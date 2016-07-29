@@ -1,12 +1,15 @@
 var passport = require('passport');
 var GitHubStrategy = require('passport-github').Strategy;
+var LocalStrategy = require('passport-local').Strategy;
 var r = require('../db');
 
 passport.serializeUser(function (user, done) {
+    console.log(user, 555);
     return done(null, user.id);
 });
 
 passport.deserializeUser(function (id, done) {
+    console.log(id, 444);
     r
         .table('users')
         .get(id)
@@ -68,7 +71,28 @@ passport.use(new GitHubStrategy({
     }, 'github')
 ));
 
+// Local
+passport.use(new LocalStrategy(
+    function(username, password, done) {
+        /*User.findOne({ username: username }, function (err, user) {
+            if (err) { return done(err); }
+            if (!user) {
+                return done(null, false, { message: 'Incorrect username.' });
+            }
+            if (!user.validPassword(password)) {
+                return done(null, false, { message: 'Incorrect password.' });
+            }
+            return done(null, user);
+        });*/
+        //TODO Check password
+        // This is checking if passord is valid and all
+        console.log(username, password);
+        return done(null, {id: "potatoe", login: "Kris", name: "Kristian", url: "no", avatarUrl: "no", type: "local"});
+    }
+));
+
 passport.checkIfLoggedIn = function (req, res, next) {
+    console.log(req.user, 666);
     if (req.user) {
         return next();
     }

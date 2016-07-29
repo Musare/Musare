@@ -18,5 +18,11 @@
 <p>You are not logged in.</p>
 <a href='/auth/login/github'>Login with GitHub</a>
 {{/user}}
+
+<form action="/auth/login">
+    <input id="username" name="username" type="text">
+    <input id="password" name="password" type="password">
+    <button type="submit">Submit</button>
+</form>
 </body>
 </html>

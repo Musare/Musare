@@ -16,6 +16,7 @@
     "node-sass": "^3.8.0",
     "passport": "^0.3.2",
     "passport-github": "^1.1.0",
+    "passport-local": "^1.0.0",
     "rethinkdb": "^2.3.2",
     "rethinkdb-init": "^0.2.2"
   }

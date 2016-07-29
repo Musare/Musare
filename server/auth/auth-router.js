@@ -10,11 +10,21 @@ authRouter.use('/login/callback/github', auth.authenticate('github'), function (
 });
 authRouter.get('/login/github', auth.authenticate('github'));
 
-// Twitter
-authRouter.use('/login/callback/twitter', auth.authenticate('twitter'), function (req, res) {
-    res.redirect('/');
+// Local
+/*authRouter.post('/login', auth.authenticate('local', {successRedirect: '/user', failureRedirect: '/login'}), function(req, res) {
+    // If this function gets called, authentication was successful.
+    // `req.user` contains the authenticated user.
+    console.log(res.user.username, 111);
+    res.redirect('/user');
+});*/
+authRouter.get('/login', function(req, res, next) {
+    auth.authenticate('local', function(err, user, info) {
+        // If this gets called, authentication was successful
+        console.log(err, user, info, 333);
+        res.redirect("/auth/user");
+    })(req, res, next);
 });
-authRouter.get('/login/twitter', auth.authenticate('twitter'));
+
 
 // All
 authRouter.use('/user', authControllers.getUser);
