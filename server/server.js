@@ -23,6 +23,7 @@ app.listen(3000, function () {
 */
 
 var express = require('express');
+var expressValidator = require('express-validator');
 var session = require('express-session');
 var engines = require('consolidate');
 
@@ -38,7 +39,8 @@ app
         saveUninitialized: true
     }))
     .use(auth.initialize())
-    .use(auth.session());
+    .use(auth.session())
+    .use(expressValidator({}));
 
 // Views
 app
@@ -51,6 +53,12 @@ app
     .use('/auth', authRouter)
     .get('/', function (req, res) {
         res.render('index.html', { user: req.user });
+    })
+    .get('/login', function (req, res) {
+        res.render('login.html');
+    })
+    .get('/register', function (req, res) {
+        res.render('register.html');
     })
     .use(express.static(__dirname + '../static'))
     .use('*', function (req, res) {

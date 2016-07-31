@@ -13,7 +13,7 @@ r.getNewConnection = function () {
 r.init({host: 'localhost', port: 28015, db: 'musare'}, [
     {
         name: 'users',
-        indexes: ['login']
+        indexes: ['username', 'usernameL', 'email']
     }
 ]).then(function (conn) {
     r.conn = conn;

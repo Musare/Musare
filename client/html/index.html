@@ -8,8 +8,7 @@
 <h1>Musare!</h1>
 <h1>Passport/RethinkDB Example</h1>
 {{#user}}
-<img style='width: 100px; height: 100px;' src='{{ avatarUrl }}'>
-<p>You are logged in as <span style="font-weight: bold;">{{ login }}</span>. Account created through <span style="font-weight: bold;">{{ type }}</span>.</p>
+<p>You are logged in as <span style="font-weight: bold;">{{ username }}</span>. Account created through <span style="font-weight: bold;">{{ type }}</span>.</p>
 <a href='/auth/user'>See user data</a>
 </br>
 <a href='/auth/logout'>Logout</a>
@@ -17,12 +16,11 @@
 {{^user}}
 <p>You are not logged in.</p>
 <a href='/auth/login/github'>Login with GitHub</a>
-{{/user}}
-
 <form action="/auth/login">
     <input id="username" name="username" type="text">
     <input id="password" name="password" type="password">
     <button type="submit">Submit</button>
 </form>
+{{/user}}
 </body>
 </html>
