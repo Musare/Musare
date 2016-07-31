@@ -2,6 +2,8 @@ var r = require('rethinkdb');
 require('rethinkdb-init')(r);
 
 r.connections = [];
+
+//Creates new connection
 r.getNewConnection = function () {
     return r.connect({host: 'localhost', port: 28015, db: 'musare'}).then(function (conn) {
         conn.use("musare");
@@ -10,6 +12,7 @@ r.getNewConnection = function () {
     });
 };
 
+//Sets up the tables for the database
 r.init({host: 'localhost', port: 28015, db: 'musare'}, [
     {
         name: 'users',

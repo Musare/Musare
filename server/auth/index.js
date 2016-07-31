@@ -4,10 +4,12 @@ var LocalStrategy = require('passport-local').Strategy;
 var r = require('../db');
 var bcrypt = require('bcryptjs');
 
+//This stores the user id in the session as a reference, and is used to call deserializeUser when it needs all info
 passport.serializeUser(function (user, done) {
     return done(null, user.id);
 });
 
+//This returns the user the user info from the user id
 passport.deserializeUser(function (id, done) {
     r
         .table('users')
@@ -19,6 +21,7 @@ passport.deserializeUser(function (id, done) {
         });
 });
 
+//This function gets called when trying to log in, to make the code more efficient and not using repetitive code
 var loginCallbackHandler = function (objectMapper, type) {
     return function (arg1, arg2, arg3, arg4) {
         /*
@@ -42,6 +45,7 @@ var loginCallbackHandler = function (objectMapper, type) {
             done = arg3;
         }
 
+        //Arg1 is the accessToken when using GitHub, so we are checking if it's not null to make sure everything is fine
         if (arg1 !== null) {
             r
                 .table('users')
@@ -57,6 +61,7 @@ var loginCallbackHandler = function (objectMapper, type) {
                                 } else if (userType === "local" && userType === type) {
                                     var hash = users[0].password;
                                     console.log("Checking password...");
+                                    //This compares the user hash with the password put in
                                     bcrypt.compare(arg2, hash, function(err, isMatch) {
                                         if (err || isMatch === false) {
                                             //Incorrect password/error occured
@@ -76,6 +81,8 @@ var loginCallbackHandler = function (objectMapper, type) {
                                     }
                                 }
                             } else if (type === "github") {
+                                //TODO Check if this allows you to have duplicate emails/usernames
+                                //This gets called to create an account with GitHub if none exist yet
                                 return r.table('users')
                                     .insert(objectMapper(arg3))
                                     .run(r.conn)
@@ -100,15 +107,18 @@ var loginCallbackHandler = function (objectMapper, type) {
         }
     };
 };
+//This is the callback url which gets used with the GitHub authentication
+//TODO Make this config dependent so it's not hardcoded
 var callbackURL = 'http://127.0.0.1:3000/auth/login/callback';
 
-// Github
+//Github strategy
 passport.use(new GitHubStrategy({
         clientID: "c5516f218aa8682ac67d",
-        clientSecret: "5a3ee482ab2eb4ade56ab6ea01fd7544dd9a9be9",
+        clientSecret: "5a3ee482ab2eb4ade56ab6ea01fd7544dd9a9be9",//TODO Make this secret
         callbackURL: callbackURL + '/github'
     },
     loginCallbackHandler(function (profile) {
+        //The object that gets created with the GitHub API response, which will be inserted into the users table
         return {
             'username': profile.username,
             'usernameL': profile.username.toLowerCase(),
@@ -119,12 +129,13 @@ passport.use(new GitHubStrategy({
     }, 'github')
 ));
 
-// Local
+//Local strategy
 passport.use(new LocalStrategy(
     {},
     loginCallbackHandler(undefined, 'local')
 ));
 
+//Function to check if user is logged in
 passport.checkIfLoggedIn = function (req, res, next) {
     if (req.user) {
         return next();
