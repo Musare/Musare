@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Musare with NodeJS + Express + SocketIO + VueJS</title>
+		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.4.8/socket.io.min.js"></script>
+		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/fetch/1.0.0/fetch.min.js"></script>
+		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vue/1.0.26/vue.min.js"></script>
+		<script src='https://www.google.com/recaptcha/api.js'></script>
+		<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+		<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet" type="text/css">
+		<link type="text/css" rel="stylesheet" href="css/app.css" />
+		<script src="js/app.js"></script>
+	</head>
+	<body>
+		<div id="app">
+			<div class="loading" style="display: block;" v-show="!(home.visible || room.visible)"></div>
+			<div class="header" style="display: none;" v-show="home.visible || room.visible">
+				<div class="header-home" v-show="home.visible">
+					<div class="header-home-title">Musare</div>
+					<div class="header-home-link" v-on:click="showModal('account')">Account&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-caret-down" aria-hidden="true"></i></div>
+					<div class="header-home-link" v-on:click="showModal('donate')">Donate</div>
+					<div class="header-home-link" v-on:click="showModal('project')">The Project</div>
+				</div>
+				<div class="header-room" v-show="room.visible">
+					<div class="header-room-linkLeft" v-on:click="leaveRoom"><i class="fa fa-home" aria-hidden="true"></i></div>
+					<div class="header-room-linkLeft"><i class="fa fa-plus" aria-hidden="true"></i></div>
+					<div class="header-room-linkLeft"><i class="fa fa-flag" aria-hidden="true"></i></div>
+					<div class="header-room-linkLeft"><i class="fa fa-step-forward" aria-hidden="true"></i></div>
+					<div class="header-room-linkCenter">{{ room.name }}</div>
+					<div class="header-room-linkRight"><i class="fa fa-users" aria-hidden="true"></i></div>
+					<div class="header-room-linkRight"><i class="fa fa-comment" aria-hidden="true"></i></div>
+					<div class="header-room-linkRight"><i class="fa fa-list" aria-hidden="true"></i></div>
+				</div>
+			</div>
+			<div class="body" style="display: none;" v-show="home.visible || room.visible">
+				<div class="body-home" v-show="home.visible">
+					<div class="body-home-group" v-for="group in home.groups">
+						<div class="body-home-group-title">{{ group.name }}</div>
+						<div class="body-home-group-nav"><i class="fa fa-chevron-left" aria-hidden="true"></i></div>
+						<div class="body-home-group-rooms">
+							<div class="body-home-group-rooms-room" v-for="room in group.rooms" v-on:click="enterRoom(room)">
+								<div class="body-home-group-rooms-room-image"></div>
+								<div class="body-home-group-rooms-room-info">
+									<div class="body-home-group-rooms-room-info-name">{{ room.name }}</div>
+									<div class="body-home-group-rooms-room-info-users">{{ room.users }}&nbsp;&nbsp;<i class="fa fa-user" aria-hidden="true"></i></div>
+									<div class="body-home-group-rooms-room-info-description">{{ room.description }}</div>
+								</div>
+							</div>
+						</div>
+						<div class="body-home-group-nav"><i class="fa fa-chevron-right" aria-hidden="true"></i></div>
+					</div>
+				</div>
+				<div class="body-room" v-show="room.visible">
+					<div class="body-room-player">
+						<!-- Youtube stuff goes here -->
+					</div>
+					<div class="body-room-playlist">
+						<div class="body-room-playlist-song" v-for="song in room.playlist.songs">
+
+						</div>
+					</div>
+					<div class="body-room-chat">
+						<div class="body-room-chat-message" v-for="message in room.chat.messages">
+
+						</div>
+					</div>
+					<div class="body-room-users"></div>
+				</div>
+				<div class="body-overlay" v-show="modalVisible()" v-on:click="showModal()"></div>
+				<div class="body-modal" v-bind:style="modalPositionStyle('register', 350, 400)">
+					<div class="body-modal-register-title">Register</div>
+					<div class="body-modal-register-exit" v-on:click="showModal()"><i class="fa fa-times" aria-hidden="true"></i></div>
+					<input class="body-modal-register-input" type="text" placeholder="Email..." v-model="modals.register.email"/>
+					<input class="body-modal-register-input" type="text" placeholder="Username..." v-model="modals.register.username"/>
+					<input class="body-modal-register-input" type="password" placeholder="Password..." v-model="modals.register.password"/>
+					<div class="g-recaptcha body-modal-register-recaptcha" data-sitekey="6Ld5jygTAAAAAEi0E1IwovUuVFhZKctMvKnY553W"></div>
+					<div class="body-modal-register-submit" v-on:click="register()">Submit</div>
+				</div>
+				<div class="body-modal" v-bind:style="modalPositionStyle('account', 360, 200)">
+					<div class="body-modal-account-button" v-on:click="showModal('register')">Register</div>
+					<div class="body-modal-account-button" v-on:click="showModal('login')">Login</div>
+				</div>
+				<div class="body-modal" v-bind:style="modalPositionStyle('donate', 360, 200)">
+					<p>Donations! Woo! :)</p>
+				</div>
+				<div class="body-modal" style="padding: 24px;" v-bind:style="modalPositionStyle('project', 600, 468)">
+					<h2 style="margin: 0 0 8px 0;">What is Musare?</h2>
+					<p style="margin: 0 0 16px 0;">Musare is an open-source music website where you can listen to real-time genre specific music stations with your friends, or just alone.</p>
+					<h2 style="margin: 0 0 8px 0;">How can I help?</h2>
+					<p style="margin: 0;">There are essentially 3 main ways in which you can help us:</p>
+					<ol>
+						<li style="margin-bottom: 16px; text-align: justify;">If you are a JavaScript developer, then we can use your help! Our project is open source and all the source code can be found on GitHub. We would love for you to create new features, add exciting content or just improve what already is on Musare. Also, if you see a bug or glitch on Musare, then create a new "issue" on GitHub and we will fix it as soon as possible. You can also have a try at fixing a bug that you may find!</li>
+						<li style="margin-bottom: 16px; text-align: justify;">If you are not a developer but want some way of supporting us - you can donate to Musare. Any amount of donation is highly appreciated, and will help us maintain server costs.</li>
+						<li style="margin-bottom: 16px; text-align: justify;">Send us feedback! Your comments and/or suggestion are extremely valuable to us. In order to improve we need to know what you like, don't like or what you might want on the app.</li>
+					</ol>
+				</div>
+			</div>
+			<div class="footer" style="display: none;" v-show="home.visible || room.visible">
+				<div class="footer-left">
+					<div class="footer-left-title">Stay Connected</div>
+					<div class="footer-left-message">Follow us on social media or send us an email!</div>
+					<div class="footer-left-icons">
+						<div class="footer-left-icons-icon"><i class="fa fa-twitter" aria-hidden="true"></i></div>
+						<div class="footer-left-icons-icon"><i class="fa fa-facebook" aria-hidden="true"></i></div>
+						<div class="footer-left-icons-icon"><i class="fa fa-twitch" aria-hidden="true"></i></div>
+					</div>
+				</div>
+				<div class="footer-right">
+					<div class="footer-right-links">
+						<div class="footer-right-links-title">Links</div>
+						<a class="footer-right-links-link">Github</a>
+						<a class="footer-right-links-link">Feedback</a>
+						<a class="footer-right-links-link">FAQ</a>
+						<a class="footer-right-links-link">Terms</a>
+						<a class="footer-right-links-link">Privacy</a>
+					</div>
+				</div>
+				<div class="footer-message">© Copyright Musare: 2015 - {{ new Date().getFullYear() }}</div>
+			</div>
+		</div>
+	</body>
+</html>
