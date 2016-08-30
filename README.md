@@ -9,15 +9,16 @@ Musare in NodeJS, Express, SocketIO and VueJS.
 The latest version of Vagrant (1.8.5) has some issues with inserting ssh keys into the machine. It's a show stopping bug that they aren't going to fix until the [next release](https://github.com/mitchellh/vagrant/issues/7610#issuecomment-234609660). So for now, I recommend using [Vagrant 1.8.4](https://releases.hashicorp.com/vagrant/1.8.4/). You'll also need to use a slightly [older version of Virtualbox](https://www.virtualbox.org/wiki/Download_Old_Builds_5_0) because of this.
 
 ## Getting Started
-Once you've installed the required tools, pull down this repo, cd into it, then copy `config/template.json` to `config/default.json`. The `secret` key can be whatever. It's used by express's session module. The `apis.youtube.key` value can be obtained by going to https://developers.google.com/youtube/v3/getting-started and obtaining a youtube api key.
+Once you've installed the required tools:
 
-After you've copied your config, run:
+1. `git clone https://github.com/luveti/MusareNode.git`
+2. `cd MusareNode`
+3. `cp config/template.json config/default.json` 
 
-`vagrant up`
+The `secret` key can be whatever. It's used by express's session module. The `apis.youtube.key` value can be obtained by setting up a [YouTube API Key](https://developers.google.com/youtube/v3/getting-started).
 
-Once that's done go ahead and call:
-
-`vagrant reload`
+4. `vagrant up`
+5. `vagrant reload`
 
 This will ensure that the services we've created start up correctly.
 
@@ -48,7 +49,7 @@ Because of this, you'll need to manually restart the nodejs app. You can do this
 
 You'll probably want to have two terminal windows open, one that you can restart Musare with. And another that you can run `sudo tail -F /var/log/upstart/musare.log` in. This will output everything that running `node app.js` would typically output.
 
-## FAQ
+### FAQ
 
 ##### What does `vagrant up` do?
 This will pull down the Ubuntu 14.04 vagrant box and setup a virtualbox machine for you. It'll ask you what network interface you want the virtualbox machine to connect to the internet with. On macOS I typically choose `en0: Wi-Fi (AirPort)`, but it'll be different on different platforms. It will then run the commands in the `bootstrap.sh` file on this virtual machine. This will install nodejs, rethinkdb, and a bunch of other goodies. This same file could be ran on a production Ubuntu 14.04 server with very little modifications (if any at all).
