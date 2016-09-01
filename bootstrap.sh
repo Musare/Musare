@@ -97,4 +97,4 @@ fi
 
 # automatically install all of our dependencies
 cd /musare
-npm install
+npm install --no-bin-links
