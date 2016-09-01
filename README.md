@@ -14,8 +14,8 @@ Once you've installed the required tools:
 1. `git clone https://github.com/luveti/MusareNode.git`
 2. `cd MusareNode`
 3. `cp config/template.json config/default.json` 
-
-The `secret` key can be whatever. It's used by express's session module. The `apis.youtube.key` value can be obtained by setting up a [YouTube API Key](https://developers.google.com/youtube/v3/getting-started).
+ 
+  > The `secret` key can be whatever. It's used by express's session module. The `apis.youtube.key` value can be obtained by setting up a [YouTube API Key](https://developers.google.com/youtube/v3/getting-started).
 
 4. `vagrant up`
 5. `vagrant reload`
