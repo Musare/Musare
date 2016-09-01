@@ -85,3 +85,9 @@ fabric.properties
 
 # Created by .ignore support plugin (hsz.mobi)
 
+Thumbs.db
+.DS_Store
+
+.vagrant/
+rethinkdb_data/
+config/default.json
