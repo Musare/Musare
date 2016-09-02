@@ -40,11 +40,15 @@
 						<div class="body-home-group-nav"><i class="fa fa-chevron-left" aria-hidden="true"></i></div>
 						<div class="body-home-group-rooms">
 							<div class="body-home-group-rooms-room" v-for="room in group.rooms" v-on:click="enterRoom(room)">
-								<div class="body-home-group-rooms-room-image"></div>
+								<img class="body-home-group-rooms-room-image" :src="room.thumbnail" />
 								<div class="body-home-group-rooms-room-info">
-									<div class="body-home-group-rooms-room-info-name">{{ room.name }}</div>
-									<div class="body-home-group-rooms-room-info-users">{{ room.users }}&nbsp;&nbsp;<i class="fa fa-user" aria-hidden="true"></i></div>
-									<div class="body-home-group-rooms-room-info-description">{{ room.description }}</div>
+									<div class="body-home-group-rooms-room-grid-left">
+										<h3>{{ room.name }}</h3>
+										<p class="body-home-group-rooms-room-info-description">{{ room.description }}</p>
+									</div>
+									<div class="body-home-group-rooms-room-grid-right">
+										<div class="body-home-group-rooms-room-info-users">{{ room.users }}&nbsp;&nbsp;<i class="fa fa-user" aria-hidden="true"></i></div>
+									</div>
 								</div>
 							</div>
 						</div>
