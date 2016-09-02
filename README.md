@@ -11,7 +11,7 @@ The latest version of Vagrant (1.8.5) has some issues with inserting ssh keys in
 ## Getting Started
 Once you've installed the required tools:
 
-1. `git clone https://github.com/luveti/MusareNode.git`
+1. `git clone https://github.com/MusareNode/MusareNode.git`
 2. `cd MusareNode`
 3. `cp config/template.json config/default.json` 
  
@@ -22,7 +22,7 @@ Once you've installed the required tools:
 
 This will ensure that the services we've created start up correctly.
 
-Once this is done you should be able to access Musare in your local browser at [127.0.0.1](http://127.0.0.1). To access the RethinkDB admin panel, go to [127.0.0.1:8080](http://127.0.0.1:8080) in your local web browser.
+Once this is done you should be able to access Musare in your local browser at [172.16.1.2](http://172.16.1.2). To access the RethinkDB admin panel, go to [172.16.1.2:8080](http://172.16.1.2:8080) in your local web browser.
 
 You can also now access your machine using:
 
