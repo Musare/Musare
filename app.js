@@ -14,8 +14,9 @@ const express    = require('express'),
       r          = require('rethinkdb');
 
 // custom modules
-const coreHandler = require('./logic/coreHandler'),
-      socketHandler = require('./logic/socketHandler'),
+const global         = require('./logic/global'),
+      coreHandler    = require('./logic/coreHandler'),
+      socketHandler  = require('./logic/socketHandler'),
       expressHandler = require('./logic/expressHandler');
 
 // setup express and socket.io
@@ -24,22 +25,15 @@ const server = app.listen(80);
 const io = require('socket.io')(server);
 
 // connect to our database before doing anything else
-r.connect( { host: 'localhost', port: 28015, db: 'musare' }, (err, conn) => {
+r.connect( { host: 'localhost', port: 28015, db: 'musare' }, (err, rc) => {
 	if (err) {
 		console.log(err);
 	}
 	else {
 
-		app.use(session({
-			resave: true,
-			saveUninitialized: false,
-			secret: config.get("secret"),
-			cookie: { httpOnly: true, maxAge: 2419200000 }
-		}));
+		global.rc = rc;
 
 		app.use(express.static(__dirname + '/public'));
-
-		coreHandler.setup(conn);
 
 		socketHandler(coreHandler, io);
 		expressHandler(coreHandler, app);

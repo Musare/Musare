@@ -1,8 +1,8 @@
 
 // custom modules
-const utils = require('./utils');
+const global = require('./global');
 
-function Station (id, data, dbConn) {
+function Station (id, data) {
 
 	var self = this;
 
@@ -17,7 +17,6 @@ function Station (id, data, dbConn) {
 	var displayName = data.displayName;
 	var description = data.description;
 	var timer;
-	var dbConnection = dbConn;
 
 	this.skipSong = function() {
 		if (playlist.length > 0) {
@@ -31,7 +30,7 @@ function Station (id, data, dbConn) {
 			}
 			skipVotes = 0;
 			currentSong = playlist[currentSongIndex];
-			timer = new utils.Timer(function() {
+			timer = new global.Timer(function() {
 				console.log("Skip!");
 				self.skipSong();
 			}, currentSong.duration, paused);
@@ -49,7 +48,7 @@ function Station (id, data, dbConn) {
 		//TODO Emit
 	};
 	this.retrievePlaylist = function() {
-		//TODO Use Rethink to get the Playlist for this room
+		//TODO Use Rethink to get the Playlist for this station
 	};
 	this.pause = function() {
 		if (!paused) {
@@ -118,15 +117,10 @@ function Station (id, data, dbConn) {
 module.exports = {
 
 	stations: [],
-	dbConnection: null,
-
-	setup: function (dbConn) {
-		this.dbConnection = dbConn;
-	},
 
 	initStation: function (id, data) {
 		if (!this.getStation(id)) {
-			var station = new Station(id, data, this.dbConnection);
+			var station = new Station(id, data);
 			this.stations.push(station);
 			return station;
 		}
@@ -143,6 +137,10 @@ module.exports = {
 		return s;
 	},
 
+	getStations: function () {
+		return this.stations;
+	},
+
 	// creates a brand new station
 	createStation: function (data) {
 		//TODO: add createStation functionality
@@ -150,9 +148,9 @@ module.exports = {
 	},
 
 	// loads a station from the database
-	loadStation: function (data) {
-		//TODO: Get this from RethinkDB
-		this.initStation({
+	loadStation: function (id) {
+		//TODO: Get the data from RethinkDB
+		this.initStation(id, {
 			playlist: [
 				{
 					mid: "3498fd83",

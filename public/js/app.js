@@ -133,7 +133,7 @@ window.onload = function () {
 			}
 		},
 		register: function () {
-			socket.emit('register', {
+			socket.emit('/users/register', {
 				email: data.modals.register.email,
 				username: data.modals.register.username,
 				password: data.modals.register.password,

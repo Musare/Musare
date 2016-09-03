@@ -1,9 +1,10 @@
 'use strict';
 
 // nodejs modules
-const path = require('path'),
-      fs   = require('fs'),
-      os   = require('os');
+const path   = require('path'),
+      fs     = require('fs'),
+      os     = require('os'),
+      events = require('events');
 
 // npm modules
 const config    = require('config'),
@@ -12,21 +13,26 @@ const config    = require('config'),
       r         = require('rethinkdb');
 
 // custom modules
-const utils = require('./utils');
+const global    = require('./global'),
+      stations = require('./stations');
 
-var dbConnection = null;
+var eventEmitter = new events.EventEmitter();
 
 module.exports = {
 
-	setup: function (dbConn) {
-		dbConnection = dbConn;
+	// module functions
+
+	on: function (name, cb) {
+		eventEmitter.on(name, cb);
 	},
 
-	disconnect: function () {//TODO Find out why we even need this.
-
+	emit: function (name, data) {
+		eventEmitter.emit(name, data);
 	},
 
-	login: function (user, cb) {
+	// core route handlers
+
+	'/users/login': function (user, cb) {
 
 		if (!user.username || !user.password) {
 			return cb({ status: 'error', message: 'Invalid login request' });
@@ -52,7 +58,7 @@ module.exports = {
 		});
 	},
 
-	register: function (user, cb) {
+	'/users/register': function (user, cb) {
 
 		if (!user.email || !user.username || !user.password) {
 			return cb({ status: 'error', message: 'Invalid register request' });
@@ -61,55 +67,66 @@ module.exports = {
 		// TODO: Implement register
 	},
 
-	rooms: function (cb) {
-		var _rooms = stations.map(function(result) {
+	'/stations': function (cb) {
+		cb(stations.getStations().map(function (result) {
 			return {
 				id: result.getId(),
 				displayName: result.getDisplayName(),
 				description: result.getDescription(),
 				users: result.getUsers()
 			}
-		});
-		cb(_rooms);
+		}));
 	},
 
-	joinRoom: function (id, cb) {//TODO Think of a better name than joinRoom
+	'/stations/join/:id': function (id, user, cb) {
 
-		var room = getStation(id);
-		socket.custom.roomId = id;
+		var station = stations.getStation(id);
 
-		var userInfo = {
-			username: socket.custom.user.username
-		};
+		if (station) {
 
-		// tell all the users in this room that someone is joining it
-		io.sockets.clients().forEach(function (otherSocket) {
-			if (otherSocket != socket && otherSocket.custom.roomId === id) {
-				otherSocket.emit('roomUserJoin', { user: userInfo });
-			}
-		});
-		//TODO Add errors.
-		return cb({
-			status: 'joined',
-			data: {
-				room: room
-			}
-		});
+			user.stationId = id;
+
+			this.emit('station-joined', {
+				user: {
+					id: user.id,
+					username: user.username
+				}
+			});
+
+			return cb({
+				status: 'joined',
+				data: {
+					displayName: station.getDisplayName(),
+					users: station.getUsers(),
+					currentSong: station.getCurrentSong()
+				}
+			});
+		}
+		else {
+			return cb({ status: 'error', message: 'Room with that ID does not exists' });
+		}
 	},
 
-	search: function (query, cb) {//TODO Replace search with a better name.
-		request('https://www.googleapis.com/youtube/v3/search?' + [
-				'part=snippet', `q=${encodeURIComponent(query)}`, `key=${config.get('apis.youtube.key')}`, 'type=video', 'maxResults=25'
-			].join('&'), (err, res, body) => {
+	'/stations/search/:query': function (query, cb) {
+
+		var params = [
+			'part=snippet',
+			`q=${encodeURIComponent(query)}`,
+			`key=${config.get('apis.youtube.key')}`,
+			'type=video',
+			'maxResults=25'
+		].join('&');
+
+		request(`https://www.googleapis.com/youtube/v3/search?${params}`, function (err, res, body) {
 			if (err) {
-				socket.emit('search', { status: 'error', message: 'Failed to make request' });
+				return cb({ status: 'error', message: 'Failed to make request' });
 			}
 			else {
 				try {
-					socket.emit('search', { status: 'success', body: JSON.parse(body) });
+					return cb({ status: 'success', body: JSON.parse(body) });
 				}
 				catch (e) {
-					socket.emit('search', { status: 'error', message: 'Non JSON response' });
+					return cb({ status: 'error', message: 'Non JSON response' });
 				}
 			}
 		});
