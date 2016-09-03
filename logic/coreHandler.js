@@ -237,7 +237,15 @@ module.exports = {
 	},
 
 	rooms: function (cb) {
-		cb(stations);
+		var _rooms = stations.map(function(result) {
+			return {
+				id: result.getId(),
+				displayName: result.getDisplayName(),
+				description: result.getDescription(),
+				users: result.getUsers()
+			}
+		});
+		cb(_rooms);
 	},
 
 	handleRoomJoin: function (id, cb) {

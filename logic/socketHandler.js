@@ -24,14 +24,6 @@ module.exports = function (base, io) {
 
 		socket.on('getRooms', function () {
 			base.rooms(function (result) {
-				var rooms = result.map(function(result) {
-					return {
-						id: result.getId(),
-						displayName: result.getDisplayName(),
-						description: result.getDescription(),
-						users: result.getUsers()
-					}
-				});
 				socket.emit('rooms', result);
 			});
 		});
