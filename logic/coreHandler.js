@@ -197,7 +197,7 @@ module.exports = {
 		dbConnection = dbConn;
 	},
 
-	disconnect: function () {
+	disconnect: function () {//TODO Find out why we even need this.
 
 	},
 
@@ -248,7 +248,7 @@ module.exports = {
 		cb(_rooms);
 	},
 
-	handleRoomJoin: function (id, cb) {
+	joinRoom: function (id, cb) {//TODO Think of a better name than joinRoom
 
 		var room = getStation(id);
 		socket.custom.roomId = id;
@@ -263,7 +263,7 @@ module.exports = {
 				otherSocket.emit('roomUserJoin', { user: userInfo });
 			}
 		});
-
+		//TODO Add errors.
 		return cb({
 			status: 'joined',
 			data: {
@@ -272,7 +272,7 @@ module.exports = {
 		});
 	},
 
-	search: function (query, cb) {
+	search: function (query, cb) {//TODO Replace search with a better name.
 		request('https://www.googleapis.com/youtube/v3/search?' + [
 				'part=snippet', `q=${encodeURIComponent(query)}`, `key=${config.get('apis.youtube.key')}`, 'type=video', 'maxResults=25'
 			].join('&'), (err, res, body) => {

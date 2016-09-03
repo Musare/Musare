@@ -10,15 +10,15 @@ module.exports = function (base, io) {
 			});
 		});
 
-		socket.on('login', function (user) {
+		socket.on('login', function (user, cb) {
 			base.login(user, function (result) {
-				socket.emit('login', result);
+				cb(result);
 			});
 		});
 
-		socket.on('register', function (user) {
+		socket.on('register', function (user, cb) {
 			base.register(user, function (result) {
-				socket.emit('register', result);
+				cb(result);
 			});
 		});
 
@@ -28,7 +28,7 @@ module.exports = function (base, io) {
 			});
 		});
 
-		socket.on('room', function (id, cb) {
+		socket.on('room', function (id, cb) {//TODO Replace 'room' with a better name.
 			base.room(id, function (result) {
 				var info = {
 					displayName: result.getDisplayName(),
@@ -39,13 +39,13 @@ module.exports = function (base, io) {
 			});
 		});
 
-		socket.on('search', function (query) {
+		socket.on('search', function (query) {//TODO Replace search with a better name.
 			base.search(query, function (result) {
 				socket.emit('search', result);
 			});
 		});
 
-		socket.emit('ready');
+		socket.emit('ready');//TODO Remove this
 
 	});
 };

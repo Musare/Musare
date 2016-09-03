@@ -1,6 +1,6 @@
 'use strict';
 
-module.exports = function (base, io) {
+module.exports = function (base, io) {//TODO Rename base to core
 
 	app.post('/login', function (user) {
 		base.login(user, function (result) {
@@ -20,13 +20,7 @@ module.exports = function (base, io) {
 		});
 	});
 
-	app.get('/room/:id', function (id) {
-		base.room(id, function (result) {
-			res.send(JSON.stringify(result));
-		});
-	});
-
-	app.get('/search/:query', function () {
+	app.get('/search/:query', function () {//TODO Replace search with a better name.
 		base.search(query, function (result) {
 			res.send(JSON.stringify(result));
 		});
