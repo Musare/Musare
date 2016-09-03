@@ -22,15 +22,28 @@ module.exports = function (base, io) {
 			});
 		});
 
-		socket.on('rooms', function () {
+		socket.on('getRooms', function () {
 			base.rooms(function (result) {
+				var rooms = result.map(function(result) {
+					return {
+						id: result.getId(),
+						displayName: result.getDisplayName(),
+						description: result.getDescription(),
+						users: result.getUsers()
+					}
+				});
 				socket.emit('rooms', result);
 			});
 		});
 
-		socket.on('room', function (id) {
+		socket.on('room', function (id, cb) {
 			base.room(id, function (result) {
-				socket.emit('room', result);
+				var info = {
+					displayName: result.getDisplayName(),
+					users: result.getUsers(),
+					currentSong: result.getCurrentSong()
+				};
+				cb(info);
 			});
 		});
 

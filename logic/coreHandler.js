@@ -58,7 +58,10 @@ function Station(id) {
 	var paused = true;//TODO Get this from RethinkDB
 	var locked = false;//TODO Get this from RethinkDB
 	var skipVotes = [];
+	var users = [];
 	var timer;
+	var displayName;//TODO Get this from RethinkDB
+	var description;//TODO Get this from RethinkDB
 
 	this.skipSong = function() {
 		if (playlist.length > 0) {
@@ -126,6 +129,32 @@ function Station(id) {
 	};
 	this.isLocked = function() {
 		return locked;
+	};
+	this.updateDisplayName = function(newDisplayName) {
+		//TODO Update RethinkDB
+		displayName = newDisplayName;
+	};
+	this.updateDescription = function(newDescription) {
+		//TODO Update RethinkDB
+		description = newDescription;
+	};
+	this.getId = function() {
+		return id;
+	};
+	this.getDisplayName = function() {
+		return displayName;
+	};
+	this.getDescription = function() {
+		return description;
+	};
+	this.addUser = function(user) {
+		users.add(user);
+	};
+	this.removeUser = function(user) {
+		users.splice(users.indexOf(user), 1);
+	};
+	this.getUsers = function() {
+		return users;
 	};
 	this.skipSong();
 }
@@ -208,57 +237,29 @@ module.exports = {
 	},
 
 	rooms: function (cb) {
-		r.table('rooms').run(rc, (err, cursor) => {
-			if (err) {
-				return cb({ status: 'failure', message: 'Error while fetching the rooms' });
-			}
-			else {
-				cursor.toArray((err, result) => {
-					if (err) {
-						return cb({ status: 'failure', message: 'Error while fetching the rooms' });
-					}
-					else {
-						return cb(result);
-					}
-				});
-			}
-		});
+		cb(stations);
 	},
 
-	room: function (id, cb) {
+	handleRoomJoin: function (id, cb) {
 
-		if (socket.custom.user == null) {
-			return cb({ status: 'error', message: "You can't join a room until you've logged in" });
-		}
+		var room = getStation(id);
+		socket.custom.roomId = id;
 
-		r.table('rooms').get(id).run(rc, (err, result) => {
-			if (err) {
-				return cb({ status: 'error', message: 'Room with that id does not exist' });
+		var userInfo = {
+			username: socket.custom.user.username
+		};
+
+		// tell all the users in this room that someone is joining it
+		io.sockets.clients().forEach(function (otherSocket) {
+			if (otherSocket != socket && otherSocket.custom.roomId === id) {
+				otherSocket.emit('roomUserJoin', { user: userInfo });
 			}
-			else {
-				socket.custom.roomId = id;
+		});
 
-				var userInfo = {
-					username: socket.custom.user.username
-				};
-
-				var otherUsersInfo = [];
-
-				// tell all the users in this room that someone is joining it
-				io.sockets.clients().forEach((otherSocket) => {
-					if (otherSocket != socket && otherSocket.custom.roomId == id) {
-						otherUsersInfo.push({ username: otherSocket.custom.user.username });
-						otherSocket.emit('room', { status: 'joining', user: userInfo });
-					}
-				});
-
-				return cb({
-					status: 'joined',
-					data: {
-						room: result,
-						users: otherUsersInfo
-					}
-				});
+		return cb({
+			status: 'joined',
+			data: {
+				room: room
 			}
 		});
 	},

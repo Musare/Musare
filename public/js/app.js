@@ -87,7 +87,7 @@ window.onload = function () {
 			data.home.visible = false;
 			window.setTimeout(function () { data.room.visible = true; }, 500);
 			data.room.id = room.id;
-			data.room.name = room.name;
+			data.room.displayName = room.displayName;
 			data.room.description = room.description;
 		},
 		modalVisibilityChange: function (name) {
