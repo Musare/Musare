@@ -24,8 +24,6 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; }
 .header-room-linkRight { float: right; width: 64px; color: white; text-decoration: none; font-weight: 300; font-size: 28px; }
 .header-room-linkLeft:hover, .header-room-linkRight:hover { cursor: pointer; background-color: #0083d3; }
 
-.body {}
-
 .body-home { width: 100%; height: auto; }
 .body-home-group { width: 100%; height: 448px; margin: 64px 0 64px 0; }
 .body-home-group-title { float: left; clear: none; width: 100%; height: 64px; line-height: 48px; text-align: center; font-size: 48px; }
@@ -72,20 +70,6 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; }
 }
 
 .body-home-group-rooms-room-image { width: 100%; height: 256px; }
-
-.body-room {}
-
-.body-room-player {}
-
-.body-room-playlist {}
-.body-room-playlist-song {}
-
-.body-room-chat {}
-.body-room-chat-message {}
-.body-room-chat-input {}
-.body-room-chat-send {}
-
-.body-room-users {}
 
 .body-overlay {
 	position: fixed;

@@ -81,7 +81,7 @@ script
 	until mountpoint -q /musare; do sleep 1; done
 	echo \$\$ > /var/run/musare.pid
 	cd /musare
-	exec node app.js
+	exec gulp
 end script
 
 pre-start script
