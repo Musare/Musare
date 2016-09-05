@@ -1,6 +1,7 @@
 
 // custom modules
 const global = require('./global');
+var io = global.io;
 
 function Station (id, data) {
 
@@ -17,6 +18,10 @@ function Station (id, data) {
 	var displayName = data.displayName;
 	var description = data.description;
 	var timer;
+	var nsp = io.of('/' + id);
+	nsp.on('connection', function(socket){
+		console.log('someone connected');
+	});
 
 	this.skipSong = function() {
 		if (playlist.length > 0) {
@@ -35,7 +40,7 @@ function Station (id, data) {
 				self.skipSong();
 			}, currentSong.duration, paused);
 
-			//io.emit("skipSong " + id, currentSong);
+			nsp.emit("skippedSong", currentSong);
 		}
 	};
 	this.toggleVoteSkip = function(userId) {
@@ -45,7 +50,7 @@ function Station (id, data) {
 			skipVotes = skipVotes.splice(skipVotes.indexOf(userId), 1);
 		}
 		//TODO Calculate if enough people voted to skip
-		//TODO Emit
+		nsp.emit("voteSkip", skipVotes);
 	};
 	this.retrievePlaylist = function() {
 		//TODO Use Rethink to get the Playlist for this station
@@ -54,15 +59,15 @@ function Station (id, data) {
 		if (!paused) {
 			paused = true;
 			timer.pause();
+			nsp.emit("pause");
 		}
-		//TODO Emit
 	};
 	this.unpause = function() {
 		if (paused) {
 			paused = false;
 			timer.resume();
+			nsp.emit("unpause");
 		}
-		//TODO Emit
 	};
 	this.isPaused = function() {
 		return paused;
@@ -73,14 +78,14 @@ function Station (id, data) {
 	this.lock = function() {
 		if (!locked) {
 			locked = true;
+			nsp.emit("lock");
 		}
-		//TODO Emit
 	};
 	this.unlock = function() {
 		if (locked) {
 			locked = false;
+			nsp.emit("unlocked");
 		}
-		//TODO Emit
 	};
 	this.isLocked = function() {
 		return locked;
@@ -88,10 +93,12 @@ function Station (id, data) {
 	this.updateDisplayName = function(newDisplayName) {
 		//TODO Update RethinkDB
 		displayName = newDisplayName;
+		nsp.emit("updateDisplayName", newDisplayName);
 	};
 	this.updateDescription = function(newDescription) {
 		//TODO Update RethinkDB
 		description = newDescription;
+		nsp.emit("updateDescription", newDescription);
 	};
 	this.getId = function() {
 		return id;
@@ -104,9 +111,11 @@ function Station (id, data) {
 	};
 	this.addUser = function(user) {
 		users.add(user);
+		nsp.emit("updateUsers", users);
 	};
 	this.removeUser = function(user) {
 		users.splice(users.indexOf(user), 1);
+		nsp.emit("updateUsers", users);
 	};
 	this.getUsers = function() {
 		return users;

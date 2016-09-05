@@ -32,6 +32,7 @@ r.connect( { host: 'localhost', port: 28015, db: 'musare' }, (err, rc) => {
 	else {
 
 		global.rc = rc;
+		global.io = io;
 
 		app.use(express.static(__dirname + '/public'));
 
