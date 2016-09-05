@@ -15,15 +15,10 @@ module.exports = function (core, app) {
 	});
 
 	app.post('/users/register', function (req, res) {
-
-		// TODO: Give this a better error message
-		if (!req.body.user) {
-			return res.send(JSON.stringify({ 'status': 'error', 'message': 'invalid request' }));
-		}
-
-		core['/users/register'](req.body.user, function (result) {
+		core['/users/register'](req.body.user, (result) => {
 			res.send(JSON.stringify(result));
 		});
+		console.log('posted');
 	});
 
 	app.get('/stations', function (req, res) {
