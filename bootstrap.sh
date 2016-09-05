@@ -98,3 +98,4 @@ fi
 # automatically install all of our dependencies
 cd /musare
 npm install --no-bin-links
+sudo npm install --global gulp-cli
