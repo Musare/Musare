@@ -34,7 +34,7 @@ r.connect( { host: 'localhost', port: 28015, db: 'musare' }, (err, rc) => {
 		global.rc = rc;
 		global.io = io;
 
-		app.use(express.static(__dirname + '/public'));
+		app.use(express.static(__dirname + '/../public'));
 
 		socketHandler(coreHandler, io);
 		expressHandler(coreHandler, app);
