@@ -17,33 +17,33 @@ module.exports = function (core, io) {
 			console.log('User has disconnected');
 		});
 
-		socket.on('/users/login', function (user) {
+		socket.on('/users/login', function (user, cb) {
 			core['/users/login'](user, function (result) {
-				socket.emit('/users/login', result);
+				cb(result);
 			});
 		});
 
-		socket.on('/users/register', function (user) {
+		socket.on('/users/register', function (user, cb) {
 			core['/users/register'](user, function (result) {
-				socket.emit('/users/register', result);
+				cb(result);
 			});
 		});
 
-		socket.on('/stations', function () {
+		socket.on('/stations', function (cb) {
 			core['/stations'](function (result) {
-				socket.emit('/stations', result);
+				cb(result);
 			});
 		});
 
-		socket.on('/stations/join/:id', function (id) {
+		socket.on('/stations/join/:id', function (id, cb) {
 			core['/stations/join/:id'](id, function (result) {
-				socket.emit('/stations/join/:id', result);
+				cb(result);
 			});
 		});
 
-		socket.on('/stations/search/:query', function (query) {
+		socket.on('/stations/search/:query', function (query, cb) {
 			core['/stations/search/:query'](query, function (result) {
-				socket.emit('/stations/search/:query', result);
+				cb(result);
 			});
 		});
 

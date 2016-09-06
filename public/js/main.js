@@ -82,6 +82,7 @@ window.onload = function () {
 		leaveRoom: function () {
 			data.room.visible = false;
 			window.setTimeout(function () { data.home.visible = true; }, 500);
+			socket.leave("/" + data.room.id);
 		},
 		enterRoom: function (room) {
 			data.home.visible = false;
@@ -89,6 +90,10 @@ window.onload = function () {
 			data.room.id = room.id;
 			data.room.displayName = room.displayName;
 			data.room.description = room.description;
+			socket.join("/" + room.id);
+			socket.emit("/stations/join/:id", room.id, function(result) {
+				console.log(result);
+			});
 		},
 		modalVisibilityChange: function (name) {
 			var modal = data.modals[name];
