@@ -32,8 +32,6 @@ function Timer(callback, delay, paused) {
 module.exports = {
 	rc: null, // RethinkDB Connection, this gets set in app.js
 	io: null, // Socket.io
-	passport: null,
-	localStrategy: null,
 	htmlEntities: function(str) {
 		return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 	},

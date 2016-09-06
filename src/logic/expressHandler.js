@@ -11,11 +11,12 @@ module.exports = function (core, app) {
 
 		core['/users/login'](req.body.user, function (result) {
 			res.send(JSON.stringify(result));
+			console.log(JSON.stringify(result));
 		});
 	});
 
 	app.post('/users/register', function (req, res) {
-		core['/users/register'](req.body.user, (result) => {
+		core['/users/register'](req.body.user, function (result) {
 			res.send(JSON.stringify(result));
 		});
 		console.log('posted');

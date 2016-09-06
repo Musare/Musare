@@ -9,33 +9,16 @@ const path   = require('path'),
 // npm modules
 const config    = require('config'),
       request   = require('request'),
-      waterfall = require('async/waterfall').
-      r         = require('rethinkdb');
+      waterfall = require('async/waterfall'),
+	  passport      = require('passport');
 
 // custom modules
-const global    = require('./global'),
-      passport  = global.passport,
-      localStrategy  = global.localStrategy,
-      stations = require('./stations');
+const global   = require('./global'),
+	  stations = require('./stations');
 
 var eventEmitter = new events.EventEmitter();
 
 module.exports = {
-
-  // auth
-
-  passport.serializeUser(function(user, cb) {
-    done(null, user.id);
-  });
-
-  passport.deserializeUser(function(id, cb) {
-    r.table('users').filter({id}).run(rc, (err, cursor) => {
-      done(err, cursor.toArray().result);
-    });
-  });
-
-  app.use(passport.initialize());
-  app.use(passport.session());
 
 	// module functions
 
@@ -49,40 +32,14 @@ module.exports = {
 
 	// core route handlers
 
-	'/users/login': function (user, cb) {},
+	'/users/login': function (user, cb) {
+		passport.authenticate('local', {
+			successRedirect: cb({ status: 'success', message: 'Successfully logged in' }),
+			failureRedirect: cb({ status: 'error', message: 'Error while trying to log in' })
+		});
+	},
 
-	'/users/register': function (user, cb) {
-    passport.use('local-signup', new localStrategy({
-      usernameField : user.email,
-      passwordField : user.password,
-      passReqToCallback : true
-    }, (req, email, password, done) => {
-      process.nextTick(() => {
-        r.table('users').filter({
-    			email: user.email
-    		}).run(rc, (err, cursor) => {
-    			if (err) return done(err);
-    			else {
-    				cursor.toArray((err, result) => {
-    					if (result) {
-    						return done(null, false);
-    					} else {
-                r.table('authors').insert([{
-                  email,
-                  password: crypto.createHash('md5').update(password).digest("hex")
-                }]).run(connection, function(err, result) {
-                  if (err) throw err;
-                  return done(null, result);
-                  console.log(result);
-                });
-              }
-    				});
-    			}
-    		});
-      });
-    }));
-
-  },
+	'/users/register': function (user, cb) {},
 
 	'/stations': function (cb) {
 		cb(stations.getStations().map(function (result) {
