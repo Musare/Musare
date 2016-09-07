@@ -39,7 +39,7 @@ You can run `vagrant` to view more options.
 You can view logs at the following locations:
 
 * Musare: `/var/log/upstart/musare.log`
-* RethinkDB: `/var/log/upstart/rethinkdb.log`
+* mongoDB: `/var/log/upstart/mongodb.log`
 
 ### Development
 

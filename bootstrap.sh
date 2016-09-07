@@ -2,7 +2,7 @@
 
 function command_exists { type "$1" &> /dev/null; }
 
-# install NodeJS
+# install mosh
 if command_exists "mosh"; then
 	echo "Skipping mosh install"
 else
@@ -19,45 +19,37 @@ else
 	sudo apt-get install -y nodejs
 fi
 
-# install RethinkDB
-if command_exists "rethinkdb"; then
-	echo "Skipping rethinkdb install"
+# install mongodb
+if command_exists "mongo"; then
+	echo "Skipping mongodb install"
 else
-	echo "Installing rethinkdb"
-	source /etc/lsb-release && echo "deb http://download.rethinkdb.com/apt $DISTRIB_CODENAME main" | sudo tee /etc/apt/sources.list.d/rethinkdb.list
-	wget -qO- https://download.rethinkdb.com/apt/pubkey.gpg | sudo apt-key add -
+	echo "Installing mongodb"
+	sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv EA312927
+	echo "deb http://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/3.2 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-3.2.list
 	sudo apt-get update
-	sudo apt-get install -y rethinkdb
+	sudo apt-get install -y mongodb-org
 fi
 
-# setup a service for RethinkDB
-if [ -f /etc/init/rethinkdb.conf ]; then
-	echo "Skipping up rethinkdb service"
+# setup a service for mongodb
+if [ -f /etc/init/mongodb.conf ]; then
+	echo "Skipping up mongodb service"
 else
-	echo "Setting up rethinkdb service"
-	sudo tee -a /etc/init/rethinkdb.conf > /dev/null <<EOF
-description "Service file for starting / stopping rethinkdb"
+	echo "Setting up mongoDB service"
+	sudo tee -a /etc/init/mongodb.conf > /dev/null <<EOF
+description "Service file for starting / stopping mongodb"
 author "Musare Developers"
-
 start on filesystem
 stop on shutdown
-
-setgid rethinkdb
 console log
-
 script
-	echo \$\$ > /var/run/rethinkdb.pid
-	cd /musare
-	exec rethinkdb --bind all
+	exec mongod
 end script
-
 pre-start script
-	echo "[\`date\`] rethinkdb starting" >> /var/log/rethinkdb.log
+	echo "[\`date\`] mongodb starting" >> /var/log/mongodb.log
 end script
-
 pre-stop script
-	rm /var/run/rethinkdb.pid
-	echo "[\`date\`] rethinkdb stopping" >> /var/log/rethinkdb.log
+	rm /var/run/mongodb.pid
+	echo "[\`date\`] mongodb stopping" >> /var/log/mongodb.log
 end script
 EOF
 fi
@@ -98,4 +90,4 @@ fi
 # automatically install all of our dependencies
 cd /musare
 npm install --no-bin-links
-sudo npm install --global gulp-cli
+sudo npm install -g gulp-cli

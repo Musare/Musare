@@ -10,7 +10,7 @@ const path   = require('path'),
 const config    = require('config'),
       request   = require('request'),
       waterfall = require('async/waterfall'),
-	  passport      = require('passport');
+	  passport  = require('passport');
 
 // custom modules
 const global   = require('./global'),
@@ -33,13 +33,18 @@ module.exports = {
 	// core route handlers
 
 	'/users/login': function (user, cb) {
-		passport.authenticate('local', {
-			successRedirect: cb({ status: 'success', message: 'Successfully logged in' }),
-			failureRedirect: cb({ status: 'error', message: 'Error while trying to log in' })
+		passport.authenticate('local-login', {
+			// successRedirect: cb({ status: 'success', message: 'Successfully logged in' }),
+			// failureRedirect: cb({ status: 'error', message: 'Error while trying to log in' })
 		});
 	},
 
-	'/users/register': function (user, cb) {},
+	'/users/register': function (user, cb) {
+		passport.authenticate('local-signup', {
+			// successRedirect: cb({ status: 'success', message: 'Successfully signed up' }),
+			// failureRedirect: cb({ status: 'error', message: 'Error while trying to sign up' })
+		});
+	},
 
 	'/stations': function (cb) {
 		cb(stations.getStations().map(function (result) {

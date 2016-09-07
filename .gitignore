@@ -89,5 +89,4 @@ Thumbs.db
 .DS_Store
 
 .vagrant/
-rethinkdb_data/
 config/default.json
