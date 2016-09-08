@@ -1,7 +1,7 @@
 [
   // Station
   {
-    "id": "edm",
+    "_id": "edm",
     "type": "official",
     "displayName": "EDM",
     "description": "EDM Music",

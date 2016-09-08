@@ -36,7 +36,8 @@ MongoDB.once('open', function() {
 });
 
 global.db = {
-	user: require('./schemas/user')(mongoose)
+	user: require('./schemas/user')(mongoose),
+	station: require('./schemas/station')(mongoose)
 };
 
 // setup express and socket.io
