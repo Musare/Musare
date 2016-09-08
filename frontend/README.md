@@ -1,4 +1,4 @@
-# Musare Backend
+# Musare Frontend
 
 Make sure to `vagrant ssh` into your vagrant machine first, and `cd /musare/frontend` before calling any of these commands.
 
