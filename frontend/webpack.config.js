@@ -5,20 +5,23 @@ module.exports = {
 	// where to place the compiled bundle
 	output: {
 		path: __dirname + '/build/',
-		filename: 'build.js'
+		filename: 'bundle.js'
 	},
 	module: {
 		// `loaders` is an array of loaders to use.
-		// here we are only configuring vue-loader
 		loaders: [
 			{
 				test: /\.vue$/, // a regex for matching all files that end in `.vue`
 				loader: 'vue'   // loader to use for matched files,
 			},
 			{
-				test: /\.js$/,
-				loader: 'babel',
-				exclude: /node_modules/
+				test: /\.js$/,          // a regex for matching all files that end in `.js`
+				loader: 'babel',        // loader to use for matched files,
+				exclude: /node_modules/ // excludes the folder `node_modules`
+			},
+			{
+				test: /\.scss$/,                 // a regex for matching all files that end in `.scss`
+				loader: "css-loader!sass-loader" // loader to use for matched files,
 			}
 		]
 	},

@@ -3,3 +3,11 @@ Thumbs.db
 *.swp
 .idea/
 .vagrant/
+
+# Back End
+backend/node_modules/
+backend/config/default.json
+
+# Front End
+frontend/node_modules/
+frontend/build/

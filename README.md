@@ -13,8 +13,8 @@ Once you've installed the required tools:
 
 1. `git clone https://github.com/MusareNode/MusareNode.git`
 2. `cd MusareNode`
-3. `cp backend/config/template.json backend/config/default.json` 
- 
+3. `cp backend/config/template.json backend/config/default.json`
+
   > The `secret` key can be whatever. It's used by express's session module. The `apis.youtube.key` value can be obtained by setting up a [YouTube API Key](https://developers.google.com/youtube/v3/getting-started).
 
 4. `vagrant up`
@@ -43,7 +43,7 @@ You can view logs at the following locations:
 
 ### Development
 
-Please refer to `frontend/README.md` and `backend/README.md`.
+`sudo service musare start`
 
 ### FAQ
 
@@ -53,5 +53,5 @@ This will pull down the Ubuntu 14.04 vagrant box and setup a virtualbox machine 
 ##### What does `vagrant ssh` and `vagrant mosh` do?
 Vagrant automagically generates and inserts a openssh keypair for you. This doesn't really have any security (as it doesn't really need to be since it's only for development). This allows you to access your machine in a very convenient way. The second command, `vagrant mosh`, is actually just a vagrant plugin. Mosh is a replacement for SSH, and if you haven't checked it out before, you really should! :)
 
-##### Why use Vagrant? I can run NodeJS and RethinkDB locally
-The reason for using vagrant is simple. It gives every developer the same local development server. This removes any inconsistencies across different dev enviroments (Windows vs macOS vs Linux). It also ensures that your changes are running on an enviroment that exactly matches the production server.
+##### Why use Vagrant? I can run NodeJS and mongoDB locally
+The reason for using vagrant is simple. It gives every developer the same local development server. This removes any inconsistencies across different dev enviroments (Windows vs macOS vs Linux). It also ensures that your changes are running on an environment that exactly matches the production server.

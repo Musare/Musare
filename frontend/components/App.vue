@@ -1,6 +1,6 @@
 <template>
 	<div class="app">
-		Hello world! :)
+		Musare ;)
 	</div>
 </template>
 
@@ -26,4 +26,3 @@
 		background-color: #ff0000;
 	}
 </style>
-

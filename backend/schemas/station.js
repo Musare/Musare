@@ -30,5 +30,5 @@ module.exports = function(mongoose) {
 		owner: { type: String }
     });
 
-    return mongoose.model('station', userSchema);
+    return mongoose.model('station', stationSchema);
 };

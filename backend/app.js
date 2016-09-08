@@ -5,6 +5,8 @@ const path = require('path'),
       fs   = require('fs'),
       os   = require('os');
 
+process.env.NODE_CONFIG_DIR = process.cwd() + '/backend/config';
+
 // npm modules
 const express          = require('express'),
       session          = require('express-session'),

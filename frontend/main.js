@@ -1,5 +1,6 @@
-import Vue from 'vue'
-import App from './components/App.vue'
+import Vue from 'vue';
+import App from './components/App.vue';
+require('./sass/main.scss');
 
 new Vue({
 	el: 'body',
@@ -7,4 +8,3 @@ new Vue({
 		app: App
 	}
 });
-

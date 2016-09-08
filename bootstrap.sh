@@ -32,7 +32,7 @@ fi
 
 # setup a service for mongodb
 if [ -f /etc/init/mongodb.conf ]; then
-	echo "Skipping up mongodb service"
+	echo "Skipping mongodb service"
 else
 	echo "Setting up mongoDB service"
 	sudo tee -a /etc/init/mongodb.conf > /dev/null <<EOF
@@ -56,7 +56,7 @@ fi
 
 # setup a service for Musare
 if [ -f /etc/init/musare.conf ]; then
-	echo "Skipping up musare service"
+	echo "Skipping musare service"
 else
 	echo "Setting up musare service"
 	sudo tee -a /etc/init/musare.conf > /dev/null <<EOF
@@ -73,7 +73,7 @@ script
 	until mountpoint -q /musare; do sleep 1; done
 	echo \$\$ > /var/run/musare.pid
 	cd /musare
-	exec gulp
+	nodemon -L backend/app.js ; cd frontend && npm run development-watch
 end script
 
 pre-start script
@@ -97,9 +97,11 @@ cd ../
 
 cd frontend
 rm -rf node_modules/
-npm install
+npm install --no-bin-links
+npm run development-watch
 cd ../
 
-sudo npm install -g gulp-cli
+sudo npm install -g nodemon
+sudo npm install -g webpack
 
 sudo mkdir -p /data/db
