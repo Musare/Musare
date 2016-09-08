@@ -89,5 +89,17 @@ fi
 
 # automatically install all of our dependencies
 cd /musare
+
+cd backend
+rm -rf node_modules/
 npm install --no-bin-links
+cd ../
+
+cd frontend
+rm -rf node_modules/
+npm install
+cd ../
+
 sudo npm install -g gulp-cli
+
+sudo mkdir -p /data/db

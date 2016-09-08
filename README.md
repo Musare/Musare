@@ -13,7 +13,7 @@ Once you've installed the required tools:
 
 1. `git clone https://github.com/MusareNode/MusareNode.git`
 2. `cd MusareNode`
-3. `cp config/template.json config/default.json` 
+3. `cp backend/config/template.json backend/config/default.json` 
  
   > The `secret` key can be whatever. It's used by express's session module. The `apis.youtube.key` value can be obtained by setting up a [YouTube API Key](https://developers.google.com/youtube/v3/getting-started).
 
@@ -34,7 +34,7 @@ Or if you have [mosh](https://mosh.org/) installed (and have ran `vagrant plugin
 
 You can run `vagrant` to view more options.
 
-### Logs
+### Production Logs
 
 You can view logs at the following locations:
 
@@ -43,11 +43,7 @@ You can view logs at the following locations:
 
 ### Development
 
-Ideally we'd have the app running using [nodemon](http://nodemon.io/). But for whatever reason, it doesn't restart when server code is changed on Ubuntu 14.04. If you find a solution for this let us know! Or make a pull request :)
-
-Because of this, you'll need to manually restart the nodejs app. You can do this by calling `sudo service musare restart` on the machine (make sure to ssh into the machine before calling this by running `vagrant ssh`).
-
-You'll probably want to have two terminal windows open, one that you can restart Musare with. And another that you can run `sudo tail -F /var/log/upstart/musare.log` in. This will output everything that running `node app.js` would typically output.
+Please refer to `frontend/README.md` and `backend/README.md`.
 
 ### FAQ
 
