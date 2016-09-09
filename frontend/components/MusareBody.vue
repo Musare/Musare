@@ -1,6 +1,6 @@
 <template>
-	<div class="footer">
-		{{ title }}	
+	<div class="body">
+		{{ title }}
 	</div>
 </template>
 
@@ -8,18 +8,18 @@
 	export default {
 		data() {
 			return {
-				title: "MusareNode is using the newest of technologies (;"
+				title: "This is thee body"
 			}
 		}
 	}
 </script>
 
 <style lang="sass" scoped>
-	.footer	{
+	.body {
 		width: 100%;
-		height: 64px;
-		line-height: 64px;
+		height: 256px;
+		line-height: 256px;
 		text-align: center;
-		background-color: blue;
+		background-color: green;
 	}
 </style>

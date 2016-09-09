@@ -8,9 +8,9 @@
 
 <script>
 	// TODO: Implement these files
-	import ComponentHeader from './ComponentHeader.vue'
-	import ComponentBody from './ComponentBody.vue'
-	import ComponentFooter from './ComponentFooter.vue'
+	import ComponentHeader from './MusareHeader.vue'
+	import ComponentBody from './MusareBody.vue'
+	import ComponentFooter from './MusareFooter.vue'
 
 	export default {
 		data() {
@@ -23,7 +23,7 @@
 <style lang="sass">
 	@import 'node_modules/vuestrap/bootstrap/bootstrap';
 
-	* { box-sizing: border-box; }
+	* { box-sizing: border-box; font-family: Roboto, sans-serif; }
 	html {
 		width: 100%;
 		height: 100%;

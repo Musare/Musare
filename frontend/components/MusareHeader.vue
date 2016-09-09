@@ -1,5 +1,5 @@
 <template>
-	<div class="header">
+	<header>
 		<vs-navbar fixed="top" type="light" variant="default" full>
 			<a class="navbar-brand" href="#">Musare</a>
 			<vs-nav type="navbar" class="pull-xs-right">
@@ -15,7 +15,7 @@
 				</vs-nav-item>
 			</vs-nav>
 		</vs-navbar>
-	</div>
+	</header>
 </template>
 
 <script>
@@ -34,13 +34,3 @@
 		}
 	}
 </script>
-
-<style lang="sass" scoped>
-	.header {
-		width: 100%;
-		height: 64px;
-		line-height: 64px;
-		text-align: center;
-		background-color: red;
-	}
-</style>

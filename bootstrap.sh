@@ -92,13 +92,12 @@ cd /musare
 
 cd backend
 rm -rf node_modules/
-npm install --no-bin-links
+npm install --no-bin-links && npm prune
 cd ../
 
 cd frontend
 rm -rf node_modules/
-npm install --no-bin-links
-npm run development-watch
+npm install --no-bin-links && npm prune
 cd ../
 
 sudo npm install -g nodemon
