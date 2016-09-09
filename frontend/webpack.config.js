@@ -8,6 +8,13 @@ module.exports = {
 		filename: 'bundle.js'
 	},
 	module: {
+		preLoaders: [
+			{
+				test: /\.vue$/,
+				loader: 'eslint',
+				exclude: /node_modules/
+			}
+		],
 		// `loaders` is an array of loaders to use.
 		loaders: [
 			{

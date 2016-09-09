@@ -1,0 +1,14 @@
+{
+	"rules": {
+		"indent": [2, "tab"]
+	},
+	"parserOptions": {
+		"ecmaVersion": 6,
+		"sourceType": "module"
+	},
+	"plugins": [ "html" ],
+	"settings": {
+		"html/indent": "tab",
+		"html/report-bad-indent": 2
+	}
+}
