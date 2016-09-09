@@ -73,7 +73,7 @@ script
 	until mountpoint -q /musare; do sleep 1; done
 	echo \$\$ > /var/run/musare.pid
 	cd /musare
-	nodemon -L backend/app.js ; cd frontend && npm run development-watch
+	nodemon -L backend/app.js
 end script
 
 pre-start script
