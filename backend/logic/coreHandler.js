@@ -22,31 +22,31 @@ module.exports = {
 
 	// module functions
 
-	on: function (name, cb) {
+	on: (name, cb) => {
 		eventEmitter.on(name, cb);
 	},
 
-	emit: function (name, data) {
+	emit: (name, data) => {
 		eventEmitter.emit(name, data);
 	},
 
 	// core route handlers
 
-	'/users/login': function (user, cb) {
+	'/users/login': (user, cb) => {
 		passport.authenticate('local-login', {
 			// successRedirect: cb({ status: 'success', message: 'Successfully logged in' }),
 			// failureRedirect: cb({ status: 'error', message: 'Error while trying to log in' })
 		});
 	},
 
-	'/users/register': function (user, cb) {
+	'/users/register': (user, cb) => {
 		passport.authenticate('local-signup', {
 			// successRedirect: cb({ status: 'success', message: 'Successfully signed up' }),
 			// failureRedirect: cb({ status: 'error', message: 'Error while trying to sign up' })
 		});
 	},
 
-	'/stations': function (cb) {
+	'/stations': cb => {
 		cb(stations.getStations().map(function (result) {
 			return {
 				id: result.getId(),
@@ -57,9 +57,9 @@ module.exports = {
 		}));
 	},
 
-	'/stations/join/:id': function (id, user, cb) {
+	'/stations/join/:id': (id, user, cb) => {
 
-		var station = stations.getStation(id);
+		const station = stations.getStation(id);
 
 		if (station) {
 
@@ -86,9 +86,9 @@ module.exports = {
 		}
 	},
 
-	'/stations/search/:query': function (query, cb) {
+	'/stations/search/:query': (query, cb) => {
 
-		var params = [
+		const params = [
 			'part=snippet',
 			`q=${encodeURIComponent(query)}`,
 			`key=${config.get('apis.youtube.key')}`,
@@ -96,7 +96,7 @@ module.exports = {
 			'maxResults=25'
 		].join('&');
 
-		request(`https://www.googleapis.com/youtube/v3/search?${params}`, function (err, res, body) {
+		request(`https://www.googleapis.com/youtube/v3/search?${params}`, (err, res, body) => {
 			if (err) {
 				return cb({ status: 'error', message: 'Failed to make request' });
 			}

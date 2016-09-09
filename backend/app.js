@@ -5,7 +5,7 @@ const path = require('path'),
       fs   = require('fs'),
       os   = require('os');
 
-process.env.NODE_CONFIG_DIR = process.cwd() + '/backend/config';
+process.env.NODE_CONFIG_DIR = `${process.cwd()}/backend/config`;
 
 // npm modules
 const express          = require('express'),
@@ -29,11 +29,11 @@ const global         = require('./logic/global'),
 // database
 const MongoDB = mongoose.connect('mongodb://localhost:27017/musare').connection;
 
-MongoDB.on('error', function(err) {
+MongoDB.on('error', (err) => {
 	console.log('Database error: ' + err.message);
 });
 
-MongoDB.once('open', function() {
+MongoDB.once('open', () => {
 	console.log('Connected to database');
 });
 
@@ -62,22 +62,22 @@ global.io.use(passportSocketIo.authorize({
 	store: new mongoStore({ mongooseConnection: MongoDB })
 }));
 
-passport.serializeUser(function(user, done) {
+passport.serializeUser((user, done) => {
 	done(null, user);
 });
 
-passport.deserializeUser(function(user, done) {
+passport.deserializeUser((user, done) => {
 	done(null, user);
 });
 
-passport.use('local-signup', new LocalStrategy(function(username, password, cb) {
-	process.nextTick(function() {
+passport.use('local-signup', new LocalStrategy((username, password, cb) => {
+	process.nextTick(() => {
 		db.user.findOne({'username' : username }, function(err, user) {
 			if (err) return cb(err);
 			if (user) return cb(null, false);
 			else {
 				var newUser = new db.user({
-					username: username
+					username
 				});
 				newUser.save(function(err) {
 					if (err) throw err;
@@ -88,9 +88,9 @@ passport.use('local-signup', new LocalStrategy(function(username, password, cb) 
 	});
 }));
 
-passport.use('local-login', new LocalStrategy(function(username, password, cb) {
-	process.nextTick(function() {
-		db.user.findOne({'username' : username }, function(err, user) {
+passport.use('local-login', new LocalStrategy((username, password, cb) => {
+	process.nextTick(() => {
+		db.user.findOne({username}, (err, user) => {
 			if (err) return cb(err);
 			if (!user) return cb(null, false);
 			if (!user.services.token.password == password) return done(null, false);

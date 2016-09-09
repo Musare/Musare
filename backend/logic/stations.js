@@ -5,25 +5,25 @@ var io = global.io;
 
 function Station (id, data) {
 
-	var self = this;
+	const self = this;
 
 	//TODO Add startedAt and timePaused
-	var playlist = data.playlist;
-	var currentSong = playlist[0];
-	var currentSongIndex = data.currentSongIndex;
-	var paused = data.paused;
-	var locked = data.locked;
-	var skipVotes = data.skipVotes;
-	var users = data.users;
-	var displayName = data.displayName;
-	var description = data.description;
-	var timer;
-	var nsp = io.of('/' + id);
-	nsp.on('connection', function(socket){
+	let playlist = data.playlist;
+	let currentSong = playlist[0];
+	let currentSongIndex = data.currentSongIndex;
+	let paused = data.paused;
+	let locked = data.locked;
+	let skipVotes = data.skipVotes;
+	let users = data.users;
+	let displayName = data.displayName;
+	let description = data.description;
+	let timer;
+	let nsp = io.of('/' + id);
+	nsp.on('connection', socket => {
 		console.log('someone connected');
 	});
 
-	this.skipSong = function() {
+	this.skipSong = () => {
 		if (playlist.length > 0) {
 			if (timer !== undefined) {
 				timer.pause();
@@ -35,7 +35,7 @@ function Station (id, data) {
 			}
 			skipVotes = 0;
 			currentSong = playlist[currentSongIndex];
-			timer = new global.Timer(function() {
+			timer = new global.Timer(() => {
 				console.log("Skip!");
 				self.skipSong();
 			}, currentSong.duration, paused);
@@ -43,7 +43,7 @@ function Station (id, data) {
 			nsp.emit("skippedSong", currentSong);
 		}
 	};
-	this.toggleVoteSkip = function(userId) {
+	this.toggleVoteSkip = userId => {
 		if (skipVotes.indexOf(userId) === -1) {
 			skipVotes.push(userId);
 		} else {
@@ -52,72 +52,72 @@ function Station (id, data) {
 		//TODO Calculate if enough people voted to skip
 		nsp.emit("voteSkip", skipVotes);
 	};
-	this.retrievePlaylist = function() {
+	this.retrievePlaylist = () => {
 		//TODO Use Rethink to get the Playlist for this station
 	};
-	this.pause = function() {
+	this.pause = () => {
 		if (!paused) {
 			paused = true;
 			timer.pause();
 			nsp.emit("pause");
 		}
 	};
-	this.unpause = function() {
+	this.unpause = () => {
 		if (paused) {
 			paused = false;
 			timer.resume();
 			nsp.emit("unpause");
 		}
 	};
-	this.isPaused = function() {
+	this.isPaused = () => {
 		return paused;
 	};
-	this.getCurrentSong = function() {
+	this.getCurrentSong = () => {
 		return currentSong;
 	};
-	this.lock = function() {
+	this.lock = () => {
 		if (!locked) {
 			locked = true;
 			nsp.emit("lock");
 		}
 	};
-	this.unlock = function() {
+	this.unlock = () => {
 		if (locked) {
 			locked = false;
 			nsp.emit("unlocked");
 		}
 	};
-	this.isLocked = function() {
+	this.isLocked = () => {
 		return locked;
 	};
-	this.updateDisplayName = function(newDisplayName) {
+	this.updateDisplayName = newDisplayName => {
 		//TODO Update RethinkDB
 		displayName = newDisplayName;
 		nsp.emit("updateDisplayName", newDisplayName);
 	};
-	this.updateDescription = function(newDescription) {
+	this.updateDescription = newDescription => {
 		//TODO Update RethinkDB
 		description = newDescription;
 		nsp.emit("updateDescription", newDescription);
 	};
-	this.getId = function() {
+	this.getId = () => {
 		return id;
 	};
-	this.getDisplayName = function() {
+	this.getDisplayName = () => {
 		return displayName;
 	};
-	this.getDescription = function() {
+	this.getDescription = () => {
 		return description;
 	};
-	this.addUser = function(user) {
+	this.addUser = user => {
 		users.add(user);
 		nsp.emit("updateUsers", users);
 	};
-	this.removeUser = function(user) {
+	this.removeUser = user => {
 		users.splice(users.indexOf(user), 1);
 		nsp.emit("updateUsers", users);
 	};
-	this.getUsers = function() {
+	this.getUsers = () => {
 		return users;
 	};
 	this.skipSong();
@@ -127,9 +127,9 @@ module.exports = {
 
 	stations: [],
 
-	initStation: function (id, data) {
+	initStation: (id, data) => {
 		if (!this.getStation(id)) {
-			var station = new Station(id, data);
+			let station = new Station(id, data);
 			this.stations.push(station);
 			return station;
 		}
@@ -138,26 +138,26 @@ module.exports = {
 		}
 	},
 
-	getStation: function (id) {
-		var s = null;
+	getStation: id => {
+		let s = null;
 		this.stations.forEach(function (station) {
 			if (station.id == id) s = station;
 		});
 		return s;
 	},
 
-	getStations: function () {
+	getStations: () => {
 		return this.stations;
 	},
 
 	// creates a brand new station
-	createStation: function (data) {
+	createStation: data => {
 		//TODO: add createStation functionality
 		this.initStation(null, data);
 	},
 
 	// loads a station from the database
-	loadStation: function (id) {
+	loadStation: id => {
 		//TODO: Get the data from RethinkDB
 		this.initStation(id, {
 			playlist: [

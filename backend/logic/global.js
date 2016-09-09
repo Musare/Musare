@@ -1,26 +1,26 @@
 function Timer(callback, delay, paused) {
-	var timerId, start, remaining = delay;
-	var timeWhenPaused = 0;
-	var timePaused = Date.now();
+	let timerId, start, remaining = delay;
+	let timeWhenPaused = 0;
+	const timePaused = Date.now();
 
-	this.pause = function () {
+	this.pause = () => {
 		clearTimeout(timerId);
 		remaining -= Date.now() - start;
 		timePaused = Date.now();
 	};
 
-	this.resume = function () {
+	this.resume = () => {
 		start = Date.now();
 		clearTimeout(timerId);
 		timerId = setTimeout(callback, remaining);
 		timeWhenPaused += Date.now() - timePaused;
 	};
 
-	this.resetTimeWhenPaused = function() {
+	this.resetTimeWhenPaused = () => {
 		timeWhenPaused = 0;
 	};
 
-	this.timeWhenPaused = function () {
+	this.timeWhenPaused = () => {
 		return timeWhenPaused;
 	};
 
@@ -35,5 +35,5 @@ module.exports = {
 	htmlEntities: function(str) {
 		return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 	},
-	Timer: Timer
+	Timer
 };
