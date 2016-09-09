@@ -1,9 +1,9 @@
 module.exports = function(mongoose) {
 
-    var Schema = mongoose.Schema;
+	var Schema = mongoose.Schema;
 
-    var stationSchema = new Schema({
-        _id: { type: String, lowercase: true, max: 16, min: 2, index: true, unique: true, required: true },
+	var stationSchema = new Schema({
+		_id: { type: String, lowercase: true, max: 16, min: 2, index: true, unique: true, required: true },
 		type: { type: String, enum: ["official", "community"], required: true},
 		displayName: { type: String, min: 2, max: 32, required: true },
 		description: { type: String, min: 2, max: 128, required: true },
@@ -28,7 +28,7 @@ module.exports = function(mongoose) {
 		partyMode: { type: Boolean, default: false, required: true },
 		queueLocked: { type: Boolean, default: false, required: true },
 		owner: { type: String }
-    });
+	});
 
-    return mongoose.model('station', stationSchema);
+	return mongoose.model('station', stationSchema);
 };
