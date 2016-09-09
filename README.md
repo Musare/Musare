@@ -42,8 +42,29 @@ You can view logs at the following locations:
 * mongoDB: `/var/log/upstart/mongodb.log`
 
 ### Development
+Make sure to `vagrant ssh` from the root of the repo before calling these (make sure your ssh'd into the vagrant machine).
+```bash
+# Start backend server
+cd /musare; sudo node backend/app.ks
+	
+# Build frontend in development mode
+cd /musare/frontend; npm run development
+	
+# Build frontend in production mode
+cd /musare/frontend; npm run production
 
-`sudo service musare start`
+# Automatically build frontend in development mode when files change
+cd /musare/frontend; npm run development-watch
+```
+### Production (these can also be used in development)
+Make sure to `vagrant ssh` from the root of the repo before calling these (make sure your ssh'd into the vagrant machine).
+```bash
+# Start the production server
+sudo service musare start
+
+# Start the mongodb
+sudo service mongodb start
+```
 
 ### FAQ
 
