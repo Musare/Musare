@@ -45,7 +45,7 @@ You can view logs at the following locations:
 Make sure to `vagrant ssh` from the root of the repo before calling these (make sure your ssh'd into the vagrant machine).
 ```bash
 # Start backend server
-cd /musare; sudo node backend/app.ks
+cd /musare; sudo node backend/app.js
 	
 # Build frontend in development mode
 cd /musare/frontend; npm run development
