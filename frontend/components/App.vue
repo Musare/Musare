@@ -1,27 +1,35 @@
 <template>
 	<div class="app">
-		Musare ;)
+		<component-header></component-header>
+		<component-body></component-body>
+		<component-footer></component-footer>
 	</div>
 </template>
 
 <script>
 	// TODO: Implement these files
-	//import Header from './components/Header.vue'
-	//import Body from './components/Body.vue'
-	//import Footer from './components/Header.vue'
+	import ComponentHeader from './ComponentHeader.vue'
+	import ComponentBody from './ComponentBody.vue'
+	import ComponentFooter from './ComponentFooter.vue'
 
 	export default {
 		data() {
-			return {
-				msg: 'hello vue'
-			}
+			return {}
 		},
-		components: { /*Header, Body, Footer*/ }
+		components: { ComponentHeader, ComponentBody, ComponentFooter }
 	}
 </script>
 
 <style lang="sass">
-	body {
-		background-color: #ff0000;
+	* { box-sizing: border-box; }
+	html {
+		width: 100%;
+		height: 100%;
+		body {
+			width: 100%;
+			height: 100%;
+			margin: 0;
+			padding: 0;
+		}
 	}
 </style>
