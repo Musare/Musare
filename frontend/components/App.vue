@@ -20,8 +20,7 @@
 	}
 </script>
 
-<!-- TODO: Get sass setup in webpack config -->
-<style scoped>
+<style lang="sass">
 	body {
 		background-color: #ff0000;
 	}
