@@ -62,7 +62,7 @@ Make sure to `vagrant ssh` from the root of the repo before calling these (make 
 # Start the production server
 sudo service musare start
 
-# Start the mongodb
+# Start the mongodb database server
 sudo service mongodb start
 ```
 
