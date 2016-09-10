@@ -21,6 +21,8 @@
 </script>
 
 <style lang="sass">
+	@import 'node_modules/vuestrap/bootstrap/bootstrap';
+
 	* { box-sizing: border-box; }
 	html {
 		width: 100%;
