@@ -6,7 +6,7 @@ Musare in NodeJS, Express, SocketIO and VueJS.
  * [Vagrant](https://www.vagrantup.com/)
 
 ##### Important Notes
-The latest version of Vagrant (1.8.5) has some issues with inserting ssh keys into the machine. It's a show stopping bug that they aren't going to fix until the [next release](https://github.com/mitchellh/vagrant/issues/7610#issuecomment-234609660). So for now, I recommend using [Vagrant 1.8.4](https://releases.hashicorp.com/vagrant/1.8.4/). You'll also need to use a slightly [older version of Virtualbox](https://www.virtualbox.org/wiki/Download_Old_Builds_5_0) because of this.
+The latest version of `Vagrant (1.8.5)`` has some issues with inserting ssh keys into the machine. It's a show stopping bug that they aren't going to fix until the [next release](https://github.com/mitchellh/vagrant/issues/7610#issuecomment-234609660). So for now, I recommend using [Vagrant 1.8.4](https://releases.hashicorp.com/vagrant/1.8.4/). You'll also need to use a slightly [older version of Virtualbox](https://www.virtualbox.org/wiki/Download_Old_Builds_5_0) because of this.
 
 ## Getting Started
 Once you've installed the required tools:
@@ -32,32 +32,30 @@ Or if you have [mosh](https://mosh.org/) installed (and have ran `vagrant plugin
 
 `vagrant mosh`
 
+If changes are made to `bootstrap.sh`, you will need to run `vagrant provision`.
+
 You can run `vagrant` to view more options.
-
-### Production Logs
-
-You can view logs at the following locations:
-
-* Musare: `/var/log/upstart/musare.log`
-* mongoDB: `/var/log/upstart/mongodb.log`
 
 ### Development
 Make sure to `vagrant ssh` from the root of the repo before calling these (make sure your ssh'd into the vagrant machine).
+
 ```bash
 # Start backend server
-cd /musare; sudo node backend/app.js
-	
+cd /musare; sudo nodemon -L backend/app.js
+
 # Build frontend in development mode
 cd /musare/frontend; npm run development
-	
+
 # Build frontend in production mode
 cd /musare/frontend; npm run production
 
 # Automatically build frontend in development mode when files change
 cd /musare/frontend; npm run development-watch
 ```
+
 ### Production (these can also be used in development)
 Make sure to `vagrant ssh` from the root of the repo before calling these (make sure your ssh'd into the vagrant machine).
+
 ```bash
 # Start the production server
 sudo service musare start
@@ -65,6 +63,13 @@ sudo service musare start
 # Start the mongodb database server
 sudo service mongodb start
 ```
+
+##### Logs
+
+You can view logs at the following locations:
+
+* Musare: `/var/log/upstart/musare.log`
+* mongoDB: `/var/log/upstart/mongodb.log`
 
 ### FAQ
 
