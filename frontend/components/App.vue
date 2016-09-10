@@ -21,8 +21,6 @@
 </script>
 
 <style lang="sass">
-	@import 'node_modules/vuestrap/bootstrap/bootstrap';
-
 	* { box-sizing: border-box; font-family: Roboto, sans-serif; }
 	html {
 		width: 100%;
