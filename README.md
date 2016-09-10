@@ -6,7 +6,7 @@ Musare in NodeJS, Express, SocketIO and VueJS.
  * [Vagrant](https://www.vagrantup.com/)
 
 ##### Important Notes
-The latest version of `Vagrant (1.8.5)`` has some issues with inserting ssh keys into the machine. It's a show stopping bug that they aren't going to fix until the [next release](https://github.com/mitchellh/vagrant/issues/7610#issuecomment-234609660). So for now, I recommend using [Vagrant 1.8.4](https://releases.hashicorp.com/vagrant/1.8.4/). You'll also need to use a slightly [older version of Virtualbox](https://www.virtualbox.org/wiki/Download_Old_Builds_5_0) because of this.
+The latest version of `Vagrant (1.8.5)` has some issues with inserting ssh keys into the machine. It's a show stopping bug that they aren't going to fix until the [next release](https://github.com/mitchellh/vagrant/issues/7610#issuecomment-234609660). So for now, I recommend using [Vagrant 1.8.4](https://releases.hashicorp.com/vagrant/1.8.4/). You'll also need to use a slightly [older version of Virtualbox](https://www.virtualbox.org/wiki/Download_Old_Builds_5_0) because of this.
 
 ## Getting Started
 Once you've installed the required tools:
