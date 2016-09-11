@@ -1,6 +1,6 @@
 <template>
 	<header>
-		<div class="header">
+		<div class="header-inner">
 			<div class="title">Musare</div>
 			<div class="link">Account&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-caret-down" aria-hidden="true"></i></div>
 			<div class="link">Donate</div>
@@ -28,7 +28,7 @@
 		box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
 	}
 
-	.header {
+	.header-inner {
 		width: 100%;
 		height: 100%;
 		background-color: #424242;
