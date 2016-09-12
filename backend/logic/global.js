@@ -44,7 +44,7 @@ class Timer {
 module.exports = {
 	io: null, // Socket.io
 	db: null, // Database
-	htmlEntities: (str) => {
+	htmlEntities: str => {
 		return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 	},
 	Timer
