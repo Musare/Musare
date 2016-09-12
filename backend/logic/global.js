@@ -1,38 +1,50 @@
-function Timer(callback, delay, paused) {
-	let timerId, start, remaining = delay;
-	let timeWhenPaused = 0;
-	const timePaused = Date.now();
+'use strict';
 
-	this.pause = () => {
-		clearTimeout(timerId);
-		remaining -= Date.now() - start;
-		timePaused = Date.now();
-	};
+class Timer {
+	constructor(callback, delay, paused) {
+		this.callback = callback;
+		this.delay = delay;
+		this.paused = paused;
 
-	this.resume = () => {
-		start = Date.now();
-		clearTimeout(timerId);
-		timerId = setTimeout(callback, remaining);
-		timeWhenPaused += Date.now() - timePaused;
-	};
+		this.timerId = delay;
+		this.start = delay;
+		this.remaining = delay;
+		this.timeWhenPaused = 0;
+		this.timePaused = Date.now();
+	}
 
-	this.resetTimeWhenPaused = () => {
-		timeWhenPaused = 0;
-	};
+	pause() {
+		clearTimeout(this.timerId);
+		this.remaining -= Date.now() - this.start;
+		this.timePaused = Date.now();
+	}
 
-	this.timeWhenPaused = () => {
-		return timeWhenPaused;
-	};
+	ifNotPaused() {
+		if (!this.paused) {
+			this.resume();
+		}
+	}
 
-	if (paused === false) {
-		this.resume();
+	resume() {
+		this.start = Date.now();
+		clearTimeout(this.timerId);
+		this.timerId = setTimeout(this.callback, this.remaining);
+		this.timeWhenPaused = Date.now() - this.timePaused;
+	}
+
+	resetTimeWhenPaused() {
+		this.timeWhenPaused = 0;
+	}
+
+	timeWhenPaused() {
+		return this.timeWhenPaused;
 	}
 }
 
 module.exports = {
 	io: null, // Socket.io
 	db: null, // Database
-	htmlEntities: function(str) {
+	htmlEntities: (str) => {
 		return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 	},
 	Timer
