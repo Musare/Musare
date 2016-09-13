@@ -33,19 +33,6 @@
 </script>
 
 <style lang="sass">
-	* { box-sizing: border-box; font-family: Roboto, sans-serif; }
-	html {
-		width: 100%;
-		height: 100%;
-		body {
-			width: 100%;
-			height: 100%;
-			margin: 0;
-			padding: 0;
-		}
-	}
-
-
 	.body {
 		/*width: 100%;
 		line-height: 256px;
@@ -68,5 +55,12 @@
 		.body {
 			width: 85%;
 		}
+	}
+
+	.room-title {
+		left: 50%;
+		-webkit-transform: translateX(-50%);
+		transform: translateX(-50%);
+		font-size: 2.1em;
 	}
 </style>
