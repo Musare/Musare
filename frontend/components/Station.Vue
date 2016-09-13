@@ -20,9 +20,9 @@
 </template>
 
 <script>
-	import ComponentHeader from './MusareHeader.vue'
-	import ComponentBody from './MusareBody.vue'
-	import ComponentFooter from './MusareFooter.vue'
+	import ComponentHeader from './MainHeader.vue'
+	import ComponentBody from './HomepageBody.vue'
+	import ComponentFooter from './MainFooter.vue'
 
 	export default {
 		data() {
@@ -34,9 +34,9 @@
 
 <style lang="sass">
 	.body {
-		/*width: 100%;
-		line-height: 256px;
-		text-align: center;*/
+		// width: 100%;
+		// line-height: 256px;
+		text-align: center;
 		background-color: green;
 		flex: 1 0 auto;
 		padding-top: 4.5vw;

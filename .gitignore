@@ -10,4 +10,4 @@ backend/config/default.json
 
 # Front End
 frontend/node_modules/
-frontend/build/
+frontend/build/bundle.js

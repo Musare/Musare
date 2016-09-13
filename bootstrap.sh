@@ -91,12 +91,10 @@ fi
 cd /musare
 
 cd backend
-rm -rf node_modules/
 npm install --no-bin-links && npm prune
 cd ../
 
 cd frontend
-rm -rf node_modules/
 npm install --no-bin-links && npm prune
 cd ../
 

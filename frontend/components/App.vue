@@ -8,9 +8,9 @@
 
 <script>
 	// TODO: Implement these files
-	import ComponentHeader from './MusareHeader.vue'
-	import ComponentBody from './MusareBody.vue'
-	import ComponentFooter from './MusareFooter.vue'
+	import ComponentHeader from './MainHeader.vue'
+	import ComponentBody from './HomeBody.vue'
+	import ComponentFooter from './MainFooter.vue'
 
 	export default {
 		data() {

@@ -1,24 +1,53 @@
 <template>
-	<header>
-		<div class="header-inner header-gray">
-			<div class="title link">Musare</div>
-			<div class="link">Account&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-caret-down" aria-hidden="true"></i></div>
-			<div class="link">Donate</div>
-			<div class="link">The Project</div>
+	<nav class="navbar navbar-default">
+		<div class="container-fluid">
+			<div class="navbar-header">
+				<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+					<span class="sr-only">Toggle navigation</span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</button>
+				<a class="navbar-brand" href="#">Musare</a>
+			</div>
+			<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+				<ul class="nav navbar-nav navbar-right">
+					<li><a href="#">The Project</a></li>
+					<li><a href="#">Donate</a></li>
+					<li><a href="#">Login</a></li>
+				</ul>
+			</div>
 		</div>
-	</header>
+	</nav>
 </template>
 
-<script>
-	export default {
-		data() {
-			return {
-				title: "Musare ;)"
+<style lang="sass" scoped>
+	.navbar-default {
+		background-color: #424242;
+		border: 0;
+		border-radius: 0;
+		margin: 0;
+
+		.navbar-brand, li a, li a:hover, li a:focus {
+			color: #fff;
+		}
+
+		li:hover {
+			background-color: #393939;
+			color: #fff;
+		}
+
+		.navbar-toggle, .navbar-toggle:hover, .navbar-toggle:focus {
+			border: 0;
+			background: 0;
+
+			.icon-bar {
+				background-color: #fff;
 			}
 		}
+
+		.navbar-collapse {
+			border: 0;
+		}
 	}
-</script>
-
-<style lang="sass" scoped>
-
 </style>
