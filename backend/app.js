@@ -19,11 +19,8 @@ const express          = require('express'),
       LocalStrategy    = require('passport-local').Strategy,
       passportSocketIo = require("passport.socketio");
 
-// custom modules
-const global         = require('./logic/global'),
-      coreHandler    = require('./logic/coreHandler'),
-      socketHandler  = require('./logic/socketHandler'),
-      expressHandler = require('./logic/expressHandler');
+// global module
+const global         = require('./logic/global');
 
 
 // database
@@ -36,16 +33,21 @@ MongoDB.on('error', (err) => {
 MongoDB.once('open', () => {
 	console.log('Connected to database');
 });
+// setup express and socket.io
+const app = express(MongoDB);
+const server = app.listen(80);
+global.io = require('socket.io')(server);
+
+// other custom modules
+const coreHandler    = require('./logic/coreHandler'),
+      socketHandler  = require('./logic/socketHandler'),
+      expressHandler = require('./logic/expressHandler');
+
 
 global.db = {
 	user: require('./schemas/user')(mongoose),
 	station: require('./schemas/station')(mongoose)
 };
-
-// setup express and socket.io
-const app = express(MongoDB);
-const server = app.listen(80);
-global.io = require('socket.io')(server);
 
 app.use(passport.initialize());
 app.use(passport.session());

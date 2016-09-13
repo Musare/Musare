@@ -2,13 +2,13 @@
 
 const global = require('./global');
 let io = global.io;
-let nsp = io.of('/' + id);
-nsp.on('connection', socket => {
-	console.info('someone connected');
-});
 
 module.exports = class Station {
 	constructor(id, data) {
+		this.nsp = io.of('/' + id);
+		this.nsp.on('connection', socket => {
+			console.info('someone connected');
+		});
 		this.id = id;
 		this.data = data;
 

@@ -41,7 +41,7 @@ Make sure to `vagrant ssh` from the root of the repo before calling these (make 
 
 ```bash
 # Start backend server
-cd /musare; sudo nodemon -L backend/app.js
+cd /musare; sudo nodemon -L backend/app.js --ignore 'frontend/*'
 
 # Build frontend in development mode
 cd /musare/frontend; npm run development
@@ -81,3 +81,8 @@ Vagrant automagically generates and inserts a openssh keypair for you. This does
 
 ##### Why use Vagrant? I can run NodeJS and mongoDB locally
 The reason for using vagrant is simple. It gives every developer the same local development server. This removes any inconsistencies across different dev enviroments (Windows vs macOS vs Linux). It also ensures that your changes are running on an environment that exactly matches the production server.
+
+### Common issues and fixes
+
+##### Node-sass issue
+Sometimes you might get an issue with node-sass. To fix this, run `cd /musare/frontend; sudo npm rebuild node-sass --no-bin-links`.
