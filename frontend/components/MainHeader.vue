@@ -14,7 +14,7 @@
 				<ul class="nav navbar-nav navbar-right">
 					<li><a href="#">The Project</a></li>
 					<li><a href="#">Donate</a></li>
-					<li><a href="#">Login</a></li>
+					<li><a href="#" data-toggle="modal" data-target="#register">Register</a></li>
 				</ul>
 			</div>
 		</div>
