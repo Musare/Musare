@@ -1,22 +1,42 @@
 <template>
 	<div class="app">
-		<component-header></component-header>
-		<component-body></component-body>
-		<component-footer></component-footer>
+		<main-header></main-header>
+		<home-body v-if="home.visible"></home-body>
+		<station-body v-if="station.visible"></station-body>
+		<main-footer></main-footer>
 	</div>
 </template>
 
 <script>
-	// TODO: Implement these files
-	import ComponentHeader from './MainHeader.vue'
-	import ComponentBody from './HomeBody.vue'
-	import ComponentFooter from './MainFooter.vue'
+	import MainHeader from './MainHeader.vue'
+	import HomeBody from './HomeBody.vue'
+	import StationBody from './StationBody.vue'
+	import MainFooter from './MainFooter.vue'
 
 	export default {
 		data() {
-			return {}
+			return {
+				home: {
+					visible: true
+				},
+				station: {
+					visible: false
+				}
+			}
 		},
-		components: { ComponentHeader, ComponentBody, ComponentFooter }
+		methods: {
+			goHome() {
+				this.home.visible = true;
+				for (let i = 0; i < this.length; i++) {
+					this[i].visible = false;
+				}
+			},
+			switchView(hide, show) {
+				this[hide].visible = false;
+				this[show].visible = true;
+			}
+		},
+		components: { MainHeader, HomeBody, StationBody, MainFooter }
 	}
 </script>
 
