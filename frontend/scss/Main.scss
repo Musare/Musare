@@ -1,0 +1,169 @@
+* { box-sizing: border-box; font-family: Roboto, sans-serif; }
+
+html {
+	width: 100%;
+	height: 100%;
+	body {
+		width: 100%;
+		height: 100%;
+		margin: 0;
+		padding: 0;
+	}
+}
+
+ul {
+	list-style: none;
+	margin: 0;
+	display: block;
+}
+
+input[type=range] {
+	-webkit-appearance: none;
+	width: 100%;
+	margin: 7.3px 0;
+}
+input[type=range]:focus {
+	outline: none;
+}
+input[type=range]::-webkit-slider-runnable-track {
+	width: 100%;
+	height: 5.2px;
+	cursor: pointer;
+	box-shadow: 0;
+	background: #c2c0c2;
+	border-radius: 0;
+	border: 0;
+}
+input[type=range]::-webkit-slider-thumb {
+	box-shadow: 0;
+	border: 0;
+	height: 19px;
+	width: 19px;
+	border-radius: 15px;
+	background: #03a9f4;
+	cursor: pointer;
+	-webkit-appearance: none;
+	margin-top: -6.5px;
+}
+input[type=range]::-moz-range-track {
+	width: 100%;
+	height: 5.2px;
+	cursor: pointer;
+	box-shadow: 0;
+	background: #c2c0c2;
+	border-radius: 0;
+	border: 0;
+}
+input[type=range]::-moz-range-thumb {
+	box-shadow: 0;
+	border: 0;
+	height: 19px;
+	width: 19px;
+	border-radius: 15px;
+	background: #03a9f4;
+	cursor: pointer;
+	-webkit-appearance: none;
+	margin-top: -6.5px;
+}
+
+input[type=range]::-ms-track {
+	width: 100%;
+	height: 5.2px;
+	cursor: pointer;
+	box-shadow: 0;
+	background: #c2c0c2;
+	border-radius: 1.3px;
+}
+input[type=range]::-ms-fill-lower {
+	background: #c2c0c2;
+	border: 0;
+	border-radius: 0;
+	box-shadow: 0;
+}
+input[type=range]::-ms-fill-upper {
+	background: #c2c0c2;
+	border: 0;
+	border-radius: 0;
+	box-shadow: 0;
+}
+input[type=range]::-ms-thumb {
+	box-shadow: 0;
+	border: 0;
+	height: 15px;
+	width: 15px;
+	border-radius: 15px;
+	background: #03a9f4;
+	cursor: pointer;
+	-webkit-appearance: none;
+	margin-top: 1.5px;
+}
+
+body {
+	background-color: #f5f5f5;
+}
+
+
+h1, h2, h3, h4, h5, h6 {
+	font-weight: 400;
+	line-height: 1.1;
+}
+
+h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
+	font-weight: inherit;
+}
+
+h1 {
+	font-size: 4.2rem;
+	line-height: 110%;
+	margin: 2.1rem 0 1.68rem 0;
+}
+
+h2 {
+	font-size: 3.56rem;
+	line-height: 110%;
+	margin: 1.78rem 0 1.424rem 0;
+}
+
+h3 {
+	font-size: 2.92rem;
+	line-height: 110%;
+	margin: 1.46rem 0 1.168rem 0;
+}
+
+h4 {
+	font-size: 2.28rem;
+	line-height: 110%;
+	margin: 1.14rem 0 0.912rem 0;
+}
+
+h5 {
+	font-size: 1.64rem;
+	line-height: 110%;
+	margin: 0.82rem 0 0.656rem 0;
+}
+
+h6 {
+	font-size: 1rem;
+	line-height: 110%;
+	margin: 0.5rem 0 0.4rem 0;
+}
+
+.thin {
+	font-weight: 200;
+}
+
+.left {
+	float: left !important;
+}
+
+.right {
+	float: right !important;
+}
+
+.light-blue {
+	background-color: #03a9f4 !important;
+}
+
+.white {
+	background-color: #FFFFFF !important;
+}
