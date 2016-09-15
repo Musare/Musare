@@ -1,8 +1,8 @@
 module.exports = mongoose => {
 
-	var Schema = mongoose.Schema;
+	const Schema = mongoose.Schema;
 
-	var queueSongSchema = new Schema({
+	const queueSongSchema = new Schema({
 		_id: { type: String, length: 11, index: true, unique: true, required: true },
 		title: { type: String, required: true },
 		artists: [{ type: String, min: 1 }],

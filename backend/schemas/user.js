@@ -1,8 +1,8 @@
 module.exports = mongoose => {
 
-    var Schema = mongoose.Schema;
+    const Schema = mongoose.Schema;
 
-    var userSchema = new Schema({
+    const userSchema = new Schema({
         username: String,
         email: {
             verified: { type: Boolean, default: false },
