@@ -1,10 +1,13 @@
 <template>
 	<div class="station">
 		<div class="row">
-			<div class="col-md-8 push-md-2 col-sm-10 push-sm-1 col-xs-12">
-				<div id="player"></div>
+			<div class="col-md-8 col-md-push-2 col-sm-10 col-sm-push-1 col-xs-12">
+				<div class="video-container">
+					<!--div id="player"></div-->
+					<iframe id="player" frameborder="0" allowfullscreen="1" title="YouTube video player" width="480" height="270" src="https://www.youtube.com/embed/xo1VInw-SKc?controls=0&amp;iv_load_policy=3&amp;rel=0&amp;showinfo=0&amp;enablejsapi=1&amp;origin=https%3A%2F%2Fmusare.com&amp;widgetid=1" kwframeid="1"></iframe>
+				</div>
 			</div>
-			<div class="col-md-8 push-md-2 col-sm-10 push-sm-1 col-xs-12">
+			<div class="col-md-8 col-md-push-2 col-sm-10 col-sm-push-1 col-xs-12">
 				<div class="row">
 					<div class="col-md-8 col-sm-12 col-sm-12">
 						<h4 id="time-display"><span id="time-elapsed">2:58</span> / <span id="time-total">3:19</span></h4>
@@ -42,7 +45,6 @@
 		margin: 0 auto;
 		max-width: 1280px;
 		width: 90%;
-		color: black;
 
 		@media only screen and (min-width: 993px) {
 			width: 70%;
@@ -139,6 +141,21 @@
 			cursor: pointer;
 			-webkit-appearance: none;
 			margin-top: 1.5px;
+		}
+
+		.video-container {
+			position: relative;
+			padding-bottom: 56.25%;
+			height: 0;
+			overflow: hidden;
+
+			iframe {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+			}
 		}
 	}
 

@@ -47,11 +47,29 @@
 	html {
 		width: 100%;
 		height: 100%;
+		color: rgba(0, 0, 0, 0.87);
+
 		body {
 			width: 100%;
 			height: 100%;
 			margin: 0;
 			padding: 0;
+		}
+	}
+
+	@media only screen and (min-width: 1200px) {
+		html {
+			font-size: 15px;
+		}
+	}
+	@media only screen and (min-width: 992px) {
+		html {
+			font-size: 14.5px;
+		}
+	}
+	@media only screen and (min-width: 0) {
+		html {
+			font-size: 14px;
 		}
 	}
 </style>

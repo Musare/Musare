@@ -27,6 +27,7 @@
 		border: 0;
 		border-radius: 0;
 		margin: 0;
+		height: 64px;
 
 		.navbar-brand, li a, li a:hover, li a:focus {
 			color: #fff;
