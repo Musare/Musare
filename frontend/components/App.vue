@@ -30,13 +30,15 @@
 				for (let i = 0; i < this.length; i++) {
 					this[i].visible = false;
 				}
-			},
-			switchView(hide, show) {
+			}
+		},
+		components: { MainHeader, HomeBody, StationBody, MainFooter },
+		events: {
+			'switchView': function(hide, show) {
 				this[hide].visible = false;
 				this[show].visible = true;
 			}
-		},
-		components: { MainHeader, HomeBody, StationBody, MainFooter }
+		}
 	}
 </script>
 

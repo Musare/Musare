@@ -18,13 +18,11 @@
 			</div>
 		</div>
 	</div>
-	<!-- Have to use button, because of a scope error when using it with line 26 :( -->
-	<button @click="$parent.switchView('home', 'station')">Join Station</button>
 	<!-- Will be deleted soon ^^ -->
 	<div class="group" v-for="group in groups">
 		<div class="group-title">{{group.name}}</div>
 		<div class="group-rooms">
-			<div class="rooms-room" v-for="room in group.rooms">
+			<div class="rooms-room" v-for="room in group.rooms" @click="this.$dispatch('switchView', 'home', 'station');">
 				<img class="room-image" :src="room.thumbnail" />
 				<div class="room-info">
 					<div class="room-grid-left">
@@ -66,6 +64,11 @@
 						]
 					}
 				]
+			}
+		},
+		methods: {
+			log: function(thing) {
+				console.log(thing);
 			}
 		}
 	}
