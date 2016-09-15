@@ -40,10 +40,8 @@ module.exports = {
 	},
 
 	'/users/register': (user, cb) => {
-		passport.authenticate('local-signup', {
-			// successRedirect: cb({ status: 'success', message: 'Successfully signed up' }),
-			// failureRedirect: cb({ status: 'error', message: 'Error while trying to sign up' })
-		});
+		console.log(user);
+		passport.authenticate('local-signup');
 	},
 
 	'/stations': cb => {

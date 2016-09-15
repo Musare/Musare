@@ -13,6 +13,8 @@
 	import StationBody from './StationBody.vue'
 	import MainFooter from './MainFooter.vue'
 
+	let socket = io();
+
 	export default {
 		data() {
 			return {
@@ -21,6 +23,11 @@
 				},
 				station: {
 					visible: false
+				},
+				register: {
+					email: "",
+					username: "",
+					password: ""
 				}
 			}
 		},
@@ -34,9 +41,18 @@
 		},
 		components: { MainHeader, HomeBody, StationBody, MainFooter },
 		events: {
-			'switchView': (hide, show) => {
+			'switchView': function(hide, show) {
 				this[hide].visible = false;
 				this[show].visible = true;
+			},
+			'register': function() {
+				console.log('registered');
+				socket.emit('/users/register', {
+					email: this.register.email,
+					username: this.register.username,
+					password: this.register.password,
+					recaptcha: grecaptcha.getResponse()
+				});
 			}
 		}
 	}

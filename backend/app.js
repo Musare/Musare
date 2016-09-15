@@ -22,7 +22,6 @@ const express          = require('express'),
 // global module
 const global         = require('./logic/global');
 
-
 // database
 const MongoDB = mongoose.connect('mongodb://localhost:27017/musare').connection;
 
@@ -42,7 +41,6 @@ global.io = require('socket.io')(server);
 const coreHandler    = require('./logic/coreHandler'),
       socketHandler  = require('./logic/socketHandler'),
       expressHandler = require('./logic/expressHandler');
-
 
 global.db = {
 	user: require('./schemas/user')(mongoose),
@@ -74,11 +72,11 @@ passport.deserializeUser((user, done) => {
 
 passport.use('local-signup', new LocalStrategy((username, password, cb) => {
 	process.nextTick(() => {
-		db.user.findOne({'username' : username }, function(err, user) {
+		global.db.user.findOne({'username' : username}, function(err, user) {
 			if (err) return cb(err);
 			if (user) return cb(null, false);
 			else {
-				var newUser = new db.user({
+				let newUser = new global.db.user({
 					username
 				});
 				newUser.save(function(err) {
@@ -92,7 +90,7 @@ passport.use('local-signup', new LocalStrategy((username, password, cb) => {
 
 passport.use('local-login', new LocalStrategy((username, password, cb) => {
 	process.nextTick(() => {
-		db.user.findOne({username}, (err, user) => {
+		global.db.user.findOne({username}, (err, user) => {
 			if (err) return cb(err);
 			if (!user) return cb(null, false);
 			if (!user.services.token.password == password) return done(null, false);

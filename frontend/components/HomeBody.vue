@@ -7,13 +7,13 @@
 					<h4 class="modal-title">Register</h4>
 				</div>
 				<div class="modal-body">
-					<input class="form-control" type="text" placeholder="Email..."/>
-					<input class="form-control" type="text" placeholder="Username..."/>
-					<input class="form-control" type="password" placeholder="Password..."/>
+					<input class="form-control" type="text" placeholder="Email..." v-model="$parent.register.email"/>
+					<input class="form-control" type="text" placeholder="Username..." v-model="$parent.register.username"/>
+					<input class="form-control" type="password" placeholder="Password..." v-model="$parent.register.password"/>
 					<div class="g-recaptcha" data-sitekey="6Ld5jygTAAAAAEi0E1IwovUuVFhZKctMvKnY553W"></div>
 				</div>
 				<div class="modal-footer">
-					<button type="button" class="btn btn-primary" data-dismiss="modal">Submit</button>
+					<button type="button" class="btn btn-primary" data-dismiss="modal" @click="this.$dispatch('register');">Submit</button>
 				</div>
 			</div>
 		</div>
@@ -66,7 +66,7 @@
 			}
 		},
 		methods: {
-			log: thing => {
+			log(thing) {
 				console.log(thing);
 			}
 		}
