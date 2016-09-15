@@ -34,7 +34,7 @@
 		},
 		components: { MainHeader, HomeBody, StationBody, MainFooter },
 		events: {
-			'switchView': function(hide, show) {
+			'switchView': (hide, show) => {
 				this[hide].visible = false;
 				this[show].visible = true;
 			}

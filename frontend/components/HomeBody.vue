@@ -18,7 +18,6 @@
 			</div>
 		</div>
 	</div>
-	<!-- Will be deleted soon ^^ -->
 	<div class="group" v-for="group in groups">
 		<div class="group-title">{{group.name}}</div>
 		<div class="group-rooms">
@@ -67,7 +66,7 @@
 			}
 		},
 		methods: {
-			log: function(thing) {
+			log: thing => {
 				console.log(thing);
 			}
 		}

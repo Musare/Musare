@@ -36,7 +36,8 @@ module.exports = mongoose => {
             songsRequested: { type: Number, default: 0 },
             songsAccepted: { type: Number, default: 0 }
         },
-        createdAt: { type: Date, default: Date.now() }
+        createdAt: { type: Date, default: Date.now() },
+		friends: []
     });
 
     return mongoose.model('user', userSchema);
