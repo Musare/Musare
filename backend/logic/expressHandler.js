@@ -1,25 +1,25 @@
 'use strict';
 
+// npm modules
+const passport  = require('passport');
+
 module.exports = (core, app) => {
 
-	app.post('/users/login', (req, res) => {
-
-		// TODO: Give this a better error message
-		if (!req.body.user) {
-			return res.send(JSON.stringify({ 'status': 'error', 'message': 'invalid request' }));
-		}
-
-		core['/users/login'](req.body.user, result => {
-			res.send(JSON.stringify(result));
-			console.log(JSON.stringify(result));
-		});
+	app.post('/users/login', passport.authenticate('local'), function(req, res) {
+		console.log("Test136", req.user);
+		res.json(JSON.stringify(req.user));
+		//res.end();
 	});
 
-	app.post('/users/register', (req, res) => {
-		core['/users/register'](req.body.user, (result) => {
+	app.get('/users/logout', function(req, res) {
+		req.logout();
+		res.end();
+	});
+
+	app.post('/users/register', function(req, res) {
+		core['/users/register'](req.body.username, req.body.email, req.body.password, req.body.recaptcha, result => {
 			res.send(JSON.stringify(result));
 		});
-		console.log('posted');
 	});
 
 	app.get('/stations', (req, res) => {

@@ -3,6 +3,9 @@
 	"apis": {
 		"youtube": {
 			"key": ""
+		},
+		"recapthca": {
+			"secret": ""
 		}
 	}
 }

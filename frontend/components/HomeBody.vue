@@ -10,10 +10,27 @@
 					<input class="form-control" type="text" placeholder="Email..." v-model="$parent.register.email"/>
 					<input class="form-control" type="text" placeholder="Username..." v-model="$parent.register.username"/>
 					<input class="form-control" type="password" placeholder="Password..." v-model="$parent.register.password"/>
-					<div class="g-recaptcha" data-sitekey="6Ld5jygTAAAAAEi0E1IwovUuVFhZKctMvKnY553W"></div>
+					<div class="g-recaptcha" data-sitekey="6Lfa-wYUAAAAANY6iVvWNEXohC38l1cZqHRole9T"></div>
 				</div>
 				<div class="modal-footer">
 					<button type="button" class="btn btn-primary" data-dismiss="modal" @click="this.$dispatch('register');">Submit</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="modal fade" id="login" tabindex="-1" role="dialog" aria-labelledby="login-modal">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<h4 class="modal-title">Login</h4>
+				</div>
+				<div class="modal-body">
+					<input class="form-control" type="text" placeholder="Email..." v-model="$parent.login.email"/>
+					<input class="form-control" type="password" placeholder="Password..." v-model="$parent.login.password"/>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-primary" data-dismiss="modal" @click="this.$dispatch('login');">Submit</button>
 				</div>
 			</div>
 		</div>

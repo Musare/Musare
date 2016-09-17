@@ -32,16 +32,51 @@ module.exports = {
 
 	// core route handlers
 
-	'/users/login': (user, cb) => {
-		passport.authenticate('local-login', {
-			// successRedirect: cb({ status: 'success', message: 'Successfully logged in' }),
-			// failureRedirect: cb({ status: 'error', message: 'Error while trying to log in' })
+	'/users/register': (username, email, password, recaptcha, cb) => {
+		console.log(username, password);
+		//TODO Check recaptcha
+		request({
+			url: 'https://www.google.com/recaptcha/api/siteverify',
+			method: 'POST',
+			form: {
+				'secret': config.get("apis.recapthca.secret"),
+				'response': recaptcha
+			}
+		}, function (error, response, body) {
+			console.log(error, body, error === null, JSON.parse(body).success === true);
+			if (error === null && JSON.parse(body).success === true) {
+				body = JSON.parse(body);
+				global.db.user.findOne({'username': username}, function (err, user) {
+					console.log(err, user);
+					if (err) return cb(err);
+					if (user) return cb("username");
+					else {
+						global.db.user.findOne({'email.address': email}, function (err, user) {
+							console.log(err, user);
+							if (err) return cb(err);
+							if (user) return cb("email");
+							else {
+								//TODO Email verification code, send email
+								//TODO Encrypt password
+								let newUser = new global.db.user({
+									username: username,
+									email: {
+										address: email,
+										verificationToken: "Code"
+									}
+								});
+								newUser.save(function (err) {
+									if (err) throw err;
+									return cb(null, newUser);
+								});
+							}
+						});
+					}
+				});
+			} else {
+				cb("Recaptcha failed");
+			}
 		});
-	},
-
-	'/users/register': (user, cb) => {
-		console.log(user);
-		passport.authenticate('local-signup');
 	},
 
 	'/stations': cb => {

@@ -12,19 +12,13 @@ module.exports = (core, io) => {
 	});
 
 	io.on('connection', socket => {
-
+		console.log("CONNECTED!");
 		socket.on('disconnect', () => {
 			console.log('User has disconnected');
 		});
 
-		socket.on('/users/login', (user, cb) => {
-			core['/users/login'](user, result => {
-				cb(result);
-			});
-		});
-
-		socket.on('/users/register', (user, cb) => {
-			core['/users/register'](user, result => {
+		socket.on('/users/register', (username, email, password, recaptcha, cb) => {
+			core['/users/register'](result => {
 				cb(result);
 			});
 		});
@@ -48,6 +42,6 @@ module.exports = (core, io) => {
 		});
 
 		// this lets the client socket know that they can start making request
-		socket.emit('ready');
+		socket.emit('ready', socket.request.user.logged_in);
 	});
 };

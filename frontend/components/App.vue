@@ -13,8 +13,6 @@
 	import StationBody from './StationBody.vue'
 	import MainFooter from './MainFooter.vue'
 
-	let socket = io();
-
 	export default {
 		data() {
 			return {
@@ -28,7 +26,12 @@
 					email: "",
 					username: "",
 					password: ""
-				}
+				},
+				login: {
+					email: "",
+					password: ""
+				},
+				loggedIn: true
 			}
 		},
 		methods: {
@@ -37,7 +40,26 @@
 				for (let i = 0; i < this.length; i++) {
 					this[i].visible = false;
 				}
+			},
+			logout() {
+				$.ajax({
+					method: "GET",
+					url: "/users/logout",
+					dataType: "json",
+					complete: function (msg) {
+						console.log(1, msg);
+						alert("Logged out!");
+						//do something
+						location.reload();
+					}
+				});
 			}
+		},
+		ready: function () {
+			this.socket = io();
+			this.socket.on("ready", function(loggedIn) {
+				this.loggedIn = loggedIn;
+			});
 		},
 		components: { MainHeader, HomeBody, StationBody, MainFooter },
 		events: {
@@ -47,11 +69,53 @@
 			},
 			'register': function() {
 				console.log('registered');
-				socket.emit('/users/register', {
-					email: this.register.email,
-					username: this.register.username,
-					password: this.register.password,
-					recaptcha: grecaptcha.getResponse()
+				$.ajax({
+					method: "POST",
+					url: "/users/register",
+					data: JSON.stringify({
+						email: this.register.email,
+						username: this.register.username,
+						password: this.register.password,
+						recaptcha: grecaptcha.getResponse()
+					}),
+					contentType: "application/json; charset=utf-8",
+					dataType: "json",
+					success: function (msg) {
+						console.log(1, msg);
+						alert("Registered!");
+						//do something
+					},
+					error: function (errormessage) {
+						console.log(2, errormessage);
+						alert("Not registered!");
+						//do something else
+
+					}
+				});
+			},
+			'login': function() {
+				console.log('login');
+				$.ajax({
+					method: "POST",
+					url: "/users/login",
+					data: JSON.stringify({
+						email: this.login.email,
+						password: this.login.password
+					}),
+					contentType: "application/json; charset=utf-8",
+					dataType: "json",
+					success: function (msg) {
+						console.log(1, msg);
+						alert("Logged in!");
+						//do something
+						location.reload();
+					},
+					error: function (errormessage) {
+						console.log(2, errormessage);
+						alert("Not logged in!");
+						//do something else
+
+					}
 				});
 			}
 		}

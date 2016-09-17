@@ -11,7 +11,7 @@ process.env.NODE_CONFIG_DIR = `${process.cwd()}/backend/config`;
 const express          = require('express'),
       session          = require('express-session'),
       mongoose         = require('mongoose'),
-      mongoStore       = require('connect-mongo')(session),
+	  MongoStore       = require('connect-mongo')(session),
       bodyParser       = require('body-parser'),
       config           = require('config'),
       request          = require('request'),
@@ -31,81 +31,86 @@ MongoDB.on('error', (err) => {
 
 MongoDB.once('open', () => {
 	console.log('Connected to database');
+	setupExpress();
 });
+
 // setup express and socket.io
-const app = express(MongoDB);
-const server = app.listen(80);
-global.io = require('socket.io')(server);
+function setupExpress() {
+	const app = express(MongoDB);
+	const server = app.listen(80);
+	global.io = require('socket.io')(server);
 
 // other custom modules
-const coreHandler    = require('./logic/coreHandler'),
-      socketHandler  = require('./logic/socketHandler'),
-      expressHandler = require('./logic/expressHandler');
+	const coreHandler = require('./logic/coreHandler'),
+		socketHandler = require('./logic/socketHandler'),
+		expressHandler = require('./logic/expressHandler');
 
-global.db = {
-	user: require('./schemas/user')(mongoose),
-	station: require('./schemas/station')(mongoose)
-};
+	global.db = {
+		user: require('./schemas/user')(mongoose),
+		station: require('./schemas/station')(mongoose)
+	};
 
-app.use(passport.initialize());
-app.use(passport.session());
+	console.log("Test");
+	const mongoStore = new MongoStore({'mongooseConnection': MongoDB});
 
-app.use(session({
-	secret: config.get('secret'),
-	store: new mongoStore({ mongooseConnection: MongoDB }),
-	resave: true,
-	saveUninitialized: true
-}));
+	app.use(session({
+		secret: config.get('secret'),
+		key: 'connect.sid',
+		store: mongoStore,
+		resave: true,
+		saveUninitialized: true
+	}));
 
-global.io.use(passportSocketIo.authorize({
-	secret: config.get('secret'),
-	store: new mongoStore({ mongooseConnection: MongoDB })
-}));
+	global.io.use(passportSocketIo.authorize({
+		cookieParser: require('cookie-parser'),
+		key: 'connect.sid',
+		secret: config.get('secret'),
+		store: mongoStore,
+		success: function (data, accept) {
+			console.log('successful connection to socket.io');
 
-passport.serializeUser((user, done) => {
-	done(null, user);
-});
+			accept();
+		},
+		fail: function (data, message, error, accept) {
+			console.log(message);
+			if (error && message !== "Passport was not initialized")
+				throw new Error(message);
 
-passport.deserializeUser((user, done) => {
-	done(null, user);
-});
+			accept();
+		}
+	}));
 
-passport.use('local-signup', new LocalStrategy((username, password, cb) => {
-	process.nextTick(() => {
-		global.db.user.findOne({'username' : username}, function(err, user) {
-			if (err) return cb(err);
-			if (user) return cb(null, false);
-			else {
-				let newUser = new global.db.user({
-					username
-				});
-				newUser.save(function(err) {
-					if (err) throw err;
-					return cb(null, newUser);
-				});
-			}
-		});
+	app.use(passport.initialize());
+	app.use(passport.session());
+
+	passport.serializeUser((user, done) => {
+		done(null, user);
 	});
-}));
 
-passport.use('local-login', new LocalStrategy((username, password, cb) => {
-	process.nextTick(() => {
-		global.db.user.findOne({username}, (err, user) => {
-			if (err) return cb(err);
-			if (!user) return cb(null, false);
-			if (!user.services.token.password == password) return done(null, false);
-			return done(null, user);
-		});
+	passport.deserializeUser((user, done) => {
+		done(null, user);
 	});
-}));
 
+	passport.use(new LocalStrategy({usernameField: 'email'}, (email, password, done) => {
+		console.log(email, password);
+		process.nextTick(() => {
+			console.log(email, password);
+			global.db.user.findOne({"email.address": email}, (err, user) => {
+				if (err) return done(err);
+				if (!user) return done(null, false);
+				//if (!user.services.token.password == password) return done(null, false);
+				return done(null, user);
+			});
+		});
+	}));
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({
-	extended: true
-}));
+	app.use(bodyParser.json());
+	app.use(bodyParser.urlencoded({
+		extended: true
+	}));
 
-app.use(express.static(__dirname + '/../frontend/build/'));
+	app.use(express.static(__dirname + '/../frontend/build/'));
 
-socketHandler(coreHandler, global.io);
-expressHandler(coreHandler, app);
+	socketHandler(coreHandler, global.io);
+	expressHandler(coreHandler, app);
+}
