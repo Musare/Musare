@@ -16,9 +16,10 @@ const express          = require('express'),
       config           = require('config'),
       request          = require('request'),
       passport         = require('passport'),
+      bcrypt           = require('bcrypt'),
       LocalStrategy    = require('passport-local').Strategy,
-      GitHubStrategy    = require('passport-github').Strategy,
-	  DiscordStrategy = require('passport-discord').Strategy,
+      GitHubStrategy   = require('passport-github').Strategy,
+	  DiscordStrategy  = require('passport-discord').Strategy,
       passportSocketIo = require("passport.socketio");
 
 // global module
@@ -100,8 +101,15 @@ function setupExpress() {
 			global.db.user.findOne({"email.address": email}, (err, user) => {
 				if (err) return done(err);
 				if (!user) return done(null, false);
-				//if (!user.services.token.password == password) return done(null, false);
-				return done(null, user);
+				bcrypt.compare(password, user.services.password.password, function(err, res) {
+					if (res) {
+						return done(null, user);
+					} else if (err) {
+						return done(err);
+					} else {
+						return done(null, false);
+					}
+				});
 			});
 		});
 	}));
@@ -116,14 +124,14 @@ function setupExpress() {
 			/*User.findOrCreate({ githubId: profile.id }, function (err, user) {
 				return cb(err, user);
 			});*/
-			global.db.user.findOne({"services.github.token": profile._json.id}, (err, user) => {
+			global.db.user.findOne({"services.github.id": profile._json.id}, (err, user) => {
 				if (err) return done(err);
 				if (!user) {
 					let newUser = new global.db.user({
 						username: profile.username,
 						services: {
 							github: {
-								token: profile._json.id
+								id: profile._json.id
 							}
 						}
 					});
@@ -145,14 +153,14 @@ function setupExpress() {
 		},
 		function(accessToken, refreshToken, profile, done) {
 			console.log(accessToken, refreshToken, profile);
-			global.db.user.findOne({"services.discord.token": profile.id}, (err, user) => {
+			global.db.user.findOne({"services.discord.id": profile.id}, (err, user) => {
 				if (err) return done(err);
 				if (!user) {
 					let newUser = new global.db.user({
 						username: profile.username,
 						services: {
 							discord: {
-								token: profile.id
+								id: profile.id
 							}
 						}
 					});

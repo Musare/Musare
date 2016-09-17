@@ -10,6 +10,22 @@ else
 	sudo apt-get install -y mosh
 fi
 
+# install python
+if command_exists "py"; then
+	echo "Skipping python install"
+else
+	echo "Installing python"
+	sudo apt-get install -y python2.7
+fi
+
+# install build-essential
+if command_exists "build-essential"; then
+	echo "Skipping build-essential install"
+else
+	echo "Installing build-essential"
+	sudo apt-get install -y build-essential
+fi
+
 # install NodeJS
 if command_exists "nodejs"; then
 	echo "Skipping nodejs install"

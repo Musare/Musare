@@ -41,11 +41,24 @@ class Timer {
 	}
 }
 
+function getRandomNumber(min, max) {
+	return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 module.exports = {
 	io: null, // Socket.io
 	db: null, // Database
 	htmlEntities: str => {
 		return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+	},
+	getRandomNumber,
+	generateRandomString: len => {
+		let chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".split("");
+		let result = [];
+		for (let i = 0; i < len; i++) {
+			result.push(chars[getRandomNumber(0, chars.length - 1)]);
+		}
+		return result.join("");
 	},
 	Timer
 };

@@ -11,13 +11,13 @@ module.exports = mongoose => {
         },
         services: {
             password: {
-                token: String
+                password: String
             },
             github: {
-                token: String
+                id: String
             },
             discord: {
-                token: String
+                id: String
             }
         },
         ban: {

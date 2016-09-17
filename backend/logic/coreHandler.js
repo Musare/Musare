@@ -10,6 +10,7 @@ const path   = require('path'),
 const config    = require('config'),
       request   = require('request'),
       waterfall = require('async/waterfall'),
+      bcrypt = require('bcrypt'),
 	  passport  = require('passport');
 
 // custom modules
@@ -58,16 +59,36 @@ module.exports = {
 							else {
 								//TODO Email verification code, send email
 								//TODO Encrypt password
-								let newUser = new global.db.user({
-									username: username,
-									email: {
-										address: email,
-										verificationToken: "Code"
+
+								bcrypt.genSalt(10, function (err, salt) {
+									if (err) {
+										return cb(err);
+									} else {
+										//Hashing the password with the salt
+										bcrypt.hash(password, salt, function (err, hash) {
+											if (err) {
+												//TODO Throw error
+												return cb(err);
+											} else {
+												let newUser = new global.db.user({
+													username: username,
+													email: {
+														address: email,
+														verificationToken: global.generateRandomString("64")
+													},
+													services: {
+														password: {
+															password: hash
+														}
+													}
+												});
+												newUser.save(function (err) {
+													if (err) throw err;
+													return cb(null, newUser);
+												});
+											}
+										});
 									}
-								});
-								newUser.save(function (err) {
-									if (err) throw err;
-									return cb(null, newUser);
 								});
 							}
 						});
