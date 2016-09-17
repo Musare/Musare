@@ -22,6 +22,18 @@ module.exports = (core, app) => {
 		});
 	});
 
+	app.get('/users/github', passport.authenticate('github'));
+
+	app.get('/users/github/callback', passport.authenticate('github'), function (req, res) {
+		res.redirect('/');
+	});
+
+	app.get('/users/discord', passport.authenticate('discord', {scope: ['identify', 'email']}));
+
+	app.get('/users/discord/callback', passport.authenticate('discord'), function (req, res) {
+		res.redirect('/');
+	});
+
 	app.get('/stations', (req, res) => {
 		core['/stations'](result => {
 			res.send(JSON.stringify(result));

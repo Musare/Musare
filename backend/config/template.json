@@ -1,10 +1,19 @@
 {
 	"secret": "",
+	"domain": "http://dev.musare.com",
 	"apis": {
 		"youtube": {
 			"key": ""
 		},
 		"recapthca": {
+			"secret": ""
+		},
+		"github": {
+			"client": "",
+			"secret": ""
+		},
+		"discord": {
+			"client": "",
 			"secret": ""
 		}
 	}

@@ -17,6 +17,8 @@ const express          = require('express'),
       request          = require('request'),
       passport         = require('passport'),
       LocalStrategy    = require('passport-local').Strategy,
+      GitHubStrategy    = require('passport-github').Strategy,
+	  DiscordStrategy = require('passport-discord').Strategy,
       passportSocketIo = require("passport.socketio");
 
 // global module
@@ -103,6 +105,67 @@ function setupExpress() {
 			});
 		});
 	}));
+
+	passport.use(new GitHubStrategy({
+			clientID: config.get("apis.github.client"),
+			clientSecret: config.get("apis.github.secret"),
+			callbackURL: `${config.get("domain")}/users/github/callback`
+		},
+		function(accessToken, refreshToken, profile, done) {
+			console.log(accessToken, refreshToken, profile);
+			/*User.findOrCreate({ githubId: profile.id }, function (err, user) {
+				return cb(err, user);
+			});*/
+			global.db.user.findOne({"services.github.token": profile._json.id}, (err, user) => {
+				if (err) return done(err);
+				if (!user) {
+					let newUser = new global.db.user({
+						username: profile.username,
+						services: {
+							github: {
+								token: profile._json.id
+							}
+						}
+					});
+					newUser.save(function (err) {
+						if (err) throw err;
+						return done(null, newUser);
+					});
+				} else {
+					return done(null, user);
+				}
+			});
+		}
+	));
+
+	passport.use(new DiscordStrategy({
+			clientID: config.get("apis.discord.client"),
+			clientSecret: config.get("apis.discord.secret"),
+			callbackURL: `${config.get("domain")}/users/discord/callback`
+		},
+		function(accessToken, refreshToken, profile, done) {
+			console.log(accessToken, refreshToken, profile);
+			global.db.user.findOne({"services.discord.token": profile.id}, (err, user) => {
+				if (err) return done(err);
+				if (!user) {
+					let newUser = new global.db.user({
+						username: profile.username,
+						services: {
+							discord: {
+								token: profile.id
+							}
+						}
+					});
+					newUser.save(function (err) {
+						if (err) throw err;
+						return done(null, newUser);
+					});
+				} else {
+					return done(null, user);
+				}
+			});
+		}
+	));
 
 	app.use(bodyParser.json());
 	app.use(bodyParser.urlencoded({
