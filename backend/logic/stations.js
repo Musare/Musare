@@ -1,138 +1,157 @@
 'use strict';
 
 const global = require('./global');
-let io = global.io;
+const io = global.io;
+let stations = [];
 
-module.exports = class Station {
-	constructor(id, data) {
-		this.nsp = io.of('/' + id);
-		this.nsp.on('connection', socket => {
-			console.info('someone connected');
-		});
-		this.id = id;
-		this.data = data;
+module.exports = {
+	Station: class Station {
+		constructor(id, data) {
+			this.nsp = io.of(id);
+			this.nsp.on('connection', socket => {
+				console.log('someone connected');
+			});
+			this.id = id;
 
-		this.playlist = data.playlist;
-		this.currentSong = this.playlist[0];
-		this.currentSongIndex = data.currentSongIndex;
-		this.paused = data.paused;
-		this.locked = data.locked;
-		this.skipVotes = data.skipVotes;
-		this.users = data.users;
-		this.displayName = data.displayName;
-		this.description = data.description;
-		this.timer = undefined;
-	}
-
-	skipSong() {
-		if (this.playlist.length > 0) {
-			if (this.timer !== undefined) this.timer.pause();
-
-			if (this.currentSongIndex+1 < this.playlist.length) this.currentSongIndex++;
-			else this.currentSongIndex = 0;
-
-			this.skipVotes = 0;
+			this.playlist = data.playlist;
+			this.currentSongIndex = data.currentSongIndex;
 			this.currentSong = this.playlist[this.currentSongIndex];
-
-			this.timer = new global.Timer(() => {
-				console.log("Skip!");
-				self.skipSong();
-			}, this.currentSong.duration, this.paused);
-
-			nsp.emit("skippedSong", this.currentSong);
+			this.paused = data.paused;
+			this.locked = data.locked;
+			this.skipVotes = 0;
+			this.users = [];
+			this.displayName = data.displayName;
+			this.description = data.description;
+			this.timer = undefined;
+			this.skipSong();
 		}
-	}
 
-	toggleVoteSkip(userId) {
-		if (this.skipVotes.indexOf(userId) === -1) this.skipVotes.push(userId);
-		else this.skipVotes = this.skipVotes.splice(this.skipVotes.indexOf(userId), 1);
+		skipSong() {
+			if (this.playlist.length > 0) {
+				console.log("SKIPP");
+				if (this.timer !== undefined) this.timer.pause();
 
-		// TODO: Calculate if enough people voted to skip
-		nsp.emit("voteSkip", this.skipVotes);
-	}
+				if (this.currentSongIndex + 1 < this.playlist.length) this.currentSongIndex++;
+				else this.currentSongIndex = 0;
 
-	retrievePlaylist() {
-		// TODO: get the Playlist for this station using db
-	}
+				this.skipVotes = 0;
+				this.currentSong = this.playlist[this.currentSongIndex];
 
-	pause() {
-		if (!this.paused) {
-			this.paused = true;
-			this.timer.pause();
-			nsp.emit("pause");
+				var self = this;
+				this.timer = new global.Timer(() => {
+					console.log("Skip!");
+					self.skipSong();
+				}, this.currentSong.duration, this.paused);
+				this.currentSong.startedAt = Date.now();
+				this.nsp.emit("skippedSong", this.currentSong);
+			}
 		}
-	}
 
-	unPause() {
-		if (this.paused) {
-			this.paused = false;
-			this.timer.resume();
-			nsp.emit("unpause");
+		toggleVoteSkip(userId) {
+			if (this.skipVotes.indexOf(userId) === -1) this.skipVotes.push(userId);
+			else this.skipVotes = this.skipVotes.splice(this.skipVotes.indexOf(userId), 1);
+
+			// TODO: Calculate if enough people voted to skip
+			this.nsp.emit("voteSkip", this.skipVotes);
 		}
-	}
 
-	isPaused() {
-		return this.paused;
-	}
-
-	getCurrentSong() {
-		return this.currentSong;
-	}
-
-	lock() {
-		if (!this.locked) {
-			this.locked = true;
-			nsp.emit("lock");
+		retrievePlaylist() {
+			// TODO: get the Playlist for this station using db
 		}
-	}
 
-	unlock() {
-		if (this.locked) {
-			this.locked = false;
-			nsp.emit("unlocked");
+		pause() {
+			if (!this.paused) {
+				this.paused = true;
+				this.timer.pause();
+				this.snp.emit("pause");
+			}
 		}
-	}
 
-	isLocked() {
-		return this.locked;
-	}
+		unPause() {
+			if (this.paused) {
+				this.paused = false;
+				this.timer.resume();
+				this.snp.emit("unpause");
+			}
+		}
 
-	updateDisplayName(newDisplayName) {
-		// TODO: Update db
-		this.displayName = newDisplayName;
-		nsp.emit("updateDisplayName", newDisplayName);
-	}
+		isPaused() {
+			return this.paused;
+		}
 
-	updateDescription(newDescription) {
-		// TODO: Update db
-		this.description = newDescription;
-		nsp.emit("updateDescription", newDescription);
-	}
+		getCurrentSong() {
+			return this.currentSong;
+		}
 
-	getId() {
-		return this.id;
-	}
+		lock() {
+			if (!this.locked) {
+				this.locked = true;
+				this.snp.emit("lock");
+			}
+		}
 
-	getDisplayName() {
-		return this.displayName;
-	}
+		unlock() {
+			if (this.locked) {
+				this.locked = false;
+				this.snp.emit("unlocked");
+			}
+		}
 
-	getDescription() {
-		return this.description;
-	}
+		isLocked() {
+			return this.locked;
+		}
 
-	addUser(user) {
-		this.users.add(user);
-		nsp.emit("updateUsers", this.users);
-	}
+		updateDisplayName(newDisplayName) {
+			// TODO: Update db
+			this.displayName = newDisplayName;
+			this.snp.emit("updateDisplayName", newDisplayName);
+		}
 
-	removeUser(user) {
-		this.users.splice(this.users.indexOf(user), 1);
-		nsp.emit("updateUsers", this.users);
-	}
+		updateDescription(newDescription) {
+			// TODO: Update db
+			this.description = newDescription;
+			this.snp.emit("updateDescription", newDescription);
+		}
 
-	getUsers() {
-		return this.users;
-	}
+		getId() {
+			return this.id;
+		}
 
-}
+		getDisplayName() {
+			return this.displayName;
+		}
+
+		getDescription() {
+			return this.description;
+		}
+
+		addUser(user) {
+			this.users.add(user);
+			this.snp.emit("updateUsers", this.users);
+		}
+
+		removeUser(user) {
+			this.users.splice(this.users.indexOf(user), 1);
+			this.snp.emit("updateUsers", this.users);
+		}
+
+		getUsers() {
+			return this.users;
+		}
+	},
+	addStation: station => {
+		stations.push(station);
+	},
+	getStation: id => {
+		let result;
+		stations.forEach(function(station) {
+			if (station.getId() === id) {
+				result = station;
+			}
+		});
+		return result;
+	},
+	getStations: () => {
+		return stations;
+	}
+};

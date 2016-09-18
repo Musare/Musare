@@ -3,14 +3,15 @@
 class Timer {
 	constructor(callback, delay, paused) {
 		this.callback = callback;
-		this.delay = delay;
-		this.paused = paused;
-
-		this.timerId = delay;
-		this.start = delay;
-		this.remaining = delay;
+		this.timerId = undefined;
+		this.start = undefined;
+		this.remaining = delay * 1000;
 		this.timeWhenPaused = 0;
 		this.timePaused = Date.now();
+
+		if (!paused) {
+			this.resume();
+		}
 	}
 
 	pause() {

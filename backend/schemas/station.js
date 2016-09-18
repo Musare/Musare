@@ -7,7 +7,7 @@ module.exports = mongoose => {
 		type: { type: String, enum: ["official", "community"], required: true},
 		displayName: { type: String, min: 2, max: 32, required: true },
 		description: { type: String, min: 2, max: 128, required: true },
-		privacy: { type: String, enum: ["public", "unlisted", "private"], required: true },
+		privacy: { type: String, enum: ["public", "unlisted", "private"], default: "public", required: true },
 		paused: { type: Boolean, default: false, required: true },
 		currentSong: {
 			startedAt: { type: Number, required: true },

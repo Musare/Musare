@@ -19,6 +19,42 @@ const global   = require('./global'),
 
 var eventEmitter = new events.EventEmitter();
 
+const station = new stations.Station("edm", {
+	playlist: [
+		{
+			startedAt: Date.now(),
+			id: "dQw4w9WgXcQ",
+			title: "Never gonna give you up",
+			artists: ["Rick Astley"],
+			duration: 20,
+			skipDuration: 0,
+			image: "https://yt3.ggpht.com/-CGlBu6kDEi8/AAAAAAAAAAI/AAAAAAAAAAA/Pi679mvyyyU/s88-c-k-no-mo-rj-c0xffffff/photo.jpg",
+			likes: 0,
+			dislikes: 1,
+			genres: ["pop", "edm"]
+		},
+		{
+			startedAt: Date.now(),
+			id: "GxBSyx85Kp8",
+			title: "Yeah!",
+			artists: ["Usher"],
+			duration: 20,
+			skipDuration: 0,
+			image: "https://yt3.ggpht.com/-CGlBu6kDEi8/AAAAAAAAAAI/AAAAAAAAAAA/Pi679mvyyyU/s88-c-k-no-mo-rj-c0xffffff/photo.jpg",
+			likes: 0,
+			dislikes: 1,
+			genres: ["pop", "edm"]
+		}
+	],
+	currentSongIndex: 1,
+	paused: false,
+	locked: false,
+	displayName: "EDM",
+	description: "EDM Music"
+});
+
+stations.addStation(station);
+
 module.exports = {
 
 	// module functions
@@ -119,19 +155,20 @@ module.exports = {
 
 			user.stationId = id;
 
-			this.emit('station-joined', {
+			/*io.sockets.emit('station-joined', {
 				user: {
 					id: user.id,
 					username: user.username
 				}
-			});
+			});*/
 
 			return cb({
 				status: 'joined',
 				data: {
 					displayName: station.getDisplayName(),
 					users: station.getUsers(),
-					currentSong: station.getCurrentSong()
+					currentSong: station.getCurrentSong(),
+					timePaused: 0
 				}
 			});
 		}

@@ -1,18 +1,18 @@
 <template>
 	<div class="station">
 		<div class="row">
-			<div class="col-md-8 col-md-push-2 col-sm-10 col-sm-push-1 col-xs-12">
+			<div class="col-md-8 col-md-push-2 col-sm-10 col-sm-push-1 col-xs-12 video-col">
 				<div class="video-container">
-					<!--div id="player"></div-->
-					<iframe id="player" frameborder="0" allowfullscreen="1" title="YouTube video player" width="480" height="270" src="https://www.youtube.com/embed/xo1VInw-SKc?controls=0&amp;iv_load_policy=3&amp;rel=0&amp;showinfo=0&amp;enablejsapi=1&amp;origin=https%3A%2F%2Fmusare.com&amp;widgetid=1" kwframeid="1"></iframe>
+					<div id="player"></div>
+					<!--iframe id="player" frameborder="0" allowfullscreen="1" title="YouTube video player" width="480" height="270" src="https://www.youtube.com/embed/xo1VInw-SKc?controls=0&amp;iv_load_policy=3&amp;rel=0&amp;showinfo=0&amp;enablejsapi=1&amp;origin=https%3A%2F%2Fmusare.com&amp;widgetid=1" kwframeid="1"></iframe-->
 				</div>
 			</div>
 			<div class="col-md-8 col-md-push-2 col-sm-10 col-sm-push-1 col-xs-12">
 				<div class="row">
 					<div class="col-md-8 col-sm-12 col-sm-12">
-						<h4 id="time-display"><span id="time-elapsed">2:58</span> / <span id="time-total">3:19</span></h4>
-						<h3>Stitches</h3>
-						<h4 class="thin" style="margin-left: 0">Shawn Mendes</h4>
+						<h4 id="time-display">{{timeElapsed}} / {{songDuration}}</h4>
+						<h3>{{title}}</h3>
+						<h4 class="thin" style="margin-left: 0">{{artists}}</h4>
 						<div class="row">
 							<form style="margin-top: 12px; margin-bottom: 0;" action="#" class="col-md-4 col-lg-4 col-xs-4 col-sm-4">
 								<p style="margin-top: 0; position: relative;">
@@ -36,6 +36,139 @@
 		</div>
 	</div>
 </template>
+
+<script>
+	export default {
+		data() {
+			return {
+				playerReady: false,
+				currentSong: undefined,
+				player: undefined,
+				timePaused: 0,
+				paused: false,
+				songDuration: "0:00",
+				timeElapsed: "0:00",
+				artists: "",
+				title: "",
+				interval: 0
+			}
+		},
+		methods: {
+			youtubeReady: function() {
+				var local = this;
+				local.player = new YT.Player("player", {
+					height: 270,
+					width: 480,
+					videoId: local.currentSong.id,
+					playerVars: {controls: 1, iv_load_policy: 3, rel: 0, showinfo: 0},
+					events: {
+						'onReady': function (event) {
+							local.playerReady = true;
+							if (!local.paused) {
+								local.playVideo();
+							}
+						},
+						'onStateChange': function (event) {
+							if (event.data === 1 && local.videoLoading === true) {
+								local.videoLoading = false;
+								local.player.seekTo(local.getTimeElapsed() / 1000, true);
+							}
+						}
+					}
+				});
+			},
+			startSong: function(song) {
+				var local = this;
+				if (local.playerReady) {
+
+				}
+			},
+			getTimeElapsed: function() {
+				var local = this;
+				if (local.currentSong !== undefined) {
+					return Date.now() - local.currentSong.startedAt - local.timePaused;
+				}
+				return 0;
+			},
+			pauseVideo: function() {
+				var local = this;
+				local.paused = true;
+				if (local.playerReady) {
+					local.player.pauseVideo();
+				}
+			},
+			unpauseVideo: function() {
+				var local = this;
+				local.paused = false;
+				if (local.playerReady) {
+					local.player.seekTo(local.getTimeElapsed() / 1000);
+					local.player.playVideo();
+				}
+			},
+			playVideo: function() {
+				var local = this;
+				if (local.playerReady) {
+					local.videoLoading = true;
+					local.player.loadVideoById(local.currentSong.id);
+					var d = moment.duration(parseInt(local.currentSong.duration), 'seconds');
+					local.songDuration = d.minutes() + ":" + ("0" + d.seconds()).slice(-2);
+					local.artists = local.currentSong.artists.join(", ");
+					local.title = local.currentSong.title;
+
+					if (local.interval !== 0) {
+						clearInterval(local.interval);
+					}
+
+					local.interval = setInterval(function () {
+						local.resizeSeekerbar();
+						local.calculateTimeElapsed();
+					}, 500);
+				}
+			},
+			resizeSeekerbar: function() {
+				var local = this;
+				if (!local.paused) {
+					$(".seeker-bar").width(((local.getTimeElapsed() / 1000) / local.currentSong.duration * 100) + "%");
+				}
+			},
+			calculateTimeElapsed: function() {
+				var local = this;
+				var duration = (Date.now() - local.currentSong.startedAt - local.timePaused) / 1000;
+				var songDuration = local.currentSong.duration;
+				if (songDuration <= duration) {
+					local.player.pauseVideo();
+				}
+				var d = moment.duration(duration, 'seconds');
+				if (!local.paused) {
+					this.timeElapsed = d.minutes() + ":" + ("0" + d.seconds()).slice(-2);
+				}
+			}
+		},
+		ready: function() {
+			var local = this;
+			window.onYouTubeIframeAPIReady = function() {
+				local.youtubeReady();
+			};
+
+			var socket = this.$parent.socket;
+			local.stationSocket = io.connect('http://dev.musare.com/edm');
+			local.stationSocket.on("skippedSong", function(currentSong) {
+				local.currentSong = currentSong;
+				local.playVideo();
+			});
+
+			//TODO Remove this
+			socket.emit("/stations/join/:id", "edm", function(data) {
+				local.currentSong = data.data.currentSong;
+				var tag = document.createElement('script');
+
+				tag.src = "https://www.youtube.com/iframe_api";
+				var firstScriptTag = document.getElementsByTagName('script')[0];
+				firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+			});
+		}
+	}
+</script>
 
 <style lang="sass">
 	.station {
@@ -157,6 +290,10 @@
 				height: 100%;
 			}
 		}
+		.video-col {
+			padding-right: 0.75rem;
+			padding-left: 0.75rem;
+		}
 	}
 
 	.room-title {
@@ -204,6 +341,7 @@
 		left: 0;
 		bottom: 0;
 		position: absolute;
+		margin-top: 20px;
 	}
 
 	ul {

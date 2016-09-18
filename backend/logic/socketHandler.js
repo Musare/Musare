@@ -30,7 +30,7 @@ module.exports = (core, io) => {
 		});
 
 		socket.on('/stations/join/:id', (id, cb) => {
-			core['/stations/join/:id'](id, result => {
+			core['/stations/join/:id'](id, socket.request.user, result => {
 				cb(result);
 			});
 		});
