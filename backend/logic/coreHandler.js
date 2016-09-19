@@ -71,7 +71,6 @@ module.exports = {
 
 	'/users/register': (username, email, password, recaptcha, cb) => {
 		console.log(username, password);
-		//TODO Check recaptcha
 		request({
 			url: 'https://www.google.com/recaptcha/api/siteverify',
 			method: 'POST',
@@ -94,16 +93,12 @@ module.exports = {
 							if (user) return cb("email");
 							else {
 								//TODO Email verification code, send email
-								//TODO Encrypt password
-
 								bcrypt.genSalt(10, function (err, salt) {
 									if (err) {
 										return cb(err);
 									} else {
-										//Hashing the password with the salt
 										bcrypt.hash(password, salt, function (err, hash) {
 											if (err) {
-												//TODO Throw error
 												return cb(err);
 											} else {
 												let newUser = new global.db.user({

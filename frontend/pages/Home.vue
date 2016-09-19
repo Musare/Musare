@@ -6,7 +6,7 @@
 				<div class="modal-content">
 					<div class="modal-header">
 						<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-						<h4 class="modal-title">Register</h4>
+						<h5 class="modal-title">Register</h5>
 					</div>
 					<div class="modal-body">
 						<input class="form-control" type="text" placeholder="Email..." v-model="register.email"/>
@@ -25,11 +25,14 @@
 				<div class="modal-content">
 					<div class="modal-header">
 						<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-						<h4 class="modal-title">Login</h4>
+						<h5 class="modal-title">Login</h5>
 					</div>
 					<div class="modal-body">
 						<input class="form-control" type="text" placeholder="Email..." v-model="login.email"/>
 						<input class="form-control" type="password" placeholder="Password..." v-model="login.password"/>
+						<hr />
+						<a class="btn btn-block btn-default btn-github" href="/users/github"><i class="fa fa-github"></i> Login with GitHub</a>
+						<a class="btn btn-block btn-default btn-discord" href="/users/discord">Login with Discord</a>
 					</div>
 					<div class="modal-footer">
 						<button type="button" class="btn btn-primary" data-dismiss="modal" @click="this.$dispatch('login');">Submit</button>
@@ -112,9 +115,7 @@
 					url: "/users/logout",
 					dataType: "json",
 					complete: function (msg) {
-						console.log(1, msg);
-						alert("Logged out!");
-						//do something
+						alert("Logged in!");
 						location.reload();
 					}
 				});
@@ -122,8 +123,8 @@
 		},
 		ready: function () {
 			this.socket = io();
-			this.socket.on("ready", function(loggedIn) {
-				this.loggedIn = loggedIn;
+			this.socket.on("ready", function(status) {
+				this.loggedIn = status;
 			});
 		},
 		components: { MainHeader, MainFooter },
@@ -142,12 +143,12 @@
 					contentType: "application/json; charset=utf-8",
 					dataType: "json",
 					success: function (msg) {
-						console.log(1, msg);
+						if (msg) console.log(msg);
 						alert("Registered!");
 						//do something
 					},
-					error: function (errormessage) {
-						console.log(2, errormessage);
+					error: function (err) {
+						if (err) console.log(err);
 						alert("Not registered!");
 						//do something else
 
@@ -166,13 +167,12 @@
 					contentType: "application/json; charset=utf-8",
 					dataType: "json",
 					success: function (msg) {
-						console.log(1, msg);
+						if (msg) console.log(msg);
 						alert("Logged in!");
 						//do something
-						location.reload();
 					},
-					error: function (errormessage) {
-						console.log(2, errormessage);
+					error: function (err) {
+						if (err) console.log(err);
 						alert("Not logged in!");
 						//do something else
 
@@ -289,6 +289,28 @@
 						width: 25%;
 				}
 			}
+		}
+	}
+
+	.btn-github {
+		background-color: #333;
+		color: #fff;
+		border: 0;
+
+		&:hover, &:active, &:focus {
+			background-color: darken(#333, 5%);
+			color: #fff;
+		}
+	}
+
+	.btn-discord {
+		background-color: #7289DA;
+		color: #fff;
+		border: 0;
+
+		&:hover, &:active, &:focus {
+			background-color: darken(#7289DA, 5%);
+			color: #fff;
 		}
 	}
 </style>

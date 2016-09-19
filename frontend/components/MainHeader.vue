@@ -14,9 +14,9 @@
 				<ul class="nav navbar-nav navbar-right">
 					<li><a href="#">The Project</a></li>
 					<li><a href="#">Donate</a></li>
-					<li v-if="$parent.loggedIn"><a href="#" @click="$parent.logout()">Logout</a></li>
-					<li v-if="!$parent.loggedIn"><a href="#" data-toggle="modal" data-target="#register">Register</a></li>
-					<li v-if="!$parent.loggedIn"><a href="#" data-toggle="modal" data-target="#login">Login</a></li>
+					<li><a href="#" @click="$parent.logout()">Logout</a></li>
+					<li><a href="#" data-toggle="modal" data-target="#register">Register</a></li>
+					<li><a href="#" data-toggle="modal" data-target="#login">Login</a></li>
 				</ul>
 			</div>
 		</div>
