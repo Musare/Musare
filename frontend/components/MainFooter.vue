@@ -29,6 +29,7 @@
 		height: 200px;
 		background-color: #e0e0e0;
 		padding-top: 26px;
+		margin-top: 100px;
 
 		.footer-left {
 			float: left;
