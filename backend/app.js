@@ -117,27 +117,32 @@ function setupExpress() {
 			callbackURL: `${config.get("domain")}/users/github/callback`
 		},
 		function(accessToken, refreshToken, profile, done) {
-			console.log(accessToken, refreshToken, profile);
+			console.log('new github auth', accessToken, refreshToken, profile);
 			/*User.findOrCreate({ githubId: profile.id }, function (err, user) {
 				return cb(err, user);
 			});*/
-			global.db.user.findOne({"services.github.id": profile._json.id}, (err, user) => {
+			global.db.user.findOne({"services.github.id": profile._json.id}, (err, id) => {
 				if (err) return done(err);
-				if (!user) {
-					let newUser = new global.db.user({
-						username: profile.username,
-						services: {
-							github: {
-								id: profile._json.id
-							}
+				if (!id) {
+					global.db.user.findOne({"username": profile.username}, (err, username) => {
+						if (err) return done(err);
+						if (!username) {
+							let newUser = new global.db.user({
+								username: profile.username,
+								services: {
+									discord: {
+										id: profile.id
+									}
+								}
+							});
+							newUser.save(err => {
+								if (err) throw err;
+								return done(null, newUser);
+							});
+						} else {
+							return done(null, user);
 						}
 					});
-					newUser.save(function (err) {
-						if (err) throw err;
-						return done(null, newUser);
-					});
-				} else {
-					return done(null, user);
 				}
 			});
 		}
@@ -149,24 +154,29 @@ function setupExpress() {
 			callbackURL: `${config.get("domain")}/users/discord/callback`
 		},
 		function(accessToken, refreshToken, profile, done) {
-			console.log(accessToken, refreshToken, profile);
-			global.db.user.findOne({"services.discord.id": profile.id}, (err, user) => {
+			console.log('new discord auth', accessToken, refreshToken, profile);
+			global.db.user.findOne({"services.discord.id": profile.id}, (err, id) => {
 				if (err) return done(err);
-				if (!user) {
-					let newUser = new global.db.user({
-						username: profile.username,
-						services: {
-							discord: {
-								id: profile.id
-							}
+				if (!id) {
+					global.db.user.findOne({"username": profile.username}, (err, username) => {
+						if (err) return done(err);
+						if (!username) {
+							let newUser = new global.db.user({
+								username: profile.username,
+								services: {
+									discord: {
+										id: profile.id
+									}
+								}
+							});
+							newUser.save(err => {
+								if (err) throw err;
+								return done(null, newUser);
+							});
+						} else {
+							return done(null, user);
 						}
 					});
-					newUser.save(function (err) {
-						if (err) throw err;
-						return done(null, newUser);
-					});
-				} else {
-					return done(null, user);
 				}
 			});
 		}
