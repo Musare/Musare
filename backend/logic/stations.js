@@ -28,7 +28,6 @@ module.exports = {
 
 		skipSong() {
 			if (this.playlist.length > 0) {
-				console.log("SKIPP");
 				if (this.timer !== undefined) this.timer.pause();
 
 				if (this.currentSongIndex + 1 < this.playlist.length) this.currentSongIndex++;
@@ -39,7 +38,6 @@ module.exports = {
 
 				var self = this;
 				this.timer = new global.Timer(() => {
-					console.log("Skip!");
 					self.skipSong();
 				}, this.currentSong.duration, this.paused);
 				this.currentSong.startedAt = Date.now();

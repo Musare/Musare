@@ -8,7 +8,7 @@
 					<span class="icon-bar"></span>
 					<span class="icon-bar"></span>
 				</button>
-				<a class="navbar-brand" href="#" @click="$parent.goHome()">Musare</a>
+				<a class="navbar-brand" href="#" v-link="{ path: '/' }">Musare</a>
 			</div>
 			<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 				<ul class="nav navbar-nav navbar-right">
@@ -32,6 +32,9 @@
 		height: 64px;
 
 		.navbar-brand, li a, li a:hover, li a:focus {
+			line-height: 64px;
+			padding: 0px 10px;
+			margin: 0px;
 			color: #fff;
 		}
 

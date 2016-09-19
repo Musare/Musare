@@ -53,8 +53,7 @@ function setupExpress() {
 		station: require('./schemas/station')(mongoose)
 	};
 
-	console.log("Test");
-	const mongoStore = new MongoStore({'mongooseConnection': MongoDB});
+		const mongoStore = new MongoStore({'mongooseConnection': MongoDB});
 
 	app.use(session({
 		secret: config.get('secret'),
@@ -71,14 +70,12 @@ function setupExpress() {
 		store: mongoStore,
 		success: function (data, accept) {
 			console.log('successful connection to socket.io');
-
 			accept();
 		},
 		fail: function (data, message, error, accept) {
 			console.log(message);
 			if (error && message !== "Passport was not initialized")
 				throw new Error(message);
-
 			accept();
 		}
 	}));

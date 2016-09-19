@@ -12,7 +12,7 @@ module.exports = (core, io) => {
 	});
 
 	io.on('connection', socket => {
-		console.log("CONNECTED!");
+		console.log("User has connected");
 		socket.on('disconnect', () => {
 			console.log('User has disconnected');
 		});

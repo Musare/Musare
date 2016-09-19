@@ -1,4 +1,5 @@
 <template>
+	<main-header></main-header>
 	<div class="station">
 		<div class="row">
 			<div class="col-md-8 col-md-push-2 col-sm-10 col-sm-push-1 col-xs-12 video-col">
@@ -35,9 +36,13 @@
 			</div>
 		</div>
 	</div>
+	<main-footer></main-footer>
 </template>
 
 <script>
+	import MainHeader from '../components/MainHeader.vue'
+	import MainFooter from '../components/MainFooter.vue'
+
 	export default {
 		data() {
 			return {
@@ -166,7 +171,8 @@
 				var firstScriptTag = document.getElementsByTagName('script')[0];
 				firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 			});
-		}
+		},
+		components: { MainHeader, MainFooter }
 	}
 </script>
 
@@ -180,22 +186,22 @@
 		width: 90%;
 
 		@media only screen and (min-width: 993px) {
-			width: 70%;
-		}
+		width: 70%;
+	}
 
 		@media only screen and (min-width: 601px) {
-			width: 85%;
-		}
+		width: 85%;
+	}
 
 		input[type=range] {
 			-webkit-appearance: none;
 			width: 100%;
 			margin: 7.3px 0;
-		}
+	}
 
 		input[type=range]:focus {
 			outline: none;
-		}
+	}
 
 		input[type=range]::-webkit-slider-runnable-track {
 			width: 100%;
@@ -205,7 +211,7 @@
 			background: #c2c0c2;
 			border-radius: 0;
 			border: 0;
-		}
+	}
 
 		input[type=range]::-webkit-slider-thumb {
 			box-shadow: 0;
@@ -217,7 +223,7 @@
 			cursor: pointer;
 			-webkit-appearance: none;
 			margin-top: -6.5px;
-		}
+	}
 
 		input[type=range]::-moz-range-track {
 			width: 100%;
@@ -227,7 +233,7 @@
 			background: #c2c0c2;
 			border-radius: 0;
 			border: 0;
-		}
+	}
 
 		input[type=range]::-moz-range-thumb {
 			box-shadow: 0;
@@ -239,7 +245,7 @@
 			cursor: pointer;
 			-webkit-appearance: none;
 			margin-top: -6.5px;
-		}
+	}
 
 		input[type=range]::-ms-track {
 			width: 100%;
@@ -248,21 +254,21 @@
 			box-shadow: 0;
 			background: #c2c0c2;
 			border-radius: 1.3px;
-		}
+	}
 
 		input[type=range]::-ms-fill-lower {
 			background: #c2c0c2;
 			border: 0;
 			border-radius: 0;
 			box-shadow: 0;
-		}
+	}
 
 		input[type=range]::-ms-fill-upper {
 			background: #c2c0c2;
 			border: 0;
 			border-radius: 0;
 			box-shadow: 0;
-		}
+	}
 
 		input[type=range]::-ms-thumb {
 			box-shadow: 0;
@@ -274,7 +280,7 @@
 			cursor: pointer;
 			-webkit-appearance: none;
 			margin-top: 1.5px;
-		}
+	}
 
 		.video-container {
 			position: relative;
@@ -288,130 +294,130 @@
 				left: 0;
 				width: 100%;
 				height: 100%;
-			}
 		}
+	}
 		.video-col {
 			padding-right: 0.75rem;
 			padding-left: 0.75rem;
+	}
+	}
+
+		.room-title {
+			left: 50%;
+			-webkit-transform: translateX(-50%);
+			transform: translateX(-50%);
+			font-size: 2.1em;
+	}
+
+		#ratings {
+			span {
+				font-size: 1.68rem;
+		}
+
+			i {
+				color: #9e9e9e !important;
+				cursor: pointer;
+				transition: 0.1s color;
 		}
 	}
 
-	.room-title {
-		left: 50%;
-		-webkit-transform: translateX(-50%);
-		transform: translateX(-50%);
-		font-size: 2.1em;
+		#time-display {
+			margin-top: 30px;
+			float: right;
 	}
 
-	#ratings {
-		span {
-			font-size: 1.68rem;
-		}
-
-		i {
-			color: #9e9e9e !important;
-			cursor: pointer;
-			transition: 0.1s color;
-		}
+		#thumbs_up:hover {
+			color: #87D37C !important;
 	}
 
-	#time-display {
-		margin-top: 30px;
-		float: right;
+		#thumbs_down:hover {
+			color: #EC644B !important;
 	}
 
-	#thumbs_up:hover {
-		color: #87D37C !important;
+		.seeker-bar-container {
+			position: relative;
+			height: 5px;
+			display: block;
+			width: 100%;
+			overflow: hidden;
 	}
 
-	#thumbs_down:hover {
-		color: #EC644B !important;
+		.seeker-bar {
+			top: 0;
+			left: 0;
+			bottom: 0;
+			position: absolute;
+			margin-top: 20px;
 	}
 
-	.seeker-bar-container {
-		position: relative;
-		height: 5px;
-		display: block;
-		width: 100%;
-		overflow: hidden;
+		ul {
+			list-style: none;
+			margin: 0;
+			display: block;
 	}
 
-	.seeker-bar {
-		top: 0;
-		left: 0;
-		bottom: 0;
-		position: absolute;
-		margin-top: 20px;
+		h1, h2, h3, h4, h5, h6 {
+			font-weight: 400;
+			line-height: 1.1;
 	}
 
-	ul {
-		list-style: none;
-		margin: 0;
-		display: block;
+		h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
+			font-weight: inherit;
 	}
 
-	h1, h2, h3, h4, h5, h6 {
-		font-weight: 400;
-		line-height: 1.1;
+		h1 {
+			font-size: 4.2rem;
+			line-height: 110%;
+			margin: 2.1rem 0 1.68rem 0;
 	}
 
-	h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
-		font-weight: inherit;
+		h2 {
+			font-size: 3.56rem;
+			line-height: 110%;
+			margin: 1.78rem 0 1.424rem 0;
 	}
 
-	h1 {
-		font-size: 4.2rem;
-		line-height: 110%;
-		margin: 2.1rem 0 1.68rem 0;
+		h3 {
+			font-size: 2.92rem;
+			line-height: 110%;
+			margin: 1.46rem 0 1.168rem 0;
 	}
 
-	h2 {
-		font-size: 3.56rem;
-		line-height: 110%;
-		margin: 1.78rem 0 1.424rem 0;
+		h4 {
+			font-size: 2.28rem;
+			line-height: 110%;
+			margin: 1.14rem 0 0.912rem 0;
 	}
 
-	h3 {
-		font-size: 2.92rem;
-		line-height: 110%;
-		margin: 1.46rem 0 1.168rem 0;
+		h5 {
+			font-size: 1.64rem;
+			line-height: 110%;
+			margin: 0.82rem 0 0.656rem 0;
 	}
 
-	h4 {
-		font-size: 2.28rem;
-		line-height: 110%;
-		margin: 1.14rem 0 0.912rem 0;
+		h6 {
+			font-size: 1rem;
+			line-height: 110%;
+			margin: 0.5rem 0 0.4rem 0;
 	}
 
-	h5 {
-		font-size: 1.64rem;
-		line-height: 110%;
-		margin: 0.82rem 0 0.656rem 0;
+		.thin {
+			font-weight: 200;
 	}
 
-	h6 {
-		font-size: 1rem;
-		line-height: 110%;
-		margin: 0.5rem 0 0.4rem 0;
+		.left {
+			float: left !important;
 	}
 
-	.thin {
-		font-weight: 200;
+		.right {
+			float: right !important;
 	}
 
-	.left {
-		float: left !important;
+		.light-blue {
+			background-color: #03a9f4 !important;
 	}
 
-	.right {
-		float: right !important;
-	}
-
-	.light-blue {
-		background-color: #03a9f4 !important;
-	}
-
-	.white {
-		background-color: #FFFFFF !important;
+		.white {
+			background-color: #FFFFFF !important;
 	}
 </style>
