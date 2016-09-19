@@ -17,13 +17,13 @@
 						<div class="row">
 							<form style="margin-top: 12px; margin-bottom: 0;" action="#" class="col-md-4 col-lg-4 col-xs-4 col-sm-4">
 								<p style="margin-top: 0; position: relative;">
-									<input type="range" id="volume_slider" min="0" max="100" class="active">
+									<input type="range" id="volumeSlider" min="0" max="100" class="active" v-on:change="changeVolume()" v-on:input="changeVolume()">
 								</p>
 							</form>
 							<div class="col-xs-8 col-sm-5 col-md-5" style="float: right;">
 								<ul id="ratings">
-									<li id="like" class="right"><span class="flow-text">2 </span> <i id="thumbs_up" class="material-icons grey-text">thumb_up</i></li>
-									<li style="margin-right: 10px;" id="dislike" class="right"><span class="flow-text">1 </span><i id="thumbs_down" class="material-icons grey-text">thumb_down</i></li>
+									<li id="like" class="right"><span class="flow-text">{{likes}} </span> <i id="thumbs_up" class="material-icons grey-text" @click="toggleLike()">thumb_up</i></li>
+									<li style="margin-right: 10px;" id="dislike" class="right"><span class="flow-text">{{dislikes}} </span><i id="thumbs_down" class="material-icons grey-text" @click="toggleDislike()">thumb_down</i></li>
 								</ul>
 							</div>
 						</div>
@@ -31,7 +31,7 @@
 							<div class="seeker-bar light-blue" style="width: 60.9869%;"></div>
 						</div>
 					</div>
-					<img alt="Not loading" class="img-responsive col-md-4 col-xs-12 col-sm-12" onerror="this.src='/notes.png'" id="song-image" style="margin-top: 10px !important" src="https://i.scdn.co/image/32031982517529900c02654c460dc9ac6c47c598" />
+					<img alt="Not loading" class="img-responsive col-md-4 col-xs-12 col-sm-12" onerror="this.src='/notes.png'" id="song-image" style="margin-top: 10px !important" v-bind:src="image" />
 				</div>
 			</div>
 		</div>
@@ -55,6 +55,9 @@
 				timeElapsed: "0:00",
 				artists: "",
 				title: "",
+				image: "",
+				likes: 0,
+				dislikes: 0,
 				interval: 0
 			}
 		},
@@ -69,6 +72,12 @@
 					events: {
 						'onReady': function (event) {
 							local.playerReady = true;
+							var volume = parseInt(localStorage.getItem("volume"));
+							volume = (typeof volume === "number") ? volume : 20;
+							local.player.setVolume(volume);
+							if (volume > 0) {
+								local.player.unMute();
+							}
 							if (!local.paused) {
 								local.playVideo();
 							}
@@ -119,6 +128,9 @@
 					local.songDuration = d.minutes() + ":" + ("0" + d.seconds()).slice(-2);
 					local.artists = local.currentSong.artists.join(", ");
 					local.title = local.currentSong.title;
+					local.image = local.currentSong.image;
+					local.likes = local.currentSong.likes;
+					local.dislikes = local.currentSong.dislikes;
 
 					if (local.interval !== 0) {
 						clearInterval(local.interval);
@@ -147,6 +159,25 @@
 				if (!local.paused) {
 					this.timeElapsed = d.minutes() + ":" + ("0" + d.seconds()).slice(-2);
 				}
+			},
+			changeVolume: function() {
+				var local = this;
+				var volume = $("#volumeSlider").val();
+				localStorage.setItem("volume", volume);
+				if (local.playerReady) {
+					local.player.setVolume(volume);
+					if (volume > 0) {
+						local.player.unMute();
+					}
+				}
+			},
+			toggleLike: function() {
+				var local = this;
+				local.stationSocket.emit("toggleLike");//TODO Add code here to see if this was a success or not
+			},
+			toggleDislike: function() {
+				var local = this;
+				local.stationSocket.emit("toggleDislike");//TODO Add code here to see if this was a success or not
 			}
 		},
 		ready: function() {
@@ -161,6 +192,10 @@
 				local.currentSong = currentSong;
 				local.playVideo();
 			});
+
+			var volume = parseInt(localStorage.getItem("volume"));
+			volume = (typeof volume === "number") ? volume : 20;
+			$("#volumeSlider").val(volume);
 
 			//TODO Remove this
 			socket.emit("/stations/join/:id", "edm", function(data) {
@@ -186,22 +221,22 @@
 		width: 90%;
 
 		@media only screen and (min-width: 993px) {
-		width: 70%;
-	}
+			width: 70%;
+		}
 
 		@media only screen and (min-width: 601px) {
-		width: 85%;
-	}
+			width: 85%;
+		}
 
 		input[type=range] {
 			-webkit-appearance: none;
 			width: 100%;
 			margin: 7.3px 0;
-	}
+		}
 
 		input[type=range]:focus {
 			outline: none;
-	}
+		}
 
 		input[type=range]::-webkit-slider-runnable-track {
 			width: 100%;
@@ -211,7 +246,7 @@
 			background: #c2c0c2;
 			border-radius: 0;
 			border: 0;
-	}
+		}
 
 		input[type=range]::-webkit-slider-thumb {
 			box-shadow: 0;
@@ -223,7 +258,7 @@
 			cursor: pointer;
 			-webkit-appearance: none;
 			margin-top: -6.5px;
-	}
+		}
 
 		input[type=range]::-moz-range-track {
 			width: 100%;
@@ -233,7 +268,7 @@
 			background: #c2c0c2;
 			border-radius: 0;
 			border: 0;
-	}
+		}
 
 		input[type=range]::-moz-range-thumb {
 			box-shadow: 0;
@@ -245,7 +280,7 @@
 			cursor: pointer;
 			-webkit-appearance: none;
 			margin-top: -6.5px;
-	}
+		}
 
 		input[type=range]::-ms-track {
 			width: 100%;
@@ -254,21 +289,21 @@
 			box-shadow: 0;
 			background: #c2c0c2;
 			border-radius: 1.3px;
-	}
+		}
 
 		input[type=range]::-ms-fill-lower {
 			background: #c2c0c2;
 			border: 0;
 			border-radius: 0;
 			box-shadow: 0;
-	}
+		}
 
 		input[type=range]::-ms-fill-upper {
 			background: #c2c0c2;
 			border: 0;
 			border-radius: 0;
 			box-shadow: 0;
-	}
+		}
 
 		input[type=range]::-ms-thumb {
 			box-shadow: 0;
@@ -280,7 +315,7 @@
 			cursor: pointer;
 			-webkit-appearance: none;
 			margin-top: 1.5px;
-	}
+		}
 
 		.video-container {
 			position: relative;
@@ -294,130 +329,130 @@
 				left: 0;
 				width: 100%;
 				height: 100%;
+			}
 		}
-	}
 		.video-col {
 			padding-right: 0.75rem;
 			padding-left: 0.75rem;
-	}
-	}
-
-		.room-title {
-			left: 50%;
-			-webkit-transform: translateX(-50%);
-			transform: translateX(-50%);
-			font-size: 2.1em;
-	}
-
-		#ratings {
-			span {
-				font-size: 1.68rem;
-		}
-
-			i {
-				color: #9e9e9e !important;
-				cursor: pointer;
-				transition: 0.1s color;
 		}
 	}
 
-		#time-display {
-			margin-top: 30px;
-			float: right;
+	.room-title {
+		left: 50%;
+		-webkit-transform: translateX(-50%);
+		transform: translateX(-50%);
+		font-size: 2.1em;
 	}
 
-		#thumbs_up:hover {
-			color: #87D37C !important;
+	#ratings {
+		span {
+			font-size: 1.68rem;
+		}
+
+		i {
+			color: #9e9e9e !important;
+			cursor: pointer;
+			transition: 0.1s color;
+		}
 	}
 
-		#thumbs_down:hover {
-			color: #EC644B !important;
+	#time-display {
+		margin-top: 30px;
+		float: right;
 	}
 
-		.seeker-bar-container {
-			position: relative;
-			height: 5px;
-			display: block;
-			width: 100%;
-			overflow: hidden;
+	#thumbs_up:hover {
+		color: #87D37C !important;
 	}
 
-		.seeker-bar {
-			top: 0;
-			left: 0;
-			bottom: 0;
-			position: absolute;
-			margin-top: 20px;
+	#thumbs_down:hover {
+		color: #EC644B !important;
 	}
 
-		ul {
-			list-style: none;
-			margin: 0;
-			display: block;
+	.seeker-bar-container {
+		position: relative;
+		height: 5px;
+		display: block;
+		width: 100%;
+		overflow: hidden;
+		margin-top: 20px;
 	}
 
-		h1, h2, h3, h4, h5, h6 {
-			font-weight: 400;
-			line-height: 1.1;
+	.seeker-bar {
+		top: 0;
+		left: 0;
+		bottom: 0;
+		position: absolute;
 	}
 
-		h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
-			font-weight: inherit;
+	ul {
+		list-style: none;
+		margin: 0;
+		display: block;
 	}
 
-		h1 {
-			font-size: 4.2rem;
-			line-height: 110%;
-			margin: 2.1rem 0 1.68rem 0;
+	h1, h2, h3, h4, h5, h6 {
+		font-weight: 400;
+		line-height: 1.1;
 	}
 
-		h2 {
-			font-size: 3.56rem;
-			line-height: 110%;
-			margin: 1.78rem 0 1.424rem 0;
+	h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
+		font-weight: inherit;
 	}
 
-		h3 {
-			font-size: 2.92rem;
-			line-height: 110%;
-			margin: 1.46rem 0 1.168rem 0;
+	h1 {
+		font-size: 4.2rem;
+		line-height: 110%;
+		margin: 2.1rem 0 1.68rem 0;
 	}
 
-		h4 {
-			font-size: 2.28rem;
-			line-height: 110%;
-			margin: 1.14rem 0 0.912rem 0;
+	h2 {
+		font-size: 3.56rem;
+		line-height: 110%;
+		margin: 1.78rem 0 1.424rem 0;
 	}
 
-		h5 {
-			font-size: 1.64rem;
-			line-height: 110%;
-			margin: 0.82rem 0 0.656rem 0;
+	h3 {
+		font-size: 2.92rem;
+		line-height: 110%;
+		margin: 1.46rem 0 1.168rem 0;
 	}
 
-		h6 {
-			font-size: 1rem;
-			line-height: 110%;
-			margin: 0.5rem 0 0.4rem 0;
+	h4 {
+		font-size: 2.28rem;
+		line-height: 110%;
+		margin: 1.14rem 0 0.912rem 0;
 	}
 
-		.thin {
-			font-weight: 200;
+	h5 {
+		font-size: 1.64rem;
+		line-height: 110%;
+		margin: 0.82rem 0 0.656rem 0;
 	}
 
-		.left {
-			float: left !important;
+	h6 {
+		font-size: 1rem;
+		line-height: 110%;
+		margin: 0.5rem 0 0.4rem 0;
 	}
 
-		.right {
-			float: right !important;
+	.thin {
+		font-weight: 200;
 	}
 
-		.light-blue {
-			background-color: #03a9f4 !important;
+	.left {
+		float: left !important;
 	}
 
-		.white {
-			background-color: #FFFFFF !important;
+	.right {
+		float: right !important;
+	}
+
+	.light-blue {
+		background-color: #03a9f4 !important;
+	}
+
+	.white {
+		background-color: #FFFFFF !important;
 	}
 </style>
