@@ -88,8 +88,8 @@ console log
 script
 	until mountpoint -q /musare; do sleep 1; done
 	echo \$\$ > /var/run/musare.pid
-	cd /musare
-	nodemon -L backend/app.js
+	cd /musare/backend/
+	nodemon -L app.js
 end script
 
 pre-start script
