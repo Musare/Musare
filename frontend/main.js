@@ -1,7 +1,8 @@
 import Vue from 'vue';
 import VueRouter from 'vue-router';
-import Home from './pages/Home.vue';
-import Station from './pages/Station.vue';
+import App from './App.vue';
+import Home from './components/pages/Home.vue';
+import Station from './components/pages/Station.vue';
 
 Vue.use(VueRouter);
 let router = new VueRouter({ history: true });
@@ -15,4 +16,4 @@ router.map({
 	}
 });
 
-router.start(Vue.extend(), 'body');
+router.start(App, 'body');

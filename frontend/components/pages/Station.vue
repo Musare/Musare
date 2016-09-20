@@ -40,8 +40,8 @@
 </template>
 
 <script>
-	import MainHeader from '../components/MainHeader.vue'
-	import MainFooter from '../components/MainFooter.vue'
+	import MainHeader from '../MainHeader.vue'
+	import MainFooter from '../MainFooter.vue'
 
 	export default {
 		data() {
@@ -63,7 +63,7 @@
 		},
 		methods: {
 			youtubeReady: function() {
-				var local = this;
+				let local = this;
 				local.player = new YT.Player("player", {
 					height: 270,
 					width: 480,
@@ -72,7 +72,7 @@
 					events: {
 						'onReady': function (event) {
 							local.playerReady = true;
-							var volume = parseInt(localStorage.getItem("volume"));
+							let volume = parseInt(localStorage.getItem("volume"));
 							volume = (typeof volume === "number") ? volume : 20;
 							local.player.setVolume(volume);
 							if (volume > 0) {
@@ -92,27 +92,27 @@
 				});
 			},
 			startSong: function(song) {
-				var local = this;
+				let local = this;
 				if (local.playerReady) {
 
 				}
 			},
 			getTimeElapsed: function() {
-				var local = this;
+				let local = this;
 				if (local.currentSong !== undefined) {
 					return Date.now() - local.currentSong.startedAt - local.timePaused;
 				}
 				return 0;
 			},
 			pauseVideo: function() {
-				var local = this;
+				let local = this;
 				local.paused = true;
 				if (local.playerReady) {
 					local.player.pauseVideo();
 				}
 			},
 			unpauseVideo: function() {
-				var local = this;
+				let local = this;
 				local.paused = false;
 				if (local.playerReady) {
 					local.player.seekTo(local.getTimeElapsed() / 1000);
@@ -120,7 +120,7 @@
 				}
 			},
 			playVideo: function() {
-				var local = this;
+				let local = this;
 				if (local.playerReady) {
 					local.videoLoading = true;
 					local.player.loadVideoById(local.currentSong.id);
@@ -143,26 +143,26 @@
 				}
 			},
 			resizeSeekerbar: function() {
-				var local = this;
+				let local = this;
 				if (!local.paused) {
 					$(".seeker-bar").width(((local.getTimeElapsed() / 1000) / local.currentSong.duration * 100) + "%");
 				}
 			},
 			calculateTimeElapsed: function() {
-				var local = this;
-				var duration = (Date.now() - local.currentSong.startedAt - local.timePaused) / 1000;
-				var songDuration = local.currentSong.duration;
+				let local = this;
+				let duration = (Date.now() - local.currentSong.startedAt - local.timePaused) / 1000;
+				let songDuration = local.currentSong.duration;
 				if (songDuration <= duration) {
 					local.player.pauseVideo();
 				}
-				var d = moment.duration(duration, 'seconds');
+				let d = moment.duration(duration, 'seconds');
 				if (!local.paused) {
 					this.timeElapsed = d.minutes() + ":" + ("0" + d.seconds()).slice(-2);
 				}
 			},
 			changeVolume: function() {
-				var local = this;
-				var volume = $("#volumeSlider").val();
+				let local = this;
+				let volume = $("#volumeSlider").val();
 				localStorage.setItem("volume", volume);
 				if (local.playerReady) {
 					local.player.setVolume(volume);
@@ -172,38 +172,38 @@
 				}
 			},
 			toggleLike: function() {
-				var local = this;
+				let local = this;
 				local.stationSocket.emit("toggleLike");//TODO Add code here to see if this was a success or not
 			},
 			toggleDislike: function() {
-				var local = this;
+				let local = this;
 				local.stationSocket.emit("toggleDislike");//TODO Add code here to see if this was a success or not
 			}
 		},
 		ready: function() {
-			var local = this;
+			let local = this;
 			window.onYouTubeIframeAPIReady = function() {
 				local.youtubeReady();
 			};
 
-			var socket = this.$parent.socket;
+			let socket = this.$parent.socket;
 			local.stationSocket = io.connect('http://dev.musare.com/edm');
 			local.stationSocket.on("skippedSong", function(currentSong) {
 				local.currentSong = currentSong;
 				local.playVideo();
 			});
 
-			var volume = parseInt(localStorage.getItem("volume"));
+			let volume = parseInt(localStorage.getItem("volume"));
 			volume = (typeof volume === "number") ? volume : 20;
 			$("#volumeSlider").val(volume);
 
-			//TODO Remove this
+			// TODO: Remove this
 			socket.emit("/stations/join/:id", "edm", function(data) {
 				local.currentSong = data.data.currentSong;
-				var tag = document.createElement('script');
+				let tag = document.createElement('script');
 
 				tag.src = "https://www.youtube.com/iframe_api";
-				var firstScriptTag = document.getElementsByTagName('script')[0];
+				let firstScriptTag = document.getElementsByTagName('script')[0];
 				firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 			});
 		},
