@@ -1,5 +1,5 @@
 <template>
-	<main-header></main-header>
+	<station-header></station-header>
 	<div class="station">
 		<div class="row">
 			<div class="col-md-8 col-md-push-2 col-sm-10 col-sm-push-1 col-xs-12 video-col">
@@ -40,7 +40,7 @@
 </template>
 
 <script>
-	import MainHeader from '../MainHeader.vue'
+	import StationHeader from '../StationHeader.vue'
 	import MainFooter from '../MainFooter.vue'
 
 	export default {
@@ -207,7 +207,7 @@
 				firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 			});
 		},
-		components: { MainHeader, MainFooter }
+		components: { StationHeader, MainFooter }
 	}
 </script>
 
