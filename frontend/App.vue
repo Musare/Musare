@@ -65,11 +65,11 @@
 			}
 		},
 		ready: function () {
-			var local = this;
+			let local = this;
 			local.socket = io();
-			local.socket.on("ready", function(status) {
+			local.socket.on("ready", status => {
 				local.loggedIn = status;
-				local.socket.emit("/user/ratings", function(result) {
+				local.socket.emit("/user/ratings", result => {
 					if (!result.err) {
 						local.likes = result.likes;
 						local.dislikes = result.dislikes;
