@@ -24,6 +24,8 @@
 					email: "",
 					password: ""
 				},
+				likes: [],
+				dislikes: [],
 				loggedIn: true,
 				groups: [
 					{
@@ -63,9 +65,16 @@
 			}
 		},
 		ready: function () {
-			this.socket = io();
-			this.socket.on("ready", function(status) {
-				this.loggedIn = status;
+			var local = this;
+			local.socket = io();
+			local.socket.on("ready", function(status) {
+				local.loggedIn = status;
+				local.socket.emit("/user/ratings", function(result) {
+					if (!result.err) {
+						local.likes = result.likes;
+						local.dislikes = result.dislikes;
+					}
+				});
 			});
 		},
 		events: {

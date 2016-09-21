@@ -195,5 +195,44 @@ module.exports = {
 				}
 			}
 		});
+	},
+
+	'/songs/:id/toggleLike': (songId, userId, cb) => {
+
+		var user = global.db.user.findOne(userId);
+		var song = global.db.song.findOne(songId);
+		if (user !== undefined) {
+			if (song !== undefined) {
+				var liked = false;
+				if (song.likes.indexOf(userId) === -1) {
+					liked = true;
+					// Add like
+				} else {
+					// Remove like
+				}
+				if (song.dislikes.indexOf(userId) !== -1) {
+					// Remove dislike
+				}
+				// Emit to all sockets with this user that their likes/dislikes updated.
+				// Emit to all sockets in the room that the likes/dislikes has updated
+				cb({liked: liked, disliked: false});
+			} else {
+				cb({err: "Song not found."});
+			}
+		} else {
+			cb({err: "User not found."});
+		}
+
+	},
+
+	'/user/ratings': (userId, cb) => {
+
+		var user = global.db.user.findOne(userId);
+		if (user !== undefined) {
+			cb({likes: user.likes, dislikes: user.dislikes});
+		} else {
+			cb({err: "User not found."});
+		}
+
 	}
 };
