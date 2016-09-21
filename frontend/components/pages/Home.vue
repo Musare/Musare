@@ -1,6 +1,9 @@
 <template>
 	<div class="app">
 		<main-header></main-header>
+		<toast>
+			Test
+		</toast>
 		<div class="modal fade" id="register" tabindex="-1" role="dialog" aria-labelledby="register-modal">
 			<div class="modal-dialog" role="document">
 				<div class="modal-content">
@@ -64,9 +67,10 @@
 <script>
 	import MainHeader from '../MainHeader.vue'
 	import MainFooter from '../MainFooter.vue'
+	import Toast from '../Toast.vue';
 
 	export default {
-		components: { MainHeader, MainFooter }
+		components: { MainHeader, MainFooter, Toast }
 	}
 </script>
 
