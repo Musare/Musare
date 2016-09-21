@@ -1,4 +1,4 @@
-'use strict';
+ 'use strict';
 
 // nodejs modules
 const path = require('path'),
@@ -23,7 +23,7 @@ const express          = require('express'),
       passportSocketIo = require("passport.socketio");
 
 // global module
-const global         = require('./logic/global');
+const global = require('./logic/global');
 
 // database
 const MongoDB = mongoose.connect('mongodb://localhost:27017/musare').connection;
@@ -45,8 +45,8 @@ function setupExpress() {
 
 // other custom modules
 	const coreHandler = require('./logic/coreHandler'),
-		socketHandler = require('./logic/socketHandler'),
-		expressHandler = require('./logic/expressHandler');
+		  socketHandler = require('./logic/socketHandler'),
+		  expressHandler = require('./logic/expressHandler');
 
 	global.db = {
 		user: require('./schemas/user')(mongoose),
@@ -54,7 +54,7 @@ function setupExpress() {
 		song: require('./schemas/song')(mongoose)
 	};
 
-		const mongoStore = new MongoStore({'mongooseConnection': MongoDB});
+	const mongoStore = new MongoStore({'mongooseConnection': MongoDB});
 
 	app.use(session({
 		secret: config.get('secret'),
@@ -189,6 +189,10 @@ function setupExpress() {
 	}));
 
 	app.use(express.static(__dirname + '/../frontend/build/'));
+
+	app.get('*', (req, res) => {
+		res.redirect('/');
+	});
 
 	socketHandler(coreHandler, global.io);
 	expressHandler(coreHandler, app);
