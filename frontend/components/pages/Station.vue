@@ -31,7 +31,7 @@
 							<div class="seeker-bar light-blue" style="width: 60.9869%;"></div>
 						</div>
 					</div>
-					<img alt="Not loading" class="img-responsive col-md-4 col-xs-12 col-sm-12" onerror="this.src='/notes.png'" id="song-image" style="margin-top: 10px !important" v-bind:src="image" />
+					<img alt="Not loading" class="img-responsive col-md-4 col-xs-12 col-sm-12" onerror="this.src='../assets/notes.png'" id="song-image" style="margin-top: 10px !important" v-bind:src="image" />
 				</div>
 			</div>
 		</div>
