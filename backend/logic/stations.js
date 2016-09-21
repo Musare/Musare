@@ -8,8 +8,18 @@ module.exports = {
 	Station: class Station {
 		constructor(id, data) {
 			this.nsp = io.of(id);
+			let local = this;
 			this.nsp.on('connection', socket => {
 				console.log('someone connected');
+				socket.on("pause", function() {
+					local.pause();
+				});
+				socket.on("unpause", function() {
+					local.unPause();
+				});
+				socket.on("skipSong", function() {
+					local.skipSong();
+				});
 			});
 			this.id = id;
 
@@ -22,6 +32,7 @@ module.exports = {
 			this.users = [];
 			this.displayName = data.displayName;
 			this.description = data.description;
+			this.timePaused = 0;
 			this.timer = undefined;
 			this.skipSong();
 		}
@@ -40,6 +51,7 @@ module.exports = {
 				this.timer = new global.Timer(() => {
 					self.skipSong();
 				}, this.currentSong.duration, this.paused);
+				this.timePaused = 0;
 				this.currentSong.startedAt = Date.now();
 				this.nsp.emit("skippedSong", this.currentSong);
 			}
@@ -58,18 +70,21 @@ module.exports = {
 		}
 
 		pause() {
+			console.log("PAUSE");
 			if (!this.paused) {
 				this.paused = true;
 				this.timer.pause();
-				this.snp.emit("pause");
+				this.nsp.emit("pause");
 			}
 		}
 
 		unPause() {
+			console.log("UNPAUSE");
 			if (this.paused) {
 				this.paused = false;
 				this.timer.resume();
-				this.snp.emit("unpause");
+				this.timePaused += this.timer.getTimePaused();
+				this.nsp.emit("unpause", this.timePaused);
 			}
 		}
 
@@ -84,14 +99,14 @@ module.exports = {
 		lock() {
 			if (!this.locked) {
 				this.locked = true;
-				this.snp.emit("lock");
+				this.nsp.emit("lock");
 			}
 		}
 
 		unlock() {
 			if (this.locked) {
 				this.locked = false;
-				this.snp.emit("unlocked");
+				this.nsp.emit("unlocked");
 			}
 		}
 
@@ -102,13 +117,13 @@ module.exports = {
 		updateDisplayName(newDisplayName) {
 			// TODO: Update db
 			this.displayName = newDisplayName;
-			this.snp.emit("updateDisplayName", newDisplayName);
+			this.nsp.emit("updateDisplayName", newDisplayName);
 		}
 
 		updateDescription(newDescription) {
 			// TODO: Update db
 			this.description = newDescription;
-			this.snp.emit("updateDescription", newDescription);
+			this.nsp.emit("updateDescription", newDescription);
 		}
 
 		getId() {
@@ -125,16 +140,21 @@ module.exports = {
 
 		addUser(user) {
 			this.users.add(user);
-			this.snp.emit("updateUsers", this.users);
+			this.nsp.emit("updateUsers", this.users);
 		}
 
 		removeUser(user) {
 			this.users.splice(this.users.indexOf(user), 1);
-			this.snp.emit("updateUsers", this.users);
+			this.nsp.emit("updateUsers", this.users);
 		}
 
 		getUsers() {
 			return this.users;
+		}
+
+		getTimePaused() {
+			console.log(this.timePaused, "        ", this.timer.getTimePaused());
+			return this.timePaused + this.timer.getTimePaused();
 		}
 	},
 	addStation: station => {

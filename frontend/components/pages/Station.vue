@@ -10,6 +10,8 @@
 			</div>
 			<div class="col-md-8 col-md-push-2 col-sm-10 col-sm-push-1 col-xs-12">
 				<div class="row">
+					<button v-if="paused" @click="unpauseStation()">Unpause</button>
+					<button v-if="!paused" @click="pauseStation()">Pause</button>
 					<div class="col-md-8 col-sm-12 col-sm-12">
 						<h4 id="time-display">{{timeElapsed}} / {{songDuration}}</h4>
 						<h3>{{title}}</h3>
@@ -78,14 +80,15 @@
 							if (volume > 0) {
 								local.player.unMute();
 							}
-							if (!local.paused) {
-								local.playVideo();
-							}
+							local.playVideo();
 						},
 						'onStateChange': function (event) {
 							if (event.data === 1 && local.videoLoading === true) {
 								local.videoLoading = false;
 								local.player.seekTo(local.getTimeElapsed() / 1000, true);
+								if (local.paused) {
+									local.player.pauseVideo();
+								}
 							}
 						}
 					}
@@ -139,7 +142,7 @@
 					local.interval = setInterval(function () {
 						local.resizeSeekerbar();
 						local.calculateTimeElapsed();
-					}, 500);
+					}, 250);
 				}
 			},
 			resizeSeekerbar: function() {
@@ -150,14 +153,20 @@
 			},
 			calculateTimeElapsed: function() {
 				let local = this;
+				let currentTime = Date.now();
+				if (local.timePausedCurrentTime !== undefined && local.paused) {
+					local.timePaused += (Date.now() - local.timePausedCurrentTime);
+					local.timePausedCurrentTime = undefined;
+				}
 				let duration = (Date.now() - local.currentSong.startedAt - local.timePaused) / 1000;
 				let songDuration = local.currentSong.duration;
 				if (songDuration <= duration) {
 					local.player.pauseVideo();
 				}
 				let d = moment.duration(duration, 'seconds');
-				if (!local.paused) {
-					this.timeElapsed = d.minutes() + ":" + ("0" + d.seconds()).slice(-2);
+				console.log(duration, "    ", local.timePaused);
+				if ((!local.paused || local.timeElapsed === "0:00") && duration <= songDuration) {
+					local.timeElapsed = d.minutes() + ":" + ("0" + d.seconds()).slice(-2);
 				}
 			},
 			changeVolume: function() {
@@ -170,6 +179,16 @@
 						local.player.unMute();
 					}
 				}
+			},
+			unpauseStation: function() {
+				console.log("UNPAUSE1");
+				let local = this;
+				local.stationSocket.emit("unpause");
+			},
+			pauseStation: function() {
+				console.log("PAUSE1");
+				let local = this;
+				local.stationSocket.emit("pause");
 			},
 			toggleLike: function() {
 				let local = this;
@@ -189,9 +208,21 @@
 			let socket = this.$parent.socket;
 			local.stationSocket = io.connect('http://dev.musare.com/edm');
 			local.stationSocket.on("skippedSong", function(currentSong) {
+				console.log("SKIPPED SONG");
 				local.currentSong = currentSong;
+				local.timePaused = 0;
 				local.playVideo();
 			});
+			local.stationSocket.on("pause", function() {
+				console.log("PAUSE");
+				local.pauseVideo();
+			});
+			local.stationSocket.on("unpause", function(timePaused) {
+				console.log("UNPAUSE");
+				local.timePaused = timePaused;
+				local.unpauseVideo();
+			});
+
 
 			let volume = parseInt(localStorage.getItem("volume"));
 			volume = (typeof volume === "number") ? volume : 20;
@@ -200,6 +231,9 @@
 			// TODO: Remove this
 			socket.emit("/stations/join/:id", "edm", function(data) {
 				local.currentSong = data.data.currentSong;
+				local.paused = data.data.paused;
+				local.timePaused = data.data.timePaused;
+				local.timePausedCurrentTime  = data.data.currentTime;
 				let tag = document.createElement('script');
 
 				tag.src = "https://www.youtube.com/iframe_api";
@@ -329,6 +363,7 @@
 				left: 0;
 				width: 100%;
 				height: 100%;
+				pointer-events: none;
 			}
 		}
 		.video-col {

@@ -163,7 +163,9 @@ module.exports = {
 					displayName: station.getDisplayName(),
 					users: station.getUsers(),
 					currentSong: station.getCurrentSong(),
-					timePaused: 0
+					timePaused: station.getTimePaused(),
+					paused: station.isPaused(),
+					currentTime: Date.now()
 				}
 			});
 		}
