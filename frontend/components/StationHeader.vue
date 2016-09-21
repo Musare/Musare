@@ -11,7 +11,7 @@
 			</div>
 			<div class="collapse navbar-collapse" id="station-navbar">
 				<ul class="nav navbar-nav">
-					<li class="pull-left"><a href="#"><i class="material-icons left">home</i></a></li>
+					<li class="pull-left"><a href="#" v-link="{ path: '/' }"><i class="material-icons left">home</i></a></li>
 					<li class="pull-left"><a href="#"><i class="material-icons left">playlist_add</i></a></li>
 					<li class="pull-left"><a href="#"><i class="material-icons left">flag</i></a></li>
 					<li class="pull-left"><a href="#"><i class="material-icons left">skip_next</i></a></li>
