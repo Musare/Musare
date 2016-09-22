@@ -31,6 +31,7 @@
   },
   "dependencies": {
     "vue": "^1.0.26",
+    "vue-roaster": "^1.0.4",
     "vue-router": "^0.7.13"
   }
 }

@@ -67,7 +67,7 @@
 <script>
 	import MainHeader from '../MainHeader.vue'
 	import MainFooter from '../MainFooter.vue'
-	import Toast from '../Toast.vue';
+	import Toast from 'vue-roaster/src/Toast.vue'
 
 	export default {
 		components: { MainHeader, MainFooter, Toast }
