@@ -68,5 +68,8 @@ module.exports = {
 		}
 		return result.join("");
 	},
+	getSocketFromId: function(socketId) {
+		return this.io.sockets.sockets[socketId];
+	},
 	Timer
 };

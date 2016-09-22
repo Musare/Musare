@@ -142,39 +142,37 @@ module.exports = {
 		}));
 	},
 
-	'/stations/join/:id': (id, user, cb) => {
+	'/station/:id/join': (stationId, socketId, cb) => {
 
-		const station = stations.getStation(id);
+		const station = stations.getStation(stationId);
 
 		if (station) {
 
-			user.stationId = id;
+			var response = station.handleUserJoin(socketId);
 
-			/*io.sockets.emit('station-joined', {
-				user: {
-					id: user.id,
-					username: user.username
-				}
-			});*/
-
-			return cb({
-				status: 'joined',
-				data: {
-					displayName: station.getDisplayName(),
-					users: station.getUsers(),
-					currentSong: station.getCurrentSong(),
-					timePaused: station.getTimePaused(),
-					paused: station.isPaused(),
-					currentTime: Date.now()
-				}
-			});
+			return cb(response);
 		}
 		else {
 			return cb({ status: 'error', message: 'Room with that ID does not exists' });
 		}
 	},
 
-	'/stations/search/:query': (query, cb) => {
+	'/station/:id/skip': (stationId, socketId, cb) => {
+
+		const station = stations.getStation(stationId);
+
+		if (station) {
+
+			var response = station.handleUserJoin(socketId);
+
+			return cb(response);
+		}
+		else {
+			return cb({ status: 'error', message: 'Room with that ID does not exists' });
+		}
+	},
+
+	/*'/stations/search/:query': (query, cb) => {
 
 		const params = [
 			'part=snippet',
@@ -197,9 +195,9 @@ module.exports = {
 				}
 			}
 		});
-	},
+	},*/
 
-	'/songs/:id/toggleLike': (songId, userId, cb) => {
+	'/song/:id/toggleLike': (songId, userId, cb) => {
 
 		var user = global.db.user.findOne(userId);
 		var song = global.db.song.findOne(songId);
@@ -227,7 +225,7 @@ module.exports = {
 
 	},
 
-	'/user/ratings': (userId, cb) => {
+	'/user/:id/ratings': (userId, cb) => {
 
 		var user = global.db.user.findOne(userId);
 		if (user !== undefined) {

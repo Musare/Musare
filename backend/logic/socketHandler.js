@@ -2,15 +2,6 @@
 
 module.exports = (core, io) => {
 
-	// tell all the users in this room that someone is joining it
-	core.on('station-joined', user => {
-		io.sockets.clients().forEach(socket => {
-			if (socket.request.user.id != user.user.id && socket.request.user.roomId === id) {
-				socket.emit('station-joined', user);
-			}
-		});
-	});
-
 	io.on('connection', socket => {
 		console.log("User has connected");
 		socket.on('disconnect', () => {
@@ -29,19 +20,19 @@ module.exports = (core, io) => {
 			});
 		});
 
-		socket.on('/stations/join/:id', (id, cb) => {
-			core['/stations/join/:id'](id, socket.request.user, result => {
+		socket.on('/station/:id/join', (id, cb) => {
+			core['/station/:id/join'](id, socket.id, result => {
 				cb(result);
 			});
 		});
 
-		socket.on('/stations/search/:query', (query, cb) => {
+		/*socket.on('/stations/search/:query', (query, cb) => {
 			core['/stations/search/:query'](query, result => {
 				cb(result);
 			});
-		});
+		});*/
 
 		// this lets the client socket know that they can start making request
-		socket.emit('ready', socket.request.user.logged_in);
+		//socket.emit('ready', socket.request.user.logged_in);
 	});
 };
