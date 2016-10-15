@@ -104,6 +104,7 @@
 		methods: {
 			youtubeReady: function() {
 				let local = this;
+				console.log("YT Ready!!!");
 				local.player = new YT.Player("player", {
 					height: 270,
 					width: 480,
@@ -111,6 +112,7 @@
 					playerVars: {controls: 1, iv_load_policy: 3, rel: 0, showinfo: 0},
 					events: {
 						'onReady': function (event) {
+							console.log("Ready!!!");
 							local.playerReady = true;
 							let volume = parseInt(localStorage.getItem("volume"));
 							volume = (typeof volume === "number") ? volume : 20;
@@ -322,11 +324,24 @@
 		ready: function() {
 			let local = this;
 			window.onYouTubeIframeAPIReady = function() {
+				console.log("API READY?");
 				local.youtubeReady();
 			};
 
 			local.socket = this.$parent.socket;
 			local.stationSocket = io.connect('http://dev.musare.com/edm');
+			local.stationSocket.on("connected", function(data) {
+				console.log("JOINED!?");
+				local.currentSong = data.currentSong;
+				local.paused = data.paused;
+				local.timePaused = data.timePaused;
+				local.timePausedCurrentTime  = data.currentTime;
+				let tag = document.createElement('script');
+
+				tag.src = "https://www.youtube.com/iframe_api";
+				let firstScriptTag = document.getElementsByTagName('script')[0];
+				firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+			});
 			local.stationSocket.on("skippedSong", function(currentSong) {
 				console.log("SKIPPED SONG");
 				local.currentSong = currentSong;
@@ -349,7 +364,8 @@
 			$("#volumeSlider").val(volume);
 
 			// TODO: Remove this
-			local.socket.emit("/stations/join/:id", "edm", function(data) {
+			/*local.socket.emit("/station/:id/join", "edm", function(data) {
+				console.log("JOINED!?");
 				local.currentSong = data.data.currentSong;
 				local.paused = data.data.paused;
 				local.timePaused = data.data.timePaused;
@@ -359,7 +375,7 @@
 				tag.src = "https://www.youtube.com/iframe_api";
 				let firstScriptTag = document.getElementsByTagName('script')[0];
 				firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-			});
+			});*/
 		},
 		components: { StationHeader, MainFooter }
 	}

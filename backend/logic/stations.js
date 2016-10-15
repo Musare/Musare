@@ -9,7 +9,7 @@ module.exports = {
 		constructor(id, data) {
 			this.nsp = io.of(id);
 			let local = this;
-			this.nsp.on('connection', socket => {
+			this.nsp.on('connection', (socket, cb) => {
 				console.log('someone connected');
 				socket.on("pause", function() {
 					local.pause();
@@ -20,6 +20,15 @@ module.exports = {
 				socket.on("skipSong", function() {
 					local.skipSong();
 				});
+
+				socket.emit("connected", {
+					displayName: this.getDisplayName(),
+					users: this.getUsers().length,
+					currentSong: this.getCurrentSong(),
+					timePaused: this.getTimePaused(),
+					paused: this.isPaused(),
+					currentTime: Date.now()
+				});
 			});
 			this.id = id;
 
@@ -29,7 +38,7 @@ module.exports = {
 			this.paused = data.paused;
 			this.locked = data.locked;
 			this.skipVotes = 0;
-			this.sockets = [];
+			this.users = [];
 			this.displayName = data.displayName;
 			this.description = data.description;
 			this.timePaused = 0;
@@ -138,47 +147,23 @@ module.exports = {
 			return this.description;
 		}
 
-		getSockets() {
-			return this.sockets;
+		addUser(user) {
+			this.users.add(user);
+			this.nsp.emit("updateUsers", this.users);
+		}
+
+		removeUser(user) {
+			this.users.splice(this.users.indexOf(user), 1);
+			this.nsp.emit("updateUsers", this.users);
+		}
+
+		getUsers() {
+			return this.users;
 		}
 
 		getTimePaused() {
 			console.log(this.timePaused, "        ", this.timer.getTimePaused());
 			return this.timePaused + this.timer.getTimePaused();
-		}
-
-		emitToStation(...data) {
-			this.sockets.forEach(function(socketId) {
-				let socket = global.getSocketFromId(socketId);
-				if (socket !== undefined) {
-					socket.emit.apply(data);
-				} else {
-					// Remove socket and emit it
-				}
-			});
-		}
-
-		handleUserJoin(socketId) {
-			const socket = global.getSocketFromId(socketId);
-			if (socket !== undefined) {
-				//TODO Check if banned from room & check if allowed to join room
-				if (this.sockets.indexOf(socketId) === -1) {
-					this.emitToStation("userJoin", "Person");
-					this.sockets.push(socketId);
-					return {
-						displayName: this.getDisplayName(),
-						users: this.getSockets().length,
-						currentSong: this.getCurrentSong(),
-						timePaused: this.getTimePaused(),
-						paused: this.isPaused(),
-						currentTime: Date.now()
-					};
-				} else {
-					return {err: "Already in that station."};
-				}
-			} else {
-				return {err: "Invalid socket id."};
-			}
 		}
 	},
 	addStation: station => {

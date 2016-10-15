@@ -22,11 +22,13 @@ module.exports = (core, io) => {
 			});
 		});
 
-		socket.on('/station/:id/join', (id, cb) => {
+		/*socket.on('/station/:id/join', (id, cb) => {
+			console.log("JOINED!!!");
 			core['/station/:id/join'](id, socket.id, result => {
+				console.log("CALLBACK!!!");
 				cb(result);
 			});
-		});
+		});*/
 
 		socket.on('/youtube/getVideos/:query', (query, cb) => {
 			core['/youtube/getVideos/:query'](query, result => {
