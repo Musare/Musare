@@ -1,4 +1,7 @@
 <template>
+	<div id="toasts">
+		<span v-for="toast in toasts" v-bind:class="toast.class">{{toast.text}}</span>
+	</div>
 	<div>
 		<router-view></router-view>
 	</div>
@@ -48,7 +51,9 @@
 							{ id: "w19hu791iiub6wmjf9a4i", thumbnail: "http://edmsauce.wpengine.netdna-cdn.com/wp-content/uploads/2012/12/Deadmau5-album-title-goes-here.jpg", name: "EDM", description: "Deadmau5 - There Might Be Coffee", users: 13 }
 						]
 					}
-				]
+				],
+				toastCount: 0,
+				toasts: []
 			}
 		},
 		methods: {
@@ -62,6 +67,36 @@
 						location.reload();
 					}
 				});
+			},
+			toast(text, duration) {
+				let local = this;
+				let id = local.toastCount++;
+
+				this.toasts.push({id: id, text: text, class: "toast toast-add"});
+				if (duration > 250) {
+					setTimeout(function() {
+						local.toasts = local.toasts.map(function(toast) {
+							if (toast.id === id) {
+								toast.class = "toast";
+							}
+							return toast;
+						});
+					}, 250);
+				}
+
+				setTimeout(function() {
+					local.toasts = local.toasts.map(function(toast) {
+						if (toast.id === id) {
+							toast.class = "toast toast-remove";
+						}
+						return toast;
+					});
+					setTimeout(function() {
+						local.toasts = local.toasts.filter(function(toast) {
+							return toast.id !== id;
+						});
+					}, 250);
+				}, duration);
 			}
 		},
 		ready: function () {
@@ -131,3 +166,40 @@
 		}
 	}
 </script>
+
+<style lang="sass" scoped>
+	#toasts {
+		position: fixed;
+		z-index: 100000;
+		right: 5%;
+		top: 10%;
+		max-width: 90%;
+
+		.toast {
+			width: 100%;
+			height: auto;
+			padding: 10px 20px;
+			border-radius: 3px;
+			color: white;
+			background-color: #424242;
+			display: -webkit-flex;
+			display: -ms-flexbox;
+			display: flex;
+			margin-bottom: 10px;
+			font-size: 1.18em;
+			font-weight: 400;
+			box-shadow: 0 2px 5px 0 rgba(0,0,0,0.16), 0 2px 10px 0 rgba(0,0,0,0.12);
+			transition: all 0.25s ease;
+		}
+
+		.toast-remove {
+			opacity: 0;
+			margin-top: -50px;
+		}
+
+		.toast-add {
+			opacity: 0;
+			margin-top: 50px;
+		}
+	}
+</style>

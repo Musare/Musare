@@ -8,13 +8,11 @@ module.exports = mongoose => {
 		artists: [{ type: String, min: 1 }],
 		duration: { type: Number, required: true },
 		skipDuration: { type: Number, required: true, default: 0 },
-		image: { type: String, required: true },
-		likes: { type: Number, required: true },
-		dislikes: { type: Number, required: true },
+		image: { type: String, required: true, default: "" },
 		genres: [{ type: String }],
 		requestedBy: { type: String, required: true },
 		requestedAt: { type: Date, required: true },
 	});
 
-	return queueSongSchema;
+	return mongoose.model('queueSong', queueSongSchema);
 };

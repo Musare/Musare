@@ -1,9 +1,6 @@
 <template>
 	<div class="app">
 		<main-header></main-header>
-		<toast>
-			Test
-		</toast>
 		<div class="modal fade" id="register" tabindex="-1" role="dialog" aria-labelledby="register-modal">
 			<div class="modal-dialog" role="document">
 				<div class="modal-content">
@@ -15,7 +12,7 @@
 						<input class="form-control" type="text" placeholder="Email..." v-model="$parent.register.email"/>
 						<input class="form-control" type="text" placeholder="Username..." v-model="$parent.register.username"/>
 						<input class="form-control" type="password" placeholder="Password..." v-model="$parent.register.password"/>
-						<div class="g-recaptcha" data-sitekey="6LdNCQcUAAAAANj_w5leQSrxnAmDp2ioh4alkUHg"></div>
+						<div class="g-recaptcha" data-sitekey="6Lfa-wYUAAAAANY6iVvWNEXohC38l1cZqHRole9T"></div>
 					</div>
 					<div class="modal-footer">
 						<button type="button" class="btn btn-primary" data-dismiss="modal" @click="this.$dispatch('register');">Submit</button>
@@ -67,10 +64,9 @@
 <script>
 	import MainHeader from '../MainHeader.vue'
 	import MainFooter from '../MainFooter.vue'
-	import Toast from 'vue-roaster/src/Toast.vue'
 
 	export default {
-		components: { MainHeader, MainFooter, Toast }
+		components: { MainHeader, MainFooter }
 	}
 </script>
 

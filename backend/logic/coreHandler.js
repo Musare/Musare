@@ -172,6 +172,107 @@ module.exports = {
 		}
 	},
 
+	'/youtube/getVideos/:query': (query, cb) => {
+		cb({
+			type: "query",
+			items: [
+				{
+					id: "39fk3490krf9",
+					title: "Test Title",
+					channel: "Test Channel",
+					duration: 200,
+					image: "https://i.ytimg.com/vi/lwg5yAuanPg/hqdefault.jpg?custom=true&w=196&h=110&stc=true&jpg444=true&jpgq=90&sp=68&sigh=DWOZl_nkv78qzj8WHPY1-53iQfA"
+				},
+				{
+					id: "49iug05it",
+					title: "Test Title 222",
+					channel: "Test Channel 222",
+					duration: 100,
+					image: "https://i.ytimg.com/vi/QJwIsBoe3Lg/hqdefault.jpg?custom=true&w=196&h=110&stc=true&jpg444=true&jpgq=90&sp=68&sigh=8L20nlTyPf7xuIB8DTeBQFWW2Xw"
+				}
+			]
+		});
+	},
+
+	'/songs/queue/addSongs/:songs': (songs, user, cb) => {
+		if (user !== null && user !== undefined && user.logged_in) {
+			if (Array.isArray(songs)) {
+				if (songs.length > 0) {
+					let failed = 0;
+					let success = 0;
+					songs.forEach(function (song) {
+						if (typeof song === "object" && song !== null) {
+							let obj = {};
+							obj.title = song.title;
+							obj._id = song.id;
+							obj.artists = [];
+							obj.image = "test";
+							obj.duration = 0;
+							obj.genres = ["edm"];
+							//TODO Get data from Wikipedia and Spotify
+							obj.requestedBy = user._id;
+							console.log(user._id);
+							console.log(user);
+							obj.requestedAt = Date.now();
+							let queueSong = new global.db.queueSong(obj);
+							queueSong.save(function(err) {
+								console.log(err);
+								if (err) failed++;
+								else success++;
+							});
+						} else {
+							failed++;
+						}
+					});
+					cb({success, failed});
+				} else {
+					cb({err: "No songs supplied."});
+				}
+			} else {
+				cb({err: "Not supplied an array."});
+			}
+		} else {
+			cb({err: "Not logged in."});
+		}
+	},
+
+	'/songs/queue/getSongs': (user, cb) => {
+		if (user !== null && user !== undefined && user.logged_in) {
+			global.db.queueSong.find({}, function(err, songs) {
+				if (err) throw err;
+				else cb({songs: songs});
+			});
+		} else {
+			cb({err: "Not logged in."});
+		}
+	},
+
+	'/songs/queue/updateSong/:id': (user, id, object, cb) => {
+		if (user !== null && user !== undefined && user.logged_in) {
+			global.db.queueSong.findOne({_id: id}, function(err, song) {
+				if (err) throw err;
+				else {
+					if (song !== undefined && song !== null) {
+						if (typeof object === "object" && object !== null) {
+							delete object.requestedBy;
+							delete object.requestedAt;
+							global.db.queueSong.update({_id: id}, {$set: object}, function(err, song) {
+								if (err) throw err;
+								cb({success: true});
+							});
+						} else {
+							cb({err: "Invalid data."});
+						}
+					} else {
+						cb({err: "Song not found."});
+					}
+				}
+			});
+		} else {
+			cb({err: "Not logged in."});
+		}
+	},
+
 	/*'/stations/search/:query': (query, cb) => {
 
 		const params = [

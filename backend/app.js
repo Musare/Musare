@@ -5,7 +5,7 @@ const path = require('path'),
       fs   = require('fs'),
       os   = require('os');
 
-process.env.NODE_CONFIG_DIR = `${process.cwd()}/config`;
+process.env.NODE_CONFIG_DIR = `${process.cwd()}/backend/config`;
 
 // npm modules
 const express          = require('express'),
@@ -51,7 +51,8 @@ function setupExpress() {
 	global.db = {
 		user: require('./schemas/user')(mongoose),
 		station: require('./schemas/station')(mongoose),
-		song: require('./schemas/song')(mongoose)
+		song: require('./schemas/song')(mongoose),
+		queueSong: require('./schemas/queueSong')(mongoose)
 	};
 
 	const mongoStore = new MongoStore({'mongooseConnection': MongoDB});

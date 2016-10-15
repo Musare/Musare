@@ -39,6 +39,40 @@
 		</div>
 	</div>
 	<main-footer></main-footer>
+	<div class="modal fade" id="queue" tabindex="-1" role="dialog" aria-labelledby="queue-modal">
+		<div class="modal-dialog modal-large" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<h5 class="modal-title">Add to Musare</h5>
+				</div>
+				<div class="modal-body">
+					<input class="form-control" type="text" placeholder="YouTube Query / Video ID / Video link / Playlist link" v-model="queueQuery"/>
+					<button type="button" class="btn btn-primary" @click="submitQueueQuery()">Search</button>
+					<button type="button" class="btn btn-error" @click="clearQueueQuery()" v-if="queueQueryActive">Clear List</button>
+					<div v-if="queueQueryActive">
+						<h2>Queue Results</h2>
+						<div v-for="item in queueQueryResults">
+							<h5>{{item.title}}</h5>
+							<button @click='addItemToItems(item.id)'>Add</button>
+							<br>
+						</div>
+					</div>
+					<hr>
+					<div class="row">
+						<h2>Items to add</h2>
+						<div v-for="item in queueItems">
+							<h5>{{item.title}}</h5>
+							<br>
+						</div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-primary left" data-dismiss="modal" @click="addItemsToQueue()">Add items to queue</button>
+				</div>
+			</div>
+		</div>
+	</div>
 </template>
 
 <script>
@@ -60,7 +94,11 @@
 				image: "",
 				likes: 0,
 				dislikes: 0,
-				interval: 0
+				interval: 0,
+				queueQuery: "",
+				queueQueryActive: false,
+				queueQueryResults: [],
+				queueItems: []
 			}
 		},
 		methods: {
@@ -197,6 +235,88 @@
 			toggleDislike: function() {
 				let local = this;
 				local.stationSocket.emit("toggleDislike");//TODO Add code here to see if this was a success or not
+			},
+			addItemToItems: function(id) {
+				let local = this;
+				let ids = local.queueItems.map(function(item) {
+					return item.id;
+				});
+				let item;
+				local.queueQueryResults.forEach(function(result) {
+					if (result.id === id) {
+						console.log(result);
+						item = result;
+					}
+				});
+				if (ids.indexOf(id) === -1) {
+					console.log(item, 222);
+					local.queueItems.push(item);
+					local.queueQuery = "";
+					local.queueQueryActive = false;
+					local.queueQueryResults = [];
+				} else {
+					//TODO Error
+				}
+			},
+			addItemsToQueue: function() {
+				let local = this;
+				let items = local.queueItems;
+				local.socket.emit("/songs/queue/addSongs/:songs", items, function(data) {
+					console.log(data);
+					if (!data.err) {
+						local.queueItems = [];
+						$('#queue').modal('hide');
+					}
+				});
+			},
+			submitQueueQuery: function() {
+				let local = this;
+				let query = local.queueQuery;
+				local.socket.emit("/youtube/getVideos/:query", query, function(data) {
+					if (!data.err) {
+						/*queueQueryActive:
+						 queueQueryResults:*/
+						if (data.type === "playlist") {
+							let added = 0;
+							let duplicate = 0;
+							let items = [];
+							let ids = local.queueItems.map(function(item) {
+								return item.id;
+							});
+
+							data.items.forEach(function(item) {
+								if (ids.indexOf(item.id) === -1) {
+									items.push(item);
+									added++;
+								} else {
+									duplicate++;
+								}
+							});
+
+							//TODO Give result
+							local.queueItems = local.queueItems.concat(items);
+						} else if (data.type === "video") {
+							let ids = local.queueItems.map(function(item) {
+								return item.id;
+							});
+
+							if (data.item !== undefined) {
+								if (ids.indexOf(data.item.id)) {
+									local.queueItems.push(data.item);
+								}
+							}
+
+							//TODO Give result
+						} else {
+							local.queueQueryResults = [];
+							data.items.forEach(function(item) {
+								local.queueQueryResults.push(item);
+							});
+							//TODO Give result
+							local.queueQueryActive = true;
+						}
+					}
+				});
 			}
 		},
 		ready: function() {
@@ -205,7 +325,7 @@
 				local.youtubeReady();
 			};
 
-			let socket = this.$parent.socket;
+			local.socket = this.$parent.socket;
 			local.stationSocket = io.connect('http://dev.musare.com/edm');
 			local.stationSocket.on("skippedSong", function(currentSong) {
 				console.log("SKIPPED SONG");
@@ -229,7 +349,7 @@
 			$("#volumeSlider").val(volume);
 
 			// TODO: Remove this
-			socket.emit("/stations/join/:id", "edm", function(data) {
+			local.socket.emit("/stations/join/:id", "edm", function(data) {
 				local.currentSong = data.data.currentSong;
 				local.paused = data.data.paused;
 				local.timePaused = data.data.timePaused;
@@ -246,6 +366,10 @@
 </script>
 
 <style lang="sass">
+	.modal-large {
+		width: 75%;
+	}
+
 	.station {
 		flex: 1 0 auto;
 		padding-top: 4.5vw;

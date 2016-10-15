@@ -12,6 +12,7 @@
 			</div>
 			<div class="collapse navbar-collapse" id="main-navbar">
 				<ul class="nav navbar-nav navbar-right">
+					<li><a v-link="{ path: '/admin/queue' }">Admin Queue</a></li>
 					<li><a href="#">The Project</a></li>
 					<li><a href="#">Donate</a></li>
 					<li><a href="#" @click="$parent.logout()">Logout</a></li>
