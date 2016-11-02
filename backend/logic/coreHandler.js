@@ -79,7 +79,6 @@ module.exports = {
 				'response': recaptcha
 			}
 		}, function (error, response, body) {
-			console.log(error, body, error === null, JSON.parse(body).success === true);
 			if (error === null && JSON.parse(body).success === true) {
 				body = JSON.parse(body);
 				global.db.user.findOne({'username': username}, function (err, user) {
@@ -92,7 +91,7 @@ module.exports = {
 							if (err) return cb(err);
 							if (user) return cb("email");
 							else {
-								//TODO Email verification code, send email
+								// TODO: Email verification code, send email
 								bcrypt.genSalt(10, function (err, salt) {
 									if (err) {
 										return cb(err);

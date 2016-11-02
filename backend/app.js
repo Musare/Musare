@@ -75,9 +75,7 @@ function setupExpress() {
 			accept();
 		},
 		fail: function (data, message, error, accept) {
-			console.log(message);
-			if (error && message !== "Passport was not initialized")
-				throw new Error(message);
+			if (error) throw new Error(message);
 			accept();
 		}
 	}));
@@ -94,9 +92,7 @@ function setupExpress() {
 	});
 
 	passport.use(new LocalStrategy({usernameField: 'email'}, (email, password, done) => {
-		console.log(email, password);
 		process.nextTick(() => {
-			console.log(email, password);
 			global.db.user.findOne({"email.address": email}, (err, user) => {
 				if (err) return done(err);
 				if (!user) return done(null, false);
@@ -112,77 +108,6 @@ function setupExpress() {
 			});
 		});
 	}));
-
-	passport.use(new GitHubStrategy({
-			clientID: config.get("apis.github.client"),
-			clientSecret: config.get("apis.github.secret"),
-			callbackURL: `${config.get("domain")}/users/github/callback`
-		},
-		function(accessToken, refreshToken, profile, done) {
-			console.log('new github auth', accessToken, refreshToken, profile);
-			/*User.findOrCreate({ githubId: profile.id }, function (err, user) {
-				return cb(err, user);
-			});*/
-			global.db.user.findOne({"services.github.id": profile._json.id}, (err, id) => {
-				if (err) return done(err);
-				if (!id) {
-					global.db.user.findOne({"username": profile.username}, (err, username) => {
-						if (err) return done(err);
-						if (!username) {
-							let newUser = new global.db.user({
-								username: profile.username,
-								services: {
-									discord: {
-										id: profile.id
-									}
-								}
-							});
-							newUser.save(err => {
-								if (err) throw err;
-								return done(null, newUser);
-							});
-						} else {
-							return done(null, user);
-						}
-					});
-				}
-			});
-		}
-	));
-
-	passport.use(new DiscordStrategy({
-			clientID: config.get("apis.discord.client"),
-			clientSecret: config.get("apis.discord.secret"),
-			callbackURL: `${config.get("domain")}/users/discord/callback`
-		},
-		function(accessToken, refreshToken, profile, done) {
-			console.log('new discord auth', accessToken, refreshToken, profile);
-			global.db.user.findOne({"services.discord.id": profile.id}, (err, id) => {
-				if (err) return done(err);
-				if (!id) {
-					global.db.user.findOne({"username": profile.username}, (err, username) => {
-						if (err) return done(err);
-						if (!username) {
-							let newUser = new global.db.user({
-								username: profile.username,
-								services: {
-									discord: {
-										id: profile.id
-									}
-								}
-							});
-							newUser.save(err => {
-								if (err) throw err;
-								return done(null, newUser);
-							});
-						} else {
-							return done(null, user);
-						}
-					});
-				}
-			});
-		}
-	));
 
 	app.use(bodyParser.json());
 	app.use(bodyParser.urlencoded({

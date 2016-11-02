@@ -15,9 +15,11 @@
 					<li><a v-link="{ path: '/admin/queue' }">Admin Queue</a></li>
 					<li><a href="#">The Project</a></li>
 					<li><a href="#">Donate</a></li>
-					<li><a href="#" @click="$parent.logout()">Logout</a></li>
-					<li><a href="#" data-toggle="modal" data-target="#register">Register</a></li>
-					<li><a href="#" data-toggle="modal" data-target="#login">Login</a></li>
+					<li v-if="$parent.$parent.loggedIn"><a href="#" @click="$parent.$parent.logout()">Logout</a></li>
+					<span class="grouped" v-else>
+						<li><a href="#" data-toggle="modal" data-target="#register">Register</a></li>
+						<li><a href="#" data-toggle="modal" data-target="#login">Login</a></li>
+					</span>
 				</ul>
 			</div>
 		</div>
@@ -30,10 +32,10 @@
 		border: 0;
 		border-radius: 0;
 		margin: 0;
-		min-height: 64px;
+		min-height: 50px;
 
 		.navbar-brand, li a, li a:hover, li a:focus {
-			line-height: 64px;
+			line-height: 50px;
 			padding: 0px 10px;
 			margin: 0px;
 			color: #fff;
@@ -42,6 +44,10 @@
 		li:hover {
 			background-color: #393939;
 			color: #fff;
+		}
+
+		a {
+    		text-decoration: none;
 		}
 
 		.navbar-toggle, .navbar-toggle:hover, .navbar-toggle:focus {
@@ -55,6 +61,12 @@
 
 		.navbar-collapse {
 			border: 0;
+		}
+
+		.grouped {
+			margin: 0;
+    		display: flex;
+			text-decoration: none;
 		}
 	}
 </style>
