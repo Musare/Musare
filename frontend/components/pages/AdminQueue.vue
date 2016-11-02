@@ -1,24 +1,29 @@
 <template>
 	<div class="app">
 		<main-header></main-header>
-		<table>
-			<thead>
-				<tr>
-					<td>Title</td>
-					<td>Artists</td>
-					<td>Genre's</td>
-					<td>Controls</td>
-				</tr>
-			</thead>
-			<tbody>
-				<tr v-for="song in songs">
-					<td>{{song.title}}</td>
-					<td>{{song.artists}}</td>
-					<td>{{song.genres}}</td>
-					<td><button @click="reviewSong(song._id)">Review</button></td>
-				</tr>
-			</tbody>
-		</table>
+		<div class="row">
+			<div class="col-md-8 col-sm-10 col-xs-12 col-md-offset-2 col-sm-offset-1 card">
+				<table class="table table-striped">
+					<thead>
+					<tr>
+						<td>Title</td>
+						<td>Artists</td>
+						<td>Genre's</td>
+						<td>Controls</td>
+					</tr>
+					</thead>
+					<tbody>
+					<tr v-for="song in songs">
+						<td>{{song.title}}</td>
+						<td>{{song.artists}}</td>
+						<td>{{song.genres}}</td>
+						<td><button @click="reviewSong(song._id)">Review</button></td>
+					</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+
 		<main-footer></main-footer>
 		<div class="modal fade" id="reviewModal" tabindex="-1" role="dialog" aria-labelledby="review-modal">
 			<div class="modal-dialog modal-large" role="document">

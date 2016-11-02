@@ -231,12 +231,12 @@
 				local.stationSocket.emit("pause");
 			},
 			toggleLike: function() {
-				let local = this;
-				local.stationSocket.emit("toggleLike");//TODO Add code here to see if this was a success or not
+				/*let local = this;
+				local.stationSocket.emit("toggleLike");//TODO Add code here to see if this was a success or not*/
 			},
 			toggleDislike: function() {
-				let local = this;
-				local.stationSocket.emit("toggleDislike");//TODO Add code here to see if this was a success or not
+				/*let local = this;
+				local.stationSocket.emit("toggleDislike");//TODO Add code here to see if this was a success or not*/
 			},
 			addItemToItems: function(id) {
 				let local = this;
