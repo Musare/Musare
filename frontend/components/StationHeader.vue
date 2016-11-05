@@ -15,7 +15,7 @@
 					<li class="pull-left"><a href="#" data-toggle="modal" data-target="#queue"><i class="material-icons left">playlist_add</i></a></li>
 					<li class="pull-left"><a href="#"><i class="material-icons left">flag</i></a></li>
 					<li class="pull-left"><a href="#"><i class="material-icons left">skip_next</i></a></li>
-					<li class="pull-center"><a href="#">Station Name</a></li>
+					<li class="pull-center"><a href="#">{{title}}</a></li>
 					<li class="pull-right"><a href="#"><i class="material-icons">queue_music</i></a></li>
 					<li class="pull-right"><a href="#"><i class="material-icons">chat</i></a></li>
 					<li class="pull-right"><a href="#"><i class="material-icons">people</i></a></li>
@@ -24,6 +24,16 @@
 		</div>
 	</nav>
 </template>
+
+<script>
+	export default {
+		data() {
+			return {
+				title: this.$route.params.id
+			}
+		}
+	}
+</script>
 
 <style lang="sass" scoped>
 	.navbar-default {
@@ -45,6 +55,7 @@
 
 			li.pull-center a {
 				line-height: 64px;
+				text-transform: capitalize;
 			}
 
 			li.pull-right, li.pull-left {

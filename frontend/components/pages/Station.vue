@@ -5,17 +5,16 @@
 			<div class="col-md-8 col-md-push-2 col-sm-10 col-sm-push-1 col-xs-12 video-col">
 				<div class="video-container">
 					<div id="player"></div>
-					<!--iframe id="player" frameborder="0" allowfullscreen="1" title="YouTube video player" width="480" height="270" src="https://www.youtube.com/embed/xo1VInw-SKc?controls=0&amp;iv_load_policy=3&amp;rel=0&amp;showinfo=0&amp;enablejsapi=1&amp;origin=https%3A%2F%2Fmusare.com&amp;widgetid=1" kwframeid="1"></iframe-->
 				</div>
 			</div>
 			<div class="col-md-8 col-md-push-2 col-sm-10 col-sm-push-1 col-xs-12">
 				<div class="row">
-					<button v-if="paused" @click="unpauseStation()">Unpause</button>
-					<button v-if="!paused" @click="pauseStation()">Pause</button>
+					<!--<button v-if="paused" @click="unpauseStation()">Unpause</button>-->
+					<!--<button v-if="!paused" @click="pauseStation()">Pause</button>-->
 					<div class="col-md-8 col-sm-12 col-sm-12">
-						<h4 id="time-display">{{timeElapsed}} / {{songDuration}}</h4>
-						<h3>{{title}}</h3>
-						<h4 class="thin" style="margin-left: 0">{{artists}}</h4>
+						<h4 id="time-display">{{timeElapsed}} / {{currentSong.duration}}</h4>
+						<h3>{{currentSong.title}}</h3>
+						<h4 class="thin" style="margin-left: 0">{{currentSong.artists}}</h4>
 						<div class="row">
 							<form style="margin-top: 12px; margin-bottom: 0;" action="#" class="col-md-4 col-lg-4 col-xs-4 col-sm-4">
 								<p style="margin-top: 0; position: relative;">
@@ -24,8 +23,8 @@
 							</form>
 							<div class="col-xs-8 col-sm-5 col-md-5" style="float: right;">
 								<ul id="ratings">
-									<li id="like" class="right"><span class="flow-text">{{likes}} </span> <i id="thumbs_up" class="material-icons grey-text" @click="toggleLike()">thumb_up</i></li>
-									<li style="margin-right: 10px;" id="dislike" class="right"><span class="flow-text">{{dislikes}} </span><i id="thumbs_down" class="material-icons grey-text" @click="toggleDislike()">thumb_down</i></li>
+									<li id="like" class="right"><span class="flow-text">{{currentSong.likes}} </span> <i id="thumbs_up" class="material-icons grey-text">thumb_up</i></li>
+									<li style="margin-right: 10px;" id="dislike" class="right"><span class="flow-text">{{currentSong.dislikes}} </span><i id="thumbs_down" class="material-icons grey-text">thumb_down</i></li>
 								</ul>
 							</div>
 						</div>
@@ -33,7 +32,7 @@
 							<div class="seeker-bar light-blue" style="width: 60.9869%;"></div>
 						</div>
 					</div>
-					<img alt="Not loading" class="img-responsive col-md-4 col-xs-12 col-sm-12" onerror="this.src='../assets/notes.png'" id="song-image" style="margin-top: 10px !important" v-bind:src="image" />
+					<img class="img-responsive col-md-4 col-xs-12 col-sm-12" id="song-thumbnail" style="margin-top: 10px !important" :src="currentSong.thumbnail" alt="Song Thumbnail" />
 				</div>
 			</div>
 		</div>
@@ -44,31 +43,30 @@
 			<div class="modal-content">
 				<div class="modal-header">
 					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-					<h5 class="modal-title">Add to Musare</h5>
+					<h5 class="modal-title">Add to Station</h5>
 				</div>
 				<div class="modal-body">
-					<input class="form-control" type="text" placeholder="YouTube Query / Video ID / Video link / Playlist link" v-model="queueQuery"/>
-					<button type="button" class="btn btn-primary" @click="submitQueueQuery()">Search</button>
-					<button type="button" class="btn btn-error" @click="clearQueueQuery()" v-if="queueQueryActive">Clear List</button>
-					<div v-if="queueQueryActive">
-						<h2>Queue Results</h2>
-						<div v-for="item in queueQueryResults">
-							<h5>{{item.title}}</h5>
-							<button @click='addItemToItems(item.id)'>Add</button>
-							<br>
+					<div class="form-group">
+						<div class="input-group">
+							<input class="form-control" type="text" placeholder="YouTube Query" v-model="queryInput"/>
+							<a type="button" class="input-group-btn btn btn-primary btn-search" @click="submitQuery()">Search</a>
 						</div>
 					</div>
-					<hr>
-					<div class="row">
-						<h2>Items to add</h2>
-						<div v-for="item in queueItems">
-							<h5>{{item.title}}</h5>
-							<br>
+					<div>
+						<div v-for="result in queryResults">
+							<div class="media">
+								<div class="media-left">
+									<a href={{result.url}}>
+										<img class="media-object" :src="result.thumbnail" />
+									</a>
+								</div>
+								<div class="media-body">
+									<h4 class="media-heading">{{result.title}}</h4>
+									<button class="btn btn-success" @click='addSongToQueue(result)'>Add</button>
+								</div>
+							</div>
 						</div>
 					</div>
-				</div>
-				<div class="modal-footer">
-					<button type="button" class="btn btn-primary left" data-dismiss="modal" @click="addItemsToQueue()">Add items to queue</button>
 				</div>
 			</div>
 		</div>
@@ -83,36 +81,27 @@
 		data() {
 			return {
 				playerReady: false,
-				currentSong: undefined,
+				currentSong: {},
 				player: undefined,
 				timePaused: 0,
 				paused: false,
-				songDuration: "0:00",
 				timeElapsed: "0:00",
-				artists: "",
-				title: "",
-				image: "",
-				likes: 0,
-				dislikes: 0,
 				interval: 0,
-				queueQuery: "",
-				queueQueryActive: false,
-				queueQueryResults: [],
-				queueItems: []
+				queryInput: "",
+				queryResults: [],
+				queue: []
 			}
 		},
 		methods: {
 			youtubeReady: function() {
 				let local = this;
-				console.log("YT Ready!!!");
 				local.player = new YT.Player("player", {
 					height: 270,
 					width: 480,
 					videoId: local.currentSong.id,
 					playerVars: {controls: 1, iv_load_policy: 3, rel: 0, showinfo: 0},
 					events: {
-						'onReady': function (event) {
-							console.log("Ready!!!");
+						'onReady': function(event) {
 							local.playerReady = true;
 							let volume = parseInt(localStorage.getItem("volume"));
 							volume = (typeof volume === "number") ? volume : 20;
@@ -122,7 +111,7 @@
 							}
 							local.playVideo();
 						},
-						'onStateChange': function (event) {
+						'onStateChange': function(event) {
 							if (event.data === 1 && local.videoLoading === true) {
 								local.videoLoading = false;
 								local.player.seekTo(local.getTimeElapsed() / 1000, true);
@@ -134,32 +123,12 @@
 					}
 				});
 			},
-			startSong: function(song) {
-				let local = this;
-				if (local.playerReady) {
-
-				}
-			},
 			getTimeElapsed: function() {
 				let local = this;
 				if (local.currentSong !== undefined) {
 					return Date.now() - local.currentSong.startedAt - local.timePaused;
-				}
-				return 0;
-			},
-			pauseVideo: function() {
-				let local = this;
-				local.paused = true;
-				if (local.playerReady) {
-					local.player.pauseVideo();
-				}
-			},
-			unpauseVideo: function() {
-				let local = this;
-				local.paused = false;
-				if (local.playerReady) {
-					local.player.seekTo(local.getTimeElapsed() / 1000);
-					local.player.playVideo();
+				} else {
+					return 0;
 				}
 			},
 			playVideo: function() {
@@ -167,13 +136,11 @@
 				if (local.playerReady) {
 					local.videoLoading = true;
 					local.player.loadVideoById(local.currentSong.id);
-					var d = moment.duration(parseInt(local.currentSong.duration), 'seconds');
-					local.songDuration = d.minutes() + ":" + ("0" + d.seconds()).slice(-2);
-					local.artists = local.currentSong.artists.join(", ");
-					local.title = local.currentSong.title;
-					local.image = local.currentSong.image;
-					local.likes = local.currentSong.likes;
-					local.dislikes = local.currentSong.dislikes;
+
+					const d = moment.duration(parseInt(local.currentSong.duration), 'seconds');
+					local.currentSong.songDuration = d.minutes() + ":" + ("0" + d.seconds()).slice(-2);
+
+					local.currentSong.artists = local.currentSong.artists.join(", ");
 
 					if (local.interval !== 0) {
 						clearInterval(local.interval);
@@ -194,9 +161,9 @@
 			calculateTimeElapsed: function() {
 				let local = this;
 				let currentTime = Date.now();
-				if (local.timePausedCurrentTime !== undefined && local.paused) {
-					local.timePaused += (Date.now() - local.timePausedCurrentTime);
-					local.timePausedCurrentTime = undefined;
+				if (local.currentTime !== undefined && local.paused) {
+					local.timePaused += (Date.now() - local.currentTime);
+					local.currentTime = undefined;
 				}
 				let duration = (Date.now() - local.currentSong.startedAt - local.timePaused) / 1000;
 				let songDuration = local.currentSong.duration;
@@ -204,7 +171,6 @@
 					local.player.pauseVideo();
 				}
 				let d = moment.duration(duration, 'seconds');
-				console.log(duration, "    ", local.timePaused);
 				if ((!local.paused || local.timeElapsed === "0:00") && duration <= songDuration) {
 					local.timeElapsed = d.minutes() + ":" + ("0" + d.seconds()).slice(-2);
 				}
@@ -221,161 +187,66 @@
 				}
 			},
 			unpauseStation: function() {
-				console.log("UNPAUSE1");
 				let local = this;
-				local.stationSocket.emit("unpause");
-			},
-			pauseStation: function() {
-				console.log("PAUSE1");
-				let local = this;
-				local.stationSocket.emit("pause");
-			},
-			toggleLike: function() {
-				/*let local = this;
-				local.stationSocket.emit("toggleLike");//TODO Add code here to see if this was a success or not*/
-			},
-			toggleDislike: function() {
-				/*let local = this;
-				local.stationSocket.emit("toggleDislike");//TODO Add code here to see if this was a success or not*/
-			},
-			addItemToItems: function(id) {
-				let local = this;
-				let ids = local.queueItems.map(function(item) {
-					return item.id;
-				});
-				let item;
-				local.queueQueryResults.forEach(function(result) {
-					if (result.id === id) {
-						console.log(result);
-						item = result;
-					}
-				});
-				if (ids.indexOf(id) === -1) {
-					console.log(item, 222);
-					local.queueItems.push(item);
-					local.queueQuery = "";
-					local.queueQueryActive = false;
-					local.queueQueryResults = [];
-				} else {
-					//TODO Error
+				local.paused = false;
+				if (local.playerReady) {
+					local.player.seekTo(local.getTimeElapsed() / 1000);
+					local.player.playVideo();
 				}
 			},
-			addItemsToQueue: function() {
+			pauseStation: function() {
 				let local = this;
-				let items = local.queueItems;
-				local.socket.emit("/songs/queue/addSongs/:songs", items, function(data) {
+				local.paused = true;
+				if (local.playerReady) {
+					local.player.pauseVideo();
+				}
+			},
+			addSongToQueue: function(song) {
+				let local = this;
+				local.socket.emit("/songs/queue/add/:song", song, function(data) {
 					console.log(data);
-					if (!data.err) {
-						local.queueItems = [];
-						$('#queue').modal('hide');
-					}
 				});
 			},
-			submitQueueQuery: function() {
+			submitQuery: function() {
 				let local = this;
-				let query = local.queueQuery;
-				local.socket.emit("/youtube/getVideos/:query", query, function(data) {
-					if (!data.err) {
-						/*queueQueryActive:
-						 queueQueryResults:*/
-						if (data.type === "playlist") {
-							let added = 0;
-							let duplicate = 0;
-							let items = [];
-							let ids = local.queueItems.map(function(item) {
-								return item.id;
-							});
-
-							data.items.forEach(function(item) {
-								if (ids.indexOf(item.id) === -1) {
-									items.push(item);
-									added++;
-								} else {
-									duplicate++;
-								}
-							});
-
-							//TODO Give result
-							local.queueItems = local.queueItems.concat(items);
-						} else if (data.type === "video") {
-							let ids = local.queueItems.map(function(item) {
-								return item.id;
-							});
-
-							if (data.item !== undefined) {
-								if (ids.indexOf(data.item.id)) {
-									local.queueItems.push(data.item);
-								}
-							}
-
-							//TODO Give result
-						} else {
-							local.queueQueryResults = [];
-							data.items.forEach(function(item) {
-								local.queueQueryResults.push(item);
-							});
-							//TODO Give result
-							local.queueQueryActive = true;
-						}
+				local.socket.emit("/youtube/getVideo/:query", local.queryInput, function(data) {
+					local.queryResults = [];
+					for (let i = 0; i < data.items.length; i++) {
+						local.queryResults.push({
+							id: data.items[i].id.videoId,
+							url: `https://www.youtube.com/watch?v=${this.id}`,
+							title: data.items[i].snippet.title,
+							thumbnail: data.items[i].snippet.thumbnails.default.url
+						});
 					}
 				});
 			}
 		},
 		ready: function() {
 			let local = this;
-			window.onYouTubeIframeAPIReady = function() {
-				console.log("API READY?");
-				local.youtubeReady();
-			};
+
+			local.interval = 0;
 
 			local.socket = this.$parent.socket;
-			local.stationSocket = io.connect('http://dev.musare.com/edm');
+			local.stationSocket = io.connect(`http://dev.musare.com/${local.$route.params.id}`);
 			local.stationSocket.on("connected", function(data) {
-				console.log("JOINED!?");
 				local.currentSong = data.currentSong;
 				local.paused = data.paused;
 				local.timePaused = data.timePaused;
-				local.timePausedCurrentTime  = data.currentTime;
-				let tag = document.createElement('script');
-
-				tag.src = "https://www.youtube.com/iframe_api";
-				let firstScriptTag = document.getElementsByTagName('script')[0];
-				firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+				local.currentTime  = data.currentTime;
 			});
-			local.stationSocket.on("skippedSong", function(currentSong) {
-				console.log("SKIPPED SONG");
+
+			local.youtubeReady();
+
+			local.stationSocket.on("nextSong", function(currentSong) {
 				local.currentSong = currentSong;
 				local.timePaused = 0;
 				local.playVideo();
 			});
-			local.stationSocket.on("pause", function() {
-				console.log("PAUSE");
-				local.pauseVideo();
-			});
-			local.stationSocket.on("unpause", function(timePaused) {
-				console.log("UNPAUSE");
-				local.timePaused = timePaused;
-				local.unpauseVideo();
-			});
-
 
 			let volume = parseInt(localStorage.getItem("volume"));
 			volume = (typeof volume === "number") ? volume : 20;
 			$("#volumeSlider").val(volume);
-
-			// TODO: Remove this
-			/*local.socket.emit("/station/:id/join", "edm", function(data) {
-				console.log("JOINED!?");
-				local.currentSong = data.data.currentSong;
-				local.paused = data.data.paused;
-				local.timePaused = data.data.timePaused;
-				local.timePausedCurrentTime  = data.data.currentTime;
-				let tag = document.createElement('script');
-
-				tag.src = "https://www.youtube.com/iframe_api";
-				let firstScriptTag = document.getElementsByTagName('script')[0];
-				firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-			});*/
 		},
 		components: { StationHeader, MainFooter }
 	}
@@ -629,5 +500,9 @@
 
 	.white {
 		background-color: #FFFFFF !important;
+	}
+
+	.btn-search {
+		font-size: 14px;
 	}
 </style>

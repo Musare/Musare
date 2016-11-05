@@ -19,41 +19,64 @@ const global   = require('./global'),
 
 var eventEmitter = new events.EventEmitter();
 
-const station = new stations.Station("edm", {
+const edmStation = new stations.Station("edm", {
+	"genres": ["edm"],
 	playlist: [
 		{
-			startedAt: Date.now(),
 			id: "dQw4w9WgXcQ",
 			title: "Never gonna give you up",
 			artists: ["Rick Astley"],
 			duration: 20,
-			skipDuration: 0,
-			image: "https://yt3.ggpht.com/-CGlBu6kDEi8/AAAAAAAAAAI/AAAAAAAAAAA/Pi679mvyyyU/s88-c-k-no-mo-rj-c0xffffff/photo.jpg",
+			thumbnail: "https://yt3.ggpht.com/-CGlBu6kDEi8/AAAAAAAAAAI/AAAAAAAAAAA/Pi679mvyyyU/s88-c-k-no-mo-rj-c0xffffff/photo.jpg",
 			likes: 0,
-			dislikes: 1,
-			genres: ["pop", "edm"]
+			dislikes: 1
 		},
 		{
-			startedAt: Date.now(),
 			id: "GxBSyx85Kp8",
 			title: "Yeah!",
 			artists: ["Usher"],
 			duration: 20,
-			skipDuration: 0,
-			image: "https://yt3.ggpht.com/-CGlBu6kDEi8/AAAAAAAAAAI/AAAAAAAAAAA/Pi679mvyyyU/s88-c-k-no-mo-rj-c0xffffff/photo.jpg",
+			thumbnail: "https://yt3.ggpht.com/-CGlBu6kDEi8/AAAAAAAAAAI/AAAAAAAAAAA/Pi679mvyyyU/s88-c-k-no-mo-rj-c0xffffff/photo.jpg",
 			likes: 0,
-			dislikes: 1,
-			genres: ["pop", "edm"]
+			dislikes: 1
 		}
 	],
-	currentSongIndex: 1,
+	currentSongIndex: 0,
 	paused: false,
-	locked: false,
 	displayName: "EDM",
 	description: "EDM Music"
 });
 
-stations.addStation(station);
+const popStation = new stations.Station("pop", {
+	"genres": ["pop"],
+	playlist: [
+		{
+			id: "HXeYRs_zR6w",
+			title: "Nobody But Me",
+			artists: ["Michael Bublé"],
+			duration: 12,
+			thumbnail: "https://yt3.ggpht.com/-CGlBu6kDEi8/AAAAAAAAAAI/AAAAAAAAAAA/Pi679mvyyyU/s88-c-k-no-mo-rj-c0xffffff/photo.jpg",
+			likes: 0,
+			dislikes: 1
+		},
+		{
+			id: "CR4YE7htLgI",
+			title: "Someday ",
+			artists: ["Michael Bublé", "Meghan Trainor"],
+			duration: 30,
+			thumbnail: "https://yt3.ggpht.com/-CGlBu6kDEi8/AAAAAAAAAAI/AAAAAAAAAAA/Pi679mvyyyU/s88-c-k-no-mo-rj-c0xffffff/photo.jpg",
+			likes: 0,
+			dislikes: 1
+		}
+	],
+	currentSongIndex: 0,
+	paused: false,
+	displayName: "Pop",
+	description: "Pop Music"
+});
+
+stations.addStation(edmStation);
+stations.addStation(popStation);
 
 module.exports = {
 
@@ -131,106 +154,95 @@ module.exports = {
 	},
 
 	'/stations': cb => {
-		cb(stations.getStations().map(function (result) {
+		cb(stations.getStations().map(station => {
 			return {
-				id: result.getId(),
-				displayName: result.getDisplayName(),
-				description: result.getDescription(),
-				users: result.getUsers()
+				id: station.id,
+				playlist: station.playlist,
+				displayName: station.displayName,
+				description: station.description,
+				currentSongIndex: station.currentSongIndex
 			}
 		}));
 	},
 
-	'/station/:id/join': (stationId, socketId, cb) => {
+	'/youtube/getVideo/:query': (query, cb) => {
+		const params = [
+			'part=snippet',
+			`q=${encodeURIComponent(query)}`,
+			`key=${config.get('apis.youtube.key')}`,
+			'type=video',
+			'maxResults=15'
+		].join('&');
+		// function params(type, id) {
+		// 	if (type == "search") {
+		// 		return [
+		// 			'part=snippet',
+		// 			`q=${encodeURIComponent(query)}`,
+		// 			`key=${config.get('apis.youtube.key')}`,
+		// 			'type=video',
+		// 			'maxResults=15'
+		// 		].join('&');
+		// 	} else if (type == "video") {
+		// 		return [
+		// 			'part=snippet,contentDetails,statistics,status',
+		// 			`id=${encodeURIComponent(id)}`,
+		// 			`key=${config.get('apis.youtube.key')}`
+		// 		].join('&');
+		// 	}
+		// }
 
-		const station = stations.getStation(stationId);
+		// let finalResults = [];
 
-		if (station) {
-
-			var response = station.handleUserJoin(socketId);
-
-			return cb(response);
-		}
-		else {
-			return cb({ status: 'error', message: 'Room with that ID does not exists' });
-		}
-	},
-
-	'/station/:id/skip': (stationId, socketId, cb) => {
-
-		const station = stations.getStation(stationId);
-
-		if (station) {
-
-			var response = station.handleUserJoin(socketId);
-
-			return cb(response);
-		}
-		else {
-			return cb({ status: 'error', message: 'Room with that ID does not exists' });
-		}
-	},
-
-	'/youtube/getVideos/:query': (query, cb) => {
-		cb({
-			type: "query",
-			items: [
-				{
-					id: "39fk3490krf9",
-					title: "Test Title",
-					channel: "Test Channel",
-					duration: 200,
-					image: "https://i.ytimg.com/vi/lwg5yAuanPg/hqdefault.jpg?custom=true&w=196&h=110&stc=true&jpg444=true&jpgq=90&sp=68&sigh=DWOZl_nkv78qzj8WHPY1-53iQfA"
-				},
-				{
-					id: "49iug05it",
-					title: "Test Title 222",
-					channel: "Test Channel 222",
-					duration: 100,
-					image: "https://i.ytimg.com/vi/QJwIsBoe3Lg/hqdefault.jpg?custom=true&w=196&h=110&stc=true&jpg444=true&jpgq=90&sp=68&sigh=8L20nlTyPf7xuIB8DTeBQFWW2Xw"
-				}
-			]
+		request(`https://www.googleapis.com/youtube/v3/search?${params}`, (err, res, body) => {
+			cb(body);
+			// for (let i = 0; i < results.items.length; i++) {
+			// 	request(`https://www.googleapis.com/youtube/v3/videos?${
+			// 		params("video", results.items[i].id.videoId)
+			// 	}`, (err, res, body) => {
+			// 		finalResults.push(JSON.parse(body));
+			// 	});
+			// }
+			// setTimeout(() => {
+			// 	return cb(finalResults);
+			// }, 500);
 		});
 	},
 
-	'/songs/queue/addSongs/:songs': (songs, user, cb) => {
-		if (user !== null && user !== undefined && user.logged_in) {
-			if (Array.isArray(songs)) {
-				if (songs.length > 0) {
-					let failed = 0;
-					let success = 0;
-					songs.forEach(function (song) {
-						if (typeof song === "object" && song !== null) {
-							let obj = {};
-							obj.title = song.title;
-							obj._id = song.id;
-							obj.artists = [];
-							obj.image = "test";
-							obj.duration = 0;
-							obj.genres = ["edm"];
-							//TODO Get data from Wikipedia and Spotify
-							obj.requestedBy = user._id;
-							console.log(user._id);
-							console.log(user);
-							obj.requestedAt = Date.now();
-							let queueSong = new global.db.queueSong(obj);
-							queueSong.save(function(err) {
-								console.log(err);
-								if (err) failed++;
-								else success++;
-							});
-						} else {
-							failed++;
-						}
-					});
-					cb({success, failed});
-				} else {
-					cb({err: "No songs supplied."});
-				}
+	'/songs/queue/add/:song': (song, user, cb) => {
+		if (user.logged_in) {
+				// if (songs.length > 0) {
+				// 	let failed = 0;
+				// 	let success = 0;
+				// 	songs.forEach(function (song) {
+				// 		if (typeof song === "object" && song !== null) {
+				// 			let obj = {};
+				// 			obj.title = song.title;
+				// 			obj._id = song.id;
+				// 			obj.artists = [];
+				// 			obj.image = "test";
+				// 			obj.duration = 0;
+				// 			obj.genres = ["edm"];
+				// 			//TODO Get data from Wikipedia and Spotify
+				// 			obj.requestedBy = user._id;
+				// 			console.log(user._id);
+				// 			console.log(user);
+				// 			obj.requestedAt = Date.now();
+				// 			let queueSong = new global.db.queueSong(obj);
+				// 			queueSong.save(function(err) {
+				// 				console.log(err);
+				// 				if (err) failed++;
+				// 				else success++;
+				// 			});
+				// 		} else {
+				// 			failed++;
+				// 		}
+				// 	});
+				// 	cb({success, failed});
+				// } else {
+				// 	cb({err: "No songs supplied."});
+				// }
+				console.log(song);
 			} else {
-				cb({err: "Not supplied an array."});
-			}
-		} else {
 			cb({err: "Not logged in."});
 		}
 	},
@@ -272,7 +284,7 @@ module.exports = {
 		}
 	},
 
-	/*'/stations/search/:query': (query, cb) => {
+	'/stations/search/:query': (query, cb) => {
 
 		const params = [
 			'part=snippet',
@@ -285,8 +297,7 @@ module.exports = {
 		request(`https://www.googleapis.com/youtube/v3/search?${params}`, (err, res, body) => {
 			if (err) {
 				return cb({ status: 'error', message: 'Failed to make request' });
-			}
-			else {
+			} else {
 				try {
 					return cb({ status: 'success', body: JSON.parse(body) });
 				}
@@ -295,7 +306,7 @@ module.exports = {
 				}
 			}
 		});
-	},*/
+	},
 
 	'/song/:id/toggleLike': (songId, userId, cb) => {
 

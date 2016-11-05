@@ -1,41 +1,21 @@
 [
   // Station
   {
-    "_id": "edm",
-    "type": "official",
+    "id": "edm",
     "displayName": "EDM",
     "description": "EDM Music",
-    "privacy": "private",
-    "paused": true,
-    "currentSong": {
-      "startedAt": 1472926465,
-      "id": "dQw4w9WgXcQ",
-      "title": "Never Gonna Give You Up",
-      "artists": ["Rick Astley"],
-      "duration": 254.21,
-      "skipDuration": 0.0,
-      "image": "https://upload.wikimedia.org/wikipedia/en/3/34/RickAstleyNeverGonnaGiveYouUp7InchSingleCover.jpg",
-      "likes": 4,
-      "dislikes": 100,
-      "genres": ["edm"]
-    },
-    "timePaused": 0,
-    "playlist": "playlistId",
-    "genres": ["edm"],
-    "whitelist": ["UserId"],
-    "partyMode": true,
-    "queueLocked": true,
-    "owner": "UserId"
-  },
-  // Queue Item
-  {
-    "id": "dQw4w9WgXcQ",
-    "title": "Never Gonna Give You Up",
-    "artists": ["Rick Astley"],
-    "duration": 254.21,
-    "skipDuration": 0.0,
-    "image": "https://upload.wikimedia.org/wikipedia/en/3/34/RickAstleyNeverGonnaGiveYouUp7InchSingleCover.jpg",
-    "genres": ["edm"]
+    "paused": false,
+    "playlist": [
+		{
+			"id": "dQw4w9WgXcQ",
+			"title": "Never Gonna Give You Up",
+			"artists": ["Rick Astley"],
+			"duration": 254.21,
+			"thumbnail": "https://upload.wikimedia.org/wikipedia/en/3/34/RickAstleyNeverGonnaGiveYouUp7InchSingleCover.jpg"
+		}
+	],
+	"currentSongIndex": 1,
+	"genres": ["edm"]
   },
   // Song Item
   {
@@ -43,35 +23,9 @@
     "title": "Never Gonna Give You Up",
     "artists": ["Rick Astley"],
     "duration": 254.21,
-    "skipDuration": 0.0,
-    "image": "https://upload.wikimedia.org/wikipedia/en/3/34/RickAstleyNeverGonnaGiveYouUp7InchSingleCover.jpg",
-    "genres": ["edm"],
-    "likes": 13,
-    "dislikes": 1
+    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/3/34/RickAstleyNeverGonnaGiveYouUp7InchSingleCover.jpg"
   },
-  // Playlist
-  {
-    "id": "defaultRethinkId",
-    "songs": [
-      "dQw4w9WgXcQ"
-    ],
-    "genres": ["edm"]
-  },
-  // Private Playlist
-  {
-    "id": "defaultRethinkId",
-    "name": "nostalgia",
-    "displayName": "Nostalgia",
-    "owner": "UserId",
-    "songs": [
-      "dQw4w9WgXcQ", //If a song is in the Song table,
-      {//If a song is not in the Song table
-        "id": "dQw4w9WgXcQ",
-        "title": "Rick Astley - Never gonna give you up",
-        "duration": 254.21
-      }
-    ]
-  },
+
   // User
   {
     "id": "kF9u3jf9eu3nf84rh47gf7474gf",
@@ -98,19 +52,8 @@
       "bannedAt": 1472926465,
       "bannedUntil": 1472926466
     },
-    "mute": {
-      "muted": true,
-      "reason": "Spamming",
-      "mutedAt": 1472926465,
-      "mutedUntil": 1472926466
-    },
-    "2fa": {
-      "enabled": true
-      //Token and such
-    },
     "statistics": {
-      "songsRequested": 34,
-      "songsAccepted": 23
+      "songsRequested": 34
     },
     "createdAt": 1472926465
   }

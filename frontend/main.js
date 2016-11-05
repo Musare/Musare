@@ -12,7 +12,7 @@ router.map({
 	'/': {
 		component: Home
 	},
-	'/station': {
+	'/station/:id': {
 		component: Station
 	},
 	'/admin/queue': {

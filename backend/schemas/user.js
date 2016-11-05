@@ -3,43 +3,27 @@ module.exports = mongoose => {
     const Schema = mongoose.Schema;
 
     const userSchema = new Schema({
-        username: String,
+        username: { type: String, required: true },
         email: {
-            verified: { type: Boolean, default: false },
+            verified: { type: Boolean, default: false, required: true },
             verificationToken: String,
             address: String
         },
         services: {
             password: {
                 password: String
-            },
-            github: {
-                id: String
-            },
-            discord: {
-                id: String
             }
         },
         ban: {
-            banned: { type: Boolean, default: false },
+            banned: { type: Boolean, default: false, required: true },
             reason: String,
             bannedAt: Date,
             bannedUntil: Date
         },
-        mute: {
-            muted: { type: Boolean, default: false },
-            reason: String,
-            mutedAt: Date,
-            mutedUntil: Date
-        },
         statistics: {
-            songsRequested: { type: Number, default: 0 },
-            songsAccepted: { type: Number, default: 0 }
+            songsRequested: { type: Number, default: 0 }
         },
-        createdAt: { type: Date, default: Date.now() },
-		friends: [],
-		likes: [],
-		dislikes: []
+        createdAt: { type: Date, default: Date.now() }
     });
 
     return mongoose.model('user', userSchema);

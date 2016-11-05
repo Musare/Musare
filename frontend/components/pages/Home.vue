@@ -30,9 +30,6 @@
 					<div class="modal-body">
 						<input class="form-control" type="text" placeholder="Email..." v-model="$parent.login.email"/>
 						<input class="form-control" type="password" placeholder="Password..." v-model="$parent.login.password"/>
-						<hr />
-						<a class="btn btn-block btn-default btn-github" href="/users/github"><i class="fa fa-github"></i> Login with GitHub</a>
-						<a class="btn btn-block btn-default btn-discord" href="/users/discord">Login with Discord</a>
 					</div>
 					<div class="modal-footer">
 						<button type="button" class="btn btn-primary" data-dismiss="modal" @click="this.$dispatch('login');">Submit</button>
@@ -40,18 +37,18 @@
 				</div>
 			</div>
 		</div>
-		<div class="group" v-for="group in $parent.groups">
-			<div class="group-title">{{group.name}}</div>
-			<div class="group-rooms">
-				<div class="rooms-room" v-for="room in group.rooms" v-link="{ path: '/station' }">
-					<img class="room-image" :src="room.thumbnail" />
-					<div class="room-info">
-						<div class="room-grid-left">
-							<h3>{{ room.name }}</h3>
-							<p>{{ room.description }}</p>
+		<div class="group">
+			<!--<div class="group-title">{{group.name}}</div>-->
+			<div class="group-stations">
+				<div class="stations-station" v-for="station in $parent.stations" v-link="{ path: '/station/' + station.id }">
+					<img class="station-image" :src="station.playlist[station.currentSongIndex].thumbnail" />
+					<div class="station-info">
+						<div class="station-grid-left">
+							<h3>{{ station.displayName }}</h3>
+							<p>{{ station.description }}</p>
 						</div>
-						<div class="room-grid-right">
-							<div>{{ room.users }}&nbsp;&nbsp;<i class="fa fa-user" aria-hidden="true"></i></div>
+						<div class="station-grid-right">
+							<!--<div>{{ station.users }}&nbsp;&nbsp;<i class="fa fa-user" aria-hidden="true"></i></div>-->
 						</div>
 					</div>
 				</div>
@@ -104,28 +101,28 @@
 		}
 	}
 
-		.g-recaptcha {
-			display: flex;
-			justify-content: center;
-			margin-top: 10px;
+	.g-recaptcha {
+		display: flex;
+		justify-content: center;
+		margin-top: 10px;
 	}
 
-		.group {
-			width: 100%;
-			height: 448px;
-			margin: 64px 0 64px 0;
+	.group {
+		width: 100%;
+		height: 448px;
+		margin: 64px 0 64px 0;
 
-			.group-title {
-				float: left;
-				clear: none;
-				width: 100%;
-				height: 64px;
-				line-height: 48px;
-				text-align: center;
-				font-size: 48px;
+		.group-title {
+			float: left;
+			clear: none;
+			width: 100%;
+			height: 64px;
+			line-height: 48px;
+			text-align: center;
+			font-size: 48px;
 		}
 
-		.group-rooms {
+		.group-stations {
 			white-space: nowrap;
 			text-align: center;
 			overflow: hidden;
@@ -134,7 +131,7 @@
 			width: 100%;
 			height: 400px;
 
-			.rooms-room {
+			.stations-station {
 				position: relative;
 				top: 16px;
 				display: inline-block;
@@ -145,18 +142,18 @@
 				box-shadow: 0 1px 6px 2px rgba(0, 0, 0, 0.25);
 				cursor: pointer;
 
-				.room-info {
+				.station-info {
 					display: flex;
 					flex-direction: row;
 					align-items: center;
 				}
 
-				.room-image {
+				.station-image {
 					width: 100%;
 					height: 256px;
 				}
 
-				.room-grid-left {
+				.station-grid-left {
 					display: flex;
 					flex-direction: column;
 					width: 75%;
@@ -170,7 +167,7 @@
 					}
 				}
 
-				.room-grid-right {
+				.station-grid-right {
 					display: flex;
 					flex-direction: column;
 					width: 25%;

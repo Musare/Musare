@@ -1,7 +1,4 @@
 <template>
-	<div id="toasts">
-		<span v-for="toast in toasts" v-bind:class="toast.class">{{toast.text}}</span>
-	</div>
 	<div>
 		<router-view></router-view>
 	</div>
@@ -30,30 +27,7 @@
 				likes: [],
 				dislikes: [],
 				loggedIn: true,
-				groups: [
-					{
-						id: "lu08gw56571r4497wrk9",
-						name: "Official Rooms",
-						rooms: [
-							{ id: "73qvw65746acvo8yqfr", thumbnail: "https://lh6.googleusercontent.com/-ghASz3s6yL4/AAAAAAAAAAI/AAAAAAAAALc/tFblPp2myu0/s0-c-k-no-ns/photo.jpg", name: "Country", description: "Johnny Cash - I Walk The Line", users: 10 },
-							{ id: "enxcysmhn1k7ld56ogvi", thumbnail: "http://66.media.tumblr.com/1734069af425e491fae7deae0a19869f/tumblr_o0i0xmIYrF1v421f2o1_1280.jpg", name: "Pop", description: "Sia - Cheap Thrills", users: 14 },
-							{ id: "kqa99gbva7lij05dn29", thumbnail: "http://www.youredm.com/wp-content/uploads/2014/09/taking-you-higher.jpg", name: "Chill", description: "MrSuicideSheep - Taking you higher", users: 13 },
-							{ id: "w19hu791iiub6wmjf9a4i", thumbnail: "http://edmsauce.wpengine.netdna-cdn.com/wp-content/uploads/2012/12/Deadmau5-album-title-goes-here.jpg", name: "EDM", description: "Deadmau5 - There Might Be Coffee", users: 13 }
-						]
-					},
-					{
-						id: "g2b8v03xaedj8ht1emi",
-						name: "Trending Rooms",
-						rooms: [
-							{ id: "73qvw65746acvo8yqfr", thumbnail: "https://lh6.googleusercontent.com/-ghASz3s6yL4/AAAAAAAAAAI/AAAAAAAAALc/tFblPp2myu0/s0-c-k-no-ns/photo.jpg", name: "Country", description: "Johnny Cash - I Walk The Line", users: 10 },
-							{ id: "enxcysmhn1k7ld56ogvi", thumbnail: "http://66.media.tumblr.com/1734069af425e491fae7deae0a19869f/tumblr_o0i0xmIYrF1v421f2o1_1280.jpg", name: "Pop", description: "Sia - Cheap Thrills", users: 14 },
-							{ id: "kqa99gbva7lij05dn29", thumbnail: "http://www.youredm.com/wp-content/uploads/2014/09/taking-you-higher.jpg", name: "Chill", description: "MrSuicideSheep - Taking you higher", users: 13 },
-							{ id: "w19hu791iiub6wmjf9a4i", thumbnail: "http://edmsauce.wpengine.netdna-cdn.com/wp-content/uploads/2012/12/Deadmau5-album-title-goes-here.jpg", name: "EDM", description: "Deadmau5 - There Might Be Coffee", users: 13 }
-						]
-					}
-				],
-				toastCount: 0,
-				toasts: []
+				stations: []
 			}
 		},
 		methods: {
@@ -67,54 +41,29 @@
 						location.reload();
 					}
 				});
-			},
-			toast(text, duration) {
-				let local = this;
-				let id = local.toastCount++;
-
-				this.toasts.push({id: id, text: text, class: "toast toast-add"});
-				if (duration > 250) {
-					setTimeout(function() {
-						local.toasts = local.toasts.map(function(toast) {
-							if (toast.id === id) {
-								toast.class = "toast";
-							}
-							return toast;
-						});
-					}, 250);
-				}
-
-				setTimeout(function() {
-					local.toasts = local.toasts.map(function(toast) {
-						if (toast.id === id) {
-							toast.class = "toast toast-remove";
-						}
-						return toast;
-					});
-					setTimeout(function() {
-						local.toasts = local.toasts.filter(function(toast) {
-							return toast.id !== id;
-						});
-					}, 250);
-				}, duration);
 			}
 		},
-		ready: function () {
+		ready: function() {
 			let local = this;
 			local.socket = io();
 			local.socket.on("ready", status => {
 				local.loggedIn = status;
-				local.socket.emit("/user/ratings", result => {
-					if (!result.err) {
-						local.likes = result.likes;
-						local.dislikes = result.dislikes;
-					}
-				});
+			});
+
+			$.ajax({
+				method: "POST",
+				url: "/stations",
+				contentType: "application/json; charset=utf-8",
+				success: stations => {
+					if (stations) this.stations = stations;
+				},
+				error: err => {
+					if (err) console.log(err);
+				}
 			});
 		},
 		events: {
-			'register': function() {
-				console.log('registered');
+			'register': () => {
 				$.ajax({
 					method: "POST",
 					url: "/users/register",
@@ -139,8 +88,7 @@
 					}
 				});
 			},
-			'login': function() {
-				console.log('login');
+			'login': () => {
 				$.ajax({
 					method: "POST",
 					url: "/users/login",
@@ -162,6 +110,9 @@
 
 					}
 				});
+			},
+			'joinStation': id => {
+
 			}
 		}
 	}

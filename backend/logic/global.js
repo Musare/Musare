@@ -53,6 +53,45 @@ function getRandomNumber(min, max) {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+
+function convertTime(duration) {
+	let a = duration.match(/\d+/g);
+
+    if (duration.indexOf('M') >= 0 && duration.indexOf('H') == -1 && duration.indexOf('S') == -1) {
+        a = [0, a[0], 0];
+    }
+
+    if (duration.indexOf('H') >= 0 && duration.indexOf('M') == -1) {
+        a = [a[0], 0, a[1]];
+    }
+    if (duration.indexOf('H') >= 0 && duration.indexOf('M') == -1 && duration.indexOf('S') == -1) {
+        a = [a[0], 0, 0];
+    }
+
+    duration = 0;
+
+    if (a.length == 3) {
+        duration = duration + parseInt(a[0]) * 3600;
+        duration = duration + parseInt(a[1]) * 60;
+        duration = duration + parseInt(a[2]);
+    }
+
+    if (a.length == 2) {
+        duration = duration + parseInt(a[0]) * 60;
+        duration = duration + parseInt(a[1]);
+    }
+
+    if (a.length == 1) {
+        duration = duration + parseInt(a[0]);
+    }
+
+    let hours = Math.floor(duration / 3600);
+    let minutes = Math.floor(duration % 3600 / 60);
+    let seconds = Math.floor(duration % 3600 % 60);
+
+    return ((hours > 0 ? hours + ":" + (minutes) : "") + minutes + ":" + (seconds < 10 ? "0" : "") + seconds);
+}
+
 module.exports = {
 	io: null, // Socket.io
 	db: null, // Database
@@ -60,6 +99,7 @@ module.exports = {
 		return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 	},
 	getRandomNumber,
+	convertTime,
 	generateRandomString: len => {
 		let chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".split("");
 		let result = [];

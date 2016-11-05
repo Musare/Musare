@@ -10,12 +10,6 @@ module.exports = (core, io) => {
 			console.log('User has disconnected');
 		});
 
-		socket.on('/stations', cb => {
-			core['/stations'](result => {
-				cb(result);
-			});
-		});
-
 		/*socket.on('/station/:id/join', (id, cb) => {
 			console.log("JOINED!!!");
 			core['/station/:id/join'](id, socket.id, result => {
@@ -24,14 +18,14 @@ module.exports = (core, io) => {
 			});
 		});*/
 
-		socket.on('/youtube/getVideos/:query', (query, cb) => {
-			core['/youtube/getVideos/:query'](query, result => {
-				cb(result);
+		socket.on('/youtube/getVideo/:query', (query, cb) => {
+			core['/youtube/getVideo/:query'](query, result => {
+				cb(JSON.parse(result));
 			});
 		});
 
-		socket.on('/songs/queue/addSongs/:songs', (songs, cb) => {
-			core['/songs/queue/addSongs/:songs'](songs, _user, result => {
+		socket.on('/songs/queue/add/:song', (song, cb) => {
+			core['/songs/queue/add/:song'](song, _user, result => {
 				cb(result);
 			});
 		});
@@ -47,12 +41,6 @@ module.exports = (core, io) => {
 				cb(result);
 			});
 		});
-
-		/*socket.on('/stations/search/:query', (query, cb) => {
-			core['/stations/search/:query'](query, result => {
-				cb(result);
-			});
-		});*/
 
 		// this lets the client socket know that they can start making request
 		socket.emit('ready', socket.request.user.logged_in);

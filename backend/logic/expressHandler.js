@@ -21,9 +21,9 @@ module.exports = (core, app) => {
 		});
 	});
 
-	app.get('/stations', (req, res) => {
+	app.post('/stations', (req, res) => {
 		core['/stations'](result => {
-			res.send(JSON.stringify(result));
+			res.send(result);
 		});
 	});
 
