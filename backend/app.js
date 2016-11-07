@@ -68,11 +68,10 @@ function setupExpress() {
 		key: 'connect.sid',
 		secret: config.get('secret'),
 		store: mongoStore,
-		success: function (data, accept) {
-			console.log('successful connection to socket.io');
+		success: (data, accept) => {
 			accept();
 		},
-		fail: function (data, message, error, accept) {
+		fail: (data, message, error, accept) => {
 			if (error) throw new Error(message);
 			accept();
 		}

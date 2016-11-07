@@ -19,10 +19,4 @@ module.exports = (core, app) => {
 		req.logout();
 		res.end();
 	});
-
-	app.post('/stations', (req, res) => {
-		core['/stations'](result => {
-			res.send(result);
-		});
-	});
 };

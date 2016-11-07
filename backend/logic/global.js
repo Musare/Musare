@@ -91,8 +91,7 @@ function convertTime(duration) {
     let minutes = Math.floor(duration % 3600 / 60);
     let seconds = Math.floor(duration % 3600 % 60);
 
-	return (hours < 10 ? ("0" + hours + ":") : (hours + ":")) + (minutes < 10 ? ("0" + minutes + ":") : (minutes + ":")) + (seconds < 10 ? ("0" + seconds) : seconds); // 00:00:23
-    // return moment.duration(final, "hh:mm:ss").asSeconds(); // 23
+	return (hours < 10 ? ("0" + hours + ":") : (hours + ":")) + (minutes < 10 ? ("0" + minutes + ":") : (minutes + ":")) + (seconds < 10 ? ("0" + seconds) : seconds);
 }
 
 module.exports = {

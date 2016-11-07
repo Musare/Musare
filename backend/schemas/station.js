@@ -9,10 +9,10 @@ module.exports = mongoose => {
 		description: { type: String, min: 2, max: 128, required: true },
 		paused: { type: Boolean, default: false, required: true },
 		currentSong: {
-			id: { type: String, length: 11, index: true, unique: true, required: true },
+			id: { type: String, unique: true, required: true },
 			title: { type: String, required: true },
-			artists: [{ type: String, min: 1 }],
-			duration: { type: Number, required: true },
+			artists: [{ type: String }],
+			duration: { type: String, required: true },
 			thumbnail: { type: String, required: true }
 		},
 		currentSongIndex: { type: Number, default: 0, required: true },

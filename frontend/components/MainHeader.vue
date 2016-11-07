@@ -13,8 +13,8 @@
 		</span>-->
 
 		<div class="nav-right">
-			<a class="nav-item" href="#" v-link="{ path: '/admin/queue' }">
-				Admin Queue
+			<a class="nav-item" href="#" v-link="{ path: '/admin' }">
+				Admin
 			</a>
 			<a class="nav-item" href="#">
 				About

@@ -34,7 +34,7 @@ const edmStation = new stations.Station("edm", {
 		{
 			id: "GxBSyx85Kp8",
 			title: "Yeah!",
-			artists: ["Usher"],
+			artists: ["Usher", "test"],
 			duration: '00:00:08',
 			thumbnail: "https://yt3.ggpht.com/-CGlBu6kDEi8/AAAAAAAAAAI/AAAAAAAAAAA/Pi679mvyyyU/s88-c-k-no-mo-rj-c0xffffff/photo.jpg",
 			likes: 0,
@@ -187,40 +187,18 @@ module.exports = {
 		}
 	},
 
-	'/songs/queue/getSongs': (user, cb) => {
-		if (user !== null && user !== undefined && user.logged_in) {
-			global.db.queueSong.find({}, function(err, songs) {
-				if (err) throw err;
-				else cb({songs: songs});
+	'/songs': cb => {
+		let songs = [];
+		cb(stations.getStations().map(station => {
+			station.playlist.forEach(song => {
+				songs.push(song);
 			});
-		} else {
-			cb({err: "Not logged in."});
-		}
+			return songs;
+		}));
 	},
 
-	'/songs/queue/updateSong/:id': (user, id, object, cb) => {
-		if (user !== null && user !== undefined && user.logged_in) {
-			global.db.queueSong.findOne({_id: id}, function(err, song) {
-				if (err) throw err;
-				else {
-					if (song !== undefined && song !== null) {
-						if (typeof object === "object" && object !== null) {
-							delete object.requestedBy;
-							delete object.requestedAt;
-							global.db.queueSong.update({_id: id}, {$set: object}, function(err, song) {
-								if (err) throw err;
-								cb({success: true});
-							});
-						} else {
-							cb({err: "Invalid data."});
-						}
-					} else {
-						cb({err: "Song not found."});
-					}
-				}
-			});
-		} else {
-			cb({err: "Not logged in."});
-		}
+	'/songs/update': (songs, cb) => {
+		console.log(songs);
+		cb(stations.getStations());
 	}
 };

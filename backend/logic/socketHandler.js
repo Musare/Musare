@@ -13,6 +13,10 @@ module.exports = (core, io) => {
 			console.log('User has disconnected');
 		});
 
+		socket.on('error', err => {
+			console.log(err);
+		});
+
 		socket.on('/stations/join/:id', (id, cb) => {
 			core['/stations/join/:id'](id, result => {
 				_currentStation = id;
@@ -39,14 +43,20 @@ module.exports = (core, io) => {
 			});
 		});
 
-		socket.on('/songs/queue/getSongs', (cb) => {
-			core['/songs/queue/getSongs'](_user, result => {
+		socket.on('/songs', (cb) => {
+			core['/songs'](result => {
+				cb(result[0]);
+			});
+		});
+
+		socket.on('/stations', (cb) => {
+			core['/stations'](result => {
 				cb(result);
 			});
 		});
 
-		socket.on('/songs/queue/updateSong/:id', (id, object, cb) => {
-			core['/songs/queue/updateSong/:id'](_user, id, object, result => {
+		socket.on('/songs/update', (songs, cb) => {
+			core['/songs/update'](songs, result => {
 				cb(result);
 			});
 		});

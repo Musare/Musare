@@ -17,14 +17,6 @@
 	"currentSongIndex": 1,
 	"genres": ["edm"]
   },
-  // Song Item
-  {
-    "id": "dQw4w9WgXcQ",
-    "title": "Never Gonna Give You Up",
-    "artists": ["Rick Astley"],
-    "duration": 254.21,
-    "thumbnail": "https://upload.wikimedia.org/wikipedia/en/3/34/RickAstleyNeverGonnaGiveYouUp7InchSingleCover.jpg"
-  },
 
   // User
   {

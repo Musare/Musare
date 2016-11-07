@@ -175,13 +175,11 @@
 
 				let duration = (Date.now() - local.currentSong.startedAt - local.timePaused) / 1000;
 				let songDuration = moment.duration(local.currentSong.duration, "hh:mm:ss").asSeconds();
-
 				if (songDuration <= duration) {
 					local.player.pauseVideo();
 				}
 
 				let d = moment.duration(duration, 'seconds');
-
 				if ((!local.paused || local.timeElapsed === "0:00") && duration <= songDuration) {
 					local.timeElapsed = (d.hours() < 10 ? ("0" + d.hours() + ":") : (d.hours() + ":")) + (d.minutes() < 10 ? ("0" + d.minutes() + ":") : (d.minutes() + ":")) + (d.seconds() < 10 ? ("0" + d.seconds()) : d.seconds());
 				}

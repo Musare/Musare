@@ -44,16 +44,8 @@
 				local.loggedIn = status;
 			});
 
-			$.ajax({
-				method: "POST",
-				url: "/stations",
-				contentType: "application/json; charset=utf-8",
-				success: stations => {
-					if (stations) this.stations = stations;
-				},
-				error: err => {
-					if (err) console.log(err);
-				}
+			local.socket.emit("/stations", function(data) {
+				local.stations = data;
 			});
 		},
 		events: {
@@ -122,40 +114,3 @@
 		}
 	}
 </script>
-
-<style lang="sass" scoped>
-	#toasts {
-		position: fixed;
-		z-index: 100000;
-		right: 5%;
-		top: 10%;
-		max-width: 90%;
-
-		.toast {
-			width: 100%;
-			height: auto;
-			padding: 10px 20px;
-			border-radius: 3px;
-			color: white;
-			background-color: #424242;
-			display: -webkit-flex;
-			display: -ms-flexbox;
-			display: flex;
-			margin-bottom: 10px;
-			font-size: 1.18em;
-			font-weight: 400;
-			box-shadow: 0 2px 5px 0 rgba(0,0,0,0.16), 0 2px 10px 0 rgba(0,0,0,0.12);
-			transition: all 0.25s ease;
-		}
-
-		.toast-remove {
-			opacity: 0;
-			margin-top: -50px;
-		}
-
-		.toast-add {
-			opacity: 0;
-			margin-top: 50px;
-		}
-	}
-</style>

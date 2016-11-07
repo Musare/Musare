@@ -53,8 +53,6 @@ module.exports = {
 
 				this.currentSong = this.playlist[this.currentSongIndex];
 
-				// console.log(this.currentSong.duration);
-
 				let self = this;
 				this.timer = new global.Timer(() => {
 					self.nextSong();
