@@ -5,7 +5,7 @@ const path = require('path'),
       fs   = require('fs'),
       os   = require('os');
 
-process.env.NODE_CONFIG_DIR = `${process.cwd()}/config`;
+process.env.NODE_CONFIG_DIR = `${__dirname}/config`;
 
 // npm modules
 const express          = require('express'),
@@ -26,7 +26,7 @@ const express          = require('express'),
 const global = require('./logic/global');
 
 // database
-const MongoDB = mongoose.connect('mongodb://localhost:27017/musare').connection;
+const MongoDB = mongoose.connect('mongodb://172.16.0.1:27017/musare').connection;
 
 MongoDB.on('error', (err) => {
 	console.log('Database error: ' + err.message);
@@ -110,9 +110,7 @@ function setupExpress() {
 	app.use(bodyParser.urlencoded({
 		extended: true
 	}));
-
-	app.use(express.static(__dirname + '/../frontend/build/'));
-
+	
 	app.get('*', (req, res) => {
 		res.redirect('/');
 	});
