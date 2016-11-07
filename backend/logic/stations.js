@@ -45,14 +45,15 @@ module.exports = {
 			if (this.playlist.length > 0) {
 				if (this.timer !== undefined) this.timer.pause();
 
-				if (this.currentSongIndex + 1 < this.playlist.length) {
+				if (this.currentSongIndex + 1 <= this.playlist.length - 1) {
 					this.currentSongIndex++;
-				}
-				else {
+				} else {
 					this.currentSongIndex = 0;
 				}
 
 				this.currentSong = this.playlist[this.currentSongIndex];
+
+				// console.log(this.currentSong.duration);
 
 				let self = this;
 				this.timer = new global.Timer(() => {
@@ -81,14 +82,6 @@ module.exports = {
 				this.nsp.emit("unpause", this.timePaused);
 			}
 		}
-
-		// isPaused() {
-		// 	return this.paused;
-		// }
-
-		// getCurrentSong() {
-		// 	return this.currentSong;
-		// }
 
 		updateDisplayName(newDisplayName) {
 			// TODO: Update db

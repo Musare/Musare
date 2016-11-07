@@ -33,8 +33,8 @@ module.exports = (core, io) => {
 			});
 		});
 
-		socket.on('/songs/queue/add/:song', (song, cb) => {
-			core['/songs/queue/add/:song'](song, _user, result => {
+		socket.on('/stations/add/:song', (station, song, cb) => {
+			core['/stations/add/:song'](station, song, _user, result => {
 				cb(result);
 			});
 		});

@@ -26,7 +26,7 @@ const edmStation = new stations.Station("edm", {
 			id: "dQw4w9WgXcQ",
 			title: "Never gonna give you up",
 			artists: ["Rick Astley"],
-			duration: 20,
+			duration: '00:01:18',
 			thumbnail: "https://yt3.ggpht.com/-CGlBu6kDEi8/AAAAAAAAAAI/AAAAAAAAAAA/Pi679mvyyyU/s88-c-k-no-mo-rj-c0xffffff/photo.jpg",
 			likes: 0,
 			dislikes: 1
@@ -35,7 +35,7 @@ const edmStation = new stations.Station("edm", {
 			id: "GxBSyx85Kp8",
 			title: "Yeah!",
 			artists: ["Usher"],
-			duration: 20,
+			duration: '00:00:08',
 			thumbnail: "https://yt3.ggpht.com/-CGlBu6kDEi8/AAAAAAAAAAI/AAAAAAAAAAA/Pi679mvyyyU/s88-c-k-no-mo-rj-c0xffffff/photo.jpg",
 			likes: 0,
 			dislikes: 1
@@ -47,36 +47,7 @@ const edmStation = new stations.Station("edm", {
 	description: "EDM Music"
 });
 
-const popStation = new stations.Station("pop", {
-	"genres": ["pop"],
-	playlist: [
-		{
-			id: "HXeYRs_zR6w",
-			title: "Nobody But Me",
-			artists: ["Michael Bublé"],
-			duration: 12,
-			thumbnail: "https://yt3.ggpht.com/-CGlBu6kDEi8/AAAAAAAAAAI/AAAAAAAAAAA/Pi679mvyyyU/s88-c-k-no-mo-rj-c0xffffff/photo.jpg",
-			likes: 0,
-			dislikes: 1
-		},
-		{
-			id: "CR4YE7htLgI",
-			title: "Someday ",
-			artists: ["Michael Bublé", "Meghan Trainor"],
-			duration: 30,
-			thumbnail: "https://yt3.ggpht.com/-CGlBu6kDEi8/AAAAAAAAAAI/AAAAAAAAAAA/Pi679mvyyyU/s88-c-k-no-mo-rj-c0xffffff/photo.jpg",
-			likes: 0,
-			dislikes: 1
-		}
-	],
-	currentSongIndex: 0,
-	paused: false,
-	displayName: "Pop",
-	description: "Pop Music"
-});
-
 stations.addStation(edmStation);
-stations.addStation(popStation);
 
 module.exports = {
 
@@ -186,77 +157,33 @@ module.exports = {
 			'type=video',
 			'maxResults=15'
 		].join('&');
-		// function params(type, id) {
-		// 	if (type == "search") {
-		// 		return [
-		// 			'part=snippet',
-		// 			`q=${encodeURIComponent(query)}`,
-		// 			`key=${config.get('apis.youtube.key')}`,
-		// 			'type=video',
-		// 			'maxResults=15'
-		// 		].join('&');
-		// 	} else if (type == "video") {
-		// 		return [
-		// 			'part=snippet,contentDetails,statistics,status',
-		// 			`id=${encodeURIComponent(id)}`,
-		// 			`key=${config.get('apis.youtube.key')}`
-		// 		].join('&');
-		// 	}
-		// }
-
-		// let finalResults = [];
 
 		request(`https://www.googleapis.com/youtube/v3/search?${params}`, (err, res, body) => {
 			cb(body);
-			// for (let i = 0; i < results.items.length; i++) {
-			// 	request(`https://www.googleapis.com/youtube/v3/videos?${
-			// 		params("video", results.items[i].id.videoId)
-			// 	}`, (err, res, body) => {
-			// 		finalResults.push(JSON.parse(body));
-			// 	});
-			// }
-			// setTimeout(() => {
-			// 	return cb(finalResults);
-			// }, 500);
 		});
 	},
 
-	'/songs/queue/add/:song': (song, user, cb) => {
+	'/stations/add/:song': (station, song, user, cb) => {
+		const params = [
+			'part=snippet,contentDetails,statistics,status',
+			`id=${encodeURIComponent(song.id)}`,
+			`key=${config.get('apis.youtube.key')}`
+		].join('&');
+
 		if (user.logged_in) {
-				// if (songs.length > 0) {
-				// 	let failed = 0;
-				// 	let success = 0;
-				// 	songs.forEach(function (song) {
-				// 		if (typeof song === "object" && song !== null) {
-				// 			let obj = {};
-				// 			obj.title = song.title;
-				// 			obj._id = song.id;
-				// 			obj.artists = [];
-				// 			obj.image = "test";
-				// 			obj.duration = 0;
-				// 			obj.genres = ["edm"];
-				// 			//TODO Get data from Wikipedia and Spotify
-				// 			obj.requestedBy = user._id;
-				// 			console.log(user._id);
-				// 			console.log(user);
-				// 			obj.requestedAt = Date.now();
-				// 			let queueSong = new global.db.queueSong(obj);
-				// 			queueSong.save(function(err) {
-				// 				console.log(err);
-				// 				if (err) failed++;
-				// 				else success++;
-				// 			});
-				// 		} else {
-				// 			failed++;
-				// 		}
-				// 	});
-				// 	cb({success, failed});
-				// } else {
-				// 	cb({err: "No songs supplied."});
-				// }
-				console.log(song);
-			} else {
-			cb({err: "Not logged in."});
+			request(`https://www.googleapis.com/youtube/v3/videos?${params}`, (err, res, body) => {
+				// TODO: Get data from Wikipedia and Spotify
+				body = JSON.parse(body);
+				let newSong = {
+					id: body.items[0].id,
+					title: body.items[0].snippet.title,
+					artists: [""],
+					duration: global.convertTime(body.items[0].contentDetails.duration),
+					thumbnail: body.items[0].snippet.thumbnails.high.url
+				};
+				stations.getStation(station).playlist.push(newSong);
+				cb(stations.getStation(station.playlist));
+			});
 		}
 	},
 

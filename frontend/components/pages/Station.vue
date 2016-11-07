@@ -91,7 +91,7 @@
 				player: undefined,
 				timePaused: 0,
 				paused: false,
-				timeElapsed: "0:00",
+				timeElapsed: "00:00:00",
 				interval: 0,
 				querySearch: "",
 				queryResults: [],
@@ -146,9 +146,6 @@
 					local.videoLoading = true;
 					local.player.loadVideoById(local.currentSong.id);
 
-					const d = moment.duration(parseInt(local.currentSong.duration), 'seconds');
-					local.currentSong.songDuration = d.minutes() + ":" + ("0" + d.seconds()).slice(-2);
-
 					local.currentSong.artists = local.currentSong.artists.join(", ");
 
 					if (local.interval !== 0) {
@@ -170,18 +167,23 @@
 			calculateTimeElapsed: function() {
 				let local = this;
 				let currentTime = Date.now();
+
 				if (local.currentTime !== undefined && local.paused) {
 					local.timePaused += (Date.now() - local.currentTime);
 					local.currentTime = undefined;
 				}
+
 				let duration = (Date.now() - local.currentSong.startedAt - local.timePaused) / 1000;
-				let songDuration = local.currentSong.duration;
+				let songDuration = moment.duration(local.currentSong.duration, "hh:mm:ss").asSeconds();
+
 				if (songDuration <= duration) {
 					local.player.pauseVideo();
 				}
+
 				let d = moment.duration(duration, 'seconds');
+
 				if ((!local.paused || local.timeElapsed === "0:00") && duration <= songDuration) {
-					local.timeElapsed = d.minutes() + ":" + ("0" + d.seconds()).slice(-2);
+					local.timeElapsed = (d.hours() < 10 ? ("0" + d.hours() + ":") : (d.hours() + ":")) + (d.minutes() < 10 ? ("0" + d.minutes() + ":") : (d.minutes() + ":")) + (d.seconds() < 10 ? ("0" + d.seconds()) : d.seconds());
 				}
 			},
 			changeVolume: function() {
@@ -212,8 +214,8 @@
 			},
 			addSongToQueue: function(song) {
 				let local = this;
-				local.socket.emit("/songs/queue/add/:song", song, function(data) {
-					console.log(data);
+				local.socket.emit("/stations/add/:song", local.$route.params.id, song, function(data) {
+					if (data) console.log(data);
 				});
 			},
 			submitQuery: function() {

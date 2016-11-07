@@ -1,12 +1,14 @@
 'use strict';
 
+const moment = require('moment');
+
 class Timer {
 	constructor(callback, delay, paused) {
 		this.callback = callback;
 		this.timerId = undefined;
 		this.start = undefined;
 		this.paused = paused;
-		this.remaining = delay * 1000;
+		this.remaining = moment.duration(delay, "hh:mm:ss").asSeconds() * 1000;
 		this.timeWhenPaused = 0;
 		this.timePaused = Date.now();
 
@@ -89,7 +91,8 @@ function convertTime(duration) {
     let minutes = Math.floor(duration % 3600 / 60);
     let seconds = Math.floor(duration % 3600 % 60);
 
-    return ((hours > 0 ? hours + ":" + (minutes) : "") + minutes + ":" + (seconds < 10 ? "0" : "") + seconds);
+	return (hours < 10 ? ("0" + hours + ":") : (hours + ":")) + (minutes < 10 ? ("0" + minutes + ":") : (minutes + ":")) + (seconds < 10 ? ("0" + seconds) : seconds); // 00:00:23
+    // return moment.duration(final, "hh:mm:ss").asSeconds(); // 23
 }
 
 module.exports = {

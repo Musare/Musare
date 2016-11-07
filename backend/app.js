@@ -50,8 +50,7 @@ function setupExpress() {
 
 	global.db = {
 		user: require('./schemas/user')(mongoose),
-		station: require('./schemas/station')(mongoose),
-		song: require('./schemas/song')(mongoose)
+		station: require('./schemas/station')(mongoose)
 	};
 
 	const mongoStore = new MongoStore({'mongooseConnection': MongoDB});
