@@ -1,7 +1,7 @@
 <template>
 	<nav class="nav has-shadow">
 		<div class="nav-left">
-			<a class="nav-item" href="#" v-link="{ path: '/' }">
+			<a class="nav-item" href="#" v-link="{ path: '/' }" @click="this.$dispatch('leaveStation', title)">
 				<span class="icon">
 					<i class="fa fa-home"></i>
 				</span>

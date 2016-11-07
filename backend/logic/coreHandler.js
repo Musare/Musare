@@ -160,9 +160,22 @@ module.exports = {
 				playlist: station.playlist,
 				displayName: station.displayName,
 				description: station.description,
-				currentSongIndex: station.currentSongIndex
+				currentSongIndex: station.currentSongIndex,
+				users: station.users
 			}
 		}));
+	},
+
+	'/stations/join/:id': (id, cb) => {
+		stations.getStation(id).users = stations.getStation(id).users + 1;
+		cb(stations.getStation(id).users);
+	},
+
+	'/stations/leave/:id': (id, cb) => {
+		if (stations.getStation(id)) {
+			stations.getStation(id).users = stations.getStation(id).users - 1;
+			if (cb) cb(stations.getStation(id).users);
+		}
 	},
 
 	'/youtube/getVideo/:query': (query, cb) => {
@@ -282,68 +295,5 @@ module.exports = {
 		} else {
 			cb({err: "Not logged in."});
 		}
-	},
-
-	'/stations/search/:query': (query, cb) => {
-
-		const params = [
-			'part=snippet',
-			`q=${encodeURIComponent(query)}`,
-			`key=${config.get('apis.youtube.key')}`,
-			'type=video',
-			'maxResults=25'
-		].join('&');
-
-		request(`https://www.googleapis.com/youtube/v3/search?${params}`, (err, res, body) => {
-			if (err) {
-				return cb({ status: 'error', message: 'Failed to make request' });
-			} else {
-				try {
-					return cb({ status: 'success', body: JSON.parse(body) });
-				}
-				catch (e) {
-					return cb({ status: 'error', message: 'Non JSON response' });
-				}
-			}
-		});
-	},
-
-	'/song/:id/toggleLike': (songId, userId, cb) => {
-
-		var user = global.db.user.findOne(userId);
-		var song = global.db.song.findOne(songId);
-		if (user !== undefined) {
-			if (song !== undefined) {
-				var liked = false;
-				if (song.likes.indexOf(userId) === -1) {
-					liked = true;
-					// Add like
-				} else {
-					// Remove like
-				}
-				if (song.dislikes.indexOf(userId) !== -1) {
-					// Remove dislike
-				}
-				// Emit to all sockets with this user that their likes/dislikes updated.
-				// Emit to all sockets in the room that the likes/dislikes has updated
-				cb({liked: liked, disliked: false});
-			} else {
-				cb({err: "Song not found."});
-			}
-		} else {
-			cb({err: "User not found."});
-		}
-
-	},
-
-	'/user/:id/ratings': (userId, cb) => {
-
-		var user = global.db.user.findOne(userId);
-		if (user !== undefined) {
-			cb({likes: user.likes, dislikes: user.dislikes});
-		} else {
-			cb({err: "User not found."});
-		}
-
 	}
 };

@@ -99,8 +99,25 @@
 					}
 				});
 			},
-			'joinStation': id => {
-
+			'joinStation': function(id) {
+				let local = this;
+				local.socket.emit('/stations/join/:id', id, (result) => {
+					local.stations.forEach(function(station) {
+						if (station.id === id) {
+							station.users = result;
+						}
+					});
+				});
+			},
+			'leaveStation': function(id) {
+				let local = this;
+				local.socket.emit('/stations/leave/:id', id, (result) => {
+					local.stations.forEach(function(station) {
+						if (station.id === id) {
+							station.users = result;
+						}
+					});
+				});
 			}
 		}
 	}

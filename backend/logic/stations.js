@@ -27,6 +27,7 @@ module.exports = {
 			});
 
 			this.id = id;
+			this.users = 0;
 			this.playlist = data.playlist;
 			this.currentSongIndex = data.currentSongIndex;
 			this.paused = data.paused;
@@ -108,15 +109,15 @@ module.exports = {
 	addStation: (station) => {
 		stations.push(station);
 	},
-	// getStation: id => {
-	// 	let result;
-	// 	stations.forEach(function(station) {
-	// 		if (station.getId() === id) {
-	// 			result = station;
-	// 		}
-	// 	});
-	// 	return result;
-	// },
+	getStation: id => {
+		let result;
+		stations.forEach(function(station) {
+			if (station.id === id) {
+				result = station;
+			}
+		});
+		return result;
+	},
 	// Returns stations list when POSTing to '/stations'
 	getStations: () => {
 		return stations;

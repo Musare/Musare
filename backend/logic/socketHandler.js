@@ -5,18 +5,27 @@ module.exports = (core, io) => {
 	io.on('connection', socket => {
 		console.log("User has connected");
 		let _user = socket.request.user;
+		let _currentStation = "";
 
 		socket.on('disconnect', () => {
+			core['/stations/leave/:id'](_currentStation);
+			_currentStation = "";
 			console.log('User has disconnected');
 		});
 
-		/*socket.on('/station/:id/join', (id, cb) => {
-			console.log("JOINED!!!");
-			core['/station/:id/join'](id, socket.id, result => {
-				console.log("CALLBACK!!!");
+		socket.on('/stations/join/:id', (id, cb) => {
+			core['/stations/join/:id'](id, result => {
+				_currentStation = id;
 				cb(result);
 			});
-		});*/
+		});
+
+		socket.on('/stations/leave/:id', (id, cb) => {
+			core['/stations/leave/:id'](id, result => {
+				_currentStation = "";
+				cb(result);
+			});
+		});
 
 		socket.on('/youtube/getVideo/:query', (query, cb) => {
 			core['/youtube/getVideo/:query'](query, result => {
