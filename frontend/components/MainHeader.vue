@@ -1,72 +1,46 @@
 <template>
-	<nav class="navbar navbar-default">
-		<div class="container-fluid">
-			<div class="navbar-header">
-				<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#main-navbar" aria-expanded="false">
-					<span class="sr-only">Toggle navigation</span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-				</button>
-				<a class="navbar-brand" href="#" v-link="{ path: '/' }">Musare</a>
-			</div>
-			<div class="collapse navbar-collapse" id="main-navbar">
-				<ul class="nav navbar-nav navbar-right">
-					<li><a v-link="{ path: '/admin/queue' }">Admin Queue</a></li>
-					<li><a href="#">The Project</a></li>
-					<li><a href="#">Donate</a></li>
-					<li v-if="$parent.$parent.loggedIn"><a href="#" @click="$parent.$parent.logout()">Logout</a></li>
-					<span class="grouped" v-else>
-						<li><a href="#" data-toggle="modal" data-target="#register">Register</a></li>
-						<li><a href="#" data-toggle="modal" data-target="#login">Login</a></li>
-					</span>
-				</ul>
-			</div>
+	<nav class="nav">
+		<div class="nav-left">
+			<a class="nav-item is-brand" href="#" v-link="{ path: '/' }">
+				Musare
+			</a>
+		</div>
+
+		<!--<span class="nav-toggle" :class="{ 'is-active': isActive }" @click="toggleMobileMenu()">
+			<span></span>
+			<span></span>
+			<span></span>
+		</span>-->
+
+		<div class="nav-right">
+			<a class="nav-item" href="#" v-link="{ path: '/admin/queue' }">
+				Admin Queue
+			</a>
+			<a class="nav-item" href="#">
+				About
+			</a>
+			<a class="nav-item" href="#">
+				Donate
+			</a>
+			<a class="nav-item" href="#" v-if="$parent.$parent.loggedIn" @click="$parent.$parent.logout()">
+				Sign Out
+			</a>
+			<span class="grouped" v-else>
+				<a class="nav-item" href="#" @click="$parent.toggleModal('login')">
+					Sign In
+				</a>
+				<a class="nav-item" href="#" @click="$parent.toggleModal('register')">
+					Register
+				</a>
+			</span>
 		</div>
 	</nav>
 </template>
 
 <style lang="sass" scoped>
-	.navbar-default {
-		background-color: #424242;
-		border: 0;
-		border-radius: 0;
+	.grouped {
 		margin: 0;
-		min-height: 50px;
-
-		.navbar-brand, li a, li a:hover, li a:focus {
-			line-height: 50px;
-			padding: 0px 10px;
-			margin: 0px;
-			color: #fff;
-		}
-
-		li:hover {
-			background-color: #393939;
-			color: #fff;
-		}
-
-		a {
-    		text-decoration: none;
-		}
-
-		.navbar-toggle, .navbar-toggle:hover, .navbar-toggle:focus {
-			border: 0;
-			background: 0;
-
-			.icon-bar {
-				background-color: #fff;
-			}
-		}
-
-		.navbar-collapse {
-			border: 0;
-		}
-
-		.grouped {
-			margin: 0;
-    		display: flex;
-			text-decoration: none;
-		}
+		display: flex;
+		text-decoration: none;
 	}
 </style>

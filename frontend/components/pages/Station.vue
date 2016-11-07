@@ -1,27 +1,29 @@
 <template>
 	<station-header></station-header>
 	<div class="station">
-		<div class="row">
-			<div class="col-md-8 col-md-push-2 col-sm-10 col-sm-push-1 col-xs-12 video-col">
+		<div class="columns is-mobile">
+			<div class="column is-8-desktop is-offset-2-desktop is-12-mobile">
 				<div class="video-container">
 					<div id="player"></div>
 				</div>
 			</div>
-			<div class="col-md-8 col-md-push-2 col-sm-10 col-sm-push-1 col-xs-12">
-				<div class="row">
-					<!--<button v-if="paused" @click="unpauseStation()">Unpause</button>-->
-					<!--<button v-if="!paused" @click="pauseStation()">Pause</button>-->
-					<div class="col-md-8 col-sm-12 col-sm-12">
+		</div>
+		<div class="columns is-mobile">
+			<div class="column is-8-desktop is-offset-2-desktop is-12-mobile">
+				<!--<button v-if="paused" @click="unpauseStation()">Unpause</button>-->
+				<!--<button v-if="!paused" @click="pauseStation()">Pause</button>-->
+				<div class="columns is-mobile">
+					<div class="column is-8-desktop is-12-mobile">
 						<h4 id="time-display">{{timeElapsed}} / {{currentSong.duration}}</h4>
 						<h3>{{currentSong.title}}</h3>
 						<h4 class="thin" style="margin-left: 0">{{currentSong.artists}}</h4>
-						<div class="row">
-							<form style="margin-top: 12px; margin-bottom: 0;" action="#" class="col-md-4 col-lg-4 col-xs-4 col-sm-4">
+						<div class="columns is-mobile">
+							<form style="margin-top: 12px; margin-bottom: 0;" action="#" class="column is-7-desktop is-4-mobile">
 								<p style="margin-top: 0; position: relative;">
 									<input type="range" id="volumeSlider" min="0" max="100" class="active" v-on:change="changeVolume()" v-on:input="changeVolume()">
 								</p>
 							</form>
-							<div class="col-xs-8 col-sm-5 col-md-5" style="float: right;">
+							<div class="column is-8-mobile is-5-desktop" style="float: right;">
 								<ul id="ratings">
 									<li id="like" class="right"><span class="flow-text">{{currentSong.likes}} </span> <i id="thumbs_up" class="material-icons grey-text">thumb_up</i></li>
 									<li style="margin-right: 10px;" id="dislike" class="right"><span class="flow-text">{{currentSong.dislikes}} </span><i id="thumbs_down" class="material-icons grey-text">thumb_down</i></li>
@@ -32,54 +34,58 @@
 							<div class="seeker-bar light-blue" style="width: 60.9869%;"></div>
 						</div>
 					</div>
-					<img class="img-responsive col-md-4 col-xs-12 col-sm-12" id="song-thumbnail" style="margin-top: 10px !important" :src="currentSong.thumbnail" alt="Song Thumbnail" />
+					<div class="column is-4-desktop is-12-mobile">
+						<img class="image" id="song-thumbnail" style="margin-top: 10px !important" :src="currentSong.thumbnail" alt="Song Thumbnail" />
+					</div>
 				</div>
 			</div>
 		</div>
 	</div>
-	<main-footer></main-footer>
-	<div class="modal fade" id="queue" tabindex="-1" role="dialog" aria-labelledby="queue-modal">
-		<div class="modal-dialog modal-large" role="document">
-			<div class="modal-content">
-				<div class="modal-header">
-					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-					<h5 class="modal-title">Add to Station</h5>
+	<div class="modal" :class="{ 'is-active': isActive }">
+		<div class="modal-background"></div>
+		<div class="modal-card">
+			<header class="modal-card-head">
+				<p class="modal-card-title">Add Songs to Station</p>
+				<button class="delete" @click="toggleModal()" ></button>
+			</header>
+			<section class="modal-card-body">
+				<div class="control is-grouped">
+					<p class="control is-expanded">
+						<input class="input" type="text" placeholder="YouTube Query" v-model="querySearch">
+					</p>
+					<p class="control">
+						<a class="button is-info" @click="submitQuery()">
+							Search
+						</a>
+					</p>
 				</div>
-				<div class="modal-body">
-					<div class="form-group">
-						<div class="input-group">
-							<input class="form-control" type="text" placeholder="YouTube Query" v-model="queryInput"/>
-							<a type="button" class="input-group-btn btn btn-primary btn-search" @click="submitQuery()">Search</a>
-						</div>
-					</div>
-					<div>
-						<div v-for="result in queryResults">
-							<div class="media">
-								<div class="media-left">
-									<a href={{result.url}}>
-										<img class="media-object" :src="result.thumbnail" />
-									</a>
-								</div>
-								<div class="media-body">
-									<h4 class="media-heading">{{result.title}}</h4>
-									<button class="btn btn-success" @click='addSongToQueue(result)'>Add</button>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
+				<table class="table">
+					<tbody>
+						<tr v-for="result in queryResults">
+							<td>
+								<img :src="result.thumbnail" />
+							</td>
+							<td>{{result.title}}</td>
+							<td>
+								<a class="button is-success" @click="addSongToQueue(result)">
+									Add
+								</a>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</section>
 		</div>
 	</div>
 </template>
 
 <script>
 	import StationHeader from '../StationHeader.vue'
-	import MainFooter from '../MainFooter.vue'
 
 	export default {
 		data() {
 			return {
+				isActive: false,
 				playerReady: false,
 				currentSong: {},
 				player: undefined,
@@ -87,12 +93,15 @@
 				paused: false,
 				timeElapsed: "0:00",
 				interval: 0,
-				queryInput: "",
+				querySearch: "",
 				queryResults: [],
 				queue: []
 			}
 		},
 		methods: {
+			toggleModal: function() {
+				this.isActive = !this.isActive;
+			},
 			youtubeReady: function() {
 				let local = this;
 				local.player = new YT.Player("player", {
@@ -209,7 +218,7 @@
 			},
 			submitQuery: function() {
 				let local = this;
-				local.socket.emit("/youtube/getVideo/:query", local.queryInput, function(data) {
+				local.socket.emit("/youtube/getVideo/:query", local.querySearch, function(data) {
 					local.queryResults = [];
 					for (let i = 0; i < data.items.length; i++) {
 						local.queryResults.push({
@@ -248,7 +257,7 @@
 			volume = (typeof volume === "number") ? volume : 20;
 			$("#volumeSlider").val(volume);
 		},
-		components: { StationHeader, MainFooter }
+		components: { StationHeader }
 	}
 </script>
 
@@ -413,6 +422,11 @@
 
 	#thumbs_down:hover {
 		color: #EC644B !important;
+	}
+
+	#song-thumbnail {
+		max-width: 100%;
+		width: 85%;
 	}
 
 	.seeker-bar-container {

@@ -9,12 +9,6 @@
 		replace: false,
 		data() {
 			return {
-				home: {
-					visible: true
-				},
-				station: {
-					visible: false
-				},
 				register: {
 					email: "",
 					username: "",
@@ -33,11 +27,11 @@
 		methods: {
 			logout() {
 				$.ajax({
-					method: "GET",
+					method: "POST",
 					url: "/users/logout",
 					dataType: "json",
-					complete: function (msg) {
-						alert("Logged in!");
+					complete: msg => {
+						alert("Logged out!");
 						location.reload();
 					}
 				});
@@ -63,7 +57,7 @@
 			});
 		},
 		events: {
-			'register': () => {
+			'register': function() {
 				$.ajax({
 					method: "POST",
 					url: "/users/register",
@@ -77,18 +71,14 @@
 					dataType: "json",
 					success: function (msg) {
 						if (msg) console.log(msg);
-						alert("Registered!");
-						//do something
 					},
 					error: function (err) {
 						if (err) console.log(err);
 						alert("Not registered!");
-						//do something else
-
 					}
 				});
 			},
-			'login': () => {
+			'login': function() {
 				$.ajax({
 					method: "POST",
 					url: "/users/login",
@@ -100,14 +90,12 @@
 					dataType: "json",
 					success: function (msg) {
 						if (msg) console.log(msg);
-						alert("Logged in!");
+						location.reload();
 						//do something
 					},
 					error: function (err) {
 						if (err) console.log(err);
 						alert("Not logged in!");
-						//do something else
-
 					}
 				});
 			},

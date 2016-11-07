@@ -1,40 +1,55 @@
 <template>
 	<div class="app">
 		<main-header></main-header>
-		<div class="modal fade" id="register" tabindex="-1" role="dialog" aria-labelledby="register-modal">
-			<div class="modal-dialog" role="document">
-				<div class="modal-content">
-					<div class="modal-header">
-						<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-						<h5 class="modal-title">Register</h5>
-					</div>
-					<div class="modal-body">
-						<input class="form-control" type="text" placeholder="Email..." v-model="$parent.register.email"/>
-						<input class="form-control" type="text" placeholder="Username..." v-model="$parent.register.username"/>
-						<input class="form-control" type="password" placeholder="Password..." v-model="$parent.register.password"/>
-						<div class="g-recaptcha" data-sitekey="6Lfa-wYUAAAAANY6iVvWNEXohC38l1cZqHRole9T"></div>
-					</div>
-					<div class="modal-footer">
-						<button type="button" class="btn btn-primary" data-dismiss="modal" @click="this.$dispatch('register');">Submit</button>
-					</div>
-				</div>
+		<div class="modal" :class="{ 'is-active': isRegisterActive }">
+			<div class="modal-background"></div>
+			<div class="modal-card">
+				<header class="modal-card-head">
+					<p class="modal-card-title">Register</p>
+					<button class="delete" @click="toggleModal('register')"></button>
+				</header>
+				<section class="modal-card-body">
+					<!-- validation to check if exists http://bulma.io/documentation/elements/form/ -->
+					<label class="label">Email</label>
+					<p class="control">
+						<input class="input" type="text" placeholder="Email..." v-model="$parent.register.email">
+					</p>
+					<label class="label">Username</label>
+					<p class="control">
+						<input class="input" type="text" placeholder="Username..." v-model="$parent.register.username">
+					</p>
+					<label class="label">Password</label>
+					<p class="control">
+						<input class="input" type="password" placeholder="Password..." v-model="$parent.register.password">
+					</p>
+					<div class="g-recaptcha" data-sitekey="6Lfa-wYUAAAAANY6iVvWNEXohC38l1cZqHRole9T"></div>
+				</section>
+				<footer class="modal-card-foot">
+					<a class="button is-primary" @click="submitModal('register')">Submit</a>
+				</footer>
 			</div>
 		</div>
-		<div class="modal fade" id="login" tabindex="-1" role="dialog" aria-labelledby="login-modal">
-			<div class="modal-dialog" role="document">
-				<div class="modal-content">
-					<div class="modal-header">
-						<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-						<h5 class="modal-title">Login</h5>
-					</div>
-					<div class="modal-body">
-						<input class="form-control" type="text" placeholder="Email..." v-model="$parent.login.email"/>
-						<input class="form-control" type="password" placeholder="Password..." v-model="$parent.login.password"/>
-					</div>
-					<div class="modal-footer">
-						<button type="button" class="btn btn-primary" data-dismiss="modal" @click="this.$dispatch('login');">Submit</button>
-					</div>
-				</div>
+		<div class="modal" :class="{ 'is-active': isLoginActive }">
+			<div class="modal-background"></div>
+			<div class="modal-card">
+				<header class="modal-card-head">
+					<p class="modal-card-title">Login</p>
+					<button class="delete" @click="toggleModal('login')"></button>
+				</header>
+				<section class="modal-card-body">
+					<!-- validation to check if exists http://bulma.io/documentation/elements/form/ -->
+					<label class="label">Email</label>
+					<p class="control">
+						<input class="input" type="text" placeholder="Email..." v-model="$parent.login.email">
+					</p>
+					<label class="label">Password</label>
+					<p class="control">
+						<input class="input" type="password" placeholder="Password..." v-model="$parent.login.password">
+					</p>
+				</section>
+				<footer class="modal-card-foot">
+					<a class="button is-primary" @click="submitModal('login')">Submit</a>
+				</footer>
 			</div>
 		</div>
 		<div class="group">
@@ -63,6 +78,36 @@
 	import MainFooter from '../MainFooter.vue'
 
 	export default {
+		data() {
+			return {
+				isRegisterActive: false,
+				isLoginActive: false
+			}
+		},
+		methods: {
+			toggleModal: function(type) {
+				switch(type) {
+					case 'register':
+						this.isRegisterActive = !this.isRegisterActive;
+						break;
+					case 'login':
+						this.isLoginActive = !this.isLoginActive;
+						break;
+				}
+			},
+			submitModal: function(type) {
+				switch(type) {
+					case 'register':
+						this.$dispatch('register');
+						this.toggleModal('register');
+						break;
+					case 'login':
+						this.$dispatch('login');
+						this.toggleModal('login');
+						break;
+				}
+			}
+		},
 		components: { MainHeader, MainFooter }
 	}
 </script>
@@ -101,16 +146,20 @@
 		}
 	}
 
+	.label {
+		display: flex;
+	}
+
 	.g-recaptcha {
 		display: flex;
 		justify-content: center;
-		margin-top: 10px;
+		margin-top: 20px;
 	}
 
 	.group {
 		width: 100%;
 		height: 448px;
-		margin: 64px 0 64px 0;
+		margin: 64px 0 0 0;
 
 		.group-title {
 			float: left;
@@ -173,28 +222,6 @@
 					width: 25%;
 				}
 			}
-		}
-	}
-
-	.btn-github {
-		background-color: #333;
-		color: #fff;
-		border: 0;
-
-		&:hover, &:active, &:focus {
-			background-color: darken(#333, 5%);
-			color: #fff;
-		}
-	}
-
-	.btn-discord {
-		background-color: #7289DA;
-		color: #fff;
-		border: 0;
-
-		&:hover, &:active, &:focus {
-			background-color: darken(#7289DA, 5%);
-			color: #fff;
 		}
 	}
 </style>

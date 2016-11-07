@@ -1,26 +1,54 @@
 <template>
-	<nav class="navbar navbar-default" role="navigation">
-		<div class="container-fluid">
-			<div class="navbar-header">
-				<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#station-navbar" aria-expanded="false">
-					<span class="sr-only">Toggle navigation</span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-				</button>
-			</div>
-			<div class="collapse navbar-collapse" id="station-navbar">
-				<ul class="nav navbar-nav">
-					<li class="pull-left"><a href="#" v-link="{ path: '/' }"><i class="material-icons left">home</i></a></li>
-					<li class="pull-left"><a href="#" data-toggle="modal" data-target="#queue"><i class="material-icons left">playlist_add</i></a></li>
-					<li class="pull-left"><a href="#"><i class="material-icons left">flag</i></a></li>
-					<li class="pull-left"><a href="#"><i class="material-icons left">skip_next</i></a></li>
-					<li class="pull-center"><a href="#">{{title}}</a></li>
-					<li class="pull-right"><a href="#"><i class="material-icons">queue_music</i></a></li>
-					<li class="pull-right"><a href="#"><i class="material-icons">chat</i></a></li>
-					<li class="pull-right"><a href="#"><i class="material-icons">people</i></a></li>
-				</ul>
-			</div>
+	<nav class="nav has-shadow">
+		<div class="nav-left">
+			<a class="nav-item" href="#" v-link="{ path: '/' }">
+				<span class="icon">
+					<i class="fa fa-home"></i>
+				</span>
+			</a>
+			<a class="nav-item" href="#" @click="$parent.toggleModal()">
+				<span class="icon">
+					<i class="fa fa-plus"></i>
+				</span>
+			</a>
+			<a class="nav-item" href="#">
+				<span class="icon">
+					<i class="fa fa-flag"></i>
+				</span>
+			</a>
+			<a class="nav-item" href="#">
+				<span class="icon">
+					<i class="fa fa-step-forward"></i>
+				</span>
+			</a>
+		</div>
+
+		<div class="nav-center">
+			{{title}}
+		</div>
+
+		<!--<span class="nav-toggle" :class="{ 'is-active': isActive }" @click="toggleMobileMenu()">
+			<span></span>
+			<span></span>
+			<span></span>
+		</span>-->
+
+		<div class="nav-right">
+			<a class="nav-item" href="#">
+				<span class="icon">
+					<i class="fa fa-music"></i>
+				</span>
+			</a>
+			<a class="nav-item" href="#">
+				<span class="icon">
+					<i class="fa fa-comments"></i>
+				</span>
+			</a>
+			<a class="nav-item" href="#">
+				<span class="icon">
+					<i class="fa fa-users"></i>
+				</span>
+			</a>
 		</div>
 	</nav>
 </template>
@@ -29,67 +57,31 @@
 	export default {
 		data() {
 			return {
-				title: this.$route.params.id
+				title: this.$route.params.id,
+				isActive: false
+			}
+		},
+		methods: {
+			toggleMobileMenu: function() {
+				this.isActive = !this.isActive;
 			}
 		}
 	}
 </script>
 
 <style lang="sass" scoped>
-	.navbar-default {
+	.nav {
 		background-color: #0091ea;
-		border: 0;
-		border-radius: 0;
-		margin: 0;
-		min-height: 64px;
+	}
 
-		.navbar-nav {
-			width: 100%;
-			text-align: center;
+	a.nav-item {
+		color: #fff;
+	}
 
-			li a, li a:hover, li a:focus {
-				padding: 0px 10px;
-				margin: 0px;
-				color: #fff;
-			}
-
-			li.pull-center a {
-				line-height: 64px;
-				text-transform: capitalize;
-			}
-
-			li.pull-right, li.pull-left {
-				height: 64px;
-				display: flex;
-				align-items: center;
-			}
-
-			li {
-				float: none;
-				display: inline-block;
-
-				i {
-					font-size: 40px;
-				}
-
-				&:hover {
-					background-color: rgba(0, 0, 0, 0.1);
-					color: #fff;
-				}
-			}
-		}
-
-		.navbar-toggle, .navbar-toggle:hover, .navbar-toggle:focus {
-			border: 0;
-			background: 0;
-
-			.icon-bar {
-				background-color: #fff;
-			}
-		}
-
-		.navbar-collapse {
-			border: 0;
-		}
+	.nav-center {
+		display: flex;
+    	align-items: center;
+		text-transform: capitalize;
+		color: #fff;
 	}
 </style>
