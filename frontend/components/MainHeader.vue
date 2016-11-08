@@ -13,16 +13,16 @@
 		</span>-->
 
 		<div class="nav-right">
-			<a class="nav-item" href="#" v-link="{ path: '/admin' }">
+			<a class="nav-item is-tab" href="#" v-link="{ path: '/admin' }">
 				Admin
 			</a>
-			<a class="nav-item" href="#">
+			<a class="nav-item is-tab" href="#">
 				About
 			</a>
-			<a class="nav-item" href="#">
+			<a class="nav-item is-tab" href="#">
 				Donate
 			</a>
-			<a class="nav-item" href="#" v-if="$parent.$parent.loggedIn" @click="$parent.$parent.logout()">
+			<a class="nav-item is-tab" href="#" v-if="$parent.$parent.loggedIn" @click="$parent.$parent.logout()">
 				Sign Out
 			</a>
 			<span class="grouped" v-else>
@@ -38,6 +38,18 @@
 </template>
 
 <style lang="sass" scoped>
+	@import 'theme.scss';
+
+	.nav {
+		background-color: $primary-color;
+		.is-brand {
+			font-size: 26px !important;
+		}
+		.nav-item {
+			font-size: 15px;
+			color: $secondary-color;
+		}
+	}
 	.grouped {
 		margin: 0;
 		display: flex;

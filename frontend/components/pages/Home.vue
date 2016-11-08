@@ -113,6 +113,9 @@
 </script>
 
 <style lang="sass">
+
+	@import 'theme.scss';
+	
 	* { box-sizing: border-box; font-family: Roboto, sans-serif; }
 
 	html {
