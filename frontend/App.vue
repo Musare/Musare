@@ -28,7 +28,7 @@
 			logout() {
 				$.ajax({
 					method: "POST",
-					url: "/users/logout",
+					url: `${window.location.protocol + '//' + window.location.hostname + ':8081'}/users/logout`,
 					dataType: "json",
 					complete: msg => {
 						alert("Logged out!");
@@ -52,7 +52,7 @@
 			'register': function() {
 				$.ajax({
 					method: "POST",
-					url: "/users/register",
+					url: `${window.location.protocol + '//' + window.location.hostname + ':8081'}/users/register`,
 					data: JSON.stringify({
 						email: this.register.email,
 						username: this.register.username,
@@ -73,13 +73,14 @@
 			'login': function() {
 				$.ajax({
 					method: "POST",
-					url: "/users/login",
+					url: `${window.location.protocol + '//' + window.location.hostname + ':8081'}/users/login`,
 					data: JSON.stringify({
 						email: this.login.email,
 						password: this.login.password
 					}),
 					contentType: "application/json; charset=utf-8",
 					dataType: "json",
+					crossDomain: true,
 					success: function (msg) {
 						if (msg) console.log(msg);
 						location.reload();

@@ -20,6 +20,4 @@ This will ensure that the services we've created start up correctly.
 
 Once this is done you should be able to access Musare in your local browser at [localhost](http://localhost:8080/).
 
-  > The backend is at [localhost:8081](http://localhost:8081/).
-
-### FAQ
+If you are using Docker ToolBox, you will access Musare at `192.168.99.100` instead of `localhost` or `127.0.0.1`.

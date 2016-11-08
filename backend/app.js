@@ -13,6 +13,7 @@ const express          = require('express'),
       mongoose         = require('mongoose'),
 	  MongoStore       = require('connect-mongo')(session),
       bodyParser       = require('body-parser'),
+	  cors			   = require('cors'),
       config           = require('config'),
       request          = require('request'),
       passport         = require('passport'),
@@ -26,7 +27,7 @@ const express          = require('express'),
 const global = require('./logic/global');
 
 // database
-const MongoDB = mongoose.connect('mongodb://172.16.0.1:27017/musare').connection;
+const MongoDB = mongoose.connect(`mongodb://${config.get('domain')}:27017/musare`).connection;
 
 MongoDB.on('error', (err) => {
 	console.log('Database error: ' + err.message);
@@ -43,7 +44,7 @@ function setupExpress() {
 	const server = app.listen(80);
 	global.io = require('socket.io')(server);
 
-// other custom modules
+	// other custom modules
 	const coreHandler = require('./logic/coreHandler'),
 		  socketHandler = require('./logic/socketHandler'),
 		  expressHandler = require('./logic/expressHandler');
@@ -72,21 +73,9 @@ function setupExpress() {
 			accept();
 		},
 		fail: (data, message, error, accept) => {
-			if (error) throw new Error(message);
 			accept();
 		}
 	}));
-
-	app.use(passport.initialize());
-	app.use(passport.session());
-
-	passport.serializeUser((user, done) => {
-		done(null, user);
-	});
-
-	passport.deserializeUser((user, done) => {
-		done(null, user);
-	});
 
 	passport.use(new LocalStrategy({usernameField: 'email'}, (email, password, done) => {
 		process.nextTick(() => {
@@ -110,10 +99,8 @@ function setupExpress() {
 	app.use(bodyParser.urlencoded({
 		extended: true
 	}));
-	
-	app.get('*', (req, res) => {
-		res.redirect('/');
-	});
+
+	app.use(cors());
 
 	socketHandler(coreHandler, global.io);
 	expressHandler(coreHandler, app);

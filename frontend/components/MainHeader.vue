@@ -42,12 +42,18 @@
 
 	.nav {
 		background-color: $primary-color;
+
 		.is-brand {
 			font-size: 26px !important;
 		}
+
 		.nav-item {
 			font-size: 15px;
 			color: $secondary-color;
+
+			&:hover {
+				color: $secondary-color;
+			}
 		}
 	}
 	.grouped {
