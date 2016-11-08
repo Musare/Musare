@@ -237,7 +237,7 @@
 			local.interval = 0;
 
 			local.socket = this.$parent.socket;
-			local.stationSocket = io.connect(`http://192.168.99.100:8081/${local.$route.params.id}`);
+			local.stationSocket = io.connect(`${window.location.protocol + '//' + window.location.hostname + ':8081'}/${local.$route.params.id}`);
 			local.stationSocket.on("connected", function(data) {
 				local.currentSong = data.currentSong;
 				local.paused = data.paused;
