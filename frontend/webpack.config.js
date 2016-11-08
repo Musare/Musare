@@ -1,7 +1,4 @@
 // webpack.config.js
-
-const webpack = require('webpack');
-
 module.exports = {
 	// entry point of our application
 	entry: './main.js',
@@ -39,8 +36,5 @@ module.exports = {
 		presets: ['es2015'],
 		plugins: ['transform-runtime'],
 		comments: false
-	},
-	plugins: [
-		new webpack.optimize.UglifyJsPlugin()
-	]
+	}
 };
