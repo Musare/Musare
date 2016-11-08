@@ -80,7 +80,6 @@
 					}),
 					contentType: "application/json; charset=utf-8",
 					dataType: "json",
-					crossDomain: true,
 					success: function (msg) {
 						if (msg) console.log(msg);
 						location.reload();

@@ -14,6 +14,8 @@ services:
     - "8080:80"
     volumes:
     - ./frontend:/opt/app
+	links:
+    - backend
   mongo:
     image: mongo
     ports:

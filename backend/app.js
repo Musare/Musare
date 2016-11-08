@@ -13,8 +13,8 @@ const express          = require('express'),
       mongoose         = require('mongoose'),
 	  MongoStore       = require('connect-mongo')(session),
       bodyParser       = require('body-parser'),
-	  cors			   = require('cors'),
       config           = require('config'),
+	  cors			   = require('cors'),
       request          = require('request'),
       passport         = require('passport'),
       bcrypt           = require('bcrypt'),
@@ -29,7 +29,7 @@ const global = require('./logic/global');
 // database
 const MongoDB = mongoose.connect(`mongodb://${config.get('domain')}:27017/musare`).connection;
 
-MongoDB.on('error', (err) => {
+MongoDB.on('error', err => {
 	console.log('Database error: ' + err.message);
 });
 
