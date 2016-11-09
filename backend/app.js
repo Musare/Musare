@@ -27,7 +27,7 @@ const express          = require('express'),
 const global = require('./logic/global');
 
 // database
-const MongoDB = mongoose.connect(`mongodb://${config.get('domain')}:27017/musare`).connection;
+const MongoDB = mongoose.connect('mongodb://mongo:27017/musare').connection;
 
 MongoDB.on('error', err => {
 	console.log('Database error: ' + err.message);
