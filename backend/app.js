@@ -14,6 +14,7 @@ const express          = require('express'),
       MongoStore       = require('connect-mongo')(session),
       bodyParser       = require('body-parser'),
       config           = require('config'),
+	  cookieParser	   = require('cookie-parser'),
       cors             = require('cors'),
       request          = require('request'),
       passport         = require('passport'),
@@ -64,15 +65,29 @@ function setupExpress() {
 		saveUninitialized: true
 	}));
 
+	app.use(passport.initialize());
+	app.use(passport.session());
+
+	passport.serializeUser((user, done) => {
+		done(null, user);
+	});
+
+	passport.deserializeUser((user, done) => {
+		done(null, user);
+	});
+
 	global.io.use(passportSocketIo.authorize({
+		passport: require('passport'),
 		cookieParser: require('cookie-parser'),
 		key: 'connect.sid',
 		secret: config.get('secret'),
 		store: mongoStore,
 		success: (data, accept) => {
+			console.log('success', data);
 			accept();
 		},
 		fail: (data, message, error, accept) => {
+			console.log('error', error, message);
 			accept();
 		}
 	}));
@@ -102,6 +117,6 @@ function setupExpress() {
 
 	app.use(cors());
 
-	socketHandler(coreHandler, global.io);
+	socketHandler(coreHandler, global.io, app);
 	expressHandler(coreHandler, app);
 }

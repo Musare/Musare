@@ -1,6 +1,8 @@
 'use strict';
 
-module.exports = (core, io) => {
+const passport = require('passport');
+
+module.exports = (core, io, app) => {
 
 	io.on('connection', socket => {
 		console.log("User has connected");
@@ -11,6 +13,12 @@ module.exports = (core, io) => {
 			core['/stations/leave/:id'](_currentStation);
 			_currentStation = "";
 			console.log('User has disconnected');
+		});
+
+		socket.on('/users/logout', () => {
+			app.use((req, res) => {
+				req.logout();
+			});
 		});
 
 		socket.on('error', err => {
@@ -62,6 +70,7 @@ module.exports = (core, io) => {
 		});
 
 		// this lets the client socket know that they can start making request
+		console.log(socket.request.user)
 		socket.emit('ready', socket.request.user.logged_in);
 	});
 };

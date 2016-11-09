@@ -26,15 +26,8 @@
 		},
 		methods: {
 			logout() {
-				$.ajax({
-					method: "POST",
-					url: `${window.location.protocol + '//' + window.location.hostname + ':8081'}/users/logout`,
-					dataType: "json",
-					complete: msg => {
-						alert("Logged out!");
-						location.reload();
-					}
-				});
+				this.socket.emit('/users/logout');
+				location.reload();
 			}
 		},
 		ready: function() {
@@ -50,45 +43,36 @@
 		},
 		events: {
 			'register': function() {
-				$.ajax({
-					method: "POST",
-					url: `${window.location.protocol + '//' + window.location.hostname + ':8081'}/users/register`,
-					data: JSON.stringify({
+				fetch(`${window.location.protocol + '//' + window.location.hostname + ':8081'}/users/register`, {
+					method: 'POST',
+					headers: {
+						'Accept': 'application/json',
+						'Content-Type': 'application/json; charset=utf-8'
+					},
+					body: JSON.stringify({
 						email: this.register.email,
 						username: this.register.username,
 						password: this.register.password,
 						recaptcha: grecaptcha.getResponse()
-					}),
-					contentType: "application/json; charset=utf-8",
-					dataType: "json",
-					success: function (msg) {
-						if (msg) console.log(msg);
-					},
-					error: function (err) {
-						if (err) console.log(err);
-						alert("Not registered!");
-					}
-				});
+					})
+				}).then(response => {
+					alert('Now sign in!');
+				})
 			},
 			'login': function() {
-				$.ajax({
-					method: "POST",
-					url: `${window.location.protocol + '//' + window.location.hostname + ':8081'}/users/login`,
-					data: JSON.stringify({
+				fetch(`${window.location.protocol + '//' + window.location.hostname + ':8081'}/users/login`, {
+					method: 'POST',
+					headers: {
+						'Accept': 'application/json',
+						'Content-Type': 'application/json; charset=utf-8'
+					},
+					body: JSON.stringify({
 						email: this.login.email,
 						password: this.login.password
-					}),
-					contentType: "application/json; charset=utf-8",
-					dataType: "json",
-					success: function (msg) {
-						if (msg) console.log(msg);
-						location.reload();
-						//do something
-					},
-					error: function (err) {
-						if (err) console.log(err);
-						alert("Not logged in!");
-					}
+					})
+				}).then(response => {
+					console.log(response);
+					// location.reload();
 				});
 			},
 			'joinStation': function(id) {

@@ -115,7 +115,7 @@
 <style lang="scss">
 
 	@import 'theme.scss';
-	
+
 	* { box-sizing: border-box; font-family: Roboto, sans-serif; }
 
 	html {

@@ -1,22 +1,18 @@
 'use strict';
 
 // npm modules
-const passport  = require('passport');
+const passport = require('passport');
 
 module.exports = (core, app) => {
 
-	app.post('/users/login', passport.authenticate('local'), function(req, res) {
+	app.post('/users/login', (req, res, next) => {
+		console.log('posted', req.user);
 		res.json(JSON.stringify(req.user));
 	});
 
-	app.post('/users/register', function(req, res) {
+	app.post('/users/register', (req, res) => {
 		core['/users/register'](req.body.username, req.body.email, req.body.password, req.body.recaptcha, result => {
 			res.send(JSON.stringify(result));
 		});
-	});
-
-	app.post('/users/logout', function(req, res) {
-		req.logout();
-		res.end();
 	});
 };
