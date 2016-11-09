@@ -11,16 +11,16 @@ process.env.NODE_CONFIG_DIR = `${__dirname}/config`;
 const express          = require('express'),
       session          = require('express-session'),
       mongoose         = require('mongoose'),
-	  MongoStore       = require('connect-mongo')(session),
+      MongoStore       = require('connect-mongo')(session),
       bodyParser       = require('body-parser'),
       config           = require('config'),
-	  cors			   = require('cors'),
+      cors             = require('cors'),
       request          = require('request'),
       passport         = require('passport'),
       bcrypt           = require('bcrypt'),
       LocalStrategy    = require('passport-local').Strategy,
       GitHubStrategy   = require('passport-github').Strategy,
-	  DiscordStrategy  = require('passport-discord').Strategy,
+      DiscordStrategy  = require('passport-discord').Strategy,
       passportSocketIo = require("passport.socketio");
 
 // global module
