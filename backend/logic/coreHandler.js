@@ -106,7 +106,7 @@ module.exports = {
 														}
 													}
 												});
-												newUser.save(function (err) {
+												newUser.save(err => {
 													if (err) throw err;
 													return cb(null, newUser);
 												});
@@ -170,31 +170,41 @@ module.exports = {
 			`key=${config.get('apis.youtube.key')}`
 		].join('&');
 
-		if (user.logged_in) {
+		// if (user.logged_in) {
 			request(`https://www.googleapis.com/youtube/v3/videos?${params}`, (err, res, body) => {
 				// TODO: Get data from Wikipedia and Spotify
 				body = JSON.parse(body);
-				let newSong = {
+				const newSong = new global.db.song({
 					id: body.items[0].id,
 					title: body.items[0].snippet.title,
-					artists: [""],
 					duration: global.convertTime(body.items[0].contentDetails.duration),
 					thumbnail: body.items[0].snippet.thumbnails.high.url
-				};
+				});
+
+				console.log(newSong);
+
+				newSong.save(err => {
+					if (err) throw err;
+				});
+
 				stations.getStation(station).playlist.push(newSong);
 				cb(stations.getStation(station.playlist));
 			});
-		}
+		//}
 	},
 
 	'/songs': cb => {
-		let songs = [];
-		cb(stations.getStations().map(station => {
-			station.playlist.forEach(song => {
-				songs.push(song);
-			});
-			return songs;
-		}));
+		// let songs = [];
+		// cb(stations.getStations().map(station => {
+		// 	station.playlist.forEach(song => {
+		// 		songs.push(song);
+		// 	});
+		// 	return songs;
+		// }));
+		global.db.song.find({}, (err, songs) => {
+			if (err) throw err;
+			cb(songs);
+		});
 	},
 
 	'/songs/update': (songs, cb) => {

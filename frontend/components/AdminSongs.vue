@@ -52,11 +52,11 @@
 			}
 		},
 		methods: {
-			update() {
-				this.socket.emit('/songs/update', this.songs, (result) => {
-					console.log(result);
-				});
-			}
+			// update() {
+			// 	this.socket.emit('/songs/update', this.songs, (result) => {
+			// 		console.log(result);
+			// 	});
+			// }
 		},
 		ready: function() {
 			let local = this;

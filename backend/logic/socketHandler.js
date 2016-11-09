@@ -37,7 +37,7 @@ module.exports = (core, io, app) => {
 				_currentStation = "";
 				cb(result);
 			});
-		});
+		})
 
 		socket.on('/youtube/getVideo/:query', (query, cb) => {
 			core['/youtube/getVideo/:query'](query, result => {
@@ -53,7 +53,7 @@ module.exports = (core, io, app) => {
 
 		socket.on('/songs', (cb) => {
 			core['/songs'](result => {
-				cb(result[0]);
+				cb(result);
 			});
 		});
 
