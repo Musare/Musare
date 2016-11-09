@@ -15,7 +15,7 @@
 	</footer>
 </template>
 
-<style lang="sass" scoped>
+<style lang="scss" scoped>
 	.content a:not(.button) {
 		border: 0;
 	}

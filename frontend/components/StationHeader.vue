@@ -69,7 +69,7 @@
 	}
 </script>
 
-<style lang="sass" scoped>
+<style lang="scss" scoped>
 	.nav {
 		background-color: #0091ea;
 	}

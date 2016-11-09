@@ -84,7 +84,7 @@
 	}
 </script>
 
-<style lang="sass" scoped>
+<style lang="scss" scoped>
 	.is-success {
 		width: 100%;
 	}

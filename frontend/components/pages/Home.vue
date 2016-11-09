@@ -112,7 +112,7 @@
 	}
 </script>
 
-<style lang="sass">
+<style lang="scss">
 
 	@import 'theme.scss';
 	

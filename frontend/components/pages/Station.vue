@@ -261,7 +261,7 @@
 	}
 </script>
 
-<style lang="sass">
+<style lang="scss">
 	.modal-large {
 		width: 75%;
 	}
