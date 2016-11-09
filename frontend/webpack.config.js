@@ -32,6 +32,12 @@ module.exports = {
 			}
 		]
 	},
+	vue: {
+		loaders: {
+			sass: 'style!css!sass?indentedSyntax',
+			scss: 'style!css!sass'
+		}
+	},
 	babel: {
 		presets: ['es2015'],
 		plugins: ['transform-runtime'],
