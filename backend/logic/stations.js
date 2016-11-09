@@ -1,6 +1,7 @@
 'use strict';
 
 const global = require('./global');
+const Promise = require('bluebird');
 const io = global.io;
 let stations = [];
 
@@ -28,17 +29,32 @@ module.exports = {
 
 			this.id = id;
 			this.users = 0;
-			this.playlist = data.playlist;
-			this.currentSongIndex = data.currentSongIndex;
-			this.paused = data.paused;
-			this.displayName = data.displayName;
-			this.description = data.description;
 
-			this.timePaused = 0;
-			this.timer = undefined;
-			this.currentSong = this.playlist[this.currentSongIndex];
+			function generatePlaylist(arr) {
+				local.playlist = [];
+				return arr.reduce((promise, id) => {
+					return promise.then(() => {
+						return global.db.song.find({ id }, (err, song) => {
+							if (err) throw err;
+							local.playlist.push(song[0]);
+						});
+					});
+				}, Promise.resolve());
+			}
 
-			this.nextSong();
+			generatePlaylist(data.playlist).then(() => {
+				local.currentSongIndex = data.currentSongIndex;
+				local.paused = data.paused;
+				local.displayName = data.displayName;
+				local.description = data.description;
+
+				local.timePaused = 0;
+				local.timer = undefined;
+				local.currentSong = local.playlist[this.currentSongIndex]
+				console.log(local.playlist);
+
+				local.nextSong();
+			});
 		}
 
 		nextSong() {

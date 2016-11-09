@@ -146,7 +146,7 @@
 					local.videoLoading = true;
 					local.player.loadVideoById(local.currentSong.id);
 
-					local.currentSong.artists = local.currentSong.artists.join(", ");
+					if (local.currentSong.artists) local.currentSong.artists = local.currentSong.artists.join(", ");
 
 					if (local.interval !== 0) {
 						clearInterval(local.interval);

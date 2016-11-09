@@ -22,24 +22,7 @@ var eventEmitter = new events.EventEmitter();
 const edmStation = new stations.Station("edm", {
 	"genres": ["edm"],
 	playlist: [
-		{
-			id: "dQw4w9WgXcQ",
-			title: "Never gonna give you up",
-			artists: ["Rick Astley"],
-			duration: '00:01:18',
-			thumbnail: "https://yt3.ggpht.com/-CGlBu6kDEi8/AAAAAAAAAAI/AAAAAAAAAAA/Pi679mvyyyU/s88-c-k-no-mo-rj-c0xffffff/photo.jpg",
-			likes: 0,
-			dislikes: 1
-		},
-		{
-			id: "GxBSyx85Kp8",
-			title: "Yeah!",
-			artists: ["Usher", "test"],
-			duration: '00:00:08',
-			thumbnail: "https://yt3.ggpht.com/-CGlBu6kDEi8/AAAAAAAAAAI/AAAAAAAAAAA/Pi679mvyyyU/s88-c-k-no-mo-rj-c0xffffff/photo.jpg",
-			likes: 0,
-			dislikes: 1
-		}
+		'gCYcHz2k5x0'
 	],
 	currentSongIndex: 0,
 	paused: false,

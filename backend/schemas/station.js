@@ -13,7 +13,7 @@ module.exports = mongoose => mongoose.model('station', new mongoose.Schema({
 	},
 	currentSongIndex: { type: Number, default: 0, required: true },
 	timePaused: { type: Number, default: 0, required: true },
-	playlist: { type: Object, required: true },
+	playlist: { type: Array, required: true },
 	genres: [{ type: String }]
 }));
 
