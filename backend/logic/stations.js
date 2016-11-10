@@ -97,18 +97,6 @@ module.exports = {
 			}
 		}
 
-		updateDisplayName(newDisplayName) {
-			// TODO: Update db
-			this.displayName = newDisplayName;
-			this.nsp.emit("updateDisplayName", newDisplayName);
-		}
-
-		updateDescription(newDescription) {
-			// TODO: Update db
-			this.description = newDescription;
-			this.nsp.emit("updateDescription", newDescription);
-		}
-
 		getTimePaused() {
 			return this.timePaused + this.timer.getTimePaused();
 		}

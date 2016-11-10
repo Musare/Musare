@@ -22,8 +22,7 @@ var eventEmitter = new events.EventEmitter();
 const edmStation = new stations.Station("edm", {
 	"genres": ["edm"],
 	playlist: [
-		'LHCob76kigA',
-		'lEi_XBg2Fpk'
+		'gCYcHz2k5x0'
 	],
 	currentSongIndex: 0,
 	paused: false,
@@ -34,7 +33,7 @@ const edmStation = new stations.Station("edm", {
 const chillStation = new stations.Station("chill", {
 	"genres": ["chill"],
 	playlist: [
-		'lEi_XBg2Fpk'
+		'gCYcHz2k5x0'
 	],
 	currentSongIndex: 0,
 	paused: false,
@@ -190,21 +189,20 @@ module.exports = {
 	},
 
 	'/songs': cb => {
-		// let songs = [];
-		// cb(stations.getStations().map(station => {
-		// 	station.playlist.forEach(song => {
-		// 		songs.push(song);
-		// 	});
-		// 	return songs;
-		// }));
 		global.db.song.find({}, (err, songs) => {
 			if (err) throw err;
 			cb(songs);
 		});
 	},
 
-	'/songs/update': (songs, cb) => {
-		console.log(songs);
-		cb(stations.getStations());
+	'/songs/:song/update': (song, cb) => {
+		global.db.song.findOneAndUpdate({ id: song.id }, song, { upsert: true }, (err, updatedSong) => {
+			if (err) throw err;
+			cb(updatedSong);
+		});
+	},
+
+	'/songs/:song/remove': (song, cb) => {
+		global.db.song.find({ id: song.id }).remove().exec();
 	}
 };

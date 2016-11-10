@@ -34,12 +34,12 @@
 							</p>
 						</td>
 						<td>
-							<a class="button is-danger" @click="songs.splice(index, 1)">Remove</a>
+							<a class="button is-danger" @click="remove(song, index)">Remove</a>
+							<a class="button is-success" @click="update(song)">Save Changes</a>
 						</td>
 					</tr>
 				</tbody>
 			</table>
-			<a class="button is-success" @click="update()">Save Changes</a>
 		</div>
 	</div>
 </template>
@@ -52,11 +52,13 @@
 			}
 		},
 		methods: {
-			// update() {
-			// 	this.socket.emit('/songs/update', this.songs, (result) => {
-			// 		console.log(result);
-			// 	});
-			// }
+			update(song) {
+				this.socket.emit('/songs/:song/update', song);
+			},
+			remove(song, index) {
+				this.songs.splice(index, 1);
+				this.socket.emit('/songs/:song/remove', song);
+			}
 		},
 		ready: function() {
 			let local = this;
@@ -69,7 +71,4 @@
 </script>
 
 <style lang="scss" scoped>
-	.is-success {
-		width: 100%;
-	}
 </style>

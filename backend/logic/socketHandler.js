@@ -63,8 +63,14 @@ module.exports = (core, io, app) => {
 			});
 		});
 
-		socket.on('/songs/update', (songs, cb) => {
-			core['/songs/update'](songs, result => {
+		socket.on('/songs/:song/update', (song, cb) => {
+			core['/songs/:song/update'](song, result => {
+				cb(result);
+			});
+		});
+
+		socket.on('/songs/:song/remove', (song, cb) => {
+			core['/songs/:song/remove'](song, result => {
 				cb(result);
 			});
 		});
