@@ -76,7 +76,7 @@ module.exports = {
 
 				this.timePaused = 0;
 				this.currentSong.startedAt = Date.now();
-				this.nsp.emit("nextSong", this.currentSong);
+				this.nsp.emit("nextSong", this.currentSong, this.currentSong.startedAt);
 			}
 		}
 
