@@ -212,7 +212,14 @@
 					text-align: left;
 					padding-left: 10px;
 
-					h3, p {
+					h3 {
+						color: $blue;
+						margin: 0;
+						white-space: normal;
+						padding-top: 10px;
+					}
+
+					p {
 						margin: 0;
 						white-space: normal;
 						padding-top: 10px;
@@ -223,6 +230,9 @@
 					display: flex;
 					flex-direction: column;
 					width: 25%;
+					i {
+						color: $blue;
+					}
 				}
 			}
 		}

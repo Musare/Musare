@@ -1,5 +1,5 @@
 <template>
-	<nav class="nav">
+	<nav class="nav is-info">
 		<div class="nav-left">
 			<a class="nav-item is-brand" href="#" v-link="{ path: '/' }">
 				Musare
@@ -13,7 +13,7 @@
 		</span>-->
 
 		<div class="nav-right">
-			<a class="nav-item is-tab" href="#" v-link="{ path: '/admin' }">
+			<a class="nav-item is-tab admin" href="#" v-link="{ path: '/admin' }">
 				Admin
 			</a>
 			<a class="nav-item is-tab" href="#">
@@ -41,7 +41,7 @@
 	@import 'theme.scss';
 
 	.nav {
-		background-color: $primary-color;
+		background-color: $grey-darker;
 
 		.is-brand {
 			font-size: 26px !important;
@@ -49,11 +49,14 @@
 
 		.nav-item {
 			font-size: 15px;
-			color: $secondary-color;
+			color: $white;
 
 			&:hover {
-				color: $secondary-color;
+				color: $white;
 			}
+		}
+		.admin {
+			color: $blue;
 		}
 	}
 	.grouped {

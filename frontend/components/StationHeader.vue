@@ -1,5 +1,5 @@
 <template>
-	<nav class="nav has-shadow">
+	<nav class="nav">
 		<div class="nav-left">
 			<a class="nav-item" href="#" v-link="{ path: '/' }" @click="this.$dispatch('leaveStation', title)">
 				<span class="icon">
@@ -70,18 +70,24 @@
 </script>
 
 <style lang="scss" scoped>
+	@import 'theme.scss';
 	.nav {
-		background-color: #0091ea;
+		background-color: $grey-darker;
 	}
 
 	a.nav-item {
-		color: #fff;
+		color: $white;
+
+		&:hover {
+			color: $white;
+		}
 	}
 
 	.nav-center {
 		display: flex;
     	align-items: center;
-		text-transform: capitalize;
-		color: #fff;
+		text-transform: uppercase;
+		color: $blue;
+		font-size: 22px;
 	}
 </style>

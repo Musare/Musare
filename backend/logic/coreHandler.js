@@ -22,7 +22,9 @@ var eventEmitter = new events.EventEmitter();
 const edmStation = new stations.Station("edm", {
 	"genres": ["edm"],
 	playlist: [
-		'gCYcHz2k5x0'
+		'gCYcHz2k5x0',
+		'LHCob76kigA',
+		'lEi_XBg2Fpk'
 	],
 	currentSongIndex: 0,
 	paused: false,
@@ -30,7 +32,19 @@ const edmStation = new stations.Station("edm", {
 	description: "EDM Music"
 });
 
+const chillStation = new stations.Station("chill", {
+	"genres": ["chill"],
+	playlist: [
+		'lEi_XBg2Fpk'
+	],
+	currentSongIndex: 0,
+	paused: false,
+	displayName: "Chill",
+	description: "Chill Music"
+});
+
 stations.addStation(edmStation);
+stations.addStation(chillStation);
 
 module.exports = {
 
