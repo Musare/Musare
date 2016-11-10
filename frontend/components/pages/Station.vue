@@ -248,9 +248,9 @@
 
 			local.youtubeReady();
 
-			local.stationSocket.on("nextSong", function(currentSong) {
+			local.stationSocket.on("nextSong", function(currentSong, startedAt) {
 				local.currentSong = currentSong;
-				local.startedAt = currentSong.startedAt;
+				local.startedAt = startedAt;
 				local.timePaused = 0;
 				local.playVideo();
 			});
