@@ -134,8 +134,8 @@
 			},
 			getTimeElapsed: function() {
 				let local = this;
-				if (local.currentSong !== undefined) {
-					return Date.now() - local.currentSong.startedAt - local.timePaused;
+				if (local.currentSong) {
+					return Date.now() - local.startedAt - local.timePaused;
 				} else {
 					return 0;
 				}
@@ -161,7 +161,7 @@
 			resizeSeekerbar: function() {
 				let local = this;
 				if (!local.paused) {
-					$(".seeker-bar").width(((local.getTimeElapsed() / 1000) / local.currentSong.duration * 100) + "%");
+					$(".seeker-bar").width(parseInt(((local.getTimeElapsed() / 1000) / parseInt(moment.duration(local.currentSong.duration, "hh:mm:ss").asSeconds()) * 100)) + "%");
 				}
 			},
 			calculateTimeElapsed: function() {
@@ -173,14 +173,14 @@
 					local.currentTime = undefined;
 				}
 
-				let duration = (Date.now() - local.currentSong.startedAt - local.timePaused) / 1000;
+				let duration = (Date.now() - local.startedAt - local.timePaused) / 1000;
 				let songDuration = moment.duration(local.currentSong.duration, "hh:mm:ss").asSeconds();
 				if (songDuration <= duration) {
 					local.player.pauseVideo();
 				}
 
 				let d = moment.duration(duration, 'seconds');
-				if ((!local.paused || local.timeElapsed === "0:00") && duration <= songDuration) {
+				if ((!local.paused || local.timeElapsed === "00:00:00") && duration <= songDuration) {
 					local.timeElapsed = (d.hours() < 10 ? ("0" + d.hours() + ":") : (d.hours() + ":")) + (d.minutes() < 10 ? ("0" + d.minutes() + ":") : (d.minutes() + ":")) + (d.seconds() < 10 ? ("0" + d.seconds()) : d.seconds());
 				}
 			},
@@ -240,6 +240,7 @@
 			local.stationSocket = io.connect(`${window.location.protocol + '//' + window.location.hostname + ':8081'}/${local.$route.params.id}`);
 			local.stationSocket.on("connected", function(data) {
 				local.currentSong = data.currentSong;
+				local.startedAt = data.startedAt;
 				local.paused = data.paused;
 				local.timePaused = data.timePaused;
 				local.currentTime  = data.currentTime;
@@ -249,6 +250,7 @@
 
 			local.stationSocket.on("nextSong", function(currentSong) {
 				local.currentSong = currentSong;
+				local.startedAt = currentSong.startedAt;
 				local.timePaused = 0;
 				local.playVideo();
 			});
