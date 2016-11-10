@@ -203,6 +203,7 @@
 				.station-image {
 					width: 100%;
 					height: 256px;
+					object-fit: cover;
 				}
 
 				.station-grid-left {
