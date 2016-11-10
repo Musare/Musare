@@ -21,6 +21,7 @@ module.exports = {
 
 				socket.emit("connected", {
 					currentSong: this.currentSong,
+					startedAt: this.currentSong.startedAt,
 					paused: this.paused,
 					timePaused: this.timePaused,
 					currentTime: Date.now()
@@ -50,8 +51,7 @@ module.exports = {
 
 				local.timePaused = 0;
 				local.timer = undefined;
-				local.currentSong = local.playlist[this.currentSongIndex]
-				console.log(local.playlist);
+				local.currentSong = local.playlist[this.currentSongIndex];
 
 				local.nextSong();
 			});
