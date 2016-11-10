@@ -268,7 +268,7 @@
 
 	.station {
 		flex: 1 0 auto;
-		padding-top: 4.5vw;
+		padding-top: 0.5vw;
 		transition: all 0.1s;
 		margin: 0 auto;
 		max-width: 1280px;

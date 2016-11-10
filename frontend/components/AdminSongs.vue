@@ -29,7 +29,7 @@
 							</p>
 						</td>
 						<td>
-							<div class="control is-horizontal">
+							<div class="control">
 								<input v-for="artist in song.artists" track-by="$index" class="input" type="text" :value="artist" v-model="artist">
 							</p>
 						</td>

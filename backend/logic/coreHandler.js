@@ -22,7 +22,6 @@ var eventEmitter = new events.EventEmitter();
 const edmStation = new stations.Station("edm", {
 	"genres": ["edm"],
 	playlist: [
-		'gCYcHz2k5x0',
 		'LHCob76kigA',
 		'lEi_XBg2Fpk'
 	],
