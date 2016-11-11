@@ -1,12 +1,13 @@
 'use strict';
 
-const global = require('./global');
+const globals = require('./globals');
 const Promise = require('bluebird');
-const io = global.io;
+const io = globals.io;
 let stations = [];
 
 module.exports = {
 	Station: class Station {
+
 		constructor(id, data) {
 			this.nsp = io.of(id);
 			let local = this;
@@ -35,7 +36,7 @@ module.exports = {
 				local.playlist = [];
 				return arr.reduce((promise, id) => {
 					return promise.then(() => {
-						return global.db.song.find({ id }, (err, song) => {
+						return globals.db.models.song.find({ id }, (err, song) => {
 							if (err) throw err;
 							local.playlist.push(song[0]);
 						});
@@ -70,7 +71,7 @@ module.exports = {
 				this.currentSong = this.playlist[this.currentSongIndex];
 
 				let self = this;
-				this.timer = new global.Timer(() => {
+				this.timer = new globals.utils.Timer(() => {
 					self.nextSong();
 				}, this.currentSong.duration, this.paused);
 
@@ -101,20 +102,7 @@ module.exports = {
 			return this.timePaused + this.timer.getTimePaused();
 		}
 	},
-	addStation: (station) => {
-		stations.push(station);
-	},
-	getStation: id => {
-		let result;
-		stations.forEach(function(station) {
-			if (station.id === id) {
-				result = station;
-			}
-		});
-		return result;
-	},
-	// Returns stations list when POSTing to '/stations'
-	getStations: () => {
-		return stations;
-	}
+	addStation: station => stations.push(station),
+	getStation: id => stations.find(station => station.id === id),
+	getStations: _ => stations
 };

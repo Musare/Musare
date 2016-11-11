@@ -5,17 +5,19 @@ const passport = require('passport');
 module.exports = (core, io, app) => {
 
 	io.on('connection', socket => {
+
 		console.log("User has connected");
+
 		let _user = socket.request.user;
 		let _currentStation = "";
 
-		socket.on('disconnect', () => {
+		socket.on('disconnect', _ => {
 			core['/stations/leave/:id'](_currentStation);
 			_currentStation = "";
 			console.log('User has disconnected');
 		});
 
-		socket.on('/users/logout', () => {
+		socket.on('/users/logout', _ => {
 			app.use((req, res) => {
 				req.logout();
 			});
@@ -76,7 +78,8 @@ module.exports = (core, io, app) => {
 		});
 
 		// this lets the client socket know that they can start making request
-		console.log(socket.request.user)
+		console.log(socket.request.user);
+
 		socket.emit('ready', socket.request.user.logged_in);
 	});
 };
