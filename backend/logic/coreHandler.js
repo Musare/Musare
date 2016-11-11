@@ -10,12 +10,12 @@ const path   = require('path'),
 const config    = require('config'),
       request   = require('request'),
       waterfall = require('async/waterfall'),
-      bcrypt = require('bcrypt'),
-	  passport  = require('passport');
+      bcrypt    = require('bcrypt'),
+      passport  = require('passport');
 
 // custom modules
-const global   = require('./global'),
-	  stations = require('./stations');
+const globals   = require('./globals'),
+      stations = require('./stations');
 
 var eventEmitter = new events.EventEmitter();
 
@@ -48,74 +48,87 @@ module.exports = {
 
 	// module functions
 
-	on: (name, cb) => {
-		eventEmitter.on(name, cb);
-	},
+	on: (name, cb) => eventEmitter.on(name, cb),
 
-	emit: (name, data) => {
-		eventEmitter.emit(name, data);
-	},
+	emit: (name, data) => eventEmitter.emit(name, data),
 
 	// core route handlers
 
 	'/users/register': (username, email, password, recaptcha, cb) => {
-		console.log(username, password);
-		request({
-			url: 'https://www.google.com/recaptcha/api/siteverify',
-			method: 'POST',
-			form: {
-				'secret': config.get("apis.recapthca.secret"),
-				'response': recaptcha
-			}
-		}, function (error, response, body) {
-			if (error === null && JSON.parse(body).success === true) {
-				body = JSON.parse(body);
-				global.db.user.findOne({'username': username}, function (err, user) {
-					console.log(err, user);
-					if (err) return cb(err);
-					if (user) return cb("username");
-					else {
-						global.db.user.findOne({'email.address': email}, function (err, user) {
-							console.log(err, user);
-							if (err) return cb(err);
-							if (user) return cb("email");
-							else {
-								// TODO: Email verification code, send email
-								bcrypt.genSalt(10, function (err, salt) {
-									if (err) {
-										return cb(err);
-									} else {
-										bcrypt.hash(password, salt, function (err, hash) {
-											if (err) {
-												return cb(err);
-											} else {
-												let newUser = new global.db.user({
-													username: username,
-													email: {
-														address: email,
-														verificationToken: global.generateRandomString("64")
-													},
-													services: {
-														password: {
-															password: hash
-														}
-													}
-												});
-												newUser.save(err => {
-													if (err) throw err;
-													return cb(null, newUser);
-												});
-											}
-										});
-									}
-								});
-							}
-						});
+
+		console.log(username, email, password, recaptcha);
+
+		waterfall([
+
+			// verify the request with google recaptcha
+			(next) => {
+				request({
+					url: 'https://www.google.com/recaptcha/api/siteverify',
+					method: 'POST',
+					form: {
+						'secret': config.get("apis.recaptcha.secret"),
+						'response': recaptcha
 					}
-				});
-			} else {
-				cb("Recaptcha failed");
+				}, next);
+			},
+
+			// check if the response from Google recaptcha is successful
+			// if it is, we check if a user with the requested username already exists
+			(response, body, next) => {
+				let json = JSON.parse(body);
+				console.log(json);
+				if (json.success !== true) return next('Response from recaptcha was not successful');
+				globals.db.models.user.findOne({ 'username': username }, next);
+			},
+
+			// if the user already exists, respond with that
+			// otherwise check if a user with the requested email already exists
+			(user, next) => {
+				if (user) return next(true, { status: 'failure', message: 'A user with that username already exists' });
+				globals.db.models.user.findOne({ 'email.address': email }, next);
+			},
+
+			// if the user already exists, respond with that
+			// otherwise, generate a salt to use with hashing the new users password
+			(user, next) => {
+				if (user) return next(true, { status: 'failure', message: 'A user with that email already exists' });
+				bcrypt.genSalt(10, next);
+			},
+
+			// hash the password
+			(salt, next) => {
+				bcrypt.hash(password, salt, next)
+			},
+
+			// save the new user to the database
+			(hash, next) => {
+				globals.db.models.user.create({
+					username: username,
+					email: {
+						address: email,
+						verificationToken: globals.utils.generateRandomString(64)
+					},
+					services: {
+						password: {
+							password: hash
+						}
+					}
+				}, next);
+			},
+
+			// respond with the new user
+			(newUser, next) => {
+				next(null, { status: 'success', user: newUser })
 			}
+
+		], (err, payload) => {
+			// log this error somewhere
+			if (err && err !== true) {
+				console.error(err);
+				return cb({ status: 'error', message: 'An error occurred while registering a new user' });
+			}
+			// respond with the payload that was passed to us earlier
+			cb(payload);
 		});
 	},
 
@@ -169,10 +182,10 @@ module.exports = {
 			request(`https://www.googleapis.com/youtube/v3/videos?${params}`, (err, res, body) => {
 				// TODO: Get data from Wikipedia and Spotify
 				body = JSON.parse(body);
-				const newSong = new global.db.song({
+				const newSong = new globals.db.models.song({
 					id: body.items[0].id,
 					title: body.items[0].snippet.title,
-					duration: global.convertTime(body.items[0].contentDetails.duration),
+					duration: globals.utils.convertTime(body.items[0].contentDetails.duration),
 					thumbnail: body.items[0].snippet.thumbnails.high.url
 				});
 
@@ -189,20 +202,20 @@ module.exports = {
 	},
 
 	'/songs': cb => {
-		global.db.song.find({}, (err, songs) => {
+		globals.db.models.song.find({}, (err, songs) => {
 			if (err) throw err;
 			cb(songs);
 		});
 	},
 
 	'/songs/:song/update': (song, cb) => {
-		global.db.song.findOneAndUpdate({ id: song.id }, song, { upsert: true }, (err, updatedSong) => {
+		globals.db.models.song.findOneAndUpdate({ id: song.id }, song, { upsert: true }, (err, updatedSong) => {
 			if (err) throw err;
 			cb(updatedSong);
 		});
 	},
 
 	'/songs/:song/remove': (song, cb) => {
-		global.db.song.find({ id: song.id }).remove().exec();
+		globals.db.models.song.find({ id: song.id }).remove().exec();
 	}
 };
