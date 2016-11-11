@@ -12,7 +12,7 @@ module.exports = (core, app) => {
 
 	app.post('/users/register', (req, res) => {
 		core['/users/register'](req.body.username, req.body.email, req.body.password, req.body.recaptcha, result => {
-			res.send(JSON.stringify(result));
+			res.end(JSON.stringify(result));
 		});
 	});
 };
