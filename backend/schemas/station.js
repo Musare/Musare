@@ -1,4 +1,4 @@
-module.exports = mongoose => mongoose.model('station', new mongoose.Schema({
+module.exports = {
 	id: { type: String, lowercase: true, max: 16, min: 2, index: true, unique: true, required: true },
 	type: { type: String, enum: ["official", "community"], required: true },
 	displayName: { type: String, min: 2, max: 32, required: true },
@@ -15,5 +15,4 @@ module.exports = mongoose => mongoose.model('station', new mongoose.Schema({
 	timePaused: { type: Number, default: 0, required: true },
 	playlist: { type: Array, required: true },
 	genres: [{ type: String }]
-}));
-
+};

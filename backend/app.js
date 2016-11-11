@@ -1,4 +1,4 @@
- 'use strict';
+'use strict';
 
 // nodejs modules
 const path = require('path'),
@@ -11,10 +11,9 @@ process.env.NODE_CONFIG_DIR = `${__dirname}/config`;
 const express          = require('express'),
       session          = require('express-session'),
       mongoose         = require('mongoose'),
-      MongoStore       = require('connect-mongo')(session),
       bodyParser       = require('body-parser'),
       config           = require('config'),
-	  cookieParser	   = require('cookie-parser'),
+      cookieParser     = require('cookie-parser'),
       cors             = require('cors'),
       request          = require('request'),
       passport         = require('passport'),
@@ -25,43 +24,40 @@ const express          = require('express'),
       passportSocketIo = require("passport.socketio");
 
 // global module
-const global = require('./logic/global');
+const globals = require('./logic/globals');
 
 // database
-const MongoDB = mongoose.connect('mongodb://mongo:27017/musare').connection;
+globals.db.connection = mongoose.connect('mongodb://mongo:27017/musare').connection;
 
-MongoDB.on('error', err => {
-	console.log('Database error: ' + err.message);
-});
+globals.db.connection.on('error', err => console.log('Database error: ' + err.message));
 
-MongoDB.once('open', () => {
+globals.db.connection.once('open', _ => {
+
 	console.log('Connected to database');
-	setupExpress();
-});
 
-// setup express and socket.io
-function setupExpress() {
-	const app = express(MongoDB);
+	const app = express(globals.db.connection);
 	const server = app.listen(80);
-	global.io = require('socket.io')(server);
 
-	global.db = {
-		user: require('./schemas/user')(mongoose),
-		station: require('./schemas/station')(mongoose),
-		song: require('./schemas/song')(mongoose)
-	};
+	globals.io = require('socket.io')(server);
 
-	// other custom modules
-	const coreHandler = require('./logic/coreHandler'),
-		  socketHandler = require('./logic/socketHandler'),
-		  expressHandler = require('./logic/expressHandler');
+	// load all the schemas from the schemas folder into an object
+	globals.db.models =
+		// get an array of all the files in the schemas folder
+		fs.readdirSync(`${__dirname}/schemas`)
+		// remove the .js from the file names
+		.map(name => name.split('.').shift())
+		// create an object with
+		.reduce((db, name) => {
+			db[name] = mongoose.model(name, new mongoose.Schema(require(`${__dirname}/schemas/${name}`)));
+			return db;
+		}, {});
 
-	const mongoStore = new MongoStore({'mongooseConnection': MongoDB});
+	globals.db.store = new (require('connect-mongo')(session))({ 'mongooseConnection': globals.db.connection });
 
 	app.use(session({
 		secret: config.get('secret'),
 		key: 'connect.sid',
-		store: mongoStore,
+		store: globals.db.store,
 		resave: true,
 		saveUninitialized: true
 	}));
@@ -69,20 +65,15 @@ function setupExpress() {
 	app.use(passport.initialize());
 	app.use(passport.session());
 
-	passport.serializeUser((user, done) => {
-		done(null, user);
-	});
+	passport.serializeUser((user, done) => done(null, user));
+	passport.deserializeUser((user, done) => done(null, user));
 
-	passport.deserializeUser((user, done) => {
-		done(null, user);
-	});
-
-	global.io.use(passportSocketIo.authorize({
+	globals.io.use(passportSocketIo.authorize({
 		passport: require('passport'),
 		cookieParser: require('cookie-parser'),
 		key: 'connect.sid',
 		secret: config.get('secret'),
-		store: mongoStore,
+		store: globals.db.store,
 		success: (data, accept) => {
 			console.log('success', data);
 			accept();
@@ -93,9 +84,9 @@ function setupExpress() {
 		}
 	}));
 
-	passport.use(new LocalStrategy({usernameField: 'email'}, (email, password, done) => {
+	passport.use(new LocalStrategy({ usernameField: 'email' }, (email, password, done) => {
 		process.nextTick(() => {
-			global.db.user.findOne({"email.address": email}, (err, user) => {
+			globals.db.user.findOne({ "email.address": email }, (err, user) => {
 				if (err) return done(err);
 				if (!user) return done(null, false);
 				bcrypt.compare(password, user.services.password.password, function(err, res) {
@@ -112,12 +103,15 @@ function setupExpress() {
 	}));
 
 	app.use(bodyParser.json());
-	app.use(bodyParser.urlencoded({
-		extended: true
-	}));
+	app.use(bodyParser.urlencoded({ extended: true }));
 
-	app.use(cors());
+	let corsOptions = Object.assign({}, config.get('cors'));
 
-	socketHandler(coreHandler, global.io, app);
-	expressHandler(coreHandler, app);
-}
+	app.use(cors(corsOptions));
+	app.options('*', cors(corsOptions));
+
+	const coreHandler = require('./logic/coreHandler');
+	require('./logic/socketHandler')(coreHandler, globals.io, app);
+	require('./logic/expressHandler')(coreHandler, app);
+});
+

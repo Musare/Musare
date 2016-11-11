@@ -1,4 +1,4 @@
-module.exports = mongoose => mongoose.model('user', new mongoose.Schema({
+module.exports = {
 	username: { type: String, required: true },
 	email: {
 		verified: { type: Boolean, default: false, required: true },
@@ -20,5 +20,4 @@ module.exports = mongoose => mongoose.model('user', new mongoose.Schema({
 		songsRequested: { type: Number, default: 0 }
 	},
 	createdAt: { type: Date, default: Date.now() }
-}));
-
+};
