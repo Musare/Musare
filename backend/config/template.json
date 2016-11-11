@@ -1,6 +1,6 @@
 {
 	"secret": "",
-	"domain": "http://dev.musare.com",
+	"domain": "",
 	"apis": {
 		"youtube": {
 			"key": ""
@@ -20,6 +20,7 @@
 	"cors": {
 		"origin": [
 			"http://localhost:8080",
+			"http://192.168.99.100:8080",
 			"http://dev.musare.com"
 		]
 	}

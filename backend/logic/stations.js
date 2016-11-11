@@ -22,7 +22,7 @@ module.exports = {
 
 				socket.emit("connected", {
 					currentSong: this.currentSong,
-					startedAt: this.currentSong.startedAt,
+					startedAt: this.startedAt,
 					paused: this.paused,
 					timePaused: this.timePaused,
 					currentTime: Date.now()
@@ -52,9 +52,10 @@ module.exports = {
 
 				local.timePaused = 0;
 				local.timer = undefined;
-				local.currentSong = local.playlist[this.currentSongIndex];
-
-				local.nextSong();
+				if (local.playlist[this.currentSongIndex]) {
+					local.currentSong = local.playlist[this.currentSongIndex];
+					local.nextSong();
+				}
 			});
 		}
 
@@ -76,8 +77,8 @@ module.exports = {
 				}, this.currentSong.duration, this.paused);
 
 				this.timePaused = 0;
-				this.currentSong.startedAt = Date.now();
-				this.nsp.emit("nextSong", this.currentSong, this.currentSong.startedAt);
+				this.startedAt = Date.now();
+				this.nsp.emit("nextSong", this.currentSong, this.startedAt);
 			}
 		}
 

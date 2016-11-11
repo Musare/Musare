@@ -54,46 +54,6 @@ module.exports = {
 
 	// core route handlers
 
-	'/users/login': (session, identifier, password, cb) => {
-
-		waterfall([
-
-			// check if a user with the requested identifier exists
-			(next) => globals.db.models.user.findOne({
-				$or: [{ 'username': identifier }, { 'email.address': identifier }]
-			}, next),
-
-			// if the user doesn't exist, respond with a failure
-			// otherwise compare the requested password and the actual users password
-			(user, next) => {
-				if (!user) return next(true, { status: 'failure', message: 'User not found' });
-				bcrypt.compare(password, user.services.password.password, next);
-			},
-
-			// if the user exists, and the passwords match, respond with a success
-			(result, next) => {
-
-				// TODO: Authenticate the user with Passport here I think?
-				// TODO: We need to figure out how other login methods will work
-
-				next(null, {
-					status: result ? 'success': 'failure',
-					message: result ? 'Logged in' : 'User not found'
-				});
-			}
-
-		], (err, payload) => {
-			// log this error somewhere
-			if (err && err !== true) {
-				console.error(err);
-				return cb({ status: 'error', message: 'An error occurred while logging in' });
-			}
-			// respond with the payload that was passed to us earlier
-			cb(payload);
-		});
-
-	},
-
 	'/users/register': (session, username, email, password, recaptcha, cb) => {
 
 		waterfall([
@@ -235,14 +195,7 @@ module.exports = {
 				return cb({ status: 'error', message: 'Failed to search youtube with the requested query' });
 			}
 
-			try {
-				let json = JSON.parse(body);
-			}
-			catch (e) {
-				return cb({ status: 'error', message: 'Invalid response from youtube' });
-			}
-
-			cb({ status: 'success', data: json });
+			cb({ status: 'success', data: JSON.parse(body) });
 		});
 	},
 
@@ -263,13 +216,6 @@ module.exports = {
 			if (err) {
 				console.error(err);
 				return cb({ status: 'error', message: 'Failed to find song from youtube' });
-			}
-
-			try {
-				let json = JSON.parse(body);
-			}
-			catch (e) {
-				return cb({ status: 'error', message: 'Invalid response from youtube' });
 			}
 
 			const newSong = new globals.db.models.song({

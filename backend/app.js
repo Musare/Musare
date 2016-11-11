@@ -86,7 +86,7 @@ globals.db.connection.once('open', _ => {
 
 	passport.use(new LocalStrategy({ usernameField: 'email' }, (email, password, done) => {
 		process.nextTick(() => {
-			globals.db.user.findOne({ "email.address": email }, (err, user) => {
+			globals.db.models.user.findOne({ "email.address": email }, (err, user) => {
 				if (err) return done(err);
 				if (!user) return done(null, false);
 				bcrypt.compare(password, user.services.password.password, function(err, res) {

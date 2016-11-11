@@ -218,14 +218,15 @@
 			},
 			submitQuery: function() {
 				let local = this;
-				local.socket.emit("/youtube/getVideo/:query", local.querySearch, function(data) {
+				local.socket.emit("/youtube/getVideo/:query", local.querySearch, function(results) {
+					results = results.data;
 					local.queryResults = [];
-					for (let i = 0; i < data.items.length; i++) {
+					for (let i = 0; i < results.items.length; i++) {
 						local.queryResults.push({
-							id: data.items[i].id.videoId,
+							id: results.items[i].id.videoId,
 							url: `https://www.youtube.com/watch?v=${this.id}`,
-							title: data.items[i].snippet.title,
-							thumbnail: data.items[i].snippet.thumbnails.default.url
+							title: results.items[i].snippet.title,
+							thumbnail: results.items[i].snippet.thumbnails.default.url
 						});
 					}
 				});

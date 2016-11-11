@@ -33,6 +33,7 @@
 		ready: function() {
 			let local = this;
 			local.socket = io(window.location.protocol + '//' + window.location.hostname + ':8081');
+
 			local.socket.on("ready", status => {
 				local.loggedIn = status;
 			});
