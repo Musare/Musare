@@ -54,9 +54,47 @@ module.exports = {
 
 	// core route handlers
 
-	'/users/register': (username, email, password, recaptcha, cb) => {
+	'/users/login': (session, identifier, password, cb) => {
 
-		console.log(username, email, password, recaptcha);
+		waterfall([
+
+			// check if a user with the requested identifier exists
+			(next) => globals.db.models.user.findOne({
+				$or: [{ 'username': identifier }, { 'email.address': identifier }]
+			}, next),
+
+			// if the user doesn't exist, respond with a failure
+			// otherwise compare the requested password and the actual users password
+			(user, next) => {
+				if (!user) return next(true, { status: 'failure', message: 'User not found' });
+				bcrypt.compare(password, user.services.password.password, next);
+			},
+
+			// if the user exists, and the passwords match, respond with a success
+			(result, next) => {
+
+				// TODO: Authenticate the user with Passport here I think?
+				// TODO: We need to figure out how other login methods will work
+
+				next(null, {
+					status: result ? 'success': 'failure',
+					message: result ? 'Logged in' : 'User not found'
+				});
+			}
+
+		], (err, payload) => {
+			// log this error somewhere
+			if (err && err !== true) {
+				console.error(err);
+				return cb({ status: 'error', message: 'An error occurred while logging in' });
+			}
+			// respond with the payload that was passed to us earlier
+			cb(payload);
+		});
+
+	},
+
+	'/users/register': (session, username, email, password, recaptcha, cb) => {
 
 		waterfall([
 
@@ -125,14 +163,23 @@ module.exports = {
 			// log this error somewhere
 			if (err && err !== true) {
 				console.error(err);
-				return cb({ status: 'error', message: 'An error occurred while registering a new user' });
+				return cb({ status: 'error', message: 'An error occurred while registering for an account' });
 			}
 			// respond with the payload that was passed to us earlier
 			cb(payload);
 		});
 	},
 
-	'/stations': cb => {
+	'/users/logout': (req, cb) => {
+
+		if (!req.user || !req.user.logged_in) return cb({ status: 'failure', message: `You're not currently logged in` });
+
+		req.logout();
+
+		cb({ status: 'success', message: `You've been successfully logged out` });
+	},
+
+	'/stations': (session, cb) => {
 		cb(stations.getStations().map(station => {
 			return {
 				id: station.id,
@@ -145,19 +192,34 @@ module.exports = {
 		}));
 	},
 
-	'/stations/join/:id': (id, cb) => {
-		stations.getStation(id).users = stations.getStation(id).users + 1;
-		cb(stations.getStation(id).users);
+	'/stations/join/:id': (session, id, cb) => {
+
+		let station = stations.getStation(id);
+
+		if (!station) return cb({ status: 'error', message: `Station with id '${id}' does not exist` });
+
+		session.station_id = id;
+		station.users++;
+
+		cb({ status: 'success', users: station.users });
 	},
 
-	'/stations/leave/:id': (id, cb) => {
-		if (stations.getStation(id)) {
-			stations.getStation(id).users = stations.getStation(id).users - 1;
-			if (cb) cb(stations.getStation(id).users);
-		}
+	// leaves the users current station
+	// returns the count of users that are still in that station
+	'/stations/leave': (session, cb) => {
+
+		let station = stations.getStation(session.station_id);
+
+		if (!station) return cb({ status: 'failure', message: `Not currently in a station, or station doesn't exist` });
+
+		session.station_id = "";
+		station.users--;
+
+		cb({ status: 'success', users: station.users });
 	},
 
-	'/youtube/getVideo/:query': (query, cb) => {
+	'/youtube/getVideo/:query': (session, query, cb) => {
+
 		const params = [
 			'part=snippet',
 			`q=${encodeURIComponent(query)}`,
@@ -167,55 +229,86 @@ module.exports = {
 		].join('&');
 
 		request(`https://www.googleapis.com/youtube/v3/search?${params}`, (err, res, body) => {
-			cb(body);
+
+			if (err) {
+				console.error(err);
+				return cb({ status: 'error', message: 'Failed to search youtube with the requested query' });
+			}
+
+			try {
+				let json = JSON.parse(body);
+			}
+			catch (e) {
+				return cb({ status: 'error', message: 'Invalid response from youtube' });
+			}
+
+			cb({ status: 'success', data: json });
 		});
 	},
 
-	'/stations/add/:song': (station, song, user, cb) => {
+	'/stations/add/:song': (session, station, song, cb) => {
+
+		if (!session.logged_in) return cb({ status: 'failure', message: 'You must be logged in to add a song' });
+
 		const params = [
 			'part=snippet,contentDetails,statistics,status',
 			`id=${encodeURIComponent(song.id)}`,
 			`key=${config.get('apis.youtube.key')}`
 		].join('&');
 
-		// if (user.logged_in) {
-			request(`https://www.googleapis.com/youtube/v3/videos?${params}`, (err, res, body) => {
-				// TODO: Get data from Wikipedia and Spotify
-				body = JSON.parse(body);
-				const newSong = new globals.db.models.song({
-					id: body.items[0].id,
-					title: body.items[0].snippet.title,
-					duration: globals.utils.convertTime(body.items[0].contentDetails.duration),
-					thumbnail: body.items[0].snippet.thumbnails.high.url
-				});
+		request(`https://www.googleapis.com/youtube/v3/videos?${params}`, (err, res, body) => {
 
-				console.log(newSong);
+			// TODO: Get data from Wikipedia and Spotify
 
-				newSong.save(err => {
-					if (err) throw err;
-				});
+			if (err) {
+				console.error(err);
+				return cb({ status: 'error', message: 'Failed to find song from youtube' });
+			}
+
+			try {
+				let json = JSON.parse(body);
+			}
+			catch (e) {
+				return cb({ status: 'error', message: 'Invalid response from youtube' });
+			}
+
+			const newSong = new globals.db.models.song({
+				id: json.items[0].id,
+				title: json.items[0].snippet.title,
+				duration: globals.utils.convertTime(json.items[0].contentDetails.duration),
+				thumbnail: json.items[0].snippet.thumbnails.high.url
+			});
+
+			// save the song to the database
+			newSong.save(err => {
+
+				if (err) {
+					console.error(err);
+					return cb({ status: 'error', message: 'Failed to save song from youtube to the database' });
+				}
 
 				stations.getStation(station).playlist.push(newSong);
-				cb(stations.getStation(station.playlist));
+
+				cb({ status: 'success', data: stations.getStation(station.playlist) });
 			});
-		//}
+		});
 	},
 
-	'/songs': cb => {
+	'/songs': (session, cb) => {
 		globals.db.models.song.find({}, (err, songs) => {
 			if (err) throw err;
 			cb(songs);
 		});
 	},
 
-	'/songs/:song/update': (song, cb) => {
+	'/songs/:song/update': (session, song, cb) => {
 		globals.db.models.song.findOneAndUpdate({ id: song.id }, song, { upsert: true }, (err, updatedSong) => {
 			if (err) throw err;
 			cb(updatedSong);
 		});
 	},
 
-	'/songs/:song/remove': (song, cb) => {
+	'/songs/:song/remove': (session, song, cb) => {
 		globals.db.models.song.find({ id: song.id }).remove().exec();
 	}
 };

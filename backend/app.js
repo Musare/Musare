@@ -111,7 +111,7 @@ globals.db.connection.once('open', _ => {
 	app.options('*', cors(corsOptions));
 
 	const coreHandler = require('./logic/coreHandler');
-	require('./logic/socketHandler')(coreHandler, globals.io, app);
+	require('./logic/socketHandler')(coreHandler, globals.io);
 	require('./logic/expressHandler')(coreHandler, app);
 });
 
