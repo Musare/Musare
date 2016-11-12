@@ -22,7 +22,7 @@
 					<p class="control">
 						<input class="input" type="password" placeholder="Password..." v-model="$parent.register.password">
 					</p>
-					<div class="g-recaptcha" data-sitekey="6Lfa-wYUAAAAANY6iVvWNEXohC38l1cZqHRole9T"></div>
+					<div class="g-recaptcha" data-sitekey="6LdNCQcUAAAAANj_w5leQSrxnAmDp2ioh4alkUHg"></div>
 				</section>
 				<footer class="modal-card-foot">
 					<a class="button is-primary" @click="submitModal('register')">Submit</a>

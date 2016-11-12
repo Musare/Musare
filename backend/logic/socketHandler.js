@@ -8,7 +8,7 @@ module.exports = (core, io) => {
 
 		console.log("socketHandler: User has connected");
 
-		let session = socket.request.user;
+		let session = "socket.request.user";
 
 		socket.on('disconnect', _ => {
 			core['/stations/leave'](session, result => {});
@@ -18,6 +18,8 @@ module.exports = (core, io) => {
 		socket.on('error', err => console.log(err));
 
 		socket.on('/users/logout', (cb) => core['/users/logout'](socket.request, result => cb(result)));
+
+		socket.on('/u/:username', (cb) => core['/users/logout'](socket.request, result => cb(result)));
 
 		socket.on('/stations', (cb) => core['/stations'](session, result => cb(result)));
 		socket.on('/stations/join/:id', (id, cb) => core['/stations/join/:id'](session, id, result => cb(result)));
@@ -31,6 +33,6 @@ module.exports = (core, io) => {
 		socket.on('/youtube/getVideo/:query', (query, cb) => core['/youtube/getVideo/:query'](session, query, result => cb(result)));
 
 		// this lets the client socket know that they can start making request
-		socket.emit('ready', socket.request.user.logged_in);
+		socket.emit('ready', false); // socket.request.user.logged_in
 	});
 };

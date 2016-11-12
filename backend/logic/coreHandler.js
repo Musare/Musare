@@ -130,8 +130,59 @@ module.exports = {
 		});
 	},
 
-	'/users/logout': (req, cb) => {
+	'/users/login': (session, identifier, password, cb) => {
 
+		waterfall([
+
+			// check if a user with the requested identifier exists
+			(next) => globals.db.models.user.findOne({
+				$or: [{ 'username': identifier }, { 'email.address': identifier }]
+			}, next),
+
+			// if the user doesn't exist, respond with a failure
+			// otherwise compare the requested password and the actual users password
+			(user, next) => {
+				if (!user) return next(true, { status: 'failure', message: 'User not found' });
+				bcrypt.compare(password, user.services.password.password, next);
+			},
+
+			// if the user exists, and the passwords match, respond with a success
+			(result, next) => {
+
+				// TODO: Authenticate the user with Passport here I think?
+				// TODO: We need to figure out how other login methods will work
+
+				next(null, {
+					status: result ? 'success': 'failure',
+					message: result ? 'Logged in' : 'User not found'
+				});
+			}
+
+		], (err, payload) => {
+			// log this error somewhere
+			if (err && err !== true) {
+				console.error(err);
+				return cb({ status: 'error', message: 'An error occurred while logging in' });
+			}
+			// respond with the payload that was passed to us earlier
+			cb(payload);
+		});
+
+	},
+
+	'/u/:username': (username, cb) => {
+		globals.db.models.user.find({ username }, (err, account) => {
+			if (err) throw err;
+			account = account[0];
+			cb({status: 'success', data: {
+				username: account.username,
+				createdAt: account.createdAt,
+				statistics: account.statistics
+			}});
+		});
+	},
+
+	'/users/logout': (req, cb) => {
 		if (!req.user || !req.user.logged_in) return cb({ status: 'failure', message: `You're not currently logged in` });
 
 		req.logout();

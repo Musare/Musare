@@ -17,7 +17,9 @@ module.exports = {
 		bannedUntil: Date
 	},
 	statistics: {
-		songsRequested: { type: Number, default: 0 }
+		songsRequested: { type: Number, default: 0, required: true },
+		songsDisliked: [{ type: String, default: '', required: true }],
+		songsLiked: [{ type: String, default: '', required: true }]
 	},
 	createdAt: { type: Date, default: Date.now() }
 };

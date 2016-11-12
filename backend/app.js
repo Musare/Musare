@@ -16,11 +16,7 @@ const express          = require('express'),
       cookieParser     = require('cookie-parser'),
       cors             = require('cors'),
       request          = require('request'),
-      passport         = require('passport'),
       bcrypt           = require('bcrypt'),
-      LocalStrategy    = require('passport-local').Strategy,
-      GitHubStrategy   = require('passport-github').Strategy,
-      DiscordStrategy  = require('passport-discord').Strategy,
       passportSocketIo = require("passport.socketio");
 
 // global module
@@ -59,47 +55,8 @@ globals.db.connection.once('open', _ => {
 		key: 'connect.sid',
 		store: globals.db.store,
 		resave: true,
-		saveUninitialized: true
-	}));
-
-	app.use(passport.initialize());
-	app.use(passport.session());
-
-	passport.serializeUser((user, done) => done(null, user));
-	passport.deserializeUser((user, done) => done(null, user));
-
-	globals.io.use(passportSocketIo.authorize({
-		passport: require('passport'),
-		cookieParser: require('cookie-parser'),
-		key: 'connect.sid',
-		secret: config.get('secret'),
-		store: globals.db.store,
-		success: (data, accept) => {
-			console.log('success', data);
-			accept();
-		},
-		fail: (data, message, error, accept) => {
-			console.log('error', error, message);
-			accept();
-		}
-	}));
-
-	passport.use(new LocalStrategy({ usernameField: 'email' }, (email, password, done) => {
-		process.nextTick(() => {
-			globals.db.models.user.findOne({ "email.address": email }, (err, user) => {
-				if (err) return done(err);
-				if (!user) return done(null, false);
-				bcrypt.compare(password, user.services.password.password, function(err, res) {
-					if (res) {
-						return done(null, user);
-					} else if (err) {
-						return done(err);
-					} else {
-						return done(null, false);
-					}
-				});
-			});
-		});
+		saveUninitialized: true,
+		cookie: { httpOnly: false }
 	}));
 
 	app.use(bodyParser.json());
@@ -114,4 +71,3 @@ globals.db.connection.once('open', _ => {
 	require('./logic/socketHandler')(coreHandler, globals.io);
 	require('./logic/expressHandler')(coreHandler, app);
 });
-

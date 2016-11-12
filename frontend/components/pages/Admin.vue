@@ -17,8 +17,8 @@
 				</li>
 			</ul>
 		</div>
-		<admin-songs v-if="currentTab == 'songs'"></admin-songs>
-		<admin-stations v-if="currentTab == 'stations'"></admin-stations>
+		<songs v-if="currentTab == 'songs'"></songs>
+		<stations v-if="currentTab == 'stations'"></stations>
 	</div>
 </template>
 
@@ -26,11 +26,11 @@
 	import MainHeader from '../MainHeader.vue'
 	import MainFooter from '../MainFooter.vue'
 
-	import AdminSongs from '../AdminSongs.vue'
-	import AdminStations from '../AdminStations.vue'
+	import Songs from '../Admin/Songs.vue'
+	import Stations from '../Admin/Stations.vue'
 
 	export default {
-		components: { MainHeader, MainFooter, AdminSongs, AdminStations },
+		components: { MainHeader, MainFooter, Songs, Stations },
 		data() {
 			return {
 				currentTab: 'songs'

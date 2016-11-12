@@ -73,7 +73,7 @@
 					})
 				}).then(response => {
 					console.log(response);
-					// location.reload();
+					location.reload();
 				});
 			},
 			'joinStation': function(id) {
