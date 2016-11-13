@@ -1,9 +1,9 @@
 'use strict';
 
 // nodejs modules
-const path = require('path'),
-      fs   = require('fs'),
-      os   = require('os');
+const path = require('path');
+const fs   = require('fs');
+const os   = require('os');
 
 process.env.NODE_CONFIG_DIR = `${__dirname}/config`;
 

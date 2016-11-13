@@ -17,7 +17,7 @@ module.exports = (core, io) => {
 
 		socket.on('error', err => console.log(err));
 
-		socket.on('/u/:username', (cb) => core['/u/:username'](result => cb(result)));
+		socket.on('/u/:username', (username, cb) => core['/u/:username'](username, result => cb(result)));
 
 		socket.on('/stations', (cb) => core['/stations'](result => cb(result)));
 		socket.on('/stations/join/:id', (id, cb) => core['/stations/join/:id'](id, result => cb(result)));
