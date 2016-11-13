@@ -54,7 +54,7 @@ module.exports = {
 
 	// core route handlers
 
-	'/users/register': (session, username, email, password, recaptcha, cb) => {
+	'/users/register': (user, username, email, password, recaptcha, cb) => {
 
 		waterfall([
 
@@ -130,7 +130,7 @@ module.exports = {
 		});
 	},
 
-	'/users/login': (session, identifier, password, cb) => {
+	'/users/login': (user, identifier, password, cb) => {
 
 		waterfall([
 
@@ -190,7 +190,7 @@ module.exports = {
 		cb({ status: 'success', message: `You've been successfully logged out` });
 	},
 
-	'/stations': (session, cb) => {
+	'/stations': cb => {
 		cb(stations.getStations().map(station => {
 			return {
 				id: station.id,
@@ -203,13 +203,13 @@ module.exports = {
 		}));
 	},
 
-	'/stations/join/:id': (session, id, cb) => {
+	'/stations/join/:id': (id, cb) => {
 
 		let station = stations.getStation(id);
 
 		if (!station) return cb({ status: 'error', message: `Station with id '${id}' does not exist` });
 
-		session.station_id = id;
+		// session.station_id = id;
 		station.users++;
 
 		cb({ status: 'success', users: station.users });
@@ -217,19 +217,19 @@ module.exports = {
 
 	// leaves the users current station
 	// returns the count of users that are still in that station
-	'/stations/leave': (session, cb) => {
+	'/stations/leave': cb => {
 
-		let station = stations.getStation(session.station_id);
-
+		// let station = stations.getStation(session.station_id);
+		let station = stations.getStation("edm"); // will be removed
 		if (!station) return cb({ status: 'failure', message: `Not currently in a station, or station doesn't exist` });
 
-		session.station_id = "";
-		station.users--;
+		// session.station_id = "";
+		// station.users--;
 
 		cb({ status: 'success', users: station.users });
 	},
 
-	'/youtube/getVideo/:query': (session, query, cb) => {
+	'/youtube/getVideo/:query': (query, cb) => {
 
 		const params = [
 			'part=snippet',
@@ -250,9 +250,9 @@ module.exports = {
 		});
 	},
 
-	'/stations/add/:song': (session, station, song, cb) => {
+	'/stations/add/:song': (station, song, cb) => {
 
-		if (!session.logged_in) return cb({ status: 'failure', message: 'You must be logged in to add a song' });
+		// if (!session.logged_in) return cb({ status: 'failure', message: 'You must be logged in to add a song' });
 
 		const params = [
 			'part=snippet,contentDetails,statistics,status',
@@ -291,21 +291,21 @@ module.exports = {
 		});
 	},
 
-	'/songs': (session, cb) => {
+	'/songs': cb => {
 		globals.db.models.song.find({}, (err, songs) => {
 			if (err) throw err;
 			cb(songs);
 		});
 	},
 
-	'/songs/:song/update': (session, song, cb) => {
+	'/songs/:song/update': (song, cb) => {
 		globals.db.models.song.findOneAndUpdate({ id: song.id }, song, { upsert: true }, (err, updatedSong) => {
 			if (err) throw err;
 			cb(updatedSong);
 		});
 	},
 
-	'/songs/:song/remove': (session, song, cb) => {
+	'/songs/:song/remove': (song, cb) => {
 		globals.db.models.song.find({ id: song.id }).remove().exec();
 	}
 };
