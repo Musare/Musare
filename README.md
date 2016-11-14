@@ -98,3 +98,7 @@ of the following commands to give Docker Toolbox access to those files.
    `docker-machine restart default`
    
 5. You should now be good to go!
+
+### Fixing the "couldn't connect to docker daemon" error
+
+Some people have had issues while trying to execute the `docker-compose` command. To fix this, you will have to run `docker-machine env dev`. This command will print various variables. At the bottom, it will say something similar to `@FOR /f "tokens=*" %i IN ('docker-machine env default') DO @%i`. Run this command in your shell. You will have to do this command for every shell you want to run `docker-compose` in, every session.
