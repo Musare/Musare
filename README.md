@@ -51,10 +51,10 @@ Once you've installed the required tools:
 
    `docker-compose up backend frontend`
 
-7. You should now be able to start working on files! The backend is auto reloaded when
+7. You should now be able to begin development! The backend is auto reloaded when
    you make changes and the frontend is auto compiled and live reloaded by webpack
    when you make changes. You should be able to access Musare in your local browser
-   at `http://<docker-machine-ip>:8080/` where `docker-machine-ip` can be found below:
+   at `http://<docker-machine-ip>:8080/` where `<docker-machine-ip>` can be found below:
 
    * Docker for Windows / Mac: This is just `localhost`
    
@@ -66,10 +66,10 @@ Below is a list of helpful tips / solutions we've collected while developing Mus
 
 ### Mounting a non-standard directory in Docker Toolbox on Windows
 
-Docker Toolbox usually mounts only `C:/Users` as a shared volume with Docker Toolbox
-(boot2docker which uses VirtualBox). So say if your code is all located else were on
-your machine. You can use variations of the following commands to give Docker Toolbox
-access to those files.
+Docker Toolbox usually only gives VirtualBox access to `C:/Users` of your
+local machine. So if your code is located elsewere on your machine,
+you'll need to tell Docker Toolbox how to find it. You can use variations
+of the following commands to give Docker Toolbox access to those files.
 
 1. First lets ensure the machine isn't running
 
@@ -77,7 +77,7 @@ access to those files.
 
 1. Next we'll want to tell the machine about the folder we want to share.
 
-   `"C:\Program Files\Oracle\VirtualBox\VBoxManage.exe" sharedfolder add default --name "d/DockerBasedProjects" --hostpath "D:\DockerBasedProjects" --automount`
+   `"C:\Program Files\Oracle\VirtualBox\VBoxManage.exe" sharedfolder add default --name "d/Projects/MusareNode" --hostpath "D:\Projects\MusareNode" --automount`
 
 2. Now start the machine back up and ssh into it
 
@@ -88,8 +88,8 @@ access to those files.
    ```bash
    sudo tee -a /mnt/sda1/var/lib/boot2docker/profile >/dev/null <<EOF
    
-   mkdir -p /d/Programming/HTML/MusareNode
-   mount -t vboxsf -o uid=1000,gid=50 d/Programming/HTML/MusareNode /d/Programming/HTML/MusareNode
+   mkdir -p /d/Projects/MusareNode
+   mount -t vboxsf -o uid=1000,gid=50 d/Projects/MusareNode /d/Projects/MusareNode
    EOF
    ```
 
