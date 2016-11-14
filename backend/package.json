@@ -7,7 +7,7 @@
   "repository": "https://github.com/Musare/MusareNode",
   "scripts": {
     "development": "nodemon -L /opt/app",
-    "production": "node /opt/app/app.js"
+    "production": "node /opt/app"
   },
   "dependencies": {
     "async": "2.0.1",

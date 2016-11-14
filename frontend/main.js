@@ -10,6 +10,7 @@ import User from './components/User/Show.vue';
 import Settings from './components/User/Settings.vue';
 
 Vue.use(VueRouter);
+
 let router = new VueRouter({ history: true });
 
 router.map({
@@ -22,7 +23,7 @@ router.map({
 	'/u/:username/settings': {
 		component: Settings
 	},
-	'/station/:id': {
+	'/station/:name': {
 		component: Station
 	},
 	'/admin': {

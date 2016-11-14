@@ -55,7 +55,7 @@
 		<div class="group">
 			<!--<div class="group-title">{{group.name}}</div>-->
 			<div class="group-stations">
-				<div class="stations-station" v-for="station in $parent.stations" v-link="{ path: '/station/' + station.id }" @click="this.$dispatch('joinStation', station.id)">
+				<div class="stations-station" v-for="station in $parent.stations" v-link="{ path: '/station/' + station.name }" @click="this.$dispatch('joinStation', station.id)">
 					<img class="station-image" :src="station.playlist[station.currentSongIndex].thumbnail" />
 					<div class="station-info">
 						<div class="station-grid-left">
@@ -63,7 +63,7 @@
 							<p>{{ station.description }}</p>
 						</div>
 						<div class="station-grid-right">
-							<div>{{ station.users }}&nbsp;&nbsp;<i class="fa fa-user" aria-hidden="true"></i></div>
+							<div>{{ station.userCount }}&nbsp;&nbsp;<i class="fa fa-user" aria-hidden="true"></i></div>
 						</div>
 					</div>
 				</div>

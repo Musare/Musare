@@ -26,74 +26,42 @@
 		},
 		methods: {
 			logout() {
-				this.socket.emit('/users/logout');
+				this.socket.emit('users.logout');
 				location.reload();
 			}
 		},
-		ready: function() {
-			let local = this;
-			local.socket = io(window.location.protocol + '//' + window.location.hostname + ':8081');
-
-			local.socket.on("ready", status => {
-				local.loggedIn = status;
-			});
-
-			local.socket.emit("/stations", function(data) {
-				local.stations = data;
-			});
+		ready: function () {
+			let socket = this.socket = io(window.location.protocol + '//' + window.location.hostname + ':8081');
+			socket.on("ready", status => this.loggedIn = status);
+			socket.emit("stations.index", data => this.stations = data);
 		},
 		events: {
-			'register': function() {
-				fetch(`${window.location.protocol + '//' + window.location.hostname + ':8081'}/users/register`, {
-					method: 'POST',
-					headers: {
-						'Accept': 'application/json',
-						'Content-Type': 'application/json; charset=utf-8'
-					},
-					body: JSON.stringify({
-						email: this.register.email,
-						username: this.register.username,
-						password: this.register.password,
-						recaptcha: grecaptcha.getResponse()
-					})
-				}).then(response => {
-					alert('Now sign in!');
-				})
-			},
-			'login': function() {
-				fetch(`${window.location.protocol + '//' + window.location.hostname + ':8081'}/users/login`, {
-					method: 'POST',
-					headers: {
-						'Accept': 'application/json',
-						'Content-Type': 'application/json'
-					},
-					body: JSON.stringify({
-						email: this.login.email,
-						password: this.login.password
-					})
-				}).then(response => {
-					console.log(response);
+			'register': function () {
+
+				var { register: { email, username, password } } = this;
+
+				this.socket.emit('users.login', email, username, password, grecaptcha.getResponse(), (result) => {
+					console.log(result);
 					location.reload();
 				});
 			},
-			'joinStation': function(id) {
-				let local = this;
-				local.socket.emit('/stations/join/:id', id, (result) => {
-					local.stations.forEach(function(station) {
-						if (station.id === id) {
-							station.users = result;
-						}
-					});
+			'login': function () {
+
+				var { login: { email, password } } = this;
+
+				this.socket.emit('users.login', email, password, (result) => {
+					console.log(result);
+					location.reload();
 				});
 			},
-			'leaveStation': function(id) {
-				let local = this;
-				local.socket.emit('/stations/leave/:id', id, (result) => {
-					local.stations.forEach(function(station) {
-						if (station.id === id) {
-							station.users = result;
-						}
-					});
+			'joinStation': function (id) {
+				this.socket.emit('stations.join', id, (result) => {
+					this.stations.find(station => station.id === id).users = result.userCount;
+				});
+			},
+			'leaveStation': function () {
+				this.socket.emit('stations.leave', (result) => {
+					//this.stations.find(station => station.id === id).users = result.userCount;
 				});
 			}
 		}

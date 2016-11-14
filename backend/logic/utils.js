@@ -90,36 +90,21 @@ function convertTime (duration) {
 	return (hours < 10 ? ("0" + hours + ":") : (hours + ":")) + (minutes < 10 ? ("0" + minutes + ":") : (minutes + ":")) + (seconds < 10 ? ("0" + seconds) : seconds);
 }
 
-const globals  = {
-	// stores the socket.io server
-	io: null,
-	// stores stuff related to the Mongo Database
-	db: {
-		// our connection to the database
-		connection: null,
-		// the models we've defined in the database
-		models: null,
-		// the store express / socket.io uses to store sessions in the database
-		store: null
+module.exports = {
+	htmlEntities: str => String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'),
+	generateRandomString: len => {
+		let chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".split("");
+		let result = [];
+		for (let i = 0; i < len; i++) {
+			result.push(chars[globals.utils.getRandomNumber(0, chars.length - 1)]);
+		}
+		return result.join("");
 	},
-	// various utilities used through out the code base
-	utils: {
-		htmlEntities: str => String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'),
-		generateRandomString: len => {
-			let chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".split("");
-			let result = [];
-			for (let i = 0; i < len; i++) {
-				result.push(chars[globals.utils.getRandomNumber(0, chars.length - 1)]);
-			}
-			return result.join("");
-		},
-		getSocketFromId: function(socketId) {
-			return globals.io.sockets.sockets[socketId];
-		},
-		getRandomNumber: (min, max) => Math.floor(Math.random() * (max - min + 1)) + min,
-		convertTime,
-		Timer
-	}
+	getSocketFromId: function(socketId) {
+		return globals.io.sockets.sockets[socketId];
+	},
+	getRandomNumber: (min, max) => Math.floor(Math.random() * (max - min + 1)) + min,
+	convertTime,
+	Timer,
+	guid: () => [1,1,0,1,0,1,0,1,0,1,1,1].map(b => b ? Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1) : '-').join('')
 };
-
-module.exports = globals;

@@ -29,7 +29,7 @@
 </template>
 
 <script>
-	import { Toast } from 'vue-roaster';
+	//import { Toast } from 'vue-roaster';
 
 	export default {
 		data() {
@@ -43,13 +43,13 @@
 		methods: {
 			changeRank(newRank) {
 				console.log(rank);
-				Toast.methods.addToast(`User ${this.$route.params.username} has been promoted to the rank of ${rank}`, 200000);
+				//Toast.methods.addToast(`User ${this.$route.params.username} has been promoted to the rank of ${rank}`, 200000);
 			}
 		},
 		ready: function() {
 			let local = this;
 			local.socket = local.$parent.socket;
-			local.socket.emit("/u/:username", local.$route.params.username, results => {
+			local.socket.emit('users.findByUsername', local.$route.params.username, results => {
 				local.user = results.data;
 				console.log(local.user)
 				local.liked = results.data.statistics.songsLiked.length;
@@ -57,7 +57,7 @@
 				local.requested = local.user.statistics.songsRequested;
 			});
 		},
-		components: { Toast }
+		//components: { Toast }
 	}
 </script>
 

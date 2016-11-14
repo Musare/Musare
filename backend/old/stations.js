@@ -1,6 +1,13 @@
 'use strict';
 
-const globals = require('./globals');
+////////////////////////////////////////////////////////////////////
+// This way of storing the state of a station is very OOP based   //
+// and is likely to not scale very efficiently. A more functional //
+// approach is needed. As in, the 'state' of a station should be  //
+// purely data based. Actions on Stations should operate directly //
+// on stored data, not on in-memory representations of them       //
+////////////////////////////////////////////////////////////////////
+
 const Promise = require('bluebird');
 const io = globals.io;
 let stations = [];

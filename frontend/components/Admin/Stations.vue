@@ -75,11 +75,12 @@
 			// }
 		},
 		ready: function() {
-			let local = this;
-			local.socket = local.$parent.$parent.socket;
-			local.socket.emit("/stations", function(data) {
-				local.stations = data;
+			let socket = this.socket = this.$parent.$parent.socket;
+			socket.emit("stations.index", (data) => {
+				console.log(data);
+				this.stations = data;
 			});
+			console.log('ready');
 		}
 	}
 </script>

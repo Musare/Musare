@@ -31,7 +31,7 @@
 						<td>
 							<div class="control">
 								<input v-for="artist in song.artists" track-by="$index" class="input" type="text" :value="artist" v-model="artist">
-							</p>
+							</div>
 						</td>
 						<td>
 							<a class="button is-danger" @click="remove(song, index)">Remove</a>
@@ -52,20 +52,17 @@
 			}
 		},
 		methods: {
-			update(song) {
-				this.socket.emit('/songs/:song/update', song);
+			update (song) {
+				this.socket.emit('songs.update', song);
 			},
-			remove(song, index) {
+			remove (song, index) {
 				this.songs.splice(index, 1);
-				this.socket.emit('/songs/:song/remove', song);
+				this.socket.emit('songs.remove', song);
 			}
 		},
 		ready: function() {
-			let local = this;
-			local.socket = local.$parent.$parent.socket;
-			local.socket.emit("/songs", function(data) {
-				local.songs = data;
-			});
+			let socket = this.socket = this.$parent.$parent.socket;
+			socket.emit('songs.index', (data) => this.songs = data);
 		}
 	}
 </script>

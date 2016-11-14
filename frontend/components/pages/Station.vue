@@ -212,13 +212,13 @@
 			},
 			addSongToQueue: function(song) {
 				let local = this;
-				local.socket.emit("/stations/add/:song", local.$route.params.id, song, function(data) {
+				local.socket.emit('stations.addSong', local.$route.params.id, song, function(data) {
 					if (data) console.log(data);
 				});
 			},
 			submitQuery: function() {
 				let local = this;
-				local.socket.emit("/youtube/getVideo/:query", local.querySearch, function(results) {
+				local.socket.emit('apis.searchYoutube', local.querySearch, function(results) {
 					results = results.data;
 					local.queryResults = [];
 					for (let i = 0; i < results.items.length; i++) {
@@ -233,13 +233,23 @@
 			}
 		},
 		ready: function() {
-			let local = this;
 
-			local.interval = 0;
+			this.interval = 0;
 
-			local.socket = this.$parent.socket;
-			local.stationSocket = io.connect(`${window.location.protocol + '//' + window.location.hostname + ':8081'}/${local.$route.params.id}`);
-			local.stationSocket.on("connected", function(data) {
+			this.socket = this.$parent.socket;
+
+			this.socket.on('event:songs.next', (data) => {
+				var {currentSong, startedAt} = data;
+				this.currentSong = currentSong;
+				this.startedAt = startedAt;
+				this.timePaused = 0;
+				this.playVideo();
+			});
+
+			/*this.stationSocket = io.connect(`${window.location.protocol + '//' + window.location.hostname + ':8081'}/${local.$route.params.id}`);
+
+			this.stationSocket.on("connected", (data) => {
+				console.log(data);
 				local.currentSong = data.currentSong;
 				local.startedAt = data.startedAt;
 				local.paused = data.paused;
@@ -247,14 +257,14 @@
 				local.currentTime  = data.currentTime;
 			});
 
-			local.youtubeReady();
+			this.youtubeReady();
 
-			local.stationSocket.on("nextSong", function(currentSong, startedAt) {
-				local.currentSong = currentSong;
-				local.startedAt = startedAt;
-				local.timePaused = 0;
-				local.playVideo();
-			});
+			this.stationSocket.on("nextSong", (currentSong, startedAt) => {
+				this.currentSong = currentSong;
+				this.startedAt = startedAt;
+				this.timePaused = 0;
+				this.playVideo();
+			});*/
 
 			let volume = parseInt(localStorage.getItem("volume"));
 			volume = (typeof volume === "number") ? volume : 20;
