@@ -8,6 +8,7 @@ services:
     - ./backend:/opt/app
     links:
     - mongo
+    - redis
   frontend:
     build: ./frontend
     ports:
@@ -22,3 +23,5 @@ services:
     image: mongoclient/mongoclient
     ports:
     - "3000:3000"
+  redis:
+    image: redis
