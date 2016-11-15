@@ -239,7 +239,7 @@
 			this.socket = this.$parent.socket;
 
 			this.socket.on('event:songs.next', (data) => {
-				var {currentSong, startedAt} = data;
+				let {currentSong, startedAt} = data;
 				this.currentSong = currentSong;
 				this.startedAt = startedAt;
 				this.timePaused = 0;

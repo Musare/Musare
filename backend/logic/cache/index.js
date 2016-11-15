@@ -1,5 +1,7 @@
 'use strict';
 
+const redis = require('redis');
+
 // Lightweight / convenience wrapper around redis module for our needs
 
 const pubs = {}, subs = {};

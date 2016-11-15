@@ -25,7 +25,7 @@ const lib = {
 			});
 		});
 		client.psubscribe('__keyevent@0__:expired');
-	}
+	},
 
 	/**
 	 * Schedules a notification to be dispatched in a specific amount of milliseconds,

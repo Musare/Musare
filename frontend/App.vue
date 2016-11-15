@@ -38,7 +38,7 @@
 		events: {
 			'register': function () {
 
-				var { register: { email, username, password } } = this;
+				let { register: { email, username, password } } = this;
 
 				this.socket.emit('users.login', email, username, password, grecaptcha.getResponse(), (result) => {
 					console.log(result);
@@ -47,7 +47,7 @@
 			},
 			'login': function () {
 
-				var { login: { email, password } } = this;
+				let { login: { email, password } } = this;
 
 				this.socket.emit('users.login', email, password, (result) => {
 					console.log(result);
