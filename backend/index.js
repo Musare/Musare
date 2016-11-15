@@ -8,7 +8,6 @@ const db = require('./logic/db');
 const app = require('./logic/app');
 const io = require('./logic/io');
 const cache = require('./logic/cache');
-// const scheduler = require('./logic/scheduler');
 
 async.waterfall([
 
