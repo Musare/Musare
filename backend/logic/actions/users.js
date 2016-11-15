@@ -32,7 +32,7 @@ module.exports = {
 					if (match) {
 
 						// store the session in the cache
-						cache.addRow('sessions', Object.assign(user, { sessionId: utils.guid() }));
+						cache.hset('sessions', utils.guid(), cache.schemas.session());
 
 						next(null, { status: 'failure', message: 'Login successful', user });
 					}

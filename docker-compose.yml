@@ -4,6 +4,7 @@ services:
     build: ./backend
     ports:
     - "8081:80"
+    - "8082:8080"
     volumes:
     - ./backend:/opt/app
     links:
@@ -25,3 +26,4 @@ services:
     - "3000:3000"
   redis:
     image: redis
+    command: "--notify-keyspace-events Ex"

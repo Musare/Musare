@@ -4,6 +4,14 @@ const request = require('request');
 
 module.exports = {
 
+	/**
+	 * Fetches a list of songs from Youtubes API
+	 *
+	 * @param session
+	 * @param query - the query we'll pass to youtubes api
+	 * @param cb
+	 * @return {{ status: String, data: Object }}
+	 */
 	searchYoutube: (session, query, cb) => {
 
 		const params = [

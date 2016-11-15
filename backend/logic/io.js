@@ -45,20 +45,30 @@ module.exports = {
 
 						let args = Array.prototype.slice.call(arguments, 0, -1);
 						let cb = arguments[arguments.length - 1];
-						let session = cache.findRow('sessions', 'id', socket.sessionId);
 
-						// if the action set 'session' to null, that means they want to delete it
-						if (session === null) delete socket.sessionId;
+						// load the session from the cache
+						cache.hget('sessions', socket.sessionId, (err, session) => {
 
-						// call the action, passing it the session, and the arguments socket.io passed us
-						actions[namespace][action].apply(null, [session].concat(args).concat([
-							(result) => {
-								// store the session id, which we use later when the user disconnects
-								if (name == 'users.login' && result.user) socket.sessionId = result.user.sessionId;
-								// respond to the socket with our message
-								cb(result);
+							if (err && err !== true) {
+								return cb({
+									status: 'error',
+									message: 'An error occurred while obtaining your session'
+								});
 							}
-						]));
+
+							// make sure the sockets sessionId isn't set if there is no session
+							if (socket.sessionId && session === null) delete socket.sessionId;
+
+							// call the action, passing it the session, and the arguments socket.io passed us
+							actions[namespace][action].apply(null, [session].concat(args).concat([
+								(result) => {
+									// store the session id
+									if (name == 'users.login' && result.user) socket.sessionId = result.user.sessionId;
+									// respond to the socket with our message
+									cb(result);
+								}
+							]));
+						});
 					})
 				})
 			});

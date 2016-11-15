@@ -10,7 +10,8 @@ RUN apk add gcc
 RUN apk add g++
 RUN apk add make
 
-RUN npm install nodemon -g
+RUN npm install -g nodemon
+RUN npm install -g node-inspector
 
 RUN mkdir -p /opt
 WORKDIR /opt

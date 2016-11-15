@@ -6,7 +6,7 @@
   "author": "Musare Team",
   "repository": "https://github.com/Musare/MusareNode",
   "scripts": {
-    "development": "nodemon -L /opt/app",
+    "development": "node-inspector & nodemon --debug -L /opt/app",
     "production": "node /opt/app"
   },
   "dependencies": {
