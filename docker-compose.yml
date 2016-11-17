@@ -4,7 +4,7 @@ services:
     build: ./backend
     ports:
     - "8081:80"
-    - "8082:8080"
+    - "9229:9229"
     volumes:
     - ./backend:/opt/app
     links:
