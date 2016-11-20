@@ -20,7 +20,7 @@
 				},
 				likes: [],
 				dislikes: [],
-				loggedIn: true,
+				loggedIn: false,
 				stations: []
 			}
 		},
@@ -31,16 +31,18 @@
 			}
 		},
 		ready: function () {
-			let socket = this.socket = io(window.location.protocol + '//' + window.location.hostname + ':8081');
-			socket.on("ready", status => this.loggedIn = status);
-			socket.emit("stations.index", data => this.stations = data);
+			lofig.folder = 'config/default.json';
+			lofig.get('socket.url', res => {
+				let socket = this.socket = io(window.location.protocol + '//' + res);
+				socket.on("ready", status => this.loggedIn = status);
+				socket.emit("stations.index", data => this.stations = data);
+			});
 		},
 		events: {
 			'register': function () {
 
 				let { register: { email, username, password } } = this;
-
-				this.socket.emit('users.login', email, username, password, grecaptcha.getResponse(), (result) => {
+				this.socket.emit('users.register', email, username, password, grecaptcha.getResponse(), (result) => {
 					console.log(result);
 					location.reload();
 				});

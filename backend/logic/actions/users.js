@@ -65,7 +65,7 @@ module.exports = {
 					url: 'https://www.google.com/recaptcha/api/siteverify',
 					method: 'POST',
 					form: {
-						'secret': config.get("apis.recaptcha.secret"),
+						//'secret': config.get("apis.recaptcha.secret"),
 						'response': recaptcha
 					}
 				}, next);
@@ -74,15 +74,17 @@ module.exports = {
 			// check if the response from Google recaptcha is successful
 			// if it is, we check if a user with the requested username already exists
 			(response, body, next) => {
+				console.log(456);
 				let json = JSON.parse(body);
 				console.log(json);
-				if (json.success !== true) return next('Response from recaptcha was not successful');
+				//if (json.success !== true) return next('Response from recaptcha was not successful');
 				db.models.user.findOne({ 'username': username }, next);
 			},
 
 			// if the user already exists, respond with that
 			// otherwise check if a user with the requested email already exists
 			(user, next) => {
+				console.log(234);
 				if (user) return next(true, { status: 'failure', message: 'A user with that username already exists' });
 				db.models.user.findOne({ 'email.address': email }, next);
 			},
@@ -90,17 +92,20 @@ module.exports = {
 			// if the user already exists, respond with that
 			// otherwise, generate a salt to use with hashing the new users password
 			(user, next) => {
+				console.log(853);
 				if (user) return next(true, { status: 'failure', message: 'A user with that email already exists' });
 				bcrypt.genSalt(10, next);
 			},
 
 			// hash the password
 			(salt, next) => {
+				console.log(4682);
 				bcrypt.hash(password, salt, next)
 			},
 
 			// save the new user to the database
 			(hash, next) => {
+				console.log(6842);
 				db.models.user.create({
 					username: username,
 					email: {
@@ -117,10 +122,12 @@ module.exports = {
 
 			// respond with the new user
 			(newUser, next) => {
+				console.log(21465);
 				next(null, { status: 'success', user: newUser })
 			}
 
 		], (err, payload) => {
+			console.log(476123123);
 			// log this error somewhere
 			if (err && err !== true) {
 				console.error(err);

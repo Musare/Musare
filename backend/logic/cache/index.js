@@ -55,8 +55,10 @@ const lib = {
 		if (stringifyJson && ['object', 'array'].includes(typeof value)) value = JSON.stringify(value);
 
 		lib.client.hset(table, key, value, (err) => {
-			if (err) return cb(err);
-			cb(null);
+			if (cb !== undefined) {
+				if (err) return cb(err);
+				cb(null);
+			}
 		});
 	},
 

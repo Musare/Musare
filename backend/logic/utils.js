@@ -92,11 +92,11 @@ function convertTime (duration) {
 
 module.exports = {
 	htmlEntities: str => String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'),
-	generateRandomString: len => {
+	generateRandomString: function(len) {
 		let chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".split("");
 		let result = [];
 		for (let i = 0; i < len; i++) {
-			result.push(chars[globals.utils.getRandomNumber(0, chars.length - 1)]);
+			result.push(chars[this.getRandomNumber(0, chars.length - 1)]);
 		}
 		return result.join("");
 	},

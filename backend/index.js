@@ -16,6 +16,7 @@ async.waterfall([
 	(next) => {
 		cache.init(config.get('redis').url, () => {
 			// load some test stations into the cache
+			console.log(next);
 			async.waterfall([
 				(next) => cache.hset('stations', '7dbf25fd-b10d-6863-2f48-637f6014b162', cache.schemas.station({
 					name: 'edm',
