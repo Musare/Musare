@@ -102,3 +102,21 @@ of the following commands to give Docker Toolbox access to those files.
 ### Fixing the "couldn't connect to docker daemon" error
 
 Some people have had issues while trying to execute the `docker-compose` command. To fix this, you will have to run `docker-machine env default`. This command will print various variables. At the bottom, it will say something similar to `@FOR /f "tokens=*" %i IN ('docker-machine env default') DO @%i`. Run this command in your shell. You will have to do this command for every shell you want to run `docker-compose` in, every session.
+
+### Running Musare locally
+
+For Windows, install Redis https://cloud.github.com/downloads/dmajkic/redis/redis-2.4.5-win32-win64.zip
+Extract it somewhere on your pc.
+In the Musare project directory, make a batch file called startRedis.cmd. In the batch file, write (in quotation marks "") the full path to the redis-server.exe
+
+For MongoDB, install MongoDB from https://www.mongodb.com/download-center#community
+Make a new batch file called startMongo with this time the full path to the mongod.exe file. For version 3.2, this is `"C:\Program Files\MongoDB\Server\3.2\bin\mongod.exe"`
+After that, on the same line, add `--dbpath "C:\Path\To\Project\.database"` which leads to your project and then a .database folder in your project. Make sure to make the .database folder in your project before running mongo.
+
+Install nodemon globally by doing `npm install nodemon -g`.
+Install webpack globally by doing `npm install webpack -g`.
+Install node-gyp globally (first check out https://github.com/nodejs/node-gyp#installation) by doing `npm install node-gyp -g`.
+In frontend and in backend, do `npm install`.
+
+To start it, start Mongo and Redis by starting the two start scripts.
+After they have started, in the frontend folder do `npm run development-watch` and in the backend folder run `npm run development-w`

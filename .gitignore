@@ -4,6 +4,10 @@ Thumbs.db
 .idea/
 .vagrant/
 
+startRedis.cmd
+startMongo.cmd
+.database
+
 # Back End
 backend/node_modules/
 backend/config/default.json

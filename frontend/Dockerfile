@@ -12,7 +12,6 @@ RUN apk add make
 RUN apk add nginx
 
 RUN npm install -g webpack@"^1.13.2"
-RUN npm install -g node-sass@"^3.11.2"
 
 RUN mkdir -p /opt
 WORKDIR /opt
