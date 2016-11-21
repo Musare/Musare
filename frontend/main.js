@@ -26,7 +26,7 @@ router.map({
 	'/admin': {
 		component: Admin
 	},
-	'/:name': {
+	'/station/:id': {
 		component: Station
 	}
 });

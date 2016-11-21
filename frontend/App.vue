@@ -36,9 +36,7 @@
 				let socket = this.socket = io(window.location.protocol + '//' + res);
 				socket.on("ready", status => this.loggedIn = status);
 				socket.emit("stations.index", data => {
-					if (data.status === "success") {
-						this.stations = data.stations;
-					}
+					if (data.status === "success") this.stations = data.stations;
 				});
 			});
 		},

@@ -90,7 +90,7 @@ module.exports = {
 				});
 			}
 			let arr = [];
-			for (var prop in stations) {
+			for (let prop in stations) {
 				console.log(prop);
 				arr.push(stations[prop]);
 			}
@@ -181,14 +181,12 @@ module.exports = {
 			}
 
 			if (session) session.stationId = null;
-
-			if (station) {
+			else if (station) {
 				cache.client.hincrby('station.userCounts', stationId, -1, (err, userCount) => {
 					if (err) return cb({ status: 'error', message: 'An error occurred while leaving the station' });
 					cb({ status: 'success', userCount });
 				});
-			}
-			else {
+			} else {
 				cb({ status: 'failure', message: `That station doesn't exist, it may have been deleted` });
 			}
 		});
