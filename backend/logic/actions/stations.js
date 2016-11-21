@@ -89,8 +89,13 @@ module.exports = {
 					message: 'An error occurred while obtaining the stations'
 				});
 			}
+			let arr = [];
+			for (var prop in stations) {
+				console.log(prop);
+				arr.push(stations[prop]);
+			}
 
-			cb({ status: 'success', stations });
+			cb({ status: 'success', stations: arr });
 		});
 	},
 
@@ -164,11 +169,11 @@ module.exports = {
 	 * Leaves the users current station
 	 *
 	 * @param session
-	 * @param stationId - the station id
 	 * @param cb
 	 * @return {{ status: String, userCount: Integer }}
 	 */
-	leave: (session, stationId, cb) => {
+	leave: (session, cb) => {
+		let stationId = "edm";
 		initializeAndReturnStation(stationId, (err, station) => {
 
 			if (err && err !== true) {

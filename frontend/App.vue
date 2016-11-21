@@ -36,7 +36,11 @@
 			lofig.get('socket.url', res => {
 				let socket = this.socket = io(window.location.protocol + '//' + res);
 				socket.on("ready", status => this.loggedIn = status);
-				socket.emit("stations.index", data => this.stations = data);
+				socket.emit("stations.index", data => {
+					if (data.status === "success") {
+						this.stations = data.stations;
+					}
+				});
 			});
 		},
 		events: {

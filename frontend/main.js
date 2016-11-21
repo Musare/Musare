@@ -23,11 +23,11 @@ router.map({
 	'/u/:username/settings': {
 		component: Settings
 	},
-	'/station/:name': {
-		component: Station
-	},
 	'/admin': {
 		component: Admin
+	},
+	'/:name': {
+		component: Station
 	}
 });
 
