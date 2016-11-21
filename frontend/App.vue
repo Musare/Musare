@@ -27,6 +27,7 @@
 		methods: {
 			logout() {
 				this.socket.emit('users.logout');
+				document.cookie = 'SID=;expires=Thu, 01 Jan 1970 00:00:01 GMT;';
 				location.reload();
 			}
 		},
@@ -53,7 +54,14 @@
 
 				this.socket.emit('users.login', email, password, (result) => {
 					console.log(result);
-					location.reload();
+					if (result.status === 'success') {
+						let date = new Date();
+						date.setTime(new Date().getTime() + (2*365*24*60*60*1000));
+						document.cookie = "SID=" + result.sessionId + "; expires="+ date.toGMTString() +"; path=/";
+						location.reload();
+					} else {
+						//TODO Error toast
+					}
 				});
 			},
 			'joinStation': function (id) {

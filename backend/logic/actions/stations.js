@@ -98,7 +98,7 @@ module.exports = {
 	 * Joins the station by its id
 	 *
 	 * @param session
-	 * @param stationId - the station join
+	 * @param stationId - the station id
 	 * @param cb
 	 * @return {{ status: String, userCount: Integer }}
 	 */
@@ -128,10 +128,11 @@ module.exports = {
 	 * Skips the users current station
 	 *
 	 * @param session
+	 * @param stationId - the station id
 	 * @param cb
 	 * @return {{ status: String, skipCount: Integer }}
 	 */
-	skip: (session, cb) => {
+	skip: (session, stationId, cb) => {
 
 		if (!session) return cb({ status: 'failure', message: 'You must be logged in to skip a song!' });
 
@@ -163,10 +164,11 @@ module.exports = {
 	 * Leaves the users current station
 	 *
 	 * @param session
+	 * @param stationId - the station id
 	 * @param cb
 	 * @return {{ status: String, userCount: Integer }}
 	 */
-	leave: (session, cb) => {
+	leave: (session, stationId, cb) => {
 		initializeAndReturnStation(stationId, (err, station) => {
 
 			if (err && err !== true) {

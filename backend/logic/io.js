@@ -5,6 +5,7 @@
 const app = require('./app');
 const actions = require('./actions');
 const cache = require('./cache');
+const utils = require('./utils');
 
 module.exports = {
 
@@ -14,6 +15,13 @@ module.exports = {
 
 		this.io = require('socket.io')(app.server);
 
+		this.io.use(function(socket, next){
+			let cookies = socket.request.headers.cookie;
+			// set the sessionId for the socket (this will have to be checked every request, this allows us to have a logout all devices option)
+			socket.sessionId = utils.cookies.parseCookies(cookies).SID;
+			return next();
+		});
+
 		this.io.on('connection', socket => {
 
 			console.log("io: User has connected");
@@ -21,9 +29,9 @@ module.exports = {
 			// catch when the socket has been disconnected
 			socket.on('disconnect', () => {
 
-				// remove the user from their current station
+				// remove the user from their current station (if any)
 				if (socket.sessionId) {
-					actions.stations.leave(socket.sessionId, result => {});
+					//actions.stations.leave(socket.sessionId, result => {});
 					delete socket.sessionId;
 				}
 
@@ -48,7 +56,6 @@ module.exports = {
 
 						// load the session from the cache
 						cache.hget('sessions', socket.sessionId, (err, session) => {
-
 							if (err && err !== true) {
 								return cb({
 									status: 'error',
@@ -73,7 +80,16 @@ module.exports = {
 				})
 			});
 
-			socket.emit('ready');
+			//TODO check if session is valid before returning true/false
+			cache.hget('sessions', socket.sessionId, (err, session) => {
+				if (err && err !== true) {
+					socket.emit('ready', false);
+				} else if (session) {
+					socket.emit('ready', true);
+				} else {
+					socket.emit('ready', false);
+				}
+			});
 		});
 
 		cb();

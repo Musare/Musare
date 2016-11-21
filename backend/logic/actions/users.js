@@ -32,9 +32,10 @@ module.exports = {
 					if (match) {
 
 						// store the session in the cache
-						cache.hset('sessions', utils.guid(), cache.schemas.session());
+						let sessionId = utils.guid();
+						cache.hset('sessions', sessionId, cache.schemas.session());
 
-						next(null, { status: 'failure', message: 'Login successful', user });
+						next(null, { status: 'success', message: 'Login successful', user, sessionId: sessionId });
 					}
 					else {
 						next(null, { status: 'failure', message: 'User not found' });
@@ -143,6 +144,7 @@ module.exports = {
 
 		if (!session) return cb({ status: 'failure', message: `You're not currently logged in` });
 
+		//TODO Remove session
 		session = null;
 
 		cb({ status: 'success', message: `You've been successfully logged out` });

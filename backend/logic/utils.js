@@ -106,5 +106,26 @@ module.exports = {
 	getRandomNumber: (min, max) => Math.floor(Math.random() * (max - min + 1)) + min,
 	convertTime,
 	Timer,
-	guid: () => [1,1,0,1,0,1,0,1,0,1,1,1].map(b => b ? Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1) : '-').join('')
+	guid: () => [1,1,0,1,0,1,0,1,0,1,1,1].map(b => b ? Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1) : '-').join(''),
+	cookies: {
+		parseCookies: cookieString => {
+			let cookies = {};
+			cookieString.split("; ").map((cookie) => {
+				(cookies[cookie.substring(0, cookie.indexOf("="))] = cookie.substring(cookie.indexOf("=") + 1, cookie.length));
+			});
+			return cookies;
+		},
+		toString: cookies => {
+			let newCookie = [];
+			for (let prop in cookie) {
+				newCookie.push(prop + "=" + cookie[prop]);
+			}
+			return newCookie.join("; ");
+		},
+		removeCookie: (cookieString, cookieName) => {
+			var cookies = this.parseCookies(cookieString);
+			delete cookies[cookieName];
+			return this.toString(cookies);
+		}
+	}
 };
