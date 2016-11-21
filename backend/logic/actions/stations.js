@@ -1,7 +1,8 @@
 'use strict';
 
-const async = require('async');
-const request = require('request');
+const async   = require('async'),
+	  request = require('request'),
+	  config  = require('config');
 
 const io = require('../io');
 const db = require('../db');
@@ -209,11 +210,13 @@ module.exports = {
 				return cb({ status: 'error', message: 'Failed to find song from youtube' });
 			}
 
+			body = JSON.parse(body);
+
 			const newSong = new db.models.song({
-				id: json.items[0].id,
-				title: json.items[0].snippet.title,
-				duration: utils.convertTime(json.items[0].contentDetails.duration),
-				thumbnail: json.items[0].snippet.thumbnails.high.url
+				id: body.items[0].id,
+				title: body.items[0].snippet.title,
+				duration: utils.convertTime(body.items[0].contentDetails.duration),
+				thumbnail: body.items[0].snippet.thumbnails.high.url
 			});
 
 			// save the song to the database
@@ -224,9 +227,9 @@ module.exports = {
 					return cb({ status: 'error', message: 'Failed to save song from youtube to the database' });
 				}
 
-				stations.getStation(station).playlist.push(newSong);
+				// stations.getStation(station).playlist.push(newSong);
 
-				cb({ status: 'success', data: stations.getStation(station.playlist) });
+				// cb({ status: 'success', data: stations.getStation(station.playlist) });
 			});
 		});
 	}

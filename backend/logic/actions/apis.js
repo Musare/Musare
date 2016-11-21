@@ -1,6 +1,7 @@
 'use strict';
 
-const request = require('request');
+const request = require('request'),
+	  config  = require('config');
 
 module.exports = {
 

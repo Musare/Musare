@@ -211,6 +211,7 @@
 				}
 			},
 			addSongToQueue: function(song) {
+				console.log('add', song)
 				let local = this;
 				local.socket.emit('stations.addSong', local.$route.params.id, song, function(data) {
 					if (data) console.log(data);
@@ -233,38 +234,42 @@
 			}
 		},
 		ready: function() {
+			let _this = this;
 
-			this.interval = 0;
+			_this.interval = 0;
 
-			this.socket = this.$parent.socket;
+			_this.socket = _this.$parent.socket;
 
-			this.socket.on('event:songs.next', (data) => {
-				let {currentSong, startedAt} = data;
+			_this.socket.on('event:songs.next', data => {
+				let { currentSong, startedAt } = data;
 				this.currentSong = currentSong;
 				this.startedAt = startedAt;
 				this.timePaused = 0;
 				this.playVideo();
 			});
 
-			/*this.stationSocket = io.connect(`${window.location.protocol + '//' + window.location.hostname + ':8081'}/${local.$route.params.id}`);
+			lofig.folder = '../config/default.json';
+			lofig.get('socket.url', function(res) {
+				_this.stationSocket = io(window.location.protocol + '//' + res + '/' + _this.$route.params.id);
 
-			this.stationSocket.on("connected", (data) => {
-				console.log(data);
-				local.currentSong = data.currentSong;
-				local.startedAt = data.startedAt;
-				local.paused = data.paused;
-				local.timePaused = data.timePaused;
-				local.currentTime  = data.currentTime;
+				_this.stationSocket.on("connected", (data) => {
+					console.log(data);
+					_this.currentSong = data.currentSong;
+					_this.startedAt = data.startedAt;
+					_this.paused = data.paused;
+					_this.timePaused = data.timePaused;
+					_this.currentTime  = data.currentTime;
+				});
+
+				_this.stationSocket.on("nextSong", (currentSong, startedAt) => {
+					_this.currentSong = currentSong;
+					_this.startedAt = startedAt;
+					_this.timePaused = 0;
+					_this.playVideo();
+				});
 			});
 
 			this.youtubeReady();
-
-			this.stationSocket.on("nextSong", (currentSong, startedAt) => {
-				this.currentSong = currentSong;
-				this.startedAt = startedAt;
-				this.timePaused = 0;
-				this.playVideo();
-			});*/
 
 			let volume = parseInt(localStorage.getItem("volume"));
 			volume = (typeof volume === "number") ? volume : 20;

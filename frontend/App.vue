@@ -25,7 +25,7 @@
 			}
 		},
 		methods: {
-			logout() {
+			logout: function () {
 				this.socket.emit('users.logout');
 				document.cookie = 'SID=;expires=Thu, 01 Jan 1970 00:00:01 GMT;';
 				location.reload();
@@ -42,7 +42,6 @@
 		},
 		events: {
 			'register': function () {
-
 				let { register: { email, username, password } } = this;
 				this.socket.emit('users.register', email, username, password, grecaptcha.getResponse(), (result) => {
 					console.log(result);
@@ -50,7 +49,6 @@
 				});
 			},
 			'login': function () {
-
 				let { login: { email, password } } = this;
 
 				this.socket.emit('users.login', email, password, (result) => {
