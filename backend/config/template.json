@@ -1,7 +1,7 @@
 {
 	"secret": "",
 	"domain": "",
-  	"localSetup": false,
+  	"isDocker": true,
 	"apis": {
 		"youtube": {
 			"key": ""

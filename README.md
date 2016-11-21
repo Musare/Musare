@@ -84,39 +84,44 @@ of the following commands to give Docker Toolbox access to those files.
    `docker-machine start default && docker-machine ssh default`
    
 3. Tell boot2docker to mount our volume at startup, by appending to its startup script
+	```bash
+	sudo tee -a /mnt/sda1/var/lib/boot2docker/profile >/dev/null <<EOF
 
-   ```bash
-   sudo tee -a /mnt/sda1/var/lib/boot2docker/profile >/dev/null <<EOF
-   
-   mkdir -p /d/Projects/MusareNode
-   mount -t vboxsf -o uid=1000,gid=50 d/Projects/MusareNode /d/Projects/MusareNode
-   EOF
-   ```
+	mkdir -p /d/Projects/MusareNode
+	mount -t vboxsf -o uid=1000,gid=50 d/Projects/MusareNode /d/Projects/MusareNode
+	EOF
+	```
 
 4. Restart the docker machine so that it uses the new shared folder
 
    `docker-machine restart default`
    
-5. You should now be good to go!
+5. You now should be good to go!
 
 ### Fixing the "couldn't connect to docker daemon" error
 
-Some people have had issues while trying to execute the `docker-compose` command. To fix this, you will have to run `docker-machine env default`. This command will print various variables. At the bottom, it will say something similar to `@FOR /f "tokens=*" %i IN ('docker-machine env default') DO @%i`. Run this command in your shell. You will have to do this command for every shell you want to run `docker-compose` in, every session.
+Some people have had issues while trying to execute the `docker-compose` command.
+To fix this, you will have to run `docker-machine env default`.
+This command will print various variables.
+At the bottom, it will say something similar to `@FOR /f "tokens=*" %i IN ('docker-machine env default') DO @%i`.
+Run this command in your shell. You will have to do this command for every shell you want to run `docker-compose` in (every session).
 
-### Running Musare locally
+### Running Musare locally without using Docker
 
-For Windows, install Redis https://cloud.github.com/downloads/dmajkic/redis/redis-2.4.5-win32-win64.zip
-Extract it somewhere on your pc.
-In the Musare project directory, make a batch file called startRedis.cmd. In the batch file, write (in quotation marks "") the full path to the redis-server.exe
+1. Install [Redis](http://redis.io/download) and [MongoDB](https://www.mongodb.com/download-center#community)
 
-For MongoDB, install MongoDB from https://www.mongodb.com/download-center#community
-Make a new batch file called startMongo with this time the full path to the mongod.exe file. For version 3.2, this is `"C:\Program Files\MongoDB\Server\3.2\bin\mongod.exe"`
-After that, on the same line, add `--dbpath "C:\Path\To\Project\.database"` which leads to your project and then a .database folder in your project. Make sure to make the .database folder in your project before running mongo.
+2. Install nodemon globally
 
-Install nodemon globally by doing `npm install nodemon -g`.
-Install webpack globally by doing `npm install webpack -g`.
-Install node-gyp globally (first check out https://github.com/nodejs/node-gyp#installation) by doing `npm install node-gyp -g`.
-In frontend and in backend, do `npm install`.
+   `npm install nodemon -g`
 
-To start it, start Mongo and Redis by starting the two start scripts.
-After they have started, in the frontend folder do `npm run development-watch` and in the backend folder run `npm run development-w`
+3. Install webpack globally
+
+   `npm install webpack -g`
+
+4. Install node-gyp globally (first check out https://github.com/nodejs/node-gyp#installation)
+
+   `npm install node-gyp -g`.
+
+5. In both `frontend` and `backend` folders, do `npm install`.
+
+6. `nodemon backend/index.js`

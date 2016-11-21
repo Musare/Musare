@@ -32,7 +32,6 @@
 			}
 		},
 		ready: function () {
-			lofig.folder = 'config/default.json';
 			lofig.get('socket.url', res => {
 				let socket = this.socket = io(window.location.protocol + '//' + res);
 				socket.on("ready", status => this.loggedIn = status);
