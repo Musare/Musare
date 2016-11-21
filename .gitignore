@@ -16,3 +16,4 @@ backend/config/default.json
 # Front End
 frontend/node_modules/
 frontend/build/bundle.js
+frontend/build/config/default.json
