@@ -4,7 +4,7 @@ import VueRouter from 'vue-router';
 import App from './App.vue';
 
 import Home from './components/pages/Home.vue';
-import Station from './components/pages/Station.vue';
+import Station from './components/Station/Station.vue';
 import Admin from './components/pages/Admin.vue';
 import User from './components/User/Show.vue';
 import Settings from './components/User/Settings.vue';
@@ -26,7 +26,10 @@ router.map({
 	'/admin': {
 		component: Admin
 	},
-	'/station/:id': {
+	'/:id': {
+		component: Station
+	},
+	'/community/:id': {
 		component: Station
 	}
 });

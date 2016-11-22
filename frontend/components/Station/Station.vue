@@ -80,7 +80,7 @@
 </template>
 
 <script>
-	import StationHeader from '../StationHeader.vue'
+	import StationHeader from './StationHeader.vue';
 
 	export default {
 		data() {
