@@ -248,7 +248,6 @@
 				this.playVideo();
 			});*/
 
-			lofig.folder = '../config/default.json';
 			lofig.get('socket.url', function(res) {
 				_this.stationSocket = io(window.location.protocol + '//' + res + '/' + _this.$route.params.id);
 

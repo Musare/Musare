@@ -55,7 +55,7 @@ module.exports = {
 						let cb = arguments[arguments.length - 1];
 
 						// load the session from the cache
-						cache.hget('sessions', socket.sessionId, (err, session) => {
+						/*if (socket.sessionId !== undefined)*/ cache.hget('sessions', socket.sessionId, (err, session) => {
 							if (err && err !== true) {
 								return cb({
 									status: 'error',
@@ -81,7 +81,7 @@ module.exports = {
 			});
 
 			//TODO check if session is valid before returning true/false
-			cache.hget('sessions', socket.sessionId, (err, session) => {
+			if (socket.sessionId !== undefined) cache.hget('sessions', socket.sessionId, (err, session) => {
 				if (err && err !== true) {
 					socket.emit('ready', false);
 				} else if (session) {

@@ -54,7 +54,7 @@ const lib = {
 		// automatically stringify objects and arrays into JSON
 		if (stringifyJson && ['object', 'array'].includes(typeof value)) value = JSON.stringify(value);
 
-		lib.client.hset(table, key, value, (err) => {
+		lib.client.hset(table, key, value, err => {
 			if (cb !== undefined) {
 				if (err) return cb(err);
 				cb(null);

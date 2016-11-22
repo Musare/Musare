@@ -84,15 +84,17 @@ module.exports = {
 		// and it should probably just a different cache table then 'stations'
 		cache.hgetall('stations', (err, stations) => {
 
+			console.log('all', stations)
+
 			if (err && err !== true) {
 				return cb({
 					status: 'error',
 					message: 'An error occurred while obtaining the stations'
 				});
 			}
+
 			let arr = [];
 			for (let prop in stations) {
-				console.log(prop);
 				arr.push(stations[prop]);
 			}
 
