@@ -21,7 +21,10 @@
 				likes: [],
 				dislikes: [],
 				loggedIn: false,
-				stations: []
+				stations: {
+					official: [],
+					community: []
+				}
 			}
 		},
 		methods: {
@@ -36,7 +39,10 @@
 				let socket = this.socket = io(window.location.protocol + '//' + res);
 				socket.on("ready", status => this.loggedIn = status);
 				socket.emit("stations.index", data => {
-					if (data.status === "success") this.stations = data.stations;
+					if (data.status === "success")  data.stations.forEach(station => {
+						if (station.type == 'official') this.stations.official.push(station);
+						else this.stations.community.push(station);
+					});
 				});
 			});
 		},
@@ -64,12 +70,13 @@
 				});
 			},
 			'joinStation': function (id) {
-				this.socket.emit('stations.join', id, (result) => {
-					this.stations.find(station => station.id === id).users = result.userCount;
+				let mergedStations = this.stations.community.concat(this.stations.official);
+				this.socket.emit('stations.join', id, result => {
+					mergedStations.find(station => station.id === id).users = result.userCount;
 				});
 			},
 			'leaveStation': function () {
-				this.socket.emit('stations.leave', (result) => {
+				this.socket.emit('stations.leave', result => {
 					//this.stations.find(station => station.id === id).users = result.userCount;
 				});
 			}

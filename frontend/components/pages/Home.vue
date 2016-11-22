@@ -53,9 +53,26 @@
 			</div>
 		</div>
 		<div class="group">
-			<!--<div class="group-title">{{group.name}}</div>-->
+			<div class="group-title">Official Stations</div>
 			<div class="group-stations">
-				<div class="stations-station" v-for="station in $parent.stations" v-link="{ path: '/' + station.name }" @click="this.$dispatch('joinStation', station.id)">
+				<div class="stations-station" v-for="station in $parent.stations.official" v-link="{ path: '/' + station.name }" @click="this.$dispatch('joinStation', station.id)">
+					<img class="station-image" :src="station.playlist[station.currentSongIndex].thumbnail" />
+					<div class="station-info">
+						<div class="station-grid-left">
+							<h3>{{ station.displayName }}</h3>
+							<p>{{ station.description }}</p>
+						</div>
+						<div class="station-grid-right">
+							<div>{{ station.userCount }}&nbsp;&nbsp;<i class="fa fa-user" aria-hidden="true"></i></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="group" v-if="$parent.stations.community.length">
+			<div class="group-title">Community Stations</div>
+			<div class="group-stations">
+				<div class="stations-station" v-for="station in $parent.stations.community" v-link="{ path: '/community/' + station.name }" @click="this.$dispatch('joinStation', station.id)">
 					<img class="station-image" :src="station.playlist[station.currentSongIndex].thumbnail" />
 					<div class="station-info">
 						<div class="station-grid-left">

@@ -248,7 +248,7 @@
 				this.playVideo();
 			});*/
 
-			lofig.get('socket.url', function(res) {
+			lofig.get('socket.url', res => {
 				_this.stationSocket = io(window.location.protocol + '//' + res + '/' + _this.$route.params.id);
 
 				_this.stationSocket.on("connected", (data) => {

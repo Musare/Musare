@@ -66,7 +66,22 @@ function initializeAndReturnStation (stationId, cb) {
 			});
 		}, true);
 
-		cb(null, station);
+		// will need to be added once station namespace thing is decided
+		// function generatePlaylist(arr) {
+		// 	station.playlist = [];
+		// 	return arr.reduce((promise, id) => {
+		// 		return promise.then(() => {
+		// 			return globals.db.models.song.findOne({ id }, (err, song) => {
+		// 				if (err) throw err;
+		// 				station.playlist.push(song);
+		// 			});
+		// 		});
+		// 	}, Promise.resolve());
+		// }
+
+		// generatePlaylist(station.playlist).then(() => {
+		// 	cb(null, station);
+		// });
 	});
 }
 
@@ -83,8 +98,6 @@ module.exports = {
 		// TODO: the logic should be a bit more personalized to the users preferred genres
 		// and it should probably just a different cache table then 'stations'
 		cache.hgetall('stations', (err, stations) => {
-
-			console.log('all', stations)
 
 			if (err && err !== true) {
 				return cb({
@@ -197,7 +210,7 @@ module.exports = {
 
 	addSong: (session, station, song, cb) => {
 
-		// if (!session.logged_in) return cb({ status: 'failure', message: 'You must be logged in to add a song' });
+		if (!session.logged_in) return cb({ status: 'failure', message: 'You must be logged in to add a song' });
 
 		const params = [
 			'part=snippet,contentDetails,statistics,status',

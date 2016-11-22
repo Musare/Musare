@@ -20,6 +20,7 @@ async.waterfall([
 				(next) => cache.hset('stations', '7dbf25fd-b10d-6863-2f48-637f6014b162', cache.schemas.station({
 					name: 'edm',
 					genres: ['edm'],
+					type: 'official',
 					displayName: 'EDM',
 					description: 'EDM Music',
 					playlist: [
@@ -29,6 +30,7 @@ async.waterfall([
 				(next) => cache.hset('stations', '79cedff1-5341-7f0e-6542-50491c4797b4', cache.schemas.station({
 					name: 'chill',
 					genres: ['chill'],
+					type: 'official',
 					displayName: 'Chill',
 					description: 'Chill Music',
 					playlist: [
