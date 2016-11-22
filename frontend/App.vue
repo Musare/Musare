@@ -35,7 +35,7 @@
 			}
 		},
 		ready: function () {
-			lofig.get('socket.url', res => {
+			lofig.get('socket.url', function(res) {
 				let socket = this.socket = io(window.location.protocol + '//' + res);
 				socket.on("ready", status => this.loggedIn = status);
 				socket.emit("stations.index", data => {
@@ -50,8 +50,9 @@
 			'register': function () {
 				let { register: { email, username, password } } = this;
 				this.socket.emit('users.register', email, username, password, grecaptcha.getResponse(), (result) => {
-					console.log(result);
-					location.reload();
+					// Need to somehow execute this on Home.vue
+					// Toast.methods.addToast(`User ${username} has been registered`, 2000);
+					setTimeout(location.reload(), 2500);
 				});
 			},
 			'login': function () {

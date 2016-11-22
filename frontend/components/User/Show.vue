@@ -29,7 +29,7 @@
 </template>
 
 <script>
-	//import { Toast } from 'vue-roaster';
+	import { Toast } from 'vue-roaster';
 
 	export default {
 		data() {
@@ -43,7 +43,7 @@
 		methods: {
 			changeRank(newRank) {
 				console.log(rank);
-				//Toast.methods.addToast(`User ${this.$route.params.username} has been promoted to the rank of ${rank}`, 200000);
+				Toast.methods.addToast(`User ${this.$route.params.username} has been promoted to the rank of ${rank}`, 200000);
 			}
 		},
 		ready: function() {
@@ -57,7 +57,7 @@
 				local.requested = local.user.statistics.songsRequested;
 			});
 		},
-		//components: { Toast }
+		components: { Toast }
 	}
 </script>
 
