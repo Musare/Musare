@@ -26,7 +26,7 @@ function initializeAndReturnStation (stationId, cb) {
 		// if the cached version exist
 		(station, next) => {
 			if (station) return next(true, station);
-			db.models.station.find({ id: stationId }, next);
+			db.models.station.findOne({ id: stationId }, next);
 		},
 
 		// if the station exists in the DB, add it to the cache
