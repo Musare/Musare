@@ -240,13 +240,13 @@
 
 			_this.socket = _this.$parent.socket;
 
-			_this.socket.on('event:songs.next', data => {
+			/*_this.socket.on('event:songs.next', data => {
 				let { currentSong, startedAt } = data;
 				this.currentSong = currentSong;
 				this.startedAt = startedAt;
 				this.timePaused = 0;
 				this.playVideo();
-			});
+			});*/
 
 			lofig.folder = '../config/default.json';
 			lofig.get('socket.url', function(res) {
@@ -259,17 +259,17 @@
 					_this.paused = data.paused;
 					_this.timePaused = data.timePaused;
 					_this.currentTime  = data.currentTime;
+					this.youtubeReady();
 				});
 
 				_this.stationSocket.on("nextSong", (currentSong, startedAt) => {
+					console.log(currentSong, startedAt);
 					_this.currentSong = currentSong;
 					_this.startedAt = startedAt;
 					_this.timePaused = 0;
 					_this.playVideo();
 				});
 			});
-
-			this.youtubeReady();
 
 			let volume = parseInt(localStorage.getItem("volume"));
 			volume = (typeof volume === "number") ? volume : 20;
