@@ -1,10 +1,13 @@
 <template>
 	<div>
 		<router-view></router-view>
+		<what-is-new></what-is-new>
 	</div>
 </template>
 
 <script>
+	import WhatIsNew from './components/WhatIsNew.vue';
+
 	export default {
 		replace: false,
 		data() {
@@ -82,6 +85,7 @@
 					//this.stations.find(station => station.id === id).users = result.userCount;
 				});
 			}
-		}
+		},
+		components: { WhatIsNew }
 	}
 </script>

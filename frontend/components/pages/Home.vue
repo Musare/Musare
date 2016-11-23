@@ -142,7 +142,7 @@
 
 	@import 'theme.scss';
 
-	* { box-sizing: border-box; font-family: Roboto, sans-serif; }
+	* { box-sizing: border-box; }
 
 	html {
 		width: 100%;
