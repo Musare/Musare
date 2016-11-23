@@ -13,7 +13,7 @@ module.exports = {
 
 	update: (session, id, song, cb) => {
 		//TODO Require admin/login
-		db.models.song.findOneAndUpdate({ id: id }, song, { upsert: true }, (err, updatedSong) => {
+		db.models.song.findOneAndUpdate({ id }, song, { upsert: true }, (err, updatedSong) => {
 			if (err) throw err;
 			cb(updatedSong);
 		});
@@ -21,7 +21,7 @@ module.exports = {
 
 	remove: (session, id, cb) => {
 		//TODO Require admin/login
-		db.models.song.find({ id: id }).remove().exec();
+		db.models.song.find({ id }).remove().exec();
 	},
 
 	add: (session, id, cb) => {
