@@ -5,6 +5,9 @@
 			<div class="column is-8-desktop is-offset-2-desktop is-12-mobile">
 				<div class="video-container">
 					<div id="player"></div>
+					<div class="seeker-bar-container white" id="preview-progress">
+						<div class="seeker-bar light-blue" style="width: 60.9869%;"></div>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -29,9 +32,6 @@
 									<li style="margin-right: 10px;" id="dislike" class="right"><span class="flow-text">{{currentSong.dislikes}} </span><i id="thumbs_down" class="material-icons grey-text">thumb_down</i></li>
 								</ul>
 							</div>
-						</div>
-						<div class="seeker-bar-container white" id="preview-progress">
-							<div class="seeker-bar light-blue" style="width: 60.9869%;"></div>
 						</div>
 					</div>
 					<div class="column is-4-desktop is-12-mobile">
@@ -258,8 +258,10 @@
 					_this.paused = data.paused;
 					_this.timePaused = data.timePaused;
 					_this.currentTime  = data.currentTime;
-					this.youtubeReady();
+					_this.youtubeReady();
 				});
+				
+				this.youtubeReady();
 
 				_this.stationSocket.on("nextSong", (currentSong, startedAt) => {
 					console.log(currentSong, startedAt);
@@ -452,7 +454,6 @@
 		display: block;
 		width: 100%;
 		overflow: hidden;
-		margin-top: 20px;
 	}
 
 	.seeker-bar {
