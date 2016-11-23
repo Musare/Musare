@@ -3,22 +3,22 @@
 		<div class="nav-left">
 			<a class="nav-item" href="#" v-link="{ path: '/' }" @click="this.$dispatch('leaveStation', title)">
 				<span class="icon">
-					<i class="fa fa-home"></i>
+					<i class="material-icons">home</i>
 				</span>
 			</a>
 			<a class="nav-item" href="#" @click="$parent.toggleModal()">
 				<span class="icon">
-					<i class="fa fa-plus"></i>
+					<i class="material-icons">playlist_add</i>
 				</span>
 			</a>
 			<a class="nav-item" href="#">
 				<span class="icon">
-					<i class="fa fa-flag"></i>
+					<i class="material-icons">flag</i>
 				</span>
 			</a>
 			<a class="nav-item" href="#">
 				<span class="icon">
-					<i class="fa fa-step-forward"></i>
+					<i class="material-icons left">skip_next</i>
 				</span>
 			</a>
 		</div>
@@ -36,17 +36,17 @@
 		<div class="nav-right">
 			<a class="nav-item" href="#">
 				<span class="icon">
-					<i class="fa fa-music"></i>
+					<i class="material-icons">queue_music</i>
 				</span>
 			</a>
 			<a class="nav-item" href="#">
 				<span class="icon">
-					<i class="fa fa-comments"></i>
+					<i class="material-icons">chat</i>
 				</span>
 			</a>
 			<a class="nav-item" href="#">
 				<span class="icon">
-					<i class="fa fa-users"></i>
+					<i class="material-icons">people</i>
 				</span>
 			</a>
 		</div>

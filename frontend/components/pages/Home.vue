@@ -63,7 +63,7 @@
 							<p>{{ station.description }}</p>
 						</div>
 						<div class="station-grid-right">
-							<div>{{ station.userCount }}&nbsp;&nbsp;<i class="fa fa-user" aria-hidden="true"></i></div>
+							<div>{{ station.userCount }}&nbsp;&nbsp;<i class="material-icons">perm_identity</i></div>
 						</div>
 					</div>
 				</div>
@@ -80,7 +80,7 @@
 							<p>{{ station.description }}</p>
 						</div>
 						<div class="station-grid-right">
-							<div>{{ station.userCount }}&nbsp;&nbsp;<i class="fa fa-user" aria-hidden="true"></i></div>
+							<div>{{ station.userCount }}&nbsp;&nbsp;<i class="material-icons">perm_identity</i></div>
 						</div>
 					</div>
 				</div>
