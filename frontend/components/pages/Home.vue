@@ -22,7 +22,7 @@
 					<p class="control">
 						<input class="input" type="password" placeholder="Password..." v-model="$parent.register.password">
 					</p>
-					<div class="g-recaptcha" data-sitekey="6LdNCQcUAAAAANj_w5leQSrxnAmDp2ioh4alkUHg"></div>
+					<div class="g-recaptcha" :data-sitekey="recaptcha.key"></div>
 				</section>
 				<footer class="modal-card-foot">
 					<a class="button is-primary" @click="submitModal('register')">Submit</a>
@@ -98,8 +98,17 @@
 		data() {
 			return {
 				isRegisterActive: false,
-				isLoginActive: false
+				isLoginActive: false,
+				recaptcha: {
+					key: ''
+				}
 			}
+		},
+		ready() {
+			let _this = this;
+			lofig.get('recaptcha.key', function(key) {
+				_this.recaptcha.key = key;
+			});
 		},
 		methods: {
 			toggleModal: function(type) {

@@ -34,14 +34,15 @@
 				location.reload();
 			}
 		},
-		ready: function () {
+		ready() {
+			let _this = this;
 			lofig.get('socket.url', function(res) {
-				let socket = this.socket = io(window.location.protocol + '//' + res);
-				socket.on("ready", status => this.loggedIn = status);
+				let socket = _this.socket = io(window.location.protocol + '//' + res);
+				socket.on("ready", status => _this.loggedIn = status);
 				socket.emit("stations.index", data => {
 					if (data.status === "success")  data.stations.forEach(station => {
-						if (station.type == 'official') this.stations.official.push(station);
-						else this.stations.community.push(station);
+						if (station.type == 'official') _this.stations.official.push(station);
+						else _this.stations.community.push(station);
 					});
 				});
 			});

@@ -1,5 +1,8 @@
 {
 	"socket": {
 		"url": ""
+	},
+	"recaptcha": {
+		"key": ""
 	}
 }
