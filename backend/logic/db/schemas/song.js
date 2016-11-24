@@ -3,5 +3,6 @@ module.exports = {
 	title: { type: String, required: true },
 	artists: [{ type: String }],
 	duration: { type: String, required: true },
+	skipDuration: { type: Number, required: true },
 	thumbnail: { type: String, required: true }
 };

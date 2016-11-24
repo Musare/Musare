@@ -19,8 +19,8 @@
 			<a class="nav-item is-tab" href="#">
 				About
 			</a>
-			<a class="nav-item is-tab" href="#">
-				Donate
+			<a class="nav-item is-tab" href="#" v-link="{ path: '/news' }">
+				News
 			</a>
 			<a class="nav-item is-tab" href="#" v-if="$parent.$parent.loggedIn" @click="$parent.$parent.logout()">
 				Sign Out
