@@ -20,7 +20,7 @@ module.exports = {
 		db.models.queueSong.findOne({ id }, function(err, queueSong) {
 			if (err) throw err;
 			//List of properties that are allowed to be changed
-			const updatableProperties = ["id", "title", "artists", "genres", "thumbnail", "duration", "skipDuration"];
+			const updatableProperties = ["id", "title", "artists", "genres", "thumbnail", "explicit", "duration", "skipDuration"];
 			//TODO Check if new id, if any, is already in use in queue or on rotation
 			let updated = false;
 			for (let prop in queueSong) {
@@ -99,6 +99,7 @@ module.exports = {
 						duration: durInSec,
 						skipDuration: 0,
 						thumbnail: '',
+						explicit: false,
 						requestedBy: '',
 						requestedAt: requestedAt
 					};
@@ -139,6 +140,7 @@ module.exports = {
 									return artist.name;
 								});
 								newSong.title = item.name;
+								newSong.explicit = item.explicit;
 								break durationArtistLoop;
 							}
 						}

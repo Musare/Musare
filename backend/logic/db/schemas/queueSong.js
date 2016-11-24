@@ -6,6 +6,7 @@ module.exports = {
 	duration: { type: Number, required: true },
 	skipDuration: { type: Number, required: true },
 	thumbnail: { type: String, required: true },
+	explicit: { type: Boolean, required: true },
 	requestedBy: { type: String, required: true },
 	requestedAt: { type: Date, required: true }
 };
