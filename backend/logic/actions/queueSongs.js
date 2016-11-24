@@ -8,29 +8,47 @@ module.exports = {
 
 	index: (session, cb) => {
 		//TODO Require admin/login
-		db.models.song.find({}, (err, songs) => {
+		db.models.queueSong.find({}, (err, songs) => {
 			if (err) throw err;
 			cb(songs);
 		});
 	},
 
-	update: (session, id, song, cb) => {
+	update: (session, id, updatedSong, cb) => {
 		//TODO Require admin/login
-		db.models.song.findOneAndUpdate({ id }, song, { upsert: true }, (err, updatedSong) => {
+		//TODO Check if id and updatedSong is valid
+		db.models.queueSong.findOne({ id }, function(err, queueSong) {
 			if (err) throw err;
-			cb(updatedSong);
+			//List of properties that are allowed to be changed
+			const updatableProperties = ["id", "title", "artists", "genres", "thumbnail", "duration", "skipDuration"];
+			//TODO Check if new id, if any, is already in use in queue or on rotation
+			let updated = false;
+			for (let prop in queueSong) {
+				if (updatableProperties.indexOf(prop) !== -1 && updatedSong.hasOwnProperty("prop") && updatedSong[prop] !== queueSong[prop]) {
+					queueSong[prop] = updatedSong[prop];
+					updated = true;
+				}
+			}
+			if (!updated) return cb({ status: 'failure', message: 'No properties changed.' });
+
+			queueSong.save((err) => {
+				if (err) return cb({ status: 'failure', message: 'Couldn\'t save to Database.' });
+
+				return cb({ status: 'success', message: 'Successfully updated the queueSong object.' });
+			});
+
 		});
 	},
 
 	remove: (session, id, cb) => {
 		//TODO Require admin/login
-		db.models.song.find({ id }).remove().exec();
+		db.models.queueSong.find({ id }).remove().exec();
 	},
 
 	add: (session, id, cb) => {
 		//TODO Require login
 		//TODO Check if id is valid
-		//TODO Check if id is duplicate
+		//TODO Check if id is already in queue/rotation
 		// if (!session.logged_in) return cb({ status: 'failure', message: 'You must be logged in to add a song' });
 
 		let requestedAt = Date.now();
@@ -130,7 +148,7 @@ module.exports = {
 				});
 			},
 			(newSong, next) => {
-				const song = new db.models.song(newSong);
+				const song = new db.models.queueSong(newSong);
 
 				song.save(err => {
 
