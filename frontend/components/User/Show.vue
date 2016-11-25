@@ -30,6 +30,8 @@
 </template>
 
 <script>
+	import { Toast } from 'vue-roaster';
+
 	import MainHeader from '../MainHeader.vue';
 	import MainFooter from '../MainFooter.vue';
 
@@ -42,7 +44,7 @@
 		methods: {
 			changeRank(newRank) {
 				console.log(rank);
-				// Toast.methods.addToast(`User ${this.$route.params.username} has been promoted to the rank of ${rank}`, 200000);
+				Toast.methods.addToast(`User ${this.$route.params.username} has been promoted to the rank of ${rank}`, 2000);
 			}
 		},
 		ready: function() {
