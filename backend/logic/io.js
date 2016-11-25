@@ -19,6 +19,7 @@ module.exports = {
 		this.io.use((socket, next) => {
 			let cookies = socket.request.headers.cookie;
 			// set the sessionId for the socket (this will have to be checked every request, this allows us to have a logout all devices option)
+			console.log(utils.cookies.parseCookies(cookies).SID);
 			if (cookies) socket.sessionId = utils.cookies.parseCookies(cookies).SID;
 			return next();
 		});

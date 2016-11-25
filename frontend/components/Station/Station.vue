@@ -242,12 +242,21 @@
 			_this.socket = _this.$parent.socket;
 
 			_this.socket.emit('stations.join', _this.stationId, data => {
-				_this.currentSong = data.currentSong;
-				_this.startedAt = data.startedAt;
-				_this.paused = data.paused;
-				_this.timePaused = data.timePaused;
-				_this.youtubeReady();
-				_this.playVideo();
+				console.log(data);
+				if (data.status === "success") {
+					_this.currentSong = data.currentSong;
+					_this.startedAt = data.startedAt;
+					_this.paused = data.paused;
+					_this.timePaused = data.timePaused;
+					_this.youtubeReady();
+					_this.playVideo();
+				} else {
+					//TODO Handle error
+				}
+			});
+
+			_this.socket.on("SomeRoomMessage", function() {
+				console.log("SOME ROOM MESSAGE!!");
 			});
 
 			_this.socket.on('event:songs.next', data => {

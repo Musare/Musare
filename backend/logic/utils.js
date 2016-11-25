@@ -128,7 +128,7 @@ module.exports = {
 			return this.toString(cookies);
 		}
 	},
-	socketFromSession: sessionId => {
+	socketFromSession: function(sessionId) {
 		let sockets = io.io.sockets;
 		for (let i = 0; i < sockets.length; i++) {
 			let socket = sockets[i];
@@ -137,16 +137,18 @@ module.exports = {
 			}
 		}
 	},
-	socketLeaveRooms: (sessionId, room) => {
+	socketLeaveRooms: function(sessionId, room) {
 		let socket = this.socketFromSession(sessionId);
 		let rooms = io.sockets.manager.roomClients[socket.id];
 		for (let j = 0; j < rooms.length; j++) {
 			socket.leave(rooms[j]);
 		}
 	},
-	socketJoinRoom: (sessionId, room) => {
+	socketJoinRoom: function(sessionId, room) {
 		let socket = this.socketFromSession(sessionId);
-		let rooms = io.sockets.manager.roomClients[socket.id];
+		console.log(socket);
+		//console.log(io.io.sockets[socket.id]);
+		let rooms = io.io.sockets.manager.roomClients[socket.id];
 		for (let j = 0; j < rooms.length; j++) {
 			socket.leave(rooms[j]);
 		}

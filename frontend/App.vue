@@ -36,9 +36,6 @@
 			lofig.get('socket.url', function(res) {
 				let socket = _this.socket = io(window.location.protocol + '//' + res);
 				socket.on("ready", status => _this.loggedIn = status);
-				socket.on("SomeRoomMessage", function() {
-				    console.log("SOME ROOM MESSAGE!");
-				});
 			});
 		},
 		events: {

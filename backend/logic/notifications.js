@@ -25,6 +25,7 @@ const lib = {
 			});
 		});
 		client.psubscribe('__keyevent@0__:expired');
+		cb();
 	},
 
 	/**

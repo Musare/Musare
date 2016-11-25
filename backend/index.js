@@ -8,6 +8,7 @@ const db = require('./logic/db');
 const app = require('./logic/app');
 const io = require('./logic/io');
 const cache = require('./logic/cache');
+const notifications = require('./logic/notifications');
 const config = require('config');
 
 async.waterfall([
@@ -17,7 +18,7 @@ async.waterfall([
 		cache.init(config.get('redis').url, () => {
 			// load some test stations into the cache
 			async.waterfall([
-				(next) => cache.hset('stations', '7dbf25fd-b10d-6863-2f48-637f6014b162', cache.schemas.station({
+				(next) => cache.hset('stations', 'edm', cache.schemas.station({
 					name: 'edm',
 					genres: ['edm'],
 					type: 'official',
@@ -25,9 +26,20 @@ async.waterfall([
 					description: 'EDM Music',
 					playlist: [
 						'gCYcHz2k5x0'
-					]
+					],
+					currentSong: {
+						id: 'gCYcHz2k5x0',
+						title: 'Title',
+						artists: ['Artist1'],
+						genres: ['edm', 'pop'],
+						thumbnail: 'test',
+						duration: 100,
+						skipDuration: 10,
+						likes: 0,
+						dislikes: 0
+					}
 				}), next),
-				(next) => cache.hset('stations', '79cedff1-5341-7f0e-6542-50491c4797b4', cache.schemas.station({
+				(next) => cache.hset('stations', 'chill', cache.schemas.station({
 					name: 'chill',
 					genres: ['chill'],
 					type: 'official',
@@ -49,6 +61,9 @@ async.waterfall([
 
 	// setup the socket.io server (all client / server communication is done over this)
 	(next) => io.init(next),
+
+	// setup the notifications
+	(next) => notifications.init(config.get('redis').url, next),
 
 	// setup the frontend for local setups
 	(next) => {
