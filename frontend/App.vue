@@ -6,7 +6,7 @@
 </template>
 
 <script>
-	import WhatIsNew from './components/WhatIsNew.vue';
+	import WhatIsNew from './components/Modals/WhatIsNew.vue';
 
 	export default {
 		replace: false,

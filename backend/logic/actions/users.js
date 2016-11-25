@@ -144,17 +144,25 @@ module.exports = {
 	},
 
 	findByUsername: (session, username, cb) => {
+		console.log(username)
 		db.models.user.find({ username }, (err, account) => {
-			if (err) throw err;
-			account = account[0];
-			cb({
-				status: 'success',
-				data: {
-					username: account.username,
-					createdAt: account.createdAt,
-					statistics: account.statistics
-				}
-			});
+			if (account == [] && err) {
+				console.error(err);
+				return cb({
+					status: 'error',
+					message: 'Username cannot be found'
+				});
+			} else {
+				account = account[0];
+				return cb({
+					status: 'success',
+					data: {
+						username: account.username,
+						createdAt: account.createdAt,
+						statistics: account.statistics
+					}
+				});
+			}
 		});
 	}
 

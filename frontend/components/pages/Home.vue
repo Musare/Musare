@@ -1,58 +1,9 @@
 <template>
 	<div class="app">
 		<main-header></main-header>
-		<div class="modal" :class="{ 'is-active': isRegisterActive }">
-			<div class="modal-background"></div>
-			<div class="modal-card">
-				<header class="modal-card-head">
-					<p class="modal-card-title">Register</p>
-					<button class="delete" @click="toggleModal('register')"></button>
-				</header>
-				<section class="modal-card-body">
-					<!-- validation to check if exists http://bulma.io/documentation/elements/form/ -->
-					<label class="label">Email</label>
-					<p class="control">
-						<input class="input" type="text" placeholder="Email..." v-model="$parent.register.email">
-					</p>
-					<label class="label">Username</label>
-					<p class="control">
-						<input class="input" type="text" placeholder="Username..." v-model="$parent.register.username">
-					</p>
-					<label class="label">Password</label>
-					<p class="control">
-						<input class="input" type="password" placeholder="Password..." v-model="$parent.register.password">
-					</p>
-					<div class="g-recaptcha" :data-sitekey="recaptcha.key"></div>
-				</section>
-				<footer class="modal-card-foot">
-					<a class="button is-primary" @click="submitModal('register')">Submit</a>
-				</footer>
-			</div>
-		</div>
-		<div class="modal" :class="{ 'is-active': isLoginActive }">
-			<div class="modal-background"></div>
-			<div class="modal-card">
-				<header class="modal-card-head">
-					<p class="modal-card-title">Login</p>
-					<button class="delete" @click="toggleModal('login')"></button>
-				</header>
-				<section class="modal-card-body">
-					<!-- validation to check if exists http://bulma.io/documentation/elements/form/ -->
-					<label class="label">Email</label>
-					<p class="control">
-						<input class="input" type="text" placeholder="Email..." v-model="$parent.login.email">
-					</p>
-					<label class="label">Password</label>
-					<p class="control">
-						<input class="input" type="password" placeholder="Password..." v-model="$parent.login.password">
-					</p>
-				</section>
-				<footer class="modal-card-foot">
-					<a class="button is-primary" @click="submitModal('login')">Submit</a>
-				</footer>
-			</div>
-		</div>
-		<div class="group">
+		<login-modal></login-modal>
+		<register-modal></register-modal>
+		<div class="group" v-if="stations.official.length">
 			<div class="group-title">Official Stations</div>
 			<div class="group-stations">
 				<div class="stations-station" v-for="station in stations.official" v-link="{ path: '/' + station.name }" @click="this.$dispatch('joinStation', station.id)">
@@ -91,8 +42,11 @@
 </template>
 
 <script>
-	import MainHeader from '../MainHeader.vue'
-	import MainFooter from '../MainFooter.vue'
+	import MainHeader from '../MainHeader.vue';
+	import MainFooter from '../MainFooter.vue';
+
+	import LoginModal from '../Modals/Login.vue';
+	import RegisterModal from '../Modals/Register.vue';
 
 	export default {
 		data() {
@@ -110,9 +64,6 @@
 		},
 		ready() {
 			let _this = this;
-			lofig.get('recaptcha.key', function(key) {
-				_this.recaptcha.key = key;
-			});
 
 			let socketInterval = setInterval(() => {
 				if (!!_this.$parent.socket) {
@@ -153,7 +104,7 @@
 				}
 			}
 		},
-		components: { MainHeader, MainFooter }
+		components: { MainHeader, MainFooter, LoginModal, RegisterModal }
 	}
 </script>
 

@@ -23,19 +23,35 @@
 				News
 			</a>
 			<a class="nav-item is-tab" href="#" v-if="$parent.$parent.loggedIn" @click="$parent.$parent.logout()">
-				Sign Out
+				Logout
 			</a>
 			<span class="grouped" v-else>
-				<a class="nav-item" href="#" @click="$parent.toggleModal('login')">
-					Sign In
+				<a class="nav-item" href="#" @click="toggleModal('login')">
+					Login
 				</a>
-				<a class="nav-item" href="#" @click="$parent.toggleModal('register')">
+				<a class="nav-item" href="#" @click="toggleModal('register')">
 					Register
 				</a>
 			</span>
 		</div>
 	</nav>
 </template>
+
+<script>
+	export default {
+		methods: {
+			toggleModal: function (type) {
+				for (let i = 0; i < this.$parent.$children.length; i++) {
+					if (this.$parent.$children[i]._uid == 4 && type == 'login') {
+						this.$parent.$children[i].isActive = !this.$parent.$children[i].isActive;
+					} else if (this.$parent.$children[i]._uid == 5 && type == 'register') {
+						this.$parent.$children[i].isActive = !this.$parent.$children[i].isActive;
+					}
+				}
+			}
+		}
+	}
+</script>
 
 <style lang="scss" scoped>
 	@import 'theme.scss';
