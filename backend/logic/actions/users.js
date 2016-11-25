@@ -78,7 +78,7 @@ module.exports = {
 				let json = JSON.parse(body);
 				console.log(json);
 				//if (json.success !== true) return next('Response from recaptcha was not successful');
-				db.models.user.findOne({ 'username': username }, next);
+				db.models.user.findOne({ username }, next);
 			},
 
 			// if the user already exists, respond with that
@@ -103,7 +103,7 @@ module.exports = {
 			// save the new user to the database
 			(hash, next) => {
 				db.models.user.create({
-					username: username,
+					username,
 					email: {
 						address: email,
 						verificationToken: utils.generateRandomString(64)
@@ -144,10 +144,9 @@ module.exports = {
 	},
 
 	findByUsername: (session, username, cb) => {
-		console.log(username)
 		db.models.user.find({ username }, (err, account) => {
-			if (account == [] && err) {
-				console.error(err);
+			if (err) throw err;
+			else if (account.length == 0) {
 				return cb({
 					status: 'error',
 					message: 'Username cannot be found'

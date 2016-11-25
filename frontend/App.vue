@@ -42,7 +42,7 @@
 		events: {
 			'register': function () {
 				let { register: { email, username, password } } = this;
-				this.socket.emit('users.register', email, username, password, grecaptcha.getResponse(), (result) => {
+				this.socket.emit('users.register', username, email, password, grecaptcha.getResponse(), (result) => {
 					// Need to somehow execute this on Home.vue
 					// Toast.methods.addToast(`User ${username} has been registered`, 2000);
 					setTimeout(location.reload(), 2500);
