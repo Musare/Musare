@@ -235,41 +235,27 @@
 		},
 		ready: function() {
 			let _this = this;
+			_this.stationId = _this.$route.params.id;
 
 			_this.interval = 0;
 
 			_this.socket = _this.$parent.socket;
 
-			/*_this.socket.on('event:songs.next', data => {
-				let { currentSong, startedAt } = data;
-				this.currentSong = currentSong;
-				this.startedAt = startedAt;
-				this.timePaused = 0;
-				this.playVideo();
-			});*/
+			_this.socket.emit('stations.join', _this.stationId, data => {
+				_this.currentSong = data.currentSong;
+				_this.startedAt = data.startedAt;
+				_this.paused = data.paused;
+				_this.timePaused = data.timePaused;
+				_this.youtubeReady();
+				_this.playVideo();
+			});
 
-			lofig.get('socket.url', res => {
-				_this.stationSocket = io(window.location.protocol + '//' + res + '/' + _this.$route.params.id);
-
-				_this.stationSocket.on("connected", (data) => {
-					console.log(data);
-					_this.currentSong = data.currentSong;
-					_this.startedAt = data.startedAt;
-					_this.paused = data.paused;
-					_this.timePaused = data.timePaused;
-					_this.currentTime  = data.currentTime;
-					_this.youtubeReady();
-				});
-				
-				this.youtubeReady();
-
-				_this.stationSocket.on("nextSong", (currentSong, startedAt) => {
-					console.log(currentSong, startedAt);
-					_this.currentSong = currentSong;
-					_this.startedAt = startedAt;
-					_this.timePaused = 0;
-					_this.playVideo();
-				});
+			_this.socket.on('event:songs.next', data => {
+				_this.currentSong = data.currentSong;
+				_this.startedAt = data.startedAt;
+				_this.paused = data.paused;
+				_this.timePaused = data.timePaused;
+				_this.playVideo();
 			});
 
 			let volume = parseInt(localStorage.getItem("volume"));

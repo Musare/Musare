@@ -1,6 +1,7 @@
 'use strict';
 
-const moment = require('moment');
+const 	moment = require('moment'),
+		io = require('./io');
 
 class Timer {
 	constructor(callback, delay, paused) {
@@ -126,5 +127,29 @@ module.exports = {
 			delete cookies[cookieName];
 			return this.toString(cookies);
 		}
+	},
+	socketFromSession: sessionId => {
+		let sockets = io.io.sockets;
+		for (let i = 0; i < sockets.length; i++) {
+			let socket = sockets[i];
+			if (socket.sessionId === sessionId) {
+				return socket;
+			}
+		}
+	},
+	socketLeaveRooms: (sessionId, room) => {
+		let socket = this.socketFromSession(sessionId);
+		let rooms = io.sockets.manager.roomClients[socket.id];
+		for (let j = 0; j < rooms.length; j++) {
+			socket.leave(rooms[j]);
+		}
+	},
+	socketJoinRoom: (sessionId, room) => {
+		let socket = this.socketFromSession(sessionId);
+		let rooms = io.sockets.manager.roomClients[socket.id];
+		for (let j = 0; j < rooms.length; j++) {
+			socket.leave(rooms[j]);
+		}
+		socket.join(room);
 	}
 };

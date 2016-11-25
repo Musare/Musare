@@ -21,13 +21,7 @@
 					email: "",
 					password: ""
 				},
-				likes: [],
-				dislikes: [],
-				loggedIn: false,
-				stations: {
-					official: [],
-					community: []
-				}
+				loggedIn: false
 			}
 		},
 		methods: {
@@ -42,11 +36,8 @@
 			lofig.get('socket.url', function(res) {
 				let socket = _this.socket = io(window.location.protocol + '//' + res);
 				socket.on("ready", status => _this.loggedIn = status);
-				socket.emit("stations.index", data => {
-					if (data.status === "success")  data.stations.forEach(station => {
-						if (station.type == 'official') _this.stations.official.push(station);
-						else _this.stations.community.push(station);
-					});
+				socket.on("SomeRoomMessage", function() {
+				    console.log("SOME ROOM MESSAGE!");
 				});
 			});
 		},
@@ -73,8 +64,8 @@
 						//TODO Error toast
 					}
 				});
-			},
-			'joinStation': function (id) {
+			}
+			/*'joinStation': function (id) {
 				let mergedStations = this.stations.community.concat(this.stations.official);
 				this.socket.emit('stations.join', id, result => {
 					mergedStations.find(station => station.id === id).users = result.userCount;
@@ -84,7 +75,7 @@
 				this.socket.emit('stations.leave', result => {
 					//this.stations.find(station => station.id === id).users = result.userCount;
 				});
-			}
+			}*/
 		},
 		components: { WhatIsNew }
 	}

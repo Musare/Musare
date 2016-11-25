@@ -46,18 +46,14 @@ function initializeAndReturnStation (stationId, cb) {
 			cache.hget('stations', station.id, (err, station) => {
 				if (station) {
 					// notify all the sockets on this station to go to the next song
-					async.waterfall(io.sockets.clients().map((socket) => (next) => {
-						// fetch the sockets session
-						cache.hget('sessions', socket.sessionId, (err, session) => {
-							if (session.stationId == station.id) {
-								socket.emit('notification:stations.nextSong');
-							}
-							next();
-						});
-					}), (err) => {
-						// schedule a notification to be dispatched when the next song ends
-						notifications.schedule(`stations.nextSong?id=${station.id}`, 5000);
+					io.to(`station.${stationId}`).emit("event:songs.next", {
+						currentSong: station.currentSong,
+						startedAt: station.startedAt,
+						paused: station.paused,
+						timePaused: 0
 					});
+					// schedule a notification to be dispatched when the next song ends
+					notifications.schedule(`stations.nextSong?id=${station.id}`, station.currentSong.duration * 1000);
 				}
 				// the station doesn't exist anymore, unsubscribe from it
 				else {
@@ -124,6 +120,8 @@ module.exports = {
 	 * @return {{ status: String, userCount: Integer }}
 	 */
 	join: (session, stationId, cb) => {
+		io.io.to("SomeRoom").emit("SomeRoomMessage");
+		io.io.emit("SomeRoomMessage");
 		initializeAndReturnStation(stationId, (err, station) => {
 
 			if (err && err !== true) {
@@ -134,8 +132,12 @@ module.exports = {
 
 				if (session) session.stationId = stationId;
 
+				//TODO Loop through all sockets, see if socket with same sessionid exists, and if so leave all other station rooms and join this stationRoom
+
 				cache.client.hincrby('station.userCounts', stationId, 1, (err, userCount) => {
 					if (err) return cb({ status: 'error', message: 'An error occurred while joining the station' });
+					utils.socketJoinRoom(sessionId);
+					//TODO Emit to cache, listen on cache
 					cb({ status: 'success', userCount });
 				});
 			}
@@ -200,6 +202,7 @@ module.exports = {
 			else if (station) {
 				cache.client.hincrby('station.userCounts', stationId, -1, (err, userCount) => {
 					if (err) return cb({ status: 'error', message: 'An error occurred while leaving the station' });
+					utils.socketLeaveRooms(sessionId);
 					cb({ status: 'success', userCount });
 				});
 			} else {
@@ -241,6 +244,7 @@ module.exports = {
 					console.error(err);
 					return cb({ status: 'error', message: 'Failed to save song from youtube to the database' });
 				}
+				//TODO Emit to cache, and listen on cache
 
 				// stations.getStation(station).playlist.push(newSong);
 

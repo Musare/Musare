@@ -101,6 +101,10 @@
 				isLoginActive: false,
 				recaptcha: {
 					key: ''
+				},
+				stations: {
+					official: [],
+					community: []
 				}
 			}
 		},
@@ -109,6 +113,14 @@
 			lofig.get('recaptcha.key', function(key) {
 				_this.recaptcha.key = key;
 			});
+			socket.emit("stations.index", data => {
+				if (data.status === "success")  data.stations.forEach(station => {
+					if (station.type == 'official') _this.stations.official.push(station);
+					else _this.stations.community.push(station);
+				});
+			});
+			socket.emit("");
+			socket.on("");
 		},
 		methods: {
 			toggleModal: function(type) {
