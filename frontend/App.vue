@@ -1,11 +1,14 @@
 <template>
 	<div>
 		<router-view></router-view>
+		<toast></toast>
 		<what-is-new></what-is-new>
 	</div>
 </template>
 
 <script>
+	import { Toast } from 'vue-roaster';
+
 	import WhatIsNew from './components/Modals/WhatIsNew.vue';
 
 	export default {
@@ -75,6 +78,6 @@
 				});
 			}*/
 		},
-		components: { WhatIsNew }
+		components: { Toast, WhatIsNew }
 	}
 </script>

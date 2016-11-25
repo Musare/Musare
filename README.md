@@ -125,3 +125,12 @@ Run this command in your shell. You will have to do this command for every shell
 5. In both `frontend` and `backend` folders, do `npm install`.
 
 6. `nodemon backend/index.js`
+
+### Calling Toasts
+
+You can call Toasts using our custom package, [`vue-roaster`](https://github.com/atjonathan/vue-roaster), using the following code:
+
+```js
+import { Toast } from 'vue-roaster';
+Toast.methods.addToast('', 0);
+```
