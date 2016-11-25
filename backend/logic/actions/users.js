@@ -157,6 +157,8 @@ module.exports = {
 					status: 'success',
 					data: {
 						username: account.username,
+						email: account.email.address,
+						password: '',
 						createdAt: account.createdAt,
 						statistics: account.statistics
 					}

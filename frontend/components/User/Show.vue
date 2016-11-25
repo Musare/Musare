@@ -42,7 +42,7 @@
 		methods: {
 			changeRank(newRank) {
 				console.log(rank);
-				Toast.methods.addToast(`User ${this.$route.params.username} has been promoted to the rank of ${rank}`, 200000);
+				// Toast.methods.addToast(`User ${this.$route.params.username} has been promoted to the rank of ${rank}`, 200000);
 			}
 		},
 		ready: function() {

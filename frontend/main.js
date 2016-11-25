@@ -24,7 +24,8 @@ router.map({
 	'/u/:username': {
 		component: User
 	},
-	'/u/:username/settings': {
+	'/u/settings': {
+		// ifLoggedIn, else show 404 Component
 		component: Settings
 	},
 	'/admin': {
