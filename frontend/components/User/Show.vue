@@ -1,5 +1,4 @@
 <template>
-	<toast></toast>
 	<main-header></main-header>
 	<div class="container">
 		<img class="avatar" src="https://avatars2.githubusercontent.com/u/11198912?v=3&s=460"/>
@@ -15,15 +14,15 @@
 			</div>
 			<div class="level-item has-text-centered">
 				<p class="heading">Songs Requested</p>
-				<p class="title">{{requested}}</p>
+				<p class="title">{{ user.statistics.songsRequested }}</p>
 			</div>
 			<div class="level-item has-text-centered">
 				<p class="heading">Likes</p>
-				<p class="title">{{liked}}</p>
+				<p class="title">{{ user.statistics.songsLiked.length }}</p>
 			</div>
 			<div class="level-item has-text-centered">
 				<p class="heading">Dislikes</p>
-				<p class="title">{{disliked}}</p>
+				<p class="title">{{ user.statistics.songsDisliked.length }}</p>
 			</div>
 		</nav>
 	</div>
@@ -31,18 +30,13 @@
 </template>
 
 <script>
-	import { Toast } from 'vue-roaster';
-
 	import MainHeader from '../MainHeader.vue';
 	import MainFooter from '../MainFooter.vue';
 
 	export default {
 		data() {
 			return {
-				user: {},
-				liked: 0,
-				disliked: 0,
-				requested: 0
+				user: {}
 			}
 		},
 		methods: {
@@ -56,18 +50,15 @@
 			let socketInterval = setInterval(() => {
 				if (!!_this.$parent.socket) {
 					_this.socket = _this.$parent.socket;
-					_this.socket.emit('users.findByUsername', _this.$route.params.username, results => {
-						_this.user = results.data;
-						console.log(_this.user);
-						_this.liked = results.data.statistics.songsLiked.length;
-						_this.disliked = local.user.statistics.songsDisliked.length;
-						_this.requested = local.user.statistics.songsRequested;
+					_this.socket.emit('users.findByUsername', _this.$route.params.username, res => {
+						if (res.status == 'error') console.error(res.message); // Add 404/ Not found Component with link back to home, for now just console.log
+						else _this.user = res.data;
 					});
 					clearInterval(socketInterval);
 				}
 			}, 100);
 		},
-		components: { Toast, MainHeader, MainFooter },
+		components: { MainHeader, MainFooter },
 	}
 </script>
 
