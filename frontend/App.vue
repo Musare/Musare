@@ -3,6 +3,8 @@
 		<router-view></router-view>
 		<toast></toast>
 		<what-is-new></what-is-new>
+		<login-modal v-if="isLoginActive"></login-modal>
+		<register-modal v-if="isRegisterActive"></register-modal>
 	</div>
 </template>
 
@@ -10,6 +12,8 @@
 	import { Toast } from 'vue-roaster';
 
 	import WhatIsNew from './components/Modals/WhatIsNew.vue';
+	import LoginModal from './components/Modals/Login.vue';
+	import RegisterModal from './components/Modals/Register.vue';
 
 	export default {
 		replace: false,
@@ -24,7 +28,9 @@
 					email: "",
 					password: ""
 				},
-				loggedIn: false
+				loggedIn: false,
+				isRegisterActive: false,
+				isLoginActive: false
 			}
 		},
 		methods: {
@@ -65,6 +71,16 @@
 						Toast.methods.addToast(result.message, 2000);
 					}
 				});
+			},
+			'toggleModal': function (type) {
+				switch(type) {
+					case 'register':
+						this.isRegisterActive = !this.isRegisterActive;
+						break;
+					case 'login':
+						this.isLoginActive = !this.isLoginActive;
+						break;
+				}
 			}
 			/*'joinStation': function (id) {
 				let mergedStations = this.stations.community.concat(this.stations.official);
@@ -78,6 +94,6 @@
 				});
 			}*/
 		},
-		components: { Toast, WhatIsNew }
+		components: { Toast, WhatIsNew, LoginModal, RegisterModal }
 	}
 </script>

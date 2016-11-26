@@ -1,5 +1,5 @@
 <template>
-	<div class="modal" :class="{ 'is-active': isActive }">
+	<div class="modal is-active">
 		<div class="modal-background"></div>
 		<div class="modal-card">
 			<header class="modal-card-head">
@@ -10,20 +10,20 @@
 				<!-- validation to check if exists http://bulma.io/documentation/elements/form/ -->
 				<label class="label">Email</label>
 				<p class="control">
-					<input class="input" type="text" placeholder="Email..." v-model="$parent.$parent.register.email">
+					<input class="input" type="text" placeholder="Email..." v-model="$parent.register.email">
 				</p>
 				<label class="label">Username</label>
 				<p class="control">
-					<input class="input" type="text" placeholder="Username..." v-model="$parent.$parent.register.username">
+					<input class="input" type="text" placeholder="Username..." v-model="$parent.register.username">
 				</p>
 				<label class="label">Password</label>
 				<p class="control">
-					<input class="input" type="password" placeholder="Password..." v-model="$parent.$parent.register.password">
+					<input class="input" type="password" placeholder="Password..." v-model="$parent.register.password">
 				</p>
 				<div class="g-recaptcha" :data-sitekey="recaptcha.key"></div>
 			</section>
 			<footer class="modal-card-foot">
-				<a class="button is-primary" @click="submitModal()">Submit</a>
+				<a class="button is-primary" @click="submitModal('register')">Submit</a>
 			</footer>
 		</div>
 	</div>
@@ -33,7 +33,6 @@
 	export default {
 		data() {
 			return {
-				isActive: false,
 				recaptcha: {
 					key: ''
 				}
@@ -47,7 +46,7 @@
 		},
 		methods: {
 			toggleModal: function () {
-				this.isActive = !this.isActive;
+				this.$dispatch('toggleModal', 'register');
 			},
 			submitModal: function () {
 				this.$dispatch('register');

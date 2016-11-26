@@ -41,13 +41,7 @@
 	export default {
 		methods: {
 			toggleModal: function (type) {
-				for (let i = 0; i < this.$parent.$children.length; i++) {
-					if (this.$parent.$children[i]._uid == 4 && type == 'login') {
-						this.$parent.$children[i].isActive = !this.$parent.$children[i].isActive;
-					} else if (this.$parent.$children[i]._uid == 5 && type == 'register') {
-						this.$parent.$children[i].isActive = !this.$parent.$children[i].isActive;
-					}
-				}
+				this.$dispatch('toggleModal', type);
 			}
 		}
 	}

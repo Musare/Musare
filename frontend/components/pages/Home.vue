@@ -1,8 +1,6 @@
 <template>
 	<div class="app">
 		<main-header></main-header>
-		<login-modal></login-modal>
-		<register-modal></register-modal>
 		<div class="group" v-if="stations.official.length">
 			<div class="group-title">Official Stations</div>
 			<div class="group-stations">
@@ -45,9 +43,6 @@
 	import MainHeader from '../MainHeader.vue';
 	import MainFooter from '../MainFooter.vue';
 
-	import LoginModal from '../Modals/Login.vue';
-	import RegisterModal from '../Modals/Register.vue';
-
 	export default {
 		data() {
 			return {
@@ -80,31 +75,7 @@
 				}
 			}, 100);
 		},
-		methods: {
-			toggleModal: function(type) {
-				switch(type) {
-					case 'register':
-						this.isRegisterActive = !this.isRegisterActive;
-						break;
-					case 'login':
-						this.isLoginActive = !this.isLoginActive;
-						break;
-				}
-			},
-			submitModal: function(type) {
-				switch(type) {
-					case 'register':
-						this.$dispatch('register');
-						this.toggleModal('register');
-						break;
-					case 'login':
-						this.$dispatch('login');
-						this.toggleModal('login');
-						break;
-				}
-			}
-		},
-		components: { MainHeader, MainFooter, LoginModal, RegisterModal }
+		components: { MainHeader, MainFooter }
 	}
 </script>
 
