@@ -140,7 +140,7 @@ module.exports = {
 		//TODO Remove session
 		session = null;
 
-		cb({ status: 'success', message: `You've been successfully logged out` });
+		return cb({ status: 'success', message: `You've been successfully logged out` });
 	},
 
 	findByUsername: (session, username, cb) => {
@@ -165,6 +165,40 @@ module.exports = {
 				});
 			}
 		});
-	}
+	},
+
+	findBySession: (session, cb) => {
+		return cb({
+			status: 'success',
+			data: session
+		});
+	},
+
+	update: (session, user_id, property, value, cb) => {
+        db.models.user.findOne({ _id: user_id }, (err, user) => {
+            if (err) throw err;
+            else if (!user) cb({ status: 'error', message: 'Invalid User ID' });
+            else if (user[property] && user[property] !== value) {
+                if (property == 'services.password.password') {
+                    bcrypt.compare(user[property], value, (err, res) => {
+                        if (err) throw err;
+                        bcrypt.genSalt(10, (err, salt) => {
+                            if (err) throw err;
+                            bcrypt.hash(value, salt, (err, hash) => {
+                                if (err) throw err;
+                                user[property] = hash;
+                            });
+                        });
+                    });
+                } else user[property] = value;
+                user.save(err => {
+                    if (err) cb({ status: 'error', message: err.message });
+                });
+            } else {
+                cb({ status: 'error', message: 'Field has not changed' });
+            }
+        });
+    },
+
 
 };
