@@ -51,7 +51,7 @@
 		events: {
 			'register': function () {
 				let { register: { email, username, password } } = this;
-				this.socket.emit('users.register', username, email, password, grecaptcha.getResponse(), result => {
+				this.socket.emit('users.register', username, email, password, /*grecaptcha.getResponse()*/null, result => {
 					Toast.methods.addToast(`User ${username} has been registered`, 2000);
 					setTimeout(location.reload(), 2500);
 				});

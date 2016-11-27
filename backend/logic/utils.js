@@ -129,26 +129,26 @@ module.exports = {
 		}
 	},
 	socketFromSession: function(sessionId) {
-		let sockets = io.io.sockets;
-		for (let i = 0; i < sockets.length; i++) {
-			let socket = sockets[i];
-			if (socket.sessionId === sessionId) {
-				return socket;
+		let ns = io.io.of("/");
+		if (ns) {
+			for (let id in ns.connected) {
+				if (ns.connected[id].sessionId === sessionId) {
+					return ns.connected[id];
+				}
 			}
 		}
 	},
 	socketLeaveRooms: function(sessionId, room) {
 		let socket = this.socketFromSession(sessionId);
-		let rooms = io.sockets.manager.roomClients[socket.id];
+		let rooms = socket.rooms;
 		for (let j = 0; j < rooms.length; j++) {
 			socket.leave(rooms[j]);
 		}
 	},
 	socketJoinRoom: function(sessionId, room) {
 		let socket = this.socketFromSession(sessionId);
-		console.log(socket);
 		//console.log(io.io.sockets[socket.id]);
-		let rooms = io.io.sockets.manager.roomClients[socket.id];
+		let rooms = socket.rooms;
 		for (let j = 0; j < rooms.length; j++) {
 			socket.leave(rooms[j]);
 		}

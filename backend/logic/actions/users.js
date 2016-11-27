@@ -35,7 +35,9 @@ module.exports = {
 						let userSessionId = utils.guid();
 						cache.hset('userSessions', userSessionId, cache.schemas.userSession(user._id), (err) => {
 							if (!err) {
+								console.log(sessionId, 222);
 								cache.hget('sessions', sessionId, (err, session) => {
+									console.log(err, session, 333);
 									session.userSessionId = userSessionId;
 									cache.hset('sessions', sessionId, session, (err) => {
 										next(null, { status: 'success', message: 'Login successful', user, SID: userSessionId });
@@ -68,7 +70,7 @@ module.exports = {
 		async.waterfall([
 
 			// verify the request with google recaptcha
-			(next) => {
+			/*(next) => {
 				request({
 					url: 'https://www.google.com/recaptcha/api/siteverify',
 					method: 'POST',
@@ -77,13 +79,13 @@ module.exports = {
 						'response': recaptcha
 					}
 				}, next);
-			},
+			},*/
 
 			// check if the response from Google recaptcha is successful
 			// if it is, we check if a user with the requested username already exists
-			(response, body, next) => {
-				let json = JSON.parse(body);
-				console.log(json);
+			(/*response, body, */next) => {
+				/*let json = JSON.parse(body);
+				console.log(json);*/
 				//if (json.success !== true) return next('Response from recaptcha was not successful');
 				db.models.user.findOne({ username }, next);
 			},

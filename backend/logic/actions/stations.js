@@ -10,8 +10,6 @@ const cache = require('../cache');
 const notifications = require('../notifications');
 const utils = require('../utils');
 
-let stationsLoaded = {};
-
 notifications.subscribe('station.locked', function(stationName) {
 	io.to(`station.${stationName}`).emit("event:station.locked");
 });
@@ -57,36 +55,33 @@ function initializeAndReturnStation (stationId, cb) {
 		if (err && err !== true) return cb(err);
 
 		// get notified when the next song for this station should play, so that we can notify our sockets
-		if (stationsLoaded[stationId] === undefined) {
-			stationsLoaded[stationId] = 1;
-			let notification = notifications.subscribe(`stations.nextSong?id=${station.id}`, () => {
-				// get the station from the cache
-				cache.hget('stations', station.name, (err, station) => {
-					if (station) {
-						console.log(777);
-						// notify all the sockets on this station to go to the next song
-						io.to(`station.${stationId}`).emit("event:songs.next", {
-							currentSong: station.currentSong,
-							startedAt: station.startedAt,
-							paused: station.paused,
-							timePaused: 0
-						});
-						// schedule a notification to be dispatched when the next song ends
-						notifications.schedule(`stations.nextSong?id=${station.id}`, station.currentSong.duration * 1000);
-					}
-					// the station doesn't exist anymore, unsubscribe from it
-					else {
-						console.log(888);
-						notifications.remove(notification);
-						delete stationsLoaded[stationId];
-					}
-				});
-			}, true);
+		let notification = notifications.subscribe(`stations.nextSong?id=${station.id}`, () => {
+			// get the station from the cache
+			console.log('NOTIFICATION');
+			cache.hget('stations', station.name, (err, station) => {
+				if (station) {
+					console.log(777);
+					// notify all the sockets on this station to go to the next song
+					io.to(`station.${stationId}`).emit("event:songs.next", {
+						currentSong: station.currentSong,
+						startedAt: station.startedAt,
+						paused: station.paused,
+						timePaused: 0
+					});
+					// schedule a notification to be dispatched when the next song ends
+					notifications.schedule(`stations.nextSong?id=${station.id}`, station.currentSong.duration * 1000);
+				}
+				// the station doesn't exist anymore, unsubscribe from it
+				else {
+					console.log(888);
+					notifications.remove(notification);
+				}
+			});
+		}, true);
 
-			if (!station.paused) {
-				console.log(station);
-				notifications.schedule(`stations.nextSong?id=${station.id}`, station.currentSong.duration * 1000);
-			}
+		if (!station.paused) {
+			console.log(station);
+			notifications.schedule(`stations.nextSong?id=${station.id}`, station.currentSong.duration * 1000);
 		}
 
 		return cb(null, station);
@@ -143,20 +138,12 @@ module.exports = {
 	/**
 	 * Joins the station by its id
 	 *
-	 * @param session
+	 * @param sessionId
 	 * @param stationId - the station id
 	 * @param cb
 	 * @return {{ status: String, userCount: Integer }}
 	 */
-	join: (session, stationId, cb) => {
-		let ns = io.io.of("/");
-		if (ns) {
-			for (let id in ns.connected) {
-				console.log(ns.connected[id]);
-				console.log(ns.connected[id].testProp);
-			}
-		}
-
+	join: (sessionId, stationId, cb) => {
 
 		initializeAndReturnStation(stationId, (err, station) => {
 
@@ -166,13 +153,11 @@ module.exports = {
 
 			if (station) {
 
-				if (session) session.stationId = stationId;
-
 				//TODO Loop through all sockets, see if socket with same session exists, and if so leave all other station rooms and join this stationRoom
 
 				cache.client.hincrby('station.userCounts', stationId, 1, (err, userCount) => {
 					if (err) return cb({ status: 'error', message: 'An error occurred while joining the station' });
-					utils.socketJoinRoom(session);
+					utils.socketJoinRoom(sessionId);
 					//TODO Emit to cache, listen on cache
 					cb({ status: 'success', currentSong: station.currentSong, startedAt: station.startedAt, paused: station.paused, timePaused: station.timePaused });
 				});

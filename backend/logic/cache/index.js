@@ -80,6 +80,20 @@ const lib = {
 	},
 
 	/**
+	 * Deletes a single value from a table
+	 *
+	 * @param {String} table - name of the table to delete the value from (table === redis hash)
+	 * @param {String} key - name of the key to delete
+	 * @param {Function} cb - gets called when the value has been deleted from Redis or when it returned an error
+	 */
+	hdel: (table, key, cb) => {
+		lib.client.hdel(table, key, (err) => {
+			if (err) return typeof cb === 'function' ? cb(err) : null;
+			if (typeof cb === 'function') cb(null);
+		});
+	},
+
+	/**
 	 * Returns all the keys for a table
 	 *
 	 * @param {String} table - name of the table to get the values from (table === redis hash)

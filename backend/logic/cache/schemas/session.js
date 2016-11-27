@@ -9,7 +9,7 @@
 module.exports = (userSessionId) => {
 	return {
 		stationId: null,
-		userSessionId,
+		userSessionId: userSessionId,
 		created: Date.now()
 	};
 };

@@ -22,9 +22,11 @@ module.exports = {
 
 			cache.hget('userSessions', SID, (err, userSession) => {
 				console.log(err, userSession);
+				if (err) {
+					SID = null;
+				}
 				let sessionId = utils.guid();
-				cache.hset('sessions', sessionId, cache.schemas.session(), (err, session) => {
-					console.log(err, session);
+				cache.hset('sessions', sessionId, cache.schemas.session(SID), (err) => {
 					socket.sessionId = sessionId;
 					return next();
 				});
@@ -41,8 +43,8 @@ module.exports = {
 				// remove the user from their current station (if any)
 				if (socket.sessionId) {
 					//actions.stations.leave(socket.sessionId, result => {});
-					//TODO Delete session
-					delete socket.sessionId;
+					// Remove session from Redis
+					cache.hdel('sessions', socket.sessionId);
 				}
 
 				console.log('io: User has disconnected');
@@ -77,7 +79,7 @@ module.exports = {
 							if (socket.sessionId && session === null) delete socket.sessionId;
 
 							// call the action, passing it the session, and the arguments socket.io passed us
-							actions[namespace][action].apply(null, [session].concat(args).concat([
+							actions[namespace][action].apply(null, [socket.sessionId].concat(args).concat([
 								(result) => {
 									// store the session id
 									//if (name == 'users.login' && result.user) socket.sessionId = result.user.sessionId;
