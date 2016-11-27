@@ -3,6 +3,7 @@ import VueRouter from 'vue-router';
 
 import App from './App.vue';
 
+import NotFound from './components/404.vue';
 import Home from './components/pages/Home.vue';
 import Station from './components/Station/Station.vue';
 import Admin from './components/pages/Admin.vue';
@@ -18,20 +19,22 @@ router.map({
 	'/': {
 		component: Home
 	},
+	'*': {
+		component: NotFound
+	},
 	'/news': {
 		component: News
 	},
 	'/u/:username': {
 		component: User
 	},
-	'/u/settings': {
-		// ifLoggedIn, else show 404 Component
+	'/settings': {
 		component: Settings
 	},
 	'/admin': {
 		component: Admin
 	},
-	'/:id': {
+	'/official/:id': {
 		component: Station
 	},
 	'/community/:id': {

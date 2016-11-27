@@ -161,7 +161,7 @@ module.exports = {
 
 	},
 
-	findByUsername: (session, username, cb) => {
+	findByUsername: (sessionId, username, cb) => {
 		db.models.user.find({ username }, (err, account) => {
 			if (err) throw err;
 			else if (account.length == 0) {
@@ -175,6 +175,7 @@ module.exports = {
 					status: 'success',
 					data: {
 						username: account.username,
+						admin: account.admin,
 						email: account.email.address,
 						password: '',
 						createdAt: account.createdAt,
@@ -185,14 +186,27 @@ module.exports = {
 		});
 	},
 
-	findBySession: (session, cb) => {
-		return cb({
-			status: 'success',
-			data: session
+	findBySession: (sessionId, cb) => {
+		cache.hget('sessions', sessionId, (err, session) => {
+			if (err || !session) return cb({ 'status': 'error', message: err });
+			if (!session.userSessionId) return cb({ 'status': 'error', message: 'You are not logged in' });
+			cache.hget('userSessions', session.userSessionId, (err, userSession) => {
+				if (err || !userSession) return cb({ 'status': 'error', message: err });
+				if (!userSession) return cb({ 'status': 'error', message: 'You are not logged in' });
+				db.models.user.findOne({ _id: userSession.userId }, (err, user) => {
+					if (err) { throw err; } else if (user) {
+						return cb({
+							status: 'success',
+							data: user
+						});
+					}
+				});
+			});
 		});
+
 	},
 
-	update: (session, user_id, property, value, cb) => {
+	update: (sessionId, user_id, property, value, cb) => {
         db.models.user.findOne({ _id: user_id }, (err, user) => {
             if (err) throw err;
             else if (!user) cb({ status: 'error', message: 'Invalid User ID' });
@@ -211,6 +225,7 @@ module.exports = {
                 } else user[property] = value;
                 user.save(err => {
                     if (err) cb({ status: 'error', message: err.message });
+					else  cb({ status: 'success', message: 'Field saved successfully' });
                 });
             } else {
                 cb({ status: 'error', message: 'Field has not changed' });

@@ -4,8 +4,8 @@
 		<img class="avatar" src="https://avatars2.githubusercontent.com/u/11198912?v=3&s=460"/>
 		<h2 class="has-text-centered">@{{user.username}}</h2>
 		<div class="admin-functionality">
-			<a class="button is-small is-info is-outlined" @click="changeRank('admin')">Promote to Admin</a>
-			<a class="button is-small is-danger is-outlined" @click="changeRank('user')">Demote to User</a>
+			<a class="button is-small is-info is-outlined" @click="changeRank('admin')" v-if="!user.admin">Promote to Admin</a>
+			<a class="button is-small is-danger is-outlined" @click="changeRank('user')" v-else>Demote to User</a>
 		</div>
 		<nav class="level">
 			<div class="level-item has-text-centered">
@@ -44,7 +44,7 @@
 		methods: {
 			changeRank(newRank) {
 				console.log(rank);
-				Toast.methods.addToast(`User ${this.$route.params.username} has been promoted to the rank of ${rank}`, 2000);
+				Toast.methods.addToast(`User ${this.$route.params.username}'s rank has been changed to: ${rank}`, 2000);
 			}
 		},
 		ready: function() {
@@ -53,7 +53,7 @@
 				if (!!_this.$parent.socket) {
 					_this.socket = _this.$parent.socket;
 					_this.socket.emit('users.findByUsername', _this.$route.params.username, res => {
-						if (res.status == 'error') console.error(res.message); // Add 404/ Not found Component with link back to home, for now just console.log
+						if (res.status == 'error') console.log(res.message) // go to 404 Component
 						else _this.user = res.data;
 					});
 					clearInterval(socketInterval);

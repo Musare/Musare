@@ -13,7 +13,7 @@
 		</span>-->
 
 		<div class="nav-right">
-			<a class="nav-item is-tab admin" href="#" v-link="{ path: '/admin' }">
+			<a class="nav-item is-tab admin" href="#" v-link="{ path: '/admin' }" v-if="isAdmin">
 				Admin
 			</a>
 			<a class="nav-item is-tab" href="#">
@@ -22,9 +22,14 @@
 			<a class="nav-item is-tab" href="#" v-link="{ path: '/news' }">
 				News
 			</a>
-			<a class="nav-item is-tab" href="#" v-if="$parent.$parent.loggedIn" @click="$parent.$parent.logout()">
-				Logout
-			</a>
+			<span class="grouped" v-if="$parent.$parent.loggedIn">
+				<a class="nav-item is-tab" href="#" v-link="{ path: '/settings' }">
+					Settings
+				</a>
+				<a class="nav-item is-tab" href="#" @click="$parent.$parent.logout()">
+					Logout
+				</a>
+			</span>
 			<span class="grouped" v-else>
 				<a class="nav-item" href="#" @click="toggleModal('login')">
 					Login
@@ -39,6 +44,23 @@
 
 <script>
 	export default {
+		data() {
+			return {
+				isAdmin: false
+			}
+		},
+		ready: function() {
+			let _this = this;
+			let socketInterval = setInterval(() => {
+				if (!!_this.$parent.socket) {
+					_this.socket = _this.$parent.socket;
+					_this.socket.emit('users.findBySession', res => {
+						if (res.status == 'success') _this.isAdmin = res.data.admin;
+					});
+					clearInterval(socketInterval);
+				}
+			}, 100);
+		},
 		methods: {
 			toggleModal: function (type) {
 				this.$dispatch('toggleModal', type);
