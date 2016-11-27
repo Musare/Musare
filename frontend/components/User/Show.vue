@@ -1,32 +1,34 @@
 <template>
-	<main-header></main-header>
-	<div class="container">
-		<img class="avatar" src="https://avatars2.githubusercontent.com/u/11198912?v=3&s=460"/>
-		<h2 class="has-text-centered">@{{user.username}}</h2>
-		<div class="admin-functionality">
-			<a class="button is-small is-info is-outlined" @click="changeRank('admin')" v-if="!user.admin">Promote to Admin</a>
-			<a class="button is-small is-danger is-outlined" @click="changeRank('user')" v-else>Demote to User</a>
+	<div v-if="isUser">
+		<main-header></main-header>
+		<div class="container">
+			<img class="avatar" src="https://avatars2.githubusercontent.com/u/11198912?v=3&s=460"/>
+			<h2 class="has-text-centered">@{{user.username}}</h2>
+			<div class="admin-functionality">
+				<a class="button is-small is-info is-outlined" @click="changeRank('admin')" v-if="!user.admin">Promote to Admin</a>
+				<a class="button is-small is-danger is-outlined" @click="changeRank('user')" v-else>Demote to User</a>
+			</div>
+			<nav class="level">
+				<div class="level-item has-text-centered">
+					<p class="heading">Rank</p>
+					<p class="title">User</p>
+				</div>
+				<div class="level-item has-text-centered">
+					<p class="heading">Songs Requested</p>
+					<p class="title">{{ user.statistics.songsRequested }}</p>
+				</div>
+				<div class="level-item has-text-centered">
+					<p class="heading">Likes</p>
+					<p class="title">{{ user.statistics.songsLiked.length }}</p>
+				</div>
+				<div class="level-item has-text-centered">
+					<p class="heading">Dislikes</p>
+					<p class="title">{{ user.statistics.songsDisliked.length }}</p>
+				</div>
+			</nav>
 		</div>
-		<nav class="level">
-			<div class="level-item has-text-centered">
-				<p class="heading">Rank</p>
-				<p class="title">User</p>
-			</div>
-			<div class="level-item has-text-centered">
-				<p class="heading">Songs Requested</p>
-				<p class="title">{{ user.statistics.songsRequested }}</p>
-			</div>
-			<div class="level-item has-text-centered">
-				<p class="heading">Likes</p>
-				<p class="title">{{ user.statistics.songsLiked.length }}</p>
-			</div>
-			<div class="level-item has-text-centered">
-				<p class="heading">Dislikes</p>
-				<p class="title">{{ user.statistics.songsDisliked.length }}</p>
-			</div>
-		</nav>
+		<main-footer></main-footer>
 	</div>
-	<main-footer></main-footer>
 </template>
 
 <script>
@@ -38,7 +40,8 @@
 	export default {
 		data() {
 			return {
-				user: {}
+				user: {},
+				isUser: false,
 			}
 		},
 		methods: {
@@ -53,8 +56,8 @@
 				if (!!_this.$parent.socket) {
 					_this.socket = _this.$parent.socket;
 					_this.socket.emit('users.findByUsername', _this.$route.params.username, res => {
-						if (res.status == 'error') console.log(res.message) // go to 404 Component
-						else _this.user = res.data;
+						if (res.status == 'error') this.$router.go('/*');
+						else _this.user = res.data; _this.isUser = true;
 					});
 					clearInterval(socketInterval);
 				}
