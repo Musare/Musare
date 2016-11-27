@@ -35,9 +35,14 @@
 		},
 		methods: {
 			logout: function () {
-				this.socket.emit('users.logout');
-				document.cookie = 'SID=;expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-				location.reload();
+				this.socket.emit('users.logout', (result) => {
+					if (result.status === 'success') {
+						document.cookie = 'SID=;expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+						location.reload();
+					} else {
+						Toast.methods.addToast(result.message, 4000);
+					}
+				});
 			}
 		},
 		ready() {

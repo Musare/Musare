@@ -142,14 +142,23 @@ module.exports = {
 
 	},
 
-	logout: (session, cb) => {
+	logout: (sessionId, cb) => {
 
-		if (!session) return cb({ status: 'failure', message: `You're not currently logged in` });
+		cache.hget('sessions', sessionId, (err, session) => {
+			if (err || !session) return cb({ 'status': 'failure', message: 'Something went wrong while logging you out.' });
+			if (!session.userSessionId) return cb({ 'status': 'failure', message: 'You are not logged in.' });
 
-		//TODO Remove session
-		session = null;
+			cache.hget('userSessions', session.userSessionId, (err, userSession) => {
+				if (err || !userSession) return cb({ 'status': 'failure', message: 'Something went wrong while logging you out.' });
+				if (!userSession) return cb({ 'status': 'failure', message: 'You are not logged in.' });
 
-		return cb({ status: 'success', message: `You've been successfully logged out` });
+				cache.hdel('userSessions', session.userSessionId, (err) => {
+					if (err || !userSession) return cb({ 'status': 'failure', message: 'Something went wrong while logging you out.' });
+					return cb({ 'status': 'success', message: 'You have been successfully logged out.' });
+				});
+			});
+		});
+
 	},
 
 	findByUsername: (session, username, cb) => {

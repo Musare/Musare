@@ -69,7 +69,7 @@ module.exports = {
 						// load the session from the cache
 						cache.hget('sessions', socket.sessionId, (err, session) => {
 							if (err && err !== true) {
-								return cb({
+								if (typeof cb === 'function') return cb({
 									status: 'error',
 									message: 'An error occurred while obtaining your session'
 								});
@@ -81,10 +81,8 @@ module.exports = {
 							// call the action, passing it the session, and the arguments socket.io passed us
 							actions[namespace][action].apply(null, [socket.sessionId].concat(args).concat([
 								(result) => {
-									// store the session id
-									//if (name == 'users.login' && result.user) socket.sessionId = result.user.sessionId;
 									// respond to the socket with our message
-									cb(result);
+									if (typeof cb === 'function') return cb(result);
 								}
 							]));
 						});
