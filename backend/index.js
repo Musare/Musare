@@ -7,6 +7,7 @@ const async = require('async');
 const db = require('./logic/db');
 const app = require('./logic/app');
 const io = require('./logic/io');
+const stations = require('./logic/stations');
 const cache = require('./logic/cache');
 const notifications = require('./logic/notifications');
 const config = require('config');
@@ -17,7 +18,7 @@ async.waterfall([
 	(next) => {
 		cache.init(config.get('redis').url, () => {
 			// load some test stations into the cache
-			async.waterfall([
+			/*async.waterfall([
 				(next) => cache.hset('stations', 'edm', cache.schemas.station({
 					name: 'edm',
 					genres: ['edm'],
@@ -49,7 +50,8 @@ async.waterfall([
 						'gCYcHz2k5x0'
 					]
 				}), next),
-			], next);
+			], next);*/
+			next();
 		});
 	},
 
@@ -64,6 +66,9 @@ async.waterfall([
 
 	// setup the notifications
 	(next) => notifications.init(config.get('redis').url, next),
+
+	// setup the stations
+	(next) => stations.init(next),
 
 	// setup the frontend for local setups
 	(next) => {

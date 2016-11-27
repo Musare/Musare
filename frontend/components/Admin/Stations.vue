@@ -42,13 +42,53 @@
 			<a class="button is-success" @click="update()">Save Changes</a>
 		</div>
 	</div>
+	<div class="columns is-mobile">
+		<div class="column is-8-desktop is-offset-2-desktop is-12-mobile">
+			<div class="card is-fullwidth">
+				<header class="card-header">
+					<p class="card-header-title">Create official station</p>
+				</header>
+				<div class="card-content">
+					<div class="content">
+						<label class="label">Name</label>
+						<div class="control is-horizontal">
+							<div class="control is-grouped">
+								<p class="control is-expanded">
+									<input class="input" type="text" placeholder="Locale name" v-model="newStation.name">
+								</p>
+								<p class="control is-expanded">
+									<input class="input" type="text" placeholder="Display name" v-model="newStation.displayName">
+								</p>
+							</div>
+						</div>
+						<label class="label">Description</label>
+						<p class="control is-expanded">
+							<input class="input" type="text" placeholder="Short description" v-model="newStation.description">
+						</p>
+						<label class="label">Genres</label>
+						<p class="control has-addons">
+							<input class="input" type="text" placeholder="Genre" v-model="newStationGenre">
+							<a class="button is-info">Add genre</a>
+						</p>
+						<span class="tag is-info">Bar<button class="delete is-info"></button></span>
+						<span class="tag is-info">Bar<button class="delete is-info"></button></span>
+						<span class="tag is-info">Bar<button class="delete is-info"></button></span>
+					</div>
+				</div>
+				<footer class="card-footer">
+					<a class="card-footer-item" @click="createStation()">Create</a>
+				</footer>
+			</div>
+		</div>
+	</div>
 </template>
 
 <script>
 	export default {
 		data() {
 			return {
-				stations: []
+				stations: [],
+				newStation: {}
 			}
 		},
 		methods: {
@@ -72,7 +112,15 @@
 			// 	local.socket.emit("/songs/queue/updateSong/:id", songId, songObject, function(data) {
 			// 		console.log(data);
 			// 	});
-			// }
+			// },
+			createStation: function() {
+				let _this = this;
+				let { newStation: { name, displayName, description } } = this;
+				let data = { name, displayName, description, genres: ['edm'] };
+				_this.socket.emit('stations.create', data, result => {
+					console.log(result);
+				});
+			}
 		},
 		ready: function() {
 			let socket = this.socket = this.$parent.$parent.socket;

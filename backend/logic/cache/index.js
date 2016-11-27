@@ -143,7 +143,7 @@ const lib = {
 				if (parseJson) try { message = JSON.parse(message); } catch (e) {}
 				subs[channel].cbs.forEach((cb) => cb(message));
 			});
-			subs[channel].subscribe(channel);
+			subs[channel].client.subscribe(channel);
 		}
 
 		subs[channel].cbs.push(cb);

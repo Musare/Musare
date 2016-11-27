@@ -12,7 +12,6 @@ module.exports = {
 	io: null,
 
 	init: (cb) => {
-
 		//TODO Check every 30s/60s, for all sockets, if they are still allowed to be in the rooms they are in, and on socket at all (permission changing/banning)
 		this.io = require('socket.io')(app.server);
 
