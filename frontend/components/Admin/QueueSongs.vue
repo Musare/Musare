@@ -53,16 +53,19 @@
 		},
 		methods: {
 			update (song) {
-				this.socket.emit('songs.update', song);
+				this.socket.emit('queueSongs.update', song);
 			},
-			remove (song, index) {
-				this.songs.splice(index, 1);
-				this.socket.emit('songs.remove', song);
+			remove (songId) {
+				this.socket.emit('queueSongs.remove', songId);
 			}
 		},
 		ready: function() {
-			let socket = this.socket = this.$parent.$parent.socket;
-			socket.emit('songs.index', (data) => this.songs = data);
+			let _this = this;
+			_this.socket = _this.$parent.$parent.socket;
+			_this.socket.emit('queueSongs.index', (data) => {
+				console.log(data);
+				_this.songs = data;
+			});
 		}
 	}
 </script>

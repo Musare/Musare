@@ -14,5 +14,7 @@ module.exports = {
 	currentSongIndex: { type: Number, default: 0, required: true },
 	timePaused: { type: Number, default: 0, required: true },
 	playlist: { type: Array, required: true },
-	genres: [{ type: String }]
+	genres: [{ type: String }],
+	privacy: { type: String, enum: ["public", "unlisted", "private"], default: "private" },//Used for Community stations
+	locked: { type: Boolean, default: true }//Used for Official stations
 };

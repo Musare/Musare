@@ -64,7 +64,7 @@
 					if (result.status === 'success') {
 						let date = new Date();
 						date.setTime(new Date().getTime() + (2*365*24*60*60*1000));
-						document.cookie = "SID=" + result.sessionId + "; expires="+ date.toGMTString() +"; path=/";
+						document.cookie = "SID=" + result.SID + "; expires="+ date.toGMTString() +"; path=/";
 						Toast.methods.addToast(`You have been successfully logged in`, 2000);
 						setTimeout(location.reload(), 2500);
 					} else {

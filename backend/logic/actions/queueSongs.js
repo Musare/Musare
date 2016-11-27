@@ -2,7 +2,23 @@
 
 const db = require('../db');
 const utils = require('../utils');
+const notifications = require('../notifications');
 const async = require('async');
+const config = require('config');
+const request = require('request');
+
+notifications.subscribe("queue.newSong", function(songId) {
+	io.to('admin.queue').emit("event:song.new", { songId });
+});
+
+notifications.subscribe("queue.removedSong", function(songId) {
+	io.to('admin.queue').emit("event:song.removed", { songId });
+});
+
+notifications.subscribe("queue.updatedSong", function(songId) {
+	//TODO Retrieve new Song object
+	io.to('admin.queue').emit("event:song.updated", { songId });
+});
 
 module.exports = {
 
@@ -56,6 +72,7 @@ module.exports = {
 		async.waterfall([
 			// Get YouTube data from id
 			(next) => {
+				console.log(111, id);
 				const youtubeParams = [
 					'part=snippet,contentDetails,statistics,status',
 					`id=${encodeURIComponent(id)}`,
@@ -72,6 +89,7 @@ module.exports = {
 					body = JSON.parse(body);
 
 					//TODO Clean up duration converter
+					console.log(body);
 					let dur = body.items[0].contentDetails.duration;
 					dur = dur.replace("PT", "");
 					let durInSec = 0;
@@ -92,15 +110,15 @@ module.exports = {
 					});
 
 					let newSong = {
-						id: body.items[0].id,
+						_id: body.items[0].id,
 						title: body.items[0].snippet.title,
 						artists: [],
 						genres: [],
 						duration: durInSec,
 						skipDuration: 0,
-						thumbnail: '',
+						thumbnail: 'default.png',
 						explicit: false,
-						requestedBy: '',
+						requestedBy: 'temp',
 						requestedAt: requestedAt
 					};
 
@@ -108,6 +126,7 @@ module.exports = {
 				});
 			},
 			(newSong, next) => {
+				console.log(222);
 				const spotifyParams = [
 					`q=${encodeURIComponent(newSong.title)}`,
 					`type=track`
@@ -141,6 +160,7 @@ module.exports = {
 								});
 								newSong.title = item.name;
 								newSong.explicit = item.explicit;
+								newSong.thumbnail = item.album.images[1].url;
 								break durationArtistLoop;
 							}
 						}
@@ -150,6 +170,7 @@ module.exports = {
 				});
 			},
 			(newSong, next) => {
+				console.log(333);
 				const song = new db.models.queueSong(newSong);
 
 				song.save(err => {
@@ -161,15 +182,18 @@ module.exports = {
 
 					//stations.getStation(station).playlist.push(newSong);
 
-					next(null);
+					next(null, newSong);
 				});
 			}
 		],
-		(err) => {
+		(err, newSong) => {
+			console.log(444, err);
 			if (err) {
 				return cb({ status: 'failure', message: err });
 			}
 
+			//TODO Emit to Redis
+			notifications.emit("queue.newSong", newSong._id);
 			return cb({ status: 'success', message: 'Successfully added that song to the queue.' });
 		});
 	}

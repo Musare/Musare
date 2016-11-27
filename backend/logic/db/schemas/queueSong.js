@@ -1,5 +1,5 @@
 module.exports = {
-	id: { type: String, unique: true, required: true },
+	_id: { type: String, unique: true, required: true },
 	title: { type: String, required: true },
 	artists: [{ type: String }],
 	genres: [{ type: String }],

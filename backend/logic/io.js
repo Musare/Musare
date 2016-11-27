@@ -18,14 +18,20 @@ module.exports = {
 
 		this.io.use((socket, next) => {
 			let cookies = socket.request.headers.cookie;
-			// set the sessionId for the socket (this will have to be checked every request, this allows us to have a logout all devices option)
-			console.log(utils.cookies.parseCookies(cookies).SID);
-			if (cookies) socket.sessionId = utils.cookies.parseCookies(cookies).SID;
-			return next();
+			let SID = utils.cookies.parseCookies(cookies).SID;
+
+			cache.hget('userSessions', SID, (err, userSession) => {
+				console.log(err, userSession);
+				let sessionId = utils.guid();
+				cache.hset('sessions', sessionId, cache.schemas.session(), (err, session) => {
+					console.log(err, session);
+					socket.sessionId = sessionId;
+					return next();
+				});
+			});
 		});
 
 		this.io.on('connection', socket => {
-
 			socket.join("SomeRoom");
 			console.log("io: User has connected");
 
@@ -35,6 +41,7 @@ module.exports = {
 				// remove the user from their current station (if any)
 				if (socket.sessionId) {
 					//actions.stations.leave(socket.sessionId, result => {});
+					//TODO Delete session
 					delete socket.sessionId;
 				}
 
@@ -73,7 +80,7 @@ module.exports = {
 							actions[namespace][action].apply(null, [session].concat(args).concat([
 								(result) => {
 									// store the session id
-									if (name == 'users.login' && result.user) socket.sessionId = result.user.sessionId;
+									//if (name == 'users.login' && result.user) socket.sessionId = result.user.sessionId;
 									// respond to the socket with our message
 									cb(result);
 								}
@@ -88,7 +95,15 @@ module.exports = {
 				if (err && err !== true) {
 					socket.emit('ready', false);
 				} else if (session) {
-					socket.emit('ready', true);
+					if (!!session.userSessionId) cache.hget('userSessions', session.userSessionId, (err2, userSession) => {
+						if (err2 && err2 !== true) {
+							socket.emit('ready', false);
+						} else if (userSession) {
+							socket.emit('ready', true);
+						} else {
+							socket.emit('ready', false);
+						}
+					});
 				} else {
 					socket.emit('ready', false);
 				}

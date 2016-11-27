@@ -34,6 +34,7 @@
 							</div>
 						</div>
 					</div>
+					<button @click="addSongToQueue('aHjpOzsQ9YI')">ADD CRYSTALIZE!</button>
 					<div class="column is-4-desktop is-12-mobile">
 						<img class="image" id="song-thumbnail" style="margin-top: 10px !important" :src="currentSong.thumbnail" alt="Song Thumbnail" />
 					</div>
@@ -210,10 +211,10 @@
 					local.player.pauseVideo();
 				}
 			},
-			addSongToQueue: function(song) {
-				console.log('add', song)
+			addSongToQueue: function(songId) {
+				console.log('add', songId);
 				let local = this;
-				local.socket.emit('stations.addSong', local.$route.params.id, song, function(data) {
+				local.socket.emit('queueSongs.add', songId, function(data) {
 					if (data) console.log(data);
 				});
 			},

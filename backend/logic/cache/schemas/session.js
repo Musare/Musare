@@ -6,9 +6,10 @@
  *
  * @returns {{stationId: null, created: number}}
  */
-module.exports = () => {
+module.exports = (userSessionId) => {
 	return {
 		stationId: null,
+		userSessionId,
 		created: Date.now()
 	};
 };

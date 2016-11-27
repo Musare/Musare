@@ -12,6 +12,7 @@ const lib = {
 	url: '',
 	schemas: {
 		session: require('./schemas/session'),
+		userSession: require('./schemas/userSession'),
 		station: require('./schemas/station')
 	},
 

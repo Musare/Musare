@@ -11,7 +11,7 @@ const utils = require('../utils');
 
 module.exports = {
 
-	login: (session, identifier, password, cb) => {
+	login: (sessionId, identifier, password, cb) => {
 
 		async.waterfall([
 
@@ -32,10 +32,17 @@ module.exports = {
 					if (match) {
 
 						// store the session in the cache
-						let sessionId = utils.guid();
-						cache.hset('sessions', sessionId, cache.schemas.session());
-
-						next(null, { status: 'success', message: 'Login successful', user, sessionId: sessionId });
+						let userSessionId = utils.guid();
+						cache.hset('userSessions', userSessionId, cache.schemas.userSession(user._id), (err) => {
+							if (!err) {
+								cache.hget('sessions', sessionId, (err, session) => {
+									session.userSessionId = userSessionId;
+									cache.hset('sessions', sessionId, session, (err) => {
+										next(null, { status: 'success', message: 'Login successful', user, SID: userSessionId });
+									})
+								})
+							}
+						});
 					}
 					else {
 						next(null, { status: 'failure', message: 'User not found' });

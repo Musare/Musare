@@ -12,6 +12,22 @@ const utils = require('../utils');
 
 let stationsLoaded = {};
 
+notifications.subscribe('station.locked', function(stationName) {
+	io.to(`station.${stationName}`).emit("event:station.locked");
+});
+
+notifications.subscribe('station.unlocked', function(stationName) {
+	io.to(`station.${stationName}`).emit("event:station.unlocked");
+});
+
+notifications.subscribe('station.pause', function(stationName) {
+	io.to(`station.${stationName}`).emit("event:station.pause");
+});
+
+notifications.subscribe('station.resume', function(stationName) {
+	io.to(`station.${stationName}`).emit("event:station.resume");
+});
+
 /**
  * Loads a station into the cache, and sets up all the related logic
  *
@@ -133,6 +149,15 @@ module.exports = {
 	 * @return {{ status: String, userCount: Integer }}
 	 */
 	join: (session, stationId, cb) => {
+		let ns = io.io.of("/");
+		if (ns) {
+			for (let id in ns.connected) {
+				console.log(ns.connected[id]);
+				console.log(ns.connected[id].testProp);
+			}
+		}
+
+
 		initializeAndReturnStation(stationId, (err, station) => {
 
 			if (err && err !== true) {
@@ -222,46 +247,32 @@ module.exports = {
 		});
 	},
 
-	addSong: (session, station, song, cb) => {
-
-		if (!session.logged_in) return cb({ status: 'failure', message: 'You must be logged in to add a song' });
-
-		const params = [
-			'part=snippet,contentDetails,statistics,status',
-			`id=${encodeURIComponent(song.id)}`,
-			`key=${config.get('apis.youtube.key')}`
-		].join('&');
-
-		request(`https://www.googleapis.com/youtube/v3/videos?${params}`, (err, res, body) => {
-
-			if (err) {
-				console.error(err);
-				return cb({ status: 'error', message: 'Failed to find song from youtube' });
+	lock: (session, stationId, cb) => {
+		//TODO Require admin
+		initializeAndReturnStation(stationId, (err, station) => {
+			if (err && err !== true) {
+				return cb({ status: 'error', message: 'An error occurred while locking the station' });
+			} else if (station) {
+				// Add code to update Mongo and Redis
+				cb({ status: 'success' });
+			} else {
+				cb({ status: 'failure', message: `That station doesn't exist, it may have been deleted` });
 			}
-
-			body = JSON.parse(body);
-
-			const newSong = new db.models.song({
-				id: body.items[0].id,
-				title: body.items[0].snippet.title,
-				duration: utils.convertTime(body.items[0].contentDetails.duration),
-				thumbnail: body.items[0].snippet.thumbnails.high.url
-			});
-
-			// save the song to the database
-			newSong.save(err => {
-
-				if (err) {
-					console.error(err);
-					return cb({ status: 'error', message: 'Failed to save song from youtube to the database' });
-				}
-				//TODO Emit to cache, and listen on cache
-
-				// stations.getStation(station).playlist.push(newSong);
-
-				// cb({ status: 'success', data: stations.getStation(station.playlist) });
-			});
 		});
-	}
+	},
+
+	unlock: (session, stationId, cb) => {
+		//TODO Require admin
+		initializeAndReturnStation(stationId, (err, station) => {
+			if (err && err !== true) {
+				return cb({ status: 'error', message: 'An error occurred while unlocking the station' });
+			} else if (station) {
+				// Add code to update Mongo and Redis
+				cb({ status: 'success' });
+			} else {
+				cb({ status: 'failure', message: `That station doesn't exist, it may have been deleted` });
+			}
+		});
+	},
 
 };
