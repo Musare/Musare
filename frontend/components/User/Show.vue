@@ -46,8 +46,10 @@
 		},
 		methods: {
 			changeRank(newRank) {
-				console.log(rank);
-				Toast.methods.addToast(`User ${this.$route.params.username}'s rank has been changed to: ${rank}`, 2000);
+				this.socket.emit('users.update', this.user._id, 'admin', ((newRank == 'admin') ? true : false), res => {
+					if (res.status == 'error') Toast.methods.addToast(res.message, 2000);
+					else Toast.methods.addToast(`User ${this.$route.params.username}'s rank has been changed to: ${newRank}`, 2000);
+				});
 			}
 		},
 		ready: function() {
@@ -56,7 +58,7 @@
 				if (!!_this.$parent.socket) {
 					_this.socket = _this.$parent.socket;
 					_this.socket.emit('users.findByUsername', _this.$route.params.username, res => {
-						if (res.status == 'error') this.$router.go('/*');
+						if (res.status == 'error') this.$router.go('/404');
 						else _this.user = res.data; _this.isUser = true;
 					});
 					clearInterval(socketInterval);

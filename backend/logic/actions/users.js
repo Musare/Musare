@@ -174,6 +174,7 @@ module.exports = {
 				return cb({
 					status: 'success',
 					data: {
+						_id: account._id,
 						username: account.username,
 						admin: account.admin,
 						email: account.email.address,
@@ -210,7 +211,7 @@ module.exports = {
         db.models.user.findOne({ _id: user_id }, (err, user) => {
             if (err) throw err;
             else if (!user) cb({ status: 'error', message: 'Invalid User ID' });
-            else if (user[property] && user[property] !== value) {
+            else if (user[property] !== undefined && user[property] !== value) {
                 if (property == 'services.password.password') {
                     bcrypt.compare(user[property], value, (err, res) => {
                         if (err) throw err;
