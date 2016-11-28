@@ -17,7 +17,7 @@
 				<!--<button v-if="!paused" @click="pauseStation()">Pause</button>-->
 				<div class="columns is-mobile">
 					<div class="column is-8-desktop is-12-mobile">
-						<h4 id="time-display">{{timeElapsed}} / {{currentSong.duration}}</h4>
+						<h4 id="time-display">{{timeElapsed}} / {{formatTime(currentSong.duration)}}</h4>
 						<h3>{{currentSong.title}}</h3>
 						<h4 class="thin" style="margin-left: 0">{{currentSong.artists}}</h4>
 						<div class="columns is-mobile">
@@ -92,7 +92,7 @@
 				player: undefined,
 				timePaused: 0,
 				paused: false,
-				timeElapsed: "00:00:00",
+				timeElapsed: "0:00",
 				interval: 0,
 				querySearch: "",
 				queryResults: [],
@@ -105,13 +105,15 @@
 			},
 			youtubeReady: function() {
 				let local = this;
+				console.log(123457)
 				local.player = new YT.Player("player", {
 					height: 270,
 					width: 480,
-					videoId: local.currentSong.id,
+					videoId: local.currentSong._id,
 					playerVars: {controls: 1, iv_load_policy: 3, rel: 0, showinfo: 0},
 					events: {
 						'onReady': function(event) {
+							console.log(4540590459);
 							local.playerReady = true;
 							let volume = parseInt(localStorage.getItem("volume"));
 							volume = (typeof volume === "number") ? volume : 20;
@@ -122,9 +124,11 @@
 							local.playVideo();
 						},
 						'onStateChange': function(event) {
+							console.log(event);
 							if (event.data === 1 && local.videoLoading === true) {
 								local.videoLoading = false;
 								local.player.seekTo(local.getTimeElapsed() / 1000, true);
+								console.log(local.paused);
 								if (local.paused) {
 									local.player.pauseVideo();
 								}
@@ -145,7 +149,7 @@
 				let local = this;
 				if (local.playerReady) {
 					local.videoLoading = true;
-					local.player.loadVideoById(local.currentSong.id);
+					local.player.loadVideoById(local.currentSong._id);
 
 					if (local.currentSong.artists) local.currentSong.artists = local.currentSong.artists.join(", ");
 
@@ -162,8 +166,12 @@
 			resizeSeekerbar: function() {
 				let local = this;
 				if (!local.paused) {
-					$(".seeker-bar").width(parseInt(((local.getTimeElapsed() / 1000) / parseInt(moment.duration(local.currentSong.duration, "hh:mm:ss").asSeconds()) * 100)) + "%");
+					$(".seeker-bar").width(parseInt(((local.getTimeElapsed() / 1000) / local.currentSong.duration * 100)) + "%");
 				}
+			},
+			formatTime: function(duration) {
+				let d = moment.duration(duration, 'seconds');
+				return ((d.hours() > 0) ? (d.hours() < 10 ? ("0" + d.hours() + ":") : (d.hours() + ":")) : "") + (d.minutes() + ":") + (d.seconds() < 10 ? ("0" + d.seconds()) : d.seconds());
 			},
 			calculateTimeElapsed: function() {
 				let local = this;
@@ -175,14 +183,15 @@
 				}
 
 				let duration = (Date.now() - local.startedAt - local.timePaused) / 1000;
-				let songDuration = moment.duration(local.currentSong.duration, "hh:mm:ss").asSeconds();
+				let songDuration = local.currentSong.duration;
 				if (songDuration <= duration) {
+					console.log("PAUSE!");
+					console.log(songDuration, duration);
 					local.player.pauseVideo();
 				}
 
-				let d = moment.duration(duration, 'seconds');
-				if ((!local.paused || local.timeElapsed === "00:00:00") && duration <= songDuration) {
-					local.timeElapsed = (d.hours() < 10 ? ("0" + d.hours() + ":") : (d.hours() + ":")) + (d.minutes() < 10 ? ("0" + d.minutes() + ":") : (d.minutes() + ":")) + (d.seconds() < 10 ? ("0" + d.seconds()) : d.seconds());
+				if ((!local.paused) && duration <= songDuration) {
+					local.timeElapsed = local.formatTime(duration);
 				}
 			},
 			changeVolume: function() {
@@ -217,7 +226,7 @@
 				local.socket.emit('queueSongs.add', songId, function(data) {
 					if (data) console.log(data);
 				});
-			},
+			}/*,
 			submitQuery: function() {
 				let local = this;
 				local.socket.emit('apis.searchYoutube', local.querySearch, function(results) {
@@ -232,7 +241,7 @@
 						});
 					}
 				});
-			}
+			}*/
 		},
 		ready: function() {
 			let _this = this;
@@ -256,11 +265,8 @@
 				}
 			});
 
-			_this.socket.on("SomeRoomMessage", function() {
-				console.log("SOME ROOM MESSAGE!!");
-			});
-
 			_this.socket.on('event:songs.next', data => {
+				console.log("NEXT SONG");
 				_this.currentSong = data.currentSong;
 				_this.startedAt = data.startedAt;
 				_this.paused = data.paused;
@@ -398,7 +404,7 @@
 				left: 0;
 				width: 100%;
 				height: 100%;
-				pointer-events: none;
+				/*pointer-events: none;*/
 			}
 		}
 		.video-col {

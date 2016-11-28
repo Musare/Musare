@@ -55,7 +55,7 @@
 				if (!!_this.$parent.socket) {
 					_this.socket = _this.$parent.socket;
 					_this.socket.emit('users.findBySession', res => {
-						if (res.status == 'success') _this.isAdmin = res.data.admin;
+						if (res.status == 'success') _this.isAdmin = (res.data.role === 'admin');
 					});
 					clearInterval(socketInterval);
 				}

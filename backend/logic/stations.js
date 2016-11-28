@@ -4,9 +4,11 @@
 
 const cache = require('./cache');
 const db = require('./db');
+const io = require('./io');
 const utils = require('./utils');
 const notifications = require('./notifications');
 const async = require('async');
+let skipTimeout = null;
 
 module.exports = {
 
@@ -18,7 +20,6 @@ module.exports = {
 				stations.forEach((station) => {
 					console.log("Initing " + station._id);
 					_this.initializeAndReturnStation(station._id, (err, station) => {
-						console.log(err, station, 123456789);
 						//TODO Emit to homepage and admin station list
 					});
 				});
@@ -27,7 +28,47 @@ module.exports = {
 		});
 	},
 
-	initializeAndReturnStation: (stationId, cb) => {
+	calculateSongForStation: (station, cb) => {
+		let songList = [];
+		async.waterfall([
+
+			(next) => {
+				let genresDone = [];
+				station.genres.forEach((genre) => {
+					db.models.song.find({genres: genre}, (err, songs) => {
+						if (!err) {
+							songs.forEach((song) => {
+								if (songList.indexOf(song._id) === -1) songList.push(song._id);
+							});
+						}
+						genresDone.push(genre);
+						if (genresDone.length === station.genres.length) {
+							next();
+						}
+					});
+				});
+			},
+
+			(next) => {
+				let playlist = [];
+				songList.forEach(function(songId) {
+					if(station.playlist.indexOf(songId) === -1) playlist.push(songId);
+				});
+				station.playlist.filter((songId) => {
+					if (songList.indexOf(songId) !== -1) playlist.push(songId);
+				});
+				db.models.station.update({_id: station._id}, {$set: {playlist: playlist}}, (err, result) => {
+					next(err, playlist);
+				});
+			}
+
+		], (err, newPlaylist) => {
+			cb(err, newPlaylist);
+		});
+	},
+
+	initializeAndReturnStation: function(stationId, cb) {
+		let _this = this;
 		async.waterfall([
 
 			// first check the cache for the station
@@ -50,53 +91,99 @@ module.exports = {
 			if (err && err !== true) return cb(err);
 
 			// get notified when the next song for this station should play, so that we can notify our sockets
-			let notification = notifications.subscribe(`stations.nextSong?id=${station._id}`, () => {
+			/*let notification = notifications.subscribe(`stations.nextSong?id=${station._id}`, () => {*/
+			function skipSongTemp() {
 				// get the station from the cache
 				console.log('NOTIFICATION');
-				cache.hget('stations', station.name, (err, station) => {
+				//TODO Recalculate songs if the last song of the station playlist is getting played
+				cache.hget('stations', station._id, (err, station) => {
 					if (station) {
-						console.log(777);
 						// notify all the sockets on this station to go to the next song
-						io.to(`station.${stationId}`).emit("event:songs.next", {
-							currentSong: station.currentSong,
-							startedAt: station.startedAt,
-							paused: station.paused,
-							timePaused: 0
+						async.waterfall([
+
+							(next) => {
+								if (station.currentSongIndex < station.playlist.length - 1) {
+									station.currentSongIndex++;
+									db.models.song.findOne({_id: station.playlist[station.currentSongIndex]}, (err, song) => {
+										if (!err) {
+											station.currentSong = {
+												_id: song._id,
+												title: song.title,
+												artists: song.artists,
+												duration: song.duration,
+												likes: song.likes,
+												dislikes: song.dislikes,
+												skipDuration: song.skipDuration,
+												thumbnail: song.thumbnail
+											};
+											station.startedAt = Date.now();
+											next(null, station);
+										}
+									});
+								} else {
+									station.currentSongIndex = 0;
+									_this.calculateSongForStation(station, (err, newPlaylist) => {
+										if (!err) {
+											db.models.song.findOne({_id: newPlaylist[0]}, (err, song) => {
+												if (!err) {
+													station.currentSong = {
+														_id: song._id,
+														title: song.title,
+														artists: song.artists,
+														duration: song.duration,
+														likes: song.likes,
+														dislikes: song.dislikes,
+														skipDuration: song.skipDuration,
+														thumbnail: song.thumbnail
+													};
+													station.startedAt = Date.now();
+													station.playlist = newPlaylist;
+													next(null, station);
+												}
+											});
+										}
+									})
+								}
+							},
+
+							(station, next) => {
+								cache.hset('stations', station._id, station, (err) => next(err, station));
+								//TODO Also save to DB
+							},
+
+
+						], (err, station) => {
+							io.io.to(`station.${stationId}`).emit("event:songs.next", {
+								currentSong: station.currentSong,
+								startedAt: station.startedAt,
+								paused: station.paused,
+								timePaused: 0
+							});
+							// schedule a notification to be dispatched when the next song ends
+							notifications.schedule(`stations.nextSong?id=${station.id}`, station.currentSong.duration * 1000);
+							skipTimeout = setTimeout(skipSongTemp, station.currentSong.duration * 1000);
 						});
-						// schedule a notification to be dispatched when the next song ends
-						notifications.schedule(`stations.nextSong?id=${station.id}`, station.currentSong.duration * 1000);
 					}
 					// the station doesn't exist anymore, unsubscribe from it
 					else {
-						console.log(888);
 						notifications.remove(notification);
 					}
 				});
-			}, true);
+			}//, true);
 
 			if (!station.paused) {
-				console.log(station);
+				if (!station.startedAt) {
+					station.startedAt = Date.now();
+					cache.hset('stations', stationId, station);
+				}
+				//setTimeout(skipSongTemp, station.currentSong.duration * 1000);
+				if (skipTimeout === null) {
+					skipTimeout = setTimeout(skipSongTemp, 1000);
+				}
 				notifications.schedule(`stations.nextSong?id=${station.id}`, station.currentSong.duration * 1000);
 			}
 
 			return cb(null, station);
-
-			// will need to be added once station namespace thing is decided
-			// function generatePlaylist(arr) {
-			// 	station.playlist = [];
-			// 	return arr.reduce((promise, id) => {
-			// 		return promise.then(() => {
-			// 			return globals.db.models.song.findOne({ id }, (err, song) => {
-			// 				if (err) throw err;
-			// 				station.playlist.push(song);
-			// 			});
-			// 		});
-			// 	}, Promise.resolve());
-			// }
-
-			// generatePlaylist(station.playlist).then(() => {
-			// 	cb(null, station);
-			// });
 		});
 	}
 

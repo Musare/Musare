@@ -15,7 +15,7 @@
 					<tr v-for="(index, song) in songs" track-by="$index">
 						<td>
 							<p class="control">
-								<input class="input" type="text" :value="song.id" v-model="song.id">
+								<input class="input" type="text" :value="song._id" v-model="song._id">
 							</p>
 						</td>
 						<td>

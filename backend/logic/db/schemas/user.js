@@ -1,6 +1,6 @@
 module.exports = {
 	username: { type: String, required: true },
-	admin: { type: Boolean, default: false,required: true },
+	role: { type: String, default: 'default', required: true },
 	email: {
 		verified: { type: Boolean, default: false, required: true },
 		verificationToken: String,

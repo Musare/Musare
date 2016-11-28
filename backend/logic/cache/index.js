@@ -103,7 +103,7 @@ const lib = {
 	hgetall: (table, cb, parseJson = true) => {
 		lib.client.hgetall(table, (err, obj) => {
 			if (err) return typeof cb === 'function' ? cb(err) : null;
-			if (parseJson) Object.keys(obj).forEach((key) => { try { obj[key] = JSON.parse(obj[key]); } catch (e) {} });
+			if (parseJson && obj) Object.keys(obj).forEach((key) => { try { obj[key] = JSON.parse(obj[key]); } catch (e) {} });
 			cb(null, obj);
 		});
 	},

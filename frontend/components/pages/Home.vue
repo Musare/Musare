@@ -4,7 +4,7 @@
 		<div class="group" v-if="stations.official.length">
 			<div class="group-title">Official Stations</div>
 			<div class="group-stations">
-				<div class="stations-station" v-for="station in stations.official" v-link="{ path: '/official/' + station.name }" @click="this.$dispatch('joinStation', station.id)">
+				<div class="stations-station" v-for="station in stations.official" v-link="{ path: '/official/' + station._id }" @click="this.$dispatch('joinStation', station._id)">
 					<img class="station-image" :src="station.playlist[station.currentSongIndex].thumbnail" />
 					<div class="station-info">
 						<div class="station-grid-left">
@@ -21,7 +21,7 @@
 		<div class="group" v-if="stations.community.length">
 			<div class="group-title">Community Stations</div>
 			<div class="group-stations">
-				<div class="stations-station" v-for="station in stations.community" v-link="{ path: '/community/' + station.name }" @click="this.$dispatch('joinStation', station.id)">
+				<div class="stations-station" v-for="station in stations.community" v-link="{ path: '/community/' + station._id }" @click="this.$dispatch('joinStation', station._id)">
 					<img class="station-image" :src="station.playlist[station.currentSongIndex].thumbnail" />
 					<div class="station-info">
 						<div class="station-grid-left">

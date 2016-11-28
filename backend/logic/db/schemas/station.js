@@ -10,6 +10,8 @@ module.exports = {
 		artists: [{ type: String }],
 		duration: { type: Number, required: true },
 		skipDuration: { type: Number, required: true },
+		likes: { type: Number, required: true },
+		dislikes: { type: Number, required: true },
 		thumbnail: { type: String, required: true }
 	},
 	currentSongIndex: { type: Number, default: 0, required: true },

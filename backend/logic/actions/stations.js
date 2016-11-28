@@ -93,7 +93,7 @@ module.exports = {
 
 				cache.client.hincrby('station.userCounts', stationId, 1, (err, userCount) => {
 					if (err) return cb({ status: 'error', message: 'An error occurred while joining the station' });
-					utils.socketJoinRoom(sessionId);
+					utils.socketJoinRoom(sessionId, `station.${stationId}`);
 					//TODO Emit to cache, listen on cache
 					cb({ status: 'success', currentSong: station.currentSong, startedAt: station.startedAt, paused: station.paused, timePaused: station.timePaused });
 				});
@@ -221,6 +221,7 @@ module.exports = {
 					description: data.description,
 					type: "official",
 					playlist: [defaultSong._id],
+					genres: ["edm"],
 					locked: true,
 					currentSong: defaultSong
 				}, next);
@@ -229,6 +230,7 @@ module.exports = {
 		], (err, station) => {
 			console.log(err, 123986);
 			if (err) return cb(err);
+			stations.calculateSongForStation(station);
 			cache.pub('station.create', data.name);
 			return cb(null, { 'status': 'success', 'message': 'Successfully created station.' });
 		});
