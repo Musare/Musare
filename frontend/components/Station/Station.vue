@@ -68,7 +68,7 @@
 							</td>
 							<td>{{result.title}}</td>
 							<td>
-								<a class="button is-success" @click="addSongToQueue(result)">
+								<a class="button is-success" @click="addSongToQueue(result.id)">
 									Add
 								</a>
 							</td>
@@ -105,7 +105,6 @@
 			},
 			youtubeReady: function() {
 				let local = this;
-				console.log(123457)
 				local.player = new YT.Player("player", {
 					height: 270,
 					width: 480,
@@ -113,7 +112,6 @@
 					playerVars: {controls: 1, iv_load_policy: 3, rel: 0, showinfo: 0},
 					events: {
 						'onReady': function(event) {
-							console.log(4540590459);
 							local.playerReady = true;
 							let volume = parseInt(localStorage.getItem("volume"));
 							volume = (typeof volume === "number") ? volume : 20;
@@ -124,11 +122,9 @@
 							local.playVideo();
 						},
 						'onStateChange': function(event) {
-							console.log(event);
 							if (event.data === 1 && local.videoLoading === true) {
 								local.videoLoading = false;
 								local.player.seekTo(local.getTimeElapsed() / 1000, true);
-								console.log(local.paused);
 								if (local.paused) {
 									local.player.pauseVideo();
 								}
@@ -185,8 +181,8 @@
 				let duration = (Date.now() - local.startedAt - local.timePaused) / 1000;
 				let songDuration = local.currentSong.duration;
 				if (songDuration <= duration) {
-					console.log("PAUSE!");
-					console.log(songDuration, duration);
+					// console.log("PAUSE!");
+					// console.log(songDuration, duration);
 					local.player.pauseVideo();
 				}
 
@@ -221,12 +217,11 @@
 				}
 			},
 			addSongToQueue: function(songId) {
-				console.log('add', songId);
 				let local = this;
 				local.socket.emit('queueSongs.add', songId, function(data) {
 					if (data) console.log(data);
 				});
-			}/*,
+			},
 			submitQuery: function() {
 				let local = this;
 				local.socket.emit('apis.searchYoutube', local.querySearch, function(results) {
@@ -241,7 +236,7 @@
 						});
 					}
 				});
-			}*/
+			}
 		},
 		ready: function() {
 			let _this = this;
@@ -252,7 +247,6 @@
 			_this.socket = _this.$parent.socket;
 
 			_this.socket.emit('stations.join', _this.stationId, data => {
-				console.log(data);
 				if (data.status === "success") {
 					_this.currentSong = data.currentSong;
 					_this.startedAt = data.startedAt;
@@ -266,7 +260,6 @@
 			});
 
 			_this.socket.on('event:songs.next', data => {
-				console.log("NEXT SONG");
 				_this.currentSong = data.currentSong;
 				_this.startedAt = data.startedAt;
 				_this.paused = data.paused;

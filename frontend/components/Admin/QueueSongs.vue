@@ -53,19 +53,27 @@
 		},
 		methods: {
 			update (song) {
-				this.socket.emit('queueSongs.update', song);
+				this.socket.emit('queueSongs.update', song, res => {
+					console.log(res);
+				});
 			},
 			remove (songId) {
-				this.socket.emit('queueSongs.remove', songId);
+				this.socket.emit('queueSongs.remove', songId, res => {
+					console.log(res);
+				});
 			}
 		},
 		ready: function() {
 			let _this = this;
-			_this.socket = _this.$parent.$parent.socket;
-			_this.socket.emit('queueSongs.index', (data) => {
-				console.log(data);
-				_this.songs = data;
-			});
+			let socketInterval = setInterval(() => {
+				if (!!_this.$parent.$parent.socket) {
+					_this.socket = _this.$parent.$parent.socket;
+					_this.socket.emit('queueSongs.index', data => {
+						_this.songs = data;
+					});
+					clearInterval(socketInterval);
+				}
+			}, 100);
 		}
 	}
 </script>

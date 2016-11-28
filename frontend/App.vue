@@ -67,7 +67,6 @@
 				let { login: { email, password } } = this;
 
 				this.socket.emit('users.login', email, password, result => {
-					console.log(result);
 					if (result.status === 'success') {
 						let date = new Date();
 						date.setTime(new Date().getTime() + (2*365*24*60*60*1000));

@@ -10,6 +10,7 @@ const cache = require('../cache');
 const notifications = require('../notifications');
 const utils = require('../utils');
 const stations = require('../stations');
+
 const defaultSong = {
 	_id: '60ItHLz5WEA',
 	title: 'Faded',
@@ -122,7 +123,7 @@ module.exports = {
 		if (!session) return cb({ status: 'failure', message: 'You must be logged in to skip a song!' });
 
 		stations.initializeAndReturnStation(stationId, (err, station) => {
-
+			
 			if (err && err !== true) {
 				return cb({ status: 'error', message: 'An error occurred while skipping the station' });
 			}
@@ -206,7 +207,7 @@ module.exports = {
 		async.waterfall([
 
 			(next) => {
-				return (data) ? next() : cb({ 'status': 'failure', 'message': 'Invalid data.' });
+				return (data) ? next() : cb({ 'status': 'failure', 'message': 'Invalid data' });
 			},
 
 			// check the cache for the station
@@ -214,27 +215,26 @@ module.exports = {
 
 			// if the cached version exist
 			(station, next) => {
-				if (station) return next({ 'status': 'failure', 'message': 'A station with that name already exists.' });
+				if (station) return next({ 'status': 'failure', 'message': 'A station with that name already exists' });
 				db.models.station.findOne({ _id: data.name }, next);
 			},
 
 			(station, next) => {
-				if (station) return next({ 'status': 'failure', 'message': 'A station with that name already exists.' });
+				if (station) return next({ 'status': 'failure', 'message': 'A station with that name already exists' });
+				const { _id, displayName, description, genres, playlist } = data;
 				db.models.station.create({
-					_id: data.name,
-					displayName: data.displayName,
-					description: data.description,
+					_id,
+					displayName,
+					description,
 					type: "official",
-					playlist: [defaultSong._id],
-					genres: ["edm"],
-					locked: true,
+					playlist,
+					genres,
 					currentSong: defaultSong
 				}, next);
 			}
 
 		], (err, station) => {
-			console.log(err, 123986);
-			if (err) return cb(err);
+			if (err) throw err;
 			stations.calculateSongForStation(station, () => {
 				cache.pub('station.create', data.name);
 				return cb(null, { 'status': 'success', 'message': 'Successfully created station.' });

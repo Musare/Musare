@@ -64,6 +64,7 @@
 				if (!!_this.$parent.socket) {
 					_this.socket = _this.$parent.socket;
 					_this.socket.emit("stations.index", data => {
+						console.log(data)
 						if (data.status === "success")  data.stations.forEach(station => {
 							if (station.type == 'official') _this.stations.official.push(station);
 							else _this.stations.community.push(station);

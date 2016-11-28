@@ -21,10 +21,7 @@ module.exports = {
 			let SID = utils.cookies.parseCookies(cookies).SID;
 
 			cache.hget('userSessions', SID, (err, userSession) => {
-				console.log(err, userSession);
-				if (err) {
-					SID = null;
-				}
+				if (err) SID = null;
 				let sessionId = utils.guid();
 				cache.hset('sessions', sessionId, cache.schemas.session(SID), (err) => {
 					socket.sessionId = sessionId;
@@ -35,7 +32,7 @@ module.exports = {
 
 		this.io.on('connection', socket => {
 			socket.join("SomeRoom");
-			console.log("io: User has connected");
+			console.info('User has connected');
 
 			// catch when the socket has been disconnected
 			socket.on('disconnect', () => {
@@ -47,11 +44,11 @@ module.exports = {
 					cache.hdel('sessions', socket.sessionId);
 				}
 
-				console.log('io: User has disconnected');
+				console.info('User has disconnected');
 			});
 
 			// catch errors on the socket (internal to socket.io)
-			socket.on('error', err => console.log(err));
+			socket.on('error', err => console.error(err));
 
 			// have the socket listen for each action
 			Object.keys(actions).forEach((namespace) => {
@@ -96,8 +93,8 @@ module.exports = {
 					socket.emit('ready', false);
 				} else if (session) {
 					if (!!session.userSessionId) {
-						cache.hget('userSessions', session.userSessionId, (err2, userSession) => {
-							if (err2 && err2 !== true) {
+						cache.hget('userSessions', session.userSessionId, (err, userSession) => {
+							if (err && err !== true) {
 								socket.emit('ready', false);
 							} else if (userSession) {
 								db.models.user.findOne({ _id: userSession.userId }, (err, user) => {

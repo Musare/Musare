@@ -3,6 +3,7 @@
 const db = require('../db');
 const utils = require('../utils');
 const notifications = require('../notifications');
+const cache = require('../cache');
 const async = require('async');
 const config = require('config');
 const request = require('request');
@@ -45,12 +46,12 @@ module.exports = {
 					updated = true;
 				}
 			}
-			if (!updated) return cb({ status: 'failure', message: 'No properties changed.' });
+			if (!updated) return cb({ status: 'failure', message: 'No properties changed' });
 
 			queueSong.save((err) => {
-				if (err) return cb({ status: 'failure', message: 'Couldn\'t save to Database.' });
+				if (err) return cb({ status: 'failure', message: 'Couldn\'t save to Database' });
 
-				return cb({ status: 'success', message: 'Successfully updated the queueSong object.' });
+				return cb({ status: 'success', message: 'Successfully updated the queueSong object' });
 			});
 
 		});
@@ -72,7 +73,6 @@ module.exports = {
 		async.waterfall([
 			// Get YouTube data from id
 			(next) => {
-				console.log(111, id);
 				const youtubeParams = [
 					'part=snippet,contentDetails,statistics,status',
 					`id=${encodeURIComponent(id)}`,
@@ -89,7 +89,6 @@ module.exports = {
 					body = JSON.parse(body);
 
 					//TODO Clean up duration converter
-					console.log(body);
 					let dur = body.items[0].contentDetails.duration;
 					dur = dur.replace("PT", "");
 					let durInSec = 0;
@@ -126,7 +125,6 @@ module.exports = {
 				});
 			},
 			(newSong, next) => {
-				console.log(222);
 				const spotifyParams = [
 					`q=${encodeURIComponent(newSong.title)}`,
 					`type=track`
@@ -145,6 +143,7 @@ module.exports = {
 					for (let i in body) {
 						let items = body[i].items;
 						for (let j in items) {
+
 							let item = items[j];
 							let hasArtist = false;
 							for (let k = 0; k < item.artists.length; k++) {
@@ -155,7 +154,7 @@ module.exports = {
 							}
 							if (hasArtist && newSong.title.indexOf(item.name) !== -1) {
 								newSong.duration = item.duration_ms / 1000;
-								newSong.artists = item.map(artist => {
+								newSong.artists = item.artists.map(artist => {
 									return artist.name;
 								});
 								newSong.title = item.name;
@@ -163,6 +162,7 @@ module.exports = {
 								newSong.thumbnail = item.album.images[1].url;
 								break durationArtistLoop;
 							}
+
 						}
 					}
 
@@ -170,31 +170,24 @@ module.exports = {
 				});
 			},
 			(newSong, next) => {
-				console.log(333);
 				const song = new db.models.queueSong(newSong);
 
 				song.save(err => {
 
 					if (err) {
 						console.error(err);
-						return next('Failed to add song to database.');
+						return next('Failed to add song to database');
 					}
 
 					//stations.getStation(station).playlist.push(newSong);
-
 					next(null, newSong);
 				});
 			}
 		],
 		(err, newSong) => {
-			console.log(444, err);
-			if (err) {
-				return cb({ status: 'failure', message: err });
-			}
-
-			//TODO Emit to Redis
-			notifications.emit("queue.newSong", newSong._id);
-			return cb({ status: 'success', message: 'Successfully added that song to the queue.' });
+			if (err) return cb({ status: 'error', message: err });
+			cache.pub('queue.newSong', newSong._id);
+			return cb({ status: 'success', message: 'Successfully added that song to the queue' });
 		});
 	}
 
