@@ -74,4 +74,8 @@
 	.card {
 		margin-top: 50px;
 	}
+
+	.notification {
+		padding: 10px !important;
+	}
 </style>
