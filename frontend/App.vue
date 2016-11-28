@@ -14,6 +14,7 @@
 	import WhatIsNew from './components/Modals/WhatIsNew.vue';
 	import LoginModal from './components/Modals/Login.vue';
 	import RegisterModal from './components/Modals/Register.vue';
+	import auth from './auth';
 
 	export default {
 		replace: false,
@@ -29,6 +30,7 @@
 					password: ""
 				},
 				loggedIn: false,
+				role: '',
 				isRegisterActive: false,
 				isLoginActive: false
 			}
@@ -47,10 +49,10 @@
 		},
 		ready() {
 			let _this = this;
-			lofig.folder = '../config/default.json';
-			lofig.get('socket.url', function(res) {
-				let socket = _this.socket = io(window.location.protocol + '//' + res);
-				socket.on("ready", status => _this.loggedIn = status);
+			auth.getStatus((authenticated, role) => {
+				_this.socket = window.socket;
+				_this.loggedIn = authenticated;
+				_this.role = role;
 			});
 		},
 		events: {

@@ -6,6 +6,7 @@ const app = require('./app');
 const actions = require('./actions');
 const cache = require('./cache');
 const utils = require('./utils');
+const db = require('./db');
 
 module.exports = {
 
@@ -98,7 +99,13 @@ module.exports = {
 						if (err2 && err2 !== true) {
 							socket.emit('ready', false);
 						} else if (userSession) {
-							socket.emit('ready', true);
+							db.models.user.findOne({ _id: userSession.userId }, (err, user) => {
+								let role = 'default';
+								if (user) {
+									role = user.role;
+								}
+								socket.emit('ready', true, role);
+							});
 						} else {
 							socket.emit('ready', false);
 						}

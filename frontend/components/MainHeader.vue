@@ -13,7 +13,7 @@
 		</span>-->
 
 		<div class="nav-right">
-			<a class="nav-item is-tab admin" href="#" v-link="{ path: '/admin' }" v-if="isAdmin">
+			<a class="nav-item is-tab admin" href="#" v-link="{ path: '/admin' }" v-if="$parent.$parent.role === 'admin'">
 				Admin
 			</a>
 			<a class="nav-item is-tab" href="#">
@@ -46,24 +46,18 @@
 	export default {
 		data() {
 			return {
-				isAdmin: false
+
 			}
 		},
 		ready: function() {
 			let _this = this;
-			let socketInterval = setInterval(() => {
-				if (!!_this.$parent.socket) {
-					_this.socket = _this.$parent.socket;
-					_this.socket.emit('users.findBySession', res => {
-						if (res.status == 'success') _this.isAdmin = (res.data.role === 'admin');
-					});
-					clearInterval(socketInterval);
-				}
-			}, 100);
 		},
 		methods: {
 			toggleModal: function (type) {
 				this.$dispatch('toggleModal', type);
+			},
+			isAdmin: function() {
+				_this = this;
 			}
 		}
 	}
