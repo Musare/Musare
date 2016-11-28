@@ -81,6 +81,8 @@
 </template>
 
 <script>
+	import { Toast } from 'vue-roaster';
+
 	import StationHeader from './StationHeader.vue';
 
 	export default {
@@ -218,8 +220,8 @@
 			},
 			addSongToQueue: function(songId) {
 				let local = this;
-				local.socket.emit('queueSongs.add', songId, function(data) {
-					if (data) console.log(data);
+				local.socket.emit('queueSongs.add', songId, res => {
+					if (res.status == 'success') Toast.methods.addToast(res.message, 2000);
 				});
 			},
 			submitQuery: function() {
