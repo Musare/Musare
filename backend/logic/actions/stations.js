@@ -22,23 +22,23 @@ const defaultSong = {
 	thumbnail: 'https://i.scdn.co/image/2ddde58427f632037093857ebb71a67ddbdec34b'
 };
 
-cache.sub('station.locked', (stationName) => {
+cache.sub('station.locked', stationName => {
 	io.to(`station.${stationName}`).emit("event:station.locked");
 });
 
-cache.sub('station.unlocked', (stationName) => {
+cache.sub('station.unlocked', stationName => {
 	io.to(`station.${stationName}`).emit("event:station.unlocked");
 });
 
-cache.sub('station.pause', (stationName) => {
+cache.sub('station.pause', stationName => {
 	io.to(`station.${stationName}`).emit("event:station.pause");
 });
 
-cache.sub('station.resume', (stationName) => {
+cache.sub('station.resume', stationName => {
 	io.to(`station.${stationName}`).emit("event:station.resume");
 });
 
-cache.sub('station.create', (stationId) => {
+cache.sub('station.create', stationId => {
 	stations.initializeAndReturnStation(stationId, (err, station) => {
 		//TODO Emit to homepage and admin station page
 		if (!err) {
@@ -174,7 +174,7 @@ module.exports = {
 		});
 	},
 
-	lock: (session, stationId, cb) => {
+	lock: (sessionId, stationId, cb) => {
 		//TODO Require admin
 		stations.initializeAndReturnStation(stationId, (err, station) => {
 			if (err && err !== true) {
@@ -188,7 +188,7 @@ module.exports = {
 		});
 	},
 
-	unlock: (session, stationId, cb) => {
+	unlock: (sessionId, stationId, cb) => {
 		//TODO Require admin
 		stations.initializeAndReturnStation(stationId, (err, station) => {
 			if (err && err !== true) {
@@ -199,6 +199,13 @@ module.exports = {
 			} else {
 				cb({ status: 'failure', message: `That station doesn't exist, it may have been deleted` });
 			}
+		});
+	},
+
+	remove: (sessionId, stationId, cb) => {
+		cache.hdel('stations', stationId, () => {
+			// TODO: Update Mongo
+			return cb({ status: 'success', message: 'Station successfully removed' });
 		});
 	},
 

@@ -34,7 +34,7 @@
 							</p>
 						</td>
 						<td>
-							<a class="button is-danger" @click="stations.splice(index, 1)">Remove</a>
+							<a class="button is-danger" @click="removeStation(index)">Remove</a>
 						</td>
 					</tr>
 				</tbody>
@@ -138,6 +138,11 @@
 					genres,
 				}, result => {
 					console.log(result);
+				});
+			},
+			removeStation: function (index) {
+				this.socket.emit('stations.remove', this.stations[index]._id, res => {
+					if (res.status == 'success') this.stations.splice(index, 1); Toast.methods.addToast(res.message, 2000);
 				});
 			},
 			addGenre: function () {
