@@ -1,9 +1,10 @@
 module.exports = {
-	released: { type: Date, default: Date.now(), required: true},
 	title: { type: String, required: true },
-	content: [{
-		head: String,
-		body: [{ type: String }]
-	}],
-	author: { type: String, default: 'Musare Team', required: true }
+	description: { type: String, required: true },
+	fixes: [{ type: String }],
+	features: [{ type: String }],
+	changes: [{ type: String }],
+	upcoming: [{ type: String }],
+	createdBy: { type: String, required: true },
+	createdAt: { type: Date, default: Date.now(), required: true }
 };
