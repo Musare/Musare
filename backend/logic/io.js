@@ -100,11 +100,9 @@ module.exports = {
 							if (err2 && err2 !== true) {
 								socket.emit('ready', false);
 							} else if (userSession) {
-								db.models.user.findOne({_id: userSession.userId}, (err, user) => {
+								db.models.user.findOne({ _id: userSession.userId }, (err, user) => {
 									let role = 'default';
-									if (user) {
-										role = user.role;
-									}
+									if (user) role = user.role;
 									socket.emit('ready', true, role);
 								});
 							} else {

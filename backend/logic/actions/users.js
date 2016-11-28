@@ -176,7 +176,7 @@ module.exports = {
 					data: {
 						_id: account._id,
 						username: account.username,
-						admin: account.admin,
+						role: account.role,
 						email: account.email.address,
 						password: '',
 						createdAt: account.createdAt,

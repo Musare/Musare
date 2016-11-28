@@ -17,10 +17,10 @@ let router = new VueRouter({ history: true });
 let _this = this;
 
 lofig.folder = '../config/default.json';
-
 lofig.get('socket.url', function(res) {
 	let socket = window.socket = io(window.location.protocol + '//' + res);
 	socket.on("ready", (status, role) => {
+		console.log(status, role)
 		auth.data(status, role);
 	});
 });
