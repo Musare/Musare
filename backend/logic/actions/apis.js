@@ -1,7 +1,8 @@
 'use strict';
 
 const request = require('request'),
-	  config  = require('config');
+	  config  = require('config'),
+		utils = require('../utils');
 
 module.exports = {
 
@@ -32,6 +33,13 @@ module.exports = {
 
 			cb({ status: 'success', data: JSON.parse(body) });
 		});
+	},
+
+	joinRoom: (sessionId, page, cb) => {
+		if (page === 'home') {
+			utils.socketJoinRoom(sessionId, page);
+		}
+		cb({});
 	}
 
 };

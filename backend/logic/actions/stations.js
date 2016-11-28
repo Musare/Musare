@@ -16,6 +16,8 @@ const defaultSong = {
 	artists: ['Alan Walker'],
 	duration: 212,
 	skipDuration: 0,
+	likes: 0,
+	dislikes: 0,
 	thumbnail: 'https://i.scdn.co/image/2ddde58427f632037093857ebb71a67ddbdec34b'
 };
 
@@ -36,8 +38,11 @@ cache.sub('station.resume', (stationName) => {
 });
 
 cache.sub('station.create', (stationId) => {
-	stations.initializeAndReturnStation(stationId, () => {
+	stations.initializeAndReturnStation(stationId, (err, station) => {
 		//TODO Emit to homepage and admin station page
+		if (!err) {
+			io.io.to('home').emit("event:stations.created", station);
+		}
 	});
 });
 
@@ -230,9 +235,10 @@ module.exports = {
 		], (err, station) => {
 			console.log(err, 123986);
 			if (err) return cb(err);
-			stations.calculateSongForStation(station);
-			cache.pub('station.create', data.name);
-			return cb(null, { 'status': 'success', 'message': 'Successfully created station.' });
+			stations.calculateSongForStation(station, () => {
+				cache.pub('station.create', data.name);
+				return cb(null, { 'status': 'success', 'message': 'Successfully created station.' });
+			});
 		});
 	},
 

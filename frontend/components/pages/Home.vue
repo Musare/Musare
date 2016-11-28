@@ -5,7 +5,7 @@
 			<div class="group-title">Official Stations</div>
 			<div class="group-stations">
 				<div class="stations-station" v-for="station in stations.official" v-link="{ path: '/official/' + station._id }" @click="this.$dispatch('joinStation', station._id)">
-					<img class="station-image" :src="station.playlist[station.currentSongIndex].thumbnail" />
+					<img class="station-image" :src="station.currentSong.thumbnail" />
 					<div class="station-info">
 						<div class="station-grid-left">
 							<h3>{{ station.displayName }}</h3>
@@ -22,7 +22,7 @@
 			<div class="group-title">Community Stations</div>
 			<div class="group-stations">
 				<div class="stations-station" v-for="station in stations.community" v-link="{ path: '/community/' + station._id }" @click="this.$dispatch('joinStation', station._id)">
-					<img class="station-image" :src="station.playlist[station.currentSongIndex].thumbnail" />
+					<img class="station-image" :src="station.currentSong.thumbnail" />
 					<div class="station-info">
 						<div class="station-grid-left">
 							<h3>{{ station.displayName }}</h3>
@@ -69,8 +69,10 @@
 							else _this.stations.community.push(station);
 						});
 					});
-					_this.socket.emit("");
-					_this.socket.on("");
+					_this.socket.emit("apis.joinRoom", 'home', () => {});
+					_this.socket.on('event:stations.created', (station) => {
+						_this.stations[station.type].push(station);
+					});
 					clearInterval(socketInterval);
 				}
 			}, 100);
