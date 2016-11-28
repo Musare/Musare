@@ -10,6 +10,7 @@ import Admin from './components/pages/Admin.vue';
 import News from './components/pages/News.vue';
 import User from './components/User/Show.vue';
 import Settings from './components/User/Settings.vue';
+import Login from './components/Modals/Login.vue';
 
 Vue.use(VueRouter);
 
@@ -24,19 +25,15 @@ lofig.get('socket.url', function(res) {
 	});
 });
 
-router.beforeEach((transition) => {
+router.beforeEach(transition => {
 	if (transition.to.loginRequired || transition.to.adminRequired) {
 		auth.getStatus((authenticated, role) => {
-			if (transition.to.loginRequired && !authenticated) {
-				transition.redirect('/login')
-			} else if (transition.to.adminRequired && role !== 'admin') {
-				transition.redirect('/adminRequired');
-			} else {
-				transition.next();
-			}
+			if (transition.to.loginRequired && !authenticated) transition.redirect('/login');
+			else if (transition.to.adminRequired && role !== 'admin') transition.redirect('/');
+			else transition.next();
 		});
 	} else {
-		transition.next()
+		transition.next();
 	}
 });
 
@@ -56,6 +53,9 @@ router.map({
 	'/settings': {
 		component: Settings,
 		loginRequired: true
+	},
+	'/login': {
+		component: Login
 	},
 	'/admin': {
 		component: Admin,
