@@ -122,7 +122,7 @@
 					height: 270,
 					width: 480,
 					videoId: local.currentSong._id,
-					playerVars: {controls: 1, iv_load_policy: 3, rel: 0, showinfo: 0},
+					playerVars: { controls: 1, iv_load_policy: 3, rel: 0, showinfo: 0 },
 					events: {
 						'onReady': function(event) {
 							local.playerReady = true;

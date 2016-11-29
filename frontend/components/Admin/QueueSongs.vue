@@ -47,40 +47,52 @@
 		<div class='modal-background'></div>
 		<div class='modal-card'>
 			<section class='modal-card-body'>
-				<h5 class='has-text-centered'><strong>Thumbnail Preview</strong></h5>
-				<img class='thumbnail-preview' :src='beingEdited.song.thumbnail'>
+				<h5 class='has-text-centered'>Video Preview</h5>
+				<div class='video-container'>
+					<div id='player'></div>
+					<p class='control has-addons'>
+						<a class='button'>
+							<i class='material-icons' @click='pauseVideo()' v-if='!video.paused'>pause</i>
+							<i class='material-icons' @click='playVideo()' v-else>play_arrow</i>
+						</a>
+						<a class='button' @click='stopVideo()'>
+							<i class='material-icons'>stop</i>
+						</a>
+						<a class='button' @click='skipToLast10Secs()'>
+							<i class='material-icons'>fast_forward</i>
+						</a>
+					</p>
+				</div>
+				<h5 class='has-text-centered'>Thumbnail Preview</h5>
+				<img class='thumbnail-preview' :src='editing.song.thumbnail'>
 				<label class='label'>Thumbnail URL</label>
 				<p class='control'>
-					<input class='input' type='text' v-model='beingEdited.song.thumbnail'>
+					<input class='input' type='text' v-model='editing.song.thumbnail'>
 				</p>
-				<h5 class='has-text-centered'><strong>Edit Info</strong></h5>
-				<!--<label class='label'>Email</label>
-				<p class='control'>
-					<input class='input' type='text' placeholder='Email...' v-model='$parent.register.email'>
-				</p>-->
+				<h5 class='has-text-centered'>Edit Info</h5>
 				<label class='label'>Song ID</label>
 				<p class='control'>
-					<input class='input' type='text' v-model='beingEdited.song._id'>
+					<input class='input' type='text' v-model='editing.song._id'>
 				</p>
 				<label class='label'>Song Title</label>
 				<p class='control'>
-					<input class='input' type='text' v-model='beingEdited.song.title'>
+					<input class='input' type='text' v-model='editing.song.title'>
 				</p>
 				<label class='label'>Artists</label>
 				<div class='control'>
-					<input v-for='artist in beingEdited.song.artists' track-by='$index' class='input' type='text' v-model='artist'>
+					<input v-for='artist in editing.song.artists' track-by='$index' class='input' type='text' v-model='artist'>
 				</div>
 				<label class='label'>Genres</label>
 				<div class='control'>
-					<input v-for='genre in beingEdited.song.genres' track-by='$index' class='input' type='text' v-model='genre'>
+					<input v-for='genre in editing.song.genres' track-by='$index' class='input' type='text' v-model='genre'>
 				</div>
 				<label class='label'>Song Duration</label>
 				<p class='control'>
-					<input class='input' type='text' v-model='beingEdited.song.duration'>
+					<input class='input' type='text' v-model='editing.song.duration'>
 				</p>
 				<label class='label'>Skip Duration</label>
 				<p class='control'>
-					<input class='input' type='text' v-model='beingEdited.song.skipDuration'>
+					<input class='input' type='text' v-model='editing.song.skipDuration'>
 				</p>
 			</section>
 			<footer class='modal-card-foot'>
@@ -98,19 +110,40 @@
 			return {
 				songs: [],
 				isEditActive: false,
-				beingEdited: {
+				editing: {
 					index: 0,
 					song: {}
+				},
+				video: {
+					player: null,
+					paused: false
 				}
 			}
 		},
 		methods: {
 			toggleModal: function () {
 				this.isEditActive = !this.isEditActive;
+				this.pauseVideo();
 			},
 			edit: function (song, index) {
-				this.beingEdited = { index, song };
+				this.editing = { index, song };
+				this.video.player.loadVideoById(song._id);
 				this.isEditActive = true;
+			},
+			pauseVideo: function () {
+				this.video.player.pauseVideo();
+				this.video.paused = true;
+			},
+			playVideo: function () {
+				this.video.player.playVideo();
+				this.video.paused = false;
+			},
+			stopVideo: function () {
+				this.video.player.stopVideo();
+				this.video.paused = true;
+			},
+			skipToLast10Secs: function () {
+				this.video.player.seekTo(this.video.player.getDuration() - 10);
 			},
 			add: function (song) {
 				this.socket.emit('queueSongs.remove', song._id);
@@ -136,11 +169,31 @@
 					clearInterval(socketInterval);
 				}
 			}, 100);
+
+			this.video.player = new YT.Player('player', {
+				height: 315,
+				width: 560,
+				videoId: this.editing.song._id,
+				playerVars: { controls: 1, iv_load_policy: 3, rel: 0, showinfo: 0 },
+				events: {
+					'onStateChange': event => {
+						if (event.data == 1) {
+							let youtubeDuration = _this.video.player.getDuration();
+							youtubeDuration -= _this.editing.song.skipDuration;
+							if (_this.editing.song.duration > youtubeDuration) this.stopVideo();
+						}
+					}
+				}
+			});
 		}
 	}
 </script>
 
 <style lang='scss' scoped>
+	body {
+		font-family: 'Roboto', sans-serif;
+	}
+
 	.thumbnail-preview {
 		display: flex;
 		margin: 0 auto;
@@ -152,7 +205,15 @@
 		background-color: rgb(66, 165, 245);
 	}
 
-	.label, strong {
+	.label, h5 {
 		color: #fff;
+		font-weight: normal;
+	}
+
+	.video-container {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		padding: 10px;
 	}
 </style>
