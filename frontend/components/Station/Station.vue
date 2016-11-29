@@ -129,18 +129,14 @@
 							let volume = parseInt(localStorage.getItem("volume"));
 							volume = (typeof volume === "number") ? volume : 20;
 							local.player.setVolume(volume);
-							if (volume > 0) {
-								local.player.unMute();
-							}
+							if (volume > 0) local.player.unMute();
 							local.playVideo();
 						},
 						'onStateChange': function(event) {
 							if (event.data === 1 && local.videoLoading === true) {
 								local.videoLoading = false;
 								local.player.seekTo(local.getTimeElapsed() / 1000, true);
-								if (local.paused) {
-									local.player.pauseVideo();
-								}
+								if (local.paused) local.player.pauseVideo();
 							}
 						}
 					}
@@ -161,11 +157,7 @@
 					local.player.loadVideoById(local.currentSong._id);
 
 					if (local.currentSong.artists) local.currentSong.artists = local.currentSong.artists.join(", ");
-
-					if (local.interval !== 0) {
-						clearInterval(local.interval);
-					}
-
+					if (local.interval !== 0) clearInterval(local.interval);
 					local.interval = setInterval(function () {
 						local.resizeSeekerbar();
 						local.calculateTimeElapsed();
@@ -193,15 +185,8 @@
 
 				let duration = (Date.now() - local.startedAt - local.timePaused) / 1000;
 				let songDuration = local.currentSong.duration;
-				if (songDuration <= duration) {
-					// console.log("PAUSE!");
-					// console.log(songDuration, duration);
-					local.player.pauseVideo();
-				}
-
-				if ((!local.paused) && duration <= songDuration) {
-					local.timeElapsed = local.formatTime(duration);
-				}
+				if (songDuration <= duration) local.player.pauseVideo();
+				if ((!local.paused) && duration <= songDuration) local.timeElapsed = local.formatTime(duration);
 			},
 			changeVolume: function() {
 				let local = this;
@@ -209,35 +194,29 @@
 				localStorage.setItem("volume", volume);
 				if (local.playerReady) {
 					local.player.setVolume(volume);
-					if (volume > 0) {
-						local.player.unMute();
-					}
+					if (volume > 0) local.player.unMute();
 				}
 			},
 			resumeLocalStation: function() {
-				let local = this;
-				local.paused = false;
-				if (local.playerReady) {
-					local.player.seekTo(local.getTimeElapsed() / 1000);
-					local.player.playVideo();
+				this.paused = false;
+				if (this.playerReady) {
+					this.player.seekTo(this.getTimeElapsed() / 1000);
+					this.player.playVideo();
 				}
 			},
 			pauseLocalStation: function() {
-				let local = this;
-				local.paused = true;
-				if (local.playerReady) {
-					local.player.pauseVideo();
-				}
+				this.paused = true;
+				if (this.playerReady) this.player.pauseVideo();
 			},
 			resumeStation: function () {
 				let _this = this;
-				_this.socket.emit('stations.resume', _this.stationId, (result) => {
+				_this.socket.emit('stations.resume', _this.stationId, res => {
 					//TODO Toasts
 				});
 			},
 			pauseStation: function () {
 				let _this = this;
-				_this.socket.emit('stations.pause', _this.stationId, (result) => {
+				_this.socket.emit('stations.pause', _this.stationId, res => {
 					//TODO Toasts
 				});
 			},
@@ -249,7 +228,7 @@
 			},
 			submitQuery: function() {
 				let local = this;
-				local.socket.emit('apis.searchYoutube', local.querySearch, function(results) {
+				local.socket.emit('apis.searchYoutube', local.querySearch, results => {
 					results = results.data;
 					local.queryResults = [];
 					for (let i = 0; i < results.items.length; i++) {
@@ -264,24 +243,17 @@
 			},
 			toggleLike: function() {
 				let _this = this;
-				if (_this.liked) {
-					_this.socket.emit('songs.unlike', _this.currentSong._id, (data) => {
-						console.log(data);
-					});
-				} else {
-					_this.socket.emit('songs.like', _this.currentSong._id, (data) => {
-						console.log(data);
-					});
-				}
+				if (_this.liked) _this.socket.emit('songs.unlike', _this.currentSong._id, data => {
+					console.log(data);
+				}); else _this.socket.emit('songs.like', _this.currentSong._id, data => {
+					console.log(data);
+				});
 			},
 			toggleDislike: function() {
 				let _this = this;
-				if (_this.disliked) {
-					_this.socket.emit('songs.undislike', _this.currentSong._id, (data) => {
+				if (_this.disliked) _this.socket.emit('songs.undislike', _this.currentSong._id, data => {
 						console.log(data);
-					});
-				} else {
-					_this.socket.emit('songs.dislike', _this.currentSong._id, (data) => {
+					}); else _this.socket.emit('songs.dislike', _this.currentSong._id, data => {
 						console.log(data);
 					});
 				}
@@ -290,11 +262,9 @@
 		ready: function() {
 			let _this = this;
 			_this.stationId = _this.$route.params.id;
-
 			_this.interval = 0;
 
 			_this.socket = _this.$parent.socket;
-
 			_this.socket.emit('stations.join', _this.stationId, data => {
 				if (data.status === "success") {
 					_this.currentSong = data.currentSong;
@@ -303,7 +273,7 @@
 					_this.timePaused = data.timePaused;
 					_this.youtubeReady();
 					_this.playVideo();
-					_this.socket.emit('songs.getOwnSongRatings', data.currentSong._id, (data) => {
+					_this.socket.emit('songs.getOwnSongRatings', data.currentSong._id, data => {
 						console.log(data);
 						if (_this.currentSong._id === data.songId) {
 							_this.liked = data.liked;
@@ -342,31 +312,23 @@
 			_this.socket.on('event:song.like', data => {
 				if (data.songId === _this.currentSong._id) {
 					_this.currentSong.likes++;
-					if (data.undisliked) {
-						_this.currentSong.dislikes--;
-					}
+					if (data.undisliked) _this.currentSong.dislikes--;
 				}
 			});
 
 			_this.socket.on('event:song.dislike', data => {
 				if (data.songId === _this.currentSong._id) {
 					_this.currentSong.dislikes++;
-					if (data.unliked) {
-						_this.currentSong.likes--;
-					}
+					if (data.unliked) _this.currentSong.likes--;
 				}
 			});
 
 			_this.socket.on('event:song.unlike', data => {
-				if (data.songId === _this.currentSong._id) {
-					_this.currentSong.likes--;
-				}
+				if (data.songId === _this.currentSong._id) _this.currentSong.likes--;
 			});
 
 			_this.socket.on('event:song.undislike', data => {
-				if (data.songId === _this.currentSong._id) {
-					_this.currentSong.dislikes--;
-				}
+				if (data.songId === _this.currentSong._id) _this.currentSong.dislikes--;
 			});
 
 			_this.socket.on('event:song.newRatings', data => {
