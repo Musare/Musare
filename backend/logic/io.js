@@ -20,6 +20,7 @@ module.exports = {
 			let cookies = socket.request.headers.cookie;
 			let SID = utils.cookies.parseCookies(cookies).SID;
 
+			if (!SID) SID = "NONE";
 			cache.hget('userSessions', SID, (err, userSession) => {
 				if (err) SID = null;
 				let sessionId = utils.guid();
