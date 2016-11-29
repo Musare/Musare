@@ -1,14 +1,6 @@
-FROM alpine
+FROM node
 
-RUN apk update && apk upgrade
-RUN apk add openssl
-RUN apk add curl
-RUN apk add git
-RUN apk add python
-RUN apk add nodejs
-RUN apk add gcc
-RUN apk add g++
-RUN apk add make
+RUN apt-get update
 
 RUN npm install -g nodemon
 

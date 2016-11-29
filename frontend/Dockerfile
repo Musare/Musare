@@ -1,17 +1,9 @@
-FROM alpine
+FROM node
 
-RUN apk update && apk upgrade
-RUN apk add openssl
-RUN apk add curl
-RUN apk add git
-RUN apk add python
-RUN apk add nodejs
-RUN apk add gcc
-RUN apk add g++
-RUN apk add make
-RUN apk add nginx
+RUN apt-get update
+RUN apt-get install nginx -y
 
-RUN npm install -g webpack@"^1.13.2"
+RUN npm install -g webpack
 
 RUN mkdir -p /opt
 WORKDIR /opt
