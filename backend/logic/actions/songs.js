@@ -19,17 +19,23 @@ module.exports = {
 		});
 	},
 
-	remove: (session, id, cb) => {
+	remove: (session, _id, cb) => {
 		//TODO Require admin/login
-		db.models.song.find({ id }).remove().exec();
+		db.models.song.find({ _id }).remove().exec();
 	},
 
-	add: (session, id, cb) => {
+	add: (session, song, cb) => {
 		//TODO Require admin/login
+		console.log(session.logged_in);
 		// if (!session.logged_in) return cb({ status: 'failure', message: 'You must be logged in to add a song' });
+		const newSong = new db.models.song(song);
+		newSong.save(err => {
+			if (err) throw err;
+			else cb({ status: 'success', message: 'Song has been moved from Queue' })
+		});
 		//TODO Check if video already in songs list
 		//TODO Check if video is in queue
-		//TODO Move video over, if it has the proper properties, and add the song to the appropriate stations
+		//TODO Add the song to the appropriate stations
 	}
 
 };

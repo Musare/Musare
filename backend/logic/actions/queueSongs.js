@@ -8,17 +8,17 @@ const async = require('async');
 const config = require('config');
 const request = require('request');
 
-notifications.subscribe("queue.newSong", function(songId) {
-	io.to('admin.queue').emit("event:song.new", { songId });
+notifications.subscribe('queue.newSong', songId => {
+	io.to('admin.queue').emit('event:song.new', { songId });
 });
 
-notifications.subscribe("queue.removedSong", function(songId) {
-	io.to('admin.queue').emit("event:song.removed", { songId });
+notifications.subscribe('queue.removedSong', songId => {
+	io.to('admin.queue').emit('event:song.removed', { songId });
 });
 
-notifications.subscribe("queue.updatedSong", function(songId) {
+notifications.subscribe('queue.updatedSong', songId => {
 	//TODO Retrieve new Song object
-	io.to('admin.queue').emit("event:song.updated", { songId });
+	io.to('admin.queue').emit('event:song.updated', { songId });
 });
 
 module.exports = {
@@ -36,12 +36,12 @@ module.exports = {
 		//TODO Check if id and updatedSong is valid
 		db.models.queueSong.findOne({ id }, function(err, queueSong) {
 			if (err) throw err;
-			//List of properties that are allowed to be changed
-			const updatableProperties = ["id", "title", "artists", "genres", "thumbnail", "explicit", "duration", "skipDuration"];
+			// List of properties that are allowed to be changed
+			const updatableProperties = ['id', 'title', 'artists', 'genres', 'thumbnail', 'explicit', 'duration', 'skipDuration'];
 			//TODO Check if new id, if any, is already in use in queue or on rotation
 			let updated = false;
 			for (let prop in queueSong) {
-				if (updatableProperties.indexOf(prop) !== -1 && updatedSong.hasOwnProperty("prop") && updatedSong[prop] !== queueSong[prop]) {
+				if (updatableProperties.indexOf(prop) !== -1 && updatedSong.hasOwnProperty('prop') && updatedSong[prop] !== queueSong[prop]) {
 					queueSong[prop] = updatedSong[prop];
 					updated = true;
 				}
@@ -57,9 +57,10 @@ module.exports = {
 		});
 	},
 
-	remove: (session, id, cb) => {
-		//TODO Require admin/login
-		db.models.queueSong.find({ id }).remove().exec();
+	remove: (session, _id, cb) => {
+		// TODO Require admin/login
+		db.models.queueSong.find({ _id }).remove().exec();
+		cb({ status: 'success', message: 'Song was removed successfully' });
 	},
 
 	add: (session, id, cb) => {
@@ -90,22 +91,22 @@ module.exports = {
 
 					//TODO Clean up duration converter
 					let dur = body.items[0].contentDetails.duration;
-					dur = dur.replace("PT", "");
+					dur = dur.replace('PT', '');
 					let durInSec = 0;
 					dur = dur.replace(/([\d]*)H/, function(v, v2) {
 						v2 = Number(v2);
 						durInSec = (v2 * 60 * 60)
-						return "";
+						return '';
 					});
 					dur = dur.replace(/([\d]*)M/, function(v, v2) {
 						v2 = Number(v2);
 						durInSec = (v2 * 60)
-						return "";
+						return '';
 					});
 					dur = dur.replace(/([\d]*)S/, function(v, v2) {
 						v2 = Number(v2);
 						durInSec += v2;
-						return "";
+						return '';
 					});
 
 					let newSong = {
