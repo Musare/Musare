@@ -11,8 +11,7 @@ let skipTimeout = null;
 
 //TEMP
 cache.sub('station.pause', (stationId) => {
-	clearTimeout(skipTimeout);
-	skipTimeout = null;
+	notifications.remove(`stations.nextSong?id=${stationId}`);
 });
 
 cache.sub('station.resume', (stationId) => {
@@ -99,8 +98,9 @@ module.exports = {
 			if (err && err !== true) return cb(err);
 
 			// get notified when the next song for this station should play, so that we can notify our sockets
-			/*let notification = notifications.subscribe(`stations.nextSong?id=${station._id}`, () => {*/
-			function skipSongTemp() {
+			let notification = notifications.subscribe(`stations.nextSong?id=${station._id}`, () => {
+				console.log("NOTIFICATION!!!");
+			//function skipSongTemp() {
 				// get the station from the cache
 				//TODO Recalculate songs if the last song of the station playlist is getting played
 				cache.hget('stations', station._id, (err, station) => {
@@ -219,7 +219,7 @@ module.exports = {
 							utils.socketsJoinSongRoom(io.io.to(`station.${stationId}`).sockets, `song.${station.currentSong._id}`);
 							// schedule a notification to be dispatched when the next song ends
 							notifications.schedule(`stations.nextSong?id=${station.id}`, station.currentSong.duration * 1000);
-							skipTimeout = setTimeout(skipSongTemp, station.currentSong.duration * 1000);
+							//skipTimeout = setTimeout(skipSongTemp, station.currentSong.duration * 1000);
 						});
 					}
 					// the station doesn't exist anymore, unsubscribe from it
@@ -227,7 +227,7 @@ module.exports = {
 						notifications.remove(notification);
 					}
 				});
-			}//, true);
+			}, true);
 
 			if (!station.paused) {
 				if (!station.startedAt) {
@@ -236,17 +236,13 @@ module.exports = {
 					cache.hset('stations', stationId, station);
 				}
 				let timeLeft = ((station.currentSong.duration * 1000) - (Date.now() - station.startedAt - station.timePaused));
-				console.log(timeLeft, 1234);
-				console.log((station.currentSong.duration * 1000), Date.now(), station.startedAt, station.timePaused);
-				//setTimeout(skipSongTemp, station.currentSong.duration * 1000);
-				if (skipTimeout === null) {
-					skipTimeout = setTimeout(skipSongTemp, timeLeft);
+				console.log(timeLeft);
+				if (station.currentSong.duration * 1000 < timeLeft || timeLeft < 0) {
+					console.log("Test");
+					notifications.schedule(`stations.nextSong?id=${station.id}`, 1);
+				} else {
+					notifications.schedule(`stations.nextSong?id=${station.id}`, timeLeft);
 				}
-				if (station.currentSong.duration * 1000 < timeLeft) {
-					clearTimeout(skipTimeout);
-					skipSongTemp();
-				}
-				notifications.schedule(`stations.nextSong?id=${station.id}`, ((station.currentSong.duration * 1000) - (Date.now() - station.startedAt - station.timePaused)));
 			}
 
 			return cb(null, station);

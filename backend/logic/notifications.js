@@ -3,7 +3,8 @@
 const crypto = require('crypto');
 const redis = require('redis');
 
-let client = null;
+let pub = null;
+let sub = null;
 
 const subscriptions = [];
 
@@ -16,15 +17,16 @@ const lib = {
 	 * @param {Function} cb - gets called once we're done initializing
 	 */
 	init: (url, cb) => {
-		client = redis.createClient({ url: url });
-		client.on('error', (err) => console.error);
-		client.on('message', (pattern, channel, expiredKey) => {
+		pub = redis.createClient({ url: url });
+		sub = redis.createClient({ url: url });
+		sub.on('error', (err) => console.error);
+		sub.on('pmessage', (pattern, channel, expiredKey) => {
 			subscriptions.forEach((sub) => {
 				if (sub.name !== expiredKey) return;
 				sub.cb();
 			});
 		});
-		client.psubscribe('__keyevent@0__:expired');
+		sub.psubscribe('__keyevent@0__:expired');
 		cb();
 	},
 
@@ -38,7 +40,8 @@ const lib = {
 	 * @param {Function} cb - gets called when the notification has been scheduled
 	 */
 	schedule: (name, time, cb) => {
-		client.set(crypto.createHash('md5').update(`_notification:${name}_`).digest('hex'), '', 'PX', 'NX', time, cb);
+		console.log(time);
+		pub.set(crypto.createHash('md5').update(`_notification:${name}_`).digest('hex'), '', 'PX', time, 'NX', cb);
 	},
 
 	/**
