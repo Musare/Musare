@@ -21,7 +21,8 @@ let lib = {
 				queueSong: new mongoose.Schema(require(`./schemas/queueSong`)),
 				station: new mongoose.Schema(require(`./schemas/station`)),
 				user: new mongoose.Schema(require(`./schemas/user`)),
-				news: new mongoose.Schema(require(`./schemas/news`))
+				news: new mongoose.Schema(require(`./schemas/news`)),
+				reports: new mongoose.Schema(require(`./schemas/reports`))
 			};
 
 			lib.models = {
@@ -29,7 +30,8 @@ let lib = {
 				queueSong: mongoose.model('queueSong', lib.schemas.queueSong),
 				station: mongoose.model('station', lib.schemas.station),
 				user: mongoose.model('user', lib.schemas.user),
-				news: mongoose.model('news', lib.schemas.news)
+				news: mongoose.model('news', lib.schemas.news),
+				reports: mongoose.model('reports', lib.schemas.reports)
 			};
 
 			cb();
