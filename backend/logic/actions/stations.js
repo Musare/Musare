@@ -10,6 +10,7 @@ const cache = require('../cache');
 const notifications = require('../notifications');
 const utils = require('../utils');
 const stations = require('../stations');
+const songs = require('../songs');
 
 cache.sub('station.locked', stationId => {
 	io.io.to(`station.${stationId}`).emit("event:stations.locked");
@@ -93,7 +94,16 @@ module.exports = {
 					utils.socketJoinRoom(sessionId, `station.${stationId}`);
 					utils.socketJoinSongRoom(sessionId, `song.${station.currentSong._id}`);
 					//TODO Emit to cache, listen on cache
-					cb({ status: 'success', currentSong: station.currentSong, startedAt: station.startedAt, paused: station.paused, timePaused: station.timePaused });
+					songs.getSong(station.currentSong._id, (err, song) => {
+						if (!err) {
+							station.currentSong.likes = song.likes;
+							station.currentSong.dislikes = song.dislikes;
+						} else {
+							station.currentSong.likes = -1;
+							station.currentSong.dislikes = -1;
+						}
+						cb({ status: 'success', currentSong: station.currentSong, startedAt: station.startedAt, paused: station.paused, timePaused: station.timePaused });
+					});
 				});
 			}
 			else {

@@ -4,6 +4,7 @@ const cache = require('./cache');
 const db = require('./db');
 const io = require('./io');
 const utils = require('./utils');
+const songs = require('./songs');
 const notifications = require('./notifications');
 const async = require('async');
 let skipTimeout = null;
@@ -112,8 +113,8 @@ module.exports = {
 									function func() {
 										if (station.currentSongIndex < station.playlist.length - 1) {
 											station.currentSongIndex++;
-											db.models.song.findOne({_id: station.playlist[station.currentSongIndex]}, (err, song) => {
-												if (!err && song) {
+											songs.getSong(station.playlist[station.currentSongIndex], (err, song) => {
+												if (!err) {
 													station.currentSong = {
 														_id: song._id,
 														title: song.title,
@@ -137,7 +138,7 @@ module.exports = {
 											_this.calculateSongForStation(station, (err, newPlaylist) => {
 												console.log('New playlist: ', newPlaylist);
 												if (!err) {
-													db.models.song.findOne({_id: newPlaylist[0]}, (err, song) => {
+													songs.getSong(newPlaylist[0], (err, song) => {
 														if (song) {
 															station.currentSong = {
 																_id: song._id,
@@ -176,12 +177,27 @@ module.exports = {
 											station.timePaused = 0;
 											next(null, station);
 										} else {
-											station.currentSongIndex = 0;
-											station.currentSong = playlist[0];
-											station.startedAt = Date.now();
-											station.timePaused = 0;
-											station.playlist = playlist;
-											next(null, station);
+											songs.getSong(playlist[0], (err, song) => {
+												if (!err) {
+													station.currentSong = {
+														_id: song._id,
+														title: song.title,
+														artists: song.artists,
+														duration: song.duration,
+														likes: song.likes,
+														dislikes: song.dislikes,
+														skipDuration: song.skipDuration,
+														thumbnail: song.thumbnail
+													};
+												} else {
+													station.currentSong = _this.defaultSong;
+												}
+												station.currentSongIndex = 0;
+												station.startedAt = Date.now();
+												station.timePaused = 0;
+												station.playlist = playlist;
+												next(null, station);
+											});
 										}
 									});
 								}
@@ -200,7 +216,6 @@ module.exports = {
 								paused: station.paused,
 								timePaused: 0
 							});
-							console.log(io.io.to(`station.${stationId}`).sockets);
 							utils.socketsJoinSongRoom(io.io.to(`station.${stationId}`).sockets, `song.${station.currentSong._id}`);
 							// schedule a notification to be dispatched when the next song ends
 							notifications.schedule(`stations.nextSong?id=${station.id}`, station.currentSong.duration * 1000);
@@ -244,8 +259,6 @@ module.exports = {
 		artists: ['Alan Walker'],
 		duration: 212,
 		skipDuration: 0,
-		likes: 0,
-		dislikes: 0,
 		thumbnail: 'https://i.scdn.co/image/2ddde58427f632037093857ebb71a67ddbdec34b'
 	}
 

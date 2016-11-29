@@ -18,8 +18,54 @@ module.exports = {
 				cb();
 			}
 		});
-	}
+	},
 
-	//TODO Add way to get song, which adds song to Redis if not in Redis and returns the song
+	// Attempts to get the song from Reids. If it's not in Redis, get it from Mongo and add it to Redis.
+	getSong: function(songId, cb) {
+		async.waterfall([
+
+			(next) => {
+				cache.hget('songs', songId, next);
+			},
+
+			(song, next) => {
+				if (song) return next(true, song);
+
+				db.models.song.findOne({_id: songId}, next);
+			},
+
+			(song, next) => {
+				if (song) {
+					cache.hset('songs', songId, song);
+					next(true, song);
+				} else next('Song not found.');
+			},
+
+		], (err, song) => {
+			if (err && err !== true) cb(err);
+
+			cb(null, song);
+		});
+	},
+
+	updateSong: (songId, cb) => {
+		async.waterfall([
+
+			(next) => {
+				db.models.song.findOne({_id: songId}, next);
+			},
+
+			(song, next) => {
+				if (!song) return next('Song not found.');
+
+				cache.hset('songs', songId, song, next);
+			}
+
+		], (err, song) => {
+			if (err && err !== true) cb(err);
+
+			cb(null, song);
+		});
+	}
 
 };

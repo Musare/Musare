@@ -2,6 +2,7 @@
 
 const db = require('../db');
 const io = require('../io');
+const songs = require('../songs');
 const cache = require('../cache');
 const utils = require('../utils');
 
@@ -89,8 +90,8 @@ module.exports = {
 							db.models.user.update({_id: userSession.userId}, {$push: {liked: songId}, $pull: {disliked: songId}}, (err) => {
 								if (!err) {
 									console.log(JSON.stringify({songId, userId: userSession.userId}));
+									songs.updateSong(songId, (err, song) => {});
 									cache.pub('song.like', JSON.stringify({songId, userId: userSession.userId, undisliked: (dislikes === -1)}));
-									//TODO Update song object in Redis
 								} else db.models.song.update({_id: songId}, {$inc: {likes: -1, dislikes: -dislikes}}, (err) => {
 									return cb({ status: 'failure', message: 'Something went wrong while liking this song.' });
 								});
@@ -115,8 +116,8 @@ module.exports = {
 						if (!err) {
 							db.models.user.update({_id: userSession.userId}, {$push: {disliked: songId}, $pull: {liked: songId}}, (err) => {
 								if (!err) {
+									songs.updateSong(songId, (err, song) => {});
 									cache.pub('song.dislike', JSON.stringify({songId, userId: userSession.userId, unliked: (likes === -1)}));
-									//TODO Update song object in Redis
 								} else db.models.song.update({_id: songId}, {$inc: {likes: -likes, dislikes: -1}}, (err) => {
 									return cb({ status: 'failure', message: 'Something went wrong while disliking this song.' });
 								});
@@ -139,8 +140,8 @@ module.exports = {
 						if (!err) {
 							db.models.user.update({_id: userSession.userId}, {$pull: {disliked: songId}}, (err) => {
 								if (!err) {
+									songs.updateSong(songId, (err, song) => {});
 									cache.pub('song.undislike', JSON.stringify({songId, userId: userSession.userId}));
-									//TODO Update song object in Redis
 								} else db.models.song.update({_id: songId}, {$inc: {dislikes: 1}}, (err) => {
 									return cb({ status: 'failure', message: 'Something went wrong while undisliking this song.' });
 								});
@@ -163,8 +164,8 @@ module.exports = {
 						if (!err) {
 							db.models.user.update({_id: userSession.userId}, {$pull: {liked: songId}}, (err) => {
 								if (!err) {
+									songs.updateSong(songId, (err, song) => {});
 									cache.pub('song.unlike', JSON.stringify({songId, userId: userSession.userId}));
-									//TODO Update song object in Redis
 								} else db.models.song.update({_id: songId}, {$inc: {likes: 1}}, (err) => {
 									return cb({ status: 'failure', message: 'Something went wrong while unliking this song.' });
 								});
