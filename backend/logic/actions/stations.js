@@ -10,6 +10,7 @@ const cache = require('../cache');
 const notifications = require('../notifications');
 const utils = require('../utils');
 const stations = require('../stations');
+
 const defaultSong = {
 	_id: '60ItHLz5WEA',
 	title: 'Faded',
@@ -21,23 +22,23 @@ const defaultSong = {
 	thumbnail: 'https://i.scdn.co/image/2ddde58427f632037093857ebb71a67ddbdec34b'
 };
 
-cache.sub('station.locked', (stationName) => {
+cache.sub('station.locked', stationName => {
 	io.to(`station.${stationName}`).emit("event:station.locked");
 });
 
-cache.sub('station.unlocked', (stationName) => {
+cache.sub('station.unlocked', stationName => {
 	io.to(`station.${stationName}`).emit("event:station.unlocked");
 });
 
-cache.sub('station.pause', (stationName) => {
+cache.sub('station.pause', stationName => {
 	io.to(`station.${stationName}`).emit("event:station.pause");
 });
 
-cache.sub('station.resume', (stationName) => {
+cache.sub('station.resume', stationName => {
 	io.to(`station.${stationName}`).emit("event:station.resume");
 });
 
-cache.sub('station.create', (stationId) => {
+cache.sub('station.create', stationId => {
 	stations.initializeAndReturnStation(stationId, (err, station) => {
 		//TODO Emit to homepage and admin station page
 		if (!err) {
@@ -122,7 +123,7 @@ module.exports = {
 		if (!session) return cb({ status: 'failure', message: 'You must be logged in to skip a song!' });
 
 		stations.initializeAndReturnStation(stationId, (err, station) => {
-
+			
 			if (err && err !== true) {
 				return cb({ status: 'error', message: 'An error occurred while skipping the station' });
 			}
@@ -173,7 +174,7 @@ module.exports = {
 		});
 	},
 
-	lock: (session, stationId, cb) => {
+	lock: (sessionId, stationId, cb) => {
 		//TODO Require admin
 		stations.initializeAndReturnStation(stationId, (err, station) => {
 			if (err && err !== true) {
@@ -187,7 +188,7 @@ module.exports = {
 		});
 	},
 
-	unlock: (session, stationId, cb) => {
+	unlock: (sessionId, stationId, cb) => {
 		//TODO Require admin
 		stations.initializeAndReturnStation(stationId, (err, station) => {
 			if (err && err !== true) {
@@ -201,12 +202,19 @@ module.exports = {
 		});
 	},
 
+	remove: (sessionId, stationId, cb) => {
+		cache.hdel('stations', stationId, () => {
+			// TODO: Update Mongo
+			return cb({ status: 'success', message: 'Station successfully removed' });
+		});
+	},
+
 	create: (sessionId, data, cb) => {
 		//TODO Require admin
 		async.waterfall([
 
 			(next) => {
-				return (data) ? next() : cb({ 'status': 'failure', 'message': 'Invalid data.' });
+				return (data) ? next() : cb({ 'status': 'failure', 'message': 'Invalid data' });
 			},
 
 			// check the cache for the station
@@ -214,27 +222,26 @@ module.exports = {
 
 			// if the cached version exist
 			(station, next) => {
-				if (station) return next({ 'status': 'failure', 'message': 'A station with that name already exists.' });
+				if (station) return next({ 'status': 'failure', 'message': 'A station with that name already exists' });
 				db.models.station.findOne({ _id: data.name }, next);
 			},
 
 			(station, next) => {
-				if (station) return next({ 'status': 'failure', 'message': 'A station with that name already exists.' });
+				if (station) return next({ 'status': 'failure', 'message': 'A station with that name already exists' });
+				const { _id, displayName, description, genres, playlist } = data;
 				db.models.station.create({
-					_id: data.name,
-					displayName: data.displayName,
-					description: data.description,
+					_id,
+					displayName,
+					description,
 					type: "official",
-					playlist: [defaultSong._id],
-					genres: ["edm"],
-					locked: true,
+					playlist,
+					genres,
 					currentSong: defaultSong
 				}, next);
 			}
 
 		], (err, station) => {
-			console.log(err, 123986);
-			if (err) return cb(err);
+			if (err) throw err;
 			stations.calculateSongForStation(station, () => {
 				cache.pub('station.create', data.name);
 				return cb(null, { 'status': 'success', 'message': 'Successfully created station.' });

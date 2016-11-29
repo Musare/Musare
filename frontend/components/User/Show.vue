@@ -5,8 +5,8 @@
 			<img class="avatar" src="https://avatars2.githubusercontent.com/u/11198912?v=3&s=460"/>
 			<h2 class="has-text-centered">@{{user.username}}</h2>
 			<div class="admin-functionality">
-				<a class="button is-small is-info is-outlined" @click="changeRank('admin')" v-if="!user.admin">Promote to Admin</a>
-				<a class="button is-small is-danger is-outlined" @click="changeRank('user')" v-else>Demote to User</a>
+				<a class="button is-small is-info is-outlined" @click="changeRank('admin')" v-if="user.role == 'default'">Promote to Admin</a>
+				<a class="button is-small is-danger is-outlined" @click="changeRank('default')" v-else>Demote to User</a>
 			</div>
 			<nav class="level">
 				<div class="level-item has-text-centered">
@@ -46,9 +46,9 @@
 		},
 		methods: {
 			changeRank(newRank) {
-				this.socket.emit('users.update', this.user._id, 'admin', ((newRank == 'admin') ? true : false), res => {
+				this.socket.emit('users.update', this.user._id, 'role', ((newRank == 'admin') ? 'admin' : 'default'), res => {
 					if (res.status == 'error') Toast.methods.addToast(res.message, 2000);
-					else Toast.methods.addToast(`User ${this.$route.params.username}'s rank has been changed to: ${newRank}`, 2000);
+					else this.user.role = newRank; Toast.methods.addToast(`User ${this.$route.params.username}'s rank has been changed to: ${newRank}`, 2000);
 				});
 			}
 		},

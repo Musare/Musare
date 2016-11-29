@@ -14,11 +14,10 @@ module.exports = {
 
 	init: function(cb) {
 		let _this = this;
-		console.log("Init stations");
 		db.models.station.find({}, (err, stations) => {
 			if (!err) {
 				stations.forEach((station) => {
-					console.log("Initing " + station._id);
+					console.info("Initializing Station: " + station._id);
 					_this.initializeAndReturnStation(station._id, (err, station) => {
 						//TODO Emit to homepage and admin station list
 					});
@@ -94,7 +93,6 @@ module.exports = {
 			/*let notification = notifications.subscribe(`stations.nextSong?id=${station._id}`, () => {*/
 			function skipSongTemp() {
 				// get the station from the cache
-				console.log('NOTIFICATION');
 				//TODO Recalculate songs if the last song of the station playlist is getting played
 				cache.hget('stations', station._id, (err, station) => {
 					if (station) {
@@ -104,7 +102,7 @@ module.exports = {
 							(next) => {
 								if (station.currentSongIndex < station.playlist.length - 1) {
 									station.currentSongIndex++;
-									db.models.song.findOne({_id: station.playlist[station.currentSongIndex]}, (err, song) => {
+									db.models.song.findOne({ _id: station.playlist[station.currentSongIndex] }, (err, song) => {
 										if (!err) {
 											station.currentSong = {
 												_id: song._id,
@@ -123,9 +121,10 @@ module.exports = {
 								} else {
 									station.currentSongIndex = 0;
 									_this.calculateSongForStation(station, (err, newPlaylist) => {
+										console.log('New playlist: ', newPlaylist)
 										if (!err) {
-											db.models.song.findOne({_id: newPlaylist[0]}, (err, song) => {
-												if (!err) {
+											db.models.song.findOne({ _id: newPlaylist[0] }, (err, song) => {
+												if (song) {
 													station.currentSong = {
 														_id: song._id,
 														title: song.title,

@@ -18,6 +18,6 @@ module.exports = {
 	timePaused: { type: Number, default: 0, required: true },
 	playlist: { type: Array, required: true },
 	genres: [{ type: String }],
-	privacy: { type: String, enum: ["public", "unlisted", "private"], default: "private" },//Used for Community stations
-	locked: { type: Boolean, default: true }//Used for Official stations
+	privacy: { type: String, enum: ["public", "unlisted", "private"], default: "private" },
+	locked: { type: Boolean, default: false }
 };

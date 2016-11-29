@@ -1,53 +1,51 @@
 <template>
-	<div v-if="isLoggedIn">
-		<main-header></main-header>
-		<div class="container">
-			<!--Implement Validation-->
-			<label class="label">Username</label>
-			<div class="control is-grouped">
-				<p class="control is-expanded has-icon has-icon-right">
-					<input class="input is-success" type="text" placeholder="Change username" v-model="user.username">
-					<!--Remove validation if it's their own without changing-->
-					<i class="fa fa-check"></i>
-					<span class="help is-success">This username is available</span>
-				</p>
-				<p class="control">
-					<button class="button is-success" @click="changeUsername()">Save Changes</button>
-				</p>
-			</div>
-			<label class="label">Email</label>
-			<div class="control is-grouped">
-				<p class="control is-expanded has-icon has-icon-right">
-					<input class="input is-danger" type="text" placeholder="Change email address" v-model="user.email.address">
-					<!--Remove validation if it's their own without changing-->
-					<i class="fa fa-warning"></i>
-					<span class="help is-danger">This email is invalid</span>
-				</p>
-				<p class="control is-expanded">
-					<button class="button is-success" @click="changeEmail()">Save Changes</button>
-				</p>
-			</div>
-			<label class="label">Change Password</label>
-			<div class="control is-grouped">
-				<p class="control is-expanded has-icon has-icon-right">
-					<input class="input is-danger" type="text" placeholder="Enter current password" v-model="currentPassword">
-					<!-- Check if correct -->
-					<i class="fa fa-warning"></i>
-					<span class="help is-danger">This password is invalid</span>
-				</p>
-				<p class="control is-expanded has-icon has-icon-right">
-					<input class="input is-danger" type="text" placeholder="Enter new password" v-model="newPassword">
-					<!--Check if longer than x chars, has x, x and x. Kris likes x too ;)-->
-					<i class="fa fa-warning"></i>
-					<span class="help is-danger">This password is invalid</span>
-				</p>
-				<p class="control is-expanded">
-					<button class="button is-success" @click="changePassword()">Save Changes</button>
-				</p>
-			</div>
+	<main-header></main-header>
+	<div class="container">
+		<!--Implement Validation-->
+		<label class="label">Username</label>
+		<div class="control is-grouped">
+			<p class="control is-expanded has-icon has-icon-right">
+				<input class="input is-success" type="text" placeholder="Change username" v-model="user.username">
+				<!--Remove validation if it's their own without changing-->
+				<i class="fa fa-check"></i>
+				<span class="help is-success">This username is available</span>
+			</p>
+			<p class="control">
+				<button class="button is-success" @click="changeUsername()">Save Changes</button>
+			</p>
 		</div>
-		<main-footer></main-footer>
+		<label class="label">Email</label>
+		<div class="control is-grouped">
+			<p class="control is-expanded has-icon has-icon-right">
+				<input class="input is-danger" type="text" placeholder="Change email address" v-model="user.email.address">
+				<!--Remove validation if it's their own without changing-->
+				<i class="fa fa-warning"></i>
+				<span class="help is-danger">This email is invalid</span>
+			</p>
+			<p class="control is-expanded">
+				<button class="button is-success" @click="changeEmail()">Save Changes</button>
+			</p>
+		</div>
+		<label class="label">Change Password</label>
+		<div class="control is-grouped">
+			<p class="control is-expanded has-icon has-icon-right">
+				<input class="input is-danger" type="text" placeholder="Enter current password" v-model="currentPassword">
+				<!-- Check if correct -->
+				<i class="fa fa-warning"></i>
+				<span class="help is-danger">This password is invalid</span>
+			</p>
+			<p class="control is-expanded has-icon has-icon-right">
+				<input class="input is-danger" type="text" placeholder="Enter new password" v-model="newPassword">
+				<!--Check if longer than x chars, has x, x and x. Kris likes x too ;)-->
+				<i class="fa fa-warning"></i>
+				<span class="help is-danger">This password is invalid</span>
+			</p>
+			<p class="control is-expanded">
+				<button class="button is-success" @click="changePassword()">Save Changes</button>
+			</p>
+		</div>
 	</div>
+	<main-footer></main-footer>
 </template>
 
 <script>
@@ -63,8 +61,7 @@
 			return {
 				currentPassword: '',
 				newPassword: '',
-				user: {},
-				isLoggedIn: false,
+				user: {}
 			}
 		},
 		ready: function() {
@@ -73,7 +70,7 @@
 				if (!!_this.$parent.socket) {
 					_this.socket = _this.$parent.socket;
 					_this.socket.emit('users.findBySession', res => {
-						if (res.status == 'success') { _this.user = res.data; _this.isLoggedIn = true; } else {
+						if (res.status == 'success') { _this.user = res.data; } else {
 							_this.$parent.isLoginActive = true;
 							Toast.methods.addToast('Your are currently not signed in', 3000);
 						}

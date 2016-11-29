@@ -44,20 +44,9 @@
 
 <script>
 	export default {
-		data() {
-			return {
-
-			}
-		},
-		ready: function() {
-			let _this = this;
-		},
 		methods: {
 			toggleModal: function (type) {
 				this.$dispatch('toggleModal', type);
-			},
-			isAdmin: function() {
-				_this = this;
 			}
 		}
 	}

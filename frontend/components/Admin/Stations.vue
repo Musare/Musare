@@ -15,7 +15,7 @@
 					<tr v-for="(index, station) in stations" track-by="$index">
 						<td>
 							<p class="control">
-								<input class="input" type="text" :value="station.id" v-model="station.id">
+								<input class="input" type="text" :value="station.id" v-model="station._id">
 							</p>
 						</td>
 						<td>
@@ -34,7 +34,7 @@
 							</p>
 						</td>
 						<td>
-							<a class="button is-danger" @click="stations.splice(index, 1)">Remove</a>
+							<a class="button is-danger" @click="removeStation(index)">Remove</a>
 						</td>
 					</tr>
 				</tbody>
@@ -50,14 +50,13 @@
 				</header>
 				<div class="card-content">
 					<div class="content">
-						<label class="label">Name</label>
 						<div class="control is-horizontal">
 							<div class="control is-grouped">
 								<p class="control is-expanded">
-									<input class="input" type="text" placeholder="Locale name" v-model="newStation.name">
+									<input class="input" type="text" placeholder="Unique Identifier" v-model="newStation._id">
 								</p>
 								<p class="control is-expanded">
-									<input class="input" type="text" placeholder="Display name" v-model="newStation.displayName">
+									<input class="input" type="text" placeholder="Display Name" v-model="newStation.displayName">
 								</p>
 							</div>
 						</div>
@@ -65,14 +64,16 @@
 						<p class="control is-expanded">
 							<input class="input" type="text" placeholder="Short description" v-model="newStation.description">
 						</p>
+						<label class="label">Default Song</label>
+						<p class="control is-expanded">
+							<input class="input" type="text" placeholder="YouTube ID" v-model="newStation.defaultSong">
+						</p>
 						<label class="label">Genres</label>
 						<p class="control has-addons">
-							<input class="input" type="text" placeholder="Genre" v-model="newStationGenre">
-							<a class="button is-info">Add genre</a>
+							<input class="input" id="new-genre" type="text" placeholder="Genre">
+							<a class="button is-info" @click="addGenre()">Add genre</a>
 						</p>
-						<span class="tag is-info">Bar<button class="delete is-info"></button></span>
-						<span class="tag is-info">Bar<button class="delete is-info"></button></span>
-						<span class="tag is-info">Bar<button class="delete is-info"></button></span>
+						<span class="tag is-info" v-for="genre in newStation.genres" track-by="$index">{{ genre }}<button class="delete is-info"></button></span>
 					</div>
 				</div>
 				<footer class="card-footer">
@@ -84,11 +85,15 @@
 </template>
 
 <script>
+	import { Toast } from 'vue-roaster';
+
 	export default {
 		data() {
 			return {
 				stations: [],
-				newStation: {}
+				newStation: {
+					genres: []
+				}
 			}
 		},
 		methods: {
@@ -113,22 +118,49 @@
 			// 		console.log(data);
 			// 	});
 			// },
-			createStation: function() {
+			createStation: function () {
 				let _this = this;
-				let { newStation: { name, displayName, description } } = this;
-				let data = { name, displayName, description, genres: ['edm'] };
-				_this.socket.emit('stations.create', data, result => {
+				let { newStation: { _id, displayName, description, genres } } = this;
+
+				let playlist = [];
+				playlist.push(this.newStation.defaultSong);
+
+				if (_id == undefined) return Toast.methods.addToast('Field (YouTube ID) cannot be empty', 2000);
+				if (displayName == undefined) return Toast.methods.addToast('Field (Display Name) cannot be empty', 2000);
+				if (description == undefined) return Toast.methods.addToast('Field (Description) cannot be empty', 2000);
+
+				_this.socket.emit('stations.create', {
+					_id,
+					type: "official",
+					displayName,
+					description,
+					playlist,
+					genres,
+				}, result => {
 					console.log(result);
 				});
+			},
+			removeStation: function (index) {
+				this.socket.emit('stations.remove', this.stations[index]._id, res => {
+					if (res.status == 'success') this.stations.splice(index, 1); Toast.methods.addToast(res.message, 2000);
+				});
+			},
+			addGenre: function () {
+				if ($("#new-genre").val() !== "") this.newStation.genres.push($("#new-genre").val());
+				else Toast.methods.addToast('Genre cannot be empty', 2000);
 			}
 		},
-		ready: function() {
-			let socket = this.socket = this.$parent.$parent.socket;
-			socket.emit("stations.index", (data) => {
-				console.log(data);
-				this.stations = data;
-			});
-			console.log('ready');
+		ready: function () {
+			let _this = this;
+			let socketInterval = setInterval(() => {
+				if (!!_this.$parent.$parent.socket) {
+					_this.socket = _this.$parent.$parent.socket;
+					_this.socket.emit("stations.index", data => {
+						_this.stations = data.stations;
+					});
+					clearInterval(socketInterval);
+				}
+			}, 100);
 		}
 	}
 </script>
@@ -137,4 +169,6 @@
 	.is-success {
 		width: 100%;
 	}
+
+	.tag:not(:last-child) { margin-right: 5px; }
 </style>
