@@ -6,11 +6,11 @@ module.exports = {
 	duration: { type: Number, required: true },
 	skipDuration: { type: Number, required: true },
 	thumbnail: { type: String, required: true },
-	likes: { type: Number, required: true },
-	dislikes: { type: Number, required: true },
-	explicit: { type: Boolean, required: true },
+	likes: { type: Number, default: 0, required: true },
+	dislikes: { type: Number, default: 0, required: true },
+	explicit: { type: Boolean, default: false, required: true },
 	requestedBy: { type: String, required: true },
 	requestedAt: { type: Date, required: true },
 	acceptedBy: { type: String, required: true },
-	acceptedAt: { type: Date, required: true }
+	acceptedAt: { type: Date, default: Date.now(), required: true }
 };

@@ -52,7 +52,7 @@ module.exports = {
 	remove: (session, _id, cb) => {
 		// TODO Require admin/login
 		db.models.queueSong.find({ _id }).remove().exec();
-		cb({ status: 'success', message: 'Song was removed successfully' });
+		return cb({ status: 'success', message: 'Song was removed successfully' });
 	},
 
 	add: (session, id, cb) => {

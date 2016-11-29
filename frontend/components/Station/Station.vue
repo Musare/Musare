@@ -252,11 +252,10 @@
 			toggleDislike: function() {
 				let _this = this;
 				if (_this.disliked) _this.socket.emit('songs.undislike', _this.currentSong._id, data => {
-						console.log(data);
-					}); else _this.socket.emit('songs.dislike', _this.currentSong._id, data => {
-						console.log(data);
-					});
-				}
+					console.log(data);
+				}); else _this.socket.emit('songs.dislike', _this.currentSong._id, data => {
+					console.log(data);
+				});
 			}
 		},
 		ready: function() {

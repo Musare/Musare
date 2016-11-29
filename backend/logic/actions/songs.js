@@ -66,33 +66,32 @@ module.exports = {
 
 	add: (session, song, cb) => {
 		//TODO Require admin/login
-		console.log(session.logged_in);
-		// if (!session.logged_in) return cb({ status: 'failure', message: 'You must be logged in to add a song' });
 		const newSong = new db.models.song(song);
-		newSong.save(err => {
+		db.models.song.findOne({ _id: song._id }, (err, existingSong) => {
 			if (err) throw err;
-			else cb({ status: 'success', message: 'Song has been moved from Queue' })
+			if (!existingSong) newSong.save(err => {
+				if (err) throw err;
+				else cb({ status: 'success', message: 'Song has been moved from Queue' })
+			});
 		});
-		//TODO Check if video already in songs list
-		//TODO Check if video is in queue
-		//TODO Add the song to the appropriate stations
+		//TODO Check if video is in queue and Add the song to the appropriate stations
 	},
 
 	like: (sessionId, songId, cb) => {
 		cache.hget('sessions', sessionId, (err, session) => {
 			cache.hget('userSessions', session.userSessionId, (err, userSession) => {
-				db.models.user.findOne({_id: userSession.userId}, (err, user) => {
+				db.models.user.findOne({ _id: userSession.userId }, (err, user) => {
 					if (user.liked.indexOf(songId) !== -1) return cb({ status: 'failure', message: 'You have already liked this song.' });
 					let dislikes = 0;
 					if (user.disliked.indexOf(songId) !== -1) dislikes = -1;
-					db.models.song.update({_id: songId}, {$inc: {likes: 1, dislikes: dislikes}}, (err) => {
+					db.models.song.update({ _id: songId }, { $inc: { likes: 1, dislikes: dislikes } }, err => {
 						if (!err) {
-							db.models.user.update({_id: userSession.userId}, {$push: {liked: songId}, $pull: {disliked: songId}}, (err) => {
+							db.models.user.update({_id: userSession.userId}, {$push: {liked: songId}, $pull: {disliked: songId}}, err => {
 								if (!err) {
-									console.log(JSON.stringify({songId, userId: userSession.userId}));
+									console.log(JSON.stringify({ songId, userId: userSession.userId }));
 									songs.updateSong(songId, (err, song) => {});
-									cache.pub('song.like', JSON.stringify({songId, userId: userSession.userId, undisliked: (dislikes === -1)}));
-								} else db.models.song.update({_id: songId}, {$inc: {likes: -1, dislikes: -dislikes}}, (err) => {
+									cache.pub('song.like', JSON.stringify({ songId, userId: userSession.userId, undisliked: (dislikes === -1) }));
+								} else db.models.song.update({ _id: songId }, { $inc: { likes: -1, dislikes: -dislikes } }, err => {
 									return cb({ status: 'failure', message: 'Something went wrong while liking this song.' });
 								});
 							});

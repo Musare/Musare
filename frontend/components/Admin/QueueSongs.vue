@@ -4,35 +4,27 @@
 			<table class='table is-striped'>
 				<thead>
 					<tr>
+						<td>Thumbnail</td>
 						<td>Title</td>
 						<td>YouTube ID</td>
 						<td>Artists</td>
 						<td>Genres</td>
+						<td>Requested By</td>
 						<td>Options</td>
 					</tr>
 				</thead>
 				<tbody>
 					<tr v-for='(index, song) in songs' track-by='$index'>
 						<td>
-							<p class='control'>
-								<input class='input' type='text' v-model='song.title'>
-							</p>
+							<img class='song-thumbnail' :src='song.thumbnail'>
 						</td>
 						<td>
-							<p class='control'>
-								<input class='input' type='text' v-model='song._id'>
-							</p>
+							<strong>{{ song.title }}</strong>
 						</td>
-						<td>
-							<div class='control'>
-								<input v-for='artist in song.artists' track-by='$index' class='input' type='text' v-model='artist'>
-							</div>
-						</td>
-						<td>
-							<div class='control'>
-								<input v-for='genre in song.genres' track-by='$index' class='input' type='text' v-model='genre'>
-							</div>
-						</td>
+						<td> {{ song._id }} </td>
+						<td><span v-for='artist in song.artists'>{{ artist }}</span></td>
+						<td><span v-for='genre in song.genres'>{{ genre }}</span></td>
+						<td> {{ song.requestedBy }} </td>
 						<td>
 							<a class='button is-primary' @click='edit(song, index)'>Edit</a>
 							<a class='button is-success' @click='add(song)'>Add</a>
@@ -47,6 +39,7 @@
 		<div class='modal-background'></div>
 		<div class='modal-card'>
 			<section class='modal-card-body'>
+
 				<h5 class='has-text-centered'>Video Preview</h5>
 				<div class='video-container'>
 					<div id='player'></div>
@@ -63,13 +56,23 @@
 						</a>
 					</p>
 				</div>
+
 				<h5 class='has-text-centered'>Thumbnail Preview</h5>
 				<img class='thumbnail-preview' :src='editing.song.thumbnail'>
+
 				<label class='label'>Thumbnail URL</label>
 				<p class='control'>
 					<input class='input' type='text' v-model='editing.song.thumbnail'>
 				</p>
+
 				<h5 class='has-text-centered'>Edit Info</h5>
+
+				<p class='control'>
+					<label class='checkbox'>
+						<input type='checkbox' v-model='editing.song.explicit'>
+						Explicit
+					</label>
+				</p>
 				<label class='label'>Song ID</label>
 				<p class='control'>
 					<input class='input' type='text' v-model='editing.song._id'>
@@ -80,11 +83,11 @@
 				</p>
 				<label class='label'>Artists</label>
 				<div class='control'>
-					<input v-for='artist in editing.song.artists' track-by='$index' class='input' type='text' v-model='artist'>
+					<input v-repeat='editing.song.artists' class='input' type='text' v-model='editing.song.artists[$index]'>
 				</div>
 				<label class='label'>Genres</label>
 				<div class='control'>
-					<input v-for='genre in editing.song.genres' track-by='$index' class='input' type='text' v-model='genre'>
+					<input v-repeat='editing.song.genres' class='input' type='text' v-model='editing.song.genres[$index]'>
 				</div>
 				<label class='label'>Song Duration</label>
 				<p class='control'>
@@ -94,10 +97,13 @@
 				<p class='control'>
 					<input class='input' type='text' v-model='editing.song.skipDuration'>
 				</p>
+
 			</section>
 			<footer class='modal-card-foot'>
-				<i class='material-icons save-changes' @click='save(editing.song)'>save</i>
-				<button class='delete' @click='toggleModal()'></button>
+				<a class='button is-success' @click='save(editing.song)'>
+					<i class='material-icons save-changes'>done</i>
+					<span>&nbsp;Save</span>
+				</a>
 			</footer>
 		</div>
 	</div>
@@ -158,9 +164,16 @@
 				});
 			},
 			add: function (song) {
-				this.socket.emit('queueSongs.remove', song._id);
-				this.socket.emit('songs.add', song, res => {
+				this.socket.emit('queueSongs.remove', song._id, res => {
 					if (res.status == 'success') Toast.methods.addToast(res.message, 2000);
+				});
+				this.socket.emit('users.findBySession', res => {
+					if (res.status == 'success') {
+						song.acceptedBy = res.data.username;
+						this.socket.emit('songs.add', song, res => {
+							if (res.status == 'success') Toast.methods.addToast(res.message, 2000);
+						});
+					}
 				});
 			},
 			remove: function (id, index) {
@@ -217,7 +230,7 @@
 		background-color: rgb(66, 165, 245);
 	}
 
-	.label, h5 {
+	.label, .checkbox, h5 {
 		color: #fff;
 		font-weight: normal;
 	}
@@ -231,7 +244,15 @@
 
 	.save-changes {
 		color: #fff;
-		margin-right: 5px;
-		cursor: pointer;
+	}
+
+	.song-thumbnail {
+		display: block;
+		max-width: 50px;
+		margin: 0 auto;
+	}
+
+	td {
+		vertical-align: middle;
 	}
 </style>
