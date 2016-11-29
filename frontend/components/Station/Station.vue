@@ -27,7 +27,7 @@
 								</p>
 							</form>
 							<div class="column is-8-mobile is-5-desktop" style="float: right;">
-								<ul id="ratings">
+								<ul id="ratings" v-if="currentSong.likes > -1 && currentSong.dislikes > -1">
 									<li id="like" class="right"><span class="flow-text">{{currentSong.likes}} </span> <i id="thumbs_up" class="material-icons grey-text">thumb_up</i></li>
 									<li style="margin-right: 10px;" id="dislike" class="right"><span class="flow-text">{{currentSong.dislikes}} </span><i id="thumbs_down" class="material-icons grey-text">thumb_down</i></li>
 								</ul>
@@ -78,6 +78,12 @@
 			</section>
 		</div>
 	</div>
+	<div class="slideout" v-if="slideout.playlist">
+		<h5 class="slideout-header">Playlist</h5>
+		<div class="slideout-content">
+
+		</div>
+	</div>
 </template>
 
 <script>
@@ -98,7 +104,10 @@
 				interval: 0,
 				querySearch: "",
 				queryResults: [],
-				queue: []
+				queue: [],
+				slideout: {
+					playlist: false
+				}
 			}
 		},
 		methods: {
@@ -299,6 +308,28 @@
 </script>
 
 <style lang="scss">
+	.slideout {
+		top: 50px;
+		height: 100%;
+		position: fixed;
+		right: 0;
+		width: 350px;
+		background-color: white;
+		box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
+		.slideout-header {
+			text-align: center;
+			background-color: rgb(3, 169, 244) !important;
+			margin: 0;
+			padding-top: 5px;
+			padding-bottom: 7px;
+			color: white;
+		}
+
+		.slideout-content {
+			height: 100%;
+		}
+	}
+
 	.modal-large {
 		width: 75%;
 	}
