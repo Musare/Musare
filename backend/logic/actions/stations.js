@@ -91,6 +91,7 @@ module.exports = {
 				cache.client.hincrby('station.userCounts', stationId, 1, (err, userCount) => {
 					if (err) return cb({ status: 'error', message: 'An error occurred while joining the station' });
 					utils.socketJoinRoom(sessionId, `station.${stationId}`);
+					utils.socketJoinSongRoom(sessionId, `song.${station.currentSong._id}`);
 					//TODO Emit to cache, listen on cache
 					cb({ status: 'success', currentSong: station.currentSong, startedAt: station.startedAt, paused: station.paused, timePaused: station.timePaused });
 				});

@@ -22,5 +22,7 @@ module.exports = {
 		songsDisliked: [{ type: String, default: '', required: true }],
 		songsLiked: [{ type: String, default: '', required: true }]
 	},
+	liked: [{ type: String }],
+	disliked: [{ type: String }],
 	createdAt: { type: Date, default: Date.now() }
 };

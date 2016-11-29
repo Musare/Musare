@@ -13,7 +13,8 @@ const lib = {
 	schemas: {
 		session: require('./schemas/session'),
 		userSession: require('./schemas/userSession'),
-		station: require('./schemas/station')
+		station: require('./schemas/station'),
+		song: require('./schemas/song')
 	},
 
 	/**

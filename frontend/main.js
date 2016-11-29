@@ -20,8 +20,8 @@ let _this = this;
 lofig.folder = '../config/default.json';
 lofig.get('socket.url', function(res) {
 	let socket = window.socket = io(window.location.protocol + '//' + res);
-	socket.on("ready", (status, role) => {
-		auth.data(status, role);
+	socket.on("ready", (status, role, username) => {
+		auth.data(status, role, username);
 	});
 });
 

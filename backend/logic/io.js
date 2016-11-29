@@ -32,7 +32,6 @@ module.exports = {
 		});
 
 		this.io.on('connection', socket => {
-			socket.join("SomeRoom");
 			console.info('User has connected');
 
 			// catch when the socket has been disconnected
@@ -97,9 +96,13 @@ module.exports = {
 							if (err && err !== true) socket.emit('ready', false);
 							else if (userSession) {
 								db.models.user.findOne({ _id: userSession.userId }, (err, user) => {
-									let role = 'default';
-									if (user) role = user.role;
-									socket.emit('ready', true, role);
+									let role = '';
+									let username = '';
+									if (user) {
+										role = user.role;
+										username = user.username;
+									}
+									socket.emit('ready', true, role, username);
 								});
 							} else socket.emit('ready', false);
 						});

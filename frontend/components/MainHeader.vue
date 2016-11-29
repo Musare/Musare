@@ -23,6 +23,9 @@
 				News
 			</a>
 			<span class="grouped" v-if="$parent.$parent.loggedIn">
+				<a class="nav-item is-tab" href="#" v-link="{ path: '/u/' + $parent.$parent.username }">
+					Profile
+				</a>
 				<a class="nav-item is-tab" href="#" v-link="{ path: '/settings' }">
 					Settings
 				</a>

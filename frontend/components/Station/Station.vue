@@ -27,9 +27,9 @@
 								</p>
 							</form>
 							<div class="column is-8-mobile is-5-desktop" style="float: right;">
-								<ul id="ratings" v-if="currentSong.likes > -1 && currentSong.dislikes > -1">
-									<li id="like" class="right"><span class="flow-text">{{currentSong.likes}} </span> <i id="thumbs_up" class="material-icons grey-text">thumb_up</i></li>
-									<li style="margin-right: 10px;" id="dislike" class="right"><span class="flow-text">{{currentSong.dislikes}} </span><i id="thumbs_down" class="material-icons grey-text">thumb_down</i></li>
+								<ul id="ratings" v-if="currentSong.likes !== -1 && currentSong.dislikes !== -1">
+									<li id="like" class="right" @click="toggleLike()"><span class="flow-text">{{currentSong.likes}} </span> <i id="thumbs_up" class="material-icons grey-text" v-bind:class="{liked: liked}">thumb_up</i></li>
+									<li style="margin-right: 10px;" id="dislike" class="right" @click="toggleDislike()"><span class="flow-text">{{currentSong.dislikes}} </span><i id="thumbs_down" class="material-icons grey-text" v-bind:class="{disliked: disliked}">thumb_down</i></li>
 								</ul>
 							</div>
 						</div>
@@ -107,7 +107,9 @@
 				queue: [],
 				slideout: {
 					playlist: false
-				}
+				},
+				liked: false,
+				disliked: false
 			}
 		},
 		methods: {
@@ -259,6 +261,30 @@
 						});
 					}
 				});
+			},
+			toggleLike: function() {
+				let _this = this;
+				if (_this.liked) {
+					_this.socket.emit('songs.unlike', _this.currentSong._id, (data) => {
+						console.log(data);
+					});
+				} else {
+					_this.socket.emit('songs.like', _this.currentSong._id, (data) => {
+						console.log(data);
+					});
+				}
+			},
+			toggleDislike: function() {
+				let _this = this;
+				if (_this.disliked) {
+					_this.socket.emit('songs.undislike', _this.currentSong._id, (data) => {
+						console.log(data);
+					});
+				} else {
+					_this.socket.emit('songs.dislike', _this.currentSong._id, (data) => {
+						console.log(data);
+					});
+				}
 			}
 		},
 		ready: function() {
@@ -277,6 +303,13 @@
 					_this.timePaused = data.timePaused;
 					_this.youtubeReady();
 					_this.playVideo();
+					_this.socket.emit('songs.getOwnSongRatings', data.currentSong._id, (data) => {
+						console.log(data);
+						if (_this.currentSong._id === data.songId) {
+							_this.liked = data.liked;
+							_this.disliked = data.disliked;
+						}
+					});
 				} else {
 					//TODO Handle error
 				}
@@ -288,6 +321,13 @@
 				_this.paused = data.paused;
 				_this.timePaused = data.timePaused;
 				_this.playVideo();
+				_this.socket.emit('songs.getOwnSongRatings', data.currentSong._id, (data) => {
+					console.log(data);
+					if (_this.currentSong._id === data.songId) {
+						_this.liked = data.liked;
+						_this.disliked = data.disliked;
+					}
+				});
 			});
 
 			_this.socket.on('event:stations.pause', data => {
@@ -297,6 +337,44 @@
 			_this.socket.on('event:stations.resume', data => {
 				_this.timePaused = data.timePaused;
 				_this.resumeLocalStation();
+			});
+
+			_this.socket.on('event:song.like', data => {
+				if (data.songId === _this.currentSong._id) {
+					_this.currentSong.likes++;
+					if (data.undisliked) {
+						_this.currentSong.dislikes--;
+					}
+				}
+			});
+
+			_this.socket.on('event:song.dislike', data => {
+				if (data.songId === _this.currentSong._id) {
+					_this.currentSong.dislikes++;
+					if (data.unliked) {
+						_this.currentSong.likes--;
+					}
+				}
+			});
+
+			_this.socket.on('event:song.unlike', data => {
+				if (data.songId === _this.currentSong._id) {
+					_this.currentSong.likes--;
+				}
+			});
+
+			_this.socket.on('event:song.undislike', data => {
+				if (data.songId === _this.currentSong._id) {
+					_this.currentSong.dislikes--;
+				}
+			});
+
+			_this.socket.on('event:song.newRatings', data => {
+				console.log(data, 1234);
+				if (data.songId === _this.currentSong._id) {
+					_this.liked = data.liked;
+					_this.disliked = data.disliked;
+				}
 			});
 
 			let volume = parseInt(localStorage.getItem("volume"));
@@ -484,11 +562,11 @@
 		float: right;
 	}
 
-	#thumbs_up:hover {
+	#thumbs_up:hover, #thumbs_up.liked {
 		color: #87D37C !important;
 	}
 
-	#thumbs_down:hover {
+	#thumbs_down:hover, #thumbs_down.disliked {
 		color: #EC644B !important;
 	}
 

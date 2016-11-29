@@ -1,7 +1,8 @@
 'use strict';
 
 const 	moment = require('moment'),
-		io = require('./io');
+		io = require('./io'),
+		cache = require('./cache');
 
 class Timer {
 	constructor(callback, delay, paused) {
@@ -138,7 +139,36 @@ module.exports = {
 			}
 		}
 	},
-	socketLeaveRooms: function(sessionId, room) {
+	socketsFromUser: function(userId, cb) {
+		let ns = io.io.of("/");
+		let sockets = [];
+		if (ns) {
+			let total = Object.keys(ns.connected).length;
+			let done = 0;
+			for (let id in ns.connected) {
+				let sessionId = ns.connected[id].sessionId;
+				if (sessionId) {
+					cache.hget('sessions', sessionId, (err, session) => {
+						if (!err && session && session.userSessionId) {
+							cache.hget('userSessions', session.userSessionId, (err, userSession) => {
+								if (!err && userSession && userSession.userId === userId) {
+									sockets.push(ns.connected[id]);
+								}
+								checkComplete();
+							})
+						} else checkComplete();
+					});
+				} else checkComplete();
+			}
+			function checkComplete() {
+				done++;
+				if (done === total) {
+					cb(sockets);
+				}
+			}
+		}
+	},
+	socketLeaveRooms: function(sessionId) {
 		let socket = this.socketFromSession(sessionId);
 		let rooms = socket.rooms;
 		for (let j = 0; j < rooms.length; j++) {
@@ -153,5 +183,29 @@ module.exports = {
 			socket.leave(rooms[j]);
 		}
 		socket.join(room);
+	},
+	socketJoinSongRoom: function(sessionId, room) {
+		let socket = this.socketFromSession(sessionId);
+		//console.log(io.io.sockets[socket.id]);
+		let rooms = socket.rooms;
+		for (let j = 0; j < rooms.length; j++) {
+			if (socket.indexOf('song.') !== -1) {
+				socket.leave(rooms[j]);
+			}
+		}
+		socket.join(room);
+	},
+	socketsJoinSongRoom: function(sockets, room) {
+		for (let id in sockets) {
+			let socket = sockets[id];
+			let rooms = socket.rooms;
+			for (let roomId in rooms) {
+				console.log(roomId);
+				if (roomId.indexOf('song.') !== -1) {
+					socket.leave(roomId);
+				}
+			}
+			socket.join(room);
+		}
 	}
 };

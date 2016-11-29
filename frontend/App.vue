@@ -31,6 +31,7 @@
 				},
 				loggedIn: false,
 				role: '',
+				username: '',
 				isRegisterActive: false,
 				isLoginActive: false
 			}
@@ -49,10 +50,11 @@
 		},
 		ready() {
 			let _this = this;
-			auth.getStatus((authenticated, role) => {
+			auth.getStatus((authenticated, role, username) => {
 				_this.socket = window.socket;
 				_this.loggedIn = authenticated;
 				_this.role = role;
+				_this.username = username;
 			});
 		},
 		events: {

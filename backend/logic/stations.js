@@ -200,6 +200,8 @@ module.exports = {
 								paused: station.paused,
 								timePaused: 0
 							});
+							console.log(io.io.to(`station.${stationId}`).sockets);
+							utils.socketsJoinSongRoom(io.io.to(`station.${stationId}`).sockets, `song.${station.currentSong._id}`);
 							// schedule a notification to be dispatched when the next song ends
 							notifications.schedule(`stations.nextSong?id=${station.id}`, station.currentSong.duration * 1000);
 							skipTimeout = setTimeout(skipSongTemp, station.currentSong.duration * 1000);

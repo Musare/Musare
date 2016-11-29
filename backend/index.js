@@ -8,6 +8,7 @@ const db = require('./logic/db');
 const app = require('./logic/app');
 const io = require('./logic/io');
 const stations = require('./logic/stations');
+const songs = require('./logic/songs');
 const cache = require('./logic/cache');
 const notifications = require('./logic/notifications');
 const config = require('config');
@@ -69,6 +70,9 @@ async.waterfall([
 
 	// setup the stations
 	(next) => stations.init(next),
+
+	// setup the songs
+	(next) => songs.init(next),
 
 	// setup the frontend for local setups
 	(next) => {
