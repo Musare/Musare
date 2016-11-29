@@ -52,13 +52,13 @@
 					<div id='player'></div>
 					<p class='control has-addons'>
 						<a class='button'>
-							<i class='material-icons' @click='pauseVideo()' v-if='!video.paused'>pause</i>
-							<i class='material-icons' @click='playVideo()' v-else>play_arrow</i>
+							<i class='material-icons' @click='video.settings("pause")' v-if='!video.paused'>pause</i>
+							<i class='material-icons' @click='video.settings("play")' v-else>play_arrow</i>
 						</a>
-						<a class='button' @click='stopVideo()'>
+						<a class='button' @click='video.settings("stop")'>
 							<i class='material-icons'>stop</i>
 						</a>
-						<a class='button' @click='skipToLast10Secs()'>
+						<a class='button' @click='video.settings("skipToLast10Secs")'>
 							<i class='material-icons'>fast_forward</i>
 						</a>
 					</p>
@@ -96,6 +96,7 @@
 				</p>
 			</section>
 			<footer class='modal-card-foot'>
+				<i class='material-icons save-changes' @click=''>save</i>
 				<button class='delete' @click='toggleModal()'></button>
 			</footer>
 		</div>
@@ -116,7 +117,26 @@
 				},
 				video: {
 					player: null,
-					paused: false
+					paused: false,
+					settings: function (type) {
+						switch(type) {
+							case 'stop':
+								this.player.stopVideo();
+								this.paused = true;
+								break;
+							case 'pause':
+								this.player.pauseVideo();
+								this.paused = true;
+								break;
+							case 'play':
+								this.player.playVideo();
+								this.paused = false;
+								break;
+							case 'skipToLast10Secs':
+								this.player.seekTo(this.player.getDuration() - 10);
+								break;
+						}
+					}
 				}
 			}
 		},
@@ -129,21 +149,6 @@
 				this.editing = { index, song };
 				this.video.player.loadVideoById(song._id);
 				this.isEditActive = true;
-			},
-			pauseVideo: function () {
-				this.video.player.pauseVideo();
-				this.video.paused = true;
-			},
-			playVideo: function () {
-				this.video.player.playVideo();
-				this.video.paused = false;
-			},
-			stopVideo: function () {
-				this.video.player.stopVideo();
-				this.video.paused = true;
-			},
-			skipToLast10Secs: function () {
-				this.video.player.seekTo(this.video.player.getDuration() - 10);
 			},
 			add: function (song) {
 				this.socket.emit('queueSongs.remove', song._id);
@@ -215,5 +220,11 @@
 		flex-direction: column;
 		align-items: center;
 		padding: 10px;
+	}
+
+	.save-changes {
+		color: #fff;
+		margin-right: 5px;
+		cursor: pointer;
 	}
 </style>
