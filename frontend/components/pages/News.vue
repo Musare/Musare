@@ -50,7 +50,7 @@
 	export default {
 		components: { MainHeader, MainFooter },
 		methods: {
-			formatDate: (unix) => {
+			formatDate: unix => {
 				return moment(unix).format("DD-MM-YYYY");
 			},
 		},
@@ -62,9 +62,8 @@
 		ready: function () {
 			let _this = this;
 			let socket = this.socket = this.$parent.socket;
-			socket.emit("news.index", function(result) {
-				_this.news = result.data;
-				console.log(_this.news)
+			socket.emit("news.index", res => {
+				_this.news = res.data;
 			});
 		}
 	}

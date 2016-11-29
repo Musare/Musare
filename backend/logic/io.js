@@ -89,29 +89,21 @@ module.exports = {
 
 			//TODO check if session is valid before returning true/false
 			if (socket.sessionId !== undefined) cache.hget('sessions', socket.sessionId, (err, session) => {
-				if (err && err !== true) {
-					socket.emit('ready', false);
-				} else if (session) {
+				if (err && err !== true) socket.emit('ready', false);
+				else if (session) {
 					if (!!session.userSessionId) {
 						cache.hget('userSessions', session.userSessionId, (err, userSession) => {
-							if (err && err !== true) {
-								socket.emit('ready', false);
-							} else if (userSession) {
+							if (err && err !== true) socket.emit('ready', false);
+							else if (userSession) {
 								db.models.user.findOne({ _id: userSession.userId }, (err, user) => {
 									let role = 'default';
 									if (user) role = user.role;
 									socket.emit('ready', true, role);
 								});
-							} else {
-								socket.emit('ready', false);
-							}
+							} else socket.emit('ready', false);
 						});
-					} else {
-						socket.emit('ready', false);
-					}
-				} else {
-					socket.emit('ready', false);
-				}
+					} else socket.emit('ready', false);
+				} else socket.emit('ready', false);
 			});
 		});
 
