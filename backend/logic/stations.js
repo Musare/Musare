@@ -108,32 +108,12 @@ module.exports = {
 						async.waterfall([
 
 							(next) => {
-								if (station.currentSongIndex < station.playlist.length - 1) {
-									station.currentSongIndex++;
-									db.models.song.findOne({ _id: station.playlist[station.currentSongIndex] }, (err, song) => {
-										if (!err) {
-											station.currentSong = {
-												_id: song._id,
-												title: song.title,
-												artists: song.artists,
-												duration: song.duration,
-												likes: song.likes,
-												dislikes: song.dislikes,
-												skipDuration: song.skipDuration,
-												thumbnail: song.thumbnail
-											};
-											station.startedAt = Date.now();
-											station.timePaused = 0;
-											next(null, station);
-										}
-									});
-								} else {
-									station.currentSongIndex = 0;
-									_this.calculateSongForStation(station, (err, newPlaylist) => {
-										console.log('New playlist: ', newPlaylist);
-										if (!err) {
-											db.models.song.findOne({ _id: newPlaylist[0] }, (err, song) => {
-												if (song) {
+								if (station.playlist.length > 0) {
+									function func() {
+										if (station.currentSongIndex < station.playlist.length - 1) {
+											station.currentSongIndex++;
+											db.models.song.findOne({_id: station.playlist[station.currentSongIndex]}, (err, song) => {
+												if (!err && song) {
 													station.currentSong = {
 														_id: song._id,
 														title: song.title,
@@ -146,12 +126,64 @@ module.exports = {
 													};
 													station.startedAt = Date.now();
 													station.timePaused = 0;
-													station.playlist = newPlaylist;
 													next(null, station);
+												} else {
+													station.currentSongIndex++;
+													func();
 												}
 											});
+										} else {
+											station.currentSongIndex = 0;
+											_this.calculateSongForStation(station, (err, newPlaylist) => {
+												console.log('New playlist: ', newPlaylist);
+												if (!err) {
+													db.models.song.findOne({_id: newPlaylist[0]}, (err, song) => {
+														if (song) {
+															station.currentSong = {
+																_id: song._id,
+																title: song.title,
+																artists: song.artists,
+																duration: song.duration,
+																likes: song.likes,
+																dislikes: song.dislikes,
+																skipDuration: song.skipDuration,
+																thumbnail: song.thumbnail
+															};
+															station.playlist = newPlaylist;
+														} else {
+															station.currentSong = _this.defaultSong;
+														}
+														station.startedAt = Date.now();
+														station.timePaused = 0;
+														next(null, station);
+													});
+												} else {
+													station.currentSong = _this.defaultSong;
+													station.startedAt = Date.now();
+													station.timePaused = 0;
+													next(null, station);
+												}
+											})
 										}
-									})
+									}
+									func();
+								} else {
+									_this.calculateSongForStation(station, (err, playlist) => {
+										if (!err && playlist.length === 0) {
+											station.currentSongIndex = 0;
+											station.currentSong = _this.defaultSong;
+											station.startedAt = Date.now();
+											station.timePaused = 0;
+											next(null, station);
+										} else {
+											station.currentSongIndex = 0;
+											station.currentSong = playlist[0];
+											station.startedAt = Date.now();
+											station.timePaused = 0;
+											station.playlist = playlist;
+											next(null, station);
+										}
+									});
 								}
 							},
 
@@ -202,6 +234,17 @@ module.exports = {
 
 			return cb(null, station);
 		});
+	},
+
+	defaultSong: {
+		_id: '60ItHLz5WEA',
+		title: 'Faded',
+		artists: ['Alan Walker'],
+		duration: 212,
+		skipDuration: 0,
+		likes: 0,
+		dislikes: 0,
+		thumbnail: 'https://i.scdn.co/image/2ddde58427f632037093857ebb71a67ddbdec34b'
 	}
 
 };

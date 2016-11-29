@@ -11,17 +11,6 @@ const notifications = require('../notifications');
 const utils = require('../utils');
 const stations = require('../stations');
 
-const defaultSong = {
-	_id: '60ItHLz5WEA',
-	title: 'Faded',
-	artists: ['Alan Walker'],
-	duration: 212,
-	skipDuration: 0,
-	likes: 0,
-	dislikes: 0,
-	thumbnail: 'https://i.scdn.co/image/2ddde58427f632037093857ebb71a67ddbdec34b'
-};
-
 cache.sub('station.locked', stationId => {
 	io.io.to(`station.${stationId}`).emit("event:stations.locked");
 });
@@ -296,7 +285,7 @@ module.exports = {
 					type: "official",
 					playlist,
 					genres,
-					currentSong: defaultSong
+					currentSong: stations.defaultSong
 				}, next);
 			}
 
