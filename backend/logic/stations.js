@@ -1,7 +1,5 @@
 'use strict';
 
-// This file contains all the logic for Socket.IO
-
 const cache = require('./cache');
 const db = require('./db');
 const io = require('./io');
@@ -9,6 +7,16 @@ const utils = require('./utils');
 const notifications = require('./notifications');
 const async = require('async');
 let skipTimeout = null;
+
+//TEMP
+cache.sub('station.pause', (stationId) => {
+	clearTimeout(skipTimeout);
+	skipTimeout = null;
+});
+
+cache.sub('station.resume', (stationId) => {
+	module.exports.initializeAndReturnStation(stationId, (err, station) => {})
+});
 
 module.exports = {
 
@@ -115,13 +123,14 @@ module.exports = {
 												thumbnail: song.thumbnail
 											};
 											station.startedAt = Date.now();
+											station.timePaused = 0;
 											next(null, station);
 										}
 									});
 								} else {
 									station.currentSongIndex = 0;
 									_this.calculateSongForStation(station, (err, newPlaylist) => {
-										console.log('New playlist: ', newPlaylist)
+										console.log('New playlist: ', newPlaylist);
 										if (!err) {
 											db.models.song.findOne({ _id: newPlaylist[0] }, (err, song) => {
 												if (song) {
@@ -136,6 +145,7 @@ module.exports = {
 														thumbnail: song.thumbnail
 													};
 													station.startedAt = Date.now();
+													station.timePaused = 0;
 													station.playlist = newPlaylist;
 													next(null, station);
 												}
@@ -173,13 +183,21 @@ module.exports = {
 			if (!station.paused) {
 				if (!station.startedAt) {
 					station.startedAt = Date.now();
+					station.timePaused = 0;
 					cache.hset('stations', stationId, station);
 				}
+				let timeLeft = ((station.currentSong.duration * 1000) - (Date.now() - station.startedAt - station.timePaused));
+				console.log(timeLeft, 1234);
+				console.log((station.currentSong.duration * 1000), Date.now(), station.startedAt, station.timePaused);
 				//setTimeout(skipSongTemp, station.currentSong.duration * 1000);
 				if (skipTimeout === null) {
-					skipTimeout = setTimeout(skipSongTemp, 1000);
+					skipTimeout = setTimeout(skipSongTemp, timeLeft);
 				}
-				notifications.schedule(`stations.nextSong?id=${station.id}`, station.currentSong.duration * 1000);
+				if (station.currentSong.duration * 1000 < timeLeft) {
+					clearTimeout(skipTimeout);
+					skipSongTemp();
+				}
+				notifications.schedule(`stations.nextSong?id=${station.id}`, ((station.currentSong.duration * 1000) - (Date.now() - station.startedAt - station.timePaused)));
 			}
 
 			return cb(null, station);

@@ -22,20 +22,22 @@ const defaultSong = {
 	thumbnail: 'https://i.scdn.co/image/2ddde58427f632037093857ebb71a67ddbdec34b'
 };
 
-cache.sub('station.locked', stationName => {
-	io.to(`station.${stationName}`).emit("event:station.locked");
+cache.sub('station.locked', stationId => {
+	io.io.to(`station.${stationId}`).emit("event:stations.locked");
 });
 
-cache.sub('station.unlocked', stationName => {
-	io.to(`station.${stationName}`).emit("event:station.unlocked");
+cache.sub('station.unlocked', stationId => {
+	io.io.to(`station.${stationId}`).emit("event:stations.unlocked");
 });
 
-cache.sub('station.pause', stationName => {
-	io.to(`station.${stationName}`).emit("event:station.pause");
+cache.sub('station.pause', stationId => {
+	io.io.to(`station.${stationId}`).emit("event:stations.pause");
 });
 
-cache.sub('station.resume', stationName => {
-	io.to(`station.${stationName}`).emit("event:station.resume");
+cache.sub('station.resume', stationId => {
+	stations.initializeAndReturnStation(stationId, (err, station) => {
+		io.io.to(`station.${stationId}`).emit("event:stations.resume", {timePaused: station.timePaused});
+	});
 });
 
 cache.sub('station.create', stationId => {
@@ -195,6 +197,64 @@ module.exports = {
 				return cb({ status: 'error', message: 'An error occurred while unlocking the station' });
 			} else if (station) {
 				// Add code to update Mongo and Redis
+				cb({ status: 'success' });
+			} else {
+				cb({ status: 'failure', message: `That station doesn't exist, it may have been deleted` });
+			}
+		});
+	},
+
+	pause: (sessionId, stationId, cb) => {
+		//TODO Require admin
+		stations.initializeAndReturnStation(stationId, (err, station) => {
+			if (err && err !== true) {
+				return cb({ status: 'error', message: 'An error occurred while pausing the station' });
+			} else if (station) {
+				if (!station.paused) {
+					station.paused = true;
+					station.pausedAt = Date.now();
+					cache.hset('stations', stationId, station, (err) => {
+						if (!err) {
+							db.models.station.update({_id: stationId}, {$set: {paused: true}}, () => {
+								cache.pub('station.pause', stationId);
+								cb({ status: 'success' });
+							});
+						} else {
+							cb({ status: 'failure', message: 'An error occurred while pausing the station.' });
+						}
+					});
+				} else {
+					cb({ status: 'failure', message: 'That station was already paused.' });
+				}
+				cb({ status: 'success' });
+			} else {
+				cb({ status: 'failure', message: `That station doesn't exist, it may have been deleted` });
+			}
+		});
+	},
+
+	resume: (sessionId, stationId, cb) => {
+		//TODO Require admin
+		stations.initializeAndReturnStation(stationId, (err, station) => {
+			if (err && err !== true) {
+				return cb({ status: 'error', message: 'An error occurred while resuming the station' });
+			} else if (station) {
+				if (station.paused) {
+					station.paused = false;
+					station.timePaused += (Date.now() - station.pausedAt);
+					cache.hset('stations', stationId, station, (err) => {
+						if (!err) {
+							db.models.station.update({_id: stationId}, {$set: {paused: false, timePaused: station.timePaused}}, () => {
+								cache.pub('station.resume', stationId);
+								cb({ status: 'success' });
+							});
+						} else {
+							cb({ status: 'failure', message: 'An error occurred while resuming the station.' });
+						}
+					});
+				} else {
+					cb({ status: 'failure', message: 'That station is not paused.' });
+				}
 				cb({ status: 'success' });
 			} else {
 				cb({ status: 'failure', message: `That station doesn't exist, it may have been deleted` });

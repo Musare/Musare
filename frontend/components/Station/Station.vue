@@ -203,7 +203,7 @@
 					}
 				}
 			},
-			unpauseStation: function() {
+			resumeLocalStation: function() {
 				let local = this;
 				local.paused = false;
 				if (local.playerReady) {
@@ -211,12 +211,24 @@
 					local.player.playVideo();
 				}
 			},
-			pauseStation: function() {
+			pauseLocalStation: function() {
 				let local = this;
 				local.paused = true;
 				if (local.playerReady) {
 					local.player.pauseVideo();
 				}
+			},
+			resumeStation: function () {
+				let _this = this;
+				_this.socket.emit('stations.resume', _this.stationId, (result) => {
+					//TODO Toasts
+				});
+			},
+			pauseStation: function () {
+				let _this = this;
+				_this.socket.emit('stations.pause', _this.stationId, (result) => {
+					//TODO Toasts
+				});
 			},
 			addSongToQueue: function(songId) {
 				let local = this;
@@ -267,6 +279,15 @@
 				_this.paused = data.paused;
 				_this.timePaused = data.timePaused;
 				_this.playVideo();
+			});
+
+			_this.socket.on('event:stations.pause', data => {
+				_this.pauseLocalStation();
+			});
+
+			_this.socket.on('event:stations.resume', data => {
+				_this.timePaused = data.timePaused;
+				_this.resumeLocalStation();
 			});
 
 			let volume = parseInt(localStorage.getItem("volume"));
