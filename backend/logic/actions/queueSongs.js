@@ -31,29 +31,21 @@ module.exports = {
 		});
 	},
 
-	update: (session, id, updatedSong, cb) => {
+	update: (session, _id, updatedSong, cb) => {
 		//TODO Require admin/login
 		//TODO Check if id and updatedSong is valid
-		db.models.queueSong.findOne({ id }, function(err, queueSong) {
+		db.models.queueSong.findOne({ _id }, (err, currentSong) => {
 			if (err) throw err;
-			// List of properties that are allowed to be changed
-			const updatableProperties = ['id', 'title', 'artists', 'genres', 'thumbnail', 'explicit', 'duration', 'skipDuration'];
-			//TODO Check if new id, if any, is already in use in queue or on rotation
+			// TODO Check if new id, if any, is already in use in queue or on rotation
 			let updated = false;
-			for (let prop in queueSong) {
-				if (updatableProperties.indexOf(prop) !== -1 && updatedSong.hasOwnProperty('prop') && updatedSong[prop] !== queueSong[prop]) {
-					queueSong[prop] = updatedSong[prop];
-					updated = true;
-				}
+			for (let prop in updatedSong) if (updatedSong[prop] !== currentSong[prop]) currentSong[prop] = updatedSong[prop]; updated = true;
+			if (!updated) return cb({ status: 'error', message: 'No properties changed' });
+			else {
+				currentSong.save(err => {
+					if (err) throw err;
+					return cb({ status: 'success', message: 'Successfully updated the queued song' });
+				});
 			}
-			if (!updated) return cb({ status: 'failure', message: 'No properties changed' });
-
-			queueSong.save((err) => {
-				if (err) return cb({ status: 'failure', message: 'Couldn\'t save to Database' });
-
-				return cb({ status: 'success', message: 'Successfully updated the queueSong object' });
-			});
-
 		});
 	},
 
@@ -172,6 +164,8 @@ module.exports = {
 			},
 			(newSong, next) => {
 				const song = new db.models.queueSong(newSong);
+
+				// check if song already exists
 
 				song.save(err => {
 

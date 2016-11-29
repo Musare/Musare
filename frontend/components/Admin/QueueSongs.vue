@@ -96,7 +96,7 @@
 				</p>
 			</section>
 			<footer class='modal-card-foot'>
-				<i class='material-icons save-changes' @click=''>save</i>
+				<i class='material-icons save-changes' @click='save(editing.song)'>save</i>
 				<button class='delete' @click='toggleModal()'></button>
 			</footer>
 		</div>
@@ -143,12 +143,19 @@
 		methods: {
 			toggleModal: function () {
 				this.isEditActive = !this.isEditActive;
-				this.pauseVideo();
+				this.video.settings('stop');
 			},
 			edit: function (song, index) {
 				this.editing = { index, song };
 				this.video.player.loadVideoById(song._id);
 				this.isEditActive = true;
+			},
+			save: function (song) {
+				let _this = this;
+				this.socket.emit('queueSongs.update', song._id, song, function (res) {
+					if (res.status == 'success' || res.status == 'error') Toast.methods.addToast(res.message, 2000);
+					_this.toggleModal();
+				});
 			},
 			add: function (song) {
 				this.socket.emit('queueSongs.remove', song._id);
