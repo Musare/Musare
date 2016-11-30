@@ -106,126 +106,126 @@ module.exports = {
 				//TODO Recalculate songs if the last song of the station playlist is getting played
 				cache.hget('stations', station._id, (err, station) => {
 					if (station) {
-						if (!station.paused) {
-							// notify all the sockets on this station to go to the next song
-							async.waterfall([
+						// notify all the sockets on this station to go to the next song
+						async.waterfall([
 
-								(next) => {
-									if (station.playlist.length > 0) {
-										function func() {
-											if (station.currentSongIndex < station.playlist.length - 1) {
-												station.currentSongIndex++;
-												songs.getSong(station.playlist[station.currentSongIndex], (err, song) => {
-													if (!err) {
-														station.currentSong = {
-															_id: song._id,
-															title: song.title,
-															artists: song.artists,
-															duration: song.duration,
-															likes: song.likes,
-															dislikes: song.dislikes,
-															skipDuration: song.skipDuration,
-															thumbnail: song.thumbnail
-														};
-														station.startedAt = Date.now();
-														station.timePaused = 0;
-														next(null, station);
-													} else {
-														station.currentSongIndex++;
-														func();
-													}
-												});
-											} else {
-												station.currentSongIndex = 0;
-												_this.calculateSongForStation(station, (err, newPlaylist) => {
-													console.log('New playlist: ', newPlaylist);
-													if (!err) {
-														songs.getSong(newPlaylist[0], (err, song) => {
-															if (song) {
-																station.currentSong = {
-																	_id: song._id,
-																	title: song.title,
-																	artists: song.artists,
-																	duration: song.duration,
-																	likes: song.likes,
-																	dislikes: song.dislikes,
-																	skipDuration: song.skipDuration,
-																	thumbnail: song.thumbnail
-																};
-																station.playlist = newPlaylist;
-															} else {
-																station.currentSong = _this.defaultSong;
-															}
-															station.startedAt = Date.now();
-															station.timePaused = 0;
-															next(null, station);
-														});
-													} else {
-														station.currentSong = _this.defaultSong;
-														station.startedAt = Date.now();
-														station.timePaused = 0;
-														next(null, station);
-													}
-												})
-											}
-										}
-
-										func();
-									} else {
-										_this.calculateSongForStation(station, (err, playlist) => {
-											if (!err && playlist.length === 0) {
-												station.currentSongIndex = 0;
-												station.currentSong = _this.defaultSong;
-												station.startedAt = Date.now();
-												station.timePaused = 0;
-												next(null, station);
-											} else {
-												songs.getSong(playlist[0], (err, song) => {
-													if (!err) {
-														station.currentSong = {
-															_id: song._id,
-															title: song.title,
-															artists: song.artists,
-															duration: song.duration,
-															likes: song.likes,
-															dislikes: song.dislikes,
-															skipDuration: song.skipDuration,
-															thumbnail: song.thumbnail
-														};
-													} else {
-														station.currentSong = _this.defaultSong;
-													}
-													station.currentSongIndex = 0;
+							(next) => {
+								if (station.playlist.length > 0) {
+									function func() {
+										if (station.currentSongIndex < station.playlist.length - 1) {
+											station.currentSongIndex++;
+											songs.getSong(station.playlist[station.currentSongIndex], (err, song) => {
+												if (!err) {
+													station.currentSong = {
+														_id: song._id,
+														title: song.title,
+														artists: song.artists,
+														duration: song.duration,
+														likes: song.likes,
+														dislikes: song.dislikes,
+														skipDuration: song.skipDuration,
+														thumbnail: song.thumbnail
+													};
 													station.startedAt = Date.now();
 													station.timePaused = 0;
-													station.playlist = playlist;
 													next(null, station);
-												});
-											}
-										});
+												} else {
+													station.currentSongIndex++;
+													func();
+												}
+											});
+										} else {
+											station.currentSongIndex = 0;
+											_this.calculateSongForStation(station, (err, newPlaylist) => {
+												console.log('New playlist: ', newPlaylist);
+												if (!err) {
+													songs.getSong(newPlaylist[0], (err, song) => {
+														if (song) {
+															station.currentSong = {
+																_id: song._id,
+																title: song.title,
+																artists: song.artists,
+																duration: song.duration,
+																likes: song.likes,
+																dislikes: song.dislikes,
+																skipDuration: song.skipDuration,
+																thumbnail: song.thumbnail
+															};
+															station.playlist = newPlaylist;
+														} else {
+															station.currentSong = _this.defaultSong;
+														}
+														station.startedAt = Date.now();
+														station.timePaused = 0;
+														next(null, station);
+													});
+												} else {
+													station.currentSong = _this.defaultSong;
+													station.startedAt = Date.now();
+													station.timePaused = 0;
+													next(null, station);
+												}
+											})
+										}
 									}
-								},
 
-								(station, next) => {
-									cache.hset('stations', station._id, station, (err) => next(err, station));
-									//TODO Also save to DB
-								},
+									func();
+								} else {
+									_this.calculateSongForStation(station, (err, playlist) => {
+										if (!err && playlist.length === 0) {
+											station.currentSongIndex = 0;
+											station.currentSong = _this.defaultSong;
+											station.startedAt = Date.now();
+											station.timePaused = 0;
+											next(null, station);
+										} else {
+											songs.getSong(playlist[0], (err, song) => {
+												if (!err) {
+													station.currentSong = {
+														_id: song._id,
+														title: song.title,
+														artists: song.artists,
+														duration: song.duration,
+														likes: song.likes,
+														dislikes: song.dislikes,
+														skipDuration: song.skipDuration,
+														thumbnail: song.thumbnail
+													};
+												} else {
+													station.currentSong = _this.defaultSong;
+												}
+												station.currentSongIndex = 0;
+												station.startedAt = Date.now();
+												station.timePaused = 0;
+												station.playlist = playlist;
+												next(null, station);
+											});
+										}
+									});
+								}
+							},
+
+							(station, next) => {
+								cache.hset('stations', station._id, station, (err) => next(err, station));
+								//TODO Also save to DB
+							},
 
 
-							], (err, station) => {
-								io.io.to(`station.${stationId}`).emit("event:songs.next", {
-									currentSong: station.currentSong,
-									startedAt: station.startedAt,
-									paused: station.paused,
-									timePaused: 0
-								});
-								utils.socketsJoinSongRoom(io.io.to(`station.${stationId}`).sockets, `song.${station.currentSong._id}`);
-								// schedule a notification to be dispatched when the next song ends
-								console.log("NEXT SONG!!!");
-								notifications.schedule(`stations.nextSong?id=${station._id}`, station.currentSong.duration * 1000);
-								//skipTimeout = setTimeout(skipSongTemp, station.currentSong.duration * 1000);
+						], (err, station) => {
+							io.io.to(`station.${stationId}`).emit("event:songs.next", {
+								currentSong: station.currentSong,
+								startedAt: station.startedAt,
+								paused: station.paused,
+								timePaused: 0
 							});
-						}
+							utils.socketsJoinSongRoom(io.io.to(`station.${stationId}`).sockets, `song.${station.currentSong._id}`);
+							// schedule a notification to be dispatched when the next song ends
+							console.log("NEXT SONG!!!");
+							if (!station.paused) {
+								notifications.schedule(`stations.nextSong?id=${station._id}`, station.currentSong.duration * 1000);
+							}
+							//skipTimeout = setTimeout(skipSongTemp, station.currentSong.duration * 1000);
+						});
 					}
 					// the station doesn't exist anymore or is paused, unsubscribe from it
 					else {

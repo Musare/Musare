@@ -53,8 +53,8 @@ const lib = {
 	 * @return {Object} - the subscription object
 	 */
 	subscribe: (name, cb, unique = false) => {
-		if (unique && subscriptions.find((subscription) => subscription.name == name)) return;
-		let subscription = { name: crypto.createHash('md5').update(`_notification:${name}_`).digest('hex'), cb };
+		if (unique && subscriptions.find((subscription) => subscription.originalName == name)) return;
+		let subscription = { originalName: name, name: crypto.createHash('md5').update(`_notification:${name}_`).digest('hex'), cb };
 		subscriptions.push(subscription);
 		return subscription;
 	},

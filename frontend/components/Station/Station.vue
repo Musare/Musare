@@ -208,6 +208,13 @@
 				this.paused = true;
 				if (this.playerReady) this.player.pauseVideo();
 			},
+			skipStation: function () {
+				let _this = this;
+				_this.socket.emit('stations.forceSkip', _this.stationId, res => {
+					//TODO Toasts
+					console.log(res);
+				});
+			},
 			resumeStation: function () {
 				let _this = this;
 				_this.socket.emit('stations.resume', _this.stationId, res => {

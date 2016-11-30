@@ -16,7 +16,12 @@
 					<i class="material-icons">flag</i>
 				</span>
 			</a>
-			<a class="nav-item" href="#">
+			<a v-if="$parent.$parent.role === 'admin'" class="nav-item" href="#" @click="$parent.skipStation()">
+				<span class="icon">
+					<i class="material-icons left">skip_next</i>
+				</span>
+			</a>
+			<a v-if="$parent.$parent.role !== 'admin' && $parent.$parent.loggedIn" class="nav-item" href="#" @click="$parent.voteSkipStation()">
 				<span class="icon">
 					<i class="material-icons left">skip_next</i>
 				</span>

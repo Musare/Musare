@@ -148,6 +148,25 @@ module.exports = {
 		});
 	},
 
+	forceSkip: (session, stationId, cb) => {
+		//TODO Require admin
+
+		stations.initializeAndReturnStation(stationId, (err, station) => {
+
+			if (err && err !== true) {
+				return cb({ status: 'error', message: 'An error occurred while skipping the station' });
+			}
+
+			if (station) {
+				notifications.unschedule(`stations.nextSong?id=${stationId}`);
+				notifications.schedule(`stations.nextSong?id=${stationId}`, 100);
+			}
+			else {
+				cb({ status: 'failure', message: `That station doesn't exist` });
+			}
+		});
+	},
+
 	/**
 	 * Leaves the users current station
 	 *
@@ -217,7 +236,7 @@ module.exports = {
 						if (!err) {
 							db.models.station.update({_id: stationId}, {$set: {paused: true}}, () => {
 								cache.pub('station.pause', stationId);
-								notifications.unschedule(stationId);
+								notifications.unschedule(`stations.nextSong?id=${stationId}`);
 								cb({ status: 'success' });
 							});
 						} else {

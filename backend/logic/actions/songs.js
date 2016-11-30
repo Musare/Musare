@@ -181,12 +181,26 @@ module.exports = {
 	getOwnSongRatings: (sessionId, songId, cb) => {
 		cache.hget('sessions', sessionId, (err, session) => {
 			cache.hget('userSessions', session.userSessionId, (err, userSession) => {
-				db.models.user.findOne({_id: userSession.userId}, (err, user) => {
-					console.log({ status: 'success', songId: songId, liked: (user.liked.indexOf(songId) !== -1), disliked: (user.disliked.indexOf(songId) !== -1) })
-					console.log(user.liked)
-					console.log(user.disliked)
-					return cb({ status: 'success', songId: songId, liked: (user.liked.indexOf(songId) !== -1), disliked: (user.disliked.indexOf(songId) !== -1) });
-				});
+				if (!err && userSession) {
+					db.models.user.findOne({_id: userSession.userId}, (err, user) => {
+						console.log({
+							status: 'success',
+							songId: songId,
+							liked: (user.liked.indexOf(songId) !== -1),
+							disliked: (user.disliked.indexOf(songId) !== -1)
+						})
+						console.log(user.liked)
+						console.log(user.disliked)
+						return cb({
+							status: 'success',
+							songId: songId,
+							liked: (user.liked.indexOf(songId) !== -1),
+							disliked: (user.disliked.indexOf(songId) !== -1)
+						});
+					});
+				} else {
+					return cb({ status: 'failure', message: 'Not logged in.' });
+				}
 			});
 		});
 	},
