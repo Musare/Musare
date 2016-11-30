@@ -67,8 +67,11 @@ const lib = {
 	remove: (subscription) => {
 		let index = subscriptions.indexOf(subscription);
 		if (index) subscriptions.splice(index, 1);
-	}
+	},
 
+	unschedule: (name) => {
+		pub.del(crypto.createHash('md5').update(`_notification:${name}_`).digest('hex'));
+	},
 };
 
 module.exports = lib;

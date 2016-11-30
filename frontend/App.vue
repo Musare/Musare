@@ -58,10 +58,10 @@
 			});
 		},
 		events: {
-		    'submitOnEnter': function(cb, event) {
+			'submitOnEnter': function(cb, event){
 				if (event.which == 13) {
 					cb();
-					return false;    //<---- Add this line
+					return false;
 				}
 			},
 			'register': function () {

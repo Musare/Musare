@@ -217,6 +217,7 @@ module.exports = {
 						if (!err) {
 							db.models.station.update({_id: stationId}, {$set: {paused: true}}, () => {
 								cache.pub('station.pause', stationId);
+								notifications.unschedule(stationId);
 								cb({ status: 'success' });
 							});
 						} else {
