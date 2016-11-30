@@ -1,5 +1,8 @@
 <template>
 	<station-header></station-header>
+
+	<playlist-sidebar v-if='sidebars.playlist'></playlist-sidebar>
+	
 	<div class="station">
 		<div class="columns is-mobile">
 			<div class="column is-8-desktop is-offset-2-desktop is-12-mobile">
@@ -28,13 +31,18 @@
 							</form>
 							<div class="column is-8-mobile is-5-desktop" style="float: right;">
 								<ul id="ratings" v-if="currentSong.likes !== -1 && currentSong.dislikes !== -1">
-									<li id="like" class="right" @click="toggleLike()"><span class="flow-text">{{currentSong.likes}} </span> <i id="thumbs_up" class="material-icons grey-text" v-bind:class="{liked: liked}">thumb_up</i></li>
-									<li style="margin-right: 10px;" id="dislike" class="right" @click="toggleDislike()"><span class="flow-text">{{currentSong.dislikes}} </span><i id="thumbs_down" class="material-icons grey-text" v-bind:class="{disliked: disliked}">thumb_down</i></li>
+									<li id="like" class="right" @click="toggleLike()">
+										<span class="flow-text">{{currentSong.likes}} </span>
+										<i id="thumbs_up" class="material-icons grey-text" v-bind:class="{liked: liked}">thumb_up</i>
+									</li>
+									<li style="margin-right: 10px;" id="dislike" class="right" @click="toggleDislike()">
+										<span class="flow-text">{{currentSong.dislikes}} </span>
+										<i id="thumbs_down" class="material-icons grey-text" v-bind:class="{disliked: disliked}">thumb_down</i>
+									</li>
 								</ul>
 							</div>
 						</div>
 					</div>
-					<button @click="addSongToQueue('aHjpOzsQ9YI')">ADD CRYSTALIZE!</button>
 					<div class="column is-4-desktop is-12-mobile">
 						<img class="image" id="song-thumbnail" style="margin-top: 10px !important" :src="currentSong.thumbnail" alt="Song Thumbnail" />
 					</div>
@@ -66,7 +74,7 @@
 							<td>
 								<img :src="result.thumbnail" />
 							</td>
-							<td>{{result.title}}</td>
+							<td>{{ result.title }}</td>
 							<td>
 								<a class="button is-success" @click="addSongToQueue(result.id)">
 									Add
@@ -78,16 +86,12 @@
 			</section>
 		</div>
 	</div>
-	<div class="slideout" v-if="slideout.playlist">
-		<h5 class="slideout-header">Playlist</h5>
-		<div class="slideout-content">
-
-		</div>
-	</div>
 </template>
 
 <script>
 	import { Toast } from 'vue-roaster';
+
+	import PlaylistSidebar from '../Sidebars/Playlist.vue';
 
 	import StationHeader from './StationHeader.vue';
 
@@ -105,11 +109,11 @@
 				querySearch: "",
 				queryResults: [],
 				queue: [],
-				slideout: {
-					playlist: false
-				},
 				liked: false,
-				disliked: false
+				disliked: false,
+				sidebars: {
+					playlist: true
+				}
 			}
 		},
 		methods: {
@@ -371,7 +375,7 @@
 			volume = (typeof volume === "number") ? volume : 20;
 			$("#volumeSlider").val(volume);
 		},
-		components: { StationHeader }
+		components: { StationHeader, PlaylistSidebar }
 	}
 </script>
 

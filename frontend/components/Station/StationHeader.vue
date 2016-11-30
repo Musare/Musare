@@ -59,7 +59,7 @@
 		</span>-->
 
 		<div class="nav-right">
-			<a class="nav-item" href="#">
+			<a class="nav-item" href="#" @click='$parent.sidebars.playlist = !$parent.sidebars.playlist'>
 				<span class="icon">
 					<i class="material-icons">queue_music</i>
 				</span>
