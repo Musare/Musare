@@ -55,7 +55,7 @@ module.exports = {
 		//TODO Require admin/login
 		db.models.song.findOneAndUpdate({ id }, song, { upsert: true }, (err, updatedSong) => {
 			if (err) throw err;
-			cb(updatedSong);
+			return cb({ status: 'success', message: 'Song has been successfully updated', data: updatedSong });
 		});
 	},
 
