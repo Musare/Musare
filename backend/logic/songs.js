@@ -8,8 +8,7 @@ const async = require('async');
 
 module.exports = {
 
-	init: function(cb) {
-		let _this = this;
+	init: cb => {
 		db.models.song.find({}, (err, songs) => {
 			if (!err) {
 				songs.forEach((song) => {
@@ -21,22 +20,22 @@ module.exports = {
 	},
 
 	// Attempts to get the song from Reids. If it's not in Redis, get it from Mongo and add it to Redis.
-	getSong: function(songId, cb) {
+	getSong: function(_id, cb) {
 		async.waterfall([
 
 			(next) => {
-				cache.hget('songs', songId, next);
+				cache.hget('songs', _id, next);
 			},
 
 			(song, next) => {
 				if (song) return next(true, song);
 
-				db.models.song.findOne({_id: songId}, next);
+				db.models.song.findOne({ _id }, next);
 			},
 
 			(song, next) => {
 				if (song) {
-					cache.hset('songs', songId, song);
+					cache.hset('songs', _id, song);
 					next(true, song);
 				} else next('Song not found.');
 			},
@@ -48,17 +47,17 @@ module.exports = {
 		});
 	},
 
-	updateSong: (songId, cb) => {
+	updateSong: (_id, cb) => {
 		async.waterfall([
 
 			(next) => {
-				db.models.song.findOne({_id: songId}, next);
+				db.models.song.findOne({ _id }, next);
 			},
 
 			(song, next) => {
 				if (!song) return next('Song not found.');
 
-				cache.hset('songs', songId, song, next);
+				cache.hset('songs', _id, song, next);
 			}
 
 		], (err, song) => {

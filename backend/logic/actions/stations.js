@@ -263,9 +263,9 @@ module.exports = {
 		});
 	},
 
-	remove: (sessionId, stationId, cb) => {
-		cache.hdel('stations', stationId, () => {
-			// TODO: Update Mongo
+	remove: (sessionId, _id, cb) => {
+		db.models.station.find({ _id }).remove().exec();
+		cache.hdel('stations', _id, () => {
 			return cb({ status: 'success', message: 'Station successfully removed' });
 		});
 	},
@@ -279,16 +279,16 @@ module.exports = {
 			},
 
 			// check the cache for the station
-			(next) => cache.hget('stations', data.name, next),
+			(next) => cache.hget('stations', data._id, next),
 
 			// if the cached version exist
 			(station, next) => {
-				if (station) return next({ 'status': 'failure', 'message': 'A station with that name already exists' });
-				db.models.station.findOne({ _id: data.name }, next);
+				if (station) return next({ 'status': 'failure', 'message': 'A station with that id already exists' });
+				db.models.station.findOne({ _id: data._id }, next);
 			},
 
 			(station, next) => {
-				if (station) return next({ 'status': 'failure', 'message': 'A station with that name already exists' });
+				if (station) return next({ 'status': 'failure', 'message': 'A station with that id already exists' });
 				const { _id, displayName, description, genres, playlist } = data;
 				db.models.station.create({
 					_id,
@@ -304,7 +304,7 @@ module.exports = {
 		], (err, station) => {
 			if (err) throw err;
 			stations.calculateSongForStation(station, () => {
-				cache.pub('station.create', data.name);
+				cache.pub('station.create', data._id);
 				return cb(null, { 'status': 'success', 'message': 'Successfully created station.' });
 			});
 		});
