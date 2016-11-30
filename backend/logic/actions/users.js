@@ -64,7 +64,6 @@ module.exports = {
 	},
 
 	register: function(session, username, email, password, recaptcha, cb) {
-		let _this = this;
 		async.waterfall([
 
 			// verify the request with google recaptcha
@@ -134,7 +133,7 @@ module.exports = {
 				return cb({ status: 'error', message: 'An error occurred while registering for an account' });
 			}
 			// respond with the payload that was passed to us earlier
-			_this.login(session, email, password, (result) => {
+			module.exports.login(session, email, password, (result) => {
 				let obj = { status: 'success', message: 'Successfully registered.' };
 				if (result.status === 'success') {
 					obj.SID = result.SID;

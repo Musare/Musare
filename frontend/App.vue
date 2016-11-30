@@ -46,7 +46,13 @@
 						Toast.methods.addToast(result.message, 4000);
 					}
 				});
-			}
+			},
+			'submitOnEnter': function(cb, event){
+				if (event.which == 13) {
+					cb();
+					return false;
+				}
+			},
 		},
 		ready() {
 			let _this = this;
@@ -58,12 +64,6 @@
 			});
 		},
 		events: {
-			'submitOnEnter': function(cb, event){
-				if (event.which == 13) {
-					cb();
-					return false;
-				}
-			},
 			'register': function () {
 				let { register: { email, username, password } } = this;
 				let _this = this;
