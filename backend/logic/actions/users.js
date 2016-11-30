@@ -8,6 +8,7 @@ const bcrypt = require('bcrypt');
 const db = require('../db');
 const cache = require('../cache');
 const utils = require('../utils');
+const hooks = require('./hooks');
 
 module.exports = {
 
@@ -211,12 +212,12 @@ module.exports = {
 
 	},
 
-	update: (sessionId, user_id, property, value, cb) => {
-        db.models.user.findOne({ _id: user_id }, (err, user) => {
+	update: hooks.loginRequired((sessionId, user_id, property, value, cb, userId) => {
+        db.models.user.findOne({ _id: userId }, (err, user) => {
             if (err) throw err;
             else if (!user) cb({ status: 'error', message: 'Invalid User ID' });
             else if (user[property] !== undefined && user[property] !== value) {
-                if (property == 'services.password.password') {
+                if (property === 'services.password.password') {
                     bcrypt.compare(user[property], value, (err, res) => {
                         if (err) throw err;
                         bcrypt.genSalt(10, (err, salt) => {
@@ -227,7 +228,7 @@ module.exports = {
                             });
                         });
                     });
-                } else user[property] = value;
+                } else if (property === 'email.address') user[property] = value;
                 user.save(err => {
                     if (err) cb({ status: 'error', message: err.message });
 					else  cb({ status: 'success', message: 'Field saved successfully' });
@@ -236,7 +237,7 @@ module.exports = {
                 cb({ status: 'error', message: 'Field has not changed' });
             }
         });
-    },
+    }),
 
 
 };

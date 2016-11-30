@@ -11,6 +11,7 @@ const notifications = require('../notifications');
 const utils = require('../utils');
 const stations = require('../stations');
 const songs = require('../songs');
+const hooks = require('./hooks');
 
 cache.sub('station.locked', stationId => {
 	io.io.to(`station.${stationId}`).emit("event:stations.locked");
@@ -120,7 +121,7 @@ module.exports = {
 	 * @param cb
 	 * @return {{ status: String, skipCount: Integer }}
 	 */
-	skip: (session, stationId, cb) => {
+	/*skip: (session, stationId, cb) => {
 
 		if (!session) return cb({ status: 'failure', message: 'You must be logged in to skip a song!' });
 
@@ -146,9 +147,9 @@ module.exports = {
 				cb({ status: 'failure', message: `That station doesn't exist` });
 			}
 		});
-	},
+	},*/
 
-	forceSkip: (session, stationId, cb) => {
+	forceSkip: hooks.adminRequired((session, stationId, cb) => {
 		//TODO Require admin
 
 		stations.initializeAndReturnStation(stationId, (err, station) => {
@@ -165,7 +166,7 @@ module.exports = {
 				cb({ status: 'failure', message: `That station doesn't exist` });
 			}
 		});
-	},
+	}),
 
 	/**
 	 * Leaves the users current station
@@ -195,8 +196,7 @@ module.exports = {
 		});
 	},
 
-	lock: (sessionId, stationId, cb) => {
-		//TODO Require admin
+	lock: hooks.adminRequired((sessionId, stationId, cb) => {
 		stations.initializeAndReturnStation(stationId, (err, station) => {
 			if (err && err !== true) {
 				return cb({ status: 'error', message: 'An error occurred while locking the station' });
@@ -207,10 +207,9 @@ module.exports = {
 				cb({ status: 'failure', message: `That station doesn't exist, it may have been deleted` });
 			}
 		});
-	},
+	}),
 
-	unlock: (sessionId, stationId, cb) => {
-		//TODO Require admin
+	unlock: hooks.adminRequired((sessionId, stationId, cb) => {
 		stations.initializeAndReturnStation(stationId, (err, station) => {
 			if (err && err !== true) {
 				return cb({ status: 'error', message: 'An error occurred while unlocking the station' });
@@ -221,9 +220,9 @@ module.exports = {
 				cb({ status: 'failure', message: `That station doesn't exist, it may have been deleted` });
 			}
 		});
-	},
+	}),
 
-	pause: (sessionId, stationId, cb) => {
+	pause: hooks.adminRequired((sessionId, stationId, cb) => {
 		//TODO Require admin
 		stations.initializeAndReturnStation(stationId, (err, station) => {
 			if (err && err !== true) {
@@ -251,9 +250,9 @@ module.exports = {
 				cb({ status: 'failure', message: `That station doesn't exist, it may have been deleted` });
 			}
 		});
-	},
+	}),
 
-	resume: (sessionId, stationId, cb) => {
+	resume: hooks.adminRequired((sessionId, stationId, cb) => {
 		//TODO Require admin
 		stations.initializeAndReturnStation(stationId, (err, station) => {
 			if (err && err !== true) {
@@ -280,17 +279,16 @@ module.exports = {
 				cb({ status: 'failure', message: `That station doesn't exist, it may have been deleted` });
 			}
 		});
-	},
+	}),
 
-	remove: (sessionId, _id, cb) => {
+	remove: hooks.adminRequired((sessionId, _id, cb) => {
 		db.models.station.find({ _id }).remove().exec();
 		cache.hdel('stations', _id, () => {
 			return cb({ status: 'success', message: 'Station successfully removed' });
 		});
-	},
+	}),
 
-	create: (sessionId, data, cb) => {
-		//TODO Require admin
+	create: hooks.adminRequired((sessionId, data, cb) => {
 		async.waterfall([
 
 			(next) => {
@@ -327,6 +325,6 @@ module.exports = {
 				return cb(null, { 'status': 'success', 'message': 'Successfully created station.' });
 			});
 		});
-	},
+	}),
 
 };

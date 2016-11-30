@@ -7,6 +7,7 @@ const cache = require('../cache');
 const async = require('async');
 const config = require('config');
 const request = require('request');
+const hooks = require('./hooks');
 
 notifications.subscribe('queue.newSong', songId => {
 	io.to('admin.queue').emit('event:song.new', { songId });
@@ -23,16 +24,14 @@ notifications.subscribe('queue.updatedSong', songId => {
 
 module.exports = {
 
-	index: (session, cb) => {
-		//TODO Require admin/login
+	index: hooks.adminRequired((session, cb) => {
 		db.models.queueSong.find({}, (err, songs) => {
 			if (err) throw err;
 			cb(songs);
 		});
-	},
+	}),
 
-	update: (session, _id, updatedSong, cb) => {
-		//TODO Require admin/login
+	update: hooks.adminRequired((session, _id, updatedSong, cb) => {
 		//TODO Check if id and updatedSong is valid
 		db.models.queueSong.findOne({ _id }, (err, currentSong) => {
 			if (err) throw err;
@@ -47,16 +46,15 @@ module.exports = {
 				});
 			}
 		});
-	},
+	}),
 
-	remove: (session, _id, cb) => {
+	remove: hooks.adminRequired((session, _id, cb) => {
 		// TODO Require admin/login
 		db.models.queueSong.find({ _id }).remove().exec();
 		return cb({ status: 'success', message: 'Song was removed successfully' });
-	},
+	}),
 
-	add: (session, id, cb) => {
-		//TODO Require login
+	add: hooks.loginRequired((session, id, cb) => {
 		//TODO Check if id is valid
 		//TODO Check if id is already in queue/rotation
 		// if (!session.logged_in) return cb({ status: 'failure', message: 'You must be logged in to add a song' });
@@ -184,6 +182,6 @@ module.exports = {
 			cache.pub('queue.newSong', newSong._id);
 			return cb({ status: 'success', message: 'Successfully added that song to the queue' });
 		});
-	}
+	})
 
 };

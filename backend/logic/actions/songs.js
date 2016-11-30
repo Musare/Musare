@@ -5,6 +5,7 @@ const io = require('../io');
 const songs = require('../songs');
 const cache = require('../cache');
 const utils = require('../utils');
+const hooks = require('./hooks');
 
 cache.sub('song.like', (data) => {
 	io.io.to(`song.${data.songId}`).emit('event:song.like', {songId: data.songId, undisliked: data.undisliked});
@@ -51,20 +52,19 @@ module.exports = {
 		});
 	},
 
-	update: (session, id, song, cb) => {
-		//TODO Require admin/login
+	update: hooks.adminRequired((session, id, song, cb) => {
 		db.models.song.findOneAndUpdate({ id }, song, { upsert: true }, (err, updatedSong) => {
 			if (err) throw err;
 			return cb({ status: 'success', message: 'Song has been successfully updated', data: updatedSong });
 		});
-	},
+	}),
 
-	remove: (session, _id, cb) => {
+	remove: hooks.adminRequired((session, _id, cb) => {
 		//TODO Require admin/login
 		db.models.song.find({ _id }).remove().exec();
-	},
+	}),
 
-	add: (session, song, cb) => {
+	add: hooks.adminRequired((session, song, cb) => {
 		//TODO Require admin/login
 		const newSong = new db.models.song(song);
 		db.models.song.findOne({ _id: song._id }, (err, existingSong) => {
@@ -75,9 +75,9 @@ module.exports = {
 			});
 		});
 		//TODO Check if video is in queue and Add the song to the appropriate stations
-	},
+	}),
 
-	like: (sessionId, songId, cb) => {
+	like: hooks.loginRequired((sessionId, songId, cb) => {
 		cache.hget('sessions', sessionId, (err, session) => {
 			cache.hget('userSessions', session.userSessionId, (err, userSession) => {
 				db.models.user.findOne({ _id: userSession.userId }, (err, user) => {
@@ -102,9 +102,9 @@ module.exports = {
 				});
 			});
 		});
-	},
+	}),
 
-	dislike: (sessionId, songId, cb) => {
+	dislike: hooks.loginRequired((sessionId, songId, cb) => {
 		cache.hget('sessions', sessionId, (err, session) => {
 			cache.hget('userSessions', session.userSessionId, (err, userSession) => {
 				db.models.user.findOne({_id: userSession.userId}, (err, user) => {
@@ -128,9 +128,9 @@ module.exports = {
 				});
 			});
 		});
-	},
+	}),
 
-	undislike: (sessionId, songId, cb) => {
+	undislike: hooks.loginRequired((sessionId, songId, cb) => {
 		cache.hget('sessions', sessionId, (err, session) => {
 			cache.hget('userSessions', session.userSessionId, (err, userSession) => {
 				db.models.user.findOne({_id: userSession.userId}, (err, user) => {
@@ -152,9 +152,9 @@ module.exports = {
 				});
 			});
 		});
-	},
+	}),
 
-	unlike: (sessionId, songId, cb) => {
+	unlike: hooks.loginRequired((sessionId, songId, cb) => {
 		cache.hget('sessions', sessionId, (err, session) => {
 			cache.hget('userSessions', session.userSessionId, (err, userSession) => {
 				db.models.user.findOne({_id: userSession.userId}, (err, user) => {
@@ -176,33 +176,25 @@ module.exports = {
 				});
 			});
 		});
-	},
+	}),
 
-	getOwnSongRatings: (sessionId, songId, cb) => {
-		cache.hget('sessions', sessionId, (err, session) => {
-			cache.hget('userSessions', session.userSessionId, (err, userSession) => {
-				if (!err && userSession) {
-					db.models.user.findOne({_id: userSession.userId}, (err, user) => {
-						console.log({
-							status: 'success',
-							songId: songId,
-							liked: (user.liked.indexOf(songId) !== -1),
-							disliked: (user.disliked.indexOf(songId) !== -1)
-						})
-						console.log(user.liked)
-						console.log(user.disliked)
-						return cb({
-							status: 'success',
-							songId: songId,
-							liked: (user.liked.indexOf(songId) !== -1),
-							disliked: (user.disliked.indexOf(songId) !== -1)
-						});
-					});
-				} else {
-					return cb({ status: 'failure', message: 'Not logged in.' });
-				}
+	getOwnSongRatings: hooks.loginRequired(function(sessionId, songId, cb, userId) {
+		db.models.user.findOne({_id: userId}, (err, user) => {
+			console.log({
+				status: 'success',
+				songId: songId,
+				liked: (user.liked.indexOf(songId) !== -1),
+				disliked: (user.disliked.indexOf(songId) !== -1)
+			})
+			console.log(user.liked)
+			console.log(user.disliked)
+			return cb({
+				status: 'success',
+				songId: songId,
+				liked: (user.liked.indexOf(songId) !== -1),
+				disliked: (user.disliked.indexOf(songId) !== -1)
 			});
 		});
-	},
+	})
 
 };
