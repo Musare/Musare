@@ -122,7 +122,7 @@
 					height: 270,
 					width: 480,
 					videoId: local.currentSong._id,
-					playerVars: { controls: 1, iv_load_policy: 3, rel: 0, showinfo: 0 },
+					playerVars: { controls: 0, iv_load_policy: 3, rel: 0, showinfo: 0 },
 					events: {
 						'onReady': function(event) {
 							local.playerReady = true;
@@ -273,7 +273,6 @@
 					_this.youtubeReady();
 					_this.playVideo();
 					_this.socket.emit('songs.getOwnSongRatings', data.currentSong._id, data => {
-						console.log(data);
 						if (_this.currentSong._id === data.songId) {
 							_this.liked = data.liked;
 							_this.disliked = data.disliked;
@@ -291,7 +290,6 @@
 				_this.timePaused = data.timePaused;
 				_this.playVideo();
 				_this.socket.emit('songs.getOwnSongRatings', data.currentSong._id, (data) => {
-					console.log(data);
 					if (_this.currentSong._id === data.songId) {
 						_this.liked = data.liked;
 						_this.disliked = data.disliked;

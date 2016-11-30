@@ -234,7 +234,7 @@
 				height: 315,
 				width: 560,
 				videoId: this.editing.song._id,
-				playerVars: { controls: 1, iv_load_policy: 3, rel: 0, showinfo: 0 },
+				playerVars: { controls: 0, iv_load_policy: 3, rel: 0, showinfo: 0 },
 				events: {
 					'onStateChange': event => {
 						if (event.data == 1) {
