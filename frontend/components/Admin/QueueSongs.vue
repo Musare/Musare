@@ -21,10 +21,10 @@
 						<td>
 							<strong>{{ song.title }}</strong>
 						</td>
-						<td> {{ song._id }} </td>
-						<td><span v-for='artist in song.artists'>{{ artist }}</span></td>
-						<td><span v-for='genre in song.genres'>{{ genre }}</span></td>
-						<td> {{ song.requestedBy }} </td>
+						<td>{{ song._id }}</td>
+						<td>{{ song.artists.join(', ') }}</td>
+						<td>{{ song.genres.join(', ') }}</td>
+						<td>{{ song.requestedBy }}</td>
 						<td>
 							<a class='button is-primary' @click='edit(song, index)'>Edit</a>
 							<a class='button is-success' @click='add(song)'>Add</a>
@@ -81,13 +81,29 @@
 				<p class='control'>
 					<input class='input' type='text' v-model='editing.song.title'>
 				</p>
-				<label class='label'>Artists</label>
-				<div class='control'>
-					<input v-repeat='editing.song.artists' class='input' type='text' v-model='editing.song.artists[$index]'>
-				</div>
-				<label class='label'>Genres</label>
-				<div class='control'>
-					<input v-repeat='editing.song.genres' class='input' type='text' v-model='editing.song.genres[$index]'>
+				<div class='control is-horizontal'>
+					<div class='control is-grouped'>
+						<div>
+							<p class='control has-addons'>
+								<input class='input' id='new-artist' type='text' placeholder='Artist'>
+								<a class='button is-info' @click='addTag("artists")'>Add Artist</a>
+							</p>
+							<span class='tag is-info' v-for='(index, artist) in editing.song.artists' track-by='$index'>
+								{{ artist }}
+								<button class='delete is-info' @click='removeTag("artists", index)'></button>
+							</span>
+						</div>
+						<div>
+							<p class='control has-addons'>
+								<input class='input' id='new-genre' type='text' placeholder='Genre'>
+								<a class='button is-info' @click='addTag("genres")'>Add Genre</a>
+							</p>
+							<span class='tag is-info' v-for='(index, genre) in editing.song.genres' track-by='$index'>
+								{{ genre }}
+								<button class='delete is-info' @click='removeTag("genres", index)'></button>
+							</span>
+						</div>
+					</div>
 				</div>
 				<label class='label'>Song Duration</label>
 				<p class='control'>
@@ -150,6 +166,25 @@
 			toggleModal: function () {
 				this.isEditActive = !this.isEditActive;
 				this.video.settings('stop');
+			},
+			addTag: function (type) {
+				if (type == 'genres') {
+					for (let z = 0; z < this.editing.song.genres.length; z++) {
+						if (this.editing.song.genres[z] == $('#new-genre').val()) return Toast.methods.addToast('Genre already exists', 3000);
+					}
+					if ($('#new-genre').val() !== '') this.editing.song.genres.push($('#new-genre').val());
+					else Toast.methods.addToast('Genre cannot be empty', 3000);
+				} else if (type == 'artists') {
+					for (let z = 0; z < this.editing.song.artists.length; z++) {
+						if (this.editing.song.artists[z] == $('#new-artist').val()) return Toast.methods.addToast('Artist already exists', 3000);
+					}
+					if ($('#new-artist').val() !== '') this.editing.song.artists.push($('#new-artist').val());
+					else Toast.methods.addToast('Artist cannot be empty', 3000);
+				}
+			},
+			removeTag: function (type, index) {
+				if (type == 'genres') this.editing.song.genres.splice(index, 1);
+				else if (type == 'artists') this.editing.song.artists.splice(index, 1);
 			},
 			edit: function (song, index) {
 				this.editing = { index, song };
@@ -215,9 +250,7 @@
 </script>
 
 <style lang='scss' scoped>
-	body {
-		font-family: 'Roboto', sans-serif;
-	}
+	body { font-family: 'Roboto', sans-serif; }
 
 	.thumbnail-preview {
 		display: flex;
@@ -225,13 +258,9 @@
 		padding: 10px 0 20px 0;
 	}
 
-	.modal-card-body, .modal-card-foot {
-		border-top: 0;
-		background-color: rgb(66, 165, 245);
-	}
+	.modal-card-body, .modal-card-foot { border-top: 0; }
 
 	.label, .checkbox, h5 {
-		color: #fff;
 		font-weight: normal;
 	}
 
@@ -242,9 +271,7 @@
 		padding: 10px;
 	}
 
-	.save-changes {
-		color: #fff;
-	}
+	.save-changes { color: #fff; }
 
 	.song-thumbnail {
 		display: block;
@@ -252,7 +279,7 @@
 		margin: 0 auto;
 	}
 
-	td {
-		vertical-align: middle;
-	}
+	td { vertical-align: middle; }
+
+	.tag:not(:last-child) { margin-right: 5px; }	
 </style>
