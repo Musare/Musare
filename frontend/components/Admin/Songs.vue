@@ -261,6 +261,10 @@
 		flex-direction: column;
 		align-items: center;
 		padding: 10px;
+
+		iframe {
+			pointer-events: none;
+		}
 	}
 
 	.save-changes { color: #fff; }
