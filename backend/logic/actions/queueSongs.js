@@ -84,20 +84,20 @@ module.exports = {
 					//TODO Clean up duration converter
 					let dur = body.items[0].contentDetails.duration;
 					dur = dur.replace('PT', '');
-					let durInSec = 0;
-					dur = dur.replace(/([\d]*)H/, function(v, v2) {
+					let duration = 0;
+					dur = dur.replace(/([\d]*)H/, (v, v2) => {
 						v2 = Number(v2);
-						durInSec = (v2 * 60 * 60)
+						duration = (v2 * 60 * 60);
 						return '';
 					});
-					dur = dur.replace(/([\d]*)M/, function(v, v2) {
+					dur = dur.replace(/([\d]*)M/, (v, v2) => {
 						v2 = Number(v2);
-						durInSec = (v2 * 60)
+						duration = (v2 * 60);
 						return '';
 					});
-					dur = dur.replace(/([\d]*)S/, function(v, v2) {
+					dur = dur.replace(/([\d]*)S/, (v, v2) => {
 						v2 = Number(v2);
-						durInSec += v2;
+						duration += v2;
 						return '';
 					});
 
@@ -106,12 +106,12 @@ module.exports = {
 						title: body.items[0].snippet.title,
 						artists: [],
 						genres: [],
-						duration: durInSec,
+						duration,
 						skipDuration: 0,
-						thumbnail: 'default.png',
+						thumbnail: '',
 						explicit: false,
 						requestedBy: 'temp',
-						requestedAt: requestedAt
+						requestedAt
 					};
 
 					next(null, newSong);
