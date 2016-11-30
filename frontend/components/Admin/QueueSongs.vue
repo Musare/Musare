@@ -16,7 +16,7 @@
 				<tbody>
 					<tr v-for='(index, song) in songs' track-by='$index'>
 						<td>
-							<img class='song-thumbnail' :src='song.thumbnail'>
+							<img class='song-thumbnail' :src='song.thumbnail' onerror="this.src='/assets/notes.png'">
 						</td>
 						<td>
 							<strong>{{ song.title }}</strong>
