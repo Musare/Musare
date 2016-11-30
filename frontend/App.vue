@@ -62,9 +62,17 @@
 				let { register: { email, username, password } } = this;
 				let _this = this;
 				this.socket.emit('users.register', username, email, password, /*grecaptcha.getResponse()*/null, result => {
-					Toast.methods.addToast(`User ${username} has been registered`, 2000);
-					_this.$router.go('/');
-					location.reload();
+					Toast.methods.addToast(`You have successfully registered.`, 4000);
+					setTimeout(() => {
+						if (result.SID) {
+							let date = new Date();
+							date.setTime(new Date().getTime() + (2 * 365 * 24 * 60 * 60 * 1000));
+							document.cookie = `SID=${result.SID}; expires=${date.toGMTString()}; path=/`;
+							location.reload();
+						} else {
+							_this.$router.go('/login');
+						}
+					}, 4000);
 				});
 			},
 			'login': function () {
