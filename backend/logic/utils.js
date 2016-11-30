@@ -111,7 +111,7 @@ module.exports = {
 	cookies: {
 		parseCookies: cookieString => {
 			let cookies = {};
-			if (cookieString !== undefined) cookieString.split("; ").map((cookie) => {
+			if (cookieString) cookieString.split("; ").map((cookie) => {
 				(cookies[cookie.substring(0, cookie.indexOf("="))] = cookie.substring(cookie.indexOf("=") + 1, cookie.length));
 			});
 			return cookies;
