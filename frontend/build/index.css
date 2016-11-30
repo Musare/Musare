@@ -6,3 +6,7 @@ body {
 	background-color: white;
 	/*padding: 20px;*/
 }
+
+.toast {
+	z-index: 10000 !important;
+}

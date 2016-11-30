@@ -210,27 +210,42 @@
 			},
 			skipStation: function () {
 				let _this = this;
-				_this.socket.emit('stations.forceSkip', _this.stationId, res => {
-					//TODO Toasts
-					console.log(res);
+				_this.socket.emit('stations.forceSkip', _this.stationId, data => {
+					if (data.status !== 'success') {
+						Toast.methods.addToast(`Error: ${data.message}`, 8000);
+					} else {
+						Toast.methods.addToast('Successfully skipped the station\'s current song.', 4000);
+					}
 				});
 			},
 			resumeStation: function () {
 				let _this = this;
-				_this.socket.emit('stations.resume', _this.stationId, res => {
-					//TODO Toasts
+				_this.socket.emit('stations.resume', _this.stationId, data => {
+					if (data.status !== 'success') {
+						Toast.methods.addToast(`Error: ${data.message}`, 8000);
+					} else {
+						Toast.methods.addToast('Successfully resumed the station.', 4000);
+					}
 				});
 			},
 			pauseStation: function () {
 				let _this = this;
-				_this.socket.emit('stations.pause', _this.stationId, res => {
-					//TODO Toasts
+				_this.socket.emit('stations.pause', _this.stationId, data => {
+					if (data.status !== 'success') {
+						Toast.methods.addToast(`Error: ${data.message}`, 8000);
+					} else {
+						Toast.methods.addToast('Successfully paused the station.', 4000);
+					}
 				});
 			},
 			addSongToQueue: function(songId) {
 				let local = this;
-				local.socket.emit('queueSongs.add', songId, res => {
-					if (res.status == 'success') Toast.methods.addToast(res.message, 2000);
+				local.socket.emit('queueSongs.add', songId, data => {
+					if (data.status !== 'success') {
+						Toast.methods.addToast(`Error: ${data.message}`, 8000);
+					} else {
+						Toast.methods.addToast(`${data.message}`, 4000);
+					}
 				});
 			},
 			submitQuery: function() {
@@ -251,17 +266,26 @@
 			toggleLike: function() {
 				let _this = this;
 				if (_this.liked) _this.socket.emit('songs.unlike', _this.currentSong._id, data => {
-					console.log(data);
+					if (data.status !== 'success') {
+						Toast.methods.addToast(`Error: ${data.message}`, 8000);
+					}
 				}); else _this.socket.emit('songs.like', _this.currentSong._id, data => {
-					console.log(data);
+					if (data.status !== 'success') {
+						Toast.methods.addToast(`Error: ${data.message}`, 8000);
+					}
 				});
 			},
 			toggleDislike: function() {
 				let _this = this;
-				if (_this.disliked) _this.socket.emit('songs.undislike', _this.currentSong._id, data => {
-					console.log(data);
-				}); else _this.socket.emit('songs.dislike', _this.currentSong._id, data => {
-					console.log(data);
+				if (_this.disliked) return _this.socket.emit('songs.undislike', _this.currentSong._id, data => {
+					if (data.status !== 'success') {
+						Toast.methods.addToast(`Error: ${data.message}`, 8000);
+					}
+				});
+				_this.socket.emit('songs.dislike', _this.currentSong._id, data => {
+					if (data.status !== 'success') {
+						Toast.methods.addToast(`Error: ${data.message}`, 8000);
+					}
 				});
 			}
 		},
