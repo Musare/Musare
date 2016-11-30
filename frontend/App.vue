@@ -58,6 +58,12 @@
 			});
 		},
 		events: {
+		    'submitOnEnter': function(cb, event) {
+				if (event.which == 13) {
+					cb();
+					return false;    //<---- Add this line
+				}
+			},
 			'register': function () {
 				let { register: { email, username, password } } = this;
 				let _this = this;

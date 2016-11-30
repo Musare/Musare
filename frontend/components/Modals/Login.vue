@@ -14,7 +14,7 @@
 				</p>
 				<label class="label">Password</label>
 				<p class="control">
-					<input class="input" type="password" placeholder="Password..." v-model="$parent.login.password">
+					<input class="input" type="password" placeholder="Password..." v-model="$parent.login.password" v-on:keypress="$parent.submitOnEnter(submitModal, $event)">
 				</p>
 			</section>
 			<footer class="modal-card-foot">

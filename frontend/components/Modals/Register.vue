@@ -18,12 +18,12 @@
 				</p>
 				<label class="label">Password</label>
 				<p class="control">
-					<input class="input" type="password" placeholder="Password..." v-model="$parent.register.password">
+					<input class="input" type="password" placeholder="Password..." v-model="$parent.register.password" v-on:keypress="$parent.submitOnEnter(submitModal, $event)">
 				</p>
 				<div class="g-recaptcha" :data-sitekey="recaptcha.key"></div>
 			</section>
 			<footer class="modal-card-foot">
-				<a class="button is-primary" @click="submitModal('register')">Submit</a>
+				<a class="button is-primary" @click="submitModal()">Submit</a>
 			</footer>
 		</div>
 	</div>
