@@ -1,29 +1,30 @@
 <template>
-	<div class="modal is-active">
-		<div class="modal-background"></div>
-		<div class="modal-card">
-			<header class="modal-card-head">
-				<p class="modal-card-title">Register</p>
-				<button class="delete" @click="toggleModal()"></button>
+	<div class='modal is-active'>
+		<div class='modal-background'></div>
+		<div class='modal-card'>
+			<header class='modal-card-head'>
+				<p class='modal-card-title'>Register</p>
+				<button class='delete' @click='toggleModal()'></button>
 			</header>
-			<section class="modal-card-body">
+			<section class='modal-card-body'>
 				<!-- validation to check if exists http://bulma.io/documentation/elements/form/ -->
-				<label class="label">Email</label>
-				<p class="control">
-					<input class="input" type="text" placeholder="Email..." v-model="$parent.register.email">
+				<label class='label'>Email</label>
+				<p class='control'>
+					<input class='input' type='text' placeholder='Email...' v-model='$parent.register.email'>
 				</p>
-				<label class="label">Username</label>
-				<p class="control">
-					<input class="input" type="text" placeholder="Username..." v-model="$parent.register.username">
+				<label class='label'>Username</label>
+				<p class='control'>
+					<input class='input' type='text' placeholder='Username...' v-model='$parent.register.username'>
 				</p>
-				<label class="label">Password</label>
-				<p class="control">
-					<input class="input" type="password" placeholder="Password..." v-model="$parent.register.password" v-on:keypress="$parent.submitOnEnter(submitModal, $event)">
+				<label class='label'>Password</label>
+				<p class='control'>
+					<input class='input' type='password' placeholder='Password...' v-model='$parent.register.password' v-on:keypress='$parent.submitOnEnter(submitModal, $event)'>
 				</p>
-				<div class="g-recaptcha" :data-sitekey="recaptcha.key"></div>
+				<div class='g-recaptcha' :data-sitekey='recaptcha.key'></div>
 			</section>
-			<footer class="modal-card-foot">
-				<a class="button is-primary" @click="submitModal()">Submit</a><a class="button is-primary" v-bind:href="$parent.serverDomain + '/auth/github/authorize'">Register in GitHub</a>
+			<footer class='modal-card-foot'>
+				<a class='button is-primary' @click='submitModal()'>Submit</a>
+				<a class='button is-primary' :href='$parent.serverDomain + "/auth/github/authorize"'>Register in GitHub</a>
 			</footer>
 		</div>
 	</div>

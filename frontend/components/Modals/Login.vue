@@ -1,24 +1,25 @@
 <template>
-	<div class="modal is-active">
-		<div class="modal-background"></div>
-		<div class="modal-card">
-			<header class="modal-card-head">
-				<p class="modal-card-title">Login</p>
-				<button class="delete" @click="toggleModal()"></button>
+	<div class='modal is-active'>
+		<div class='modal-background'></div>
+		<div class='modal-card'>
+			<header class='modal-card-head'>
+				<p class='modal-card-title'>Login</p>
+				<button class='delete' @click='toggleModal()'></button>
 			</header>
-			<section class="modal-card-body">
+			<section class='modal-card-body'>
 				<!-- validation to check if exists http://bulma.io/documentation/elements/form/ -->
-				<label class="label">Email</label>
-				<p class="control">
-					<input class="input" type="text" placeholder="Email..." v-model="$parent.login.email">
+				<label class='label'>Email</label>
+				<p class='control'>
+					<input class='input' type='text' placeholder='Email...' v-model='$parent.login.email'>
 				</p>
-				<label class="label">Password</label>
-				<p class="control">
-					<input class="input" type="password" placeholder="Password..." v-model="$parent.login.password" v-on:keypress="$parent.submitOnEnter(submitModal, $event)">
+				<label class='label'>Password</label>
+				<p class='control'>
+					<input class='input' type='password' placeholder='Password...' v-model='$parent.login.password' v-on:keypress='$parent.submitOnEnter(submitModal, $event)'>
 				</p>
 			</section>
-			<footer class="modal-card-foot">
-				<a class="button is-primary" @click="submitModal('login')">Submit</a><a class="button is-primary" v-bind:href="$parent.serverDomain + '/auth/github/authorize'">Log in in GitHub</a>
+			<footer class='modal-card-foot'>
+				<a class='button is-primary' @click='submitModal("login")'>Submit</a>
+				<a class='button is-primary' :href='$parent.serverDomain + "/auth/github/authorize"'>Log in in GitHub</a>
 			</footer>
 		</div>
 	</div>

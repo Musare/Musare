@@ -3,8 +3,8 @@
 		<router-view></router-view>
 		<toast></toast>
 		<what-is-new></what-is-new>
-		<login-modal v-if="isLoginActive"></login-modal>
-		<register-modal v-if="isRegisterActive"></register-modal>
+		<login-modal v-if='isLoginActive'></login-modal>
+		<register-modal v-if='isRegisterActive'></register-modal>
 	</div>
 </template>
 
@@ -21,13 +21,13 @@
 		data() {
 			return {
 				register: {
-					email: "",
-					username: "",
-					password: ""
+					email: '',
+					username: '',
+					password: ''
 				},
 				login: {
-					email: "",
-					password: ""
+					email: '',
+					password: ''
 				},
 				loggedIn: false,
 				role: '',
@@ -39,20 +39,15 @@
 		},
 		methods: {
 			logout: function () {
-				this.socket.emit('users.logout', (result) => {
+				this.socket.emit('users.logout', result => {
 					if (result.status === 'success') {
 						document.cookie = 'SID=;expires=Thu, 01 Jan 1970 00:00:01 GMT;';
 						location.reload();
-					} else {
-						Toast.methods.addToast(result.message, 4000);
-					}
+					} else Toast.methods.addToast(result.message, 4000);
 				});
 			},
-			'submitOnEnter': function(cb, event){
-				if (event.which == 13) {
-					cb();
-					return false;
-				}
+			'submitOnEnter': (cb, event) => {
+				if (event.which == 13) b(); return false;
 			},
 		},
 		ready() {
@@ -63,7 +58,7 @@
 				_this.role = role;
 				_this.username = username;
 			});
-			lofig.get("serverDomain", (res) => {
+			lofig.get('serverDomain', res => {
 				_this.serverDomain = res;
 			});
 		},

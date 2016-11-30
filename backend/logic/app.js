@@ -36,105 +36,94 @@ const lib = {
 		app.options('*', cors(corsOptions));
 
 		let oauth2 = new OAuth2(
-			config.get("apis.github.client"),
-			config.get("apis.github.secret"),
+			config.get('apis.github.client'),
+			config.get('apis.github.secret'),
 			'https://github.com/',
 			'login/oauth/authorize',
 			'login/oauth/access_token',
 			null
 		);
 
-		let redirect_uri = config.get("serverDomain") + "/auth/github/authorize/callback";
+		let redirect_uri = config.get('serverDomain') + '/auth/github/authorize/callback';
 
 		app.get('/auth/github/authorize', (req, res) => {
 			let params = [
-				`client_id=${config.get("apis.github.client")}`,
-				`redirect_uri=http://localhost/auth/github/authorize/callback`,
+				`client_id=${config.get('apis.github.client')}`,
+				`redirect_uri=${config.get('serverDomain')}/auth/github/authorize/callback`,
 				`scope=user:email`
 			].join('&');
 			res.redirect(`https://github.com/login/oauth/authorize?${params}`);
 		});
 
+		function redirectOnErr (req, res, next) {
+			return res.redirect('http://' + config.get('domain') + '/?err=' + encodeURIComponent('err'));
+		}
+
 		app.get('/auth/github/authorize/callback', (req, res) => {
 			let code = req.query.code;
-			oauth2.getOAuthAccessToken(code, {'redirect_uri': redirect_uri}, (error, access_token, refresh_token, results) => {
-				if (!error) {
-					request.get({
+			oauth2.getOAuthAccessToken(code, { redirect_uri }, (err, access_token, refresh_token, results) => {
+				if (!err) request.get({
 						url: `https://api.github.com/user?access_token=${access_token}`,
-						headers: {'User-Agent': 'request'}
-					}, (error, httpResponse, body) => {
-						if (error) return res.redirect(`http://localhost:8080/?err=${encodeURIComponent("Something went wrong while logging in1.")}`);
+						headers: { 'User-Agent': 'request' }
+					}, (err, httpResponse, body) => {
+						if (err) return redirectOnErr('err');
 						body = JSON.parse(body);
-						db.models.user.findOne({"services.github.id": body.id}, (err, user) => {
-							if (err) return res.redirect(`http://localhost:8080/?err=${encodeURIComponent("Something went wrong while logging in2.")}`);
+						db.models.user.findOne({'services.github.id': body.id}, (err, user) => {
+							if (err) return redirectOnErr('err');
 							if (user) {
 								user.services.github.access_token = access_token;
-								user.save((err) => {
-									if (err) return res.redirect(`http://localhost:8080/?err=${encodeURIComponent("Something went wrong while logging in3.")}`);
+								user.save(err => {
+									if (err) return redirectOnErr('err');
 									let userSessionId = utils.guid();
-									cache.hset('userSessions', userSessionId, cache.schemas.userSession(user._id), (err) => {
-										if (err) return res.redirect(`http://localhost:8080/?err=${encodeURIComponent("Something went wrong while logging in3.")}`);
-										res.cookie("SID", userSessionId);
-										res.redirect(`http://localhost:8080/`);
+									cache.hset('userSessions', utils.guid(), cache.schemas.userSession(user._id), err => {
+										if (err) return redirectOnErr('err');
+										res.cookie('SID', utils.guid());
+										res.redirect(`http://${config.get('domain')}/`);
 									});
 								});
 							} else {
-								db.models.user.findOne({username: new RegExp(`^${body.login}$`, 'i')}, (err, user) => {
-									if (err) return res.redirect(`http://localhost:8080/?err=${encodeURIComponent("Something went wrong while logging in4.")}`);
-									if (user) {
-										res.redirect(`http://localhost:8080/?err=${encodeURIComponent("Something went wrong while logging in5.")}`);
-									} else {
-										request.get({
-											url: `https://api.github.com/user/emails?access_token=${access_token}`,
-											headers: {'User-Agent': 'request'}
-										}, (error, httpResponse, body2) => {
-											if (error) return res.redirect(`http://localhost:8080/?err=${encodeURIComponent("Something went wrong while logging in6.")}`);
-											body2 = JSON.parse(body2);
-											let primaryEmail;
-											body2.forEach((email) => {
-												if (email.primary) {
-													primaryEmail = email.email.toLowerCase();
+								db.models.user.findOne({ username: new RegExp(`^${body.login}$`, 'i') }, (err, user) => {
+									if (err) return redirectOnErr('err');
+									if (user) return redirectOnErr('err');
+									else request.get({
+										url: `https://api.github.com/user/emails?access_token=${access_token}`,
+										headers: {'User-Agent': 'request'}
+									}, (err, httpResponse, res) => {
+										if (err) return redirectOnErr('err');
+										res = JSON.parse(res);
+										let address;
+										res.forEach(email => {
+											if (email.primary) address = email.email.toLowerCase();
+										});
+										db.models.user.findOne({ 'email.address': address }, (err, user) => {
+											if (err) return redirectOnErr('err');
+											if (user) return redirectOnErr('err');
+											else db.models.user.create({
+												username: body.login,
+												email: {
+													address,
+													verificationToken: utils.generateRandomString(64)
+												},
+												services: {
+													github: { id: body.id, access_token }
 												}
-											});
-											db.models.user.findOne({"email.address": primaryEmail}, (err, user) => {
-												if (err) return res.redirect(`http://localhost:8080/?err=${encodeURIComponent("Something went wrong while logging in7.")}`);
-												if (user) {
-													if (err) return res.redirect(`http://localhost:8080/?err=${encodeURIComponent("Something went wrong while logging in8.")}`);
-												} else {
-													db.models.user.create({
-														username: body.login,
-														email: {
-															address: primaryEmail,
-															verificationToken: utils.generateRandomString(64)
-														},
-														services: {
-															github: {
-																id: body.id,
-																access_token: access_token
-															}
-														}
-													}, (err, user) => {
-														if (err) return res.redirect(`http://localhost:8080/?err=${encodeURIComponent("Something went wrong while logging in9.")}`);
-														//TODO Send verification email
-														let userSessionId = utils.guid();
-														cache.hset('userSessions', userSessionId, cache.schemas.userSession(user._id), (err) => {
-															if (err) return res.redirect(`http://localhost:8080/?err=${encodeURIComponent("Something went wrong while logging in3.")}`);
-															res.cookie("SID", userSessionId);
-															res.redirect(`http://localhost:8080/`);
-														});
-													});
-												}
+											}, (err, user) => {
+												if (err) return redirectOnErr('err');
+												//TODO Send verification email
+												let userSessionId = utils.guid();
+												cache.hset('userSessions', userSessionId, cache.schemas.userSession(user._id), err => {
+													if (err) return redirectOnErr('err');
+													res.cookie('SID', userSessionId);
+													res.redirect(`http://${config.get('domain')}/`);
+												});
 											});
 										});
-									}
+									});
 								});
 							}
 						});
 					});
-
-				} else {
-					res.redirect(`http://localhost:8080/?err=${encodeURIComponent("Something went wrong while logging in2.")}`);
-				}
+				else return redirectOnErr('err');
 			});
 		});
 
