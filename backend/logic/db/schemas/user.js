@@ -9,6 +9,9 @@ module.exports = {
 	services: {
 		password: {
 			password: String
+		},
+		github: {
+			id: Number,
 		}
 	},
 	ban: {

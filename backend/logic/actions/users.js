@@ -64,6 +64,7 @@ module.exports = {
 	},
 
 	register: function(session, username, email, password, recaptcha, cb) {
+		email = email.toLowerCase();
 		async.waterfall([
 
 			// verify the request with google recaptcha
@@ -83,7 +84,7 @@ module.exports = {
 			(/*response, body, */next) => {
 				/*let json = JSON.parse(body);*/
 				//if (json.success !== true) return next('Response from recaptcha was not successful');
-				db.models.user.findOne({ username }, next);
+				db.models.user.findOne({ username: new RegExp(`^${username}$`, 'i') }, next);
 			},
 
 			// if the user already exists, respond with that
@@ -123,6 +124,7 @@ module.exports = {
 
 			// respond with the new user
 			(newUser, next) => {
+				//TODO Send verification email
 				next(null, { status: 'success', user: newUser })
 			}
 

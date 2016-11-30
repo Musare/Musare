@@ -1,6 +1,7 @@
 {
 	"secret": "",
 	"domain": "",
+	"serverDomain": "",
   	"isDocker": true,
 	"apis": {
 		"youtube": {
@@ -11,7 +12,8 @@
 		},
 		"github": {
 			"client": "",
-			"secret": ""
+			"secret": "",
+			"redirect_uri": ""
 		},
 		"discord": {
 			"client": "",

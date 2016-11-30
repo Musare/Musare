@@ -33,7 +33,8 @@
 				role: '',
 				username: '',
 				isRegisterActive: false,
-				isLoginActive: false
+				isLoginActive: false,
+				serverDomain: ''
 			}
 		},
 		methods: {
@@ -61,6 +62,9 @@
 				_this.loggedIn = authenticated;
 				_this.role = role;
 				_this.username = username;
+			});
+			lofig.get("serverDomain", (res) => {
+				_this.serverDomain = res;
 			});
 		},
 		events: {

@@ -18,7 +18,7 @@
 				</p>
 			</section>
 			<footer class="modal-card-foot">
-				<a class="button is-primary" @click="submitModal('login')">Submit</a>
+				<a class="button is-primary" @click="submitModal('login')">Submit</a><a class="button is-primary" v-bind:href="$parent.serverDomain + '/auth/github/authorize'">Log in in GitHub</a>
 			</footer>
 		</div>
 	</div>
