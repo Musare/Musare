@@ -75,7 +75,7 @@ module.exports = {
 		//TODO Check if video is in queue and Add the song to the appropriate stations
 	}),
 
-	like: hooks.loginRequired((session, songId, cb) => {
+	like: hooks.loginRequired((session, songId, cb, userId) => {
 		db.models.user.findOne({ _id: userId }, (err, user) => {
 			if (user.liked.indexOf(songId) !== -1) return cb({ status: 'failure', message: 'You have already liked this song.' });
 			let dislikes = 0;

@@ -26,13 +26,13 @@ cache.sub('station.pause', stationId => {
 });
 
 cache.sub('station.resume', stationId => {
-	stations.initializeAndReturnStation(stationId, (err, station) => {
+	stations.getStation(stationId, (err, station) => {
 		io.io.to(`station.${stationId}`).emit("event:stations.resume", {timePaused: station.timePaused});
 	});
 });
 
 cache.sub('station.create', stationId => {
-	stations.initializeAndReturnStation(stationId, (err, station) => {
+	stations.getStation(stationId, (err, station) => {
 		//TODO Emit to homepage and admin station page
 		if (!err) {
 			io.io.to('home').emit("event:stations.created", station);
@@ -80,7 +80,7 @@ module.exports = {
 	 */
 	join: (session, stationId, cb) => {
 
-		stations.initializeAndReturnStation(stationId, (err, station) => {
+		stations.getStation(stationId, (err, station) => {
 
 			if (err && err !== true) {
 				return cb({ status: 'error', message: 'An error occurred while joining the station' });
@@ -125,7 +125,7 @@ module.exports = {
 
 		if (!session) return cb({ status: 'failure', message: 'You must be logged in to skip a song!' });
 
-		stations.initializeAndReturnStation(stationId, (err, station) => {
+		stations.getStation(stationId, (err, station) => {
 			
 			if (err && err !== true) {
 				return cb({ status: 'error', message: 'An error occurred while skipping the station' });
@@ -150,7 +150,7 @@ module.exports = {
 	},*/
 
 	forceSkip: hooks.adminRequired((session, stationId, cb) => {
-		stations.initializeAndReturnStation(stationId, (err, station) => {
+		stations.getStation(stationId, (err, station) => {
 
 			if (err && err !== true) {
 				return cb({ status: 'error', message: 'An error occurred while skipping the station' });
@@ -175,7 +175,7 @@ module.exports = {
 	 * @return {{ status: String, userCount: Integer }}
 	 */
 	leave: (session, stationId, cb) => {
-		stations.initializeAndReturnStation(stationId, (err, station) => {
+		stations.getStation(stationId, (err, station) => {
 
 			if (err && err !== true) {
 				return cb({ status: 'error', message: 'An error occurred while leaving the station' });
@@ -195,7 +195,7 @@ module.exports = {
 	},
 
 	lock: hooks.adminRequired((session, stationId, cb) => {
-		stations.initializeAndReturnStation(stationId, (err, station) => {
+		stations.getStation(stationId, (err, station) => {
 			if (err && err !== true) {
 				return cb({ status: 'error', message: 'An error occurred while locking the station' });
 			} else if (station) {
@@ -208,7 +208,7 @@ module.exports = {
 	}),
 
 	unlock: hooks.adminRequired((session, stationId, cb) => {
-		stations.initializeAndReturnStation(stationId, (err, station) => {
+		stations.getStation(stationId, (err, station) => {
 			if (err && err !== true) {
 				return cb({ status: 'error', message: 'An error occurred while unlocking the station' });
 			} else if (station) {
@@ -221,23 +221,20 @@ module.exports = {
 	}),
 
 	pause: hooks.adminRequired((session, stationId, cb) => {
-		stations.initializeAndReturnStation(stationId, (err, station) => {
+		stations.getStation(stationId, (err, station) => {
 			if (err && err !== true) {
 				return cb({ status: 'error', message: 'An error occurred while pausing the station' });
 			} else if (station) {
 				if (!station.paused) {
 					station.paused = true;
 					station.pausedAt = Date.now();
-					cache.hset('stations', stationId, station, (err) => {
-						if (!err) {
-							db.models.station.update({_id: stationId}, {$set: {paused: true}}, () => {
-								cache.pub('station.pause', stationId);
-								notifications.unschedule(`stations.nextSong?id=${stationId}`);
-								cb({ status: 'success' });
-							});
-						} else {
-							cb({ status: 'failure', message: 'An error occurred while pausing the station.' });
-						}
+					db.models.station.update({_id: stationId}, {$set: {paused: true, pausedAt: Date.now()}}, () => {
+						if (err) return cb({ status: 'failure', message: 'An error occurred while pausing the station.' });
+						stations.updateStation(stationId, () => {
+							cache.pub('station.pause', stationId);
+							notifications.unschedule(`stations.nextSong?id=${stationId}`);
+							cb({ status: 'success' });
+						});
 					});
 				} else {
 					cb({ status: 'failure', message: 'That station was already paused.' });
@@ -250,27 +247,22 @@ module.exports = {
 	}),
 
 	resume: hooks.adminRequired((session, stationId, cb) => {
-		stations.initializeAndReturnStation(stationId, (err, station) => {
+		stations.getStation(stationId, (err, station) => {
 			if (err && err !== true) {
 				return cb({ status: 'error', message: 'An error occurred while resuming the station' });
 			} else if (station) {
 				if (station.paused) {
 					station.paused = false;
 					station.timePaused += (Date.now() - station.pausedAt);
-					cache.hset('stations', stationId, station, (err) => {
-						if (!err) {
-							db.models.station.update({_id: stationId}, {$set: {paused: false, timePaused: station.timePaused}}, () => {
-								cache.pub('station.resume', stationId);
-								cb({ status: 'success' });
-							});
-						} else {
-							cb({ status: 'failure', message: 'An error occurred while resuming the station.' });
-						}
+					db.models.station.update({_id: stationId}, {$set: {paused: false}, $inc: {timePaused: Date.now() - station.pausedAt}}, () => {
+						stations.updateStation(stationId, (err, station) => {
+							cache.pub('station.resume', stationId);
+							cb({ status: 'success' });
+						});
 					});
 				} else {
 					cb({ status: 'failure', message: 'That station is not paused.' });
 				}
-				cb({ status: 'success' });
 			} else {
 				cb({ status: 'failure', message: `That station doesn't exist, it may have been deleted` });
 			}

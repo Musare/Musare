@@ -225,6 +225,7 @@
 			resumeStation: function () {
 				let _this = this;
 				_this.socket.emit('stations.resume', _this.stationId, data => {
+					console.log(data);
 					if (data.status !== 'success') {
 						Toast.methods.addToast(`Error: ${data.message}`, 8000);
 					} else {
@@ -235,6 +236,7 @@
 			pauseStation: function () {
 				let _this = this;
 				_this.socket.emit('stations.pause', _this.stationId, data => {
+					console.log(data);
 					if (data.status !== 'success') {
 						Toast.methods.addToast(`Error: ${data.message}`, 8000);
 					} else {
@@ -325,6 +327,7 @@
 				_this.timePaused = data.timePaused;
 				_this.playVideo();
 				_this.socket.emit('songs.getOwnSongRatings', data.currentSong._id, (data) => {
+					console.log(data);
 					if (_this.currentSong._id === data.songId) {
 						_this.liked = data.liked;
 						_this.disliked = data.disliked;
