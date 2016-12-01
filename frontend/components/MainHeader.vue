@@ -60,6 +60,7 @@
 
 	.nav {
 		background-color: $grey-darker;
+		height: 50px;
 
 		.is-brand {
 			font-size: 26px !important;
