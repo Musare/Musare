@@ -1,7 +1,7 @@
 <template>
 	<station-header></station-header>
 
-	<playlist-sidebar v-if='sidebars.playlist'></playlist-sidebar>
+	<queue-sidebar v-if='sidebars.queue'></queue-sidebar>
 	
 	<div class="station">
 		<div class="columns is-mobile">
@@ -91,7 +91,7 @@
 <script>
 	import { Toast } from 'vue-roaster';
 
-	import PlaylistSidebar from '../Sidebars/Playlist.vue';
+	import QueueSidebar from '../Sidebars/Queue.vue';
 
 	import StationHeader from './StationHeader.vue';
 
@@ -112,7 +112,7 @@
 				liked: false,
 				disliked: false,
 				sidebars: {
-					playlist: true
+					queue: false
 				}
 			}
 		},
@@ -378,7 +378,7 @@
 			volume = (typeof volume === "number") ? volume : 20;
 			$("#volumeSlider").val(volume);
 		},
-		components: { StationHeader, PlaylistSidebar }
+		components: { StationHeader, QueueSidebar }
 	}
 </script>
 
