@@ -12,12 +12,13 @@ const hooks = require('./hooks');
 
 module.exports = {
 
-	login: (sessionId, identifier, password, cb) => {
+	login: (session, identifier, password, cb) => {
 
 		async.waterfall([
 
 			// check if a user with the requested identifier exists
 			(next) => db.models.user.findOne({
+				//TODO Handle lowercase
 				$or: [{ 'username': identifier }, { 'email.address': identifier }]
 			}, next),
 
@@ -33,15 +34,13 @@ module.exports = {
 					if (match) {
 
 						// store the session in the cache
-						let userSessionId = utils.guid();
-						cache.hset('userSessions', userSessionId, cache.schemas.userSession(user._id), (err) => {
+						let sessionId = utils.guid();
+						cache.hset('sessions', sessionId, cache.schemas.session(sessionId, user._id), (err) => {
 							if (!err) {
-								cache.hget('sessions', sessionId, (err, session) => {
-									session.userSessionId = userSessionId;
-									cache.hset('sessions', sessionId, session, (err) => {
-										next(null, { status: 'success', message: 'Login successful', user, SID: userSessionId });
-									})
-								})
+								//TODO See if it is necessary to add new SID to socket.
+								next(null, { status: 'success', message: 'Login successful', user, SID: sessionId });
+							} else {
+								next(null, { status: 'failure', message: 'Something went wrong' });
 							}
 						});
 					}
@@ -147,26 +146,20 @@ module.exports = {
 
 	},
 
-	logout: (sessionId, cb) => {
+	logout: (session, cb) => {
 
-		cache.hget('sessions', sessionId, (err, session) => {
+		cache.hget('sessions', session.sessionId, (err, session) => {
 			if (err || !session) return cb({ 'status': 'failure', message: 'Something went wrong while logging you out.' });
-			if (!session.userSessionId) return cb({ 'status': 'failure', message: 'You are not logged in.' });
 
-			cache.hget('userSessions', session.userSessionId, (err, userSession) => {
-				if (err || !userSession) return cb({ 'status': 'failure', message: 'Something went wrong while logging you out.' });
-				if (!userSession) return cb({ 'status': 'failure', message: 'You are not logged in.' });
-
-				cache.hdel('userSessions', session.userSessionId, (err) => {
-					if (err || !userSession) return cb({ 'status': 'failure', message: 'Something went wrong while logging you out.' });
-					return cb({ 'status': 'success', message: 'You have been successfully logged out.' });
-				});
+			cache.hdel('sessions', session.sessionId, (err) => {
+				if (err) return cb({ 'status': 'failure', message: 'Something went wrong while logging you out.' });
+				return cb({ 'status': 'success', message: 'You have been successfully logged out.' });
 			});
 		});
 
 	},
 
-	findByUsername: (sessionId, username, cb) => {
+	findByUsername: (session, username, cb) => {
 		db.models.user.find({ username }, (err, account) => {
 			if (err) throw err;
 			else if (account.length == 0) {
@@ -192,28 +185,24 @@ module.exports = {
 		});
 	},
 
-	findBySession: (sessionId, cb) => {
-		cache.hget('sessions', sessionId, (err, session) => {
-			if (err || !session) return cb({ 'status': 'error', message: err });
-			if (!session.userSessionId) return cb({ 'status': 'error', message: 'You are not logged in' });
-			cache.hget('userSessions', session.userSessionId, (err, userSession) => {
-				if (err || !userSession) return cb({ 'status': 'error', message: err });
-				if (!userSession) return cb({ 'status': 'error', message: 'You are not logged in' });
-				db.models.user.findOne({ _id: userSession.userId }, (err, user) => {
-					if (err) { throw err; } else if (user) {
-						return cb({
-							status: 'success',
-							data: user
-						});
-					}
-				});
+	findBySession: (session, cb) => {
+		cache.hget('sessions', session.sessionId, (err, session) => {
+			if (err) return cb({ 'status': 'error', message: err });
+			if (!session) return cb({ 'status': 'error', message: 'You are not logged in' });
+			db.models.user.findOne({ _id: session.userId }, (err, user) => {
+				if (err) { throw err; } else if (user) {
+					return cb({
+						status: 'success',
+						data: user
+					});
+				}
 			});
 		});
 
 	},
 
-	update: hooks.loginRequired((sessionId, user_id, property, value, cb, userId) => {
-        db.models.user.findOne({ _id: userId }, (err, user) => {
+	update: hooks.loginRequired((session, user_id, property, value, cb) => {
+        db.models.user.findOne({ _id: session.userId }, (err, user) => {
             if (err) throw err;
             else if (!user) cb({ status: 'error', message: 'Invalid User ID' });
             else if (user[property] !== undefined && user[property] !== value) {

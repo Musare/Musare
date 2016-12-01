@@ -50,14 +50,13 @@ module.exports = {
 
 	remove: hooks.adminRequired((session, _id, cb) => {
 		// TODO Require admin/login
-		db.models.queueSong.find({ _id }).remove().exec();
+		db.models.queueSong.remove({ _id });
 		return cb({ status: 'success', message: 'Song was removed successfully' });
 	}),
 
-	add: hooks.loginRequired((session, id, cb) => {
+	add: hooks.loginRequired((session, id, cb, userId) => {
 		//TODO Check if id is valid
 		//TODO Check if id is already in queue/rotation
-		// if (!session.logged_in) return cb({ status: 'failure', message: 'You must be logged in to add a song' });
 
 		let requestedAt = Date.now();
 
@@ -108,7 +107,7 @@ module.exports = {
 						skipDuration: 0,
 						thumbnail: '',
 						explicit: false,
-						requestedBy: 'temp',
+						requestedBy: userId,
 						requestedAt
 					};
 

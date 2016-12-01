@@ -74,10 +74,10 @@ const lib = {
 								user.services.github.access_token = access_token;
 								user.save(err => {
 									if (err) return redirectOnErr('err');
-									let userSessionId = utils.guid();
-									cache.hset('userSessions', utils.guid(), cache.schemas.userSession(user._id), err => {
+									let sessionId = utils.guid();
+									cache.hset('sessions', sessionId, cache.schemas.session(sessionId, user._id), err => {
 										if (err) return redirectOnErr('err');
-										res.cookie('SID', utils.guid());
+										res.cookie('SID', sessionId);
 										res.redirect(`http://${config.get('domain')}/`);
 									});
 								});
@@ -110,10 +110,10 @@ const lib = {
 											}, (err, user) => {
 												if (err) return redirectOnErr('err');
 												//TODO Send verification email
-												let userSessionId = utils.guid();
-												cache.hset('userSessions', userSessionId, cache.schemas.userSession(user._id), err => {
+												let sessionId = utils.guid();
+												cache.hset('sessions', sessionId, cache.schemas.session(sessionId, user._id), err => {
 													if (err) return redirectOnErr('err');
-													res.cookie('SID', userSessionId);
+													res.cookie('SID', sessionId);
 													res.redirect(`http://${config.get('domain')}/`);
 												});
 											});

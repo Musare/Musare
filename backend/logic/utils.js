@@ -129,14 +129,10 @@ module.exports = {
 			return this.toString(cookies);
 		}
 	},
-	socketFromSession: function(sessionId) {
+	socketFromSession: function(socketId) {
 		let ns = io.io.of("/");
 		if (ns) {
-			for (let id in ns.connected) {
-				if (ns.connected[id].sessionId === sessionId) {
-					return ns.connected[id];
-				}
-			}
+			return ns.connected[socketId];
 		}
 	},
 	socketsFromUser: function(userId, cb) {
@@ -146,19 +142,13 @@ module.exports = {
 			let total = Object.keys(ns.connected).length;
 			let done = 0;
 			for (let id in ns.connected) {
-				let sessionId = ns.connected[id].sessionId;
-				if (sessionId) {
-					cache.hget('sessions', sessionId, (err, session) => {
-						if (!err && session && session.userSessionId) {
-							cache.hget('userSessions', session.userSessionId, (err, userSession) => {
-								if (!err && userSession && userSession.userId === userId) {
-									sockets.push(ns.connected[id]);
-								}
-								checkComplete();
-							})
-						} else checkComplete();
-					});
-				} else checkComplete();
+				let session = ns.connected[id].session;
+				cache.hget('sessions', session.sessionId, (err, session) => {
+					if (!err && session && session.userId === userId) {
+						sockets.push(ns.connected[id]);
+					}
+					checkComplete();
+				});
 			}
 			function checkComplete() {
 				done++;
@@ -168,25 +158,23 @@ module.exports = {
 			}
 		}
 	},
-	socketLeaveRooms: function(sessionId) {
-		let socket = this.socketFromSession(sessionId);
+	socketLeaveRooms: function(socketid) {
+		let socket = this.socketFromSession(socketid);
 		let rooms = socket.rooms;
 		for (let j = 0; j < rooms.length; j++) {
 			socket.leave(rooms[j]);
 		}
 	},
-	socketJoinRoom: function(sessionId, room) {
-		let socket = this.socketFromSession(sessionId);
-		//console.log(io.io.sockets[socket.id]);
+	socketJoinRoom: function(socketId, room) {
+		let socket = this.socketFromSession(socketId);
 		let rooms = socket.rooms;
 		for (let j = 0; j < rooms.length; j++) {
 			socket.leave(rooms[j]);
 		}
 		socket.join(room);
 	},
-	socketJoinSongRoom: function(sessionId, room) {
-		let socket = this.socketFromSession(sessionId);
-		//console.log(io.io.sockets[socket.id]);
+	socketJoinSongRoom: function(socketId, room) {
+		let socket = this.socketFromSession(socketId);
 		let rooms = socket.rooms;
 		for (let j = 0; j < rooms.length; j++) {
 			if (socket.indexOf('song.') !== -1) {

@@ -73,12 +73,12 @@ module.exports = {
 	/**
 	 * Joins the station by its id
 	 *
-	 * @param sessionId
+	 * @param session
 	 * @param stationId - the station id
 	 * @param cb
 	 * @return {{ status: String, userCount: Integer }}
 	 */
-	join: (sessionId, stationId, cb) => {
+	join: (session, stationId, cb) => {
 
 		stations.initializeAndReturnStation(stationId, (err, station) => {
 
@@ -90,22 +90,22 @@ module.exports = {
 
 				//TODO Loop through all sockets, see if socket with same session exists, and if so leave all other station rooms and join this stationRoom
 
-				cache.client.hincrby('station.userCounts', stationId, 1, (err, userCount) => {
-					if (err) return cb({ status: 'error', message: 'An error occurred while joining the station' });
-					utils.socketJoinRoom(sessionId, `station.${stationId}`);
-					utils.socketJoinSongRoom(sessionId, `song.${station.currentSong._id}`);
-					//TODO Emit to cache, listen on cache
-					songs.getSong(station.currentSong._id, (err, song) => {
-						if (!err) {
-							station.currentSong.likes = song.likes;
-							station.currentSong.dislikes = song.dislikes;
-						} else {
-							station.currentSong.likes = -1;
-							station.currentSong.dislikes = -1;
-						}
-						cb({ status: 'success', currentSong: station.currentSong, startedAt: station.startedAt, paused: station.paused, timePaused: station.timePaused });
-					});
+				/*cache.client.hincrby('station.userCounts', stationId, 1, (err, userCount) => {
+					if (err) return cb({ status: 'error', message: 'An error occurred while joining the station' });*/
+				utils.socketJoinRoom(session.socketId, `station.${stationId}`);
+				utils.socketJoinSongRoom(session.socketId, `song.${station.currentSong._id}`);
+				//TODO Emit to cache, listen on cache
+				songs.getSong(station.currentSong._id, (err, song) => {
+					if (!err && song) {
+						station.currentSong.likes = song.likes;
+						station.currentSong.dislikes = song.dislikes;
+					} else {
+						station.currentSong.likes = -1;
+						station.currentSong.dislikes = -1;
+					}
+					cb({ status: 'success', currentSong: station.currentSong, startedAt: station.startedAt, paused: station.paused, timePaused: station.timePaused });
 				});
+				//});
 			}
 			else {
 				cb({ status: 'failure', message: `That station doesn't exist` });
@@ -150,8 +150,6 @@ module.exports = {
 	},*/
 
 	forceSkip: hooks.adminRequired((session, stationId, cb) => {
-		//TODO Require admin
-
 		stations.initializeAndReturnStation(stationId, (err, station) => {
 
 			if (err && err !== true) {
@@ -172,11 +170,11 @@ module.exports = {
 	 * Leaves the users current station
 	 *
 	 * @param session
+	 * @param stationId
 	 * @param cb
 	 * @return {{ status: String, userCount: Integer }}
 	 */
-	leave: (session, cb) => {
-		let stationId = "edm";
+	leave: (session, stationId, cb) => {
 		stations.initializeAndReturnStation(stationId, (err, station) => {
 
 			if (err && err !== true) {
@@ -196,7 +194,7 @@ module.exports = {
 		});
 	},
 
-	lock: hooks.adminRequired((sessionId, stationId, cb) => {
+	lock: hooks.adminRequired((session, stationId, cb) => {
 		stations.initializeAndReturnStation(stationId, (err, station) => {
 			if (err && err !== true) {
 				return cb({ status: 'error', message: 'An error occurred while locking the station' });
@@ -209,7 +207,7 @@ module.exports = {
 		});
 	}),
 
-	unlock: hooks.adminRequired((sessionId, stationId, cb) => {
+	unlock: hooks.adminRequired((session, stationId, cb) => {
 		stations.initializeAndReturnStation(stationId, (err, station) => {
 			if (err && err !== true) {
 				return cb({ status: 'error', message: 'An error occurred while unlocking the station' });
@@ -222,8 +220,7 @@ module.exports = {
 		});
 	}),
 
-	pause: hooks.adminRequired((sessionId, stationId, cb) => {
-		//TODO Require admin
+	pause: hooks.adminRequired((session, stationId, cb) => {
 		stations.initializeAndReturnStation(stationId, (err, station) => {
 			if (err && err !== true) {
 				return cb({ status: 'error', message: 'An error occurred while pausing the station' });
@@ -252,8 +249,7 @@ module.exports = {
 		});
 	}),
 
-	resume: hooks.adminRequired((sessionId, stationId, cb) => {
-		//TODO Require admin
+	resume: hooks.adminRequired((session, stationId, cb) => {
 		stations.initializeAndReturnStation(stationId, (err, station) => {
 			if (err && err !== true) {
 				return cb({ status: 'error', message: 'An error occurred while resuming the station' });
@@ -281,14 +277,14 @@ module.exports = {
 		});
 	}),
 
-	remove: hooks.adminRequired((sessionId, _id, cb) => {
-		db.models.station.find({ _id }).remove().exec();
-		cache.hdel('stations', _id, () => {
+	remove: hooks.adminRequired((session, stationId, cb) => {
+		db.models.station.remove({ _id: stationId });
+		cache.hdel('stations', stationId, () => {
 			return cb({ status: 'success', message: 'Station successfully removed' });
 		});
 	}),
 
-	create: hooks.adminRequired((sessionId, data, cb) => {
+	create: hooks.adminRequired((session, data, cb) => {
 		async.waterfall([
 
 			(next) => {
@@ -320,10 +316,8 @@ module.exports = {
 
 		], (err, station) => {
 			if (err) throw err;
-			stations.calculateSongForStation(station, () => {
-				cache.pub('station.create', data._id);
-				return cb(null, { 'status': 'success', 'message': 'Successfully created station.' });
-			});
+			cache.pub('station.create', data._id);
+			return cb(null, { 'status': 'success', 'message': 'Successfully created station.' });
 		});
 	}),
 

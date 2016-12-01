@@ -21,13 +21,11 @@ module.exports = {
 			let SID = utils.cookies.parseCookies(cookies).SID;
 
 			if (!SID) SID = "NONE";
-			cache.hget('userSessions', SID, (err, userSession) => {
+			cache.hget('sessions', SID, (err, session) => {
 				if (err) SID = null;
-				let sessionId = utils.guid();
-				cache.hset('sessions', sessionId, cache.schemas.session(SID), (err) => {
-					socket.sessionId = sessionId;
-					return next();
-				});
+				socket.session = (session) ? session : {};
+				socket.session.socketId = socket.id;
+				return next();
 			});
 		});
 
@@ -38,10 +36,10 @@ module.exports = {
 			socket.on('disconnect', () => {
 
 				// remove the user from their current station (if any)
-				if (socket.sessionId) {
+				if (socket.session) {
 					//actions.stations.leave(socket.sessionId, result => {});
 					// Remove session from Redis
-					cache.hdel('sessions', socket.sessionId);
+					//cache.hdel('sessions', socket.session.sessionId);
 				}
 
 				console.info('User has disconnected');
@@ -64,7 +62,7 @@ module.exports = {
 						let cb = arguments[arguments.length - 1];
 
 						// load the session from the cache
-						cache.hget('sessions', socket.sessionId, (err, session) => {
+						cache.hget('sessions', socket.session.sessionId, (err, session) => {
 							if (err && err !== true) {
 								if (typeof cb === 'function') return cb({
 									status: 'error',
@@ -73,10 +71,10 @@ module.exports = {
 							}
 
 							// make sure the sockets sessionId isn't set if there is no session
-							if (socket.sessionId && session === null) delete socket.sessionId;
+							if (socket.session.sessionId && session === null) delete socket.session.sessionId;
 
 							// call the action, passing it the session, and the arguments socket.io passed us
-							actions[namespace][action].apply(null, [socket.sessionId].concat(args).concat([
+							actions[namespace][action].apply(null, [socket.session].concat(args).concat([
 								(result) => {
 									// respond to the socket with our message
 									if (typeof cb === 'function') return cb(result);
@@ -87,28 +85,22 @@ module.exports = {
 				})
 			});
 
-			//TODO check if session is valid before returning true/false
-			if (socket.sessionId !== undefined) cache.hget('sessions', socket.sessionId, (err, session) => {
-				if (err && err !== true) socket.emit('ready', false);
-				else if (session) {
-					if (!!session.userSessionId) {
-						cache.hget('userSessions', session.userSessionId, (err, userSession) => {
-							if (err && err !== true) socket.emit('ready', false);
-							else if (userSession) {
-								db.models.user.findOne({ _id: userSession.userId }, (err, user) => {
-									let role = '';
-									let username = '';
-									if (user) {
-										role = user.role;
-										username = user.username;
-									}
-									socket.emit('ready', true, role, username);
-								});
-							} else socket.emit('ready', false);
+			if (socket.session.sessionId) {
+				cache.hget('sessions', socket.session.sessionId, (err, session) => {
+					if (err && err !== true) socket.emit('ready', false);
+					else if (session && session.userId) {
+						db.models.user.findOne({ _id: session.userId }, (err, user) => {
+							let role = '';
+							let username = '';
+							if (user) {
+								role = user.role;
+								username = user.username;
+							}
+							socket.emit('ready', true, role, username);
 						});
 					} else socket.emit('ready', false);
-				} else socket.emit('ready', false);
-			});
+				})
+			} else socket.emit('ready', false);
 		});
 
 		cb();

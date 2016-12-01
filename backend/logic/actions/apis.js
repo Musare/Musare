@@ -35,9 +35,9 @@ module.exports = {
 		});
 	},
 
-	joinRoom: (sessionId, page, cb) => {
+	joinRoom: (session, page, cb) => {
 		if (page === 'home') {
-			utils.socketJoinRoom(sessionId, page);
+			utils.socketJoinRoom(session.socketId, page);
 		}
 		cb({});
 	}

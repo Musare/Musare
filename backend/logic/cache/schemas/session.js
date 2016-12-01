@@ -1,15 +1,9 @@
 'use strict';
 
-/**
- * Schema for a session stored in redis,
- * gets created when a user logs in
- *
- * @returns {{stationId: null, created: number}}
- */
-module.exports = (userSessionId) => {
+module.exports = (sessionId, userId) => {
 	return {
-		stationId: null,
-		userSessionId: userSessionId,
+		sessionId: sessionId,
+		userId: userId,
 		created: Date.now()
 	};
 };
