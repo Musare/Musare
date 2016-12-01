@@ -217,16 +217,15 @@ module.exports = {
                             });
                         });
                     });
-                } else if (property === 'email.address') user[property] = value;
+                } else user[property] = value;
                 user.save(err => {
                     if (err) cb({ status: 'error', message: err.message });
-					else  cb({ status: 'success', message: 'Field saved successfully' });
+					else cb({ status: 'success', message: 'Field saved successfully' });
                 });
             } else {
                 cb({ status: 'error', message: 'Field has not changed' });
             }
         });
-    }),
-
+    })
 
 };

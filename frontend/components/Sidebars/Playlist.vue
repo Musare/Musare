@@ -1,5 +1,5 @@
 <template>
-	<div class='sidebar' transition='slide' v-if='$parent.sidebars.queue'>
+	<div class='sidebar' transition='slide' v-if='$parent.sidebars.playlist'>
 		<div class='inner-wrapper'>
 			<div class='title'>
 				Queue

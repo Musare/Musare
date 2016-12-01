@@ -4,7 +4,7 @@
 		<div class="container">
 			<img class="avatar" src="https://avatars2.githubusercontent.com/u/11198912?v=3&s=460"/>
 			<h2 class="has-text-centered">@{{user.username}}</h2>
-			<div class="admin-functionality">
+			<div class="admin-functionality" v-if="user.role == 'admin'">
 				<a class="button is-small is-info is-outlined" @click="changeRank('admin')" v-if="user.role == 'default'">Promote to Admin</a>
 				<a class="button is-small is-danger is-outlined" @click="changeRank('default')" v-else>Demote to User</a>
 			</div>
@@ -41,12 +41,12 @@
 		data() {
 			return {
 				user: {},
-				isUser: false,
+				isUser: false
 			}
 		},
 		methods: {
 			changeRank(newRank) {
-				this.socket.emit('users.update', 'role', ((newRank == 'admin') ? 'admin' : 'default'), res => {
+				this.socket.emit('users.update', this.$route.params.username, 'role', ((newRank == 'admin') ? 'admin' : 'default'), res => {
 					if (res.status == 'error') Toast.methods.addToast(res.message, 2000);
 					else this.user.role = newRank; Toast.methods.addToast(`User ${this.$route.params.username}'s rank has been changed to: ${newRank}`, 2000);
 				});
