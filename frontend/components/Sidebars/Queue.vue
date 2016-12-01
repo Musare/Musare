@@ -4,19 +4,53 @@
 			<div class='title'>
 				Queue
 			</div>
+
+			<article class="media">
+				<figure class="media-left">
+					<p class="image is-64x64">
+						<img :src="$parent.currentSong.thumbnail">
+					</p>
+				</figure>
+				<div class="media-content">
+					<div class="content">
+						<p>
+							Current Song: <strong>{{ $parent.currentSong.title }}</strong>
+							<br>
+							<small>{{ $parent.currentSong.artists }}</small>
+						</p>
+					</div>
+				</div>
+			</article>
+
+			<article class="media" v-for='song in playlist'>
+				<div class="media-content">
+					<div class="content">
+						<p>
+							<strong>{{ song.title }}</strong>
+							<br>
+							<small>{{ song.artists }}</small>
+						</p>
+					</div>
+				</div>
+			</article>
 		</div>
 	</div>
 </template>
 
 <script>
 	export default {
+		data() {
+			return {
+				playlist: []
+			}
+		},
 		ready: function () {
 			let _this = this;
 			let socketInterval = setInterval(() => {
 				if (!!_this.$parent.$parent.socket) {
 					_this.socket = _this.$parent.$parent.socket;
-					_this.socket.emit('stations.getPlaylist', _this.$parent.stationId, data => {
-						console.log(data);
+					_this.socket.emit('stations.getPlaylist', _this.$parent.stationId, res => {
+						if (res.status == 'success') _this.playlist = res.data;
 					});
 					clearInterval(socketInterval);
 				}
@@ -56,5 +90,15 @@
 		padding: 10px;
 		color: white;
 		font-weight: 600;
+	}
+
+	.media {
+    	padding: 0px 25px;
+	}
+
+	.media-content .content {
+		height: 64px;
+		display: flex;
+		align-items: center;
 	}
 </style>

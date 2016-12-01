@@ -70,6 +70,20 @@ module.exports = {
 		});
 	},
 
+	getPlaylist: (session, stationId, cb) => {
+		let playlist = [];
+
+		stations.getStation(stationId, (err, station) => {
+			for (let s = 1; s < station.playlist.length; s++) {
+				songs.getSong(station.playlist[s], (err, song) => {
+					playlist.push(song);
+				});
+			}
+		});
+
+		cb({ status: 'success', data: playlist })
+	},
+
 	/**
 	 * Joins the station by its id
 	 *
