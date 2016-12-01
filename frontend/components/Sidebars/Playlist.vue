@@ -1,7 +1,9 @@
 <template>
 	<div class='sidebar' transition='slide' v-if='$parent.sidebars.queue'>
 		<div class='inner-wrapper'>
-			<div class='title'>Queue</div>
+			<div class='title'>
+				Queue
+			</div>
 
 			<article class="media">
 				<figure class="media-left">

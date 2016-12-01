@@ -1,0 +1,51 @@
+<template>
+	<div class='sidebar' transition='slide' v-if='$parent.sidebars.users'>
+		<div class='inner-wrapper'>
+			<div class='title'>Users</div>
+
+			<aside class="menu">
+				<ul class="menu-list">
+					<li><a href="#" v-link="{ path: '/u/atjonathan' }" target="_blank">@atjonathan</a></li>
+				</ul>
+			</aside>
+		</div>
+	</div>
+</template>
+
+<style type='scss' scoped>
+	.sidebar {
+		position: fixed;
+		top: 0;
+		right: 0;
+		width: 300px;
+		height: 100vh;
+		background-color: #fff;
+		box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
+	}
+
+	.inner-wrapper {	
+		top: 50px;
+		position: relative;
+	}
+
+	.slide-transition {
+		transition: transform 0.6s ease-in-out;
+		transform: translateX(0);
+	}
+
+	.slide-enter, .slide-leave {
+		transform: translateX(100%);
+	}
+
+	.title {
+		background-color: rgb(3, 169, 244);
+		text-align: center;
+		padding: 10px;
+		color: white;
+		font-weight: 600;
+	}
+
+	.menu {
+		padding: 0 20px;
+	}
+</style>

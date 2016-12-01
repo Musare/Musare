@@ -2,6 +2,8 @@
 	<station-header></station-header>
 
 	<queue-sidebar v-if='sidebars.queue'></queue-sidebar>
+	<playlist-sidebar v-if='sidebars.playlist'></playlist-sidebar>
+	<users-sidebar v-if='sidebars.users'></users-sidebar>
 	
 	<div class="station">
 		<div class="columns is-mobile">
@@ -16,8 +18,6 @@
 		</div>
 		<div class="columns is-mobile">
 			<div class="column is-8-desktop is-offset-2-desktop is-12-mobile">
-				<!--<button v-if="paused" @click="unpauseStation()">Unpause</button>-->
-				<!--<button v-if="!paused" @click="pauseStation()">Pause</button>-->
 				<div class="columns is-mobile">
 					<div class="column is-8-desktop is-12-mobile">
 						<h4 id="time-display">{{timeElapsed}} / {{formatTime(currentSong.duration)}}</h4>
@@ -92,6 +92,8 @@
 	import { Toast } from 'vue-roaster';
 
 	import QueueSidebar from '../Sidebars/Queue.vue';
+	import PlaylistSidebar from '../Sidebars/Playlist.vue';
+	import UsersSidebar from '../Sidebars/UsersList.vue';
 
 	import StationHeader from './StationHeader.vue';
 
@@ -112,7 +114,9 @@
 				liked: false,
 				disliked: false,
 				sidebars: {
-					queue: false
+					queue: false,
+					users: false,
+					playlist: false
 				}
 			}
 		},
@@ -378,7 +382,7 @@
 			volume = (typeof volume === "number") ? volume : 20;
 			$("#volumeSlider").val(volume);
 		},
-		components: { StationHeader, QueueSidebar }
+		components: { StationHeader, QueueSidebar, PlaylistSidebar, UsersSidebar }
 	}
 </script>
 

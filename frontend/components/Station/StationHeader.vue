@@ -64,12 +64,12 @@
 					<i class="material-icons">queue_music</i>
 				</span>
 			</a>
-			<a class="nav-item" href="#">
+			<!--<a class="nav-item" href="#">
 				<span class="icon">
 					<i class="material-icons">chat</i>
 				</span>
-			</a>
-			<a class="nav-item" href="#">
+			</a>-->
+			<a class="nav-item" href="#" @click='$parent.sidebars.users = !$parent.sidebars.users'>
 				<span class="icon">
 					<i class="material-icons">people</i>
 				</span>
