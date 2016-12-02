@@ -34,15 +34,15 @@ module.exports = {
 		});
 	},
 
-	initializeStation: function(_station, cb) {
+	initializeStation: function(stationId, cb) {
 		if (typeof cb !== 'function') cb = ()=>{};
 		let _this = this;
-		_this.getStation(_station._id, (err, station) => {
+		_this.getStation(stationId, (err, station) => {
 			if (!err) {
 				if (station) {
 					let notification = notifications.subscribe(`stations.nextSong?id=${station._id}`, () => {
 						console.log("NOTIFICATION!!!");
-						_this.getStation(_station._id, (err, station) => {
+						_this.getStation(stationId, (err, station) => {
 							if (station) {
 								// notify all the sockets on this station to go to the next song
 								async.waterfall([

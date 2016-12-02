@@ -140,7 +140,6 @@ const lib = {
 			subs[channel] = { client: redis.createClient({ url: lib.url }), cbs: [] };
 			subs[channel].client.on('error', (err) => console.error);
 			subs[channel].client.on('message', (channel, message) => {
-				console.log("MESSAGE", channel, message);
 				if (parseJson) try { message = JSON.parse(message); } catch (e) {}
 				subs[channel].cbs.forEach((cb) => cb(message));
 			});
