@@ -222,9 +222,7 @@ module.exports = {
                     if (err) cb({ status: 'error', message: err.message });
 					else cb({ status: 'success', message: 'Field saved successfully' });
                 });
-            } else {
-                cb({ status: 'error', message: 'Field has not changed' });
-            }
+            } else cb({ status: 'error', message: 'Field has not changed' });
         });
     })
 

@@ -83,7 +83,7 @@
 			changePassword: function () {
 				if (this.currentPassword == "" || this.newPassword == "") return Toast.methods.addToast('Current password field is incorrect', 2000);
 
-				this.socket.emit('users.update', 'services.password.password', this.user.password, res => {
+				this.socket.emit('users.update', this.user._id, 'services.password.password', this.user.password, res => {
 					if (res.status == 'error') Toast.methods.addToast(res.message, 2000);
 					else Toast.methods.addToast('Successfully changed password', 2000);
 				});
@@ -91,7 +91,7 @@
 			changeEmail: function () {
 				if (this.user.email == "") return Toast.methods.addToast('Field cannot be empty', 2000);
 
-				this.socket.emit('users.update', 'email.address', this.user.email, res => {
+				this.socket.emit('users.update', this.user._id, 'email.address', this.user.email, res => {
 					if (res.status == 'error') Toast.methods.addToast(res.message, 2000);
 					else Toast.methods.addToast('Successfully changed email address', 2000);
 				});
@@ -118,7 +118,7 @@
 			changeUsername: function () {
 				if (this.user.username == "") return Toast.methods.addToast('Field cannot be empty', 2000);
 
-				this.socket.emit('users.update', 'username', this.user.username, res => {
+				this.socket.emit('users.update', this.user._id, 'username', this.user.username, res => {
 					if (res.status == 'error') Toast.methods.addToast(res.message, 2000);
 					else Toast.methods.addToast('Successfully changed username', 2000);
 				});
