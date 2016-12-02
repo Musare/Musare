@@ -5,7 +5,7 @@
 			<div class="group-title">Official Stations</div>
 			<div class="group-stations">
 				<div class="stations-station" v-for="station in stations.official" v-link="{ path: '/official/' + station._id }" @click="this.$dispatch('joinStation', station._id)">
-					<img class="station-image" :src="station.currentSong.thumbnail" />
+					<img class="station-image" :src="station.currentSong.thumbnail" onerror="this.src='/assets/notes.png'" />
 					<div class="station-info">
 						<div class="station-grid-left">
 							<h3>{{ station.displayName }}</h3>
@@ -23,7 +23,7 @@
 			<div class="group-title">Community Stations</div>
 			<div class="group-stations">
 				<div class="stations-station" v-for="station in stations.community" v-link="{ path: '/community/' + station._id }" @click="this.$dispatch('joinStation', station._id)">
-					<img class="station-image" :src="station.currentSong.thumbnail" />
+					<img class="station-image" :src="station.currentSong.thumbnail" onerror="this.src='/assets/notes.png'" />
 					<div class="station-info">
 						<div class="station-grid-left">
 							<h3>{{ station.displayName }}</h3>
@@ -66,12 +66,18 @@
 					_this.socket = _this.$parent.socket;
 					_this.socket.emit("stations.index", data => {
 						if (data.status === "success")  data.stations.forEach(station => {
+							if (!station.currentSong) {
+								station.currentSong = {thumbnail: '/assets/notes.png'};
+							}
 							if (station.type == 'official') _this.stations.official.push(station);
 							else _this.stations.community.push(station);
 						});
 					});
 					_this.socket.emit("apis.joinRoom", 'home', () => {});
 					_this.socket.on('event:stations.created', (station) => {
+						if (!station.currentSong) {
+							station.currentSong = {};
+						}
 						_this.stations[station.type].push(station);
 					});
 					clearInterval(socketInterval);

@@ -1,10 +1,8 @@
 <template>
 	<nav class="nav">
 		<div class="nav-left">
-			<a class="nav-item" href="#" v-link="{ path: '/' }" @click="this.$dispatch('leaveStation', title)">
-				<span class="icon">
-					<i class="material-icons">home</i>
-				</span>
+			<a class="nav-item logo" href="#" v-link="{ path: '/' }" @click="this.$dispatch('leaveStation', title)">
+				Musare
 			</a>
 			<a class="nav-item" href="#" @click="$parent.toggleModal()">
 				<span class="icon">
@@ -18,32 +16,32 @@
 			</a>
 			<a v-if="$parent.$parent.role === 'admin'" class="nav-item" href="#" @click="$parent.skipStation()">
 				<span class="icon">
-					<i class="material-icons left">skip_next</i>
+					<i class="material-icons">skip_next</i>
 				</span>
 			</a>
 			<a v-if="$parent.$parent.role !== 'admin' && $parent.$parent.loggedIn" class="nav-item" href="#" @click="$parent.voteSkipStation()">
 				<span class="icon">
-					<i class="material-icons left">skip_next</i>
+					<i class="material-icons">skip_next</i>
 				</span>
 			</a>
 			<a class="nav-item" href="#" v-if="$parent.$parent.role === 'admin' && $parent.locked" @click="$parent.unlockStation()">
 				<span class="icon">
-					<i class="material-icons left">lock_outline</i>
+					<i class="material-icons">lock_outline</i>
 				</span>
 			</a>
 			<a class="nav-item" href="#" v-if="$parent.$parent.role === 'admin' && !$parent.locked" @click="$parent.lockStation()">
 				<span class="icon">
-					<i class="material-icons left">lock_open</i>
+					<i class="material-icons">lock_open</i>
 				</span>
 			</a>
 			<a class="nav-item" href="#" v-if="$parent.$parent.role === 'admin' && $parent.paused" @click="$parent.resumeStation()">
 				<span class="icon">
-					<i class="material-icons left">play_arrow</i>
+					<i class="material-icons">play_arrow</i>
 				</span>
 			</a>
 			<a class="nav-item" href="#" v-if="$parent.$parent.role === 'admin' && !$parent.paused" @click="$parent.pauseStation()">
 				<span class="icon">
-					<i class="material-icons left">pause</i>
+					<i class="material-icons">pause</i>
 				</span>
 			</a>
 		</div>
@@ -97,7 +95,7 @@
 <style lang="scss" scoped>
 	@import 'theme.scss';
 	.nav {
-		background-color: $grey-darker;
+		background-color: #03a9f4;
 	}
 
 	a.nav-item {
@@ -106,6 +104,24 @@
 		&:hover {
 			color: $white;
 		}
+
+		padding: 0 18px;
+		.icon {
+			height: 64px;
+			i {
+				font-size: 2rem;
+				line-height: 64px;
+				height: 64px;
+				width: 34px;
+			}
+		}
+	}
+
+	.logo {
+		font-size: 2.1rem;
+		line-height: 64px;
+		padding-left: 20px !important;
+		padding-right: 20px !important;
 	}
 
 	.nav-center {

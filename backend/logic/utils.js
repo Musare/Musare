@@ -195,5 +195,17 @@ module.exports = {
 			}
 			socket.join(room);
 		}
+	},
+	socketsLeaveSongRooms: function(sockets) {
+		for (let id in sockets) {
+			let socket = sockets[id];
+			let rooms = socket.rooms;
+			for (let roomId in rooms) {
+				console.log(roomId);
+				if (roomId.indexOf('song.') !== -1) {
+					socket.leave(roomId);
+				}
+			}
+		}
 	}
 };

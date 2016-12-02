@@ -106,7 +106,7 @@
 			},
 			'ccs': function () {
 				let _this = this;
-				this.socket.emit('stations.create', _this.ccs.name, _this.ccs.displayName, _this.ccs.description, result => {
+				this.socket.emit('stations.createCommunity', {_id: _this.ccs.name, displayName: _this.ccs.displayName, description: _this.ccs.description}, result => {
 					if (result.status === 'success') {
 						Toast.methods.addToast(`You have added the station successfully`, 4000);
 					} else {

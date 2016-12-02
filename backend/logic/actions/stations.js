@@ -41,10 +41,8 @@ cache.sub('station.queueUpdate', stationId => {
 
 cache.sub('station.create', stationId => {
 	stations.initializeStation(stationId, (err, station) => {
-		//TODO Emit to homepage and admin station page
-		if (!err) {
-			io.io.to('home').emit("event:stations.created", station);
-		}
+		//TODO Emit to admin station page
+		io.io.to('home').emit("event:stations.created", station);
 	});
 });
 
@@ -115,18 +113,34 @@ module.exports = {
 				/*cache.client.hincrby('station.userCounts', stationId, 1, (err, userCount) => {
 					if (err) return cb({ status: 'error', message: 'An error occurred while joining the station' });*/
 				utils.socketJoinRoom(session.socketId, `station.${stationId}`);
-				utils.socketJoinSongRoom(session.socketId, `song.${station.currentSong._id}`);
-				//TODO Emit to cache, listen on cache
-				songs.getSong(station.currentSong._id, (err, song) => {
-					if (!err && song) {
-						station.currentSong.likes = song.likes;
-						station.currentSong.dislikes = song.dislikes;
-					} else {
-						station.currentSong.likes = -1;
-						station.currentSong.dislikes = -1;
-					}
-					cb({ status: 'success', currentSong: station.currentSong, startedAt: station.startedAt, paused: station.paused, timePaused: station.timePaused });
-				});
+				if (station.currentSong) {
+					utils.socketJoinSongRoom(session.socketId, `song.${station.currentSong._id}`);
+					//TODO Emit to cache, listen on cache
+					songs.getSong(station.currentSong._id, (err, song) => {
+						if (!err && song) {
+							station.currentSong.likes = song.likes;
+							station.currentSong.dislikes = song.dislikes;
+						} else {
+							station.currentSong.likes = -1;
+							station.currentSong.dislikes = -1;
+						}
+						cb({
+							status: 'success',
+							currentSong: station.currentSong,
+							startedAt: station.startedAt,
+							paused: station.paused,
+							timePaused: station.timePaused
+						});
+					});
+				} else {
+					cb({
+						status: 'success',
+						currentSong: null,
+						startedAt: station.startedAt,
+						paused: station.paused,
+						timePaused: station.timePaused
+					});
+				}
 				//});
 			}
 			else {
@@ -360,14 +374,14 @@ module.exports = {
 					description,
 					type: "community",
 					queue: [],
-					currentSong: stations.defaultSong
+					currentSong: null
 				}, next);
 			}
 
 		], (err, station) => {
-			if (err) throw err;
+			if (err) {console.log(err); throw err;}
 			cache.pub('station.create', data._id);
-			return cb(null, { 'status': 'success', 'message': 'Successfully created station.' });
+			return cb({ 'status': 'success', 'message': 'Successfully created station.' });
 		});
 	}),
 

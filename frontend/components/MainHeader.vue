@@ -59,11 +59,13 @@
 	@import 'theme.scss';
 
 	.nav {
-		background-color: $grey-darker;
-		height: 50px;
+		background-color: #03a9f4;
+		height: 64px;
 
 		.is-brand {
-			font-size: 26px !important;
+			font-size: 2.1rem !important;
+			line-height: 64px !important;
+			padding: 0 20px;
 		}
 
 		.nav-item {
@@ -75,7 +77,7 @@
 			}
 		}
 		.admin {
-			color: $blue;
+			color: $red;
 		}
 	}
 	.grouped {
