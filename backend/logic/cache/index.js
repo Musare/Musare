@@ -117,14 +117,15 @@ const lib = {
 	 */
 	pub: (channel, value, stringifyJson = true) => {
 
-		if (pubs[channel] === undefined) {
+		/*if (pubs[channel] === undefined) {
 			pubs[channel] = redis.createClient({ url: lib.url });
 			pubs[channel].on('error', (err) => console.error);
-		}
+		}*/
 
 		if (stringifyJson && ['object', 'array'].includes(typeof value)) value = JSON.stringify(value);
 
-		pubs[channel].publish(channel, value);
+		//pubs[channel].publish(channel, value);
+		lib.client.publish(channel, value);
 	},
 
 	/**
@@ -135,17 +136,19 @@ const lib = {
 	 * @param {Boolean} [parseJson=true] - parse the message as JSON
 	 */
 	sub: (channel, cb, parseJson = true) => {
-
 		if (subs[channel] === undefined) {
 			subs[channel] = { client: redis.createClient({ url: lib.url }), cbs: [] };
+			setInterval(() => {
+				console.log(channel, subs[channel].client.connected, lib.url);
+			}, 2000);
 			subs[channel].client.on('error', (err) => console.error);
 			subs[channel].client.on('message', (channel, message) => {
+				console.log("MESSAGE", channel, message);
 				if (parseJson) try { message = JSON.parse(message); } catch (e) {}
 				subs[channel].cbs.forEach((cb) => cb(message));
 			});
 			subs[channel].client.subscribe(channel);
 		}
-
 		subs[channel].cbs.push(cb);
 	}
 

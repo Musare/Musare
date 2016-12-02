@@ -32,7 +32,9 @@ cache.sub('station.resume', stationId => {
 });
 
 cache.sub('station.create', stationId => {
-	stations.getStation(stationId, (err, station) => {
+	console.log(111);
+	stations.initializeStation(stationId, (err, station) => {
+		console.log(err, station);
 		//TODO Emit to homepage and admin station page
 		if (!err) {
 			io.io.to('home').emit("event:stations.created", station);
@@ -321,8 +323,11 @@ module.exports = {
 			}
 
 		], (err, station) => {
+			console.log(1234567);
 			if (err) throw err;
+			console.log(123456789);
 			cache.pub('station.create', data._id);
+			console.log(123456723213);
 			return cb(null, { 'status': 'success', 'message': 'Successfully created station.' });
 		});
 	}),

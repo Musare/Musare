@@ -34,7 +34,8 @@ module.exports = {
 		});
 	},
 
-	initializeStation: function(_station) {
+	initializeStation: function(_station, cb) {
+		if (typeof cb !== 'function') cb = ()=>{};
 		let _this = this;
 		_this.getStation(_station._id, (err, station) => {
 			if (!err) {
@@ -177,6 +178,7 @@ module.exports = {
 									if (!station.paused) {
 										notifications.schedule(`stations.nextSong?id=${station._id}`, station.currentSong.duration * 1000);
 									}
+									cb(err, station);
 								});
 							}
 							// the station doesn't exist anymore, unsubscribe from it
