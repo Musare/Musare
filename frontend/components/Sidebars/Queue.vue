@@ -31,6 +31,8 @@
 					</div>
 				</div>
 			</article>
+
+			<a class='button add-to-queue' @click='$parent.toggleModal()'>Add Song to Queue</a>
 		</div>
 	</div>
 </template>
@@ -78,9 +80,7 @@
 		transform: translateX(0);
 	}
 
-	.slide-enter, .slide-leave {
-		transform: translateX(100%);
-	}
+	.slide-enter, .slide-leave { transform: translateX(100%); }
 
 	.title {
 		background-color: rgb(3, 169, 244);
@@ -90,9 +90,19 @@
 		font-weight: 600;
 	}
 
-	.media {
-    	padding: 0px 25px;
+	.add-to-queue {
+		width: 100%;
+    	margin-top: 25px;
+		height: 40px;
+		border-radius: 0;
+		background: rgb(3, 169, 244);
+    	color: #fff !important;
+		border: 0;
+
+		&:active, &:focus { border: 0; }
 	}
+
+	.media { padding: 0px 25px;}
 
 	.media-content .content {
 		height: 64px;
