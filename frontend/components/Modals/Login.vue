@@ -19,7 +19,7 @@
 			</section>
 			<footer class='modal-card-foot'>
 				<a class='button is-primary' @click='submitModal("login")'>Submit</a>
-				<a class='button is-primary' :href='$parent.serverDomain + "/auth/github/authorize"'>Log in in GitHub</a>
+				<a class='button is-primary' :href='$parent.serverDomain + "/auth/github/authorize"'>Log in with GitHub</a>
 			</footer>
 		</div>
 	</div>

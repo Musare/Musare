@@ -3,8 +3,7 @@ services:
   backend:
     build: ./backend
     ports:
-    - "8081:80"
-    - "9229:9229"
+    - "8080:8080"
     volumes:
     - ./backend:/opt/app
     links:
@@ -13,7 +12,7 @@ services:
   frontend:
     build: ./frontend
     ports:
-    - "8080:80"
+    - "80:80"
     volumes:
     - ./frontend:/opt/app
   mongo:

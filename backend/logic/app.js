@@ -25,7 +25,7 @@ const lib = {
 
 		let app = lib.app = express();
 
-		lib.server = app.listen(80);
+		lib.server = app.listen(8080);
 
 		app.use(bodyParser.json());
 		app.use(bodyParser.urlencoded({ extended: true }));
@@ -55,8 +55,8 @@ const lib = {
 			res.redirect(`https://github.com/login/oauth/authorize?${params}`);
 		});
 
-		function redirectOnErr (req, res, next) {
-			return res.redirect('http://' + config.get('domain') + '/?err=' + encodeURIComponent('err'));
+		function redirectOnErr (res, err){
+			return res.redirect(config.get('domain') + '/?err=' + encodeURIComponent('err'));
 		}
 
 		app.get('/auth/github/authorize/callback', (req, res) => {
@@ -66,38 +66,39 @@ const lib = {
 						url: `https://api.github.com/user?access_token=${access_token}`,
 						headers: { 'User-Agent': 'request' }
 					}, (err, httpResponse, body) => {
-						if (err) return redirectOnErr('err');
+						if (err) return redirectOnErr(res, 'err');
 						body = JSON.parse(body);
 						db.models.user.findOne({'services.github.id': body.id}, (err, user) => {
-							if (err) return redirectOnErr('err');
+							if (err) return redirectOnErr(res, 'err');
 							if (user) {
 								user.services.github.access_token = access_token;
 								user.save(err => {
-									if (err) return redirectOnErr('err');
+									if (err) return redirectOnErr(res, 'err');
 									let sessionId = utils.guid();
 									cache.hset('sessions', sessionId, cache.schemas.session(sessionId, user._id), err => {
-										if (err) return redirectOnErr('err');
+										if (err) return redirectOnErr(res, 'err');
 										res.cookie('SID', sessionId);
-										res.redirect(`http://${config.get('domain')}/`);
+										res.redirect(`${config.get('domain')}/`);
 									});
 								});
 							} else {
 								db.models.user.findOne({ username: new RegExp(`^${body.login}$`, 'i') }, (err, user) => {
-									if (err) return redirectOnErr('err');
-									if (user) return redirectOnErr('err');
+									if (err) return redirectOnErr(res, 'err');
+									if (user) return redirectOnErr(res, 'err');
 									else request.get({
 										url: `https://api.github.com/user/emails?access_token=${access_token}`,
 										headers: {'User-Agent': 'request'}
-									}, (err, httpResponse, res) => {
-										if (err) return redirectOnErr('err');
-										res = JSON.parse(res);
+									}, (err, httpResponse, body2) => {
+										if (err) return redirectOnErr(res, 'err');
+										body2 = JSON.parse(body2);
 										let address;
-										res.forEach(email => {
+										if (!Array.isArray(body2)) return redirectOnErr(res, body2.message);
+										body2.forEach(email => {
 											if (email.primary) address = email.email.toLowerCase();
 										});
-										db.models.user.findOne({ 'email.address': address }, (err, user) => {
-											if (err) return redirectOnErr('err');
-											if (user) return redirectOnErr('err');
+										db.models.user.findOne({'email.address': address}, (err, user) => {
+											if (err) return redirectOnErr(res, 'err');
+											if (user) return redirectOnErr(res, 'err');
 											else db.models.user.create({
 												username: body.login,
 												email: {
@@ -105,16 +106,16 @@ const lib = {
 													verificationToken: utils.generateRandomString(64)
 												},
 												services: {
-													github: { id: body.id, access_token }
+													github: {id: body.id, access_token}
 												}
 											}, (err, user) => {
-												if (err) return redirectOnErr('err');
+												if (err) return redirectOnErr(res, 'err');
 												//TODO Send verification email
 												let sessionId = utils.guid();
 												cache.hset('sessions', sessionId, cache.schemas.session(sessionId, user._id), err => {
-													if (err) return redirectOnErr('err');
+													if (err) return redirectOnErr(res, 'err');
 													res.cookie('SID', sessionId);
-													res.redirect(`http://${config.get('domain')}/`);
+													res.redirect(`${config.get('domain')}/`);
 												});
 											});
 										});
@@ -123,7 +124,7 @@ const lib = {
 							}
 						});
 					});
-				else return redirectOnErr('err');
+				else return redirectOnErr(res, 'err');
 			});
 		});
 

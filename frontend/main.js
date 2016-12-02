@@ -18,8 +18,8 @@ let router = new VueRouter({ history: true });
 let _this = this;
 
 lofig.folder = '../config/default.json';
-lofig.get('socket.url', function(res) {
-	let socket = window.socket = io(window.location.protocol + '//' + res);
+lofig.get('serverDomain', function(res) {
+	let socket = window.socket = io(res);
 	socket.on("ready", (status, role, username) => {
 		auth.data(status, role, username);
 	});
