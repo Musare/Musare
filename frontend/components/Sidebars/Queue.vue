@@ -32,7 +32,7 @@
 				</div>
 			</article>
 
-			<a class='button add-to-queue' @click='$parent.toggleModal()'>Add Song to Queue</a>
+			<a class='button add-to-queue' @click='$parent.toggleModal("addSongToQueue")'>Add Song to Queue</a>
 		</div>
 	</div>
 </template>

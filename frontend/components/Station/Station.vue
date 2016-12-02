@@ -76,13 +76,10 @@
 				paused: false,
 				timeElapsed: "0:00",
 				interval: 0,
-				querySearch: "",
-				queryResults: [],
-				queue: [],
 				liked: false,
 				disliked: false,
 				modals: {
-					addSongToQueue: true
+					addSongToQueue: false
 				},
 				sidebars: {
 					queue: false,
@@ -93,8 +90,8 @@
 			}
 		},
 		methods: {
-			toggleModal: function() {
-				this.modals.addSongToQueue = !this.modals.addSongToQueue;
+			toggleModal: function (type) {
+				if (type == 'addSongToQueue') this.modals.addSongToQueue = !this.modals.addSongToQueue;
 			},
 			youtubeReady: function() {
 				let local = this;
@@ -221,31 +218,6 @@
 						Toast.methods.addToast(`Error: ${data.message}`, 8000);
 					} else {
 						Toast.methods.addToast('Successfully paused the station.', 4000);
-					}
-				});
-			},
-			addSongToQueue: function(songId) {
-				let local = this;
-				local.socket.emit('queueSongs.add', songId, data => {
-					if (data.status !== 'success') {
-						Toast.methods.addToast(`Error: ${data.message}`, 8000);
-					} else {
-						Toast.methods.addToast(`${data.message}`, 4000);
-					}
-				});
-			},
-			submitQuery: function() {
-				let local = this;
-				local.socket.emit('apis.searchYoutube', local.querySearch, results => {
-					results = results.data;
-					local.queryResults = [];
-					for (let i = 0; i < results.items.length; i++) {
-						local.queryResults.push({
-							id: results.items[i].id.videoId,
-							url: `https://www.youtube.com/watch?v=${this.id}`,
-							title: results.items[i].snippet.title,
-							thumbnail: results.items[i].snippet.thumbnails.default.url
-						});
 					}
 				});
 			},

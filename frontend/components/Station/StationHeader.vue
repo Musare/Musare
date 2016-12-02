@@ -4,7 +4,7 @@
 			<a class="nav-item logo" href="#" v-link="{ path: '/' }" @click="this.$dispatch('leaveStation', title)">
 				Musare
 			</a>
-			<a class="nav-item" href="#" @click="$parent.toggleModal()">
+			<a class="nav-item" href="#" @click="$parent.toggleModal('addSongToQueue')">
 				<span class="icon">
 					<i class="material-icons">playlist_add</i>
 				</span>
