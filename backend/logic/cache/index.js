@@ -5,6 +5,8 @@ const redis = require('redis');
 // Lightweight / convenience wrapper around redis module for our needs
 
 const pubs = {}, subs = {};
+let initialized = false;
+let callbacks = [];
 
 const lib = {
 
@@ -23,11 +25,15 @@ const lib = {
 	 * @param {Function} cb - gets called once we're done initializing
 	 */
 	init: (url, cb) => {
-
 		lib.url = url;
 
 		lib.client = redis.createClient({ url: lib.url });
-		lib.client.on('error', (err) => console.error);
+		lib.client.on('error', (err) => console.error(err));
+
+		initialized = true;
+		callbacks.forEach((callback) => {
+			callback();
+		});
 
 		cb();
 	},
@@ -118,9 +124,9 @@ const lib = {
 	pub: (channel, value, stringifyJson = true) => {
 
 		/*if (pubs[channel] === undefined) {
-			pubs[channel] = redis.createClient({ url: lib.url });
-			pubs[channel].on('error', (err) => console.error);
-		}*/
+		 pubs[channel] = redis.createClient({ url: lib.url });
+		 pubs[channel].on('error', (err) => console.error);
+		 }*/
 
 		if (stringifyJson && ['object', 'array'].includes(typeof value)) value = JSON.stringify(value);
 
@@ -136,16 +142,25 @@ const lib = {
 	 * @param {Boolean} [parseJson=true] - parse the message as JSON
 	 */
 	sub: (channel, cb, parseJson = true) => {
-		if (subs[channel] === undefined) {
-			subs[channel] = { client: redis.createClient({ url: lib.url }), cbs: [] };
-			subs[channel].client.on('error', (err) => console.error);
-			subs[channel].client.on('message', (channel, message) => {
-				if (parseJson) try { message = JSON.parse(message); } catch (e) {}
-				subs[channel].cbs.forEach((cb) => cb(message));
+		if (initialized) {
+			func();
+		} else {
+			callbacks.push(() => {
+				func();
 			});
-			subs[channel].client.subscribe(channel);
 		}
-		subs[channel].cbs.push(cb);
+		function func() {
+			if (subs[channel] === undefined) {
+				subs[channel] = { client: redis.createClient({ url: lib.url }), cbs: [] };
+				subs[channel].client.on('error', (err) => console.error(err));
+				subs[channel].client.on('message', (channel, message) => {
+					if (parseJson) try { message = JSON.parse(message); } catch (e) {}
+					subs[channel].cbs.forEach((cb) => cb(message));
+				});
+				subs[channel].client.subscribe(channel);
+			}
+			subs[channel].cbs.push(cb);
+		}
 	}
 
 };
