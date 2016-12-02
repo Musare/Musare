@@ -78,7 +78,7 @@ const lib = {
 									cache.hset('sessions', sessionId, cache.schemas.session(sessionId, user._id), err => {
 										if (err) return redirectOnErr(res, 'err');
 										res.cookie('SID', sessionId);
-										res.redirect(`${config.get('domain')}/`);
+										res.redirect(`http://${config.get('domain')}/`);
 									});
 								});
 							} else {
@@ -115,7 +115,7 @@ const lib = {
 												cache.hset('sessions', sessionId, cache.schemas.session(sessionId, user._id), err => {
 													if (err) return redirectOnErr(res, 'err');
 													res.cookie('SID', sessionId);
-													res.redirect(`${config.get('domain')}/`);
+													res.redirect(`http://${config.get('domain')}/`);
 												});
 											});
 										});
