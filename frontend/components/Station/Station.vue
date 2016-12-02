@@ -252,99 +252,103 @@
 			_this.stationId = _this.$route.params.id;
 			_this.interval = 0;
 
-			_this.socket = _this.$parent.socket;
-			_this.socket.emit('stations.join', _this.stationId, data => {
-				if (data.status === "success") {
-					_this.currentSong = (data.currentSong) ? data.currentSong : {};
-					_this.startedAt = data.startedAt;
-					_this.paused = data.paused;
-					_this.timePaused = data.timePaused;
-					if (data.currentSong) {
-						_this.youtubeReady();
-						_this.playVideo();
-						_this.socket.emit('songs.getOwnSongRatings', data.currentSong._id, data => {
-							if (_this.currentSong._id === data.songId) {
+			let socketInterval = setInterval(() => {
+				if (!!_this.$parent.socket) {
+					_this.socket = _this.$parent.socket;
+					_this.socket.emit('stations.join', _this.stationId, data => {
+						if (data.status === "success") {
+							_this.currentSong = (data.currentSong) ? data.currentSong : {};
+							_this.startedAt = data.startedAt;
+							_this.paused = data.paused;
+							_this.timePaused = data.timePaused;
+							if (data.currentSong) {
+								_this.youtubeReady();
+								_this.playVideo();
+								_this.socket.emit('songs.getOwnSongRatings', data.currentSong._id, data => {
+									if (_this.currentSong._id === data.songId) {
+										_this.liked = data.liked;
+										_this.disliked = data.disliked;
+									}
+								});
+							} else {
+								_this.noSong = true;
+							}
+						} else {
+							//TODO Handle error
+						}
+					});
+					_this.socket.on('event:songs.next', data => {
+						_this.currentSong = (data.currentSong) ? data.currentSong : {};
+						_this.startedAt = data.startedAt;
+						_this.paused = data.paused;
+						_this.timePaused = data.timePaused;
+						if (data.currentSong) {
+							if (!_this.playerReady) {
+								_this.youtubeReady();
+							}
+							_this.playVideo();
+							_this.socket.emit('songs.getOwnSongRatings', data.currentSong._id, (data) => {
+								console.log(data);
+								if (_this.currentSong._id === data.songId) {
+									_this.liked = data.liked;
+									_this.disliked = data.disliked;
+								}
+							});
+						} else {
+							_this.noSong = true;
+						}
+					});
+
+					_this.socket.on('event:stations.pause', data => {
+						_this.pauseLocalStation();
+					});
+
+					_this.socket.on('event:stations.resume', data => {
+						_this.timePaused = data.timePaused;
+						_this.resumeLocalStation();
+					});
+
+					_this.socket.on('event:song.like', data => {
+						if (!this.noSong) {
+							if (data.songId === _this.currentSong._id) {
+								_this.currentSong.likes++;
+								if (data.undisliked) _this.currentSong.dislikes--;
+							}
+						}
+					});
+
+					_this.socket.on('event:song.dislike', data => {
+						if (!this.noSong) {
+							if (data.songId === _this.currentSong._id) {
+								_this.currentSong.dislikes++;
+								if (data.unliked) _this.currentSong.likes--;
+							}
+						}
+					});
+
+					_this.socket.on('event:song.unlike', data => {
+						if (!this.noSong) {
+							if (data.songId === _this.currentSong._id) _this.currentSong.likes--;
+						}
+					});
+
+					_this.socket.on('event:song.undislike', data => {
+						if (!this.noSong) {
+							if (data.songId === _this.currentSong._id) _this.currentSong.dislikes--;
+						}
+					});
+
+					_this.socket.on('event:song.newRatings', data => {
+						if (!this.noSong) {
+							if (data.songId === _this.currentSong._id) {
 								_this.liked = data.liked;
 								_this.disliked = data.disliked;
 							}
-						});
-					} else {
-						_this.noSong = true;
-					}
-				} else {
-					//TODO Handle error
-				}
-			});
-
-			_this.socket.on('event:songs.next', data => {
-				_this.currentSong = (data.currentSong) ? data.currentSong : {};
-				_this.startedAt = data.startedAt;
-				_this.paused = data.paused;
-				_this.timePaused = data.timePaused;
-				if (data.currentSong) {
-					if (!_this.playerReady) {
-						_this.youtubeReady();
-					}
-					_this.playVideo();
-					_this.socket.emit('songs.getOwnSongRatings', data.currentSong._id, (data) => {
-						console.log(data);
-						if (_this.currentSong._id === data.songId) {
-							_this.liked = data.liked;
-							_this.disliked = data.disliked;
 						}
 					});
-				} else {
-					_this.noSong = true;
+					clearInterval(socketInterval);
 				}
-			});
-
-			_this.socket.on('event:stations.pause', data => {
-				_this.pauseLocalStation();
-			});
-
-			_this.socket.on('event:stations.resume', data => {
-				_this.timePaused = data.timePaused;
-				_this.resumeLocalStation();
-			});
-
-			_this.socket.on('event:song.like', data => {
-				if (!this.noSong) {
-					if (data.songId === _this.currentSong._id) {
-						_this.currentSong.likes++;
-						if (data.undisliked) _this.currentSong.dislikes--;
-					}
-				}
-			});
-
-			_this.socket.on('event:song.dislike', data => {
-				if (!this.noSong) {
-					if (data.songId === _this.currentSong._id) {
-						_this.currentSong.dislikes++;
-						if (data.unliked) _this.currentSong.likes--;
-					}
-				}
-			});
-
-			_this.socket.on('event:song.unlike', data => {
-				if (!this.noSong) {
-					if (data.songId === _this.currentSong._id) _this.currentSong.likes--;
-				}
-			});
-
-			_this.socket.on('event:song.undislike', data => {
-				if (!this.noSong) {
-					if (data.songId === _this.currentSong._id) _this.currentSong.dislikes--;
-				}
-			});
-
-			_this.socket.on('event:song.newRatings', data => {
-				if (!this.noSong) {
-					if (data.songId === _this.currentSong._id) {
-						_this.liked = data.liked;
-						_this.disliked = data.disliked;
-					}
-				}
-			});
+			}, 100);
 
 			let volume = parseInt(localStorage.getItem("volume"));
 			volume = (typeof volume === "number") ? volume : 20;
