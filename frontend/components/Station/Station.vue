@@ -1,6 +1,8 @@
 <template>
 	<station-header></station-header>
 
+	<song-queue v-if='modals.addSongToQueue'></song-queue>
+
 	<queue-sidebar v-if='sidebars.queue'></queue-sidebar>
 	<playlist-sidebar v-if='sidebars.playlist'></playlist-sidebar>
 	<users-sidebar v-if='sidebars.users'></users-sidebar>
@@ -51,46 +53,12 @@
 			</div>
 		</div>
 	</div>
-	<div class="modal" :class="{ 'is-active': isActive }">
-		<div class="modal-background"></div>
-		<div class="modal-card">
-			<header class="modal-card-head">
-				<p class="modal-card-title">Add Songs to Station</p>
-				<button class="delete" @click="toggleModal()" ></button>
-			</header>
-			<section class="modal-card-body">
-				<div class="control is-grouped">
-					<p class="control is-expanded">
-						<input class="input" type="text" placeholder="YouTube Query" v-model="querySearch">
-					</p>
-					<p class="control">
-						<a class="button is-info" @click="submitQuery()">
-							Search
-						</a>
-					</p>
-				</div>
-				<table class="table">
-					<tbody>
-						<tr v-for="result in queryResults">
-							<td>
-								<img :src="result.thumbnail" />
-							</td>
-							<td>{{ result.title }}</td>
-							<td>
-								<a class="button is-success" @click="addSongToQueue(result.id)">
-									Add
-								</a>
-							</td>
-						</tr>
-					</tbody>
-				</table>
-			</section>
-		</div>
-	</div>
 </template>
 
 <script>
 	import { Toast } from 'vue-roaster';
+
+	import SongQueue from '../Modals/AddSongToQueue.vue';
 
 	import QueueSidebar from '../Sidebars/Queue.vue';
 	import PlaylistSidebar from '../Sidebars/Playlist.vue';
@@ -101,7 +69,6 @@
 	export default {
 		data() {
 			return {
-				isActive: false,
 				playerReady: false,
 				currentSong: {},
 				player: undefined,
@@ -114,6 +81,9 @@
 				queue: [],
 				liked: false,
 				disliked: false,
+				modals: {
+					addSongToQueue: true
+				},
 				sidebars: {
 					queue: false,
 					users: false,
@@ -124,7 +94,7 @@
 		},
 		methods: {
 			toggleModal: function() {
-				this.isActive = !this.isActive;
+				this.modals.addSongToQueue = !this.modals.addSongToQueue;
 			},
 			youtubeReady: function() {
 				let local = this;
@@ -408,7 +378,7 @@
 			volume = (typeof volume === "number") ? volume : 20;
 			$("#volumeSlider").val(volume);
 		},
-		components: { StationHeader, QueueSidebar, PlaylistSidebar, UsersSidebar }
+		components: { StationHeader, SongQueue, QueueSidebar, PlaylistSidebar, UsersSidebar }
 	}
 </script>
 
