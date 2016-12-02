@@ -343,7 +343,7 @@ module.exports = {
 			}
 
 		], (err, station) => {
-			if (err) throw err;
+			if (err) {console.log(err); return cb({ 'status': 'failure', 'message': 'Something went wrong.'});}
 			cache.pub('station.create', data._id);
 			return cb(null, { 'status': 'success', 'message': 'Successfully created station.' });
 		});

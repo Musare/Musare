@@ -41,7 +41,7 @@ module.exports = {
 			},
 
 		], (err, song) => {
-			if (err && err !== true) cb(err);
+			if (err && err !== true) return cb(err);
 
 			cb(null, song);
 		});
