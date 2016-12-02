@@ -105,7 +105,7 @@ module.exports = {
 						genres: [],
 						duration,
 						skipDuration: 0,
-						thumbnail: '',
+						thumbnail: 'empty',
 						explicit: false,
 						requestedBy: userId,
 						requestedAt
