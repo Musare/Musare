@@ -1,57 +1,29 @@
 <template>
 	<div class='sidebar' transition='slide' v-if='$parent.sidebars.playlist'>
 		<div class='inner-wrapper'>
-			<div class='title'>
-				Queue
-			</div>
+			<div class='title'>Playlists</div>
 
-			<article class="media">
-				<figure class="media-left">
-					<p class="image is-64x64">
-						<img :src="$parent.currentSong.thumbnail">
-					</p>
-				</figure>
-				<div class="media-content">
-					<div class="content">
-						<p>
-							Current Song: <strong>{{ $parent.currentSong.title }}</strong>
-							<br>
-							<small>{{ $parent.currentSong.artists }}</small>
-						</p>
-					</div>
-				</div>
-			</article>
+			<aside class="menu">
+				<ul class="menu-list">
+					<li><a href="#">Top 40</a></li>
+					<li><a href="#">Good Mood</a></li>
+					<li><a href="#">Chills</a></li>
+				</ul>
+			</aside>
 
-			<article class="media" v-for='song in playlist'>
-				<div class="media-content">
-					<div class="content">
-						<p>
-							<strong>{{ song.title }}</strong>
-							<br>
-							<small>{{ song.artists }}</small>
-						</p>
-					</div>
-				</div>
-			</article>
+			<a class='button create-playlist'>Create Playlist</a>
 		</div>
 	</div>
 </template>
 
 <script>
 	export default {
-		data() {
-			return {
-				playlist: []
-			}
-		},
 		ready: function () {
 			let _this = this;
 			let socketInterval = setInterval(() => {
 				if (!!_this.$parent.$parent.socket) {
 					_this.socket = _this.$parent.$parent.socket;
-					_this.socket.emit('stations.getPlaylist', _this.$parent.stationId, res => {
-						if (res.status == 'success') _this.playlist = res.data;
-					});
+					// get users playlists
 					clearInterval(socketInterval);
 				}
 			}, 100);
@@ -80,9 +52,7 @@
 		transform: translateX(0);
 	}
 
-	.slide-enter, .slide-leave {
-		transform: translateX(100%);
-	}
+	.slide-enter, .slide-leave { transform: translateX(100%); }
 
 	.title {
 		background-color: rgb(3, 169, 244);
@@ -92,13 +62,19 @@
 		font-weight: 600;
 	}
 
-	.media {
-    	padding: 0px 25px;
+	.create-playlist {
+		width: 100%;
+    	margin-top: 25px;
+		height: 40px;
+		border-radius: 0;
+		background: rgb(3, 169, 244);
+    	color: #fff !important;
+		border: 0;
+
+		&:active, &:focus { border: 0; }
 	}
 
-	.media-content .content {
-		height: 64px;
-		display: flex;
-		align-items: center;
-	}
+	.menu { padding: 0 20px; }
+
+	.menu-list li a:hover { color: #000 !important; }
 </style>

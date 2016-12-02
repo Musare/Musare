@@ -2,7 +2,7 @@
 	<div class='sidebar' transition='slide' v-if='$parent.sidebars.users'>
 		<div class='inner-wrapper'>
 			<div class='title'>Users</div>
-
+			
 			<aside class="menu">
 				<ul class="menu-list">
 					<li><a href="#" v-link="{ path: '/u/atjonathan' }" target="_blank">@atjonathan</a></li>
@@ -45,7 +45,7 @@
 		font-weight: 600;
 	}
 
-	.menu {
-		padding: 0 20px;
-	}
+	.menu { padding: 0 20px; }
+
+	.menu-list li a:hover { color: #000 !important; }
 </style>
