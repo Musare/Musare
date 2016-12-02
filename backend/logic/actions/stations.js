@@ -31,6 +31,14 @@ cache.sub('station.resume', stationId => {
 	});
 });
 
+cache.sub('station.queueUpdate', stationId => {
+	stations.getStation(stationId, (err, station) => {
+		if (!err) {
+			io.io.to(`station.${stationId}`).emit("event:queue.update", station.queue);
+		}
+	});
+});
+
 cache.sub('station.create', stationId => {
 	console.log(111);
 	stations.initializeStation(stationId, (err, station) => {
@@ -329,6 +337,86 @@ module.exports = {
 			cache.pub('station.create', data._id);
 			console.log(123456723213);
 			return cb(null, { 'status': 'success', 'message': 'Successfully created station.' });
+		});
+	}),
+
+	createCommunity: hooks.loginRequired((session, data, cb) => {
+		async.waterfall([
+
+			(next) => {
+				return (data) ? next() : cb({ 'status': 'failure', 'message': 'Invalid data' });
+			},
+
+			// check the cache for the station
+			(next) => cache.hget('stations', data._id, next),
+
+			// if the cached version exist
+			(station, next) => {
+				if (station) return next({ 'status': 'failure', 'message': 'A station with that id already exists' });
+				db.models.station.findOne({ _id: data._id }, next);
+			},
+
+			(station, next) => {
+				if (station) return next({ 'status': 'failure', 'message': 'A station with that id already exists' });
+				const { _id, displayName, description } = data;
+				db.models.station.create({
+					_id,
+					displayName,
+					description,
+					type: "community",
+					queue: [],
+					currentSong: stations.defaultSong
+				}, next);
+			}
+
+		], (err, station) => {
+			if (err) throw err;
+			cache.pub('station.create', data._id);
+			return cb(null, { 'status': 'success', 'message': 'Successfully created station.' });
+		});
+	}),
+
+	addToQueue: hooks.loginRequired((session, stationId, songId, cb, userId) => {
+		stations.getStation(stationId, (err, station) => {
+			if (err) return cb(err);
+			if (station.type === 'community') {
+				let has = false;
+				station.queue.forEach((queueSong) => {
+					if (queueSong.songId === songId) {
+						has = true;
+					}
+				});
+				if (has) return cb({'status': 'failure', 'message': 'That song has already been added to the queue.'});
+				db.models.update({_id: stationId}, {$push: {queue: {_id: songId, title: "Title", duration: 100, requestedBy: userId}}}, (err) => {
+					if (err) return cb({'status': 'failure', 'message': 'Something went wrong.'});
+					stations.updateStation(stationId, (err, station) => {
+						if (err) return cb(err);
+						cache.pub('station.queueUpdate', stationId);
+					});
+				});
+			} else cb({'status': 'failure', 'message': 'That station is not a community station.'});
+		});
+	}),
+
+	removeFromQueue: hooks.adminRequired((session, stationId, songId, cb, userId) => {
+		stations.getStation(stationId, (err, station) => {
+			if (err) return cb(err);
+			if (station.type === 'community') {
+				let has = false;
+				station.queue.forEach((queueSong) => {
+					if (queueSong._id === songId) {
+						has = true;
+					}
+				});
+				if (!has) return cb({'status': 'failure', 'message': 'That song is not in the queue.'});
+				db.models.update({_id: stationId}, {$pull: {queue: {_id: songId}}}, (err) => {
+					if (err) return cb({'status': 'failure', 'message': 'Something went wrong.'});
+					stations.updateStation(stationId, (err, station) => {
+						if (err) return cb(err);
+						cache.pub('station.queueUpdate', stationId);
+					});
+				});
+			} else cb({'status': 'failure', 'message': 'That station is not a community station.'});
 		});
 	}),
 

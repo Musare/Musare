@@ -18,6 +18,7 @@
 				</div>
 			</div>
 		</div>
+		<button @click="toggleModal('ccs')">CREATE COMMUNITY STATION</button>
 		<div class="group" v-if="stations.community.length">
 			<div class="group-title">Community Stations</div>
 			<div class="group-stations">
@@ -76,6 +77,11 @@
 					clearInterval(socketInterval);
 				}
 			}, 100);
+		},
+		methods: {
+			toggleModal: function (type) {
+				this.$dispatch('toggleModal', type);
+			}
 		},
 		components: { MainHeader, MainFooter }
 	}

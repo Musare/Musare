@@ -21,5 +21,9 @@ module.exports = {
 	playlist: { type: Array, required: true },
 	genres: [{ type: String }],
 	privacy: { type: String, enum: ["public", "unlisted", "private"], default: "private" },
-	locked: { type: Boolean, default: false }
+	locked: { type: Boolean, default: false },
+	queue: [{
+		songId: { type: String, required: true },
+		requestedBy: { type: String, required: true }
+	}]
 };

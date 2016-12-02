@@ -5,6 +5,7 @@
 		<what-is-new></what-is-new>
 		<login-modal v-if='isLoginActive'></login-modal>
 		<register-modal v-if='isRegisterActive'></register-modal>
+		<create-community-station v-if='isCCSActive'></create-community-station>
 	</div>
 </template>
 
@@ -14,6 +15,7 @@
 	import WhatIsNew from './components/Modals/WhatIsNew.vue';
 	import LoginModal from './components/Modals/Login.vue';
 	import RegisterModal from './components/Modals/Register.vue';
+	import CreateCommunityStation from './components/Modals/CreateCommunityStation.vue';
 	import auth from './auth';
 
 	export default {
@@ -29,11 +31,17 @@
 					email: '',
 					password: ''
 				},
+				ccs: {
+					name: '',
+					displayName: '',
+					description: ''
+				},
 				loggedIn: false,
 				role: '',
 				username: '',
 				isRegisterActive: false,
 				isLoginActive: false,
+				isCCSActive: false,
 				serverDomain: ''
 			}
 		},
@@ -96,6 +104,16 @@
 					}
 				});
 			},
+			'ccs': function () {
+				let _this = this;
+				this.socket.emit('stations.create', _this.ccs.name, _this.ccs.displayName, _this.ccs.description, result => {
+					if (result.status === 'success') {
+						Toast.methods.addToast(`You have added the station successfully`, 4000);
+					} else {
+						Toast.methods.addToast(result.message, 4000);
+					}
+				});
+			},
 			'toggleModal': function (type) {
 				switch(type) {
 					case 'register':
@@ -103,6 +121,9 @@
 						break;
 					case 'login':
 						this.isLoginActive = !this.isLoginActive;
+						break;
+					case 'ccs':
+						this.isCCSActive = !this.isCCSActive;
 						break;
 				}
 			}
@@ -118,6 +139,6 @@
 				});
 			}*/
 		},
-		components: { Toast, WhatIsNew, LoginModal, RegisterModal }
+		components: { Toast, WhatIsNew, LoginModal, RegisterModal, CreateCommunityStation }
 	}
 </script>
