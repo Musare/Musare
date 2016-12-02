@@ -138,9 +138,6 @@ const lib = {
 	sub: (channel, cb, parseJson = true) => {
 		if (subs[channel] === undefined) {
 			subs[channel] = { client: redis.createClient({ url: lib.url }), cbs: [] };
-			setInterval(() => {
-				console.log(channel, subs[channel].client.connected, lib.url);
-			}, 2000);
 			subs[channel].client.on('error', (err) => console.error);
 			subs[channel].client.on('message', (channel, message) => {
 				console.log("MESSAGE", channel, message);

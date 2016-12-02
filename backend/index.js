@@ -79,7 +79,7 @@ async.waterfall([
 		if (!config.get("isDocker")) {
 			const express = require('express');
 			const app = express();
-			const server = app.listen(8080);
+			const server = app.listen(80);
 			app.use(express.static(__dirname + "/../frontend/build/"));
 		}
 		next();
