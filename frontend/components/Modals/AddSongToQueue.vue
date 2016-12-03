@@ -44,13 +44,13 @@
 		data() {
 			return {
 				querySearch: '',
-				queryResults: [],
+				queryResults: []
 			}
 		},
 		methods: {
 			addSongToQueue: function (songId) {
 				let _this = this;
-				_this.socket.emit('queueSongs.add', songId, data => {
+				_this.socket.emit('stations.addToQueue', _this.$parent.stationId, songId, data => {
 					if (data.status !== 'success') {
 						Toast.methods.addToast(`Error: ${data.message}`, 8000);
 					} else {

@@ -194,7 +194,8 @@ module.exports = {
 
 			if (station) {
 				notifications.unschedule(`stations.nextSong?id=${stationId}`);
-				notifications.schedule(`stations.nextSong?id=${stationId}`, 100);
+				//notifications.schedule(`stations.nextSong?id=${stationId}`, 100);
+				stations.skipStation(stationId)();
 			}
 			else {
 				cb({ status: 'failure', message: `That station doesn't exist` });
@@ -290,6 +291,7 @@ module.exports = {
 				if (station.paused) {
 					station.paused = false;
 					station.timePaused += (Date.now() - station.pausedAt);
+					console.log("&&&", station.timePaused, station.pausedAt, Date.now(), station.timePaused);
 					db.models.station.update({_id: stationId}, {$set: {paused: false}, $inc: {timePaused: Date.now() - station.pausedAt}}, () => {
 						stations.updateStation(stationId, (err, station) => {
 							cache.pub('station.resume', stationId);
@@ -391,16 +393,21 @@ module.exports = {
 			if (station.type === 'community') {
 				let has = false;
 				station.queue.forEach((queueSong) => {
-					if (queueSong.songId === songId) {
+					if (queueSong._id === songId) {
 						has = true;
 					}
 				});
 				if (has) return cb({'status': 'failure', 'message': 'That song has already been added to the queue.'});
-				db.models.update({_id: stationId}, {$push: {queue: {_id: songId, title: "Title", duration: 100, requestedBy: userId}}}, (err) => {
+				db.models.station.update({_id: stationId}, {$push: {queue: {_id: songId, title: "Title", duration: 100, requestedBy: userId}}}, (err) => {
+					console.log(err);
 					if (err) return cb({'status': 'failure', 'message': 'Something went wrong.'});
 					stations.updateStation(stationId, (err, station) => {
 						if (err) return cb(err);
+						if (station.currentSong === null || station.currentSong._id === undefined) {
+							notifications.schedule(`stations.nextSong?id=${stationId}`, 1);
+						}
 						cache.pub('station.queueUpdate', stationId);
+						cb({'status': 'success', 'message': 'Added that song to the queue.'});
 					});
 				});
 			} else cb({'status': 'failure', 'message': 'That station is not a community station.'});
@@ -418,7 +425,7 @@ module.exports = {
 					}
 				});
 				if (!has) return cb({'status': 'failure', 'message': 'That song is not in the queue.'});
-				db.models.update({_id: stationId}, {$pull: {queue: {_id: songId}}}, (err) => {
+				db.models.update({_id: stationId}, {$pull: {queue: {songId: songId}}}, (err) => {
 					if (err) return cb({'status': 'failure', 'message': 'Something went wrong.'});
 					stations.updateStation(stationId, (err, station) => {
 						if (err) return cb(err);

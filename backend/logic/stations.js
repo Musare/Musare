@@ -48,181 +48,10 @@ module.exports = {
 		let _this = this;
 		_this.getStation(stationId, (err, station) => {
 			if (!err) {
+				console.log("###");
 				if (station) {
-					let notification = notifications.subscribe(`stations.nextSong?id=${station._id}`, () => {
-						console.log("NOTIFICATION!!!");
-						_this.getStation(stationId, (err, station) => {
-							if (station) {
-								// notify all the sockets on this station to go to the next song
-								async.waterfall([
-
-									(next) => {
-										if (station.type === "official") {
-											if (station.playlist.length > 0) {
-												function func() {
-													if (station.currentSongIndex < station.playlist.length - 1) {
-														station.currentSongIndex++;
-														songs.getSong(station.playlist[station.currentSongIndex], (err, song) => {
-															if (!err) {
-																let $set = {};
-
-																$set.currentSong = {
-																	_id: song._id,
-																	title: song.title,
-																	artists: song.artists,
-																	duration: song.duration,
-																	likes: song.likes,
-																	dislikes: song.dislikes,
-																	skipDuration: song.skipDuration,
-																	thumbnail: song.thumbnail
-																};
-																$set.startedAt = Date.now();
-																$set.timePaused = 0;
-																next(null, $set);
-															} else {
-																db.models.station.update({_id: station._id}, {$inc: {currentSongIndex: 1}}, (err) => {
-																	_this.updateStation(station._id, () => {
-																		func();
-																	});
-																});
-															}
-														});
-													} else {
-														db.models.station.update({_id: station._id}, {$set: {currentSongIndex: 0}}, (err) => {
-															_this.updateStation(station._id, (err, station) => {
-																console.log(12345678, err, station);
-																_this.calculateSongForStation(station, (err, newPlaylist) => {
-																	console.log('New playlist: ', newPlaylist);
-																	if (!err) {
-																		songs.getSong(newPlaylist[0], (err, song) => {
-																			let $set = {};
-																			if (song) {
-																				$set.currentSong = {
-																					_id: song._id,
-																					title: song.title,
-																					artists: song.artists,
-																					duration: song.duration,
-																					likes: song.likes,
-																					dislikes: song.dislikes,
-																					skipDuration: song.skipDuration,
-																					thumbnail: song.thumbnail
-																				};
-																				station.playlist = newPlaylist;
-																			} else {
-																				$set.currentSong = _this.defaultSong;
-																			}
-																			$set.startedAt = Date.now();
-																			$set.timePaused = 0;
-																			next(null, $set);
-																		});
-																	} else {
-																		let $set = {};
-																		$set.currentSong = _this.defaultSong;
-																		$set.startedAt = Date.now();
-																		$set.timePaused = 0;
-																		next(null, $set);
-																	}
-																})
-															});
-														});
-													}
-												}
-
-												func();
-											} else {
-												_this.calculateSongForStation(station, (err, playlist) => {
-													if (!err && playlist.length === 0) {
-														let $set = {};
-														$set.currentSongIndex = 0;
-														$set.currentSong = _this.defaultSong;
-														$set.startedAt = Date.now();
-														$set.timePaused = 0;
-														next(null, $set);
-													} else {
-														songs.getSong(playlist[0], (err, song) => {
-															let $set = {};
-															if (!err) {
-																$set.currentSong = {
-																	_id: song._id,
-																	title: song.title,
-																	artists: song.artists,
-																	duration: song.duration,
-																	likes: song.likes,
-																	dislikes: song.dislikes,
-																	skipDuration: song.skipDuration,
-																	thumbnail: song.thumbnail
-																};
-															} else {
-																$set.currentSong = _this.defaultSong;
-															}
-															$set.currentSongIndex = 0;
-															$set.startedAt = Date.now();
-															$set.timePaused = 0;
-															next(null, $set);
-														});
-													}
-												});
-											}
-										} else {
-											if (station.queue.length > 0) {
-												db.models.station.update({_id: stationId}, {$pull: {_id: station.queue[0]._id}}, (err) => {
-													if (err) return next(err);
-													let $set = {};
-													$set.currentSong = {
-														_id: station.queue[0]._id,
-														title: station.queue[0].title,
-														duration: station.queue[0].duration
-													};
-													$set.startedAt = Date.now();
-													$set.timePaused = 0;
-													next(null, $set);
-												});
-
-												func();
-											} else {
-												next(null, {currentSong: null});
-											}
-										}
-									},
-
-									($set, next) => {
-										db.models.station.update({_id: station._id}, {$set}, (err) => {
-											_this.updateStation(station._id, (err, station) => {
-												next(null, station);
-											});
-										});
-									},
-
-
-								], (err, station) => {
-									console.log(err);
-									if (!err) {
-										io.io.to(`station.${station._id}`).emit("event:songs.next", {
-											currentSong: station.currentSong,
-											startedAt: station.startedAt,
-											paused: station.paused,
-											timePaused: 0
-										});
-										if (station.currentSong !== null && station.currentSong._id !== undefined) {
-											utils.socketsJoinSongRoom(io.io.to(`station.${station._id}`).sockets, `song.${station.currentSong._id}`);
-											console.log("NEXT SONG!!!", station.currentSong);
-											if (!station.paused) {
-												notifications.schedule(`stations.nextSong?id=${station._id}`, station.currentSong.duration * 1000);
-											}
-										} else {
-											console.log("22", !!(station.currentSong));
-											utils.socketsLeaveSongRooms(io.io.to(`station.${station._id}`).sockets, `song.${station.currentSong._id}`);
-										}
-									}
-								});
-							}
-							// the station doesn't exist anymore, unsubscribe from it
-							else {
-								console.log(112233445566, "REMOVE NOTIFICATION");
-								notifications.remove(notification);
-							}
-						});
-					}, true);
+					console.log("###1");
+					let notification = notifications.subscribe(`stations.nextSong?id=${station._id}`, _this.skipStation(station._id), true);
 					if (!station.paused ) {
 						/*if (!station.startedAt) {
 							station.startedAt = Date.now();
@@ -342,6 +171,195 @@ module.exports = {
 
 			cb(null, station);
 		});
+	},
+
+	skipStation: function(stationId) {
+		let _this = this;
+		return () => {
+			console.log("###2");
+			console.log("NOTIFICATION!!!");
+			_this.getStation(stationId, (err, station) => {
+				console.log("###3");
+				if (station) {
+					console.log("###4");
+					// notify all the sockets on this station to go to the next song
+					async.waterfall([
+
+						(next) => {
+							console.log("###5");
+							if (station.type === "official") {
+								if (station.playlist.length > 0) {
+									function func() {
+										if (station.currentSongIndex < station.playlist.length - 1) {
+											station.currentSongIndex++;
+											songs.getSong(station.playlist[station.currentSongIndex], (err, song) => {
+												if (!err) {
+													let $set = {};
+
+													$set.currentSong = {
+														_id: song._id,
+														title: song.title,
+														artists: song.artists,
+														duration: song.duration,
+														likes: song.likes,
+														dislikes: song.dislikes,
+														skipDuration: song.skipDuration,
+														thumbnail: song.thumbnail
+													};
+													$set.startedAt = Date.now();
+													$set.timePaused = 0;
+													next(null, $set);
+												} else {
+													db.models.station.update({_id: station._id}, {$inc: {currentSongIndex: 1}}, (err) => {
+														_this.updateStation(station._id, () => {
+															func();
+														});
+													});
+												}
+											});
+										} else {
+											db.models.station.update({_id: station._id}, {$set: {currentSongIndex: 0}}, (err) => {
+												_this.updateStation(station._id, (err, station) => {
+													console.log(12345678, err, station);
+													_this.calculateSongForStation(station, (err, newPlaylist) => {
+														console.log('New playlist: ', newPlaylist);
+														if (!err) {
+															songs.getSong(newPlaylist[0], (err, song) => {
+																let $set = {};
+																if (song) {
+																	$set.currentSong = {
+																		_id: song._id,
+																		title: song.title,
+																		artists: song.artists,
+																		duration: song.duration,
+																		likes: song.likes,
+																		dislikes: song.dislikes,
+																		skipDuration: song.skipDuration,
+																		thumbnail: song.thumbnail
+																	};
+																	station.playlist = newPlaylist;
+																} else {
+																	$set.currentSong = _this.defaultSong;
+																}
+																$set.startedAt = Date.now();
+																$set.timePaused = 0;
+																next(null, $set);
+															});
+														} else {
+															let $set = {};
+															$set.currentSong = _this.defaultSong;
+															$set.startedAt = Date.now();
+															$set.timePaused = 0;
+															next(null, $set);
+														}
+													})
+												});
+											});
+										}
+									}
+
+									func();
+								} else {
+									_this.calculateSongForStation(station, (err, playlist) => {
+										if (!err && playlist.length === 0) {
+											let $set = {};
+											$set.currentSongIndex = 0;
+											$set.currentSong = _this.defaultSong;
+											$set.startedAt = Date.now();
+											$set.timePaused = 0;
+											next(null, $set);
+										} else {
+											songs.getSong(playlist[0], (err, song) => {
+												let $set = {};
+												if (!err) {
+													$set.currentSong = {
+														_id: song._id,
+														title: song.title,
+														artists: song.artists,
+														duration: song.duration,
+														likes: song.likes,
+														dislikes: song.dislikes,
+														skipDuration: song.skipDuration,
+														thumbnail: song.thumbnail
+													};
+												} else {
+													$set.currentSong = _this.defaultSong;
+												}
+												$set.currentSongIndex = 0;
+												$set.startedAt = Date.now();
+												$set.timePaused = 0;
+												next(null, $set);
+											});
+										}
+									});
+								}
+							} else {
+								if (station.queue.length > 0) {
+									console.log("##");
+									db.models.station.update({_id: stationId}, {$pull: {queue: {songId: station.queue[0]._id}}}, (err) => {
+										console.log("##1", err);
+										if (err) return next(err);
+										let $set = {};
+										$set.currentSong = {
+											_id: station.queue[0]._id,
+											title: station.queue[0].title,
+											duration: station.queue[0].duration
+										};
+										$set.startedAt = Date.now();
+										$set.timePaused = 0;
+										if (station.paused) {
+											$set.pausedAt = Date.now();
+										}
+										next(null, $set);
+									});
+								} else {
+									console.log("##2");
+									next(null, {currentSong: null});
+								}
+							}
+						},
+
+						($set, next) => {
+							console.log("$set", $set);
+							db.models.station.update({_id: station._id}, {$set}, (err) => {
+								console.log("##2.5", err);
+								_this.updateStation(station._id, (err, station) => {
+									console.log("##2.6", err);
+									next(null, station);
+								});
+							});
+						},
+
+
+					], (err, station) => {
+						console.log("##3", err);
+						if (!err) {
+							io.io.to(`station.${station._id}`).emit("event:songs.next", {
+								currentSong: station.currentSong,
+								startedAt: station.startedAt,
+								paused: station.paused,
+								timePaused: 0
+							});
+							if (station.currentSong !== null && station.currentSong._id !== undefined) {
+								utils.socketsJoinSongRoom(io.io.to(`station.${station._id}`).sockets, `song.${station.currentSong._id}`);
+								console.log("NEXT SONG!!!", station.currentSong);
+								if (!station.paused) {
+									notifications.schedule(`stations.nextSong?id=${station._id}`, station.currentSong.duration * 1000);
+								}
+							} else {
+								console.log("22", !!(station.currentSong));
+								utils.socketsLeaveSongRooms(io.io.to(`station.${station._id}`).sockets, `song.${station.currentSong._id}`);
+							}
+						}
+					});
+				}
+				// the station doesn't exist anymore, unsubscribe from it
+				else {
+					console.log(112233445566, "REMOVE NOTIFICATION");
+					notifications.remove(notification);
+				}
+			});
+		}
 	},
 
 	defaultSong: {

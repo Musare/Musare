@@ -8,8 +8,8 @@
 	<users-sidebar v-if='sidebars.users'></users-sidebar>
 	
 	<div class="station">
-		<h1 v-if="noSong" class="noSong">No song is currently playing.</h1>
-		<div class="columns is-mobile" v-if="!noSong">
+		<h1 v-show="noSong" class="noSong">No song is currently playing.</h1>
+		<div class="columns is-mobile" v-show="!noSong">
 			<div class="column is-8-desktop is-offset-2-desktop is-12-mobile">
 				<div class="video-container">
 					<div id="player"></div>
@@ -19,7 +19,7 @@
 				</div>
 			</div>
 		</div>
-		<div class="columns is-mobile" v-if="!noSong">
+		<div class="columns is-mobile" v-show="!noSong">
 			<div class="column is-8-desktop is-offset-2-desktop is-12-mobile">
 				<div class="columns is-mobile">
 					<div class="column is-8-desktop is-12-mobile">
@@ -86,7 +86,8 @@
 					users: false,
 					playlist: false
 				},
-				noSong: false
+				noSong: false,
+				simpleSong: false
 			}
 		},
 		methods: {
@@ -95,6 +96,7 @@
 			},
 			youtubeReady: function() {
 				let local = this;
+				console.log("@@5", local.currentSong._id);
 				local.player = new YT.Player("player", {
 					height: 270,
 					width: 480,
@@ -102,11 +104,13 @@
 					playerVars: { controls: 0, iv_load_policy: 3, rel: 0, showinfo: 0 },
 					events: {
 						'onReady': function(event) {
+							console.log("@@6");
 							local.playerReady = true;
 							let volume = parseInt(localStorage.getItem("volume"));
 							volume = (typeof volume === "number") ? volume : 20;
 							local.player.setVolume(volume);
 							if (volume > 0) local.player.unMute();
+							console.log("@@7");
 							local.playVideo();
 						},
 						'onStateChange': function(event) {
@@ -115,6 +119,9 @@
 								local.player.seekTo(local.getTimeElapsed() / 1000, true);
 								if (local.paused) local.player.pauseVideo();
 							}
+						},
+						'onError': function(err) {
+							console.log("@@@@", err, local.currentSong._id);
 						}
 					}
 				});
@@ -129,7 +136,9 @@
 			},
 			playVideo: function() {
 				let local = this;
+				console.log("@@9");
 				if (local.playerReady) {
+					console.log("@@@1");
 					local.videoLoading = true;
 					local.player.loadVideoById(local.currentSong._id);
 
@@ -156,12 +165,14 @@
 				let currentTime = Date.now();
 
 				if (local.currentTime !== undefined && local.paused) {
+					console.log("123");
 					local.timePaused += (Date.now() - local.currentTime);
 					local.currentTime = undefined;
 				}
 
 				let duration = (Date.now() - local.startedAt - local.timePaused) / 1000;
 				let songDuration = local.currentSong.duration;
+				//console.log(duration, currentTime, local.startedAt, local.timePaused, local.startedAt - local.timePaused, Date.now() - local.startedAt - local.timePaused, Date.now() - local.startedAt);
 				if (songDuration <= duration) local.player.pauseVideo();
 				if ((!local.paused) && duration <= songDuration) local.timeElapsed = local.formatTime(duration);
 			},
@@ -262,6 +273,8 @@
 							_this.paused = data.paused;
 							_this.timePaused = data.timePaused;
 							if (data.currentSong) {
+								_this.noSong = false;
+								_this.simpleSong = (data.currentSong.likes === -1 && data.currentSong.dislikes === -1);
 								_this.youtubeReady();
 								_this.playVideo();
 								_this.socket.emit('songs.getOwnSongRatings', data.currentSong._id, data => {
@@ -271,6 +284,8 @@
 									}
 								});
 							} else {
+								if (_this.playerReady) _this.player.pauseVideo();
+								console.log("NO SONG TRUE1", data);
 								_this.noSong = true;
 							}
 						} else {
@@ -283,10 +298,13 @@
 						_this.paused = data.paused;
 						_this.timePaused = data.timePaused;
 						if (data.currentSong) {
+							_this.noSong = false;
+							_this.simpleSong = (data.currentSong.likes === -1 && data.currentSong.dislikes === -1);
 							if (!_this.playerReady) {
 								_this.youtubeReady();
+							} else {
+								_this.playVideo();
 							}
-							_this.playVideo();
 							_this.socket.emit('songs.getOwnSongRatings', data.currentSong._id, (data) => {
 								console.log(data);
 								if (_this.currentSong._id === data.songId) {
@@ -295,6 +313,8 @@
 								}
 							});
 						} else {
+							if (_this.playerReady) _this.player.pauseVideo();
+							console.log("NO SONG TRUE2", data);
 							_this.noSong = true;
 						}
 					});

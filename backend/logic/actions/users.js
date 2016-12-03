@@ -45,7 +45,7 @@ module.exports = {
 						});
 					}
 					else {
-						next(null, { status: 'failure', message: 'User not found' });
+						next(null, { status: 'failure', message: 'Incorrect password' });
 					}
 				});
 			}

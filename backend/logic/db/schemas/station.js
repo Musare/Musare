@@ -23,7 +23,9 @@ module.exports = {
 	privacy: { type: String, enum: ["public", "unlisted", "private"], default: "private" },
 	locked: { type: Boolean, default: false },
 	queue: [{
-		songId: { type: String, required: true },
+		_id: { type: String, required: true },
+		title: { type: String },
+		duration: { type: Number },
 		requestedBy: { type: String, required: true }
 	}]
 };
