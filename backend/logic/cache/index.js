@@ -15,6 +15,7 @@ const lib = {
 	schemas: {
 		session: require('./schemas/session'),
 		station: require('./schemas/station'),
+		playlist: require('./schemas/playlist'),
 		song: require('./schemas/song')
 	},
 
@@ -159,6 +160,7 @@ const lib = {
 				});
 				subs[channel].client.subscribe(channel);
 			}
+			
 			subs[channel].cbs.push(cb);
 		}
 	}

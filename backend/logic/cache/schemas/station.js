@@ -9,6 +9,5 @@
  * @returns {Object}
  */
 module.exports = (station) => {
-	// this is just the data from the DB for now, which we're just caching in memory for fast access
 	return station;
 };
