@@ -3,15 +3,18 @@
 		<div class='inner-wrapper'>
 			<div class='title'>Playlists</div>
 
-			<aside class="menu">
-				<ul class="menu-list">
-					<li><a href="#">Top 40</a></li>
-					<li><a href="#">Good Mood</a></li>
-					<li><a href="#">Chills</a></li>
+			<aside class='menu'>
+				<ul class='menu-list'>
+					<li>
+						<a href='#'>Top 40</a>
+						<a href='#' @click='$parent.editPlaylist(56);'>
+							<i class='material-icons'>edit</i>
+						</a>
+					</li>
 				</ul>
 			</aside>
 
-			<a class='button create-playlist'>Create Playlist</a>
+			<a class='button create-playlist' @click='$parent.toggleModal("createPlaylist")'>Create Playlist</a>
 		</div>
 	</div>
 </template>
@@ -77,4 +80,14 @@
 	.menu { padding: 0 20px; }
 
 	.menu-list li a:hover { color: #000 !important; }
+
+	.menu-list li {
+		display: flex;
+		justify-content: space-between;
+	}
+
+	li a {
+		display: flex;
+    	align-items: center;
+	}
 </style>

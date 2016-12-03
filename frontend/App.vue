@@ -56,7 +56,7 @@
 			},
 			'submitOnEnter': (cb, event) => {
 				if (event.which == 13) b(); return false;
-			},
+			}
 		},
 		ready() {
 			let _this = this;
@@ -127,17 +127,6 @@
 						break;
 				}
 			}
-			/*'joinStation': function (id) {
-				let mergedStations = this.stations.community.concat(this.stations.official);
-				this.socket.emit('stations.join', id, result => {
-					mergedStations.find(station => station.id === id).users = result.userCount;
-				});
-			},
-			'leaveStation': function () {
-				this.socket.emit('stations.leave', result => {
-					//this.stations.find(station => station.id === id).users = result.userCount;
-				});
-			}*/
 		},
 		components: { Toast, WhatIsNew, LoginModal, RegisterModal, CreateCommunityStation }
 	}

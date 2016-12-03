@@ -2,6 +2,8 @@
 	<station-header></station-header>
 
 	<song-queue v-if='modals.addSongToQueue'></song-queue>
+	<edit-playlist v-if='modals.editPlaylist'></edit-playlist>
+	<create-playlist v-if='modals.createPlaylist'></create-playlist>
 
 	<queue-sidebar v-if='sidebars.queue'></queue-sidebar>
 	<playlist-sidebar v-if='sidebars.playlist'></playlist-sidebar>
@@ -59,6 +61,8 @@
 	import { Toast } from 'vue-roaster';
 
 	import SongQueue from '../Modals/AddSongToQueue.vue';
+	import EditPlaylist from '../Modals/EditPlaylist.vue';
+	import CreatePlaylist from '../Modals/CreatePlaylist.vue';
 
 	import QueueSidebar from '../Sidebars/Queue.vue';
 	import PlaylistSidebar from '../Sidebars/Playlist.vue';
@@ -79,20 +83,28 @@
 				liked: false,
 				disliked: false,
 				modals: {
-					addSongToQueue: false
+					addSongToQueue: false,
+					editPlaylist: false,
+					createPlaylist: false
 				},
 				sidebars: {
 					queue: false,
 					users: false,
-					playlist: false
+					playlist: true
 				},
 				noSong: false,
 				simpleSong: false
 			}
 		},
 		methods: {
+			editPlaylist: function (id) {
+				this.playlistBeingEdited = id;
+				this.toggleModal('editPlaylist');
+			},
 			toggleModal: function (type) {
 				if (type == 'addSongToQueue') this.modals.addSongToQueue = !this.modals.addSongToQueue;
+				else if (type == 'editPlaylist') this.modals.editPlaylist = !this.modals.editPlaylist;
+				else if (type == 'createPlaylist') this.modals.createPlaylist = !this.modals.createPlaylist;
 			},
 			youtubeReady: function() {
 				let local = this;
@@ -374,7 +386,7 @@
 			volume = (typeof volume === "number") ? volume : 20;
 			$("#volumeSlider").val(volume);
 		},
-		components: { StationHeader, SongQueue, QueueSidebar, PlaylistSidebar, UsersSidebar }
+		components: { StationHeader, SongQueue, EditPlaylist, CreatePlaylist, QueueSidebar, PlaylistSidebar, UsersSidebar }
 	}
 </script>
 
