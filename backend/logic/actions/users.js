@@ -185,11 +185,12 @@ module.exports = {
 		});
 	},
 
+	//TODO Fix security issues
 	findBySession: (session, cb) => {
 		cache.hget('sessions', session.sessionId, (err, session) => {
 			if (err) return cb({ 'status': 'error', message: err });
 			if (!session) return cb({ 'status': 'error', message: 'You are not logged in' });
-			db.models.user.findOne({ _id: session.userId }, (err, user) => {
+			db.models.user.findOne({ _id: session.userId }, {username: 1, "email.address": 1}, (err, user) => {
 				if (err) { throw err; } else if (user) {
 					return cb({
 						status: 'success',
@@ -201,29 +202,46 @@ module.exports = {
 
 	},
 
-	update: hooks.loginRequired((session, user_id, property, value, cb) => {
-        db.models.user.findOne({ _id: session.userId }, (err, user) => {
-            if (err) throw err;
-            else if (!user) cb({ status: 'error', message: 'Invalid User ID' });
-            else if (user[property] !== undefined && user[property] !== value) {
-                if (property === 'services.password.password') {
-                    bcrypt.compare(user[property], value, (err, res) => {
-                        if (err) throw err;
-                        bcrypt.genSalt(10, (err, salt) => {
-                            if (err) throw err;
-                            bcrypt.hash(value, salt, (err, hash) => {
-                                if (err) throw err;
-                                user[property] = hash;
-                            });
-                        });
-                    });
-                } else user[property] = value;
-                user.save(err => {
-                    if (err) cb({ status: 'error', message: err.message });
-					else cb({ status: 'success', message: 'Field saved successfully' });
-                });
-            } else cb({ status: 'error', message: 'Field has not changed' });
-        });
-    })
+	updateUsername: hooks.loginRequired((session, newUsername, cb, userId) => {
+		db.models.user.findOne({ _id: userId }, (err, user) => {
+			if (err) throw err;
+			if (!user) return cb({ status: 'error', message: 'User not found.' });
+			if (user.username !== newUsername) {
+				if (user.username.toLowerCase() !== newUsername.toLowerCase()) {
+					db.models.user.findOne({username: new RegExp(`^${newUsername}$`, 'i')}, (err, _user) => {
+						if (err) return cb({ status: 'error', message: err.message });
+						if (_user) return cb({ status: 'failure', message: 'That username is already in use.' });
+						db.models.user.update({_id: userId}, {$set: {username: newUsername}}, (err) => {
+							if (err) return cb({ status: 'error', message: err.message });
+							cb({ status: 'success', message: 'Username updated successfully.' });
+						});
+					});
+				} else {
+					db.models.user.update({_id: userId}, {$set: {username: newUsername}}, (err) => {
+						if (err) return cb({ status: 'error', message: err.message });
+						cb({ status: 'success', message: 'Username updated successfully.' });
+					});
+				}
+			} else cb({ status: 'error', message: 'Username has not changed. Your new username cannot be the same as your old username.' });
+		});
+	}),
+
+	updateEmail: hooks.loginRequired((session, newEmail, cb, userId) => {
+		newEmail = newEmail.toLowerCase();
+		db.models.user.findOne({ _id: userId }, (err, user) => {
+			if (err) throw err;
+			if (!user) return cb({ status: 'error', message: 'User not found.' });
+			if (user.email.address !== newEmail) {
+				db.models.user.findOne({"email.address": newEmail}, (err, _user) => {
+					if (err) return cb({ status: 'error', message: err.message });
+					if (_user) return cb({ status: 'failure', message: 'That email is already in use.' });
+					db.models.user.update({_id: userId}, {$set: {"email.address": newEmail}}, (err) => {
+						if (err) return cb({ status: 'error', message: err.message });
+						cb({ status: 'success', message: 'Email updated successfully.' });
+					});
+				});
+			} else cb({ status: 'error', message: 'Email has not changed. Your new email cannot be the same as your old email.' });
+		});
+	})
 
 };
