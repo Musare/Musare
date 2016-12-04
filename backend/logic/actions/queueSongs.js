@@ -54,16 +54,32 @@ module.exports = {
 		return cb({ status: 'success', message: 'Song was removed successfully' });
 	}),
 
-	add: hooks.loginRequired((session, id, cb, userId) => {
+	add: hooks.loginRequired((session, songId, cb, userId) => {
 		//TODO Check if id is valid
 		//TODO Check if id is already in queue/rotation
 
 		let requestedAt = Date.now();
 
 		async.waterfall([
+			(next) => {
+				db.models.queueSong.findOne({_id: songId}, (err, song) => {
+					if (err) return next('Something went wrong while getting the song from the Database.');
+					if (song) return next('This song is already in the queue.');
+					next();
+				});
+			},
+
+			(next) => {
+				db.models.song.findOne({_id: songId}, (err, song) => {
+					if (err) return next('Something went wrong while getting the song from the Database.');
+					if (song) return next('This song has already been added.');
+					next();
+				});
+			},
+
 			// Get YouTube data from id
 			(next) => {
-				utils.getSongFromYouTube(id, (song) => {
+				utils.getSongFromYouTube(songId, (song) => {
 					song.artists = [];
 					song.genres = [];
 					song.skipDuration = 0;

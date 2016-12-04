@@ -6,7 +6,7 @@
 			<article class="media">
 				<figure class="media-left">
 					<p class="image is-64x64">
-						<img :src="$parent.currentSong.thumbnail">
+						<img :src="$parent.currentSong.thumbnail" onerror="this.src='/assets/notes.png'">
 					</p>
 				</figure>
 				<div class="media-content">

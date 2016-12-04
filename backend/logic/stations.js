@@ -63,12 +63,12 @@ module.exports = {
 							if (isNaN(timeLeft)) timeLeft = -1;
 							if (station.currentSong.duration * 1000 < timeLeft || timeLeft < 0) {
 								console.log("Test");
-								notifications.schedule(`stations.nextSong?id=${station._id}`, 1);
+								_this.skipStation(station._id)();
 							} else {
 								notifications.schedule(`stations.nextSong?id=${station._id}`, timeLeft);
 							}
 						} else {
-							notifications.schedule(`stations.nextSong?id=${station._id}`, 1);
+							_this.skipStation(station._id)();
 						}
 					} else {
 						notifications.unschedule(`stations.nextSong?id${station._id}`);

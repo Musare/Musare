@@ -404,6 +404,7 @@ module.exports = {
 					}
 				});
 				if (has) return cb({'status': 'failure', 'message': 'That song has already been added to the queue.'});
+				if (station.currentSong && station.currentSong._id === songId) return cb({'status': 'failure', 'message': 'That song is currently playing.'});
 
 				songs.getSong(songId, (err, song) => {
 					if (err) {
@@ -423,9 +424,6 @@ module.exports = {
 							if (err) return cb({'status': 'failure', 'message': 'Something went wrong.'});
 							stations.updateStation(stationId, (err, station) => {
 								if (err) return cb(err);
-								if (station.currentSong === null || station.currentSong._id === undefined) {
-									notifications.schedule(`stations.nextSong?id=${stationId}`, 1);
-								}
 								cache.pub('station.queueUpdate', stationId);
 								cb({'status': 'success', 'message': 'Added that song to the queue.'});
 							});
