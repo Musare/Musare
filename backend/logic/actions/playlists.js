@@ -71,6 +71,14 @@ module.exports = {
 		});
 	},
 
+	addSongToPlaylist: (session, _id, song, cb) => {
+		db.models.playlist.findOneAndUpdate({ _id }, { songs: songs.push(song) }, { upsert: true }, (err, data) => {
+			if (err) throw err;
+			console.log(data, 222);
+			return cb({ status: 'success', message: 'Song has been successfully added to the Playlist', data });
+		});
+	},
+
 	updateDisplayName: (session, _id, displayName, cb) => {
 		db.models.playlist.findOneAndUpdate({ _id }, { displayName }, { upsert: true }, (err, data) => {
 			if (err) throw err;

@@ -96,10 +96,14 @@
 					} else if (res.status == 'error') Toast.methods.addToast(res.message, 3000);
 				});
 			},
-			addSongToPlaylist: function (id) {},
+			addSongToPlaylist: function (id) {
+				this.socket.emit('playlists.addSongToPlaylist', id, res => {
+					if (res.status == 'success') Toast.methods.addToast(res.message, 3000);
+				});
+			},
 			removeSongFromPlaylist: function (id) {},
 			renamePlaylist: function () {
-				_this.socket.emit('playlists.updateDisplayName', _this.playlist._id, _this.playlist.displayName, res => {
+				this.socket.emit('playlists.updateDisplayName', this.playlist._id, this.playlist.displayName, res => {
 					if (res.status == 'success') Toast.methods.addToast(res.message, 3000);
 				});
 			}

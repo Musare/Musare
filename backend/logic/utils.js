@@ -1,10 +1,10 @@
 'use strict';
 
-const 	moment = require('moment'),
-		io = require('./io'),
-		config = require('config'),
-		request = require('request'),
-		cache = require('./cache');
+const moment  = require('moment'),
+	  io      = require('./io'),
+	  config  = require('config'),
+	  request = require('request'),
+	  cache   = require('./cache');
 
 class Timer {
 	constructor(callback, delay, paused) {

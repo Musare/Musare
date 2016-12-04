@@ -311,7 +311,7 @@
 								});
 							} else {
 								if (_this.playerReady) _this.player.pauseVideo();
-								console.log("NO SONG TRUE1", res);
+								console.log("NO SONG TRUE1", res.data);
 								_this.noSong = true;
 							}
 							if (_this.type === 'community') {
