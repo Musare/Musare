@@ -56,6 +56,9 @@
 						</a>
 					</p>
 				</div>
+				<p style="margin-top: 0; position: relative;">
+					<input type="range" id="volumeSlider" min="0" max="100" class="active" v-on:change="changeVolume()" v-on:input="changeVolume()">
+				</p>
 
 				<h5 class='has-text-centered'>Thumbnail Preview</h5>
 				<img class='thumbnail-preview' :src='editing.song.thumbnail'>
@@ -120,6 +123,9 @@
 					<i class='material-icons save-changes'>done</i>
 					<span>&nbsp;Save</span>
 				</a>
+				<a class='button is-danger' @click='cancel()'>
+					<span>&nbspCancel</span>
+				</a>
 			</footer>
 		</div>
 	</div>
@@ -163,6 +169,13 @@
 			}
 		},
 		methods: {
+			changeVolume: function() {
+				let local = this;
+				let volume = $("#volumeSlider").val();
+				localStorage.setItem("volume", volume);
+				local.video.player.setVolume(volume);
+				if (volume > 0) local.player.unMute();
+			},
 			toggleModal: function () {
 				this.isEditActive = !this.isEditActive;
 				this.video.settings('stop');
@@ -197,6 +210,10 @@
 					if (res.status == 'success' || res.status == 'error') Toast.methods.addToast(res.message, 2000);
 					_this.toggleModal();
 				});
+			},
+			cancel: function () {
+				let _this = this;
+				_this.toggleModal();
 			},
 			add: function (song) {
 				this.socket.emit('queueSongs.remove', song._id, res => {
@@ -236,6 +253,12 @@
 				videoId: this.editing.song._id,
 				playerVars: { controls: 0, iv_load_policy: 3, rel: 0, showinfo: 0 },
 				events: {
+					'onReady': () => {
+						let volume = parseInt(localStorage.getItem("volume"));
+						volume = (typeof volume === "number") ? volume : 20;
+						_this.video.player.setVolume(volume);
+						if (volume > 0) _this.video.player.unMute();
+					},
 					'onStateChange': event => {
 						if (event.data == 1) {
 							let youtubeDuration = _this.video.player.getDuration();
@@ -245,6 +268,9 @@
 					}
 				}
 			});
+			let volume = parseInt(localStorage.getItem("volume"));
+			volume = (typeof volume === "number") ? volume : 20;
+			$("#volumeSlider").val(volume);
 		}
 	}
 </script>
