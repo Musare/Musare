@@ -2,6 +2,8 @@
 
 const 	moment = require('moment'),
 		io = require('./io'),
+		config = require('config'),
+		request = require('request'),
 		cache = require('./cache');
 
 class Timer {
@@ -207,5 +209,49 @@ module.exports = {
 				}
 			}
 		}
+	},
+	getSongFromYouTube: (songId, cb) => {
+		const youtubeParams = [
+			'part=snippet,contentDetails,statistics,status',
+			`id=${encodeURIComponent(songId)}`,
+			`key=${config.get('apis.youtube.key')}`
+		].join('&');
+
+		request(`https://www.googleapis.com/youtube/v3/videos?${youtubeParams}`, (err, res, body) => {
+
+			if (err) {
+				console.error(err);
+				return next('Failed to find song from YouTube');
+			}
+
+			body = JSON.parse(body);
+
+			//TODO Clean up duration converter
+			let dur = body.items[0].contentDetails.duration;
+			dur = dur.replace('PT', '');
+			let duration = 0;
+			dur = dur.replace(/([\d]*)H/, (v, v2) => {
+				v2 = Number(v2);
+				duration = (v2 * 60 * 60);
+				return '';
+			});
+			dur = dur.replace(/([\d]*)M/, (v, v2) => {
+				v2 = Number(v2);
+				duration = (v2 * 60);
+				return '';
+			});
+			dur = dur.replace(/([\d]*)S/, (v, v2) => {
+				v2 = Number(v2);
+				duration += v2;
+				return '';
+			});
+
+			let song = {
+				_id: body.items[0].id,
+				title: body.items[0].snippet.title,
+				duration
+			};
+			cb(song);
+		});
 	}
 };

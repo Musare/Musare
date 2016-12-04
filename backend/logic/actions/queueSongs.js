@@ -63,55 +63,15 @@ module.exports = {
 		async.waterfall([
 			// Get YouTube data from id
 			(next) => {
-				const youtubeParams = [
-					'part=snippet,contentDetails,statistics,status',
-					`id=${encodeURIComponent(id)}`,
-					`key=${config.get('apis.youtube.key')}`
-				].join('&');
-
-				request(`https://www.googleapis.com/youtube/v3/videos?${youtubeParams}`, (err, res, body) => {
-
-					if (err) {
-						console.error(err);
-						return next('Failed to find song from YouTube');
-					}
-
-					body = JSON.parse(body);
-
-					//TODO Clean up duration converter
-					let dur = body.items[0].contentDetails.duration;
-					dur = dur.replace('PT', '');
-					let duration = 0;
-					dur = dur.replace(/([\d]*)H/, (v, v2) => {
-						v2 = Number(v2);
-						duration = (v2 * 60 * 60);
-						return '';
-					});
-					dur = dur.replace(/([\d]*)M/, (v, v2) => {
-						v2 = Number(v2);
-						duration = (v2 * 60);
-						return '';
-					});
-					dur = dur.replace(/([\d]*)S/, (v, v2) => {
-						v2 = Number(v2);
-						duration += v2;
-						return '';
-					});
-
-					let newSong = {
-						_id: body.items[0].id,
-						title: body.items[0].snippet.title,
-						artists: [],
-						genres: [],
-						duration,
-						skipDuration: 0,
-						thumbnail: 'empty',
-						explicit: false,
-						requestedBy: userId,
-						requestedAt
-					};
-
-					next(null, newSong);
+				utils.getSongFromYouTube(id, (song) => {
+					song.artists = [];
+					song.genres = [];
+					song.skipDuration = 0;
+					song.thumbnail = 'empty';
+					song.explicit = false;
+					song.requestedBy = userId;
+					song.requestedAt = requestedAt;
+					next(null, song);
 				});
 			},
 			(newSong, next) => {

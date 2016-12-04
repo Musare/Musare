@@ -404,17 +404,33 @@ module.exports = {
 					}
 				});
 				if (has) return cb({'status': 'failure', 'message': 'That song has already been added to the queue.'});
-				db.models.station.update({_id: stationId}, {$push: {queue: {_id: songId, title: "Title", duration: 100, requestedBy: userId}}}, (err) => {
-					console.log(err);
-					if (err) return cb({'status': 'failure', 'message': 'Something went wrong.'});
-					stations.updateStation(stationId, (err, station) => {
-						if (err) return cb(err);
-						if (station.currentSong === null || station.currentSong._id === undefined) {
-							notifications.schedule(`stations.nextSong?id=${stationId}`, 1);
-						}
-						cache.pub('station.queueUpdate', stationId);
-						cb({'status': 'success', 'message': 'Added that song to the queue.'});
-					});
+
+				songs.getSong(songId, (err, song) => {
+					if (err) {
+						utils.getSongFromYouTube(songId, (song) => {
+							song.artists = [];
+							song.skipDuration = 0;
+							song.likes = -1;
+							song.dislikes = -1;
+							song.thumbnail = "empty";
+							song.explicit = false;
+							cont(song);
+						});
+					} else cont(song);
+					function cont(song) {
+						db.models.station.update({_id: stationId}, {$push: {queue: song}}, (err) => {
+							console.log(err);
+							if (err) return cb({'status': 'failure', 'message': 'Something went wrong.'});
+							stations.updateStation(stationId, (err, station) => {
+								if (err) return cb(err);
+								if (station.currentSong === null || station.currentSong._id === undefined) {
+									notifications.schedule(`stations.nextSong?id=${stationId}`, 1);
+								}
+								cache.pub('station.queueUpdate', stationId);
+								cb({'status': 'success', 'message': 'Added that song to the queue.'});
+							});
+						});
+					}
 				});
 			} else cb({'status': 'failure', 'message': 'That station is not a community station.'});
 		});
@@ -438,6 +454,16 @@ module.exports = {
 						cache.pub('station.queueUpdate', stationId);
 					});
 				});
+			} else cb({'status': 'failure', 'message': 'That station is not a community station.'});
+		});
+	}),
+
+	getQueue: hooks.adminRequired((session, stationId, cb) => {
+		stations.getStation(stationId, (err, station) => {
+			if (err) return cb(err);
+			if (!station) return cb({'status': 'failure', 'message': 'Station not found.'});
+			if (station.type === 'community') {
+				cb({'status': 'success', queue: station.queue});
 			} else cb({'status': 'failure', 'message': 'That station is not a community station.'});
 		});
 	}),

@@ -25,7 +25,12 @@ module.exports = {
 	queue: [{
 		_id: { type: String, required: true },
 		title: { type: String },
+		artists: [{ type: String }],
 		duration: { type: Number },
+		skipDuration: { type: Number },
+		thumbnail: { type: String },
+		likes: { type: Number, default: -1 },
+		dislikes: { type: Number, default: -1 },
 		requestedBy: { type: String, required: true }
 	}]
 };

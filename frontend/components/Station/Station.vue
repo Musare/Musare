@@ -25,7 +25,7 @@
 		<div class="columns is-mobile" v-show="!noSong">
 			<div class="column is-8-desktop is-offset-2-desktop is-12-mobile">
 				<div class="columns is-mobile">
-					<div class="column is-8-desktop is-12-mobile">
+					<div class="column is-12-mobile" v-bind:class="{'is-8-desktop': !simpleSong}">
 						<h4 id="time-display">{{timeElapsed}} / {{formatTime(currentSong.duration)}}</h4>
 						<h3>{{currentSong.title}}</h3>
 						<h4 class="thin" style="margin-left: 0">{{currentSong.artists}}</h4>
@@ -49,7 +49,7 @@
 							</div>
 						</div>
 					</div>
-					<div class="column is-4-desktop is-12-mobile">
+					<div class="column is-4-desktop is-12-mobile" v-if="!simpleSong">
 						<img class="image" id="song-thumbnail" style="margin-top: 10px !important" :src="currentSong.thumbnail" alt="Song Thumbnail" />
 					</div>
 				</div>
@@ -96,7 +96,9 @@
 					playlist: false
 				},
 				noSong: false,
-				simpleSong: false
+				simpleSong: false,
+				queue: [],
+				timeBeforePause: 0
 			}
 		},
 		methods: {
@@ -112,34 +114,40 @@
 			youtubeReady: function() {
 				let local = this;
 				console.log("@@5", local.currentSong._id);
-				local.player = new YT.Player("player", {
-					height: 270,
-					width: 480,
-					videoId: local.currentSong._id,
-					playerVars: { controls: 0, iv_load_policy: 3, rel: 0, showinfo: 0 },
-					events: {
-						'onReady': function(event) {
-							console.log("@@6");
-							local.playerReady = true;
-							let volume = parseInt(localStorage.getItem("volume"));
-							volume = (typeof volume === "number") ? volume : 20;
-							local.player.setVolume(volume);
-							if (volume > 0) local.player.unMute();
-							console.log("@@7");
-							local.playVideo();
-						},
-						'onStateChange': function(event) {
-							if (event.data === 1 && local.videoLoading === true) {
-								local.videoLoading = false;
-								local.player.seekTo(local.getTimeElapsed() / 1000, true);
-								if (local.paused) local.player.pauseVideo();
+				if (!local.player) {
+					local.player = new YT.Player("player", {
+						height: 270,
+						width: 480,
+						videoId: local.currentSong._id,
+						playerVars: {controls: 0, iv_load_policy: 3, rel: 0, showinfo: 0},
+						events: {
+							'onReady': function (event) {
+								console.log("@@6");
+								local.playerReady = true;
+								let volume = parseInt(localStorage.getItem("volume"));
+								volume = (typeof volume === "number") ? volume : 20;
+								local.player.setVolume(volume);
+								if (volume > 0) local.player.unMute();
+								console.log("@@7");
+								local.playVideo();
+							},
+							'onStateChange': function (event) {
+								if (event.data === 1 && local.videoLoading === true) {
+									local.videoLoading = false;
+									local.player.seekTo(local.getTimeElapsed() / 1000, true);
+									if (local.paused) local.player.pauseVideo();
+								} else if (event.data === 1 && local.paused) {
+									local.player.seekTo(local.timeBeforePause / 1000, true);
+									local.player.pauseVideo();
+								}
+								if (event.data === 2 && !local.paused) {
+									local.player.seekTo(local.getTimeElapsed() / 1000, true);
+									local.player.playVideo();
+								}
 							}
-						},
-						'onError': function(err) {
-							console.log("@@@@", err, local.currentSong._id);
 						}
-					}
-				});
+					});
+				}
 			},
 			getTimeElapsed: function() {
 				let local = this;
@@ -212,6 +220,7 @@
 			pauseLocalStation: function() {
 				this.paused = true;
 				if (!this.noSong) {
+					this.timeBeforePause = this.getTimeElapsed();
 					if (this.playerReady) this.player.pauseVideo();
 				}
 			},
@@ -281,17 +290,6 @@
 			let socketInterval = setInterval(() => {
 				if (!!_this.$parent.socket) {
 					_this.socket = _this.$parent.socket;
-<<<<<<< 10e2c9a208c1e4d81b218d7782ef618b4f49990c
-					_this.socket.emit('stations.join', _this.stationId, data => {
-						if (data.status === "success") {
-							_this.currentSong = (data.currentSong) ? data.currentSong : {};
-							_this.startedAt = data.startedAt;
-							_this.paused = data.paused;
-							_this.timePaused = data.timePaused;
-							if (data.currentSong) {
-								_this.noSong = false;
-								_this.simpleSong = (data.currentSong.likes === -1 && data.currentSong.dislikes === -1);
-=======
 					_this.socket.emit('stations.join', _this.stationId, res => {
 						if (res.status === "success") {
 							_this.currentSong = (res.data.currentSong) ? res.data.currentSong : {};
@@ -300,7 +298,8 @@
 							_this.paused = res.data.paused;
 							_this.timePaused = res.data.timePaused;
 							if (res.data.currentSong) {
->>>>>>> Seperated Community and Official Station Headers
+								_this.noSong = false;
+								_this.simpleSong = (res.data.currentSong.likes === -1 && res.data.currentSong.dislikes === -1);
 								_this.youtubeReady();
 								_this.playVideo();
 								_this.socket.emit('songs.getOwnSongRatings', res.data.currentSong._id, data => {
@@ -311,8 +310,16 @@
 								});
 							} else {
 								if (_this.playerReady) _this.player.pauseVideo();
-								console.log("NO SONG TRUE1", data);
+								console.log("NO SONG TRUE1", res);
 								_this.noSong = true;
+							}
+							if (_this.type === 'community') {
+								_this.socket.emit('stations.getQueue', _this.stationId, data => {
+									console.log(data);
+									if (data.status === 'success') {
+										_this.queue = data.queue;
+									}
+								});
 							}
 						} else {
 							//TODO Handle error
@@ -386,6 +393,12 @@
 								_this.liked = data.liked;
 								_this.disliked = data.disliked;
 							}
+						}
+					});
+
+					_this.socket.on('event:queue.update', queue => {
+						if (this.type === 'community') {
+							this.queue = queue;
 						}
 					});
 					clearInterval(socketInterval);
@@ -549,7 +562,6 @@
 				left: 0;
 				width: 100%;
 				height: 100%;
-				pointer-events: none;
 			}
 		}
 		.video-col {

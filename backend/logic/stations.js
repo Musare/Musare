@@ -20,7 +20,7 @@ cache.sub('station.resume', (stationId) => {
 
 cache.sub('station.queueUpdate', (stationId) => {
 	module.exports.getStation(stationId, (err, station) => {
-		if (!station.currentSong) {
+		if (!station.currentSong && station.queue.length > 0) {
 			module.exports.initializeStation(stationId);
 		}
 	});
@@ -300,11 +300,7 @@ module.exports = {
 										console.log("##1", err);
 										if (err) return next(err);
 										let $set = {};
-										$set.currentSong = {
-											_id: station.queue[0]._id,
-											title: station.queue[0].title,
-											duration: station.queue[0].duration
-										};
+										$set.currentSong = station.queue[0];
 										$set.startedAt = Date.now();
 										$set.timePaused = 0;
 										if (station.paused) {
@@ -325,6 +321,9 @@ module.exports = {
 								console.log("##2.5", err);
 								_this.updateStation(station._id, (err, station) => {
 									console.log("##2.6", err);
+									if (station.type === 'community') {
+										cache.pub('station.queueUpdate', stationId);
+									}
 									next(null, station);
 								});
 							});

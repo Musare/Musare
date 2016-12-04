@@ -20,7 +20,7 @@
 				</div>
 			</article>
 
-			<article class="media" v-for='song in playlist'>
+			<article class="media" v-for='song in $parent.queue'>
 				<div class="media-content">
 					<div class="content">
 						<p>
