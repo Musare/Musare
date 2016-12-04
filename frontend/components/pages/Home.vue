@@ -66,18 +66,14 @@
 					_this.socket = _this.$parent.socket;
 					_this.socket.emit("stations.index", data => {
 						if (data.status === "success")  data.stations.forEach(station => {
-							if (!station.currentSong) {
-								station.currentSong = {thumbnail: '/assets/notes.png'};
-							}
+							if (!station.currentSong) station.currentSong = { thumbnail: '/assets/notes.png' };
 							if (station.type == 'official') _this.stations.official.push(station);
 							else _this.stations.community.push(station);
 						});
 					});
 					_this.socket.emit("apis.joinRoom", 'home', () => {});
-					_this.socket.on('event:stations.created', (station) => {
-						if (!station.currentSong) {
-							station.currentSong = {};
-						}
+					_this.socket.on('event:stations.created', station => {
+						if (!station.currentSong) station.currentSong = {};
 						_this.stations[station.type].push(station);
 					});
 					clearInterval(socketInterval);

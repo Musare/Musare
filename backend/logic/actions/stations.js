@@ -126,19 +126,25 @@ module.exports = {
 						}
 						cb({
 							status: 'success',
-							currentSong: station.currentSong,
-							startedAt: station.startedAt,
-							paused: station.paused,
-							timePaused: station.timePaused
+							data: {
+								type: station.type,
+								currentSong: station.currentSong,
+								startedAt: station.startedAt,
+								paused: station.paused,
+								timePaused: station.timePaused
+							}
 						});
 					});
 				} else {
 					cb({
 						status: 'success',
-						currentSong: null,
-						startedAt: station.startedAt,
-						paused: station.paused,
-						timePaused: station.timePaused
+						data: {
+							type: station.type,
+							currentSong: null,
+							startedAt: station.startedAt,
+							paused: station.paused,
+							timePaused: station.timePaused
+						}
 					});
 				}
 				//});

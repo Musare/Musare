@@ -1,5 +1,6 @@
 <template>
-	<station-header></station-header>
+	<official-header v-if='type == "official"'></official-header>
+	<community-header v-if='type == "community"'></community-header>
 
 	<song-queue v-if='modals.addSongToQueue'></song-queue>
 	<edit-playlist v-if='modals.editPlaylist'></edit-playlist>
@@ -68,11 +69,13 @@
 	import PlaylistSidebar from '../Sidebars/Playlist.vue';
 	import UsersSidebar from '../Sidebars/UsersList.vue';
 
-	import StationHeader from './StationHeader.vue';
+	import OfficialHeader from './OfficialHeader.vue';
+	import CommunityHeader from './CommunityHeader.vue';
 
 	export default {
 		data() {
 			return {
+				type: '',
 				playerReady: false,
 				currentSong: {},
 				player: undefined,
@@ -278,6 +281,7 @@
 			let socketInterval = setInterval(() => {
 				if (!!_this.$parent.socket) {
 					_this.socket = _this.$parent.socket;
+<<<<<<< 10e2c9a208c1e4d81b218d7782ef618b4f49990c
 					_this.socket.emit('stations.join', _this.stationId, data => {
 						if (data.status === "success") {
 							_this.currentSong = (data.currentSong) ? data.currentSong : {};
@@ -287,9 +291,19 @@
 							if (data.currentSong) {
 								_this.noSong = false;
 								_this.simpleSong = (data.currentSong.likes === -1 && data.currentSong.dislikes === -1);
+=======
+					_this.socket.emit('stations.join', _this.stationId, res => {
+						if (res.status === "success") {
+							_this.currentSong = (res.data.currentSong) ? res.data.currentSong : {};
+							_this.type = res.data.type;
+							_this.startedAt = res.data.startedAt;
+							_this.paused = res.data.paused;
+							_this.timePaused = res.data.timePaused;
+							if (res.data.currentSong) {
+>>>>>>> Seperated Community and Official Station Headers
 								_this.youtubeReady();
 								_this.playVideo();
-								_this.socket.emit('songs.getOwnSongRatings', data.currentSong._id, data => {
+								_this.socket.emit('songs.getOwnSongRatings', res.data.currentSong._id, data => {
 									if (_this.currentSong._id === data.songId) {
 										_this.liked = data.liked;
 										_this.disliked = data.disliked;
@@ -312,13 +326,9 @@
 						if (data.currentSong) {
 							_this.noSong = false;
 							_this.simpleSong = (data.currentSong.likes === -1 && data.currentSong.dislikes === -1);
-							if (!_this.playerReady) {
-								_this.youtubeReady();
-							} else {
-								_this.playVideo();
-							}
+							if (!_this.playerReady) _this.youtubeReady();
+							else _this.playVideo();
 							_this.socket.emit('songs.getOwnSongRatings', data.currentSong._id, (data) => {
-								console.log(data);
 								if (_this.currentSong._id === data.songId) {
 									_this.liked = data.liked;
 									_this.disliked = data.disliked;
@@ -386,7 +396,7 @@
 			volume = (typeof volume === "number") ? volume : 20;
 			$("#volumeSlider").val(volume);
 		},
-		components: { StationHeader, SongQueue, EditPlaylist, CreatePlaylist, QueueSidebar, PlaylistSidebar, UsersSidebar }
+		components: { OfficialHeader, CommunityHeader, SongQueue, EditPlaylist, CreatePlaylist, QueueSidebar, PlaylistSidebar, UsersSidebar }
 	}
 </script>
 
