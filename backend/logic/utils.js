@@ -251,5 +251,43 @@ module.exports = {
 			};
 			cb(song);
 		});
+	},
+	getSongFromSpotify: (song, cb) => {
+		const spotifyParams = [
+			`q=${encodeURIComponent(song.title)}`,
+			`type=track`
+		].join('&');
+
+		request(`https://api.spotify.com/v1/search?${spotifyParams}`, (err, res, body) => {
+
+			if (err) console.error(err);
+
+			body = JSON.parse(body);
+
+			durationArtistLoop:
+			for (let i in body) {
+				let items = body[i].items;
+				for (let j in items) {
+					let item = items[j];
+					let hasArtist = false;
+					for (let k = 0; k < item.artists.length; k++) {
+						let artist = item.artists[k];
+						if (song.title.indexOf(artist.name) !== -1) hasArtist = true;
+					}
+					if (hasArtist && song.title.indexOf(item.name) !== -1) {
+						song.duration = item.duration_ms / 1000;
+						song.artists = item.artists.map(artist => {
+							return artist.name;
+						});
+						song.title = item.name;
+						song.explicit = item.explicit;
+						song.thumbnail = item.album.images[1].url;
+						break durationArtistLoop;
+					}
+				}
+			}
+
+			cb(song);
+		});
 	}
 };

@@ -91,48 +91,8 @@ module.exports = {
 				});
 			},
 			(newSong, next) => {
-				const spotifyParams = [
-					`q=${encodeURIComponent(newSong.title)}`,
-					`type=track`
-				].join('&');
-
-				request(`https://api.spotify.com/v1/search?${spotifyParams}`, (err, res, body) => {
-
-					if (err) {
-						console.error(err);
-						return next('Failed to find song from Spotify');
-					}
-
-					body = JSON.parse(body);
-
-					durationArtistLoop:
-					for (let i in body) {
-						let items = body[i].items;
-						for (let j in items) {
-
-							let item = items[j];
-							let hasArtist = false;
-							for (let k = 0; k < item.artists.length; k++) {
-								let artist = item.artists[k];
-								if (newSong.title.indexOf(artist.name) !== -1) {
-									hasArtist = true;
-								}
-							}
-							if (hasArtist && newSong.title.indexOf(item.name) !== -1) {
-								newSong.duration = item.duration_ms / 1000;
-								newSong.artists = item.artists.map(artist => {
-									return artist.name;
-								});
-								newSong.title = item.name;
-								newSong.explicit = item.explicit;
-								newSong.thumbnail = item.album.images[1].url;
-								break durationArtistLoop;
-							}
-
-						}
-					}
-
-					next(null, newSong);
+				utils.getSongFromSpotify(newSong, (song) => {
+					next(null, song);
 				});
 			},
 			(newSong, next) => {

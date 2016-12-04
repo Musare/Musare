@@ -49,9 +49,9 @@ module.exports = {
 			}
 
 		], (err, playlist) => {
-			if (err) {console.log(err); return cb({ 'status': 'failure', 'message': 'Something went wrong'});}
+			if (err) return cb({ 'status': 'failure', 'message': 'Something went wrong'});
 			cache.pub('playlist.create', data._id);
-			return cb(null, { 'status': 'success', 'message': 'Successfully created playlist' });
+			return cb({ 'status': 'success', 'message': 'Successfully created playlist' });
 		});
 	},
 
@@ -71,23 +71,123 @@ module.exports = {
 		});
 	},
 
-	addSongToPlaylist: (session, _id, song, cb) => {
-		db.models.playlist.findOneAndUpdate({ _id }, { songs: songs.push(song) }, { upsert: true }, (err, data) => {
+	addSongToPlaylist: (session, songId, playlistId, cb) => {
+		async.waterfall([
+			(next) => {
+				utils.getSongFromYouTube(songId, (song) => {
+					song.artists = [];
+					song.genres = [];
+					song.skipDuration = 0;
+					song.thumbnail = 'empty';
+					song.explicit = false;
+					song.requestedBy = 'temp';
+					song.requestedAt = Date.now();
+					next(null, song);
+				});
+			},
+			(newSong, next) => {
+				utils.getSongFromSpotify(newSong, (song) => {
+					next(null, song);
+				});
+			},
+			(newSong, next) => {
+				db.models.playlist.findOne({ _id: playlistId }, (err, playlist) => {
+					if (err) throw err;
+
+					playlist.songs.push(newSong);
+					playlist.save(err => {
+						if (err) {
+							console.error(err);
+							return next('Failed to add song to playlist');
+						}
+
+						cache.hset('playlists', playlistId, playlist);
+						next(null, playlist);
+					});
+				});
+			}
+		],
+		(err, playlist) => {
+			if (err) return cb({ status: 'error', message: err });
+			else return cb({ status: 'success', message: 'Song has been successfully added to the playlist', data: playlist.songs });
+		});
+	},
+
+	removeSongFromPlaylist: (session, songId, playlistId, cb) => {
+		db.models.playlist.findOne({ _id: playlistId }, (err, playlist) => {
 			if (err) throw err;
-			console.log(data, 222);
-			return cb({ status: 'success', message: 'Song has been successfully added to the Playlist', data });
+
+			for (let z = 0; z < playlist.songs.length; z++) {
+				if (playlist.songs[z]._id == songId) playlist.songs.shift(playlist.songs[z]);
+			}
+
+			playlist.save(err => {
+				if (err) {
+					console.error(err);
+					return next('Failed to remove song to playlist');
+				}
+
+				cache.hset('playlists', playlistId, playlist);
+				return cb({ status: 'success', message: 'Song has been successfully removed from playlist', data: playlist.songs });
+			});
 		});
 	},
 
 	updateDisplayName: (session, _id, displayName, cb) => {
-		db.models.playlist.findOneAndUpdate({ _id }, { displayName }, { upsert: true }, (err, data) => {
+		db.models.playlist.findOneAndUpdate({ _id }, { displayName }, { upsert: true }, (err, res) => {
 			if (err) throw err;
-			return cb({ status: 'success', message: 'Playlist has been successfully updated', data });
+			cache.hset('playlists', _id, res);
+			return cb({ status: 'success', message: 'Playlist has been successfully updated' });
+		});
+	},
+
+	promoteSong: (session, playlistId, fromIndex, cb) => {
+		db.models.playlist.findOne({ _id: playlistId }, (err, playlist) => {
+			if (err) throw err;
+
+			let song = playlist.songs[fromIndex];
+			playlist.songs.splice(fromIndex, 1);
+			playlist.songs.splice((fromIndex + 1), 0, song);
+
+			playlist.save(err => {
+				if (err) {
+					console.error(err);
+					return next('Failed to promote song');
+				}
+
+				cache.hset('playlists', playlistId, playlist);
+				return cb({ status: 'success', data: playlist.songs });
+			});
+		});
+	},
+
+	demoteSong: (session, playlistId, fromIndex, cb) => {
+		db.models.playlist.findOne({ _id: playlistId }, (err, playlist) => {
+			if (err) throw err;
+
+			let song = playlist.songs[fromIndex];
+			playlist.songs.splice(fromIndex, 1);
+			playlist.songs.splice((fromIndex - 1), 0, song);
+
+			playlist.save(err => {
+				if (err) {
+					console.error(err);
+					return next('Failed to demote song');
+				}
+
+				cache.hset('playlists', playlistId, playlist);
+				return cb({ status: 'success', data: playlist.songs });
+			});
 		});
 	},
 
 	remove: (session, _id, cb) => {
-		db.models.playlist.remove({ _id });
+		db.models.playlist.remove({ _id }).exec(err => {
+			if (err) throw err;
+		});
+		cache.hdel('playlists', _id, () => {
+			return cb({ status: 'success', message: 'Playlist successfully removed' });
+		});
 	}
 
 };

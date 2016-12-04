@@ -34,6 +34,7 @@
 			}
 		},
 		ready: function () {
+			// TODO: Update when playlist is removed/created
 			let _this = this;
 			let socketInterval = setInterval(() => {
 				if (!!_this.$parent.$parent.socket) {
