@@ -90,7 +90,7 @@
 				sidebars: {
 					queue: false,
 					users: false,
-					playlist: true
+					playlist: false
 				},
 				noSong: false,
 				simpleSong: false

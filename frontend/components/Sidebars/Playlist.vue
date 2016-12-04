@@ -3,16 +3,18 @@
 		<div class='inner-wrapper'>
 			<div class='title'>Playlists</div>
 
-			<aside class='menu'>
+			<aside class='menu' v-if='playlists.length > 0'>
 				<ul class='menu-list'>
-					<li>
-						<a href='#'>Top 40</a>
-						<a href='#' @click='$parent.editPlaylist(56);'>
+					<li v-for='playlist in playlists'>
+						<a href='#'>{{ playlist.displayName }}</a>
+						<a href='#' @click='editPlaylist(playlist._id)'>
 							<i class='material-icons'>edit</i>
 						</a>
 					</li>
 				</ul>
 			</aside>
+
+			<div class='none-found' v-else>No Playlists found</div>
 
 			<a class='button create-playlist' @click='$parent.toggleModal("createPlaylist")'>Create Playlist</a>
 		</div>
@@ -21,12 +23,24 @@
 
 <script>
 	export default {
+		data() {
+			return {
+				playlists: []
+			}
+		},
+		methods: {
+			editPlaylist: function (id) {
+				this.$parent.editPlaylist(id);
+			}
+		},
 		ready: function () {
 			let _this = this;
 			let socketInterval = setInterval(() => {
 				if (!!_this.$parent.$parent.socket) {
 					_this.socket = _this.$parent.$parent.socket;
-					// get users playlists
+					_this.socket.emit('playlists.indexForUser', _this.$parent.$parent.username, res => {
+						if (res.status == 'success') _this.playlists = res.data;
+					});
 					clearInterval(socketInterval);
 				}
 			}, 100);
@@ -67,7 +81,7 @@
 
 	.create-playlist {
 		width: 100%;
-    	margin-top: 25px;
+    	margin-top: 20px;
 		height: 40px;
 		border-radius: 0;
 		background: rgb(3, 169, 244);
@@ -90,4 +104,6 @@
 		display: flex;
     	align-items: center;
 	}
+
+	.none-found { text-align: center; }
 </style>

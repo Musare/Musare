@@ -9,6 +9,7 @@ const app = require('./logic/app');
 const io = require('./logic/io');
 const stations = require('./logic/stations');
 const songs = require('./logic/songs');
+const playlists = require('./logic/playlists');
 const cache = require('./logic/cache');
 const notifications = require('./logic/notifications');
 const config = require('config');
@@ -18,40 +19,6 @@ async.waterfall([
 	// setup our Redis cache
 	(next) => {
 		cache.init(config.get('redis').url, () => {
-			// load some test stations into the cache
-			/*async.waterfall([
-				(next) => cache.hset('stations', 'edm', cache.schemas.station({
-					name: 'edm',
-					genres: ['edm'],
-					type: 'official',
-					displayName: 'EDM',
-					description: 'EDM Music',
-					playlist: [
-						'gCYcHz2k5x0'
-					],
-					currentSong: {
-						id: 'gCYcHz2k5x0',
-						title: 'Title',
-						artists: ['Artist1'],
-						genres: ['edm', 'pop'],
-						thumbnail: 'test',
-						duration: 100,
-						skipDuration: 10,
-						likes: 0,
-						dislikes: 0
-					}
-				}), next),
-				(next) => cache.hset('stations', 'chill', cache.schemas.station({
-					name: 'chill',
-					genres: ['chill'],
-					type: 'official',
-					displayName: 'Chill',
-					description: 'Chill Music',
-					playlist: [
-						'gCYcHz2k5x0'
-					]
-				}), next),
-			], next);*/
 			next();
 		});
 	},
@@ -73,6 +40,9 @@ async.waterfall([
 
 	// setup the songs
 	(next) => songs.init(next),
+
+	// setup the playlists
+	(next) => playlists.init(next),
 
 	// setup the frontend for local setups
 	(next) => {

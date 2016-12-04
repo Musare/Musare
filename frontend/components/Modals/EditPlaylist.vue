@@ -3,19 +3,18 @@
 		<div class='modal-background'></div>
 		<div class='modal-card'>
 			<header class='modal-card-head'>
-				<p class='modal-card-title'>Editing: {{ 'Ultimate Playlist' }}</p>
+				<p class='modal-card-title'>Editing: {{ playlist.displayName }}</p>
 				<button class='delete' @click='$parent.toggleModal("editPlaylist")'></button>
 			</header>
 			<section class='modal-card-body'>
 				<aside class='menu'>
 					<ul class='menu-list'>
-						<li>
-							<!--repeat for each song in playlist-->
-							<a :href='' target='_blank'>Clean Bandit - Rockabye ft. Sean Paul & Anne-Marie</a>
+						<li v-for='song in playlist.songs'>
+							<a :href='' target='_blank'>{{ song.title }}</a>
 							<div class='controls'>
 								<a href='#' @click=''><i class='material-icons'>keyboard_arrow_down</i></a>
 								<a href='#' @click=''><i class='material-icons'>keyboard_arrow_up</i></a>
-								<a href='#' @click=''><i class='material-icons'>delete</i></a>
+								<a href='#' @click='removeSongFromPlaylist(song._id)'><i class='material-icons'>delete</i></a>
 							</div>
 						</li>
 					</ul>
@@ -55,7 +54,7 @@
 				<h5>Edit playlist details:</h5>
 				<div class='control is-grouped'>
 					<p class='control is-expanded'>
-						<input class='input' type='text' placeholder='Playlist Display Name'>
+						<input class='input' type='text' placeholder='Playlist Display Name' v-model='playlist.displayName'>
 					</p>
 					<p class='control'>
 						<a class='button is-info' @click='renamePlaylist()'>Rename</a>
@@ -97,14 +96,12 @@
 					} else if (res.status == 'error') Toast.methods.addToast(res.message, 3000);
 				});
 			},
-			addSongToPlaylist: function () {
-
-			},
-			addPlaylist: function () {
-
-			},
+			addSongToPlaylist: function (id) {},
+			removeSongFromPlaylist: function (id) {},
 			renamePlaylist: function () {
-
+				_this.socket.emit('playlists.updateDisplayName', _this.playlist._id, _this.playlist.displayName, res => {
+					if (res.status == 'success') Toast.methods.addToast(res.message, 3000);
+				});
 			}
 		},
 		ready: function () {
@@ -112,7 +109,9 @@
 			let socketInterval = setInterval(() => {
 				if (!!_this.$parent.$parent.socket) {
 					_this.socket = _this.$parent.$parent.socket;
-					// _this.$parent.playlistBeingEdited - get that playlist id from socket
+					_this.socket.emit('playlists.getPlaylist', _this.$parent.playlistBeingEdited, res => {
+						if (res.status == 'success') _this.playlist = res.data;
+					});
 					clearInterval(socketInterval);
 				}
 			}, 100);

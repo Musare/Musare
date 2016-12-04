@@ -8,7 +8,7 @@
 			</header>
 			<section class='modal-card-body'>
 				<p class='control is-expanded'>
-					<input class='input' type='text' placeholder='Playlist ID' v-model='playlist.id'>
+					<input class='input' type='text' placeholder='Playlist ID' v-model='playlist._id'>
 				</p>
 				<p class='control is-expanded'>
 					<input class='input' type='text' placeholder='Playlist Display Name' v-model='playlist.displayName'>
@@ -28,15 +28,21 @@
 		data() {
 			return {
 				playlist: {
-					id: null,
-					displayName: null
+					_id: null,
+					displayName: null,
+					songs: [],
+					createdBy: this.$parent.$parent.username,
+					createdAt: Date.now()
 				}
 			}
 		},
 		methods: {
 			createPlaylist: function () {
-				// socket
-				this.$parent.toggleModal("createPlaylist");
+				let _this = this;
+				_this.socket.emit('playlists.create', _this.playlist, res => {
+					Toast.methods.addToast(res.message, 3000);
+				});
+				this.$parent.toggleModal('createPlaylist');
 			}
 		},
 		ready: function () {
