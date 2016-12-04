@@ -82,7 +82,6 @@
 				timePaused: 0,
 				paused: false,
 				timeElapsed: "0:00",
-				interval: 0,
 				liked: false,
 				disliked: false,
 				modals: {
@@ -166,8 +165,8 @@
 					local.player.loadVideoById(local.currentSong._id);
 
 					if (local.currentSong.artists) local.currentSong.artists = local.currentSong.artists.join(", ");
-					if (local.interval !== 0) clearInterval(local.interval);
-					local.interval = setInterval(function () {
+					if (window.stationInterval !== 0) clearInterval(window.stationInterval);
+					window.stationInterval = setInterval(function () {
 						local.resizeSeekerbar();
 						local.calculateTimeElapsed();
 					}, 250);
@@ -285,11 +284,12 @@
 		ready: function() {
 			let _this = this;
 			_this.stationId = _this.$route.params.id;
-			_this.interval = 0;
+			window.stationInterval = 0;
 
 			let socketInterval = setInterval(() => {
 				if (!!_this.$parent.socket) {
 					_this.socket = _this.$parent.socket;
+					_this.socket.removeAllListeners();
 					_this.socket.emit('stations.join', _this.stationId, res => {
 						if (res.status === "success") {
 							_this.currentSong = (res.data.currentSong) ? res.data.currentSong : {};
@@ -300,6 +300,7 @@
 							if (res.data.currentSong) {
 								_this.noSong = false;
 								_this.simpleSong = (res.data.currentSong.likes === -1 && res.data.currentSong.dislikes === -1);
+								console.log(12334);
 								_this.youtubeReady();
 								_this.playVideo();
 								_this.socket.emit('songs.getOwnSongRatings', res.data.currentSong._id, data => {
@@ -325,6 +326,7 @@
 							//TODO Handle error
 						}
 					});
+
 					_this.socket.on('event:songs.next', data => {
 						_this.currentSong = (data.currentSong) ? data.currentSong : {};
 						_this.startedAt = data.startedAt;
@@ -333,6 +335,7 @@
 						if (data.currentSong) {
 							_this.noSong = false;
 							_this.simpleSong = (data.currentSong.likes === -1 && data.currentSong.dislikes === -1);
+							console.log(1233, _this.stationId);
 							if (!_this.playerReady) _this.youtubeReady();
 							else _this.playVideo();
 							_this.socket.emit('songs.getOwnSongRatings', data.currentSong._id, (data) => {

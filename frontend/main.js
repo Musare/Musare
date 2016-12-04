@@ -26,6 +26,13 @@ lofig.get('serverDomain', function(res) {
 });
 
 router.beforeEach(transition => {
+	if (window.stationInterval) {
+		clearInterval(window.stationInterval);
+		window.stationInterval = 0;
+	}
+	if (window.socket) {
+		window.socket.removeAllListeners();
+	}
 	if (transition.to.loginRequired || transition.to.adminRequired) {
 		auth.getStatus((authenticated, role) => {
 			if (transition.to.loginRequired && !authenticated) transition.redirect('/login');

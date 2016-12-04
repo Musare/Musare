@@ -163,24 +163,24 @@ module.exports = {
 	socketLeaveRooms: function(socketid) {
 		let socket = this.socketFromSession(socketid);
 		let rooms = socket.rooms;
-		for (let j = 0; j < rooms.length; j++) {
-			socket.leave(rooms[j]);
+		for (let room in rooms) {
+			socket.leave(room);
 		}
 	},
 	socketJoinRoom: function(socketId, room) {
 		let socket = this.socketFromSession(socketId);
 		let rooms = socket.rooms;
-		for (let j = 0; j < rooms.length; j++) {
-			socket.leave(rooms[j]);
+		for (let room in rooms) {
+			socket.leave(room);
 		}
 		socket.join(room);
 	},
 	socketJoinSongRoom: function(socketId, room) {
 		let socket = this.socketFromSession(socketId);
 		let rooms = socket.rooms;
-		for (let j = 0; j < rooms.length; j++) {
-			if (socket.indexOf('song.') !== -1) {
-				socket.leave(rooms[j]);
+		for (let room in rooms) {
+			if (room.indexOf('song.') !== -1) {
+				socket.leave(rooms);
 			}
 		}
 		socket.join(room);
@@ -189,10 +189,9 @@ module.exports = {
 		for (let id in sockets) {
 			let socket = sockets[id];
 			let rooms = socket.rooms;
-			for (let roomId in rooms) {
-				console.log(roomId);
-				if (roomId.indexOf('song.') !== -1) {
-					socket.leave(roomId);
+			for (let room in rooms) {
+				if (room.indexOf('song.') !== -1) {
+					socket.leave(room);
 				}
 			}
 			socket.join(room);
@@ -202,10 +201,9 @@ module.exports = {
 		for (let id in sockets) {
 			let socket = sockets[id];
 			let rooms = socket.rooms;
-			for (let roomId in rooms) {
-				console.log(roomId);
-				if (roomId.indexOf('song.') !== -1) {
-					socket.leave(roomId);
+			for (let room in rooms) {
+				if (room.indexOf('song.') !== -1) {
+					socket.leave(room);
 				}
 			}
 		}
