@@ -62,8 +62,8 @@
 	import { Toast } from 'vue-roaster';
 
 	import SongQueue from '../Modals/AddSongToQueue.vue';
-	import EditPlaylist from '../Modals/EditPlaylist.vue';
-	import CreatePlaylist from '../Modals/CreatePlaylist.vue';
+	import EditPlaylist from '../Modals/Playlists/Edit.vue';
+	import CreatePlaylist from '../Modals/Playlists/Create.vue';
 
 	import QueueSidebar from '../Sidebars/Queue.vue';
 	import PlaylistSidebar from '../Sidebars/Playlist.vue';
