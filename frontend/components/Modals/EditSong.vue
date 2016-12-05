@@ -7,23 +7,26 @@
 				<h5 class='has-text-centered'>Video Preview</h5>
 				<div class='video-container'>
 					<div id='player'></div>
-					<p class='control has-addons'>
-						<a class='button'>
-							<i class='material-icons' @click='$parent.video.settings("pause")' v-if='!$parent.video.paused'>pause</i>
-							<i class='material-icons' @click='$parent.video.settings("play")' v-else>play_arrow</i>
-						</a>
-						<a class='button' @click='$parent.video.settings("stop")'>
-							<i class='material-icons'>stop</i>
-						</a>
-						<a class='button' @click='$parent.video.settings("skipToLast10Secs")'>
-							<i class='material-icons'>fast_forward</i>
-						</a>
-					</p>
+					<div class="controls">
+						<form action="#" class="column is-7-desktop is-4-mobile">
+							<p style="margin-top: 0; position: relative;">
+								<input type="range" id="volumeSlider" min="0" max="100" class="active" v-on:change="$parent.changeVolume()" v-on:input="$parent.changeVolume()">
+							</p>
+						</form>
+						<p class='control has-addons'>
+							<a class='button'>
+								<i class='material-icons' @click='$parent.video.settings("pause")' v-if='!$parent.video.paused'>pause</i>
+								<i class='material-icons' @click='$parent.video.settings("play")' v-else>play_arrow</i>
+							</a>
+							<a class='button' @click='$parent.video.settings("stop")'>
+								<i class='material-icons'>stop</i>
+							</a>
+							<a class='button' @click='$parent.video.settings("skipToLast10Secs")'>
+								<i class='material-icons'>fast_forward</i>
+							</a>
+						</p>
+					</div>
 				</div>
-				<p style="margin-top: 0; position: relative;">
-					<input type="range" id="volumeSlider" min="0" max="100" class="active" v-on:change="$parent.changeVolume()" v-on:input="$parent.changeVolume()">
-				</p>
-
 				<h5 class='has-text-centered'>Thumbnail Preview</h5>
 				<img class='thumbnail-preview' :src='$parent.editing.song.thumbnail' onerror="this.src='/assets/notes.png'">
 
@@ -94,3 +97,130 @@
 		</div>
 	</div>
 </template>
+
+<style type='scss' scoped>
+	input[type=range] {
+		-webkit-appearance: none;
+		width: 100%;
+		margin: 7.3px 0;
+	}
+
+	input[type=range]:focus {
+		outline: none;
+	}
+
+	input[type=range]::-webkit-slider-runnable-track {
+		width: 100%;
+		height: 5.2px;
+		cursor: pointer;
+		box-shadow: 0;
+		background: #c2c0c2;
+		border-radius: 0;
+		border: 0;
+	}
+
+	input[type=range]::-webkit-slider-thumb {
+		box-shadow: 0;
+		border: 0;
+		height: 19px;
+		width: 19px;
+		border-radius: 15px;
+		background: #03a9f4;
+		cursor: pointer;
+		-webkit-appearance: none;
+		margin-top: -6.5px;
+	}
+
+	input[type=range]::-moz-range-track {
+		width: 100%;
+		height: 5.2px;
+		cursor: pointer;
+		box-shadow: 0;
+		background: #c2c0c2;
+		border-radius: 0;
+		border: 0;
+	}
+
+	input[type=range]::-moz-range-thumb {
+		box-shadow: 0;
+		border: 0;
+		height: 19px;
+		width: 19px;
+		border-radius: 15px;
+		background: #03a9f4;
+		cursor: pointer;
+		-webkit-appearance: none;
+		margin-top: -6.5px;
+	}
+
+	input[type=range]::-ms-track {
+		width: 100%;
+		height: 5.2px;
+		cursor: pointer;
+		box-shadow: 0;
+		background: #c2c0c2;
+		border-radius: 1.3px;
+	}
+
+	input[type=range]::-ms-fill-lower {
+		background: #c2c0c2;
+		border: 0;
+		border-radius: 0;
+		box-shadow: 0;
+	}
+
+	input[type=range]::-ms-fill-upper {
+		background: #c2c0c2;
+		border: 0;
+		border-radius: 0;
+		box-shadow: 0;
+	}
+
+	input[type=range]::-ms-thumb {
+		box-shadow: 0;
+		border: 0;
+		height: 15px;
+		width: 15px;
+		border-radius: 15px;
+		background: #03a9f4;
+		cursor: pointer;
+		-webkit-appearance: none;
+		margin-top: 1.5px;
+	}
+
+	.controls {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+	}
+
+	#volumeSlider { margin-bottom: 15px; }
+
+	.has-text-centered { padding: 10px; }
+
+	.thumbnail-preview {
+		display: flex;
+		margin: 0 auto;
+		max-width: 200px;
+		width: 100%;
+	}
+
+	.modal-card-body, .modal-card-foot { border-top: 0; }
+
+	.label, .checkbox, h5 {
+		font-weight: normal;
+	}
+
+	.video-container {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		padding: 10px;
+
+		iframe { pointer-events: none; }
+	}
+
+	.save-changes { color: #fff; }
+
+	.tag:not(:last-child) { margin-right: 5px; }
+</style>

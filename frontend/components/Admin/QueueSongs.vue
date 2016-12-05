@@ -84,7 +84,7 @@
 				let volume = $("#volumeSlider").val();
 				localStorage.setItem("volume", volume);
 				local.video.player.setVolume(volume);
-				if (volume > 0) local.player.unMute();
+				if (volume > 0) local.video.player.unMute();
 			},
 			toggleModal: function () {
 				this.isEditActive = !this.isEditActive;
@@ -174,33 +174,6 @@
 </script>
 
 <style lang='scss' scoped>
-	body { font-family: 'Roboto', sans-serif; }
-
-	.thumbnail-preview {
-		display: flex;
-		margin: 0 auto;
-		padding: 10px 0 20px 0;
-	}
-
-	.modal-card-body, .modal-card-foot { border-top: 0; }
-
-	.label, .checkbox, h5 {
-		font-weight: normal;
-	}
-
-	.video-container {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		padding: 10px;
-
-		iframe {
-			pointer-events: none;
-		}
-	}
-
-	.save-changes { color: #fff; }
-
 	.song-thumbnail {
 		display: block;
 		max-width: 50px;
@@ -208,6 +181,4 @@
 	}
 
 	td { vertical-align: middle; }
-
-	.tag:not(:last-child) { margin-right: 5px; }	
 </style>
