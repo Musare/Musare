@@ -216,16 +216,8 @@
 				_this.toggleModal();
 			},
 			add: function (song) {
-				this.socket.emit('queueSongs.remove', song._id, res => {
+				this.socket.emit('songs.add', song, res => {
 					if (res.status == 'success') Toast.methods.addToast(res.message, 2000);
-				});
-				this.socket.emit('users.findBySession', res => {
-					if (res.status == 'success') {
-						song.acceptedBy = res.data.username;
-						this.socket.emit('songs.add', song, res => {
-							if (res.status == 'success') Toast.methods.addToast(res.message, 2000);
-						});
-					}
 				});
 			},
 			remove: function (id, index) {

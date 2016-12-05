@@ -27,7 +27,6 @@
 						<td>{{ song.requestedBy }}</td>
 						<td>
 							<a class='button is-primary' @click='edit(song, index)'>Edit</a>
-							<a class='button is-success' @click='add(song)'>Add</a>
 							<a class='button is-danger' @click='remove(song._id, index)'>Remove</a>
 						</td>
 					</tr>
@@ -214,11 +213,6 @@
 			cancel: function () {
 				let _this = this;
 				_this.toggleModal();
-			},
-			add: function (song) {
-				this.socket.emit('songs.add', song, res => {
-					if (res.status == 'success') Toast.methods.addToast(res.message, 2000);
-				});
 			},
 			remove: function (id, index) {
 				this.songs.splice(index, 1);

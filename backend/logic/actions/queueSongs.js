@@ -48,15 +48,16 @@ module.exports = {
 		});
 	}),
 
-	remove: hooks.adminRequired((session, _id, cb) => {
-		// TODO Require admin/login
-		db.models.queueSong.remove({ _id });
-		return cb({ status: 'success', message: 'Song was removed successfully' });
+	remove: hooks.adminRequired((session, songId, cb) => {
+		db.models.queueSong.remove({ _id: songId }, (err, res) => {
+			if (err) return cb({ status: 'failure', message: err.message });
+			//TODO Pub/sub for (queue)songs on admin pages.
+			cb({ status: 'success', message: 'Song was removed successfully' });
+		});
 	}),
 
 	add: hooks.loginRequired((session, songId, cb, userId) => {
 		//TODO Check if id is valid
-		//TODO Check if id is already in queue/rotation
 
 		let requestedAt = Date.now();
 
