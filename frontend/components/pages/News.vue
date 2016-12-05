@@ -5,35 +5,35 @@
 			<div class="card is-fullwidth" v-for="item in news">
 				<header class="card-header">
 					<p class="card-header-title">
-						{{item.title}} - {{formatDate(item.createdAt)}}
+						{{ item.title }} - {{ formatDate(item.createdAt) }}
 					</p>
 				</header>
 				<div class="card-content">
 					<div class="content">
-						<p>{{item.description}}</p>
+						<p>{{ item.description }}</p>
 					</div>
 					<div class="content" v-show="item.features.length > 0">
 						<div class="tile notification is-success">Features</div>
 						<ul>
-							<li v-for="li in item.features">{{li}}</li>
+							<li v-for="li in item.features">{{ li }}</li>
 						</ul>
 					</div>
 					<div class="content" v-show="item.changes.length > 0">
 						<div class="tile notification is-info">Changes</div>
 						<ul>
-							<li v-for="li in item.changes">{{li}}</li>
+							<li v-for="li in item.changes">{{ li }}</li>
 						</ul>
 					</div>
 					<div class="content" v-show="item.fixes.length > 0">
 						<div class="tile notification is-danger">Bug fixes</div>
 						<ul>
-							<li v-for="li in item.fixes">{{li}}</li>
+							<li v-for="li in item.fixes">{{ li }}</li>
 						</ul>
 					</div>
 					<div class="content" v-show="item.upcoming.length > 0">
 						<div class="tile notification is-primary">Upcoming</div>
 						<ul>
-							<li v-for="li in item.upcoming">{{li}}</li>
+							<li v-for="li in item.upcoming">{{ li }}</li>
 						</ul>
 					</div>
 				</div>
@@ -61,10 +61,15 @@
 		},
 		ready: function () {
 			let _this = this;
-			let socket = this.socket = this.$parent.socket;
-			socket.emit("news.index", res => {
-				_this.news = res.data;
-			});
+			let socketInterval = setInterval(() => {
+				if (!!_this.$parent.socket) {
+					_this.socket = _this.$parent.socket;
+					_this.socket.emit('news.index', res => {
+						_this.news = res.data;
+					});
+					clearInterval(socketInterval);
+				}
+			}, 100);
 		}
 	}
 </script>
