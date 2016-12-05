@@ -86,7 +86,7 @@
 
 			</section>
 			<footer class='modal-card-foot'>
-				<a class='button is-success' @click='$parent.save(editing.song)'>
+				<a class='button is-success' @click='$parent.save($parent.editing.song)'>
 					<i class='material-icons save-changes'>done</i>
 					<span>&nbsp;Save</span>
 				</a>
