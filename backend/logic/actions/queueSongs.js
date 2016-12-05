@@ -34,14 +34,14 @@ module.exports = {
 	update: hooks.adminRequired((session, _id, updatedSong, cb) => {
 		//TODO Check if id and updatedSong is valid
 		db.models.queueSong.findOne({ _id }, (err, currentSong) => {
-			if (err) throw err;
+			if (err) console.error(err);
 			// TODO Check if new id, if any, is already in use in queue or on rotation
 			let updated = false;
 			for (let prop in updatedSong) if (updatedSong[prop] !== currentSong[prop]) currentSong[prop] = updatedSong[prop]; updated = true;
 			if (!updated) return cb({ status: 'error', message: 'No properties changed' });
 			else {
 				currentSong.save(err => {
-					if (err) throw err;
+					if (err) console.error(err);
 					return cb({ status: 'success', message: 'Successfully updated the queued song' });
 				});
 			}
