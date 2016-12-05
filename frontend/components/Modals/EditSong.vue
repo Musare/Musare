@@ -60,7 +60,7 @@
 							</p>
 							<span class='tag is-info' v-for='(index, artist) in $parent.editing.song.artists' track-by='$index'>
 								{{ artist }}
-								<button class='delete is-info' @click='$parent.removeTag("artists", index)'></button>
+								<button class='delete is-info' @click='$parent.$parent.removeTag("artists", index)'></button>
 							</span>
 						</div>
 						<div>
@@ -70,7 +70,7 @@
 							</p>
 							<span class='tag is-info' v-for='(index, genre) in $parent.editing.song.genres' track-by='$index'>
 								{{ genre }}
-								<button class='delete is-info' @click='$parent.removeTag("genres", index)'></button>
+								<button class='delete is-info' @click='$parent.$parent.removeTag("genres", index)'></button>
 							</span>
 						</div>
 					</div>
