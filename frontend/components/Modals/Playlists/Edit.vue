@@ -66,6 +66,14 @@
 						<a class='button is-info' @click='renamePlaylist()'>Rename</a>
 					</p>
 				</div>
+				<div class='control is-grouped'>
+					<p class='control is-expanded'>
+						<input class='input' type='text' placeholder='Playlist ID' v-model='playlist._id'>
+					</p>
+					<p class='control'>
+						<a class='button is-info' @click='renamePlaylistId()'>Rename</a>
+					</p>
+				</div>
 			</section>
 			<footer class='modal-card-foot'>
 				<a class='button is-danger' @click='removePlaylist()'>Remove Playlist</a>
@@ -125,6 +133,12 @@
 					if (res.status == 'success') Toast.methods.addToast(res.message, 3000);
 				});
 			},
+			renamePlaylistId: function () {
+				let _this = this;
+				_this.socket.emit('playlists.updatePlaylistId', _this.playlist.oldId, _this.playlist._id, res => {
+					if (res.status == 'success') _this.playlist = res.data;
+				});
+			},
 			removePlaylist: function () {
 				let _this = this;
 				_this.socket.emit('playlists.remove', _this.playlist._id, res => {
@@ -153,7 +167,7 @@
 				if (!!_this.$parent.$parent.socket) {
 					_this.socket = _this.$parent.$parent.socket;
 					_this.socket.emit('playlists.getPlaylist', _this.$parent.playlistBeingEdited, res => {
-						if (res.status == 'success') _this.playlist = res.data;
+						if (res.status == 'success') _this.playlist = res.data; _this.playlist.oldId = res.data._id;
 					});
 					clearInterval(socketInterval);
 				}

@@ -141,6 +141,23 @@ module.exports = {
 		});
 	},
 
+	updatePlaylistId: (session, oldId, newId, cb) => {
+		db.models.playlist.findOne({ _id: oldId }).exec((err, doc) => {
+			if (err) throw err;
+			doc._id = newId;
+			let newPlaylist = new db.models.playlist(doc);
+			newPlaylist.isNew = true;
+			newPlaylist.save(err => {
+				if (err) console.error(err);
+			});
+			db.models.playlist.remove({ _id: oldId });
+			cache.hdel('playlists', oldId, () => {
+				cache.hset('playlists', newId, doc);
+				return cb({ status: 'success', data: doc });
+			});
+		});
+	},
+
 	promoteSong: (session, playlistId, fromIndex, cb) => {
 		db.models.playlist.findOne({ _id: playlistId }, (err, playlist) => {
 			if (err) throw err;
@@ -184,9 +201,9 @@ module.exports = {
 	remove: (session, _id, cb) => {
 		db.models.playlist.remove({ _id }).exec(err => {
 			if (err) throw err;
-		});
-		cache.hdel('playlists', _id, () => {
-			return cb({ status: 'success', message: 'Playlist successfully removed' });
+			cache.hdel('playlists', _id, () => {
+				return cb({ status: 'success', message: 'Playlist successfully removed' });
+			});
 		});
 	}
 

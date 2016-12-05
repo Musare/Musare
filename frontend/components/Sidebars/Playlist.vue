@@ -7,9 +7,15 @@
 				<ul class='menu-list'>
 					<li v-for='playlist in playlists'>
 						<a href='#'>{{ playlist.displayName }}</a>
-						<a href='#' @click='editPlaylist(playlist._id)'>
-							<i class='material-icons'>edit</i>
-						</a>
+						<!--Will play playlist in community station Kris-->
+						<div class='icons-group'>
+							<a href='#' @click=''>
+								<i class='material-icons'>play_arrow</i>
+							</a>
+							<a href='#' @click='editPlaylist(playlist._id)'>
+								<i class='material-icons'>edit</i>
+							</a>
+						</div>
 					</li>
 				</ul>
 			</aside>
@@ -101,10 +107,7 @@
 		justify-content: space-between;
 	}
 
-	li a {
-		display: flex;
-    	align-items: center;
-	}
+	.icons-group { display: flex; }
 
 	.none-found { text-align: center; }
 </style>
