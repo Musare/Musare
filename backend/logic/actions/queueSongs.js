@@ -48,15 +48,16 @@ module.exports = {
 		});
 	}),
 
-	remove: hooks.adminRequired((session, _id, cb) => {
-		// TODO Require admin/login
-		db.models.queueSong.remove({ _id });
-		return cb({ status: 'success', message: 'Song was removed successfully' });
+	remove: hooks.adminRequired((session, songId, cb) => {
+		db.models.queueSong.remove({ _id: songId }, (err, res) => {
+			if (err) return cb({ status: 'failure', message: err.message });
+			//TODO Pub/sub for (queue)songs on admin pages.
+			cb({ status: 'success', message: 'Song was removed successfully' });
+		});
 	}),
 
 	add: hooks.loginRequired((session, songId, cb, userId) => {
 		//TODO Check if id is valid
-		//TODO Check if id is already in queue/rotation
 
 		let requestedAt = Date.now();
 
@@ -91,48 +92,8 @@ module.exports = {
 				});
 			},
 			(newSong, next) => {
-				const spotifyParams = [
-					`q=${encodeURIComponent(newSong.title)}`,
-					`type=track`
-				].join('&');
-
-				request(`https://api.spotify.com/v1/search?${spotifyParams}`, (err, res, body) => {
-
-					if (err) {
-						console.error(err);
-						return next('Failed to find song from Spotify');
-					}
-
-					body = JSON.parse(body);
-
-					durationArtistLoop:
-					for (let i in body) {
-						let items = body[i].items;
-						for (let j in items) {
-
-							let item = items[j];
-							let hasArtist = false;
-							for (let k = 0; k < item.artists.length; k++) {
-								let artist = item.artists[k];
-								if (newSong.title.indexOf(artist.name) !== -1) {
-									hasArtist = true;
-								}
-							}
-							if (hasArtist && newSong.title.indexOf(item.name) !== -1) {
-								newSong.duration = item.duration_ms / 1000;
-								newSong.artists = item.artists.map(artist => {
-									return artist.name;
-								});
-								newSong.title = item.name;
-								newSong.explicit = item.explicit;
-								newSong.thumbnail = item.album.images[1].url;
-								break durationArtistLoop;
-							}
-
-						}
-					}
-
-					next(null, newSong);
+				utils.getSongFromSpotify(newSong, (song) => {
+					next(null, song);
 				});
 			},
 			(newSong, next) => {

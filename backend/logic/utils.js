@@ -1,10 +1,10 @@
 'use strict';
 
-const 	moment = require('moment'),
-		io = require('./io'),
-		config = require('config'),
-		request = require('request'),
-		cache = require('./cache');
+const moment  = require('moment'),
+	  io      = require('./io'),
+	  config  = require('config'),
+	  request = require('request'),
+	  cache   = require('./cache');
 
 class Timer {
 	constructor(callback, delay, paused) {
@@ -249,6 +249,67 @@ module.exports = {
 				title: body.items[0].snippet.title,
 				duration
 			};
+			cb(song);
+		});
+	},
+	getPlaylistFromYouTube: (url, cb) => {
+		
+		let name = 'list'.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+		var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+		let playlistId = regex.exec(url)[1];
+
+		const youtubeParams = [
+			'part=contentDetails',
+			`playlistId=${encodeURIComponent(playlistId)}`,
+			`maxResults=50`,
+			`key=${config.get('apis.youtube.key')}`
+		].join('&');
+
+		request(`https://www.googleapis.com/youtube/v3/playlistItems?${youtubeParams}`, (err, res, body) => {
+			if (err) {
+				console.error(err);
+				return next('Failed to find playlist from YouTube');
+			}
+
+			body = JSON.parse(body);
+			cb(body.items);
+		});
+	},
+	getSongFromSpotify: (song, cb) => {
+		const spotifyParams = [
+			`q=${encodeURIComponent(song.title)}`,
+			`type=track`
+		].join('&');
+
+		request(`https://api.spotify.com/v1/search?${spotifyParams}`, (err, res, body) => {
+
+			if (err) console.error(err);
+
+			body = JSON.parse(body);
+
+			durationArtistLoop:
+			for (let i in body) {
+				let items = body[i].items;
+				for (let j in items) {
+					let item = items[j];
+					let hasArtist = false;
+					for (let k = 0; k < item.artists.length; k++) {
+						let artist = item.artists[k];
+						if (song.title.indexOf(artist.name) !== -1) hasArtist = true;
+					}
+					if (hasArtist && song.title.indexOf(item.name) !== -1) {
+						song.duration = item.duration_ms / 1000;
+						song.artists = item.artists.map(artist => {
+							return artist.name;
+						});
+						song.title = item.name;
+						song.explicit = item.explicit;
+						song.thumbnail = item.album.images[1].url;
+						break durationArtistLoop;
+					}
+				}
+			}
+
 			cb(song);
 		});
 	}

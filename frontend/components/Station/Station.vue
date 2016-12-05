@@ -5,6 +5,7 @@
 	<song-queue v-if='modals.addSongToQueue'></song-queue>
 	<edit-playlist v-if='modals.editPlaylist'></edit-playlist>
 	<create-playlist v-if='modals.createPlaylist'></create-playlist>
+	<edit-station v-if='modals.editStation'></edit-station>
 
 	<queue-sidebar v-if='sidebars.queue'></queue-sidebar>
 	<playlist-sidebar v-if='sidebars.playlist'></playlist-sidebar>
@@ -64,6 +65,7 @@
 	import SongQueue from '../Modals/AddSongToQueue.vue';
 	import EditPlaylist from '../Modals/Playlists/Edit.vue';
 	import CreatePlaylist from '../Modals/Playlists/Create.vue';
+	import EditStation from '../Modals/EditStation.vue';
 
 	import QueueSidebar from '../Sidebars/Queue.vue';
 	import PlaylistSidebar from '../Sidebars/Playlist.vue';
@@ -87,7 +89,8 @@
 				modals: {
 					addSongToQueue: false,
 					editPlaylist: false,
-					createPlaylist: false
+					createPlaylist: false,
+					editStation: false
 				},
 				sidebars: {
 					queue: false,
@@ -97,7 +100,8 @@
 				noSong: false,
 				simpleSong: false,
 				queue: [],
-				timeBeforePause: 0
+				timeBeforePause: 0,
+				station: {}
 			}
 		},
 		methods: {
@@ -109,6 +113,7 @@
 				if (type == 'addSongToQueue') this.modals.addSongToQueue = !this.modals.addSongToQueue;
 				else if (type == 'editPlaylist') this.modals.editPlaylist = !this.modals.editPlaylist;
 				else if (type == 'createPlaylist') this.modals.createPlaylist = !this.modals.createPlaylist;
+				else if (type == 'editStation') this.modals.editStation = !this.modals.editStation;
 			},
 			youtubeReady: function() {
 				let local = this;
@@ -118,6 +123,7 @@
 						height: 270,
 						width: 480,
 						videoId: local.currentSong._id,
+						startSeconds: local.getTimeElapsed() / 1000 + local.currentSong.skipDuration,
 						playerVars: {controls: 0, iv_load_policy: 3, rel: 0, showinfo: 0},
 						events: {
 							'onReady': function (event) {
@@ -133,14 +139,14 @@
 							'onStateChange': function (event) {
 								if (event.data === 1 && local.videoLoading === true) {
 									local.videoLoading = false;
-									local.player.seekTo(local.getTimeElapsed() / 1000, true);
+									local.player.seekTo(local.getTimeElapsed() / 1000 + local.currentSong.skipDuration, true);
 									if (local.paused) local.player.pauseVideo();
 								} else if (event.data === 1 && local.paused) {
 									local.player.seekTo(local.timeBeforePause / 1000, true);
 									local.player.pauseVideo();
 								}
 								if (event.data === 2 && !local.paused && !local.noSong) {
-									local.player.seekTo(local.getTimeElapsed() / 1000, true);
+									local.player.seekTo(local.getTimeElapsed() / 1000 + local.currentSong.skipDuration, true);
 									local.player.playVideo();
 								}
 							}
@@ -162,7 +168,7 @@
 				if (local.playerReady) {
 					console.log("@@@1");
 					local.videoLoading = true;
-					local.player.loadVideoById(local.currentSong._id);
+					local.player.loadVideoById(local.currentSong._id, local.getTimeElapsed() / 1000 + local.currentSong.skipDuration);
 
 					if (local.currentSong.artists) local.currentSong.artists = local.currentSong.artists.join(", ");
 					if (window.stationInterval !== 0) clearInterval(window.stationInterval);
@@ -211,7 +217,7 @@
 				this.paused = false;
 				if (!this.noSong) {
 					if (this.playerReady) {
-						this.player.seekTo(this.getTimeElapsed() / 1000);
+						this.player.seekTo(this.getTimeElapsed() / 1000 + this.currentSong.skipDuration);
 						this.player.playVideo();
 					}
 				}
@@ -291,7 +297,12 @@
 					_this.socket = _this.$parent.socket;
 					_this.socket.removeAllListeners();
 					_this.socket.emit('stations.join', _this.stationId, res => {
-						if (res.status === "success") {
+						if (res.status === 'success') {
+							_this.station = {
+								displayName: res.data.displayName,
+								description: res.data.description,
+								privacy: res.data.privacy
+							};
 							_this.currentSong = (res.data.currentSong) ? res.data.currentSong : {};
 							_this.type = res.data.type;
 							_this.startedAt = res.data.startedAt;
@@ -311,7 +322,7 @@
 								});
 							} else {
 								if (_this.playerReady) _this.player.pauseVideo();
-								console.log("NO SONG TRUE1", res);
+								console.log("NO SONG TRUE1", res.data);
 								_this.noSong = true;
 							}
 							if (_this.type === 'community') {
@@ -412,7 +423,7 @@
 			volume = (typeof volume === "number") ? volume : 20;
 			$("#volumeSlider").val(volume);
 		},
-		components: { OfficialHeader, CommunityHeader, SongQueue, EditPlaylist, CreatePlaylist, QueueSidebar, PlaylistSidebar, UsersSidebar }
+		components: { OfficialHeader, CommunityHeader, SongQueue, EditPlaylist, CreatePlaylist, EditStation, QueueSidebar, PlaylistSidebar, UsersSidebar }
 	}
 </script>
 

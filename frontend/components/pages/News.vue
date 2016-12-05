@@ -1,39 +1,39 @@
 <template>
-	<div class="app">
+	<div class='app'>
 		<main-header></main-header>
-		<div class="container">
-			<div class="card is-fullwidth" v-for="item in news">
-				<header class="card-header">
-					<p class="card-header-title">
-						{{item.title}} - {{formatDate(item.createdAt)}}
+		<div class='container'>
+			<div class='card is-fullwidth' v-for='item in news'>
+				<header class='card-header'>
+					<p class='card-header-title'>
+						{{ item.title }} - {{ formatDate(item.createdAt) }}
 					</p>
 				</header>
-				<div class="card-content">
-					<div class="content">
-						<p>{{item.description}}</p>
+				<div class='card-content'>
+					<div class='content'>
+						<p>{{ item.description }}</p>
 					</div>
-					<div class="content" v-show="item.features.length > 0">
-						<div class="tile notification is-success">Features</div>
-						<ul>
-							<li v-for="li in item.features">{{li}}</li>
+					<div class='sect' v-show='item.features.length > 0'>
+						<div class='sect-head-features'>The features are so great</div>
+						<ul class='sect-body'>
+							<li v-for='li in item.features'>{{ li }}</li>
 						</ul>
 					</div>
-					<div class="content" v-show="item.changes.length > 0">
-						<div class="tile notification is-info">Changes</div>
-						<ul>
-							<li v-for="li in item.changes">{{li}}</li>
+					<div class='sect' v-show='item.improvements.length > 0'>
+						<div class='sect-head-improvements'>Improvements</div>
+						<ul class='sect-body'>
+							<li v-for='li in item.improvements'>{{ li }}</li>
 						</ul>
 					</div>
-					<div class="content" v-show="item.fixes.length > 0">
-						<div class="tile notification is-danger">Bug fixes</div>
-						<ul>
-							<li v-for="li in item.fixes">{{li}}</li>
+					<div class='sect' v-show='item.bugs.length > 0'>
+						<div class='sect-head-bugs'>Bugs Smashed</div>
+						<ul class='sect-body'>
+							<li v-for='li in item.bugs'>{{ li }}</li>
 						</ul>
 					</div>
-					<div class="content" v-show="item.upcoming.length > 0">
-						<div class="tile notification is-primary">Upcoming</div>
-						<ul>
-							<li v-for="li in item.upcoming">{{li}}</li>
+					<div class='sect' v-show='item.upcoming.length > 0'>
+						<div class='sect-head-upcoming'>Coming Soon to a Musare near you</div>
+						<ul class='sect-body'>
+							<li v-for='li in item.upcoming'>{{ li }}</li>
 						</ul>
 					</div>
 				</div>
@@ -51,7 +51,7 @@
 		components: { MainHeader, MainFooter },
 		methods: {
 			formatDate: unix => {
-				return moment(unix).format("DD-MM-YYYY");
+				return moment(unix).format('DD-MM-YYYY');
 			},
 		},
 		data() {
@@ -61,20 +61,39 @@
 		},
 		ready: function () {
 			let _this = this;
-			let socket = this.socket = this.$parent.socket;
-			socket.emit("news.index", res => {
-				_this.news = res.data;
-			});
+			let socketInterval = setInterval(() => {
+				if (!!_this.$parent.socket) {
+					_this.socket = _this.$parent.socket;
+					_this.socket.emit('news.index', res => {
+						_this.news = res.data;
+					});
+					clearInterval(socketInterval);
+				}
+			}, 100);
 		}
 	}
 </script>
 
-<style lang="scss" scoped>
-	.card {
-		margin-top: 50px;
-	}
+<style lang='scss' scoped>
+	.card { margin-top: 50px; }
 
-	.notification {
-		padding: 10px !important;
+	.sect {
+		div[class^='sect-head'], div[class*=' sect-head']{
+			padding: 12px;
+			text-transform: uppercase;
+			font-weight: bold;
+			color: #fff;
+		}
+
+		.sect-head-features { background-color: dodgerblue; }
+		.sect-head-improvements { background-color: seagreen; }
+		.sect-head-bugs { background-color: brown; }
+		.sect-head-upcoming { background-color: mediumpurple; }
+
+		.sect-body {
+			padding: 15px 25px;
+
+			li { list-style-type: disc; }
+		}
 	}
 </style>

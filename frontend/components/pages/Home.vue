@@ -60,7 +60,6 @@
 		},
 		ready() {
 			let _this = this;
-
 			let socketInterval = setInterval(() => {
 				if (!!_this.$parent.socket) {
 					_this.socket = _this.$parent.socket;

@@ -191,8 +191,7 @@ module.exports = {
 								if (station.playlist.length > 0) {
 									function func() {
 										if (station.currentSongIndex < station.playlist.length - 1) {
-											station.currentSongIndex++;
-											songs.getSong(station.playlist[station.currentSongIndex], (err, song) => {
+											songs.getSong(station.playlist[station.currentSongIndex + 1], (err, song) => {
 												if (!err) {
 													let $set = {};
 
@@ -208,6 +207,7 @@ module.exports = {
 													};
 													$set.startedAt = Date.now();
 													$set.timePaused = 0;
+													$set.currentSongIndex = station.currentSongIndex + 1;
 													next(null, $set);
 												} else {
 													db.models.station.update({_id: station._id}, {$inc: {currentSongIndex: 1}}, (err) => {

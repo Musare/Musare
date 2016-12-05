@@ -6,6 +6,7 @@ const songs = require('../songs');
 const cache = require('../cache');
 const utils = require('../utils');
 const hooks = require('./hooks');
+const queueSongs = require('./queueSongs');
 
 cache.sub('song.like', (data) => {
 	io.io.to(`song.${data.songId}`).emit('event:song.like', {songId: data.songId, undisliked: data.undisliked});
@@ -53,9 +54,12 @@ module.exports = {
 	},
 
 	update: hooks.adminRequired((session, songId, song, cb) => {
-		db.models.song.findOneAndUpdate({ _id: songId }, song, { upsert: true }, (err, updatedSong) => {
+		db.models.song.update({ _id: songId }, song, { upsert: true }, (err, updatedSong) => {
 			if (err) throw err;
-			return cb({ status: 'success', message: 'Song has been successfully updated', data: updatedSong });
+			songs.updateSong(songId, (err, song) => {
+				if (err) throw err;
+				cb({ status: 'success', message: 'Song has been successfully updated', data: song });
+			});
 		});
 	}),
 
@@ -63,16 +67,21 @@ module.exports = {
 		db.models.song.remove({ _id: songId });
 	}),
 
-	add: hooks.adminRequired((session, song, cb) => {
-		const newSong = new db.models.song(song);
-		db.models.song.findOne({ _id: song._id }, (err, existingSong) => {
-			if (err) throw err;
-			if (!existingSong) newSong.save(err => {
+	add: hooks.adminRequired((session, song, cb, userId) => {
+		queueSongs.remove(session, song._id, () => {
+			const newSong = new db.models.song(song);
+			db.models.song.findOne({ _id: song._id }, (err, existingSong) => {
 				if (err) throw err;
-				else cb({ status: 'success', message: 'Song has been moved from Queue' })
+				newSong.acceptedBy = userId;
+				newSong.acceptedAt = Date.now();
+				if (!existingSong) newSong.save(err => {
+					console.log(err, 1);
+					if (err) throw err;
+					else cb({ status: 'success', message: 'Song has been moved from Queue' })
+				});
 			});
+			//TODO Check if video is in queue and Add the song to the appropriate stations
 		});
-		//TODO Check if video is in queue and Add the song to the appropriate stations
 	}),
 
 	like: hooks.loginRequired((session, songId, cb, userId) => {
