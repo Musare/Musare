@@ -204,7 +204,7 @@ module.exports = {
 
 	updateUsername: hooks.loginRequired((session, newUsername, cb, userId) => {
 		db.models.user.findOne({ _id: userId }, (err, user) => {
-			if (err) throw err;
+			if (err) console.error(err);
 			if (!user) return cb({ status: 'error', message: 'User not found.' });
 			if (user.username !== newUsername) {
 				if (user.username.toLowerCase() !== newUsername.toLowerCase()) {
@@ -229,7 +229,7 @@ module.exports = {
 	updateEmail: hooks.loginRequired((session, newEmail, cb, userId) => {
 		newEmail = newEmail.toLowerCase();
 		db.models.user.findOne({ _id: userId }, (err, user) => {
-			if (err) throw err;
+			if (err) console.error(err);
 			if (!user) return cb({ status: 'error', message: 'User not found.' });
 			if (user.email.address !== newEmail) {
 				db.models.user.findOne({"email.address": newEmail}, (err, _user) => {

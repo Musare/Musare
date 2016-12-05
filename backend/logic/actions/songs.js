@@ -55,9 +55,9 @@ module.exports = {
 
 	update: hooks.adminRequired((session, songId, song, cb) => {
 		db.models.song.update({ _id: songId }, song, { upsert: true }, (err, updatedSong) => {
-			if (err) throw err;
+			if (err) console.error(err);
 			songs.updateSong(songId, (err, song) => {
-				if (err) throw err;
+				if (err) console.error(err);
 				cb({ status: 'success', message: 'Song has been successfully updated', data: song });
 			});
 		});
@@ -71,12 +71,12 @@ module.exports = {
 		queueSongs.remove(session, song._id, () => {
 			const newSong = new db.models.song(song);
 			db.models.song.findOne({ _id: song._id }, (err, existingSong) => {
-				if (err) throw err;
+				if (err) console.error(err);
 				newSong.acceptedBy = userId;
 				newSong.acceptedAt = Date.now();
 				if (!existingSong) newSong.save(err => {
 					console.log(err, 1);
-					if (err) throw err;
+					if (err) console.error(err);
 					else cb({ status: 'success', message: 'Song has been moved from Queue' })
 				});
 			});
