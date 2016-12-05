@@ -54,9 +54,12 @@ module.exports = {
 	},
 
 	update: hooks.adminRequired((session, songId, song, cb) => {
-		db.models.song.findOneAndUpdate({ _id: songId }, song, { upsert: true }, (err, updatedSong) => {
+		db.models.song.update({ _id: songId }, song, { upsert: true }, (err, updatedSong) => {
 			if (err) throw err;
-			return cb({ status: 'success', message: 'Song has been successfully updated', data: updatedSong });
+			songs.updateSong(songId, (err, song) => {
+				if (err) throw err;
+				cb({ status: 'success', message: 'Song has been successfully updated', data: song });
+			});
 		});
 	}),
 

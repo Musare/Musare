@@ -118,6 +118,7 @@
 						height: 270,
 						width: 480,
 						videoId: local.currentSong._id,
+						startSeconds: local.getTimeElapsed() / 1000 + local.currentSong.skipDuration,
 						playerVars: {controls: 0, iv_load_policy: 3, rel: 0, showinfo: 0},
 						events: {
 							'onReady': function (event) {
@@ -133,14 +134,14 @@
 							'onStateChange': function (event) {
 								if (event.data === 1 && local.videoLoading === true) {
 									local.videoLoading = false;
-									local.player.seekTo(local.getTimeElapsed() / 1000, true);
+									local.player.seekTo(local.getTimeElapsed() / 1000 + local.currentSong.skipDuration, true);
 									if (local.paused) local.player.pauseVideo();
 								} else if (event.data === 1 && local.paused) {
 									local.player.seekTo(local.timeBeforePause / 1000, true);
 									local.player.pauseVideo();
 								}
 								if (event.data === 2 && !local.paused && !local.noSong) {
-									local.player.seekTo(local.getTimeElapsed() / 1000, true);
+									local.player.seekTo(local.getTimeElapsed() / 1000 + local.currentSong.skipDuration, true);
 									local.player.playVideo();
 								}
 							}
@@ -162,7 +163,7 @@
 				if (local.playerReady) {
 					console.log("@@@1");
 					local.videoLoading = true;
-					local.player.loadVideoById(local.currentSong._id);
+					local.player.loadVideoById(local.currentSong._id, local.getTimeElapsed() / 1000 + local.currentSong.skipDuration);
 
 					if (local.currentSong.artists) local.currentSong.artists = local.currentSong.artists.join(", ");
 					if (window.stationInterval !== 0) clearInterval(window.stationInterval);
@@ -211,7 +212,7 @@
 				this.paused = false;
 				if (!this.noSong) {
 					if (this.playerReady) {
-						this.player.seekTo(this.getTimeElapsed() / 1000);
+						this.player.seekTo(this.getTimeElapsed() / 1000 + this.currentSong.skipDuration);
 						this.player.playVideo();
 					}
 				}
