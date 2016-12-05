@@ -32,5 +32,6 @@ module.exports = {
 		likes: { type: Number, default: -1 },
 		dislikes: { type: Number, default: -1 },
 		requestedBy: { type: String, required: true }
-	}]
+	}],
+	owner: { type: String }
 };

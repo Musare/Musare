@@ -9,6 +9,11 @@
 					<i class="material-icons">playlist_add</i>
 				</span>
 			</a>
+			<a class="nav-item" href="#" @click="$parent.toggleModal('editStation')">
+				<span class="icon">
+					<i class="material-icons">flag</i>
+				</span>
+			</a>
 			<a class="nav-item" href="#">
 				<span class="icon">
 					<i class="material-icons">flag</i>

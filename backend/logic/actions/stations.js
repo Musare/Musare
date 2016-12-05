@@ -68,11 +68,46 @@ module.exports = {
 			}
 
 			let arr = [];
+			let done = 0;
 			for (let prop in stations) {
-				arr.push(stations[prop]);
+				// TODO If community, check if on whitelist
+				let station = stations[prop];
+				if (station.privacy === 'public') {
+					add(true, station);
+				} else if (!session.sessionId) {
+					add(false);
+				} else {
+					cache.hget('sessions', session.sessionId, (err, session) => {
+						if (err || !session) {
+							add(false);
+						} else {
+							db.models.user.findOne({_id: session.userId}, (err, user) => {
+								if (err || !user) {
+									add(false);
+								} else if (user.role === 'admin') {
+									add(true, station);
+								} else if (station.type === 'official') {
+									add(false);
+								} else if (station.owner === session.userId) {
+									add(true, station);
+								} else add(false);
+							});
+						}
+					});
+				}
 			}
 
-			cb({ status: 'success', stations: arr });
+			function add(add, station) {
+				console.log("ADD!", add, station);
+				if (add) {
+					arr.push(station);
+				}
+				done++;
+				if (done === Object.keys(stations).length) {
+					console.log("DONE!", done);
+					cb({ status: 'success', stations: arr });
+				}
+			}
 		});
 	},
 
@@ -108,48 +143,61 @@ module.exports = {
 
 			if (station) {
 
-				//TODO Loop through all sockets, see if socket with same session exists, and if so leave all other station rooms and join this stationRoom
+				if (station.privacy !== 'private') {
+					func();
+				} else {
+					// TODO If community, check if on whitelist
+					if (!session.userId) return cb({ status: 'error', message: 'An error occurred while joining the station1' });
+					db.models.user.findOne({_id: session.userId}, (err, user) => {
+						if (err || !user) return cb({ status: 'error', message: 'An error occurred while joining the station2' });
+						if (user.role === 'admin') return func();
+						if (station.type === 'official') return cb({ status: 'error', message: 'An error occurred while joining the station3' });
+						if (station.owner === session.userId) return func();
+						return cb({ status: 'error', message: 'An error occurred while joining the station4' });
+					});
+				}
 
-				/*cache.client.hincrby('station.userCounts', stationId, 1, (err, userCount) => {
-					if (err) return cb({ status: 'error', message: 'An error occurred while joining the station' });*/
-				utils.socketJoinRoom(session.socketId, `station.${stationId}`);
-				if (station.currentSong) {
-					utils.socketJoinSongRoom(session.socketId, `song.${station.currentSong._id}`);
-					//TODO Emit to cache, listen on cache
-					songs.getSong(station.currentSong._id, (err, song) => {
-						if (!err && song) {
-							station.currentSong.likes = song.likes;
-							station.currentSong.dislikes = song.dislikes;
-						} else {
-							station.currentSong.likes = -1;
-							station.currentSong.dislikes = -1;
-						}
+				function func() {
+					utils.socketJoinRoom(session.socketId, `station.${stationId}`);
+					if (station.currentSong) {
+						utils.socketJoinSongRoom(session.socketId, `song.${station.currentSong._id}`);
+						//TODO Emit to cache, listen on cache
+						songs.getSong(station.currentSong._id, (err, song) => {
+							if (!err && song) {
+								station.currentSong.likes = song.likes;
+								station.currentSong.dislikes = song.dislikes;
+							} else {
+								station.currentSong.likes = -1;
+								station.currentSong.dislikes = -1;
+							}
+							cb({
+								status: 'success',
+								data: {
+									type: station.type,
+									currentSong: station.currentSong,
+									startedAt: station.startedAt,
+									paused: station.paused,
+									timePaused: station.timePaused,
+									description: station.description,
+									displayName: station.displayName,
+									privacy: station.privacy
+								}
+							});
+						});
+					} else {
 						cb({
 							status: 'success',
 							data: {
 								type: station.type,
-								currentSong: station.currentSong,
+								currentSong: null,
 								startedAt: station.startedAt,
 								paused: station.paused,
 								timePaused: station.timePaused
 							}
 						});
-					});
-				} else {
-					cb({
-						status: 'success',
-						data: {
-							type: station.type,
-							currentSong: null,
-							startedAt: station.startedAt,
-							paused: station.paused,
-							timePaused: station.timePaused
-						}
-					});
+					}
 				}
-				//});
-			}
-			else {
+			} else {
 				cb({ status: 'failure', message: `That station doesn't exist` });
 			}
 		});
@@ -237,29 +285,33 @@ module.exports = {
 		});
 	},
 
-	lock: hooks.adminRequired((session, stationId, cb) => {
-		stations.getStation(stationId, (err, station) => {
-			if (err && err !== true) {
-				return cb({ status: 'error', message: 'An error occurred while locking the station' });
-			} else if (station) {
-				// Add code to update Mongo and Redis
-				cb({ status: 'success' });
-			} else {
-				cb({ status: 'failure', message: `That station doesn't exist, it may have been deleted` });
-			}
+	updateDisplayName: hooks.adminRequired((session, stationId, newDisplayName, cb) => {
+		db.models.station.update({_id: stationId}, {$set: {displayName: newDisplayName}}, (err) => {
+			if (err) return cb({ status: 'failure', message: 'Something went wrong when saving the station.' });
+			stations.updateStation(stationId, () => {
+				//TODO Pub/sub for displayName change
+				cb({ status: 'success', message: 'Successfully updated the display name.' });
+			})
 		});
 	}),
 
-	unlock: hooks.adminRequired((session, stationId, cb) => {
-		stations.getStation(stationId, (err, station) => {
-			if (err && err !== true) {
-				return cb({ status: 'error', message: 'An error occurred while unlocking the station' });
-			} else if (station) {
-				// Add code to update Mongo and Redis
-				cb({ status: 'success' });
-			} else {
-				cb({ status: 'failure', message: `That station doesn't exist, it may have been deleted` });
-			}
+	updateDescription: hooks.adminRequired((session, stationId, newDescription, cb) => {
+		db.models.station.update({_id: stationId}, {$set: {description: newDescription}}, (err) => {
+			if (err) return cb({ status: 'failure', message: 'Something went wrong when saving the station.' });
+			stations.updateStation(stationId, () => {
+				//TODO Pub/sub for description change
+				cb({ status: 'success', message: 'Successfully updated the description.' });
+			})
+		});
+	}),
+
+	updatePrivacy: hooks.adminRequired((session, stationId, newPrivacy, cb) => {
+		db.models.station.update({_id: stationId}, {$set: {privacy: newPrivacy}}, (err) => {
+			if (err) return cb({ status: 'failure', message: 'Something went wrong when saving the station.' });
+			stations.updateStation(stationId, () => {
+				//TODO Pub/sub for privacy change
+				cb({ status: 'success', message: 'Successfully updated the privacy.' });
+			})
 		});
 	}),
 

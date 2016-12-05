@@ -5,6 +5,7 @@
 	<song-queue v-if='modals.addSongToQueue'></song-queue>
 	<edit-playlist v-if='modals.editPlaylist'></edit-playlist>
 	<create-playlist v-if='modals.createPlaylist'></create-playlist>
+	<edit-station v-if='modals.editStation'></edit-station>
 
 	<queue-sidebar v-if='sidebars.queue'></queue-sidebar>
 	<playlist-sidebar v-if='sidebars.playlist'></playlist-sidebar>
@@ -64,6 +65,7 @@
 	import SongQueue from '../Modals/AddSongToQueue.vue';
 	import EditPlaylist from '../Modals/Playlists/Edit.vue';
 	import CreatePlaylist from '../Modals/Playlists/Create.vue';
+	import EditStation from '../Modals/EditStation.vue';
 
 	import QueueSidebar from '../Sidebars/Queue.vue';
 	import PlaylistSidebar from '../Sidebars/Playlist.vue';
@@ -87,7 +89,8 @@
 				modals: {
 					addSongToQueue: false,
 					editPlaylist: false,
-					createPlaylist: false
+					createPlaylist: false,
+					editStation: false
 				},
 				sidebars: {
 					queue: false,
@@ -97,7 +100,8 @@
 				noSong: false,
 				simpleSong: false,
 				queue: [],
-				timeBeforePause: 0
+				timeBeforePause: 0,
+				station: {}
 			}
 		},
 		methods: {
@@ -106,9 +110,11 @@
 				this.toggleModal('editPlaylist');
 			},
 			toggleModal: function (type) {
+				console.log(type);
 				if (type == 'addSongToQueue') this.modals.addSongToQueue = !this.modals.addSongToQueue;
 				else if (type == 'editPlaylist') this.modals.editPlaylist = !this.modals.editPlaylist;
 				else if (type == 'createPlaylist') this.modals.createPlaylist = !this.modals.createPlaylist;
+				else if (type == 'editStation') this.modals.editStation = !this.modals.editStation;
 			},
 			youtubeReady: function() {
 				let local = this;
@@ -293,6 +299,7 @@
 					_this.socket.removeAllListeners();
 					_this.socket.emit('stations.join', _this.stationId, res => {
 						if (res.status === "success") {
+							_this.station = {displayName: res.data.displayName, description: res.data.description, privacy: res.data.privacy};
 							_this.currentSong = (res.data.currentSong) ? res.data.currentSong : {};
 							_this.type = res.data.type;
 							_this.startedAt = res.data.startedAt;
@@ -413,7 +420,7 @@
 			volume = (typeof volume === "number") ? volume : 20;
 			$("#volumeSlider").val(volume);
 		},
-		components: { OfficialHeader, CommunityHeader, SongQueue, EditPlaylist, CreatePlaylist, QueueSidebar, PlaylistSidebar, UsersSidebar }
+		components: { OfficialHeader, CommunityHeader, SongQueue, EditPlaylist, CreatePlaylist, EditStation, QueueSidebar, PlaylistSidebar, UsersSidebar }
 	}
 </script>
 

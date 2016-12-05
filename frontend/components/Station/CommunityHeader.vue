@@ -4,6 +4,11 @@
 			<a class="nav-item logo" href="#" v-link="{ path: '/' }" @click="this.$dispatch('leaveStation', title)">
 				Musare
 			</a>
+			<a class="nav-item" href="#" @click="$parent.toggleModal('editStation')">
+				<span class="icon">
+					<i class="material-icons">flag</i>
+				</span>
+			</a>
 			<a v-if="$parent.$parent.role === 'admin'" class="nav-item" href="#" @click="$parent.skipStation()">
 				<span class="icon">
 					<i class="material-icons">skip_next</i>
