@@ -72,25 +72,19 @@ module.exports = {
 			for (let prop in stations) {
 				// TODO If community, check if on whitelist
 				let station = stations[prop];
-				if (station.privacy === 'public') {
-					add(true, station);
-				} else if (!session.sessionId) {
-					add(false);
-				} else {
+				if (station.privacy === 'public') add(true, station);
+				else if (!session.sessionId) add(false);
+				else {
 					cache.hget('sessions', session.sessionId, (err, session) => {
 						if (err || !session) {
 							add(false);
 						} else {
 							db.models.user.findOne({_id: session.userId}, (err, user) => {
-								if (err || !user) {
-									add(false);
-								} else if (user.role === 'admin') {
-									add(true, station);
-								} else if (station.type === 'official') {
-									add(false);
-								} else if (station.owner === session.userId) {
-									add(true, station);
-								} else add(false);
+								if (err || !user) add(false);
+								else if (user.role === 'admin') add(true, station);
+								else if (station.type === 'official') add(false);
+								else if (station.owner === session.userId) add(true, station);
+								else add(false);
 							});
 						}
 					});
@@ -99,9 +93,7 @@ module.exports = {
 
 			function add(add, station) {
 				console.log("ADD!", add, station);
-				if (add) {
-					arr.push(station);
-				}
+				if (add) arr.push(station);
 				done++;
 				if (done === Object.keys(stations).length) {
 					console.log("DONE!", done);
