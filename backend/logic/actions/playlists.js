@@ -8,7 +8,7 @@ const hooks = require('./hooks');
 const async = require('async');
 const playlists = require('../playlists');
 
-module.exports = {
+let lib = {
 
 	indexForUser: (session, createdBy, cb) => {
 		db.models.playlist.find({ createdBy }, (err, playlists) => {
@@ -112,6 +112,34 @@ module.exports = {
 			else return cb({ status: 'success', message: 'Song has been successfully added to the playlist', data: playlist.songs });
 		});
 	},
+	
+	addSetToPlaylist: (session, url, playlistId, cb) => {
+		async.waterfall([
+			(next) => {
+				utils.getPlaylistFromYouTube(url, songs => {
+					next(null, songs);
+				});
+			},
+			(songs, next) => {
+				for (let s = 0; s < songs.length; s++) {
+					lib.addSongToPlaylist(session, songs[s].contentDetails.videoId, playlistId, (res) => {});
+				}
+				next(null);
+			},
+			(next) => {
+				db.models.playlist.findOne({ _id: playlistId }, (err, playlist) => {
+					if (err) throw err;
+
+					next(null, playlist);
+				});
+			}
+		],
+		(err, playlist) => {
+			if (err) return cb({ status: 'error', message: err });
+			else return cb({ status: 'success', message: 'Playlist has been successfully added', data: playlist.songs });
+		});
+	},
+
 
 	removeSongFromPlaylist: (session, songId, playlistId, cb) => {
 		db.models.playlist.findOne({ _id: playlistId }, (err, playlist) => {
@@ -208,3 +236,5 @@ module.exports = {
 	}
 
 };
+
+module.exports = lib;

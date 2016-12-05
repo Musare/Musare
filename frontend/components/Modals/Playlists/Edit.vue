@@ -51,10 +51,10 @@
 				</table>
 				<div class='control is-grouped'>
 					<p class='control is-expanded'>
-						<input class='input' type='text' placeholder='YouTube Playlist URL'>
+						<input class='input' type='text' placeholder='YouTube Playlist URL' v-model='importQuery'>
 					</p>
 					<p class='control'>
-						<a class='button is-info' @click='submitQuery()'>Import</a>
+						<a class='button is-info' @click='importPlaylist()'>Import</a>
 					</p>
 				</div>
 				<h5>Edit playlist details:</h5>
@@ -89,7 +89,6 @@
 		data() {
 			return {
 				playlist: {},
-				songQuery: '',
 				songQueryResults: []
 			}
 		},
@@ -117,6 +116,12 @@
 						Toast.methods.addToast(res.message, 3000);
 						_this.playlist.songs = res.data;
 					}
+				});
+			},
+			importPlaylist: function () {
+				let _this = this;
+				this.socket.emit('playlists.addSetToPlaylist', _this.importQuery, _this.playlist._id, res => {
+					if (res.status == 'success') _this.playlist.songs = res.data;
 				});
 			},
 			removeSongFromPlaylist: function (id) {

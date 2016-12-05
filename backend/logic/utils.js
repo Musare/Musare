@@ -252,6 +252,29 @@ module.exports = {
 			cb(song);
 		});
 	},
+	getPlaylistFromYouTube: (url, cb) => {
+		
+		let name = 'list'.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+		var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+		let playlistId = regex.exec(url)[1];
+
+		const youtubeParams = [
+			'part=contentDetails',
+			`playlistId=${encodeURIComponent(playlistId)}`,
+			`maxResults=50`,
+			`key=${config.get('apis.youtube.key')}`
+		].join('&');
+
+		request(`https://www.googleapis.com/youtube/v3/playlistItems?${youtubeParams}`, (err, res, body) => {
+			if (err) {
+				console.error(err);
+				return next('Failed to find playlist from YouTube');
+			}
+
+			body = JSON.parse(body);
+			cb(body.items);
+		});
+	},
 	getSongFromSpotify: (song, cb) => {
 		const spotifyParams = [
 			`q=${encodeURIComponent(song.title)}`,
