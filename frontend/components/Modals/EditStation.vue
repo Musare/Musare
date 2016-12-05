@@ -25,14 +25,14 @@
 						<a class='button is-info' @click='updateDescription()'>Update</a>
 					</p>
 				</div>
-				<label class="label">Privacy</label>
+				<label class='label'>Privacy</label>
 				<div class='control is-grouped'>
-					<p class="control is-expanded">
-						<span class="select">
-							<select v-model="$parent.station.privacy">
-								<option v-bind:value="'public'">Public</option>
-								<option v-bind:value="'unlisted'">Unlisted</option>
-								<option v-bind:value="'private'">Private</option>
+					<p class='control is-expanded'>
+						<span class='select'>
+							<select v-model='$parent.station.privacy'>
+								<option v-bind:value=''public''>Public</option>
+								<option v-bind:value=''unlisted''>Unlisted</option>
+								<option v-bind:value=''private''>Private</option>
 							</select>
 						</span>
 					</p>
@@ -49,11 +49,6 @@
 	import { Toast } from 'vue-roaster';
 
 	export default {
-		data() {
-			return {
-
-			}
-		},
 		methods: {
 			updateDisplayName: function () {
 				this.socket.emit('stations.updateDisplayName', this.$parent.stationId, this.$parent.station.displayName, res => {
@@ -87,8 +82,6 @@
 </script>
 
 <style type='scss' scoped>
-
-
 	.controls {
 		display: flex;
 
@@ -98,9 +91,7 @@
 		}
 	}
 
-	.table {
-		margin-bottom: 0;
-	}
+	.table { margin-bottom: 0; }
 
 	h5 { padding: 20px 0; }
 </style>

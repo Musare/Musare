@@ -9,14 +9,9 @@
 					<i class="material-icons">playlist_add</i>
 				</span>
 			</a>
-			<a class="nav-item" href="#" @click="$parent.toggleModal('editStation')">
+			<a class="nav-item" href="#" v-if="$parent.$parent.role === 'admin'" @click="$parent.toggleModal('editStation')">
 				<span class="icon">
-					<i class="material-icons">flag</i>
-				</span>
-			</a>
-			<a class="nav-item" href="#">
-				<span class="icon">
-					<i class="material-icons">flag</i>
+					<i class="material-icons">settings</i>
 				</span>
 			</a>
 			<a v-if="$parent.$parent.role === 'admin'" class="nav-item" href="#" @click="$parent.skipStation()">
@@ -72,11 +67,11 @@
 					<i class="material-icons">chat</i>
 				</span>
 			</a>-->
-			<a class="nav-item" href="#" @click='$parent.sidebars.users = !$parent.sidebars.users'>
+			<!--<a class="nav-item" href="#" @click='$parent.sidebars.users = !$parent.sidebars.users'>
 				<span class="icon">
 					<i class="material-icons">people</i>
 				</span>
-			</a>
+			</a>-->
 		</div>
 	</nav>
 </template>

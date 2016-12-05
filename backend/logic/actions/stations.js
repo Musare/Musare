@@ -184,7 +184,10 @@ module.exports = {
 								currentSong: null,
 								startedAt: station.startedAt,
 								paused: station.paused,
-								timePaused: station.timePaused
+								timePaused: station.timePaused,
+								description: station.description,
+								displayName: station.displayName,
+								privacy: station.privacy
 							}
 						});
 					}

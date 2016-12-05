@@ -110,7 +110,6 @@
 				this.toggleModal('editPlaylist');
 			},
 			toggleModal: function (type) {
-				console.log(type);
 				if (type == 'addSongToQueue') this.modals.addSongToQueue = !this.modals.addSongToQueue;
 				else if (type == 'editPlaylist') this.modals.editPlaylist = !this.modals.editPlaylist;
 				else if (type == 'createPlaylist') this.modals.createPlaylist = !this.modals.createPlaylist;
@@ -298,8 +297,12 @@
 					_this.socket = _this.$parent.socket;
 					_this.socket.removeAllListeners();
 					_this.socket.emit('stations.join', _this.stationId, res => {
-						if (res.status === "success") {
-							_this.station = {displayName: res.data.displayName, description: res.data.description, privacy: res.data.privacy};
+						if (res.status === 'success') {
+							_this.station = {
+								displayName: res.data.displayName,
+								description: res.data.description,
+								privacy: res.data.privacy
+							};
 							_this.currentSong = (res.data.currentSong) ? res.data.currentSong : {};
 							_this.type = res.data.type;
 							_this.startedAt = res.data.startedAt;
