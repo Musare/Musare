@@ -30,7 +30,7 @@
 						</td>
 						<td>
 							<div class='control'>
-								<input v-for='song in station.playlist' track-by='$index' class='input' type='text' :value='song.id' v-model='song.id'>
+								<span v-for='song in station.playlist' track-by='$index'>{{ song }}</span>
 							</p>
 						</td>
 						<td>
