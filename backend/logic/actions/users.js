@@ -178,7 +178,9 @@ module.exports = {
 						email: account.email.address,
 						password: '',
 						createdAt: account.createdAt,
-						statistics: account.statistics
+						statistics: account.statistics,
+						liked: account.liked,
+						disliked: account.disliked
 					}
 				});
 			}

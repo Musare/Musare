@@ -19,11 +19,11 @@
 				</div>
 				<div class="level-item has-text-centered">
 					<p class="heading">Likes</p>
-					<p class="title">{{ user.statistics.songsLiked.length }}</p>
+					<p class="title">{{ user.liked.length }}</p>
 				</div>
 				<div class="level-item has-text-centered">
 					<p class="heading">Dislikes</p>
-					<p class="title">{{ user.statistics.songsDisliked.length }}</p>
+					<p class="title">{{ user.disliked.length }}</p>
 				</div>
 			</nav>
 		</div>
