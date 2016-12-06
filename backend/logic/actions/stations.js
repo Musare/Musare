@@ -186,7 +186,8 @@ module.exports = {
 									timePaused: station.timePaused,
 									description: station.description,
 									displayName: station.displayName,
-									privacy: station.privacy
+									privacy: station.privacy,
+									owner: station.owner
 								}
 							});
 						});
@@ -201,7 +202,8 @@ module.exports = {
 								timePaused: station.timePaused,
 								description: station.description,
 								displayName: station.displayName,
-								privacy: station.privacy
+								privacy: station.privacy,
+								owner: station.owner
 							}
 						});
 					}
@@ -248,7 +250,7 @@ module.exports = {
 		});
 	},*/
 
-	forceSkip: hooks.adminRequired((session, stationId, cb) => {
+	forceSkip: hooks.csOwnerRequired((session, stationId, cb) => {
 		stations.getStation(stationId, (err, station) => {
 
 			if (err && err !== true) {
@@ -294,7 +296,7 @@ module.exports = {
 		});
 	},
 
-	updateDisplayName: hooks.adminRequired((session, stationId, newDisplayName, cb) => {
+	updateDisplayName: hooks.csOwnerRequired((session, stationId, newDisplayName, cb) => {
 		db.models.station.update({_id: stationId}, {$set: {displayName: newDisplayName}}, (err) => {
 			if (err) return cb({ status: 'failure', message: 'Something went wrong when saving the station.' });
 			stations.updateStation(stationId, () => {
@@ -304,7 +306,7 @@ module.exports = {
 		});
 	}),
 
-	updateDescription: hooks.adminRequired((session, stationId, newDescription, cb) => {
+	updateDescription: hooks.csOwnerRequired((session, stationId, newDescription, cb) => {
 		db.models.station.update({_id: stationId}, {$set: {description: newDescription}}, (err) => {
 			if (err) return cb({ status: 'failure', message: 'Something went wrong when saving the station.' });
 			stations.updateStation(stationId, () => {
@@ -314,7 +316,7 @@ module.exports = {
 		});
 	}),
 
-	updatePrivacy: hooks.adminRequired((session, stationId, newPrivacy, cb) => {
+	updatePrivacy: hooks.csOwnerRequired((session, stationId, newPrivacy, cb) => {
 		db.models.station.update({_id: stationId}, {$set: {privacy: newPrivacy}}, (err) => {
 			if (err) return cb({ status: 'failure', message: 'Something went wrong when saving the station.' });
 			stations.updateStation(stationId, () => {
@@ -324,7 +326,7 @@ module.exports = {
 		});
 	}),
 
-	pause: hooks.adminRequired((session, stationId, cb) => {
+	pause: hooks.csOwnerRequired((session, stationId, cb) => {
 		stations.getStation(stationId, (err, station) => {
 			if (err && err !== true) {
 				return cb({ status: 'error', message: 'An error occurred while pausing the station' });
@@ -350,7 +352,7 @@ module.exports = {
 		});
 	}),
 
-	resume: hooks.adminRequired((session, stationId, cb) => {
+	resume: hooks.csOwnerRequired((session, stationId, cb) => {
 		stations.getStation(stationId, (err, station) => {
 			if (err && err !== true) {
 				return cb({ status: 'error', message: 'An error occurred while resuming the station' });
@@ -374,7 +376,7 @@ module.exports = {
 		});
 	}),
 
-	remove: hooks.adminRequired((session, stationId, cb) => {
+	remove: hooks.csOwnerRequired((session, stationId, cb) => {
 		db.models.station.remove({ _id: stationId });
 		cache.hdel('stations', stationId, () => {
 			return cb({ status: 'success', message: 'Station successfully removed' });
@@ -505,7 +507,7 @@ module.exports = {
 		});
 	}),
 
-	removeFromQueue: hooks.adminRequired((session, stationId, songId, cb, userId) => {
+	removeFromQueue: hooks.csOwnerRequired((session, stationId, songId, cb, userId) => {
 		stations.getStation(stationId, (err, station) => {
 			if (err) return cb(err);
 			if (station.type === 'community') {

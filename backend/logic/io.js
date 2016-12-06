@@ -92,11 +92,13 @@ module.exports = {
 						db.models.user.findOne({ _id: session.userId }, (err, user) => {
 							let role = '';
 							let username = '';
+							let userId = '';
 							if (user) {
 								role = user.role;
 								username = user.username;
+								userId = session.userId;
 							}
-							socket.emit('ready', true, role, username);
+							socket.emit('ready', true, role, username, userId);
 						});
 					} else socket.emit('ready', false);
 				})

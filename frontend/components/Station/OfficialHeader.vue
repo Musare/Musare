@@ -24,16 +24,6 @@
 					<i class="material-icons">skip_next</i>
 				</span>
 			</a>
-			<a class="nav-item" href="#" v-if="$parent.$parent.role === 'admin' && $parent.locked" @click="$parent.unlockStation()">
-				<span class="icon">
-					<i class="material-icons">lock_outline</i>
-				</span>
-			</a>
-			<a class="nav-item" href="#" v-if="$parent.$parent.role === 'admin' && !$parent.locked" @click="$parent.lockStation()">
-				<span class="icon">
-					<i class="material-icons">lock_open</i>
-				</span>
-			</a>
 			<a class="nav-item" href="#" v-if="$parent.$parent.role === 'admin' && $parent.paused" @click="$parent.resumeStation()">
 				<span class="icon">
 					<i class="material-icons">play_arrow</i>

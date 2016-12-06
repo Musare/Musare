@@ -301,7 +301,8 @@
 							_this.station = {
 								displayName: res.data.displayName,
 								description: res.data.description,
-								privacy: res.data.privacy
+								privacy: res.data.privacy,
+								owner: res.data.owner
 							};
 							_this.currentSong = (res.data.currentSong) ? res.data.currentSong : {};
 							_this.type = res.data.type;

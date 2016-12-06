@@ -39,6 +39,7 @@
 				loggedIn: false,
 				role: '',
 				username: '',
+				userId: '',
 				isRegisterActive: false,
 				isLoginActive: false,
 				isCCSActive: false,
@@ -60,11 +61,12 @@
 		},
 		ready() {
 			let _this = this;
-			auth.getStatus((authenticated, role, username) => {
+			auth.getStatus((authenticated, role, username, userId) => {
 				_this.socket = window.socket;
 				_this.loggedIn = authenticated;
 				_this.role = role;
 				_this.username = username;
+				_this.userId = userId;
 			});
 			lofig.get('serverDomain', res => {
 				_this.serverDomain = res;

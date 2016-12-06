@@ -4,37 +4,27 @@
 			<a class="nav-item logo" href="#" v-link="{ path: '/' }" @click="this.$dispatch('leaveStation', title)">
 				Musare
 			</a>
-			<a class="nav-item" href="#" v-if="$parent.$parent.role === 'admin'" @click="$parent.toggleModal('editStation')">
+			<a class="nav-item" href="#" v-if="isOwner()" @click="$parent.toggleModal('editStation')">
 				<span class="icon">
 					<i class="material-icons">settings</i>
 				</span>
 			</a>
-			<a v-if="$parent.$parent.role === 'admin'" class="nav-item" href="#" @click="$parent.skipStation()">
+			<a v-if="isOwner()" class="nav-item" href="#" @click="$parent.skipStation()">
 				<span class="icon">
 					<i class="material-icons">skip_next</i>
 				</span>
 			</a>
-			<a v-if="$parent.$parent.role !== 'admin' && $parent.$parent.loggedIn" class="nav-item" href="#" @click="$parent.voteSkipStation()">
+			<a v-if="!isOwner()' && $parent.$parent.loggedIn" class="nav-item" href="#" @click="$parent.voteSkipStation()">
 				<span class="icon">
 					<i class="material-icons">skip_next</i>
 				</span>
 			</a>
-			<a class="nav-item" href="#" v-if="$parent.$parent.role === 'admin' && $parent.locked" @click="$parent.unlockStation()">
-				<span class="icon">
-					<i class="material-icons">lock_outline</i>
-				</span>
-			</a>
-			<a class="nav-item" href="#" v-if="$parent.$parent.role === 'admin' && !$parent.locked" @click="$parent.lockStation()">
-				<span class="icon">
-					<i class="material-icons">lock_open</i>
-				</span>
-			</a>
-			<a class="nav-item" href="#" v-if="$parent.$parent.role === 'admin' && $parent.paused" @click="$parent.resumeStation()">
+			<a class="nav-item" href="#" v-if="isOwner() && $parent.paused" @click="$parent.resumeStation()">
 				<span class="icon">
 					<i class="material-icons">play_arrow</i>
 				</span>
 			</a>
-			<a class="nav-item" href="#" v-if="$parent.$parent.role === 'admin' && !$parent.paused" @click="$parent.pauseStation()">
+			<a class="nav-item" href="#" v-if="isOwner() && !$parent.paused" @click="$parent.pauseStation()">
 				<span class="icon">
 					<i class="material-icons">pause</i>
 				</span>
@@ -87,6 +77,9 @@
 		methods: {
 			toggleMobileMenu: function() {
 				this.isActive = !this.isActive;
+			},
+			isOwner: function() {
+				return this.$parent.$parent.role === 'admin' || this.$parent.$parent.userId === this.$parent.station.owner
 			}
 		}
 	}
