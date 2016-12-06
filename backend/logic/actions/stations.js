@@ -56,8 +56,6 @@ module.exports = {
 	 * @return {{ status: String, stations: Array }}
 	 */
 	index: (session, cb) => {
-		// TODO: the logic should be a bit more personalized to the users preferred genres
-		// and it should probably just a different cache table then 'stations'
 		cache.hgetall('stations', (err, stations) => {
 
 			if (err && err !== true) {
@@ -72,6 +70,7 @@ module.exports = {
 			for (let prop in stations) {
 				// TODO If community, check if on whitelist
 				let station = stations[prop];
+				console.log(station)
 				if (station.privacy === 'public') add(true, station);
 				else if (!session.sessionId) add(false);
 				else {
@@ -390,7 +389,8 @@ module.exports = {
 					_id,
 					displayName,
 					description,
-					type: "official",
+					type: 'official',
+					privacy: 'private',
 					playlist,
 					genres,
 					currentSong: stations.defaultSong
@@ -421,11 +421,19 @@ module.exports = {
 			},
 
 			(station, next) => {
+				cache.hget('sessions', session.sessionId, (err, session) => {
+					next(null, station, session.userId);
+				});
+			},
+
+			(station, userId, next) => {
 				if (station) return next({ 'status': 'failure', 'message': 'A station with that id already exists' });
 				const { _id, displayName, description } = data;
 				db.models.station.create({
 					_id,
 					displayName,
+					owner: userId,
+					privacy: 'private',
 					description,
 					type: "community",
 					queue: [],

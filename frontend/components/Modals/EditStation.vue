@@ -30,9 +30,9 @@
 					<p class='control is-expanded'>
 						<span class='select'>
 							<select v-model='$parent.station.privacy'>
-								<option v-bind:value=''public''>Public</option>
-								<option v-bind:value=''unlisted''>Unlisted</option>
-								<option v-bind:value=''private''>Private</option>
+								<option :value='"public"'>Public</option>
+								<option :value='"unlisted"'>Unlisted</option>
+								<option :value='"private"'>Private</option>
 							</select>
 						</span>
 					</p>
