@@ -14,11 +14,12 @@ module.exports = {
 
 	login: (session, identifier, password, cb) => {
 
+		identifier = identifier.toLowerCase();
+
 		async.waterfall([
 
 			// check if a user with the requested identifier exists
 			(next) => db.models.user.findOne({
-				//TODO Handle lowercase
 				$or: [{ 'username': identifier }, { 'email.address': identifier }]
 			}, next),
 

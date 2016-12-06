@@ -14,11 +14,11 @@
 							<div class='controls'>
 								<a href='#'>
 									<i class='material-icons' v-if='playlist.songs[0] !== song' @click='promoteSong($index)'>keyboard_arrow_up</i>
-									<i class='material-icons' v-else>error</i>
+									<i class='material-icons' style='opacity: 0' v-else>error</i>
 								</a>
 								<a href='#' @click=''>
 									<i class='material-icons' v-if='playlist.songs.length - 1 !== $index' @click='demoteSong($index)'>keyboard_arrow_down</i>
-									<i class='material-icons' v-else>error</i>
+									<i class='material-icons' style='opacity: 0' v-else>error</i>
 								</a>
 								<a href='#' @click='removeSongFromPlaylist(song._id)'><i class='material-icons'>delete</i></a>
 							</div>
@@ -64,14 +64,6 @@
 					</p>
 					<p class='control'>
 						<a class='button is-info' @click='renamePlaylist()'>Rename</a>
-					</p>
-				</div>
-				<div class='control is-grouped'>
-					<p class='control is-expanded'>
-						<input class='input' type='text' placeholder='Playlist ID' v-model='playlist._id'>
-					</p>
-					<p class='control'>
-						<a class='button is-info' @click='renamePlaylistId()'>Rename</a>
 					</p>
 				</div>
 			</section>
@@ -136,12 +128,6 @@
 			renamePlaylist: function () {
 				this.socket.emit('playlists.updateDisplayName', this.playlist._id, this.playlist.displayName, res => {
 					if (res.status == 'success') Toast.methods.addToast(res.message, 3000);
-				});
-			},
-			renamePlaylistId: function () {
-				let _this = this;
-				_this.socket.emit('playlists.updatePlaylistId', _this.playlist.oldId, _this.playlist._id, res => {
-					if (res.status == 'success') _this.playlist = res.data;
 				});
 			},
 			removePlaylist: function () {

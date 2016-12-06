@@ -42,7 +42,7 @@
 		</span>-->
 
 		<div class='nav-right'>
-			<a class='nav-item' href='#' @click='$parent.sidebars.queue = !$parent.sidebars.queue'>
+			<a class='nav-item' href='#' @click='$parent.sidebars.queue = !$parent.sidebars.queue' v-if='$parent.station.partyMode === true'>
 				<span class='icon'>
 					<i class='material-icons'>queue_music</i>
 				</span>

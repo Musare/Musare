@@ -33,19 +33,26 @@ cache.sub('station.queueUpdate', stationId => {
 
 cache.sub('station.create', stationId => {
 	stations.initializeStation(stationId, (err, station) => {
+		console.log("*************", err, station);
 		//TODO Emit to admin station page
 
 		// TODO If community, check if on whitelist
+		console.log("*************", station.privacy);
 		if (station.privacy === 'public') io.io.to('home').emit("event:stations.created", station);
 		else {
 			let sockets = io.io.to('home').sockets;
+			console.log("*************", sockets.length);
 			for (let socketId in sockets) {
 				let socket = sockets[socketId];
 				let session = sockets[socketId].session;
+				console.log("*************", session);
 				if (session.sessionId) {
 					cache.hget('sessions', session.sessionId, (err, session) => {
+						console.log("*************", err, session);
 						if (!err && session) {
+							console.log("*************");
 							db.models.user.findOne({_id: session.userId}, (err, user) => {
+								console.log("*************", err, user.role, station.type, station.owner, session.userId);
 								if (user.role === 'admin') socket.emit("event:stations.created", station);
 								else if (station.type === "community" && station.owner === session.userId) socket.emit("event:stations.created", station);
 							});
@@ -53,10 +60,6 @@ cache.sub('station.create', stationId => {
 					});
 				}
 			}
-		}
-
-		function func() {
-			io.io.to('home').emit("event:stations.created", station);
 		}
 	});
 });
@@ -187,7 +190,9 @@ module.exports = {
 									description: station.description,
 									displayName: station.displayName,
 									privacy: station.privacy,
-									owner: station.owner
+									partyMode: station.partyMode,
+									owner: station.owner,
+									privatePlaylist: station.privatePlaylist
 								}
 							});
 						});
@@ -326,6 +331,21 @@ module.exports = {
 		});
 	}),
 
+	updatePartyMode: hooks.csOwnerRequired((session, stationId, newPartyMode, cb) => {
+		stations.getStation(stationId, (err, station) => {
+			if (err) return cb({ status: 'failure', message: err });
+			if (station.partyMode === newPartyMode) return cb({ status: 'failure', message: 'The party mode was already ' + ((newPartyMode) ? 'enabled.' : 'disabled.') });
+			db.models.station.update({_id: stationId}, {$set: {partyMode: newPartyMode}}, (err) => {
+				if (err) return cb({ status: 'failure', message: 'Something went wrong when saving the station.' });
+				stations.updateStation(stationId, () => {
+					//TODO Pub/sub for privacy change
+					stations.skipStation(stationId)();
+					cb({ status: 'success', message: 'Successfully updated the party mode.' });
+				})
+			});
+		});
+	}),
+
 	pause: hooks.csOwnerRequired((session, stationId, cb) => {
 		stations.getStation(stationId, (err, station) => {
 			if (err && err !== true) {
@@ -377,9 +397,12 @@ module.exports = {
 	}),
 
 	remove: hooks.csOwnerRequired((session, stationId, cb) => {
-		db.models.station.remove({ _id: stationId });
-		cache.hdel('stations', stationId, () => {
-			return cb({ status: 'success', message: 'Station successfully removed' });
+		db.models.station.remove({ _id: stationId }, (err) => {
+			console.log(err, stationId);
+			if (err) return cb({status: 'failure', message: 'Something went wrong when deleting that station.'});
+			cache.hdel('stations', stationId, () => {
+				return cb({ status: 'success', message: 'Station successfully removed' });
+			});
 		});
 	}),
 
@@ -410,7 +433,8 @@ module.exports = {
 					privacy: 'private',
 					playlist,
 					genres,
-					currentSong: stations.defaultSong
+					currentSong: stations.defaultSong,
+					partyMode: true
 				}, next);
 			}
 
@@ -429,12 +453,15 @@ module.exports = {
 			},
 
 			// check the cache for the station
-			(next) => cache.hget('stations', data._id, next),
+			(next) => {
+				data._id = data._id.toLowerCase();
+				cache.hget('stations', data._id, next)
+			},
 
 			// if the cached version exist
 			(station, next) => {
-				if (station) return next({ 'status': 'failure', 'message': 'A station with that id already exists' });
-				db.models.station.findOne({ _id: data._id }, next);
+				if (station) return next({ 'status': 'failure', 'message': 'A station with that name already exists' });
+				db.models.station.findOne({$or: [{_id: data._id}, {displayName: new RegExp(`^${data.displayName}$`, 'i')}] }, next);
 			},
 
 			(station, next) => {
@@ -444,7 +471,7 @@ module.exports = {
 			},
 
 			(station, userId, next) => {
-				if (station) return next({ 'status': 'failure', 'message': 'A station with that id already exists' });
+				if (station) return next({ 'status': 'failure', 'message': 'A station with that name or display name already exists' });
 				const { _id, displayName, description } = data;
 				db.models.station.create({
 					_id,
@@ -459,7 +486,7 @@ module.exports = {
 			}
 
 		], (err, station) => {
-			if (err) console.error(err);
+			if (err) return cb(err);
 			console.log(err, station);
 			cache.pub('station.create', data._id);
 			return cb({ 'status': 'success', 'message': 'Successfully created station.' });
@@ -535,6 +562,28 @@ module.exports = {
 			if (!station) return cb({'status': 'failure', 'message': 'Station not found.'});
 			if (station.type === 'community') {
 				cb({'status': 'success', queue: station.queue});
+			} else cb({'status': 'failure', 'message': 'That station is not a community station.'});
+		});
+	}),
+
+	selectPrivatePlaylist: hooks.csOwnerRequired((session, stationId, playlistId, cb, userId) => {
+		stations.getStation(stationId, (err, station) => {
+			if (err) return cb(err);
+			if (station.type === 'community') {
+				if (station.privatePlaylist === playlistId) return cb({'status': 'failure', 'message': 'That playlist is already selected.'});
+				db.models.playlist.findOne({_id: playlistId}, (err, playlist) => {
+					if (err) return cb(err);
+					if (playlist) {
+						db.models.station.update({_id: stationId}, {$set: {privatePlaylist: playlistId, currentSongIndex: 0}}, (err) => {
+							if (err) return cb(err);
+							stations.updateStation(stationId, (err, station) => {
+								if (err) return cb(err);
+								stations.skipStation(stationId)();
+								cb({'status': 'success', 'message': 'Playlist selected.'});
+							});
+						});
+					} else cb({'status': 'failure', 'message': 'Playlist not found.'});
+				});
 			} else cb({'status': 'failure', 'message': 'That station is not a community station.'});
 		});
 	}),

@@ -7,6 +7,7 @@ const utils = require('../utils');
 const hooks = require('./hooks');
 const async = require('async');
 const playlists = require('../playlists');
+const songs = require('../songs');
 
 let lib = {
 
@@ -27,20 +28,9 @@ let lib = {
 				return (data) ? next() : cb({ 'status': 'failure', 'message': 'Invalid data' });
 			},
 
-			// check the cache for the playlist
-			(next) => cache.hget('playlists', data._id, next),
-
-			// if the cached version exist
-			(playlist, next) => {
-				if (playlist) return next({ 'status': 'failure', 'message': 'A playlist with that id already exists' });
-				db.models.playlist.findOne({ _id: data._id }, next);
-			},
-
-			(playlist, next) => {
-				if (playlist) return next({ 'status': 'failure', 'message': 'A playlist with that id already exists' });
-				const { _id, displayName, songs, createdBy } = data;
+			(next) => {
+				const { name, displayName, songs, createdBy } = data;
 				db.models.playlist.create({
-					_id,
 					displayName,
 					songs,
 					createdBy,
@@ -74,20 +64,14 @@ let lib = {
 	addSongToPlaylist: (session, songId, playlistId, cb) => {
 		async.waterfall([
 			(next) => {
-				utils.getSongFromYouTube(songId, (song) => {
-					song.artists = [];
-					song.genres = [];
-					song.skipDuration = 0;
-					song.thumbnail = 'empty';
-					song.explicit = false;
-					song.requestedBy = 'temp';
-					song.requestedAt = Date.now();
-					next(null, song);
-				});
-			},
-			(newSong, next) => {
-				utils.getSongFromSpotify(newSong, (song) => {
-					next(null, song);
+				songs.getSong(songId, (err, song) => {
+					if (err) {
+						utils.getSongFromYouTube(songId, (song) => {
+							next(null, song);
+						});
+					} else {
+						next(null, {_id: songId, title: song.title, duration: song.duration});
+					}
 				});
 			},
 			(newSong, next) => {
@@ -166,23 +150,6 @@ let lib = {
 			if (err) throw err;
 			cache.hset('playlists', _id, res);
 			return cb({ status: 'success', message: 'Playlist has been successfully updated' });
-		});
-	},
-
-	updatePlaylistId: (session, oldId, newId, cb) => {
-		db.models.playlist.findOne({ _id: oldId }).exec((err, doc) => {
-			if (err) throw err;
-			doc._id = newId;
-			let newPlaylist = new db.models.playlist(doc);
-			newPlaylist.isNew = true;
-			newPlaylist.save(err => {
-				if (err) console.error(err);
-			});
-			db.models.playlist.remove({ _id: oldId });
-			cache.hdel('playlists', oldId, () => {
-				cache.hset('playlists', newId, doc);
-				return cb({ status: 'success', data: doc });
-			});
 		});
 	},
 

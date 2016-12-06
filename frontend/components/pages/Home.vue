@@ -64,21 +64,23 @@
 				_this.socket = _this.$parent.socket;
 				_this.socket.emit("stations.index", data => {
 					if (data.status === "success")  data.stations.forEach(station => {
-					if (!station.currentSong) station.currentSong = { thumbnail: '/assets/notes.png' };
-			console.log(station.privacy);
-					if (station.privacy !== 'public') {
-						console.log(123);
-						station.class = {'station-red': true}
-					} else if (station.type === 'community') {
-						if (station.owner === userId) {
-							station.class = {'station-blue': true}
+						if (!station.currentSong) station.currentSong = { thumbnail: '/assets/notes.png' };
+						console.log(station.privacy);
+						if (station.privacy !== 'public') {
+							console.log(123);
+							station.class = {'station-red': true}
+						} else if (station.type === 'community') {
+							if (station.owner === userId) {
+								station.class = {'station-blue': true}
+							}
 						}
-					}
-					if (station.type == 'official') _this.stations.official.push(station);
-					else _this.stations.community.push(station);
+						if (station.type == 'official') _this.stations.official.push(station);
+						else _this.stations.community.push(station);
+					});
 				});
-				_this.socket.emit("apis.joinRoom", 'home', () => {});
+				_this.socket.emit("apis.joinRoom", 'home', () => {
 					_this.socket.on('event:stations.created', station => {
+						console.log("CREATED!!!", station);
 						if (!station.currentSong) station.currentSong = {thumbnail: '/assets/notes.png'};
 						if (station.privacy !== 'public') {
 							station.class = {'station-red': true}

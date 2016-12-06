@@ -40,6 +40,17 @@
 						<a class='button is-info' @click='updatePrivacy()'>Update</a>
 					</p>
 				</div>
+				<div class='control is-grouped' v-if="$parent.type === 'community'">
+					<p class="control is-expanded">
+						<label class="checkbox">
+							<input type="checkbox" v-model="$parent.station.partyMode">
+							Party mode
+						</label>
+					</p>
+					<p class='control'>
+						<a class='button is-info' @click='updatePartyMode()'>Update</a>
+					</p>
+				</div>
 			</section>
 		</div>
 	</div>
@@ -64,6 +75,12 @@
 			},
 			updatePrivacy: function () {
 				this.socket.emit('stations.updatePrivacy', this.$parent.stationId, this.$parent.station.privacy, res => {
+					if (res.status == 'success') return Toast.methods.addToast(res.message, 4000);
+					Toast.methods.addToast(res.message, 8000);
+				});
+			},
+			updatePartyMode: function () {
+				this.socket.emit('stations.updatePartyMode', this.$parent.stationId, this.$parent.station.partyMode, res => {
 					if (res.status == 'success') return Toast.methods.addToast(res.message, 4000);
 					Toast.methods.addToast(res.message, 8000);
 				});
