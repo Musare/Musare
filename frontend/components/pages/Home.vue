@@ -18,9 +18,8 @@
 				</div>
 			</div>
 		</div>
-		<button @click="toggleModal('ccs')">CREATE COMMUNITY STATION</button>
 		<div class="group" v-if="stations.community.length">
-			<div class="group-title">Community Stations</div>
+			<div class="group-title">Community Stations <i class="material-icons ccs-button" @click="toggleModal('ccs')" v-if="$parent.loggedIn">add</i></div>
 			<div class="group-stations">
 				<div class="stations-station" v-for="station in stations.community" v-link="{ path: '/community/' + station._id }" @click="this.$dispatch('joinStation', station._id)">
 					<img class="station-image" :src="station.currentSong.thumbnail" onerror="this.src='/assets/notes.png'" />
@@ -123,6 +122,16 @@
 		html {
 			font-size: 14px;
 		}
+	}
+
+	.ccs-button {
+		cursor: pointer;
+		transition: .25s ease color;
+		font-size: 30px;
+	}
+
+	.ccs-button:hover {
+		color: #03a9f4;
 	}
 
 	.label {
