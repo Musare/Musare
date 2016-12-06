@@ -120,7 +120,7 @@ let lib = {
 		],
 		(err, playlist) => {
 			if (err) return cb({ status: 'error', message: err });
-			else return cb({ status: 'success', message: 'Playlist has been successfully added', data: playlist.songs });
+			else if (playlist.songs) return cb({ status: 'success', message: 'Playlist has been successfully added', data: playlist.songs });
 		});
 	},
 
