@@ -24,16 +24,6 @@
 					<i class="material-icons">skip_next</i>
 				</span>
 			</a>
-			<a class="nav-item" href="#" v-if="$parent.$parent.role === 'admin' && $parent.locked" @click="$parent.unlockStation()">
-				<span class="icon">
-					<i class="material-icons">lock_outline</i>
-				</span>
-			</a>
-			<a class="nav-item" href="#" v-if="$parent.$parent.role === 'admin' && !$parent.locked" @click="$parent.lockStation()">
-				<span class="icon">
-					<i class="material-icons">lock_open</i>
-				</span>
-			</a>
 			<a class="nav-item" href="#" v-if="$parent.$parent.role === 'admin' && $parent.paused" @click="$parent.resumeStation()">
 				<span class="icon">
 					<i class="material-icons">play_arrow</i>
@@ -57,11 +47,11 @@
 		</span>-->
 
 		<div class="nav-right">
-			<a class="nav-item" href="#" @click='$parent.sidebars.queue = !$parent.sidebars.queue'>
+			<!--a class="nav-item" href="#" @click='$parent.sidebars.queue = !$parent.sidebars.queue'>
 				<span class="icon">
 					<i class="material-icons">queue_music</i>
 				</span>
-			</a>
+			</a-->
 			<!--<a class="nav-item" href="#">
 				<span class="icon">
 					<i class="material-icons">chat</i>

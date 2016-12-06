@@ -51,7 +51,7 @@
 						</div>
 					</div>
 					<div class="column is-4-desktop is-12-mobile" v-if="!simpleSong">
-						<img class="image" id="song-thumbnail" style="margin-top: 10px !important" :src="currentSong.thumbnail" alt="Song Thumbnail" />
+						<img class="image" id="song-thumbnail" style="margin-top: 10px !important" :src="currentSong.thumbnail" alt="Song Thumbnail" onerror="this.src='/assets/notes.png'" />
 					</div>
 				</div>
 			</div>
@@ -301,7 +301,10 @@
 							_this.station = {
 								displayName: res.data.displayName,
 								description: res.data.description,
-								privacy: res.data.privacy
+								privacy: res.data.privacy,
+								partyMode: res.data.partyMode,
+								owner: res.data.owner,
+								privatePlaylist: res.data.privatePlaylist
 							};
 							_this.currentSong = (res.data.currentSong) ? res.data.currentSong : {};
 							_this.type = res.data.type;

@@ -8,9 +8,6 @@
 			</header>
 			<section class='modal-card-body'>
 				<p class='control is-expanded'>
-					<input class='input' type='text' placeholder='Playlist ID' v-model='playlist._id'>
-				</p>
-				<p class='control is-expanded'>
 					<input class='input' type='text' placeholder='Playlist Display Name' v-model='playlist.displayName'>
 				</p>
 			</section>
@@ -28,7 +25,6 @@
 		data() {
 			return {
 				playlist: {
-					_id: null,
 					displayName: null,
 					songs: [],
 					createdBy: this.$parent.$parent.username,

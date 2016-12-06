@@ -1,4 +1,8 @@
 // Change any Bulma default variables here
 $blue: #03A9F4;
 
+.is-primary {
+	background-color: $blue !important;
+}
+
 @import '~bulma';

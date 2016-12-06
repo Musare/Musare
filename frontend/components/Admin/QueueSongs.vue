@@ -95,14 +95,18 @@
 					for (let z = 0; z < this.editing.song.genres.length; z++) {
 						if (this.editing.song.genres[z] == $('#new-genre').val()) return Toast.methods.addToast('Genre already exists', 3000);
 					}
-					if ($('#new-genre').val() !== '') this.editing.song.genres.push($('#new-genre').val());
-					else Toast.methods.addToast('Genre cannot be empty', 3000);
+					if ($('#new-genre').val() !== '') {
+						this.editing.song.genres.push($('#new-genre').val());
+						$('#new-genre').val('');
+					} else Toast.methods.addToast('Genre cannot be empty', 3000);
 				} else if (type == 'artists') {
 					for (let z = 0; z < this.editing.song.artists.length; z++) {
 						if (this.editing.song.artists[z] == $('#new-artist').val()) return Toast.methods.addToast('Artist already exists', 3000);
 					}
-					if ($('#new-artist').val() !== '') this.editing.song.artists.push($('#new-artist').val());
-					else Toast.methods.addToast('Artist cannot be empty', 3000);
+					if ($('#new-artist').val() !== '') {
+						this.editing.song.artists.push($('#new-artist').val());
+						$('#new-artist').val('');
+					} else Toast.methods.addToast('Artist cannot be empty', 3000);
 				}
 			},
 			removeTag: function (type, index) {

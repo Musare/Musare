@@ -13,14 +13,6 @@ const stations = require('../stations');
 const songs = require('../songs');
 const hooks = require('./hooks');
 
-cache.sub('station.locked', stationId => {
-	io.io.to(`station.${stationId}`).emit("event:stations.locked");
-});
-
-cache.sub('station.unlocked', stationId => {
-	io.io.to(`station.${stationId}`).emit("event:stations.unlocked");
-});
-
 cache.sub('station.pause', stationId => {
 	io.io.to(`station.${stationId}`).emit("event:stations.pause");
 });
@@ -41,8 +33,34 @@ cache.sub('station.queueUpdate', stationId => {
 
 cache.sub('station.create', stationId => {
 	stations.initializeStation(stationId, (err, station) => {
+		console.log("*************", err, station);
 		//TODO Emit to admin station page
-		io.io.to('home').emit("event:stations.created", station);
+
+		// TODO If community, check if on whitelist
+		console.log("*************", station.privacy);
+		if (station.privacy === 'public') io.io.to('home').emit("event:stations.created", station);
+		else {
+			let sockets = io.io.to('home').sockets;
+			console.log("*************", sockets.length);
+			for (let socketId in sockets) {
+				let socket = sockets[socketId];
+				let session = sockets[socketId].session;
+				console.log("*************", session);
+				if (session.sessionId) {
+					cache.hget('sessions', session.sessionId, (err, session) => {
+						console.log("*************", err, session);
+						if (!err && session) {
+							console.log("*************");
+							db.models.user.findOne({_id: session.userId}, (err, user) => {
+								console.log("*************", err, user.role, station.type, station.owner, session.userId);
+								if (user.role === 'admin') socket.emit("event:stations.created", station);
+								else if (station.type === "community" && station.owner === session.userId) socket.emit("event:stations.created", station);
+							});
+						}
+					});
+				}
+			}
+		}
 	});
 });
 
@@ -56,8 +74,6 @@ module.exports = {
 	 * @return {{ status: String, stations: Array }}
 	 */
 	index: (session, cb) => {
-		// TODO: the logic should be a bit more personalized to the users preferred genres
-		// and it should probably just a different cache table then 'stations'
 		cache.hgetall('stations', (err, stations) => {
 
 			if (err && err !== true) {
@@ -72,6 +88,7 @@ module.exports = {
 			for (let prop in stations) {
 				// TODO If community, check if on whitelist
 				let station = stations[prop];
+				console.log(station)
 				if (station.privacy === 'public') add(true, station);
 				else if (!session.sessionId) add(false);
 				else {
@@ -129,9 +146,7 @@ module.exports = {
 
 		stations.getStation(stationId, (err, station) => {
 
-			if (err && err !== true) {
-				return cb({ status: 'error', message: 'An error occurred while joining the station' });
-			}
+			if (err && err !== true) return cb({ status: 'error', message: 'An error occurred while joining the station' });
 
 			if (station) {
 
@@ -172,7 +187,10 @@ module.exports = {
 									timePaused: station.timePaused,
 									description: station.description,
 									displayName: station.displayName,
-									privacy: station.privacy
+									privacy: station.privacy,
+									partyMode: station.partyMode,
+									owner: station.owner,
+									privatePlaylist: station.privatePlaylist
 								}
 							});
 						});
@@ -187,7 +205,8 @@ module.exports = {
 								timePaused: station.timePaused,
 								description: station.description,
 								displayName: station.displayName,
-								privacy: station.privacy
+								privacy: station.privacy,
+								owner: station.owner
 							}
 						});
 					}
@@ -234,7 +253,7 @@ module.exports = {
 		});
 	},*/
 
-	forceSkip: hooks.adminRequired((session, stationId, cb) => {
+	forceSkip: hooks.ownerRequired((session, stationId, cb) => {
 		stations.getStation(stationId, (err, station) => {
 
 			if (err && err !== true) {
@@ -280,7 +299,7 @@ module.exports = {
 		});
 	},
 
-	updateDisplayName: hooks.adminRequired((session, stationId, newDisplayName, cb) => {
+	updateDisplayName: hooks.ownerRequired((session, stationId, newDisplayName, cb) => {
 		db.models.station.update({_id: stationId}, {$set: {displayName: newDisplayName}}, (err) => {
 			if (err) return cb({ status: 'failure', message: 'Something went wrong when saving the station.' });
 			stations.updateStation(stationId, () => {
@@ -290,7 +309,7 @@ module.exports = {
 		});
 	}),
 
-	updateDescription: hooks.adminRequired((session, stationId, newDescription, cb) => {
+	updateDescription: hooks.ownerRequired((session, stationId, newDescription, cb) => {
 		db.models.station.update({_id: stationId}, {$set: {description: newDescription}}, (err) => {
 			if (err) return cb({ status: 'failure', message: 'Something went wrong when saving the station.' });
 			stations.updateStation(stationId, () => {
@@ -300,7 +319,7 @@ module.exports = {
 		});
 	}),
 
-	updatePrivacy: hooks.adminRequired((session, stationId, newPrivacy, cb) => {
+	updatePrivacy: hooks.ownerRequired((session, stationId, newPrivacy, cb) => {
 		db.models.station.update({_id: stationId}, {$set: {privacy: newPrivacy}}, (err) => {
 			if (err) return cb({ status: 'failure', message: 'Something went wrong when saving the station.' });
 			stations.updateStation(stationId, () => {
@@ -310,7 +329,22 @@ module.exports = {
 		});
 	}),
 
-	pause: hooks.adminRequired((session, stationId, cb) => {
+	updatePartyMode: hooks.ownerRequired((session, stationId, newPartyMode, cb) => {
+		stations.getStation(stationId, (err, station) => {
+			if (err) return cb({ status: 'failure', message: err });
+			if (station.partyMode === newPartyMode) return cb({ status: 'failure', message: 'The party mode was already ' + ((newPartyMode) ? 'enabled.' : 'disabled.') });
+			db.models.station.update({_id: stationId}, {$set: {partyMode: newPartyMode}}, (err) => {
+				if (err) return cb({ status: 'failure', message: 'Something went wrong when saving the station.' });
+				stations.updateStation(stationId, () => {
+					//TODO Pub/sub for privacy change
+					stations.skipStation(stationId)();
+					cb({ status: 'success', message: 'Successfully updated the party mode.' });
+				})
+			});
+		});
+	}),
+
+	pause: hooks.ownerRequired((session, stationId, cb) => {
 		stations.getStation(stationId, (err, station) => {
 			if (err && err !== true) {
 				return cb({ status: 'error', message: 'An error occurred while pausing the station' });
@@ -336,7 +370,7 @@ module.exports = {
 		});
 	}),
 
-	resume: hooks.adminRequired((session, stationId, cb) => {
+	resume: hooks.ownerRequired((session, stationId, cb) => {
 		stations.getStation(stationId, (err, station) => {
 			if (err && err !== true) {
 				return cb({ status: 'error', message: 'An error occurred while resuming the station' });
@@ -360,14 +394,17 @@ module.exports = {
 		});
 	}),
 
-	remove: hooks.adminRequired((session, stationId, cb) => {
-		db.models.station.remove({ _id: stationId });
-		cache.hdel('stations', stationId, () => {
-			return cb({ status: 'success', message: 'Station successfully removed' });
+	remove: hooks.ownerRequired((session, stationId, cb) => {
+		db.models.station.remove({ _id: stationId }, (err) => {
+			console.log(err, stationId);
+			if (err) return cb({status: 'failure', message: 'Something went wrong when deleting that station.'});
+			cache.hdel('stations', stationId, () => {
+				return cb({ status: 'success', message: 'Station successfully removed' });
+			});
 		});
 	}),
 
-	create: hooks.adminRequired((session, data, cb) => {
+	create: hooks.loginRequired((session, data, cb) => {
 		async.waterfall([
 
 			(next) => {
@@ -385,61 +422,41 @@ module.exports = {
 
 			(station, next) => {
 				if (station) return next({ 'status': 'failure', 'message': 'A station with that id already exists' });
-				const { _id, displayName, description, genres, playlist } = data;
-				db.models.station.create({
-					_id,
-					displayName,
-					description,
-					type: "official",
-					playlist,
-					genres,
-					currentSong: stations.defaultSong
-				}, next);
+				const { _id, displayName, description, genres, playlist, type } = data;
+				if (type == 'official') {
+					db.models.station.create({
+						_id,
+						displayName,
+						description,
+						type,
+						privacy: 'private',
+						playlist,
+						genres,
+						currentSong: stations.defaultSong
+					}, next);
+				} else if (type == 'community') {
+					cache.hget('sessions', session.sessionId, (err, session) => {
+						db.models.station.create({
+							_id,
+							displayName,
+							description,
+							type,
+							privacy: 'private',
+							owner: session.userId,
+							queue: [],
+							currentSong: null
+						}, next);
+					});
+				}
 			}
 
 		], (err, station) => {
-			if (err) {console.log(err); return cb({ 'status': 'failure', 'message': 'Something went wrong.'});}
-			cache.pub('station.create', data._id);
+			if (err) console.log(err); return cb({ 'status': 'failure', 'message': 'Something went wrong.'});
 			return cb(null, { 'status': 'success', 'message': 'Successfully created station.' });
-		});
-	}),
-
-	createCommunity: hooks.loginRequired((session, data, cb) => {
-		async.waterfall([
-
-			(next) => {
-				return (data) ? next() : cb({ 'status': 'failure', 'message': 'Invalid data' });
-			},
-
-			// check the cache for the station
-			(next) => cache.hget('stations', data._id, next),
-
-			// if the cached version exist
-			(station, next) => {
-				if (station) return next({ 'status': 'failure', 'message': 'A station with that id already exists' });
-				db.models.station.findOne({ _id: data._id }, next);
-			},
-
-			(station, next) => {
-				if (station) return next({ 'status': 'failure', 'message': 'A station with that id already exists' });
-				const { _id, displayName, description } = data;
-				db.models.station.create({
-					_id,
-					displayName,
-					description,
-					type: "community",
-					queue: [],
-					currentSong: null
-				}, next);
-			}
-
-		], (err, station) => {
-			if (err) console.error(err);
 			cache.pub('station.create', data._id);
-			return cb({ 'status': 'success', 'message': 'Successfully created station.' });
 		});
 	}),
-
+	
 	addToQueue: hooks.loginRequired((session, stationId, songId, cb, userId) => {
 		stations.getStation(stationId, (err, station) => {
 			if (err) return cb(err);
@@ -481,7 +498,7 @@ module.exports = {
 		});
 	}),
 
-	removeFromQueue: hooks.adminRequired((session, stationId, songId, cb, userId) => {
+	removeFromQueue: hooks.ownerRequired((session, stationId, songId, cb, userId) => {
 		stations.getStation(stationId, (err, station) => {
 			if (err) return cb(err);
 			if (station.type === 'community') {
@@ -509,6 +526,28 @@ module.exports = {
 			if (!station) return cb({'status': 'failure', 'message': 'Station not found.'});
 			if (station.type === 'community') {
 				cb({'status': 'success', queue: station.queue});
+			} else cb({'status': 'failure', 'message': 'That station is not a community station.'});
+		});
+	}),
+
+	selectPrivatePlaylist: hooks.csOwnerRequired((session, stationId, playlistId, cb, userId) => {
+		stations.getStation(stationId, (err, station) => {
+			if (err) return cb(err);
+			if (station.type === 'community') {
+				if (station.privatePlaylist === playlistId) return cb({'status': 'failure', 'message': 'That playlist is already selected.'});
+				db.models.playlist.findOne({_id: playlistId}, (err, playlist) => {
+					if (err) return cb(err);
+					if (playlist) {
+						db.models.station.update({_id: stationId}, {$set: {privatePlaylist: playlistId, currentSongIndex: 0}}, (err) => {
+							if (err) return cb(err);
+							stations.updateStation(stationId, (err, station) => {
+								if (err) return cb(err);
+								stations.skipStation(stationId)();
+								cb({'status': 'success', 'message': 'Playlist selected.'});
+							});
+						});
+					} else cb({'status': 'failure', 'message': 'Playlist not found.'});
+				});
 			} else cb({'status': 'failure', 'message': 'That station is not a community station.'});
 		});
 	}),

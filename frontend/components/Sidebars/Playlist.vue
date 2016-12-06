@@ -9,7 +9,7 @@
 						<a href='#'>{{ playlist.displayName }}</a>
 						<!--Will play playlist in community station Kris-->
 						<div class='icons-group'>
-							<a href='#' @click=''>
+							<a href='#' @click='selectPlaylist(playlist._id)' v-if="$parent.station && !$parent.station.privatePlaylist === playlist._id">
 								<i class='material-icons'>play_arrow</i>
 							</a>
 							<a href='#' @click='editPlaylist(playlist._id)'>
@@ -28,6 +28,8 @@
 </template>
 
 <script>
+	import { Toast } from 'vue-roaster';
+
 	export default {
 		data() {
 			return {
@@ -35,8 +37,14 @@
 			}
 		},
 		methods: {
-			editPlaylist: function (id) {
+			editPlaylist: function(id) {
 				this.$parent.editPlaylist(id);
+			},
+			selectPlaylist: function(id) {
+				this.socket.emit('stations.selectPrivatePlaylist', this.$parent.stationId, id, (res) => {
+					if (res.status === 'failure') return Toast.methods.addToast(res.message, 8000);
+					Toast.methods.addToast(res.message, 4000);
+				});
 			}
 		},
 		ready: function () {

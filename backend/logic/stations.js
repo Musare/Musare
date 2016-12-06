@@ -43,7 +43,7 @@ module.exports = {
 	},
 
 	initializeStation: function(stationId, cb) {
-		console.log(112233, stationId);
+		console.log(112233, stationId, cb);
 		if (typeof cb !== 'function') cb = ()=>{};
 		let _this = this;
 		_this.getStation(stationId, (err, station) => {
@@ -63,18 +63,26 @@ module.exports = {
 							if (isNaN(timeLeft)) timeLeft = -1;
 							if (station.currentSong.duration * 1000 < timeLeft || timeLeft < 0) {
 								console.log("Test");
-								_this.skipStation(station._id)();
+								this.skipStation(station._id)((err, station) => {
+									console.log(45, err, station);
+									cb(err, station);
+								});
 							} else {
 								notifications.schedule(`stations.nextSong?id=${station._id}`, timeLeft);
+								cb(null, station);
 							}
 						} else {
-							_this.skipStation(station._id)();
+							_this.skipStation(station._id)((err, station) => {
+								console.log(47, err, station);
+								cb(err, station);
+							});
 						}
 					} else {
 						notifications.unschedule(`stations.nextSong?id${station._id}`);
+						cb(null, station);
 					}
-				}
-			}
+				} else cb("Station not found.");
+			} else cb(err);
 		});
 	},
 
@@ -175,7 +183,8 @@ module.exports = {
 
 	skipStation: function(stationId) {
 		let _this = this;
-		return () => {
+		return (cb) => {
+			if (typeof cb !== 'function') cb = ()=>{};
 			console.log("###2");
 			console.log("NOTIFICATION!!!");
 			_this.getStation(stationId, (err, station) => {
@@ -294,23 +303,67 @@ module.exports = {
 									});
 								}
 							} else {
-								if (station.queue.length > 0) {
-									console.log("##");
-									db.models.station.update({_id: stationId}, {$pull: {queue: {songId: station.queue[0]._id}}}, (err) => {
-										console.log("##1", err);
-										if (err) return next(err);
-										let $set = {};
-										$set.currentSong = station.queue[0];
-										$set.startedAt = Date.now();
-										$set.timePaused = 0;
-										if (station.paused) {
-											$set.pausedAt = Date.now();
-										}
-										next(null, $set);
-									});
+								if (station.partyMode === true) {
+									if (station.queue.length > 0) {
+										console.log("##");
+										db.models.station.update({_id: stationId}, {$pull: {queue: {songId: station.queue[0]._id}}}, (err) => {
+											console.log("##1", err);
+											if (err) return next(err);
+											let $set = {};
+											$set.currentSong = station.queue[0];
+											$set.startedAt = Date.now();
+											$set.timePaused = 0;
+											if (station.paused) {
+												$set.pausedAt = Date.now();
+											}
+											next(null, $set);
+										});
+									} else {
+										console.log("##2");
+										next(null, {currentSong: null});
+									}
 								} else {
-									console.log("##2");
-									next(null, {currentSong: null});
+									db.models.playlist.findOne({_id: station.privatePlaylist}, (err, playlist) => {
+										console.log(station.privatePlaylist, err, playlist);
+										if (err || !playlist) return next(null, {currentSong: null});
+										playlist = playlist.songs;
+										if (playlist.length > 0) {
+											let $set = {};
+											if (station.currentSongIndex < playlist.length - 1) {
+												$set.currentSongIndex = station.currentSongIndex + 1;
+											} else {
+												$set.currentSongIndex = 0;
+											}
+											songs.getSong(playlist[$set.currentSongIndex]._id, (err, song) => {
+												if (!err && song) {
+													$set.currentSong = {
+														_id: song._id,
+														title: song.title,
+														artists: song.artists,
+														duration: song.duration,
+														likes: song.likes,
+														dislikes: song.dislikes,
+														skipDuration: song.skipDuration,
+														thumbnail: song.thumbnail
+													};
+												} else {
+													let song = playlist[$set.currentSongIndex];
+													$set.currentSong = {
+														_id: song._id,
+														title: song.title,
+														duration: song.duration,
+														likes: -1,
+														dislikes: -1
+													};
+												}
+												$set.startedAt = Date.now();
+												$set.timePaused = 0;
+												next(null, $set);
+											});
+										} else {
+											next(null, {currentSong: null});
+										}
+									});
 								}
 							}
 						},
@@ -321,7 +374,7 @@ module.exports = {
 								console.log("##2.5", err);
 								_this.updateStation(station._id, (err, station) => {
 									console.log("##2.6", err);
-									if (station.type === 'community') {
+									if (station.type === 'community' && station.partyMode === true) {
 										cache.pub('station.queueUpdate', stationId);
 									}
 									next(null, station);
@@ -349,13 +402,15 @@ module.exports = {
 								console.log("22", !!(station.currentSong));
 								utils.socketsLeaveSongRooms(io.io.to(`station.${station._id}`).sockets, `song.${station.currentSong._id}`);
 							}
-						}
+							cb(null, station);
+						} else cb(err);
 					});
 				}
 				// the station doesn't exist anymore, unsubscribe from it
 				else {
 					console.log(112233445566, "REMOVE NOTIFICATION");
 					notifications.remove(notification);
+					cb("Station not found.");
 				}
 			});
 		}
