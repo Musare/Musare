@@ -146,9 +146,7 @@ module.exports = {
 
 		stations.getStation(stationId, (err, station) => {
 
-			if (err && err !== true) {
-				return cb({ status: 'error', message: 'An error occurred while joining the station' });
-			}
+			if (err && err !== true) return cb({ status: 'error', message: 'An error occurred while joining the station' });
 
 			if (station) {
 
@@ -255,7 +253,7 @@ module.exports = {
 		});
 	},*/
 
-	forceSkip: hooks.csOwnerRequired((session, stationId, cb) => {
+	forceSkip: hooks.ownerRequired((session, stationId, cb) => {
 		stations.getStation(stationId, (err, station) => {
 
 			if (err && err !== true) {
@@ -301,7 +299,7 @@ module.exports = {
 		});
 	},
 
-	updateDisplayName: hooks.csOwnerRequired((session, stationId, newDisplayName, cb) => {
+	updateDisplayName: hooks.ownerRequired((session, stationId, newDisplayName, cb) => {
 		db.models.station.update({_id: stationId}, {$set: {displayName: newDisplayName}}, (err) => {
 			if (err) return cb({ status: 'failure', message: 'Something went wrong when saving the station.' });
 			stations.updateStation(stationId, () => {
@@ -311,7 +309,7 @@ module.exports = {
 		});
 	}),
 
-	updateDescription: hooks.csOwnerRequired((session, stationId, newDescription, cb) => {
+	updateDescription: hooks.ownerRequired((session, stationId, newDescription, cb) => {
 		db.models.station.update({_id: stationId}, {$set: {description: newDescription}}, (err) => {
 			if (err) return cb({ status: 'failure', message: 'Something went wrong when saving the station.' });
 			stations.updateStation(stationId, () => {
@@ -321,7 +319,7 @@ module.exports = {
 		});
 	}),
 
-	updatePrivacy: hooks.csOwnerRequired((session, stationId, newPrivacy, cb) => {
+	updatePrivacy: hooks.ownerRequired((session, stationId, newPrivacy, cb) => {
 		db.models.station.update({_id: stationId}, {$set: {privacy: newPrivacy}}, (err) => {
 			if (err) return cb({ status: 'failure', message: 'Something went wrong when saving the station.' });
 			stations.updateStation(stationId, () => {
@@ -331,7 +329,7 @@ module.exports = {
 		});
 	}),
 
-	updatePartyMode: hooks.csOwnerRequired((session, stationId, newPartyMode, cb) => {
+	updatePartyMode: hooks.ownerRequired((session, stationId, newPartyMode, cb) => {
 		stations.getStation(stationId, (err, station) => {
 			if (err) return cb({ status: 'failure', message: err });
 			if (station.partyMode === newPartyMode) return cb({ status: 'failure', message: 'The party mode was already ' + ((newPartyMode) ? 'enabled.' : 'disabled.') });
@@ -346,7 +344,7 @@ module.exports = {
 		});
 	}),
 
-	pause: hooks.csOwnerRequired((session, stationId, cb) => {
+	pause: hooks.ownerRequired((session, stationId, cb) => {
 		stations.getStation(stationId, (err, station) => {
 			if (err && err !== true) {
 				return cb({ status: 'error', message: 'An error occurred while pausing the station' });
@@ -372,7 +370,7 @@ module.exports = {
 		});
 	}),
 
-	resume: hooks.csOwnerRequired((session, stationId, cb) => {
+	resume: hooks.ownerRequired((session, stationId, cb) => {
 		stations.getStation(stationId, (err, station) => {
 			if (err && err !== true) {
 				return cb({ status: 'error', message: 'An error occurred while resuming the station' });
@@ -396,7 +394,7 @@ module.exports = {
 		});
 	}),
 
-	remove: hooks.csOwnerRequired((session, stationId, cb) => {
+	remove: hooks.ownerRequired((session, stationId, cb) => {
 		db.models.station.remove({ _id: stationId }, (err) => {
 			console.log(err, stationId);
 			if (err) return cb({status: 'failure', message: 'Something went wrong when deleting that station.'});
@@ -406,7 +404,7 @@ module.exports = {
 		});
 	}),
 
-	create: hooks.adminRequired((session, data, cb) => {
+	create: hooks.loginRequired((session, data, cb) => {
 		async.waterfall([
 
 			(next) => {
@@ -424,18 +422,32 @@ module.exports = {
 
 			(station, next) => {
 				if (station) return next({ 'status': 'failure', 'message': 'A station with that id already exists' });
-				const { _id, displayName, description, genres, playlist } = data;
-				db.models.station.create({
-					_id,
-					displayName,
-					description,
-					type: 'official',
-					privacy: 'private',
-					playlist,
-					genres,
-					currentSong: stations.defaultSong,
-					partyMode: true
-				}, next);
+				const { _id, displayName, description, genres, playlist, type } = data;
+				if (type == 'official') {
+					db.models.station.create({
+						_id,
+						displayName,
+						description,
+						type,
+						privacy: 'private',
+						playlist,
+						genres,
+						currentSong: stations.defaultSong
+					}, next);
+				} else if (type == 'community') {
+					cache.hget('sessions', session.sessionId, (err, session) => {
+						db.models.station.create({
+							_id,
+							displayName,
+							description,
+							type,
+							privacy: 'private',
+							owner: session.userId,
+							queue: [],
+							currentSong: null
+						}, next);
+					});
+				}
 			}
 
 		], (err, station) => {
@@ -444,55 +456,7 @@ module.exports = {
 			cache.pub('station.create', data._id);
 		});
 	}),
-
-	createCommunity: hooks.loginRequired((session, data, cb) => {
-		async.waterfall([
-
-			(next) => {
-				return (data) ? next() : cb({ 'status': 'failure', 'message': 'Invalid data' });
-			},
-
-			// check the cache for the station
-			(next) => {
-				data._id = data._id.toLowerCase();
-				cache.hget('stations', data._id, next)
-			},
-
-			// if the cached version exist
-			(station, next) => {
-				if (station) return next({ 'status': 'failure', 'message': 'A station with that name already exists' });
-				db.models.station.findOne({$or: [{_id: data._id}, {displayName: new RegExp(`^${data.displayName}$`, 'i')}] }, next);
-			},
-
-			(station, next) => {
-				cache.hget('sessions', session.sessionId, (err, session) => {
-					next(null, station, session.userId);
-				});
-			},
-
-			(station, userId, next) => {
-				if (station) return next({ 'status': 'failure', 'message': 'A station with that name or display name already exists' });
-				const { _id, displayName, description } = data;
-				db.models.station.create({
-					_id,
-					displayName,
-					owner: userId,
-					privacy: 'private',
-					description,
-					type: "community",
-					queue: [],
-					currentSong: null
-				}, next);
-			}
-
-		], (err, station) => {
-			if (err) return cb(err);
-			console.log(err, station);
-			cache.pub('station.create', data._id);
-			return cb({ 'status': 'success', 'message': 'Successfully created station.' });
-		});
-	}),
-
+	
 	addToQueue: hooks.loginRequired((session, stationId, songId, cb, userId) => {
 		stations.getStation(stationId, (err, station) => {
 			if (err) return cb(err);
@@ -534,7 +498,7 @@ module.exports = {
 		});
 	}),
 
-	removeFromQueue: hooks.csOwnerRequired((session, stationId, songId, cb, userId) => {
+	removeFromQueue: hooks.ownerRequired((session, stationId, songId, cb, userId) => {
 		stations.getStation(stationId, (err, station) => {
 			if (err) return cb(err);
 			if (station.type === 'community') {

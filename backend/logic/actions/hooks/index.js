@@ -3,5 +3,5 @@
 module.exports = {
 	loginRequired: require('./loginRequired'),
 	adminRequired: require('./adminRequired'),
-	csOwnerRequired: require('./csOwnerRequired'),
+	ownerRequired: require('./ownerRequired')
 };

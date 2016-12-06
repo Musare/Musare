@@ -19,7 +19,7 @@
 			</div>
 		</div>
 		<div class="group">
-			<div class="group-title">Community Stations <i class="material-icons ccs-button" @click="toggleModal('ccs')" v-if="$parent.loggedIn">add</i></div>
+			<div class="group-title">Community Stations <i class="material-icons ccs-button" @click="toggleModal('createCommunityStation')" v-if="$parent.loggedIn">add</i></div>
 			<div class="group-stations">
 				<div class="stations-station" v-for="station in stations.community" v-link="{ path: '/community/' + station._id }" @click="this.$dispatch('joinStation', station._id)" v-bind:class="station.class">
 					<img class="station-image" :src="station.currentSong.thumbnail" onerror="this.src='/assets/notes.png'" />
