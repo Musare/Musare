@@ -1,10 +1,10 @@
 <template>
 	<div class="app">
 		<main-header></main-header>
-		<div class="group" v-if="stations.official.length">
+		<div class="group">
 			<div class="group-title">Official Stations</div>
 			<div class="group-stations">
-				<div class="stations-station" v-for="station in stations.official" v-link="{ path: '/official/' + station._id }" @click="this.$dispatch('joinStation', station._id)">
+				<div class="stations-station" v-for="station in stations.official" v-link="{ path: '/official/' + station._id }" @click="this.$dispatch('joinStation', station._id)" v-bind:class="station.class">
 					<img class="station-image" :src="station.currentSong.thumbnail" onerror="this.src='/assets/notes.png'" />
 					<div class="station-info">
 						<div class="station-grid-left">
@@ -18,10 +18,10 @@
 				</div>
 			</div>
 		</div>
-		<div class="group" v-if="stations.community.length">
+		<div class="group">
 			<div class="group-title">Community Stations <i class="material-icons ccs-button" @click="toggleModal('ccs')" v-if="$parent.loggedIn">add</i></div>
 			<div class="group-stations">
-				<div class="stations-station" v-for="station in stations.community" v-link="{ path: '/community/' + station._id }" @click="this.$dispatch('joinStation', station._id)">
+				<div class="stations-station" v-for="station in stations.community" v-link="{ path: '/community/' + station._id }" @click="this.$dispatch('joinStation', station._id)" v-bind:class="station.class">
 					<img class="station-image" :src="station.currentSong.thumbnail" onerror="this.src='/assets/notes.png'" />
 					<div class="station-info">
 						<div class="station-grid-left">
@@ -42,6 +42,7 @@
 <script>
 	import MainHeader from '../MainHeader.vue';
 	import MainFooter from '../MainFooter.vue';
+	import auth from '../../auth';
 
 	export default {
 		data() {
@@ -59,24 +60,37 @@
 		},
 		ready() {
 			let _this = this;
-			let socketInterval = setInterval(() => {
-				if (!!_this.$parent.socket) {
-					_this.socket = _this.$parent.socket;
-					_this.socket.emit("stations.index", data => {
-						if (data.status === "success")  data.stations.forEach(station => {
-							if (!station.currentSong) station.currentSong = { thumbnail: '/assets/notes.png' };
-							if (station.type == 'official') _this.stations.official.push(station);
-							else _this.stations.community.push(station);
-						});
-					});
-					_this.socket.emit("apis.joinRoom", 'home', () => {});
+			auth.getStatus((authenticated, role, username, userId) => {
+				_this.socket = _this.$parent.socket;
+				_this.socket.emit("stations.index", data => {
+					if (data.status === "success")  data.stations.forEach(station => {
+					if (!station.currentSong) station.currentSong = { thumbnail: '/assets/notes.png' };
+			console.log(station.privacy);
+					if (station.privacy !== 'public') {
+						console.log(123);
+						station.class = {'station-red': true}
+					} else if (station.type === 'community') {
+						if (station.owner === userId) {
+							station.class = {'station-blue': true}
+						}
+					}
+					if (station.type == 'official') _this.stations.official.push(station);
+					else _this.stations.community.push(station);
+				});
+				_this.socket.emit("apis.joinRoom", 'home', () => {});
 					_this.socket.on('event:stations.created', station => {
-						if (!station.currentSong) station.currentSong = {};
+						if (!station.currentSong) station.currentSong = {thumbnail: '/assets/notes.png'};
+						if (station.privacy !== 'public') {
+							station.class = {'station-red': true}
+						} else if (station.type === 'community') {
+							if (station.owner === userId) {
+								station.class = {'station-blue': true}
+							}
+						}
 						_this.stations[station.type].push(station);
 					});
-					clearInterval(socketInterval);
-				}
-			}, 100);
+				});
+			});
 		},
 		methods: {
 			toggleModal: function (type) {
@@ -132,6 +146,14 @@
 
 	.ccs-button:hover {
 		color: #03a9f4;
+	}
+
+	.station-blue {
+		outline: 5px solid #03a9f4;
+	}
+
+	.station-red {
+		outline: 5px solid #f45703;
 	}
 
 	.label {
