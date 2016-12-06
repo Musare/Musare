@@ -439,9 +439,9 @@ module.exports = {
 			}
 
 		], (err, station) => {
-			if (err) {console.log(err); return cb({ 'status': 'failure', 'message': 'Something went wrong.'});}
-			cache.pub('station.create', data._id);
+			if (err) console.log(err); return cb({ 'status': 'failure', 'message': 'Something went wrong.'});
 			return cb(null, { 'status': 'success', 'message': 'Successfully created station.' });
+			cache.pub('station.create', data._id);
 		});
 	}),
 

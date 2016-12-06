@@ -5,7 +5,7 @@
 		<what-is-new></what-is-new>
 		<login-modal v-if='isLoginActive'></login-modal>
 		<register-modal v-if='isRegisterActive'></register-modal>
-		<create-community-station v-if='isCCSActive'></create-community-station>
+		<create-community-station v-if='isCreateCommunityStationActive'></create-community-station>
 	</div>
 </template>
 
@@ -31,18 +31,13 @@
 					email: '',
 					password: ''
 				},
-				ccs: {
-					name: '',
-					displayName: '',
-					description: ''
-				},
 				loggedIn: false,
 				role: '',
 				username: '',
 				userId: '',
 				isRegisterActive: false,
 				isLoginActive: false,
-				isCCSActive: false,
+				isCreateCommunityStationActive: false,
 				serverDomain: ''
 			}
 		},
@@ -106,16 +101,6 @@
 					}
 				});
 			},
-			'ccs': function () {
-				let _this = this;
-				this.socket.emit('stations.createCommunity', {_id: _this.ccs.name, displayName: _this.ccs.displayName, description: _this.ccs.description}, result => {
-					if (result.status === 'success') {
-						Toast.methods.addToast(`You have added the station successfully`, 4000);
-					} else {
-						Toast.methods.addToast(result.message, 4000);
-					}
-				});
-			},
 			'toggleModal': function (type) {
 				switch(type) {
 					case 'register':
@@ -124,8 +109,8 @@
 					case 'login':
 						this.isLoginActive = !this.isLoginActive;
 						break;
-					case 'ccs':
-						this.isCCSActive = !this.isCCSActive;
+					case 'createCommunityStation':
+						this.isCreateCommunityStationActive = !this.isCreateCommunityStationActive;
 						break;
 				}
 			}
