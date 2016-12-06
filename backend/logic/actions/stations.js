@@ -451,12 +451,12 @@ module.exports = {
 			}
 
 		], (err, station) => {
-			if (err) console.log(err); return cb({ 'status': 'failure', 'message': 'Something went wrong.'});
-			return cb(null, { 'status': 'success', 'message': 'Successfully created station.' });
+			if (err) console.error(err); cb({ 'status': 'failure', 'message': 'Something went wrong.'});
+			cb(null, { 'status': 'success', 'message': 'Successfully created station.' });
 			cache.pub('station.create', data._id);
 		});
 	}),
-	
+
 	addToQueue: hooks.loginRequired((session, stationId, songId, cb, userId) => {
 		stations.getStation(stationId, (err, station) => {
 			if (err) return cb(err);
@@ -530,7 +530,7 @@ module.exports = {
 		});
 	}),
 
-	selectPrivatePlaylist: hooks.csOwnerRequired((session, stationId, playlistId, cb, userId) => {
+	selectPrivatePlaylist: hooks.ownerRequired((session, stationId, playlistId, cb, userId) => {
 		stations.getStation(stationId, (err, station) => {
 			if (err) return cb(err);
 			if (station.type === 'community') {
