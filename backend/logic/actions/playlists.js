@@ -112,7 +112,7 @@ let lib = {
 			},
 			(next) => {
 				db.models.playlist.findOne({ _id: playlistId }, (err, playlist) => {
-					if (err) throw err;
+					if (err) console.error(err);
 
 					next(null, playlist);
 				});
@@ -127,7 +127,7 @@ let lib = {
 
 	removeSongFromPlaylist: (session, songId, playlistId, cb) => {
 		db.models.playlist.findOne({ _id: playlistId }, (err, playlist) => {
-			if (err) throw err;
+			if (err) console.error(err);
 
 			for (let z = 0; z < playlist.songs.length; z++) {
 				if (playlist.songs[z]._id == songId) playlist.songs.shift(playlist.songs[z]);
@@ -147,7 +147,7 @@ let lib = {
 
 	updateDisplayName: (session, _id, displayName, cb) => {
 		db.models.playlist.findOneAndUpdate({ _id }, { displayName }, { upsert: true }, (err, res) => {
-			if (err) throw err;
+			if (err) console.error(err);
 			cache.hset('playlists', _id, res);
 			return cb({ status: 'success', message: 'Playlist has been successfully updated' });
 		});
@@ -155,7 +155,7 @@ let lib = {
 
 	promoteSong: (session, playlistId, fromIndex, cb) => {
 		db.models.playlist.findOne({ _id: playlistId }, (err, playlist) => {
-			if (err) throw err;
+			if (err) console.error(err);
 
 			let song = playlist.songs[fromIndex];
 			playlist.songs.splice(fromIndex, 1);
@@ -175,7 +175,7 @@ let lib = {
 
 	demoteSong: (session, playlistId, fromIndex, cb) => {
 		db.models.playlist.findOne({ _id: playlistId }, (err, playlist) => {
-			if (err) throw err;
+			if (err) console.error(err);
 
 			let song = playlist.songs[fromIndex];
 			playlist.songs.splice(fromIndex, 1);
@@ -195,7 +195,7 @@ let lib = {
 
 	remove: (session, _id, cb) => {
 		db.models.playlist.remove({ _id }).exec(err => {
-			if (err) throw err;
+			if (err) console.error(err);
 			cache.hdel('playlists', _id, () => {
 				return cb({ status: 'success', message: 'Playlist successfully removed' });
 			});
