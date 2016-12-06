@@ -78,19 +78,18 @@
 						else _this.stations.community.push(station);
 					});
 				});
-				_this.socket.emit("apis.joinRoom", 'home', () => {
-					_this.socket.on('event:stations.created', station => {
-						console.log("CREATED!!!", station);
-						if (!station.currentSong) station.currentSong = {thumbnail: '/assets/notes.png'};
-						if (station.privacy !== 'public') {
-							station.class = {'station-red': true}
-						} else if (station.type === 'community') {
-							if (station.owner === userId) {
-								station.class = {'station-blue': true}
-							}
+				_this.socket.emit("apis.joinRoom", 'home', () => {});
+				_this.socket.on('event:stations.created', station => {
+					console.log("CREATED!!!", station);
+					if (!station.currentSong) station.currentSong = {thumbnail: '/assets/notes.png'};
+					if (station.privacy !== 'public') {
+						station.class = {'station-red': true}
+					} else if (station.type === 'community') {
+						if (station.owner === userId) {
+							station.class = {'station-blue': true}
 						}
-						_this.stations[station.type].push(station);
-					});
+					}
+					_this.stations[station.type].push(station);
 				});
 			});
 		},
@@ -104,7 +103,6 @@
 </script>
 
 <style lang="scss">
-
 	@import 'theme.scss';
 
 	* { box-sizing: border-box; }
