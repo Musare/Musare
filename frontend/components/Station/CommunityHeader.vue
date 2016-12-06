@@ -1,65 +1,65 @@
 <template>
-	<nav class="nav">
-		<div class="nav-left">
-			<a class="nav-item logo" href="#" v-link="{ path: '/' }" @click="this.$dispatch('leaveStation', title)">
+	<nav class='nav'>
+		<div class='nav-left'>
+			<a class='nav-item logo' href='#' v-link='{ path: "/" }' @click='this.$dispatch('leaveStation', title)'>
 				Musare
 			</a>
-			<a class="nav-item" href="#" v-if="isOwner()" @click="$parent.toggleModal('editStation')">
-				<span class="icon">
-					<i class="material-icons">settings</i>
+			<a class='nav-item' href='#' v-if='isOwner()' @click='$parent.toggleModal('editStation')'>
+				<span class='icon'>
+					<i class='material-icons'>settings</i>
 				</span>
 			</a>
-			<a v-if="isOwner()" class="nav-item" href="#" @click="$parent.skipStation()">
-				<span class="icon">
-					<i class="material-icons">skip_next</i>
+			<a v-if='isOwner()' class='nav-item' href='#' @click='$parent.skipStation()'>
+				<span class='icon'>
+					<i class='material-icons'>skip_next</i>
 				</span>
 			</a>
-			<a v-if="!isOwner()' && $parent.$parent.loggedIn" class="nav-item" href="#" @click="$parent.voteSkipStation()">
-				<span class="icon">
-					<i class="material-icons">skip_next</i>
+			<a v-if='!isOwner() && $parent.$parent.loggedIn' class='nav-item' href='#' @click='$parent.voteSkipStation()'>
+				<span class='icon'>
+					<i class='material-icons'>skip_next</i>
 				</span>
 			</a>
-			<a class="nav-item" href="#" v-if="isOwner() && $parent.paused" @click="$parent.resumeStation()">
-				<span class="icon">
-					<i class="material-icons">play_arrow</i>
+			<a class='nav-item' href='#' v-if='isOwner() && $parent.paused' @click='$parent.resumeStation()'>
+				<span class='icon'>
+					<i class='material-icons'>play_arrow</i>
 				</span>
 			</a>
-			<a class="nav-item" href="#" v-if="isOwner() && !$parent.paused" @click="$parent.pauseStation()">
-				<span class="icon">
-					<i class="material-icons">pause</i>
+			<a class='nav-item' href='#' v-if='isOwner() && !$parent.paused' @click='$parent.pauseStation()'>
+				<span class='icon'>
+					<i class='material-icons'>pause</i>
 				</span>
 			</a>
 		</div>
 
-		<div class="nav-center">
+		<div class='nav-center'>
 			{{title}}
 		</div>
 
-		<!--<span class="nav-toggle" :class="{ 'is-active': isActive }" @click="toggleMobileMenu()">
+		<!--<span class='nav-toggle' :class='{ 'is-active': isActive }' @click='toggleMobileMenu()'>
 			<span></span>
 			<span></span>
 			<span></span>
 		</span>-->
 
-		<div class="nav-right">
-			<a class="nav-item" href="#" @click='$parent.sidebars.queue = !$parent.sidebars.queue'>
-				<span class="icon">
-					<i class="material-icons">queue_music</i>
+		<div class='nav-right'>
+			<a class='nav-item' href='#' @click='$parent.sidebars.queue = !$parent.sidebars.queue'>
+				<span class='icon'>
+					<i class='material-icons'>queue_music</i>
 				</span>
 			</a>
-			<!--<a class="nav-item" href="#">
-				<span class="icon">
-					<i class="material-icons">chat</i>
+			<!--<a class='nav-item' href='#'>
+				<span class='icon'>
+					<i class='material-icons'>chat</i>
 				</span>
 			</a>-->
-			<!--<a class="nav-item" href="#" @click='$parent.sidebars.users = !$parent.sidebars.users'>
-				<span class="icon">
-					<i class="material-icons">people</i>
+			<!--<a class='nav-item' href='#' @click='$parent.sidebars.users = !$parent.sidebars.users'>
+				<span class='icon'>
+					<i class='material-icons'>people</i>
 				</span>
 			</a>-->
-			<a class="nav-item" href="#" @click='$parent.sidebars.playlist = !$parent.sidebars.playlist'>
-				<span class="icon">
-					<i class="material-icons">library_music</i>
+			<a class='nav-item' href='#' @click='$parent.sidebars.playlist = !$parent.sidebars.playlist'>
+				<span class='icon'>
+					<i class='material-icons'>library_music</i>
 				</span>
 			</a>
 		</div>
@@ -75,17 +75,17 @@
 			}
 		},
 		methods: {
-			toggleMobileMenu: function() {
+			toggleMobileMenu: function () {
 				this.isActive = !this.isActive;
 			},
-			isOwner: function() {
+			isOwner: function () {
 				return this.$parent.$parent.role === 'admin' || this.$parent.$parent.userId === this.$parent.station.owner
 			}
 		}
 	}
 </script>
 
-<style lang="scss" scoped>
+<style lang='scss' scoped>
 	@import 'theme.scss';
 	.nav {
 		background-color: #03a9f4;
