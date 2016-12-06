@@ -13,14 +13,6 @@ const stations = require('../stations');
 const songs = require('../songs');
 const hooks = require('./hooks');
 
-cache.sub('station.locked', stationId => {
-	io.io.to(`station.${stationId}`).emit("event:stations.locked");
-});
-
-cache.sub('station.unlocked', stationId => {
-	io.io.to(`station.${stationId}`).emit("event:stations.unlocked");
-});
-
 cache.sub('station.pause', stationId => {
 	io.io.to(`station.${stationId}`).emit("event:stations.pause");
 });
@@ -42,7 +34,30 @@ cache.sub('station.queueUpdate', stationId => {
 cache.sub('station.create', stationId => {
 	stations.initializeStation(stationId, (err, station) => {
 		//TODO Emit to admin station page
-		io.io.to('home').emit("event:stations.created", station);
+
+		// TODO If community, check if on whitelist
+		if (station.privacy === 'public') io.io.to('home').emit("event:stations.created", station);
+		else {
+			let sockets = io.io.to('home').sockets;
+			for (let socketId in sockets) {
+				let socket = sockets[socketId];
+				let session = sockets[socketId].session;
+				if (session.sessionId) {
+					cache.hget('sessions', session.sessionId, (err, session) => {
+						if (!err && session) {
+							db.models.user.findOne({_id: session.userId}, (err, user) => {
+								if (user.role === 'admin') socket.emit("event:stations.created", station);
+								else if (station.type === "community" && station.owner === session.userId) socket.emit("event:stations.created", station);
+							});
+						}
+					});
+				}
+			}
+		}
+
+		function func() {
+			io.io.to('home').emit("event:stations.created", station);
+		}
 	});
 });
 
@@ -443,6 +458,7 @@ module.exports = {
 
 		], (err, station) => {
 			if (err) console.error(err);
+			console.log(err, station);
 			cache.pub('station.create', data._id);
 			return cb({ 'status': 'success', 'message': 'Successfully created station.' });
 		});
