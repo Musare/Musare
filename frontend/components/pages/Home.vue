@@ -3,34 +3,50 @@
 		<main-header></main-header>
 		<div class="group">
 			<div class="group-title">Official Stations</div>
-			<div class="group-stations">
-				<div class="stations-station" v-for="station in stations.official" v-link="{ path: '/official/' + station._id }" @click="this.$dispatch('joinStation', station._id)" v-bind:class="station.class">
-					<img class="station-image" :src="station.currentSong.thumbnail" onerror="this.src='/assets/notes.png'" />
-					<div class="station-info">
-						<div class="station-grid-left">
-							<h3>{{ station.displayName }}</h3>
-							<p>{{ station.description }}</p>
+			<div class="card" v-for="station in stations.official" v-link="{ path: '/official/' + station._id }" @click="this.$dispatch('joinStation', station._id)" :class="station.class">
+				<div class="card-image">
+					<figure class="image is-square">
+						<img :src="station.currentSong.thumbnail" onerror="this.src='/assets/notes.png'" />
+					</figure>
+				</div>
+				<div class="card-content">
+					<div class="media">
+						<div class="media-left">
+							<h5>{{ station.displayName }}</h5>
 						</div>
-						<div class="station-grid-right">
+						<div class="media-content"></div>
+						<div class="media-right">
 							<div>{{ station.userCount }}&nbsp;&nbsp;<i class="material-icons">perm_identity</i></div>
 						</div>
+					</div>
+
+					<div class="content">
+						{{ station.description }}
 					</div>
 				</div>
 			</div>
 		</div>
 		<div class="group">
 			<div class="group-title">Community Stations <i class="material-icons ccs-button" @click="toggleModal('createCommunityStation')" v-if="$parent.loggedIn">add</i></div>
-			<div class="group-stations">
-				<div class="stations-station" v-for="station in stations.community" v-link="{ path: '/community/' + station._id }" @click="this.$dispatch('joinStation', station._id)" v-bind:class="station.class">
-					<img class="station-image" :src="station.currentSong.thumbnail" onerror="this.src='/assets/notes.png'" />
-					<div class="station-info">
-						<div class="station-grid-left">
-							<h3>{{ station.displayName }}</h3>
-							<p>{{ station.description }}</p>
+			<div class="card" v-for="station in stations.community" v-link="{ path: '/community/' + station._id }" @click="this.$dispatch('joinStation', station._id)" :class="station.class">
+				<div class="card-image">
+					<figure class="image is-square">
+						<img :src="station.currentSong.thumbnail" onerror="this.src='/assets/notes.png'" />
+					</figure>
+				</div>
+				<div class="card-content">
+					<div class="media">
+						<div class="media-left">
+							<h5>{{ station.displayName }}</h5>
 						</div>
-						<div class="station-grid-right">
+						<div class="media-content"></div>
+						<div class="media-right">
 							<div>{{ station.userCount }}&nbsp;&nbsp;<i class="material-icons">perm_identity</i></div>
 						</div>
+					</div>
+
+					<div class="content">
+						{{ station.description }}
 					</div>
 				</div>
 			</div>
@@ -167,8 +183,8 @@
 	}
 
 	.group {
+		text-align: center;
 		width: 100%;
-		height: 448px;
 		margin: 64px 0 0 0;
 
 		.group-title {
@@ -179,70 +195,12 @@
 			line-height: 48px;
 			text-align: center;
 			font-size: 48px;
-		}
-
-		.group-stations {
-			white-space: nowrap;
-			text-align: center;
-			overflow: hidden;
-			float: left;
-			clear: none;
-			width: 100%;
-			height: 400px;
-
-			.stations-station {
-				position: relative;
-				top: 16px;
-				display: inline-block;
-				clear: none;
-				width: 256px;
-				height: 370px;
-				margin: 0 16px 0 16px;
-				box-shadow: 0 1px 6px 2px rgba(0, 0, 0, 0.25);
-				cursor: pointer;
-
-				.station-info {
-					display: flex;
-					flex-direction: row;
-					align-items: center;
-				}
-
-				.station-image {
-					width: 100%;
-					height: 256px;
-					object-fit: cover;
-				}
-
-				.station-grid-left {
-					display: flex;
-					flex-direction: column;
-					width: 75%;
-					text-align: left;
-					padding-left: 10px;
-
-					h3 {
-						color: $blue;
-						margin: 0;
-						white-space: normal;
-						padding-top: 10px;
-					}
-
-					p {
-						margin: 0;
-						white-space: normal;
-						padding-top: 10px;
-					}
-				}
-
-				.station-grid-right {
-					display: flex;
-					flex-direction: column;
-					width: 25%;
-					i {
-						color: $blue;
-					}
-				}
-			}
+			margin-bottom: 25px;
 		}
 	}
+
+	.card {
+		display: inline-block;
+	}
+	
 </style>
