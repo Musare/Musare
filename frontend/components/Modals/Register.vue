@@ -24,7 +24,10 @@
 			</section>
 			<footer class='modal-card-foot'>
 				<a class='button is-primary' @click='submitModal()'>Submit</a>
-				<a class='button is-primary' :href='$parent.serverDomain + "/auth/github/authorize"'>Register with GitHub</a>
+				<a class='button is-github' :href='$parent.serverDomain + "/auth/github/authorize"'>
+					<i class='fa fa-github' aria-hidden='true'></i>
+					&nbsp;&nbsp;Register with GitHub
+				</a>
 			</footer>
 		</div>
 	</div>
@@ -56,3 +59,10 @@
 		}
 	}
 </script>
+
+<style type='scss' scoped>
+	.button.is-github {
+		background-color: #333 !important;
+		color: #fff !important;
+	}
+</style>
