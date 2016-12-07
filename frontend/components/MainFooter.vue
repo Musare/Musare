@@ -19,4 +19,8 @@
 	.content a:not(.button) {
 		border: 0;
 	}
+
+	.icon:visited {
+		color: #4a4a4a !important;
+	}
 </style>
