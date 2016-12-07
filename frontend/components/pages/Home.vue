@@ -199,8 +199,11 @@
 		}
 	}
 
-	.card {
-		display: inline-block;
+	.card { display: inline-block; }
+
+	.media-left {
+		word-wrap: break-word;
+    	width: 80%;
 	}
 	
 </style>
