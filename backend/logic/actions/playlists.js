@@ -70,30 +70,36 @@ let lib = {
 							next(null, song);
 						});
 					} else {
-						next(null, {_id: songId, title: song.title, duration: song.duration});
+						next(null, {
+							_id: songId,
+							title: song.title,
+							duration: song.duration
+						});
 					}
 				});
 			},
 			(newSong, next) => {
 				db.models.playlist.findOne({ _id: playlistId }, (err, playlist) => {
-					if (err) throw err;
+					if (err) console.error(err);
 
-					playlist.songs.push(newSong);
-					playlist.save(err => {
-						if (err) {
-							console.error(err);
-							return next('Failed to add song to playlist');
-						}
+					if (Array.isArray(playlist.songs)) {
+						playlist.songs.push(newSong);
+						playlist.save(err => {
+							if (err) {
+								console.error(err);
+								return next('Failed to add song to playlist');
+							}
 
-						cache.hset('playlists', playlistId, playlist);
-						next(null, playlist);
-					});
+							cache.hset('playlists', playlistId, playlist);
+							next(null, playlist);
+						});
+					}
 				});
 			}
 		],
 		(err, playlist) => {
 			if (err) return cb({ status: 'error', message: err });
-			else return cb({ status: 'success', message: 'Song has been successfully added to the playlist', data: playlist.songs });
+			else if (playlist.songs) return cb({ status: 'success', message: 'Song has been successfully added to the playlist', data: playlist.songs });
 		});
 	},
 	
