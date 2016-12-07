@@ -55,6 +55,9 @@
 			}
 		},
 		ready() {
+			Toast.methods.addToast('Hiasd', 50000);
+			Toast.methods.addToast('Hiasd', 50000);
+			Toast.methods.addToast('Hiasd', 50000);
 			let _this = this;
 			auth.getStatus((authenticated, role, username, userId) => {
 				_this.socket = window.socket;
@@ -118,3 +121,7 @@
 		components: { Toast, WhatIsNew, LoginModal, RegisterModal, CreateCommunityStation }
 	}
 </script>
+
+<style type='scss'>
+	#toast-container { z-index: 10000 !important; }
+</style>
