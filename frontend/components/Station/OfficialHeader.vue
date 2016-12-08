@@ -1,67 +1,67 @@
 <template>
-	<nav class="nav">
-		<div class="nav-left">
-			<a class="nav-item logo" href="#" v-link="{ path: '/' }" @click="this.$dispatch('leaveStation', title)">
+	<nav class='nav'>
+		<div class='nav-left'>
+			<a class='nav-item logo' href='#' v-link='{ path: "/" }' @click='this.$dispatch("leaveStation", title)'>
 				Musare
 			</a>
-			<a class="nav-item" href="#" @click="$parent.toggleModal('addSongToQueue')">
-				<span class="icon">
-					<i class="material-icons">playlist_add</i>
-				</span>
-			</a>
-			<a class="nav-item" href="#" v-if="$parent.$parent.role === 'admin'" @click="$parent.toggleModal('editStation')">
-				<span class="icon">
-					<i class="material-icons">settings</i>
-				</span>
-			</a>
-			<a v-if="$parent.$parent.role === 'admin'" class="nav-item" href="#" @click="$parent.skipStation()">
-				<span class="icon">
-					<i class="material-icons">skip_next</i>
-				</span>
-			</a>
-			<a v-if="$parent.$parent.role !== 'admin' && $parent.$parent.loggedIn" class="nav-item" href="#" @click="$parent.voteSkipStation()">
-				<span class="icon">
-					<i class="material-icons">skip_next</i>
-				</span>
-			</a>
-			<a class="nav-item" href="#" v-if="$parent.$parent.role === 'admin' && $parent.paused" @click="$parent.resumeStation()">
-				<span class="icon">
-					<i class="material-icons">play_arrow</i>
-				</span>
-			</a>
-			<a class="nav-item" href="#" v-if="$parent.$parent.role === 'admin' && !$parent.paused" @click="$parent.pauseStation()">
-				<span class="icon">
-					<i class="material-icons">pause</i>
+			<a class='nav-item' href='#' v-if='isOwner()' @click='$parent.toggleModal("editStation")'>
+				<span class='icon'>
+					<i class='material-icons'>settings</i>
 				</span>
 			</a>
 		</div>
 
-		<div class="nav-center">
+		<!--<div class='nav-center'>
 			{{title}}
-		</div>
+		</div>-->
 
-		<!--<span class="nav-toggle" :class="{ 'is-active': isActive }" @click="toggleMobileMenu()">
+		<span class="nav-toggle" :class="{ 'is-active': isMobile }" @click="isMobile = !isMobile">
 			<span></span>
 			<span></span>
 			<span></span>
-		</span>-->
+		</span>
 
-		<div class="nav-right">
-			<!--a class="nav-item" href="#" @click='$parent.sidebars.queue = !$parent.sidebars.queue'>
-				<span class="icon">
-					<i class="material-icons">queue_music</i>
+		<div class="nav-right nav-menu" :class="{ 'is-active': isMobile }">
+			<a class='nav-item' href='#' @click='$parent.sidebars.queue = !$parent.sidebars.queue' v-if='$parent.station.partyMode === true'>
+				<span class='icon'>
+					<i class='material-icons'>queue_music</i>
 				</span>
-			</a-->
-			<!--<a class="nav-item" href="#">
-				<span class="icon">
-					<i class="material-icons">chat</i>
+			</a>
+			<a v-if='isOwner()' class='nav-item' href='#' @click='$parent.skipStation()'>
+				<span class='icon'>
+					<i class='material-icons'>skip_next</i>
+				</span>
+			</a>
+			<a v-if='!isOwner() && $parent.$parent.loggedIn' class='nav-item' href='#' @click='$parent.voteSkipStation()'>
+				<span class='icon'>
+					<i class='material-icons'>skip_next</i>
+				</span>
+			</a>
+			<a class='nav-item' href='#' v-if='isOwner() && $parent.paused' @click='$parent.resumeStation()'>
+				<span class='icon'>
+					<i class='material-icons'>play_arrow</i>
+				</span>
+			</a>
+			<a class='nav-item' href='#' v-if='isOwner() && !$parent.paused' @click='$parent.pauseStation()'>
+				<span class='icon'>
+					<i class='material-icons'>pause</i>
+				</span>
+			</a>
+			<!--<a class='nav-item' href='#'>
+				<span class='icon'>
+					<i class='material-icons'>chat</i>
 				</span>
 			</a>-->
-			<!--<a class="nav-item" href="#" @click='$parent.sidebars.users = !$parent.sidebars.users'>
-				<span class="icon">
-					<i class="material-icons">people</i>
+			<!--<a class='nav-item' href='#' @click='$parent.sidebars.users = !$parent.sidebars.users'>
+				<span class='icon'>
+					<i class='material-icons'>people</i>
 				</span>
 			</a>-->
+			<a class='nav-item' href='#' @click='$parent.sidebars.playlist = !$parent.sidebars.playlist'>
+				<span class='icon'>
+					<i class='material-icons'>library_music</i>
+				</span>
+			</a>
 		</div>
 	</nav>
 </template>
@@ -71,18 +71,18 @@
 		data() {
 			return {
 				title: this.$route.params.id,
-				isActive: false
+				isMobile: false
 			}
 		},
 		methods: {
-			toggleMobileMenu: function() {
-				this.isActive = !this.isActive;
+			isOwner: function () {
+				return this.$parent.$parent.role === 'admin' || this.$parent.$parent.userId === this.$parent.station.owner
 			}
 		}
 	}
 </script>
 
-<style lang="scss" scoped>
+<style lang='scss' scoped>
 	@import 'theme.scss';
 	.nav {
 		background-color: #03a9f4;
@@ -107,6 +107,10 @@
 		}
 	}
 
+	.nav-toggle {
+		height: 64px;
+	}
+
 	.logo {
 		font-size: 2.1rem;
 		line-height: 64px;
@@ -120,5 +124,10 @@
 		text-transform: uppercase;
 		color: $blue;
 		font-size: 22px;
+	}
+
+	.nav-right.is-active .nav-item {
+		background: #03a9f4;
+    	border: 0;
 	}
 </style>

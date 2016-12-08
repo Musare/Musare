@@ -9,6 +9,24 @@
 					<i class='material-icons'>settings</i>
 				</span>
 			</a>
+		</div>
+
+		<!--<div class='nav-center'>
+			{{title}}
+		</div>-->
+
+		<span class="nav-toggle" :class="{ 'is-active': isMobile }" @click="isMobile = !isMobile">
+			<span></span>
+			<span></span>
+			<span></span>
+		</span>
+
+		<div class="nav-right nav-menu" :class="{ 'is-active': isMobile }">
+			<a class='nav-item' href='#' @click='$parent.sidebars.queue = !$parent.sidebars.queue' v-if='$parent.station.partyMode === true'>
+				<span class='icon'>
+					<i class='material-icons'>queue_music</i>
+				</span>
+			</a>
 			<a v-if='isOwner()' class='nav-item' href='#' @click='$parent.skipStation()'>
 				<span class='icon'>
 					<i class='material-icons'>skip_next</i>
@@ -27,24 +45,6 @@
 			<a class='nav-item' href='#' v-if='isOwner() && !$parent.paused' @click='$parent.pauseStation()'>
 				<span class='icon'>
 					<i class='material-icons'>pause</i>
-				</span>
-			</a>
-		</div>
-
-		<div class='nav-center'>
-			{{title}}
-		</div>
-
-		<!--<span class='nav-toggle' :class='{ 'is-active': isActive }' @click='toggleMobileMenu()'>
-			<span></span>
-			<span></span>
-			<span></span>
-		</span>-->
-
-		<div class='nav-right'>
-			<a class='nav-item' href='#' @click='$parent.sidebars.queue = !$parent.sidebars.queue' v-if='$parent.station.partyMode === true'>
-				<span class='icon'>
-					<i class='material-icons'>queue_music</i>
 				</span>
 			</a>
 			<!--<a class='nav-item' href='#'>
@@ -71,13 +71,10 @@
 		data() {
 			return {
 				title: this.$route.params.id,
-				isActive: false
+				isMobile: false
 			}
 		},
 		methods: {
-			toggleMobileMenu: function () {
-				this.isActive = !this.isActive;
-			},
 			isOwner: function () {
 				return this.$parent.$parent.role === 'admin' || this.$parent.$parent.userId === this.$parent.station.owner
 			}
@@ -110,6 +107,10 @@
 		}
 	}
 
+	.nav-toggle {
+		height: 64px;
+	}
+
 	.logo {
 		font-size: 2.1rem;
 		line-height: 64px;
@@ -123,5 +124,10 @@
 		text-transform: uppercase;
 		color: $blue;
 		font-size: 22px;
+	}
+
+	.nav-right.is-active .nav-item {
+		background: #03a9f4;
+    	border: 0;
 	}
 </style>
