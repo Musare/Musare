@@ -6,13 +6,13 @@
 			</a>
 		</div>
 
-		<!--<span class="nav-toggle" :class="{ 'is-active': isActive }" @click="toggleMobileMenu()">
+		<span class="nav-toggle" :class="{ 'is-active': isMobile }" @click="isMobile = !isMobile">
 			<span></span>
 			<span></span>
 			<span></span>
-		</span>-->
+		</span>
 
-		<div class="nav-right">
+		<div class="nav-right nav-menu" :class="{ 'is-active': isMobile }">
 			<a class="nav-item is-tab admin" href="#" v-link="{ path: '/admin' }" v-if="$parent.$parent.role === 'admin'">
 				Admin
 			</a>
@@ -47,6 +47,11 @@
 
 <script>
 	export default {
+		data() {
+			return {
+				isMobile: false
+			}
+		},
 		methods: {
 			toggleModal: function (type) {
 				this.$dispatch('toggleModal', type);
@@ -61,6 +66,24 @@
 	.nav {
 		background-color: #03a9f4;
 		height: 64px;
+
+		.nav-menu.is-active {
+			.nav-item {
+				color: #333;
+
+				&:hover {
+					color: #333;
+				}
+			}
+		}
+
+		.nav-toggle {
+			height: 64px;
+
+			&.is-active span {
+				background-color: #333;
+			}
+		}
 
 		.is-brand {
 			font-size: 2.1rem !important;
@@ -77,7 +100,7 @@
 			}
 		}
 		.admin {
-			color: $red;
+			color: $purple;
 		}
 	}
 	.grouped {
