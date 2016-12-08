@@ -3,7 +3,7 @@
 		<main-header></main-header>
 		<div class="container">
 			<img class="avatar" src="https://avatars2.githubusercontent.com/u/11198912?v=3&s=460"/>
-			<h2 class="has-text-centered">@{{user.username}}</h2>
+			<h2 class="has-text-centered username">@{{user.username}}</h2>
 			<div class="admin-functionality" v-if="user.role == 'admin'">
 				<a class="button is-small is-info is-outlined" @click="changeRank('admin')" v-if="user.role == 'default'">Promote to Admin</a>
 				<a class="button is-small is-danger is-outlined" @click="changeRank('default')" v-else>Demote to User</a>
@@ -88,5 +88,12 @@
 	.admin-functionality {
 		text-align: center;
 		margin: 0 auto;
+	}
+
+	@media (max-width: 350px) {
+		.username {
+			font-size: 2.9rem;
+			word-wrap: break-all;
+		}
 	}
 </style>
