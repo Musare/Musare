@@ -57,7 +57,10 @@ module.exports = {
 			(song, next) => {
 				if (!song) return next('Song not found.');
 
-				cache.hset('songs', _id, song, next);
+				cache.hset('songs', _id, song, (err) => {
+					if (err) return next(err);
+					return next(null, song);
+				});
 			}
 
 		], (err, song) => {

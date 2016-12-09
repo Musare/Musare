@@ -9,7 +9,7 @@
 						<a href='#'>{{ playlist.displayName }}</a>
 						<!--Will play playlist in community station Kris-->
 						<div class='icons-group'>
-							<a href='#' @click='selectPlaylist(playlist._id)' v-if="$parent.station && !$parent.station.privatePlaylist === playlist._id">
+							<a href='#' @click='selectPlaylist(playlist._id)' v-if="isNotSelected(playlist._id)">
 								<i class='material-icons'>play_arrow</i>
 							</a>
 							<a href='#' @click='editPlaylist(playlist._id)'>
@@ -29,6 +29,7 @@
 
 <script>
 	import { Toast } from 'vue-roaster';
+	import { Edit } from '../Modals/Playlists/Edit.vue';
 
 	export default {
 		data() {
@@ -45,6 +46,13 @@
 					if (res.status === 'failure') return Toast.methods.addToast(res.message, 8000);
 					Toast.methods.addToast(res.message, 4000);
 				});
+			},
+			isNotSelected: function(id) {
+				let _this = this;
+				console.log(_this.$parent.station);
+				//TODO Also change this once it changes for a station
+				if (_this.$parent.station && _this.$parent.station.privatePlaylist === id) return false;
+				return true;
 			}
 		},
 		ready: function () {
@@ -53,8 +61,43 @@
 			let socketInterval = setInterval(() => {
 				if (!!_this.$parent.$parent.socket) {
 					_this.socket = _this.$parent.$parent.socket;
-					_this.socket.emit('playlists.indexForUser', _this.$parent.$parent.username, res => {
+					_this.socket.emit('playlists.indexForUser', res => {
 						if (res.status == 'success') _this.playlists = res.data;
+					});
+					_this.socket.on('event:playlist.create', (playlist) => {
+						_this.playlists.push(playlist);
+					});
+					_this.socket.on('event:playlist.delete', (playlistId) => {
+						_this.playlists.forEach((playlist, index) => {
+							if (playlist._id === playlistId) {
+								_this.playlists.splice(index, 1);
+							}
+						});
+					});
+					_this.socket.on('event:playlist.addSong', (data) => {
+						_this.playlists.forEach((playlist, index) => {
+							if (playlist._id === data.playlistId) {
+								_this.playlists[index].songs.push(data.song);
+							}
+						});
+					});
+					_this.socket.on('event:playlist.removeSong', (data) => {
+						_this.playlists.forEach((playlist, index) => {
+							if (playlist._id === data.playlistId) {
+								_this.playlists[index].songs.forEach((song, index2) => {
+									if (song._id === data.songId) {
+										_this.playlists[index].songs.splice(index2, 1);
+									}
+								});
+							}
+						});
+					});
+					_this.socket.on('event:playlist.updateDisplayName', (data) => {
+						_this.playlists.forEach((playlist, index) => {
+							if (playlist._id === data.playlistId) {
+								_this.playlists[index].displayName = data.displayName;
+							}
+						});
 					});
 					clearInterval(socketInterval);
 				}

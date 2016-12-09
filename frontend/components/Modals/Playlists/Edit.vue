@@ -7,19 +7,19 @@
 				<button class='delete' @click='$parent.toggleModal("editPlaylist")'></button>
 			</header>
 			<section class='modal-card-body'>
-				<aside class='menu' v-if='playlist.songs.length > 0'>
+				<aside class='menu' v-if='playlist.songs && playlist.songs.length > 0'>
 					<ul class='menu-list'>
 						<li v-for='song in playlist.songs' track-by='$index'>
-							<a :href='' target='_blank'>{{ song.title }} - {{ song.artists.join(', ') }}</a>
+							<a :href='' target='_blank'>{{ song.title }}</a>
 							<div class='controls'>
-								<a href='#'>
+								<!--a href='#'>
 									<i class='material-icons' v-if='playlist.songs[0] !== song' @click='promoteSong($index)'>keyboard_arrow_up</i>
 									<i class='material-icons' style='opacity: 0' v-else>error</i>
 								</a>
-								<a href='#' @click=''>
+								<a href='#'>
 									<i class='material-icons' v-if='playlist.songs.length - 1 !== $index' @click='demoteSong($index)'>keyboard_arrow_down</i>
 									<i class='material-icons' style='opacity: 0' v-else>error</i>
-								</a>
+								</a-->
 								<a href='#' @click='removeSongFromPlaylist(song._id)'><i class='material-icons'>delete</i></a>
 							</div>
 						</li>
@@ -49,14 +49,14 @@
 						</tr>
 					</tbody>
 				</table>
-				<div class='control is-grouped'>
+				<!--div class='control is-grouped'>
 					<p class='control is-expanded'>
 						<input class='input' type='text' placeholder='YouTube Playlist URL' v-model='importQuery'>
 					</p>
 					<p class='control'>
 						<a class='button is-info' @click='importPlaylist()'>Import</a>
 					</p>
-				</div>
+				</div-->
 				<h5>Edit playlist details:</h5>
 				<div class='control is-grouped'>
 					<p class='control is-expanded'>
@@ -106,22 +106,20 @@
 				_this.socket.emit('playlists.addSongToPlaylist', id, _this.playlist._id, res => {
 					if (res.status == 'success') {
 						Toast.methods.addToast(res.message, 3000);
-						_this.playlist.songs = res.data;
 					}
 				});
 			},
-			importPlaylist: function () {
+			/*importPlaylist: function () {
 				let _this = this;
 				this.socket.emit('playlists.addSetToPlaylist', _this.importQuery, _this.playlist._id, res => {
 					if (res.status == 'success') _this.playlist.songs = res.data;
 				});
-			},
+			},*/
 			removeSongFromPlaylist: function (id) {
 				let _this = this;
 				this.socket.emit('playlists.removeSongFromPlaylist', id, _this.playlist._id, res => {
 					if (res.status == 'success') {
 						Toast.methods.addToast(res.message, 3000);
-						_this.playlist.songs = res.data;
 					}
 				});
 			},
@@ -138,7 +136,7 @@
 						_this.$parent.toggleModal('editPlaylist');
 					}
 				});
-			},
+			},/*
 			promoteSong: function (fromIndex) {
 				let _this = this;
 				_this.socket.emit('playlists.promoteSong', _this.playlist._id, fromIndex, res => {
@@ -150,7 +148,7 @@
 				_this.socket.emit('playlists.demoteSong', _this.playlist._id, fromIndex, res => {
 					if (res.status == 'success') _this.$set('playlist.songs', res.data); // bug: v-for is not updating
 				});
-			}
+			}*/
 		},
 		ready: function () {
 			let _this = this;
@@ -159,6 +157,26 @@
 					_this.socket = _this.$parent.$parent.socket;
 					_this.socket.emit('playlists.getPlaylist', _this.$parent.playlistBeingEdited, res => {
 						if (res.status == 'success') _this.playlist = res.data; _this.playlist.oldId = res.data._id;
+					});
+					_this.socket.on('event:playlist.addSong', (data) => {
+						if (_this.playlist._id === data.playlistId) {
+							console.log("PUSH!");
+							_this.playlist.songs.push(data.song);
+						}
+					});
+					_this.socket.on('event:playlist.removeSong', (data) => {
+						if (_this.playlist._id === data.playlistId) {
+							_this.playlist.songs.forEach((song, index) => {
+								if (song._id === data.songId) {
+									_this.playlist.songs.splice(index, 1);
+								}
+							});
+						}
+					});
+					_this.socket.on('event:playlist.updateDisplayName', (data) => {
+						if (_this.playlist._id === data.playlistId) {
+							_this.playlist.displayName = data.displayName;
+						}
 					});
 					clearInterval(socketInterval);
 				}
