@@ -101,7 +101,8 @@
 				simpleSong: false,
 				queue: [],
 				timeBeforePause: 0,
-				station: {}
+				station: {},
+				skipVotes: 0
 			}
 		},
 		methods: {
@@ -236,6 +237,16 @@
 						Toast.methods.addToast(`Error: ${data.message}`, 8000);
 					} else {
 						Toast.methods.addToast('Successfully skipped the station\'s current song.', 4000);
+					}
+				});
+			},
+			voteSkipStation: function () {
+				let _this = this;
+				_this.socket.emit('stations.voteSkip', _this.stationId, data => {
+					if (data.status !== 'success') {
+						Toast.methods.addToast(`Error: ${data.message}`, 8000);
+					} else {
+						Toast.methods.addToast('Successfully voted to skip the current song.', 4000);
 					}
 				});
 			},
@@ -416,6 +427,12 @@
 					_this.socket.on('event:queue.update', queue => {
 						if (this.type === 'community') {
 							this.queue = queue;
+						}
+					});
+
+					_this.socket.on('event:song.voteSkipSong', () => {
+						if (this.currentSong) {
+							this.currentSong.skipVotes++;
 						}
 					});
 					clearInterval(socketInterval);

@@ -386,6 +386,9 @@ module.exports = {
 					], (err, station) => {
 						console.log("##3", err);
 						if (!err) {
+							if (station.currentSong !== null && station.currentSong._id !== undefined) {
+								station.currentSong.skipVotes = 0;
+							}
 							io.io.to(`station.${station._id}`).emit("event:songs.next", {
 								currentSong: station.currentSong,
 								startedAt: station.startedAt,
@@ -408,8 +411,6 @@ module.exports = {
 				}
 				// the station doesn't exist anymore, unsubscribe from it
 				else {
-					console.log(112233445566, "REMOVE NOTIFICATION");
-					notifications.remove(notification);
 					cb("Station not found.");
 				}
 			});

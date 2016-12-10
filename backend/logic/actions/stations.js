@@ -31,6 +31,10 @@ cache.sub('station.queueUpdate', stationId => {
 	});
 });
 
+cache.sub('station.voteSkipSong', stationId => {
+	io.io.to(`station.${stationId}`).emit("event:song.voteSkipSong");
+});
+
 cache.sub('station.create', stationId => {
 	stations.initializeStation(stationId, (err, station) => {
 		console.log("*************", err, station);
@@ -177,6 +181,7 @@ module.exports = {
 								station.currentSong.likes = -1;
 								station.currentSong.dislikes = -1;
 							}
+							station.currentSong.skipVotes = station.currentSong.skipVotes.length;
 							cb({
 								status: 'success',
 								data: {
@@ -223,35 +228,24 @@ module.exports = {
 	 * @param session
 	 * @param stationId - the station id
 	 * @param cb
-	 * @return {{ status: String, skipCount: Integer }}
 	 */
-	/*skip: (session, stationId, cb) => {
-
-		if (!session) return cb({ status: 'failure', message: 'You must be logged in to skip a song!' });
-
+	voteSkip: hooks.loginRequired((session, stationId, cb, userId) => {
 		stations.getStation(stationId, (err, station) => {
-			
-			if (err && err !== true) {
-				return cb({ status: 'error', message: 'An error occurred while skipping the station' });
-			}
-
-			if (station) {
-				cache.client.hincrby('station.skipCounts', session.stationId, 1, (err, skipCount) => {
-
-					session.skippedSong = true;
-
-					if (err) return cb({ status: 'error', message: 'An error occurred while skipping the station' });
-
-					cache.hget('station.userCounts', session.stationId, (err, userCount) => {
-						cb({ status: 'success', skipCount });
-					});
-				});
-			}
-			else {
-				cb({ status: 'failure', message: `That station doesn't exist` });
-			}
+			if (err) return cb({ status: 'failure', message: 'Something went wrong when saving the station.' });
+			if (!station.currentSong) return cb({ status: 'failure', message: 'There is currently no song to skip.' });
+			if (station.currentSong.skipVotes.indexOf(userId) !== -1) return cb({ status: 'failure', message: 'You have already voted to skip this song.' });
+			db.models.station.update({_id: stationId}, {$push: {"currentSong.skipVotes": userId}}, (err) => {
+				if (err) return cb({ status: 'failure', message: 'Something went wrong when saving the station.' });
+				stations.updateStation(stationId, (err, station) => {
+					cache.pub('station.voteSkipSong', stationId);
+					if (station.currentSong && station.currentSong.skipVotes.length >= 1) {
+						stations.skipStation(stationId)();
+					}
+					cb({ status: 'success', message: 'Successfully voted to skip the song.' });
+				})
+			});
 		});
-	},*/
+	}),
 
 	forceSkip: hooks.ownerRequired((session, stationId, cb) => {
 		stations.getStation(stationId, (err, station) => {
@@ -405,37 +399,38 @@ module.exports = {
 	}),
 
 	create: hooks.loginRequired((session, data, cb) => {
+		data._id = data._id.toLowerCase();
 		async.waterfall([
 
 			(next) => {
 				return (data) ? next() : cb({ 'status': 'failure', 'message': 'Invalid data' });
 			},
 
-			// check the cache for the station
-			(next) => cache.hget('stations', data._id, next),
-
-			// if the cached version exist
-			(station, next) => {
-				if (station) return next({ 'status': 'failure', 'message': 'A station with that id already exists' });
-				db.models.station.findOne({ _id: data._id }, next);
+			(next) => {
+				db.models.station.findOne({ $or: [{_id: data._id}, {displayName: new RegExp(`^${data.displayName}$`, 'i')}] }, next);
 			},
 
 			(station, next) => {
-				if (station) return next({ 'status': 'failure', 'message': 'A station with that id already exists' });
+				if (station) return next({ 'status': 'failure', 'message': 'A station with that name or display name already exists' });
 				const { _id, displayName, description, genres, playlist, type } = data;
-				if (type == 'official') {
-					db.models.station.create({
-						_id,
-						displayName,
-						description,
-						type,
-						privacy: 'private',
-						playlist,
-						genres,
-						currentSong: {}
-					}, next);
-				} else if (type == 'community') {
-					cache.hget('sessions', session.sessionId, (err, session) => {
+				cache.hget('sessions', session.sessionId, (err, session) => {
+					if (type == 'official') {
+						db.models.user.findOne({_id: session.userId}, (err, user) => {
+							if (err) return next({ 'status': 'failure', 'message': 'Something went wrong when getting your user info.' });
+							if (!user) return next({ 'status': 'failure', 'message': 'User not found.' });
+							if (user.role !== 'admin') return next({ 'status': 'failure', 'message': 'Admin required.' });
+							db.models.station.create({
+								_id,
+								displayName,
+								description,
+								type,
+								privacy: 'private',
+								playlist,
+								genres,
+								currentSong: stations.defaultSong
+							}, next);
+						});
+					} else if (type == 'community') {
 						db.models.station.create({
 							_id,
 							displayName,
@@ -446,14 +441,17 @@ module.exports = {
 							queue: [],
 							currentSong: null
 						}, next);
-					});
-				}
+					}
+				});
 			}
 
 		], (err, station) => {
-			if (err) console.error(err); cb({ 'status': 'failure', 'message': 'Something went wrong.'});
-			cb(null, { 'status': 'success', 'message': 'Successfully created station.' });
+			if (err) {
+				console.error(err);
+				return cb({ 'status': 'failure', 'message': 'Something went wrong.'});
+			}
 			cache.pub('station.create', data._id);
+			cb({ 'status': 'success', 'message': 'Successfully created station.' });
 		});
 	}),
 
