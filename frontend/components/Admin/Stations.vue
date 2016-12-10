@@ -5,33 +5,25 @@
 				<thead>
 					<tr>
 						<td>ID</td>
+						<td>Type</td>
 						<td>Display Name</td>
 						<td>Description</td>
-						<td>Playlist</td>
 						<td>Options</td>
 					</tr>
 				</thead>
 				<tbody>
 					<tr v-for='(index, station) in stations' track-by='$index'>
 						<td>
-							<p class='control'>
-								<input class='input' type='text' :value='station.id' v-model='station._id'>
-							</p>
+							<span>{{ station._id }}</span>
 						</td>
 						<td>
-							<p class='control'>
-								<input class='input' type='text' :value='station.displayName' v-model='station.displayName'>
-							</p>
+							<span>{{ station.type }}</span>
 						</td>
 						<td>
-							<p class='control'>
-								<input class='input' type='text' :value='station.description' v-model='station.description'>
-							</p>
+							<span>{{ station.description }}</span>
 						</td>
 						<td>
-							<div class='control'>
-								<span v-for='song in station.playlist' track-by='$index'>{{ song }}</span>
-							</p>
+							<span>{{ station.description }}</span>
 						</td>
 						<td>
 							<a class='button is-danger' @click='removeStation(index)'>Remove</a>
@@ -39,7 +31,6 @@
 					</tr>
 				</tbody>
 			</table>
-			<a class='button is-success' @click='update()'>Save Changes</a>
 		</div>
 	</div>
 	<div class='columns is-mobile'>
@@ -63,10 +54,6 @@
 						<label class='label'>Description</label>
 						<p class='control is-expanded'>
 							<input class='input' type='text' placeholder='Short description' v-model='newStation.description'>
-						</p>
-						<label class='label'>Default Song</label>
-						<p class='control is-expanded'>
-							<input class='input' type='text' placeholder='YouTube ID' v-model='newStation.defaultSong'>
 						</p>
 						<label class='label'>Genres</label>
 						<p class='control has-addons'>
@@ -104,9 +91,6 @@
 				let _this = this;
 				let { newStation: { _id, displayName, description, genres } } = this;
 
-				let playlist = [];
-				playlist.push(this.newStation.defaultSong);
-
 				if (_id == undefined) return Toast.methods.addToast('Field (YouTube ID) cannot be empty', 3000);
 				if (displayName == undefined) return Toast.methods.addToast('Field (Display Name) cannot be empty', 3000);
 				if (description == undefined) return Toast.methods.addToast('Field (Description) cannot be empty', 3000);
@@ -116,7 +100,6 @@
 					type: 'official',
 					displayName,
 					description,
-					playlist,
 					genres,
 				}, result => {
 					console.log(result);
@@ -152,9 +135,10 @@
 </script>
 
 <style lang='scss' scoped>
-	.is-success {
-		width: 100%;
-	}
-
 	.tag:not(:last-child) { margin-right: 5px; }
+
+	td {
+		word-wrap: break-word;
+		max-width: 10vw;
+	}
 </style>

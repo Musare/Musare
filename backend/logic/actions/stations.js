@@ -432,7 +432,7 @@ module.exports = {
 						privacy: 'private',
 						playlist,
 						genres,
-						currentSong: stations.defaultSong
+						currentSong: {}
 					}, next);
 				} else if (type == 'community') {
 					cache.hget('sessions', session.sessionId, (err, session) => {
