@@ -26,6 +26,10 @@ let lib = {
 				reports: new mongoose.Schema(require(`./schemas/reports`))
 			};
 
+			lib.schemas.station.path('_id').validate((id) => {
+				return /^[a-z]+$/.test(id);
+			}, 'The id can only have the letters a-z.');
+
 			lib.models = {
 				song: mongoose.model('song', lib.schemas.song),
 				queueSong: mongoose.model('queueSong', lib.schemas.queueSong),

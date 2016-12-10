@@ -9,6 +9,27 @@
 					<i class='material-icons'>settings</i>
 				</span>
 			</a>
+			<a v-if='isOwner()' class='nav-item' href='#' @click='$parent.skipStation()'>
+				<span class='icon'>
+					<i class='material-icons'>skip_next</i>
+				</span>
+			</a>
+			<a v-if='!isOwner() && $parent.$parent.loggedIn && $parent.currentSong' class='nav-item' href='#' @click='$parent.voteSkipStation()'>
+				<span class='icon'>
+					<i class='material-icons'>skip_next</i>
+				</span>
+				<span class="skip-votes">{{$parent.currentSong.skipVotes}}</span>
+			</a>
+			<a class='nav-item' href='#' v-if='isOwner() && $parent.paused' @click='$parent.resumeStation()'>
+				<span class='icon'>
+					<i class='material-icons'>play_arrow</i>
+				</span>
+			</a>
+			<a class='nav-item' href='#' v-if='isOwner() && !$parent.paused' @click='$parent.pauseStation()'>
+				<span class='icon'>
+					<i class='material-icons'>pause</i>
+				</span>
+			</a>
 		</div>
 
 		<!--<div class='nav-center'>
@@ -25,26 +46,6 @@
 			<a class='nav-item' href='#' @click='$parent.sidebars.queue = !$parent.sidebars.queue' v-if='$parent.station.partyMode === true'>
 				<span class='icon'>
 					<i class='material-icons'>queue_music</i>
-				</span>
-			</a>
-			<a v-if='isOwner()' class='nav-item' href='#' @click='$parent.skipStation()'>
-				<span class='icon'>
-					<i class='material-icons'>skip_next</i>
-				</span>
-			</a>
-			<a v-if='!isOwner() && $parent.$parent.loggedIn' class='nav-item' href='#' @click='$parent.voteSkipStation()'>
-				<span class='icon'>
-					<i class='material-icons'>skip_next</i>
-				</span>
-			</a>
-			<a class='nav-item' href='#' v-if='isOwner() && $parent.paused' @click='$parent.resumeStation()'>
-				<span class='icon'>
-					<i class='material-icons'>play_arrow</i>
-				</span>
-			</a>
-			<a class='nav-item' href='#' v-if='isOwner() && !$parent.paused' @click='$parent.pauseStation()'>
-				<span class='icon'>
-					<i class='material-icons'>pause</i>
 				</span>
 			</a>
 			<!--<a class='nav-item' href='#'>
@@ -105,6 +106,11 @@
 				width: 34px;
 			}
 		}
+	}
+
+	.skip-votes {
+		position: relative;
+		left: 11px;
 	}
 
 	.nav-toggle {

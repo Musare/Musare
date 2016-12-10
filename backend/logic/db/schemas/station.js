@@ -1,8 +1,8 @@
 module.exports = {
-	_id: { type: String, lowercase: true, max: 16, min: 2, index: true, unique: true, required: true },
+	_id: { type: String, lowercase: true, maxlength: 16, minlength: 2, index: true, unique: true, required: true },
 	type: { type: String, enum: ["official", "community"], required: true },
-	displayName: { type: String, min: 2, max: 32, required: true, unique: true },
-	description: { type: String, min: 2, max: 128, required: true },
+	displayName: { type: String, minlength: 2, maxlength: 32, required: true, unique: true },
+	description: { type: String, minlength: 2, maxlength: 128, required: true },
 	paused: { type: Boolean, default: false, required: true },
 	currentSong: {
 		_id: { type: String },
@@ -13,6 +13,7 @@ module.exports = {
 		thumbnail: { type: String },
 		likes: { type: Number, default: -1 },
 		dislikes: { type: Number, default: -1 },
+		skipVotes: [{ type: String }],
 	},
 	currentSongIndex: { type: Number, default: 0, required: true },
 	timePaused: { type: Number, default: 0, required: true },

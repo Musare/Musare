@@ -27,7 +27,7 @@
 			</div>
 		</div>
 		<div class="group">
-			<div class="group-title">Community Stations <i class="material-icons ccs-button" @click="toggleModal('createCommunityStation')" v-if="$parent.loggedIn">add</i></div>
+			<div class="group-title">Community Stations <i class="material-icons ccs-button" @click="toggleModal('createCommunityStation')" v-if="$parent.loggedIn">add_circle_outline</i></div>
 			<div class="card" v-for="station in stations.community" v-link="{ path: '/community/' + station._id }" @click="this.$dispatch('joinStation', station._id)" :class="station.class">
 				<div class="card-image">
 					<figure class="image is-square">
@@ -152,6 +152,10 @@
 		html {
 			font-size: 14px;
 		}
+	}
+
+	.group {
+		min-height: 64px;
 	}
 
 	.ccs-button {
