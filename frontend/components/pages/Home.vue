@@ -199,11 +199,19 @@
 		}
 	}
 
-	.card { display: inline-block; }
+	.card {
+		display: inline-block;
+		height: 415px;
+		overflow: hidden;
+	}
 
 	.media-left {
 		word-wrap: break-word;
     	width: 80%;
+	}
+
+	.content {
+		word-wrap: break-word;
 	}
 	
 </style>
