@@ -118,7 +118,7 @@
 	}
 </script>
 
-<style lang="scss">
+<style lang='scss'>
 	@import 'theme.scss';
 
 	* { box-sizing: border-box; }
@@ -199,7 +199,7 @@
 		}
 	}
 
-	.card {
+	.group .card {
 		display: inline-block;
 		height: 415px;
 		overflow: hidden;
