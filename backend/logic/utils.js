@@ -208,6 +208,30 @@ module.exports = {
 			}
 		}
 	},
+	emitToRoom: function(room) {
+		let sockets = io.io.sockets.sockets;
+		for (let id in sockets) {
+			let socket = sockets[id];
+			if (socket.rooms[room]) {
+				let args = [];
+				for (let i = 1; i < Object.keys(arguments).length; i++) {
+					args.push(arguments[i]);
+				}
+				socket.emit.apply(socket, args);
+			}
+		}
+	},
+	getRoomSockets: function(room) {
+		let sockets = io.io.sockets.sockets;
+		let roomSockets = [];
+		for (let id in sockets) {
+			let socket = sockets[id];
+			if (socket.rooms[room]) {
+				roomSockets.push(socket);
+			}
+		}
+		return roomSockets;
+	},
 	getSongFromYouTube: (songId, cb) => {
 		const youtubeParams = [
 			'part=snippet,contentDetails,statistics,status',

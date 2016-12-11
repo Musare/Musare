@@ -14,25 +14,25 @@ const songs = require('../songs');
 const hooks = require('./hooks');
 
 cache.sub('station.pause', stationId => {
-	io.io.to(`station.${stationId}`).emit("event:stations.pause");
+	utils.emitToRoom(`station.${stationId}`, "event:stations.pause");
 });
 
 cache.sub('station.resume', stationId => {
 	stations.getStation(stationId, (err, station) => {
-		io.io.to(`station.${stationId}`).emit("event:stations.resume", {timePaused: station.timePaused});
+		utils.emitToRoom(`station.${stationId}`, "event:stations.resume", {timePaused: station.timePaused});
 	});
 });
 
 cache.sub('station.queueUpdate', stationId => {
 	stations.getStation(stationId, (err, station) => {
 		if (!err) {
-			io.io.to(`station.${stationId}`).emit("event:queue.update", station.queue);
+			utils.emitToRoom(`station.${stationId}`, "event:queue.update", station.queue);
 		}
 	});
 });
 
 cache.sub('station.voteSkipSong', stationId => {
-	io.io.to(`station.${stationId}`).emit("event:song.voteSkipSong");
+	utils.emitToRoom(`station.${stationId}`, "event:song.voteSkipSong");
 });
 
 cache.sub('station.create', stationId => {
@@ -42,9 +42,9 @@ cache.sub('station.create', stationId => {
 
 		// TODO If community, check if on whitelist
 		console.log("*************", station.privacy);
-		if (station.privacy === 'public') io.io.to('home').emit("event:stations.created", station);
+		if (station.privacy === 'public') utils.emitToRoom('home', "event:stations.created", station);
 		else {
-			let sockets = io.io.to('home').sockets;
+			let sockets = utils.getRoomSockets('home');
 			console.log("*************", sockets.length);
 			for (let socketId in sockets) {
 				let socket = sockets[socketId];

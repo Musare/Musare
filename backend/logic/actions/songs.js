@@ -9,7 +9,7 @@ const hooks = require('./hooks');
 const queueSongs = require('./queueSongs');
 
 cache.sub('song.like', (data) => {
-	io.io.to(`song.${data.songId}`).emit('event:song.like', {songId: data.songId, undisliked: data.undisliked});
+	utils.emitToRoom(`song.${data.songId}`, 'event:song.like', {songId: data.songId, undisliked: data.undisliked});
 	utils.socketsFromUser(data.userId, (sockets) => {
 		sockets.forEach((socket) => {
 			socket.emit('event:song.newRatings', {songId: data.songId, liked: true, disliked: false});
@@ -18,7 +18,7 @@ cache.sub('song.like', (data) => {
 });
 
 cache.sub('song.dislike', (data) => {
-	io.io.to(`song.${data.songId}`).emit('event:song.dislike', {songId: data.songId, unliked: data.unliked});
+	utils.emitToRoom(`song.${data.songId}`, 'event:song.dislike', {songId: data.songId, unliked: data.unliked});
 	utils.socketsFromUser(data.userId, (sockets) => {
 		sockets.forEach((socket) => {
 			socket.emit('event:song.newRatings', {songId: data.songId, liked: false, disliked: true});
@@ -27,7 +27,7 @@ cache.sub('song.dislike', (data) => {
 });
 
 cache.sub('song.unlike', (data) => {
-	io.io.to(`song.${data.songId}`).emit('event:song.unlike', {songId: data.songId});
+	utils.emitToRoom(`song.${data.songId}`, 'event:song.unlike', {songId: data.songId});
 	utils.socketsFromUser(data.userId, (sockets) => {
 		sockets.forEach((socket) => {
 			socket.emit('event:song.newRatings', {songId: data.songId, liked: false, disliked: false});
@@ -36,7 +36,7 @@ cache.sub('song.unlike', (data) => {
 });
 
 cache.sub('song.undislike', (data) => {
-	io.io.to(`song.${data.songId}`).emit('event:song.undislike', {songId: data.songId});
+	utils.emitToRoom(`song.${data.songId}`, 'event:song.undislike', {songId: data.songId});
 	utils.socketsFromUser(data.userId, (sockets) => {
 		sockets.forEach((socket) => {
 			socket.emit('event:song.newRatings', {songId: data.songId, liked: false, disliked: false});

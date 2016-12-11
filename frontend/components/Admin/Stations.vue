@@ -140,5 +140,6 @@
 	td {
 		word-wrap: break-word;
 		max-width: 10vw;
+		vertical-align: middle;
 	}
 </style>
