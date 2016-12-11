@@ -389,21 +389,21 @@ module.exports = {
 							if (station.currentSong !== null && station.currentSong._id !== undefined) {
 								station.currentSong.skipVotes = 0;
 							}
-							io.io.to(`station.${station._id}`).emit("event:songs.next", {
+							utils.emitToRoom(`station.${station._id}`, "event:songs.next", {
 								currentSong: station.currentSong,
 								startedAt: station.startedAt,
 								paused: station.paused,
 								timePaused: 0
 							});
 							if (station.currentSong !== null && station.currentSong._id !== undefined) {
-								utils.socketsJoinSongRoom(io.io.to(`station.${station._id}`).sockets, `song.${station.currentSong._id}`);
+								utils.socketsJoinSongRoom(utils.getRoomSockets(`station.${station._id}`), `song.${station.currentSong._id}`);
 								console.log("NEXT SONG!!!", station.currentSong);
 								if (!station.paused) {
 									notifications.schedule(`stations.nextSong?id=${station._id}`, station.currentSong.duration * 1000);
 								}
 							} else {
 								console.log("22", !!(station.currentSong));
-								utils.socketsLeaveSongRooms(io.io.to(`station.${station._id}`).sockets, `song.${station.currentSong._id}`);
+								utils.socketsLeaveSongRooms(utils.getRoomSockets(`station.${station._id}`), `song.${station.currentSong._id}`);
 							}
 							cb(null, station);
 						} else cb(err);

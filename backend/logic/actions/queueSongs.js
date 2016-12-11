@@ -10,16 +10,16 @@ const request = require('request');
 const hooks = require('./hooks');
 
 notifications.subscribe('queue.newSong', songId => {
-	io.to('admin.queue').emit('event:song.new', { songId });
+	utils.emitToRoom('admin.queue', 'event:song.new', { songId });
 });
 
 notifications.subscribe('queue.removedSong', songId => {
-	io.to('admin.queue').emit('event:song.removed', { songId });
+	utils.emitToRoom('admin.queue', 'event:song.removed', { songId });
 });
 
 notifications.subscribe('queue.updatedSong', songId => {
 	//TODO Retrieve new Song object
-	io.to('admin.queue').emit('event:song.updated', { songId });
+	utils.emitToRoom('admin.queue', 'event:song.updated', { songId });
 });
 
 module.exports = {
