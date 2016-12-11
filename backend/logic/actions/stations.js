@@ -211,6 +211,7 @@ module.exports = {
 								description: station.description,
 								displayName: station.displayName,
 								privacy: station.privacy,
+								partyMode: station.partyMode,
 								owner: station.owner
 							}
 						});
