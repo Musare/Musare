@@ -158,6 +158,11 @@
 		min-height: 64px;
 	}
 
+	.card {
+		margin: 10px;
+		cursor: pointer;
+	}
+
 	.ccs-button {
 		cursor: pointer;
 		transition: .25s ease color;
