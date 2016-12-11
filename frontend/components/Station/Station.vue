@@ -330,6 +330,9 @@
 							if (res.data.currentSong) {
 								_this.noSong = false;
 								_this.simpleSong = (res.data.currentSong.likes === -1 && res.data.currentSong.dislikes === -1);
+								if (_this.simpleSong) {
+									_this.currentSong.skipDuration = 0;
+								}
 								console.log(12334);
 								_this.youtubeReady();
 								_this.playVideo();
@@ -365,6 +368,9 @@
 						if (data.currentSong) {
 							_this.noSong = false;
 							_this.simpleSong = (data.currentSong.likes === -1 && data.currentSong.dislikes === -1);
+							if (_this.simpleSong) {
+								_this.currentSong.skipDuration = 0;
+							}
 							console.log(1233, _this.stationId);
 							if (!_this.playerReady) _this.youtubeReady();
 							else _this.playVideo();
