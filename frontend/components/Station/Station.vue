@@ -12,7 +12,12 @@
 	<users-sidebar v-if='sidebars.users'></users-sidebar>
 	
 	<div class="station">
-		<h1 v-show="noSong" class="noSong">No song is currently playing.</h1>
+		<div v-show="noSong" class="noSong">
+			<h1>No song is currently playing.</h1>
+			<h1 v-if='type === "community" && station.partyMode'>You can add a song to the queue by clicking <a href="#" @click="sidebars.queue = true">here</a>.</h1>
+			<h1 v-if='type === "community" && !station.partyMode && $parent.userId === station.owner && !station.privatePlaylist'>Click <a href="#" @click="sidebars.playlist = true">here</a> to play a private playlist.</h1>
+			<h1 v-if='type === "community" && !station.partyMode && $parent.userId === station.owner && station.privatePlaylist'>Maybe you can add some songs to your selected private playlist.</h1>
+		</div>
 		<div class="columns is-mobile" v-show="!noSong">
 			<div class="column is-8-desktop is-offset-2-desktop is-12-mobile">
 				<div class="video-container">
