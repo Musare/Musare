@@ -205,8 +205,10 @@
 				// });
 			}
 		},
-		ready() {
-			console.log(this.$parent.currentSong)
+		events: {
+			closeModal: function () {
+				this.$parent.toggleModal('report');
+			}
 		}
 	}
 </script>

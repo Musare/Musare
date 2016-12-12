@@ -56,7 +56,7 @@
 				if (event.which == 13) b(); return false;
 			}
 		},
-		readyL function () {
+		ready: function () {
 			let _this = this;
 			auth.getStatus((authenticated, role, username, userId) => {
 				_this.socket = window.socket;

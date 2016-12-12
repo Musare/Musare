@@ -124,6 +124,7 @@
 				else if (type == 'editPlaylist') this.modals.editPlaylist = !this.modals.editPlaylist;
 				else if (type == 'createPlaylist') this.modals.createPlaylist = !this.modals.createPlaylist;
 				else if (type == 'editStation') this.modals.editStation = !this.modals.editStation;
+				else if (type == 'report') this.modals.report = !this.modals.report;
 			},
 			youtubeReady: function() {
 				let local = this;
