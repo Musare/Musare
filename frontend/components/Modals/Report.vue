@@ -170,7 +170,8 @@
 						</div>
 						<div class='column'>
 							<label class='label'>Other</label>
-							<textarea class='textarea' placeholder='Any other details...'></textarea>
+							<textarea class='textarea' maxlength='400' placeholder='Any other details...' @keyup='updateCharactersRemaining()'></textarea>
+							<div class='textarea-counter'>{{ charactersRemaining }}</div>
 						</div>
 					</div>
 				</div>
@@ -192,9 +193,8 @@
 	export default {
 		data() {
 			return {
-				report: {
-
-				}
+				charactersRemaining: 400,
+				report: {}
 			}
 		},
 		methods: {
@@ -203,6 +203,9 @@
 				// 	if (res.status == 'success') return Toast.methods.addToast(res.message, 4000);
 				// 	Toast.methods.addToast(res.message, 8000);
 				// });
+			},
+			updateCharactersRemaining: function () {
+				this.charactersRemaining = 400 - $('.textarea').val().length;
 			}
 		},
 		events: {
@@ -231,6 +234,10 @@
 	.radio-controls .control {
 		display: flex;
 		align-items: center;
+	}
+
+	.textarea-counter {
+		text-align: right;
 	}
 
 	@media screen and (min-width: 769px) {
