@@ -8,6 +8,8 @@ import Home from './components/pages/Home.vue';
 import Station from './components/Station/Station.vue';
 import Admin from './components/pages/Admin.vue';
 import News from './components/pages/News.vue';
+import Terms from './components/pages/Terms.vue';
+import Privacy from './components/pages/Privacy.vue';
 import User from './components/User/Show.vue';
 import Settings from './components/User/Settings.vue';
 import Login from './components/Modals/Login.vue';
@@ -65,6 +67,12 @@ router.map({
 	},
 	'*': {
 		component: NotFound
+	},
+	'/terms': {
+		component: Terms
+	},
+	'/privacy': {
+		component: Privacy
 	},
 	'/news': {
 		component: News

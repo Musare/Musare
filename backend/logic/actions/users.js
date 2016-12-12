@@ -69,22 +69,23 @@ module.exports = {
 		async.waterfall([
 
 			// verify the request with google recaptcha
-			/*(next) => {
+			(next) => {
 				request({
 					url: 'https://www.google.com/recaptcha/api/siteverify',
 					method: 'POST',
 					form: {
-						//'secret': config.get("apis.recaptcha.secret"),
+						'secret': config.get("apis").recaptcha.secret,
 						'response': recaptcha
 					}
 				}, next);
-			},*/
+			},
 
 			// check if the response from Google recaptcha is successful
 			// if it is, we check if a user with the requested username already exists
-			(/*response, body, */next) => {
-				/*let json = JSON.parse(body);*/
-				//if (json.success !== true) return next('Response from recaptcha was not successful');
+			(response, body, next) => {
+				let json = JSON.parse(body);
+				console.log(response, body);
+				if (json.success !== true) return next('Response from recaptcha was not successful');
 				db.models.user.findOne({ username: new RegExp(`^${username}$`, 'i') }, next);
 			},
 
@@ -134,15 +135,15 @@ module.exports = {
 			if (err && err !== true) {
 				console.error(err);
 				return cb({ status: 'error', message: 'An error occurred while registering for an account' });
+			} else {
+				module.exports.login(session, email, password, (result) => {
+					let obj = {status: 'success', message: 'Successfully registered.'};
+					if (result.status === 'success') {
+						obj.SID = result.SID;
+					}
+					cb(obj);
+				});
 			}
-			// respond with the payload that was passed to us earlier
-			module.exports.login(session, email, password, (result) => {
-				let obj = { status: 'success', message: 'Successfully registered.' };
-				if (result.status === 'success') {
-					obj.SID = result.SID;
-				}
-				cb(obj);
-			});
 		});
 
 	},
