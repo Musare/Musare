@@ -91,7 +91,7 @@
 					<span>&nbsp;Save</span>
 				</a>
 				<a class='button is-danger' @click='$parent.toggleModal()'>
-					<span>&nbspCancel</span>
+					<span>&nbsp;Cancel</span>
 				</a>
 			</footer>
 		</div>

@@ -15,7 +15,9 @@
 	<div class="station">
 		<div v-show="noSong" class="noSong">
 			<h1>No song is currently playing.</h1>
-			<h1 v-if='type === "community" && station.partyMode'>You can add a song to the queue by clicking <a href="#" @click="sidebars.queue = true">here</a>.</h1>
+			<h4 v-if='type === "community" && station.partyMode'>
+				<a href='#' class='noSong' @click='sidebars.queue = true'>Add a Song to the Queue</a>
+			</h4>
 			<h1 v-if='type === "community" && !station.partyMode && $parent.userId === station.owner && !station.privatePlaylist'>Click <a href="#" @click="sidebars.playlist = true">here</a> to play a private playlist.</h1>
 			<h1 v-if='type === "community" && !station.partyMode && $parent.userId === station.owner && station.privatePlaylist'>Maybe you can add some songs to your selected private playlist.</h1>
 		</div>
@@ -29,7 +31,7 @@
 				</div>
 			</div>
 		</div>
-		<div class="columns is-mobile" v-show="!noSong">
+		<div class="columns is-mobile" v-show="!noSong" v-if='currentSong !== null'>
 			<div class="column is-8-desktop is-offset-2-desktop is-12-mobile">
 				<div class="columns is-mobile">
 					<div class="column is-12-mobile" v-bind:class="{'is-8-desktop': !simpleSong}">
@@ -86,8 +88,8 @@
 			return {
 				type: '',
 				playerReady: false,
-				previousSong: {},
-				currentSong: {},
+				previousSong: null,
+				currentSong: null,
 				player: undefined,
 				timePaused: 0,
 				paused: false,
@@ -167,11 +169,8 @@
 			},
 			getTimeElapsed: function() {
 				let local = this;
-				if (local.currentSong) {
-					return Date.now() - local.startedAt - local.timePaused;
-				} else {
-					return 0;
-				}
+				if (local.currentSong) return Date.now() - local.startedAt - local.timePaused;
+				else return 0;
 			},
 			playVideo: function() {
 				let local = this;
@@ -307,7 +306,7 @@
 					}
 				});
 			},
-			joinStation: function(test) {
+			joinStation: function () {
 				let _this = this;
 				_this.socket.emit('stations.join', _this.stationId, res => {
 					if (res.status === 'success') {
@@ -319,7 +318,7 @@
 							owner: res.data.owner,
 							privatePlaylist: res.data.privatePlaylist
 						};
-						_this.currentSong = (res.data.currentSong) ? res.data.currentSong : {};
+						_this.currentSong = (res.data.currentSong) ? res.data.currentSong : null;
 						_this.type = res.data.type;
 						_this.startedAt = res.data.startedAt;
 						_this.paused = res.data.paused;

@@ -1,5 +1,5 @@
 <template>
-	<div class='modal' :class='{ "is-active": isModalActive }' v-if="news !== null">
+	<div class='modal' :class='{ "is-active": isModalActive }' v-if='news !== null'>
 		<div class='modal-background'></div>
 		<div class='modal-card'>
 			<header class='modal-card-head'>

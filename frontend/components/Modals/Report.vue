@@ -8,7 +8,7 @@
 			</header>
 			<section class='modal-card-body'>
 				<div class='columns'>
-					<div class='column'>
+					<div class='column' v-if='$parent.previousSong !== null'>
 						<div class='card is-fullwidth'>
 							<header class='card-header'>
 								<p class='card-header-title'>
@@ -35,7 +35,7 @@
 							</div>
 						</div>
 					</div>
-					<div class='column'>
+					<div class='column' v-if='$parent.currentSong !== null'>
 						<div class='card is-fullwidth'>
 							<header class='card-header'>
 								<p class='card-header-title'>
