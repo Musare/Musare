@@ -17,10 +17,9 @@ import Login from './components/Modals/Login.vue';
 Vue.use(VueRouter);
 
 let router = new VueRouter({ history: true });
-let _this = this;
 
 lofig.folder = '../config/default.json';
-lofig.get('serverDomain', function(res) {
+lofig.get('serverDomain', res => {
 	let socket = window.socket = io(res);
 	socket.on("ready", (status, role, username, userId) => {
 		auth.data(status, role, username, userId);
@@ -36,11 +35,10 @@ lofig.get('serverDomain', function(res) {
 	}, 10000);
 });
 
-$(document).keydown(e => {
-	if (e.which === 27) {
-		router.app.$dispatch('closeModal');
-	}
-});
+document.onkeydown = event => {
+    event = event || window.event;
+    if (event.keyCode === 27) router.app.$dispatch('closeModal');
+};
 
 router.beforeEach(transition => {
 	if (window.stationInterval) {
