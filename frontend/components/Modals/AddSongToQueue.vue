@@ -92,6 +92,11 @@
 					clearInterval(socketInterval);
 				}
 			}, 100);
+		},
+		events: {
+			closeModal: function() {
+				this.$parent.toggleModal('addSongToQueue')
+			}
 		}
 	}
 </script>

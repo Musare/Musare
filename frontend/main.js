@@ -34,6 +34,12 @@ lofig.get('serverDomain', function(res) {
 	}, 10000);
 });
 
+$(document).keydown(function(e) {
+	if (e.which === 27) {
+		router.app.$dispatch("closeModal");
+	}
+});
+
 router.beforeEach(transition => {
 	if (window.stationInterval) {
 		clearInterval(window.stationInterval);

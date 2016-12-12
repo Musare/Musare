@@ -56,6 +56,11 @@
 				this.$dispatch('register');
 				this.toggleModal();
 			}
+		},
+		events: {
+			closeModal: function() {
+				this.$dispatch('toggleModal', 'register');
+			}
 		}
 	}
 </script>

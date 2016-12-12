@@ -49,6 +49,11 @@
 					clearInterval(socketInterval);
 				}
 			}, 100);
+		},
+		events: {
+			closeModal: function() {
+				this.$parent.toggleModal("createPlaylist");
+			}
 		}
 	}
 </script>

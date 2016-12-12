@@ -77,6 +77,11 @@
 			formatDate: unix => {
 				return moment(unix).format('DD-MM-YYYY');
 			}
+		},
+		events: {
+			closeModal: function() {
+				this.isModalActive = false;
+			}
 		}
 	}
 </script>

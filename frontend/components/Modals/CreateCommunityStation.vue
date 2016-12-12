@@ -70,6 +70,11 @@
 				});
 				this.toggleModal();
 			}
+		},
+		events: {
+			closeModal: function() {
+				this.$dispatch('toggleModal', 'createCommunityStation');
+			}
 		}
 	}
 </script>

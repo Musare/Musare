@@ -94,6 +94,11 @@
 					clearInterval(socketInterval);
 				}
 			}, 100);
+		},
+		events: {
+			closeModal: function() {
+				this.$parent.toggleModal("editStation")
+			}
 		}
 	}
 </script>

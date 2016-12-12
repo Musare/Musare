@@ -38,6 +38,11 @@
 				this.$dispatch('login');
 				this.toggleModal();
 			}
+		},
+		events: {
+			closeModal: function() {
+				this.$dispatch('toggleModal', 'login');
+			}
 		}
 	}
 </script>

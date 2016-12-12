@@ -119,6 +119,9 @@
 			'handleSocketConnection': function() {
 				this.socketConnected = window.socketConnected;
 				this.$broadcast('handleSocketConnection');
+			},
+			'closeModal': function() {
+				this.$broadcast('closeModal');
 			}
 		},
 		components: { Toast, WhatIsNew, LoginModal, RegisterModal, CreateCommunityStation }

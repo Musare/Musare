@@ -98,6 +98,25 @@
 	</div>
 </template>
 
+<script>
+	export default {
+		methods: {
+			toggleModal: function () {
+				this.$dispatch('toggleModal', 'login');
+			},
+			submitModal: function () {
+				this.$dispatch('login');
+				this.toggleModal();
+			}
+		},
+		events: {
+			closeModal: function() {
+				this.$parent.toggleModal()
+			}
+		}
+	}
+</script>
+
 <style type='scss' scoped>
 	input[type=range] {
 		-webkit-appearance: none;
