@@ -301,6 +301,56 @@
 						Toast.methods.addToast(`Error: ${data.message}`, 8000);
 					}
 				});
+			},
+			joinStation: function(test) {
+				let _this = this;
+				_this.socket.emit('stations.join', _this.stationId, res => {
+					if (res.status === 'success') {
+						_this.station = {
+							displayName: res.data.displayName,
+							description: res.data.description,
+							privacy: res.data.privacy,
+							partyMode: res.data.partyMode,
+							owner: res.data.owner,
+							privatePlaylist: res.data.privatePlaylist
+						};
+						_this.currentSong = (res.data.currentSong) ? res.data.currentSong : {};
+						_this.type = res.data.type;
+						_this.startedAt = res.data.startedAt;
+						_this.paused = res.data.paused;
+						_this.timePaused = res.data.timePaused;
+						if (res.data.currentSong) {
+							_this.noSong = false;
+							_this.simpleSong = (res.data.currentSong.likes === -1 && res.data.currentSong.dislikes === -1);
+							if (_this.simpleSong) {
+								_this.currentSong.skipDuration = 0;
+							}
+							console.log(12334);
+							_this.youtubeReady();
+							_this.playVideo();
+							_this.socket.emit('songs.getOwnSongRatings', res.data.currentSong._id, data => {
+								if (_this.currentSong._id === data.songId) {
+									_this.liked = data.liked;
+									_this.disliked = data.disliked;
+								}
+							});
+						} else {
+							if (_this.playerReady) _this.player.pauseVideo();
+							console.log("NO SONG TRUE1", res.data);
+							_this.noSong = true;
+						}
+						if (_this.type === 'community') {
+							_this.socket.emit('stations.getQueue', _this.stationId, data => {
+								console.log(data);
+								if (data.status === 'success') {
+									_this.queue = data.queue;
+								}
+							});
+						}
+					} else {
+						//TODO Handle error
+					}
+				});
 			}
 		},
 		ready: function() {
@@ -312,53 +362,10 @@
 				if (!!_this.$parent.socket) {
 					_this.socket = _this.$parent.socket;
 					_this.socket.removeAllListeners();
-					_this.socket.emit('stations.join', _this.stationId, res => {
-						if (res.status === 'success') {
-							_this.station = {
-								displayName: res.data.displayName,
-								description: res.data.description,
-								privacy: res.data.privacy,
-								partyMode: res.data.partyMode,
-								owner: res.data.owner,
-								privatePlaylist: res.data.privatePlaylist
-							};
-							_this.currentSong = (res.data.currentSong) ? res.data.currentSong : {};
-							_this.type = res.data.type;
-							_this.startedAt = res.data.startedAt;
-							_this.paused = res.data.paused;
-							_this.timePaused = res.data.timePaused;
-							if (res.data.currentSong) {
-								_this.noSong = false;
-								_this.simpleSong = (res.data.currentSong.likes === -1 && res.data.currentSong.dislikes === -1);
-								if (_this.simpleSong) {
-									_this.currentSong.skipDuration = 0;
-								}
-								console.log(12334);
-								_this.youtubeReady();
-								_this.playVideo();
-								_this.socket.emit('songs.getOwnSongRatings', res.data.currentSong._id, data => {
-									if (_this.currentSong._id === data.songId) {
-										_this.liked = data.liked;
-										_this.disliked = data.disliked;
-									}
-								});
-							} else {
-								if (_this.playerReady) _this.player.pauseVideo();
-								console.log("NO SONG TRUE1", res.data);
-								_this.noSong = true;
-							}
-							if (_this.type === 'community') {
-								_this.socket.emit('stations.getQueue', _this.stationId, data => {
-									console.log(data);
-									if (data.status === 'success') {
-										_this.queue = data.queue;
-									}
-								});
-							}
-						} else {
-							//TODO Handle error
-						}
-					});
+
+					if (_this.socket.connected) {
+						_this.joinStation();
+					}
 
 					_this.socket.on('event:songs.next', data => {
 						_this.currentSong = (data.currentSong) ? data.currentSong : {};
@@ -453,6 +460,13 @@
 			let volume = parseInt(localStorage.getItem("volume"));
 			volume = (typeof volume === "number") ? volume : 20;
 			$("#volumeSlider").val(volume);
+		},
+		events: {
+			'handleSocketConnection': function() {
+				if (this.$parent.socketConnected) {
+					this.joinStation(321);
+				}
+			}
 		},
 		components: { OfficialHeader, CommunityHeader, SongQueue, EditPlaylist, CreatePlaylist, EditStation, QueueSidebar, PlaylistSidebar, UsersSidebar }
 	}

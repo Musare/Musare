@@ -1,5 +1,6 @@
 <template>
 	<div>
+		<h1 v-if="!socketConnected" class="socketNotConnected">Could not connect to the server.</h1>
 		<router-view></router-view>
 		<toast></toast>
 		<what-is-new></what-is-new>
@@ -38,7 +39,8 @@
 				isRegisterActive: false,
 				isLoginActive: false,
 				isCreateCommunityStationActive: false,
-				serverDomain: ''
+				serverDomain: '',
+				socketConnected: true
 			}
 		},
 		methods: {
@@ -113,6 +115,10 @@
 						this.isCreateCommunityStationActive = !this.isCreateCommunityStationActive;
 						break;
 				}
+			},
+			'handleSocketConnection': function() {
+				this.socketConnected = window.socketConnected;
+				this.$broadcast('handleSocketConnection');
 			}
 		},
 		components: { Toast, WhatIsNew, LoginModal, RegisterModal, CreateCommunityStation }
@@ -121,4 +127,16 @@
 
 <style type='scss'>
 	#toast-container { z-index: 10000 !important; }
+
+	.socketNotConnected {
+		padding: 20px;
+		color: white;
+		background-color: red;
+		position: fixed;
+		top: 50px;
+		right: 50px;
+		font-size: 2em;
+		border-radius: 5px;
+		z-index: 10000000;
+	}
 </style>

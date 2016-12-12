@@ -78,23 +78,9 @@
 			let _this = this;
 			auth.getStatus((authenticated, role, username, userId) => {
 				_this.socket = _this.$parent.socket;
-				_this.socket.emit("stations.index", data => {
-					if (data.status === "success")  data.stations.forEach(station => {
-						if (!station.currentSong) station.currentSong = { thumbnail: '/assets/notes.png' };
-						console.log(station.privacy);
-						if (station.privacy !== 'public') {
-							console.log(123);
-							station.class = {'station-red': true}
-						} else if (station.type === 'community') {
-							if (station.owner === userId) {
-								station.class = {'station-blue': true}
-							}
-						}
-						if (station.type == 'official') _this.stations.official.push(station);
-						else _this.stations.community.push(station);
-					});
-				});
-				_this.socket.emit("apis.joinRoom", 'home', () => {});
+				if (_this.socket.connected) {
+					this.init();
+				}
 				_this.socket.on('event:stations.created', station => {
 					console.log("CREATED!!!", station);
 					if (!station.currentSong) station.currentSong = {thumbnail: '/assets/notes.png'};
@@ -112,6 +98,35 @@
 		methods: {
 			toggleModal: function (type) {
 				this.$dispatch('toggleModal', type);
+			},
+			init: function() {
+				let _this = this;
+				_this.socket.emit("stations.index", data => {
+					_this.stations.community = [];
+					_this.stations.official = [];
+					if (data.status === "success")  data.stations.forEach(station => {
+						if (!station.currentSong) station.currentSong = { thumbnail: '/assets/notes.png' };
+						console.log(station.privacy);
+						if (station.privacy !== 'public') {
+							console.log(123);
+							station.class = {'station-red': true}
+						} else if (station.type === 'community') {
+							if (station.owner === userId) {
+								station.class = {'station-blue': true}
+							}
+						}
+						if (station.type == 'official') _this.stations.official.push(station);
+						else _this.stations.community.push(station);
+					});
+				});
+				_this.socket.emit("apis.joinRoom", 'home', () => {});
+			}
+		},
+		events: {
+			'handleSocketConnection': function() {
+				if (this.$parent.socketConnected) {
+					this.init();
+				}
 			}
 		},
 		components: { MainHeader, MainFooter }

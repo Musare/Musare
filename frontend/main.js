@@ -23,6 +23,15 @@ lofig.get('serverDomain', function(res) {
 	socket.on("ready", (status, role, username, userId) => {
 		auth.data(status, role, username, userId);
 	});
+	setInterval(() => {
+		if (!socket.connected) {
+			window.socketConnected = false;
+			router.app.$dispatch("handleSocketConnection");
+		} else if (!window.socketConnected && socket.connected) {
+			window.socketConnected = true;
+			router.app.$dispatch("handleSocketConnection");
+		}
+	}, 10000);
 });
 
 router.beforeEach(transition => {
