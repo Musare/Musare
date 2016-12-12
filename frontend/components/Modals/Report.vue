@@ -97,6 +97,7 @@
 
 <script>
 	import { Toast } from 'vue-roaster';
+	import io from '../../io';
 
 	export default {
 		data() {
@@ -199,12 +200,9 @@
 		},
 		ready: function () {
 			let _this = this;
-			let socketInterval = setInterval(() => {
-				if (!!_this.$parent.socket) {
-					_this.socket = _this.$parent.socket;
-					clearInterval(socketInterval);
-				}
-			}, 100);
+			io.getSocket((socket) => {
+				_this.socket = socket;
+			});
 		},
 	}
 </script>
