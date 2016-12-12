@@ -1,5 +1,5 @@
 <template>
-	<div class='modal' :class='{ "is-active": isModalActive }'>
+	<div class='modal' :class='{ "is-active": isModalActive }' v-if="news !== null">
 		<div class='modal-background'></div>
 		<div class='modal-card'>
 			<header class='modal-card-head'>
@@ -44,7 +44,7 @@
 		data() {
 			return {
 				isModalActive: false,
-				news: {}
+				news: null
 			}
 		},
 		ready: function () {
@@ -54,14 +54,16 @@
 					_this.socket = _this.$parent.socket;
 					_this.socket.emit('news.newest', res => {
 						_this.news = res.data;
-						if (localStorage.getItem('whatIsNew')) {
-							if (parseInt(localStorage.getItem('whatIsNew')) < res.data.createdAt) {
+						if (_this.news) {
+							if (localStorage.getItem('whatIsNew')) {
+								if (parseInt(localStorage.getItem('whatIsNew')) < res.data.createdAt) {
+									this.toggleModal();
+									localStorage.setItem('whatIsNew', res.data.createdAt);
+								}
+							} else {
 								this.toggleModal();
 								localStorage.setItem('whatIsNew', res.data.createdAt);
 							}
-						} else {
-							this.toggleModal();
-							localStorage.setItem('whatIsNew', res.data.createdAt);
 						}
 					});
 					clearInterval(socketInterval);
