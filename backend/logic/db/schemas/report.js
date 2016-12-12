@@ -1,4 +1,5 @@
 module.exports = {
+	resolved: { type: Boolean, default: false, required: true },
 	songId: { type: String, required: true },
 	description: { type: String, required: true },
 	issues: [{

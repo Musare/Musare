@@ -117,9 +117,11 @@
 							console.log(123);
 							station.class = {'station-red': true}
 						} else if (station.type === 'community') {
-							if (station.owner === userId) {
-								station.class = {'station-blue': true}
-							}
+							auth.getStatus((authenticated, role, username, userId) => {
+								if (station.owner === userId) {
+									station.class = {'station-blue': true}
+								}
+							});
 						}
 						if (station.type == 'official') _this.stations.official.push(station);
 						else _this.stations.community.push(station);
