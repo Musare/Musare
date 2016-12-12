@@ -7,9 +7,9 @@
 				<button class='delete' @click='$parent.modals.report = !$parent.modals.report'></button>
 			</header>
 			<section class='modal-card-body'>
-				<div class='columns'>
-					<div class='column' v-if='$parent.previousSong !== null'>
-						<div class='card is-fullwidth'>
+				<div class='columns song-types'>
+					<div class='column song-type' v-if='$parent.previousSong !== null'>
+						<div class='card is-fullwidth' :class="{ 'is-highlight-active': isPreviousSongActive }" @click="highlight('previousSong')">
 							<header class='card-header'>
 								<p class='card-header-title'>
 									Previous Song
@@ -35,8 +35,8 @@
 							</div>
 						</div>
 					</div>
-					<div class='column' v-if='$parent.currentSong !== null'>
-						<div class='card is-fullwidth'>
+					<div class='column song-type' v-if='$parent.currentSong !== null'>
+						<div class='card is-fullwidth'  :class="{ 'is-highlight-active': isCurrentSongActive }" @click="highlight('currentSong')">
 							<header class='card-header'>
 								<p class='card-header-title'>
 									Current Song
@@ -194,6 +194,8 @@
 		data() {
 			return {
 				charactersRemaining: 400,
+				isPreviousSongActive: false,
+				isCurrentSongActive: true,
 				report: {}
 			}
 		},
@@ -206,6 +208,15 @@
 			},
 			updateCharactersRemaining: function () {
 				this.charactersRemaining = 400 - $('.textarea').val().length;
+			},
+			highlight: function (type) {
+				if (type == 'currentSong') {
+					this.isPreviousSongActive = false;
+					this.isCurrentSongActive = true;
+				} else if (type == 'previousSong') {
+					this.isCurrentSongActive = false;
+					this.isPreviousSongActive = true;
+				}
 			}
 		},
 		events: {
@@ -219,10 +230,12 @@
 <style type='scss' scoped>
 	h6 { margin-bottom: 15px; }
 
-	.previous-song, .current-song {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
+	.song-types {
+		margin-right: 0;
+	}
+
+	.song-type:first-of-type {
+		padding-left: 0;
 	}
 
 	.media-content {
@@ -246,5 +259,9 @@
 
 	.edit-report-wrapper {
 		padding: 20px;
+	}
+
+	.is-highlight-active {
+		border: 3px #03a9f4 solid;
 	}
 </style>
