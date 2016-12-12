@@ -21,11 +21,19 @@
 						<span>&nbsp;Stations</span>
 					</a>
 				</li>
+				<li :class='{ "is-active": currentTab == "reports" }' @click='showTab("reports")'>
+					<a>
+						<i class="material-icons">report_problem</i>
+						<span>&nbsp;Reports</span>
+					</a>
+				</li>
 			</ul>
 		</div>
+
 		<queue-songs v-if='currentTab == "queueSongs"'></queue-songs>
 		<songs v-if='currentTab == "songs"'></songs>
 		<stations v-if='currentTab == "stations"'></stations>
+		<reports v-if='currentTab == "reports"'></reports>
 	</div>
 </template>
 
@@ -36,9 +44,10 @@
 	import QueueSongs from '../Admin/QueueSongs.vue';
 	import Songs from '../Admin/Songs.vue';
 	import Stations from '../Admin/Stations.vue';
+	import Reports from '../Admin/Reports.vue';
 
 	export default {
-		components: { MainHeader, MainFooter, QueueSongs, Songs, Stations },
+		components: { MainHeader, MainFooter, QueueSongs, Songs, Stations, Reports },
 		data() {
 			return {
 				currentTab: 'queueSongs'

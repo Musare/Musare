@@ -106,6 +106,7 @@
 				isPreviousSongActive: false,
 				isCurrentSongActive: true,
 				report: {
+					resolved: false,
 					songId: this.$parent.currentSong._id,
 					description: '',
 					issues: [

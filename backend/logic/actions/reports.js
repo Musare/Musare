@@ -8,9 +8,20 @@ const hooks = require('./hooks');
 module.exports = {
 
 	index: hooks.adminRequired((session, cb) => {
-		db.models.reports.find({}).sort({ released: 'desc' }).exec((err, reports) => {
+		db.models.report.find({ resolved: false }).sort({ released: 'desc' }).exec((err, reports) => {
 			if (err) console.error(err);
-			else cb({ status: 'success', data: reports });
+			cb({ status: 'success', data: reports });
+		});
+	}),
+
+	resolve: hooks.adminRequired((session, _id, cb) => {
+		db.models.report.findOne({ _id }).sort({ released: 'desc' }).exec((err, report) => {
+			if (err) console.error(err);
+			report.resolved = true;
+			report.save(err => {
+				if (err) console.error(err);
+				else cb({ status: 'success', message: 'Successfully resolved Report' });
+			});
 		});
 	}),
 
