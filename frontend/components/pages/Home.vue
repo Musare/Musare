@@ -3,7 +3,7 @@
 		<main-header></main-header>
 		<div class="group">
 			<div class="group-title">Official Stations</div>
-			<div class="card" v-for="station in stations.official" v-link="{ path: '/official/' + station._id }" @click="this.$dispatch('joinStation', station._id)" :class="station.class">
+			<div class="card station-card" v-for="station in stations.official" v-link="{ path: '/official/' + station._id }" @click="this.$dispatch('joinStation', station._id)" :class="station.class">
 				<div class="card-image">
 					<figure class="image is-square">
 						<img :src="station.currentSong.thumbnail" onerror="this.src='/assets/notes.png'" />
@@ -11,7 +11,7 @@
 				</div>
 				<div class="card-content">
 					<div class="media">
-						<div class="media-left">
+						<div class="media-left displayName">
 							<h5>{{ station.displayName }}</h5>
 						</div>
 						<div class="media-content"></div>
@@ -28,7 +28,7 @@
 		</div>
 		<div class="group">
 			<div class="group-title">Community Stations <i class="material-icons ccs-button" @click="toggleModal('createCommunityStation')" v-if="$parent.loggedIn">add_circle_outline</i></div>
-			<div class="card" v-for="station in stations.community" v-link="{ path: '/community/' + station._id }" @click="this.$dispatch('joinStation', station._id)" :class="station.class">
+			<div class="card station-card" v-for="station in stations.community" v-link="{ path: '/community/' + station._id }" @click="this.$dispatch('joinStation', station._id)" :class="station.class">
 				<div class="card-image">
 					<figure class="image is-square">
 						<img :src="station.currentSong.thumbnail" onerror="this.src='/assets/notes.png'" />
@@ -36,7 +36,7 @@
 				</div>
 				<div class="card-content">
 					<div class="media">
-						<div class="media-left">
+						<div class="media-left displayName">
 							<h5>{{ station.displayName }}</h5>
 						</div>
 						<div class="media-content"></div>
@@ -59,6 +59,7 @@
 	import MainHeader from '../MainHeader.vue';
 	import MainFooter from '../MainFooter.vue';
 	import auth from '../../auth';
+	import io from '../../io';
 
 	export default {
 		data() {
@@ -77,8 +78,38 @@
 		ready() {
 			let _this = this;
 			auth.getStatus((authenticated, role, username, userId) => {
-				_this.socket = _this.$parent.socket;
+				io.getSocket((socket) => {
+					_this.socket = socket;
+					if (_this.socket.connected) {
+						_this.init();
+					}
+					io.onConnect(() => {
+						_this.init();
+					});
+					_this.socket.on('event:stations.created', station => {
+						console.log("CREATED!!!", station);
+						if (!station.currentSong) station.currentSong = {thumbnail: '/assets/notes.png'};
+						if (station.privacy !== 'public') {
+							station.class = {'station-red': true}
+						} else if (station.type === 'community') {
+							if (station.owner === userId) {
+								station.class = {'station-blue': true}
+							}
+						}
+						_this.stations[station.type].push(station);
+					});
+				});
+			});
+		},
+		methods: {
+			toggleModal: function (type) {
+				this.$dispatch('toggleModal', type);
+			},
+			init: function() {
+				let _this = this;
 				_this.socket.emit("stations.index", data => {
+					_this.stations.community = [];
+					_this.stations.official = [];
 					if (data.status === "success")  data.stations.forEach(station => {
 						if (!station.currentSong) station.currentSong = { thumbnail: '/assets/notes.png' };
 						console.log(station.privacy);
@@ -95,23 +126,6 @@
 					});
 				});
 				_this.socket.emit("apis.joinRoom", 'home', () => {});
-				_this.socket.on('event:stations.created', station => {
-					console.log("CREATED!!!", station);
-					if (!station.currentSong) station.currentSong = {thumbnail: '/assets/notes.png'};
-					if (station.privacy !== 'public') {
-						station.class = {'station-red': true}
-					} else if (station.type === 'community') {
-						if (station.owner === userId) {
-							station.class = {'station-blue': true}
-						}
-					}
-					_this.stations[station.type].push(station);
-				});
-			});
-		},
-		methods: {
-			toggleModal: function (type) {
-				this.$dispatch('toggleModal', type);
 			}
 		},
 		components: { MainHeader, MainFooter }
@@ -156,6 +170,11 @@
 
 	.group {
 		min-height: 64px;
+	}
+
+	.station-card {
+		margin: 10px;
+		cursor: pointer;
 	}
 
 	.ccs-button {
@@ -209,7 +228,7 @@
 		overflow: hidden;
 	}
 
-	.media-left {
+	.displayName {
 		word-wrap: break-word;
     	width: 80%;
 	}

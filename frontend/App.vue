@@ -1,5 +1,6 @@
 <template>
 	<div>
+		<h1 v-if="!socketConnected" class="socketNotConnected">Could not connect to the server.</h1>
 		<router-view></router-view>
 		<toast></toast>
 		<what-is-new></what-is-new>
@@ -17,6 +18,7 @@
 	import RegisterModal from './components/Modals/Register.vue';
 	import CreateCommunityStation from './components/Modals/CreateCommunityStation.vue';
 	import auth from './auth';
+	import io from './io';
 
 	export default {
 		replace: false,
@@ -38,7 +40,8 @@
 				isRegisterActive: false,
 				isLoginActive: false,
 				isCreateCommunityStationActive: false,
-				serverDomain: ''
+				serverDomain: '',
+				socketConnected: true
 			}
 		},
 		methods: {
@@ -54,7 +57,7 @@
 				if (event.which == 13) b(); return false;
 			}
 		},
-		ready() {
+		ready: function () {
 			let _this = this;
 			auth.getStatus((authenticated, role, username, userId) => {
 				_this.socket = window.socket;
@@ -62,6 +65,12 @@
 				_this.role = role;
 				_this.username = username;
 				_this.userId = userId;
+			});
+			io.onConnect(() => {
+				_this.socketConnected = true;
+			});
+			io.onDisconnect(() => {
+				_this.socketConnected = false;
 			});
 			lofig.get('serverDomain', res => {
 				_this.serverDomain = res;
@@ -71,18 +80,18 @@
 			'register': function () {
 				let { register: { email, username, password } } = this;
 				let _this = this;
-				this.socket.emit('users.register', username, email, password, /*grecaptcha.getResponse()*/null, result => {
-					Toast.methods.addToast(`You have successfully registered.`, 4000);
-					setTimeout(() => {
-						if (result.SID) {
-							let date = new Date();
-							date.setTime(new Date().getTime() + (2 * 365 * 24 * 60 * 60 * 1000));
-							document.cookie = `SID=${result.SID}; expires=${date.toGMTString()}; path=/`;
-							location.reload();
-						} else {
-							_this.$router.go('/login');
-						}
-					}, 4000);
+				this.socket.emit('users.register', username, email, password, grecaptcha.getResponse(), result => {
+					if (result.status === 'success') {
+						Toast.methods.addToast(`You have successfully registered.`, 4000);
+						setTimeout(() => {
+							if (result.SID) {
+								let date = new Date();
+								date.setTime(new Date().getTime() + (2 * 365 * 24 * 60 * 60 * 1000));
+								document.cookie = `SID=${result.SID}; expires=${date.toGMTString()}; path=/`;
+								location.reload();
+							} else _this.$router.go('/login');
+						}, 4000);
+					} else Toast.methods.addToast(result.message, 8000);
 				});
 			},
 			'login': function () {
@@ -96,9 +105,7 @@
 						Toast.methods.addToast(`You have been successfully logged in`, 2000);
 						_this.$router.go('/');
 						location.reload();
-					} else {
-						Toast.methods.addToast(result.message, 2000);
-					}
+					} else Toast.methods.addToast(result.message, 2000);
 				});
 			},
 			'toggleModal': function (type) {
@@ -113,6 +120,9 @@
 						this.isCreateCommunityStationActive = !this.isCreateCommunityStationActive;
 						break;
 				}
+			},
+			'closeModal': function() {
+				this.$broadcast('closeModal');
 			}
 		},
 		components: { Toast, WhatIsNew, LoginModal, RegisterModal, CreateCommunityStation }
@@ -121,4 +131,16 @@
 
 <style type='scss'>
 	#toast-container { z-index: 10000 !important; }
+
+	.socketNotConnected {
+		padding: 20px;
+		color: white;
+		background-color: red;
+		position: fixed;
+		top: 50px;
+		right: 50px;
+		font-size: 2em;
+		border-radius: 5px;
+		z-index: 10000000;
+	}
 </style>

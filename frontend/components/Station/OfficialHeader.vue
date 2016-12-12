@@ -9,6 +9,11 @@
 					<i class='material-icons'>settings</i>
 				</span>
 			</a>
+			<a class='nav-item' href='#' @click='$parent.toggleModal("addSongToQueue")' v-if='$parent.type === "official"'>
+				<span class='icon'>
+					<i class='material-icons'>queue_music</i>
+				</span>
+			</a>
 			<a v-if='isOwner()' class='nav-item' href='#' @click='$parent.skipStation()'>
 				<span class='icon'>
 					<i class='material-icons'>skip_next</i>
@@ -43,6 +48,11 @@
 		</span>
 
 		<div class="nav-right nav-menu" :class="{ 'is-active': isMobile }">
+			<a v-if='$parent.$parent.loggedIn' class='nav-item' href='#' @click='$parent.modals.report = !$parent.modals.report'>
+				<span class='icon'>
+					<i class='material-icons'>report</i>
+				</span>
+			</a>
 			<a class='nav-item' href='#' @click='$parent.sidebars.queue = !$parent.sidebars.queue' v-if='$parent.station.partyMode === true'>
 				<span class='icon'>
 					<i class='material-icons'>queue_music</i>
@@ -58,7 +68,7 @@
 					<i class='material-icons'>people</i>
 				</span>
 			</a>-->
-			<a class='nav-item' href='#' @click='$parent.sidebars.playlist = !$parent.sidebars.playlist'>
+			<a class='nav-item' href='#' @click='$parent.sidebars.playlist = !$parent.sidebars.playlist' v-if='$parent.type === "community"'>
 				<span class='icon'>
 					<i class='material-icons'>library_music</i>
 				</span>

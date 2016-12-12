@@ -30,6 +30,7 @@
 <script>
 	import { Toast } from 'vue-roaster';
 	import { Edit } from '../Modals/Playlists/Edit.vue';
+	import io from '../../io';
 
 	export default {
 		data() {
@@ -58,50 +59,47 @@
 		ready: function () {
 			// TODO: Update when playlist is removed/created
 			let _this = this;
-			let socketInterval = setInterval(() => {
-				if (!!_this.$parent.$parent.socket) {
-					_this.socket = _this.$parent.$parent.socket;
-					_this.socket.emit('playlists.indexForUser', res => {
-						if (res.status == 'success') _this.playlists = res.data;
-					});
-					_this.socket.on('event:playlist.create', (playlist) => {
+			io.getSocket((socket) => {
+				_this.socket = socket;
+				_this.socket.emit('playlists.indexForUser', res => {
+					if (res.status == 'success') _this.playlists = res.data;
+				});
+				_this.socket.on('event:playlist.create', (playlist) => {
 						_this.playlists.push(playlist);
+				});
+				_this.socket.on('event:playlist.delete', (playlistId) => {
+					_this.playlists.forEach((playlist, index) => {
+						if (playlist._id === playlistId) {
+							_this.playlists.splice(index, 1);
+						}
 					});
-					_this.socket.on('event:playlist.delete', (playlistId) => {
-						_this.playlists.forEach((playlist, index) => {
-							if (playlist._id === playlistId) {
-								_this.playlists.splice(index, 1);
-							}
-						});
+				});
+				_this.socket.on('event:playlist.addSong', (data) => {
+					_this.playlists.forEach((playlist, index) => {
+						if (playlist._id === data.playlistId) {
+							_this.playlists[index].songs.push(data.song);
+						}
 					});
-					_this.socket.on('event:playlist.addSong', (data) => {
-						_this.playlists.forEach((playlist, index) => {
-							if (playlist._id === data.playlistId) {
-								_this.playlists[index].songs.push(data.song);
-							}
-						});
+				});
+				_this.socket.on('event:playlist.removeSong', (data) => {
+					_this.playlists.forEach((playlist, index) => {
+						if (playlist._id === data.playlistId) {
+							_this.playlists[index].songs.forEach((song, index2) => {
+								if (song._id === data.songId) {
+									_this.playlists[index].songs.splice(index2, 1);
+								}
+							});
+						}
 					});
-					_this.socket.on('event:playlist.removeSong', (data) => {
-						_this.playlists.forEach((playlist, index) => {
-							if (playlist._id === data.playlistId) {
-								_this.playlists[index].songs.forEach((song, index2) => {
-									if (song._id === data.songId) {
-										_this.playlists[index].songs.splice(index2, 1);
-									}
-								});
-							}
-						});
+				});
+				_this.socket.on('event:playlist.updateDisplayName', (data) => {
+					_this.playlists.forEach((playlist, index) => {
+						if (playlist._id === data.playlistId) {
+							_this.playlists[index].displayName = data.displayName;
+						}
 					});
-					_this.socket.on('event:playlist.updateDisplayName', (data) => {
-						_this.playlists.forEach((playlist, index) => {
-							if (playlist._id === data.playlistId) {
-								_this.playlists[index].displayName = data.displayName;
-							}
-						});
-					});
-					clearInterval(socketInterval);
-				}
-			}, 100);
+				});
+			});
 		}
 	}
 </script>

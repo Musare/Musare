@@ -21,6 +21,7 @@ module.exports = {
 	startedAt: { type: Number, default: 0, required: true },
 	playlist: { type: Array },
 	genres: [{ type: String }],
+	blacklistedGenres: [{ type: String }],
 	privacy: { type: String, enum: ["public", "unlisted", "private"], default: "private" },
 	locked: { type: Boolean, default: false },
 	queue: [{

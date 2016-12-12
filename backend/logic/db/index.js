@@ -23,7 +23,7 @@ let lib = {
 				user: new mongoose.Schema(require(`./schemas/user`)),
 				playlist: new mongoose.Schema(require(`./schemas/playlist`)),
 				news: new mongoose.Schema(require(`./schemas/news`)),
-				reports: new mongoose.Schema(require(`./schemas/reports`))
+				report: new mongoose.Schema(require(`./schemas/report`))
 			};
 
 			lib.schemas.station.path('_id').validate((id) => {
@@ -37,7 +37,7 @@ let lib = {
 				user: mongoose.model('user', lib.schemas.user),
 				playlist: mongoose.model('playlist', lib.schemas.playlist),
 				news: mongoose.model('news', lib.schemas.news),
-				reports: mongoose.model('reports', lib.schemas.reports)
+				report: mongoose.model('report', lib.schemas.report)
 			};
 
 			cb();

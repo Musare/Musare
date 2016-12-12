@@ -91,12 +91,31 @@
 					<span>&nbsp;Save</span>
 				</a>
 				<a class='button is-danger' @click='$parent.toggleModal()'>
-					<span>&nbspCancel</span>
+					<span>&nbsp;Cancel</span>
 				</a>
 			</footer>
 		</div>
 	</div>
 </template>
+
+<script>
+	export default {
+		methods: {
+			toggleModal: function () {
+				this.$dispatch('toggleModal', 'login');
+			},
+			submitModal: function () {
+				this.$dispatch('login');
+				this.toggleModal();
+			}
+		},
+		events: {
+			closeModal: function() {
+				this.$parent.toggleModal()
+			}
+		}
+	}
+</script>
 
 <style type='scss' scoped>
 	input[type=range] {

@@ -211,6 +211,7 @@ module.exports = {
 								description: station.description,
 								displayName: station.displayName,
 								privacy: station.privacy,
+								partyMode: station.partyMode,
 								owner: station.owner
 							}
 						});
@@ -412,7 +413,7 @@ module.exports = {
 
 			(station, next) => {
 				if (station) return next({ 'status': 'failure', 'message': 'A station with that name or display name already exists' });
-				const { _id, displayName, description, genres, playlist, type } = data;
+				const { _id, displayName, description, genres, playlist, type, blacklistedGenres } = data;
 				cache.hget('sessions', session.sessionId, (err, session) => {
 					if (type == 'official') {
 						db.models.user.findOne({_id: session.userId}, (err, user) => {
@@ -427,6 +428,7 @@ module.exports = {
 								privacy: 'private',
 								playlist,
 								genres,
+								blacklistedGenres,
 								currentSong: stations.defaultSong
 							}, next);
 						});

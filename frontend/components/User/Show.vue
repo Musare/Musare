@@ -54,18 +54,15 @@
 		},
 		ready: function() {
 			let _this = this;
-			let socketInterval = setInterval(() => {
-				if (!!_this.$parent.socket) {
-					_this.socket = _this.$parent.socket;
-					_this.socket.emit('users.findByUsername', _this.$route.params.username, res => {
-						if (res.status == 'error') this.$router.go('/404');
-						else _this.user = res.data; _this.isUser = true;
-					});
-					clearInterval(socketInterval);
-				}
-			}, 100);
+			io.getSocket((socket) => {
+				_this.socket = socket;
+				_this.socket.emit('users.findByUsername', _this.$route.params.username, res => {
+					if (res.status == 'error') this.$router.go('/404');
+					else _this.user = res.data; _this.isUser = true;
+				});
+			});
 		},
-		components: { MainHeader, MainFooter },
+		components: { MainHeader, MainFooter }
 	}
 </script>
 

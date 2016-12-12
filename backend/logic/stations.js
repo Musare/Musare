@@ -97,7 +97,16 @@ module.exports = {
 					db.models.song.find({genres: genre}, (err, songs) => {
 						if (!err) {
 							songs.forEach((song) => {
-								if (songList.indexOf(song._id) === -1) songList.push(song._id);
+								if (songList.indexOf(song._id) === -1) {
+									let found = false;
+									song.genres.forEach((songGenre) => {
+										if (station.blacklistedGenres.indexOf(songGenre) !== -1) found = true;
+										console.log(songGenre, station.blacklistedGenres, station.blacklistedGenres.indexOf(songGenre), found);
+									});
+									if (!found) {
+										songList.push(song._id);
+									}
+								}
 							});
 						}
 						genresDone.push(genre);

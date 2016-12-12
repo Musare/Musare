@@ -20,7 +20,8 @@
 				<p class='control'>
 					<input class='input' type='password' placeholder='Password...' v-model='$parent.register.password' v-on:keypress='$parent.submitOnEnter(submitModal, $event)'>
 				</p>
-				<div class='g-recaptcha' :data-sitekey='recaptcha.key'></div>
+				<div id="recaptcha"></div>
+				<p>By logging in you agree to our <a href="/terms" v-link="{ path: '/terms' }">Terms of Service</a> and <a href="/privacy" v-link="{ path: '/privacy' }">Privacy Policy</a>.</p>
 			</section>
 			<footer class='modal-card-foot'>
 				<a class='button is-primary' @click='submitModal()'>Submit</a>
@@ -44,8 +45,11 @@
 		},
 		ready: function () {
 			let _this = this;
-			lofig.get('recaptcha.key', function (key) {
-				_this.recaptcha.key = key;
+			lofig.get('recaptcha', function (obj) {
+				_this.recaptcha.key = obj.key;
+				grecaptcha.render('recaptcha', {
+					'sitekey' : _this.recaptcha.key
+				});
 			});
 		},
 		methods: {
@@ -55,6 +59,11 @@
 			submitModal: function () {
 				this.$dispatch('register');
 				this.toggleModal();
+			}
+		},
+		events: {
+			closeModal: function() {
+				this.$dispatch('toggleModal', 'register');
 			}
 		}
 	}

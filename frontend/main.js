@@ -2,12 +2,15 @@ import Vue from 'vue';
 import VueRouter from 'vue-router';
 import App from './App.vue';
 import auth from './auth';
+import io from './io';
 
 import NotFound from './components/404.vue';
 import Home from './components/pages/Home.vue';
 import Station from './components/Station/Station.vue';
 import Admin from './components/pages/Admin.vue';
 import News from './components/pages/News.vue';
+import Terms from './components/pages/Terms.vue';
+import Privacy from './components/pages/Privacy.vue';
 import User from './components/User/Show.vue';
 import Settings from './components/User/Settings.vue';
 import Login from './components/Modals/Login.vue';
@@ -19,11 +22,18 @@ let _this = this;
 
 lofig.folder = '../config/default.json';
 lofig.get('serverDomain', function(res) {
-	let socket = window.socket = io(res);
-	socket.on("ready", (status, role, username, userId) => {
-		auth.data(status, role, username, userId);
+	io.init(res);
+	io.getSocket((socket) => {
+		socket.on("ready", (status, role, username, userId) => {
+			auth.data(status, role, username, userId);
+		});
 	});
 });
+
+document.onkeydown = event => {
+    event = event || window.event;
+    if (event.keyCode === 27) router.app.$dispatch('closeModal');
+};
 
 router.beforeEach(transition => {
 	if (window.stationInterval) {
@@ -31,7 +41,7 @@ router.beforeEach(transition => {
 		window.stationInterval = 0;
 	}
 	if (window.socket) {
-		window.socket.removeAllListeners();
+		io.removeAllListeners();
 	}
 	if (transition.to.loginRequired || transition.to.adminRequired) {
 		auth.getStatus((authenticated, role) => {
@@ -50,6 +60,12 @@ router.map({
 	},
 	'*': {
 		component: NotFound
+	},
+	'/terms': {
+		component: Terms
+	},
+	'/privacy': {
+		component: Privacy
 	},
 	'/news': {
 		component: News

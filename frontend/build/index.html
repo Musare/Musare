@@ -13,21 +13,7 @@
 	<script src="/vendor/jquery.min.js"></script>
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.15.0/moment.min.js"></script>
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.4.8/socket.io.min.js"></script>
-	<script>
-		var lofig = {
-			folder: 'config/default.json',
-			get: function(query, callback) {
-				$.getJSON(this.folder, function(json) {
-					callback(json[query]);
-				});
-			},
-			has: function(query, callback) {
-				$.getJSON(this.folder, function(json) {
-					callback(!!json[query]);
-				});
-			}
-		};
-	</script>
+	<script type="text/javascript" src="https://cdn.rawgit.com/atjonathan/lofig/master/dist/lofig.min.js"></script>
 </head>
 <body>
 	<script src="/bundle.js"></script>
