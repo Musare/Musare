@@ -116,6 +116,7 @@
 			},
 			'handleSocketConnection': function () {
 				this.socketConnected = window.socketConnected;
+				console.log(123332222111);
 				this.$broadcast('handleSocketConnection');
 			},
 			'closeModal': function () {

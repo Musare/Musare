@@ -3,7 +3,7 @@
 		<main-header></main-header>
 		<div class="group">
 			<div class="group-title">Official Stations</div>
-			<div class="card" v-for="station in stations.official" v-link="{ path: '/official/' + station._id }" @click="this.$dispatch('joinStation', station._id)" :class="station.class">
+			<div class="card station-card" v-for="station in stations.official" v-link="{ path: '/official/' + station._id }" @click="this.$dispatch('joinStation', station._id)" :class="station.class">
 				<div class="card-image">
 					<figure class="image is-square">
 						<img :src="station.currentSong.thumbnail" onerror="this.src='/assets/notes.png'" />
@@ -28,7 +28,7 @@
 		</div>
 		<div class="group">
 			<div class="group-title">Community Stations <i class="material-icons ccs-button" @click="toggleModal('createCommunityStation')" v-if="$parent.loggedIn">add_circle_outline</i></div>
-			<div class="card" v-for="station in stations.community" v-link="{ path: '/community/' + station._id }" @click="this.$dispatch('joinStation', station._id)" :class="station.class">
+			<div class="card station-card" v-for="station in stations.community" v-link="{ path: '/community/' + station._id }" @click="this.$dispatch('joinStation', station._id)" :class="station.class">
 				<div class="card-image">
 					<figure class="image is-square">
 						<img :src="station.currentSong.thumbnail" onerror="this.src='/assets/notes.png'" />
@@ -173,7 +173,7 @@
 		min-height: 64px;
 	}
 
-	.card {
+	.station-card {
 		margin: 10px;
 		cursor: pointer;
 	}

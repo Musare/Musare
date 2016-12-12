@@ -24,6 +24,7 @@ lofig.get('serverDomain', res => {
 	socket.on("ready", (status, role, username, userId) => {
 		auth.data(status, role, username, userId);
 	});
+	window.socketConnected = true;
 	setInterval(() => {
 		if (!socket.connected) {
 			window.socketConnected = false;

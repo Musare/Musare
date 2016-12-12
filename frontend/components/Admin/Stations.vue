@@ -64,6 +64,15 @@
 							{{ genre }}
 							<button class='delete is-info' @click='removeGenre(index)'></button>
 						</span>
+						<label class='label'>Blacklisted Genres</label>
+						<p class='control has-addons'>
+							<input class='input' id='new-blacklisted-genre' type='text' placeholder='Blacklisted Genre'>
+							<a class='button is-info' @click='addBlacklistedGenre()'>Add blacklisted genre</a>
+						</p>
+						<span class='tag is-info' v-for='(index, genre) in newStation.blacklistedGenres' track-by='$index'>
+							{{ genre }}
+							<button class='delete is-info' @click='removeBlacklistedGenre(index)'></button>
+						</span>
 					</div>
 				</div>
 				<footer class='card-footer'>
@@ -82,14 +91,15 @@
 			return {
 				stations: [],
 				newStation: {
-					genres: []
+					genres: [],
+					blacklistedGenres: []
 				}
 			}
 		},
 		methods: {
 			createStation: function () {
 				let _this = this;
-				let { newStation: { _id, displayName, description, genres } } = this;
+				let { newStation: { _id, displayName, description, genres, blacklistedGenres } } = this;
 
 				if (_id == undefined) return Toast.methods.addToast('Field (YouTube ID) cannot be empty', 3000);
 				if (displayName == undefined) return Toast.methods.addToast('Field (Display Name) cannot be empty', 3000);
@@ -101,6 +111,7 @@
 					displayName,
 					description,
 					genres,
+					blacklistedGenres,
 				}, result => {
 					console.log(result);
 				});
@@ -111,13 +122,21 @@
 				});
 			},
 			addGenre: function () {
-				for (let z = 0; z < this.newStation.genres.length; z++) {
-					if (this.newStation.genres[z] == $('#new-genre').val()) return Toast.methods.addToast('Genre already exists', 3000);
-				}
-				if ($('#new-genre').val() !== '') this.newStation.genres.push($('#new-genre').val());
+				let genre = $('#new-genre').val().toLowerCase().trim();
+				if (this.newStation.genres.indexOf(genre) !== -1) return Toast.methods.addToast('Genre already exists', 3000);
+
+				if (genre) this.newStation.genres.push(genre);
 				else Toast.methods.addToast('Genre cannot be empty', 3000);
 			},
-			removeGenre: function (index) { this.newStation.genres.splice(index, 1); }
+			removeGenre: function (index) { this.newStation.genres.splice(index, 1); },
+			addBlacklistedGenre: function () {
+				let genre = $('#new-blacklisted-genre').val().toLowerCase().trim();
+				if (this.newStation.blacklistedGenres.indexOf(genre) !== -1) return Toast.methods.addToast('Genre already exists', 3000);
+
+				if (genre) this.newStation.blacklistedGenres.push(genre);
+				else Toast.methods.addToast('Genre cannot be empty', 3000);
+			},
+			removeBlacklistedGenre: function (index) { this.newStation.blacklistedGenres.splice(index, 1); }
 		},
 		ready: function () {
 			let _this = this;

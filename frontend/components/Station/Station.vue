@@ -469,7 +469,7 @@
 		events: {
 			'handleSocketConnection': function () {
 				if (this.$parent.socketConnected) {
-					this.joinStation(321);
+					this.joinStation();
 				}
 			}
 		},

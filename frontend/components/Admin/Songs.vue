@@ -91,19 +91,17 @@
 			},
 			addTag: function (type) {
 				if (type == 'genres') {
-					for (let z = 0; z < this.editing.song.genres.length; z++) {
-						if (this.editing.song.genres[z] == $('#new-genre').val()) return Toast.methods.addToast('Genre already exists', 3000);
-					}
-					if ($('#new-genre').val() !== '') {
-						this.editing.song.genres.push($('#new-genre').val());
+					let genre = $('#new-genre').val().toLowerCase().trim();
+					if (this.editing.song.genres.indexOf(genre) !== -1) return Toast.methods.addToast('Genre already exists', 3000);
+					if (genre) {
+						this.editing.song.genres.push(genre);
 						$('#new-genre').val('');
 					} else Toast.methods.addToast('Genre cannot be empty', 3000);
 				} else if (type == 'artists') {
-					for (let z = 0; z < this.editing.song.artists.length; z++) {
-						if (this.editing.song.artists[z] == $('#new-artist').val()) return Toast.methods.addToast('Artist already exists', 3000);
-					}
+					let artist = $('#new-artist').val();
+					if (this.editing.song.artists.indexOf(artist) !== -1) return Toast.methods.addToast('Artist already exists', 3000);
 					if ($('#new-artist').val() !== '') {
-						this.editing.song.artists.push($('#new-artist').val());
+						this.editing.song.artists.push(artist);
 						$('#new-artist').val('');
 					} else Toast.methods.addToast('Artist cannot be empty', 3000);
 				}
