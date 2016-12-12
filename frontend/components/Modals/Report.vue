@@ -64,122 +64,28 @@
 					</div>
 				</div>
 				<div class='edit-report-wrapper'>
-					<div class='columns'>
-						<div class='column'>
-							<label class='label'>Video</label>
-							<p class='control'>
+					<div class='columns is-multiline'>
+						<div class='column is-half' v-for='issue in issues'>
+							<label class='label'>{{ issue.name }}</label>
+							<p class='control' v-for='reason in issue.reasons' track-by='$index'>
 								<label class='checkbox'>
-									<input type='checkbox'>
-									Doesn't exist
-								</label>
-							</p>
-							<p class='control'>
-								<label class='checkbox'>
-									<input type='checkbox'>
-									It's Private
-								</label>
-							</p>
-							<p class='control'>
-								<label class='checkbox'>
-									<input type='checkbox'>
-									It's not available in my country
-								</label>
-							</p>
-						</div>
-						<div class='column'>
-							<label class='label'>Title</label>
-							<p class='control'>
-								<label class='checkbox'>
-									<input type='checkbox'>
-									Incorrect
-								</label>
-							</p>
-							<p class='control'>
-								<label class='checkbox'>
-									<input type='checkbox'>
-									Inappropriate
-								</label>
-							</p>
-						</div>
-					</div>
-					<div class='columns'>
-						<div class='column'>
-							<label class='label'>Duration</label>
-							<p class='control'>
-								<label class='checkbox'>
-									<input type='checkbox'>
-									Skips too soon
-								</label>
-							</p>
-							<p class='control'>
-								<label class='checkbox'>
-									<input type='checkbox'>
-									Skips too late
-								</label>
-							</p>
-							<p class='control'>
-								<label class='checkbox'>
-									<input type='checkbox'>
-									Starts too soon
-								</label>
-							</p>
-							<p class='control'>
-								<label class='checkbox'>
-									<input type='checkbox'>
-									Starts too late
-								</label>
-							</p>
-						</div>
-						<div class='column'>
-							<label class='label'>Artists</label>
-							<p class='control'>
-								<label class='checkbox'>
-									<input type='checkbox'>
-									Incorrect
-								</label>
-							</p>
-							<p class='control'>
-								<label class='checkbox'>
-									<input type='checkbox'>
-									Inappropriate
-								</label>
-							</p>
-						</div>
-					</div>
-					<div class='columns'>
-						<div class='column'>
-							<label class='label'>Thumbnail</label>
-							<p class='control'>
-								<label class='checkbox'>
-									<input type='checkbox'>
-									Incorrect
-								</label>
-							</p>
-							<p class='control'>
-								<label class='checkbox'>
-									<input type='checkbox'>
-									Inappropriate
-								</label>
-							</p>
-							<p class='control'>
-								<label class='checkbox'>
-									<input type='checkbox'>
-									Doesn't exist
+									<input type='checkbox' @click='toggleIssue(issue.name, reason)'>
+									{{ reason }}
 								</label>
 							</p>
 						</div>
 						<div class='column'>
 							<label class='label'>Other</label>
-							<textarea class='textarea' maxlength='400' placeholder='Any other details...' @keyup='updateCharactersRemaining()'></textarea>
+							<textarea class='textarea' maxlength='400' placeholder='Any other details...' @keyup='updateCharactersRemaining()' v-model='report.description'></textarea>
 							<div class='textarea-counter'>{{ charactersRemaining }}</div>
 						</div>
 					</div>
 				</div>
 			</section>
 			<footer class='modal-card-foot'>
-				<a class='button is-success' @click='save()'>
+				<a class='button is-success' @click='create()'>
 					<i class='material-icons save-changes'>done</i>
-					<span>&nbsp;Submit Report</span>
+					<span>&nbsp;Create</span>
 				</a>
 				<a class='button is-danger' @click='$parent.modals.report = !$parent.modals.report'>
 					<span>&nbsp;Cancel</span>
@@ -190,32 +96,99 @@
 </template>
 
 <script>
+	import { Toast } from 'vue-roaster';
+
 	export default {
 		data() {
 			return {
 				charactersRemaining: 400,
 				isPreviousSongActive: false,
 				isCurrentSongActive: true,
-				report: {}
+				report: {
+					songId: this.$parent.currentSong._id,
+					description: '',
+					issues: [
+						{ name: 'Video', reasons: [] },
+						{ name: 'Title', reasons: [] },
+						{ name: 'Duration', reasons: [] },
+						{ name: 'Artists', reasons: [] },
+						{ name: 'Thumbnail', reasons: [] }
+					],
+					createdBy: this.$parent.$parent.userId,
+					createdAt: Date.now()
+				},
+				issues: [
+					{
+						name: 'Video',
+						reasons: [
+							'Doesn\'t exist',
+							'It\'s private',
+							'It\'s not available in my country'
+						]
+					},
+					{
+						name: 'Title',
+						reasons: [
+							'Incorrect',
+							'Inappropriate'
+						]
+					},
+					{
+						name: 'Duration',
+						reasons: [
+							'Skips too soon',
+							'Skips too late',
+							'Starts too soon',
+							'Skips too late'
+						]
+					},
+					{
+						name: 'Artists',
+						reasons: [
+							'Incorrect',
+							'Inappropriate'
+						]
+					},
+					{
+						name: 'Thumbnail',
+						reasons: [
+							'Incorrect',
+							'Inappropriate',
+							'Doesn\'t exist'
+						]
+					}
+				]
 			}
 		},
 		methods: {
-			save: function () {
-				// this.socket.emit('reports.updateDisplayName', this.$parent.stationId, this.$parent.station.displayName, res => {
-				// 	if (res.status == 'success') return Toast.methods.addToast(res.message, 4000);
-				// 	Toast.methods.addToast(res.message, 8000);
-				// });
+			create: function () {
+				this.socket.emit('reports.create', this.report, res => {
+					Toast.methods.addToast(res.message, 4000);
+				});
 			},
 			updateCharactersRemaining: function () {
 				this.charactersRemaining = 400 - $('.textarea').val().length;
 			},
 			highlight: function (type) {
 				if (type == 'currentSong') {
+					this.report.songId = this.$parent.currentSong._id;
 					this.isPreviousSongActive = false;
 					this.isCurrentSongActive = true;
 				} else if (type == 'previousSong') {
+					this.report.songId = this.$parent.previousSong._id;
 					this.isCurrentSongActive = false;
 					this.isPreviousSongActive = true;
+				}
+			},
+			toggleIssue: function (name, reason) {
+				for (let z = 0; z < this.report.issues.length; z++) {
+					if (this.report.issues[z].name == name) {
+						if (this.report.issues[z].reasons.indexOf(reason) > -1) {
+							this.report.issues[z].reasons.splice(
+								this.report.issues[z].reasons.indexOf(reason), 1
+							);
+						} else this.report.issues[z].reasons.push(reason);
+					}
 				}
 			}
 		},
@@ -223,7 +196,16 @@
 			closeModal: function () {
 				this.$parent.toggleModal('report');
 			}
-		}
+		},
+		ready: function () {
+			let _this = this;
+			let socketInterval = setInterval(() => {
+				if (!!_this.$parent.socket) {
+					_this.socket = _this.$parent.socket;
+					clearInterval(socketInterval);
+				}
+			}, 100);
+		},
 	}
 </script>
 
