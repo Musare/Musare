@@ -42,18 +42,15 @@
 		},
 		ready: function() {
 			let _this = this;
-			let socketInterval = setInterval(() => {
-				if (!!_this.$parent.socket) {
-					_this.socket = _this.$parent.socket;
-					_this.socket.emit('users.findBySession', res => {
-						if (res.status == 'success') { _this.user = res.data; } else {
-							_this.$parent.isLoginActive = true;
-							Toast.methods.addToast('Your are currently not signed in', 3000);
-						}
-					});
-					clearInterval(socketInterval);
-				}
-			}, 100);
+			io.getSocket((socket) => {
+				_this.socket = socket;
+				_this.socket.emit('users.findBySession', res => {
+					if (res.status == 'success') { _this.user = res.data; } else {
+						_this.$parent.isLoginActive = true;
+						Toast.methods.addToast('Your are currently not signed in', 3000);
+					}
+				});
+			});
 		},
 		methods: {
 			changeEmail: function () {

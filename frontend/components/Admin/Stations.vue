@@ -85,6 +85,7 @@
 
 <script>
 	import { Toast } from 'vue-roaster';
+	import io from '../../io';
 
 	export default {
 		data() {
@@ -140,15 +141,12 @@
 		},
 		ready: function () {
 			let _this = this;
-			let socketInterval = setInterval(() => {
-				if (!!_this.$parent.$parent.socket) {
-					_this.socket = _this.$parent.$parent.socket;
-					_this.socket.emit('stations.index', data => {
+			io.getSocket((socket) => {
+				_this.socket = socket;
+				_this.socket.emit('stations.index', data => {
 						_this.stations = data.stations;
-					});
-					clearInterval(socketInterval);
-				}
-			}, 100);
+				});
+			});
 		}
 	}
 </script>

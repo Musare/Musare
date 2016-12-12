@@ -40,6 +40,8 @@
 </template>
 
 <script>
+	import io from '../../io';
+
 	export default {
 		data() {
 			return {
@@ -49,26 +51,23 @@
 		},
 		ready: function () {
 			let _this = this;
-			let socketInterval = setInterval(() => {
-				if (!!_this.$parent.socket) {
-					_this.socket = _this.$parent.socket;
-					_this.socket.emit('news.newest', res => {
-						_this.news = res.data;
-						if (_this.news) {
-							if (localStorage.getItem('whatIsNew')) {
-								if (parseInt(localStorage.getItem('whatIsNew')) < res.data.createdAt) {
-									this.toggleModal();
-									localStorage.setItem('whatIsNew', res.data.createdAt);
-								}
-							} else {
+			io.getSocket((socket) => {
+				_this.socket = socket;
+				_this.socket.emit('news.newest', res => {
+					_this.news = res.data;
+					if (_this.news) {
+						if (localStorage.getItem('whatIsNew')) {
+							if (parseInt(localStorage.getItem('whatIsNew')) < res.data.createdAt) {
 								this.toggleModal();
 								localStorage.setItem('whatIsNew', res.data.createdAt);
 							}
+						} else {
+							this.toggleModal();
+							localStorage.setItem('whatIsNew', res.data.createdAt);
 						}
-					});
-					clearInterval(socketInterval);
-				}
-			}, 100);
+					}
+				});
+			});
 		},
 		methods: {
 			toggleModal: function () {

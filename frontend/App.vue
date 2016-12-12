@@ -18,6 +18,7 @@
 	import RegisterModal from './components/Modals/Register.vue';
 	import CreateCommunityStation from './components/Modals/CreateCommunityStation.vue';
 	import auth from './auth';
+	import io from './io';
 
 	export default {
 		replace: false,
@@ -64,6 +65,12 @@
 				_this.role = role;
 				_this.username = username;
 				_this.userId = userId;
+			});
+			io.onConnect(() => {
+				_this.socketConnected = true;
+			});
+			io.onDisconnect(() => {
+				_this.socketConnected = false;
 			});
 			lofig.get('serverDomain', res => {
 				_this.serverDomain = res;
@@ -114,12 +121,7 @@
 						break;
 				}
 			},
-			'handleSocketConnection': function () {
-				this.socketConnected = window.socketConnected;
-				console.log(123332222111);
-				this.$broadcast('handleSocketConnection');
-			},
-			'closeModal': function () {
+			'closeModal': function() {
 				this.$broadcast('closeModal');
 			}
 		},

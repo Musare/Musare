@@ -38,6 +38,8 @@
 </template>
 
 <script>
+	import io from '../../io';
+
 	export default {
 		data() {
 			return {
@@ -46,15 +48,12 @@
 		},
 		ready: function () {
 			let _this = this;
-			let socketInterval = setInterval(() => {
-				if (!!_this.$parent.$parent.socket) {
-					_this.socket = _this.$parent.$parent.socket;
-					_this.socket.emit('stations.getPlaylist', _this.$parent.stationId, res => {
+			io.getSocket((socket) => {
+				_this.socket = socket;
+				_this.socket.emit('stations.getPlaylist', _this.$parent.stationId, res => {
 						if (res.status == 'success') _this.playlist = res.data;
-					});
-					clearInterval(socketInterval);
-				}
-			}, 100);
+				});
+			});
 		}
 	}
 </script>

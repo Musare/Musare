@@ -42,6 +42,7 @@
 	import { Toast } from 'vue-roaster';
 
 	import EditSong from '../Modals/EditSong.vue';
+	import io from '../../io';
 
 	export default {
 		components: { EditSong },
@@ -137,15 +138,12 @@
 		},
 		ready: function () {
 			let _this = this;
-			let socketInterval = setInterval(() => {
-				if (!!_this.$parent.$parent.socket) {
-					_this.socket = _this.$parent.$parent.socket;
-					_this.socket.emit('queueSongs.index', data => {
-						_this.songs = data;
-					});
-					clearInterval(socketInterval);
-				}
-			}, 100);
+			io.getSocket((socket) => {
+				_this.socket = socket;
+				_this.socket.emit('queueSongs.index', data => {
+					_this.songs = data;
+				});
+			});
 
 			this.video.player = new YT.Player('player', {
 				height: 315,

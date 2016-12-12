@@ -2,6 +2,7 @@ import Vue from 'vue';
 import VueRouter from 'vue-router';
 import App from './App.vue';
 import auth from './auth';
+import io from './io';
 
 import NotFound from './components/404.vue';
 import Home from './components/pages/Home.vue';
@@ -17,23 +18,16 @@ import Login from './components/Modals/Login.vue';
 Vue.use(VueRouter);
 
 let router = new VueRouter({ history: true });
+let _this = this;
 
 lofig.folder = '../config/default.json';
-lofig.get('serverDomain', res => {
-	let socket = window.socket = io(res);
-	socket.on("ready", (status, role, username, userId) => {
-		auth.data(status, role, username, userId);
+lofig.get('serverDomain', function(res) {
+	io.init(res);
+	io.getSocket((socket) => {
+		socket.on("ready", (status, role, username, userId) => {
+			auth.data(status, role, username, userId);
+		});
 	});
-	window.socketConnected = true;
-	setInterval(() => {
-		if (!socket.connected) {
-			window.socketConnected = false;
-			router.app.$dispatch("handleSocketConnection");
-		} else if (!window.socketConnected && socket.connected) {
-			window.socketConnected = true;
-			router.app.$dispatch("handleSocketConnection");
-		}
-	}, 10000);
 });
 
 document.onkeydown = event => {
@@ -47,7 +41,7 @@ router.beforeEach(transition => {
 		window.stationInterval = 0;
 	}
 	if (window.socket) {
-		window.socket.removeAllListeners();
+		io.removeAllListeners();
 	}
 	if (transition.to.loginRequired || transition.to.adminRequired) {
 		auth.getStatus((authenticated, role) => {

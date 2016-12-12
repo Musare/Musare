@@ -58,6 +58,7 @@
 
 <script>
 	import { Toast } from 'vue-roaster';
+	import io from '../../io';
 
 	export default {
 		methods: {
@@ -88,12 +89,9 @@
 		},
 		ready: function () {
 			let _this = this;
-			let socketInterval = setInterval(() => {
-				if (!!_this.$parent.$parent.socket) {
-					_this.socket = _this.$parent.$parent.socket;
-					clearInterval(socketInterval);
-				}
-			}, 100);
+			io.getSocket((socket) => {
+				_this.socket = socket;
+			});
 		},
 		events: {
 			closeModal: function() {

@@ -59,6 +59,7 @@
 	import MainHeader from '../MainHeader.vue';
 	import MainFooter from '../MainFooter.vue';
 	import auth from '../../auth';
+	import io from '../../io';
 
 	export default {
 		data() {
@@ -77,21 +78,26 @@
 		ready() {
 			let _this = this;
 			auth.getStatus((authenticated, role, username, userId) => {
-				_this.socket = _this.$parent.socket;
-				if (_this.socket.connected) {
-					this.init();
-				}
-				_this.socket.on('event:stations.created', station => {
-					console.log("CREATED!!!", station);
-					if (!station.currentSong) station.currentSong = {thumbnail: '/assets/notes.png'};
-					if (station.privacy !== 'public') {
-						station.class = {'station-red': true}
-					} else if (station.type === 'community') {
-						if (station.owner === userId) {
-							station.class = {'station-blue': true}
-						}
+				io.getSocket((socket) => {
+					_this.socket = socket;
+					if (_this.socket.connected) {
+						_this.init();
 					}
-					_this.stations[station.type].push(station);
+					io.onConnect(() => {
+						_this.init();
+					});
+					_this.socket.on('event:stations.created', station => {
+						console.log("CREATED!!!", station);
+						if (!station.currentSong) station.currentSong = {thumbnail: '/assets/notes.png'};
+						if (station.privacy !== 'public') {
+							station.class = {'station-red': true}
+						} else if (station.type === 'community') {
+							if (station.owner === userId) {
+								station.class = {'station-blue': true}
+							}
+						}
+						_this.stations[station.type].push(station);
+					});
 				});
 			});
 		},
@@ -120,13 +126,6 @@
 					});
 				});
 				_this.socket.emit("apis.joinRoom", 'home', () => {});
-			}
-		},
-		events: {
-			'handleSocketConnection': function() {
-				if (this.$parent.socketConnected) {
-					this.init();
-				}
 			}
 		},
 		components: { MainHeader, MainFooter }
