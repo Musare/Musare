@@ -11,7 +11,7 @@
 				</div>
 				<div class="card-content">
 					<div class="media">
-						<div class="media-left">
+						<div class="media-left displayName">
 							<h5>{{ station.displayName }}</h5>
 						</div>
 						<div class="media-content"></div>
@@ -36,7 +36,7 @@
 				</div>
 				<div class="card-content">
 					<div class="media">
-						<div class="media-left">
+						<div class="media-left displayName">
 							<h5>{{ station.displayName }}</h5>
 						</div>
 						<div class="media-content"></div>
@@ -229,7 +229,7 @@
 		overflow: hidden;
 	}
 
-	.media-left {
+	.displayName {
 		word-wrap: break-word;
     	width: 80%;
 	}

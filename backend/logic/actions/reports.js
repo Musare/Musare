@@ -12,7 +12,7 @@ module.exports = {
 		});
 	}),
 
-	add: hooks.loginRequired((session, report, cb) => {
+	create: hooks.loginRequired((session, report, cb) => {
 		console.log(report);
 	})
 

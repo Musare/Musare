@@ -43,6 +43,11 @@
 		</span>
 
 		<div class="nav-right nav-menu" :class="{ 'is-active': isMobile }">
+			<a v-if='$parent.$parent.loggedIn' class='nav-item' href='#' @click='$parent.modals.report = !$parent.modals.report'>
+				<span class='icon'>
+					<i class='material-icons'>report</i>
+				</span>
+			</a>
 			<a class='nav-item' href='#' @click='$parent.sidebars.queue = !$parent.sidebars.queue' v-if='$parent.station.partyMode === true'>
 				<span class='icon'>
 					<i class='material-icons'>queue_music</i>

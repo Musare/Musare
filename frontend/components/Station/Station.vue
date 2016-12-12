@@ -6,6 +6,7 @@
 	<edit-playlist v-if='modals.editPlaylist'></edit-playlist>
 	<create-playlist v-if='modals.createPlaylist'></create-playlist>
 	<edit-station v-if='modals.editStation'></edit-station>
+	<report v-if='modals.report'></report>
 
 	<queue-sidebar v-if='sidebars.queue'></queue-sidebar>
 	<playlist-sidebar v-if='sidebars.playlist'></playlist-sidebar>
@@ -71,6 +72,7 @@
 	import EditPlaylist from '../Modals/Playlists/Edit.vue';
 	import CreatePlaylist from '../Modals/Playlists/Create.vue';
 	import EditStation from '../Modals/EditStation.vue';
+	import Report from '../Modals/Report.vue';
 
 	import QueueSidebar from '../Sidebars/Queue.vue';
 	import PlaylistSidebar from '../Sidebars/Playlist.vue';
@@ -84,18 +86,20 @@
 			return {
 				type: '',
 				playerReady: false,
+				previousSong: {},
 				currentSong: {},
 				player: undefined,
 				timePaused: 0,
 				paused: false,
-				timeElapsed: "0:00",
+				timeElapsed: '0:00',
 				liked: false,
 				disliked: false,
 				modals: {
 					addSongToQueue: false,
 					editPlaylist: false,
 					createPlaylist: false,
-					editStation: false
+					editStation: false,
+					report: false
 				},
 				sidebars: {
 					queue: false,
@@ -368,6 +372,7 @@
 					}
 
 					_this.socket.on('event:songs.next', data => {
+						_this.previousSong = _this.currentSong;
 						_this.currentSong = (data.currentSong) ? data.currentSong : {};
 						_this.startedAt = data.startedAt;
 						_this.paused = data.paused;
@@ -462,13 +467,24 @@
 			$("#volumeSlider").val(volume);
 		},
 		events: {
-			'handleSocketConnection': function() {
+			'handleSocketConnection': function () {
 				if (this.$parent.socketConnected) {
 					this.joinStation(321);
 				}
 			}
 		},
-		components: { OfficialHeader, CommunityHeader, SongQueue, EditPlaylist, CreatePlaylist, EditStation, QueueSidebar, PlaylistSidebar, UsersSidebar }
+		components: {
+			OfficialHeader,
+			CommunityHeader,
+			SongQueue,
+			EditPlaylist,
+			CreatePlaylist,
+			EditStation,
+			Report,
+			QueueSidebar,
+			PlaylistSidebar,
+			UsersSidebar
+		}
 	}
 </script>
 
