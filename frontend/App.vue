@@ -56,7 +56,7 @@
 				if (event.which == 13) b(); return false;
 			}
 		},
-		ready() {
+		readyL function () {
 			let _this = this;
 			auth.getStatus((authenticated, role, username, userId) => {
 				_this.socket = window.socket;
@@ -82,9 +82,7 @@
 								date.setTime(new Date().getTime() + (2 * 365 * 24 * 60 * 60 * 1000));
 								document.cookie = `SID=${result.SID}; expires=${date.toGMTString()}; path=/`;
 								location.reload();
-							} else {
-								_this.$router.go('/login');
-							}
+							} else _this.$router.go('/login');
 						}, 4000);
 					} else Toast.methods.addToast(result.message, 8000);
 				});
@@ -100,9 +98,7 @@
 						Toast.methods.addToast(`You have been successfully logged in`, 2000);
 						_this.$router.go('/');
 						location.reload();
-					} else {
-						Toast.methods.addToast(result.message, 2000);
-					}
+					} else Toast.methods.addToast(result.message, 2000);
 				});
 			},
 			'toggleModal': function (type) {
@@ -118,11 +114,11 @@
 						break;
 				}
 			},
-			'handleSocketConnection': function() {
+			'handleSocketConnection': function () {
 				this.socketConnected = window.socketConnected;
 				this.$broadcast('handleSocketConnection');
 			},
-			'closeModal': function() {
+			'closeModal': function () {
 				this.$broadcast('closeModal');
 			}
 		},
