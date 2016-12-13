@@ -2,7 +2,8 @@
 
 const request = require('request'),
 	  config  = require('config'),
-		utils = require('../utils');
+		utils = require('../utils'),
+		hooks = require('./hooks');
 
 module.exports = {
 
@@ -40,6 +41,13 @@ module.exports = {
 			utils.socketJoinRoom(session.socketId, page);
 		}
 		cb({});
-	}
+	},
+
+	joinAdminRoom: hooks.adminRequired((session, page, cb) => {
+		if (page === 'queue' || page === 'songs' || page === 'stations' || page === 'reports') {
+			utils.socketJoinRoom(session.socketId, `admin.${page}`);
+		}
+		cb({});
+	})
 
 };

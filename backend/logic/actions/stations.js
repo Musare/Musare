@@ -35,10 +35,15 @@ cache.sub('station.voteSkipSong', stationId => {
 	utils.emitToRoom(`station.${stationId}`, "event:song.voteSkipSong");
 });
 
+cache.sub('station.remove', stationId => {
+	utils.emitToRoom('admin.stations', 'event:admin.station.removed', stationId);
+});
+
 cache.sub('station.create', stationId => {
 	stations.initializeStation(stationId, (err, station) => {
 		console.log("*************", err, station);
 		//TODO Emit to admin station page
+		utils.emitToRoom('admin.stations', 'event:admin.station.added', station);
 
 		// TODO If community, check if on whitelist
 		console.log("*************", station.privacy);
@@ -391,6 +396,7 @@ module.exports = {
 			console.log(err, stationId);
 			if (err) return cb({status: 'failure', message: 'Something went wrong when deleting that station.'});
 			cache.hdel('stations', stationId, () => {
+				cache.pub('station.remove', stationId);
 				return cb({ status: 'success', message: 'Station successfully removed' });
 			});
 		});
