@@ -114,7 +114,7 @@
 					genres,
 					blacklistedGenres,
 				}, result => {
-					console.log(result);
+					// Toast
 				});
 			},
 			removeStation: function (index) {

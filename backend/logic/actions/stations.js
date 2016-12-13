@@ -37,26 +37,19 @@ cache.sub('station.voteSkipSong', stationId => {
 
 cache.sub('station.create', stationId => {
 	stations.initializeStation(stationId, (err, station) => {
-		console.log("*************", err, station);
+		if (err) console.error(err);
 		//TODO Emit to admin station page
-
 		// TODO If community, check if on whitelist
-		console.log("*************", station.privacy);
 		if (station.privacy === 'public') utils.emitToRoom('home', "event:stations.created", station);
 		else {
 			let sockets = utils.getRoomSockets('home');
-			console.log("*************", sockets.length);
 			for (let socketId in sockets) {
 				let socket = sockets[socketId];
 				let session = sockets[socketId].session;
-				console.log("*************", session);
 				if (session.sessionId) {
 					cache.hget('sessions', session.sessionId, (err, session) => {
-						console.log("*************", err, session);
 						if (!err && session) {
-							console.log("*************");
 							db.models.user.findOne({_id: session.userId}, (err, user) => {
-								console.log("*************", err, user.role, station.type, station.owner, session.userId);
 								if (user.role === 'admin') socket.emit("event:stations.created", station);
 								else if (station.type === "community" && station.owner === session.userId) socket.emit("event:stations.created", station);
 							});
@@ -370,7 +363,6 @@ module.exports = {
 				if (station.paused) {
 					station.paused = false;
 					station.timePaused += (Date.now() - station.pausedAt);
-					console.log("&&&", station.timePaused, station.pausedAt, Date.now(), station.timePaused);
 					db.models.station.update({_id: stationId}, {$set: {paused: false}, $inc: {timePaused: Date.now() - station.pausedAt}}, () => {
 						stations.updateStation(stationId, (err, station) => {
 							cache.pub('station.resume', stationId);
@@ -388,7 +380,6 @@ module.exports = {
 
 	remove: hooks.ownerRequired((session, stationId, cb) => {
 		db.models.station.remove({ _id: stationId }, (err) => {
-			console.log(err, stationId);
 			if (err) return cb({status: 'failure', message: 'Something went wrong when deleting that station.'});
 			cache.hdel('stations', stationId, () => {
 				return cb({ status: 'success', message: 'Station successfully removed' });
@@ -481,7 +472,6 @@ module.exports = {
 					} else cont(song);
 					function cont(song) {
 						db.models.station.update({_id: stationId}, {$push: {queue: song}}, (err) => {
-							console.log(err);
 							if (err) return cb({'status': 'failure', 'message': 'Something went wrong.'});
 							stations.updateStation(stationId, (err, station) => {
 								if (err) return cb(err);

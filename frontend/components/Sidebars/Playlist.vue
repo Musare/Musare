@@ -50,7 +50,6 @@
 			},
 			isNotSelected: function(id) {
 				let _this = this;
-				console.log(_this.$parent.station);
 				//TODO Also change this once it changes for a station
 				if (_this.$parent.station && _this.$parent.station.privatePlaylist === id) return false;
 				return true;

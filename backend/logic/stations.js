@@ -43,14 +43,11 @@ module.exports = {
 	},
 
 	initializeStation: function(stationId, cb) {
-		console.log(112233, stationId, cb);
 		if (typeof cb !== 'function') cb = ()=>{};
 		let _this = this;
 		_this.getStation(stationId, (err, station) => {
 			if (!err) {
-				console.log("###");
 				if (station) {
-					console.log("###1");
 					let notification = notifications.subscribe(`stations.nextSong?id=${station._id}`, _this.skipStation(station._id), true);
 					if (!station.paused ) {
 						/*if (!station.startedAt) {
@@ -62,9 +59,7 @@ module.exports = {
 							let timeLeft = ((station.currentSong.duration * 1000) - (Date.now() - station.startedAt - station.timePaused));
 							if (isNaN(timeLeft)) timeLeft = -1;
 							if (station.currentSong.duration * 1000 < timeLeft || timeLeft < 0) {
-								console.log("Test");
 								this.skipStation(station._id)((err, station) => {
-									console.log(45, err, station);
 									cb(err, station);
 								});
 							} else {
@@ -73,7 +68,6 @@ module.exports = {
 							}
 						} else {
 							_this.skipStation(station._id)((err, station) => {
-								console.log(47, err, station);
 								cb(err, station);
 							});
 						}
@@ -101,7 +95,6 @@ module.exports = {
 									let found = false;
 									song.genres.forEach((songGenre) => {
 										if (station.blacklistedGenres.indexOf(songGenre) !== -1) found = true;
-										console.log(songGenre, station.blacklistedGenres, station.blacklistedGenres.indexOf(songGenre), found);
 									});
 									if (!found) {
 										songList.push(song._id);
@@ -110,9 +103,7 @@ module.exports = {
 							});
 						}
 						genresDone.push(genre);
-						if (genresDone.length === station.genres.length) {
-							next();
-						}
+						if (genresDone.length === station.genres.length) next();
 					});
 				});
 			},
@@ -147,14 +138,12 @@ module.exports = {
 
 			(station, next) => {
 				if (station) return next(true, station);
-
 				db.models.station.findOne({ _id: stationId }, next);
 			},
 
 			(station, next) => {
 				if (station) {
 					station = cache.schemas.station(station);
-					console.log(1234321, stationId);
 					cache.hset('stations', stationId, station);
 					next(true, station);
 				} else next('Station not found.');
@@ -162,7 +151,6 @@ module.exports = {
 
 		], (err, station) => {
 			if (err && err !== true) cb(err);
-
 			cb(null, station);
 		});
 	},
@@ -176,7 +164,6 @@ module.exports = {
 
 			(station, next) => {
 				if (!station) return next('Station not found.');
-				console.log(123444321, stationId);
 				cache.hset('stations', stationId, station, (err) => {
 					if (err) return next(err);
 					next(null, station);
@@ -185,7 +172,6 @@ module.exports = {
 
 		], (err, station) => {
 			if (err && err !== true) cb(err);
-
 			cb(null, station);
 		});
 	},
@@ -194,17 +180,12 @@ module.exports = {
 		let _this = this;
 		return (cb) => {
 			if (typeof cb !== 'function') cb = ()=>{};
-			console.log("###2");
-			console.log("NOTIFICATION!!!");
 			_this.getStation(stationId, (err, station) => {
-				console.log("###3");
 				if (station) {
-					console.log("###4");
 					// notify all the sockets on this station to go to the next song
 					async.waterfall([
 
 						(next) => {
-							console.log("###5");
 							if (station.type === "official") {
 								if (station.playlist.length > 0) {
 									function func() {
@@ -238,9 +219,7 @@ module.exports = {
 										} else {
 											db.models.station.update({_id: station._id}, {$set: {currentSongIndex: 0}}, (err) => {
 												_this.updateStation(station._id, (err, station) => {
-													console.log(12345678, err, station);
 													_this.calculateSongForStation(station, (err, newPlaylist) => {
-														console.log('New playlist: ', newPlaylist);
 														if (!err) {
 															songs.getSong(newPlaylist[0], (err, song) => {
 																let $set = {};
@@ -314,9 +293,7 @@ module.exports = {
 							} else {
 								if (station.partyMode === true) {
 									if (station.queue.length > 0) {
-										console.log("##");
 										db.models.station.update({_id: stationId}, {$pull: {queue: {songId: station.queue[0]._id}}}, (err) => {
-											console.log("##1", err);
 											if (err) return next(err);
 											let $set = {};
 											$set.currentSong = station.queue[0];
@@ -328,21 +305,16 @@ module.exports = {
 											next(null, $set);
 										});
 									} else {
-										console.log("##2");
 										next(null, {currentSong: null});
 									}
 								} else {
 									db.models.playlist.findOne({_id: station.privatePlaylist}, (err, playlist) => {
-										console.log(station.privatePlaylist, err, playlist);
 										if (err || !playlist) return next(null, {currentSong: null});
 										playlist = playlist.songs;
 										if (playlist.length > 0) {
 											let $set = {};
-											if (station.currentSongIndex < playlist.length - 1) {
-												$set.currentSongIndex = station.currentSongIndex + 1;
-											} else {
-												$set.currentSongIndex = 0;
-											}
+											if (station.currentSongIndex < playlist.length - 1) $set.currentSongIndex = station.currentSongIndex + 1;
+											else $set.currentSongIndex = 0;
 											songs.getSong(playlist[$set.currentSongIndex]._id, (err, song) => {
 												if (!err && song) {
 													$set.currentSong = {
@@ -369,23 +341,17 @@ module.exports = {
 												$set.timePaused = 0;
 												next(null, $set);
 											});
-										} else {
-											next(null, {currentSong: null});
-										}
+										} else next(null, {currentSong: null});
 									});
 								}
 							}
 						},
 
 						($set, next) => {
-							console.log("$set", $set);
 							db.models.station.update({_id: station._id}, {$set}, (err) => {
-								console.log("##2.5", err);
 								_this.updateStation(station._id, (err, station) => {
-									console.log("##2.6", err);
-									if (station.type === 'community' && station.partyMode === true) {
+									if (station.type === 'community' && station.partyMode === true)
 										cache.pub('station.queueUpdate', stationId);
-									}
 									next(null, station);
 								});
 							});
@@ -393,7 +359,6 @@ module.exports = {
 
 
 					], (err, station) => {
-						console.log("##3", err);
 						if (!err) {
 							if (station.currentSong !== null && station.currentSong._id !== undefined) {
 								station.currentSong.skipVotes = 0;
@@ -406,12 +371,10 @@ module.exports = {
 							});
 							if (station.currentSong !== null && station.currentSong._id !== undefined) {
 								utils.socketsJoinSongRoom(utils.getRoomSockets(`station.${station._id}`), `song.${station.currentSong._id}`);
-								console.log("NEXT SONG!!!", station.currentSong);
 								if (!station.paused) {
 									notifications.schedule(`stations.nextSong?id=${station._id}`, station.currentSong.duration * 1000);
 								}
 							} else {
-								console.log("22", !!(station.currentSong));
 								utils.socketsLeaveSongRooms(utils.getRoomSockets(`station.${station._id}`), `song.${station.currentSong._id}`);
 							}
 							cb(null, station);

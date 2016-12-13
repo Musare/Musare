@@ -75,7 +75,6 @@ module.exports = {
 				newSong.acceptedBy = userId;
 				newSong.acceptedAt = Date.now();
 				if (!existingSong) newSong.save(err => {
-					console.log(err, 1);
 					if (err) console.error(err);
 					else cb({ status: 'success', message: 'Song has been moved from Queue' })
 				});
@@ -93,7 +92,6 @@ module.exports = {
 				if (!err) {
 					db.models.user.update({_id: userId}, {$push: {liked: songId}, $pull: {disliked: songId}}, err => {
 						if (!err) {
-							console.log(JSON.stringify({ songId, userId: userId }));
 							songs.updateSong(songId, (err, song) => {});
 							cache.pub('song.like', JSON.stringify({ songId, userId: session.userId, undisliked: (dislikes === -1) }));
 						} else db.models.song.update({ _id: songId }, { $inc: { likes: -1, dislikes: -dislikes } }, err => {

@@ -13,19 +13,19 @@ export default {
 		else callbacks.push(cb);
 	},
 
-	onConnect: function(cb) {
+	onConnect: (cb) => {
 		onConnectCallbacks.push(cb);
 	},
 
-	onDisconnect: function(cb) {
+	onDisconnect: (cb) => {
 		onDisconnectCallbacks.push(cb);
 	},
 
-	onConnectError: function(cb) {
+	onConnectError: (cb) => {
 		onConnectErrorCallbacks.push(cb);
 	},
 
-	removeAllListeners: function() {
+	removeAllListeners: function () {
 		Object.keys(this.socket._callbacks).forEach((id) => {
 			if (id.indexOf("$event:song") !== -1) {
 				delete this.socket._callbacks[id];
@@ -37,21 +37,18 @@ export default {
 		this.socket = window.socket = io(url);
 		this.socket.on('connect', () => {
 			// Connect
-			console.log("SOCKET.IO CONNECTED");
 			onConnectCallbacks.forEach((cb) => {
 				cb();
 			});
 		});
 		this.socket.on('disconnect', () => {
 			// Disconnect
-			console.log("SOCKET.IO DISCONNECTED");
 			onDisconnectCallbacks.forEach((cb) => {
 				cb();
 			});
 		});
 		this.socket.on('connect_error', () => {
 			// Connect error
-			console.log("SOCKET.IO ERROR WHILE CONNECTING");
 			onConnectErrorCallbacks.forEach((cb) => {
 				cb();
 			});

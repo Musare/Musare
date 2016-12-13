@@ -87,7 +87,6 @@
 						_this.init();
 					});
 					_this.socket.on('event:stations.created', station => {
-						console.log("CREATED!!!", station);
 						if (!station.currentSong) station.currentSong = {thumbnail: '/assets/notes.png'};
 						if (station.privacy !== 'public') {
 							station.class = {'station-red': true}
@@ -113,9 +112,7 @@
 						_this.stations.official = [];
 						if (data.status === "success")  data.stations.forEach(station => {
 							if (!station.currentSong) station.currentSong = {thumbnail: '/assets/notes.png'};
-							console.log(station.privacy);
 							if (station.privacy !== 'public') {
-								console.log(123);
 								station.class = {'station-red': true}
 							} else if (station.type === 'community') {
 								if (station.owner === userId) {
