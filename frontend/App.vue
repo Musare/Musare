@@ -54,7 +54,9 @@
 				});
 			},
 			'submitOnEnter': (cb, event) => {
-				if (event.which == 13) b(); return false;
+				if (event.which == 13) {
+					cb();
+				}
 			}
 		},
 		ready: function () {
