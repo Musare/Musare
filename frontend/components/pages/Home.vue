@@ -6,7 +6,7 @@
 			<div class="card station-card" v-for="station in stations.official" v-link="{ path: '/official/' + station._id }" @click="this.$dispatch('joinStation', station._id)" :class="station.class">
 				<div class="card-image">
 					<figure class="image is-square">
-						<img :src="station.currentSong.thumbnail" onerror="this.src='/assets/notes.png'" />
+						<img :src="station.currentSong.thumbnail" onerror="this.src='/assets/notes-transparent.png'" />
 					</figure>
 				</div>
 				<div class="card-content">
@@ -31,7 +31,7 @@
 			<div class="card station-card" v-for="station in stations.community" v-link="{ path: '/community/' + station._id }" @click="this.$dispatch('joinStation', station._id)" :class="station.class">
 				<div class="card-image">
 					<figure class="image is-square">
-						<img :src="station.currentSong.thumbnail" onerror="this.src='/assets/notes.png'" />
+						<img :src="station.currentSong.thumbnail" onerror="this.src='/assets/notes-transparent.png'" />
 					</figure>
 				</div>
 				<div class="card-content">
@@ -87,7 +87,7 @@
 						_this.init();
 					});
 					_this.socket.on('event:stations.created', station => {
-						if (!station.currentSong) station.currentSong = {thumbnail: '/assets/notes.png'};
+						if (!station.currentSong) station.currentSong = {thumbnail: '/assets/notes-transparent.png'};
 						if (station.privacy !== 'public') {
 							station.class = {'station-red': true}
 						} else if (station.type === 'community') {
@@ -111,7 +111,7 @@
 						_this.stations.community = [];
 						_this.stations.official = [];
 						if (data.status === "success")  data.stations.forEach(station => {
-							if (!station.currentSong) station.currentSong = {thumbnail: '/assets/notes.png'};
+							if (!station.currentSong) station.currentSong = {thumbnail: '/assets/notes-transparent.png'};
 							if (station.privacy !== 'public') {
 								station.class = {'station-red': true}
 							} else if (station.type === 'community') {

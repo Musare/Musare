@@ -2,7 +2,7 @@
 	<div v-if="isUser">
 		<main-header></main-header>
 		<div class="container">
-			<img class="avatar" src="/assets/color-wb.png"/>
+			<img class="avatar" src="/assets/notes.png"/>
 			<h2 class="has-text-centered username">@{{user.username}}</h2>
 			<div class="admin-functionality" v-if="user.role == 'admin'">
 				<a class="button is-small is-info is-outlined" @click="changeRank('admin')" v-if="user.role == 'default'">Promote to Admin</a>

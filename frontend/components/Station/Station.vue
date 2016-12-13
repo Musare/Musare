@@ -59,7 +59,7 @@
 						</div>
 					</div>
 					<div class="column is-4-desktop is-12-mobile" v-if="!simpleSong">
-						<img class="image" id="song-thumbnail" style="margin-top: 10px !important" :src="currentSong.thumbnail" alt="Song Thumbnail" onerror="this.src='/assets/notes.png'" />
+						<img class="image" id="song-thumbnail" style="margin-top: 10px !important" :src="currentSong.thumbnail" alt="Song Thumbnail" onerror="this.src='/assets/notes-transparent.png'" />
 					</div>
 				</div>
 			</div>
