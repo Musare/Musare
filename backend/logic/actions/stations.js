@@ -13,6 +13,11 @@ const stations = require('../stations');
 const songs = require('../songs');
 const hooks = require('./hooks');
 
+cache.sub('privatePlaylist.selected', data => {
+	console.log(data);
+	utils.emitToRoom(`station.${data.stationId}`, "event:privatePlaylist.selected", data.playlistId);
+});
+
 cache.sub('station.pause', stationId => {
 	utils.emitToRoom(`station.${stationId}`, "event:stations.pause");
 });
@@ -214,7 +219,8 @@ module.exports = {
 								displayName: station.displayName,
 								privacy: station.privacy,
 								partyMode: station.partyMode,
-								owner: station.owner
+								owner: station.owner,
+								privatePlaylist: station.privatePlaylist
 							}
 						});
 					}
@@ -546,6 +552,7 @@ module.exports = {
 							stations.updateStation(stationId, (err, station) => {
 								if (err) return cb(err);
 								stations.skipStation(stationId)();
+								cache.pub('privatePlaylist.selected', {playlistId, stationId});
 								cb({'status': 'success', 'message': 'Playlist selected.'});
 							});
 						});

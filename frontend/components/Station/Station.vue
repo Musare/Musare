@@ -462,6 +462,12 @@
 						this.currentSong.skipVotes++;
 					}
 				});
+
+				_this.socket.on('event:privatePlaylist.selected', (playlistId) => {
+					if (this.type === 'community') {
+						this.station.privatePlaylist = playlistId;
+					}
+				});
 			});
 
 			let volume = parseInt(localStorage.getItem("volume"));
