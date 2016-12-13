@@ -4,14 +4,14 @@
 			<a class='nav-item logo' href='#' v-link='{ path: "/" }' @click='this.$dispatch("leaveStation", title)'>
 				Musare
 			</a>
-			<a v-if='$parent.$parent.loggedIn' class='nav-item' href='#' @click='$parent.modals.report = !$parent.modals.report'>
-				<span class='icon'>
-					<i class='material-icons'>report</i>
-				</span>
-			</a>
 			<a class='nav-item' href='#' v-if='isOwner()' @click='$parent.toggleModal("editStation")'>
 				<span class='icon'>
 					<i class='material-icons'>settings</i>
+				</span>
+			</a>
+			<a v-if='$parent.$parent.loggedIn' class='nav-item' href='#' @click='$parent.modals.report = !$parent.modals.report'>
+				<span class='icon'>
+					<i class='material-icons'>report</i>
 				</span>
 			</a>
 			<a v-if='isOwner()' class='nav-item' href='#' @click='$parent.skipStation()'>
