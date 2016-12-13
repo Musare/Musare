@@ -495,6 +495,10 @@
 		text-align: center;
 	}
 
+	.stationDisplayName {
+		color: white !important;
+	}
+
 	.slideout {
 		top: 50px;
 		height: 100%;
