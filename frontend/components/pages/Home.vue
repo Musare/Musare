@@ -107,27 +107,28 @@
 			},
 			init: function() {
 				let _this = this;
-				_this.socket.emit("stations.index", data => {
-					_this.stations.community = [];
-					_this.stations.official = [];
-					if (data.status === "success")  data.stations.forEach(station => {
-						if (!station.currentSong) station.currentSong = { thumbnail: '/assets/notes.png' };
-						console.log(station.privacy);
-						if (station.privacy !== 'public') {
-							console.log(123);
-							station.class = {'station-red': true}
-						} else if (station.type === 'community') {
-							auth.getStatus((authenticated, role, username, userId) => {
+				auth.getStatus((authenticated, role, username, userId) => {
+					_this.socket.emit("stations.index", data => {
+						_this.stations.community = [];
+						_this.stations.official = [];
+						if (data.status === "success")  data.stations.forEach(station => {
+							if (!station.currentSong) station.currentSong = {thumbnail: '/assets/notes.png'};
+							console.log(station.privacy);
+							if (station.privacy !== 'public') {
+								console.log(123);
+								station.class = {'station-red': true}
+							} else if (station.type === 'community') {
 								if (station.owner === userId) {
 									station.class = {'station-blue': true}
 								}
-							});
-						}
-						if (station.type == 'official') _this.stations.official.push(station);
-						else _this.stations.community.push(station);
+							}
+							if (station.type == 'official') _this.stations.official.push(station);
+							else _this.stations.community.push(station);
+						});
+					});
+					_this.socket.emit("apis.joinRoom", 'home', () => {
 					});
 				});
-				_this.socket.emit("apis.joinRoom", 'home', () => {});
 			}
 		},
 		components: { MainHeader, MainFooter }

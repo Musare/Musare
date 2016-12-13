@@ -144,7 +144,7 @@
 			io.getSocket((socket) => {
 				_this.socket = socket;
 				_this.socket.emit('stations.index', data => {
-						_this.stations = data.stations;
+					_this.stations = data.stations;
 				});
 			});
 		}

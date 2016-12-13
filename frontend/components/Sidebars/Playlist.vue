@@ -65,7 +65,7 @@
 					if (res.status == 'success') _this.playlists = res.data;
 				});
 				_this.socket.on('event:playlist.create', (playlist) => {
-						_this.playlists.push(playlist);
+					_this.playlists.push(playlist);
 				});
 				_this.socket.on('event:playlist.delete', (playlistId) => {
 					_this.playlists.forEach((playlist, index) => {

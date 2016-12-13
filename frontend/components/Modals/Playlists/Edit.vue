@@ -156,7 +156,7 @@
 			io.getSocket((socket) => {
 				_this.socket = socket;
 				_this.socket.emit('playlists.getPlaylist', _this.$parent.playlistBeingEdited, res => {
-						if (res.status == 'success') _this.playlist = res.data; _this.playlist.oldId = res.data._id;
+					if (res.status == 'success') _this.playlist = res.data; _this.playlist.oldId = res.data._id;
 				});
 				_this.socket.on('event:playlist.addSong', (data) => {
 					if (_this.playlist._id === data.playlistId) {
@@ -167,10 +167,10 @@
 				_this.socket.on('event:playlist.removeSong', (data) => {
 					if (_this.playlist._id === data.playlistId) {
 						_this.playlist.songs.forEach((song, index) => {
-						if (song._id === data.songId) {
-							_this.playlist.songs.splice(index, 1);
-						}
-					});
+							if (song._id === data.songId) {
+								_this.playlist.songs.splice(index, 1);
+							}
+						});
 					}
 				});
 				_this.socket.on('event:playlist.updateDisplayName', (data) => {

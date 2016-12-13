@@ -51,7 +51,7 @@
 			io.getSocket((socket) => {
 				_this.socket = socket;
 				_this.socket.emit('stations.getPlaylist', _this.$parent.stationId, res => {
-						if (res.status == 'success') _this.playlist = res.data;
+					if (res.status == 'success') _this.playlist = res.data;
 				});
 			});
 		}

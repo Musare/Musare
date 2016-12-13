@@ -319,7 +319,7 @@
 							owner: res.data.owner,
 							privatePlaylist: res.data.privatePlaylist
 						};
-						_this.currentSong = (res.data.currentSong) ? res.data.currentSong : null;
+						_this.currentSong = (res.data.currentSong) ? res.data.currentSong : {};
 						_this.type = res.data.type;
 						_this.startedAt = res.data.startedAt;
 						_this.paused = res.data.paused;
