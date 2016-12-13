@@ -18,6 +18,15 @@ cache.sub('song.added', songId => {
 	});
 });
 
+cache.sub('song.like', (data) => {
+	utils.emitToRoom(`song.${data.songId}`, 'event:song.like', {songId: data.songId, undisliked: data.undisliked});
+	utils.socketsFromUser(data.userId, (sockets) => {
+		sockets.forEach((socket) => {
+			socket.emit('event:song.newRatings', {songId: data.songId, liked: true, disliked: false});
+		});
+	});
+});
+
 cache.sub('song.dislike', (data) => {
 	utils.emitToRoom(`song.${data.songId}`, 'event:song.dislike', {songId: data.songId, unliked: data.unliked});
 	utils.socketsFromUser(data.userId, (sockets) => {
