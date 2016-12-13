@@ -92,7 +92,6 @@ module.exports = {
 			for (let prop in stations) {
 				// TODO If community, check if on whitelist
 				let station = stations[prop];
-				console.log(station)
 				if (station.privacy === 'public') add(true, station);
 				else if (!session.sessionId) add(false);
 				else {
@@ -113,11 +112,9 @@ module.exports = {
 			}
 
 			function add(add, station) {
-				console.log("ADD!", add, station);
 				if (add) arr.push(station);
 				done++;
 				if (done === Object.keys(stations).length) {
-					console.log("DONE!", done);
 					cb({ status: 'success', stations: arr });
 				}
 			}
