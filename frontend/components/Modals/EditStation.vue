@@ -10,7 +10,7 @@
 				<label class='label'>Display name</label>
 				<div class='control is-grouped'>
 					<p class='control is-expanded'>
-						<input class='input' type='text' placeholder='Station Display Name' v-model='$parent.station.displayName'>
+						<input class='input' type='text' placeholder='Station Display Name' v-model='data.displayName'>
 					</p>
 					<p class='control'>
 						<a class='button is-info' @click='updateDisplayName()'>Update</a>
@@ -19,7 +19,7 @@
 				<label class='label'>Description</label>
 				<div class='control is-grouped'>
 					<p class='control is-expanded'>
-						<input class='input' type='text' placeholder='Station Display Name' v-model='$parent.station.description'>
+						<input class='input' type='text' placeholder='Station Display Name' v-model='data.description'>
 					</p>
 					<p class='control'>
 						<a class='button is-info' @click='updateDescription()'>Update</a>
@@ -29,7 +29,7 @@
 				<div class='control is-grouped'>
 					<p class='control is-expanded'>
 						<span class='select'>
-							<select v-model='$parent.station.privacy'>
+							<select v-model='data.privacy'>
 								<option :value='"public"'>Public</option>
 								<option :value='"unlisted"'>Unlisted</option>
 								<option :value='"private"'>Private</option>
@@ -43,7 +43,7 @@
 				<div class='control is-grouped' v-if="$parent.type === 'community'">
 					<p class="control is-expanded">
 						<label class="checkbox">
-							<input type="checkbox" v-model="$parent.station.partyMode">
+							<input type="checkbox" v-model="data.partyMode">
 							Party mode
 						</label>
 					</p>
@@ -61,27 +61,37 @@
 	import io from '../../io';
 
 	export default {
+		data: function() {
+			return {
+				data: {
+					displayName: '',
+					description: '',
+					privacy: 'private',
+					partyMode: false
+				}
+			}
+		},
 		methods: {
 			updateDisplayName: function () {
-				this.socket.emit('stations.updateDisplayName', this.$parent.stationId, this.$parent.station.displayName, res => {
+				this.socket.emit('stations.updateDisplayName', this.data.stationId, this.data.displayName, res => {
 					if (res.status == 'success') return Toast.methods.addToast(res.message, 4000);
 					Toast.methods.addToast(res.message, 8000);
 				});
 			},
 			updateDescription: function () {
-				this.socket.emit('stations.updateDescription', this.$parent.stationId, this.$parent.station.description, res => {
+				this.socket.emit('stations.updateDescription', this.data.stationId, this.data.description, res => {
 					if (res.status == 'success') return Toast.methods.addToast(res.message, 4000);
 					Toast.methods.addToast(res.message, 8000);
 				});
 			},
 			updatePrivacy: function () {
-				this.socket.emit('stations.updatePrivacy', this.$parent.stationId, this.$parent.station.privacy, res => {
+				this.socket.emit('stations.updatePrivacy', this.data.stationId, this.data.privacy, res => {
 					if (res.status == 'success') return Toast.methods.addToast(res.message, 4000);
 					Toast.methods.addToast(res.message, 8000);
 				});
 			},
 			updatePartyMode: function () {
-				this.socket.emit('stations.updatePartyMode', this.$parent.stationId, this.$parent.station.partyMode, res => {
+				this.socket.emit('stations.updatePartyMode', this.data.stationId, this.data.partyMode, res => {
 					if (res.status == 'success') return Toast.methods.addToast(res.message, 4000);
 					Toast.methods.addToast(res.message, 8000);
 				});
@@ -92,6 +102,11 @@
 			io.getSocket((socket) => {
 				_this.socket = socket;
 			});
+			this.data.stationId = this.$parent.stationId;
+			this.data.partyMode = this.$parent.station.partyMode;
+			this.data.description = this.$parent.station.description;
+			this.data.privacy = this.$parent.station.privacy;
+			this.data.displayName = this.$parent.station.displayName;
 		},
 		events: {
 			closeModal: function() {

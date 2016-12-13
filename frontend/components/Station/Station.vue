@@ -90,7 +90,7 @@
 				type: '',
 				playerReady: false,
 				previousSong: null,
-				currentSong: null,
+				currentSong: {},
 				player: undefined,
 				timePaused: 0,
 				paused: false,
