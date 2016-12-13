@@ -36,6 +36,7 @@
 
 	import MainHeader from '../MainHeader.vue';
 	import MainFooter from '../MainFooter.vue';
+	import io from '../../io';
 
 	export default {
 		data() {
