@@ -1,22 +1,22 @@
 <template>
-	<footer class="footer">
-		<div class="container">
-			<div class="content has-text-centered">
+	<footer class='footer'>
+		<div class='container'>
+			<div class='content has-text-centered'>
 				<p>
 					© Copyright Musare 2015 - 2016
 				</p>
 				<p>
-					<a class="icon" href="https://github.com/Musare/MusareNode" title="GitHub project">
-						<i class="fa fa-github"></i>
+					<a class='icon' href='https://github.com/Musare/MusareNode' title='GitHub Repository'>
+						<i class='fa fa-github'></i>
 					</a>
-					<a class="icon" href="https://twitter.com/MusareMusic" title="Twitter account">
-						<i class="fa fa-twitter"></i>
+					<a class='icon' href='https://twitter.com/MusareMusic' title='Twitter Account'>
+						<i class='fa fa-twitter'></i>
 					</a>
-					<a class="icon" href="https://www.facebook.com/MusareMusic/" title="Facebook page">
-						<i class="fa fa-facebook"></i>
+					<a class='icon' href='https://www.facebook.com/MusareMusic/' title='Facebook Page'>
+						<i class='fa fa-facebook'></i>
 					</a>
-					<a class="icon" href="https://discord.gg/Y5NxYGP" title="Discord server">
-						<img src="/assets/discord.svg"/>
+					<a class='icon' href='https://discord.gg/Y5NxYGP' title='Discord Server'>
+						<img src='/assets/discord.svg'/>
 					</a>
 				</p>
 			</div>
@@ -24,7 +24,7 @@
 	</footer>
 </template>
 
-<style lang="scss" scoped>
+<style lang='scss' scoped>
 	.content a:not(.button) {
 		border: 0;
 	}

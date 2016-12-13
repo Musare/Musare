@@ -54,9 +54,7 @@
 				});
 			},
 			'submitOnEnter': (cb, event) => {
-				if (event.which == 13) {
-					cb();
-				}
+				if (event.which == 13) cb();
 			}
 		},
 		ready: function () {
@@ -80,9 +78,7 @@
 			lofig.get('serverDomain', res => {
 				_this.serverDomain = res;
 			});
-			if (_this.$route.query.err) {
-				Toast.methods.addToast(_this.$route.query.err, 20000);
-			}
+			if (_this.$route.query.err) Toast.methods.addToast(_this.$route.query.err, 20000);
 		},
 		events: {
 			'register': function () {
