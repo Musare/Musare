@@ -4,6 +4,7 @@ const async = require('async');
 
 const db = require('../db');
 const hooks = require('./hooks');
+const songs = require('../songs');
 
 module.exports = {
 
@@ -25,14 +26,14 @@ module.exports = {
 		});
 	}),
 
-	create: hooks.loginRequired((session, data, cb) => {
+	create: hooks.loginRequired((session, data, cb, userId) => {
 		async.waterfall([
 
 			(next) => {
-				db.models.report.find({ createdBy: data.createdBy, createdAt: data.createdAt }).exec((err, report) => {
-					if (err) console.error(err);
-					if (report) return cb({ status: 'failure', message: 'Report already exists' });
-					else next();
+				songs.getSong(data.songId, (err, song) => {
+					if (err) return next(err);
+					if (!song) return next('Song does not exist in our Database.');
+					next();
 				});
 			},
 
@@ -93,6 +94,8 @@ module.exports = {
 			},
 
 			(next) => {
+				data.createdBy = userId;
+				data.createdAt = Date.now();
 				db.models.report.create(data, next);
 			}
 

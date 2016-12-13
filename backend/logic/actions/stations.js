@@ -13,6 +13,14 @@ const stations = require('../stations');
 const songs = require('../songs');
 const hooks = require('./hooks');
 
+cache.sub('station.updatePartyMode', data => {
+	utils.emitToRoom(`station.${data.stationId}`, "event:partyMode.updated", data.partyMode);
+});
+
+cache.sub('privatePlaylist.selected', data => {
+	utils.emitToRoom(`station.${data.stationId}`, "event:privatePlaylist.selected", data.playlistId);
+});
+
 cache.sub('station.pause', stationId => {
 	utils.emitToRoom(`station.${stationId}`, "event:stations.pause");
 });
@@ -35,28 +43,25 @@ cache.sub('station.voteSkipSong', stationId => {
 	utils.emitToRoom(`station.${stationId}`, "event:song.voteSkipSong");
 });
 
+cache.sub('station.remove', stationId => {
+	utils.emitToRoom('admin.stations', 'event:admin.station.removed', stationId);
+});
+
 cache.sub('station.create', stationId => {
 	stations.initializeStation(stationId, (err, station) => {
-		console.log("*************", err, station);
-		//TODO Emit to admin station page
-
+		if (err) console.error(err);
+		utils.emitToRoom('admin.stations', 'event:admin.station.added', station);
 		// TODO If community, check if on whitelist
-		console.log("*************", station.privacy);
 		if (station.privacy === 'public') utils.emitToRoom('home', "event:stations.created", station);
 		else {
 			let sockets = utils.getRoomSockets('home');
-			console.log("*************", sockets.length);
 			for (let socketId in sockets) {
 				let socket = sockets[socketId];
 				let session = sockets[socketId].session;
-				console.log("*************", session);
 				if (session.sessionId) {
 					cache.hget('sessions', session.sessionId, (err, session) => {
-						console.log("*************", err, session);
 						if (!err && session) {
-							console.log("*************");
 							db.models.user.findOne({_id: session.userId}, (err, user) => {
-								console.log("*************", err, user.role, station.type, station.owner, session.userId);
 								if (user.role === 'admin') socket.emit("event:stations.created", station);
 								else if (station.type === "community" && station.owner === session.userId) socket.emit("event:stations.created", station);
 							});
@@ -92,7 +97,6 @@ module.exports = {
 			for (let prop in stations) {
 				// TODO If community, check if on whitelist
 				let station = stations[prop];
-				console.log(station)
 				if (station.privacy === 'public') add(true, station);
 				else if (!session.sessionId) add(false);
 				else {
@@ -113,11 +117,9 @@ module.exports = {
 			}
 
 			function add(add, station) {
-				console.log("ADD!", add, station);
 				if (add) arr.push(station);
 				done++;
 				if (done === Object.keys(stations).length) {
-					console.log("DONE!", done);
 					cb({ status: 'success', stations: arr });
 				}
 			}
@@ -212,7 +214,8 @@ module.exports = {
 								displayName: station.displayName,
 								privacy: station.privacy,
 								partyMode: station.partyMode,
-								owner: station.owner
+								owner: station.owner,
+								privatePlaylist: station.privatePlaylist
 							}
 						});
 					}
@@ -332,6 +335,7 @@ module.exports = {
 				if (err) return cb({ status: 'failure', message: 'Something went wrong when saving the station.' });
 				stations.updateStation(stationId, () => {
 					//TODO Pub/sub for privacy change
+					cache.pub('station.updatePartyMode', {stationId: stationId, partyMode: newPartyMode});
 					stations.skipStation(stationId)();
 					cb({ status: 'success', message: 'Successfully updated the party mode.' });
 				})
@@ -373,7 +377,6 @@ module.exports = {
 				if (station.paused) {
 					station.paused = false;
 					station.timePaused += (Date.now() - station.pausedAt);
-					console.log("&&&", station.timePaused, station.pausedAt, Date.now(), station.timePaused);
 					db.models.station.update({_id: stationId}, {$set: {paused: false}, $inc: {timePaused: Date.now() - station.pausedAt}}, () => {
 						stations.updateStation(stationId, (err, station) => {
 							cache.pub('station.resume', stationId);
@@ -391,9 +394,9 @@ module.exports = {
 
 	remove: hooks.ownerRequired((session, stationId, cb) => {
 		db.models.station.remove({ _id: stationId }, (err) => {
-			console.log(err, stationId);
 			if (err) return cb({status: 'failure', message: 'Something went wrong when deleting that station.'});
 			cache.hdel('stations', stationId, () => {
+				cache.pub('station.remove', stationId);
 				return cb({ status: 'success', message: 'Station successfully removed' });
 			});
 		});
@@ -484,7 +487,6 @@ module.exports = {
 					} else cont(song);
 					function cont(song) {
 						db.models.station.update({_id: stationId}, {$push: {queue: song}}, (err) => {
-							console.log(err);
 							if (err) return cb({'status': 'failure', 'message': 'Something went wrong.'});
 							stations.updateStation(stationId, (err, station) => {
 								if (err) return cb(err);
@@ -543,6 +545,7 @@ module.exports = {
 							stations.updateStation(stationId, (err, station) => {
 								if (err) return cb(err);
 								stations.skipStation(stationId)();
+								cache.pub('privatePlaylist.selected', {playlistId, stationId});
 								cb({'status': 'success', 'message': 'Playlist selected.'});
 							});
 						});

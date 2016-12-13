@@ -13,7 +13,7 @@
 			</p>
 		</div>
 		<label class="label">Email</label>
-		<div class="control is-grouped">
+		<div class="control is-grouped" v-if="user.email">
 			<p class="control is-expanded has-icon has-icon-right">
 				<input class="input" type="text" placeholder="Change email address" v-model="user.email.address">
 				<!--Remove validation if it's their own without changing-->
@@ -33,6 +33,7 @@
 	import MainFooter from '../MainFooter.vue';
 
 	import LoginModal from '../Modals/Login.vue'
+	import io from '../../io'
 
 	export default {
 		data() {

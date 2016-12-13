@@ -8,7 +8,7 @@
 			</header>
 			<section class='modal-card-body'>
 				<div class='columns song-types'>
-					<div class='column song-type' v-if='$parent.previousSong !== null'>
+					<div class='column song-type' v-if='$parent.previousSong !== null && $parent.previousSong.likes !== -1 && $parent.previousSong.dislikes !== -1'>
 						<div class='card is-fullwidth' :class="{ 'is-highlight-active': isPreviousSongActive }" @click="highlight('previousSong')">
 							<header class='card-header'>
 								<p class='card-header-title'>
@@ -19,7 +19,7 @@
 								<article class='media'>
 									<figure class='media-left'>
 										<p class='image is-64x64'>
-											<img :src='$parent.previousSong.thumbnail' onerror='this.src="/assets/notes.png"'>
+											<img :src='$parent.previousSong.thumbnail' onerror='this.src="/assets/notes-transparent.png"'>
 										</p>
 									</figure>
 									<div class='media-content'>
@@ -35,7 +35,7 @@
 							</div>
 						</div>
 					</div>
-					<div class='column song-type' v-if='$parent.currentSong !== null'>
+					<div class='column song-type' v-if='$parent.currentSong !== null && $parent.currentSong.likes !== -1 && $parent.currentSong.dislikes !== -1'>
 						<div class='card is-fullwidth'  :class="{ 'is-highlight-active': isCurrentSongActive }" @click="highlight('currentSong')">
 							<header class='card-header'>
 								<p class='card-header-title'>
@@ -46,7 +46,7 @@
 								<article class='media'>
 									<figure class='media-left'>
 										<p class='image is-64x64'>
-											<img :src='$parent.currentSong.thumbnail' onerror='this.src="/assets/notes.png"'>
+											<img :src='$parent.currentSong.thumbnail' onerror='this.src="/assets/notes-transparent.png"'>
 										</p>
 									</figure>
 									<div class='media-content'>
@@ -63,7 +63,8 @@
 						</div>
 					</div>
 				</div>
-				<div class='edit-report-wrapper'>
+				<h4 v-if='($parent.currentSong === null || ($parent.currentSong.likes === -1 && $parent.currentSong.dislikes === -1)) && ($parent.previousSong === null || ($parent.previousSong.likes === -1 || $parent.previousSong.dislikes === -1))'>There are currently no songs to report.</h4>
+				<div class='edit-report-wrapper' v-else>
 					<div class='columns is-multiline'>
 						<div class='column is-half' v-for='issue in issues'>
 							<label class='label'>{{ issue.name }}</label>
@@ -83,7 +84,7 @@
 				</div>
 			</section>
 			<footer class='modal-card-foot'>
-				<a class='button is-success' @click='create()'>
+				<a class='button is-success' @click='create()' v-if='!(($parent.currentSong === null || ($parent.currentSong.likes === -1 && $parent.currentSong.dislikes === -1)) && ($parent.previousSong === null || ($parent.previousSong.likes === -1 || $parent.previousSong.dislikes === -1)))'>
 					<i class='material-icons save-changes'>done</i>
 					<span>&nbsp;Create</span>
 				</a>
@@ -115,9 +116,7 @@
 						{ name: 'Duration', reasons: [] },
 						{ name: 'Artists', reasons: [] },
 						{ name: 'Thumbnail', reasons: [] }
-					],
-					createdBy: this.$parent.$parent.userId,
-					createdAt: Date.now()
+					]
 				},
 				issues: [
 					{

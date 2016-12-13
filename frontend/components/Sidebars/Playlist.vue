@@ -50,7 +50,6 @@
 			},
 			isNotSelected: function(id) {
 				let _this = this;
-				console.log(_this.$parent.station);
 				//TODO Also change this once it changes for a station
 				if (_this.$parent.station && _this.$parent.station.privatePlaylist === id) return false;
 				return true;
@@ -65,7 +64,7 @@
 					if (res.status == 'success') _this.playlists = res.data;
 				});
 				_this.socket.on('event:playlist.create', (playlist) => {
-						_this.playlists.push(playlist);
+					_this.playlists.push(playlist);
 				});
 				_this.socket.on('event:playlist.delete', (playlistId) => {
 					_this.playlists.forEach((playlist, index) => {
@@ -107,6 +106,7 @@
 <style type='scss' scoped>
 	.sidebar {
 		position: fixed;
+		z-index: 1;
 		top: 0;
 		right: 0;
 		width: 300px;

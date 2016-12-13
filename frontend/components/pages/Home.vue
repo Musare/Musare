@@ -6,7 +6,7 @@
 			<div class="card station-card" v-for="station in stations.official" v-link="{ path: '/official/' + station._id }" @click="this.$dispatch('joinStation', station._id)" :class="station.class">
 				<div class="card-image">
 					<figure class="image is-square">
-						<img :src="station.currentSong.thumbnail" onerror="this.src='/assets/notes.png'" />
+						<img :src="station.currentSong.thumbnail" onerror="this.src='/assets/notes-transparent.png'" />
 					</figure>
 				</div>
 				<div class="card-content">
@@ -31,7 +31,7 @@
 			<div class="card station-card" v-for="station in stations.community" v-link="{ path: '/community/' + station._id }" @click="this.$dispatch('joinStation', station._id)" :class="station.class">
 				<div class="card-image">
 					<figure class="image is-square">
-						<img :src="station.currentSong.thumbnail" onerror="this.src='/assets/notes.png'" />
+						<img :src="station.currentSong.thumbnail" onerror="this.src='/assets/notes-transparent.png'" />
 					</figure>
 				</div>
 				<div class="card-content">
@@ -87,8 +87,7 @@
 						_this.init();
 					});
 					_this.socket.on('event:stations.created', station => {
-						console.log("CREATED!!!", station);
-						if (!station.currentSong) station.currentSong = {thumbnail: '/assets/notes.png'};
+						if (!station.currentSong) station.currentSong = {thumbnail: '/assets/notes-transparent.png'};
 						if (station.privacy !== 'public') {
 							station.class = {'station-red': true}
 						} else if (station.type === 'community') {
@@ -107,27 +106,26 @@
 			},
 			init: function() {
 				let _this = this;
-				_this.socket.emit("stations.index", data => {
-					_this.stations.community = [];
-					_this.stations.official = [];
-					if (data.status === "success")  data.stations.forEach(station => {
-						if (!station.currentSong) station.currentSong = { thumbnail: '/assets/notes.png' };
-						console.log(station.privacy);
-						if (station.privacy !== 'public') {
-							console.log(123);
-							station.class = {'station-red': true}
-						} else if (station.type === 'community') {
-							auth.getStatus((authenticated, role, username, userId) => {
+				auth.getStatus((authenticated, role, username, userId) => {
+					_this.socket.emit("stations.index", data => {
+						_this.stations.community = [];
+						_this.stations.official = [];
+						if (data.status === "success")  data.stations.forEach(station => {
+							if (!station.currentSong) station.currentSong = {thumbnail: '/assets/notes-transparent.png'};
+							if (station.privacy !== 'public') {
+								station.class = {'station-red': true}
+							} else if (station.type === 'community') {
 								if (station.owner === userId) {
 									station.class = {'station-blue': true}
 								}
-							});
-						}
-						if (station.type == 'official') _this.stations.official.push(station);
-						else _this.stations.community.push(station);
+							}
+							if (station.type == 'official') _this.stations.official.push(station);
+							else _this.stations.community.push(station);
+						});
+					});
+					_this.socket.emit("apis.joinRoom", 'home', () => {
 					});
 				});
-				_this.socket.emit("apis.joinRoom", 'home', () => {});
 			}
 		},
 		components: { MainHeader, MainFooter }

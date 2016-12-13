@@ -28,7 +28,7 @@
 					</div>
 				</div>
 				<h5 class='has-text-centered'>Thumbnail Preview</h5>
-				<img class='thumbnail-preview' :src='$parent.editing.song.thumbnail' onerror="this.src='/assets/notes.png'">
+				<img class='thumbnail-preview' :src='$parent.editing.song.thumbnail' onerror="this.src='/assets/notes-transparent.png'">
 
 				<label class='label'>Thumbnail URL</label>
 				<p class='control'>

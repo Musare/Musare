@@ -16,7 +16,7 @@
 				<tbody>
 					<tr v-for='(index, song) in songs' track-by='$index'>
 						<td>
-							<img class='song-thumbnail' :src='song.thumbnail' onerror="this.src='/assets/notes.png'">
+							<img class='song-thumbnail' :src='song.thumbnail' onerror="this.src='/assets/notes-transparent.png'">
 						</td>
 						<td>
 							<strong>{{ song.title }}</strong>
@@ -41,6 +41,7 @@
 	import { Toast } from 'vue-roaster';
 
 	import EditSong from '../Modals/EditSong.vue';
+	import io from '../../io';
 
 	export default {
 		components: { EditSong },
@@ -123,18 +124,36 @@
 				});
 			},
 			remove: function (id, index) {
-				this.songs.splice(index, 1);
 				this.socket.emit('songs.remove', id, res => {
-					if (res.status == 'success') Toast.methods.addToast(res.message, 2000);
+					if (res.status == 'success') Toast.methods.addToast(res.message, 4000);
+					else Toast.methods.addToast(res.message, 8000);
 				});
+			},
+			init: function() {
+				let _this = this;
+				_this.socket.emit('songs.index', data => {
+					_this.songs = data;
+				});
+				_this.socket.emit('apis.joinAdminRoom', 'songs', data => {});
 			}
 		},
 		ready: function () {
 			let _this = this;
 			io.getSocket((socket) => {
 				_this.socket = socket;
-				_this.socket.emit('songs.index', data => {
-					_this.songs = data;
+				if (_this.socket.connected) {
+					_this.init();
+					_this.socket.on('event:admin.song.added', song => {
+						_this.songs.push(song);
+					});
+					_this.socket.on('event:admin.song.removed', songId => {
+						_this.songs = _this.songs.filter(function(song) {
+							return song._id !== songId;
+						});
+					});
+				}
+				io.onConnect(() => {
+					_this.init();
 				});
 			});
 

@@ -6,7 +6,7 @@
 			<article class="media">
 				<figure class="media-left">
 					<p class="image is-64x64">
-						<img :src="$parent.currentSong.thumbnail" onerror="this.src='/assets/notes.png'">
+						<img :src="$parent.currentSong.thumbnail" onerror="this.src='/assets/notes-transparent.png'">
 					</p>
 				</figure>
 				<div class="media-content">
@@ -51,7 +51,7 @@
 			io.getSocket((socket) => {
 				_this.socket = socket;
 				_this.socket.emit('stations.getPlaylist', _this.$parent.stationId, res => {
-						if (res.status == 'success') _this.playlist = res.data;
+					if (res.status == 'success') _this.playlist = res.data;
 				});
 			});
 		}
@@ -61,6 +61,7 @@
 <style type='scss' scoped>
 	.sidebar {
 		position: fixed;
+		z-index: 1;
 		top: 0;
 		right: 0;
 		width: 300px;

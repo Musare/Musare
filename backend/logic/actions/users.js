@@ -84,7 +84,6 @@ module.exports = {
 			// if it is, we check if a user with the requested username already exists
 			(response, body, next) => {
 				let json = JSON.parse(body);
-				console.log(response, body);
 				if (json.success !== true) return next('Response from recaptcha was not successful');
 				db.models.user.findOne({ username: new RegExp(`^${username}$`, 'i') }, next);
 			},

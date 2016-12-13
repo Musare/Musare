@@ -54,7 +54,7 @@
 				});
 			},
 			'submitOnEnter': (cb, event) => {
-				if (event.which == 13) b(); return false;
+				if (event.which == 13) cb();
 			}
 		},
 		ready: function () {
@@ -69,12 +69,16 @@
 			io.onConnect(() => {
 				_this.socketConnected = true;
 			});
+			io.onConnectError(() => {
+				_this.socketConnected = false;
+			});
 			io.onDisconnect(() => {
 				_this.socketConnected = false;
 			});
 			lofig.get('serverDomain', res => {
 				_this.serverDomain = res;
 			});
+			if (_this.$route.query.err) Toast.methods.addToast(_this.$route.query.err, 20000);
 		},
 		events: {
 			'register': function () {

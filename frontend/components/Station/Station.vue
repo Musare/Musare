@@ -59,7 +59,7 @@
 						</div>
 					</div>
 					<div class="column is-4-desktop is-12-mobile" v-if="!simpleSong">
-						<img class="image" id="song-thumbnail" style="margin-top: 10px !important" :src="currentSong.thumbnail" alt="Song Thumbnail" onerror="this.src='/assets/notes.png'" />
+						<img class="image" id="song-thumbnail" style="margin-top: 10px !important" :src="currentSong.thumbnail" alt="Song Thumbnail" onerror="this.src='/assets/notes-transparent.png'" />
 					</div>
 				</div>
 			</div>
@@ -90,7 +90,7 @@
 				type: '',
 				playerReady: false,
 				previousSong: null,
-				currentSong: null,
+				currentSong: {},
 				player: undefined,
 				timePaused: 0,
 				paused: false,
@@ -131,7 +131,6 @@
 			},
 			youtubeReady: function() {
 				let local = this;
-				console.log("@@5", local.currentSong._id);
 				if (!local.player) {
 					local.player = new YT.Player("player", {
 						height: 270,
@@ -141,13 +140,11 @@
 						playerVars: {controls: 0, iv_load_policy: 3, rel: 0, showinfo: 0},
 						events: {
 							'onReady': function (event) {
-								console.log("@@6");
 								local.playerReady = true;
 								let volume = parseInt(localStorage.getItem("volume"));
 								volume = (typeof volume === "number") ? volume : 20;
 								local.player.setVolume(volume);
 								if (volume > 0) local.player.unMute();
-								console.log("@@7");
 								local.playVideo();
 							},
 							'onStateChange': function (event) {
@@ -175,9 +172,7 @@
 			},
 			playVideo: function() {
 				let local = this;
-				console.log("@@9");
 				if (local.playerReady) {
-					console.log("@@@1");
 					local.videoLoading = true;
 					local.player.loadVideoById(local.currentSong._id, local.getTimeElapsed() / 1000 + local.currentSong.skipDuration);
 
@@ -204,14 +199,12 @@
 				let currentTime = Date.now();
 
 				if (local.currentTime !== undefined && local.paused) {
-					console.log("123");
 					local.timePaused += (Date.now() - local.currentTime);
 					local.currentTime = undefined;
 				}
 
 				let duration = (Date.now() - local.startedAt - local.timePaused) / 1000;
 				let songDuration = local.currentSong.duration;
-				//console.log(duration, currentTime, local.startedAt, local.timePaused, local.startedAt - local.timePaused, Date.now() - local.startedAt - local.timePaused, Date.now() - local.startedAt);
 				if (songDuration <= duration) local.player.pauseVideo();
 				if ((!local.paused) && duration <= songDuration) local.timeElapsed = local.formatTime(duration);
 			},
@@ -243,68 +236,46 @@
 			skipStation: function () {
 				let _this = this;
 				_this.socket.emit('stations.forceSkip', _this.stationId, data => {
-					if (data.status !== 'success') {
-						Toast.methods.addToast(`Error: ${data.message}`, 8000);
-					} else {
-						Toast.methods.addToast('Successfully skipped the station\'s current song.', 4000);
-					}
+					if (data.status !== 'success') Toast.methods.addToast(`Error: ${data.message}`, 8000);
+					else Toast.methods.addToast('Successfully skipped the station\'s current song.', 4000);
 				});
 			},
 			voteSkipStation: function () {
 				let _this = this;
 				_this.socket.emit('stations.voteSkip', _this.stationId, data => {
-					if (data.status !== 'success') {
-						Toast.methods.addToast(`Error: ${data.message}`, 8000);
-					} else {
-						Toast.methods.addToast('Successfully voted to skip the current song.', 4000);
-					}
+					if (data.status !== 'success') Toast.methods.addToast(`Error: ${data.message}`, 8000);
+					else Toast.methods.addToast('Successfully voted to skip the current song.', 4000);
 				});
 			},
 			resumeStation: function () {
 				let _this = this;
 				_this.socket.emit('stations.resume', _this.stationId, data => {
-					console.log(data);
-					if (data.status !== 'success') {
-						Toast.methods.addToast(`Error: ${data.message}`, 8000);
-					} else {
-						Toast.methods.addToast('Successfully resumed the station.', 4000);
-					}
+					if (data.status !== 'success') Toast.methods.addToast(`Error: ${data.message}`, 8000);
+					else Toast.methods.addToast('Successfully resumed the station.', 4000);
 				});
 			},
 			pauseStation: function () {
 				let _this = this;
 				_this.socket.emit('stations.pause', _this.stationId, data => {
-					console.log(data);
-					if (data.status !== 'success') {
-						Toast.methods.addToast(`Error: ${data.message}`, 8000);
-					} else {
-						Toast.methods.addToast('Successfully paused the station.', 4000);
-					}
+					if (data.status !== 'success') Toast.methods.addToast(`Error: ${data.message}`, 8000);
+					else Toast.methods.addToast('Successfully paused the station.', 4000);
 				});
 			},
 			toggleLike: function() {
 				let _this = this;
 				if (_this.liked) _this.socket.emit('songs.unlike', _this.currentSong._id, data => {
-					if (data.status !== 'success') {
-						Toast.methods.addToast(`Error: ${data.message}`, 8000);
-					}
+					if (data.status !== 'success') Toast.methods.addToast(`Error: ${data.message}`, 8000);
 				}); else _this.socket.emit('songs.like', _this.currentSong._id, data => {
-					if (data.status !== 'success') {
-						Toast.methods.addToast(`Error: ${data.message}`, 8000);
-					}
+					if (data.status !== 'success') Toast.methods.addToast(`Error: ${data.message}`, 8000);
 				});
 			},
 			toggleDislike: function() {
 				let _this = this;
 				if (_this.disliked) return _this.socket.emit('songs.undislike', _this.currentSong._id, data => {
-					if (data.status !== 'success') {
-						Toast.methods.addToast(`Error: ${data.message}`, 8000);
-					}
+					if (data.status !== 'success') Toast.methods.addToast(`Error: ${data.message}`, 8000);
 				});
 				_this.socket.emit('songs.dislike', _this.currentSong._id, data => {
-					if (data.status !== 'success') {
-						Toast.methods.addToast(`Error: ${data.message}`, 8000);
-					}
+					if (data.status !== 'success') Toast.methods.addToast(`Error: ${data.message}`, 8000);
 				});
 			},
 			joinStation: function () {
@@ -319,7 +290,7 @@
 							owner: res.data.owner,
 							privatePlaylist: res.data.privatePlaylist
 						};
-						_this.currentSong = (res.data.currentSong) ? res.data.currentSong : null;
+						_this.currentSong = (res.data.currentSong) ? res.data.currentSong : {};
 						_this.type = res.data.type;
 						_this.startedAt = res.data.startedAt;
 						_this.paused = res.data.paused;
@@ -330,7 +301,6 @@
 							if (_this.simpleSong) {
 								_this.currentSong.skipDuration = 0;
 							}
-							console.log(12334);
 							_this.youtubeReady();
 							_this.playVideo();
 							_this.socket.emit('songs.getOwnSongRatings', res.data.currentSong._id, data => {
@@ -341,15 +311,11 @@
 							});
 						} else {
 							if (_this.playerReady) _this.player.pauseVideo();
-							console.log("NO SONG TRUE1", res.data);
 							_this.noSong = true;
 						}
 						if (_this.type === 'community') {
 							_this.socket.emit('stations.getQueue', _this.stationId, data => {
-								console.log(data);
-								if (data.status === 'success') {
-									_this.queue = data.queue;
-								}
+								if (data.status === 'success') _this.queue = data.queue;
 							});
 						}
 					} else {
@@ -376,7 +342,7 @@
 				});
 
 				_this.socket.on('event:songs.next', data => {
-					_this.previousSong = _this.currentSong;
+					_this.previousSong = (_this.currentSong._id) ? _this.currentSong : null;
 					_this.currentSong = (data.currentSong) ? data.currentSong : {};
 					_this.startedAt = data.startedAt;
 					_this.paused = data.paused;
@@ -387,7 +353,6 @@
 						if (_this.simpleSong) {
 							_this.currentSong.skipDuration = 0;
 						}
-						console.log(1233, _this.stationId);
 						if (!_this.playerReady) _this.youtubeReady();
 						else _this.playVideo();
 						_this.socket.emit('songs.getOwnSongRatings', data.currentSong._id, (data) => {
@@ -398,7 +363,6 @@
 						});
 					} else {
 						if (_this.playerReady) _this.player.pauseVideo();
-						console.log("NO SONG TRUE2", data);
 						_this.noSong = true;
 					}
 				});
@@ -452,14 +416,22 @@
 				});
 
 				_this.socket.on('event:queue.update', queue => {
-					if (this.type === 'community') {
-						this.queue = queue;
-					}
+					if (this.type === 'community') this.queue = queue;
 				});
 
 				_this.socket.on('event:song.voteSkipSong', () => {
-					if (this.currentSong) {
-						this.currentSong.skipVotes++;
+					if (this.currentSong) this.currentSong.skipVotes++;
+				});
+
+				_this.socket.on('event:privatePlaylist.selected', (playlistId) => {
+					if (this.type === 'community') {
+						this.station.privatePlaylist = playlistId;
+					}
+				});
+
+				_this.socket.on('event:partyMode.updated', (partyMode) => {
+					if (this.type === 'community') {
+						this.station.partyMode = partyMode;
 					}
 				});
 			});
@@ -487,6 +459,10 @@
 	.noSong {
 		color: #03A9F4;
 		text-align: center;
+	}
+
+	.stationDisplayName {
+		color: white !important;
 	}
 
 	.slideout {

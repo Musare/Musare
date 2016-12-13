@@ -114,12 +114,12 @@
 					genres,
 					blacklistedGenres,
 				}, result => {
-					console.log(result);
+					// Toast
 				});
 			},
 			removeStation: function (index) {
 				this.socket.emit('stations.remove', this.stations[index]._id, res => {
-					if (res.status == 'success') this.stations.splice(index, 1); Toast.methods.addToast(res.message, 3000);
+					Toast.methods.addToast(res.message, 3000);
 				});
 			},
 			addGenre: function () {
@@ -137,14 +137,32 @@
 				if (genre) this.newStation.blacklistedGenres.push(genre);
 				else Toast.methods.addToast('Genre cannot be empty', 3000);
 			},
-			removeBlacklistedGenre: function (index) { this.newStation.blacklistedGenres.splice(index, 1); }
+			removeBlacklistedGenre: function (index) { this.newStation.blacklistedGenres.splice(index, 1); },
+			init: function() {
+				let _this = this;
+				_this.socket.emit('stations.index', data => {
+					_this.stations = data.stations;
+				});
+				_this.socket.emit('apis.joinAdminRoom', 'stations', data => {});
+			}
 		},
 		ready: function () {
 			let _this = this;
 			io.getSocket((socket) => {
 				_this.socket = socket;
-				_this.socket.emit('stations.index', data => {
-						_this.stations = data.stations;
+				if (_this.socket.connected) {
+					_this.init();
+				}
+				_this.socket.on('event:admin.station.added', station => {
+					_this.stations.push(station);
+				});
+				_this.socket.on('event:admin.station.removed', stationId => {
+					_this.stations = _this.stations.filter(function(station) {
+						return station._id !== stationId;
+					});
+				});
+				io.onConnect(() => {
+					_this.init();
 				});
 			});
 		}

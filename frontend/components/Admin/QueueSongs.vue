@@ -16,7 +16,7 @@
 				<tbody>
 					<tr v-for='(index, song) in songs' track-by='$index'>
 						<td>
-							<img class='song-thumbnail' :src='song.thumbnail' onerror="this.src='/assets/notes.png'">
+							<img class='song-thumbnail' :src='song.thumbnail' onerror="this.src='/assets/notes-transparent.png'">
 						</td>
 						<td>
 							<strong>{{ song.title }}</strong>
@@ -130,18 +130,35 @@
 				});
 			},
 			remove: function (id, index) {
-				this.songs.splice(index, 1);
 				this.socket.emit('queueSongs.remove', id, res => {
 					if (res.status == 'success') Toast.methods.addToast(res.message, 2000);
 				});
+			},
+			init: function() {
+				let _this = this;
+				_this.socket.emit('queueSongs.index', data => {
+					_this.songs = data;
+				});
+				_this.socket.emit('apis.joinAdminRoom', 'queue', data => {});
 			}
 		},
 		ready: function () {
 			let _this = this;
 			io.getSocket((socket) => {
 				_this.socket = socket;
-				_this.socket.emit('queueSongs.index', data => {
-					_this.songs = data;
+				if (_this.socket.connected) {
+					_this.init();
+					_this.socket.on('event:admin.queueSong.added', queueSong => {
+						_this.songs.push(queueSong);
+					});
+					_this.socket.on('event:admin.queueSong.removed', songId => {
+						_this.songs = _this.songs.filter(function(song) {
+							return song._id !== songId;
+						});
+					});
+				}
+				io.onConnect(() => {
+					_this.init();
 				});
 			});
 
