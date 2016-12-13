@@ -376,7 +376,7 @@
 				});
 
 				_this.socket.on('event:songs.next', data => {
-					_this.previousSong = _this.currentSong;
+					_this.previousSong = (_this.currentSong._id) ? _this.currentSong : null;
 					_this.currentSong = (data.currentSong) ? data.currentSong : {};
 					_this.startedAt = data.startedAt;
 					_this.paused = data.paused;
@@ -466,6 +466,12 @@
 				_this.socket.on('event:privatePlaylist.selected', (playlistId) => {
 					if (this.type === 'community') {
 						this.station.privatePlaylist = playlistId;
+					}
+				});
+
+				_this.socket.on('event:partyMode.updated', (partyMode) => {
+					if (this.type === 'community') {
+						this.station.partyMode = partyMode;
 					}
 				});
 			});

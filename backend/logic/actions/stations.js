@@ -13,8 +13,11 @@ const stations = require('../stations');
 const songs = require('../songs');
 const hooks = require('./hooks');
 
+cache.sub('station.updatePartyMode', data => {
+	utils.emitToRoom(`station.${data.stationId}`, "event:partyMode.updated", data.partyMode);
+});
+
 cache.sub('privatePlaylist.selected', data => {
-	console.log(data);
 	utils.emitToRoom(`station.${data.stationId}`, "event:privatePlaylist.selected", data.playlistId);
 });
 
@@ -340,6 +343,7 @@ module.exports = {
 				if (err) return cb({ status: 'failure', message: 'Something went wrong when saving the station.' });
 				stations.updateStation(stationId, () => {
 					//TODO Pub/sub for privacy change
+					cache.pub('station.updatePartyMode', {stationId: stationId, partyMode: newPartyMode});
 					stations.skipStation(stationId)();
 					cb({ status: 'success', message: 'Successfully updated the party mode.' });
 				})
