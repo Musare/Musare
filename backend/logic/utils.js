@@ -259,7 +259,7 @@ module.exports = {
 			});
 			dur = dur.replace(/([\d]*)M/, (v, v2) => {
 				v2 = Number(v2);
-				duration = (v2 * 60);
+				duration += (v2 * 60);
 				return '';
 			});
 			dur = dur.replace(/([\d]*)S/, (v, v2) => {

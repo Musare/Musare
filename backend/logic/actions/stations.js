@@ -13,6 +13,14 @@ const stations = require('../stations');
 const songs = require('../songs');
 const hooks = require('./hooks');
 
+cache.sub('station.updatePartyMode', data => {
+	utils.emitToRoom(`station.${data.stationId}`, "event:partyMode.updated", data.partyMode);
+});
+
+cache.sub('privatePlaylist.selected', data => {
+	utils.emitToRoom(`station.${data.stationId}`, "event:privatePlaylist.selected", data.playlistId);
+});
+
 cache.sub('station.pause', stationId => {
 	utils.emitToRoom(`station.${stationId}`, "event:stations.pause");
 });
@@ -35,10 +43,14 @@ cache.sub('station.voteSkipSong', stationId => {
 	utils.emitToRoom(`station.${stationId}`, "event:song.voteSkipSong");
 });
 
+cache.sub('station.remove', stationId => {
+	utils.emitToRoom('admin.stations', 'event:admin.station.removed', stationId);
+});
+
 cache.sub('station.create', stationId => {
 	stations.initializeStation(stationId, (err, station) => {
 		if (err) console.error(err);
-		//TODO Emit to admin station page
+		utils.emitToRoom('admin.stations', 'event:admin.station.added', station);
 		// TODO If community, check if on whitelist
 		if (station.privacy === 'public') utils.emitToRoom('home', "event:stations.created", station);
 		else {
@@ -202,7 +214,8 @@ module.exports = {
 								displayName: station.displayName,
 								privacy: station.privacy,
 								partyMode: station.partyMode,
-								owner: station.owner
+								owner: station.owner,
+								privatePlaylist: station.privatePlaylist
 							}
 						});
 					}
@@ -322,6 +335,7 @@ module.exports = {
 				if (err) return cb({ status: 'failure', message: 'Something went wrong when saving the station.' });
 				stations.updateStation(stationId, () => {
 					//TODO Pub/sub for privacy change
+					cache.pub('station.updatePartyMode', {stationId: stationId, partyMode: newPartyMode});
 					stations.skipStation(stationId)();
 					cb({ status: 'success', message: 'Successfully updated the party mode.' });
 				})
@@ -382,6 +396,7 @@ module.exports = {
 		db.models.station.remove({ _id: stationId }, (err) => {
 			if (err) return cb({status: 'failure', message: 'Something went wrong when deleting that station.'});
 			cache.hdel('stations', stationId, () => {
+				cache.pub('station.remove', stationId);
 				return cb({ status: 'success', message: 'Station successfully removed' });
 			});
 		});
@@ -530,6 +545,7 @@ module.exports = {
 							stations.updateStation(stationId, (err, station) => {
 								if (err) return cb(err);
 								stations.skipStation(stationId)();
+								cache.pub('privatePlaylist.selected', {playlistId, stationId});
 								cb({'status': 'success', 'message': 'Playlist selected.'});
 							});
 						});

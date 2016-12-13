@@ -8,12 +8,13 @@ const utils = require('../utils');
 const hooks = require('./hooks');
 const queueSongs = require('./queueSongs');
 
-cache.sub('song.like', (data) => {
-	utils.emitToRoom(`song.${data.songId}`, 'event:song.like', {songId: data.songId, undisliked: data.undisliked});
-	utils.socketsFromUser(data.userId, (sockets) => {
-		sockets.forEach((socket) => {
-			socket.emit('event:song.newRatings', {songId: data.songId, liked: true, disliked: false});
-		});
+cache.sub('song.removed', songId => {
+	utils.emitToRoom('admin.songs', 'event:admin.song.removed', songId);
+});
+
+cache.sub('song.added', songId => {
+	db.models.queueSong.findOne({_id: songId}, (err, song) => {
+		utils.emitToRoom('admin.songs', 'event:admin.song.added', song);
 	});
 });
 
@@ -64,7 +65,14 @@ module.exports = {
 	}),
 
 	remove: hooks.adminRequired((session, songId, cb) => {
-		db.models.song.remove({ _id: songId });
+		db.models.song.remove({ _id: songId }, (err) => {
+			if (err) return cb({status: 'failure', message: err.message});
+			cache.hdel('songs', songId, (err) => {
+				if (err) return cb({status: 'failure', message: err.message});
+				cache.pub('song.removed', songId);
+				cb({status: 'success', message: 'Successfully removed the song.'});
+			});
+		});
 	}),
 
 	add: hooks.adminRequired((session, song, cb, userId) => {
@@ -75,8 +83,13 @@ module.exports = {
 				newSong.acceptedBy = userId;
 				newSong.acceptedAt = Date.now();
 				if (!existingSong) newSong.save(err => {
-					if (err) console.error(err);
-					else cb({ status: 'success', message: 'Song has been moved from Queue' })
+					if (err) {
+						console.error(err);
+						cb({ status: 'failure', message: 'Something went wrong while adding the song to the queue.' });
+					} else {
+						cache.pub('song.added', songId);
+						cb({ status: 'success', message: 'Song has been moved from Queue' });
+					}
 				});
 			});
 			//TODO Check if video is in queue and Add the song to the appropriate stations

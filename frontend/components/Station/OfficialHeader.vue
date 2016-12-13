@@ -42,9 +42,9 @@
 			</a>
 		</div>
 
-		<!--<div class='nav-center'>
-			{{title}}
-		</div>-->
+		<div class='nav-center stationDisplayName'>
+			{{$parent.station.displayName}}
+		</div>
 
 		<span class="nav-toggle" :class="{ 'is-active': isMobile }" @click="isMobile = !isMobile">
 			<span></span>

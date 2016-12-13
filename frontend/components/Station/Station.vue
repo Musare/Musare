@@ -90,7 +90,7 @@
 				type: '',
 				playerReady: false,
 				previousSong: null,
-				currentSong: null,
+				currentSong: {},
 				player: undefined,
 				timePaused: 0,
 				paused: false,
@@ -342,7 +342,7 @@
 				});
 
 				_this.socket.on('event:songs.next', data => {
-					_this.previousSong = _this.currentSong;
+					_this.previousSong = (_this.currentSong._id) ? _this.currentSong : null;
 					_this.currentSong = (data.currentSong) ? data.currentSong : {};
 					_this.startedAt = data.startedAt;
 					_this.paused = data.paused;
@@ -422,6 +422,18 @@
 				_this.socket.on('event:song.voteSkipSong', () => {
 					if (this.currentSong) this.currentSong.skipVotes++;
 				});
+
+				_this.socket.on('event:privatePlaylist.selected', (playlistId) => {
+					if (this.type === 'community') {
+						this.station.privatePlaylist = playlistId;
+					}
+				});
+
+				_this.socket.on('event:partyMode.updated', (partyMode) => {
+					if (this.type === 'community') {
+						this.station.partyMode = partyMode;
+					}
+				});
 			});
 
 			let volume = parseInt(localStorage.getItem("volume"));
@@ -447,6 +459,10 @@
 	.noSong {
 		color: #03A9F4;
 		text-align: center;
+	}
+
+	.stationDisplayName {
+		color: white !important;
 	}
 
 	.slideout {

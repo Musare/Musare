@@ -9,15 +9,19 @@ const config = require('config');
 const request = require('request');
 const hooks = require('./hooks');
 
-notifications.subscribe('queue.newSong', songId => {
-	utils.emitToRoom('admin.queue', 'event:song.new', { songId });
+cache.sub('queue.newSong', songId => {
+	console.log(123321);
+	db.models.queueSong.findOne({_id: songId}, (err, song) => {
+		console.log(err, song);
+		utils.emitToRoom('admin.queue', 'event:admin.queueSong.added', song);
+	});
 });
 
-notifications.subscribe('queue.removedSong', songId => {
-	utils.emitToRoom('admin.queue', 'event:song.removed', { songId });
+cache.sub('queue.removedSong', songId => {
+	utils.emitToRoom('admin.queue', 'event:admin.queueSong.removed', songId);
 });
 
-notifications.subscribe('queue.updatedSong', songId => {
+cache.sub('queue.updatedSong', songId => {
 	//TODO Retrieve new Song object
 	utils.emitToRoom('admin.queue', 'event:song.updated', { songId });
 });
@@ -51,7 +55,7 @@ module.exports = {
 	remove: hooks.adminRequired((session, songId, cb) => {
 		db.models.queueSong.remove({ _id: songId }, (err, res) => {
 			if (err) return cb({ status: 'failure', message: err.message });
-			//TODO Pub/sub for (queue)songs on admin pages.
+			cache.pub('queue.removedSong', songId);
 			cb({ status: 'success', message: 'Song was removed successfully' });
 		});
 	}),
