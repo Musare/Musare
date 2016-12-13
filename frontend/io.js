@@ -1,6 +1,7 @@
 let callbacks = [];
 let onConnectCallbacks = [];
 let onDisconnectCallbacks = [];
+let onConnectErrorCallbacks = [];
 
 export default {
 
@@ -18,6 +19,10 @@ export default {
 
 	onDisconnect: function(cb) {
 		onDisconnectCallbacks.push(cb);
+	},
+
+	onConnectError: function(cb) {
+		onConnectErrorCallbacks.push(cb);
 	},
 
 	removeAllListeners: function() {
@@ -47,6 +52,9 @@ export default {
 		this.socket.on('connect_error', () => {
 			// Connect error
 			console.log("SOCKET.IO ERROR WHILE CONNECTING");
+			onConnectErrorCallbacks.forEach((cb) => {
+				cb();
+			});
 		});
 		this.ready = true;
 		callbacks.forEach(callback => {

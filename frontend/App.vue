@@ -69,6 +69,9 @@
 			io.onConnect(() => {
 				_this.socketConnected = true;
 			});
+			io.onConnectError(() => {
+				_this.socketConnected = false;
+			});
 			io.onDisconnect(() => {
 				_this.socketConnected = false;
 			});
