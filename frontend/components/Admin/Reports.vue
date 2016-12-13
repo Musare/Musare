@@ -9,6 +9,7 @@
 						<td>Created At</td>
 						<td>Description</td>
 						<td>Issues</td>
+						<td>Options</td>
 					</tr>
 				</thead>
 				<tbody>
@@ -21,6 +22,9 @@
 						</td>
 						<td>
 							<span>{{ report.createdAt }}</span>
+						</td>
+						<td>
+							<span>{{ report.description }}</span>
 						</td>
 						<td>
 							<span>{{ report.issues }}</span>

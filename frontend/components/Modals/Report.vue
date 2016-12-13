@@ -8,7 +8,7 @@
 			</header>
 			<section class='modal-card-body'>
 				<div class='columns song-types'>
-					<div class='column song-type' v-if='$parent.previousSong !== null && $parent.previousSong.likes !== -1 && $parent.previousSong.dislikes !== -1'>
+					<div class='column song-type' v-if='$parent.previousSong !== null'>
 						<div class='card is-fullwidth' :class="{ 'is-highlight-active': isPreviousSongActive }" @click="highlight('previousSong')">
 							<header class='card-header'>
 								<p class='card-header-title'>
@@ -35,7 +35,7 @@
 							</div>
 						</div>
 					</div>
-					<div class='column song-type' v-if='$parent.currentSong !== null && $parent.currentSong.likes !== -1 && $parent.currentSong.dislikes !== -1'>
+					<div class='column song-type' v-if='$parent.currentSong !== {}'>
 						<div class='card is-fullwidth'  :class="{ 'is-highlight-active': isCurrentSongActive }" @click="highlight('currentSong')">
 							<header class='card-header'>
 								<p class='card-header-title'>
@@ -63,8 +63,7 @@
 						</div>
 					</div>
 				</div>
-				<h4 v-if='($parent.currentSong === null || ($parent.currentSong.likes === -1 && $parent.currentSong.dislikes === -1)) && ($parent.previousSong === null || ($parent.previousSong.likes === -1 || $parent.previousSong.dislikes === -1))'>There are currently no songs to report.</h4>
-				<div class='edit-report-wrapper' v-else>
+				<div class='edit-report-wrapper'>
 					<div class='columns is-multiline'>
 						<div class='column is-half' v-for='issue in issues'>
 							<label class='label'>{{ issue.name }}</label>
@@ -84,7 +83,7 @@
 				</div>
 			</section>
 			<footer class='modal-card-foot'>
-				<a class='button is-success' @click='create()' v-if='!(($parent.currentSong === null || ($parent.currentSong.likes === -1 && $parent.currentSong.dislikes === -1)) && ($parent.previousSong === null || ($parent.previousSong.likes === -1 || $parent.previousSong.dislikes === -1)))'>
+				<a class='button is-success' @click='create()'>
 					<i class='material-icons save-changes'>done</i>
 					<span>&nbsp;Create</span>
 				</a>
@@ -163,8 +162,10 @@
 		},
 		methods: {
 			create: function () {
-				this.socket.emit('reports.create', this.report, res => {
+				let _this = this;
+				_this.socket.emit('reports.create', _this.report, res => {
 					Toast.methods.addToast(res.message, 4000);
+					if (res.status == 'success') _this.$parent.modals.report = !_this.$parent.modals.report;
 				});
 			},
 			updateCharactersRemaining: function () {

@@ -9,7 +9,7 @@
 					<i class='material-icons'>settings</i>
 				</span>
 			</a>
-			<a v-if='$parent.$parent.loggedIn' class='nav-item' href='#' @click='$parent.modals.report = !$parent.modals.report'>
+			<a v-if='$parent.$parent.loggedIn && !$parent.noSong && !$parent.simpleSong' class='nav-item' href='#' @click='$parent.modals.report = !$parent.modals.report'>
 				<span class='icon'>
 					<i class='material-icons'>report</i>
 				</span>

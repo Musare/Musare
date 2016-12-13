@@ -32,7 +32,7 @@ module.exports = {
 			(next) => {
 				songs.getSong(data.songId, (err, song) => {
 					if (err) return next(err);
-					if (!song) return next('Song does not exist in our Database.');
+					if (!song) return next('Song does not exist in our Database');
 					next();
 				});
 			},

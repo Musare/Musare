@@ -10,9 +10,7 @@ const request = require('request');
 const hooks = require('./hooks');
 
 cache.sub('queue.newSong', songId => {
-	console.log(123321);
 	db.models.queueSong.findOne({_id: songId}, (err, song) => {
-		console.log(err, song);
 		utils.emitToRoom('admin.queue', 'event:admin.queueSong.added', song);
 	});
 });

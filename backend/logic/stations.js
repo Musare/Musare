@@ -235,9 +235,7 @@ module.exports = {
 																		thumbnail: song.thumbnail
 																	};
 																	station.playlist = newPlaylist;
-																} else {
-																	$set.currentSong = _this.defaultSong;
-																}
+																} else $set.currentSong = _this.defaultSong;
 																$set.startedAt = Date.now();
 																$set.timePaused = 0;
 																next(null, $set);
