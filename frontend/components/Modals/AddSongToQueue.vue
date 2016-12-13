@@ -71,7 +71,13 @@
 			},
 			submitQuery: function () {
 				let _this = this;
-				_this.socket.emit('apis.searchYoutube', _this.querySearch, results => {
+				let query = _this.querySearch;
+				if (query.indexOf('&index=') !== -1) {
+					query = query.split('&index=');
+					query.pop();
+					query = query.join('');
+				}
+				_this.socket.emit('apis.searchYoutube', query, results => {
 					results = results.data;
 					_this.queryResults = [];
 					for (let i = 0; i < results.items.length; i++) {
