@@ -137,7 +137,6 @@
 	.nav-center {
 		display: flex;
     	align-items: center;
-		text-transform: uppercase;
 		color: $blue;
 		font-size: 22px;
 	}
