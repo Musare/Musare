@@ -111,6 +111,7 @@ let lib = {
 	}),
 
 	addSongToPlaylist: hooks.loginRequired((session, songId, playlistId, cb, userId) => {
+		console.log(songId);
 		async.waterfall([
 			(next) => {
 				playlists.getPlaylist(playlistId, (err, playlist) => {
@@ -163,7 +164,7 @@ let lib = {
 		});
 	}),
 	
-	/*addSetToPlaylist: hooks.loginRequired((session, url, playlistId, cb, userId) => {
+	addSetToPlaylist: hooks.loginRequired((session, url, playlistId, cb, userId) => {
 		async.waterfall([
 			(next) => {
 				utils.getPlaylistFromYouTube(url, songs => {
@@ -171,10 +172,18 @@ let lib = {
 				});
 			},
 			(songs, next) => {
-				for (let s = 0; s < songs.length; s++) {
-					lib.addSongToPlaylist(session, songs[s].contentDetails.videoId, playlistId, (res) => {})();
+				let processed = 0;
+				function checkDone() {
+					if (processed === songs.length) {
+						next();
+					}
 				}
-				next(null);
+				for (let s = 0; s < songs.length; s++) {
+					lib.addSongToPlaylist(session, songs[s].contentDetails.videoId, playlistId, () => {
+						processed++;
+						checkDone();
+					});
+				}
 			},
 			(next) => {
 				playlists.getPlaylist(playlistId, (err, playlist) => {
@@ -186,9 +195,9 @@ let lib = {
 		],
 		(err, playlist) => {
 			if (err) return cb({ status: 'failure', message: err });
-			else if (playlist.songs) return cb({ status: 'success', message: 'Playlist has been successfully added', data: playlist.songs });
+			else if (playlist.songs) return cb({ status: 'success', message: 'Playlist has been successfully imported.', data: playlist.songs });
 		});
-	}),*/
+	}),
 
 
 	removeSongFromPlaylist: hooks.loginRequired((session, songId, playlistId, cb, userId) => {
