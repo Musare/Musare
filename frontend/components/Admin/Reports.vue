@@ -78,6 +78,9 @@
 						return report._id !== reportId;
 					});
 				});
+				_this.socket.on('event:admin.report.created', report => {
+					_this.reports.push(report);
+				});
 				io.onConnect(() => {
 					_this.init();
 				});

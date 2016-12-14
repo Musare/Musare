@@ -12,6 +12,10 @@ cache.sub('report.resolve', reportId => {
 	utils.emitToRoom('admin.reports', 'event:admin.report.resolved', reportId);
 });
 
+cache.sub('report.create', report => {
+	utils.emitToRoom('admin.reports', 'event:admin.report.created', report);
+});
+
 module.exports = {
 
 	index: hooks.adminRequired((session, cb) => {
@@ -114,9 +118,12 @@ module.exports = {
 				db.models.report.create(data, next);
 			}
 
-		], err => {
+		], (err, report) => {
 			if (err) return cb({ 'status': 'failure', 'message': 'Something went wrong'});
-			return cb({ 'status': 'success', 'message': 'Successfully created report' });
+			else {
+				cache.pub('report.create', report);
+				return cb({ 'status': 'success', 'message': 'Successfully created report' });
+			}
 		});
 	})
 
