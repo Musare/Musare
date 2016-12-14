@@ -61,4 +61,9 @@
 	}
 </script>
 
-<style lang='scss' scoped></style>
+<style lang='scss' scoped>
+	.is-active a {
+		color: #03a9f4 !important;
+		border-color: #03a9f4 !important;
+	}
+</style>
