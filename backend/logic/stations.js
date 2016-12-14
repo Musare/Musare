@@ -389,11 +389,10 @@ module.exports = {
 
 	defaultSong: {
 		_id: '60ItHLz5WEA',
-		title: 'Faded',
-		artists: ['Alan Walker'],
+		title: 'Faded - Alan Walker',
 		duration: 212,
-		skipDuration: 0,
-		thumbnail: 'https://i.scdn.co/image/2ddde58427f632037093857ebb71a67ddbdec34b'
+		likes: -1,
+		dislikes: -1
 	}
 
 };

@@ -14,7 +14,7 @@
 					<i class='material-icons'>queue_music</i>
 				</span>
 			</a>
-			<a v-if='$parent.$parent.loggedIn && !$parent.noSong' class='nav-item' href='#' @click='$parent.modals.report = !$parent.modals.report'>
+			<a v-if='$parent.$parent.loggedIn && !$parent.noSong && !$parent.simpleSong' class='nav-item' href='#' @click='$parent.modals.report = !$parent.modals.report'>
 				<span class='icon'>
 					<i class='material-icons'>report</i>
 				</span>
@@ -43,7 +43,7 @@
 		</div>
 
 		<div class='nav-center stationDisplayName'>
-			{{$parent.station.displayName}}
+			{{ $parent.station.displayName }}
 		</div>
 
 		<span class="nav-toggle" :class="{ 'is-active': isMobile }" @click="isMobile = !isMobile">
