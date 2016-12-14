@@ -249,9 +249,7 @@ module.exports = {
 				if (err) return cb({ status: 'failure', message: 'Something went wrong when saving the station.' });
 				stations.updateStation(stationId, (err, station) => {
 					cache.pub('station.voteSkipSong', stationId);
-					if (station.currentSong && station.currentSong.skipVotes.length >= 3) {
-						stations.skipStation(stationId)();
-					}
+					if (station.currentSong && station.currentSong.skipVotes.length >= 3) stations.skipStation(stationId)();
 					cb({ status: 'success', message: 'Successfully voted to skip the song.' });
 				})
 			});

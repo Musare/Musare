@@ -183,9 +183,7 @@ module.exports = {
 		let socket = this.socketFromSession(socketId);
 		let rooms = socket.rooms;
 		for (let room in rooms) {
-			if (room.indexOf('song.') !== -1) {
-				socket.leave(rooms);
-			}
+			if (room.indexOf('song.') !== -1) socket.leave(rooms);
 		}
 		socket.join(room);
 	},
@@ -194,9 +192,7 @@ module.exports = {
 			let socket = sockets[id];
 			let rooms = socket.rooms;
 			for (let room in rooms) {
-				if (room.indexOf('song.') !== -1) {
-					socket.leave(room);
-				}
+				if (room.indexOf('song.') !== -1) socket.leave(room);
 			}
 			socket.join(room);
 		}
@@ -206,9 +202,7 @@ module.exports = {
 			let socket = sockets[id];
 			let rooms = socket.rooms;
 			for (let room in rooms) {
-				if (room.indexOf('song.') !== -1) {
-					socket.leave(room);
-				}
+				if (room.indexOf('song.') !== -1) socket.leave(room);
 			}
 		}
 	},
@@ -230,9 +224,7 @@ module.exports = {
 		let roomSockets = [];
 		for (let id in sockets) {
 			let socket = sockets[id];
-			if (socket.rooms[room]) {
-				roomSockets.push(socket);
-			}
+			if (socket.rooms[room]) roomSockets.push(socket);
 		}
 		return roomSockets;
 	},
@@ -251,9 +243,7 @@ module.exports = {
 				youtubeRequestCallbacks.splice(0, 1);
 				if (youtubeRequestCallbacks.length > 0) {
 					youtubeRequestCallbacks[0].cb(youtubeRequestCallbacks[0].songId);
-				} else {
-					youtubeRequestsActive = false;
-				}
+				} else youtubeRequestsActive = false;
 
 				if (err) {
 					console.error(err);
@@ -316,12 +306,11 @@ module.exports = {
 					console.error(err);
 					return next('Failed to find playlist from YouTube');
 				}
-				body = JSON.parse(body);
 
+				body = JSON.parse(body);
 				songs = songs.concat(body.items);
-				if (body.nextPageToken) {
-					getPage(body.nextPageToken, songs);
-				} else {
+				if (body.nextPageToken) getPage(body.nextPageToken, songs);
+				else {
 					console.log(songs);
 					cb(songs);
 				}

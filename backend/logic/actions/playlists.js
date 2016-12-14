@@ -73,7 +73,7 @@ let lib = {
 
 	indexForUser: hooks.loginRequired((session, cb, userId) => {
 		db.models.playlist.find({ createdBy: userId }, (err, playlists) => {
-			if (err) return cb({ status: 'failure', message: 'Something went wrong when getting the playlists.'});;
+			if (err) return cb({ status: 'failure', message: 'Something went wrong when getting the playlists'});;
 			cb({
 				status: 'success',
 				data: playlists
@@ -107,7 +107,7 @@ let lib = {
 
 	getPlaylist: hooks.loginRequired((session, id, cb, userId) => {
 		playlists.getPlaylist(id, (err, playlist) => {
-			if (err || playlist.createdBy !== userId) return cb({status: 'success', message: 'Playlist not found.'});
+			if (err || playlist.createdBy !== userId) return cb({status: 'success', message: 'Playlist not found'});
 			if (err == null) return cb({
 				status: 'success',
 				data: playlist
@@ -131,7 +131,7 @@ let lib = {
 		async.waterfall([
 			(next) => {
 				playlists.getPlaylist(playlistId, (err, playlist) => {
-					if (err || !playlist || playlist.createdBy !== userId) return next('Something went wrong when trying to get the playlist.');
+					if (err || !playlist || playlist.createdBy !== userId) return next('Something went wrong when trying to get the playlist');
 
 					let found = false;
 					playlist.songs.forEach((song) => {
@@ -159,7 +159,7 @@ let lib = {
 				});
 			},
 			(newSong, next) => {
-				db.models.playlist.update({_id: playlistId}, {$push: {songs: newSong}}, (err) => {
+				db.models.playlist.update({ _id: playlistId }, { $push: { songs: newSong } }, (err) => {
 					if (err) {
 						console.error(err);
 						return next('Failed to add song to playlist');
@@ -190,9 +190,7 @@ let lib = {
 			(songs, next) => {
 				let processed = 0;
 				function checkDone() {
-					if (processed === songs.length) {
-						next();
-					}
+					if (processed === songs.length) next();
 				}
 				for (let s = 0; s < songs.length; s++) {
 					lib.addSongToPlaylist(session, songs[s].contentDetails.videoId, playlistId, () => {
@@ -203,7 +201,7 @@ let lib = {
 			},
 			(next) => {
 				playlists.getPlaylist(playlistId, (err, playlist) => {
-					if (err || !playlist || playlist.createdBy !== userId) return next('Something went wrong while trying to get the playlist.');
+					if (err || !playlist || playlist.createdBy !== userId) return next('Something went wrong while trying to get the playlist');
 
 					next(null, playlist);
 				});
@@ -218,7 +216,7 @@ let lib = {
 
 	removeSongFromPlaylist: hooks.loginRequired((session, songId, playlistId, cb, userId) => {
 		playlists.getPlaylist(playlistId, (err, playlist) => {
-			if (err || !playlist || playlist.createdBy !== userId) return cb({ status: 'failure', message: 'Something went wrong when getting the playlist.'});
+			if (err || !playlist || playlist.createdBy !== userId) return cb({ status: 'failure', message: 'Something went wrong when getting the playlist'});
 
 			for (let z = 0; z < playlist.songs.length; z++) {
 				if (playlist.songs[z]._id == songId) playlist.songs.shift(playlist.songs[z]);
@@ -250,7 +248,7 @@ let lib = {
 
 	moveSongToTop: hooks.loginRequired((session, playlistId, songId, cb, userId) => {
 		playlists.getPlaylist(playlistId, (err, playlist) => {
-			if (err || !playlist || playlist.createdBy !== userId) return cb({ status: 'failure', message: 'Something went wrong when getting the playlist.'});
+			if (err || !playlist || playlist.createdBy !== userId) return cb({ status: 'failure', message: 'Something went wrong when getting the playlist'});
 			let found = false;
 			let foundSong;
 			playlist.songs.forEach((song) => {
@@ -263,7 +261,7 @@ let lib = {
 			if (found) {
 				db.models.playlist.update({_id: playlistId}, {$pull: {songs: {_id: songId}}}, (err) => {
 					console.log(err);
-					if (err) return cb({status: 'failure', message: 'Something went wrong when moving the song.'});
+					if (err) return cb({status: 'failure', message: 'Something went wrong when moving the song'});
 					db.models.playlist.update({_id: playlistId}, {
 						$push: {
 							songs: {
@@ -273,7 +271,7 @@ let lib = {
 						}
 					}, (err) => {
 						console.log(err);
-						if (err) return cb({status: 'failure', message: 'Something went wrong when moving the song.'});
+						if (err) return cb({status: 'failure', message: 'Something went wrong when moving the song'});
 						playlists.updatePlaylist(playlistId, (err) => {
 							if (err) return cb({ status: 'failure', message: err});
 							cache.pub('playlist.moveSongToTop', {playlistId, songId, userId: userId});
@@ -289,7 +287,7 @@ let lib = {
 
 	moveSongToBottom: hooks.loginRequired((session, playlistId, songId, cb, userId) => {
 		playlists.getPlaylist(playlistId, (err, playlist) => {
-			if (err || !playlist || playlist.createdBy !== userId) return cb({ status: 'failure', message: 'Something went wrong when getting the playlist.'});
+			if (err || !playlist || playlist.createdBy !== userId) return cb({ status: 'failure', message: 'Something went wrong when getting the playlist'});
 			let found = false;
 			let foundSong;
 			playlist.songs.forEach((song) => {
@@ -302,12 +300,12 @@ let lib = {
 			if (found) {
 				db.models.playlist.update({_id: playlistId}, {$pull: {songs: {_id: songId}}}, (err) => {
 					console.log(err);
-					if (err) return cb({status: 'failure', message: 'Something went wrong when moving the song.'});
+					if (err) return cb({status: 'failure', message: 'Something went wrong when moving the song'});
 					db.models.playlist.update({_id: playlistId}, {
 						$push: { songs: foundSong }
 					}, (err) => {
 						console.log(err);
-						if (err) return cb({status: 'failure', message: 'Something went wrong when moving the song.'});
+						if (err) return cb({status: 'failure', message: 'Something went wrong when moving the song'});
 						playlists.updatePlaylist(playlistId, (err) => {
 							if (err) return cb({ status: 'failure', message: err});
 							cache.pub('playlist.moveSongToBottom', {playlistId, songId, userId: userId});
@@ -315,9 +313,7 @@ let lib = {
 						})
 					});
 				});
-			} else {
-				return cb({status: 'failure', message: 'Song not found.'});
-			}
+			} else return cb({status: 'failure', message: 'Song not found'});
 		});
 	}),
 
