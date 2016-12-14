@@ -114,7 +114,8 @@
 				queue: [],
 				timeBeforePause: 0,
 				station: {},
-				skipVotes: 0
+				skipVotes: 0,
+				privatePlaylistQueueSelected: null
 			}
 		},
 		methods: {
@@ -745,4 +746,19 @@
 	.btn-search {
 		font-size: 14px;
 	}
+
+	.menu { padding: 0 10px; }
+
+	.menu-list li a:hover { color: #000 !important; }
+
+	.menu-list li {
+		display: flex;
+		justify-content: space-between;
+	}
+
+	.menu-list a {
+		padding: 0 10px !important;
+	}
+
+	.icons-group { display: flex; }
 </style>

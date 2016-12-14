@@ -7,6 +7,18 @@
 				<button class="delete" @click="$parent.toggleModal('addSongToQueue')" ></button>
 			</header>
 			<section class="modal-card-body">
+				<aside class='menu' v-if='$parent.$parent.loggedIn'>
+					<ul class='menu-list'>
+						<li v-for='playlist in playlists' track-by='$index'>
+							<a :href='' target='_blank' @click='$parent.editPlaylist(playlist._id)'>{{ playlist.displayName }}</a>
+							<div class='controls'>
+								<a href='#' @click='selectPlaylist(playlist._id)' v-if="!isPlaylistSelected(playlist._id)"><i class='material-icons'>panorama_fish_eye</i></a>
+								<a href='#' @click='unSelectPlaylist()' v-if="isPlaylistSelected(playlist._id)"><i class='material-icons'>lens</i></a>
+							</div>
+						</li>
+					</ul>
+					<br />
+				</aside>
 				<div class="control is-grouped">
 					<p class="control is-expanded">
 						<input class="input" type="text" placeholder="YouTube Query" v-model="querySearch">
@@ -45,10 +57,30 @@
 		data() {
 			return {
 				querySearch: '',
-				queryResults: []
+				queryResults: [],
+				playlists: [],
+				privatePlaylistQueueSelected: null
 			}
 		},
 		methods: {
+			isPlaylistSelected: function(playlistId) {
+				console.log(this.privatePlaylistQueueSelected === playlistId);
+				return this.privatePlaylistQueueSelected === playlistId;
+			},
+			selectPlaylist: function (playlistId) {
+				let _this = this;
+				if (_this.$parent.type === 'community') {
+					_this.privatePlaylistQueueSelected = playlistId;
+					_this.$parent.privatePlaylistQueueSelected = playlistId;
+				}
+			},
+			unSelectPlaylist: function () {
+				let _this = this;
+				if (_this.$parent.type === 'community') {
+					_this.privatePlaylistQueueSelected = null;
+					_this.$parent.privatePlaylistQueueSelected = null;
+				}
+			},
 			addSongToQueue: function (songId) {
 				let _this = this;
 				if (_this.$parent.type === 'community') {
@@ -100,6 +132,10 @@
 			let _this = this;
 			io.getSocket((socket) => {
 				_this.socket = socket;
+				_this.socket.emit('playlists.indexForUser', res => {
+					if (res.status === 'success') _this.playlists = res.data;
+				});
+				_this.privatePlaylistQueueSelected = _this.$parent.privatePlaylistQueueSelected;
 			});
 		},
 		events: {
