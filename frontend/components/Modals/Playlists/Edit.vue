@@ -172,6 +172,26 @@
 				_this.socket.on('event:playlist.updateDisplayName', (data) => {
 					if (_this.playlist._id === data.playlistId) _this.playlist.displayName = data.displayName;
 				});
+				_this.socket.on('event:playlist.moveSongToBottom', (data) => {
+					if (_this.playlist._id === data.playlistId) {
+						let songIndex;
+						_this.playlist.songs.forEach((song, index) => {
+							if (song._id === data.songId) songIndex = index;
+						});
+						let song = _this.playlist.songs.splice(songIndex, 1)[0];
+						_this.playlist.songs.push(song);
+					}
+				});
+				_this.socket.on('event:playlist.moveSongToTop', (data) => {
+					if (_this.playlist._id === data.playlistId) {
+						let songIndex;
+						_this.playlist.songs.forEach((song, index) => {
+							if (song._id === data.songId) songIndex = index;
+						});
+						let song = _this.playlist.songs.splice(songIndex, 1)[0];
+						_this.playlist.songs.unshift(song);
+					}
+				});
 			});
 		},
 		events: {
