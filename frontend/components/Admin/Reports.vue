@@ -8,7 +8,6 @@
 						<td>Created By</td>
 						<td>Created At</td>
 						<td>Description</td>
-						<td>Issues</td>
 						<td>Options</td>
 					</tr>
 				</thead>
@@ -27,38 +26,64 @@
 							<span>{{ report.description }}</span>
 						</td>
 						<td>
-							<span>{{ report.issues }}</span>
-						</td>
-						<td>
-							<a class='button is-primary' @click='resolve()'>Resolve</a>
+							<a class='button is-warning' @click='toggleModal(report.issues)'>Issues</a>
+							<a class='button is-primary' @click='resolve(report._id)'>Resolve</a>
 						</td>
 					</tr>
 				</tbody>
 			</table>
 		</div>
 	</div>
+
+	<issues-modal v-if='isModalActive'></issues-modal>
 </template>
 
 <script>
 	import { Toast } from 'vue-roaster';
 	import io from '../../io';
 
+	import IssuesModal from '../Modals/IssuesModal.vue';
+
 	export default {
 		data() {
 			return {
-				reports: []
+				reports: [],
+				isModalActive: false
 			}
 		},
-		methods: {},
+		methods: {
+			init: function() {
+				this.socket.emit('apis.joinAdminRoom', 'reports', data => {});
+			},
+			toggleModal: function (issues) {
+				this.isModalActive = !this.isModalActive;
+				if (this.isModalActive) this.currentReport = issues;
+			},
+			resolve: function (reportId) {
+				this.socket.emit('reports.resolve', reportId, res => {
+					Toast.methods.addToast(res.message, 3000);
+				});
+			}
+		},
 		ready: function () {
 			let _this = this;
 			io.getSocket((socket) => {
 				_this.socket = socket;
+				if (_this.socket.connected) _this.init();
 				_this.socket.emit('reports.index', res => {
 					_this.reports = res.data;
 				});
+				_this.socket.on('event:admin.report.resolved', reportId => {
+					_this.reports = _this.reports.filter(report => {
+						return report._id !== reportId;
+					});
+				});
+				io.onConnect(() => {
+					_this.init();
+				});
 			});
-		}
+		},
+		components: { IssuesModal }
 	}
 </script>
 
