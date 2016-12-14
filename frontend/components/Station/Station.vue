@@ -331,14 +331,19 @@
 
 			io.getSocket((socket) => {
 				_this.socket = socket;
+
 				io.removeAllListeners();
 
-				if (_this.socket.connected) {
-					_this.joinStation();
-				}
-
+				if (_this.socket.connected) _this.joinStation();
 				io.onConnect(() => {
 					_this.joinStation();
+				});
+
+				_this.socket.emit('stations.find', _this.stationId, res => {
+					if (res.status === 'error') {
+						_this.$router.go('/404');
+						Toast.methods.addToast(res.message, 3000);
+					}
 				});
 
 				_this.socket.on('event:songs.next', data => {

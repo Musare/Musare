@@ -126,6 +126,13 @@ module.exports = {
 		});
 	},
 
+	find: (session, stationId, cb) => {
+		stations.getStation(stationId, (err, station) => {
+			if (err) cb({ status: 'error', message: err });
+			else if (station) cb({ status: 'success', data: station });
+		});
+	},
+
 	getPlaylist: (session, stationId, cb) => {
 		let playlist = [];
 

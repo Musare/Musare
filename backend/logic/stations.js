@@ -146,7 +146,7 @@ module.exports = {
 					station = cache.schemas.station(station);
 					cache.hset('stations', stationId, station);
 					next(true, station);
-				} else next('Station not found.');
+				} else next('Station not found');
 			},
 
 		], (err, station) => {
