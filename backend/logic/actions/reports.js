@@ -111,6 +111,14 @@ module.exports = {
 
 				next();
 			},
+			
+			(next) => {
+				for (let r = 0; r < data.issues.length; r++) {
+					if (data.issues[r].reasons.length === 0) data.issues.splice(r, 1);
+				}
+
+				next();
+			},
 
 			(next) => {
 				data.createdBy = userId;

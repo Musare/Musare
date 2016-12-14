@@ -57,7 +57,7 @@
 			},
 			toggleModal: function (report) {
 				this.isModalActive = !this.isModalActive;
-				if (this.isModalActive) this.currentReport = report;
+				if (this.isModalActive) this.editing = report;
 			},
 			resolve: function (reportId) {
 				this.socket.emit('reports.resolve', reportId, res => {
