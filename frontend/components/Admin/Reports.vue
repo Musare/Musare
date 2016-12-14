@@ -41,6 +41,7 @@
 
 <script>
 	import { Toast } from 'vue-roaster';
+	import io from '../../io';
 
 	export default {
 		data() {
