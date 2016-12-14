@@ -90,7 +90,18 @@
 		methods: {
 			searchForSongs: function () {
 				let _this = this;
-				_this.socket.emit('apis.searchYoutube', _this.songQuery, res => {
+				let query = _this.songQuery;
+				if (query.indexOf('&index=') !== -1) {
+					query = query.split('&index=');
+					query.pop();
+					query = query.join('');
+				}
+				if (query.indexOf('&list=') !== -1) {
+					query = query.split('&list=');
+					query.pop();
+					query = query.join('');
+				}
+				_this.socket.emit('apis.searchYoutube', query, res => {
 					if (res.status == 'success') {
 						_this.songQueryResults = [];
 						for (let i = 0; i < res.data.items.length; i++) {

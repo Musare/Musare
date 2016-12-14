@@ -77,6 +77,11 @@
 					query.pop();
 					query = query.join('');
 				}
+				if (query.indexOf('&list=') !== -1) {
+					query = query.split('&list=');
+					query.pop();
+					query = query.join('');
+				}
 				_this.socket.emit('apis.searchYoutube', query, results => {
 					results = results.data;
 					_this.queryResults = [];
