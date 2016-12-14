@@ -16,7 +16,7 @@
 						</tr>
 					</thead>
 					<tbody>
-						<tr v-for='(index, issue) in $parent.currentReport' track-by='$index'>
+						<tr v-for='(index, issue) in $parent.currentReport.issues' track-by='$index'>
 							<td>
 								<span>{{ issue.name }}</span>
 							</td>
@@ -29,7 +29,7 @@
 
 			</section>
 			<footer class='modal-card-foot'>
-				<a class='button is-primary' @click='$parent.resolve()'>
+				<a class='button is-primary' @click='$parent.resolve($parent.currentReport._id)'>
 					<span>Resolve</span>
 				</a>
 				<a class='button is-danger' @click='$parent.toggleModal()'>

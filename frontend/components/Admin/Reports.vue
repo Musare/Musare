@@ -26,7 +26,7 @@
 							<span>{{ report.description }}</span>
 						</td>
 						<td>
-							<a class='button is-warning' @click='toggleModal(report.issues)'>Issues</a>
+							<a class='button is-warning' @click='toggleModal(report)'>Issues</a>
 							<a class='button is-primary' @click='resolve(report._id)'>Resolve</a>
 						</td>
 					</tr>
@@ -55,9 +55,9 @@
 			init: function() {
 				this.socket.emit('apis.joinAdminRoom', 'reports', data => {});
 			},
-			toggleModal: function (issues) {
+			toggleModal: function (report) {
 				this.isModalActive = !this.isModalActive;
-				if (this.isModalActive) this.currentReport = issues;
+				if (this.isModalActive) this.currentReport = report;
 			},
 			resolve: function (reportId) {
 				this.socket.emit('reports.resolve', reportId, res => {
