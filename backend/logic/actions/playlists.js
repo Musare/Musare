@@ -29,6 +29,22 @@ cache.sub('playlist.delete', res => {
 	});
 });
 
+cache.sub('playlist.moveSongToTop', res => {
+	utils.socketsFromUser(res.userId, (sockets) => {
+		sockets.forEach((socket) => {
+			socket.emit('event:playlist.moveSongToTop', {playlistId: res.playlistId, songId: res.songId});
+		});
+	});
+});
+
+cache.sub('playlist.moveSongToBottom', res => {
+	utils.socketsFromUser(res.userId, (sockets) => {
+		sockets.forEach((socket) => {
+			socket.emit('event:playlist.moveSongToBottom', {playlistId: res.playlistId, songId: res.songId});
+		});
+	});
+});
+
 cache.sub('playlist.addSong', res => {
 	utils.socketsFromUser(res.userId, (sockets) => {
 		sockets.forEach((socket) => {
@@ -57,7 +73,7 @@ let lib = {
 
 	indexForUser: hooks.loginRequired((session, cb, userId) => {
 		db.models.playlist.find({ createdBy: userId }, (err, playlists) => {
-			if (err) return cb({ status: 'failure', message: 'Something went wrong when getting the playlists.'});;
+			if (err) return cb({ status: 'failure', message: 'Something went wrong when getting the playlists'});;
 			cb({
 				status: 'success',
 				data: playlists
@@ -91,7 +107,7 @@ let lib = {
 
 	getPlaylist: hooks.loginRequired((session, id, cb, userId) => {
 		playlists.getPlaylist(id, (err, playlist) => {
-			if (err || playlist.createdBy !== userId) return cb({status: 'success', message: 'Playlist not found.'});
+			if (err || playlist.createdBy !== userId) return cb({status: 'success', message: 'Playlist not found'});
 			if (err == null) return cb({
 				status: 'success',
 				data: playlist
@@ -111,10 +127,11 @@ let lib = {
 	}),
 
 	addSongToPlaylist: hooks.loginRequired((session, songId, playlistId, cb, userId) => {
+		console.log(songId);
 		async.waterfall([
 			(next) => {
 				playlists.getPlaylist(playlistId, (err, playlist) => {
-					if (err || !playlist || playlist.createdBy !== userId) return next('Something went wrong when trying to get the playlist.');
+					if (err || !playlist || playlist.createdBy !== userId) return next('Something went wrong when trying to get the playlist');
 
 					let found = false;
 					playlist.songs.forEach((song) => {
@@ -142,7 +159,7 @@ let lib = {
 				});
 			},
 			(newSong, next) => {
-				db.models.playlist.update({_id: playlistId}, {$push: {songs: newSong}}, (err) => {
+				db.models.playlist.update({ _id: playlistId }, { $push: { songs: newSong } }, (err) => {
 					if (err) {
 						console.error(err);
 						return next('Failed to add song to playlist');
@@ -163,7 +180,7 @@ let lib = {
 		});
 	}),
 	
-	/*addSetToPlaylist: hooks.loginRequired((session, url, playlistId, cb, userId) => {
+	addSetToPlaylist: hooks.loginRequired((session, url, playlistId, cb, userId) => {
 		async.waterfall([
 			(next) => {
 				utils.getPlaylistFromYouTube(url, songs => {
@@ -171,14 +188,20 @@ let lib = {
 				});
 			},
 			(songs, next) => {
-				for (let s = 0; s < songs.length; s++) {
-					lib.addSongToPlaylist(session, songs[s].contentDetails.videoId, playlistId, (res) => {})();
+				let processed = 0;
+				function checkDone() {
+					if (processed === songs.length) next();
 				}
-				next(null);
+				for (let s = 0; s < songs.length; s++) {
+					lib.addSongToPlaylist(session, songs[s].contentDetails.videoId, playlistId, () => {
+						processed++;
+						checkDone();
+					});
+				}
 			},
 			(next) => {
 				playlists.getPlaylist(playlistId, (err, playlist) => {
-					if (err || !playlist || playlist.createdBy !== userId) return next('Something went wrong while trying to get the playlist.');
+					if (err || !playlist || playlist.createdBy !== userId) return next('Something went wrong while trying to get the playlist');
 
 					next(null, playlist);
 				});
@@ -186,14 +209,14 @@ let lib = {
 		],
 		(err, playlist) => {
 			if (err) return cb({ status: 'failure', message: err });
-			else if (playlist.songs) return cb({ status: 'success', message: 'Playlist has been successfully added', data: playlist.songs });
+			else if (playlist.songs) return cb({ status: 'success', message: 'Playlist has been successfully imported.', data: playlist.songs });
 		});
-	}),*/
+	}),
 
 
 	removeSongFromPlaylist: hooks.loginRequired((session, songId, playlistId, cb, userId) => {
 		playlists.getPlaylist(playlistId, (err, playlist) => {
-			if (err || !playlist || playlist.createdBy !== userId) return cb({ status: 'failure', message: 'Something went wrong when getting the playlist.'});
+			if (err || !playlist || playlist.createdBy !== userId) return cb({ status: 'failure', message: 'Something went wrong when getting the playlist'});
 
 			for (let z = 0; z < playlist.songs.length; z++) {
 				if (playlist.songs[z]._id == songId) playlist.songs.shift(playlist.songs[z]);
@@ -221,7 +244,80 @@ let lib = {
 				return cb({ status: 'success', message: 'Playlist has been successfully updated' });
 			})
 		});
-	}),/*
+	}),
+
+	moveSongToTop: hooks.loginRequired((session, playlistId, songId, cb, userId) => {
+		playlists.getPlaylist(playlistId, (err, playlist) => {
+			if (err || !playlist || playlist.createdBy !== userId) return cb({ status: 'failure', message: 'Something went wrong when getting the playlist'});
+			let found = false;
+			let foundSong;
+			playlist.songs.forEach((song) => {
+				if (song._id === songId) {
+					foundSong = song;
+					found = true;
+				}
+			});
+
+			if (found) {
+				db.models.playlist.update({_id: playlistId}, {$pull: {songs: {_id: songId}}}, (err) => {
+					console.log(err);
+					if (err) return cb({status: 'failure', message: 'Something went wrong when moving the song'});
+					db.models.playlist.update({_id: playlistId}, {
+						$push: {
+							songs: {
+								$each: [foundSong],
+								$position: 0
+							}
+						}
+					}, (err) => {
+						console.log(err);
+						if (err) return cb({status: 'failure', message: 'Something went wrong when moving the song'});
+						playlists.updatePlaylist(playlistId, (err) => {
+							if (err) return cb({ status: 'failure', message: err});
+							cache.pub('playlist.moveSongToTop', {playlistId, songId, userId: userId});
+							return cb({ status: 'success', message: 'Playlist has been successfully updated' });
+						})
+					});
+				});
+			} else {
+				return cb({status: 'failure', message: 'Song not found.'});
+			}
+		});
+	}),
+
+	moveSongToBottom: hooks.loginRequired((session, playlistId, songId, cb, userId) => {
+		playlists.getPlaylist(playlistId, (err, playlist) => {
+			if (err || !playlist || playlist.createdBy !== userId) return cb({ status: 'failure', message: 'Something went wrong when getting the playlist'});
+			let found = false;
+			let foundSong;
+			playlist.songs.forEach((song) => {
+				if (song._id === songId) {
+					foundSong = song;
+					found = true;
+				}
+			});
+
+			if (found) {
+				db.models.playlist.update({_id: playlistId}, {$pull: {songs: {_id: songId}}}, (err) => {
+					console.log(err);
+					if (err) return cb({status: 'failure', message: 'Something went wrong when moving the song'});
+					db.models.playlist.update({_id: playlistId}, {
+						$push: { songs: foundSong }
+					}, (err) => {
+						console.log(err);
+						if (err) return cb({status: 'failure', message: 'Something went wrong when moving the song'});
+						playlists.updatePlaylist(playlistId, (err) => {
+							if (err) return cb({ status: 'failure', message: err});
+							cache.pub('playlist.moveSongToBottom', {playlistId, songId, userId: userId});
+							return cb({ status: 'success', message: 'Playlist has been successfully updated' });
+						})
+					});
+				});
+			} else return cb({status: 'failure', message: 'Song not found'});
+		});
+	}),
+
+	/*
 
 	promoteSong: hooks.loginRequired((session, playlistId, fromIndex, cb, userId) => {
 		db.models.playlist.findOne({ _id: playlistId }, (err, playlist) => {

@@ -49,14 +49,14 @@
 						</tr>
 					</tbody>
 				</table>
-				<!--div class='control is-grouped'>
+				<div class='control is-grouped'>
 					<p class='control is-expanded'>
 						<input class='input' type='text' placeholder='YouTube Playlist URL' v-model='importQuery'>
 					</p>
 					<p class='control'>
 						<a class='button is-info' @click='importPlaylist()'>Import</a>
 					</p>
-				</div-->
+				</div>
 				<h5>Edit playlist details:</h5>
 				<div class='control is-grouped'>
 					<p class='control is-expanded'>
@@ -82,13 +82,26 @@
 		data() {
 			return {
 				playlist: {},
-				songQueryResults: []
+				songQueryResults: [],
+				songQuery: '',
+				importQuery: ''
 			}
 		},
 		methods: {
 			searchForSongs: function () {
 				let _this = this;
-				_this.socket.emit('apis.searchYoutube', _this.songQuery, res => {
+				let query = _this.songQuery;
+				if (query.indexOf('&index=') !== -1) {
+					query = query.split('&index=');
+					query.pop();
+					query = query.join('');
+				}
+				if (query.indexOf('&list=') !== -1) {
+					query = query.split('&list=');
+					query.pop();
+					query = query.join('');
+				}
+				_this.socket.emit('apis.searchYoutube', query, res => {
 					if (res.status == 'success') {
 						_this.songQueryResults = [];
 						for (let i = 0; i < res.data.items.length; i++) {
@@ -99,40 +112,39 @@
 								thumbnail: res.data.items[i].snippet.thumbnails.default.url
 							});
 						}
-					} else if (res.status == 'error') Toast.methods.addToast(res.message, 3000);
+						Toast.methods.addToast(res.message, 3000);
+					} else if (res.status === 'error') Toast.methods.addToast(res.message, 3000);
 				});
 			},
 			addSongToPlaylist: function (id) {
 				let _this = this;
 				_this.socket.emit('playlists.addSongToPlaylist', id, _this.playlist._id, res => {
-					if (res.status == 'success') {
-						Toast.methods.addToast(res.message, 3000);
-					}
+					Toast.methods.addToast(res.message, 4000);
 				});
 			},
-			/*importPlaylist: function () {
+			importPlaylist: function () {
 				let _this = this;
+				Toast.methods.addToast('Starting to import your playlist. This can take some time to do.', 4000);
 				this.socket.emit('playlists.addSetToPlaylist', _this.importQuery, _this.playlist._id, res => {
-					if (res.status == 'success') _this.playlist.songs = res.data;
+					if (res.status === 'success') _this.playlist.songs = res.data;
+					Toast.methods.addToast(res.message, 4000);
 				});
-			},*/
+			},
 			removeSongFromPlaylist: function (id) {
 				let _this = this;
 				this.socket.emit('playlists.removeSongFromPlaylist', id, _this.playlist._id, res => {
-					if (res.status == 'success') {
-						Toast.methods.addToast(res.message, 3000);
-					}
+					Toast.methods.addToast(res.message, 4000);
 				});
 			},
 			renamePlaylist: function () {
 				this.socket.emit('playlists.updateDisplayName', this.playlist._id, this.playlist.displayName, res => {
-					if (res.status == 'success') Toast.methods.addToast(res.message, 3000);
+					Toast.methods.addToast(res.message, 4000);
 				});
 			},
 			removePlaylist: function () {
 				let _this = this;
 				_this.socket.emit('playlists.remove', _this.playlist._id, res => {
-					if (res.status == 'success') {
+					if (res.status === 'success') {
 						Toast.methods.addToast(res.message, 3000);
 						_this.$parent.toggleModal('editPlaylist');
 					}
@@ -141,13 +153,13 @@
 			promoteSong: function (fromIndex) {
 				let _this = this;
 				_this.socket.emit('playlists.promoteSong', _this.playlist._id, fromIndex, res => {
-					if (res.status == 'success') _this.$set('playlist.songs', res.data); // bug: v-for is not updating
+					if (res.status === 'success') _this.$set('playlist.songs', res.data); // bug: v-for is not updating
 				});
 			},
 			demoteSong: function (fromIndex) {
 				let _this = this;
 				_this.socket.emit('playlists.demoteSong', _this.playlist._id, fromIndex, res => {
-					if (res.status == 'success') _this.$set('playlist.songs', res.data); // bug: v-for is not updating
+					if (res.status === 'success') _this.$set('playlist.songs', res.data); // bug: v-for is not updating
 				});
 			}*/
 		},
@@ -170,6 +182,26 @@
 				});
 				_this.socket.on('event:playlist.updateDisplayName', (data) => {
 					if (_this.playlist._id === data.playlistId) _this.playlist.displayName = data.displayName;
+				});
+				_this.socket.on('event:playlist.moveSongToBottom', (data) => {
+					if (_this.playlist._id === data.playlistId) {
+						let songIndex;
+						_this.playlist.songs.forEach((song, index) => {
+							if (song._id === data.songId) songIndex = index;
+						});
+						let song = _this.playlist.songs.splice(songIndex, 1)[0];
+						_this.playlist.songs.push(song);
+					}
+				});
+				_this.socket.on('event:playlist.moveSongToTop', (data) => {
+					if (_this.playlist._id === data.playlistId) {
+						let songIndex;
+						_this.playlist.songs.forEach((song, index) => {
+							if (song._id === data.songId) songIndex = index;
+						});
+						let song = _this.playlist.songs.splice(songIndex, 1)[0];
+						_this.playlist.songs.unshift(song);
+					}
 				});
 			});
 		},

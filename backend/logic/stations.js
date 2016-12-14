@@ -146,7 +146,7 @@ module.exports = {
 					station = cache.schemas.station(station);
 					cache.hset('stations', stationId, station);
 					next(true, station);
-				} else next('Station not found.');
+				} else next('Station not found');
 			},
 
 		], (err, station) => {
@@ -235,9 +235,7 @@ module.exports = {
 																		thumbnail: song.thumbnail
 																	};
 																	station.playlist = newPlaylist;
-																} else {
-																	$set.currentSong = _this.defaultSong;
-																}
+																} else $set.currentSong = _this.defaultSong;
 																$set.startedAt = Date.now();
 																$set.timePaused = 0;
 																next(null, $set);
@@ -391,11 +389,10 @@ module.exports = {
 
 	defaultSong: {
 		_id: '60ItHLz5WEA',
-		title: 'Faded',
-		artists: ['Alan Walker'],
+		title: 'Faded - Alan Walker',
 		duration: 212,
-		skipDuration: 0,
-		thumbnail: 'https://i.scdn.co/image/2ddde58427f632037093857ebb71a67ddbdec34b'
+		likes: -1,
+		dislikes: -1
 	}
 
 };

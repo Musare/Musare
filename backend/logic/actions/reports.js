@@ -3,25 +3,44 @@
 const async = require('async');
 
 const db = require('../db');
+const cache = require('../cache');
+const utils = require('../utils');
 const hooks = require('./hooks');
 const songs = require('../songs');
+
+cache.sub('report.resolve', reportId => {
+	utils.emitToRoom('admin.reports', 'event:admin.report.resolved', reportId);
+});
+
+cache.sub('report.create', report => {
+	utils.emitToRoom('admin.reports', 'event:admin.report.created', report);
+});
 
 module.exports = {
 
 	index: hooks.adminRequired((session, cb) => {
 		db.models.report.find({ resolved: false }).sort({ released: 'desc' }).exec((err, reports) => {
-			if (err) console.error(err);
+			if (err) {
+				console.error(err);
+				cb({ 'status': 'failure', 'message': 'Something went wrong'});
+			}
 			cb({ status: 'success', data: reports });
 		});
 	}),
 
 	resolve: hooks.adminRequired((session, _id, cb) => {
 		db.models.report.findOne({ _id }).sort({ released: 'desc' }).exec((err, report) => {
-			if (err) console.error(err);
+			if (err) {
+				console.error(err);
+				cb({ 'status': 'failure', 'message': 'Something went wrong'});
+			}
 			report.resolved = true;
 			report.save(err => {
 				if (err) console.error(err);
-				else cb({ status: 'success', message: 'Successfully resolved Report' });
+				else {
+					cache.pub('report.resolve', _id);
+					cb({ status: 'success', message: 'Successfully resolved Report' });
+				}
 			});
 		});
 	}),
@@ -32,7 +51,7 @@ module.exports = {
 			(next) => {
 				songs.getSong(data.songId, (err, song) => {
 					if (err) return next(err);
-					if (!song) return next('Song does not exist in our Database.');
+					if (!song) return next('Song does not exist in our Database');
 					next();
 				});
 			},
@@ -92,6 +111,14 @@ module.exports = {
 
 				next();
 			},
+			
+			(next) => {
+				for (let r = 0; r < data.issues.length; r++) {
+					if (data.issues[r].reasons.length === 0) data.issues.splice(r, 1);
+				}
+
+				next();
+			},
 
 			(next) => {
 				data.createdBy = userId;
@@ -99,9 +126,12 @@ module.exports = {
 				db.models.report.create(data, next);
 			}
 
-		], err => {
+		], (err, report) => {
 			if (err) return cb({ 'status': 'failure', 'message': 'Something went wrong'});
-			return cb({ 'status': 'success', 'message': 'Successfully created report' });
+			else {
+				cache.pub('report.create', report);
+				return cb({ 'status': 'success', 'message': 'Successfully created report' });
+			}
 		});
 	})
 

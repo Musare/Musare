@@ -40,25 +40,27 @@
 						<h4 class="thin" style="margin-left: 0">{{currentSong.artists}}</h4>
 						<div class="columns is-mobile">
 							<form style="margin-top: 12px; margin-bottom: 0;" action="#" class="column is-7-desktop is-4-mobile">
-								<p style="margin-top: 0; position: relative;">
+								<p style="margin-top: 0; position: relative; display: flex;">
+									<i class="material-icons">volume_down</i>
 									<input type="range" id="volumeSlider" min="0" max="100" class="active" v-on:change="changeVolume()" v-on:input="changeVolume()">
+									<i class="material-icons">volume_up</i>
 								</p>
 							</form>
 							<div class="column is-8-mobile is-5-desktop" style="float: right;">
 								<ul id="ratings" v-if="currentSong.likes !== -1 && currentSong.dislikes !== -1">
 									<li id="like" class="right" @click="toggleLike()">
 										<span class="flow-text">{{currentSong.likes}} </span>
-										<i id="thumbs_up" class="material-icons grey-text" v-bind:class="{liked: liked}">thumb_up</i>
+										<i id="thumbs_up" class="material-icons grey-text" v-bind:class="{ liked: liked }">thumb_up</i>
 									</li>
 									<li style="margin-right: 10px;" id="dislike" class="right" @click="toggleDislike()">
 										<span class="flow-text">{{currentSong.dislikes}} </span>
-										<i id="thumbs_down" class="material-icons grey-text" v-bind:class="{disliked: disliked}">thumb_down</i>
+										<i id="thumbs_down" class="material-icons grey-text" v-bind:class="{ disliked: disliked }">thumb_down</i>
 									</li>
 								</ul>
 							</div>
 						</div>
 					</div>
-					<div class="column is-4-desktop is-12-mobile" v-if="!simpleSong">
+					<div class="column is-4-desktop" v-if="!simpleSong">
 						<img class="image" id="song-thumbnail" style="margin-top: 10px !important" :src="currentSong.thumbnail" alt="Song Thumbnail" onerror="this.src='/assets/notes-transparent.png'" />
 					</div>
 				</div>
@@ -114,7 +116,8 @@
 				queue: [],
 				timeBeforePause: 0,
 				station: {},
-				skipVotes: 0
+				skipVotes: 0,
+				privatePlaylistQueueSelected: null
 			}
 		},
 		methods: {
@@ -318,8 +321,6 @@
 								if (data.status === 'success') _this.queue = data.queue;
 							});
 						}
-					} else {
-						//TODO Handle error
 					}
 				});
 			}
@@ -331,14 +332,19 @@
 
 			io.getSocket((socket) => {
 				_this.socket = socket;
+
 				io.removeAllListeners();
 
-				if (_this.socket.connected) {
-					_this.joinStation();
-				}
-
+				if (_this.socket.connected) _this.joinStation();
 				io.onConnect(() => {
 					_this.joinStation();
+				});
+
+				_this.socket.emit('stations.find', _this.stationId, res => {
+					if (res.status === 'error') {
+						_this.$router.go('/404');
+						Toast.methods.addToast(res.message, 3000);
+					}
 				});
 
 				_this.socket.on('event:songs.next', data => {
@@ -350,9 +356,7 @@
 					if (data.currentSong) {
 						_this.noSong = false;
 						_this.simpleSong = (data.currentSong.likes === -1 && data.currentSong.dislikes === -1);
-						if (_this.simpleSong) {
-							_this.currentSong.skipDuration = 0;
-						}
+						if (_this.simpleSong) _this.currentSong.skipDuration = 0;
 						if (!_this.playerReady) _this.youtubeReady();
 						else _this.playVideo();
 						_this.socket.emit('songs.getOwnSongRatings', data.currentSong._id, (data) => {
@@ -459,6 +463,11 @@
 	.noSong {
 		color: #03A9F4;
 		text-align: center;
+	}
+
+	#volumeSlider {
+		padding: 0 15px;
+    	background: transparent;
 	}
 
 	.stationDisplayName {
@@ -742,4 +751,19 @@
 	.btn-search {
 		font-size: 14px;
 	}
+
+	.menu { padding: 0 10px; }
+
+	.menu-list li a:hover { color: #000 !important; }
+
+	.menu-list li {
+		display: flex;
+		justify-content: space-between;
+	}
+
+	.menu-list a {
+		padding: 0 10px !important;
+	}
+
+	.icons-group { display: flex; }
 </style>

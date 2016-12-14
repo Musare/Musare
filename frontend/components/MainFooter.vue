@@ -7,16 +7,16 @@
 				</p>
 				<p>
 					<a class='icon' href='https://github.com/Musare/MusareNode' title='GitHub Repository'>
-						<i class='fa fa-github'></i>
+						<img src='/assets/social/github.svg'/>
 					</a>
-					<a class='icon' href='https://twitter.com/MusareMusic' title='Twitter Account'>
+					<a class='icon' href='https://twitter.com/MusareApp' title='Twitter Account'>
 						<i class='fa fa-twitter'></i>
 					</a>
 					<a class='icon' href='https://www.facebook.com/MusareMusic/' title='Facebook Page'>
 						<i class='fa fa-facebook'></i>
 					</a>
 					<a class='icon' href='https://discord.gg/Y5NxYGP' title='Discord Server'>
-						<img src='/assets/discord.svg'/>
+						<img src='/assets/social/discord.svg'/>
 					</a>
 				</p>
 			</div>

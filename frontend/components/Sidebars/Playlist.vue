@@ -147,16 +147,5 @@
 		&:active, &:focus { border: 0; }
 	}
 
-	.menu { padding: 0 20px; }
-
-	.menu-list li a:hover { color: #000 !important; }
-
-	.menu-list li {
-		display: flex;
-		justify-content: space-between;
-	}
-
-	.icons-group { display: flex; }
-
 	.none-found { text-align: center; }
 </style>

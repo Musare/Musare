@@ -126,6 +126,13 @@ module.exports = {
 		});
 	},
 
+	find: (session, stationId, cb) => {
+		stations.getStation(stationId, (err, station) => {
+			if (err) cb({ status: 'error', message: err });
+			else if (station) cb({ status: 'success', data: station });
+		});
+	},
+
 	getPlaylist: (session, stationId, cb) => {
 		let playlist = [];
 
@@ -242,9 +249,7 @@ module.exports = {
 				if (err) return cb({ status: 'failure', message: 'Something went wrong when saving the station.' });
 				stations.updateStation(stationId, (err, station) => {
 					cache.pub('station.voteSkipSong', stationId);
-					if (station.currentSong && station.currentSong.skipVotes.length >= 1) {
-						stations.skipStation(stationId)();
-					}
+					if (station.currentSong && station.currentSong.skipVotes.length >= 3) stations.skipStation(stationId)();
 					cb({ status: 'success', message: 'Successfully voted to skip the song.' });
 				})
 			});
@@ -404,6 +409,7 @@ module.exports = {
 
 	create: hooks.loginRequired((session, data, cb) => {
 		data._id = data._id.toLowerCase();
+		let blacklist = ["country", "edm", "musare", "hip-hop", "rap", "top-hits", "todays-hits", "old-school", "christmas", "about", "support", "staff", "help", "news", "terms", "privacy", "profile", "c", "community", "tos", "login", "register", "p", "official", "o", "trap", "faq", "team", "donate", "buy", "shop", "forums", "explore", "settings", "admin"];
 		async.waterfall([
 
 			(next) => {
@@ -418,7 +424,7 @@ module.exports = {
 				if (station) return next({ 'status': 'failure', 'message': 'A station with that name or display name already exists' });
 				const { _id, displayName, description, genres, playlist, type, blacklistedGenres } = data;
 				cache.hget('sessions', session.sessionId, (err, session) => {
-					if (type == 'official') {
+					if (type === 'official') {
 						db.models.user.findOne({_id: session.userId}, (err, user) => {
 							if (err) return next({ 'status': 'failure', 'message': 'Something went wrong when getting your user info.' });
 							if (!user) return next({ 'status': 'failure', 'message': 'User not found.' });
@@ -435,7 +441,8 @@ module.exports = {
 								currentSong: stations.defaultSong
 							}, next);
 						});
-					} else if (type == 'community') {
+					} else if (type === 'community') {
+						if (blacklist.indexOf(_id) !== -1) return next({ 'status': 'failure', 'message': 'That id is blacklisted. Please use a different id.' });
 						db.models.station.create({
 							_id,
 							displayName,
@@ -453,10 +460,11 @@ module.exports = {
 		], (err, station) => {
 			if (err) {
 				console.error(err);
-				return cb({ 'status': 'failure', 'message': 'Something went wrong.'});
+				return cb({ 'status': 'failure', 'message': err.message});
+			} else {
+				cache.pub('station.create', data._id);
+				cb({ 'status': 'success', 'message': 'Successfully created station' });
 			}
-			cache.pub('station.create', data._id);
-			cb({ 'status': 'success', 'message': 'Successfully created station.' });
 		});
 	}),
 

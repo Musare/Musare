@@ -80,14 +80,12 @@
 			auth.getStatus((authenticated, role, username, userId) => {
 				io.getSocket((socket) => {
 					_this.socket = socket;
-					if (_this.socket.connected) {
-						_this.init();
-					}
+					if (_this.socket.connected) _this.init();
 					io.onConnect(() => {
 						_this.init();
 					});
 					_this.socket.on('event:stations.created', station => {
-						if (!station.currentSong) station.currentSong = {thumbnail: '/assets/notes-transparent.png'};
+						if (!station.currentSong) station.currentSong = { thumbnail: '/assets/notes-transparent.png' };
 						if (station.privacy !== 'public') {
 							station.class = {'station-red': true}
 						} else if (station.type === 'community') {
@@ -107,16 +105,16 @@
 			init: function() {
 				let _this = this;
 				auth.getStatus((authenticated, role, username, userId) => {
-					_this.socket.emit("stations.index", data => {
+					_this.socket.emit('stations.index', data => {
 						_this.stations.community = [];
 						_this.stations.official = [];
-						if (data.status === "success")  data.stations.forEach(station => {
-							if (!station.currentSong) station.currentSong = {thumbnail: '/assets/notes-transparent.png'};
+						if (data.status === "success") data.stations.forEach(station => {
+							if (!station.currentSong) station.currentSong = { thumbnail: '/assets/notes-transparent.png' };
 							if (station.privacy !== 'public') {
-								station.class = {'station-red': true}
+								station.class = { 'station-red': true }
 							} else if (station.type === 'community') {
 								if (station.owner === userId) {
-									station.class = {'station-blue': true}
+									station.class = { 'station-blue': true }
 								}
 							}
 							if (station.type == 'official') _this.stations.official.push(station);

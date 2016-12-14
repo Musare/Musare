@@ -93,6 +93,10 @@ function convertTime (duration) {
 	return (hours < 10 ? ("0" + hours + ":") : (hours + ":")) + (minutes < 10 ? ("0" + minutes + ":") : (minutes + ":")) + (seconds < 10 ? ("0" + seconds) : seconds);
 }
 
+let youtubeRequestCallbacks = [];
+let youtubeRequestsPending = 0;
+let youtubeRequestsActive = false;
+
 module.exports = {
 	htmlEntities: str => String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'),
 	generateRandomString: function(len) {
@@ -179,9 +183,7 @@ module.exports = {
 		let socket = this.socketFromSession(socketId);
 		let rooms = socket.rooms;
 		for (let room in rooms) {
-			if (room.indexOf('song.') !== -1) {
-				socket.leave(rooms);
-			}
+			if (room.indexOf('song.') !== -1) socket.leave(rooms);
 		}
 		socket.join(room);
 	},
@@ -190,9 +192,7 @@ module.exports = {
 			let socket = sockets[id];
 			let rooms = socket.rooms;
 			for (let room in rooms) {
-				if (room.indexOf('song.') !== -1) {
-					socket.leave(room);
-				}
+				if (room.indexOf('song.') !== -1) socket.leave(room);
 			}
 			socket.join(room);
 		}
@@ -202,9 +202,7 @@ module.exports = {
 			let socket = sockets[id];
 			let rooms = socket.rooms;
 			for (let room in rooms) {
-				if (room.indexOf('song.') !== -1) {
-					socket.leave(room);
-				}
+				if (room.indexOf('song.') !== -1) socket.leave(room);
 			}
 		}
 	},
@@ -226,55 +224,66 @@ module.exports = {
 		let roomSockets = [];
 		for (let id in sockets) {
 			let socket = sockets[id];
-			if (socket.rooms[room]) {
-				roomSockets.push(socket);
-			}
+			if (socket.rooms[room]) roomSockets.push(socket);
 		}
 		return roomSockets;
 	},
 	getSongFromYouTube: (songId, cb) => {
-		const youtubeParams = [
-			'part=snippet,contentDetails,statistics,status',
-			`id=${encodeURIComponent(songId)}`,
-			`key=${config.get('apis.youtube.key')}`
-		].join('&');
 
-		request(`https://www.googleapis.com/youtube/v3/videos?${youtubeParams}`, (err, res, body) => {
+		youtubeRequestCallbacks.push({cb: (test) => {
+			youtubeRequestsActive = true;
+			const youtubeParams = [
+				'part=snippet,contentDetails,statistics,status',
+				`id=${encodeURIComponent(songId)}`,
+				`key=${config.get('apis.youtube.key')}`
+			].join('&');
 
-			if (err) {
-				console.error(err);
-				return next('Failed to find song from YouTube');
-			}
+			request(`https://www.googleapis.com/youtube/v3/videos?${youtubeParams}`, (err, res, body) => {
 
-			body = JSON.parse(body);
+				youtubeRequestCallbacks.splice(0, 1);
+				if (youtubeRequestCallbacks.length > 0) {
+					youtubeRequestCallbacks[0].cb(youtubeRequestCallbacks[0].songId);
+				} else youtubeRequestsActive = false;
 
-			//TODO Clean up duration converter
-			let dur = body.items[0].contentDetails.duration;
-			dur = dur.replace('PT', '');
-			let duration = 0;
-			dur = dur.replace(/([\d]*)H/, (v, v2) => {
-				v2 = Number(v2);
-				duration = (v2 * 60 * 60);
-				return '';
+				if (err) {
+					console.error(err);
+					return null;
+				}
+
+				body = JSON.parse(body);
+
+				//TODO Clean up duration converter
+				let dur = body.items[0].contentDetails.duration;
+				dur = dur.replace('PT', '');
+				let duration = 0;
+				dur = dur.replace(/([\d]*)H/, (v, v2) => {
+					v2 = Number(v2);
+					duration = (v2 * 60 * 60);
+					return '';
+				});
+				dur = dur.replace(/([\d]*)M/, (v, v2) => {
+					v2 = Number(v2);
+					duration += (v2 * 60);
+					return '';
+				});
+				dur = dur.replace(/([\d]*)S/, (v, v2) => {
+					v2 = Number(v2);
+					duration += v2;
+					return '';
+				});
+
+				let song = {
+					_id: body.items[0].id,
+					title: body.items[0].snippet.title,
+					duration
+				};
+				cb(song);
 			});
-			dur = dur.replace(/([\d]*)M/, (v, v2) => {
-				v2 = Number(v2);
-				duration += (v2 * 60);
-				return '';
-			});
-			dur = dur.replace(/([\d]*)S/, (v, v2) => {
-				v2 = Number(v2);
-				duration += v2;
-				return '';
-			});
+		}, songId});
 
-			let song = {
-				_id: body.items[0].id,
-				title: body.items[0].snippet.title,
-				duration
-			};
-			cb(song);
-		});
+		if (!youtubeRequestsActive) {
+			youtubeRequestCallbacks[0].cb(youtubeRequestCallbacks[0].songId);
+		}
 	},
 	getPlaylistFromYouTube: (url, cb) => {
 		
@@ -282,22 +291,32 @@ module.exports = {
 		var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
 		let playlistId = regex.exec(url)[1];
 
-		const youtubeParams = [
-			'part=contentDetails',
-			`playlistId=${encodeURIComponent(playlistId)}`,
-			`maxResults=50`,
-			`key=${config.get('apis.youtube.key')}`
-		].join('&');
+		function getPage(pageToken, songs) {
+			let nextPageToken = (pageToken) ? `pageToken=${pageToken}` : '';
+			const youtubeParams = [
+				'part=contentDetails',
+				`playlistId=${encodeURIComponent(playlistId)}`,
+				`maxResults=5`,
+				`key=${config.get('apis.youtube.key')}`,
+				nextPageToken
+			].join('&');
 
-		request(`https://www.googleapis.com/youtube/v3/playlistItems?${youtubeParams}`, (err, res, body) => {
-			if (err) {
-				console.error(err);
-				return next('Failed to find playlist from YouTube');
-			}
+			request(`https://www.googleapis.com/youtube/v3/playlistItems?${youtubeParams}`, (err, res, body) => {
+				if (err) {
+					console.error(err);
+					return next('Failed to find playlist from YouTube');
+				}
 
-			body = JSON.parse(body);
-			cb(body.items);
-		});
+				body = JSON.parse(body);
+				songs = songs.concat(body.items);
+				if (body.nextPageToken) getPage(body.nextPageToken, songs);
+				else {
+					console.log(songs);
+					cb(songs);
+				}
+			});
+		}
+		getPage(null, []);
 	},
 	getSongFromSpotify: (song, cb) => {
 		const spotifyParams = [

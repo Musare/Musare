@@ -9,12 +9,12 @@
 					<i class='material-icons'>settings</i>
 				</span>
 			</a>
-			<a class='nav-item' href='#' @click='$parent.toggleModal("addSongToQueue")' v-if='$parent.type === "official"'>
+			<a class='nav-item' href='#' @click='$parent.toggleModal("addSongToQueue")' v-if='$parent.type === "official" && $parent.$parent.loggedIn'>
 				<span class='icon'>
 					<i class='material-icons'>queue_music</i>
 				</span>
 			</a>
-			<a v-if='$parent.$parent.loggedIn' class='nav-item' href='#' @click='$parent.modals.report = !$parent.modals.report'>
+			<a v-if='$parent.$parent.loggedIn && !$parent.noSong && !$parent.simpleSong' class='nav-item' href='#' @click='$parent.modals.report = !$parent.modals.report'>
 				<span class='icon'>
 					<i class='material-icons'>report</i>
 				</span>
@@ -24,7 +24,7 @@
 					<i class='material-icons'>skip_next</i>
 				</span>
 			</a>
-			<a v-if='!isOwner() && $parent.$parent.loggedIn && $parent.currentSong' class='nav-item' href='#' @click='$parent.voteSkipStation()'>
+			<a v-if='!isOwner() && $parent.$parent.loggedIn && !$parent.noSong' class='nav-item' href='#' @click='$parent.voteSkipStation()'>
 				<span class='icon'>
 					<i class='material-icons'>skip_next</i>
 				</span>
@@ -43,7 +43,7 @@
 		</div>
 
 		<div class='nav-center stationDisplayName'>
-			{{$parent.station.displayName}}
+			{{ $parent.station.displayName }}
 		</div>
 
 		<span class="nav-toggle" :class="{ 'is-active': isMobile }" @click="isMobile = !isMobile">
@@ -87,7 +87,7 @@
 		},
 		methods: {
 			isOwner: function () {
-				return this.$parent.$parent.role === 'admin' || this.$parent.$parent.userId === this.$parent.station.owner
+				return this.$parent.$parent.loggedIn && this.$parent.$parent.role === 'admin';
 			}
 		}
 	}
@@ -118,6 +118,11 @@
 		}
 	}
 
+	.skip-votes {
+		position: relative;
+		left: 11px;
+	}
+
 	.nav-toggle {
 		height: 64px;
 	}
@@ -132,7 +137,6 @@
 	.nav-center {
 		display: flex;
     	align-items: center;
-		text-transform: uppercase;
 		color: $blue;
 		font-size: 22px;
 	}

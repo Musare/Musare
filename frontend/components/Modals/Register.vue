@@ -26,7 +26,9 @@
 			<footer class='modal-card-foot'>
 				<a class='button is-primary' @click='submitModal()'>Submit</a>
 				<a class='button is-github' :href='$parent.serverDomain + "/auth/github/authorize"'>
-					<i class='fa fa-github' aria-hidden='true'></i>
+					<div class='icon'>
+						<img class='invert' src='/assets/social/github.svg'/>
+					</div>
 					&nbsp;&nbsp;Register with GitHub
 				</a>
 			</footer>
@@ -74,4 +76,6 @@
 		background-color: #333 !important;
 		color: #fff !important;
 	}
+
+	.invert { filter: brightness(5); }
 </style>
