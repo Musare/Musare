@@ -50,17 +50,17 @@
 								<ul id="ratings" v-if="currentSong.likes !== -1 && currentSong.dislikes !== -1">
 									<li id="like" class="right" @click="toggleLike()">
 										<span class="flow-text">{{currentSong.likes}} </span>
-										<i id="thumbs_up" class="material-icons grey-text" v-bind:class="{liked: liked}">thumb_up</i>
+										<i id="thumbs_up" class="material-icons grey-text" v-bind:class="{ liked: liked }">thumb_up</i>
 									</li>
 									<li style="margin-right: 10px;" id="dislike" class="right" @click="toggleDislike()">
 										<span class="flow-text">{{currentSong.dislikes}} </span>
-										<i id="thumbs_down" class="material-icons grey-text" v-bind:class="{disliked: disliked}">thumb_down</i>
+										<i id="thumbs_down" class="material-icons grey-text" v-bind:class="{ disliked: disliked }">thumb_down</i>
 									</li>
 								</ul>
 							</div>
 						</div>
 					</div>
-					<div class="column is-4-desktop is-12-mobile" v-if="!simpleSong">
+					<div class="column is-4-desktop" v-if="!simpleSong">
 						<img class="image" id="song-thumbnail" style="margin-top: 10px !important" :src="currentSong.thumbnail" alt="Song Thumbnail" onerror="this.src='/assets/notes-transparent.png'" />
 					</div>
 				</div>
