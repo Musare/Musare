@@ -19,7 +19,7 @@
 					<i class='material-icons'>skip_next</i>
 				</span>
 			</a>
-			<a v-if='!isOwner() && $parent.$parent.loggedIn && $parent.currentSong' class='nav-item' href='#' @click='$parent.voteSkipStation()'>
+			<a v-if='!isOwner() && $parent.$parent.loggedIn && !$parent.noSong' class='nav-item' href='#' @click='$parent.voteSkipStation()'>
 				<span class='icon'>
 					<i class='material-icons'>skip_next</i>
 				</span>
@@ -63,7 +63,7 @@
 					<i class='material-icons'>people</i>
 				</span>
 			</a>-->
-			<a class='nav-item' href='#' @click='$parent.sidebars.playlist = !$parent.sidebars.playlist'>
+			<a class='nav-item' href='#' @click='$parent.sidebars.playlist = !$parent.sidebars.playlist' v-if='$parent.$parent.loggedIn'>
 				<span class='icon'>
 					<i class='material-icons'>library_music</i>
 				</span>
@@ -82,7 +82,7 @@
 		},
 		methods: {
 			isOwner: function () {
-				return this.$parent.$parent.role === 'admin' || this.$parent.$parent.userId === this.$parent.station.owner
+				return this.$parent.$parent.loggedIn && (this.$parent.$parent.role === 'admin' || this.$parent.$parent.userId === this.$parent.station.owner);
 			}
 		}
 	}

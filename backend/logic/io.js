@@ -90,6 +90,7 @@ module.exports = {
 					if (err && err !== true) socket.emit('ready', false);
 					else if (session && session.userId) {
 						db.models.user.findOne({ _id: session.userId }, (err, user) => {
+							if (err || !user) return socket.emit('ready', false);
 							let role = '';
 							let username = '';
 							let userId = '';
