@@ -13,13 +13,15 @@
 	<users-sidebar v-if='sidebars.users'></users-sidebar>
 	
 	<div class="station">
-		<div v-show="noSong" class="noSong">
-			<h1>No song is currently playing.</h1>
+		<div v-show="noSong" class="no-song">
+			<h1>No song is currently playing</h1>
 			<h4 v-if='type === "community" && station.partyMode'>
-				<a href='#' class='noSong' @click='sidebars.queue = true'>Add a Song to the Queue</a>
+				<a href='#' class='no-song' @click='sidebars.queue = true'>Add a Song to the Queue</a>
 			</h4>
-			<h1 v-if='type === "community" && !station.partyMode && $parent.userId === station.owner && !station.privatePlaylist'>Click <a href="#" @click="sidebars.playlist = true">here</a> to play a private playlist.</h1>
-			<h1 v-if='type === "community" && !station.partyMode && $parent.userId === station.owner && station.privatePlaylist'>Maybe you can add some songs to your selected private playlist.</h1>
+			<h4 v-if='type === "community" && !station.partyMode && $parent.userId === station.owner && !station.privatePlaylist'>
+				<a href='#' class='no-song' @click='sidebars.playlist = true'>Play a private playlist</a>
+			</h4>
+			<h1 v-if='type === "community" && !station.partyMode && $parent.userId === station.owner && station.privatePlaylist'>Maybe you can add some songs to your selected private playlist</h1>
 		</div>
 		<div class="columns is-mobile" v-show="!noSong">
 			<div class="column is-8-desktop is-offset-2-desktop is-12-mobile">
@@ -496,7 +498,7 @@
 </script>
 
 <style lang="scss">
-	.noSong {
+	.no-song {
 		color: #03A9F4;
 		text-align: center;
 	}
