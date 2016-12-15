@@ -399,7 +399,7 @@ module.exports = {
 
 	remove: hooks.ownerRequired((session, stationId, cb) => {
 		db.models.station.remove({ _id: stationId }, (err) => {
-			if (err) return cb({status: 'failure', message: 'Something went wrong when deleting that station.'});
+			if (err) return cb({ status: 'failure', message: 'Something went wrong when deleting that station' });
 			cache.hdel('stations', stationId, () => {
 				cache.pub('station.remove', stationId);
 				return cb({ status: 'success', message: 'Station successfully removed' });

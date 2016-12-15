@@ -478,7 +478,9 @@
 				});
 			});
 
+			
 			let volume = parseInt(localStorage.getItem("volume"));
+			if (!volume) localStorage.setItem("volume", 50);
 			volume = (typeof volume === "number") ? volume : 20;
 			$("#volumeSlider").val(volume);
 		},
