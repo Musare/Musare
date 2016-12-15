@@ -7,7 +7,7 @@
 				<button class="delete" @click="$parent.toggleModal('addSongToQueue')" ></button>
 			</header>
 			<section class="modal-card-body">
-				<aside class='menu' v-if='$parent.$parent.loggedIn'>
+				<aside class='menu' v-if='$parent.$parent.loggedIn && $parent.type === "community"'>
 					<ul class='menu-list'>
 						<li v-for='playlist in playlists' track-by='$index'>
 							<a :href='' target='_blank' @click='$parent.editPlaylist(playlist._id)'>{{ playlist.displayName }}</a>
@@ -52,6 +52,7 @@
 <script>
 	import { Toast } from 'vue-roaster';
 	import io from '../../io';
+	import auth from '../../auth';
 
 	export default {
 		data() {
@@ -64,7 +65,6 @@
 		},
 		methods: {
 			isPlaylistSelected: function(playlistId) {
-				console.log(this.privatePlaylistQueueSelected === playlistId);
 				return this.privatePlaylistQueueSelected === playlistId;
 			},
 			selectPlaylist: function (playlistId) {
@@ -72,6 +72,7 @@
 				if (_this.$parent.type === 'community') {
 					_this.privatePlaylistQueueSelected = playlistId;
 					_this.$parent.privatePlaylistQueueSelected = playlistId;
+					_this.$parent.addFirstPrivatePlaylistSongToQueue();
 				}
 			},
 			unSelectPlaylist: function () {

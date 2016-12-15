@@ -71,6 +71,16 @@ cache.sub('playlist.updateDisplayName', res => {
 
 let lib = {
 
+	getFirstSong: hooks.loginRequired((session, playlistId, cb, userId) => {
+		playlists.getPlaylist(playlistId, (err, playlist) => {
+			if (err || !playlist || playlist.createdBy !== userId) return cb({ status: 'failure', message: 'Something went wrong when getting the playlist'});
+			cb({
+				status: 'success',
+				song: playlist.songs[0]
+			});
+		});
+	}),
+
 	indexForUser: hooks.loginRequired((session, cb, userId) => {
 		db.models.playlist.find({ createdBy: userId }, (err, playlists) => {
 			if (err) return cb({ status: 'failure', message: 'Something went wrong when getting the playlists'});;

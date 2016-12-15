@@ -117,7 +117,8 @@
 				timeBeforePause: 0,
 				station: {},
 				skipVotes: 0,
-				privatePlaylistQueueSelected: null
+				privatePlaylistQueueSelected: null,
+				automaticallyRequestedSongId: null
 			}
 		},
 		methods: {
@@ -281,6 +282,32 @@
 					if (data.status !== 'success') Toast.methods.addToast(`Error: ${data.message}`, 8000);
 				});
 			},
+			addFirstPrivatePlaylistSongToQueue: function() {
+				let _this = this;
+				let isInQueue = false;
+				let userId = _this.$parent.userId;
+				_this.queue.forEach((queueSong) => {
+					if (queueSong.requestedBy === userId) isInQueue = true;
+				});
+				if (!isInQueue && _this.privatePlaylistQueueSelected) {
+
+					_this.socket.emit('playlists.getFirstSong', _this.privatePlaylistQueueSelected, data => {
+						if (data.status === 'success') {
+							let songId = data.song._id;
+							_this.automaticallyRequestedSongId = songId;
+							_this.socket.emit('stations.addToQueue', _this.stationId, songId, data => {
+								if (data.status === 'success') {
+									_this.socket.emit('playlists.moveSongToBottom', _this.privatePlaylistQueueSelected, songId, data => {
+										if (data.status === 'success') {
+											console.log("Added first song to queue!");
+										}
+									});
+								}
+							});
+						}
+					});
+				}
+			},
 			joinStation: function () {
 				let _this = this;
 				_this.socket.emit('stations.join', _this.stationId, res => {
@@ -368,6 +395,15 @@
 					} else {
 						if (_this.playerReady) _this.player.pauseVideo();
 						_this.noSong = true;
+					}
+
+					let isInQueue = false;
+					let userId = _this.$parent.userId;
+					_this.queue.forEach((queueSong) => {
+						if (queueSong.requestedBy === userId) isInQueue = true;
+					});
+					if (!isInQueue && _this.privatePlaylistQueueSelected && (_this.automaticallyRequestedSongId !== _this.currentSong._id || !_this.currentSong._id)) {
+						_this.addFirstPrivatePlaylistSongToQueue();
 					}
 				});
 
