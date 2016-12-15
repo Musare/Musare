@@ -112,7 +112,6 @@
 								thumbnail: res.data.items[i].snippet.thumbnails.default.url
 							});
 						}
-						Toast.methods.addToast(res.message, 3000);
 					} else if (res.status === 'error') Toast.methods.addToast(res.message, 3000);
 				});
 			},

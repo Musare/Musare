@@ -317,8 +317,8 @@ let lib = {
 						console.log(err);
 						if (err) return cb({status: 'failure', message: 'Something went wrong when moving the song'});
 						playlists.updatePlaylist(playlistId, (err) => {
-							if (err) return cb({ status: 'failure', message: err});
-							cache.pub('playlist.moveSongToBottom', {playlistId, songId, userId: userId});
+							if (err) return cb({ status: 'failure', message: err });
+							cache.pub('playlist.moveSongToBottom', { playlistId, songId, userId: userId });
 							return cb({ status: 'success', message: 'Playlist has been successfully updated' });
 						})
 					});
