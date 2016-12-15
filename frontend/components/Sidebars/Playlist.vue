@@ -115,6 +115,13 @@
 		box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
 	}
 
+	.icons-group a {
+		display: flex;
+    	align-items: center;
+	}
+
+	.menu-list li { align-items: center; }
+
 	.inner-wrapper {	
 		top: 50px;
 		position: relative;
