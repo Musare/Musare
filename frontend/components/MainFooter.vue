@@ -10,10 +10,10 @@
 						<img src='/assets/social/github.svg'/>
 					</a>
 					<a class='icon' href='https://twitter.com/MusareApp' title='Twitter Account'>
-						<i class='fa fa-twitter'></i>
+						<img src='/assets/social/twitter.svg'/>
 					</a>
 					<a class='icon' href='https://www.facebook.com/MusareMusic/' title='Facebook Page'>
-						<i class='fa fa-facebook'></i>
+						<img src='/assets/social/facebook.svg'/>
 					</a>
 					<a class='icon' href='https://discord.gg/Y5NxYGP' title='Discord Server'>
 						<img src='/assets/social/discord.svg'/>
