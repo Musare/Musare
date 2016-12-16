@@ -33,9 +33,7 @@ cache.sub('station.resume', stationId => {
 
 cache.sub('station.queueUpdate', stationId => {
 	stations.getStation(stationId, (err, station) => {
-		if (!err) {
-			utils.emitToRoom(`station.${stationId}`, "event:queue.update", station.queue);
-		}
+		if (!err) utils.emitToRoom(`station.${stationId}`, "event:queue.update", station.queue);
 	});
 });
 
@@ -538,16 +536,14 @@ module.exports = {
 			if (err) return cb(err);
 			if (station.type === 'community') {
 				if (station.privatePlaylist === playlistId) return cb({'status': 'failure', 'message': 'That playlist is already selected.'});
-				db.models.playlist.findOne({_id: playlistId}, (err, playlist) => {
+				db.models.playlist.findOne({ _id: playlistId }, (err, playlist) => {
 					if (err) return cb(err);
 					if (playlist) {
-						db.models.station.update({_id: stationId}, {$set: {privatePlaylist: playlistId, currentSongIndex: 0}}, (err) => {
+						db.models.station.update({_id: stationId}, { $set: { privatePlaylist: playlistId, currentSongIndex: 0 } }, (err) => {
 							if (err) return cb(err);
 							stations.updateStation(stationId, (err, station) => {
 								if (err) return cb(err);
-								if (!station.partyMode) {
-									stations.skipStation(stationId)();
-								}
+								if (!station.partyMode) stations.skipStation(stationId)();
 								cache.pub('privatePlaylist.selected', {playlistId, stationId});
 								cb({'status': 'success', 'message': 'Playlist selected.'});
 							});

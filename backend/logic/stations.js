@@ -289,23 +289,18 @@ module.exports = {
 									});
 								}
 							} else {
-								if (station.partyMode === true) {
-									if (station.queue.length > 0) {
-										db.models.station.update({_id: stationId}, {$pull: {queue: {_id: station.queue[0]._id}}}, (err) => {
+								if (station.partyMode === true) if (station.queue.length > 0) {
+										db.models.station.update({ _id: stationId }, { $pull: { queue: { _id: station.queue[0]._id } } }, (err) => {
 											if (err) return next(err);
 											let $set = {};
 											$set.currentSong = station.queue[0];
 											$set.startedAt = Date.now();
 											$set.timePaused = 0;
-											if (station.paused) {
-												$set.pausedAt = Date.now();
-											}
+											if (station.paused) $set.pausedAt = Date.now();
 											next(null, $set);
 										});
-									} else {
-										next(null, {currentSong: null});
-									}
-								} else {
+									} else next(null, {currentSong: null});
+								else {
 									db.models.playlist.findOne({_id: station.privatePlaylist}, (err, playlist) => {
 										if (err || !playlist) return next(null, {currentSong: null});
 										playlist = playlist.songs;
