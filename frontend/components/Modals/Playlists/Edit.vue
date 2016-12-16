@@ -12,14 +12,14 @@
 						<li v-for='song in playlist.songs' track-by='$index'>
 							<a :href='' target='_blank'>{{ song.title }}</a>
 							<div class='controls'>
-								<!--a href='#'>
-									<i class='material-icons' v-if='playlist.songs[0] !== song' @click='promoteSong($index)'>keyboard_arrow_up</i>
+								<a href='#' @click='promoteSong(song._id)'>
+									<i class='material-icons' v-if='$index > 0' @click='promoteSong(song._id)'>keyboard_arrow_up</i>
 									<i class='material-icons' style='opacity: 0' v-else>error</i>
 								</a>
-								<a href='#'>
-									<i class='material-icons' v-if='playlist.songs.length - 1 !== $index' @click='demoteSong($index)'>keyboard_arrow_down</i>
+								<a href='#' @click='demoteSong(song._id)'>
+									<i class='material-icons' v-if='playlist.songs.length - 1 !== $index' @click='demoteSong(song._id)'>keyboard_arrow_down</i>
 									<i class='material-icons' style='opacity: 0' v-else>error</i>
-								</a-->
+								</a>
 								<a href='#' @click='removeSongFromPlaylist(song._id)'><i class='material-icons'>delete</i></a>
 							</div>
 						</li>
@@ -148,19 +148,19 @@
 						_this.$parent.toggleModal('editPlaylist');
 					}
 				});
-			},/*
-			promoteSong: function (fromIndex) {
+			},
+			promoteSong: function (songId) {
 				let _this = this;
-				_this.socket.emit('playlists.promoteSong', _this.playlist._id, fromIndex, res => {
-					if (res.status === 'success') _this.$set('playlist.songs', res.data); // bug: v-for is not updating
+				_this.socket.emit('playlists.moveSongToTop', _this.playlist._id, songId, res => {
+					Toast.methods.toast(4000, res.message);
 				});
 			},
-			demoteSong: function (fromIndex) {
+			demoteSong: function (songId) {
 				let _this = this;
-				_this.socket.emit('playlists.demoteSong', _this.playlist._id, fromIndex, res => {
-					if (res.status === 'success') _this.$set('playlist.songs', res.data); // bug: v-for is not updating
+				_this.socket.emit('playlists.moveSongToBottom', _this.playlist._id, songId, res => {
+					Toast.methods.toast(4000, res.message);
 				});
-			}*/
+			}
 		},
 		ready: function () {
 			let _this = this;
