@@ -78,4 +78,6 @@
 	}
 
 	.invert { filter: brightness(5); }
+
+	#recaptcha { padding: 10px 0; }
 </style>
