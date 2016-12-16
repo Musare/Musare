@@ -42,7 +42,7 @@
 						<h4 class="thin" style="margin-left: 0">{{currentSong.artists}}</h4>
 						<div class="columns is-mobile">
 							<form style="margin-top: 12px; margin-bottom: 0;" action="#" class="column is-7-desktop is-4-mobile">
-								<p style="margin-top: 0; position: relative; display: flex;">
+								<p class='volume-slider-wrapper'>
 									<i class="material-icons">volume_down</i>
 									<input type="range" id="volumeSlider" min="0" max="100" class="active" v-on:change="changeVolume()" v-on:input="changeVolume()">
 									<i class="material-icons">volume_up</i>
@@ -508,6 +508,13 @@
 	#volumeSlider {
 		padding: 0 15px;
     	background: transparent;
+	}
+
+	.volume-slider-wrapper {
+		margin-top: 0;
+		position: relative;
+		display: flex;
+		align-items: center;
 	}
 
 	.stationDisplayName {
