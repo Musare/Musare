@@ -41,10 +41,10 @@
 					</p>
 				</div>
 				<div class='control is-grouped' v-if="$parent.type === 'community'">
-					<p class="control is-expanded">
-						<label class="checkbox">
+					<p class="control is-expanded party-mode-outer">
+						<label class="checkbox party-mode-inner">
 							<input type="checkbox" v-model="data.partyMode">
-							Party mode
+							&nbsp;Party mode
 						</label>
 					</p>
 					<p class='control'>
@@ -129,4 +129,9 @@
 	.table { margin-bottom: 0; }
 
 	h5 { padding: 20px 0; }
+
+	.party-mode-inner, .party-mode-outer {
+		display: flex;
+		align-items: center;
+	}
 </style>
