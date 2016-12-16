@@ -74,25 +74,37 @@
 		methods: {
 			updateDisplayName: function () {
 				this.socket.emit('stations.updateDisplayName', this.data.stationId, this.data.displayName, res => {
-					if (res.status == 'success') return Toast.methods.addToast(res.message, 4000);
+					if (res.status === 'success') {
+						this.$parent.station.displayName = this.data.displayName;
+						return Toast.methods.addToast(res.message, 4000);
+					}
 					Toast.methods.addToast(res.message, 8000);
 				});
 			},
 			updateDescription: function () {
 				this.socket.emit('stations.updateDescription', this.data.stationId, this.data.description, res => {
-					if (res.status == 'success') return Toast.methods.addToast(res.message, 4000);
+					if (res.status === 'success') {
+						this.$parent.station.description = this.data.description;
+						return Toast.methods.addToast(res.message, 4000);
+					}
 					Toast.methods.addToast(res.message, 8000);
 				});
 			},
 			updatePrivacy: function () {
 				this.socket.emit('stations.updatePrivacy', this.data.stationId, this.data.privacy, res => {
-					if (res.status == 'success') return Toast.methods.addToast(res.message, 4000);
+					if (res.status === 'success') {
+						this.$parent.station.privacy = this.data.privacy;
+						return Toast.methods.addToast(res.message, 4000);
+					}
 					Toast.methods.addToast(res.message, 8000);
 				});
 			},
 			updatePartyMode: function () {
 				this.socket.emit('stations.updatePartyMode', this.data.stationId, this.data.partyMode, res => {
-					if (res.status == 'success') return Toast.methods.addToast(res.message, 4000);
+					if (res.status === 'success') {
+					this.$parent.station.partyMode = this.data.partyMode;
+						return Toast.methods.addToast(res.message, 4000);
+					}
 					Toast.methods.addToast(res.message, 8000);
 				});
 			}
