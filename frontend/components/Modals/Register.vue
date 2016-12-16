@@ -21,7 +21,7 @@
 					<input class='input' type='password' placeholder='Password...' v-model='$parent.register.password' v-on:keypress='$parent.submitOnEnter(submitModal, $event)'>
 				</p>
 				<div id="recaptcha"></div>
-				<p>By registering you agree to our <a href="/terms" v-link="{ path: '/terms' }">Terms of Service</a> and <a href="/privacy" v-link="{ path: '/privacy' }">Privacy Policy</a>.</p>
+				<p>By logging in/registering you agree to our <a href="/terms" v-link="{ path: '/terms' }">Terms of Service</a> and <a href="/privacy" v-link="{ path: '/privacy' }">Privacy Policy</a>.</p>
 			</section>
 			<footer class='modal-card-foot'>
 				<a class='button is-primary' href='#' @click='submitModal()'>Submit</a>

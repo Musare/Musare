@@ -35,7 +35,8 @@ module.exports = {
 			// if the user doesn't exist, respond with a failure
 			// otherwise compare the requested password and the actual users password
 			(user, next) => {
-				if (!user) return next(true, { status: 'failure', message: 'User not found' });
+				if (!user) return next('User not found');
+				if (!user.services.password || !user.services.password.password) return next('The account you are trying to access uses GitHub to log in.');
 				bcrypt.compare(sha256(password), user.services.password.password, (err, match) => {
 
 					if (err) return next(err);
@@ -64,8 +65,9 @@ module.exports = {
 
 			// log this error somewhere
 			if (err && err !== true) {
-				console.error(err);
-				return cb({ status: 'error', message: 'An error occurred while logging in' });
+				if (typeof err === "string") return cb({ status: 'error', message: err });
+				else if (err.message) return cb({ status: 'error', message: err.message });
+				else return cb({ status: 'error', message: 'An error occurred.' });
 			}
 
 			cb(payload);
@@ -93,21 +95,21 @@ module.exports = {
 			// if it is, we check if a user with the requested username already exists
 			(response, body, next) => {
 				let json = JSON.parse(body);
-				if (json.success !== true) return next('Response from recaptcha was not successful');
+				if (json.success !== true) return next('Response from recaptcha was not successful.');
 				db.models.user.findOne({ username: new RegExp(`^${username}$`, 'i') }, next);
 			},
 
 			// if the user already exists, respond with that
 			// otherwise check if a user with the requested email already exists
 			(user, next) => {
-				if (user) return next(true, { status: 'failure', message: 'A user with that username already exists' });
+				if (user) return next('A user with that username already exists.');
 				db.models.user.findOne({ 'email.address': email }, next);
 			},
 
 			// if the user already exists, respond with that
 			// otherwise, generate a salt to use with hashing the new users password
 			(user, next) => {
-				if (user) return next(true, { status: 'failure', message: 'A user with that email already exists' });
+				if (user) return next('A user with that email already exists.');
 				bcrypt.genSalt(10, next);
 			},
 
@@ -142,8 +144,9 @@ module.exports = {
 		], (err, payload) => {
 			// log this error somewhere
 			if (err && err !== true) {
-				console.error(err);
-				return cb({ status: 'error', message: 'An error occurred while registering for an account' });
+				if (typeof err === "string") return cb({ status: 'error', message: err });
+				else if (err.message) return cb({ status: 'error', message: err.message });
+				else return cb({ status: 'error', message: 'An error occurred.' });
 			} else {
 				module.exports.login(session, email, password, (result) => {
 					let obj = {status: 'success', message: 'Successfully registered.'};
