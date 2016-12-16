@@ -153,26 +153,18 @@
 	}
 
 	@media only screen and (min-width: 1200px) {
-		html {
-			font-size: 15px;
-		}
+		html { font-size: 15px; }
 	}
 
 	@media only screen and (min-width: 992px) {
-		html {
-			font-size: 14.5px;
-		}
+		html { font-size: 14.5px; }
 	}
 
 	@media only screen and (min-width: 0) {
-		html {
-			font-size: 14px;
-		}
+		html { font-size: 14px; }
 	}
 
-	.group {
-		min-height: 64px;
-	}
+	.group { min-height: 64px; }
 
 	.station-card {
 		margin: 10px;
@@ -198,9 +190,7 @@
 		outline: 5px solid #f45703;
 	}
 
-	.label {
-		display: flex;
-	}
+	.label { display: flex; }
 
 	.g-recaptcha {
 		display: flex;
@@ -226,8 +216,8 @@
 	}
 
 	.group .card {
-		display: inline-block;
-		height: 415px;
+		display: inline-flex;
+    	flex-direction: column;
 		overflow: hidden;
 	}
 
@@ -237,6 +227,7 @@
 	}
 
 	.content {
+		text-align: left;
 		word-wrap: break-word;
 	}
 	
