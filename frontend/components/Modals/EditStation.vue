@@ -10,7 +10,7 @@
 				<label class='label'>Display name</label>
 				<div class='control is-grouped'>
 					<p class='control is-expanded'>
-						<input class='input' type='text' placeholder='Station Display Name' v-model='data.displayName'>
+						<input class='input' type='text' placeholder='Station Display Name' v-model='data.displayName' autofocus>
 					</p>
 					<p class='control'>
 						<a class='button is-info' @click='updateDisplayName()' href='#'>Update</a>

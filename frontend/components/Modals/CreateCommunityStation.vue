@@ -10,7 +10,7 @@
 				<!-- validation to check if exists http://bulma.io/documentation/elements/form/ -->
 				<label class='label'>Unique ID (lowercase, a-z, used in the url)</label>
 				<p class='control'>
-					<input class='input' type='text' placeholder='Name...' v-model='newCommunity._id'>
+					<input class='input' type='text' placeholder='Name...' v-model='newCommunity._id' autofocus>
 				</p>
 				<label class='label'>Display Name</label>
 				<p class='control'>

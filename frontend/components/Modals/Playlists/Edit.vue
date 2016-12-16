@@ -28,7 +28,7 @@
 				</aside>
 				<div class='control is-grouped'>
 					<p class='control is-expanded'>
-						<input class='input' type='text' placeholder='Search for Song to add' v-model='songQuery' @keyup.enter="searchForSongs()">
+						<input class='input' type='text' placeholder='Search for Song to add' v-model='songQuery' autofocus @keyup.enter='searchForSongs()'>
 					</p>
 					<p class='control'>
 						<a class='button is-info' @click='searchForSongs()' href="#">Search</a>

@@ -51,7 +51,7 @@
 				</p>
 				<label class='label'>Song Title</label>
 				<p class='control'>
-					<input class='input' type='text' v-model='$parent.editing.song.title'>
+					<input class='input' type='text' v-model='$parent.editing.song.title' autofocus>
 				</p>
 				<div class='control is-horizontal'>
 					<div class='control is-grouped'>

@@ -10,7 +10,7 @@
 				<!-- validation to check if exists http://bulma.io/documentation/elements/form/ -->
 				<label class='label'>Email</label>
 				<p class='control'>
-					<input class='input' type='text' placeholder='Email...' v-model='$parent.register.email'>
+					<input class='input' type='text' placeholder='Email...' v-model='$parent.register.email' autofocus>
 				</p>
 				<label class='label'>Username</label>
 				<p class='control'>

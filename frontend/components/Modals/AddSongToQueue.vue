@@ -21,7 +21,7 @@
 				</aside>
 				<div class="control is-grouped">
 					<p class="control is-expanded">
-						<input class="input" type="text" placeholder="YouTube Query" v-model="querySearch" @keyup.enter="submitQuery()">
+						<input class="input" type="text" placeholder="YouTube Query" v-model='querySearch' autofocus @keyup.enter='submitQuery()'>
 					</p>
 					<p class="control">
 						<a class="button is-info" @click="submitQuery()" href='#'>
