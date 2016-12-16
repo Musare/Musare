@@ -88,6 +88,7 @@
 					});
 					_this.socket.on('event:stations.created', station => {
 						if (!station.currentSong) station.currentSong = { thumbnail: '/assets/notes-transparent.png' };
+						if (station.currentSong && !station.currentSong.thumbnail) station.currentSong.thumbnail = "/assets/notes-transparent.png";
 						if (station.privacy !== 'public') {
 							station.class = {'station-red': true}
 						} else if (station.type === 'community') {
@@ -112,6 +113,7 @@
 						_this.stations.official = [];
 						if (data.status === "success") data.stations.forEach(station => {
 							if (!station.currentSong) station.currentSong = { thumbnail: '/assets/notes-transparent.png' };
+							if (station.currentSong && !station.currentSong.thumbnail) station.currentSong.thumbnail = "/assets/notes-transparent.png";
 							if (station.privacy !== 'public') {
 								station.class = { 'station-red': true }
 							} else if (station.type === 'community') {
