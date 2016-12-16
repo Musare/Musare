@@ -145,11 +145,9 @@ let lib = {
 
 					let found = false;
 					playlist.songs.forEach((song) => {
-						if (songId === song._id) {
-							found = true;
-						}
+						if (songId === song._id) found = true;
 					});
-					if (found) return next('That song is already in the playlist.');
+					if (found) return next('That song is already in the playlist');
 					return next(null);
 				});
 			},
@@ -184,7 +182,7 @@ let lib = {
 		(err, playlist, newSong) => {
 			if (err) return cb({ status: 'error', message: err });
 			else if (playlist.songs) {
-				cache.pub('playlist.addSong', {playlistId: playlist._id, song: newSong, userId: userId});
+				cache.pub('playlist.addSong', { playlistId: playlist._id, song: newSong, userId: userId });
 				return cb({ status: 'success', message: 'Song has been successfully added to the playlist', data: playlist.songs });
 			}
 		});

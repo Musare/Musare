@@ -302,9 +302,7 @@
 							_this.socket.emit('stations.addToQueue', _this.stationId, songId, data => {
 								if (data.status === 'success') {
 									_this.socket.emit('playlists.moveSongToBottom', _this.privatePlaylistQueueSelected, songId, data => {
-										if (data.status === 'success') {
-											console.log("Added first song to queue!");
-										}
+										if (data.status === 'success') {}
 									});
 								}
 							});

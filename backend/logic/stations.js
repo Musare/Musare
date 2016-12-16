@@ -75,7 +75,7 @@ module.exports = {
 						notifications.unschedule(`stations.nextSong?id${station._id}`);
 						cb(null, station);
 					}
-				} else cb("Station not found.");
+				} else cb("Station not found");
 			} else cb(err);
 		});
 	},
@@ -163,7 +163,7 @@ module.exports = {
 			},
 
 			(station, next) => {
-				if (!station) return next('Station not found.');
+				if (!station) return next('Station not found');
 				cache.hset('stations', stationId, station, (err) => {
 					if (err) return next(err);
 					next(null, station);
