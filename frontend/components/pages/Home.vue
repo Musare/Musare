@@ -28,7 +28,7 @@
 			</div>
 		</div>
 		<div class="group">
-			<div class="group-title">Community Stations <a @click="toggleModal('createCommunityStation')" v-if="$parent.loggedIn" href='#'><i class="material-icons ccs-button">add_circle_outline</i></a></div>
+			<div class="group-title">Community Stations <a @click="toggleModal('createCommunityStation')" v-if="$parent.loggedIn" href='#'><i class="material-icons community-button">add_circle_outline</i></a></div>
 			<div class="card station-card" v-for="station in stations.community" v-link="{ path: '/community/' + station._id }" @click="this.$dispatch('joinStation', station._id)" :class="station.class">
 				<div class="card-image">
 					<figure class="image is-square">
@@ -171,24 +171,17 @@
 		cursor: pointer;
 	}
 
-	.ccs-button {
+	.community-button {
 		cursor: pointer;
 		transition: .25s ease color;
 		font-size: 30px;
 		color: black;
 	}
 
-	.ccs-button:hover {
-		color: #03a9f4;
-	}
+	.community-button:hover { color: #03a9f4; }
 
-	.station-blue {
-		outline: 5px solid #03a9f4;
-	}
-
-	.station-red {
-		outline: 5px solid #f45703;
-	}
+	.station-blue { outline: 5px solid #03a9f4; }
+	.station-red { outline: 5px solid #f45703; }
 
 	.label { display: flex; }
 
