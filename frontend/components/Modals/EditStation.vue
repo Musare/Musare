@@ -10,10 +10,10 @@
 				<label class='label'>Display name</label>
 				<div class='control is-grouped'>
 					<p class='control is-expanded'>
-						<input class='input' type='text' placeholder='Station Display Name' v-model='data.displayName'>
+						<input class='input' type='text' placeholder='Station Display Name' v-model='data.displayName' autofocus>
 					</p>
 					<p class='control'>
-						<a class='button is-info' @click='updateDisplayName()'>Update</a>
+						<a class='button is-info' @click='updateDisplayName()' href='#'>Update</a>
 					</p>
 				</div>
 				<label class='label'>Description</label>
@@ -22,7 +22,7 @@
 						<input class='input' type='text' placeholder='Station Display Name' v-model='data.description'>
 					</p>
 					<p class='control'>
-						<a class='button is-info' @click='updateDescription()'>Update</a>
+						<a class='button is-info' @click='updateDescription()' href='#'>Update</a>
 					</p>
 				</div>
 				<label class='label'>Privacy</label>
@@ -37,18 +37,18 @@
 						</span>
 					</p>
 					<p class='control'>
-						<a class='button is-info' @click='updatePrivacy()'>Update</a>
+						<a class='button is-info' @click='updatePrivacy()' href='#'>Update</a>
 					</p>
 				</div>
 				<div class='control is-grouped' v-if="$parent.type === 'community'">
-					<p class="control is-expanded">
-						<label class="checkbox">
+					<p class="control is-expanded party-mode-outer">
+						<label class="checkbox party-mode-inner">
 							<input type="checkbox" v-model="data.partyMode">
-							Party mode
+							&nbsp;Party mode
 						</label>
 					</p>
 					<p class='control'>
-						<a class='button is-info' @click='updatePartyMode()'>Update</a>
+						<a class='button is-info' @click='updatePartyMode()' href='#'>Update</a>
 					</p>
 				</div>
 			</section>
@@ -74,25 +74,37 @@
 		methods: {
 			updateDisplayName: function () {
 				this.socket.emit('stations.updateDisplayName', this.data.stationId, this.data.displayName, res => {
-					if (res.status == 'success') return Toast.methods.addToast(res.message, 4000);
+					if (res.status === 'success') {
+						this.$parent.station.displayName = this.data.displayName;
+						return Toast.methods.addToast(res.message, 4000);
+					}
 					Toast.methods.addToast(res.message, 8000);
 				});
 			},
 			updateDescription: function () {
 				this.socket.emit('stations.updateDescription', this.data.stationId, this.data.description, res => {
-					if (res.status == 'success') return Toast.methods.addToast(res.message, 4000);
+					if (res.status === 'success') {
+						this.$parent.station.description = this.data.description;
+						return Toast.methods.addToast(res.message, 4000);
+					}
 					Toast.methods.addToast(res.message, 8000);
 				});
 			},
 			updatePrivacy: function () {
 				this.socket.emit('stations.updatePrivacy', this.data.stationId, this.data.privacy, res => {
-					if (res.status == 'success') return Toast.methods.addToast(res.message, 4000);
+					if (res.status === 'success') {
+						this.$parent.station.privacy = this.data.privacy;
+						return Toast.methods.addToast(res.message, 4000);
+					}
 					Toast.methods.addToast(res.message, 8000);
 				});
 			},
 			updatePartyMode: function () {
 				this.socket.emit('stations.updatePartyMode', this.data.stationId, this.data.partyMode, res => {
-					if (res.status == 'success') return Toast.methods.addToast(res.message, 4000);
+					if (res.status === 'success') {
+					this.$parent.station.partyMode = this.data.partyMode;
+						return Toast.methods.addToast(res.message, 4000);
+					}
 					Toast.methods.addToast(res.message, 8000);
 				});
 			}
@@ -129,4 +141,9 @@
 	.table { margin-bottom: 0; }
 
 	h5 { padding: 20px 0; }
+
+	.party-mode-inner, .party-mode-outer {
+		display: flex;
+		align-items: center;
+	}
 </style>

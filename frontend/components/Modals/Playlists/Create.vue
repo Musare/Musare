@@ -8,7 +8,7 @@
 			</header>
 			<section class='modal-card-body'>
 				<p class='control is-expanded'>
-					<input class='input' type='text' placeholder='Playlist Display Name' v-model='playlist.displayName'>
+					<input class='input' type='text' placeholder='Playlist Display Name' v-model='playlist.displayName' autofocus @keyup.enter='createPlaylist()'>
 				</p>
 			</section>
 			<footer class='modal-card-foot'>

@@ -29,10 +29,10 @@
 
 			</section>
 			<footer class='modal-card-foot'>
-				<a class='button is-primary' @click='$parent.resolve($parent.editing._id)'>
+				<a class='button is-primary' @click='$parent.resolve($parent.editing._id)' href='#'>
 					<span>Resolve</span>
 				</a>
-				<a class='button is-danger' @click='$parent.toggleModal()'>
+				<a class='button is-danger' @click='$parent.toggleModal()' href='#'>
 					<span>Cancel</span>
 				</a>
 			</footer>

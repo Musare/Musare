@@ -27,15 +27,13 @@ cache.sub('station.pause', stationId => {
 
 cache.sub('station.resume', stationId => {
 	stations.getStation(stationId, (err, station) => {
-		utils.emitToRoom(`station.${stationId}`, "event:stations.resume", {timePaused: station.timePaused});
+		utils.emitToRoom(`station.${stationId}`, "event:stations.resume", { timePaused: station.timePaused });
 	});
 });
 
 cache.sub('station.queueUpdate', stationId => {
 	stations.getStation(stationId, (err, station) => {
-		if (!err) {
-			utils.emitToRoom(`station.${stationId}`, "event:queue.update", station.queue);
-		}
+		if (!err) utils.emitToRoom(`station.${stationId}`, "event:queue.update", station.queue);
 	});
 });
 
@@ -376,30 +374,25 @@ module.exports = {
 
 	resume: hooks.ownerRequired((session, stationId, cb) => {
 		stations.getStation(stationId, (err, station) => {
-			if (err && err !== true) {
-				return cb({ status: 'error', message: 'An error occurred while resuming the station' });
-			} else if (station) {
+			if (err && err !== true) return cb({ status: 'error', message: 'An error occurred while resuming the station' });
+			else if (station) {
 				if (station.paused) {
 					station.paused = false;
 					station.timePaused += (Date.now() - station.pausedAt);
-					db.models.station.update({_id: stationId}, {$set: {paused: false}, $inc: {timePaused: Date.now() - station.pausedAt}}, () => {
+					db.models.station.update({ _id: stationId }, { $set: { paused: false }, $inc: { timePaused: Date.now() - station.pausedAt } }, () => {
 						stations.updateStation(stationId, (err, station) => {
 							cache.pub('station.resume', stationId);
 							cb({ status: 'success' });
 						});
 					});
-				} else {
-					cb({ status: 'failure', message: 'That station is not paused.' });
-				}
-			} else {
-				cb({ status: 'failure', message: `That station doesn't exist, it may have been deleted` });
-			}
+				} else cb({ status: 'failure', message: 'That station is not paused.' });
+			} else cb({ status: 'failure', message: `That station doesn't exist, it may have been deleted` });
 		});
 	}),
 
 	remove: hooks.ownerRequired((session, stationId, cb) => {
 		db.models.station.remove({ _id: stationId }, (err) => {
-			if (err) return cb({status: 'failure', message: 'Something went wrong when deleting that station.'});
+			if (err) return cb({ status: 'failure', message: 'Something went wrong when deleting that station' });
 			cache.hdel('stations', stationId, () => {
 				cache.pub('station.remove', stationId);
 				return cb({ status: 'success', message: 'Station successfully removed' });
@@ -473,13 +466,11 @@ module.exports = {
 			if (err) return cb(err);
 			if (station.type === 'community') {
 				let has = false;
-				station.queue.forEach((queueSong) => {
-					if (queueSong._id === songId) {
-						has = true;
-					}
+				station.queue.forEach(queueSong => {
+					if (queueSong._id === songId) has = true;
 				});
-				if (has) return cb({'status': 'failure', 'message': 'That song has already been added to the queue.'});
-				if (station.currentSong && station.currentSong._id === songId) return cb({'status': 'failure', 'message': 'That song is currently playing.'});
+				if (has) return cb({'status': 'failure', 'message': 'That song has already been added to the queue'});
+				if (station.currentSong && station.currentSong._id === songId) return cb({'status': 'failure', 'message': 'That song is currently playing'});
 
 				songs.getSong(songId, (err, song) => {
 					if (err) {
@@ -494,17 +485,17 @@ module.exports = {
 						});
 					} else cont(song);
 					function cont(song) {
-						db.models.station.update({_id: stationId}, {$push: {queue: song}}, (err) => {
-							if (err) return cb({'status': 'failure', 'message': 'Something went wrong.'});
+						db.models.station.update({ _id: stationId }, { $push: { queue: song } }, (err) => {
+							if (err) return cb({'status': 'failure', 'message': 'Something went wrong'});
 							stations.updateStation(stationId, (err, station) => {
 								if (err) return cb(err);
 								cache.pub('station.queueUpdate', stationId);
-								cb({'status': 'success', 'message': 'Added that song to the queue.'});
+								cb({ 'status': 'success', 'message': 'Added that song to the queue' });
 							});
 						});
 					}
 				});
-			} else cb({'status': 'failure', 'message': 'That station is not a community station.'});
+			} else cb({'status': 'failure', 'message': 'That station is not a community station'});
 		});
 	}),
 
@@ -545,14 +536,14 @@ module.exports = {
 			if (err) return cb(err);
 			if (station.type === 'community') {
 				if (station.privatePlaylist === playlistId) return cb({'status': 'failure', 'message': 'That playlist is already selected.'});
-				db.models.playlist.findOne({_id: playlistId}, (err, playlist) => {
+				db.models.playlist.findOne({ _id: playlistId }, (err, playlist) => {
 					if (err) return cb(err);
 					if (playlist) {
-						db.models.station.update({_id: stationId}, {$set: {privatePlaylist: playlistId, currentSongIndex: 0}}, (err) => {
+						db.models.station.update({_id: stationId}, { $set: { privatePlaylist: playlistId, currentSongIndex: 0 } }, (err) => {
 							if (err) return cb(err);
 							stations.updateStation(stationId, (err, station) => {
 								if (err) return cb(err);
-								stations.skipStation(stationId)();
+								if (!station.partyMode) stations.skipStation(stationId)();
 								cache.pub('privatePlaylist.selected', {playlistId, stationId});
 								cb({'status': 'success', 'message': 'Playlist selected.'});
 							});

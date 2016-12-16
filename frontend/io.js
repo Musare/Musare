@@ -36,19 +36,16 @@ export default {
 	init: function (url) {
 		this.socket = window.socket = io(url);
 		this.socket.on('connect', () => {
-			// Connect
 			onConnectCallbacks.forEach((cb) => {
 				cb();
 			});
 		});
 		this.socket.on('disconnect', () => {
-			// Disconnect
 			onDisconnectCallbacks.forEach((cb) => {
 				cb();
 			});
 		});
 		this.socket.on('connect_error', () => {
-			// Connect error
 			onConnectErrorCallbacks.forEach((cb) => {
 				cb();
 			});

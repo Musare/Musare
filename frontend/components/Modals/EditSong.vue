@@ -14,14 +14,16 @@
 							</p>
 						</form>
 						<p class='control has-addons'>
-							<a class='button'>
-								<i class='material-icons' @click='$parent.video.settings("pause")' v-if='!$parent.video.paused'>pause</i>
-								<i class='material-icons' @click='$parent.video.settings("play")' v-else>play_arrow</i>
+							<a class='button' @click='$parent.video.settings("pause")' v-if='!$parent.video.paused' href='#'>
+								<i class='material-icons'>pause</i>
 							</a>
-							<a class='button' @click='$parent.video.settings("stop")'>
+							<a class='button' @click='$parent.video.settings("play")' v-if='$parent.video.paused' href='#'>
+								<i class='material-icons'>play_arrow</i>
+							</a>
+							<a class='button' @click='$parent.video.settings("stop")' href='#'>
 								<i class='material-icons'>stop</i>
 							</a>
-							<a class='button' @click='$parent.video.settings("skipToLast10Secs")'>
+							<a class='button' @click='$parent.video.settings("skipToLast10Secs")' href='#'>
 								<i class='material-icons'>fast_forward</i>
 							</a>
 						</p>
@@ -30,10 +32,14 @@
 				<h5 class='has-text-centered'>Thumbnail Preview</h5>
 				<img class='thumbnail-preview' :src='$parent.editing.song.thumbnail' onerror="this.src='/assets/notes-transparent.png'">
 
-				<label class='label'>Thumbnail URL</label>
-				<p class='control'>
-					<input class='input' type='text' v-model='$parent.editing.song.thumbnail'>
-				</p>
+				<div class="control is-horizontal">
+					<div class="control-label">
+						<label class="label">Thumbnail URL</label>
+					</div>
+					<div class="control">
+						<input class='input' type='text' v-model='$parent.editing.song.thumbnail'>
+					</div>
+				</div>
 
 				<h5 class='has-text-centered'>Edit Info</h5>
 
@@ -43,20 +49,24 @@
 						Explicit
 					</label>
 				</p>
-				<label class='label'>Song ID</label>
-				<p class='control'>
-					<input class='input' type='text' v-model='$parent.editing.song._id'>
-				</p>
-				<label class='label'>Song Title</label>
-				<p class='control'>
-					<input class='input' type='text' v-model='$parent.editing.song.title'>
-				</p>
+				<label class='label'>Song ID & Title</label>
+				<div class="control is-horizontal">
+					<div class="control is-grouped">
+						<p class='control is-expanded'>
+							<input class='input' type='text' v-model='$parent.editing.song._id'>
+						</p>
+						<p class='control is-expanded'>
+							<input class='input' type='text' v-model='$parent.editing.song.title' autofocus>
+						</p>
+					</div>
+				</div>
+				<label class='label'>Artists & Genres</label>
 				<div class='control is-horizontal'>
-					<div class='control is-grouped'>
+					<div class='control is-grouped artist-genres'>
 						<div>
 							<p class='control has-addons'>
 								<input class='input' id='new-artist' type='text' placeholder='Artist'>
-								<a class='button is-info' @click='$parent.addTag("artists")'>Add Artist</a>
+								<a class='button is-info' @click='$parent.addTag("artists")' href='#'>Add Artist</a>
 							</p>
 							<span class='tag is-info' v-for='(index, artist) in $parent.editing.song.artists' track-by='$index'>
 								{{ artist }}
@@ -66,7 +76,7 @@
 						<div>
 							<p class='control has-addons'>
 								<input class='input' id='new-genre' type='text' placeholder='Genre'>
-								<a class='button is-info' @click='$parent.addTag("genres")'>Add Genre</a>
+								<a class='button is-info' @click='$parent.addTag("genres")' href='#'>Add Genre</a>
 							</p>
 							<span class='tag is-info' v-for='(index, genre) in $parent.editing.song.genres' track-by='$index'>
 								{{ genre }}
@@ -86,11 +96,11 @@
 
 			</section>
 			<footer class='modal-card-foot'>
-				<a class='button is-success' @click='$parent.save($parent.editing.song)'>
+				<a class='button is-success' @click='$parent.save($parent.editing.song)' href='#'>
 					<i class='material-icons save-changes'>done</i>
 					<span>&nbsp;Save</span>
 				</a>
-				<a class='button is-danger' @click='$parent.toggleModal()'>
+				<a class='button is-danger' @click='$parent.toggleModal()' href='#'>
 					<span>&nbsp;Cancel</span>
 				</a>
 			</footer>
@@ -213,13 +223,18 @@
 		align-items: center;
 	}
 
+	.artist-genres {
+		display: flex;
+    	justify-content: space-between;
+	}
+
 	#volumeSlider { margin-bottom: 15px; }
 
 	.has-text-centered { padding: 10px; }
 
 	.thumbnail-preview {
 		display: flex;
-		margin: 0 auto;
+		margin: 0 auto 25px auto;
 		max-width: 200px;
 		width: 100%;
 	}

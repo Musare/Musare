@@ -16,9 +16,9 @@
 			<a class="nav-item is-tab admin" href="#" v-link="{ path: '/admin' }" v-if="$parent.$parent.role === 'admin'">
 				<strong>Admin</strong>
 			</a>
-			<a class="nav-item is-tab" href="#">
+			<!--a class="nav-item is-tab" href="#">
 				About
-			</a>
+			</a-->
 			<a class="nav-item is-tab" href="#" v-link="{ path: '/news' }">
 				News
 			</a>

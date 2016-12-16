@@ -71,6 +71,16 @@ cache.sub('playlist.updateDisplayName', res => {
 
 let lib = {
 
+	getFirstSong: hooks.loginRequired((session, playlistId, cb, userId) => {
+		playlists.getPlaylist(playlistId, (err, playlist) => {
+			if (err || !playlist || playlist.createdBy !== userId) return cb({ status: 'failure', message: 'Something went wrong when getting the playlist'});
+			cb({
+				status: 'success',
+				song: playlist.songs[0]
+			});
+		});
+	}),
+
 	indexForUser: hooks.loginRequired((session, cb, userId) => {
 		db.models.playlist.find({ createdBy: userId }, (err, playlists) => {
 			if (err) return cb({ status: 'failure', message: 'Something went wrong when getting the playlists'});;
@@ -99,6 +109,7 @@ let lib = {
 			}
 
 		], (err, playlist) => {
+			console.log(err, playlist);
 			if (err) return cb({ 'status': 'failure', 'message': 'Something went wrong'});
 			cache.pub('playlist.create', playlist._id);
 			return cb({ 'status': 'success', 'message': 'Successfully created playlist' });
@@ -135,11 +146,9 @@ let lib = {
 
 					let found = false;
 					playlist.songs.forEach((song) => {
-						if (songId === song._id) {
-							found = true;
-						}
+						if (songId === song._id) found = true;
 					});
-					if (found) return next('That song is already in the playlist.');
+					if (found) return next('That song is already in the playlist');
 					return next(null);
 				});
 			},
@@ -174,7 +183,7 @@ let lib = {
 		(err, playlist, newSong) => {
 			if (err) return cb({ status: 'error', message: err });
 			else if (playlist.songs) {
-				cache.pub('playlist.addSong', {playlistId: playlist._id, song: newSong, userId: userId});
+				cache.pub('playlist.addSong', { playlistId: playlist._id, song: newSong, userId: userId });
 				return cb({ status: 'success', message: 'Song has been successfully added to the playlist', data: playlist.songs });
 			}
 		});
@@ -307,8 +316,8 @@ let lib = {
 						console.log(err);
 						if (err) return cb({status: 'failure', message: 'Something went wrong when moving the song'});
 						playlists.updatePlaylist(playlistId, (err) => {
-							if (err) return cb({ status: 'failure', message: err});
-							cache.pub('playlist.moveSongToBottom', {playlistId, songId, userId: userId});
+							if (err) return cb({ status: 'failure', message: err });
+							cache.pub('playlist.moveSongToBottom', { playlistId, songId, userId: userId });
 							return cb({ status: 'success', message: 'Playlist has been successfully updated' });
 						})
 					});

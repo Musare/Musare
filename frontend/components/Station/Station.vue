@@ -13,13 +13,15 @@
 	<users-sidebar v-if='sidebars.users'></users-sidebar>
 	
 	<div class="station">
-		<div v-show="noSong" class="noSong">
-			<h1>No song is currently playing.</h1>
+		<div v-show="noSong" class="no-song">
+			<h1>No song is currently playing</h1>
 			<h4 v-if='type === "community" && station.partyMode'>
-				<a href='#' class='noSong' @click='sidebars.queue = true'>Add a Song to the Queue</a>
+				<a href='#' class='no-song' @click='sidebars.queue = true'>Add a Song to the Queue</a>
 			</h4>
-			<h1 v-if='type === "community" && !station.partyMode && $parent.userId === station.owner && !station.privatePlaylist'>Click <a href="#" @click="sidebars.playlist = true">here</a> to play a private playlist.</h1>
-			<h1 v-if='type === "community" && !station.partyMode && $parent.userId === station.owner && station.privatePlaylist'>Maybe you can add some songs to your selected private playlist.</h1>
+			<h4 v-if='type === "community" && !station.partyMode && $parent.userId === station.owner && !station.privatePlaylist'>
+				<a href='#' class='no-song' @click='sidebars.playlist = true'>Play a private playlist</a>
+			</h4>
+			<h1 v-if='type === "community" && !station.partyMode && $parent.userId === station.owner && station.privatePlaylist'>Maybe you can add some songs to your selected private playlist</h1>
 		</div>
 		<div class="columns is-mobile" v-show="!noSong">
 			<div class="column is-8-desktop is-offset-2-desktop is-12-mobile">
@@ -40,7 +42,7 @@
 						<h4 class="thin" style="margin-left: 0">{{currentSong.artists}}</h4>
 						<div class="columns is-mobile">
 							<form style="margin-top: 12px; margin-bottom: 0;" action="#" class="column is-7-desktop is-4-mobile">
-								<p style="margin-top: 0; position: relative; display: flex;">
+								<p class='volume-slider-wrapper'>
 									<i class="material-icons">volume_down</i>
 									<input type="range" id="volumeSlider" min="0" max="100" class="active" v-on:change="changeVolume()" v-on:input="changeVolume()">
 									<i class="material-icons">volume_up</i>
@@ -51,10 +53,12 @@
 									<li id="like" class="right" @click="toggleLike()">
 										<span class="flow-text">{{currentSong.likes}} </span>
 										<i id="thumbs_up" class="material-icons grey-text" v-bind:class="{ liked: liked }">thumb_up</i>
+										<a class='absolute-a behind' @click="toggleLike()" href='#'></a>
 									</li>
 									<li style="margin-right: 10px;" id="dislike" class="right" @click="toggleDislike()">
 										<span class="flow-text">{{currentSong.dislikes}} </span>
 										<i id="thumbs_down" class="material-icons grey-text" v-bind:class="{ disliked: disliked }">thumb_down</i>
+										<a class='absolute-a behind' @click="toggleDislike()" href='#'></a>
 									</li>
 								</ul>
 							</div>
@@ -117,7 +121,8 @@
 				timeBeforePause: 0,
 				station: {},
 				skipVotes: 0,
-				privatePlaylistQueueSelected: null
+				privatePlaylistQueueSelected: null,
+				automaticallyRequestedSongId: null
 			}
 		},
 		methods: {
@@ -281,6 +286,30 @@
 					if (data.status !== 'success') Toast.methods.addToast(`Error: ${data.message}`, 8000);
 				});
 			},
+			addFirstPrivatePlaylistSongToQueue: function() {
+				let _this = this;
+				let isInQueue = false;
+				let userId = _this.$parent.userId;
+				_this.queue.forEach((queueSong) => {
+					if (queueSong.requestedBy === userId) isInQueue = true;
+				});
+				if (!isInQueue && _this.privatePlaylistQueueSelected) {
+
+					_this.socket.emit('playlists.getFirstSong', _this.privatePlaylistQueueSelected, data => {
+						if (data.status === 'success') {
+							let songId = data.song._id;
+							_this.automaticallyRequestedSongId = songId;
+							_this.socket.emit('stations.addToQueue', _this.stationId, songId, data => {
+								if (data.status === 'success') {
+									_this.socket.emit('playlists.moveSongToBottom', _this.privatePlaylistQueueSelected, songId, data => {
+										if (data.status === 'success') {}
+									});
+								}
+							});
+						}
+					});
+				}
+			},
 			joinStation: function () {
 				let _this = this;
 				_this.socket.emit('stations.join', _this.stationId, res => {
@@ -369,6 +398,15 @@
 						if (_this.playerReady) _this.player.pauseVideo();
 						_this.noSong = true;
 					}
+
+					let isInQueue = false;
+					let userId = _this.$parent.userId;
+					_this.queue.forEach((queueSong) => {
+						if (queueSong.requestedBy === userId) isInQueue = true;
+					});
+					if (!isInQueue && _this.privatePlaylistQueueSelected && (_this.automaticallyRequestedSongId !== _this.currentSong._id || !_this.currentSong._id)) {
+						_this.addFirstPrivatePlaylistSongToQueue();
+					}
 				});
 
 				_this.socket.on('event:stations.pause', data => {
@@ -440,8 +478,10 @@
 				});
 			});
 
+			
 			let volume = parseInt(localStorage.getItem("volume"));
 			volume = (typeof volume === "number") ? volume : 20;
+			localStorage.setItem("volume", volume);
 			$("#volumeSlider").val(volume);
 		},
 		components: {
@@ -460,7 +500,7 @@
 </script>
 
 <style lang="scss">
-	.noSong {
+	.no-song {
 		color: #03A9F4;
 		text-align: center;
 	}
@@ -468,6 +508,13 @@
 	#volumeSlider {
 		padding: 0 15px;
     	background: transparent;
+	}
+
+	.volume-slider-wrapper {
+		margin-top: 0;
+		position: relative;
+		display: flex;
+		align-items: center;
 	}
 
 	.stationDisplayName {
@@ -766,4 +813,16 @@
 	}
 
 	.icons-group { display: flex; }
+
+	#like, #dislike {
+		position: relative;
+	}
+
+	.behind {
+		z-index: -1;
+	}
+
+	.behind:focus {
+		z-index: 0;
+	}
 </style>

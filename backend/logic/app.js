@@ -100,6 +100,7 @@ const lib = {
 											if (err) return redirectOnErr(res, err.message);
 											if (user) return redirectOnErr(res, 'An account with that email address already exists.');
 											else db.models.user.create({
+												_id: utils.generateRandomString(12),//TODO Check if exists
 												username: body.login,
 												email: {
 													address,

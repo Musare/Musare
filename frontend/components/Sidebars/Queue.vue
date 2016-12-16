@@ -32,7 +32,7 @@
 				</div>
 			</article>
 
-			<a class='button add-to-queue' @click='$parent.toggleModal("addSongToQueue")'>Add Song to Queue</a>
+			<a class='button add-to-queue' href='#' @click='$parent.toggleModal("addSongToQueue")'>Add Song to Queue</a>
 		</div>
 	</div>
 </template>
@@ -71,7 +71,7 @@
 	}
 
 	.inner-wrapper {	
-		top: 50px;
+		top: 64px;
 		position: relative;
 	}
 
@@ -101,6 +101,8 @@
 
 		&:active, &:focus { border: 0; }
 	}
+
+	.add-to-queue:focus { background: #029ce3; }
 
 	.media { padding: 0px 25px;}
 

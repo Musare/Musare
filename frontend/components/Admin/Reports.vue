@@ -26,8 +26,8 @@
 							<span>{{ report.description }}</span>
 						</td>
 						<td>
-							<a class='button is-warning' @click='toggleModal(report)'>Issues</a>
-							<a class='button is-primary' @click='resolve(report._id)'>Resolve</a>
+							<a class='button is-warning' href='#' @click='toggleModal(report)'>Issues</a>
+							<a class='button is-primary' href='#' @click='resolve(report._id)'>Resolve</a>
 						</td>
 					</tr>
 				</tbody>

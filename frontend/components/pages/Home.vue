@@ -24,10 +24,11 @@
 						{{ station.description }}
 					</div>
 				</div>
+				<a @click="this.$dispatch('joinStation', station._id)" href='#' class='absolute-a'></a>
 			</div>
 		</div>
 		<div class="group">
-			<div class="group-title">Community Stations <i class="material-icons ccs-button" @click="toggleModal('createCommunityStation')" v-if="$parent.loggedIn">add_circle_outline</i></div>
+			<div class="group-title">Community Stations <a @click="toggleModal('createCommunityStation')" v-if="$parent.loggedIn" href='#'><i class="material-icons community-button">add_circle_outline</i></a></div>
 			<div class="card station-card" v-for="station in stations.community" v-link="{ path: '/community/' + station._id }" @click="this.$dispatch('joinStation', station._id)" :class="station.class">
 				<div class="card-image">
 					<figure class="image is-square">
@@ -49,6 +50,7 @@
 						{{ station.description }}
 					</div>
 				</div>
+				<a @click="this.$dispatch('joinStation', station._id)" href='#' class='absolute-a'></a>
 			</div>
 		</div>
 		<main-footer></main-footer>
@@ -86,6 +88,7 @@
 					});
 					_this.socket.on('event:stations.created', station => {
 						if (!station.currentSong) station.currentSong = { thumbnail: '/assets/notes-transparent.png' };
+						if (station.currentSong && !station.currentSong.thumbnail) station.currentSong.thumbnail = "/assets/notes-transparent.png";
 						if (station.privacy !== 'public') {
 							station.class = {'station-red': true}
 						} else if (station.type === 'community') {
@@ -110,6 +113,7 @@
 						_this.stations.official = [];
 						if (data.status === "success") data.stations.forEach(station => {
 							if (!station.currentSong) station.currentSong = { thumbnail: '/assets/notes-transparent.png' };
+							if (station.currentSong && !station.currentSong.thumbnail) station.currentSong.thumbnail = "/assets/notes-transparent.png";
 							if (station.privacy !== 'public') {
 								station.class = { 'station-red': true }
 							} else if (station.type === 'community') {
@@ -149,53 +153,37 @@
 	}
 
 	@media only screen and (min-width: 1200px) {
-		html {
-			font-size: 15px;
-		}
+		html { font-size: 15px; }
 	}
 
 	@media only screen and (min-width: 992px) {
-		html {
-			font-size: 14.5px;
-		}
+		html { font-size: 14.5px; }
 	}
 
 	@media only screen and (min-width: 0) {
-		html {
-			font-size: 14px;
-		}
+		html { font-size: 14px; }
 	}
 
-	.group {
-		min-height: 64px;
-	}
+	.group { min-height: 64px; }
 
 	.station-card {
 		margin: 10px;
 		cursor: pointer;
 	}
 
-	.ccs-button {
+	.community-button {
 		cursor: pointer;
 		transition: .25s ease color;
 		font-size: 30px;
+		color: black;
 	}
 
-	.ccs-button:hover {
-		color: #03a9f4;
-	}
+	.community-button:hover { color: #03a9f4; }
 
-	.station-blue {
-		outline: 5px solid #03a9f4;
-	}
+	.station-blue { outline: 5px solid #03a9f4; }
+	.station-red { outline: 5px solid #f45703; }
 
-	.station-red {
-		outline: 5px solid #f45703;
-	}
-
-	.label {
-		display: flex;
-	}
+	.label { display: flex; }
 
 	.g-recaptcha {
 		display: flex;
@@ -221,8 +209,8 @@
 	}
 
 	.group .card {
-		display: inline-block;
-		height: 415px;
+		display: inline-flex;
+    	flex-direction: column;
 		overflow: hidden;
 	}
 
@@ -232,6 +220,7 @@
 	}
 
 	.content {
+		text-align: left;
 		word-wrap: break-word;
 	}
 	

@@ -46,9 +46,11 @@
 		},
 		methods: {
 			logout: function () {
-				this.socket.emit('users.logout', result => {
+				let _this = this;
+				_this.socket.emit('users.logout', result => {
 					if (result.status === 'success') {
 						document.cookie = 'SID=;expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+						_this.$router.go('/');
 						location.reload();
 					} else Toast.methods.addToast(result.message, 4000);
 				});
@@ -136,6 +138,14 @@
 <style type='scss'>
 	#toast-container { z-index: 10000 !important; }
 
+	.absolute-a {
+		width: 100%;
+		height: 100%;
+		position: absolute;
+		top: 0;
+		left: 0;
+	}
+
 	.socketNotConnected {
 		padding: 20px;
 		color: white;
@@ -217,4 +227,10 @@
 			&:after { left: 200%; }
 		}
 	}
+
+	.button:focus, .button:active { border-color: #dbdbdb !important; }
+	.input:focus, .input:active { border-color: #03a9f4 !important; }
+	button.delete:focus { background-color: rgba(10, 10, 10, 0.3); }
+
+	.tag { padding-right: 6px !important; }
 </style>

@@ -26,9 +26,9 @@
 						<td>{{ song.genres.join(', ') }}</td>
 						<td>{{ song.requestedBy }}</td>
 						<td>
-							<a class='button is-primary' @click='edit(song, index)'>Edit</a>
-							<a class='button is-success' @click='add(song)'>Add</a>
-							<a class='button is-danger' @click='remove(song._id, index)'>Remove</a>
+							<a class='button is-primary' href='#' @click='edit(song, index)'>Edit</a>
+							<a class='button is-success' href='#' @click='add(song)'>Add</a>
+							<a class='button is-danger' href='#' @click='remove(song._id, index)'>Remove</a>
 						</td>
 					</tr>
 				</tbody>
@@ -198,4 +198,6 @@
 	}
 
 	td { vertical-align: middle; }
+
+	.is-primary:focus { background-color: #029ce3 !important; }
 </style>

@@ -6,7 +6,7 @@
 			<aside class='menu' v-if='playlists.length > 0'>
 				<ul class='menu-list'>
 					<li v-for='playlist in playlists'>
-						<a href='#'>{{ playlist.displayName }}</a>
+						<span>{{ playlist.displayName }}</span>
 						<!--Will play playlist in community station Kris-->
 						<div class='icons-group'>
 							<a href='#' @click='selectPlaylist(playlist._id)' v-if="isNotSelected(playlist._id)">
@@ -22,7 +22,7 @@
 
 			<div class='none-found' v-else>No Playlists found</div>
 
-			<a class='button create-playlist' @click='$parent.toggleModal("createPlaylist")'>Create Playlist</a>
+			<a class='button create-playlist' href='#' @click='$parent.toggleModal("createPlaylist")'>Create Playlist</a>
 		</div>
 	</div>
 </template>
@@ -115,8 +115,15 @@
 		box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
 	}
 
+	.icons-group a {
+		display: flex;
+    	align-items: center;
+	}
+
+	.menu-list li { align-items: center; }
+
 	.inner-wrapper {	
-		top: 50px;
+		top: 64px;
 		position: relative;
 	}
 
@@ -140,12 +147,14 @@
     	margin-top: 20px;
 		height: 40px;
 		border-radius: 0;
-		background: rgb(3, 169, 244);
+		background: rgba(3, 169, 244, 1);
     	color: #fff !important;
 		border: 0;
 
 		&:active, &:focus { border: 0; }
 	}
+
+	.create-playlist:focus { background: #029ce3; }
 
 	.none-found { text-align: center; }
 </style>

@@ -12,14 +12,14 @@
 						<li v-for='song in playlist.songs' track-by='$index'>
 							<a :href='' target='_blank'>{{ song.title }}</a>
 							<div class='controls'>
-								<!--a href='#'>
-									<i class='material-icons' v-if='playlist.songs[0] !== song' @click='promoteSong($index)'>keyboard_arrow_up</i>
+								<a href='#' @click='promoteSong(song._id)'>
+									<i class='material-icons' v-if='$index > 0' @click='promoteSong(song._id)'>keyboard_arrow_up</i>
 									<i class='material-icons' style='opacity: 0' v-else>error</i>
 								</a>
-								<a href='#'>
-									<i class='material-icons' v-if='playlist.songs.length - 1 !== $index' @click='demoteSong($index)'>keyboard_arrow_down</i>
+								<a href='#' @click='demoteSong(song._id)'>
+									<i class='material-icons' v-if='playlist.songs.length - 1 !== $index' @click='demoteSong(song._id)'>keyboard_arrow_down</i>
 									<i class='material-icons' style='opacity: 0' v-else>error</i>
-								</a-->
+								</a>
 								<a href='#' @click='removeSongFromPlaylist(song._id)'><i class='material-icons'>delete</i></a>
 							</div>
 						</li>
@@ -28,10 +28,10 @@
 				</aside>
 				<div class='control is-grouped'>
 					<p class='control is-expanded'>
-						<input class='input' type='text' placeholder='Search for Song to add' v-model='songQuery'>
+						<input class='input' type='text' placeholder='Search for Song to add' v-model='songQuery' autofocus @keyup.enter='searchForSongs()'>
 					</p>
 					<p class='control'>
-						<a class='button is-info' @click='searchForSongs()'>Search</a>
+						<a class='button is-info' @click='searchForSongs()' href="#">Search</a>
 					</p>
 				</div>
 				<table class='table' v-if='songQueryResults.length > 0'>
@@ -42,7 +42,7 @@
 							</td>
 							<td>{{ result.title }}</td>
 							<td>
-								<a class='button is-success' @click='addSongToPlaylist(result.id)'>
+								<a class='button is-success' @click='addSongToPlaylist(result.id)' href='#'>
 									Add
 								</a>
 							</td>
@@ -51,24 +51,24 @@
 				</table>
 				<div class='control is-grouped'>
 					<p class='control is-expanded'>
-						<input class='input' type='text' placeholder='YouTube Playlist URL' v-model='importQuery'>
+						<input class='input' type='text' placeholder='YouTube Playlist URL' v-model='importQuery' @keyup.enter="importPlaylist()">
 					</p>
 					<p class='control'>
-						<a class='button is-info' @click='importPlaylist()'>Import</a>
+						<a class='button is-info' @click='importPlaylist()' href="#">Import</a>
 					</p>
 				</div>
 				<h5>Edit playlist details:</h5>
 				<div class='control is-grouped'>
 					<p class='control is-expanded'>
-						<input class='input' type='text' placeholder='Playlist Display Name' v-model='playlist.displayName'>
+						<input class='input' type='text' placeholder='Playlist Display Name' v-model='playlist.displayName' @keyup.enter="renamePlaylist()">
 					</p>
 					<p class='control'>
-						<a class='button is-info' @click='renamePlaylist()'>Rename</a>
+						<a class='button is-info' @click='renamePlaylist()' href="#">Rename</a>
 					</p>
 				</div>
 			</section>
 			<footer class='modal-card-foot'>
-				<a class='button is-danger' @click='removePlaylist()'>Remove Playlist</a>
+				<a class='button is-danger' @click='removePlaylist()' href="#">Remove Playlist</a>
 			</footer>
 		</div>
 	</div>
@@ -112,7 +112,6 @@
 								thumbnail: res.data.items[i].snippet.thumbnails.default.url
 							});
 						}
-						Toast.methods.addToast(res.message, 3000);
 					} else if (res.status === 'error') Toast.methods.addToast(res.message, 3000);
 				});
 			},
@@ -149,19 +148,19 @@
 						_this.$parent.toggleModal('editPlaylist');
 					}
 				});
-			},/*
-			promoteSong: function (fromIndex) {
+			},
+			promoteSong: function (songId) {
 				let _this = this;
-				_this.socket.emit('playlists.promoteSong', _this.playlist._id, fromIndex, res => {
-					if (res.status === 'success') _this.$set('playlist.songs', res.data); // bug: v-for is not updating
+				_this.socket.emit('playlists.moveSongToTop', _this.playlist._id, songId, res => {
+					Toast.methods.toast(4000, res.message);
 				});
 			},
-			demoteSong: function (fromIndex) {
+			demoteSong: function (songId) {
 				let _this = this;
-				_this.socket.emit('playlists.demoteSong', _this.playlist._id, fromIndex, res => {
-					if (res.status === 'success') _this.$set('playlist.songs', res.data); // bug: v-for is not updating
+				_this.socket.emit('playlists.moveSongToBottom', _this.playlist._id, songId, res => {
+					Toast.methods.toast(4000, res.message);
 				});
-			}*/
+			}
 		},
 		ready: function () {
 			let _this = this;

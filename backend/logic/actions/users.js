@@ -9,6 +9,15 @@ const db = require('../db');
 const cache = require('../cache');
 const utils = require('../utils');
 const hooks = require('./hooks');
+const sha256 = require('sha256');
+
+cache.sub('user.updateUsername', user => {
+	utils.socketsFromUser(user._id, sockets => {
+		sockets.forEach(socket => {
+			socket.emit('event:user.username.changed', user.username);
+		});
+	});
+});
 
 module.exports = {
 
@@ -26,8 +35,9 @@ module.exports = {
 			// if the user doesn't exist, respond with a failure
 			// otherwise compare the requested password and the actual users password
 			(user, next) => {
-				if (!user) return next(true, { status: 'failure', message: 'User not found' });
-				bcrypt.compare(password, user.services.password.password, (err, match) => {
+				if (!user) return next('User not found');
+				if (!user.services.password || !user.services.password.password) return next('The account you are trying to access uses GitHub to log in.');
+				bcrypt.compare(sha256(password), user.services.password.password, (err, match) => {
 
 					if (err) return next(err);
 
@@ -55,8 +65,9 @@ module.exports = {
 
 			// log this error somewhere
 			if (err && err !== true) {
-				console.error(err);
-				return cb({ status: 'error', message: 'An error occurred while logging in' });
+				if (typeof err === "string") return cb({ status: 'error', message: err });
+				else if (err.message) return cb({ status: 'error', message: err.message });
+				else return cb({ status: 'error', message: 'An error occurred.' });
 			}
 
 			cb(payload);
@@ -84,32 +95,33 @@ module.exports = {
 			// if it is, we check if a user with the requested username already exists
 			(response, body, next) => {
 				let json = JSON.parse(body);
-				if (json.success !== true) return next('Response from recaptcha was not successful');
+				if (json.success !== true) return next('Response from recaptcha was not successful.');
 				db.models.user.findOne({ username: new RegExp(`^${username}$`, 'i') }, next);
 			},
 
 			// if the user already exists, respond with that
 			// otherwise check if a user with the requested email already exists
 			(user, next) => {
-				if (user) return next(true, { status: 'failure', message: 'A user with that username already exists' });
+				if (user) return next('A user with that username already exists.');
 				db.models.user.findOne({ 'email.address': email }, next);
 			},
 
 			// if the user already exists, respond with that
 			// otherwise, generate a salt to use with hashing the new users password
 			(user, next) => {
-				if (user) return next(true, { status: 'failure', message: 'A user with that email already exists' });
+				if (user) return next('A user with that email already exists.');
 				bcrypt.genSalt(10, next);
 			},
 
 			// hash the password
 			(salt, next) => {
-				bcrypt.hash(password, salt, next)
+				bcrypt.hash(sha256(password), salt, next)
 			},
 
 			// save the new user to the database
 			(hash, next) => {
 				db.models.user.create({
+					_id: utils.generateRandomString(12),//TODO Check if exists
 					username,
 					email: {
 						address: email,
@@ -132,8 +144,9 @@ module.exports = {
 		], (err, payload) => {
 			// log this error somewhere
 			if (err && err !== true) {
-				console.error(err);
-				return cb({ status: 'error', message: 'An error occurred while registering for an account' });
+				if (typeof err === "string") return cb({ status: 'error', message: err });
+				else if (err.message) return cb({ status: 'error', message: err.message });
+				else return cb({ status: 'error', message: 'An error occurred.' });
 			} else {
 				module.exports.login(session, email, password, (result) => {
 					let obj = {status: 'success', message: 'Successfully registered.'};
@@ -208,24 +221,32 @@ module.exports = {
 	updateUsername: hooks.loginRequired((session, newUsername, cb, userId) => {
 		db.models.user.findOne({ _id: userId }, (err, user) => {
 			if (err) console.error(err);
-			if (!user) return cb({ status: 'error', message: 'User not found.' });
+			if (!user) return cb({ status: 'error', message: 'User not found' });
 			if (user.username !== newUsername) {
 				if (user.username.toLowerCase() !== newUsername.toLowerCase()) {
-					db.models.user.findOne({username: new RegExp(`^${newUsername}$`, 'i')}, (err, _user) => {
+					db.models.user.findOne({ username: new RegExp(`^${newUsername}$`, 'i') }, (err, _user) => {
 						if (err) return cb({ status: 'error', message: err.message });
-						if (_user) return cb({ status: 'failure', message: 'That username is already in use.' });
-						db.models.user.update({_id: userId}, {$set: {username: newUsername}}, (err) => {
+						if (_user) return cb({ status: 'failure', message: 'That username is already in use' });
+						db.models.user.update({ _id: userId }, { $set: { username: newUsername } }, (err) => {
 							if (err) return cb({ status: 'error', message: err.message });
-							cb({ status: 'success', message: 'Username updated successfully.' });
+							cache.pub('user.updateUsername', {
+								username: newUsername,
+								_id: userId
+							});
+							cb({ status: 'success', message: 'Username updated successfully' });
 						});
 					});
 				} else {
-					db.models.user.update({_id: userId}, {$set: {username: newUsername}}, (err) => {
+					db.models.user.update({ _id: userId }, { $set: { username: newUsername } }, (err) => {
 						if (err) return cb({ status: 'error', message: err.message });
-						cb({ status: 'success', message: 'Username updated successfully.' });
+						cache.pub('user.updateUsername', {
+							username: newUsername,
+							_id: userId
+						});
+						cb({ status: 'success', message: 'Username updated successfully' });
 					});
 				}
-			} else cb({ status: 'error', message: 'Username has not changed. Your new username cannot be the same as your old username.' });
+			} else cb({ status: 'error', message: 'Your new username cannot be the same as your old username' });
 		});
 	}),
 
