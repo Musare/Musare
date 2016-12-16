@@ -140,3 +140,11 @@
 		}
 	}
 </script>
+
+<style type='scss' scoped>
+	tr td {
+		vertical-align: middle;
+
+		img { width: 55px; }
+	}
+</style>
