@@ -480,8 +480,8 @@
 
 			
 			let volume = parseInt(localStorage.getItem("volume"));
-			if (!volume) localStorage.setItem("volume", 50);
 			volume = (typeof volume === "number") ? volume : 20;
+			localStorage.setItem("volume", volume);
 			$("#volumeSlider").val(volume);
 		},
 		components: {
