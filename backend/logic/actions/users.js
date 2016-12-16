@@ -9,6 +9,7 @@ const db = require('../db');
 const cache = require('../cache');
 const utils = require('../utils');
 const hooks = require('./hooks');
+const sha256 = require('sha256');
 
 module.exports = {
 
@@ -27,7 +28,7 @@ module.exports = {
 			// otherwise compare the requested password and the actual users password
 			(user, next) => {
 				if (!user) return next(true, { status: 'failure', message: 'User not found' });
-				bcrypt.compare(password, user.services.password.password, (err, match) => {
+				bcrypt.compare(sha256(password), user.services.password.password, (err, match) => {
 
 					if (err) return next(err);
 
@@ -104,12 +105,13 @@ module.exports = {
 
 			// hash the password
 			(salt, next) => {
-				bcrypt.hash(password, salt, next)
+				bcrypt.hash(sha256(password), salt, next)
 			},
 
 			// save the new user to the database
 			(hash, next) => {
 				db.models.user.create({
+					_id: utils.generateRandomString(12),//TODO Check if exists
 					username,
 					email: {
 						address: email,
