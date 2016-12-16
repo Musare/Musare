@@ -51,6 +51,9 @@
 						Toast.methods.addToast('Your are currently not signed in', 3000);
 					}
 				});
+				_this.socket.on('event:user.username.changed', username => {
+					_this.$parent.username = username;
+				});
 			});
 		},
 		methods: {
@@ -66,10 +69,7 @@
 				if (!_this.user.username) return Toast.methods.addToast('Username cannot be empty', 8000);
 				_this.socket.emit('users.updateUsername', _this.user.username, res => {
 					if (res.status !== 'success') Toast.methods.addToast(res.message, 8000);
-					else {
-						Toast.methods.addToast('Successfully changed username', 4000);
-						_this.$parent.username = _this.user.username;
-					}
+					else Toast.methods.addToast('Successfully changed username', 4000);
 				});
 			}
 		},

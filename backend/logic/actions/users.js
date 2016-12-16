@@ -11,6 +11,14 @@ const utils = require('../utils');
 const hooks = require('./hooks');
 const sha256 = require('sha256');
 
+cache.sub('user.updateUsername', user => {
+	utils.socketsFromUser(user._id, sockets => {
+		sockets.forEach(socket => {
+			socket.emit('event:user.username.changed', user.username);
+		});
+	});
+});
+
 module.exports = {
 
 	login: (session, identifier, password, cb) => {
@@ -210,24 +218,32 @@ module.exports = {
 	updateUsername: hooks.loginRequired((session, newUsername, cb, userId) => {
 		db.models.user.findOne({ _id: userId }, (err, user) => {
 			if (err) console.error(err);
-			if (!user) return cb({ status: 'error', message: 'User not found.' });
+			if (!user) return cb({ status: 'error', message: 'User not found' });
 			if (user.username !== newUsername) {
 				if (user.username.toLowerCase() !== newUsername.toLowerCase()) {
-					db.models.user.findOne({username: new RegExp(`^${newUsername}$`, 'i')}, (err, _user) => {
+					db.models.user.findOne({ username: new RegExp(`^${newUsername}$`, 'i') }, (err, _user) => {
 						if (err) return cb({ status: 'error', message: err.message });
-						if (_user) return cb({ status: 'failure', message: 'That username is already in use.' });
-						db.models.user.update({_id: userId}, {$set: {username: newUsername}}, (err) => {
+						if (_user) return cb({ status: 'failure', message: 'That username is already in use' });
+						db.models.user.update({ _id: userId }, { $set: { username: newUsername } }, (err) => {
 							if (err) return cb({ status: 'error', message: err.message });
-							cb({ status: 'success', message: 'Username updated successfully.' });
+							cache.pub('user.updateUsername', {
+								username: newUsername,
+								_id: userId
+							});
+							cb({ status: 'success', message: 'Username updated successfully' });
 						});
 					});
 				} else {
-					db.models.user.update({_id: userId}, {$set: {username: newUsername}}, (err) => {
+					db.models.user.update({ _id: userId }, { $set: { username: newUsername } }, (err) => {
 						if (err) return cb({ status: 'error', message: err.message });
-						cb({ status: 'success', message: 'Username updated successfully.' });
+						cache.pub('user.updateUsername', {
+							username: newUsername,
+							_id: userId
+						});
+						cb({ status: 'success', message: 'Username updated successfully' });
 					});
 				}
-			} else cb({ status: 'error', message: 'Username has not changed. Your new username cannot be the same as your old username.' });
+			} else cb({ status: 'error', message: 'Your new username cannot be the same as your old username' });
 		});
 	}),
 
