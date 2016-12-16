@@ -291,7 +291,7 @@ module.exports = {
 							} else {
 								if (station.partyMode === true) {
 									if (station.queue.length > 0) {
-										db.models.station.update({_id: stationId}, {$pull: {queue: {songId: station.queue[0]._id}}}, (err) => {
+										db.models.station.update({_id: stationId}, {$pull: {queue: {_id: station.queue[0]._id}}}, (err) => {
 											if (err) return next(err);
 											let $set = {};
 											$set.currentSong = station.queue[0];
