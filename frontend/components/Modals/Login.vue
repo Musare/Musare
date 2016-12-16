@@ -52,9 +52,12 @@
 
 <style type='scss' scoped>
 	.button.is-github {
-		background-color: #333 !important;
+		background-color: #333;
 		color: #fff !important;
 	}
+
+	.is-github:focus { background-color: #1a1a1a; }
+	.is-primary:focus { background-color: #029ce3 !important; }
 
 	.invert { filter: brightness(5); }
 </style>

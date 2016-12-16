@@ -58,7 +58,7 @@
 						<label class='label'>Genres</label>
 						<p class='control has-addons'>
 							<input class='input' id='new-genre' type='text' placeholder='Genre'>
-							<button class='button is-info' @click='addGenre()'>Add genre</button>
+							<a class='button is-info' href='#' @click='addGenre()'>Add genre</a>
 						</p>
 						<span class='tag is-info' v-for='(index, genre) in newStation.genres' track-by='$index'>
 							{{ genre }}
@@ -67,7 +67,7 @@
 						<label class='label'>Blacklisted Genres</label>
 						<p class='control has-addons'>
 							<input class='input' id='new-blacklisted-genre' type='text' placeholder='Blacklisted Genre'>
-							<button class='button is-info' @click='addBlacklistedGenre()'>Add blacklisted genre</button>
+							<a class='button is-info' href='#' @click='addBlacklistedGenre()'>Add blacklisted genre</a>
 						</p>
 						<span class='tag is-info' v-for='(index, genre) in newStation.blacklistedGenres' track-by='$index'>
 							{{ genre }}
@@ -175,4 +175,6 @@
 		max-width: 10vw;
 		vertical-align: middle;
 	}
+
+	.is-info:focus { background-color: #0398db; }
 </style>

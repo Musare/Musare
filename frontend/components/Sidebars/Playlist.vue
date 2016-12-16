@@ -22,7 +22,7 @@
 
 			<div class='none-found' v-else>No Playlists found</div>
 
-			<a class='button create-playlist' @click='$parent.toggleModal("createPlaylist")' href='#'>Create Playlist</a>
+			<a class='button create-playlist' href='#' @click='$parent.toggleModal("createPlaylist")'>Create Playlist</a>
 		</div>
 	</div>
 </template>
@@ -147,12 +147,14 @@
     	margin-top: 20px;
 		height: 40px;
 		border-radius: 0;
-		background: rgb(3, 169, 244);
+		background: rgba(3, 169, 244, 1);
     	color: #fff !important;
 		border: 0;
 
 		&:active, &:focus { border: 0; }
 	}
+
+	.create-playlist:focus { background: #029ce3; }
 
 	.none-found { text-align: center; }
 </style>

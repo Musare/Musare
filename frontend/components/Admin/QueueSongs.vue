@@ -198,4 +198,6 @@
 	}
 
 	td { vertical-align: middle; }
+
+	.is-primary:focus { background-color: #029ce3 !important; }
 </style>

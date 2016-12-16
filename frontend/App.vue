@@ -227,4 +227,7 @@
 			&:after { left: 200%; }
 		}
 	}
+
+	.button:focus { border-color: #dbdbdb !important; }
+	button.delete:focus { background-color: rgba(10, 10, 10, 0.3); }
 </style>
