@@ -109,6 +109,7 @@ let lib = {
 			}
 
 		], (err, playlist) => {
+			console.log(err, playlist);
 			if (err) return cb({ 'status': 'failure', 'message': 'Something went wrong'});
 			cache.pub('playlist.create', playlist._id);
 			return cb({ 'status': 'success', 'message': 'Successfully created playlist' });

@@ -545,7 +545,9 @@ module.exports = {
 							if (err) return cb(err);
 							stations.updateStation(stationId, (err, station) => {
 								if (err) return cb(err);
-								stations.skipStation(stationId)();
+								if (!station.partyMode) {
+									stations.skipStation(stationId)();
+								}
 								cache.pub('privatePlaylist.selected', {playlistId, stationId});
 								cb({'status': 'success', 'message': 'Playlist selected.'});
 							});
