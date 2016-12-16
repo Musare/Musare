@@ -10,7 +10,7 @@
 				<aside class='menu' v-if='$parent.$parent.loggedIn && $parent.type === "community"'>
 					<ul class='menu-list'>
 						<li v-for='playlist in playlists' track-by='$index'>
-							<a :href='' target='_blank' @click='$parent.editPlaylist(playlist._id)'>{{ playlist.displayName }}</a>
+							<a href='#' target='_blank' @click='$parent.editPlaylist(playlist._id)'>{{ playlist.displayName }}</a>
 							<div class='controls'>
 								<a href='#' @click='selectPlaylist(playlist._id)' v-if="!isPlaylistSelected(playlist._id)"><i class='material-icons'>panorama_fish_eye</i></a>
 								<a href='#' @click='unSelectPlaylist()' v-if="isPlaylistSelected(playlist._id)"><i class='material-icons'>lens</i></a>
@@ -21,10 +21,10 @@
 				</aside>
 				<div class="control is-grouped">
 					<p class="control is-expanded">
-						<input class="input" type="text" placeholder="YouTube Query" v-model="querySearch">
+						<input class="input" type="text" placeholder="YouTube Query" v-model="querySearch" @keyup.enter="submitQuery()">
 					</p>
 					<p class="control">
-						<a class="button is-info" @click="submitQuery()">
+						<a class="button is-info" @click="submitQuery()" href='#'>
 							Search
 						</a>
 					</p>
@@ -37,7 +37,7 @@
 							</td>
 							<td>{{ result.title }}</td>
 							<td>
-								<a class="button is-success" @click="addSongToQueue(result.id)">
+								<a class="button is-success" @click="addSongToQueue(result.id)" href='#'>
 									Add
 								</a>
 							</td>

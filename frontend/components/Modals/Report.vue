@@ -33,6 +33,7 @@
 									</div>
 								</article>
 							</div>
+							<a @click=highlight('previousSong') href='#' class='absolute-a'></a>
 						</div>
 					</div>
 					<div class='column song-type' v-if='$parent.currentSong !== {}'>
@@ -60,6 +61,7 @@
 									</div>
 								</article>
 							</div>
+							<a @click=highlight('currentSong') href='#' class='absolute-a'></a>
 						</div>
 					</div>
 				</div>
@@ -83,11 +85,11 @@
 				</div>
 			</section>
 			<footer class='modal-card-foot'>
-				<a class='button is-success' @click='create()'>
+				<a class='button is-success' @click='create()' href='#'>
 					<i class='material-icons save-changes'>done</i>
 					<span>&nbsp;Create</span>
 				</a>
-				<a class='button is-danger' @click='$parent.modals.report = !$parent.modals.report'>
+				<a class='button is-danger' @click='$parent.modals.report = !$parent.modals.report' href='#'>
 					<span>&nbsp;Cancel</span>
 				</a>
 			</footer>

@@ -6,7 +6,7 @@
 			<aside class='menu' v-if='playlists.length > 0'>
 				<ul class='menu-list'>
 					<li v-for='playlist in playlists'>
-						<a href='#'>{{ playlist.displayName }}</a>
+						<span>{{ playlist.displayName }}</span>
 						<!--Will play playlist in community station Kris-->
 						<div class='icons-group'>
 							<a href='#' @click='selectPlaylist(playlist._id)' v-if="isNotSelected(playlist._id)">
@@ -22,7 +22,7 @@
 
 			<div class='none-found' v-else>No Playlists found</div>
 
-			<a class='button create-playlist' @click='$parent.toggleModal("createPlaylist")'>Create Playlist</a>
+			<a class='button create-playlist' @click='$parent.toggleModal("createPlaylist")' href='#'>Create Playlist</a>
 		</div>
 	</div>
 </template>
@@ -123,7 +123,7 @@
 	.menu-list li { align-items: center; }
 
 	.inner-wrapper {	
-		top: 50px;
+		top: 64px;
 		position: relative;
 	}
 

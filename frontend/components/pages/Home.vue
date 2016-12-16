@@ -24,10 +24,11 @@
 						{{ station.description }}
 					</div>
 				</div>
+				<a @click="this.$dispatch('joinStation', station._id)" href='#' class='absolute-a'></a>
 			</div>
 		</div>
 		<div class="group">
-			<div class="group-title">Community Stations <i class="material-icons ccs-button" @click="toggleModal('createCommunityStation')" v-if="$parent.loggedIn">add_circle_outline</i></div>
+			<div class="group-title">Community Stations <a @click="toggleModal('createCommunityStation')" v-if="$parent.loggedIn" href='#'><i class="material-icons ccs-button">add_circle_outline</i></a></div>
 			<div class="card station-card" v-for="station in stations.community" v-link="{ path: '/community/' + station._id }" @click="this.$dispatch('joinStation', station._id)" :class="station.class">
 				<div class="card-image">
 					<figure class="image is-square">
@@ -49,6 +50,7 @@
 						{{ station.description }}
 					</div>
 				</div>
+				<a @click="this.$dispatch('joinStation', station._id)" href='#' class='absolute-a'></a>
 			</div>
 		</div>
 		<main-footer></main-footer>
@@ -179,6 +181,7 @@
 		cursor: pointer;
 		transition: .25s ease color;
 		font-size: 30px;
+		color: black;
 	}
 
 	.ccs-button:hover {

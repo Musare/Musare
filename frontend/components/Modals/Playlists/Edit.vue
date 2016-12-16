@@ -28,10 +28,10 @@
 				</aside>
 				<div class='control is-grouped'>
 					<p class='control is-expanded'>
-						<input class='input' type='text' placeholder='Search for Song to add' v-model='songQuery'>
+						<input class='input' type='text' placeholder='Search for Song to add' v-model='songQuery' @keyup.enter="searchForSongs()">
 					</p>
 					<p class='control'>
-						<a class='button is-info' @click='searchForSongs()'>Search</a>
+						<a class='button is-info' @click='searchForSongs()' href="#">Search</a>
 					</p>
 				</div>
 				<table class='table' v-if='songQueryResults.length > 0'>
@@ -42,7 +42,7 @@
 							</td>
 							<td>{{ result.title }}</td>
 							<td>
-								<a class='button is-success' @click='addSongToPlaylist(result.id)'>
+								<a class='button is-success' @click='addSongToPlaylist(result.id)' href='#'>
 									Add
 								</a>
 							</td>
@@ -51,24 +51,24 @@
 				</table>
 				<div class='control is-grouped'>
 					<p class='control is-expanded'>
-						<input class='input' type='text' placeholder='YouTube Playlist URL' v-model='importQuery'>
+						<input class='input' type='text' placeholder='YouTube Playlist URL' v-model='importQuery' @keyup.enter="importPlaylist()">
 					</p>
 					<p class='control'>
-						<a class='button is-info' @click='importPlaylist()'>Import</a>
+						<a class='button is-info' @click='importPlaylist()' href="#">Import</a>
 					</p>
 				</div>
 				<h5>Edit playlist details:</h5>
 				<div class='control is-grouped'>
 					<p class='control is-expanded'>
-						<input class='input' type='text' placeholder='Playlist Display Name' v-model='playlist.displayName'>
+						<input class='input' type='text' placeholder='Playlist Display Name' v-model='playlist.displayName' @keyup.enter="renamePlaylist()">
 					</p>
 					<p class='control'>
-						<a class='button is-info' @click='renamePlaylist()'>Rename</a>
+						<a class='button is-info' @click='renamePlaylist()' href="#">Rename</a>
 					</p>
 				</div>
 			</section>
 			<footer class='modal-card-foot'>
-				<a class='button is-danger' @click='removePlaylist()'>Remove Playlist</a>
+				<a class='button is-danger' @click='removePlaylist()' href="#">Remove Playlist</a>
 			</footer>
 		</div>
 	</div>

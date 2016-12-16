@@ -18,7 +18,7 @@
 				</p>
 				<label class='label'>Description</label>
 				<p class='control'>
-					<input class='input' type='text' placeholder='Description...' v-model='newCommunity.description'>
+					<input class='input' type='text' placeholder='Description...' v-model='newCommunity.description' @keyup.enter="submitModal()">
 				</p>
 			</section>
 			<footer class='modal-card-foot'>

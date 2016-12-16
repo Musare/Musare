@@ -32,7 +32,7 @@
 				</div>
 			</article>
 
-			<a class='button add-to-queue' @click='$parent.toggleModal("addSongToQueue")'>Add Song to Queue</a>
+			<a href='#' class='button add-to-queue' @click='$parent.toggleModal("addSongToQueue")'>Add Song to Queue</a>
 		</div>
 	</div>
 </template>
@@ -71,7 +71,7 @@
 	}
 
 	.inner-wrapper {	
-		top: 50px;
+		top: 64px;
 		position: relative;
 	}
 

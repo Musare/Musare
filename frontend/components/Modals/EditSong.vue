@@ -14,14 +14,16 @@
 							</p>
 						</form>
 						<p class='control has-addons'>
-							<a class='button'>
-								<i class='material-icons' @click='$parent.video.settings("pause")' v-if='!$parent.video.paused'>pause</i>
-								<i class='material-icons' @click='$parent.video.settings("play")' v-else>play_arrow</i>
+							<a class='button' @click='$parent.video.settings("pause")' v-if='!$parent.video.paused' href='#'>
+								<i class='material-icons'>pause</i>
 							</a>
-							<a class='button' @click='$parent.video.settings("stop")'>
+							<a class='button' @click='$parent.video.settings("play")' v-if='$parent.video.paused' href='#'>
+								<i class='material-icons'>play_arrow</i>
+							</a>
+							<a class='button' @click='$parent.video.settings("stop")' href='#'>
 								<i class='material-icons'>stop</i>
 							</a>
-							<a class='button' @click='$parent.video.settings("skipToLast10Secs")'>
+							<a class='button' @click='$parent.video.settings("skipToLast10Secs")' href='#'>
 								<i class='material-icons'>fast_forward</i>
 							</a>
 						</p>
@@ -56,7 +58,7 @@
 						<div>
 							<p class='control has-addons'>
 								<input class='input' id='new-artist' type='text' placeholder='Artist'>
-								<a class='button is-info' @click='$parent.addTag("artists")'>Add Artist</a>
+								<a class='button is-info' @click='$parent.addTag("artists")' href='#'>Add Artist</a>
 							</p>
 							<span class='tag is-info' v-for='(index, artist) in $parent.editing.song.artists' track-by='$index'>
 								{{ artist }}
@@ -66,7 +68,7 @@
 						<div>
 							<p class='control has-addons'>
 								<input class='input' id='new-genre' type='text' placeholder='Genre'>
-								<a class='button is-info' @click='$parent.addTag("genres")'>Add Genre</a>
+								<a class='button is-info' @click='$parent.addTag("genres")' href='#'>Add Genre</a>
 							</p>
 							<span class='tag is-info' v-for='(index, genre) in $parent.editing.song.genres' track-by='$index'>
 								{{ genre }}
@@ -86,11 +88,11 @@
 
 			</section>
 			<footer class='modal-card-foot'>
-				<a class='button is-success' @click='$parent.save($parent.editing.song)'>
+				<a class='button is-success' @click='$parent.save($parent.editing.song)' href='#'>
 					<i class='material-icons save-changes'>done</i>
 					<span>&nbsp;Save</span>
 				</a>
-				<a class='button is-danger' @click='$parent.toggleModal()'>
+				<a class='button is-danger' @click='$parent.toggleModal()' href='#'>
 					<span>&nbsp;Cancel</span>
 				</a>
 			</footer>

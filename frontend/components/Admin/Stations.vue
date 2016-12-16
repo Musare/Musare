@@ -26,7 +26,7 @@
 							<span>{{ station.description }}</span>
 						</td>
 						<td>
-							<a class='button is-danger' @click='removeStation(index)'>Remove</a>
+							<a class='button is-danger' @click='removeStation(index)' href='#'>Remove</a>
 						</td>
 					</tr>
 				</tbody>
@@ -58,7 +58,7 @@
 						<label class='label'>Genres</label>
 						<p class='control has-addons'>
 							<input class='input' id='new-genre' type='text' placeholder='Genre'>
-							<a class='button is-info' @click='addGenre()'>Add genre</a>
+							<button class='button is-info' @click='addGenre()'>Add genre</button>
 						</p>
 						<span class='tag is-info' v-for='(index, genre) in newStation.genres' track-by='$index'>
 							{{ genre }}
@@ -67,7 +67,7 @@
 						<label class='label'>Blacklisted Genres</label>
 						<p class='control has-addons'>
 							<input class='input' id='new-blacklisted-genre' type='text' placeholder='Blacklisted Genre'>
-							<a class='button is-info' @click='addBlacklistedGenre()'>Add blacklisted genre</a>
+							<button class='button is-info' @click='addBlacklistedGenre()'>Add blacklisted genre</button>
 						</p>
 						<span class='tag is-info' v-for='(index, genre) in newStation.blacklistedGenres' track-by='$index'>
 							{{ genre }}
@@ -76,7 +76,7 @@
 					</div>
 				</div>
 				<footer class='card-footer'>
-					<a class='card-footer-item' @click='createStation()'>Create</a>
+					<a class='card-footer-item' @click='createStation()' href='#'>Create</a>
 				</footer>
 			</div>
 		</div>

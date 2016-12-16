@@ -53,10 +53,12 @@
 									<li id="like" class="right" @click="toggleLike()">
 										<span class="flow-text">{{currentSong.likes}} </span>
 										<i id="thumbs_up" class="material-icons grey-text" v-bind:class="{ liked: liked }">thumb_up</i>
+										<a class='absolute-a behind' @click="toggleLike()" href='#'></a>
 									</li>
 									<li style="margin-right: 10px;" id="dislike" class="right" @click="toggleDislike()">
 										<span class="flow-text">{{currentSong.dislikes}} </span>
 										<i id="thumbs_down" class="material-icons grey-text" v-bind:class="{ disliked: disliked }">thumb_down</i>
+										<a class='absolute-a behind' @click="toggleDislike()" href='#'></a>
 									</li>
 								</ul>
 							</div>
@@ -806,4 +808,16 @@
 	}
 
 	.icons-group { display: flex; }
+
+	#like, #dislike {
+		position: relative;
+	}
+
+	.behind {
+		z-index: -1;
+	}
+
+	.behind:focus {
+		z-index: 0;
+	}
 </style>

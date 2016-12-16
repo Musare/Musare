@@ -13,7 +13,7 @@
 						<input class='input' type='text' placeholder='Station Display Name' v-model='data.displayName'>
 					</p>
 					<p class='control'>
-						<a class='button is-info' @click='updateDisplayName()'>Update</a>
+						<a class='button is-info' @click='updateDisplayName()' href='#'>Update</a>
 					</p>
 				</div>
 				<label class='label'>Description</label>
@@ -22,7 +22,7 @@
 						<input class='input' type='text' placeholder='Station Display Name' v-model='data.description'>
 					</p>
 					<p class='control'>
-						<a class='button is-info' @click='updateDescription()'>Update</a>
+						<a class='button is-info' @click='updateDescription()' href='#'>Update</a>
 					</p>
 				</div>
 				<label class='label'>Privacy</label>
@@ -37,7 +37,7 @@
 						</span>
 					</p>
 					<p class='control'>
-						<a class='button is-info' @click='updatePrivacy()'>Update</a>
+						<a class='button is-info' @click='updatePrivacy()' href='#'>Update</a>
 					</p>
 				</div>
 				<div class='control is-grouped' v-if="$parent.type === 'community'">
@@ -48,7 +48,7 @@
 						</label>
 					</p>
 					<p class='control'>
-						<a class='button is-info' @click='updatePartyMode()'>Update</a>
+						<a class='button is-info' @click='updatePartyMode()' href='#'>Update</a>
 					</p>
 				</div>
 			</section>
