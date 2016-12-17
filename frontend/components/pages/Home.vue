@@ -229,6 +229,11 @@
     	flex-direction: column;
 		overflow: hidden;
 
+		.content {
+			text-align: left;
+			word-wrap: break-word;
+		}
+
 		.media {
 			display: flex;
     		align-items: center;
@@ -242,10 +247,5 @@
 	.displayName {
 		word-wrap: break-word;
     	width: 80%;
-	}
-
-	.content {
-		text-align: left;
-		word-wrap: break-word;
 	}
 </style>

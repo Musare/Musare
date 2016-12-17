@@ -96,14 +96,20 @@
 		font-weight: 600;
 	}
 
-	.media { padding: 0px 25px;}
+	.media { padding: 0 25px; }
 
 	.media-content .content {
-		height: 64px;
+		min-height: 64px;
 		display: flex;
 		align-items: center;
+	}
 
-		strong { word-break: break-word; }
+	.content p strong {
+		word-break: break-all;
+	}
+	
+	.content p small {
+		word-break: break-all;
 	}
 
 	.add-to-queue {
@@ -116,6 +122,7 @@
 		border: 0;
 		&:active, &:focus { border: 0; }
 	}
+	
 	.add-to-queue:focus { background: #029ce3; }
 
 	.media-right { line-height: 64px; }
