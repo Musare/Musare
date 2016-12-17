@@ -18,9 +18,12 @@
 						</p>
 					</div>
 				</div>
+				<div class="media-right">
+					{{ $parent.formatTime($parent.currentSong.duration) }}
+				</div>
 			</article>
 
-			<article class="media" v-for='song in $parent.queue'>
+			<article class="media" v-for='song in playlist'>
 				<div class="media-content">
 					<div class="content">
 						<p>
@@ -30,9 +33,10 @@
 						</p>
 					</div>
 				</div>
+				<div class="media-right">
+					{{ $parent.$parent.formatTime(song.duration) }}
+				</div>
 			</article>
-
-			<a class='button add-to-queue' href='#' @click='$parent.modals.addSongToQueue = !$parent.modals.addSongToQueue'>Add Song to Queue</a>
 		</div>
 	</div>
 </template>
@@ -41,7 +45,7 @@
 	import io from '../../io';
 
 	export default {
-		data() {
+		data: function () {
 			return {
 				playlist: []
 			}
@@ -90,25 +94,15 @@
 		font-weight: 600;
 	}
 
-	.add-to-queue {
-		width: 100%;
-    	margin-top: 25px;
-		height: 40px;
-		border-radius: 0;
-		background: rgb(3, 169, 244);
-    	color: #fff !important;
-		border: 0;
-
-		&:active, &:focus { border: 0; }
-	}
-
-	.add-to-queue:focus { background: #029ce3; }
-
 	.media { padding: 0px 25px;}
 
 	.media-content .content {
 		height: 64px;
 		display: flex;
 		align-items: center;
+
+		strong { word-break: break-word; }
 	}
+
+	.media-right { line-height: 64px; }
 </style>

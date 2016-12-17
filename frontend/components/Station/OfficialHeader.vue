@@ -53,7 +53,7 @@
 		</span>
 
 		<div class="nav-right nav-menu" :class="{ 'is-active': isMobile }">
-			<a class='nav-item' href='#' @click='$parent.toggleSidebar("officialqueue")'>
+			<a class='nav-item' href='#' @click='$parent.toggleSidebar("queue")'>
 				<span class='icon'>
 					<i class='material-icons'>queue_music</i>
 				</span>

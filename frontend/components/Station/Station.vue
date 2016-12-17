@@ -9,7 +9,6 @@
 	<report v-if='modals.report'></report>
 
 	<queue-sidebar v-if='sidebars.queue'></queue-sidebar>
-	<official-queue-sidebar v-if='sidebars.officialqueue'></official-queue-sidebar>
 	<playlist-sidebar v-if='sidebars.playlist'></playlist-sidebar>
 	<users-sidebar v-if='sidebars.users'></users-sidebar>
 	
@@ -84,7 +83,6 @@
 	import Report from '../Modals/Report.vue';
 
 	import QueueSidebar from '../Sidebars/Queue.vue';
-	import OfficialQueueSidebar from '../Sidebars/OfficialQueue.vue';
 	import PlaylistSidebar from '../Sidebars/Playlist.vue';
 	import UsersSidebar from '../Sidebars/UsersList.vue';
 
@@ -114,7 +112,6 @@
 				},
 				sidebars: {
 					queue: false,
-					officialqueue: false,
 					users: false,
 					playlist: false
 				},
@@ -495,7 +492,6 @@
 			EditStation,
 			Report,
 			QueueSidebar,
-			OfficialQueueSidebar,
 			PlaylistSidebar,
 			UsersSidebar
 		}
