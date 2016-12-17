@@ -1,28 +1,50 @@
 let callbacks = [];
+let callbacksPersist = [];
 let onConnectCallbacks = [];
 let onDisconnectCallbacks = [];
 let onConnectErrorCallbacks = [];
+let onConnectCallbacksPersist = [];
+let onDisconnectCallbacksPersist = [];
+let onConnectErrorCallbacksPersist = [];
 
 export default {
 
 	ready: false,
 	socket: null,
 
-	getSocket: function (cb) {
-		if (this.ready) cb(this.socket);
-		else callbacks.push(cb);
+	getSocket: function () {
+		if (arguments[0] === true) {
+			if (this.ready) arguments[1](this.socket);
+			else callbacksPersist.push(arguments[1]);
+		} else {
+			if (this.ready) arguments[0](this.socket);
+			else callbacks.push(arguments[0]);
+		}
 	},
 
-	onConnect: (cb) => {
-		onConnectCallbacks.push(cb);
+	onConnect: function() {
+		if (arguments[0] === true) {
+			onConnectCallbacksPersist.push(arguments[1]);
+		} else onConnectCallbacks.push(arguments[0]);
 	},
 
-	onDisconnect: (cb) => {
-		onDisconnectCallbacks.push(cb);
+	onDisconnect: function() {
+		if (arguments[0] === true) {
+			onDisconnectCallbacksPersist.push(arguments[1]);
+		} else onDisconnectCallbacks.push(arguments[0]);
 	},
 
-	onConnectError: (cb) => {
-		onConnectErrorCallbacks.push(cb);
+	onConnectError: function() {
+		if (arguments[0] === true) {
+			onConnectErrorCallbacksPersist.push(arguments[1]);
+		} else onConnectErrorCallbacks.push(arguments[0]);
+	},
+
+	clear: () => {
+		onConnectCallbacks = [];
+		onDisconnectCallbacks = [];
+		onConnectErrorCallbacks = [];
+		callbacks = [];
 	},
 
 	removeAllListeners: function () {
@@ -39,9 +61,15 @@ export default {
 			onConnectCallbacks.forEach((cb) => {
 				cb();
 			});
+			onConnectCallbacksPersist.forEach((cb) => {
+				cb();
+			});
 		});
 		this.socket.on('disconnect', () => {
 			onDisconnectCallbacks.forEach((cb) => {
+				cb();
+			});
+			onDisconnectCallbacksPersist.forEach((cb) => {
 				cb();
 			});
 		});
@@ -49,11 +77,19 @@ export default {
 			onConnectErrorCallbacks.forEach((cb) => {
 				cb();
 			});
+			onConnectErrorCallbacksPersist.forEach((cb) => {
+				cb();
+			});
 		});
 		this.ready = true;
 		callbacks.forEach(callback => {
 			callback(this.socket);
 		});
+
+		callbacksPersist.forEach(callback => {
+			callback(this.socket);
+		});
 		callbacks = [];
+		callbacksPersist = [];
 	}
 }

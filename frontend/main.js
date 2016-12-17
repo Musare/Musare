@@ -42,6 +42,7 @@ router.beforeEach(transition => {
 	}
 	if (window.socket) {
 		io.removeAllListeners();
+		io.clear();
 	}
 	if (transition.to.loginRequired || transition.to.adminRequired) {
 		auth.getStatus((authenticated, role) => {

@@ -68,13 +68,13 @@
 				_this.username = username;
 				_this.userId = userId;
 			});
-			io.onConnect(() => {
+			io.onConnect(true, () => {
 				_this.socketConnected = true;
 			});
-			io.onConnectError(() => {
+			io.onConnectError(true, () => {
 				_this.socketConnected = false;
 			});
-			io.onDisconnect(() => {
+			io.onDisconnect(true, () => {
 				_this.socketConnected = false;
 			});
 			lofig.get('serverDomain', res => {
