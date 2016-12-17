@@ -4,7 +4,7 @@
 			<div class='title' v-if='$parent.type === "community"'>Queue</div>
 			<div class='title' v-else>Playlist</div>
 
-			<article class="media">
+			<article class="media" v-if="!$parent.noSong">
 				<figure class="media-left">
 					<p class="image is-64x64">
 						<img :src="$parent.currentSong.thumbnail" onerror="this.src='/assets/notes-transparent.png'">
@@ -24,7 +24,7 @@
 				</div>
 			</article>
 
-			<article class="media" v-for='song in playlist'>
+			<article class="media" v-for='song in $parent.songsList'>
 				<div class="media-content">
 					<div class="content">
 						<p>
@@ -38,6 +38,7 @@
 					{{ $parent.$parent.formatTime(song.duration) }}
 				</div>
 			</article>
+			<a class='button add-to-queue' href='#' @click='$parent.modals.addSongToQueue = !$parent.modals.addSongToQueue' v-if="$parent.type === 'community'">Add Song to Queue</a>
 		</div>
 	</div>
 </template>
@@ -48,17 +49,15 @@
 	export default {
 		data: function () {
 			return {
-				playlist: []
+
 			}
 		},
 		ready: function () {
-			let _this = this;
+			/*let _this = this;
 			io.getSocket((socket) => {
 				_this.socket = socket;
-				_this.socket.emit('stations.getPlaylist', _this.$parent.stationId, res => {
-					if (res.status == 'success') _this.playlist = res.data;
-				});
-			});
+
+			});*/
 		}
 	}
 </script>
@@ -78,6 +77,8 @@
 	.inner-wrapper {	
 		top: 64px;
 		position: relative;
+		overflow: auto;
+		height: 100%;
 	}
 
 	.slide-transition {
@@ -104,6 +105,18 @@
 
 		strong { word-break: break-word; }
 	}
+
+	.add-to-queue {
+		width: 100%;
+		margin-top: 25px;
+		height: 40px;
+		border-radius: 0;
+		background: rgb(3, 169, 244);
+		color: #fff !important;
+		border: 0;
+		&:active, &:focus { border: 0; }
+	}
+	.add-to-queue:focus { background: #029ce3; }
 
 	.media-right { line-height: 64px; }
 </style>

@@ -28,7 +28,7 @@ cache.sub('station.queueUpdate', (stationId) => {
 
 cache.sub('station.newOfficialPlaylist', (stationId) => {
 	cache.hget("officialPlaylists", stationId, (err, playlistObj) => {
-		if (!err && !playlistObj) {
+		if (!err && playlistObj) {
 			utils.emitToRoom(`station.${stationId}`, "event:newOfficialPlaylist", playlistObj.songs);
 		}
 	})
@@ -184,9 +184,6 @@ module.exports = {
 
 			(station, next) => {
 				if (!station) return next('Station not found');
-				if (station.type === 'official') {
-					_this.calculateOfficialPlaylistList(station._id, station.playlist, ()=>{});
-				}
 				cache.hset('stations', stationId, station, (err) => {
 					if (err) return next(err);
 					next(null, station);
@@ -303,7 +300,7 @@ module.exports = {
 										}
 									}
 
-									func();
+									setCurrentSong();
 								} else {
 									_this.calculateSongForStation(station, (err, playlist) => {
 										if (!err && playlist.length === 0) {

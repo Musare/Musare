@@ -117,7 +117,7 @@
 				},
 				noSong: false,
 				simpleSong: false,
-				queue: [],
+				songsList: [],
 				timeBeforePause: 0,
 				station: {},
 				skipVotes: 0,
@@ -289,24 +289,26 @@
 				let _this = this;
 				let isInQueue = false;
 				let userId = _this.$parent.userId;
-				_this.queue.forEach((queueSong) => {
-					if (queueSong.requestedBy === userId) isInQueue = true;
-				});
-				if (!isInQueue && _this.privatePlaylistQueueSelected) {
-
-					_this.socket.emit('playlists.getFirstSong', _this.privatePlaylistQueueSelected, data => {
-						if (data.status === 'success') {
-							let songId = data.song._id;
-							_this.automaticallyRequestedSongId = songId;
-							_this.socket.emit('stations.addToQueue', _this.stationId, songId, data => {
-								if (data.status === 'success') {
-									_this.socket.emit('playlists.moveSongToBottom', _this.privatePlaylistQueueSelected, songId, data => {
-										if (data.status === 'success') {}
-									});
-								}
-							});
-						}
+				if (_this.type === 'community') {
+					_this.songsList.forEach((queueSong) => {
+						if (queueSong.requestedBy === userId) isInQueue = true;
 					});
+					if (!isInQueue && _this.privatePlaylistQueueSelected) {
+
+						_this.socket.emit('playlists.getFirstSong', _this.privatePlaylistQueueSelected, data => {
+							if (data.status === 'success') {
+								let songId = data.song._id;
+								_this.automaticallyRequestedSongId = songId;
+								_this.socket.emit('stations.addToQueue', _this.stationId, songId, data => {
+									if (data.status === 'success') {
+										_this.socket.emit('playlists.moveSongToBottom', _this.privatePlaylistQueueSelected, songId, data => {
+											if (data.status === 'success') {}
+										});
+									}
+								});
+							}
+						});
+					}
 				}
 			},
 			joinStation: function () {
@@ -346,10 +348,14 @@
 						}
 						if (_this.type === 'community') {
 							_this.socket.emit('stations.getQueue', _this.stationId, data => {
-								if (data.status === 'success') _this.queue = data.queue;
+								if (data.status === 'success') _this.songsList = data.queue;
 							});
 						}
 					}
+
+					_this.socket.emit('stations.getPlaylist', _this.stationId, res => {
+				 		if (res.status == 'success') _this.songsList = res.data;
+				 	});
 				});
 			}
 		},
@@ -400,7 +406,7 @@
 
 					let isInQueue = false;
 					let userId = _this.$parent.userId;
-					_this.queue.forEach((queueSong) => {
+					_this.songsList.forEach((queueSong) => {
 						if (queueSong.requestedBy === userId) isInQueue = true;
 					});
 					if (!isInQueue && _this.privatePlaylistQueueSelected && (_this.automaticallyRequestedSongId !== _this.currentSong._id || !_this.currentSong._id)) {
@@ -457,7 +463,7 @@
 				});
 
 				_this.socket.on('event:queue.update', queue => {
-					if (this.type === 'community') this.queue = queue;
+					if (this.type === 'community') this.songsList = queue;
 				});
 
 				_this.socket.on('event:song.voteSkipSong', () => {
@@ -473,6 +479,13 @@
 				_this.socket.on('event:partyMode.updated', (partyMode) => {
 					if (this.type === 'community') {
 						this.station.partyMode = partyMode;
+					}
+				});
+
+				_this.socket.on('event:newOfficialPlaylist', (playlist) => {
+					console.log(playlist);
+					if (this.type === 'official') {
+						this.songsList = playlist;
 					}
 				});
 			});

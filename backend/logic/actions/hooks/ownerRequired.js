@@ -15,7 +15,7 @@ module.exports = function(next) {
 				else {
 					stations.getStation(stationId, (err, station) => {
 						if (err || !station) return cb({ status: 'failure', message: 'Something went wrong when getting the station.' });
-						else if (station.type === 'community' && station.owner === session.userId) func();
+						else if (station.type === 'community' && station.owner === session.userId) pushArgs();
 						else return cb({ status: 'failure', message: 'Invalid permissions.' });
 					});
 				}

@@ -96,7 +96,7 @@ module.exports = {
 						console.error(err);
 						cb({ status: 'failure', message: 'Something went wrong while adding the song to the queue.' });
 					} else {
-						cache.pub('song.added', songId);
+						cache.pub('song.added', song._id);
 						cb({ status: 'success', message: 'Song has been moved from Queue' });
 					}
 				});
