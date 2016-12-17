@@ -4,7 +4,7 @@
 		<div class='modal-card'>
 			<header class='modal-card-head'>
 				<p class='modal-card-title'>Editing: {{ playlist.displayName }}</p>
-				<button class='delete' @click='$parent.toggleModal("editPlaylist")'></button>
+				<button class='delete' @click='$parent.modals.editPlaylist = !$parent.modals.editPlaylist'></button>
 			</header>
 			<section class='modal-card-body'>
 				<aside class='menu' v-if='playlist.songs && playlist.songs.length > 0'>
@@ -145,20 +145,20 @@
 				_this.socket.emit('playlists.remove', _this.playlist._id, res => {
 					if (res.status === 'success') {
 						Toast.methods.addToast(res.message, 3000);
-						_this.$parent.toggleModal('editPlaylist');
+						_this.$parent.modals.editPlaylist = !_this.$parent.modals.editPlaylist;
 					}
 				});
 			},
 			promoteSong: function (songId) {
 				let _this = this;
 				_this.socket.emit('playlists.moveSongToTop', _this.playlist._id, songId, res => {
-					Toast.methods.toast(4000, res.message);
+					Toast.methods.addToast(res.message, 4000);
 				});
 			},
 			demoteSong: function (songId) {
 				let _this = this;
 				_this.socket.emit('playlists.moveSongToBottom', _this.playlist._id, songId, res => {
-					Toast.methods.toast(4000, res.message);
+					Toast.methods.addToast(res.message, 4000);
 				});
 			}
 		},
@@ -206,7 +206,7 @@
 		},
 		events: {
 			closeModal: function() {
-				this.$parent.toggleModal("editPlaylist");
+				this.$parent.modals.editPlaylist = !this.$parent.modals.editPlaylist;
 			}
 		}
 	}

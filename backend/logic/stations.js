@@ -26,6 +26,14 @@ cache.sub('station.queueUpdate', (stationId) => {
 	});
 });
 
+cache.sub('station.newOfficialPlaylist', (stationId) => {
+	cache.hget("officialPlaylists", stationId, (err, playlistObj) => {
+		if (!err && playlistObj) {
+			utils.emitToRoom(`station.${stationId}`, "event:newOfficialPlaylist", playlistObj.songs);
+		}
+	})
+});
+
 module.exports = {
 
 	init: function(cb) {
@@ -116,6 +124,13 @@ module.exports = {
 				station.playlist.filter((songId) => {
 					if (songList.indexOf(songId) !== -1) playlist.push(songId);
 				});
+
+				_this.calculateOfficialPlaylistList(station._id, playlist, () => {
+					next(null, playlist);
+				});
+			},
+
+			(playlist, next) => {
 				db.models.station.update({_id: station._id}, {$set: {playlist: playlist}}, (err) => {
 					_this.updateStation(station._id, () => {
 						next(err, playlist);
@@ -130,6 +145,7 @@ module.exports = {
 
 	// Attempts to get the station from Redis. If it's not in Redis, get it from Mongo and add it to Redis.
 	getStation: function(stationId, cb) {
+		let _this = this;
 		async.waterfall([
 
 			(next) => {
@@ -143,6 +159,9 @@ module.exports = {
 
 			(station, next) => {
 				if (station) {
+					if (station.type === 'official') {
+						_this.calculateOfficialPlaylistList(station._id, station.playlist, ()=>{});
+					}
 					station = cache.schemas.station(station);
 					cache.hset('stations', stationId, station);
 					next(true, station);
@@ -155,7 +174,8 @@ module.exports = {
 		});
 	},
 
-	updateStation: (stationId, cb) => {
+	updateStation: function(stationId, cb) {
+		let _this = this;
 		async.waterfall([
 
 			(next) => {
@@ -176,6 +196,33 @@ module.exports = {
 		});
 	},
 
+	calculateOfficialPlaylistList: (stationId, songList, cb) => {
+		let lessInfoPlaylist = [];
+
+		function getSongInfo(index) {
+			if (songList.length > index) {
+				songs.getSong(songList[index], (err, song) => {
+					if (!err && song) {
+						let newSong = {
+							_id: song._id,
+							title: song.title,
+							artists: song.artists,
+							duration: song.duration
+						};
+						lessInfoPlaylist.push(newSong);
+					}
+					getSongInfo(index + 1);
+				})
+			} else {
+				cache.hset("officialPlaylists", stationId, cache.schemas.officialPlaylist(stationId, lessInfoPlaylist), () => {
+					cache.pub("station.newOfficialPlaylist", stationId);
+					cb();
+				});
+			}
+		}
+		getSongInfo(0);
+	},
+
 	skipStation: function(stationId) {
 		let _this = this;
 		return (cb) => {
@@ -188,7 +235,7 @@ module.exports = {
 						(next) => {
 							if (station.type === "official") {
 								if (station.playlist.length > 0) {
-									function func() {
+									function setCurrentSong() {
 										if (station.currentSongIndex < station.playlist.length - 1) {
 											songs.getSong(station.playlist[station.currentSongIndex + 1], (err, song) => {
 												if (!err) {
@@ -209,9 +256,9 @@ module.exports = {
 													$set.currentSongIndex = station.currentSongIndex + 1;
 													next(null, $set);
 												} else {
-													db.models.station.update({_id: station._id}, {$inc: {currentSongIndex: 1}}, (err) => {
+													db.models.station.update({ _id: station._id }, { $inc: { currentSongIndex: 1 } }, (err) => {
 														_this.updateStation(station._id, () => {
-															func();
+															setCurrentSong();
 														});
 													});
 												}
@@ -253,7 +300,7 @@ module.exports = {
 										}
 									}
 
-									func();
+									setCurrentSong();
 								} else {
 									_this.calculateSongForStation(station, (err, playlist) => {
 										if (!err && playlist.length === 0) {
@@ -356,12 +403,33 @@ module.exports = {
 							if (station.currentSong !== null && station.currentSong._id !== undefined) {
 								station.currentSong.skipVotes = 0;
 							}
+							//TODO Pub/Sub this
 							utils.emitToRoom(`station.${station._id}`, "event:songs.next", {
 								currentSong: station.currentSong,
 								startedAt: station.startedAt,
 								paused: station.paused,
 								timePaused: 0
 							});
+
+							if (station.privacy === 'public') utils.emitToRoom('home', "event:station.nextSong", station._id, station.currentSong);
+							else {
+								let sockets = utils.getRoomSockets('home');
+								for (let socketId in sockets) {
+									let socket = sockets[socketId];
+									let session = sockets[socketId].session;
+									if (session.sessionId) {
+										cache.hget('sessions', session.sessionId, (err, session) => {
+											if (!err && session) {
+												db.models.user.findOne({_id: session.userId}, (err, user) => {
+													if (user.role === 'admin') socket.emit("event:station.nextSong", station._id, station.currentSong);
+													else if (station.type === "community" && station.owner === session.userId) socket.emit("event:station.nextSong", station._id, station.currentSong);
+												});
+											}
+										});
+									}
+								}
+							}
+
 							if (station.currentSong !== null && station.currentSong._id !== undefined) {
 								utils.socketsJoinSongRoom(utils.getRoomSockets(`station.${station._id}`), `song.${station.currentSong._id}`);
 								if (!station.paused) {

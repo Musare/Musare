@@ -25,11 +25,13 @@
 </template>
 
 <style lang='scss' scoped>
-	.content a:not(.button) {
-		border: 0;
+	.content a:not(.button) { border: 0; }
+
+	.content {
+		display: flex;
+		align-items: center;
+		flex-direction: column;
 	}
 
-	.icon:visited {
-		color: #4a4a4a !important;
-	}
+	.icon:visited { color: #4a4a4a !important; }
 </style>

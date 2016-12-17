@@ -138,6 +138,10 @@
 <style type='scss'>
 	#toast-container { z-index: 10000 !important; }
 
+	html {
+		overflow: auto !important;
+	}
+
 	.absolute-a {
 		width: 100%;
 		height: 100%;

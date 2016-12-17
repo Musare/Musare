@@ -11,16 +11,16 @@ module.exports = function(next) {
 			if (err || !session || !session.userId) return cb({ status: 'failure', message: 'Login required.' });
 			db.models.user.findOne({_id: session.userId}, (err, user) => {
 				if (err || !user) return cb({ status: 'failure', message: 'Login required.' });
-				if (user.role === 'admin') func();
+				if (user.role === 'admin') pushArgs();
 				else {
 					stations.getStation(stationId, (err, station) => {
 						if (err || !station) return cb({ status: 'failure', message: 'Something went wrong when getting the station.' });
-						else if (station.type === 'community' && station.owner === session.userId) func();
+						else if (station.type === 'community' && station.owner === session.userId) pushArgs();
 						else return cb({ status: 'failure', message: 'Invalid permissions.' });
 					});
 				}
 
-				function func() {
+				function pushArgs() {
 					args.push(session.userId);
 					next.apply(null, args);
 				}

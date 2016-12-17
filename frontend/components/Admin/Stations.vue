@@ -57,7 +57,7 @@
 						</p>
 						<label class='label'>Genres</label>
 						<p class='control has-addons'>
-							<input class='input' id='new-genre' type='text' placeholder='Genre'>
+							<input class='input' id='new-genre' type='text' placeholder='Genre' v-on:keyup.enter='addGenre()'>
 							<a class='button is-info' href='#' @click='addGenre()'>Add genre</a>
 						</p>
 						<span class='tag is-info' v-for='(index, genre) in newStation.genres' track-by='$index'>
@@ -66,7 +66,7 @@
 						</span>
 						<label class='label'>Blacklisted Genres</label>
 						<p class='control has-addons'>
-							<input class='input' id='new-blacklisted-genre' type='text' placeholder='Blacklisted Genre'>
+							<input class='input' id='new-blacklisted-genre' type='text' placeholder='Blacklisted Genre' v-on:keyup.enter='addBlacklistedGenre()'>
 							<a class='button is-info' href='#' @click='addBlacklistedGenre()'>Add blacklisted genre</a>
 						</p>
 						<span class='tag is-info' v-for='(index, genre) in newStation.blacklistedGenres' track-by='$index'>
@@ -115,6 +115,10 @@
 					blacklistedGenres,
 				}, result => {
 					Toast.methods.addToast(result.message, 3000);
+					if (result.status == 'success') this.newStation = {
+						genres: [],
+						blacklistedGenres: []
+					}
 				});
 			},
 			removeStation: function (index) {

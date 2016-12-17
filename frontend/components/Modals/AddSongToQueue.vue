@@ -4,7 +4,7 @@
 		<div class="modal-card">
 			<header class="modal-card-head">
 				<p class="modal-card-title">Add Songs to Station</p>
-				<button class="delete" @click="$parent.toggleModal('addSongToQueue')" ></button>
+				<button class="delete" @click="$parent.modals.addSongToQueue = !$parent.modals.addSongToQueue" ></button>
 			</header>
 			<section class="modal-card-body">
 				<aside class='menu' v-if='$parent.$parent.loggedIn && $parent.type === "community"'>
@@ -134,8 +134,8 @@
 			});
 		},
 		events: {
-			closeModal: function() {
-				this.$parent.toggleModal('addSongToQueue')
+			closeModal: function () {
+				this.$parent.modals.addSongToQueue = !this.$parent.modals.addSongToQueue;
 			}
 		}
 	}

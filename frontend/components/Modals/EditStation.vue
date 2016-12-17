@@ -4,7 +4,7 @@
 		<div class='modal-card'>
 			<header class='modal-card-head'>
 				<p class='modal-card-title'>Edit station</p>
-				<button class='delete' @click='$parent.toggleModal("editStation")'></button>
+				<button class='delete' @click='$parent.modals.editStation = !$parent.modals.editStation'></button>
 			</header>
 			<section class='modal-card-body'>
 				<label class='label'>Display name</label>
@@ -102,7 +102,7 @@
 			updatePartyMode: function () {
 				this.socket.emit('stations.updatePartyMode', this.data.stationId, this.data.partyMode, res => {
 					if (res.status === 'success') {
-					this.$parent.station.partyMode = this.data.partyMode;
+						this.$parent.station.partyMode = this.data.partyMode;
 						return Toast.methods.addToast(res.message, 4000);
 					}
 					Toast.methods.addToast(res.message, 8000);
@@ -122,7 +122,7 @@
 		},
 		events: {
 			closeModal: function() {
-				this.$parent.toggleModal("editStation")
+				this.$parent.modals.editStation = !this.$parent.modals.editStation;
 			}
 		}
 	}

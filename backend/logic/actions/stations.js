@@ -132,17 +132,15 @@ module.exports = {
 	},
 
 	getPlaylist: (session, stationId, cb) => {
-		let playlist = [];
-
 		stations.getStation(stationId, (err, station) => {
-			for (let s = 1; s < station.playlist.length; s++) {
-				songs.getSong(station.playlist[s], (err, song) => {
-					playlist.push(song);
-				});
-			}
+			if (err) return cb({ status: 'failure', message: 'Something went wrong when getting the station.' });
+			if (station.type === 'official') {
+				cache.hget("officialPlaylists", stationId, (err, playlist) => {
+					if (err) return cb({ status: 'failure', message: 'Something went wrong when getting the playlist.' });
+					cb({ status: 'success', data: playlist.songs })
+				})
+			} else cb({ status: 'failure', message: 'This is not an official station.' })
 		});
-
-		cb({ status: 'success', data: playlist })
 	},
 
 	/**
@@ -161,21 +159,20 @@ module.exports = {
 
 			if (station) {
 
-				if (station.privacy !== 'private') {
-					func();
-				} else {
+				if (station.privacy !== 'private') joinStation();
+				else {
 					// TODO If community, check if on whitelist
 					if (!session.userId) return cb({ status: 'error', message: 'An error occurred while joining the station1' });
 					db.models.user.findOne({_id: session.userId}, (err, user) => {
 						if (err || !user) return cb({ status: 'error', message: 'An error occurred while joining the station2' });
-						if (user.role === 'admin') return func();
+						if (user.role === 'admin') return joinStation();
 						if (station.type === 'official') return cb({ status: 'error', message: 'An error occurred while joining the station3' });
-						if (station.owner === session.userId) return func();
+						if (station.owner === session.userId) return joinStation();
 						return cb({ status: 'error', message: 'An error occurred while joining the station4' });
 					});
 				}
 
-				function func() {
+				function joinStation() {
 					utils.socketJoinRoom(session.socketId, `station.${stationId}`);
 					if (station.currentSong) {
 						utils.socketJoinSongRoom(session.socketId, `song.${station.currentSong._id}`);

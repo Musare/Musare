@@ -4,7 +4,7 @@
 			<a class='nav-item logo' href='#' v-link='{ path: "/" }' @click='this.$dispatch("leaveStation", title)'>
 				Musare
 			</a>
-			<a class='nav-item' href='#' v-if='isOwner()' @click='$parent.toggleModal("editStation")'>
+			<a class='nav-item' href='#' v-if='isOwner()' @click='$parent.modals.editStation = !$parent.modals.editStation'>
 				<span class='icon'>
 					<i class='material-icons'>settings</i>
 				</span>
@@ -23,7 +23,7 @@
 				<span class='icon'>
 					<i class='material-icons'>skip_next</i>
 				</span>
-				<span class="skip-votes">{{$parent.currentSong.skipVotes}}</span>
+				<span class="skip-votes">{{ $parent.currentSong.skipVotes }}</span>
 			</a>
 			<a class='nav-item' href='#' v-if='isOwner() && $parent.paused' @click='$parent.resumeStation()'>
 				<span class='icon'>
@@ -48,7 +48,7 @@
 		</span>
 
 		<div class="nav-right nav-menu" :class="{ 'is-active': isMobile }">
-			<a class='nav-item' href='#' @click='$parent.sidebars.queue = !$parent.sidebars.queue' v-if='$parent.station.partyMode === true'>
+			<a class='nav-item' href='#' @click='$parent.toggleSidebar("songslist")' v-if='$parent.station.partyMode === true'>
 				<span class='icon'>
 					<i class='material-icons'>queue_music</i>
 				</span>
@@ -58,12 +58,12 @@
 					<i class='material-icons'>chat</i>
 				</span>
 			</a>-->
-			<!--<a class='nav-item' href='#' @click='$parent.sidebars.users = !$parent.sidebars.users'>
+			<!--<a class='nav-item' href='#' @click='$parent.toggleSidebar("users")'>
 				<span class='icon'>
 					<i class='material-icons'>people</i>
 				</span>
 			</a>-->
-			<a class='nav-item' href='#' @click='$parent.sidebars.playlist = !$parent.sidebars.playlist' v-if='$parent.$parent.loggedIn'>
+			<a class='nav-item' href='#' @click='$parent.toggleSidebar("playlist")' v-if='$parent.$parent.loggedIn'>
 				<span class='icon'>
 					<i class='material-icons'>library_music</i>
 				</span>

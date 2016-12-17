@@ -3,7 +3,7 @@
 		<main-header></main-header>
 		<div class="group">
 			<div class="group-title">Official Stations</div>
-			<div class="card station-card" v-for="station in stations.official" v-link="{ path: '/official/' + station._id }" @click="this.$dispatch('joinStation', station._id)" :class="station.class">
+			<div class="card station-card" v-for="station in stations.official" v-link="{ path: '/official/' + station._id }" @click="this.$dispatch('joinStation', station._id)">
 				<div class="card-image">
 					<figure class="image is-square">
 						<img :src="station.currentSong.thumbnail" onerror="this.src='/assets/notes-transparent.png'" />
@@ -14,22 +14,21 @@
 						<div class="media-left displayName">
 							<h5>{{ station.displayName }}</h5>
 						</div>
-						<div class="media-content"></div>
-						<div class="media-right">
-							<div>{{ station.userCount }}&nbsp;&nbsp;<i class="material-icons">perm_identity</i></div>
-						</div>
 					</div>
 
 					<div class="content">
 						{{ station.description }}
 					</div>
 				</div>
-				<a @click="this.$dispatch('joinStation', station._id)" href='#' class='absolute-a'></a>
+				<a @click="this.$dispatch('joinStation', station._id)" href='#' class='absolute-a' v-link="{ path: '/official/' + station._id }"></a>
+				<div v-if="station.privacy !== 'public'" title="This station is not visible to other users." class="station-status">
+					<i class='material-icons'>lock</i>
+				</div>
 			</div>
 		</div>
 		<div class="group">
 			<div class="group-title">Community Stations <a @click="toggleModal('createCommunityStation')" v-if="$parent.loggedIn" href='#'><i class="material-icons community-button">add_circle_outline</i></a></div>
-			<div class="card station-card" v-for="station in stations.community" v-link="{ path: '/community/' + station._id }" @click="this.$dispatch('joinStation', station._id)" :class="station.class">
+			<div class="card station-card" v-for="station in stations.community" v-link="{ path: '/community/' + station._id }" @click="this.$dispatch('joinStation', station._id)">
 				<div class="card-image">
 					<figure class="image is-square">
 						<img :src="station.currentSong.thumbnail" onerror="this.src='/assets/notes-transparent.png'" />
@@ -40,17 +39,19 @@
 						<div class="media-left displayName">
 							<h5>{{ station.displayName }}</h5>
 						</div>
-						<div class="media-content"></div>
-						<div class="media-right">
-							<div>{{ station.userCount }}&nbsp;&nbsp;<i class="material-icons">perm_identity</i></div>
-						</div>
 					</div>
 
 					<div class="content">
 						{{ station.description }}
 					</div>
 				</div>
-				<a @click="this.$dispatch('joinStation', station._id)" href='#' class='absolute-a'></a>
+				<a @click="this.$dispatch('joinStation', station._id)" href='#' class='absolute-a' v-link="{ path: '/community/' + station._id }"></a>
+				<div v-if="station.privacy !== 'public'" title="This station is not visible to other users." class="station-status">
+					<i class='material-icons'>lock</i>
+				</div>
+				<div v-if="isOwner(station)" title="This is your station." class="station-status">
+					<i class='material-icons'>home</i>
+				</div>
 			</div>
 		</div>
 		<main-footer></main-footer>
@@ -89,14 +90,24 @@
 					_this.socket.on('event:stations.created', station => {
 						if (!station.currentSong) station.currentSong = { thumbnail: '/assets/notes-transparent.png' };
 						if (station.currentSong && !station.currentSong.thumbnail) station.currentSong.thumbnail = "/assets/notes-transparent.png";
-						if (station.privacy !== 'public') {
-							station.class = {'station-red': true}
-						} else if (station.type === 'community') {
-							if (station.owner === userId) {
-								station.class = {'station-blue': true}
-							}
-						}
 						_this.stations[station.type].push(station);
+					});
+					_this.socket.on('event:station.nextSong', (stationId, newSong) => {
+						_this.stations.official.forEach((station) => {
+							if (station._id === stationId) {
+								if (!newSong) newSong = { thumbnail: '/assets/notes-transparent.png' };
+								if (newSong && !newSong.thumbnail) newSong.thumbnail = "/assets/notes-transparent.png";
+								station.currentSong = newSong;
+							}
+						});
+
+						_this.stations.community.forEach((station) => {
+							if (station._id === stationId) {
+								if (!newSong) newSong = { thumbnail: '/assets/notes-transparent.png' };
+								if (newSong && !newSong.thumbnail) newSong.thumbnail = "/assets/notes-transparent.png";
+								station.currentSong = newSong;
+							}
+						});
 					});
 				});
 			});
@@ -114,13 +125,8 @@
 						if (data.status === "success") data.stations.forEach(station => {
 							if (!station.currentSong) station.currentSong = { thumbnail: '/assets/notes-transparent.png' };
 							if (station.currentSong && !station.currentSong.thumbnail) station.currentSong.thumbnail = "/assets/notes-transparent.png";
-							if (station.privacy !== 'public') {
-								station.class = { 'station-red': true }
-							} else if (station.type === 'community') {
-								if (station.owner === userId) {
-									station.class = { 'station-blue': true }
-								}
-							}
+							if (station.privacy !== 'public') station.class = { 'station-red': true }
+							else if (station.type === 'community' && station.owner === userId) station.class = { 'station-blue': true }
 							if (station.type == 'official') _this.stations.official.push(station);
 							else _this.stations.community.push(station);
 						});
@@ -128,6 +134,10 @@
 					_this.socket.emit("apis.joinRoom", 'home', () => {
 					});
 				});
+			},
+			isOwner: function(station) {
+				let _this = this;
+				return station.owner === _this.$parent.userId && station.privacy === 'public';
 			}
 		},
 		components: { MainHeader, MainFooter }
@@ -164,6 +174,22 @@
 		html { font-size: 14px; }
 	}
 
+	.station-status {
+		width: 40px;
+		height: 40px;
+		position: absolute;
+		top: 0;
+		right: 0;
+		background-color: rgba(255, 255, 255, 1);
+		border-bottom-left-radius: 2px;
+		i {
+			font-size: 40px;
+			text-align: center;
+			line-height: 40px;
+			margin-left: 1px;
+		}
+	}
+
 	.group { min-height: 64px; }
 
 	.station-card {
@@ -180,8 +206,7 @@
 
 	.community-button:hover { color: #03a9f4; }
 
-	.station-blue { outline: 5px solid #03a9f4; }
-	.station-red { outline: 5px solid #f45703; }
+	.station-privacy { text-transform: capitalize; }
 
 	.label { display: flex; }
 

@@ -113,9 +113,15 @@
 				else if (type == 'artists') this.editing.song.artists.splice(index, 1);
 			},
 			edit: function (song, index) {
-				this.editing = { index, song };
-				this.video.player.loadVideoById(song._id);
-				this.isEditActive = true;
+				if (this.video.player) {
+					this.video.player.loadVideoById(song._id);
+					let songCopy = {};
+					for (let n in song) {
+						songCopy[n] = song[n];
+					}
+					this.editing = { index, song: songCopy };
+					this.isEditActive = true;
+				}
 			},
 			save: function (song) {
 				let _this = this;
@@ -175,10 +181,13 @@
 						if (volume > 0) _this.video.player.unMute();
 					},
 					'onStateChange': event => {
-						if (event.data == 1) {
+						if (event.data === 1) {
 							let youtubeDuration = _this.video.player.getDuration();
 							youtubeDuration -= _this.editing.song.skipDuration;
-							if (_this.editing.song.duration > youtubeDuration) this.stopVideo();
+							if (_this.editing.song.duration > youtubeDuration) {
+								this.video.player.stopVideo();
+								Toast.methods.addToast("Video can't play. Specified duration is bigger than the YouTube song duration.", 4000);
+							}
 						}
 					}
 				}

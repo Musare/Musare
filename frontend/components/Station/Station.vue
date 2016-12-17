@@ -8,7 +8,7 @@
 	<edit-station v-if='modals.editStation'></edit-station>
 	<report v-if='modals.report'></report>
 
-	<queue-sidebar v-if='sidebars.queue'></queue-sidebar>
+	<songs-list-sidebar v-if='sidebars.songslist'></songs-list-sidebar>
 	<playlist-sidebar v-if='sidebars.playlist'></playlist-sidebar>
 	<users-sidebar v-if='sidebars.users'></users-sidebar>
 	
@@ -21,7 +21,7 @@
 			<h4 v-if='type === "community" && !station.partyMode && $parent.userId === station.owner && !station.privatePlaylist'>
 				<a href='#' class='no-song' @click='sidebars.playlist = true'>Play a private playlist</a>
 			</h4>
-			<h1 v-if='type === "community" && !station.partyMode && $parent.userId === station.owner && station.privatePlaylist'>Maybe you can add some songs to your selected private playlist</h1>
+			<h1 v-if='type === "community" && !station.partyMode && $parent.userId === station.owner && station.privatePlaylist'>Maybe you can add some songs to your selected private playlist and then press the skip button</h1>
 		</div>
 		<div class="columns is-mobile" v-show="!noSong">
 			<div class="column is-8-desktop is-offset-2-desktop is-12-mobile">
@@ -82,7 +82,7 @@
 	import EditStation from '../Modals/EditStation.vue';
 	import Report from '../Modals/Report.vue';
 
-	import QueueSidebar from '../Sidebars/Queue.vue';
+	import SongsListSidebar from '../Sidebars/SongsList.vue';
 	import PlaylistSidebar from '../Sidebars/Playlist.vue';
 	import UsersSidebar from '../Sidebars/UsersList.vue';
 
@@ -111,13 +111,13 @@
 					report: false
 				},
 				sidebars: {
-					queue: false,
+					songslist: false,
 					users: false,
 					playlist: false
 				},
 				noSong: false,
 				simpleSong: false,
-				queue: [],
+				songsList: [],
 				timeBeforePause: 0,
 				station: {},
 				skipVotes: 0,
@@ -136,6 +136,12 @@
 				else if (type == 'createPlaylist') this.modals.createPlaylist = !this.modals.createPlaylist;
 				else if (type == 'editStation') this.modals.editStation = !this.modals.editStation;
 				else if (type == 'report') this.modals.report = !this.modals.report;
+			},
+			toggleSidebar: function (type) {
+				Object.keys(this.sidebars).forEach(sidebar => {
+					if (sidebar !== type) this.sidebars[sidebar] = false;
+					else this.sidebars[type] = !this.sidebars[type];
+				});
 			},
 			youtubeReady: function() {
 				let local = this;
@@ -290,24 +296,26 @@
 				let _this = this;
 				let isInQueue = false;
 				let userId = _this.$parent.userId;
-				_this.queue.forEach((queueSong) => {
-					if (queueSong.requestedBy === userId) isInQueue = true;
-				});
-				if (!isInQueue && _this.privatePlaylistQueueSelected) {
-
-					_this.socket.emit('playlists.getFirstSong', _this.privatePlaylistQueueSelected, data => {
-						if (data.status === 'success') {
-							let songId = data.song._id;
-							_this.automaticallyRequestedSongId = songId;
-							_this.socket.emit('stations.addToQueue', _this.stationId, songId, data => {
-								if (data.status === 'success') {
-									_this.socket.emit('playlists.moveSongToBottom', _this.privatePlaylistQueueSelected, songId, data => {
-										if (data.status === 'success') {}
-									});
-								}
-							});
-						}
+				if (_this.type === 'community') {
+					_this.songsList.forEach((queueSong) => {
+						if (queueSong.requestedBy === userId) isInQueue = true;
 					});
+					if (!isInQueue && _this.privatePlaylistQueueSelected) {
+
+						_this.socket.emit('playlists.getFirstSong', _this.privatePlaylistQueueSelected, data => {
+							if (data.status === 'success') {
+								let songId = data.song._id;
+								_this.automaticallyRequestedSongId = songId;
+								_this.socket.emit('stations.addToQueue', _this.stationId, songId, data => {
+									if (data.status === 'success') {
+										_this.socket.emit('playlists.moveSongToBottom', _this.privatePlaylistQueueSelected, songId, data => {
+											if (data.status === 'success') {}
+										});
+									}
+								});
+							}
+						});
+					}
 				}
 			},
 			joinStation: function () {
@@ -347,10 +355,14 @@
 						}
 						if (_this.type === 'community') {
 							_this.socket.emit('stations.getQueue', _this.stationId, data => {
-								if (data.status === 'success') _this.queue = data.queue;
+								if (data.status === 'success') _this.songsList = data.queue;
 							});
 						}
 					}
+
+					_this.socket.emit('stations.getPlaylist', _this.stationId, res => {
+				 		if (res.status == 'success') _this.songsList = res.data;
+				 	});
 				});
 			}
 		},
@@ -401,7 +413,7 @@
 
 					let isInQueue = false;
 					let userId = _this.$parent.userId;
-					_this.queue.forEach((queueSong) => {
+					_this.songsList.forEach((queueSong) => {
 						if (queueSong.requestedBy === userId) isInQueue = true;
 					});
 					if (!isInQueue && _this.privatePlaylistQueueSelected && (_this.automaticallyRequestedSongId !== _this.currentSong._id || !_this.currentSong._id)) {
@@ -458,7 +470,7 @@
 				});
 
 				_this.socket.on('event:queue.update', queue => {
-					if (this.type === 'community') this.queue = queue;
+					if (this.type === 'community') this.songsList = queue;
 				});
 
 				_this.socket.on('event:song.voteSkipSong', () => {
@@ -474,6 +486,13 @@
 				_this.socket.on('event:partyMode.updated', (partyMode) => {
 					if (this.type === 'community') {
 						this.station.partyMode = partyMode;
+					}
+				});
+
+				_this.socket.on('event:newOfficialPlaylist', (playlist) => {
+					console.log(playlist);
+					if (this.type === 'official') {
+						this.songsList = playlist;
 					}
 				});
 			});
@@ -492,7 +511,7 @@
 			CreatePlaylist,
 			EditStation,
 			Report,
-			QueueSidebar,
+			SongsListSidebar,
 			PlaylistSidebar,
 			UsersSidebar
 		}
@@ -809,7 +828,11 @@
 	}
 
 	.menu-list a {
-		padding: 0 10px !important;
+		/*padding: 0 10px !important;*/
+	}
+
+	.menu-list a:hover {
+		background-color : transparent;
 	}
 
 	.icons-group { display: flex; }

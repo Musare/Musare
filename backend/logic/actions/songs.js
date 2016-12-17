@@ -96,7 +96,7 @@ module.exports = {
 						console.error(err);
 						cb({ status: 'failure', message: 'Something went wrong while adding the song to the queue.' });
 					} else {
-						cache.pub('song.added', songId);
+						cache.pub('song.added', song._id);
 						cb({ status: 'success', message: 'Song has been moved from Queue' });
 					}
 				});
@@ -106,6 +106,7 @@ module.exports = {
 	}),
 
 	like: hooks.loginRequired((session, songId, cb, userId) => {
+		return cb({ status: 'failure', message: 'Ratings are currently disabled.' });
 		db.models.user.findOne({ _id: userId }, (err, user) => {
 			if (user.liked.indexOf(songId) !== -1) return cb({ status: 'failure', message: 'You have already liked this song.' });
 			let dislikes = 0;
@@ -128,6 +129,7 @@ module.exports = {
 	}),
 
 	dislike: hooks.loginRequired((session, songId, cb, userId) => {
+		return cb({ status: 'failure', message: 'Ratings are currently disabled.' });
 		db.models.user.findOne({_id: userId}, (err, user) => {
 			if (user.disliked.indexOf(songId) !== -1) return cb({ status: 'failure', message: 'You have already disliked this song.' });
 			let likes = 0;
@@ -150,6 +152,7 @@ module.exports = {
 	}),
 
 	undislike: hooks.loginRequired((session, songId, cb, userId) => {
+		return cb({ status: 'failure', message: 'Ratings are currently disabled.' });
 		db.models.user.findOne({_id: userId}, (err, user) => {
 			if (user.disliked.indexOf(songId) === -1) return cb({ status: 'failure', message: 'You have not disliked this song.' });
 			db.models.song.update({_id: songId}, {$inc: {dislikes: -1}}, (err) => {
@@ -170,6 +173,7 @@ module.exports = {
 	}),
 
 	unlike: hooks.loginRequired((session, songId, cb, userId) => {
+		return cb({ status: 'failure', message: 'Ratings are currently disabled.' });
 		db.models.user.findOne({_id: userId}, (err, user) => {
 			if (user.liked.indexOf(songId) === -1) return cb({ status: 'failure', message: 'You have not liked this song.' });
 			db.models.song.update({_id: songId}, {$inc: {likes: -1}}, (err) => {

@@ -16,6 +16,7 @@ const lib = {
 		session: require('./schemas/session'),
 		station: require('./schemas/station'),
 		playlist: require('./schemas/playlist'),
+		officialPlaylist: require('./schemas/officialPlaylist'),
 		song: require('./schemas/song')
 	},
 
@@ -29,7 +30,10 @@ const lib = {
 		lib.url = url;
 
 		lib.client = redis.createClient({ url: lib.url });
-		lib.client.on('error', (err) => console.error(err));
+		lib.client.on('error', (err) => {
+			console.error(err);
+			process.exit();
+		});
 
 		initialized = true;
 		callbacks.forEach((callback) => {
@@ -143,17 +147,19 @@ const lib = {
 	 * @param {Boolean} [parseJson=true] - parse the message as JSON
 	 */
 	sub: (channel, cb, parseJson = true) => {
-		if (initialized) {
-			func();
-		} else {
+		if (initialized) subToChannel();
+		else {
 			callbacks.push(() => {
-				func();
+				subToChannel();
 			});
 		}
-		function func() {
+		function subToChannel() {
 			if (subs[channel] === undefined) {
 				subs[channel] = { client: redis.createClient({ url: lib.url }), cbs: [] };
-				subs[channel].client.on('error', (err) => console.error(err));
+				subs[channel].client.on('error', (err) => {
+					console.error(err);
+					process.exit();
+				});
 				subs[channel].client.on('message', (channel, message) => {
 					if (parseJson) try { message = JSON.parse(message); } catch (e) {}
 					subs[channel].cbs.forEach((cb) => cb(message));

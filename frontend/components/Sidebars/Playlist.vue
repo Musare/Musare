@@ -22,7 +22,7 @@
 
 			<div class='none-found' v-else>No Playlists found</div>
 
-			<a class='button create-playlist' href='#' @click='$parent.toggleModal("createPlaylist")'>Create Playlist</a>
+			<a class='button create-playlist' href='#' @click='$parent.modals.createPlaylist = !$parent.modals.createPlaylist'>Create Playlist</a>
 		</div>
 	</div>
 </template>
