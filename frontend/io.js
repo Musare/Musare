@@ -58,6 +58,7 @@ export default {
 	init: function (url) {
 		this.socket = window.socket = io(url);
 		this.socket.on('connect', () => {
+			console.log("IO: SOCKET CONNECTED");
 			onConnectCallbacks.forEach((cb) => {
 				cb();
 			});
@@ -66,6 +67,7 @@ export default {
 			});
 		});
 		this.socket.on('disconnect', () => {
+			console.log("IO: SOCKET DISCONNECTED");
 			onDisconnectCallbacks.forEach((cb) => {
 				cb();
 			});
@@ -74,6 +76,7 @@ export default {
 			});
 		});
 		this.socket.on('connect_error', () => {
+			console.log("IO: SOCKET CONNECT ERROR");
 			onConnectErrorCallbacks.forEach((cb) => {
 				cb();
 			});
