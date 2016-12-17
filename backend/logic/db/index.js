@@ -12,7 +12,10 @@ let lib = {
 
 		lib.connection = mongoose.connect(url).connection;
 
-		lib.connection.on('error', err => console.error('Database error: ' + err.message));
+		lib.connection.on('error', err => {
+			console.error('Database error: ' + err.message)
+			process.exit();
+		});
 
 		lib.connection.once('open', _ => {
 

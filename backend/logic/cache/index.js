@@ -29,7 +29,10 @@ const lib = {
 		lib.url = url;
 
 		lib.client = redis.createClient({ url: lib.url });
-		lib.client.on('error', (err) => console.error(err));
+		lib.client.on('error', (err) => {
+			console.error(err);
+			process.exit();
+		});
 
 		initialized = true;
 		callbacks.forEach((callback) => {
@@ -153,7 +156,10 @@ const lib = {
 		function func() {
 			if (subs[channel] === undefined) {
 				subs[channel] = { client: redis.createClient({ url: lib.url }), cbs: [] };
-				subs[channel].client.on('error', (err) => console.error(err));
+				subs[channel].client.on('error', (err) => {
+					console.error(err);
+					process.exit();
+				});
 				subs[channel].client.on('message', (channel, message) => {
 					if (parseJson) try { message = JSON.parse(message); } catch (e) {}
 					subs[channel].cbs.forEach((cb) => cb(message));
