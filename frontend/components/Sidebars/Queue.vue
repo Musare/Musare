@@ -1,7 +1,8 @@
 <template>
 	<div class='sidebar' transition='slide' v-if='$parent.sidebars.queue'>
 		<div class='inner-wrapper'>
-			<div class='title'>Queue</div>
+			<div class='title' v-if='$parent.type === "community"'>Queue</div>
+			<div class='title' v-else>Playlist</div>
 
 			<article class="media">
 				<figure class="media-left">
