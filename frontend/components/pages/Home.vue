@@ -49,7 +49,7 @@
 				<div v-if="station.privacy !== 'public'" title="This station is not visible to other users." class="station-status">
 					<i class='material-icons'>lock</i>
 				</div>
-				<div v-if="station.owner === userId && station.privacy === 'public'" title="This is your station." class="station-status">
+				<div v-if="isOwner(station)" title="This is your station." class="station-status">
 					<i class='material-icons'>home</i>
 				</div>
 			</div>
@@ -134,6 +134,10 @@
 					_this.socket.emit("apis.joinRoom", 'home', () => {
 					});
 				});
+			},
+			isOwner: function(station) {
+				let _this = this;
+				return station.owner === _this.$parent.userId && station.privacy === 'public';
 			}
 		},
 		components: { MainHeader, MainFooter }
