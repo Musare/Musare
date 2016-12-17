@@ -27,7 +27,7 @@ export default {
 
 	removeAllListeners: function () {
 		Object.keys(this.socket._callbacks).forEach((id) => {
-			if (id.indexOf("$event:song") !== -1) {
+			if (id.indexOf("$event:") !== -1) {
 				delete this.socket._callbacks[id];
 			}
 		});
