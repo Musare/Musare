@@ -23,7 +23,7 @@
 				</div>
 			</article>
 
-			<article class="media" v-for='song in $parent.queue'>
+			<article class="media" v-for='song in playlist'>
 				<div class="media-content">
 					<div class="content">
 						<p>
@@ -42,11 +42,19 @@
 	import io from '../../io';
 
 	export default {
+		data: function () {
+			return {
+				playlist: []
+			}
+		},
 		ready: function () {
 			let _this = this;
 			io.getSocket((socket) => {
 				_this.socket = socket;
-				// get official station playlist
+				_this.socket.emit('stations.getPlaylist', _this.$parent.stationId, res => {
+					console.log(res);
+					if (res.status == 'success') _this.playlist = res.data;
+				});
 			});
 		}
 	}
