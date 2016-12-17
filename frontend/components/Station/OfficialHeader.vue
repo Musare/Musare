@@ -53,7 +53,7 @@
 		</span>
 
 		<div class="nav-right nav-menu" :class="{ 'is-active': isMobile }">
-			<a class='nav-item' href='#' @click='$parent.sidebars.queue = !$parent.sidebars.queue' v-if='$parent.station.partyMode === true'>
+			<a class='nav-item' href='#' @click='$parent.sidebars.officialqueue = !$parent.sidebars.officialqueue'>
 				<span class='icon'>
 					<i class='material-icons'>queue_music</i>
 				</span>

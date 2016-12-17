@@ -102,7 +102,7 @@
 			updatePartyMode: function () {
 				this.socket.emit('stations.updatePartyMode', this.data.stationId, this.data.partyMode, res => {
 					if (res.status === 'success') {
-					this.$parent.station.partyMode = this.data.partyMode;
+						this.$parent.station.partyMode = this.data.partyMode;
 						return Toast.methods.addToast(res.message, 4000);
 					}
 					Toast.methods.addToast(res.message, 8000);

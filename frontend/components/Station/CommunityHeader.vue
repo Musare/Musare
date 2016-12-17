@@ -23,7 +23,7 @@
 				<span class='icon'>
 					<i class='material-icons'>skip_next</i>
 				</span>
-				<span class="skip-votes">{{$parent.currentSong.skipVotes}}</span>
+				<span class="skip-votes">{{ $parent.currentSong.skipVotes }}</span>
 			</a>
 			<a class='nav-item' href='#' v-if='isOwner() && $parent.paused' @click='$parent.resumeStation()'>
 				<span class='icon'>
