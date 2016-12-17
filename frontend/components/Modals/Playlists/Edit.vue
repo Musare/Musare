@@ -4,7 +4,7 @@
 		<div class='modal-card'>
 			<header class='modal-card-head'>
 				<p class='modal-card-title'>Editing: {{ playlist.displayName }}</p>
-				<button class='delete' @click='$parent.toggleModal("editPlaylist")'></button>
+				<button class='delete' @click='$parent.modals.editPlaylist = !$parent.modals.editPlaylist'></button>
 			</header>
 			<section class='modal-card-body'>
 				<aside class='menu' v-if='playlist.songs && playlist.songs.length > 0'>
@@ -145,7 +145,7 @@
 				_this.socket.emit('playlists.remove', _this.playlist._id, res => {
 					if (res.status === 'success') {
 						Toast.methods.addToast(res.message, 3000);
-						_this.$parent.toggleModal('editPlaylist');
+						_this.$parent.modals.editPlaylist = !_this.$parent.modals.editPlaylist;
 					}
 				});
 			},
@@ -206,7 +206,7 @@
 		},
 		events: {
 			closeModal: function() {
-				this.$parent.toggleModal("editPlaylist");
+				this.$parent.modals.editPlaylist = !this.$parent.modals.editPlaylist;
 			}
 		}
 	}

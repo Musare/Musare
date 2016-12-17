@@ -4,7 +4,7 @@
 		<div class='modal-card'>
 			<header class='modal-card-head'>
 				<p class='modal-card-title'>Create Playlist</p>
-				<button class='delete' @click='$parent.toggleModal("createPlaylist")'></button>
+				<button class='delete' @click='$parent.modals.createPlaylist = !$parent.modals.createPlaylist'></button>
 			</header>
 			<section class='modal-card-body'>
 				<p class='control is-expanded'>
@@ -39,7 +39,7 @@
 				_this.socket.emit('playlists.create', _this.playlist, res => {
 					Toast.methods.addToast(res.message, 3000);
 				});
-				this.$parent.toggleModal('createPlaylist');
+				this.$parent.modals.createPlaylist = !this.$parent.modals.createPlaylist;
 			}
 		},
 		ready: function () {
@@ -50,7 +50,7 @@
 		},
 		events: {
 			closeModal: function() {
-				this.$parent.toggleModal("createPlaylist");
+				this.$parent.modals.createPlaylist = !this.$parent.modals.createPlaylist;
 			}
 		}
 	}

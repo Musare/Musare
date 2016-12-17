@@ -4,7 +4,7 @@
 		<div class='modal-card'>
 			<header class='modal-card-head'>
 				<p class='modal-card-title'>Edit station</p>
-				<button class='delete' @click='$parent.toggleModal("editStation")'></button>
+				<button class='delete' @click='$parent.modals.editStation = !$parent.modals.editStation'></button>
 			</header>
 			<section class='modal-card-body'>
 				<label class='label'>Display name</label>
@@ -122,7 +122,7 @@
 		},
 		events: {
 			closeModal: function() {
-				this.$parent.toggleModal("editStation")
+				this.$parent.modals.editStation = !this.$parent.modals.editStation;
 			}
 		}
 	}

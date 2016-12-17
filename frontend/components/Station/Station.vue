@@ -114,7 +114,7 @@
 				},
 				sidebars: {
 					queue: false,
-					officialqueue: true,
+					officialqueue: false,
 					users: false,
 					playlist: false
 				},
@@ -133,12 +133,11 @@
 				this.playlistBeingEdited = id;
 				this.toggleModal('editPlaylist');
 			},
-			toggleModal: function (type) {
-				if (type == 'addSongToQueue') this.modals.addSongToQueue = !this.modals.addSongToQueue;
-				else if (type == 'editPlaylist') this.modals.editPlaylist = !this.modals.editPlaylist;
-				else if (type == 'createPlaylist') this.modals.createPlaylist = !this.modals.createPlaylist;
-				else if (type == 'editStation') this.modals.editStation = !this.modals.editStation;
-				else if (type == 'report') this.modals.report = !this.modals.report;
+			toggleSidebar: function (type) {
+				Object.keys(this.sidebars).forEach(sidebar => {
+					if (sidebar !== type) this.sidebars[sidebar] = false;
+					else this.sidebars[type] = !this.sidebars[type];
+				});
 			},
 			youtubeReady: function() {
 				let local = this;

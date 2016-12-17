@@ -198,7 +198,7 @@
 		},
 		events: {
 			closeModal: function () {
-				this.$parent.toggleModal('report');
+				this.$parent.modals.report = !this.$parent.modals.report;
 			}
 		},
 		ready: function () {
