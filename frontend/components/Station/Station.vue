@@ -163,7 +163,7 @@
 									local.player.seekTo(local.timeBeforePause / 1000, true);
 									local.player.pauseVideo();
 								}
-								if (event.data === 2 && !local.paused && !local.noSong && local.getTimeElapsed() < local.currentSong.duration) {
+								if (event.data === 2 && !local.paused && !local.noSong && (local.getTimeElapsed() / 1000) < local.currentSong.duration) {
 									local.player.seekTo(local.getTimeElapsed() / 1000 + local.currentSong.skipDuration, true);
 									local.player.playVideo();
 								}
