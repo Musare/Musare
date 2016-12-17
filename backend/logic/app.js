@@ -56,7 +56,7 @@ const lib = {
 		});
 
 		function redirectOnErr (res, err){
-			return res.redirect(`http://${config.get('domain')}/?err=${encodeURIComponent(err)}`);
+			return res.redirect(`${config.get('domain')}/?err=${encodeURIComponent(err)}`);
 		}
 
 		app.get('/auth/github/authorize/callback', (req, res) => {
@@ -78,7 +78,7 @@ const lib = {
 									cache.hset('sessions', sessionId, cache.schemas.session(sessionId, user._id), err => {
 										if (err) return redirectOnErr(res, err.message);
 										res.cookie('SID', sessionId);
-										res.redirect(`http://${config.get('domain')}/`);
+										res.redirect(`${config.get('domain')}/`);
 									});
 								});
 							} else {
@@ -116,7 +116,7 @@ const lib = {
 												cache.hset('sessions', sessionId, cache.schemas.session(sessionId, user._id), err => {
 													if (err) return redirectOnErr(res, err.message);
 													res.cookie('SID', sessionId);
-													res.redirect(`http://${config.get('domain')}/`);
+													res.redirect(`${config.get('domain')}/`);
 												});
 											});
 										});
