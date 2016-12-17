@@ -18,15 +18,12 @@
 
 					<div class="content">
 						{{ station.description }}
-						<div class="right">
-							(
-								<span class='station-privacy'>{{ station.privacy }}</span>
-								<span v-if='station.owner === userId'>, Your Station</span>
-							)
-						</div>
 					</div>
 				</div>
 				<a @click="this.$dispatch('joinStation', station._id)" href='#' class='absolute-a' v-link="{ path: '/official/' + station._id }"></a>
+				<div v-if="station.privacy !== 'public'" title="This station is not visible to other users." class="station-status">
+					<i class='material-icons'>lock</i>
+				</div>
 			</div>
 		</div>
 		<div class="group">
@@ -46,15 +43,15 @@
 
 					<div class="content">
 						{{ station.description }}
-						<div class="right">
-							(
-								<span class='station-privacy'>{{ station.privacy }}</span>
-								<span v-if='station.owner === userId'>, Your Station</span>
-							)
-						</div>
 					</div>
 				</div>
 				<a @click="this.$dispatch('joinStation', station._id)" href='#' class='absolute-a' v-link="{ path: '/community/' + station._id }"></a>
+				<div v-if="station.privacy !== 'public'" title="This station is not visible to other users." class="station-status">
+					<i class='material-icons'>lock</i>
+				</div>
+				<div v-if="station.owner === userId && station.privacy === 'public'" title="This is your station." class="station-status">
+					<i class='material-icons'>home</i>
+				</div>
 			</div>
 		</div>
 		<main-footer></main-footer>
@@ -171,6 +168,22 @@
 
 	@media only screen and (min-width: 0) {
 		html { font-size: 14px; }
+	}
+
+	.station-status {
+		width: 40px;
+		height: 40px;
+		position: absolute;
+		top: 0;
+		right: 0;
+		background-color: rgba(255, 255, 255, 1);
+		border-bottom-left-radius: 2px;
+		i {
+			font-size: 40px;
+			text-align: center;
+			line-height: 40px;
+			margin-left: 1px;
+		}
 	}
 
 	.group { min-height: 64px; }
