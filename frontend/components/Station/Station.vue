@@ -426,8 +426,8 @@
 				_this.socket.on('event:song.like', data => {
 					if (!this.noSong) {
 						if (data.songId === _this.currentSong._id) {
-							_this.currentSong.likes++;
-							if (data.undisliked) _this.currentSong.dislikes--;
+							_this.currentSong.dislikes = data.dislikes;
+							_this.currentSong.likes = data.likes;
 						}
 					}
 				});
@@ -435,21 +435,27 @@
 				_this.socket.on('event:song.dislike', data => {
 					if (!this.noSong) {
 						if (data.songId === _this.currentSong._id) {
-							_this.currentSong.dislikes++;
-							if (data.unliked) _this.currentSong.likes--;
+							_this.currentSong.dislikes = data.dislikes;
+							_this.currentSong.likes = data.likes;
 						}
 					}
 				});
 
 				_this.socket.on('event:song.unlike', data => {
 					if (!this.noSong) {
-						if (data.songId === _this.currentSong._id) _this.currentSong.likes--;
+						if (data.songId === _this.currentSong._id) {
+							_this.currentSong.dislikes = data.dislikes;
+							_this.currentSong.likes = data.likes;
+						}
 					}
 				});
 
 				_this.socket.on('event:song.undislike', data => {
 					if (!this.noSong) {
-						if (data.songId === _this.currentSong._id) _this.currentSong.dislikes--;
+						if (data.songId === _this.currentSong._id) {
+							_this.currentSong.dislikes = data.dislikes;
+							_this.currentSong.likes = data.likes;
+						}
 					}
 				});
 
