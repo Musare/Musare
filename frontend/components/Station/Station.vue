@@ -21,7 +21,7 @@
 			<h4 v-if='type === "community" && !station.partyMode && $parent.userId === station.owner && !station.privatePlaylist'>
 				<a href='#' class='no-song' @click='sidebars.playlist = true'>Play a private playlist</a>
 			</h4>
-			<h1 v-if='type === "community" && !station.partyMode && $parent.userId === station.owner && station.privatePlaylist'>Maybe you can add some songs to your selected private playlist</h1>
+			<h1 v-if='type === "community" && !station.partyMode && $parent.userId === station.owner && station.privatePlaylist'>Maybe you can add some songs to your selected private playlist and then press the skip button</h1>
 		</div>
 		<div class="columns is-mobile" v-show="!noSong">
 			<div class="column is-8-desktop is-offset-2-desktop is-12-mobile">
@@ -129,6 +129,13 @@
 			editPlaylist: function (id) {
 				this.playlistBeingEdited = id;
 				this.toggleModal('editPlaylist');
+			},
+			toggleModal: function (type) {
+				if (type == 'addSongToQueue') this.modals.addSongToQueue = !this.modals.addSongToQueue;
+				else if (type == 'editPlaylist') this.modals.editPlaylist = !this.modals.editPlaylist;
+				else if (type == 'createPlaylist') this.modals.createPlaylist = !this.modals.createPlaylist;
+				else if (type == 'editStation') this.modals.editStation = !this.modals.editStation;
+				else if (type == 'report') this.modals.report = !this.modals.report;
 			},
 			toggleSidebar: function (type) {
 				Object.keys(this.sidebars).forEach(sidebar => {
@@ -821,7 +828,11 @@
 	}
 
 	.menu-list a {
-		padding: 0 10px !important;
+		/*padding: 0 10px !important;*/
+	}
+
+	.menu-list a:hover {
+		background-color : transparent;
 	}
 
 	.icons-group { display: flex; }
