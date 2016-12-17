@@ -3,7 +3,7 @@
 		<main-header></main-header>
 		<div class="group">
 			<div class="group-title">Official Stations</div>
-			<div class="card station-card" v-for="station in stations.official" v-link="{ path: '/official/' + station._id }" @click="this.$dispatch('joinStation', station._id)" :class="station.class">
+			<div class="card station-card" v-for="station in stations.official" v-link="{ path: '/official/' + station._id }" @click="this.$dispatch('joinStation', station._id)">
 				<div class="card-image">
 					<figure class="image is-square">
 						<img :src="station.currentSong.thumbnail" onerror="this.src='/assets/notes-transparent.png'" />
@@ -14,14 +14,16 @@
 						<div class="media-left displayName">
 							<h5>{{ station.displayName }}</h5>
 						</div>
-						<div class="media-content"></div>
-						<div class="media-right">
-							<div>{{ station.userCount }}&nbsp;&nbsp;<i class="material-icons">perm_identity</i></div>
-						</div>
 					</div>
 
 					<div class="content">
 						{{ station.description }}
+						<div class="right">
+							(
+								<span class='station-privacy'>{{ station.privacy }}</span>
+								<span v-if='station.owner === userId'>, Your Station</span>
+							)
+						</div>
 					</div>
 				</div>
 				<a @click="this.$dispatch('joinStation', station._id)" href='#' class='absolute-a'></a>
@@ -29,7 +31,7 @@
 		</div>
 		<div class="group">
 			<div class="group-title">Community Stations <a @click="toggleModal('createCommunityStation')" v-if="$parent.loggedIn" href='#'><i class="material-icons community-button">add_circle_outline</i></a></div>
-			<div class="card station-card" v-for="station in stations.community" v-link="{ path: '/community/' + station._id }" @click="this.$dispatch('joinStation', station._id)" :class="station.class">
+			<div class="card station-card" v-for="station in stations.community" v-link="{ path: '/community/' + station._id }" @click="this.$dispatch('joinStation', station._id)">
 				<div class="card-image">
 					<figure class="image is-square">
 						<img :src="station.currentSong.thumbnail" onerror="this.src='/assets/notes-transparent.png'" />
@@ -40,14 +42,16 @@
 						<div class="media-left displayName">
 							<h5>{{ station.displayName }}</h5>
 						</div>
-						<div class="media-content"></div>
-						<div class="media-right">
-							<div>{{ station.userCount }}&nbsp;&nbsp;<i class="material-icons">perm_identity</i></div>
-						</div>
 					</div>
 
 					<div class="content">
 						{{ station.description }}
+						<div class="right">
+							(
+								<span class='station-privacy'>{{ station.privacy }}</span>
+								<span v-if='station.owner === userId'>, Your Station</span>
+							)
+						</div>
 					</div>
 				</div>
 				<a @click="this.$dispatch('joinStation', station._id)" href='#' class='absolute-a'></a>
@@ -89,13 +93,6 @@
 					_this.socket.on('event:stations.created', station => {
 						if (!station.currentSong) station.currentSong = { thumbnail: '/assets/notes-transparent.png' };
 						if (station.currentSong && !station.currentSong.thumbnail) station.currentSong.thumbnail = "/assets/notes-transparent.png";
-						if (station.privacy !== 'public') {
-							station.class = {'station-red': true}
-						} else if (station.type === 'community') {
-							if (station.owner === userId) {
-								station.class = {'station-blue': true}
-							}
-						}
 						_this.stations[station.type].push(station);
 					});
 				});
@@ -114,13 +111,8 @@
 						if (data.status === "success") data.stations.forEach(station => {
 							if (!station.currentSong) station.currentSong = { thumbnail: '/assets/notes-transparent.png' };
 							if (station.currentSong && !station.currentSong.thumbnail) station.currentSong.thumbnail = "/assets/notes-transparent.png";
-							if (station.privacy !== 'public') {
-								station.class = { 'station-red': true }
-							} else if (station.type === 'community') {
-								if (station.owner === userId) {
-									station.class = { 'station-blue': true }
-								}
-							}
+							if (station.privacy !== 'public') station.class = { 'station-red': true }
+							else if (station.type === 'community' && station.owner === userId) station.class = { 'station-blue': true }
 							if (station.type == 'official') _this.stations.official.push(station);
 							else _this.stations.community.push(station);
 						});
@@ -180,8 +172,7 @@
 
 	.community-button:hover { color: #03a9f4; }
 
-	.station-blue { outline: 5px solid #03a9f4; }
-	.station-red { outline: 5px solid #f45703; }
+	.station-privacy { text-transform: capitalize; }
 
 	.label { display: flex; }
 
