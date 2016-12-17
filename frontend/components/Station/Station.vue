@@ -16,7 +16,7 @@
 		<div v-show="noSong" class="no-song">
 			<h1>No song is currently playing</h1>
 			<h4 v-if='type === "community" && station.partyMode'>
-				<a href='#' class='no-song' @click='sidebars.queue = true'>Add a Song to the Queue</a>
+				<a href='#' class='no-song' @click='modals.addSongToQueue = true'>Add a Song to the Queue</a>
 			</h4>
 			<h4 v-if='type === "community" && !station.partyMode && $parent.userId === station.owner && !station.privatePlaylist'>
 				<a href='#' class='no-song' @click='sidebars.playlist = true'>Play a private playlist</a>
@@ -128,14 +128,7 @@
 		methods: {
 			editPlaylist: function (id) {
 				this.playlistBeingEdited = id;
-				this.toggleModal('editPlaylist');
-			},
-			toggleModal: function (type) {
-				if (type == 'addSongToQueue') this.modals.addSongToQueue = !this.modals.addSongToQueue;
-				else if (type == 'editPlaylist') this.modals.editPlaylist = !this.modals.editPlaylist;
-				else if (type == 'createPlaylist') this.modals.createPlaylist = !this.modals.createPlaylist;
-				else if (type == 'editStation') this.modals.editStation = !this.modals.editStation;
-				else if (type == 'report') this.modals.report = !this.modals.report;
+				this.modals.editPlaylist = !this.modals.editPlaylist;
 			},
 			toggleSidebar: function (type) {
 				Object.keys(this.sidebars).forEach(sidebar => {
