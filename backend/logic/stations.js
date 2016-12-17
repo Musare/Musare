@@ -229,7 +229,7 @@ module.exports = {
 						(next) => {
 							if (station.type === "official") {
 								if (station.playlist.length > 0) {
-									function func() {
+									function setCurrentSong() {
 										if (station.currentSongIndex < station.playlist.length - 1) {
 											songs.getSong(station.playlist[station.currentSongIndex + 1], (err, song) => {
 												if (!err) {
@@ -250,9 +250,9 @@ module.exports = {
 													$set.currentSongIndex = station.currentSongIndex + 1;
 													next(null, $set);
 												} else {
-													db.models.station.update({_id: station._id}, {$inc: {currentSongIndex: 1}}, (err) => {
+													db.models.station.update({ _id: station._id }, { $inc: { currentSongIndex: 1 } }, (err) => {
 														_this.updateStation(station._id, () => {
-															func();
+															setCurrentSong();
 														});
 													});
 												}

@@ -159,21 +159,20 @@ module.exports = {
 
 			if (station) {
 
-				if (station.privacy !== 'private') {
-					func();
-				} else {
+				if (station.privacy !== 'private') joinStation();
+				else {
 					// TODO If community, check if on whitelist
 					if (!session.userId) return cb({ status: 'error', message: 'An error occurred while joining the station1' });
 					db.models.user.findOne({_id: session.userId}, (err, user) => {
 						if (err || !user) return cb({ status: 'error', message: 'An error occurred while joining the station2' });
-						if (user.role === 'admin') return func();
+						if (user.role === 'admin') return joinStation();
 						if (station.type === 'official') return cb({ status: 'error', message: 'An error occurred while joining the station3' });
-						if (station.owner === session.userId) return func();
+						if (station.owner === session.userId) return joinStation();
 						return cb({ status: 'error', message: 'An error occurred while joining the station4' });
 					});
 				}
 
-				function func() {
+				function joinStation() {
 					utils.socketJoinRoom(session.socketId, `station.${stationId}`);
 					if (station.currentSong) {
 						utils.socketJoinSongRoom(session.socketId, `song.${station.currentSong._id}`);

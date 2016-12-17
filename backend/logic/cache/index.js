@@ -147,14 +147,13 @@ const lib = {
 	 * @param {Boolean} [parseJson=true] - parse the message as JSON
 	 */
 	sub: (channel, cb, parseJson = true) => {
-		if (initialized) {
-			func();
-		} else {
+		if (initialized) subToChannel();
+		else {
 			callbacks.push(() => {
-				func();
+				subToChannel();
 			});
 		}
-		function func() {
+		function subToChannel() {
 			if (subs[channel] === undefined) {
 				subs[channel] = { client: redis.createClient({ url: lib.url }), cbs: [] };
 				subs[channel].client.on('error', (err) => {
