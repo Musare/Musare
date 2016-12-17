@@ -152,13 +152,13 @@
 			promoteSong: function (songId) {
 				let _this = this;
 				_this.socket.emit('playlists.moveSongToTop', _this.playlist._id, songId, res => {
-					Toast.methods.toast(4000, res.message);
+					Toast.methods.addToast(res.message, 4000);
 				});
 			},
 			demoteSong: function (songId) {
 				let _this = this;
 				_this.socket.emit('playlists.moveSongToBottom', _this.playlist._id, songId, res => {
-					Toast.methods.toast(4000, res.message);
+					Toast.methods.addToast(res.message, 4000);
 				});
 			}
 		},
