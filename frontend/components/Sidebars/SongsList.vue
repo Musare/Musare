@@ -1,5 +1,5 @@
 <template>
-	<div class='sidebar' transition='slide' v-if='$parent.sidebars.queue'>
+	<div class='sidebar' transition='slide' v-if='$parent.sidebars.songslist'>
 		<div class='inner-wrapper'>
 			<div class='title' v-if='$parent.type === "community"'>Queue</div>
 			<div class='title' v-else>Playlist</div>
