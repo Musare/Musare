@@ -26,7 +26,7 @@
 						</div>
 					</div>
 				</div>
-				<a @click="this.$dispatch('joinStation', station._id)" href='#' class='absolute-a'></a>
+				<a @click="this.$dispatch('joinStation', station._id)" href='#' class='absolute-a' v-link="{ path: '/official/' + station._id }"></a>
 			</div>
 		</div>
 		<div class="group">
@@ -54,7 +54,7 @@
 						</div>
 					</div>
 				</div>
-				<a @click="this.$dispatch('joinStation', station._id)" href='#' class='absolute-a'></a>
+				<a @click="this.$dispatch('joinStation', station._id)" href='#' class='absolute-a' v-link="{ path: '/community/' + station._id }"></a>
 			</div>
 		</div>
 		<main-footer></main-footer>
@@ -94,6 +94,23 @@
 						if (!station.currentSong) station.currentSong = { thumbnail: '/assets/notes-transparent.png' };
 						if (station.currentSong && !station.currentSong.thumbnail) station.currentSong.thumbnail = "/assets/notes-transparent.png";
 						_this.stations[station.type].push(station);
+					});
+					_this.socket.on('event:station.nextSong', (stationId, newSong) => {
+						_this.stations.official.forEach((station) => {
+							if (station._id === stationId) {
+								if (!newSong) newSong = { thumbnail: '/assets/notes-transparent.png' };
+								if (newSong && !newSong.thumbnail) newSong.thumbnail = "/assets/notes-transparent.png";
+								station.currentSong = newSong;
+							}
+						});
+
+						_this.stations.community.forEach((station) => {
+							if (station._id === stationId) {
+								if (!newSong) newSong = { thumbnail: '/assets/notes-transparent.png' };
+								if (newSong && !newSong.thumbnail) newSong.thumbnail = "/assets/notes-transparent.png";
+								station.currentSong = newSong;
+							}
+						});
 					});
 				});
 			});

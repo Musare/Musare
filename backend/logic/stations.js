@@ -356,12 +356,33 @@ module.exports = {
 							if (station.currentSong !== null && station.currentSong._id !== undefined) {
 								station.currentSong.skipVotes = 0;
 							}
+							//TODO Pub/Sub this
 							utils.emitToRoom(`station.${station._id}`, "event:songs.next", {
 								currentSong: station.currentSong,
 								startedAt: station.startedAt,
 								paused: station.paused,
 								timePaused: 0
 							});
+
+							if (station.privacy === 'public') utils.emitToRoom('home', "event:station.nextSong", station._id, station.currentSong);
+							else {
+								let sockets = utils.getRoomSockets('home');
+								for (let socketId in sockets) {
+									let socket = sockets[socketId];
+									let session = sockets[socketId].session;
+									if (session.sessionId) {
+										cache.hget('sessions', session.sessionId, (err, session) => {
+											if (!err && session) {
+												db.models.user.findOne({_id: session.userId}, (err, user) => {
+													if (user.role === 'admin') socket.emit("event:station.nextSong", station._id, station.currentSong);
+													else if (station.type === "community" && station.owner === session.userId) socket.emit("event:station.nextSong", station._id, station.currentSong);
+												});
+											}
+										});
+									}
+								}
+							}
+
 							if (station.currentSong !== null && station.currentSong._id !== undefined) {
 								utils.socketsJoinSongRoom(utils.getRoomSockets(`station.${station._id}`), `song.${station.currentSong._id}`);
 								if (!station.paused) {
