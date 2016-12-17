@@ -496,9 +496,9 @@
 				});
 			});
 
-			
+
 			let volume = parseInt(localStorage.getItem("volume"));
-			volume = (typeof volume === "number") ? volume : 20;
+			volume = (typeof volume === "number" && !isNaN(volume)) ? volume : 20;
 			localStorage.setItem("volume", volume);
 			$("#volumeSlider").val(volume);
 		},
