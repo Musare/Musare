@@ -115,6 +115,10 @@
 					blacklistedGenres,
 				}, result => {
 					Toast.methods.addToast(result.message, 3000);
+					if (result.status == 'success') this.newStation = {
+						genres: [],
+						blacklistedGenres: []
+					}
 				});
 			},
 			removeStation: function (index) {
