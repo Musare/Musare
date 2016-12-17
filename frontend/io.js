@@ -58,7 +58,6 @@ export default {
 	init: function (url) {
 		this.socket = window.socket = io(url);
 		this.socket.on('connect', () => {
-			console.log("IO: SOCKET CONNECTED");
 			onConnectCallbacks.forEach((cb) => {
 				cb();
 			});

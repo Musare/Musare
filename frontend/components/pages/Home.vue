@@ -18,9 +18,6 @@
 							<div v-if="station.privacy !== 'public'" title="This station is not visible to other users." class="station-status">
 								<i class='material-icons'>lock</i>
 							</div>
-							<div v-if="isOwner(station)" title="This is your station." class="station-status">
-								<i class='material-icons'>home</i>
-							</div>
 						</div>
 					</div>
 

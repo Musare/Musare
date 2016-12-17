@@ -536,7 +536,8 @@ module.exports = {
 				db.models.playlist.findOne({ _id: playlistId }, (err, playlist) => {
 					if (err) return cb(err);
 					if (playlist) {
-						db.models.station.update({_id: stationId}, { $set: { privatePlaylist: playlistId, currentSongIndex: 0 } }, (err) => {
+						let currentSongIndex = (playlist.songs.length > 0) ? playlist.songs.length - 1 : 0;
+						db.models.station.update({_id: stationId}, { $set: { privatePlaylist: playlistId, currentSongIndex: currentSongIndex } }, (err) => {
 							if (err) return cb(err);
 							stations.updateStation(stationId, (err, station) => {
 								if (err) return cb(err);

@@ -163,7 +163,7 @@
 									local.player.seekTo(local.timeBeforePause / 1000, true);
 									local.player.pauseVideo();
 								}
-								if (event.data === 2 && !local.paused && !local.noSong && local.getTimeElapsed() < local.currentSong.duration) {
+								if (event.data === 2 && !local.paused && !local.noSong && (local.getTimeElapsed() / 1000) < local.currentSong.duration) {
 									local.player.seekTo(local.getTimeElapsed() / 1000 + local.currentSong.skipDuration, true);
 									local.player.playVideo();
 								}
@@ -426,8 +426,8 @@
 				_this.socket.on('event:song.like', data => {
 					if (!this.noSong) {
 						if (data.songId === _this.currentSong._id) {
-							_this.currentSong.likes++;
-							if (data.undisliked) _this.currentSong.dislikes--;
+							_this.currentSong.dislikes = data.dislikes;
+							_this.currentSong.likes = data.likes;
 						}
 					}
 				});
@@ -435,21 +435,27 @@
 				_this.socket.on('event:song.dislike', data => {
 					if (!this.noSong) {
 						if (data.songId === _this.currentSong._id) {
-							_this.currentSong.dislikes++;
-							if (data.unliked) _this.currentSong.likes--;
+							_this.currentSong.dislikes = data.dislikes;
+							_this.currentSong.likes = data.likes;
 						}
 					}
 				});
 
 				_this.socket.on('event:song.unlike', data => {
 					if (!this.noSong) {
-						if (data.songId === _this.currentSong._id) _this.currentSong.likes--;
+						if (data.songId === _this.currentSong._id) {
+							_this.currentSong.dislikes = data.dislikes;
+							_this.currentSong.likes = data.likes;
+						}
 					}
 				});
 
 				_this.socket.on('event:song.undislike', data => {
 					if (!this.noSong) {
-						if (data.songId === _this.currentSong._id) _this.currentSong.dislikes--;
+						if (data.songId === _this.currentSong._id) {
+							_this.currentSong.dislikes = data.dislikes;
+							_this.currentSong.likes = data.likes;
+						}
 					}
 				});
 
@@ -490,9 +496,9 @@
 				});
 			});
 
-			
+
 			let volume = parseInt(localStorage.getItem("volume"));
-			volume = (typeof volume === "number") ? volume : 20;
+			volume = (typeof volume === "number" && !isNaN(volume)) ? volume : 20;
 			localStorage.setItem("volume", volume);
 			$("#volumeSlider").val(volume);
 		},
