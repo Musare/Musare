@@ -26,6 +26,14 @@ cache.sub('station.queueUpdate', (stationId) => {
 	});
 });
 
+cache.sub('station.newOfficialPlaylist', (stationId) => {
+	cache.hget("officialPlaylists", stationId, (err, playlistObj) => {
+		if (!err && !playlistObj) {
+			utils.emitToRoom(`station.${stationId}`, "event:newOfficialPlaylist", playlistObj.songs);
+		}
+	})
+});
+
 module.exports = {
 
 	init: function(cb) {
@@ -122,7 +130,7 @@ module.exports = {
 				});
 			},
 
-			(playlist, lessInfoPlaylist, next) => {
+			(playlist, next) => {
 				db.models.station.update({_id: station._id}, {$set: {playlist: playlist}}, (err) => {
 					_this.updateStation(station._id, () => {
 						next(err, playlist);
@@ -210,6 +218,7 @@ module.exports = {
 				})
 			} else {
 				cache.hset("officialPlaylists", stationId, cache.schemas.officialPlaylist(stationId, lessInfoPlaylist), () => {
+					cache.pub("station.newOfficialPlaylist", stationId);
 					cb();
 				});
 			}
