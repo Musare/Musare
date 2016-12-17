@@ -101,6 +101,7 @@ let lib = {
 			(next) => {
 				const { name, displayName, songs } = data;
 				db.models.playlist.create({
+					_id: utils.generateRandomString(17),//TODO Check if exists
 					displayName,
 					songs,
 					createdBy: userId,

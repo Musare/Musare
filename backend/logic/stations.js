@@ -56,6 +56,12 @@ module.exports = {
 		_this.getStation(stationId, (err, station) => {
 			if (!err) {
 				if (station) {
+					cache.hget('officialPlaylists', stationId, (err, playlist) => {
+						if (err || !playlist) {
+							_this.calculateOfficialPlaylistList(stationId, station.playlist, ()=>{});
+						}
+					});
+
 					let notification = notifications.subscribe(`stations.nextSong?id=${station._id}`, _this.skipStation(station._id), true);
 					if (!station.paused ) {
 						/*if (!station.startedAt) {

@@ -14,6 +14,14 @@
 						<div class="media-left displayName">
 							<h5>{{ station.displayName }}</h5>
 						</div>
+						<div class="media-right">
+							<div v-if="station.privacy !== 'public'" title="This station is not visible to other users." class="station-status">
+								<i class='material-icons'>lock</i>
+							</div>
+							<div v-if="isOwner(station)" title="This is your station." class="station-status">
+								<i class='material-icons'>home</i>
+							</div>
+						</div>
 					</div>
 
 					<div class="content">
@@ -21,9 +29,6 @@
 					</div>
 				</div>
 				<a @click="this.$dispatch('joinStation', station._id)" href='#' class='absolute-a' v-link="{ path: '/official/' + station._id }"></a>
-				<div v-if="station.privacy !== 'public'" title="This station is not visible to other users." class="station-status">
-					<i class='material-icons'>lock</i>
-				</div>
 			</div>
 		</div>
 		<div class="group">
@@ -39,6 +44,14 @@
 						<div class="media-left displayName">
 							<h5>{{ station.displayName }}</h5>
 						</div>
+						<div class="media-right">
+							<div v-if="station.privacy !== 'public'" title="This station is not visible to other users." class="station-status">
+								<i class='material-icons'>lock</i>
+							</div>
+							<div v-if="isOwner(station)" title="This is your station." class="station-status">
+								<i class='material-icons'>home</i>
+							</div>
+						</div>
 					</div>
 
 					<div class="content">
@@ -46,12 +59,6 @@
 					</div>
 				</div>
 				<a @click="this.$dispatch('joinStation', station._id)" href='#' class='absolute-a' v-link="{ path: '/community/' + station._id }"></a>
-				<div v-if="station.privacy !== 'public'" title="This station is not visible to other users." class="station-status">
-					<i class='material-icons'>lock</i>
-				</div>
-				<div v-if="isOwner(station)" title="This is your station." class="station-status">
-					<i class='material-icons'>home</i>
-				</div>
 			</div>
 		</div>
 		<main-footer></main-footer>
@@ -174,22 +181,6 @@
 		html { font-size: 14px; }
 	}
 
-	.station-status {
-		width: 40px;
-		height: 40px;
-		position: absolute;
-		top: 0;
-		right: 0;
-		background-color: rgba(255, 255, 255, 1);
-		border-bottom-left-radius: 2px;
-		i {
-			font-size: 40px;
-			text-align: center;
-			line-height: 40px;
-			margin-left: 1px;
-		}
-	}
-
 	.group { min-height: 64px; }
 
 	.station-card {
@@ -237,16 +228,24 @@
 		display: inline-flex;
     	flex-direction: column;
 		overflow: hidden;
+
+		.content {
+			text-align: left;
+			word-wrap: break-word;
+		}
+
+		.media {
+			display: flex;
+    		align-items: center;
+
+			.station-status { line-height: 13px; }
+
+			h5 { margin: 0; }
+		}
 	}
 
 	.displayName {
 		word-wrap: break-word;
     	width: 80%;
 	}
-
-	.content {
-		text-align: left;
-		word-wrap: break-word;
-	}
-	
 </style>
