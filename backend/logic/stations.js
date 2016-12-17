@@ -116,6 +116,13 @@ module.exports = {
 				station.playlist.filter((songId) => {
 					if (songList.indexOf(songId) !== -1) playlist.push(songId);
 				});
+
+				_this.calculateOfficialPlaylistList(station._id, playlist, () => {
+					next(null, playlist);
+				});
+			},
+
+			(playlist, lessInfoPlaylist, next) => {
 				db.models.station.update({_id: station._id}, {$set: {playlist: playlist}}, (err) => {
 					_this.updateStation(station._id, () => {
 						next(err, playlist);
@@ -130,6 +137,7 @@ module.exports = {
 
 	// Attempts to get the station from Redis. If it's not in Redis, get it from Mongo and add it to Redis.
 	getStation: function(stationId, cb) {
+		let _this = this;
 		async.waterfall([
 
 			(next) => {
@@ -143,6 +151,9 @@ module.exports = {
 
 			(station, next) => {
 				if (station) {
+					if (station.type === 'official') {
+						_this.calculateOfficialPlaylistList(station._id, station.playlist, ()=>{});
+					}
 					station = cache.schemas.station(station);
 					cache.hset('stations', stationId, station);
 					next(true, station);
@@ -155,7 +166,8 @@ module.exports = {
 		});
 	},
 
-	updateStation: (stationId, cb) => {
+	updateStation: function(stationId, cb) {
+		let _this = this;
 		async.waterfall([
 
 			(next) => {
@@ -164,6 +176,9 @@ module.exports = {
 
 			(station, next) => {
 				if (!station) return next('Station not found');
+				if (station.type === 'official') {
+					_this.calculateOfficialPlaylistList(station._id, station.playlist, ()=>{});
+				}
 				cache.hset('stations', stationId, station, (err) => {
 					if (err) return next(err);
 					next(null, station);
@@ -174,6 +189,32 @@ module.exports = {
 			if (err && err !== true) cb(err);
 			cb(null, station);
 		});
+	},
+
+	calculateOfficialPlaylistList: (stationId, songList, cb) => {
+		let lessInfoPlaylist = [];
+
+		function getSongInfo(index) {
+			if (songList.length > index) {
+				songs.getSong(songList[index], (err, song) => {
+					if (!err && song) {
+						let newSong = {
+							_id: song._id,
+							title: song.title,
+							artists: song.artists,
+							duration: song.duration
+						};
+						lessInfoPlaylist.push(newSong);
+					}
+					getSongInfo(index + 1);
+				})
+			} else {
+				cache.hset("officialPlaylists", stationId, cache.schemas.officialPlaylist(stationId, lessInfoPlaylist), () => {
+					cb();
+				});
+			}
+		}
+		getSongInfo(0);
 	},
 
 	skipStation: function(stationId) {

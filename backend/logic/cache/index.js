@@ -16,6 +16,7 @@ const lib = {
 		session: require('./schemas/session'),
 		station: require('./schemas/station'),
 		playlist: require('./schemas/playlist'),
+		officialPlaylist: require('./schemas/officialPlaylist'),
 		song: require('./schemas/song')
 	},
 

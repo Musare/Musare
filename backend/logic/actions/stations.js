@@ -133,15 +133,13 @@ module.exports = {
 
 	getPlaylist: (session, stationId, cb) => {
 		stations.getStation(stationId, (err, station) => {
-			let playlist = [];
-
-			for (let s = 0; s < station.playlist.length; s++) {
-				songs.getSong(station.playlist[s], (err, song) => {
-					playlist.push(song);
-				});
-			}
-
-			cb({ status: 'success', data: playlist });
+			if (err) return cb({ status: 'failure', message: 'Something went wrong when getting the station.' });
+			if (station.type === 'official') {
+				cache.hget("officialPlaylists", stationId, (err, playlist) => {
+					if (err) return cb({ status: 'failure', message: 'Something went wrong when getting the playlist.' });
+					cb({ status: 'success', data: playlist.songs })
+				})
+			} else cb({ status: 'failure', message: 'This is not an official station.' })
 		});
 	},
 
