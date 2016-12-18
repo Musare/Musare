@@ -1,39 +1,37 @@
 <template>
-	<div class='columns is-mobile'>
-		<div class='column is-8-desktop is-offset-2-desktop is-12-mobile'>
-			<table class='table is-striped'>
-				<thead>
-					<tr>
-						<td>Thumbnail</td>
-						<td>Title</td>
-						<td>YouTube ID</td>
-						<td>Artists</td>
-						<td>Genres</td>
-						<td>Requested By</td>
-						<td>Options</td>
-					</tr>
-				</thead>
-				<tbody>
-					<tr v-for='(index, song) in songs' track-by='$index'>
-						<td>
-							<img class='song-thumbnail' :src='song.thumbnail' onerror="this.src='/assets/notes-transparent.png'">
-						</td>
-						<td>
-							<strong>{{ song.title }}</strong>
-						</td>
-						<td>{{ song._id }}</td>
-						<td>{{ song.artists.join(', ') }}</td>
-						<td>{{ song.genres.join(', ') }}</td>
-						<td>{{ song.requestedBy }}</td>
-						<td>
-							<a class='button is-primary' href='#' @click='edit(song, index)'>Edit</a>
-							<a class='button is-success' href='#' @click='add(song)'>Add</a>
-							<a class='button is-danger' href='#' @click='remove(song._id, index)'>Remove</a>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
+	<div class='container'>
+		<table class='table is-striped'>
+			<thead>
+				<tr>
+					<td>Thumbnail</td>
+					<td>Title</td>
+					<td>YouTube ID</td>
+					<td>Artists</td>
+					<td>Genres</td>
+					<td>Requested By</td>
+					<td>Options</td>
+				</tr>
+			</thead>
+			<tbody>
+				<tr v-for='(index, song) in songs' track-by='$index'>
+					<td>
+						<img class='song-thumbnail' :src='song.thumbnail' onerror="this.src='/assets/notes-transparent.png'">
+					</td>
+					<td>
+						<strong>{{ song.title }}</strong>
+					</td>
+					<td>{{ song._id }}</td>
+					<td>{{ song.artists.join(', ') }}</td>
+					<td>{{ song.genres.join(', ') }}</td>
+					<td>{{ song.requestedBy }}</td>
+					<td>
+						<a class='button is-primary' href='#' @click='edit(song, index)'>Edit</a>
+						<a class='button is-success' href='#' @click='add(song)'>Add</a>
+						<a class='button is-danger' href='#' @click='remove(song._id, index)'>Remove</a>
+					</td>
+				</tr>
+			</tbody>
+		</table>
 	</div>
 	<edit-song v-show='isEditActive'></edit-song>
 </template>

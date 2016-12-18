@@ -1,38 +1,36 @@
 <template>
-	<div class='columns is-mobile'>
-		<div class='column is-8-desktop is-offset-2-desktop is-12-mobile'>
-			<table class='table is-striped'>
-				<thead>
-					<tr>
-						<td>Song ID</td>
-						<td>Created By</td>
-						<td>Created At</td>
-						<td>Description</td>
-						<td>Options</td>
-					</tr>
-				</thead>
-				<tbody>
-					<tr v-for='(index, report) in reports' track-by='$index'>
-						<td>
-							<span>{{ report.songId }}</span>
-						</td>
-						<td>
-							<span>{{ report.createdBy }}</span>
-						</td>
-						<td>
-							<span>{{ report.createdAt }}</span>
-						</td>
-						<td>
-							<span>{{ report.description }}</span>
-						</td>
-						<td>
-							<a class='button is-warning' href='#' @click='toggleModal(report)'>Issues</a>
-							<a class='button is-primary' href='#' @click='resolve(report._id)'>Resolve</a>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
+	<div class='container'>
+		<table class='table is-striped'>
+			<thead>
+				<tr>
+					<td>Song ID</td>
+					<td>Created By</td>
+					<td>Created At</td>
+					<td>Description</td>
+					<td>Options</td>
+				</tr>
+			</thead>
+			<tbody>
+				<tr v-for='(index, report) in reports' track-by='$index'>
+					<td>
+						<span>{{ report.songId }}</span>
+					</td>
+					<td>
+						<span>{{ report.createdBy }}</span>
+					</td>
+					<td>
+						<span>{{ report.createdAt }}</span>
+					</td>
+					<td>
+						<span>{{ report.description }}</span>
+					</td>
+					<td>
+						<a class='button is-warning' href='#' @click='toggleModal(report)'>Issues</a>
+						<a class='button is-primary' href='#' @click='resolve(report._id)'>Resolve</a>
+					</td>
+				</tr>
+			</tbody>
+		</table>
 	</div>
 
 	<issues-modal v-if='isModalActive'></issues-modal>
