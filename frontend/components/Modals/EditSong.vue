@@ -14,18 +14,18 @@
 							</p>
 						</form>
 						<p class='control has-addons'>
-							<a class='button' @click='$parent.video.settings("pause")' v-if='!$parent.video.paused' href='#'>
+							<button class='button' @click='$parent.settings("pause")' v-if='!$parent.video.paused'>
 								<i class='material-icons'>pause</i>
-							</a>
-							<a class='button' @click='$parent.video.settings("play")' v-if='$parent.video.paused' href='#'>
+							</button>
+							<button class='button' @click='$parent.settings("play")' v-if='$parent.video.paused'>
 								<i class='material-icons'>play_arrow</i>
-							</a>
-							<a class='button' @click='$parent.video.settings("stop")' href='#'>
+							</button>
+							<button class='button' @click='$parent.settings("stop")'>
 								<i class='material-icons'>stop</i>
-							</a>
-							<a class='button' @click='$parent.video.settings("skipToLast10Secs")' href='#'>
+							</button>
+							<button class='button' @click='$parent.settings("skipToLast10Secs")'>
 								<i class='material-icons'>fast_forward</i>
-							</a>
+							</button>
 						</p>
 					</div>
 				</div>
@@ -66,7 +66,7 @@
 						<div>
 							<p class='control has-addons'>
 								<input class='input' id='new-artist' type='text' placeholder='Artist'>
-								<a class='button is-info' @click='$parent.addTag("artists")' href='#'>Add Artist</a>
+								<button class='button is-info' @click='$parent.addTag("artists")'>Add Artist</button>
 							</p>
 							<span class='tag is-info' v-for='(index, artist) in $parent.editing.song.artists' track-by='$index'>
 								{{ artist }}
@@ -76,7 +76,7 @@
 						<div>
 							<p class='control has-addons'>
 								<input class='input' id='new-genre' type='text' placeholder='Genre'>
-								<a class='button is-info' @click='$parent.addTag("genres")' href='#'>Add Genre</a>
+								<button class='button is-info' @click='$parent.addTag("genres")'>Add Genre</button>
 							</p>
 							<span class='tag is-info' v-for='(index, genre) in $parent.editing.song.genres' track-by='$index'>
 								{{ genre }}
@@ -96,13 +96,17 @@
 
 			</section>
 			<footer class='modal-card-foot'>
-				<a class='button is-success' @click='$parent.save($parent.editing.song)' href='#'>
+				<button class='button is-success' @click='$parent.save($parent.editing.song, false)'>
 					<i class='material-icons save-changes'>done</i>
 					<span>&nbsp;Save</span>
-				</a>
-				<a class='button is-danger' @click='$parent.toggleModal()' href='#'>
-					<span>&nbsp;Cancel</span>
-				</a>
+				</button>
+				<button class='button is-success' @click='$parent.save($parent.editing.song, true)'>
+					<i class='material-icons save-changes'>done</i>
+					<span>&nbsp;Save and close</span>
+				</button>
+				<button class='button is-danger' @click='$parent.toggleModal()'>
+					<span>&nbsp;Close</span>
+				</button>
 			</footer>
 		</div>
 	</div>
