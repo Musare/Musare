@@ -91,10 +91,12 @@
 						Toast.methods.addToast(`You have successfully registered.`, 4000);
 						setTimeout(() => {
 							if (result.SID) {
-								let date = new Date();
-								date.setTime(new Date().getTime() + (2 * 365 * 24 * 60 * 60 * 1000));
-								document.cookie = `SID=${result.SID}; expires=${date.toGMTString()}; path=/`;
-								location.reload();
+								lofig.get('cookie', cookie => {
+									let date = new Date();
+									date.setTime(new Date().getTime() + (2 * 365 * 24 * 60 * 60 * 1000));
+									document.cookie = `SID=${result.SID}; expires=${date.toGMTString()}; domain=${cookie.domain}; secure=${cookie.secure}; path=/`;
+									location.reload();
+								}
 							} else _this.$router.go('/login');
 						}, 4000);
 					} else Toast.methods.addToast(result.message, 8000);
@@ -105,12 +107,14 @@
 				let _this = this;
 				this.socket.emit('users.login', email, password, result => {
 					if (result.status === 'success') {
-						let date = new Date();
-						date.setTime(new Date().getTime() + (2 * 365 * 24 * 60 * 60 * 1000));
-						document.cookie = `SID=${result.SID}; expires=${date.toGMTString()}; path=/`;
-						Toast.methods.addToast(`You have been successfully logged in`, 2000);
-						_this.$router.go('/');
-						location.reload();
+						lofig.get('cookie', cookie => {
+							let date = new Date();
+							date.setTime(new Date().getTime() + (2 * 365 * 24 * 60 * 60 * 1000));
+							document.cookie = `SID=${result.SID}; expires=${date.toGMTString()}; domain=${cookie.domain}; secure=${cookie.secure}; path=/`;
+							Toast.methods.addToast(`You have been successfully logged in`, 2000);
+							_this.$router.go('/');
+							location.reload();
+						});
 					} else Toast.methods.addToast(result.message, 2000);
 				});
 			},
@@ -164,72 +168,72 @@
 
 	.tooltip {
 		position: relative;
-		
-		&:after {
-			position: absolute;
-			min-width: 80px;
-			margin-left: -75%;
-			text-align: center;
-			padding: 7.5px 6px;
-			border-radius: 2px;
-			background-color: #323232;
-			font-size: .9em;
-			color: #fff;
-			content: attr(data-tooltip);
-			opacity: 0;
-			transition: all .2s ease-in-out .1s;
-			visibility: hidden;
-		}
-		
-		&:hover:after {
-			opacity: 1;
-			visibility: visible;
-		}
+
+	&:after {
+		 position: absolute;
+		 min-width: 80px;
+		 margin-left: -75%;
+		 text-align: center;
+		 padding: 7.5px 6px;
+		 border-radius: 2px;
+		 background-color: #323232;
+		 font-size: .9em;
+		 color: #fff;
+		 content: attr(data-tooltip);
+		 opacity: 0;
+		 transition: all .2s ease-in-out .1s;
+		 visibility: hidden;
+	 }
+
+	&:hover:after {
+		 opacity: 1;
+		 visibility: visible;
+	 }
 	}
 
 	.tooltip-top {
-		&:after {
-			bottom: 150%;
-		}
+	&:after {
+		 bottom: 150%;
+	 }
 
-		&:hover {
-			&:after { bottom: 120%; }
-		}
+	&:hover {
+	&:after { bottom: 120%; }
+	}
 	}
 
 
 	.tooltip-bottom {
-		&:after {
-			top: 155%;
-		}
+	&:after {
+		 top: 155%;
+	 }
 
-		&:hover {
-			&:after { top: 125%; }
-		}
+	&:hover {
+	&:after { top: 125%; }
+	}
 	}
 
 	.tooltip-left {
-		&:after {
-			bottom: -10px;
-			right: 130%;
-			min-width: 100px;
-		}
+	&:after {
+		 bottom: -10px;
+		 right: 130%;
+		 min-width: 100px;
+	 }
 
-		&:hover {
-			&:after { right: 110%; }
-		}
+	&:hover {
+	&:after { right: 110%; }
+	}
 	}
 
 	.tooltip-right {
-		&:after {
-			bottom: -10px;
-			left: 190%;
-			min-width: 100px;
-		}
+	&:after {
+		 bottom: -10px;
+		 left: 190%;
+		 min-width: 100px;
+	 }
 
-		&:hover {
-			&:after { left: 200%; }
-		}
+	&:hover {
+	&:after { left: 200%; }
+	}
 	}
 
 	.button:focus, .button:active { border-color: #dbdbdb !important; }

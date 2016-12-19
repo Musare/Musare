@@ -1,9 +1,10 @@
 {
-	"socket": {
-		"url": ""
-	},
 	"recaptcha": {
 		"key": ""
 	},
-  	"serverDomain": ""
+  	"serverDomain": "",
+  	"cookie": {
+		"domain": "",
+		"secure": false
+	}
 }

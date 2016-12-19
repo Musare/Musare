@@ -77,7 +77,9 @@ const lib = {
 									let sessionId = utils.guid();
 									cache.hset('sessions', sessionId, cache.schemas.session(sessionId, user._id), err => {
 										if (err) return redirectOnErr(res, err.message);
-										res.cookie('SID', sessionId);
+										let date = new Date();
+										date.setTime(new Date().getTime() + (2 * 365 * 24 * 60 * 60 * 1000));
+										res.cookie('SID', sessionId, {expires: date, secure: config.get("cookie.secure"), path: "/", domain: config.get("cookie.domain")});
 										res.redirect(`${config.get('domain')}/`);
 									});
 								});
@@ -115,7 +117,9 @@ const lib = {
 												let sessionId = utils.guid();
 												cache.hset('sessions', sessionId, cache.schemas.session(sessionId, user._id), err => {
 													if (err) return redirectOnErr(res, err.message);
-													res.cookie('SID', sessionId);
+													let date = new Date();
+													date.setTime(new Date().getTime() + (2 * 365 * 24 * 60 * 60 * 1000));
+													res.cookie('SID', sessionId, {expires: date, secure: config.get("cookie.secure"), path: "/", domain: config.get("cookie.domain")});
 													res.redirect(`${config.get('domain')}/`);
 												});
 											});
