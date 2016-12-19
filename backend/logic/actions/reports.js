@@ -131,7 +131,7 @@ module.exports = {
 			}
 
 		], (err, report) => {
-			if (err) return cb({ 'status': 'failure', 'message': 'Something went wrong'});
+			if (err) return cb({ 'status': 'failure', 'message': 'Something went wrong' });
 			else {
 				cache.pub('report.create', report);
 				return cb({ 'status': 'success', 'message': 'Successfully created report' });

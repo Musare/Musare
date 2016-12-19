@@ -67,6 +67,9 @@
 				_this.socket.emit('news.index', res => {
 					_this.news = res.data;
 				});
+				_this.socket.on('event:admin.news.created', news => {
+					_this.news.unshift(news);
+				});
 			});
 		}
 	}

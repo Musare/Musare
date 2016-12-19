@@ -27,6 +27,12 @@
 						<span>&nbsp;Reports</span>
 					</a>
 				</li>
+				<li :class='{ "is-active": currentTab == "news" }' @click='showTab("news")'>
+					<a>
+						<i class="material-icons">chrome_reader_mode</i>
+						<span>&nbsp;News</span>
+					</a>
+				</li>
 			</ul>
 		</div>
 
@@ -34,6 +40,7 @@
 		<songs v-if='currentTab == "songs"'></songs>
 		<stations v-if='currentTab == "stations"'></stations>
 		<reports v-if='currentTab == "reports"'></reports>
+		<news v-if='currentTab == "news"'></news>
 	</div>
 </template>
 
@@ -45,9 +52,18 @@
 	import Songs from '../Admin/Songs.vue';
 	import Stations from '../Admin/Stations.vue';
 	import Reports from '../Admin/Reports.vue';
+	import News from '../Admin/News.vue';
 
 	export default {
-		components: { MainHeader, MainFooter, QueueSongs, Songs, Stations, Reports },
+		components: {
+			MainHeader,
+			MainFooter,
+			QueueSongs,
+			Songs,
+			Stations,
+			Reports,
+			News
+		},
 		data() {
 			return {
 				currentTab: 'queueSongs'
