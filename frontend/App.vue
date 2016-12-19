@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<h1 v-if="!socketConnected" class="socketNotConnected">Could not connect to the server.</h1>
+		<h1 v-if="!socketConnected" class="alert">Could not connect to the server.</h1>
 		<router-view></router-view>
 		<toast></toast>
 		<what-is-new></what-is-new>
@@ -96,7 +96,7 @@
 									date.setTime(new Date().getTime() + (2 * 365 * 24 * 60 * 60 * 1000));
 									document.cookie = `SID=${result.SID}; expires=${date.toGMTString()}; domain=${cookie.domain}; secure=${cookie.secure}; path=/`;
 									location.reload();
-								}
+								});
 							} else _this.$router.go('/login');
 						}, 4000);
 					} else Toast.methods.addToast(result.message, 8000);
@@ -154,7 +154,7 @@
 		left: 0;
 	}
 
-	.socketNotConnected {
+	.alert {
 		padding: 20px;
 		color: white;
 		background-color: red;

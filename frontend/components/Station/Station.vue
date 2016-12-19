@@ -122,7 +122,8 @@
 				station: {},
 				skipVotes: 0,
 				privatePlaylistQueueSelected: null,
-				automaticallyRequestedSongId: null
+				automaticallyRequestedSongId: null,
+				systemDifference: 0
 			}
 		},
 		methods: {
@@ -163,7 +164,7 @@
 									local.player.seekTo(local.timeBeforePause / 1000, true);
 									local.player.pauseVideo();
 								}
-								if (event.data === 2 && !local.paused && !local.noSong && (local.getTimeElapsed() / 1000) < local.currentSong.duration) {
+								if (event.data === 2 && !local.paused && !local.noSong && (local.player.getDuration() / 1000) < local.currentSong.duration) {
 									local.player.seekTo(local.getTimeElapsed() / 1000 + local.currentSong.skipDuration, true);
 									local.player.playVideo();
 								}
@@ -174,7 +175,7 @@
 			},
 			getTimeElapsed: function() {
 				let local = this;
-				if (local.currentSong) return Date.now() - local.startedAt - local.timePaused;
+				if (local.currentSong) return Date.now2() - local.startedAt - local.timePaused;
 				else return 0;
 			},
 			playVideo: function() {
@@ -199,18 +200,19 @@
 			},
 			formatTime: function(duration) {
 				let d = moment.duration(duration, 'seconds');
+				if (duration < 0) return "0:00";
 				return ((d.hours() > 0) ? (d.hours() < 10 ? ("0" + d.hours() + ":") : (d.hours() + ":")) : "") + (d.minutes() + ":") + (d.seconds() < 10 ? ("0" + d.seconds()) : d.seconds());
 			},
 			calculateTimeElapsed: function() {
 				let local = this;
-				let currentTime = Date.now();
+				let currentTime = Date.now2();
 
 				if (local.currentTime !== undefined && local.paused) {
-					local.timePaused += (Date.now() - local.currentTime);
+					local.timePaused += (Date.now2() - local.currentTime);
 					local.currentTime = undefined;
 				}
 
-				let duration = (Date.now() - local.startedAt - local.timePaused) / 1000;
+				let duration = (Date.now2() - local.startedAt - local.timePaused) / 1000;
 				let songDuration = local.currentSong.duration;
 				if (songDuration <= duration) local.player.pauseVideo();
 				if ((!local.paused) && duration <= songDuration) local.timeElapsed = local.formatTime(duration);
@@ -356,11 +358,32 @@
 					_this.socket.emit('stations.getPlaylist', _this.stationId, res => {
 				 		if (res.status == 'success') _this.songsList = res.data;
 				 	});
+					// UNIX client time before ping
+					let beforePing = Date.now();
+					_this.socket.emit('apis.ping', res => {
+						// UNIX client time after ping
+						let afterPing = Date.now();
+						// Average time in MS it took between the server responding and the client receiving
+						let connectionLatency = (afterPing - beforePing) / 2;
+						console.log(connectionLatency, beforePing - afterPing);
+						// UNIX server time
+						let serverDate = res.date;
+						// Difference between the server UNIX time and the client UNIX time after ping, with the connectionLatency added to the server UNIX time
+						let difference = (serverDate + connectionLatency) - afterPing;
+						console.log("Difference: ", difference);
+						if (difference > 3000 || difference < -3000) {
+							console.log("System time difference is bigger than 3 seconds.");
+						}
+						_this.systemDifference = difference;
+					});
 				});
 			}
 		},
 		ready: function() {
 			let _this = this;
+			Date.now2 = function() {
+				return new Date().getTime() + _this.systemDifference;
+			};
 			_this.stationId = _this.$route.params.id;
 			window.stationInterval = 0;
 

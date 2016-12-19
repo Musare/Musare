@@ -15,7 +15,8 @@ const notifications = require('./logic/notifications');
 const config = require('config');
 
 process.on('uncaughtException', err => {
-	console.log(`ERROR: ${err}`);
+	//console.log(`ERROR: ${err.message}`);
+	console.log(`ERROR: ${err.stack}`);
 });
 
 async.waterfall([
