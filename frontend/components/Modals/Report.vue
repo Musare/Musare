@@ -213,13 +213,8 @@
 <style type='scss' scoped>
 	h6 { margin-bottom: 15px; }
 
-	.song-types {
-		margin-right: 0;
-	}
-
-	.song-type:first-of-type {
-		padding-left: 0;
-	}
+	.song-type:first-of-type { padding-left: 0; }
+	.song-type:last-of-type { padding-right: 0; }
 
 	.media-content {
 		display: flex;

@@ -48,6 +48,10 @@ module.exports = {
 			utils.socketJoinRoom(session.socketId, `admin.${page}`);
 		}
 		cb({});
-	})
+	}),
+
+	ping: (session, cb) => {
+		cb({date: Date.now()});
+	}
 
 };

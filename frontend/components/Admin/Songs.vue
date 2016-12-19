@@ -1,38 +1,36 @@
 <template>
-	<div class='columns is-mobile'>
-		<div class='column is-8-desktop is-offset-2-desktop is-12-mobile'>
-			<table class='table is-striped'>
-				<thead>
-					<tr>
-						<td>Thumbnail</td>
-						<td>Title</td>
-						<td>YouTube ID</td>
-						<td>Artists</td>
-						<td>Genres</td>
-						<td>Requested By</td>
-						<td>Options</td>
-					</tr>
-				</thead>
-				<tbody>
-					<tr v-for='(index, song) in songs' track-by='$index'>
-						<td>
-							<img class='song-thumbnail' :src='song.thumbnail' onerror="this.src='/assets/notes-transparent.png'">
-						</td>
-						<td>
-							<strong>{{ song.title }}</strong>
-						</td>
-						<td>{{ song._id }}</td>
-						<td>{{ song.artists.join(', ') }}</td>
-						<td>{{ song.genres.join(', ') }}</td>
-						<td>{{ song.requestedBy }}</td>
-						<td>
-							<a class='button is-primary' href='#' @click='edit(song, index)'>Edit</a>
-							<a class='button is-danger' href='#' @click='remove(song._id, index)'>Remove</a>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
+	<div class='container'>
+		<table class='table is-striped'>
+			<thead>
+				<tr>
+					<td>Thumbnail</td>
+					<td>Title</td>
+					<td>YouTube ID</td>
+					<td>Artists</td>
+					<td>Genres</td>
+					<td>Requested By</td>
+					<td>Options</td>
+				</tr>
+			</thead>
+			<tbody>
+				<tr v-for='(index, song) in songs' track-by='$index'>
+					<td>
+						<img class='song-thumbnail' :src='song.thumbnail' onerror="this.src='/assets/notes-transparent.png'">
+					</td>
+					<td>
+						<strong>{{ song.title }}</strong>
+					</td>
+					<td>{{ song._id }}</td>
+					<td>{{ song.artists.join(', ') }}</td>
+					<td>{{ song.genres.join(', ') }}</td>
+					<td>{{ song.requestedBy }}</td>
+					<td>
+						<button class='button is-primary' @click='edit(song, index)'>Edit</button>
+						<button class='button is-danger' @click='remove(song._id, index)'>Remove</button>
+					</td>
+				</tr>
+			</tbody>
+		</table>
 	</div>
 	<edit-song v-show='isEditActive'></edit-song>
 </template>
@@ -56,29 +54,31 @@
 				video: {
 					player: null,
 					paused: false,
-					settings: function (type) {
-						switch(type) {
-							case 'stop':
-								this.player.stopVideo();
-								this.paused = true;
-								break;
-							case 'pause':
-								this.player.pauseVideo();
-								this.paused = true;
-								break;
-							case 'play':
-								this.player.playVideo();
-								this.paused = false;
-								break;
-							case 'skipToLast10Secs':
-								this.player.seekTo(this.player.getDuration() - 10);
-								break;
-						}
-					}
+					playerReady: false
 				}
 			}
 		},
 		methods: {
+			settings: function (type) {
+				let _this = this;
+				switch(type) {
+					case 'stop':
+						_this.video.player.stopVideo();
+						_this.video.paused = true;
+						break;
+					case 'pause':
+						_this.video.player.pauseVideo();
+						_this.video.paused = true;
+						break;
+					case 'play':
+						_this.video.player.playVideo();
+						_this.video.paused = false;
+						break;
+					case 'skipToLast10Secs':
+						_this.video.player.seekTo((_this.editing.song.duration - 10) + _this.editing.song.skipDuration);
+						break;
+				}
+			},
 			changeVolume: function() {
 				let local = this;
 				let volume = $("#volumeSlider").val();
@@ -88,7 +88,7 @@
 			},
 			toggleModal: function () {
 				this.isEditActive = !this.isEditActive;
-				this.video.settings('stop');
+				this.settings('stop');
 			},
 			addTag: function (type) {
 				if (type == 'genres') {
@@ -113,7 +113,7 @@
 			},
 			edit: function (song, index) {
 				if (this.video.player) {
-					this.video.player.loadVideoById(song._id);
+					this.video.player.loadVideoById(song._id, this.editing.song.skipDuration);
 					let songCopy = {};
 					for (let n in song) {
 						songCopy[n] = song[n];
@@ -122,11 +122,22 @@
 					this.isEditActive = true;
 				}
 			},
-			save: function (song) {
+			save: function (song, close) {
 				let _this = this;
 				this.socket.emit('songs.update', song._id, song, function (res) {
-					if (res.status == 'success' || res.status == 'error') Toast.methods.addToast(res.message, 2000);
-					_this.toggleModal();
+					Toast.methods.addToast(res.message, 4000);
+					if (res.status === 'success') {
+						_this.songs.forEach((lSong) => {
+							if (song._id === lSong._id) {
+								for (let n in song) {
+									lSong[n] = song[n];
+								}
+							}
+						});
+					}
+					if (close) {
+						_this.toggleModal();
+					}
 				});
 			},
 			remove: function (id, index) {
@@ -163,26 +174,48 @@
 				});
 			});
 
+			setInterval(() => {
+				if (_this.video.paused === false && _this.playerReady && _this.video.player.getCurrentTime() - _this.editing.song.skipDuration > _this.editing.song.duration) {
+					_this.video.paused = false;
+					_this.video.player.stopVideo();
+				}
+			}, 200);
+
 			this.video.player = new YT.Player('player', {
 				height: 315,
 				width: 560,
 				videoId: this.editing.song._id,
 				playerVars: { controls: 0, iv_load_policy: 3, rel: 0, showinfo: 0 },
+				startSeconds: _this.editing.song.skipDuration,
 				events: {
 					'onReady': () => {
 						let volume = parseInt(localStorage.getItem("volume"));
 						volume = (typeof volume === "number") ? volume : 20;
+						_this.video.player.seekTo(_this.editing.song.skipDuration);
 						_this.video.player.setVolume(volume);
 						if (volume > 0) _this.video.player.unMute();
+						_this.playerReady = true;
 					},
 					'onStateChange': event => {
-						if (event.data == 1) {
+						if (event.data === 1) {
+							_this.video.paused = false;
 							let youtubeDuration = _this.video.player.getDuration();
 							youtubeDuration -= _this.editing.song.skipDuration;
 							if (_this.editing.song.duration > youtubeDuration) {
 								this.video.player.stopVideo();
+								_this.video.paused = true;
 								Toast.methods.addToast("Video can't play. Specified duration is bigger than the YouTube song duration.", 4000);
+							} else if (_this.editing.song.duration <= 0) {
+								this.video.player.stopVideo();
+								_this.video.paused = true;
+								Toast.methods.addToast("Video can't play. Specified duration has to be more than 0 seconds.", 4000);
 							}
+
+							if (_this.video.player.getCurrentTime() < _this.editing.song.skipDuration) {
+								_this.video.player.seekTo(10);
+							}
+						} else if (event.data === 2) {
+							this.video.paused = true;
 						}
 					}
 				}

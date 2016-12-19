@@ -72,6 +72,7 @@ module.exports = {
 						if (station.currentSong) {
 							let timeLeft = ((station.currentSong.duration * 1000) - (Date.now() - station.startedAt - station.timePaused));
 							if (isNaN(timeLeft)) timeLeft = -1;
+							timeLeft = Math.floor(timeLeft);
 							if (station.currentSong.duration * 1000 < timeLeft || timeLeft < 0) {
 								this.skipStation(station._id)((err, station) => {
 									cb(err, station);
@@ -427,8 +428,10 @@ module.exports = {
 										cache.hget('sessions', session.sessionId, (err, session) => {
 											if (!err && session) {
 												db.models.user.findOne({_id: session.userId}, (err, user) => {
-													if (user.role === 'admin') socket.emit("event:station.nextSong", station._id, station.currentSong);
-													else if (station.type === "community" && station.owner === session.userId) socket.emit("event:station.nextSong", station._id, station.currentSong);
+													if (!err && user) {
+														if (user.role === 'admin') socket.emit("event:station.nextSong", station._id, station.currentSong);
+														else if (station.type === "community" && station.owner === session.userId) socket.emit("event:station.nextSong", station._id, station.currentSong);
+													}
 												});
 											}
 										});

@@ -195,12 +195,19 @@ module.exports = {
 
 	getOwnSongRatings: hooks.loginRequired(function(session, songId, cb, userId) {
 		db.models.user.findOne({_id: userId}, (err, user) => {
-			return cb({
-				status: 'success',
-				songId: songId,
-				liked: (user.liked.indexOf(songId) !== -1),
-				disliked: (user.disliked.indexOf(songId) !== -1)
-			});
+			if (!err && user) {
+				return cb({
+					status: 'success',
+					songId: songId,
+					liked: (user.liked.indexOf(songId) !== -1),
+					disliked: (user.disliked.indexOf(songId) !== -1)
+				});
+			} else {
+				return cb({
+					status: 'failure',
+					message: 'You are not logged in.'
+				});
+			}
 		});
 	})
 

@@ -113,9 +113,13 @@ module.exports = {
 			},
 			
 			(next) => {
+				let issues = [];
+
 				for (let r = 0; r < data.issues.length; r++) {
-					if (data.issues[r].reasons.length === 0) data.issues.splice(r, 1);
+					if (!data.issues[r].reasons.length <= 0) issues.push(data.issues[r]);
 				}
+
+				data.issues = issues;
 
 				next();
 			},

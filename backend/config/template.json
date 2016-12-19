@@ -32,5 +32,9 @@
 	},
   	"mongo": {
 	  	"url": "mongodb://mongo:27017/musare"
+	},
+  	"cookie": {
+	  	"domain": "",
+	  	"secure": false
 	}
 }
