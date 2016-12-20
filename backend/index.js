@@ -6,6 +6,7 @@ const async = require('async');
 
 const db = require('./logic/db');
 const app = require('./logic/app');
+const api = require('./logic/api');
 const io = require('./logic/io');
 const stations = require('./logic/stations');
 const songs = require('./logic/songs');
@@ -48,6 +49,9 @@ async.waterfall([
 
 	// setup the playlists
 	(next) => playlists.init(next),
+
+	// setup the API
+	(next) => api.init(next),
 
 	// setup the frontend for local setups
 	(next) => {

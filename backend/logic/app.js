@@ -34,8 +34,6 @@ const lib = {
 		app.use(cors(corsOptions));
 		app.options('*', cors(corsOptions));
 
-		api(app);
-
 		let oauth2 = new OAuth2(
 			config.get('apis.github.client'),
 			config.get('apis.github.secret'),
