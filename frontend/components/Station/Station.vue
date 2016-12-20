@@ -43,7 +43,8 @@
 						<div class="columns is-mobile">
 							<form style="margin-top: 12px; margin-bottom: 0;" action="#" class="column is-7-desktop is-4-mobile">
 								<p class='volume-slider-wrapper'>
-									<i class="material-icons">volume_down</i>
+									<i class="material-icons" @click='toggleMute()' v-if='muted'>volume_mute</i>
+									<i class="material-icons" @click='toggleMute()' v-else>volume_down</i>
 									<input type="range" id="volumeSlider" min="0" max="100" class="active" v-on:change="changeVolume()" v-on:input="changeVolume()">
 									<i class="material-icons">volume_up</i>
 								</p>
@@ -100,6 +101,7 @@
 				player: undefined,
 				timePaused: 0,
 				paused: false,
+				muted: false,
 				timeElapsed: '0:00',
 				liked: false,
 				disliked: false,
@@ -269,6 +271,14 @@
 					if (data.status !== 'success') Toast.methods.addToast(`Error: ${data.message}`, 8000);
 					else Toast.methods.addToast('Successfully paused the station.', 4000);
 				});
+			},
+			toggleMute: function () {
+				if (this.playerReady) {
+					let volume = this.player.getVolume() <= 0 ? 20 : 0;
+					this.muted = !this.muted;
+					$("#volumeSlider").val(volume);
+					this.player.setVolume(volume);
+				}
 			},
 			toggleLike: function() {
 				let _this = this;
@@ -557,6 +567,8 @@
 		display: flex;
 		align-items: center;
 	}
+
+	.material-icons { cursor: pointer; }
 
 	.stationDisplayName {
 		color: white !important;
