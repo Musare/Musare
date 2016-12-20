@@ -177,7 +177,7 @@
 			},
 			getTimeElapsed: function() {
 				let local = this;
-				if (local.currentSong) return Date.now2() - local.startedAt - local.timePaused;
+				if (local.currentSong) return Date.currently() - local.startedAt - local.timePaused;
 				else return 0;
 			},
 			playVideo: function() {
@@ -207,14 +207,14 @@
 			},
 			calculateTimeElapsed: function() {
 				let local = this;
-				let currentTime = Date.now2();
+				let currentTime = Date.currently();
 
 				if (local.currentTime !== undefined && local.paused) {
-					local.timePaused += (Date.now2() - local.currentTime);
+					local.timePaused += (Date.currently() - local.currentTime);
 					local.currentTime = undefined;
 				}
 
-				let duration = (Date.now2() - local.startedAt - local.timePaused) / 1000;
+				let duration = (Date.currently() - local.startedAt - local.timePaused) / 1000;
 				let songDuration = local.currentSong.duration;
 				if (songDuration <= duration) local.player.pauseVideo();
 				if ((!local.paused) && duration <= songDuration) local.timeElapsed = local.formatTime(duration);
@@ -400,7 +400,7 @@
 		},
 		ready: function() {
 			let _this = this;
-			Date.now2 = function() {
+			Date.currently = () => {
 				return new Date().getTime() + _this.systemDifference;
 			};
 			_this.stationId = _this.$route.params.id;
