@@ -1,6 +1,6 @@
 'use strict';
 
-function twoDigits(num) {
+let twoDigits = (num) => {
 	return (num < 10) ? '0' + num : num;
 }
 
