@@ -113,7 +113,7 @@
 				});
 			},
 			addChange: function (type) {
-				let change = $(`#new-${type}`).val().toLowerCase().trim();
+				let change = $(`#new-${type}`).val().trim();
 
 				if (this.news[type].indexOf(change) !== -1) return Toast.methods.addToast(`Tag already exists`, 3000);
 

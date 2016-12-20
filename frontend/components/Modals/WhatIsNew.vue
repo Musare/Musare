@@ -51,7 +51,7 @@
 		},
 		ready: function () {
 			let _this = this;
-			io.getSocket((socket) => {
+			io.getSocket(true, (socket) => {
 				_this.socket = socket;
 				_this.socket.emit('news.newest', res => {
 					_this.news = res.data;
