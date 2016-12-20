@@ -10,6 +10,7 @@ const cache = require('../cache');
 const utils = require('../utils');
 const hooks = require('./hooks');
 const sha256 = require('sha256');
+const logger = require('../logger');
 
 cache.sub('user.updateUsername', user => {
 	utils.socketsFromUser(user._id, sockets => {
@@ -29,7 +30,7 @@ module.exports = {
 
 			// check if a user with the requested identifier exists
 			(next) => db.models.user.findOne({
-				$or: [{ 'username': identifier }, { 'email.address': identifier }]
+				$or: [{ 'email.address': identifier }]
 			}, next),
 
 			// if the user doesn't exist, respond with a failure
@@ -65,11 +66,13 @@ module.exports = {
 
 			// log this error somewhere
 			if (err && err !== true) {
-				if (typeof err === "string") return cb({ status: 'error', message: err });
-				else if (err.message) return cb({ status: 'error', message: err.message });
-				else return cb({ status: 'error', message: 'An error occurred.' });
+				let error = 'An error occurred.';
+				if (typeof err === "string") error = err;
+				else if (err.message) error = err.message;
+				logger.log("USER_PASSWORD_LOGIN", "ERROR", "Login failed with password for user " + identifier + '. "' + error + '"');
+				return cb({ status: 'failure', message: error });
 			}
-
+			logger.log("USER_PASSWORD_LOGIN", "SUCCESS", "Login successful with password for user " + identifier);
 			cb(payload);
 		});
 
@@ -144,15 +147,17 @@ module.exports = {
 		], (err, payload) => {
 			// log this error somewhere
 			if (err && err !== true) {
-				if (typeof err === "string") return cb({ status: 'error', message: err });
-				else if (err.message) return cb({ status: 'error', message: err.message });
-				else return cb({ status: 'error', message: 'An error occurred.' });
+				let error = 'An error occurred.';
+				if (typeof err === "string") error = err;
+				else if (err.message) error = err.message;
+				logger.log("USER_PASSWORD_REGISTER", "ERROR", "Register failed with password for user. " + '"' + error + '"');
 			} else {
 				module.exports.login(session, email, password, (result) => {
 					let obj = {status: 'success', message: 'Successfully registered.'};
 					if (result.status === 'success') {
 						obj.SID = result.SID;
 					}
+					logger.log("USER_PASSWORD_REGISTER", "SUCCESS", "Register successful with password for user '" + username + "'.");
 					cb(obj);
 				});
 			}
@@ -163,10 +168,18 @@ module.exports = {
 	logout: (session, cb) => {
 
 		cache.hget('sessions', session.sessionId, (err, session) => {
-			if (err || !session) return cb({ 'status': 'failure', message: 'Something went wrong while logging you out.' });
+			if (err || !session) {
+				//TODO Properly return err message
+				logger.log("USER_LOGOUT", "ERROR", "Logout failed. Couldn't get session.");
+				return cb({ 'status': 'failure', message: 'Something went wrong while logging you out.' });
+			}
 
 			cache.hdel('sessions', session.sessionId, (err) => {
-				if (err) return cb({ 'status': 'failure', message: 'Something went wrong while logging you out.' });
+				if (err) {
+					logger.log("USER_LOGOUT", "ERROR", "Logout failed. Failed deleting session from cache.");
+					return cb({ 'status': 'failure', message: 'Something went wrong while logging you out.' });
+				}
+				logger.log("USER_LOGOUT", "SUCCESS", "Logout successful.");
 				return cb({ 'status': 'success', message: 'You have been successfully logged out.' });
 			});
 		});
@@ -175,14 +188,19 @@ module.exports = {
 
 	findByUsername: (session, username, cb) => {
 		db.models.user.find({ username }, (err, account) => {
-			if (err) throw err;
+			if (err) {
+				logger.log("FIND_BY_USERNAME", "ERROR", "Find by username failed for username '" + username + "'. Mongo error.");
+				throw err;
+			}
 			else if (account.length == 0) {
+				logger.log("FIND_BY_USERNAME", "ERROR", "User not found for username '" + username + "'.");
 				return cb({
 					status: 'error',
 					message: 'Username cannot be found'
 				});
 			} else {
 				account = account[0];
+				logger.log("FIND_BY_USERNAME", "SUCCESS", "User found for username '" + username + "'.");
 				return cb({
 					status: 'success',
 					data: {
@@ -204,10 +222,20 @@ module.exports = {
 	//TODO Fix security issues
 	findBySession: (session, cb) => {
 		cache.hget('sessions', session.sessionId, (err, session) => {
-			if (err) return cb({ 'status': 'error', message: err });
-			if (!session) return cb({ 'status': 'error', message: 'You are not logged in' });
+			if (err) {
+				logger.log("FIND_BY_SESSION", "ERROR", "Failed getting session. Redis error. '" + err + "'.");
+				return cb({ 'status': 'error', message: err.message });
+			}
+			if (!session) {
+				logger.log("FIND_BY_SESSION", "ERROR", "Session not found. Not logged in.");
+				return cb({ 'status': 'error', message: 'You are not logged in' });
+			}
 			db.models.user.findOne({ _id: session.userId }, {username: 1, "email.address": 1}, (err, user) => {
-				if (err) { throw err; } else if (user) {
+				if (err) {
+					logger.log("FIND_BY_SESSION", "ERROR", "User not found. Failed getting user. Mongo error.");
+					throw err;
+				} else if (user) {
+					logger.log("FIND_BY_SESSION", "SUCCESS", "User found. '" + user.username + "'.");
 					return cb({
 						status: 'success',
 						data: user
@@ -220,51 +248,91 @@ module.exports = {
 
 	updateUsername: hooks.loginRequired((session, newUsername, cb, userId) => {
 		db.models.user.findOne({ _id: userId }, (err, user) => {
-			if (err) console.error(err);
-			if (!user) return cb({ status: 'error', message: 'User not found' });
-			if (user.username !== newUsername) {
+			if (err) {
+				logger.log("UPDATE_USERNAME", "ERROR", `Failed getting user. Mongo error. '${err.message}'.`);
+				return cb({ status: 'error', message: 'Something went wrong.' });
+			} else if (!user) {
+				logger.log("UPDATE_USERNAME", "ERROR", `User not found. '${userId}'`);
+				return cb({ status: 'error', message: 'User not found' });
+			} else if (user.username !== newUsername) {
 				if (user.username.toLowerCase() !== newUsername.toLowerCase()) {
 					db.models.user.findOne({ username: new RegExp(`^${newUsername}$`, 'i') }, (err, _user) => {
-						if (err) return cb({ status: 'error', message: err.message });
-						if (_user) return cb({ status: 'failure', message: 'That username is already in use' });
+						if (err) {
+							logger.log("UPDATE_USERNAME", "ERROR", `Failed to get other user with the same username. Mongo error. '${err.message}'`);
+							return cb({ status: 'error', message: err.message });
+						}
+						if (_user) {
+							logger.log("UPDATE_USERNAME", "ERROR", `Username already in use.`);
+							return cb({ status: 'failure', message: 'That username is already in use' });
+						}
 						db.models.user.update({ _id: userId }, { $set: { username: newUsername } }, (err) => {
-							if (err) return cb({ status: 'error', message: err.message });
+							if (err) {
+								logger.log("UPDATE_USERNAME", "ERROR", `Couldn't update user. Mongo error. '${err.message}'`);
+								return cb({ status: 'error', message: err.message });
+							}
 							cache.pub('user.updateUsername', {
 								username: newUsername,
 								_id: userId
 							});
+							logger.log("UPDATE_USERNAME", "SUCCESS", `Updated username. '${userId}' '${newUsername}'`);
 							cb({ status: 'success', message: 'Username updated successfully' });
 						});
 					});
 				} else {
 					db.models.user.update({ _id: userId }, { $set: { username: newUsername } }, (err) => {
-						if (err) return cb({ status: 'error', message: err.message });
+						if (err) {
+							logger.log("UPDATE_USERNAME", "ERROR", `Couldn't update user. Mongo error. '${err.message}'`);
+							return cb({ status: 'error', message: err.message });
+						}
 						cache.pub('user.updateUsername', {
 							username: newUsername,
 							_id: userId
 						});
+						logger.log("UPDATE_USERNAME", "SUCCESS", `Updated username. '${userId}' '${newUsername}'`);
 						cb({ status: 'success', message: 'Username updated successfully' });
 					});
 				}
-			} else cb({ status: 'error', message: 'Your new username cannot be the same as your old username' });
+			} else {
+				logger.log("UPDATE_USERNAME", "ERROR", `New username is the same as the old username. '${newUsername}'`);
+				cb({ status: 'error', message: 'Your new username cannot be the same as your old username' });
+			}
 		});
 	}),
 
 	updateEmail: hooks.loginRequired((session, newEmail, cb, userId) => {
 		newEmail = newEmail.toLowerCase();
 		db.models.user.findOne({ _id: userId }, (err, user) => {
-			if (err) console.error(err);
-			if (!user) return cb({ status: 'error', message: 'User not found.' });
-			if (user.email.address !== newEmail) {
+			if (err) {
+				logger.log("UPDATE_EMAIL", "ERROR", `Failed getting user. Mongo error. '${err.message}'.`);
+				return cb({ status: 'error', message: 'Something went wrong.' });
+			} else if (!user) {
+				logger.log("UPDATE_EMAIL", "ERROR", `User not found. '${userId}'`);
+				return cb({ status: 'error', message: 'User not found.' });
+			} else if (user.email.address !== newEmail) {
 				db.models.user.findOne({"email.address": newEmail}, (err, _user) => {
-					if (err) return cb({ status: 'error', message: err.message });
-					if (_user) return cb({ status: 'failure', message: 'That email is already in use.' });
+					if (err) {
+						logger.log("UPDATE_EMAIL", "ERROR", `Couldn't get other user with new email. Mongo error. '${newEmail}'`);
+						return cb({ status: 'error', message: err.message });
+					} else if (_user) {
+						logger.log("UPDATE_EMAIL", "ERROR", `Email already in use.`);
+						return cb({ status: 'failure', message: 'That email is already in use.' });
+					}
 					db.models.user.update({_id: userId}, {$set: {"email.address": newEmail}}, (err) => {
-						if (err) return cb({ status: 'error', message: err.message });
+						if (err) {
+							logger.log("UPDATE_EMAIL", "ERROR", `Couldn't update user. Mongo error. ${err.message}`);
+							return cb({ status: 'error', message: err.message });
+						}
+						logger.log("UPDATE_EMAIL", "SUCCESS", `Updated email. '${userId}' ${newEmail}'`);
 						cb({ status: 'success', message: 'Email updated successfully.' });
 					});
 				});
-			} else cb({ status: 'error', message: 'Email has not changed. Your new email cannot be the same as your old email.' });
+			} else {
+				logger.log("UPDATE_EMAIL", "ERROR", `New email is the same as the old email.`);
+				cb({
+					status: 'error',
+					message: 'Email has not changed. Your new email cannot be the same as your old email.'
+				});
+			}
 		});
 	})
 

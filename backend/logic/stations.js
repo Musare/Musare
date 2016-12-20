@@ -438,7 +438,7 @@ module.exports = {
 									}
 								}
 							}
-
+							console.log(Date.now(), station._id, station.currentSong !== null && station.currentSong._id !== undefined, station.currentSong !== null, station.currentSong._id !== undefined);
 							if (station.currentSong !== null && station.currentSong._id !== undefined) {
 								utils.socketsJoinSongRoom(utils.getRoomSockets(`station.${station._id}`), `song.${station.currentSong._id}`);
 								if (!station.paused) {
