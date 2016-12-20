@@ -46,7 +46,7 @@
 									<i class="material-icons" @click='toggleMute()' v-if='muted'>volume_mute</i>
 									<i class="material-icons" @click='toggleMute()' v-else>volume_down</i>
 									<input type="range" id="volumeSlider" min="0" max="100" class="active" v-on:change="changeVolume()" v-on:input="changeVolume()">
-									<i class="material-icons">volume_up</i>
+									<i class="material-icons" @click='toggleMaxVolume()'>volume_up</i>
 								</p>
 							</form>
 							<div class="column is-8-mobile is-5-desktop" style="float: right;">
@@ -274,8 +274,17 @@
 			},
 			toggleMute: function () {
 				if (this.playerReady) {
-					let volume = this.player.getVolume() <= 0 ? 20 : 0;
+					let previousVolume = parseInt(localStorage.getItem("volume"));
+					let volume = this.player.getVolume() <= 0 ? previousVolume : 0;
 					this.muted = !this.muted;
+					$("#volumeSlider").val(volume);
+					this.player.setVolume(volume);
+				}
+			},
+			toggleMaxVolume: function () {
+				if (this.playerReady) {
+					let previousVolume = parseInt(localStorage.getItem("volume"));
+					let volume = this.player.getVolume() <= previousVolume ? 100 : previousVolume;
 					$("#volumeSlider").val(volume);
 					this.player.setVolume(volume);
 				}
