@@ -1,18 +1,17 @@
 'use strict';
 
-// This file contains all the logic for Express
-
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const config = require('config');
 const request = require('request');
-const cache = require('./cache');
-const db = require('./db');
-let utils;
 const OAuth2 = require('oauth').OAuth2;
 
+const api = require('./api');
+const cache = require('./cache');
+const db = require('./db');
 
+let utils;
 
 const lib = {
 
@@ -34,6 +33,8 @@ const lib = {
 
 		app.use(cors(corsOptions));
 		app.options('*', cors(corsOptions));
+
+		api(app);
 
 		let oauth2 = new OAuth2(
 			config.get('apis.github.client'),
@@ -134,6 +135,8 @@ const lib = {
 		});
 
 		cb();
+
+
 	}
 };
 

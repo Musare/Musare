@@ -31,7 +31,7 @@ async.waterfall([
 	// setup our MongoDB database
 	(next) => db.init(config.get("mongo").url, next),
 
-	// setup the express server (not used right now, but may be used for OAuth stuff later, or for an API)
+	// setup the express server
 	(next) => app.init(next),
 
 	// setup the socket.io server (all client / server communication is done over this)
