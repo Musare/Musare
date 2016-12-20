@@ -1,107 +1,102 @@
 <template>
-	<div class='modal is-active'>
-		<div class='modal-background'></div>
-		<div class='modal-card'>
-			<header class='modal-card-head'>
-				<p class='modal-card-title'>Report</p>
-				<button class='delete' @click='$parent.modals.report = !$parent.modals.report'></button>
-			</header>
-			<section class='modal-card-body'>
-				<div class='columns song-types'>
-					<div class='column song-type' v-if='$parent.previousSong !== null'>
-						<div class='card is-fullwidth' :class="{ 'is-highlight-active': isPreviousSongActive }" @click="highlight('previousSong')">
-							<header class='card-header'>
-								<p class='card-header-title'>
-									Previous Song
-								</p>
-							</header>
-							<div class='card-content'>
-								<article class='media'>
-									<figure class='media-left'>
-										<p class='image is-64x64'>
-											<img :src='$parent.previousSong.thumbnail' onerror='this.src="/assets/notes-transparent.png"'>
-										</p>
-									</figure>
-									<div class='media-content'>
-										<div class='content'>
-											<p>
-												<strong>{{ $parent.previousSong.title }}</strong>
-												<br>
-												<small>{{ $parent.previousSong.artists.split(' ,') }}</small>
-											</p>
-										</div>
-									</div>
-								</article>
-							</div>
-							<a @click=highlight('previousSong') href='#' class='absolute-a'></a>
-						</div>
-					</div>
-					<div class='column song-type' v-if='$parent.currentSong !== {}'>
-						<div class='card is-fullwidth'  :class="{ 'is-highlight-active': isCurrentSongActive }" @click="highlight('currentSong')">
-							<header class='card-header'>
-								<p class='card-header-title'>
-									Current Song
-								</p>
-							</header>
-							<div class='card-content'>
-								<article class='media'>
-									<figure class='media-left'>
-										<p class='image is-64x64'>
-											<img :src='$parent.currentSong.thumbnail' onerror='this.src="/assets/notes-transparent.png"'>
-										</p>
-									</figure>
-									<div class='media-content'>
-										<div class='content'>
-											<p>
-												<strong>{{ $parent.currentSong.title }}</strong>
-												<br>
-												<small>{{ $parent.currentSong.artists.split(' ,') }}</small>
-											</p>
-										</div>
-									</div>
-								</article>
-							</div>
-							<a @click=highlight('currentSong') href='#' class='absolute-a'></a>
-						</div>
-					</div>
-				</div>
-				<div class='edit-report-wrapper'>
-					<div class='columns is-multiline'>
-						<div class='column is-half' v-for='issue in issues'>
-							<label class='label'>{{ issue.name }}</label>
-							<p class='control' v-for='reason in issue.reasons' track-by='$index'>
-								<label class='checkbox'>
-									<input type='checkbox' @click='toggleIssue(issue.name, reason)'>
-									{{ reason }}
-								</label>
+	<modal title='Report'>
+		<div slot='body'>
+			<div class='columns song-types'>
+				<div class='column song-type' v-if='$parent.previousSong !== null'>
+					<div class='card is-fullwidth' :class="{ 'is-highlight-active': isPreviousSongActive }" @click="highlight('previousSong')">
+						<header class='card-header'>
+							<p class='card-header-title'>
+								Previous Song
 							</p>
+						</header>
+						<div class='card-content'>
+							<article class='media'>
+								<figure class='media-left'>
+									<p class='image is-64x64'>
+										<img :src='$parent.previousSong.thumbnail' onerror='this.src="/assets/notes-transparent.png"'>
+									</p>
+								</figure>
+								<div class='media-content'>
+									<div class='content'>
+										<p>
+											<strong>{{ $parent.previousSong.title }}</strong>
+											<br>
+											<small>{{ $parent.previousSong.artists.split(' ,') }}</small>
+										</p>
+									</div>
+								</div>
+							</article>
 						</div>
-						<div class='column'>
-							<label class='label'>Other</label>
-							<textarea class='textarea' maxlength='400' placeholder='Any other details...' @keyup='updateCharactersRemaining()' v-model='report.description'></textarea>
-							<div class='textarea-counter'>{{ charactersRemaining }}</div>
-						</div>
+						<a @click=highlight('previousSong') href='#' class='absolute-a'></a>
 					</div>
 				</div>
-			</section>
-			<footer class='modal-card-foot'>
-				<a class='button is-success' @click='create()' href='#'>
-					<i class='material-icons save-changes'>done</i>
-					<span>&nbsp;Create</span>
-				</a>
-				<a class='button is-danger' @click='$parent.modals.report = !$parent.modals.report' href='#'>
-					<span>&nbsp;Cancel</span>
-				</a>
-			</footer>
+				<div class='column song-type' v-if='$parent.currentSong !== {}'>
+					<div class='card is-fullwidth'  :class="{ 'is-highlight-active': isCurrentSongActive }" @click="highlight('currentSong')">
+						<header class='card-header'>
+							<p class='card-header-title'>
+								Current Song
+							</p>
+						</header>
+						<div class='card-content'>
+							<article class='media'>
+								<figure class='media-left'>
+									<p class='image is-64x64'>
+										<img :src='$parent.currentSong.thumbnail' onerror='this.src="/assets/notes-transparent.png"'>
+									</p>
+								</figure>
+								<div class='media-content'>
+									<div class='content'>
+										<p>
+											<strong>{{ $parent.currentSong.title }}</strong>
+											<br>
+											<small>{{ $parent.currentSong.artists.split(' ,') }}</small>
+										</p>
+									</div>
+								</div>
+							</article>
+						</div>
+						<a @click=highlight('currentSong') href='#' class='absolute-a'></a>
+					</div>
+				</div>
+			</div>
+			<div class='edit-report-wrapper'>
+				<div class='columns is-multiline'>
+					<div class='column is-half' v-for='issue in issues'>
+						<label class='label'>{{ issue.name }}</label>
+						<p class='control' v-for='reason in issue.reasons' track-by='$index'>
+							<label class='checkbox'>
+								<input type='checkbox' @click='toggleIssue(issue.name, reason)'>
+								{{ reason }}
+							</label>
+						</p>
+					</div>
+					<div class='column'>
+						<label class='label'>Other</label>
+						<textarea class='textarea' maxlength='400' placeholder='Any other details...' @keyup='updateCharactersRemaining()' v-model='report.description'></textarea>
+						<div class='textarea-counter'>{{ charactersRemaining }}</div>
+					</div>
+				</div>
+			</div>
 		</div>
-	</div>
+		<div slot='footer'>
+			<a class='button is-success' @click='create()' href='#'>
+				<i class='material-icons save-changes'>done</i>
+				<span>&nbsp;Create</span>
+			</a>
+			<a class='button is-danger' @click='$parent.modals.report = !$parent.modals.report' href='#'>
+				<span>&nbsp;Cancel</span>
+			</a>
+		</div>
+	</modal>
 </template>
 
 <script>
 	import { Toast } from 'vue-roaster';
+	import Modal from './Modal.vue';
 	import io from '../../io';
 
 	export default {
+		components: { Modal },
 		data() {
 			return {
 				charactersRemaining: 400,
