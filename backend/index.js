@@ -67,6 +67,7 @@ async.waterfall([
 	if (err && err !== true) {
 		console.error('An error occurred while initializing the backend server');
 		console.error(err);
+		process.exit();
 	} else {
 		console.info('Backend server has been successfully started');
 	}

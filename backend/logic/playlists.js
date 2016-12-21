@@ -14,6 +14,23 @@ module.exports = {
 	init: cb => {
 		async.waterfall([
 			(next) => {
+				cache.hgetall('playlists', next);
+			},
+
+			(playlists, next) => {
+				if (!playlists) return next();
+				let playlistIds = Object.keys(playlists);
+				async.each(playlistIds, (playlistId, next) => {
+					db.models.playlist.findOne({_id: playlistId}, (err, playlist) => {
+						if (err) next(err);
+						else if (!playlist) {
+							cache.hdel('playlists', playlistId, next);
+						}
+					});
+				}, next);
+			},
+
+			(next) => {
 				db.models.playlist.find({}, next);
 			},
 

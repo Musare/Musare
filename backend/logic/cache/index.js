@@ -83,9 +83,13 @@ const lib = {
 	 * @param {Boolean} [parseJson=true] - attempt to parse returned data as JSON
 	 */
 	hget: (table, key, cb, parseJson = true) => {
+		if (!key || !table) return cb(null, null);
 		lib.client.hget(table, key, (err, value) => {
 			if (err) return typeof cb === 'function' ? cb(err) : null;
-			if (parseJson) try { value = JSON.parse(value); } catch (e) {}
+			if (parseJson) try {
+				value = JSON.parse(value);
+			} catch (e) {
+			}
 			if (typeof cb === 'function') cb(null, value);
 		});
 	},
@@ -98,6 +102,7 @@ const lib = {
 	 * @param {Function} cb - gets called when the value has been deleted from Redis or when it returned an error
 	 */
 	hdel: (table, key, cb) => {
+		if (!key || !table) return cb(null, null);
 		lib.client.hdel(table, key, (err) => {
 			if (err) return typeof cb === 'function' ? cb(err) : null;
 			if (typeof cb === 'function') cb(null);
@@ -112,6 +117,7 @@ const lib = {
 	 * @param {Boolean} [parseJson=true] - attempts to parse all values as JSON by default
 	 */
 	hgetall: (table, cb, parseJson = true) => {
+		if (!table) return cb(null, null);
 		lib.client.hgetall(table, (err, obj) => {
 			if (err) return typeof cb === 'function' ? cb(err) : null;
 			if (parseJson && obj) Object.keys(obj).forEach((key) => { try { obj[key] = JSON.parse(obj[key]); } catch (e) {} });

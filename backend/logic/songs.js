@@ -20,6 +20,7 @@ module.exports = {
 			},
 
 			(songs, next) => {
+				if (!songs) return next();
 				let songIds = Object.keys(songs);
 				async.each(songIds, (songId, next) => {
 					db.models.song.findOne({_id: songId}, (err, song) => {
