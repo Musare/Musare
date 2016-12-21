@@ -78,14 +78,12 @@ module.exports = {
 			if (err) {
 				console.log(`FAILED TO INITIALIZE STATIONS. ABORTING. "${err.message}"`);
 				process.exit();
-			} else {
-				cb();
-			}
+			} else cb();
 		});
 	},
 
 	initializeStation: function(stationId, cb) {
-		if (typeof cb !== 'function') cb = ()=>{};
+		if (typeof cb !== 'function') cb = () => {};
 		async.waterfall([
 			(next) => {
 				this.getStation(stationId, next);
@@ -107,13 +105,12 @@ module.exports = {
 					this.calculateOfficialPlaylistList(stationId, station.playlist, () => {
 						next(station);
 					});
-				} else next();
+				} else next(station);
 			},
 
 			(station, next) => {
-				if (!station.paused ) {
-
-				} else {
+				if (!station.paused) next(true, station);
+				else {
 					notifications.unschedule(`stations.nextSong?id${station._id}`);
 					next(true, station);
 				}
@@ -136,7 +133,7 @@ module.exports = {
 					this.skipStation(station._id)(next);
 				}
 			}
-		], (err, station) => {
+		], (station, err) => {
 			if (err && err !== true) {
 				let error = 'An error occurred.';
 				if (typeof err === "string") error = err;

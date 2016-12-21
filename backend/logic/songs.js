@@ -23,11 +23,10 @@ module.exports = {
 				if (!songs) return next();
 				let songIds = Object.keys(songs);
 				async.each(songIds, (songId, next) => {
-					db.models.song.findOne({_id: songId}, (err, song) => {
+					db.models.song.findOne({ _id: songId }, (err, song) => {
 						if (err) next(err);
-						else if (!song) {
-							cache.hdel('songs', songId, next);
-						}
+						else if (!song) cache.hdel('songs', songId, next);
+						else next();
 					});
 				}, next);
 			},
@@ -45,9 +44,7 @@ module.exports = {
 			if (err) {
 				console.log(`FAILED TO INITIALIZE SONGS. ABORTING. "${err.message}"`);
 				process.exit();
-			} else {
-				cb();
-			}
+			} else cb();
 		});
 	},
 
