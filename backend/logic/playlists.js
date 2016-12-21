@@ -24,7 +24,7 @@ module.exports = {
 			}
 		], (err) => {
 			if (err) {
-				console.log("FAILED TO INITIALIZE PLAYLISTS. ABORTING.");
+				console.log(`FAILED TO INITIALIZE PLAYLISTS. ABORTING. "${err.message}"`);
 				process.exit();
 			} else {
 				cb();
@@ -40,6 +40,21 @@ module.exports = {
 	 */
 	getPlaylist: (playlistId, cb) => {
 		async.waterfall([
+			(next) => {
+				cache.hgetall('playlists', next);
+			},
+
+			(playlists) => {
+				let playlistIds = Object.keys(playlists);
+				async.each(playlistIds, (playlistId, next) => {
+					db.models.playlist.findOne({_id: playlistId}, (err, playlist) => {
+						if (err) next(err);
+						else if (!playlist) {
+							cache.hdel('playlists', playlistId, next);
+						}
+					});
+				}, next);
+			},
 
 			(next) => {
 				cache.hget('playlists', playlistId, next);
@@ -52,8 +67,7 @@ module.exports = {
 
 			(playlist, next) => {
 				if (playlist) {
-					cache.hset('playlists', playlistId, playlist);
-					next(true, playlist);
+					cache.hset('playlists', playlistId, playlist, next);
 				} else next('Playlist not found');
 			},
 
@@ -85,6 +99,29 @@ module.exports = {
 			if (err && err !== true) cb(err);
 			cb(null, playlist);
 		});
-	}
+	},
 
+	/**
+	 * Deletes playlist from id from Mongo and cache
+	 *
+	 * @param {String} playlistId - the id of the playlist we are trying to delete
+	 * @param {Function} cb - gets called when an error occurred or when the operation was successful
+	 */
+	deleteSong: (playlistId, cb) => {
+		async.waterfall([
+
+			(next) => {
+				db.models.playlist.remove({ _id: playlistId }, next);
+			},
+
+			(next) => {
+				cache.hdel('playlists', playlistId, next);
+			}
+
+		], (err) => {
+			if (err && err !== true) cb(err);
+
+			cb(null);
+		});
+	}
 };
