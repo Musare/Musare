@@ -376,6 +376,7 @@ let lib = {
 	}),*/
 
 	remove: hooks.loginRequired((session, _id, cb, userId) => {
+		console.log(_id, userId);
 		db.models.playlist.remove({ _id, createdBy: userId }).exec(err => {
 			if (err) return cb({ status: 'failure', message: 'Something went wrong when removing the playlist.'});
 			cache.hdel('playlists', _id, () => {

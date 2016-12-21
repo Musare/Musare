@@ -26,6 +26,7 @@ module.exports = {
 						else if (!playlist) {
 							cache.hdel('playlists', playlistId, next);
 						}
+						else next();
 					});
 				}, next);
 			},
@@ -61,7 +62,7 @@ module.exports = {
 				cache.hgetall('playlists', next);
 			},
 
-			(playlists) => {
+			(playlists, next) => {
 				let playlistIds = Object.keys(playlists);
 				async.each(playlistIds, (playlistId, next) => {
 					db.models.playlist.findOne({_id: playlistId}, (err, playlist) => {
@@ -69,6 +70,7 @@ module.exports = {
 						else if (!playlist) {
 							cache.hdel('playlists', playlistId, next);
 						}
+						else next();
 					});
 				}, next);
 			},
