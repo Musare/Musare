@@ -69,7 +69,7 @@ const lib = {
 		lib.client.hset(table, key, value, err => {
 			if (cb !== undefined) {
 				if (err) return cb(err);
-				cb(null, value);
+				cb(null, JSON.parse(value));
 			}
 		});
 	},
