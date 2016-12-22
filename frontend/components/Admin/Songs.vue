@@ -1,5 +1,7 @@
 <template>
 	<div class='container'>
+		<input type='text' class='input' v-model='searchQuery' placeholder='Search for Songs'>
+		<br /><br />
 		<table class='table is-striped'>
 			<thead>
 				<tr>
@@ -13,7 +15,7 @@
 				</tr>
 			</thead>
 			<tbody>
-				<tr v-for='(index, song) in songs' track-by='$index'>
+				<tr v-for='(index, song) in filteredSongs' track-by='$index'>
 					<td>
 						<img class='song-thumbnail' :src='song.thumbnail' onerror="this.src='/assets/notes-transparent.png'">
 					</td>
@@ -56,6 +58,11 @@
 					paused: false,
 					playerReady: false
 				}
+			}
+		},
+		computed: {
+			filteredSongs: function () {
+				return this.$eval('songs | filterBy searchQuery');
 			}
 		},
 		methods: {
