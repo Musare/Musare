@@ -151,6 +151,14 @@
 
 				_this.socket.emit('news.create', _this.creating, result => {
 					Toast.methods.addToast(result.message, 4000);
+						if (result.status == 'success') _this.creating = {
+						title: '',
+						description: '',
+						bugs: [],
+						features: [],
+						improvements: [],
+						upcoming: []
+					}
 				});
 			},
 			removeNews: function (news) {
