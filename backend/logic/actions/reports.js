@@ -60,6 +60,12 @@ cache.sub('report.create', report => {
 
 module.exports = {
 
+	/**
+	 * Gets all reports
+	 *
+	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {Function} cb - gets called with the result
+	 */
 	index: hooks.adminRequired((session, cb) => {
 
 		async.waterfall([
@@ -76,6 +82,14 @@ module.exports = {
 		});
 	}),
 
+	/**
+	 * Resolves a report
+	 *
+	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {String} reportId - the id of the report that is getting resolved
+	 * @param {Function} cb - gets called with the result
+	 * @param {String} userId - the userId automatically added by hooks
+	 */
 	resolve: hooks.adminRequired((session, reportId, cb, userId) => {
 		async.waterfall([
 			(next) => {
@@ -88,16 +102,24 @@ module.exports = {
 			}
 		], (err) => {
 			if (err) {
-				logger.log("REPORTS_RESOLVE", "ERROR", `Resolving report "${reportId}" failed. Mongo error. "${err.message}"`);
+				logger.log("REPORTS_RESOLVE", "ERROR", `Resolving report "${reportId}" failed by user "${userId}". Mongo error. "${err.message}"`);
 				return cb({ 'status': 'failure', 'message': 'Something went wrong'});
 			} else {
 				cache.pub('report.resolve', reportId);
-				logger.log("REPORTS_RESOLVE", "SUCCESS", `"${userId}" resolved report "${reportId}".`);
+				logger.log("REPORTS_RESOLVE", "SUCCESS", `User "${userId}" resolved report "${reportId}".`);
 				cb({ status: 'success', message: 'Successfully resolved Report' });
 			}
 		});
 	}),
 
+	/**
+	 * Creates a new report
+	 *
+	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {Object} data - the object of the report data
+	 * @param {Function} cb - gets called with the result
+	 * @param {String} userId - the userId automatically added by hooks
+	 */
 	create: hooks.loginRequired((session, data, cb, userId) => {
 		async.waterfall([
 
@@ -145,12 +167,12 @@ module.exports = {
 				let error = 'An error occurred.';
 				if (typeof err === "string") error = err;
 				else if (err.message) error = err.message;
-				logger.log("REPORTS_CREATE", "ERROR", `Creating report for "${data.songId}" failed. "${error}"`);
+				logger.log("REPORTS_CREATE", "ERROR", `Creating report for "${data.songId}" failed by user "${userId}". "${error}"`);
 				return cb({ 'status': 'failure', 'message': 'Something went wrong' });
 			}
 			else {
 				cache.pub('report.create', report);
-				logger.log("REPORTS_CREATE", "SUCCESS", `"${userId}" created report for "${data.songId}".`);
+				logger.log("REPORTS_CREATE", "SUCCESS", `User "${userId}" created report for "${data.songId}".`);
 				return cb({ 'status': 'success', 'message': 'Successfully created report' });
 			}
 		});
