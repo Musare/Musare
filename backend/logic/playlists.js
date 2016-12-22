@@ -126,7 +126,7 @@ module.exports = {
 	 * @param {String} playlistId - the id of the playlist we are trying to delete
 	 * @param {Function} cb - gets called when an error occurred or when the operation was successful
 	 */
-	deleteSong: (playlistId, cb) => {
+	deletePlaylist: (playlistId, cb) => {
 		async.waterfall([
 
 			(next) => {
