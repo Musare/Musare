@@ -21,67 +21,120 @@ cache.sub('queue.removedSong', songId => {
 
 cache.sub('queue.updatedSong', songId => {
 	//TODO Retrieve new Song object
-	utils.emitToRoom('admin.queue', 'event:song.updated', { songId });
+	utils.emitToRoom('admin.queue', 'event:queueSong.updated', { songId });
 });
 
 module.exports = {
 
+	/**
+	 * Gets all queuesongs
+	 *
+	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {Function} cb - gets called with the result
+	 */
 	index: hooks.adminRequired((session, cb) => {
-		db.models.queueSong.find({}, (err, songs) => {
-			if (err) throw err;
-			cb(songs);
-		});
-	}),
-
-	update: hooks.adminRequired((session, _id, updatedSong, cb) => {
-		//TODO Check if id and updatedSong is valid
-		db.models.queueSong.findOne({ _id }, (err, currentSong) => {
-			if (err) console.error(err);
-			// TODO Check if new id, if any, is already in use in queue or on rotation
-			let updated = false;
-			for (let prop in updatedSong) if (updatedSong[prop] !== currentSong[prop]) currentSong[prop] = updatedSong[prop]; updated = true;
-			if (!updated) return cb({ status: 'error', message: 'No properties changed' });
-			else {
-				currentSong.save(err => {
-					if (err) console.error(err);
-					return cb({ status: 'success', message: 'Successfully updated the queued song' });
-				});
+		async.waterfall([
+			(next) => {
+				db.models.queueSong.find({}, next);
 			}
+		], (err, songs) => {
+			if (err) {
+				logger.log("QUEUE_INDEX", "ERROR", `Indexing queuesongs failed. "${err.message}"`);
+				return cb({status: 'failure', message: 'Something went wrong.'});
+			}
+			logger.log("QUEUE_INDEX", "SUCCESS", `Indexing queuesongs successful.`);
+			return cb(songs);
 		});
 	}),
 
-	remove: hooks.adminRequired((session, songId, cb) => {
-		db.models.queueSong.remove({ _id: songId }, (err, res) => {
-			if (err) return cb({ status: 'failure', message: err.message });
+	/**
+	 * Updates a queuesong
+	 *
+	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {String} songId - the id of the queuesong that gets updated
+	 * @param {Object} updatedSong - the object of the updated queueSong
+	 * @param {Function} cb - gets called with the result
+	 * @param {String} userId - the userId automatically added by hooks
+	 */
+	update: hooks.adminRequired((session, songId, updatedSong, cb, userId) => {
+		async.waterfall([
+			(next) => {
+				db.models.queueSong.findOne({ songId }, next);
+			},
+
+			(song, next) => {
+				let updated = false;
+				let $set = {};
+				for (let prop in updatedSong) if (updatedSong[prop] !== song[prop]) $set[prop] = updatedSong[prop]; updated = true;
+				if (!updated) return next('No properties changed');
+				db.models.queueSong.update({ _id: songId }, {$set}, next);
+			}
+		], (err) => {
+			if (err) {
+				let error = 'An error occurred.';
+				if (typeof err === "string") error = err;
+				else if (err.message) error = err.message;
+				logger.log("QUEUE_UPDATE", "ERROR", `Updating queuesong "${songId}" failed for user ${userId}. "${err.message}"`);
+				return cb({status: 'failure', message: error});
+			}
+			cache.pub('queue.updatedSong', songId);
+			logger.log("QUEUE_UPDATE", "SUCCESS", `User "${userId}" successfully update queuesong "${songId}".`);
+			return cb({status: 'success', message: 'Successfully updated song.'});
+		});
+	}),
+
+	/**
+	 * Removes a queuesong
+	 *
+	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {String} songId - the id of the queuesong that gets removed
+	 * @param {Function} cb - gets called with the result
+	 * @param {String} userId - the userId automatically added by hooks
+	 */
+	remove: hooks.adminRequired((session, songId, cb, userId) => {
+		async.waterfall([
+			(next) => {
+				db.models.queueSong.remove({ _id: songId }, next);
+			}
+		], (err) => {
+			if (err) {
+				let error = 'An error occurred.';
+				if (typeof err === "string") error = err;
+				else if (err.message) error = err.message;
+				logger.log("QUEUE_REMOVE", "ERROR", `Removing queuesong "${songId}" failed for user ${userId}. "${err.message}"`);
+				return cb({status: 'failure', message: error});
+			}
 			cache.pub('queue.removedSong', songId);
-			cb({ status: 'success', message: 'Song was removed successfully' });
+			logger.log("QUEUE_REMOVE", "SUCCESS", `User "${userId}" successfully removed queuesong "${songId}".`);
+			return cb({status: 'success', message: 'Successfully updated song.'});
 		});
 	}),
 
+	/**
+	 * Creates a queuesong
+	 *
+	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {String} songId - the id of the song that gets added
+	 * @param {Function} cb - gets called with the result
+	 * @param {String} userId - the userId automatically added by hooks
+	 */
 	add: hooks.loginRequired((session, songId, cb, userId) => {
-		//TODO Check if id is valid
-
 		let requestedAt = Date.now();
 
 		async.waterfall([
 			(next) => {
-				db.models.queueSong.findOne({_id: songId}, (err, song) => {
-					if (err) return next('Something went wrong while getting the song from the Database.');
-					if (song) return next('This song is already in the queue.');
-					next();
-				});
+				db.models.queueSong.findOne({_id: songId}, next);
 			},
 
-			(next) => {
-				db.models.song.findOne({_id: songId}, (err, song) => {
-					if (err) return next('Something went wrong while getting the song from the Database.');
-					if (song) return next('This song has already been added.');
-					next();
-				});
+			(song, next) => {
+				if (song) return next('This song is already in the queue.');
+				db.models.song.findOne({_id: songId}, next);
 			},
 
 			// Get YouTube data from id
-			(next) => {
+			(song, next) => {
+				if (song) return next('This song has already been added.');
+				//TODO Add err object as first param of callback
 				utils.getSongFromYouTube(songId, (song) => {
 					song.artists = [];
 					song.genres = [];
@@ -94,32 +147,27 @@ module.exports = {
 				});
 			},
 			(newSong, next) => {
+				//TODO Add err object as first param of callback
 				utils.getSongFromSpotify(newSong, (song) => {
 					next(null, song);
 				});
 			},
 			(newSong, next) => {
 				const song = new db.models.queueSong(newSong);
-
-				// check if song already exists
-
 				song.save(err => {
-
-					if (err) {
-						console.error(err);
-						return next('Failed to add song to database');
-					}
-
-					//stations.getStation(station).playlist.push(newSong);
+					if (err) return next(err);
 					next(null, newSong);
 				});
 			}
-		],
-		(err, newSong) => {
-			if (err) return cb({ status: 'error', message: err });
+		], (err, newSong) => {
+			if (err) {
+				let error = 'An error occurred.';
+				if (typeof err === "string") error = err;
+				else if (err.message) error = err.message;
+				return cb({status: 'failure', message: error});
+			}
 			cache.pub('queue.newSong', newSong._id);
 			return cb({ status: 'success', message: 'Successfully added that song to the queue' });
 		});
 	})
-
 };
