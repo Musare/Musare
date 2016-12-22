@@ -201,6 +201,7 @@ let lib = {
 				return cb({ status: 'failure', message: error});
 			}
 			logger.log("PLAYLIST_GET", "SUCCESS", `Successfully got private playlist "${playlistId}" for user "${userId}".`);
+			console.log(playlist);
 			cb({
 				status: 'success',
 				data: playlist
@@ -323,7 +324,7 @@ let lib = {
 				function checkDone() {
 					if (processed === songs.length) next();
 				}
-				for (let s = 0; sif (playlist.song < songs.length; s++) {
+				for (let s = 0; s < songs.length; s++) {
 					lib.addSongToPlaylist(session, songs[s].contentDetails.videoId, playlistId, () => {
 						processed++;
 						checkDone();
@@ -368,7 +369,7 @@ let lib = {
 
 			(playlist, next) => {
 				if (!playlist || playlist.createdBy !== userId) return next('Playlist not found');
-				db.models.update({_id: playlistId}, {$pull: {songs: songId}}, next);
+				db.models.playlist.update({_id: playlistId}, {$pull: {songs: songId}}, next);
 			},
 
 			(res, next) => {
@@ -399,7 +400,7 @@ let lib = {
 	updateDisplayName: hooks.loginRequired((session, playlistId, displayName, cb, userId) => {
 		async.waterfall([
 			(next) => {
-				db.models.playlist.update({ _id: playlistId, createdBy: userId }, { $set: displayName }, next);
+				db.models.playlist.update({ _id: playlistId, createdBy: userId }, { $set: { displayName } }, next);
 			},
 
 			(res, next) => {
@@ -436,11 +437,11 @@ let lib = {
 
 			(playlist, next) => {
 				if (!playlist || playlist.createdBy !== userId) return next('Playlist not found');
-				async.each(playlist.songs, (song) => {
-					if (song._id === songId) return next(true, song);
+				async.each(playlist.songs, (song, next) => {
+					if (song._id === songId) return next(song);
 					next();
-				}, (err, song) => {
-					if (err === true) return next(null, song);
+				}, (err) => {
+					if (err && err._id) return next(null, err);
 					next('Song not found');
 				});
 			},
@@ -497,11 +498,11 @@ let lib = {
 
 			(playlist, next) => {
 				if (!playlist || playlist.createdBy !== userId) return next('Playlist not found');
-				async.each(playlist.songs, (song) => {
-					if (song._id === songId) return next(true, song);
+				async.each(playlist.songs, (song, next) => {
+					if (song._id === songId) return next(song);
 					next();
-				}, (err, song) => {
-					if (err === true) return next(null, song);
+				}, (err) => {
+					if (err && err._id) return next(null, err);
 					next('Song not found');
 				});
 			},
@@ -516,9 +517,7 @@ let lib = {
 			(song, next) => {
 				db.models.playlist.update({_id: playlistId}, {
 					$push: {
-						songs: {
-							song
-						}
+						songs: song
 					}
 				}, next);
 			},

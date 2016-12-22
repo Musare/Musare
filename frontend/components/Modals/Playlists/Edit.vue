@@ -13,11 +13,11 @@
 							<a :href='' target='_blank'>{{ song.title }}</a>
 							<div class='controls'>
 								<a href='#' @click='promoteSong(song._id)'>
-									<i class='material-icons' v-if='$index > 0' @click='promoteSong(song._id)'>keyboard_arrow_up</i>
+									<i class='material-icons' v-if='$index > 0'>keyboard_arrow_up</i>
 									<i class='material-icons' style='opacity: 0' v-else>error</i>
 								</a>
 								<a href='#' @click='demoteSong(song._id)'>
-									<i class='material-icons' v-if='playlist.songs.length - 1 !== $index' @click='demoteSong(song._id)'>keyboard_arrow_down</i>
+									<i class='material-icons' v-if='playlist.songs.length - 1 !== $index'>keyboard_arrow_down</i>
 									<i class='material-icons' style='opacity: 0' v-else>error</i>
 								</a>
 								<a href='#' @click='removeSongFromPlaylist(song._id)'><i class='material-icons'>delete</i></a>
@@ -143,8 +143,8 @@
 			removePlaylist: function () {
 				let _this = this;
 				_this.socket.emit('playlists.remove', _this.playlist._id, res => {
+					Toast.methods.addToast(res.message, 3000);
 					if (res.status === 'success') {
-						Toast.methods.addToast(res.message, 3000);
 						_this.$parent.modals.editPlaylist = !_this.$parent.modals.editPlaylist;
 					}
 				});

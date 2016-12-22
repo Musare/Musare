@@ -2,6 +2,7 @@
 
 const db = require('../db');
 const utils = require('../utils');
+const logger = require('../logger');
 const notifications = require('../notifications');
 const cache = require('../cache');
 const async = require('async');

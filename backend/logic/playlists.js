@@ -133,7 +133,7 @@ module.exports = {
 				db.models.playlist.remove({ _id: playlistId }, next);
 			},
 
-			(next) => {
+			(res, next) => {
 				cache.hdel('playlists', playlistId, next);
 			}
 
