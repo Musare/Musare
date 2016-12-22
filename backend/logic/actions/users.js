@@ -22,6 +22,14 @@ cache.sub('user.updateUsername', user => {
 
 module.exports = {
 
+	/**
+	 * Logs user in
+	 *
+	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {String} identifier - the email of the user
+	 * @param {String} password - the plaintext of the user
+	 * @param {Function} cb - gets called with the result
+	 */
 	login: (session, identifier, password, cb) => {
 
 		identifier = identifier.toLowerCase();
@@ -41,30 +49,20 @@ module.exports = {
 				bcrypt.compare(sha256(password), user.services.password.password, (err, match) => {
 
 					if (err) return next(err);
+					if (!match) return next('Incorrect password');
 
 					// if the passwords match
-					if (match) {
 
-						// store the session in the cache
-						let sessionId = utils.guid();
-						cache.hset('sessions', sessionId, cache.schemas.session(sessionId, user._id), (err) => {
-							if (!err) {
-								//TODO See if it is necessary to add new SID to socket.
-								next(null, { status: 'success', message: 'Login successful', user, SID: sessionId });
-							} else {
-								next(null, { status: 'failure', message: 'Something went wrong' });
-							}
-						});
-					}
-					else {
-						next(null, { status: 'failure', message: 'Incorrect password' });
-					}
+					// store the session in the cache
+					let sessionId = utils.guid();
+					cache.hset('sessions', sessionId, cache.schemas.session(sessionId, user._id), (err) => {
+						if (err) return next(err);
+						next(sessionId);
+					});
 				});
 			}
 
-		], (err, payload) => {
-
-			// log this error somewhere
+		], (err, sessionId) => {
 			if (err && err !== true) {
 				let error = 'An error occurred.';
 				if (typeof err === "string") error = err;
@@ -73,11 +71,21 @@ module.exports = {
 				return cb({ status: 'failure', message: error });
 			}
 			logger.log("USER_PASSWORD_LOGIN", "SUCCESS", "Login successful with password for user " + identifier);
-			cb(payload);
+			cb({ status: 'success', message: 'Login successful', user: {}, SID: sessionId });
 		});
 
 	},
 
+	/**
+	 * Registers a new user
+	 *
+	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {String} username - the username for the new user
+	 * @param {String} email - the email for the new user
+	 * @param {String} password - the plaintext password for the new user
+	 * @param {Object} recaptcha - the recaptcha data
+	 * @param {Function} cb - gets called with the result
+	 */
 	register: function(session, username, email, password, recaptcha, cb) {
 		email = email.toLowerCase();
 		async.waterfall([
@@ -141,16 +149,16 @@ module.exports = {
 			// respond with the new user
 			(newUser, next) => {
 				//TODO Send verification email
-				next(null, { status: 'success', user: newUser })
+				next();
 			}
 
-		], (err, payload) => {
-			// log this error somewhere
+		], (err) => {
 			if (err && err !== true) {
 				let error = 'An error occurred.';
 				if (typeof err === "string") error = err;
 				else if (err.message) error = err.message;
 				logger.log("USER_PASSWORD_REGISTER", "ERROR", "Register failed with password for user. " + '"' + error + '"');
+				cb({status: 'failure', message: error});
 			} else {
 				module.exports.login(session, email, password, (result) => {
 					let obj = {status: 'success', message: 'Successfully registered.'};
@@ -158,13 +166,19 @@ module.exports = {
 						obj.SID = result.SID;
 					}
 					logger.log("USER_PASSWORD_REGISTER", "SUCCESS", "Register successful with password for user '" + username + "'.");
-					cb(obj);
+					cb({status: 'success', message: 'Successfully registered.'});
 				});
 			}
 		});
 
 	},
 
+	/**
+	 * Logs out a user
+	 *
+	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {Function} cb - gets called with the result
+	 */
 	logout: (session, cb) => {
 
 		cache.hget('sessions', session.sessionId, (err, session) => {
@@ -186,6 +200,13 @@ module.exports = {
 
 	},
 
+	/**
+	 * Gets user object from username (only a few properties)
+	 *
+	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {String} username - the username of the user we are trying to find
+	 * @param {Function} cb - gets called with the result
+	 */
 	findByUsername: (session, username, cb) => {
 		db.models.user.find({ username }, (err, account) => {
 			if (err) {
@@ -220,6 +241,12 @@ module.exports = {
 	},
 
 	//TODO Fix security issues
+	/**
+	 * Gets user info from session
+	 *
+	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {Function} cb - gets called with the result
+	 */
 	findBySession: (session, cb) => {
 		cache.hget('sessions', session.sessionId, (err, session) => {
 			if (err) {
@@ -246,6 +273,14 @@ module.exports = {
 
 	},
 
+	/**
+	 * Updates a user's username
+	 *
+	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {String} newUsername - the new username
+	 * @param {Function} cb - gets called with the result
+	 * @param {String} userId - the userId automatically added by hooks
+	 */
 	updateUsername: hooks.loginRequired((session, newUsername, cb, userId) => {
 		db.models.user.findOne({ _id: userId }, (err, user) => {
 			if (err) {
@@ -299,6 +334,14 @@ module.exports = {
 		});
 	}),
 
+	/**
+	 * Updates a user's email
+	 *
+	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {String} newEmail - the new email
+	 * @param {Function} cb - gets called with the result
+	 * @param {String} userId - the userId automatically added by hooks
+	 */
 	updateEmail: hooks.loginRequired((session, newEmail, cb, userId) => {
 		newEmail = newEmail.toLowerCase();
 		db.models.user.findOne({ _id: userId }, (err, user) => {
@@ -335,5 +378,4 @@ module.exports = {
 			}
 		});
 	})
-
 };
