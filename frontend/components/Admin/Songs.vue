@@ -135,9 +135,7 @@
 							}
 						});
 					}
-					if (close) {
-						_this.toggleModal();
-					}
+					if (close) _this.toggleModal();
 				});
 			},
 			remove: function (id, index) {

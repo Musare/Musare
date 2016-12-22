@@ -16,6 +16,22 @@ cache.sub('news.create', news => {
 	});
 });
 
+cache.sub('news.remove', news => {
+	utils.socketsFromUser(news.createdBy, sockets => {
+		sockets.forEach(socket => {
+			socket.emit('event:admin.news.removed', news);
+		});
+	});
+});
+
+cache.sub('news.update', news => {
+	utils.socketsFromUser(news.createdBy, sockets => {
+		sockets.forEach(socket => {
+			socket.emit('event:admin.news.updated', news);
+		});
+	});
+});
+
 module.exports = {
 
 	index: (session, cb) => {
@@ -48,6 +64,32 @@ module.exports = {
 				cache.pub('news.create', news);
 				logger.log("NEWS_CREATE", "SUCCESS", `Creating news successful.`);
 				return cb({ 'status': 'success', 'message': 'Successfully created News' });
+			}
+		});
+	}),
+
+	remove: hooks.adminRequired((session, news, cb, userId) => {
+		db.models.news.remove({ _id: news._id }, err => {
+			if (err) {
+				logger.log("NEWS_REMOVE", "ERROR", `Creating news failed. "${err.message}"`);
+				return cb({ 'status': 'failure', 'message': 'Something went wrong' });
+			} else {
+				cache.pub('news.remove', news);
+				logger.log("NEWS_REMOVE", "SUCCESS", `Removing news successful.`);
+				return cb({ 'status': 'success', 'message': 'Successfully removed News' });
+			}
+		});
+	}),
+
+	update: hooks.adminRequired((session, _id, news, cb, userId) => {
+		db.models.news.update({ _id }, news, { upsert: true }, err => {
+			if (err) {
+				logger.log("NEWS_UPDATE", "ERROR", `Updating news failed. "${err.message}"`);
+				return cb({ 'status': 'failure', 'message': 'Something went wrong' });
+			} else {
+				cache.pub('news.update', news);
+				logger.log("NEWS_UPDATE", "SUCCESS", `Updating news successful.`);
+				return cb({ 'status': 'success', 'message': 'Successfully updated News' });
 			}
 		});
 	}),
