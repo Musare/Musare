@@ -4,6 +4,7 @@ const db = require('../db');
 const io = require('../io');
 const cache = require('../cache');
 const utils = require('../utils');
+const logger = require('../logger');
 const hooks = require('./hooks');
 const async = require('async');
 const playlists = require('../playlists');
@@ -72,18 +73,34 @@ cache.sub('playlist.updateDisplayName', res => {
 let lib = {
 
 	getFirstSong: hooks.loginRequired((session, playlistId, cb, userId) => {
-		playlists.getPlaylist(playlistId, (err, playlist) => {
-			if (err || !playlist || playlist.createdBy !== userId) return cb({ status: 'failure', message: 'Something went wrong when getting the playlist'});
+		async.waterfall([
+			(next) => {
+				playlists.getPlaylist(playlistId, next);
+			},
+
+			(playlist, next) => {
+				if (!playlist || playlist.createdBy !== userId) return next('Playlist not found.');
+				next(null, playlist.songs[0]);
+			}
+		], (err, song) => {
+			if (err) {
+				let error = 'An error occurred.';
+				if (typeof err === "string") error = err;
+				else if (err.message) error = err.message;
+				logger.log("PLAYLIST_GET_FIRST_SONG", "ERROR", `Getting the first song of playlist "${playlistId}" failed for user "${userId}". "${error}"`);
+				return cb({ status: 'failure', message: 'Something went wrong when getting the playlist'});
+			}
+			logger.log("PLAYLIST_GET_FIRST_SONG", "SUCCESS", `Successfully got the first song of playlist "${playlistId}" for user "${userId}".`);
 			cb({
 				status: 'success',
-				song: playlist.songs[0]
+				song: song
 			});
 		});
 	}),
 
 	indexForUser: hooks.loginRequired((session, cb, userId) => {
 		db.models.playlist.find({ createdBy: userId }, (err, playlists) => {
-			if (err) return cb({ status: 'failure', message: 'Something went wrong when getting the playlists'});;
+			if (err) return cb({ status: 'failure', message: 'Something went wrong when getting the playlists'});
 			cb({
 				status: 'success',
 				data: playlists

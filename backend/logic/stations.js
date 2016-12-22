@@ -242,14 +242,11 @@ module.exports = {
 
 			(station, next) => {
 				if (!station) return next('Station not found');
-				cache.hset('stations', stationId, station, (err) => {
-					if (err) return next(err);
-					next(null, station);
-				});
+				cache.hset('stations', stationId, station, next);
 			}
 
 		], (err, station) => {
-			if (err && err !== true) cb(err);
+			if (err && err !== true) return cb(err);
 			cb(null, station);
 		});
 	},
