@@ -482,6 +482,7 @@ module.exports = {
 						});
 					} else cont(song);
 					function cont(song) {
+						song.requestedBy = userId;
 						db.models.station.update({ _id: stationId }, { $push: { queue: song } }, (err) => {
 							if (err) return cb({'status': 'failure', 'message': 'Something went wrong'});
 							stations.updateStation(stationId, (err, station) => {
