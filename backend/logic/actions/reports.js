@@ -98,7 +98,11 @@ module.exports = {
 
 			(report, next) => {
 				if (!report) return next('Report not found.');
-				report.update({ _id: reportId }, next);
+				report.resolved = true;
+				report.save(err => {
+					if (err) next(err.message);
+					else next();
+				});
 			}
 		], (err) => {
 			if (err) {
