@@ -1,38 +1,33 @@
 <template>
-	<div class='modal is-active'>
-		<div class='modal-background'></div>
-		<div class='modal-card'>
-			<header class='modal-card-head'>
-				<p class='modal-card-title'>Create community station</p>
-				<button class='delete' @click='toggleModal()'></button>
-			</header>
-			<section class='modal-card-body'>
-				<!-- validation to check if exists http://bulma.io/documentation/elements/form/ -->
-				<label class='label'>Unique ID (lowercase, a-z, used in the url)</label>
-				<p class='control'>
-					<input class='input' type='text' placeholder='Name...' v-model='newCommunity._id' autofocus>
-				</p>
-				<label class='label'>Display Name</label>
-				<p class='control'>
-					<input class='input' type='text' placeholder='Display name...' v-model='newCommunity.displayName'>
-				</p>
-				<label class='label'>Description</label>
-				<p class='control'>
-					<input class='input' type='text' placeholder='Description...' v-model='newCommunity.description' @keyup.enter="submitModal()">
-				</p>
-			</section>
-			<footer class='modal-card-foot'>
-				<a class='button is-primary' @click='submitModal()'>Create</a>
-			</footer>
+	<modal title='Create Community Station'>
+		<div slot='body'>
+			<!-- validation to check if exists http://bulma.io/documentation/elements/form/ -->
+			<label class='label'>Unique ID (lowercase, a-z, used in the url)</label>
+			<p class='control'>
+				<input class='input' type='text' placeholder='Name...' v-model='newCommunity._id' autofocus>
+			</p>
+			<label class='label'>Display Name</label>
+			<p class='control'>
+				<input class='input' type='text' placeholder='Display name...' v-model='newCommunity.displayName'>
+			</p>
+			<label class='label'>Description</label>
+			<p class='control'>
+				<input class='input' type='text' placeholder='Description...' v-model='newCommunity.description' @keyup.enter="submitModal()">
+			</p>
 		</div>
-	</div>
+		<div slot='footer'>
+			<a class='button is-primary' @click='submitModal()'>Create</a>
+		</div>
+	</modal>
 </template>
 
 <script>
 	import { Toast } from 'vue-roaster';
+	import Modal from './Modal.vue';
 	import io from '../../io';
 
 	export default {
+		components: { Modal },
 		data() {
 			return {
 				newCommunity: {
@@ -50,7 +45,7 @@
 		},
 		methods: {
 			toggleModal: function () {
-				this.$dispatch('toggleModal', 'createCommunityStation');
+				this.$parent.modals.createCommunityStation = !this.$parent.modals.createCommunityStation;
 			},
 			submitModal: function () {
 				let _this = this;
@@ -71,7 +66,7 @@
 		},
 		events: {
 			closeModal: function() {
-				this.$dispatch('toggleModal', 'createCommunityStation');
+				this.$parent.modals.createCommunityStation = !this.$parent.modals.createCommunityStation;
 			}
 		}
 	}

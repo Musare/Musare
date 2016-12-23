@@ -6,7 +6,6 @@
 		<what-is-new></what-is-new>
 		<login-modal v-if='isLoginActive'></login-modal>
 		<register-modal v-if='isRegisterActive'></register-modal>
-		<create-community-station v-if='isCreateCommunityStationActive'></create-community-station>
 	</div>
 </template>
 
@@ -16,7 +15,6 @@
 	import WhatIsNew from './components/Modals/WhatIsNew.vue';
 	import LoginModal from './components/Modals/Login.vue';
 	import RegisterModal from './components/Modals/Register.vue';
-	import CreateCommunityStation from './components/Modals/CreateCommunityStation.vue';
 	import auth from './auth';
 	import io from './io';
 
@@ -39,7 +37,6 @@
 				userId: '',
 				isRegisterActive: false,
 				isLoginActive: false,
-				isCreateCommunityStationActive: false,
 				serverDomain: '',
 				socketConnected: true
 			}
@@ -126,16 +123,13 @@
 					case 'login':
 						this.isLoginActive = !this.isLoginActive;
 						break;
-					case 'createCommunityStation':
-						this.isCreateCommunityStationActive = !this.isCreateCommunityStationActive;
-						break;
 				}
 			},
 			'closeModal': function() {
 				this.$broadcast('closeModal');
 			}
 		},
-		components: { Toast, WhatIsNew, LoginModal, RegisterModal, CreateCommunityStation }
+		components: { Toast, WhatIsNew, LoginModal, RegisterModal }
 	}
 </script>
 
