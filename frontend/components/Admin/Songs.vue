@@ -1,5 +1,7 @@
 <template>
 	<div class='container'>
+		<input type='text' class='input' v-model='searchQuery' placeholder='Search for Songs'>
+		<br /><br />
 		<table class='table is-striped'>
 			<thead>
 				<tr>
@@ -13,7 +15,7 @@
 				</tr>
 			</thead>
 			<tbody>
-				<tr v-for='(index, song) in songs' track-by='$index'>
+				<tr v-for='(index, song) in filteredSongs' track-by='$index'>
 					<td>
 						<img class='song-thumbnail' :src='song.thumbnail' onerror="this.src='/assets/notes-transparent.png'">
 					</td>
@@ -32,7 +34,7 @@
 			</tbody>
 		</table>
 	</div>
-	<edit-song v-show='isEditActive'></edit-song>
+	<edit-song v-show='modals.editSong'></edit-song>
 </template>
 
 <script>
@@ -46,7 +48,7 @@
 		data() {
 			return {
 				songs: [],
-				isEditActive: false,
+				modals: { editSong: false },
 				editing: {
 					index: 0,
 					song: {}
@@ -58,87 +60,17 @@
 				}
 			}
 		},
+		computed: {
+			filteredSongs: function () {
+				return this.$eval('songs | filterBy searchQuery');
+			}
+		},
 		methods: {
-			settings: function (type) {
-				let _this = this;
-				switch(type) {
-					case 'stop':
-						_this.video.player.stopVideo();
-						_this.video.paused = true;
-						break;
-					case 'pause':
-						_this.video.player.pauseVideo();
-						_this.video.paused = true;
-						break;
-					case 'play':
-						_this.video.player.playVideo();
-						_this.video.paused = false;
-						break;
-					case 'skipToLast10Secs':
-						_this.video.player.seekTo((_this.editing.song.duration - 10) + _this.editing.song.skipDuration);
-						break;
-				}
-			},
-			changeVolume: function() {
-				let local = this;
-				let volume = $("#volumeSlider").val();
-				localStorage.setItem("volume", volume);
-				local.video.player.setVolume(volume);
-				if (volume > 0) local.video.player.unMute();
-			},
 			toggleModal: function () {
-				this.isEditActive = !this.isEditActive;
-				this.settings('stop');
-			},
-			addTag: function (type) {
-				if (type == 'genres') {
-					let genre = $('#new-genre').val().toLowerCase().trim();
-					if (this.editing.song.genres.indexOf(genre) !== -1) return Toast.methods.addToast('Genre already exists', 3000);
-					if (genre) {
-						this.editing.song.genres.push(genre);
-						$('#new-genre').val('');
-					} else Toast.methods.addToast('Genre cannot be empty', 3000);
-				} else if (type == 'artists') {
-					let artist = $('#new-artist').val();
-					if (this.editing.song.artists.indexOf(artist) !== -1) return Toast.methods.addToast('Artist already exists', 3000);
-					if ($('#new-artist').val() !== '') {
-						this.editing.song.artists.push(artist);
-						$('#new-artist').val('');
-					} else Toast.methods.addToast('Artist cannot be empty', 3000);
-				}
-			},
-			removeTag: function (type, index) {
-				if (type == 'genres') this.editing.song.genres.splice(index, 1);
-				else if (type == 'artists') this.editing.song.artists.splice(index, 1);
+				this.modals.editSong = !this.modals.editSong;
 			},
 			edit: function (song, index) {
-				if (this.video.player) {
-					this.video.player.loadVideoById(song._id, this.editing.song.skipDuration);
-					let songCopy = {};
-					for (let n in song) {
-						songCopy[n] = song[n];
-					}
-					this.editing = { index, song: songCopy };
-					this.isEditActive = true;
-				}
-			},
-			save: function (song, close) {
-				let _this = this;
-				this.socket.emit('songs.update', song._id, song, function (res) {
-					Toast.methods.addToast(res.message, 4000);
-					if (res.status === 'success') {
-						_this.songs.forEach((lSong) => {
-							if (song._id === lSong._id) {
-								for (let n in song) {
-									lSong[n] = song[n];
-								}
-							}
-						});
-					}
-					if (close) {
-						_this.toggleModal();
-					}
-				});
+				this.$broadcast('editSong', song, index, 'songs');
 			},
 			remove: function (id, index) {
 				this.socket.emit('songs.remove', id, res => {
@@ -173,56 +105,6 @@
 					_this.init();
 				});
 			});
-
-			setInterval(() => {
-				if (_this.video.paused === false && _this.playerReady && _this.video.player.getCurrentTime() - _this.editing.song.skipDuration > _this.editing.song.duration) {
-					_this.video.paused = false;
-					_this.video.player.stopVideo();
-				}
-			}, 200);
-
-			this.video.player = new YT.Player('player', {
-				height: 315,
-				width: 560,
-				videoId: this.editing.song._id,
-				playerVars: { controls: 0, iv_load_policy: 3, rel: 0, showinfo: 0 },
-				startSeconds: _this.editing.song.skipDuration,
-				events: {
-					'onReady': () => {
-						let volume = parseInt(localStorage.getItem("volume"));
-						volume = (typeof volume === "number") ? volume : 20;
-						_this.video.player.seekTo(_this.editing.song.skipDuration);
-						_this.video.player.setVolume(volume);
-						if (volume > 0) _this.video.player.unMute();
-						_this.playerReady = true;
-					},
-					'onStateChange': event => {
-						if (event.data === 1) {
-							_this.video.paused = false;
-							let youtubeDuration = _this.video.player.getDuration();
-							youtubeDuration -= _this.editing.song.skipDuration;
-							if (_this.editing.song.duration > youtubeDuration) {
-								this.video.player.stopVideo();
-								_this.video.paused = true;
-								Toast.methods.addToast("Video can't play. Specified duration is bigger than the YouTube song duration.", 4000);
-							} else if (_this.editing.song.duration <= 0) {
-								this.video.player.stopVideo();
-								_this.video.paused = true;
-								Toast.methods.addToast("Video can't play. Specified duration has to be more than 0 seconds.", 4000);
-							}
-
-							if (_this.video.player.getCurrentTime() < _this.editing.song.skipDuration) {
-								_this.video.player.seekTo(10);
-							}
-						} else if (event.data === 2) {
-							this.video.paused = true;
-						}
-					}
-				}
-			});
-			let volume = parseInt(localStorage.getItem("volume"));
-			volume = (typeof volume === "number") ? volume : 20;
-			$("#volumeSlider").val(volume);
 		}
 	}
 </script>

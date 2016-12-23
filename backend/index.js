@@ -6,6 +6,7 @@ const async = require('async');
 
 const db = require('./logic/db');
 const app = require('./logic/app');
+const api = require('./logic/api');
 const io = require('./logic/io');
 const stations = require('./logic/stations');
 const songs = require('./logic/songs');
@@ -31,7 +32,7 @@ async.waterfall([
 	// setup our MongoDB database
 	(next) => db.init(config.get("mongo").url, next),
 
-	// setup the express server (not used right now, but may be used for OAuth stuff later, or for an API)
+	// setup the express server
 	(next) => app.init(next),
 
 	// setup the socket.io server (all client / server communication is done over this)
@@ -49,6 +50,9 @@ async.waterfall([
 	// setup the playlists
 	(next) => playlists.init(next),
 
+	// setup the API
+	(next) => api.init(next),
+
 	// setup the frontend for local setups
 	(next) => {
 		if (!config.get("isDocker")) {
@@ -63,6 +67,7 @@ async.waterfall([
 	if (err && err !== true) {
 		console.error('An error occurred while initializing the backend server');
 		console.error(err);
+		process.exit();
 	} else {
 		console.info('Backend server has been successfully started');
 	}

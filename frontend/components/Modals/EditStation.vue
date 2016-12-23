@@ -1,33 +1,27 @@
 <template>
-	<div class='modal is-active'>
-		<div class='modal-background'></div>
-		<div class='modal-card'>
-			<header class='modal-card-head'>
-				<p class='modal-card-title'>Edit station</p>
-				<button class='delete' @click='$parent.modals.editStation = !$parent.modals.editStation'></button>
-			</header>
-			<section class='modal-card-body'>
-				<label class='label'>Display name</label>
-				<div class='control is-grouped'>
-					<p class='control is-expanded'>
-						<input class='input' type='text' placeholder='Station Display Name' v-model='data.displayName' autofocus>
-					</p>
-					<p class='control'>
-						<a class='button is-info' @click='updateDisplayName()' href='#'>Update</a>
-					</p>
-				</div>
-				<label class='label'>Description</label>
-				<div class='control is-grouped'>
-					<p class='control is-expanded'>
-						<input class='input' type='text' placeholder='Station Display Name' v-model='data.description'>
-					</p>
-					<p class='control'>
-						<a class='button is-info' @click='updateDescription()' href='#'>Update</a>
-					</p>
-				</div>
-				<label class='label'>Privacy</label>
-				<div class='control is-grouped'>
-					<p class='control is-expanded'>
+	<modal title='Edit Station'>
+		<div slot='body'>
+			<label class='label'>Display name</label>
+			<div class='control is-grouped'>
+				<p class='control is-expanded'>
+					<input class='input' type='text' placeholder='Station Display Name' v-model='data.displayName' autofocus>
+				</p>
+				<p class='control'>
+					<a class='button is-info' @click='updateDisplayName()' href='#'>Update</a>
+				</p>
+			</div>
+			<label class='label'>Description</label>
+			<div class='control is-grouped'>
+				<p class='control is-expanded'>
+					<input class='input' type='text' placeholder='Station Display Name' v-model='data.description'>
+				</p>
+				<p class='control'>
+					<a class='button is-info' @click='updateDescription()' href='#'>Update</a>
+				</p>
+			</div>
+			<label class='label'>Privacy</label>
+			<div class='control is-grouped'>
+				<p class='control is-expanded'>
 						<span class='select'>
 							<select v-model='data.privacy'>
 								<option :value='"public"'>Public</option>
@@ -35,29 +29,29 @@
 								<option :value='"private"'>Private</option>
 							</select>
 						</span>
-					</p>
-					<p class='control'>
-						<a class='button is-info' @click='updatePrivacy()' href='#'>Update</a>
-					</p>
-				</div>
-				<div class='control is-grouped' v-if="$parent.type === 'community'">
-					<p class="control is-expanded party-mode-outer">
-						<label class="checkbox party-mode-inner">
-							<input type="checkbox" v-model="data.partyMode">
-							&nbsp;Party mode
-						</label>
-					</p>
-					<p class='control'>
-						<a class='button is-info' @click='updatePartyMode()' href='#'>Update</a>
-					</p>
-				</div>
-			</section>
+				</p>
+				<p class='control'>
+					<a class='button is-info' @click='updatePrivacy()' href='#'>Update</a>
+				</p>
+			</div>
+			<div class='control is-grouped' v-if="$parent.type === 'community'">
+				<p class="control is-expanded party-mode-outer">
+					<label class="checkbox party-mode-inner">
+						<input type="checkbox" v-model="data.partyMode">
+						&nbsp;Party mode
+					</label>
+				</p>
+				<p class='control'>
+					<a class='button is-info' @click='updatePartyMode()' href='#'>Update</a>
+				</p>
+			</div>
 		</div>
-	</div>
+	</modal>
 </template>
 
 <script>
 	import { Toast } from 'vue-roaster';
+	import Modal from './Modal.vue';
 	import io from '../../io';
 
 	export default {
@@ -76,7 +70,6 @@
 				this.socket.emit('stations.updateDisplayName', this.data.stationId, this.data.displayName, res => {
 					if (res.status === 'success') {
 						this.$parent.station.displayName = this.data.displayName;
-						return Toast.methods.addToast(res.message, 4000);
 					}
 					Toast.methods.addToast(res.message, 8000);
 				});
@@ -124,7 +117,8 @@
 			closeModal: function() {
 				this.$parent.modals.editStation = !this.$parent.modals.editStation;
 			}
-		}
+		},
+		components: { Modal }
 	}
 </script>
 

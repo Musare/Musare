@@ -1,18 +1,17 @@
 'use strict';
 
-// This file contains all the logic for Express
-
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const config = require('config');
 const request = require('request');
-const cache = require('./cache');
-const db = require('./db');
-let utils;
 const OAuth2 = require('oauth').OAuth2;
 
+const api = require('./api');
+const cache = require('./cache');
+const db = require('./db');
 
+let utils;
 
 const lib = {
 
@@ -25,7 +24,7 @@ const lib = {
 
 		let app = lib.app = express();
 
-		lib.server = app.listen(8080);
+		lib.server = app.listen(config.get('serverPort'));
 
 		app.use(bodyParser.json());
 		app.use(bodyParser.urlencoded({ extended: true }));
@@ -134,6 +133,8 @@ const lib = {
 		});
 
 		cb();
+
+
 	}
 };
 

@@ -53,7 +53,7 @@
 		methods: {
 			formatDate: unix => {
 				return moment(unix).format('DD-MM-YYYY');
-			},
+			}
 		},
 		data() {
 			return {
@@ -66,6 +66,19 @@
 				_this.socket = socket;
 				_this.socket.emit('news.index', res => {
 					_this.news = res.data;
+				});
+				_this.socket.on('event:admin.news.created', news => {
+					_this.news.unshift(news);
+				});
+				_this.socket.on('event:admin.news.updated', news => {
+					for (let n = 0; n < _this.news.length; n++) {
+						if (_this.news[n]._id === news._id) {
+							_this.news.$set(n, news);
+						}
+					}
+				});
+				_this.socket.on('event:admin.news.removed', news => {
+					_this.news = _this.news.filter(item => item._id !== news._id);
 				});
 			});
 		}

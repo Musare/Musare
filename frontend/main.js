@@ -36,6 +36,7 @@ document.onkeydown = event => {
 };
 
 router.beforeEach(transition => {
+	window.location.hash = '';
 	if (window.stationInterval) {
 		clearInterval(window.stationInterval);
 		window.stationInterval = 0;

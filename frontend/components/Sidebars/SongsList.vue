@@ -105,7 +105,7 @@
 	}
 
 	.content p strong {
-		word-break: break-all;
+		word-break: break-word;
 	}
 	
 	.content p small {

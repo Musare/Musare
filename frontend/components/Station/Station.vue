@@ -43,9 +43,10 @@
 						<div class="columns is-mobile">
 							<form style="margin-top: 12px; margin-bottom: 0;" action="#" class="column is-7-desktop is-4-mobile">
 								<p class='volume-slider-wrapper'>
-									<i class="material-icons">volume_down</i>
+									<i class="material-icons" @click='toggleMute()' v-if='muted'>volume_mute</i>
+									<i class="material-icons" @click='toggleMute()' v-else>volume_down</i>
 									<input type="range" id="volumeSlider" min="0" max="100" class="active" v-on:change="changeVolume()" v-on:input="changeVolume()">
-									<i class="material-icons">volume_up</i>
+									<i class="material-icons" @click='toggleMaxVolume()'>volume_up</i>
 								</p>
 							</form>
 							<div class="column is-8-mobile is-5-desktop" style="float: right;">
@@ -100,6 +101,7 @@
 				player: undefined,
 				timePaused: 0,
 				paused: false,
+				muted: false,
 				timeElapsed: '0:00',
 				liked: false,
 				disliked: false,
@@ -175,7 +177,7 @@
 			},
 			getTimeElapsed: function() {
 				let local = this;
-				if (local.currentSong) return Date.now2() - local.startedAt - local.timePaused;
+				if (local.currentSong) return Date.currently() - local.startedAt - local.timePaused;
 				else return 0;
 			},
 			playVideo: function() {
@@ -205,14 +207,14 @@
 			},
 			calculateTimeElapsed: function() {
 				let local = this;
-				let currentTime = Date.now2();
+				let currentTime = Date.currently();
 
 				if (local.currentTime !== undefined && local.paused) {
-					local.timePaused += (Date.now2() - local.currentTime);
+					local.timePaused += (Date.currently() - local.currentTime);
 					local.currentTime = undefined;
 				}
 
-				let duration = (Date.now2() - local.startedAt - local.timePaused) / 1000;
+				let duration = (Date.currently() - local.startedAt - local.timePaused) / 1000;
 				let songDuration = local.currentSong.duration;
 				if (songDuration <= duration) local.player.pauseVideo();
 				if ((!local.paused) && duration <= songDuration) local.timeElapsed = local.formatTime(duration);
@@ -269,6 +271,23 @@
 					if (data.status !== 'success') Toast.methods.addToast(`Error: ${data.message}`, 8000);
 					else Toast.methods.addToast('Successfully paused the station.', 4000);
 				});
+			},
+			toggleMute: function () {
+				if (this.playerReady) {
+					let previousVolume = parseInt(localStorage.getItem("volume"));
+					let volume = this.player.getVolume() <= 0 ? previousVolume : 0;
+					this.muted = !this.muted;
+					$("#volumeSlider").val(volume);
+					this.player.setVolume(volume);
+				}
+			},
+			toggleMaxVolume: function () {
+				if (this.playerReady) {
+					let previousVolume = parseInt(localStorage.getItem("volume"));
+					let volume = this.player.getVolume() <= previousVolume ? 100 : previousVolume;
+					$("#volumeSlider").val(volume);
+					this.player.setVolume(volume);
+				}
 			},
 			toggleLike: function() {
 				let _this = this;
@@ -381,7 +400,7 @@
 		},
 		ready: function() {
 			let _this = this;
-			Date.now2 = function() {
+			Date.currently = () => {
 				return new Date().getTime() + _this.systemDifference;
 			};
 			_this.stationId = _this.$route.params.id;
@@ -557,6 +576,8 @@
 		display: flex;
 		align-items: center;
 	}
+
+	.material-icons { cursor: pointer; }
 
 	.stationDisplayName {
 		color: white !important;

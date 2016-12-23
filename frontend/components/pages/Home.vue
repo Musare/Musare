@@ -29,7 +29,11 @@
 			</div>
 		</div>
 		<div class="group">
-			<div class="group-title">Community Stations <a @click="toggleModal('createCommunityStation')" v-if="$parent.loggedIn" href='#'><i class="material-icons community-button">add_circle_outline</i></a></div>
+			<div class="group-title">
+				Community Stations&nbsp;
+				<a @click='modals.createCommunityStation = !modals.createCommunityStation' v-if="$parent.loggedIn" href='#'>
+				<i class="material-icons community-button">add_circle_outline</i></a>
+			</div>
 			<div class="card station-card" v-for="station in stations.community" v-link="{ path: '/community/' + station._id }" @click="this.$dispatch('joinStation', station._id)">
 				<div class="card-image">
 					<figure class="image is-square">
@@ -60,25 +64,28 @@
 		</div>
 		<main-footer></main-footer>
 	</div>
+	<create-community-station v-if='modals.createCommunityStation'></create-community-station>
 </template>
 
 <script>
 	import MainHeader from '../MainHeader.vue';
 	import MainFooter from '../MainFooter.vue';
+	import CreateCommunityStation from '../Modals/CreateCommunityStation.vue';
 	import auth from '../../auth';
 	import io from '../../io';
 
 	export default {
 		data() {
 			return {
-				isRegisterActive: false,
-				isLoginActive: false,
 				recaptcha: {
 					key: ''
 				},
 				stations: {
 					official: [],
 					community: []
+				},
+				modals: {
+					createCommunityStation: false
 				}
 			}
 		},
@@ -144,7 +151,7 @@
 				return station.owner === _this.$parent.userId && station.privacy === 'public';
 			}
 		},
-		components: { MainHeader, MainFooter }
+		components: { MainHeader, MainFooter, CreateCommunityStation }
 	}
 </script>
 

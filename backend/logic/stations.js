@@ -4,10 +4,10 @@ const cache = require('./cache');
 const db = require('./db');
 const io = require('./io');
 const utils = require('./utils');
+const logger = require('./logger');
 const songs = require('./songs');
 const notifications = require('./notifications');
 const async = require('async');
-let skipTimeout = null;
 
 //TEMP
 cache.sub('station.pause', (stationId) => {
@@ -37,61 +37,112 @@ cache.sub('station.newOfficialPlaylist', (stationId) => {
 module.exports = {
 
 	init: function(cb) {
-		let _this = this;
-		//TODO Add async waterfall
-		db.models.station.find({}, (err, stations) => {
-			if (!err) {
-				stations.forEach((station) => {
-					console.info("Initializing Station: " + station._id);
-					_this.initializeStation(station._id);
-				});
-				cb();
+		async.waterfall([
+			(next) => {
+				cache.hgetall('stations', next);
+			},
+
+			(stations, next) => {
+				if (!stations) return next();
+				let stationIds = Object.keys(stations);
+				async.each(stationIds, (stationId, next) => {
+					db.models.station.findOne({_id: stationId}, (err, station) => {
+						if (err) next(err);
+						else if (!station) {
+							cache.hdel('stations', stationId, next);
+						} else next();
+					});
+				}, next);
+			},
+
+			(next) => {
+				db.models.station.find({}, next);
+			},
+
+			(stations, next) => {
+				async.each(stations, (station, next) => {
+					async.waterfall([
+						(next) => {
+							cache.hset('stations', station._id, cache.schemas.station(station), next);
+						},
+
+						(station, next) => {
+							this.initializeStation(station._id, next);
+						}
+					], (err) => {
+						next(err);
+					});
+				}, next);
 			}
+		], (err) => {
+			if (err) {
+				console.log(`FAILED TO INITIALIZE STATIONS. ABORTING. "${err.message}"`);
+				process.exit();
+			} else cb();
 		});
 	},
 
 	initializeStation: function(stationId, cb) {
-		if (typeof cb !== 'function') cb = ()=>{};
-		let _this = this;
-		_this.getStation(stationId, (err, station) => {
-			if (!err) {
-				if (station) {
-					cache.hget('officialPlaylists', stationId, (err, playlist) => {
-						if (err || !playlist) {
-							_this.calculateOfficialPlaylistList(stationId, station.playlist, ()=>{});
-						}
-					});
+		if (typeof cb !== 'function') cb = () => {};
+		async.waterfall([
+			(next) => {
+				this.getStation(stationId, next);
+			},
 
-					let notification = notifications.subscribe(`stations.nextSong?id=${station._id}`, _this.skipStation(station._id), true);
-					if (!station.paused ) {
-						/*if (!station.startedAt) {
-							station.startedAt = Date.now();
-							station.timePaused = 0;
-							cache.hset('stations', stationId, station);
-						}*/
-						if (station.currentSong) {
-							let timeLeft = ((station.currentSong.duration * 1000) - (Date.now() - station.startedAt - station.timePaused));
-							if (isNaN(timeLeft)) timeLeft = -1;
-							timeLeft = Math.floor(timeLeft);
-							if (station.currentSong.duration * 1000 < timeLeft || timeLeft < 0) {
-								this.skipStation(station._id)((err, station) => {
-									cb(err, station);
-								});
-							} else {
-								notifications.schedule(`stations.nextSong?id=${station._id}`, timeLeft);
-								cb(null, station);
-							}
-						} else {
-							_this.skipStation(station._id)((err, station) => {
-								cb(err, station);
-							});
-						}
+			(station, next) => {
+				if (!station) return next('Station not found.');
+				if (station.type === 'official') {
+					cache.hget('officialPlaylists', stationId, (err, playlist) => {
+						if (err) return next(err);
+						if (playlist) return next(null, station, null);
+						next(null, station, playlist);
+					});
+				} else next(null, station, null);
+			},
+
+			(station, playlist, next) => {
+				if (playlist) {
+					this.calculateOfficialPlaylistList(stationId, station.playlist, () => {
+						next(station);
+					});
+				} else next(station);
+			},
+
+			(station, next) => {
+				if (!station.paused) next(true, station);
+				else {
+					notifications.unschedule(`stations.nextSong?id${station._id}`);
+					next(true, station);
+				}
+			},
+
+			(station, next) => {
+				if (station.currentSong) {
+					let timeLeft = ((station.currentSong.duration * 1000) - (Date.now() - station.startedAt - station.timePaused));
+					if (isNaN(timeLeft)) timeLeft = -1;
+					timeLeft = Math.floor(timeLeft);
+					if (station.currentSong.duration * 1000 < timeLeft || timeLeft < 0) {
+						this.skipStation(station._id)(next);
 					} else {
-						notifications.unschedule(`stations.nextSong?id${station._id}`);
+						notifications.schedule(`stations.nextSong?id=${station._id}`, timeLeft, (err) => {
+							next(err, station);
+						});
 						cb(null, station);
 					}
-				} else cb("Station not found");
-			} else cb(err);
+				} else {
+					this.skipStation(station._id)(next);
+				}
+			}
+		], (station, err) => {
+			if (err && err !== true) {
+				let error = 'An error occurred.';
+				if (typeof err === "string") error = err;
+				else if (err.message) error = err.message;
+				logger.log("INITIALIZE_STATION", "ERROR", `Station initialization failed for "${stationId}". "${error}"`);
+			}
+
+			logger.log("INITIALIZE_STATION", "SUCCESS", `Station "${stationId}" initialized.`);
+			cb(err, station);
 		});
 	},
 
@@ -191,14 +242,11 @@ module.exports = {
 
 			(station, next) => {
 				if (!station) return next('Station not found');
-				cache.hset('stations', stationId, station, (err) => {
-					if (err) return next(err);
-					next(null, station);
-				});
+				cache.hset('stations', stationId, station, next);
 			}
 
 		], (err, station) => {
-			if (err && err !== true) cb(err);
+			if (err && err !== true) return cb(err);
 			cb(null, station);
 		});
 	},
@@ -438,7 +486,13 @@ module.exports = {
 									}
 								}
 							}
-
+							console.log(
+								Date.now(),
+								(station) ? station._id : "STATION_NULL",
+								station.currentSong !== null && station.currentSong._id !== undefined,
+								station.currentSong !== null,
+								(station.currentSong) ? station.currentSong._id !== undefined : "CURRENTSONG_NULL"
+							);
 							if (station.currentSong !== null && station.currentSong._id !== undefined) {
 								utils.socketsJoinSongRoom(utils.getRoomSockets(`station.${station._id}`), `song.${station.currentSong._id}`);
 								if (!station.paused) {

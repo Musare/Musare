@@ -56,12 +56,12 @@ cache.sub('song.undislike', (data) => {
 
 module.exports = {
 
-	index: (session, cb) => {
+	index: hooks.adminRequired((session, cb) => {
 		db.models.song.find({}, (err, songs) => {
 			if (err) throw err;
 			cb(songs);
 		});
-	},
+	}),
 
 	update: hooks.adminRequired((session, songId, song, cb) => {
 		db.models.song.update({ _id: songId }, song, { upsert: true }, (err, updatedSong) => {
