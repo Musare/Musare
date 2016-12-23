@@ -35,7 +35,7 @@
 			</tbody>
 		</table>
 	</div>
-	<edit-song v-show='isEditActive'></edit-song>
+	<edit-song v-show='modals.editSong'></edit-song>
 </template>
 
 <script>
@@ -50,7 +50,7 @@
 			return {
 				searchQuery: '',
 				songs: [],
-				isEditActive: false
+				modals: { editSong: false }
 			}
 		},
 		computed: {
@@ -60,7 +60,7 @@
 		},
 		methods: {
 			toggleModal: function () {
-				this.isEditActive = !this.isEditActive;
+				this.modals.editSong = !this.modals.editSong;
 			},
 			edit: function (song, index) {
 				this.$broadcast('editSong', song, index, 'queueSongs');

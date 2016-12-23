@@ -1,9 +1,7 @@
 <template>
-	<div class='modal is-active'>
-		<div class='modal-background'></div>
-		<div class='modal-card'>
-			<section class='modal-card-body'>
-
+	<div>
+		<modal title='Edit Song'>
+			<div slot='body'>
 				<h5 class='has-text-centered'>Video Preview</h5>
 				<div class='video-container'>
 					<div id='player'></div>
@@ -93,9 +91,8 @@
 				<p class='control'>
 					<input class='input' type='text' v-model='editing.song.skipDuration'>
 				</p>
-
-			</section>
-			<footer class='modal-card-foot'>
+			</div>
+			<div slot='footer'>
 				<button class='button is-success' @click='save(editing.song, false)'>
 					<i class='material-icons save-changes'>done</i>
 					<span>&nbsp;Save</span>
@@ -107,16 +104,18 @@
 				<button class='button is-danger' @click='$parent.toggleModal()'>
 					<span>&nbsp;Close</span>
 				</button>
-			</footer>
-		</div>
+			</div>
+		</modal>
 	</div>
 </template>
 
 <script>
 	import io from '../../io';
 	import { Toast } from 'vue-roaster';
+	import Modal from './Modal.vue';
 
 	export default {
+		components: { Modal },
 		data() {
 			return {
 				editing: {
@@ -259,20 +258,20 @@
 		},
 		events: {
 			closeModal: function () {
-				this.$parent.toggleModal()
+				this.$parent.toggleModal();
 			},
 			editSong: function (song, index, type) {
-				if (this.video.player) {
-					this.video.player.loadVideoById(song._id, this.editing.song.skipDuration);
-					let newSong = {};
-					for (let n in song) { newSong[n] = song[n]; }
-					this.editing = {
-						index,
-						song: newSong,
-						type
-					};
-					this.$parent.isEditActive = true;
+				this.video.player.loadVideoById(song._id, this.editing.song.skipDuration);
+				let newSong = {};
+				for (let n in song) {
+					newSong[n] = song[n];
 				}
+				this.editing = {
+					index,
+					song: newSong,
+					type
+				};
+				this.$parent.toggleModal();
 			}
 		}
 	}
