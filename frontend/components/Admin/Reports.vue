@@ -33,7 +33,7 @@
 		</table>
 	</div>
 
-	<issues-modal v-if='isModalActive'></issues-modal>
+	<issues-modal v-if='modals.reportIssues'></issues-modal>
 </template>
 
 <script>
@@ -46,7 +46,9 @@
 		data() {
 			return {
 				reports: [],
-				isModalActive: false
+				modals: {
+					reportIssues: false
+				}
 			}
 		},
 		methods: {
@@ -54,8 +56,8 @@
 				this.socket.emit('apis.joinAdminRoom', 'reports', data => {});
 			},
 			toggleModal: function (report) {
-				this.isModalActive = !this.isModalActive;
-				if (this.isModalActive) this.editing = report;
+				this.modals.reportIssues = !this.modals.reportIssues;
+				if (this.modals.reportIssues) this.editing = report;
 			},
 			resolve: function (reportId) {
 				this.socket.emit('reports.resolve', reportId, res => {
