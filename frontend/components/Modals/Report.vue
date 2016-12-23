@@ -136,7 +136,7 @@
 							'Skips too soon',
 							'Skips too late',
 							'Starts too soon',
-							'Skips too late'
+							'Starts too late'
 						]
 					},
 					{
