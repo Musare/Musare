@@ -83,66 +83,40 @@ module.exports = {
 	},
 
 	initializeStation: function(stationId, cb) {
-		if (typeof cb !== 'function') cb = () => {};
-		async.waterfall([
-			(next) => {
-				this.getStation(stationId, next);
-			},
-
-			(station, next) => {
-				if (!station) return next('Station not found.');
-				if (station.type === 'official') {
-					cache.hget('officialPlaylists', stationId, (err, playlist) => {
-						if (err) return next(err);
-						if (playlist) return next(null, station, null);
-						next(null, station, playlist);
-					});
-				} else next(null, station, null);
-			},
-
-			(station, playlist, next) => {
-				if (playlist) {
-					this.calculateOfficialPlaylistList(stationId, station.playlist, () => {
-						next(station);
-					});
-				} else next(station);
-			},
-
-			(station, next) => {
-				if (!station.paused) next(true, station);
-				else {
-					notifications.unschedule(`stations.nextSong?id${station._id}`);
-					next(true, station);
-				}
-			},
-
-			(station, next) => {
-				if (station.currentSong) {
-					let timeLeft = ((station.currentSong.duration * 1000) - (Date.now() - station.startedAt - station.timePaused));
-					if (isNaN(timeLeft)) timeLeft = -1;
-					timeLeft = Math.floor(timeLeft);
-					if (station.currentSong.duration * 1000 < timeLeft || timeLeft < 0) {
-						this.skipStation(station._id)(next);
+		if (typeof cb !== 'function') cb = ()=>{};
+		let _this = this;
+		_this.getStation(stationId, (err, station) => {
+			if (!err) {
+				if (station) {
+					let notification = notifications.subscribe(`stations.nextSong?id=${station._id}`, _this.skipStation(station._id), true);
+					if (!station.paused ) {
+						/*if (!station.startedAt) {
+						 station.startedAt = Date.now();
+						 station.timePaused = 0;
+						 cache.hset('stations', stationId, station);
+						 }*/
+						if (station.currentSong) {
+							let timeLeft = ((station.currentSong.duration * 1000) - (Date.now() - station.startedAt - station.timePaused));
+							if (isNaN(timeLeft)) timeLeft = -1;
+							if (station.currentSong.duration * 1000 < timeLeft || timeLeft < 0) {
+								this.skipStation(station._id)((err, station) => {
+									cb(err, station);
+								});
+							} else {
+								notifications.schedule(`stations.nextSong?id=${station._id}`, timeLeft);
+								cb(null, station);
+							}
+						} else {
+							_this.skipStation(station._id)((err, station) => {
+								cb(err, station);
+							});
+						}
 					} else {
-						notifications.schedule(`stations.nextSong?id=${station._id}`, timeLeft, (err) => {
-							next(err, station);
-						});
+						notifications.unschedule(`stations.nextSong?id${station._id}`);
 						cb(null, station);
 					}
-				} else {
-					this.skipStation(station._id)(next);
-				}
-			}
-		], (station, err) => {
-			if (err && err !== true) {
-				let error = 'An error occurred.';
-				if (typeof err === "string") error = err;
-				else if (err.message) error = err.message;
-				logger.log("INITIALIZE_STATION", "ERROR", `Station initialization failed for "${stationId}". "${error}"`);
-			}
-
-			logger.log("INITIALIZE_STATION", "SUCCESS", `Station "${stationId}" initialized.`);
-			cb(err, station);
+				} else cb("Station not found");
+			} else cb(err);
 		});
 	},
 
@@ -279,6 +253,7 @@ module.exports = {
 	},
 
 	skipStation: function(stationId) {
+		console.log("SKIP!", stationId);
 		let _this = this;
 		return (cb) => {
 			if (typeof cb !== 'function') cb = ()=>{};
@@ -499,7 +474,7 @@ module.exports = {
 									notifications.schedule(`stations.nextSong?id=${station._id}`, station.currentSong.duration * 1000);
 								}
 							} else {
-								utils.socketsLeaveSongRooms(utils.getRoomSockets(`station.${station._id}`), `song.${station.currentSong._id}`);
+								utils.socketsLeaveSongRooms(utils.getRoomSockets(`station.${station._id}`));
 							}
 							cb(null, station);
 						} else cb(err);
