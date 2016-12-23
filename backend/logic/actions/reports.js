@@ -133,7 +133,7 @@ module.exports = {
 
 				for (let z = 0; z < data.issues.length; z++) {
 					if (reportableIssues.filter(issue => { return issue.name == data.issues[z].name; }).length > 0) {
-						for (let r = 0; r < issues.length; r++) {
+						for (let r = 0; r < reportableIssues.length; r++) {
 							if (reportableIssues[r].reasons.every(reason => data.issues[z].reasons.indexOf(reason) < -1)) {
 								return cb({ 'status': 'failure', 'message': 'Invalid data' });
 							}
