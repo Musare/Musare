@@ -60,10 +60,11 @@ module.exports = {
 	update: hooks.adminRequired((session, songId, updatedSong, cb, userId) => {
 		async.waterfall([
 			(next) => {
-				db.models.queueSong.findOne({ songId }, next);
+				db.models.queueSong.findOne({ _id: songId }, next);
 			},
 
 			(song, next) => {
+				if(!song) return next('Song not found');
 				let updated = false;
 				let $set = {};
 				for (let prop in updatedSong) if (updatedSong[prop] !== song[prop]) $set[prop] = updatedSong[prop]; updated = true;

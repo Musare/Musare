@@ -64,21 +64,21 @@
 						<div>
 							<p class='control has-addons'>
 								<input class='input' id='new-artist' type='text' placeholder='Artist'>
-								<button class='button is-info' @click='$parent.addTag("artists")'>Add Artist</button>
+								<button class='button is-info' @click='addTag("artists")'>Add Artist</button>
 							</p>
 							<span class='tag is-info' v-for='(index, artist) in editing.song.artists' track-by='$index'>
 								{{ artist }}
-								<button class='delete is-info' @click='$parent.$parent.removeTag("artists", index)'></button>
+								<button class='delete is-info' @click='removeTag("artists", index)'></button>
 							</span>
 						</div>
 						<div>
 							<p class='control has-addons'>
 								<input class='input' id='new-genre' type='text' placeholder='Genre'>
-								<button class='button is-info' @click='$parent.addTag("genres")'>Add Genre</button>
+								<button class='button is-info' @click='addTag("genres")'>Add Genre</button>
 							</p>
 							<span class='tag is-info' v-for='(index, genre) in editing.song.genres' track-by='$index'>
 								{{ genre }}
-								<button class='delete is-info' @click='$parent.$parent.removeTag("genres", index)'></button>
+								<button class='delete is-info' @click='removeTag("genres", index)'></button>
 							</span>
 						</div>
 					</div>

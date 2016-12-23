@@ -70,7 +70,7 @@
 				this.modals.editSong = !this.modals.editSong;
 			},
 			edit: function (song, index) {
-				this.$broadcast('editSong', song, index, 'queueSongs');
+				this.$broadcast('editSong', song, index, 'songs');
 			},
 			remove: function (id, index) {
 				this.socket.emit('songs.remove', id, res => {
