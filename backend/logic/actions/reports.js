@@ -93,12 +93,12 @@ module.exports = {
 	resolve: hooks.adminRequired((session, reportId, cb, userId) => {
 		async.waterfall([
 			(next) => {
-				db.models.report.findOne({ _id: reportId }).sort({ released: 'desc' }).exec(next);
+				db.models.report.findOne({ _id: reportId }).exec(next);
 			},
 
 			(report, next) => {
 				if (!report) return next('Report not found.');
-				db.models.update({ _id: reportId }, next);
+				report.update({ _id: reportId }, next);
 			}
 		], (err) => {
 			if (err) {
@@ -135,10 +135,10 @@ module.exports = {
 					if (reportableIssues.filter(issue => { return issue.name == data.issues[z].name; }).length > 0) {
 						for (let r = 0; r < reportableIssues.length; r++) {
 							if (reportableIssues[r].reasons.every(reason => data.issues[z].reasons.indexOf(reason) < -1)) {
-								return cb({ 'status': 'failure', 'message': 'Invalid data' });
+								return cb({ status: 'failure', message: 'Invalid data' });
 							}
 						}
-					} else return cb({ 'status': 'failure', 'message': 'Invalid data' });
+					} else return cb({ status: 'failure', message: 'Invalid data' });
 				}
 
 				next();

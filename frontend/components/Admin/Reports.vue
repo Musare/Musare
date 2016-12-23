@@ -60,8 +60,10 @@
 				if (this.modals.reportIssues) this.editing = report;
 			},
 			resolve: function (reportId) {
+				let _this = this;
 				this.socket.emit('reports.resolve', reportId, res => {
 					Toast.methods.addToast(res.message, 3000);
+					if (res.status == 'success' && this.modals.reportIssues) _this.toggleModal();
 				});
 			}
 		},
