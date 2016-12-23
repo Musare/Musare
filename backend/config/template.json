@@ -2,6 +2,7 @@
 	"secret": "",
 	"domain": "",
 	"serverDomain": "",
+  	"serverPort": 8080,
   	"isDocker": true,
 	"apis": {
 		"youtube": {

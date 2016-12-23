@@ -24,7 +24,7 @@ const lib = {
 
 		let app = lib.app = express();
 
-		lib.server = app.listen(8080);
+		lib.server = app.listen(config.get('serverPort'));
 
 		app.use(bodyParser.json());
 		app.use(bodyParser.urlencoded({ extended: true }));
