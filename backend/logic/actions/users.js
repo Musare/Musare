@@ -57,7 +57,7 @@ module.exports = {
 					let sessionId = utils.guid();
 					cache.hset('sessions', sessionId, cache.schemas.session(sessionId, user._id), (err) => {
 						if (err) return next(err);
-						next(sessionId);
+						next(null, sessionId);
 					});
 				});
 			}
