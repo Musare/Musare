@@ -74,10 +74,10 @@ module.exports = {
 			}
 		], (err, reports) => {
 			if (err) {
-				logger.log("REPORTS_INDEX", "ERROR", `Indexing reports failed. "${err.message}"`);
+				logger.error("REPORTS_INDEX", `Indexing reports failed. "${err.message}"`);
 				return cb({ 'status': 'failure', 'message': 'Something went wrong'});
 			}
-			logger.log("REPORTS_INDEX", "SUCCESS", "Indexing reports successful.");
+			logger.success("REPORTS_INDEX", "Indexing reports successful.");
 			cb({ status: 'success', data: reports });
 		});
 	}),
@@ -106,11 +106,11 @@ module.exports = {
 			}
 		], (err) => {
 			if (err) {
-				logger.log("REPORTS_RESOLVE", "ERROR", `Resolving report "${reportId}" failed by user "${userId}". Mongo error. "${err.message}"`);
+				logger.error("REPORTS_RESOLVE", `Resolving report "${reportId}" failed by user "${userId}". Mongo error. "${err.message}"`);
 				return cb({ 'status': 'failure', 'message': 'Something went wrong'});
 			} else {
 				cache.pub('report.resolve', reportId);
-				logger.log("REPORTS_RESOLVE", "SUCCESS", `User "${userId}" resolved report "${reportId}".`);
+				logger.success("REPORTS_RESOLVE", `User "${userId}" resolved report "${reportId}".`);
 				cb({ status: 'success', message: 'Successfully resolved Report' });
 			}
 		});
@@ -171,12 +171,12 @@ module.exports = {
 				let error = 'An error occurred.';
 				if (typeof err === "string") error = err;
 				else if (err.message) error = err.message;
-				logger.log("REPORTS_CREATE", "ERROR", `Creating report for "${data.songId}" failed by user "${userId}". "${error}"`);
+				logger.error("REPORTS_CREATE", `Creating report for "${data.songId}" failed by user "${userId}". "${error}"`);
 				return cb({ 'status': 'failure', 'message': 'Something went wrong' });
 			}
 			else {
 				cache.pub('report.create', report);
-				logger.log("REPORTS_CREATE", "SUCCESS", `User "${userId}" created report for "${data.songId}".`);
+				logger.success("REPORTS_CREATE", `User "${userId}" created report for "${data.songId}".`);
 				return cb({ 'status': 'success', 'message': 'Successfully created report' });
 			}
 		});

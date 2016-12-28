@@ -47,10 +47,10 @@ module.exports = {
 			}
 		], (err, news) => {
 			if (err) {
-				logger.log("NEWS_INDEX", "ERROR", `Indexing news failed. "${err.message}"`);
+				logger.error("NEWS_INDEX", `Indexing news failed. "${err.message}"`);
 				return cb({status: 'failure', message: 'Something went wrong.'});
 			}
-			logger.log("NEWS_INDEX", "SUCCESS", `Indexing news successful.`);
+			logger.success("NEWS_INDEX", `Indexing news successful.`);
 			return cb({ status: 'success', data: news });
 		});
 	},
@@ -72,11 +72,11 @@ module.exports = {
 			}
 		], (err, news) => {
 			if (err) {
-				logger.log("NEWS_CREATE", "ERROR", `Creating news failed. "${err.message}"`);
+				logger.error("NEWS_CREATE", `Creating news failed. "${err.message}"`);
 				return cb({ 'status': 'failure', 'message': 'Something went wrong' });
 			}
 			cache.pub('news.create', news);
-			logger.log("NEWS_CREATE", "SUCCESS", `Creating news successful.`);
+			logger.success("NEWS_CREATE", `Creating news successful.`);
 			return cb({ 'status': 'success', 'message': 'Successfully created News' });
 		});
 	}),
@@ -94,10 +94,10 @@ module.exports = {
 			}
 		], (err, news) => {
 			if (err) {
-				logger.log("NEWS_NEWEST", "ERROR", `Getting the latest news failed. "${err.message}"`);
+				logger.error("NEWS_NEWEST", `Getting the latest news failed. "${err.message}"`);
 				return cb({ 'status': 'failure', 'message': 'Something went wrong' });
 			}
-			logger.log("NEWS_NEWEST", "SUCCESS", `Successfully got the latest news.`);
+			logger.success("NEWS_NEWEST", `Successfully got the latest news.`);
 			return cb({ status: 'success', data: news });
 		});
 	},
@@ -114,11 +114,11 @@ module.exports = {
 	remove: hooks.adminRequired((session, news, cb, userId) => {
 		db.models.news.remove({ _id: news._id }, err => {
 			if (err) {
-				logger.log("NEWS_REMOVE", "ERROR", `Removing news "${news._id}" failed for user "${userId}". "${err.message}"`);
+				logger.error("NEWS_REMOVE", `Removing news "${news._id}" failed for user "${userId}". "${err.message}"`);
 				return cb({ 'status': 'failure', 'message': 'Something went wrong' });
 			} else {
 				cache.pub('news.remove', news);
-				logger.log("NEWS_REMOVE", "SUCCESS", `Removing news "${news._id}" successful by user "${userId}".`);
+				logger.success("NEWS_REMOVE", `Removing news "${news._id}" successful by user "${userId}".`);
 				return cb({ 'status': 'success', 'message': 'Successfully removed News' });
 			}
 		});
@@ -136,11 +136,11 @@ module.exports = {
 	update: hooks.adminRequired((session, _id, news, cb, userId) => {
 		db.models.news.update({ _id }, news, { upsert: true }, err => {
 			if (err) {
-				logger.log("NEWS_UPDATE", "ERROR", `Updating news "${_id}" failed for user "${userId}". "${err.message}"`);
+				logger.error("NEWS_UPDATE", `Updating news "${_id}" failed for user "${userId}". "${err.message}"`);
 				return cb({ 'status': 'failure', 'message': 'Something went wrong' });
 			} else {
 				cache.pub('news.update', news);
-				logger.log("NEWS_UPDATE", "SUCCESS", `Updating news "${_id}" successful for user "${userId}".`);
+				logger.success("NEWS_UPDATE", `Updating news "${_id}" successful for user "${userId}".`);
 				return cb({ 'status': 'success', 'message': 'Successfully updated News' });
 			}
 		});

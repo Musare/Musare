@@ -43,6 +43,7 @@ const lib = {
 	 * @param {Function} cb - gets called when the notification has been scheduled
 	 */
 	schedule: (name, time, cb) => {
+		time = Math.round(time);
 		pub.set(crypto.createHash('md5').update(`_notification:${name}_`).digest('hex'), '', 'PX', time, 'NX', cb);
 	},
 

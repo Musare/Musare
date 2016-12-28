@@ -40,10 +40,10 @@ module.exports = {
 			}
 		], (err, songs) => {
 			if (err) {
-				logger.log("QUEUE_INDEX", "ERROR", `Indexing queuesongs failed. "${err.message}"`);
+				logger.error("QUEUE_INDEX", `Indexing queuesongs failed. "${err.message}"`);
 				return cb({status: 'failure', message: 'Something went wrong.'});
 			}
-			logger.log("QUEUE_INDEX", "SUCCESS", `Indexing queuesongs successful.`);
+			logger.success("QUEUE_INDEX", `Indexing queuesongs successful.`);
 			return cb(songs);
 		});
 	}),
@@ -76,11 +76,11 @@ module.exports = {
 				let error = 'An error occurred.';
 				if (typeof err === "string") error = err;
 				else if (err.message) error = err.message;
-				logger.log("QUEUE_UPDATE", "ERROR", `Updating queuesong "${songId}" failed for user ${userId}. "${err.message}"`);
+				logger.error("QUEUE_UPDATE", `Updating queuesong "${songId}" failed for user ${userId}. "${err.message}"`);
 				return cb({status: 'failure', message: error});
 			}
 			cache.pub('queue.updatedSong', songId);
-			logger.log("QUEUE_UPDATE", "SUCCESS", `User "${userId}" successfully update queuesong "${songId}".`);
+			logger.success("QUEUE_UPDATE", `User "${userId}" successfully update queuesong "${songId}".`);
 			return cb({status: 'success', message: 'Successfully updated song.'});
 		});
 	}),
@@ -103,11 +103,11 @@ module.exports = {
 				let error = 'An error occurred.';
 				if (typeof err === "string") error = err;
 				else if (err.message) error = err.message;
-				logger.log("QUEUE_REMOVE", "ERROR", `Removing queuesong "${songId}" failed for user ${userId}. "${err.message}"`);
+				logger.error("QUEUE_REMOVE", `Removing queuesong "${songId}" failed for user ${userId}. "${err.message}"`);
 				return cb({status: 'failure', message: error});
 			}
 			cache.pub('queue.removedSong', songId);
-			logger.log("QUEUE_REMOVE", "SUCCESS", `User "${userId}" successfully removed queuesong "${songId}".`);
+			logger.success("QUEUE_REMOVE", `User "${userId}" successfully removed queuesong "${songId}".`);
 			return cb({status: 'success', message: 'Successfully updated song.'});
 		});
 	}),

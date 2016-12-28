@@ -95,10 +95,10 @@ let lib = {
 				let error = 'An error occurred.';
 				if (typeof err === "string") error = err;
 				else if (err.message) error = err.message;
-				logger.log("PLAYLIST_GET_FIRST_SONG", "ERROR", `Getting the first song of playlist "${playlistId}" failed for user "${userId}". "${error}"`);
+				logger.error("PLAYLIST_GET_FIRST_SONG", `Getting the first song of playlist "${playlistId}" failed for user "${userId}". "${error}"`);
 				return cb({ status: 'failure', message: 'Something went wrong when getting the playlist'});
 			}
-			logger.log("PLAYLIST_GET_FIRST_SONG", "SUCCESS", `Successfully got the first song of playlist "${playlistId}" for user "${userId}".`);
+			logger.success("PLAYLIST_GET_FIRST_SONG", `Successfully got the first song of playlist "${playlistId}" for user "${userId}".`);
 			cb({
 				status: 'success',
 				song: song
@@ -123,10 +123,10 @@ let lib = {
 				let error = 'An error occurred.';
 				if (typeof err === "string") error = err;
 				else if (err.message) error = err.message;
-				logger.log("PLAYLIST_INDEX_FOR_USER", "ERROR", `Indexing playlists for user "${userId}" failed. "${error}"`);
+				logger.error("PLAYLIST_INDEX_FOR_USER", `Indexing playlists for user "${userId}" failed. "${error}"`);
 				return cb({ status: 'failure', message: error});
 			}
-			logger.log("PLAYLIST_INDEX_FOR_USER", "SUCCESS", `Successfully indexed playlists for user "${userId}".`);
+			logger.success("PLAYLIST_INDEX_FOR_USER", `Successfully indexed playlists for user "${userId}".`);
 			cb({
 				status: 'success',
 				data: playlists
@@ -165,11 +165,11 @@ let lib = {
 				let error = 'An error occurred.';
 				if (typeof err === "string") error = err;
 				else if (err.message) error = err.message;
-				logger.log("PLAYLIST_CREATE", "ERROR", `Creating private playlist failed for user "${userId}". "${error}"`);
+				logger.error("PLAYLIST_CREATE", `Creating private playlist failed for user "${userId}". "${error}"`);
 				return cb({ status: 'failure', message: error});
 			}
 			cache.pub('playlist.create', playlist._id);
-			logger.log("PLAYLIST_CREATE", "SUCCESS", `Successfully created private playlist for user "${userId}".`);
+			logger.success("PLAYLIST_CREATE", `Successfully created private playlist for user "${userId}".`);
 			cb({ 'status': 'success', 'message': 'Successfully created playlist' });
 		});
 	}),
@@ -197,10 +197,10 @@ let lib = {
 				let error = 'An error occurred.';
 				if (typeof err === "string") error = err;
 				else if (err.message) error = err.message;
-				logger.log("PLAYLIST_GET", "ERROR", `Getting private playlist "${playlistId}" failed for user "${userId}". "${error}"`);
+				logger.error("PLAYLIST_GET", `Getting private playlist "${playlistId}" failed for user "${userId}". "${error}"`);
 				return cb({ status: 'failure', message: error});
 			}
-			logger.log("PLAYLIST_GET", "SUCCESS", `Successfully got private playlist "${playlistId}" for user "${userId}".`);
+			logger.success("PLAYLIST_GET", `Successfully got private playlist "${playlistId}" for user "${userId}".`);
 			console.log(playlist);
 			cb({
 				status: 'success',
@@ -233,10 +233,10 @@ let lib = {
 				let error = 'An error occurred.';
 				if (typeof err === "string") error = err;
 				else if (err.message) error = err.message;
-				logger.log("PLAYLIST_UPDATE", "ERROR", `Updating private playlist "${playlistId}" failed for user "${userId}". "${error}"`);
+				logger.error("PLAYLIST_UPDATE", `Updating private playlist "${playlistId}" failed for user "${userId}". "${error}"`);
 				return cb({ status: 'failure', message: error});
 			}
-			logger.log("PLAYLIST_UPDATE", "SUCCESS", `Successfully updated private playlist "${playlistId}" for user "${userId}".`);
+			logger.success("PLAYLIST_UPDATE", `Successfully updated private playlist "${playlistId}" for user "${userId}".`);
 			cb({
 				status: 'success',
 				data: playlist
@@ -294,10 +294,10 @@ let lib = {
 				let error = 'An error occurred.';
 				if (typeof err === "string") error = err;
 				else if (err.message) error = err.message;
-				logger.log("PLAYLIST_ADD_SONG", "ERROR", `Adding song "${songId}" to private playlist "${playlistId}" failed for user "${userId}". "${error}"`);
+				logger.error("PLAYLIST_ADD_SONG", `Adding song "${songId}" to private playlist "${playlistId}" failed for user "${userId}". "${error}"`);
 				return cb({ status: 'failure', message: error});
 			}
-			logger.log("PLAYLIST_ADD_SONG", "SUCCESS", `Successfully added song "${songId}" to private playlist "${playlistId}" for user "${userId}".`);
+			logger.success("PLAYLIST_ADD_SONG", `Successfully added song "${songId}" to private playlist "${playlistId}" for user "${userId}".`);
 			cache.pub('playlist.addSong', { playlistId: playlist._id, song: newSong, userId: userId });
 			return cb({ status: 'success', message: 'Song has been successfully added to the playlist', data: playlist.songs });
 		});
@@ -344,10 +344,10 @@ let lib = {
 				let error = 'An error occurred.';
 				if (typeof err === "string") error = err;
 				else if (err.message) error = err.message;
-				logger.log("PLAYLIST_IMPORT", "ERROR", `Importing a YouTube playlist to private playlist "${playlistId}" failed for user "${userId}". "${error}"`);
+				logger.error("PLAYLIST_IMPORT", `Importing a YouTube playlist to private playlist "${playlistId}" failed for user "${userId}". "${error}"`);
 				return cb({ status: 'failure', message: error});
 			}
-			logger.log("PLAYLIST_IMPORT", "SUCCESS", `Successfully imported a YouTube playlist to private playlist "${playlistId}" for user "${userId}".`);
+			logger.success("PLAYLIST_IMPORT", `Successfully imported a YouTube playlist to private playlist "${playlistId}" for user "${userId}".`);
 			cb({ status: 'success', message: 'Playlist has been successfully imported.', data: playlist.songs });
 		});
 	}),
@@ -380,10 +380,10 @@ let lib = {
 				let error = 'An error occurred.';
 				if (typeof err === "string") error = err;
 				else if (err.message) error = err.message;
-				logger.log("PLAYLIST_REMOVE_SONG", "ERROR", `Removing song "${songId}" from private playlist "${playlistId}" failed for user "${userId}". "${error}"`);
+				logger.error("PLAYLIST_REMOVE_SONG", `Removing song "${songId}" from private playlist "${playlistId}" failed for user "${userId}". "${error}"`);
 				return cb({ status: 'failure', message: error});
 			}
-			logger.log("PLAYLIST_REMOVE_SONG", "SUCCESS", `Successfully removed song "${songId}" from private playlist "${playlistId}" for user "${userId}".`);
+			logger.success("PLAYLIST_REMOVE_SONG", `Successfully removed song "${songId}" from private playlist "${playlistId}" for user "${userId}".`);
 			cache.pub('playlist.removeSong', {playlistId: playlist._id, songId: songId, userId: userId});
 			return cb({ status: 'success', message: 'Song has been successfully removed from playlist', data: playlist.songs });
 		});
@@ -411,10 +411,10 @@ let lib = {
 				let error = 'An error occurred.';
 				if (typeof err === "string") error = err;
 				else if (err.message) error = err.message;
-				logger.log("PLAYLIST_UPDATE_DISPLAY_NAME", "ERROR", `Updating display name to "${displayName}" for private playlist "${playlistId}" failed for user "${userId}". "${error}"`);
+				logger.error("PLAYLIST_UPDATE_DISPLAY_NAME", `Updating display name to "${displayName}" for private playlist "${playlistId}" failed for user "${userId}". "${error}"`);
 				return cb({ status: 'failure', message: error});
 			}
-			logger.log("PLAYLIST_UPDATE_DISPLAY_NAME", "SUCCESS", `Successfully updated display name to "${displayName}" for private playlist "${playlistId}" for user "${userId}".`);
+			logger.success("PLAYLIST_UPDATE_DISPLAY_NAME", `Successfully updated display name to "${displayName}" for private playlist "${playlistId}" for user "${userId}".`);
 			cache.pub('playlist.updateDisplayName', {playlistId: playlistId, displayName: displayName, userId: userId});
 			return cb({ status: 'success', message: 'Playlist has been successfully updated' });
 		});
@@ -472,10 +472,10 @@ let lib = {
 				let error = 'An error occurred.';
 				if (typeof err === "string") error = err;
 				else if (err.message) error = err.message;
-				logger.log("PLAYLIST_MOVE_SONG_TO_TOP", "ERROR", `Moving song "${songId}" to the top for private playlist "${playlistId}" failed for user "${userId}". "${error}"`);
+				logger.error("PLAYLIST_MOVE_SONG_TO_TOP", `Moving song "${songId}" to the top for private playlist "${playlistId}" failed for user "${userId}". "${error}"`);
 				return cb({ status: 'failure', message: error});
 			}
-			logger.log("PLAYLIST_MOVE_SONG_TO_TOP", "SUCCESS", `Successfully moved song "${songId}" to the top for private playlist "${playlistId}" for user "${userId}".`);
+			logger.success("PLAYLIST_MOVE_SONG_TO_TOP", `Successfully moved song "${songId}" to the top for private playlist "${playlistId}" for user "${userId}".`);
 			cache.pub('playlist.moveSongToTop', {playlistId, songId, userId: userId});
 			return cb({ status: 'success', message: 'Playlist has been successfully updated' });
 		});
@@ -530,10 +530,10 @@ let lib = {
 				let error = 'An error occurred.';
 				if (typeof err === "string") error = err;
 				else if (err.message) error = err.message;
-				logger.log("PLAYLIST_MOVE_SONG_TO_BOTTOM", "ERROR", `Moving song "${songId}" to the bottom for private playlist "${playlistId}" failed for user "${userId}". "${error}"`);
+				logger.error("PLAYLIST_MOVE_SONG_TO_BOTTOM", `Moving song "${songId}" to the bottom for private playlist "${playlistId}" failed for user "${userId}". "${error}"`);
 				return cb({ status: 'failure', message: error});
 			}
-			logger.log("PLAYLIST_MOVE_SONG_TO_BOTTOM", "SUCCESS", `Successfully moved song "${songId}" to the bottom for private playlist "${playlistId}" for user "${userId}".`);
+			logger.success("PLAYLIST_MOVE_SONG_TO_BOTTOM", `Successfully moved song "${songId}" to the bottom for private playlist "${playlistId}" for user "${userId}".`);
 			cache.pub('playlist.moveSongToBottom', {playlistId, songId, userId: userId});
 			return cb({ status: 'success', message: 'Playlist has been successfully updated' });
 		});
@@ -557,10 +557,10 @@ let lib = {
 				let error = 'An error occurred.';
 				if (typeof err === "string") error = err;
 				else if (err.message) error = err.message;
-				logger.log("PLAYLIST_REMOVE", "ERROR", `Removing private playlist "${playlistId}" failed for user "${userId}". "${error}"`);
+				logger.error("PLAYLIST_REMOVE", `Removing private playlist "${playlistId}" failed for user "${userId}". "${error}"`);
 				return cb({ status: 'failure', message: error});
 			}
-			logger.log("PLAYLIST_REMOVE", "SUCCESS", `Successfully removed private playlist "${playlistId}" for user "${userId}".`);
+			logger.success("PLAYLIST_REMOVE", `Successfully removed private playlist "${playlistId}" for user "${userId}".`);
 			cache.pub('playlist.delete', {userId: userId, playlistId});
 			return cb({ status: 'success', message: 'Playlist successfully removed' });
 		});
