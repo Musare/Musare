@@ -1,84 +1,79 @@
 <template>
-	<div class='modal is-active'>
-		<div class='modal-background'></div>
-		<div class='modal-card'>
-			<header class='modal-card-head'>
-				<p class='modal-card-title'>Editing: {{ playlist.displayName }}</p>
-				<button class='delete' @click='$parent.modals.editPlaylist = !$parent.modals.editPlaylist'></button>
-			</header>
-			<section class='modal-card-body'>
-				<aside class='menu' v-if='playlist.songs && playlist.songs.length > 0'>
-					<ul class='menu-list'>
-						<li v-for='song in playlist.songs' track-by='$index'>
-							<a :href='' target='_blank'>{{ song.title }}</a>
-							<div class='controls'>
-								<a href='#' @click='promoteSong(song._id)'>
-									<i class='material-icons' v-if='$index > 0'>keyboard_arrow_up</i>
-									<i class='material-icons' style='opacity: 0' v-else>error</i>
-								</a>
-								<a href='#' @click='demoteSong(song._id)'>
-									<i class='material-icons' v-if='playlist.songs.length - 1 !== $index'>keyboard_arrow_down</i>
-									<i class='material-icons' style='opacity: 0' v-else>error</i>
-								</a>
-								<a href='#' @click='removeSongFromPlaylist(song._id)'><i class='material-icons'>delete</i></a>
-							</div>
-						</li>
-					</ul>
-					<br />
-				</aside>
-				<div class='control is-grouped'>
-					<p class='control is-expanded'>
-						<input class='input' type='text' placeholder='Search for Song to add' v-model='songQuery' autofocus @keyup.enter='searchForSongs()'>
-					</p>
-					<p class='control'>
-						<a class='button is-info' @click='searchForSongs()' href="#">Search</a>
-					</p>
-				</div>
-				<table class='table' v-if='songQueryResults.length > 0'>
-					<tbody>
-						<tr v-for='result in songQueryResults'>
-							<td>
-								<img :src='result.thumbnail' />
-							</td>
-							<td>{{ result.title }}</td>
-							<td>
-								<a class='button is-success' @click='addSongToPlaylist(result.id)' href='#'>
-									Add
-								</a>
-							</td>
-						</tr>
-					</tbody>
-				</table>
-				<div class='control is-grouped'>
-					<p class='control is-expanded'>
-						<input class='input' type='text' placeholder='YouTube Playlist URL' v-model='importQuery' @keyup.enter="importPlaylist()">
-					</p>
-					<p class='control'>
-						<a class='button is-info' @click='importPlaylist()' href="#">Import</a>
-					</p>
-				</div>
-				<h5>Edit playlist details:</h5>
-				<div class='control is-grouped'>
-					<p class='control is-expanded'>
-						<input class='input' type='text' placeholder='Playlist Display Name' v-model='playlist.displayName' @keyup.enter="renamePlaylist()">
-					</p>
-					<p class='control'>
-						<a class='button is-info' @click='renamePlaylist()' href="#">Rename</a>
-					</p>
-				</div>
-			</section>
-			<footer class='modal-card-foot'>
-				<a class='button is-danger' @click='removePlaylist()' href="#">Remove Playlist</a>
-			</footer>
+	<modal title='Edit Playlist'>
+		<div slot='body'>
+			<aside class='menu' v-if='playlist.songs && playlist.songs.length > 0'>
+				<ul class='menu-list'>
+					<li v-for='song in playlist.songs' track-by='$index'>
+						<a :href='' target='_blank'>{{ song.title }}</a>
+						<div class='controls'>
+							<a href='#' @click='promoteSong(song._id)'>
+								<i class='material-icons' v-if='$index > 0'>keyboard_arrow_up</i>
+								<i class='material-icons' style='opacity: 0' v-else>error</i>
+							</a>
+							<a href='#' @click='demoteSong(song._id)'>
+								<i class='material-icons' v-if='playlist.songs.length - 1 !== $index'>keyboard_arrow_down</i>
+								<i class='material-icons' style='opacity: 0' v-else>error</i>
+							</a>
+							<a href='#' @click='removeSongFromPlaylist(song._id)'><i class='material-icons'>delete</i></a>
+						</div>
+					</li>
+				</ul>
+				<br />
+			</aside>
+			<div class='control is-grouped'>
+				<p class='control is-expanded'>
+					<input class='input' type='text' placeholder='Search for Song to add' v-model='songQuery' autofocus @keyup.enter='searchForSongs()'>
+				</p>
+				<p class='control'>
+					<a class='button is-info' @click='searchForSongs()' href="#">Search</a>
+				</p>
+			</div>
+			<table class='table' v-if='songQueryResults.length > 0'>
+				<tbody>
+				<tr v-for='result in songQueryResults'>
+					<td>
+						<img :src='result.thumbnail' />
+					</td>
+					<td>{{ result.title }}</td>
+					<td>
+						<a class='button is-success' @click='addSongToPlaylist(result.id)' href='#'>
+							Add
+						</a>
+					</td>
+				</tr>
+				</tbody>
+			</table>
+			<div class='control is-grouped'>
+				<p class='control is-expanded'>
+					<input class='input' type='text' placeholder='YouTube Playlist URL' v-model='importQuery' @keyup.enter="importPlaylist()">
+				</p>
+				<p class='control'>
+					<a class='button is-info' @click='importPlaylist()' href="#">Import</a>
+				</p>
+			</div>
+			<h5>Edit playlist details:</h5>
+			<div class='control is-grouped'>
+				<p class='control is-expanded'>
+					<input class='input' type='text' placeholder='Playlist Display Name' v-model='playlist.displayName' @keyup.enter="renamePlaylist()">
+				</p>
+				<p class='control'>
+					<a class='button is-info' @click='renamePlaylist()' href="#">Rename</a>
+				</p>
+			</div>
 		</div>
-	</div>
+		<div slot='footer'>
+			<a class='button is-danger' @click='removePlaylist()' href="#">Remove Playlist</a>
+		</div>
+	</modal>
 </template>
 
 <script>
 	import { Toast } from 'vue-roaster';
+	import Modal from '../Modal.vue';
 	import io from '../../../io';
 
 	export default {
+		components: { Modal },
 		data() {
 			return {
 				playlist: {},
