@@ -48,7 +48,7 @@
 		},
 		methods: {
 			changeRank(newRank) {
-				this.socket.emit('users.update', this.$route.params.username, 'role', ((newRank == 'admin') ? 'admin' : 'default'), res => {
+				this.socket.emit('users.updateRole', this.user._id, 'role', ((newRank == 'admin') ? 'admin' : 'default'), res => {
 					if (res.status == 'error') Toast.methods.addToast(res.message, 2000);
 					else this.user.role = newRank; Toast.methods.addToast(`User ${this.$route.params.username}'s rank has been changed to: ${newRank}`, 2000);
 				});

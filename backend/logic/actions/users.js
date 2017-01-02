@@ -375,5 +375,29 @@ module.exports = {
 				});
 			}
 		});
+	}),
+
+	/**
+	 * Updates a user's role
+	 *
+	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {String} updatingUserId - the updating user's id
+	 * @param {String} newRole - the new role
+	 * @param {Function} cb - gets called with the result
+	 * @param {String} userId - the userId automatically added by hooks
+	 */
+	updateRole: hooks.adminRequired((session, updatingUserId, newRole, cb, userId) => {
+		newRole = newRole.toLowerCase();
+		db.models.user.update({_id: updatingUserId}, {$set: {role: newRole}}, (err) => {
+			if (err) {
+				logger.error("UPDATE_ROLE", `Failed updating user. Mongo error. '${err.message}'.`);
+				return cb({ status: 'error', message: 'Something went wrong.' });
+			}
+			logger.error("UPDATE_ROLE", `User '${userId}' updated the role of user '${updatingUserId}' to role '${newRole}'.`);
+			cb({
+				status: 'success',
+				message: 'Role successfully updated.'
+			});
+		});
 	})
 };

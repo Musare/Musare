@@ -45,6 +45,7 @@
 					<a class='button is-info' @click='updatePartyMode()' href='#'>Update</a>
 				</p>
 			</div>
+			<button class='button is-danger' @click='deleteStation()' v-if="$parent.type === 'community'">Delete station</button>
 		</div>
 	</modal>
 </template>
@@ -99,6 +100,14 @@
 						return Toast.methods.addToast(res.message, 4000);
 					}
 					Toast.methods.addToast(res.message, 8000);
+				});
+			},
+			deleteStation: function() {
+				this.socket.emit('stations.remove', this.data.stationId, res => {
+					Toast.methods.addToast(res.message, 8000);
+					if (res.status === 'success') {
+						location.href = '/';
+					}
 				});
 			}
 		},
