@@ -4,6 +4,7 @@
 		<div class="container">
 			<img class="avatar" src="/assets/notes.png"/>
 			<h2 class="has-text-centered username">@{{user.username}}</h2>
+			<h5>A member since {{user.createdAt}}</h5>
 			<div class="admin-functionality" v-if="user.role == 'admin'">
 				<a class="button is-small is-info is-outlined" href='#' @click="changeRank('admin')" v-if="user.role == 'default'">Promote to Admin</a>
 				<a class="button is-small is-danger is-outlined" href='#' @click="changeRank('default')" v-else>Demote to User</a>
@@ -59,7 +60,11 @@
 				_this.socket = socket;
 				_this.socket.emit('users.findByUsername', _this.$route.params.username, res => {
 					if (res.status == 'error') this.$router.go('/404');
-					else _this.user = res.data; _this.isUser = true;
+					else {
+						_this.user = res.data;
+						this.user.createdAt = moment(this.user.createdAt).format('LL');
+						_this.isUser = true;
+					}
 				});
 			});
 		},
@@ -77,6 +82,12 @@
 		width: 250px;
 		display: block;
 		margin: auto;
+	}
+
+	h5 {
+		text-align: center;
+		margin-bottom: 25px;
+		font-size: 17px;
 	}
 
 	.level {

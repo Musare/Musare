@@ -28,7 +28,7 @@
     "vue-loader": "^8.5.2",
     "vue-style-loader": "^1.0.0",
     "whatwg-fetch": "^0.11.1",
-		"webpack": "^1.14.0",
+	"webpack": "^1.14.0",
     "webpack-dev-server": "^1.15.1"
   },
   "dependencies": {
