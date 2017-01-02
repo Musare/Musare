@@ -12,7 +12,7 @@
 			<nav class="level">
 				<div class="level-item has-text-centered">
 					<p class="heading">Rank</p>
-					<p class="title">User</p>
+					<p class="title role">{{user.role}}</p>
 				</div>
 				<div class="level-item has-text-centered">
 					<p class="heading">Songs Requested</p>
@@ -90,9 +90,9 @@
 		font-size: 17px;
 	}
 
-	.level {
-		margin-top: 40px;
-	}
+	.role { text-transform: capitalize; }
+
+	.level { margin-top: 40px; }
 
 	.admin-functionality {
 		text-align: center;
