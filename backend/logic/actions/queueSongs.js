@@ -43,9 +43,22 @@ module.exports = {
 			if (err) {
 				logger.error("QUEUE_INDEX", `Indexing queuesongs failed. "${err.message}"`);
 				return cb({status: 'failure', message: 'Something went wrong.'});
+			} else {
+				module.exports.getSet(session, 1, result => {
+					logger.success("QUEUE_INDEX", `Indexing queuesongs successful.`);
+					return cb({
+						songs: result,
+						maxLength: songs.length
+					});
+				});
 			}
-			logger.success("QUEUE_INDEX", `Indexing queuesongs successful.`);
-			return cb(songs);
+		});
+	}),
+
+	getSet: hooks.adminRequired((session, set, cb) => {
+		db.models.queueSong.find({}).limit(50 * set).exec((err, songs) => {
+			if (err) throw err;
+			cb(songs.splice(Math.max(songs.length - 50, 0)));
 		});
 	}),
 

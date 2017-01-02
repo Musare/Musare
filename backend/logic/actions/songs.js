@@ -62,15 +62,22 @@ cache.sub('song.undislike', (data) => {
 
 module.exports = {
 
-	index: hooks.adminRequired((session, cb) => {
+	length: hooks.adminRequired((session, cb) => {
 		db.models.song.find({}, (err, songs) => {
-			if (err) throw err;
-			cb(songs);
+			if (err) console.error(err);
+			cb(songs.length);
+		})
+	}),
+
+	getSet: hooks.adminRequired((session, set, cb) => {
+		db.models.song.find({}).limit(15 * set).exec((err, songs) => {
+			if (err) console.error(err);
+			cb(songs.splice(Math.max(songs.length - 15, 0)));
 		});
 	}),
 
 	update: hooks.adminRequired((session, songId, song, cb) => {
-		db.models.song.update({ _id: songId }, song, { upsert: true }, (err, updatedSong) => {
+		db.models.song.update({ _id: songId }, song, { upsert: true }, err => {
 			if (err) console.error(err);
 			songs.updateSong(songId, (err, song) => {
 				if (err) console.error(err);
