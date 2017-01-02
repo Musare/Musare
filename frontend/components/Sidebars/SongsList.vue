@@ -30,7 +30,7 @@
 						<p>
 							<strong>{{ song.title }}</strong>
 							<br>
-							<small>{{ song.artists }}</small>
+							<small>{{ song.artists.join(', ') }}</small>
 						</p>
 					</div>
 				</div>
