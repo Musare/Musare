@@ -157,6 +157,8 @@ module.exports = {
 					if (songList.indexOf(songId) !== -1) playlist.push(songId);
 				});
 
+				playlist = utils.shuffle(playlist);
+
 				_this.calculateOfficialPlaylistList(station._id, playlist, () => {
 					next(null, playlist);
 				});
