@@ -1,28 +1,23 @@
 <template>
-	<div class='modal is-active'>
-		<div class='modal-background'></div>
-		<div class='modal-card'>
-			<header class='modal-card-head'>
-				<p class='modal-card-title'>Create Playlist</p>
-				<button class='delete' @click='$parent.modals.createPlaylist = !$parent.modals.createPlaylist'></button>
-			</header>
-			<section class='modal-card-body'>
-				<p class='control is-expanded'>
-					<input class='input' type='text' placeholder='Playlist Display Name' v-model='playlist.displayName' autofocus @keyup.enter='createPlaylist()'>
-				</p>
-			</section>
-			<footer class='modal-card-foot'>
-				<a class='button is-info' @click='createPlaylist()'>Create Playlist</a>
-			</footer>
+	<modal title='Create Playlist'>
+		<div slot='body'>
+			<p class='control is-expanded'>
+				<input class='input' type='text' placeholder='Playlist Display Name' v-model='playlist.displayName' autofocus @keyup.enter='createPlaylist()'>
+			</p>
 		</div>
-	</div>
+		<div slot='footer'>
+			<a class='button is-info' @click='createPlaylist()'>Create Playlist</a>
+		</div>
+	</modal>
 </template>
 
 <script>
 	import { Toast } from 'vue-roaster';
+	import Modal from '../Modal.vue';
 	import io from '../../../io';
 
 	export default {
+		components: { Modal },
 		data() {
 			return {
 				playlist: {
