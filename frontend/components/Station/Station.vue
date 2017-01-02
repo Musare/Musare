@@ -157,6 +157,10 @@
 								if (volume > 0) local.player.unMute();
 								local.playVideo();
 							},
+							'onError': function(err) {
+								console.log("iframe error", err);
+								local.voteSkipStation();
+							},
 							'onStateChange': function (event) {
 								if (event.data === 1 && local.videoLoading === true) {
 									local.videoLoading = false;
