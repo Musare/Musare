@@ -215,7 +215,10 @@ module.exports = {
 			},
 
 			(station, next) => {
-				if (!station) return next('Station not found');
+				if (!station) {
+					cache.hdel('stations', stationId);
+					return next('Station not found');
+				}
 				cache.hset('stations', stationId, station, next);
 			}
 

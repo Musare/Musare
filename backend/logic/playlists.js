@@ -110,7 +110,10 @@ module.exports = {
 			},
 
 			(playlist, next) => {
-				if (!playlist) return next('Playlist not found');
+				if (!playlist) {
+					cache.hdel('playlists', playlistId);
+					return next('Playlist not found');
+				}
 				cache.hset('playlists', playlistId, playlist, next);
 			}
 

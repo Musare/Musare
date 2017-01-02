@@ -94,12 +94,12 @@ module.exports = {
 			},
 
 			(song, next) => {
-				if (!song) return next('Song not found.');
+				if (!song) {
+					cache.hdel('songs', songId);
+					return next('Song not found.');
+				}
 
-				cache.hset('songs', songId, song, (err) => {
-					if (err) return next(err);
-					return next(null, song);
-				});
+				cache.hset('songs', songId, song, next);
 			}
 
 		], (err, song) => {
