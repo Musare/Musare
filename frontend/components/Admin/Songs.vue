@@ -100,6 +100,14 @@
 							return song._id !== songId;
 						});
 					});
+					_this.socket.on('event:admin.song.updated', updatedSong => {
+						for (let i = 0; i < _this.songs.length; i++) {
+							let song = _this.songs[i];
+							if (song._id === updatedSong._id) {
+								_this.songs.$set(i, updatedSong);
+							}
+						}
+					});
 				}
 				io.onConnect(() => {
 					_this.init();

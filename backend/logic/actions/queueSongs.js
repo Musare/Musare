@@ -20,9 +20,10 @@ cache.sub('queue.removedSong', songId => {
 	utils.emitToRoom('admin.queue', 'event:admin.queueSong.removed', songId);
 });
 
-cache.sub('queue.updatedSong', songId => {
-	//TODO Retrieve new Song object
-	utils.emitToRoom('admin.queue', 'event:queueSong.updated', { songId });
+cache.sub('queue.update', songId => {
+	db.models.queueSong.findOne({_id: songId}, (err, song) => {
+		utils.emitToRoom('admin.queue', 'event:admin.queueSong.updated', song);
+	});
 });
 
 module.exports = {
@@ -79,7 +80,7 @@ module.exports = {
 				logger.error("QUEUE_UPDATE", `Updating queuesong "${songId}" failed for user ${userId}. "${err.message}"`);
 				return cb({status: 'failure', message: error});
 			}
-			cache.pub('queue.updatedSong', songId);
+			cache.pub('queue.update', songId);
 			logger.success("QUEUE_UPDATE", `User "${userId}" successfully update queuesong "${songId}".`);
 			return cb({status: 'success', message: 'Successfully updated song.'});
 		});

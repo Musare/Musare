@@ -13,8 +13,14 @@ cache.sub('song.removed', songId => {
 });
 
 cache.sub('song.added', songId => {
-	db.models.queueSong.findOne({_id: songId}, (err, song) => {
+	db.models.song.findOne({_id: songId}, (err, song) => {
 		utils.emitToRoom('admin.songs', 'event:admin.song.added', song);
+	});
+});
+
+cache.sub('song.updated', songId => {
+	db.models.song.findOne({_id: songId}, (err, song) => {
+		utils.emitToRoom('admin.songs', 'event:admin.song.updated', song);
 	});
 });
 
@@ -68,6 +74,7 @@ module.exports = {
 			if (err) console.error(err);
 			songs.updateSong(songId, (err, song) => {
 				if (err) console.error(err);
+				cache.pub('song.updated', song._id);
 				cb({ status: 'success', message: 'Song has been successfully updated', data: song });
 			});
 		});
