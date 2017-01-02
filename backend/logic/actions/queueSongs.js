@@ -161,6 +161,18 @@ module.exports = {
 					if (err) return next(err);
 					next(null, newSong);
 				});
+			},
+			(newSong, next) => {
+				db.models.user.findOne({ _id: userId }, (err, user) => {
+					if (err) next(err, newSong);
+					else {
+						user.statistics.songsRequested = user.statistics.songsRequested + 1;
+						user.save(err => {
+							if (err) return next(err, newSong);
+							else next(null, newSong);
+						});
+					}
+				});
 			}
 		], (err, newSong) => {
 			if (err) {
