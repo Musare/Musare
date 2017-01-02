@@ -208,19 +208,18 @@ module.exports = {
 	 * @param {Function} cb - gets called with the result
 	 */
 	findByUsername: (session, username, cb) => {
-		db.models.user.find({ username }, (err, account) => {
+		db.models.user.findOne({ username: new RegExp(`^${username}$`, 'i') }, (err, account) => {
 			if (err) {
 				logger.error("FIND_BY_USERNAME", "Find by username failed for username '" + username + "'. Mongo error.");
-				throw err;
+				return cb({ 'status': 'error', message: err.message });
 			}
-			else if (account.length == 0) {
+			else if (!account) {
 				logger.error("FIND_BY_USERNAME", "User not found for username '" + username + "'.");
 				return cb({
 					status: 'error',
-					message: 'Username cannot be found'
+					message: 'User cannot be found'
 				});
 			} else {
-				account = account[0];
 				logger.success("FIND_BY_USERNAME", "User found for username '" + username + "'.");
 				return cb({
 					status: 'success',
@@ -229,7 +228,6 @@ module.exports = {
 						username: account.username,
 						role: account.role,
 						email: account.email.address,
-						password: '',
 						createdAt: account.createdAt,
 						statistics: account.statistics,
 						liked: account.liked,
