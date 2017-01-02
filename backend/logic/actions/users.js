@@ -255,15 +255,22 @@ module.exports = {
 				logger.error("FIND_BY_SESSION", "Session not found. Not logged in.");
 				return cb({ 'status': 'error', message: 'You are not logged in' });
 			}
-			db.models.user.findOne({ _id: session.userId }, {username: 1, "email.address": 1}, (err, user) => {
+			db.models.user.findOne({ _id: session.userId }, (err, user) => {
 				if (err) {
 					logger.error("FIND_BY_SESSION", "User not found. Failed getting user. Mongo error.");
 					throw err;
 				} else if (user) {
+					let userObj = {
+						email: {
+							address: user.email.address
+						},
+						username: user.username
+					};
+					if (user.services.password && user.services.password.password) userObj.password = true;
 					logger.success("FIND_BY_SESSION", "User found. '" + user.username + "'.");
 					return cb({
 						status: 'success',
-						data: user
+						data: userObj
 					});
 				}
 			});
@@ -397,6 +404,51 @@ module.exports = {
 			cb({
 				status: 'success',
 				message: 'Role successfully updated.'
+			});
+		});
+	}),
+
+	/**
+	 * Updates a user's password
+	 *
+	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {String} newPassword - the new password
+	 * @param {Function} cb - gets called with the result
+	 * @param {String} userId - the userId automatically added by hooks
+	 */
+	updatePassword: hooks.loginRequired((session, newPassword, cb, userId) => {
+		async.waterfall([
+			(next) => {
+				db.models.user.findOne({_id: userId}, next);
+			},
+
+			(user, next) => {
+				if (!user.services.password) return next('This account does not have a password set.');
+				next();
+			},
+
+			(next) => {
+				bcrypt.genSalt(10, next);
+			},
+
+			// hash the password
+			(salt, next) => {
+				bcrypt.hash(sha256(newPassword), salt, next);
+			},
+
+			(hashedPassword, next) => {
+				db.models.user.update({_id: userId}, {$set: {"services.password.password": hashedPassword}}, next);
+			}
+		], (err) => {
+			if (err) {
+				logger.error("UPDATE_PASSWORD", `Failed updating user. Mongo error. '${err.message}'.`);
+				return cb({ status: 'error', message: 'Something went wrong.' });
+			}
+
+			logger.error("UPDATE_PASSWORD", `User '${userId}' updated their password.`);
+			cb({
+				status: 'success',
+				message: 'Password successfully updated.'
 			});
 		});
 	})

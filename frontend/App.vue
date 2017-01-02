@@ -95,7 +95,8 @@
 								lofig.get('cookie', cookie => {
 									let date = new Date();
 									date.setTime(new Date().getTime() + (2 * 365 * 24 * 60 * 60 * 1000));
-									document.cookie = `SID=${result.SID}; expires=${date.toGMTString()}; domain=${cookie.domain}; secure=${cookie.secure}; path=/`;
+									let secure = (cookie.secure) ? 'secure=true; ' : '';
+									document.cookie = `SID=${result.SID}; expires=${date.toGMTString()}; domain=${cookie.domain}; ${secure}path=/`;
 									location.reload();
 								});
 							} else _this.$router.go('/login');
@@ -111,7 +112,8 @@
 						lofig.get('cookie', cookie => {
 							let date = new Date();
 							date.setTime(new Date().getTime() + (2 * 365 * 24 * 60 * 60 * 1000));
-							document.cookie = `SID=${result.SID}; expires=${date.toGMTString()}; domain=${cookie.domain}; secure=${cookie.secure}; path=/`;
+							let secure = (cookie.secure) ? 'secure=true; ' : '';
+							document.cookie = `SID=${result.SID}; expires=${date.toGMTString()}; domain=${cookie.domain}; ${secure}path=/`;
 							Toast.methods.addToast(`You have been successfully logged in`, 2000);
 							_this.$router.go('/');
 							location.reload();
