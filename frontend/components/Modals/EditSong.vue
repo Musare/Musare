@@ -258,7 +258,7 @@
 		},
 		events: {
 			closeModal: function () {
-				this.$parent.toggleModal();
+				this.$parent.modals.editSong = false;
 			},
 			editSong: function (song, index, type) {
 				this.video.player.loadVideoById(song._id, this.editing.song.skipDuration);
