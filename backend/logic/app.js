@@ -4,6 +4,9 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const config = require('config');
+const async = require('async');
+const logger = require('./logger');
+const mail = require('./mail');
 const request = require('request');
 const OAuth2 = require('oauth').OAuth2;
 
@@ -98,6 +101,7 @@ const lib = {
 											if (email.primary) address = email.email.toLowerCase();
 										});
 										db.models.user.findOne({'email.address': address}, (err, user) => {
+											let verificationToken = utils.generateRandomString(64);
 											if (err) return redirectOnErr(res, err.message);
 											if (user) return redirectOnErr(res, 'An account with that email address already exists.');
 											else db.models.user.create({
@@ -105,14 +109,14 @@ const lib = {
 												username: body.login,
 												email: {
 													address,
-													verificationToken: utils.generateRandomString(64)
+													verificationToken: verificationToken
 												},
 												services: {
 													github: {id: body.id, access_token}
 												}
 											}, (err, user) => {
 												if (err) return redirectOnErr(res, err.message);
-												//TODO Send verification email
+												mail.schemas.verifyEmail(address, body.login, verificationToken);
 												let sessionId = utils.guid();
 												cache.hset('sessions', sessionId, cache.schemas.session(sessionId, user._id), err => {
 													if (err) return redirectOnErr(res, err.message);
@@ -132,9 +136,38 @@ const lib = {
 			});
 		});
 
+		app.get('/auth/verify_email', (req, res) => {
+			let code = req.query.code;
+
+			async.waterfall([
+				(next) => {
+					if (!code) return next('Invalid code.');
+					next();
+				},
+
+				(next) => {
+					db.models.user.findOne({"email.verificationToken": code}, next);
+				},
+
+				(user, next) => {
+					if (!user) return next('User not found.');
+					if (user.email.verified) return next('This email is already verified.');
+					db.models.user.update({"email.verificationToken": code}, {$set: {"email.verified": true}, $unset: {"email.verificationToken": ''}}, next);
+				}
+			], (err) => {
+				if (err) {
+					let error = 'An error occurred.';
+					if (typeof err === "string") error = err;
+					else if (err.message) error = err.message;
+					logger.error("VERIFY_EMAIL", `Verifying email failed. "${error}"`);
+					return res.json({ status: 'failure', message: error});
+				}
+				logger.success("VERIFY_EMAIL", `Successfully verified email.`);
+				res.redirect(config.get("domain"));
+			});
+		});
+
 		cb();
-
-
 	}
 };
 

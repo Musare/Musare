@@ -6,6 +6,7 @@ const async = require('async');
 
 const db = require('./logic/db');
 const app = require('./logic/app');
+const mail = require('./logic/mail');
 const api = require('./logic/api');
 const io = require('./logic/io');
 const stations = require('./logic/stations');
@@ -34,6 +35,9 @@ async.waterfall([
 
 	// setup the express server
 	(next) => app.init(next),
+
+	// setup the mail
+	(next) => mail.init(next),
 
 	// setup the socket.io server (all client / server communication is done over this)
 	(next) => io.init(next),

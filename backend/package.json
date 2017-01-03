@@ -20,6 +20,7 @@
     "cors": "^2.8.1",
     "express": "^4.14.0",
     "express-session": "^1.14.0",
+    "mailgun-js": "^0.8.0",
     "moment": "^2.15.2",
     "mongoose": "^4.6.0",
     "oauth": "^0.9.14",

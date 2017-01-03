@@ -6,6 +6,7 @@ const request = require('request');
 const bcrypt = require('bcrypt');
 
 const db = require('../db');
+const mail = require('../mail');
 const cache = require('../cache');
 const utils = require('../utils');
 const hooks = require('./hooks');
@@ -88,6 +89,7 @@ module.exports = {
 	 */
 	register: function(session, username, email, password, recaptcha, cb) {
 		email = email.toLowerCase();
+		let verificationToken = utils.generateRandomString(64);
 		async.waterfall([
 
 			// verify the request with google recaptcha
@@ -136,7 +138,7 @@ module.exports = {
 					username,
 					email: {
 						address: email,
-						verificationToken: utils.generateRandomString(64)
+						verificationToken: verificationToken
 					},
 					services: {
 						password: {
@@ -149,7 +151,9 @@ module.exports = {
 			// respond with the new user
 			(newUser, next) => {
 				//TODO Send verification email
-				next();
+				mail.schemas.verifyEmail(email, username, verificationToken, () => {
+					next();
+				});
 			}
 
 		], (err) => {
@@ -365,11 +369,16 @@ module.exports = {
 						logger.error("UPDATE_EMAIL", `Email already in use.`);
 						return cb({ status: 'failure', message: 'That email is already in use.' });
 					}
-					db.models.user.update({_id: userId}, {$set: {"email.address": newEmail}}, (err) => {
+					let verificationToken = utils.generateRandomString(64);
+					db.models.user.update({_id: userId}, {$set: {"email.address": newEmail, "email.verified": false, "email.verificationToken": verificationToken}}, (err) => {
 						if (err) {
 							logger.error("UPDATE_EMAIL", `Couldn't update user. Mongo error. ${err.message}`);
 							return cb({ status: 'error', message: err.message });
 						}
+						console.log(12, newEmail, user.username, verificationToken);
+						mail.schemas.verifyEmail(newEmail, user.username, verificationToken, (err) => {
+							console.log(1, err);
+						});
 						logger.success("UPDATE_EMAIL", `Updated email. '${userId}' ${newEmail}'`);
 						cb({ status: 'success', message: 'Email updated successfully.' });
 					});
