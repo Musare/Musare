@@ -20,13 +20,13 @@ module.exports = {
 	success: (type, message) => {
 		getTime((time) => {
 			let timeString = `${time.year}-${twoDigits(time.month)}-${twoDigits(time.day)} ${twoDigits(time.hour)}:${twoDigits(time.minute)}:${twoDigits(time.second)}`;
-			console.info('\x1b[32m', timeString, 'SUCCESS', '-', message, '\x1b[0m');
+			console.info('\x1b[32m', timeString, 'SUCCESS', '-', type, '-', message, '\x1b[0m');
 		});
 	},
 	error: (type, message) => {
 		getTime((time) => {
 			let timeString = `${time.year}-${twoDigits(time.month)}-${twoDigits(time.day)} ${twoDigits(time.hour)}:${twoDigits(time.minute)}:${twoDigits(time.second)}`;
-			console.warn('\x1b[31m', timeString, 'ERROR', type, '-', message, '\x1b[0m');
+			console.warn('\x1b[31m', timeString, 'ERROR', '-', type, '-', message, '\x1b[0m');
 		});
 	}
 };
