@@ -24,6 +24,48 @@ cache.sub('user.updateUsername', user => {
 module.exports = {
 
 	/**
+	 * Lists all Users
+	 *
+	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {Function} cb - gets called with the result
+	 */
+	index: hooks.adminRequired((session, cb) => {
+		async.waterfall([
+			(next) => {
+				db.models.user.find({}).exec(next);
+			}
+		], (err, users) => {
+			if (err) {
+				logger.error("USER_INDEX", `Indexing users failed. "${err.message}"`);
+				return cb({status: 'failure', message: 'Something went wrong.'});
+			} else {
+				logger.success("USER_INDEX", `Indexing users successful.`);
+				let filteredUsers = [];
+				users.forEach(user => {
+					filteredUsers.push({
+						_id: user._id,
+						username: user.username,
+						role: user.role,
+						liked: user.liked,
+						disliked: user.disliked,
+						songsRequested: user.statistics.songsRequested,
+						email: {
+							address: user.email.address,
+							verified: user.email.verified
+						},
+						hasPassword: () => {
+							if (user.services.password) return true;
+							else return false;
+						},
+						services: { github: user.services.github }
+					});
+				});
+				return cb({ status: 'success', data: filteredUsers });
+			}
+		});
+	}),
+
+	/**
 	 * Logs user in
 	 *
 	 * @param {Object} session - the session object automatically added by socket.io
@@ -311,14 +353,15 @@ module.exports = {
 	 * Updates a user's username
 	 *
 	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {String} updatingUserId - the updating user's id
 	 * @param {String} newUsername - the new username
 	 * @param {Function} cb - gets called with the result
 	 * @param {String} userId - the userId automatically added by hooks
 	 */
-	updateUsername: hooks.loginRequired((session, newUsername, cb, userId) => {
+	updateUsername: hooks.loginRequired((session, updatingUserId, newUsername, cb, userId) => {
 		async.waterfall([
 			(next) => {
-				db.models.user.findOne({ _id: userId }, next);
+				db.models.user.findOne({ _id: updatingUserId }, next);
 			},
 
 			(user, next) => {
@@ -333,26 +376,26 @@ module.exports = {
 
 			(user, next) => {
 				if (!user) return next();
-				if (user._id === userId) return next();
+				if (user._id === updatingUserId) return next();
 				next('That username is already in use.');
 			},
 
 			(next) => {
-				db.models.user.update({ _id: userId }, {$set: {username: newUsername}}, next);
+				db.models.user.update({ _id: updatingUserId }, {$set: {username: newUsername}}, next);
 			}
 		], (err) => {
 			if (err && err !== true) {
 				let error = 'An error occurred.';
 				if (typeof err === "string") error = err;
 				else if (err.message) error = err.message;
-				logger.error("UPDATE_USERNAME", `Couldn't update username for user '${userId}' to username '${newUsername}'. '${error}'`);
+				logger.error("UPDATE_USERNAME", `Couldn't update username for user '${updatingUserId}' to username '${newUsername}'. '${error}'`);
 				cb({status: 'failure', message: error});
 			} else {
 				cache.pub('user.updateUsername', {
 					username: newUsername,
-					_id: userId
+					_id: updatingUserId
 				});
-				logger.success("UPDATE_USERNAME", `Updated username for user '${userId}' to username '${newUsername}'.`);
+				logger.success("UPDATE_USERNAME", `Updated username for user '${updatingUserId}' to username '${newUsername}'.`);
 				cb({ status: 'success', message: 'Username updated successfully' });
 			}
 		});
@@ -362,16 +405,17 @@ module.exports = {
 	 * Updates a user's email
 	 *
 	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {String} updatingUserId - the updating user's id
 	 * @param {String} newEmail - the new email
 	 * @param {Function} cb - gets called with the result
 	 * @param {String} userId - the userId automatically added by hooks
 	 */
-	updateEmail: hooks.loginRequired((session, newEmail, cb, userId) => {
+	updateEmail: hooks.loginRequired((session, updatingUserId, newEmail, cb, userId) => {
 		newEmail = newEmail.toLowerCase();
 		let verificationToken = utils.generateRandomString(64);
 		async.waterfall([
 			(next) => {
-				db.models.user.findOne({ _id: userId }, next);
+				db.models.user.findOne({ _id: updatingUserId }, next);
 			},
 
 			(user, next) => {
@@ -386,16 +430,16 @@ module.exports = {
 
 			(user, next) => {
 				if (!user) return next();
-				if (user._id === userId) return next();
+				if (user._id === updatingUserId) return next();
 				next('That email is already in use.');
 			},
 
 			(next) => {
-				db.models.user.update({_id: userId}, {$set: {"email.address": newEmail, "email.verified": false, "email.verificationToken": verificationToken}}, next);
+				db.models.user.update({_id: updatingUserId}, {$set: {"email.address": newEmail, "email.verified": false, "email.verificationToken": verificationToken}}, next);
 			},
 
 			(res, next) => {
-				db.models.user.findOne({ _id: userId }, next);
+				db.models.user.findOne({ _id: updatingUserId }, next);
 			},
 
 			(user, next) => {
@@ -406,10 +450,10 @@ module.exports = {
 				let error = 'An error occurred.';
 				if (typeof err === "string") error = err;
 				else if (err.message) error = err.message;
-				logger.error("UPDATE_EMAIL", `Couldn't update email for user '${userId}' to email '${newEmail}'. '${error}'`);
+				logger.error("UPDATE_EMAIL", `Couldn't update email for user '${updatingUserId}' to email '${newEmail}'. '${error}'`);
 				cb({status: 'failure', message: error});
 			} else {
-				logger.success("UPDATE_EMAIL", `Updated email for user '${userId}' to email '${newEmail}'.`);
+				logger.success("UPDATE_EMAIL", `Updated email for user '${updatingUserId}' to email '${newEmail}'.`);
 				cb({ status: 'success', message: 'Email updated successfully.' });
 			}
 		});

@@ -44,7 +44,7 @@ module.exports = {
 	},
 
 	joinAdminRoom: hooks.adminRequired((session, page, cb) => {
-		if (page === 'queue' || page === 'songs' || page === 'stations' || page === 'reports' || page === 'news') {
+		if (page === 'queue' || page === 'songs' || page === 'stations' || page === 'reports' || page === 'news' || page === 'users') {
 			utils.socketJoinRoom(session.socketId, `admin.${page}`);
 		}
 		cb({});

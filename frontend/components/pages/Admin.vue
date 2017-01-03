@@ -33,6 +33,12 @@
 						<span>&nbsp;News</span>
 					</a>
 				</li>
+				<li :class='{ "is-active": currentTab == "users" }' @click='showTab("users")'>
+					<a>
+						<i class="material-icons">person</i>
+						<span>&nbsp;Users</span>
+					</a>
+				</li>
 			</ul>
 		</div>
 
@@ -41,6 +47,7 @@
 		<stations v-if='currentTab == "stations"'></stations>
 		<reports v-if='currentTab == "reports"'></reports>
 		<news v-if='currentTab == "news"'></news>
+		<users v-if='currentTab == "users"'></users>
 	</div>
 </template>
 
@@ -53,6 +60,7 @@
 	import Stations from '../Admin/Stations.vue';
 	import Reports from '../Admin/Reports.vue';
 	import News from '../Admin/News.vue';
+	import Users from '../Admin/Users.vue';
 
 	export default {
 		components: {
@@ -62,7 +70,8 @@
 			Songs,
 			Stations,
 			Reports,
-			News
+			News,
+			Users
 		},
 		data() {
 			return {
