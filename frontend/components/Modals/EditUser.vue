@@ -7,7 +7,7 @@
 					<a class="button is-info" @click='updateUsername()'>Update Username</a>
 				</p>
 				<p class="control has-addons">
-					<input class='input is-expanded' type='text' placeholder='Username' v-model='editing.email.address' autofocus>
+					<input class='input is-expanded' type='text' placeholder='Username' v-model='editing.email' autofocus>
 					<a class="button is-info" @click='updateEmail()'>Update Email Address</a>
 				</p>
 				<p class="control has-addons">
@@ -59,7 +59,7 @@
 				});
 			},
 			updateEmail: function () {
-				this.socket.emit(`users.updateEmail`, this.editing._id, this.editing.email.address, res => {
+				this.socket.emit(`users.updateEmail`, this.editing._id, this.editing.email, res => {
 					Toast.methods.addToast(res.message, 4000);
 				});
 			},
@@ -80,7 +80,12 @@
 				this.$parent.modals.editUser = false;
 			},
 			editUser: function (user) {
-				this.editing = user;
+				this.editing = {
+					_id: user._id,
+					username: user.username,
+					email: user.email.address,
+					role: user.role
+				};
 				this.$parent.toggleModal();
 			}
 		}
