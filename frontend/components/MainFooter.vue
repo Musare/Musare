@@ -3,7 +3,7 @@
 		<div class='container'>
 			<div class='content has-text-centered'>
 				<p>
-					© Copyright Musare 2015 - 2016
+					© Copyright Musare 2015 - 2017
 				</p>
 				<p>
 					<a class='icon' href='https://github.com/Musare/MusareNode' title='GitHub Repository'>
