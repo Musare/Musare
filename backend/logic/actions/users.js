@@ -537,5 +537,139 @@ module.exports = {
 				message: 'Password successfully updated.'
 			});
 		});
-	})
+	}),
+
+	/**
+	 * Requests a password reset for an email
+	 *
+	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {String} email - the email of the user that requests a password reset
+	 * @param {Function} cb - gets called with the result
+	 */
+	requestPasswordReset: (session, email, cb) => {
+		let code = utils.generateRandomString(8);
+		async.waterfall([
+			(next) => {
+				if (!email || typeof email !== 'string') return next('Invalid code.');
+				email = email.toLowerCase();
+				db.models.user.findOne({"email.address": email}, next);
+			},
+
+			(user, next) => {
+				if (!user) return next('User not found.');
+				if (!user.services.password || !user.services.password.password) return next('User does not have a password set, and probably uses GitHub to log in.');
+				next(null, user);
+			},
+
+			(user, next) => {
+				let expires = new Date();
+				expires.setDate(expires.getDate() + 1);
+				db.models.user.findOneAndUpdate({"email.address": email}, {$set: {"services.password.reset": {code: code, expires}}}, next);
+			},
+
+			(user, next) => {
+				mail.schemas.resetPasswordRequest(user.email.address, user.username, code, next);
+			}
+		], (err) => {
+			if (err && err !== true) {
+				let error = 'An error occurred.';
+				if (typeof err === "string") error = err;
+				else if (err.message) error = err.message;
+				logger.error("REQUEST_PASSWORD_RESET", `Email '${email}' failed to request password reset. '${error}'`);
+				cb({status: 'failure', message: error});
+			} else {
+				logger.success("REQUEST_PASSWORD_RESET", `Email '${email}' successfully requested a password reset.`);
+				cb({
+					status: 'success',
+					message: 'Successfully requested password reset.'
+				});
+			}
+		});
+	},
+
+	/**
+	 * Verifies a reset code
+	 *
+	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {String} code - the password reset code
+	 * @param {Function} cb - gets called with the result
+	 */
+	verifyPasswordResetCode: (session, code, cb) => {
+		async.waterfall([
+			(next) => {
+				if (!code || typeof code !== 'string') return next('Invalid code.');
+				db.models.user.findOne({"services.password.reset.code": code}, next);
+			},
+
+			(user, next) => {
+				if (!user) return next('Invalid code.');
+				if (!user.services.password.reset.expires > new Date()) return next('That code has expired.');
+				next(null);
+			}
+		], (err) => {
+			if (err && err !== true) {
+				let error = 'An error occurred.';
+				if (typeof err === "string") error = err;
+				else if (err.message) error = err.message;
+				logger.error("VERIFY_PASSWORD_RESET_CODE", `Code '${code}' failed to verify. '${error}'`);
+				cb({status: 'failure', message: error});
+			} else {
+				logger.success("VERIFY_PASSWORD_RESET_CODE", `Code '${code}' successfully verified.`);
+				cb({
+					status: 'success',
+					message: 'Successfully verified password reset code.'
+				});
+			}
+		});
+	},
+
+	/**
+	 * Changes a user's password with a reset code
+	 *
+	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {String} code - the password reset code
+	 * @param {String} newPassword - the new password reset code
+	 * @param {Function} cb - gets called with the result
+	 */
+	changePasswordWithResetCode: (session, code, newPassword, cb) => {
+		async.waterfall([
+			(next) => {
+				if (!code || typeof code !== 'string') return next('Invalid code.');
+				db.models.user.findOne({"services.password.reset.code": code}, next);
+			},
+
+			(user, next) => {
+				if (!user) return next('Invalid code.');
+				if (!user.services.password.reset.expires > new Date()) return next('That code has expired.');
+				next();
+			},
+
+			(next) => {
+				bcrypt.genSalt(10, next);
+			},
+
+			// hash the password
+			(salt, next) => {
+				bcrypt.hash(sha256(newPassword), salt, next);
+			},
+
+			(hashedPassword, next) => {
+				db.models.user.update({"services.password.reset.code": code}, {$set: {"services.password.password": hashedPassword}, $unset: {"services.password.reset": ''}}, next);
+			}
+		], (err) => {
+			if (err && err !== true) {
+				let error = 'An error occurred.';
+				if (typeof err === "string") error = err;
+				else if (err.message) error = err.message;
+				logger.error("CHANGE_PASSWORD_WITH_RESET_CODE", `Code '${code}' failed to change password. '${error}'`);
+				cb({status: 'failure', message: error});
+			} else {
+				logger.success("CHANGE_PASSWORD_WITH_RESET_CODE", `Code '${code}' successfully changed password.`);
+				cb({
+					status: 'success',
+					message: 'Successfully changed password.'
+				});
+			}
+		});
+	}
 };

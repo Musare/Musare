@@ -26,6 +26,7 @@
 					</div>
 					&nbsp;&nbsp;Login with GitHub
 				</a>
+				<a href='/reset_password' v-link="{ path: '/reset_password' }">Forgot password?</a>
 			</footer>
 		</div>
 	</div>

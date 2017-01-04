@@ -13,6 +13,7 @@ import Terms from './components/pages/Terms.vue';
 import Privacy from './components/pages/Privacy.vue';
 import User from './components/User/Show.vue';
 import Settings from './components/User/Settings.vue';
+import ResetPassword from './components/User/ResetPassword.vue';
 import Login from './components/Modals/Login.vue';
 
 Vue.use(VueRouter);
@@ -78,6 +79,9 @@ router.map({
 	'/settings': {
 		component: Settings,
 		loginRequired: true
+	},
+	'/reset_password': {
+		component: ResetPassword
 	},
 	'/login': {
 		component: Login

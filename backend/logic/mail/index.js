@@ -9,7 +9,8 @@ let lib = {
 
 	init: (cb) => {
 		lib.schemas = {
-			verifyEmail: require('./schemas/verifyEmail')
+			verifyEmail: require('./schemas/verifyEmail'),
+			resetPasswordRequest: require('./schemas/resetPasswordRequest')
 		};
 
 		cb();

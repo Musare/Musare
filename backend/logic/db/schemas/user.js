@@ -9,7 +9,11 @@ module.exports = {
 	},
 	services: {
 		password: {
-			password: String
+			password: String,
+			reset: {
+				code: { type: String, min: 8, max: 8 },
+				expires: { type: Date }
+			}
 		},
 		github: {
 			id: Number,
