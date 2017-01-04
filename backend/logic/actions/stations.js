@@ -134,6 +134,7 @@ module.exports = {
 	getPlaylist: (session, stationId, cb) => {
 		stations.getStation(stationId, (err, station) => {
 			if (err) return cb({ status: 'failure', message: 'Something went wrong when getting the station.' });
+			if (!station) return cb({ status: 'failure', message: 'Station not found..' });
 			if (station.type === 'official') {
 				cache.hget("officialPlaylists", stationId, (err, playlist) => {
 					if (err) return cb({ status: 'failure', message: 'Something went wrong when getting the playlist.' });
