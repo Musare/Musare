@@ -51,7 +51,7 @@
 								</li>
 								<li>
 									<b>Email: </b>
-									<a href="mailto:theflametrooper@gmail.com">theflametrooper@gmail.com</a>
+									<a href="mailto:atjonathan@engineer.com">atjonathan@engineer.com</a>
 								</li>
 							</ul>
 						</div>

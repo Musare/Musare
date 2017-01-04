@@ -178,7 +178,7 @@ module.exports = {
 					username,
 					email: {
 						address: email,
-						verificationToken: verificationToken
+						verificationToken
 					},
 					services: {
 						password: {
