@@ -138,6 +138,7 @@ module.exports = {
 			if (station.type === 'official') {
 				cache.hget("officialPlaylists", stationId, (err, playlist) => {
 					if (err) return cb({ status: 'failure', message: 'Something went wrong when getting the playlist.' });
+					if (!playlist) return cb({ status: 'failure', message: 'Playlist not found.' });
 					cb({ status: 'success', data: playlist.songs })
 				})
 			} else cb({ status: 'failure', message: 'This is not an official station.' })
