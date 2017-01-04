@@ -210,7 +210,7 @@ module.exports = {
 						obj.SID = result.SID;
 					}
 					logger.success("USER_PASSWORD_REGISTER", "Register successful with password for user '" + username + "'.");
-					cb({status: 'success', message: 'Successfully registered.'});
+					cb(obj);
 				});
 			}
 		});
