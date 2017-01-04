@@ -104,13 +104,9 @@
 		align-items: center;
 	}
 
-	.content p strong {
-		word-break: break-word;
-	}
+	.content p strong { word-break: break-word; }
 	
-	.content p small {
-		word-break: break-all;
-	}
+	.content p small { word-break: break-word; }
 
 	.add-to-queue {
 		width: 100%;
