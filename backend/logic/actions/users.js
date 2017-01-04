@@ -440,7 +440,9 @@ module.exports = {
 			},
 
 			(user, next) => {
-				mail.schemas.verifyEmail(newEmail, user.username, verificationToken, next);
+				mail.schemas.verifyEmail(newEmail, user.username, verificationToken, () => {
+					next();
+				});
 			}
 		], (err) => {
 			if (err && err !== true) {
