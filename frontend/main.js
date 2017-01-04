@@ -11,6 +11,7 @@ import Admin from './components/pages/Admin.vue';
 import News from './components/pages/News.vue';
 import Terms from './components/pages/Terms.vue';
 import Privacy from './components/pages/Privacy.vue';
+import Team from './components/pages/Team.vue';
 import User from './components/User/Show.vue';
 import Settings from './components/User/Settings.vue';
 import ResetPassword from './components/User/ResetPassword.vue';
@@ -69,6 +70,9 @@ router.map({
 	},
 	'/privacy': {
 		component: Privacy
+	},
+	'/team': {
+		component: Team
 	},
 	'/news': {
 		component: News
