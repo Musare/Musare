@@ -470,9 +470,20 @@ module.exports = {
 	updateRole: hooks.adminRequired((session, updatingUserId, newRole, cb, userId) => {
 		newRole = newRole.toLowerCase();
 		async.waterfall([
+
+			(next) => {
+				db.models.user.findOne({ _id: updatingUserId }, next);
+			},
+
+			(user, next) => {
+				if (!user) return next('User not found.');
+				else if (user.role === newRole) return next('New role can\'t be the same as the old role.');
+				else return next();
+			},
 			(next) => {
 				db.models.user.update({_id: updatingUserId}, {$set: {role: newRole}}, next);
 			}
+
 		], (err) => {
 			if (err && err !== true) {
 				let error = 'An error occurred.';
