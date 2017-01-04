@@ -26,7 +26,7 @@
 					</div>
 					&nbsp;&nbsp;Login with GitHub
 				</a>
-				<a href='/reset_password' v-link="{ path: '/reset_password' }">Forgot password?</a>
+				<a href='#' @click='resetPassword()'>Forgot password?</a>
 			</footer>
 		</div>
 	</div>
@@ -41,6 +41,10 @@
 			submitModal: function () {
 				this.$dispatch('login');
 				this.toggleModal();
+			},
+			resetPassword: function () {
+				this.toggleModal();
+				this.$router.go('/reset_password');
 			}
 		},
 		events: {
