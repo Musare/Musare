@@ -3,7 +3,7 @@
 		<main-header></main-header>
 		<div class="group">
 			<div class="group-title">Official Stations</div>
-			<div class="card station-card" v-for="station in stations.official" v-link="{ path: '/official/' + station._id }" @click="this.$dispatch('joinStation', station._id)">
+			<div class="card station-card" v-for="station in stations.official" v-link="{ path: '/' + station._id }" @click="this.$dispatch('joinStation', station._id)">
 				<div class="card-image">
 					<figure class="image is-square">
 						<img :src="station.currentSong.thumbnail" onerror="this.src='/assets/notes-transparent.png'" />
@@ -25,7 +25,7 @@
 						{{ station.description }}
 					</div>
 				</div>
-				<a @click="this.$dispatch('joinStation', station._id)" href='#' class='absolute-a' v-link="{ path: '/official/' + station._id }"></a>
+				<a @click="this.$dispatch('joinStation', station._id)" href='#' class='absolute-a' v-link="{ path: '/' + station._id }"></a>
 			</div>
 		</div>
 		<div class="group">

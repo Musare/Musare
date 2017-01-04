@@ -97,6 +97,9 @@ router.map({
 	'/official/:id': {
 		component: Station
 	},
+	'/:id': {
+		component: Station
+	},
 	'/community/:id': {
 		component: Station
 	}
