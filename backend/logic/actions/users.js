@@ -53,10 +53,7 @@ module.exports = {
 							address: user.email.address,
 							verified: user.email.verified
 						},
-						hasPassword: () => {
-							if (user.services.password) return true;
-							else return false;
-						},
+						hasPassword: !!user.services.password,
 						services: { github: user.services.github }
 					});
 				});

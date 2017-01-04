@@ -21,12 +21,12 @@
 				</p>
 			</div>
 			<div slot='footer'>
-				<button class='button is-warning'>
+				<!--button class='button is-warning'>
 					<span>&nbsp;Send Verification Email</span>
 				</button>
 				<button class='button is-warning'>
 					<span>&nbsp;Send Password Reset Email</span>
-				</button>
+				</button-->
 				<button class='button is-danger' @click='$parent.toggleModal()'>
 					<span>&nbsp;Close</span>
 				</button>
