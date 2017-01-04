@@ -65,6 +65,9 @@ router.map({
 	'*': {
 		component: NotFound
 	},
+	'404': {
+		component: NotFound
+	},
 	'/terms': {
 		component: Terms
 	},

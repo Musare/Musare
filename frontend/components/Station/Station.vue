@@ -90,6 +90,7 @@
 	import OfficialHeader from './OfficialHeader.vue';
 	import CommunityHeader from './CommunityHeader.vue';
 	import io from '../../io';
+	import auth from '../../auth';
 
 	export default {
 		data() {
@@ -404,11 +405,18 @@
 		},
 		ready: function() {
 			let _this = this;
+
 			Date.currently = () => {
 				return new Date().getTime() + _this.systemDifference;
 			};
+
 			_this.stationId = _this.$route.params.id;
+
 			window.stationInterval = 0;
+
+			auth.getStatus(isLoggedIn => {
+				if (!isLoggedIn) _this.$router.go('/404');
+			});
 
 			io.getSocket((socket) => {
 				_this.socket = socket;
@@ -424,6 +432,7 @@
 					if (res.status === 'error') {
 						_this.$router.go('/404');
 						Toast.methods.addToast(res.message, 3000);
+						console.log('yup')
 					}
 				});
 
