@@ -418,7 +418,7 @@
 				if (!isLoggedIn) _this.$router.go('/404');
 			});
 
-			io.getSocket((socket) => {
+			io.getSocket(socket => {
 				_this.socket = socket;
 
 				io.removeAllListeners();
