@@ -414,10 +414,6 @@
 
 			window.stationInterval = 0;
 
-			auth.getStatus(isLoggedIn => {
-				if (!isLoggedIn) _this.$router.go('/404');
-			});
-
 			io.getSocket(socket => {
 				_this.socket = socket;
 
