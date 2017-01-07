@@ -93,6 +93,7 @@ const lib = {
 								if (user.services.github && user.services.github.id) return redirectOnErr(res, 'Account already has GitHub linked.');
 								db.models.user.update({_id: user._id}, {$set: {"services.github": {id: body.id, access_token}}}, (err) => {
 									if (err) return redirectOnErr(res, err.message);
+									cache.pub('user.linkGitHub', user._id);
 									res.redirect(`${config.get('domain')}/settings`);
 								});
 							});

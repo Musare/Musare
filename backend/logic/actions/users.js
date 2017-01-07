@@ -21,6 +21,42 @@ cache.sub('user.updateUsername', user => {
 	});
 });
 
+cache.sub('user.linkPassword', userId => {
+	console.log("LINK4", userId);
+	utils.socketsFromUser(userId, sockets => {
+		sockets.forEach(socket => {
+			socket.emit('event:user.linkPassword');
+		});
+	});
+});
+
+cache.sub('user.linkGitHub', userId => {
+	console.log("LINK1", userId);
+	utils.socketsFromUser(userId, sockets => {
+		sockets.forEach(socket => {
+			socket.emit('event:user.linkGitHub');
+		});
+	});
+});
+
+cache.sub('user.unlinkPassword', userId => {
+	console.log("LINK2", userId);
+	utils.socketsFromUser(userId, sockets => {
+		sockets.forEach(socket => {
+			socket.emit('event:user.unlinkPassword');
+		});
+	});
+});
+
+cache.sub('user.unlinkGitHub', userId => {
+	console.log("LINK3", userId);
+	utils.socketsFromUser(userId, sockets => {
+		sockets.forEach(socket => {
+			socket.emit('event:user.unlinkGitHub');
+		});
+	});
+});
+
 module.exports = {
 
 	/**
@@ -643,7 +679,7 @@ module.exports = {
 	 * @param {Function} cb - gets called with the result
 	 * @param {String} userId - the userId automatically added by hooks
 	 */
-	changePasswordWithCode: hooks.loginRequired((session, code, newPassword, cb) => {
+	changePasswordWithCode: hooks.loginRequired((session, code, newPassword, cb, userId) => {
 		async.waterfall([
 			(next) => {
 				if (!code || typeof code !== 'string') return next('Invalid code1.');
@@ -677,6 +713,7 @@ module.exports = {
 				cb({status: 'failure', message: error});
 			} else {
 				logger.success("ADD_PASSWORD_WITH_CODE", `Code '${code}' successfully added password.`);
+				cache.pub('user.linkPassword', userId);
 				cb({
 					status: 'success',
 					message: 'Successfully added password.'
@@ -712,6 +749,7 @@ module.exports = {
 				cb({status: 'failure', message: error});
 			} else {
 				logger.success("UNLINK_PASSWORD", `Unlinking password successful for userId '${userId}'.`);
+				cache.pub('user.unlinkPassword', userId);
 				cb({
 					status: 'success',
 					message: 'Successfully unlinked password.'
@@ -747,6 +785,7 @@ module.exports = {
 				cb({status: 'failure', message: error});
 			} else {
 				logger.success("UNLINK_GITHUB", `Unlinking GitHub successful for userId '${userId}'.`);
+				cache.pub('user.unlinkGitHub', userId);
 				cb({
 					status: 'success',
 					message: 'Successfully unlinked GitHub.'

@@ -22,8 +22,8 @@
 				<button class="button is-success" @click="changeEmail()">Save Changes</button>
 			</p>
 		</div>
-		<label class="label" v-if="user.password">Change Password</label>
-		<div class="control is-grouped" v-if="user.password">
+		<label class="label" v-if="password">Change Password</label>
+		<div class="control is-grouped" v-if="password">
 			<p class="control is-expanded has-icon has-icon-right">
 				<input class="input" type="password" placeholder="Change password" v-model="newPassword">
 			</p>
@@ -33,8 +33,8 @@
 		</div>
 
 
-		<label class="label" v-if="!user.password">Add password</label>
-		<div class="control is-grouped" v-if="!user.password">
+		<label class="label" v-if="!password">Add password</label>
+		<div class="control is-grouped" v-if="!password">
 			<button class="button is-success" @click="requestPassword()" v-if="passwordStep === 1">Request password email</button><br>
 
 
@@ -53,18 +53,18 @@
 				<button class="button is-success" @click="setPassword()">Set password</button>
 			</p>
 		</div>
-		<a href="#" v-if="passwordStep === 1 && !user.password" @click="passwordStep = 2">Skip this step</a>
+		<a href="#" v-if="passwordStep === 1 && !password" @click="passwordStep = 2">Skip this step</a>
 
 
-		<a class="button is-github" v-if="!user.github" :href='$parent.serverDomain + "/auth/github/link"'>
+		<a class="button is-github" v-if="!github" :href='$parent.serverDomain + "/auth/github/link"'>
 			<div class='icon'>
 				<img class='invert' src='/assets/social/github.svg'/>
 			</div>
 			&nbsp; Link GitHub to account
 		</a>
 
-		<button class="button is-danger" @click="unlinkPassword()" v-if="user.password && user.github">Remove logging in with password</button>
-		<button class="button is-danger" @click="unlinkGitHub()" v-if="user.password && user.github">Remove logging in with GitHub</button>
+		<button class="button is-danger" @click="unlinkPassword()" v-if="password && github">Remove logging in with password</button>
+		<button class="button is-danger" @click="unlinkGitHub()" v-if="password && github">Remove logging in with GitHub</button>
 	</div>
 	<main-footer></main-footer>
 </template>
@@ -83,6 +83,8 @@
 			return {
 				user: {},
 				newPassword: '',
+				password: false,
+				github: false,
 				setNewPassword: '',
 				passwordStep: 1,
 				passwordCode: ''
@@ -90,16 +92,32 @@
 		},
 		ready: function() {
 			let _this = this;
-			io.getSocket((socket) => {
+			io.getSocket(socket => {
 				_this.socket = socket;
 				_this.socket.emit('users.findBySession', res => {
-					if (res.status == 'success') { _this.user = res.data; } else {
+					if (res.status == 'success') {
+						_this.user = res.data; 
+						_this.password = _this.user.password;
+						_this.github = _this.user.github;
+					} else {
 						_this.$parent.isLoginActive = true;
 						Toast.methods.addToast('Your are currently not signed in', 3000);
 					}
 				});
 				_this.socket.on('event:user.username.changed', username => {
 					_this.$parent.username = username;
+				});
+				_this.socket.on('event:user.linkPassword', () => {console.log(1);
+					_this.password = true;
+				});
+				_this.socket.on('event:user.linkGitHub', () => {console.log(2);
+					_this.github = true;
+				});
+				_this.socket.on('event:user.unlinkPassword', () => {console.log(3);
+					_this.password = false;
+				});
+				_this.socket.on('event:user.unlinkGitHub', () => {console.log(4);
+					_this.github = false;
 				});
 			});
 		},
