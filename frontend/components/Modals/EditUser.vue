@@ -44,12 +44,7 @@
 		components: { Modal },
 		data() {
 			return {
-				editing: {},
-				video: {
-					player: null,
-					paused: false,
-					playerReady: false
-				}
+				editing: {}
 			}
 		},
 		methods: {
@@ -67,7 +62,11 @@
 				let _this = this;
 				this.socket.emit(`users.updateRole`, this.editing._id, this.editing.role, res => {
 					Toast.methods.addToast(res.message, 4000);
-					if (res.status === 'success' && _this.editing.role === 'default') location.reload();
+					if (
+							res.status === 'success' &&
+							_this.editing.role === 'default' &&
+							_this.editing._id === _this.$parent.$parent.$parent.userId
+					) location.reload();
 				});
 			}
 		},
