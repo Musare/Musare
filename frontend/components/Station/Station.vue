@@ -428,7 +428,6 @@
 					if (res.status === 'error') {
 						_this.$router.go('/404');
 						Toast.methods.addToast(res.message, 3000);
-						console.log('yup')
 					}
 				});
 

@@ -17,6 +17,7 @@ import User from './components/User/Show.vue';
 import Settings from './components/User/Settings.vue';
 import ResetPassword from './components/User/ResetPassword.vue';
 import Login from './components/Modals/Login.vue';
+import Register from './components/Modals/Register.vue';
 
 Vue.use(VueRouter);
 
@@ -96,6 +97,9 @@ router.map({
 	},
 	'/login': {
 		component: Login
+	},
+	'/register': {
+		component: Register
 	},
 	'/admin': {
 		component: Admin,

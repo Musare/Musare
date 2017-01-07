@@ -47,7 +47,7 @@
 		},
 		ready: function () {
 			let _this = this;
-			lofig.get('recaptcha', function (obj) {
+			lofig.get('recaptcha', obj => {
 				_this.recaptcha.key = obj.key;
 				grecaptcha.render('recaptcha', {
 					'sitekey' : _this.recaptcha.key
@@ -56,7 +56,8 @@
 		},
 		methods: {
 			toggleModal: function () {
-				this.$dispatch('toggleModal', 'register');
+				if (this.$router._currentRoute.path === '/register') location.href = '/';
+				else this.$dispatch('toggleModal', 'register');
 			},
 			submitModal: function () {
 				this.$dispatch('register');

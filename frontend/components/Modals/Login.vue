@@ -36,11 +36,8 @@
 	export default {
 		methods: {
 			toggleModal: function () {
-				if (this.$router._currentRoute.path === '/login') {
-					location.href = '/';
-				} else {
-					this.$dispatch('toggleModal', 'login');
-				}
+				if (this.$router._currentRoute.path === '/login') location.href = '/';
+				else this.$dispatch('toggleModal', 'login');
 			},
 			submitModal: function () {
 				this.$dispatch('login');
