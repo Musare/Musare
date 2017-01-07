@@ -337,6 +337,7 @@ module.exports = {
 					username: user.username
 				};
 				if (user.services.password && user.services.password.password) data.password = true;
+				if (user.services.github && user.services.github.id) data.github = true;
 				logger.success("FIND_BY_SESSION", `User found. '${user.username}'.`);
 				return cb({
 					status: 'success',
@@ -550,6 +551,211 @@ module.exports = {
 	}),
 
 	/**
+	 * Requests a password for a session
+	 *
+	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {String} email - the email of the user that requests a password reset
+	 * @param {Function} cb - gets called with the result
+	 * @param {String} userId - the userId automatically added by hooks
+	 */
+	requestPassword: hooks.loginRequired((session, cb, userId) => {
+		let code = utils.generateRandomString(8);
+		async.waterfall([
+			(next) => {
+				db.models.user.findOne({_id: userId}, next);
+			},
+
+			(user, next) => {
+				if (!user) return next('User not found.');
+				if (user.services.password && user.services.password.password) return next('You already have a password set.');
+				next(null, user);
+			},
+
+			(user, next) => {
+				let expires = new Date();
+				expires.setDate(expires.getDate() + 1);
+				db.models.user.findOneAndUpdate({"email.address": user.email.address}, {$set: {"services.password": {set: {code: code, expires}}}}, next);
+			},
+
+			(user, next) => {
+				mail.schemas.passwordRequest(user.email.address, user.username, code, next);
+			}
+		], (err) => {
+			if (err && err !== true) {
+				let error = 'An error occurred.';
+				if (typeof err === "string") error = err;
+				else if (err.message) error = err.message;
+				logger.error("REQUEST_PASSWORD", `UserId '${userId}' failed to request password. '${error}'`);
+				cb({status: 'failure', message: error});
+			} else {
+				logger.success("REQUEST_PASSWORD", `UserId '${userId}' successfully requested a password.`);
+				cb({
+					status: 'success',
+					message: 'Successfully requested password.'
+				});
+			}
+		});
+	}),
+
+	/**
+	 * Verifies a password code
+	 *
+	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {String} code - the password code
+	 * @param {Function} cb - gets called with the result
+	 * @param {String} userId - the userId automatically added by hooks
+	 */
+	verifyPasswordCode: hooks.loginRequired((session, code, cb, userId) => {
+		async.waterfall([
+			(next) => {
+				if (!code || typeof code !== 'string') return next('Invalid code1.');
+				db.models.user.findOne({"services.password.set.code": code, _id: userId}, next);
+			},
+
+			(user, next) => {
+				if (!user) return next('Invalid code2.');
+				if (user.services.password.set.expires < new Date()) return next('That code has expired.');
+				next(null);
+			}
+		], (err) => {
+			if (err && err !== true) {
+				let error = 'An error occurred.';
+				if (typeof err === "string") error = err;
+				else if (err.message) error = err.message;
+				logger.error("VERIFY_PASSWORD_CODE", `Code '${code}' failed to verify. '${error}'`);
+				cb({status: 'failure', message: error});
+			} else {
+				logger.success("VERIFY_PASSWORD_CODE", `Code '${code}' successfully verified.`);
+				cb({
+					status: 'success',
+					message: 'Successfully verified password code.'
+				});
+			}
+		});
+	}),
+
+	/**
+	 * Adds a password to a user with a code
+	 *
+	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {String} code - the password code
+	 * @param {String} newPassword - the new password code
+	 * @param {Function} cb - gets called with the result
+	 * @param {String} userId - the userId automatically added by hooks
+	 */
+	changePasswordWithCode: hooks.loginRequired((session, code, newPassword, cb) => {
+		async.waterfall([
+			(next) => {
+				if (!code || typeof code !== 'string') return next('Invalid code1.');
+				db.models.user.findOne({"services.password.set.code": code}, next);
+			},
+
+			(user, next) => {
+				if (!user) return next('Invalid code2.');
+				if (!user.services.password.set.expires > new Date()) return next('That code has expired.');
+				next();
+			},
+
+			(next) => {
+				bcrypt.genSalt(10, next);
+			},
+
+			// hash the password
+			(salt, next) => {
+				bcrypt.hash(sha256(newPassword), salt, next);
+			},
+
+			(hashedPassword, next) => {
+				db.models.user.update({"services.password.set.code": code}, {$set: {"services.password.password": hashedPassword}, $unset: {"services.password.set": ''}}, next);
+			}
+		], (err) => {
+			if (err && err !== true) {
+				let error = 'An error occurred.';
+				if (typeof err === "string") error = err;
+				else if (err.message) error = err.message;
+				logger.error("ADD_PASSWORD_WITH_CODE", `Code '${code}' failed to add password. '${error}'`);
+				cb({status: 'failure', message: error});
+			} else {
+				logger.success("ADD_PASSWORD_WITH_CODE", `Code '${code}' successfully added password.`);
+				cb({
+					status: 'success',
+					message: 'Successfully added password.'
+				});
+			}
+		});
+	}),
+
+	/**
+	 * Unlinks password from user
+	 *
+	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {Function} cb - gets called with the result
+	 * @param {String} userId - the userId automatically added by hooks
+	 */
+	unlinkPassword: hooks.loginRequired((session, cb, userId) => {
+		async.waterfall([
+			(next) => {
+				db.models.user.findOne({_id: userId}, next);
+			},
+
+			(user, next) => {
+				if (!user) return next('Not logged in.');
+				if (!user.services.github || !user.services.github.id) return next('You can\'t remove password login without having GitHub login.');
+				db.models.user.update({_id: userId}, {$unset: {"services.password": ''}}, next);
+			}
+		], (err) => {
+			if (err && err !== true) {
+				let error = 'An error occurred.';
+				if (typeof err === "string") error = err;
+				else if (err.message) error = err.message;
+				logger.error("UNLINK_PASSWORD", `Unlinking password failed for userId '${userId}'. '${error}'`);
+				cb({status: 'failure', message: error});
+			} else {
+				logger.success("UNLINK_PASSWORD", `Unlinking password successful for userId '${userId}'.`);
+				cb({
+					status: 'success',
+					message: 'Successfully unlinked password.'
+				});
+			}
+		});
+	}),
+
+	/**
+	 * Unlinks GitHub from user
+	 *
+	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {Function} cb - gets called with the result
+	 * @param {String} userId - the userId automatically added by hooks
+	 */
+	unlinkGitHub: hooks.loginRequired((session, cb, userId) => {
+		async.waterfall([
+			(next) => {
+				db.models.user.findOne({_id: userId}, next);
+			},
+
+			(user, next) => {
+				if (!user) return next('Not logged in.');
+				if (!user.services.password || !user.services.password.password) return next('You can\'t remove GitHub login without having password login.');
+				db.models.user.update({_id: userId}, {$unset: {"services.github": ''}}, next);
+			}
+		], (err) => {
+			if (err && err !== true) {
+				let error = 'An error occurred.';
+				if (typeof err === "string") error = err;
+				else if (err.message) error = err.message;
+				logger.error("UNLINK_GITHUB", `Unlinking GitHub failed for userId '${userId}'. '${error}'`);
+				cb({status: 'failure', message: error});
+			} else {
+				logger.success("UNLINK_GITHUB", `Unlinking GitHub successful for userId '${userId}'.`);
+				cb({
+					status: 'success',
+					message: 'Successfully unlinked GitHub.'
+				});
+			}
+		});
+	}),
+
+	/**
 	 * Requests a password reset for an email
 	 *
 	 * @param {Object} session - the session object automatically added by socket.io
@@ -560,7 +766,7 @@ module.exports = {
 		let code = utils.generateRandomString(8);
 		async.waterfall([
 			(next) => {
-				if (!email || typeof email !== 'string') return next('Invalid code.');
+				if (!email || typeof email !== 'string') return next('Invalid email.');
 				email = email.toLowerCase();
 				db.models.user.findOne({"email.address": email}, next);
 			},

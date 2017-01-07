@@ -31,6 +31,40 @@
 				<button class="button is-success" @click="changePassword()">Change password</button>
 			</p>
 		</div>
+
+
+		<label class="label" v-if="!user.password">Add password</label>
+		<div class="control is-grouped" v-if="!user.password">
+			<button class="button is-success" @click="requestPassword()" v-if="passwordStep === 1">Request password email</button><br>
+
+
+			<p class="control is-expanded has-icon has-icon-right" v-if="passwordStep === 2">
+				<input class="input" type="text" placeholder="Code" v-model="passwordCode">
+			</p>
+			<p class="control is-expanded" v-if="passwordStep === 2">
+				<button class="button is-success" @click="verifyCode()">Verify code</button>
+			</p>
+
+
+			<p class="control is-expanded has-icon has-icon-right" v-if="passwordStep === 3">
+				<input class="input" type="password" placeholder="New password" v-model="setNewPassword">
+			</p>
+			<p class="control is-expanded" v-if="passwordStep === 3">
+				<button class="button is-success" @click="setPassword()">Set password</button>
+			</p>
+		</div>
+		<a href="#" v-if="passwordStep === 1 && !user.password" @click="passwordStep = 2">Skip this step</a>
+
+
+		<a class="button is-github" v-if="!user.github" :href='$parent.serverDomain + "/auth/github/link"'>
+			<div class='icon'>
+				<img class='invert' src='/assets/social/github.svg'/>
+			</div>
+			&nbsp; Link GitHub to account
+		</a>
+
+		<button class="button is-danger" @click="unlinkPassword()" v-if="user.password && user.github">Remove logging in with password</button>
+		<button class="button is-danger" @click="unlinkGitHub()" v-if="user.password && user.github">Remove logging in with GitHub</button>
 	</div>
 	<main-footer></main-footer>
 </template>
@@ -48,7 +82,10 @@
 		data() {
 			return {
 				user: {},
-				newPassword: ''
+				newPassword: '',
+				setNewPassword: '',
+				passwordStep: 1,
+				passwordCode: ''
 			}
 		},
 		ready: function() {
@@ -89,6 +126,39 @@
 					if (res.status !== 'success') Toast.methods.addToast(res.message, 8000);
 					else Toast.methods.addToast('Successfully changed password', 4000);
 				});
+			},
+			requestPassword: function() {
+				this.socket.emit('users.requestPassword', res => {
+					Toast.methods.addToast(res.message, 8000);
+					if (res.status === 'success') {
+						this.passwordStep = 2;
+					}
+				});
+			},
+			verifyCode: function () {
+				if (!this.passwordCode) return Toast.methods.addToast('Code cannot be empty', 8000);
+				this.socket.emit('users.verifyPasswordCode', this.passwordCode, res => {
+					Toast.methods.addToast(res.message, 8000);
+					if (res.status === 'success') {
+						this.passwordStep = 3;
+					}
+				});
+			},
+			setPassword: function () {
+				if (!this.setNewPassword) return Toast.methods.addToast('Password cannot be empty', 8000);
+				this.socket.emit('users.changePasswordWithCode', this.passwordCode, this.setNewPassword, res => {
+					Toast.methods.addToast(res.message, 8000);
+				});
+			},
+			unlinkPassword: function () {
+				this.socket.emit('users.unlinkPassword', res => {
+					Toast.methods.addToast(res.message, 8000);
+				});
+			},
+			unlinkGitHub: function () {
+				this.socket.emit('users.unlinkGitHub', res => {
+					Toast.methods.addToast(res.message, 8000);
+			});
 			}
 		},
 		components: { MainHeader, MainFooter, LoginModal }

@@ -2,6 +2,7 @@
 
 const express = require('express');
 const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const config = require('config');
 const async = require('async');
@@ -28,6 +29,8 @@ const lib = {
 		let app = lib.app = express();
 
 		lib.server = app.listen(config.get('serverPort'));
+
+		app.use(cookieParser());
 
 		app.use(bodyParser.json());
 		app.use(bodyParser.urlencoded({ extended: true }));
@@ -57,19 +60,44 @@ const lib = {
 			res.redirect(`https://github.com/login/oauth/authorize?${params}`);
 		});
 
+		app.get('/auth/github/link', (req, res) => {
+			let params = [
+				`client_id=${config.get('apis.github.client')}`,
+				`redirect_uri=${config.get('serverDomain')}/auth/github/authorize/callback`,
+				`scope=user:email`,
+				`state=${req.cookies.SID}`
+			].join('&');
+			res.redirect(`https://github.com/login/oauth/authorize?${params}`);
+		});
+
 		function redirectOnErr (res, err){
 			return res.redirect(`${config.get('domain')}/?err=${encodeURIComponent(err)}`);
 		}
 
 		app.get('/auth/github/authorize/callback', (req, res) => {
 			let code = req.query.code;
-			oauth2.getOAuthAccessToken(code, { redirect_uri }, (err, access_token, refresh_token, results) => {
+			const state = req.query.state;
+			oauth2.getOAuthAccessToken(code, {redirect_uri}, (err, access_token, refresh_token, results) => {
 				if (!err) request.get({
-						url: `https://api.github.com/user?access_token=${access_token}`,
-						headers: { 'User-Agent': 'request' }
-					}, (err, httpResponse, body) => {
-						if (err) return redirectOnErr(res, err.message);
-						body = JSON.parse(body);
+					url: `https://api.github.com/user?access_token=${access_token}`,
+					headers: {'User-Agent': 'request'}
+				}, (err, httpResponse, body) => {
+					if (err) return redirectOnErr(res, err.message);
+					body = JSON.parse(body);
+					if (state) {
+						cache.hget('sessions', state, (err, session) => {
+							if (err) return redirectOnErr(res, err.message);
+							db.models.user.findOne({_id: session.userId}, (err, user) => {
+								if (err) return redirectOnErr(res, err.message);
+								if (!user) return redirectOnErr(res, 'Not logged in.');
+								if (user.services.github && user.services.github.id) return redirectOnErr(res, 'Account already has GitHub linked.');
+								db.models.user.update({_id: user._id}, {$set: {"services.github": {id: body.id, access_token}}}, (err) => {
+									if (err) return redirectOnErr(res, err.message);
+									res.redirect(`${config.get('domain')}/settings`);
+								});
+							});
+						});
+					} else {
 						db.models.user.findOne({'services.github.id': body.id}, (err, user) => {
 							if (err) return redirectOnErr(res, 'err');
 							if (user) {
@@ -81,12 +109,17 @@ const lib = {
 										if (err) return redirectOnErr(res, err.message);
 										let date = new Date();
 										date.setTime(new Date().getTime() + (2 * 365 * 24 * 60 * 60 * 1000));
-										res.cookie('SID', sessionId, {expires: date, secure: config.get("cookie.secure"), path: "/", domain: config.get("cookie.domain")});
+										res.cookie('SID', sessionId, {
+											expires: date,
+											secure: config.get("cookie.secure"),
+											path: "/",
+											domain: config.get("cookie.domain")
+										});
 										res.redirect(`${config.get('domain')}/`);
 									});
 								});
 							} else {
-								db.models.user.findOne({ username: new RegExp(`^${body.login}$`, 'i') }, (err, user) => {
+								db.models.user.findOne({username: new RegExp(`^${body.login}$`, 'i')}, (err, user) => {
 									if (err) return redirectOnErr(res, err.message);
 									if (user) return redirectOnErr(res, 'An account with that username already exists.');
 									else request.get({
@@ -122,7 +155,12 @@ const lib = {
 													if (err) return redirectOnErr(res, err.message);
 													let date = new Date();
 													date.setTime(new Date().getTime() + (2 * 365 * 24 * 60 * 60 * 1000));
-													res.cookie('SID', sessionId, {expires: date, secure: config.get("cookie.secure"), path: "/", domain: config.get("cookie.domain")});
+													res.cookie('SID', sessionId, {
+														expires: date,
+														secure: config.get("cookie.secure"),
+														path: "/",
+														domain: config.get("cookie.domain")
+													});
 													res.redirect(`${config.get('domain')}/`);
 												});
 											});
@@ -131,7 +169,8 @@ const lib = {
 								});
 							}
 						});
-					});
+					}
+				});
 				else return redirectOnErr(res, 'err');
 			});
 		});
