@@ -9,6 +9,7 @@ import Home from './components/pages/Home.vue';
 import Station from './components/Station/Station.vue';
 import Admin from './components/pages/Admin.vue';
 import News from './components/pages/News.vue';
+import About from './components/pages/About.vue';
 import Terms from './components/pages/Terms.vue';
 import Privacy from './components/pages/Privacy.vue';
 import Team from './components/pages/Team.vue';
@@ -79,6 +80,9 @@ router.map({
 	},
 	'/news': {
 		component: News
+	},
+	'/about': {
+		component: About
 	},
 	'/u/:username': {
 		component: User

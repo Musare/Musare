@@ -22,6 +22,9 @@
 			<a class="nav-item is-tab" href="#" v-link="{ path: '/team' }">
 				Team
 			</a>
+			<a class="nav-item is-tab" href="#" v-link="{ path: '/about' }">
+				About
+			</a>
 			<a class="nav-item is-tab" href="#" v-link="{ path: '/news' }">
 				News
 			</a>
