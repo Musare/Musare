@@ -67,7 +67,6 @@ module.exports = {
 	 * @param {Function} cb - gets called with the result
 	 */
 	index: hooks.adminRequired((session, cb) => {
-
 		async.waterfall([
 			(next) => {
 				db.models.report.find({ resolved: false }).sort({ released: 'desc' }).exec(next);
@@ -79,6 +78,29 @@ module.exports = {
 			}
 			logger.success("REPORTS_INDEX", "Indexing reports successful.");
 			cb({ status: 'success', data: reports });
+		});
+	}),
+
+	/**
+	 * Gets all reports for a songId
+	 *
+	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {String} songId - the id of the song to index reports for
+	 * @param {Function} cb - gets called with the result
+	 */
+	getReportsForSong: hooks.adminRequired((session, songId, cb) => {
+		async.waterfall([
+			(next) => {
+				db.models.report.find({ songId, resolved: false }).sort({ released: 'desc' }).exec(next);
+			}
+		], (err, reports) => {
+			if (err) {
+				logger.error("REPORTS_GETFORSONG", `Indexing reports for song "${songId}" failed. "${err.message}"`);
+				return cb({ 'status': 'failure', 'message': 'Something went wrong'});
+			} else {
+				logger.success("REPORTS_GETFORSONG", `Indexing report for song "{songId}" successful.`);
+				return cb({ status: 'success', data: reports.length });
+			}
 		});
 	}),
 

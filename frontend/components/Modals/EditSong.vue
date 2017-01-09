@@ -2,6 +2,11 @@
 	<div>
 		<modal title='Edit Song'>
 			<div slot='body'>
+				<span class="tag is-info is-medium reports" v-if="reports > 0">
+					{{ reports }}
+					<span v-if="reports > 1">&nbsp;Reports&nbsp;</span>
+					<span v-else>&nbsp;Report&nbsp;</span>
+				</span>
 				<h5 class='has-text-centered'>Video Preview</h5>
 				<div class='video-container'>
 					<div id='player'></div>
@@ -123,6 +128,7 @@
 					song: {},
 					type: ''
 				},
+				reports: 0,
 				video: {
 					player: null,
 					paused: false,
@@ -261,6 +267,7 @@
 				this.$parent.modals.editSong = false;
 			},
 			editSong: function (song, index, type) {
+				let _this = this;
 				this.video.player.loadVideoById(song._id, this.editing.song.skipDuration);
 				let newSong = {};
 				for (let n in song) {
@@ -271,6 +278,9 @@
 					song: newSong,
 					type
 				};
+				_this.socket.emit('reports.getReportsForSong', song._id, res => {
+					if (res.status === 'success') _this.reports = res.data;
+				});
 				this.$parent.toggleModal();
 			}
 		}
@@ -407,4 +417,9 @@
 	.save-changes { color: #fff; }
 
 	.tag:not(:last-child) { margin-right: 5px; }
+
+	.reports {
+		margin: 0 auto;
+		display: flex;
+	}
 </style>
