@@ -68,6 +68,11 @@
 				return this.$eval('songs | filterBy searchQuery');
 			}
 		},
+		watch: {
+			'modals.editSong': function (value) {
+				if (!value) this.$broadcast('stopVideo');
+			}
+		},
 		methods: {
 			toggleModal: function () {
 				this.modals.editSong = !this.modals.editSong;
