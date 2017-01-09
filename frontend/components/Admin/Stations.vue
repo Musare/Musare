@@ -19,12 +19,13 @@
 						<span>{{ station.type }}</span>
 					</td>
 					<td>
-						<span>{{ station.description }}</span>
+						<span>{{ station.displayName }}</span>
 					</td>
 					<td>
 						<span>{{ station.description }}</span>
 					</td>
 					<td>
+						<a class='button is-info' @click='editStation(station)'>Edit</a>
 						<a class='button is-danger' @click='removeStation(index)' href='#'>Remove</a>
 					</td>
 				</tr>
@@ -77,23 +78,32 @@
 			</footer>
 		</div>
 	</div>
+
+	<edit-station v-show='modals.editStation'></edit-station>
 </template>
 
 <script>
 	import { Toast } from 'vue-roaster';
 	import io from '../../io';
 
+	import EditStation from '../Modals/EditStation.vue';
+
 	export default {
+		components: { EditStation },
 		data() {
 			return {
 				stations: [],
 				newStation: {
 					genres: [],
 					blacklistedGenres: []
-				}
+				},
+				modals: { editStation: false }
 			}
 		},
 		methods: {
+			toggleModal: function () {
+				this.modals.editStation	= !this.modals.editStation;
+			},
 			createStation: function () {
 				let _this = this;
 				let { newStation: { _id, displayName, description, genres, blacklistedGenres } } = this;
@@ -120,6 +130,16 @@
 			removeStation: function (index) {
 				this.socket.emit('stations.remove', this.stations[index]._id, res => {
 					Toast.methods.addToast(res.message, 3000);
+				});
+			},
+			editStation: function (station) {
+				this.$broadcast('editStation', {
+					_id: station._id,
+					type: station.type,
+					partyMode: station.partyMode,
+					description: station.description,
+					privacy: station.privacy,
+					displayName: station.displayName
 				});
 			},
 			addGenre: function () {
