@@ -141,6 +141,7 @@
 					privacy: station.privacy,
 					displayName: station.displayName
 				});
+				this.modals.editStation = !this.modals.editStation;
 			},
 			addGenre: function () {
 				let genre = $('#new-genre').val().toLowerCase().trim();

@@ -150,7 +150,6 @@
 			},
 			editStation: function (station) {
 				this.editing = station;
-				this.$parent.toggleModal();
 			}
 		},
 		components: { Modal }
