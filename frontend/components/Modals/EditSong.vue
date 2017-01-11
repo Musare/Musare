@@ -265,6 +265,7 @@
 		events: {
 			closeModal: function () {
 				this.$parent.modals.editSong = false;
+				this.video.player.stopVideo();
 			},
 			editSong: function (song, index, type) {
 				let _this = this;
@@ -282,6 +283,9 @@
 					if (res.status === 'success') _this.reports = res.data;
 				});
 				this.$parent.toggleModal();
+			},
+			stopVideo: function () {
+				this.video.player.stopVideo();
 			}
 		}
 	}

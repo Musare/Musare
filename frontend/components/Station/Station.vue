@@ -5,7 +5,7 @@
 	<song-queue v-if='modals.addSongToQueue'></song-queue>
 	<edit-playlist v-if='modals.editPlaylist'></edit-playlist>
 	<create-playlist v-if='modals.createPlaylist'></create-playlist>
-	<edit-station v-if='modals.editStation'></edit-station>
+	<edit-station v-show='modals.editStation'></edit-station>
 	<report v-if='modals.report'></report>
 
 	<songs-list-sidebar v-if='sidebars.songslist'></songs-list-sidebar>
@@ -133,6 +133,18 @@
 			editPlaylist: function (id) {
 				this.playlistBeingEdited = id;
 				this.modals.editPlaylist = !this.modals.editPlaylist;
+			},
+			editStation: function () {
+				let _this = this;
+				this.$broadcast('editStation', {
+					_id: _this.$route.params.id,
+					type: _this.type,
+					partyMode: _this.station.partyMode,
+					description: _this.station.description,
+					privacy: _this.station.privacy,
+					displayName: _this.station.displayName
+				});
+				this.modals.editStation = !this.modals.editStation;
 			},
 			toggleSidebar: function (type) {
 				Object.keys(this.sidebars).forEach(sidebar => {
