@@ -373,5 +373,11 @@ module.exports = {
 		}
 
 		return array;
+	},
+	getError: (err) => {
+		let error = 'An error occurred.';
+		if (typeof err === "string") error = err;
+		else if (err.message) error = err.message;
+		return error;
 	}
 };

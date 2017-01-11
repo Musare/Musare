@@ -342,6 +342,7 @@
 				_this.socket.emit('stations.join', _this.stationId, res => {
 					if (res.status === 'success') {
 						_this.station = {
+							_id: _this.stationId,
 							displayName: res.data.displayName,
 							description: res.data.description,
 							privacy: res.data.privacy,

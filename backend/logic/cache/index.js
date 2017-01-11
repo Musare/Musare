@@ -83,7 +83,7 @@ const lib = {
 	 * @param {Boolean} [parseJson=true] - attempt to parse returned data as JSON
 	 */
 	hget: (table, key, cb, parseJson = true) => {
-		if (!key || !table) return cb(null, null);
+		if (!key || !table) return typeof cb === 'function' ? cb(null, null) : null;
 		lib.client.hget(table, key, (err, value) => {
 			if (err) return typeof cb === 'function' ? cb(err) : null;
 			if (parseJson) try {
@@ -102,7 +102,7 @@ const lib = {
 	 * @param {Function} cb - gets called when the value has been deleted from Redis or when it returned an error
 	 */
 	hdel: (table, key, cb) => {
-		if (!key || !table) return cb(null, null);
+		if (!key || !table) return typeof cb === 'function' ? cb(null, null) : null;
 		lib.client.hdel(table, key, (err) => {
 			if (err) return typeof cb === 'function' ? cb(err) : null;
 			if (typeof cb === 'function') cb(null);

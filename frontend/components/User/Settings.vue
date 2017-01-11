@@ -176,7 +176,7 @@
 			unlinkGitHub: function () {
 				this.socket.emit('users.unlinkGitHub', res => {
 					Toast.methods.addToast(res.message, 8000);
-			});
+				});
 			}
 		},
 		components: { MainHeader, MainFooter, LoginModal }

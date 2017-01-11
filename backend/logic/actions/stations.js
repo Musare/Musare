@@ -9,6 +9,7 @@ const db = require('../db');
 const cache = require('../cache');
 const notifications = require('../notifications');
 const utils = require('../utils');
+const logger = require('../logger');
 const stations = require('../stations');
 const songs = require('../songs');
 const hooks = require('./hooks');
@@ -81,67 +82,109 @@ module.exports = {
 	 * @return {{ status: String, stations: Array }}
 	 */
 	index: (session, cb) => {
-		cache.hgetall('stations', (err, stations) => {
+		async.waterfall([
+			(next) => {
+				cache.hgetall('stations', next);
+			},
 
-			if (err && err !== true) {
-				return cb({
-					status: 'error',
-					message: 'An error occurred while obtaining the stations'
+			(stations, next) => {
+				let resultStations = [];
+				for (let id in stations) {
+					resultStations.push(stations[id]);
+				}
+				next(null, stations);
+			},
+
+			(stations, next) => {
+				let resultStations = [];
+				async.each(stations, (station, next) => {
+					async.waterfall([
+						(next) => {
+							if (station.privacy === 'public') return next(true);
+							if (!session.sessionId) return next(false);
+							cache.hget('sessions', session.sessionId, next);
+						},
+
+						(session, next) => {
+							if (!session) return next(false);
+							db.models.user.findOne({_id: session.userId}, next);
+						},
+
+						(user, next) => {
+							if (!user) return next(false);
+							if (user.role === 'admin') return next(true);
+							if (station.type === 'official') return next(false);
+							if (station.owner === session.userId) return next(true);
+							next(false);
+						}
+					], (err) => {
+						if (err === true) resultStations.push(station);
+						next();
+					});
+				}, () => {
+					next(null, resultStations);
 				});
 			}
-
-			let arr = [];
-			let done = 0;
-			for (let prop in stations) {
-				// TODO If community, check if on whitelist
-				let station = stations[prop];
-				if (station.privacy === 'public') add(true, station);
-				else if (!session.sessionId) add(false);
-				else {
-					cache.hget('sessions', session.sessionId, (err, session) => {
-						if (err || !session) {
-							add(false);
-						} else {
-							db.models.user.findOne({_id: session.userId}, (err, user) => {
-								if (err || !user) add(false);
-								else if (user.role === 'admin') add(true, station);
-								else if (station.type === 'official') add(false);
-								else if (station.owner === session.userId) add(true, station);
-								else add(false);
-							});
-						}
-					});
-				}
+		], (err, stations) => {
+			if (err) {
+				err = utils.getError(err);
+				logger.error("STATIONS_INDEX", `Indexing stations failed. "${err}"`);
+				return cb({'status': 'failure', 'message': err});
 			}
-
-			function add(add, station) {
-				if (add) arr.push(station);
-				done++;
-				if (done === Object.keys(stations).length) {
-					cb({ status: 'success', stations: arr });
-				}
-			}
+			logger.success("STATIONS_INDEX", `Indexing stations successful.`);
+			return cb({'status': 'success', 'stations': stations});
 		});
 	},
 
 	find: (session, stationId, cb) => {
-		stations.getStation(stationId, (err, station) => {
-			if (err) cb({ status: 'error', message: err });
-			else if (station) cb({ status: 'success', data: station });
+		async.waterfall([
+			(next) => {
+				stations.getStation(stationId, next);
+			},
+
+			(station, next) => {
+				if (!station) return next('Station not found.');
+				next(null, station);
+			}
+		], (err, station) => {
+			if (err) {
+				err = utils.getError(err);
+				logger.error("STATIONS_FIND", `Finding station "${stationId}" failed. "${err}"`);
+				return cb({'status': 'failure', 'message': err});
+			}
+			logger.success("STATIONS_FIND", `Found station "${stationId}" successfully.`);
+			cb({status: 'success', data: station});
 		});
 	},
 
 	getPlaylist: (session, stationId, cb) => {
-		stations.getStation(stationId, (err, station) => {
-			if (err) return cb({ status: 'failure', message: 'Something went wrong when getting the station.' });
-			if (!station) return cb({ status: 'failure', message: 'Station not found..' });
-			if (station.type === 'official') {
-				cache.hget("officialPlaylists", stationId, (err, playlist) => {
-					if (err) return cb({ status: 'failure', message: 'Something went wrong when getting the playlist.' });
-					if (!playlist) return cb({ status: 'failure', message: 'Playlist not found.' });
-					cb({ status: 'success', data: playlist.songs })
-				})
-			} else cb({ status: 'failure', message: 'This is not an official station.' })
+		async.waterfall([
+			(next) => {
+				stations.getStation(stationId, next);
+			},
+
+			(station, next) => {
+				if (!station) return next('Station not found.');
+				if (station.type !== 'official') return next('This is not an official station.');
+				next();
+			},
+
+			(next) => {
+				cache.hget("officialPlaylists", stationId, next);
+			},
+
+			(playlist, next) => {
+				if (!playlist) return next('Playlist not found.');
+				next(null, playlist);
+			}
+		], (err, playlist) => {
+			if (err) {
+				err = utils.getError(err);
+				logger.error("STATIONS_GET_PLAYLIST", `Getting playlist for station "${stationId}" failed. "${err}"`);
+				return cb({'status': 'failure', 'message': err});
+			}
+			logger.success("STATIONS_GET_PLAYLIST", `Got playlist for station "${stationId}" successfully.`);
+			cb({status: 'success', data: playlist.songs})
 		});
 	},
 
@@ -154,79 +197,78 @@ module.exports = {
 	 * @return {{ status: String, userCount: Integer }}
 	 */
 	join: (session, stationId, cb) => {
+		async.waterfall([
+			(next) => {
+				stations.getStation(stationId, next);
+			},
 
-		stations.getStation(stationId, (err, station) => {
+			(station, next) => {
+				if (!station) return next('Station not found.');
+				async.waterfall([
+					(next) => {
+						if (station.privacy !== 'private') return next(true);
+						if (!session.userId) return next('An error occurred while joining the station.');
+						next();
+					},
 
-			if (err && err !== true) return cb({ status: 'error', message: 'An error occurred while joining the station' });
+					(next) => {
+						db.models.user.findOne({_id: session.userId}, next);
+					},
 
-			if (station) {
-
-				if (station.privacy !== 'private') joinStation();
-				else {
-					// TODO If community, check if on whitelist
-					if (!session.userId) return cb({ status: 'error', message: 'An error occurred while joining the station1' });
-					db.models.user.findOne({_id: session.userId}, (err, user) => {
-						if (err || !user) return cb({ status: 'error', message: 'An error occurred while joining the station2' });
-						if (user.role === 'admin') return joinStation();
-						if (station.type === 'official') return cb({ status: 'error', message: 'An error occurred while joining the station3' });
-						if (station.owner === session.userId) return joinStation();
-						return cb({ status: 'error', message: 'An error occurred while joining the station4' });
-					});
-				}
-
-				function joinStation() {
-					utils.socketJoinRoom(session.socketId, `station.${stationId}`);
-					if (station.currentSong) {
-						utils.socketJoinSongRoom(session.socketId, `song.${station.currentSong._id}`);
-						//TODO Emit to cache, listen on cache
-						songs.getSong(station.currentSong._id, (err, song) => {
-							if (!err && song) {
-								station.currentSong.likes = song.likes;
-								station.currentSong.dislikes = song.dislikes;
-							} else {
-								station.currentSong.likes = -1;
-								station.currentSong.dislikes = -1;
-							}
-							station.currentSong.skipVotes = station.currentSong.skipVotes.length;
-							cb({
-								status: 'success',
-								data: {
-									type: station.type,
-									currentSong: station.currentSong,
-									startedAt: station.startedAt,
-									paused: station.paused,
-									timePaused: station.timePaused,
-									description: station.description,
-									displayName: station.displayName,
-									privacy: station.privacy,
-									partyMode: station.partyMode,
-									owner: station.owner,
-									privatePlaylist: station.privatePlaylist
-								}
-							});
-						});
-					} else {
-						cb({
-							status: 'success',
-							data: {
-								type: station.type,
-								currentSong: null,
-								startedAt: station.startedAt,
-								paused: station.paused,
-								timePaused: station.timePaused,
-								description: station.description,
-								displayName: station.displayName,
-								privacy: station.privacy,
-								partyMode: station.partyMode,
-								owner: station.owner,
-								privatePlaylist: station.privatePlaylist
-							}
-						});
+					(user, next) => {
+						if (!user) return next('An error occurred while joining the station.');
+						if (user.role === 'admin') return next(true);
+						if (station.type === 'official') return next('An error occurred while joining the station.');
+						if (station.owner === session.userId) return next(true);
+						next('An error occurred while joining the station.');
 					}
-				}
-			} else {
-				cb({ status: 'failure', message: `That station doesn't exist` });
+				], (err) => {
+					if (err === true) return next(null, station);
+					next(utils.getError(err));
+				});
+			},
+
+			(station, next) => {
+				utils.socketJoinRoom(session.socketId, `station.${stationId}`);
+				let data = {
+					type: station.type,
+					currentSong: station.currentSong,
+					startedAt: station.startedAt,
+					paused: station.paused,
+					timePaused: station.timePaused,
+					description: station.description,
+					displayName: station.displayName,
+					privacy: station.privacy,
+					partyMode: station.partyMode,
+					owner: station.owner,
+					privatePlaylist: station.privatePlaylist
+				};
+				next(null, data);
+			},
+
+			(data, next) => {
+				if (!data.currentSong) return next(null, data);
+				utils.socketJoinSongRoom(session.socketId, `song.${data.currentSong._id}`);
+				data.currentSong.skipVotes = data.currentSong.skipVotes.length;
+				songs.getSong(data.currentSong._id, (err, song) => {
+					if (!err && song) {
+						data.currentSong.likes = song.likes;
+						data.currentSong.dislikes = song.dislikes;
+					} else {
+						data.currentSong.likes = -1;
+						data.currentSong.dislikes = -1;
+					}
+					next(null, data);
+				});
 			}
+		], (err, data) => {
+			if (err) {
+				err = utils.getError(err);
+				logger.error("STATIONS_JOIN", `Joining station "${stationId}" failed. "${err}"`);
+				return cb({'status': 'failure', 'message': err});
+			}
+			logger.success("STATIONS_JOIN", `Joined station "${stationId}" successfully.`);
+			cb({status: 'success', data});
 		});
 	},
 
@@ -238,36 +280,63 @@ module.exports = {
 	 * @param cb
 	 */
 	voteSkip: hooks.loginRequired((session, stationId, cb, userId) => {
-		stations.getStation(stationId, (err, station) => {
-			if (err) return cb({ status: 'failure', message: 'Something went wrong when saving the station.' });
-			if (!station.currentSong) return cb({ status: 'failure', message: 'There is currently no song to skip.' });
-			if (station.currentSong.skipVotes.indexOf(userId) !== -1) return cb({ status: 'failure', message: 'You have already voted to skip this song.' });
-			db.models.station.update({_id: stationId}, {$push: {"currentSong.skipVotes": userId}}, (err) => {
-				if (err) return cb({ status: 'failure', message: 'Something went wrong when saving the station.' });
-				stations.updateStation(stationId, (err, station) => {
-					cache.pub('station.voteSkipSong', stationId);
-					if (station.currentSong && station.currentSong.skipVotes.length >= 3) stations.skipStation(stationId)();
-					cb({ status: 'success', message: 'Successfully voted to skip the song.' });
-				})
-			});
+		async.waterfall([
+			(next) => {
+				stations.getStation(stationId, next);
+			},
+
+			(station, next) => {
+				if (!station) return next('Station not found.');
+				if (!station.currentSong) return next('There is currently no song to skip.');
+				if (station.currentSong.skipVotes.indexOf(userId) !== -1) return next('You have already voted to skip this song.');
+				next(null, station);
+			},
+
+			(station, next) => {
+				db.models.station.update({_id: stationId}, {$push: {"currentSong.skipVotes": userId}}, next)
+			},
+
+			(res, next) => {
+				stations.updateStation(stationId, next);
+			},
+
+			(station, next) => {
+				if (!station) return next('Station not found.');
+				next(null, station);
+			}
+		], (err, station) => {
+			if (err) {
+				err = utils.getError(err);
+				logger.error("STATIONS_VOTE_SKIP", `Vote skipping station "${stationId}" failed. "${err}"`);
+				return cb({'status': 'failure', 'message': err});
+			}
+			logger.success("STATIONS_VOTE_SKIP", `Vote skipping "${stationId}" successful.`);
+			cache.pub('station.voteSkipSong', stationId);
+			if (station.currentSong && station.currentSong.skipVotes.length >= 3) stations.skipStation(stationId)();
+			cb({ status: 'success', message: 'Successfully voted to skip the song.' });
 		});
 	}),
 
 	forceSkip: hooks.ownerRequired((session, stationId, cb) => {
-		stations.getStation(stationId, (err, station) => {
+		async.waterfall([
+			(next) => {
+				stations.getStation(stationId, next);
+			},
 
-			if (err && err !== true) {
-				return cb({ status: 'error', message: 'An error occurred while skipping the station' });
+			(station, next) => {
+				if (!station) return next('Station not found.');
+				next();
 			}
-
-			if (station) {
-				notifications.unschedule(`stations.nextSong?id=${stationId}`);
-				//notifications.schedule(`stations.nextSong?id=${stationId}`, 100);
-				stations.skipStation(stationId)();
+		], (err) => {
+			if (err) {
+				err = utils.getError(err);
+				logger.error("STATIONS_FORCE_SKIP", `Force skipping station "${stationId}" failed. "${err}"`);
+				return cb({'status': 'failure', 'message': err});
 			}
-			else {
-				cb({ status: 'failure', message: `That station doesn't exist` });
-			}
+			notifications.unschedule(`stations.nextSong?id=${stationId}`);
+			stations.skipStation(stationId)();
+			logger.error("STATIONS_FORCE_SKIP", `Force skipped station "${stationId}" successfully.`);
+			return cb({'status': 'success', 'message': 'Successfully skipped station.'});
 		});
 	}),
 
@@ -280,22 +349,28 @@ module.exports = {
 	 * @return {{ status: String, userCount: Integer }}
 	 */
 	leave: (session, stationId, cb) => {
-		stations.getStation(stationId, (err, station) => {
+		async.waterfall([
+			(next) => {
+				stations.getStation(stationId, next);
+			},
 
-			if (err && err !== true) {
-				return cb({ status: 'error', message: 'An error occurred while leaving the station' });
-			}
+			(station, next) => {
+				if (!station) return next('Station not found.');
+				next();
+			},
 
-			if (session) session.stationId = null;
-			else if (station) {
-				cache.client.hincrby('station.userCounts', stationId, -1, (err, userCount) => {
-					if (err) return cb({ status: 'error', message: 'An error occurred while leaving the station' });
-					utils.socketLeaveRooms(session);
-					cb({ status: 'success', userCount });
-				});
-			} else {
-				cb({ status: 'failure', message: `That station doesn't exist, it may have been deleted` });
+			(next) => {
+				cache.client.hincrby('station.userCounts', stationId, -1, next);
 			}
+		], (err, userCount) => {
+			if (err) {
+				err = utils.getError(err);
+				logger.error("STATIONS_LEAVE", `Leaving station "${stationId}" failed. "${err}"`);
+				return cb({'status': 'failure', 'message': err});
+			}
+			logger.error("STATIONS_LEAVE", `Left station "${stationId}" successfully.`);
+			utils.socketLeaveRooms(session);
+			return cb({'status': 'success', 'message': 'Successfully left station.', userCount});
 		});
 	},
 
@@ -322,7 +397,7 @@ module.exports = {
 	updatePrivacy: hooks.ownerRequired((session, stationId, newPrivacy, cb) => {
 		db.models.station.update({_id: stationId}, {$set: {privacy: newPrivacy}}, (err) => {
 			if (err) return cb({ status: 'failure', message: 'Something went wrong when saving the station.' });
-			stations.updateStation(stationId, () => {
+			stations.updateStation(stationId, (err) => {
 				//TODO Pub/sub for privacy change
 				cb({ status: 'success', message: 'Successfully updated the privacy.' });
 			})
