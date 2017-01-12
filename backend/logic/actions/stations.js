@@ -335,7 +335,7 @@ module.exports = {
 			}
 			notifications.unschedule(`stations.nextSong?id=${stationId}`);
 			stations.skipStation(stationId)();
-			logger.error("STATIONS_FORCE_SKIP", `Force skipped station "${stationId}" successfully.`);
+			logger.success("STATIONS_FORCE_SKIP", `Force skipped station "${stationId}" successfully.`);
 			return cb({'status': 'success', 'message': 'Successfully skipped station.'});
 		});
 	}),
@@ -368,119 +368,184 @@ module.exports = {
 				logger.error("STATIONS_LEAVE", `Leaving station "${stationId}" failed. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
-			logger.error("STATIONS_LEAVE", `Left station "${stationId}" successfully.`);
+			logger.success("STATIONS_LEAVE", `Left station "${stationId}" successfully.`);
 			utils.socketLeaveRooms(session);
 			return cb({'status': 'success', 'message': 'Successfully left station.', userCount});
 		});
 	},
 
 	updateDisplayName: hooks.ownerRequired((session, stationId, newDisplayName, cb) => {
-		db.models.station.update({_id: stationId}, {$set: {displayName: newDisplayName}}, (err) => {
-			if (err) return cb({ status: 'failure', message: 'Something went wrong when saving the station.' });
-			stations.updateStation(stationId, () => {
-				//TODO Pub/sub for displayName change
-				cb({ status: 'success', message: 'Successfully updated the display name.' });
-			})
+		async.waterfall([
+			(next) => {
+				db.models.station.update({_id: stationId}, {$set: {displayName: newDisplayName}}, next);
+			},
+
+			(res, next) => {
+				stations.updateStation(stationId, next);
+			}
+		], (err) => {
+			if (err) {
+				err = utils.getError(err);
+				logger.error("STATIONS_UPDATE_DISPLAY_NAME", `Updating station "${stationId}" displayName to "${newDisplayName}" failed. "${err}"`);
+				return cb({'status': 'failure', 'message': err});
+			}
+			logger.success("STATIONS_UPDATE_DISPLAY_NAME", `Updated station "${stationId}" displayName to "${newDisplayName}" successfully.`);
+			return cb({'status': 'success', 'message': 'Successfully updated the display name.'});
 		});
 	}),
 
 	updateDescription: hooks.ownerRequired((session, stationId, newDescription, cb) => {
-		db.models.station.update({_id: stationId}, {$set: {description: newDescription}}, (err) => {
-			if (err) return cb({ status: 'failure', message: 'Something went wrong when saving the station.' });
-			stations.updateStation(stationId, () => {
-				//TODO Pub/sub for description change
-				cb({ status: 'success', message: 'Successfully updated the description.' });
-			})
+		async.waterfall([
+			(next) => {
+				db.models.station.update({_id: stationId}, {$set: {description: newDescription}}, next);
+			},
+
+			(res, next) => {
+				stations.updateStation(stationId, next);
+			}
+		], (err) => {
+			if (err) {
+				err = utils.getError(err);
+				logger.error("STATIONS_UPDATE_DESCRIPTION", `Updating station "${stationId}" description to "${newDescription}" failed. "${err}"`);
+				return cb({'status': 'failure', 'message': err});
+			}
+			logger.success("STATIONS_UPDATE_DESCRIPTION", `Updated station "${stationId}" description to "${newDescription}" successfully.`);
+			return cb({'status': 'success', 'message': 'Successfully updated the description.'});
 		});
 	}),
 
 	updatePrivacy: hooks.ownerRequired((session, stationId, newPrivacy, cb) => {
-		db.models.station.update({_id: stationId}, {$set: {privacy: newPrivacy}}, (err) => {
-			if (err) return cb({ status: 'failure', message: 'Something went wrong when saving the station.' });
-			stations.updateStation(stationId, (err) => {
-				//TODO Pub/sub for privacy change
-				cb({ status: 'success', message: 'Successfully updated the privacy.' });
-			})
+		async.waterfall([
+			(next) => {
+				db.models.station.update({_id: stationId}, {$set: {privacy: newPrivacy}}, next);
+			},
+
+			(res, next) => {
+				stations.updateStation(stationId, next);
+			}
+		], (err) => {
+			if (err) {
+				err = utils.getError(err);
+				logger.error("STATIONS_UPDATE_PRIVACY", `Updating station "${stationId}" privacy to "${newPrivacy}" failed. "${err}"`);
+				return cb({'status': 'failure', 'message': err});
+			}
+			logger.success("STATIONS_UPDATE_PRIVACY", `Updated station "${stationId}" privacy to "${newPrivacy}" successfully.`);
+			return cb({'status': 'success', 'message': 'Successfully updated the privacy.'});
 		});
 	}),
 
 	updatePartyMode: hooks.ownerRequired((session, stationId, newPartyMode, cb) => {
-		stations.getStation(stationId, (err, station) => {
-			if (err) return cb({ status: 'failure', message: err });
-			if (station.partyMode === newPartyMode) return cb({ status: 'failure', message: 'The party mode was already ' + ((newPartyMode) ? 'enabled.' : 'disabled.') });
-			db.models.station.update({_id: stationId}, {$set: {partyMode: newPartyMode}}, (err) => {
-				if (err) return cb({ status: 'failure', message: 'Something went wrong when saving the station.' });
-				stations.updateStation(stationId, () => {
-					//TODO Pub/sub for privacy change
-					cache.pub('station.updatePartyMode', {stationId: stationId, partyMode: newPartyMode});
-					stations.skipStation(stationId)();
-					cb({ status: 'success', message: 'Successfully updated the party mode.' });
-				})
-			});
+		async.waterfall([
+			(next) => {
+				stations.getStation(stationId, next);
+			},
+
+			(station, next) => {
+				if (!station) return next('Station not found.');
+				if (station.partyMode === newPartyMode) return next('The party mode was already ' + ((newPartyMode) ? 'enabled.' : 'disabled.'));
+				db.models.station.update({_id: stationId}, {$set: {partyMode: newPartyMode}}, next);
+			},
+
+			(res, next) => {
+				stations.updateStation(stationId, next);
+			}
+		], (err) => {
+			if (err) {
+				err = utils.getError(err);
+				logger.error("STATIONS_UPDATE_PARTY_MODE", `Updating station "${stationId}" party mode to "${newPartyMode}" failed. "${err}"`);
+				return cb({'status': 'failure', 'message': err});
+			}
+			logger.success("STATIONS_UPDATE_PARTY_MODE", `Updated station "${stationId}" party mode to "${newPartyMode}" successfully.`);
+			cache.pub('station.updatePartyMode', {stationId: stationId, partyMode: newPartyMode});
+			stations.skipStation(stationId)();
+			return cb({'status': 'success', 'message': 'Successfully updated the party mode.'});
 		});
 	}),
 
 	pause: hooks.ownerRequired((session, stationId, cb) => {
-		stations.getStation(stationId, (err, station) => {
-			if (err && err !== true) {
-				return cb({ status: 'error', message: 'An error occurred while pausing the station' });
-			} else if (station) {
-				if (!station.paused) {
-					station.paused = true;
-					station.pausedAt = Date.now();
-					db.models.station.update({_id: stationId}, {$set: {paused: true, pausedAt: Date.now()}}, () => {
-						if (err) return cb({ status: 'failure', message: 'An error occurred while pausing the station.' });
-						stations.updateStation(stationId, () => {
-							cache.pub('station.pause', stationId);
-							notifications.unschedule(`stations.nextSong?id=${stationId}`);
-							cb({ status: 'success' });
-						});
-					});
-				} else {
-					cb({ status: 'failure', message: 'That station was already paused.' });
-				}
-				cb({ status: 'success' });
-			} else {
-				cb({ status: 'failure', message: `That station doesn't exist, it may have been deleted` });
+		async.waterfall([
+			(next) => {
+				stations.getStation(stationId, next);
+			},
+
+			(station, next) => {
+				if (!station) return next('Station not found.');
+				if (station.paused) return next('That station was already paused.');
+				db.models.station.update({_id: stationId}, {$set: {paused: true, pausedAt: Date.now()}}, next);
+			},
+
+			(res, next) => {
+				stations.updateStation(stationId, next);
 			}
+		], (err) => {
+			if (err) {
+				err = utils.getError(err);
+				logger.error("STATIONS_PAUSE", `Pausing station "${stationId}" failed. "${err}"`);
+				return cb({'status': 'failure', 'message': err});
+			}
+			logger.success("STATIONS_PAUSE", `Paused station "${stationId}" successfully.`);
+			cache.pub('station.pause', stationId);
+			notifications.unschedule(`stations.nextSong?id=${stationId}`);
+			return cb({'status': 'success', 'message': 'Successfully paused.'});
 		});
 	}),
 
 	resume: hooks.ownerRequired((session, stationId, cb) => {
-		stations.getStation(stationId, (err, station) => {
-			if (err && err !== true) return cb({ status: 'error', message: 'An error occurred while resuming the station' });
-			else if (station) {
-				if (station.paused) {
-					station.paused = false;
-					station.timePaused += (Date.now() - station.pausedAt);
-					db.models.station.update({ _id: stationId }, { $set: { paused: false }, $inc: { timePaused: Date.now() - station.pausedAt } }, () => {
-						stations.updateStation(stationId, (err, station) => {
-							cache.pub('station.resume', stationId);
-							cb({ status: 'success' });
-						});
-					});
-				} else cb({ status: 'failure', message: 'That station is not paused.' });
-			} else cb({ status: 'failure', message: `That station doesn't exist, it may have been deleted` });
+		async.waterfall([
+			(next) => {
+				stations.getStation(stationId, next);
+			},
+
+			(station, next) => {
+				if (!station) return next('Station not found.');
+				if (!station.paused) return next('That station is not paused.');
+				station.timePaused += (Date.now() - station.pausedAt);
+				db.models.station.update({_id: stationId}, {$set: {paused: false}, $inc: {timePaused: Date.now() - station.pausedAt}}, next);
+			},
+
+			(next) => {
+				stations.updateStation(stationId, next);
+			}
+		], (err) => {
+			if (err) {
+				err = utils.getError(err);
+				logger.error("STATIONS_RESUME", `Resuming station "${stationId}" failed. "${err}"`);
+				return cb({'status': 'failure', 'message': err});
+			}
+			logger.success("STATIONS_RESUME", `Resuming station "${stationId}" successfully.`);
+			cache.pub('station.resume', stationId);
+			return cb({'status': 'success', 'message': 'Successfully resumed.'});
 		});
 	}),
 
 	remove: hooks.ownerRequired((session, stationId, cb) => {
-		db.models.station.remove({ _id: stationId }, (err) => {
-			if (err) return cb({ status: 'failure', message: 'Something went wrong when deleting that station' });
-			cache.hdel('stations', stationId, () => {
-				cache.pub('station.remove', stationId);
-				return cb({ status: 'success', message: 'Station successfully removed' });
-			});
+		async.waterfall([
+			(next) => {
+				db.models.station.remove({ _id: stationId }, next);
+			},
+
+			(next) => {
+				cache.hdel('stations', stationId, next);
+			}
+		], (err) => {
+			if (err) {
+				err = utils.getError(err);
+				logger.error("STATIONS_REMOVE", `Removing station "${stationId}" failed. "${err}"`);
+				return cb({'status': 'failure', 'message': err});
+			}
+			logger.success("STATIONS_REMOVE", `Removing station "${stationId}" successfully.`);
+			cache.pub('station.remove', stationId);
+			return cb({'status': 'success', 'message': 'Successfully removed.'});
 		});
 	}),
 
-	create: hooks.loginRequired((session, data, cb) => {
+	create: hooks.loginRequired((session, data, cb, userId) => {
 		data._id = data._id.toLowerCase();
 		let blacklist = ["country", "edm", "musare", "hip-hop", "rap", "top-hits", "todays-hits", "old-school", "christmas", "about", "support", "staff", "help", "news", "terms", "privacy", "profile", "c", "community", "tos", "login", "register", "p", "official", "o", "trap", "faq", "team", "donate", "buy", "shop", "forums", "explore", "settings", "admin", "auth", "reset_password"];
 		async.waterfall([
-
 			(next) => {
-				return (data) ? next() : cb({ 'status': 'failure', 'message': 'Invalid data' });
+				if (!data) return next('Invalid data.');
+				next();
 			},
 
 			(next) => {
@@ -488,146 +553,196 @@ module.exports = {
 			},
 
 			(station, next) => {
-				if (station) return next({ 'status': 'failure', 'message': 'A station with that name or display name already exists' });
+				if (station) return next('A station with that name or display name already exists.');
 				const { _id, displayName, description, genres, playlist, type, blacklistedGenres } = data;
-				cache.hget('sessions', session.sessionId, (err, session) => {
-					if (type === 'official') {
-						db.models.user.findOne({_id: session.userId}, (err, user) => {
-							if (err) return next({ 'status': 'failure', 'message': 'Something went wrong when getting your user info.' });
-							if (!user) return next({ 'status': 'failure', 'message': 'User not found.' });
-							if (user.role !== 'admin') return next({ 'status': 'failure', 'message': 'Admin required.' });
-							db.models.station.create({
-								_id,
-								displayName,
-								description,
-								type,
-								privacy: 'private',
-								playlist,
-								genres,
-								blacklistedGenres,
-								currentSong: stations.defaultSong
-							}, next);
-						});
-					} else if (type === 'community') {
-						if (blacklist.indexOf(_id) !== -1) return next({ 'status': 'failure', 'message': 'That id is blacklisted. Please use a different id.' });
+				if (type === 'official') {
+					db.models.user.findOne({_id: userId}, (err, user) => {
+						if (err) return next(err);
+						if (!user) return next('User not found.');
+						if (user.role !== 'admin') return next('Admin required.');
 						db.models.station.create({
 							_id,
 							displayName,
 							description,
 							type,
 							privacy: 'private',
-							owner: session.userId,
-							queue: [],
-							currentSong: null
+							playlist,
+							genres,
+							blacklistedGenres,
+							currentSong: stations.defaultSong
 						}, next);
-					}
-				});
+					});
+				} else if (type === 'community') {
+					if (blacklist.indexOf(_id) !== -1) return next('That id is blacklisted. Please use a different id.');
+					db.models.station.create({
+						_id,
+						displayName,
+						description,
+						type,
+						privacy: 'private',
+						owner: userId,
+						queue: [],
+						currentSong: null
+					}, next);
+				}
 			}
-
 		], (err, station) => {
 			if (err) {
-				console.error(err);
-				return cb({ 'status': 'failure', 'message': err.message});
-			} else {
-				cache.pub('station.create', data._id);
-				cb({ 'status': 'success', 'message': 'Successfully created station' });
+				err = utils.getError(err);
+				logger.error("STATIONS_CREATE", `Creating station failed. "${err}"`);
+				return cb({'status': 'failure', 'message': err});
 			}
+			logger.success("STATIONS_CREATE", `Created station "${station._id}" successfully.`);
+			cache.pub('station.create', station._id);
+			return cb({'status': 'success', 'message': 'Successfully created station.'});
 		});
 	}),
 
 	addToQueue: hooks.loginRequired((session, stationId, songId, cb, userId) => {
-		stations.getStation(stationId, (err, station) => {
-			if (err) return cb(err);
-			if (station.type === 'community') {
-				let has = false;
-				station.queue.forEach(queueSong => {
-					if (queueSong._id === songId) has = true;
-				});
-				if (has) return cb({'status': 'failure', 'message': 'That song has already been added to the queue'});
-				if (station.currentSong && station.currentSong._id === songId) return cb({'status': 'failure', 'message': 'That song is currently playing'});
+		async.waterfall([
+			(next) => {
+				stations.getStation(stationId, next);
+			},
 
-				songs.getSong(songId, (err, song) => {
-					if (err) {
-						utils.getSongFromYouTube(songId, (song) => {
-							song.artists = [];
-							song.skipDuration = 0;
-							song.likes = -1;
-							song.dislikes = -1;
-							song.thumbnail = "empty";
-							song.explicit = false;
-							cont(song);
-						});
-					} else cont(song);
-					function cont(song) {
-						song.requestedBy = userId;
-						db.models.station.update({ _id: stationId }, { $push: { queue: song } }, (err) => {
-							if (err) return cb({'status': 'failure', 'message': 'Something went wrong'});
-							stations.updateStation(stationId, (err, station) => {
-								if (err) return cb(err);
-								cache.pub('station.queueUpdate', stationId);
-								cb({ 'status': 'success', 'message': 'Added that song to the queue' });
-							});
-						});
-					}
+			(station, next) => {
+				if (!station) return next('Station not found.');
+				if (station.type !== 'community') return next('That station is not a community station.');
+				if (station.currentSong && station.currentSong._id === songId) return next('That song is currently playing.');
+				async.each(station.queue, (queueSong, next) => {
+					if (queueSong._id === songId) return next('That song is already in the queue.');
+					next();
+				}, (err) => {
+					next(err, station);
 				});
-			} else cb({'status': 'failure', 'message': 'That station is not a community station'});
+			},
+
+			(station, next) => {
+				songs.getSong(songId, (err, song) => {
+					if (!err && song) return next(null, song);
+					utils.getSongFromYouTube(songId, (song) => {
+						song.artists = [];
+						song.skipDuration = 0;
+						song.likes = -1;
+						song.dislikes = -1;
+						song.thumbnail = "empty";
+						song.explicit = false;
+						next(null, song);
+					});
+				});
+			},
+
+			(song, next) => {
+				song.requestedBy = userId;
+				db.models.station.update({_id: stationId}, {$push: {queue: song}}, next);
+			},
+
+			(res, next) => {
+				stations.updateStation(stationId, next);
+			}
+		], (err, station) => {
+			if (err) {
+				err = utils.getError(err);
+				logger.error("STATIONS_ADD_SONG_TO_QUEUE", `Adding song "${songId}" to station "${stationId}" queue failed. "${err}"`);
+				return cb({'status': 'failure', 'message': err});
+			}
+			logger.success("STATIONS_ADD_SONG_TO_QUEUE", `Added song "${songId}" to station "${stationId}" successfully.`);
+			cache.pub('station.queueUpdate', stationId);
+			return cb({'status': 'success', 'message': 'Successfully added song to queue.'});
 		});
 	}),
 
 	removeFromQueue: hooks.ownerRequired((session, stationId, songId, cb, userId) => {
-		stations.getStation(stationId, (err, station) => {
-			if (err) return cb(err);
-			if (station.type === 'community') {
-				let has = false;
-				station.queue.forEach((queueSong) => {
-					if (queueSong._id === songId) {
-						has = true;
-					}
+		async.waterfall([
+			(next) => {
+				if (!songId) return next('Invalid song id.');
+				stations.getStation(stationId, next);
+			},
+
+			(station, next) => {
+				if (!station) return next('Station not found.');
+				if (station.type !== 'community') return next('Station is not a community station.');
+				async.each(station.queue, (queueSong, next) => {
+					if (queueSong._id === songId) return next(true);
+					next();
+				}, (err) => {
+					if (err === true) return next();
+					next('Song is not currently in the queue.');
 				});
-				if (!has) return cb({'status': 'failure', 'message': 'That song is not in the queue.'});
-				db.models.update({_id: stationId}, {$pull: {queue: {songId: songId}}}, (err) => {
-					if (err) return cb({'status': 'failure', 'message': 'Something went wrong.'});
-					stations.updateStation(stationId, (err, station) => {
-						if (err) return cb(err);
-						cache.pub('station.queueUpdate', stationId);
-					});
-				});
-			} else cb({'status': 'failure', 'message': 'That station is not a community station.'});
+			},
+
+			(next) => {
+				db.models.update({_id: stationId}, {$pull: {queue: {songId: songId}}}, next);
+			},
+
+			(next) => {
+				stations.updateStation(stationId, next);
+			}
+		], (err, station) => {
+			if (err) {
+				err = utils.getError(err);
+				logger.error("STATIONS_REMOVE_SONG_TO_QUEUE", `Removing song "${songId}" from station "${stationId}" queue failed. "${err}"`);
+				return cb({'status': 'failure', 'message': err});
+			}
+			logger.success("STATIONS_REMOVE_SONG_TO_QUEUE", `Removed song "${songId}" from station "${stationId}" successfully.`);
+			cache.pub('station.queueUpdate', stationId);
+			return cb({'status': 'success', 'message': 'Successfully removed song from queue.'});
 		});
 	}),
 
 	getQueue: hooks.adminRequired((session, stationId, cb) => {
-		stations.getStation(stationId, (err, station) => {
-			if (err) return cb(err);
-			if (!station) return cb({'status': 'failure', 'message': 'Station not found.'});
-			if (station.type === 'community') {
-				cb({'status': 'success', queue: station.queue});
-			} else cb({'status': 'failure', 'message': 'That station is not a community station.'});
+		async.waterfall([
+			(next) => {
+				stations.getStation(stationId, next);
+			},
+
+			(station, next) => {
+				if (!station) return next('Station not found.');
+				if (station.type !== 'community') return next('Station is not a community station.');
+				next(null, station);
+			}
+		], (err, station) => {
+			if (err) {
+				err = utils.getError(err);
+				logger.error("STATIONS_GET_QUEUE", `Getting queue for station "${stationId}" failed. "${err}"`);
+				return cb({'status': 'failure', 'message': err});
+			}
+			logger.success("STATIONS_GET_QUEUE", `Got queue for station "${stationId}" successfully.`);
+			return cb({'status': 'success', 'message': 'Successfully got queue.', queue: station.queue});
 		});
 	}),
 
 	selectPrivatePlaylist: hooks.ownerRequired((session, stationId, playlistId, cb, userId) => {
-		stations.getStation(stationId, (err, station) => {
-			if (err) return cb(err);
-			if (station.type === 'community') {
-				if (station.privatePlaylist === playlistId) return cb({'status': 'failure', 'message': 'That playlist is already selected.'});
-				db.models.playlist.findOne({ _id: playlistId }, (err, playlist) => {
-					if (err) return cb(err);
-					if (playlist) {
-						let currentSongIndex = (playlist.songs.length > 0) ? playlist.songs.length - 1 : 0;
-						db.models.station.update({_id: stationId}, { $set: { privatePlaylist: playlistId, currentSongIndex: currentSongIndex } }, (err) => {
-							if (err) return cb(err);
-							stations.updateStation(stationId, (err, station) => {
-								if (err) return cb(err);
-								if (!station.partyMode) stations.skipStation(stationId)();
-								cache.pub('privatePlaylist.selected', {playlistId, stationId});
-								cb({'status': 'success', 'message': 'Playlist selected.'});
-							});
-						});
-					} else cb({'status': 'failure', 'message': 'Playlist not found.'});
-				});
-			} else cb({'status': 'failure', 'message': 'That station is not a community station.'});
+		async.waterfall([
+			(next) => {
+				stations.getStation(stationId, next);
+			},
+
+			(station, next) => {
+				if (!station) return next('Station not found.');
+				if (station.type !== 'community') return next('Station is not a community station.');
+				if (station.privatePlaylist === playlistId) return next('That private playlist is already selected.');
+				db.models.playlist.findOne({_id: playlistId}, next);
+			},
+
+			(playlist, next) => {
+				if (!playlist) return next('Playlist not found.');
+				let currentSongIndex = (playlist.songs.length > 0) ? playlist.songs.length - 1 : 0;
+				db.models.station.update({_id: stationId}, {$set: {privatePlaylist: playlistId, currentSongIndex: currentSongIndex}}, next);
+			},
+
+			(res, next) => {
+				stations.updateStation(stationId, next);
+			}
+		], (err, station) => {
+			if (err) {
+				err = utils.getError(err);
+				logger.error("STATIONS_SELECT_PRIVATE_PLAYLIST", `Selecting private playlist "${playlistId}" for station "${stationId}" failed. "${err}"`);
+				return cb({'status': 'failure', 'message': err});
+			}
+			logger.success("STATIONS_SELECT_PRIVATE_PLAYLIST", `Selected private playlist "${playlistId}" for station "${stationId}" successfully.`);
+			if (!station.partyMode) stations.skipStation(stationId)();
+			cache.pub('privatePlaylist.selected', {playlistId, stationId});
+			return cb({'status': 'success', 'message': 'Successfully got queue.'});
 		});
 	}),
-
 };
