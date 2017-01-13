@@ -5,6 +5,7 @@ const io = require('../io');
 const songs = require('../songs');
 const cache = require('../cache');
 const utils = require('../utils');
+const logger = require('../logger');
 const hooks = require('./hooks');
 const queueSongs = require('./queueSongs');
 
@@ -63,60 +64,113 @@ cache.sub('song.undislike', (data) => {
 module.exports = {
 
 	length: hooks.adminRequired((session, cb) => {
-		db.models.song.find({}, (err, songs) => {
-			if (err) console.error(err);
-			cb(songs.length);
-		})
+		async.waterfall([
+			(next) => {
+				db.models.song.count({}, next);
+			}
+		], (err, count) => {
+			if (err) {
+				err = utils.getError(err);
+				logger.error("SONGS_LENGTH", `Failed to get length from songs. "${err}"`);
+				return cb({'status': 'failure', 'message': err});
+			}
+			logger.success("SONGS_LENGTH", `Got length from songs successfully.`);
+			cb(count);
+		});
 	}),
 
 	getSet: hooks.adminRequired((session, set, cb) => {
-		db.models.song.find({}).limit(15 * set).exec((err, songs) => {
-			if (err) console.error(err);
+		async.waterfall([
+			(next) => {
+				db.models.song.find({}).limit(15 * set).exec(next);
+			}
+		], (err, songs) => {
+			if (err) {
+				err = utils.getError(err);
+				logger.error("SONGS_GET_SET", `Failed to get set from songs. "${err}"`);
+				return cb({'status': 'failure', 'message': err});
+			}
+			logger.success("SONGS_GET_SET", `Got set from songs successfully.`);
 			cb(songs.splice(Math.max(songs.length - 15, 0)));
 		});
 	}),
 
 	update: hooks.adminRequired((session, songId, song, cb) => {
-		db.models.song.update({ _id: songId }, song, { upsert: true }, err => {
-			if (err) console.error(err);
-			songs.updateSong(songId, (err, song) => {
-				if (err) console.error(err);
-				cache.pub('song.updated', song._id);
-				cb({ status: 'success', message: 'Song has been successfully updated', data: song });
-			});
+		async.waterfall([
+			(next) => {
+				db.models.song.update({_id: songId}, song, {upsert: true}, next);
+			},
+
+			(res, next) => {
+				songs.updateSong(songId, next);
+			}
+		], (err, song) => {
+			if (err) {
+				err = utils.getError(err);
+				logger.error("SONGS_UPDATE", `Failed to update song "${songId}". "${err}"`);
+				return cb({'status': 'failure', 'message': err});
+			}
+			logger.success("SONGS_UPDATE", `Successfully updated song "${songId}".`);
+			cache.pub('song.updated', song._id);
+			cb({ status: 'success', message: 'Song has been successfully updated', data: song });
 		});
 	}),
 
 	remove: hooks.adminRequired((session, songId, cb) => {
-		db.models.song.remove({ _id: songId }, (err) => {
-			if (err) return cb({status: 'failure', message: err.message});
-			cache.hdel('songs', songId, (err) => {
-				if (err) return cb({status: 'failure', message: err.message});
-				cache.pub('song.removed', songId);
-				cb({status: 'success', message: 'Successfully removed the song.'});
-			});
+		async.waterfall([
+			(next) => {
+				db.models.song.remove({_id: songId}, next);
+			},
+
+			(res, next) => {//TODO Check if res gets returned from above
+				cache.hdel('songs', songId, next);
+			}
+		], (err) => {
+			if (err) {
+				err = utils.getError(err);
+				logger.error("SONGS_UPDATE", `Failed to update song "${songId}". "${err}"`);
+				return cb({'status': 'failure', 'message': err});
+			}
+			logger.success("SONGS_UPDATE", `Successfully updated song "${songId}".`);
+			cache.pub('song.removed', songId);
+			cb({status: 'success', message: 'Song has been successfully updated'});
 		});
 	}),
 
 	add: hooks.adminRequired((session, song, cb, userId) => {
-		queueSongs.remove(session, song._id, () => {
-			const newSong = new db.models.song(song);
-			db.models.song.findOne({ _id: song._id }, (err, existingSong) => {
-				if (err) console.error(err);
+		async.waterfall([
+			(next) => {
+				queueSongs.remove(session, song._id, () => {
+					next();
+				});
+			},
+
+			(next) => {
+				db.models.song.findOne({_id: song._id}, next);
+			},
+
+			(existingSong, next) => {
+				if (existingSong) return next('Song is already in rotation.');
+				next();
+			},
+
+			(next) => {
+				const newSong = new db.models.song(song);
 				newSong.acceptedBy = userId;
 				newSong.acceptedAt = Date.now();
-				if (!existingSong) newSong.save(err => {
-					if (err) {
-						console.error(err);
-						cb({ status: 'failure', message: 'Something went wrong while adding the song to the queue.' });
-					} else {
-						cache.pub('song.added', song._id);
-						cb({ status: 'success', message: 'Song has been moved from Queue' });
-					}
-				});
-			});
-			//TODO Check if video is in queue and Add the song to the appropriate stations
+				newSong.save(next);
+			}
+		], (err) => {
+			if (err) {
+				err = utils.getError(err);
+				logger.error("SONGS_ADD", `User "${userId}" failed to add song. "${err}"`);
+				return cb({'status': 'failure', 'message': err});
+			}
+			logger.success("SONGS_ADD", `User "${userId}" successfully added song "${song._id}".`);
+			cache.pub('song.added', song._id);
+			cb({status: 'success', message: 'Song has been moved from the queue successfully.'});
 		});
+		//TODO Check if video is in queue and Add the song to the appropriate stations
 	}),
 
 	like: hooks.loginRequired((session, songId, cb, userId) => {
@@ -224,5 +278,4 @@ module.exports = {
 			}
 		});
 	})
-
 };
