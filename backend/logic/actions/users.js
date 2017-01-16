@@ -556,11 +556,9 @@ module.exports = {
 			}
 		], (err) => {
 			if (err) {
-				let error = 'An error occurred.';
-				if (typeof err === "string") error = err;
-				else if (err.message) error = err.message;
-				logger.error("UPDATE_PASSWORD", `Failed updating user password of user '${userId}'. '${error}'.`);
-				return cb({ status: 'failure', message: error });
+				err = utils.getError(err);
+				logger.error("UPDATE_PASSWORD", `Failed updating user password of user '${userId}'. '${err}'.`);
+				return cb({ status: 'failure', message: err });
 			}
 
 			logger.error("UPDATE_PASSWORD", `User '${userId}' updated their password.`);
@@ -603,11 +601,9 @@ module.exports = {
 			}
 		], (err) => {
 			if (err && err !== true) {
-				let error = 'An error occurred.';
-				if (typeof err === "string") error = err;
-				else if (err.message) error = err.message;
-				logger.error("REQUEST_PASSWORD", `UserId '${userId}' failed to request password. '${error}'`);
-				cb({status: 'failure', message: error});
+				err = utils.getError(err);
+				logger.error("REQUEST_PASSWORD", `UserId '${userId}' failed to request password. '${err}'`);
+				cb({status: 'failure', message: err});
 			} else {
 				logger.success("REQUEST_PASSWORD", `UserId '${userId}' successfully requested a password.`);
 				cb({
@@ -640,11 +636,9 @@ module.exports = {
 			}
 		], (err) => {
 			if (err && err !== true) {
-				let error = 'An error occurred.';
-				if (typeof err === "string") error = err;
-				else if (err.message) error = err.message;
-				logger.error("VERIFY_PASSWORD_CODE", `Code '${code}' failed to verify. '${error}'`);
-				cb({status: 'failure', message: error});
+				err = utils.getError(err);
+				logger.error("VERIFY_PASSWORD_CODE", `Code '${code}' failed to verify. '${err}'`);
+				cb({status: 'failure', message: err});
 			} else {
 				logger.success("VERIFY_PASSWORD_CODE", `Code '${code}' successfully verified.`);
 				cb({
@@ -691,11 +685,9 @@ module.exports = {
 			}
 		], (err) => {
 			if (err && err !== true) {
-				let error = 'An error occurred.';
-				if (typeof err === "string") error = err;
-				else if (err.message) error = err.message;
-				logger.error("ADD_PASSWORD_WITH_CODE", `Code '${code}' failed to add password. '${error}'`);
-				cb({status: 'failure', message: error});
+				err = utils.getError(err);
+				logger.error("ADD_PASSWORD_WITH_CODE", `Code '${code}' failed to add password. '${err}'`);
+				cb({status: 'failure', message: err});
 			} else {
 				logger.success("ADD_PASSWORD_WITH_CODE", `Code '${code}' successfully added password.`);
 				cache.pub('user.linkPassword', userId);
@@ -727,11 +719,9 @@ module.exports = {
 			}
 		], (err) => {
 			if (err && err !== true) {
-				let error = 'An error occurred.';
-				if (typeof err === "string") error = err;
-				else if (err.message) error = err.message;
-				logger.error("UNLINK_PASSWORD", `Unlinking password failed for userId '${userId}'. '${error}'`);
-				cb({status: 'failure', message: error});
+				err = utils.getError(err);
+				logger.error("UNLINK_PASSWORD", `Unlinking password failed for userId '${userId}'. '${err}'`);
+				cb({status: 'failure', message: err});
 			} else {
 				logger.success("UNLINK_PASSWORD", `Unlinking password successful for userId '${userId}'.`);
 				cache.pub('user.unlinkPassword', userId);
@@ -763,11 +753,9 @@ module.exports = {
 			}
 		], (err) => {
 			if (err && err !== true) {
-				let error = 'An error occurred.';
-				if (typeof err === "string") error = err;
-				else if (err.message) error = err.message;
-				logger.error("UNLINK_GITHUB", `Unlinking GitHub failed for userId '${userId}'. '${error}'`);
-				cb({status: 'failure', message: error});
+				err = utils.getError(err);
+				logger.error("UNLINK_GITHUB", `Unlinking GitHub failed for userId '${userId}'. '${err}'`);
+				cb({status: 'failure', message: err});
 			} else {
 				logger.success("UNLINK_GITHUB", `Unlinking GitHub successful for userId '${userId}'.`);
 				cache.pub('user.unlinkGitHub', userId);
@@ -812,11 +800,9 @@ module.exports = {
 			}
 		], (err) => {
 			if (err && err !== true) {
-				let error = 'An error occurred.';
-				if (typeof err === "string") error = err;
-				else if (err.message) error = err.message;
-				logger.error("REQUEST_PASSWORD_RESET", `Email '${email}' failed to request password reset. '${error}'`);
-				cb({status: 'failure', message: error});
+				err = utils.getError(err);
+				logger.error("REQUEST_PASSWORD_RESET", `Email '${email}' failed to request password reset. '${err}'`);
+				cb({status: 'failure', message: err});
 			} else {
 				logger.success("REQUEST_PASSWORD_RESET", `Email '${email}' successfully requested a password reset.`);
 				cb({
@@ -848,11 +834,9 @@ module.exports = {
 			}
 		], (err) => {
 			if (err && err !== true) {
-				let error = 'An error occurred.';
-				if (typeof err === "string") error = err;
-				else if (err.message) error = err.message;
-				logger.error("VERIFY_PASSWORD_RESET_CODE", `Code '${code}' failed to verify. '${error}'`);
-				cb({status: 'failure', message: error});
+				err = utils.getError(err);
+				logger.error("VERIFY_PASSWORD_RESET_CODE", `Code '${code}' failed to verify. '${err}'`);
+				cb({status: 'failure', message: err});
 			} else {
 				logger.success("VERIFY_PASSWORD_RESET_CODE", `Code '${code}' successfully verified.`);
 				cb({
@@ -898,11 +882,9 @@ module.exports = {
 			}
 		], (err) => {
 			if (err && err !== true) {
-				let error = 'An error occurred.';
-				if (typeof err === "string") error = err;
-				else if (err.message) error = err.message;
-				logger.error("CHANGE_PASSWORD_WITH_RESET_CODE", `Code '${code}' failed to change password. '${error}'`);
-				cb({status: 'failure', message: error});
+				err = utils.getError(err);
+				logger.error("CHANGE_PASSWORD_WITH_RESET_CODE", `Code '${code}' failed to change password. '${err}'`);
+				cb({status: 'failure', message: err});
 			} else {
 				logger.success("CHANGE_PASSWORD_WITH_RESET_CODE", `Code '${code}' successfully changed password.`);
 				cb({

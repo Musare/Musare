@@ -73,8 +73,9 @@ module.exports = {
 			}
 		], (err, reports) => {
 			if (err) {
-				logger.error("REPORTS_INDEX", `Indexing reports failed. "${err.message}"`);
-				return cb({ 'status': 'failure', 'message': 'Something went wrong'});
+				err = utils.getError(err);
+				logger.error("REPORTS_INDEX", `Indexing reports failed. "${err}"`);
+				return cb({ 'status': 'failure', 'message': err});
 			}
 			logger.success("REPORTS_INDEX", "Indexing reports successful.");
 			cb({ status: 'success', data: reports });
@@ -95,8 +96,9 @@ module.exports = {
 			}
 		], (err, reports) => {
 			if (err) {
-				logger.error("REPORTS_GETFORSONG", `Indexing reports for song "${songId}" failed. "${err.message}"`);
-				return cb({ 'status': 'failure', 'message': 'Something went wrong'});
+				err = utils.getError(err);
+				logger.error("REPORTS_GETFORSONG", `Indexing reports for song "${songId}" failed. "${err}"`);
+				return cb({ 'status': 'failure', 'message': err});
 			} else {
 				logger.success("REPORTS_GETFORSONG", `Indexing report for song "{songId}" successful.`);
 				return cb({ status: 'success', data: reports.length });
@@ -128,8 +130,9 @@ module.exports = {
 			}
 		], (err) => {
 			if (err) {
-				logger.error("REPORTS_RESOLVE", `Resolving report "${reportId}" failed by user "${userId}". Mongo error. "${err.message}"`);
-				return cb({ 'status': 'failure', 'message': 'Something went wrong'});
+				err = utils.getError(err);
+				logger.error("REPORTS_RESOLVE", `Resolving report "${reportId}" failed by user "${userId}". "${err}"`);
+				return cb({ 'status': 'failure', 'message': err});
 			} else {
 				cache.pub('report.resolve', reportId);
 				logger.success("REPORTS_RESOLVE", `User "${userId}" resolved report "${reportId}".`);
@@ -190,11 +193,9 @@ module.exports = {
 
 		], (err, report) => {
 			if (err) {
-				let error = 'An error occurred.';
-				if (typeof err === "string") error = err;
-				else if (err.message) error = err.message;
-				logger.error("REPORTS_CREATE", `Creating report for "${data.songId}" failed by user "${userId}". "${error}"`);
-				return cb({ 'status': 'failure', 'message': 'Something went wrong' });
+				err = utils.getError(err);
+				logger.error("REPORTS_CREATE", `Creating report for "${data.songId}" failed by user "${userId}". "${err}"`);
+				return cb({ 'status': 'failure', 'message': err });
 			}
 			else {
 				cache.pub('report.create', report);

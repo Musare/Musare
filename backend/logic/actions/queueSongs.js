@@ -41,8 +41,9 @@ module.exports = {
 			}
 		], (err, songs) => {
 			if (err) {
-				logger.error("QUEUE_INDEX", `Indexing queuesongs failed. "${err.message}"`);
-				return cb({status: 'failure', message: 'Something went wrong.'});
+				err = utils.getError(err);
+				logger.error("QUEUE_INDEX", `Indexing queuesongs failed. "${err}"`);
+				return cb({status: 'failure', message: err});
 			} else {
 				module.exports.getSet(session, 1, result => {
 					logger.success("QUEUE_INDEX", `Indexing queuesongs successful.`);
@@ -87,11 +88,9 @@ module.exports = {
 			}
 		], (err) => {
 			if (err) {
-				let error = 'An error occurred.';
-				if (typeof err === "string") error = err;
-				else if (err.message) error = err.message;
-				logger.error("QUEUE_UPDATE", `Updating queuesong "${songId}" failed for user ${userId}. "${err.message}"`);
-				return cb({status: 'failure', message: error});
+				err = utils.getError(err);
+				logger.error("QUEUE_UPDATE", `Updating queuesong "${songId}" failed for user ${userId}. "${err}"`);
+				return cb({status: 'failure', message: err});
 			}
 			cache.pub('queue.update', songId);
 			logger.success("QUEUE_UPDATE", `User "${userId}" successfully update queuesong "${songId}".`);
@@ -114,11 +113,9 @@ module.exports = {
 			}
 		], (err) => {
 			if (err) {
-				let error = 'An error occurred.';
-				if (typeof err === "string") error = err;
-				else if (err.message) error = err.message;
-				logger.error("QUEUE_REMOVE", `Removing queuesong "${songId}" failed for user ${userId}. "${err.message}"`);
-				return cb({status: 'failure', message: error});
+				err = utils.getError(err);
+				logger.error("QUEUE_REMOVE", `Removing queuesong "${songId}" failed for user ${userId}. "${err}"`);
+				return cb({status: 'failure', message: err});
 			}
 			cache.pub('queue.removedSong', songId);
 			logger.success("QUEUE_REMOVE", `User "${userId}" successfully removed queuesong "${songId}".`);
@@ -189,12 +186,12 @@ module.exports = {
 			}
 		], (err, newSong) => {
 			if (err) {
-				let error = 'An error occurred.';
-				if (typeof err === "string") error = err;
-				else if (err.message) error = err.message;
-				return cb({status: 'failure', message: error});
+				err = utils.getError(err);
+				logger.error("QUEUE_ADD", `Adding queuesong "${songId}" failed for user ${userId}. "${err}"`);
+				return cb({status: 'failure', message: err});
 			}
 			cache.pub('queue.newSong', newSong._id);
+			logger.success("QUEUE_ADD", `User "${userId}" successfully added queuesong "${songId}".`);
 			return cb({ status: 'success', message: 'Successfully added that song to the queue' });
 		});
 	})

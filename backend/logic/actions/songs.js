@@ -261,7 +261,7 @@ module.exports = {
 		});
 	}),
 
-	getOwnSongRatings: hooks.loginRequired(function(session, songId, cb, userId) {
+	getOwnSongRatings: hooks.loginRequired((session, songId, cb, userId) => {
 		db.models.user.findOne({_id: userId}, (err, user) => {
 			if (!err && user) {
 				return cb({
@@ -273,7 +273,7 @@ module.exports = {
 			} else {
 				return cb({
 					status: 'failure',
-					message: 'You are not logged in.'
+					message: utils.getError(err)
 				});
 			}
 		});
