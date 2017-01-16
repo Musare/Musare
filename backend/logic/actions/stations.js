@@ -859,7 +859,7 @@ module.exports = {
 			logger.success("STATIONS_SELECT_PRIVATE_PLAYLIST", `Selected private playlist "${playlistId}" for station "${stationId}" successfully.`);
 			if (!station.partyMode) stations.skipStation(stationId)();
 			cache.pub('privatePlaylist.selected', {playlistId, stationId});
-			return cb({'status': 'success', 'message': 'Successfully got queue.'});
+			return cb({'status': 'success', 'message': 'Successfully selected playlist.'});
 		});
 	}),
 };

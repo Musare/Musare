@@ -1,10 +1,11 @@
 'use strict';
 
-const request = require('request'),
-	  config  = require('config'),
-		utils = require('../utils'),
-	   logger = require('../logger'),
-		hooks = require('./hooks');
+const 	request = require('request'),
+		config  = require('config'),
+		async 	= require('async'),
+		utils 	= require('../utils'),
+		logger 	= require('../logger'),
+		hooks 	= require('./hooks');
 
 module.exports = {
 

@@ -140,10 +140,6 @@
 		},
 		ready: function () {
 			let _this = this;
-			for (let prop in _this.editing) {
-				console.log(prop, _this.editing[prop]);
-				_this.editing[prop] = _this.$parent.station[prop];
-			}
 			io.getSocket(socket => {
 				_this.socket = socket;
 			});
@@ -151,6 +147,12 @@
 		events: {
 			closeModal: function() {
 				this.$parent.modals.editStation = false;
+			},
+			editStation: function(station) {
+				for (let prop in station) {
+					this.editing[prop] = station[prop];
+				}
+				this.$parent.modals.editStation = true;
 			}
 		},
 		components: { Modal }
