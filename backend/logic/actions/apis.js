@@ -3,6 +3,7 @@
 const request = require('request'),
 	  config  = require('config'),
 		utils = require('../utils'),
+	   logger = require('../logger'),
 		hooks = require('./hooks');
 
 module.exports = {
@@ -16,7 +17,6 @@ module.exports = {
 	 * @return {{ status: String, data: Object }}
 	 */
 	searchYoutube: (session, query, cb) => {
-
 		const params = [
 			'part=snippet',
 			`q=${encodeURIComponent(query)}`,
@@ -25,14 +25,22 @@ module.exports = {
 			'maxResults=15'
 		].join('&');
 
-		request(`https://www.googleapis.com/youtube/v3/search?${params}`, (err, res, body) => {
+		async.waterfall([
+			(next) => {
+				request(`https://www.googleapis.com/youtube/v3/search?${params}`, next);
+			},
 
-			if (err) {
-				console.error(err);
-				return cb({ status: 'error', message: 'Failed to search youtube with the requested query' });
+			(res, body, next) => {
+				next(null, JSON.parse(body));
 			}
-
-			cb({ status: 'success', data: JSON.parse(body) });
+		], (err, data) => {
+			if (err) {
+				err = utils.getError(err);
+				logger.error("APIS_SEARCH_YOUTUBE", `Searching youtube failed with query "${query}". "${err}"`);
+				return cb({status: 'failure', message: err});
+			}
+			logger.success("APIS_SEARCH_YOUTUBE", `Searching YouTube successful with query "${query}".`);
+			return cb({ status: 'success', data });
 		});
 	},
 

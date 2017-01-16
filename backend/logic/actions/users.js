@@ -72,8 +72,9 @@ module.exports = {
 			}
 		], (err, users) => {
 			if (err) {
-				logger.error("USER_INDEX", `Indexing users failed. "${err.message}"`);
-				return cb({status: 'failure', message: 'Something went wrong.'});
+				err = utils.getError(err);
+				logger.error("USER_INDEX", `Indexing users failed. "${err}"`);
+				return cb({status: 'failure', message: err});
 			} else {
 				logger.success("USER_INDEX", `Indexing users successful.`);
 				let filteredUsers = [];
@@ -141,13 +142,11 @@ module.exports = {
 
 		], (err, sessionId) => {
 			if (err && err !== true) {
-				let error = 'An error occurred.';
-				if (typeof err === "string") error = err;
-				else if (err.message) error = err.message;
-				logger.error("USER_PASSWORD_LOGIN", "Login failed with password for user " + identifier + '. "' + error + '"');
-				return cb({ status: 'failure', message: error });
+				err = utils.getError(err);
+				logger.error("USER_PASSWORD_LOGIN", `Login failed with password for user "${identifier}". "${err}"`);
+				return cb({status: 'failure', message: err});
 			}
-			logger.success("USER_PASSWORD_LOGIN", "Login successful with password for user " + identifier);
+			logger.success("USER_PASSWORD_LOGIN", `Login successful with password for user "${identifier}"`);
 			cb({ status: 'success', message: 'Login successful', user: {}, SID: sessionId });
 		});
 
@@ -234,18 +233,16 @@ module.exports = {
 
 		], (err) => {
 			if (err && err !== true) {
-				let error = 'An error occurred.';
-				if (typeof err === "string") error = err;
-				else if (err.message) error = err.message;
-				logger.error("USER_PASSWORD_REGISTER", "Register failed with password for user. " + '"' + error + '"');
-				cb({status: 'failure', message: error});
+				err = utils.getError(err);
+				logger.error("USER_PASSWORD_REGISTER", `Register failed with password for user "${username}"."${err}"`);
+				cb({status: 'failure', message: err});
 			} else {
 				module.exports.login(session, email, password, (result) => {
 					let obj = {status: 'success', message: 'Successfully registered.'};
 					if (result.status === 'success') {
 						obj.SID = result.SID;
 					}
-					logger.success("USER_PASSWORD_REGISTER", "Register successful with password for user '" + username + "'.");
+					logger.success("USER_PASSWORD_REGISTER", `Register successful with password for user "${username}".`);
 					cb(obj);
 				});
 			}
@@ -276,11 +273,9 @@ module.exports = {
 			}
 		], (err) => {
 			if (err && err !== true) {
-				let error = 'An error occurred.';
-				if (typeof err === "string") error = err;
-				else if (err.message) error = err.message;
-				logger.error("USER_LOGOUT", `Logout failed. ${error}`);
-				cb({status: 'failure', message: error});
+				err = utils.getError(err);
+				logger.error("USER_LOGOUT", `Logout failed. "${err}" `);
+				cb({status: 'failure', message: err});
 			} else {
 				logger.success("USER_LOGOUT", `Logout successful.`);
 				cb({status: 'success', message: 'Successfully logged out.'});
@@ -308,13 +303,11 @@ module.exports = {
 			}
 		], (err, account) => {
 			if (err && err !== true) {
-				let error = 'An error occurred.';
-				if (typeof err === "string") error = err;
-				else if (err.message) error = err.message;
-				logger.error("FIND_BY_USERNAME", `User not found for username '${username}'. ${error}`);
-				cb({status: 'failure', message: error});
+				err = utils.getError(err);
+				logger.error("FIND_BY_USERNAME", `User not found for username "${username}". "${err}"`);
+				cb({status: 'failure', message: err});
 			} else {
-				logger.success("FIND_BY_USERNAME", `User found for username '${username}'.`);
+				logger.success("FIND_BY_USERNAME", `User found for username "${username}".`);
 				return cb({
 					status: 'success',
 					data: {
@@ -360,11 +353,9 @@ module.exports = {
 			}
 		], (err, user) => {
 			if (err && err !== true) {
-				let error = 'An error occurred.';
-				if (typeof err === "string") error = err;
-				else if (err.message) error = err.message;
-				logger.error("FIND_BY_SESSION", `User not found. ${error}`);
-				cb({status: 'failure', message: error});
+				err = utils.getError(err);
+				logger.error("FIND_BY_SESSION", `User not found. "${err}"`);
+				cb({status: 'failure', message: err});
 			} else {
 				let data = {
 					email: {
@@ -374,7 +365,7 @@ module.exports = {
 				};
 				if (user.services.password && user.services.password.password) data.password = true;
 				if (user.services.github && user.services.github.id) data.github = true;
-				logger.success("FIND_BY_SESSION", `User found. '${user.username}'.`);
+				logger.success("FIND_BY_SESSION", `User found. "${user.username}".`);
 				return cb({
 					status: 'success',
 					data
@@ -419,17 +410,15 @@ module.exports = {
 			}
 		], (err) => {
 			if (err && err !== true) {
-				let error = 'An error occurred.';
-				if (typeof err === "string") error = err;
-				else if (err.message) error = err.message;
-				logger.error("UPDATE_USERNAME", `Couldn't update username for user '${updatingUserId}' to username '${newUsername}'. '${error}'`);
-				cb({status: 'failure', message: error});
+				err = utils.getError(err);
+				logger.error("UPDATE_USERNAME", `Couldn't update username for user "${updatingUserId}" to username "${newUsername}". "${err}"`);
+				cb({status: 'failure', message: err});
 			} else {
 				cache.pub('user.updateUsername', {
 					username: newUsername,
 					_id: updatingUserId
 				});
-				logger.success("UPDATE_USERNAME", `Updated username for user '${updatingUserId}' to username '${newUsername}'.`);
+				logger.success("UPDATE_USERNAME", `Updated username for user "${updatingUserId}" to username "${newUsername}".`);
 				cb({ status: 'success', message: 'Username updated successfully' });
 			}
 		});
@@ -483,13 +472,11 @@ module.exports = {
 			}
 		], (err) => {
 			if (err && err !== true) {
-				let error = 'An error occurred.';
-				if (typeof err === "string") error = err;
-				else if (err.message) error = err.message;
-				logger.error("UPDATE_EMAIL", `Couldn't update email for user '${updatingUserId}' to email '${newEmail}'. '${error}'`);
-				cb({status: 'failure', message: error});
+				err = utils.getError(err);
+				logger.error("UPDATE_EMAIL", `Couldn't update email for user "${updatingUserId}" to email "${newEmail}". '${err}'`);
+				cb({status: 'failure', message: err});
 			} else {
-				logger.success("UPDATE_EMAIL", `Updated email for user '${updatingUserId}' to email '${newEmail}'.`);
+				logger.success("UPDATE_EMAIL", `Updated email for user "${updatingUserId}" to email "${newEmail}".`);
 				cb({ status: 'success', message: 'Email updated successfully.' });
 			}
 		});
@@ -523,13 +510,11 @@ module.exports = {
 
 		], (err) => {
 			if (err && err !== true) {
-				let error = 'An error occurred.';
-				if (typeof err === "string") error = err;
-				else if (err.message) error = err.message;
-				logger.error("UPDATE_ROLE", `User '${userId}' couldn't update role for user '${updatingUserId}' to role '${newRole}'. '${error}'`);
-				cb({status: 'failure', message: error});
+				err = utils.getError(err);
+				logger.error("UPDATE_ROLE", `User "${userId}" couldn't update role for user "${updatingUserId}" to role "${newRole}". "${err}"`);
+				cb({status: 'failure', message: err});
 			} else {
-				logger.success("UPDATE_ROLE", `User '${userId}' updated the role of user '${updatingUserId}' to role '${newRole}'.`);
+				logger.success("UPDATE_ROLE", `User "${userId}" updated the role of user "${updatingUserId}" to role "${newRole}".`);
 				cb({
 					status: 'success',
 					message: 'Role successfully updated.'
