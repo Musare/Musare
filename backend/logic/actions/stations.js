@@ -136,6 +136,13 @@ module.exports = {
 		});
 	},
 
+	/**
+	 * Finds a station by id
+	 *
+	 * @param session
+	 * @param stationId - the station id
+	 * @param cb
+	 */
 	find: (session, stationId, cb) => {
 		async.waterfall([
 			(next) => {
@@ -157,6 +164,13 @@ module.exports = {
 		});
 	},
 
+	/**
+	 * Gets the official playlist for a station
+	 *
+	 * @param session
+	 * @param stationId - the station id
+	 * @param cb
+	 */
 	getPlaylist: (session, stationId, cb) => {
 		async.waterfall([
 			(next) => {
@@ -273,11 +287,12 @@ module.exports = {
 	},
 
 	/**
-	 * Skips the users current station
+	 * Votes to skip a station
 	 *
 	 * @param session
 	 * @param stationId - the station id
 	 * @param cb
+	 * @param userId
 	 */
 	voteSkip: hooks.loginRequired((session, stationId, cb, userId) => {
 		async.waterfall([
@@ -317,6 +332,13 @@ module.exports = {
 		});
 	}),
 
+	/**
+	 * Force skips a station
+	 *
+	 * @param session
+	 * @param stationId - the station id
+	 * @param cb
+	 */
 	forceSkip: hooks.ownerRequired((session, stationId, cb) => {
 		async.waterfall([
 			(next) => {
@@ -341,7 +363,7 @@ module.exports = {
 	}),
 
 	/**
-	 * Leaves the users current station
+	 * Leaves the user's current station
 	 *
 	 * @param session
 	 * @param stationId
@@ -374,6 +396,14 @@ module.exports = {
 		});
 	},
 
+	/**
+	 * Updates a station's display name
+	 *
+	 * @param session
+	 * @param stationId - the station id
+	 * @param newDisplayName - the new station display name
+	 * @param cb
+	 */
 	updateDisplayName: hooks.ownerRequired((session, stationId, newDisplayName, cb) => {
 		async.waterfall([
 			(next) => {
@@ -394,6 +424,14 @@ module.exports = {
 		});
 	}),
 
+	/**
+	 * Updates a station's description
+	 *
+	 * @param session
+	 * @param stationId - the station id
+	 * @param newDescription - the new station description
+	 * @param cb
+	 */
 	updateDescription: hooks.ownerRequired((session, stationId, newDescription, cb) => {
 		async.waterfall([
 			(next) => {
@@ -414,6 +452,14 @@ module.exports = {
 		});
 	}),
 
+	/**
+	 * Updates a station's privacy
+	 *
+	 * @param session
+	 * @param stationId - the station id
+	 * @param newPrivacy - the new station privacy
+	 * @param cb
+	 */
 	updatePrivacy: hooks.ownerRequired((session, stationId, newPrivacy, cb) => {
 		async.waterfall([
 			(next) => {
@@ -434,6 +480,14 @@ module.exports = {
 		});
 	}),
 
+	/**
+	 * Updates a station's party mode
+	 *
+	 * @param session
+	 * @param stationId - the station id
+	 * @param newPartyMode - the new station party mode
+	 * @param cb
+	 */
 	updatePartyMode: hooks.ownerRequired((session, stationId, newPartyMode, cb) => {
 		async.waterfall([
 			(next) => {
@@ -462,6 +516,13 @@ module.exports = {
 		});
 	}),
 
+	/**
+	 * Pauses a station
+	 *
+	 * @param session
+	 * @param stationId - the station id
+	 * @param cb
+	 */
 	pause: hooks.ownerRequired((session, stationId, cb) => {
 		async.waterfall([
 			(next) => {
@@ -490,6 +551,13 @@ module.exports = {
 		});
 	}),
 
+	/**
+	 * Resumes a station
+	 *
+	 * @param session
+	 * @param stationId - the station id
+	 * @param cb
+	 */
 	resume: hooks.ownerRequired((session, stationId, cb) => {
 		async.waterfall([
 			(next) => {
@@ -518,6 +586,13 @@ module.exports = {
 		});
 	}),
 
+	/**
+	 * Removes a station
+	 *
+	 * @param session
+	 * @param stationId - the station id
+	 * @param cb
+	 */
 	remove: hooks.ownerRequired((session, stationId, cb) => {
 		async.waterfall([
 			(next) => {
@@ -539,6 +614,14 @@ module.exports = {
 		});
 	}),
 
+	/**
+	 * Created a station
+	 *
+	 * @param session
+	 * @param data - the station data
+	 * @param cb
+	 * @param userId
+	 */
 	create: hooks.loginRequired((session, data, cb, userId) => {
 		data._id = data._id.toLowerCase();
 		let blacklist = ["country", "edm", "musare", "hip-hop", "rap", "top-hits", "todays-hits", "old-school", "christmas", "about", "support", "staff", "help", "news", "terms", "privacy", "profile", "c", "community", "tos", "login", "register", "p", "official", "o", "trap", "faq", "team", "donate", "buy", "shop", "forums", "explore", "settings", "admin", "auth", "reset_password"];
@@ -598,6 +681,15 @@ module.exports = {
 		});
 	}),
 
+	/**
+	 * Adds song to station queue
+	 *
+	 * @param session
+	 * @param stationId - the station id
+	 * @param songId - the song id
+	 * @param cb
+	 * @param userId
+	 */
 	addToQueue: hooks.loginRequired((session, stationId, songId, cb, userId) => {
 		async.waterfall([
 			(next) => {
@@ -651,6 +743,15 @@ module.exports = {
 		});
 	}),
 
+	/**
+	 * Removes song from station queue
+	 *
+	 * @param session
+	 * @param stationId - the station id
+	 * @param songId - the song id
+	 * @param cb
+	 * @param userId
+	 */
 	removeFromQueue: hooks.ownerRequired((session, stationId, songId, cb, userId) => {
 		async.waterfall([
 			(next) => {
@@ -689,6 +790,13 @@ module.exports = {
 		});
 	}),
 
+	/**
+	 * Gets the queue from a station
+	 *
+	 * @param session
+	 * @param stationId - the station id
+	 * @param cb
+	 */
 	getQueue: hooks.adminRequired((session, stationId, cb) => {
 		async.waterfall([
 			(next) => {
@@ -711,6 +819,15 @@ module.exports = {
 		});
 	}),
 
+	/**
+	 * Selects a private playlist for a station
+	 *
+	 * @param session
+	 * @param stationId - the station id
+	 * @param playlistId - the private playlist id
+	 * @param cb
+	 * @param userId
+	 */
 	selectPrivatePlaylist: hooks.ownerRequired((session, stationId, playlistId, cb, userId) => {
 		async.waterfall([
 			(next) => {

@@ -63,6 +63,12 @@ cache.sub('song.undislike', (data) => {
 
 module.exports = {
 
+	/**
+	 * Returns the length of the songs list
+	 *
+	 * @param session
+	 * @param cb
+	 */
 	length: hooks.adminRequired((session, cb) => {
 		async.waterfall([
 			(next) => {
@@ -79,6 +85,13 @@ module.exports = {
 		});
 	}),
 
+	/**
+	 * Gets a set of songs
+	 *
+	 * @param session
+	 * @param set - the set number to return
+	 * @param cb
+	 */
 	getSet: hooks.adminRequired((session, set, cb) => {
 		async.waterfall([
 			(next) => {
@@ -95,6 +108,14 @@ module.exports = {
 		});
 	}),
 
+	/**
+	 * Updates a song
+	 *
+	 * @param session
+	 * @param songId - the song id
+	 * @param song - the updated song object
+	 * @param cb
+	 */
 	update: hooks.adminRequired((session, songId, song, cb) => {
 		async.waterfall([
 			(next) => {
@@ -116,6 +137,13 @@ module.exports = {
 		});
 	}),
 
+	/**
+	 * Removes a song
+	 *
+	 * @param session
+	 * @param songId - the song id
+	 * @param cb
+	 */
 	remove: hooks.adminRequired((session, songId, cb) => {
 		async.waterfall([
 			(next) => {
@@ -137,6 +165,14 @@ module.exports = {
 		});
 	}),
 
+	/**
+	 * Adds a song
+	 *
+	 * @param session
+	 * @param song - the song object
+	 * @param cb
+	 * @param userId
+	 */
 	add: hooks.adminRequired((session, song, cb, userId) => {
 		async.waterfall([
 			(next) => {
@@ -173,6 +209,14 @@ module.exports = {
 		//TODO Check if video is in queue and Add the song to the appropriate stations
 	}),
 
+	/**
+	 * Likes a song
+	 *
+	 * @param session
+	 * @param songId - the song id
+	 * @param cb
+	 * @param userId
+	 */
 	like: hooks.loginRequired((session, songId, cb, userId) => {
 		db.models.user.findOne({ _id: userId }, (err, user) => {
 			if (user.liked.indexOf(songId) !== -1) return cb({ status: 'failure', message: 'You have already liked this song.' });
@@ -195,6 +239,14 @@ module.exports = {
 		});
 	}),
 
+	/**
+	 * Dislikes a song
+	 *
+	 * @param session
+	 * @param songId - the song id
+	 * @param cb
+	 * @param userId
+	 */
 	dislike: hooks.loginRequired((session, songId, cb, userId) => {
 		db.models.user.findOne({ _id: userId }, (err, user) => {
 			if (user.disliked.indexOf(songId) !== -1) return cb({ status: 'failure', message: 'You have already disliked this song.' });
@@ -217,6 +269,14 @@ module.exports = {
 		});
 	}),
 
+	/**
+	 * Undislikes a song
+	 *
+	 * @param session
+	 * @param songId - the song id
+	 * @param cb
+	 * @param userId
+	 */
 	undislike: hooks.loginRequired((session, songId, cb, userId) => {
 		db.models.user.findOne({ _id: userId }, (err, user) => {
 			if (user.disliked.indexOf(songId) === -1) return cb({ status: 'failure', message: 'You have not disliked this song.' });
@@ -239,6 +299,14 @@ module.exports = {
 		});
 	}),
 
+	/**
+	 * Unlikes a song
+	 *
+	 * @param session
+	 * @param songId - the song id
+	 * @param cb
+	 * @param userId
+	 */
 	unlike: hooks.loginRequired((session, songId, cb, userId) => {
 		db.models.user.findOne({ _id: userId }, (err, user) => {
 			if (user.liked.indexOf(songId) === -1) return cb({ status: 'failure', message: 'You have not liked this song.' });
@@ -261,6 +329,14 @@ module.exports = {
 		});
 	}),
 
+	/**
+	 * Gets user's own song ratings
+	 *
+	 * @param session
+	 * @param songId - the song id
+	 * @param cb
+	 * @param userId
+	 */
 	getOwnSongRatings: hooks.loginRequired((session, songId, cb, userId) => {
 		db.models.user.findOne({_id: userId}, (err, user) => {
 			if (!err && user) {

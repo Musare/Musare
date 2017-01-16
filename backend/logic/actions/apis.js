@@ -44,6 +44,13 @@ module.exports = {
 		});
 	},
 
+	/**
+	 * Joins a room
+	 *
+	 * @param session
+	 * @param page - the room to join
+	 * @param cb
+	 */
 	joinRoom: (session, page, cb) => {
 		if (page === 'home') {
 			utils.socketJoinRoom(session.socketId, page);
@@ -51,6 +58,13 @@ module.exports = {
 		cb({});
 	},
 
+	/**
+	 * Joins an admin room
+	 *
+	 * @param session
+	 * @param page - the admin room to join
+	 * @param cb
+	 */
 	joinAdminRoom: hooks.adminRequired((session, page, cb) => {
 		if (page === 'queue' || page === 'songs' || page === 'stations' || page === 'reports' || page === 'news' || page === 'users') {
 			utils.socketJoinRoom(session.socketId, `admin.${page}`);
@@ -58,6 +72,12 @@ module.exports = {
 		cb({});
 	}),
 
+	/**
+	 * Returns current date
+	 *
+	 * @param session
+	 * @param cb
+	 */
 	ping: (session, cb) => {
 		cb({date: Date.now()});
 	}

@@ -56,6 +56,13 @@ module.exports = {
 		});
 	}),
 
+	/**
+	 * Gets a set of queue songs
+	 *
+	 * @param session
+	 * @param set - the set number to return
+	 * @param cb
+	 */
 	getSet: hooks.adminRequired((session, set, cb) => {
 		db.models.queueSong.find({}).limit(50 * set).exec((err, songs) => {
 			if (err) throw err;
