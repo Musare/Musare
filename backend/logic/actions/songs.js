@@ -4,6 +4,7 @@ const db = require('../db');
 const io = require('../io');
 const songs = require('../songs');
 const cache = require('../cache');
+const async = require('async');
 const utils = require('../utils');
 const logger = require('../logger');
 const hooks = require('./hooks');
