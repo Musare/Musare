@@ -85,38 +85,40 @@ module.exports = {
 	initializeStation: function(stationId, cb) {
 		if (typeof cb !== 'function') cb = ()=>{};
 		let _this = this;
-		_this.getStation(stationId, (err, station) => {
-			if (!err) {
-				if (station) {
-					let notification = notifications.subscribe(`stations.nextSong?id=${station._id}`, _this.skipStation(station._id), true);
-					if (!station.paused ) {
-						/*if (!station.startedAt) {
-						 station.startedAt = Date.now();
-						 station.timePaused = 0;
-						 cache.hset('stations', stationId, station);
-						 }*/
-						if (station.currentSong) {
-							let timeLeft = ((station.currentSong.duration * 1000) - (Date.now() - station.startedAt - station.timePaused));
-							if (isNaN(timeLeft)) timeLeft = -1;
-							if (station.currentSong.duration * 1000 < timeLeft || timeLeft < 0) {
-								this.skipStation(station._id)((err, station) => {
-									cb(err, station);
-								});
-							} else {
-								notifications.schedule(`stations.nextSong?id=${station._id}`, timeLeft);
-								cb(null, station);
-							}
-						} else {
-							_this.skipStation(station._id)((err, station) => {
-								cb(err, station);
-							});
-						}
-					} else {
-						notifications.unschedule(`stations.nextSong?id${station._id}`);
-						cb(null, station);
-					}
-				} else cb("Station not found");
-			} else cb(err);
+		async.waterfall([
+			(next) => {
+				_this.getStation(stationId, next);
+			},
+			(station, next) => {
+				if (!station) return next('Station not found.');
+				notifications.subscribe(`stations.nextSong?id=${station._id}`, _this.skipStation(station._id), true);
+				if (station.paused) {
+					notifications.unschedule(`stations.nextSong?id${station._id}`);
+					return next(true, station);
+				}
+				next(null, station);
+			},
+			(station, next) => {
+				if (!station.currentSong) {
+					return _this.skipStation(station._id)((err, station) => {
+						if (err) return next(err);
+						return next(true, station);
+					});
+				}
+				let timeLeft = ((station.currentSong.duration * 1000) - (Date.now() - station.startedAt - station.timePaused));
+				if (isNaN(timeLeft)) timeLeft = -1;
+				if (station.currentSong.duration * 1000 < timeLeft || timeLeft < 0) {
+					this.skipStation(station._id)((err, station) => {
+						next(err, station);
+					});
+				} else {
+					notifications.schedule(`stations.nextSong?id=${station._id}`, timeLeft);
+					next(null, station);
+				}
+			}
+		], (err, station) => {
+			if (err && err !== true) return cb(err);
+			cb(null, station);
 		});
 	},
 
