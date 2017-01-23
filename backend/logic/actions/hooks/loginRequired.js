@@ -20,10 +20,10 @@ module.exports = function(next) {
 		], (err) => {
 			if (err) {
 				err = utils.getError(err);
-				logger.info("LOGIN_REQUIRED", `User failed to pass login required check for station "${stationId}". "${err}"`);
+				logger.info("LOGIN_REQUIRED", `User failed to pass login required check.`);
 				return cb({status: 'failure', message: err});
 			}
-			logger.info("LOGIN_REQUIRED", `User "${session.userId}" passed login required check for station "${stationId}"`);
+			logger.info("LOGIN_REQUIRED", `User "${session.userId}" passed login required check.`);
 			args.push(session.userId);
 			next.apply(null, args);
 		});
