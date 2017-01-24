@@ -76,103 +76,125 @@ const lib = {
 
 		app.get('/auth/github/authorize/callback', (req, res) => {
 			let code = req.query.code;
+			let access_token;
+			let body;
 			const state = req.query.state;
-			oauth2.getOAuthAccessToken(code, {redirect_uri}, (err, access_token, refresh_token, results) => {
-				if (!err) request.get({
-					url: `https://api.github.com/user?access_token=${access_token}`,
-					headers: {'User-Agent': 'request'}
-				}, (err, httpResponse, body) => {
-					if (err) return redirectOnErr(res, err.message);
-					body = JSON.parse(body);
+
+
+
+			async.waterfall([
+				(next) => {
+					oauth2.getOAuthAccessToken(code, {redirect_uri}, next);
+				},
+
+				(access_token, refresh_token, results, next) => {
+					this.access_token = access_token;
+					request.get({
+						url: `https://api.github.com/user?access_token=${access_token}`,
+						headers: {'User-Agent': 'request'}
+					}, next);
+				},
+
+				(httpResponse, body, next) => {
+					this.body = body = JSON.parse(body);
 					if (state) {
-						cache.hget('sessions', state, (err, session) => {
-							if (err) return redirectOnErr(res, err.message);
-							db.models.user.findOne({_id: session.userId}, (err, user) => {
-								if (err) return redirectOnErr(res, err.message);
-								if (!user) return redirectOnErr(res, 'Not logged in.');
-								if (user.services.github && user.services.github.id) return redirectOnErr(res, 'Account already has GitHub linked.');
+						return async.waterfall([
+							(next) => {
+								cache.hget('sessions', state, next);
+							},
+
+							(session, next) => {
+								if (!session) return next('Invalid session.');
+								db.models.user.findOne({_id: session.userId}, next);
+							},
+
+							(user, next) => {
+								if (!user) return next('User not found.');
+								if (user.services.github && user.services.github.id) return next('Account already has GitHub linked.');
 								db.models.user.update({_id: user._id}, {$set: {"services.github": {id: body.id, access_token}}}, (err) => {
-									if (err) return redirectOnErr(res, err.message);
-									cache.pub('user.linkGitHub', user._id);
-									res.redirect(`${config.get('domain')}/settings`);
+									if (err) return next(err);
+									next(null, user);
 								});
-							});
-						});
-					} else {
-						db.models.user.findOne({'services.github.id': body.id}, (err, user) => {
-							if (err) return redirectOnErr(res, 'err');
-							if (user) {
-								user.services.github.access_token = access_token;
-								user.save(err => {
-									if (err) return redirectOnErr(res, err.message);
-									let sessionId = utils.guid();
-									cache.hset('sessions', sessionId, cache.schemas.session(sessionId, user._id), err => {
-										if (err) return redirectOnErr(res, err.message);
-										let date = new Date();
-										date.setTime(new Date().getTime() + (2 * 365 * 24 * 60 * 60 * 1000));
-										res.cookie('SID', sessionId, {
-											expires: date,
-											secure: config.get("cookie.secure"),
-											path: "/",
-											domain: config.get("cookie.domain")
-										});
-										res.redirect(`${config.get('domain')}/`);
-									});
-								});
-							} else {
-								db.models.user.findOne({username: new RegExp(`^${body.login}$`, 'i')}, (err, user) => {
-									if (err) return redirectOnErr(res, err.message);
-									if (user) return redirectOnErr(res, 'An account with that username already exists.');
-									else request.get({
-										url: `https://api.github.com/user/emails?access_token=${access_token}`,
-										headers: {'User-Agent': 'request'}
-									}, (err, httpResponse, body2) => {
-										if (err) return redirectOnErr(res, err.message);
-										body2 = JSON.parse(body2);
-										let address;
-										if (!Array.isArray(body2)) return redirectOnErr(res, body2.message);
-										body2.forEach(email => {
-											if (email.primary) address = email.email.toLowerCase();
-										});
-										db.models.user.findOne({'email.address': address}, (err, user) => {
-											let verificationToken = utils.generateRandomString(64);
-											if (err) return redirectOnErr(res, err.message);
-											if (user) return redirectOnErr(res, 'An account with that email address already exists.');
-											else db.models.user.create({
-												_id: utils.generateRandomString(12),//TODO Check if exists
-												username: body.login,
-												email: {
-													address,
-													verificationToken: verificationToken
-												},
-												services: {
-													github: {id: body.id, access_token}
-												}
-											}, (err, user) => {
-												if (err) return redirectOnErr(res, err.message);
-												mail.schemas.verifyEmail(address, body.login, verificationToken);
-												let sessionId = utils.guid();
-												cache.hset('sessions', sessionId, cache.schemas.session(sessionId, user._id), err => {
-													if (err) return redirectOnErr(res, err.message);
-													let date = new Date();
-													date.setTime(new Date().getTime() + (2 * 365 * 24 * 60 * 60 * 1000));
-													res.cookie('SID', sessionId, {
-														expires: date,
-														secure: config.get("cookie.secure"),
-														path: "/",
-														domain: config.get("cookie.domain")
-													});
-													res.redirect(`${config.get('domain')}/`);
-												});
-											});
-										});
-									});
-								});
+							},
+
+							(user) => {
+								cache.pub('user.linkGitHub', user._id);
+								res.redirect(`${config.get('domain')}/settings`);
 							}
+						], next);
+					}
+					db.models.user.findOne({'services.github.id': body.id}, next);
+				},
+
+				(user, next) => {
+					if (user) {
+						user.services.github.access_token = access_token;
+						return user.save(() => {
+							next(true, user._id);
 						});
 					}
+					db.models.user.findOne({username: new RegExp(`^${body.login}$`, 'i')}, next);
+				},
+
+				(user, next) => {
+					if (user) return next('An account with that username already exists.');
+					request.get({
+						url: `https://api.github.com/user/emails?access_token=${access_token}`,
+						headers: {'User-Agent': 'request'}
+					}, next);
+				},
+
+				(httpResponse, body2, next) => {
+					body2 = JSON.parse(body2);
+					if (!Array.isArray(body2)) return next(body2.message);
+					let address;
+					body2.forEach(email => {
+						if (email.primary) address = email.email.toLowerCase();
+					});
+					db.models.user.findOne({'email.address': address}, next);
+				},
+
+				(user, next) => {
+					const verificationToken = utils.generateRandomString(64);
+					if (user) return next('An account with that email address already exists.');
+					db.models.user.create({
+						_id: utils.generateRandomString(12),//TODO Check if exists
+						username: body.login,
+						email: {
+							address,
+							verificationToken: verificationToken
+						},
+						services: {
+							github: {id: body.id, access_token}
+						}
+					}, next);
+				},
+
+				(user, next) => {
+					mail.schemas.verifyEmail(address, body.login, user.email.verificationToken);
+					next(null, user._id);
+				}
+			], (err, userId) => {
+				if (err && err !== true) {
+					err = utils.getError(err);
+					logger.error('AUTH_GITHUB_AUTHORIZE_CALLBACK', `Failed to authorize with GitHub. "${err}"`);
+					return redirectOnErr(res, err);
+				}
+
+				const sessionId = utils.guid();
+				cache.hset('sessions', sessionId, cache.schemas.session(sessionId, userId), err => {
+					if (err) return redirectOnErr(res, err.message);
+					let date = new Date();
+					date.setTime(new Date().getTime() + (2 * 365 * 24 * 60 * 60 * 1000));
+					res.cookie('SID', sessionId, {
+						expires: date,
+						secure: config.get("cookie.secure"),
+						path: "/",
+						domain: config.get("cookie.domain")
+					});
+					logger.success('AUTH_GITHUB_AUTHORIZE_CALLBACK', `User "${userId}" successfully authorized with GitHub.`);
+					res.redirect(`${config.get('domain')}/`);
 				});
-				else return redirectOnErr(res, 'err');
 			});
 		});
 
