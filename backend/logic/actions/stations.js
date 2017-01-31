@@ -101,21 +101,21 @@ module.exports = {
 					async.waterfall([
 						(next) => {
 							if (station.privacy === 'public') return next(true);
-							if (!session.sessionId) return next(false);
+							if (!session.sessionId) return next(`Insufficient permissions.`);
 							cache.hget('sessions', session.sessionId, next);
 						},
 
 						(session, next) => {
-							if (!session) return next(false);
+							if (!session) return next(`Insufficient permissions.`);
 							db.models.user.findOne({_id: session.userId}, next);
 						},
 
 						(user, next) => {
-							if (!user) return next(false);
+							if (!user) return next(`Insufficient permissions.`);
 							if (user.role === 'admin') return next(true);
-							if (station.type === 'official') return next(false);
+							if (station.type === 'official') return next(`Insufficient permissions.`);
 							if (station.owner === session.userId) return next(true);
-							next(false);
+							next(`Insufficient permissions.`);
 						}
 					], (err) => {
 						if (err === true) resultStations.push(station);
