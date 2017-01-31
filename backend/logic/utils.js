@@ -3,6 +3,7 @@
 const moment  = require('moment'),
 	  io      = require('./io'),
 	  config  = require('config'),
+	  async	  = require('async'),
 	  request = require('request'),
 	  cache   = require('./cache');
 
@@ -145,23 +146,17 @@ module.exports = {
 		let ns = io.io.of("/");
 		let sockets = [];
 		if (ns) {
-			let total = Object.keys(ns.connected).length;
-			let done = 0;
-			for (let id in ns.connected) {
+			async.each(Object.keys(ns.connected), (id, next) => {
 				let session = ns.connected[id].session;
 				cache.hget('sessions', session.sessionId, (err, session) => {
 					if (!err && session && session.userId === userId) {
 						sockets.push(ns.connected[id]);
 					}
-					checkComplete();
+					next();
 				});
-			}
-			function checkComplete() {
-				done++;
-				if (done === total) {
-					cb(sockets);
-				}
-			}
+			}, () => {
+				cb(sockets);
+			});
 		}
 	},
 	socketLeaveRooms: function(socketid) {
