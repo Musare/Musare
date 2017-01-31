@@ -113,7 +113,11 @@
 							let date = new Date();
 							date.setTime(new Date().getTime() + (2 * 365 * 24 * 60 * 60 * 1000));
 							let secure = (cookie.secure) ? 'secure=true; ' : '';
-							document.cookie = `SID=${result.SID}; expires=${date.toGMTString()}; domain=${cookie.domain}; ${secure}path=/`;
+							let domain = '';
+							if (cookie.domain !== 'localhost') {
+								domain = ` domain=${cookie.domain};`;
+							}
+							document.cookie = `SID=${result.SID}; expires=${date.toGMTString()}; ${domain}${secure}path=/`;
 							Toast.methods.addToast(`You have been successfully logged in`, 2000);
 							_this.$router.go('/');
 							location.reload();
@@ -144,6 +148,10 @@
 
 	html {
 		overflow: auto !important;
+	}
+
+	.modal-card {
+		margin: 0 !important;
 	}
 
 	.absolute-a {

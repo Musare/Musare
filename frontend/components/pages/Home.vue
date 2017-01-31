@@ -185,15 +185,14 @@
 		html { font-size: 14px; }
 	}
 
-	.card-content {
-		max-height: 159px;
-	}
-
 	.group { min-height: 64px; }
 
 	.station-card {
 		margin: 10px;
 		cursor: pointer;
+		.card-content {
+			max-height: 159px;
+		}
 	}
 
 	.community-button {
