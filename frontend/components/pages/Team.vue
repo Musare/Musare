@@ -8,13 +8,13 @@
 				<div class='card column is-6-desktop is-offset-3-desktop is-12-mobile'>
 					<header class='card-header'>
 						<p class='card-header-title'>
-							Kris (@KrisVos130)
+							Kris
 						</p>
 					</header>
 					<div class='card-content'>
 						<div class='content'>
-							<span class="tag is-info">co-founder</span>
-							<span class="tag is-black">lead-developer</span>
+							<span class="custom-tag blue">co-founder</span>
+							<span class="custom-tag light-blue">lead-developer</span>
 							<ul>
 								<li>
 									<b>Joined: </b>
@@ -34,12 +34,12 @@
 				<div class='card column is-6-desktop is-offset-3-desktop is-12-mobile'>
 					<header class='card-header'>
 						<p class='card-header-title'>
-							Jonathan (@atjonathan)
+							Jonathan
 						</p>
 					</header>
 					<div class='card-content'>
 						<div class='content'>
-							<span class="tag is-black">lead-developer</span>
+							<span class="custom-tag light-blue">lead-developer</span>
 							<ul>
 								<li>
 									<b>Joined: </b>
@@ -64,7 +64,141 @@
 					</header>
 					<div class='card-content'>
 						<div class='content'>
-							<span class="tag is-dark">moderator</span>
+							<span class="custom-tag light-green">moderator</span>
+							<ul>
+								<li>
+									<b>Joined: </b>
+									November 11, 2015
+								</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+			<h3 class="center">Old/inactive members</h3>
+			<br />
+			<div class="columns">
+				<div class='card column is-6-desktop is-offset-3-desktop is-12-mobile'>
+					<header class='card-header'>
+						<p class='card-header-title'>
+							Cameron Kline
+						</p>
+					</header>
+					<div class='card-content'>
+						<div class='content'>
+							<span class="custom-tag light-blue">developer</span>
+							<ul>
+								<li>
+									<b>Joined: </b>
+									August 26, 2016
+								</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+			<br />
+			<div class="columns">
+				<div class='card column is-6-desktop is-offset-3-desktop is-12-mobile'>
+					<header class='card-header'>
+						<p class='card-header-title'>
+							Wesley McCann
+						</p>
+					</header>
+					<div class='card-content'>
+						<div class='content'>
+							<span class="custom-tag light-blue">developer</span>
+							<ul>
+								<li>
+									<b>Joined: </b>
+									November 8, 2015
+								</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+			<br />
+			<div class="columns">
+				<div class='card column is-6-desktop is-offset-3-desktop is-12-mobile'>
+					<header class='card-header'>
+						<p class='card-header-title'>
+							Nex
+						</p>
+					</header>
+					<div class='card-content'>
+						<div class='content'>
+							<span class="custom-tag light-blue">developer</span>
+							<ul>
+								<li>
+									<b>Joined: </b>
+									February 29, 2016
+								</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+			<br />
+			<div class="columns">
+				<div class='card column is-6-desktop is-offset-3-desktop is-12-mobile'>
+					<header class='card-header'>
+						<p class='card-header-title'>
+							Akira Laine
+						</p>
+					</header>
+					<div class='card-content'>
+						<div class='content'>
+							<span class="custom-tag blue">co-founder</span>
+							<span class="custom-tag light-blue">lead-developer</span>
+							<ul>
+								<li>
+									<b>Joined: </b>
+									September 23, 2015
+								</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+			<br />
+			<div class="columns">
+				<div class='card column is-6-desktop is-offset-3-desktop is-12-mobile'>
+					<header class='card-header'>
+						<p class='card-header-title'>
+							Johannes Andersen
+						</p>
+					</header>
+					<div class='card-content'>
+						<div class='content'>
+							<span class="custom-tag light-blue">developer</span>
+							<ul>
+								<li>
+									<b>Joined: </b>
+									September 23, 2015
+								</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+			<br />
+			<div class="columns">
+				<div class='card column is-6-desktop is-offset-3-desktop is-12-mobile'>
+					<header class='card-header'>
+						<p class='card-header-title'>
+							Aaron Gildea
+						</p>
+					</header>
+					<div class='card-content'>
+						<div class='content'>
+							<span class="custom-tag light-green">moderator</span>
+							<ul>
+								<li>
+									<b>Joined: </b>
+									November 7, 2015
+								</li>
+							</ul>
 						</div>
 					</div>
 				</div>
@@ -87,5 +221,32 @@
 	li a {
 		color: dodgerblue;
     	border-bottom: 0 !important;
+	}
+
+	ul {
+		margin-left: 0;
+		margin-right: 0;
+		list-style: none;
+	}
+
+	.custom-tag {
+		padding: 2px 5px;
+		border-radius: 10px;
+		display: inline-block;
+	}
+
+	.custom-tag.blue {
+		background-color: #0066f4;
+		color: white;
+	}
+
+	.custom-tag.light-blue {
+		background-color: #00baf4;
+		color: white;
+	}
+
+	.custom-tag.light-green {
+		background-color: #00f472;
+		color: white;
 	}
 </style>
