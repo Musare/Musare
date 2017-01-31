@@ -350,12 +350,19 @@ let lib = {
 	removeSongFromPlaylist: hooks.loginRequired((session, songId, playlistId, cb, userId) => {
 		async.waterfall([
 			(next) => {
+				if (!songId || typeof songId !== 'string') return next('Invalid song id.');
+				if (!playlistId  || typeof playlistId !== 'string') return next('Invalid playlist id.');
+				next();
+			},
+
+			(next) => {
 				playlists.getPlaylist(playlistId, next);
 			},
 
 			(playlist, next) => {
 				if (!playlist || playlist.createdBy !== userId) return next('Playlist not found');
-				db.models.playlist.update({_id: playlistId}, {$pull: {songs: songId}}, next);
+				console.log(playlist, playlistId, songId);
+				db.models.playlist.update({_id: playlistId}, {$pull: {songs: {_id: songId}}}, next);
 			},
 
 			(res, next) => {
@@ -518,7 +525,7 @@ let lib = {
 	}),
 
 	/**
-	 * Removes a song from a private playlist
+	 * Removes a private playlist
 	 *
 	 * @param {Object} session - the session object automatically added by socket.io
 	 * @param {String} playlistId - the id of the playlist we are moving the song to the top from

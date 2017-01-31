@@ -390,11 +390,12 @@
 								if (data.status === 'success') _this.songsList = data.queue;
 							});
 						}
+						if (_this.type === 'official') {
+							_this.socket.emit('stations.getPlaylist', _this.stationId, res => {
+								if (res.status == 'success') _this.songsList = res.data;
+							});
+						}
 					}
-
-					_this.socket.emit('stations.getPlaylist', _this.stationId, res => {
-				 		if (res.status == 'success') _this.songsList = res.data;
-				 	});
 					// UNIX client time before ping
 					let beforePing = Date.now();
 					_this.socket.emit('apis.ping', res => {
