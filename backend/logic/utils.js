@@ -351,6 +351,43 @@ module.exports = {
 			cb(song);
 		});
 	},
+	getSongsFromSpotify: (title, artist, cb) => {
+		const spotifyParams = [
+			`q=${encodeURIComponent(title)}`,
+			`type=track`
+		].join('&');
+
+		request(`https://api.spotify.com/v1/search?${spotifyParams}`, (err, res, body) => {
+			if (err) return console.error(err);
+			body = JSON.parse(body);
+			let songs = [];
+
+			for (let i in body) {
+				let items = body[i].items;
+				for (let j in items) {
+					let item = items[j];
+					let hasArtist = false;
+					for (let k = 0; k < item.artists.length; k++) {
+						let localArtist = item.artists[k];
+						if (artist.toLowerCase() === localArtist.name.toLowerCase()) hasArtist = true;
+					}
+					if (hasArtist && (title.indexOf(item.name) !== -1 || item.name.indexOf(title) !== -1)) {
+						let song = {};
+						song.duration = item.duration_ms / 1000;
+						song.artists = item.artists.map(artist => {
+							return artist.name;
+						});
+						song.title = item.name;
+						song.explicit = item.explicit;
+						song.thumbnail = item.album.images[1].url;
+						songs.push(song);
+					}
+				}
+			}
+
+			cb(songs);
+		});
+	},
 	shuffle: (array) => {
 		let currentIndex = array.length, temporaryValue, randomIndex;
 

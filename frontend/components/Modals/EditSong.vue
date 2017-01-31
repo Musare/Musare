@@ -96,6 +96,37 @@
 				<p class='control'>
 					<input class='input' type='text' v-model='editing.song.skipDuration'>
 				</p>
+				<hr>
+				<h5 class='has-text-centered'>Spotify info</h5>
+				<label class='label'>Song title</label>
+				<p class='control'>
+					<input class='input' type='text' v-model='spotify.title'>
+				</p>
+				<label class='label'>Song artist (1 artist full name)</label>
+				<p class='control'>
+					<input class='input' type='text' v-model='spotify.artist'>
+				</p>
+				<button class='button is-success' @click='getSpotifySongs()'>
+					Get Spotify songs
+				</button>
+				<hr v-if="spotify.songs.length > 0">
+				<h5 class='has-text-centered' v-if="spotify.songs.length > 0">Spotify results</h5>
+				<div v-for='song in spotify.songs'>
+					<p><b>Title:</b> {{song.title}}</p>
+					<p>
+						<b>Artists:</b>
+						<ul>
+							<li v-for='artist in song.artists'>{{artist}}</li>
+						</ul>
+					</p>
+					<p><b>Duration:</b> {{song.duration}}</p>
+					<p><b>Explicit:</b> {{song.explicit}}</p>
+					<p>
+						<b>Thumbnail:</b> {{song.thumbnail}}
+						<img :src='song.thumbnail' onerror="this.src='/assets/notes-transparent.png'">
+					</p>
+					<hr>
+				</div>
 			</div>
 			<div slot='footer'>
 				<button class='button is-success' @click='save(editing.song, false)'>
@@ -133,6 +164,11 @@
 					player: null,
 					paused: false,
 					playerReady: false
+				},
+				spotify: {
+					title: '',
+					artist: '',
+					songs: []
 				}
 			}
 		},
@@ -201,6 +237,13 @@
 				if (type == 'genres') this.editing.song.genres.splice(index, 1);
 				else if (type == 'artists') this.editing.song.artists.splice(index, 1);
 			},
+			getSpotifySongs: function() {
+				this.socket.emit('apis.getSpotifySongs', this.spotify.title, this.spotify.artist, (res) => {
+					if (res.status === 'success') {
+						this.spotify.songs = res.songs;
+					}
+				});
+			}
 		},
 		ready: function () {
 

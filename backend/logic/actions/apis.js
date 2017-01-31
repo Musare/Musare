@@ -46,6 +46,25 @@ module.exports = {
 	},
 
 	/**
+	 * Gets Spotify data
+	 *
+	 * @param session
+	 * @param title - the title of the song
+	 * @param artist - an artist for that song
+	 * @param cb
+	 */
+	getSpotifySongs: hooks.adminRequired((session, title, artist, cb, userId) => {
+		async.waterfall([
+			(next) => {
+				utils.getSongsFromSpotify(title, artist, next);
+			}
+		], (songs) => {
+			logger.success('APIS_GET_SPOTIFY_SONGS', `User "${userId}" got Spotify songs for title "${title}" successfully.`);
+			cb({status: 'success', songs: songs});
+		});
+	}),
+
+	/**
 	 * Joins a room
 	 *
 	 * @param session
