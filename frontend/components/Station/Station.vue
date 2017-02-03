@@ -158,7 +158,7 @@
 					local.player = new YT.Player("player", {
 						height: 270,
 						width: 480,
-						videoId: local.currentSong._id,
+						videoId: local.currentSong.songId,
 						startSeconds: local.getTimeElapsed() / 1000 + local.currentSong.skipDuration,
 						playerVars: {controls: 0, iv_load_policy: 3, rel: 0, showinfo: 0},
 						events: {
@@ -201,7 +201,7 @@
 				let local = this;
 				if (local.playerReady) {
 					local.videoLoading = true;
-					local.player.loadVideoById(local.currentSong._id, local.getTimeElapsed() / 1000 + local.currentSong.skipDuration);
+					local.player.loadVideoById(local.currentSong.songId, local.getTimeElapsed() / 1000 + local.currentSong.skipDuration);
 
 					if (local.currentSong.artists) local.currentSong.artists = local.currentSong.artists.join(", ");
 					if (window.stationInterval !== 0) clearInterval(window.stationInterval);
@@ -344,9 +344,10 @@
 
 						_this.socket.emit('playlists.getFirstSong', _this.privatePlaylistQueueSelected, data => {
 							if (data.status === 'success') {
+								console.log(data.song);
 								let songId = data.song._id;
-								_this.automaticallyRequestedSongId = songId;
-								_this.socket.emit('stations.addToQueue', _this.stationId, songId, data => {
+								_this.automaticallyRequestedSongId = data.song.songId;
+								_this.socket.emit('stations.addToQueue', _this.stationId, data.song.songId, data => {
 									if (data.status === 'success') {
 										_this.socket.emit('playlists.moveSongToBottom', _this.privatePlaylistQueueSelected, songId, data => {
 											if (data.status === 'success') {}
@@ -482,7 +483,7 @@
 					_this.songsList.forEach((queueSong) => {
 						if (queueSong.requestedBy === userId) isInQueue = true;
 					});
-					if (!isInQueue && _this.privatePlaylistQueueSelected && (_this.automaticallyRequestedSongId !== _this.currentSong._id || !_this.currentSong._id)) {
+					if (!isInQueue && _this.privatePlaylistQueueSelected && (_this.automaticallyRequestedSongId !== _this.currentSong.songId || !_this.currentSong._id)) {
 						_this.addFirstPrivatePlaylistSongToQueue();
 					}
 				});

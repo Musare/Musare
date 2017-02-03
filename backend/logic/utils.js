@@ -268,7 +268,7 @@ module.exports = {
 				});
 
 				let song = {
-					_id: body.items[0].id,
+					songId: body.items[0].id,
 					title: body.items[0].snippet.title,
 					duration
 				};

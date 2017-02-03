@@ -11,7 +11,7 @@ const request = require('request');
 const hooks = require('./hooks');
 
 cache.sub('queue.newSong', songId => {
-	db.models.queueSong.findOne({_id: songId}, (err, song) => {
+	db.models.queueSong.findOne({songId}, (err, song) => {
 		utils.emitToRoom('admin.queue', 'event:admin.queueSong.added', song);
 	});
 });
@@ -21,7 +21,7 @@ cache.sub('queue.removedSong', songId => {
 });
 
 cache.sub('queue.update', songId => {
-	db.models.queueSong.findOne({_id: songId}, (err, song) => {
+	db.models.queueSong.findOne({songId}, (err, song) => {
 		utils.emitToRoom('admin.queue', 'event:admin.queueSong.updated', song);
 	});
 });
@@ -82,7 +82,7 @@ module.exports = {
 	update: hooks.adminRequired((session, songId, updatedSong, cb, userId) => {
 		async.waterfall([
 			(next) => {
-				db.models.queueSong.findOne({ _id: songId }, next);
+				db.models.queueSong.findOne({songId}, next);
 			},
 
 			(song, next) => {
@@ -91,7 +91,7 @@ module.exports = {
 				let $set = {};
 				for (let prop in updatedSong) if (updatedSong[prop] !== song[prop]) $set[prop] = updatedSong[prop]; updated = true;
 				if (!updated) return next('No properties changed');
-				db.models.queueSong.update({ _id: songId }, {$set}, next);
+				db.models.queueSong.update({songId}, {$set}, next);
 			}
 		], (err) => {
 			if (err) {
@@ -116,7 +116,7 @@ module.exports = {
 	remove: hooks.adminRequired((session, songId, cb, userId) => {
 		async.waterfall([
 			(next) => {
-				db.models.queueSong.remove({ _id: songId }, next);
+				db.models.queueSong.remove({_id: songId}, next);
 			}
 		], (err) => {
 			if (err) {
@@ -143,18 +143,19 @@ module.exports = {
 
 		async.waterfall([
 			(next) => {
-				db.models.queueSong.findOne({_id: songId}, next);
+				db.models.queueSong.findOne({songId}, next);
 			},
 
 			(song, next) => {
 				if (song) return next('This song is already in the queue.');
-				db.models.song.findOne({_id: songId}, next);
+				db.models.song.findOne({songId}, next);
 			},
 
 			// Get YouTube data from id
 			(song, next) => {
 				if (song) return next('This song has already been added.');
 				//TODO Add err object as first param of callback
+				console.log(52, songId);
 				utils.getSongFromYouTube(songId, (song) => {
 					song.artists = [];
 					song.genres = [];
@@ -174,9 +175,9 @@ module.exports = {
 			},
 			(newSong, next) => {
 				const song = new db.models.queueSong(newSong);
-				song.save(err => {
+				song.save((err, song) => {
 					if (err) return next(err);
-					next(null, newSong);
+					next(null, song);
 				});
 			},
 			(newSong, next) => {

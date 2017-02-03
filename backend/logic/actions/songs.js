@@ -15,13 +15,13 @@ cache.sub('song.removed', songId => {
 });
 
 cache.sub('song.added', songId => {
-	db.models.song.findOne({_id: songId}, (err, song) => {
+	db.models.song.findOne({songId}, (err, song) => {
 		utils.emitToRoom('admin.songs', 'event:admin.song.added', song);
 	});
 });
 
 cache.sub('song.updated', songId => {
-	db.models.song.findOne({_id: songId}, (err, song) => {
+	db.models.song.findOne({songId}, (err, song) => {
 		utils.emitToRoom('admin.songs', 'event:admin.song.updated', song);
 	});
 });
@@ -120,7 +120,7 @@ module.exports = {
 	update: hooks.adminRequired((session, songId, song, cb) => {
 		async.waterfall([
 			(next) => {
-				db.models.song.update({_id: songId}, song, {upsert: true}, next);
+				db.models.song.update({_id: songId}, song, next);
 			},
 
 			(res, next) => {
@@ -133,7 +133,7 @@ module.exports = {
 				return cb({'status': 'failure', 'message': err});
 			}
 			logger.success("SONGS_UPDATE", `Successfully updated song "${songId}".`);
-			cache.pub('song.updated', song._id);
+			cache.pub('song.updated', song.songId);
 			cb({ status: 'success', message: 'Song has been successfully updated', data: song });
 		});
 	}),
@@ -148,7 +148,7 @@ module.exports = {
 	remove: hooks.adminRequired((session, songId, cb) => {
 		async.waterfall([
 			(next) => {
-				db.models.song.remove({_id: songId}, next);
+				db.models.song.remove({songId}, next);
 			},
 
 			(res, next) => {//TODO Check if res gets returned from above
@@ -177,13 +177,13 @@ module.exports = {
 	add: hooks.adminRequired((session, song, cb, userId) => {
 		async.waterfall([
 			(next) => {
-				queueSongs.remove(session, song._id, () => {
+				queueSongs.remove(session, song.songId, () => {
 					next();
 				});
 			},
 
 			(next) => {
-				db.models.song.findOne({_id: song._id}, next);
+				db.models.song.findOne({songId: song.songId}, next);
 			},
 
 			(existingSong, next) => {
@@ -203,8 +203,8 @@ module.exports = {
 				logger.error("SONGS_ADD", `User "${userId}" failed to add song. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
-			logger.success("SONGS_ADD", `User "${userId}" successfully added song "${song._id}".`);
-			cache.pub('song.added', song._id);
+			logger.success("SONGS_ADD", `User "${userId}" successfully added song "${song.songId}".`);
+			cache.pub('song.added', song.songId);
 			cb({status: 'success', message: 'Song has been moved from the queue successfully.'});
 		});
 		//TODO Check if video is in queue and Add the song to the appropriate stations
@@ -227,7 +227,7 @@ module.exports = {
 						if (err) return cb({ status: 'failure', message: 'Something went wrong while liking this song.' });
 						db.models.user.count({"disliked": songId}, (err, dislikes) => {
 							if (err) return cb({ status: 'failure', message: 'Something went wrong while liking this song.' });
-							db.models.song.update({_id: songId}, {$set: {likes: likes, dislikes: dislikes}}, (err) => {
+							db.models.song.update({songId}, {$set: {likes: likes, dislikes: dislikes}}, (err) => {
 								if (err) return cb({ status: 'failure', message: 'Something went wrong while liking this song.' });
 								songs.updateSong(songId, (err, song) => {});
 								cache.pub('song.like', JSON.stringify({ songId, userId: session.userId, likes: likes, dislikes: dislikes }));
@@ -257,7 +257,7 @@ module.exports = {
 						if (err) return cb({ status: 'failure', message: 'Something went wrong while disliking this song.' });
 						db.models.user.count({"disliked": songId}, (err, dislikes) => {
 							if (err) return cb({ status: 'failure', message: 'Something went wrong while disliking this song.' });
-							db.models.song.update({_id: songId}, {$set: {likes: likes, dislikes: dislikes}}, (err) => {
+							db.models.song.update({songId}, {$set: {likes: likes, dislikes: dislikes}}, (err) => {
 								if (err) return cb({ status: 'failure', message: 'Something went wrong while disliking this song.' });
 								songs.updateSong(songId, (err, song) => {});
 								cache.pub('song.dislike', JSON.stringify({ songId, userId: session.userId, likes: likes, dislikes: dislikes }));
@@ -287,7 +287,7 @@ module.exports = {
 						if (err) return cb({ status: 'failure', message: 'Something went wrong while undisliking this song.' });
 						db.models.user.count({"disliked": songId}, (err, dislikes) => {
 							if (err) return cb({ status: 'failure', message: 'Something went wrong while undisliking this song.' });
-							db.models.song.update({_id: songId}, {$set: {likes: likes, dislikes: dislikes}}, (err) => {
+							db.models.song.update({songId}, {$set: {likes: likes, dislikes: dislikes}}, (err) => {
 								if (err) return cb({ status: 'failure', message: 'Something went wrong while undisliking this song.' });
 								songs.updateSong(songId, (err, song) => {});
 								cache.pub('song.undislike', JSON.stringify({ songId, userId: session.userId, likes: likes, dislikes: dislikes }));
@@ -317,7 +317,7 @@ module.exports = {
 						if (err) return cb({ status: 'failure', message: 'Something went wrong while unliking this song.' });
 						db.models.user.count({"disliked": songId}, (err, dislikes) => {
 							if (err) return cb({ status: 'failure', message: 'Something went wrong while undiking this song.' });
-							db.models.song.update({_id: songId}, {$set: {likes: likes, dislikes: dislikes}}, (err) => {
+							db.models.song.update({songId}, {$set: {likes: likes, dislikes: dislikes}}, (err) => {
 								if (err) return cb({ status: 'failure', message: 'Something went wrong while unliking this song.' });
 								songs.updateSong(songId, (err, song) => {});
 								cache.pub('song.unlike', JSON.stringify({ songId, userId: session.userId, likes: likes, dislikes: dislikes }));

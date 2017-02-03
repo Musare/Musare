@@ -56,7 +56,7 @@
 				<div class="control is-horizontal">
 					<div class="control is-grouped">
 						<p class='control is-expanded'>
-							<input class='input' type='text' v-model='editing.song._id'>
+							<input class='input' type='text' v-model='editing.song.songId'>
 						</p>
 						<p class='control is-expanded'>
 							<input class='input' type='text' v-model='editing.song.title' autofocus>
@@ -263,7 +263,7 @@
 			this.video.player = new YT.Player('player', {
 				height: 315,
 				width: 560,
-				videoId: this.editing.song._id,
+				videoId: this.editing.song.songId,
 				playerVars: { controls: 0, iv_load_policy: 3, rel: 0, showinfo: 0 },
 				startSeconds: _this.editing.song.skipDuration,
 				events: {
@@ -312,7 +312,7 @@
 			},
 			editSong: function (song, index, type) {
 				let _this = this;
-				this.video.player.loadVideoById(song._id, this.editing.song.skipDuration);
+				this.video.player.loadVideoById(song.songId, this.editing.song.skipDuration);
 				let newSong = {};
 				for (let n in song) {
 					newSong[n] = song[n];

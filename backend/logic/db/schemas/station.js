@@ -5,7 +5,7 @@ module.exports = {
 	description: { type: String, minlength: 2, maxlength: 128, required: true },
 	paused: { type: Boolean, default: false, required: true },
 	currentSong: {
-		_id: { type: String },
+		songId: { type: String },
 		title: { type: String },
 		artists: [{ type: String }],
 		duration: { type: Number },
@@ -25,7 +25,7 @@ module.exports = {
 	privacy: { type: String, enum: ["public", "unlisted", "private"], default: "private" },
 	locked: { type: Boolean, default: false },
 	queue: [{
-		_id: { type: String, required: true },
+		songId: { type: String, required: true },
 		title: { type: String },
 		artists: [{ type: String }],
 		duration: { type: Number },

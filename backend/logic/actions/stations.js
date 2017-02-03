@@ -262,9 +262,9 @@ module.exports = {
 
 			(data, next) => {
 				if (!data.currentSong) return next(null, data);
-				utils.socketJoinSongRoom(session.socketId, `song.${data.currentSong._id}`);
+				utils.socketJoinSongRoom(session.socketId, `song.${data.currentSong.songId}`);
 				data.currentSong.skipVotes = data.currentSong.skipVotes.length;
-				songs.getSong(data.currentSong._id, (err, song) => {
+				songs.getSong(data.currentSong.songId, (err, song) => {
 					if (!err && song) {
 						data.currentSong.likes = song.likes;
 						data.currentSong.dislikes = song.dislikes;
@@ -699,9 +699,9 @@ module.exports = {
 			(station, next) => {
 				if (!station) return next('Station not found.');
 				if (station.type !== 'community') return next('That station is not a community station.');
-				if (station.currentSong && station.currentSong._id === songId) return next('That song is currently playing.');
+				if (station.currentSong && station.currentSong.songId === songId) return next('That song is currently playing.');
 				async.each(station.queue, (queueSong, next) => {
-					if (queueSong._id === songId) return next('That song is already in the queue.');
+					if (queueSong.songId === songId) return next('That song is already in the queue.');
 					next();
 				}, (err) => {
 					next(err, station);
@@ -711,6 +711,7 @@ module.exports = {
 			(station, next) => {
 				songs.getSong(songId, (err, song) => {
 					if (!err && song) return next(null, song);
+					console.log(53, songId);
 					utils.getSongFromYouTube(songId, (song) => {
 						song.artists = [];
 						song.skipDuration = 0;
@@ -763,7 +764,7 @@ module.exports = {
 				if (!station) return next('Station not found.');
 				if (station.type !== 'community') return next('Station is not a community station.');
 				async.each(station.queue, (queueSong, next) => {
-					if (queueSong._id === songId) return next(true);
+					if (queueSong.songId === songId) return next(true);
 					next();
 				}, (err) => {
 					if (err === true) return next();

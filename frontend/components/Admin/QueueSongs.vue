@@ -22,7 +22,7 @@
 					<td>
 						<strong>{{ song.title }}</strong>
 					</td>
-					<td>{{ song._id }}</td>
+					<td>{{ song.songId }}</td>
 					<td>{{ song.artists.join(', ') }}</td>
 					<td>{{ song.genres.join(', ') }}</td>
 					<td>{{ song.requestedBy }}</td>
@@ -89,6 +89,7 @@
 				});
 			},
 			remove: function (id, index) {
+				console.log("Removing ", id);
 				this.socket.emit('queueSongs.remove', id, res => {
 					if (res.status == 'success') Toast.methods.addToast(res.message, 2000);
 				});

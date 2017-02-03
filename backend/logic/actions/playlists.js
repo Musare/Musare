@@ -193,7 +193,6 @@ let lib = {
 				return cb({ status: 'failure', message: err});
 			}
 			logger.success("PLAYLIST_GET", `Successfully got private playlist "${playlistId}" for user "${userId}".`);
-			console.log(playlist);
 			cb({
 				status: 'success',
 				data: playlist
@@ -250,7 +249,7 @@ let lib = {
 					if (err || !playlist || playlist.createdBy !== userId) return next('Something went wrong when trying to get the playlist');
 
 					async.each(playlist.songs, (song, next) => {
-						if (song._id === songId) return next('That song is already in the playlist');
+						if (song.songId === songId) return next('That song is already in the playlist');
 						next();
 					}, next);
 				});
@@ -263,7 +262,8 @@ let lib = {
 						});
 					} else {
 						next(null, {
-							_id: songId,
+							_id: song._id,
+							songId: songId,
 							title: song.title,
 							duration: song.duration
 						});
@@ -361,7 +361,6 @@ let lib = {
 
 			(playlist, next) => {
 				if (!playlist || playlist.createdBy !== userId) return next('Playlist not found');
-				console.log(playlist, playlistId, songId);
 				db.models.playlist.update({_id: playlistId}, {$pull: {songs: {_id: songId}}}, next);
 			},
 

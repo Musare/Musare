@@ -133,13 +133,13 @@ module.exports = {
 					db.models.song.find({genres: genre}, (err, songs) => {
 						if (!err) {
 							songs.forEach((song) => {
-								if (songList.indexOf(song._id) === -1) {
+								if (songList.indexOf(song.songId) === -1) {
 									let found = false;
 									song.genres.forEach((songGenre) => {
 										if (station.blacklistedGenres.indexOf(songGenre) !== -1) found = true;
 									});
 									if (!found) {
-										songList.push(song._id);
+										songList.push(song.songId);
 									}
 								}
 							});
@@ -236,10 +236,10 @@ module.exports = {
 		let lessInfoPlaylist = [];
 
 		async.each(songList, (song, next) => {
-			songs.getSong(song, (err, song) => {
+			songs.getSongFromId(song, (err, song) => {
 				if (!err && song) {
 					let newSong = {
-						_id: song._id,
+						songId: song.songId,
 						title: song.title,
 						artists: song.artists,
 						duration: song.duration
@@ -284,13 +284,13 @@ module.exports = {
 								let currentSongIndex;
 								if (station.currentSongIndex < playlist.length - 1) currentSongIndex = station.currentSongIndex + 1;
 								else currentSongIndex = 0;
-								songs.getSong(playlist[currentSongIndex]._id, (err, song) => {
+								let callback = (err, song) => {
 									if (err) return next(err);
 									if (song) return next(null, song, currentSongIndex, station);
 									else {
 										let song = playlist[currentSongIndex];
 										let currentSong = {
-											_id: song._id,
+											songId: song.songId,
 											title: song.title,
 											duration: song.duration,
 											likes: -1,
@@ -298,7 +298,9 @@ module.exports = {
 										};
 										return next(null, currentSong, currentSongIndex, station);
 									}
-								});
+								};
+								if (playlist[currentSongIndex]._id) songs.getSong(playlist[currentSongIndex]._id, callback);
+								else songs.getSongFromId(playlist[currentSongIndex].songId, callback);
 							} else return next(null, null, -14, station);
 						});
 					}
@@ -327,7 +329,7 @@ module.exports = {
 							} else {
 								_this.calculateSongForStation(station, (err, newPlaylist) => {
 									if (err) return next(null, _this.defaultSong, 0);
-									songs.getSong(newPlaylist[0], (err, song) => {
+									songs.getSongFromId(newPlaylist[0], (err, song) => {
 										if (err || !song) return next(null, _this.defaultSong, 0);
 										station.playlist = newPlaylist;
 										next(null, song, 0);
@@ -346,7 +348,7 @@ module.exports = {
 					if (song === null) $set.currentSong = null;
 					else if (song.likes === -1 && song.dislikes === -1) {
 						$set.currentSong = {
-							_id: song._id,
+							songId: song.songId,
 							title: song.title,
 							duration: song.duration,
 							likes: -1,
@@ -354,7 +356,7 @@ module.exports = {
 						};
 					} else {
 						$set.currentSong = {
-							_id: song._id,
+							songId: song.songId,
 							title: song.title,
 							artists: song.artists,
 							duration: song.duration,
@@ -382,7 +384,7 @@ module.exports = {
 				},
 			], (err, station) => {
 				if (!err) {
-					if (station.currentSong !== null && station.currentSong._id !== undefined) {
+					if (station.currentSong !== null && station.currentSong.songId !== undefined) {
 						station.currentSong.skipVotes = 0;
 					}
 					//TODO Pub/Sub this
@@ -413,8 +415,8 @@ module.exports = {
 							}
 						}
 					}
-					if (station.currentSong !== null && station.currentSong._id !== undefined) {
-						utils.socketsJoinSongRoom(utils.getRoomSockets(`station.${station._id}`), `song.${station.currentSong._id}`);
+					if (station.currentSong !== null && station.currentSong.songId !== undefined) {
+						utils.socketsJoinSongRoom(utils.getRoomSockets(`station.${station._id}`), `song.${station.currentSong.songId}`);
 						if (!station.paused) {
 							notifications.schedule(`stations.nextSong?id=${station._id}`, station.currentSong.duration * 1000);
 						}
@@ -432,7 +434,7 @@ module.exports = {
 	},
 
 	defaultSong: {
-		_id: '60ItHLz5WEA',
+		songId: '60ItHLz5WEA',
 		title: 'Faded - Alan Walker',
 		duration: 212,
 		likes: -1,
