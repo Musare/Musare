@@ -6,15 +6,15 @@
 					<li v-for='song in playlist.songs' track-by='$index'>
 						<a :href='' target='_blank'>{{ song.title }}</a>
 						<div class='controls'>
-							<a href='#' @click='promoteSong(song._id)'>
+							<a href='#' @click='promoteSong(song.songId)'>
 								<i class='material-icons' v-if='$index > 0'>keyboard_arrow_up</i>
 								<i class='material-icons' style='opacity: 0' v-else>error</i>
 							</a>
-							<a href='#' @click='demoteSong(song._id)'>
+							<a href='#' @click='demoteSong(song.songId)'>
 								<i class='material-icons' v-if='playlist.songs.length - 1 !== $index'>keyboard_arrow_down</i>
 								<i class='material-icons' style='opacity: 0' v-else>error</i>
 							</a>
-							<a href='#' @click='removeSongFromPlaylist(song._id)'><i class='material-icons'>delete</i></a>
+							<a href='#' @click='removeSongFromPlaylist(song.songId)'><i class='material-icons'>delete</i></a>
 						</div>
 					</li>
 				</ul>
@@ -170,7 +170,7 @@
 				_this.socket.on('event:playlist.removeSong', (data) => {
 					if (_this.playlist._id === data.playlistId) {
 						_this.playlist.songs.forEach((song, index) => {
-							if (song._id === data.songId) _this.playlist.songs.splice(index, 1);
+							if (song.songId === data.songId) _this.playlist.songs.splice(index, 1);
 						});
 					}
 				});
@@ -181,7 +181,7 @@
 					if (_this.playlist._id === data.playlistId) {
 						let songIndex;
 						_this.playlist.songs.forEach((song, index) => {
-							if (song._id === data.songId) songIndex = index;
+							if (song.songId === data.songId) songIndex = index;
 						});
 						let song = _this.playlist.songs.splice(songIndex, 1)[0];
 						_this.playlist.songs.push(song);
@@ -191,7 +191,7 @@
 					if (_this.playlist._id === data.playlistId) {
 						let songIndex;
 						_this.playlist.songs.forEach((song, index) => {
-							if (song._id === data.songId) songIndex = index;
+							if (song.songId === data.songId) songIndex = index;
 						});
 						let song = _this.playlist.songs.splice(songIndex, 1)[0];
 						_this.playlist.songs.unshift(song);

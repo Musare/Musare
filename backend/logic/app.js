@@ -113,7 +113,7 @@ const lib = {
 								if (user.services.github && user.services.github.id) return next('Account already has GitHub linked.');
 								db.models.user.update({_id: user._id}, {$set: {"services.github": {id: body.id, access_token}}}, (err) => {
 									if (err) return next(err);
-									next(null, user);
+									next(null, user, body);
 								});
 							},
 
@@ -126,7 +126,7 @@ const lib = {
 					db.models.user.findOne({'services.github.id': body.id}, next);
 				},
 
-				(user, next) => {
+				(user, body, next) => {
 					if (user) {
 						user.services.github.access_token = access_token;
 						return user.save(() => {
