@@ -144,7 +144,6 @@
 					privacy: _this.station.privacy,
 					displayName: _this.station.displayName
 				});
-				//this.modals.editStation = !this.modals.editStation;
 			},
 			toggleSidebar: function (type) {
 				Object.keys(this.sidebars).forEach(sidebar => {

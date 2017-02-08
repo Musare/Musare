@@ -149,6 +149,7 @@
 				this.$parent.modals.editStation = false;
 			},
 			editStation: function(station) {
+				console.log('edit', 5);
 				for (let prop in station) {
 					this.editing[prop] = station[prop];
 				}

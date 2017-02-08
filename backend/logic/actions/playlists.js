@@ -49,7 +49,7 @@ cache.sub('playlist.moveSongToBottom', res => {
 cache.sub('playlist.addSong', res => {
 	utils.socketsFromUser(res.userId, (sockets) => {
 		sockets.forEach((socket) => {
-			socket.emit('event:playlist.addSong', {playlistId: res.playlistId, song: res.song});
+			socket.emit('event:playlist.addSong', { playlistId: res.playlistId, song: res.song });
 		});
 	});
 });
@@ -57,7 +57,7 @@ cache.sub('playlist.addSong', res => {
 cache.sub('playlist.removeSong', res => {
 	utils.socketsFromUser(res.userId, (sockets) => {
 		sockets.forEach((socket) => {
-			socket.emit('event:playlist.removeSong', {playlistId: res.playlistId, songId: res.songId});
+			socket.emit('event:playlist.removeSong', { playlistId: res.playlistId, songId: res.songId });
 		});
 	});
 });
@@ -65,7 +65,7 @@ cache.sub('playlist.removeSong', res => {
 cache.sub('playlist.updateDisplayName', res => {
 	utils.socketsFromUser(res.userId, (sockets) => {
 		sockets.forEach((socket) => {
-			socket.emit('event:playlist.updateDisplayName', {playlistId: res.playlistId, displayName: res.displayName});
+			socket.emit('event:playlist.updateDisplayName', { playlistId: res.playlistId, displayName: res.displayName });
 		});
 	});
 });
