@@ -63,6 +63,7 @@ module.exports = {
 			},
 
 			(playlists, next) => {
+				if (!playlists) return next();
 				let playlistIds = Object.keys(playlists);
 				async.each(playlistIds, (playlistId, next) => {
 					db.models.playlist.findOne({_id: playlistId}, (err, playlist) => {

@@ -426,16 +426,16 @@ let lib = {
 			(playlist, next) => {
 				if (!playlist || playlist.createdBy !== userId) return next('Playlist not found');
 				async.each(playlist.songs, (song, next) => {
-					if (song._id === songId) return next(song);
+					if (song.songId === songId) return next(song);
 					next();
 				}, (err) => {
-					if (err && err._id) return next(null, err);
+					if (err && err.songId) return next(null, err);
 					next('Song not found');
 				});
 			},
 
 			(song, next) => {
-				db.models.playlist.update({_id: playlistId}, {$pull: {songs: {_id: songId}}}, (err) => {
+				db.models.playlist.update({_id: playlistId}, {$pull: {songs: {songId}}}, (err) => {
 					if (err) return next(err);
 					return next(null, song);
 				});
@@ -485,16 +485,16 @@ let lib = {
 			(playlist, next) => {
 				if (!playlist || playlist.createdBy !== userId) return next('Playlist not found');
 				async.each(playlist.songs, (song, next) => {
-					if (song._id === songId) return next(song);
+					if (song.songId === songId) return next(song);
 					next();
 				}, (err) => {
-					if (err && err._id) return next(null, err);
+					if (err && err.songId) return next(null, err);
 					next('Song not found');
 				});
 			},
 
 			(song, next) => {
-				db.models.playlist.update({_id: playlistId}, {$pull: {songs: {_id: songId}}}, (err) => {
+				db.models.playlist.update({_id: playlistId}, {$pull: {songs: {songId}}}, (err) => {
 					if (err) return next(err);
 					return next(null, song);
 				});
