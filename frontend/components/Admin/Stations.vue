@@ -53,24 +53,28 @@
 					<p class='control is-expanded'>
 						<input class='input' type='text' placeholder='Short description' v-model='newStation.description'>
 					</p>
-					<label class='label'>Genres</label>
-					<p class='control has-addons'>
-						<input class='input' id='new-genre' type='text' placeholder='Genre' v-on:keyup.enter='addGenre()'>
-						<a class='button is-info' href='#' @click='addGenre()'>Add genre</a>
-					</p>
-					<span class='tag is-info' v-for='(index, genre) in newStation.genres' track-by='$index'>
-						{{ genre }}
-						<button class='delete is-info' @click='removeGenre(index)'></button>
-					</span>
-					<label class='label'>Blacklisted Genres</label>
-					<p class='control has-addons'>
-						<input class='input' id='new-blacklisted-genre' type='text' placeholder='Blacklisted Genre' v-on:keyup.enter='addBlacklistedGenre()'>
-						<a class='button is-info' href='#' @click='addBlacklistedGenre()'>Add blacklisted genre</a>
-					</p>
-					<span class='tag is-info' v-for='(index, genre) in newStation.blacklistedGenres' track-by='$index'>
-						{{ genre }}
-						<button class='delete is-info' @click='removeBlacklistedGenre(index)'></button>
-					</span>
+					<div class="control is-grouped genre-wrapper">
+						<div class="sector">
+							<p class='control has-addons'>
+								<input class='input' id='new-genre' type='text' placeholder='Genre' v-on:keyup.enter='addGenre()'>
+								<a class='button is-info' href='#' @click='addGenre()'>Add genre</a>
+							</p>
+							<span class='tag is-info' v-for='(index, genre) in newStation.genres' track-by='$index'>
+								{{ genre }}
+								<button class='delete is-info' @click='removeGenre(index)'></button>
+							</span>
+						</div>
+						<div class="sector">
+							<p class='control has-addons'>
+								<input class='input' id='new-blacklisted-genre' type='text' placeholder='Blacklisted Genre' v-on:keyup.enter='addBlacklistedGenre()'>
+								<a class='button is-info' href='#' @click='addBlacklistedGenre()'>Add blacklisted genre</a>
+							</p>
+							<span class='tag is-info' v-for='(index, genre) in newStation.blacklistedGenres' track-by='$index'>
+								{{ genre }}
+								<button class='delete is-info' @click='removeBlacklistedGenre(index)'></button>
+							</span>
+						</div>
+					</div>
 				</div>
 			</div>
 			<footer class='card-footer'>
@@ -193,7 +197,12 @@
 </script>
 
 <style lang='scss' scoped>
-	.tag:not(:last-child) { margin-right: 5px; }
+	.tag {
+		margin-top: 5px;
+		&:not(:last-child) {
+			margin-right: 5px;
+		}
+	}
 
 	td {
 		word-wrap: break-word;
@@ -202,4 +211,9 @@
 	}
 
 	.is-info:focus { background-color: #0398db; }
+
+	.genre-wrapper {
+		display: flex;
+    	justify-content: space-around;
+	}
 </style>
