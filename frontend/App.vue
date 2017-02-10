@@ -90,17 +90,15 @@
 				this.socket.emit('users.register', username, email, password, grecaptcha.getResponse(), result => {
 					if (result.status === 'success') {
 						Toast.methods.addToast(`You have successfully registered.`, 4000);
-						setTimeout(() => {
-							if (result.SID) {
-								lofig.get('cookie', cookie => {
-									let date = new Date();
-									date.setTime(new Date().getTime() + (2 * 365 * 24 * 60 * 60 * 1000));
-									let secure = (cookie.secure) ? 'secure=true; ' : '';
-									document.cookie = `SID=${result.SID}; expires=${date.toGMTString()}; domain=${cookie.domain}; ${secure}path=/`;
-									location.reload();
-								});
-							} else _this.$router.go('/login');
-						}, 4000);
+						if (result.SID) {
+							lofig.get('cookie', cookie => {
+								let date = new Date();
+								date.setTime(new Date().getTime() + (2 * 365 * 24 * 60 * 60 * 1000));
+								let secure = (cookie.secure) ? 'secure=true; ' : '';
+								document.cookie = `SID=${result.SID}; expires=${date.toGMTString()}; domain=${cookie.domain}; ${secure}path=/`;
+								location.reload();
+							});
+						} else _this.$router.go('/login');
 					} else Toast.methods.addToast(result.message, 8000);
 				});
 			},
