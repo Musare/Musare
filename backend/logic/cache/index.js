@@ -102,10 +102,10 @@ const lib = {
 	 * @param {Function} cb - gets called when the value has been deleted from Redis or when it returned an error
 	 */
 	hdel: (table, key, cb) => {
-		if (!key || !table) return typeof cb === 'function' ? cb(null, null) : null;
+		if (!key || !table) return cb(null, null);
 		lib.client.hdel(table, key, (err) => {
-			if (err) return typeof cb === 'function' ? cb(err) : null;
-			if (typeof cb === 'function') cb(null);
+			if (err) return cb(err);
+			else return cb(null);
 		});
 	},
 

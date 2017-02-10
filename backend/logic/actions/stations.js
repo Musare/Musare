@@ -596,21 +596,21 @@ module.exports = {
 	remove: hooks.ownerRequired((session, stationId, cb) => {
 		async.waterfall([
 			(next) => {
-				db.models.station.remove({ _id: stationId }, next);
+				db.models.station.remove({ _id: stationId }, err => next(err));
 			},
 
 			(next) => {
-				cache.hdel('stations', stationId, next);
+				cache.hdel('stations', stationId, err => next(err));
 			}
 		], (err) => {
 			if (err) {
 				err = utils.getError(err);
 				logger.error("STATIONS_REMOVE", `Removing station "${stationId}" failed. "${err}"`);
-				return cb({'status': 'failure', 'message': err});
+				return cb({ 'status': 'failure', 'message': err });
 			}
 			logger.success("STATIONS_REMOVE", `Removing station "${stationId}" successfully.`);
 			cache.pub('station.remove', stationId);
-			return cb({'status': 'success', 'message': 'Successfully removed.'});
+			return cb({ 'status': 'success', 'message': 'Successfully removed.' });
 		});
 	}),
 
