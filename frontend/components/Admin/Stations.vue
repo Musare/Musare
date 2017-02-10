@@ -145,8 +145,10 @@
 			addGenre: function () {
 				let genre = $('#new-genre').val().toLowerCase().trim();
 				if (this.newStation.genres.indexOf(genre) !== -1) return Toast.methods.addToast('Genre already exists', 3000);
-
-				if (genre) this.newStation.genres.push(genre);
+				if (genre) {
+					this.newStation.genres.push(genre);
+					$('#new-genre').val('');
+				}
 				else Toast.methods.addToast('Genre cannot be empty', 3000);
 			},
 			removeGenre: function (index) { this.newStation.genres.splice(index, 1); },
@@ -154,7 +156,10 @@
 				let genre = $('#new-blacklisted-genre').val().toLowerCase().trim();
 				if (this.newStation.blacklistedGenres.indexOf(genre) !== -1) return Toast.methods.addToast('Genre already exists', 3000);
 
-				if (genre) this.newStation.blacklistedGenres.push(genre);
+				if (genre) {
+					this.newStation.blacklistedGenres.push(genre);
+					$('#new-blacklisted-genre').val('');
+				}
 				else Toast.methods.addToast('Genre cannot be empty', 3000);
 			},
 			removeBlacklistedGenre: function (index) { this.newStation.blacklistedGenres.splice(index, 1); },
