@@ -78,25 +78,24 @@ const lib = {
 			let code = req.query.code;
 			let access_token;
 			let body;
+			let address;
 			const state = req.query.state;
-
-
 
 			async.waterfall([
 				(next) => {
 					oauth2.getOAuthAccessToken(code, {redirect_uri}, next);
 				},
 
-				(access_token, refresh_token, results, next) => {
-					this.access_token = access_token;
+				(_access_token, refresh_token, results, next) => {
+					access_token = _access_token;
 					request.get({
 						url: `https://api.github.com/user?access_token=${access_token}`,
 						headers: {'User-Agent': 'request'}
 					}, next);
 				},
 
-				(httpResponse, body, next) => {
-					this.body = body = JSON.parse(body);
+				(httpResponse, _body, next) => {
+					body = _body = JSON.parse(_body);
 					if (state) {
 						return async.waterfall([
 							(next) => {
@@ -123,7 +122,9 @@ const lib = {
 							}
 						], next);
 					}
-					db.models.user.findOne({'services.github.id': body.id}, next);
+					db.models.user.findOne({'services.github.id': body.id}, (err, user) => {
+						next(err, user, body);
+					});
 				},
 
 				(user, body, next) => {
@@ -133,7 +134,9 @@ const lib = {
 							next(true, user._id);
 						});
 					}
-					db.models.user.findOne({username: new RegExp(`^${body.login}$`, 'i')}, next);
+					db.models.user.findOne({username: new RegExp(`^${body.login}$`, 'i')}, (err, user) => {
+						next(err, user);
+					});
 				},
 
 				(user, next) => {
