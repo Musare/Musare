@@ -2,10 +2,19 @@
 	<div>
 		<modal title='Edit Station'>
 			<div slot='body'>
+				<label class='label'>Name</label>
+				<div class='control is-grouped'>
+					<p class='control is-expanded'>
+						<input class='input' type='text' placeholder='Station Name' v-model='editing.name'>
+					</p>
+					<p class='control'>
+						<a class='button is-info' @click='updateName()' href='#'>Update</a>
+					</p>
+				</div>
 				<label class='label'>Display name</label>
 				<div class='control is-grouped'>
 					<p class='control is-expanded'>
-						<input class='input' type='text' placeholder='Station Display Name' v-model='editing.displayName' autofocus>
+						<input class='input' type='text' placeholder='Station Display Name' v-model='editing.displayName'>
 					</p>
 					<p class='control'>
 						<a class='button is-info' @click='updateDisplayName()' href='#'>Update</a>
@@ -62,6 +71,7 @@
 			return {
 				editing: {
 					_id: '',
+					name: '',
 					type: '',
 					displayName: '',
 					description: '',
@@ -71,6 +81,20 @@
 			}
 		},
 		methods: {
+			updateName: function () {
+				let _this = this;
+				this.socket.emit('stations.updateName', this.editing._id, this.editing.name, res => {
+					if (res.status === 'success') {
+						if (_this.$parent.station) _this.$parent.station.name = _this.editing.name;
+						else {
+							_this.$parent.stations.forEach((station, index) => {
+								if (station._id === _this.editing._id) return _this.$parent.stations[index].name = _this.editing.name;
+							});
+						}
+					}
+					Toast.methods.addToast(res.message, 8000);
+				});
+			},
 			updateDisplayName: function () {
 				let _this = this;
 				this.socket.emit('stations.updateDisplayName', this.editing._id, this.editing.displayName, res => {

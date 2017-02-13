@@ -4,6 +4,7 @@
 			<thead>
 				<tr>
 					<td>ID</td>
+					<td>Name</td>
 					<td>Type</td>
 					<td>Display Name</td>
 					<td>Description</td>
@@ -13,16 +14,19 @@
 			<tbody>
 				<tr v-for='(index, station) in stations' track-by='$index'>
 					<td>
-						<span>{{ station._id }}</span>
+						<span>{{station._id}}</span>
 					</td>
 					<td>
-						<span>{{ station.type }}</span>
+						<span>{{station.name}}</span>
 					</td>
 					<td>
-						<span>{{ station.displayName }}</span>
+						<span>{{station.type}}</span>
 					</td>
 					<td>
-						<span>{{ station.description }}</span>
+						<span>{{station.displayName}}</span>
+					</td>
+					<td>
+						<span>{{station.description}}</span>
 					</td>
 					<td>
 						<a class='button is-info' @click='editStation(station)'>Edit</a>
@@ -42,7 +46,7 @@
 					<div class='control is-horizontal'>
 						<div class='control is-grouped'>
 							<p class='control is-expanded'>
-								<input class='input' type='text' placeholder='Unique Identifier' v-model='newStation._id'>
+								<input class='input' type='text' placeholder='Name' v-model='newStation.name'>
 							</p>
 							<p class='control is-expanded'>
 								<input class='input' type='text' placeholder='Display Name' v-model='newStation.displayName'>
@@ -110,14 +114,14 @@
 			},
 			createStation: function () {
 				let _this = this;
-				let { newStation: { _id, displayName, description, genres, blacklistedGenres } } = this;
+				let {newStation: {name, displayName, description, genres, blacklistedGenres}} = this;
 
-				if (_id == undefined) return Toast.methods.addToast('Field (YouTube ID) cannot be empty', 3000);
+				if (name == undefined) return Toast.methods.addToast('Field (Name) cannot be empty', 3000);
 				if (displayName == undefined) return Toast.methods.addToast('Field (Display Name) cannot be empty', 3000);
 				if (description == undefined) return Toast.methods.addToast('Field (Description) cannot be empty', 3000);
 
 				_this.socket.emit('stations.create', {
-					_id,
+					name,
 					type: 'official',
 					displayName,
 					description,
@@ -139,6 +143,7 @@
 			editStation: function (station) {
 				this.$broadcast('editStation', {
 					_id: station._id,
+					name: station.name,
 					type: station.type,
 					partyMode: station.partyMode,
 					description: station.description,

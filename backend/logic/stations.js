@@ -210,6 +210,32 @@ module.exports = {
 		});
 	},
 
+	// Attempts to get the station from Redis. If it's not in Redis, get it from Mongo and add it to Redis.
+	getStationByName: function(stationName, cb) {
+		let _this = this;
+		async.waterfall([
+
+			(next) => {
+				db.models.station.findOne({name: stationName}, next);
+			},
+
+			(station, next) => {
+				if (station) {
+					if (station.type === 'official') {
+						_this.calculateOfficialPlaylistList(station._id, station.playlist, ()=>{});
+					}
+					station = cache.schemas.station(station);
+					cache.hset('stations', station._id, station);
+					next(true, station);
+				} else next('Station not found');
+			},
+
+		], (err, station) => {
+			if (err && err !== true) cb(err);
+			cb(null, station);
+		});
+	},
+
 	updateStation: function(stationId, cb) {
 		let _this = this;
 		async.waterfall([

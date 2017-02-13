@@ -137,16 +137,16 @@ module.exports = {
 	},
 
 	/**
-	 * Finds a station by id
+	 * Finds a station by name
 	 *
 	 * @param session
-	 * @param stationId - the station id
+	 * @param stationName - the station name
 	 * @param cb
 	 */
-	find: (session, stationId, cb) => {
+	findByName: (session, stationName, cb) => {
 		async.waterfall([
 			(next) => {
-				stations.getStation(stationId, next);
+				stations.getStationByName(stationName, next);
 			},
 
 			(station, next) => {
@@ -156,10 +156,10 @@ module.exports = {
 		], (err, station) => {
 			if (err) {
 				err = utils.getError(err);
-				logger.error("STATIONS_FIND", `Finding station "${stationId}" failed. "${err}"`);
+				logger.error("STATIONS_FIND_BY_NAME", `Finding station "${stationName}" failed. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
-			logger.success("STATIONS_FIND", `Found station "${stationId}" successfully.`);
+			logger.success("STATIONS_FIND_BY_NAME", `Found station "${stationName}" successfully.`);
 			cb({status: 'success', data: station});
 		});
 	},
@@ -203,17 +203,17 @@ module.exports = {
 	},
 
 	/**
-	 * Joins the station by its id
+	 * Joins the station by its name
 	 *
 	 * @param session
-	 * @param stationId - the station id
+	 * @param stationName - the station name
 	 * @param cb
 	 * @return {{ status: String, userCount: Integer }}
 	 */
-	join: (session, stationId, cb) => {
+	join: (session, stationName, cb) => {
 		async.waterfall([
 			(next) => {
-				stations.getStation(stationId, next);
+				stations.getStationByName(stationName, next);
 			},
 
 			(station, next) => {
@@ -243,8 +243,9 @@ module.exports = {
 			},
 
 			(station, next) => {
-				utils.socketJoinRoom(session.socketId, `station.${stationId}`);
+				utils.socketJoinRoom(session.socketId, `station.${station._id}`);
 				let data = {
+					_id: station._id,
 					type: station.type,
 					currentSong: station.currentSong,
 					startedAt: station.startedAt,
@@ -261,7 +262,7 @@ module.exports = {
 			},
 
 			(data, next) => {
-				if (!data.currentSong) return next(null, data);
+				if (!data.currentSong || !data.currentSong.title) return next(null, data);
 				utils.socketJoinSongRoom(session.socketId, `song.${data.currentSong.songId}`);
 				data.currentSong.skipVotes = data.currentSong.skipVotes.length;
 				songs.getSong(data.currentSong.songId, (err, song) => {
@@ -278,10 +279,10 @@ module.exports = {
 		], (err, data) => {
 			if (err) {
 				err = utils.getError(err);
-				logger.error("STATIONS_JOIN", `Joining station "${stationId}" failed. "${err}"`);
+				logger.error("STATIONS_JOIN", `Joining station "${stationName}" failed. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
-			logger.success("STATIONS_JOIN", `Joined station "${stationId}" successfully.`);
+			logger.success("STATIONS_JOIN", `Joined station "${data._id}" successfully.`);
 			cb({status: 'success', data});
 		});
 	},
@@ -395,6 +396,34 @@ module.exports = {
 			return cb({'status': 'success', 'message': 'Successfully left station.', userCount});
 		});
 	},
+
+	/**
+	 * Updates a station's name
+	 *
+	 * @param session
+	 * @param stationId - the station id
+	 * @param newName - the new station name
+	 * @param cb
+	 */
+	updateName: hooks.ownerRequired((session, stationId, newName, cb) => {
+		async.waterfall([
+			(next) => {
+				db.models.station.update({_id: stationId}, {$set: {name: newName}}, next);
+			},
+
+			(res, next) => {
+				stations.updateStation(stationId, next);
+			}
+		], (err) => {
+			if (err) {
+				err = utils.getError(err);
+				logger.error("STATIONS_UPDATE_DISPLAY_NAME", `Updating station "${stationId}" displayName to "${newName}" failed. "${err}"`);
+				return cb({'status': 'failure', 'message': err});
+			}
+			logger.success("STATIONS_UPDATE_DISPLAY_NAME", `Updated station "${stationId}" displayName to "${newName}" successfully.`);
+			return cb({'status': 'success', 'message': 'Successfully updated the name.'});
+		});
+	}),
 
 	/**
 	 * Updates a station's display name
@@ -615,7 +644,7 @@ module.exports = {
 	}),
 
 	/**
-	 * Created a station
+	 * Create a station
 	 *
 	 * @param session
 	 * @param data - the station data
@@ -623,7 +652,8 @@ module.exports = {
 	 * @param userId
 	 */
 	create: hooks.loginRequired((session, data, cb, userId) => {
-		data._id = data._id.toLowerCase();
+		console.log(data);
+		data.name = data.name.toLowerCase();
 		let blacklist = ["country", "edm", "musare", "hip-hop", "rap", "top-hits", "todays-hits", "old-school", "christmas", "about", "support", "staff", "help", "news", "terms", "privacy", "profile", "c", "community", "tos", "login", "register", "p", "official", "o", "trap", "faq", "team", "donate", "buy", "shop", "forums", "explore", "settings", "admin", "auth", "reset_password"];
 		async.waterfall([
 			(next) => {
@@ -632,19 +662,19 @@ module.exports = {
 			},
 
 			(next) => {
-				db.models.station.findOne({ $or: [{_id: data._id}, {displayName: new RegExp(`^${data.displayName}$`, 'i')}] }, next);
+				db.models.station.findOne({ $or: [{name: data.name}, {displayName: new RegExp(`^${data.displayName}$`, 'i')}] }, next);
 			},
 
 			(station, next) => {
 				if (station) return next('A station with that name or display name already exists.');
-				const { _id, displayName, description, genres, playlist, type, blacklistedGenres } = data;
+				const { name, displayName, description, genres, playlist, type, blacklistedGenres } = data;
 				if (type === 'official') {
 					db.models.user.findOne({_id: userId}, (err, user) => {
 						if (err) return next(err);
 						if (!user) return next('User not found.');
 						if (user.role !== 'admin') return next('Admin required.');
 						db.models.station.create({
-							_id,
+							name,
 							displayName,
 							description,
 							type,
@@ -656,9 +686,9 @@ module.exports = {
 						}, next);
 					});
 				} else if (type === 'community') {
-					if (blacklist.indexOf(_id) !== -1) return next('That id is blacklisted. Please use a different id.');
+					if (blacklist.indexOf(name) !== -1) return next('That name is blacklisted. Please use a different name.');
 					db.models.station.create({
-						_id,
+						name,
 						displayName,
 						description,
 						type,
@@ -671,6 +701,7 @@ module.exports = {
 			}
 		], (err, station) => {
 			if (err) {
+				console.log(err);
 				err = utils.getError(err);
 				logger.error("STATIONS_CREATE", `Creating station failed. "${err}"`);
 				return cb({'status': 'failure', 'message': err});

@@ -1,5 +1,5 @@
 module.exports = {
-	_id: { type: String, lowercase: true, maxlength: 16, minlength: 2, index: true, unique: true, required: true },
+	name: { type: String, lowercase: true, maxlength: 16, minlength: 2, index: true, unique: true, required: true },
 	type: { type: String, enum: ["official", "community"], required: true },
 	displayName: { type: String, minlength: 2, maxlength: 32, required: true, unique: true },
 	description: { type: String, minlength: 2, maxlength: 128, required: true },

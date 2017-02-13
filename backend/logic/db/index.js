@@ -33,7 +33,7 @@ let lib = {
 				report: new mongoose.Schema(require(`./schemas/report`))
 			};
 
-			lib.schemas.station.path('_id').validate((id) => {
+			lib.schemas.station.path('name').validate((id) => {
 				return /^[a-z]+$/.test(id);
 			}, 'The id can only have the letters a-z.');
 

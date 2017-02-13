@@ -16,7 +16,7 @@
 		<div v-show="noSong" class="no-song">
 			<h1>No song is currently playing</h1>
 			<h4 v-if='type === "community" && station.partyMode'>
-				<a href='#' class='no-song' @click='modals.addSongToQueue = true'>Add a Song to the Queue</a>
+				<a href='#' class='no-song' @click='modals.addSongToQueue = true'>Add a song to the queue</a>
 			</h4>
 			<h4 v-if='type === "community" && !station.partyMode && $parent.userId === station.owner && !station.privatePlaylist'>
 				<a href='#' class='no-song' @click='sidebars.playlist = true'>Play a private playlist</a>
@@ -137,7 +137,8 @@
 			editStation: function () {
 				let _this = this;
 				this.$broadcast('editStation', {
-					_id: _this.$route.params.id,
+					_id: _this.station._id,
+					name: _this.station.name,
 					type: _this.type,
 					partyMode: _this.station.partyMode,
 					description: _this.station.description,
@@ -262,28 +263,28 @@
 			},
 			skipStation: function () {
 				let _this = this;
-				_this.socket.emit('stations.forceSkip', _this.stationId, data => {
+				_this.socket.emit('stations.forceSkip', _this.station._id, data => {
 					if (data.status !== 'success') Toast.methods.addToast(`Error: ${data.message}`, 8000);
 					else Toast.methods.addToast('Successfully skipped the station\'s current song.', 4000);
 				});
 			},
 			voteSkipStation: function () {
 				let _this = this;
-				_this.socket.emit('stations.voteSkip', _this.stationId, data => {
+				_this.socket.emit('stations.voteSkip', _this.station._id, data => {
 					if (data.status !== 'success') Toast.methods.addToast(`Error: ${data.message}`, 8000);
 					else Toast.methods.addToast('Successfully voted to skip the current song.', 4000);
 				});
 			},
 			resumeStation: function () {
 				let _this = this;
-				_this.socket.emit('stations.resume', _this.stationId, data => {
+				_this.socket.emit('stations.resume', _this.station._id, data => {
 					if (data.status !== 'success') Toast.methods.addToast(`Error: ${data.message}`, 8000);
 					else Toast.methods.addToast('Successfully resumed the station.', 4000);
 				});
 			},
 			pauseStation: function () {
 				let _this = this;
-				_this.socket.emit('stations.pause', _this.stationId, data => {
+				_this.socket.emit('stations.pause', _this.station._id, data => {
 					if (data.status !== 'success') Toast.methods.addToast(`Error: ${data.message}`, 8000);
 					else Toast.methods.addToast('Successfully paused the station.', 4000);
 				});
@@ -346,7 +347,7 @@
 								console.log(data.song);
 								let songId = data.song._id;
 								_this.automaticallyRequestedSongId = data.song.songId;
-								_this.socket.emit('stations.addToQueue', _this.stationId, data.song.songId, data => {
+								_this.socket.emit('stations.addToQueue', _this.station._id, data.song.songId, data => {
 									if (data.status === 'success') {
 										_this.socket.emit('playlists.moveSongToBottom', _this.privatePlaylistQueueSelected, songId, data => {
 											if (data.status === 'success') {}
@@ -360,10 +361,11 @@
 			},
 			joinStation: function () {
 				let _this = this;
-				_this.socket.emit('stations.join', _this.stationId, res => {
+				_this.socket.emit('stations.join', _this.stationName, res => {
 					if (res.status === 'success') {
 						_this.station = {
-							_id: _this.stationId,
+							_id: res.data._id,
+							name: _this.stationName,
 							displayName: res.data.displayName,
 							description: res.data.description,
 							privacy: res.data.privacy,
@@ -395,12 +397,12 @@
 							_this.noSong = true;
 						}
 						if (_this.type === 'community') {
-							_this.socket.emit('stations.getQueue', _this.stationId, data => {
+							_this.socket.emit('stations.getQueue', _this.station._id, data => {
 								if (data.status === 'success') _this.songsList = data.queue;
 							});
 						}
 						if (_this.type === 'official') {
-							_this.socket.emit('stations.getPlaylist', _this.stationId, res => {
+							_this.socket.emit('stations.getPlaylist', _this.station._id, res => {
 								if (res.status == 'success') _this.songsList = res.data;
 							});
 						}
@@ -433,7 +435,7 @@
 				return new Date().getTime() + _this.systemDifference;
 			};
 
-			_this.stationId = _this.$route.params.id;
+			_this.stationName = _this.$route.params.id;
 
 			window.stationInterval = 0;
 
@@ -441,19 +443,16 @@
 				_this.socket = socket;
 
 				io.removeAllListeners();
-
 				if (_this.socket.connected) _this.joinStation();
 				io.onConnect(() => {
 					_this.joinStation();
 				});
-
-				_this.socket.emit('stations.find', _this.stationId, res => {
+				_this.socket.emit('stations.findByName', _this.stationName, res => {
 					if (res.status === 'error') {
 						_this.$router.go('/404');
 						Toast.methods.addToast(res.message, 3000);
 					}
 				});
-
 				_this.socket.on('event:songs.next', data => {
 					_this.previousSong = (_this.currentSong._id) ? _this.currentSong : null;
 					_this.currentSong = (data.currentSong) ? data.currentSong : {};

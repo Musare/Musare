@@ -1,6 +1,7 @@
 'use strict';
 
 const redis = require('redis');
+const mongoose = require('mongoose');
 
 // Lightweight / convenience wrapper around redis module for our needs
 
@@ -62,7 +63,7 @@ const lib = {
 	 * @param {Boolean} [stringifyJson=true] - stringify 'value' if it's an Object or Array
 	 */
 	hset: (table, key, value, cb, stringifyJson = true) => {
-
+		if (mongoose.Types.ObjectId.isValid(key)) key = key.toString();
 		// automatically stringify objects and arrays into JSON
 		if (stringifyJson && ['object', 'array'].includes(typeof value)) value = JSON.stringify(value);
 
@@ -84,6 +85,7 @@ const lib = {
 	 */
 	hget: (table, key, cb, parseJson = true) => {
 		if (!key || !table) return typeof cb === 'function' ? cb(null, null) : null;
+		if (mongoose.Types.ObjectId.isValid(key)) key = key.toString();
 		lib.client.hget(table, key, (err, value) => {
 			if (err) return typeof cb === 'function' ? cb(err) : null;
 			if (parseJson) try {
@@ -103,6 +105,7 @@ const lib = {
 	 */
 	hdel: (table, key, cb) => {
 		if (!key || !table) return cb(null, null);
+		if (mongoose.Types.ObjectId.isValid(key)) key = key.toString();
 		lib.client.hdel(table, key, (err) => {
 			if (err) return cb(err);
 			else return cb(null);

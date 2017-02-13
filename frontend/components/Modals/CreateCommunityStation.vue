@@ -2,9 +2,9 @@
 	<modal title='Create Community Station'>
 		<div slot='body'>
 			<!-- validation to check if exists http://bulma.io/documentation/elements/form/ -->
-			<label class='label'>Unique ID (lowercase, a-z, used in the url)</label>
+			<label class='label'>Name (lowercase, a-z, used in the url)</label>
 			<p class='control'>
-				<input class='input' type='text' placeholder='Name...' v-model='newCommunity._id' autofocus>
+				<input class='input' type='text' placeholder='Name...' v-model='newCommunity.name' autofocus>
 			</p>
 			<label class='label'>Display Name</label>
 			<p class='control'>
@@ -31,7 +31,7 @@
 		data() {
 			return {
 				newCommunity: {
-					_id: '',
+					name: '',
 					displayName: '',
 					description: ''
 				}
@@ -49,11 +49,11 @@
 			},
 			submitModal: function () {
 				let _this = this;
-				if (_this.newCommunity._id == '') return Toast.methods.addToast('ID cannot be a blank field', 3000);
+				if (_this.newCommunity.name == '') return Toast.methods.addToast('Name cannot be a blank field', 3000);
 				if (_this.newCommunity.displayName == '') return Toast.methods.addToast('Display Name cannot be a blank field', 3000);
 				if (_this.newCommunity.description == '') return Toast.methods.addToast('Description cannot be a blank field', 3000);
 				this.socket.emit('stations.create', {
-					_id: _this.newCommunity._id,
+					name: _this.newCommunity.name,
 					type: 'community',
 					displayName: _this.newCommunity.displayName,
 					description: _this.newCommunity.description
