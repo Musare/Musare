@@ -230,7 +230,7 @@
 	}
 
 	.custom-tag {
-		padding: 2px 5px;
+		padding: 2px 7px;
 		border-radius: 10px;
 		display: inline-block;
 	}
@@ -246,7 +246,7 @@
 	}
 
 	.custom-tag.light-green {
-		background-color: #00f472;
+		background-color: #019875;
 		color: white;
 	}
 </style>

@@ -175,7 +175,7 @@ const lib = {
 				});
 				subs[channel].client.subscribe(channel);
 			}
-			
+
 			subs[channel].cbs.push(cb);
 		}
 	}
