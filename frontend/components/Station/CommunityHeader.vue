@@ -9,11 +9,6 @@
 					<i class='material-icons'>settings</i>
 				</span>
 			</a>
-			<a v-if='$parent.$parent.loggedIn && !$parent.noSong && !$parent.simpleSong' class='nav-item' href='#' @click='$parent.modals.report = !$parent.modals.report'>
-				<span class='icon'>
-					<i class='material-icons'>report</i>
-				</span>
-			</a>
 			<a v-if='isOwner()' class='nav-item' href='#' @click='$parent.skipStation()'>
 				<span class='icon'>
 					<i class='material-icons'>skip_next</i>
@@ -24,6 +19,11 @@
 					<i class='material-icons'>skip_next</i>
 				</span>
 				<span class="skip-votes">{{ $parent.currentSong.skipVotes }}</span>
+			</a>
+			<a v-if='$parent.$parent.loggedIn && !$parent.noSong && !$parent.simpleSong' class='nav-item' href='#' @click='$parent.modals.report = !$parent.modals.report'>
+				<span class='icon'>
+					<i class='material-icons'>report</i>
+				</span>
 			</a>
 			<a class='nav-item' href='#' v-if='isOwner() && $parent.paused' @click='$parent.resumeStation()'>
 				<span class='icon'>
