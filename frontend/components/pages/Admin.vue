@@ -4,37 +4,37 @@
 		<div class='tabs is-centered'>
 			<ul>
 				<li :class='{ "is-active": currentTab == "queueSongs" }' @click='showTab("queueSongs")'>
-					<a>
+					<a v-link="{ path: '/admin/queuesongs' }">
 						<i class='material-icons'>queue_music</i>
 						<span>&nbsp;Queue Songs</span>
 					</a>
 				</li>
 				<li :class='{ "is-active": currentTab == "songs" }' @click='showTab("songs")'>
-					<a>
+					<a v-link="{ path: '/admin/songs' }">
 						<i class='material-icons'>music_note</i>
 						<span>&nbsp;Songs</span>
 					</a>
 				</li>
 				<li :class='{ "is-active": currentTab == "stations" }' @click='showTab("stations")'>
-					<a>
+					<a v-link="{ path: '/admin/stations' }">
 						<i class='material-icons'>hearing</i>
 						<span>&nbsp;Stations</span>
 					</a>
 				</li>
 				<li :class='{ "is-active": currentTab == "reports" }' @click='showTab("reports")'>
-					<a>
+					<a v-link="{ path: '/admin/reports' }">
 						<i class="material-icons">report_problem</i>
 						<span>&nbsp;Reports</span>
 					</a>
 				</li>
 				<li :class='{ "is-active": currentTab == "news" }' @click='showTab("news")'>
-					<a>
+					<a v-link="{ path: '/admin/news' }">
 						<i class="material-icons">chrome_reader_mode</i>
 						<span>&nbsp;News</span>
 					</a>
 				</li>
 				<li :class='{ "is-active": currentTab == "users" }' @click='showTab("users")'>
-					<a>
+					<a v-link="{ path: '/admin/users' }">
 						<i class="material-icons">person</i>
 						<span>&nbsp;Users</span>
 					</a>
@@ -72,6 +72,30 @@
 			Reports,
 			News,
 			Users
+		},
+		ready() {
+			switch(this.$route.path) {
+				case '/admin/queuesongs':
+					this.currentTab = 'queueSongs';
+					break;
+				case '/admin/songs':
+					this.currentTab = 'songs';
+					break;
+				case '/admin/stations':
+					this.currentTab = 'stations';
+					break;
+				case '/admin/reports':
+					this.currentTab = 'reports';
+					break;
+				case '/admin/news':
+					this.currentTab = 'news';
+					break;
+				case '/admin/users':
+					this.currentTab = 'users';
+					break;
+				default:
+					this.currentTab = 'queueSongs';
+			}
 		},
 		data() {
 			return {

@@ -7,14 +7,7 @@ import io from './io';
 import NotFound from './components/404.vue';
 import Home from './components/pages/Home.vue';
 import Station from './components/Station/Station.vue';
-
 import Admin from './components/pages/Admin.vue';
-import AdminNews from './components/Admin/News.vue';
-import AdminUsers from './components/Admin/Users.vue';
-import AdminReports from './components/Admin/Reports.vue';
-import AdminStations from './components/Admin/Stations.vue';
-import AdminSongs from './components/Admin/Songs.vue';
-import AdminQueueSongs from './components/Admin/QueueSongs.vue';
 
 import News from './components/pages/News.vue';
 import About from './components/pages/About.vue';
@@ -113,28 +106,8 @@ router.map({
 		component: Admin,
 		adminRequired: true
 	},
-	'/admin/news': {
-		component: AdminNews,
-		adminRequired: true
-	},
-	'/admin/users': {
-		component: AdminUsers,
-		adminRequired: true
-	},
-	'/admin/reports': {
-		component: AdminReports,
-		adminRequired: true
-	},
-	'/admin/stations': {
-		component: AdminStations,
-		adminRequired: true
-	},
-	'/admin/songs': {
-		component: AdminSongs,
-		adminRequired: true
-	},
-	'/admin/queuesongs': {
-		component: AdminQueueSongs,
+	'/admin/:page': {
+		component: Admin,
 		adminRequired: true
 	},
 	'/official/:id': {
