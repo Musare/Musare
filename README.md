@@ -1,19 +1,21 @@
 # MusareNode
-This is a rewrite of the original [Musare](https://github.com/Musare/Musare)
-in NodeJS, Express, SocketIO and VueJS. Everything is ran in it's own docker container.
+This is a rewrite of the original [Musare](https://github.com/Musare/MusareMeteor)
+in NodeJS, Express, SocketIO and VueJS. Everything is ran in it's own docker container, but you can also run it without Docker.
+
+The site is available at [https://musare.com](https://musare.com).
 
 ### Our Stack
 
    * NodeJS
    * MongoDB
    * Redis
-   * Nginx
+   * Nginx (not required)
    * VueJS
 
 ### Frontend
 The frontend is a [vue-cli](https://github.com/vuejs/vue-cli) generated,
 [vue-loader](https://github.com/vuejs/vue-loader) single page app, that's
-served over Nginx. The Nginx server not only serves the frontend, but
+served over Nginx or express. The Nginx server not only serves the frontend, but
 also serves as a load balancer for requests going to the backend.
 
 ### Backend
@@ -23,8 +25,18 @@ in a central Redis server. All data is stored in a central MongoDB server.
 The Redis and MongoDB servers are replicated to several secondary nodes,
 which can become the primary node if the current primary node goes down.
 
+We currently only have 1 backend, 1 MongoDB server and 1 Redis server running for production, though it is relatively easy to expand.
+
 ## Requirements
+Option 1: (not recommended for Windows users)
  * [Docker](https://www.docker.com/)
+ 
+Option 2:
+ * [NodeJS](https://nodejs.org/en/download/)
+ 	* nodemon: `npm install -g nodemon`
+ 	* [node-gyp](https://github.com/nodejs/node-gyp#installation)
+ * [MongoDB](https://www.mongodb.com/download-center)
+ * [Redis (Windows)](https://github.com/MSOpenTech/redis/releases/tag/win-3.2.100) [Redis (Unix)](https://redis.io/download)
 
 ## Getting Started
 Once you've installed the required tools:
@@ -35,23 +47,47 @@ Once you've installed the required tools:
 
 3. `cp backend/config/template.json backend/config/default.json`
 
-   > The `secret` key can be whatever. It's used by express's session module.
-   The `apis.youtube.key` value can be obtained by setting up a
-   [YouTube API Key](https://developers.google.com/youtube/v3/getting-started).
-  
-4. Build the backend and frontend Docker images
+	Values:  
+   	The `secret` key can be whatever. It's used by express's session module.  
+   	The `domain` should be the url where the site will be accessible from, usually `http://localhost` for non-Docker.  
+   	The `serverDomain` should be the url where the backend will be accessible from, usually `http://localhost:8080` for non-Docker.  
+   	The `serverPort` should be the port where the backend will listen on, usually `8080` for non-Docker.  
+   	`isDocker` if you are using Docker or not.  
+   	The `apis.youtube.key` value can be obtained by setting up a [YouTube API Key](https://developers.google.com/youtube/v3/getting-started).  
+   	The `apis.recaptcha.secret` value can be obtained by setting up a [ReCaptcha Site](https://www.google.com/recaptcha/admin).  
+   	The `apis.github` values can be obtained by setting up a [GitHub OAuth Application](https://github.com/settings/developers).  
+   	`apis.discord` is currently not needed.  
+   	The `apis.mailgun` values can be obtained by setting up a [Mailgun account](http://www.mailgun.com/).  
+   	The `redis.url` url should be left alone for Docker, and changed to `redis://localhost:6379/0` for non-Docker.
+   	The `mongo.url` url should be left alone for Docker, and changed to `mongodb://localhost:27017/musare` for non-Docker.  
+   	The `cookie.domain` value should be the ip or address you use to access the site, without protocols (http/https), so for example `localhost`.   
+   	The `cookie.secure` value should be `true` for SSL connections, and `false` for normal http connections.  
+   	 
+4. `cp frontend/build/config/template.json frontend/build/config/default.json`
+
+	Values:  
+   	The `serverDomain` should be the url where the backend will be accessible from, usually `http://localhost:8080` for non-Docker.   
+   	The `recaptcha.key` value can be obtained by setting up a [ReCaptcha Site](https://www.google.com/recaptcha/admin).  
+   	The `cookie.domain` value should be the ip or address you use to access the site, without protocols (http/https), so for example `localhost`.   
+   	The `cookie.secure` value should be `true` for SSL connections, and `false` for normal http connections.  
+
+Now you have different paths here.
+
+####Docker
+
+1. Build the backend and frontend Docker images (from the main folder)
 
    `docker-compose build`
 
-5. Start the databases and tools in the background, as we usually don't need to monitor these for errors
+2. Start the databases and tools in the background, as we usually don't need to monitor these for errors
 
    `docker-compose up -d mongo mongoclient redis`
 
-6. Start the backend and frontend in the foreground, so we can watch for errors during development
+3. Start the backend and frontend in the foreground, so we can watch for errors during development
 
    `docker-compose up backend frontend`
 
-7. You should now be able to begin development! The backend is auto reloaded when
+4. You should now be able to begin development! The backend is auto reloaded when
    you make changes and the frontend is auto compiled and live reloaded by webpack
    when you make changes. You should be able to access Musare in your local browser
    at `http://<docker-machine-ip>:8080/` where `<docker-machine-ip>` can be found below:
@@ -59,6 +95,24 @@ Once you've installed the required tools:
    * Docker for Windows / Mac: This is just `localhost`
    
    * Docker ToolBox: The output of `docker-machine ip default`
+   
+####Non-docker
+
+1. In the main folder, create a folder called `.database`
+
+2. Create a file called `startMongo.cmd` in the main folder with the contents:
+
+		"C:\Program Files\MongoDB\Server\3.2\bin\mongod.exe" --dbpath "D:\Programming\HTML\MusareNode\.database"
+		
+	Make sure to adjust your paths accordingly.
+	
+3. In the folder where you installed Redis, edit the `redis.windows.conf` file. In there, look for the property `notify-keyspace-events`. Make sure that property is uncommented and has the value `Ex`. It should look like `notify-keyspace-events Ex` when done.
+
+4. Create a file called `startRedis.cmd` in the main folder with the contents:
+
+		"D:\Redis\redis-server.exe" "D:\Redis\redis.windows.conf"
+		
+	And again, make sure that the paths lead to the proper config and executable.
    
 ## Extra
 
@@ -134,3 +188,9 @@ You can call Toasts using our custom package, [`vue-roaster`](https://github.com
 import { Toast } from 'vue-roaster';
 Toast.methods.addToast('', 0);
 ```
+
+## Contact
+
+There are multiple ways to contact us. You can send an email to [musaremusic@gmail.com](musaremusic@gmail.com) or [krisvos130@gmail.com](krisvos130@gmail.com).
+
+You can also message us on [Facebook](https://www.facebook.com/MusareMusic), [Twitter](https://twitter.com/MusareApp) or on our [Discord](https://discord.gg/Y5NxYGP).
