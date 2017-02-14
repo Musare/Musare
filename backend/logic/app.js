@@ -150,7 +150,6 @@ const lib = {
 				(httpResponse, body2, next) => {
 					body2 = JSON.parse(body2);
 					if (!Array.isArray(body2)) return next(body2.message);
-					let address;
 					body2.forEach(email => {
 						if (email.primary) address = email.email.toLowerCase();
 					});

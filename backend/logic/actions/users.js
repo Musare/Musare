@@ -386,6 +386,12 @@ module.exports = {
 	updateUsername: hooks.loginRequired((session, updatingUserId, newUsername, cb, userId) => {
 		async.waterfall([
 			(next) => {
+				if (updatingUserId === userId) return next(null, true);
+				db.models.user.findOne({_id: userId}, next);
+			},
+
+			(user, next) => {
+				if (user !== true && (!user || user.role !== 'admin')) return next('Invalid permissions.');
 				db.models.user.findOne({ _id: updatingUserId }, next);
 			},
 
@@ -438,6 +444,12 @@ module.exports = {
 		let verificationToken = utils.generateRandomString(64);
 		async.waterfall([
 			(next) => {
+				if (updatingUserId === userId) return next(null, true);
+				db.models.user.findOne({_id: userId}, next);
+			},
+
+			(user, next) => {
+				if (user !== true && (!user || user.role !== 'admin')) return next('Invalid permissions.');
 				db.models.user.findOne({ _id: updatingUserId }, next);
 			},
 

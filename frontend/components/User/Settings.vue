@@ -124,7 +124,7 @@
 		methods: {
 			changeEmail: function () {
 				if (!this.user.email.address) return Toast.methods.addToast('Email cannot be empty', 8000);
-				this.socket.emit('users.updateEmail', this.user.email.address, res => {
+				this.socket.emit('users.updateEmail', this.$parent.userId, this.user.email.address, res => {
 					if (res.status !== 'success') Toast.methods.addToast(res.message, 8000);
 					else Toast.methods.addToast('Successfully changed email address', 4000);
 				});
@@ -132,7 +132,7 @@
 			changeUsername: function () {
 				let _this = this;
 				if (!_this.user.username) return Toast.methods.addToast('Username cannot be empty', 8000);
-				_this.socket.emit('users.updateUsername', _this.user.username, res => {
+				_this.socket.emit('users.updateUsername', this.$parent.userId, _this.user.username, res => {
 					if (res.status !== 'success') Toast.methods.addToast(res.message, 8000);
 					else Toast.methods.addToast('Successfully changed username', 4000);
 				});
