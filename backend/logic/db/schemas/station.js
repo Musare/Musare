@@ -1,3 +1,5 @@
+const mongoose = require('mongoose');
+
 module.exports = {
 	name: { type: String, lowercase: true, maxlength: 16, minlength: 2, index: true, unique: true, required: true },
 	type: { type: String, enum: ["official", "community"], required: true },
@@ -36,6 +38,6 @@ module.exports = {
 		requestedBy: { type: String, required: true }
 	}],
 	owner: { type: String },
-	privatePlaylist: { type: String },
+	privatePlaylist: { type: mongoose.Schema.Types.ObjectId },
 	partyMode: { type: Boolean }
 };
