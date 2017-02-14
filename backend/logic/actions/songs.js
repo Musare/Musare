@@ -177,7 +177,7 @@ module.exports = {
 	add: hooks.adminRequired((session, song, cb, userId) => {
 		async.waterfall([
 			(next) => {
-				queueSongs.remove(session, song.songId, () => {
+				queueSongs.remove(session, song._id, () => {
 					next();
 				});
 			},

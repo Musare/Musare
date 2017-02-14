@@ -97,10 +97,10 @@ module.exports = {
 		], (err, reports) => {
 			if (err) {
 				err = utils.getError(err);
-				logger.error("REPORTS_GETFORSONG", `Indexing reports for song "${songId}" failed. "${err}"`);
+				logger.error("GET_REPORTS_FOR_SONG", `Indexing reports for song "${songId}" failed. "${err}"`);
 				return cb({ 'status': 'failure', 'message': err});
 			} else {
-				logger.success("REPORTS_GETFORSONG", `Indexing report for song "{songId}" successful.`);
+				logger.success("GET_REPORTS_FOR_SONG", `Indexing reports for song "${songId}" successful.`);
 				return cb({ status: 'success', data: reports.length });
 			}
 		});
