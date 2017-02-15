@@ -23,6 +23,7 @@
 					{{ $parent.formatTime($parent.currentSong.duration) }}
 				</div>
 			</article>
+			<p v-if="$parent.noSong" class="center">There is currently no song playing.</p>
 
 			<article class="media" v-for='song in $parent.songsList'>
 				<div class="media-content">
@@ -38,7 +39,7 @@
 					{{ $parent.$parent.formatTime(song.duration) }}
 				</div>
 			</article>
-			<a class='button add-to-queue' href='#' @click='$parent.modals.addSongToQueue = !$parent.modals.addSongToQueue' v-if="$parent.type === 'community'">Add Song to Queue</a>
+			<a class='button add-to-queue' href='#' @click='$parent.modals.addSongToQueue = !$parent.modals.addSongToQueue' v-if="$parent.type === 'community' && $parent.$parent.loggedIn">Add Song to Queue</a>
 		</div>
 	</div>
 </template>
