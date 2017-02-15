@@ -12,7 +12,7 @@
 				<div class="card-content">
 					<div class="media">
 						<div class="media-left displayName">
-							<h5>{{ station.displayName }}</h5>
+							<h5>{{ station.displayName }} - {{station.userCount}}</h5>
 						</div>
 						<div class="media-right">
 							<div v-if="station.privacy !== 'public'" title="This station is not visible to other users." class="station-status">
@@ -43,7 +43,7 @@
 				<div class="card-content">
 					<div class="media">
 						<div class="media-left displayName">
-							<h5>{{ station.displayName }}</h5>
+							<h5>{{ station.displayName }} - {{station.userCount}}</h5>
 						</div>
 						<div class="media-right">
 							<div v-if="station.privacy !== 'public'" title="This station is not visible to other users." class="station-status">
@@ -102,6 +102,19 @@
 						if (!station.currentSong) station.currentSong = { thumbnail: '/assets/notes-transparent.png' };
 						if (station.currentSong && !station.currentSong.thumbnail) station.currentSong.thumbnail = "/assets/notes-transparent.png";
 						_this.stations[station.type].push(station);
+					});
+					_this.socket.on('event:userCount.updated', (stationId, userCount) => {
+						_this.stations.official.forEach((station) => {
+							if (station._id === stationId) {
+								station.userCount = userCount;
+							}
+						});
+
+						_this.stations.community.forEach((station) => {
+							if (station._id === stationId) {
+								station.userCount = userCount;
+							}
+						});
 					});
 					_this.socket.on('event:station.nextSong', (stationId, newSong) => {
 						_this.stations.official.forEach((station) => {

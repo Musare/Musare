@@ -13,6 +13,70 @@ const logger = require('../logger');
 const stations = require('../stations');
 const songs = require('../songs');
 const hooks = require('./hooks');
+let userList = {};
+let usersPerStation = {};
+let usersPerStationCount = {};
+
+setInterval(() => {
+	let stationsUpdated = [];
+	let oldUsersPerStation = usersPerStation;
+	usersPerStation = {};
+	let oldUsersPerStationCount = usersPerStationCount;
+	usersPerStationCount = {};
+	for (let socketId in userList) {
+		let socket = utils.socketFromSession(socketId);
+		let stationId = userList[socketId];
+		console.log(socketId, !socket, stationId);
+		if (!socket || Object.keys(socket.rooms).indexOf(`station.${stationId}`) === -1) {
+			if (stationsUpdated.indexOf(stationId) === -1) stationsUpdated.push(stationId);
+			console.log(12222333, userList);
+			return delete userList[socketId];
+		}
+		if (!usersPerStationCount[stationId]) usersPerStationCount[stationId] = 0;
+		if (!usersPerStation[stationId]) usersPerStation[stationId] = [];
+		usersPerStationCount[stationId]++;
+		//TODO Code to show users
+	}
+	for (let stationId in usersPerStationCount) {
+		if (oldUsersPerStationCount[stationId] !== usersPerStationCount[stationId]) {
+			if (stationsUpdated.indexOf(stationId) === -1) stationsUpdated.push(stationId);
+		}
+	}
+	stationsUpdated.forEach((stationId) => {
+		console.log("Updating ", stationId);
+		cache.pub('station.updateUserCount', stationId);
+	});
+
+	console.log("Userlist", userList, usersPerStationCount);
+}, 3000);
+
+cache.sub('station.updateUserCount', stationId => {
+	let count = usersPerStationCount[stationId] | 0;
+	console.log(12321, count, usersPerStationCount);
+	utils.emitToRoom(`station.${stationId}`, "event:userCount.updated", count);
+	stations.getStation(stationId, (err, station) => {
+		console.log(421123);
+		if (station.privacy === 'public') utils.emitToRoom('home', "event:userCount.updated", stationId, count);
+		else {
+			console.log(42112345345);
+			let sockets = utils.getRoomSockets('home');
+			for (let socketId in sockets) {
+				let socket = sockets[socketId];
+				let session = sockets[socketId].session;
+				if (session.sessionId) {
+					cache.hget('sessions', session.sessionId, (err, session) => {
+						if (!err && session) {
+							db.models.user.findOne({_id: session.userId}, (err, user) => {
+								if (user.role === 'admin') socket.emit("event:userCount.updated", stationId, count);
+								else if (station.type === "community" && station.owner === session.userId) socket.emit("event:userCount.updated", stationId, count);
+							});
+						}
+					});
+				}
+			}
+		}
+	})
+});
 
 cache.sub('station.updatePartyMode', data => {
 	utils.emitToRoom(`station.${data.stationId}`, "event:partyMode.updated", data.partyMode);
@@ -48,6 +112,7 @@ cache.sub('station.remove', stationId => {
 
 cache.sub('station.create', stationId => {
 	stations.initializeStation(stationId, (err, station) => {
+		station.userCount = usersPerStationCount[stationId] | 0;
 		if (err) console.error(err);
 		utils.emitToRoom('admin.stations', 'event:admin.station.added', station);
 		// TODO If community, check if on whitelist
@@ -118,6 +183,7 @@ module.exports = {
 							next(`Insufficient permissions.`);
 						}
 					], (err) => {
+						station.userCount = usersPerStationCount[station._id] | 0;
 						if (err === true) resultStations.push(station);
 						next();
 					});
@@ -258,6 +324,7 @@ module.exports = {
 					owner: station.owner,
 					privatePlaylist: station.privatePlaylist
 				};
+				userList[session.socketId] = station._id;
 				next(null, data);
 			},
 
@@ -275,6 +342,7 @@ module.exports = {
 					}
 					next(null, data);
 				});
+				data.userCount = usersPerStationCount[station._id] | 0;
 			}
 		], (err, data) => {
 			if (err) {
@@ -393,6 +461,7 @@ module.exports = {
 			}
 			logger.success("STATIONS_LEAVE", `Left station "${stationId}" successfully.`);
 			utils.socketLeaveRooms(session);
+			delete userList[session.socketId];
 			return cb({'status': 'success', 'message': 'Successfully left station.', userCount});
 		});
 	},
