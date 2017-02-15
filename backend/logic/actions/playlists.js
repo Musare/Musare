@@ -360,7 +360,7 @@ let lib = {
 
 			(playlist, next) => {
 				if (!playlist || playlist.createdBy !== userId) return next('Playlist not found');
-				db.models.playlist.update({_id: playlistId}, {$pull: {songs: {_id: songId}}}, next);
+				db.models.playlist.update({_id: playlistId}, {$pull: {songs: {songId: songId}}}, next);
 			},
 
 			(res, next) => {
