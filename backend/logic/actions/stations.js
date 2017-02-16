@@ -2,7 +2,8 @@
 
 const async   = require('async'),
 	  request = require('request'),
-	  config  = require('config');
+	  config  = require('config'),
+	  _		  =  require('underscore')._;
 
 const io = require('../io');
 const db = require('../db');
@@ -18,47 +19,89 @@ let usersPerStation = {};
 let usersPerStationCount = {};
 
 setInterval(() => {
+	let stationsCountUpdated = [];
 	let stationsUpdated = [];
+
 	let oldUsersPerStation = usersPerStation;
 	usersPerStation = {};
+
 	let oldUsersPerStationCount = usersPerStationCount;
 	usersPerStationCount = {};
-	for (let socketId in userList) {
+
+	async.each(Object.keys(userList), function(socketId, next) {
 		let socket = utils.socketFromSession(socketId);
 		let stationId = userList[socketId];
-		console.log(socketId, !socket, stationId);
 		if (!socket || Object.keys(socket.rooms).indexOf(`station.${stationId}`) === -1) {
+			if (stationsCountUpdated.indexOf(stationId) === -1) stationsCountUpdated.push(stationId);
 			if (stationsUpdated.indexOf(stationId) === -1) stationsUpdated.push(stationId);
-			console.log(12222333, userList);
-			return delete userList[socketId];
+			delete userList[socketId];
+			return next();
 		}
 		if (!usersPerStationCount[stationId]) usersPerStationCount[stationId] = 0;
-		if (!usersPerStation[stationId]) usersPerStation[stationId] = [];
 		usersPerStationCount[stationId]++;
-		//TODO Code to show users
-	}
-	for (let stationId in usersPerStationCount) {
-		if (oldUsersPerStationCount[stationId] !== usersPerStationCount[stationId]) {
-			if (stationsUpdated.indexOf(stationId) === -1) stationsUpdated.push(stationId);
-		}
-	}
-	stationsUpdated.forEach((stationId) => {
-		console.log("Updating ", stationId);
-		cache.pub('station.updateUserCount', stationId);
-	});
+		if (!usersPerStation[stationId]) usersPerStation[stationId] = [];
 
-	console.log("Userlist", userList, usersPerStationCount);
+		async.waterfall([
+			(next) => {
+				if (!socket.session || !socket.session.sessionId) return next('No session found.');
+				cache.hget('sessions', socket.session.sessionId, next);
+			},
+
+			(session, next) => {
+				if (!session) return next('Session not found.');
+				db.models.user.findOne({_id: session.userId}, next);
+			},
+
+			(user, next) => {
+				if (!user) return next('User not found.');
+				if (usersPerStation[stationId].indexOf(user.username) !== -1) return next('User already in the list.');
+				next(null, user.username);
+			}
+		], (err, username) => {
+			if (!err) {
+				usersPerStation[stationId].push(username);
+			}
+			next();
+		});
+		//TODO Code to show users
+	}, (err) => {
+		for (let stationId in usersPerStationCount) {
+			if (oldUsersPerStationCount[stationId] !== usersPerStationCount[stationId]) {
+				if (stationsCountUpdated.indexOf(stationId) === -1) stationsCountUpdated.push(stationId);
+			}
+		}
+
+		for (let stationId in usersPerStation) {
+			if (_.difference(usersPerStation[stationId], oldUsersPerStation[stationId]).length > 0 || _.difference(oldUsersPerStation[stationId], usersPerStation[stationId]).length > 0) {
+				if (stationsUpdated.indexOf(stationId) === -1) stationsUpdated.push(stationId);
+			}
+		}
+
+		stationsCountUpdated.forEach((stationId) => {
+			console.log("Updating count of ", stationId);
+			cache.pub('station.updateUserCount', stationId);
+		});
+
+		stationsUpdated.forEach((stationId) => {
+			console.log("Updating ", stationId);
+			//cache.pub('station.updateUserCount', stationId);
+		});
+
+		//console.log("Userlist", userList, usersPerStation);
+	});
 }, 3000);
+
+cache.sub('station.updateUserlist', stationId => {
+	let list = usersPerStation[stationId] | [];
+	utils.emitToRoom(`station.${stationId}`, "event:userlist.updated", list);
+});
 
 cache.sub('station.updateUserCount', stationId => {
 	let count = usersPerStationCount[stationId] | 0;
-	console.log(12321, count, usersPerStationCount);
 	utils.emitToRoom(`station.${stationId}`, "event:userCount.updated", count);
 	stations.getStation(stationId, (err, station) => {
-		console.log(421123);
 		if (station.privacy === 'public') utils.emitToRoom('home', "event:userCount.updated", stationId, count);
 		else {
-			console.log(42112345345);
 			let sockets = utils.getRoomSockets('home');
 			for (let socketId in sockets) {
 				let socket = sockets[socketId];
