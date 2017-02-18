@@ -2,11 +2,6 @@
 	<div>
 		<modal title='Edit Song'>
 			<div slot='body'>
-				<span class="tag is-info is-medium reports" v-if="reports > 0">
-					{{ reports }}
-					<span v-if="reports > 1">&nbsp;Reports&nbsp;</span>
-					<span v-else>&nbsp;Report&nbsp;</span>
-				</span>
 				<h5 class='has-text-centered'>Video Preview</h5>
 				<div class='video-container'>
 					<div id='player'></div>
@@ -44,7 +39,7 @@
 					</div>
 				</div>
 
-				<h5 class='has-text-centered'>Edit Info</h5>
+				<h5 class='has-text-centered'>Edit Information</h5>
 
 				<p class='control'>
 					<label class='checkbox'>
@@ -96,7 +91,19 @@
 				<p class='control'>
 					<input class='input' type='text' v-model='editing.song.skipDuration'>
 				</p>
-				<hr>
+				<article class="message">
+					<div class="message-body">
+						<span class="reports-length">
+							{{ reports.length }}
+							<span v-if="reports.length > 1 || reports.length <= 0">&nbsp;Reports</span>
+							<span v-else>&nbsp;Report</span>
+						</span>
+						<div v-for='report in reports'>
+							<a :href='`/admin/reports?id=${report}`' class='report-link'>Report - {{ report }}</a>
+						</div>
+					</div>
+				</article>
+				<hr />
 				<h5 class='has-text-centered'>Spotify Information</h5>
 				<label class='label'>Song title</label>
 				<p class='control'>
@@ -253,7 +260,7 @@
 			io.getSocket(socket => {
 				_this.socket = socket;
 			});
-			
+
 			setInterval(() => {
 				if (_this.video.paused === false && _this.playerReady && _this.video.player.getCurrentTime() - _this.editing.song.skipDuration > _this.editing.song.duration) {
 					_this.video.paused = false;
@@ -304,7 +311,7 @@
 			let volume = parseInt(localStorage.getItem("volume"));
 			volume = (typeof volume === "number") ? volume : 20;
 			$("#volumeSlider").val(volume);
-			
+
 		},
 		events: {
 			closeModal: function () {
@@ -323,7 +330,7 @@
 					song: newSong,
 					type
 				};
-				_this.socket.emit('reports.getReportsForSong', song._id, res => {
+				_this.socket.emit('reports.getReportsForSong', song.songId, res => {
 					if (res.status === 'success') _this.reports = res.data;
 				});
 				this.$parent.toggleModal();
@@ -466,8 +473,14 @@
 
 	.tag:not(:last-child) { margin-right: 5px; }
 
-	.reports {
-		margin: 0 auto;
+	.reports-length {
+		color: #03A9F4;
+		font-weight: bold;
 		display: flex;
+		justify-content: center;
+	}
+
+	.report-link {
+		color: #000;
 	}
 </style>

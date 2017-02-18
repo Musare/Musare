@@ -116,15 +116,23 @@ module.exports = {
 		async.waterfall([
 			(next) => {
 				db.models.report.find({ songId, resolved: false }).sort({ released: 'desc' }).exec(next);
+			},
+
+			(reports, next) => {
+				let data = [];
+				for (let i = 0; i < reports.length; i++) {
+					data.push(reports[i]._id);
+				}
+				next(null, data);
 			}
-		], (err, reports) => {
+		], (err, data) => {
 			if (err) {
 				err = utils.getError(err);
 				logger.error("GET_REPORTS_FOR_SONG", `Indexing reports for song "${songId}" failed. "${err}"`);
 				return cb({ 'status': 'failure', 'message': err});
 			} else {
 				logger.success("GET_REPORTS_FOR_SONG", `Indexing reports for song "${songId}" successful.`);
-				return cb({ status: 'success', data: reports.length });
+				return cb({ status: 'success', data });
 			}
 		});
 	}),
