@@ -104,7 +104,7 @@
 				isCurrentSongActive: true,
 				report: {
 					resolved: false,
-					songId: this.$parent.currentSong._id,
+					songId: this.$parent.currentSong.songId,
 					description: '',
 					issues: [
 						{ name: 'Video', reasons: [] },
@@ -160,6 +160,7 @@
 		methods: {
 			create: function () {
 				let _this = this;
+				console.log(this.report);
 				_this.socket.emit('reports.create', _this.report, res => {
 					Toast.methods.addToast(res.message, 4000);
 					if (res.status == 'success') _this.$parent.modals.report = !_this.$parent.modals.report;
@@ -170,11 +171,11 @@
 			},
 			highlight: function (type) {
 				if (type == 'currentSong') {
-					this.report.songId = this.$parent.currentSong._id;
+					this.report.songId = this.$parent.currentSong.songId
 					this.isPreviousSongActive = false;
 					this.isCurrentSongActive = true;
 				} else if (type == 'previousSong') {
-					this.report.songId = this.$parent.previousSong._id;
+					this.report.songId = this.$parent.previousSong.songId
 					this.isCurrentSongActive = false;
 					this.isPreviousSongActive = true;
 				}

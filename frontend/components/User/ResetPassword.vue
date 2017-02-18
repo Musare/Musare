@@ -4,7 +4,6 @@
 		<!--Implement Validation-->
 		<h1>Step {{step}}</h1>
 
-
 		<label class="label" v-if="step === 1">Email</label>
 		<div class="control is-grouped" v-if="step === 1">
 			<p class="control is-expanded has-icon has-icon-right">

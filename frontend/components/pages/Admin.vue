@@ -74,7 +74,7 @@
 			Users
 		},
 		ready() {
-			switch(this.$route.path) {
+			switch(window.location.pathname) {
 				case '/admin/queuesongs':
 					this.currentTab = 'queueSongs';
 					break;

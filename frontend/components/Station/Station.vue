@@ -11,7 +11,7 @@
 	<songs-list-sidebar v-if='sidebars.songslist'></songs-list-sidebar>
 	<playlist-sidebar v-if='sidebars.playlist'></playlist-sidebar>
 	<users-sidebar v-if='sidebars.users'></users-sidebar>
-	
+
 	<div class="station">
 		<div v-show="noSong" class="no-song">
 			<h1>No song is currently playing</h1>
@@ -317,18 +317,18 @@
 			},
 			toggleLike: function() {
 				let _this = this;
-				if (_this.liked) _this.socket.emit('songs.unlike', _this.currentSong._id, data => {
+				if (_this.liked) _this.socket.emit('songs.unlike', _this.currentSong.songId, data => {
 					if (data.status !== 'success') Toast.methods.addToast(`Error: ${data.message}`, 8000);
-				}); else _this.socket.emit('songs.like', _this.currentSong._id, data => {
+				}); else _this.socket.emit('songs.like', _this.currentSong.songId, data => {
 					if (data.status !== 'success') Toast.methods.addToast(`Error: ${data.message}`, 8000);
 				});
 			},
 			toggleDislike: function() {
 				let _this = this;
-				if (_this.disliked) return _this.socket.emit('songs.undislike', _this.currentSong._id, data => {
+				if (_this.disliked) return _this.socket.emit('songs.undislike', _this.currentSong.songId, data => {
 					if (data.status !== 'success') Toast.methods.addToast(`Error: ${data.message}`, 8000);
 				});
-				_this.socket.emit('songs.dislike', _this.currentSong._id, data => {
+				_this.socket.emit('songs.dislike', _this.currentSong.songId, data => {
 					if (data.status !== 'success') Toast.methods.addToast(`Error: ${data.message}`, 8000);
 				});
 			},
@@ -373,6 +373,7 @@
 							owner: res.data.owner,
 							privatePlaylist: res.data.privatePlaylist
 						};
+						console.log(res.data.currentSong);
 						_this.currentSong = (res.data.currentSong) ? res.data.currentSong : {};
 						_this.type = res.data.type;
 						_this.startedAt = res.data.startedAt;
@@ -387,7 +388,7 @@
 							_this.youtubeReady();
 							_this.playVideo();
 							_this.socket.emit('songs.getOwnSongRatings', res.data.currentSong._id, data => {
-								if (_this.currentSong._id === data.songId) {
+								if (_this.currentSong.songId === data.songId) {
 									_this.liked = data.liked;
 									_this.disliked = data.disliked;
 								}
@@ -454,7 +455,7 @@
 					}
 				});
 				_this.socket.on('event:songs.next', data => {
-					_this.previousSong = (_this.currentSong._id) ? _this.currentSong : null;
+					_this.previousSong = (_this.currentSong.songId) ? _this.currentSong : null;
 					_this.currentSong = (data.currentSong) ? data.currentSong : {};
 					_this.startedAt = data.startedAt;
 					_this.paused = data.paused;
@@ -466,7 +467,7 @@
 						if (!_this.playerReady) _this.youtubeReady();
 						else _this.playVideo();
 						_this.socket.emit('songs.getOwnSongRatings', data.currentSong._id, (data) => {
-							if (_this.currentSong._id === data.songId) {
+							if (_this.currentSong.songId === data.songId) {
 								_this.liked = data.liked;
 								_this.disliked = data.disliked;
 							}
@@ -481,7 +482,7 @@
 					_this.songsList.forEach((queueSong) => {
 						if (queueSong.requestedBy === userId) isInQueue = true;
 					});
-					if (!isInQueue && _this.privatePlaylistQueueSelected && (_this.automaticallyRequestedSongId !== _this.currentSong.songId || !_this.currentSong._id)) {
+					if (!isInQueue && _this.privatePlaylistQueueSelected && (_this.automaticallyRequestedSongId !== _this.currentSong.songId || !_this.currentSong.songId)) {
 						_this.addFirstPrivatePlaylistSongToQueue();
 					}
 				});
@@ -497,7 +498,7 @@
 
 				_this.socket.on('event:song.like', data => {
 					if (!this.noSong) {
-						if (data.songId === _this.currentSong._id) {
+						if (data.songId === _this.currentSong.songId) {
 							_this.currentSong.dislikes = data.dislikes;
 							_this.currentSong.likes = data.likes;
 						}
@@ -506,7 +507,7 @@
 
 				_this.socket.on('event:song.dislike', data => {
 					if (!this.noSong) {
-						if (data.songId === _this.currentSong._id) {
+						if (data.songId === _this.currentSong.songId) {
 							_this.currentSong.dislikes = data.dislikes;
 							_this.currentSong.likes = data.likes;
 						}
@@ -515,7 +516,7 @@
 
 				_this.socket.on('event:song.unlike', data => {
 					if (!this.noSong) {
-						if (data.songId === _this.currentSong._id) {
+						if (data.songId === _this.currentSong.songId) {
 							_this.currentSong.dislikes = data.dislikes;
 							_this.currentSong.likes = data.likes;
 						}
@@ -524,7 +525,7 @@
 
 				_this.socket.on('event:song.undislike', data => {
 					if (!this.noSong) {
-						if (data.songId === _this.currentSong._id) {
+						if (data.songId === _this.currentSong.songId) {
 							_this.currentSong.dislikes = data.dislikes;
 							_this.currentSong.likes = data.likes;
 						}
@@ -533,7 +534,7 @@
 
 				_this.socket.on('event:song.newRatings', data => {
 					if (!this.noSong) {
-						if (data.songId === _this.currentSong._id) {
+						if (data.songId === _this.currentSong.songId) {
 							_this.liked = data.liked;
 							_this.disliked = data.disliked;
 						}

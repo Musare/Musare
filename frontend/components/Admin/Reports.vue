@@ -25,7 +25,7 @@
 						<span>{{ report.description }}</span>
 					</td>
 					<td>
-						<a class='button is-warning' href='#' @click='toggleModal(report)' v-if='report.issues.length > 0'>Issues</a>
+						<a class='button is-warning' href='#' @click='toggleModal(report)'>Issues Modal</a>
 						<a class='button is-primary' href='#' @click='resolve(report._id)'>Resolve</a>
 					</td>
 				</tr>
@@ -33,7 +33,7 @@
 		</table>
 	</div>
 
-	<issues-modal v-if='modals.reportIssues'></issues-modal>
+	<issues-modal v-if='modals.report'></issues-modal>
 </template>
 
 <script>
@@ -47,7 +47,7 @@
 			return {
 				reports: [],
 				modals: {
-					reportIssues: false
+					report: false
 				}
 			}
 		},
@@ -56,20 +56,20 @@
 				this.socket.emit('apis.joinAdminRoom', 'reports', data => {});
 			},
 			toggleModal: function (report) {
-				this.modals.reportIssues = !this.modals.reportIssues;
-				if (this.modals.reportIssues) this.editing = report;
+				this.modals.report = !this.modals.report;
+				if (this.modals.report) this.editing = report;
 			},
 			resolve: function (reportId) {
 				let _this = this;
 				this.socket.emit('reports.resolve', reportId, res => {
 					Toast.methods.addToast(res.message, 3000);
-					if (res.status == 'success' && this.modals.reportIssues) _this.toggleModal();
+					if (res.status === 'success' && this.modals.report) _this.toggleModal();
 				});
 			}
 		},
 		ready: function () {
 			let _this = this;
-			io.getSocket((socket) => {
+			io.getSocket(socket => {
 				_this.socket = socket;
 				if (_this.socket.connected) _this.init();
 				_this.socket.emit('reports.index', res => {
@@ -87,6 +87,12 @@
 					_this.init();
 				});
 			});
+			if (this.$route.query.id) {
+				this.socket.emit('reports.findOne', this.$route.query.id, res => {
+					if (res.status === 'success') _this.toggleModal(res.data);
+					else Toast.methods.addToast('Report with that ID not found', 3000);
+				});
+			}
 		},
 		components: { IssuesModal }
 	}

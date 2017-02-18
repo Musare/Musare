@@ -83,6 +83,29 @@ module.exports = {
 	}),
 
 	/**
+	 * Gets a specific report
+	 *
+	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {String} reportId - the id of the report to return
+	 * @param {Function} cb - gets called with the result
+	 */
+	findOne: hooks.adminRequired((session, reportId, cb) => {
+		async.waterfall([
+			(next) => {
+				db.models.report.findOne({ _id: reportId }).exec(next);
+			}
+		], (err, report) => {
+			if (err) {
+				err = utils.getError(err);
+				logger.error("REPORTS_FIND_ONE", `Finding report "${reportId}" failed. "${err}"`);
+				return cb({ 'status': 'failure', 'message': err });
+			}
+			logger.success("REPORTS_FIND_ONE", `Finding report "${reportId}" successful.`);
+			cb({ status: 'success', data: report });
+		});
+	}),
+
+	/**
 	 * Gets all reports for a songId
 	 *
 	 * @param {Object} session - the session object automatically added by socket.io
