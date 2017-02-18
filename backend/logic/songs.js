@@ -52,25 +52,25 @@ module.exports = {
 	/**
 	 * Gets a song by id from the cache or Mongo, and if it isn't in the cache yet, adds it the cache
 	 *
-	 * @param {String} songId - the id of the song we are trying to get
+	 * @param {String} id - the id of the song we are trying to get
 	 * @param {Function} cb - gets called once we're done initializing
 	 */
-	getSong: function(songId, cb) {
+	getSong: function(id, cb) {
 		async.waterfall([
 
 			(next) => {
-				if (!mongoose.Types.ObjectId.isValid(songId)) return next('Id is not a valid ObjectId.');
-				cache.hget('songs', songId, next);
+				if (!mongoose.Types.ObjectId.isValid(id)) return next('Id is not a valid ObjectId.');
+				cache.hget('songs', id, next);
 			},
 
 			(song, next) => {
 				if (song) return next(true, song);
-				db.models.song.findOne({_id: songId}, next);
+				db.models.song.findOne({_id: id}, next);
 			},
 
 			(song, next) => {
 				if (song) {
-					cache.hset('songs', songId, song, next);
+					cache.hset('songs', id, song, next);
 				} else next('Song not found.');
 			},
 

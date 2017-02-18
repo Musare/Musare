@@ -153,7 +153,12 @@ module.exports = {
 		async.waterfall([
 
 			(next) => {
-				songs.getSong(data.songId, next);
+				db.models.song.findOne({ songId: data.songId }).exec(next);
+			},
+
+			(song, next) => {
+				if (!song) return next('Song not found.');
+				songs.getSong(song._id, next);
 			},
 
 			(song, next) => {
@@ -172,7 +177,7 @@ module.exports = {
 
 				next();
 			},
-			
+
 			(next) => {
 				let issues = [];
 
@@ -196,8 +201,7 @@ module.exports = {
 				err = utils.getError(err);
 				logger.error("REPORTS_CREATE", `Creating report for "${data.songId}" failed by user "${userId}". "${err}"`);
 				return cb({ 'status': 'failure', 'message': err });
-			}
-			else {
+			} else {
 				cache.pub('report.create', report);
 				logger.success("REPORTS_CREATE", `User "${userId}" created report for "${data.songId}".`);
 				return cb({ 'status': 'success', 'message': 'Successfully created report' });
