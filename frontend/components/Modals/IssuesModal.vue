@@ -1,7 +1,15 @@
 <template>
-	<modal title='Report Issues'>
+	<modal title='Report'>
 		<div slot='body'>
-			<table class='table is-narrow'>
+			<article class="message">
+				<div class="message-body">
+					<strong>Song ID: </strong>{{ $parent.editing.songId }}<br/ >
+					<strong>Created By: </strong>{{ $parent.editing.createdBy }}<br/ >
+					<strong>Created At: </strong>{{ $parent.editing.createdAt }}<br/ >
+					<span v-if='$parent.editing.description'><strong>Description: </strong>{{ $parent.editing.description }}</span>
+				</div>
+			</article>
+			<table class='table is-narrow' v-if='$parent.editing.issues.length > 0'>
 				<thead>
 					<tr>
 						<td>Issue</td>
@@ -35,6 +43,11 @@
 	import Modal from './Modal.vue';
 
 	export default {
-		components: { Modal }
+		components: { Modal },
+		events: {
+			closeModal: function () {
+				this.$parent.modals.report = false;
+			}
+		}
 	}
 </script>
