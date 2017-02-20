@@ -28,10 +28,11 @@
     "vue-loader": "^8.5.2",
     "vue-style-loader": "^1.0.0",
     "whatwg-fetch": "^0.11.1",
-	"webpack": "^1.14.0",
+    "webpack": "^1.14.0",
     "webpack-dev-server": "^1.15.1"
   },
   "dependencies": {
+    "chart.js": "^2.5.0",
     "node-sass": "^3.13.0",
     "vue": "^1.0.26",
     "vue-roaster": "^1.1.1",

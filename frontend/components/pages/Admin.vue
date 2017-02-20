@@ -39,6 +39,12 @@
 						<span>&nbsp;Users</span>
 					</a>
 				</li>
+				<li :class='{ "is-active": currentTab == "statistics" }' @click='showTab("statistics")'>
+					<a v-link="{ path: '/admin/statistics' }">
+						<i class="material-icons">person</i>
+						<span>&nbsp;Statistics</span>
+					</a>
+				</li>
 			</ul>
 		</div>
 
@@ -48,6 +54,7 @@
 		<reports v-if='currentTab == "reports"'></reports>
 		<news v-if='currentTab == "news"'></news>
 		<users v-if='currentTab == "users"'></users>
+		<statistics v-if='currentTab == "statistics"'></statistics>
 	</div>
 </template>
 
@@ -61,6 +68,7 @@
 	import Reports from '../Admin/Reports.vue';
 	import News from '../Admin/News.vue';
 	import Users from '../Admin/Users.vue';
+	import Statistics from '../Admin/Statistics.vue';
 
 	export default {
 		components: {
@@ -71,7 +79,8 @@
 			Stations,
 			Reports,
 			News,
-			Users
+			Users,
+			Statistics
 		},
 		ready() {
 			switch(window.location.pathname) {
@@ -92,6 +101,9 @@
 					break;
 				case '/admin/users':
 					this.currentTab = 'users';
+					break;
+				case '/admin/statistics':
+					this.currentTab = 'statistics';
 					break;
 				default:
 					this.currentTab = 'queueSongs';

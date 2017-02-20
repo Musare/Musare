@@ -14,6 +14,7 @@ const songs = require('./logic/songs');
 const playlists = require('./logic/playlists');
 const cache = require('./logic/cache');
 const notifications = require('./logic/notifications');
+const logger = require('./logic/logger');
 const config = require('config');
 
 process.on('uncaughtException', err => {
@@ -56,6 +57,9 @@ async.waterfall([
 
 	// setup the API
 	(next) => api.init(next),
+
+	// setup the logger
+	(next) => logger.init(next),
 
 	// setup the frontend for local setups
 	(next) => {
