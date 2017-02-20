@@ -84,20 +84,20 @@ setInterval(() => {
 
 		stationsUpdated.forEach((stationId) => {
 			console.log("Updating ", stationId);
-			//cache.pub('station.updateUserCount', stationId);
+			cache.pub('station.updateUsers', stationId);
 		});
 
-		//console.log("Userlist", userList, usersPerStation);
+		//console.log("Userlist", usersPerStation);
 	});
 }, 3000);
 
-cache.sub('station.updateUserlist', stationId => {
-	let list = usersPerStation[stationId] | [];
-	utils.emitToRoom(`station.${stationId}`, "event:userlist.updated", list);
+cache.sub('station.updateUsers', stationId => {
+	let list = usersPerStation[stationId] || [];
+	utils.emitToRoom(`station.${stationId}`, "event:users.updated", list);
 });
 
 cache.sub('station.updateUserCount', stationId => {
-	let count = usersPerStationCount[stationId] | 0;
+	let count = usersPerStationCount[stationId] || 0;
 	utils.emitToRoom(`station.${stationId}`, "event:userCount.updated", count);
 	stations.getStation(stationId, (err, station) => {
 		if (station.privacy === 'public') utils.emitToRoom('home', "event:userCount.updated", stationId, count);
@@ -155,7 +155,7 @@ cache.sub('station.remove', stationId => {
 
 cache.sub('station.create', stationId => {
 	stations.initializeStation(stationId, (err, station) => {
-		station.userCount = usersPerStationCount[stationId] | 0;
+		station.userCount = usersPerStationCount[stationId] || 0;
 		if (err) console.error(err);
 		utils.emitToRoom('admin.stations', 'event:admin.station.added', station);
 		// TODO If community, check if on whitelist
@@ -226,7 +226,7 @@ module.exports = {
 							next(`Insufficient permissions.`);
 						}
 					], (err) => {
-						station.userCount = usersPerStationCount[station._id] | 0;
+						station.userCount = usersPerStationCount[station._id] || 0;
 						if (err === true) resultStations.push(station);
 						next();
 					});
@@ -372,6 +372,8 @@ module.exports = {
 			},
 
 			(data, next) => {
+				data.userCount = usersPerStationCount[data._id] || 0;
+				data.users = usersPerStation[data._id] || [];
 				if (!data.currentSong || !data.currentSong.title) return next(null, data);
 				utils.socketJoinSongRoom(session.socketId, `song.${data.currentSong.songId}`);
 				data.currentSong.skipVotes = data.currentSong.skipVotes.length;
@@ -385,7 +387,6 @@ module.exports = {
 					}
 					next(null, data);
 				});
-				data.userCount = usersPerStationCount[station._id] | 0;
 			}
 		], (err, data) => {
 			if (err) {

@@ -2,10 +2,12 @@
 	<div class='sidebar' transition='slide' v-if='$parent.sidebars.users'>
 		<div class='inner-wrapper'>
 			<div class='title'>Users</div>
-			
+			<h5 class="center">Total users: {{$parent.userCount}}</h5>
 			<aside class="menu">
 				<ul class="menu-list">
-					<li><a href="#" v-link="{ path: '/u/atjonathan' }" target="_blank">@atjonathan</a></li>
+					<li v-for="user in $parent.users">
+						<a href="#" v-link="{ path: '/u/' + user }" target="_blank">{{user}}</a>
+					</li>
 				</ul>
 			</aside>
 		</div>

@@ -63,11 +63,11 @@
 					<i class='material-icons'>chat</i>
 				</span>
 			</a>-->
-			<!--<a class='nav-item' href='#' @click='$parent.toggleSidebar("users")'>
+			<a class='nav-item' href='#' @click='$parent.toggleSidebar("users")'>
 				<span class='icon'>
 					<i class='material-icons'>people</i>
 				</span>
-			</a>-->
+			</a>
 		</div>
 	</nav>
 </template>

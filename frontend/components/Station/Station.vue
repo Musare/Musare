@@ -126,7 +126,9 @@
 				skipVotes: 0,
 				privatePlaylistQueueSelected: null,
 				automaticallyRequestedSongId: null,
-				systemDifference: 0
+				systemDifference: 0,
+				users: [],
+				userCount: 0
 			}
 		},
 		methods: {
@@ -379,6 +381,8 @@
 						_this.startedAt = res.data.startedAt;
 						_this.paused = res.data.paused;
 						_this.timePaused = res.data.timePaused;
+						_this.userCount = res.data.userCount;
+						_this.users = res.data.users;
 						if (res.data.currentSong) {
 							_this.noSong = false;
 							_this.simpleSong = (res.data.currentSong.likes === -1 && res.data.currentSong.dislikes === -1);
@@ -566,6 +570,14 @@
 					if (this.type === 'official') {
 						this.songsList = playlist;
 					}
+				});
+
+				_this.socket.on('event:users.updated', users => {
+					_this.users = users;
+				});
+
+				_this.socket.on('event:userCount.updated', userCount => {
+					_this.userCount = userCount;
 				});
 			});
 

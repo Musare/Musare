@@ -14,15 +14,17 @@
 						<div class="media-left displayName">
 							<h5>{{ station.displayName }} - {{station.userCount}}</h5>
 						</div>
-						<div class="media-right">
-							<div v-if="station.privacy !== 'public'" title="This station is not visible to other users." class="station-status">
-								<i class='material-icons'>lock</i>
-							</div>
-						</div>
 					</div>
 
 					<div class="content">
 						{{ station.description }}
+					</div>
+
+					<div class="under-content">
+						<i class='material-icons' title="How many users there are in the station.">people</i>
+						<span class="users-count" title="How many users there are in the station.">&nbsp;{{station.userCount}}</span>
+
+						<i class="material-icons right" v-if="station.privacy !== 'public'" title="This station is not visible to other users.">lock</i>
 					</div>
 				</div>
 				<a @click="this.$dispatch('joinStation', station._id)" href='#' class='absolute-a' v-link="{ path: '/' + station.name }"></a>
@@ -43,20 +45,19 @@
 				<div class="card-content">
 					<div class="media">
 						<div class="media-left displayName">
-							<h5>{{ station.displayName }} - {{station.userCount}}</h5>
-						</div>
-						<div class="media-right">
-							<div v-if="station.privacy !== 'public'" title="This station is not visible to other users." class="station-status">
-								<i class='material-icons'>lock</i>
-							</div>
-							<div v-if="isOwner(station)" title="This is your station." class="station-status">
-								<i class='material-icons'>home</i>
-							</div>
+							<h5>{{ station.displayName }}</h5>
 						</div>
 					</div>
 
 					<div class="content">
 						{{ station.description }}
+					</div>
+					<div class="under-content">
+						<i class='material-icons' title="How many users there are in the station.">people</i>
+						<span class="users-count" title="How many users there are in the station.">&nbsp;{{station.userCount}}</span>
+
+						<i class="material-icons right" v-if="station.privacy !== 'public'" title="This station is not visible to other users.">lock</i>
+						<i class="material-icons right" v-if="isOwner(station)" title="This is your station.">home</i>
 					</div>
 				</div>
 				<a @click="this.$dispatch('joinStation', station._id)" href='#' class='absolute-a' v-link="{ path: '/community/' + station.name }"></a>
@@ -196,6 +197,26 @@
 
 	@media only screen and (min-width: 0) {
 		html { font-size: 14px; }
+	}
+
+	.under-content {
+		text-align: left;
+		height: 25px;
+
+		* {
+			z-index: 10;
+			position: relative;
+		}
+	}
+
+	.users-count {
+		font-size: 20px;
+		position: relative;
+		top: -4px;
+	}
+
+	.right {
+		float: right;
 	}
 
 	.group { min-height: 64px; }
