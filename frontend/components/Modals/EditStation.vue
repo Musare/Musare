@@ -201,4 +201,6 @@
 		display: flex;
 		align-items: center;
 	}
+
+	.select:after { border-color: #029ce3; }
 </style>

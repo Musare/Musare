@@ -96,7 +96,7 @@
 				_this.socket = socket;
 				_this.socket.emit('users.findBySession', res => {
 					if (res.status == 'success') {
-						_this.user = res.data; 
+						_this.user = res.data;
 						_this.password = _this.user.password;
 						_this.github = _this.user.github;
 					} else {
@@ -187,4 +187,6 @@
 	.container {
 		padding: 25px;
 	}
+
+	a { color: #029ce3 !important; }
 </style>

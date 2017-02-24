@@ -66,4 +66,6 @@
 	.is-primary:focus { background-color: #029ce3 !important; }
 
 	.invert { filter: brightness(5); }
+
+	a { color: #029ce3; }
 </style>

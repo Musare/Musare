@@ -84,4 +84,6 @@
 	.invert { filter: brightness(5); }
 
 	#recaptcha { padding: 10px 0; }
+
+	a { color: #029ce3; }
 </style>

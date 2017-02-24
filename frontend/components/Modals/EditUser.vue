@@ -95,4 +95,6 @@
 	.save-changes { color: #fff; }
 
 	.tag:not(:last-child) { margin-right: 5px; }
+
+	.select:after { border-color: #029ce3; }
 </style>

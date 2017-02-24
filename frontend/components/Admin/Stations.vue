@@ -221,4 +221,6 @@
 		display: flex;
     	justify-content: space-around;
 	}
+
+	.card-footer-item { color: #029ce3; }
 </style>
