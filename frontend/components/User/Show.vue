@@ -5,7 +5,7 @@
 			<img class="avatar" src="/assets/notes.png"/>
 			<h2 class="has-text-centered username">@{{user.username}}</h2>
 			<h5>A member since {{user.createdAt}}</h5>
-			<div class="admin-functionality" v-if="user.role == 'admin'">
+			<div class="admin-functionality" v-if="this.$parent.$parent.role === 'admin' == 'admin'">
 				<a class="button is-small is-info is-outlined" href='#' @click="changeRank('admin')" v-if="user.role == 'default'">Promote to Admin</a>
 				<a class="button is-small is-danger is-outlined" href='#' @click="changeRank('default')" v-else>Demote to User</a>
 			</div>
