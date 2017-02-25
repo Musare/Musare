@@ -175,71 +175,71 @@
 	.tooltip {
 		position: relative;
 
-	&:after {
-		 position: absolute;
-		 min-width: 80px;
-		 margin-left: -75%;
-		 text-align: center;
-		 padding: 7.5px 6px;
-		 border-radius: 2px;
-		 background-color: #323232;
-		 font-size: .9em;
-		 color: #fff;
-		 content: attr(data-tooltip);
-		 opacity: 0;
-		 transition: all .2s ease-in-out .1s;
-		 visibility: hidden;
-	 }
+		&:after {
+			 position: absolute;
+			 min-width: 80px;
+			 margin-left: -75%;
+			 text-align: center;
+			 padding: 7.5px 6px;
+			 border-radius: 2px;
+			 background-color: #323232;
+			 font-size: .9em;
+			 color: #fff;
+			 content: attr(data-tooltip);
+			 opacity: 0;
+			 transition: all .2s ease-in-out .1s;
+			 visibility: hidden;
+		}
 
-	&:hover:after {
-		 opacity: 1;
-		 visibility: visible;
-	 }
+		&:hover:after {
+			 opacity: 1;
+			 visibility: visible;
+		}
 	}
 
 	.tooltip-top {
-	&:after {
-		 bottom: 150%;
-	 }
+		&:after {
+			 bottom: 150%;
+		}
 
-	&:hover {
-	&:after { bottom: 120%; }
-	}
+		&:hover {
+			&:after { bottom: 120%; }
+		}
 	}
 
 
 	.tooltip-bottom {
-	&:after {
-		 top: 155%;
-	 }
+		&:after {
+			 top: 155%;
+		}
 
-	&:hover {
-	&:after { top: 125%; }
-	}
+		&:hover {
+			&:after { top: 125%; }
+		}
 	}
 
 	.tooltip-left {
-	&:after {
-		 bottom: -10px;
-		 right: 130%;
-		 min-width: 100px;
-	 }
+		&:after {
+			 bottom: -10px;
+			 right: 130%;
+			 min-width: 100px;
+		}
 
-	&:hover {
-	&:after { right: 110%; }
-	}
+		&:hover {
+			&:after { right: 110%; }
+		}
 	}
 
 	.tooltip-right {
-	&:after {
-		 bottom: -10px;
-		 left: 190%;
-		 min-width: 100px;
-	 }
+		&:after {
+			 bottom: -10px;
+			 left: 190%;
+			 min-width: 100px;
+		}
 
-	&:hover {
-	&:after { left: 200%; }
-	}
+		&:hover {
+			 &:after { left: 200%; }
+		}
 	}
 
 	.button:focus, .button:active { border-color: #dbdbdb !important; }
@@ -247,4 +247,6 @@
 	button.delete:focus { background-color: rgba(10, 10, 10, 0.3); }
 
 	.tag { padding-right: 6px !important; }
+
+	.button.is-success { background-color: #00B16A !important; }
 </style>
