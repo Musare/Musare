@@ -6,7 +6,7 @@
 				<div class='video-container'>
 					<div id='player'></div>
 					<div class="controls">
-						<form action="#" class="column is-7-desktop is-4-mobile">
+						<form action="#">
 							<p style="margin-top: 0; position: relative;">
 								<input type="range" id="volumeSlider" min="0" max="100" class="active" v-on:change="changeVolume()" v-on:input="changeVolume()">
 							</p>
