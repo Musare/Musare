@@ -6,7 +6,7 @@
 			<aside class="menu">
 				<ul class="menu-list">
 					<li v-for="user in $parent.users">
-						<a href="#" v-link="{ path: '/u/' + user }" target="_blank">{{user}}</a>
+						<a href="#" v-link="{ path: '/u/' + user }" target="_blank">@{{user}}</a>
 					</li>
 				</ul>
 			</aside>
@@ -26,7 +26,7 @@
 		box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
 	}
 
-	.inner-wrapper {	
+	.inner-wrapper {
 		top: 64px;
 		position: relative;
 	}
