@@ -4,28 +4,26 @@
 		<!--Implement Validation-->
 		<h1>Step {{step}}</h1>
 
-		<label class="label" v-if="step === 1">Email</label>
+		<label class="label" v-if="step === 1">Email Address</label>
 		<div class="control is-grouped" v-if="step === 1">
 			<p class="control is-expanded has-icon has-icon-right">
-				<input class="input" type="email" placeholder="Email" v-model="email">
+				<input class="input" type="email" placeholder="The email address associated with your account" v-model="email">
 			</p>
 			<p class="control">
 				<button class="button is-success" @click="submitEmail()">Request</button>
+				<button @click="step = 2" v-if="step === 1" class="button is-default skip-step">Skip this step</button>
 			</p>
 		</div>
-		<button @click="step = 2" v-if="step === 1" class="button is-success">Skip this step</button>
 
-
-		<label class="label" v-if="step === 2">Reset code (the code that was sent to your account email address)</label>
+		<label class="label" v-if="step === 2">Reset Code</label>
 		<div class="control is-grouped" v-if="step === 2">
 			<p class="control is-expanded has-icon has-icon-right">
-				<input class="input" type="text" placeholder="Reset code" v-model="code">
+				<input class="input" type="text" placeholder="The reset code that was sent to your account's email address" v-model="code">
 			</p>
 			<p class="control">
 				<button class="button is-success" @click="verifyCode()">Verify reset code</button>
 			</p>
 		</div>
-
 
 		<label class="label" v-if="step === 3">Change password</label>
 		<div class="control is-grouped" v-if="step === 3">
@@ -100,5 +98,10 @@
 <style lang="scss" scoped>
 	.container {
 		padding: 25px;
+	}
+
+	.skip-step {
+		background-color: #7e7e7e;
+		color: #fff;
 	}
 </style>
