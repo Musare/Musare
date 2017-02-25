@@ -500,6 +500,10 @@
 					_this.resumeLocalStation();
 				});
 
+				_this.socket.on('event:stations.remove', () => {
+					location.href = '/';
+				});
+
 				_this.socket.on('event:song.like', data => {
 					if (!this.noSong) {
 						if (data.songId === _this.currentSong.songId) {

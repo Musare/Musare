@@ -150,6 +150,7 @@ cache.sub('station.voteSkipSong', stationId => {
 });
 
 cache.sub('station.remove', stationId => {
+	utils.emitToRoom(`station.${stationId}`, 'event:stations.remove');
 	utils.emitToRoom('admin.stations', 'event:admin.station.removed', stationId);
 });
 

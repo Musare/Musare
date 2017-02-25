@@ -158,7 +158,6 @@
 				let _this = this;
 				this.socket.emit('stations.remove', this.editing._id, res => {
 					Toast.methods.addToast(res.message, 8000);
-					if (res.status === 'success' && _this.$parent.station) location.href = '/';
 				});
 			}
 		},
