@@ -41,7 +41,7 @@
 				</li>
 				<li :class='{ "is-active": currentTab == "statistics" }' @click='showTab("statistics")'>
 					<a v-link="{ path: '/admin/statistics' }">
-						<i class="material-icons">person</i>
+						<i class="material-icons">show_chart</i>
 						<span>&nbsp;Statistics</span>
 					</a>
 				</li>
