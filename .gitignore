@@ -20,3 +20,4 @@ frontend/build/bundle.js
 frontend/build/config/default.json
 
 npm
+*.log
