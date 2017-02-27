@@ -8,7 +8,6 @@ startRedis.cmd
 startMongo.cmd
 .database
 dump.rdb
-npm-debug.log
 
 # Back End
 backend/node_modules/
