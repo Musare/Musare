@@ -8,17 +8,12 @@ module.exports = {
 		filename: 'bundle.js'
 	},
 	module: {
-		preLoaders: [
-			{
-				test: /\.vue$/,
-				loader: 'eslint',
-				exclude: /node_modules/
-			}
-		],
 		loaders: [
 			{
+				enforce: "pre",
 				test: /\.vue$/,
-				loader: 'vue'
+				loader: 'vue',
+				exclude: /node_modules/
 			},
 			{
 				test: /\.js$/,
@@ -36,10 +31,5 @@ module.exports = {
 			sass: 'style!css!sass?indentedSyntax',
 			scss: 'style!css!sass'
 		}
-	},
-	babel: {
-		presets: ['es2015'],
-		plugins: ['transform-runtime'],
-		comments: false
 	}
 };
