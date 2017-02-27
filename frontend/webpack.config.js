@@ -10,14 +10,20 @@ module.exports = {
 	module: {
 		loaders: [
 			{
-				enforce: "pre",
+				enforce: 'pre',
 				test: /\.vue$/,
-				loader: 'vue',
-				exclude: /node_modules/
+				loader: 'vue-loader',
+				exclude: /node_modules/,
+				options: {
+					loaders: {
+						sass: 'style-loader!css-loader!sass-loader?indentedSyntax',
+						scss: 'style-loader!css-loader!sass-loader'
+					}
+				}
 			},
 			{
 				test: /\.js$/,
-				loader: 'babel',
+				loader: 'babel-loader',
 				exclude: /node_modules/
 			},
 			{
@@ -25,11 +31,5 @@ module.exports = {
 				loader: 'css-loader!sass-loader'
 			}
 		]
-	},
-	vue: {
-		loaders: {
-			sass: 'style!css!sass?indentedSyntax',
-			scss: 'style!css!sass'
-		}
 	}
 };
