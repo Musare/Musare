@@ -412,6 +412,9 @@
 								if (res.status == 'success') _this.songsList = res.data;
 							});
 						}
+					} else {
+						_this.$router.go('/404');
+						Toast.methods.addToast(res.message, 3000);
 					}
 					// UNIX client time before ping
 					let beforePing = Date.now();
