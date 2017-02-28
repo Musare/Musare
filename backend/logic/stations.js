@@ -167,7 +167,7 @@ module.exports = {
 			},
 
 			(playlist, next) => {
-				db.models.station.update({_id: station._id}, {$set: {playlist: playlist}}, (err) => {
+				db.models.station.update({_id: station._id}, {$set: {playlist: playlist}}, {runValidators: true}, (err) => {
 					_this.updateStation(station._id, () => {
 						next(err, playlist);
 					});
@@ -231,7 +231,7 @@ module.exports = {
 			},
 
 		], (err, station) => {
-			if (err && err !== true) cb(err);
+			if (err && err !== true) return cb(err);
 			cb(null, station);
 		});
 	},

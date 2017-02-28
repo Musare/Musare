@@ -120,7 +120,7 @@ module.exports = {
 	update: hooks.adminRequired((session, songId, song, cb) => {
 		async.waterfall([
 			(next) => {
-				db.models.song.update({_id: songId}, song, next);
+				db.models.song.update({_id: songId}, song, {runValidators: true}, next);
 			},
 
 			(res, next) => {
@@ -148,7 +148,7 @@ module.exports = {
 	remove: hooks.adminRequired((session, songId, cb) => {
 		async.waterfall([
 			(next) => {
-				db.models.song.remove({songId}, next);
+				db.models.song.remove({_id: songId}, next);
 			},
 
 			(res, next) => {//TODO Check if res gets returned from above
@@ -157,10 +157,10 @@ module.exports = {
 		], (err) => {
 			if (err) {
 				err = utils.getError(err);
-				logger.error("SONGS_UPDATE", `Failed to update song "${songId}". "${err}"`);
+				logger.error("SONGS_UPDATE", `Failed to remove song "${songId}". "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
-			logger.success("SONGS_UPDATE", `Successfully updated song "${songId}".`);
+			logger.success("SONGS_UPDATE", `Successfully remove song "${songId}".`);
 			cache.pub('song.removed', songId);
 			cb({status: 'success', message: 'Song has been successfully updated'});
 		});

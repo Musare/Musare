@@ -91,7 +91,7 @@ module.exports = {
 				let $set = {};
 				for (let prop in updatedSong) if (updatedSong[prop] !== song[prop]) $set[prop] = updatedSong[prop]; updated = true;
 				if (!updated) return next('No properties changed');
-				db.models.queueSong.update({_id: songId}, {$set}, next);
+				db.models.queueSong.update({_id: songId}, {$set}, {runValidators: true}, next);
 			}
 		], (err) => {
 			if (err) {

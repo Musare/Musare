@@ -22,7 +22,7 @@
 								</li>
 								<li>
 									<b>Email: </b>
-									<a href="mailto:krisvos130@gmail.com">krisvos130@gmail.com</a>
+									<a href="&#109;&#097;&#105;&#108;&#116;&#111;:&#107;&#114;&#105;&#115;&#118;&#111;&#115;&#049;&#051;&#048;&#064;&#103;&#109;&#097;&#105;&#108;&#046;&#099;&#111;&#109;">krisvos130@gmail.com</a>
 								</li>
 							</ul>
 						</div>
@@ -47,7 +47,32 @@
 								</li>
 								<li>
 									<b>Email: </b>
-									<a href="mailto:atjonathan@engineer.com">atjonathan@engineer.com</a>
+									<a href="&#109;&#097;&#105;&#108;&#116;&#111;:&#097;&#116;&#106;&#111;&#110;&#097;&#116;&#104;&#097;&#110;&#064;&#101;&#110;&#103;&#105;&#110;&#101;&#101;&#114;&#046;&#099;&#111;&#109;">atjonathan@engineer.com</a>
+								</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+			<br>
+			<div class="columns">
+				<div class='card column is-6-desktop is-offset-3-desktop is-12-mobile'>
+					<header class='card-header'>
+						<p class='card-header-title'>
+							Owen Diffey
+						</p>
+					</header>
+					<div class='card-content'>
+						<div class='content'>
+							<span class="custom-tag light-blue">developer</span>
+							<ul>
+								<li>
+									<b>Joined: </b>
+									February 29, 2016
+								</li>
+								<li>
+									<b>Email: </b>
+									<a href="&#109;&#097;&#105;&#108;&#116;&#111;:&#111;&#119;&#101;&#110;&#064;&#111;&#100;&#105;&#102;&#102;&#101;&#121;&#046;&#117;&#107;">&#111;&#119;&#101;&#110;&#064;&#111;&#100;&#105;&#102;&#102;&#101;&#121;&#046;&#117;&#107;</a>
 								</li>
 							</ul>
 						</div>

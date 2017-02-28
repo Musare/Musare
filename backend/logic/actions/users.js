@@ -169,6 +169,11 @@ module.exports = {
 
 			// verify the request with google recaptcha
 			(next) => {
+				if (!db.passwordValid(password)) return next('Invalid password. Check if it meets all the requirements.');
+				return next();
+			},
+
+			(next) => {
 				request({
 					url: 'https://www.google.com/recaptcha/api/siteverify',
 					method: 'POST',
@@ -412,7 +417,7 @@ module.exports = {
 			},
 
 			(next) => {
-				db.models.user.update({ _id: updatingUserId }, {$set: {username: newUsername}}, next);
+				db.models.user.update({ _id: updatingUserId }, {$set: {username: newUsername}}, {runValidators: true}, next);
 			}
 		], (err) => {
 			if (err && err !== true) {
@@ -470,7 +475,7 @@ module.exports = {
 			},
 
 			(next) => {
-				db.models.user.update({_id: updatingUserId}, {$set: {"email.address": newEmail, "email.verified": false, "email.verificationToken": verificationToken}}, next);
+				db.models.user.update({_id: updatingUserId}, {$set: {"email.address": newEmail, "email.verified": false, "email.verificationToken": verificationToken}}, {runValidators: true}, next);
 			},
 
 			(res, next) => {
@@ -517,7 +522,7 @@ module.exports = {
 				else return next();
 			},
 			(next) => {
-				db.models.user.update({_id: updatingUserId}, {$set: {role: newRole}}, next);
+				db.models.user.update({_id: updatingUserId}, {$set: {role: newRole}}, {runValidators: true}, next);
 			}
 
 		], (err) => {
@@ -555,6 +560,11 @@ module.exports = {
 			},
 
 			(next) => {
+				if (!db.passwordValid(newPassword)) return next('Invalid password. Check if it meets all the requirements.');
+				return next();
+			},
+
+			(next) => {
 				bcrypt.genSalt(10, next);
 			},
 
@@ -573,7 +583,7 @@ module.exports = {
 				return cb({ status: 'failure', message: err });
 			}
 
-			logger.error("UPDATE_PASSWORD", `User '${userId}' updated their password.`);
+			logger.success("UPDATE_PASSWORD", `User '${userId}' updated their password.`);
 			cb({
 				status: 'success',
 				message: 'Password successfully updated.'
@@ -605,7 +615,7 @@ module.exports = {
 			(user, next) => {
 				let expires = new Date();
 				expires.setDate(expires.getDate() + 1);
-				db.models.user.findOneAndUpdate({"email.address": user.email.address}, {$set: {"services.password": {set: {code: code, expires}}}}, next);
+				db.models.user.findOneAndUpdate({"email.address": user.email.address}, {$set: {"services.password": {set: {code: code, expires}}}}, {runValidators: true}, next);
 			},
 
 			(user, next) => {
@@ -684,6 +694,11 @@ module.exports = {
 			},
 
 			(next) => {
+				if (!db.passwordValid(newPassword)) return next('Invalid password. Check if it meets all the requirements.');
+				return next();
+			},
+
+			(next) => {
 				bcrypt.genSalt(10, next);
 			},
 
@@ -693,7 +708,7 @@ module.exports = {
 			},
 
 			(hashedPassword, next) => {
-				db.models.user.update({"services.password.set.code": code}, {$set: {"services.password.password": hashedPassword}, $unset: {"services.password.set": ''}}, next);
+				db.models.user.update({"services.password.set.code": code}, {$set: {"services.password.password": hashedPassword}, $unset: {"services.password.set": ''}}, {runValidators: true}, next);
 			}
 		], (err) => {
 			if (err && err !== true) {
@@ -804,7 +819,7 @@ module.exports = {
 			(user, next) => {
 				let expires = new Date();
 				expires.setDate(expires.getDate() + 1);
-				db.models.user.findOneAndUpdate({"email.address": email}, {$set: {"services.password.reset": {code: code, expires}}}, next);
+				db.models.user.findOneAndUpdate({"email.address": email}, {$set: {"services.password.reset": {code: code, expires}}}, {runValidators: true}, next);
 			},
 
 			(user, next) => {
@@ -881,6 +896,11 @@ module.exports = {
 			},
 
 			(next) => {
+				if (!db.passwordValid(newPassword)) return next('Invalid password. Check if it meets all the requirements.');
+				return next();
+			},
+
+			(next) => {
 				bcrypt.genSalt(10, next);
 			},
 
@@ -890,7 +910,7 @@ module.exports = {
 			},
 
 			(hashedPassword, next) => {
-				db.models.user.update({"services.password.reset.code": code}, {$set: {"services.password.password": hashedPassword}, $unset: {"services.password.reset": ''}}, next);
+				db.models.user.update({"services.password.reset.code": code}, {$set: {"services.password.password": hashedPassword}, $unset: {"services.password.reset": ''}}, {runValidators: true}, next);
 			}
 		], (err) => {
 			if (err && err !== true) {

@@ -236,6 +236,7 @@ module.exports = {
 				});
 			}
 		], (err, stations) => {
+			console.log(err, stations);
 			if (err) {
 				err = utils.getError(err);
 				logger.error("STATIONS_INDEX", `Indexing stations failed. "${err}"`);
@@ -522,7 +523,7 @@ module.exports = {
 	updateName: hooks.ownerRequired((session, stationId, newName, cb) => {
 		async.waterfall([
 			(next) => {
-				db.models.station.update({_id: stationId}, {$set: {name: newName}}, next);
+				db.models.station.update({_id: stationId}, {$set: {name: newName}}, {runValidators: true}, next);
 			},
 
 			(res, next) => {
@@ -550,7 +551,7 @@ module.exports = {
 	updateDisplayName: hooks.ownerRequired((session, stationId, newDisplayName, cb) => {
 		async.waterfall([
 			(next) => {
-				db.models.station.update({_id: stationId}, {$set: {displayName: newDisplayName}}, next);
+				db.models.station.update({_id: stationId}, {$set: {displayName: newDisplayName}}, {runValidators: true}, next);
 			},
 
 			(res, next) => {
@@ -578,7 +579,7 @@ module.exports = {
 	updateDescription: hooks.ownerRequired((session, stationId, newDescription, cb) => {
 		async.waterfall([
 			(next) => {
-				db.models.station.update({_id: stationId}, {$set: {description: newDescription}}, next);
+				db.models.station.update({_id: stationId}, {$set: {description: newDescription}}, {runValidators: true}, next);
 			},
 
 			(res, next) => {
@@ -606,7 +607,7 @@ module.exports = {
 	updatePrivacy: hooks.ownerRequired((session, stationId, newPrivacy, cb) => {
 		async.waterfall([
 			(next) => {
-				db.models.station.update({_id: stationId}, {$set: {privacy: newPrivacy}}, next);
+				db.models.station.update({_id: stationId}, {$set: {privacy: newPrivacy}}, {runValidators: true}, next);
 			},
 
 			(res, next) => {
@@ -640,7 +641,7 @@ module.exports = {
 			(station, next) => {
 				if (!station) return next('Station not found.');
 				if (station.partyMode === newPartyMode) return next('The party mode was already ' + ((newPartyMode) ? 'enabled.' : 'disabled.'));
-				db.models.station.update({_id: stationId}, {$set: {partyMode: newPartyMode}}, next);
+				db.models.station.update({_id: stationId}, {$set: {partyMode: newPartyMode}}, {runValidators: true}, next);
 			},
 
 			(res, next) => {
@@ -714,7 +715,7 @@ module.exports = {
 				db.models.station.update({_id: stationId}, {$set: {paused: false}, $inc: {timePaused: Date.now() - station.pausedAt}}, next);
 			},
 
-			(next) => {
+			(res, next) => {
 				stations.updateStation(stationId, next);
 			}
 		], (err) => {
@@ -990,7 +991,7 @@ module.exports = {
 			(playlist, next) => {
 				if (!playlist) return next('Playlist not found.');
 				let currentSongIndex = (playlist.songs.length > 0) ? playlist.songs.length - 1 : 0;
-				db.models.station.update({_id: stationId}, {$set: {privatePlaylist: playlistId, currentSongIndex: currentSongIndex}}, next);
+				db.models.station.update({_id: stationId}, {$set: {privatePlaylist: playlistId, currentSongIndex: currentSongIndex}}, {runValidators: true}, next);
 			},
 
 			(res, next) => {

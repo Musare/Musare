@@ -212,7 +212,7 @@ let lib = {
 	update: hooks.loginRequired((session, playlistId, playlist, cb, userId) => {
 		async.waterfall([
 			(next) => {
-				db.models.playlist.update({ _id: playlistId, createdBy: userId }, playlist, next);
+				db.models.playlist.update({ _id: playlistId, createdBy: userId }, playlist, {runValidators: true}, next);
 			},
 
 			(res, next) => {
@@ -389,7 +389,7 @@ let lib = {
 	updateDisplayName: hooks.loginRequired((session, playlistId, displayName, cb, userId) => {
 		async.waterfall([
 			(next) => {
-				db.models.playlist.update({ _id: playlistId, createdBy: userId }, { $set: { displayName } }, next);
+				db.models.playlist.update({ _id: playlistId, createdBy: userId }, { $set: { displayName } }, {runValidators: true}, next);
 			},
 
 			(res, next) => {
