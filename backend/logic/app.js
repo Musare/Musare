@@ -110,7 +110,7 @@ const lib = {
 							(user, next) => {
 								if (!user) return next('User not found.');
 								if (user.services.github && user.services.github.id) return next('Account already has GitHub linked.');
-								db.models.user.update({_id: user._id}, {$set: {"services.github": {id: body.id, access_token}}}, (err) => {
+								db.models.user.update({_id: user._id}, {$set: {"services.github": {id: body.id, access_token}}}, {runValidators: true}, (err) => {
 									if (err) return next(err);
 									next(null, user, body);
 								});
@@ -216,7 +216,7 @@ const lib = {
 				(user, next) => {
 					if (!user) return next('User not found.');
 					if (user.email.verified) return next('This email is already verified.');
-					db.models.user.update({"email.verificationToken": code}, {$set: {"email.verified": true}, $unset: {"email.verificationToken": ''}}, next);
+					db.models.user.update({"email.verificationToken": code}, {$set: {"email.verified": true}, $unset: {"email.verificationToken": ''}}, {runValidators: true}, next);
 				}
 			], (err) => {
 				if (err) {

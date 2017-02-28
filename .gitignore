@@ -4,11 +4,11 @@ Thumbs.db
 .idea/
 .vagrant/
 
-
 startRedis.cmd
 startMongo.cmd
 .database
 dump.rdb
+npm-debug.log
 
 # Back End
 backend/node_modules/
@@ -20,4 +20,10 @@ frontend/build/bundle.js
 frontend/build/config/default.json
 
 npm
-*.log
+
+# Logs
+all.log
+error.log
+info.log
+success.log
+

@@ -30,7 +30,7 @@ We currently only have 1 backend, 1 MongoDB server and 1 Redis server running fo
 ## Requirements
 Option 1: (not recommended for Windows users)
  * [Docker](https://www.docker.com/)
- 
+
 Option 2:
  * [NodeJS](https://nodejs.org/en/download/)
  	* nodemon: `npm install -g nodemon`
@@ -41,7 +41,7 @@ Option 2:
 ## Getting Started
 Once you've installed the required tools:
 
-1. `git clone https://github.com/MusareNode/MusareNode.git`
+1. `git clone https://github.com/Musare/MusareNode.git`
 
 2. `cd MusareNode`
 
@@ -54,6 +54,7 @@ Once you've installed the required tools:
    	The `serverPort` should be the port where the backend will listen on, usually `8080` for non-Docker.  
    	`isDocker` if you are using Docker or not.  
    	The `apis.youtube.key` value can be obtained by setting up a [YouTube API Key](https://developers.google.com/youtube/v3/getting-started).  
+	To set up a GitHub OAuth Application, you need to fill in some value's. The homepage is the homepage of frontend. The authorization callback url is the backend url with `/auth/github/authorize/callback` added at the end. For example `http://localhost:8080/auth/github/authorize/callback`.
    	The `apis.recaptcha.secret` value can be obtained by setting up a [ReCaptcha Site](https://www.google.com/recaptcha/admin).  
    	The `apis.github` values can be obtained by setting up a [GitHub OAuth Application](https://github.com/settings/developers).  
    	`apis.discord` is currently not needed.  
@@ -62,7 +63,7 @@ Once you've installed the required tools:
    	The `mongo.url` url should be left alone for Docker, and changed to `mongodb://localhost:27017/musare` for non-Docker.  
    	The `cookie.domain` value should be the ip or address you use to access the site, without protocols (http/https), so for example `localhost`.   
    	The `cookie.secure` value should be `true` for SSL connections, and `false` for normal http connections.  
-   	 
+
 4. `cp frontend/build/config/template.json frontend/build/config/default.json`
 
 	Values:  
@@ -93,27 +94,35 @@ Now you have different paths here.
    at `http://<docker-machine-ip>:8080/` where `<docker-machine-ip>` can be found below:
 
    * Docker for Windows / Mac: This is just `localhost`
-   
+
    * Docker ToolBox: The output of `docker-machine ip default`
-   
+
 ####Non-docker
+
+Steps 1-4 are things you only have to do once. The steps after that are steps you want to do when you want to start the site.
 
 1. In the main folder, create a folder called `.database`
 
 2. Create a file called `startMongo.cmd` in the main folder with the contents:
 
 		"C:\Program Files\MongoDB\Server\3.2\bin\mongod.exe" --dbpath "D:\Programming\HTML\MusareNode\.database"
-		
+
 	Make sure to adjust your paths accordingly.
-	
+
 3. In the folder where you installed Redis, edit the `redis.windows.conf` file. In there, look for the property `notify-keyspace-events`. Make sure that property is uncommented and has the value `Ex`. It should look like `notify-keyspace-events Ex` when done.
 
 4. Create a file called `startRedis.cmd` in the main folder with the contents:
 
 		"D:\Redis\redis-server.exe" "D:\Redis\redis.windows.conf"
-		
+
 	And again, make sure that the paths lead to the proper config and executable.
-   
+
+5. Run `startRedis.cmd` and `startMongo.cmd` to start Redis and Mongo.
+
+6. In a command prompt with the pwd of frontend, run `npm run development-watch`
+
+7. In a command prompt with the pwd of backend, run `nodemon`
+
 ## Extra
 
 Below is a list of helpful tips / solutions we've collected while developing MusareNode.
@@ -136,7 +145,7 @@ of the following commands to give Docker Toolbox access to those files.
 2. Now start the machine back up and ssh into it
 
    `docker-machine start default && docker-machine ssh default`
-   
+
 3. Tell boot2docker to mount our volume at startup, by appending to its startup script
 	```bash
 	sudo tee -a /mnt/sda1/var/lib/boot2docker/profile >/dev/null <<EOF
@@ -149,7 +158,7 @@ of the following commands to give Docker Toolbox access to those files.
 4. Restart the docker machine so that it uses the new shared folder
 
    `docker-machine restart default`
-   
+
 5. You now should be good to go!
 
 ### Fixing the "couldn't connect to docker daemon" error

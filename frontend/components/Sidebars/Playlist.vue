@@ -43,7 +43,7 @@
 				this.$parent.editPlaylist(id);
 			},
 			selectPlaylist: function(id) {
-				this.socket.emit('stations.selectPrivatePlaylist', this.$parent.stationId, id, (res) => {
+				this.socket.emit('stations.selectPrivatePlaylist', this.$parent.station._id, id, (res) => {
 					if (res.status === 'failure') return Toast.methods.addToast(res.message, 8000);
 					Toast.methods.addToast(res.message, 4000);
 				});

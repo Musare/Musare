@@ -98,6 +98,7 @@
 			},
 			init: function () {
 				let _this = this;
+				_this.songs = [];
 				_this.socket.emit('songs.length', length => {
 					_this.maxPosition = Math.round(length / 15);
 					_this.getSet();

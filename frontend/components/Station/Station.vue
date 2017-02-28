@@ -89,6 +89,7 @@
 
 	import OfficialHeader from './OfficialHeader.vue';
 	import CommunityHeader from './CommunityHeader.vue';
+	import MainFooter from '../MainFooter.vue';
 	import io from '../../io';
 	import auth from '../../auth';
 
@@ -601,7 +602,8 @@
 			Report,
 			SongsListSidebar,
 			PlaylistSidebar,
-			UsersSidebar
+			UsersSidebar,
+			MainFooter
 		}
 	}
 </script>

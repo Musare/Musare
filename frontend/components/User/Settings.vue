@@ -9,7 +9,7 @@
 				<!--Remove validation if it's their own without changing-->
 			</p>
 			<p class="control">
-				<button class="button is-success" @click="changeUsername()">Save Changes</button>
+				<button class="button is-success" @click="changeUsername()">Save changes</button>
 			</p>
 		</div>
 		<label class="label">Email</label>
@@ -19,7 +19,7 @@
 				<!--Remove validation if it's their own without changing-->
 			</p>
 			<p class="control is-expanded">
-				<button class="button is-success" @click="changeEmail()">Save Changes</button>
+				<button class="button is-success" @click="changeEmail()">Save changes</button>
 			</p>
 		</div>
 		<label class="label" v-if="password">Change Password</label>

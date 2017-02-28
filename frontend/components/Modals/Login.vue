@@ -26,7 +26,7 @@
 					</div>
 					&nbsp;&nbsp;Login with GitHub
 				</a>
-				<a href='#' @click='resetPassword()'>Forgot password?</a>
+				<a href='/reset_password' @click='resetPassword()'>Forgot password?</a>
 			</footer>
 		</div>
 	</div>

@@ -5,9 +5,9 @@
 			<img class="avatar" src="/assets/notes.png"/>
 			<h2 class="has-text-centered username">@{{user.username}}</h2>
 			<h5>A member since {{user.createdAt}}</h5>
-			<div class="admin-functionality" v-if="this.$parent.$parent.role === 'admin' == 'admin'">
-				<a class="button is-small is-info is-outlined" href='#' @click="changeRank('admin')" v-if="user.role == 'default'">Promote to Admin</a>
-				<a class="button is-small is-danger is-outlined" href='#' @click="changeRank('default')" v-else>Demote to User</a>
+			<div class="admin-functionality" v-if="$parent.role === 'admin' && !($parent.userId === user._id)">
+				<a class="button is-small is-info is-outlined" @click="changeRank('admin')" v-if="user.role == 'default'">Promote to Admin</a>
+				<a class="button is-small is-danger is-outlined" @click="changeRank('default')" v-if="user.role == 'admin'">Demote to User</a>
 			</div>
 			<nav class="level">
 				<div class="level-item has-text-centered">
@@ -48,7 +48,7 @@
 		},
 		methods: {
 			changeRank(newRank) {
-				this.socket.emit('users.updateRole', this.user._id, 'role', ((newRank == 'admin') ? 'admin' : 'default'), res => {
+				this.socket.emit('users.updateRole', this.user._id, ((newRank == 'admin') ? 'admin' : 'default'), res => {
 					if (res.status == 'error') Toast.methods.addToast(res.message, 2000);
 					else this.user.role = newRank; Toast.methods.addToast(`User ${this.$route.params.username}'s rank has been changed to: ${newRank}`, 2000);
 				});

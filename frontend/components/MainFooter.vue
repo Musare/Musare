@@ -6,16 +6,16 @@
 					© Copyright Musare 2015 - 2017
 				</p>
 				<p>
-					<a class='icon' href='https://github.com/Musare/MusareNode' title='GitHub Repository'>
+					<a class='icon' href='https://github.com/Musare/MusareNode' target='_blank' title='GitHub Repository'>
 						<img src='/assets/social/github.svg'/>
 					</a>
-					<a class='icon' href='https://twitter.com/MusareApp' title='Twitter Account'>
+					<a class='icon' href='https://twitter.com/MusareApp' target='_blank' title='Twitter Account'>
 						<img src='/assets/social/twitter.svg'/>
 					</a>
-					<a class='icon' href='https://www.facebook.com/MusareMusic/' title='Facebook Page'>
+					<a class='icon' href='https://www.facebook.com/MusareMusic/' target='_blank' title='Facebook Page'>
 						<img src='/assets/social/facebook.svg'/>
 					</a>
-					<a class='icon' href='https://discord.gg/Y5NxYGP' title='Discord Server'>
+					<a class='icon' href='https://discord.gg/Y5NxYGP' target='_blank' title='Discord Server'>
 						<img src='/assets/social/discord.svg'/>
 					</a>
 				</p>

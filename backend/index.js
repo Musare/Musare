@@ -3,6 +3,7 @@
 process.env.NODE_CONFIG_DIR = `${__dirname}/config`;
 
 const async = require('async');
+const fs = require('fs');
 
 const db = require('./logic/db');
 const app = require('./logic/app');
@@ -66,8 +67,19 @@ async.waterfall([
 		if (!config.get("isDocker")) {
 			const express = require('express');
 			const app = express();
-			const server = app.listen(80);
-			app.use(express.static(__dirname + "/../frontend/build/"));
+			app.listen(80);
+			const rootDir = __dirname.substr(0, __dirname.lastIndexOf("backend")) + "frontend\\build\\";
+
+			app.get("/*", (req, res) => {
+				const path = req.path;
+				fs.access(rootDir + path, function(err) {
+					if (!err) {
+						res.sendFile(rootDir + path);
+					} else {
+						res.sendFile(rootDir + "index.html");
+					}
+				});
+			});
 		}
 		next();
 	}
