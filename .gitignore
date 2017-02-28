@@ -4,6 +4,7 @@ Thumbs.db
 .idea/
 .vagrant/
 
+
 startRedis.cmd
 startMongo.cmd
 .database
