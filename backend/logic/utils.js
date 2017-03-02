@@ -13,7 +13,7 @@ class Timer {
 		this.timerId = undefined;
 		this.start = undefined;
 		this.paused = paused;
-		this.remaining = moment.duration(delay, "hh:mm:ss").asSeconds() * 1000;
+		this.remaining = delay;
 		this.timeWhenPaused = 0;
 		this.timePaused = Date.now();
 
