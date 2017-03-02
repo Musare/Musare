@@ -1,5 +1,8 @@
 'use strict';
 
+const cache = require("./cache");
+const Stations = require("./stations");
+const async = require("async");
 let utils;
 let tasks = {};
 
@@ -12,16 +15,40 @@ let testTask = (callback) => {
 	}, 10000);
 };
 
+let checkStationSkipTask = (callback) => {
+	console.log(`Checking for stations`);
+	async.waterfall([
+		(next) => {
+			cache.hgetall('stations', next);
+		},
+		(stations, next) => {
+			async.each(stations, (station, next2) => {
+				if (station.paused || !station.currentSong || !station.currentSong.title) return next2();
+				const timeElapsed = Date.now() - station.startedAt - station.timePaused;
+				if (timeElapsed <= station.currentSong.duration) return next2();
+				else {
+					console.log(`Skipping ${station._id}`);
+					stations.skipStation(station._id);
+					next2();
+				}
+			}, () => {
+				next();
+			});
+		}
+	], () => {
+		callback();
+	});
+};
 
 module.exports = {
 	init: function(cb) {
 		utils = require('./utils');
-		this.createTask("testTask", testTask, 5000);
-		this.pauseTask("testTask");
+		this.createTask("testTask", testTask, 5000, true);
+		this.createTask("stationSkipTask", checkStationSkipTask, 1000 * 60 * 30);
 
 		cb();
 	},
-	createTask: function(name, fn, timeout) {
+	createTask: function(name, fn, timeout, paused = false) {
 		tasks[name] = {
 			name,
 			fn,
@@ -29,7 +56,7 @@ module.exports = {
 			lastRan: 0,
 			timer: null
 		};
-		this.handleTask(tasks[name]);
+		if (!paused) this.handleTask(tasks[name]);
 	},
 	pauseTask: (name) => {
 		tasks[name].timer.pause();

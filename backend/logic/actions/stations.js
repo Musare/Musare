@@ -236,7 +236,6 @@ module.exports = {
 				});
 			}
 		], (err, stations) => {
-			console.log(err, stations);
 			if (err) {
 				err = utils.getError(err);
 				logger.error("STATIONS_INDEX", `Indexing stations failed. "${err}"`);
@@ -815,7 +814,6 @@ module.exports = {
 			}
 		], (err, station) => {
 			if (err) {
-				console.log(err);
 				err = utils.getError(err);
 				logger.error("STATIONS_CREATE", `Creating station failed. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
