@@ -233,7 +233,7 @@
 		cursor: pointer;
 		transition: .25s ease color;
 		font-size: 30px;
-		color: black;
+		color: #4a4a4a;
 	}
 
 	.community-button:hover { color: #03a9f4; }
