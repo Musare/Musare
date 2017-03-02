@@ -205,7 +205,7 @@ module.exports = {
 			},
 
 		], (err, station) => {
-			if (err && err !== true) cb(err);
+			if (err && err !== true) return cb(err);
 			cb(null, station);
 		});
 	},

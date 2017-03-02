@@ -767,7 +767,6 @@ module.exports = {
 	 * @param userId
 	 */
 	create: hooks.loginRequired((session, data, cb, userId) => {
-		console.log(data);
 		data.name = data.name.toLowerCase();
 		let blacklist = ["country", "edm", "musare", "hip-hop", "rap", "top-hits", "todays-hits", "old-school", "christmas", "about", "support", "staff", "help", "news", "terms", "privacy", "profile", "c", "community", "tos", "login", "register", "p", "official", "o", "trap", "faq", "team", "donate", "buy", "shop", "forums", "explore", "settings", "admin", "auth", "reset_password"];
 		async.waterfall([
@@ -857,7 +856,6 @@ module.exports = {
 			(station, next) => {
 				songs.getSong(songId, (err, song) => {
 					if (!err && song) return next(null, song);
-					console.log(53, songId);
 					utils.getSongFromYouTube(songId, (song) => {
 						song.artists = [];
 						song.skipDuration = 0;
@@ -872,7 +870,7 @@ module.exports = {
 
 			(song, next) => {
 				song.requestedBy = userId;
-				db.models.station.update({_id: stationId}, {$push: {queue: song}}, next);
+				db.models.station.update({_id: stationId}, {$push: {queue: song}}, {runValidators: true}, next);
 			},
 
 			(res, next) => {
