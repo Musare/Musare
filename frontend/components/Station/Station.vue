@@ -3,6 +3,7 @@
 	<community-header v-if='type == "community"'></community-header>
 
 	<song-queue v-if='modals.addSongToQueue'></song-queue>
+	<add-to-playlist v-if='modals.addSongToPlaylist'></add-to-playlist>
 	<edit-playlist v-if='modals.editPlaylist'></edit-playlist>
 	<create-playlist v-if='modals.createPlaylist'></create-playlist>
 	<edit-station v-show='modals.editStation'></edit-station>
@@ -36,7 +37,12 @@
 		<div class="columns is-mobile" v-show="!noSong">
 			<div class="column is-8-desktop is-offset-2-desktop is-12-mobile">
 				<div class="columns is-mobile">
-					<div class="column is-12-mobile" v-bind:class="{'is-8-desktop': !simpleSong}">
+					<div class="column is-1-desktop add-to-playlist">
+						<span class="icon is-large" @click='modals.addSongToPlaylist = true'>
+							<i class="material-icons">playlist_add</i>
+						</span>
+					</div>
+					<div class="column is-11-desktop" v-bind:class="{'is-7-desktop': !simpleSong}">
 						<h4 id="time-display">{{timeElapsed}} / {{formatTime(currentSong.duration)}}</h4>
 						<h3>{{currentSong.title}}</h3>
 						<h4 class="thin" style="margin-left: 0">{{currentSong.artists}}</h4>
@@ -78,6 +84,7 @@
 	import { Toast } from 'vue-roaster';
 
 	import SongQueue from '../Modals/AddSongToQueue.vue';
+	import AddToPlaylist from '../Modals/AddSongToPlaylist.vue';
 	import EditPlaylist from '../Modals/Playlists/Edit.vue';
 	import CreatePlaylist from '../Modals/Playlists/Create.vue';
 	import EditStation from '../Modals/EditStation.vue';
@@ -109,6 +116,7 @@
 				disliked: false,
 				modals: {
 					addSongToQueue: false,
+					addSongToPlaylist: false,
 					editPlaylist: false,
 					createPlaylist: false,
 					editStation: false,
@@ -376,7 +384,6 @@
 							owner: res.data.owner,
 							privatePlaylist: res.data.privatePlaylist
 						};
-						console.log(res.data.currentSong);
 						_this.currentSong = (res.data.currentSong) ? res.data.currentSong : {};
 						_this.type = res.data.type;
 						_this.startedAt = res.data.startedAt;
@@ -599,6 +606,7 @@
 			OfficialHeader,
 			CommunityHeader,
 			SongQueue,
+			AddToPlaylist,
 			EditPlaylist,
 			CreatePlaylist,
 			EditStation,
@@ -633,6 +641,12 @@
 
 	.stationDisplayName {
 		color: white !important;
+	}
+
+	.add-to-playlist {
+		display: flex;
+	    align-items: center;
+	    justify-content: center;
 	}
 
 	.slideout {
