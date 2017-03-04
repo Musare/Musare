@@ -142,6 +142,19 @@ module.exports = {
 			return ns.connected[socketId];
 		}
 	},
+	socketsFromSessionId: function(sessionId, cb) {
+		let ns = io.io.of("/");
+		let sockets = [];
+		if (ns) {
+			async.each(Object.keys(ns.connected), (id, next) => {
+				let session = ns.connected[id].session;
+				if (session.sessionId === sessionId) sockets.push(session.sessionId);
+				next();
+			}, () => {
+				cb(sockets);
+			});
+		}
+	},
 	socketsFromUser: function(userId, cb) {
 		let ns = io.io.of("/");
 		let sockets = [];

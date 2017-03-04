@@ -1,6 +1,7 @@
 'use strict';
 
 const cache = require("./cache");
+const logger = require("./logger");
 const Stations = require("./stations");
 const async = require("async");
 let utils;
@@ -16,7 +17,7 @@ let testTask = (callback) => {
 };
 
 let checkStationSkipTask = (callback) => {
-	console.log(`Checking for stations`);
+	logger.info("TASK_STATIONS_SKIP_CHECK", `Checking for stations to be skipped.`);
 	async.waterfall([
 		(next) => {
 			cache.hgetall('stations', next);
@@ -27,8 +28,59 @@ let checkStationSkipTask = (callback) => {
 				const timeElapsed = Date.now() - station.startedAt - station.timePaused;
 				if (timeElapsed <= station.currentSong.duration) return next2();
 				else {
-					console.log(`Skipping ${station._id}`);
+					logger.error("TASK_STATIONS_SKIP_CHECK", `Skipping ${station._id} as it should have skipped already.`);
 					stations.skipStation(station._id);
+					next2();
+				}
+			}, () => {
+				next();
+			});
+		}
+	], () => {
+		callback();
+	});
+};
+
+let sessionClearingTask = (callback) => {
+	logger.info("TASK_SESSION_CLEAR", `Checking for sessions to be cleared.`);
+	async.waterfall([
+		(next) => {
+			cache.hgetall('sessions', next);
+		},
+		(sessions, next) => {
+			if (!sessions) return next();
+			let keys = Object.keys(sessions);
+			async.each(keys, (sessionId, next2) => {
+				let session = sessions[sessionId];
+				console.log(Date.now() - session.refreshDate);
+				if (session && session.refreshDate && (Date.now() - session.refreshDate) < (60 * 60 * 24 * 30 * 1000)) return next2();
+				console.log(2);
+				if (!session) {
+					logger.info("TASK_SESSION_CLEAR", 'Removing an empty session.');
+					cache.hdel('sessions', sessionId, () => {
+						next2();
+					});
+				} else if (!session.refreshDate) {
+					session.refreshDate = Date.now();
+					cache.hset('sessions', sessionId, session, () => {
+						next2();
+					});
+				} else if ((Date.now() - session.refreshDate) > (60 * 60 * 24 * 30 * 1000)) {
+					utils.socketsFromSessionId(session.sessionId, (sockets) => {
+						if (sockets.length > 0) {
+							session.refreshDate = Date.now();
+							cache.hset('sessions', sessionId, session, () => {
+								next2()
+							});
+						} else {
+							logger.info("TASK_SESSION_CLEAR", `Removing session ${sessionId} for user ${session.userId} since inactive for 30 days and not currently in use.`);
+							cache.hdel('sessions', session.sessionId, () => {
+								next2();
+							});
+						}
+					});
+				} else {
+					logger.error("TASK_SESSION_CLEAR", "This should never log.");
 					next2();
 				}
 			}, () => {
@@ -45,6 +97,7 @@ module.exports = {
 		utils = require('./utils');
 		this.createTask("testTask", testTask, 5000, true);
 		this.createTask("stationSkipTask", checkStationSkipTask, 1000 * 60 * 30);
+		this.createTask("sessionClearTask", sessionClearingTask, 1000 * 60 * 60 * 6);
 
 		cb();
 	},
