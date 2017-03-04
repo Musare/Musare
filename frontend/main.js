@@ -22,7 +22,10 @@ import Register from './components/Modals/Register.vue';
 
 Vue.use(VueRouter);
 
-let router = new VueRouter({ history: true });
+let router = new VueRouter({
+	history: true,
+	suppressTransitionError: true
+});
 let _this = this;
 
 lofig.folder = '../config/default.json';
