@@ -46,9 +46,7 @@ router.beforeEach(transition => {
 		clearInterval(window.stationInterval);
 		window.stationInterval = 0;
 	}
-	if (window.socket) {
-		io.removeAllListeners();
-	}
+	if (window.socket) io.removeAllListeners();
 	io.clear();
 	if (transition.to.loginRequired || transition.to.adminRequired) {
 		auth.getStatus((authenticated, role) => {
@@ -56,9 +54,7 @@ router.beforeEach(transition => {
 			else if (transition.to.adminRequired && role !== 'admin') transition.redirect('/');
 			else transition.next();
 		});
-	} else {
-		transition.next();
-	}
+	} else transition.next();
 
 	if (transition.to.officialRequired) {
 		io.getSocket(socket => {
