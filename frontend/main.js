@@ -59,6 +59,28 @@ router.beforeEach(transition => {
 	} else {
 		transition.next();
 	}
+
+	if (transition.to.officialRequired) {
+		io.getSocket(socket => {
+			socket.emit('stations.findByName', transition.to.params.id, res => {
+				if (res.status === 'success') {
+					if (res.data.type === 'community') transition.redirect(`/community/${transition.to.params.id}`);
+					else transition.next();
+				}
+			});
+		});
+	}
+
+	if (transition.to.communityRequired) {
+		io.getSocket(socket => {
+			socket.emit('stations.findByName', transition.to.params.id, res => {
+				if (res.status === 'success') {
+					if (res.data.type === 'official') transition.redirect(`/official/${transition.to.params.id}`);
+					else transition.next();
+				}
+			});
+		});
+	}
 });
 
 router.map({
@@ -111,13 +133,16 @@ router.map({
 		adminRequired: true
 	},
 	'/official/:id': {
-		component: Station
+		component: Station,
+		officialRequired: true
 	},
 	'/:id': {
-		component: Station
+		component: Station,
+		officialRequired: true
 	},
 	'/community/:id': {
-		component: Station
+		component: Station,
+		communityRequired: true
 	}
 });
 
