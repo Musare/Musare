@@ -1000,6 +1000,7 @@ module.exports = {
 				return cb({'status': 'failure', 'message': err});
 			}
 			logger.success("STATIONS_SELECT_PRIVATE_PLAYLIST", `Selected private playlist "${playlistId}" for station "${stationId}" successfully.`);
+			notifications.unschedule(`stations.nextSong?id${stationId}`);
 			if (!station.partyMode) stations.skipStation(stationId)();
 			cache.pub('privatePlaylist.selected', {playlistId, stationId});
 			return cb({'status': 'success', 'message': 'Successfully selected playlist.'});
