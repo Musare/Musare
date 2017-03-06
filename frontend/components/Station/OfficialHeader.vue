@@ -25,11 +25,6 @@
 				</span>
 				<span class="skip-votes">{{$parent.currentSong.skipVotes}}</span>
 			</a>
-			<a v-if='$parent.$parent.loggedIn && !$parent.noSong && !$parent.simpleSong' class='nav-item' href='#' @click='$parent.modals.report = !$parent.modals.report'>
-				<span class='icon'>
-					<i class='material-icons'>report</i>
-				</span>
-			</a>
 			<a class='nav-item' href='#' v-if='isOwner() && $parent.paused' @click='$parent.resumeStation()'>
 				<span class='icon'>
 					<i class='material-icons'>play_arrow</i>
@@ -38,6 +33,11 @@
 			<a class='nav-item' href='#' v-if='isOwner() && !$parent.paused' @click='$parent.pauseStation()'>
 				<span class='icon'>
 					<i class='material-icons'>pause</i>
+				</span>
+			</a>
+			<a v-if='$parent.$parent.loggedIn && !$parent.noSong && !$parent.simpleSong' class='nav-item' href='#' @click='$parent.modals.report = !$parent.modals.report'>
+				<span class='icon'>
+					<i class='material-icons'>report</i>
 				</span>
 			</a>
 		</div>
