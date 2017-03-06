@@ -481,7 +481,7 @@
 						if (_this.simpleSong) _this.currentSong.skipDuration = 0;
 						if (!_this.playerReady) _this.youtubeReady();
 						else _this.playVideo();
-						_this.socket.emit('songs.getOwnSongRatings', data.currentSong._id, (data) => {
+						_this.socket.emit('songs.getOwnSongRatings', data.currentSong.songId, (data) => {
 							if (_this.currentSong.songId === data.songId) {
 								_this.liked = data.liked;
 								_this.disliked = data.disliked;
