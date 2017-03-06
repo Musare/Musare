@@ -378,7 +378,7 @@ module.exports = {
 				if (!data.currentSong || !data.currentSong.title) return next(null, data);
 				utils.socketJoinSongRoom(session.socketId, `song.${data.currentSong.songId}`);
 				data.currentSong.skipVotes = data.currentSong.skipVotes.length;
-				songs.getSong(data.currentSong.songId, (err, song) => {
+				songs.getSongFromId(data.currentSong.songId, (err, song) => {
 					if (!err && song) {
 						data.currentSong.likes = song.likes;
 						data.currentSong.dislikes = song.dislikes;

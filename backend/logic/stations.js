@@ -355,7 +355,7 @@ module.exports = {
 							} else {
 								_this.calculateSongForStation(station, (err, newPlaylist) => {
 									if (err) return next(null, _this.defaultSong, 0);
-									songs.getSongFromId(newPlaylist[0], (err, song) => {
+									songs.getSong(newPlaylist[0], (err, song) => {
 										if (err || !song) return next(null, _this.defaultSong, 0);
 										station.playlist = newPlaylist;
 										next(null, song, 0);
