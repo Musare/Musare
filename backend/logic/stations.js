@@ -133,13 +133,13 @@ module.exports = {
 					db.models.song.find({genres: genre}, (err, songs) => {
 						if (!err) {
 							songs.forEach((song) => {
-								if (songList.indexOf(song.songId) === -1) {
+								if (songList.indexOf(song._id) === -1) {
 									let found = false;
 									song.genres.forEach((songGenre) => {
 										if (station.blacklistedGenres.indexOf(songGenre) !== -1) found = true;
 									});
 									if (!found) {
-										songList.push(song.songId);
+										songList.push(song._id);
 									}
 								}
 							});
