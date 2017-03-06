@@ -129,8 +129,14 @@ let lib = {
 			lib.schemas.song.path('title').validate(songTitle, 'Invalid title.');
 			lib.schemas.queueSong.path('title').validate(songTitle, 'Invalid title.');
 
+			lib.schemas.song.path('artists').validate((artists) => {
+				return !(artists.length < 1 || artists.length > 10);
+			}, 'Invalid artists.');
+			lib.schemas.queueSong.path('artists').validate((artists) => {
+				return !(artists.length < 0 || artists.length > 10);
+			}, 'Invalid artists.');
+
 			let songArtists = (artists) => {
-				if (artists.length < 1 || artists.length > 10) return false;
 				return artists.filter((artist) => {
 						return (isLength(artist, 1, 32) && regex.ascii.test(artist) && artist !== "NONE");
 					}).length === artists.length;
@@ -146,11 +152,12 @@ let lib = {
 			lib.schemas.song.path('genres').validate(songGenres, 'Invalid genres.');
 			lib.schemas.queueSong.path('genres').validate(songGenres, 'Invalid genres.');
 
-			let songThumbnail = (thumbnail) => {
+			lib.schemas.song.path('thumbnail').validate((thumbnail) => {
 				return isLength(thumbnail, 8, 256);
-			};
-			lib.schemas.song.path('thumbnail').validate(songThumbnail, 'Invalid thumbnail.');
-			lib.schemas.queueSong.path('thumbnail').validate(songThumbnail, 'Invalid thumbnail.');
+			}, 'Invalid thumbnail.');
+			lib.schemas.queueSong.path('thumbnail').validate((thumbnail) => {
+				return isLength(thumbnail, 0, 256);
+			}, 'Invalid thumbnail.');
 
 			lib.schemas.playlist.path('displayName').validate((displayName) => {
 				return (isLength(displayName, 1, 16) && regex.ascii.test(displayName));

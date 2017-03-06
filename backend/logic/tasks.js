@@ -52,9 +52,7 @@ let sessionClearingTask = (callback) => {
 			let keys = Object.keys(sessions);
 			async.each(keys, (sessionId, next2) => {
 				let session = sessions[sessionId];
-				console.log(Date.now() - session.refreshDate);
 				if (session && session.refreshDate && (Date.now() - session.refreshDate) < (60 * 60 * 24 * 30 * 1000)) return next2();
-				console.log(2);
 				if (!session) {
 					logger.info("TASK_SESSION_CLEAR", 'Removing an empty session.');
 					cache.hdel('sessions', sessionId, () => {

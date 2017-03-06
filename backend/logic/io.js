@@ -39,7 +39,6 @@ module.exports = {
 				if (!socket.session) {
 					socket.session = {socketId: socket.id};
 				} else socket.session.socketId = socket.id;
-				console.log(socket.session);
 				next();
 			});
 		});
