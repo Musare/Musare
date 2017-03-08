@@ -75,6 +75,10 @@
 		<div class="mobile-only" v-show="!noSong">
 			<div>
 				<div>
+					<div>
+						<h3>{{currentSong.title}}</h3>
+						<h4 class="thin">{{currentSong.artists}}</h4>
+						<h5>{{timeElapsed}} / {{formatTime(currentSong.duration)}}</h5>
 						<div>
 							<form class="columns" action="#">
 								<p class='column is-11-mobile volume-slider-wrapper'>
