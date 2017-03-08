@@ -35,21 +35,25 @@
 					<span class='icon'>
 						<i class='material-icons'>settings</i>
 					</span>
+					<span class="icon-purpose">Station settings</span>
 				</a>
 				<a v-if='isOwner()' class="sidebar-item" href='#' @click='$parent.skipStation()'>
 					<span class='icon'>
 						<i class='material-icons'>skip_next</i>
 					</span>
+					<span class="icon-purpose">Skip current song</span>
 				</a>
 				<a class="sidebar-item" href='#' v-if='isOwner() && $parent.paused' @click='$parent.resumeStation()'>
 					<span class='icon'>
 						<i class='material-icons'>play_arrow</i>
 					</span>
+					<span class="icon-purpose">Resume station</span>
 				</a>
 				<a class="sidebar-item" href='#' v-if='isOwner() && !$parent.paused' @click='$parent.pauseStation()'>
 					<span class='icon'>
 						<i class='material-icons'>pause</i>
 					</span>
+					<span class="icon-purpose">Pause station</span>
 				</a>
 				<hr>
 			</div>
@@ -59,11 +63,13 @@
 						<i class='material-icons'>skip_next</i>
 					</span>
 					<span class="skip-votes">{{ $parent.currentSong.skipVotes }}</span>
+					<span class="icon-purpose">Skip current song</span>
 				</a>
 				<a v-if='$parent.$parent.loggedIn && !$parent.noSong' class="sidebar-item" href='#' @click='$parent.modals.addSongToPlaylist = true'>
 					<span class='icon'>
 						<i class='material-icons'>playlist_add</i>
 					</span>
+					<span class="icon-purpose">Add current song to playlist</span>
 				</a>
 				<hr>
 			</div>
@@ -71,16 +77,19 @@
 				<span class='icon'>
 					<i class='material-icons'>queue_music</i>
 				</span>
+				<span class="icon-purpose">Show the station queue</span>
 			</a>
 			<a class="sidebar-item" href='#' @click='$parent.toggleSidebar("users")'>
 				<span class='icon'>
 					<i class='material-icons'>people</i>
 				</span>
+				<span class="icon-purpose">Display users in the station</span>
 			</a>
 			<a class="sidebar-item" href='#' @click='$parent.toggleSidebar("playlist")' v-if='$parent.$parent.loggedIn'>
 				<span class='icon'>
 					<i class='material-icons'>library_music</i>
 				</span>
+				<span class="icon-purpose">Show your playlists</span>
 			</a>
 		</div>
 	</div>
@@ -194,9 +203,27 @@
 		-ms-flex-pack: center;
 		justify-content: center;
 		width: 100%;
-
+		position: relative;
 	}
 	.admin-sidebar .sidebar-top-hr {
 		margin: 0 0 20px 0;
+	}
+
+	.sidebar-item .icon-purpose {
+    visibility: hidden;
+    width: 150px;
+		font-size: 12px;
+    background-color: rgba(3, 169, 244,0.8);
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 0;
+    position: absolute;
+    z-index: 1;
+    left: 105%;
+	}
+
+	.sidebar-item:hover .icon-purpose {
+    visibility: visible;
 	}
 </style>
