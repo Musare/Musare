@@ -4,37 +4,8 @@
 			<a class='nav-item logo' href='#' v-link='{ path: "/" }' @click='this.$dispatch("leaveStation", title)'>
 				Musare
 			</a>
-			<a class='nav-item' href='#' v-if='isOwner()' @click='$parent.editStation()'>
-				<span class='icon'>
-					<i class='material-icons'>settings</i>
-				</span>
-			</a>
-			<a v-if='isOwner()' class='nav-item' href='#' @click='$parent.skipStation()'>
-				<span class='icon'>
-					<i class='material-icons'>skip_next</i>
-				</span>
-			</a>
-			<a v-if='!isOwner() && $parent.$parent.loggedIn && !$parent.noSong' class='nav-item' href='#' @click='$parent.voteSkipStation()'>
-				<span class='icon'>
-					<i class='material-icons'>skip_next</i>
-				</span>
-				<span class="skip-votes">{{ $parent.currentSong.skipVotes }}</span>
-			</a>
-			<a class='nav-item' href='#' v-if='isOwner() && $parent.paused' @click='$parent.resumeStation()'>
-				<span class='icon'>
-					<i class='material-icons'>play_arrow</i>
-				</span>
-			</a>
-			<a class='nav-item' href='#' v-if='isOwner() && !$parent.paused' @click='$parent.pauseStation()'>
-				<span class='icon'>
-					<i class='material-icons'>pause</i>
-				</span>
-			</a>
-			<a v-if='$parent.$parent.loggedIn && !$parent.noSong && !$parent.simpleSong' class='nav-item' href='#' @click='$parent.modals.report = !$parent.modals.report'>
-				<span class='icon'>
-					<i class='material-icons'>report</i>
-				</span>
-			</a>
+
+
 		</div>
 
 		<div class='nav-center stationDisplayName'>
@@ -48,28 +19,71 @@
 		</span>
 
 		<div class="nav-right nav-menu" :class="{ 'is-active': isMobile }">
-			<a class='nav-item' href='#' @click='$parent.toggleSidebar("songslist")' v-if='$parent.station.partyMode === true'>
-				<span class='icon'>
-					<i class='material-icons'>queue_music</i>
-				</span>
-			</a>
-			<!--<a class='nav-item' href='#'>
-				<span class='icon'>
-					<i class='material-icons'>chat</i>
-				</span>
-			</a>-->
+			<!-- DUPLICATE BUTTON TO HOLD FORMATTING -->
 			<a class='nav-item' href='#' @click='$parent.toggleSidebar("users")'>
 				<span class='icon'>
 					<i class='material-icons'>people</i>
 				</span>
 			</a>
-			<a class='nav-item' href='#' @click='$parent.toggleSidebar("playlist")' v-if='$parent.$parent.loggedIn'>
+		</div>
+	</nav>
+	<div class="admin-sidebar">
+		<div class='inner-wrapper'>
+			<hr class="sidebar-top-hr">
+			<div v-if='isOwner()'>
+				<a class="sidebar-item" href='#' v-if='isOwner()' @click='$parent.editStation()'>
+					<span class='icon'>
+						<i class='material-icons'>settings</i>
+					</span>
+				</a>
+				<a v-if='isOwner()' class="sidebar-item" href='#' @click='$parent.skipStation()'>
+					<span class='icon'>
+						<i class='material-icons'>skip_next</i>
+					</span>
+				</a>
+				<a class="sidebar-item" href='#' v-if='isOwner() && $parent.paused' @click='$parent.resumeStation()'>
+					<span class='icon'>
+						<i class='material-icons'>play_arrow</i>
+					</span>
+				</a>
+				<a class="sidebar-item" href='#' v-if='isOwner() && !$parent.paused' @click='$parent.pauseStation()'>
+					<span class='icon'>
+						<i class='material-icons'>pause</i>
+					</span>
+				</a>
+				<hr>
+			</div>
+			<div v-if="$parent.$parent.loggedIn && !$parent.noSong">
+				<a v-if='!isOwner() && $parent.$parent.loggedIn && !$parent.noSong' class="sidebar-item" href='#' @click='$parent.voteSkipStation()'>
+					<span class='icon'>
+						<i class='material-icons'>skip_next</i>
+					</span>
+					<span class="skip-votes">{{ $parent.currentSong.skipVotes }}</span>
+				</a>
+				<a v-if='$parent.$parent.loggedIn && !$parent.noSong' class="sidebar-item" href='#' @click='$parent.modals.addSongToPlaylist = true'>
+					<span class='icon'>
+						<i class='material-icons'>playlist_add</i>
+					</span>
+				</a>
+				<hr>
+			</div>
+			<a class="sidebar-item" href='#' @click='$parent.toggleSidebar("songslist")' v-if='$parent.station.partyMode === true'>
+				<span class='icon'>
+					<i class='material-icons'>queue_music</i>
+				</span>
+			</a>
+			<a class="sidebar-item" href='#' @click='$parent.toggleSidebar("users")'>
+				<span class='icon'>
+					<i class='material-icons'>people</i>
+				</span>
+			</a>
+			<a class="sidebar-item" href='#' @click='$parent.toggleSidebar("playlist")' v-if='$parent.$parent.loggedIn'>
 				<span class='icon'>
 					<i class='material-icons'>library_music</i>
 				</span>
 			</a>
 		</div>
-	</nav>
+	</div>
 </template>
 
 <script>
@@ -139,5 +153,50 @@
 	.nav-right.is-active .nav-item {
 		background: #03a9f4;
     	border: 0;
+	}
+
+	.admin-sidebar {
+		position: fixed;
+		z-index: 1;
+		top: 0;
+		left: 0;
+		width: 64px;
+		height: 100vh;
+		background-color: #03a9f4;
+		box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
+	}
+
+	.inner-wrapper {
+		top: 64px;
+		position: relative;
+	}
+
+	.admin-sidebar .material-icons {
+		width: 100%;
+		font-size: 2rem;
+	}
+	.admin-sidebar .sidebar-item {
+		font-size: 2rem;
+		height: 50px;
+		color: white;
+		-webkit-box-align: center;
+		-ms-flex-align: center;
+		align-items: center;
+		display: -webkit-box;
+		display: -ms-flexbox;
+		display: flex;
+		-webkit-box-flex: 0;
+		-ms-flex-positive: 0;
+		flex-grow: 0;
+		-ms-flex-negative: 0;
+		flex-shrink: 0;
+		-webkit-box-pack: center;
+		-ms-flex-pack: center;
+		justify-content: center;
+		width: 100%;
+
+	}
+	.admin-sidebar .sidebar-top-hr {
+		margin: 0 0 20px 0;
 	}
 </style>

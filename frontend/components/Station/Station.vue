@@ -37,11 +37,6 @@
 		<div class="columns is-mobile" v-show="!noSong">
 			<div class="column is-8-desktop is-offset-2-desktop is-12-mobile">
 				<div class="columns is-mobile">
-					<div class="column is-1-desktop add-to-playlist">
-						<span class="icon is-large" @click='modals.addSongToPlaylist = true'>
-							<i class="material-icons">playlist_add</i>
-						</span>
-					</div>
 					<div class="column is-11-desktop" v-bind:class="{'is-7-desktop': !simpleSong}">
 						<h4 id="time-display">{{timeElapsed}} / {{formatTime(currentSong.duration)}}</h4>
 						<h3>{{currentSong.title}}</h3>
