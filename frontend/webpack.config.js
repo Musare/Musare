@@ -13,13 +13,7 @@ module.exports = {
 				enforce: 'pre',
 				test: /\.vue$/,
 				loader: 'vue-loader',
-				exclude: /node_modules/,
-				options: {
-					loaders: {
-						sass: 'style-loader!css-loader!sass-loader?indentedSyntax',
-						scss: 'style-loader!css-loader!sass-loader'
-					}
-				}
+				exclude: /node_modules/
 			},
 			{
 				test: /\.js$/,
@@ -31,5 +25,11 @@ module.exports = {
 				loader: 'css-loader!sass-loader'
 			}
 		]
+	},
+	vue: {
+		loaders: {
+			sass: 'style-loader!css-loader!sass-loader?indentedSyntax',
+			scss: 'style-loader!css-loader!sass-loader'
+		}
 	}
 };

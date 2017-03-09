@@ -3,6 +3,7 @@
 	<community-header v-if='type == "community"'></community-header>
 
 	<song-queue v-if='modals.addSongToQueue'></song-queue>
+	<add-to-playlist v-if='modals.addSongToPlaylist'></add-to-playlist>
 	<edit-playlist v-if='modals.editPlaylist'></edit-playlist>
 	<create-playlist v-if='modals.createPlaylist'></create-playlist>
 	<edit-station v-show='modals.editStation'></edit-station>
@@ -23,8 +24,8 @@
 			</h4>
 			<h1 v-if='type === "community" && !station.partyMode && $parent.userId === station.owner && station.privatePlaylist'>Maybe you can add some songs to your selected private playlist and then press the skip button</h1>
 		</div>
-		<div class="columns is-mobile" v-show="!noSong">
-			<div class="column is-8-desktop is-offset-2-desktop is-12-mobile">
+		<div class="columns" v-show="!noSong">
+			<div class="column is-8-desktop is-offset-2-desktop is-11-mobile">
 				<div class="video-container">
 					<div id="player"></div>
 					<div class="seeker-bar-container white" id="preview-progress">
@@ -33,10 +34,10 @@
 				</div>
 			</div>
 		</div>
-		<div class="columns is-mobile" v-show="!noSong">
+		<div class="desktop-only columns is-mobile" v-show="!noSong">
 			<div class="column is-8-desktop is-offset-2-desktop is-12-mobile">
 				<div class="columns is-mobile">
-					<div class="column is-12-mobile" v-bind:class="{'is-8-desktop': !simpleSong}">
+					<div class="column is-11-desktop" v-bind:class="{'is-7-desktop': !simpleSong}">
 						<h4 id="time-display">{{timeElapsed}} / {{formatTime(currentSong.duration)}}</h4>
 						<h3>{{currentSong.title}}</h3>
 						<h4 class="thin" style="margin-left: 0">{{currentSong.artists}}</h4>
@@ -71,6 +72,41 @@
 				</div>
 			</div>
 		</div>
+		<div class="mobile-only" v-show="!noSong">
+			<div>
+				<div>
+					<div>
+						<h3>{{currentSong.title}}</h3>
+						<h4 class="thin">{{currentSong.artists}}</h4>
+						<h5>{{timeElapsed}} / {{formatTime(currentSong.duration)}}</h5>
+						<div>
+							<form class="columns" action="#">
+								<p class='column is-11-mobile volume-slider-wrapper'>
+									<i class="material-icons" @click='toggleMute()' v-if='muted'>volume_mute</i>
+									<i class="material-icons" @click='toggleMute()' v-else>volume_down</i>
+									<input type="range" id="volumeSlider" min="0" max="100" class="active" v-on:change="changeVolume()" v-on:input="changeVolume()">
+									<i class="material-icons" @click='increaseVolume()'>volume_up</i>
+								</p>
+							</form>
+							<div>
+								<ul id="ratings" style="display: inline-block;" v-if="currentSong.likes !== -1 && currentSong.dislikes !== -1">
+									<li id="dislike" style="display: inline-block;margin-right: 10px;" @click="toggleDislike()">
+										<span class="flow-text">{{currentSong.dislikes}} </span>
+										<i id="thumbs_down" class="material-icons grey-text" v-bind:class="{ disliked: disliked }">thumb_down</i>
+										<a class='absolute-a behind' @click="toggleDislike()" href='#'></a>
+									</li>
+									<li id="like" style="display: inline-block;" @click="toggleLike()">
+										<span class="flow-text">{{currentSong.likes}} </span>
+										<i id="thumbs_up" class="material-icons grey-text" v-bind:class="{ liked: liked }">thumb_up</i>
+										<a class='absolute-a behind' @click="toggleLike()" href='#'></a>
+									</li>
+								</ul>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
 	</div>
 </template>
 
@@ -78,6 +114,7 @@
 	import { Toast } from 'vue-roaster';
 
 	import SongQueue from '../Modals/AddSongToQueue.vue';
+	import AddToPlaylist from '../Modals/AddSongToPlaylist.vue';
 	import EditPlaylist from '../Modals/Playlists/Edit.vue';
 	import CreatePlaylist from '../Modals/Playlists/Create.vue';
 	import EditStation from '../Modals/EditStation.vue';
@@ -109,6 +146,7 @@
 				disliked: false,
 				modals: {
 					addSongToQueue: false,
+					addSongToPlaylist: false,
 					editPlaylist: false,
 					createPlaylist: false,
 					editStation: false,
@@ -376,7 +414,6 @@
 							owner: res.data.owner,
 							privatePlaylist: res.data.privatePlaylist
 						};
-						console.log(res.data.currentSong);
 						_this.currentSong = (res.data.currentSong) ? res.data.currentSong : {};
 						_this.type = res.data.type;
 						_this.startedAt = res.data.startedAt;
@@ -412,6 +449,9 @@
 								if (res.status == 'success') _this.songsList = res.data;
 							});
 						}
+					} else {
+						_this.$router.go('/404');
+						Toast.methods.addToast(res.message, 3000);
 					}
 					// UNIX client time before ping
 					let beforePing = Date.now();
@@ -471,7 +511,7 @@
 						if (_this.simpleSong) _this.currentSong.skipDuration = 0;
 						if (!_this.playerReady) _this.youtubeReady();
 						else _this.playVideo();
-						_this.socket.emit('songs.getOwnSongRatings', data.currentSong._id, (data) => {
+						_this.socket.emit('songs.getOwnSongRatings', data.currentSong.songId, (data) => {
 							if (_this.currentSong.songId === data.songId) {
 								_this.liked = data.liked;
 								_this.disliked = data.disliked;
@@ -596,6 +636,7 @@
 			OfficialHeader,
 			CommunityHeader,
 			SongQueue,
+			AddToPlaylist,
 			EditPlaylist,
 			CreatePlaylist,
 			EditStation,
@@ -632,6 +673,12 @@
 		color: white !important;
 	}
 
+	.add-to-playlist {
+		display: flex;
+	    align-items: center;
+	    justify-content: center;
+	}
+
 	.slideout {
 		top: 50px;
 		height: 100%;
@@ -663,7 +710,7 @@
 		padding-top: 0.5vw;
 		transition: all 0.1s;
 		margin: 0 auto;
-		max-width: 1280px;
+		max-width: 100%;
 		width: 90%;
 
 		@media only screen and (min-width: 993px) {
@@ -672,6 +719,29 @@
 
 		@media only screen and (min-width: 601px) {
 			width: 85%;
+		}
+
+		@media (min-width: 881px) {
+			.mobile-only {
+				display: none;
+			}
+			.desktop-only {
+				display: block;
+			}
+		}
+		@media (max-width: 880px) {
+			margin-left: 64px;
+			.mobile-only {
+				display: block;
+			}
+			.desktop-only {
+				display: none;
+				visibility: hidden;
+			}
+		}
+
+		.mobile-only {
+			text-align: center;
 		}
 
 		input[type=range] {

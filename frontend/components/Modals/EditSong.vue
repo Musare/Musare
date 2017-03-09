@@ -248,8 +248,9 @@
 			getSpotifySongs: function() {
 				this.socket.emit('apis.getSpotifySongs', this.spotify.title, this.spotify.artist, (res) => {
 					if (res.status === 'success') {
+						Toast.methods.addToast(`Succesfully got ${res.songs.length} song${(res.songs.length !== 1) ? 's' : ''}.`, 3000);
 						this.spotify.songs = res.songs;
-					}
+					} else Toast.methods.addToast(`Failed to get songs. ${res.message}`, 3000);
 				});
 			}
 		},

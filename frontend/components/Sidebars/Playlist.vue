@@ -9,7 +9,7 @@
 						<span>{{ playlist.displayName }}</span>
 						<!--Will play playlist in community station Kris-->
 						<div class='icons-group'>
-							<a href='#' @click='selectPlaylist(playlist._id)' v-if="isNotSelected(playlist._id)">
+							<a href='#' @click='selectPlaylist(playlist._id)' v-if="isNotSelected(playlist._id) && !this.$parent.$parent.station.partyMode">
 								<i class='material-icons'>play_arrow</i>
 							</a>
 							<a href='#' @click='editPlaylist(playlist._id)'>

@@ -4,6 +4,7 @@
 
 const app = require('./app');
 const actions = require('./actions');
+const async = require('async');
 const cache = require('./cache');
 const utils = require('./utils');
 const db = require('./db');
@@ -20,12 +21,25 @@ module.exports = {
 			let cookies = socket.request.headers.cookie;
 			let SID = utils.cookies.parseCookies(cookies).SID;
 
-			if (!SID) SID = "NONE";
-			cache.hget('sessions', SID, (err, session) => {
-				if (err) SID = null;
-				socket.session = (session) ? session : {};
-				socket.session.socketId = socket.id;
-				return next();
+			async.waterfall([
+				(next) => {
+					if (!SID) return next('No SID.');
+					next();
+				},
+				(next) => {
+					cache.hget('sessions', SID, next);
+				},
+				(session, next) => {
+					if (!session) return next('No session found.');
+					session.refreshDate = Date.now();
+					socket.session = session;
+					cache.hset('sessions', SID, session, next);
+				}
+			], () => {
+				if (!socket.session) {
+					socket.session = {socketId: socket.id};
+				} else socket.session.socketId = socket.id;
+				next();
 			});
 		});
 

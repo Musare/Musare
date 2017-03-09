@@ -13,7 +13,7 @@ class Timer {
 		this.timerId = undefined;
 		this.start = undefined;
 		this.paused = paused;
-		this.remaining = moment.duration(delay, "hh:mm:ss").asSeconds() * 1000;
+		this.remaining = delay;
 		this.timeWhenPaused = 0;
 		this.timePaused = Date.now();
 
@@ -140,6 +140,19 @@ module.exports = {
 		let ns = io.io.of("/");
 		if (ns) {
 			return ns.connected[socketId];
+		}
+	},
+	socketsFromSessionId: function(sessionId, cb) {
+		let ns = io.io.of("/");
+		let sockets = [];
+		if (ns) {
+			async.each(Object.keys(ns.connected), (id, next) => {
+				let session = ns.connected[id].session;
+				if (session.sessionId === sessionId) sockets.push(session.sessionId);
+				next();
+			}, () => {
+				cb(sockets);
+			});
 		}
 	},
 	socketsFromUser: function(userId, cb) {

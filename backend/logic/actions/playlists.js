@@ -270,7 +270,7 @@ let lib = {
 				});
 			},
 			(newSong, next) => {
-				db.models.playlist.update({ _id: playlistId }, { $push: { songs: newSong } }, (err) => {
+				db.models.playlist.update({_id: playlistId}, {$push: {songs: newSong}}, {runValidators: true}, (err) => {
 					if (err) return next(err);
 					playlists.updatePlaylist(playlistId, (err, playlist) => {
 						next(err, playlist, newSong);

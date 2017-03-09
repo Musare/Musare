@@ -177,12 +177,6 @@ module.exports = {
 	add: hooks.adminRequired((session, song, cb, userId) => {
 		async.waterfall([
 			(next) => {
-				queueSongs.remove(session, song._id, () => {
-					next();
-				});
-			},
-
-			(next) => {
 				db.models.song.findOne({songId: song.songId}, next);
 			},
 
@@ -196,7 +190,13 @@ module.exports = {
 				newSong.acceptedBy = userId;
 				newSong.acceptedAt = Date.now();
 				newSong.save(next);
-			}
+			},
+
+			(next) => {
+				queueSongs.remove(session, song._id, () => {
+					next();
+				});
+			},
 		], (err) => {
 			if (err) {
 				err = utils.getError(err);

@@ -133,13 +133,13 @@ module.exports = {
 					db.models.song.find({genres: genre}, (err, songs) => {
 						if (!err) {
 							songs.forEach((song) => {
-								if (songList.indexOf(song.songId) === -1) {
+								if (songList.indexOf(song._id) === -1) {
 									let found = false;
 									song.genres.forEach((songGenre) => {
 										if (station.blacklistedGenres.indexOf(songGenre) !== -1) found = true;
 									});
 									if (!found) {
-										songList.push(song.songId);
+										songList.push(song._id);
 									}
 								}
 							});
@@ -205,7 +205,7 @@ module.exports = {
 			},
 
 		], (err, station) => {
-			if (err && err !== true) cb(err);
+			if (err && err !== true) return cb(err);
 			cb(null, station);
 		});
 	},
@@ -355,7 +355,7 @@ module.exports = {
 							} else {
 								_this.calculateSongForStation(station, (err, newPlaylist) => {
 									if (err) return next(null, _this.defaultSong, 0);
-									songs.getSongFromId(newPlaylist[0], (err, song) => {
+									songs.getSong(newPlaylist[0], (err, song) => {
 										if (err || !song) return next(null, _this.defaultSong, 0);
 										station.playlist = newPlaylist;
 										next(null, song, 0);

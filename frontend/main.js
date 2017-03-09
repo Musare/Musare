@@ -22,7 +22,10 @@ import Register from './components/Modals/Register.vue';
 
 Vue.use(VueRouter);
 
-let router = new VueRouter({ history: true });
+let router = new VueRouter({
+	history: true,
+	suppressTransitionError: true
+});
 let _this = this;
 
 lofig.folder = '../config/default.json';
@@ -46,9 +49,7 @@ router.beforeEach(transition => {
 		clearInterval(window.stationInterval);
 		window.stationInterval = 0;
 	}
-	if (window.socket) {
-		io.removeAllListeners();
-	}
+	if (window.socket) io.removeAllListeners();
 	io.clear();
 	if (transition.to.loginRequired || transition.to.adminRequired) {
 		auth.getStatus((authenticated, role) => {
@@ -56,8 +57,28 @@ router.beforeEach(transition => {
 			else if (transition.to.adminRequired && role !== 'admin') transition.redirect('/');
 			else transition.next();
 		});
-	} else {
-		transition.next();
+	} else transition.next();
+
+	if (transition.to.officialRequired) {
+		io.getSocket(socket => {
+			socket.emit('stations.findByName', transition.to.params.id, res => {
+				if (res.status === 'success') {
+					if (res.data.type === 'community') transition.redirect(`/community/${transition.to.params.id}`);
+					else transition.next();
+				}
+			});
+		});
+	}
+
+	if (transition.to.communityRequired) {
+		io.getSocket(socket => {
+			socket.emit('stations.findByName', transition.to.params.id, res => {
+				if (res.status === 'success') {
+					if (res.data.type === 'official') transition.redirect(`/official/${transition.to.params.id}`);
+					else transition.next();
+				}
+			});
+		});
 	}
 });
 
@@ -111,13 +132,16 @@ router.map({
 		adminRequired: true
 	},
 	'/official/:id': {
-		component: Station
+		component: Station,
+		officialRequired: true
 	},
 	'/:id': {
-		component: Station
+		component: Station,
+		officialRequired: true
 	},
 	'/community/:id': {
-		component: Station
+		component: Station,
+		communityRequired: true
 	}
 });
 

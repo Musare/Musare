@@ -86,12 +86,14 @@
 			add: function (song) {
 				this.socket.emit('songs.add', song, res => {
 					if (res.status == 'success') Toast.methods.addToast(res.message, 2000);
+					else Toast.methods.addToast(res.message, 4000);
 				});
 			},
 			remove: function (id, index) {
 				console.log("Removing ", id);
 				this.socket.emit('queueSongs.remove', id, res => {
 					if (res.status == 'success') Toast.methods.addToast(res.message, 2000);
+				else Toast.methods.addToast(res.message, 4000);
 				});
 			},
 			init: function() {

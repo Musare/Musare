@@ -236,7 +236,6 @@ module.exports = {
 				});
 			}
 		], (err, stations) => {
-			console.log(err, stations);
 			if (err) {
 				err = utils.getError(err);
 				logger.error("STATIONS_INDEX", `Indexing stations failed. "${err}"`);
@@ -379,7 +378,7 @@ module.exports = {
 				if (!data.currentSong || !data.currentSong.title) return next(null, data);
 				utils.socketJoinSongRoom(session.socketId, `song.${data.currentSong.songId}`);
 				data.currentSong.skipVotes = data.currentSong.skipVotes.length;
-				songs.getSong(data.currentSong.songId, (err, song) => {
+				songs.getSongFromId(data.currentSong.songId, (err, song) => {
 					if (!err && song) {
 						data.currentSong.likes = song.likes;
 						data.currentSong.dislikes = song.dislikes;
@@ -767,7 +766,6 @@ module.exports = {
 	 * @param userId
 	 */
 	create: hooks.loginRequired((session, data, cb, userId) => {
-		console.log(data);
 		data.name = data.name.toLowerCase();
 		let blacklist = ["country", "edm", "musare", "hip-hop", "rap", "top-hits", "todays-hits", "old-school", "christmas", "about", "support", "staff", "help", "news", "terms", "privacy", "profile", "c", "community", "tos", "login", "register", "p", "official", "o", "trap", "faq", "team", "donate", "buy", "shop", "forums", "explore", "settings", "admin", "auth", "reset_password"];
 		async.waterfall([
@@ -816,7 +814,6 @@ module.exports = {
 			}
 		], (err, station) => {
 			if (err) {
-				console.log(err);
 				err = utils.getError(err);
 				logger.error("STATIONS_CREATE", `Creating station failed. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
@@ -857,7 +854,6 @@ module.exports = {
 			(station, next) => {
 				songs.getSong(songId, (err, song) => {
 					if (!err && song) return next(null, song);
-					console.log(53, songId);
 					utils.getSongFromYouTube(songId, (song) => {
 						song.artists = [];
 						song.skipDuration = 0;
@@ -872,7 +868,7 @@ module.exports = {
 
 			(song, next) => {
 				song.requestedBy = userId;
-				db.models.station.update({_id: stationId}, {$push: {queue: song}}, next);
+				db.models.station.update({_id: stationId}, {$push: {queue: song}}, {runValidators: true}, next);
 			},
 
 			(res, next) => {
@@ -1004,6 +1000,7 @@ module.exports = {
 				return cb({'status': 'failure', 'message': err});
 			}
 			logger.success("STATIONS_SELECT_PRIVATE_PLAYLIST", `Selected private playlist "${playlistId}" for station "${stationId}" successfully.`);
+			notifications.unschedule(`stations.nextSong?id${stationId}`);
 			if (!station.partyMode) stations.skipStation(stationId)();
 			cache.pub('privatePlaylist.selected', {playlistId, stationId});
 			return cb({'status': 'success', 'message': 'Successfully selected playlist.'});
