@@ -153,7 +153,7 @@ let lib = {
 			lib.schemas.queueSong.path('genres').validate(songGenres, 'Invalid genres.');
 
 			lib.schemas.song.path('thumbnail').validate((thumbnail) => {
-				return isLength(thumbnail, 8, 256);
+				return isLength(thumbnail, 0, 256);
 			}, 'Invalid thumbnail.');
 			lib.schemas.queueSong.path('thumbnail').validate((thumbnail) => {
 				return isLength(thumbnail, 0, 256);
