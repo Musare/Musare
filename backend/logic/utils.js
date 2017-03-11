@@ -424,5 +424,29 @@ module.exports = {
 		if (typeof err === "string") error = err;
 		else if (err.message) error = err.message;
 		return error;
+	},
+	canUserBeInStation: (station, userId, cb) => {
+		async.waterfall([
+			(next) => {
+				if (station.privacy !== 'private') return next(true);
+				if (!session.userId) return next(false);
+				next();
+			},
+
+			(next) => {
+				db.models.user.findOne({_id: session.userId}, next);
+			},
+
+			(user, next) => {
+				if (!user) return next(false);
+				if (user.role === 'admin') return next(true);
+				if (station.type === 'official') return next(false);
+				if (station.owner === session.userId) return next(true);
+				next(false);
+			}
+		], (err) => {
+			if (err === true) return cb(true);
+			return cb(false);
+		});
 	}
 };

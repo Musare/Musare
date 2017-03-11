@@ -416,6 +416,13 @@ module.exports = {
 
 			(station, next) => {
 				if (!station) return next('Station not found.');
+				utils.canUserBeInStation(station, userId, (canBe) => {
+					if (canBe) return next(null, station);
+					return next('Insufficient permissions.');
+				});
+			},
+
+			(station, next) => {
 				if (!station.currentSong) return next('There is currently no song to skip.');
 				if (station.currentSong.skipVotes.indexOf(userId) !== -1) return next('You have already voted to skip this song.');
 				next(null, station);
@@ -493,10 +500,6 @@ module.exports = {
 			(station, next) => {
 				if (!station) return next('Station not found.');
 				next();
-			},
-
-			(next) => {
-				cache.client.hincrby('station.userCounts', stationId, -1, next);
 			}
 		], (err, userCount) => {
 			if (err) {
@@ -842,6 +845,13 @@ module.exports = {
 			(station, next) => {
 				if (!station) return next('Station not found.');
 				if (station.type !== 'community') return next('That station is not a community station.');
+				utils.canUserBeInStation(station, userId, (canBe) => {
+					if (canBe) return next(null, station);
+					return next('Insufficient permissions.');
+				});
+			},
+
+			(station, next) => {
 				if (station.currentSong && station.currentSong.songId === songId) return next('That song is currently playing.');
 				async.each(station.queue, (queueSong, next) => {
 					if (queueSong.songId === songId) return next('That song is already in the queue.');
@@ -940,7 +950,7 @@ module.exports = {
 	 * @param stationId - the station id
 	 * @param cb
 	 */
-	getQueue: hooks.adminRequired((session, stationId, cb) => {
+	getQueue: (session, stationId, cb) => {
 		async.waterfall([
 			(next) => {
 				stations.getStation(stationId, next);
@@ -950,6 +960,13 @@ module.exports = {
 				if (!station) return next('Station not found.');
 				if (station.type !== 'community') return next('Station is not a community station.');
 				next(null, station);
+			},
+
+			(station, next) => {
+				utils.canUserBeInStation(station, session.userId, (canBe) => {
+					if (canBe) return next(null, station);
+					return next('Insufficient permissions.');
+				});
 			}
 		], (err, station) => {
 			if (err) {
@@ -960,7 +977,7 @@ module.exports = {
 			logger.success("STATIONS_GET_QUEUE", `Got queue for station "${stationId}" successfully.`);
 			return cb({'status': 'success', 'message': 'Successfully got queue.', queue: station.queue});
 		});
-	}),
+	},
 
 	/**
 	 * Selects a private playlist for a station
