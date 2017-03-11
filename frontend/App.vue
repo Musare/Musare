@@ -84,10 +84,10 @@
 			}
 		},
 		events: {
-			'register': function () {
+			'register': function (recaptchaId) {
 				let { register: { email, username, password } } = this;
 				let _this = this;
-				this.socket.emit('users.register', username, email, password, grecaptcha.getResponse(), result => {
+				this.socket.emit('users.register', username, email, password, grecaptcha.getResponse(recaptchaId), result => {
 					if (result.status === 'success') {
 						Toast.methods.addToast(`You have successfully registered.`, 4000);
 						if (result.SID) {
