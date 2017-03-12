@@ -4,8 +4,6 @@
 			<a class='nav-item is-brand' href='#' v-link='{ path: "/" }' @click='this.$dispatch("leaveStation", title)'>
 				Musare
 			</a>
-
-
 		</div>
 
 		<div class='nav-center stationDisplayName'>
@@ -288,20 +286,20 @@
 	}
 
 	.sidebar-item .icon-purpose {
-    visibility: hidden;
-    width: 150px;
+	    visibility: hidden;
+	    width: 150px;
 		font-size: 12px;
-    background-color: rgba(3, 169, 244,0.8);
-    color: #fff;
-    text-align: center;
-    border-radius: 6px;
-    padding: 5px 0;
-    position: absolute;
-    z-index: 1;
-    left: 105%;
+	    background-color: rgba(3, 169, 244,0.8);
+	    color: #fff;
+	    text-align: center;
+	    border-radius: 6px;
+	    padding: 5px 0;
+	    position: absolute;
+	    z-index: 1;
+	    left: 105%;
 	}
 
 	.sidebar-item:hover .icon-purpose {
-    visibility: visible;
+	    visibility: visible;
 	}
 </style>

@@ -223,7 +223,7 @@
 
 	.nav-center {
 		display: flex;
-    align-items: center;
+    	align-items: center;
 		color: $blue;
 		font-size: 22px;
 		position: absolute;
@@ -277,19 +277,19 @@
 		height: 50px;
 		color: white;
 		-webkit-box-align: center;
-    -ms-flex-align: center;
-    align-items: center;
-    display: -webkit-box;
-    display: -ms-flexbox;
-    display: flex;
-    -webkit-box-flex: 0;
-    -ms-flex-positive: 0;
-    flex-grow: 0;
-    -ms-flex-negative: 0;
-    flex-shrink: 0;
-    -webkit-box-pack: center;
-    -ms-flex-pack: center;
-    justify-content: center;
+	    -ms-flex-align: center;
+	    align-items: center;
+	    display: -webkit-box;
+	    display: -ms-flexbox;
+	    display: flex;
+	    -webkit-box-flex: 0;
+	    -ms-flex-positive: 0;
+	    flex-grow: 0;
+	    -ms-flex-negative: 0;
+	    flex-shrink: 0;
+	    -webkit-box-pack: center;
+	    -ms-flex-pack: center;
+	    justify-content: center;
 		width: 100%;
 		position: relative;
 	}
