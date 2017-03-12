@@ -25,19 +25,19 @@
 			<h1 v-if='type === "community" && !station.partyMode && $parent.userId === station.owner && station.privatePlaylist'>Maybe you can add some songs to your selected private playlist and then press the skip button</h1>
 		</div>
 		<div class="columns" v-show="!noSong">
-			<div class="column is-8-desktop is-offset-2-desktop is-11-mobile">
+			<div class="column is-8-desktop is-offset-2-desktop is-12-mobile">
 				<div class="video-container">
 					<div id="player"></div>
-					<div class="seeker-bar-container white" id="preview-progress">
-						<div class="seeker-bar light-blue" style="width: 0%;"></div>
-					</div>
+				</div>
+				<div class="seeker-bar-container white" id="preview-progress">
+					<div class="seeker-bar light-blue" style="width: 0%;"></div>
 				</div>
 			</div>
 		</div>
 		<div class="desktop-only columns is-mobile" v-show="!noSong">
 			<div class="column is-8-desktop is-offset-2-desktop is-12-mobile">
 				<div class="columns is-mobile">
-					<div class="column is-11-desktop" v-bind:class="{'is-7-desktop': !simpleSong}">
+					<div class="column is-12-desktop">
 						<h4 id="time-display">{{timeElapsed}} / {{formatTime(currentSong.duration)}}</h4>
 						<h3>{{currentSong.title}}</h3>
 						<h4 class="thin" style="margin-left: 0">{{currentSong.artists}}</h4>
@@ -65,9 +65,6 @@
 								</ul>
 							</div>
 						</div>
-					</div>
-					<div class="column is-4-desktop" v-if="!simpleSong">
-						<img class="image" id="song-thumbnail" style="margin-top: 10px !important" :src="currentSong.thumbnail" alt="Song Thumbnail" onerror="this.src='/assets/notes-transparent.png'" />
 					</div>
 				</div>
 			</div>
@@ -721,7 +718,7 @@
 			width: 85%;
 		}
 
-		@media (min-width: 881px) {
+		@media (min-width: 999px) {
 			.mobile-only {
 				display: none;
 			}
@@ -729,8 +726,8 @@
 				display: block;
 			}
 		}
-		@media (max-width: 880px) {
-			margin-left: 64px;
+		@media (max-width: 998px) {
+
 			.mobile-only {
 				display: block;
 			}
@@ -892,7 +889,7 @@
 
 	.seeker-bar-container {
 		position: relative;
-		height: 5px;
+		height: 7px;
 		display: block;
 		width: 100%;
 		overflow: hidden;

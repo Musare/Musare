@@ -1,7 +1,7 @@
 <template>
 	<nav class='nav'>
 		<div class='nav-left'>
-			<a class='nav-item logo' href='#' v-link='{ path: "/" }' @click='this.$dispatch("leaveStation", title)'>
+			<a class='nav-item is-brand' href='#' v-link='{ path: "/" }' @click='this.$dispatch("leaveStation", title)'>
 				Musare
 			</a>
 		</div>
@@ -10,24 +10,52 @@
 			{{ $parent.station.displayName }}
 		</div>
 
-		<span class="nav-toggle" :class="{ 'is-active': isMobile }" @click="isMobile = !isMobile">
+		<span class="nav-toggle" @click="controlBar = !controlBar">
 			<span></span>
 			<span></span>
 			<span></span>
 		</span>
 
 		<div class="nav-right nav-menu" :class="{ 'is-active': isMobile }">
-			<!-- DUPLICATE BUTTON TO HOLD FORMATTING -->
-			<a class='nav-item' href='#' @click='$parent.toggleSidebar("songslist")'>
-				<span class='icon'>
-					<i class='material-icons'>queue_music</i>
-				</span>
+			<a class="nav-item is-tab admin" href="#" v-link="{ path: '/admin' }" v-if="$parent.$parent.role === 'admin'">
+				<strong>Admin</strong>
 			</a>
+			<!--a class="nav-item is-tab" href="#">
+				About
+			</a-->
+			<a class="nav-item is-tab" href="#" v-link="{ path: '/team' }">
+				Team
+			</a>
+			<a class="nav-item is-tab" href="#" v-link="{ path: '/about' }">
+				About
+			</a>
+			<a class="nav-item is-tab" href="#" v-link="{ path: '/news' }">
+				News
+			</a>
+			<span class="grouped" v-if="$parent.$parent.loggedIn">
+				<a class="nav-item is-tab" href="#" v-link="{ path: '/u/' + $parent.$parent.username }">
+					Profile
+				</a>
+				<a class="nav-item is-tab" href="#" v-link="{ path: '/settings' }">
+					Settings
+				</a>
+				<a class="nav-item is-tab" href="#" @click="$parent.$parent.logout()">
+					Logout
+				</a>
+			</span>
+			<span class="grouped" v-else>
+				<a class="nav-item" href="#" @click="toggleModal('login')">
+					Login
+				</a>
+				<a class="nav-item" href="#" @click="toggleModal('register')">
+					Register
+				</a>
+			</span>
 		</div>
+
 	</nav>
-	<div class="admin-sidebar">
+	<div class="control-sidebar" :class="{ 'show-controlBar': controlBar }">
 		<div class='inner-wrapper'>
-			<hr class="sidebar-top-hr">
 			<div v-if='isOwner()'>
 				<a class="sidebar-item" href='#' v-if='isOwner()' @click='$parent.editStation()'>
 					<span class='icon'>
@@ -104,12 +132,16 @@
 		data() {
 			return {
 				title: this.$route.params.id,
-				isMobile: false
+				isMobile: false,
+				controlBar: false
 			}
 		},
 		methods: {
 			isOwner: function () {
 				return this.$parent.$parent.loggedIn && this.$parent.$parent.role === 'admin';
+			},
+			toggleModal: function (type) {
+				this.$dispatch('toggleModal', type);
 			}
 		}
 	}
@@ -119,13 +151,25 @@
 	@import 'theme.scss';
 	.nav {
 		background-color: #03a9f4;
+		line-height: 64px;
+
+		.is-brand {
+			font-size: 2.1rem !important;
+			line-height: 64px !important;
+			padding: 0 20px;
+		}
 	}
 
 	a.nav-item {
 		color: $white;
+		font-size: 15px;
 
 		&:hover {
 			color: $white;
+		}
+
+		.admin {
+			color: #424242;
 		}
 
 		padding: 0 18px;
@@ -140,6 +184,12 @@
 		}
 	}
 
+	.grouped {
+		margin: 0;
+		display: flex;
+		text-decoration: none;
+	}
+
 	.skip-votes {
 		position: relative;
 		left: 11px;
@@ -147,6 +197,21 @@
 
 	.nav-toggle {
 		height: 64px;
+	}
+
+	@media screen and (max-width: 998px) {
+		.nav-menu {
+		    background-color: white;
+		    box-shadow: 0 4px 7px rgba(10, 10, 10, 0.1);
+		    left: 0;
+		    display: none;
+		    right: 0;
+		    top: 100%;
+		    position: absolute;
+		}
+		.nav-toggle {
+	    	display: block;
+		}
 	}
 
 	.logo {
@@ -158,7 +223,7 @@
 
 	.nav-center {
 		display: flex;
-    	align-items: center;
+    align-items: center;
 		color: $blue;
 		font-size: 22px;
 	}
@@ -172,7 +237,7 @@
 		display: none;
 	}
 
-	.admin-sidebar {
+	.control-sidebar {
 		position: fixed;
 		z-index: 1;
 		top: 0;
@@ -183,6 +248,14 @@
 		box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
 		overflow-y: auto;
 		overflow-x: hidden;
+
+		@media (max-width: 998px) {
+			display: none;
+		}
+	}
+
+	.show-controlBar {
+		display: block;
 	}
 
 	.inner-wrapper {
@@ -190,11 +263,11 @@
 		position: relative;
 	}
 
-	.admin-sidebar .material-icons {
+	.control-sidebar .material-icons {
 		width: 100%;
 		font-size: 2rem;
 	}
-	.admin-sidebar .sidebar-item {
+	.control-sidebar .sidebar-item {
 		font-size: 2rem;
 		height: 50px;
 		color: white;
@@ -215,7 +288,7 @@
 		width: 100%;
 		position: relative;
 	}
-	.admin-sidebar .sidebar-top-hr {
+	.control-sidebar .sidebar-top-hr {
 		margin: 0 0 20px 0;
 	}
 
