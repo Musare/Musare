@@ -1,6 +1,8 @@
 <template>
 	<modal title='Add Song To Playlist'>
 		<div slot='body'>
+			<h4 class="songTitle">{{ $parent.currentSong.title }}</h4>
+			<h5 class="songArtist">{{ $parent.currentSong.artists }}</h5>
 			<aside class="menu">
 				<p class="menu-label">
 					Playlists
@@ -11,7 +13,7 @@
 							<span class='icon is-small' @click='removeSongFromPlaylist(playlist._id)' v-if='playlists[playlist._id].hasSong'>
 								<i class="material-icons">playlist_add_check</i>
 							</span>
-							<span class='icon is-small' @click='addSongToPlaylist(playlist._id)' v-else>
+							<span class='icon' @click='addSongToPlaylist(playlist._id)' v-else>
 								<i class="material-icons">playlist_add</i>
 							</span>
 							{{ playlist.displayName }}
@@ -106,5 +108,17 @@
 <style type='scss' scoped>
 	.icon.is-small {
 		margin-right: 10px !important;
+	}
+	.songTitle {
+		font-size: 22px;
+		padding: 0 10px;
+	}
+	.songArtist {
+		font-size: 19px;
+		font-weight: 200;
+		padding: 0 10px;
+	}
+	.menu-label {
+		font-size: 16px;
 	}
 </style>
