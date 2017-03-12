@@ -226,6 +226,11 @@
     align-items: center;
 		color: $blue;
 		font-size: 22px;
+		position: absolute;
+		margin: auto;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
 	}
 
 	.nav-right.is-active .nav-item {
