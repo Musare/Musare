@@ -117,11 +117,15 @@ Steps 1-4 are things you only have to do once. The steps after that are steps yo
 
 	And again, make sure that the paths lead to the proper config and executable.
 
-5. Run `startRedis.cmd` and `startMongo.cmd` to start Redis and Mongo.
+**(Windows)**
+5.  If you are on Windows you can run `windows-start.cmd` or just double click the `windows-start.cmd` file and all servers will automatically start up.
 
-6. In a command prompt with the pwd of frontend, run `npm run development-watch`
+**Linux (or manual Windows)**
+6. Run `startRedis.cmd` and `startMongo.cmd` to start Redis and Mongo.
 
-7. In a command prompt with the pwd of backend, run `nodemon`
+7. In a command prompt with the pwd of frontend, run `npm run development-watch`
+
+8. In a command prompt with the pwd of backend, run `nodemon`
 
 ## Extra
 
