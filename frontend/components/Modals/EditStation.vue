@@ -3,58 +3,36 @@
 		<modal title='Edit Station'>
 			<div slot='body'>
 				<label class='label'>Name</label>
-				<div class='control is-grouped'>
-					<p class='control is-expanded'>
-						<input class='input' type='text' placeholder='Station Name' v-model='editing.name'>
-					</p>
-					<p class='control'>
-						<a class='button is-info' @click='updateName()' href='#'>Update</a>
-					</p>
-				</div>
+				<p class='control'>
+					<input class='input' type='text' placeholder='Station Name' v-model='editing.name'>
+				</p>
 				<label class='label'>Display name</label>
-				<div class='control is-grouped'>
-					<p class='control is-expanded'>
-						<input class='input' type='text' placeholder='Station Display Name' v-model='editing.displayName'>
-					</p>
-					<p class='control'>
-						<a class='button is-info' @click='updateDisplayName()' href='#'>Update</a>
-					</p>
-				</div>
+				<p class='control'>
+					<input class='input' type='text' placeholder='Station Display Name' v-model='editing.displayName'>
+				</p>
 				<label class='label'>Description</label>
-				<div class='control is-grouped'>
-					<p class='control is-expanded'>
-						<input class='input' type='text' placeholder='Station Display Name' v-model='editing.description'>
-					</p>
-					<p class='control'>
-						<a class='button is-info' @click='updateDescription()' href='#'>Update</a>
-					</p>
-				</div>
+				<p class='control'>
+					<input class='input' type='text' placeholder='Station Display Name' v-model='editing.description'>
+				</p>
 				<label class='label'>Privacy</label>
-				<div class='control is-grouped'>
-					<p class='control is-expanded'>
-							<span class='select'>
-								<select v-model='editing.privacy'>
-									<option :value='"public"'>Public</option>
-									<option :value='"unlisted"'>Unlisted</option>
-									<option :value='"private"'>Private</option>
-								</select>
-							</span>
-					</p>
-					<p class='control'>
-						<a class='button is-info' @click='updatePrivacy()' href='#'>Update</a>
-					</p>
-				</div>
-				<div class='control is-grouped' v-if="editing.type === 'community'">
-					<p class="control is-expanded party-mode-outer">
-						<label class="checkbox party-mode-inner">
-							<input type="checkbox" v-model="editing.partyMode">
-							&nbsp;Party mode
-						</label>
-					</p>
-					<p class='control'>
-						<a class='button is-info' @click='updatePartyMode()' href='#'>Update</a>
-					</p>
-				</div>
+				<p class='control'>
+					<span class='select'>
+						<select v-model='editing.privacy'>
+							<option :value='"public"'>Public</option>
+							<option :value='"unlisted"'>Unlisted</option>
+							<option :value='"private"'>Private</option>
+						</select>
+					</span>
+				</p>
+				<p class='control'>
+					<label class="checkbox party-mode-inner">
+						<input type="checkbox" v-model="editing.partyMode">
+						&nbsp;Party mode
+					</label>
+				</p>
+			</div>
+			<div slot='footer'>
+				<button class='button is-success' @click='update()'>Update Settings</button>
 				<button class='button is-danger' @click='deleteStation()' v-if="$parent.type === 'community'">Delete station</button>
 			</div>
 		</modal>
@@ -81,6 +59,13 @@
 			}
 		},
 		methods: {
+			update: function () {
+				if (this.$parent.station.name !== this.editing.name) this.updateName();
+				if (this.$parent.station.displayName !== this.editing.displayName) this.updateDisplayName();
+				if (this.$parent.station.description !== this.editing.description) this.updateDescription();
+				if (this.$parent.station.privacy !== this.editing.privacy) this.updatePrivacy();
+				if (this.$parent.station.partyMode !== this.editing.partyMode) this.updatePartyMode();
+			},
 			updateName: function () {
 				let _this = this;
 				this.socket.emit('stations.updateName', this.editing._id, this.editing.name, res => {
