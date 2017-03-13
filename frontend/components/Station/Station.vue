@@ -334,20 +334,15 @@
 					this.muted = !this.muted;
 					$("#volumeSlider").val(volume);
 					this.player.setVolume(volume);
-					localStorage.setItem("volume", volume);
+					if (!this.muted) localStorage.setItem("volume", volume);
 				}
 			},
 			increaseVolume: function () {
 				if (this.playerReady) {
 					let previousVolume = parseInt(localStorage.getItem("volume"));
 					let volume = previousVolume + 5;
-					if (previousVolume === 0) {
-						this.muted = false;
-					}
-					if (volume > 100) {
-						volume = 100;
-					}
-					console.log(previousVolume, volume);
+					if (previousVolume === 0) this.muted = false;
+					if (volume > 100) volume = 100;
 					$("#volumeSlider").val(volume);
 					this.player.setVolume(volume);
 					localStorage.setItem("volume", volume);
