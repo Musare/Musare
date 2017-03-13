@@ -43,6 +43,7 @@
 	import { Toast } from 'vue-roaster';
 	import Modal from './Modal.vue';
 	import io from '../../io';
+	import validation from '../../validation';
 
 	export default {
 		data: function() {
@@ -67,13 +68,17 @@
 				if (this.$parent.station.partyMode !== this.editing.partyMode) this.updatePartyMode();
 			},
 			updateName: function () {
-				let _this = this;
-				this.socket.emit('stations.updateName', this.editing._id, this.editing.name, res => {
+				const name = this.editing.name;
+				if (!validation.isLength(name, 2, 16)) return Toast.methods.addToast('Name must have between 2 and 16 characters.', 8000);
+				if (!validation.regex.az09_.test(name)) return Toast.methods.addToast('Invalid name format. Allowed characters: a-z, 0-9 and _.', 8000);
+
+
+				this.socket.emit('stations.updateName', this.editing._id, name, res => {
 					if (res.status === 'success') {
-						if (_this.$parent.station) _this.$parent.station.name = _this.editing.name;
+						if (this.$parent.station) _this.$parent.station.name = name;
 						else {
-							_this.$parent.stations.forEach((station, index) => {
-								if (station._id === _this.editing._id) return _this.$parent.stations[index].name = _this.editing.name;
+							this.$parent.stations.forEach((station, index) => {
+								if (station._id === this.editing._id) return this.$parent.stations[index].name = name;
 							});
 						}
 					}
@@ -81,13 +86,17 @@
 				});
 			},
 			updateDisplayName: function () {
-				let _this = this;
-				this.socket.emit('stations.updateDisplayName', this.editing._id, this.editing.displayName, res => {
+				const displayName = this.editing.displayName;
+				if (!validation.isLength(displayName, 2, 32)) return Toast.methods.addToast('Display name must have between 2 and 32 characters.', 8000);
+				if (!validation.regex.azAZ09_.test(displayName)) return Toast.methods.addToast('Invalid display name format. Allowed characters: a-z, A-Z, 0-9 and _.', 8000);
+
+
+				this.socket.emit('stations.updateDisplayName', this.editing._id, displayName, res => {
 					if (res.status === 'success') {
-						if (_this.$parent.station) _this.$parent.station.displayName = _this.editing.displayName;
+						if (this.$parent.station) _this.$parent.station.displayName = displayName;
 						else {
-							_this.$parent.stations.forEach((station, index) => {
-								if (station._id === _this.editing._id) return _this.$parent.stations[index].displayName = _this.editing.displayName;
+							this.$parent.stations.forEach((station, index) => {
+								if (station._id === this.editing._id) return this.$parent.stations[index].displayName = displayName;
 							});
 						}
 					}
@@ -95,13 +104,21 @@
 				});
 			},
 			updateDescription: function () {
-				let _this = this;
-				this.socket.emit('stations.updateDescription', this.editing._id, this.editing.description, res => {
+				const description = this.editing.description;
+				if (!validation.isLength(description, 2, 200)) return Toast.methods.addToast('Description must have between 2 and 200 characters.', 8000);
+				let characters = description.split("");
+				characters = characters.filter(function(character) {
+					return character.charCodeAt(0) === 21328;
+				});
+				if (characters.length !== 0) return Toast.methods.addToast('Invalid description format. Swastika\'s are not allowed.', 8000);
+
+
+				this.socket.emit('stations.updateDescription', this.editing._id, description, res => {
 					if (res.status === 'success') {
-						if (_this.$parent.station) _this.$parent.station.description = _this.editing.description;
+						if (_this.$parent.station) _this.$parent.station.description = description;
 						else {
 							_this.$parent.stations.forEach((station, index) => {
-								if (station._id === station._id) return _this.$parent.stations[index].description = _this.editing.description;
+								if (station._id === station._id) return _this.$parent.stations[index].description = description;
 							});
 						}
 						return Toast.methods.addToast(res.message, 4000);
