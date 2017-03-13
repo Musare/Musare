@@ -657,6 +657,7 @@
 		position: relative;
 		display: flex;
 		align-items: center;
+		.material-icons { user-select: none; }
 	}
 
 	.material-icons { cursor: pointer; }
@@ -722,7 +723,6 @@
 			}
 		}
 		@media (max-width: 998px) {
-
 			.mobile-only {
 				display: block;
 			}
