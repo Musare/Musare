@@ -3,63 +3,103 @@
 	<community-header v-if='type == "community"'></community-header>
 
 	<song-queue v-if='modals.addSongToQueue'></song-queue>
+	<add-to-playlist v-if='modals.addSongToPlaylist'></add-to-playlist>
 	<edit-playlist v-if='modals.editPlaylist'></edit-playlist>
 	<create-playlist v-if='modals.createPlaylist'></create-playlist>
-	<edit-station v-if='modals.editStation'></edit-station>
+	<edit-station v-show='modals.editStation'></edit-station>
 	<report v-if='modals.report'></report>
 
-	<queue-sidebar v-if='sidebars.queue'></queue-sidebar>
+	<songs-list-sidebar v-if='sidebars.songslist'></songs-list-sidebar>
 	<playlist-sidebar v-if='sidebars.playlist'></playlist-sidebar>
 	<users-sidebar v-if='sidebars.users'></users-sidebar>
-	
+
 	<div class="station">
-		<div v-show="noSong" class="noSong">
-			<h1>No song is currently playing.</h1>
+		<div v-show="noSong" class="no-song">
+			<h1>No song is currently playing</h1>
 			<h4 v-if='type === "community" && station.partyMode'>
-				<a href='#' class='noSong' @click='sidebars.queue = true'>Add a Song to the Queue</a>
+				<a href='#' class='no-song' @click='modals.addSongToQueue = true'>Add a song to the queue</a>
 			</h4>
-			<h1 v-if='type === "community" && !station.partyMode && $parent.userId === station.owner && !station.privatePlaylist'>Click <a href="#" @click="sidebars.playlist = true">here</a> to play a private playlist.</h1>
-			<h1 v-if='type === "community" && !station.partyMode && $parent.userId === station.owner && station.privatePlaylist'>Maybe you can add some songs to your selected private playlist.</h1>
+			<h4 v-if='type === "community" && !station.partyMode && $parent.userId === station.owner && !station.privatePlaylist'>
+				<a href='#' class='no-song' @click='sidebars.playlist = true'>Play a private playlist</a>
+			</h4>
+			<h1 v-if='type === "community" && !station.partyMode && $parent.userId === station.owner && station.privatePlaylist'>Maybe you can add some songs to your selected private playlist and then press the skip button</h1>
 		</div>
-		<div class="columns is-mobile" v-show="!noSong">
+		<div class="columns" v-show="!noSong">
 			<div class="column is-8-desktop is-offset-2-desktop is-12-mobile">
 				<div class="video-container">
 					<div id="player"></div>
-					<div class="seeker-bar-container white" id="preview-progress">
-						<div class="seeker-bar light-blue" style="width: 0%;"></div>
-					</div>
+				</div>
+				<div class="seeker-bar-container white" id="preview-progress">
+					<div class="seeker-bar light-blue" style="width: 0%;"></div>
 				</div>
 			</div>
 		</div>
-		<div class="columns is-mobile" v-show="!noSong">
+		<div class="desktop-only columns is-mobile" v-show="!noSong">
 			<div class="column is-8-desktop is-offset-2-desktop is-12-mobile">
 				<div class="columns is-mobile">
-					<div class="column is-12-mobile" v-bind:class="{'is-8-desktop': !simpleSong}">
+					<div class="column is-12-desktop">
 						<h4 id="time-display">{{timeElapsed}} / {{formatTime(currentSong.duration)}}</h4>
 						<h3>{{currentSong.title}}</h3>
 						<h4 class="thin" style="margin-left: 0">{{currentSong.artists}}</h4>
 						<div class="columns is-mobile">
 							<form style="margin-top: 12px; margin-bottom: 0;" action="#" class="column is-7-desktop is-4-mobile">
-								<p style="margin-top: 0; position: relative;">
+								<p class='volume-slider-wrapper'>
+									<i class="material-icons" @click='toggleMute()' v-if='muted'>volume_mute</i>
+									<i class="material-icons" @click='toggleMute()' v-else>volume_down</i>
 									<input type="range" id="volumeSlider" min="0" max="100" class="active" v-on:change="changeVolume()" v-on:input="changeVolume()">
+									<i class="material-icons" @click='increaseVolume()'>volume_up</i>
 								</p>
 							</form>
 							<div class="column is-8-mobile is-5-desktop" style="float: right;">
 								<ul id="ratings" v-if="currentSong.likes !== -1 && currentSong.dislikes !== -1">
 									<li id="like" class="right" @click="toggleLike()">
 										<span class="flow-text">{{currentSong.likes}} </span>
-										<i id="thumbs_up" class="material-icons grey-text" v-bind:class="{liked: liked}">thumb_up</i>
+										<i id="thumbs_up" class="material-icons grey-text" v-bind:class="{ liked: liked }">thumb_up</i>
+										<a class='absolute-a behind' @click="toggleLike()" href='#'></a>
 									</li>
 									<li style="margin-right: 10px;" id="dislike" class="right" @click="toggleDislike()">
 										<span class="flow-text">{{currentSong.dislikes}} </span>
-										<i id="thumbs_down" class="material-icons grey-text" v-bind:class="{disliked: disliked}">thumb_down</i>
+										<i id="thumbs_down" class="material-icons grey-text" v-bind:class="{ disliked: disliked }">thumb_down</i>
+										<a class='absolute-a behind' @click="toggleDislike()" href='#'></a>
 									</li>
 								</ul>
 							</div>
 						</div>
 					</div>
-					<div class="column is-4-desktop is-12-mobile" v-if="!simpleSong">
-						<img class="image" id="song-thumbnail" style="margin-top: 10px !important" :src="currentSong.thumbnail" alt="Song Thumbnail" onerror="this.src='/assets/notes.png'" />
+				</div>
+			</div>
+		</div>
+		<div class="mobile-only" v-show="!noSong">
+			<div>
+				<div>
+					<div>
+						<h3>{{currentSong.title}}</h3>
+						<h4 class="thin">{{currentSong.artists}}</h4>
+						<h5>{{timeElapsed}} / {{formatTime(currentSong.duration)}}</h5>
+						<div>
+							<form class="columns" action="#">
+								<p class='column is-11-mobile volume-slider-wrapper'>
+									<i class="material-icons" @click='toggleMute()' v-if='muted'>volume_mute</i>
+									<i class="material-icons" @click='toggleMute()' v-else>volume_down</i>
+									<input type="range" id="volumeSlider" min="0" max="100" class="active" v-on:change="changeVolume()" v-on:input="changeVolume()">
+									<i class="material-icons" @click='increaseVolume()'>volume_up</i>
+								</p>
+							</form>
+							<div>
+								<ul id="ratings" style="display: inline-block;" v-if="currentSong.likes !== -1 && currentSong.dislikes !== -1">
+									<li id="dislike" style="display: inline-block;margin-right: 10px;" @click="toggleDislike()">
+										<span class="flow-text">{{currentSong.dislikes}} </span>
+										<i id="thumbs_down" class="material-icons grey-text" v-bind:class="{ disliked: disliked }">thumb_down</i>
+										<a class='absolute-a behind' @click="toggleDislike()" href='#'></a>
+									</li>
+									<li id="like" style="display: inline-block;" @click="toggleLike()">
+										<span class="flow-text">{{currentSong.likes}} </span>
+										<i id="thumbs_up" class="material-icons grey-text" v-bind:class="{ liked: liked }">thumb_up</i>
+										<a class='absolute-a behind' @click="toggleLike()" href='#'></a>
+									</li>
+								</ul>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -71,18 +111,21 @@
 	import { Toast } from 'vue-roaster';
 
 	import SongQueue from '../Modals/AddSongToQueue.vue';
+	import AddToPlaylist from '../Modals/AddSongToPlaylist.vue';
 	import EditPlaylist from '../Modals/Playlists/Edit.vue';
 	import CreatePlaylist from '../Modals/Playlists/Create.vue';
 	import EditStation from '../Modals/EditStation.vue';
 	import Report from '../Modals/Report.vue';
 
-	import QueueSidebar from '../Sidebars/Queue.vue';
+	import SongsListSidebar from '../Sidebars/SongsList.vue';
 	import PlaylistSidebar from '../Sidebars/Playlist.vue';
 	import UsersSidebar from '../Sidebars/UsersList.vue';
 
 	import OfficialHeader from './OfficialHeader.vue';
 	import CommunityHeader from './CommunityHeader.vue';
+	import MainFooter from '../MainFooter.vue';
 	import io from '../../io';
+	import auth from '../../auth';
 
 	export default {
 		data() {
@@ -90,65 +133,84 @@
 				type: '',
 				playerReady: false,
 				previousSong: null,
-				currentSong: null,
+				currentSong: {},
 				player: undefined,
 				timePaused: 0,
 				paused: false,
+				muted: false,
 				timeElapsed: '0:00',
 				liked: false,
 				disliked: false,
 				modals: {
 					addSongToQueue: false,
+					addSongToPlaylist: false,
 					editPlaylist: false,
 					createPlaylist: false,
 					editStation: false,
 					report: false
 				},
 				sidebars: {
-					queue: false,
+					songslist: false,
 					users: false,
 					playlist: false
 				},
 				noSong: false,
 				simpleSong: false,
-				queue: [],
+				songsList: [],
 				timeBeforePause: 0,
 				station: {},
-				skipVotes: 0
+				skipVotes: 0,
+				privatePlaylistQueueSelected: null,
+				automaticallyRequestedSongId: null,
+				systemDifference: 0,
+				users: [],
+				userCount: 0
 			}
 		},
 		methods: {
 			editPlaylist: function (id) {
 				this.playlistBeingEdited = id;
-				this.toggleModal('editPlaylist');
+				this.modals.editPlaylist = !this.modals.editPlaylist;
 			},
-			toggleModal: function (type) {
-				if (type == 'addSongToQueue') this.modals.addSongToQueue = !this.modals.addSongToQueue;
-				else if (type == 'editPlaylist') this.modals.editPlaylist = !this.modals.editPlaylist;
-				else if (type == 'createPlaylist') this.modals.createPlaylist = !this.modals.createPlaylist;
-				else if (type == 'editStation') this.modals.editStation = !this.modals.editStation;
-				else if (type == 'report') this.modals.report = !this.modals.report;
+			editStation: function () {
+				let _this = this;
+				this.$broadcast('editStation', {
+					_id: _this.station._id,
+					name: _this.station.name,
+					type: _this.type,
+					partyMode: _this.station.partyMode,
+					description: _this.station.description,
+					privacy: _this.station.privacy,
+					displayName: _this.station.displayName
+				});
+			},
+			toggleSidebar: function (type) {
+				Object.keys(this.sidebars).forEach(sidebar => {
+					if (sidebar !== type) this.sidebars[sidebar] = false;
+					else this.sidebars[type] = !this.sidebars[type];
+				});
 			},
 			youtubeReady: function() {
 				let local = this;
-				console.log("@@5", local.currentSong._id);
 				if (!local.player) {
 					local.player = new YT.Player("player", {
 						height: 270,
 						width: 480,
-						videoId: local.currentSong._id,
+						videoId: local.currentSong.songId,
 						startSeconds: local.getTimeElapsed() / 1000 + local.currentSong.skipDuration,
 						playerVars: {controls: 0, iv_load_policy: 3, rel: 0, showinfo: 0},
 						events: {
 							'onReady': function (event) {
-								console.log("@@6");
 								local.playerReady = true;
 								let volume = parseInt(localStorage.getItem("volume"));
 								volume = (typeof volume === "number") ? volume : 20;
 								local.player.setVolume(volume);
 								if (volume > 0) local.player.unMute();
-								console.log("@@7");
 								local.playVideo();
+							},
+							'onError': function(err) {
+								console.log("iframe error", err);
+								local.voteSkipStation();
 							},
 							'onStateChange': function (event) {
 								if (event.data === 1 && local.videoLoading === true) {
@@ -159,7 +221,7 @@
 									local.player.seekTo(local.timeBeforePause / 1000, true);
 									local.player.pauseVideo();
 								}
-								if (event.data === 2 && !local.paused && !local.noSong) {
+								if (event.data === 2 && !local.paused && !local.noSong && (local.player.getDuration() / 1000) < local.currentSong.duration) {
 									local.player.seekTo(local.getTimeElapsed() / 1000 + local.currentSong.skipDuration, true);
 									local.player.playVideo();
 								}
@@ -170,16 +232,14 @@
 			},
 			getTimeElapsed: function() {
 				let local = this;
-				if (local.currentSong) return Date.now() - local.startedAt - local.timePaused;
+				if (local.currentSong) return Date.currently() - local.startedAt - local.timePaused;
 				else return 0;
 			},
 			playVideo: function() {
 				let local = this;
-				console.log("@@9");
 				if (local.playerReady) {
-					console.log("@@@1");
 					local.videoLoading = true;
-					local.player.loadVideoById(local.currentSong._id, local.getTimeElapsed() / 1000 + local.currentSong.skipDuration);
+					local.player.loadVideoById(local.currentSong.songId, local.getTimeElapsed() / 1000 + local.currentSong.skipDuration);
 
 					if (local.currentSong.artists) local.currentSong.artists = local.currentSong.artists.join(", ");
 					if (window.stationInterval !== 0) clearInterval(window.stationInterval);
@@ -197,21 +257,20 @@
 			},
 			formatTime: function(duration) {
 				let d = moment.duration(duration, 'seconds');
+				if (duration < 0) return "0:00";
 				return ((d.hours() > 0) ? (d.hours() < 10 ? ("0" + d.hours() + ":") : (d.hours() + ":")) : "") + (d.minutes() + ":") + (d.seconds() < 10 ? ("0" + d.seconds()) : d.seconds());
 			},
 			calculateTimeElapsed: function() {
 				let local = this;
-				let currentTime = Date.now();
+				let currentTime = Date.currently();
 
 				if (local.currentTime !== undefined && local.paused) {
-					console.log("123");
-					local.timePaused += (Date.now() - local.currentTime);
+					local.timePaused += (Date.currently() - local.currentTime);
 					local.currentTime = undefined;
 				}
 
-				let duration = (Date.now() - local.startedAt - local.timePaused) / 1000;
+				let duration = (Date.currently() - local.startedAt - local.timePaused) / 1000;
 				let songDuration = local.currentSong.duration;
-				//console.log(duration, currentTime, local.startedAt, local.timePaused, local.startedAt - local.timePaused, Date.now() - local.startedAt - local.timePaused, Date.now() - local.startedAt);
 				if (songDuration <= duration) local.player.pauseVideo();
 				if ((!local.paused) && duration <= songDuration) local.timeElapsed = local.formatTime(duration);
 			},
@@ -242,76 +301,104 @@
 			},
 			skipStation: function () {
 				let _this = this;
-				_this.socket.emit('stations.forceSkip', _this.stationId, data => {
-					if (data.status !== 'success') {
-						Toast.methods.addToast(`Error: ${data.message}`, 8000);
-					} else {
-						Toast.methods.addToast('Successfully skipped the station\'s current song.', 4000);
-					}
+				_this.socket.emit('stations.forceSkip', _this.station._id, data => {
+					if (data.status !== 'success') Toast.methods.addToast(`Error: ${data.message}`, 8000);
+					else Toast.methods.addToast('Successfully skipped the station\'s current song.', 4000);
 				});
 			},
 			voteSkipStation: function () {
 				let _this = this;
-				_this.socket.emit('stations.voteSkip', _this.stationId, data => {
-					if (data.status !== 'success') {
-						Toast.methods.addToast(`Error: ${data.message}`, 8000);
-					} else {
-						Toast.methods.addToast('Successfully voted to skip the current song.', 4000);
-					}
+				_this.socket.emit('stations.voteSkip', _this.station._id, data => {
+					if (data.status !== 'success') Toast.methods.addToast(`Error: ${data.message}`, 8000);
+					else Toast.methods.addToast('Successfully voted to skip the current song.', 4000);
 				});
 			},
 			resumeStation: function () {
 				let _this = this;
-				_this.socket.emit('stations.resume', _this.stationId, data => {
-					console.log(data);
-					if (data.status !== 'success') {
-						Toast.methods.addToast(`Error: ${data.message}`, 8000);
-					} else {
-						Toast.methods.addToast('Successfully resumed the station.', 4000);
-					}
+				_this.socket.emit('stations.resume', _this.station._id, data => {
+					if (data.status !== 'success') Toast.methods.addToast(`Error: ${data.message}`, 8000);
+					else Toast.methods.addToast('Successfully resumed the station.', 4000);
 				});
 			},
 			pauseStation: function () {
 				let _this = this;
-				_this.socket.emit('stations.pause', _this.stationId, data => {
-					console.log(data);
-					if (data.status !== 'success') {
-						Toast.methods.addToast(`Error: ${data.message}`, 8000);
-					} else {
-						Toast.methods.addToast('Successfully paused the station.', 4000);
-					}
+				_this.socket.emit('stations.pause', _this.station._id, data => {
+					if (data.status !== 'success') Toast.methods.addToast(`Error: ${data.message}`, 8000);
+					else Toast.methods.addToast('Successfully paused the station.', 4000);
 				});
+			},
+			toggleMute: function () {
+				if (this.playerReady) {
+					let previousVolume = parseInt(localStorage.getItem("volume"));
+					let volume = this.player.getVolume() <= 0 ? previousVolume : 0;
+					this.muted = !this.muted;
+					$("#volumeSlider").val(volume);
+					this.player.setVolume(volume);
+					if (!this.muted) localStorage.setItem("volume", volume);
+				}
+			},
+			increaseVolume: function () {
+				if (this.playerReady) {
+					let previousVolume = parseInt(localStorage.getItem("volume"));
+					let volume = previousVolume + 5;
+					if (previousVolume === 0) this.muted = false;
+					if (volume > 100) volume = 100;
+					$("#volumeSlider").val(volume);
+					this.player.setVolume(volume);
+					localStorage.setItem("volume", volume);
+				}
 			},
 			toggleLike: function() {
 				let _this = this;
-				if (_this.liked) _this.socket.emit('songs.unlike', _this.currentSong._id, data => {
-					if (data.status !== 'success') {
-						Toast.methods.addToast(`Error: ${data.message}`, 8000);
-					}
-				}); else _this.socket.emit('songs.like', _this.currentSong._id, data => {
-					if (data.status !== 'success') {
-						Toast.methods.addToast(`Error: ${data.message}`, 8000);
-					}
+				if (_this.liked) _this.socket.emit('songs.unlike', _this.currentSong.songId, data => {
+					if (data.status !== 'success') Toast.methods.addToast(`Error: ${data.message}`, 8000);
+				}); else _this.socket.emit('songs.like', _this.currentSong.songId, data => {
+					if (data.status !== 'success') Toast.methods.addToast(`Error: ${data.message}`, 8000);
 				});
 			},
 			toggleDislike: function() {
 				let _this = this;
-				if (_this.disliked) return _this.socket.emit('songs.undislike', _this.currentSong._id, data => {
-					if (data.status !== 'success') {
-						Toast.methods.addToast(`Error: ${data.message}`, 8000);
-					}
+				if (_this.disliked) return _this.socket.emit('songs.undislike', _this.currentSong.songId, data => {
+					if (data.status !== 'success') Toast.methods.addToast(`Error: ${data.message}`, 8000);
 				});
-				_this.socket.emit('songs.dislike', _this.currentSong._id, data => {
-					if (data.status !== 'success') {
-						Toast.methods.addToast(`Error: ${data.message}`, 8000);
-					}
+				_this.socket.emit('songs.dislike', _this.currentSong.songId, data => {
+					if (data.status !== 'success') Toast.methods.addToast(`Error: ${data.message}`, 8000);
 				});
+			},
+			addFirstPrivatePlaylistSongToQueue: function() {
+				let _this = this;
+				let isInQueue = false;
+				let userId = _this.$parent.userId;
+				if (_this.type === 'community') {
+					_this.songsList.forEach((queueSong) => {
+						if (queueSong.requestedBy === userId) isInQueue = true;
+					});
+					if (!isInQueue && _this.privatePlaylistQueueSelected) {
+
+						_this.socket.emit('playlists.getFirstSong', _this.privatePlaylistQueueSelected, data => {
+							if (data.status === 'success') {
+								console.log(data.song);
+								let songId = data.song._id;
+								_this.automaticallyRequestedSongId = data.song.songId;
+								_this.socket.emit('stations.addToQueue', _this.station._id, data.song.songId, data => {
+									if (data.status === 'success') {
+										_this.socket.emit('playlists.moveSongToBottom', _this.privatePlaylistQueueSelected, songId, data => {
+											if (data.status === 'success') {}
+										});
+									}
+								});
+							}
+						});
+					}
+				}
 			},
 			joinStation: function () {
 				let _this = this;
-				_this.socket.emit('stations.join', _this.stationId, res => {
+				_this.socket.emit('stations.join', _this.stationName, res => {
 					if (res.status === 'success') {
 						_this.station = {
+							_id: res.data._id,
+							name: _this.stationName,
 							displayName: res.data.displayName,
 							description: res.data.description,
 							privacy: res.data.privacy,
@@ -319,64 +406,93 @@
 							owner: res.data.owner,
 							privatePlaylist: res.data.privatePlaylist
 						};
-						_this.currentSong = (res.data.currentSong) ? res.data.currentSong : null;
+						_this.currentSong = (res.data.currentSong) ? res.data.currentSong : {};
 						_this.type = res.data.type;
 						_this.startedAt = res.data.startedAt;
 						_this.paused = res.data.paused;
 						_this.timePaused = res.data.timePaused;
+						_this.userCount = res.data.userCount;
+						_this.users = res.data.users;
 						if (res.data.currentSong) {
 							_this.noSong = false;
 							_this.simpleSong = (res.data.currentSong.likes === -1 && res.data.currentSong.dislikes === -1);
 							if (_this.simpleSong) {
 								_this.currentSong.skipDuration = 0;
 							}
-							console.log(12334);
 							_this.youtubeReady();
 							_this.playVideo();
 							_this.socket.emit('songs.getOwnSongRatings', res.data.currentSong._id, data => {
-								if (_this.currentSong._id === data.songId) {
+								if (_this.currentSong.songId === data.songId) {
 									_this.liked = data.liked;
 									_this.disliked = data.disliked;
 								}
 							});
 						} else {
 							if (_this.playerReady) _this.player.pauseVideo();
-							console.log("NO SONG TRUE1", res.data);
 							_this.noSong = true;
 						}
 						if (_this.type === 'community') {
-							_this.socket.emit('stations.getQueue', _this.stationId, data => {
-								console.log(data);
-								if (data.status === 'success') {
-									_this.queue = data.queue;
-								}
+							_this.socket.emit('stations.getQueue', _this.station._id, data => {
+								if (data.status === 'success') _this.songsList = data.queue;
+							});
+						}
+						if (_this.type === 'official') {
+							_this.socket.emit('stations.getPlaylist', _this.station._id, res => {
+								if (res.status == 'success') _this.songsList = res.data;
 							});
 						}
 					} else {
-						//TODO Handle error
+						_this.$router.go('/404');
+						Toast.methods.addToast(res.message, 3000);
 					}
+					// UNIX client time before ping
+					let beforePing = Date.now();
+					_this.socket.emit('apis.ping', res => {
+						// UNIX client time after ping
+						let afterPing = Date.now();
+						// Average time in MS it took between the server responding and the client receiving
+						let connectionLatency = (afterPing - beforePing) / 2;
+						console.log(connectionLatency, beforePing - afterPing);
+						// UNIX server time
+						let serverDate = res.date;
+						// Difference between the server UNIX time and the client UNIX time after ping, with the connectionLatency added to the server UNIX time
+						let difference = (serverDate + connectionLatency) - afterPing;
+						console.log("Difference: ", difference);
+						if (difference > 3000 || difference < -3000) {
+							console.log("System time difference is bigger than 3 seconds.");
+						}
+						_this.systemDifference = difference;
+					});
 				});
 			}
 		},
 		ready: function() {
 			let _this = this;
-			_this.stationId = _this.$route.params.id;
+
+			Date.currently = () => {
+				return new Date().getTime() + _this.systemDifference;
+			};
+
+			_this.stationName = _this.$route.params.id;
+
 			window.stationInterval = 0;
 
-			io.getSocket((socket) => {
+			io.getSocket(socket => {
 				_this.socket = socket;
+
 				io.removeAllListeners();
-
-				if (_this.socket.connected) {
-					_this.joinStation();
-				}
-
+				if (_this.socket.connected) _this.joinStation();
 				io.onConnect(() => {
 					_this.joinStation();
 				});
-
+				_this.socket.emit('stations.findByName', _this.stationName, res => {
+					if (res.status === 'error') {
+						_this.$router.go('/404');
+						Toast.methods.addToast(res.message, 3000);
+					}
+				});
 				_this.socket.on('event:songs.next', data => {
-					_this.previousSong = _this.currentSong;
+					_this.previousSong = (_this.currentSong.songId) ? _this.currentSong : null;
 					_this.currentSong = (data.currentSong) ? data.currentSong : {};
 					_this.startedAt = data.startedAt;
 					_this.paused = data.paused;
@@ -384,22 +500,27 @@
 					if (data.currentSong) {
 						_this.noSong = false;
 						_this.simpleSong = (data.currentSong.likes === -1 && data.currentSong.dislikes === -1);
-						if (_this.simpleSong) {
-							_this.currentSong.skipDuration = 0;
-						}
-						console.log(1233, _this.stationId);
+						if (_this.simpleSong) _this.currentSong.skipDuration = 0;
 						if (!_this.playerReady) _this.youtubeReady();
 						else _this.playVideo();
-						_this.socket.emit('songs.getOwnSongRatings', data.currentSong._id, (data) => {
-							if (_this.currentSong._id === data.songId) {
+						_this.socket.emit('songs.getOwnSongRatings', data.currentSong.songId, (data) => {
+							if (_this.currentSong.songId === data.songId) {
 								_this.liked = data.liked;
 								_this.disliked = data.disliked;
 							}
 						});
 					} else {
 						if (_this.playerReady) _this.player.pauseVideo();
-						console.log("NO SONG TRUE2", data);
 						_this.noSong = true;
+					}
+
+					let isInQueue = false;
+					let userId = _this.$parent.userId;
+					_this.songsList.forEach((queueSong) => {
+						if (queueSong.requestedBy === userId) isInQueue = true;
+					});
+					if (!isInQueue && _this.privatePlaylistQueueSelected && (_this.automaticallyRequestedSongId !== _this.currentSong.songId || !_this.currentSong.songId)) {
+						_this.addFirstPrivatePlaylistSongToQueue();
 					}
 				});
 
@@ -412,39 +533,49 @@
 					_this.resumeLocalStation();
 				});
 
+				_this.socket.on('event:stations.remove', () => {
+					location.href = '/';
+				});
+
 				_this.socket.on('event:song.like', data => {
 					if (!this.noSong) {
-						if (data.songId === _this.currentSong._id) {
-							_this.currentSong.likes++;
-							if (data.undisliked) _this.currentSong.dislikes--;
+						if (data.songId === _this.currentSong.songId) {
+							_this.currentSong.dislikes = data.dislikes;
+							_this.currentSong.likes = data.likes;
 						}
 					}
 				});
 
 				_this.socket.on('event:song.dislike', data => {
 					if (!this.noSong) {
-						if (data.songId === _this.currentSong._id) {
-							_this.currentSong.dislikes++;
-							if (data.unliked) _this.currentSong.likes--;
+						if (data.songId === _this.currentSong.songId) {
+							_this.currentSong.dislikes = data.dislikes;
+							_this.currentSong.likes = data.likes;
 						}
 					}
 				});
 
 				_this.socket.on('event:song.unlike', data => {
 					if (!this.noSong) {
-						if (data.songId === _this.currentSong._id) _this.currentSong.likes--;
+						if (data.songId === _this.currentSong.songId) {
+							_this.currentSong.dislikes = data.dislikes;
+							_this.currentSong.likes = data.likes;
+						}
 					}
 				});
 
 				_this.socket.on('event:song.undislike', data => {
 					if (!this.noSong) {
-						if (data.songId === _this.currentSong._id) _this.currentSong.dislikes--;
+						if (data.songId === _this.currentSong.songId) {
+							_this.currentSong.dislikes = data.dislikes;
+							_this.currentSong.likes = data.likes;
+						}
 					}
 				});
 
 				_this.socket.on('event:song.newRatings', data => {
 					if (!this.noSong) {
-						if (data.songId === _this.currentSong._id) {
+						if (data.songId === _this.currentSong.songId) {
 							_this.liked = data.liked;
 							_this.disliked = data.disliked;
 						}
@@ -452,41 +583,93 @@
 				});
 
 				_this.socket.on('event:queue.update', queue => {
-					if (this.type === 'community') {
-						this.queue = queue;
-					}
+					if (this.type === 'community') this.songsList = queue;
 				});
 
 				_this.socket.on('event:song.voteSkipSong', () => {
-					if (this.currentSong) {
-						this.currentSong.skipVotes++;
+					if (this.currentSong) this.currentSong.skipVotes++;
+				});
+
+				_this.socket.on('event:privatePlaylist.selected', (playlistId) => {
+					if (this.type === 'community') {
+						this.station.privatePlaylist = playlistId;
 					}
+				});
+
+				_this.socket.on('event:partyMode.updated', (partyMode) => {
+					if (this.type === 'community') {
+						this.station.partyMode = partyMode;
+					}
+				});
+
+				_this.socket.on('event:newOfficialPlaylist', (playlist) => {
+					console.log(playlist);
+					if (this.type === 'official') {
+						this.songsList = playlist;
+					}
+				});
+
+				_this.socket.on('event:users.updated', users => {
+					_this.users = users;
+				});
+
+				_this.socket.on('event:userCount.updated', userCount => {
+					_this.userCount = userCount;
 				});
 			});
 
+
 			let volume = parseInt(localStorage.getItem("volume"));
-			volume = (typeof volume === "number") ? volume : 20;
+			volume = (typeof volume === "number" && !isNaN(volume)) ? volume : 20;
+			localStorage.setItem("volume", volume);
 			$("#volumeSlider").val(volume);
 		},
 		components: {
 			OfficialHeader,
 			CommunityHeader,
 			SongQueue,
+			AddToPlaylist,
 			EditPlaylist,
 			CreatePlaylist,
 			EditStation,
 			Report,
-			QueueSidebar,
+			SongsListSidebar,
 			PlaylistSidebar,
-			UsersSidebar
+			UsersSidebar,
+			MainFooter
 		}
 	}
 </script>
 
 <style lang="scss">
-	.noSong {
+	.no-song {
 		color: #03A9F4;
 		text-align: center;
+	}
+
+	#volumeSlider {
+		padding: 0 15px;
+    	background: transparent;
+	}
+
+	.volume-slider-wrapper {
+		margin-top: 0;
+		position: relative;
+		display: flex;
+		align-items: center;
+		.material-icons { user-select: none; }
+	}
+
+	.material-icons { cursor: pointer; }
+
+	.stationDisplayName {
+		color: white !important;
+	}
+
+	.add-to-playlist {
+		display: flex;
+	    align-items: center;
+	    justify-content: center;
 	}
 
 	.slideout {
@@ -520,7 +703,7 @@
 		padding-top: 0.5vw;
 		transition: all 0.1s;
 		margin: 0 auto;
-		max-width: 1280px;
+		max-width: 100%;
 		width: 90%;
 
 		@media only screen and (min-width: 993px) {
@@ -529,6 +712,28 @@
 
 		@media only screen and (min-width: 601px) {
 			width: 85%;
+		}
+
+		@media (min-width: 999px) {
+			.mobile-only {
+				display: none;
+			}
+			.desktop-only {
+				display: block;
+			}
+		}
+		@media (max-width: 998px) {
+			.mobile-only {
+				display: block;
+			}
+			.desktop-only {
+				display: none;
+				visibility: hidden;
+			}
+		}
+
+		.mobile-only {
+			text-align: center;
 		}
 
 		input[type=range] {
@@ -679,7 +884,7 @@
 
 	.seeker-bar-container {
 		position: relative;
-		height: 5px;
+		height: 7px;
 		display: block;
 		width: 100%;
 		overflow: hidden;
@@ -765,5 +970,36 @@
 
 	.btn-search {
 		font-size: 14px;
+	}
+
+	.menu { padding: 0 10px; }
+
+	.menu-list li a:hover { color: #000 !important; }
+
+	.menu-list li {
+		display: flex;
+		justify-content: space-between;
+	}
+
+	.menu-list a {
+		/*padding: 0 10px !important;*/
+	}
+
+	.menu-list a:hover {
+		background-color : transparent;
+	}
+
+	.icons-group { display: flex; }
+
+	#like, #dislike {
+		position: relative;
+	}
+
+	.behind {
+		z-index: -1;
+	}
+
+	.behind:focus {
+		z-index: 0;
 	}
 </style>

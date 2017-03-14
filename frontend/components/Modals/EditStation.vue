@@ -1,103 +1,186 @@
 <template>
-	<div class='modal is-active'>
-		<div class='modal-background'></div>
-		<div class='modal-card'>
-			<header class='modal-card-head'>
-				<p class='modal-card-title'>Edit station</p>
-				<button class='delete' @click='$parent.toggleModal("editStation")'></button>
-			</header>
-			<section class='modal-card-body'>
+	<div>
+		<modal title='Edit Station'>
+			<div slot='body'>
+				<label class='label'>Name</label>
+				<p class='control'>
+					<input class='input' type='text' placeholder='Station Name' v-model='editing.name'>
+				</p>
 				<label class='label'>Display name</label>
-				<div class='control is-grouped'>
-					<p class='control is-expanded'>
-						<input class='input' type='text' placeholder='Station Display Name' v-model='$parent.station.displayName'>
-					</p>
-					<p class='control'>
-						<a class='button is-info' @click='updateDisplayName()'>Update</a>
-					</p>
-				</div>
+				<p class='control'>
+					<input class='input' type='text' placeholder='Station Display Name' v-model='editing.displayName'>
+				</p>
 				<label class='label'>Description</label>
-				<div class='control is-grouped'>
-					<p class='control is-expanded'>
-						<input class='input' type='text' placeholder='Station Display Name' v-model='$parent.station.description'>
-					</p>
-					<p class='control'>
-						<a class='button is-info' @click='updateDescription()'>Update</a>
-					</p>
-				</div>
+				<p class='control'>
+					<input class='input' type='text' placeholder='Station Display Name' v-model='editing.description'>
+				</p>
 				<label class='label'>Privacy</label>
-				<div class='control is-grouped'>
-					<p class='control is-expanded'>
-						<span class='select'>
-							<select v-model='$parent.station.privacy'>
-								<option :value='"public"'>Public</option>
-								<option :value='"unlisted"'>Unlisted</option>
-								<option :value='"private"'>Private</option>
-							</select>
-						</span>
-					</p>
-					<p class='control'>
-						<a class='button is-info' @click='updatePrivacy()'>Update</a>
-					</p>
-				</div>
-				<div class='control is-grouped' v-if="$parent.type === 'community'">
-					<p class="control is-expanded">
-						<label class="checkbox">
-							<input type="checkbox" v-model="$parent.station.partyMode">
-							Party mode
-						</label>
-					</p>
-					<p class='control'>
-						<a class='button is-info' @click='updatePartyMode()'>Update</a>
-					</p>
-				</div>
-			</section>
-		</div>
+				<p class='control'>
+					<span class='select'>
+						<select v-model='editing.privacy'>
+							<option :value='"public"'>Public</option>
+							<option :value='"unlisted"'>Unlisted</option>
+							<option :value='"private"'>Private</option>
+						</select>
+					</span>
+				</p>
+				<p class='control'>
+					<label class="checkbox party-mode-inner">
+						<input type="checkbox" v-model="editing.partyMode">
+						&nbsp;Party mode
+					</label>
+				</p>
+			</div>
+			<div slot='footer'>
+				<button class='button is-success' @click='update()'>Update Settings</button>
+				<button class='button is-danger' @click='deleteStation()' v-if="$parent.type === 'community'">Delete station</button>
+			</div>
+		</modal>
 	</div>
 </template>
 
 <script>
 	import { Toast } from 'vue-roaster';
+	import Modal from './Modal.vue';
 	import io from '../../io';
+	import validation from '../../validation';
 
 	export default {
+		data: function() {
+			return {
+				editing: {
+					_id: '',
+					name: '',
+					type: '',
+					displayName: '',
+					description: '',
+					privacy: 'private',
+					partyMode: false
+				}
+			}
+		},
 		methods: {
+			update: function () {
+				if (this.$parent.station.name !== this.editing.name) this.updateName();
+				if (this.$parent.station.displayName !== this.editing.displayName) this.updateDisplayName();
+				if (this.$parent.station.description !== this.editing.description) this.updateDescription();
+				if (this.$parent.station.privacy !== this.editing.privacy) this.updatePrivacy();
+				if (this.$parent.station.partyMode !== this.editing.partyMode) this.updatePartyMode();
+			},
+			updateName: function () {
+				const name = this.editing.name;
+				if (!validation.isLength(name, 2, 16)) return Toast.methods.addToast('Name must have between 2 and 16 characters.', 8000);
+				if (!validation.regex.az09_.test(name)) return Toast.methods.addToast('Invalid name format. Allowed characters: a-z, 0-9 and _.', 8000);
+
+
+				this.socket.emit('stations.updateName', this.editing._id, name, res => {
+					if (res.status === 'success') {
+						if (this.$parent.station) _this.$parent.station.name = name;
+						else {
+							this.$parent.stations.forEach((station, index) => {
+								if (station._id === this.editing._id) return this.$parent.stations[index].name = name;
+							});
+						}
+					}
+					Toast.methods.addToast(res.message, 8000);
+				});
+			},
 			updateDisplayName: function () {
-				this.socket.emit('stations.updateDisplayName', this.$parent.stationId, this.$parent.station.displayName, res => {
-					if (res.status == 'success') return Toast.methods.addToast(res.message, 4000);
+				const displayName = this.editing.displayName;
+				if (!validation.isLength(displayName, 2, 32)) return Toast.methods.addToast('Display name must have between 2 and 32 characters.', 8000);
+				if (!validation.regex.azAZ09_.test(displayName)) return Toast.methods.addToast('Invalid display name format. Allowed characters: a-z, A-Z, 0-9 and _.', 8000);
+
+
+				this.socket.emit('stations.updateDisplayName', this.editing._id, displayName, res => {
+					if (res.status === 'success') {
+						if (this.$parent.station) _this.$parent.station.displayName = displayName;
+						else {
+							this.$parent.stations.forEach((station, index) => {
+								if (station._id === this.editing._id) return this.$parent.stations[index].displayName = displayName;
+							});
+						}
+					}
 					Toast.methods.addToast(res.message, 8000);
 				});
 			},
 			updateDescription: function () {
-				this.socket.emit('stations.updateDescription', this.$parent.stationId, this.$parent.station.description, res => {
-					if (res.status == 'success') return Toast.methods.addToast(res.message, 4000);
+				const description = this.editing.description;
+				if (!validation.isLength(description, 2, 200)) return Toast.methods.addToast('Description must have between 2 and 200 characters.', 8000);
+				let characters = description.split("");
+				characters = characters.filter(function(character) {
+					return character.charCodeAt(0) === 21328;
+				});
+				if (characters.length !== 0) return Toast.methods.addToast('Invalid description format. Swastika\'s are not allowed.', 8000);
+
+
+				this.socket.emit('stations.updateDescription', this.editing._id, description, res => {
+					if (res.status === 'success') {
+						if (_this.$parent.station) _this.$parent.station.description = description;
+						else {
+							_this.$parent.stations.forEach((station, index) => {
+								if (station._id === station._id) return _this.$parent.stations[index].description = description;
+							});
+						}
+						return Toast.methods.addToast(res.message, 4000);
+					}
 					Toast.methods.addToast(res.message, 8000);
 				});
 			},
 			updatePrivacy: function () {
-				this.socket.emit('stations.updatePrivacy', this.$parent.stationId, this.$parent.station.privacy, res => {
-					if (res.status == 'success') return Toast.methods.addToast(res.message, 4000);
+				let _this = this;
+				this.socket.emit('stations.updatePrivacy', this.editing._id, this.editing.privacy, res => {
+					if (res.status === 'success') {
+						if (_this.$parent.station) _this.$parent.station.privacy = _this.editing.privacy;
+						else {
+							_this.$parent.stations.forEach((station, index) => {
+								if (station._id === station._id) return _this.$parent.stations[index].privacy = _this.editing.privacy;
+							});
+						}
+						return Toast.methods.addToast(res.message, 4000);
+					}
 					Toast.methods.addToast(res.message, 8000);
 				});
 			},
 			updatePartyMode: function () {
-				this.socket.emit('stations.updatePartyMode', this.$parent.stationId, this.$parent.station.partyMode, res => {
-					if (res.status == 'success') return Toast.methods.addToast(res.message, 4000);
+				let _this = this;
+				this.socket.emit('stations.updatePartyMode', this.editing._id, this.editing.partyMode, res => {
+					if (res.status === 'success') {
+						if (_this.$parent.station) _this.$parent.station.partyMode = _this.editing.partyMode;
+						else {
+							_this.$parent.stations.forEach((station, index) => {
+								if (station._id === station._id) return _this.$parent.stations[index].partyMode = _this.editing.partyMode;
+							});
+						}
+						return Toast.methods.addToast(res.message, 4000);
+					}
+					Toast.methods.addToast(res.message, 8000);
+				});
+			},
+			deleteStation: function() {
+				let _this = this;
+				this.socket.emit('stations.remove', this.editing._id, res => {
 					Toast.methods.addToast(res.message, 8000);
 				});
 			}
 		},
 		ready: function () {
 			let _this = this;
-			io.getSocket((socket) => {
+			io.getSocket(socket => {
 				_this.socket = socket;
 			});
 		},
 		events: {
 			closeModal: function() {
-				this.$parent.toggleModal("editStation")
+				this.$parent.modals.editStation = false;
+			},
+			editStation: function(station) {
+				for (let prop in station) {
+					this.editing[prop] = station[prop];
+				}
+				this.$parent.modals.editStation = true;
 			}
-		}
+		},
+		components: { Modal }
 	}
 </script>
 
@@ -114,4 +197,11 @@
 	.table { margin-bottom: 0; }
 
 	h5 { padding: 20px 0; }
+
+	.party-mode-inner, .party-mode-outer {
+		display: flex;
+		align-items: center;
+	}
+
+	.select:after { border-color: #029ce3; }
 </style>

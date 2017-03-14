@@ -1,53 +1,57 @@
 <template>
-	<div class='columns is-mobile'>
-		<div class='column is-8-desktop is-offset-2-desktop is-12-mobile'>
-			<table class='table is-striped'>
-				<thead>
-					<tr>
-						<td>Thumbnail</td>
-						<td>Title</td>
-						<td>YouTube ID</td>
-						<td>Artists</td>
-						<td>Genres</td>
-						<td>Requested By</td>
-						<td>Options</td>
-					</tr>
-				</thead>
-				<tbody>
-					<tr v-for='(index, song) in songs' track-by='$index'>
-						<td>
-							<img class='song-thumbnail' :src='song.thumbnail' onerror="this.src='/assets/notes.png'">
-						</td>
-						<td>
-							<strong>{{ song.title }}</strong>
-						</td>
-						<td>{{ song._id }}</td>
-						<td>{{ song.artists.join(', ') }}</td>
-						<td>{{ song.genres.join(', ') }}</td>
-						<td>{{ song.requestedBy }}</td>
-						<td>
-							<a class='button is-primary' @click='edit(song, index)'>Edit</a>
-							<a class='button is-danger' @click='remove(song._id, index)'>Remove</a>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
+	<div class='container'>
+		<input type='text' class='input' v-model='searchQuery' placeholder='Search for Songs'>
+		<br /><br />
+		<table class='table is-striped'>
+			<thead>
+				<tr>
+					<td>Thumbnail</td>
+					<td>Title</td>
+					<td>YouTube ID</td>
+					<td>Artists</td>
+					<td>Genres</td>
+					<td>Requested By</td>
+					<td>Options</td>
+				</tr>
+			</thead>
+			<tbody>
+				<tr v-for='(index, song) in filteredSongs' track-by='$index'>
+					<td>
+						<img class='song-thumbnail' :src='song.thumbnail' onerror="this.src='/assets/notes-transparent.png'">
+					</td>
+					<td>
+						<strong>{{ song.title }}</strong>
+					</td>
+					<td>{{ song.songId }}</td>
+					<td>{{ song.artists.join(', ') }}</td>
+					<td>{{ song.genres.join(', ') }}</td>
+					<td>{{ song.requestedBy }}</td>
+					<td>
+						<button class='button is-primary' @click='edit(song, index)'>Edit</button>
+						<button class='button is-danger' @click='remove(song._id, index)'>Remove</button>
+					</td>
+				</tr>
+			</tbody>
+		</table>
 	</div>
-	<edit-song v-show='isEditActive'></edit-song>
+	<edit-song v-show='modals.editSong'></edit-song>
 </template>
 
 <script>
 	import { Toast } from 'vue-roaster';
 
 	import EditSong from '../Modals/EditSong.vue';
+	import io from '../../io';
 
 	export default {
 		components: { EditSong },
 		data() {
 			return {
+				position: 1,
+				maxPosition: 1,
 				songs: [],
-				isEditActive: false,
+				searchQuery: '',
+				modals: { editSong: false },
 				editing: {
 					index: 0,
 					song: {}
@@ -55,113 +59,80 @@
 				video: {
 					player: null,
 					paused: false,
-					settings: function (type) {
-						switch(type) {
-							case 'stop':
-								this.player.stopVideo();
-								this.paused = true;
-								break;
-							case 'pause':
-								this.player.pauseVideo();
-								this.paused = true;
-								break;
-							case 'play':
-								this.player.playVideo();
-								this.paused = false;
-								break;
-							case 'skipToLast10Secs':
-								this.player.seekTo(this.player.getDuration() - 10);
-								break;
-						}
-					}
+					playerReady: false
 				}
 			}
 		},
+		computed: {
+			filteredSongs: function () {
+				return this.$eval('songs | filterBy searchQuery');
+			}
+		},
+		watch: {
+			'modals.editSong': function (value) {
+				if (!value) this.$broadcast('stopVideo');
+			}
+		},
 		methods: {
-			changeVolume: function() {
-				let local = this;
-				let volume = $("#volumeSlider").val();
-				localStorage.setItem("volume", volume);
-				local.video.player.setVolume(volume);
-				if (volume > 0) local.video.player.unMute();
-			},
 			toggleModal: function () {
-				this.isEditActive = !this.isEditActive;
-				this.video.settings('stop');
-			},
-			addTag: function (type) {
-				if (type == 'genres') {
-					let genre = $('#new-genre').val().toLowerCase().trim();
-					if (this.editing.song.genres.indexOf(genre) !== -1) return Toast.methods.addToast('Genre already exists', 3000);
-					if (genre) {
-						this.editing.song.genres.push(genre);
-						$('#new-genre').val('');
-					} else Toast.methods.addToast('Genre cannot be empty', 3000);
-				} else if (type == 'artists') {
-					let artist = $('#new-artist').val();
-					if (this.editing.song.artists.indexOf(artist) !== -1) return Toast.methods.addToast('Artist already exists', 3000);
-					if ($('#new-artist').val() !== '') {
-						this.editing.song.artists.push(artist);
-						$('#new-artist').val('');
-					} else Toast.methods.addToast('Artist cannot be empty', 3000);
-				}
-			},
-			removeTag: function (type, index) {
-				if (type == 'genres') this.editing.song.genres.splice(index, 1);
-				else if (type == 'artists') this.editing.song.artists.splice(index, 1);
+				this.modals.editSong = !this.modals.editSong;
 			},
 			edit: function (song, index) {
-				this.editing = { index, song };
-				this.video.player.loadVideoById(song._id);
-				this.isEditActive = true;
+				this.$broadcast('editSong', song, index, 'songs');
 			},
-			save: function (song) {
-				let _this = this;
-				this.socket.emit('songs.update', song._id, song, function (res) {
-					if (res.status == 'success' || res.status == 'error') Toast.methods.addToast(res.message, 2000);
-					_this.toggleModal();
-				});
-			},
-			remove: function (id, index) {
-				this.songs.splice(index, 1);
+			remove: function (id) {
 				this.socket.emit('songs.remove', id, res => {
-					if (res.status == 'success') Toast.methods.addToast(res.message, 2000);
+					if (res.status == 'success') Toast.methods.addToast(res.message, 4000);
+					else Toast.methods.addToast(res.message, 8000);
 				});
+			},
+			getSet: function () {
+				let _this = this;
+				_this.socket.emit('songs.getSet', _this.position, data => {
+					data.forEach(song => {
+						_this.songs.push(song);
+					});
+					_this.position = _this.position + 1;
+					if (_this.maxPosition > _this.position - 1) _this.getSet();
+				});
+			},
+			init: function () {
+				let _this = this;
+				_this.songs = [];
+				_this.socket.emit('songs.length', length => {
+					_this.maxPosition = Math.round(length / 15);
+					_this.getSet();
+				});
+				_this.socket.emit('apis.joinAdminRoom', 'songs', () => {});
 			}
 		},
 		ready: function () {
 			let _this = this;
 			io.getSocket((socket) => {
 				_this.socket = socket;
-				_this.socket.emit('songs.index', data => {
-					_this.songs = data;
+				if (_this.socket.connected) {
+					_this.init();
+					_this.socket.on('event:admin.song.added', song => {
+						_this.songs.push(song);
+					});
+					_this.socket.on('event:admin.song.removed', songId => {
+						_this.songs = _this.songs.filter(function(song) {
+							return song._id !== songId;
+						});
+					});
+					_this.socket.on('event:admin.song.updated', updatedSong => {
+						for (let i = 0; i < _this.songs.length; i++) {
+							let song = _this.songs[i];
+							if (song._id === updatedSong._id) {
+								_this.songs.$set(i, updatedSong);
+							}
+						}
+					});
+				}
+				io.onConnect(() => {
+					_this.init();
 				});
 			});
-
-			this.video.player = new YT.Player('player', {
-				height: 315,
-				width: 560,
-				videoId: this.editing.song._id,
-				playerVars: { controls: 0, iv_load_policy: 3, rel: 0, showinfo: 0 },
-				events: {
-					'onReady': () => {
-						let volume = parseInt(localStorage.getItem("volume"));
-						volume = (typeof volume === "number") ? volume : 20;
-						_this.video.player.setVolume(volume);
-						if (volume > 0) _this.video.player.unMute();
-					},
-					'onStateChange': event => {
-						if (event.data == 1) {
-							let youtubeDuration = _this.video.player.getDuration();
-							youtubeDuration -= _this.editing.song.skipDuration;
-							if (_this.editing.song.duration > youtubeDuration) this.stopVideo();
-						}
-					}
-				}
-			});
-			let volume = parseInt(localStorage.getItem("volume"));
-			volume = (typeof volume === "number") ? volume : 20;
-			$("#volumeSlider").val(volume);
 		}
 	}
 </script>
@@ -176,4 +147,6 @@
 	}
 
 	td { vertical-align: middle; }
+
+	.is-primary:focus { background-color: #029ce3 !important; }
 </style>

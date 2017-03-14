@@ -14,9 +14,15 @@
 
 		<div class="nav-right nav-menu" :class="{ 'is-active': isMobile }">
 			<a class="nav-item is-tab admin" href="#" v-link="{ path: '/admin' }" v-if="$parent.$parent.role === 'admin'">
-				Admin
+				<strong>Admin</strong>
 			</a>
-			<a class="nav-item is-tab" href="#">
+			<!--a class="nav-item is-tab" href="#">
+				About
+			</a-->
+			<a class="nav-item is-tab" href="#" v-link="{ path: '/team' }">
+				Team
+			</a>
+			<a class="nav-item is-tab" href="#" v-link="{ path: '/about' }">
 				About
 			</a>
 			<a class="nav-item is-tab" href="#" v-link="{ path: '/news' }">
@@ -100,7 +106,7 @@
 			}
 		}
 		.admin {
-			color: $purple;
+			color: #424242;
 		}
 	}
 	.grouped {

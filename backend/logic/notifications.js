@@ -19,7 +19,10 @@ const lib = {
 	init: (url, cb) => {
 		pub = redis.createClient({ url: url });
 		sub = redis.createClient({ url: url });
-		sub.on('error', (err) => console.error);
+		sub.on('error', (err) => {
+			console.error(err);
+			process.exit();
+		});
 		sub.on('pmessage', (pattern, channel, expiredKey) => {
 			subscriptions.forEach((sub) => {
 				if (sub.name !== expiredKey) return;
@@ -40,7 +43,7 @@ const lib = {
 	 * @param {Function} cb - gets called when the notification has been scheduled
 	 */
 	schedule: (name, time, cb) => {
-		console.log(time);
+		time = Math.round(time);
 		pub.set(crypto.createHash('md5').update(`_notification:${name}_`).digest('hex'), '', 'PX', time, 'NX', cb);
 	},
 

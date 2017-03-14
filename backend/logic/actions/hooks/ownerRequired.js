@@ -1,5 +1,8 @@
 const cache = require('../../cache');
 const db = require('../../db');
+const utils = require('../../utils');
+const logger = require('../../logger');
+const async = require('async');
 const stations = require('../../stations');
 
 module.exports = function(next) {
@@ -7,24 +10,34 @@ module.exports = function(next) {
 		let args = [];
 		for (let prop in arguments) args.push(arguments[prop]);
 		let cb = args[args.length - 1];
-		cache.hget('sessions', session.sessionId, (err, session) => {
-			if (err || !session || !session.userId) return cb({ status: 'failure', message: 'Login required.' });
-			db.models.user.findOne({_id: session.userId}, (err, user) => {
-				if (err || !user) return cb({ status: 'failure', message: 'Login required.' });
-				if (user.role === 'admin') func();
-				else {
-					stations.getStation(stationId, (err, station) => {
-						if (err || !station) return cb({ status: 'failure', message: 'Something went wrong when getting the station.' });
-						else if (station.type === 'community' && station.owner === session.userId) func();
-						else return cb({ status: 'failure', message: 'Invalid permissions.' });
-					});
-				}
-
-				function func() {
-					args.push(session.userId);
-					next.apply(null, args);
-				}
-			});
+		async.waterfall([
+			(next) => {
+				cache.hget('sessions', session.sessionId, next);
+			},
+			(session, next) => {
+				if (!session || !session.userId) return next('Login required.');
+				this.session = session;
+				db.models.user.findOne({_id: session.userId}, next);
+			},
+			(user, next) => {
+				if (!user) return next('Login required.');
+				if (user.role === 'admin') return next(true);
+				stations.getStation(stationId, next);
+			},
+			(station, next) => {
+				if (!station) return next('Station not found.');
+				if (station.type === 'community' && station.owner === session.userId) return next(true);
+				next('Invalid permissions.');
+			}
+		], (err) => {
+			if (err !== true) {
+				err = utils.getError(err);
+				logger.info("OWNER_REQUIRED", `User failed to pass owner required check for station "${stationId}". "${err}"`);
+				return cb({status: 'failure', message: err});
+			}
+			logger.info("OWNER_REQUIRED", `User "${session.userId}" passed owner required check for station "${stationId}"`);
+			args.push(session.userId);
+			next.apply(null, args);
 		});
 	}
 };

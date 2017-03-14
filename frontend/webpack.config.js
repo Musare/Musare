@@ -1,25 +1,23 @@
+const webpack = require('webpack');
+
 module.exports = {
+	devtool: 'eval-source-map',
 	entry: './main.js',
 	output: {
 		path: __dirname + '/build/',
 		filename: 'bundle.js'
 	},
 	module: {
-		preLoaders: [
-			{
-				test: /\.vue$/,
-				loader: 'eslint',
-				exclude: /node_modules/
-			}
-		],
 		loaders: [
 			{
+				enforce: 'pre',
 				test: /\.vue$/,
-				loader: 'vue'
+				loader: 'vue-loader',
+				exclude: /node_modules/
 			},
 			{
 				test: /\.js$/,
-				loader: 'babel',
+				loader: 'babel-loader',
 				exclude: /node_modules/
 			},
 			{
@@ -30,13 +28,8 @@ module.exports = {
 	},
 	vue: {
 		loaders: {
-			sass: 'style!css!sass?indentedSyntax',
-			scss: 'style!css!sass'
+			sass: 'style-loader!css-loader!sass-loader?indentedSyntax',
+			scss: 'style-loader!css-loader!sass-loader'
 		}
-	},
-	babel: {
-		presets: ['es2015'],
-		plugins: ['transform-runtime'],
-		comments: false
 	}
 };

@@ -1,117 +1,343 @@
 <template>
-	<div class='modal is-active'>
-		<div class='modal-background'></div>
-		<div class='modal-card'>
-			<section class='modal-card-body'>
-
+	<div>
+		<modal title='Edit Song'>
+			<div slot='body'>
 				<h5 class='has-text-centered'>Video Preview</h5>
 				<div class='video-container'>
 					<div id='player'></div>
 					<div class="controls">
-						<form action="#" class="column is-7-desktop is-4-mobile">
+						<form action="#">
 							<p style="margin-top: 0; position: relative;">
-								<input type="range" id="volumeSlider" min="0" max="100" class="active" v-on:change="$parent.changeVolume()" v-on:input="$parent.changeVolume()">
+								<input type="range" id="volumeSlider" min="0" max="100" class="active" v-on:change="changeVolume()" v-on:input="changeVolume()">
 							</p>
 						</form>
 						<p class='control has-addons'>
-							<a class='button'>
-								<i class='material-icons' @click='$parent.video.settings("pause")' v-if='!$parent.video.paused'>pause</i>
-								<i class='material-icons' @click='$parent.video.settings("play")' v-else>play_arrow</i>
-							</a>
-							<a class='button' @click='$parent.video.settings("stop")'>
+							<button class='button' @click='settings("pause")' v-if='!video.paused'>
+								<i class='material-icons'>pause</i>
+							</button>
+							<button class='button' @click='settings("play")' v-if='video.paused'>
+								<i class='material-icons'>play_arrow</i>
+							</button>
+							<button class='button' @click='settings("stop")'>
 								<i class='material-icons'>stop</i>
-							</a>
-							<a class='button' @click='$parent.video.settings("skipToLast10Secs")'>
+							</button>
+							<button class='button' @click='settings("skipToLast10Secs")'>
 								<i class='material-icons'>fast_forward</i>
-							</a>
+							</button>
 						</p>
 					</div>
 				</div>
 				<h5 class='has-text-centered'>Thumbnail Preview</h5>
-				<img class='thumbnail-preview' :src='$parent.editing.song.thumbnail' onerror="this.src='/assets/notes.png'">
+				<img class='thumbnail-preview' :src='editing.song.thumbnail' onerror="this.src='/assets/notes-transparent.png'">
 
-				<label class='label'>Thumbnail URL</label>
-				<p class='control'>
-					<input class='input' type='text' v-model='$parent.editing.song.thumbnail'>
-				</p>
+				<div class="control is-horizontal">
+					<div class="control-label">
+						<label class="label">Thumbnail URL</label>
+					</div>
+					<div class="control">
+						<input class='input' type='text' v-model='editing.song.thumbnail'>
+					</div>
+				</div>
 
-				<h5 class='has-text-centered'>Edit Info</h5>
+				<h5 class='has-text-centered'>Edit Information</h5>
 
 				<p class='control'>
 					<label class='checkbox'>
-						<input type='checkbox' v-model='$parent.editing.song.explicit'>
+						<input type='checkbox' v-model='editing.song.explicit'>
 						Explicit
 					</label>
 				</p>
-				<label class='label'>Song ID</label>
-				<p class='control'>
-					<input class='input' type='text' v-model='$parent.editing.song._id'>
-				</p>
-				<label class='label'>Song Title</label>
-				<p class='control'>
-					<input class='input' type='text' v-model='$parent.editing.song.title'>
-				</p>
+				<label class='label'>Song ID & Title</label>
+				<div class="control is-horizontal">
+					<div class="control is-grouped">
+						<p class='control is-expanded'>
+							<input class='input' type='text' v-model='editing.song.songId'>
+						</p>
+						<p class='control is-expanded'>
+							<input class='input' type='text' v-model='editing.song.title' autofocus>
+						</p>
+					</div>
+				</div>
+				<label class='label'>Artists & Genres</label>
 				<div class='control is-horizontal'>
-					<div class='control is-grouped'>
+					<div class='control is-grouped artist-genres'>
 						<div>
 							<p class='control has-addons'>
 								<input class='input' id='new-artist' type='text' placeholder='Artist'>
-								<a class='button is-info' @click='$parent.addTag("artists")'>Add Artist</a>
+								<button class='button is-info' @click='addTag("artists")'>Add Artist</button>
 							</p>
-							<span class='tag is-info' v-for='(index, artist) in $parent.editing.song.artists' track-by='$index'>
+							<span class='tag is-info' v-for='(index, artist) in editing.song.artists' track-by='$index'>
 								{{ artist }}
-								<button class='delete is-info' @click='$parent.$parent.removeTag("artists", index)'></button>
+								<button class='delete is-info' @click='removeTag("artists", index)'></button>
 							</span>
 						</div>
 						<div>
 							<p class='control has-addons'>
 								<input class='input' id='new-genre' type='text' placeholder='Genre'>
-								<a class='button is-info' @click='$parent.addTag("genres")'>Add Genre</a>
+								<button class='button is-info' @click='addTag("genres")'>Add Genre</button>
 							</p>
-							<span class='tag is-info' v-for='(index, genre) in $parent.editing.song.genres' track-by='$index'>
+							<span class='tag is-info' v-for='(index, genre) in editing.song.genres' track-by='$index'>
 								{{ genre }}
-								<button class='delete is-info' @click='$parent.$parent.removeTag("genres", index)'></button>
+								<button class='delete is-info' @click='removeTag("genres", index)'></button>
 							</span>
 						</div>
 					</div>
 				</div>
 				<label class='label'>Song Duration</label>
 				<p class='control'>
-					<input class='input' type='text' v-model='$parent.editing.song.duration'>
+					<input class='input' type='text' v-model='editing.song.duration'>
 				</p>
 				<label class='label'>Skip Duration</label>
 				<p class='control'>
-					<input class='input' type='text' v-model='$parent.editing.song.skipDuration'>
+					<input class='input' type='text' v-model='editing.song.skipDuration'>
 				</p>
-
-			</section>
-			<footer class='modal-card-foot'>
-				<a class='button is-success' @click='$parent.save($parent.editing.song)'>
+				<article class="message">
+					<div class="message-body">
+						<span class="reports-length">
+							{{ reports.length }}
+							<span v-if="reports.length > 1 || reports.length <= 0">&nbsp;Reports</span>
+							<span v-else>&nbsp;Report</span>
+						</span>
+						<div v-for='report in reports'>
+							<a :href='`/admin/reports?id=${report}`' class='report-link'>Report - {{ report }}</a>
+						</div>
+					</div>
+				</article>
+				<hr />
+				<h5 class='has-text-centered'>Spotify Information</h5>
+				<label class='label'>Song title</label>
+				<p class='control'>
+					<input class='input' type='text' v-model='spotify.title'>
+				</p>
+				<label class='label'>Song artist (1 artist full name)</label>
+				<p class='control'>
+					<input class='input' type='text' v-model='spotify.artist'>
+				</p>
+				<button class='button is-success' @click='getSpotifySongs()'>
+					Get Spotify songs
+				</button>
+				<hr />
+				<article class="media" v-for='song in spotify.songs'>
+					<figure class="media-left">
+						<p class="image is-64x64">
+							<img :src="song.thumbnail" onerror="this.src='/assets/notes-transparent.png'">
+						</p>
+					</figure>
+					<div class="media-content">
+						<div class="content">
+							<p>
+								<strong>{{song.title}}</strong>
+								<br />
+								<small>Artists: {{song.artists}}</small>, <small>Duration: {{song.duration}}</small>, <small>Explicit: {{song.explicit}}</small>
+								<br />
+								<small>Thumbnail: {{song.thumbnail}}</small>
+							</p>
+						</div>
+					</div>
+				</article>
+			</div>
+			<div slot='footer'>
+				<button class='button is-success' @click='save(editing.song, false)'>
 					<i class='material-icons save-changes'>done</i>
 					<span>&nbsp;Save</span>
-				</a>
-				<a class='button is-danger' @click='$parent.toggleModal()'>
-					<span>&nbsp;Cancel</span>
-				</a>
-			</footer>
-		</div>
+				</button>
+				<button class='button is-success' @click='save(editing.song, true)'>
+					<i class='material-icons save-changes'>done</i>
+					<span>&nbsp;Save and close</span>
+				</button>
+				<button class='button is-danger' @click='$parent.toggleModal()'>
+					<span>&nbsp;Close</span>
+				</button>
+			</div>
+		</modal>
 	</div>
 </template>
 
 <script>
+	import io from '../../io';
+	import { Toast } from 'vue-roaster';
+	import Modal from './Modal.vue';
+
 	export default {
-		methods: {
-			toggleModal: function () {
-				this.$dispatch('toggleModal', 'login');
-			},
-			submitModal: function () {
-				this.$dispatch('login');
-				this.toggleModal();
+		components: { Modal },
+		data() {
+			return {
+				editing: {
+					index: 0,
+					song: {},
+					type: ''
+				},
+				reports: 0,
+				video: {
+					player: null,
+					paused: false,
+					playerReady: false
+				},
+				spotify: {
+					title: '',
+					artist: '',
+					songs: []
+				}
 			}
 		},
+		methods: {
+			save: function (song, close) {
+				let _this = this;
+				this.socket.emit(`${_this.editing.type}.update`, song._id, song, res => {
+					Toast.methods.addToast(res.message, 4000);
+					if (res.status === 'success') {
+						_this.$parent.songs.forEach(lSong => {
+							if (song._id === lSong._id) {
+								for (let n in song) {
+									lSong[n] = song[n];
+								}
+							}
+						});
+					}
+					if (close) _this.$parent.toggleModal();
+				});
+			},
+			settings: function (type) {
+				let _this = this;
+				switch(type) {
+					case 'stop':
+						_this.video.player.stopVideo();
+						_this.video.paused = true;
+						break;
+					case 'pause':
+						_this.video.player.pauseVideo();
+						_this.video.paused = true;
+						break;
+					case 'play':
+						_this.video.player.playVideo();
+						_this.video.paused = false;
+						break;
+					case 'skipToLast10Secs':
+						_this.video.player.seekTo((_this.editing.song.duration - 10) + _this.editing.song.skipDuration);
+						break;
+				}
+			},
+			changeVolume: function () {
+				let local = this;
+				let volume = $("#volumeSlider").val();
+				localStorage.setItem("volume", volume);
+				local.video.player.setVolume(volume);
+				if (volume > 0) local.video.player.unMute();
+			},
+			addTag: function (type) {
+				if (type == 'genres') {
+					let genre = $('#new-genre').val().toLowerCase().trim();
+					if (this.editing.song.genres.indexOf(genre) !== -1) return Toast.methods.addToast('Genre already exists', 3000);
+					if (genre) {
+						this.editing.song.genres.push(genre);
+						$('#new-genre').val('');
+					} else Toast.methods.addToast('Genre cannot be empty', 3000);
+				} else if (type == 'artists') {
+					let artist = $('#new-artist').val();
+					if (this.editing.song.artists.indexOf(artist) !== -1) return Toast.methods.addToast('Artist already exists', 3000);
+					if ($('#new-artist').val() !== '') {
+						this.editing.song.artists.push(artist);
+						$('#new-artist').val('');
+					} else Toast.methods.addToast('Artist cannot be empty', 3000);
+				}
+			},
+			removeTag: function (type, index) {
+				if (type == 'genres') this.editing.song.genres.splice(index, 1);
+				else if (type == 'artists') this.editing.song.artists.splice(index, 1);
+			},
+			getSpotifySongs: function() {
+				this.socket.emit('apis.getSpotifySongs', this.spotify.title, this.spotify.artist, (res) => {
+					if (res.status === 'success') {
+						Toast.methods.addToast(`Succesfully got ${res.songs.length} song${(res.songs.length !== 1) ? 's' : ''}.`, 3000);
+						this.spotify.songs = res.songs;
+					} else Toast.methods.addToast(`Failed to get songs. ${res.message}`, 3000);
+				});
+			}
+		},
+		ready: function () {
+
+			let _this = this;
+
+			io.getSocket(socket => {
+				_this.socket = socket;
+			});
+
+			setInterval(() => {
+				if (_this.video.paused === false && _this.playerReady && _this.video.player.getCurrentTime() - _this.editing.song.skipDuration > _this.editing.song.duration) {
+					_this.video.paused = false;
+					_this.video.player.stopVideo();
+				}
+			}, 200);
+
+			this.video.player = new YT.Player('player', {
+				height: 315,
+				width: 560,
+				videoId: this.editing.song.songId,
+				playerVars: { controls: 0, iv_load_policy: 3, rel: 0, showinfo: 0 },
+				startSeconds: _this.editing.song.skipDuration,
+				events: {
+					'onReady': () => {
+						let volume = parseInt(localStorage.getItem("volume"));
+						volume = (typeof volume === "number") ? volume : 20;
+						_this.video.player.seekTo(_this.editing.song.skipDuration);
+						_this.video.player.setVolume(volume);
+						if (volume > 0) _this.video.player.unMute();
+						_this.playerReady = true;
+					},
+					'onStateChange': event => {
+						if (event.data === 1) {
+							_this.video.paused = false;
+							let youtubeDuration = _this.video.player.getDuration();
+							youtubeDuration -= _this.editing.song.skipDuration;
+							if (_this.editing.song.duration > youtubeDuration) {
+								this.video.player.stopVideo();
+								_this.video.paused = true;
+								Toast.methods.addToast("Video can't play. Specified duration is bigger than the YouTube song duration.", 4000);
+							} else if (_this.editing.song.duration <= 0) {
+								this.video.player.stopVideo();
+								_this.video.paused = true;
+								Toast.methods.addToast("Video can't play. Specified duration has to be more than 0 seconds.", 4000);
+							}
+
+							if (_this.video.player.getCurrentTime() < _this.editing.song.skipDuration) {
+								_this.video.player.seekTo(10);
+							}
+						} else if (event.data === 2) {
+							this.video.paused = true;
+						}
+					}
+				}
+			});
+
+			let volume = parseInt(localStorage.getItem("volume"));
+			volume = (typeof volume === "number") ? volume : 20;
+			$("#volumeSlider").val(volume);
+
+		},
 		events: {
-			closeModal: function() {
-				this.$parent.toggleModal()
+			closeModal: function () {
+				this.$parent.modals.editSong = false;
+				this.video.player.stopVideo();
+			},
+			editSong: function (song, index, type) {
+				let _this = this;
+				this.video.player.loadVideoById(song.songId, this.editing.song.skipDuration);
+				let newSong = {};
+				for (let n in song) {
+					newSong[n] = song[n];
+				}
+				this.editing = {
+					index,
+					song: newSong,
+					type
+				};
+				_this.socket.emit('reports.getReportsForSong', song.songId, res => {
+					if (res.status === 'success') _this.reports = res.data;
+				});
+				this.$parent.toggleModal();
+			},
+			stopVideo: function () {
+				this.video.player.stopVideo();
 			}
 		}
 	}
@@ -213,13 +439,18 @@
 		align-items: center;
 	}
 
+	.artist-genres {
+		display: flex;
+    	justify-content: space-between;
+	}
+
 	#volumeSlider { margin-bottom: 15px; }
 
 	.has-text-centered { padding: 10px; }
 
 	.thumbnail-preview {
 		display: flex;
-		margin: 0 auto;
+		margin: 0 auto 25px auto;
 		max-width: 200px;
 		width: 100%;
 	}
@@ -242,4 +473,15 @@
 	.save-changes { color: #fff; }
 
 	.tag:not(:last-child) { margin-right: 5px; }
+
+	.reports-length {
+		color: #03A9F4;
+		font-weight: bold;
+		display: flex;
+		justify-content: center;
+	}
+
+	.report-link {
+		color: #000;
+	}
 </style>

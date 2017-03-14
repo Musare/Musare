@@ -3,7 +3,7 @@ FROM node
 RUN apt-get update
 RUN apt-get install nginx -y
 
-RUN npm install -g webpack
+RUN npm install -g webpack@1.14.0
 
 RUN mkdir -p /opt
 WORKDIR /opt

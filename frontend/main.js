@@ -8,16 +8,24 @@ import NotFound from './components/404.vue';
 import Home from './components/pages/Home.vue';
 import Station from './components/Station/Station.vue';
 import Admin from './components/pages/Admin.vue';
+
 import News from './components/pages/News.vue';
+import About from './components/pages/About.vue';
 import Terms from './components/pages/Terms.vue';
 import Privacy from './components/pages/Privacy.vue';
+import Team from './components/pages/Team.vue';
 import User from './components/User/Show.vue';
 import Settings from './components/User/Settings.vue';
+import ResetPassword from './components/User/ResetPassword.vue';
 import Login from './components/Modals/Login.vue';
+import Register from './components/Modals/Register.vue';
 
 Vue.use(VueRouter);
 
-let router = new VueRouter({ history: true });
+let router = new VueRouter({
+	history: true,
+	suppressTransitionError: true
+});
 let _this = this;
 
 lofig.folder = '../config/default.json';
@@ -36,22 +44,48 @@ document.onkeydown = event => {
 };
 
 router.beforeEach(transition => {
+	window.location.hash = '';
+	//
 	if (window.stationInterval) {
 		clearInterval(window.stationInterval);
 		window.stationInterval = 0;
 	}
-	if (window.socket) {
-		io.removeAllListeners();
-	}
+	if (window.socket) io.removeAllListeners();
+	io.clear();
 	if (transition.to.loginRequired || transition.to.adminRequired) {
 		auth.getStatus((authenticated, role) => {
 			if (transition.to.loginRequired && !authenticated) transition.redirect('/login');
 			else if (transition.to.adminRequired && role !== 'admin') transition.redirect('/');
 			else transition.next();
 		});
-	} else {
-		transition.next();
+	} else transition.next();
+
+	if (transition.to.officialRequired) {
+		io.getSocket(socket => {
+			socket.emit('stations.findByName', transition.to.params.id, res => {
+				if (res.status === 'success') {
+					if (res.data.type === 'community') transition.redirect(`/community/${transition.to.params.id}`);
+					else transition.next();
+				}
+			});
+		});
 	}
+
+	if (transition.to.communityRequired) {
+		io.getSocket(socket => {
+			socket.emit('stations.findByName', transition.to.params.id, res => {
+				if (res.status === 'success') {
+					if (res.data.type === 'official') transition.redirect(`/official/${transition.to.params.id}`);
+					else transition.next();
+				}
+			});
+		});
+	}
+});
+
+router.afterEach((data) => {
+	ga('set', 'page', data.to.path);
+	ga('send', 'pageview');
 });
 
 router.map({
@@ -61,14 +95,23 @@ router.map({
 	'*': {
 		component: NotFound
 	},
+	'404': {
+		component: NotFound
+	},
 	'/terms': {
 		component: Terms
 	},
 	'/privacy': {
 		component: Privacy
 	},
+	'/team': {
+		component: Team
+	},
 	'/news': {
 		component: News
+	},
+	'/about': {
+		component: About
 	},
 	'/u/:username': {
 		component: User
@@ -77,18 +120,34 @@ router.map({
 		component: Settings,
 		loginRequired: true
 	},
+	'/reset_password': {
+		component: ResetPassword
+	},
 	'/login': {
 		component: Login
+	},
+	'/register': {
+		component: Register
 	},
 	'/admin': {
 		component: Admin,
 		adminRequired: true
 	},
+	'/admin/:page': {
+		component: Admin,
+		adminRequired: true
+	},
 	'/official/:id': {
-		component: Station
+		component: Station,
+		officialRequired: true
+	},
+	'/:id': {
+		component: Station,
+		officialRequired: true
 	},
 	'/community/:id': {
-		component: Station
+		component: Station,
+		communityRequired: true
 	}
 });
 

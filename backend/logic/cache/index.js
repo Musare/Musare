@@ -1,6 +1,7 @@
 'use strict';
 
 const redis = require('redis');
+const mongoose = require('mongoose');
 
 // Lightweight / convenience wrapper around redis module for our needs
 
@@ -16,6 +17,7 @@ const lib = {
 		session: require('./schemas/session'),
 		station: require('./schemas/station'),
 		playlist: require('./schemas/playlist'),
+		officialPlaylist: require('./schemas/officialPlaylist'),
 		song: require('./schemas/song')
 	},
 
@@ -29,7 +31,10 @@ const lib = {
 		lib.url = url;
 
 		lib.client = redis.createClient({ url: lib.url });
-		lib.client.on('error', (err) => console.error(err));
+		lib.client.on('error', (err) => {
+			console.error(err);
+			process.exit();
+		});
 
 		initialized = true;
 		callbacks.forEach((callback) => {
@@ -58,14 +63,14 @@ const lib = {
 	 * @param {Boolean} [stringifyJson=true] - stringify 'value' if it's an Object or Array
 	 */
 	hset: (table, key, value, cb, stringifyJson = true) => {
-
+		if (mongoose.Types.ObjectId.isValid(key)) key = key.toString();
 		// automatically stringify objects and arrays into JSON
 		if (stringifyJson && ['object', 'array'].includes(typeof value)) value = JSON.stringify(value);
 
 		lib.client.hset(table, key, value, err => {
 			if (cb !== undefined) {
 				if (err) return cb(err);
-				cb(null);
+				cb(null, JSON.parse(value));
 			}
 		});
 	},
@@ -79,9 +84,14 @@ const lib = {
 	 * @param {Boolean} [parseJson=true] - attempt to parse returned data as JSON
 	 */
 	hget: (table, key, cb, parseJson = true) => {
+		if (!key || !table) return typeof cb === 'function' ? cb(null, null) : null;
+		if (mongoose.Types.ObjectId.isValid(key)) key = key.toString();
 		lib.client.hget(table, key, (err, value) => {
 			if (err) return typeof cb === 'function' ? cb(err) : null;
-			if (parseJson) try { value = JSON.parse(value); } catch (e) {}
+			if (parseJson) try {
+				value = JSON.parse(value);
+			} catch (e) {
+			}
 			if (typeof cb === 'function') cb(null, value);
 		});
 	},
@@ -94,9 +104,11 @@ const lib = {
 	 * @param {Function} cb - gets called when the value has been deleted from Redis or when it returned an error
 	 */
 	hdel: (table, key, cb) => {
+		if (!key || !table) return cb(null, null);
+		if (mongoose.Types.ObjectId.isValid(key)) key = key.toString();
 		lib.client.hdel(table, key, (err) => {
-			if (err) return typeof cb === 'function' ? cb(err) : null;
-			if (typeof cb === 'function') cb(null);
+			if (err) return cb(err);
+			else return cb(null);
 		});
 	},
 
@@ -108,6 +120,7 @@ const lib = {
 	 * @param {Boolean} [parseJson=true] - attempts to parse all values as JSON by default
 	 */
 	hgetall: (table, cb, parseJson = true) => {
+		if (!table) return cb(null, null);
 		lib.client.hgetall(table, (err, obj) => {
 			if (err) return typeof cb === 'function' ? cb(err) : null;
 			if (parseJson && obj) Object.keys(obj).forEach((key) => { try { obj[key] = JSON.parse(obj[key]); } catch (e) {} });
@@ -143,24 +156,26 @@ const lib = {
 	 * @param {Boolean} [parseJson=true] - parse the message as JSON
 	 */
 	sub: (channel, cb, parseJson = true) => {
-		if (initialized) {
-			func();
-		} else {
+		if (initialized) subToChannel();
+		else {
 			callbacks.push(() => {
-				func();
+				subToChannel();
 			});
 		}
-		function func() {
+		function subToChannel() {
 			if (subs[channel] === undefined) {
 				subs[channel] = { client: redis.createClient({ url: lib.url }), cbs: [] };
-				subs[channel].client.on('error', (err) => console.error(err));
+				subs[channel].client.on('error', (err) => {
+					console.error(err);
+					process.exit();
+				});
 				subs[channel].client.on('message', (channel, message) => {
 					if (parseJson) try { message = JSON.parse(message); } catch (e) {}
 					subs[channel].cbs.forEach((cb) => cb(message));
 				});
 				subs[channel].client.subscribe(channel);
 			}
-			
+
 			subs[channel].cbs.push(cb);
 		}
 	}

@@ -2,7 +2,9 @@
 
 const moment  = require('moment'),
 	  io      = require('./io'),
+	  db      = require('./db'),
 	  config  = require('config'),
+	  async	  = require('async'),
 	  request = require('request'),
 	  cache   = require('./cache');
 
@@ -12,7 +14,7 @@ class Timer {
 		this.timerId = undefined;
 		this.start = undefined;
 		this.paused = paused;
-		this.remaining = moment.duration(delay, "hh:mm:ss").asSeconds() * 1000;
+		this.remaining = delay;
 		this.timeWhenPaused = 0;
 		this.timePaused = Date.now();
 
@@ -93,6 +95,10 @@ function convertTime (duration) {
 	return (hours < 10 ? ("0" + hours + ":") : (hours + ":")) + (minutes < 10 ? ("0" + minutes + ":") : (minutes + ":")) + (seconds < 10 ? ("0" + seconds) : seconds);
 }
 
+let youtubeRequestCallbacks = [];
+let youtubeRequestsPending = 0;
+let youtubeRequestsActive = false;
+
 module.exports = {
 	htmlEntities: str => String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'),
 	generateRandomString: function(len) {
@@ -137,27 +143,34 @@ module.exports = {
 			return ns.connected[socketId];
 		}
 	},
+	socketsFromSessionId: function(sessionId, cb) {
+		let ns = io.io.of("/");
+		let sockets = [];
+		if (ns) {
+			async.each(Object.keys(ns.connected), (id, next) => {
+				let session = ns.connected[id].session;
+				if (session.sessionId === sessionId) sockets.push(session.sessionId);
+				next();
+			}, () => {
+				cb(sockets);
+			});
+		}
+	},
 	socketsFromUser: function(userId, cb) {
 		let ns = io.io.of("/");
 		let sockets = [];
 		if (ns) {
-			let total = Object.keys(ns.connected).length;
-			let done = 0;
-			for (let id in ns.connected) {
+			async.each(Object.keys(ns.connected), (id, next) => {
 				let session = ns.connected[id].session;
 				cache.hget('sessions', session.sessionId, (err, session) => {
 					if (!err && session && session.userId === userId) {
 						sockets.push(ns.connected[id]);
 					}
-					checkComplete();
+					next();
 				});
-			}
-			function checkComplete() {
-				done++;
-				if (done === total) {
-					cb(sockets);
-				}
-			}
+			}, () => {
+				cb(sockets);
+			});
 		}
 	},
 	socketLeaveRooms: function(socketid) {
@@ -179,9 +192,7 @@ module.exports = {
 		let socket = this.socketFromSession(socketId);
 		let rooms = socket.rooms;
 		for (let room in rooms) {
-			if (room.indexOf('song.') !== -1) {
-				socket.leave(rooms);
-			}
+			if (room.indexOf('song.') !== -1) socket.leave(rooms);
 		}
 		socket.join(room);
 	},
@@ -190,9 +201,7 @@ module.exports = {
 			let socket = sockets[id];
 			let rooms = socket.rooms;
 			for (let room in rooms) {
-				if (room.indexOf('song.') !== -1) {
-					socket.leave(room);
-				}
+				if (room.indexOf('song.') !== -1) socket.leave(room);
 			}
 			socket.join(room);
 		}
@@ -202,9 +211,7 @@ module.exports = {
 			let socket = sockets[id];
 			let rooms = socket.rooms;
 			for (let room in rooms) {
-				if (room.indexOf('song.') !== -1) {
-					socket.leave(room);
-				}
+				if (room.indexOf('song.') !== -1) socket.leave(room);
 			}
 		}
 	},
@@ -226,55 +233,66 @@ module.exports = {
 		let roomSockets = [];
 		for (let id in sockets) {
 			let socket = sockets[id];
-			if (socket.rooms[room]) {
-				roomSockets.push(socket);
-			}
+			if (socket.rooms[room]) roomSockets.push(socket);
 		}
 		return roomSockets;
 	},
 	getSongFromYouTube: (songId, cb) => {
-		const youtubeParams = [
-			'part=snippet,contentDetails,statistics,status',
-			`id=${encodeURIComponent(songId)}`,
-			`key=${config.get('apis.youtube.key')}`
-		].join('&');
 
-		request(`https://www.googleapis.com/youtube/v3/videos?${youtubeParams}`, (err, res, body) => {
+		youtubeRequestCallbacks.push({cb: (test) => {
+			youtubeRequestsActive = true;
+			const youtubeParams = [
+				'part=snippet,contentDetails,statistics,status',
+				`id=${encodeURIComponent(songId)}`,
+				`key=${config.get('apis.youtube.key')}`
+			].join('&');
 
-			if (err) {
-				console.error(err);
-				return next('Failed to find song from YouTube');
-			}
+			request(`https://www.googleapis.com/youtube/v3/videos?${youtubeParams}`, (err, res, body) => {
 
-			body = JSON.parse(body);
+				youtubeRequestCallbacks.splice(0, 1);
+				if (youtubeRequestCallbacks.length > 0) {
+					youtubeRequestCallbacks[0].cb(youtubeRequestCallbacks[0].songId);
+				} else youtubeRequestsActive = false;
 
-			//TODO Clean up duration converter
-			let dur = body.items[0].contentDetails.duration;
-			dur = dur.replace('PT', '');
-			let duration = 0;
-			dur = dur.replace(/([\d]*)H/, (v, v2) => {
-				v2 = Number(v2);
-				duration = (v2 * 60 * 60);
-				return '';
+				if (err) {
+					console.error(err);
+					return null;
+				}
+
+				body = JSON.parse(body);
+
+				//TODO Clean up duration converter
+				let dur = body.items[0].contentDetails.duration;
+				dur = dur.replace('PT', '');
+				let duration = 0;
+				dur = dur.replace(/([\d]*)H/, (v, v2) => {
+					v2 = Number(v2);
+					duration = (v2 * 60 * 60);
+					return '';
+				});
+				dur = dur.replace(/([\d]*)M/, (v, v2) => {
+					v2 = Number(v2);
+					duration += (v2 * 60);
+					return '';
+				});
+				dur = dur.replace(/([\d]*)S/, (v, v2) => {
+					v2 = Number(v2);
+					duration += v2;
+					return '';
+				});
+
+				let song = {
+					songId: body.items[0].id,
+					title: body.items[0].snippet.title,
+					duration
+				};
+				cb(song);
 			});
-			dur = dur.replace(/([\d]*)M/, (v, v2) => {
-				v2 = Number(v2);
-				duration = (v2 * 60);
-				return '';
-			});
-			dur = dur.replace(/([\d]*)S/, (v, v2) => {
-				v2 = Number(v2);
-				duration += v2;
-				return '';
-			});
+		}, songId});
 
-			let song = {
-				_id: body.items[0].id,
-				title: body.items[0].snippet.title,
-				duration
-			};
-			cb(song);
-		});
+		if (!youtubeRequestsActive) {
+			youtubeRequestCallbacks[0].cb(youtubeRequestCallbacks[0].songId);
+		}
 	},
 	getPlaylistFromYouTube: (url, cb) => {
 		
@@ -282,22 +300,32 @@ module.exports = {
 		var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
 		let playlistId = regex.exec(url)[1];
 
-		const youtubeParams = [
-			'part=contentDetails',
-			`playlistId=${encodeURIComponent(playlistId)}`,
-			`maxResults=50`,
-			`key=${config.get('apis.youtube.key')}`
-		].join('&');
+		function getPage(pageToken, songs) {
+			let nextPageToken = (pageToken) ? `pageToken=${pageToken}` : '';
+			const youtubeParams = [
+				'part=contentDetails',
+				`playlistId=${encodeURIComponent(playlistId)}`,
+				`maxResults=5`,
+				`key=${config.get('apis.youtube.key')}`,
+				nextPageToken
+			].join('&');
 
-		request(`https://www.googleapis.com/youtube/v3/playlistItems?${youtubeParams}`, (err, res, body) => {
-			if (err) {
-				console.error(err);
-				return next('Failed to find playlist from YouTube');
-			}
+			request(`https://www.googleapis.com/youtube/v3/playlistItems?${youtubeParams}`, (err, res, body) => {
+				if (err) {
+					console.error(err);
+					return next('Failed to find playlist from YouTube');
+				}
 
-			body = JSON.parse(body);
-			cb(body.items);
-		});
+				body = JSON.parse(body);
+				songs = songs.concat(body.items);
+				if (body.nextPageToken) getPage(body.nextPageToken, songs);
+				else {
+					console.log(songs);
+					cb(songs);
+				}
+			});
+		}
+		getPage(null, []);
 	},
 	getSongFromSpotify: (song, cb) => {
 		const spotifyParams = [
@@ -335,6 +363,94 @@ module.exports = {
 			}
 
 			cb(song);
+		});
+	},
+	getSongsFromSpotify: (title, artist, cb) => {
+		const spotifyParams = [
+			`q=${encodeURIComponent(title)}`,
+			`type=track`
+		].join('&');
+
+		request(`https://api.spotify.com/v1/search?${spotifyParams}`, (err, res, body) => {
+			if (err) return console.error(err);
+			body = JSON.parse(body);
+			let songs = [];
+
+			for (let i in body) {
+				let items = body[i].items;
+				for (let j in items) {
+					let item = items[j];
+					let hasArtist = false;
+					for (let k = 0; k < item.artists.length; k++) {
+						let localArtist = item.artists[k];
+						if (artist.toLowerCase() === localArtist.name.toLowerCase()) hasArtist = true;
+					}
+					if (hasArtist && (title.indexOf(item.name) !== -1 || item.name.indexOf(title) !== -1)) {
+						let song = {};
+						song.duration = item.duration_ms / 1000;
+						song.artists = item.artists.map(artist => {
+							return artist.name;
+						});
+						song.title = item.name;
+						song.explicit = item.explicit;
+						song.thumbnail = item.album.images[1].url;
+						songs.push(song);
+					}
+				}
+			}
+
+			cb(songs);
+		});
+	},
+	shuffle: (array) => {
+		let currentIndex = array.length, temporaryValue, randomIndex;
+
+		// While there remain elements to shuffle...
+		while (0 !== currentIndex) {
+
+			// Pick a remaining element...
+			randomIndex = Math.floor(Math.random() * currentIndex);
+			currentIndex -= 1;
+
+			// And swap it with the current element.
+			temporaryValue = array[currentIndex];
+			array[currentIndex] = array[randomIndex];
+			array[randomIndex] = temporaryValue;
+		}
+
+		return array;
+	},
+	getError: (err) => {
+		let error = 'An error occurred.';
+		if (typeof err === "string") error = err;
+		else if (err.message) {
+			if (err.message !== 'Validation failed') error = err.message;
+			else error = err.errors[Object.keys(err.errors)].message;
+		}
+		return error;
+	},
+	canUserBeInStation: (station, userId, cb) => {
+		async.waterfall([
+			(next) => {
+				if (station.privacy !== 'private') return next(true);
+				if (!userId) return next(false);
+				next();
+			},
+
+			(next) => {
+				db.models.user.findOne({_id: userId}, next);
+			},
+
+			(user, next) => {
+				if (!user) return next(false);
+				if (user.role === 'admin') return next(true);
+				if (station.type === 'official') return next(false);
+				if (station.owner === userId) return next(true);
+				next(false);
+			}
+		], (err) => {
+			if (err === true) return cb(true);
+			return cb(false);
 		});
 	}
 };

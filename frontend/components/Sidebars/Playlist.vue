@@ -6,10 +6,10 @@
 			<aside class='menu' v-if='playlists.length > 0'>
 				<ul class='menu-list'>
 					<li v-for='playlist in playlists'>
-						<a href='#'>{{ playlist.displayName }}</a>
+						<span>{{ playlist.displayName }}</span>
 						<!--Will play playlist in community station Kris-->
 						<div class='icons-group'>
-							<a href='#' @click='selectPlaylist(playlist._id)' v-if="isNotSelected(playlist._id)">
+							<a href='#' @click='selectPlaylist(playlist._id)' v-if="isNotSelected(playlist._id) && !this.$parent.$parent.station.partyMode">
 								<i class='material-icons'>play_arrow</i>
 							</a>
 							<a href='#' @click='editPlaylist(playlist._id)'>
@@ -22,7 +22,7 @@
 
 			<div class='none-found' v-else>No Playlists found</div>
 
-			<a class='button create-playlist' @click='$parent.toggleModal("createPlaylist")'>Create Playlist</a>
+			<a class='button create-playlist' href='#' @click='$parent.modals.createPlaylist = !$parent.modals.createPlaylist'>Create Playlist</a>
 		</div>
 	</div>
 </template>
@@ -43,14 +43,13 @@
 				this.$parent.editPlaylist(id);
 			},
 			selectPlaylist: function(id) {
-				this.socket.emit('stations.selectPrivatePlaylist', this.$parent.stationId, id, (res) => {
+				this.socket.emit('stations.selectPrivatePlaylist', this.$parent.station._id, id, (res) => {
 					if (res.status === 'failure') return Toast.methods.addToast(res.message, 8000);
 					Toast.methods.addToast(res.message, 4000);
 				});
 			},
 			isNotSelected: function(id) {
 				let _this = this;
-				console.log(_this.$parent.station);
 				//TODO Also change this once it changes for a station
 				if (_this.$parent.station && _this.$parent.station.privatePlaylist === id) return false;
 				return true;
@@ -65,7 +64,7 @@
 					if (res.status == 'success') _this.playlists = res.data;
 				});
 				_this.socket.on('event:playlist.create', (playlist) => {
-						_this.playlists.push(playlist);
+					_this.playlists.push(playlist);
 				});
 				_this.socket.on('event:playlist.delete', (playlistId) => {
 					_this.playlists.forEach((playlist, index) => {
@@ -107,6 +106,7 @@
 <style type='scss' scoped>
 	.sidebar {
 		position: fixed;
+		z-index: 1;
 		top: 0;
 		right: 0;
 		width: 300px;
@@ -115,8 +115,15 @@
 		box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
 	}
 
+	.icons-group a {
+		display: flex;
+    	align-items: center;
+	}
+
+	.menu-list li { align-items: center; }
+
 	.inner-wrapper {	
-		top: 50px;
+		top: 64px;
 		position: relative;
 	}
 
@@ -140,23 +147,14 @@
     	margin-top: 20px;
 		height: 40px;
 		border-radius: 0;
-		background: rgb(3, 169, 244);
+		background: rgba(3, 169, 244, 1);
     	color: #fff !important;
 		border: 0;
 
 		&:active, &:focus { border: 0; }
 	}
 
-	.menu { padding: 0 20px; }
-
-	.menu-list li a:hover { color: #000 !important; }
-
-	.menu-list li {
-		display: flex;
-		justify-content: space-between;
-	}
-
-	.icons-group { display: flex; }
+	.create-playlist:focus { background: #029ce3; }
 
 	.none-found { text-align: center; }
 </style>

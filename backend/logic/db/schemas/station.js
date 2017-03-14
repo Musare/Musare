@@ -1,11 +1,13 @@
+const mongoose = require('mongoose');
+
 module.exports = {
-	_id: { type: String, lowercase: true, maxlength: 16, minlength: 2, index: true, unique: true, required: true },
+	name: { type: String, lowercase: true, maxlength: 16, minlength: 2, index: true, unique: true, required: true },
 	type: { type: String, enum: ["official", "community"], required: true },
 	displayName: { type: String, minlength: 2, maxlength: 32, required: true, unique: true },
 	description: { type: String, minlength: 2, maxlength: 128, required: true },
 	paused: { type: Boolean, default: false, required: true },
 	currentSong: {
-		_id: { type: String },
+		songId: { type: String },
 		title: { type: String },
 		artists: [{ type: String }],
 		duration: { type: Number },
@@ -25,7 +27,7 @@ module.exports = {
 	privacy: { type: String, enum: ["public", "unlisted", "private"], default: "private" },
 	locked: { type: Boolean, default: false },
 	queue: [{
-		_id: { type: String, required: true },
+		songId: { type: String, required: true },
 		title: { type: String },
 		artists: [{ type: String }],
 		duration: { type: Number },
@@ -36,6 +38,6 @@ module.exports = {
 		requestedBy: { type: String, required: true }
 	}],
 	owner: { type: String },
-	privatePlaylist: { type: String },
+	privatePlaylist: { type: mongoose.Schema.Types.ObjectId },
 	partyMode: { type: Boolean }
 };

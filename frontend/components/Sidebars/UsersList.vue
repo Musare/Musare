@@ -2,10 +2,12 @@
 	<div class='sidebar' transition='slide' v-if='$parent.sidebars.users'>
 		<div class='inner-wrapper'>
 			<div class='title'>Users</div>
-			
+			<h5 class="center">Total users: {{$parent.userCount}}</h5>
 			<aside class="menu">
 				<ul class="menu-list">
-					<li><a href="#" v-link="{ path: '/u/atjonathan' }" target="_blank">@atjonathan</a></li>
+					<li v-for="user in $parent.users">
+						<a href="#" v-link="{ path: '/u/' + user }" target="_blank">{{user}}</a>
+					</li>
 				</ul>
 			</aside>
 		</div>
@@ -15,6 +17,7 @@
 <style type='scss' scoped>
 	.sidebar {
 		position: fixed;
+		z-index: 1;
 		top: 0;
 		right: 0;
 		width: 300px;
@@ -23,8 +26,8 @@
 		box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
 	}
 
-	.inner-wrapper {	
-		top: 50px;
+	.inner-wrapper {
+		top: 64px;
 		position: relative;
 	}
 

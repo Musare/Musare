@@ -1,4 +1,5 @@
 module.exports = {
+	_id: { type: String, required: true, index: true, unique: true, min: 12, max: 12 },
 	username: { type: String, required: true },
 	role: { type: String, default: 'default', required: true },
 	email: {
@@ -8,10 +9,19 @@ module.exports = {
 	},
 	services: {
 		password: {
-			password: String
+			password: String,
+			reset: {
+				code: { type: String, min: 8, max: 8 },
+				expires: { type: Date }
+			},
+			set: {
+				code: { type: String, min: 8, max: 8 },
+				expires: { type: Date }
+			}
 		},
 		github: {
 			id: Number,
+			access_token: String
 		}
 	},
 	ban: {

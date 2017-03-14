@@ -1,62 +1,100 @@
 <template>
-	<div class='columns is-mobile'>
-		<div class='column is-8-desktop is-offset-2-desktop is-12-mobile'>
-			<table class='table is-striped'>
-				<thead>
-					<tr>
-						<td>Song ID</td>
-						<td>Created By</td>
-						<td>Created At</td>
-						<td>Description</td>
-						<td>Issues</td>
-					</tr>
-				</thead>
-				<tbody>
-					<tr v-for='(index, report) in reports' track-by='$index'>
-						<td>
-							<span>{{ report.songId }}</span>
-						</td>
-						<td>
-							<span>{{ report.createdBy }}</span>
-						</td>
-						<td>
-							<span>{{ report.createdAt }}</span>
-						</td>
-						<td>
-							<span>{{ report.issues }}</span>
-						</td>
-						<td>
-							<a class='button is-primary' @click='resolve()'>Resolve</a>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
+	<div class='container'>
+		<table class='table is-striped'>
+			<thead>
+				<tr>
+					<td>Song ID</td>
+					<td>Created By</td>
+					<td>Created At</td>
+					<td>Description</td>
+					<td>Options</td>
+				</tr>
+			</thead>
+			<tbody>
+				<tr v-for='(index, report) in reports' track-by='$index'>
+					<td>
+						<span>{{ report.songId }}</span>
+					</td>
+					<td>
+						<span>{{ report.createdBy }}</span>
+					</td>
+					<td>
+						<span>{{ report.createdAt }}</span>
+					</td>
+					<td>
+						<span>{{ report.description }}</span>
+					</td>
+					<td>
+						<a class='button is-warning' href='#' @click='toggleModal(report)'>Issues Modal</a>
+						<a class='button is-primary' href='#' @click='resolve(report._id)'>Resolve</a>
+					</td>
+				</tr>
+			</tbody>
+		</table>
 	</div>
+
+	<issues-modal v-if='modals.report'></issues-modal>
 </template>
 
 <script>
 	import { Toast } from 'vue-roaster';
+	import io from '../../io';
+
+	import IssuesModal from '../Modals/IssuesModal.vue';
 
 	export default {
 		data() {
 			return {
-				reports: []
+				reports: [],
+				modals: {
+					report: false
+				}
 			}
 		},
-		methods: {},
+		methods: {
+			init: function() {
+				this.socket.emit('apis.joinAdminRoom', 'reports', data => {});
+			},
+			toggleModal: function (report) {
+				this.modals.report = !this.modals.report;
+				if (this.modals.report) this.editing = report;
+			},
+			resolve: function (reportId) {
+				let _this = this;
+				this.socket.emit('reports.resolve', reportId, res => {
+					Toast.methods.addToast(res.message, 3000);
+					if (res.status === 'success' && this.modals.report) _this.toggleModal();
+				});
+			}
+		},
 		ready: function () {
 			let _this = this;
-			let socketInterval = setInterval(() => {
-				if (!!_this.$parent.$parent.socket) {
-					_this.socket = _this.$parent.$parent.socket;
-					_this.socket.emit('reports.index', res => {
-						_this.reports = res.data;
+			io.getSocket(socket => {
+				_this.socket = socket;
+				if (_this.socket.connected) _this.init();
+				_this.socket.emit('reports.index', res => {
+					_this.reports = res.data;
+				});
+				_this.socket.on('event:admin.report.resolved', reportId => {
+					_this.reports = _this.reports.filter(report => {
+						return report._id !== reportId;
 					});
-					clearInterval(socketInterval);
-				}
-			}, 100);
-		}
+				});
+				_this.socket.on('event:admin.report.created', report => {
+					_this.reports.push(report);
+				});
+				io.onConnect(() => {
+					_this.init();
+				});
+			});
+			if (this.$route.query.id) {
+				this.socket.emit('reports.findOne', this.$route.query.id, res => {
+					if (res.status === 'success') _this.toggleModal(res.data);
+					else Toast.methods.addToast('Report with that ID not found', 3000);
+				});
+			}
+		},
+		components: { IssuesModal }
 	}
 </script>
 

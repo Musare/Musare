@@ -1,28 +1,24 @@
 <template>
-	<div class='modal is-active'>
-		<div class='modal-background'></div>
-		<div class='modal-card'>
-			<header class='modal-card-head'>
-				<p class='modal-card-title'>Create Playlist</p>
-				<button class='delete' @click='$parent.toggleModal("createPlaylist")'></button>
-			</header>
-			<section class='modal-card-body'>
-				<p class='control is-expanded'>
-					<input class='input' type='text' placeholder='Playlist Display Name' v-model='playlist.displayName'>
-				</p>
-			</section>
-			<footer class='modal-card-foot'>
-				<a class='button is-info' @click='createPlaylist()'>Create Playlist</a>
-			</footer>
+	<modal title='Create Playlist'>
+		<div slot='body'>
+			<p class='control is-expanded'>
+				<input class='input' type='text' placeholder='Playlist Display Name' v-model='playlist.displayName' autofocus @keyup.enter='createPlaylist()'>
+			</p>
 		</div>
-	</div>
+		<div slot='footer'>
+			<a class='button is-info' @click='createPlaylist()'>Create Playlist</a>
+		</div>
+	</modal>
 </template>
 
 <script>
 	import { Toast } from 'vue-roaster';
+	import Modal from '../Modal.vue';
 	import io from '../../../io';
+	import validation from '../../../validation';
 
 	export default {
+		components: { Modal },
 		data() {
 			return {
 				playlist: {
@@ -35,11 +31,15 @@
 		},
 		methods: {
 			createPlaylist: function () {
-				let _this = this;
-				_this.socket.emit('playlists.create', _this.playlist, res => {
+				const displayName = this.playlist.displayName;
+				if (!validation.isLength(displayName, 2, 32)) return Toast.methods.addToast('Display name must have between 2 and 32 characters.', 8000);
+				if (!validation.regex.azAZ09_.test(displayName)) return Toast.methods.addToast('Invalid display name format. Allowed characters: a-z, A-Z, 0-9 and _.', 8000);
+
+
+				this.socket.emit('playlists.create', this.playlist, res => {
 					Toast.methods.addToast(res.message, 3000);
 				});
-				this.$parent.toggleModal('createPlaylist');
+				this.$parent.modals.createPlaylist = !this.$parent.modals.createPlaylist;
 			}
 		},
 		ready: function () {
@@ -50,7 +50,7 @@
 		},
 		events: {
 			closeModal: function() {
-				this.$parent.toggleModal("createPlaylist");
+				this.$parent.modals.createPlaylist = !this.$parent.modals.createPlaylist;
 			}
 		}
 	}
