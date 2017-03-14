@@ -88,12 +88,13 @@ let lib = {
 				});
 			}, 'User already has 3 stations.');
 
+			/*
 			lib.schemas.station.path('queue').validate((queue, callback) => {
 				let totalDuration = 0;
 				queue.forEach((song) => {
 					totalDuration += song.duration;
 				});
-				return callback(totalDuration <= 3600);
+				return callback(totalDuration <= 3600 * 3);
 			}, 'The max length of the queue is 3 hours.');
 
 			lib.schemas.station.path('queue').validate((queue, callback) => {
@@ -122,6 +123,7 @@ let lib = {
 				if (queue[queue.length - 2].requestedBy !== userId || queue[queue.length - 3] !== userId) return callback(true);
 				return callback(false);
 			}, 'The max amount of songs per user is 3, and only 2 in a row is allowed.');
+			*/
 
 			let songTitle = (title) => {
 				return (isLength(title, 1, 64) && regex.ascii.test(title));

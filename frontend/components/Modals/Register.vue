@@ -49,7 +49,7 @@
 			let _this = this;
 			lofig.get('recaptcha', obj => {
 				_this.recaptcha.key = obj.key;
-				grecaptcha.render('recaptcha', {
+				_this.recaptcha.id = grecaptcha.render('recaptcha', {
 					'sitekey' : _this.recaptcha.key
 				});
 			});
@@ -60,7 +60,7 @@
 				else this.$dispatch('toggleModal', 'register');
 			},
 			submitModal: function () {
-				this.$dispatch('register');
+				this.$dispatch('register', this.recaptcha.id);
 				this.toggleModal();
 			}
 		},

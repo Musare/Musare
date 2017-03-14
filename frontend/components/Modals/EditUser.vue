@@ -39,6 +39,7 @@
 	import io from '../../io';
 	import { Toast } from 'vue-roaster';
 	import Modal from './Modal.vue';
+	import validation from '../../validation';
 
 	export default {
 		components: { Modal },
@@ -49,23 +50,32 @@
 		},
 		methods: {
 			updateUsername: function () {
-				this.socket.emit(`users.updateUsername`, this.editing._id, this.editing.username, res => {
+				const username = this.editing.username;
+				if (!validation.isLength(username, 2, 32)) return Toast.methods.addToast('Username must have between 2 and 32 characters.', 8000);
+				if (!validation.regex.azAZ09_.test(username)) return Toast.methods.addToast('Invalid username format. Allowed characters: a-z, A-Z, 0-9 and _.', 8000);
+
+
+				this.socket.emit(`users.updateUsername`, this.editing._id, username, res => {
 					Toast.methods.addToast(res.message, 4000);
 				});
 			},
 			updateEmail: function () {
-				this.socket.emit(`users.updateEmail`, this.editing._id, this.editing.email, res => {
+				const email = this.editing.email;
+				if (!validation.isLength(email, 3, 254)) return Toast.methods.addToast('Email must have between 3 and 254 characters.', 8000);
+				if (email.indexOf('@') !== email.lastIndexOf('@') || !validation.regex.emailSimple.test(email)) return Toast.methods.addToast('Invalid email format.', 8000);
+
+
+				this.socket.emit(`users.updateEmail`, this.editing._id, email, res => {
 					Toast.methods.addToast(res.message, 4000);
 				});
 			},
 			updateRole: function () {
-				let _this = this;
 				this.socket.emit(`users.updateRole`, this.editing._id, this.editing.role, res => {
 					Toast.methods.addToast(res.message, 4000);
 					if (
 							res.status === 'success' &&
-							_this.editing.role === 'default' &&
-							_this.editing._id === _this.$parent.$parent.$parent.userId
+							this.editing.role === 'default' &&
+							this.editing._id === this.$parent.$parent.$parent.userId
 					) location.reload();
 				});
 			}
