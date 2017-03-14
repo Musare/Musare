@@ -71,6 +71,7 @@
 	import { Toast } from 'vue-roaster';
 	import Modal from '../Modal.vue';
 	import io from '../../../io';
+	import validation from '../../../validation';
 
 	export default {
 		components: { Modal },
@@ -131,6 +132,11 @@
 				});
 			},
 			renamePlaylist: function () {
+				const displayName = this.playlist.displayName;
+				if (!validation.isLength(displayName, 2, 32)) return Toast.methods.addToast('Display name must have between 2 and 32 characters.', 8000);
+				if (!validation.regex.azAZ09_.test(displayName)) return Toast.methods.addToast('Invalid display name format. Allowed characters: a-z, A-Z, 0-9 and _.', 8000);
+
+
 				this.socket.emit('playlists.updateDisplayName', this.playlist._id, this.playlist.displayName, res => {
 					Toast.methods.addToast(res.message, 4000);
 				});
