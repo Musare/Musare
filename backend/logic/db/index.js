@@ -93,7 +93,7 @@ let lib = {
 				queue.forEach((song) => {
 					totalDuration += song.duration;
 				});
-				return callback(totalDuration <= 3600);
+				return callback(totalDuration <= 3600 * 3);
 			}, 'The max length of the queue is 3 hours.');
 
 			lib.schemas.station.path('queue').validate((queue, callback) => {
