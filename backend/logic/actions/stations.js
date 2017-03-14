@@ -863,7 +863,7 @@ module.exports = {
 
 			(station, next) => {
 				songs.getSong(songId, (err, song) => {
-					if (!err && song) return next(null, song);
+					if (!err && song) return next(null, song, station);
 					utils.getSongFromYouTube(songId, (song) => {
 						song.artists = [];
 						song.skipDuration = 0;
@@ -871,13 +871,57 @@ module.exports = {
 						song.dislikes = -1;
 						song.thumbnail = "empty";
 						song.explicit = false;
-						next(null, song);
+						next(null, song, station);
 					});
 				});
 			},
 
-			(song, next) => {
+			(song, station, next) => {
+				let queue = station.queue;
 				song.requestedBy = userId;
+				queue.push(song);
+
+				let totalDuration = 0;
+				queue.forEach((song) => {
+					totalDuration += song.duration;
+				});
+				if (totalDuration >= 3600 * 3) return next('The max length of the queue is 3 hours.');
+				next(null, song, station);
+			},
+
+			(song, station, next) => {
+				let queue = station.queue;
+				if (queue.length === 0) return next(null, song, station);
+				let totalDuration = 0;
+				const userId = queue[queue.length - 1].requestedBy;
+				station.queue.forEach((song) => {
+					if (userId === song.requestedBy) {
+						totalDuration += song.duration;
+					}
+				});
+
+				if(totalDuration >= 900) return next('The max length of songs per user is 15 minutes.');
+				next(null, song, station);
+			},
+
+			(song, station, next) => {
+				let queue = station.queue;
+				if (queue.length === 0) return next(null, song);
+				let totalSongs = 0;
+				const userId = queue[queue.length - 1].requestedBy;
+				queue.forEach((song) => {
+					if (userId === song.requestedBy) {
+						totalSongs++;
+					}
+				});
+
+				if (totalSongs <= 2) return next(null, song);
+				if (totalSongs > 3) return next('The max amount of songs per user is 3, and only 2 in a row is allowed.');
+				if (queue[queue.length - 2].requestedBy !== userId || queue[queue.length - 3] !== userId) return next('The max amount of songs per user is 3, and only 2 in a row is allowed.');
+				next(null, song);
+			},
+
+			(song, next) => {
 				db.models.station.update({_id: stationId}, {$push: {queue: song}}, {runValidators: true}, next);
 			},
 
