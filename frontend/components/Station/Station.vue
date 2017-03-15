@@ -380,10 +380,10 @@
 								console.log(data.song);
 								let songId = data.song._id;
 								_this.automaticallyRequestedSongId = data.song.songId;
-								_this.socket.emit('stations.addToQueue', _this.station._id, data.song.songId, data => {
-									if (data.status === 'success') {
-										_this.socket.emit('playlists.moveSongToBottom', _this.privatePlaylistQueueSelected, data.song.songId, data => {
-											if (data.status === 'success') {}
+								_this.socket.emit('stations.addToQueue', _this.station._id, data.song.songId, data2 => {
+									if (data2.status === 'success') {
+										_this.socket.emit('playlists.moveSongToBottom', _this.privatePlaylistQueueSelected, data.song.songId, data3 => {
+											if (data3.status === 'success') {}
 										});
 									}
 								});
