@@ -382,7 +382,7 @@
 								_this.automaticallyRequestedSongId = data.song.songId;
 								_this.socket.emit('stations.addToQueue', _this.station._id, data.song.songId, data => {
 									if (data.status === 'success') {
-										_this.socket.emit('playlists.moveSongToBottom', _this.privatePlaylistQueueSelected, songId, data => {
+										_this.socket.emit('playlists.moveSongToBottom', _this.privatePlaylistQueueSelected, data.song.songId, data => {
 											if (data.status === 'success') {}
 										});
 									}
