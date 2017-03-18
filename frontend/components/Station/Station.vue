@@ -13,7 +13,8 @@
 	<playlist-sidebar v-if='sidebars.playlist'></playlist-sidebar>
 	<users-sidebar v-if='sidebars.users'></users-sidebar>
 
-	<div class="station">
+	<div class='progress' v-if='!ready'></div>
+	<div class='station' v-else>
 		<div v-show="noSong" class="no-song">
 			<h1>No song is currently playing</h1>
 			<h4 v-if='type === "community" && station.partyMode'>
@@ -130,6 +131,7 @@
 	export default {
 		data() {
 			return {
+				ready: false,
 				type: '',
 				playerReady: false,
 				previousSong: null,
@@ -489,6 +491,8 @@
 					if (res.status === 'error') {
 						_this.$router.go('/404');
 						Toast.methods.addToast(res.message, 3000);
+					} else {
+						_this.ready = true;
 					}
 				});
 				_this.socket.on('event:songs.next', data => {
@@ -1001,5 +1005,21 @@
 
 	.behind:focus {
 		z-index: 0;
+	}
+
+	.progress {
+		width: 50px;
+		animation: rotate 0.8s infinite linear;
+		border: 8px solid #03A9F4;
+		border-right-color: transparent;
+		height: 50px;
+		position: absolute;
+		top: 50%;
+		left: 50%;
+	}
+
+	@keyframes rotate {
+		0% { transform: rotate(0deg); }
+		100% { transform: rotate(360deg); }
 	}
 </style>
