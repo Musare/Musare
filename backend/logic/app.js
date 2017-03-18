@@ -134,7 +134,7 @@ const lib = {
 							next(true, user._id);
 						});
 					}
-					db.models.user.findOne({username: new RegExp(`^${body.login}$`, 'i')}, (err, user) => {
+					db.models.user.findOne({ username: new RegExp(`^${body.login}$`, 'i' )}, (err, user) => {
 						next(err, user);
 					});
 				},

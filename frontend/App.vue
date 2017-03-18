@@ -48,7 +48,6 @@
 				_this.socket.emit('users.logout', result => {
 					if (result.status === 'success') {
 						document.cookie = 'SID=;expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-						_this.$router.go('/');
 						location.reload();
 					} else Toast.methods.addToast(result.message, 4000);
 				});
@@ -127,12 +126,9 @@
 							date.setTime(new Date().getTime() + (2 * 365 * 24 * 60 * 60 * 1000));
 							let secure = (cookie.secure) ? 'secure=true; ' : '';
 							let domain = '';
-							if (cookie.domain !== 'localhost') {
-								domain = ` domain=${cookie.domain};`;
-							}
+							if (cookie.domain !== 'localhost') domain = ` domain=${cookie.domain};`;
 							document.cookie = `SID=${result.SID}; expires=${date.toGMTString()}; ${domain}${secure}path=/`;
 							Toast.methods.addToast(`You have been successfully logged in`, 2000);
-							_this.$router.go('/');
 							location.reload();
 						});
 					} else Toast.methods.addToast(result.message, 2000);
