@@ -70,17 +70,22 @@ let twoDigits = (num) => {
 	return (num < 10) ? '0' + num : num;
 };
 
-let getTime = (cb) => {
+let getTime = () => {
 	let time = new Date();
-	return cb ({
+	return {
 		year: time.getFullYear(),
 		month: time.getMonth() + 1,
 		day: time.getDate(),
 		hour: time.getHours(),
 		minute: time.getMinutes(),
 		second: time.getSeconds()
-	});
+	}
 };
+
+let getTimeFormatted = () => {
+	let time = getTime();
+	return `${time.year}-${twoDigits(time.month)}-${twoDigits(time.day)} ${twoDigits(time.hour)}:${twoDigits(time.minute)}:${twoDigits(time.second)}`;
+}
 
 module.exports = {
 	init: function(cb) {
@@ -90,6 +95,13 @@ module.exports = {
 		setTimeout(calculateMinuteUnits, 1000 * 60);
 		setTimeout(calculateHourUnits, 1000 * 60 * 60);
 		setTimeout(this.calculate, 1000 * 30);
+
+		let time = getTimeFormatted();
+		fs.appendFile(dir + '/all.log', `${time} BACKEND_RESTARTED\n`, ()=>{});
+		fs.appendFile(dir + '/success.log', `${time} BACKEND_RESTARTED\n`, ()=>{});
+		fs.appendFile(dir + '/error.log', `${time} BACKEND_RESTARTED\n`, ()=>{});
+		fs.appendFile(dir + '/info.log', `${time} BACKEND_RESTARTED\n`, ()=>{});
+		fs.appendFile(dir + '/debugStation.log', `${time} BACKEND_RESTARTED\n`, ()=>{});
 
 		cb();
 	},
@@ -125,6 +137,14 @@ module.exports = {
 			fs.appendFile(dir + '/info.log', `${timeString} INFO - ${type} - ${message}\n`, ()=>{});
 
 			console.info('\x1b[36m', timeString, 'INFO', '-', type, '-', message, '\x1b[0m');
+		});
+	},
+	stationIssue: (string) => {
+		getTime((time) => {
+			let timeString = `${time.year}-${twoDigits(time.month)}-${twoDigits(time.day)} ${twoDigits(time.hour)}:${twoDigits(time.minute)}:${twoDigits(time.second)}`;
+			fs.appendFile(dir + '/debugStation.log', `${timeString} - ${string}\n`, ()=>{});
+
+			console.info('\x1b[35m', timeString, '-', string, '\x1b[0m');
 		});
 	},
 	calculatePerSecond: function(number) {

@@ -91,9 +91,9 @@ module.exports = {
 			},
 			(station, next) => {
 				if (!station) return next('Station not found.');
-				notifications.subscribe(`stations.nextSong?id=${station._id}`, _this.skipStation(station._id), true);
+				notifications.subscribe(`stations.nextSong?id=${station._id}`, _this.skipStation(station._id), true, station);
 				if (station.paused) {
-					notifications.unschedule(`stations.nextSong?id${station._id}`);
+					notifications.unschedule(`stations.nextSong?id=${station._id}`);
 					return next(true, station);
 				}
 				next(null, station);
@@ -112,7 +112,7 @@ module.exports = {
 						next(err, station);
 					});
 				} else {
-					notifications.schedule(`stations.nextSong?id=${station._id}`, timeLeft);
+					notifications.schedule(`stations.nextSong?id=${station._id}`, timeLeft, null, station);
 					next(null, station);
 				}
 			}
@@ -444,7 +444,7 @@ module.exports = {
 					if (station.currentSong !== null && station.currentSong.songId !== undefined) {
 						utils.socketsJoinSongRoom(utils.getRoomSockets(`station.${station._id}`), `song.${station.currentSong.songId}`);
 						if (!station.paused) {
-							notifications.schedule(`stations.nextSong?id=${station._id}`, station.currentSong.duration * 1000);
+							notifications.schedule(`stations.nextSong?id=${station._id}`, station.currentSong.duration * 1000, null, station);
 						}
 					} else {
 						utils.socketsLeaveSongRooms(utils.getRoomSockets(`station.${station._id}`));

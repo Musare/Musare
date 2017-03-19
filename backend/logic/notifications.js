@@ -2,6 +2,7 @@
 
 const crypto = require('crypto');
 const redis = require('redis');
+const logger = require('./logger');
 
 let pub = null;
 let sub = null;
@@ -24,6 +25,7 @@ const lib = {
 			process.exit();
 		});
 		sub.on('pmessage', (pattern, channel, expiredKey) => {
+			logger.stationIssue(`PMESSAGE - Pattern: ${pattern}; Channel: ${channel}; ExpiredKey: ${expiredKey}`);
 			subscriptions.forEach((sub) => {
 				if (sub.name !== expiredKey) return;
 				sub.cb();
@@ -42,8 +44,9 @@ const lib = {
 	 * @param {Integer} time - how long in milliseconds until the notification should be fired
 	 * @param {Function} cb - gets called when the notification has been scheduled
 	 */
-	schedule: (name, time, cb) => {
+	schedule: (name, time, cb, station) => {
 		time = Math.round(time);
+		logger.stationIssue(`SCHEDULE - Time: ${time}; Name: ${name}; Key: ${crypto.createHash('md5').update(`_notification:${name}_`).digest('hex')}; StationId: ${station._id}; StationName: ${station.name}`);
 		pub.set(crypto.createHash('md5').update(`_notification:${name}_`).digest('hex'), '', 'PX', time, 'NX', cb);
 	},
 
@@ -55,8 +58,9 @@ const lib = {
 	 * @param {Boolean} unique - only subscribe if another subscription with the same name doesn't already exist
 	 * @return {Object} - the subscription object
 	 */
-	subscribe: (name, cb, unique = false) => {
+	subscribe: (name, cb, unique = false, station) => {
 		if (unique && subscriptions.find((subscription) => subscription.originalName == name)) return;
+		logger.stationIssue(`SUBSCRIBE - Name: ${name}; Key: ${crypto.createHash('md5').update(`_notification:${name}_`).digest('hex')}, StationId: ${station._id}; StationName: ${station.name}`);
 		let subscription = { originalName: name, name: crypto.createHash('md5').update(`_notification:${name}_`).digest('hex'), cb };
 		subscriptions.push(subscription);
 		return subscription;
@@ -73,6 +77,7 @@ const lib = {
 	},
 
 	unschedule: (name) => {
+		logger.stationIssue(`UNSCHEDULE - Name: ${name}; Key: ${crypto.createHash('md5').update(`_notification:${name}_`).digest('hex')}`);
 		pub.del(crypto.createHash('md5').update(`_notification:${name}_`).digest('hex'));
 	},
 };
