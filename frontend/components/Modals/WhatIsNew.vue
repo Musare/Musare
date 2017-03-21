@@ -51,11 +51,11 @@
 		},
 		ready: function () {
 			let _this = this;
-			io.getSocket(true, (socket) => {
+			io.getSocket(true, socket => {
 				_this.socket = socket;
 				_this.socket.emit('news.newest', res => {
 					_this.news = res.data;
-					if (_this.news) {
+					if (_this.news && localStorage.getItem('firstVisited')) {
 						if (localStorage.getItem('whatIsNew')) {
 							if (parseInt(localStorage.getItem('whatIsNew')) < res.data.createdAt) {
 								this.toggleModal();
@@ -65,6 +65,8 @@
 							this.toggleModal();
 							localStorage.setItem('whatIsNew', res.data.createdAt);
 						}
+					} else {
+						if (!localStorage.getItem('firstVisited')) localStorage.setItem('firstVisited', Date.now());
 					}
 				});
 			});
