@@ -1,6 +1,14 @@
 <template>
 	<modal title='Edit Playlist'>
 		<div slot='body'>
+			<nav class="level">
+				<div class="level-item has-text-centered">
+					<div>
+						<p class="heading">Total Length</p>
+						<p class="title">{{ formatTime(totalLength) }}</p>
+					</div>
+				</div>
+			</nav>
 			<aside class='menu' v-if='playlist.songs && playlist.songs.length > 0'>
 				<ul class='menu-list'>
 					<li v-for='song in playlist.songs' track-by='$index'>
@@ -78,12 +86,18 @@
 		data() {
 			return {
 				playlist: {},
+				totalLength: 0,
 				songQueryResults: [],
 				songQuery: '',
 				importQuery: ''
 			}
 		},
 		methods: {
+			formatTime: function () {
+				let duration = moment.duration(this.totalLength, 'seconds');
+				if (this.totalLength < 0) return '0 minutes';
+				return ((duration.hours() > 0) ? (duration.hours() < 10 ? ('0' + duration.hours() + ' hours ') : (duration.hours() + ' hours ')) : '') + (duration.minutes() + ' minutes ') + (duration.seconds() > 0 ? (duration.seconds() < 10 ? ('0' + duration.seconds() + ' seconds') : duration.seconds() + ' seconds') : (duration.seconds() + ' seconds'));
+			},
 			searchForSongs: function () {
 				let _this = this;
 				let query = _this.songQuery;
@@ -168,22 +182,28 @@
 			io.getSocket((socket) => {
 				_this.socket = socket;
 				_this.socket.emit('playlists.getPlaylist', _this.$parent.playlistBeingEdited, res => {
-					if (res.status == 'success') _this.playlist = res.data; _this.playlist.oldId = res.data._id;
+					if (res.status === 'success') _this.playlist = res.data; _this.playlist.oldId = res.data._id;
 				});
-				_this.socket.on('event:playlist.addSong', (data) => {
+				_this.socket.emit('playlists.totalLength', _this.$parent.playlistBeingEdited, res => {
+					if (res.status === 'success') _this.totalLength = res.data;
+				});
+				_this.socket.on('event:playlist.updateTotalLength', res => {
+					if (res.status === 'success') _this.totalLength = res.data;
+				});
+				_this.socket.on('event:playlist.addSong', data => {
 					if (_this.playlist._id === data.playlistId) _this.playlist.songs.push(data.song);
 				});
-				_this.socket.on('event:playlist.removeSong', (data) => {
+				_this.socket.on('event:playlist.removeSong', data => {
 					if (_this.playlist._id === data.playlistId) {
 						_this.playlist.songs.forEach((song, index) => {
 							if (song.songId === data.songId) _this.playlist.songs.splice(index, 1);
 						});
 					}
 				});
-				_this.socket.on('event:playlist.updateDisplayName', (data) => {
+				_this.socket.on('event:playlist.updateDisplayName', data => {
 					if (_this.playlist._id === data.playlistId) _this.playlist.displayName = data.displayName;
 				});
-				_this.socket.on('event:playlist.moveSongToBottom', (data) => {
+				_this.socket.on('event:playlist.moveSongToBottom', data => {
 					if (_this.playlist._id === data.playlistId) {
 						let songIndex;
 						_this.playlist.songs.forEach((song, index) => {
