@@ -91,7 +91,7 @@
 				<p class='control'>
 					<input class='input' type='text' v-model='editing.song.skipDuration'>
 				</p>
-				<article class="message">
+				<article class="message" v-if="editing.type === 'songs'">
 					<div class="message-body">
 						<span class="reports-length">
 							{{ reports.length }}
@@ -155,6 +155,7 @@
 
 <script>
 	import io from '../../io';
+	import validation from '../../validation';
 	import { Toast } from 'vue-roaster';
 	import Modal from './Modal.vue';
 
@@ -170,8 +171,9 @@
 				reports: 0,
 				video: {
 					player: null,
-					paused: false,
-					playerReady: false
+					paused: true,
+					playerReady: false,
+					autoPlayed: false
 				},
 				spotify: {
 					title: '',
@@ -183,6 +185,41 @@
 		methods: {
 			save: function (song, close) {
 				let _this = this;
+
+				if (!song.title) return Toast.methods.addToast('Please fill in all fields', 8000);
+				if (!song.thumbnail) return Toast.methods.addToast('Please fill in all fields', 8000);
+
+
+				// Title
+				if (!validation.isLength(song.title, 1, 64)) return Toast.methods.addToast('Title must have between 1 and 64 characters.', 8000);
+				if (!validation.regex.ascii.test(song.title)) return Toast.methods.addToast('Invalid title format. Only ascii characters are allowed.', 8000);
+
+
+				// Artists
+				if (song.artists.length < 1 || song.artists.length > 10) return Toast.methods.addToast('Invalid artists. You must have at least 1 artist and a maximum of 10 artists.', 8000);
+				let error;
+				song.artists.forEach((artist) => {
+					if (!validation.isLength(artist, 1, 32)) return error = 'Artist must have between 1 and 32 characters.';
+					if (!validation.regex.ascii.test(artist)) return error = 'Invalid artist format. Only ascii characters are allowed.';
+					if (artist === 'NONE') return error = 'Invalid artist format. Artists are not allowed to be named "NONE".';
+				});
+				if (error) return Toast.methods.addToast(error, 8000);
+
+
+				// Genres
+				error = undefined;
+				song.genres.forEach((genre) => {
+					if (!validation.isLength(genre, 1, 16)) return error = 'Genre must have between 1 and 16 characters.';
+					if (!validation.regex.az09_.test(genre)) return error = 'Invalid genre format. Only ascii characters are allowed.';
+				});
+				if (error) return Toast.methods.addToast(error, 8000);
+
+
+				// Thumbnail
+				if (!validation.isLength(song.thumbnail, 8, 256)) return Toast.methods.addToast('Thumbnail must have between 8 and 256 characters.', 8000);
+				if (song.thumbnail.indexOf('https://') !== 0) return Toast.methods.addToast('Thumbnail must start with "https://".', 8000);
+
+
 				this.socket.emit(`${_this.editing.type}.update`, song._id, song, res => {
 					Toast.methods.addToast(res.message, 4000);
 					if (res.status === 'success') {
@@ -273,7 +310,7 @@
 				height: 315,
 				width: 560,
 				videoId: this.editing.song.songId,
-				playerVars: { controls: 0, iv_load_policy: 3, rel: 0, showinfo: 0 },
+				playerVars: { controls: 0, iv_load_policy: 3, rel: 0, showinfo: 0, autoplay: 1 },
 				startSeconds: _this.editing.song.skipDuration,
 				events: {
 					'onReady': () => {
@@ -286,6 +323,11 @@
 					},
 					'onStateChange': event => {
 						if (event.data === 1) {
+							if (!_this.video.autoPlayed) {
+								_this.video.autoPlayed = true;
+								return _this.video.player.stopVideo();
+							}
+
 							_this.video.paused = false;
 							let youtubeDuration = _this.video.player.getDuration();
 							youtubeDuration -= _this.editing.song.skipDuration;
@@ -331,9 +373,11 @@
 					song: newSong,
 					type
 				};
-				_this.socket.emit('reports.getReportsForSong', song.songId, res => {
-					if (res.status === 'success') _this.reports = res.data;
-				});
+				if (type === 'songs') {
+					_this.socket.emit('reports.getReportsForSong', song.songId, res => {
+						if (res.status === 'success') _this.reports = res.data;
+					});
+				}
 				this.$parent.toggleModal();
 			},
 			stopVideo: function () {
