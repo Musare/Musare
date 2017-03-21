@@ -114,4 +114,46 @@
 		display: flex;
 		text-decoration: none;
 	}
+	.nightMode {
+		.nav {
+			background-color: #012332;
+			height: 64px;
+
+			.nav-menu.is-active {
+				.nav-item {
+					color: #333;
+
+					&:hover {
+						color: #333;
+					}
+				}
+			}
+
+			.nav-toggle {
+				height: 64px;
+
+				&.is-active span {
+					background-color: #333;
+				}
+			}
+
+			.is-brand {
+				font-size: 2.1rem !important;
+				line-height: 64px !important;
+				padding: 0 20px;
+			}
+
+			.nav-item {
+				font-size: 15px;
+				color: $white;
+
+				&:hover {
+					color: $white;
+				}
+			}
+			.admin strong {
+				color: #03a9f4;
+			}
+		}
+	}
 </style>
