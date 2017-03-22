@@ -183,7 +183,6 @@ module.exports = {
 	getStation: function(stationId, cb) {
 		let _this = this;
 		async.waterfall([
-
 			(next) => {
 				cache.hget('stations', stationId, next);
 			},
@@ -196,7 +195,7 @@ module.exports = {
 			(station, next) => {
 				if (station) {
 					if (station.type === 'official') {
-						_this.calculateOfficialPlaylistList(station._id, station.playlist, ()=>{});
+						_this.calculateOfficialPlaylistList(station._id, station.playlist, () => {});
 					}
 					station = cache.schemas.station(station);
 					cache.hset('stations', stationId, station);
@@ -216,7 +215,7 @@ module.exports = {
 		async.waterfall([
 
 			(next) => {
-				db.models.station.findOne({name: stationName}, next);
+				db.models.station.findOne({ name: stationName }, next);
 			},
 
 			(station, next) => {

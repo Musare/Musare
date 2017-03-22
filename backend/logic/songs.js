@@ -84,20 +84,17 @@ module.exports = {
 	/**
 	 * Gets a song by song id from the cache or Mongo, and if it isn't in the cache yet, adds it the cache
 	 *
-	 * @param {String} songId - the id of the song we are trying to get
+	 * @param {String} songId - the mongo id of the song we are trying to get
 	 * @param {Function} cb - gets called once we're done initializing
 	 */
 	getSongFromId: function(songId, cb) {
 		async.waterfall([
-
 			(next) => {
-				db.models.song.findOne({songId}, next);
+				db.models.song.findOne({ _id: songId }, next);
 			}
-
 		], (err, song) => {
 			if (err && err !== true) return cb(err);
-
-			cb(null, song);
+			else return cb(null, song);
 		});
 	},
 

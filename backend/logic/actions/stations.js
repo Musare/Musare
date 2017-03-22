@@ -289,12 +289,12 @@ module.exports = {
 
 			(station, next) => {
 				if (!station) return next('Station not found.');
-				if (station.type !== 'official') return next('This is not an official station.');
-				next();
+				else if (station.type !== 'official') return next('This is not an official station.');
+				else next();
 			},
 
 			(next) => {
-				cache.hget("officialPlaylists", stationId, next);
+				cache.hget('officialPlaylists', stationId, next);
 			},
 
 			(playlist, next) => {
@@ -305,10 +305,11 @@ module.exports = {
 			if (err) {
 				err = utils.getError(err);
 				logger.error("STATIONS_GET_PLAYLIST", `Getting playlist for station "${stationId}" failed. "${err}"`);
-				return cb({'status': 'failure', 'message': err});
+				return cb({ status: 'failure', message: err });
+			} else {
+				logger.success("STATIONS_GET_PLAYLIST", `Got playlist for station "${stationId}" successfully.`);
+				cb({ status: 'success', data: playlist.songs });
 			}
-			logger.success("STATIONS_GET_PLAYLIST", `Got playlist for station "${stationId}" successfully.`);
-			cb({status: 'success', data: playlist.songs})
 		});
 	},
 
