@@ -355,6 +355,7 @@ module.exports = {
 
 			(station, next) => {
 				utils.socketJoinRoom(session.socketId, `station.${station._id}`);
+				console.log(station.currentSong);
 				let data = {
 					_id: station._id,
 					type: station.type,

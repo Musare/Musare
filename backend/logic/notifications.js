@@ -45,6 +45,7 @@ const lib = {
 	 * @param {Function} cb - gets called when the notification has been scheduled
 	 */
 	schedule: (name, time, cb, station) => {
+		if (!cb) cb = ()=>{};
 		time = Math.round(time);
 		logger.stationIssue(`SCHEDULE - Time: ${time}; Name: ${name}; Key: ${crypto.createHash('md5').update(`_notification:${name}_`).digest('hex')}; StationId: ${station._id}; StationName: ${station.name}`);
 		pub.set(crypto.createHash('md5').update(`_notification:${name}_`).digest('hex'), '', 'PX', time, 'NX', cb);

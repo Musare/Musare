@@ -109,43 +109,33 @@ module.exports = {
 		success++;
 		successThisMinute++;
 		successThisHour++;
-		getTime((time) => {
-			let timeString = `${time.year}-${twoDigits(time.month)}-${twoDigits(time.day)} ${twoDigits(time.hour)}:${twoDigits(time.minute)}:${twoDigits(time.second)}`;
-			fs.appendFile(dir + '/all.log', `${timeString} SUCCESS - ${type} - ${message}\n`, ()=>{});
-			fs.appendFile(dir + '/success.log', `${timeString} SUCCESS - ${type} - ${message}\n`, ()=>{});
-			console.info('\x1b[32m', timeString, 'SUCCESS', '-', type, '-', message, '\x1b[0m');
-		});
+		let time = getTimeFormatted();
+		fs.appendFile(dir + '/all.log', `${time} SUCCESS - ${type} - ${message}\n`, ()=>{});
+		fs.appendFile(dir + '/success.log', `${time} SUCCESS - ${type} - ${message}\n`, ()=>{});
+		console.info('\x1b[32m', time, 'SUCCESS', '-', type, '-', message, '\x1b[0m');
 	},
 	error: (type, message) => {
 		error++;
 		errorThisMinute++;
 		errorThisHour++;
-		getTime((time) => {
-			let timeString = `${time.year}-${twoDigits(time.month)}-${twoDigits(time.day)} ${twoDigits(time.hour)}:${twoDigits(time.minute)}:${twoDigits(time.second)}`;
-			fs.appendFile(dir + '/all.log', `${timeString} ERROR - ${type} - ${message}\n`, ()=>{});
-			fs.appendFile(dir + '/error.log', `${timeString} ERROR - ${type} - ${message}\n`, ()=>{});
-			console.warn('\x1b[31m', timeString, 'ERROR', '-', type, '-', message, '\x1b[0m');
-		});
+		let time = getTimeFormatted();
+		fs.appendFile(dir + '/all.log', `${time} ERROR - ${type} - ${message}\n`, ()=>{});
+		fs.appendFile(dir + '/error.log', `${time} ERROR - ${type} - ${message}\n`, ()=>{});
+		console.warn('\x1b[31m', time, 'ERROR', '-', type, '-', message, '\x1b[0m');
 	},
 	info: (type, message) => {
 		info++;
 		infoThisMinute++;
 		infoThisHour++;
-		getTime((time) => {
-			let timeString = `${time.year}-${twoDigits(time.month)}-${twoDigits(time.day)} ${twoDigits(time.hour)}:${twoDigits(time.minute)}:${twoDigits(time.second)}`;
-			fs.appendFile(dir + '/all.log', `${timeString} INFO - ${type} - ${message}\n`, ()=>{});
-			fs.appendFile(dir + '/info.log', `${timeString} INFO - ${type} - ${message}\n`, ()=>{});
-
-			console.info('\x1b[36m', timeString, 'INFO', '-', type, '-', message, '\x1b[0m');
-		});
+		let time = getTimeFormatted();
+		fs.appendFile(dir + '/all.log', `${time} INFO - ${type} - ${message}\n`, ()=>{});
+		fs.appendFile(dir + '/info.log', `${time} INFO - ${type} - ${message}\n`, ()=>{});
+		console.info('\x1b[36m', time, 'INFO', '-', type, '-', message, '\x1b[0m');
 	},
 	stationIssue: (string) => {
-		getTime((time) => {
-			let timeString = `${time.year}-${twoDigits(time.month)}-${twoDigits(time.day)} ${twoDigits(time.hour)}:${twoDigits(time.minute)}:${twoDigits(time.second)}`;
-			fs.appendFile(dir + '/debugStation.log', `${timeString} - ${string}\n`, ()=>{});
-
-			console.info('\x1b[35m', timeString, '-', string, '\x1b[0m');
-		});
+		let time = getTimeFormatted();
+		fs.appendFile(dir + '/debugStation.log', `${time} - ${string}\n`, ()=>{});
+		console.info('\x1b[35m', time, '-', string, '\x1b[0m');
 	},
 	calculatePerSecond: function(number) {
 		let secondsRunning = Math.floor((Date.now() - started) / 1000);

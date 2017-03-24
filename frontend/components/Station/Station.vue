@@ -13,8 +13,8 @@
 	<playlist-sidebar v-if='sidebars.playlist'></playlist-sidebar>
 	<users-sidebar v-if='sidebars.users'></users-sidebar>
 
-	<div class='progress' v-if='!ready'></div>
-	<div class='station' v-else>
+	<div class='progress' v-show='!ready'></div>
+	<div class='station' v-show="ready">
 		<div v-show="noSong" class="no-song">
 			<h1>No song is currently playing</h1>
 			<h4 v-if='type === "community" && station.partyMode'>
@@ -395,9 +395,12 @@
 				}
 			},
 			joinStation: function () {
+				console.log("JOINSTATION");
 				let _this = this;
 				_this.socket.emit('stations.join', _this.stationName, res => {
+					console.log("SOCKET STATIONS JOIN");
 					if (res.status === 'success') {
+						console.log("SOCKET STATIONS JOIN SUCCESS");
 						_this.station = {
 							_id: res.data._id,
 							name: _this.stationName,
@@ -416,6 +419,7 @@
 						_this.userCount = res.data.userCount;
 						_this.users = res.data.users;
 						if (res.data.currentSong) {
+							console.log(">> HAS CURRENT SONG");
 							_this.noSong = false;
 							_this.simpleSong = (res.data.currentSong.likes === -1 && res.data.currentSong.dislikes === -1);
 							if (_this.simpleSong) {
@@ -430,6 +434,7 @@
 								}
 							});
 						} else {
+							console.log(">> HAS NO CURRENT SONG");
 							if (_this.playerReady) _this.player.pauseVideo();
 							_this.noSong = true;
 						}
@@ -469,6 +474,7 @@
 			}
 		},
 		ready: function() {
+			console.log("READY");
 			let _this = this;
 
 			Date.currently = () => {
@@ -480,11 +486,13 @@
 			window.stationInterval = 0;
 
 			io.getSocket(socket => {
+				console.log("SOCKET");
 				_this.socket = socket;
 
 				io.removeAllListeners();
 				if (_this.socket.connected) _this.joinStation();
 				io.onConnect(() => {
+					console.log("IO CONNECT");
 					_this.joinStation();
 				});
 				_this.socket.emit('stations.findByName', _this.stationName, res => {
@@ -496,6 +504,7 @@
 					}
 				});
 				_this.socket.on('event:songs.next', data => {
+					console.log("NEXT SONG EVENT");
 					_this.previousSong = (_this.currentSong.songId) ? _this.currentSong : null;
 					_this.currentSong = (data.currentSong) ? data.currentSong : {};
 					_this.startedAt = data.startedAt;

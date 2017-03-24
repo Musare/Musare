@@ -376,6 +376,7 @@ module.exports = {
 							songId: song.songId,
 							title: song.title,
 							duration: song.duration,
+							skipDuration: 0,
 							likes: -1,
 							dislikes: -1
 						};
@@ -462,6 +463,7 @@ module.exports = {
 		songId: '60ItHLz5WEA',
 		title: 'Faded - Alan Walker',
 		duration: 212,
+		skipDuration: 0,
 		likes: -1,
 		dislikes: -1
 	}
