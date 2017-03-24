@@ -26,7 +26,7 @@
 			<h1 v-if='type === "community" && !station.partyMode && $parent.userId === station.owner && station.privatePlaylist'>Maybe you can add some songs to your selected private playlist and then press the skip button</h1>
 		</div>
 		<div class="columns" v-show="!noSong">
-			<div class="column is-8-desktop is-offset-2-desktop is-12-mobile">
+			<div class="column is-7-desktop is-offset-1-desktop is-12-mobile">
 				<div class="video-container">
 					<div id="player"></div>
 				</div>
@@ -34,9 +34,51 @@
 					<div class="seeker-bar light-blue" style="width: 0%;"></div>
 				</div>
 			</div>
+			<div class="desktop-only column is-3-desktop card playlistCard">
+				<div class='title' v-if='type === "community"'>Queue</div>
+				<div class='title' v-else>Playlist</div>
+				<article class="media" v-if="!noSong">
+					<figure class="media-left">
+						<p class="image is-64x64">
+							<img :src="currentSong.thumbnail" onerror="this.src='/assets/notes-transparent.png'">
+						</p>
+					</figure>
+					<div class="media-content">
+						<div class="content">
+							<p>
+								Current Song:
+								<br>
+								<strong>{{ currentSong.title }}</strong>
+								<br>
+								<small>{{ currentSong.artists }}</small>
+							</p>
+						</div>
+					</div>
+					<div class="media-right">
+						{{ formatTime(currentSong.duration) }}
+					</div>
+				</article>
+				<p v-if="noSong" class="center">There is currently no song playing.</p>
+
+				<article class="media" v-for='song in songsList'>
+					<div class="media-content">
+						<div class="content">
+							<p>
+								<strong>{{ song.title }}</strong>
+								<br>
+								<small>{{ song.artists.join(', ') }}</small>
+							</p>
+						</div>
+					</div>
+					<div class="media-right">
+						{{ $parent.formatTime(song.duration) }}
+					</div>
+				</article>
+				<a class='button add-to-queue' href='#' @click='modals.addSongToQueue = !modals.addSongToQueue' v-if="type === 'community' && $parent.loggedIn">Add Song to Queue</a>
+			</div>
 		</div>
 		<div class="desktop-only columns is-mobile" v-show="!noSong">
-			<div class="column is-8-desktop is-offset-2-desktop is-12-mobile">
+			<div class="column is-7-desktop is-offset-1-desktop is-12-mobile">
 				<div class="columns is-mobile">
 					<div class="column is-12-desktop">
 						<h4 id="time-display">{{timeElapsed}} / {{formatTime(currentSong.duration)}}</h4>
@@ -66,6 +108,9 @@
 								</ul>
 							</div>
 						</div>
+					</div>
+					<div class="column is-3-desktop" v-if="!simpleSong">
+						<img class="image" :src="currentSong.thumbnail" alt="Song Thumbnail" onerror="this.src='/assets/notes-transparent.png'" />
 					</div>
 				</div>
 			</div>
@@ -379,6 +424,7 @@
 
 						_this.socket.emit('playlists.getFirstSong', _this.privatePlaylistQueueSelected, data => {
 							if (data.status === 'success') {
+								console.log(data.song);
 								let songId = data.song._id;
 								_this.automaticallyRequestedSongId = data.song.songId;
 								_this.socket.emit('stations.addToQueue', _this.station._id, data.song.songId, data2 => {
@@ -606,6 +652,7 @@
 				});
 
 				_this.socket.on('event:newOfficialPlaylist', (playlist) => {
+					console.log(playlist);
 					if (this.type === 'official') {
 						this.songsList = playlist;
 					}
@@ -736,6 +783,46 @@
 
 		.mobile-only {
 			text-align: center;
+		}
+
+		.playlistCard {
+			margin: 10px;
+
+			.title {
+				background-color: rgb(3, 169, 244);
+				text-align: center;
+				padding: 10px;
+				color: white;
+				font-weight: 600;
+			}
+
+			.media { padding: 0 25px; }
+
+			.media-content .content {
+				min-height: 64px;
+				display: flex;
+				align-items: center;
+			}
+
+			.content p strong { word-break: break-word; }
+
+			.content p small { word-break: break-word; }
+
+			.add-to-queue {
+				width: 100%;
+				margin-top: 25px;
+				height: 40px;
+				border-radius: 0;
+				background: rgb(3, 169, 244);
+				color: #fff !important;
+				border: 0;
+				&:active, &:focus { border: 0; }
+			}
+
+			.add-to-queue:focus { background: #029ce3; }
+
+			.media-right { line-height: 64px; }
+
 		}
 
 		input[type=range] {

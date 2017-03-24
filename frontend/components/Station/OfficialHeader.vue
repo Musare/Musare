@@ -252,8 +252,6 @@
 		height: 100vh;
 		background-color: #03a9f4;
 		box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
-		overflow-y: auto;
-		overflow-x: hidden;
 
 		@media (max-width: 998px) {
 			display: none;
