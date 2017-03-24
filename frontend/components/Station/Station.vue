@@ -379,7 +379,6 @@
 
 						_this.socket.emit('playlists.getFirstSong', _this.privatePlaylistQueueSelected, data => {
 							if (data.status === 'success') {
-								console.log(data.song);
 								let songId = data.song._id;
 								_this.automaticallyRequestedSongId = data.song.songId;
 								_this.socket.emit('stations.addToQueue', _this.station._id, data.song.songId, data2 => {
@@ -395,12 +394,9 @@
 				}
 			},
 			joinStation: function () {
-				console.log("JOINSTATION");
 				let _this = this;
 				_this.socket.emit('stations.join', _this.stationName, res => {
-					console.log("SOCKET STATIONS JOIN");
 					if (res.status === 'success') {
-						console.log("SOCKET STATIONS JOIN SUCCESS");
 						_this.station = {
 							_id: res.data._id,
 							name: _this.stationName,
@@ -419,7 +415,6 @@
 						_this.userCount = res.data.userCount;
 						_this.users = res.data.users;
 						if (res.data.currentSong) {
-							console.log(">> HAS CURRENT SONG");
 							_this.noSong = false;
 							_this.simpleSong = (res.data.currentSong.likes === -1 && res.data.currentSong.dislikes === -1);
 							if (_this.simpleSong) {
@@ -427,14 +422,13 @@
 							}
 							_this.youtubeReady();
 							_this.playVideo();
-							_this.socket.emit('songs.getOwnSongRatings', res.data.currentSong._id, data => {
+							_this.socket.emit('songs.getOwnSongRatings', res.data.currentSong.songId, data => {
 								if (_this.currentSong.songId === data.songId) {
 									_this.liked = data.liked;
 									_this.disliked = data.disliked;
 								}
 							});
 						} else {
-							console.log(">> HAS NO CURRENT SONG");
 							if (_this.playerReady) _this.player.pauseVideo();
 							_this.noSong = true;
 						}
@@ -474,7 +468,6 @@
 			}
 		},
 		ready: function() {
-			console.log("READY");
 			let _this = this;
 
 			Date.currently = () => {
@@ -486,13 +479,11 @@
 			window.stationInterval = 0;
 
 			io.getSocket(socket => {
-				console.log("SOCKET");
 				_this.socket = socket;
 
 				io.removeAllListeners();
 				if (_this.socket.connected) _this.joinStation();
 				io.onConnect(() => {
-					console.log("IO CONNECT");
 					_this.joinStation();
 				});
 				_this.socket.emit('stations.findByName', _this.stationName, res => {
@@ -504,7 +495,6 @@
 					}
 				});
 				_this.socket.on('event:songs.next', data => {
-					console.log("NEXT SONG EVENT");
 					_this.previousSong = (_this.currentSong.songId) ? _this.currentSong : null;
 					_this.currentSong = (data.currentSong) ? data.currentSong : {};
 					_this.startedAt = data.startedAt;
@@ -616,7 +606,6 @@
 				});
 
 				_this.socket.on('event:newOfficialPlaylist', (playlist) => {
-					console.log(playlist);
 					if (this.type === 'official') {
 						this.songsList = playlist;
 					}
