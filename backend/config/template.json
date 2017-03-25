@@ -36,7 +36,7 @@
 	  	"url": "redis://redis:6379/0"
 	},
   	"mongo": {
-	  	"url": "mongodb://mongo:27017/musare"
+	  	"url": "mongodb://musare:PASSWORD@mongo:27017/musare"
 	},
   	"cookie": {
 	  	"domain": "",

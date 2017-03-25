@@ -1,6 +1,7 @@
 'use strict';
 
 const mongoose = require('mongoose');
+const config = require('config');
 
 const bluebird = require('bluebird');
 
@@ -25,11 +26,10 @@ let lib = {
 	models: {},
 
 	init: (url, cb) => {
-
 		lib.connection = mongoose.connect(url).connection;
 
 		lib.connection.on('error', err => {
-			console.error('Database error: ' + err.message)
+			console.error('Database error: ' + err);
 			process.exit();
 		});
 

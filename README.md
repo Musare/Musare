@@ -80,15 +80,50 @@ Now you have different paths here.
 
    `docker-compose build`
 
-2. Start the databases and tools in the background, as we usually don't need to monitor these for errors
+2. Set up the MongoDB database
+
+	1. Disable auth
+	
+		In `docker-compose.yml` remove `--auth` from the line `command: "--auth"` for mongo.
+	
+	2. Start the database
+	
+		`docker-compose up mongo`
+		
+	3. Connect to Mongo
+	
+		`docker-compose exec mongo mongo admin`
+	
+	4. Create an admin user
+	
+		`db.createUser({user: 'admin', pwd: 'PASSWORD_HERE', roles: [{role: 'userAdminAnyDatabase', db: 'admin'}]})`
+		
+	5. Connect to the Musare database
+	
+		`use musare`
+		
+	6. Create the musare user
+	
+		`db.createUser({user: 'musare', pwd: 'OTHER_PASSWORD_HERE', roles: [{role: 'readWrite', db: 'musare'}]})`
+	
+	7. Exit
+	
+		`exit`
+	
+	8. Add back authentication
+	
+		In `docker-compose.yml` add back `--auth` on the line `command: ""` for mongo.
+	
+
+3. Start the databases and tools in the background, as we usually don't need to monitor these for errors
 
    `docker-compose up -d mongo mongoclient redis`
 
-3. Start the backend and frontend in the foreground, so we can watch for errors during development
+4. Start the backend and frontend in the foreground, so we can watch for errors during development
 
    `docker-compose up backend frontend`
 
-4. You should now be able to begin development! The backend is auto reloaded when
+5. You should now be able to begin development! The backend is auto reloaded when
    you make changes and the frontend is auto compiled and live reloaded by webpack
    when you make changes. You should be able to access Musare in your local browser
    at `http://<docker-machine-ip>:8080/` where `<docker-machine-ip>` can be found below:
@@ -108,10 +143,38 @@ Steps 1-4 are things you only have to do once. The steps to start servers follow
 		"C:\Program Files\MongoDB\Server\3.2\bin\mongod.exe" --dbpath "D:\Programming\HTML\MusareNode\.database"
 
 	Make sure to adjust your paths accordingly.
+	
+3. Set up the MongoDB database
+	
+	1. Start the database by executing the script `startMongo.cmd` you just made
+		
+	2. Connect to Mongo from a command prompt
+	
+		`mongo admin`
+	
+	3. Create an admin user
+	
+		`db.createUser({user: 'admin', pwd: 'PASSWORD_HERE', roles: [{role: 'userAdminAnyDatabase', db: 'admin'}]})`
+		
+	4. Connect to the Musare database
+	
+		`use musare`
+		
+	5. Create the musare user
+	
+		`db.createUser({user: 'musare', pwd: 'OTHER_PASSWORD_HERE', roles: [{role: 'readWrite', db: 'musare'}]})`
+	
+	6. Exit
+	
+		`exit`
+	
+	7. Add the authentication
+	
+		In `startMongo.cmd` add ` --auth` at the end of the first line
 
-3. In the folder where you installed Redis, edit the `redis.windows.conf` file. In there, look for the property `notify-keyspace-events`. Make sure that property is uncommented and has the value `Ex`. It should look like `notify-keyspace-events Ex` when done.
+4. In the folder where you installed Redis, edit the `redis.windows.conf` file. In there, look for the property `notify-keyspace-events`. Make sure that property is uncommented and has the value `Ex`. It should look like `notify-keyspace-events Ex` when done.
 
-4. Create a file called `startRedis.cmd` in the main folder with the contents:
+5. Create a file called `startRedis.cmd` in the main folder with the contents:
 
 		"D:\Redis\redis-server.exe" "D:\Redis\redis.windows.conf"
 

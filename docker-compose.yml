@@ -19,6 +19,7 @@ services:
     image: mongo
     ports:
     - "27018:27018"
+    command: "--auth"
   mongoclient:
     image: mongoclient/mongoclient
     ports:
