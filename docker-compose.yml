@@ -3,25 +3,22 @@ services:
   backend:
     build: ./backend
     ports:
-    - "8080:8080"
+    - "${BACKEND_PORT}:8080"
     volumes:
     - ./backend:/opt/app
-    - ./log:/opt/log
     links:
     - mongo
     - redis
-    environment:
-    - NGINX_PORT=80
   frontend:
     build: ./frontend
     ports:
-    - "80:80"
+    - "${FRONTEND_PORT}:80"
     volumes:
     - ./frontend:/opt/app
   mongo:
     image: mongo
     ports:
-    - "27017:27017"
+    - "27018:27018"
   mongoclient:
     image: mongoclient/mongoclient
     ports:

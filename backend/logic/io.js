@@ -44,7 +44,8 @@ module.exports = {
 		});
 
 		this.io.on('connection', socket => {
-			console.info('User has connected');
+			socket.ip = socket.request.headers['x-forwarded-for'] || '0.0.0.0';
+			console.info(`User has connected. IP: ${socket.ip}`);
 
 			// catch when the socket has been disconnected
 			socket.on('disconnect', () => {
