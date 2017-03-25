@@ -60,7 +60,7 @@ Once you've installed the required tools:
    	`apis.discord` is currently not needed.  
    	The `apis.mailgun` values can be obtained by setting up a [Mailgun account](http://www.mailgun.com/).  
    	The `redis.url` url should be left alone for Docker, and changed to `redis://localhost:6379/0` for non-Docker.
-   	The `mongo.url` url should be left alone for Docker, and changed to `mongodb://localhost:27017/musare` for non-Docker.  
+   	The `mongo.url` needs to have the proper password for the MongoDB musare user, and for non-Docker you need to replace `@musare:27017` with `@localhost:27017`.  
    	The `cookie.domain` value should be the ip or address you use to access the site, without protocols (http/https), so for example `localhost`.   
    	The `cookie.secure` value should be `true` for SSL connections, and `false` for normal http connections.  
 
