@@ -78,12 +78,12 @@ setInterval(() => {
 		}
 
 		stationsCountUpdated.forEach((stationId) => {
-			console.log("Updating count of ", stationId);
+			//logger.info("UPDATE_STATION_USER_COUNT", `Updating user count of ${stationId}.`);
 			cache.pub('station.updateUserCount', stationId);
 		});
 
 		stationsUpdated.forEach((stationId) => {
-			console.log("Updating ", stationId);
+			//logger.info("UPDATE_STATION_USER_LIST", `Updating user list of ${stationId}.`);
 			cache.pub('station.updateUsers', stationId);
 		});
 
@@ -241,7 +241,7 @@ module.exports = {
 				logger.error("STATIONS_INDEX", `Indexing stations failed. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
-			logger.success("STATIONS_INDEX", `Indexing stations successful.`);
+			logger.success("STATIONS_INDEX", `Indexing stations successful.`, false);
 			return cb({'status': 'success', 'stations': stations});
 		});
 	},
@@ -269,7 +269,7 @@ module.exports = {
 				logger.error("STATIONS_FIND_BY_NAME", `Finding station "${stationName}" failed. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
-			logger.success("STATIONS_FIND_BY_NAME", `Found station "${stationName}" successfully.`);
+			logger.success("STATIONS_FIND_BY_NAME", `Found station "${stationName}" successfully.`, false);
 			cb({status: 'success', data: station});
 		});
 	},
@@ -307,7 +307,7 @@ module.exports = {
 				logger.error("STATIONS_GET_PLAYLIST", `Getting playlist for station "${stationId}" failed. "${err}"`);
 				return cb({ status: 'failure', message: err });
 			} else {
-				logger.success("STATIONS_GET_PLAYLIST", `Got playlist for station "${stationId}" successfully.`);
+				logger.success("STATIONS_GET_PLAYLIST", `Got playlist for station "${stationId}" successfully.`, false);
 				cb({ status: 'success', data: playlist.songs });
 			}
 		});
@@ -355,7 +355,6 @@ module.exports = {
 
 			(station, next) => {
 				utils.socketJoinRoom(session.socketId, `station.${station._id}`);
-				console.log(station.currentSong);
 				let data = {
 					_id: station._id,
 					type: station.type,

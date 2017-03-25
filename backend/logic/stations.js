@@ -282,7 +282,7 @@ module.exports = {
 	},
 
 	skipStation: function(stationId) {
-		console.log("SKIP!", stationId);
+		logger.info("STATION_SKIP", `Skipping station ${stationId}.`, false);
 		let _this = this;
 		return (cb) => {
 			if (typeof cb !== 'function') cb = ()=>{};

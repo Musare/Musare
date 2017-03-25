@@ -17,7 +17,7 @@ let testTask = (callback) => {
 };
 
 let checkStationSkipTask = (callback) => {
-	logger.info("TASK_STATIONS_SKIP_CHECK", `Checking for stations to be skipped.`);
+	logger.info("TASK_STATIONS_SKIP_CHECK", `Checking for stations to be skipped.`, false);
 	async.waterfall([
 		(next) => {
 			cache.hgetall('stations', next);
@@ -42,7 +42,7 @@ let checkStationSkipTask = (callback) => {
 };
 
 let sessionClearingTask = (callback) => {
-	logger.info("TASK_SESSION_CLEAR", `Checking for sessions to be cleared.`);
+	logger.info("TASK_SESSION_CLEAR", `Checking for sessions to be cleared.`, false);
 	async.waterfall([
 		(next) => {
 			cache.hgetall('sessions', next);

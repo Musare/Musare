@@ -51,7 +51,7 @@ module.exports = {
 				logger.error("NEWS_INDEX", `Indexing news failed. "${err}"`);
 				return cb({status: 'failure', message: err});
 			}
-			logger.success("NEWS_INDEX", `Indexing news successful.`);
+			logger.success("NEWS_INDEX", `Indexing news successful.`, false);
 			return cb({ status: 'success', data: news });
 		});
 	},
@@ -100,7 +100,7 @@ module.exports = {
 				logger.error("NEWS_NEWEST", `Getting the latest news failed. "${err}"`);
 				return cb({ 'status': 'failure', 'message': err });
 			}
-			logger.success("NEWS_NEWEST", `Successfully got the latest news.`);
+			logger.success("NEWS_NEWEST", `Successfully got the latest news.`, false);
 			return cb({ status: 'success', data: news });
 		});
 	},

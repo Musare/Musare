@@ -8,6 +8,7 @@ const async = require('async');
 const cache = require('./cache');
 const utils = require('./utils');
 const db = require('./db');
+const logger = require('./logger');
 
 module.exports = {
 
@@ -45,19 +46,15 @@ module.exports = {
 
 		this.io.on('connection', socket => {
 			socket.ip = socket.request.headers['x-forwarded-for'] || '0.0.0.0';
-			console.info(`User has connected. IP: ${socket.ip}`);
+			let sessionInfo = '';
+			if (socket.session.sessionId) sessionInfo = ` UserID: ${socket.session.userId}.`;
+			logger.info('IO_CONNECTION', `User connected. IP: ${socket.ip}.${sessionInfo}`);
 
 			// catch when the socket has been disconnected
-			socket.on('disconnect', () => {
-
-				// remove the user from their current station (if any)
-				if (socket.session) {
-					//actions.stations.leave(socket.sessionId, result => {});
-					// Remove session from Redis
-					//cache.hdel('sessions', socket.session.sessionId);
-				}
-
-				console.info('User has disconnected');
+			socket.on('disconnect', (reason) => {
+				let sessionInfo = '';
+				if (socket.session.sessionId) sessionInfo = ` UserID: ${socket.session.userId}.`;
+				logger.info('IO_DISCONNECTION', `User disconnected. IP: ${socket.ip}.${sessionInfo}`);
 			});
 
 			// catch errors on the socket (internal to socket.io)

@@ -105,37 +105,37 @@ module.exports = {
 
 		cb();
 	},
-	success: (type, message) => {
+	success: (type, message, display = true) => {
 		success++;
 		successThisMinute++;
 		successThisHour++;
 		let time = getTimeFormatted();
 		fs.appendFile(dir + '/all.log', `${time} SUCCESS - ${type} - ${message}\n`, ()=>{});
 		fs.appendFile(dir + '/success.log', `${time} SUCCESS - ${type} - ${message}\n`, ()=>{});
-		console.info('\x1b[32m', time, 'SUCCESS', '-', type, '-', message, '\x1b[0m');
+		if (display) console.info('\x1b[32m', time, 'SUCCESS', '-', type, '-', message, '\x1b[0m');
 	},
-	error: (type, message) => {
+	error: (type, message, display = true) => {
 		error++;
 		errorThisMinute++;
 		errorThisHour++;
 		let time = getTimeFormatted();
 		fs.appendFile(dir + '/all.log', `${time} ERROR - ${type} - ${message}\n`, ()=>{});
 		fs.appendFile(dir + '/error.log', `${time} ERROR - ${type} - ${message}\n`, ()=>{});
-		console.warn('\x1b[31m', time, 'ERROR', '-', type, '-', message, '\x1b[0m');
+		if (display) console.warn('\x1b[31m', time, 'ERROR', '-', type, '-', message, '\x1b[0m');
 	},
-	info: (type, message) => {
+	info: (type, message, display = true) => {
 		info++;
 		infoThisMinute++;
 		infoThisHour++;
 		let time = getTimeFormatted();
 		fs.appendFile(dir + '/all.log', `${time} INFO - ${type} - ${message}\n`, ()=>{});
 		fs.appendFile(dir + '/info.log', `${time} INFO - ${type} - ${message}\n`, ()=>{});
-		console.info('\x1b[36m', time, 'INFO', '-', type, '-', message, '\x1b[0m');
+		if (display) console.info('\x1b[36m', time, 'INFO', '-', type, '-', message, '\x1b[0m');
 	},
-	stationIssue: (string) => {
+	stationIssue: (string, display = false) => {
 		let time = getTimeFormatted();
 		fs.appendFile(dir + '/debugStation.log', `${time} - ${string}\n`, ()=>{});
-		console.info('\x1b[35m', time, '-', string, '\x1b[0m');
+		if (display) console.info('\x1b[35m', time, '-', string, '\x1b[0m');
 	},
 	calculatePerSecond: function(number) {
 		let secondsRunning = Math.floor((Date.now() - started) / 1000);
