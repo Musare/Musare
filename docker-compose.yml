@@ -26,4 +26,8 @@ services:
     - "3000:3000"
   redis:
     image: redis
-    command: "--notify-keyspace-events Ex"
+    command: "--notify-keyspace-events Ex --requirepass ${REDIS_PASSWORD}"
+    volumes:
+    - .redis:/data
+    ports:
+    - "6371:6371"
