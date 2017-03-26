@@ -21,6 +21,8 @@
 					</div>
 
 					<div class="under-content">
+						<i class="material-icons" v-if="station.privacy !== 'public'" title="This station is not visible to other users.">lock | </i>
+
 						<i class='material-icons' title="How many users there are in the station.">people</i>
 						<span class="users-count" title="How many users there are in the station.">&nbsp;{{station.userCount}}</span>
 					</div>
@@ -51,6 +53,9 @@
 						{{ station.description }}
 					</div>
 					<div class="under-content">
+						<i class="material-icons" v-if="station.privacy !== 'public'" title="This station is not visible to other users.">lock | </i>
+ 						<i class="material-icons" v-if="isOwner(station)" title="This is your station.">home | </i>
+
 						<i class='material-icons' title="How many users there are in the station.">people</i>
 						<span class="users-count" title="How many users there are in the station.">&nbsp;{{station.userCount}}</span>
 					</div>
@@ -201,6 +206,9 @@
 		bottom: 0;
 		position: absolute;
 		margin-bottom: 10px;
+		line-height: 1;
+	    font-size: 24px;
+	    vertical-align: middle;
 
 		* {
 			z-index: 10;

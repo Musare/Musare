@@ -787,6 +787,10 @@
 
 		.playlistCard {
 			margin: 10px;
+			position: relative;
+			padding-bottom: calc(31.25% + 7px);
+			height: 0;
+			overflow-y: scroll;
 
 			.title {
 				background-color: rgb(3, 169, 244);
@@ -800,6 +804,7 @@
 
 			.media-content .content {
 				min-height: 64px;
+				max-height: 64px;
 				display: flex;
 				align-items: center;
 			}

@@ -97,6 +97,12 @@
 					<span class="skip-votes">{{$parent.currentSong.skipVotes}}</span>
 					<span class="icon-purpose">Skip current song</span>
 				</a>
+				<a v-if='$parent.$parent.loggedIn && !$parent.noSong && !$parent.simpleSong' class="sidebar-item" href='#' @click='$parent.modals.report = !$parent.modals.report'>
+					<span class='icon'>
+						<i class='material-icons'>report</i>
+					</span>
+					<span class="icon-purpose">Report a song</span>
+				</a>
 				<a v-if='$parent.$parent.loggedIn && !$parent.noSong' class="sidebar-item" href='#' @click='$parent.modals.addSongToPlaylist = true'>
 					<span class='icon'>
 						<i class='material-icons'>playlist_add</i>
@@ -105,7 +111,7 @@
 				</a>
 				<hr>
 			</div>
-			<a class="sidebar-item" href='#' @click='$parent.toggleSidebar("songslist")'>
+			<a class="sidebar-item mobile-only" href='#' @click='$parent.toggleSidebar("songslist")'>
 				<span class='icon'>
 					<i class='material-icons'>queue_music</i>
 				</span>
@@ -116,13 +122,6 @@
 					<i class='material-icons'>people</i>
 				</span>
 				<span class="icon-purpose">Display users in the station</span>
-			</a>
-			<hr>
-			<a v-if='$parent.$parent.loggedIn && !$parent.noSong && !$parent.simpleSong' class="sidebar-item" href='#' @click='$parent.modals.report = !$parent.modals.report'>
-				<span class='icon'>
-					<i class='material-icons'>report</i>
-				</span>
-				<span class="icon-purpose">Report a song</span>
 			</a>
 		</div>
 	</div>
@@ -255,6 +254,25 @@
 
 		@media (max-width: 998px) {
 			display: none;
+		}
+		.inner-wrapper {
+			@media (min-width: 999px) {
+				.mobile-only {
+					display: none;
+				}
+				.desktop-only {
+					display: flex;
+				}
+			}
+			@media (max-width: 998px) {
+				.mobile-only {
+					display: flex;
+				}
+				.desktop-only {
+					display: none;
+					visibility: hidden;
+				}
+			}
 		}
 	}
 
