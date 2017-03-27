@@ -15,11 +15,12 @@ const lib = {
 	 * Initializes the notifications module
 	 *
 	 * @param {String} url - the url of the redis server
+	 * @param {String} password - the password of the redis server
 	 * @param {Function} cb - gets called once we're done initializing
 	 */
-	init: (url, cb) => {
-		pub = redis.createClient({ url: url });
-		sub = redis.createClient({ url: url });
+	init: (url, password, cb) => {
+		pub = redis.createClient({ url, password });
+		sub = redis.createClient({ url, password });
 		sub.on('error', (err) => {
 			console.error(err);
 			process.exit();

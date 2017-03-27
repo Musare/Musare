@@ -33,7 +33,8 @@
 		]
 	},
   	"redis": {
-	  	"url": "redis://redis:6379/0"
+	  	"url": "redis://redis:6379/0",
+	    "password": "PASSWORD"
 	},
   	"mongo": {
 	  	"url": "mongodb://musare:PASSWORD@mongo:27017/musare"

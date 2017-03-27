@@ -25,12 +25,14 @@ const lib = {
 	 * Initializes the cache module
 	 *
 	 * @param {String} url - the url of the redis server
+	 * @param {String} password - the password of the redis server
 	 * @param {Function} cb - gets called once we're done initializing
 	 */
-	init: (url, cb) => {
+	init: (url, password, cb) => {
 		lib.url = url;
+		lib.password = password;
 
-		lib.client = redis.createClient({ url: lib.url });
+		lib.client = redis.createClient({ url: lib.url, password: lib.password });
 		lib.client.on('error', (err) => {
 			console.error(err);
 			process.exit();
@@ -164,7 +166,7 @@ const lib = {
 		}
 		function subToChannel() {
 			if (subs[channel] === undefined) {
-				subs[channel] = { client: redis.createClient({ url: lib.url }), cbs: [] };
+				subs[channel] = { client: redis.createClient({ url: lib.url, password: lib.password }), cbs: [] };
 				subs[channel].client.on('error', (err) => {
 					console.error(err);
 					process.exit();

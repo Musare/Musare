@@ -28,7 +28,7 @@ async.waterfall([
 
 	// setup our Redis cache
 	(next) => {
-		cache.init(config.get('redis').url, () => {
+		cache.init(config.get('redis').url, config.get('redis').password, () => {
 			next();
 		});
 	},
@@ -46,7 +46,7 @@ async.waterfall([
 	(next) => io.init(next),
 
 	// setup the notifications
-	(next) => notifications.init(config.get('redis').url, next),
+	(next) => notifications.init(config.get('redis').url, config.get('redis').password, next),
 
 	// setup the stations
 	(next) => stations.init(next),
