@@ -365,6 +365,7 @@ module.exports = {
 					description: station.description,
 					displayName: station.displayName,
 					privacy: station.privacy,
+					locked: station.locked,
 					partyMode: station.partyMode,
 					owner: station.owner,
 					privatePlaylist: station.privatePlaylist
@@ -400,6 +401,35 @@ module.exports = {
 			cb({status: 'success', data});
 		});
 	},
+
+	/**
+	 * Toggles if a station is locked
+	 *
+	 * @param session
+	 * @param stationId - the station id
+	 * @param locked - the old locked status
+	 * @param cb
+	 */
+	toggleLock: hooks.adminRequired((session, stationId, oldLocked, cb) => {
+		async.waterfall([
+			(next) => {
+				db.models.station.update({ _id: stationId }, { $set: { locked: !oldLocked } }, next);
+			},
+
+			(res, next) => {
+				stations.updateStation(stationId, next);
+			}
+		], (err, station) => {
+			if (err) {
+				err = utils.getError(err);
+				logger.error("STATIONS_UPDATE_LOCKED_STATUS", `Updating station "${stationId}" locked status to "${!oldLocked}" failed. "${err}"`);
+				return cb({ status: 'failure', message: err });
+			} else {
+				logger.success("STATIONS_UPDATE_LOCKED_STATUS", `Updated station "${stationId}" locked status to "${!oldLocked}" successfully.`);
+				return cb({ status: 'success', data: !oldLocked });
+			}
+		});
+	}),
 
 	/**
 	 * Votes to skip a station
@@ -845,6 +875,17 @@ module.exports = {
 
 			(station, next) => {
 				if (!station) return next('Station not found.');
+				if (station.locked) {
+					db.models.user.findOne({ _id: userId }, (err, user) => {
+						if (user.role !== 'admin' || station.owner !== userId) return next('Only owners and admins can add songs to a locked queue.');
+						else return next(null, station);
+					});
+				} else {
+					return next(null, station);
+				}
+			},
+
+			(station, next) => {
 				if (station.type !== 'community') return next('That station is not a community station.');
 				utils.canUserBeInStation(station, userId, (canBe) => {
 					if (canBe) return next(null, station);

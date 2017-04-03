@@ -321,6 +321,15 @@
 				if (songDuration <= duration) local.player.pauseVideo();
 				if ((!local.paused) && duration <= songDuration) local.timeElapsed = local.formatTime(duration);
 			},
+			toggleLock: function () {
+				let _this = this;
+				socket.emit('stations.toggleLock', this.station._id, this.station.locked, res => {
+					console.log(res);
+					if (res.status === 'success') {
+						_this.station.locked = res.data;
+					}
+				});
+			},
 			changeVolume: function() {
 				let local = this;
 				let volume = $("#volumeSlider").val();
@@ -449,6 +458,7 @@
 							displayName: res.data.displayName,
 							description: res.data.description,
 							privacy: res.data.privacy,
+							locked: res.data.locked,
 							partyMode: res.data.partyMode,
 							owner: res.data.owner,
 							privatePlaylist: res.data.privatePlaylist

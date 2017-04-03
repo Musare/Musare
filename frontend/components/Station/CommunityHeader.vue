@@ -81,6 +81,18 @@
 					</span>
 					<span class="icon-purpose">Pause station</span>
 				</a>
+				<a class="sidebar-item" href="#" v-if='$parent.station.locked && $parent.$parent.role === "admin"' @click='$parent.toggleLock()'>
+					<span class='icon'>
+						<i class='material-icons'>lock_open</i>
+					</span>
+					<span class="icon-purpose">Unlock station queue</span>
+				</a>
+				<a class="sidebar-item" href="#" @click='$parent.toggleLock()' v-if='!$parent.station.locked && $parent.$parent.role === "admin"'>
+					<span class='icon'>
+						<i class='material-icons'>lock</i>
+					</span>
+					<span class="icon-purpose">Lock Station queue</span>
+				</a>
 				<hr>
 			</div>
 			<div v-if="$parent.$parent.loggedIn && !$parent.noSong">
