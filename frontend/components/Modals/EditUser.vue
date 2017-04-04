@@ -32,6 +32,9 @@
 				<button class='button is-warning'>
 					<span>&nbsp;Send Password Reset Email</span>
 				</button-->
+				<button class='button is-warning' @click='removeSessions()'>
+					<span>&nbsp;Remove all sessions</span>
+				</button>
 				<button class='button is-danger' @click='$parent.toggleModal()'>
 					<span>&nbsp;Close</span>
 				</button>
@@ -85,12 +88,17 @@
 					) location.reload();
 				});
 			},
-			banUser: function() {
+			banUser: function () {
 				const reason = this.ban.reason;
 				if (!validation.isLength(reason, 1, 64)) return Toast.methods.addToast('Reason must have between 1 and 64 characters.', 8000);
 				if (!validation.regex.ascii.test(reason)) return Toast.methods.addToast('Invalid reason format. Only ascii characters are allowed.', 8000);
 
 				this.socket.emit(`users.banUserById`, this.editing._id, this.ban.reason, '1h', res => {
+					Toast.methods.addToast(res.message, 4000);
+				});
+			},
+			removeSessions: function () {
+				this.socket.emit(`users.removeSessions`, this.editing._id, res => {
 					Toast.methods.addToast(res.message, 4000);
 				});
 			}

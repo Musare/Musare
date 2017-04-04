@@ -173,6 +173,19 @@ module.exports = {
 			});
 		}
 	},
+	socketsFromUserWithoutCache: function(userId, cb) {
+		let ns = io.io.of("/");
+		let sockets = [];
+		if (ns) {
+			async.each(Object.keys(ns.connected), (id, next) => {
+				let session = ns.connected[id].session;
+				if (session.userId === userId) sockets.push(ns.connected[id]);
+				next();
+			}, () => {
+				cb(sockets);
+			});
+		}
+	},
 	socketLeaveRooms: function(socketid) {
 		let socket = this.socketFromSession(socketid);
 		let rooms = socket.rooms;
@@ -295,7 +308,7 @@ module.exports = {
 		}
 	},
 	getPlaylistFromYouTube: (url, cb) => {
-		
+
 		let name = 'list'.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
 		var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
 		let playlistId = regex.exec(url)[1];

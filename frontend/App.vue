@@ -88,6 +88,12 @@
 				err = err.replace(new RegExp('<', 'g'), '&lt;').replace(new RegExp('>', 'g'), '&gt;');
 				Toast.methods.addToast(err, 20000);
 			}
+			io.getSocket(true, socket => {
+				socket.on('keep.event:user.session.removed', () => {
+					location.reload();
+				});
+			});
+
 		},
 		events: {
 			'register': function (recaptchaId) {

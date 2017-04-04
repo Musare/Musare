@@ -22,6 +22,14 @@ cache.sub('user.updateUsername', user => {
 	});
 });
 
+cache.sub('user.removeSessions', userId => {
+	utils.socketsFromUserWithoutCache(userId, sockets => {
+		sockets.forEach(socket => {
+			socket.emit('keep.event:user.session.removed');
+		});
+	});
+});
+
 cache.sub('user.linkPassword', userId => {
 	console.log("LINK4", userId);
 	utils.socketsFromUser(userId, sockets => {
@@ -281,14 +289,73 @@ module.exports = {
 			if (err && err !== true) {
 				err = utils.getError(err);
 				logger.error("USER_LOGOUT", `Logout failed. "${err}" `);
-				cb({status: 'failure', message: err});
+				cb({ status: 'failure', message: err });
 			} else {
 				logger.success("USER_LOGOUT", `Logout successful.`);
-				cb({status: 'success', message: 'Successfully logged out.'});
+				cb({ status: 'success', message: 'Successfully logged out.' });
 			}
 		});
 
 	},
+
+	/**
+	 * Removes all sessions for a user
+	 *
+	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {String} userId - the id of the user we are trying to delete the sessions of
+	 * @param {Function} cb - gets called with the result
+	 * @param {String} loggedInUser - the logged in userId automatically added by hooks
+	 */
+	removeSessions:  hooks.loginRequired((session, userId, cb, loggedInUser) => {
+
+		async.waterfall([
+
+			(next) => {
+				db.models.user.findOne({ _id: loggedInUser }, (err, user) => {
+					if (user.role !== 'admin' && loggedInUser !== userId) return next('Only admins and the owner of the account can remove their sessions.');
+					else return next();
+				});
+			},
+
+			(next) => {
+				cache.hgetall('sessions', next);
+			},
+
+			(sessions, next) => {
+				if (!sessions) return next('There are no sessions for this user to remove.');
+				else {
+					let keys = Object.keys(sessions);
+					next(null, keys, sessions);
+				}
+			},
+
+			(keys, sessions, next) => {
+				cache.pub('user.removeSessions', userId);
+				async.each(keys, (sessionId, callback) => {
+					let session = sessions[sessionId];
+					if (session.userId === userId) {
+						cache.hdel('sessions', sessionId, err => {
+							if (err) return callback(err);
+							else callback(null);
+						});
+					}
+				}, err => {
+					next(err);
+				});
+			}
+
+		], err => {
+			if (err) {
+				err = utils.getError(err);
+				logger.error("REMOVE_SESSIONS_FOR_USER", `Couldn't remove all sessions for user "${userId}". "${err}"`);
+				return cb({ status: 'failure', message: err });
+			} else {
+				logger.success("REMOVE_SESSIONS_FOR_USER", `Removed all sessions for user "${userId}".`);
+				return cb({ status: 'success', message: 'Successfully removed all sessions.' });
+			}
+		});
+
+	}),
 
 	/**
 	 * Gets user object from username (only a few properties)
