@@ -18,7 +18,8 @@ const lib = {
 		station: require('./schemas/station'),
 		playlist: require('./schemas/playlist'),
 		officialPlaylist: require('./schemas/officialPlaylist'),
-		song: require('./schemas/song')
+		song: require('./schemas/song'),
+		punishment: require('./schemas/punishment')
 	},
 
 	/**
@@ -126,6 +127,7 @@ const lib = {
 		lib.client.hgetall(table, (err, obj) => {
 			if (err) return typeof cb === 'function' ? cb(err) : null;
 			if (parseJson && obj) Object.keys(obj).forEach((key) => { try { obj[key] = JSON.parse(obj[key]); } catch (e) {} });
+			if (parseJson && !obj) obj = [];
 			cb(null, obj);
 		});
 	},

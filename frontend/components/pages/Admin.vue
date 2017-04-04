@@ -45,6 +45,12 @@
 						<span>&nbsp;Statistics</span>
 					</a>
 				</li>
+				<li :class='{ "is-active": currentTab == "punishments" }' @click='showTab("punishments")'>
+					<a v-link="{ path: '/admin/punishments' }">
+						<i class="material-icons">gavel</i>
+						<span>&nbsp;Punishments</span>
+					</a>
+				</li>
 			</ul>
 		</div>
 
@@ -55,6 +61,7 @@
 		<news v-if='currentTab == "news"'></news>
 		<users v-if='currentTab == "users"'></users>
 		<statistics v-if='currentTab == "statistics"'></statistics>
+		<punishments v-if='currentTab == "punishments"'></punishments>
 	</div>
 </template>
 
@@ -69,6 +76,7 @@
 	import News from '../Admin/News.vue';
 	import Users from '../Admin/Users.vue';
 	import Statistics from '../Admin/Statistics.vue';
+	import Punishments from '../Admin/Punishments.vue';
 
 	export default {
 		components: {
@@ -80,7 +88,8 @@
 			Reports,
 			News,
 			Users,
-			Statistics
+			Statistics,
+			Punishments
 		},
 		ready() {
 			switch(window.location.pathname) {
@@ -104,6 +113,9 @@
 					break;
 				case '/admin/statistics':
 					this.currentTab = 'statistics';
+					break;
+				case '/admin/punishments':
+					this.currentTab = 'punishments';
 					break;
 				default:
 					this.currentTab = 'queueSongs';

@@ -42,7 +42,8 @@ let lib = {
 				user: new mongoose.Schema(require(`./schemas/user`)),
 				playlist: new mongoose.Schema(require(`./schemas/playlist`)),
 				news: new mongoose.Schema(require(`./schemas/news`)),
-				report: new mongoose.Schema(require(`./schemas/report`))
+				report: new mongoose.Schema(require(`./schemas/report`)),
+				punishment: new mongoose.Schema(require(`./schemas/punishment`))
 			};
 
 			lib.models = {
@@ -52,7 +53,8 @@ let lib = {
 				user: mongoose.model('user', lib.schemas.user),
 				playlist: mongoose.model('playlist', lib.schemas.playlist),
 				news: mongoose.model('news', lib.schemas.news),
-				report: mongoose.model('report', lib.schemas.report)
+				report: mongoose.model('report', lib.schemas.report),
+				punishment: mongoose.model('punishment', lib.schemas.punishment)
 			};
 
 			lib.schemas.user.path('username').validate((username) => {

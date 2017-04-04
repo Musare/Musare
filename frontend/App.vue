@@ -1,5 +1,5 @@
 <template>
-	<div>
+	<div v-if="!banned">
 		<h1 v-if="!socketConnected" class="alert">Could not connect to the server.</h1>
 		<router-view></router-view>
 		<toast></toast>
@@ -7,6 +7,7 @@
 		<login-modal v-if='isLoginActive'></login-modal>
 		<register-modal v-if='isRegisterActive'></register-modal>
 	</div>
+	<h1 v-if="banned">BANNED</h1>
 </template>
 
 <script>
@@ -23,6 +24,7 @@
 		replace: false,
 		data() {
 			return {
+				banned: false,
 				register: {
 					email: '',
 					username: '',
@@ -58,6 +60,10 @@
 		},
 		ready: function () {
 			let _this = this;
+			auth.isBanned((banned) => {
+				console.log("BANNED: ", banned);
+				_this.banned = banned;
+			});
 			auth.getStatus((authenticated, role, username, userId) => {
 				_this.socket = window.socket;
 				_this.loggedIn = authenticated;

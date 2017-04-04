@@ -8,6 +8,7 @@ const bcrypt = require('bcrypt');
 const db = require('../db');
 const mail = require('../mail');
 const cache = require('../cache');
+const punishments = require('../punishments');
 const utils = require('../utils');
 const hooks = require('./hooks');
 const sha256 = require('sha256');
@@ -925,5 +926,79 @@ module.exports = {
 				});
 			}
 		});
-	}
+	},
+
+	/**
+	 * Bans a user by userId
+	 *
+	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {String} value - the user id that is going to be banned
+	 * @param {String} reason - the reason for the ban
+	 * @param {String} expiresAt - the time the ban expires
+	 * @param {Function} cb - gets called with the result
+	 * @param {String} userId - the userId automatically added by hooks
+	 */
+	banUserById: hooks.adminRequired((session, value, reason, expiresAt, cb, userId) => {
+		async.waterfall([
+			(next) => {
+				if (!expiresAt || typeof expiresAt !== 'string') return next('Invalid expire date.');
+				let date = new Date();
+				switch(expiresAt) {
+					case '1h':
+						//expiresAt = date.setHours(date.getHours() + 1);
+						expiresAt = date.setMinutes(date.getMinutes() + 1);
+						break;
+					case '12h':
+						expiresAt = date.setHours(date.getHours() + 12);
+						break;
+					case '1d':
+						expiresAt = date.setDate(date.getDate() + 1);
+						break;
+					case '1w':
+						expiresAt = date.setDate(date.getDate() + 7);
+						break;
+					case '1m':
+						expiresAt = date.setMonth(date.getMonth() + 1);
+						break;
+					case '3m':
+						expiresAt = date.setMonth(date.getMonth() + 3);
+						break;
+					case '6m':
+						expiresAt = date.setMonth(date.getMonth() + 6);
+						break;
+					case '1y':
+						expiresAt = date.setFullYear(date.getFullYear() + 1);
+						break;
+					case 'never':
+						expiresAt = new Date(3093527980800000);
+						break;
+					default:
+						return next('Invalid expire date.');
+				}
+
+				next();
+			},
+
+			(next) => {
+				punishments.addPunishment('banUserId', value, reason, expiresAt, userId, next)
+			},
+
+			(next) => {
+				//TODO Emit to all users with userId as value
+				next();
+			},
+		], (err) => {
+			if (err && err !== true) {
+				err = utils.getError(err);
+				logger.error("BAN_USER_BY_ID", `User ${userId} failed to ban user ${value} with the reason ${reason}. '${err}'`);
+				cb({status: 'failure', message: err});
+			} else {
+				logger.success("BAN_USER_BY_ID", `User ${userId} has successfully banned user ${value} with the reason ${reason}.`);
+				cb({
+					status: 'success',
+					message: 'Successfully banned user.'
+				});
+			}
+		});
+	})
 };
