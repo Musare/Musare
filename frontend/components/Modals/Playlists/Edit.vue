@@ -9,6 +9,7 @@
 					</div>
 				</div>
 			</nav>
+			<hr />
 			<aside class='menu' v-if='playlist.songs && playlist.songs.length > 0'>
 				<ul class='menu-list'>
 					<li v-for='song in playlist.songs' track-by='$index'>
@@ -96,7 +97,7 @@
 			formatTime: function () {
 				let duration = moment.duration(this.totalLength, 'seconds');
 				if (this.totalLength < 0) return '0 minutes';
-				return ((duration.hours() > 0) ? (duration.hours() < 10 ? ('0' + duration.hours() + ' hours ') : (duration.hours() + ' hours ')) : '') + (duration.minutes() + ' minutes ') + (duration.seconds() > 0 ? (duration.seconds() < 10 ? ('0' + duration.seconds() + ' seconds') : duration.seconds() + ' seconds') : (duration.seconds() + ' seconds'));
+				else return ((duration.hours() > 0 ? (duration.hours > 1 ? (duration.hours() < 10 ? ('0' + duration.hours() + ' hours ') : (duration.hours() + ' hours ')) : ('0' + duration.hours() + ' hour ')) : '') + (duration.minutes() > 0 ? (duration.minutes() > 1 ? (duration.minutes() < 10 ? ('0' + duration.minutes() + ' minutes ') : (duration.minutes() + ' minutes ')) : ('0' + duration.minutes() + ' minute ')) : '') + (duration.seconds() > 0 ? (duration.seconds() > 1 ? (duration.seconds() < 10 ? ('0' + duration.seconds() + ' seconds ') : (duration.seconds() + ' seconds ')) : ('0' + duration.seconds() + ' second ')) : ''));
 			},
 			searchForSongs: function () {
 				let _this = this;
