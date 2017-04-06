@@ -61,8 +61,8 @@ const lib = {
 	 * @return {Object} - the subscription object
 	 */
 	subscribe: (name, cb, unique = false, station) => {
+		logger.stationIssue(`SUBSCRIBE - Name: ${name}; Key: ${crypto.createHash('md5').update(`_notification:${name}_`).digest('hex')}, StationId: ${station._id}; StationName: ${station.name}; Unique: ${unique}; SubscribtionExists: ${subscriptions.find((subscription) => subscription.originalName == name)};`);
 		if (unique && subscriptions.find((subscription) => subscription.originalName == name)) return;
-		logger.stationIssue(`SUBSCRIBE - Name: ${name}; Key: ${crypto.createHash('md5').update(`_notification:${name}_`).digest('hex')}, StationId: ${station._id}; StationName: ${station.name}`);
 		let subscription = { originalName: name, name: crypto.createHash('md5').update(`_notification:${name}_`).digest('hex'), cb };
 		subscriptions.push(subscription);
 		return subscription;
