@@ -22,7 +22,8 @@
 		},
 		"mailgun": {
 			"key": "",
-			"domain": ""
+			"domain": "",
+		  	"enabled": true
 		}
 	},
 	"cors": {
