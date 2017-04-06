@@ -63,11 +63,15 @@
 				<article class="media" v-for='song in songsList'>
 					<div class="media-content">
 						<div class="content">
-							<p>
-								<strong>{{ song.title }}</strong>
+								<strong class="songTitle">{{ song.title }}</strong>
 								<br>
 								<small>{{ song.artists.join(', ') }}</small>
-							</p>
+								<br>
+								<div v-if="station.partyMode">
+									<br>
+									<small>Requested by <b>{{this.$parent.$parent.getUsernameFromId(song.requestedBy)}} {{this.userIdMap[song.requestedBy]}}</b></small>
+									<button class="button" @click="removeFromQueue(song.songId)" v-if="isOwnerOnly() || isAdminOnly()">REMOVE</button>
+								</div>
 						</div>
 					</div>
 					<div class="media-right">
@@ -211,10 +215,24 @@
 				automaticallyRequestedSongId: null,
 				systemDifference: 0,
 				users: [],
-				userCount: 0
+				userCount: 0,
+				userIdMap: this.$parent.userIdMap
 			}
 		},
 		methods: {
+			isOwnerOnly: function () {
+				return this.$parent.loggedIn && this.$parent.userId === this.station.owner;
+			},
+			isAdminOnly: function() {
+				return this.$parent.loggedIn && this.$parent.role === 'admin';
+			},
+			removeFromQueue: function(songId) {
+				socket.emit('stations.removeFromQueue', this.station._id, songId, res => {
+					if (res.status === 'success') {
+						Toast.methods.addToast('Successfully removed song from the queue.', 4000);
+					} else Toast.methods.addToast(res.message, 8000);
+				});
+			},
 			editPlaylist: function (id) {
 				this.playlistBeingEdited = id;
 				this.modals.editPlaylist = !this.modals.editPlaylist;
@@ -840,6 +858,18 @@
 			.add-to-queue:focus { background: #029ce3; }
 
 			.media-right { line-height: 64px; }
+
+			.songTitle {
+				word-wrap: break-word;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				display: -webkit-box;
+				-webkit-box-orient: vertical;
+				-webkit-line-clamp: 2;
+				line-height: 20px;
+				max-height: 40px;
+				width: 100%;
+			}
 
 		}
 

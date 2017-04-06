@@ -99,7 +99,7 @@
 				</a>
 				<hr>
 			</div>
-			<a class="sidebar-item" href='#' @click='$parent.toggleSidebar("songslist")' v-if='$parent.station.partyMode === true'>
+			<a class="sidebar-item mobile-only" href='#' @click='$parent.toggleSidebar("songslist")' v-if='$parent.station.partyMode === true'>
 				<span class='icon'>
 					<i class='material-icons'>queue_music</i>
 				</span>
@@ -244,6 +244,25 @@
 
 		@media (max-width: 998px) {
 			display: none;
+		}
+		.inner-wrapper {
+			@media (min-width: 999px) {
+				.mobile-only {
+					display: none;
+				}
+				.desktop-only {
+					display: flex;
+				}
+			}
+			@media (max-width: 998px) {
+				.mobile-only {
+					display: flex;
+				}
+				.desktop-only {
+					display: none;
+					visibility: hidden;
+				}
+			}
 		}
 	}
 
