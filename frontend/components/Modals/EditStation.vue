@@ -24,12 +24,22 @@
 						</select>
 					</span>
 				</p>
+				<br><br>
 				<p class='control'>
 					<label class="checkbox party-mode-inner">
 						<input type="checkbox" v-model="editing.partyMode">
 						&nbsp;Party mode
 					</label>
 				</p>
+				<small>With party mode enabled, people can add songs to a queue that plays. With party mode disabled you can play a private playlist on loop.</small><br>
+				<div v-if="$parent.station.partyMode">
+					<br>
+					<br>
+					<label class='label'>Queue lock</label>
+					<small v-if="$parent.station.partyMode">With the queue locked, only owners (you) can add songs to the queue.</small><br>
+					<button class='button is-danger' v-if='!$parent.station.locked' @click="$parent.toggleLock()">Lock the queue</button>
+					<button class='button is-success' v-if='$parent.station.locked' @click="$parent.toggleLock()">Unlock the queue</button>
+				</div>
 			</div>
 			<div slot='footer'>
 				<button class='button is-success' @click='update()'>Update Settings</button>

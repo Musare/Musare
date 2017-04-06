@@ -121,6 +121,10 @@ cache.sub('station.updateUserCount', stationId => {
 	})
 });
 
+cache.sub('station.queueLockToggled', data => {
+	utils.emitToRoom(`station.${data.stationId}`, "event:queueLockToggled", data.locked)
+});
+
 cache.sub('station.updatePartyMode', data => {
 	utils.emitToRoom(`station.${data.stationId}`, "event:partyMode.updated", data.partyMode);
 });
@@ -407,13 +411,16 @@ module.exports = {
 	 *
 	 * @param session
 	 * @param stationId - the station id
-	 * @param locked - the old locked status
 	 * @param cb
 	 */
-	toggleLock: hooks.adminRequired((session, stationId, oldLocked, cb) => {
+	toggleLock: hooks.ownerRequired((session, stationId, cb) => {
 		async.waterfall([
 			(next) => {
-				db.models.station.update({ _id: stationId }, { $set: { locked: !oldLocked } }, next);
+				stations.getStation(stationId, next);
+			},
+
+			(station, next) => {
+				db.models.station.update({ _id: stationId }, { $set: { locked: !station.locked} }, next);
 			},
 
 			(res, next) => {
@@ -422,11 +429,12 @@ module.exports = {
 		], (err, station) => {
 			if (err) {
 				err = utils.getError(err);
-				logger.error("STATIONS_UPDATE_LOCKED_STATUS", `Updating station "${stationId}" locked status to "${!oldLocked}" failed. "${err}"`);
+				logger.error("STATIONS_UPDATE_LOCKED_STATUS", `Toggling the queue lock for station "${stationId}" failed. "${err}"`);
 				return cb({ status: 'failure', message: err });
 			} else {
-				logger.success("STATIONS_UPDATE_LOCKED_STATUS", `Updated station "${stationId}" locked status to "${!oldLocked}" successfully.`);
-				return cb({ status: 'success', data: !oldLocked });
+				logger.success("STATIONS_UPDATE_LOCKED_STATUS", `Toggled the queue lock for station "${stationId}" successfully to "${station.locked}".`);
+				cache.pub('station.queueLockToggled', {stationId, locked: station.locked});
+				return cb({ status: 'success', data: station.locked });
 			}
 		});
 	}),

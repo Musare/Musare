@@ -17,7 +17,7 @@
 	<div class='station' v-show="ready">
 		<div v-show="noSong" class="no-song">
 			<h1>No song is currently playing</h1>
-			<h4 v-if='type === "community" && station.partyMode'>
+			<h4 v-if='type === "community" && station.partyMode && (!station.locked || (station.locked && $parent.loggedIn && $parent.userId === station.owner))'>
 				<a href='#' class='no-song' @click='modals.addSongToQueue = true'>Add a song to the queue</a>
 			</h4>
 			<h4 v-if='type === "community" && !station.partyMode && $parent.userId === station.owner && !station.privatePlaylist'>
@@ -323,11 +323,10 @@
 			},
 			toggleLock: function () {
 				let _this = this;
-				socket.emit('stations.toggleLock', this.station._id, this.station.locked, res => {
-					console.log(res);
+				socket.emit('stations.toggleLock', this.station._id, res => {
 					if (res.status === 'success') {
-						_this.station.locked = res.data;
-					}
+						Toast.methods.addToast('Successfully toggled the queue lock.', 4000);
+					} else Toast.methods.addToast(res.message, 8000);
 				});
 			},
 			changeVolume: function() {
@@ -674,6 +673,10 @@
 
 				_this.socket.on('event:userCount.updated', userCount => {
 					_this.userCount = userCount;
+				});
+
+				_this.socket.on('event:queueLockToggled', locked => {
+					_this.station.locked = locked;
 				});
 			});
 

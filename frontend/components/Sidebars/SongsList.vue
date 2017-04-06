@@ -39,7 +39,11 @@
 					{{ $parent.$parent.formatTime(song.duration) }}
 				</div>
 			</article>
-			<a class='button add-to-queue' href='#' @click='$parent.modals.addSongToQueue = !$parent.modals.addSongToQueue' v-if="$parent.type === 'community' && $parent.$parent.loggedIn">Add Song to Queue</a>
+			<div v-if="$parent.type === 'community' && $parent.$parent.loggedIn">
+				<button class='button add-to-queue' @click='$parent.modals.addSongToQueue = !$parent.modals.addSongToQueue' v-if="($parent.station.locked && isOwnerOnly()) || !$parent.station.locked || ($parent.station.locked && isAdminOnly() && dismissedWarning)">Add Song to Queue</button>
+				<button class='button add-to-queue add-to-queue-warning' @click='dismissedWarning = true' v-if="$parent.station.locked && isAdminOnly() && !isOwnerOnly() && !dismissedWarning">THIS STATION'S QUEUE IS LOCKED.</button>
+				<button class='button add-to-queue add-to-queue-disabled' v-if="$parent.station.locked && !isAdminOnly() && !isOwnerOnly()">THIS STATION'S QUEUE IS LOCKED.</button>
+			</div>
 		</div>
 	</div>
 </template>
@@ -50,7 +54,15 @@
 	export default {
 		data: function () {
 			return {
-
+				dismissedWarning: false
+			}
+		},
+		methods: {
+			isOwnerOnly: function () {
+				return this.$parent.$parent.loggedIn && this.$parent.$parent.userId === this.$parent.station.owner;
+			},
+			isAdminOnly: function() {
+				return this.$parent.$parent.loggedIn && this.$parent.$parent.role === 'admin';
 			}
 		},
 		ready: function () {
@@ -118,6 +130,17 @@
 		color: #fff !important;
 		border: 0;
 		&:active, &:focus { border: 0; }
+	}
+
+	.add-to-queue.add-to-queue-warning {
+		background-color: red;
+	}
+
+	.add-to-queue.add-to-queue-disabled {
+		background-color: gray;
+	}
+	.add-to-queue.add-to-queue-disabled:focus {
+		background-color: gray;
 	}
 	
 	.add-to-queue:focus { background: #029ce3; }
