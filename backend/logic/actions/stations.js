@@ -885,7 +885,7 @@ module.exports = {
 				if (!station) return next('Station not found.');
 				if (station.locked) {
 					db.models.user.findOne({ _id: userId }, (err, user) => {
-						if (user.role !== 'admin' || station.owner !== userId) return next('Only owners and admins can add songs to a locked queue.');
+						if (user.role !== 'admin' && station.owner !== userId) return next('Only owners and admins can add songs to a locked queue.');
 						else return next(null, station);
 					});
 				} else {

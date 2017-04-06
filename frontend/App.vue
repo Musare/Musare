@@ -41,7 +41,9 @@
 				isRegisterActive: false,
 				isLoginActive: false,
 				serverDomain: '',
-				socketConnected: true
+				socketConnected: true,
+				userIdMap: {},
+				currentlyGettingUsernameFrom: {}
 			}
 		},
 		methods: {
@@ -56,6 +58,19 @@
 			},
 			'submitOnEnter': (cb, event) => {
 				if (event.which == 13) cb();
+			},
+			getUsernameFromId: function(userId) {
+			    if (typeof this.userIdMap[userId] !== 'string' && !this.currentlyGettingUsernameFrom[userId]) {
+					this.currentlyGettingUsernameFrom[userId] = true;
+			        io.getSocket(socket => {
+			            socket.emit('users.getUsernameFromId', userId, (data) => {
+			                if (data.status === 'success') {
+								this.$set(`userIdMap.${userId}`, data.data);
+							}
+							this.currentlyGettingUsernameFrom[userId] = false;
+						});
+					});
+				}
 			}
 		},
 		ready: function () {

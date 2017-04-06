@@ -32,6 +32,10 @@
 							<strong>{{ song.title }}</strong>
 							<br>
 							<small>{{ song.artists.join(', ') }}</small>
+							<div v-if="this.$parent.$parent.type === 'community'">
+								<br>
+								<small>Requested by <b>{{this.$parent.$parent.$parent.getUsernameFromId(song.requestedBy)}} {{this.userIdMap[song.requestedBy]}}</b></small>
+							</div>
 						</p>
 					</div>
 				</div>
@@ -54,7 +58,8 @@
 	export default {
 		data: function () {
 			return {
-				dismissedWarning: false
+				dismissedWarning: false,
+				userIdMap: this.$parent.$parent.userIdMap
 			}
 		},
 		methods: {

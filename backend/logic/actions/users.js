@@ -398,6 +398,34 @@ module.exports = {
 		});
 	},
 
+
+	/**
+	 * Gets a username from an userId
+	 *
+	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {String} userId - the userId of the person we are trying to get the username from
+	 * @param {Function} cb - gets called with the result
+	 */
+	getUsernameFromId: (session, userId, cb) => {
+		async.waterfall([
+			(next) => {
+				db.models.user.findOne({ _id: userId }, next);
+			},
+		], (err, user) => {
+			if (err && err !== true) {
+				err = utils.getError(err);
+				logger.error("GET_USERNAME_FROM_ID", `Getting the username from userId "${userId}" failed. "${err}"`);
+				cb({status: 'failure', message: err});
+			} else {
+				logger.success("GET_USERNAME_FROM_ID", `Found username for userId "${userId}".`);
+				return cb({
+					status: 'success',
+					data: user.username
+				});
+			}
+		});
+	},
+
 	//TODO Fix security issues
 	/**
 	 * Gets user info from session
