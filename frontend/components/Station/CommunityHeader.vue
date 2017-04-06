@@ -286,20 +286,36 @@
 	}
 
 	.sidebar-item .icon-purpose {
-	    visibility: hidden;
-	    width: 150px;
+		visibility: hidden;
+		width: 160px;
 		font-size: 12px;
-	    background-color: rgba(3, 169, 244,0.8);
-	    color: #fff;
-	    text-align: center;
-	    border-radius: 6px;
-	    padding: 5px 0;
+		background-color: rgba(3, 169, 244,0.8);
+		color: #fff;
+		text-align: center;
+		border-radius: 6px;
+		padding: 5px;
+		position: absolute;
+		z-index: 1;
+		left: 115%;
+		opacity: 0;
+    	transition: opacity 0.5s;
+		display: none;
+	}
+
+	.sidebar-item .icon-purpose::after {
+		content: "";
 	    position: absolute;
-	    z-index: 1;
-	    left: 105%;
+	    top: 50%;
+	    right: 100%;
+	    margin-top: -5px;
+	    border-width: 5px;
+	    border-style: solid;
+	    border-color: transparent rgba(3, 169, 244,0.8) transparent transparent;
 	}
 
 	.sidebar-item:hover .icon-purpose {
-	    visibility: visible;
+		visibility: visible;
+		opacity: 1;
+		display: block;
 	}
 </style>
