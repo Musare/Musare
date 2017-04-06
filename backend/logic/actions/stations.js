@@ -1019,10 +1019,10 @@ module.exports = {
 			},
 
 			(next) => {
-				db.models.update({_id: stationId}, {$pull: {queue: {songId: songId}}}, next);
+				db.models.station.update({_id: stationId}, {$pull: {queue: {songId: songId}}}, next);
 			},
 
-			(next) => {
+			(res, next) => {
 				stations.updateStation(stationId, next);
 			}
 		], (err, station) => {

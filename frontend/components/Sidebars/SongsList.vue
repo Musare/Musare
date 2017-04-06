@@ -35,6 +35,7 @@
 							<div v-if="this.$parent.$parent.type === 'community'">
 								<br>
 								<small>Requested by <b>{{this.$parent.$parent.$parent.getUsernameFromId(song.requestedBy)}} {{this.userIdMap[song.requestedBy]}}</b></small>
+								<button class="button" @click="removeFromQueue(song.songId)" v-if="isOwnerOnly() || isAdminOnly()">REMOVE</button>
 							</div>
 						</p>
 					</div>
@@ -54,6 +55,7 @@
 
 <script>
 	import io from '../../io';
+	import { Toast } from 'vue-roaster';
 
 	export default {
 		data: function () {
@@ -68,6 +70,13 @@
 			},
 			isAdminOnly: function() {
 				return this.$parent.$parent.loggedIn && this.$parent.$parent.role === 'admin';
+			},
+			removeFromQueue: function(songId) {
+				socket.emit('stations.removeFromQueue', this.$parent.station._id, songId, res => {
+					if (res.status === 'success') {
+						Toast.methods.addToast('Successfully removed song from the queue.', 4000);
+					} else Toast.methods.addToast(res.message, 8000);
+				});
 			}
 		},
 		ready: function () {
