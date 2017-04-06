@@ -6,6 +6,7 @@ services:
     - "${BACKEND_PORT}:8080"
     volumes:
     - ./backend:/opt/app
+    - ./log:/opt/log
     links:
     - mongo
     - redis
