@@ -375,7 +375,7 @@ let lib = {
 				return cb({ status: 'failure', message: err});
 			} else {
 				logger.success("PLAYLIST_REMOVE_SONG", `Successfully removed song "${songId}" from private playlist "${playlistId}" for user "${userId}".`);
-				cache.pub('playlist.removeSong', { playlistId: playlist._id, songId: songId, userId });\
+				cache.pub('playlist.removeSong', { playlistId: playlist._id, songId: songId, userId });
 				return cb({ status: 'success', message: 'Song has been successfully removed from playlist', data: playlist.songs });
 			}
 		});

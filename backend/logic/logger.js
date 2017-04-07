@@ -3,6 +3,8 @@
 const dir = `${__dirname}/../../log`;
 const fs = require('fs');
 const config = require('config');
+const Discord = require("discord.js");
+let client;
 let utils;
 
 if (!config.isDocker && !fs.existsSync(`${dir}`)) {
@@ -102,8 +104,9 @@ module.exports = {
 		fs.appendFile(dir + '/error.log', `${time} BACKEND_RESTARTED\n`, ()=>{});
 		fs.appendFile(dir + '/info.log', `${time} BACKEND_RESTARTED\n`, ()=>{});
 		fs.appendFile(dir + '/debugStation.log', `${time} BACKEND_RESTARTED\n`, ()=>{});
+		cb("MAJOR FAILURE!");
 
-		cb();
+		//cb();
 	},
 	success: (type, message, display = true) => {
 		success++;
