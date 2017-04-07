@@ -22,25 +22,6 @@ cache.sub('playlist.create', playlistId => {
 	});
 });
 
-cache.sub('playlist.updateTotalLength', res => {
-	playlists.getPlaylist(res.playlistId, (err, playlist) => {
-		if (!err) {
-			let totalLength = 0;
-			for (let i = 0; i < playlist.songs.length; i++) {
-				totalLength += playlist.songs[i].duration;
-			}
-			utils.socketsFromUser(res.userId, sockets => {
-				sockets.forEach(socket => {
-					socket.emit('event:playlist.updateTotalLength', {
-						status: 'success',
-						data: totalLength
-					});
-				});
-			});
-		}
-	});
-});
-
 cache.sub('playlist.delete', res => {
 	utils.socketsFromUser(res.userId, sockets => {
 		sockets.forEach(socket => {
@@ -218,46 +199,6 @@ let lib = {
 		});
 	}),
 
-	/**
-	 * Gets the total length of a playlist from id
-	 *
-	 * @param {Object} session - the session object automatically added by socket.io
-	 * @param {String} playlistId - the id of the playlist we are getting
-	 * @param {Function} cb - gets called with the result
-	 */
-	totalLength: hooks.loginRequired((session, playlistId, cb) => {
-		async.waterfall([
-			(next) => {
-				playlists.getPlaylist(playlistId, next);
-			},
-
-			(playlist, next) => {
-				if (!playlist) return next('Playlist not found');
-				next(null, playlist);
-			},
-
-			(playlist, next) => {
-				let totalLength = 0;
-				for (let i = 0; i < playlist.songs.length; i++) {
-					totalLength += playlist.songs[i].duration;
-				}
-				next(null, totalLength);
-			}
-		], (err, totalLength) => {
-			if (err) {
-				err = utils.getError(err);
-				logger.error("PLAYLIST_TOTAL_LENGTH", `Getting private playlist "${playlistId}" failed. "${err}"`);
-				return cb({ status: 'failure', message: err});
-			} else{
-				logger.success("PLAYLIST_TOTAL_LENGTH", `Successfully got private playlist "${playlistId}" length.`);
-				cb({
-					status: 'success',
-					data: totalLength
-				});
-			}
-		});
-	}),
-
 	//TODO Remove this
 	/**
 	 * Updates a private playlist
@@ -345,7 +286,6 @@ let lib = {
 			} else {
 				logger.success("PLAYLIST_ADD_SONG", `Successfully added song "${songId}" to private playlist "${playlistId}" for user "${userId}".`);
 				cache.pub('playlist.addSong', { playlistId: playlist._id, song: newSong, userId });
-				cache.pub('playlist.updateTotalLength', { playlistId: playlist._id, userId });
 				return cb({ status: 'success', message: 'Song has been successfully added to the playlist', data: playlist.songs });
 			}
 		});
@@ -393,7 +333,6 @@ let lib = {
 				logger.error("PLAYLIST_IMPORT", `Importing a YouTube playlist to private playlist "${playlistId}" failed for user "${userId}". "${err}"`);
 				return cb({ status: 'failure', message: err});
 			} else {
-				cache.pub('playlist.updateTotalLength', { playlistId: playlist._id, userId });
 				logger.success("PLAYLIST_IMPORT", `Successfully imported a YouTube playlist to private playlist "${playlistId}" for user "${userId}".`);
 				cb({ status: 'success', message: 'Playlist has been successfully imported.', data: playlist.songs });
 			}
@@ -436,8 +375,7 @@ let lib = {
 				return cb({ status: 'failure', message: err});
 			} else {
 				logger.success("PLAYLIST_REMOVE_SONG", `Successfully removed song "${songId}" from private playlist "${playlistId}" for user "${userId}".`);
-				cache.pub('playlist.removeSong', { playlistId: playlist._id, songId: songId, userId });
-				cache.pub('playlist.updateTotalLength', { playlistId: playlist._id, userId });
+				cache.pub('playlist.removeSong', { playlistId: playlist._id, songId: songId, userId });\
 				return cb({ status: 'success', message: 'Song has been successfully removed from playlist', data: playlist.songs });
 			}
 		});

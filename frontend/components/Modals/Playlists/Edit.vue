@@ -5,7 +5,7 @@
 				<div class="level-item has-text-centered">
 					<div>
 						<p class="heading">Total Length</p>
-						<p class="title">{{ formatTime(totalLength) }}</p>
+						<p class="title">{{ totalLength() }}</p>
 					</div>
 				</div>
 			</nav>
@@ -86,18 +86,24 @@
 		components: { Modal },
 		data() {
 			return {
-				playlist: {},
-				totalLength: 0,
+				playlist: {songs: []},
 				songQueryResults: [],
 				songQuery: '',
 				importQuery: ''
 			}
 		},
 		methods: {
-			formatTime: function () {
-				let duration = moment.duration(this.totalLength, 'seconds');
-				if (this.totalLength < 0) return '0 minutes';
+			formatTime: function (length) {
+				let duration = moment.duration(length, 'seconds');
+				if (length < 0) return '0 minutes';
 				else return ((duration.hours() > 0 ? (duration.hours > 1 ? (duration.hours() < 10 ? ('0' + duration.hours() + ' hours ') : (duration.hours() + ' hours ')) : ('0' + duration.hours() + ' hour ')) : '') + (duration.minutes() > 0 ? (duration.minutes() > 1 ? (duration.minutes() < 10 ? ('0' + duration.minutes() + ' minutes ') : (duration.minutes() + ' minutes ')) : ('0' + duration.minutes() + ' minute ')) : '') + (duration.seconds() > 0 ? (duration.seconds() > 1 ? (duration.seconds() < 10 ? ('0' + duration.seconds() + ' seconds ') : (duration.seconds() + ' seconds ')) : ('0' + duration.seconds() + ' second ')) : ''));
+			},
+			totalLength: function() {
+			    let length = 0;
+			    this.playlist.songs.forEach((song) => {
+			        length += song.duration;
+				});
+			    return this.formatTime(length);
 			},
 			searchForSongs: function () {
 				let _this = this;
@@ -184,12 +190,6 @@
 				_this.socket = socket;
 				_this.socket.emit('playlists.getPlaylist', _this.$parent.playlistBeingEdited, res => {
 					if (res.status === 'success') _this.playlist = res.data; _this.playlist.oldId = res.data._id;
-				});
-				_this.socket.emit('playlists.totalLength', _this.$parent.playlistBeingEdited, res => {
-					if (res.status === 'success') _this.totalLength = res.data;
-				});
-				_this.socket.on('event:playlist.updateTotalLength', res => {
-					if (res.status === 'success') _this.totalLength = res.data;
 				});
 				_this.socket.on('event:playlist.addSong', data => {
 					if (_this.playlist._id === data.playlistId) _this.playlist.songs.push(data.song);
