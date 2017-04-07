@@ -75,6 +75,10 @@
 		},
 		ready: function () {
 			let _this = this;
+			if (localStorage.getItem('github_redirect')) {
+			    this.$router.go(localStorage.getItem('github_redirect'));
+			    localStorage.removeItem('github_redirect');
+			}
 			auth.isBanned((banned) => {
 				console.log("BANNED: ", banned);
 				_this.banned = banned;
