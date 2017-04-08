@@ -26,7 +26,7 @@
 			<h1 v-if='type === "community" && !station.partyMode && $parent.userId === station.owner && station.privatePlaylist'>Maybe you can add some songs to your selected private playlist and then press the skip button</h1>
 		</div>
 		<div class="columns" v-show="!noSong">
-			<div class="column is-7-desktop is-offset-1-desktop is-12-mobile">
+			<div class="column is-8-desktop is-offset-2-desktop is-12-mobile">
 				<div class="video-container">
 					<div id="player"></div>
 				</div>
@@ -34,7 +34,7 @@
 					<div class="seeker-bar light-blue" style="width: 0%;"></div>
 				</div>
 			</div>
-			<div class="desktop-only column is-3-desktop card playlistCard">
+			<div class="desktop-only column is-3-desktop card playlistCard experimental">
 				<div class='title' v-if='type === "community"'>Queue</div>
 				<div class='title' v-else>Playlist</div>
 				<article class="media" v-if="!noSong">
@@ -82,7 +82,7 @@
 			</div>
 		</div>
 		<div class="desktop-only columns is-mobile" v-show="!noSong">
-			<div class="column is-7-desktop is-offset-1-desktop is-12-mobile">
+			<div class="column is-8-desktop is-offset-2-desktop is-12-mobile">
 				<div class="columns is-mobile">
 					<div class="column is-12-desktop">
 						<h4 id="time-display">{{timeElapsed}} / {{formatTime(currentSong.duration)}}</h4>
@@ -113,7 +113,7 @@
 							</div>
 						</div>
 					</div>
-					<div class="column is-3-desktop" v-if="!simpleSong">
+					<div class="column is-3-desktop experimental" v-if="!simpleSong">
 						<img class="image" :src="currentSong.thumbnail" alt="Song Thumbnail" onerror="this.src='/assets/notes-transparent.png'" />
 					</div>
 				</div>
@@ -1166,5 +1166,9 @@
 	@keyframes rotate {
 		0% { transform: rotate(0deg); }
 		100% { transform: rotate(360deg); }
+	}
+
+	.experimental {
+		display: none !important;
 	}
 </style>

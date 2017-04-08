@@ -21,7 +21,7 @@
 					</div>
 
 					<div class="under-content">
-						<i class="material-icons" v-if="station.privacy !== 'public'" title="This station is not visible to other users.">lock | </i>
+						<i class="material-icons" v-if="station.privacy !== 'public'" title="This station is not visible to other users." style="border-right: 1px solid #4a4a4a;padding-right: 3px;">lock</i>
 
 						<i class='material-icons' title="How many users there are in the station.">people</i>
 						<span class="users-count" title="How many users there are in the station.">&nbsp;{{station.userCount}}</span>
@@ -53,8 +53,8 @@
 						{{ station.description }}
 					</div>
 					<div class="under-content">
-						<i class="material-icons" v-if="station.privacy !== 'public'" title="This station is not visible to other users.">lock | </i>
- 						<i class="material-icons" v-if="isOwner(station)" title="This is your station.">home | </i>
+						<i class="material-icons" v-if="station.privacy !== 'public'" title="This station is not visible to other users." style="border-right: 1px solid #4a4a4a;padding-right: 3px;">lock</i>
+ 						<i class="material-icons" v-if="isOwner(station)" title="This is your station." style="border-right: 1px solid #4a4a4a;padding-right: 3px;">home</i>
 
 						<i class='material-icons' title="How many users there are in the station.">people</i>
 						<span class="users-count" title="How many users there are in the station.">&nbsp;{{station.userCount}}</span>
@@ -253,13 +253,13 @@
 		box-shadow: 0 2px 3px rgba(10, 10, 10, 0.3), 0 0 10px rgba(10, 10, 10, 0.3);
 	}
 
-	.isPrivate {
+	/*.isPrivate {
 		background-color: #F8BBD0;
 	}
 
 	.isMine {
 		background-color: #29B6F6;
-	}
+	}*/
 
 	.community-button {
 		cursor: pointer;

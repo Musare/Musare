@@ -27,17 +27,13 @@
 
 			<article class="media" v-for='song in $parent.songsList'>
 				<div class="media-content">
-					<div class="content">
-						<p>
-							<strong>{{ song.title }}</strong>
-							<br>
+					<div class="content" style="display: block;">
+							<strong class="songTitle">{{ song.title }}</strong>
 							<small>{{ song.artists.join(', ') }}</small>
 							<div v-if="this.$parent.$parent.type === 'community'">
-								<br>
 								<small>Requested by <b>{{this.$parent.$parent.$parent.getUsernameFromId(song.requestedBy)}} {{this.userIdMap[song.requestedBy]}}</b></small>
-								<button class="button" @click="removeFromQueue(song.songId)" v-if="isOwnerOnly() || isAdminOnly()">REMOVE</button>
+								<i class="material-icons" style="vertical-align: middle;" @click="removeFromQueue(song.songId)" v-if="isOwnerOnly() || isAdminOnly()">delete_forever</i>
 							</div>
-						</p>
 					</div>
 				</div>
 				<div class="media-right">
@@ -101,7 +97,7 @@
 		box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
 	}
 
-	.inner-wrapper {	
+	.inner-wrapper {
 		top: 64px;
 		position: relative;
 		overflow: auto;
@@ -132,7 +128,7 @@
 	}
 
 	.content p strong { word-break: break-word; }
-	
+
 	.content p small { word-break: break-word; }
 
 	.add-to-queue {
@@ -156,8 +152,20 @@
 	.add-to-queue.add-to-queue-disabled:focus {
 		background-color: gray;
 	}
-	
+
 	.add-to-queue:focus { background: #029ce3; }
 
 	.media-right { line-height: 64px; }
+
+	.songTitle {
+		word-wrap: break-word;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+		line-height: 20px;
+		max-height: 40px;
+	}
+
 </style>

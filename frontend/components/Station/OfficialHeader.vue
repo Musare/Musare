@@ -111,7 +111,7 @@
 				</a>
 				<hr>
 			</div>
-			<a class="sidebar-item mobile-only" href='#' @click='$parent.toggleSidebar("songslist")'>
+			<a class="sidebar-item" href='#' @click='$parent.toggleSidebar("songslist")'>
 				<span class='icon'>
 					<i class='material-icons'>queue_music</i>
 				</span>
