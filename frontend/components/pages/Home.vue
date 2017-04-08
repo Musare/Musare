@@ -233,6 +233,8 @@
 		cursor: pointer;
 		height: 475px;
 
+		transition: all ease-in-out 0.2s;
+
 		.card-content {
 			max-height: 159px;
 
@@ -251,6 +253,7 @@
 
 	.station-card:hover {
 		box-shadow: 0 2px 3px rgba(10, 10, 10, 0.3), 0 0 10px rgba(10, 10, 10, 0.3);
+		transition: all ease-in-out 0.2s;
 	}
 
 	/*.isPrivate {
