@@ -1,6 +1,9 @@
 <template>
 	<main-header></main-header>
 	<div class="container">
+		<label class="label">Remove (you will be logged out)</label>
+		<button class="button is-warning" @click="removeSessions()">Remove all sessions</button><br>
+
 		<!--Implement Validation-->
 		<label class="label">Username</label>
 		<div class="control is-grouped">
@@ -32,11 +35,9 @@
 			</p>
 		</div>
 
-
 		<label class="label" v-if="!password">Add password</label>
 		<div class="control is-grouped" v-if="!password">
 			<button class="button is-success" @click="requestPassword()" v-if="passwordStep === 1">Request password email</button><br>
-
 
 			<p class="control is-expanded has-icon has-icon-right" v-if="passwordStep === 2">
 				<input class="input" type="text" placeholder="Code" v-model="passwordCode">
@@ -44,7 +45,6 @@
 			<p class="control is-expanded" v-if="passwordStep === 2">
 				<button class="button is-success" @click="verifyCode()">Verify code</button>
 			</p>
-
 
 			<p class="control is-expanded has-icon has-icon-right" v-if="passwordStep === 3">
 				<input class="input" type="password" placeholder="New password" v-model="setNewPassword">
@@ -54,7 +54,6 @@
 			</p>
 		</div>
 		<a href="#" v-if="passwordStep === 1 && !password" @click="passwordStep = 2">Skip this step</a>
-
 
 		<a class="button is-github" v-if="!github" :href='$parent.serverDomain + "/auth/github/link"'>
 			<div class='icon'>
@@ -108,16 +107,16 @@
 				_this.socket.on('event:user.username.changed', username => {
 					_this.$parent.username = username;
 				});
-				_this.socket.on('event:user.linkPassword', () => {console.log(1);
+				_this.socket.on('event:user.linkPassword', () => {
 					_this.password = true;
 				});
-				_this.socket.on('event:user.linkGitHub', () => {console.log(2);
+				_this.socket.on('event:user.linkGitHub', () => {
 					_this.github = true;
 				});
-				_this.socket.on('event:user.unlinkPassword', () => {console.log(3);
+				_this.socket.on('event:user.unlinkPassword', () => {
 					_this.password = false;
 				});
-				_this.socket.on('event:user.unlinkGitHub', () => {console.log(4);
+				_this.socket.on('event:user.unlinkGitHub', () => {
 					_this.github = false;
 				});
 			});
@@ -191,6 +190,11 @@
 			unlinkGitHub: function () {
 				this.socket.emit('users.unlinkGitHub', res => {
 					Toast.methods.addToast(res.message, 8000);
+				});
+			},
+			removeSessions: function () {
+				this.socket.emit(`users.removeSessions`, this.$parent.userId, res => {
+					Toast.methods.addToast(res.message, 4000);
 				});
 			}
 		},
