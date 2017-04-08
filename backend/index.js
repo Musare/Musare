@@ -60,7 +60,7 @@ const getDiscordClient = (cb) => {
 const logToDiscord = (message, color, type, critical, extraFields, cb = ()=>{}) => {
 	getDiscordClient(() => {
 		let richEmbed = new Discord.RichEmbed();
-		richEmbed.setAuthor("Musare Logger", "https://musare.com/favicon-194x194.png", "https://musare.com");
+		richEmbed.setAuthor("Musare Logger", config.get("domain")+"/favicon-194x194.png", config.get("domain"));
 		richEmbed.setColor(color);
 		richEmbed.setDescription(message);
 		//richEmbed.setFooter("Footer", "https://musare.com/favicon-194x194.png");
@@ -68,7 +68,7 @@ const logToDiscord = (message, color, type, critical, extraFields, cb = ()=>{}) 
 		//richEmbed.setThumbnail("https://musare.com/favicon-194x194.png");
 		richEmbed.setTimestamp(new Date());
 		richEmbed.setTitle("MUSARE ALERT");
-		richEmbed.setURL("https://musare.com");
+		richEmbed.setURL(config.get("domain"));
 		richEmbed.addField("Type:", type, true);
 		richEmbed.addField("Critical:", (critical) ? 'True' : 'False', true);
 		extraFields.forEach((extraField) => {
