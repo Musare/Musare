@@ -62,7 +62,9 @@
 								localStorage.setItem('whatIsNew', res.data.createdAt);
 							}
 						} else {
-							this.toggleModal();
+							if (parseInt(localStorage.getItem('firstVisited')) < res.data.createdAt) {
+								this.toggleModal();
+							}
 							localStorage.setItem('whatIsNew', res.data.createdAt);
 						}
 					} else {
