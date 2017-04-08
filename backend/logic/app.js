@@ -16,6 +16,8 @@ const cache = require('./cache');
 const db = require('./db');
 
 let utils;
+let initialized = false;
+let lockdown = false;
 
 const lib = {
 
@@ -52,6 +54,7 @@ const lib = {
 		let redirect_uri = config.get('serverDomain') + '/auth/github/authorize/callback';
 
 		app.get('/auth/github/authorize', (req, res) => {
+			if (lockdown) return res.json({status: 'failure', message: 'Lockdown'});
 			let params = [
 				`client_id=${config.get('apis.github.client')}`,
 				`redirect_uri=${config.get('serverDomain')}/auth/github/authorize/callback`,
@@ -61,6 +64,7 @@ const lib = {
 		});
 
 		app.get('/auth/github/link', (req, res) => {
+			if (lockdown) return res.json({status: 'failure', message: 'Lockdown'});
 			let params = [
 				`client_id=${config.get('apis.github.client')}`,
 				`redirect_uri=${config.get('serverDomain')}/auth/github/authorize/callback`,
@@ -75,6 +79,7 @@ const lib = {
 		}
 
 		app.get('/auth/github/authorize/callback', (req, res) => {
+			if (lockdown) return res.json({status: 'failure', message: 'Lockdown'});
 			let code = req.query.code;
 			let access_token;
 			let body;
@@ -231,7 +236,15 @@ const lib = {
 			});
 		});
 
+		initialized = true;
+
+		if (lockdown) return this._lockdown();
 		cb();
+	},
+
+	_lockdown: () => {
+		lib.server.close();
+		lockdown = true;
 	}
 };
 

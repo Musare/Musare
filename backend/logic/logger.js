@@ -89,6 +89,9 @@ let getTimeFormatted = () => {
 	return `${time.year}-${twoDigits(time.month)}-${twoDigits(time.day)} ${twoDigits(time.hour)}:${twoDigits(time.minute)}:${twoDigits(time.second)}`;
 }
 
+let initialized = false;
+let lockdown = false;
+
 module.exports = {
 	init: function(cb) {
 		utils = require('./utils');
@@ -104,11 +107,14 @@ module.exports = {
 		fs.appendFile(dir + '/error.log', `${time} BACKEND_RESTARTED\n`, ()=>{});
 		fs.appendFile(dir + '/info.log', `${time} BACKEND_RESTARTED\n`, ()=>{});
 		fs.appendFile(dir + '/debugStation.log', `${time} BACKEND_RESTARTED\n`, ()=>{});
-		cb("MAJOR FAILURE!");
 
-		//cb();
+		initialized = true;
+
+		if (lockdown) return this._lockdown();
+		cb();
 	},
 	success: (type, message, display = true) => {
+		if (lockdown) return;
 		success++;
 		successThisMinute++;
 		successThisHour++;
@@ -118,6 +124,7 @@ module.exports = {
 		if (display) console.info('\x1b[32m', time, 'SUCCESS', '-', type, '-', message, '\x1b[0m');
 	},
 	error: (type, message, display = true) => {
+		if (lockdown) return;
 		error++;
 		errorThisMinute++;
 		errorThisHour++;
@@ -127,6 +134,7 @@ module.exports = {
 		if (display) console.warn('\x1b[31m', time, 'ERROR', '-', type, '-', message, '\x1b[0m');
 	},
 	info: (type, message, display = true) => {
+		if (lockdown) return;
 		info++;
 		infoThisMinute++;
 		infoThisHour++;
@@ -136,28 +144,34 @@ module.exports = {
 		if (display) console.info('\x1b[36m', time, 'INFO', '-', type, '-', message, '\x1b[0m');
 	},
 	stationIssue: (string, display = false) => {
+		if (lockdown) return;
 		let time = getTimeFormatted();
 		fs.appendFile(dir + '/debugStation.log', `${time} - ${string}\n`, ()=>{});
 		if (display) console.info('\x1b[35m', time, '-', string, '\x1b[0m');
 	},
 	calculatePerSecond: function(number) {
+		if (lockdown) return;
 		let secondsRunning = Math.floor((Date.now() - started) / 1000);
 		let perSecond = number / secondsRunning;
 		return perSecond;
 	},
 	calculatePerMinute: function(number) {
+		if (lockdown) return;
 		let perMinute = this.calculatePerSecond(number) * 60;
 		return perMinute;
 	},
 	calculatePerHour: function(number) {
+		if (lockdown) return;
 		let perHour = this.calculatePerMinute(number) * 60;
 		return perHour;
 	},
 	calculatePerDay: function(number) {
+		if (lockdown) return;
 		let perDay = this.calculatePerHour(number) * 24;
 		return perDay;
 	},
 	calculate: function() {
+		if (lockdown) return;
 		let _this = module.exports;
 		utils.emitToRoom('admin.statistics', 'event:admin.statistics.logs', {
 			second: {
@@ -182,5 +196,9 @@ module.exports = {
 			}
 		});
 		setTimeout(_this.calculate, 1000 * 30);
+	},
+
+	_lockdown: () => {
+		lockdown = true;
 	}
 };

@@ -6,12 +6,14 @@ const mongoose = require('mongoose');
 // Lightweight / convenience wrapper around redis module for our needs
 
 const pubs = {}, subs = {};
-let initialized = false;
 let callbacks = [];
+let initialized = false;
+let lockdown = false;
 
 const lib = {
 
 	client: null,
+	errorCb: null,
 	url: '',
 	schemas: {
 		session: require('./schemas/session'),
@@ -29,21 +31,24 @@ const lib = {
 	 * @param {String} password - the password of the redis server
 	 * @param {Function} cb - gets called once we're done initializing
 	 */
-	init: (url, password, cb) => {
+	init: (url, password, errorCb, cb) => {
+		lib.errorCb = errorCb;
 		lib.url = url;
 		lib.password = password;
 
 		lib.client = redis.createClient({ url: lib.url, password: lib.password });
 		lib.client.on('error', (err) => {
-			console.error(err);
-			process.exit();
+			if (lockdown) return;
+			errorCb('Cache connection error.', err, 'Cache');
 		});
 
-		initialized = true;
 		callbacks.forEach((callback) => {
 			callback();
 		});
 
+		initialized = true;
+
+		if (lockdown) return this._lockdown();
 		cb();
 	},
 
@@ -51,9 +56,11 @@ const lib = {
 	 * Gracefully closes all the Redis client connections
 	 */
 	quit: () => {
-		lib.client.quit();
-		Object.keys(pubs).forEach((channel) => pubs[channel].quit());
-		Object.keys(subs).forEach((channel) => subs[channel].client.quit());
+		if (lib.client.connected) {
+			lib.client.quit();
+			Object.keys(pubs).forEach((channel) => pubs[channel].quit());
+			Object.keys(subs).forEach((channel) => subs[channel].client.quit());
+		}
 	},
 
 	/**
@@ -66,6 +73,7 @@ const lib = {
 	 * @param {Boolean} [stringifyJson=true] - stringify 'value' if it's an Object or Array
 	 */
 	hset: (table, key, value, cb, stringifyJson = true) => {
+		if (lockdown) return cb('Lockdown');
 		if (mongoose.Types.ObjectId.isValid(key)) key = key.toString();
 		// automatically stringify objects and arrays into JSON
 		if (stringifyJson && ['object', 'array'].includes(typeof value)) value = JSON.stringify(value);
@@ -87,6 +95,7 @@ const lib = {
 	 * @param {Boolean} [parseJson=true] - attempt to parse returned data as JSON
 	 */
 	hget: (table, key, cb, parseJson = true) => {
+		if (lockdown) return cb('Lockdown');
 		if (!key || !table) return typeof cb === 'function' ? cb(null, null) : null;
 		if (mongoose.Types.ObjectId.isValid(key)) key = key.toString();
 		lib.client.hget(table, key, (err, value) => {
@@ -107,6 +116,7 @@ const lib = {
 	 * @param {Function} cb - gets called when the value has been deleted from Redis or when it returned an error
 	 */
 	hdel: (table, key, cb) => {
+		if (lockdown) return cb('Lockdown');
 		if (!key || !table) return cb(null, null);
 		if (mongoose.Types.ObjectId.isValid(key)) key = key.toString();
 		lib.client.hdel(table, key, (err) => {
@@ -123,6 +133,7 @@ const lib = {
 	 * @param {Boolean} [parseJson=true] - attempts to parse all values as JSON by default
 	 */
 	hgetall: (table, cb, parseJson = true) => {
+		if (lockdown) return cb('Lockdown');
 		if (!table) return cb(null, null);
 		lib.client.hgetall(table, (err, obj) => {
 			if (err) return typeof cb === 'function' ? cb(err) : null;
@@ -160,6 +171,7 @@ const lib = {
 	 * @param {Boolean} [parseJson=true] - parse the message as JSON
 	 */
 	sub: (channel, cb, parseJson = true) => {
+		if (lockdown) return;
 		if (initialized) subToChannel();
 		else {
 			callbacks.push(() => {
@@ -169,10 +181,6 @@ const lib = {
 		function subToChannel() {
 			if (subs[channel] === undefined) {
 				subs[channel] = { client: redis.createClient({ url: lib.url, password: lib.password }), cbs: [] };
-				subs[channel].client.on('error', (err) => {
-					console.error(err);
-					process.exit();
-				});
 				subs[channel].client.on('message', (channel, message) => {
 					if (parseJson) try { message = JSON.parse(message); } catch (e) {}
 					subs[channel].cbs.forEach((cb) => cb(message));
@@ -182,8 +190,12 @@ const lib = {
 
 			subs[channel].cbs.push(cb);
 		}
-	}
+	},
 
+	_lockdown: () => {
+		lib.quit();
+		lockdown = true;
+	}
 };
 
 module.exports = lib;

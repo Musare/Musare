@@ -7,6 +7,9 @@ const utils = require('./utils');
 const async = require('async');
 const mongoose = require('mongoose');
 
+let initialized = false;
+let lockdown = false;
+
 module.exports = {
 
 	/**
@@ -43,10 +46,14 @@ module.exports = {
 				}, next);
 			}
 		], (err) => {
+			if (lockdown) return this._lockdown();
 			if (err) {
-				console.log(`FAILED TO INITIALIZE PUNISHMENTS. ABORTING. "${err.message}"`);
-				process.exit();
-			} else cb();
+				err = utils.getError(err);
+				cb(err);
+			} else {
+				initialized = true;
+				cb();
+			}
 		});
 	},
 
@@ -56,6 +63,7 @@ module.exports = {
 	 * @param {Function} cb - gets called once we're done initializing
 	 */
 	getPunishments: function(cb) {
+		if (lockdown) return cb('Lockdown');
 		let punishmentsToRemove = [];
 		async.waterfall([
 			(next) => {
@@ -103,6 +111,7 @@ module.exports = {
 	 * @param {Function} cb - gets called once we're done initializing
 	 */
 	getPunishment: function(id, cb) {
+		if (lockdown) return cb('Lockdown');
 		async.waterfall([
 
 			(next) => {
@@ -135,6 +144,7 @@ module.exports = {
 	 * @param {Function} cb - gets called once we're done initializing
 	 */
 	getPunishmentsFromUserId: function(userId, cb) {
+		if (lockdown) return cb('Lockdown');
 		async.waterfall([
 			(next) => {
 				module.exports.getPunishments(next);
@@ -153,6 +163,7 @@ module.exports = {
 	},
 
 	addPunishment: function(type, value, reason, expiresAt, punishedBy, cb) {
+		if (lockdown) return cb('Lockdown');
 		async.waterfall([
 			(next) => {
 				const punishment = new db.models.punishment({
@@ -185,6 +196,7 @@ module.exports = {
 	},
 
 	removePunishmentFromCache: function(punishmentId, cb) {
+		if (lockdown) return cb('Lockdown');
 		async.waterfall([
 			(next) => {
 				const punishment = new db.models.punishment({
@@ -214,5 +226,9 @@ module.exports = {
 		], (err) => {
 			cb(err);
 		});
+	},
+
+	_lockdown: () => {
+		lockdown = true;
 	}
 };

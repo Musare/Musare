@@ -57,7 +57,9 @@ Once you've installed the required tools:
 	To set up a GitHub OAuth Application, you need to fill in some value's. The homepage is the homepage of frontend. The authorization callback url is the backend url with `/auth/github/authorize/callback` added at the end. For example `http://localhost:8080/auth/github/authorize/callback`.
    	The `apis.recaptcha.secret` value can be obtained by setting up a [ReCaptcha Site](https://www.google.com/recaptcha/admin).  
    	The `apis.github` values can be obtained by setting up a [GitHub OAuth Application](https://github.com/settings/developers).  
-   	`apis.discord` is currently not needed.  
+   	The `apis.discord.token` is the token for the Discord bot.  
+   	The `apis.discord.loggingServer` is the Discord logging server id.  
+   	The `apis.discord.loggingChannel` is the Discord logging channel id.  
    	The `apis.mailgun` values can be obtained by setting up a [Mailgun account](http://www.mailgun.com/).  
    	The `redis.url` url should be left alone for Docker, and changed to `redis://localhost:6379/0` for non-Docker.
    	The `redis.password` should be the Redis password you either put in your `startRedis.cmd` file for Windows, or `docker-compose.yml` for docker.

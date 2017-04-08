@@ -90,6 +90,9 @@ let sessionClearingTask = (callback) => {
 	});
 };
 
+let initialized = false;
+let lockdown = false;
+
 module.exports = {
 	init: function(cb) {
 		utils = require('./utils');
@@ -97,9 +100,13 @@ module.exports = {
 		this.createTask("stationSkipTask", checkStationSkipTask, 1000 * 60 * 30);
 		this.createTask("sessionClearTask", sessionClearingTask, 1000 * 60 * 60 * 6);
 
+		initialized = true;
+
+		if (lockdown) return this._lockdown();
 		cb();
 	},
 	createTask: function(name, fn, timeout, paused = false) {
+		if (lockdown) return;
 		tasks[name] = {
 			name,
 			fn,
@@ -110,12 +117,13 @@ module.exports = {
 		if (!paused) this.handleTask(tasks[name]);
 	},
 	pauseTask: (name) => {
-		tasks[name].timer.pause();
+		if (tasks[name].timer) tasks[name].timer.pause();
 	},
 	resumeTask: (name) => {
 		tasks[name].timer.resume();
 	},
 	handleTask: function(task) {
+		if (lockdown) return;
 		if (task.timer) task.timer.pause();
 
 		task.fn(() => {
@@ -124,5 +132,12 @@ module.exports = {
 				this.handleTask(task);
 			}, task.timeout, false);
 		});
+	},
+	_lockdown: function() {
+		for (let key in tasks) {
+			this.pauseTask(key);
+		}
+		tasks = {};
+		lockdown = true;
 	}
 };

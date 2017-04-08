@@ -17,8 +17,9 @@
 			"redirect_uri": ""
 		},
 		"discord": {
-			"client": "",
-			"secret": ""
+			"token": "",
+			"loggingChannel": "",
+			"loggingServer": ""
 		},
 		"mailgun": {
 			"key": "",

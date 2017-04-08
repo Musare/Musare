@@ -19,18 +19,20 @@ const isLength = (string, min, max) => {
 
 mongoose.Promise = bluebird;
 
+let initialized = false;
+let lockdown = false;
+
 let lib = {
 
 	connection: null,
 	schemas: {},
 	models: {},
 
-	init: (url, cb) => {
+	init: (url, errorCb,  cb) => {
 		lib.connection = mongoose.connect(url).connection;
 
 		lib.connection.on('error', err => {
-			console.error('Database error: ' + err);
-			process.exit();
+			errorCb('Database connection error.', err, 'DB');
 		});
 
 		lib.connection.once('open', _ => {
@@ -186,6 +188,9 @@ let lib = {
 				return (!description || (isLength(description, 0, 400) && regex.ascii.test(description)));
 			}, 'Invalid description.');
 
+			initialized = true;
+
+			if (lockdown) return this._lockdown();
 			cb();
 		});
 	},
@@ -193,6 +198,11 @@ let lib = {
 	passwordValid: (password) => {
 		if (!isLength(password, 6, 200)) return false;
 		return regex.password.test(password);
+	},
+
+	_lockdown: () => {
+		lib.connection.close();
+		lockdown = true;
 	}
 };
 

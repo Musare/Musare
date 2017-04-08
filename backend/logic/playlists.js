@@ -4,6 +4,9 @@ const cache = require('./cache');
 const db = require('./db');
 const async = require('async');
 
+let initialized = false;
+let lockdown = false;
+
 module.exports = {
 
 	/**
@@ -41,10 +44,12 @@ module.exports = {
 				}, next);
 			}
 		], (err) => {
+			if (lockdown) return this._lockdown();
 			if (err) {
-				console.log(`FAILED TO INITIALIZE PLAYLISTS. ABORTING. "${err.message}"`);
-				process.exit();
+				err = utils.getError(err);
+				cb(err);
 			} else {
+				initialized = true;
 				cb();
 			}
 		});
@@ -57,6 +62,7 @@ module.exports = {
 	 * @param {Function} cb - gets called once we're done initializing
 	 */
 	getPlaylist: (playlistId, cb) => {
+		if (lockdown) return cb('Lockdown');
 		async.waterfall([
 			(next) => {
 				cache.hgetall('playlists', next);
@@ -104,6 +110,7 @@ module.exports = {
 	 * @param {Function} cb - gets called when an error occurred or when the operation was successful
 	 */
 	updatePlaylist: (playlistId, cb) => {
+		if (lockdown) return cb('Lockdown');
 		async.waterfall([
 
 			(next) => {
@@ -131,6 +138,7 @@ module.exports = {
 	 * @param {Function} cb - gets called when an error occurred or when the operation was successful
 	 */
 	deletePlaylist: (playlistId, cb) => {
+		if (lockdown) return cb('Lockdown');
 		async.waterfall([
 
 			(next) => {
@@ -146,5 +154,9 @@ module.exports = {
 
 			cb(null);
 		});
+	},
+
+	_lockdown: () => {
+		lockdown = true;
 	}
 };

@@ -1,3 +1,5 @@
+let lockdown = false;
+
 module.exports = {
 	init: (cb) => {
 		const { app } = require('./app.js');
@@ -22,6 +24,11 @@ module.exports = {
 			})
 		});
 
+		if (lockdown) return this._lockdown();
 		cb();
+	},
+
+	_lockdown: () => {
+		lockdown = true;
 	}
 }

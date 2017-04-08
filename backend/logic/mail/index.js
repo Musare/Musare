@@ -10,6 +10,9 @@ if (enabled) {
 	});
 }
 
+let initialized = false;
+let lockdown = false;
+
 let lib = {
 
 	schemas: {},
@@ -21,13 +24,21 @@ let lib = {
 			passwordRequest: require('./schemas/passwordRequest')
 		};
 
+		initialized = true;
+
+		if (lockdown) return this._lockdown();
 		cb();
 	},
 
 	sendMail: (data, cb) => {
+		if (lockdown) return cb('Lockdown');
 		if (!cb) cb = ()=>{};
 		if (enabled) mailgun.messages().send(data, cb);
 		else cb();
+	},
+
+	_lockdown: () => {
+		lockdown = true;
 	}
 };
 

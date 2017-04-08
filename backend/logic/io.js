@@ -11,6 +11,9 @@ const db = require('./db');
 const logger = require('./logger');
 const punishments = require('./punishments');
 
+let initialized = false;
+let lockdown = false;
+
 module.exports = {
 
 	io: null,
@@ -20,6 +23,7 @@ module.exports = {
 		this.io = require('socket.io')(app.server);
 
 		this.io.use((socket, next) => {
+			if (lockdown) return;
 			let cookies = socket.request.headers.cookie;
 			let SID = utils.cookies.parseCookies(cookies).SID;
 
@@ -66,6 +70,7 @@ module.exports = {
 		});
 
 		this.io.on('connection', socket => {
+			if (lockdown) return socket.disconnect(true);
 			let sessionInfo = '';
 			if (socket.session.sessionId) sessionInfo = ` UserID: ${socket.session.userId}.`;
 			if (socket.banned) {
@@ -94,9 +99,10 @@ module.exports = {
 
 						// listen for this action to be called
 						socket.on(name, function () {
-
 							let args = Array.prototype.slice.call(arguments, 0, -1);
 							let cb = arguments[arguments.length - 1];
+
+							if (lockdown) return cb({status: 'failure', message: 'Lockdown'});
 
 							// load the session from the cache
 							cache.hget('sessions', socket.session.sessionId, (err, session) => {
@@ -144,7 +150,19 @@ module.exports = {
 			}
 		});
 
+		initialized = true;
+
+		if (lockdown) return this._lockdown();
 		cb();
+	},
+
+	_lockdown: () => {
+		this.io.close();
+		let connected = this.io.of('/').connected;
+		for (let key in connected) {
+			connected[key].disconnect('Lockdown');
+		}
+		lockdown = true;
 	}
 
 };

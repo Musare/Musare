@@ -9,16 +9,22 @@ const songs = require('./songs');
 const notifications = require('./notifications');
 const async = require('async');
 
+let initialized = false;
+let lockdown = false;
+
 //TEMP
 cache.sub('station.pause', (stationId) => {
+	if (lockdown) return;
 	notifications.remove(`stations.nextSong?id=${stationId}`);
 });
 
 cache.sub('station.resume', (stationId) => {
+	if (lockdown) return;
 	module.exports.initializeStation(stationId)
 });
 
 cache.sub('station.queueUpdate', (stationId) => {
+	if (lockdown) return;
 	module.exports.getStation(stationId, (err, station) => {
 		if (!station.currentSong && station.queue.length > 0) {
 			module.exports.initializeStation(stationId);
@@ -27,6 +33,7 @@ cache.sub('station.queueUpdate', (stationId) => {
 });
 
 cache.sub('station.newOfficialPlaylist', (stationId) => {
+	if (lockdown) return;
 	cache.hget("officialPlaylists", stationId, (err, playlistObj) => {
 		if (!err && playlistObj) {
 			utils.emitToRoom(`station.${stationId}`, "event:newOfficialPlaylist", playlistObj.songs);
@@ -75,14 +82,19 @@ module.exports = {
 				}, next);
 			}
 		], (err) => {
+			if (lockdown) return this._lockdown();
 			if (err) {
-				console.log(`FAILED TO INITIALIZE STATIONS. ABORTING. "${err.message}"`);
-				process.exit();
-			} else cb();
+				err = utils.getError(err);
+				cb(err);
+			} else {
+				initialized = true;
+				cb();
+			}
 		});
 	},
 
 	initializeStation: function(stationId, cb) {
+		if (lockdown) return;
 		if (typeof cb !== 'function') cb = ()=>{};
 		let _this = this;
 		async.waterfall([
@@ -123,10 +135,10 @@ module.exports = {
 	},
 
 	calculateSongForStation: function(station, cb) {
+		if (lockdown) return;
 		let _this = this;
 		let songList = [];
 		async.waterfall([
-
 			(next) => {
 				let genresDone = [];
 				station.genres.forEach((genre) => {
@@ -181,6 +193,7 @@ module.exports = {
 
 	// Attempts to get the station from Redis. If it's not in Redis, get it from Mongo and add it to Redis.
 	getStation: function(stationId, cb) {
+		if (lockdown) return;
 		let _this = this;
 		async.waterfall([
 			(next) => {
@@ -211,6 +224,7 @@ module.exports = {
 
 	// Attempts to get the station from Redis. If it's not in Redis, get it from Mongo and add it to Redis.
 	getStationByName: function(stationName, cb) {
+		if (lockdown) return;
 		let _this = this;
 		async.waterfall([
 
@@ -236,6 +250,7 @@ module.exports = {
 	},
 
 	updateStation: function(stationId, cb) {
+		if (lockdown) return;
 		let _this = this;
 		async.waterfall([
 
@@ -258,8 +273,8 @@ module.exports = {
 	},
 
 	calculateOfficialPlaylistList: (stationId, songList, cb) => {
+		if (lockdown) return;
 		let lessInfoPlaylist = [];
-
 		async.each(songList, (song, next) => {
 			songs.getSongFromId(song, (err, song) => {
 				if (!err && song) {
@@ -282,9 +297,11 @@ module.exports = {
 	},
 
 	skipStation: function(stationId) {
+		if (lockdown) return;
 		logger.info("STATION_SKIP", `Skipping station ${stationId}.`, false);
 		let _this = this;
 		return (cb) => {
+			if (lockdown) return;
 			if (typeof cb !== 'function') cb = ()=>{};
 
 			async.waterfall([
@@ -466,6 +483,10 @@ module.exports = {
 		skipDuration: 0,
 		likes: -1,
 		dislikes: -1
+	},
+
+	_lockdown: () => {
+		lockdown = true;
 	}
 
 };

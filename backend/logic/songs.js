@@ -7,6 +7,9 @@ const utils = require('./utils');
 const async = require('async');
 const mongoose = require('mongoose');
 
+let initialized = false;
+let lockdown = false;
+
 module.exports = {
 
 	/**
@@ -42,10 +45,14 @@ module.exports = {
 				}, next);
 			}
 		], (err) => {
+			if (lockdown) return this._lockdown();
 			if (err) {
-				console.log(`FAILED TO INITIALIZE SONGS. ABORTING. "${err.message}"`);
-				process.exit();
-			} else cb();
+				err = utils.getError(err);
+				cb(err);
+			} else {
+				initialized = true;
+				cb();
+			}
 		});
 	},
 
@@ -56,6 +63,7 @@ module.exports = {
 	 * @param {Function} cb - gets called once we're done initializing
 	 */
 	getSong: function(id, cb) {
+		if (lockdown) return cb('Lockdown');
 		async.waterfall([
 
 			(next) => {
@@ -88,6 +96,7 @@ module.exports = {
 	 * @param {Function} cb - gets called once we're done initializing
 	 */
 	getSongFromId: function(songId, cb) {
+		if (lockdown) return cb('Lockdown');
 		async.waterfall([
 			(next) => {
 				db.models.song.findOne({ _id: songId }, next);
@@ -105,6 +114,7 @@ module.exports = {
 	 * @param {Function} cb - gets called when an error occurred or when the operation was successful
 	 */
 	updateSong: (songId, cb) => {
+		if (lockdown) return cb('Lockdown');
 		async.waterfall([
 
 			(next) => {
@@ -134,6 +144,7 @@ module.exports = {
 	 * @param {Function} cb - gets called when an error occurred or when the operation was successful
 	 */
 	deleteSong: (songId, cb) => {
+		if (lockdown) return cb('Lockdown');
 		async.waterfall([
 
 			(next) => {
@@ -149,5 +160,9 @@ module.exports = {
 
 			cb(null);
 		});
+	},
+
+	_lockdown: () => {
+		lockdown = true;
 	}
 };
