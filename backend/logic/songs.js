@@ -99,7 +99,7 @@ module.exports = {
 		if (lockdown) return cb('Lockdown');
 		async.waterfall([
 			(next) => {
-				db.models.song.findOne({ _id: songId }, next);
+				db.models.song.findOne({ songId }, next);
 			}
 		], (err, song) => {
 			if (err && err !== true) return cb(err);

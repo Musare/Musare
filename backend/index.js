@@ -46,7 +46,12 @@ client.on('ready', () => {
 	discordClientCBS.forEach((cb) => {
 		cb();
 	});
+	discordClientCBS = [];
 	console.log(`Logged in to Discord as ${client.user.username}#${client.user.discriminator}`);
+});
+
+client.on('disconnect', (err) => {
+	console.log(`Discord disconnected. Code: ${err.code}.`);
 });
 
 client.login(config.get('apis.discord.token'));
