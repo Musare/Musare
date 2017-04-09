@@ -27,10 +27,10 @@
 
 			<article class="media" v-for='song in $parent.songsList'>
 				<div class="media-content">
-					<div class="content" style="display: block;">
+					<div class="content" style="display: block;padding-top: 10px;">
 							<strong class="songTitle">{{ song.title }}</strong>
 							<small>{{ song.artists.join(', ') }}</small>
-							<div v-if="this.$parent.$parent.type === 'community'">
+							<div v-if="this.$parent.$parent.type === 'community' && this.$parent.$parent.station.partyMode === true">
 								<small>Requested by <b>{{this.$parent.$parent.$parent.getUsernameFromId(song.requestedBy)}} {{this.userIdMap[song.requestedBy]}}</b></small>
 								<i class="material-icons" style="vertical-align: middle;" @click="removeFromQueue(song.songId)" v-if="isOwnerOnly() || isAdminOnly()">delete_forever</i>
 							</div>
@@ -40,7 +40,7 @@
 					{{ $parent.$parent.formatTime(song.duration) }}
 				</div>
 			</article>
-			<div v-if="$parent.type === 'community' && $parent.$parent.loggedIn">
+			<div v-if="$parent.type === 'community' && $parent.$parent.loggedIn && $parent.station.partyMode === true">
 				<button class='button add-to-queue' @click='$parent.modals.addSongToQueue = !$parent.modals.addSongToQueue' v-if="($parent.station.locked && isOwnerOnly()) || !$parent.station.locked || ($parent.station.locked && isAdminOnly() && dismissedWarning)">Add Song to Queue</button>
 				<button class='button add-to-queue add-to-queue-warning' @click='dismissedWarning = true' v-if="$parent.station.locked && isAdminOnly() && !isOwnerOnly() && !dismissedWarning">THIS STATION'S QUEUE IS LOCKED.</button>
 				<button class='button add-to-queue add-to-queue-disabled' v-if="$parent.station.locked && !isAdminOnly() && !isOwnerOnly()">THIS STATION'S QUEUE IS LOCKED.</button>
