@@ -77,7 +77,7 @@ module.exports = {
 					obj.punishmentId = id;
 					punishments.push(obj);
 				}
-				punishments = punishments.filter((punishment) => {
+				punishments = punishments.filter(punishment => {
 					if (punishment.expiresAt < Date.now()) punishmentsToRemove.push(punishment);
 					return punishment.expiresAt > Date.now();
 				});
@@ -176,14 +176,13 @@ module.exports = {
 					punishedBy
 				});
 				punishment.save((err, punishment) => {
-					console.log(err);
 					if (err) return next(err);
 					next(null, punishment);
 				});
 			},
 
 			(punishment, next) => {
-				cache.hset('punishments', punishment._id, {type, value, expiresAt}, next);
+				cache.hset('punishments', punishment._id, { type, value, reason, expiresAt }, next);
 			},
 
 			(punishment, next) => {

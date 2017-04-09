@@ -24,12 +24,6 @@ module.exports = {
 			access_token: String
 		}
 	},
-	ban: {
-		banned: { type: Boolean, default: false, required: true },
-		reason: String,
-		bannedAt: Date,
-		bannedUntil: Date
-	},
 	statistics: {
 		songsRequested: { type: Number, default: 0, required: true }
 	},

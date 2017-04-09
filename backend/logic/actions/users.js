@@ -31,7 +31,6 @@ cache.sub('user.removeSessions', userId => {
 });
 
 cache.sub('user.linkPassword', userId => {
-	console.log("LINK4", userId);
 	utils.socketsFromUser(userId, sockets => {
 		sockets.forEach(socket => {
 			socket.emit('event:user.linkPassword');
@@ -40,7 +39,6 @@ cache.sub('user.linkPassword', userId => {
 });
 
 cache.sub('user.linkGitHub', userId => {
-	console.log("LINK1", userId);
 	utils.socketsFromUser(userId, sockets => {
 		sockets.forEach(socket => {
 			socket.emit('event:user.linkGitHub');
@@ -49,7 +47,6 @@ cache.sub('user.linkGitHub', userId => {
 });
 
 cache.sub('user.unlinkPassword', userId => {
-	console.log("LINK2", userId);
 	utils.socketsFromUser(userId, sockets => {
 		sockets.forEach(socket => {
 			socket.emit('event:user.unlinkPassword');
@@ -58,10 +55,17 @@ cache.sub('user.unlinkPassword', userId => {
 });
 
 cache.sub('user.unlinkGitHub', userId => {
-	console.log("LINK3", userId);
 	utils.socketsFromUser(userId, sockets => {
 		sockets.forEach(socket => {
 			socket.emit('event:user.unlinkGitHub');
+		});
+	});
+});
+
+cache.sub('user.ban', userId => {
+	utils.socketsFromUser(userId, sockets => {
+		sockets.forEach(socket => {
+			socket.emit('keep.event:banned');
 		});
 	});
 });
@@ -1036,12 +1040,17 @@ module.exports = {
 	banUserById: hooks.adminRequired((session, value, reason, expiresAt, cb, userId) => {
 		async.waterfall([
 			(next) => {
+				if (value === '') return next('You must provide an IP address to ban.');
+				else if (reason === '') return next('You must provide a reason for the ban.');
+				else return next();
+			},
+
+			(next) => {
 				if (!expiresAt || typeof expiresAt !== 'string') return next('Invalid expire date.');
 				let date = new Date();
 				switch(expiresAt) {
 					case '1h':
-						//expiresAt = date.setHours(date.getHours() + 1);
-						expiresAt = date.setMinutes(date.getMinutes() + 1);
+						expiresAt = date.setHours(date.getHours() + 1);
 						break;
 					case '12h':
 						expiresAt = date.setHours(date.getHours() + 12);
@@ -1079,7 +1088,7 @@ module.exports = {
 			},
 
 			(next) => {
-				//TODO Emit to all users with userId as value
+				cache.pub('user.ban', value);
 				next();
 			},
 		], (err) => {

@@ -163,9 +163,22 @@ module.exports = {
 			async.each(Object.keys(ns.connected), (id, next) => {
 				let session = ns.connected[id].session;
 				cache.hget('sessions', session.sessionId, (err, session) => {
-					if (!err && session && session.userId === userId) {
-						sockets.push(ns.connected[id]);
-					}
+					if (!err && session && session.userId === userId) sockets.push(ns.connected[id]);
+					next();
+				});
+			}, () => {
+				cb(sockets);
+			});
+		}
+	},
+	socketsFromIP: function(ip, cb) {
+		let ns = io.io.of("/");
+		let sockets = [];
+		if (ns) {
+			async.each(Object.keys(ns.connected), (id, next) => {
+				let session = ns.connected[id].session;
+				cache.hget('sessions', session.sessionId, (err, session) => {
+					if (!err && session && ns.connected[id].ip === ip) sockets.push(ns.connected[id]);
 					next();
 				});
 			}, () => {

@@ -47,23 +47,21 @@ module.exports = {
 					punishments.getPunishments((err, punishments) => {
 						const isLoggedIn = !!(socket.session && socket.session.refreshDate);
 						const userId = (isLoggedIn) ? socket.session.userId : null;
+						let ban = 0;
 						let banned = false;
-						punishments.forEach((punishment) => {
-							if (punishment.type === 'banUserId' && isLoggedIn && punishment.value === userId) {
-								banned = true;
-							}
-							if (punishment.type === 'banUserIp' && punishment.value === socket.ip) {
-								banned = true;
-							}
+						punishments.forEach(punishment => {
+							if (punishment.expiresAt > ban) ban = punishment;
+							if (punishment.type === 'banUserId' && isLoggedIn && punishment.value === userId) banned = true;
+							if (punishment.type === 'banUserIp' && punishment.value === socket.ip) banned = true;
 						});
-						//socket.banned = banned;
 						socket.banned = banned;
+						socket.ban = ban;
 						next();
 					});
 				}
 			], () => {
 				if (!socket.session) {
-					socket.session = {socketId: socket.id};
+					socket.session = { socketId: socket.id };
 				} else socket.session.socketId = socket.id;
 				next();
 			});
@@ -75,7 +73,7 @@ module.exports = {
 			if (socket.session.sessionId) sessionInfo = ` UserID: ${socket.session.userId}.`;
 			if (socket.banned) {
 				logger.info('IO_BANNED_CONNECTION', `A user tried to connect, but is currently banned. IP: ${socket.ip}.${sessionInfo}`);
-				socket.emit('keep.me.isBanned');
+				socket.emit('keep.event:banned', socket.ban);
 				socket.disconnect(true);
 			} else {
 				logger.info('IO_CONNECTION', `User connected. IP: ${socket.ip}.${sessionInfo}`);

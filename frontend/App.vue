@@ -1,5 +1,6 @@
 <template>
-	<div v-if="!banned">
+	<banned v-if="banned"></banned>
+	<div v-else>
 		<h1 v-if="!socketConnected" class="alert">Could not connect to the server.</h1>
 		<router-view></router-view>
 		<toast></toast>
@@ -7,12 +8,12 @@
 		<login-modal v-if='isLoginActive'></login-modal>
 		<register-modal v-if='isRegisterActive'></register-modal>
 	</div>
-	<h1 v-if="banned">BANNED</h1>
 </template>
 
 <script>
 	import { Toast } from 'vue-roaster';
 
+	import Banned from './components/pages/Banned.vue';
 	import WhatIsNew from './components/Modals/WhatIsNew.vue';
 	import LoginModal from './components/Modals/Login.vue';
 	import RegisterModal from './components/Modals/Register.vue';
@@ -25,6 +26,7 @@
 		data() {
 			return {
 				banned: false,
+				ban: {},
 				register: {
 					email: '',
 					username: '',
@@ -64,9 +66,7 @@
 					this.currentlyGettingUsernameFrom[userId] = true;
 			        io.getSocket(socket => {
 			            socket.emit('users.getUsernameFromId', userId, (data) => {
-			                if (data.status === 'success') {
-								this.$set(`userIdMap.${userId}`, data.data);
-							}
+			                if (data.status === 'success') this.$set(`userIdMap.${userId}`, data.data);
 							this.currentlyGettingUsernameFrom[userId] = false;
 						});
 					});
@@ -79,8 +79,8 @@
 			    this.$router.go(localStorage.getItem('github_redirect'));
 			    localStorage.removeItem('github_redirect');
 			}
-			auth.isBanned((banned) => {
-				console.log("BANNED: ", banned);
+			auth.isBanned((banned, ban) => {
+				_this.ban = ban;
 				_this.banned = banned;
 			});
 			auth.getStatus((authenticated, role, username, userId) => {
@@ -179,7 +179,7 @@
 				this.$broadcast('closeModal');
 			}
 		},
-		components: { Toast, WhatIsNew, LoginModal, RegisterModal }
+		components: { Toast, WhatIsNew, LoginModal, RegisterModal, Banned }
 	}
 </script>
 

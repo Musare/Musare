@@ -1,5 +1,5 @@
 'use strict';
 
-module.exports = (punishment) => {
+module.exports = punishment => {
 	return punishment;
 };
