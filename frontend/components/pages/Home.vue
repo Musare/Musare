@@ -21,10 +21,10 @@
 					</div>
 
 					<div class="under-content">
-						<i class="material-icons" v-if="station.privacy !== 'public'" title="This station is not visible to other users." style="border-right: 1px solid #4a4a4a;padding-right: 3px;">lock</i>
-
 						<i class='material-icons' title="How many users there are in the station.">people</i>
 						<span class="users-count" title="How many users there are in the station.">&nbsp;{{station.userCount}}</span>
+
+						<i class="material-icons right-icon" v-if="station.privacy !== 'public'" title="This station is not visible to other users.">lock</i>
 					</div>
 				</div>
 				<a @click="this.$dispatch('joinStation', station._id)" href='#' class='absolute-a' v-link="{ path: '/' + station.name }"></a>
@@ -53,11 +53,11 @@
 						{{ station.description }}
 					</div>
 					<div class="under-content">
-						<i class="material-icons" v-if="station.privacy !== 'public'" title="This station is not visible to other users." style="border-right: 1px solid #4a4a4a;padding-right: 3px;">lock</i>
- 						<i class="material-icons" v-if="isOwner(station)" title="This is your station." style="border-right: 1px solid #4a4a4a;padding-right: 3px;">home</i>
-
 						<i class='material-icons' title="How many users there are in the station.">people</i>
 						<span class="users-count" title="How many users there are in the station.">&nbsp;{{station.userCount}}</span>
+
+						<i class="material-icons right-icon" v-if="station.privacy !== 'public'" title="This station is not visible to other users.">lock</i>
+						<i class="material-icons right-icon" v-if="isOwner(station)" title="This is your station.">home</i>
 					</div>
 				</div>
 				<a @click="this.$dispatch('joinStation', station._id)" href='#' class='absolute-a' v-link="{ path: '/community/' + station.name }"></a>
@@ -201,9 +201,12 @@
 	}
 
 	.under-content {
+		width: calc(100% - 40px);
+		left: 20px;
+		right: 20px;
+		bottom: 10px;
 		text-align: left;
 		height: 25px;
-		bottom: 0;
 		position: absolute;
 		margin-bottom: 10px;
 		line-height: 1;
@@ -213,6 +216,10 @@
 		* {
 			z-index: 10;
 			position: relative;
+		}
+
+		.right-icon {
+			float: right;
 		}
 	}
 
