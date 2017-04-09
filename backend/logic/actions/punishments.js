@@ -8,10 +8,11 @@ const 	hooks 	    = require('./hooks'),
 	 	db 	        = require('../db'),
 		punishments = require('../punishments');
 
-cache.sub('ip.ban', ip => {
-	utils.socketsFromIP(ip, sockets => {
+cache.sub('ip.ban', data => {
+	utils.socketsFromIP(data.ip, sockets => {
 		sockets.forEach(socket => {
-			socket.emit('keep.event:banned');
+			socket.emit('keep.event:banned', data.punishment);
+			socket.disconnect(true);
 		});
 	});
 });
@@ -100,8 +101,8 @@ module.exports = {
 				punishments.addPunishment('banUserIp', value, reason, expiresAt, userId, next)
 			},
 
-			(next) => {
-				cache.pub('ip.ban', value);
+			(punishment, next) => {
+				cache.pub('ip.ban', {ip: value, punishment});
 				next();
 			},
 		], (err) => {

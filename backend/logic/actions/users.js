@@ -62,10 +62,11 @@ cache.sub('user.unlinkGitHub', userId => {
 	});
 });
 
-cache.sub('user.ban', userId => {
-	utils.socketsFromUser(userId, sockets => {
+cache.sub('user.ban', data => {
+	utils.socketsFromUser(data.userId, sockets => {
 		sockets.forEach(socket => {
-			socket.emit('keep.event:banned');
+			socket.emit('keep.event:banned', data.punishment);
+			socket.disconnect(true);
 		});
 	});
 });
@@ -1087,8 +1088,8 @@ module.exports = {
 				punishments.addPunishment('banUserId', value, reason, expiresAt, userId, next)
 			},
 
-			(next) => {
-				cache.pub('user.ban', value);
+			(punishment, next) => {
+				cache.pub('user.ban', {userId: value, punishment});
 				next();
 			},
 		], (err) => {

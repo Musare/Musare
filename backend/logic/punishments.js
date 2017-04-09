@@ -42,7 +42,7 @@ module.exports = {
 			(punishments, next) => {
 				async.each(punishments, (punishment, next) => {
 					if (punishment.active === false || punishment.expiresAt < Date.now()) return next();
-					cache.hset('punishments', punishment._id, cache.schemas.punishment(punishment), next);
+					cache.hset('punishments', punishment._id, cache.schemas.punishment(punishment, punishment._id), next);
 				}, next);
 			}
 		], (err) => {
@@ -182,15 +182,17 @@ module.exports = {
 			},
 
 			(punishment, next) => {
-				cache.hset('punishments', punishment._id, { type, value, reason, expiresAt }, next);
+				cache.hset('punishments', punishment._id, cache.schemas.punishment(punishment, punishment._id), (err) => {
+					next(err, punishment);
+				});
 			},
 
 			(punishment, next) => {
 				// DISCORD MESSAGE
-				next();
+				next(null, punishment);
 			}
-		], (err) => {
-			cb(err);
+		], (err, punishment) => {
+			cb(err, punishment);
 		});
 	},
 
