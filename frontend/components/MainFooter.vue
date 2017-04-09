@@ -33,5 +33,15 @@
 		flex-direction: column;
 	}
 
-	.icon:visited { color: #4a4a4a !important; }
+	.icon:hover { color: #90298C !important; }
+
+	.nightMode {
+		.footer {
+			background-color: rgb(51, 51, 51);
+			.content {
+				color: #e6e6e6;
+			}
+		}
+
+	}
 </style>

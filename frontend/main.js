@@ -35,6 +35,9 @@ lofig.get('serverDomain', function(res) {
 		socket.on("ready", (status, role, username, userId) => {
 			auth.data(status, role, username, userId);
 		});
+		socket.on('keep.event:banned', ban => {
+			auth.setBanned(ban);
+		});
 	});
 });
 

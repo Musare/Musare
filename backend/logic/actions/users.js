@@ -8,6 +8,7 @@ const bcrypt = require('bcrypt');
 const db = require('../db');
 const mail = require('../mail');
 const cache = require('../cache');
+const punishments = require('../punishments');
 const utils = require('../utils');
 const hooks = require('./hooks');
 const sha256 = require('sha256');
@@ -21,8 +22,15 @@ cache.sub('user.updateUsername', user => {
 	});
 });
 
+cache.sub('user.removeSessions', userId => {
+	utils.socketsFromUserWithoutCache(userId, sockets => {
+		sockets.forEach(socket => {
+			socket.emit('keep.event:user.session.removed');
+		});
+	});
+});
+
 cache.sub('user.linkPassword', userId => {
-	console.log("LINK4", userId);
 	utils.socketsFromUser(userId, sockets => {
 		sockets.forEach(socket => {
 			socket.emit('event:user.linkPassword');
@@ -31,7 +39,6 @@ cache.sub('user.linkPassword', userId => {
 });
 
 cache.sub('user.linkGitHub', userId => {
-	console.log("LINK1", userId);
 	utils.socketsFromUser(userId, sockets => {
 		sockets.forEach(socket => {
 			socket.emit('event:user.linkGitHub');
@@ -40,7 +47,6 @@ cache.sub('user.linkGitHub', userId => {
 });
 
 cache.sub('user.unlinkPassword', userId => {
-	console.log("LINK2", userId);
 	utils.socketsFromUser(userId, sockets => {
 		sockets.forEach(socket => {
 			socket.emit('event:user.unlinkPassword');
@@ -49,10 +55,18 @@ cache.sub('user.unlinkPassword', userId => {
 });
 
 cache.sub('user.unlinkGitHub', userId => {
-	console.log("LINK3", userId);
 	utils.socketsFromUser(userId, sockets => {
 		sockets.forEach(socket => {
 			socket.emit('event:user.unlinkGitHub');
+		});
+	});
+});
+
+cache.sub('user.ban', data => {
+	utils.socketsFromUser(data.userId, sockets => {
+		sockets.forEach(socket => {
+			socket.emit('keep.event:banned', data.punishment);
+			socket.disconnect(true);
 		});
 	});
 });
@@ -280,14 +294,73 @@ module.exports = {
 			if (err && err !== true) {
 				err = utils.getError(err);
 				logger.error("USER_LOGOUT", `Logout failed. "${err}" `);
-				cb({status: 'failure', message: err});
+				cb({ status: 'failure', message: err });
 			} else {
 				logger.success("USER_LOGOUT", `Logout successful.`);
-				cb({status: 'success', message: 'Successfully logged out.'});
+				cb({ status: 'success', message: 'Successfully logged out.' });
 			}
 		});
 
 	},
+
+	/**
+	 * Removes all sessions for a user
+	 *
+	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {String} userId - the id of the user we are trying to delete the sessions of
+	 * @param {Function} cb - gets called with the result
+	 * @param {String} loggedInUser - the logged in userId automatically added by hooks
+	 */
+	removeSessions:  hooks.loginRequired((session, userId, cb, loggedInUser) => {
+
+		async.waterfall([
+
+			(next) => {
+				db.models.user.findOne({ _id: loggedInUser }, (err, user) => {
+					if (user.role !== 'admin' && loggedInUser !== userId) return next('Only admins and the owner of the account can remove their sessions.');
+					else return next();
+				});
+			},
+
+			(next) => {
+				cache.hgetall('sessions', next);
+			},
+
+			(sessions, next) => {
+				if (!sessions) return next('There are no sessions for this user to remove.');
+				else {
+					let keys = Object.keys(sessions);
+					next(null, keys, sessions);
+				}
+			},
+
+			(keys, sessions, next) => {
+				cache.pub('user.removeSessions', userId);
+				async.each(keys, (sessionId, callback) => {
+					let session = sessions[sessionId];
+					if (session.userId === userId) {
+						cache.hdel('sessions', sessionId, err => {
+							if (err) return callback(err);
+							else callback(null);
+						});
+					}
+				}, err => {
+					next(err);
+				});
+			}
+
+		], err => {
+			if (err) {
+				err = utils.getError(err);
+				logger.error("REMOVE_SESSIONS_FOR_USER", `Couldn't remove all sessions for user "${userId}". "${err}"`);
+				return cb({ status: 'failure', message: err });
+			} else {
+				logger.success("REMOVE_SESSIONS_FOR_USER", `Removed all sessions for user "${userId}".`);
+				return cb({ status: 'success', message: 'Successfully removed all sessions.' });
+			}
+		});
+
+	}),
 
 	/**
 	 * Gets user object from username (only a few properties)
@@ -325,6 +398,34 @@ module.exports = {
 						liked: account.liked,
 						disliked: account.disliked
 					}
+				});
+			}
+		});
+	},
+
+
+	/**
+	 * Gets a username from an userId
+	 *
+	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {String} userId - the userId of the person we are trying to get the username from
+	 * @param {Function} cb - gets called with the result
+	 */
+	getUsernameFromId: (session, userId, cb) => {
+		async.waterfall([
+			(next) => {
+				db.models.user.findOne({ _id: userId }, next);
+			},
+		], (err, user) => {
+			if (err && err !== true) {
+				err = utils.getError(err);
+				logger.error("GET_USERNAME_FROM_ID", `Getting the username from userId "${userId}" failed. "${err}"`);
+				cb({status: 'failure', message: err});
+			} else {
+				logger.success("GET_USERNAME_FROM_ID", `Found username for userId "${userId}".`);
+				return cb({
+					status: 'success',
+					data: user.username
 				});
 			}
 		});
@@ -925,5 +1026,84 @@ module.exports = {
 				});
 			}
 		});
-	}
+	},
+
+	/**
+	 * Bans a user by userId
+	 *
+	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {String} value - the user id that is going to be banned
+	 * @param {String} reason - the reason for the ban
+	 * @param {String} expiresAt - the time the ban expires
+	 * @param {Function} cb - gets called with the result
+	 * @param {String} userId - the userId automatically added by hooks
+	 */
+	banUserById: hooks.adminRequired((session, value, reason, expiresAt, cb, userId) => {
+		async.waterfall([
+			(next) => {
+				if (value === '') return next('You must provide an IP address to ban.');
+				else if (reason === '') return next('You must provide a reason for the ban.');
+				else return next();
+			},
+
+			(next) => {
+				if (!expiresAt || typeof expiresAt !== 'string') return next('Invalid expire date.');
+				let date = new Date();
+				switch(expiresAt) {
+					case '1h':
+						expiresAt = date.setHours(date.getHours() + 1);
+						break;
+					case '12h':
+						expiresAt = date.setHours(date.getHours() + 12);
+						break;
+					case '1d':
+						expiresAt = date.setDate(date.getDate() + 1);
+						break;
+					case '1w':
+						expiresAt = date.setDate(date.getDate() + 7);
+						break;
+					case '1m':
+						expiresAt = date.setMonth(date.getMonth() + 1);
+						break;
+					case '3m':
+						expiresAt = date.setMonth(date.getMonth() + 3);
+						break;
+					case '6m':
+						expiresAt = date.setMonth(date.getMonth() + 6);
+						break;
+					case '1y':
+						expiresAt = date.setFullYear(date.getFullYear() + 1);
+						break;
+					case 'never':
+						expiresAt = new Date(3093527980800000);
+						break;
+					default:
+						return next('Invalid expire date.');
+				}
+
+				next();
+			},
+
+			(next) => {
+				punishments.addPunishment('banUserId', value, reason, expiresAt, userId, next)
+			},
+
+			(punishment, next) => {
+				cache.pub('user.ban', {userId: value, punishment});
+				next();
+			},
+		], (err) => {
+			if (err && err !== true) {
+				err = utils.getError(err);
+				logger.error("BAN_USER_BY_ID", `User ${userId} failed to ban user ${value} with the reason ${reason}. '${err}'`);
+				cb({status: 'failure', message: err});
+			} else {
+				logger.success("BAN_USER_BY_ID", `User ${userId} has successfully banned user ${value} with the reason ${reason}.`);
+				cb({
+					status: 'success',
+					message: 'Successfully banned user.'
+				});
+			}
+		});
+	})
 };

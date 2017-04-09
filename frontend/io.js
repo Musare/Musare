@@ -49,7 +49,7 @@ export default {
 
 	removeAllListeners: function () {
 		Object.keys(this.socket._callbacks).forEach((id) => {
-			if (id.indexOf("$event:") !== -1) {
+			if (id.indexOf("$event:") !== -1 && id.indexOf("$event:keep.") === -1) {
 				delete this.socket._callbacks[id];
 			}
 		});

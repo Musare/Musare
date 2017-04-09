@@ -78,12 +78,12 @@ setInterval(() => {
 		}
 
 		stationsCountUpdated.forEach((stationId) => {
-			console.log("Updating count of ", stationId);
+			//logger.info("UPDATE_STATION_USER_COUNT", `Updating user count of ${stationId}.`);
 			cache.pub('station.updateUserCount', stationId);
 		});
 
 		stationsUpdated.forEach((stationId) => {
-			console.log("Updating ", stationId);
+			//logger.info("UPDATE_STATION_USER_LIST", `Updating user list of ${stationId}.`);
 			cache.pub('station.updateUsers', stationId);
 		});
 
@@ -119,6 +119,10 @@ cache.sub('station.updateUserCount', stationId => {
 			}
 		}
 	})
+});
+
+cache.sub('station.queueLockToggled', data => {
+	utils.emitToRoom(`station.${data.stationId}`, "event:queueLockToggled", data.locked)
 });
 
 cache.sub('station.updatePartyMode', data => {
@@ -241,7 +245,7 @@ module.exports = {
 				logger.error("STATIONS_INDEX", `Indexing stations failed. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
-			logger.success("STATIONS_INDEX", `Indexing stations successful.`);
+			logger.success("STATIONS_INDEX", `Indexing stations successful.`, false);
 			return cb({'status': 'success', 'stations': stations});
 		});
 	},
@@ -269,7 +273,7 @@ module.exports = {
 				logger.error("STATIONS_FIND_BY_NAME", `Finding station "${stationName}" failed. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
-			logger.success("STATIONS_FIND_BY_NAME", `Found station "${stationName}" successfully.`);
+			logger.success("STATIONS_FIND_BY_NAME", `Found station "${stationName}" successfully.`, false);
 			cb({status: 'success', data: station});
 		});
 	},
@@ -289,12 +293,12 @@ module.exports = {
 
 			(station, next) => {
 				if (!station) return next('Station not found.');
-				if (station.type !== 'official') return next('This is not an official station.');
-				next();
+				else if (station.type !== 'official') return next('This is not an official station.');
+				else next();
 			},
 
 			(next) => {
-				cache.hget("officialPlaylists", stationId, next);
+				cache.hget('officialPlaylists', stationId, next);
 			},
 
 			(playlist, next) => {
@@ -305,10 +309,11 @@ module.exports = {
 			if (err) {
 				err = utils.getError(err);
 				logger.error("STATIONS_GET_PLAYLIST", `Getting playlist for station "${stationId}" failed. "${err}"`);
-				return cb({'status': 'failure', 'message': err});
+				return cb({ status: 'failure', message: err });
+			} else {
+				logger.success("STATIONS_GET_PLAYLIST", `Got playlist for station "${stationId}" successfully.`, false);
+				cb({ status: 'success', data: playlist.songs });
 			}
-			logger.success("STATIONS_GET_PLAYLIST", `Got playlist for station "${stationId}" successfully.`);
-			cb({status: 'success', data: playlist.songs})
 		});
 	},
 
@@ -364,6 +369,7 @@ module.exports = {
 					description: station.description,
 					displayName: station.displayName,
 					privacy: station.privacy,
+					locked: station.locked,
 					partyMode: station.partyMode,
 					owner: station.owner,
 					privatePlaylist: station.privatePlaylist
@@ -399,6 +405,39 @@ module.exports = {
 			cb({status: 'success', data});
 		});
 	},
+
+	/**
+	 * Toggles if a station is locked
+	 *
+	 * @param session
+	 * @param stationId - the station id
+	 * @param cb
+	 */
+	toggleLock: hooks.ownerRequired((session, stationId, cb) => {
+		async.waterfall([
+			(next) => {
+				stations.getStation(stationId, next);
+			},
+
+			(station, next) => {
+				db.models.station.update({ _id: stationId }, { $set: { locked: !station.locked} }, next);
+			},
+
+			(res, next) => {
+				stations.updateStation(stationId, next);
+			}
+		], (err, station) => {
+			if (err) {
+				err = utils.getError(err);
+				logger.error("STATIONS_UPDATE_LOCKED_STATUS", `Toggling the queue lock for station "${stationId}" failed. "${err}"`);
+				return cb({ status: 'failure', message: err });
+			} else {
+				logger.success("STATIONS_UPDATE_LOCKED_STATUS", `Toggled the queue lock for station "${stationId}" successfully to "${station.locked}".`);
+				cache.pub('station.queueLockToggled', {stationId, locked: station.locked});
+				return cb({ status: 'success', data: station.locked });
+			}
+		});
+	}),
 
 	/**
 	 * Votes to skip a station
@@ -844,6 +883,17 @@ module.exports = {
 
 			(station, next) => {
 				if (!station) return next('Station not found.');
+				if (station.locked) {
+					db.models.user.findOne({ _id: userId }, (err, user) => {
+						if (user.role !== 'admin' && station.owner !== userId) return next('Only owners and admins can add songs to a locked queue.');
+						else return next(null, station);
+					});
+				} else {
+					return next(null, station);
+				}
+			},
+
+			(station, next) => {
 				if (station.type !== 'community') return next('That station is not a community station.');
 				utils.canUserBeInStation(station, userId, (canBe) => {
 					if (canBe) return next(null, station);
@@ -969,10 +1019,10 @@ module.exports = {
 			},
 
 			(next) => {
-				db.models.update({_id: stationId}, {$pull: {queue: {songId: songId}}}, next);
+				db.models.station.update({_id: stationId}, {$pull: {queue: {songId: songId}}}, next);
 			},
 
-			(next) => {
+			(res, next) => {
 				stations.updateStation(stationId, next);
 			}
 		], (err, station) => {

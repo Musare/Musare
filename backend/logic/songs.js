@@ -7,6 +7,9 @@ const utils = require('./utils');
 const async = require('async');
 const mongoose = require('mongoose');
 
+let initialized = false;
+let lockdown = false;
+
 module.exports = {
 
 	/**
@@ -42,10 +45,14 @@ module.exports = {
 				}, next);
 			}
 		], (err) => {
+			if (lockdown) return this._lockdown();
 			if (err) {
-				console.log(`FAILED TO INITIALIZE SONGS. ABORTING. "${err.message}"`);
-				process.exit();
-			} else cb();
+				err = utils.getError(err);
+				cb(err);
+			} else {
+				initialized = true;
+				cb();
+			}
 		});
 	},
 
@@ -56,6 +63,7 @@ module.exports = {
 	 * @param {Function} cb - gets called once we're done initializing
 	 */
 	getSong: function(id, cb) {
+		if (lockdown) return cb('Lockdown');
 		async.waterfall([
 
 			(next) => {
@@ -84,20 +92,18 @@ module.exports = {
 	/**
 	 * Gets a song by song id from the cache or Mongo, and if it isn't in the cache yet, adds it the cache
 	 *
-	 * @param {String} songId - the id of the song we are trying to get
+	 * @param {String} songId - the mongo id of the song we are trying to get
 	 * @param {Function} cb - gets called once we're done initializing
 	 */
 	getSongFromId: function(songId, cb) {
+		if (lockdown) return cb('Lockdown');
 		async.waterfall([
-
 			(next) => {
-				db.models.song.findOne({songId}, next);
+				db.models.song.findOne({ songId }, next);
 			}
-
 		], (err, song) => {
 			if (err && err !== true) return cb(err);
-
-			cb(null, song);
+			else return cb(null, song);
 		});
 	},
 
@@ -108,6 +114,7 @@ module.exports = {
 	 * @param {Function} cb - gets called when an error occurred or when the operation was successful
 	 */
 	updateSong: (songId, cb) => {
+		if (lockdown) return cb('Lockdown');
 		async.waterfall([
 
 			(next) => {
@@ -137,6 +144,7 @@ module.exports = {
 	 * @param {Function} cb - gets called when an error occurred or when the operation was successful
 	 */
 	deleteSong: (songId, cb) => {
+		if (lockdown) return cb('Lockdown');
 		async.waterfall([
 
 			(next) => {
@@ -152,5 +160,9 @@ module.exports = {
 
 			cb(null);
 		});
+	},
+
+	_lockdown: () => {
+		lockdown = true;
 	}
 };

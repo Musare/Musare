@@ -3,6 +3,8 @@
 const dir = `${__dirname}/../../log`;
 const fs = require('fs');
 const config = require('config');
+const Discord = require("discord.js");
+let client;
 let utils;
 
 if (!config.isDocker && !fs.existsSync(`${dir}`)) {
@@ -70,17 +72,25 @@ let twoDigits = (num) => {
 	return (num < 10) ? '0' + num : num;
 };
 
-let getTime = (cb) => {
+let getTime = () => {
 	let time = new Date();
-	return cb ({
+	return {
 		year: time.getFullYear(),
 		month: time.getMonth() + 1,
 		day: time.getDate(),
 		hour: time.getHours(),
 		minute: time.getMinutes(),
 		second: time.getSeconds()
-	});
+	}
 };
+
+let getTimeFormatted = () => {
+	let time = getTime();
+	return `${time.year}-${twoDigits(time.month)}-${twoDigits(time.day)} ${twoDigits(time.hour)}:${twoDigits(time.minute)}:${twoDigits(time.second)}`;
+}
+
+let initialized = false;
+let lockdown = false;
 
 module.exports = {
 	init: function(cb) {
@@ -91,60 +101,77 @@ module.exports = {
 		setTimeout(calculateHourUnits, 1000 * 60 * 60);
 		setTimeout(this.calculate, 1000 * 30);
 
+		let time = getTimeFormatted();
+		fs.appendFile(dir + '/all.log', `${time} BACKEND_RESTARTED\n`, ()=>{});
+		fs.appendFile(dir + '/success.log', `${time} BACKEND_RESTARTED\n`, ()=>{});
+		fs.appendFile(dir + '/error.log', `${time} BACKEND_RESTARTED\n`, ()=>{});
+		fs.appendFile(dir + '/info.log', `${time} BACKEND_RESTARTED\n`, ()=>{});
+		fs.appendFile(dir + '/debugStation.log', `${time} BACKEND_RESTARTED\n`, ()=>{});
+
+		initialized = true;
+
+		if (lockdown) return this._lockdown();
 		cb();
 	},
-	success: (type, message) => {
+	success: (type, message, display = true) => {
+		if (lockdown) return;
 		success++;
 		successThisMinute++;
 		successThisHour++;
-		getTime((time) => {
-			let timeString = `${time.year}-${twoDigits(time.month)}-${twoDigits(time.day)} ${twoDigits(time.hour)}:${twoDigits(time.minute)}:${twoDigits(time.second)}`;
-			fs.appendFile(dir + '/all.log', `${timeString} SUCCESS - ${type} - ${message}\n`, ()=>{});
-			fs.appendFile(dir + '/success.log', `${timeString} SUCCESS - ${type} - ${message}\n`, ()=>{});
-			console.info('\x1b[32m', timeString, 'SUCCESS', '-', type, '-', message, '\x1b[0m');
-		});
+		let time = getTimeFormatted();
+		fs.appendFile(dir + '/all.log', `${time} SUCCESS - ${type} - ${message}\n`, ()=>{});
+		fs.appendFile(dir + '/success.log', `${time} SUCCESS - ${type} - ${message}\n`, ()=>{});
+		if (display) console.info('\x1b[32m', time, 'SUCCESS', '-', type, '-', message, '\x1b[0m');
 	},
-	error: (type, message) => {
+	error: (type, message, display = true) => {
+		if (lockdown) return;
 		error++;
 		errorThisMinute++;
 		errorThisHour++;
-		getTime((time) => {
-			let timeString = `${time.year}-${twoDigits(time.month)}-${twoDigits(time.day)} ${twoDigits(time.hour)}:${twoDigits(time.minute)}:${twoDigits(time.second)}`;
-			fs.appendFile(dir + '/all.log', `${timeString} ERROR - ${type} - ${message}\n`, ()=>{});
-			fs.appendFile(dir + '/error.log', `${timeString} ERROR - ${type} - ${message}\n`, ()=>{});
-			console.warn('\x1b[31m', timeString, 'ERROR', '-', type, '-', message, '\x1b[0m');
-		});
+		let time = getTimeFormatted();
+		fs.appendFile(dir + '/all.log', `${time} ERROR - ${type} - ${message}\n`, ()=>{});
+		fs.appendFile(dir + '/error.log', `${time} ERROR - ${type} - ${message}\n`, ()=>{});
+		if (display) console.warn('\x1b[31m', time, 'ERROR', '-', type, '-', message, '\x1b[0m');
 	},
-	info: (type, message) => {
+	info: (type, message, display = true) => {
+		if (lockdown) return;
 		info++;
 		infoThisMinute++;
 		infoThisHour++;
-		getTime((time) => {
-			let timeString = `${time.year}-${twoDigits(time.month)}-${twoDigits(time.day)} ${twoDigits(time.hour)}:${twoDigits(time.minute)}:${twoDigits(time.second)}`;
-			fs.appendFile(dir + '/all.log', `${timeString} INFO - ${type} - ${message}\n`, ()=>{});
-			fs.appendFile(dir + '/info.log', `${timeString} INFO - ${type} - ${message}\n`, ()=>{});
-
-			console.info('\x1b[36m', timeString, 'INFO', '-', type, '-', message, '\x1b[0m');
-		});
+		let time = getTimeFormatted();
+		fs.appendFile(dir + '/all.log', `${time} INFO - ${type} - ${message}\n`, ()=>{});
+		fs.appendFile(dir + '/info.log', `${time} INFO - ${type} - ${message}\n`, ()=>{});
+		if (display) console.info('\x1b[36m', time, 'INFO', '-', type, '-', message, '\x1b[0m');
+	},
+	stationIssue: (string, display = false) => {
+		if (lockdown) return;
+		let time = getTimeFormatted();
+		fs.appendFile(dir + '/debugStation.log', `${time} - ${string}\n`, ()=>{});
+		if (display) console.info('\x1b[35m', time, '-', string, '\x1b[0m');
 	},
 	calculatePerSecond: function(number) {
+		if (lockdown) return;
 		let secondsRunning = Math.floor((Date.now() - started) / 1000);
 		let perSecond = number / secondsRunning;
 		return perSecond;
 	},
 	calculatePerMinute: function(number) {
+		if (lockdown) return;
 		let perMinute = this.calculatePerSecond(number) * 60;
 		return perMinute;
 	},
 	calculatePerHour: function(number) {
+		if (lockdown) return;
 		let perHour = this.calculatePerMinute(number) * 60;
 		return perHour;
 	},
 	calculatePerDay: function(number) {
+		if (lockdown) return;
 		let perDay = this.calculatePerHour(number) * 24;
 		return perDay;
 	},
 	calculate: function() {
+		if (lockdown) return;
 		let _this = module.exports;
 		utils.emitToRoom('admin.statistics', 'event:admin.statistics.logs', {
 			second: {
@@ -169,5 +196,9 @@ module.exports = {
 			}
 		});
 		setTimeout(_this.calculate, 1000 * 30);
+	},
+
+	_lockdown: () => {
+		lockdown = true;
 	}
 };

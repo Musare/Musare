@@ -29,7 +29,7 @@ module.exports = function(next) {
 				logger.info("ADMIN_REQUIRED", `User failed to pass admin required check. "${err}"`);
 				return cb({status: 'failure', message: err});
 			}
-			logger.info("ADMIN_REQUIRED", `User "${session.userId}" passed admin required check.`);
+			logger.info("ADMIN_REQUIRED", `User "${session.userId}" passed admin required check.`, false);
 			args.push(session.userId);
 			next.apply(null, args);
 		});

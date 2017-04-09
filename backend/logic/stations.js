@@ -9,16 +9,24 @@ const songs = require('./songs');
 const notifications = require('./notifications');
 const async = require('async');
 
+let subscription = null;
+
+let initialized = false;
+let lockdown = false;
+
 //TEMP
 cache.sub('station.pause', (stationId) => {
+	if (lockdown) return;
 	notifications.remove(`stations.nextSong?id=${stationId}`);
 });
 
 cache.sub('station.resume', (stationId) => {
+	if (lockdown) return;
 	module.exports.initializeStation(stationId)
 });
 
 cache.sub('station.queueUpdate', (stationId) => {
+	if (lockdown) return;
 	module.exports.getStation(stationId, (err, station) => {
 		if (!station.currentSong && station.queue.length > 0) {
 			module.exports.initializeStation(stationId);
@@ -27,6 +35,7 @@ cache.sub('station.queueUpdate', (stationId) => {
 });
 
 cache.sub('station.newOfficialPlaylist', (stationId) => {
+	if (lockdown) return;
 	cache.hget("officialPlaylists", stationId, (err, playlistObj) => {
 		if (!err && playlistObj) {
 			utils.emitToRoom(`station.${stationId}`, "event:newOfficialPlaylist", playlistObj.songs);
@@ -75,14 +84,19 @@ module.exports = {
 				}, next);
 			}
 		], (err) => {
+			if (lockdown) return this._lockdown();
 			if (err) {
-				console.log(`FAILED TO INITIALIZE STATIONS. ABORTING. "${err.message}"`);
-				process.exit();
-			} else cb();
+				err = utils.getError(err);
+				cb(err);
+			} else {
+				initialized = true;
+				cb();
+			}
 		});
 	},
 
 	initializeStation: function(stationId, cb) {
+		if (lockdown) return;
 		if (typeof cb !== 'function') cb = ()=>{};
 		let _this = this;
 		async.waterfall([
@@ -91,11 +105,10 @@ module.exports = {
 			},
 			(station, next) => {
 				if (!station) return next('Station not found.');
-				notifications.subscribe(`stations.nextSong?id=${station._id}`, _this.skipStation(station._id), true);
-				if (station.paused) {
-					notifications.unschedule(`stations.nextSong?id${station._id}`);
-					return next(true, station);
-				}
+				notifications.unschedule(`stations.nextSong?id=${station._id}`);
+				if (subscription) notifications.remove(subscription);
+				subscription = notifications.subscribe(`stations.nextSong?id=${station._id}`, _this.skipStation(station._id), true, station);
+				if (station.paused) return next(true, station);
 				next(null, station);
 			},
 			(station, next) => {
@@ -112,7 +125,7 @@ module.exports = {
 						next(err, station);
 					});
 				} else {
-					notifications.schedule(`stations.nextSong?id=${station._id}`, timeLeft);
+					notifications.schedule(`stations.nextSong?id=${station._id}`, timeLeft, null, station);
 					next(null, station);
 				}
 			}
@@ -123,10 +136,10 @@ module.exports = {
 	},
 
 	calculateSongForStation: function(station, cb) {
+		if (lockdown) return;
 		let _this = this;
 		let songList = [];
 		async.waterfall([
-
 			(next) => {
 				let genresDone = [];
 				station.genres.forEach((genre) => {
@@ -181,9 +194,9 @@ module.exports = {
 
 	// Attempts to get the station from Redis. If it's not in Redis, get it from Mongo and add it to Redis.
 	getStation: function(stationId, cb) {
+		if (lockdown) return;
 		let _this = this;
 		async.waterfall([
-
 			(next) => {
 				cache.hget('stations', stationId, next);
 			},
@@ -196,7 +209,7 @@ module.exports = {
 			(station, next) => {
 				if (station) {
 					if (station.type === 'official') {
-						_this.calculateOfficialPlaylistList(station._id, station.playlist, ()=>{});
+						_this.calculateOfficialPlaylistList(station._id, station.playlist, () => {});
 					}
 					station = cache.schemas.station(station);
 					cache.hset('stations', stationId, station);
@@ -212,11 +225,12 @@ module.exports = {
 
 	// Attempts to get the station from Redis. If it's not in Redis, get it from Mongo and add it to Redis.
 	getStationByName: function(stationName, cb) {
+		if (lockdown) return;
 		let _this = this;
 		async.waterfall([
 
 			(next) => {
-				db.models.station.findOne({name: stationName}, next);
+				db.models.station.findOne({ name: stationName }, next);
 			},
 
 			(station, next) => {
@@ -237,6 +251,7 @@ module.exports = {
 	},
 
 	updateStation: function(stationId, cb) {
+		if (lockdown) return;
 		let _this = this;
 		async.waterfall([
 
@@ -259,10 +274,10 @@ module.exports = {
 	},
 
 	calculateOfficialPlaylistList: (stationId, songList, cb) => {
+		if (lockdown) return;
 		let lessInfoPlaylist = [];
-
 		async.each(songList, (song, next) => {
-			songs.getSongFromId(song, (err, song) => {
+			songs.getSong(song, (err, song) => {
 				if (!err && song) {
 					let newSong = {
 						songId: song.songId,
@@ -283,9 +298,11 @@ module.exports = {
 	},
 
 	skipStation: function(stationId) {
-		console.log("SKIP!", stationId);
+		if (lockdown) return;
+		logger.info("STATION_SKIP", `Skipping station ${stationId}.`, false);
 		let _this = this;
 		return (cb) => {
+			if (lockdown) return;
 			if (typeof cb !== 'function') cb = ()=>{};
 
 			async.waterfall([
@@ -377,6 +394,7 @@ module.exports = {
 							songId: song.songId,
 							title: song.title,
 							duration: song.duration,
+							skipDuration: 0,
 							likes: -1,
 							dislikes: -1
 						};
@@ -444,7 +462,7 @@ module.exports = {
 					if (station.currentSong !== null && station.currentSong.songId !== undefined) {
 						utils.socketsJoinSongRoom(utils.getRoomSockets(`station.${station._id}`), `song.${station.currentSong.songId}`);
 						if (!station.paused) {
-							notifications.schedule(`stations.nextSong?id=${station._id}`, station.currentSong.duration * 1000);
+							notifications.schedule(`stations.nextSong?id=${station._id}`, station.currentSong.duration * 1000, null, station);
 						}
 					} else {
 						utils.socketsLeaveSongRooms(utils.getRoomSockets(`station.${station._id}`));
@@ -463,8 +481,13 @@ module.exports = {
 		songId: '60ItHLz5WEA',
 		title: 'Faded - Alan Walker',
 		duration: 212,
+		skipDuration: 0,
 		likes: -1,
 		dislikes: -1
+	},
+
+	_lockdown: () => {
+		lockdown = true;
 	}
 
 };

@@ -19,6 +19,23 @@
 					</span>
 					<a class="button is-info" @click='updateRole()'>Update Role</a>
 				</p>
+				<hr>
+				<p class="control has-addons">
+					<span class="select">
+						<select v-model='ban.expiresAt'>
+							<option value='1h'>1 Hour</option>
+							<option value='12h'>12 Hours</option>
+							<option value='1d'>1 Day</option>
+							<option value='1w'>1 Week</option>
+							<option value='1m'>1 Month</option>
+							<option value='3m'>3 Months</option>
+							<option value='6m'>6 Months</option>
+							<option value='1y'>1 Year</option>
+						</select>
+					</span>
+					<input class='input is-expanded' type='text' placeholder='Ban reason' v-model='ban.reason' autofocus>
+					<a class="button is-error" @click='banUser()'>Ban user</a>
+				</p>
 			</div>
 			<div slot='footer'>
 				<!--button class='button is-warning'>
@@ -27,6 +44,9 @@
 				<button class='button is-warning'>
 					<span>&nbsp;Send Password Reset Email</span>
 				</button-->
+				<button class='button is-warning' @click='removeSessions()'>
+					<span>&nbsp;Remove all sessions</span>
+				</button>
 				<button class='button is-danger' @click='$parent.toggleModal()'>
 					<span>&nbsp;Close</span>
 				</button>
@@ -45,7 +65,10 @@
 		components: { Modal },
 		data() {
 			return {
-				editing: {}
+				editing: {},
+				ban: {
+					expiresAt: '1h'
+				}
 			}
 		},
 		methods: {
@@ -77,6 +100,20 @@
 							this.editing.role === 'default' &&
 							this.editing._id === this.$parent.$parent.$parent.userId
 					) location.reload();
+				});
+			},
+			banUser: function () {
+				const reason = this.ban.reason;
+				if (!validation.isLength(reason, 1, 64)) return Toast.methods.addToast('Reason must have between 1 and 64 characters.', 8000);
+				if (!validation.regex.ascii.test(reason)) return Toast.methods.addToast('Invalid reason format. Only ascii characters are allowed.', 8000);
+
+				this.socket.emit(`users.banUserById`, this.editing._id, this.ban.reason, this.ban.expiresAt, res => {
+					Toast.methods.addToast(res.message, 4000);
+				});
+			},
+			removeSessions: function () {
+				this.socket.emit(`users.removeSessions`, this.editing._id, res => {
+					Toast.methods.addToast(res.message, 4000);
 				});
 			}
 		},

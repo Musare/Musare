@@ -1,6 +1,7 @@
 'use strict';
 
 const mongoose = require('mongoose');
+const config = require('config');
 
 const bluebird = require('bluebird');
 
@@ -18,19 +19,20 @@ const isLength = (string, min, max) => {
 
 mongoose.Promise = bluebird;
 
+let initialized = false;
+let lockdown = false;
+
 let lib = {
 
 	connection: null,
 	schemas: {},
 	models: {},
 
-	init: (url, cb) => {
-
+	init: (url, errorCb,  cb) => {
 		lib.connection = mongoose.connect(url).connection;
 
 		lib.connection.on('error', err => {
-			console.error('Database error: ' + err.message)
-			process.exit();
+			errorCb('Database connection error.', err, 'DB');
 		});
 
 		lib.connection.once('open', _ => {
@@ -42,7 +44,8 @@ let lib = {
 				user: new mongoose.Schema(require(`./schemas/user`)),
 				playlist: new mongoose.Schema(require(`./schemas/playlist`)),
 				news: new mongoose.Schema(require(`./schemas/news`)),
-				report: new mongoose.Schema(require(`./schemas/report`))
+				report: new mongoose.Schema(require(`./schemas/report`)),
+				punishment: new mongoose.Schema(require(`./schemas/punishment`))
 			};
 
 			lib.models = {
@@ -52,7 +55,8 @@ let lib = {
 				user: mongoose.model('user', lib.schemas.user),
 				playlist: mongoose.model('playlist', lib.schemas.playlist),
 				news: mongoose.model('news', lib.schemas.news),
-				report: mongoose.model('report', lib.schemas.report)
+				report: mongoose.model('report', lib.schemas.report),
+				punishment: mongoose.model('punishment', lib.schemas.punishment)
 			};
 
 			lib.schemas.user.path('username').validate((username) => {
@@ -184,6 +188,9 @@ let lib = {
 				return (!description || (isLength(description, 0, 400) && regex.ascii.test(description)));
 			}, 'Invalid description.');
 
+			initialized = true;
+
+			if (lockdown) return this._lockdown();
 			cb();
 		});
 	},
@@ -191,6 +198,11 @@ let lib = {
 	passwordValid: (password) => {
 		if (!isLength(password, 6, 200)) return false;
 		return regex.password.test(password);
+	},
+
+	_lockdown: () => {
+		lib.connection.close();
+		lockdown = true;
 	}
 };
 

@@ -1,9 +1,9 @@
 <template>
-	<div class="app">
+	<div class="app" :class="{'nightMode': nightMode}">
 		<main-header></main-header>
 		<div class="group">
 			<div class="group-title">Official Stations</div>
-			<div class="card station-card" v-for="station in stations.official" v-link="{ path: '/' + station.name }" @click="this.$dispatch('joinStation', station._id)">
+			<div class="card station-card" v-for="station in stations.official" v-link="{ path: '/' + station.name }" @click="this.$dispatch('joinStation', station._id)" :class="{'isPrivate': station.privacy === 'private'}">
 				<div class="card-image">
 					<figure class="image is-square">
 						<img :src="station.currentSong.thumbnail" onerror="this.src='/assets/notes-transparent.png'" />
@@ -24,7 +24,7 @@
 						<i class='material-icons' title="How many users there are in the station.">people</i>
 						<span class="users-count" title="How many users there are in the station.">&nbsp;{{station.userCount}}</span>
 
-						<i class="material-icons right" v-if="station.privacy !== 'public'" title="This station is not visible to other users.">lock</i>
+						<i class="material-icons right-icon" v-if="station.privacy !== 'public'" title="This station is not visible to other users.">lock</i>
 					</div>
 				</div>
 				<a @click="this.$dispatch('joinStation', station._id)" href='#' class='absolute-a' v-link="{ path: '/' + station.name }"></a>
@@ -36,7 +36,7 @@
 				<a @click='modals.createCommunityStation = !modals.createCommunityStation' v-if="$parent.loggedIn" href='#'>
 				<i class="material-icons community-button">add_circle_outline</i></a>
 			</div>
-			<div class="card station-card" v-for="station in stations.community" v-link="{ path: '/community/' + station.name }" @click="this.$dispatch('joinStation', station._id)">
+			<div class="card station-card" v-for="station in stations.community" v-link="{ path: '/community/' + station.name }" @click="this.$dispatch('joinStation', station._id)" :class="{'isPrivate': station.privacy === 'private','isMine': isOwner(station)}">
 				<div class="card-image">
 					<figure class="image is-square">
 						<img :src="station.currentSong.thumbnail" onerror="this.src='/assets/notes-transparent.png'" />
@@ -56,8 +56,8 @@
 						<i class='material-icons' title="How many users there are in the station.">people</i>
 						<span class="users-count" title="How many users there are in the station.">&nbsp;{{station.userCount}}</span>
 
-						<i class="material-icons right" v-if="station.privacy !== 'public'" title="This station is not visible to other users.">lock</i>
-						<i class="material-icons right" v-if="isOwner(station)" title="This is your station.">home</i>
+						<i class="material-icons right-icon" v-if="station.privacy !== 'public'" title="This station is not visible to other users.">lock</i>
+						<i class="material-icons right-icon" v-if="isOwner(station)" title="This is your station.">home</i>
 					</div>
 				</div>
 				<a @click="this.$dispatch('joinStation', station._id)" href='#' class='absolute-a' v-link="{ path: '/community/' + station.name }"></a>
@@ -87,7 +87,8 @@
 				},
 				modals: {
 					createCommunityStation: false
-				}
+				},
+				nightMode: false
 			}
 		},
 		ready() {
@@ -200,12 +201,25 @@
 	}
 
 	.under-content {
+		width: calc(100% - 40px);
+		left: 20px;
+		right: 20px;
+		bottom: 10px;
 		text-align: left;
 		height: 25px;
+		position: absolute;
+		margin-bottom: 10px;
+		line-height: 1;
+	    font-size: 24px;
+	    vertical-align: middle;
 
 		* {
 			z-index: 10;
 			position: relative;
+		}
+
+		.right-icon {
+			float: right;
 		}
 	}
 
@@ -224,10 +238,38 @@
 	.station-card {
 		margin: 10px;
 		cursor: pointer;
+		height: 475px;
+
+		transition: all ease-in-out 0.2s;
+
 		.card-content {
 			max-height: 159px;
+
+			.content {
+				word-wrap: break-word;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				display: -webkit-box;
+				-webkit-box-orient: vertical;
+				-webkit-line-clamp: 3;
+				line-height: 20px;
+				max-height: 60px;
+			}
 		}
 	}
+
+	.station-card:hover {
+		box-shadow: 0 2px 3px rgba(10, 10, 10, 0.3), 0 0 10px rgba(10, 10, 10, 0.3);
+		transition: all ease-in-out 0.2s;
+	}
+
+	/*.isPrivate {
+		background-color: #F8BBD0;
+	}
+
+	.isMine {
+		background-color: #29B6F6;
+	}*/
 
 	.community-button {
 		cursor: pointer;
@@ -288,5 +330,64 @@
 	.displayName {
 		word-wrap: break-word;
     	width: 80%;
+		word-wrap: break-word;
+	    overflow: hidden;
+	    text-overflow: ellipsis;
+	    display: -webkit-box;
+	    -webkit-box-orient: vertical;
+	    -webkit-line-clamp: 1;
+	    line-height: 30px;
+	    max-height: 30px;
+	}
+
+	.nightMode {
+		background-color: rgb(51, 51, 51);
+		color: #e6e6e6;
+
+		.community-button {
+			cursor: pointer;
+			transition: .25s ease color;
+			font-size: 30px;
+			color: #e6e6e6;
+		}
+
+		.community-button:hover { color: #03a9f4; }
+
+		.station-card {
+			margin: 10px;
+			cursor: pointer;
+			height: 475px;
+			background-color: rgb(51, 51, 51);
+			color: #e6e6e6;
+
+			.card-content {
+				max-height: 159px;
+				color: #e6e6e6;
+
+				.content {
+					word-wrap: break-word;
+					overflow: hidden;
+					text-overflow: ellipsis;
+					display: -webkit-box;
+					-webkit-box-orient: vertical;
+					-webkit-line-clamp: 3;
+					line-height: 20px;
+					max-height: 60px;
+					color: #e6e6e6;
+				}
+			}
+		}
+
+		.station-card:hover {
+			box-shadow: 0 2px 3px rgba(10, 10, 10, 0.3), 0 0 10px rgba(10, 10, 10, 0.3);
+		}
+
+		.isPrivate {
+			background-color: #d01657;
+		}
+
+		.isMine {
+			background-color: #0777ab;
+		}
 	}
 </style>

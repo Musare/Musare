@@ -8,6 +8,11 @@ const async = require('async');
 const cache = require('./cache');
 const utils = require('./utils');
 const db = require('./db');
+const logger = require('./logger');
+const punishments = require('./punishments');
+
+let initialized = false;
+let lockdown = false;
 
 module.exports = {
 
@@ -18,8 +23,11 @@ module.exports = {
 		this.io = require('socket.io')(app.server);
 
 		this.io.use((socket, next) => {
+			if (lockdown) return;
 			let cookies = socket.request.headers.cookie;
 			let SID = utils.cookies.parseCookies(cookies).SID;
+
+			socket.ip = socket.request.headers['x-forwarded-for'] || '0.0.0.0';
 
 			async.waterfall([
 				(next) => {
@@ -34,93 +42,125 @@ module.exports = {
 					session.refreshDate = Date.now();
 					socket.session = session;
 					cache.hset('sessions', SID, session, next);
+				},
+				(res, next) => {
+					punishments.getPunishments((err, punishments) => {
+						const isLoggedIn = !!(socket.session && socket.session.refreshDate);
+						const userId = (isLoggedIn) ? socket.session.userId : null;
+						let ban = 0;
+						let banned = false;
+						punishments.forEach(punishment => {
+							if (punishment.expiresAt > ban) ban = punishment;
+							if (punishment.type === 'banUserId' && isLoggedIn && punishment.value === userId) banned = true;
+							if (punishment.type === 'banUserIp' && punishment.value === socket.ip) banned = true;
+						});
+						socket.banned = banned;
+						socket.ban = ban;
+						next();
+					});
 				}
 			], () => {
 				if (!socket.session) {
-					socket.session = {socketId: socket.id};
+					socket.session = { socketId: socket.id };
 				} else socket.session.socketId = socket.id;
 				next();
 			});
 		});
 
 		this.io.on('connection', socket => {
-			console.info('User has connected');
+			if (lockdown) return socket.disconnect(true);
+			let sessionInfo = '';
+			if (socket.session.sessionId) sessionInfo = ` UserID: ${socket.session.userId}.`;
+			if (socket.banned) {
+				logger.info('IO_BANNED_CONNECTION', `A user tried to connect, but is currently banned. IP: ${socket.ip}.${sessionInfo}`);
+				socket.emit('keep.event:banned', socket.ban);
+				socket.disconnect(true);
+			} else {
+				logger.info('IO_CONNECTION', `User connected. IP: ${socket.ip}.${sessionInfo}`);
 
-			// catch when the socket has been disconnected
-			socket.on('disconnect', () => {
+				// catch when the socket has been disconnected
+				socket.on('disconnect', (reason) => {
+					let sessionInfo = '';
+					if (socket.session.sessionId) sessionInfo = ` UserID: ${socket.session.userId}.`;
+					logger.info('IO_DISCONNECTION', `User disconnected. IP: ${socket.ip}.${sessionInfo}`);
+				});
 
-				// remove the user from their current station (if any)
-				if (socket.session) {
-					//actions.stations.leave(socket.sessionId, result => {});
-					// Remove session from Redis
-					//cache.hdel('sessions', socket.session.sessionId);
-				}
+				// catch errors on the socket (internal to socket.io)
+				socket.on('error', err => console.error(err));
 
-				console.info('User has disconnected');
-			});
+				// have the socket listen for each action
+				Object.keys(actions).forEach((namespace) => {
+					Object.keys(actions[namespace]).forEach((action) => {
 
-			// catch errors on the socket (internal to socket.io)
-			socket.on('error', err => console.error(err));
+						// the full name of the action
+						let name = `${namespace}.${action}`;
 
-			// have the socket listen for each action
-			Object.keys(actions).forEach((namespace) => {
-				Object.keys(actions[namespace]).forEach((action) => {
+						// listen for this action to be called
+						socket.on(name, function () {
+							let args = Array.prototype.slice.call(arguments, 0, -1);
+							let cb = arguments[arguments.length - 1];
 
-					// the full name of the action
-					let name = `${namespace}.${action}`;
+							if (lockdown) return cb({status: 'failure', message: 'Lockdown'});
 
-					// listen for this action to be called
-					socket.on(name, function () {
-
-						let args = Array.prototype.slice.call(arguments, 0, -1);
-						let cb = arguments[arguments.length - 1];
-
-						// load the session from the cache
-						cache.hget('sessions', socket.session.sessionId, (err, session) => {
-							if (err && err !== true) {
-								if (typeof cb === 'function') return cb({
-									status: 'error',
-									message: 'An error occurred while obtaining your session'
-								});
-							}
-
-							// make sure the sockets sessionId isn't set if there is no session
-							if (socket.session.sessionId && session === null) delete socket.session.sessionId;
-
-							// call the action, passing it the session, and the arguments socket.io passed us
-							actions[namespace][action].apply(null, [socket.session].concat(args).concat([
-								(result) => {
-									// respond to the socket with our message
-									if (typeof cb === 'function') return cb(result);
+							// load the session from the cache
+							cache.hget('sessions', socket.session.sessionId, (err, session) => {
+								if (err && err !== true) {
+									if (typeof cb === 'function') return cb({
+										status: 'error',
+										message: 'An error occurred while obtaining your session'
+									});
 								}
-							]));
-						});
-					})
-				})
-			});
 
-			if (socket.session.sessionId) {
-				cache.hget('sessions', socket.session.sessionId, (err, session) => {
-					if (err && err !== true) socket.emit('ready', false);
-					else if (session && session.userId) {
-						db.models.user.findOne({ _id: session.userId }, (err, user) => {
-							if (err || !user) return socket.emit('ready', false);
-							let role = '';
-							let username = '';
-							let userId = '';
-							if (user) {
-								role = user.role;
-								username = user.username;
-								userId = session.userId;
-							}
-							socket.emit('ready', true, role, username, userId);
-						});
-					} else socket.emit('ready', false);
-				})
-			} else socket.emit('ready', false);
+								// make sure the sockets sessionId isn't set if there is no session
+								if (socket.session.sessionId && session === null) delete socket.session.sessionId;
+
+								// call the action, passing it the session, and the arguments socket.io passed us
+								actions[namespace][action].apply(null, [socket.session].concat(args).concat([
+									(result) => {
+										// respond to the socket with our message
+										if (typeof cb === 'function') return cb(result);
+									}
+								]));
+							});
+						})
+					})
+				});
+
+				if (socket.session.sessionId) {
+					cache.hget('sessions', socket.session.sessionId, (err, session) => {
+						if (err && err !== true) socket.emit('ready', false);
+						else if (session && session.userId) {
+							db.models.user.findOne({ _id: session.userId }, (err, user) => {
+								if (err || !user) return socket.emit('ready', false);
+								let role = '';
+								let username = '';
+								let userId = '';
+								if (user) {
+									role = user.role;
+									username = user.username;
+									userId = session.userId;
+								}
+								socket.emit('ready', true, role, username, userId);
+							});
+						} else socket.emit('ready', false);
+					})
+				} else socket.emit('ready', false);
+			}
 		});
 
+		initialized = true;
+
+		if (lockdown) return this._lockdown();
 		cb();
+	},
+
+	_lockdown: () => {
+		this.io.close();
+		let connected = this.io.of('/').connected;
+		for (let key in connected) {
+			connected[key].disconnect('Lockdown');
+		}
+		lockdown = true;
 	}
 
 };

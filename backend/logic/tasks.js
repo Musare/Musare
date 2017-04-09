@@ -3,6 +3,7 @@
 const cache = require("./cache");
 const logger = require("./logger");
 const Stations = require("./stations");
+const notifications = require("./notifications");
 const async = require("async");
 let utils;
 let tasks = {};
@@ -17,7 +18,7 @@ let testTask = (callback) => {
 };
 
 let checkStationSkipTask = (callback) => {
-	logger.info("TASK_STATIONS_SKIP_CHECK", `Checking for stations to be skipped.`);
+	logger.info("TASK_STATIONS_SKIP_CHECK", `Checking for stations to be skipped.`, false);
 	async.waterfall([
 		(next) => {
 			cache.hgetall('stations', next);
@@ -29,7 +30,7 @@ let checkStationSkipTask = (callback) => {
 				if (timeElapsed <= station.currentSong.duration) return next2();
 				else {
 					logger.error("TASK_STATIONS_SKIP_CHECK", `Skipping ${station._id} as it should have skipped already.`);
-					Stations.skipStation(station._id);
+					Stations.initializeStation(station._id);
 					next2();
 				}
 			}, () => {
@@ -42,7 +43,7 @@ let checkStationSkipTask = (callback) => {
 };
 
 let sessionClearingTask = (callback) => {
-	logger.info("TASK_SESSION_CLEAR", `Checking for sessions to be cleared.`);
+	logger.info("TASK_SESSION_CLEAR", `Checking for sessions to be cleared.`, false);
 	async.waterfall([
 		(next) => {
 			cache.hgetall('sessions', next);
@@ -90,6 +91,9 @@ let sessionClearingTask = (callback) => {
 	});
 };
 
+let initialized = false;
+let lockdown = false;
+
 module.exports = {
 	init: function(cb) {
 		utils = require('./utils');
@@ -97,9 +101,13 @@ module.exports = {
 		this.createTask("stationSkipTask", checkStationSkipTask, 1000 * 60 * 30);
 		this.createTask("sessionClearTask", sessionClearingTask, 1000 * 60 * 60 * 6);
 
+		initialized = true;
+
+		if (lockdown) return this._lockdown();
 		cb();
 	},
 	createTask: function(name, fn, timeout, paused = false) {
+		if (lockdown) return;
 		tasks[name] = {
 			name,
 			fn,
@@ -110,12 +118,13 @@ module.exports = {
 		if (!paused) this.handleTask(tasks[name]);
 	},
 	pauseTask: (name) => {
-		tasks[name].timer.pause();
+		if (tasks[name].timer) tasks[name].timer.pause();
 	},
 	resumeTask: (name) => {
 		tasks[name].timer.resume();
 	},
 	handleTask: function(task) {
+		if (lockdown) return;
 		if (task.timer) task.timer.pause();
 
 		task.fn(() => {
@@ -124,5 +133,12 @@ module.exports = {
 				this.handleTask(task);
 			}, task.timeout, false);
 		});
+	},
+	_lockdown: function() {
+		for (let key in tasks) {
+			this.pauseTask(key);
+		}
+		tasks = {};
+		lockdown = true;
 	}
 };

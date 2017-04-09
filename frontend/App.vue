@@ -1,5 +1,6 @@
 <template>
-	<div>
+	<banned v-if="banned"></banned>
+	<div v-else>
 		<h1 v-if="!socketConnected" class="alert">Could not connect to the server.</h1>
 		<router-view></router-view>
 		<toast></toast>
@@ -12,6 +13,7 @@
 <script>
 	import { Toast } from 'vue-roaster';
 
+	import Banned from './components/pages/Banned.vue';
 	import WhatIsNew from './components/Modals/WhatIsNew.vue';
 	import LoginModal from './components/Modals/Login.vue';
 	import RegisterModal from './components/Modals/Register.vue';
@@ -23,6 +25,8 @@
 		replace: false,
 		data() {
 			return {
+				banned: false,
+				ban: {},
 				register: {
 					email: '',
 					username: '',
@@ -39,7 +43,9 @@
 				isRegisterActive: false,
 				isLoginActive: false,
 				serverDomain: '',
-				socketConnected: true
+				socketConnected: true,
+				userIdMap: {},
+				currentlyGettingUsernameFrom: {}
 			}
 		},
 		methods: {
@@ -48,17 +54,35 @@
 				_this.socket.emit('users.logout', result => {
 					if (result.status === 'success') {
 						document.cookie = 'SID=;expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-						_this.$router.go('/');
 						location.reload();
 					} else Toast.methods.addToast(result.message, 4000);
 				});
 			},
 			'submitOnEnter': (cb, event) => {
 				if (event.which == 13) cb();
+			},
+			getUsernameFromId: function(userId) {
+			    if (typeof this.userIdMap[userId] !== 'string' && !this.currentlyGettingUsernameFrom[userId]) {
+					this.currentlyGettingUsernameFrom[userId] = true;
+			        io.getSocket(socket => {
+			            socket.emit('users.getUsernameFromId', userId, (data) => {
+			                if (data.status === 'success') this.$set(`userIdMap.${userId}`, data.data);
+							this.currentlyGettingUsernameFrom[userId] = false;
+						});
+					});
+				}
 			}
 		},
 		ready: function () {
 			let _this = this;
+			if (localStorage.getItem('github_redirect')) {
+			    this.$router.go(localStorage.getItem('github_redirect'));
+			    localStorage.removeItem('github_redirect');
+			}
+			auth.isBanned((banned, ban) => {
+				_this.ban = ban;
+				_this.banned = banned;
+			});
 			auth.getStatus((authenticated, role, username, userId) => {
 				_this.socket = window.socket;
 				_this.loggedIn = authenticated;
@@ -83,6 +107,12 @@
 				err = err.replace(new RegExp('<', 'g'), '&lt;').replace(new RegExp('>', 'g'), '&gt;');
 				Toast.methods.addToast(err, 20000);
 			}
+			io.getSocket(true, socket => {
+				socket.on('keep.event:user.session.removed', () => {
+					location.reload();
+				});
+			});
+
 		},
 		events: {
 			'register': function (recaptchaId) {
@@ -127,12 +157,9 @@
 							date.setTime(new Date().getTime() + (2 * 365 * 24 * 60 * 60 * 1000));
 							let secure = (cookie.secure) ? 'secure=true; ' : '';
 							let domain = '';
-							if (cookie.domain !== 'localhost') {
-								domain = ` domain=${cookie.domain};`;
-							}
+							if (cookie.domain !== 'localhost') domain = ` domain=${cookie.domain};`;
 							document.cookie = `SID=${result.SID}; expires=${date.toGMTString()}; ${domain}${secure}path=/`;
 							Toast.methods.addToast(`You have been successfully logged in`, 2000);
-							_this.$router.go('/');
 							location.reload();
 						});
 					} else Toast.methods.addToast(result.message, 2000);
@@ -152,7 +179,7 @@
 				this.$broadcast('closeModal');
 			}
 		},
-		components: { Toast, WhatIsNew, LoginModal, RegisterModal }
+		components: { Toast, WhatIsNew, LoginModal, RegisterModal, Banned }
 	}
 </script>
 

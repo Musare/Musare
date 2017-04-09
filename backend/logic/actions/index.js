@@ -8,5 +8,6 @@ module.exports = {
 	playlists: require('./playlists'),
 	users: require('./users'),
 	reports: require('./reports'),
-	news: require('./news')
+	news: require('./news'),
+	punishments: require('./punishments')
 };

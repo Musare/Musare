@@ -145,7 +145,7 @@
 				if (this.creating.title === '') return Toast.methods.addToast('Field (Title) cannot be empty', 3000);
 				if (this.creating.description === '') return Toast.methods.addToast('Field (Description) cannot be empty', 3000);
 				if (
-					bugs.length <= 0 && features.length <= 0 && 
+					bugs.length <= 0 && features.length <= 0 &&
 					improvements.length <= 0 && upcoming.length <= 0
 				) return Toast.methods.addToast('You must have at least one News Item', 3000);
 
@@ -184,7 +184,10 @@
 
 				if (this.creating[type].indexOf(change) !== -1) return Toast.methods.addToast(`Tag already exists`, 3000);
 
-				if (change) this.creating[type].push(change);
+				if (change) {
+					$(`#new-${type}`).val('');
+					this.creating[type].push(change);
+				}
 				else Toast.methods.addToast(`${type} cannot be empty`, 3000);
 			},
 			removeChange: function (type, index) {

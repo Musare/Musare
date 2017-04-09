@@ -20,7 +20,7 @@
 			</section>
 			<footer class='modal-card-foot'>
 				<a class='button is-primary' href='#' @click='submitModal("login")'>Submit</a>
-				<a class='button is-github' :href='$parent.serverDomain + "/auth/github/authorize"'>
+				<a class='button is-github' :href='$parent.serverDomain + "/auth/github/authorize"' @click="githubRedirect()">
 					<div class='icon'>
 						<img class='invert' src='/assets/social/github.svg'/>
 					</div>
@@ -46,6 +46,9 @@
 			resetPassword: function () {
 				this.toggleModal();
 				this.$router.go('/reset_password');
+			},
+			githubRedirect: function() {
+			    localStorage.setItem('github_redirect', this.$route.path)
 			}
 		},
 		events: {

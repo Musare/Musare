@@ -97,6 +97,12 @@
 					<span class="skip-votes">{{$parent.currentSong.skipVotes}}</span>
 					<span class="icon-purpose">Skip current song</span>
 				</a>
+				<a v-if='$parent.$parent.loggedIn && !$parent.noSong && !$parent.simpleSong' class="sidebar-item" href='#' @click='$parent.modals.report = !$parent.modals.report'>
+					<span class='icon'>
+						<i class='material-icons'>report</i>
+					</span>
+					<span class="icon-purpose">Report a song</span>
+				</a>
 				<a v-if='$parent.$parent.loggedIn && !$parent.noSong' class="sidebar-item" href='#' @click='$parent.modals.addSongToPlaylist = true'>
 					<span class='icon'>
 						<i class='material-icons'>playlist_add</i>
@@ -116,13 +122,6 @@
 					<i class='material-icons'>people</i>
 				</span>
 				<span class="icon-purpose">Display users in the station</span>
-			</a>
-			<hr>
-			<a v-if='$parent.$parent.loggedIn && !$parent.noSong && !$parent.simpleSong' class="sidebar-item" href='#' @click='$parent.modals.report = !$parent.modals.report'>
-				<span class='icon'>
-					<i class='material-icons'>report</i>
-				</span>
-				<span class="icon-purpose">Report a song</span>
 			</a>
 		</div>
 	</div>
@@ -252,11 +251,28 @@
 		height: 100vh;
 		background-color: #03a9f4;
 		box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
-		overflow-y: auto;
-		overflow-x: hidden;
 
 		@media (max-width: 998px) {
 			display: none;
+		}
+		.inner-wrapper {
+			@media (min-width: 999px) {
+				.mobile-only {
+					display: none;
+				}
+				.desktop-only {
+					display: flex;
+				}
+			}
+			@media (max-width: 998px) {
+				.mobile-only {
+					display: flex;
+				}
+				.desktop-only {
+					display: none;
+					visibility: hidden;
+				}
+			}
 		}
 	}
 
@@ -300,19 +316,35 @@
 
 	.sidebar-item .icon-purpose {
 		visibility: hidden;
-		width: 150px;
+		width: 160px;
 		font-size: 12px;
 		background-color: rgba(3, 169, 244,0.8);
 		color: #fff;
 		text-align: center;
 		border-radius: 6px;
-		padding: 5px 0;
+		padding: 5px;
 		position: absolute;
 		z-index: 1;
-		left: 105%;
+		left: 115%;
+		opacity: 0;
+    	transition: opacity 0.5s;
+		display: none;
+	}
+
+	.sidebar-item .icon-purpose::after {
+		content: "";
+	    position: absolute;
+	    top: 50%;
+	    right: 100%;
+	    margin-top: -5px;
+	    border-width: 5px;
+	    border-style: solid;
+	    border-color: transparent rgba(3, 169, 244,0.8) transparent transparent;
 	}
 
 	.sidebar-item:hover .icon-purpose {
 		visibility: visible;
+		opacity: 1;
+		display: block;
 	}
 </style>

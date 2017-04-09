@@ -23,7 +23,7 @@ module.exports = function(next) {
 				logger.info("LOGIN_REQUIRED", `User failed to pass login required check.`);
 				return cb({status: 'failure', message: err});
 			}
-			logger.info("LOGIN_REQUIRED", `User "${session.userId}" passed login required check.`);
+			logger.info("LOGIN_REQUIRED", `User "${session.userId}" passed login required check.`, false);
 			args.push(session.userId);
 			next.apply(null, args);
 		});

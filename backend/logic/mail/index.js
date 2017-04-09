@@ -1,7 +1,17 @@
 'use strict';
 
 const config = require('config');
-const mailgun = require('mailgun-js')({apiKey: config.get("apis.mailgun.key"), domain: config.get("apis.mailgun.domain")});
+const enabled = config.get('apis.mailgun.enabled');
+let mailgun = null;
+if (enabled) {
+	mailgun = require('mailgun-js')({
+		apiKey: config.get("apis.mailgun.key"),
+		domain: config.get("apis.mailgun.domain")
+	});
+}
+
+let initialized = false;
+let lockdown = false;
 
 let lib = {
 
@@ -14,12 +24,21 @@ let lib = {
 			passwordRequest: require('./schemas/passwordRequest')
 		};
 
+		initialized = true;
+
+		if (lockdown) return this._lockdown();
 		cb();
 	},
 
 	sendMail: (data, cb) => {
+		if (lockdown) return cb('Lockdown');
 		if (!cb) cb = ()=>{};
-		mailgun.messages().send(data, cb);
+		if (enabled) mailgun.messages().send(data, cb);
+		else cb();
+	},
+
+	_lockdown: () => {
+		lockdown = true;
 	}
 };
 

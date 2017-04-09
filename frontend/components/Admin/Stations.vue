@@ -114,7 +114,7 @@
 			},
 			createStation: function () {
 				let _this = this;
-				let {newStation: {name, displayName, description, genres, blacklistedGenres}} = this;
+				let { newStation: { name, displayName, description, genres, blacklistedGenres } } = this;
 
 				if (name == undefined) return Toast.methods.addToast('Field (Name) cannot be empty', 3000);
 				if (displayName == undefined) return Toast.methods.addToast('Field (Display Name) cannot be empty', 3000);

@@ -13,10 +13,11 @@
 	<playlist-sidebar v-if='sidebars.playlist'></playlist-sidebar>
 	<users-sidebar v-if='sidebars.users'></users-sidebar>
 
-	<div class="station">
+	<div class='progress' v-show='!ready'></div>
+	<div class='station' v-show="ready">
 		<div v-show="noSong" class="no-song">
 			<h1>No song is currently playing</h1>
-			<h4 v-if='type === "community" && station.partyMode'>
+			<h4 v-if='type === "community" && station.partyMode && (!station.locked || (station.locked && $parent.loggedIn && $parent.userId === station.owner))'>
 				<a href='#' class='no-song' @click='modals.addSongToQueue = true'>Add a song to the queue</a>
 			</h4>
 			<h4 v-if='type === "community" && !station.partyMode && $parent.userId === station.owner && !station.privatePlaylist'>
@@ -32,6 +33,52 @@
 				<div class="seeker-bar-container white" id="preview-progress">
 					<div class="seeker-bar light-blue" style="width: 0%;"></div>
 				</div>
+			</div>
+			<div class="desktop-only column is-3-desktop card playlistCard experimental">
+				<div class='title' v-if='type === "community"'>Queue</div>
+				<div class='title' v-else>Playlist</div>
+				<article class="media" v-if="!noSong">
+					<figure class="media-left">
+						<p class="image is-64x64">
+							<img :src="currentSong.thumbnail" onerror="this.src='/assets/notes-transparent.png'">
+						</p>
+					</figure>
+					<div class="media-content">
+						<div class="content">
+							<p>
+								Current Song:
+								<br>
+								<strong>{{ currentSong.title }}</strong>
+								<br>
+								<small>{{ currentSong.artists }}</small>
+							</p>
+						</div>
+					</div>
+					<div class="media-right">
+						{{ formatTime(currentSong.duration) }}
+					</div>
+				</article>
+				<p v-if="noSong" class="center">There is currently no song playing.</p>
+
+				<article class="media" v-for='song in songsList'>
+					<div class="media-content">
+						<div class="content">
+								<strong class="songTitle">{{ song.title }}</strong>
+								<br>
+								<small>{{ song.artists.join(', ') }}</small>
+								<br>
+								<div v-if="station.partyMode">
+									<br>
+									<small>Requested by <b>{{this.$parent.$parent.getUsernameFromId(song.requestedBy)}} {{this.userIdMap[song.requestedBy]}}</b></small>
+									<button class="button" @click="removeFromQueue(song.songId)" v-if="isOwnerOnly() || isAdminOnly()">REMOVE</button>
+								</div>
+						</div>
+					</div>
+					<div class="media-right">
+						{{ $parent.formatTime(song.duration) }}
+					</div>
+				</article>
+				<a class='button add-to-queue' href='#' @click='modals.addSongToQueue = !modals.addSongToQueue' v-if="type === 'community' && $parent.loggedIn">Add Song to Queue</a>
 			</div>
 		</div>
 		<div class="desktop-only columns is-mobile" v-show="!noSong">
@@ -65,6 +112,9 @@
 								</ul>
 							</div>
 						</div>
+					</div>
+					<div class="column is-3-desktop experimental" v-if="!simpleSong">
+						<img class="image" :src="currentSong.thumbnail" alt="Song Thumbnail" onerror="this.src='/assets/notes-transparent.png'" />
 					</div>
 				</div>
 			</div>
@@ -130,6 +180,7 @@
 	export default {
 		data() {
 			return {
+				ready: false,
 				type: '',
 				playerReady: false,
 				previousSong: null,
@@ -164,10 +215,24 @@
 				automaticallyRequestedSongId: null,
 				systemDifference: 0,
 				users: [],
-				userCount: 0
+				userCount: 0,
+				userIdMap: this.$parent.userIdMap
 			}
 		},
 		methods: {
+			isOwnerOnly: function () {
+				return this.$parent.loggedIn && this.$parent.userId === this.station.owner;
+			},
+			isAdminOnly: function() {
+				return this.$parent.loggedIn && this.$parent.role === 'admin';
+			},
+			removeFromQueue: function(songId) {
+				socket.emit('stations.removeFromQueue', this.station._id, songId, res => {
+					if (res.status === 'success') {
+						Toast.methods.addToast('Successfully removed song from the queue.', 4000);
+					} else Toast.methods.addToast(res.message, 8000);
+				});
+			},
 			editPlaylist: function (id) {
 				this.playlistBeingEdited = id;
 				this.modals.editPlaylist = !this.modals.editPlaylist;
@@ -274,6 +339,14 @@
 				if (songDuration <= duration) local.player.pauseVideo();
 				if ((!local.paused) && duration <= songDuration) local.timeElapsed = local.formatTime(duration);
 			},
+			toggleLock: function () {
+				let _this = this;
+				socket.emit('stations.toggleLock', this.station._id, res => {
+					if (res.status === 'success') {
+						Toast.methods.addToast('Successfully toggled the queue lock.', 4000);
+					} else Toast.methods.addToast(res.message, 8000);
+				});
+			},
 			changeVolume: function() {
 				let local = this;
 				let volume = $("#volumeSlider").val();
@@ -377,16 +450,28 @@
 
 						_this.socket.emit('playlists.getFirstSong', _this.privatePlaylistQueueSelected, data => {
 							if (data.status === 'success') {
-								console.log(data.song);
-								let songId = data.song._id;
-								_this.automaticallyRequestedSongId = data.song.songId;
-								_this.socket.emit('stations.addToQueue', _this.station._id, data.song.songId, data => {
-									if (data.status === 'success') {
-										_this.socket.emit('playlists.moveSongToBottom', _this.privatePlaylistQueueSelected, songId, data => {
-											if (data.status === 'success') {}
-										});
-									}
-								});
+							    if (data.song.duration < 15 * 60) {
+									console.log(data.song);
+									let songId = data.song._id;
+									_this.automaticallyRequestedSongId = data.song.songId;
+									_this.socket.emit('stations.addToQueue', _this.station._id, data.song.songId, data2 => {
+										if (data2.status === 'success') {
+											_this.socket.emit('playlists.moveSongToBottom', _this.privatePlaylistQueueSelected, data.song.songId, data3 => {
+												if (data3.status === 'success') {
+												}
+											});
+										}
+									});
+								} else {
+									Toast.methods.addToast(`Top song in playlist was too long to be added.`, 3000);
+									_this.socket.emit('playlists.moveSongToBottom', _this.privatePlaylistQueueSelected, data.song.songId, data3 => {
+										if (data3.status === 'success') {
+										    setTimeout(() => {
+										        this.addFirstPrivatePlaylistSongToQueue();
+											}, 3000);
+										}
+									});
+								}
 							}
 						});
 					}
@@ -402,6 +487,7 @@
 							displayName: res.data.displayName,
 							description: res.data.description,
 							privacy: res.data.privacy,
+							locked: res.data.locked,
 							partyMode: res.data.partyMode,
 							owner: res.data.owner,
 							privatePlaylist: res.data.privatePlaylist
@@ -421,7 +507,7 @@
 							}
 							_this.youtubeReady();
 							_this.playVideo();
-							_this.socket.emit('songs.getOwnSongRatings', res.data.currentSong._id, data => {
+							_this.socket.emit('songs.getOwnSongRatings', res.data.currentSong.songId, data => {
 								if (_this.currentSong.songId === data.songId) {
 									_this.liked = data.liked;
 									_this.disliked = data.disliked;
@@ -489,6 +575,8 @@
 					if (res.status === 'error') {
 						_this.$router.go('/404');
 						Toast.methods.addToast(res.message, 3000);
+					} else {
+						_this.ready = true;
 					}
 				});
 				_this.socket.on('event:songs.next', data => {
@@ -616,6 +704,10 @@
 				_this.socket.on('event:userCount.updated', userCount => {
 					_this.userCount = userCount;
 				});
+
+				_this.socket.on('event:queueLockToggled', locked => {
+					_this.station.locked = locked;
+				});
 			});
 
 
@@ -734,6 +826,63 @@
 
 		.mobile-only {
 			text-align: center;
+		}
+
+		.playlistCard {
+			margin: 10px;
+			position: relative;
+			padding-bottom: calc(31.25% + 7px);
+			height: 0;
+			overflow-y: scroll;
+
+			.title {
+				background-color: rgb(3, 169, 244);
+				text-align: center;
+				padding: 10px;
+				color: white;
+				font-weight: 600;
+			}
+
+			.media { padding: 0 25px; }
+
+			.media-content .content {
+				min-height: 64px;
+				max-height: 64px;
+				display: flex;
+				align-items: center;
+			}
+
+			.content p strong { word-break: break-word; }
+
+			.content p small { word-break: break-word; }
+
+			.add-to-queue {
+				width: 100%;
+				margin-top: 25px;
+				height: 40px;
+				border-radius: 0;
+				background: rgb(3, 169, 244);
+				color: #fff !important;
+				border: 0;
+				&:active, &:focus { border: 0; }
+			}
+
+			.add-to-queue:focus { background: #029ce3; }
+
+			.media-right { line-height: 64px; }
+
+			.songTitle {
+				word-wrap: break-word;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				display: -webkit-box;
+				-webkit-box-orient: vertical;
+				-webkit-line-clamp: 2;
+				line-height: 20px;
+				max-height: 40px;
+				width: 100%;
+			}
+
 		}
 
 		input[type=range] {
@@ -1001,5 +1150,25 @@
 
 	.behind:focus {
 		z-index: 0;
+	}
+
+	.progress {
+		width: 50px;
+		animation: rotate 0.8s infinite linear;
+		border: 8px solid #03A9F4;
+		border-right-color: transparent;
+		height: 50px;
+		position: absolute;
+		top: 50%;
+		left: 50%;
+	}
+
+	@keyframes rotate {
+		0% { transform: rotate(0deg); }
+		100% { transform: rotate(360deg); }
+	}
+
+	.experimental {
+		display: none !important;
 	}
 </style>

@@ -17,12 +17,14 @@
 			"redirect_uri": ""
 		},
 		"discord": {
-			"client": "",
-			"secret": ""
+			"token": "",
+			"loggingChannel": "",
+			"loggingServer": ""
 		},
 		"mailgun": {
 			"key": "",
-			"domain": ""
+			"domain": "",
+		  	"enabled": true
 		}
 	},
 	"cors": {
@@ -33,10 +35,11 @@
 		]
 	},
   	"redis": {
-	  	"url": "redis://redis:6379/0"
+	  	"url": "redis://redis:6379/0",
+	    "password": "PASSWORD"
 	},
   	"mongo": {
-	  	"url": "mongodb://mongo:27017/musare"
+	  	"url": "mongodb://musare:PASSWORD@mongo:27017/musare"
 	},
   	"cookie": {
 	  	"domain": "",

@@ -14,7 +14,7 @@ cache.sub('playlist.create', playlistId => {
 	playlists.getPlaylist(playlistId, (err, playlist) => {
 		if (!err) {
 			utils.socketsFromUser(playlist.createdBy, (sockets) => {
-				sockets.forEach((socket) => {
+				sockets.forEach(socket => {
 					socket.emit('event:playlist.create', playlist);
 				});
 			});
@@ -23,48 +23,48 @@ cache.sub('playlist.create', playlistId => {
 });
 
 cache.sub('playlist.delete', res => {
-	utils.socketsFromUser(res.userId, (sockets) => {
-		sockets.forEach((socket) => {
+	utils.socketsFromUser(res.userId, sockets => {
+		sockets.forEach(socket => {
 			socket.emit('event:playlist.delete', res.playlistId);
 		});
 	});
 });
 
 cache.sub('playlist.moveSongToTop', res => {
-	utils.socketsFromUser(res.userId, (sockets) => {
-		sockets.forEach((socket) => {
+	utils.socketsFromUser(res.userId, sockets => {
+		sockets.forEach(socket => {
 			socket.emit('event:playlist.moveSongToTop', {playlistId: res.playlistId, songId: res.songId});
 		});
 	});
 });
 
 cache.sub('playlist.moveSongToBottom', res => {
-	utils.socketsFromUser(res.userId, (sockets) => {
-		sockets.forEach((socket) => {
+	utils.socketsFromUser(res.userId, sockets => {
+		sockets.forEach(socket => {
 			socket.emit('event:playlist.moveSongToBottom', {playlistId: res.playlistId, songId: res.songId});
 		});
 	});
 });
 
 cache.sub('playlist.addSong', res => {
-	utils.socketsFromUser(res.userId, (sockets) => {
-		sockets.forEach((socket) => {
+	utils.socketsFromUser(res.userId, sockets => {
+		sockets.forEach(socket => {
 			socket.emit('event:playlist.addSong', { playlistId: res.playlistId, song: res.song });
 		});
 	});
 });
 
 cache.sub('playlist.removeSong', res => {
-	utils.socketsFromUser(res.userId, (sockets) => {
-		sockets.forEach((socket) => {
+	utils.socketsFromUser(res.userId, sockets => {
+		sockets.forEach(socket => {
 			socket.emit('event:playlist.removeSong', { playlistId: res.playlistId, songId: res.songId });
 		});
 	});
 });
 
 cache.sub('playlist.updateDisplayName', res => {
-	utils.socketsFromUser(res.userId, (sockets) => {
-		sockets.forEach((socket) => {
+	utils.socketsFromUser(res.userId, sockets => {
+		sockets.forEach(socket => {
 			socket.emit('event:playlist.updateDisplayName', { playlistId: res.playlistId, displayName: res.displayName });
 		});
 	});
@@ -283,10 +283,11 @@ let lib = {
 				err = utils.getError(err);
 				logger.error("PLAYLIST_ADD_SONG", `Adding song "${songId}" to private playlist "${playlistId}" failed for user "${userId}". "${err}"`);
 				return cb({ status: 'failure', message: err});
+			} else {
+				logger.success("PLAYLIST_ADD_SONG", `Successfully added song "${songId}" to private playlist "${playlistId}" for user "${userId}".`);
+				cache.pub('playlist.addSong', { playlistId: playlist._id, song: newSong, userId });
+				return cb({ status: 'success', message: 'Song has been successfully added to the playlist', data: playlist.songs });
 			}
-			logger.success("PLAYLIST_ADD_SONG", `Successfully added song "${songId}" to private playlist "${playlistId}" for user "${userId}".`);
-			cache.pub('playlist.addSong', { playlistId: playlist._id, song: newSong, userId: userId });
-			return cb({ status: 'success', message: 'Song has been successfully added to the playlist', data: playlist.songs });
 		});
 	}),
 
@@ -331,9 +332,10 @@ let lib = {
 				err = utils.getError(err);
 				logger.error("PLAYLIST_IMPORT", `Importing a YouTube playlist to private playlist "${playlistId}" failed for user "${userId}". "${err}"`);
 				return cb({ status: 'failure', message: err});
+			} else {
+				logger.success("PLAYLIST_IMPORT", `Successfully imported a YouTube playlist to private playlist "${playlistId}" for user "${userId}".`);
+				cb({ status: 'success', message: 'Playlist has been successfully imported.', data: playlist.songs });
 			}
-			logger.success("PLAYLIST_IMPORT", `Successfully imported a YouTube playlist to private playlist "${playlistId}" for user "${userId}".`);
-			cb({ status: 'success', message: 'Playlist has been successfully imported.', data: playlist.songs });
 		});
 	}),
 
@@ -371,10 +373,11 @@ let lib = {
 				err = utils.getError(err);
 				logger.error("PLAYLIST_REMOVE_SONG", `Removing song "${songId}" from private playlist "${playlistId}" failed for user "${userId}". "${err}"`);
 				return cb({ status: 'failure', message: err});
+			} else {
+				logger.success("PLAYLIST_REMOVE_SONG", `Successfully removed song "${songId}" from private playlist "${playlistId}" for user "${userId}".`);
+				cache.pub('playlist.removeSong', { playlistId: playlist._id, songId: songId, userId });
+				return cb({ status: 'success', message: 'Song has been successfully removed from playlist', data: playlist.songs });
 			}
-			logger.success("PLAYLIST_REMOVE_SONG", `Successfully removed song "${songId}" from private playlist "${playlistId}" for user "${userId}".`);
-			cache.pub('playlist.removeSong', {playlistId: playlist._id, songId: songId, userId: userId});
-			return cb({ status: 'success', message: 'Song has been successfully removed from playlist', data: playlist.songs });
 		});
 	}),
 

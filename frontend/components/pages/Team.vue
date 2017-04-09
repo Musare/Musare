@@ -64,6 +64,7 @@
 					</header>
 					<div class='card-content'>
 						<div class='content'>
+							<span class="custom-tag pink">lead-designer</span>
 							<span class="custom-tag light-blue">developer</span>
 							<ul>
 								<li>
@@ -266,6 +267,11 @@
 
 	.custom-tag.blue {
 		background-color: #0066f4;
+		color: white;
+	}
+
+	.custom-tag.pink {
+		background-color: #ff99dd;
 		color: white;
 	}
 
