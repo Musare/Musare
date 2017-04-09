@@ -330,6 +330,14 @@
 	.displayName {
 		word-wrap: break-word;
     	width: 80%;
+		word-wrap: break-word;
+	    overflow: hidden;
+	    text-overflow: ellipsis;
+	    display: -webkit-box;
+	    -webkit-box-orient: vertical;
+	    -webkit-line-clamp: 1;
+	    line-height: 30px;
+	    max-height: 30px;
 	}
 
 	.nightMode {
