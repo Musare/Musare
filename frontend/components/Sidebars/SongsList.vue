@@ -5,7 +5,7 @@
 			<div class='title' v-else>Playlist</div>
 
 			<article class="media" v-if="!$parent.noSong">
-				<figure class="media-left">
+				<figure class="media-left" v-if="$parent.currentSong.thumbnail">
 					<p class="image is-64x64">
 						<img :src="$parent.currentSong.thumbnail" onerror="this.src='/assets/notes-transparent.png'">
 					</p>
