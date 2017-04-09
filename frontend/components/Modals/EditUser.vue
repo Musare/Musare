@@ -21,16 +21,18 @@
 				</p>
 				<hr>
 				<p class="control has-addons">
-					<select v-model='ban.expiresAt'>
-						<option value='1h'>1 Hour</option>
-						<option value='12h'>12 Hours</option>
-						<option value='1d'>1 Day</option>
-						<option value='1w'>1 Week</option>
-						<option value='1m'>1 Month</option>
-						<option value='3m'>3 Months</option>
-						<option value='6m'>6 Months</option>
-						<option value='1y'>1 Year</option>
-					</select>
+					<span class="select">
+						<select v-model='ban.expiresAt'>
+							<option value='1h'>1 Hour</option>
+							<option value='12h'>12 Hours</option>
+							<option value='1d'>1 Day</option>
+							<option value='1w'>1 Week</option>
+							<option value='1m'>1 Month</option>
+							<option value='3m'>3 Months</option>
+							<option value='6m'>6 Months</option>
+							<option value='1y'>1 Year</option>
+						</select>
+					</span>
 					<input class='input is-expanded' type='text' placeholder='Ban reason' v-model='ban.reason' autofocus>
 					<a class="button is-error" @click='banUser()'>Ban user</a>
 				</p>
