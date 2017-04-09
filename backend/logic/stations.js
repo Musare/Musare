@@ -277,7 +277,7 @@ module.exports = {
 		if (lockdown) return;
 		let lessInfoPlaylist = [];
 		async.each(songList, (song, next) => {
-			songs.getSongFromId(song, (err, song) => {
+			songs.getSong(song, (err, song) => {
 				if (!err && song) {
 					let newSong = {
 						songId: song.songId,
