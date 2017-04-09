@@ -3,6 +3,7 @@
 const cache = require("./cache");
 const logger = require("./logger");
 const Stations = require("./stations");
+const notifications = require("./notifications");
 const async = require("async");
 let utils;
 let tasks = {};
@@ -29,7 +30,7 @@ let checkStationSkipTask = (callback) => {
 				if (timeElapsed <= station.currentSong.duration) return next2();
 				else {
 					logger.error("TASK_STATIONS_SKIP_CHECK", `Skipping ${station._id} as it should have skipped already.`);
-					Stations.skipStation(station._id);
+					Stations.initializeStation(station._id);
 					next2();
 				}
 			}, () => {
