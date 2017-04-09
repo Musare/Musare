@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Musare</title>
+
+        <link href="https://fonts.googleapis.com/css?family=Lato:100" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+        <style media="screen">
+        </style>
+
+        <style>
+            html, body {
+                height: 100%;
+            }
+            body {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                display: table;
+                font-weight: 100;
+                font-family: 'Lato';
+            }
+            .container {
+                text-align: center;
+                display: table-cell;
+                vertical-align: middle;
+            }
+            .content {
+                text-align: center;
+                display: inline-block;
+                padding-left: 15px;
+                padding-right: 15px;
+            }
+            .title {
+                font-size: 96px;
+            }
+            p {
+              font-size: 28px;
+              font-weight: 700;
+            }
+            .social {
+                width: 100%;
+                text-align:center;
+                display: block;
+            }
+            .social #discord {
+                display: inline-block;
+                vertical-align: middle;
+                color: #03a9f4;
+                font-size: 22px;
+                background-color: transparent;
+                height: 40px;
+                line-height: 42px;
+                width: 40px;
+                margin: 10px 5px;
+                transition: all ease-in-out 0.5s
+            }
+            .social #discord .st0 {
+                fill:#03a9f4;
+                transition: all ease-in-out 0.5s
+            }
+            .social #discord:hover .st0 {
+                fill:#0279b1;
+                transition: all ease-in-out 0.5s
+            }
+            .social .fa {
+                display: inline-block;
+                vertical-align: middle;
+                color: #03a9f4;
+                font-size: 28px;
+                background-color: transparent;
+                height: 40px;
+                line-height: 42px;
+                width: 40px;
+                margin: 10px 5px;
+                transition: all ease-in-out 0.5s
+            }
+            .social .fa:hover {
+                color: #0279b1;
+            }
+
+            .social .social-icon .fa {
+                font-size:20px;
+            	position:absolute;
+            	left:9px;
+            	top:10px;
+            }
+
+            .socialIcon {
+                position: relative;
+            }
+
+            .socialIcon .icon-purpose {
+        		visibility: hidden;
+        		width: 120px;
+        		font-size: 18px;
+        		background-color: rgba(3, 169, 244,0.8);
+        		color: #fff;
+        		text-align: center;
+        		border-radius: 6px;
+        		padding: 5px;
+        		position: absolute;
+        		z-index: 1;
+                bottom: 150%;
+                left: 50%;
+                margin-left: -65px;
+        		opacity: 0;
+                margin-bottom: 10px;
+            	transition: opacity 0.5s;
+        		display: none;
+        	}
+
+        	.socialIcon .icon-purpose::after {
+        		content: "";
+        	    position: absolute;
+                top: 100%;
+                left: 50%;
+                margin-left: -5px;
+        	    border-width: 5px;
+        	    border-style: solid;
+        	    border-color: rgba(3, 169, 244,0.8) transparent transparent transparent;
+        	}
+
+        	.socialIcon:hover .icon-purpose {
+        		visibility: visible;
+        		opacity: 1;
+        		display: block;
+        	}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="content">
+                <img src="https://preview.ibb.co/eAo1y5/logo.png" alt="Logo" style="width: 80%;" />
+                <div class="title">We are offline!</div>
+                <p>Visit Twitter or Discord via the links below to check when we are back online.</p>
+                <span class="social">
+                    <a class="socialIcon" href="https://twitter.com/MusareApp" target="_blank">
+                        <i class="fa fa-twitter" aria-hidden="true"></i>
+                        <span class="icon-purpose">Twitter</span>
+                    </a>
+                    <a class="socialIcon" href="https://discord.gg/Y5NxYGP" target="_blank">
+                        <svg id="discord" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 245 240"><path class="st0" d="M104.4 103.9c-5.7 0-10.2 5-10.2 11.1s4.6 11.1 10.2 11.1c5.7 0 10.2-5 10.2-11.1.1-6.1-4.5-11.1-10.2-11.1zM140.9 103.9c-5.7 0-10.2 5-10.2 11.1s4.6 11.1 10.2 11.1c5.7 0 10.2-5 10.2-11.1s-4.5-11.1-10.2-11.1z"/><path class="st0" d="M189.5 20h-134C44.2 20 35 29.2 35 40.6v135.2c0 11.4 9.2 20.6 20.5 20.6h113.4l-5.3-18.5 12.8 11.9 12.1 11.2 21.5 19V40.6c0-11.4-9.2-20.6-20.5-20.6zm-38.6 130.6s-3.6-4.3-6.6-8.1c13.1-3.7 18.1-11.9 18.1-11.9-4.1 2.7-8 4.6-11.5 5.9-5 2.1-9.8 3.5-14.5 4.3-9.6 1.8-18.4 1.3-25.9-.1-5.7-1.1-10.6-2.7-14.7-4.3-2.3-.9-4.8-2-7.3-3.4-.3-.2-.6-.3-.9-.5-.2-.1-.3-.2-.4-.3-1.8-1-2.8-1.7-2.8-1.7s4.8 8 17.5 11.8c-3 3.8-6.7 8.3-6.7 8.3-22.1-.7-30.5-15.2-30.5-15.2 0-32.2 14.4-58.3 14.4-58.3 14.4-10.8 28.1-10.5 28.1-10.5l1 1.2c-18 5.2-26.3 13.1-26.3 13.1s2.2-1.2 5.9-2.9c10.7-4.7 19.2-6 22.7-6.3.6-.1 1.1-.2 1.7-.2 6.1-.8 13-1 20.2-.2 9.5 1.1 19.7 3.9 30.1 9.6 0 0-7.9-7.5-24.9-12.7l1.4-1.6s13.7-.3 28.1 10.5c0 0 14.4 26.1 14.4 58.3 0 0-8.5 14.5-30.6 15.2z"/></svg>
+                        <span class="icon-purpose">Discord</span>
+                    </a>
+                </span>
+            </div>
+        </div>
+    </body>
+</html>
