@@ -1,9 +1,6 @@
 <template>
 	<main-header></main-header>
 	<div class="container">
-		<label class="label">Remove (you will be logged out)</label>
-		<button class="button is-warning" @click="removeSessions()">Remove all sessions</button><br>
-
 		<!--Implement Validation-->
 		<label class="label">Username</label>
 		<div class="control is-grouped">
@@ -64,6 +61,9 @@
 
 		<button class="button is-danger" @click="unlinkPassword()" v-if="password && github">Remove logging in with password</button>
 		<button class="button is-danger" @click="unlinkGitHub()" v-if="password && github">Remove logging in with GitHub</button>
+
+		<br>
+		<button class="button is-warning" @click="removeSessions()" style="margin-top: 30px;">Log out everywhere</button>
 	</div>
 	<main-footer></main-footer>
 </template>
