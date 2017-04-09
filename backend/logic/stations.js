@@ -9,6 +9,8 @@ const songs = require('./songs');
 const notifications = require('./notifications');
 const async = require('async');
 
+let subscription = null;
+
 let initialized = false;
 let lockdown = false;
 
@@ -104,7 +106,8 @@ module.exports = {
 			(station, next) => {
 				if (!station) return next('Station not found.');
 				notifications.unschedule(`stations.nextSong?id=${station._id}`);
-				notifications.subscribe(`stations.nextSong?id=${station._id}`, _this.skipStation(station._id), true, station);
+				if (subscription) notifications.remove(subscription);
+				subscription = notifications.subscribe(`stations.nextSong?id=${station._id}`, _this.skipStation(station._id), true, station);
 				if (station.paused) return next(true, station);
 				next(null, station);
 			},
