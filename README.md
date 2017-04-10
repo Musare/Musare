@@ -99,7 +99,7 @@ Now you have different paths here.
 	
 	4. Create an admin user
 	
-		`db.createUser({user: 'admin', pwd: 'PASSWORD_HERE', roles: [{role: 'userAdminAnyDatabase', db: 'admin'}]})`
+		`db.createUser({user: 'admin', pwd: 'PASSWORD_HERE', roles: [{role: 'root', db: 'admin'}]})`
 		
 	5. Connect to the Musare database
 	
