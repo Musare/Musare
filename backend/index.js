@@ -204,7 +204,7 @@ async.waterfall([
 			const express = require('express');
 			const app = express();
 			app.listen(config.get("frontendPort"));
-			const rootDir = __dirname.substr(0, __dirname.lastIndexOf("backend")) + "frontend\\build\\";
+			const rootDir = __dirname.substr(0, __dirname.lastIndexOf("backend")) + "frontend/build/";
 
 			app.get("/*", (req, res) => {
 				const path = req.path;
