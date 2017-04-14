@@ -203,6 +203,7 @@ async.waterfall([
 		if (!config.get("isDocker")) {
 			const express = require('express');
 			const app = express();
+			app.listen(config.get("frontendPort"));
 			const rootDir = __dirname.substr(0, __dirname.lastIndexOf("backend")) + "frontend\\build\\";
 
 			app.get("/*", (req, res) => {
