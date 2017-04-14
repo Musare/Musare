@@ -1,6 +1,7 @@
 {
 	"secret": "",
 	"domain": "",
+	"frontendPort": 80,
 	"serverDomain": "",
   	"serverPort": 8080,
   	"isDocker": true,
