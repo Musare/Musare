@@ -6,7 +6,7 @@
 			<aside class="menu">
 				<ul class="menu-list">
 					<li v-for="user in $parent.users">
-						<a href="#" v-link="{ path: '/u/' + user }" target="_blank">{{user}}</a>
+						<a href="#" v-link="{ path: '/u/' + user }" target="_blank">@{{user}}</a>
 					</li>
 				</ul>
 			</aside>

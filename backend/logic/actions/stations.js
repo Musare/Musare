@@ -416,13 +416,6 @@ module.exports = {
 
 			(station, next) => {
 				if (!station) return next('Station not found.');
-				utils.canUserBeInStation(station, userId, (canBe) => {
-					if (canBe) return next(null, station);
-					return next('Insufficient permissions.');
-				});
-			},
-
-			(station, next) => {
 				if (!station.currentSong) return next('There is currently no song to skip.');
 				if (station.currentSong.skipVotes.indexOf(userId) !== -1) return next('You have already voted to skip this song.');
 				next(null, station);
@@ -500,6 +493,10 @@ module.exports = {
 			(station, next) => {
 				if (!station) return next('Station not found.');
 				next();
+			},
+
+			(next) => {
+				cache.client.hincrby('station.userCounts', stationId, -1, next);
 			}
 		], (err, userCount) => {
 			if (err) {
@@ -845,13 +842,6 @@ module.exports = {
 			(station, next) => {
 				if (!station) return next('Station not found.');
 				if (station.type !== 'community') return next('That station is not a community station.');
-				utils.canUserBeInStation(station, userId, (canBe) => {
-					if (canBe) return next(null, station);
-					return next('Insufficient permissions.');
-				});
-			},
-
-			(station, next) => {
 				if (station.currentSong && station.currentSong.songId === songId) return next('That song is currently playing.');
 				async.each(station.queue, (queueSong, next) => {
 					if (queueSong.songId === songId) return next('That song is already in the queue.');
@@ -863,7 +853,7 @@ module.exports = {
 
 			(station, next) => {
 				songs.getSong(songId, (err, song) => {
-					if (!err && song) return next(null, song, station);
+					if (!err && song) return next(null, song);
 					utils.getSongFromYouTube(songId, (song) => {
 						song.artists = [];
 						song.skipDuration = 0;
@@ -871,57 +861,13 @@ module.exports = {
 						song.dislikes = -1;
 						song.thumbnail = "empty";
 						song.explicit = false;
-						next(null, song, station);
+						next(null, song);
 					});
 				});
 			},
 
-			(song, station, next) => {
-				let queue = station.queue;
-				song.requestedBy = userId;
-				queue.push(song);
-
-				let totalDuration = 0;
-				queue.forEach((song) => {
-					totalDuration += song.duration;
-				});
-				if (totalDuration >= 3600 * 3) return next('The max length of the queue is 3 hours.');
-				next(null, song, station);
-			},
-
-			(song, station, next) => {
-				let queue = station.queue;
-				if (queue.length === 0) return next(null, song, station);
-				let totalDuration = 0;
-				const userId = queue[queue.length - 1].requestedBy;
-				station.queue.forEach((song) => {
-					if (userId === song.requestedBy) {
-						totalDuration += song.duration;
-					}
-				});
-
-				if(totalDuration >= 900) return next('The max length of songs per user is 15 minutes.');
-				next(null, song, station);
-			},
-
-			(song, station, next) => {
-				let queue = station.queue;
-				if (queue.length === 0) return next(null, song);
-				let totalSongs = 0;
-				const userId = queue[queue.length - 1].requestedBy;
-				queue.forEach((song) => {
-					if (userId === song.requestedBy) {
-						totalSongs++;
-					}
-				});
-
-				if (totalSongs <= 2) return next(null, song);
-				if (totalSongs > 3) return next('The max amount of songs per user is 3, and only 2 in a row is allowed.');
-				if (queue[queue.length - 2].requestedBy !== userId || queue[queue.length - 3] !== userId) return next('The max amount of songs per user is 3, and only 2 in a row is allowed.');
-				next(null, song);
-			},
-
 			(song, next) => {
+				song.requestedBy = userId;
 				db.models.station.update({_id: stationId}, {$push: {queue: song}}, {runValidators: true}, next);
 			},
 
@@ -994,7 +940,7 @@ module.exports = {
 	 * @param stationId - the station id
 	 * @param cb
 	 */
-	getQueue: (session, stationId, cb) => {
+	getQueue: hooks.adminRequired((session, stationId, cb) => {
 		async.waterfall([
 			(next) => {
 				stations.getStation(stationId, next);
@@ -1004,13 +950,6 @@ module.exports = {
 				if (!station) return next('Station not found.');
 				if (station.type !== 'community') return next('Station is not a community station.');
 				next(null, station);
-			},
-
-			(station, next) => {
-				utils.canUserBeInStation(station, session.userId, (canBe) => {
-					if (canBe) return next(null, station);
-					return next('Insufficient permissions.');
-				});
 			}
 		], (err, station) => {
 			if (err) {
@@ -1021,7 +960,7 @@ module.exports = {
 			logger.success("STATIONS_GET_QUEUE", `Got queue for station "${stationId}" successfully.`);
 			return cb({'status': 'success', 'message': 'Successfully got queue.', queue: station.queue});
 		});
-	},
+	}),
 
 	/**
 	 * Selects a private playlist for a station

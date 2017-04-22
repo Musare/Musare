@@ -22,4 +22,8 @@ frontend/build/config/default.json
 npm
 
 # Logs
-log/
+all.log
+error.log
+info.log
+success.log
+

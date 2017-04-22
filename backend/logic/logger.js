@@ -1,13 +1,11 @@
 'use strict';
 
-const dir = `${__dirname}/../../log`;
 const fs = require('fs');
-const config = require('config');
 let utils;
-
-if (!config.isDocker && !fs.existsSync(`${dir}`)) {
-	fs.mkdirSync(dir);
-}
+/*const log_file = fs.createWriteStream(__dirname + '/../../all.log', {flags : 'w'});
+const success_log_file = fs.createWriteStream(__dirname + '/../../success.log', {flags : 'w'});
+const error_log_file = fs.createWriteStream(__dirname + '/../../error.log', {flags : 'w'});
+const info_log_file = fs.createWriteStream(__dirname + '/../../info.log', {flags : 'w'});*/
 
 let started;
 let success = 0;
@@ -99,8 +97,8 @@ module.exports = {
 		successThisHour++;
 		getTime((time) => {
 			let timeString = `${time.year}-${twoDigits(time.month)}-${twoDigits(time.day)} ${twoDigits(time.hour)}:${twoDigits(time.minute)}:${twoDigits(time.second)}`;
-			fs.appendFile(dir + '/all.log', `${timeString} SUCCESS - ${type} - ${message}\n`, ()=>{});
-			fs.appendFile(dir + '/success.log', `${timeString} SUCCESS - ${type} - ${message}\n`, ()=>{});
+			fs.appendFile(__dirname + '/../../all.log', `${timeString} SUCCESS - ${type} - ${message}\n`, ()=>{});
+			fs.appendFile(__dirname + '/../../success.log', `${timeString} SUCCESS - ${type} - ${message}\n`, ()=>{});
 			console.info('\x1b[32m', timeString, 'SUCCESS', '-', type, '-', message, '\x1b[0m');
 		});
 	},
@@ -110,8 +108,8 @@ module.exports = {
 		errorThisHour++;
 		getTime((time) => {
 			let timeString = `${time.year}-${twoDigits(time.month)}-${twoDigits(time.day)} ${twoDigits(time.hour)}:${twoDigits(time.minute)}:${twoDigits(time.second)}`;
-			fs.appendFile(dir + '/all.log', `${timeString} ERROR - ${type} - ${message}\n`, ()=>{});
-			fs.appendFile(dir + '/error.log', `${timeString} ERROR - ${type} - ${message}\n`, ()=>{});
+			fs.appendFile(__dirname + '/../../all.log', `${timeString} ERROR - ${type} - ${message}\n`, ()=>{});
+			fs.appendFile(__dirname + '/../../error.log', `${timeString} ERROR - ${type} - ${message}\n`, ()=>{});
 			console.warn('\x1b[31m', timeString, 'ERROR', '-', type, '-', message, '\x1b[0m');
 		});
 	},
@@ -121,8 +119,8 @@ module.exports = {
 		infoThisHour++;
 		getTime((time) => {
 			let timeString = `${time.year}-${twoDigits(time.month)}-${twoDigits(time.day)} ${twoDigits(time.hour)}:${twoDigits(time.minute)}:${twoDigits(time.second)}`;
-			fs.appendFile(dir + '/all.log', `${timeString} INFO - ${type} - ${message}\n`, ()=>{});
-			fs.appendFile(dir + '/info.log', `${timeString} INFO - ${type} - ${message}\n`, ()=>{});
+			fs.appendFile(__dirname + '/../../all.log', `${timeString} INFO - ${type} - ${message}\n`, ()=>{});
+			fs.appendFile(__dirname + '/../../info.log', `${timeString} INFO - ${type} - ${message}\n`, ()=>{});
 
 			console.info('\x1b[36m', timeString, 'INFO', '-', type, '-', message, '\x1b[0m');
 		});

@@ -22,7 +22,7 @@
     "express-session": "^1.14.0",
     "mailgun-js": "^0.8.0",
     "moment": "^2.15.2",
-    "mongoose": "^4.9.0",
+    "mongoose": "^4.6.0",
     "oauth": "^0.9.14",
     "passport": "^0.3.2",
     "passport-discord": "^0.1.1",

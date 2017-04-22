@@ -99,7 +99,7 @@ Now you have different paths here.
 
 ####Non-docker
 
-Steps 1-4 are things you only have to do once. The steps to start servers follow.
+Steps 1-4 are things you only have to do once. The steps after that are steps you want to do when you want to start the site.
 
 1. In the main folder, create a folder called `.database`
 
@@ -117,19 +117,11 @@ Steps 1-4 are things you only have to do once. The steps to start servers follow
 
 	And again, make sure that the paths lead to the proper config and executable.
 
-####Non-docker start servers
+5. Run `startRedis.cmd` and `startMongo.cmd` to start Redis and Mongo.
 
-**Automatic**
+6. In a command prompt with the pwd of frontend, run `npm run development-watch`
 
-1.  If you are on Windows you can run `windows-start.cmd` or just double click the `windows-start.cmd` file and all servers will automatically start up.
-
-**Manual**
-
-1. Run `startRedis.cmd` and `startMongo.cmd` to start Redis and Mongo.
-
-2. In a command prompt with the pwd of frontend, run `npm run development-watch`
-
-3. In a command prompt with the pwd of backend, run `nodemon`
+7. In a command prompt with the pwd of backend, run `nodemon`
 
 ## Extra
 
