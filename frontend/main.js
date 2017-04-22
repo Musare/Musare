@@ -45,7 +45,6 @@ document.onkeydown = event => {
 
 router.beforeEach(transition => {
 	window.location.hash = '';
-	//
 	if (window.stationInterval) {
 		clearInterval(window.stationInterval);
 		window.stationInterval = 0;
@@ -81,11 +80,6 @@ router.beforeEach(transition => {
 			});
 		});
 	}
-});
-
-router.afterEach((data) => {
-	ga('set', 'page', data.to.path);
-	ga('send', 'pageview');
 });
 
 router.map({

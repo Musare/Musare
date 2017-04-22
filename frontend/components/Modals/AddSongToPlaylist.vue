@@ -1,19 +1,17 @@
 <template>
 	<modal title='Add Song To Playlist'>
 		<div slot='body'>
-			<h4 class="songTitle">{{ $parent.currentSong.title }}</h4>
-			<h5 class="songArtist">{{ $parent.currentSong.artists }}</h5>
 			<aside class="menu">
 				<p class="menu-label">
 					Playlists
 				</p>
 				<ul class="menu-list">
-					<li v-for='playlist in playlistsArr'>
+					<li v-for='playlist in playlists'>
 						<div class='playlist'>
-							<span class='icon is-small' @click='removeSongFromPlaylist(playlist._id)' v-if='playlists[playlist._id].hasSong'>
+							<span class='icon is-small' @click='removeSongFromPlaylist(playlist._id)' v-if='playlistContains(playlist._id)'>
 								<i class="material-icons">playlist_add_check</i>
 							</span>
-							<span class='icon' @click='addSongToPlaylist(playlist._id)' v-else>
+							<span class='icon is-small' @click='addSongToPlaylist(playlist._id)' v-else>
 								<i class="material-icons">playlist_add</i>
 							</span>
 							{{ playlist.displayName }}
@@ -34,65 +32,47 @@
 	export default {
 		data() {
 			return {
-				playlists: {},
-				playlistsArr: [],
-				songId: null,
-				song: null
+				playlists: {}
 			}
 		},
 		methods: {
+			playlistContains: function (playlistId) {
+				let _this = this;
+				let toReturn = false;
+
+				let playlist = this.playlists.filter(playlist => {
+				    return playlist._id === playlistId;
+				})[0];
+
+				for (let i = 0; i < playlist.songs.length; i++) {
+					if (playlist.songs[i].songId === _this.$parent.currentSong.songId) {
+						toReturn = true;
+					}
+				}
+
+				return toReturn;
+			},
 			addSongToPlaylist: function (playlistId) {
 				let _this = this;
 				this.socket.emit('playlists.addSongToPlaylist', this.$parent.currentSong.songId, playlistId, res => {
 					Toast.methods.addToast(res.message, 4000);
-					if (res.status === 'success') {
-						_this.playlists[playlistId].songs.push(_this.song);
-					}
-					_this.recalculatePlaylists();
-					//this.$parent.modals.addSongToPlaylist = false;
+					this.$parent.modals.addSongToPlaylist = false;
 				});
 			},
 			removeSongFromPlaylist: function (playlistId) {
 				let _this = this;
-				this.socket.emit('playlists.removeSongFromPlaylist', _this.songId, playlistId, res => {
+				this.socket.emit('playlists.removeSongFromPlaylist', this.$parent.currentSong.songId, playlistId, res => {
 					Toast.methods.addToast(res.message, 4000);
-					if (res.status === 'success') {
-						_this.playlists[playlistId].songs.forEach((song, index) => {
-							if (song.songId === _this.songId) _this.playlists[playlistId].songs.splice(index, 1);
-						});
-					}
-					_this.recalculatePlaylists();
-					//this.$parent.modals.addSongToPlaylist = false;
-				});
-			},
-			recalculatePlaylists: function() {
-				let _this = this;
-				_this.playlistsArr = Object.values(_this.playlists).map((playlist) => {
-					let hasSong = false;
-					for (let i = 0; i < playlist.songs.length; i++) {
-						if (playlist.songs[i].songId === _this.songId) {
-							hasSong = true;
-						}
-					}
-					playlist.hasSong = hasSong;
-					_this.playlists[playlist._id] = playlist;
-					return playlist;
+					this.$parent.modals.addSongToPlaylist = false;
 				});
 			}
 		},
 		ready: function () {
 			let _this = this;
-			this.songId = this.$parent.currentSong.songId;
-			this.song = this.$parent.currentSong;
 			io.getSocket((socket) => {
 				_this.socket = socket;
 				_this.socket.emit('playlists.indexForUser', res => {
-					if (res.status === 'success') {
-						res.data.forEach((playlist) => {
-							_this.playlists[playlist._id] = playlist;
-						});
-						_this.recalculatePlaylists();
-					}
+					if (res.status === 'success') _this.playlists = res.data;
 				});
 			});
 		},
@@ -108,17 +88,5 @@
 <style type='scss' scoped>
 	.icon.is-small {
 		margin-right: 10px !important;
-	}
-	.songTitle {
-		font-size: 22px;
-		padding: 0 10px;
-	}
-	.songArtist {
-		font-size: 19px;
-		font-weight: 200;
-		padding: 0 10px;
-	}
-	.menu-label {
-		font-size: 16px;
 	}
 </style>

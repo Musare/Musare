@@ -77,7 +77,6 @@
 
 	import LoginModal from '../Modals/Login.vue'
 	import io from '../../io'
-	import validation from '../../validation';
 
 	export default {
 		data() {
@@ -124,34 +123,24 @@
 		},
 		methods: {
 			changeEmail: function () {
-				const email = this.user.email.address;
-				if (!validation.isLength(email, 3, 254)) return Toast.methods.addToast('Email must have between 3 and 254 characters.', 8000);
-				if (email.indexOf('@') !== email.lastIndexOf('@') || !validation.regex.emailSimple.test(email)) return Toast.methods.addToast('Invalid email format.', 8000);
-
-
-				this.socket.emit('users.updateEmail', this.$parent.userId, email, res => {
+				if (!this.user.email.address) return Toast.methods.addToast('Email cannot be empty', 8000);
+				this.socket.emit('users.updateEmail', this.$parent.userId, this.user.email.address, res => {
 					if (res.status !== 'success') Toast.methods.addToast(res.message, 8000);
 					else Toast.methods.addToast('Successfully changed email address', 4000);
 				});
 			},
 			changeUsername: function () {
-				const username = this.user.username;
-				if (!validation.isLength(username, 2, 32)) return Toast.methods.addToast('Username must have between 2 and 32 characters.', 8000);
-				if (!validation.regex.azAZ09_.test(username)) return Toast.methods.addToast('Invalid username format. Allowed characters: a-z, A-Z, 0-9 and _.', 8000);
-
-
-				this.socket.emit('users.updateUsername', this.$parent.userId, username, res => {
+				let _this = this;
+				if (!_this.user.username) return Toast.methods.addToast('Username cannot be empty', 8000);
+				_this.socket.emit('users.updateUsername', this.$parent.userId, _this.user.username, res => {
 					if (res.status !== 'success') Toast.methods.addToast(res.message, 8000);
 					else Toast.methods.addToast('Successfully changed username', 4000);
 				});
 			},
 			changePassword: function () {
-				const newPassword = this.newPassword;
-				if (!validation.isLength(newPassword, 6, 200)) return Toast.methods.addToast('Password must have between 6 and 200 characters.', 8000);
-				if (!validation.regex.password.test(newPassword)) return Toast.methods.addToast('Invalid password format. Must have one lowercase letter, one uppercase letter, one number and one special character.', 8000);
-
-
-				this.socket.emit('users.updatePassword', newPassword, res => {
+				let _this = this;
+				if (!_this.newPassword) return Toast.methods.addToast('New password cannot be empty', 8000);
+				_this.socket.emit('users.updatePassword', _this.newPassword, res => {
 					if (res.status !== 'success') Toast.methods.addToast(res.message, 8000);
 					else Toast.methods.addToast('Successfully changed password', 4000);
 				});
@@ -174,12 +163,8 @@
 				});
 			},
 			setPassword: function () {
-				const newPassword = this.setNewPassword;
-				if (!validation.isLength(newPassword, 6, 200)) return Toast.methods.addToast('Password must have between 6 and 200 characters.', 8000);
-				if (!validation.regex.password.test(newPassword)) return Toast.methods.addToast('Invalid password format. Must have one lowercase letter, one uppercase letter, one number and one special character.', 8000);
-
-
-				this.socket.emit('users.changePasswordWithCode', this.passwordCode, newPassword, res => {
+				if (!this.setNewPassword) return Toast.methods.addToast('Password cannot be empty', 8000);
+				this.socket.emit('users.changePasswordWithCode', this.passwordCode, this.setNewPassword, res => {
 					Toast.methods.addToast(res.message, 8000);
 				});
 			},

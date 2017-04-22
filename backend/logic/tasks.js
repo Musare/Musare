@@ -29,7 +29,7 @@ let checkStationSkipTask = (callback) => {
 				if (timeElapsed <= station.currentSong.duration) return next2();
 				else {
 					logger.error("TASK_STATIONS_SKIP_CHECK", `Skipping ${station._id} as it should have skipped already.`);
-					Stations.skipStation(station._id);
+					stations.skipStation(station._id);
 					next2();
 				}
 			}, () => {
