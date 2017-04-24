@@ -171,8 +171,6 @@
 </script>
 
 <style lang='scss'>
-	@import 'theme.scss';
-
 	* { box-sizing: border-box; }
 
 	html {

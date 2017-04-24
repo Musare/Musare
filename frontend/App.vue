@@ -184,6 +184,8 @@
 </script>
 
 <style type='scss'>
+	.center { text-align: center; }
+
 	#toast-container { z-index: 10000 !important; }
 
 	html {

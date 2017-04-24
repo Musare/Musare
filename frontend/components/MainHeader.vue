@@ -67,8 +67,6 @@
 </script>
 
 <style lang="scss" scoped>
-	@import 'theme.scss';
-
 	.nav {
 		background-color: #03a9f4;
 		height: 64px;
@@ -99,10 +97,10 @@
 
 		.nav-item {
 			font-size: 15px;
-			color: $white;
+			color: hsl(0, 0%, 100%);
 
 			&:hover {
-				color: $white;
+				color: hsl(0, 0%, 100%);
 			}
 		}
 		.admin {
@@ -145,10 +143,10 @@
 
 			.nav-item {
 				font-size: 15px;
-				color: $white;
+				color: hsl(0, 0%, 100%);
 
 				&:hover {
-					color: $white;
+					color: hsl(0, 0%, 100%);
 				}
 			}
 			.admin strong {

@@ -1,5 +1,5 @@
 start "Redis" "startRedis.cmd"
-start "Mongo" "startmongo.cmd"
+start "Mongo" "startMongo.cmd"
 cd frontend
 start "Frontend" npm run development-watch
 cd ..
