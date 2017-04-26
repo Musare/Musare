@@ -69,7 +69,7 @@
 								<br>
 								<div v-if="station.partyMode">
 									<br>
-									<small>Requested by <b>{{this.$parent.$parent.getUsernameFromId(song.requestedBy)}} {{this.userIdMap[song.requestedBy]}}</b></small>
+									<small>Requested by <b>{{this.$parent.$parent.getUsernameFromId(song.requestedBy)}} {{this.userIdMap['Z' + song.requestedBy]}}</b></small>
 									<button class="button" @click="removeFromQueue(song.songId)" v-if="isOwnerOnly() || isAdminOnly()">REMOVE</button>
 								</div>
 						</div>
