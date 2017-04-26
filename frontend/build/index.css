@@ -10,3 +10,89 @@ body {
 .toast {
 	z-index: 10000 !important;
 }
+
+ul {
+	list-style: none;
+	margin: 0;
+	display: block;
+}
+
+h1, h2, h3, h4, h5, h6 {
+	font-weight: 400;
+	line-height: 1.1;
+}
+
+h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
+	font-weight: inherit;
+}
+
+h1 {
+	font-size: 4.2rem;
+	line-height: 110%;
+	margin: 2.1rem 0 1.68rem 0;
+}
+
+h2 {
+	font-size: 3.56rem;
+	line-height: 110%;
+	margin: 1.78rem 0 1.424rem 0;
+}
+
+h3 {
+	font-size: 2.92rem;
+	line-height: 110%;
+	margin: 1.46rem 0 1.168rem 0;
+}
+
+h4 {
+	font-size: 2.28rem;
+	line-height: 110%;
+	margin: 1.14rem 0 0.912rem 0;
+}
+
+h5 {
+	font-size: 1.64rem;
+	line-height: 110%;
+	margin: 0.82rem 0 0.656rem 0;
+}
+
+h6 {
+	font-size: 1rem;
+	line-height: 110%;
+	margin: 0.5rem 0 0.4rem 0;
+}
+
+.thin {
+	font-weight: 200;
+}
+
+.left {
+	float: left !important;
+}
+
+.right {
+	float: right !important;
+}
+
+.light-blue {
+	background-color: #03a9f4 !important;
+}
+
+.white {
+	background-color: #FFFFFF !important;
+}
+
+.btn-search {
+	font-size: 14px;
+}
+
+a.nav-item.is-tab {
+	border-bottom: 1px solid transparent;
+	border-top: 1px solid transparent;
+}
+
+.button.is-info {
+	background-color: #03a9f4;
+	border-width: 0;
+	color: #fff;
+}

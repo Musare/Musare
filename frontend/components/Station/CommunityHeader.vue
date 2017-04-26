@@ -165,7 +165,7 @@
 			color: #424242;
 		}
 
-		padding: 0 18px;
+		padding: 0 12px;
 		.icon {
 			height: 64px;
 			i {
