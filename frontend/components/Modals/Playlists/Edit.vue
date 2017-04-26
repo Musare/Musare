@@ -94,9 +94,11 @@
 		},
 		methods: {
 			formatTime: function (length) {
+				length = 1000000;
 				let duration = moment.duration(length, 'seconds');
+				function getHours() {return Math.floor(duration.asHours());}
 				if (length <= 0) return '0 seconds';
-				else return ((duration.hours() > 0 ? (duration.hours > 1 ? (duration.hours() < 10 ? ('0' + duration.hours() + ' hours ') : (duration.hours() + ' hours ')) : ('0' + duration.hours() + ' hour ')) : '') + (duration.minutes() > 0 ? (duration.minutes() > 1 ? (duration.minutes() < 10 ? ('0' + duration.minutes() + ' minutes ') : (duration.minutes() + ' minutes ')) : ('0' + duration.minutes() + ' minute ')) : '') + (duration.seconds() > 0 ? (duration.seconds() > 1 ? (duration.seconds() < 10 ? ('0' + duration.seconds() + ' seconds ') : (duration.seconds() + ' seconds ')) : ('0' + duration.seconds() + ' second ')) : ''));
+				else return ((getHours() > 0 ? (getHours() > 1 ? (getHours() < 10 ? ('0' + getHours() + ' hours ') : (getHours() + ' hours ')) : ('0' + getHours() + ' hour ')) : '') + (duration.minutes() > 0 ? (duration.minutes() > 1 ? (duration.minutes() < 10 ? ('0' + duration.minutes() + ' minutes ') : (duration.minutes() + ' minutes ')) : ('0' + duration.minutes() + ' minute ')) : '') + (duration.seconds() > 0 ? (duration.seconds() > 1 ? (duration.seconds() < 10 ? ('0' + duration.seconds() + ' seconds ') : (duration.seconds() + ' seconds ')) : ('0' + duration.seconds() + ' second ')) : ''));
 			},
 			totalLength: function() {
 			    let length = 0;
