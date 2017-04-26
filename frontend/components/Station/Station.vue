@@ -311,13 +311,14 @@
 					window.stationInterval = setInterval(function () {
 						local.resizeSeekerbar();
 						local.calculateTimeElapsed();
-					}, 250);
+					}, 150);
 				}
 			},
 			resizeSeekerbar: function() {
 				let local = this;
 				if (!local.paused) {
-					$(".seeker-bar").width(parseInt(((local.getTimeElapsed() / 1000) / local.currentSong.duration * 100)) + "%");
+					console.log(parseFloat(((local.getTimeElapsed() / 1000) / local.currentSong.duration * 100)));
+					$(".seeker-bar").width(parseFloat(((local.getTimeElapsed() / 1000) / local.currentSong.duration * 100)) + "%");
 				}
 			},
 			formatTime: function(duration) {
