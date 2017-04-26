@@ -4,28 +4,13 @@ import App from './App.vue';
 import auth from './auth';
 import io from './io';
 
-import NotFound from './components/404.vue';
-import Home from './components/pages/Home.vue';
-import Station from './components/Station/Station.vue';
-import Admin from './components/pages/Admin.vue';
-
-import News from './components/pages/News.vue';
-import About from './components/pages/About.vue';
-import Terms from './components/pages/Terms.vue';
-import Privacy from './components/pages/Privacy.vue';
-import Team from './components/pages/Team.vue';
-import User from './components/User/Show.vue';
-import Settings from './components/User/Settings.vue';
-import ResetPassword from './components/User/ResetPassword.vue';
-import Login from './components/Modals/Login.vue';
-import Register from './components/Modals/Register.vue';
-
 Vue.use(VueRouter);
 
 let router = new VueRouter({
 	history: true,
 	suppressTransitionError: true
 });
+
 let _this = this;
 
 lofig.folder = '../config/default.json';
@@ -42,8 +27,8 @@ lofig.get('serverDomain', function(res) {
 });
 
 document.onkeydown = event => {
-    event = event || window.event;
-    if (event.keyCode === 27) router.app.$dispatch('closeModal');
+	event = event || window.event;
+	if (event.keyCode === 27) router.app.$dispatch('closeModal');
 };
 
 router.beforeEach(transition => {
@@ -86,70 +71,71 @@ router.beforeEach(transition => {
 	}
 });
 
-router.afterEach((data) => {
+router.afterEach(data => {
 	ga('set', 'page', data.to.path);
 	ga('send', 'pageview');
 });
 
+
 router.map({
 	'/': {
-		component: Home
+		component: resolve => require(['./components/pages/Home.vue'], resolve)
 	},
 	'*': {
-		component: NotFound
+		component: resolve => require(['./components/404.vue'], resolve)
 	},
 	'404': {
-		component: NotFound
+		component: resolve => require(['./components/404.vue'], resolve)
 	},
 	'/terms': {
-		component: Terms
+		component: resolve => require(['./components/pages/Terms.vue'], resolve)
 	},
 	'/privacy': {
-		component: Privacy
+		component: resolve => require(['./components/pages/Privacy.vue'], resolve)
 	},
 	'/team': {
-		component: Team
+		component: resolve => require(['./components/pages/Team.vue'], resolve)
 	},
 	'/news': {
-		component: News
+		component: resolve => require(['./components/pages/News.vue'], resolve)
 	},
 	'/about': {
-		component: About
+		component: resolve => require(['./components/pages/About.vue'], resolve)
 	},
 	'/u/:username': {
-		component: User
+		component: resolve => require(['./components/User/Show.vue'], resolve),
 	},
 	'/settings': {
-		component: Settings,
+		component: resolve => require(['./components/User/Settings.vue'], resolve),
 		loginRequired: true
 	},
 	'/reset_password': {
-		component: ResetPassword
+		component: resolve => require(['./components/User/ResetPassword.vue'], resolve)
 	},
 	'/login': {
-		component: Login
+		component: resolve => require(['./components/Modals/Login.vue'], resolve)
 	},
 	'/register': {
-		component: Register
+		component: resolve => require(['./components/Modals/Register.vue'], resolve)
 	},
 	'/admin': {
-		component: Admin,
+		component: resolve => require(['./components/pages/Admin.vue'], resolve),
 		adminRequired: true
 	},
 	'/admin/:page': {
-		component: Admin,
+		component: resolve => require(['./components/pages/Admin.vue'], resolve),
 		adminRequired: true
 	},
 	'/official/:id': {
-		component: Station,
+		component: resolve => require(['./components/Station/Station.vue'], resolve),
 		officialRequired: true
 	},
 	'/:id': {
-		component: Station,
+		component: resolve => require(['./components/Station/Station.vue'], resolve),
 		officialRequired: true
 	},
 	'/community/:id': {
-		component: Station,
+		component: resolve => require(['./components/Station/Station.vue'], resolve),
 		communityRequired: true
 	}
 });

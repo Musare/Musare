@@ -5,6 +5,7 @@ module.exports = {
 	entry: './main.js',
 	output: {
 		path: __dirname + '/build/',
+		publicPath: '/',
 		filename: 'bundle.js'
 	},
 	module: {
@@ -22,13 +23,13 @@ module.exports = {
 			},
 			{
 				test: /\.scss$/,
+				exclude: /node_modules/,
 				loader: 'css-loader!sass-loader'
 			}
 		]
 	},
 	vue: {
 		loaders: {
-			sass: 'style-loader!css-loader!sass-loader?indentedSyntax',
 			scss: 'style-loader!css-loader!sass-loader'
 		}
 	}

@@ -69,7 +69,7 @@
 								<br>
 								<div v-if="station.partyMode">
 									<br>
-									<small>Requested by <b>{{this.$parent.$parent.getUsernameFromId(song.requestedBy)}} {{this.userIdMap[song.requestedBy]}}</b></small>
+									<small>Requested by <b>{{this.$parent.$parent.getUsernameFromId(song.requestedBy)}} {{this.userIdMap['Z' + song.requestedBy]}}</b></small>
 									<button class="button" @click="removeFromQueue(song.songId)" v-if="isOwnerOnly() || isAdminOnly()">REMOVE</button>
 								</div>
 						</div>
@@ -93,7 +93,7 @@
 								<p class='volume-slider-wrapper'>
 									<i class="material-icons" @click='toggleMute()' v-if='muted'>volume_mute</i>
 									<i class="material-icons" @click='toggleMute()' v-else>volume_down</i>
-									<input type="range" id="volumeSlider" min="0" max="100" class="active" v-on:change="changeVolume()" v-on:input="changeVolume()">
+									<input type="range" id="volumeSlider" min="0" max="10000" class="active" v-on:change="changeVolume()" v-on:input="changeVolume()">
 									<i class="material-icons" @click='increaseVolume()'>volume_up</i>
 								</p>
 							</form>
@@ -131,7 +131,7 @@
 								<p class='column is-11-mobile volume-slider-wrapper'>
 									<i class="material-icons" @click='toggleMute()' v-if='muted'>volume_mute</i>
 									<i class="material-icons" @click='toggleMute()' v-else>volume_down</i>
-									<input type="range" id="volumeSlider" min="0" max="100" class="active" v-on:change="changeVolume()" v-on:input="changeVolume()">
+									<input type="range" id="volumeSlider" min="0" max="10000" class="active" v-on:change="changeVolume()" v-on:input="changeVolume()">
 									<i class="material-icons" @click='increaseVolume()'>volume_up</i>
 								</p>
 							</form>
@@ -311,13 +311,13 @@
 					window.stationInterval = setInterval(function () {
 						local.resizeSeekerbar();
 						local.calculateTimeElapsed();
-					}, 250);
+					}, 150);
 				}
 			},
 			resizeSeekerbar: function() {
 				let local = this;
 				if (!local.paused) {
-					$(".seeker-bar").width(parseInt(((local.getTimeElapsed() / 1000) / local.currentSong.duration * 100)) + "%");
+					$(".seeker-bar").width(parseFloat(((local.getTimeElapsed() / 1000) / local.currentSong.duration * 100)) + "%");
 				}
 			},
 			formatTime: function(duration) {
@@ -350,9 +350,9 @@
 			changeVolume: function() {
 				let local = this;
 				let volume = $("#volumeSlider").val();
-				localStorage.setItem("volume", volume);
+				localStorage.setItem("volume", volume / 100);
 				if (local.playerReady) {
-					local.player.setVolume(volume);
+					local.player.setVolume(volume / 100);
 					if (volume > 0) local.player.unMute();
 				}
 			},
@@ -402,10 +402,10 @@
 			},
 			toggleMute: function () {
 				if (this.playerReady) {
-					let previousVolume = parseInt(localStorage.getItem("volume"));
-					let volume = this.player.getVolume() <= 0 ? previousVolume : 0;
+					let previousVolume = parseFloat(localStorage.getItem("volume"));
+					let volume = this.player.getVolume() * 100 <= 0 ? previousVolume : 0;
 					this.muted = !this.muted;
-					$("#volumeSlider").val(volume);
+					$("#volumeSlider").val(volume * 100);
 					this.player.setVolume(volume);
 					if (!this.muted) localStorage.setItem("volume", volume);
 				}
@@ -416,7 +416,7 @@
 					let volume = previousVolume + 5;
 					if (previousVolume === 0) this.muted = false;
 					if (volume > 100) volume = 100;
-					$("#volumeSlider").val(volume);
+					$("#volumeSlider").val(volume * 100);
 					this.player.setVolume(volume);
 					localStorage.setItem("volume", volume);
 				}
@@ -451,7 +451,6 @@
 						_this.socket.emit('playlists.getFirstSong', _this.privatePlaylistQueueSelected, data => {
 							if (data.status === 'success') {
 							    if (data.song.duration < 15 * 60) {
-									console.log(data.song);
 									let songId = data.song._id;
 									_this.automaticallyRequestedSongId = data.song.songId;
 									_this.socket.emit('stations.addToQueue', _this.station._id, data.song.songId, data2 => {
@@ -691,7 +690,6 @@
 				});
 
 				_this.socket.on('event:newOfficialPlaylist', (playlist) => {
-					console.log(playlist);
 					if (this.type === 'official') {
 						this.songsList = playlist;
 					}
@@ -711,10 +709,10 @@
 			});
 
 
-			let volume = parseInt(localStorage.getItem("volume"));
+			let volume = parseFloat(localStorage.getItem("volume"));
 			volume = (typeof volume === "number" && !isNaN(volume)) ? volume : 20;
 			localStorage.setItem("volume", volume);
-			$("#volumeSlider").val(volume);
+			$("#volumeSlider").val(volume * 100);
 		},
 		components: {
 			OfficialHeader,

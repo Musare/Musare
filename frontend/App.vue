@@ -66,7 +66,7 @@
 					this.currentlyGettingUsernameFrom[userId] = true;
 			        io.getSocket(socket => {
 			            socket.emit('users.getUsernameFromId', userId, (data) => {
-			                if (data.status === 'success') this.$set(`userIdMap.${userId}`, data.data);
+			                if (data.status === 'success') this.$set(`userIdMap.Z${userId}`, data.data);
 							this.currentlyGettingUsernameFrom[userId] = false;
 						});
 					});
@@ -184,6 +184,8 @@
 </script>
 
 <style type='scss'>
+	.center { text-align: center; }
+
 	#toast-container { z-index: 10000 !important; }
 
 	html {

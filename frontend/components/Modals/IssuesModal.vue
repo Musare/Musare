@@ -3,9 +3,9 @@
 		<div slot='body'>
 			<article class="message">
 				<div class="message-body">
-					<strong>Song ID: </strong>{{ $parent.editing.songId }}<br/ >
-					<strong>Created By: </strong>{{ $parent.editing.createdBy }}<br/ >
-					<strong>Created At: </strong>{{ $parent.editing.createdAt }}<br/ >
+					<strong>Song ID: </strong>{{ $parent.editing.songId }}<br/>
+					<strong>Created By: </strong>{{ $parent.editing.createdBy }}<br/>
+					<strong>Created At: </strong>{{ $parent.editing.createdAt }}<br/>
 					<span v-if='$parent.editing.description'><strong>Description: </strong>{{ $parent.editing.description }}</span>
 				</div>
 			</article>

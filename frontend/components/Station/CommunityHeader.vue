@@ -142,7 +142,6 @@
 </script>
 
 <style lang='scss' scoped>
-	@import 'theme.scss';
 	.nav {
 		background-color: #03a9f4;
 		line-height: 64px;
@@ -155,18 +154,18 @@
 	}
 
 	a.nav-item {
-		color: $white;
+		color: hsl(0, 0%, 100%);
 		font-size: 15px;
 
 		&:hover {
-			color: $white;
+			color: hsl(0, 0%, 100%);
 		}
 
 		.admin {
 			color: #424242;
 		}
 
-		padding: 0 18px;
+		padding: 0 12px;
 		.icon {
 			height: 64px;
 			i {
@@ -218,7 +217,7 @@
 	.nav-center {
 		display: flex;
     align-items: center;
-		color: $blue;
+		color: #03A9F4;
 		font-size: 22px;
 		position: absolute;
 		margin: auto;

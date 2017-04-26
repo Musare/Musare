@@ -106,7 +106,6 @@ module.exports = {
 			(station, next) => {
 				if (!station) return next('Station not found.');
 				notifications.unschedule(`stations.nextSong?id=${station._id}`);
-				if (subscription) notifications.remove(subscription);
 				subscription = notifications.subscribe(`stations.nextSong?id=${station._id}`, _this.skipStation(station._id), true, station);
 				if (station.paused) return next(true, station);
 				next(null, station);

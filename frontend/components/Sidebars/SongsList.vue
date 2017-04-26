@@ -31,7 +31,7 @@
 							<strong class="songTitle">{{ song.title }}</strong>
 							<small>{{ song.artists.join(', ') }}</small>
 							<div v-if="this.$parent.$parent.type === 'community' && this.$parent.$parent.station.partyMode === true">
-								<small>Requested by <b>{{this.$parent.$parent.$parent.getUsernameFromId(song.requestedBy)}} {{this.userIdMap[song.requestedBy]}}</b></small>
+								<small>Requested by <b>{{this.$parent.$parent.$parent.getUsernameFromId(song.requestedBy)}} {{this.userIdMap['Z' + song.requestedBy]}}</b></small>
 								<i class="material-icons" style="vertical-align: middle;" @click="removeFromQueue(song.songId)" v-if="isOwnerOnly() || isAdminOnly()">delete_forever</i>
 							</div>
 					</div>

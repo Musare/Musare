@@ -19,7 +19,7 @@ services:
   mongo:
     image: mongo
     ports:
-    - "27018:27018"
+    - "27017:27017"
     command: "--auth"
   mongoclient:
     image: mongoclient/mongoclient
@@ -31,4 +31,4 @@ services:
     volumes:
     - .redis:/data
     ports:
-    - "6371:6371"
+    - "6379:6379"
