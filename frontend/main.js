@@ -79,63 +79,63 @@ router.afterEach(data => {
 
 router.map({
 	'/': {
-		component: resolve => require(['./components/pages/Home.vue'], resolve)
+		component: resolve => require.ensure([], () => resolve(require('./components/pages/Home.vue')), 'home')
 	},
 	'*': {
-		component: resolve => require(['./components/404.vue'], resolve)
+		component: resolve => require.ensure([], () => resolve(require('./components/404.vue')), '404')
 	},
 	'404': {
-		component: resolve => require(['./components/404.vue'], resolve)
+		component: resolve => require.ensure([], () => resolve(require('./components/404.vue')), '404')
 	},
 	'/terms': {
-		component: resolve => require(['./components/pages/Terms.vue'], resolve)
+		component: resolve => require.ensure([], () => resolve(require('./components/pages/Terms.vue')), 'terms')
 	},
 	'/privacy': {
-		component: resolve => require(['./components/pages/Privacy.vue'], resolve)
+		component: resolve => require.ensure([], () => resolve(require('./components/pages/Privacy.vue')), 'privacy')
 	},
 	'/team': {
-		component: resolve => require(['./components/pages/Team.vue'], resolve)
+		component: resolve => require.ensure([], () => resolve(require('./components/pages/Team.vue')), 'team')
 	},
 	'/news': {
-		component: resolve => require(['./components/pages/News.vue'], resolve)
+		component: resolve => require.ensure([], () => resolve(require('./components/pages/News.vue')), 'news')
 	},
 	'/about': {
-		component: resolve => require(['./components/pages/About.vue'], resolve)
+		component: resolve => require.ensure([], () => resolve(require('./components/pages/About.vue')), 'about')
 	},
 	'/u/:username': {
-		component: resolve => require(['./components/User/Show.vue'], resolve),
+		component: resolve => require.ensure([], () => resolve(require('./components/User/Show.vue')), 'show-user')
 	},
 	'/settings': {
-		component: resolve => require(['./components/User/Settings.vue'], resolve),
+		component: resolve => require.ensure([], () => resolve(require('./components/User/Settings.vue')), 'settings'),
 		loginRequired: true
 	},
 	'/reset_password': {
-		component: resolve => require(['./components/User/ResetPassword.vue'], resolve)
+		component: resolve => require.ensure([], () => resolve(require('./components/User/ResetPassword.vue')), 'reset-password')
 	},
 	'/login': {
-		component: resolve => require(['./components/Modals/Login.vue'], resolve)
+		component: resolve => require.ensure([], () => resolve(require('./components/Modals/Login.vue')), 'login')
 	},
 	'/register': {
-		component: resolve => require(['./components/Modals/Register.vue'], resolve)
+		component: resolve => require.ensure([], () => resolve(require('./components/Modals/Register.vue')), 'register')
 	},
 	'/admin': {
-		component: resolve => require(['./components/pages/Admin.vue'], resolve),
+		component: resolve => require.ensure([], () => resolve(require('./components/pages/Admin.vue')), 'admin'),
 		adminRequired: true
 	},
 	'/admin/:page': {
-		component: resolve => require(['./components/pages/Admin.vue'], resolve),
+		component: resolve => require.ensure([], () => resolve(require('./components/pages/Admin.vue')), 'admin'),
 		adminRequired: true
 	},
 	'/official/:id': {
-		component: resolve => require(['./components/Station/Station.vue'], resolve),
+		component: resolve => require.ensure([], () => resolve(require('./components/Station/Station.vue')), 'station'),
 		officialRequired: true
 	},
 	'/:id': {
-		component: resolve => require(['./components/Station/Station.vue'], resolve),
+		component: resolve => require.ensure([], () => resolve(require('./components/Station/Station.vue')), 'station'),
 		officialRequired: true
 	},
 	'/community/:id': {
-		component: resolve => require(['./components/Station/Station.vue'], resolve),
+		component: resolve => require.ensure([], () => resolve(require('./components/Station/Station.vue')), 'station'),
 		communityRequired: true
 	}
 });

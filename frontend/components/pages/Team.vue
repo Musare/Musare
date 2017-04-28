@@ -3,7 +3,7 @@
 		<main-header></main-header>
 		<div class='container'>
 			<h3 class="center">Current members</h3>
-			<br />
+			<br>
 			<div class="columns">
 				<div class='card column is-6-desktop is-offset-3-desktop is-12-mobile'>
 					<header class='card-header'>
@@ -13,8 +13,8 @@
 					</header>
 					<div class='card-content'>
 						<div class='content'>
+							<span class="custom-tag purple">senior-project-manager</span>
 							<span class="custom-tag blue">co-founder</span>
-							<span class="custom-tag light-blue">lead-developer</span>
 							<ul>
 								<li>
 									<b>Joined: </b>
@@ -22,7 +22,33 @@
 								</li>
 								<li>
 									<b>Email: </b>
-									<a href="&#109;&#097;&#105;&#108;&#116;&#111;:&#107;&#114;&#105;&#115;&#118;&#111;&#115;&#049;&#051;&#048;&#064;&#103;&#109;&#097;&#105;&#108;&#046;&#099;&#111;&#109;">krisvos130@gmail.com</a>
+									<a href="&#109;&#097;&#105;&#108;&#116;&#111;:&#107;&#114;&#105;&#115;&#064;&#109;&#117;&#115;&#097;&#114;&#101;&#046;&#099;&#111;&#109;">&#107;&#114;&#105;&#115;&#064;&#109;&#117;&#115;&#097;&#114;&#101;&#046;&#099;&#111;&#109;</a>
+								</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+			<br>
+			<div class="columns">
+				<div class='card column is-6-desktop is-offset-3-desktop is-12-mobile'>
+					<header class='card-header'>
+						<p class='card-header-title'>
+							Owen Diffey
+						</p>
+					</header>
+					<div class='card-content'>
+						<div class='content'>
+							<span class="custom-tag purple">project-manager</span>
+							<span class="custom-tag light-blue">developer</span>
+							<ul>
+								<li>
+									<b>Joined: </b>
+									February 29, 2016
+								</li>
+								<li>
+									<b>Email: </b>
+									<a href="&#109;&#097;&#105;&#108;&#116;&#111;:&#111;&#119;&#101;&#110;&#064;&#109;&#117;&#115;&#097;&#114;&#101;&#046;&#099;&#111;&#109;">&#111;&#119;&#101;&#110;&#064;&#109;&#117;&#115;&#097;&#114;&#101;&#046;&#099;&#111;&#109;</a>
 								</li>
 							</ul>
 						</div>
@@ -47,7 +73,7 @@
 								</li>
 								<li>
 									<b>Email: </b>
-									<a href="&#109;&#097;&#105;&#108;&#116;&#111;:&#097;&#116;&#106;&#111;&#110;&#097;&#116;&#104;&#097;&#110;&#064;&#101;&#110;&#103;&#105;&#110;&#101;&#101;&#114;&#046;&#099;&#111;&#109;">atjonathan@engineer.com</a>
+									<a href="&#109;&#097;&#105;&#108;&#116;&#111;:&#106;&#111;&#110;&#097;&#116;&#104;&#097;&#110;&#064;&#109;&#117;&#115;&#097;&#114;&#101;&#046;&#099;&#111;&#109;">&#106;&#111;&#110;&#097;&#116;&#104;&#097;&#110;&#064;&#109;&#117;&#115;&#097;&#114;&#101;&#046;&#099;&#111;&#109;</a>
 								</li>
 							</ul>
 						</div>
@@ -59,21 +85,20 @@
 				<div class='card column is-6-desktop is-offset-3-desktop is-12-mobile'>
 					<header class='card-header'>
 						<p class='card-header-title'>
-							Owen Diffey
+							Adryd
 						</p>
 					</header>
 					<div class='card-content'>
 						<div class='content'>
 							<span class="custom-tag pink">lead-designer</span>
-							<span class="custom-tag light-blue">developer</span>
 							<ul>
 								<li>
 									<b>Joined: </b>
-									February 29, 2016
+									April 21, 2017
 								</li>
 								<li>
 									<b>Email: </b>
-									<a href="&#109;&#097;&#105;&#108;&#116;&#111;:&#111;&#119;&#101;&#110;&#064;&#111;&#100;&#105;&#102;&#102;&#101;&#121;&#046;&#117;&#107;">&#111;&#119;&#101;&#110;&#064;&#111;&#100;&#105;&#102;&#102;&#101;&#121;&#046;&#117;&#107;</a>
+									<a href="&#109;&#097;&#105;&#108;&#116;&#111;:&#097;&#100;&#114;&#121;&#100;&#064;&#109;&#117;&#115;&#097;&#114;&#101;&#046;&#099;&#111;&#109;">&#097;&#100;&#114;&#121;&#100;&#064;&#109;&#117;&#115;&#097;&#114;&#101;&#046;&#099;&#111;&#109;</a>
 								</li>
 							</ul>
 						</div>
@@ -283,5 +308,10 @@
 	.custom-tag.light-green {
 		background-color: #019875;
 		color: white;
+	}
+
+	.custom-tag.purple {
+		background-color: #90298C;
+    	color: white;
 	}
 </style>
