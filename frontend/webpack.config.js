@@ -1,4 +1,6 @@
 const webpack = require('webpack');
+const WebpackMd5Hash = require('webpack-md5-hash');
+const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = {
 	devtool: 'eval-source-map',
@@ -6,8 +8,17 @@ module.exports = {
 	output: {
 		path: __dirname + '/build/',
 		publicPath: '/',
-		filename: 'bundle.js'
+		filename: '[name].[chunkhash].js'
 	},
+	plugins: [
+		new WebpackMd5Hash(),
+		new HtmlWebpackPlugin({
+			hash: true,
+			template: "build/index.tpl.html",
+			inject: "body",
+			filename: "index.html"
+		})
+	],
 	module: {
 		loaders: [
 			{
