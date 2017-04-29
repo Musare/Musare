@@ -94,7 +94,6 @@
 		},
 		methods: {
 			formatTime: function (length) {
-				length = 1000000;
 				let duration = moment.duration(length, 'seconds');
 				function getHours() {return Math.floor(duration.asHours());}
 				if (length <= 0) return '0 seconds';
