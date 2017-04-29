@@ -5,6 +5,7 @@
 		<router-view></router-view>
 		<toast></toast>
 		<what-is-new></what-is-new>
+		<mobile-alert></mobile-alert>
 		<login-modal v-if='isLoginActive'></login-modal>
 		<register-modal v-if='isRegisterActive'></register-modal>
 	</div>
@@ -15,6 +16,7 @@
 
 	import Banned from './components/pages/Banned.vue';
 	import WhatIsNew from './components/Modals/WhatIsNew.vue';
+	import MobileAlert from './Components/Modals/MobileAlert.vue';
 	import LoginModal from './components/Modals/Login.vue';
 	import RegisterModal from './components/Modals/Register.vue';
 	import auth from './auth';
@@ -179,7 +181,7 @@
 				this.$broadcast('closeModal');
 			}
 		},
-		components: { Toast, WhatIsNew, LoginModal, RegisterModal, Banned }
+		components: { Toast, WhatIsNew, MobileAlert, LoginModal, RegisterModal, Banned }
 	}
 </script>
 
