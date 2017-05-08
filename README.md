@@ -62,7 +62,7 @@ Once you've installed the required tools:
    	The `apis.discord.loggingChannel` is the Discord logging channel id.  
    	The `apis.mailgun` values can be obtained by setting up a [Mailgun account](http://www.mailgun.com/).  
    	The `redis.url` url should be left alone for Docker, and changed to `redis://localhost:6379/0` for non-Docker.
-   	The `redis.password` should be the Redis password you either put in your `startRedis.cmd` file for Windows, or `docker-compose.yml` for docker.
+   	The `redis.password` should be the Redis password you either put in your `startRedis.cmd` file for Windows, or `.env` for docker.
    	The `mongo.url` needs to have the proper password for the MongoDB musare user, and for non-Docker you need to replace `@musare:27017` with `@localhost:27017`.  
    	The `cookie.domain` value should be the ip or address you use to access the site, without protocols (http/https), so for example `localhost`.   
    	The `cookie.secure` value should be `true` for SSL connections, and `false` for normal http connections.  
@@ -179,9 +179,9 @@ Steps 1-4 are things you only have to do once. The steps to start servers follow
 
 5. Create a file called `startRedis.cmd` in the main folder with the contents:
 
-		"D:\Redis\redis-server.exe" "D:\Redis\redis.windows.conf"
+		"D:\Redis\redis-server.exe" "D:\Redis\redis.windows.conf" "--requirepass" "PASSWORD"
 
-	And again, make sure that the paths lead to the proper config and executable.
+	And again, make sure that the paths lead to the proper config and executable. Replace `PASSWORD` with your Redis password.
 
 ####Non-docker start servers
 
