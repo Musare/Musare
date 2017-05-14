@@ -206,15 +206,16 @@ async.waterfall([
 			app.listen(config.get("frontendPort"));
 			const rootDir = __dirname.substr(0, __dirname.lastIndexOf("backend")) + "frontend/build/";
 
+			app.use(express.static(rootDir, {
+				setHeaders: function(res, path) {
+					console.log(path);
+					if (path.indexOf('.html') !== -1) res.setHeader('Cache-Control', 'public, max-age=0');
+					else res.setHeader('Cache-Control', 'public, max-age=2628000');
+				}
+			}));
+
 			app.get("/*", (req, res) => {
-				const path = req.path;
-				fs.access(rootDir + path, function(err) {
-					if (!err) {
-						res.sendFile(rootDir + path);
-					} else {
-						res.sendFile(rootDir + "index.html");
-					}
-				});
+				res.sendFile(rootDir + "index.html");
 			});
 		}
 		if (lockdownB) return;
