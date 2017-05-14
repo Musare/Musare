@@ -85,31 +85,6 @@
 				<div class='card column is-6-desktop is-offset-3-desktop is-12-mobile'>
 					<header class='card-header'>
 						<p class='card-header-title'>
-							Adryd
-						</p>
-					</header>
-					<div class='card-content'>
-						<div class='content'>
-							<span class="custom-tag pink">lead-designer</span>
-							<ul>
-								<li>
-									<b>Joined: </b>
-									April 21, 2017
-								</li>
-								<li>
-									<b>Email: </b>
-									<a href="&#109;&#097;&#105;&#108;&#116;&#111;:&#097;&#100;&#114;&#121;&#100;&#064;&#109;&#117;&#115;&#097;&#114;&#101;&#046;&#099;&#111;&#109;">&#097;&#100;&#114;&#121;&#100;&#064;&#109;&#117;&#115;&#097;&#114;&#101;&#046;&#099;&#111;&#109;</a>
-								</li>
-							</ul>
-						</div>
-					</div>
-				</div>
-			</div>
-			<br>
-			<div class="columns">
-				<div class='card column is-6-desktop is-offset-3-desktop is-12-mobile'>
-					<header class='card-header'>
-						<p class='card-header-title'>
 							Antonio
 						</p>
 					</header>
@@ -131,6 +106,27 @@
 				</div>
 			</div>
 			<h3 class="center">Old/inactive members</h3>
+			<br />
+			<div class="columns">
+				<div class='card column is-6-desktop is-offset-3-desktop is-12-mobile'>
+					<header class='card-header'>
+						<p class='card-header-title'>
+							Adryd
+						</p>
+					</header>
+					<div class='card-content'>
+						<div class='content'>
+							<span class="custom-tag pink">designer</span>
+							<ul>
+								<li>
+									<b>Joined: </b>
+									April 21, 2017
+								</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
 			<br />
 			<div class="columns">
 				<div class='card column is-6-desktop is-offset-3-desktop is-12-mobile'>
