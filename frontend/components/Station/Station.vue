@@ -733,7 +733,7 @@
 
 <style lang="scss">
 	.no-song {
-		color: #03A9F4;
+		color: #ff4545;
 		text-align: center;
 	}
 
@@ -772,7 +772,7 @@
 		box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
 		.slideout-header {
 			text-align: center;
-			background-color: rgb(3, 169, 244) !important;
+			background-color: rgb(255, 69, 69) !important;
 			margin: 0;
 			padding-top: 5px;
 			padding-bottom: 7px;
@@ -834,7 +834,7 @@
 			overflow-y: scroll;
 
 			.title {
-				background-color: rgb(3, 169, 244);
+				background-color: rgb(255, 69, 69);
 				text-align: center;
 				padding: 10px;
 				color: white;
@@ -859,7 +859,7 @@
 				margin-top: 25px;
 				height: 40px;
 				border-radius: 0;
-				background: rgb(3, 169, 244);
+				background: rgb(255, 69, 69);
 				color: #fff !important;
 				border: 0;
 				&:active, &:focus { border: 0; }
@@ -909,7 +909,7 @@
 			height: 19px;
 			width: 19px;
 			border-radius: 15px;
-			background: #03a9f4;
+			background: #ff4545;
 			cursor: pointer;
 			-webkit-appearance: none;
 			margin-top: -6.5px;
@@ -931,7 +931,7 @@
 			height: 19px;
 			width: 19px;
 			border-radius: 15px;
-			background: #03a9f4;
+			background: #ff4545;
 			cursor: pointer;
 			-webkit-appearance: none;
 			margin-top: -6.5px;
@@ -966,7 +966,7 @@
 			height: 15px;
 			width: 15px;
 			border-radius: 15px;
-			background: #03a9f4;
+			background: #ff4545;
 			cursor: pointer;
 			-webkit-appearance: none;
 			margin-top: 1.5px;
@@ -1108,7 +1108,7 @@
 	}
 
 	.light-blue {
-		background-color: #03a9f4 !important;
+		background-color: #ff4545 !important;
 	}
 
 	.white {
@@ -1153,7 +1153,7 @@
 	.progress {
 		width: 50px;
 		animation: rotate 0.8s infinite linear;
-		border: 8px solid #03A9F4;
+		border: 8px solid #ff4545;
 		border-right-color: transparent;
 		height: 50px;
 		position: absolute;
