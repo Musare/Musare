@@ -414,7 +414,7 @@
 		height: 19px;
 		width: 19px;
 		border-radius: 15px;
-		background: #03a9f4;
+		background: #ff4545;
 		cursor: pointer;
 		-webkit-appearance: none;
 		margin-top: -6.5px;
@@ -436,7 +436,7 @@
 		height: 19px;
 		width: 19px;
 		border-radius: 15px;
-		background: #03a9f4;
+		background: #ff4545;
 		cursor: pointer;
 		-webkit-appearance: none;
 		margin-top: -6.5px;
@@ -471,7 +471,7 @@
 		height: 15px;
 		width: 15px;
 		border-radius: 15px;
-		background: #03a9f4;
+		background: #ff4545;
 		cursor: pointer;
 		-webkit-appearance: none;
 		margin-top: 1.5px;
@@ -519,7 +519,7 @@
 	.tag:not(:last-child) { margin-right: 5px; }
 
 	.reports-length {
-		color: #03A9F4;
+		color: #ff4545;
 		font-weight: bold;
 		display: flex;
 		justify-content: center;

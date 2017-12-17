@@ -276,7 +276,7 @@
 		color: #4a4a4a;
 	}
 
-	.community-button:hover { color: #03a9f4; }
+	.community-button:hover { color: #ff4545; }
 
 	.station-privacy { text-transform: capitalize; }
 
@@ -349,7 +349,7 @@
 			color: #e6e6e6;
 		}
 
-		.community-button:hover { color: #03a9f4; }
+		.community-button:hover { color: #ff4545; }
 
 		.station-card {
 			margin: 10px;

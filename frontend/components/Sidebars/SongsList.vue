@@ -112,7 +112,7 @@
 	.slide-enter, .slide-leave { transform: translateX(100%); }
 
 	.title {
-		background-color: rgb(3, 169, 244);
+		background-color: rgb(255, 69, 69);
 		text-align: center;
 		padding: 10px;
 		color: white;
@@ -136,7 +136,7 @@
 		margin-top: 25px;
 		height: 40px;
 		border-radius: 0;
-		background: rgb(3, 169, 244);
+		background: rgb(255, 69, 69);
 		color: #fff !important;
 		border: 0;
 		&:active, &:focus { border: 0; }

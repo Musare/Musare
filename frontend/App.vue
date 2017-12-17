@@ -289,7 +289,7 @@
 	}
 
 	.button:focus, .button:active { border-color: #dbdbdb !important; }
-	.input:focus, .input:active { border-color: #03a9f4 !important; }
+	.input:focus, .input:active { border-color: #ff4545 !important; }
 	button.delete:focus { background-color: rgba(10, 10, 10, 0.3); }
 
 	.tag { padding-right: 6px !important; }
