@@ -226,5 +226,5 @@
 
 	.is-info:focus { background-color: #0398db; }
 
-	.card-footer-item { color: #03A9F4; }
+	.card-footer-item { color: #ff4545; }
 </style>

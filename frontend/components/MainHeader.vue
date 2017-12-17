@@ -1,4 +1,15 @@
 <template>
+<div class="winter-is-coming">
+
+<div class="snow snow--near"></div>
+<div class="snow snow--near snow--alt"></div>
+
+<div class="snow snow--mid"></div>
+<div class="snow snow--mid snow--alt"></div>
+
+<div class="snow snow--far"></div>
+<div class="snow snow--far snow--alt"></div>
+</div>
 	<nav class="nav is-info">
 		<div class="nav-left">
 			<a class="nav-item is-brand" href="#" v-link="{ path: '/' }">
@@ -68,7 +79,7 @@
 
 <style lang="scss" scoped>
 	.nav {
-		background-color: #03a9f4;
+		background-color: #ff4545;
 		height: 64px;
 
 		.nav-menu.is-active {
@@ -150,7 +161,7 @@
 				}
 			}
 			.admin strong {
-				color: #03a9f4;
+				color: #ff4545;
 			}
 		}
 	}

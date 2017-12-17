@@ -236,6 +236,6 @@
 	}
 
 	.is-highlight-active {
-		border: 3px #03a9f4 solid;
+		border: 3px #ff4545 solid;
 	}
 </style>
