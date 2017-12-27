@@ -105,6 +105,8 @@ module.exports = {
 				return cb({'status': 'failure', 'message': err});
 			}
 			logger.success("SONGS_GET_SET", `Got set from songs successfully.`);
+			logger.stationIssue(songs.length, true);
+			logger.stationIssue(Math.max(songs.length - 15, 0), true);
 			cb(songs.splice(Math.max(songs.length - 15, 0)));
 		});
 	}),

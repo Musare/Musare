@@ -136,7 +136,7 @@
 
 <style lang='scss' scoped>
 	.is-active a {
-		color: #ff4545 !important;
-		border-color: #ff4545 !important;
+		color: #03a9f4 !important;
+		border-color: #03a9f4 !important;
 	}
 </style>

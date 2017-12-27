@@ -41,7 +41,7 @@
 	}
 
 	.title {
-		background-color: rgb(255, 69, 69);
+		background-color: rgb(3, 169, 244);
 		text-align: center;
 		padding: 10px;
 		color: white;

@@ -100,7 +100,7 @@
 				let _this = this;
 				_this.songs = [];
 				_this.socket.emit('songs.length', length => {
-					_this.maxPosition = Math.round(length / 15);
+					_this.maxPosition = Math.ceil(length / 15);
 					_this.getSet();
 				});
 				_this.socket.emit('apis.joinAdminRoom', 'songs', () => {});

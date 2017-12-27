@@ -25,11 +25,11 @@
 	<link rel='icon' type='image/png' href='/android-chrome-192x192.png?v=06042016' sizes='192x192'>
 	<link rel='icon' type='image/png' href='/favicon-16x16.png?v=06042016' sizes='16x16'>
 	<link rel='manifest' href='/manifest.json?v=06042016'>
-	<link rel='mask-icon' href='/safari-pinned-tab.svg?v=06042016' color='#ff4545'>
+	<link rel='mask-icon' href='/safari-pinned-tab.svg?v=06042016' color='#03a9f4'>
 	<link rel='shortcut icon' href='/favicon.ico?v=06042016'>
-	<meta name='msapplication-TileColor' content='#ff4545'>
+	<meta name='msapplication-TileColor' content='#03a9f4'>
 	<meta name='msapplication-TileImage' content='/mstile-144x144.png?v=06042016'>
-	<meta name='theme-color' content='#ff4545'>
+	<meta name='theme-color' content='#03a9f4'>
 	<meta name='google' content='nositelinkssearchbox' />
 
 
@@ -50,67 +50,6 @@
 
 		ga('create', 'UA-93460758-1', 'auto');
 	</script>
-	<style>
-	/*Snow courtesy of iamjamie on codepen.io*/
-	.winter-is-coming, .snow {
-  z-index: 100;
-  pointer-events: none;
-}
-
-.winter-is-coming {
-  overflow: hidden;
-  position: absolute;
-  top: 0;
-  height: 100%;
-  width: 100%;
-  max-width: 100%;
-  background: transparent;
-}
-
-.snow {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  animation: falling linear infinite both;
-  transform: translate3D(0, -100%, 0);
-}
-.snow--near {
-  animation-duration: 10s;
-  background-image: url("https://dl6rt3mwcjzxg.cloudfront.net/assets/snow/snow-large-075d267ecbc42e3564c8ed43516dd557.png");
-  background-size: contain;
-}
-.snow--near + .snow--alt {
-  animation-delay: 5s;
-}
-.snow--mid {
-  animation-duration: 20s;
-  background-image: url(https://dl6rt3mwcjzxg.cloudfront.net/assets/snow/snow-medium-0b8a5e0732315b68e1f54185be7a1ad9.png);
-  background-size: contain;
-}
-.snow--mid + .snow--alt {
-  animation-delay: 10s;
-}
-.snow--far {
-  animation-duration: 30s;
-  background-image: url(https://dl6rt3mwcjzxg.cloudfront.net/assets/snow/snow-small-1ecd03b1fce08c24e064ff8c0a72c519.png);
-  background-size: contain;
-}
-.snow--far + .snow--alt {
-  animation-delay: 15s;
-}
-
-@keyframes falling {
-  0% {
-    transform: translate3D(-7.5%, -100%, 0);
-  }
-  100% {
-    transform: translate3D(7.5%, 100%, 0);
-  }
-}
-
-	</style>
 </head>
 <body>
 	<script src='https://www.google.com/recaptcha/api.js'></script>

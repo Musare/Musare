@@ -414,7 +414,7 @@
 		height: 19px;
 		width: 19px;
 		border-radius: 15px;
-		background: #ff4545;
+		background: #03a9f4;
 		cursor: pointer;
 		-webkit-appearance: none;
 		margin-top: -6.5px;
@@ -436,7 +436,7 @@
 		height: 19px;
 		width: 19px;
 		border-radius: 15px;
-		background: #ff4545;
+		background: #03a9f4;
 		cursor: pointer;
 		-webkit-appearance: none;
 		margin-top: -6.5px;
@@ -471,7 +471,7 @@
 		height: 15px;
 		width: 15px;
 		border-radius: 15px;
-		background: #ff4545;
+		background: #03a9f4;
 		cursor: pointer;
 		-webkit-appearance: none;
 		margin-top: 1.5px;

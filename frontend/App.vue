@@ -16,7 +16,7 @@
 
 	import Banned from './components/pages/Banned.vue';
 	import WhatIsNew from './components/Modals/WhatIsNew.vue';
-	import MobileAlert from './Components/Modals/MobileAlert.vue';
+	import MobileAlert from './components/Modals/MobileAlert.vue';
 	import LoginModal from './components/Modals/Login.vue';
 	import RegisterModal from './components/Modals/Register.vue';
 	import auth from './auth';
@@ -289,7 +289,7 @@
 	}
 
 	.button:focus, .button:active { border-color: #dbdbdb !important; }
-	.input:focus, .input:active { border-color: #ff4545 !important; }
+	.input:focus, .input:active { border-color: #03a9f4 !important; }
 	button.delete:focus { background-color: rgba(10, 10, 10, 0.3); }
 
 	.tag { padding-right: 6px !important; }

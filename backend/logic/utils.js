@@ -288,7 +288,7 @@ module.exports = {
 				body = JSON.parse(body);
 
 				//TODO Clean up duration converter
-				let dur = body.items[0].contentDetails.duration;
+  				let dur = body.items[0].contentDetails.duration;
 				dur = dur.replace('PT', '');
 				let duration = 0;
 				dur = dur.replace(/([\d]*)H/, (v, v2) => {

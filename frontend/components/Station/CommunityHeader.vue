@@ -1,15 +1,4 @@
 <template>
-<div class="winter-is-coming">
-
-<div class="snow snow--near"></div>
-<div class="snow snow--near snow--alt"></div>
-
-<div class="snow snow--mid"></div>
-<div class="snow snow--mid snow--alt"></div>
-
-<div class="snow snow--far"></div>
-<div class="snow snow--far snow--alt"></div>
-</div>
 	<nav class='nav'>
 		<div class='nav-left'>
 			<a class='nav-item is-brand' href='#' v-link='{ path: "/" }' @click='this.$dispatch("leaveStation", title)'>
@@ -154,7 +143,7 @@
 
 <style lang='scss' scoped>
 	.nav {
-		background-color: #ff4545;
+		background-color: #03a9f4;
 		line-height: 64px;
 
 		.is-brand {
@@ -228,7 +217,7 @@
 	.nav-center {
 		display: flex;
     align-items: center;
-		color: #ff4545;
+		color: #03a9f4;
 		font-size: 22px;
 		position: absolute;
 		margin: auto;
@@ -238,7 +227,7 @@
 	}
 
 	.nav-right.is-active .nav-item {
-		background: #ff4545;
+		background: #03a9f4;
     	border: 0;
 	}
 
@@ -249,7 +238,7 @@
 		left: 0;
 		width: 64px;
 		height: 100vh;
-		background-color: #ff4545;
+		background-color: #03a9f4;
 		box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
 
 		@media (max-width: 998px) {
@@ -318,7 +307,7 @@
 		visibility: hidden;
 		width: 160px;
 		font-size: 12px;
-		background-color: rgba(255, 69, 69, 0.8);
+		background-color: rgba(3, 169, 244, 0.8);
 		color: #fff;
 		text-align: center;
 		border-radius: 6px;
@@ -339,7 +328,7 @@
 	    margin-top: -5px;
 	    border-width: 5px;
 	    border-style: solid;
-	    border-color: transparent rgba(255, 69, 69, 0.8) transparent transparent;
+	    border-color: transparent rgba(3, 169, 244, 0.8) transparent transparent;
 	}
 
 	.sidebar-item:hover .icon-purpose {
