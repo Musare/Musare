@@ -52,7 +52,7 @@
 		</div>
 		<a href="#" v-if="passwordStep === 1 && !password" @click="passwordStep = 2">Skip this step</a>
 
-		<a class="button is-github" v-if="!github" :href='$parent.serverDomain + "/auth/github/link"'>
+		<a class="button is-github" v-if="!github" :href='"http://" + $parent.serverDomain + "/auth/github/link"'>
 			<div class='icon'>
 				<img class='invert' src='/assets/social/github.svg'/>
 			</div>

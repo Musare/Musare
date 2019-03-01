@@ -17,7 +17,7 @@ services:
     volumes:
     - ./frontend:/opt/app
   mongo:
-    image: mongo
+    image: mongo:3.3
     ports:
     - "27017:27017"
     command: "--auth"

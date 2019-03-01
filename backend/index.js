@@ -6,8 +6,8 @@ const async = require('async');
 const fs = require('fs');
 
 
-const Discord = require("discord.js");
-const client = new Discord.Client();
+//const Discord = require("discord.js");
+//const client = new Discord.Client();
 const db = require('./logic/db');
 const app = require('./logic/app');
 const mail = require('./logic/mail');
@@ -42,7 +42,7 @@ const getError = (err) => {
 	return error;
 };
 
-client.on('ready', () => {
+/*client.on('ready', () => {
 	discordClientCBS.forEach((cb) => {
 		cb();
 	});
@@ -85,7 +85,7 @@ const logToDiscord = (message, color, type, critical, extraFields, cb = ()=>{}) 
 			cb(reason);
 		});
 	});
-};
+};*/
 
 function lockdown() {
 	if (lockdownB) return;
@@ -99,7 +99,7 @@ function lockdown() {
 function errorCb(message, err, component) {
 	err = getError(err);
 	lockdown();
-	logToDiscord(message, "#FF0000", message, true, [{name: "Error:", value: err, inline: false}, {name: "Component:", value: component, inline: true}]);
+	//logToDiscord(message, "#FF0000", message, true, [{name: "Error:", value: err, inline: false}, {name: "Component:", value: component, inline: true}]);
 }
 
 async.waterfall([
@@ -224,10 +224,10 @@ async.waterfall([
 ], (err) => {
 	if (err && err !== true) {
 		lockdown();
-		logToDiscord("An error occurred while initializing the backend server.", "#FF0000", "Startup error", true, [{name: "Error:", value: err, inline: false}, {name: "Component:", value: currentComponent, inline: true}]);
+		//logToDiscord("An error occurred while initializing the backend server.", "#FF0000", "Startup error", true, [{name: "Error:", value: err, inline: false}, {name: "Component:", value: currentComponent, inline: true}]);
 		console.error('An error occurred while initializing the backend server');
 	} else {
-		logToDiscord("The backend server started successfully.", "#00AA00", "Startup", false, []);
+		//logToDiscord("The backend server started successfully.", "#00AA00", "Startup", false, []);
 		console.info('Backend server has been successfully started');
 	}
 });
