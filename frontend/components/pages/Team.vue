@@ -2,7 +2,7 @@
 	<div class='app'>
 		<main-header></main-header>
 		<div class='container'>
-			<h3 class="center">Current members</h3>
+			<h3 class="center">Our Team</h3>
 			<br>
 			<div class="columns">
 				<div class='card column is-6-desktop is-offset-3-desktop is-12-mobile'>
@@ -13,8 +13,7 @@
 					</header>
 					<div class='card-content'>
 						<div class='content'>
-							<span class="custom-tag purple">senior-project-manager</span>
-							<span class="custom-tag blue">co-founder</span>
+							<span class="role"><span class="custom-tag purple">Senior Project Manager</span> and <span class="custom-tag blue">Co-Founder</span></span>
 							<ul>
 								<li>
 									<b>Joined: </b>
@@ -39,8 +38,7 @@
 					</header>
 					<div class='card-content'>
 						<div class='content'>
-							<span class="custom-tag purple">project-manager</span>
-							<span class="custom-tag light-blue">developer</span>
+							<span class="role"><span class="custom-tag purple">Project Manager</span> and <span class="custom-tag light-blue">Developer</span></span>
 							<ul>
 								<li>
 									<b>Joined: </b>
@@ -65,7 +63,7 @@
 					</header>
 					<div class='card-content'>
 						<div class='content'>
-							<span class="custom-tag light-blue">lead-developer</span>
+							<span class="role"><span class="custom-tag light-blue">Lead Developer</span></span>
 							<ul>
 								<li>
 									<b>Joined: </b>
@@ -90,7 +88,7 @@
 					</header>
 					<div class='card-content'>
 						<div class='content'>
-							<span class="custom-tag light-green">moderator</span>
+							<span class="role"><span class="custom-tag light-green">Moderator</span></span>
 							<ul>
 								<li>
 									<b>Joined: </b>
@@ -105,155 +103,9 @@
 					</div>
 				</div>
 			</div>
-			<h3 class="center">Old/inactive members</h3>
+			<h4 class="center">Special Thanks</h4>
 			<br />
-			<div class="columns">
-				<div class='card column is-6-desktop is-offset-3-desktop is-12-mobile'>
-					<header class='card-header'>
-						<p class='card-header-title'>
-							Adryd
-						</p>
-					</header>
-					<div class='card-content'>
-						<div class='content'>
-							<span class="custom-tag pink">designer</span>
-							<ul>
-								<li>
-									<b>Joined: </b>
-									April 21, 2017
-								</li>
-							</ul>
-						</div>
-					</div>
-				</div>
-			</div>
-			<br />
-			<div class="columns">
-				<div class='card column is-6-desktop is-offset-3-desktop is-12-mobile'>
-					<header class='card-header'>
-						<p class='card-header-title'>
-							Cameron Kline
-						</p>
-					</header>
-					<div class='card-content'>
-						<div class='content'>
-							<span class="custom-tag light-blue">developer</span>
-							<ul>
-								<li>
-									<b>Joined: </b>
-									August 26, 2016
-								</li>
-							</ul>
-						</div>
-					</div>
-				</div>
-			</div>
-			<br />
-			<div class="columns">
-				<div class='card column is-6-desktop is-offset-3-desktop is-12-mobile'>
-					<header class='card-header'>
-						<p class='card-header-title'>
-							Wesley McCann
-						</p>
-					</header>
-					<div class='card-content'>
-						<div class='content'>
-							<span class="custom-tag light-blue">developer</span>
-							<ul>
-								<li>
-									<b>Joined: </b>
-									November 8, 2015
-								</li>
-							</ul>
-						</div>
-					</div>
-				</div>
-			</div>
-			<br />
-			<div class="columns">
-				<div class='card column is-6-desktop is-offset-3-desktop is-12-mobile'>
-					<header class='card-header'>
-						<p class='card-header-title'>
-							Nex
-						</p>
-					</header>
-					<div class='card-content'>
-						<div class='content'>
-							<span class="custom-tag light-blue">developer</span>
-							<ul>
-								<li>
-									<b>Joined: </b>
-									February 29, 2016
-								</li>
-							</ul>
-						</div>
-					</div>
-				</div>
-			</div>
-			<br />
-			<div class="columns">
-				<div class='card column is-6-desktop is-offset-3-desktop is-12-mobile'>
-					<header class='card-header'>
-						<p class='card-header-title'>
-							Akira Laine
-						</p>
-					</header>
-					<div class='card-content'>
-						<div class='content'>
-							<span class="custom-tag blue">co-founder</span>
-							<span class="custom-tag light-blue">lead-developer</span>
-							<ul>
-								<li>
-									<b>Joined: </b>
-									September 23, 2015
-								</li>
-							</ul>
-						</div>
-					</div>
-				</div>
-			</div>
-			<br />
-			<div class="columns">
-				<div class='card column is-6-desktop is-offset-3-desktop is-12-mobile'>
-					<header class='card-header'>
-						<p class='card-header-title'>
-							Johannes Andersen
-						</p>
-					</header>
-					<div class='card-content'>
-						<div class='content'>
-							<span class="custom-tag light-blue">developer</span>
-							<ul>
-								<li>
-									<b>Joined: </b>
-									September 23, 2015
-								</li>
-							</ul>
-						</div>
-					</div>
-				</div>
-			</div>
-			<br />
-			<div class="columns">
-				<div class='card column is-6-desktop is-offset-3-desktop is-12-mobile'>
-					<header class='card-header'>
-						<p class='card-header-title'>
-							Aaron Gildea
-						</p>
-					</header>
-					<div class='card-content'>
-						<div class='content'>
-							<span class="custom-tag light-green">moderator</span>
-							<ul>
-								<li>
-									<b>Joined: </b>
-									November 7, 2015
-								</li>
-							</ul>
-						</div>
-					</div>
-				</div>
-			</div>
+			<p class="center thanks">Special thanks to Adryd, Cameron Kline, Wesley McCann, <strong>Akira Laine (Co-Founder)</strong>, Johannes Andersen and Aaron Gildea for their contributions to Musare.</p>
 		</div>
 		<main-footer></main-footer>
 	</div>
@@ -280,34 +132,42 @@
 		list-style: none;
 	}
 
-	.custom-tag {
-		padding: 2px 7px;
-		border-radius: 10px;
-		display: inline-block;
+	.card-content .content {
+		font-size: 15px;
+	}
+
+	.card-header-title {
+		font-size: 17px;
+		font-weight: 700;
+	}
+
+	.role {
+		font-size: 16px;
+		font-weight: 500;
 	}
 
 	.custom-tag.blue {
-		background-color: #0066f4;
-		color: white;
+		border-bottom: 2px #0066f4 solid;
 	}
 
 	.custom-tag.pink {
-		background-color: #ff99dd;
-		color: white;
+		border-bottom: 2px #ff99dd solid;
 	}
 
 	.custom-tag.light-blue {
-		background-color: #00baf4;
-		color: white;
+		border-bottom: 2px #00baf4 solid;
+		background-color: transparent !important;
 	}
 
 	.custom-tag.light-green {
-		background-color: #019875;
-		color: white;
+		border-bottom: 2px #019875 solid;
 	}
 
 	.custom-tag.purple {
-		background-color: #90298C;
-    	color: white;
+		border-bottom: 2px #90298C solid;
+	}
+
+	.thanks {
+		font-size: 15px;
 	}
 </style>
