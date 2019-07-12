@@ -34,8 +34,8 @@ Option 1: (not recommended for Windows users)
 Option 2:
  * [NodeJS](https://nodejs.org/en/download/)
  	* nodemon: `npm install -g nodemon`
- 	* [node-gyp](https://github.com/nodejs/node-gyp#installation)
- * [MongoDB](https://www.mongodb.com/download-center)
+ 	* node-gyp: `npm install -g node-gyp`
+ * [MongoDB](https://www.mongodb.com/download-center) *Known issues above version 3.3*
  * [Redis (Windows)](https://github.com/MSOpenTech/redis/releases/tag/win-3.2.100) [Redis (Unix)](https://redis.io/download)
 
 ## Getting Started
@@ -57,6 +57,7 @@ Once you've installed the required tools:
 	To set up a GitHub OAuth Application, you need to fill in some value's. The homepage is the homepage of frontend. The authorization callback url is the backend url with `/auth/github/authorize/callback` added at the end. For example `http://localhost:8080/auth/github/authorize/callback`.
    	The `apis.recaptcha.secret` value can be obtained by setting up a [ReCaptcha Site](https://www.google.com/recaptcha/admin).  
    	The `apis.github` values can be obtained by setting up a [GitHub OAuth Application](https://github.com/settings/developers).  
+    *Discord is currently unsupported*
    	The `apis.discord.token` is the token for the Discord bot.  
    	The `apis.discord.loggingServer` is the Discord logging server id.  
    	The `apis.discord.loggingChannel` is the Discord logging channel id.  
@@ -79,6 +80,10 @@ Now you have different paths here.
 
 ####Docker
 
+*Configuration*
+
+To configure docker simply `cp .env.template .env` and configure the .env file to match your settings in `backend/config/default.json`
+
 1. Build the backend and frontend Docker images (from the main folder)
 
    `docker-compose build`
@@ -86,37 +91,37 @@ Now you have different paths here.
 2. Set up the MongoDB database
 
 	1. Disable auth
-	
+
 		In `docker-compose.yml` remove `--auth` from the line `command: "--auth"` for mongo.
-	
+
 	2. Start the database
-	
+
 		`docker-compose up mongo`
-		
+
 	3. Connect to Mongo
-	
+
 		`docker-compose exec mongo mongo admin`
-	
+
 	4. Create an admin user
-	
+
 		`db.createUser({user: 'admin', pwd: 'PASSWORD_HERE', roles: [{role: 'root', db: 'admin'}]})`
-		
+
 	5. Connect to the Musare database
-	
+
 		`use musare`
-		
+
 	6. Create the musare user
-	
+
 		`db.createUser({user: 'musare', pwd: 'OTHER_PASSWORD_HERE', roles: [{role: 'readWrite', db: 'musare'}]})`
-	
+
 	7. Exit
-	
+
 		`exit`
-	
+
 	8. Add back authentication
-	
+
 		In `docker-compose.yml` add back `--auth` on the line `command: ""` for mongo.
-	
+
 
 3. Start the databases and tools in the background, as we usually don't need to monitor these for errors
 
@@ -146,33 +151,33 @@ Steps 1-4 are things you only have to do once. The steps to start servers follow
 		"C:\Program Files\MongoDB\Server\3.2\bin\mongod.exe" --dbpath "D:\Programming\HTML\MusareNode\.database"
 
 	Make sure to adjust your paths accordingly.
-	
+
 3. Set up the MongoDB database
-	
+
 	1. Start the database by executing the script `startMongo.cmd` you just made
-		
+
 	2. Connect to Mongo from a command prompt
-	
+
 		`mongo admin`
-	
+
 	3. Create an admin user
-	
+
 		`db.createUser({user: 'admin', pwd: 'PASSWORD_HERE', roles: [{role: 'userAdminAnyDatabase', db: 'admin'}]})`
-		
+
 	4. Connect to the Musare database
-	
+
 		`use musare`
-		
+
 	5. Create the musare user
-	
+
 		`db.createUser({user: 'musare', pwd: 'OTHER_PASSWORD_HERE', roles: [{role: 'readWrite', db: 'musare'}]})`
-	
+
 	6. Exit
-	
+
 		`exit`
-	
+
 	7. Add the authentication
-	
+
 		In `startMongo.cmd` add ` --auth` at the end of the first line
 
 4. In the folder where you installed Redis, edit the `redis.windows.conf` file. In there, look for the property `notify-keyspace-events`. Make sure that property is uncommented and has the value `Ex`. It should look like `notify-keyspace-events Ex` when done.
@@ -272,8 +277,20 @@ import { Toast } from 'vue-roaster';
 Toast.methods.addToast('', 0);
 ```
 
+### Set user role
+
+When setting up you will need to grant yourself the admin role, using the following commands:
+
+```
+docker-compose exec mongo mongo admin
+
+use musare
+db.auth("MUSAREDBUSER","MUSAREDBPASSWORD")
+db.users.update({username: "USERNAME"}, {$set: {role: "admin"}})
+```
+
 ## Contact
 
-There are multiple ways to contact us. You can send an email to [musaremusic@gmail.com](musaremusic@gmail.com) or [krisvos130@gmail.com](krisvos130@gmail.com).
+There are multiple ways to contact us. You can send an email to [core@musare.com](core@musare.com).
 
 You can also message us on [Facebook](https://www.facebook.com/MusareMusic), [Twitter](https://twitter.com/MusareApp) or on our [Discord](https://discord.gg/Y5NxYGP).
