@@ -34,8 +34,8 @@ Option 1: (not recommended for Windows users)
 Option 2:
  * [NodeJS](https://nodejs.org/en/download/)
  	* nodemon: `npm install -g nodemon`
- 	* node-gyp: `npm install -g node-gyp` [Instructions](https://github.com/nodejs/node-gyp/#installation)
- * [MongoDB](https://www.mongodb.com/download-center) Latest version *Known issues above version 3.3*
+ 	* [node-gyp](https://github.com/nodejs/node-gyp#installation): `npm install -g node-gyp`
+ * [MongoDB](https://www.mongodb.com/download-center) Currently version 4.0
  * [Redis (Windows)](https://github.com/MSOpenTech/redis/releases/tag/win-3.2.100) [Redis (Unix)](https://redis.io/download)
 
 ## Getting Started
