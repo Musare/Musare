@@ -30,7 +30,8 @@ let lib = {
 
 	init: (url, errorCb,  cb) => {
 		mongoose.connect(url, {
-			useMongoClient: true,
+			useNewUrlParser: true,
+			useCreateIndex: true
 		})
 			.then(() => {
 				lib.schemas = {

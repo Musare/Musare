@@ -115,7 +115,7 @@ module.exports = {
 	//TODO Pass in an id, not an object
 	//TODO Fix this
 	remove: hooks.adminRequired((session, news, cb, userId) => {
-		db.models.news.remove({ _id: news._id }, err => {
+		db.models.news.removeOne({ _id: news._id }, err => {
 			if (err) {
 				err = utils.getError(err);
 				logger.error("NEWS_REMOVE", `Removing news "${news._id}" failed for user "${userId}". "${err}"`);
@@ -138,7 +138,7 @@ module.exports = {
 	 */
 	//TODO Fix this
 	update: hooks.adminRequired((session, _id, news, cb, userId) => {
-		db.models.news.update({ _id }, news, { upsert: true }, err => {
+		db.models.news.updateOne({ _id }, news, { upsert: true }, err => {
 			if (err) {
 				err = utils.getError(err);
 				logger.error("NEWS_UPDATE", `Updating news "${_id}" failed for user "${userId}". "${err}"`);

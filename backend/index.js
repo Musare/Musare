@@ -208,7 +208,6 @@ async.waterfall([
 
 			app.use(express.static(rootDir, {
 				setHeaders: function(res, path) {
-					console.log(path);
 					if (path.indexOf('.html') !== -1) res.setHeader('Cache-Control', 'public, max-age=0');
 					else res.setHeader('Cache-Control', 'public, max-age=2628000');
 				}

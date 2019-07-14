@@ -179,7 +179,7 @@ module.exports = {
 			},
 
 			(playlist, next) => {
-				db.models.station.update({_id: station._id}, {$set: {playlist: playlist}}, {runValidators: true}, (err) => {
+				db.models.station.updateOne({_id: station._id}, {$set: {playlist: playlist}}, {runValidators: true}, (err) => {
 					_this.updateStation(station._id, () => {
 						next(err, playlist);
 					});
@@ -312,7 +312,7 @@ module.exports = {
 					if (!station) return next('Station not found.');
 					if (station.type === 'community' && station.partyMode && station.queue.length === 0) return next(null, null, -11, station); // Community station with party mode enabled and no songs in the queue
 					if (station.type === 'community' && station.partyMode && station.queue.length > 0) { // Community station with party mode enabled and songs in the queue
-						return db.models.station.update({_id: stationId}, {$pull: {queue: {_id: station.queue[0]._id}}}, (err) => {
+						return db.models.station.updateOne({_id: stationId}, {$pull: {queue: {_id: station.queue[0]._id}}}, (err) => {
 							if (err) return next(err);
 							next(null, station.queue[0], -12, station);
 						});
@@ -417,7 +417,7 @@ module.exports = {
 				},
 
 				($set, station, next) => {
-					db.models.station.update({_id: station._id}, {$set}, (err) => {
+					db.models.station.updateOne({_id: station._id}, {$set}, (err) => {
 						_this.updateStation(station._id, (err, station) => {
 							if (station.type === 'community' && station.partyMode === true)
 								cache.pub('station.queueUpdate', stationId);
