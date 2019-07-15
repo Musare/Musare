@@ -17,6 +17,7 @@ const stations = require('./logic/stations');
 const songs = require('./logic/songs');
 const playlists = require('./logic/playlists');
 const cache = require('./logic/cache');
+const discord = require('./logic/discord');
 const notifications = require('./logic/notifications');
 const punishments = require('./logic/punishments');
 const logger = require('./logic/logger');
@@ -42,51 +43,6 @@ const getError = (err) => {
 	return error;
 };
 
-/*client.on('ready', () => {
-	discordClientCBS.forEach((cb) => {
-		cb();
-	});
-	discordClientCBS = [];
-	console.log(`Logged in to Discord as ${client.user.username}#${client.user.discriminator}`);
-});
-
-client.on('disconnect', (err) => {
-	console.log(`Discord disconnected. Code: ${err.code}.`);
-});
-
-client.login(config.get('apis.discord.token'));
-
-let discordClientCBS = [];
-const getDiscordClient = (cb) => {
-	if (client.status === 0) return cb();
-	else discordClientCBS.push(cb);
-};
-
-const logToDiscord = (message, color, type, critical, extraFields, cb = ()=>{}) => {
-	getDiscordClient(() => {
-		let richEmbed = new Discord.RichEmbed();
-		richEmbed.setAuthor("Musare Logger", config.get("domain")+"/favicon-194x194.png", config.get("domain"));
-		richEmbed.setColor(color);
-		richEmbed.setDescription(message);
-		//richEmbed.setFooter("Footer", "https://musare.com/favicon-194x194.png");
-		//richEmbed.setImage("https://musare.com/favicon-194x194.png");
-		//richEmbed.setThumbnail("https://musare.com/favicon-194x194.png");
-		richEmbed.setTimestamp(new Date());
-		richEmbed.setTitle("MUSARE ALERT");
-		richEmbed.setURL(config.get("domain"));
-		richEmbed.addField("Type:", type, true);
-		richEmbed.addField("Critical:", (critical) ? 'True' : 'False', true);
-		extraFields.forEach((extraField) => {
-			richEmbed.addField(extraField.name, extraField.value, extraField.inline);
-		});
-		client.channels.get(config.get('apis.discord.loggingChannel')).sendEmbed(richEmbed).then(() => {
-			cb();
-		}).then((reason) => {
-			cb(reason);
-		});
-	});
-};*/
-
 function lockdown() {
 	if (lockdownB) return;
 	lockdownB = true;
@@ -99,14 +55,28 @@ function lockdown() {
 function errorCb(message, err, component) {
 	err = getError(err);
 	lockdown();
-	//logToDiscord(message, "#FF0000", message, true, [{name: "Error:", value: err, inline: false}, {name: "Component:", value: component, inline: true}]);
+	discord.sendAdminAlertMessage(message, "#FF0000", message, true, [{name: "Error:", value: err, inline: false}, {name: "Component:", value: component, inline: true}]); //TODO Maybe due to lockdown this won't work, and what if the Discord module was the one that failed?
+}
+
+function moduleStartFunction() {
+	logger.info("MODULE_START", `Starting to initialize component '${currentComponent}'`);
 }
 
 async.waterfall([
 
+	// setup our Discord module
+	(next) => {
+		currentComponent = 'Discord';
+		moduleStartFunction();
+		discord.init(config.get('apis.discord').token, config.get('apis.discord').loggingChannel, errorCb, () => {
+			next();
+		});
+	},
+
 	// setup our Redis cache
 	(next) => {
 		currentComponent = 'Cache';
+		moduleStartFunction();
 		cache.init(config.get('redis').url, config.get('redis').password, errorCb, () => {
 			next();
 		});
@@ -116,6 +86,7 @@ async.waterfall([
 	(next) => {
 		initializedComponents.push(cache);
 		currentComponent = 'DB';
+		moduleStartFunction();
 		db.init(config.get("mongo").url, errorCb, next);
 	},
 
@@ -123,6 +94,7 @@ async.waterfall([
 	(next) => {
 		initializedComponents.push(db);
 		currentComponent = 'App';
+		moduleStartFunction();
 		app.init(next);
 	},
 
@@ -130,6 +102,7 @@ async.waterfall([
 	(next) => {
 		initializedComponents.push(app);
 		currentComponent = 'Mail';
+		moduleStartFunction();
 		mail.init(next);
 	},
 
@@ -137,6 +110,7 @@ async.waterfall([
 	(next) => {
 		initializedComponents.push(mail);
 		currentComponent = 'IO';
+		moduleStartFunction();
 		io.init(next);
 	},
 
@@ -144,6 +118,7 @@ async.waterfall([
 	(next) => {
 		initializedComponents.push(io);
 		currentComponent = 'Punishments';
+		moduleStartFunction();
 		punishments.init(next);
 	},
 
@@ -151,6 +126,7 @@ async.waterfall([
 	(next) => {
 		initializedComponents.push(punishments);
 		currentComponent = 'Notifications';
+		moduleStartFunction();
 		notifications.init(config.get('redis').url, config.get('redis').password, errorCb, next);
 	},
 
@@ -158,6 +134,7 @@ async.waterfall([
 	(next) => {
 		initializedComponents.push(notifications);
 		currentComponent = 'Stations';
+		moduleStartFunction();
 		stations.init(next)
 	},
 
@@ -165,6 +142,7 @@ async.waterfall([
 	(next) => {
 		initializedComponents.push(stations);
 		currentComponent = 'Songs';
+		moduleStartFunction();
 		songs.init(next)
 	},
 
@@ -172,6 +150,7 @@ async.waterfall([
 	(next) => {
 		initializedComponents.push(songs);
 		currentComponent = 'Playlists';
+		moduleStartFunction();
 		playlists.init(next)
 	},
 
@@ -179,6 +158,7 @@ async.waterfall([
 	(next) => {
 		initializedComponents.push(playlists);
 		currentComponent = 'API';
+		moduleStartFunction();
 		api.init(next)
 	},
 
@@ -186,6 +166,7 @@ async.waterfall([
 	(next) => {
 		initializedComponents.push(api);
 		currentComponent = 'Logger';
+		moduleStartFunction();
 		logger.init(next)
 	},
 
@@ -193,6 +174,7 @@ async.waterfall([
 	(next) => {
 		initializedComponents.push(logger);
 		currentComponent = 'Tasks';
+		moduleStartFunction();
 		tasks.init(next)
 	},
 
@@ -200,6 +182,7 @@ async.waterfall([
 	(next) => {
 		initializedComponents.push(tasks);
 		currentComponent = 'Windows';
+		moduleStartFunction();
 		if (!config.get("isDocker")) {
 			const express = require('express');
 			const app = express();
@@ -223,10 +206,10 @@ async.waterfall([
 ], (err) => {
 	if (err && err !== true) {
 		lockdown();
-		//logToDiscord("An error occurred while initializing the backend server.", "#FF0000", "Startup error", true, [{name: "Error:", value: err, inline: false}, {name: "Component:", value: currentComponent, inline: true}]);
+		discord.sendAdminAlertMessage("An error occurred while initializing the backend server.", "#FF0000", "Startup error", true, [{name: "Error:", value: err, inline: false}, {name: "Component:", value: currentComponent, inline: true}]);
 		console.error('An error occurred while initializing the backend server');
 	} else {
-		//logToDiscord("The backend server started successfully.", "#00AA00", "Startup", false, []);
+		discord.sendAdminAlertMessage("The backend server started successfully.", "#00AA00", "Startup", false, []);
 		console.info('Backend server has been successfully started');
 	}
 });
