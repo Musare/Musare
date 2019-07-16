@@ -35,7 +35,7 @@
   "dependencies": {
     "chart.js": "^2.5.0",
     "node-sass": "^3.13.0",
-    "vue": "^1.0.26",
+    "vue": "^2.5.17",
     "vue-roaster": "^1.1.1",
     "vue-router": "^0.7.13"
   }
