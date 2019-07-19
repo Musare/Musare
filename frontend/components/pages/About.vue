@@ -64,7 +64,7 @@
 
 			}
 		},
-		ready: function () {
+		mounted: function () {
 
 		}
 	}

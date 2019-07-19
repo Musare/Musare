@@ -1,88 +1,103 @@
 <template>
-	<modal title='Create Playlist'>
-		<div slot='body'>
-			<p class='control is-expanded'>
-				<input class='input' type='text' placeholder='Playlist Display Name' v-model='playlist.displayName' autofocus @keyup.enter='createPlaylist()'>
-			</p>
-		</div>
-		<div slot='footer'>
-			<a class='button is-info' @click='createPlaylist()'>Create Playlist</a>
-		</div>
-	</modal>
+  <modal title="Create Playlist">
+    <template v-slot:body>
+      <p class="control is-expanded">
+        <input
+          class="input"
+          type="text"
+          placeholder="Playlist Display Name"
+          v-model="playlist.displayName"
+          autofocus
+          @keyup.enter="createPlaylist()"
+        />
+      </p>
+    </template>
+    <template v-slot:footer>
+      <a class="button is-info" v-on:click="createPlaylist()">Create Playlist</a>
+    </template>
+  </modal>
 </template>
 
 <script>
-	import { Toast } from 'vue-roaster';
-	import Modal from '../Modal.vue';
-	import io from '../../../io';
-	import validation from '../../../validation';
+import { Toast } from "vue-roaster";
+import Modal from "../Modal.vue";
+import io from "../../../io";
+import validation from "../../../validation";
 
-	export default {
-		components: { Modal },
-		data() {
-			return {
-				playlist: {
-					displayName: null,
-					songs: [],
-					createdBy: this.$parent.$parent.username,
-					createdAt: Date.now()
-				}
-			}
-		},
-		methods: {
-			createPlaylist: function () {
-				const displayName = this.playlist.displayName;
-				if (!validation.isLength(displayName, 2, 32)) return Toast.methods.addToast('Display name must have between 2 and 32 characters.', 8000);
-				if (!validation.regex.azAZ09_.test(displayName)) return Toast.methods.addToast('Invalid display name format. Allowed characters: a-z, A-Z, 0-9 and _.', 8000);
+export default {
+  components: { Modal },
+  data() {
+    return {
+      playlist: {
+        displayName: null,
+        songs: [],
+        createdBy: this.$parent.$parent.username,
+        createdAt: Date.now()
+      }
+    };
+  },
+  methods: {
+    createPlaylist: function() {
+      const displayName = this.playlist.displayName;
+      if (!validation.isLength(displayName, 2, 32))
+        return Toast.methods.addToast(
+          "Display name must have between 2 and 32 characters.",
+          8000
+        );
+      if (!validation.regex.azAZ09_.test(displayName))
+        return Toast.methods.addToast(
+          "Invalid display name format. Allowed characters: a-z, A-Z, 0-9 and _.",
+          8000
+        );
 
-
-				this.socket.emit('playlists.create', this.playlist, res => {
-					Toast.methods.addToast(res.message, 3000);
-				});
-				this.$parent.modals.createPlaylist = !this.$parent.modals.createPlaylist;
-			}
-		},
-		ready: function () {
-			let _this = this;
-			io.getSocket((socket) => {
-				_this.socket = socket;
-			});
-		},
-		events: {
-			closeModal: function() {
-				this.$parent.modals.createPlaylist = !this.$parent.modals.createPlaylist;
-			}
-		}
-	}
+      this.socket.emit("playlists.create", this.playlist, res => {
+        Toast.methods.addToast(res.message, 3000);
+      });
+      this.$parent.modals.createPlaylist = !this.$parent.modals.createPlaylist;
+    }
+  },
+  mounted: function() {
+    let _this = this;
+    io.getSocket(socket => {
+      _this.socket = socket;
+    });
+  }
+};
 </script>
 
-<style type='scss' scoped>
-	.menu { padding: 0 20px; }
+<style lang='scss' scoped>
+.menu {
+  padding: 0 20px;
+}
 
-	.menu-list li {
-		display: flex;
-		justify-content: space-between;
-	}
+.menu-list li {
+  display: flex;
+  justify-content: space-between;
+}
 
-	.menu-list a:hover { color: #000 !important; }
+.menu-list a:hover {
+  color: #000 !important;
+}
 
-	li a {
-		display: flex;
-    	align-items: center;
-	}
+li a {
+  display: flex;
+  align-items: center;
+}
 
-	.controls {
-		display: flex;
+.controls {
+  display: flex;
 
-		a {
-			display: flex;
-    		align-items: center;
-		}
-	}
+  a {
+    display: flex;
+    align-items: center;
+  }
+}
 
-	.table {
-		margin-bottom: 0;
-	}
+.table {
+  margin-bottom: 0;
+}
 
-	h5 { padding: 20px 0; }
+h5 {
+  padding: 20px 0;
+}
 </style>

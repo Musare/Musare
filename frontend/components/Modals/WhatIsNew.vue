@@ -4,7 +4,7 @@
 		<div class='modal-card'>
 			<header class='modal-card-head'>
 				<p class='modal-card-title'><strong>{{ news.title }}</strong> ({{ formatDate(news.createdAt) }})</p>
-				<button class='delete' @click='toggleModal()'></button>
+				<button class='delete' v-on:click='toggleModal()'></button>
 			</header>
 			<section class='modal-card-body'>
 				<div class='content'>
@@ -49,7 +49,7 @@
 				news: null
 			}
 		},
-		ready: function () {
+		mounted: function () {
 			let _this = this;
 			io.getSocket(true, socket => {
 				_this.socket = socket;

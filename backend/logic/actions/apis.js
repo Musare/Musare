@@ -35,7 +35,9 @@ module.exports = {
 				next(null, JSON.parse(body));
 			}
 		], (err, data) => {
-			if (err) {
+			console.log(data.error);
+			if (err || data.error) {
+				if (!err) err = data.error.message;
 				err = utils.getError(err);
 				logger.error("APIS_SEARCH_YOUTUBE", `Searching youtube failed with query "${query}". "${err}"`);
 				return cb({status: 'failure', message: err});

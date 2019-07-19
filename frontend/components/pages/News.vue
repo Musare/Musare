@@ -62,7 +62,7 @@
 				noFound: false
 			}
 		},
-		ready: function () {
+		mounted: function () {
 			let _this = this;
 			io.getSocket((socket) => {
 				_this.socket = socket;

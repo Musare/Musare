@@ -154,7 +154,7 @@
 				return Math.round(number);
 			}
 		},
-		ready: function () {
+		mounted: function () {
 			let _this = this;
 			var minuteCtx = document.getElementById("minuteChart");
 			var hourCtx = document.getElementById("hourChart");

@@ -77,12 +77,12 @@
 import { mapState } from "vuex";
 
 import { Toast } from "vue-roaster";
-import Modal from "./Modal.vue";
+import Modal from "../Modals/Modal.vue";
 import io from "../../io";
 import validation from "../../validation";
 
 export default {
-  computed: mapState("station", {
+  computed: mapState("admin/stations", {
     station: state => state.station,
     editing: state => state.editing
   }),

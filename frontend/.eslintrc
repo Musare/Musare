@@ -3,10 +3,10 @@
 		"indent": [2, "tab", { "SwitchCase": 1 }]
 	},
 	"parserOptions": {
-		"ecmaVersion": 6,
+		"ecmaVersion": 2018,
 		"sourceType": "module"
 	},
-	"plugins": [ "html" ],
+	"plugins": ["html"],
 	"settings": {
 		"html/indent": "tab",
 		"html/report-bad-indent": 2

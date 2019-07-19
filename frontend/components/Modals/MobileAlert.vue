@@ -3,7 +3,7 @@
 		<div class='modal-background'></div>
 		<div class='modal-card'>
 			<header class='modal-card-head'>
-				<button class='delete' @click='toggleModal()'></button>
+				<button class='delete' v-on:click='toggleModal()'></button>
 			</header>
 			<section class='modal-card-body'>
 				<h5>Musare doesn't work very well on mobile right now, we are working on this!</h5>
@@ -21,7 +21,7 @@
 				isModalActive: false
 			}
 		},
-		ready: function () {
+		mounted: function () {
 			let _this = this;
 			if (!localStorage.getItem('mobileOptimization')) {
 				this.toggleModal();

@@ -3,7 +3,7 @@
 		<div slot='body'>
 			<div class='columns song-types'>
 				<div class='column song-type' v-if='$parent.previousSong !== null'>
-					<div class='card is-fullwidth' :class="{ 'is-highlight-active': isPreviousSongActive }" @click="highlight('previousSong')">
+					<div class='card is-fullwidth' :class="{ 'is-highlight-active': isPreviousSongActive }" v-on:click="highlight('previousSong')">
 						<header class='card-header'>
 							<p class='card-header-title'>
 								Previous Song
@@ -27,11 +27,11 @@
 								</div>
 							</article>
 						</div>
-						<a @click=highlight('previousSong') href='#' class='absolute-a'></a>
+						<a v-on:click=highlight('previousSong') href='#' class='absolute-a'></a>
 					</div>
 				</div>
 				<div class='column song-type' v-if='$parent.currentSong !== {}'>
-					<div class='card is-fullwidth'  :class="{ 'is-highlight-active': isCurrentSongActive }" @click="highlight('currentSong')">
+					<div class='card is-fullwidth'  :class="{ 'is-highlight-active': isCurrentSongActive }" v-on:click="highlight('currentSong')">
 						<header class='card-header'>
 							<p class='card-header-title'>
 								Current Song
@@ -55,7 +55,7 @@
 								</div>
 							</article>
 						</div>
-						<a @click=highlight('currentSong') href='#' class='absolute-a'></a>
+						<a v-on:click=highlight('currentSong') href='#' class='absolute-a'></a>
 					</div>
 				</div>
 			</div>
@@ -65,7 +65,7 @@
 						<label class='label'>{{ issue.name }}</label>
 						<p class='control' v-for='reason in issue.reasons' track-by='$index'>
 							<label class='checkbox'>
-								<input type='checkbox' @click='toggleIssue(issue.name, reason)'>
+								<input type='checkbox' v-on:click='toggleIssue(issue.name, reason)'>
 								{{ reason }}
 							</label>
 						</p>
@@ -79,11 +79,11 @@
 			</div>
 		</div>
 		<div slot='footer'>
-			<a class='button is-success' @click='create()' href='#'>
+			<a class='button is-success' v-on:click='create()' href='#'>
 				<i class='material-icons save-changes'>done</i>
 				<span>&nbsp;Create</span>
 			</a>
-			<a class='button is-danger' @click='$parent.modals.report = !$parent.modals.report' href='#'>
+			<a class='button is-danger' v-on:click='$parent.modals.report = !$parent.modals.report' href='#'>
 				<span>&nbsp;Cancel</span>
 			</a>
 		</div>
@@ -197,7 +197,7 @@
 				this.$parent.modals.report = !this.$parent.modals.report;
 			}
 		},
-		ready: function () {
+		mounted: function () {
 			let _this = this;
 			io.getSocket((socket) => {
 				_this.socket = socket;
@@ -206,7 +206,7 @@
 	}
 </script>
 
-<style type='scss' scoped>
+<style lang='scss' scoped>
 	h6 { margin-bottom: 15px; }
 
 	.song-type:first-of-type { padding-left: 0; }

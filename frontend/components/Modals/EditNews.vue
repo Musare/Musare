@@ -14,22 +14,22 @@
 					<label class='label'>Bugs</label>
 					<p class='control has-addons'>
 						<input class='input' id='edit-bugs' type='text' placeholder='Bug' v-on:keyup.enter='addChange("bugs")'>
-						<a class='button is-info' href='#' @click='addChange("bugs")'>Add</a>
+						<a class='button is-info' href='#' v-on:click='addChange("bugs")'>Add</a>
 					</p>
 					<span class='tag is-info' v-for='(index, bug) in $parent.editing.bugs' track-by='$index'>
 						{{ bug }}
-						<button class='delete is-info' @click='removeChange("bugs", index)'></button>
+						<button class='delete is-info' v-on:click='removeChange("bugs", index)'></button>
 					</span>
 				</div>
 				<div class="column">
 					<label class='label'>Features</label>
 					<p class='control has-addons'>
 						<input class='input' id='edit-features' type='text' placeholder='Feature' v-on:keyup.enter='addChange("features")'>
-						<a class='button is-info' href='#' @click='addChange("features")'>Add</a>
+						<a class='button is-info' href='#' v-on:click='addChange("features")'>Add</a>
 					</p>
 					<span class='tag is-info' v-for='(index, feature) in $parent.editing.features' track-by='$index'>
 						{{ feature }}
-						<button class='delete is-info' @click='removeChange("features", index)'></button>
+						<button class='delete is-info' v-on:click='removeChange("features", index)'></button>
 					</span>
 				</div>
 			</div>
@@ -39,36 +39,36 @@
 					<label class='label'>Improvements</label>
 					<p class='control has-addons'>
 						<input class='input' id='edit-improvements' type='text' placeholder='Improvement' v-on:keyup.enter='addChange("improvements")'>
-						<a class='button is-info' href='#' @click='addChange("improvements")'>Add</a>
+						<a class='button is-info' href='#' v-on:click='addChange("improvements")'>Add</a>
 					</p>
 					<span class='tag is-info' v-for='(index, improvement) in $parent.editing.improvements' track-by='$index'>
 						{{ improvement }}
-						<button class='delete is-info' @click='removeChange("improvements", index)'></button>
+						<button class='delete is-info' v-on:click='removeChange("improvements", index)'></button>
 					</span>
 				</div>
 				<div class="column">
 					<label class='label'>Upcoming</label>
 					<p class='control has-addons'>
 						<input class='input' id='edit-upcoming' type='text' placeholder='Upcoming' v-on:keyup.enter='addChange("upcoming")'>
-						<a class='button is-info' href='#' @click='addChange("upcoming")'>Add</a>
+						<a class='button is-info' href='#' v-on:click='addChange("upcoming")'>Add</a>
 					</p>
 					<span class='tag is-info' v-for='(index, upcoming) in $parent.editing.upcoming' track-by='$index'>
 						{{ upcoming }}
-						<button class='delete is-info' @click='removeChange("upcoming", index)'></button>
+						<button class='delete is-info' v-on:click='removeChange("upcoming", index)'></button>
 					</span>
 				</div>
 			</div>
 		</div>
 		<div slot='footer'>
-			<button class='button is-success' @click='$parent.updateNews(false)'>
+			<button class='button is-success' v-on:click='$parent.updateNews(false)'>
 				<i class='material-icons save-changes'>done</i>
 				<span>&nbsp;Save</span>
 			</button>
-			<button class='button is-success' @click='$parent.updateNews(true)'>
+			<button class='button is-success' v-on:click='$parent.updateNews(true)'>
 				<i class='material-icons save-changes'>done</i>
 				<span>&nbsp;Save and close</span>
 			</button>
-			<button class='button is-danger' @click='$parent.toggleModal()'>
+			<button class='button is-danger' v-on:click='$parent.toggleModal()'>
 				<span>&nbsp;Close</span>
 			</button>
 		</div>
@@ -103,7 +103,7 @@
 	}
 </script>
 
-<style type='scss' scoped>
+<style lang='scss' scoped>
 	input[type=range] {
 		-webkit-appearance: none;
 		width: 100%;

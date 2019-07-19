@@ -1,163 +1,245 @@
 <template>
-	<official-header v-if='type == "official"'></official-header>
-	<community-header v-if='type == "community"'></community-header>
+  <div>
+    <official-header v-if="type == 'official'"></official-header>
+    <community-header v-if="type == 'community'"></community-header>
 
-	<song-queue v-if='modals.addSongToQueue'></song-queue>
-	<add-to-playlist v-if='modals.addSongToPlaylist'></add-to-playlist>
-	<edit-playlist v-if='modals.editPlaylist'></edit-playlist>
-	<create-playlist v-if='modals.createPlaylist'></create-playlist>
-	<edit-station v-show='modals.editStation'></edit-station>
-	<report v-if='modals.report'></report>
+    <song-queue v-if="modals.addSongToQueue"></song-queue>
+    <add-to-playlist v-if="modals.addSongToPlaylist"></add-to-playlist>
+    <edit-playlist v-if="modals.editPlaylist"></edit-playlist>
+    <create-playlist v-if="modals.createPlaylist"></create-playlist>
+    <edit-station v-show="modals.editStation"></edit-station>
+    <report v-if="modals.report"></report>
 
-	<songs-list-sidebar v-if='sidebars.songslist'></songs-list-sidebar>
-	<playlist-sidebar v-if='sidebars.playlist'></playlist-sidebar>
-	<users-sidebar v-if='sidebars.users'></users-sidebar>
+    <songs-list-sidebar v-if="sidebars.songslist"></songs-list-sidebar>
+    <playlist-sidebar v-if="sidebars.playlist"></playlist-sidebar>
+    <users-sidebar v-if="sidebars.users"></users-sidebar>
 
-	<div class='progress' v-show='!ready'></div>
-	<div class='station' v-show="ready">
-		<div v-show="noSong" class="no-song">
-			<h1>No song is currently playing</h1>
-			<h4 v-if='type === "community" && station.partyMode && (!station.locked || (station.locked && $parent.loggedIn && $parent.userId === station.owner))'>
-				<a href='#' class='no-song' @click='modals.addSongToQueue = true'>Add a song to the queue</a>
-			</h4>
-			<h4 v-if='type === "community" && !station.partyMode && $parent.userId === station.owner && !station.privatePlaylist'>
-				<a href='#' class='no-song' @click='sidebars.playlist = true'>Play a private playlist</a>
-			</h4>
-			<h1 v-if='type === "community" && !station.partyMode && $parent.userId === station.owner && station.privatePlaylist'>Maybe you can add some songs to your selected private playlist and then press the skip button</h1>
-		</div>
-		<div class="columns" v-show="!noSong">
-			<div class="column is-8-desktop is-offset-2-desktop is-12-mobile">
-				<div class="video-container">
-					<div id="player"></div>
-				</div>
-				<div class="seeker-bar-container white" id="preview-progress">
-					<div class="seeker-bar light-blue" style="width: 0%;"></div>
-				</div>
-			</div>
-			<div class="desktop-only column is-3-desktop card playlistCard experimental">
-				<div class='title' v-if='type === "community"'>Queue</div>
-				<div class='title' v-else>Playlist</div>
-				<article class="media" v-if="!noSong">
-					<figure class="media-left">
-						<p class="image is-64x64">
-							<img :src="currentSong.thumbnail" onerror="this.src='/assets/notes-transparent.png'">
-						</p>
-					</figure>
-					<div class="media-content">
-						<div class="content">
-							<p>
-								Current Song:
-								<br>
-								<strong>{{ currentSong.title }}</strong>
-								<br>
-								<small>{{ currentSong.artists }}</small>
-							</p>
-						</div>
-					</div>
-					<div class="media-right">
-						{{ formatTime(currentSong.duration) }}
-					</div>
-				</article>
-				<p v-if="noSong" class="center">There is currently no song playing.</p>
+    <div class="progress" v-show="!ready"></div>
+    <div class="station" v-show="ready">
+      <div v-show="noSong" class="no-song">
+        <h1>No song is currently playing</h1>
+        <h4
+          v-if="type === 'community' && station.partyMode && (!station.locked || (station.locked && $parent.loggedIn && $parent.userId === station.owner))"
+        >
+          <a
+            href="#"
+            class="no-song"
+            v-on:click="toggleModal({ sector: 'station', modal: 'addSongToQueue' })"
+          >Add a song to the queue</a>
+        </h4>
+        <h4
+          v-if="type === 'community' && !station.partyMode && $parent.userId === station.owner && !station.privatePlaylist"
+        >
+          <a href="#" class="no-song" v-on:click="sidebars.playlist = true">Play a private playlist</a>
+        </h4>
+        <h1
+          v-if="type === 'community' && !station.partyMode && $parent.userId === station.owner && station.privatePlaylist"
+        >Maybe you can add some songs to your selected private playlist and then press the skip button</h1>
+      </div>
+      <div class="columns" v-show="!noSong">
+        <div class="column is-8-desktop is-offset-2-desktop is-12-mobile">
+          <div class="video-container">
+            <div id="player"></div>
+          </div>
+          <div class="seeker-bar-container white" id="preview-progress">
+            <div class="seeker-bar light-blue" style="width: 0%;"></div>
+          </div>
+        </div>
+        <div class="desktop-only column is-3-desktop card playlistCard experimental">
+          <div class="title" v-if="type === 'community'">Queue</div>
+          <div class="title" v-else>Playlist</div>
+          <article class="media" v-if="!noSong">
+            <figure class="media-left">
+              <p class="image is-64x64">
+                <img
+                  :src="currentSong.thumbnail"
+                  onerror="this.src='/assets/notes-transparent.png'"
+                />
+              </p>
+            </figure>
+            <div class="media-content">
+              <div class="content">
+                <p>
+                  Current Song:
+                  <br />
+                  <strong>{{ currentSong.title }}</strong>
+                  <br />
+                  <small>{{ currentSong.artists }}</small>
+                </p>
+              </div>
+            </div>
+            <div class="media-right">{{ formatTime(currentSong.duration) }}</div>
+          </article>
+          <p v-if="noSong" class="center">There is currently no song playing.</p>
 
-				<article class="media" v-for='song in songsList'>
-					<div class="media-content">
-						<div class="content">
-								<strong class="songTitle">{{ song.title }}</strong>
-								<br>
-								<small>{{ song.artists.join(', ') }}</small>
-								<br>
-								<div v-if="station.partyMode">
-									<br>
-									<small>Requested by <b>{{this.$parent.$parent.getUsernameFromId(song.requestedBy)}} {{this.userIdMap['Z' + song.requestedBy]}}</b></small>
-									<button class="button" @click="removeFromQueue(song.songId)" v-if="isOwnerOnly() || isAdminOnly()">REMOVE</button>
-								</div>
-						</div>
-					</div>
-					<div class="media-right">
-						{{ $parent.formatTime(song.duration) }}
-					</div>
-				</article>
-				<a class='button add-to-queue' href='#' @click='modals.addSongToQueue = !modals.addSongToQueue' v-if="type === 'community' && $parent.loggedIn">Add Song to Queue</a>
-			</div>
-		</div>
-		<div class="desktop-only columns is-mobile" v-show="!noSong">
-			<div class="column is-8-desktop is-offset-2-desktop is-12-mobile">
-				<div class="columns is-mobile">
-					<div class="column is-12-desktop">
-						<h4 id="time-display">{{timeElapsed}} / {{formatTime(currentSong.duration)}}</h4>
-						<h3>{{currentSong.title}}</h3>
-						<h4 class="thin" style="margin-left: 0">{{currentSong.artists}}</h4>
-						<div class="columns is-mobile">
-							<form style="margin-top: 12px; margin-bottom: 0;" action="#" class="column is-7-desktop is-4-mobile">
-								<p class='volume-slider-wrapper'>
-									<i class="material-icons" @click='toggleMute()' v-if='muted'>volume_mute</i>
-									<i class="material-icons" @click='toggleMute()' v-else>volume_down</i>
-									<input type="range" id="volumeSlider" min="0" max="10000" class="active" v-on:change="changeVolume()" v-on:input="changeVolume()">
-									<i class="material-icons" @click='increaseVolume()'>volume_up</i>
-								</p>
-							</form>
-							<div class="column is-8-mobile is-5-desktop" style="float: right;">
-								<ul id="ratings" v-if="currentSong.likes !== -1 && currentSong.dislikes !== -1">
-									<li id="like" class="right" @click="toggleLike()">
-										<span class="flow-text">{{currentSong.likes}} </span>
-										<i id="thumbs_up" class="material-icons grey-text" v-bind:class="{ liked: liked }">thumb_up</i>
-										<a class='absolute-a behind' @click="toggleLike()" href='#'></a>
-									</li>
-									<li style="margin-right: 10px;" id="dislike" class="right" @click="toggleDislike()">
-										<span class="flow-text">{{currentSong.dislikes}} </span>
-										<i id="thumbs_down" class="material-icons grey-text" v-bind:class="{ disliked: disliked }">thumb_down</i>
-										<a class='absolute-a behind' @click="toggleDislike()" href='#'></a>
-									</li>
-								</ul>
-							</div>
-						</div>
-					</div>
-					<div class="column is-3-desktop experimental" v-if="!simpleSong">
-						<img class="image" :src="currentSong.thumbnail" alt="Song Thumbnail" onerror="this.src='/assets/notes-transparent.png'" />
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class="mobile-only" v-show="!noSong">
-			<div>
-				<div>
-					<div>
-						<h3>{{currentSong.title}}</h3>
-						<h4 class="thin">{{currentSong.artists}}</h4>
-						<h5>{{timeElapsed}} / {{formatTime(currentSong.duration)}}</h5>
-						<div>
-							<form class="columns" action="#">
-								<p class='column is-11-mobile volume-slider-wrapper'>
-									<i class="material-icons" @click='toggleMute()' v-if='muted'>volume_mute</i>
-									<i class="material-icons" @click='toggleMute()' v-else>volume_down</i>
-									<input type="range" id="volumeSlider" min="0" max="10000" class="active" v-on:change="changeVolume()" v-on:input="changeVolume()">
-									<i class="material-icons" @click='increaseVolume()'>volume_up</i>
-								</p>
-							</form>
-							<div>
-								<ul id="ratings" style="display: inline-block;" v-if="currentSong.likes !== -1 && currentSong.dislikes !== -1">
-									<li id="dislike" style="display: inline-block;margin-right: 10px;" @click="toggleDislike()">
-										<span class="flow-text">{{currentSong.dislikes}} </span>
-										<i id="thumbs_down" class="material-icons grey-text" v-bind:class="{ disliked: disliked }">thumb_down</i>
-										<a class='absolute-a behind' @click="toggleDislike()" href='#'></a>
-									</li>
-									<li id="like" style="display: inline-block;" @click="toggleLike()">
-										<span class="flow-text">{{currentSong.likes}} </span>
-										<i id="thumbs_up" class="material-icons grey-text" v-bind:class="{ liked: liked }">thumb_up</i>
-										<a class='absolute-a behind' @click="toggleLike()" href='#'></a>
-									</li>
-								</ul>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+          <article class="media" v-for="(song, index) in songsList" :key="index">
+            <div class="media-content">
+              <div class="content">
+                <strong class="songTitle">{{ song.title }}</strong>
+                <br />
+                <small>{{ song.artists.join(', ') }}</small>
+                <br />
+                <div v-if="station.partyMode">
+                  <br />
+                  <small>
+                    Requested by
+                    <b>{{$parent.getUsernameFromId(song.requestedBy)}} {{userIdMap['Z' + song.requestedBy]}}</b>
+                  </small>
+                  <button
+                    class="button"
+                    v-on:click="removeFromQueue(song.songId)"
+                    v-if="isOwnerOnly() || isAdminOnly()"
+                  >REMOVE</button>
+                </div>
+              </div>
+            </div>
+            <div class="media-right">{{ formatTime(song.duration) }}</div>
+          </article>
+          <a
+            class="button add-to-queue"
+            href="#"
+            v-on:click="toggleModal({
+						sector: 'station',
+						modal: 'addSongToQueue'
+					})"
+            v-if="type === 'community' && $parent.loggedIn"
+          >Add Song to Queue</a>
+        </div>
+      </div>
+      <div class="desktop-only columns is-mobile" v-show="!noSong">
+        <div class="column is-8-desktop is-offset-2-desktop is-12-mobile">
+          <div class="columns is-mobile">
+            <div class="column is-12-desktop">
+              <h4 id="time-display">{{timeElapsed}} / {{formatTime(currentSong.duration)}}</h4>
+              <h3>{{currentSong.title}}</h3>
+              <h4 class="thin" style="margin-left: 0">{{currentSong.artists}}</h4>
+              <div class="columns is-mobile">
+                <form
+                  style="margin-top: 12px; margin-bottom: 0;"
+                  action="#"
+                  class="column is-7-desktop is-4-mobile"
+                >
+                  <p class="volume-slider-wrapper">
+                    <i class="material-icons" v-on:click="toggleMute()" v-if="muted">volume_mute</i>
+                    <i class="material-icons" v-on:click="toggleMute()" v-else>volume_down</i>
+                    <input
+                      type="range"
+                      id="volumeSlider"
+                      min="0"
+                      max="10000"
+                      class="active"
+                      v-on:change="changeVolume()"
+                      v-on:input="changeVolume()"
+                    />
+                    <i class="material-icons" v-on:click="increaseVolume()">volume_up</i>
+                  </p>
+                </form>
+                <div class="column is-8-mobile is-5-desktop" style="float: right;">
+                  <ul id="ratings" v-if="currentSong.likes !== -1 && currentSong.dislikes !== -1">
+                    <li id="like" class="right" v-on:click="toggleLike()">
+                      <span class="flow-text">{{currentSong.likes}}</span>
+                      <i
+                        id="thumbs_up"
+                        class="material-icons grey-text"
+                        v-bind:class="{ liked: liked }"
+                      >thumb_up</i>
+                      <a class="absolute-a behind" v-on:click="toggleLike()" href="#"></a>
+                    </li>
+                    <li
+                      style="margin-right: 10px;"
+                      id="dislike"
+                      class="right"
+                      v-on:click="toggleDislike()"
+                    >
+                      <span class="flow-text">{{currentSong.dislikes}}</span>
+                      <i
+                        id="thumbs_down"
+                        class="material-icons grey-text"
+                        v-bind:class="{ disliked: disliked }"
+                      >thumb_down</i>
+                      <a class="absolute-a behind" v-on:click="toggleDislike()" href="#"></a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div class="column is-3-desktop experimental" v-if="!simpleSong">
+              <img
+                class="image"
+                :src="currentSong.thumbnail"
+                alt="Song Thumbnail"
+                onerror="this.src='/assets/notes-transparent.png'"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mobile-only" v-show="!noSong">
+        <div>
+          <div>
+            <div>
+              <h3>{{currentSong.title}}</h3>
+              <h4 class="thin">{{currentSong.artists}}</h4>
+              <h5>{{timeElapsed}} / {{formatTime(currentSong.duration)}}</h5>
+              <div>
+                <form class="columns" action="#">
+                  <p class="column is-11-mobile volume-slider-wrapper">
+                    <i class="material-icons" v-on:click="toggleMute()" v-if="muted">volume_mute</i>
+                    <i class="material-icons" v-on:click="toggleMute()" v-else>volume_down</i>
+                    <input
+                      type="range"
+                      id="volumeSlider"
+                      min="0"
+                      max="10000"
+                      class="active"
+                      v-on:change="changeVolume()"
+                      v-on:input="changeVolume()"
+                    />
+                    <i class="material-icons" v-on:click="increaseVolume()">volume_up</i>
+                  </p>
+                </form>
+                <div>
+                  <ul
+                    id="ratings"
+                    style="display: inline-block;"
+                    v-if="currentSong.likes !== -1 && currentSong.dislikes !== -1"
+                  >
+                    <li
+                      id="dislike"
+                      style="display: inline-block;margin-right: 10px;"
+                      v-on:click="toggleDislike()"
+                    >
+                      <span class="flow-text">{{currentSong.dislikes}}</span>
+                      <i
+                        id="thumbs_down"
+                        class="material-icons grey-text"
+                        v-bind:class="{ disliked: disliked }"
+                      >thumb_down</i>
+                      <a class="absolute-a behind" v-on:click="toggleDislike()" href="#"></a>
+                    </li>
+                    <li id="like" style="display: inline-block;" v-on:click="toggleLike()">
+                      <span class="flow-text">{{currentSong.likes}}</span>
+                      <i
+                        id="thumbs_up"
+                        class="material-icons grey-text"
+                        v-bind:class="{ liked: liked }"
+                      >thumb_up</i>
+                      <a class="absolute-a behind" v-on:click="toggleLike()" href="#"></a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>
+	import { mapState, mapActions } from "vuex";
+
 	import { Toast } from 'vue-roaster';
 
 	import SongQueue from '../Modals/AddSongToQueue.vue';
@@ -192,14 +274,6 @@
 				timeElapsed: '0:00',
 				liked: false,
 				disliked: false,
-				modals: {
-					addSongToQueue: false,
-					addSongToPlaylist: false,
-					editPlaylist: false,
-					createPlaylist: false,
-					editStation: false,
-					report: false
-				},
 				sidebars: {
 					songslist: false,
 					users: false,
@@ -209,7 +283,6 @@
 				simpleSong: false,
 				songsList: [],
 				timeBeforePause: 0,
-				station: {},
 				skipVotes: 0,
 				privatePlaylistQueueSelected: null,
 				automaticallyRequestedSongId: null,
@@ -218,6 +291,14 @@
 				userCount: 0,
 				userIdMap: this.$parent.userIdMap
 			}
+		},
+		computed: {
+			...mapState("modals", {
+				modals: state => state.modals.station
+			}),
+			...mapState("station", {
+				station: state => state.station
+			})
 		},
 		methods: {
 			isOwnerOnly: function () {
@@ -231,22 +312,6 @@
 					if (res.status === 'success') {
 						Toast.methods.addToast('Successfully removed song from the queue.', 4000);
 					} else Toast.methods.addToast(res.message, 8000);
-				});
-			},
-			editPlaylist: function (id) {
-				this.playlistBeingEdited = id;
-				this.modals.editPlaylist = !this.modals.editPlaylist;
-			},
-			editStation: function () {
-				let _this = this;
-				this.$broadcast('editStation', {
-					_id: _this.station._id,
-					name: _this.station.name,
-					type: _this.type,
-					partyMode: _this.station.partyMode,
-					description: _this.station.description,
-					privacy: _this.station.privacy,
-					displayName: _this.station.displayName
 				});
 			},
 			toggleSidebar: function (type) {
@@ -366,6 +431,7 @@
 				}
 			},
 			pauseLocalStation: function() {
+        console.log("pause locally");
 				this.paused = true;
 				if (!this.noSong) {
 					this.timeBeforePause = this.getTimeElapsed();
@@ -476,21 +542,22 @@
 					}
 				}
 			},
-			joinStation: function () {
+			join: function () {
 				let _this = this;
 				_this.socket.emit('stations.join', _this.stationName, res => {
 					if (res.status === 'success') {
-						_this.station = {
-							_id: res.data._id,
+						const { _id, displayName, description, privacy, locked, partyMode, owner, privatePlaylist } = res.data;
+						_this.joinStation({
+							_id,
 							name: _this.stationName,
-							displayName: res.data.displayName,
-							description: res.data.description,
-							privacy: res.data.privacy,
-							locked: res.data.locked,
-							partyMode: res.data.partyMode,
-							owner: res.data.owner,
-							privatePlaylist: res.data.privatePlaylist
-						};
+							displayName,
+							description,
+							privacy,
+							locked,
+							partyMode,
+							owner,
+							privatePlaylist
+						});
 						_this.currentSong = (res.data.currentSong) ? res.data.currentSong : {};
 						_this.type = res.data.type;
 						_this.startedAt = res.data.startedAt;
@@ -549,9 +616,11 @@
 						_this.systemDifference = difference;
 					});
 				});
-			}
+			},
+			...mapActions("modals", ["toggleModal"]),
+			...mapActions("station", ["joinStation"]),
 		},
-		ready: function() {
+		mounted: function() {
 			let _this = this;
 
 			Date.currently = () => {
@@ -566,10 +635,8 @@
 				_this.socket = socket;
 
 				io.removeAllListeners();
-				if (_this.socket.connected) _this.joinStation();
-				io.onConnect(() => {
-					_this.joinStation();
-				});
+				if (_this.socket.connected) _this.join();
+				io.onConnect(_this.join());
 				_this.socket.emit('stations.findByName', _this.stationName, res => {
 					if (res.status === 'error') {
 						_this.$router.go('/404');
@@ -611,18 +678,17 @@
 					}
 				});
 
-				_this.socket.on('event:stations.pause', data => {
-					_this.pauseLocalStation();
-				});
+				_this.socket.on('event:stations.pause', () => {
+          _this.pauseLocalStation();
+          console.log("local pause");
+        });
 
 				_this.socket.on('event:stations.resume', data => {
 					_this.timePaused = data.timePaused;
 					_this.resumeLocalStation();
 				});
 
-				_this.socket.on('event:stations.remove', () => {
-					location.href = '/';
-				});
+				_this.socket.on('event:stations.remove', () => location.href = '/');
 
 				_this.socket.on('event:song.like', data => {
 					if (!this.noSong) {
@@ -732,441 +798,480 @@
 </script>
 
 <style lang="scss">
-	.no-song {
-		color: #03A9F4;
-		text-align: center;
-	}
-
-	#volumeSlider {
-		padding: 0 15px;
-    	background: transparent;
-	}
-
-	.volume-slider-wrapper {
-		margin-top: 0;
-		position: relative;
-		display: flex;
-		align-items: center;
-		.material-icons { user-select: none; }
-	}
-
-	.material-icons { cursor: pointer; }
-
-	.stationDisplayName {
-		color: white !important;
-	}
-
-	.add-to-playlist {
-		display: flex;
-	    align-items: center;
-	    justify-content: center;
-	}
-
-	.slideout {
-		top: 50px;
-		height: 100%;
-		position: fixed;
-		right: 0;
-		width: 350px;
-		background-color: white;
-		box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
-		.slideout-header {
-			text-align: center;
-			background-color: rgb(3, 169, 244) !important;
-			margin: 0;
-			padding-top: 5px;
-			padding-bottom: 7px;
-			color: white;
-		}
-
-		.slideout-content {
-			height: 100%;
-		}
-	}
-
-	.modal-large {
-		width: 75%;
-	}
-
-	.station {
-		flex: 1 0 auto;
-		padding-top: 0.5vw;
-		transition: all 0.1s;
-		margin: 0 auto;
-		max-width: 100%;
-		width: 90%;
-
-		@media only screen and (min-width: 993px) {
-			width: 70%;
-		}
-
-		@media only screen and (min-width: 601px) {
-			width: 85%;
-		}
-
-		@media (min-width: 999px) {
-			.mobile-only {
-				display: none;
-			}
-			.desktop-only {
-				display: block;
-			}
-		}
-		@media (max-width: 998px) {
-			.mobile-only {
-				display: block;
-			}
-			.desktop-only {
-				display: none;
-				visibility: hidden;
-			}
-		}
-
-		.mobile-only {
-			text-align: center;
-		}
-
-		.playlistCard {
-			margin: 10px;
-			position: relative;
-			padding-bottom: calc(31.25% + 7px);
-			height: 0;
-			overflow-y: scroll;
-
-			.title {
-				background-color: rgb(3, 169, 244);
-				text-align: center;
-				padding: 10px;
-				color: white;
-				font-weight: 600;
-			}
-
-			.media { padding: 0 25px; }
-
-			.media-content .content {
-				min-height: 64px;
-				max-height: 64px;
-				display: flex;
-				align-items: center;
-			}
-
-			.content p strong { word-break: break-word; }
-
-			.content p small { word-break: break-word; }
-
-			.add-to-queue {
-				width: 100%;
-				margin-top: 25px;
-				height: 40px;
-				border-radius: 0;
-				background: rgb(3, 169, 244);
-				color: #fff !important;
-				border: 0;
-				&:active, &:focus { border: 0; }
-			}
-
-			.add-to-queue:focus { background: #029ce3; }
-
-			.media-right { line-height: 64px; }
-
-			.songTitle {
-				word-wrap: break-word;
-				overflow: hidden;
-				text-overflow: ellipsis;
-				display: -webkit-box;
-				-webkit-box-orient: vertical;
-				-webkit-line-clamp: 2;
-				line-height: 20px;
-				max-height: 40px;
-				width: 100%;
-			}
-
-		}
-
-		input[type=range] {
-			-webkit-appearance: none;
-			width: 100%;
-			margin: 7.3px 0;
-		}
-
-		input[type=range]:focus {
-			outline: none;
-		}
-
-		input[type=range]::-webkit-slider-runnable-track {
-			width: 100%;
-			height: 5.2px;
-			cursor: pointer;
-			box-shadow: 0;
-			background: #c2c0c2;
-			border-radius: 0;
-			border: 0;
-		}
-
-		input[type=range]::-webkit-slider-thumb {
-			box-shadow: 0;
-			border: 0;
-			height: 19px;
-			width: 19px;
-			border-radius: 15px;
-			background: #03a9f4;
-			cursor: pointer;
-			-webkit-appearance: none;
-			margin-top: -6.5px;
-		}
-
-		input[type=range]::-moz-range-track {
-			width: 100%;
-			height: 5.2px;
-			cursor: pointer;
-			box-shadow: 0;
-			background: #c2c0c2;
-			border-radius: 0;
-			border: 0;
-		}
-
-		input[type=range]::-moz-range-thumb {
-			box-shadow: 0;
-			border: 0;
-			height: 19px;
-			width: 19px;
-			border-radius: 15px;
-			background: #03a9f4;
-			cursor: pointer;
-			-webkit-appearance: none;
-			margin-top: -6.5px;
-		}
-
-		input[type=range]::-ms-track {
-			width: 100%;
-			height: 5.2px;
-			cursor: pointer;
-			box-shadow: 0;
-			background: #c2c0c2;
-			border-radius: 1.3px;
-		}
-
-		input[type=range]::-ms-fill-lower {
-			background: #c2c0c2;
-			border: 0;
-			border-radius: 0;
-			box-shadow: 0;
-		}
-
-		input[type=range]::-ms-fill-upper {
-			background: #c2c0c2;
-			border: 0;
-			border-radius: 0;
-			box-shadow: 0;
-		}
-
-		input[type=range]::-ms-thumb {
-			box-shadow: 0;
-			border: 0;
-			height: 15px;
-			width: 15px;
-			border-radius: 15px;
-			background: #03a9f4;
-			cursor: pointer;
-			-webkit-appearance: none;
-			margin-top: 1.5px;
-		}
-
-		.video-container {
-			position: relative;
-			padding-bottom: 56.25%;
-			height: 0;
-			overflow: hidden;
-
-			iframe {
-				position: absolute;
-				top: 0;
-				left: 0;
-				width: 100%;
-				height: 100%;
-			}
-		}
-		.video-col {
-			padding-right: 0.75rem;
-			padding-left: 0.75rem;
-		}
-	}
-
-	.room-title {
-		left: 50%;
-		-webkit-transform: translateX(-50%);
-		transform: translateX(-50%);
-		font-size: 2.1em;
-	}
-
-	#ratings {
-		span {
-			font-size: 1.68rem;
-		}
-
-		i {
-			color: #9e9e9e !important;
-			cursor: pointer;
-			transition: 0.1s color;
-		}
-	}
-
-	#time-display {
-		margin-top: 30px;
-		float: right;
-	}
-
-	#thumbs_up:hover, #thumbs_up.liked {
-		color: #87D37C !important;
-	}
-
-	#thumbs_down:hover, #thumbs_down.disliked {
-		color: #EC644B !important;
-	}
-
-	#song-thumbnail {
-		max-width: 100%;
-		width: 85%;
-	}
-
-	.seeker-bar-container {
-		position: relative;
-		height: 7px;
-		display: block;
-		width: 100%;
-		overflow: hidden;
-	}
-
-	.seeker-bar {
-		top: 0;
-		left: 0;
-		bottom: 0;
-		position: absolute;
-	}
-
-	ul {
-		list-style: none;
-		margin: 0;
-		display: block;
-	}
-
-	h1, h2, h3, h4, h5, h6 {
-		font-weight: 400;
-		line-height: 1.1;
-	}
-
-	h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
-		font-weight: inherit;
-	}
-
-	h1 {
-		font-size: 4.2rem;
-		line-height: 110%;
-		margin: 2.1rem 0 1.68rem 0;
-	}
-
-	h2 {
-		font-size: 3.56rem;
-		line-height: 110%;
-		margin: 1.78rem 0 1.424rem 0;
-	}
-
-	h3 {
-		font-size: 2.92rem;
-		line-height: 110%;
-		margin: 1.46rem 0 1.168rem 0;
-	}
-
-	h4 {
-		font-size: 2.28rem;
-		line-height: 110%;
-		margin: 1.14rem 0 0.912rem 0;
-	}
-
-	h5 {
-		font-size: 1.64rem;
-		line-height: 110%;
-		margin: 0.82rem 0 0.656rem 0;
-	}
-
-	h6 {
-		font-size: 1rem;
-		line-height: 110%;
-		margin: 0.5rem 0 0.4rem 0;
-	}
-
-	.thin {
-		font-weight: 200;
-	}
-
-	.left {
-		float: left !important;
-	}
-
-	.right {
-		float: right !important;
-	}
-
-	.light-blue {
-		background-color: #03a9f4 !important;
-	}
-
-	.white {
-		background-color: #FFFFFF !important;
-	}
-
-	.btn-search {
-		font-size: 14px;
-	}
-
-	.menu { padding: 0 10px; }
-
-	.menu-list li a:hover { color: #000 !important; }
-
-	.menu-list li {
-		display: flex;
-		justify-content: space-between;
-	}
-
-	.menu-list a {
-		/*padding: 0 10px !important;*/
-	}
-
-	.menu-list a:hover {
-		background-color : transparent;
-	}
-
-	.icons-group { display: flex; }
-
-	#like, #dislike {
-		position: relative;
-	}
-
-	.behind {
-		z-index: -1;
-	}
-
-	.behind:focus {
-		z-index: 0;
-	}
-
-	.progress {
-		width: 50px;
-		animation: rotate 0.8s infinite linear;
-		border: 8px solid #03a9f4;
-		border-right-color: transparent;
-		height: 50px;
-		position: absolute;
-		top: 50%;
-		left: 50%;
-	}
-
-	@keyframes rotate {
-		0% { transform: rotate(0deg); }
-		100% { transform: rotate(360deg); }
-	}
-
-	.experimental {
-		display: none !important;
-	}
+.no-song {
+  color: #03a9f4;
+  text-align: center;
+}
+
+#volumeSlider {
+  padding: 0 15px;
+  background: transparent;
+}
+
+.volume-slider-wrapper {
+  margin-top: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  .material-icons {
+    user-select: none;
+  }
+}
+
+.material-icons {
+  cursor: pointer;
+}
+
+.stationDisplayName {
+  color: white !important;
+}
+
+.add-to-playlist {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.slideout {
+  top: 50px;
+  height: 100%;
+  position: fixed;
+  right: 0;
+  width: 350px;
+  background-color: white;
+  box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
+  .slideout-header {
+    text-align: center;
+    background-color: rgb(3, 169, 244) !important;
+    margin: 0;
+    padding-top: 5px;
+    padding-bottom: 7px;
+    color: white;
+  }
+
+  .slideout-content {
+    height: 100%;
+  }
+}
+
+.modal-large {
+  width: 75%;
+}
+
+.station {
+  flex: 1 0 auto;
+  padding-top: 0.5vw;
+  transition: all 0.1s;
+  margin: 0 auto;
+  max-width: 100%;
+  width: 90%;
+
+  @media only screen and (min-width: 993px) {
+    width: 70%;
+  }
+
+  @media only screen and (min-width: 601px) {
+    width: 85%;
+  }
+
+  @media (min-width: 999px) {
+    .mobile-only {
+      display: none;
+    }
+    .desktop-only {
+      display: block;
+    }
+  }
+  @media (max-width: 998px) {
+    .mobile-only {
+      display: block;
+    }
+    .desktop-only {
+      display: none;
+      visibility: hidden;
+    }
+  }
+
+  .mobile-only {
+    text-align: center;
+  }
+
+  .playlistCard {
+    margin: 10px;
+    position: relative;
+    padding-bottom: calc(31.25% + 7px);
+    height: 0;
+    overflow-y: scroll;
+
+    .title {
+      background-color: rgb(3, 169, 244);
+      text-align: center;
+      padding: 10px;
+      color: white;
+      font-weight: 600;
+    }
+
+    .media {
+      padding: 0 25px;
+    }
+
+    .media-content .content {
+      min-height: 64px;
+      max-height: 64px;
+      display: flex;
+      align-items: center;
+    }
+
+    .content p strong {
+      word-break: break-word;
+    }
+
+    .content p small {
+      word-break: break-word;
+    }
+
+    .add-to-queue {
+      width: 100%;
+      margin-top: 25px;
+      height: 40px;
+      border-radius: 0;
+      background: rgb(3, 169, 244);
+      color: #fff !important;
+      border: 0;
+      &:active,
+      &:focus {
+        border: 0;
+      }
+    }
+
+    .add-to-queue:focus {
+      background: #029ce3;
+    }
+
+    .media-right {
+      line-height: 64px;
+    }
+
+    .songTitle {
+      word-wrap: break-word;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      line-height: 20px;
+      max-height: 40px;
+      width: 100%;
+    }
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    margin: 7.3px 0;
+  }
+
+  input[type="range"]:focus {
+    outline: none;
+  }
+
+  input[type="range"]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 5.2px;
+    cursor: pointer;
+    box-shadow: 0;
+    background: #c2c0c2;
+    border-radius: 0;
+    border: 0;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    box-shadow: 0;
+    border: 0;
+    height: 19px;
+    width: 19px;
+    border-radius: 15px;
+    background: #03a9f4;
+    cursor: pointer;
+    -webkit-appearance: none;
+    margin-top: -6.5px;
+  }
+
+  input[type="range"]::-moz-range-track {
+    width: 100%;
+    height: 5.2px;
+    cursor: pointer;
+    box-shadow: 0;
+    background: #c2c0c2;
+    border-radius: 0;
+    border: 0;
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    box-shadow: 0;
+    border: 0;
+    height: 19px;
+    width: 19px;
+    border-radius: 15px;
+    background: #03a9f4;
+    cursor: pointer;
+    -webkit-appearance: none;
+    margin-top: -6.5px;
+  }
+
+  input[type="range"]::-ms-track {
+    width: 100%;
+    height: 5.2px;
+    cursor: pointer;
+    box-shadow: 0;
+    background: #c2c0c2;
+    border-radius: 1.3px;
+  }
+
+  input[type="range"]::-ms-fill-lower {
+    background: #c2c0c2;
+    border: 0;
+    border-radius: 0;
+    box-shadow: 0;
+  }
+
+  input[type="range"]::-ms-fill-upper {
+    background: #c2c0c2;
+    border: 0;
+    border-radius: 0;
+    box-shadow: 0;
+  }
+
+  input[type="range"]::-ms-thumb {
+    box-shadow: 0;
+    border: 0;
+    height: 15px;
+    width: 15px;
+    border-radius: 15px;
+    background: #03a9f4;
+    cursor: pointer;
+    -webkit-appearance: none;
+    margin-top: 1.5px;
+  }
+
+  .video-container {
+    position: relative;
+    padding-bottom: 56.25%;
+    height: 0;
+    overflow: hidden;
+
+    iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+  }
+  .video-col {
+    padding-right: 0.75rem;
+    padding-left: 0.75rem;
+  }
+}
+
+.room-title {
+  left: 50%;
+  -webkit-transform: translateX(-50%);
+  transform: translateX(-50%);
+  font-size: 2.1em;
+}
+
+#ratings {
+  span {
+    font-size: 1.68rem;
+  }
+
+  i {
+    color: #9e9e9e !important;
+    cursor: pointer;
+    transition: 0.1s color;
+  }
+}
+
+#time-display {
+  margin-top: 30px;
+  float: right;
+}
+
+#thumbs_up:hover,
+#thumbs_up.liked {
+  color: #87d37c !important;
+}
+
+#thumbs_down:hover,
+#thumbs_down.disliked {
+  color: #ec644b !important;
+}
+
+#song-thumbnail {
+  max-width: 100%;
+  width: 85%;
+}
+
+.seeker-bar-container {
+  position: relative;
+  height: 7px;
+  display: block;
+  width: 100%;
+  overflow: hidden;
+}
+
+.seeker-bar {
+  top: 0;
+  left: 0;
+  bottom: 0;
+  position: absolute;
+}
+
+ul {
+  list-style: none;
+  margin: 0;
+  display: block;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+h1 a,
+h2 a,
+h3 a,
+h4 a,
+h5 a,
+h6 a {
+  font-weight: inherit;
+}
+
+h1 {
+  font-size: 4.2rem;
+  line-height: 110%;
+  margin: 2.1rem 0 1.68rem 0;
+}
+
+h2 {
+  font-size: 3.56rem;
+  line-height: 110%;
+  margin: 1.78rem 0 1.424rem 0;
+}
+
+h3 {
+  font-size: 2.92rem;
+  line-height: 110%;
+  margin: 1.46rem 0 1.168rem 0;
+}
+
+h4 {
+  font-size: 2.28rem;
+  line-height: 110%;
+  margin: 1.14rem 0 0.912rem 0;
+}
+
+h5 {
+  font-size: 1.64rem;
+  line-height: 110%;
+  margin: 0.82rem 0 0.656rem 0;
+}
+
+h6 {
+  font-size: 1rem;
+  line-height: 110%;
+  margin: 0.5rem 0 0.4rem 0;
+}
+
+.thin {
+  font-weight: 200;
+}
+
+.left {
+  float: left !important;
+}
+
+.right {
+  float: right !important;
+}
+
+.light-blue {
+  background-color: #03a9f4 !important;
+}
+
+.white {
+  background-color: #ffffff !important;
+}
+
+.btn-search {
+  font-size: 14px;
+}
+
+.menu {
+  padding: 0 10px;
+}
+
+.menu-list li a:hover {
+  color: #000 !important;
+}
+
+.menu-list li {
+  display: flex;
+  justify-content: space-between;
+}
+
+.menu-list a {
+  /*padding: 0 10px !important;*/
+}
+
+.menu-list a:hover {
+  background-color: transparent;
+}
+
+.icons-group {
+  display: flex;
+}
+
+#like,
+#dislike {
+  position: relative;
+}
+
+.behind {
+  z-index: -1;
+}
+
+.behind:focus {
+  z-index: 0;
+}
+
+.progress {
+  width: 50px;
+  animation: rotate 0.8s infinite linear;
+  border: 8px solid #03a9f4;
+  border-right-color: transparent;
+  height: 50px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.experimental {
+  display: none !important;
+}
 </style>
