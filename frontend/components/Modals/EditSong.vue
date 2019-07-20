@@ -33,6 +33,9 @@
                 <i class="material-icons">fast_forward</i>
               </button>
             </p>
+            <p>
+              YouTube: <span>{{youtubeVideoCurrentTime}}</span> / <span>{{youtubeVideoDuration}}</span> {{youtubeVideoNote}}
+            </p>
           </div>
         </div>
         <h5 class="has-text-centered">Thumbnail Preview</h5>
@@ -191,7 +194,10 @@ export default {
         title: "",
         artist: "",
         songs: []
-      }
+      },
+      youtubeVideoDuration: 0.0,
+      youtubeVideoCurrentTime: 0.0,
+      youtubeVideoNote: "",
     };
   },
   computed: {
@@ -211,6 +217,14 @@ export default {
         return Toast.methods.addToast("Please fill in all fields", 8000);
       if (!song.thumbnail)
         return Toast.methods.addToast("Please fill in all fields", 8000);
+
+      // Duration
+      if (Number(song.skipDuration) + Number(song.duration) > this.youtubeVideoDuration) {
+        return Toast.methods.addToast(
+          "Duration can't be higher than the length of the video",
+          8000
+        );
+      }
 
       // Title
       if (!validation.isLength(song.title, 1, 64))
@@ -382,6 +396,7 @@ export default {
         _this.video.paused = false;
         _this.video.player.stopVideo();
       }
+      if (this.playerReady) this.youtubeVideoCurrentTime = _this.video.player.getCurrentTime().toFixed(3);
     }, 200);
 
     this.video.player = new YT.Player("player", {
@@ -400,9 +415,12 @@ export default {
         onReady: () => {
           let volume = parseInt(localStorage.getItem("volume"));
           volume = typeof volume === "number" ? volume : 20;
+          console.log("Seekto: " + _this.editing.song.skipDuration);
           _this.video.player.seekTo(_this.editing.song.skipDuration);
           _this.video.player.setVolume(volume);
           if (volume > 0) _this.video.player.unMute();
+          this.youtubeVideoDuration = _this.video.player.getDuration();
+          this.youtubeVideoNote = "(~)"; 
           _this.playerReady = true;
         },
         onStateChange: event => {
@@ -414,6 +432,8 @@ export default {
 
             _this.video.paused = false;
             let youtubeDuration = _this.video.player.getDuration();
+            this.youtubeVideoDuration = youtubeDuration;
+            this.youtubeVideoNote = "";
             youtubeDuration -= _this.editing.song.skipDuration;
             if (_this.editing.song.duration > youtubeDuration) {
               this.video.player.stopVideo();
@@ -435,7 +455,8 @@ export default {
               _this.video.player.getCurrentTime() <
               _this.editing.song.skipDuration
             ) {
-              _this.video.player.seekTo(10);
+              console.log("Seekto2: " + _this.editing.song.skipDuration);
+              _this.video.player.seekTo(_this.editing.song.skipDuration);
             }
           } else if (event.data === 2) {
             this.video.paused = true;
