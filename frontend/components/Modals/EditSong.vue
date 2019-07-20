@@ -455,7 +455,6 @@ export default {
               _this.video.player.getCurrentTime() <
               _this.editing.song.skipDuration
             ) {
-              console.log("Seekto2: " + _this.editing.song.skipDuration);
               _this.video.player.seekTo(_this.editing.song.skipDuration);
             }
           } else if (event.data === 2) {

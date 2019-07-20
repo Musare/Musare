@@ -26,7 +26,7 @@ cache.sub('queue.update', songId => {
 	});
 });
 
-module.exports = {
+let lib = {
 
 	/**
 	 * Gets all queuesongs
@@ -203,5 +203,46 @@ module.exports = {
 			logger.success("QUEUE_ADD", `User "${userId}" successfully added queuesong "${songId}".`);
 			return cb({ status: 'success', message: 'Successfully added that song to the queue' });
 		});
+	}),
+
+	/**
+	 * Adds a set of songs to the queue
+	 *
+	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {String} url - the url of the the YouTube playlist
+	 * @param {Function} cb - gets called with the result
+	 * @param {String} userId - the userId automatically added by hooks
+	 */
+	addSetToQueue: hooks.loginRequired((session, url, cb, userId) => {
+		async.waterfall([
+			(next) => {
+				utils.getPlaylistFromYouTube(url, songs => {
+					next(null, songs);
+				});
+			},
+			(songs, next) => {
+				let processed = 0;
+				function checkDone() {
+					if (processed === songs.length) next();
+				}
+				for (let s = 0; s < songs.length; s++) {
+					lib.add(session, songs[s].contentDetails.videoId, () => {
+						processed++;
+						checkDone();
+					});
+				}
+			}
+		], (err) => {
+			if (err) {
+				err = utils.getError(err);
+				logger.error("QUEUE_IMPORT", `Importing a YouTube playlist to the queue failed for user "${userId}". "${err}"`);
+				return cb({ status: 'failure', message: err});
+			} else {
+				logger.success("QUEUE_IMPORT", `Successfully imported a YouTube playlist to the queue for user "${userId}".`);
+				cb({ status: 'success', message: 'Playlist has been successfully imported.' });
+			}
+		});
 	})
 };
+
+module.exports = lib;

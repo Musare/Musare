@@ -40,6 +40,20 @@
           <a class="button is-info" v-on:click="submitQuery()" href="#">Search</a>
         </p>
       </div>
+      <div class="control is-grouped">
+        <p class="control is-expanded">
+          <input
+            class="input"
+            type="text"
+            placeholder="YouTube Playlist URL"
+            v-model="importQuery"
+            @keyup.enter="importPlaylist()"
+          />
+        </p>
+        <p class="control">
+          <a class="button is-info" v-on:click="importPlaylist()" href="#">Import</a>
+        </p>
+      </div>
       <table class="table">
         <tbody>
           <tr v-for="(result, index) in queryResults" :key="index">
@@ -69,7 +83,8 @@ export default {
       querySearch: "",
       queryResults: [],
       playlists: [],
-      privatePlaylistQueueSelected: null
+      privatePlaylistQueueSelected: null,
+      importQuery: "",
     };
   },
   methods: {
@@ -111,6 +126,20 @@ export default {
           else Toast.methods.addToast(`${data.message}`, 4000);
         });
       }
+    },
+    importPlaylist: function() {
+      let _this = this;
+      Toast.methods.addToast(
+        "Starting to import your playlist. This can take some time to do.",
+        4000
+      );
+      this.socket.emit(
+        "queueSongs.addSetToQueue",
+        _this.importQuery,
+        res => {
+          Toast.methods.addToast(res.message, 4000);
+        }
+      );
     },
     submitQuery: function() {
       console.log("submit query");
