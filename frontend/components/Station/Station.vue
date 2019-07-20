@@ -636,7 +636,7 @@
 
 				io.removeAllListeners();
 				if (_this.socket.connected) _this.join();
-				io.onConnect(_this.join());
+				io.onConnect(_this.join);
 				_this.socket.emit('stations.findByName', _this.stationName, res => {
 					if (res.status === 'error') {
 						_this.$router.go('/404');
