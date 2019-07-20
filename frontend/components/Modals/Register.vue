@@ -10,22 +10,11 @@
         <!-- validation to check if exists http://bulma.io/documentation/elements/form/ -->
         <label class="label">Email</label>
         <p class="control">
-          <input
-            class="input"
-            type="text"
-            placeholder="Email..."
-            v-model="$parent.register.email"
-            autofocus
-          />
+          <input class="input" type="text" placeholder="Email..." v-model="email" autofocus />
         </p>
         <label class="label">Username</label>
         <p class="control">
-          <input
-            class="input"
-            type="text"
-            placeholder="Username..."
-            v-model="$parent.register.username"
-          />
+          <input class="input" type="text" placeholder="Username..." v-model="username" />
         </p>
         <label class="label">Password</label>
         <p class="control">
@@ -33,14 +22,14 @@
             class="input"
             type="password"
             placeholder="Password..."
-            v-model="$parent.register.password"
+            v-model="password"
             v-on:keypress="$parent.submitOnEnter(submitModal, $event)"
           />
         </p>
         <div id="recaptcha"></div>
         <p>
           By logging in/registering you agree to our
-          <router-link to="/terms">Terms of Service</router-link>and
+          <router-link to="/terms">Terms of Service</router-link>&nbsp;and
           <router-link to="/privacy">Privacy Policy</router-link>.
         </p>
       </section>
@@ -63,9 +52,14 @@
 <script>
 import { mapActions } from "vuex";
 
+import { Toast } from "vue-roaster";
+
 export default {
   data() {
     return {
+      username: "",
+      email: "",
+      password: "",
       recaptcha: {
         key: ""
       }
@@ -82,13 +76,24 @@ export default {
   },
   methods: {
     submitModal: function() {
-      // this.$dispatch('register', this.recaptcha.id);
-      this.toggleModal();
+      this.register(
+        {
+          username: this.username,
+          email: this.email,
+          password: this.password
+        },
+        this.recaptcha.id
+      )
+        .then(res => {
+          if (res.status == "success") location.reload();
+        })
+        .catch(err => Toast.methods.addToast(err.message, 5000));
     },
     githubRedirect: function() {
       localStorage.setItem("github_redirect", this.$route.path);
     },
-    ...mapActions("modals", ["toggleModal", "closeCurrentModal"])
+    ...mapActions("modals", ["toggleModal", "closeCurrentModal"]),
+    ...mapActions("user/auth", ["register"])
   }
 };
 </script>

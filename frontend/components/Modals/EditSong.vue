@@ -358,7 +358,7 @@ export default {
       "pauseVideo",
       "editSong"
     ]),
-    ...mapActions("modals", ["toggleModal"])
+    ...mapActions("modals", ["toggleModal", "closeCurrentModal"])
   },
   mounted: function() {
     let _this = this;

@@ -10,7 +10,7 @@
         <!-- validation to check if exists http://bulma.io/documentation/elements/form/ -->
         <label class="label">Email</label>
         <p class="control">
-          <input class="input" type="text" placeholder="Email..." v-model="$parent.login.email" />
+          <input class="input" type="text" placeholder="Email..." v-model="email" />
         </p>
         <label class="label">Password</label>
         <p class="control">
@@ -18,13 +18,13 @@
             class="input"
             type="password"
             placeholder="Password..."
-            v-model="$parent.login.password"
+            v-model="password"
             v-on:keypress="$parent.submitOnEnter(submitModal, $event)"
           />
         </p>
         <p>
           By logging in/registering you agree to our
-          <router-link to="/terms">Terms of Service</router-link>and&nbsp;
+          <router-link to="/terms">Terms of Service</router-link>&nbsp;and
           <router-link to="/privacy">Privacy Policy</router-link>.
         </p>
       </section>
@@ -48,20 +48,35 @@
 <script>
 import { mapActions } from "vuex";
 
+import { Toast } from "vue-roaster";
+
 export default {
+  data: function() {
+    return {
+      email: "",
+      password: ""
+    };
+  },
   methods: {
     submitModal: function() {
-      // this.$dispatch('login');
-      //this.toggleModal();
+      this.login({
+        email: this.email,
+        password: this.password
+      })
+        .then(res => {
+          if (res.status == "success") location.reload();
+        })
+        .catch(err => Toast.methods.addToast(err.message, 5000));
     },
     resetPassword: function() {
+      this.toggleModal({ sector: "header", modal: "login" });
       this.$router.go("/reset_password");
-      //this.toggleModal();
     },
     githubRedirect: function() {
       localStorage.setItem("github_redirect", this.$route.path);
     },
-    ...mapActions("modals", ["toggleModal", "closeCurrentModal"])
+    ...mapActions("modals", ["toggleModal", "closeCurrentModal"]),
+    ...mapActions("user/auth", ["login"])
   }
 };
 </script>
