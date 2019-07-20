@@ -21,7 +21,7 @@ module.exports = {
       logger.info("DISCORD_READY", `Logged in as ${client.user.tag}!`);
       connected = true;
       messagesToSend.forEach(message => {
-        this.sendAdminAlertMessage(message);
+        this.sendAdminAlertMessage(message.message, message.color, message.type, message.critical, message.extraFields);
       });
       messagesToSend = [];
     });
@@ -50,7 +50,7 @@ module.exports = {
   },
 
   sendAdminAlertMessage: function(message, color, type, critical, extraFields) {
-    if (!connected) return messagesToSend.push(message);
+    if (!connected) return messagesToSend.push({message, color, type, critical, extraFields});
     else {
       let channel = client.channels.find("id", this.adminAlertChannelId);
       if (channel !== null) {
