@@ -379,7 +379,8 @@ module.exports = {
 								});
 							}
 						}, (song, currentSongIndex, next) => {
-							return next(!!song);
+							if (!!song) return next(null, true, currentSongIndex);
+							else return next(null, false);
 						}, (err, song, currentSongIndex) => {
 							return next(err, song, currentSongIndex, station);
 						});
