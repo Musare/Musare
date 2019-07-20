@@ -378,8 +378,8 @@ module.exports = {
 									});
 								});
 							}
-						}, (song) => {
-							return !!song;
+						}, (song, currentSongIndex, next) => {
+							return next(!!song);
 						}, (err, song, currentSongIndex) => {
 							return next(err, song, currentSongIndex, station);
 						});
