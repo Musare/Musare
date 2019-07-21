@@ -33,7 +33,11 @@
 						</div>
 
 						<div class="under-content">
-							<span class="official"><i class="badge material-icons">verified_user</i>Official</span>
+							<span class="official"
+								><i class="badge material-icons"
+									>verified_user</i
+								>Official</span
+							>
 							<i
 								v-if="station.privacy !== 'public'"
 								class="material-icons right-icon"
@@ -96,7 +100,15 @@
 							{{ station.description }}
 						</div>
 						<div class="under-content">
-							<span class="hostedby">Hosted by <span class="host">{{$parent.getUsernameFromId(station.owner)}} {{userIdMap['Z' + station.owner]}}</span></span>
+							<span class="hostedby"
+								>Hosted by
+								<span class="host"
+									>{{
+										$parent.getUsernameFromId(station.owner)
+									}}
+									{{ userIdMap["Z" + station.owner] }}</span
+								></span
+							>
 							<i
 								v-if="station.privacy !== 'public'"
 								class="material-icons right-icon"
@@ -146,7 +158,7 @@ export default {
 				official: [],
 				community: []
 			},
-      userIdMap: this.$parent.userIdMap,
+			userIdMap: this.$parent.userIdMap,
 			nightMode: false
 		};
 	},
@@ -324,28 +336,28 @@ html {
 		position: relative;
 	}
 
-  .official {
-    font-size: 18px;
-    color: #03a9f4;
-    position: relative;
-    top: -5px;
+	.official {
+		font-size: 18px;
+		color: #03a9f4;
+		position: relative;
+		top: -5px;
 
-    .badge {
-      position: relative;
-      padding-right: 2px;
-      color: #38d227;
-      top: +5px;
-    }
-  }
+		.badge {
+			position: relative;
+			padding-right: 2px;
+			color: #38d227;
+			top: +5px;
+		}
+	}
 
-  .hostedby {
-    font-size: 15px;
+	.hostedby {
+		font-size: 15px;
 
-    .host {
-      font-size: 18px;
-      color: #03a9f4;
-    }
-  }
+		.host {
+			font-size: 18px;
+			color: #03a9f4;
+		}
+	}
 
 	.right-icon {
 		float: right;
