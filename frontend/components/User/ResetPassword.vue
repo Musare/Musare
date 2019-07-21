@@ -1,57 +1,70 @@
 <template>
-  <div>
-    <main-header></main-header>
-    <div class="container">
-      <!--Implement Validation-->
-      <h1>Step {{step}}</h1>
+	<div>
+		<main-header />
+		<div class="container">
+			<!--Implement Validation-->
+			<h1>Step {{ step }}</h1>
 
-      <label class="label" v-if="step === 1">Email Address</label>
-      <div class="control is-grouped" v-if="step === 1">
-        <p class="control is-expanded has-icon has-icon-right">
-          <input
-            class="input"
-            type="email"
-            placeholder="The email address associated with your account"
-            v-model="email"
-          />
-        </p>
-        <p class="control">
-          <button class="button is-success" v-on:click="submitEmail()">Request</button>
-          <button
-            v-on:click="step = 2"
-            v-if="step === 1"
-            class="button is-default skip-step"
-          >Skip this step</button>
-        </p>
-      </div>
+			<label v-if="step === 1" class="label">Email Address</label>
+			<div v-if="step === 1" class="control is-grouped">
+				<p class="control is-expanded has-icon has-icon-right">
+					<input
+						v-model="email"
+						class="input"
+						type="email"
+						placeholder="The email address associated with your account"
+					/>
+				</p>
+				<p class="control">
+					<button class="button is-success" @click="submitEmail()">
+						Request
+					</button>
+					<button
+						v-if="step === 1"
+						class="button is-default skip-step"
+						@click="step = 2"
+					>
+						Skip this step
+					</button>
+				</p>
+			</div>
 
-      <label class="label" v-if="step === 2">Reset Code</label>
-      <div class="control is-grouped" v-if="step === 2">
-        <p class="control is-expanded has-icon has-icon-right">
-          <input
-            class="input"
-            type="text"
-            placeholder="The reset code that was sent to your account's email address"
-            v-model="code"
-          />
-        </p>
-        <p class="control">
-          <button class="button is-success" v-on:click="verifyCode()">Verify reset code</button>
-        </p>
-      </div>
+			<label v-if="step === 2" class="label">Reset Code</label>
+			<div v-if="step === 2" class="control is-grouped">
+				<p class="control is-expanded has-icon has-icon-right">
+					<input
+						v-model="code"
+						class="input"
+						type="text"
+						placeholder="The reset code that was sent to your account's email address"
+					/>
+				</p>
+				<p class="control">
+					<button class="button is-success" v-on:click="verifyCode()">
+						Verify reset code
+					</button>
+				</p>
+			</div>
 
-      <label class="label" v-if="step === 3">Change password</label>
-      <div class="control is-grouped" v-if="step === 3">
-        <p class="control is-expanded has-icon has-icon-right">
-          <input class="input" type="password" placeholder="New password" v-model="newPassword" />
-        </p>
-        <p class="control">
-          <button class="button is-success" v-on:click="changePassword()">Change password</button>
-        </p>
-      </div>
-    </div>
-    <main-footer></main-footer>
-  </div>
+			<label v-if="step === 3" class="label">Change password</label>
+			<div v-if="step === 3" class="control is-grouped">
+				<p class="control is-expanded has-icon has-icon-right">
+					<input
+						v-model="newPassword"
+						class="input"
+						type="password"
+						placeholder="New password"
+					/>
+				</p>
+				<p class="control">
+					<button class="button is-success" @click="changePassword()">
+						Change password
+					</button>
+				</p>
+			</div>
+		</div>
+		<main-footer />
+	</div>
 </template>
 
 <script>
@@ -60,72 +73,75 @@ import { Toast } from "vue-roaster";
 import MainHeader from "../MainHeader.vue";
 import MainFooter from "../MainFooter.vue";
 
-import LoginModal from "../Modals/Login.vue";
 import io from "../../io";
 
 export default {
-  data() {
-    return {
-      email: "",
-      code: "",
-      newPassword: "",
-      step: 1
-    };
-  },
-  mounted: function() {
-    let _this = this;
-    io.getSocket(socket => {
-      _this.socket = socket;
-    });
-  },
-  methods: {
-    submitEmail: function() {
-      if (!this.email)
-        return Toast.methods.addToast("Email cannot be empty", 8000);
-      this.socket.emit("users.requestPasswordReset", this.email, res => {
-        Toast.methods.addToast(res.message, 8000);
-        if (res.status === "success") {
-          this.step = 2;
-        }
-      });
-    },
-    verifyCode: function() {
-      if (!this.code)
-        return Toast.methods.addToast("Code cannot be empty", 8000);
-      this.socket.emit("users.verifyPasswordResetCode", this.code, res => {
-        Toast.methods.addToast(res.message, 8000);
-        if (res.status === "success") {
-          this.step = 3;
-        }
-      });
-    },
-    changePassword: function() {
-      if (!this.newPassword)
-        return Toast.methods.addToast("Password cannot be empty", 8000);
-      this.socket.emit(
-        "users.changePasswordWithResetCode",
-        this.code,
-        this.newPassword,
-        res => {
-          Toast.methods.addToast(res.message, 8000);
-          if (res.status === "success") {
-            this.$router.go("/login");
-          }
-        }
-      );
-    }
-  },
-  components: { MainHeader, MainFooter, LoginModal }
+	components: { MainHeader, MainFooter },
+	data() {
+		return {
+			email: "",
+			code: "",
+			newPassword: "",
+			step: 1
+		};
+	},
+	mounted: function() {
+		let _this = this;
+		io.getSocket(socket => {
+			_this.socket = socket;
+		});
+	},
+	methods: {
+		submitEmail: function() {
+			if (!this.email)
+				return Toast.methods.addToast("Email cannot be empty", 8000);
+			this.socket.emit("users.requestPasswordReset", this.email, res => {
+				Toast.methods.addToast(res.message, 8000);
+				if (res.status === "success") {
+					this.step = 2;
+				}
+			});
+		},
+		verifyCode: function() {
+			if (!this.code)
+				return Toast.methods.addToast("Code cannot be empty", 8000);
+			this.socket.emit(
+				"users.verifyPasswordResetCode",
+				this.code,
+				res => {
+					Toast.methods.addToast(res.message, 8000);
+					if (res.status === "success") {
+						this.step = 3;
+					}
+				}
+			);
+		},
+		changePassword: function() {
+			if (!this.newPassword)
+				return Toast.methods.addToast("Password cannot be empty", 8000);
+			this.socket.emit(
+				"users.changePasswordWithResetCode",
+				this.code,
+				this.newPassword,
+				res => {
+					Toast.methods.addToast(res.message, 8000);
+					if (res.status === "success") {
+						this.$router.go("/login");
+					}
+				}
+			);
+		}
+	}
 };
 </script>
 
 <style lang="scss" scoped>
 .container {
-  padding: 25px;
+	padding: 25px;
 }
 
 .skip-step {
-  background-color: #7e7e7e;
-  color: #fff;
+	background-color: #7e7e7e;
+	color: #fff;
 }
 </style>

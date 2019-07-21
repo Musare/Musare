@@ -1,17 +1,19 @@
 <template>
-  <div>
-    <banned v-if="banned"></banned>
-    <div v-else>
-      <h1 v-if="!socketConnected" class="alert">Could not connect to the server.</h1>
-      <!-- should be a persistant toast -->
-      <router-view></router-view>
-      <toast></toast>
-      <what-is-new></what-is-new>
-      <mobile-alert></mobile-alert>
-      <login-modal v-if="modals.header.login"></login-modal>
-      <register-modal v-if="modals.header.register"></register-modal>
-    </div>
-  </div>
+	<div>
+		<banned v-if="banned" />
+		<div v-else>
+			<h1 v-if="!socketConnected" class="alert">
+				Could not connect to the server.
+			</h1>
+			<!-- should be a persistant toast -->
+			<router-view />
+			<toast />
+			<what-is-new />
+			<mobile-alert />
+			<login-modal v-if="modals.header.login" />
+			<register-modal v-if="modals.header.register" />
+		</div>
+	</div>
 </template>
 
 <script>
@@ -26,262 +28,253 @@ import LoginModal from "./components/Modals/Login.vue";
 import RegisterModal from "./components/Modals/Register.vue";
 import auth from "./auth";
 import io from "./io";
-import validation from "./validation";
 
 export default {
-  replace: false,
-  data() {
-    return {
-      banned: false,
-      ban: {},
-      register: {
-        email: "",
-        username: "",
-        password: ""
-      },
-      login: {
-        email: "",
-        password: ""
-      },
-      loggedIn: false,
-      role: "",
-      username: "",
-      userId: "",
-      serverDomain: "",
-      socketConnected: true,
-      userIdMap: {},
-      currentlyGettingUsernameFrom: {}
-    };
-  },
-  computed: mapState({
-    modals: state => state.modals.modals,
-    currentlyActive: state => state.modals.currentlyActive
-  }),
-  methods: {
-    logout: function() {
-      let _this = this;
-      _this.socket.emit("users.logout", result => {
-        if (result.status === "success") {
-          document.cookie = "SID=;expires=Thu, 01 Jan 1970 00:00:01 GMT;";
-          location.reload();
-        } else Toast.methods.addToast(result.message, 4000);
-      });
-    },
-    submitOnEnter: (cb, event) => {
-      if (event.which == 13) cb();
-    },
-    getUsernameFromId: function(userId) {
-      // refactor
-      if (
-        typeof this.userIdMap[userId] !== "string" &&
-        !this.currentlyGettingUsernameFrom[userId]
-      ) {
-        this.currentlyGettingUsernameFrom[userId] = true;
-        io.getSocket(socket => {
-          socket.emit("users.getUsernameFromId", userId, res => {
-            if (res.status === "success") {
-              this.$set(this.userIdMap, `Z${userId}`, res.data);
-            }
-            this.currentlyGettingUsernameFrom[userId] = false;
-          });
-        });
-      }
-    },
-    ...mapActions("modals", ["closeCurrentModal"])
-  },
-  mounted: function() {
-    document.onkeydown = event => {
-      event = event || window.event;
-      if (
-        event.keyCode === 27 &&
-        Object.keys(this.currentlyActive).length !== 0
-      )
-        this.closeCurrentModal();
-    };
+	replace: false,
+	data() {
+		return {
+			banned: false,
+			ban: {},
+			loggedIn: false,
+			role: "",
+			username: "",
+			userId: "",
+			serverDomain: "",
+			socketConnected: true,
+			userIdMap: {},
+			currentlyGettingUsernameFrom: {}
+		};
+	},
+	computed: mapState({
+		modals: state => state.modals.modals,
+		currentlyActive: state => state.modals.currentlyActive
+	}),
+	methods: {
+		logout: function() {
+			let _this = this;
+			_this.socket.emit("users.logout", result => {
+				if (result.status === "success") {
+					document.cookie =
+						"SID=;expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+					location.reload();
+				} else Toast.methods.addToast(result.message, 4000);
+			});
+		},
+		submitOnEnter: (cb, event) => {
+			if (event.which == 13) cb();
+		},
+		getUsernameFromId: function(userId) {
+			// refactor
+			if (
+				typeof this.userIdMap[userId] !== "string" &&
+				!this.currentlyGettingUsernameFrom[userId]
+			) {
+				this.currentlyGettingUsernameFrom[userId] = true;
+				io.getSocket(socket => {
+					socket.emit("users.getUsernameFromId", userId, res => {
+						if (res.status === "success") {
+							this.$set(this.userIdMap, `Z${userId}`, res.data);
+						}
+						this.currentlyGettingUsernameFrom[userId] = false;
+					});
+				});
+			}
+		},
+		...mapActions("modals", ["closeCurrentModal"])
+	},
+	mounted: function() {
+		document.onkeydown = event => {
+			event = event || window.event;
+			if (
+				event.keyCode === 27 &&
+				Object.keys(this.currentlyActive).length !== 0
+			)
+				this.closeCurrentModal();
+		};
 
-    let _this = this;
-    if (localStorage.getItem("github_redirect")) {
-      this.$router.go(localStorage.getItem("github_redirect"));
-      localStorage.removeItem("github_redirect");
-    }
-    auth.isBanned((banned, ban) => {
-      _this.ban = ban;
-      _this.banned = banned;
-    });
-    auth.getStatus((authenticated, role, username, userId) => {
-      _this.socket = window.socket;
-      _this.loggedIn = authenticated;
-      _this.role = role;
-      _this.username = username;
-      _this.userId = userId;
-    });
-    io.onConnect(true, () => {
-      _this.socketConnected = true;
-    });
-    io.onConnectError(true, () => {
-      _this.socketConnected = false;
-    });
-    io.onDisconnect(true, () => {
-      _this.socketConnected = false;
-    });
-    lofig.get("serverDomain", res => {
-      _this.serverDomain = res;
-    });
-    if (_this.$route.query.err) {
-      let err = _this.$route.query.err;
-      err = err
-        .replace(new RegExp("<", "g"), "&lt;")
-        .replace(new RegExp(">", "g"), "&gt;");
-      Toast.methods.addToast(err, 20000);
-    }
-    io.getSocket(true, socket => {
-      socket.on("keep.event:user.session.removed", () => {
-        location.reload();
-      });
-    });
-  },
-  components: {
-    Toast,
-    WhatIsNew,
-    MobileAlert,
-    LoginModal,
-    RegisterModal,
-    Banned
-  }
+		let _this = this;
+		if (localStorage.getItem("github_redirect")) {
+			this.$router.go(localStorage.getItem("github_redirect"));
+			localStorage.removeItem("github_redirect");
+		}
+		auth.isBanned((banned, ban) => {
+			_this.ban = ban;
+			_this.banned = banned;
+		});
+		auth.getStatus((authenticated, role, username, userId) => {
+			_this.socket = window.socket;
+			_this.loggedIn = authenticated;
+			_this.role = role;
+			_this.username = username;
+			_this.userId = userId;
+		});
+		io.onConnect(true, () => {
+			_this.socketConnected = true;
+		});
+		io.onConnectError(true, () => {
+			_this.socketConnected = false;
+		});
+		io.onDisconnect(true, () => {
+			_this.socketConnected = false;
+		});
+		lofig.get("serverDomain", res => {
+			_this.serverDomain = res;
+		});
+		if (_this.$route.query.err) {
+			let err = _this.$route.query.err;
+			err = err
+				.replace(new RegExp("<", "g"), "&lt;")
+				.replace(new RegExp(">", "g"), "&gt;");
+			Toast.methods.addToast(err, 20000);
+		}
+		io.getSocket(true, socket => {
+			socket.on("keep.event:user.session.removed", () => {
+				location.reload();
+			});
+		});
+	},
+	components: {
+		Toast,
+		WhatIsNew,
+		MobileAlert,
+		LoginModal,
+		RegisterModal,
+		Banned
+	}
 };
 </script>
 
-<style lang='scss'>
+<style lang="scss">
 .center {
-  text-align: center;
+	text-align: center;
 }
 
 #toast-container {
-  z-index: 10000 !important;
+	z-index: 10000 !important;
 }
 
 html {
-  overflow: auto !important;
+	overflow: auto !important;
 }
 
 .modal-card {
-  margin: 0 !important;
+	margin: 0 !important;
 }
 
 .absolute-a {
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	top: 0;
+	left: 0;
 }
 
 .alert {
-  padding: 20px;
-  color: white;
-  background-color: red;
-  position: fixed;
-  top: 50px;
-  right: 50px;
-  font-size: 2em;
-  border-radius: 5px;
-  z-index: 10000000;
+	padding: 20px;
+	color: white;
+	background-color: red;
+	position: fixed;
+	top: 50px;
+	right: 50px;
+	font-size: 2em;
+	border-radius: 5px;
+	z-index: 10000000;
 }
 
 .tooltip {
-  position: relative;
+	position: relative;
 
-  &:after {
-    position: absolute;
-    min-width: 80px;
-    margin-left: -75%;
-    text-align: center;
-    padding: 7.5px 6px;
-    border-radius: 2px;
-    background-color: #323232;
-    font-size: 0.9em;
-    color: #fff;
-    content: attr(data-tooltip);
-    opacity: 0;
-    transition: all 0.2s ease-in-out 0.1s;
-    visibility: hidden;
-  }
+	&:after {
+		position: absolute;
+		min-width: 80px;
+		margin-left: -75%;
+		text-align: center;
+		padding: 7.5px 6px;
+		border-radius: 2px;
+		background-color: #323232;
+		font-size: 0.9em;
+		color: #fff;
+		content: attr(data-tooltip);
+		opacity: 0;
+		transition: all 0.2s ease-in-out 0.1s;
+		visibility: hidden;
+	}
 
-  &:hover:after {
-    opacity: 1;
-    visibility: visible;
-  }
+	&:hover:after {
+		opacity: 1;
+		visibility: visible;
+	}
 }
 
 .tooltip-top {
-  &:after {
-    bottom: 150%;
-  }
+	&:after {
+		bottom: 150%;
+	}
 
-  &:hover {
-    &:after {
-      bottom: 120%;
-    }
-  }
+	&:hover {
+		&:after {
+			bottom: 120%;
+		}
+	}
 }
 
 .tooltip-bottom {
-  &:after {
-    top: 155%;
-  }
+	&:after {
+		top: 155%;
+	}
 
-  &:hover {
-    &:after {
-      top: 125%;
-    }
-  }
+	&:hover {
+		&:after {
+			top: 125%;
+		}
+	}
 }
 
 .tooltip-left {
-  &:after {
-    bottom: -10px;
-    right: 130%;
-    min-width: 100px;
-  }
+	&:after {
+		bottom: -10px;
+		right: 130%;
+		min-width: 100px;
+	}
 
-  &:hover {
-    &:after {
-      right: 110%;
-    }
-  }
+	&:hover {
+		&:after {
+			right: 110%;
+		}
+	}
 }
 
 .tooltip-right {
-  &:after {
-    bottom: -10px;
-    left: 190%;
-    min-width: 100px;
-  }
+	&:after {
+		bottom: -10px;
+		left: 190%;
+		min-width: 100px;
+	}
 
-  &:hover {
-    &:after {
-      left: 200%;
-    }
-  }
+	&:hover {
+		&:after {
+			left: 200%;
+		}
+	}
 }
 
 .button:focus,
 .button:active {
-  border-color: #dbdbdb !important;
+	border-color: #dbdbdb !important;
 }
 .input:focus,
 .input:active {
-  border-color: #03a9f4 !important;
+	border-color: #03a9f4 !important;
 }
 button.delete:focus {
-  background-color: rgba(10, 10, 10, 0.3);
+	background-color: rgba(10, 10, 10, 0.3);
 }
 
 .tag {
-  padding-right: 6px !important;
+	padding-right: 6px !important;
 }
 
 .button.is-success {
-  background-color: #00b16a !important;
+	background-color: #00b16a !important;
 }
 </style>

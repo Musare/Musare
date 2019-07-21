@@ -1,16 +1,15 @@
-const webpack = require('webpack');
-const VueLoaderPlugin = require('vue-loader/lib/plugin');
-const WebpackMd5Hash = require('webpack-md5-hash');
+const VueLoaderPlugin = require("vue-loader/lib/plugin");
+const WebpackMd5Hash = require("webpack-md5-hash");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = {
-	mode: 'none',
-	devtool: 'eval-source-map',
-	entry: './main.js',
+	mode: "none",
+	devtool: "eval-source-map",
+	entry: "./main.js",
 	output: {
-		path: __dirname + '/build/',
-		publicPath: '/',
-		filename: '[name].[chunkhash].js'
+		path: __dirname + "/build/",
+		publicPath: "/",
+		filename: "[name].[chunkhash].js"
 	},
 	plugins: [
 		new VueLoaderPlugin(),
@@ -25,29 +24,37 @@ module.exports = {
 	module: {
 		rules: [
 			{
+				enforce: "pre",
 				test: /\.vue$/,
-				loader: 'vue-loader',
+				loader: "eslint-loader",
+				exclude: /node_modules/
+			},
+			{
+				test: /\.vue$/,
+				loader: "vue-loader",
+				exclude: /node_modules/
+			},
+			{
+				enforce: "pre",
+				test: /\.js$/,
+				loader: "eslint-loader",
 				exclude: /node_modules/
 			},
 			{
 				test: /\.js$/,
-				loader: 'babel-loader',
+				loader: "babel-loader",
 				exclude: /node_modules/
 			},
 			{
 				test: /\.scss$/,
 				exclude: /node_modules/,
-				use: [
-					'vue-style-loader',
-					'css-loader',
-					'sass-loader'
-				]
+				use: ["vue-style-loader", "css-loader", "sass-loader"]
 			}
 		]
 	},
 	resolve: {
 		alias: {
-			vue: 'vue/dist/vue.js'
+			vue: "vue/dist/vue.js"
 		}
 	}
 };

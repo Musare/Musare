@@ -1,49 +1,65 @@
 <template>
-  <div>
-    <div class="container">
-      <table class="table is-striped">
-        <thead>
-          <tr>
-            <td>Profile Picture</td>
-            <td>User ID</td>
-            <td>GitHub ID</td>
-            <td>Password</td>
-            <td>Username</td>
-            <td>Role</td>
-            <td>Email Address</td>
-            <td>Email Verified</td>
-            <td>Likes</td>
-            <td>Dislikes</td>
-            <td>Songs Requested</td>
-            <td>Options</td>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(user, index) in users" :key="index">
-            <td>
-              <img class="user-avatar" src="/assets/notes-transparent.png" />
-            </td>
-            <td>{{ user._id }}</td>
-            <td v-if="user.services.github">{{ user.services.github.id }}</td>
-            <td v-else>Not Linked</td>
-            <td v-if="user.hasPassword">Yes</td>
-            <td v-else>Not Linked</td>
-            <td>{{ user.username }}</td>
-            <td>{{ user.role }}</td>
-            <td>{{ user.email.address }}</td>
-            <td>{{ user.email.verified }}</td>
-            <td>{{ user.liked.length }}</td>
-            <td>{{ user.disliked.length }}</td>
-            <td>{{ user.songsRequested }}</td>
-            <td>
-              <button class="button is-primary" v-on:click="edit(user)">Edit</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <edit-user v-if="modals.editUser"></edit-user>
-  </div>
+	<div>
+		<div class="container">
+			<table class="table is-striped">
+				<thead>
+					<tr>
+						<td>Profile Picture</td>
+						<td>User ID</td>
+						<td>GitHub ID</td>
+						<td>Password</td>
+						<td>Username</td>
+						<td>Role</td>
+						<td>Email Address</td>
+						<td>Email Verified</td>
+						<td>Likes</td>
+						<td>Dislikes</td>
+						<td>Songs Requested</td>
+						<td>Options</td>
+					</tr>
+				</thead>
+				<tbody>
+					<tr v-for="(user, index) in users" :key="index">
+						<td>
+							<img
+								class="user-avatar"
+								src="/assets/notes-transparent.png"
+							/>
+						</td>
+						<td>{{ user._id }}</td>
+						<td v-if="user.services.github">
+							{{ user.services.github.id }}
+						</td>
+						<td v-else>
+							Not Linked
+						</td>
+						<td v-if="user.hasPassword">
+							Yes
+						</td>
+						<td v-else>
+							Not Linked
+						</td>
+						<td>{{ user.username }}</td>
+						<td>{{ user.role }}</td>
+						<td>{{ user.email.address }}</td>
+						<td>{{ user.email.verified }}</td>
+						<td>{{ user.liked.length }}</td>
+						<td>{{ user.disliked.length }}</td>
+						<td>{{ user.songsRequested }}</td>
+						<td>
+							<button
+								class="button is-primary"
+								@click="edit(user)"
+							>
+								Edit
+							</button>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		<edit-user v-if="modals.editUser" />
+	</div>
 </template>
 
 <script>
@@ -53,62 +69,62 @@ import EditUser from "../Modals/EditUser.vue";
 import io from "../../io";
 
 export default {
-  components: { EditUser },
-  data() {
-    return {
-      users: []
-    };
-  },
-  computed: {
-    ...mapState("modals", {
-      modals: state => state.modals.admin
-    })
-  },
-  methods: {
-    edit: function(user) {
-      this.editUser(user);
-      this.toggleModal({ sector: "admin", modal: "editUser" });
-    },
-    init: function() {
-      let _this = this;
-      _this.socket.emit("users.index", result => {
-        if (result.status === "success") _this.users = result.data;
-      });
-      _this.socket.emit("apis.joinAdminRoom", "users", () => {});
-      _this.socket.on("event:user.username.changed", username => {
-        _this.$parent.$parent.username = username;
-      });
-    },
-    ...mapActions("admin/users", ["editUser"]),
-    ...mapActions("modals", ["toggleModal"])
-  },
-  mounted: function() {
-    let _this = this;
-    io.getSocket(socket => {
-      _this.socket = socket;
-      if (_this.socket.connected) _this.init();
-      io.onConnect(() => _this.init());
-    });
-  }
+	components: { EditUser },
+	data() {
+		return {
+			users: []
+		};
+	},
+	computed: {
+		...mapState("modals", {
+			modals: state => state.modals.admin
+		})
+	},
+	methods: {
+		edit: function(user) {
+			this.editUser(user);
+			this.toggleModal({ sector: "admin", modal: "editUser" });
+		},
+		init: function() {
+			let _this = this;
+			_this.socket.emit("users.index", result => {
+				if (result.status === "success") _this.users = result.data;
+			});
+			_this.socket.emit("apis.joinAdminRoom", "users", () => {});
+			_this.socket.on("event:user.username.changed", username => {
+				_this.$parent.$parent.username = username;
+			});
+		},
+		...mapActions("admin/users", ["editUser"]),
+		...mapActions("modals", ["toggleModal"])
+	},
+	mounted: function() {
+		let _this = this;
+		io.getSocket(socket => {
+			_this.socket = socket;
+			if (_this.socket.connected) _this.init();
+			io.onConnect(() => _this.init());
+		});
+	}
 };
 </script>
 
-<style lang='scss' scoped>
+<style lang="scss" scoped>
 body {
-  font-family: "Roboto", sans-serif;
+	font-family: "Roboto", sans-serif;
 }
 
 .user-avatar {
-  display: block;
-  max-width: 50px;
-  margin: 0 auto;
+	display: block;
+	max-width: 50px;
+	margin: 0 auto;
 }
 
 td {
-  vertical-align: middle;
+	vertical-align: middle;
 }
 
 .is-primary:focus {
-  background-color: #029ce3 !important;
+	background-color: #029ce3 !important;
 }
 </style>

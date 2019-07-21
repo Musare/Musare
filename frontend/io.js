@@ -8,11 +8,10 @@ let onDisconnectCallbacksPersist = [];
 let onConnectErrorCallbacksPersist = [];
 
 export default {
-
 	ready: false,
 	socket: null,
 
-	getSocket: function () {
+	getSocket: function() {
 		if (arguments[0] === true) {
 			if (this.ready) arguments[1](this.socket);
 			else callbacksPersist.push(arguments[1]);
@@ -47,39 +46,43 @@ export default {
 		callbacks = [];
 	},
 
-	removeAllListeners: function () {
-		Object.keys(this.socket._callbacks).forEach((id) => {
-			if (id.indexOf("$event:") !== -1 && id.indexOf("$event:keep.") === -1) {
+	removeAllListeners: function() {
+		Object.keys(this.socket._callbacks).forEach(id => {
+			if (
+				id.indexOf("$event:") !== -1 &&
+				id.indexOf("$event:keep.") === -1
+			) {
 				delete this.socket._callbacks[id];
 			}
 		});
 	},
 
-	init: function (url) {
+	init: function(url) {
+		/* eslint-disable-next-line no-undef */
 		this.socket = window.socket = io(url);
-		this.socket.on('connect', () => {
-			onConnectCallbacks.forEach((cb) => {
+		this.socket.on("connect", () => {
+			onConnectCallbacks.forEach(cb => {
 				cb();
 			});
-			onConnectCallbacksPersist.forEach((cb) => {
+			onConnectCallbacksPersist.forEach(cb => {
 				cb();
 			});
 		});
-		this.socket.on('disconnect', () => {
+		this.socket.on("disconnect", () => {
 			console.log("IO: SOCKET DISCONNECTED");
-			onDisconnectCallbacks.forEach((cb) => {
+			onDisconnectCallbacks.forEach(cb => {
 				cb();
 			});
-			onDisconnectCallbacksPersist.forEach((cb) => {
+			onDisconnectCallbacksPersist.forEach(cb => {
 				cb();
 			});
 		});
-		this.socket.on('connect_error', () => {
+		this.socket.on("connect_error", () => {
 			console.log("IO: SOCKET CONNECT ERROR");
-			onConnectErrorCallbacks.forEach((cb) => {
+			onConnectErrorCallbacks.forEach(cb => {
 				cb();
 			});
-			onConnectErrorCallbacksPersist.forEach((cb) => {
+			onConnectErrorCallbacksPersist.forEach(cb => {
 				cb();
 			});
 		});
@@ -94,4 +97,4 @@ export default {
 		callbacks = [];
 		callbacksPersist = [];
 	}
-}
+};

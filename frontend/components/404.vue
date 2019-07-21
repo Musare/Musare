@@ -1,27 +1,27 @@
 <template>
-  <div class="wrapper">
-    <h3>
-      <strong>404</strong>&nbsp;Not Found
-    </h3>
-    <router-link class="button is-black" to="/">Back to Home</router-link>
-  </div>
+	<div class="wrapper">
+		<h3><strong>404</strong>&nbsp;Not Found</h3>
+		<router-link class="button is-black" to="/">
+			Back to Home
+		</router-link>
+	</div>
 </template>
 
 <style lang="scss" scoped>
 * {
-  margin: 0;
-  padding: 0;
+	margin: 0;
+	padding: 0;
 }
 
 .wrapper {
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
+	height: 100vh;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-direction: column;
 }
 
 a {
-  margin-top: 15px;
+	margin-top: 15px;
 }
 </style>

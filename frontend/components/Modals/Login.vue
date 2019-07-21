@@ -1,48 +1,64 @@
 <template>
-  <div class="modal is-active">
-    <div class="modal-background"></div>
-    <div class="modal-card">
-      <header class="modal-card-head">
-        <p class="modal-card-title">Login</p>
-        <button class="delete" v-on:click="closeCurrentModal()"></button>
-      </header>
-      <section class="modal-card-body">
-        <!-- validation to check if exists http://bulma.io/documentation/elements/form/ -->
-        <label class="label">Email</label>
-        <p class="control">
-          <input class="input" type="text" placeholder="Email..." v-model="email" />
-        </p>
-        <label class="label">Password</label>
-        <p class="control">
-          <input
-            class="input"
-            type="password"
-            placeholder="Password..."
-            v-model="password"
-            v-on:keypress="$parent.submitOnEnter(submitModal, $event)"
-          />
-        </p>
-        <p>
-          By logging in/registering you agree to our
-          <router-link to="/terms">Terms of Service</router-link>&nbsp;and
-          <router-link to="/privacy">Privacy Policy</router-link>.
-        </p>
-      </section>
-      <footer class="modal-card-foot">
-        <a class="button is-primary" href="#" v-on:click="submitModal('login')">Submit</a>
-        <a
-          class="button is-github"
-          :href="$parent.serverDomain + '/auth/github/authorize'"
-          v-on:click="githubRedirect()"
-        >
-          <div class="icon">
-            <img class="invert" src="/assets/social/github.svg" />
-          </div>&nbsp;&nbsp;Login with GitHub
-        </a>
-        <a href="/reset_password" v-on:click="resetPassword()">Forgot password?</a>
-      </footer>
-    </div>
-  </div>
+	<div class="modal is-active">
+		<div class="modal-background" />
+		<div class="modal-card">
+			<header class="modal-card-head">
+				<p class="modal-card-title">
+					Login
+				</p>
+				<button class="delete" @click="closeCurrentModal()" />
+			</header>
+			<section class="modal-card-body">
+				<!-- validation to check if exists http://bulma.io/documentation/elements/form/ -->
+				<label class="label">Email</label>
+				<p class="control">
+					<input
+						v-model="email"
+						class="input"
+						type="text"
+						placeholder="Email..."
+					/>
+				</p>
+				<label class="label">Password</label>
+				<p class="control">
+					<input
+						v-model="password"
+						class="input"
+						type="password"
+						placeholder="Password..."
+						@keypress="$parent.submitOnEnter(submitModal, $event)"
+					/>
+				</p>
+				<p>
+					By logging in/registering you agree to our
+					<router-link to="/terms"> Terms of Service </router-link
+					>&nbsp;and
+					<router-link to="/privacy"> Privacy Policy </router-link>.
+				</p>
+			</section>
+			<footer class="modal-card-foot">
+				<a
+					class="button is-primary"
+					href="#"
+					@click="submitModal('login')"
+					>Submit</a
+				>
+				<a
+					class="button is-github"
+					:href="$parent.serverDomain + '/auth/github/authorize'"
+					@click="githubRedirect()"
+				>
+					<div class="icon">
+						<img class="invert" src="/assets/social/github.svg" />
+					</div>
+					&nbsp;&nbsp;Login with GitHub
+				</a>
+				<a href="/reset_password" v-on:click="resetPassword()"
+					>Forgot password?</a
+				>
+			</footer>
+		</div>
+	</div>
 </template>
 
 <script>
@@ -51,54 +67,54 @@ import { mapActions } from "vuex";
 import { Toast } from "vue-roaster";
 
 export default {
-  data: function() {
-    return {
-      email: "",
-      password: ""
-    };
-  },
-  methods: {
-    submitModal: function() {
-      this.login({
-        email: this.email,
-        password: this.password
-      })
-        .then(res => {
-          if (res.status == "success") location.reload();
-        })
-        .catch(err => Toast.methods.addToast(err.message, 5000));
-    },
-    resetPassword: function() {
-      this.toggleModal({ sector: "header", modal: "login" });
-      this.$router.go("/reset_password");
-    },
-    githubRedirect: function() {
-      localStorage.setItem("github_redirect", this.$route.path);
-    },
-    ...mapActions("modals", ["toggleModal", "closeCurrentModal"]),
-    ...mapActions("user/auth", ["login"])
-  }
+	data: function() {
+		return {
+			email: "",
+			password: ""
+		};
+	},
+	methods: {
+		submitModal: function() {
+			this.login({
+				email: this.email,
+				password: this.password
+			})
+				.then(res => {
+					if (res.status == "success") location.reload();
+				})
+				.catch(err => Toast.methods.addToast(err.message, 5000));
+		},
+		resetPassword: function() {
+			this.toggleModal({ sector: "header", modal: "login" });
+			this.$router.go("/reset_password");
+		},
+		githubRedirect: function() {
+			localStorage.setItem("github_redirect", this.$route.path);
+		},
+		...mapActions("modals", ["toggleModal", "closeCurrentModal"]),
+		...mapActions("user/auth", ["login"])
+	}
 };
 </script>
 
-<style lang='scss' scoped>
+<style lang="scss" scoped>
 .button.is-github {
-  background-color: #333;
-  color: #fff !important;
+	background-color: #333;
+	color: #fff !important;
 }
 
 .is-github:focus {
-  background-color: #1a1a1a;
+	background-color: #1a1a1a;
 }
 .is-primary:focus {
-  background-color: #029ce3 !important;
+	background-color: #029ce3 !important;
 }
 
 .invert {
-  filter: brightness(5);
+	filter: brightness(5);
 }
 
 a {
-  color: #029ce3;
+	color: #029ce3;
 }
 </style>

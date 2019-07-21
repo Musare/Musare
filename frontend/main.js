@@ -15,114 +15,83 @@ let router = new VueRouter({
 	routes: [
 		{
 			path: "/",
-			component: () =>
-				import(/* webpackChunkName: "home" */ "./components/pages/Home.vue")
+			component: () => import("./components/pages/Home.vue")
 		},
 		{
 			path: "*",
-			component: () =>
-				import(/* webpackChunkName: "404" */ "./components/404.vue")
+			component: () => import("./components/404.vue")
 		},
 		{
 			path: "/404",
-			component: () =>
-				import(/* webpackChunkName: "404" */ "./components/404.vue")
+			component: () => import("./components/404.vue")
 		},
 		{
 			path: "/terms",
-			component: () =>
-				import(/* webpackChunkName: "terms" */ "./components/pages/Terms.vue")
+			component: () => import("./components/pages/Terms.vue")
 		},
 		{
 			path: "/privacy",
-			component: () =>
-				import(
-					/* webpackChunkName: "privacy" */ "./components/pages/Privacy.vue"
-				)
+			component: () => import("./components/pages/Privacy.vue")
 		},
 		{
 			path: "/team",
-			component: () =>
-				import(/* webpackChunkName: "team" */ "./components/pages/Team.vue")
+			component: () => import("./components/pages/Team.vue")
 		},
 		{
 			path: "/news",
-			component: () =>
-				import(/* webpackChunkName: "news" */ "./components/pages/News.vue")
+			component: () => import("./components/pages/News.vue")
 		},
 		{
 			path: "/about",
-			component: () =>
-				import(/* webpackChunkName: "about" */ "./components/pages/About.vue")
+			component: () => import("./components/pages/About.vue")
 		},
 		{
 			name: "profile",
 			path: "/u/:username",
-			component: () =>
-				import(/* webpackChunkName: "profile" */ "./components/User/Show.vue")
+			component: () => import("./components/User/Show.vue")
 		},
 		{
 			path: "/settings",
-			component: () =>
-				import(
-					/* webpackChunkName: "settings" */ "./components/User/Settings.vue"
-				),
+			component: () => import("./components/User/Settings.vue"),
 			loginRequired: true
 		},
 		{
 			path: "/reset_password",
-			component: () =>
-				import(
-					/* webpackChunkName: "reset_password" */ "./components/User/ResetPassword.vue"
-				)
+			component: () => import("./components/User/ResetPassword.vue")
 		},
 		{
 			path: "/login",
-			component: () =>
-				import(/* webpackChunkName: "login" */ "./components/Modals/Login.vue")
+			component: () => import("./components/Modals/Login.vue")
 		},
 		{
 			path: "/register",
-			component: () =>
-				import(
-					/* webpackChunkName: "register" */ "./components/Modals/Register.vue"
-				)
+			component: () => import("./components/Modals/Register.vue")
 		},
 		{
 			path: "/admin",
-			component: () =>
-				import(/* webpackChunkName: "admin" */ "./components/pages/Admin.vue"),
+			component: () => import("./components/pages/Admin.vue"),
 			adminRequired: true
 		},
 		{
 			path: "/admin/:page",
-			component: () =>
-				import(/* webpackChunkName: "admin" */ "./components/pages/Admin.vue"),
+			component: () => import("./components/pages/Admin.vue"),
 			adminRequired: true
 		},
 		{
 			name: "official",
 			path: "/official/:id",
 			alias: "/:id",
-			component: () =>
-				import(
-					/* webpackChunkName: "officialStation" */ "./components/Station/Station.vue"
-				),
+			component: () => import("./components/Station/Station.vue"),
 			officialRequired: true
 		},
 		{
 			name: "community",
 			path: "/community/:id",
-			component: () =>
-				import(
-					/* webpackChunkName: "communityStation" */ "./components/Station/Station.vue"
-				),
+			component: () => import("./components/Station/Station.vue"),
 			communityRequired: true
 		}
 	]
 });
-
-let _this = this;
 
 lofig.folder = "../config/default.json";
 lofig.get("serverDomain", function(res) {

@@ -1,21 +1,23 @@
 <template>
-  <modal title="Create Playlist">
-    <template v-slot:body>
-      <p class="control is-expanded">
-        <input
-          class="input"
-          type="text"
-          placeholder="Playlist Display Name"
-          v-model="playlist.displayName"
-          autofocus
-          @keyup.enter="createPlaylist()"
-        />
-      </p>
-    </template>
-    <template v-slot:footer>
-      <a class="button is-info" v-on:click="createPlaylist()">Create Playlist</a>
-    </template>
-  </modal>
+	<modal title="Create Playlist">
+		<template v-slot:body>
+			<p class="control is-expanded">
+				<input
+					v-model="playlist.displayName"
+					class="input"
+					type="text"
+					placeholder="Playlist Display Name"
+					autofocus
+					@keyup.enter="createPlaylist()"
+				/>
+			</p>
+		</template>
+		<template v-slot:footer>
+			<a class="button is-info" v-on:click="createPlaylist()"
+				>Create Playlist</a
+			>
+		</template>
+	</modal>
 </template>
 
 <script>
@@ -25,79 +27,80 @@ import io from "../../../io";
 import validation from "../../../validation";
 
 export default {
-  components: { Modal },
-  data() {
-    return {
-      playlist: {
-        displayName: null,
-        songs: [],
-        createdBy: this.$parent.$parent.username,
-        createdAt: Date.now()
-      }
-    };
-  },
-  methods: {
-    createPlaylist: function() {
-      const displayName = this.playlist.displayName;
-      if (!validation.isLength(displayName, 2, 32))
-        return Toast.methods.addToast(
-          "Display name must have between 2 and 32 characters.",
-          8000
-        );
-      if (!validation.regex.azAZ09_.test(displayName))
-        return Toast.methods.addToast(
-          "Invalid display name format. Allowed characters: a-z, A-Z, 0-9 and _.",
-          8000
-        );
+	components: { Modal },
+	data() {
+		return {
+			playlist: {
+				displayName: null,
+				songs: [],
+				createdBy: this.$parent.$parent.username,
+				createdAt: Date.now()
+			}
+		};
+	},
+	mounted: function() {
+		let _this = this;
+		io.getSocket(socket => {
+			_this.socket = socket;
+		});
+	},
+	methods: {
+		createPlaylist: function() {
+			const displayName = this.playlist.displayName;
+			if (!validation.isLength(displayName, 2, 32))
+				return Toast.methods.addToast(
+					"Display name must have between 2 and 32 characters.",
+					8000
+				);
+			if (!validation.regex.azAZ09_.test(displayName))
+				return Toast.methods.addToast(
+					"Invalid display name format. Allowed characters: a-z, A-Z, 0-9 and _.",
+					8000
+				);
 
-      this.socket.emit("playlists.create", this.playlist, res => {
-        Toast.methods.addToast(res.message, 3000);
-      });
-      this.$parent.modals.createPlaylist = !this.$parent.modals.createPlaylist;
-    }
-  },
-  mounted: function() {
-    let _this = this;
-    io.getSocket(socket => {
-      _this.socket = socket;
-    });
-  }
+			this.socket.emit("playlists.create", this.playlist, res => {
+				Toast.methods.addToast(res.message, 3000);
+			});
+			this.$parent.modals.createPlaylist = !this.$parent.modals
+				.createPlaylist;
+		}
+	}
 };
 </script>
 
-<style lang='scss' scoped>
+<style lang="scss" scoped>
 .menu {
-  padding: 0 20px;
+	padding: 0 20px;
 }
 
 .menu-list li {
-  display: flex;
-  justify-content: space-between;
+	display: flex;
+	justify-content: space-between;
 }
 
 .menu-list a:hover {
-  color: #000 !important;
+	color: #000 !important;
 }
 
 li a {
-  display: flex;
-  align-items: center;
+	display: flex;
+	align-items: center;
 }
 
 .controls {
-  display: flex;
+	display: flex;
 
-  a {
-    display: flex;
-    align-items: center;
-  }
+	a {
+		display: flex;
+		align-items: center;
+	}
 }
 
 .table {
-  margin-bottom: 0;
+	margin-bottom: 0;
 }
 
 h5 {
-  padding: 20px 0;
+	padding: 20px 0;
 }
 </style>

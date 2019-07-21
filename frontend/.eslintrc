@@ -1,14 +1,30 @@
 {
-	"rules": {
-		"indent": [2, "tab", { "SwitchCase": 1 }]
+	"root": true,
+	"env": {
+		"browser": true,
+		"amd": true,
+		"node": true,
+		"es6": true,
+		"jquery": true
 	},
 	"parserOptions": {
 		"ecmaVersion": 2018,
-		"sourceType": "module"
+		"sourceType": "module",
+		"parser": "babel-eslint"
 	},
-	"plugins": ["html"],
-	"settings": {
-		"html/indent": "tab",
-		"html/report-bad-indent": 2
+	"extends": [
+		"plugin:vue/essential",
+		"plugin:prettier/recommended",
+		"eslint:recommended"
+	],
+	"globals": {
+		"lofig": "writable",
+		"grecaptcha": "readonly",
+		"ga": "readonly",
+		"moment": "readonly"
+	},
+	"rules": {
+		"no-control-regex": 0,
+		"no-var": 2
 	}
 }

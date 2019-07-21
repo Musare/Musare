@@ -7,6 +7,10 @@ module.exports = {
 		ascii: /^[\x00-\x7F]+$/
 	},
 	isLength: (string, min, max) => {
-		return !(typeof string !== 'string' || string.length < min || string.length > max);
+		return !(
+			typeof string !== "string" ||
+			string.length < min ||
+			string.length > max
+		);
 	}
 };

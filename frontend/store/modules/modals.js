@@ -11,7 +11,6 @@ const state = {
 			addSongToQueue: false,
 			editPlaylist: false,
 			createPlaylist: false,
-			editPlaylist: false,
 			addSongToPlaylist: false,
 			editStation: false,
 			report: false
@@ -40,7 +39,8 @@ const mutations = {
 	toggleModal(state, data) {
 		const { sector, modal } = data;
 		state.modals[sector][modal] = !state.modals[sector][modal];
-		if (state.modals[sector][modal]) state.currentlyActive = { sector, modal };
+		if (state.modals[sector][modal])
+			state.currentlyActive = { sector, modal };
 		else state.currentlyActive = {};
 	},
 	closeCurrentModal(state) {
