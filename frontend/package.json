@@ -6,6 +6,7 @@
 	"author": "Musare Team",
 	"repository": "https://github.com/Musare/MusareNode",
 	"scripts": {
+		"lint": "npx eslint . --ext .js,.vue",
 		"development": "webpack --mode development",
 		"development-watch": "webpack --watch --watch-poll",
 		"production": "webpack --mode production"
