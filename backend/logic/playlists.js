@@ -142,7 +142,7 @@ module.exports = {
 		async.waterfall([
 
 			(next) => {
-				db.models.playlist.removeOne({ _id: playlistId }, next);
+				db.models.playlist.deleteOne({ _id: playlistId }, next);
 			},
 
 			(res, next) => {

@@ -116,7 +116,7 @@ let lib = {
 	remove: hooks.adminRequired((session, songId, cb, userId) => {
 		async.waterfall([
 			(next) => {
-				db.models.queueSong.removeOne({_id: songId}, next);
+				db.models.queueSong.deleteOne({_id: songId}, next);
 			}
 		], (err) => {
 			if (err) {

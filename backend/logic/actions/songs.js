@@ -150,7 +150,7 @@ module.exports = {
 	remove: hooks.adminRequired((session, songId, cb) => {
 		async.waterfall([
 			(next) => {
-				db.models.song.removeOne({_id: songId}, next);
+				db.models.song.deleteOne({_id: songId}, next);
 			},
 
 			(res, next) => {//TODO Check if res gets returned from above
@@ -194,7 +194,7 @@ module.exports = {
 				newSong.save(next);
 			},
 
-			(next) => {
+			(res, next) => {
 				queueSongs.remove(session, song._id, () => {
 					next();
 				});

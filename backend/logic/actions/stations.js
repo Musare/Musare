@@ -781,7 +781,7 @@ module.exports = {
 	remove: hooks.ownerRequired((session, stationId, cb) => {
 		async.waterfall([
 			(next) => {
-				db.models.station.removeOne({ _id: stationId }, err => next(err));
+				db.models.station.deleteOne({ _id: stationId }, err => next(err));
 			},
 
 			(next) => {

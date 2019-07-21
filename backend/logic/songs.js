@@ -148,7 +148,7 @@ module.exports = {
 		async.waterfall([
 
 			(next) => {
-				db.models.song.removeOne({ songId }, next);
+				db.models.song.deleteOne({ songId }, next);
 			},
 
 			(next) => {
