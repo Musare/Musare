@@ -431,33 +431,33 @@ export default {
 		},
 		changeVolume: function() {
 			let local = this;
-			let volume = $("#volumeSlider").val();
+			let volume = document.getElementById("volumeSlider").value;
 			localStorage.setItem("volume", volume);
 			local.video.player.setVolume(volume);
 			if (volume > 0) local.video.player.unMute();
 		},
 		addTag: function(type) {
 			if (type == "genres") {
-				let genre = $("#new-genre")
-					.val()
-					.toLowerCase()
+				let genre = document
+					.getElementById("new-genre")
+					.value.toLowerCase()
 					.trim();
 				if (this.editing.song.genres.indexOf(genre) !== -1)
 					return Toast.methods.addToast("Genre already exists", 3000);
 				if (genre) {
 					this.editing.song.genres.push(genre);
-					$("#new-genre").val("");
+					document.getElementById("new-genre").value = "";
 				} else Toast.methods.addToast("Genre cannot be empty", 3000);
 			} else if (type == "artists") {
-				let artist = $("#new-artist").val();
+				let artist = document.getElementById("new-artist").value;
 				if (this.editing.song.artists.indexOf(artist) !== -1)
 					return Toast.methods.addToast(
 						"Artist already exists",
 						3000
 					);
-				if ($("#new-artist").val() !== "") {
+				if (document.getElementById("new-artist").value !== "") {
 					this.editing.song.artists.push(artist);
-					$("#new-artist").val("");
+					document.getElementById("new-artist").value = "";
 				} else Toast.methods.addToast("Artist cannot be empty", 3000);
 			}
 		},
@@ -593,8 +593,8 @@ export default {
 		});
 
 		let volume = parseInt(localStorage.getItem("volume"));
-		volume = typeof volume === "number" ? volume : 20;
-		$("#volumeSlider").val(volume);
+		document.getElementById("volumeSlider").value = volume =
+			typeof volume === "number" ? volume : 20;
 	}
 };
 </script>

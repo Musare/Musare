@@ -322,15 +322,13 @@ export default {
 			);
 		},
 		addChange: function(type) {
-			let change = $(`#new-${type}`)
-				.val()
-				.trim();
+			let change = document.getElementById(`new-${type}`).value.trim();
 
 			if (this.creating[type].indexOf(change) !== -1)
 				return Toast.methods.addToast(`Tag already exists`, 3000);
 
 			if (change) {
-				$(`#new-${type}`).val("");
+				document.getElementById(`new-${type}`).value = "";
 				this.creating[type].push(change);
 			} else Toast.methods.addToast(`${type} cannot be empty`, 3000);
 		},

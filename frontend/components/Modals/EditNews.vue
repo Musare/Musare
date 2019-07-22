@@ -171,9 +171,7 @@ export default {
 	components: { Modal },
 	methods: {
 		addChange: function(type) {
-			let change = $(`#edit-${type}`)
-				.val()
-				.trim();
+			let change = document.getElementById(`edit-${type}`).value.trim();
 
 			if (this.$parent.editing[type].indexOf(change) !== -1)
 				return Toast.methods.addToast(`Tag already exists`, 3000);

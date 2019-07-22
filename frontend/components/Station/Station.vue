@@ -596,14 +596,13 @@ export default {
 		resizeSeekerbar: function() {
 			let local = this;
 			if (!local.paused) {
-				$(".seeker-bar").width(
+				document.getElementsByClassName("seeker-bar")[0].style.width =
 					parseFloat(
 						(local.getTimeElapsed() /
 							1000 /
 							local.currentSong.duration) *
 							100
-					) + "%"
-				);
+					) + "%";
 			}
 		},
 		formatTime: function(duration) {
@@ -646,7 +645,7 @@ export default {
 		},
 		changeVolume: function() {
 			let local = this;
-			let volume = $("#volumeSlider").val();
+			let volume = document.getElementById("volumeSlider").value;
 			localStorage.setItem("volume", volume / 100);
 			if (local.playerReady) {
 				local.player.setVolume(volume / 100);
@@ -727,7 +726,7 @@ export default {
 				let volume =
 					this.player.getVolume() * 100 <= 0 ? previousVolume : 0;
 				this.muted = !this.muted;
-				$("#volumeSlider").val(volume * 100);
+				document.getElementById("volumeSlider").value = volume * 100;
 				this.player.setVolume(volume);
 				if (!this.muted) localStorage.setItem("volume", volume);
 			}
@@ -738,7 +737,7 @@ export default {
 				let volume = previousVolume + 5;
 				if (previousVolume === 0) this.muted = false;
 				if (volume > 100) volume = 100;
-				$("#volumeSlider").val(volume * 100);
+				document.getElementById("volumeSlider").value = volume * 100;
 				this.player.setVolume(volume);
 				localStorage.setItem("volume", volume);
 			}
@@ -1113,7 +1112,7 @@ export default {
 		let volume = parseFloat(localStorage.getItem("volume"));
 		volume = typeof volume === "number" && !isNaN(volume) ? volume : 20;
 		localStorage.setItem("volume", volume);
-		$("#volumeSlider").val(volume * 100);
+		document.getElementById("volumeSlider").value = volume * 100;
 	},
 	components: {
 		OfficialHeader,

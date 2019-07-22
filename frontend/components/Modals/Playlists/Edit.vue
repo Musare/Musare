@@ -14,16 +14,13 @@
 				</div>
 			</nav>
 			<hr />
-			<aside
-				v-if="playlist.songs && playlist.songs.length > 0"
-				class="menu"
-			>
+			<aside class="menu">
 				<ul class="menu-list">
 					<li v-for="(song, index) in playlist.songs" :key="index">
 						<a href="#" target="_blank">{{ song.title }}</a>
 						<div class="controls">
 							<a href="#" v-on:click="promoteSong(song.songId)">
-								<i class="material-icons" v-if="$index > 0"
+								<i class="material-icons" v-if="index > 0"
 									>keyboard_arrow_up</i
 								>
 								<i
@@ -35,7 +32,7 @@
 							</a>
 							<a href="#" v-on:click="demoteSong(song.songId)">
 								<i
-									v-if="playlist.songs.length - 1 !== $index"
+									v-if="playlist.songs.length - 1 !== index"
 									class="material-icons"
 									>keyboard_arrow_down</i
 								>
@@ -48,7 +45,7 @@
 							</a>
 							<a
 								href="#"
-								@click="removeSongFromPlaylist(song.songId)"
+								v-on:click="removeSongFromPlaylist(song.songId)"
 							>
 								<i class="material-icons">delete</i>
 							</a>

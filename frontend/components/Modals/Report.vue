@@ -226,7 +226,8 @@ export default {
 			});
 		},
 		updateCharactersRemaining: function() {
-			this.charactersRemaining = 400 - $(".textarea").val().length;
+			this.charactersRemaining =
+				400 - document.getElementsByClassName("textarea").value.length;
 		},
 		highlight: function(type) {
 			if (type == "currentSong") {
