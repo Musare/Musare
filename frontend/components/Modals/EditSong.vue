@@ -492,6 +492,7 @@ export default {
 			"stopVideo",
 			"loadVideoById",
 			"pauseVideo",
+			"getCurrentTime",
 			"editSong"
 		]),
 		...mapActions("modals", ["toggleModal", "closeCurrentModal"])
@@ -512,17 +513,20 @@ export default {
 			if (
 				_this.video.paused === false &&
 				_this.playerReady &&
-				_this.video.player.getCurrentTime() -
+				_this.getCurrentTime().then(time => {
+					return time;
+				}) -
 					_this.editing.song.skipDuration >
 					_this.editing.song.duration
 			) {
 				_this.video.paused = false;
 				_this.video.player.stopVideo();
 			}
-			if (this.playerReady)
-				this.youtubeVideoCurrentTime = _this.video.player
-					.getCurrentTime()
-					.toFixed(3);
+			if (this.playerReady) {
+				_this
+					.getCurrentTime(3)
+					.then(time => (this.youtubeVideoCurrentTime = time));
+			}
 		}, 200);
 
 		this.video.player = new window.YT.Player("player", {
@@ -578,8 +582,9 @@ export default {
 						}
 
 						if (
-							_this.video.player.getCurrentTime() <
-							_this.editing.song.skipDuration
+							_this.getCurrentTime(time => {
+								return time;
+							}) < _this.editing.song.skipDuration
 						) {
 							_this.video.player.seekTo(
 								_this.editing.song.skipDuration

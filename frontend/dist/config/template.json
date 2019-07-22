@@ -2,7 +2,8 @@
 	"recaptcha": {
 		"key": ""
 	},
-  	"serverDomain": "",
+	"serverDomain": "",
+	"frontendPort": "",
   	"cookie": {
 		"domain": "",
 		"secure": false

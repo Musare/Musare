@@ -11,7 +11,8 @@ const modules = {
 				player: null,
 				paused: true,
 				playerReady: false,
-				autoPlayed: false
+				autoPlayed: false,
+				currentTime: 0
 			},
 			editing: {}
 		},
@@ -21,12 +22,17 @@ const modules = {
 			stopVideo: ({ commit }) => commit("stopVideo"),
 			loadVideoById: ({ commit }, id, skipDuration) =>
 				commit("loadVideoById", id, skipDuration),
-			pauseVideo: ({ commit }, status) => commit("pauseVideo", status)
+			pauseVideo: ({ commit }, status) => commit("pauseVideo", status),
+			getCurrentTime: ({ commit, state }, fixedVal) => {
+				return new Promise(resolve => {
+					commit("getCurrentTime", fixedVal);
+					resolve(state.video.currentTime);
+				});
+			}
 		},
 		mutations: {
 			editSong(state, song) {
 				state.editing = { ...song };
-				console.log("editing", state.editing);
 			},
 			stopVideo(state) {
 				state.video.player.stopVideo();
@@ -38,6 +44,19 @@ const modules = {
 				if (status) state.video.player.pauseVideo();
 				else state.video.player.playVideo();
 				state.video.paused = status;
+			},
+			getCurrentTime(state, fixedVal) {
+				Promise.resolve(state.video.player.getCurrentTime()).then(
+					time => {
+						if (fixedVal)
+							Promise.resolve(time.toFixed(fixedVal)).then(
+								fixedTime => {
+									state.video.currentTime = fixedTime;
+								}
+							);
+						else state.video.currentTime = time;
+					}
+				);
 			}
 		}
 	},
