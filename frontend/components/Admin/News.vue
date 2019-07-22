@@ -212,6 +212,8 @@
 </template>
 
 <script>
+import { mapActions, mapState } from "vuex";
+
 import { Toast } from "vue-roaster";
 import io from "../../io";
 
@@ -221,7 +223,6 @@ export default {
 	components: { EditNews },
 	data() {
 		return {
-			modals: { editNews: false },
 			news: [],
 			creating: {
 				title: "",
@@ -238,9 +239,10 @@ export default {
 		let _this = this;
 		io.getSocket(socket => {
 			_this.socket = socket;
-			_this.socket.emit("news.index", result => {
-				_this.news = result.data;
-			});
+			_this.socket.emit(
+				"news.index",
+				result => (_this.news = result.data)
+			);
 			_this.socket.on("event:admin.news.created", news => {
 				_this.news.unshift(news);
 			});
@@ -248,15 +250,15 @@ export default {
 				_this.news = _this.news.filter(item => item._id !== news._id);
 			});
 			if (_this.socket.connected) _this.init();
-			io.onConnect(() => {
-				_this.init();
-			});
+			io.onConnect(() => _this.init());
 		});
 	},
+	computed: {
+		...mapState("modals", {
+			modals: state => state.modals.admin
+		})
+	},
 	methods: {
-		toggleModal: function() {
-			this.modals.editNews = !this.modals.editNews;
-		},
 		createNews: function() {
 			let _this = this;
 
@@ -299,13 +301,13 @@ export default {
 			});
 		},
 		removeNews: function(news) {
-			this.socket.emit("news.remove", news, res => {
-				Toast.methods.addToast(res.message, 8000);
-			});
+			this.socket.emit("news.remove", news, res =>
+				Toast.methods.addToast(res.message, 8000)
+			);
 		},
 		editNews: function(news) {
 			this.editing = news;
-			this.toggleModal();
+			this.toggleModal({ sector: "admin", modal: "editNews" });
 		},
 		updateNews: function(close) {
 			let _this = this;
@@ -316,7 +318,11 @@ export default {
 				res => {
 					Toast.methods.addToast(res.message, 4000);
 					if (res.status === "success") {
-						if (close) _this.toggleModal();
+						if (close)
+							_this.toggleModal({
+								sector: "admin",
+								modal: "editNews"
+							});
 					}
 				}
 			);
@@ -337,7 +343,8 @@ export default {
 		},
 		init: function() {
 			this.socket.emit("apis.joinAdminRoom", "news", () => {});
-		}
+		},
+		...mapActions("modals", ["toggleModal"])
 	}
 };
 </script>

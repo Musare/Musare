@@ -98,6 +98,7 @@ export default {
 	methods: {
 		edit: function(song, index) {
 			this.editSong({ song, index, type: "songs" });
+			this.toggleModal({ sector: "admin", modal: "editSong" });
 		},
 		remove: function(id) {
 			this.socket.emit("songs.remove", id, res => {

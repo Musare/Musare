@@ -155,7 +155,7 @@
 				<i class="material-icons save-changes">done</i>
 				<span>&nbsp;Save and close</span>
 			</button>
-			<button class="button is-danger" @click="$parent.toggleModal()">
+			<button class="button is-danger" @click="closeCurrentModal()">
 				<span>&nbsp;Close</span>
 			</button>
 		</div>
@@ -163,6 +163,8 @@
 </template>
 
 <script>
+import { mapActions } from "vuex";
+
 import { Toast } from "vue-roaster";
 
 import Modal from "./Modal.vue";
@@ -178,15 +180,13 @@ export default {
 
 			if (change) this.$parent.editing[type].push(change);
 			else Toast.methods.addToast(`${type} cannot be empty`, 3000);
+
+			document.getElementById(`edit-${type}`).value = "";
 		},
 		removeChange: function(type, index) {
 			this.$parent.editing[type].splice(index, 1);
-		}
-	},
-	events: {
-		closeModal: function() {
-			this.$parent.toggleModal();
-		}
+		},
+		...mapActions("modals", ["closeCurrentModal"])
 	}
 };
 </script>

@@ -16,6 +16,7 @@ const state = {
 			report: false
 		},
 		admin: {
+			editNews: false,
 			editUser: false,
 			editSong: false,
 			viewPunishment: false
