@@ -1,3 +1,6 @@
+process.env["NODE_CONFIG_DIR"] = __dirname + "/dist/config/";
+const config = require("config");
+
 const merge = require("webpack-merge");
 const common = require("./webpack.common.js");
 
@@ -8,6 +11,6 @@ module.exports = merge(common, {
 		contentBase: "./dist/",
 		historyApiFallback: true,
 		hot: true,
-		port: 3000
+		port: config.get("frontendPort")
 	}
 });

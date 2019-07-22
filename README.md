@@ -79,6 +79,7 @@ The `cookie.secure` value should be `true` for SSL connections, and `false` for 
 
    Values:  
    The `serverDomain` should be the url where the backend will be accessible from, usually `http://localhost:8080` for non-Docker.
+   The `frontendPort` should be the port where the frontend will be accessible from, usually port `3000`.
    The `recaptcha.key` value can be obtained by setting up a [ReCaptcha Site](https://www.google.com/recaptcha/admin).
    The `cookie.domain` value should be the ip or address you use to access the site, without protocols (http/https), so for example `localhost`.
    The `cookie.secure` value should be `true` for SSL connections, and `false` for normal http connections.
