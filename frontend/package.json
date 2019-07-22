@@ -7,9 +7,8 @@
 	"repository": "https://github.com/Musare/MusareNode",
 	"scripts": {
 		"lint": "npx eslint . --ext .js,.vue",
-		"development": "webpack --mode development",
-		"development-watch": "webpack --watch --watch-poll",
-		"production": "webpack --mode production"
+		"dev": "webpack-dev-server --open --config webpack.dev.js",
+		"build": "webpack --config webpack.prod.js"
 	},
 	"devDependencies": {
 		"@babel/core": "^7.5.4",
@@ -37,7 +36,8 @@
 		"webpack": "^4.35.3",
 		"webpack-cli": "^3.3.5",
 		"webpack-dev-server": "^3.7.2",
-		"webpack-md5-hash": "0.0.6"
+		"webpack-md5-hash": "0.0.6",
+		"webpack-merge": "^4.2.1"
 	},
 	"dependencies": {
 		"@babel/runtime": "^7.5.4",

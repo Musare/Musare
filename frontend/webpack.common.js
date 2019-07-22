@@ -3,20 +3,18 @@ const WebpackMd5Hash = require("webpack-md5-hash");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = {
-	mode: "none",
-	devtool: "eval-source-map",
 	entry: "./main.js",
 	output: {
-		path: __dirname + "/build/",
+		path: __dirname + "/dist/build/",
 		publicPath: "/",
-		filename: "[name].[chunkhash].js"
+		filename: "[name].[hash].js"
 	},
 	plugins: [
 		new VueLoaderPlugin(),
 		new WebpackMd5Hash(),
 		new HtmlWebpackPlugin({
 			hash: true,
-			template: "build/index.tpl.html",
+			template: "dist/index.tpl.html",
 			inject: "body",
 			filename: "index.html"
 		})

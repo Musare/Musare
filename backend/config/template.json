@@ -1,4 +1,5 @@
 {
+	"mode": "development",
 	"secret": "",
 	"domain": "",
 	"frontendPort": 80,

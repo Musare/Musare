@@ -16,4 +16,4 @@ RUN mkdir -p /run/nginx
 
 EXPOSE 80
 
-CMD nginx -c /opt/app/nginx.conf; cd /opt/app; yarn run development-watch
+CMD nginx -c /opt/app/nginx.conf; cd /opt/app; yarn run dev

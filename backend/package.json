@@ -6,8 +6,8 @@
   "author": "Musare Team",
   "repository": "https://github.com/Musare/MusareNode",
   "scripts": {
-    "development": "nodemon -L /opt/app",
-    "production": "node /opt/app"
+    "docker:dev": "nodemon -L /opt/app",
+    "docker:prod": "node /opt/app"
   },
   "dependencies": {
     "async": "3.1.0",

@@ -18,10 +18,10 @@ backend/config/default.json
 
 # Front End
 frontend/node_modules/
-frontend/build/*.js
-!frontend/build/lofig.min.js
-frontend/build/index.html
-frontend/build/config/default.json
+frontend/dist/build/
+!frontend/dist/lofig.min.js
+frontend/dist/index.html
+frontend/dist/config/default.json
 
 npm
 

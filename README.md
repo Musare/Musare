@@ -54,8 +54,9 @@ Once you've installed the required tools:
 
 3. `cp backend/config/template.json backend/config/default.json`
 
-Values:  
- The `secret` key can be whatever. It's used by express's session module.
+Values:
+The `mode` should be either "development" or "production". No more explanation needed.
+The `secret` key can be whatever. It's used by express's session module.
 The `domain` should be the url where the site will be accessible from, usually `http://localhost` for non-Docker.
 The `serverDomain` should be the url where the backend will be accessible from, usually `http://localhost:8080` for non-Docker.
 The `serverPort` should be the port where the backend will listen on, usually `8080` for non-Docker.
@@ -203,7 +204,7 @@ Steps 1-4 are things you only have to do once. The steps to start servers follow
 
 1. Run `startRedis.cmd` and `startMongo.cmd` to start Redis and Mongo.
 
-2. In a command prompt with the pwd of frontend, run `yarn run development-watch`
+2. In a command prompt with the pwd of frontend, run `yarn run dev`
 
 3. In a command prompt with the pwd of backend, run `nodemon`
 

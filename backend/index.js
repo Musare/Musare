@@ -5,7 +5,6 @@ process.env.NODE_CONFIG_DIR = `${__dirname}/config`;
 const async = require('async');
 const fs = require('fs');
 
-
 //const Discord = require("discord.js");
 //const client = new Discord.Client();
 const db = require('./logic/db');
@@ -183,11 +182,11 @@ async.waterfall([
 		initializedComponents.push(tasks);
 		currentComponent = 'Windows';
 		moduleStartFunction();
-		if (!config.get("isDocker")) {
+		if (!config.get("isDocker") && !(config.get("mode") === "development" || config.get("mode") === "dev")) {
 			const express = require('express');
 			const app = express();
 			app.listen(config.get("frontendPort"));
-			const rootDir = __dirname.substr(0, __dirname.lastIndexOf("backend")) + "frontend/build/";
+			const rootDir = __dirname.substr(0, __dirname.lastIndexOf("backend")) + "frontend/dist/build";
 
 			app.use(express.static(rootDir, {
 				setHeaders: function(res, path) {
@@ -197,7 +196,7 @@ async.waterfall([
 			}));
 
 			app.get("/*", (req, res) => {
-				res.sendFile(rootDir + "index.html");
+				res.sendFile(`${rootDir}/index.html`);
 			});
 		}
 		if (lockdownB) return;

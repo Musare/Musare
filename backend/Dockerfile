@@ -12,4 +12,4 @@ RUN npm install
 
 EXPOSE 80
 
-CMD npm run development
+CMD npm run docker:dev
