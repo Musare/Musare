@@ -294,7 +294,8 @@ export default {
 			},
 			youtubeVideoDuration: 0.0,
 			youtubeVideoCurrentTime: 0.0,
-			youtubeVideoNote: ""
+			youtubeVideoNote: "",
+			useHTTPS: false
 		};
 	},
 	computed: {
@@ -382,11 +383,19 @@ export default {
 					"Thumbnail must have between 8 and 256 characters.",
 					8000
 				);
-			if (song.thumbnail.indexOf("https://") !== 0)
+			if (this.useHTTPS && song.thumbnail.indexOf("https://") !== 0) {
 				return Toast.methods.addToast(
 					'Thumbnail must start with "https://".',
 					8000
 				);
+			}
+
+			if (!this.useHTTPS && song.thumbnail.indexOf("http://") !== 0) {
+				return Toast.methods.addToast(
+					'Thumbnail must start with "http://".',
+					8000
+				);
+			}
 
 			this.socket.emit(
 				`${_this.editing.type}.update`,
@@ -506,6 +515,10 @@ export default {
 		//   this.editing.song.songId,
 		//   this.editing.song.skipDuration
 		// );
+
+		lofig.get("cookie.secure", res => {
+			_this.useHTTPS = res;
+		});
 
 		io.getSocket(socket => (_this.socket = socket));
 
