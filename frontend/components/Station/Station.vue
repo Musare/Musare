@@ -14,8 +14,8 @@
 		<playlist-sidebar v-if="sidebars.playlist" />
 		<users-sidebar v-if="sidebars.users" />
 
-		<div v-show="!ready" class="progress" />
-		<div v-show="ready" class="station">
+		<div v-show="loading" class="progress" />
+		<div v-show="!loading && exists" class="station">
 			<div v-show="noSong" class="no-song">
 				<h1>No song is currently playing</h1>
 				<h4
@@ -395,6 +395,8 @@
 				</div>
 			</div>
 		</div>
+
+		<Z404 v-if="!exists"></Z404>
 	</div>
 </template>
 
@@ -418,13 +420,16 @@ import OfficialHeader from "./OfficialHeader.vue";
 import CommunityHeader from "./CommunityHeader.vue";
 
 import UserIdToUsername from "../UserIdToUsername.vue";
+import Z404 from "../404.vue";
 
 import io from "../../io";
 
 export default {
 	data() {
 		return {
+			loading: true,
 			ready: false,
+			exists: true,
 			type: "",
 			playerReady: false,
 			previousSong: null,
@@ -898,6 +903,8 @@ export default {
 			let _this = this;
 			_this.socket.emit("stations.join", _this.stationName, res => {
 				if (res.status === "success") {
+					_this.loading = false;
+
 					const {
 						_id,
 						displayName,
@@ -998,11 +1005,11 @@ export default {
 			if (_this.socket.connected) _this.join();
 			io.onConnect(_this.join);
 			_this.socket.emit("stations.findByName", _this.stationName, res => {
-				if (res.status === "error") {
-					_this.$router.go("/404");
-					Toast.methods.addToast(res.message, 3000);
+				if (res.status === "failure") {
+					_this.loading = false;
+					_this.exists = false;
 				} else {
-					_this.ready = true;
+					_this.exists = true;
 				}
 			});
 			_this.socket.on("event:songs.next", data => {
@@ -1169,7 +1176,8 @@ export default {
 		SongsListSidebar,
 		PlaylistSidebar,
 		UsersSidebar,
-		UserIdToUsername
+		UserIdToUsername,
+		Z404
 	}
 };
 </script>
