@@ -127,7 +127,7 @@ let lib = {
 				*/
 	
 				let songTitle = (title) => {
-					return (isLength(title, 1, 64) && regex.ascii.test(title));
+					return isLength(title, 1, 100);
 				};
 				lib.schemas.song.path('title').validate(songTitle, 'Invalid title.');
 				lib.schemas.queueSong.path('title').validate(songTitle, 'Invalid title.');

@@ -339,16 +339,16 @@ export default {
 			}
 
 			// Title
-			if (!validation.isLength(song.title, 1, 64))
+			if (!validation.isLength(song.title, 1, 100))
 				return Toast.methods.addToast(
-					"Title must have between 1 and 64 characters.",
+					"Title must have between 1 and 100 characters.",
 					8000
 				);
-			if (!validation.regex.ascii.test(song.title))
+			/*if (!validation.regex.ascii.test(song.title))
 				return Toast.methods.addToast(
 					"Invalid title format. Only ascii characters are allowed.",
 					8000
-				);
+				);*/
 
 			// Artists
 			if (song.artists.length < 1 || song.artists.length > 10)
