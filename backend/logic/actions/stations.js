@@ -134,7 +134,9 @@ cache.sub('privatePlaylist.selected', data => {
 });
 
 cache.sub('station.pause', stationId => {
-	utils.emitToRoom(`station.${stationId}`, "event:stations.pause");
+	stations.getStation(stationId, (err, station) => {
+		utils.emitToRoom(`station.${stationId}`, "event:stations.pause", { pausedAt: station.pausedAt });
+	});
 });
 
 cache.sub('station.resume', stationId => {
@@ -366,6 +368,7 @@ module.exports = {
 					startedAt: station.startedAt,
 					paused: station.paused,
 					timePaused: station.timePaused,
+					pausedAt: station.pausedAt,
 					description: station.description,
 					displayName: station.displayName,
 					privacy: station.privacy,

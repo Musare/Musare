@@ -563,9 +563,12 @@ export default {
 		},
 		getTimeElapsed: function() {
 			let local = this;
-			if (local.currentSong)
-				return Date.currently() - local.startedAt - local.timePaused;
-			else return 0;
+			if (local.currentSong) {
+				let timePaused = local.timePaused;
+				if (local.paused)
+					timePaused += Date.currently() - local.pausedAt;
+				return Date.currently() - local.startedAt - timePaused;
+			} else return 0;
 		},
 		playVideo: function() {
 			let local = this;
@@ -617,13 +620,55 @@ export default {
 		calculateTimeElapsed: function() {
 			let local = this;
 
-			if (local.currentTime !== undefined && local.paused) {
-				local.timePaused += Date.currently() - local.currentTime;
-				local.currentTime = undefined;
+			if (
+				local.playerReady &&
+				local.currentSong &&
+				local.player.getPlayerState() === -1
+			) {
+				local.player.playVideo();
 			}
 
+			if (!local.paused) {
+				let timeElapsed = local.getTimeElapsed();
+				let currentPlayerTime = local.player.getCurrentTime() * 1000;
+
+				let difference = timeElapsed - currentPlayerTime;
+				//console.log(difference123);
+				if (difference < -200) {
+					//console.log("Difference0.8");
+					local.player.setPlaybackRate(0.8);
+				} else if (difference < -50) {
+					//console.log("Difference0.9");
+					local.player.setPlaybackRate(0.9);
+				} else if (difference < -25) {
+					//console.log("Difference0.99");
+					local.player.setPlaybackRate(0.99);
+				} else if (difference > 200) {
+					//console.log("Difference1.2");
+					local.player.setPlaybackRate(1.2);
+				} else if (difference > 50) {
+					//console.log("Difference1.1");
+					local.player.setPlaybackRate(1.1);
+				} else if (difference > 25) {
+					//console.log("Difference1.01");
+					local.player.setPlaybackRate(1.01);
+				} else if (local.player.getPlaybackRate !== 1.0) {
+					//console.log("NDifference1.0");
+					local.player.setPlaybackRate(1.0);
+				}
+			}
+
+			/*if (local.currentTime !== undefined && local.paused) {
+				local.timePaused += Date.currently() - local.currentTime;
+				local.currentTime = undefined;
+			}*/
+
+			let timePaused = local.timePaused;
+			if (local.paused) timePaused += Date.currently() - local.pausedAt;
+
 			let duration =
-				(Date.currently() - local.startedAt - local.timePaused) / 1000;
+				(Date.currently() - local.startedAt - timePaused) / 1000;
+
 			let songDuration = local.currentSong.duration;
 			if (songDuration <= duration) local.player.pauseVideo();
 			if (!local.paused && duration <= songDuration)
@@ -883,6 +928,7 @@ export default {
 					_this.timePaused = res.data.timePaused;
 					_this.userCount = res.data.userCount;
 					_this.users = res.data.users;
+					_this.pausedAt = res.data.pausedAt;
 					if (res.data.currentSong) {
 						_this.noSong = false;
 						_this.simpleSong =
@@ -1006,7 +1052,8 @@ export default {
 				}
 			});
 
-			_this.socket.on("event:stations.pause", () => {
+			_this.socket.on("event:stations.pause", data => {
+				_this.pausedAt = data.pausedAt;
 				_this.pauseLocalStation();
 				console.log("local pause");
 			});
