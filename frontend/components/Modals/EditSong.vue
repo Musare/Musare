@@ -526,9 +526,7 @@ export default {
 			if (
 				_this.video.paused === false &&
 				_this.playerReady &&
-				_this.getCurrentTime().then(time => {
-					return time;
-				}) -
+				_this.video.player.getCurrentTime() -
 					_this.editing.song.skipDuration >
 					_this.editing.song.duration
 			) {
