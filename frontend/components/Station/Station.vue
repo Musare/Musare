@@ -135,18 +135,12 @@
 									<br />
 									<small>
 										Requested by
-										<b
-											>{{
-												$parent.getUsernameFromId(
-													song.requestedBy
-												)
-											}}
-											{{
-												userIdMap[
-													"Z" + song.requestedBy
-												]
-											}}</b
-										>
+										<b>
+											<user-id-to-username
+												:userId="song.requestedBy"
+												:link="true"
+											/>
+										</b>
 									</small>
 									<button
 										v-if="isOwnerOnly() || isAdminOnly()"
@@ -422,6 +416,9 @@ import UsersSidebar from "../Sidebars/UsersList.vue";
 
 import OfficialHeader from "./OfficialHeader.vue";
 import CommunityHeader from "./CommunityHeader.vue";
+
+import UserIdToUsername from "../UserIdToUsername.vue";
+
 import io from "../../io";
 
 export default {
@@ -453,8 +450,7 @@ export default {
 			automaticallyRequestedSongId: null,
 			systemDifference: 0,
 			users: [],
-			userCount: 0,
-			userIdMap: this.$parent.userIdMap
+			userCount: 0
 		};
 	},
 	computed: {
@@ -1125,7 +1121,8 @@ export default {
 		Report,
 		SongsListSidebar,
 		PlaylistSidebar,
-		UsersSidebar
+		UsersSidebar,
+		UserIdToUsername
 	}
 };
 </script>

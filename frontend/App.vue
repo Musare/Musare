@@ -40,9 +40,7 @@ export default {
 			username: "",
 			userId: "",
 			serverDomain: "",
-			socketConnected: true,
-			userIdMap: {},
-			currentlyGettingUsernameFrom: {}
+			socketConnected: true
 		};
 	},
 	computed: mapState({
@@ -62,23 +60,6 @@ export default {
 		},
 		submitOnEnter: (cb, event) => {
 			if (event.which == 13) cb();
-		},
-		getUsernameFromId: function(userId) {
-			// refactor
-			if (
-				typeof this.userIdMap[userId] !== "string" &&
-				!this.currentlyGettingUsernameFrom[userId]
-			) {
-				this.currentlyGettingUsernameFrom[userId] = true;
-				io.getSocket(socket => {
-					socket.emit("users.getUsernameFromId", userId, res => {
-						if (res.status === "success") {
-							this.$set(this.userIdMap, `Z${userId}`, res.data);
-						}
-						this.currentlyGettingUsernameFrom[userId] = false;
-					});
-				});
-			}
 		},
 		...mapActions("modals", ["closeCurrentModal"])
 	},

@@ -102,13 +102,13 @@
 						<div class="under-content">
 							<span class="hostedby"
 								>Hosted by
-								<span class="host"
-									>{{
-										$parent.getUsernameFromId(station.owner)
-									}}
-									{{ userIdMap["Z" + station.owner] }}</span
-								></span
-							>
+								<span class="host">
+									<user-id-to-username
+										:userId="station.owner"
+										:link="true"
+									/>
+								</span>
+							</span>
 							<i
 								v-if="station.privacy !== 'public'"
 								class="material-icons right-icon"
@@ -145,6 +145,8 @@ import { mapState, mapActions } from "vuex";
 import MainHeader from "../MainHeader.vue";
 import MainFooter from "../MainFooter.vue";
 import CreateCommunityStation from "../Modals/CreateCommunityStation.vue";
+import UserIdToUsername from "../UserIdToUsername.vue";
+
 import auth from "../../auth";
 import io from "../../io";
 
@@ -158,7 +160,6 @@ export default {
 				official: [],
 				community: []
 			},
-			userIdMap: this.$parent.userIdMap,
 			nightMode: false
 		};
 	},
@@ -278,7 +279,12 @@ export default {
 		},
 		...mapActions("modals", ["toggleModal"])
 	},
-	components: { MainHeader, MainFooter, CreateCommunityStation }
+	components: {
+		MainHeader,
+		MainFooter,
+		CreateCommunityStation,
+		UserIdToUsername
+	}
 };
 </script>
 

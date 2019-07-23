@@ -9,6 +9,7 @@
 						<td>Type</td>
 						<td>Display Name</td>
 						<td>Description</td>
+						<td>Owner</td>
 						<td>Options</td>
 					</tr>
 				</thead>
@@ -28,6 +29,12 @@
 						</td>
 						<td>
 							<span>{{ station.description }}</span>
+						</td>
+						<td>
+							<user-id-to-username
+								:userId="station.owner"
+								:link="true"
+							/>
 						</td>
 						<td>
 							<a class="button is-info" v-on:click="edit(station)"
@@ -165,9 +172,10 @@ import { Toast } from "vue-roaster";
 import io from "../../io";
 
 import EditStation from "./EditStation.vue";
+import UserIdToUsername from "../UserIdToUsername.vue";
 
 export default {
-	components: { EditStation },
+	components: { EditStation, UserIdToUsername },
 	data() {
 		return {
 			stations: [],

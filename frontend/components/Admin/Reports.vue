@@ -17,7 +17,10 @@
 							<span>{{ report.songId }}</span>
 						</td>
 						<td>
-							<span>{{ report.createdBy }}</span>
+							<user-id-to-username
+								:userId="report.createdBy"
+								:link="true"
+							/>
 						</td>
 						<td>
 							<span>{{ report.createdAt }}</span>
@@ -53,9 +56,10 @@ import { Toast } from "vue-roaster";
 import io from "../../io";
 
 import IssuesModal from "../Modals/IssuesModal.vue";
+import UserIdToUsername from "../UserIdToUsername.vue";
 
 export default {
-	components: { IssuesModal },
+	components: { IssuesModal, UserIdToUsername },
 	data() {
 		return {
 			reports: [],

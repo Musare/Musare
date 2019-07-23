@@ -1,4 +1,5 @@
 import auth from "../../api/auth.js";
+import io from "../../io.js";
 import validation from "../../validation.js";
 
 const state = {};
@@ -115,6 +116,58 @@ const modules = {
 		mutations: {
 			editPlaylist(state, id) {
 				state.editing = id;
+			}
+		}
+	},
+	userIdMap: {
+		namespaced: true,
+		state: {
+			userIdMap: {},
+			currentlyGettingUsernameFrom: {}
+		},
+		getters: {},
+		actions: {
+			getUsernameFromId: ({ commit }, userId) => {
+				/* eslint-disable-next-line no-unused-vars */
+				return new Promise((resolve, reject) => {
+					if (
+						typeof state.userIdMap.userIdMap[userId] !== "string" &&
+						!state.userIdMap.currentlyGettingUsernameFrom[userId]
+					) {
+						commit("gettingUsername", userId);
+						io.getSocket(socket => {
+							socket.emit(
+								"users.getUsernameFromId",
+								userId,
+								res => {
+									commit("noLongerGettingUsername", userId);
+									if (res.status === "success") {
+										commit("gotUsername", {
+											userId,
+											username: res.data
+										});
+										return resolve(res.data);
+									} else return resolve();
+								}
+							);
+						});
+					} else if (
+						!state.userIdMap.currentlyGettingUsernameFrom[userId]
+					)
+						return resolve(state.userIdMap.userIdMap[userId]);
+					else return resolve();
+				});
+			}
+		},
+		mutations: {
+			gettingUsername(state, userId) {
+				state.currentlyGettingUsernameFrom[userId] = true;
+			},
+			noLongerGettingUsername(state, userId) {
+				state.currentlyGettingUsernameFrom[userId] = true;
+			},
+			gotUsername(state, data) {
+				state.userIdMap["Z" + data.userId] = data.username;
 			}
 		}
 	}

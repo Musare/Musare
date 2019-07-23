@@ -55,14 +55,12 @@
 						>
 							<small>
 								Requested by
-								<b
-									>{{
-										$parent.$parent.getUsernameFromId(
-											song.requestedBy
-										)
-									}}
-									{{ userIdMap["Z" + song.requestedBy] }}</b
-								>
+								<b>
+									<user-id-to-username
+										:userId="song.requestedBy"
+										:link="true"
+									/>
+								</b>
 							</small>
 							<i
 								v-if="isOwnerOnly() || isAdminOnly()"
@@ -135,11 +133,12 @@ import { mapActions } from "vuex";
 
 import { Toast } from "vue-roaster";
 
+import UserIdToUsername from "../UserIdToUsername.vue";
+
 export default {
 	data: function() {
 		return {
-			dismissedWarning: false,
-			userIdMap: this.$parent.$parent.userIdMap
+			dismissedWarning: false
 		};
 	},
 	methods: {
@@ -178,7 +177,8 @@ export default {
 				_this.socket = socket;
 
 			});*/
-	}
+	},
+	components: { UserIdToUsername }
 };
 </script>
 

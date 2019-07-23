@@ -36,7 +36,12 @@
 						<td>{{ song.songId }}</td>
 						<td>{{ song.artists.join(", ") }}</td>
 						<td>{{ song.genres.join(", ") }}</td>
-						<td>{{ song.requestedBy }}</td>
+						<td>
+							<user-id-to-username
+								:userId="song.requestedBy"
+								:link="true"
+							/>
+						</td>
 						<td>
 							<button
 								class="button is-primary"
@@ -65,10 +70,12 @@ import { mapState, mapActions } from "vuex";
 import { Toast } from "vue-roaster";
 
 import EditSong from "../Modals/EditSong.vue";
+import UserIdToUsername from "../UserIdToUsername.vue";
+
 import io from "../../io";
 
 export default {
-	components: { EditSong },
+	components: { EditSong, UserIdToUsername },
 	data() {
 		return {
 			position: 1,
