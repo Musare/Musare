@@ -5,6 +5,11 @@
 				<h5 class="has-text-centered">Video Preview</h5>
 				<div class="video-container">
 					<div id="player"></div>
+					<canvas
+						id="durationCanvas"
+						height="40"
+						width="560"
+					></canvas>
 					<div class="controls">
 						<form action="#">
 							<p style="margin-top: 0; position: relative;">
@@ -497,6 +502,74 @@ export default {
 				}
 			);
 		},
+		initCanvas: function() {
+			let canvasElement = document.getElementById("durationCanvas");
+			let ctx = canvasElement.getContext("2d");
+
+			const skipDurationColor = "#ef4a1c";
+			const durationColor = "#1dc146";
+			const afterDurationColor = "#ef731a";
+
+			ctx.font = "16px Arial";
+
+			ctx.fillStyle = skipDurationColor;
+			ctx.fillRect(0, 25, 20, 15);
+
+			ctx.fillStyle = "#000000";
+			ctx.fillText("Skip duration", 25, 38);
+
+			ctx.fillStyle = durationColor;
+			ctx.fillRect(130, 25, 20, 15);
+
+			ctx.fillStyle = "#000000";
+			ctx.fillText("Duration", 155, 38);
+
+			ctx.fillStyle = afterDurationColor;
+			ctx.fillRect(230, 25, 20, 15);
+
+			ctx.fillStyle = "#000000";
+			ctx.fillText("After duration", 255, 38);
+		},
+		drawCanvas: function() {
+			let canvasElement = document.getElementById("durationCanvas");
+			let ctx = canvasElement.getContext("2d");
+
+			const videoDuration = Number(this.youtubeVideoDuration);
+
+			const skipDuration = Number(this.editing.song.skipDuration);
+			const duration = Number(this.editing.song.duration);
+			const afterDuration = videoDuration - (skipDuration + duration);
+
+			const width = 560;
+
+			const currentTime = this.video.player.getCurrentTime();
+
+			let widthSkipDuration = (skipDuration / videoDuration) * width;
+			let widthDuration = (duration / videoDuration) * width;
+			let widthAfterDuration = (afterDuration / videoDuration) * width;
+
+			let widthCurrentTime = (currentTime / videoDuration) * width;
+
+			const skipDurationColor = "#ef4a1c";
+			const durationColor = "#1dc146";
+			const afterDurationColor = "#ef731a";
+			const currentDurationColor = "#3b25e8";
+
+			ctx.fillStyle = skipDurationColor;
+			ctx.fillRect(0, 0, widthSkipDuration, 20);
+			ctx.fillStyle = durationColor;
+			ctx.fillRect(widthSkipDuration, 0, widthDuration, 20);
+			ctx.fillStyle = afterDurationColor;
+			ctx.fillRect(
+				widthSkipDuration + widthDuration,
+				0,
+				widthAfterDuration,
+				20
+			);
+
+			ctx.fillStyle = currentDurationColor;
+			ctx.fillRect(widthCurrentTime, 0, 1, 20);
+		},
 		...mapActions("admin/songs", [
 			"stopVideo",
 			"loadVideoById",
@@ -515,6 +588,8 @@ export default {
 		//   this.editing.song.songId,
 		//   this.editing.song.skipDuration
 		// );
+
+		this.initCanvas();
 
 		lofig.get("cookie.secure", res => {
 			_this.useHTTPS = res;
@@ -538,6 +613,8 @@ export default {
 					.getCurrentTime(3)
 					.then(time => (this.youtubeVideoCurrentTime = time));
 			}
+
+			if (_this.video.paused === false) _this.drawCanvas();
 		}, 200);
 
 		this.video.player = new window.YT.Player("player", {
@@ -563,6 +640,8 @@ export default {
 					this.youtubeVideoDuration = _this.video.player.getDuration();
 					this.youtubeVideoNote = "(~)";
 					_this.playerReady = true;
+
+					_this.drawCanvas();
 				},
 				onStateChange: event => {
 					if (event.data === 1) {
