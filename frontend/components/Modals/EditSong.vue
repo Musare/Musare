@@ -576,7 +576,7 @@ export default {
 						this.youtubeVideoDuration = youtubeDuration;
 						this.youtubeVideoNote = "";
 						youtubeDuration -= _this.editing.song.skipDuration;
-						if (_this.editing.song.duration > youtubeDuration) {
+						if (_this.editing.song.duration > youtubeDuration + 1) {
 							this.video.player.stopVideo();
 							_this.video.paused = true;
 							Toast.methods.addToast(
