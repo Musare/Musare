@@ -672,9 +672,8 @@ export default {
 						}
 
 						if (
-							_this.getCurrentTime(time => {
-								return time;
-							}) < _this.editing.song.skipDuration
+							_this.video.player.getCurrentTime() <
+							_this.editing.song.skipDuration
 						) {
 							_this.video.player.seekTo(
 								_this.editing.song.skipDuration
