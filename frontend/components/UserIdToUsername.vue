@@ -1,7 +1,10 @@
 <template>
-	<a v-if="$props.link" v-bind:href="`/u/${userIdMap['Z' + $props.userId]}`">
+	<router-link
+		v-if="$props.link"
+		:to="{ path: `/u/${userIdMap['Z' + $props.userId]}` }"
+	>
 		{{ userIdMap["Z" + $props.userId] }}
-	</a>
+	</router-link>
 	<span v-else>
 		{{ userIdMap["Z" + $props.userId] }}
 	</span>
