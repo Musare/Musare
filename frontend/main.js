@@ -107,8 +107,6 @@ lofig.get("serverDomain", function(res) {
 });
 
 router.beforeEach((to, from, next) => {
-	window.location.hash = "";
-
 	if (window.stationInterval) {
 		clearInterval(window.stationInterval);
 		window.stationInterval = 0;
@@ -122,6 +120,10 @@ router.beforeEach((to, from, next) => {
 			else next();
 		});
 	} else next();
+
+	if (from.name === "community" || from.name === "official") {
+		document.title = "Musare";
+	}
 
 	if (to.officialRequired) {
 		io.getSocket(socket => {

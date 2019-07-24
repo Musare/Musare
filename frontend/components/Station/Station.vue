@@ -915,6 +915,9 @@ export default {
 						owner,
 						privatePlaylist
 					} = res.data;
+
+					document.title = `Musare - ${displayName}`;
+
 					_this.joinStation({
 						_id,
 						name: _this.stationName,

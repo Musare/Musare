@@ -2,11 +2,7 @@
 	<div>
 		<nav class="nav">
 			<div class="nav-left">
-				<router-link
-					class="nav-item is-brand"
-					to="/"
-					@click="this.$dispatch('leaveStation', title)"
-				>
+				<router-link class="nav-item is-brand" to="/">
 					Musare
 				</router-link>
 			</div>

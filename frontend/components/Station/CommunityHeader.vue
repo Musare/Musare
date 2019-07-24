@@ -6,7 +6,6 @@
 					class="nav-item is-brand"
 					href="#"
 					:to="{ path: '/' }"
-					@click="this.$dispatch('leaveStation', title)"
 				>
 					Musare
 				</router-link>
