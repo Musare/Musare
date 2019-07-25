@@ -136,11 +136,6 @@ export default {
 
 html {
 	overflow: auto !important;
-
-	a {
-		color: #03a9f4;
-		text-decoration: none;
-	}
 }
 
 .modal-card {

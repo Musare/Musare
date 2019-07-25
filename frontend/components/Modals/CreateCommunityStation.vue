@@ -39,6 +39,8 @@
 </template>
 
 <script>
+import { mapActions } from "vuex";
+
 import { Toast } from "vue-roaster";
 import Modal from "./Modal.vue";
 import io from "../../io";
@@ -109,6 +111,8 @@ export default {
 					8000
 				);
 
+			let _this = this;
+
 			this.socket.emit(
 				"stations.create",
 				{
@@ -118,16 +122,17 @@ export default {
 					description: description
 				},
 				res => {
-					if (res.status === "success")
+					if (res.status === "success") {
 						Toast.methods.addToast(
 							`You have added the station successfully`,
 							4000
 						);
-					else Toast.methods.addToast(res.message, 4000);
+						_this.closeCurrentModal();
+					} else Toast.methods.addToast(res.message, 4000);
 				}
 			);
-			//   this.toggleModal();
-		}
+		},
+		...mapActions("modals", ["closeCurrentModal"])
 	}
 };
 </script>

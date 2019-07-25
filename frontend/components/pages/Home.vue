@@ -360,8 +360,11 @@ html {
 		font-size: 15px;
 
 		.host {
-			font-size: 18px;
 			color: #03a9f4;
+
+			a {
+				color: #03a9f4;
+			}
 		}
 	}
 
