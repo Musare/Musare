@@ -1,9 +1,18 @@
+
 # MusareNode
 
-This is a rewrite of the original [Musare](https://github.com/Musare/MusareMeteor)
-in NodeJS, Express, SocketIO and VueJS. Everything is ran in it's own docker container, but you can also run it without Docker.
+Based off of the original [Musare](https://github.com/Musare/MusareMeteor), which utilized Meteor.
 
-The site is available at [https://musare.com](https://musare.com).
+MusareNode now uses NodeJS, Express, SocketIO and VueJS - among other technologies. We have also implemented the ability to host Musare in [Docker Containers](https://www.docker.com/).
+
+The master branch is available at [musare.com](https://musare.com)
+You can also find the staging branch at [musare.dev](https://musare.dev)
+
+## Contact
+
+Get in touch with us via email at [core@musare.com](mailto:core@musare.com) or join our [Discord Guild](https://discord.gg/Y5NxYGP).
+
+You can also find us on [Facebook](https://www.facebook.com/MusareMusic) and [Twitter](https://twitter.com/MusareApp).
 
 ### Our Stack
 
@@ -15,32 +24,31 @@ The site is available at [https://musare.com](https://musare.com).
 
 ### Frontend
 
-The frontend is a [vue-cli](https://github.com/vuejs/vue-cli) generated,
-[vue-loader](https://github.com/vuejs/vue-loader) single page app, that's
-served over Nginx or express. The Nginx server not only serves the frontend, but
-also serves as a load balancer for requests going to the backend.
+The frontend is a [vue-cli](https://github.com/vuejs/vue-cli) generated, [vue-loader](https://github.com/vuejs/vue-loader) single page app, that's served over Nginx or Express. The Nginx server not only serves the frontend, but can also serve as a load balancer for requests going to the backend.
 
 ### Backend
 
-The backend is a scalable NodeJS / Redis / MongoDB app. Each backend
-server handles a group of SocketIO connections. User sessions are stored
-in a central Redis server. All data is stored in a central MongoDB server.
-The Redis and MongoDB servers are replicated to several secondary nodes,
-which can become the primary node if the current primary node goes down.
+The backend is a scalable NodeJS / Redis / MongoDB app. Each backend server handles a group of SocketIO connections. User sessions are stored in a central Redis server. All data is stored in a central MongoDB server. The Redis and MongoDB servers are replicated to several secondary nodes, which can become the primary node if the current primary node goes down.
 
-We currently only have 1 backend, 1 MongoDB server and 1 Redis server running for production, though it is relatively easy to expand.
+We currently only utilize 1 backend, 1 MongoDB server and 1 Redis server running for production, though it is relatively easy to expand.
 
 ## Requirements
-
-Option 1: (not recommended for Windows users)
+Installing with Docker: (not recommended for Windows users)
 
 - [Docker](https://www.docker.com/)
+- [NodeJS](https://nodejs.org/en/download/)
+  _ nodemon: `yarn global add nodemon`
+  _ [node-gyp](https://github.com/nodejs/node-gyp#installation): `yarn global add node-gyp`
+- [Yarn (Windows)](https://yarnpkg.com/lang/en/docs/install/#windows-stable) [Yarn (Unix)](https://yarnpkg.com/lang/en/docs/install/#debian-stable) ([npm](https://www.npmjs.com/) can also be used)
+- [MongoDB](https://www.mongodb.com/download-center) Currently version 4.0
+- [Redis (Windows)](https://github.com/MSOpenTech/redis/releases/tag/win-3.2.100) [Redis (Unix)](https://redis.io/download)
 
-Option 2:
+Standard Installation:
 
 - [NodeJS](https://nodejs.org/en/download/)
   _ nodemon: `yarn global add nodemon`
   _ [node-gyp](https://github.com/nodejs/node-gyp#installation): `yarn global add node-gyp`
+- [Yarn (Windows)](https://yarnpkg.com/lang/en/docs/install/#windows-stable) [Yarn (Unix)](https://yarnpkg.com/lang/en/docs/install/#debian-stable) ([npm](https://www.npmjs.com/) can also be used)
 - [MongoDB](https://www.mongodb.com/download-center) Currently version 4.0
 - [Redis (Windows)](https://github.com/MSOpenTech/redis/releases/tag/win-3.2.100) [Redis (Unix)](https://redis.io/download)
 
@@ -64,7 +72,6 @@ The `serverPort` should be the port where the backend will listen on, usually `8
 The `apis.youtube.key` value can be obtained by setting up a [YouTube API Key](https://developers.google.com/youtube/v3/getting-started). You need to use the YouTube Data API v3, and create an API key.
 The `apis.recaptcha.secret` value can be obtained by setting up a [ReCaptcha Site (v3)](https://www.google.com/recaptcha/admin).
 The `apis.github` values can be obtained by setting up a [GitHub OAuth Application](https://github.com/settings/developers). You need to fill in some values to create the OAuth application. The homepage is the homepage of frontend. The authorization callback url is the backend url with `/auth/github/authorize/callback` added at the end. For example `http://localhost:8080/auth/github/authorize/callback`.
-_Discord is currently unsupported_
 The `apis.discord.token` is the token for the Discord bot.
 The `apis.discord.loggingServer` is the Discord logging server id.
 The `apis.discord.loggingChannel` is the Discord logging channel id.
@@ -86,7 +93,7 @@ The `cookie.secure` value should be `true` for SSL connections, and `false` for 
 
 Now you have different paths here.
 
-### Docker
+### Installing with Docker
 
 _Configuration_
 
@@ -147,7 +154,7 @@ To configure docker simply `cp .env.template .env` and configure the .env file t
 
    - Docker ToolBox: The output of `docker-machine ip default`
 
-### Non-docker
+### Standard Installation
 
 Steps 1-4 are things you only have to do once. The steps to start servers follow.
 
@@ -295,10 +302,3 @@ docker-compose exec mongo mongo admin
 use musare
 db.auth("MUSAREDBUSER","MUSAREDBPASSWORD")
 db.users.update({username: "USERNAME"}, {$set: {role: "admin"}})
-```
-
-## Contact
-
-There are multiple ways to contact us. You can send an email to [core@musare.com](core@musare.com).
-
-You can also message us on [Facebook](https://www.facebook.com/MusareMusic), [Twitter](https://twitter.com/MusareApp) or on our [Discord](https://discord.gg/Y5NxYGP).
