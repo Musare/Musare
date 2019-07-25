@@ -2,7 +2,10 @@
 	<nav class="nav is-info">
 		<div class="nav-left">
 			<router-link class="nav-item is-brand" to="/">
-				Musare
+				<img
+					:src="`${this.frontendDomain}/assets/wordmark.png`"
+					alt="Musare"
+				/>
 			</router-link>
 		</div>
 
@@ -24,18 +27,18 @@
 			>
 				<strong>Admin</strong>
 			</router-link>
-			<router-link class="nav-item is-tab admin" to="/team">
+			<router-link class="nav-item is-tab" to="/team">
 				Team
 			</router-link>
-			<router-link class="nav-item is-tab admin" to="/about">
+			<router-link class="nav-item is-tab" to="/about">
 				About
 			</router-link>
-			<router-link class="nav-item is-tab admin" to="/news">
+			<router-link class="nav-item is-tab" to="/news">
 				News
 			</router-link>
 			<span v-if="$parent.$parent.loggedIn" class="grouped">
 				<router-link
-					class="nav-item is-tab admin"
+					class="nav-item is-tab"
 					:to="{
 						name: 'profile',
 						params: { username: $parent.$parent.username }
@@ -43,7 +46,7 @@
 				>
 					Profile
 				</router-link>
-				<router-link class="nav-item is-tab admin" to="/settings"
+				<router-link class="nav-item is-tab" to="/settings"
 					>Settings</router-link
 				>
 				<a
@@ -87,8 +90,14 @@ import { mapState, mapActions } from "vuex";
 export default {
 	data() {
 		return {
-			isMobile: false
+			isMobile: false,
+			frontendDomain: ""
 		};
+	},
+	mounted: function() {
+		lofig.get("frontendDomain", res => {
+			this.frontendDomain = res;
+		});
 	},
 	computed: mapState("modals", {
 		modals: state => state.modals.header
@@ -126,18 +135,25 @@ export default {
 		font-size: 2.1rem !important;
 		line-height: 64px !important;
 		padding: 0 20px;
+		color: #ffffff;
+		font-family: Pacifico, cursive;
+		filter: brightness(0) invert(1);
+
+		img {
+			max-height: 38px;
+		}
 	}
 
 	.nav-item {
-		font-size: 15px;
-		color: hsl(0, 0%, 100%);
+		font-size: 17px;
+		color: #ffffff;
 
 		&:hover {
-			color: hsl(0, 0%, 100%);
+			color: #ffffff;
 		}
 	}
-	.admin {
-		color: #424242;
+	.admin strong {
+		color: #9d42b1;
 	}
 }
 .grouped {

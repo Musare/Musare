@@ -7,7 +7,10 @@
 					href="#"
 					:to="{ path: '/' }"
 				>
-					Musare
+					<img
+						:src="`${this.frontendDomain}/assets/wordmark.png`"
+						alt="Musare"
+					/>
 				</router-link>
 			</div>
 
@@ -210,8 +213,14 @@ export default {
 		return {
 			title: this.$route.params.id,
 			isMobile: false,
-			controlBar: true
+			controlBar: true,
+			frontendDomain: ""
 		};
+	},
+	mounted: function() {
+		lofig.get("frontendDomain", res => {
+			this.frontendDomain = res;
+		});
 	},
 	methods: {
 		isOwner: function() {
@@ -251,19 +260,22 @@ export default {
 		font-size: 2.1rem !important;
 		line-height: 64px !important;
 		padding: 0 20px;
+		color: #ffffff;
+		font-family: Pacifico, cursive;
+		filter: brightness(0) invert(1);
+
+		img {
+			max-height: 38px;
+		}
 	}
 }
 
 a.nav-item {
-	color: hsl(0, 0%, 100%);
-	font-size: 15px;
+	color: #ffffff;
+	font-size: 17px;
 
 	&:hover {
-		color: hsl(0, 0%, 100%);
-	}
-
-	.admin {
-		color: #424242;
+		color: #ffffff;
 	}
 
 	padding: 0 12px;
@@ -276,6 +288,10 @@ a.nav-item {
 			width: 34px;
 		}
 	}
+}
+
+.admin strong {
+	color: #9d42b1;
 }
 
 .grouped {
