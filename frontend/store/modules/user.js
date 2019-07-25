@@ -14,7 +14,7 @@ const modules = {
 		getters: {},
 		actions: {
 			/* eslint-disable-next-line no-unused-vars */
-			register: ({ commit }, user, recaptchaId) => {
+			register: ({ commit }, user) => {
 				return new Promise((resolve, reject) => {
 					const { username, email, password } = user;
 
@@ -68,7 +68,7 @@ const modules = {
 								"Invalid password format. Must have one lowercase letter, one uppercase letter, one number and one special character."
 						});
 
-					auth.register(user, recaptchaId)
+					auth.register(user)
 						.then(() => {
 							return resolve({
 								status: "success",

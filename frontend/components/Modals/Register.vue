@@ -39,7 +39,6 @@
 						@keypress="$parent.submitOnEnter(submitModal, $event)"
 					/>
 				</p>
-				<div id="recaptcha" />
 				<p>
 					By logging in/registering you agree to our
 					<router-link to="/terms"> Terms of Service </router-link
@@ -78,7 +77,8 @@ export default {
 			email: "",
 			password: "",
 			recaptcha: {
-				key: ""
+				key: "",
+				token: ""
 			}
 		};
 	},
@@ -86,21 +86,37 @@ export default {
 		let _this = this;
 		lofig.get("recaptcha", obj => {
 			_this.recaptcha.key = obj.key;
-			_this.recaptcha.id = grecaptcha.render("recaptcha", {
-				sitekey: _this.recaptcha.key
-			});
+
+			let recaptchaScript = document.createElement("script");
+			recaptchaScript.onload = () => {
+				grecaptcha.ready(() => {
+					grecaptcha
+						.execute(this.recaptcha.key, { action: "login" })
+						.then(function(token) {
+							_this.recaptcha.token = token;
+						});
+				});
+			};
+
+			recaptchaScript.setAttribute(
+				"src",
+				`https://www.google.com/recaptcha/api.js?render=${
+					this.recaptcha.key
+				}`
+			);
+			document.head.appendChild(recaptchaScript);
 		});
 	},
 	methods: {
 		submitModal: function() {
-			this.register(
-				{
-					username: this.username,
-					email: this.email,
-					password: this.password
-				},
-				this.recaptcha.id
-			)
+			console.log(this.recaptcha.token);
+
+			this.register({
+				username: this.username,
+				email: this.email,
+				password: this.password,
+				recaptchaToken: this.recaptcha.token
+			})
 				.then(res => {
 					if (res.status == "success") location.reload();
 				})

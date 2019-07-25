@@ -3,9 +3,9 @@ import io from "../io";
 // when Vuex needs to interact with socket.io
 
 export default {
-	register(user, recaptchaId) {
+	register(user) {
 		return new Promise((resolve, reject) => {
-			const { username, email, password } = user;
+			const { username, email, password, recaptchaToken } = user;
 
 			io.getSocket(socket => {
 				socket.emit(
@@ -13,7 +13,7 @@ export default {
 					username,
 					email,
 					password,
-					grecaptcha.getResponse(recaptchaId),
+					recaptchaToken,
 					res => {
 						if (res.status === "success") {
 							if (res.SID) {
