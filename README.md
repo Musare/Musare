@@ -62,7 +62,7 @@ The `serverDomain` should be the url where the backend will be accessible from, 
 The `serverPort` should be the port where the backend will listen on, usually `8080` for non-Docker.
 `isDocker` if you are using Docker or not.
 The `apis.youtube.key` value can be obtained by setting up a [YouTube API Key](https://developers.google.com/youtube/v3/getting-started). You need to use the YouTube Data API v3, and create an API key.
-The `apis.recaptcha.secret` value can be obtained by setting up a [ReCaptcha Site](https://www.google.com/recaptcha/admin).
+The `apis.recaptcha.secret` value can be obtained by setting up a [ReCaptcha Site (v3)](https://www.google.com/recaptcha/admin).
 The `apis.github` values can be obtained by setting up a [GitHub OAuth Application](https://github.com/settings/developers). You need to fill in some values to create the OAuth application. The homepage is the homepage of frontend. The authorization callback url is the backend url with `/auth/github/authorize/callback` added at the end. For example `http://localhost:8080/auth/github/authorize/callback`.
 _Discord is currently unsupported_
 The `apis.discord.token` is the token for the Discord bot.
@@ -80,7 +80,7 @@ The `cookie.secure` value should be `true` for SSL connections, and `false` for 
    Values:  
    The `serverDomain` should be the url where the backend will be accessible from, usually `http://localhost:8080` for non-Docker.
    The `frontendPort` should be the port where the frontend will be accessible from, usually port `3000`.
-   The `recaptcha.key` value can be obtained by setting up a [ReCaptcha Site](https://www.google.com/recaptcha/admin).
+   The `recaptcha.key` value can be obtained by setting up a [ReCaptcha Site (v3)](https://www.google.com/recaptcha/admin).
    The `cookie.domain` value should be the ip or address you use to access the site, without protocols (http/https), so for example `localhost`.
    The `cookie.secure` value should be `true` for SSL connections, and `false` for normal http connections.
 
