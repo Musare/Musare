@@ -3,6 +3,7 @@
 		"key": ""
 	},
 	"serverDomain": "",
+	"frontendDomain": "",
 	"frontendPort": "",
   	"cookie": {
 		"domain": "",
