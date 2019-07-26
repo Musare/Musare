@@ -10,9 +10,15 @@
 		<edit-station v-show="modals.editStation" />
 		<report v-if="modals.report" />
 
-		<songs-list-sidebar v-if="sidebars.songslist" />
-		<playlist-sidebar v-if="sidebars.playlist" />
-		<users-sidebar v-if="sidebars.users" />
+		<transition name="slide">
+			<songs-list-sidebar v-if="sidebars.songslist" />
+		</transition>
+		<transition name="slide">
+			<playlist-sidebar v-if="sidebars.playlist" />
+		</transition>
+		<transition name="slide">
+			<users-sidebar v-if="sidebars.users" />
+		</transition>
 
 		<div v-show="loading" class="progress" />
 		<div v-show="!loading && exists" class="station">
@@ -1186,6 +1192,15 @@ export default {
 </script>
 
 <style lang="scss">
+.slide-enter-active,
+.slide-leave-active {
+	transition: all 0.3s ease;
+}
+.slide-enter,
+.slide-leave-to {
+	transform: translateX(300px);
+}
+
 .no-song {
 	color: #03a9f4;
 	text-align: center;
