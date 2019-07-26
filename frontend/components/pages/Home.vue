@@ -2,136 +2,144 @@
 	<div>
 		<div class="app" :class="{ nightMode: nightMode }">
 			<main-header />
-			<div class="group">
-				<div class="group-title">
-					Official Stations
-				</div>
-				<router-link
-					v-for="(station, index) in stations.official"
-					:key="index"
-					class="card station-card"
-					:to="{ name: 'official', params: { id: station.name } }"
-					:class="{ isPrivate: station.privacy === 'private' }"
-				>
-					<div class="card-image">
-						<figure class="image is-square">
-							<img
-								:src="station.currentSong.thumbnail"
-								onerror="this.src='/assets/notes-transparent.png'"
-							/>
-						</figure>
-					</div>
-					<div class="card-content">
-						<div class="media">
-							<div class="media-left displayName">
-								<h5>{{ station.displayName }}</h5>
-							</div>
-						</div>
-
-						<div class="content">
-							{{ station.description }}
-						</div>
-
-						<div class="under-content">
-							<span class="official"
-								><i class="badge material-icons"
-									>verified_user</i
-								>Official</span
-							>
-							<i
-								v-if="station.privacy !== 'public'"
-								class="material-icons right-icon"
-								title="This station is not visible to other users."
-								>lock</i
-							>
-						</div>
+			<div class="content-wrapper">
+				<div class="group">
+					<div class="group-title">
+						Official Stations
 					</div>
 					<router-link
-						href="#"
-						class="absolute-a"
+						v-for="(station, index) in stations.official"
+						:key="index"
+						class="card station-card"
 						:to="{ name: 'official', params: { id: station.name } }"
-					/>
-				</router-link>
-			</div>
-			<div class="group">
-				<div class="group-title">
-					Community Stations&nbsp;
-					<a
-						v-if="$parent.loggedIn"
-						href="#"
-						@click="
-							toggleModal({
-								sector: 'home',
-								modal: 'createCommunityStation'
-							})
-						"
+						:class="{ isPrivate: station.privacy === 'private' }"
 					>
-						<i class="material-icons community-button"
-							>add_circle_outline</i
-						>
-					</a>
-				</div>
-				<router-link
-					v-for="(station, index) in stations.community"
-					:key="index"
-					:to="{ name: 'community', params: { id: station.name } }"
-					class="card station-card"
-					:class="{
-						isPrivate: station.privacy === 'private',
-						isMine: isOwner(station)
-					}"
-				>
-					<div class="card-image">
-						<figure class="image is-square">
-							<img
-								:src="station.currentSong.thumbnail"
-								onerror="this.src='/assets/notes-transparent.png'"
-							/>
-						</figure>
-					</div>
-					<div class="card-content">
-						<div class="media">
-							<div class="media-left displayName">
-								<h5>{{ station.displayName }}</h5>
+						<div class="card-image">
+							<figure class="image is-square">
+								<img
+									:src="station.currentSong.thumbnail"
+									onerror="this.src='/assets/notes-transparent.png'"
+								/>
+							</figure>
+						</div>
+						<div class="card-content">
+							<div class="media">
+								<div class="media-left displayName">
+									<h5>{{ station.displayName }}</h5>
+								</div>
+							</div>
+
+							<div class="content">
+								{{ station.description }}
+							</div>
+
+							<div class="under-content">
+								<span class="official"
+									><i class="badge material-icons"
+										>verified_user</i
+									>Official</span
+								>
+								<i
+									v-if="station.privacy !== 'public'"
+									class="material-icons right-icon"
+									title="This station is not visible to other users."
+									>lock</i
+								>
 							</div>
 						</div>
-
-						<div class="content">
-							{{ station.description }}
-						</div>
-						<div class="under-content">
-							<span class="hostedby"
-								>Hosted by
-								<span class="host">
-									<user-id-to-username
-										:userId="station.owner"
-										:link="true"
-									/>
-								</span>
-							</span>
-							<i
-								v-if="station.privacy !== 'public'"
-								class="material-icons right-icon"
-								title="This station is not visible to other users."
-								>lock</i
+						<router-link
+							href="#"
+							class="absolute-a"
+							:to="{
+								name: 'official',
+								params: { id: station.name }
+							}"
+						/>
+					</router-link>
+				</div>
+				<div class="group">
+					<div class="group-title">
+						Community Stations&nbsp;
+						<a
+							v-if="$parent.loggedIn"
+							href="#"
+							@click="
+								toggleModal({
+									sector: 'home',
+									modal: 'createCommunityStation'
+								})
+							"
+						>
+							<i class="material-icons community-button"
+								>add_circle_outline</i
 							>
-							<i
-								v-if="isOwner(station)"
-								class="material-icons right-icon"
-								title="This is your station."
-								>home</i
-							>
-						</div>
+						</a>
 					</div>
 					<router-link
-						href="#"
-						class="absolute-a"
+						v-for="(station, index) in stations.community"
+						:key="index"
 						:to="{
 							name: 'community',
 							params: { id: station.name }
 						}"
-					/>
-				</router-link>
+						class="card station-card"
+						:class="{
+							isPrivate: station.privacy === 'private',
+							isMine: isOwner(station)
+						}"
+					>
+						<div class="card-image">
+							<figure class="image is-square">
+								<img
+									:src="station.currentSong.thumbnail"
+									onerror="this.src='/assets/notes-transparent.png'"
+								/>
+							</figure>
+						</div>
+						<div class="card-content">
+							<div class="media">
+								<div class="media-left displayName">
+									<h5>{{ station.displayName }}</h5>
+								</div>
+							</div>
+
+							<div class="content">
+								{{ station.description }}
+							</div>
+							<div class="under-content">
+								<span class="hostedby"
+									>Hosted by
+									<span class="host">
+										<user-id-to-username
+											:userId="station.owner"
+											:link="true"
+										/>
+									</span>
+								</span>
+								<i
+									v-if="station.privacy !== 'public'"
+									class="material-icons right-icon"
+									title="This station is not visible to other users."
+									>lock</i
+								>
+								<i
+									v-if="isOwner(station)"
+									class="material-icons right-icon"
+									title="This is your station."
+									>home</i
+								>
+							</div>
+						</div>
+						<router-link
+							href="#"
+							class="absolute-a"
+							:to="{
+								name: 'community',
+								params: { id: station.name }
+							}"
+						/>
+					</router-link>
+				</div>
 			</div>
 			<main-footer />
 		</div>
@@ -451,7 +459,6 @@ html {
 .group {
 	text-align: center;
 	width: 100%;
-	margin: 64px 0 0 0;
 
 	.group-title {
 		float: left;

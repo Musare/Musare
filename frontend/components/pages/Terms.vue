@@ -1,7 +1,7 @@
 <template>
 	<div class="app">
 		<main-header />
-		<div class="container">
+		<div class="content-wrapper">
 			<h1>MUSARE TERMS OF SERVICE</h1>
 			<h4>Last Updated: January 25, 2016</h4>
 

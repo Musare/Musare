@@ -13,7 +13,7 @@ const modules = {
 		state: {
 			userIdMap: {},
 			userIdRequested: {},
-			waitingForUserIdCallbacks: {}
+			pendingUserIdCallbacks: {}
 		},
 		getters: {},
 		actions: {
@@ -121,14 +121,12 @@ const modules = {
 												username: res.data
 											});
 
-											state.waitingForUserIdCallbacks[
+											state.pendingUserIdCallbacks[
 												`Z${userId}`
-											].forEach(callback => {
-												callback(res.data);
-											});
+											].forEach(cb => cb(res.data));
 
 											commit(
-												"clearWaitingCallbacks",
+												"clearPendingCallbacks",
 												userId
 											);
 
@@ -138,7 +136,7 @@ const modules = {
 								);
 							});
 						} else {
-							commit("waitForUsername", {
+							commit("pendingUsername", {
 								userId,
 								callback: username => {
 									return resolve(username);
@@ -156,16 +154,16 @@ const modules = {
 			},
 			requestingUserId(state, userId) {
 				state.userIdRequested[`Z${userId}`] = true;
-				if (!state.waitingForUserIdCallbacks[`Z${userId}`])
-					state.waitingForUserIdCallbacks[`Z${userId}`] = [];
+				if (!state.pendingUserIdCallbacks[`Z${userId}`])
+					state.pendingUserIdCallbacks[`Z${userId}`] = [];
 			},
-			waitForUsername(state, data) {
-				state.waitingForUserIdCallbacks[`Z${data.userId}`].push(
+			pendingUsername(state, data) {
+				state.pendingUserIdCallbacks[`Z${data.userId}`].push(
 					data.callback
 				);
 			},
-			clearWaitingCallbacks(state, userId) {
-				state.waitingForUserIdCallbacks[`Z${userId}`] = [];
+			clearPendingCallbacks(state, userId) {
+				state.pendingUserIdCallbacks[`Z${userId}`] = [];
 			}
 		}
 	},

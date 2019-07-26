@@ -62,12 +62,15 @@
 }
 
 .footer {
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	height: 230px;
 	border-radius: 33% 33% 0% 0% / 7% 7% 0% 0%;
 	box-shadow: 0 4px 8px 0 rgba(3, 169, 244, 0.65),
 		0 6px 20px 0 rgba(3, 169, 244, 0.4);
 	background-color: #ffffff;
-	margin-top: 50px;
-	padding-bottom: 25px;
 	width: 100%;
 
 	.musareFooterLogo {

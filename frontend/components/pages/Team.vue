@@ -1,7 +1,7 @@
 <template>
 	<div class="app">
 		<main-header />
-		<div class="container">
+		<div class="content-wrapper">
 			<h3 class="center">
 				Our Team
 			</h3>

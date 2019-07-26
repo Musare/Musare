@@ -1,7 +1,7 @@
 <template>
 	<div class="app">
 		<main-header />
-		<div class="container">
+		<div class="content-wrapper">
 			<div class="card is-fullwidth">
 				<header class="card-header">
 					<p class="card-header-title">

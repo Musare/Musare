@@ -2,10 +2,7 @@
 	<nav class="nav is-info">
 		<div class="nav-left">
 			<router-link class="nav-item is-brand" to="/">
-				<img
-					:src="`${this.frontendDomain}/assets/wordmark.png`"
-					alt="Musare"
-				/>
+				<img src="/assets/wordmark.png" alt="Musare" />
 			</router-link>
 		</div>
 

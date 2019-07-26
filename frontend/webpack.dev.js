@@ -14,7 +14,7 @@ module.exports = merge(common, {
 		port: config.get("frontendPort"),
 		public: config.get("frontendDomain"),
 		proxy: {
-			"/sockjs-node": "http://localhost:"+config.get("frontendPort")
+			"/sockjs-node": `http://localhost:${config.get("frontendPort")}`
 		}
 	}
 });
