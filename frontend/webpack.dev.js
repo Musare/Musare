@@ -11,6 +11,10 @@ module.exports = merge(common, {
 		contentBase: "./dist/",
 		historyApiFallback: true,
 		hot: true,
-		port: config.get("frontendPort")
+		port: config.get("frontendPort"),
+		public: config.get("frontendDomain"),
+		proxy: {
+			"/sockjs-node": "http://localhost:"+config.get("frontendPort")
+		}
 	}
 });
