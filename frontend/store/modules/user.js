@@ -11,7 +11,9 @@ const modules = {
 	auth: {
 		namespaced: true,
 		state: {
-			userIdMap: {}
+			userIdMap: {},
+			userIdRequested: {},
+			waitingForUserIdCallbacks: {}
 		},
 		getters: {},
 		actions: {
@@ -105,29 +107,65 @@ const modules = {
 			},
 			getUsernameFromId: ({ commit, state }, userId) => {
 				return new Promise(resolve => {
-					if (typeof state.userIdMap[userId] !== "string") {
-						io.getSocket(socket => {
-							socket.emit(
-								"users.getUsernameFromId",
+					if (typeof state.userIdMap[`Z${userId}`] !== "string") {
+						if (state.userIdRequested[`Z${userId}`] !== true) {
+							commit("requestingUserId", userId);
+							io.getSocket(socket => {
+								socket.emit(
+									"users.getUsernameFromId",
+									userId,
+									res => {
+										if (res.status === "success") {
+											commit("mapUserId", {
+												userId,
+												username: res.data
+											});
+
+											state.waitingForUserIdCallbacks[
+												`Z${userId}`
+											].forEach(callback => {
+												callback(res.data);
+											});
+
+											commit(
+												"clearWaitingCallbacks",
+												userId
+											);
+
+											return resolve(res.data);
+										} else return resolve();
+									}
+								);
+							});
+						} else {
+							commit("waitForUsername", {
 								userId,
-								res => {
-									if (res.status === "success") {
-										commit("mapUserId", {
-											userId,
-											username: res.data
-										});
-										return resolve(res.data);
-									} else return resolve();
+								callback: username => {
+									return resolve(username);
 								}
-							);
-						});
+							});
+						}
 					}
 				});
 			}
 		},
 		mutations: {
 			mapUserId(state, data) {
-				state.userIdMap["Z" + data.userId] = data.username;
+				state.userIdMap[`Z${data.userId}`] = data.username;
+				state.userIdRequested[`Z${data.userId}`] = false;
+			},
+			requestingUserId(state, userId) {
+				state.userIdRequested[`Z${userId}`] = true;
+				if (!state.waitingForUserIdCallbacks[`Z${userId}`])
+					state.waitingForUserIdCallbacks[`Z${userId}`] = [];
+			},
+			waitForUsername(state, data) {
+				state.waitingForUserIdCallbacks[`Z${data.userId}`].push(
+					data.callback
+				);
+			},
+			clearWaitingCallbacks(state, userId) {
+				state.waitingForUserIdCallbacks[`Z${userId}`] = [];
 			}
 		}
 	},
