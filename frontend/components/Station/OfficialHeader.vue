@@ -25,7 +25,7 @@
 					v-if="$parent.$parent.role === 'admin'"
 					class="nav-item is-tab admin"
 					href="#"
-					to="admin"
+					:to="{ path: '/admin' }"
 				>
 					<strong>Admin</strong>
 				</router-link>
