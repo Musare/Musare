@@ -11,8 +11,7 @@
 			<section class="modal-card-body">
 				<slot name="body" />
 			</section>
-			<!-- v-if="_slotContents['footer'] != null" -->
-			<footer class="modal-card-foot">
+			<footer class="modal-card-foot" v-if="$slots['footer'] != null">
 				<slot name="footer" />
 			</footer>
 		</div>

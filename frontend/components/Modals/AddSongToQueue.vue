@@ -72,7 +72,7 @@
 					>
 				</p>
 			</div>
-			<table class="table">
+			<table class="table" v-if="queryResults.length > 0">
 				<tbody>
 					<tr v-for="(result, index) in queryResults" :key="index">
 						<td>
@@ -223,5 +223,9 @@ tr td {
 	img {
 		width: 55px;
 	}
+}
+
+.table {
+	margin-bottom: 0;
 }
 </style>

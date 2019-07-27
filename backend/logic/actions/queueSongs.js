@@ -155,7 +155,6 @@ let lib = {
 			(song, next) => {
 				if (song) return next('This song has already been added.');
 				//TODO Add err object as first param of callback
-				console.log(52, songId);
 				utils.getSongFromYouTube(songId, (song) => {
 					song.artists = [];
 					song.genres = [];
@@ -176,7 +175,6 @@ let lib = {
 			(newSong, next) => {
 				const song = new db.models.queueSong(newSong);
 				song.save((err, song) => {
-					console.log(err);
 					if (err) return next(err);
 					next(null, song);
 				});
