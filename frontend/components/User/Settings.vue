@@ -109,7 +109,7 @@
 			<a
 				v-if="!github"
 				class="button is-github"
-				:href="`http://${$parent.serverDomain}/auth/github/link`"
+				:href="`${$parent.serverDomain}/auth/github/link`"
 			>
 				<div class="icon">
 					<img class="invert" src="/assets/social/github.svg" />
