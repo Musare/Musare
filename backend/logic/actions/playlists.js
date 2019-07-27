@@ -163,7 +163,9 @@ let lib = {
 			}
 			cache.pub('playlist.create', playlist._id);
 			logger.success("PLAYLIST_CREATE", `Successfully created private playlist for user "${userId}".`);
-			cb({ 'status': 'success', 'message': 'Successfully created playlist' });
+			cb({ status: 'success', message: 'Successfully created playlist', data: {
+				_id: playlist._id
+			} });
 		});
 	}),
 

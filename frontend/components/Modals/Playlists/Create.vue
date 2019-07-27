@@ -21,6 +21,8 @@
 </template>
 
 <script>
+import { mapActions } from "vuex";
+
 import { Toast } from "vue-roaster";
 import Modal from "../Modal.vue";
 import io from "../../../io";
@@ -60,10 +62,22 @@ export default {
 
 			this.socket.emit("playlists.create", this.playlist, res => {
 				Toast.methods.addToast(res.message, 3000);
+
+				if (res.status === "success") {
+					this.toggleModal({
+						sector: "station",
+						modal: "createPlaylist"
+					});
+					this.editPlaylist(res.data._id);
+					this.toggleModal({
+						sector: "station",
+						modal: "editPlaylist"
+					});
+				}
 			});
-			this.$parent.modals.createPlaylist = !this.$parent.modals
-				.createPlaylist;
-		}
+		},
+		...mapActions("modals", ["toggleModal"]),
+		...mapActions("user/playlists", ["editPlaylist"])
 	}
 };
 </script>
