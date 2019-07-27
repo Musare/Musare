@@ -119,36 +119,44 @@ export default {
 		};
 	},
 	mounted() {
-		switch (window.location.pathname) {
-			case "/admin/queuesongs":
-				this.currentTab = "queueSongs";
-				break;
-			case "/admin/songs":
-				this.currentTab = "songs";
-				break;
-			case "/admin/stations":
-				this.currentTab = "stations";
-				break;
-			case "/admin/reports":
-				this.currentTab = "reports";
-				break;
-			case "/admin/news":
-				this.currentTab = "news";
-				break;
-			case "/admin/users":
-				this.currentTab = "users";
-				break;
-			case "/admin/statistics":
-				this.currentTab = "statistics";
-				break;
-			case "/admin/punishments":
-				this.currentTab = "punishments";
-				break;
-			default:
-				this.currentTab = "queueSongs";
+		this.changeTab(this.$route.path);
+	},
+	watch: {
+		$route(route) {
+			this.changeTab(route.path);
 		}
 	},
 	methods: {
+		changeTab: function(path) {
+			switch (path) {
+				case "/admin/queuesongs":
+					this.currentTab = "queueSongs";
+					break;
+				case "/admin/songs":
+					this.currentTab = "songs";
+					break;
+				case "/admin/stations":
+					this.currentTab = "stations";
+					break;
+				case "/admin/reports":
+					this.currentTab = "reports";
+					break;
+				case "/admin/news":
+					this.currentTab = "news";
+					break;
+				case "/admin/users":
+					this.currentTab = "users";
+					break;
+				case "/admin/statistics":
+					this.currentTab = "statistics";
+					break;
+				case "/admin/punishments":
+					this.currentTab = "punishments";
+					break;
+				default:
+					this.currentTab = "queueSongs";
+			}
+		},
 		showTab: function(tab) {
 			this.currentTab = tab;
 		}

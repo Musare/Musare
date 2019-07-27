@@ -197,11 +197,15 @@
 							<span v-else>&nbsp;Report</span>
 						</span>
 						<div v-for="(report, index) in reports" :key="index">
-							<a
-								:href="`/admin/reports?id=${report}`"
+							<router-link
+								:to="{
+									path: '/admin/reports',
+									query: { id: report }
+								}"
 								class="report-link"
-								>Report - {{ report }}</a
 							>
+								Report - {{ report }}
+							</router-link>
 						</div>
 					</div>
 				</article>
