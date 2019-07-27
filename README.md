@@ -36,12 +36,6 @@ We currently only utilize 1 backend, 1 MongoDB server and 1 Redis server running
 Installing with Docker: (not recommended for Windows users)
 
 - [Docker](https://www.docker.com/)
-- [NodeJS](https://nodejs.org/en/download/)
-  _ nodemon: `yarn global add nodemon`
-  _ [node-gyp](https://github.com/nodejs/node-gyp#installation): `yarn global add node-gyp`
-- [Yarn (Windows)](https://yarnpkg.com/lang/en/docs/install/#windows-stable) [Yarn (Unix)](https://yarnpkg.com/lang/en/docs/install/#debian-stable) ([npm](https://www.npmjs.com/) can also be used)
-- [MongoDB](https://www.mongodb.com/download-center) Currently version 4.0
-- [Redis (Windows)](https://github.com/MSOpenTech/redis/releases/tag/win-3.2.100) [Redis (Unix)](https://redis.io/download)
 
 Standard Installation:
 
@@ -62,25 +56,25 @@ Once you've installed the required tools:
 
 3. `cp backend/config/template.json backend/config/default.json`
 
-Values:
-The `mode` should be either "development" or "production". No more explanation needed.
-The `secret` key can be whatever. It's used by express's session module.
-The `domain` should be the url where the site will be accessible from, usually `http://localhost` for non-Docker.
-The `serverDomain` should be the url where the backend will be accessible from, usually `http://localhost:8080` for non-Docker.
-The `serverPort` should be the port where the backend will listen on, usually `8080` for non-Docker.
-`isDocker` if you are using Docker or not.
-The `apis.youtube.key` value can be obtained by setting up a [YouTube API Key](https://developers.google.com/youtube/v3/getting-started). You need to use the YouTube Data API v3, and create an API key.
-The `apis.recaptcha.secret` value can be obtained by setting up a [ReCaptcha Site (v3)](https://www.google.com/recaptcha/admin).
-The `apis.github` values can be obtained by setting up a [GitHub OAuth Application](https://github.com/settings/developers). You need to fill in some values to create the OAuth application. The homepage is the homepage of frontend. The authorization callback url is the backend url with `/auth/github/authorize/callback` added at the end. For example `http://localhost:8080/auth/github/authorize/callback`.
-The `apis.discord.token` is the token for the Discord bot.
-The `apis.discord.loggingServer` is the Discord logging server id.
-The `apis.discord.loggingChannel` is the Discord logging channel id.
-The `apis.mailgun` values can be obtained by setting up a [Mailgun account](http://www.mailgun.com/).
-The `redis.url` url should be left alone for Docker, and changed to `redis://localhost:6379/0` for non-Docker.
-The `redis.password` should be the Redis password you either put in your `startRedis.cmd` file for Windows, or `.env` for docker.
-The `mongo.url` needs to have the proper password for the MongoDB musare user, and for non-Docker you need to replace `@musare:27017` with `@localhost:27017`.
-The `cookie.domain` value should be the ip or address you use to access the site, without protocols (http/https), so for example `localhost`.
-The `cookie.secure` value should be `true` for SSL connections, and `false` for normal http connections.
+   Values:
+   The `mode` should be either "development" or "production". No more explanation needed.  
+   The `secret` key can be whatever. It's used by express's session module.  
+   The `domain` should be the url where the site will be accessible from, usually `http://localhost` for non-Docker.  
+   The `serverDomain` should be the url where the backend will be accessible from, usually `http://localhost:8080` for non-Docker.  
+   The `serverPort` should be the port where the backend will listen on, usually `8080` for non-Docker.  
+   `isDocker` if you are using Docker or not.  
+   The `apis.youtube.key` value can be obtained by setting up a [YouTube API Key](https://developers.google.com/youtube/v3/getting-started). You need to use the YouTube Data API v3, and create an API key.  
+   The `apis.recaptcha.secret` value can be obtained by setting up a [ReCaptcha Site (v3)](https://www.google.com/recaptcha/admin).  
+   The `apis.github` values can be obtained by setting up a [GitHub OAuth Application](https://github.com/settings/developers). You need to fill in some values to create the OAuth application. The homepage is the homepage of frontend. The authorization callback url is the backend url with `/auth/github/authorize/callback` added at the end. For example `http://localhost:8080/auth/github/authorize/callback`.  
+   The `apis.discord.token` is the token for the Discord bot.  
+   The `apis.discord.loggingServer` is the Discord logging server id.  
+   The `apis.discord.loggingChannel` is the Discord logging channel id.  
+   The `apis.mailgun` values can be obtained by setting up a [Mailgun account](http://www.mailgun.com/).  
+   The `redis.url` url should be left alone for Docker, and changed to `redis://localhost:6379/0` for non-Docker.  
+   The `redis.password` should be the Redis password you either put in your `startRedis.cmd` file for Windows, or `.env` for docker.  
+   The `mongo.url` needs to have the proper password for the MongoDB musare user, and for non-Docker you need to replace `@musare:27017` with `@localhost:27017`.  
+   The `cookie.domain` value should be the ip or address you use to access the site, without protocols (http/https), so for example `localhost`.  
+   The `cookie.secure` value should be `true` for SSL connections, and `false` for normal http connections.  
 
 4. `cp frontend/build/config/template.json frontend/build/config/default.json`
 
