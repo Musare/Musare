@@ -595,7 +595,19 @@ export default {
 			_this.useHTTPS = res;
 		});
 
-		io.getSocket(socket => (_this.socket = socket));
+		io.getSocket(socket => {
+			this.socket = socket;
+
+			if (this.editing.type === "songs") {
+				socket.emit(
+					"reports.getReportsForSong",
+					this.editing.song.songId,
+					res => {
+						this.reports = res.data;
+					}
+				);
+			}
+		});
 
 		setInterval(() => {
 			if (
