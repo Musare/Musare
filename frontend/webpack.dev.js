@@ -12,6 +12,7 @@ module.exports = merge(common, {
 		historyApiFallback: true,
 		hot: true,
 		port: config.get("frontendPort"),
+		public: config.get("frontendDomain"),
 		disableHostCheck: true
 	}
 });
