@@ -79,6 +79,15 @@
 				>
 					<div class="video-container">
 						<div id="player" />
+						<div
+							class="player-can-not-autoplay"
+							v-if="!canAutoplay"
+						>
+							<p>
+								Please click anywhere on the screen for the
+								video to start
+							</p>
+						</div>
 					</div>
 					<div
 						id="preview-progress"
@@ -461,7 +470,10 @@ export default {
 			automaticallyRequestedSongId: null,
 			systemDifference: 0,
 			users: [],
-			userCount: 0
+			userCount: 0,
+			attemptsToPlayVideo: 0,
+			canAutoplay: true,
+			lastTimeRequestedIfCanAutoplay: 0
 		};
 	},
 	computed: {
@@ -636,7 +648,25 @@ export default {
 				local.currentSong &&
 				local.player.getPlayerState() === -1
 			) {
-				local.player.playVideo();
+				if (local.attemptsToPlayVideo >= 5) {
+					if (
+						Date.now() - local.lastTimeRequestedIfCanAutoplay >
+						2000
+					) {
+						local.lastTimeRequestedIfCanAutoplay = Date.now();
+						window.canAutoplay.video().then(({ result }) => {
+							if (result) {
+								local.attemptsToPlayVideo = 0;
+								local.canAutoplay = true;
+							} else {
+								local.canAutoplay = false;
+							}
+						});
+					}
+				} else {
+					local.player.playVideo();
+					local.attemptsToPlayVideo++;
+				}
 			}
 
 			if (!local.paused) {
@@ -1192,6 +1222,22 @@ export default {
 </script>
 
 <style lang="scss">
+.player-can-not-autoplay {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	background: rgba(3, 169, 244, 0.95);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	p {
+		color: white;
+		font-size: 26px;
+		text-align: center;
+	}
+}
+
 .slide-enter-active,
 .slide-leave-active {
 	transition: all 0.3s ease;
