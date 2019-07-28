@@ -166,9 +166,9 @@ let lib = {
 					return (isLength(displayName, 1, 16) && regex.ascii.test(displayName));
 				}, 'Invalid display name.');
 	
-				lib.schemas.playlist.path('createdBy').validate((createdBy, callback) => {
+				lib.schemas.playlist.path('createdBy').validate((createdBy) => {
 					lib.models.playlist.countDocuments({ createdBy: createdBy }, (err, c) => {
-						callback(!(err || c >= 10));
+						return !(err || c >= 10);
 					});
 				}, 'Max 10 playlists per user.');
 	
