@@ -2,7 +2,10 @@
 	<nav class="nav is-info">
 		<div class="nav-left">
 			<router-link class="nav-item is-brand" to="/">
-				<img src="/assets/wordmark.png" alt="Musare" />
+				<img
+					:src="`${this.siteSettings.logo}`"
+					:alt="`${this.siteSettings.siteName}`"
+				/>
 			</router-link>
 		</div>
 
@@ -23,15 +26,6 @@
 				to="/admin"
 			>
 				<strong>Admin</strong>
-			</router-link>
-			<router-link class="nav-item is-tab" to="/team">
-				Team
-			</router-link>
-			<router-link class="nav-item is-tab" to="/about">
-				About
-			</router-link>
-			<router-link class="nav-item is-tab" to="/news">
-				News
 			</router-link>
 			<span v-if="$parent.$parent.loggedIn" class="grouped">
 				<router-link
@@ -88,12 +82,19 @@ export default {
 	data() {
 		return {
 			isMobile: false,
-			frontendDomain: ""
+			frontendDomain: "",
+			siteSettings: {
+				logo: "",
+				siteName: ""
+			}
 		};
 	},
 	mounted: function() {
 		lofig.get("frontendDomain", res => {
 			this.frontendDomain = res;
+		});
+		lofig.get("siteSettings", res => {
+			this.siteSettings = res;
 		});
 	},
 	computed: mapState("modals", {
@@ -109,6 +110,7 @@ export default {
 .nav {
 	background-color: #03a9f4;
 	height: 64px;
+	border-radius: 0% 0% 33% 33% / 0% 0% 7% 7%;
 
 	.nav-menu.is-active {
 		.nav-item {
@@ -118,6 +120,11 @@ export default {
 				color: #333;
 			}
 		}
+	}
+
+	a.nav-item.is-tab:hover {
+		border-bottom: none;
+		border-top: solid 1px #ffffff;
 	}
 
 	.nav-toggle {
@@ -157,47 +164,5 @@ export default {
 	margin: 0;
 	display: flex;
 	text-decoration: none;
-}
-.nightMode {
-	.nav {
-		background-color: #012332;
-		height: 64px;
-
-		.nav-menu.is-active {
-			.nav-item {
-				color: #333;
-
-				&:hover {
-					color: #333;
-				}
-			}
-		}
-
-		.nav-toggle {
-			height: 64px;
-
-			&.is-active span {
-				background-color: #333;
-			}
-		}
-
-		.is-brand {
-			font-size: 2.1rem !important;
-			line-height: 64px !important;
-			padding: 0 20px;
-		}
-
-		.nav-item {
-			font-size: 15px;
-			color: hsl(0, 0%, 100%);
-
-			&:hover {
-				color: hsl(0, 0%, 100%);
-			}
-		}
-		.admin strong {
-			color: #03a9f4;
-		}
-	}
 }
 </style>

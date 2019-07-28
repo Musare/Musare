@@ -4,8 +4,8 @@
 			<div class="nav-left">
 				<router-link class="nav-item is-brand" to="/">
 					<img
-						:src="`${this.frontendDomain}/assets/wordmark.png`"
-						alt="Musare"
+						:src="`${this.siteSettings.logo}`"
+						:alt="`${this.siteSettings.siteName}`"
 					/>
 				</router-link>
 			</div>
@@ -28,15 +28,6 @@
 					:to="{ path: '/admin' }"
 				>
 					<strong>Admin</strong>
-				</router-link>
-				<router-link class="nav-item is-tab" to="/team">
-					Team
-				</router-link>
-				<router-link class="nav-item is-tab" to="/about">
-					About
-				</router-link>
-				<router-link class="nav-item is-tab" to="/news">
-					News
 				</router-link>
 				<span v-if="$parent.$parent.loggedIn" class="grouped">
 					<router-link
@@ -235,12 +226,19 @@ export default {
 			title: this.$route.params.id,
 			isMobile: false,
 			controlBar: false,
-			frontendDomain: ""
+			frontendDomain: "",
+			siteSettings: {
+				logo: "",
+				siteName: ""
+			}
 		};
 	},
 	mounted: function() {
 		lofig.get("frontendDomain", res => {
 			this.frontendDomain = res;
+		});
+		lofig.get("siteSettings", res => {
+			this.siteSettings = res;
 		});
 	},
 	methods: {
@@ -275,6 +273,7 @@ export default {
 .nav {
 	background-color: #03a9f4;
 	line-height: 64px;
+	border-radius: 0% 0% 33% 33% / 0% 0% 7% 7%;
 
 	.is-brand {
 		font-size: 2.1rem !important;
@@ -308,6 +307,11 @@ a.nav-item {
 			width: 34px;
 		}
 	}
+}
+
+a.nav-item.is-tab:hover {
+	border-bottom: none;
+	border-top: solid 1px #ffffff;
 }
 
 .admin strong {

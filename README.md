@@ -85,6 +85,9 @@ Once you've installed the required tools:
    The `recaptcha.key` value can be obtained by setting up a [ReCaptcha Site (v3)](https://www.google.com/recaptcha/admin).
    The `cookie.domain` value should be the ip or address you use to access the site, without protocols (http/https), so for example `localhost`.
    The `cookie.secure` value should be `true` for SSL connections, and `false` for normal http connections.
+   The `siteSettings.logo` should be the path to the logo image, by default it is `/assets/wordmark.png`.
+   The `siteSettings.siteName` should be the name of the site.
+   The `siteSettings.socialLinks.` `github`,`twitter`,`facebook` and `github` are set to the official Musare accounts by default but can be changed. 
 
 Now you have different paths here.
 

@@ -7,6 +7,16 @@
 	"frontendPort": "",
   	"cookie": {
 		"domain": "",
-		"secure": false
+		"secure": true
+	},
+	"siteSettings": {
+		"logo": "/assets/wordmark.png",
+		"siteName": "Musare",
+		"socialLinks": {
+			"github": "https://github.com/Musare/MusareNode",
+			"twitter": "https://twitter.com/MusareApp",
+			"facebook": "https://www.facebook.com/MusareMusic/",
+			"discord": "https://discord.gg/Y5NxYGP"
+		}
 	}
 }
