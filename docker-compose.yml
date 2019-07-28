@@ -19,16 +19,16 @@ services:
   mongo:
     image: mongo:4.0
     ports:
-    - "27017:27017"
+    - "${MONGO_PORT}:27017"
     command: "--auth"
   mongoclient:
     image: mongoclient/mongoclient
     ports:
-    - "3000:3000"
+    - "${MONGOCLIENT_PORT}:3000"
   redis:
     image: redis
     command: "--notify-keyspace-events Ex --requirepass ${REDIS_PASSWORD}"
     volumes:
     - .redis:/data
     ports:
-    - "6379:6379"
+    - "${REDIS_PORT}:6379"

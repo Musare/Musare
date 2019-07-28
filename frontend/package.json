@@ -8,6 +8,7 @@
 	"scripts": {
 		"lint": "npx eslint . --ext .js,.vue",
 		"dev": "webpack-dev-server --config webpack.dev.js",
+		"dev-docker": "webpack --config webpack.dev-docker.js",
 		"build": "webpack --config webpack.prod.js"
 	},
 	"devDependencies": {
