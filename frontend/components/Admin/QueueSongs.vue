@@ -14,6 +14,7 @@
 					<tr>
 						<td>Thumbnail</td>
 						<td>Title</td>
+						<td>ID</td>
 						<td>YouTube ID</td>
 						<td>Artists</td>
 						<td>Genres</td>
@@ -33,7 +34,18 @@
 						<td>
 							<strong>{{ song.title }}</strong>
 						</td>
-						<td>{{ song.songId }}</td>
+						<td>{{ song._id }}</td>
+						<td>
+							<a
+								:href="
+									'https://www.youtube.com/watch?v=' +
+										`${song.songId}`
+								"
+								target="_blank"
+							>
+								{{ song.songId }}</a
+							>
+						</td>
 						<td>{{ song.artists.join(", ") }}</td>
 						<td>{{ song.genres.join(", ") }}</td>
 						<td>
@@ -42,24 +54,24 @@
 								:link="true"
 							/>
 						</td>
-						<td>
+						<td class="optionsColumn">
 							<button
 								class="button is-primary"
 								@click="edit(song, index)"
 							>
-								Edit
+								<i class="material-icons">edit</i>
 							</button>
 							<button
 								class="button is-success"
 								@click="add(song)"
 							>
-								Add
+								<i class="material-icons">add</i>
 							</button>
 							<button
 								class="button is-danger"
 								@click="remove(song._id, index)"
 							>
-								Remove
+								<i class="material-icons">cancel</i>
 							</button>
 						</td>
 					</tr>
@@ -201,6 +213,13 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.optionsColumn {
+	width: 140px;
+	button {
+		width: 35px;
+	}
+}
+
 .song-thumbnail {
 	display: block;
 	max-width: 50px;

@@ -7,7 +7,7 @@
 					:class="{ 'is-active': currentTab == 'queueSongs' }"
 					@click="showTab('queueSongs')"
 				>
-					<router-link to="/admin/queuesongs">
+					<router-link class="tab queueSongs" to="/admin/queuesongs">
 						<i class="material-icons">queue_music</i>
 						<span>&nbsp;Queue Songs</span>
 					</router-link>
@@ -16,7 +16,7 @@
 					:class="{ 'is-active': currentTab == 'songs' }"
 					@click="showTab('songs')"
 				>
-					<router-link to="/admin/songs">
+					<router-link class="tab songs" to="/admin/songs">
 						<i class="material-icons">music_note</i>
 						<span>&nbsp;Songs</span>
 					</router-link>
@@ -25,8 +25,8 @@
 					:class="{ 'is-active': currentTab == 'stations' }"
 					@click="showTab('stations')"
 				>
-					<router-link to="/admin/stations">
-						<i class="material-icons">hearing</i>
+					<router-link class="tab stations" to="/admin/stations">
+						<i class="material-icons">radio</i>
 						<span>&nbsp;Stations</span>
 					</router-link>
 				</li>
@@ -34,7 +34,7 @@
 					:class="{ 'is-active': currentTab == 'reports' }"
 					@click="showTab('reports')"
 				>
-					<router-link to="/admin/reports">
+					<router-link class="tab reports" to="/admin/reports">
 						<i class="material-icons">report_problem</i>
 						<span>&nbsp;Reports</span>
 					</router-link>
@@ -43,7 +43,7 @@
 					:class="{ 'is-active': currentTab == 'news' }"
 					@click="showTab('news')"
 				>
-					<router-link to="/admin/news">
+					<router-link class="tab news" to="/admin/news">
 						<i class="material-icons">chrome_reader_mode</i>
 						<span>&nbsp;News</span>
 					</router-link>
@@ -52,8 +52,8 @@
 					:class="{ 'is-active': currentTab == 'users' }"
 					@click="showTab('users')"
 				>
-					<router-link to="/admin/users">
-						<i class="material-icons">person</i>
+					<router-link class="tab users" to="/admin/users">
+						<i class="material-icons">people</i>
 						<span>&nbsp;Users</span>
 					</router-link>
 				</li>
@@ -61,7 +61,7 @@
 					:class="{ 'is-active': currentTab == 'statistics' }"
 					@click="showTab('statistics')"
 				>
-					<router-link to="/admin/statistics">
+					<router-link class="tab statistics" to="/admin/statistics">
 						<i class="material-icons">show_chart</i>
 						<span>&nbsp;Statistics</span>
 					</router-link>
@@ -70,7 +70,10 @@
 					:class="{ 'is-active': currentTab == 'punishments' }"
 					@click="showTab('punishments')"
 				>
-					<router-link to="/admin/punishments">
+					<router-link
+						class="tab punishments"
+						to="/admin/punishments"
+					>
 						<i class="material-icons">gavel</i>
 						<span>&nbsp;Punishments</span>
 					</router-link>
@@ -165,8 +168,53 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.is-active a {
-	color: #03a9f4 !important;
-	border-color: #03a9f4 !important;
+.tabs {
+	background-color: #ffffff;
+	.queueSongs {
+		color: #00d1b2;
+		border-color: #00d1b2;
+	}
+	.songs {
+		color: #03a9f4;
+		border-color: #03a9f4;
+	}
+	.stations {
+		color: #90298c;
+		border-color: #90298c;
+	}
+	.reports {
+		color: #f7c218;
+		border-color: #f7c218;
+	}
+	.news {
+		color: #e49ba6;
+		border-color: #e49ba6;
+	}
+	.users {
+		color: #ea4962;
+		border-color: #ea4962;
+	}
+	.statistics {
+		color: #ff5e00;
+		border-color: #ff5e00;
+	}
+	.punishments {
+		color: #fc3200;
+		border-color: #fc3200;
+	}
+	.tab {
+		transition: all 0.2s ease-in-out;
+		font-weight: 500;
+		border-bottom: solid 0px;
+	}
+	.tab:hover {
+		border-width: 3px;
+		transition: all 0.2s ease-in-out;
+		font-weight: 600;
+	}
+	.is-active .tab {
+		font-weight: 600;
+		border-width: 3px;
+	}
 }
 </style>
