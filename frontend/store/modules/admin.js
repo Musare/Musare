@@ -76,6 +76,21 @@ const modules = {
 			}
 		}
 	},
+	reports: {
+		namespaced: true,
+		state: {
+			report: {}
+		},
+		getters: {},
+		actions: {
+			viewReport: ({ commit }, report) => commit("viewReport", report)
+		},
+		mutations: {
+			viewReport(state, report) {
+				state.report = report;
+			}
+		}
+	},
 	punishments: {
 		namespaced: true,
 		state: {

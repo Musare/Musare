@@ -112,6 +112,32 @@ module.exports = {
 	}),
 
 	/**
+	 * Gets a song
+	 *
+	 * @param session
+	 * @param songId - the song id
+	 * @param cb
+	 */
+	getSong: hooks.adminRequired((session, songId, cb) => {
+		console.log(songId);
+
+		async.waterfall([
+			(next) => {
+				db.models.song.findOne({ songId }).exec(next);
+			}
+		], (err, song) => {
+			if (err) {
+				err = utils.getError(err);
+				logger.error("SONGS_GET_SONG", `Failed to get song ${songId}. "${err}"`);
+				return cb({ status: 'failure', message: err });
+			} else {
+				logger.success("SONGS_GET_SONG", `Got song ${songId} successfully.`);
+				cb({ status: "success", data: song });
+			}
+		});
+	}),
+
+	/**
 	 * Updates a song
 	 *
 	 * @param session

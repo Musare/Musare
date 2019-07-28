@@ -45,7 +45,7 @@
 						<td>
 							<button
 								class="button is-primary"
-								@click="edit(song, index)"
+								@click="edit(song)"
 							>
 								Edit
 							</button>
@@ -103,9 +103,9 @@ export default {
 		}
 	},
 	methods: {
-		edit: function(song, index) {
-			this.editSong({ song, index, type: "songs" });
-			this.toggleModal({ sector: "admin", modal: "editSong" });
+		edit: function(song) {
+			this.editSong({ song, type: "songs" });
+			this.openModal({ sector: "admin", modal: "editSong" });
 		},
 		remove: function(id) {
 			this.socket.emit("songs.remove", id, res => {
@@ -134,7 +134,7 @@ export default {
 			_this.socket.emit("apis.joinAdminRoom", "songs", () => {});
 		},
 		...mapActions("admin/songs", ["stopVideo", "editSong"]),
-		...mapActions("modals", ["toggleModal"])
+		...mapActions("modals", ["openModal", "closeModal"])
 	},
 	mounted: function() {
 		let _this = this;
@@ -163,6 +163,16 @@ export default {
 				_this.init();
 			});
 		});
+
+		if (this.$route.query.id) {
+			this.socket.emit("songs.getSong", this.$route.query.id, res => {
+				if (res.status === "success") {
+					this.edit(res.data);
+					this.closeModal({ sector: "admin", modal: "viewReport" });
+				} else
+					Toast.methods.addToast("Song with that ID not found", 3000);
+			});
+		}
 	}
 };
 </script>

@@ -1,27 +1,35 @@
 <template>
 	<modal title="Report">
 		<div slot="body">
+			<router-link
+				v-if="$route.query.returnToSong"
+				class="button is-dark back-to-song"
+				:to="{
+					path: '/admin/songs',
+					query: { id: report.songId }
+				}"
+			>
+				<i class="material-icons">keyboard_return</i> &nbsp; Edit Song
+			</router-link>
+
 			<article class="message">
 				<div class="message-body">
 					<strong>Song ID:</strong>
-					{{ $parent.editing.songId }}
+					{{ report.songId }}
 					<br />
 					<strong>Created By:</strong>
-					{{ $parent.editing.createdBy }}
+					{{ report.createdBy }}
 					<br />
 					<strong>Created At:</strong>
-					{{ $parent.editing.createdAt }}
+					{{ report.createdAt }}
 					<br />
-					<span v-if="$parent.editing.description">
+					<span v-if="report.description">
 						<strong>Description:</strong>
-						{{ $parent.editing.description }}
+						{{ report.description }}
 					</span>
 				</div>
 			</article>
-			<table
-				v-if="$parent.editing.issues.length > 0"
-				class="table is-narrow"
-			>
+			<table v-if="report.issues.length > 0" class="table is-narrow">
 				<thead>
 					<tr>
 						<td>Issue</td>
@@ -29,10 +37,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					<tr
-						v-for="(issue, index) in $parent.editing.issues"
-						:key="index"
-					>
+					<tr v-for="(issue, index) in report.issues" :key="index">
 						<td>
 							<span>{{ issue.name }}</span>
 						</td>
@@ -47,11 +52,20 @@
 			<a
 				class="button is-primary"
 				href="#"
-				@click="$parent.resolve($parent.editing._id)"
+				@click="$parent.resolve(report._id)"
 			>
 				<span>Resolve</span>
 			</a>
-			<a class="button is-danger" @click="$parent.toggleModal()" href="#">
+			<a
+				class="button is-danger"
+				@click="
+					closeModal({
+						sector: 'admin',
+						modal: 'viewReport'
+					})
+				"
+				href="#"
+			>
 				<span>Cancel</span>
 			</a>
 		</div>
@@ -59,14 +73,31 @@
 </template>
 
 <script>
+import { mapActions, mapState } from "vuex";
+
 import Modal from "./Modal.vue";
 
 export default {
-	components: { Modal },
-	events: {
-		closeModal: function() {
-			this.$parent.modals.report = false;
+	computed: {
+		...mapState("admin/reports", {
+			report: state => state.report
+		})
+	},
+	mounted: function() {
+		if (this.$route.query.returnToSong) {
+			this.closeModal({ sector: "admin", modal: "editSong" });
 		}
-	}
+	},
+	methods: {
+		...mapActions("modals", ["toggleModal", "closeModal"])
+	},
+	components: { Modal }
 };
 </script>
+
+<style lang="scss">
+.back-to-song {
+	display: flex;
+	margin-bottom: 20px;
+}
+</style>

@@ -200,7 +200,7 @@
 							<router-link
 								:to="{
 									path: '/admin/reports',
-									query: { id: report }
+									query: { id: report, returnToSong: true }
 								}"
 								class="report-link"
 							>

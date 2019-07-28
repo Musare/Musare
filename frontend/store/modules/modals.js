@@ -19,6 +19,7 @@ const state = {
 			editNews: false,
 			editUser: false,
 			editSong: false,
+			viewReport: false,
 			viewPunishment: false
 		}
 	},
@@ -28,6 +29,12 @@ const state = {
 const getters = {};
 
 const actions = {
+	closeModal: ({ commit }, data) => {
+		commit("closeModal", data);
+	},
+	openModal: ({ commit }, data) => {
+		commit("openModal", data);
+	},
 	toggleModal: ({ commit }, data) => {
 		commit("toggleModal", data);
 	},
@@ -37,6 +44,15 @@ const actions = {
 };
 
 const mutations = {
+	closeModal(state, data) {
+		const { sector, modal } = data;
+		state.modals[sector][modal] = false;
+	},
+	openModal(state, data) {
+		const { sector, modal } = data;
+		state.modals[sector][modal] = true;
+		state.currentlyActive = { sector, modal };
+	},
 	toggleModal(state, data) {
 		const { sector, modal } = data;
 		state.modals[sector][modal] = !state.modals[sector][modal];

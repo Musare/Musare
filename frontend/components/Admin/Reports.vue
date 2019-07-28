@@ -32,8 +32,8 @@
 							<a
 								class="button is-warning"
 								href="#"
-								@click="toggleModal(report)"
-								>Issues Modal</a
+								@click="view(report)"
+								>View</a
 							>
 							<a
 								class="button is-primary"
@@ -47,11 +47,13 @@
 			</table>
 		</div>
 
-		<issues-modal v-if="modals.report" />
+		<issues-modal v-if="modals.viewReport" />
 	</div>
 </template>
 
 <script>
+import { mapState, mapActions } from "vuex";
+
 import { Toast } from "vue-roaster";
 import io from "../../io";
 
@@ -62,10 +64,7 @@ export default {
 	components: { IssuesModal, UserIdToUsername },
 	data() {
 		return {
-			reports: [],
-			modals: {
-				report: false
-			}
+			reports: []
 		};
 	},
 	mounted: function() {
@@ -88,9 +87,10 @@ export default {
 				_this.init();
 			});
 		});
+
 		if (this.$route.query.id) {
 			this.socket.emit("reports.findOne", this.$route.query.id, res => {
-				if (res.status === "success") _this.toggleModal(res.data);
+				if (res.status === "success") _this.view(res.data);
 				else
 					Toast.methods.addToast(
 						"Report with that ID not found",
@@ -99,22 +99,32 @@ export default {
 			});
 		}
 	},
+	computed: {
+		...mapState("modals", {
+			modals: state => state.modals.admin
+		})
+	},
 	methods: {
 		init: function() {
 			this.socket.emit("apis.joinAdminRoom", "reports", () => {});
 		},
-		toggleModal: function(report) {
-			this.modals.report = !this.modals.report;
-			if (this.modals.report) this.editing = report;
+		view: function(report) {
+			this.viewReport(report);
+			this.openModal({ sector: "admin", modal: "viewReport" });
 		},
 		resolve: function(reportId) {
 			let _this = this;
 			this.socket.emit("reports.resolve", reportId, res => {
 				Toast.methods.addToast(res.message, 3000);
-				if (res.status === "success" && this.modals.report)
-					_this.toggleModal();
+				if (res.status === "success" && this.modals.viewReport)
+					_this.closeModal({
+						sector: "admin",
+						modal: "viewReport"
+					});
 			});
-		}
+		},
+		...mapActions("modals", ["openModal", "closeModal"]),
+		...mapActions("admin/reports", ["viewReport"])
 	}
 };
 </script>
