@@ -84,7 +84,7 @@ let lib = {
 	
 	
 				lib.schemas.station.path('owner').validate((owner, callback) => {
-					lib.models.station.count({owner: owner}, (err, c) => {
+					lib.models.station.countDocuments({ owner: owner }, (err, c) => {
 						callback(!(err || c >= 3));
 					});
 				}, 'User already has 3 stations.');
@@ -167,7 +167,7 @@ let lib = {
 				}, 'Invalid display name.');
 	
 				lib.schemas.playlist.path('createdBy').validate((createdBy, callback) => {
-					lib.models.playlist.count({createdBy: createdBy}, (err, c) => {
+					lib.models.playlist.countDocuments({ createdBy: createdBy }, (err, c) => {
 						callback(!(err || c >= 10));
 					});
 				}, 'Max 10 playlists per user.');
