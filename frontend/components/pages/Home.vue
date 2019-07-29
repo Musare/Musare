@@ -64,7 +64,7 @@
 							v-if="$parent.loggedIn"
 							href="#"
 							@click="
-								toggleModal({
+								openModal({
 									sector: 'home',
 									modal: 'createCommunityStation'
 								})
@@ -284,7 +284,7 @@ export default {
 				station.privacy === "public"
 			);
 		},
-		...mapActions("modals", ["toggleModal"])
+		...mapActions("modals", ["openModal"])
 	},
 	components: {
 		MainHeader,

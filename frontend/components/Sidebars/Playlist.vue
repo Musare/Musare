@@ -37,7 +37,7 @@
 				class="button create-playlist"
 				href="#"
 				@click="
-					toggleModal({ sector: 'station', modal: 'createPlaylist' })
+					openModal({ sector: 'station', modal: 'createPlaylist' })
 				"
 				>Create Playlist</a
 			>
@@ -60,7 +60,7 @@ export default {
 	methods: {
 		edit: function(id) {
 			this.editPlaylist(id);
-			this.toggleModal({ sector: "station", modal: "editPlaylist" });
+			this.openModal({ sector: "station", modal: "editPlaylist" });
 		},
 		selectPlaylist: function(id) {
 			this.socket.emit(
@@ -84,7 +84,7 @@ export default {
 				return false;
 			return true;
 		},
-		...mapActions("modals", ["toggleModal"]),
+		...mapActions("modals", ["openModal"]),
 		...mapActions("user/playlists", ["editPlaylist"])
 	},
 	mounted: function() {

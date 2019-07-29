@@ -93,7 +93,7 @@
 					"
 					class="button add-to-queue"
 					@click="
-						toggleModal({
+						openModal({
 							sector: 'station',
 							modal: 'addSongToQueue'
 						})
@@ -169,7 +169,7 @@ export default {
 				}
 			);
 		},
-		...mapActions("modals", ["toggleModal"])
+		...mapActions("modals", ["openModal"])
 	},
 	mounted: function() {
 		/*let _this = this;

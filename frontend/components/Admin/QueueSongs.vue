@@ -150,7 +150,7 @@ export default {
 			for (let n in song) newSong[n] = song[n];
 
 			this.editSong({ index, song: newSong, type: "queueSongs" });
-			this.toggleModal({ sector: "admin", modal: "editSong" });
+			this.openModal({ sector: "admin", modal: "editSong" });
 		},
 		add: function(song) {
 			this.socket.emit("songs.add", song, res => {
@@ -176,7 +176,7 @@ export default {
 			_this.socket.emit("apis.joinAdminRoom", "queue", () => {});
 		},
 		...mapActions("admin/songs", ["stopVideo", "editSong"]),
-		...mapActions("modals", ["toggleModal"])
+		...mapActions("modals", ["openModal"])
 	},
 	mounted: function() {
 		let _this = this;

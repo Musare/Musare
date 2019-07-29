@@ -139,7 +139,7 @@ export default {
 	methods: {
 		view: function(punishment) {
 			this.viewPunishment(punishment);
-			this.toggleModal({ sector: "admin", modal: "viewPunishment" });
+			this.openModal({ sector: "admin", modal: "viewPunishment" });
 		},
 		banIP: function() {
 			let _this = this;
@@ -160,7 +160,7 @@ export default {
 			});
 			//_this.socket.emit('apis.joinAdminRoom', 'punishments', () => {});
 		},
-		...mapActions("modals", ["toggleModal"]),
+		...mapActions("modals", ["openModal"]),
 		...mapActions("admin/punishments", ["viewPunishment"])
 	},
 	mounted: function() {

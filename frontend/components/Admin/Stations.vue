@@ -260,7 +260,7 @@ export default {
 				genres: station.genres,
 				blacklistedGenres: station.blacklistedGenres
 			});
-			this.toggleModal({
+			this.openModal({
 				sector: "station",
 				modal: "editStation"
 			});
@@ -303,7 +303,7 @@ export default {
 			});
 			_this.socket.emit("apis.joinAdminRoom", "stations", () => {});
 		},
-		...mapActions("modals", ["toggleModal"]),
+		...mapActions("modals", ["openModal"]),
 		...mapActions("admin/stations", ["editStation"])
 	},
 	mounted: function() {

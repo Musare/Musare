@@ -38,7 +38,7 @@
 						href="#"
 						class="no-song"
 						@click="
-							toggleModal({
+							openModal({
 								sector: 'station',
 								modal: 'addSongToQueue'
 							})
@@ -176,7 +176,7 @@
 						class="button add-to-queue"
 						href="#"
 						@click="
-							toggleModal({
+							openModal({
 								sector: 'station',
 								modal: 'addSongToQueue'
 							})
@@ -1023,7 +1023,7 @@ export default {
 				}
 			});
 		},
-		...mapActions("modals", ["toggleModal"]),
+		...mapActions("modals", ["openModal"]),
 		...mapActions("station", ["joinStation"])
 	},
 	mounted: function() {

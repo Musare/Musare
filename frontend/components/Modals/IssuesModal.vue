@@ -89,7 +89,7 @@ export default {
 		}
 	},
 	methods: {
-		...mapActions("modals", ["toggleModal", "closeModal"])
+		...mapActions("modals", ["closeModal"])
 	},
 	components: { Modal }
 };

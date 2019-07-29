@@ -52,7 +52,7 @@
 					class="nav-item"
 					href="#"
 					@click="
-						toggleModal({
+						openModal({
 							sector: 'header',
 							modal: 'login'
 						})
@@ -63,7 +63,7 @@
 					class="nav-item"
 					href="#"
 					@click="
-						toggleModal({
+						openModal({
 							sector: 'header',
 							modal: 'register'
 						})
@@ -97,7 +97,7 @@ export default {
 		modals: state => state.modals.header
 	}),
 	methods: {
-		...mapActions("modals", ["toggleModal"])
+		...mapActions("modals", ["openModal"])
 	}
 };
 </script>

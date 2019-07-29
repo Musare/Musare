@@ -83,7 +83,7 @@ export default {
 	methods: {
 		edit: function(user) {
 			this.editUser(user);
-			this.toggleModal({ sector: "admin", modal: "editUser" });
+			this.openModal({ sector: "admin", modal: "editUser" });
 		},
 		init: function() {
 			let _this = this;
@@ -96,7 +96,7 @@ export default {
 			});
 		},
 		...mapActions("admin/users", ["editUser"]),
-		...mapActions("modals", ["toggleModal"])
+		...mapActions("modals", ["openModal"])
 	},
 	mounted: function() {
 		let _this = this;

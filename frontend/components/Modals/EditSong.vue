@@ -273,7 +273,7 @@
 				<button
 					class="button is-danger"
 					v-on:click="
-						toggleModal({ sector: 'admin', modal: 'editSong' })
+						closeModal({ sector: 'admin', modal: 'editSong' })
 					"
 				>
 					<span>&nbsp;Close</span>
@@ -581,7 +581,7 @@ export default {
 			"getCurrentTime",
 			"editSong"
 		]),
-		...mapActions("modals", ["toggleModal", "closeCurrentModal"])
+		...mapActions("modals", ["closeModal", "closeCurrentModal"])
 	},
 	mounted: function() {
 		let _this = this;

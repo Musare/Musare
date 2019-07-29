@@ -47,16 +47,14 @@
 					<a
 						class="nav-item"
 						href="#"
-						@click="
-							toggleModal({ sector: 'header', modal: 'login' })
-						"
+						@click="openModal({ sector: 'header', modal: 'login' })"
 						>Login</a
 					>
 					<a
 						class="nav-item"
 						href="#"
 						@click="
-							toggleModal({ sector: 'header', modal: 'register' })
+							openModal({ sector: 'header', modal: 'register' })
 						"
 						>Register</a
 					>
@@ -121,7 +119,7 @@
 						class="sidebar-item"
 						href="#"
 						@click="
-							toggleModal({
+							openModal({
 								sector: 'station',
 								modal: 'addSongToQueue'
 							})
@@ -159,7 +157,7 @@
 						class="sidebar-item"
 						href="#"
 						@click="
-							toggleModal({
+							openModal({
 								sector: 'station',
 								modal: 'report'
 							})
@@ -175,7 +173,7 @@
 						class="sidebar-item"
 						href="#"
 						@click="
-							toggleModal({
+							openModal({
 								sector: 'station',
 								modal: 'addSongToPlaylist'
 							})
@@ -254,12 +252,12 @@ export default {
 				privacy: this.$parent.station.privacy,
 				displayName: this.$parent.station.displayName
 			});
-			this.toggleModal({
+			this.openModal({
 				sector: "station",
 				modal: "editStation"
 			});
 		},
-		...mapActions("modals", ["toggleModal"]),
+		...mapActions("modals", ["openModal"]),
 		...mapActions("station", ["editStation"])
 	}
 };

@@ -85,13 +85,13 @@ export default {
 				.catch(err => Toast.methods.addToast(err.message, 5000));
 		},
 		resetPassword: function() {
-			this.toggleModal({ sector: "header", modal: "login" });
+			this.closeModal({ sector: "header", modal: "login" });
 			this.$router.go("/reset_password");
 		},
 		githubRedirect: function() {
 			localStorage.setItem("github_redirect", this.$route.path);
 		},
-		...mapActions("modals", ["toggleModal", "closeCurrentModal"]),
+		...mapActions("modals", ["closeModal", "closeCurrentModal"]),
 		...mapActions("user/auth", ["login"])
 	}
 };

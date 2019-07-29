@@ -307,7 +307,7 @@ export default {
 		},
 		editNews: function(news) {
 			this.editing = news;
-			this.toggleModal({ sector: "admin", modal: "editNews" });
+			this.openModal({ sector: "admin", modal: "editNews" });
 		},
 		updateNews: function(close) {
 			let _this = this;
@@ -319,7 +319,7 @@ export default {
 					Toast.methods.addToast(res.message, 4000);
 					if (res.status === "success") {
 						if (close)
-							_this.toggleModal({
+							_this.closeModal({
 								sector: "admin",
 								modal: "editNews"
 							});
@@ -344,7 +344,7 @@ export default {
 		init: function() {
 			this.socket.emit("apis.joinAdminRoom", "news", () => {});
 		},
-		...mapActions("modals", ["toggleModal"])
+		...mapActions("modals", ["openModal", "closeModal"])
 	}
 };
 </script>

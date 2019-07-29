@@ -64,19 +64,19 @@ export default {
 				Toast.methods.addToast(res.message, 3000);
 
 				if (res.status === "success") {
-					this.toggleModal({
+					this.closeModal({
 						sector: "station",
 						modal: "createPlaylist"
 					});
 					this.editPlaylist(res.data._id);
-					this.toggleModal({
+					this.openModal({
 						sector: "station",
 						modal: "editPlaylist"
 					});
 				}
 			});
 		},
-		...mapActions("modals", ["toggleModal"]),
+		...mapActions("modals", ["closeModal", "openModal"]),
 		...mapActions("user/playlists", ["editPlaylist"])
 	}
 };
