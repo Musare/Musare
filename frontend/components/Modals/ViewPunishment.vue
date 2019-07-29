@@ -39,7 +39,15 @@
 				</article>
 			</div>
 			<div slot="footer">
-				<button class="button is-danger" @click="$parent.toggleModal()">
+				<button
+					class="button is-danger"
+					@click="
+						closeModal({
+							sector: 'admin',
+							modal: 'viewPunishment'
+						})
+					"
+				>
 					<span>&nbsp;Close</span>
 				</button>
 			</div>
@@ -48,7 +56,7 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
+import { mapState, mapActions } from "vuex";
 
 import io from "../../io";
 import Modal from "./Modal.vue";
@@ -70,6 +78,8 @@ export default {
 		let _this = this;
 		io.getSocket(socket => (_this.socket = socket));
 	},
-	methods: {}
+	methods: {
+		...mapActions("modals", ["closeModal"])
+	}
 };
 </script>
