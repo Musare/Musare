@@ -1,6 +1,6 @@
 const config = require('config'),
 	  async  = require('async'),
-	  logger = require('./logger');
+	  logger = require('./logger'),
 	  cache  = require('./cache');
 
 const client = config.get("apis.spotify.client");
