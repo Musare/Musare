@@ -232,7 +232,7 @@ const lib = {
 					return res.json({ status: 'failure', message: error});
 				}
 				logger.success("VERIFY_EMAIL", `Successfully verified email.`);
-				res.redirect(config.get("domain"));
+				res.redirect(`${config.get("domain")}?msg=Thank you for verifying your email`);
 			});
 		});
 

@@ -101,13 +101,24 @@ export default {
 		lofig.get("serverDomain", res => {
 			_this.serverDomain = res;
 		});
-		if (_this.$route.query.err) {
-			let err = _this.$route.query.err;
-			err = err
-				.replace(new RegExp("<", "g"), "&lt;")
-				.replace(new RegExp(">", "g"), "&gt;");
-			Toast.methods.addToast(err, 20000);
-		}
+		_this.$router.onReady(() => {
+			if (_this.$route.query.err) {
+				let err = _this.$route.query.err;
+				err = err
+					.replace(new RegExp("<", "g"), "&lt;")
+					.replace(new RegExp(">", "g"), "&gt;");
+				_this.$router.push({ query: {} });
+				Toast.methods.addToast(err, 20000);
+			}
+			if (_this.$route.query.msg) {
+				let msg = _this.$route.query.msg;
+				msg = msg
+					.replace(new RegExp("<", "g"), "&lt;")
+					.replace(new RegExp(">", "g"), "&gt;");
+				_this.$router.push({ query: {} });
+				Toast.methods.addToast(msg, 20000);
+			}
+		});
 		io.getSocket(true, socket => {
 			socket.on("keep.event:user.session.removed", () => {
 				location.reload();
