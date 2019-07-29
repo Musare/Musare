@@ -16,4 +16,4 @@ RUN yarn install
 
 RUN mkdir -p /run/nginx
 
-CMD nginx -c /opt/app/nginx.conf; cd /opt/app; yarn run dev-docker
+CMD nginx -c /opt/app/nginx.conf; cd /opt/app; yarn run $FRONTEND_YARN_SCRIPT
