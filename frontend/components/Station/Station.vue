@@ -537,9 +537,15 @@ export default {
 							let volume = parseInt(
 								localStorage.getItem("volume")
 							);
-							volume = typeof volume === "number" ? volume : 20;
+
+							volume = local.muted
+								? 0
+								: typeof volume === "number"
+								? volume
+								: 20;
 							local.player.setVolume(volume);
 							if (volume > 0) local.player.unMute();
+
 							local.playVideo();
 						},
 						onError: function(err) {
@@ -727,7 +733,10 @@ export default {
 			localStorage.setItem("volume", volume / 100);
 			if (local.playerReady) {
 				local.player.setVolume(volume / 100);
-				if (volume > 0) local.player.unMute();
+				if (volume > 0) {
+					local.player.unMute();
+					local.muted = false;
+				}
 			}
 		},
 		resumeLocalStation: function() {
@@ -743,7 +752,6 @@ export default {
 			}
 		},
 		pauseLocalStation: function() {
-			console.log("pause locally");
 			this.paused = true;
 			if (!this.noSong) {
 				this.timeBeforePause = this.getTimeElapsed();
@@ -804,6 +812,7 @@ export default {
 				let volume =
 					this.player.getVolume() * 100 <= 0 ? previousVolume : 0;
 				this.muted = !this.muted;
+				localStorage.setItem("muted", this.muted);
 				document.getElementById("volumeSlider").value = volume * 100;
 				this.player.setVolume(volume);
 				if (!this.muted) localStorage.setItem("volume", volume);
@@ -1105,7 +1114,6 @@ export default {
 			_this.socket.on("event:stations.pause", data => {
 				_this.pausedAt = data.pausedAt;
 				_this.pauseLocalStation();
-				console.log("local pause");
 			});
 
 			_this.socket.on("event:stations.resume", data => {
@@ -1202,10 +1210,16 @@ export default {
 			});
 		});
 
-		let volume = parseFloat(localStorage.getItem("volume"));
-		volume = typeof volume === "number" && !isNaN(volume) ? volume : 20;
-		localStorage.setItem("volume", volume);
-		document.getElementById("volumeSlider").value = volume * 100;
+		if (JSON.parse(localStorage.getItem("muted"))) {
+			this.muted = true;
+			this.player.setVolume(0);
+			document.getElementById("volumeSlider").value = 0 * 100;
+		} else {
+			let volume = parseFloat(localStorage.getItem("volume"));
+			volume = typeof volume === "number" && !isNaN(volume) ? volume : 20;
+			localStorage.setItem("volume", volume);
+			document.getElementById("volumeSlider").value = volume * 100;
+		}
 	},
 	components: {
 		OfficialHeader,
