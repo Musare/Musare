@@ -603,10 +603,6 @@ export default {
 						local.currentSong.skipDuration
 				);
 
-				if (local.currentSong.artists)
-					local.currentSong.artists = local.currentSong.artists.join(
-						", "
-					);
 				if (window.stationInterval !== 0)
 					clearInterval(window.stationInterval);
 				window.stationInterval = setInterval(function() {
@@ -968,6 +964,10 @@ export default {
 					_this.currentSong = res.data.currentSong
 						? res.data.currentSong
 						: {};
+					if (_this.currentSong.artists)
+						_this.currentSong.artists = _this.currentSong.artists.join(
+							", "
+						);
 					_this.type = res.data.type;
 					_this.startedAt = res.data.startedAt;
 					_this.paused = res.data.paused;
@@ -1061,6 +1061,10 @@ export default {
 				_this.timePaused = data.timePaused;
 				if (data.currentSong) {
 					_this.noSong = false;
+					if (_this.currentSong.artists)
+						_this.currentSong.artists = _this.currentSong.artists.join(
+							", "
+						);
 					_this.simpleSong =
 						data.currentSong.likes === -1 &&
 						data.currentSong.dislikes === -1;
