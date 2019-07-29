@@ -14,6 +14,7 @@ const api = require('./logic/api');
 const io = require('./logic/io');
 const stations = require('./logic/stations');
 const songs = require('./logic/songs');
+const spotify = require('./logic/spotify');
 const playlists = require('./logic/playlists');
 const cache = require('./logic/cache');
 const discord = require('./logic/discord');
@@ -105,9 +106,17 @@ async.waterfall([
 		mail.init(next);
 	},
 
-	// setup the socket.io server (all client / server communication is done over this)
+	// setup the Spotify
 	(next) => {
 		initializedComponents.push(mail);
+		currentComponent = 'Spotify';
+		moduleStartFunction();
+		spotify.init(next);
+	},
+
+	// setup the socket.io server (all client / server communication is done over this)
+	(next) => {
+		initializedComponents.push(spotify);
 		currentComponent = 'IO';
 		moduleStartFunction();
 		io.init(next);

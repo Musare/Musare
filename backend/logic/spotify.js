@@ -1,4 +1,7 @@
-const config = require('config');
+const config = require('config'),
+	  async  = require('async'),
+	  logger = require('./logger');
+	  cache  = require('./cache');
 
 const client = config.get("apis.spotify.client");
 const secret = config.get("apis.spotify.secret");
@@ -20,7 +23,31 @@ let apiResults = {
 	scope: "",
 };
 
+let initialized = false;
+let lockdown = false;
+
 let lib = {
+	init: (cb) => {
+		async.waterfall([
+			(next) => {
+				cache.hget("api", "spotify", next, true);
+			},
+
+			(data, next) => {
+				if (data) apiResults = data;
+				next();
+			}
+		], (err) => {
+			if (lockdown) return this._lockdown();
+			if (err) {
+				err = utils.getError(err);
+				cb(err);
+			} else {
+				initialized = true;
+				cb();
+			}
+		});
+	},
 	getToken: () => {
 		return new Promise((resolve, reject) => {
 			if (Date.now() > apiResults.expires_at) {
@@ -31,14 +58,26 @@ let lib = {
 		});
 	},
 	requestToken: (cb) => {
-		SpotifyOauth.getOAuthAccessToken(
-			'',
-			{ 'grant_type': 'client_credentials' },
-			(e, access_token, refresh_token, results) => {
+		async.waterfall([
+			(next) => {
+				logger.info("SPOTIFY_REQUEST_TOKEN", "Requesting new Spotify token.");
+				SpotifyOauth.getOAuthAccessToken(
+					'',
+					{ 'grant_type': 'client_credentials' },
+					next
+				);
+			},
+			(access_token, refresh_token, results, next) => {
 				apiResults = results;
 				apiResults.expires_at = Date.now() + (results.expires_in * 1000);
-				cb();
+				cache.hset("api", "spotify", apiResults, next, true);
+			}
+		], () => {
+			cb();
 		});
+	},
+	_lockdown: () => {
+		lockdown = true;
 	}
 };
 
