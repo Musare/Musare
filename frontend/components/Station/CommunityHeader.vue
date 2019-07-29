@@ -9,7 +9,7 @@
 				>
 					<img
 						:src="`${this.siteSettings.logo}`"
-						:alt="`${this.siteSettings.siteName}`"
+						:alt="`${this.siteSettings.siteName}` || `Musare`"
 					/>
 				</router-link>
 			</div>
@@ -213,12 +213,8 @@ export default {
 		};
 	},
 	mounted: function() {
-		lofig.get("frontendDomain", res => {
-			this.frontendDomain = res;
-		});
-		lofig.get("siteSettings", res => {
-			this.siteSettings = res;
-		});
+		lofig.get("frontendDomain", res => (this.frontendDomain = res));
+		lofig.get("siteSettings", res => (this.siteSettings = res));
 	},
 	methods: {
 		isOwner: function() {

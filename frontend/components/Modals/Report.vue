@@ -144,7 +144,12 @@
 			<a
 				class="button is-danger"
 				href="#"
-				@click="$parent.modals.report = !$parent.modals.report"
+				@click="
+					closeModal({
+						sector: 'station',
+						modal: 'report'
+					})
+				"
 			>
 				<span>&nbsp;Cancel</span>
 			</a>
@@ -153,6 +158,8 @@
 </template>
 
 <script>
+import { mapActions } from "vuex";
+
 import { Toast } from "vue-roaster";
 import Modal from "./Modal.vue";
 import io from "../../io";
@@ -222,7 +229,10 @@ export default {
 			_this.socket.emit("reports.create", _this.report, res => {
 				Toast.methods.addToast(res.message, 4000);
 				if (res.status == "success")
-					_this.$parent.modals.report = !_this.$parent.modals.report;
+					_this.closeModal({
+						sector: "station",
+						modal: "report"
+					});
 			});
 		},
 		updateCharactersRemaining: function() {
@@ -251,12 +261,8 @@ export default {
 					} else this.report.issues[z].reasons.push(reason);
 				}
 			}
-		}
-	},
-	events: {
-		closeModal: function() {
-			this.$parent.modals.report = !this.$parent.modals.report;
-		}
+		},
+		...mapActions("modals", ["closeModal"])
 	}
 };
 </script>
