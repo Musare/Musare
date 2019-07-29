@@ -3,6 +3,7 @@
 const moment  = require('moment'),
 	  io      = require('./io'),
 	  db      = require('./db'),
+	  spotify = require('./spotify'),
 	  config  = require('config'),
 	  async	  = require('async'),
 	  request = require('request'),
@@ -353,17 +354,25 @@ module.exports = {
 		}
 		getPage(null, []);
 	},
-	getSongFromSpotify: (song, cb) => {
+	getSongFromSpotify: async (song, cb) => {
+		if (!config.get("apis.spotify.enabled")) return cb(null);
 		const spotifyParams = [
 			`q=${encodeURIComponent(song.title)}`,
 			`type=track`
 		].join('&');
 
-		request(`https://api.spotify.com/v1/search?${spotifyParams}`, (err, res, body) => {
+		const token = await spotify.getToken();
+		const options = {
+			url: `https://api.spotify.com/v1/search?${spotifyParams}`,
+			headers: {
+				Authorization: `Bearer ${token}`
+			}
+		};
 
+		request(options, (err, res, body) => {
 			if (err) console.error(err);
-
 			body = JSON.parse(body);
+			if (body.error) console.error(body.error);
 
 			durationArtistLoop:
 			for (let i in body) {
@@ -391,15 +400,27 @@ module.exports = {
 			cb(song);
 		});
 	},
-	getSongsFromSpotify: (title, artist, cb) => {
+	getSongsFromSpotify: async (title, artist, cb) => {
+		if (!config.get("apis.spotify.enabled")) return cb([]);
+
 		const spotifyParams = [
 			`q=${encodeURIComponent(title)}`,
 			`type=track`
 		].join('&');
+		
+		const token = await spotify.getToken();
+		const options = {
+			url: `https://api.spotify.com/v1/search?${spotifyParams}`,
+			headers: {
+				Authorization: `Bearer ${token}`
+			}
+		};
 
-		request(`https://api.spotify.com/v1/search?${spotifyParams}`, (err, res, body) => {
+		request(options, (err, res, body) => {
 			if (err) return console.error(err);
 			body = JSON.parse(body);
+			if (body.error) return console.error(body.error);
+
 			let songs = [];
 
 			for (let i in body) {

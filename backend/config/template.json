@@ -26,7 +26,12 @@
 		"mailgun": {
 			"key": "",
 			"domain": "",
-		  	"enabled": true
+		  	"enabled": false
+		},
+		"spotify": {
+			"client": "",
+			"secret": "",
+			"enabled": false
 		}
 	},
 	"cors": {
