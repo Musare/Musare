@@ -46,17 +46,20 @@ const modules = {
 				state.video.paused = status;
 			},
 			getCurrentTime(state, fixedVal) {
-				Promise.resolve(state.video.player.getCurrentTime()).then(
-					time => {
-						if (fixedVal)
-							Promise.resolve(time.toFixed(fixedVal)).then(
-								fixedTime => {
-									state.video.currentTime = fixedTime;
-								}
-							);
-						else state.video.currentTime = time;
-					}
-				);
+				if (!state.playerReady) state.video.currentTime = 0;
+				else {
+					Promise.resolve(state.video.player.getCurrentTime()).then(
+						time => {
+							if (fixedVal)
+								Promise.resolve(time.toFixed(fixedVal)).then(
+									fixedTime => {
+										state.video.currentTime = fixedTime;
+									}
+								);
+							else state.video.currentTime = time;
+						}
+					);
+				}
 			}
 		}
 	},
