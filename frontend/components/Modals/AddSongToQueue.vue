@@ -53,7 +53,7 @@
 					>
 				</p>
 			</div>
-			<div class="control is-grouped">
+			<div class="control is-grouped" v-if="$parent.type === 'official'">
 				<p class="control is-expanded">
 					<input
 						class="input"
