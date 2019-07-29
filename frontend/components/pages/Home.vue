@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<div class="app" :class="{ nightMode: nightMode }">
+		<div class="app">
 			<main-header />
 			<div class="content-wrapper">
 				<div class="group">
@@ -167,8 +167,7 @@ export default {
 			stations: {
 				official: [],
 				community: []
-			},
-			nightMode: false
+			}
 		};
 	},
 	computed: mapState("modals", {
@@ -507,59 +506,5 @@ html {
 	-webkit-line-clamp: 1;
 	line-height: 30px;
 	max-height: 30px;
-}
-
-.nightMode {
-	background-color: rgb(51, 51, 51);
-	color: #e6e6e6;
-
-	.community-button {
-		cursor: pointer;
-		transition: 0.25s ease color;
-		font-size: 30px;
-		color: #e6e6e6;
-	}
-
-	.community-button:hover {
-		color: #03a9f4;
-	}
-
-	.station-card {
-		margin: 10px;
-		cursor: pointer;
-		height: 475px;
-		background-color: rgb(51, 51, 51);
-		color: #e6e6e6;
-
-		.card-content {
-			max-height: 159px;
-			color: #e6e6e6;
-
-			.content {
-				word-wrap: break-word;
-				overflow: hidden;
-				text-overflow: ellipsis;
-				display: -webkit-box;
-				-webkit-box-orient: vertical;
-				-webkit-line-clamp: 3;
-				line-height: 20px;
-				max-height: 60px;
-				color: #e6e6e6;
-			}
-		}
-	}
-
-	.station-card:hover {
-		box-shadow: 0 2px 3px rgba(10, 10, 10, 0.3),
-			0 0 10px rgba(10, 10, 10, 0.3);
-	}
-
-	.isPrivate {
-		background-color: #d01657;
-	}
-
-	.isMine {
-		background-color: #0777ab;
-	}
 }
 </style>
