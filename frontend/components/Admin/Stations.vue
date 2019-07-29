@@ -256,7 +256,9 @@ export default {
 				partyMode: station.partyMode,
 				description: station.description,
 				privacy: station.privacy,
-				displayName: station.displayName
+				displayName: station.displayName,
+				genres: station.genres,
+				blacklistedGenres: station.blacklistedGenres
 			});
 			this.toggleModal({
 				sector: "station",

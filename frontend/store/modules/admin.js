@@ -75,7 +75,8 @@ const modules = {
 		},
 		mutations: {
 			editStation(state, station) {
-				state.editing = state.station = station;
+				state.station = station;
+				state.editing = JSON.parse(JSON.stringify(station));
 			}
 		}
 	},

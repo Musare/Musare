@@ -39,19 +39,19 @@
 				</span>
 			</p>
 			<br />
-			<p class="control">
+			<p class="control" v-if="station.type === 'community'">
 				<label class="checkbox party-mode-inner">
 					<input v-model="editing.partyMode" type="checkbox" />
 					&nbsp;Party mode
 				</label>
 			</p>
-			<small
+			<small v-if="station.type === 'community'"
 				>With party mode enabled, people can add songs to a queue that
 				plays. With party mode disabled you can play a private playlist
 				on loop.</small
 			>
 			<br />
-			<div v-if="station.partyMode">
+			<div v-if="station.type === 'community' && station.partyMode">
 				<br />
 				<br />
 				<label class="label">Queue lock</label>
@@ -74,6 +74,64 @@
 				>
 					Unlock the queue
 				</button>
+			</div>
+			<div
+				v-if="station.type === 'official'"
+				class="control is-grouped genre-wrapper"
+			>
+				<div class="sector">
+					<p class="control has-addons">
+						<input
+							id="new-genre-edit"
+							class="input"
+							type="text"
+							placeholder="Genre"
+							@keyup.enter="addGenre()"
+						/>
+						<a class="button is-info" href="#" @click="addGenre()"
+							>Add genre</a
+						>
+					</p>
+					<span
+						v-for="(genre, index) in editing.genres"
+						:key="index"
+						class="tag is-info"
+					>
+						{{ genre }}
+						<button
+							class="delete is-info"
+							@click="removeGenre(index)"
+						/>
+					</span>
+				</div>
+				<div class="sector">
+					<p class="control has-addons">
+						<input
+							id="new-blacklisted-genre-edit"
+							class="input"
+							type="text"
+							placeholder="Blacklisted Genre"
+							@keyup.enter="addBlacklistedGenre()"
+						/>
+						<a
+							class="button is-info"
+							href="#"
+							@click="addBlacklistedGenre()"
+							>Add blacklisted genre</a
+						>
+					</p>
+					<span
+						v-for="(genre, index) in editing.blacklistedGenres"
+						:key="index"
+						class="tag is-info"
+					>
+						{{ genre }}
+						<button
+							class="delete is-info"
+							@click="removeBlacklistedGenre(index)"
+						/>
+					</span>
+				</div>
 			</div>
 		</template>
 		<template v-slot:footer>
@@ -119,6 +177,16 @@ export default {
 				this.updatePrivacy();
 			if (this.station.partyMode !== this.editing.partyMode)
 				this.updatePartyMode();
+			if (
+				this.station.genres.toString() !==
+				this.editing.genres.toString()
+			)
+				this.updateGenres();
+			if (
+				this.station.blacklistedGenres.toString() !==
+				this.editing.blacklistedGenres.toString()
+			)
+				this.updateBlacklistedGenres();
 		},
 		updateName: function() {
 			const name = this.editing.name;
@@ -140,14 +208,12 @@ export default {
 				res => {
 					if (res.status === "success") {
 						if (this.station) this.station.name = name;
-						else {
-							this.$parent.stations.forEach((station, index) => {
-								if (station._id === this.editing._id)
-									return (this.$parent.stations[
-										index
-									].name = name);
-							});
-						}
+						this.$parent.stations.forEach((station, index) => {
+							if (station._id === this.editing._id)
+								return (this.$parent.stations[
+									index
+								].name = name);
+						});
 					}
 					Toast.methods.addToast(res.message, 8000);
 				}
@@ -174,14 +240,12 @@ export default {
 					if (res.status === "success") {
 						if (this.station)
 							this.station.displayName = displayName;
-						else {
-							this.$parent.stations.forEach((station, index) => {
-								if (station._id === this.editing._id)
-									return (this.$parent.stations[
-										index
-									].displayName = displayName);
-							});
-						}
+						this.$parent.stations.forEach((station, index) => {
+							if (station._id === this.editing._id)
+								return (this.$parent.stations[
+									index
+								].displayName = displayName);
+						});
 					}
 					Toast.methods.addToast(res.message, 8000);
 				}
@@ -214,14 +278,12 @@ export default {
 					if (res.status === "success") {
 						if (_this.station)
 							_this.station.description = description;
-						else {
-							_this.$parent.stations.forEach((station, index) => {
-								if (station._id === station._id)
-									return (_this.$parent.stations[
-										index
-									].description = description);
-							});
-						}
+						_this.$parent.stations.forEach((station, index) => {
+							if (station._id === station._id)
+								return (_this.$parent.stations[
+									index
+								].description = description);
+						});
 						return Toast.methods.addToast(res.message, 4000);
 					}
 					Toast.methods.addToast(res.message, 8000);
@@ -252,6 +314,55 @@ export default {
 				}
 			);
 		},
+		updateGenres: function() {
+			let _this = this;
+			this.socket.emit(
+				"stations.updateGenres",
+				this.editing._id,
+				this.editing.genres,
+				res => {
+					if (res.status === "success") {
+						let genres = JSON.parse(
+							JSON.stringify(_this.editing.genres)
+						);
+						if (_this.station) _this.station.genres = genres;
+						_this.$parent.stations.forEach((station, index) => {
+							if (station._id === station._id)
+								return (_this.$parent.stations[
+									index
+								].genres = genres);
+						});
+						return Toast.methods.addToast(res.message, 4000);
+					}
+					Toast.methods.addToast(res.message, 8000);
+				}
+			);
+		},
+		updateBlacklistedGenres: function() {
+			let _this = this;
+			this.socket.emit(
+				"stations.updateBlacklistedGenres",
+				this.editing._id,
+				this.editing.blacklistedGenres,
+				res => {
+					if (res.status === "success") {
+						let blacklistedGenres = JSON.parse(
+							JSON.stringify(_this.editing.blacklistedGenres)
+						);
+						if (_this.station)
+							_this.station.blacklistedGenres = blacklistedGenres;
+						_this.$parent.stations.forEach((station, index) => {
+							if (station._id === station._id)
+								return (_this.$parent.stations[
+									index
+								].blacklistedGenres = blacklistedGenres);
+						});
+						return Toast.methods.addToast(res.message, 4000);
+					}
+					Toast.methods.addToast(res.message, 8000);
+				}
+			);
+		},
 		updatePartyMode: function() {
 			let _this = this;
 			this.socket.emit(
@@ -262,19 +373,48 @@ export default {
 					if (res.status === "success") {
 						if (_this.station)
 							_this.station.partyMode = _this.editing.partyMode;
-						else {
-							_this.$parent.stations.forEach((station, index) => {
-								if (station._id === station._id)
-									return (_this.$parent.stations[
-										index
-									].partyMode = _this.editing.partyMode);
-							});
-						}
+						_this.$parent.stations.forEach((station, index) => {
+							if (station._id === station._id)
+								return (_this.$parent.stations[
+									index
+								].partyMode = _this.editing.partyMode);
+						});
 						return Toast.methods.addToast(res.message, 4000);
 					}
 					Toast.methods.addToast(res.message, 8000);
 				}
 			);
+		},
+		addGenre: function() {
+			let genre = document
+				.getElementById(`new-genre-edit`)
+				.value.toLowerCase()
+				.trim();
+			if (this.editing.genres.indexOf(genre) !== -1)
+				return Toast.methods.addToast("Genre already exists", 3000);
+			if (genre) {
+				this.editing.genres.push(genre);
+				document.getElementById(`new-genre`).value = "";
+			} else Toast.methods.addToast("Genre cannot be empty", 3000);
+		},
+		removeGenre: function(index) {
+			this.editing.genres.splice(index, 1);
+		},
+		addBlacklistedGenre: function() {
+			let genre = document
+				.getElementById(`new-blacklisted-genre-edit`)
+				.value.toLowerCase()
+				.trim();
+			if (this.editing.blacklistedGenres.indexOf(genre) !== -1)
+				return Toast.methods.addToast("Genre already exists", 3000);
+
+			if (genre) {
+				this.editing.blacklistedGenres.push(genre);
+				document.getElementById(`new-blacklisted-genre`).value = "";
+			} else Toast.methods.addToast("Genre cannot be empty", 3000);
+		},
+		removeBlacklistedGenre: function(index) {
+			this.editing.blacklistedGenres.splice(index, 1);
 		},
 		deleteStation: function() {
 			this.socket.emit("stations.remove", this.editing._id, res => {

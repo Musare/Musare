@@ -669,6 +669,62 @@ module.exports = {
 	}),
 
 	/**
+	 * Updates a station's genres
+	 *
+	 * @param session
+	 * @param stationId - the station id
+	 * @param newGenres - the new station genres
+	 * @param cb
+	 */
+	updateGenres: hooks.ownerRequired((session, stationId, newGenres, cb) => {
+		async.waterfall([
+			(next) => {
+				db.models.station.updateOne({_id: stationId}, {$set: {genres: newGenres}}, {runValidators: true}, next);
+			},
+
+			(res, next) => {
+				stations.updateStation(stationId, next);
+			}
+		], (err) => {
+			if (err) {
+				err = utils.getError(err);
+				logger.error("STATIONS_UPDATE_GENRES", `Updating station "${stationId}" genres to "${newGenres}" failed. "${err}"`);
+				return cb({'status': 'failure', 'message': err});
+			}
+			logger.success("STATIONS_UPDATE_GENRES", `Updated station "${stationId}" genres to "${newGenres}" successfully.`);
+			return cb({'status': 'success', 'message': 'Successfully updated the genres.'});
+		});
+	}),
+
+	/**
+	 * Updates a station's blacklisted genres
+	 *
+	 * @param session
+	 * @param stationId - the station id
+	 * @param newBlacklistedGenres - the new station blacklisted genres
+	 * @param cb
+	 */
+	updateBlacklistedGenres: hooks.ownerRequired((session, stationId, newBlacklistedGenres, cb) => {
+		async.waterfall([
+			(next) => {
+				db.models.station.updateOne({_id: stationId}, {$set: {blacklistedGenres: newBlacklistedGenres}}, {runValidators: true}, next);
+			},
+
+			(res, next) => {
+				stations.updateStation(stationId, next);
+			}
+		], (err) => {
+			if (err) {
+				err = utils.getError(err);
+				logger.error("STATIONS_UPDATE_BLACKLISTED_GENRES", `Updating station "${stationId}" blacklisted genres to "${newBlacklistedGenres}" failed. "${err}"`);
+				return cb({'status': 'failure', 'message': err});
+			}
+			logger.success("STATIONS_UPDATE_BLACKLISTED_GENRES", `Updated station "${stationId}" blacklisted genres to "${newBlacklistedGenres}" successfully.`);
+			return cb({'status': 'success', 'message': 'Successfully updated the blacklisted genres.'});
+		});
+	}),
+
+	/**
 	 * Updates a station's party mode
 	 *
 	 * @param session
