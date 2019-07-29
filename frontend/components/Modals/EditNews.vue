@@ -155,7 +155,15 @@
 				<i class="material-icons save-changes">done</i>
 				<span>&nbsp;Save and close</span>
 			</button>
-			<button class="button is-danger" @click="closeCurrentModal()">
+			<button
+				class="button is-danger"
+				@click="
+					closeModal({
+						sector: 'admin',
+						modal: 'editNews'
+					})
+				"
+			>
 				<span>&nbsp;Close</span>
 			</button>
 		</div>
@@ -186,7 +194,7 @@ export default {
 		removeChange: function(type, index) {
 			this.$parent.editing[type].splice(index, 1);
 		},
-		...mapActions("modals", ["closeCurrentModal"])
+		...mapActions("modals", ["closeModal"])
 	}
 };
 </script>

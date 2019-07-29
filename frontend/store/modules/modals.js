@@ -35,9 +35,6 @@ const actions = {
 	openModal: ({ commit }, data) => {
 		commit("openModal", data);
 	},
-	toggleModal: ({ commit }, data) => {
-		commit("toggleModal", data);
-	},
 	closeCurrentModal: ({ commit }) => {
 		commit("closeCurrentModal");
 	}
@@ -52,13 +49,6 @@ const mutations = {
 		const { sector, modal } = data;
 		state.modals[sector][modal] = true;
 		state.currentlyActive = { sector, modal };
-	},
-	toggleModal(state, data) {
-		const { sector, modal } = data;
-		state.modals[sector][modal] = !state.modals[sector][modal];
-		if (state.modals[sector][modal])
-			state.currentlyActive = { sector, modal };
-		else state.currentlyActive = {};
 	},
 	closeCurrentModal(state) {
 		const { sector, modal } = state.currentlyActive;

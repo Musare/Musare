@@ -1,12 +1,28 @@
 <template>
 	<div class="modal is-active">
-		<div class="modal-background" @click="closeCurrentModal()" />
+		<div
+			class="modal-background"
+			@click="
+				closeModal({
+					sector: 'header',
+					modal: 'login'
+				})
+			"
+		/>
 		<div class="modal-card">
 			<header class="modal-card-head">
 				<p class="modal-card-title">
 					Login
 				</p>
-				<button class="delete" @click="closeCurrentModal()" />
+				<button
+					class="delete"
+					@click="
+						closeModal({
+							sector: 'header',
+							modal: 'login'
+						})
+					"
+				/>
 			</header>
 			<section class="modal-card-body">
 				<!-- validation to check if exists http://bulma.io/documentation/elements/form/ -->
@@ -91,7 +107,7 @@ export default {
 		githubRedirect: function() {
 			localStorage.setItem("github_redirect", this.$route.path);
 		},
-		...mapActions("modals", ["closeModal", "closeCurrentModal"]),
+		...mapActions("modals", ["closeModal"]),
 		...mapActions("user/auth", ["login"])
 	}
 };

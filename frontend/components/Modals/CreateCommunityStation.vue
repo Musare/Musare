@@ -127,12 +127,15 @@ export default {
 							`You have added the station successfully`,
 							4000
 						);
-						_this.closeCurrentModal();
+						_this.closeModal({
+							sector: "home",
+							modal: "createCommunityStation"
+						});
 					} else Toast.methods.addToast(res.message, 4000);
 				}
 			);
 		},
-		...mapActions("modals", ["closeCurrentModal"])
+		...mapActions("modals", ["closeModal"])
 	}
 };
 </script>

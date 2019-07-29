@@ -421,7 +421,11 @@ export default {
 							}
 						});
 					}
-					if (close) _this.closeCurrentModal();
+					if (close)
+						_this.closeModal({
+							sector: "admin",
+							modal: "editSong"
+						});
 				}
 			);
 		},
@@ -581,7 +585,7 @@ export default {
 			"getCurrentTime",
 			"editSong"
 		]),
-		...mapActions("modals", ["closeModal", "closeCurrentModal"])
+		...mapActions("modals", ["closeModal"])
 	},
 	mounted: function() {
 		let _this = this;

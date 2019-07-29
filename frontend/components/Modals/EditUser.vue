@@ -73,7 +73,15 @@
 				<button class="button is-warning" v-on:click="removeSessions()">
 					<span>&nbsp;Remove all sessions</span>
 				</button>
-				<button class="button is-danger" @click="closeCurrentModal()">
+				<button
+					class="button is-danger"
+					@click="
+						closeModal({
+							sector: 'admin',
+							modal: 'editUser'
+						})
+					"
+				>
 					<span>&nbsp;Close</span>
 				</button>
 			</div>
@@ -192,7 +200,7 @@ export default {
 				Toast.methods.addToast(res.message, 4000);
 			});
 		},
-		...mapActions("modals", ["closeCurrentModal"])
+		...mapActions("modals", ["closeModal"])
 	},
 	mounted: function() {
 		let _this = this;
