@@ -99,6 +99,7 @@ _Configuration_
 To configure docker simply `cp .env.template .env` and configure the .env file to match your settings in `backend/config/default.json`.  
 The configurable ports will be how you access the services on your machine, or what ports you will need to specify in your nginx files when using proxy_pass.  
 `COMPOSE_PROJECT_NAME` should be a unique name for this installation, especially if you have multiple instances of Musare on the same machine.
+`FRONTEND_YARN_SCRIPT` should be `dev-docker` for development, `build` for production.
 
 1. Build the backend and frontend Docker images (from the main folder)
 
