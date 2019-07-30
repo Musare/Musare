@@ -538,13 +538,15 @@ export default {
 								localStorage.getItem("volume")
 							);
 
-							volume = local.muted
-								? 0
-								: typeof volume === "number"
-								? volume
-								: 20;
+							volume = typeof volume === "number" ? volume : 20;
+
 							local.player.setVolume(volume);
-							if (volume > 0) local.player.unMute();
+
+							if (volume > 0) {
+								local.player.unMute();
+							}
+
+							if (local.muted) local.player.mute();
 
 							local.playVideo();
 						},
@@ -735,6 +737,7 @@ export default {
 				local.player.setVolume(volume / 100);
 				if (volume > 0) {
 					local.player.unMute();
+					localStorage.setItem("muted", false);
 					local.muted = false;
 				}
 			}
@@ -822,7 +825,10 @@ export default {
 			if (this.playerReady) {
 				let previousVolume = parseInt(localStorage.getItem("volume"));
 				let volume = previousVolume + 5;
-				if (previousVolume === 0) this.muted = false;
+				if (previousVolume === 0) {
+					this.muted = false;
+					localStorage.setItem("muted", false);
+				}
 				if (volume > 100) volume = 100;
 				document.getElementById("volumeSlider").value = volume * 100;
 				this.player.setVolume(volume);
