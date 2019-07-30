@@ -6,7 +6,6 @@ module.exports = {
 	entry: "./main.js",
 	output: {
 		path: __dirname + "/dist/build/",
-		publicPath: "/",
 		filename: "[name].[hash].js"
 	},
 	plugins: [
@@ -49,10 +48,5 @@ module.exports = {
 				use: ["vue-style-loader", "css-loader", "sass-loader"]
 			}
 		]
-	},
-	resolve: {
-		alias: {
-			vue: "vue/dist/vue.js"
-		}
 	}
 };

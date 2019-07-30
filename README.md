@@ -81,8 +81,8 @@ Once you've installed the required tools:
 
    Values:  
    The `serverDomain` should be the url where the backend will be accessible from, usually `http://localhost:8080` for non-Docker.
-   The `frontendDomain` should be the url where the frontend will be accessible from, usually `http://localhost` for non-Docker.
-   The `frontendPort` should be the port where the frontend will be accessible from, should always be port `80` for Docker, and is recommended for non-Docker.
+   The `frontendDomain` should be the url where the frontend will be accessible from, usually `http://localhost` for docker or `http://localhost:80` for non-Docker.
+   The `frontendPort` should be the port where the frontend will be accessible from, should always be port `81` for Docker, and is recommended to be port `80` for non-Docker.
    The `recaptcha.key` value can be obtained by setting up a [ReCaptcha Site (v3)](https://www.google.com/recaptcha/admin).
    The `cookie.domain` value should be the ip or address you use to access the site, without protocols (http/https), so for example `localhost`.
    The `cookie.secure` value should be `true` for SSL connections, and `false` for normal http connections.
@@ -97,9 +97,9 @@ Now you have different paths here.
 _Configuration_
 
 To configure docker simply `cp .env.template .env` and configure the .env file to match your settings in `backend/config/default.json`.  
-The configurable ports will be how you access the services on your machine, or what ports you will need to specify in your nginx files when using proxy_pass.  
+The configurable ports will be how you access the services on your machine, or what ports you will need to specify in your nginx files when using proxy_pass. 
 `COMPOSE_PROJECT_NAME` should be a unique name for this installation, especially if you have multiple instances of Musare on the same machine.
-`FRONTEND_YARN_SCRIPT` should be `dev-docker` for development, `build` for production.
+`FRONTEND_MODE` should be either `dev` or `prod` (self-explanatory).
 
 1. Build the backend and frontend Docker images (from the main folder)
 

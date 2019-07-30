@@ -9,7 +9,7 @@ startRedis.cmd
 startMongo.cmd
 .database
 .redis
-dump.rdb
+*.rdb
 npm-debug.log
 
 # Back End

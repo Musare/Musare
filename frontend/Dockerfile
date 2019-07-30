@@ -7,6 +7,7 @@ RUN npm install -g yarn
 
 RUN yarn global add webpack@4.35.3
 RUN yarn global add webpack-cli@3.3.5
+RUN yarn global add webpack-dev-server@3.7.2
 
 RUN mkdir -p /opt
 WORKDIR /opt
@@ -16,4 +17,7 @@ RUN yarn install
 
 RUN mkdir -p /run/nginx
 
-CMD nginx -c /opt/app/nginx.conf; cd /opt/app; yarn run $FRONTEND_YARN_SCRIPT
+COPY bootstrap.sh /opt/
+RUN chmod u+x /opt/bootstrap.sh
+
+CMD bash /opt/bootstrap.sh

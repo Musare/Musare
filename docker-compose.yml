@@ -17,7 +17,7 @@ services:
     volumes:
     - ./frontend:/opt/app
     environment:
-    - FRONTEND_YARN_SCRIPT=${FRONTEND_YARN_SCRIPT}
+    - FRONTEND_MODE=${FRONTEND_MODE}
   mongo:
     image: mongo:4.0
     ports:
