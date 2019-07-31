@@ -109,9 +109,7 @@ export default {
 						Toast.methods.addToast(res.message, 2000);
 					else this.user.role = newRank;
 					Toast.methods.addToast(
-						`User ${
-							this.$route.params.username
-						}'s rank has been changed to: ${newRank}`,
+						`User ${this.$route.params.username}'s rank has been changed to: ${newRank}`,
 						2000
 					);
 				}

@@ -112,9 +112,9 @@
 
 <script>
 import { mapState, mapActions } from "vuex";
+import { Toast } from "vue-roaster";
 
 import ViewPunishment from "../Modals/ViewPunishment.vue";
-import { Toast } from "vue-roaster";
 import io from "../../io";
 
 export default {

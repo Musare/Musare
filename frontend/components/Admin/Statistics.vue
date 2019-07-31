@@ -103,8 +103,9 @@
 </template>
 
 <script>
-import io from "../../io";
 import Chart from "chart.js";
+
+import io from "../../io";
 
 export default {
 	components: {},

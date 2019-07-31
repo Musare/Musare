@@ -13,6 +13,7 @@
 		"parser": "babel-eslint"
 	},
 	"extends": [
+		"airbnb-base",
 		"plugin:vue/essential",
 		"plugin:prettier/recommended",
 		"eslint:recommended"
@@ -24,6 +25,7 @@
 		"moment": "readonly"
 	},
 	"rules": {
+		"no-console": 0,
 		"no-control-regex": 0,
 		"no-var": 2
 	}

@@ -116,9 +116,7 @@ export default {
 
 			recaptchaScript.setAttribute(
 				"src",
-				`https://www.google.com/recaptcha/api.js?render=${
-					this.recaptcha.key
-				}`
+				`https://www.google.com/recaptcha/api.js?render=${this.recaptcha.key}`
 			);
 			document.head.appendChild(recaptchaScript);
 		});

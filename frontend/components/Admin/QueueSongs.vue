@@ -144,8 +144,6 @@ export default {
 			});
 		},
 		edit: function(song, index) {
-			console.log(song, index);
-
 			let newSong = {};
 			for (let n in song) newSong[n] = song[n];
 
@@ -160,7 +158,6 @@ export default {
 			});
 		},
 		remove: function(id) {
-			console.log("Removing ", id);
 			this.socket.emit("queueSongs.remove", id, res => {
 				if (res.status == "success")
 					Toast.methods.addToast(res.message, 2000);

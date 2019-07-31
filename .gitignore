@@ -12,11 +12,12 @@ startMongo.cmd
 *.rdb
 npm-debug.log
 
-# Back End
+# Backend
 backend/node_modules/
 backend/config/default.json
 
-# Front End
+# Frontend
+frontend/yarn-error.log
 frontend/node_modules/
 frontend/dist/build/
 !frontend/dist/lofig.min.js

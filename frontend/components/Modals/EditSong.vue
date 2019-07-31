@@ -285,10 +285,10 @@
 
 <script>
 import { mapState, mapActions } from "vuex";
+import { Toast } from "vue-roaster";
 
 import io from "../../io";
 import validation from "../../validation";
-import { Toast } from "vue-roaster";
 import Modal from "./Modal.vue";
 
 export default {

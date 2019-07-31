@@ -1,6 +1,6 @@
-import auth from "../../api/auth.js";
-import io from "../../io.js";
-import validation from "../../validation.js";
+import auth from "../../api/auth";
+import io from "../../io";
+import validation from "../../validation";
 
 const state = {};
 const getters = {};
