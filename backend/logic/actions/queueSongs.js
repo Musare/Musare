@@ -167,9 +167,9 @@ let lib = {
 				});
 			},
 			(newSong, next) => {
-				//TODO Add err object as first param of callback
-				utils.getSongFromSpotify(newSong, (song) => {
-					next(null, song);
+				utils.getSongFromSpotify(newSong, (err, song) => {
+					if (!song) next(null, newSong);
+					else next(err, song);
 				});
 			},
 			(newSong, next) => {

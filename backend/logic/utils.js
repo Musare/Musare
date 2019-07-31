@@ -355,7 +355,8 @@ module.exports = {
 		getPage(null, []);
 	},
 	getSongFromSpotify: async (song, cb) => {
-		if (!config.get("apis.spotify.enabled")) return cb(null);
+		if (!config.get("apis.spotify.enabled")) return cb("Spotify is not enabled", null);
+
 		const spotifyParams = [
 			`q=${encodeURIComponent(song.title)}`,
 			`type=track`
@@ -397,7 +398,7 @@ module.exports = {
 				}
 			}
 
-			cb(song);
+			cb(null, song);
 		});
 	},
 	getSongsFromSpotify: async (title, artist, cb) => {

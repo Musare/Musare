@@ -206,12 +206,6 @@ export default {
 				_this.$parent.privatePlaylistQueueSelected;
 		});
 	},
-	events: {
-		closeModal: function() {
-			this.$parent.modals.addSongToQueue = !this.$parent.modals
-				.addSongToQueue;
-		}
-	},
 	components: { Modal }
 };
 </script>
