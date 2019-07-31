@@ -4,6 +4,7 @@
   "description": "A modern, open-source, collaborative music app https://musare.com",
   "main": "app.js",
   "author": "Musare Team",
+  "license": "GPL-3.0",
   "repository": "https://github.com/Musare/MusareNode",
   "scripts": {
     "docker:dev": "nodemon -L /opt/app",
