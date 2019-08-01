@@ -96,7 +96,7 @@ Now you have different paths here.
 
 _Configuration_
 
-To configure docker simply `cp .env.template .env` and configure the .env file to match your settings in `backend/config/default.json`.  
+To configure docker simply `cp .env.example .env` and configure the .env file to match your settings in `backend/config/default.json`.  
 The configurable ports will be how you access the services on your machine, or what ports you will need to specify in your nginx files when using proxy_pass. 
 `COMPOSE_PROJECT_NAME` should be a unique name for this installation, especially if you have multiple instances of Musare on the same machine.
 `FRONTEND_MODE` should be either `dev` or `prod` (self-explanatory).
@@ -107,37 +107,18 @@ The configurable ports will be how you access the services on your machine, or w
 
 2. Set up the MongoDB database
 
-   1. Disable auth
+   1. Set the password for the admin/root user.
 
-      In `docker-compose.yml` remove `--auth` from the line `command: "--auth"` for mongo.
+      In `.env` set the environment variable of `MONGO_ROOT_PASSWORD`.
 
-   2. Start the database
+   2. Set the password for the musare user (the one the backend will use).
+
+      In `.env` set the environment variable of `MONGO_USER_USERNAME` and `MONGO_USER_PASSWORD`.
+
+   2. Start the database, which will generate the correct MongoDB users.
 
       `docker-compose up mongo`
 
-   3. Connect to Mongo
-
-      `docker-compose exec mongo mongo admin`
-
-   4. Create an admin user
-
-      `db.createUser({user: 'admin', pwd: 'PASSWORD_HERE', roles: [{role: 'root', db: 'admin'}]})`
-
-   5. Connect to the Musare database
-
-      `use musare`
-
-   6. Create the musare user
-
-      `db.createUser({user: 'musare', pwd: 'OTHER_PASSWORD_HERE', roles: [{role: 'readWrite', db: 'musare'}]})`
-
-   7. Exit
-
-      `exit`
-
-   8. Add back authentication
-
-      In `docker-compose.yml` add back `--auth` on the line `command: ""` for mongo.
 
 3) Start the databases and tools in the background, as we usually don't need to monitor these for errors
 

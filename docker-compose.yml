@@ -22,7 +22,16 @@ services:
     image: mongo:4.0
     ports:
     - "${MONGO_PORT}:27017"
-    command: "--auth"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
+      - MONGO_INITDB_DATABASE=musare
+      - MONGO_PORT=${MONGO_PORT}
+      - MONGO_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
+      - MONGO_USER_USERNAME=${MONGO_USER_USERNAME}
+      - MONGO_USER_PASSWORD=${MONGO_USER_PASSWORD}
+    volumes:
+      - ./tools/setup-mongo.sh:/docker-entrypoint-initdb.d/setup-mongo.sh
   mongoclient:
     image: mongoclient/mongoclient
     ports:

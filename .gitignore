@@ -8,6 +8,7 @@ Thumbs.db
 startRedis.cmd
 startMongo.cmd
 .database
+.db
 .redis
 *.rdb
 npm-debug.log
