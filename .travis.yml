@@ -27,7 +27,6 @@ before_install:
 
 jobs:
   include:
-    - stage: general
     - stage: frontend
       script:
         - docker-compose build frontend # build frontend
@@ -37,7 +36,7 @@ jobs:
     - stage: backend
       script:
         - docker-compose up -d mongo # start mongo (users automatically setup)
-        - docker-compose up -d mongoclient redis # start mongoclient and redis
+        - docker-compose up -d redis # start redis
         - docker-compose build backend # build backend
         - docker-compose up -d backend # start backend
         - docker-compose exec backend /bin/bash -c "snyk test --dev" # scan for dependency/dev. dependency vunerabilities
