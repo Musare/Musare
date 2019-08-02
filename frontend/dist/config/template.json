@@ -2,12 +2,12 @@
 	"recaptcha": {
 		"key": ""
 	},
-	"serverDomain": "",
-	"frontendDomain": "",
-	"frontendPort": "",
+	"serverDomain": "http://localhost:8080",
+	"frontendDomain": "http://localhost",
+	"frontendPort": "81",
   	"cookie": {
-		"domain": "",
-		"secure": true
+		"domain": "localhost",
+		"secure": false
 	},
 	"siteSettings": {
 		"logo": "/assets/wordmark.png",

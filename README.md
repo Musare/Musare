@@ -115,14 +115,14 @@ The configurable ports will be how you access the services on your machine, or w
 
       In `.env` set the environment variable of `MONGO_USER_USERNAME` and `MONGO_USER_PASSWORD`.
 
-   2. Start the database, which will generate the correct MongoDB users.
+   2. Start the database (in detached mode), which will generate the correct MongoDB users.
 
-      `docker-compose up mongo`
+      `docker-compose up -d mongo`
 
 
-3) Start the databases and tools in the background, as we usually don't need to monitor these for errors
+3) Start redis and the mongo client in the background, as we usually don't need to monitor these for errors
 
-   `docker-compose up -d mongo mongoclient redis`
+   `docker-compose up -d mongoclient redis`
 
 4) Start the backend and frontend in the foreground, so we can watch for errors during development
 

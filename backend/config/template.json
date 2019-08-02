@@ -1,9 +1,9 @@
 {
 	"mode": "development",
-	"secret": "",
-	"domain": "",
+	"secret": "default",
+	"domain": "http://localhost",
 	"frontendPort": 80,
-	"serverDomain": "",
+	"serverDomain": "http://localhost:8080",
   	"serverPort": 8080,
   	"isDocker": true,
 	"apis": {
@@ -46,10 +46,10 @@
 	    "password": "PASSWORD"
 	},
   	"mongo": {
-	  	"url": "mongodb://musare:PASSWORD@mongo:27017/musare"
+	  	"url": "mongodb://musare:OTHER_PASSWORD_HERE@mongo:27017/musare"
 	},
   	"cookie": {
-	  	"domain": "",
+	  	"domain": "localhost",
 	  	"secure": false
 	}
 }

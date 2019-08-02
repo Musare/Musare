@@ -1,0 +1,35 @@
+# .travis.yml
+
+
+language: minimal
+sudo: required
+services:
+  - docker
+
+env:
+  - REDIS_PASSWORD=PASSWORD
+  - BACKEND_PORT=8080
+  - FRONTEND_PORT=80
+  - MONGO_PORT=27017
+  - MONGO_ROOT_PASSWORD=PASSWORD_HERE
+  - MONGO_USER_USERNAME=musare
+  - MONGO_USER_PASSWORD=OTHER_PASSWORD_HERE
+  - MONGOCLIENT_PORT=3000
+  - REDIS_PORT=6379
+  - COMPOSE_PROJECT_NAME=musare
+  - FRONTEND_MODE=prod
+
+before_install:
+  # create config files from template
+  - cp backend/config/template.json backend/config/default.json
+  - cp frontend/dist/config/template.json frontend/dist/config/default.json
+
+script:
+  - docker-compose build
+  - docker compose up -d mongo # start mongo (users automatically setup)
+  - docker-compose up -d mongoclient redis # start mongoclient and redis
+  - docker-compose up -d frontend # start frontend
+  - docker-compose -p tests run frontend yarn lint # using eslint to check for formatting/linting issues
+  - docker-compose -p tests run frontend snyk test --dev # scan for dependency/dev. dependency vunerabilities
+  - docker-compose up -d backend # start backend
+  - docker-compose -p tests run backend snyk test --dev # scan for dependency/dev. dependency vunerabilities
