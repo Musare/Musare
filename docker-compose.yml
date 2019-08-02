@@ -10,14 +10,18 @@ services:
     links:
     - mongo
     - redis
+    environment:
+    - SNYK_TOKEN=${SNYK_TOKEN}
   frontend:
     build: ./frontend
+    environment:
     ports:
     - "${FRONTEND_PORT}:80"
     volumes:
     - ./frontend:/opt/app
     environment:
     - FRONTEND_MODE=${FRONTEND_MODE}
+    - SNYK_TOKEN=${SNYK_TOKEN}
   mongo:
     image: mongo:4.0
     ports:

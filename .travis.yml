@@ -30,12 +30,14 @@ jobs:
     - stage: general
     - stage: frontend
       script:
-        - docker-compose up --build --detach frontend # build and start frontend
-        - docker-compose -p tests run frontend yarn lint # using eslint to check for formatting/linting issues
-        - docker-compose -p tests run frontend snyk test --dev # scan for dependency/dev. dependency vunerabilities
+        - docker-compose build frontend # build frontend
+        - docker-compose up -d frontend # start frontend
+        - docker-compose exec frontend /bin/bash -c "cd app && yarn lint" # using eslint to check for formatting/linting issues
+        - docker-compose exec frontend /bin/bash -c "snyk test --dev" # scan for dependency/dev. dependency vunerabilities
     - stage: backend
       script:
-        - docker compose up --detach mongo # start mongo (users automatically setup)
-        - docker-compose up --detach mongoclient redis # start mongoclient and redis
-        - docker-compose up --build --detach backend # build and start backend
-        - docker-compose -p tests run backend snyk test --dev # scan for dependency/dev. dependency vunerabilities
+        - docker-compose up -d mongo # start mongo (users automatically setup)
+        - docker-compose up -d mongoclient redis # start mongoclient and redis
+        - docker-compose build backend # build backend
+        - docker-compose up -d backend # start backend
+        - docker-compose exec backend /bin/bash -c "snyk test --dev" # scan for dependency/dev. dependency vunerabilities
