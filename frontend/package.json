@@ -20,8 +20,7 @@
 		"babel-eslint": "^10.0.2",
 		"babel-loader": "^8.0.6",
 		"css-loader": "^3.0.0",
-		"eslint": "5.3.0",
-		"eslint-config-airbnb-base": "13.2.0",
+		"eslint": "^6.1.0",
 		"eslint-config-prettier": "^6.0.0",
 		"eslint-loader": "^2.2.1",
 		"eslint-plugin-import": "^2.17.2",
@@ -42,14 +41,15 @@
 	"dependencies": {
 		"@babel/runtime": "^7.5.4",
 		"chart.js": "^2.5.0",
+		"config": "^3.2.2",
+		"eslint-config-airbnb-base": "13.2.0",
+		"html-webpack-plugin": "^3.2.0",
 		"vue": "^2.6.10",
+		"vue-loader": "^15.7.0",
 		"vue-roaster": "^1.1.1",
 		"vue-router": "^3.0.7",
 		"vuex": "^3.1.1",
-		"html-webpack-plugin": "^3.2.0",
-		"vue-loader": "^15.7.0",
 		"webpack-md5-hash": "0.0.6",
-		"webpack-merge": "^4.2.1",
-		"config": "^3.2.2"
+		"webpack-merge": "^4.2.1"
 	}
 }
