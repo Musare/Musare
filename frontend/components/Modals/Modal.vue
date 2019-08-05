@@ -38,7 +38,7 @@ export default {
 		},
 		...mapActions("modals", ["closeCurrentModal"])
 	},
-	mounted: function() {
+	mounted() {
 		this.type = this.toCamelCase(this.title);
 	}
 };

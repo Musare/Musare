@@ -40,15 +40,15 @@ export default {
 			}
 		};
 	},
-	mounted: function() {
-		let _this = this;
+	mounted() {
+		const _this = this;
 		io.getSocket(socket => {
 			_this.socket = socket;
 		});
 	},
 	methods: {
-		createPlaylist: function() {
-			const displayName = this.playlist.displayName;
+		createPlaylist() {
+			const { displayName } = this.playlist;
 			if (!validation.isLength(displayName, 2, 32))
 				return Toast.methods.addToast(
 					"Display name must have between 2 and 32 characters.",
@@ -60,7 +60,7 @@ export default {
 					8000
 				);
 
-			this.socket.emit("playlists.create", this.playlist, res => {
+			return this.socket.emit("playlists.create", this.playlist, res => {
 				Toast.methods.addToast(res.message, 3000);
 
 				if (res.status === "success") {

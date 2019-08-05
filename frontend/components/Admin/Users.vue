@@ -81,12 +81,12 @@ export default {
 		})
 	},
 	methods: {
-		edit: function(user) {
+		edit(user) {
 			this.editUser(user);
 			this.openModal({ sector: "admin", modal: "editUser" });
 		},
-		init: function() {
-			let _this = this;
+		init() {
+			const _this = this;
 			_this.socket.emit("users.index", result => {
 				if (result.status === "success") _this.users = result.data;
 			});
@@ -98,8 +98,8 @@ export default {
 		...mapActions("admin/users", ["editUser"]),
 		...mapActions("modals", ["openModal"])
 	},
-	mounted: function() {
-		let _this = this;
+	mounted() {
+		const _this = this;
 		io.getSocket(socket => {
 			_this.socket = socket;
 			if (_this.socket.connected) _this.init();

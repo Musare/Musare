@@ -155,8 +155,8 @@ export default {
 	computed: mapState("user/playlists", {
 		editing: state => state.editing
 	}),
-	mounted: function() {
-		let _this = this;
+	mounted() {
+		const _this = this;
 		io.getSocket(socket => {
 			_this.socket = socket;
 			_this.socket.emit("playlists.getPlaylist", _this.editing, res => {
@@ -185,7 +185,7 @@ export default {
 					_this.playlist.songs.forEach((song, index) => {
 						if (song.songId === data.songId) songIndex = index;
 					});
-					let song = _this.playlist.songs.splice(songIndex, 1)[0];
+					const song = _this.playlist.songs.splice(songIndex, 1)[0];
 					_this.playlist.songs.push(song);
 				}
 			});
@@ -195,53 +195,52 @@ export default {
 					_this.playlist.songs.forEach((song, index) => {
 						if (song.songId === data.songId) songIndex = index;
 					});
-					let song = _this.playlist.songs.splice(songIndex, 1)[0];
+					const song = _this.playlist.songs.splice(songIndex, 1)[0];
 					_this.playlist.songs.unshift(song);
 				}
 			});
 		});
 	},
 	methods: {
-		formatTime: function(length) {
-			let duration = moment.duration(length, "seconds");
+		formatTime(length) {
+			const duration = moment.duration(length, "seconds");
 			function getHours() {
 				return Math.floor(duration.asHours());
 			}
 			if (length <= 0) return "0 seconds";
-			else
-				return (
-					(getHours() > 0
-						? getHours() > 1
-							? getHours() < 10
-								? "0" + getHours() + " hours "
-								: getHours() + " hours "
-							: "0" + getHours() + " hour "
-						: "") +
-					(duration.minutes() > 0
-						? duration.minutes() > 1
-							? duration.minutes() < 10
-								? "0" + duration.minutes() + " minutes "
-								: duration.minutes() + " minutes "
-							: "0" + duration.minutes() + " minute "
-						: "") +
-					(duration.seconds() > 0
-						? duration.seconds() > 1
-							? duration.seconds() < 10
-								? "0" + duration.seconds() + " seconds "
-								: duration.seconds() + " seconds "
-							: "0" + duration.seconds() + " second "
-						: "")
-				);
+			return (
+				(getHours() > 0
+					? getHours() > 1
+						? getHours() < 10
+							? `0${getHours()} hours `
+							: `${getHours()} hours `
+						: `0${getHours()} hour `
+					: "") +
+				(duration.minutes() > 0
+					? duration.minutes() > 1
+						? duration.minutes() < 10
+							? `0${duration.minutes()} minutes `
+							: `${duration.minutes()} minutes `
+						: `0${duration.minutes()} minute `
+					: "") +
+				(duration.seconds() > 0
+					? duration.seconds() > 1
+						? duration.seconds() < 10
+							? `0${duration.seconds()} seconds `
+							: `${duration.seconds()} seconds `
+						: `0${duration.seconds()} second `
+					: "")
+			);
 		},
-		totalLength: function() {
+		totalLength() {
 			let length = 0;
 			this.playlist.songs.forEach(song => {
 				length += song.duration;
 			});
 			return this.formatTime(length);
 		},
-		searchForSongs: function() {
-			let _this = this;
+		searchForSongs() {
+			const _this = this;
 			let query = _this.songQuery;
 			if (query.indexOf("&index=") !== -1) {
 				query = query.split("&index=");
@@ -254,9 +253,9 @@ export default {
 				query = query.join("");
 			}
 			_this.socket.emit("apis.searchYoutube", query, res => {
-				if (res.status == "success") {
+				if (res.status === "success") {
 					_this.songQueryResults = [];
-					for (let i = 0; i < res.data.items.length; i++) {
+					for (let i = 0; i < res.data.items.length; i += 1) {
 						_this.songQueryResults.push({
 							id: res.data.items[i].id.videoId,
 							url: `https://www.youtube.com/watch?v=${this.id}`,
@@ -269,8 +268,8 @@ export default {
 					Toast.methods.addToast(res.message, 3000);
 			});
 		},
-		addSongToPlaylist: function(id) {
-			let _this = this;
+		addSongToPlaylist(id) {
+			const _this = this;
 			_this.socket.emit(
 				"playlists.addSongToPlaylist",
 				id,
@@ -280,8 +279,8 @@ export default {
 				}
 			);
 		},
-		importPlaylist: function() {
-			let _this = this;
+		importPlaylist() {
+			const _this = this;
 			Toast.methods.addToast(
 				"Starting to import your playlist. This can take some time to do.",
 				4000
@@ -297,8 +296,8 @@ export default {
 				}
 			);
 		},
-		removeSongFromPlaylist: function(id) {
-			let _this = this;
+		removeSongFromPlaylist(id) {
+			const _this = this;
 			this.socket.emit(
 				"playlists.removeSongFromPlaylist",
 				id,
@@ -308,8 +307,8 @@ export default {
 				}
 			);
 		},
-		renamePlaylist: function() {
-			const displayName = this.playlist.displayName;
+		renamePlaylist() {
+			const { displayName } = this.playlist;
 			if (!validation.isLength(displayName, 2, 32))
 				return Toast.methods.addToast(
 					"Display name must have between 2 and 32 characters.",
@@ -321,7 +320,7 @@ export default {
 					8000
 				);
 
-			this.socket.emit(
+			return this.socket.emit(
 				"playlists.updateDisplayName",
 				this.playlist._id,
 				this.playlist.displayName,
@@ -330,8 +329,8 @@ export default {
 				}
 			);
 		},
-		removePlaylist: function() {
-			let _this = this;
+		removePlaylist() {
+			const _this = this;
 			_this.socket.emit("playlists.remove", _this.playlist._id, res => {
 				Toast.methods.addToast(res.message, 3000);
 				if (res.status === "success") {
@@ -340,8 +339,8 @@ export default {
 				}
 			});
 		},
-		promoteSong: function(songId) {
-			let _this = this;
+		promoteSong(songId) {
+			const _this = this;
 			_this.socket.emit(
 				"playlists.moveSongToTop",
 				_this.playlist._id,
@@ -351,8 +350,8 @@ export default {
 				}
 			);
 		},
-		demoteSong: function(songId) {
-			let _this = this;
+		demoteSong(songId) {
+			const _this = this;
 			_this.socket.emit(
 				"playlists.moveSongToBottom",
 				_this.playlist._id,

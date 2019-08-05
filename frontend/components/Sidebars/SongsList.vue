@@ -136,25 +136,25 @@ import { Toast } from "vue-roaster";
 import UserIdToUsername from "../UserIdToUsername.vue";
 
 export default {
-	data: function() {
+	data() {
 		return {
 			dismissedWarning: false
 		};
 	},
 	methods: {
-		isOwnerOnly: function() {
+		isOwnerOnly() {
 			return (
 				this.$parent.$parent.loggedIn &&
 				this.$parent.$parent.userId === this.$parent.station.owner
 			);
 		},
-		isAdminOnly: function() {
+		isAdminOnly() {
 			return (
 				this.$parent.$parent.loggedIn &&
 				this.$parent.$parent.role === "admin"
 			);
 		},
-		removeFromQueue: function(songId) {
+		removeFromQueue(songId) {
 			window.socket.emit(
 				"stations.removeFromQueue",
 				this.$parent.station._id,
@@ -171,12 +171,12 @@ export default {
 		},
 		...mapActions("modals", ["openModal"])
 	},
-	mounted: function() {
-		/*let _this = this;
+	mounted() {
+		/* let _this = this;
 			io.getSocket((socket) => {
 				_this.socket = socket;
 
-			});*/
+			}); */
 	},
 	components: { UserIdToUsername }
 };

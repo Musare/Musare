@@ -52,8 +52,8 @@ export default {
 			song: null
 		};
 	},
-	mounted: function() {
-		let _this = this;
+	mounted() {
+		const _this = this;
 		this.songId = this.$parent.currentSong.songId;
 		this.song = this.$parent.currentSong;
 		io.getSocket(socket => {
@@ -69,8 +69,8 @@ export default {
 		});
 	},
 	methods: {
-		addSongToPlaylist: function(playlistId) {
-			let _this = this;
+		addSongToPlaylist(playlistId) {
+			const _this = this;
 			this.socket.emit(
 				"playlists.addSongToPlaylist",
 				this.$parent.currentSong.songId,
@@ -81,12 +81,12 @@ export default {
 						_this.playlists[playlistId].songs.push(_this.song);
 					}
 					_this.recalculatePlaylists();
-					//this.$parent.modals.addSongToPlaylist = false;
+					// this.$parent.modals.addSongToPlaylist = false;
 				}
 			);
 		},
-		removeSongFromPlaylist: function(playlistId) {
-			let _this = this;
+		removeSongFromPlaylist(playlistId) {
+			const _this = this;
 			this.socket.emit(
 				"playlists.removeSongFromPlaylist",
 				_this.songId,
@@ -105,21 +105,22 @@ export default {
 						);
 					}
 					_this.recalculatePlaylists();
-					//this.$parent.modals.addSongToPlaylist = false;
+					// this.$parent.modals.addSongToPlaylist = false;
 				}
 			);
 		},
-		recalculatePlaylists: function() {
-			let _this = this;
+		recalculatePlaylists() {
+			const _this = this;
 			_this.playlistsArr = Object.values(_this.playlists).map(
 				playlist => {
 					let hasSong = false;
-					for (let i = 0; i < playlist.songs.length; i++) {
+					for (let i = 0; i < playlist.songs.length; i += 1) {
 						if (playlist.songs[i].songId === _this.songId) {
 							hasSong = true;
 						}
 					}
-					playlist.hasSong = hasSong;
+
+					playlist.hasSong = hasSong; // eslint-disable-line no-param-reassign
 					_this.playlists[playlist._id] = playlist;
 					return playlist;
 				}

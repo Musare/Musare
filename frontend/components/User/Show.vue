@@ -78,15 +78,15 @@ export default {
 			isUser: false
 		};
 	},
-	mounted: function() {
-		let _this = this;
+	mounted() {
+		const _this = this;
 		io.getSocket(socket => {
 			_this.socket = socket;
 			_this.socket.emit(
 				"users.findByUsername",
 				_this.$route.params.username,
 				res => {
-					if (res.status == "error") this.$router.go("/404");
+					if (res.status === "error") this.$router.go("/404");
 					else {
 						_this.user = res.data;
 						this.user.createdAt = moment(
@@ -103,9 +103,9 @@ export default {
 			this.socket.emit(
 				"users.updateRole",
 				this.user._id,
-				newRank == "admin" ? "admin" : "default",
+				newRank === "admin" ? "admin" : "default",
 				res => {
-					if (res.status == "error")
+					if (res.status === "error")
 						Toast.methods.addToast(res.message, 2000);
 					else this.user.role = newRank;
 					Toast.methods.addToast(

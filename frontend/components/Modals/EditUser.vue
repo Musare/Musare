@@ -112,8 +112,8 @@ export default {
 		})
 	},
 	methods: {
-		updateUsername: function() {
-			const username = this.editing.username;
+		updateUsername() {
+			const { username } = this.editing;
 			if (!validation.isLength(username, 2, 32))
 				return Toast.methods.addToast(
 					"Username must have between 2 and 32 characters.",
@@ -125,7 +125,7 @@ export default {
 					8000
 				);
 
-			this.socket.emit(
+			return this.socket.emit(
 				`users.updateUsername`,
 				this.editing._id,
 				username,
@@ -134,8 +134,8 @@ export default {
 				}
 			);
 		},
-		updateEmail: function() {
-			const email = this.editing.email;
+		updateEmail() {
+			const { email } = this.editing;
 			if (!validation.isLength(email, 3, 254))
 				return Toast.methods.addToast(
 					"Email must have between 3 and 254 characters.",
@@ -147,7 +147,7 @@ export default {
 			)
 				return Toast.methods.addToast("Invalid email format.", 8000);
 
-			this.socket.emit(
+			return this.socket.emit(
 				`users.updateEmail`,
 				this.editing._id,
 				email,
@@ -156,7 +156,7 @@ export default {
 				}
 			);
 		},
-		updateRole: function() {
+		updateRole() {
 			this.socket.emit(
 				`users.updateRole`,
 				this.editing._id,
@@ -168,12 +168,12 @@ export default {
 						this.editing.role === "default" &&
 						this.editing._id === this.$parent.$parent.$parent.userId
 					)
-						location.reload();
+						window.location.reload();
 				}
 			);
 		},
-		banUser: function() {
-			const reason = this.ban.reason;
+		banUser() {
+			const { reason } = this.ban;
 			if (!validation.isLength(reason, 1, 64))
 				return Toast.methods.addToast(
 					"Reason must have between 1 and 64 characters.",
@@ -185,7 +185,7 @@ export default {
 					8000
 				);
 
-			this.socket.emit(
+			return this.socket.emit(
 				`users.banUserById`,
 				this.editing._id,
 				this.ban.reason,
@@ -195,16 +195,19 @@ export default {
 				}
 			);
 		},
-		removeSessions: function() {
+		removeSessions() {
 			this.socket.emit(`users.removeSessions`, this.editing._id, res => {
 				Toast.methods.addToast(res.message, 4000);
 			});
 		},
 		...mapActions("modals", ["closeModal"])
 	},
-	mounted: function() {
-		let _this = this;
-		io.getSocket(socket => (_this.socket = socket));
+	mounted() {
+		const _this = this;
+		io.getSocket(socket => {
+			_this.socket = socket;
+			return socket;
+		});
 	}
 };
 </script>

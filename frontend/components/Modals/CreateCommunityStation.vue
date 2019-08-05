@@ -57,17 +57,16 @@ export default {
 			}
 		};
 	},
-	mounted: function() {
-		let _this = this;
+	mounted() {
+		const _this = this;
 		io.getSocket(socket => {
 			_this.socket = socket;
 		});
 	},
 	methods: {
-		submitModal: function() {
-			const name = this.newCommunity.name;
-			const displayName = this.newCommunity.displayName;
-			const description = this.newCommunity.description;
+		submitModal() {
+			const { name, displayName, description } = this.newCommunity;
+
 			if (!name || !displayName || !description)
 				return Toast.methods.addToast(
 					"Please fill in all fields",
@@ -79,6 +78,7 @@ export default {
 					"Name must have between 2 and 16 characters.",
 					8000
 				);
+
 			if (!validation.regex.az09_.test(name))
 				return Toast.methods.addToast(
 					"Invalid name format. Allowed characters: a-z, 0-9 and _.",
@@ -101,25 +101,28 @@ export default {
 					"Description must have between 2 and 200 characters.",
 					8000
 				);
+
 			let characters = description.split("");
-			characters = characters.filter(function(character) {
+
+			characters = characters.filter(character => {
 				return character.charCodeAt(0) === 21328;
 			});
+
 			if (characters.length !== 0)
 				return Toast.methods.addToast(
 					"Invalid description format. Swastika's are not allowed.",
 					8000
 				);
 
-			let _this = this;
+			const _this = this;
 
-			this.socket.emit(
+			return this.socket.emit(
 				"stations.create",
 				{
-					name: name,
+					name,
 					type: "community",
-					displayName: displayName,
-					description: description
+					displayName,
+					description
 				},
 				res => {
 					if (res.status === "success") {

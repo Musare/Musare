@@ -15,7 +15,7 @@ import { mapState, mapActions } from "vuex";
 
 export default {
 	props: ["userId", "link"],
-	data: function() {
+	data() {
 		return {
 			username: ""
 		};
@@ -28,7 +28,7 @@ export default {
 	methods: {
 		...mapActions("user/auth", ["getUsernameFromId"])
 	},
-	mounted: function() {
+	mounted() {
 		this.getUsernameFromId(this.$props.userId).then(res => {
 			this.username = res;
 		});

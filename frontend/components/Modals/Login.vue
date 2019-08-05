@@ -83,28 +83,28 @@ import { mapActions } from "vuex";
 import { Toast } from "vue-roaster";
 
 export default {
-	data: function() {
+	data() {
 		return {
 			email: "",
 			password: ""
 		};
 	},
 	methods: {
-		submitModal: function() {
+		submitModal() {
 			this.login({
 				email: this.email,
 				password: this.password
 			})
 				.then(res => {
-					if (res.status == "success") location.reload();
+					if (res.status === "success") window.location.reload();
 				})
 				.catch(err => Toast.methods.addToast(err.message, 5000));
 		},
-		resetPassword: function() {
+		resetPassword() {
 			this.closeModal({ sector: "header", modal: "login" });
 			this.$router.go("/reset_password");
 		},
-		githubRedirect: function() {
+		githubRedirect() {
 			localStorage.setItem("github_redirect", this.$route.path);
 		},
 		...mapActions("modals", ["closeModal"]),

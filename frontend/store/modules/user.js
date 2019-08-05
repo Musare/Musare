@@ -1,3 +1,5 @@
+/* eslint no-param-reassign: 0 */
+
 import auth from "../../api/auth";
 import io from "../../io";
 import validation from "../../validation";
@@ -72,7 +74,8 @@ const modules = {
 								"Invalid password format. Must have one lowercase letter, one uppercase letter, one number and one special character."
 						});
 
-					auth.register(user)
+					return auth
+						.register(user)
 						.then(() => {
 							return resolve({
 								status: "success",
@@ -131,7 +134,8 @@ const modules = {
 											);
 
 											return resolve(res.data);
-										} else return resolve();
+										}
+										return resolve();
 									}
 								);
 							});

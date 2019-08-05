@@ -22,15 +22,15 @@ export default {
 			isModalActive: false
 		};
 	},
-	mounted: function() {
+	mounted() {
 		if (!localStorage.getItem("mobileOptimization")) {
 			this.toggleModal();
 			localStorage.setItem("mobileOptimization", true);
 		}
 	},
 	methods: {
-		toggleModal: function() {
-			let _this = this;
+		toggleModal() {
+			const _this = this;
 			_this.isModalActive = !_this.isModalActive;
 			if (_this.isModalActive) {
 				setTimeout(() => {
@@ -40,7 +40,7 @@ export default {
 		}
 	},
 	events: {
-		closeModal: function() {
+		closeModal() {
 			this.isModalActive = false;
 		}
 	}

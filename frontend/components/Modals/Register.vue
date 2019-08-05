@@ -98,12 +98,12 @@ export default {
 			}
 		};
 	},
-	mounted: function() {
-		let _this = this;
+	mounted() {
+		const _this = this;
 		lofig.get("recaptcha", obj => {
 			_this.recaptcha.key = obj.key;
 
-			let recaptchaScript = document.createElement("script");
+			const recaptchaScript = document.createElement("script");
 			recaptchaScript.onload = () => {
 				grecaptcha.ready(() => {
 					grecaptcha
@@ -122,7 +122,7 @@ export default {
 		});
 	},
 	methods: {
-		submitModal: function() {
+		submitModal() {
 			console.log(this.recaptcha.token);
 
 			this.register({
@@ -132,11 +132,11 @@ export default {
 				recaptchaToken: this.recaptcha.token
 			})
 				.then(res => {
-					if (res.status == "success") location.reload();
+					if (res.status === "success") window.location.reload();
 				})
 				.catch(err => Toast.methods.addToast(err.message, 5000));
 		},
-		githubRedirect: function() {
+		githubRedirect() {
 			localStorage.setItem("github_redirect", this.$route.path);
 		},
 		...mapActions("modals", ["closeModal"]),

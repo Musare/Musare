@@ -17,13 +17,13 @@ export default {
 					res => {
 						if (res.status === "success") {
 							if (res.SID) {
-								lofig.get("cookie", cookie => {
-									let date = new Date();
+								return lofig.get("cookie", cookie => {
+									const date = new Date();
 									date.setTime(
 										new Date().getTime() +
 											2 * 365 * 24 * 60 * 60 * 1000
 									);
-									let secure = cookie.secure
+									const secure = cookie.secure
 										? "secure=true; "
 										: "";
 									document.cookie = `SID=${
@@ -31,18 +31,19 @@ export default {
 									}; expires=${date.toGMTString()}; domain=${
 										cookie.domain
 									}; ${secure}path=/`;
+
 									return resolve({ status: "success" });
 								});
-							} else
-								return reject({
-									status: "error",
-									message: "You must login"
-								});
-						} else
+							}
 							return reject({
 								status: "error",
-								message: res.message
+								message: "You must login"
 							});
+						}
+						return reject({
+							status: "error",
+							message: res.message
+						});
 					}
 				);
 			});
@@ -55,13 +56,13 @@ export default {
 			io.getSocket(socket => {
 				socket.emit("users.login", email, password, res => {
 					if (res.status === "success") {
-						lofig.get("cookie", cookie => {
-							let date = new Date();
+						return lofig.get("cookie", cookie => {
+							const date = new Date();
 							date.setTime(
 								new Date().getTime() +
 									2 * 365 * 24 * 60 * 60 * 1000
 							);
-							let secure = cookie.secure ? "secure=true; " : "";
+							const secure = cookie.secure ? "secure=true; " : "";
 							let domain = "";
 							if (cookie.domain !== "localhost")
 								domain = ` domain=${cookie.domain};`;
@@ -70,11 +71,11 @@ export default {
 							}; expires=${date.toGMTString()}; ${domain}${secure}path=/`;
 							return resolve({ status: "success" });
 						});
-					} else
-						return reject({
-							status: "error",
-							message: res.message
-						});
+					}
+					return reject({
+						status: "error",
+						message: res.message
+					});
 				});
 			});
 		});

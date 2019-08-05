@@ -85,27 +85,31 @@ export default {
 			step: 1
 		};
 	},
-	mounted: function() {
-		let _this = this;
+	mounted() {
+		const _this = this;
 		io.getSocket(socket => {
 			_this.socket = socket;
 		});
 	},
 	methods: {
-		submitEmail: function() {
+		submitEmail() {
 			if (!this.email)
 				return Toast.methods.addToast("Email cannot be empty", 8000);
-			this.socket.emit("users.requestPasswordReset", this.email, res => {
-				Toast.methods.addToast(res.message, 8000);
-				if (res.status === "success") {
-					this.step = 2;
+			return this.socket.emit(
+				"users.requestPasswordReset",
+				this.email,
+				res => {
+					Toast.methods.addToast(res.message, 8000);
+					if (res.status === "success") {
+						this.step = 2;
+					}
 				}
-			});
+			);
 		},
-		verifyCode: function() {
+		verifyCode() {
 			if (!this.code)
 				return Toast.methods.addToast("Code cannot be empty", 8000);
-			this.socket.emit(
+			return this.socket.emit(
 				"users.verifyPasswordResetCode",
 				this.code,
 				res => {
@@ -116,10 +120,10 @@ export default {
 				}
 			);
 		},
-		changePassword: function() {
+		changePassword() {
 			if (!this.newPassword)
 				return Toast.methods.addToast("Password cannot be empty", 8000);
-			this.socket.emit(
+			return this.socket.emit(
 				"users.changePasswordWithResetCode",
 				this.code,
 				this.newPassword,

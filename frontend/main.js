@@ -9,7 +9,7 @@ import io from "./io";
 
 Vue.use(VueRouter);
 
-let router = new VueRouter({
+const router = new VueRouter({
 	mode: "history",
 	routes: [
 		{
@@ -93,7 +93,7 @@ let router = new VueRouter({
 });
 
 lofig.folder = "../config/default.json";
-lofig.get("serverDomain", function(res) {
+lofig.get("serverDomain", res => {
 	io.init(res);
 	io.getSocket(socket => {
 		socket.on("ready", (status, role, username, userId) => {
@@ -154,6 +154,7 @@ router.afterEach(to => {
 	ga("send", "pageview");
 });
 
+// eslint-disable-next-line no-new
 new Vue({
 	router,
 	store,

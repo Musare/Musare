@@ -180,8 +180,8 @@ import Modal from "./Modal.vue";
 export default {
 	components: { Modal },
 	methods: {
-		addChange: function(type) {
-			let change = document.getElementById(`edit-${type}`).value.trim();
+		addChange(type) {
+			const change = document.getElementById(`edit-${type}`).value.trim();
 
 			if (this.$parent.editing[type].indexOf(change) !== -1)
 				return Toast.methods.addToast(`Tag already exists`, 3000);
@@ -190,8 +190,9 @@ export default {
 			else Toast.methods.addToast(`${type} cannot be empty`, 3000);
 
 			document.getElementById(`edit-${type}`).value = "";
+			return true;
 		},
-		removeChange: function(type, index) {
+		removeChange(type, index) {
 			this.$parent.editing[type].splice(index, 1);
 		},
 		...mapActions("modals", ["closeModal"])

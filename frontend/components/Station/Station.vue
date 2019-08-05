@@ -485,16 +485,16 @@ export default {
 		})
 	},
 	methods: {
-		isOwnerOnly: function() {
+		isOwnerOnly() {
 			return (
 				this.$parent.loggedIn &&
 				this.$parent.userId === this.station.owner
 			);
 		},
-		isAdminOnly: function() {
+		isAdminOnly() {
 			return this.$parent.loggedIn && this.$parent.role === "admin";
 		},
-		removeFromQueue: function(songId) {
+		removeFromQueue(songId) {
 			window.socket.emit(
 				"stations.removeFromQueue",
 				this.station._id,
@@ -509,14 +509,14 @@ export default {
 				}
 			);
 		},
-		toggleSidebar: function(type) {
+		toggleSidebar(type) {
 			Object.keys(this.sidebars).forEach(sidebar => {
 				if (sidebar !== type) this.sidebars[sidebar] = false;
 				else this.sidebars[type] = !this.sidebars[type];
 			});
 		},
-		youtubeReady: function() {
-			let local = this;
+		youtubeReady() {
+			const local = this;
 			if (!local.player) {
 				local.player = new window.YT.Player("player", {
 					height: 270,
@@ -532,7 +532,7 @@ export default {
 						showinfo: 0
 					},
 					events: {
-						onReady: function() {
+						onReady() {
 							local.playerReady = true;
 							let volume = parseInt(
 								localStorage.getItem("volume")
@@ -550,11 +550,11 @@ export default {
 
 							local.playVideo();
 						},
-						onError: function(err) {
+						onError(err) {
 							console.log("iframe error", err);
 							local.voteSkipStation();
 						},
-						onStateChange: function(event) {
+						onStateChange(event) {
 							if (
 								event.data === 1 &&
 								local.videoLoading === true
@@ -592,17 +592,18 @@ export default {
 				});
 			}
 		},
-		getTimeElapsed: function() {
-			let local = this;
+		getTimeElapsed() {
+			const local = this;
 			if (local.currentSong) {
-				let timePaused = local.timePaused;
+				let { timePaused } = local;
 				if (local.paused)
 					timePaused += Date.currently() - local.pausedAt;
 				return Date.currently() - local.startedAt - timePaused;
-			} else return 0;
+			}
+			return 0;
 		},
-		playVideo: function() {
-			let local = this;
+		playVideo() {
+			const local = this;
 			if (local.playerReady) {
 				local.videoLoading = true;
 				local.player.loadVideoById(
@@ -619,33 +620,34 @@ export default {
 				}, 150);
 			}
 		},
-		resizeSeekerbar: function() {
-			let local = this;
+		resizeSeekerbar() {
+			const local = this;
 			if (!local.paused) {
-				document.getElementsByClassName("seeker-bar")[0].style.width =
-					parseFloat(
-						(local.getTimeElapsed() /
-							1000 /
-							local.currentSong.duration) *
-							100
-					) + "%";
+				document.getElementsByClassName(
+					"seeker-bar"
+				)[0].style.width = `${parseFloat(
+					(local.getTimeElapsed() /
+						1000 /
+						local.currentSong.duration) *
+						100
+				)}%`;
 			}
 		},
-		formatTime: function(duration) {
-			let d = moment.duration(duration, "seconds");
+		formatTime(duration) {
+			const d = moment.duration(duration, "seconds");
 			if (duration < 0) return "0:00";
-			return (
-				(d.hours() > 0
+			return `${
+				d.hours() > 0
 					? d.hours() < 10
-						? "0" + d.hours() + ":"
-						: d.hours() + ":"
-					: "") +
-				(d.minutes() + ":") +
-				(d.seconds() < 10 ? "0" + d.seconds() : d.seconds())
-			);
+						? `0${d.hours()}:`
+						: `${d.hours()}:`
+					: ""
+			}${d.minutes()}:${
+				d.seconds() < 10 ? `0${d.seconds()}` : d.seconds()
+			}`;
 		},
-		calculateTimeElapsed: function() {
-			let local = this;
+		calculateTimeElapsed() {
+			const local = this;
 
 			if (
 				local.playerReady &&
@@ -669,57 +671,57 @@ export default {
 					}
 				} else {
 					local.player.playVideo();
-					local.attemptsToPlayVideo++;
+					local.attemptsToPlayVideo += 1;
 				}
 			}
 
 			if (!local.paused) {
-				let timeElapsed = local.getTimeElapsed();
-				let currentPlayerTime = local.player.getCurrentTime() * 1000;
+				const timeElapsed = local.getTimeElapsed();
+				const currentPlayerTime = local.player.getCurrentTime() * 1000;
 
-				let difference = timeElapsed - currentPlayerTime;
-				//console.log(difference123);
+				const difference = timeElapsed - currentPlayerTime;
+				// console.log(difference123);
 				if (difference < -200) {
-					//console.log("Difference0.8");
+					// console.log("Difference0.8");
 					local.player.setPlaybackRate(0.8);
 				} else if (difference < -50) {
-					//console.log("Difference0.9");
+					// console.log("Difference0.9");
 					local.player.setPlaybackRate(0.9);
 				} else if (difference < -25) {
-					//console.log("Difference0.99");
+					// console.log("Difference0.99");
 					local.player.setPlaybackRate(0.99);
 				} else if (difference > 200) {
-					//console.log("Difference1.2");
+					// console.log("Difference1.2");
 					local.player.setPlaybackRate(1.2);
 				} else if (difference > 50) {
-					//console.log("Difference1.1");
+					// console.log("Difference1.1");
 					local.player.setPlaybackRate(1.1);
 				} else if (difference > 25) {
-					//console.log("Difference1.01");
+					// console.log("Difference1.01");
 					local.player.setPlaybackRate(1.01);
 				} else if (local.player.getPlaybackRate !== 1.0) {
-					//console.log("NDifference1.0");
+					// console.log("NDifference1.0");
 					local.player.setPlaybackRate(1.0);
 				}
 			}
 
-			/*if (local.currentTime !== undefined && local.paused) {
+			/* if (local.currentTime !== undefined && local.paused) {
 				local.timePaused += Date.currently() - local.currentTime;
 				local.currentTime = undefined;
-			}*/
+			} */
 
-			let timePaused = local.timePaused;
+			let { timePaused } = local;
 			if (local.paused) timePaused += Date.currently() - local.pausedAt;
 
-			let duration =
+			const duration =
 				(Date.currently() - local.startedAt - timePaused) / 1000;
 
-			let songDuration = local.currentSong.duration;
+			const songDuration = local.currentSong.duration;
 			if (songDuration <= duration) local.player.pauseVideo();
 			if (!local.paused && duration <= songDuration)
 				local.timeElapsed = local.formatTime(duration);
 		},
-		toggleLock: function() {
+		toggleLock() {
 			window.socket.emit("stations.toggleLock", this.station._id, res => {
 				if (res.status === "success") {
 					Toast.methods.addToast(
@@ -729,9 +731,9 @@ export default {
 				} else Toast.methods.addToast(res.message, 8000);
 			});
 		},
-		changeVolume: function() {
-			let local = this;
-			let volume = document.getElementById("volumeSlider").value;
+		changeVolume() {
+			const local = this;
+			const volume = document.getElementById("volumeSlider").value;
 			localStorage.setItem("volume", volume / 100);
 			if (local.playerReady) {
 				local.player.setVolume(volume / 100);
@@ -742,7 +744,7 @@ export default {
 				}
 			}
 		},
-		resumeLocalStation: function() {
+		resumeLocalStation() {
 			this.paused = false;
 			if (!this.noSong) {
 				if (this.playerReady) {
@@ -754,15 +756,15 @@ export default {
 				}
 			}
 		},
-		pauseLocalStation: function() {
+		pauseLocalStation() {
 			this.paused = true;
 			if (!this.noSong) {
 				this.timeBeforePause = this.getTimeElapsed();
 				if (this.playerReady) this.player.pauseVideo();
 			}
 		},
-		skipStation: function() {
-			let _this = this;
+		skipStation() {
+			const _this = this;
 			_this.socket.emit("stations.forceSkip", _this.station._id, data => {
 				if (data.status !== "success")
 					Toast.methods.addToast(`Error: ${data.message}`, 8000);
@@ -773,8 +775,8 @@ export default {
 					);
 			});
 		},
-		voteSkipStation: function() {
-			let _this = this;
+		voteSkipStation() {
+			const _this = this;
 			_this.socket.emit("stations.voteSkip", _this.station._id, data => {
 				if (data.status !== "success")
 					Toast.methods.addToast(`Error: ${data.message}`, 8000);
@@ -785,8 +787,8 @@ export default {
 					);
 			});
 		},
-		resumeStation: function() {
-			let _this = this;
+		resumeStation() {
+			const _this = this;
 			_this.socket.emit("stations.resume", _this.station._id, data => {
 				if (data.status !== "success")
 					Toast.methods.addToast(`Error: ${data.message}`, 8000);
@@ -797,8 +799,8 @@ export default {
 					);
 			});
 		},
-		pauseStation: function() {
-			let _this = this;
+		pauseStation() {
+			const _this = this;
 			_this.socket.emit("stations.pause", _this.station._id, data => {
 				if (data.status !== "success")
 					Toast.methods.addToast(`Error: ${data.message}`, 8000);
@@ -809,10 +811,12 @@ export default {
 					);
 			});
 		},
-		toggleMute: function() {
+		toggleMute() {
 			if (this.playerReady) {
-				let previousVolume = parseFloat(localStorage.getItem("volume"));
-				let volume =
+				const previousVolume = parseFloat(
+					localStorage.getItem("volume")
+				);
+				const volume =
 					this.player.getVolume() * 100 <= 0 ? previousVolume : 0;
 				this.muted = !this.muted;
 				localStorage.setItem("muted", this.muted);
@@ -821,9 +825,9 @@ export default {
 				if (!this.muted) localStorage.setItem("volume", volume);
 			}
 		},
-		increaseVolume: function() {
+		increaseVolume() {
 			if (this.playerReady) {
-				let previousVolume = parseInt(localStorage.getItem("volume"));
+				const previousVolume = parseInt(localStorage.getItem("volume"));
 				let volume = previousVolume + 5;
 				if (previousVolume === 0) {
 					this.muted = false;
@@ -835,8 +839,8 @@ export default {
 				localStorage.setItem("volume", volume);
 			}
 		},
-		toggleLike: function() {
-			let _this = this;
+		toggleLike() {
+			const _this = this;
 			if (_this.liked)
 				_this.socket.emit(
 					"songs.unlike",
@@ -862,8 +866,8 @@ export default {
 					}
 				);
 		},
-		toggleDislike: function() {
-			let _this = this;
+		toggleDislike() {
+			const _this = this;
 			if (_this.disliked)
 				return _this.socket.emit(
 					"songs.undislike",
@@ -876,7 +880,8 @@ export default {
 							);
 					}
 				);
-			_this.socket.emit(
+
+			return _this.socket.emit(
 				"songs.dislike",
 				_this.currentSong.songId,
 				data => {
@@ -885,10 +890,10 @@ export default {
 				}
 			);
 		},
-		addFirstPrivatePlaylistSongToQueue: function() {
-			let _this = this;
+		addFirstPrivatePlaylistSongToQueue() {
+			const _this = this;
 			let isInQueue = false;
-			let userId = _this.$parent.userId;
+			const { userId } = _this.$parent;
 			if (_this.type === "community") {
 				_this.songsList.forEach(queueSong => {
 					if (queueSong.requestedBy === userId) isInQueue = true;
@@ -946,8 +951,8 @@ export default {
 				}
 			}
 		},
-		join: function() {
-			let _this = this;
+		join() {
+			const _this = this;
 			_this.socket.emit("stations.join", _this.stationName, res => {
 				if (res.status === "success") {
 					_this.loading = false;
@@ -1015,17 +1020,17 @@ export default {
 						_this.noSong = true;
 					}
 					// UNIX client time before ping
-					let beforePing = Date.now();
-					_this.socket.emit("apis.ping", res => {
+					const beforePing = Date.now();
+					_this.socket.emit("apis.ping", pong => {
 						// UNIX client time after ping
-						let afterPing = Date.now();
+						const afterPing = Date.now();
 						// Average time in MS it took between the server responding and the client receiving
-						let connectionLatency = (afterPing - beforePing) / 2;
+						const connectionLatency = (afterPing - beforePing) / 2;
 						console.log(connectionLatency, beforePing - afterPing);
 						// UNIX server time
-						let serverDate = res.date;
+						const serverDate = pong.date;
 						// Difference between the server UNIX time and the client UNIX time after ping, with the connectionLatency added to the server UNIX time
-						let difference =
+						const difference =
 							serverDate + connectionLatency - afterPing;
 						console.log("Difference: ", difference);
 						if (difference > 3000 || difference < -3000) {
@@ -1041,8 +1046,8 @@ export default {
 		...mapActions("modals", ["openModal"]),
 		...mapActions("station", ["joinStation"])
 	},
-	mounted: function() {
-		let _this = this;
+	mounted() {
+		const _this = this;
 
 		Date.currently = () => {
 			return new Date().getTime() + _this.systemDifference;
@@ -1089,10 +1094,10 @@ export default {
 					_this.socket.emit(
 						"songs.getOwnSongRatings",
 						data.currentSong.songId,
-						data => {
-							if (_this.currentSong.songId === data.songId) {
-								_this.liked = data.liked;
-								_this.disliked = data.disliked;
+						song => {
+							if (_this.currentSong.songId === song.songId) {
+								_this.liked = song.liked;
+								_this.disliked = song.disliked;
 							}
 						}
 					);
@@ -1102,7 +1107,7 @@ export default {
 				}
 
 				let isInQueue = false;
-				let userId = _this.$parent.userId;
+				const { userId } = _this.$parent;
 				_this.songsList.forEach(queueSong => {
 					if (queueSong.requestedBy === userId) isInQueue = true;
 				});
@@ -1127,10 +1132,10 @@ export default {
 				_this.resumeLocalStation();
 			});
 
-			_this.socket.on(
-				"event:stations.remove",
-				() => (location.href = "/")
-			);
+			_this.socket.on("event:stations.remove", () => {
+				window.location.href = "/";
+				return true;
+			});
 
 			_this.socket.on("event:song.like", data => {
 				if (!this.noSong) {
@@ -1182,7 +1187,7 @@ export default {
 			});
 
 			_this.socket.on("event:song.voteSkipSong", () => {
-				if (this.currentSong) this.currentSong.skipVotes++;
+				if (this.currentSong) this.currentSong.skipVotes += 1;
 			});
 
 			_this.socket.on("event:privatePlaylist.selected", playlistId => {
@@ -1222,7 +1227,10 @@ export default {
 			document.getElementById("volumeSlider").value = 0 * 100;
 		} else {
 			let volume = parseFloat(localStorage.getItem("volume"));
-			volume = typeof volume === "number" && !isNaN(volume) ? volume : 20;
+			volume =
+				typeof volume === "number" && !Number.isNaN(volume)
+					? volume
+					: 20;
 			localStorage.setItem("volume", volume);
 			document.getElementById("volumeSlider").value = volume * 100;
 		}

@@ -121,7 +121,7 @@ export default {
 		};
 	},
 	computed: {
-		filteredSongs: function() {
+		filteredSongs() {
 			return this.songs;
 			// return this.songs.filter(song => song.indexOf(song.searchQuery) !== -1);
 		},
@@ -136,36 +136,38 @@ export default {
 	//   }
 	// },
 	methods: {
-		getSet: function(position) {
-			let _this = this;
+		getSet(position) {
+			const _this = this;
 			this.socket.emit("queueSongs.getSet", position, data => {
 				_this.songs = data;
 				this.position = position;
 			});
 		},
-		edit: function(song, index) {
-			let newSong = {};
-			for (let n in song) newSong[n] = song[n];
+		edit(song, index) {
+			const newSong = {};
+			Object.keys(song).forEach(n => {
+				newSong[n] = song[n];
+			});
 
 			this.editSong({ index, song: newSong, type: "queueSongs" });
 			this.openModal({ sector: "admin", modal: "editSong" });
 		},
-		add: function(song) {
+		add(song) {
 			this.socket.emit("songs.add", song, res => {
-				if (res.status == "success")
+				if (res.status === "success")
 					Toast.methods.addToast(res.message, 2000);
 				else Toast.methods.addToast(res.message, 4000);
 			});
 		},
-		remove: function(id) {
+		remove(id) {
 			this.socket.emit("queueSongs.remove", id, res => {
-				if (res.status == "success")
+				if (res.status === "success")
 					Toast.methods.addToast(res.message, 2000);
 				else Toast.methods.addToast(res.message, 4000);
 			});
 		},
-		init: function() {
-			let _this = this;
+		init() {
+			const _this = this;
 			_this.socket.emit("queueSongs.index", data => {
 				_this.songs = data.songs;
 				_this.maxPosition = Math.round(data.maxLength / 50);
@@ -175,8 +177,8 @@ export default {
 		...mapActions("admin/songs", ["stopVideo", "editSong"]),
 		...mapActions("modals", ["openModal"])
 	},
-	mounted: function() {
-		let _this = this;
+	mounted() {
+		const _this = this;
 		io.getSocket(socket => {
 			_this.socket = socket;
 			if (_this.socket.connected) {
@@ -192,8 +194,8 @@ export default {
 				_this.socket.on(
 					"event:admin.queueSong.updated",
 					updatedSong => {
-						for (let i = 0; i < _this.songs.length; i++) {
-							let song = _this.songs[i];
+						for (let i = 0; i < _this.songs.length; i += 1) {
+							const song = _this.songs[i];
 							if (song._id === updatedSong._id) {
 								_this.songs.$set(i, updatedSong);
 							}

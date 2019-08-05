@@ -216,43 +216,43 @@ export default {
 			]
 		};
 	},
-	mounted: function() {
-		let _this = this;
+	mounted() {
+		const _this = this;
 		io.getSocket(socket => {
 			_this.socket = socket;
 		});
 	},
 	methods: {
-		create: function() {
-			let _this = this;
+		create() {
+			const _this = this;
 			console.log(this.report);
 			_this.socket.emit("reports.create", _this.report, res => {
 				Toast.methods.addToast(res.message, 4000);
-				if (res.status == "success")
+				if (res.status === "success")
 					_this.closeModal({
 						sector: "station",
 						modal: "report"
 					});
 			});
 		},
-		updateCharactersRemaining: function() {
+		updateCharactersRemaining() {
 			this.charactersRemaining =
 				400 - document.getElementsByClassName("textarea").value.length;
 		},
-		highlight: function(type) {
-			if (type == "currentSong") {
+		highlight(type) {
+			if (type === "currentSong") {
 				this.report.songId = this.$parent.currentSong.songId;
 				this.isPreviousSongActive = false;
 				this.isCurrentSongActive = true;
-			} else if (type == "previousSong") {
+			} else if (type === "previousSong") {
 				this.report.songId = this.$parent.previousSong.songId;
 				this.isCurrentSongActive = false;
 				this.isPreviousSongActive = true;
 			}
 		},
-		toggleIssue: function(name, reason) {
-			for (let z = 0; z < this.report.issues.length; z++) {
-				if (this.report.issues[z].name == name) {
+		toggleIssue(name, reason) {
+			for (let z = 0; z < this.report.issues.length; z += 1) {
+				if (this.report.issues[z].name === name) {
 					if (this.report.issues[z].reasons.indexOf(reason) > -1) {
 						this.report.issues[z].reasons.splice(
 							this.report.issues[z].reasons.indexOf(reason),

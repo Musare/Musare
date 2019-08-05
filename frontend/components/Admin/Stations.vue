@@ -191,9 +191,9 @@ export default {
 		})
 	},
 	methods: {
-		createStation: function() {
-			let _this = this;
-			let {
+		createStation() {
+			const _this = this;
+			const {
 				newStation: {
 					name,
 					displayName,
@@ -203,23 +203,23 @@ export default {
 				}
 			} = this;
 
-			if (name == undefined)
+			if (name === undefined)
 				return Toast.methods.addToast(
 					"Field (Name) cannot be empty",
 					3000
 				);
-			if (displayName == undefined)
+			if (displayName === undefined)
 				return Toast.methods.addToast(
 					"Field (Display Name) cannot be empty",
 					3000
 				);
-			if (description == undefined)
+			if (description === undefined)
 				return Toast.methods.addToast(
 					"Field (Description) cannot be empty",
 					3000
 				);
 
-			_this.socket.emit(
+			return _this.socket.emit(
 				"stations.create",
 				{
 					name,
@@ -231,7 +231,7 @@ export default {
 				},
 				result => {
 					Toast.methods.addToast(result.message, 3000);
-					if (result.status == "success")
+					if (result.status === "success")
 						this.newStation = {
 							genres: [],
 							blacklistedGenres: []
@@ -239,7 +239,7 @@ export default {
 				}
 			);
 		},
-		removeStation: function(index) {
+		removeStation(index) {
 			this.socket.emit(
 				"stations.remove",
 				this.stations[index]._id,
@@ -248,7 +248,7 @@ export default {
 				}
 			);
 		},
-		edit: function(station) {
+		edit(station) {
 			this.editStation({
 				_id: station._id,
 				name: station.name,
@@ -265,8 +265,8 @@ export default {
 				modal: "editStation"
 			});
 		},
-		addGenre: function() {
-			let genre = document
+		addGenre() {
+			const genre = document
 				.getElementById(`new-genre`)
 				.value.toLowerCase()
 				.trim();
@@ -275,13 +275,15 @@ export default {
 			if (genre) {
 				this.newStation.genres.push(genre);
 				document.getElementById(`new-genre`).value = "";
-			} else Toast.methods.addToast("Genre cannot be empty", 3000);
+				return true;
+			}
+			return Toast.methods.addToast("Genre cannot be empty", 3000);
 		},
-		removeGenre: function(index) {
+		removeGenre(index) {
 			this.newStation.genres.splice(index, 1);
 		},
-		addBlacklistedGenre: function() {
-			let genre = document
+		addBlacklistedGenre() {
+			const genre = document
 				.getElementById(`new-blacklisted-genre`)
 				.value.toLowerCase()
 				.trim();
@@ -291,13 +293,15 @@ export default {
 			if (genre) {
 				this.newStation.blacklistedGenres.push(genre);
 				document.getElementById(`new-blacklisted-genre`).value = "";
-			} else Toast.methods.addToast("Genre cannot be empty", 3000);
+				return true;
+			}
+			return Toast.methods.addToast("Genre cannot be empty", 3000);
 		},
-		removeBlacklistedGenre: function(index) {
+		removeBlacklistedGenre(index) {
 			this.newStation.blacklistedGenres.splice(index, 1);
 		},
-		init: function() {
-			let _this = this;
+		init() {
+			const _this = this;
 			_this.socket.emit("stations.index", data => {
 				_this.stations = data.stations;
 			});
@@ -306,8 +310,8 @@ export default {
 		...mapActions("modals", ["openModal"]),
 		...mapActions("admin/stations", ["editStation"])
 	},
-	mounted: function() {
-		let _this = this;
+	mounted() {
+		const _this = this;
 		io.getSocket(socket => {
 			_this.socket = socket;
 			if (_this.socket.connected) _this.init();

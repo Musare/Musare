@@ -67,8 +67,8 @@ export default {
 			reports: []
 		};
 	},
-	mounted: function() {
-		let _this = this;
+	mounted() {
+		const _this = this;
 		io.getSocket(socket => {
 			_this.socket = socket;
 			if (_this.socket.connected) _this.init();
@@ -105,15 +105,15 @@ export default {
 		})
 	},
 	methods: {
-		init: function() {
+		init() {
 			this.socket.emit("apis.joinAdminRoom", "reports", () => {});
 		},
-		view: function(report) {
+		view(report) {
 			this.viewReport(report);
 			this.openModal({ sector: "admin", modal: "viewReport" });
 		},
-		resolve: function(reportId) {
-			let _this = this;
+		resolve(reportId) {
+			const _this = this;
 			this.socket.emit("reports.resolve", reportId, res => {
 				Toast.methods.addToast(res.message, 3000);
 				if (res.status === "success" && this.modals.viewReport)

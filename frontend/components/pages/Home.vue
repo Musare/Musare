@@ -174,7 +174,7 @@ export default {
 		modals: state => state.modals.home
 	}),
 	mounted() {
-		let _this = this;
+		const _this = this;
 		auth.getStatus(() => {
 			io.getSocket(socket => {
 				_this.socket = socket;
@@ -182,7 +182,9 @@ export default {
 				io.onConnect(() => {
 					_this.init();
 				});
-				_this.socket.on("event:stations.created", station => {
+				_this.socket.on("event:stations.created", res => {
+					const station = res;
+
 					if (!station.currentSong)
 						station.currentSong = {
 							thumbnail: "/assets/notes-transparent.png"
@@ -195,63 +197,64 @@ export default {
 				_this.socket.on(
 					"event:userCount.updated",
 					(stationId, userCount) => {
-						_this.stations.official.forEach(station => {
+						_this.stations.official.forEach(s => {
+							const station = s;
 							if (station._id === stationId) {
 								station.userCount = userCount;
 							}
 						});
 
-						_this.stations.community.forEach(station => {
+						_this.stations.community.forEach(s => {
+							const station = s;
 							if (station._id === stationId) {
 								station.userCount = userCount;
 							}
 						});
 					}
 				);
-				_this.socket.on(
-					"event:station.nextSong",
-					(stationId, newSong) => {
-						_this.stations.official.forEach(station => {
-							if (station._id === stationId) {
-								if (!newSong)
-									newSong = {
-										thumbnail:
-											"/assets/notes-transparent.png"
-									};
-								if (newSong && !newSong.thumbnail)
-									newSong.thumbnail =
-										"/assets/notes-transparent.png";
-								station.currentSong = newSong;
-							}
-						});
+				_this.socket.on("event:station.nextSong", (stationId, song) => {
+					let newSong = song;
+					_this.stations.official.forEach(s => {
+						const station = s;
+						if (station._id === stationId) {
+							if (!newSong)
+								newSong = {
+									thumbnail: "/assets/notes-transparent.png"
+								};
+							if (newSong && !newSong.thumbnail)
+								newSong.thumbnail =
+									"/assets/notes-transparent.png";
+							station.currentSong = newSong;
+						}
+					});
 
-						_this.stations.community.forEach(station => {
-							if (station._id === stationId) {
-								if (!newSong)
-									newSong = {
-										thumbnail:
-											"/assets/notes-transparent.png"
-									};
-								if (newSong && !newSong.thumbnail)
-									newSong.thumbnail =
-										"/assets/notes-transparent.png";
-								station.currentSong = newSong;
-							}
-						});
-					}
-				);
+					_this.stations.community.forEach(s => {
+						const station = s;
+						if (station._id === stationId) {
+							if (!newSong)
+								newSong = {
+									thumbnail: "/assets/notes-transparent.png"
+								};
+							if (newSong && !newSong.thumbnail)
+								newSong.thumbnail =
+									"/assets/notes-transparent.png";
+							station.currentSong = newSong;
+						}
+					});
+				});
 			});
 		});
 	},
 	methods: {
-		init: function() {
-			let _this = this;
+		init() {
+			const _this = this;
 			auth.getStatus((authenticated, role, username, userId) => {
 				_this.socket.emit("stations.index", data => {
 					_this.stations.community = [];
 					_this.stations.official = [];
 					if (data.status === "success")
-						data.stations.forEach(station => {
+						data.stations.forEach(s => {
+							const station = s;
 							if (!station.currentSong)
 								station.currentSong = {
 									thumbnail: "/assets/notes-transparent.png"
@@ -269,7 +272,7 @@ export default {
 								station.owner === userId
 							)
 								station.class = { "station-blue": true };
-							if (station.type == "official")
+							if (station.type === "official")
 								_this.stations.official.push(station);
 							else _this.stations.community.push(station);
 						});
@@ -277,8 +280,8 @@ export default {
 				_this.socket.emit("apis.joinRoom", "home", () => {});
 			});
 		},
-		isOwner: function(station) {
-			let _this = this;
+		isOwner(station) {
+			const _this = this;
 			return (
 				station.owner === _this.$parent.userId &&
 				station.privacy === "public"

@@ -1,3 +1,5 @@
+/* eslint no-param-reassign: 0 */
+
 const state = {
 	station: {},
 	editing: {}

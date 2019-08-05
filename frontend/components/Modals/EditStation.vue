@@ -104,12 +104,15 @@ export default {
 		station: state => state.station,
 		editing: state => state.editing
 	}),
-	mounted: function() {
-		let _this = this;
-		io.getSocket(socket => (_this.socket = socket));
+	mounted() {
+		const _this = this;
+		io.getSocket(socket => {
+			_this.socket = socket;
+			return socket;
+		});
 	},
 	methods: {
-		update: function() {
+		update() {
 			if (this.station.name !== this.editing.name) this.updateName();
 			if (this.station.displayName !== this.editing.displayName)
 				this.updateDisplayName();
@@ -120,8 +123,8 @@ export default {
 			if (this.station.partyMode !== this.editing.partyMode)
 				this.updatePartyMode();
 		},
-		updateName: function() {
-			const name = this.editing.name;
+		updateName() {
+			const { name } = this.editing;
 			if (!validation.isLength(name, 2, 16))
 				return Toast.methods.addToast(
 					"Name must have between 2 and 16 characters.",
@@ -133,28 +136,33 @@ export default {
 					8000
 				);
 
-			this.socket.emit(
+			return this.socket.emit(
 				"stations.updateName",
 				this.editing._id,
 				name,
 				res => {
 					if (res.status === "success") {
-						if (this.station) this.station.name = name;
-						else {
-							this.$parent.stations.forEach((station, index) => {
-								if (station._id === this.editing._id)
-									return (this.$parent.stations[
-										index
-									].name = name);
-							});
+						if (this.station) {
+							this.station.name = name;
+							return name;
 						}
+
+						this.$parent.stations.forEach((station, index) => {
+							if (station._id === this.editing._id) {
+								this.$parent.stations[index].name = name;
+								return name;
+							}
+
+							return false;
+						});
 					}
-					Toast.methods.addToast(res.message, 8000);
+
+					return Toast.methods.addToast(res.message, 8000);
 				}
 			);
 		},
-		updateDisplayName: function() {
-			const displayName = this.editing.displayName;
+		updateDisplayName() {
+			const { displayName } = this.editing;
 			if (!validation.isLength(displayName, 2, 32))
 				return Toast.methods.addToast(
 					"Display name must have between 2 and 32 characters.",
@@ -166,7 +174,7 @@ export default {
 					8000
 				);
 
-			this.socket.emit(
+			return this.socket.emit(
 				"stations.updateDisplayName",
 				this.editing._id,
 				displayName,
@@ -177,9 +185,10 @@ export default {
 						else {
 							this.$parent.stations.forEach((station, index) => {
 								if (station._id === this.editing._id)
-									return (this.$parent.stations[
+									this.$parent.stations[
 										index
-									].displayName = displayName);
+									].displayName = displayName;
+								return displayName;
 							});
 						}
 					}
@@ -187,96 +196,117 @@ export default {
 				}
 			);
 		},
-		updateDescription: function() {
-			let _this = this;
+		updateDescription() {
+			const _this = this;
 
-			const description = this.editing.description;
+			const { description } = this.editing;
 			if (!validation.isLength(description, 2, 200))
 				return Toast.methods.addToast(
 					"Description must have between 2 and 200 characters.",
 					8000
 				);
+
 			let characters = description.split("");
 			characters = characters.filter(character => {
 				return character.charCodeAt(0) === 21328;
 			});
+
 			if (characters.length !== 0)
 				return Toast.methods.addToast(
 					"Invalid description format. Swastika's are not allowed.",
 					8000
 				);
 
-			this.socket.emit(
+			return this.socket.emit(
 				"stations.updateDescription",
 				this.editing._id,
 				description,
 				res => {
 					if (res.status === "success") {
-						if (_this.station)
+						if (_this.station) {
 							_this.station.description = description;
-						else {
-							_this.$parent.stations.forEach((station, index) => {
-								if (station._id === station._id)
-									return (_this.$parent.stations[
-										index
-									].description = description);
-							});
+							return description;
 						}
+
+						_this.$parent.stations.forEach((station, index) => {
+							if (station._id === this.editing._id) {
+								_this.$parent.stations[
+									index
+								].description = description;
+								return description;
+							}
+
+							return false;
+						});
+
 						return Toast.methods.addToast(res.message, 4000);
 					}
-					Toast.methods.addToast(res.message, 8000);
+
+					return Toast.methods.addToast(res.message, 8000);
 				}
 			);
 		},
-		updatePrivacy: function() {
-			let _this = this;
-			this.socket.emit(
+		updatePrivacy() {
+			const _this = this;
+			return this.socket.emit(
 				"stations.updatePrivacy",
 				this.editing._id,
 				this.editing.privacy,
 				res => {
 					if (res.status === "success") {
-						if (_this.station)
+						if (_this.station) {
 							_this.station.privacy = _this.editing.privacy;
-						else {
-							_this.$parent.stations.forEach((station, index) => {
-								if (station._id === station._id)
-									return (_this.$parent.stations[
-										index
-									].privacy = _this.editing.privacy);
-							});
+							return _this.editing.privacy;
 						}
+
+						_this.$parent.stations.forEach((station, index) => {
+							if (station._id === _this.editing._id) {
+								_this.$parent.stations[index].privacy =
+									_this.editing.privacy;
+								return _this.editing.privacy;
+							}
+
+							return false;
+						});
+
 						return Toast.methods.addToast(res.message, 4000);
 					}
-					Toast.methods.addToast(res.message, 8000);
+
+					return Toast.methods.addToast(res.message, 8000);
 				}
 			);
 		},
-		updatePartyMode: function() {
-			let _this = this;
-			this.socket.emit(
+		updatePartyMode() {
+			const _this = this;
+			return this.socket.emit(
 				"stations.updatePartyMode",
 				this.editing._id,
 				this.editing.partyMode,
 				res => {
 					if (res.status === "success") {
-						if (_this.station)
+						if (_this.station) {
 							_this.station.partyMode = _this.editing.partyMode;
-						else {
-							_this.$parent.stations.forEach((station, index) => {
-								if (station._id === station._id)
-									return (_this.$parent.stations[
-										index
-									].partyMode = _this.editing.partyMode);
-							});
+							return _this.editing.partyMode;
 						}
+
+						_this.$parent.stations.forEach((station, index) => {
+							if (station._id === _this.editing._id) {
+								_this.$parent.stations[index].partyMode =
+									_this.editing.partyMode;
+								return _this.editing.partyMode;
+							}
+
+							return false;
+						});
+
 						return Toast.methods.addToast(res.message, 4000);
 					}
-					Toast.methods.addToast(res.message, 8000);
+
+					return Toast.methods.addToast(res.message, 8000);
 				}
 			);
 		},
-		deleteStation: function() {
+		deleteStation() {
 			this.socket.emit("stations.remove", this.editing._id, res => {
 				Toast.methods.addToast(res.message, 8000);
 			});

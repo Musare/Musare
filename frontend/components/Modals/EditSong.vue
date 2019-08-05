@@ -317,8 +317,8 @@ export default {
 		})
 	},
 	methods: {
-		save: function(song, close) {
-			let _this = this;
+		save(song, close) {
+			const _this = this;
 
 			if (!song.title)
 				return Toast.methods.addToast(
@@ -348,11 +348,11 @@ export default {
 					"Title must have between 1 and 100 characters.",
 					8000
 				);
-			/*if (!validation.regex.ascii.test(song.title))
+			/* if (!validation.regex.ascii.test(song.title))
 				return Toast.methods.addToast(
 					"Invalid title format. Only ascii characters are allowed.",
 					8000
-				);*/
+				); */
 
 			// Artists
 			if (song.artists.length < 1 || song.artists.length > 10)
@@ -362,27 +362,39 @@ export default {
 				);
 			let error;
 			song.artists.forEach(artist => {
-				if (!validation.isLength(artist, 1, 32))
-					return (error =
-						"Artist must have between 1 and 32 characters.");
-				if (!validation.regex.ascii.test(artist))
-					return (error =
-						"Invalid artist format. Only ascii characters are allowed.");
-				if (artist === "NONE")
-					return (error =
-						'Invalid artist format. Artists are not allowed to be named "NONE".');
+				if (!validation.isLength(artist, 1, 32)) {
+					error = "Artist must have between 1 and 32 characters.";
+					return error;
+				}
+				if (!validation.regex.ascii.test(artist)) {
+					error =
+						"Invalid artist format. Only ascii characters are allowed.";
+					return error;
+				}
+				if (artist === "NONE") {
+					error =
+						'Invalid artist format. Artists are not allowed to be named "NONE".';
+					return error;
+				}
+
+				return false;
 			});
 			if (error) return Toast.methods.addToast(error, 8000);
 
 			// Genres
 			error = undefined;
 			song.genres.forEach(genre => {
-				if (!validation.isLength(genre, 1, 16))
-					return (error =
-						"Genre must have between 1 and 16 characters.");
-				if (!validation.regex.az09_.test(genre))
-					return (error =
-						"Invalid genre format. Only ascii characters are allowed.");
+				if (!validation.isLength(genre, 1, 16)) {
+					error = "Genre must have between 1 and 16 characters.";
+					return error;
+				}
+				if (!validation.regex.az09_.test(genre)) {
+					error =
+						"Invalid genre format. Only ascii characters are allowed.";
+					return error;
+				}
+
+				return false;
 			});
 			if (error) return Toast.methods.addToast(error, 8000);
 
@@ -406,18 +418,20 @@ export default {
 				);
 			}
 
-			this.socket.emit(
+			return this.socket.emit(
 				`${_this.editing.type}.update`,
 				song._id,
 				song,
 				res => {
 					Toast.methods.addToast(res.message, 4000);
 					if (res.status === "success") {
-						_this.$parent.songs.forEach(lSong => {
-							if (song._id === lSong._id) {
-								for (let n in song) {
-									lSong[n] = song[n];
-								}
+						_this.$parent.songs.forEach(originalSong => {
+							const updatedSong = song;
+							if (originalSong._id === updatedSong._id) {
+								Object.keys(originalSong).forEach(n => {
+									updatedSong[n] = originalSong[n];
+									return originalSong[n];
+								});
 							}
 						});
 					}
@@ -429,9 +443,11 @@ export default {
 				}
 			);
 		},
-		settings: function(type) {
-			let _this = this;
+		settings(type) {
+			const _this = this;
 			switch (type) {
+				default:
+					break;
 				case "stop":
 					_this.stopVideo();
 					_this.pauseVideo(true);
@@ -451,16 +467,16 @@ export default {
 					break;
 			}
 		},
-		changeVolume: function() {
-			let local = this;
-			let volume = document.getElementById("volumeSlider").value;
+		changeVolume() {
+			const local = this;
+			const volume = document.getElementById("volumeSlider").value;
 			localStorage.setItem("volume", volume);
 			local.video.player.setVolume(volume);
 			if (volume > 0) local.video.player.unMute();
 		},
-		addTag: function(type) {
-			if (type == "genres") {
-				let genre = document
+		addTag(type) {
+			if (type === "genres") {
+				const genre = document
 					.getElementById("new-genre")
 					.value.toLowerCase()
 					.trim();
@@ -469,9 +485,13 @@ export default {
 				if (genre) {
 					this.editing.song.genres.push(genre);
 					document.getElementById("new-genre").value = "";
-				} else Toast.methods.addToast("Genre cannot be empty", 3000);
-			} else if (type == "artists") {
-				let artist = document.getElementById("new-artist").value;
+					return false;
+				}
+
+				return Toast.methods.addToast("Genre cannot be empty", 3000);
+			}
+			if (type === "artists") {
+				const artist = document.getElementById("new-artist").value;
 				if (this.editing.song.artists.indexOf(artist) !== -1)
 					return Toast.methods.addToast(
 						"Artist already exists",
@@ -480,15 +500,19 @@ export default {
 				if (document.getElementById("new-artist").value !== "") {
 					this.editing.song.artists.push(artist);
 					document.getElementById("new-artist").value = "";
-				} else Toast.methods.addToast("Artist cannot be empty", 3000);
+					return false;
+				}
+				return Toast.methods.addToast("Artist cannot be empty", 3000);
 			}
+
+			return false;
 		},
-		removeTag: function(type, index) {
-			if (type == "genres") this.editing.song.genres.splice(index, 1);
-			else if (type == "artists")
+		removeTag(type, index) {
+			if (type === "genres") this.editing.song.genres.splice(index, 1);
+			else if (type === "artists")
 				this.editing.song.artists.splice(index, 1);
 		},
-		getSpotifySongs: function() {
+		getSpotifySongs() {
 			this.socket.emit(
 				"apis.getSpotifySongs",
 				this.spotify.title,
@@ -510,9 +534,9 @@ export default {
 				}
 			);
 		},
-		initCanvas: function() {
-			let canvasElement = document.getElementById("durationCanvas");
-			let ctx = canvasElement.getContext("2d");
+		initCanvas() {
+			const canvasElement = document.getElementById("durationCanvas");
+			const ctx = canvasElement.getContext("2d");
 
 			const skipDurationColor = "#ef4a1c";
 			const durationColor = "#1dc146";
@@ -538,9 +562,9 @@ export default {
 			ctx.fillStyle = "#000000";
 			ctx.fillText("After duration", 255, 38);
 		},
-		drawCanvas: function() {
-			let canvasElement = document.getElementById("durationCanvas");
-			let ctx = canvasElement.getContext("2d");
+		drawCanvas() {
+			const canvasElement = document.getElementById("durationCanvas");
+			const ctx = canvasElement.getContext("2d");
 
 			const videoDuration = Number(this.youtubeVideoDuration);
 
@@ -552,11 +576,11 @@ export default {
 
 			const currentTime = this.video.player.getCurrentTime();
 
-			let widthSkipDuration = (skipDuration / videoDuration) * width;
-			let widthDuration = (duration / videoDuration) * width;
-			let widthAfterDuration = (afterDuration / videoDuration) * width;
+			const widthSkipDuration = (skipDuration / videoDuration) * width;
+			const widthDuration = (duration / videoDuration) * width;
+			const widthAfterDuration = (afterDuration / videoDuration) * width;
 
-			let widthCurrentTime = (currentTime / videoDuration) * width;
+			const widthCurrentTime = (currentTime / videoDuration) * width;
 
 			const skipDurationColor = "#ef4a1c";
 			const durationColor = "#1dc146";
@@ -587,8 +611,8 @@ export default {
 		]),
 		...mapActions("modals", ["closeModal"])
 	},
-	mounted: function() {
-		let _this = this;
+	mounted() {
+		const _this = this;
 
 		// if (this.modals.editSong = false) this.video.player.stopVideo();
 
@@ -629,9 +653,10 @@ export default {
 				_this.video.player.stopVideo();
 			}
 			if (this.playerReady) {
-				_this
-					.getCurrentTime(3)
-					.then(time => (this.youtubeVideoCurrentTime = time));
+				_this.getCurrentTime(3).then(time => {
+					this.youtubeVideoCurrentTime = time;
+					return time;
+				});
 			}
 
 			if (_this.video.paused === false) _this.drawCanvas();
@@ -653,7 +678,7 @@ export default {
 				onReady: () => {
 					let volume = parseInt(localStorage.getItem("volume"));
 					volume = typeof volume === "number" ? volume : 20;
-					console.log("Seekto: " + _this.editing.song.skipDuration);
+					console.log(`Seekto: ${_this.editing.song.skipDuration}`);
 					_this.video.player.seekTo(_this.editing.song.skipDuration);
 					_this.video.player.setVolume(volume);
 					if (volume > 0) _this.video.player.unMute();
@@ -678,14 +703,15 @@ export default {
 						if (_this.editing.song.duration > youtubeDuration + 1) {
 							this.video.player.stopVideo();
 							_this.video.paused = true;
-							Toast.methods.addToast(
+							return Toast.methods.addToast(
 								"Video can't play. Specified duration is bigger than the YouTube song duration.",
 								4000
 							);
-						} else if (_this.editing.song.duration <= 0) {
+						}
+						if (_this.editing.song.duration <= 0) {
 							this.video.player.stopVideo();
 							_this.video.paused = true;
-							Toast.methods.addToast(
+							return Toast.methods.addToast(
 								"Video can't play. Specified duration has to be more than 0 seconds.",
 								4000
 							);
@@ -695,13 +721,15 @@ export default {
 							_this.video.player.getCurrentTime() <
 							_this.editing.song.skipDuration
 						) {
-							_this.video.player.seekTo(
+							return _this.video.player.seekTo(
 								_this.editing.song.skipDuration
 							);
 						}
 					} else if (event.data === 2) {
 						this.video.paused = true;
 					}
+
+					return false;
 				}
 			}
 		});

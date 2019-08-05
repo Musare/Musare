@@ -128,7 +128,7 @@ export default {
 		};
 	},
 	computed: {
-		sortedPunishments: function() {
+		sortedPunishments() {
 			//   return _.orderBy(this.punishments, -1);
 			return this.punishments;
 		},
@@ -137,12 +137,12 @@ export default {
 		})
 	},
 	methods: {
-		view: function(punishment) {
+		view(punishment) {
 			this.viewPunishment(punishment);
 			this.openModal({ sector: "admin", modal: "viewPunishment" });
 		},
-		banIP: function() {
-			let _this = this;
+		banIP() {
+			const _this = this;
 			_this.socket.emit(
 				"punishments.banIP",
 				_this.ipBan.ip,
@@ -153,18 +153,18 @@ export default {
 				}
 			);
 		},
-		init: function() {
-			let _this = this;
+		init() {
+			const _this = this;
 			_this.socket.emit("punishments.index", res => {
 				if (res.status === "success") _this.punishments = res.data;
 			});
-			//_this.socket.emit('apis.joinAdminRoom', 'punishments', () => {});
+			// _this.socket.emit('apis.joinAdminRoom', 'punishments', () => {});
 		},
 		...mapActions("modals", ["openModal"]),
 		...mapActions("admin/punishments", ["viewPunishment"])
 	},
-	mounted: function() {
-		let _this = this;
+	mounted() {
+		const _this = this;
 		io.getSocket(socket => {
 			_this.socket = socket;
 			if (_this.socket.connected) _this.init();

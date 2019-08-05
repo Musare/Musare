@@ -89,9 +89,15 @@ export default {
 			}
 		};
 	},
-	mounted: function() {
-		lofig.get("frontendDomain", res => (this.frontendDomain = res));
-		lofig.get("siteSettings", res => (this.siteSettings = res));
+	mounted() {
+		lofig.get("frontendDomain", res => {
+			this.frontendDomain = res;
+			return res;
+		});
+		lofig.get("siteSettings", res => {
+			this.siteSettings = res;
+			return res;
+		});
 	},
 	computed: mapState("modals", {
 		modals: state => state.modals.header

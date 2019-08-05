@@ -1,3 +1,5 @@
+/* eslint no-param-reassign: 0 */
+
 const state = {};
 const getters = {};
 const actions = {};

@@ -27,6 +27,12 @@
 	"rules": {
 		"no-console": 0,
 		"no-control-regex": 0,
-		"no-var": 2
+		"no-var": 2,
+		"no-underscore-dangle": 1,
+		"prefer-promise-reject-errors": 0, // temp
+		"no-nested-ternary": 0, // temp
+		"radix": 0,
+		"no-multi-assign": 0,
+		"no-shadow": 0
 	}
 }

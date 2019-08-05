@@ -143,10 +143,10 @@ export default {
 			}
 		};
 	},
-	mounted: function() {
-		let _this = this;
-		let minuteCtx = document.getElementById("minuteChart");
-		let hourCtx = document.getElementById("hourChart");
+	mounted() {
+		const _this = this;
+		const minuteCtx = document.getElementById("minuteChart");
+		const hourCtx = document.getElementById("hourChart");
 
 		_this.minuteChart = new Chart(minuteCtx, {
 			type: "line",
@@ -273,7 +273,7 @@ export default {
 		});
 	},
 	methods: {
-		init: function() {
+		init() {
 			this.socket.emit("apis.joinAdminRoom", "statistics", () => {});
 			this.socket.on(
 				"event:admin.statistics.success.units.minute",
@@ -321,7 +321,7 @@ export default {
 				this.logs = logs;
 			});
 		},
-		round: function(number) {
+		round(number) {
 			return Math.round(number);
 		}
 	}

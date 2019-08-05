@@ -83,7 +83,7 @@ export default {
 			report: state => state.report
 		})
 	},
-	mounted: function() {
+	mounted() {
 		if (this.$route.query.returnToSong) {
 			this.closeModal({ sector: "admin", modal: "editSong" });
 		}

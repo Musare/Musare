@@ -235,14 +235,14 @@ export default {
 			editing: {}
 		};
 	},
-	mounted: function() {
-		let _this = this;
+	mounted() {
+		const _this = this;
 		io.getSocket(socket => {
 			_this.socket = socket;
-			_this.socket.emit(
-				"news.index",
-				result => (_this.news = result.data)
-			);
+			_this.socket.emit("news.index", res => {
+				_this.news = res.data;
+				return res.data;
+			});
 			_this.socket.on("event:admin.news.created", news => {
 				_this.news.unshift(news);
 			});
@@ -259,10 +259,10 @@ export default {
 		})
 	},
 	methods: {
-		createNews: function() {
-			let _this = this;
+		createNews() {
+			const _this = this;
 
-			let {
+			const {
 				creating: { bugs, features, improvements, upcoming }
 			} = this;
 
@@ -287,9 +287,9 @@ export default {
 					3000
 				);
 
-			_this.socket.emit("news.create", _this.creating, result => {
+			return _this.socket.emit("news.create", _this.creating, result => {
 				Toast.methods.addToast(result.message, 4000);
-				if (result.status == "success")
+				if (result.status === "success")
 					_this.creating = {
 						title: "",
 						description: "",
@@ -300,17 +300,17 @@ export default {
 					};
 			});
 		},
-		removeNews: function(news) {
+		removeNews(news) {
 			this.socket.emit("news.remove", news, res =>
 				Toast.methods.addToast(res.message, 8000)
 			);
 		},
-		editNews: function(news) {
+		editNews(news) {
 			this.editing = news;
 			this.openModal({ sector: "admin", modal: "editNews" });
 		},
-		updateNews: function(close) {
-			let _this = this;
+		updateNews(close) {
+			const _this = this;
 			this.socket.emit(
 				"news.update",
 				_this.editing._id,
@@ -327,8 +327,8 @@ export default {
 				}
 			);
 		},
-		addChange: function(type) {
-			let change = document.getElementById(`new-${type}`).value.trim();
+		addChange(type) {
+			const change = document.getElementById(`new-${type}`).value.trim();
 
 			if (this.creating[type].indexOf(change) !== -1)
 				return Toast.methods.addToast(`Tag already exists`, 3000);
@@ -336,12 +336,14 @@ export default {
 			if (change) {
 				document.getElementById(`new-${type}`).value = "";
 				this.creating[type].push(change);
-			} else Toast.methods.addToast(`${type} cannot be empty`, 3000);
+				return true;
+			}
+			return Toast.methods.addToast(`${type} cannot be empty`, 3000);
 		},
-		removeChange: function(type, index) {
+		removeChange(type, index) {
 			this.creating[type].splice(index, 1);
 		},
-		init: function() {
+		init() {
 			this.socket.emit("apis.joinAdminRoom", "news", () => {});
 		},
 		...mapActions("modals", ["openModal", "closeModal"])

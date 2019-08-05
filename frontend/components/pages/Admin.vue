@@ -130,7 +130,7 @@ export default {
 		}
 	},
 	methods: {
-		changeTab: function(path) {
+		changeTab(path) {
 			switch (path) {
 				case "/admin/queuesongs":
 					this.currentTab = "queueSongs";
@@ -160,7 +160,7 @@ export default {
 					this.currentTab = "queueSongs";
 			}
 		},
-		showTab: function(tab) {
+		showTab(tab) {
 			this.currentTab = tab;
 		}
 	}

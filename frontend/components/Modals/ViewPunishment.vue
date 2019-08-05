@@ -74,9 +74,12 @@ export default {
 			punishment: state => state.punishment
 		})
 	},
-	mounted: function() {
-		let _this = this;
-		io.getSocket(socket => (_this.socket = socket));
+	mounted() {
+		const _this = this;
+		io.getSocket(socket => {
+			_this.socket = socket;
+			return socket;
+		});
 	},
 	methods: {
 		...mapActions("modals", ["closeModal"])

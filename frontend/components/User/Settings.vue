@@ -167,12 +167,12 @@ export default {
 			passwordCode: ""
 		};
 	},
-	mounted: function() {
-		let _this = this;
+	mounted() {
+		const _this = this;
 		io.getSocket(socket => {
 			_this.socket = socket;
 			_this.socket.emit("users.findBySession", res => {
-				if (res.status == "success") {
+				if (res.status === "success") {
 					_this.user = res.data;
 					_this.password = _this.user.password;
 					_this.github = _this.user.github;
@@ -202,7 +202,7 @@ export default {
 		});
 	},
 	methods: {
-		changeEmail: function() {
+		changeEmail() {
 			const email = this.user.email.address;
 			if (!validation.isLength(email, 3, 254))
 				return Toast.methods.addToast(
@@ -215,7 +215,7 @@ export default {
 			)
 				return Toast.methods.addToast("Invalid email format.", 8000);
 
-			this.socket.emit(
+			return this.socket.emit(
 				"users.updateEmail",
 				this.$parent.userId,
 				email,
@@ -230,8 +230,8 @@ export default {
 				}
 			);
 		},
-		changeUsername: function() {
-			const username = this.user.username;
+		changeUsername() {
+			const { username } = this.user;
 			if (!validation.isLength(username, 2, 32))
 				return Toast.methods.addToast(
 					"Username must have between 2 and 32 characters.",
@@ -243,7 +243,7 @@ export default {
 					8000
 				);
 
-			this.socket.emit(
+			return this.socket.emit(
 				"users.updateUsername",
 				this.$parent.userId,
 				username,
@@ -258,8 +258,8 @@ export default {
 				}
 			);
 		},
-		changePassword: function() {
-			const newPassword = this.newPassword;
+		changePassword() {
+			const { newPassword } = this;
 			if (!validation.isLength(newPassword, 6, 200))
 				return Toast.methods.addToast(
 					"Password must have between 6 and 200 characters.",
@@ -271,28 +271,32 @@ export default {
 					8000
 				);
 
-			this.socket.emit("users.updatePassword", newPassword, res => {
-				if (res.status !== "success")
-					Toast.methods.addToast(res.message, 8000);
-				else
-					Toast.methods.addToast(
-						"Successfully changed password",
-						4000
-					);
-			});
+			return this.socket.emit(
+				"users.updatePassword",
+				newPassword,
+				res => {
+					if (res.status !== "success")
+						Toast.methods.addToast(res.message, 8000);
+					else
+						Toast.methods.addToast(
+							"Successfully changed password",
+							4000
+						);
+				}
+			);
 		},
-		requestPassword: function() {
-			this.socket.emit("users.requestPassword", res => {
+		requestPassword() {
+			return this.socket.emit("users.requestPassword", res => {
 				Toast.methods.addToast(res.message, 8000);
 				if (res.status === "success") {
 					this.passwordStep = 2;
 				}
 			});
 		},
-		verifyCode: function() {
+		verifyCode() {
 			if (!this.passwordCode)
 				return Toast.methods.addToast("Code cannot be empty", 8000);
-			this.socket.emit(
+			return this.socket.emit(
 				"users.verifyPasswordCode",
 				this.passwordCode,
 				res => {
@@ -303,7 +307,7 @@ export default {
 				}
 			);
 		},
-		setPassword: function() {
+		setPassword() {
 			const newPassword = this.setNewPassword;
 			if (!validation.isLength(newPassword, 6, 200))
 				return Toast.methods.addToast(
@@ -316,7 +320,7 @@ export default {
 					8000
 				);
 
-			this.socket.emit(
+			return this.socket.emit(
 				"users.changePasswordWithCode",
 				this.passwordCode,
 				newPassword,
@@ -325,17 +329,17 @@ export default {
 				}
 			);
 		},
-		unlinkPassword: function() {
+		unlinkPassword() {
 			this.socket.emit("users.unlinkPassword", res => {
 				Toast.methods.addToast(res.message, 8000);
 			});
 		},
-		unlinkGitHub: function() {
+		unlinkGitHub() {
 			this.socket.emit("users.unlinkGitHub", res => {
 				Toast.methods.addToast(res.message, 8000);
 			});
 		},
-		removeSessions: function() {
+		removeSessions() {
 			this.socket.emit(
 				`users.removeSessions`,
 				this.$parent.userId,

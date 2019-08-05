@@ -81,8 +81,8 @@ export default {
 			news: null
 		};
 	},
-	mounted: function() {
-		let _this = this;
+	mounted() {
+		const _this = this;
 		io.getSocket(true, socket => {
 			_this.socket = socket;
 			_this.socket.emit("news.newest", res => {
@@ -108,15 +108,13 @@ export default {
 						}
 						localStorage.setItem("whatIsNew", res.data.createdAt);
 					}
-				} else {
-					if (!localStorage.getItem("firstVisited"))
-						localStorage.setItem("firstVisited", Date.now());
-				}
+				} else if (!localStorage.getItem("firstVisited"))
+					localStorage.setItem("firstVisited", Date.now());
 			});
 		});
 	},
 	methods: {
-		toggleModal: function() {
+		toggleModal() {
 			this.isModalActive = !this.isModalActive;
 		},
 		formatDate: unix => {
@@ -124,7 +122,7 @@ export default {
 		}
 	},
 	events: {
-		closeModal: function() {
+		closeModal() {
 			this.isModalActive = false;
 		}
 	}

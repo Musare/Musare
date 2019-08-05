@@ -89,8 +89,8 @@ export default {
 			noFound: false
 		};
 	},
-	mounted: function() {
-		let _this = this;
+	mounted() {
+		const _this = this;
 		io.getSocket(socket => {
 			_this.socket = socket;
 			_this.socket.emit("news.index", res => {
@@ -102,7 +102,7 @@ export default {
 				_this.noFound = false;
 			});
 			_this.socket.on("event:admin.news.updated", news => {
-				for (let n = 0; n < _this.news.length; n++) {
+				for (let n = 0; n < _this.news.length; n += 1) {
 					if (_this.news[n]._id === news._id) {
 						_this.news.$set(n, news);
 					}

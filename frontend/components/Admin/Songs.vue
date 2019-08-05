@@ -101,7 +101,7 @@ export default {
 		};
 	},
 	computed: {
-		filteredSongs: function() {
+		filteredSongs() {
 			return this.songs;
 			// return this.songs.filter(song => song.indexOf(song.searchQuery) !== -1);
 		},
@@ -115,29 +115,29 @@ export default {
 		}
 	},
 	methods: {
-		edit: function(song) {
+		edit(song) {
 			this.editSong({ song, type: "songs" });
 			this.openModal({ sector: "admin", modal: "editSong" });
 		},
-		remove: function(id) {
+		remove(id) {
 			this.socket.emit("songs.remove", id, res => {
-				if (res.status == "success")
+				if (res.status === "success")
 					Toast.methods.addToast(res.message, 4000);
 				else Toast.methods.addToast(res.message, 8000);
 			});
 		},
-		getSet: function() {
-			let _this = this;
+		getSet() {
+			const _this = this;
 			_this.socket.emit("songs.getSet", _this.position, data => {
 				data.forEach(song => {
 					_this.songs.push(song);
 				});
-				_this.position = _this.position + 1;
+				_this.position += 1;
 				if (_this.maxPosition > _this.position - 1) _this.getSet();
 			});
 		},
-		init: function() {
-			let _this = this;
+		init() {
+			const _this = this;
 			_this.songs = [];
 			_this.socket.emit("songs.length", length => {
 				_this.maxPosition = Math.ceil(length / 15);
@@ -148,8 +148,8 @@ export default {
 		...mapActions("admin/songs", ["stopVideo", "editSong"]),
 		...mapActions("modals", ["openModal", "closeModal"])
 	},
-	mounted: function() {
-		let _this = this;
+	mounted() {
+		const _this = this;
 		io.getSocket(socket => {
 			_this.socket = socket;
 			if (_this.socket.connected) {
@@ -163,8 +163,8 @@ export default {
 					});
 				});
 				_this.socket.on("event:admin.song.updated", updatedSong => {
-					for (let i = 0; i < _this.songs.length; i++) {
-						let song = _this.songs[i];
+					for (let i = 0; i < _this.songs.length; i += 1) {
+						const song = _this.songs[i];
 						if (song._id === updatedSong._id) {
 							_this.songs.$set(i, updatedSong);
 						}

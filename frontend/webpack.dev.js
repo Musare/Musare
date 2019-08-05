@@ -1,4 +1,4 @@
-process.env["NODE_CONFIG_DIR"] = __dirname + "/dist/config/";
+process.env.NODE_CONFIG_DIR = `${__dirname}/dist/config/`;
 const config = require("config");
 
 const merge = require("webpack-merge");

@@ -110,26 +110,26 @@ export default {
 		};
 	},
 	methods: {
-		isPlaylistSelected: function(playlistId) {
+		isPlaylistSelected(playlistId) {
 			return this.privatePlaylistQueueSelected === playlistId;
 		},
-		selectPlaylist: function(playlistId) {
-			let _this = this;
+		selectPlaylist(playlistId) {
+			const _this = this;
 			if (_this.$parent.type === "community") {
 				_this.privatePlaylistQueueSelected = playlistId;
 				_this.$parent.privatePlaylistQueueSelected = playlistId;
 				_this.$parent.addFirstPrivatePlaylistSongToQueue();
 			}
 		},
-		unSelectPlaylist: function() {
-			let _this = this;
+		unSelectPlaylist() {
+			const _this = this;
 			if (_this.$parent.type === "community") {
 				_this.privatePlaylistQueueSelected = null;
 				_this.$parent.privatePlaylistQueueSelected = null;
 			}
 		},
-		addSongToQueue: function(songId) {
-			let _this = this;
+		addSongToQueue(songId) {
+			const _this = this;
 			if (_this.$parent.type === "community") {
 				_this.socket.emit(
 					"stations.addToQueue",
@@ -152,8 +152,8 @@ export default {
 				});
 			}
 		},
-		importPlaylist: function() {
-			let _this = this;
+		importPlaylist() {
+			const _this = this;
 			Toast.methods.addToast(
 				"Starting to import your playlist. This can take some time to do.",
 				4000
@@ -166,8 +166,8 @@ export default {
 				}
 			);
 		},
-		submitQuery: function() {
-			let _this = this;
+		submitQuery() {
+			const _this = this;
 			let query = _this.querySearch;
 			if (query.indexOf("&index=") !== -1) {
 				query = query.split("&index=");
@@ -179,24 +179,23 @@ export default {
 				query.pop();
 				query = query.join("");
 			}
-			_this.socket.emit("apis.searchYoutube", query, results => {
+			_this.socket.emit("apis.searchYoutube", query, res => {
 				// check for error
-				results = results.data;
+				const { data } = res;
 				_this.queryResults = [];
-				for (let i = 0; i < results.items.length; i++) {
+				for (let i = 0; i < data.items.length; i += 1) {
 					_this.queryResults.push({
-						id: results.items[i].id.videoId,
+						id: data.items[i].id.videoId,
 						url: `https://www.youtube.com/watch?v=${this.id}`,
-						title: results.items[i].snippet.title,
-						thumbnail:
-							results.items[i].snippet.thumbnails.default.url
+						title: data.items[i].snippet.title,
+						thumbnail: data.items[i].snippet.thumbnails.default.url
 					});
 				}
 			});
 		}
 	},
-	mounted: function() {
-		let _this = this;
+	mounted() {
+		const _this = this;
 		io.getSocket(socket => {
 			_this.socket = socket;
 			_this.socket.emit("playlists.indexForUser", res => {

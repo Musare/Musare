@@ -210,12 +210,18 @@ export default {
 			}
 		};
 	},
-	mounted: function() {
-		lofig.get("frontendDomain", res => (this.frontendDomain = res));
-		lofig.get("siteSettings", res => (this.siteSettings = res));
+	mounted() {
+		lofig.get("frontendDomain", res => {
+			this.frontendDomain = res;
+			return res;
+		});
+		lofig.get("siteSettings", res => {
+			this.siteSettings = res;
+			return res;
+		});
 	},
 	methods: {
-		isOwner: function() {
+		isOwner() {
 			return (
 				this.$parent.$parent.loggedIn &&
 				(this.$parent.$parent.role === "admin" ||

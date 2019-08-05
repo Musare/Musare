@@ -58,11 +58,11 @@ export default {
 		};
 	},
 	methods: {
-		edit: function(id) {
+		edit(id) {
 			this.editPlaylist(id);
 			this.openModal({ sector: "station", modal: "editPlaylist" });
 		},
-		selectPlaylist: function(id) {
+		selectPlaylist(id) {
 			this.socket.emit(
 				"stations.selectPrivatePlaylist",
 				this.$parent.station._id,
@@ -70,13 +70,13 @@ export default {
 				res => {
 					if (res.status === "failure")
 						return Toast.methods.addToast(res.message, 8000);
-					Toast.methods.addToast(res.message, 4000);
+					return Toast.methods.addToast(res.message, 4000);
 				}
 			);
 		},
-		isNotSelected: function(id) {
-			let _this = this;
-			//TODO Also change this once it changes for a station
+		isNotSelected(id) {
+			const _this = this;
+			// TODO Also change this once it changes for a station
 			if (
 				_this.$parent.station &&
 				_this.$parent.station.privatePlaylist === id
@@ -87,13 +87,13 @@ export default {
 		...mapActions("modals", ["openModal"]),
 		...mapActions("user/playlists", ["editPlaylist"])
 	},
-	mounted: function() {
+	mounted() {
 		// TODO: Update when playlist is removed/created
-		let _this = this;
+		const _this = this;
 		io.getSocket(socket => {
 			_this.socket = socket;
 			_this.socket.emit("playlists.indexForUser", res => {
-				if (res.status == "success") _this.playlists = res.data;
+				if (res.status === "success") _this.playlists = res.data;
 			});
 			_this.socket.on("event:playlist.create", playlist => {
 				_this.playlists.push(playlist);

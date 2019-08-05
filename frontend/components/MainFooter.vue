@@ -73,7 +73,7 @@ export default {
 			}
 		};
 	},
-	mounted: function() {
+	mounted() {
 		lofig.get("siteSettings.socialLinks", res => {
 			this.socialLinks = res;
 		});
