@@ -137,6 +137,12 @@ The configurable ports will be how you access the services on your machine, or w
 
    - Docker ToolBox: The output of `docker-machine ip default`
 
+If you are using linting extensions in IDEs/want to run `yarn lint`, you need to install the following locally (outside of Docker):
+```
+yarn global add eslint
+yarn add eslint-config-airbnb-base
+```
+
 ### Standard Installation
 
 Steps 1-4 are things you only have to do once. The steps to start servers follow.
