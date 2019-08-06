@@ -614,7 +614,7 @@ export default {
 
 				if (window.stationInterval !== 0)
 					clearInterval(window.stationInterval);
-				window.stationInterval = setInterval(function() {
+				window.stationInterval = setInterval(() => {
 					local.resizeSeekerbar();
 					local.calculateTimeElapsed();
 				}, 150);
