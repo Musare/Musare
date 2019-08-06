@@ -634,16 +634,19 @@ export default {
 			}
 		},
 		formatTime(duration) {
-			const d = moment.duration(duration, "seconds");
+			const dur = moment.duration(duration, "seconds");
 			if (duration < 0) return "0:00";
-			return `${
-				d.hours() > 0
-					? d.hours() < 10
-						? `0${d.hours()}:`
-						: `${d.hours()}:`
-					: ""
-			}${d.minutes()}:${
-				d.seconds() < 10 ? `0${d.seconds()}` : d.seconds()
+
+			const getHours = () => {
+				if (dur.hours > 0) {
+					if (dur.hours() < 10) return `0${dur.hours()}:`;
+					return `${dur.hours()}:`;
+				}
+				return "";
+			};
+
+			return `${getHours()}${dur.minutes()}:${
+				dur.seconds() < 10 ? `0${dur.seconds()}` : dur.seconds()
 			}`;
 		},
 		calculateTimeElapsed() {

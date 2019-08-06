@@ -35,15 +35,10 @@ export default {
 									return resolve({ status: "success" });
 								});
 							}
-							return reject({
-								status: "error",
-								message: "You must login"
-							});
+							return reject(new Error("You must login"));
 						}
-						return reject({
-							status: "error",
-							message: res.message
-						});
+
+						return reject(new Error(res.message));
 					}
 				);
 			});
@@ -72,10 +67,8 @@ export default {
 							return resolve({ status: "success" });
 						});
 					}
-					return reject({
-						status: "error",
-						message: res.message
-					});
+
+					return reject(new Error(res.message));
 				});
 			});
 		});

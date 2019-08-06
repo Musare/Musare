@@ -204,33 +204,48 @@ export default {
 	methods: {
 		formatTime(length) {
 			const duration = moment.duration(length, "seconds");
-			function getHours() {
+			const getHours = () => {
 				return Math.floor(duration.asHours());
-			}
+			};
+
 			if (length <= 0) return "0 seconds";
-			return (
-				(getHours() > 0
-					? getHours() > 1
-						? getHours() < 10
-							? `0${getHours()} hours `
-							: `${getHours()} hours `
-						: `0${getHours()} hour `
-					: "") +
-				(duration.minutes() > 0
-					? duration.minutes() > 1
-						? duration.minutes() < 10
-							? `0${duration.minutes()} minutes `
-							: `${duration.minutes()} minutes `
-						: `0${duration.minutes()} minute `
-					: "") +
-				(duration.seconds() > 0
-					? duration.seconds() > 1
-						? duration.seconds() < 10
-							? `0${duration.seconds()} seconds `
-							: `${duration.seconds()} seconds `
-						: `0${duration.seconds()} second `
-					: "")
-			);
+
+			const formatHours = () => {
+				if (getHours() > 0) {
+					if (getHours() > 1) {
+						if (getHours() < 10) return `0${getHours()} hours `;
+						return `${getHours()} hours `;
+					}
+					return `0${getHours()} hour `;
+				}
+				return "";
+			};
+
+			const formatMinutes = () => {
+				if (duration.minutes() > 0) {
+					if (duration.minutes() > 1) {
+						if (duration.minutes() < 10)
+							return `0${duration.minutes()} minutes `;
+						return `${duration.minutes()} minutes `;
+					}
+					return `0${duration.minutes()} minute `;
+				}
+				return "";
+			};
+
+			const formatSeconds = () => {
+				if (duration.seconds() > 0) {
+					if (duration.seconds() > 1) {
+						if (duration.seconds() < 10)
+							return `0${duration.seconds()} seconds `;
+						return `${duration.seconds()} seconds `;
+					}
+					return `0${duration.seconds()} second `;
+				}
+				return "";
+			};
+
+			return formatHours() + formatMinutes() + formatSeconds();
 		},
 		totalLength() {
 			let length = 0;

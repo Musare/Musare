@@ -25,54 +25,48 @@ const modules = {
 					const { username, email, password } = user;
 
 					if (!email || !username || !password)
-						return reject({
-							status: "error",
-							message: "Please fill in all fields"
-						});
+						return reject(new Error("Please fill in all fields"));
 
 					if (!validation.isLength(email, 3, 254))
-						return reject({
-							status: "error",
-							message:
+						return reject(
+							new Error(
 								"Email must have between 3 and 254 characters."
-						});
+							)
+						);
 
 					if (
 						email.indexOf("@") !== email.lastIndexOf("@") ||
 						!validation.regex.emailSimple.test(email)
 					)
-						return reject({
-							status: "error",
-							message: "Invalid email format."
-						});
+						return reject(new Error("Invalid email format."));
 
 					if (!validation.isLength(username, 2, 32))
-						return reject({
-							status: "error",
-							message:
+						return reject(
+							new Error(
 								"Username must have between 2 and 32 characters."
-						});
+							)
+						);
 
 					if (!validation.regex.azAZ09_.test(username))
-						return reject({
-							status: "error",
-							message:
+						return reject(
+							new Error(
 								"Invalid username format. Allowed characters: a-z, A-Z, 0-9 and _."
-						});
+							)
+						);
 
 					if (!validation.isLength(password, 6, 200))
-						return reject({
-							status: "error",
-							message:
+						return reject(
+							new Error(
 								"Password must have between 6 and 200 characters."
-						});
+							)
+						);
 
 					if (!validation.regex.password.test(password))
-						return reject({
-							status: "error",
-							message:
+						return reject(
+							new Error(
 								"Invalid password format. Must have one lowercase letter, one uppercase letter, one number and one special character."
-						});
+							)
+						);
 
 					return auth
 						.register(user)
@@ -83,10 +77,7 @@ const modules = {
 							});
 						})
 						.catch(err => {
-							return reject({
-								status: "error",
-								message: err.message
-							});
+							return reject(new Error(err.message));
 						});
 				});
 			},
@@ -101,10 +92,7 @@ const modules = {
 							});
 						})
 						.catch(err => {
-							return reject({
-								status: "error",
-								message: err.message
-							});
+							return reject(new Error(err.message));
 						});
 				});
 			},
