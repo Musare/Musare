@@ -2,6 +2,15 @@ body {
 	background-color: rgb(245, 245, 245);
 }
 
+.app {
+	min-height: 100vh;
+	position: relative;
+}
+
+.content-wrapper {
+	padding: 60px 0 calc(230px + 60px) 0;
+}
+
 .card {
 	background-color: white;
 	/*padding: 20px;*/

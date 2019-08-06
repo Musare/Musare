@@ -412,21 +412,17 @@ module.exports = {
 	 * @param {Function} cb - gets called with the result
 	 */
 	getUsernameFromId: (session, userId, cb) => {
-		async.waterfall([
-			(next) => {
-				db.models.user.findOne({ _id: userId }, next);
-			},
-		], (err, user) => {
+		db.models.user.findById(userId).then(user => {
+			logger.success("GET_USERNAME_FROM_ID", `Found username for userId "${userId}".`);
+			return cb({
+				status: 'success',
+				data: user.username
+			});
+		}).catch(err => {
 			if (err && err !== true) {
 				err = utils.getError(err);
 				logger.error("GET_USERNAME_FROM_ID", `Getting the username from userId "${userId}" failed. "${err}"`);
-				cb({status: 'failure', message: err});
-			} else {
-				logger.success("GET_USERNAME_FROM_ID", `Found username for userId "${userId}".`);
-				return cb({
-					status: 'success',
-					data: user.username
-				});
+				cb({ status: 'failure', message: err });
 			}
 		});
 	},
@@ -518,7 +514,7 @@ module.exports = {
 			},
 
 			(next) => {
-				db.models.user.update({ _id: updatingUserId }, {$set: {username: newUsername}}, {runValidators: true}, next);
+				db.models.user.updateOne({ _id: updatingUserId }, {$set: {username: newUsername}}, {runValidators: true}, next);
 			}
 		], (err) => {
 			if (err && err !== true) {
@@ -576,7 +572,7 @@ module.exports = {
 			},
 
 			(next) => {
-				db.models.user.update({_id: updatingUserId}, {$set: {"email.address": newEmail, "email.verified": false, "email.verificationToken": verificationToken}}, {runValidators: true}, next);
+				db.models.user.updateOne({_id: updatingUserId}, {$set: {"email.address": newEmail, "email.verified": false, "email.verificationToken": verificationToken}}, {runValidators: true}, next);
 			},
 
 			(res, next) => {
@@ -623,7 +619,7 @@ module.exports = {
 				else return next();
 			},
 			(next) => {
-				db.models.user.update({_id: updatingUserId}, {$set: {role: newRole}}, {runValidators: true}, next);
+				db.models.user.updateOne({_id: updatingUserId}, {$set: {role: newRole}}, {runValidators: true}, next);
 			}
 
 		], (err) => {
@@ -675,7 +671,7 @@ module.exports = {
 			},
 
 			(hashedPassword, next) => {
-				db.models.user.update({_id: userId}, {$set: {"services.password.password": hashedPassword}}, next);
+				db.models.user.updateOne({_id: userId}, {$set: {"services.password.password": hashedPassword}}, next);
 			}
 		], (err) => {
 			if (err) {
@@ -809,7 +805,7 @@ module.exports = {
 			},
 
 			(hashedPassword, next) => {
-				db.models.user.update({"services.password.set.code": code}, {$set: {"services.password.password": hashedPassword}, $unset: {"services.password.set": ''}}, {runValidators: true}, next);
+				db.models.user.updateOne({"services.password.set.code": code}, {$set: {"services.password.password": hashedPassword}, $unset: {"services.password.set": ''}}, {runValidators: true}, next);
 			}
 		], (err) => {
 			if (err && err !== true) {
@@ -843,7 +839,7 @@ module.exports = {
 			(user, next) => {
 				if (!user) return next('Not logged in.');
 				if (!user.services.github || !user.services.github.id) return next('You can\'t remove password login without having GitHub login.');
-				db.models.user.update({_id: userId}, {$unset: {"services.password": ''}}, next);
+				db.models.user.updateOne({_id: userId}, {$unset: {"services.password": ''}}, next);
 			}
 		], (err) => {
 			if (err && err !== true) {
@@ -877,7 +873,7 @@ module.exports = {
 			(user, next) => {
 				if (!user) return next('Not logged in.');
 				if (!user.services.password || !user.services.password.password) return next('You can\'t remove GitHub login without having password login.');
-				db.models.user.update({_id: userId}, {$unset: {"services.github": ''}}, next);
+				db.models.user.updateOne({_id: userId}, {$unset: {"services.github": ''}}, next);
 			}
 		], (err) => {
 			if (err && err !== true) {
@@ -1011,7 +1007,7 @@ module.exports = {
 			},
 
 			(hashedPassword, next) => {
-				db.models.user.update({"services.password.reset.code": code}, {$set: {"services.password.password": hashedPassword}, $unset: {"services.password.reset": ''}}, {runValidators: true}, next);
+				db.models.user.updateOne({"services.password.reset.code": code}, {$set: {"services.password.password": hashedPassword}, $unset: {"services.password.reset": ''}}, {runValidators: true}, next);
 			}
 		], (err) => {
 			if (err && err !== true) {

@@ -1,0 +1,22 @@
+{
+	"recaptcha": {
+		"key": ""
+	},
+	"serverDomain": "http://localhost:8080",
+	"frontendDomain": "http://localhost",
+	"frontendPort": "81",
+  	"cookie": {
+		"domain": "localhost",
+		"secure": false
+	},
+	"siteSettings": {
+		"logo": "/assets/wordmark.png",
+		"siteName": "Musare",
+		"socialLinks": {
+			"github": "https://github.com/Musare/MusareNode",
+			"twitter": "https://twitter.com/MusareApp",
+			"facebook": "https://facebook.com/MusareMusic/",
+			"discord": "https://discord.gg/Y5NxYGP"
+		}
+	}
+}

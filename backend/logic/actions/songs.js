@@ -73,7 +73,7 @@ module.exports = {
 	length: hooks.adminRequired((session, cb) => {
 		async.waterfall([
 			(next) => {
-				db.models.song.count({}, next);
+				db.models.song.countDocuments({}, next);
 			}
 		], (err, count) => {
 			if (err) {
@@ -105,7 +105,35 @@ module.exports = {
 				return cb({'status': 'failure', 'message': err});
 			}
 			logger.success("SONGS_GET_SET", `Got set from songs successfully.`);
+			logger.stationIssue(songs.length, true);
+			logger.stationIssue(Math.max(songs.length - 15, 0), true);
 			cb(songs.splice(Math.max(songs.length - 15, 0)));
+		});
+	}),
+
+	/**
+	 * Gets a song
+	 *
+	 * @param session
+	 * @param songId - the song id
+	 * @param cb
+	 */
+	getSong: hooks.adminRequired((session, songId, cb) => {
+		console.log(songId);
+
+		async.waterfall([
+			(next) => {
+				db.models.song.findOne({ songId }).exec(next);
+			}
+		], (err, song) => {
+			if (err) {
+				err = utils.getError(err);
+				logger.error("SONGS_GET_SONG", `Failed to get song ${songId}. "${err}"`);
+				return cb({ status: 'failure', message: err });
+			} else {
+				logger.success("SONGS_GET_SONG", `Got song ${songId} successfully.`);
+				cb({ status: "success", data: song });
+			}
 		});
 	}),
 
@@ -120,7 +148,7 @@ module.exports = {
 	update: hooks.adminRequired((session, songId, song, cb) => {
 		async.waterfall([
 			(next) => {
-				db.models.song.update({_id: songId}, song, {runValidators: true}, next);
+				db.models.song.updateOne({_id: songId}, song, {runValidators: true}, next);
 			},
 
 			(res, next) => {
@@ -148,7 +176,7 @@ module.exports = {
 	remove: hooks.adminRequired((session, songId, cb) => {
 		async.waterfall([
 			(next) => {
-				db.models.song.remove({_id: songId}, next);
+				db.models.song.deleteOne({_id: songId}, next);
 			},
 
 			(res, next) => {//TODO Check if res gets returned from above
@@ -192,7 +220,7 @@ module.exports = {
 				newSong.save(next);
 			},
 
-			(next) => {
+			(res, next) => {
 				queueSongs.remove(session, song._id, () => {
 					next();
 				});
@@ -238,11 +266,11 @@ module.exports = {
 			songId = song._id;
 			db.models.user.findOne({ _id: userId }, (err, user) => {
 				if (user.liked.indexOf(songId) !== -1) return cb({ status: 'failure', message: 'You have already liked this song.' });
-				db.models.user.update({_id: userId}, {$push: {liked: songId}, $pull: {disliked: songId}}, err => {
+				db.models.user.updateOne({_id: userId}, {$push: {liked: songId}, $pull: {disliked: songId}}, err => {
 					if (!err) {
-						db.models.user.count({"liked": songId}, (err, likes) => {
+						db.models.user.countDocuments({"liked": songId}, (err, likes) => {
 							if (err) return cb({ status: 'failure', message: 'Something went wrong while liking this song.' });
-							db.models.user.count({"disliked": songId}, (err, dislikes) => {
+							db.models.user.countDocuments({"disliked": songId}, (err, dislikes) => {
 								if (err) return cb({ status: 'failure', message: 'Something went wrong while liking this song.' });
 								db.models.song.update({_id: songId}, {$set: {likes: likes, dislikes: dislikes}}, (err) => {
 									if (err) return cb({ status: 'failure', message: 'Something went wrong while liking this song.' });
@@ -286,11 +314,11 @@ module.exports = {
 			songId = song._id;
 			db.models.user.findOne({ _id: userId }, (err, user) => {
 				if (user.disliked.indexOf(songId) !== -1) return cb({ status: 'failure', message: 'You have already disliked this song.' });
-				db.models.user.update({_id: userId}, {$push: {disliked: songId}, $pull: {liked: songId}}, err => {
+				db.models.user.updateOne({_id: userId}, {$push: {disliked: songId}, $pull: {liked: songId}}, err => {
 					if (!err) {
-						db.models.user.count({"liked": songId}, (err, likes) => {
+						db.models.user.countDocuments({"liked": songId}, (err, likes) => {
 							if (err) return cb({ status: 'failure', message: 'Something went wrong while disliking this song.' });
-							db.models.user.count({"disliked": songId}, (err, dislikes) => {
+							db.models.user.countDocuments({"disliked": songId}, (err, dislikes) => {
 								if (err) return cb({ status: 'failure', message: 'Something went wrong while disliking this song.' });
 								db.models.song.update({_id: songId}, {$set: {likes: likes, dislikes: dislikes}}, (err, res) => {
 									if (err) return cb({ status: 'failure', message: 'Something went wrong while disliking this song.' });
@@ -337,14 +365,14 @@ module.exports = {
 					status: 'failure',
 					message: 'You have not disliked this song.'
 				});
-				db.models.user.update({_id: userId}, {$pull: {liked: songId, disliked: songId}}, err => {
+				db.models.user.updateOne({_id: userId}, {$pull: {liked: songId, disliked: songId}}, err => {
 					if (!err) {
-						db.models.user.count({"liked": songId}, (err, likes) => {
+						db.models.user.countDocuments({"liked": songId}, (err, likes) => {
 							if (err) return cb({
 								status: 'failure',
 								message: 'Something went wrong while undisliking this song.'
 							});
-							db.models.user.count({"disliked": songId}, (err, dislikes) => {
+							db.models.user.countDocuments({"disliked": songId}, (err, dislikes) => {
 								if (err) return cb({
 									status: 'failure',
 									message: 'Something went wrong while undisliking this song.'
@@ -403,13 +431,13 @@ module.exports = {
 			songId = song._id;
 			db.models.user.findOne({ _id: userId }, (err, user) => {
 				if (user.liked.indexOf(songId) === -1) return cb({ status: 'failure', message: 'You have not liked this song.' });
-				db.models.user.update({_id: userId}, {$pull: {liked: songId, disliked: songId}}, err => {
+				db.models.user.updateOne({_id: userId}, {$pull: {liked: songId, disliked: songId}}, err => {
 					if (!err) {
-						db.models.user.count({"liked": songId}, (err, likes) => {
+						db.models.user.countDocuments({"liked": songId}, (err, likes) => {
 							if (err) return cb({ status: 'failure', message: 'Something went wrong while unliking this song.' });
-							db.models.user.count({"disliked": songId}, (err, dislikes) => {
+							db.models.user.countDocuments({"disliked": songId}, (err, dislikes) => {
 								if (err) return cb({ status: 'failure', message: 'Something went wrong while undiking this song.' });
-								db.models.song.update({_id: songId}, {$set: {likes: likes, dislikes: dislikes}}, (err) => {
+								db.models.song.updateOne({_id: songId}, {$set: {likes: likes, dislikes: dislikes}}, (err) => {
 									if (err) return cb({ status: 'failure', message: 'Something went wrong while unliking this song.' });
 									songs.updateSong(songId, (err, song) => {});
 									cache.pub('song.unlike', JSON.stringify({ songId: oldSongId, userId: session.userId, likes: likes, dislikes: dislikes }));

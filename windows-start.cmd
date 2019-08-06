@@ -1,7 +1,7 @@
 start "Redis" "startRedis.cmd"
 start "Mongo" "startMongo.cmd"
 cd frontend
-start "Frontend" npm run development-watch
+start "Frontend" yarn run dev
 cd ..
 SLEEP 20
 cd backend

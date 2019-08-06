@@ -2,24 +2,28 @@ Thumbs.db
 .DS_Store
 *.swp
 .idea/
+.vscode/
 .vagrant/
 
 startRedis.cmd
 startMongo.cmd
 .database
+.db
 .redis
-dump.rdb
+*.rdb
 npm-debug.log
 
-# Back End
+# Backend
 backend/node_modules/
 backend/config/default.json
 
-# Front End
+# Frontend
+frontend/yarn-error.log
 frontend/node_modules/
-frontend/build/*.js
-frontend/build/index.html
-frontend/build/config/default.json
+frontend/dist/build/
+!frontend/dist/lofig.min.js
+frontend/dist/index.html
+frontend/dist/config/default.json
 
 npm
 

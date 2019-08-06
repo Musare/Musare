@@ -3,41 +3,38 @@ let callbacksPersist = [];
 let onConnectCallbacks = [];
 let onDisconnectCallbacks = [];
 let onConnectErrorCallbacks = [];
-let onConnectCallbacksPersist = [];
-let onDisconnectCallbacksPersist = [];
-let onConnectErrorCallbacksPersist = [];
+const onConnectCallbacksPersist = [];
+const onDisconnectCallbacksPersist = [];
+const onConnectErrorCallbacksPersist = [];
 
 export default {
-
 	ready: false,
 	socket: null,
 
-	getSocket: function () {
-		if (arguments[0] === true) {
-			if (this.ready) arguments[1](this.socket);
-			else callbacksPersist.push(arguments[1]);
-		} else {
-			if (this.ready) arguments[0](this.socket);
-			else callbacks.push(arguments[0]);
-		}
+	getSocket(...args) {
+		if (args[0] === true) {
+			if (this.ready) args[1](this.socket);
+			else callbacksPersist.push(args[1]);
+		} else if (this.ready) args[0](this.socket);
+		else callbacks.push(args[0]);
 	},
 
-	onConnect: function() {
-		if (arguments[0] === true) {
-			onConnectCallbacksPersist.push(arguments[1]);
-		} else onConnectCallbacks.push(arguments[0]);
+	onConnect(...args) {
+		if (args[0] === true) {
+			onConnectCallbacksPersist.push(args[1]);
+		} else onConnectCallbacks.push(args[0]);
 	},
 
-	onDisconnect: function() {
-		if (arguments[0] === true) {
-			onDisconnectCallbacksPersist.push(arguments[1]);
-		} else onDisconnectCallbacks.push(arguments[0]);
+	onDisconnect(...args) {
+		if (args[0] === true) {
+			onDisconnectCallbacksPersist.push(args[1]);
+		} else onDisconnectCallbacks.push(args[0]);
 	},
 
-	onConnectError: function() {
-		if (arguments[0] === true) {
-			onConnectErrorCallbacksPersist.push(arguments[1]);
-		} else onConnectErrorCallbacks.push(arguments[0]);
+	onConnectError(...args) {
+		if (args[0] === true) {
+			onConnectErrorCallbacksPersist.push(args[1]);
+		} else onConnectErrorCallbacks.push(args[0]);
 	},
 
 	clear: () => {
@@ -47,39 +44,43 @@ export default {
 		callbacks = [];
 	},
 
-	removeAllListeners: function () {
-		Object.keys(this.socket._callbacks).forEach((id) => {
-			if (id.indexOf("$event:") !== -1 && id.indexOf("$event:keep.") === -1) {
+	removeAllListeners() {
+		Object.keys(this.socket._callbacks).forEach(id => {
+			if (
+				id.indexOf("$event:") !== -1 &&
+				id.indexOf("$event:keep.") === -1
+			) {
 				delete this.socket._callbacks[id];
 			}
 		});
 	},
 
-	init: function (url) {
+	init(url) {
+		/* eslint-disable-next-line no-undef */
 		this.socket = window.socket = io(url);
-		this.socket.on('connect', () => {
-			onConnectCallbacks.forEach((cb) => {
+		this.socket.on("connect", () => {
+			onConnectCallbacks.forEach(cb => {
 				cb();
 			});
-			onConnectCallbacksPersist.forEach((cb) => {
+			onConnectCallbacksPersist.forEach(cb => {
 				cb();
 			});
 		});
-		this.socket.on('disconnect', () => {
+		this.socket.on("disconnect", () => {
 			console.log("IO: SOCKET DISCONNECTED");
-			onDisconnectCallbacks.forEach((cb) => {
+			onDisconnectCallbacks.forEach(cb => {
 				cb();
 			});
-			onDisconnectCallbacksPersist.forEach((cb) => {
+			onDisconnectCallbacksPersist.forEach(cb => {
 				cb();
 			});
 		});
-		this.socket.on('connect_error', () => {
+		this.socket.on("connect_error", () => {
 			console.log("IO: SOCKET CONNECT ERROR");
-			onConnectErrorCallbacks.forEach((cb) => {
+			onConnectErrorCallbacks.forEach(cb => {
 				cb();
 			});
-			onConnectErrorCallbacksPersist.forEach((cb) => {
+			onConnectErrorCallbacksPersist.forEach(cb => {
 				cb();
 			});
 		});
@@ -94,4 +95,4 @@ export default {
 		callbacks = [];
 		callbacksPersist = [];
 	}
-}
+};

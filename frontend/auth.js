@@ -1,23 +1,23 @@
 let callbacks = [];
-let bannedCallbacks = [];
+const bannedCallbacks = [];
 
 export default {
-
 	ready: false,
 	authenticated: false,
-	username: '',
-	userId: '',
-	role: 'default',
+	username: "",
+	userId: "",
+	role: "default",
 	banned: null,
 	ban: {},
 
-	getStatus: function (cb) {
-		if (this.ready) cb(this.authenticated, this.role, this.username, this.userId);
+	getStatus(cb) {
+		if (this.ready)
+			cb(this.authenticated, this.role, this.username, this.userId);
 		else callbacks.push(cb);
 	},
 
-	setBanned: function (ban) {
-		let _this = this;
+	setBanned(ban) {
+		const _this = this;
 		_this.banned = true;
 		_this.ban = ban;
 		bannedCallbacks.forEach(callback => {
@@ -25,13 +25,13 @@ export default {
 		});
 	},
 
-	isBanned: function (cb) {
+	isBanned(cb) {
 		if (this.ready) return cb(false);
 		if (!this.ready && this.banned === true) return cb(true, this.ban);
-		bannedCallbacks.push(cb);
+		return bannedCallbacks.push(cb);
 	},
 
-	data: function (authenticated, role, username, userId) {
+	data(authenticated, role, username, userId) {
 		this.authenticated = authenticated;
 		this.role = role;
 		this.username = username;
@@ -45,4 +45,4 @@ export default {
 		});
 		callbacks = [];
 	}
-}
+};

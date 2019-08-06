@@ -163,7 +163,9 @@ let lib = {
 			}
 			cache.pub('playlist.create', playlist._id);
 			logger.success("PLAYLIST_CREATE", `Successfully created private playlist for user "${userId}".`);
-			cb({ 'status': 'success', 'message': 'Successfully created playlist' });
+			cb({ status: 'success', message: 'Successfully created playlist', data: {
+				_id: playlist._id
+			} });
 		});
 	}),
 
@@ -212,7 +214,7 @@ let lib = {
 	update: hooks.loginRequired((session, playlistId, playlist, cb, userId) => {
 		async.waterfall([
 			(next) => {
-				db.models.playlist.update({ _id: playlistId, createdBy: userId }, playlist, {runValidators: true}, next);
+				db.models.playlist.updateOne({ _id: playlistId, createdBy: userId }, playlist, {runValidators: true}, next);
 			},
 
 			(res, next) => {
@@ -270,7 +272,7 @@ let lib = {
 				});
 			},
 			(newSong, next) => {
-				db.models.playlist.update({_id: playlistId}, {$push: {songs: newSong}}, {runValidators: true}, (err) => {
+				db.models.playlist.updateOne({_id: playlistId}, {$push: {songs: newSong}}, {runValidators: true}, (err) => {
 					if (err) return next(err);
 					playlists.updatePlaylist(playlistId, (err, playlist) => {
 						next(err, playlist, newSong);
@@ -362,7 +364,7 @@ let lib = {
 
 			(playlist, next) => {
 				if (!playlist || playlist.createdBy !== userId) return next('Playlist not found');
-				db.models.playlist.update({_id: playlistId}, {$pull: {songs: {songId: songId}}}, next);
+				db.models.playlist.updateOne({_id: playlistId}, {$pull: {songs: {songId: songId}}}, next);
 			},
 
 			(res, next) => {
@@ -392,7 +394,7 @@ let lib = {
 	updateDisplayName: hooks.loginRequired((session, playlistId, displayName, cb, userId) => {
 		async.waterfall([
 			(next) => {
-				db.models.playlist.update({ _id: playlistId, createdBy: userId }, { $set: { displayName } }, {runValidators: true}, next);
+				db.models.playlist.updateOne({ _id: playlistId, createdBy: userId }, { $set: { displayName } }, {runValidators: true}, next);
 			},
 
 			(res, next) => {
@@ -437,14 +439,14 @@ let lib = {
 			},
 
 			(song, next) => {
-				db.models.playlist.update({_id: playlistId}, {$pull: {songs: {songId}}}, (err) => {
+				db.models.playlist.updateOne({_id: playlistId}, {$pull: {songs: {songId}}}, (err) => {
 					if (err) return next(err);
 					return next(null, song);
 				});
 			},
 
 			(song, next) => {
-				db.models.playlist.update({_id: playlistId}, {
+				db.models.playlist.updateOne({_id: playlistId}, {
 					$push: {
 						songs: {
 							$each: [song],
@@ -496,14 +498,14 @@ let lib = {
 			},
 
 			(song, next) => {
-				db.models.playlist.update({_id: playlistId}, {$pull: {songs: {songId}}}, (err) => {
+				db.models.playlist.updateOne({_id: playlistId}, {$pull: {songs: {songId}}}, (err) => {
 					if (err) return next(err);
 					return next(null, song);
 				});
 			},
 
 			(song, next) => {
-				db.models.playlist.update({_id: playlistId}, {
+				db.models.playlist.updateOne({_id: playlistId}, {
 					$push: {
 						songs: song
 					}

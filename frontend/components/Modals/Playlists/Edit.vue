@@ -1,267 +1,418 @@
 <template>
-	<modal title='Edit Playlist'>
-		<div slot='body'>
+	<modal title="Edit Playlist">
+		<div slot="body">
 			<nav class="level">
 				<div class="level-item has-text-centered">
 					<div>
-						<p class="heading">Total Length</p>
-						<p class="title">{{ totalLength() }}</p>
+						<p class="heading">
+							Total Length
+						</p>
+						<p class="title">
+							{{ totalLength() }}
+						</p>
 					</div>
 				</div>
 			</nav>
 			<hr />
-			<aside class='menu' v-if='playlist.songs && playlist.songs.length > 0'>
-				<ul class='menu-list'>
-					<li v-for='song in playlist.songs' track-by='$index'>
-						<a :href='' target='_blank'>{{ song.title }}</a>
-						<div class='controls'>
-							<a href='#' @click='promoteSong(song.songId)'>
-								<i class='material-icons' v-if='$index > 0'>keyboard_arrow_up</i>
-								<i class='material-icons' style='opacity: 0' v-else>error</i>
+			<aside class="menu">
+				<ul class="menu-list">
+					<li v-for="(song, index) in playlist.songs" :key="index">
+						<a href="#" target="_blank">{{ song.title }}</a>
+						<div class="controls">
+							<a href="#" v-on:click="promoteSong(song.songId)">
+								<i class="material-icons" v-if="index > 0"
+									>keyboard_arrow_up</i
+								>
+								<i
+									v-else
+									class="material-icons"
+									style="opacity: 0"
+									>error</i
+								>
 							</a>
-							<a href='#' @click='demoteSong(song.songId)'>
-								<i class='material-icons' v-if='playlist.songs.length - 1 !== $index'>keyboard_arrow_down</i>
-								<i class='material-icons' style='opacity: 0' v-else>error</i>
+							<a href="#" v-on:click="demoteSong(song.songId)">
+								<i
+									v-if="playlist.songs.length - 1 !== index"
+									class="material-icons"
+									>keyboard_arrow_down</i
+								>
+								<i
+									v-else
+									class="material-icons"
+									style="opacity: 0"
+									>error</i
+								>
 							</a>
-							<a href='#' @click='removeSongFromPlaylist(song.songId)'><i class='material-icons'>delete</i></a>
+							<a
+								href="#"
+								v-on:click="removeSongFromPlaylist(song.songId)"
+							>
+								<i class="material-icons">delete</i>
+							</a>
 						</div>
 					</li>
 				</ul>
 				<br />
 			</aside>
-			<div class='control is-grouped'>
-				<p class='control is-expanded'>
-					<input class='input' type='text' placeholder='Search for Song to add' v-model='songQuery' autofocus @keyup.enter='searchForSongs()'>
+			<div class="control is-grouped">
+				<p class="control is-expanded">
+					<input
+						v-model="songQuery"
+						class="input"
+						type="text"
+						placeholder="Search for Song to add"
+						autofocus
+						@keyup.enter="searchForSongs()"
+					/>
 				</p>
-				<p class='control'>
-					<a class='button is-info' @click='searchForSongs()' href="#">Search</a>
+				<p class="control">
+					<a class="button is-info" @click="searchForSongs()" href="#"
+						>Search</a
+					>
 				</p>
 			</div>
-			<table class='table' v-if='songQueryResults.length > 0'>
+			<table v-if="songQueryResults.length > 0" class="table">
 				<tbody>
-				<tr v-for='result in songQueryResults'>
-					<td>
-						<img :src='result.thumbnail' />
-					</td>
-					<td>{{ result.title }}</td>
-					<td>
-						<a class='button is-success' @click='addSongToPlaylist(result.id)' href='#'>
-							Add
-						</a>
-					</td>
-				</tr>
+					<tr
+						v-for="(result, index) in songQueryResults"
+						:key="index"
+					>
+						<td>
+							<img :src="result.thumbnail" />
+						</td>
+						<td>{{ result.title }}</td>
+						<td>
+							<a
+								class="button is-success"
+								href="#"
+								@click="addSongToPlaylist(result.id)"
+								>Add</a
+							>
+						</td>
+					</tr>
 				</tbody>
 			</table>
-			<div class='control is-grouped'>
-				<p class='control is-expanded'>
-					<input class='input' type='text' placeholder='YouTube Playlist URL' v-model='importQuery' @keyup.enter="importPlaylist()">
+			<div class="control is-grouped">
+				<p class="control is-expanded">
+					<input
+						v-model="importQuery"
+						class="input"
+						type="text"
+						placeholder="YouTube Playlist URL"
+						@keyup.enter="importPlaylist()"
+					/>
 				</p>
-				<p class='control'>
-					<a class='button is-info' @click='importPlaylist()' href="#">Import</a>
+				<p class="control">
+					<a class="button is-info" @click="importPlaylist()" href="#"
+						>Import</a
+					>
 				</p>
 			</div>
 			<h5>Edit playlist details:</h5>
-			<div class='control is-grouped'>
-				<p class='control is-expanded'>
-					<input class='input' type='text' placeholder='Playlist Display Name' v-model='playlist.displayName' @keyup.enter="renamePlaylist()">
+			<div class="control is-grouped">
+				<p class="control is-expanded">
+					<input
+						v-model="playlist.displayName"
+						class="input"
+						type="text"
+						placeholder="Playlist Display Name"
+						@keyup.enter="renamePlaylist()"
+					/>
 				</p>
-				<p class='control'>
-					<a class='button is-info' @click='renamePlaylist()' href="#">Rename</a>
+				<p class="control">
+					<a class="button is-info" @click="renamePlaylist()" href="#"
+						>Rename</a
+					>
 				</p>
 			</div>
 		</div>
-		<div slot='footer'>
-			<a class='button is-danger' @click='removePlaylist()' href="#">Remove Playlist</a>
+		<div slot="footer">
+			<a class="button is-danger" v-on:click="removePlaylist()" href="#"
+				>Remove Playlist</a
+			>
 		</div>
 	</modal>
 </template>
 
 <script>
-	import { Toast } from 'vue-roaster';
-	import Modal from '../Modal.vue';
-	import io from '../../../io';
-	import validation from '../../../validation';
+import { mapState } from "vuex";
 
-	export default {
-		components: { Modal },
-		data() {
-			return {
-				playlist: {songs: []},
-				songQueryResults: [],
-				songQuery: '',
-				importQuery: ''
-			}
+import { Toast } from "vue-roaster";
+import Modal from "../Modal.vue";
+import io from "../../../io";
+import validation from "../../../validation";
+
+export default {
+	components: { Modal },
+	data() {
+		return {
+			playlist: { songs: [] },
+			songQueryResults: [],
+			songQuery: "",
+			importQuery: ""
+		};
+	},
+	computed: mapState("user/playlists", {
+		editing: state => state.editing
+	}),
+	mounted() {
+		const _this = this;
+		io.getSocket(socket => {
+			_this.socket = socket;
+			_this.socket.emit("playlists.getPlaylist", _this.editing, res => {
+				if (res.status === "success") _this.playlist = res.data;
+				_this.playlist.oldId = res.data._id;
+			});
+			_this.socket.on("event:playlist.addSong", data => {
+				if (_this.playlist._id === data.playlistId)
+					_this.playlist.songs.push(data.song);
+			});
+			_this.socket.on("event:playlist.removeSong", data => {
+				if (_this.playlist._id === data.playlistId) {
+					_this.playlist.songs.forEach((song, index) => {
+						if (song.songId === data.songId)
+							_this.playlist.songs.splice(index, 1);
+					});
+				}
+			});
+			_this.socket.on("event:playlist.updateDisplayName", data => {
+				if (_this.playlist._id === data.playlistId)
+					_this.playlist.displayName = data.displayName;
+			});
+			_this.socket.on("event:playlist.moveSongToBottom", data => {
+				if (_this.playlist._id === data.playlistId) {
+					let songIndex;
+					_this.playlist.songs.forEach((song, index) => {
+						if (song.songId === data.songId) songIndex = index;
+					});
+					const song = _this.playlist.songs.splice(songIndex, 1)[0];
+					_this.playlist.songs.push(song);
+				}
+			});
+			_this.socket.on("event:playlist.moveSongToTop", data => {
+				if (_this.playlist._id === data.playlistId) {
+					let songIndex;
+					_this.playlist.songs.forEach((song, index) => {
+						if (song.songId === data.songId) songIndex = index;
+					});
+					const song = _this.playlist.songs.splice(songIndex, 1)[0];
+					_this.playlist.songs.unshift(song);
+				}
+			});
+		});
+	},
+	methods: {
+		formatTime(length) {
+			const duration = moment.duration(length, "seconds");
+			const getHours = () => {
+				return Math.floor(duration.asHours());
+			};
+
+			if (length <= 0) return "0 seconds";
+
+			const formatHours = () => {
+				if (getHours() > 0) {
+					if (getHours() > 1) {
+						if (getHours() < 10) return `0${getHours()} hours `;
+						return `${getHours()} hours `;
+					}
+					return `0${getHours()} hour `;
+				}
+				return "";
+			};
+
+			const formatMinutes = () => {
+				if (duration.minutes() > 0) {
+					if (duration.minutes() > 1) {
+						if (duration.minutes() < 10)
+							return `0${duration.minutes()} minutes `;
+						return `${duration.minutes()} minutes `;
+					}
+					return `0${duration.minutes()} minute `;
+				}
+				return "";
+			};
+
+			const formatSeconds = () => {
+				if (duration.seconds() > 0) {
+					if (duration.seconds() > 1) {
+						if (duration.seconds() < 10)
+							return `0${duration.seconds()} seconds `;
+						return `${duration.seconds()} seconds `;
+					}
+					return `0${duration.seconds()} second `;
+				}
+				return "";
+			};
+
+			return formatHours() + formatMinutes() + formatSeconds();
 		},
-		methods: {
-			formatTime: function (length) {
-				let duration = moment.duration(length, 'seconds');
-				function getHours() {return Math.floor(duration.asHours());}
-				if (length <= 0) return '0 seconds';
-				else return ((getHours() > 0 ? (getHours() > 1 ? (getHours() < 10 ? ('0' + getHours() + ' hours ') : (getHours() + ' hours ')) : ('0' + getHours() + ' hour ')) : '') + (duration.minutes() > 0 ? (duration.minutes() > 1 ? (duration.minutes() < 10 ? ('0' + duration.minutes() + ' minutes ') : (duration.minutes() + ' minutes ')) : ('0' + duration.minutes() + ' minute ')) : '') + (duration.seconds() > 0 ? (duration.seconds() > 1 ? (duration.seconds() < 10 ? ('0' + duration.seconds() + ' seconds ') : (duration.seconds() + ' seconds ')) : ('0' + duration.seconds() + ' second ')) : ''));
-			},
-			totalLength: function() {
-			    let length = 0;
-			    this.playlist.songs.forEach((song) => {
-			        length += song.duration;
-				});
-			    return this.formatTime(length);
-			},
-			searchForSongs: function () {
-				let _this = this;
-				let query = _this.songQuery;
-				if (query.indexOf('&index=') !== -1) {
-					query = query.split('&index=');
-					query.pop();
-					query = query.join('');
-				}
-				if (query.indexOf('&list=') !== -1) {
-					query = query.split('&list=');
-					query.pop();
-					query = query.join('');
-				}
-				_this.socket.emit('apis.searchYoutube', query, res => {
-					if (res.status == 'success') {
-						_this.songQueryResults = [];
-						for (let i = 0; i < res.data.items.length; i++) {
-							_this.songQueryResults.push({
-								id: res.data.items[i].id.videoId,
-								url: `https://www.youtube.com/watch?v=${this.id}`,
-								title: res.data.items[i].snippet.title,
-								thumbnail: res.data.items[i].snippet.thumbnails.default.url
-							});
-						}
-					} else if (res.status === 'error') Toast.methods.addToast(res.message, 3000);
-				});
-			},
-			addSongToPlaylist: function (id) {
-				let _this = this;
-				_this.socket.emit('playlists.addSongToPlaylist', id, _this.playlist._id, res => {
-					Toast.methods.addToast(res.message, 4000);
-				});
-			},
-			importPlaylist: function () {
-				let _this = this;
-				Toast.methods.addToast('Starting to import your playlist. This can take some time to do.', 4000);
-				this.socket.emit('playlists.addSetToPlaylist', _this.importQuery, _this.playlist._id, res => {
-					if (res.status === 'success') _this.playlist.songs = res.data;
-					Toast.methods.addToast(res.message, 4000);
-				});
-			},
-			removeSongFromPlaylist: function (id) {
-				let _this = this;
-				this.socket.emit('playlists.removeSongFromPlaylist', id, _this.playlist._id, res => {
-					Toast.methods.addToast(res.message, 4000);
-				});
-			},
-			renamePlaylist: function () {
-				const displayName = this.playlist.displayName;
-				if (!validation.isLength(displayName, 2, 32)) return Toast.methods.addToast('Display name must have between 2 and 32 characters.', 8000);
-				if (!validation.regex.azAZ09_.test(displayName)) return Toast.methods.addToast('Invalid display name format. Allowed characters: a-z, A-Z, 0-9 and _.', 8000);
-
-
-				this.socket.emit('playlists.updateDisplayName', this.playlist._id, this.playlist.displayName, res => {
-					Toast.methods.addToast(res.message, 4000);
-				});
-			},
-			removePlaylist: function () {
-				let _this = this;
-				_this.socket.emit('playlists.remove', _this.playlist._id, res => {
+		totalLength() {
+			let length = 0;
+			this.playlist.songs.forEach(song => {
+				length += song.duration;
+			});
+			return this.formatTime(length);
+		},
+		searchForSongs() {
+			const _this = this;
+			let query = _this.songQuery;
+			if (query.indexOf("&index=") !== -1) {
+				query = query.split("&index=");
+				query.pop();
+				query = query.join("");
+			}
+			if (query.indexOf("&list=") !== -1) {
+				query = query.split("&list=");
+				query.pop();
+				query = query.join("");
+			}
+			_this.socket.emit("apis.searchYoutube", query, res => {
+				if (res.status === "success") {
+					_this.songQueryResults = [];
+					for (let i = 0; i < res.data.items.length; i += 1) {
+						_this.songQueryResults.push({
+							id: res.data.items[i].id.videoId,
+							url: `https://www.youtube.com/watch?v=${this.id}`,
+							title: res.data.items[i].snippet.title,
+							thumbnail:
+								res.data.items[i].snippet.thumbnails.default.url
+						});
+					}
+				} else if (res.status === "error")
 					Toast.methods.addToast(res.message, 3000);
-					if (res.status === 'success') {
-						_this.$parent.modals.editPlaylist = !_this.$parent.modals.editPlaylist;
-					}
-				});
-			},
-			promoteSong: function (songId) {
-				let _this = this;
-				_this.socket.emit('playlists.moveSongToTop', _this.playlist._id, songId, res => {
-					Toast.methods.addToast(res.message, 4000);
-				});
-			},
-			demoteSong: function (songId) {
-				let _this = this;
-				_this.socket.emit('playlists.moveSongToBottom', _this.playlist._id, songId, res => {
-					Toast.methods.addToast(res.message, 4000);
-				});
-			}
-		},
-		ready: function () {
-			let _this = this;
-			io.getSocket((socket) => {
-				_this.socket = socket;
-				_this.socket.emit('playlists.getPlaylist', _this.$parent.playlistBeingEdited, res => {
-					if (res.status === 'success') _this.playlist = res.data; _this.playlist.oldId = res.data._id;
-				});
-				_this.socket.on('event:playlist.addSong', data => {
-					if (_this.playlist._id === data.playlistId) _this.playlist.songs.push(data.song);
-				});
-				_this.socket.on('event:playlist.removeSong', data => {
-					if (_this.playlist._id === data.playlistId) {
-						_this.playlist.songs.forEach((song, index) => {
-							if (song.songId === data.songId) _this.playlist.songs.splice(index, 1);
-						});
-					}
-				});
-				_this.socket.on('event:playlist.updateDisplayName', data => {
-					if (_this.playlist._id === data.playlistId) _this.playlist.displayName = data.displayName;
-				});
-				_this.socket.on('event:playlist.moveSongToBottom', data => {
-					if (_this.playlist._id === data.playlistId) {
-						let songIndex;
-						_this.playlist.songs.forEach((song, index) => {
-							if (song.songId === data.songId) songIndex = index;
-						});
-						let song = _this.playlist.songs.splice(songIndex, 1)[0];
-						_this.playlist.songs.push(song);
-					}
-				});
-				_this.socket.on('event:playlist.moveSongToTop', (data) => {
-					if (_this.playlist._id === data.playlistId) {
-						let songIndex;
-						_this.playlist.songs.forEach((song, index) => {
-							if (song.songId === data.songId) songIndex = index;
-						});
-						let song = _this.playlist.songs.splice(songIndex, 1)[0];
-						_this.playlist.songs.unshift(song);
-					}
-				});
 			});
 		},
-		events: {
-			closeModal: function() {
-				this.$parent.modals.editPlaylist = !this.$parent.modals.editPlaylist;
-			}
+		addSongToPlaylist(id) {
+			const _this = this;
+			_this.socket.emit(
+				"playlists.addSongToPlaylist",
+				id,
+				_this.playlist._id,
+				res => {
+					Toast.methods.addToast(res.message, 4000);
+				}
+			);
+		},
+		importPlaylist() {
+			const _this = this;
+			Toast.methods.addToast(
+				"Starting to import your playlist. This can take some time to do.",
+				4000
+			);
+			this.socket.emit(
+				"playlists.addSetToPlaylist",
+				_this.importQuery,
+				_this.playlist._id,
+				res => {
+					if (res.status === "success")
+						_this.playlist.songs = res.data;
+					Toast.methods.addToast(res.message, 4000);
+				}
+			);
+		},
+		removeSongFromPlaylist(id) {
+			const _this = this;
+			this.socket.emit(
+				"playlists.removeSongFromPlaylist",
+				id,
+				_this.playlist._id,
+				res => {
+					Toast.methods.addToast(res.message, 4000);
+				}
+			);
+		},
+		renamePlaylist() {
+			const { displayName } = this.playlist;
+			if (!validation.isLength(displayName, 2, 32))
+				return Toast.methods.addToast(
+					"Display name must have between 2 and 32 characters.",
+					8000
+				);
+			if (!validation.regex.azAZ09_.test(displayName))
+				return Toast.methods.addToast(
+					"Invalid display name format. Allowed characters: a-z, A-Z, 0-9 and _.",
+					8000
+				);
+
+			return this.socket.emit(
+				"playlists.updateDisplayName",
+				this.playlist._id,
+				this.playlist.displayName,
+				res => {
+					Toast.methods.addToast(res.message, 4000);
+				}
+			);
+		},
+		removePlaylist() {
+			const _this = this;
+			_this.socket.emit("playlists.remove", _this.playlist._id, res => {
+				Toast.methods.addToast(res.message, 3000);
+				if (res.status === "success") {
+					_this.$parent.modals.editPlaylist = !_this.$parent.modals
+						.editPlaylist;
+				}
+			});
+		},
+		promoteSong(songId) {
+			const _this = this;
+			_this.socket.emit(
+				"playlists.moveSongToTop",
+				_this.playlist._id,
+				songId,
+				res => {
+					Toast.methods.addToast(res.message, 4000);
+				}
+			);
+		},
+		demoteSong(songId) {
+			const _this = this;
+			_this.socket.emit(
+				"playlists.moveSongToBottom",
+				_this.playlist._id,
+				songId,
+				res => {
+					Toast.methods.addToast(res.message, 4000);
+				}
+			);
 		}
 	}
+};
 </script>
 
-<style type='scss' scoped>
-	.menu { padding: 0 20px; }
+<style lang="scss" scoped>
+.menu {
+	padding: 0 20px;
+}
 
-	.menu-list li {
+.menu-list li {
+	display: flex;
+	justify-content: space-between;
+}
+
+.menu-list a:hover {
+	color: #000 !important;
+}
+
+li a {
+	display: flex;
+	align-items: center;
+}
+
+.controls {
+	display: flex;
+
+	a {
 		display: flex;
-		justify-content: space-between;
+		align-items: center;
 	}
+}
 
-	.menu-list a:hover { color: #000 !important; }
+.table {
+	margin-bottom: 0;
+}
 
-	li a {
-		display: flex;
-    	align-items: center;
-	}
-
-	.controls {
-		display: flex;
-
-		a {
-			display: flex;
-    		align-items: center;
-		}
-	}
-
-	.table {
-		margin-bottom: 0;
-	}
-
-	h5 { padding: 20px 0; }
+h5 {
+	padding: 20px 0;
+}
 </style>

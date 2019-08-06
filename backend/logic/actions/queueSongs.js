@@ -26,7 +26,7 @@ cache.sub('queue.update', songId => {
 	});
 });
 
-module.exports = {
+let lib = {
 
 	/**
 	 * Gets all queuesongs
@@ -91,7 +91,7 @@ module.exports = {
 				let $set = {};
 				for (let prop in updatedSong) if (updatedSong[prop] !== song[prop]) $set[prop] = updatedSong[prop]; updated = true;
 				if (!updated) return next('No properties changed');
-				db.models.queueSong.update({_id: songId}, {$set}, {runValidators: true}, next);
+				db.models.queueSong.updateOne({_id: songId}, {$set}, {runValidators: true}, next);
 			}
 		], (err) => {
 			if (err) {
@@ -116,7 +116,7 @@ module.exports = {
 	remove: hooks.adminRequired((session, songId, cb, userId) => {
 		async.waterfall([
 			(next) => {
-				db.models.queueSong.remove({_id: songId}, next);
+				db.models.queueSong.deleteOne({_id: songId}, next);
 			}
 		], (err) => {
 			if (err) {
@@ -155,12 +155,11 @@ module.exports = {
 			(song, next) => {
 				if (song) return next('This song has already been added.');
 				//TODO Add err object as first param of callback
-				console.log(52, songId);
 				utils.getSongFromYouTube(songId, (song) => {
 					song.artists = [];
 					song.genres = [];
 					song.skipDuration = 0;
-					song.thumbnail = 'empty';
+					song.thumbnail = `${config.get("domain")}/assets/notes.png`;
 					song.explicit = false;
 					song.requestedBy = userId;
 					song.requestedAt = requestedAt;
@@ -168,15 +167,14 @@ module.exports = {
 				});
 			},
 			(newSong, next) => {
-				//TODO Add err object as first param of callback
-				utils.getSongFromSpotify(newSong, (song) => {
-					next(null, song);
+				utils.getSongFromSpotify(newSong, (err, song) => {
+					if (!song) next(null, newSong);
+					else next(err, song);
 				});
 			},
 			(newSong, next) => {
 				const song = new db.models.queueSong(newSong);
 				song.save((err, song) => {
-					console.log(err);
 					if (err) return next(err);
 					next(null, song);
 				});
@@ -203,5 +201,46 @@ module.exports = {
 			logger.success("QUEUE_ADD", `User "${userId}" successfully added queuesong "${songId}".`);
 			return cb({ status: 'success', message: 'Successfully added that song to the queue' });
 		});
+	}),
+
+	/**
+	 * Adds a set of songs to the queue
+	 *
+	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {String} url - the url of the the YouTube playlist
+	 * @param {Function} cb - gets called with the result
+	 * @param {String} userId - the userId automatically added by hooks
+	 */
+	addSetToQueue: hooks.loginRequired((session, url, cb, userId) => {
+		async.waterfall([
+			(next) => {
+				utils.getPlaylistFromYouTube(url, songs => {
+					next(null, songs);
+				});
+			},
+			(songs, next) => {
+				let processed = 0;
+				function checkDone() {
+					if (processed === songs.length) next();
+				}
+				for (let s = 0; s < songs.length; s++) {
+					lib.add(session, songs[s].contentDetails.videoId, () => {
+						processed++;
+						checkDone();
+					});
+				}
+			}
+		], (err) => {
+			if (err) {
+				err = utils.getError(err);
+				logger.error("QUEUE_IMPORT", `Importing a YouTube playlist to the queue failed for user "${userId}". "${err}"`);
+				return cb({ status: 'failure', message: err});
+			} else {
+				logger.success("QUEUE_IMPORT", `Successfully imported a YouTube playlist to the queue for user "${userId}".`);
+				cb({ status: 'success', message: 'Playlist has been successfully imported.' });
+			}
+		});
 	})
 };
+
+module.exports = lib;

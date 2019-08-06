@@ -3,6 +3,7 @@
 const moment  = require('moment'),
 	  io      = require('./io'),
 	  db      = require('./db'),
+	  spotify = require('./spotify'),
 	  config  = require('config'),
 	  async	  = require('async'),
 	  request = require('request'),
@@ -288,7 +289,7 @@ module.exports = {
 				body = JSON.parse(body);
 
 				//TODO Clean up duration converter
-				let dur = body.items[0].contentDetails.duration;
+  				let dur = body.items[0].contentDetails.duration;
 				dur = dur.replace('PT', '');
 				let duration = 0;
 				dur = dur.replace(/([\d]*)H/, (v, v2) => {
@@ -353,17 +354,26 @@ module.exports = {
 		}
 		getPage(null, []);
 	},
-	getSongFromSpotify: (song, cb) => {
+	getSongFromSpotify: async (song, cb) => {
+		if (!config.get("apis.spotify.enabled")) return cb("Spotify is not enabled", null);
+
 		const spotifyParams = [
 			`q=${encodeURIComponent(song.title)}`,
 			`type=track`
 		].join('&');
 
-		request(`https://api.spotify.com/v1/search?${spotifyParams}`, (err, res, body) => {
+		const token = await spotify.getToken();
+		const options = {
+			url: `https://api.spotify.com/v1/search?${spotifyParams}`,
+			headers: {
+				Authorization: `Bearer ${token}`
+			}
+		};
 
+		request(options, (err, res, body) => {
 			if (err) console.error(err);
-
 			body = JSON.parse(body);
+			if (body.error) console.error(body.error);
 
 			durationArtistLoop:
 			for (let i in body) {
@@ -388,18 +398,30 @@ module.exports = {
 				}
 			}
 
-			cb(song);
+			cb(null, song);
 		});
 	},
-	getSongsFromSpotify: (title, artist, cb) => {
+	getSongsFromSpotify: async (title, artist, cb) => {
+		if (!config.get("apis.spotify.enabled")) return cb([]);
+
 		const spotifyParams = [
 			`q=${encodeURIComponent(title)}`,
 			`type=track`
 		].join('&');
+		
+		const token = await spotify.getToken();
+		const options = {
+			url: `https://api.spotify.com/v1/search?${spotifyParams}`,
+			headers: {
+				Authorization: `Bearer ${token}`
+			}
+		};
 
-		request(`https://api.spotify.com/v1/search?${spotifyParams}`, (err, res, body) => {
+		request(options, (err, res, body) => {
 			if (err) return console.error(err);
 			body = JSON.parse(body);
+			if (body.error) return console.error(body.error);
+
 			let songs = [];
 
 			for (let i in body) {

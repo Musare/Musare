@@ -1,298 +1,272 @@
 <template>
-	<banned v-if="banned"></banned>
-	<div v-else>
-		<h1 v-if="!socketConnected" class="alert">Could not connect to the server.</h1>
-		<router-view></router-view>
-		<toast></toast>
-		<what-is-new></what-is-new>
-		<mobile-alert></mobile-alert>
-		<login-modal v-if='isLoginActive'></login-modal>
-		<register-modal v-if='isRegisterActive'></register-modal>
+	<div>
+		<banned v-if="banned" />
+		<div v-else>
+			<h1 v-if="!socketConnected" class="alert">
+				Could not connect to the server.
+			</h1>
+			<!-- should be a persistant toast -->
+			<router-view />
+			<toast />
+			<what-is-new />
+			<mobile-alert />
+			<login-modal v-if="modals.header.login" />
+			<register-modal v-if="modals.header.register" />
+		</div>
 	</div>
 </template>
 
 <script>
-	import { Toast } from 'vue-roaster';
+import { mapState, mapActions } from "vuex";
 
-	import Banned from './components/pages/Banned.vue';
-	import WhatIsNew from './components/Modals/WhatIsNew.vue';
-	import MobileAlert from './Components/Modals/MobileAlert.vue';
-	import LoginModal from './components/Modals/Login.vue';
-	import RegisterModal from './components/Modals/Register.vue';
-	import auth from './auth';
-	import io from './io';
-	import validation from './validation';
+import { Toast } from "vue-roaster";
 
-	export default {
-		replace: false,
-		data() {
-			return {
-				banned: false,
-				ban: {},
-				register: {
-					email: '',
-					username: '',
-					password: ''
-				},
-				login: {
-					email: '',
-					password: ''
-				},
-				loggedIn: false,
-				role: '',
-				username: '',
-				userId: '',
-				isRegisterActive: false,
-				isLoginActive: false,
-				serverDomain: '',
-				socketConnected: true,
-				userIdMap: {},
-				currentlyGettingUsernameFrom: {}
-			}
+import Banned from "./components/pages/Banned.vue";
+import WhatIsNew from "./components/Modals/WhatIsNew.vue";
+import MobileAlert from "./components/Modals/MobileAlert.vue";
+import LoginModal from "./components/Modals/Login.vue";
+import RegisterModal from "./components/Modals/Register.vue";
+import auth from "./auth";
+import io from "./io";
+
+export default {
+	replace: false,
+	data() {
+		return {
+			banned: false,
+			ban: {},
+			loggedIn: false,
+			role: "",
+			username: "",
+			userId: "",
+			serverDomain: "",
+			socketConnected: true
+		};
+	},
+	computed: mapState({
+		modals: state => state.modals.modals,
+		currentlyActive: state => state.modals.currentlyActive
+	}),
+	methods: {
+		logout() {
+			const _this = this;
+			_this.socket.emit("users.logout", result => {
+				if (result.status === "success") {
+					document.cookie =
+						"SID=;expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+					window.location.reload();
+				} else Toast.methods.addToast(result.message, 4000);
+			});
 		},
-		methods: {
-			logout: function () {
-				let _this = this;
-				_this.socket.emit('users.logout', result => {
-					if (result.status === 'success') {
-						document.cookie = 'SID=;expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-						location.reload();
-					} else Toast.methods.addToast(result.message, 4000);
-				});
-			},
-			'submitOnEnter': (cb, event) => {
-				if (event.which == 13) cb();
-			},
-			getUsernameFromId: function(userId) {
-			    if (typeof this.userIdMap[userId] !== 'string' && !this.currentlyGettingUsernameFrom[userId]) {
-					this.currentlyGettingUsernameFrom[userId] = true;
-			        io.getSocket(socket => {
-			            socket.emit('users.getUsernameFromId', userId, (data) => {
-			                if (data.status === 'success') this.$set(`userIdMap.Z${userId}`, data.data);
-							this.currentlyGettingUsernameFrom[userId] = false;
-						});
-					});
-				}
-			}
+		submitOnEnter: (cb, event) => {
+			if (event.which === 13) cb();
 		},
-		ready: function () {
-			let _this = this;
-			if (localStorage.getItem('github_redirect')) {
-			    this.$router.go(localStorage.getItem('github_redirect'));
-			    localStorage.removeItem('github_redirect');
-			}
-			auth.isBanned((banned, ban) => {
-				_this.ban = ban;
-				_this.banned = banned;
-			});
-			auth.getStatus((authenticated, role, username, userId) => {
-				_this.socket = window.socket;
-				_this.loggedIn = authenticated;
-				_this.role = role;
-				_this.username = username;
-				_this.userId = userId;
-			});
-			io.onConnect(true, () => {
-				_this.socketConnected = true;
-			});
-			io.onConnectError(true, () => {
-				_this.socketConnected = false;
-			});
-			io.onDisconnect(true, () => {
-				_this.socketConnected = false;
-			});
-			lofig.get('serverDomain', res => {
-				_this.serverDomain = res;
-			});
+		...mapActions("modals", ["closeCurrentModal"])
+	},
+	mounted() {
+		document.onkeydown = ev => {
+			const event = ev || window.event;
+			if (
+				event.keyCode === 27 &&
+				Object.keys(this.currentlyActive).length !== 0
+			)
+				this.closeCurrentModal();
+		};
+
+		const _this = this;
+		if (localStorage.getItem("github_redirect")) {
+			this.$router.go(localStorage.getItem("github_redirect"));
+			localStorage.removeItem("github_redirect");
+		}
+		auth.isBanned((banned, ban) => {
+			_this.ban = ban;
+			_this.banned = banned;
+		});
+		auth.getStatus((authenticated, role, username, userId) => {
+			_this.socket = window.socket;
+			_this.loggedIn = authenticated;
+			_this.role = role;
+			_this.username = username;
+			_this.userId = userId;
+		});
+		io.onConnect(true, () => {
+			_this.socketConnected = true;
+		});
+		io.onConnectError(true, () => {
+			_this.socketConnected = false;
+		});
+		io.onDisconnect(true, () => {
+			_this.socketConnected = false;
+		});
+		lofig.get("serverDomain", res => {
+			_this.serverDomain = res;
+		});
+		_this.$router.onReady(() => {
 			if (_this.$route.query.err) {
-				let err = _this.$route.query.err;
-				err = err.replace(new RegExp('<', 'g'), '&lt;').replace(new RegExp('>', 'g'), '&gt;');
+				let { err } = _this.$route.query;
+				err = err
+					.replace(new RegExp("<", "g"), "&lt;")
+					.replace(new RegExp(">", "g"), "&gt;");
+				_this.$router.push({ query: {} });
 				Toast.methods.addToast(err, 20000);
 			}
-			io.getSocket(true, socket => {
-				socket.on('keep.event:user.session.removed', () => {
-					location.reload();
-				});
-			});
-
-		},
-		events: {
-			'register': function (recaptchaId) {
-				let { register: { email, username, password } } = this;
-				let _this = this;
-				if (!email || !username || !password) return Toast.methods.addToast('Please fill in all fields', 8000);
-
-
-				if (!validation.isLength(email, 3, 254)) return Toast.methods.addToast('Email must have between 3 and 254 characters.', 8000);
-				if (email.indexOf('@') !== email.lastIndexOf('@') || !validation.regex.emailSimple.test(email)) return Toast.methods.addToast('Invalid email format.', 8000);
-
-
-				if (!validation.isLength(username, 2, 32)) return Toast.methods.addToast('Username must have between 2 and 32 characters.', 8000);
-				if (!validation.regex.azAZ09_.test(username)) return Toast.methods.addToast('Invalid username format. Allowed characters: a-z, A-Z, 0-9 and _.', 8000);
-
-
-				if (!validation.isLength(password, 6, 200)) return Toast.methods.addToast('Password must have between 6 and 200 characters.', 8000);
-				if (!validation.regex.password.test(password)) return Toast.methods.addToast('Invalid password format. Must have one lowercase letter, one uppercase letter, one number and one special character.', 8000);
-
-				this.socket.emit('users.register', username, email, password, grecaptcha.getResponse(recaptchaId), result => {
-					if (result.status === 'success') {
-						Toast.methods.addToast(`You have successfully registered.`, 4000);
-						if (result.SID) {
-							lofig.get('cookie', cookie => {
-								let date = new Date();
-								date.setTime(new Date().getTime() + (2 * 365 * 24 * 60 * 60 * 1000));
-								let secure = (cookie.secure) ? 'secure=true; ' : '';
-								document.cookie = `SID=${result.SID}; expires=${date.toGMTString()}; domain=${cookie.domain}; ${secure}path=/`;
-								location.reload();
-							});
-						} else _this.$router.go('/login');
-					} else Toast.methods.addToast(result.message, 8000);
-				});
-			},
-			'login': function () {
-				let { login: { email, password } } = this;
-				let _this = this;
-				this.socket.emit('users.login', email, password, result => {
-					if (result.status === 'success') {
-						lofig.get('cookie', cookie => {
-							let date = new Date();
-							date.setTime(new Date().getTime() + (2 * 365 * 24 * 60 * 60 * 1000));
-							let secure = (cookie.secure) ? 'secure=true; ' : '';
-							let domain = '';
-							if (cookie.domain !== 'localhost') domain = ` domain=${cookie.domain};`;
-							document.cookie = `SID=${result.SID}; expires=${date.toGMTString()}; ${domain}${secure}path=/`;
-							Toast.methods.addToast(`You have been successfully logged in`, 2000);
-							location.reload();
-						});
-					} else Toast.methods.addToast(result.message, 2000);
-				});
-			},
-			'toggleModal': function (type) {
-				switch(type) {
-					case 'register':
-						this.isRegisterActive = !this.isRegisterActive;
-						break;
-					case 'login':
-						this.isLoginActive = !this.isLoginActive;
-						break;
-				}
-			},
-			'closeModal': function() {
-				this.$broadcast('closeModal');
+			if (_this.$route.query.msg) {
+				let { msg } = _this.$route.query;
+				msg = msg
+					.replace(new RegExp("<", "g"), "&lt;")
+					.replace(new RegExp(">", "g"), "&gt;");
+				_this.$router.push({ query: {} });
+				Toast.methods.addToast(msg, 20000);
 			}
-		},
-		components: { Toast, WhatIsNew, MobileAlert, LoginModal, RegisterModal, Banned }
+		});
+		io.getSocket(true, socket => {
+			socket.on("keep.event:user.session.removed", () => {
+				window.location.reload();
+			});
+		});
+	},
+	components: {
+		Toast,
+		WhatIsNew,
+		MobileAlert,
+		LoginModal,
+		RegisterModal,
+		Banned
 	}
+};
 </script>
 
-<style type='scss'>
-	.center { text-align: center; }
+<style lang="scss">
+.center {
+	text-align: center;
+}
 
-	#toast-container { z-index: 10000 !important; }
+#toast-container {
+	z-index: 10000 !important;
+}
 
-	html {
-		overflow: auto !important;
-	}
+html {
+	overflow: auto !important;
+}
 
-	.modal-card {
-		margin: 0 !important;
-	}
+.modal-card {
+	margin: 0 !important;
+}
 
-	.absolute-a {
-		width: 100%;
-		height: 100%;
+.absolute-a {
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	top: 0;
+	left: 0;
+}
+
+.alert {
+	padding: 20px;
+	color: white;
+	background-color: red;
+	position: fixed;
+	top: 50px;
+	right: 50px;
+	font-size: 2em;
+	border-radius: 5px;
+	z-index: 10000000;
+}
+
+.tooltip {
+	position: relative;
+
+	&:after {
 		position: absolute;
-		top: 0;
-		left: 0;
+		min-width: 80px;
+		margin-left: -75%;
+		text-align: center;
+		padding: 7.5px 6px;
+		border-radius: 2px;
+		background-color: #323232;
+		font-size: 0.9em;
+		color: #fff;
+		content: attr(data-tooltip);
+		opacity: 0;
+		transition: all 0.2s ease-in-out 0.1s;
+		visibility: hidden;
 	}
 
-	.alert {
-		padding: 20px;
-		color: white;
-		background-color: red;
-		position: fixed;
-		top: 50px;
-		right: 50px;
-		font-size: 2em;
-		border-radius: 5px;
-		z-index: 10000000;
+	&:hover:after {
+		opacity: 1;
+		visibility: visible;
+	}
+}
+
+.tooltip-top {
+	&:after {
+		bottom: 150%;
 	}
 
-	.tooltip {
-		position: relative;
-
+	&:hover {
 		&:after {
-			 position: absolute;
-			 min-width: 80px;
-			 margin-left: -75%;
-			 text-align: center;
-			 padding: 7.5px 6px;
-			 border-radius: 2px;
-			 background-color: #323232;
-			 font-size: .9em;
-			 color: #fff;
-			 content: attr(data-tooltip);
-			 opacity: 0;
-			 transition: all .2s ease-in-out .1s;
-			 visibility: hidden;
-		}
-
-		&:hover:after {
-			 opacity: 1;
-			 visibility: visible;
+			bottom: 120%;
 		}
 	}
+}
 
-	.tooltip-top {
+.tooltip-bottom {
+	&:after {
+		top: 155%;
+	}
+
+	&:hover {
 		&:after {
-			 bottom: 150%;
-		}
-
-		&:hover {
-			&:after { bottom: 120%; }
+			top: 125%;
 		}
 	}
+}
 
+.tooltip-left {
+	&:after {
+		bottom: -10px;
+		right: 130%;
+		min-width: 100px;
+	}
 
-	.tooltip-bottom {
+	&:hover {
 		&:after {
-			 top: 155%;
-		}
-
-		&:hover {
-			&:after { top: 125%; }
+			right: 110%;
 		}
 	}
+}
 
-	.tooltip-left {
+.tooltip-right {
+	&:after {
+		bottom: -10px;
+		left: 190%;
+		min-width: 100px;
+	}
+
+	&:hover {
 		&:after {
-			 bottom: -10px;
-			 right: 130%;
-			 min-width: 100px;
-		}
-
-		&:hover {
-			&:after { right: 110%; }
+			left: 200%;
 		}
 	}
+}
 
-	.tooltip-right {
-		&:after {
-			 bottom: -10px;
-			 left: 190%;
-			 min-width: 100px;
-		}
+.button:focus,
+.button:active {
+	border-color: #dbdbdb !important;
+}
+.input:focus,
+.input:active {
+	border-color: #03a9f4 !important;
+}
+button.delete:focus {
+	background-color: rgba(10, 10, 10, 0.3);
+}
 
-		&:hover {
-			 &:after { left: 200%; }
-		}
-	}
+.tag {
+	padding-right: 6px !important;
+}
 
-	.button:focus, .button:active { border-color: #dbdbdb !important; }
-	.input:focus, .input:active { border-color: #ff4545 !important; }
-	button.delete:focus { background-color: rgba(10, 10, 10, 0.3); }
-
-	.tag { padding-right: 6px !important; }
-
-	.button.is-success { background-color: #00B16A !important; }
+.button.is-success {
+	background-color: #00b16a !important;
+}
 </style>
