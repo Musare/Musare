@@ -33,7 +33,6 @@
     "sass-loader": "^7.1.0",
     "snyk": "^1.208.0",
     "vue-hot-reload-api": "^2.3.3",
-    "vue-html-loader": "^1.2.4",
     "vue-style-loader": "^4.1.2",
     "vue-template-compiler": "^2.6.10",
     "webpack": "^4.35.3",
