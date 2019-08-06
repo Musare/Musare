@@ -187,7 +187,7 @@ export default {
 					_this.songs.push(queueSong);
 				});
 				_this.socket.on("event:admin.queueSong.removed", songId => {
-					_this.songs = _this.songs.filter(function(song) {
+					_this.songs = _this.songs.filter(song => {
 						return song._id !== songId;
 					});
 				});

@@ -108,7 +108,7 @@ export default {
 				grecaptcha.ready(() => {
 					grecaptcha
 						.execute(this.recaptcha.key, { action: "login" })
-						.then(function(token) {
+						.then(token => {
 							_this.recaptcha.token = token;
 						});
 				});

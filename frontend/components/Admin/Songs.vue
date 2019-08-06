@@ -110,8 +110,8 @@ export default {
 		})
 	},
 	watch: {
-		"modals.editSong": function(value) {
-			if (!value) this.stopVideo();
+		"modals.editSong": val => {
+			if (!val) this.stopVideo();
 		}
 	},
 	methods: {
@@ -158,7 +158,7 @@ export default {
 					_this.songs.push(song);
 				});
 				_this.socket.on("event:admin.song.removed", songId => {
-					_this.songs = _this.songs.filter(function(song) {
+					_this.songs = _this.songs.filter(song => {
 						return song._id !== songId;
 					});
 				});

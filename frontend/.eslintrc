@@ -28,7 +28,7 @@
 		"no-console": 0,
 		"no-control-regex": 0,
 		"no-var": 2,
-		"no-underscore-dangle": 1,
+		"no-underscore-dangle": 0,
 		"prefer-promise-reject-errors": 0, // temp
 		"no-nested-ternary": 0, // temp
 		"radix": 0,
