@@ -196,7 +196,7 @@ export default {
 }
 
 .inner-wrapper {
-	top: 64px;
+	top: 60px;
 	position: relative;
 	overflow: auto;
 	height: 100%;
