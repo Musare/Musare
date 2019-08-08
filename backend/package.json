@@ -3,7 +3,7 @@
   "private": true,
   "version": "2.1.0",
   "description": "A modern, open-source, collaborative music app https://musare.com",
-  "main": "app.js",
+  "main": "logic/app.js",
   "author": "Musare Team",
   "license": "GPL-3.0",
   "repository": "https://github.com/Musare/MusareNode",

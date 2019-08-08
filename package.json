@@ -1,6 +1,10 @@
 {
   "name": "@musare/musare",
   "version": "2.1.0",
+  "description": "A modern, open-source, collaborative music app https://musare.com",
+  "author": "Musare Team",
+  "license": "GPL-3.0",
+  "repository": "https://github.com/Musare/MusareNode",
   "scripts": {
     "postinstall": "yarn run bootstrap",
     "bootstrap": "npx lerna bootstrap --ci",
