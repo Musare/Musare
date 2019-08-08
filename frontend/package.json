@@ -1,5 +1,6 @@
 {
   "name": "musare-frontend",
+  "private": true,
   "version": "2.1.0",
   "description": "A modern, open-source, collaborative music app https://musare.com",
   "main": "main.js",
