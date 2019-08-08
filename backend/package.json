@@ -7,6 +7,7 @@
   "license": "GPL-3.0",
   "repository": "https://github.com/Musare/MusareNode",
   "scripts": {
+    "dev": "nodemon",
     "docker:dev": "nodemon -L /opt/app",
     "docker:prod": "node /opt/app"
   },
