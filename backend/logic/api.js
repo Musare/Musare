@@ -9,6 +9,8 @@ module.exports = class extends coreClass {
 
 	initialize() {
 		return new Promise((resolve, reject) => {
+			this.setStage(1);
+
 			this.app = this.moduleManager.modules["app"];
 
 			this.app.app.get('/', (req, res) => {

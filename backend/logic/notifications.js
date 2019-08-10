@@ -11,6 +11,8 @@ const subscriptions = [];
 module.exports = class extends coreClass {
 	initialize() {
 		return new Promise((resolve, reject) => {
+			this.setStage(1);
+
 			const url = this.url = config.get("redis").url;
 			const password = this.password = config.get("redis").password;
 

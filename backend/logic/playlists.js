@@ -13,16 +13,20 @@ module.exports = class extends coreClass {
 
 	initialize() {
 		return new Promise((resolve, reject) => {
+			this.setStage(1);
+
 			this.cache = this.moduleManager.modules["cache"];
 			this.db	= this.moduleManager.modules["db"];
 			this.utils	= this.moduleManager.modules["utils"];
 
 			async.waterfall([
 				(next) => {
+					this.setStage(2);
 					this.cache.hgetall('playlists', next);
 				},
 	
 				(playlists, next) => {
+					this.setStage(3);
 					if (!playlists) return next();
 					let playlistIds = Object.keys(playlists);
 					async.each(playlistIds, (playlistId, next) => {
@@ -37,10 +41,12 @@ module.exports = class extends coreClass {
 				},
 	
 				(next) => {
+					this.setStage(4);
 					this.db.models.playlist.find({}, next);
 				},
 	
 				(playlists, next) => {
+					this.setStage(5);
 					async.each(playlists, (playlist, next) => {
 						this.cache.hset('playlists', playlist._id, this.cache.schemas.playlist(playlist), next);
 					}, next);

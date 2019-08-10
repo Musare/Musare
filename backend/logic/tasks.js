@@ -9,6 +9,8 @@ let tasks = {};
 module.exports = class extends coreClass {
 	initialize() {
 		return new Promise((resolve, reject) => {
+			this.setStage(1);
+			
 			this.cache = this.moduleManager.modules["cache"];
 			this.stations = this.moduleManager.modules["stations"];
 			this.notifications = this.moduleManager.modules["notifications"];

@@ -13,6 +13,8 @@ const pubs = {}, subs = {};
 module.exports = class extends coreClass {
 	initialize() {
 		return new Promise((resolve, reject) => {
+			this.setStage(1);
+
 			this.schemas = {
 				session: require('./schemas/session'),
 				station: require('./schemas/station'),

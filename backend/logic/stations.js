@@ -15,6 +15,8 @@ module.exports = class extends coreClass {
 
 	initialize() {
 		return new Promise(async (resolve, reject) => {
+			this.setStage(1);
+
 			this.cache = this.moduleManager.modules["cache"];
 			this.db = this.moduleManager.modules["db"];
 			this.utils = this.moduleManager.modules["utils"];
@@ -66,10 +68,12 @@ module.exports = class extends coreClass {
 
 			async.waterfall([
 				(next) => {
+					this.setStage(2);
 					this.cache.hgetall('stations', next);
 				},
 	
 				(stations, next) => {
+					this.setStage(3);
 					if (!stations) return next();
 					let stationIds = Object.keys(stations);
 					async.each(stationIds, (stationId, next) => {
@@ -83,10 +87,12 @@ module.exports = class extends coreClass {
 				},
 	
 				(next) => {
+					this.setStage(4);
 					this.db.models.station.find({}, next);
 				},
 	
 				(stations, next) => {
+					this.setStage(4);
 					async.each(stations, (station, next) => {
 						async.waterfall([
 							(next) => {
@@ -373,7 +379,6 @@ module.exports = class extends coreClass {
 							} else return next(null, null, -14, station);
 						});
 					}
-					console.log(111, station);
 					if (station.type === 'official' && station.playlist.length === 0) {
 						return _this.calculateSongForStation(station, (err, playlist) => {
 							if (err) return next(err);

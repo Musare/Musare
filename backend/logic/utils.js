@@ -62,6 +62,8 @@ let youtubeRequestsActive = false;
 module.exports = class extends coreClass {
 	initialize() {
 		return new Promise((resolve, reject) => {
+			this.setStage(1);
+			
 			this.io = this.moduleManager.modules["io"];
 			this.db = this.moduleManager.modules["db"];
 			this.spotify = this.moduleManager.modules["spotify"];

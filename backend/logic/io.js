@@ -16,6 +16,8 @@ module.exports = class extends coreClass {
 
 	initialize() {
 		return new Promise((resolve, reject) => {
+			this.setStage(1);
+
 			const 	logger		= this.logger,
 					app			= this.moduleManager.modules["app"],
 					cache		= this.moduleManager.modules["cache"],

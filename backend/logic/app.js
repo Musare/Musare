@@ -14,6 +14,8 @@ const OAuth2 = require('oauth').OAuth2;
 module.exports = class extends coreClass {
 	initialize() {
 		return new Promise((resolve, reject) => {
+			this.setStage(1);
+
 			const 	logger 	= this.logger,
 					mail	= this.moduleManager.modules["mail"],
 					cache	= this.moduleManager.modules["cache"],

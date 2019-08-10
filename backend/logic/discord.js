@@ -9,6 +9,8 @@ const bus = new EventEmitter();
 module.exports = class extends coreClass {
 	initialize() {
 		return new Promise((resolve, reject) => {
+			this.setStage(1);
+
 			this.client = new Discord.Client();
 			
 			this.connected = false;

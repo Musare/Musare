@@ -20,6 +20,8 @@ module.exports = class extends coreClass {
 
 	initialize() {
 		return new Promise((resolve, reject) => {
+			this.setStage(1);
+
 			this.cache = this.moduleManager.modules["cache"];
 
 			const client = config.get("apis.spotify.client");
@@ -36,10 +38,12 @@ module.exports = class extends coreClass {
 
 			async.waterfall([
 				(next) => {
+					this.setStage(2);
 					this.cache.hget("api", "spotify", next, true);
 				},
 	
 				(data, next) => {
+					this.setStage(3);
 					if (data) apiResults = data;
 					next();
 				}

@@ -14,6 +14,8 @@ module.exports = class extends coreClass {
 
 	initialize() {
 		return new Promise((resolve, reject) => {
+			this.setStage(1);
+
 			this.cache = this.moduleManager.modules['cache'];
 			this.db = this.moduleManager.modules['db'];
 			this.io = this.moduleManager.modules['io'];
@@ -21,10 +23,12 @@ module.exports = class extends coreClass {
 
 			async.waterfall([
 				(next) => {
+					this.setStage(2);
 					this.cache.hgetall('punishments', next);
 				},
 	
 				(punishments, next) => {
+					this.setStage(3);
 					if (!punishments) return next();
 					let punishmentIds = Object.keys(punishments);
 					async.each(punishmentIds, (punishmentId, next) => {
@@ -37,10 +41,12 @@ module.exports = class extends coreClass {
 				},
 	
 				(next) => {
+					this.setStage(4);
 					this.db.models.punishment.find({}, next);
 				},
 	
 				(punishments, next) => {
+					this.setStage(5);
 					async.each(punishments, (punishment, next) => {
 						if (punishment.active === false || punishment.expiresAt < Date.now()) return next();
 						this.cache.hset('punishments', punishment._id, cache.schemas.punishment(punishment, punishment._id), next);

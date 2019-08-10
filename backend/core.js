@@ -10,6 +10,10 @@ module.exports = class {
 		this.dependsOn = [];
 		this.eventHandlers = [];
 		this.state = "NOT_INITIALIZED";
+		this.stage = 0;
+		this.lastTime = 0;
+		this.totalTimeInitialize = 0;
+		this.timeDifferences = [];
 	}
 
 	_initialize() {
@@ -18,6 +22,8 @@ module.exports = class {
 
 		this.initialize().then(() => {
 			this.setState("INITIALIZED");
+			this.setStage(0);
+			this.moduleManager.printStatus();
 		}).catch(() => {
 			this.moduleManager.aModuleFailed(this);
 		});
@@ -46,6 +52,17 @@ module.exports = class {
 		this.logger.info(`MODULE_STATE`, `${state}: ${this.name}`);
 	}
 
+	setStage(stage) {
+		if (stage !== 1)
+			this.totalTimeInitialize += (Date.now() - this.lastTime);
+		//this.timeDifferences.push(this.stage + ": " + (Date.now() - this.lastTime) + "ms");
+		this.timeDifferences.push(Date.now() - this.lastTime);
+
+		this.lastTime = Date.now();
+		this.stage = stage;
+		this.moduleManager.printStatus();
+	}
+
 	_validateHook() {
 		return Promise.race([this._onInitialize, this._isInitialized]).then(
 			() => this._isNotLocked()
@@ -54,5 +71,7 @@ module.exports = class {
 
 	_lockdown() {
 		this.lockdown = true;
+		this.setState("LOCKDOWN");
+		this.moduleManager.printStatus();
 	}
 }

@@ -17,6 +17,8 @@ module.exports = class extends coreClass {
 
 	initialize() {
 		return new Promise((resolve, reject) => {
+			this.setStage(1);
+
 			this.cache = this.moduleManager.modules["cache"];
 			this.db = this.moduleManager.modules["db"];
 			this.io = this.moduleManager.modules["io"];
@@ -24,10 +26,12 @@ module.exports = class extends coreClass {
 
 			async.waterfall([
 				(next) => {
+					this.setStage(2);
 					this.cache.hgetall('songs', next);
 				},
 	
 				(songs, next) => {
+					this.setStage(3);
 					if (!songs) return next();
 					let songIds = Object.keys(songs);
 					async.each(songIds, (songId, next) => {
@@ -40,10 +44,12 @@ module.exports = class extends coreClass {
 				},
 	
 				(next) => {
+					this.setStage(4);
 					this.db.models.song.find({}, next);
 				},
 	
 				(songs, next) => {
+					this.setStage(5);
 					async.each(songs, (song, next) => {
 						this.cache.hset('songs', song.songId, this.cache.schemas.song(song), next);
 					}, next);
