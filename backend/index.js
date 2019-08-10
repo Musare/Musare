@@ -2,222 +2,102 @@
 
 process.env.NODE_CONFIG_DIR = `${__dirname}/config`;
 
-const async = require('async');
-const fs = require('fs');
-
-//const Discord = require("discord.js");
-//const client = new Discord.Client();
-const db = require('./logic/db');
-const app = require('./logic/app');
-const mail = require('./logic/mail');
-const api = require('./logic/api');
-const io = require('./logic/io');
-const stations = require('./logic/stations');
-const songs = require('./logic/songs');
-const spotify = require('./logic/spotify');
-const playlists = require('./logic/playlists');
-const cache = require('./logic/cache');
-const discord = require('./logic/discord');
-const notifications = require('./logic/notifications');
-const punishments = require('./logic/punishments');
-const logger = require('./logic/logger');
-const tasks = require('./logic/tasks');
-const config = require('config');
-
-let currentComponent;
-let initializedComponents = [];
-let lockdownB = false;
-
 process.on('uncaughtException', err => {
 	if (lockdownB || err.code === 'ECONNREFUSED' || err.code === 'UNCERTAIN_STATE') return;
 	console.log(`UNCAUGHT EXCEPTION: ${err.stack}`);
 });
 
-const getError = (err) => {
-	let error = 'An error occurred.';
-	if (typeof err === "string") error = err;
-	else if (err.message) {
-		if (err.message !== 'Validation failed') error = err.message;
-		else error = err.errors[Object.keys(err.errors)].message;
+class ModuleManager {
+	constructor() {
+		this.modules = {};
+		this.modulesInitialized = 0;
+		this.totalModules = 0;
+		this.modulesLeft = [];
+		this.i = 0;
+		this.lockdown = false;
 	}
-	return error;
-};
 
-function lockdown() {
-	if (lockdownB) return;
-	lockdownB = true;
-	initializedComponents.forEach((component) => {
-		component._lockdown();
-	});
-	console.log("Backend locked down.");
-}
+	addModule(moduleName) {
+		console.log("add module", moduleName);
+		const moduleClass = new require(`./logic/${moduleName}`);
+		this.modules[moduleName] = new moduleClass(moduleName, this);
+		this.totalModules++;
+		this.modulesLeft.push(moduleName);
+	}
 
-function errorCb(message, err, component) {
-	err = getError(err);
-	lockdown();
-	discord.sendAdminAlertMessage(message, "#FF0000", message, true, [{name: "Error:", value: err, inline: false}, {name: "Component:", value: component, inline: true}]); //TODO Maybe due to lockdown this won't work, and what if the Discord module was the one that failed?
-}
+	initialize() {
+		if (!this.modules["logger"]) return console.error("There is no logger module");
+		this.logger = this.modules["logger"];
+		
+		for (let moduleName in this.modules) {
+			let module = this.modules[moduleName];
+			if (this.lockdown) break;
 
-function moduleStartFunction() {
-	logger.info("MODULE_START", `Starting to initialize component '${currentComponent}'`);
-}
+			module._onInitialize().then(() => {
+				this.moduleInitialized(moduleName);
+			});
 
-async.waterfall([
+			let dependenciesInitializedPromises = [];
+			
+			module.dependsOn.forEach(dependencyName => {
+				let dependency = this.modules[dependencyName];
+				dependenciesInitializedPromises.push(dependency._onInitialize());
+			});
 
-	// setup our Discord module
-	(next) => {
-		currentComponent = 'Discord';
-		moduleStartFunction();
-		discord.init(config.get('apis.discord').token, config.get('apis.discord').loggingChannel, errorCb, () => {
-			next();
-		});
-	},
-
-	// setup our Redis cache
-	(next) => {
-		currentComponent = 'Cache';
-		moduleStartFunction();
-		cache.init(config.get('redis').url, config.get('redis').password, errorCb, () => {
-			next();
-		});
-	},
-
-	// setup our MongoDB database
-	(next) => {
-		initializedComponents.push(cache);
-		currentComponent = 'DB';
-		moduleStartFunction();
-		db.init(config.get("mongo").url, errorCb, next);
-	},
-
-	// setup the express server
-	(next) => {
-		initializedComponents.push(db);
-		currentComponent = 'App';
-		moduleStartFunction();
-		app.init(next);
-	},
-
-	// setup the mail
-	(next) => {
-		initializedComponents.push(app);
-		currentComponent = 'Mail';
-		moduleStartFunction();
-		mail.init(next);
-	},
-
-	// setup the Spotify
-	(next) => {
-		initializedComponents.push(mail);
-		currentComponent = 'Spotify';
-		moduleStartFunction();
-		spotify.init(next);
-	},
-
-	// setup the socket.io server (all client / server communication is done over this)
-	(next) => {
-		initializedComponents.push(spotify);
-		currentComponent = 'IO';
-		moduleStartFunction();
-		io.init(next);
-	},
-
-	// setup the punishment system
-	(next) => {
-		initializedComponents.push(io);
-		currentComponent = 'Punishments';
-		moduleStartFunction();
-		punishments.init(next);
-	},
-
-	// setup the notifications
-	(next) => {
-		initializedComponents.push(punishments);
-		currentComponent = 'Notifications';
-		moduleStartFunction();
-		notifications.init(config.get('redis').url, config.get('redis').password, errorCb, next);
-	},
-
-	// setup the stations
-	(next) => {
-		initializedComponents.push(notifications);
-		currentComponent = 'Stations';
-		moduleStartFunction();
-		stations.init(next)
-	},
-
-	// setup the songs
-	(next) => {
-		initializedComponents.push(stations);
-		currentComponent = 'Songs';
-		moduleStartFunction();
-		songs.init(next)
-	},
-
-	// setup the playlists
-	(next) => {
-		initializedComponents.push(songs);
-		currentComponent = 'Playlists';
-		moduleStartFunction();
-		playlists.init(next)
-	},
-
-	// setup the API
-	(next) => {
-		initializedComponents.push(playlists);
-		currentComponent = 'API';
-		moduleStartFunction();
-		api.init(next)
-	},
-
-	// setup the logger
-	(next) => {
-		initializedComponents.push(api);
-		currentComponent = 'Logger';
-		moduleStartFunction();
-		logger.init(next)
-	},
-
-	// setup the tasks system
-	(next) => {
-		initializedComponents.push(logger);
-		currentComponent = 'Tasks';
-		moduleStartFunction();
-		tasks.init(next)
-	},
-
-	// setup the frontend for local setups
-	(next) => {
-		initializedComponents.push(tasks);
-		currentComponent = 'Windows';
-		moduleStartFunction();
-		if (!config.get("isDocker") && !(config.get("mode") === "development" || config.get("mode") === "dev")) {
-			const express = require('express');
-			const app = express();
-			app.listen(config.get("frontendPort"));
-			const rootDir = __dirname.substr(0, __dirname.lastIndexOf("backend")) + "frontend/dist/build";
-
-			app.use(express.static(rootDir, {
-				setHeaders: function(res, path) {
-					if (path.indexOf('.html') !== -1) res.setHeader('Cache-Control', 'public, max-age=0');
-					else res.setHeader('Cache-Control', 'public, max-age=2628000');
-				}
-			}));
-
-			app.get("/*", (req, res) => {
-				res.sendFile(`${rootDir}/index.html`);
+			Promise.all(dependenciesInitializedPromises).then((res, res2) => {
+				if (this.lockdown) return;
+				this.logger.info("MODULE_MANAGER", `${moduleName} dependencies have been completed`);
+				module._initialize();
 			});
 		}
-		if (lockdownB) return;
-		next();
 	}
-], (err) => {
-	if (err && err !== true) {
-		lockdown();
-		discord.sendAdminAlertMessage("An error occurred while initializing the backend server.", "#FF0000", "Startup error", true, [{name: "Error:", value: err, inline: false}, {name: "Component:", value: currentComponent, inline: true}]);
-		console.error('An error occurred while initializing the backend server');
-	} else {
-		discord.sendAdminAlertMessage("The backend server started successfully.", "#00AA00", "Startup", false, []);
-		console.info('Backend server has been successfully started');
+
+	moduleInitialized(moduleName) {
+		this.modulesInitialized++;
+		this.modulesLeft.splice(this.modulesLeft.indexOf(moduleName), 1);
+
+		this.logger.info("MODULE_MANAGER", `Initialized: ${this.modulesInitialized}/${this.totalModules}.`);
+
+		if (this.modulesLeft.length === 0) this.allModulesInitialized();
 	}
-});
+
+	allModulesInitialized() {
+		this.logger.success("MODULE_MANAGER", "All modules have started!");
+		this.modules["discord"].sendAdminAlertMessage("The backend server started successfully.", "#00AA00", "Startup", false, []);
+	}
+
+	aModuleFailed(failedModule) {
+		this.logger.error("MODULE_MANAGER", `A module has failed, locking down. Module: ${failedModule.name}`);
+		this.modules["discord"].sendAdminAlertMessage(`The backend server failed to start due to a failing module: ${failedModule.name}.`, "#AA0000", "Startup", false, []);
+
+		this.lockdown = true;
+
+		for (let moduleName in this.modules) {
+			let module = this.modules[moduleName];
+			module._lockdown();
+		}
+	}
+}
+
+const moduleManager = new ModuleManager();
+
+module.exports = moduleManager;
+
+moduleManager.addModule("cache");
+moduleManager.addModule("db");
+moduleManager.addModule("mail");
+moduleManager.addModule("api");
+moduleManager.addModule("app");
+moduleManager.addModule("discord");
+moduleManager.addModule("io");
+moduleManager.addModule("logger");
+moduleManager.addModule("notifications");
+moduleManager.addModule("playlists");
+moduleManager.addModule("punishments");
+moduleManager.addModule("songs");
+moduleManager.addModule("spotify");
+moduleManager.addModule("stations");
+moduleManager.addModule("tasks");
+moduleManager.addModule("utils");
+
+moduleManager.initialize();

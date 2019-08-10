@@ -1,34 +1,38 @@
-let lockdown = false;
+const coreClass = require("../core");
 
-module.exports = {
-	init: (cb) => {
-		const { app } = require('./app.js');
-		const actions = require('./actions');
+module.exports = class extends coreClass {
+	constructor(name, moduleManager) {
+		super(name, moduleManager);
 
-		app.get('/', (req, res) => {
-			res.json({
-				status: 'success',
-				message: 'Coming Soon'
-			});
-		});
+		this.dependsOn = ["app", "db", "cache"];
+	}
 
-		Object.keys(actions).forEach((namespace) => {
-			Object.keys(actions[namespace]).forEach((action) => {
-				let name = `/${namespace}/${action}`;
+	initialize() {
+		return new Promise((resolve, reject) => {
+			this.app = this.moduleManager.modules["app"];
 
-				app.get(name, (req, res) => {
-					actions[namespace][action](null, (result) => {
-						if (typeof cb === 'function') return res.json(result);
-					});
+			this.app.app.get('/', (req, res) => {
+				res.json({
+					status: 'success',
+					message: 'Coming Soon'
 				});
-			})
+			});
+
+			const actions = require("../logic/actions");
+	
+			Object.keys(actions).forEach((namespace) => {
+				Object.keys(actions[namespace]).forEach((action) => {
+					let name = `/${namespace}/${action}`;
+	
+					this.app.app.get(name, (req, res) => {
+						actions[namespace][action](null, (result) => {
+							if (typeof cb === 'function') return res.json(result);
+						});
+					});
+				})
+			});
+
+			resolve();
 		});
-
-		if (lockdown) return this._lockdown();
-		cb();
-	},
-
-	_lockdown: () => {
-		lockdown = true;
 	}
 }

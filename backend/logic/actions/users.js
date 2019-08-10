@@ -4,15 +4,18 @@ const async = require('async');
 const config = require('config');
 const request = require('request');
 const bcrypt = require('bcrypt');
-
-const db = require('../db');
-const mail = require('../mail');
-const cache = require('../cache');
-const punishments = require('../punishments');
-const utils = require('../utils');
-const hooks = require('./hooks');
 const sha256 = require('sha256');
-const logger = require('../logger');
+
+const hooks = require('./hooks');
+
+const moduleManager = require("../../index");
+
+const db = moduleManager.modules["db"];
+const mail = moduleManager.modules["mail"];
+const cache = moduleManager.modules["cache"];
+const punishments = moduleManager.modules["punishments"];
+const utils = moduleManager.modules["utils"];
+const logger = moduleManager.modules["logger"];
 
 cache.sub('user.updateUsername', user => {
 	utils.socketsFromUser(user._id, sockets => {
@@ -84,9 +87,9 @@ module.exports = {
 			(next) => {
 				db.models.user.find({}).exec(next);
 			}
-		], (err, users) => {
+		], async (err, users) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("USER_INDEX", `Indexing users failed. "${err}"`);
 				return cb({status: 'failure', message: err});
 			} else {
@@ -147,16 +150,21 @@ module.exports = {
 			},
 
 			(user, next) => {
-				let sessionId = utils.guid();
+				utils.guid().then((sessionId) => {
+					next(null, user, sessionId);
+				});
+			},
+
+			(user, sessionId, next) => {
 				cache.hset('sessions', sessionId, cache.schemas.session(sessionId, user._id), (err) => {
 					if (err) return next(err);
 					next(null, sessionId);
 				});
 			}
 
-		], (err, sessionId) => {
+		], async (err, sessionId) => {
 			if (err && err !== true) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("USER_PASSWORD_LOGIN", `Login failed with password for user "${identifier}". "${err}"`);
 				return cb({status: 'failure', message: err});
 			}
@@ -250,9 +258,9 @@ module.exports = {
 				});
 			}
 
-		], (err) => {
+		], async (err) => {
 			if (err && err !== true) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("USER_PASSWORD_REGISTER", `Register failed with password for user "${username}"."${err}"`);
 				cb({status: 'failure', message: err});
 			} else {
@@ -290,9 +298,9 @@ module.exports = {
 			(session, next) => {
 				cache.hdel('sessions', session.sessionId, next);
 			}
-		], (err) => {
+		], async (err) => {
 			if (err && err !== true) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("USER_LOGOUT", `Logout failed. "${err}" `);
 				cb({ status: 'failure', message: err });
 			} else {
@@ -349,9 +357,9 @@ module.exports = {
 				});
 			}
 
-		], err => {
+		], async err => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("REMOVE_SESSIONS_FOR_USER", `Couldn't remove all sessions for user "${userId}". "${err}"`);
 				return cb({ status: 'failure', message: err });
 			} else {
@@ -379,9 +387,9 @@ module.exports = {
 				if (!account) return next('User not found.');
 				next(null, account);
 			}
-		], (err, account) => {
+		], async (err, account) => {
 			if (err && err !== true) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("FIND_BY_USERNAME", `User not found for username "${username}". "${err}"`);
 				cb({status: 'failure', message: err});
 			} else {
@@ -413,14 +421,23 @@ module.exports = {
 	 */
 	getUsernameFromId: (session, userId, cb) => {
 		db.models.user.findById(userId).then(user => {
-			logger.success("GET_USERNAME_FROM_ID", `Found username for userId "${userId}".`);
-			return cb({
-				status: 'success',
-				data: user.username
-			});
-		}).catch(err => {
+			if (user) {
+				logger.success("GET_USERNAME_FROM_ID", `Found username for userId "${userId}".`);
+				return cb({
+					status: 'success',
+					data: user.username
+				});
+			} else {
+				logger.error("GET_USERNAME_FROM_ID", `Getting the username from userId "${userId}" failed. User not found.`);
+				cb({
+					status: 'failure',
+					message: "Couldn't find the user."
+				});
+			}
+			
+		}).catch(async err => {
 			if (err && err !== true) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("GET_USERNAME_FROM_ID", `Getting the username from userId "${userId}" failed. "${err}"`);
 				cb({ status: 'failure', message: err });
 			}
@@ -453,9 +470,9 @@ module.exports = {
 				if (!user) return next('User not found.');
 				next(null, user);
 			}
-		], (err, user) => {
+		], async (err, user) => {
 			if (err && err !== true) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("FIND_BY_SESSION", `User not found. "${err}"`);
 				cb({status: 'failure', message: err});
 			} else {
@@ -516,9 +533,9 @@ module.exports = {
 			(next) => {
 				db.models.user.updateOne({ _id: updatingUserId }, {$set: {username: newUsername}}, {runValidators: true}, next);
 			}
-		], (err) => {
+		], async (err) => {
 			if (err && err !== true) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("UPDATE_USERNAME", `Couldn't update username for user "${updatingUserId}" to username "${newUsername}". "${err}"`);
 				cb({status: 'failure', message: err});
 			} else {
@@ -584,9 +601,9 @@ module.exports = {
 					next();
 				});
 			}
-		], (err) => {
+		], async (err) => {
 			if (err && err !== true) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("UPDATE_EMAIL", `Couldn't update email for user "${updatingUserId}" to email "${newEmail}". '${err}'`);
 				cb({status: 'failure', message: err});
 			} else {
@@ -622,9 +639,9 @@ module.exports = {
 				db.models.user.updateOne({_id: updatingUserId}, {$set: {role: newRole}}, {runValidators: true}, next);
 			}
 
-		], (err) => {
+		], async (err) => {
 			if (err && err !== true) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("UPDATE_ROLE", `User "${userId}" couldn't update role for user "${updatingUserId}" to role "${newRole}". "${err}"`);
 				cb({status: 'failure', message: err});
 			} else {
@@ -673,9 +690,9 @@ module.exports = {
 			(hashedPassword, next) => {
 				db.models.user.updateOne({_id: userId}, {$set: {"services.password.password": hashedPassword}}, next);
 			}
-		], (err) => {
+		], async (err) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("UPDATE_PASSWORD", `Failed updating user password of user '${userId}'. '${err}'.`);
 				return cb({ status: 'failure', message: err });
 			}
@@ -718,9 +735,9 @@ module.exports = {
 			(user, next) => {
 				mail.schemas.passwordRequest(user.email.address, user.username, code, next);
 			}
-		], (err) => {
+		], async (err) => {
 			if (err && err !== true) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("REQUEST_PASSWORD", `UserId '${userId}' failed to request password. '${err}'`);
 				cb({status: 'failure', message: err});
 			} else {
@@ -753,9 +770,9 @@ module.exports = {
 				if (user.services.password.set.expires < new Date()) return next('That code has expired.');
 				next(null);
 			}
-		], (err) => {
+		], async(err) => {
 			if (err && err !== true) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("VERIFY_PASSWORD_CODE", `Code '${code}' failed to verify. '${err}'`);
 				cb({status: 'failure', message: err});
 			} else {
@@ -807,9 +824,9 @@ module.exports = {
 			(hashedPassword, next) => {
 				db.models.user.updateOne({"services.password.set.code": code}, {$set: {"services.password.password": hashedPassword}, $unset: {"services.password.set": ''}}, {runValidators: true}, next);
 			}
-		], (err) => {
+		], async (err) => {
 			if (err && err !== true) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("ADD_PASSWORD_WITH_CODE", `Code '${code}' failed to add password. '${err}'`);
 				cb({status: 'failure', message: err});
 			} else {
@@ -841,9 +858,9 @@ module.exports = {
 				if (!user.services.github || !user.services.github.id) return next('You can\'t remove password login without having GitHub login.');
 				db.models.user.updateOne({_id: userId}, {$unset: {"services.password": ''}}, next);
 			}
-		], (err) => {
+		], async (err) => {
 			if (err && err !== true) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("UNLINK_PASSWORD", `Unlinking password failed for userId '${userId}'. '${err}'`);
 				cb({status: 'failure', message: err});
 			} else {
@@ -875,9 +892,9 @@ module.exports = {
 				if (!user.services.password || !user.services.password.password) return next('You can\'t remove GitHub login without having password login.');
 				db.models.user.updateOne({_id: userId}, {$unset: {"services.github": ''}}, next);
 			}
-		], (err) => {
+		], async (err) => {
 			if (err && err !== true) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("UNLINK_GITHUB", `Unlinking GitHub failed for userId '${userId}'. '${err}'`);
 				cb({status: 'failure', message: err});
 			} else {
@@ -922,9 +939,9 @@ module.exports = {
 			(user, next) => {
 				mail.schemas.resetPasswordRequest(user.email.address, user.username, code, next);
 			}
-		], (err) => {
+		], async (err) => {
 			if (err && err !== true) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("REQUEST_PASSWORD_RESET", `Email '${email}' failed to request password reset. '${err}'`);
 				cb({status: 'failure', message: err});
 			} else {
@@ -956,9 +973,9 @@ module.exports = {
 				if (!user.services.password.reset.expires > new Date()) return next('That code has expired.');
 				next(null);
 			}
-		], (err) => {
+		], async (err) => {
 			if (err && err !== true) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("VERIFY_PASSWORD_RESET_CODE", `Code '${code}' failed to verify. '${err}'`);
 				cb({status: 'failure', message: err});
 			} else {
@@ -1009,9 +1026,9 @@ module.exports = {
 			(hashedPassword, next) => {
 				db.models.user.updateOne({"services.password.reset.code": code}, {$set: {"services.password.password": hashedPassword}, $unset: {"services.password.reset": ''}}, {runValidators: true}, next);
 			}
-		], (err) => {
+		], async (err) => {
 			if (err && err !== true) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("CHANGE_PASSWORD_WITH_RESET_CODE", `Code '${code}' failed to change password. '${err}'`);
 				cb({status: 'failure', message: err});
 			} else {
@@ -1088,9 +1105,9 @@ module.exports = {
 				cache.pub('user.ban', {userId: value, punishment});
 				next();
 			},
-		], (err) => {
+		], async (err) => {
 			if (err && err !== true) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("BAN_USER_BY_ID", `User ${userId} failed to ban user ${value} with the reason ${reason}. '${err}'`);
 				cb({status: 'failure', message: err});
 			} else {

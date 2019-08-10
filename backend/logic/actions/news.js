@@ -2,11 +2,13 @@
 
 const async = require('async');
 
-const db = require('../db');
-const cache = require('../cache');
-const utils = require('../utils');
-const logger = require('../logger');
 const hooks = require('./hooks');
+const moduleManager = require("../../index");
+
+const db = moduleManager.modules["db"];
+const cache = moduleManager.modules["cache"];
+const utils = moduleManager.modules["utils"];
+const logger = moduleManager.modules["logger"];
 
 cache.sub('news.create', news => {
 	utils.socketsFromUser(news.createdBy, sockets => {
@@ -45,9 +47,9 @@ module.exports = {
 			(next) => {
 				db.models.news.find({}).sort({ createdAt: 'desc' }).exec(next);
 			}
-		], (err, news) => {
+		], async (err, news) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("NEWS_INDEX", `Indexing news failed. "${err}"`);
 				return cb({status: 'failure', message: err});
 			}
@@ -71,9 +73,9 @@ module.exports = {
 				data.createdAt = Date.now();
 				db.models.news.create(data, next);
 			}
-		], (err, news) => {
+		], async (err, news) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("NEWS_CREATE", `Creating news failed. "${err}"`);
 				return cb({ 'status': 'failure', 'message': err });
 			}

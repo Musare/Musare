@@ -1,14 +1,17 @@
 'use strict';
 
-const db = require('../db');
-const utils = require('../utils');
-const logger = require('../logger');
-const notifications = require('../notifications');
-const cache = require('../cache');
-const async = require('async');
 const config = require('config');
+const async = require('async');
 const request = require('request');
+
 const hooks = require('./hooks');
+
+const moduleManager = require("../../index");
+
+const db = moduleManager.modules["db"];
+const utils = moduleManager.modules["utils"];
+const logger = moduleManager.modules["logger"];
+const cache = moduleManager.modules["cache"];
 
 cache.sub('queue.newSong', songId => {
 	db.models.queueSong.findOne({songId}, (err, song) => {
@@ -39,9 +42,9 @@ let lib = {
 			(next) => {
 				db.models.queueSong.find({}, next);
 			}
-		], (err, songs) => {
+		], async (err, songs) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("QUEUE_INDEX", `Indexing queuesongs failed. "${err}"`);
 				return cb({status: 'failure', message: err});
 			} else {
@@ -93,9 +96,9 @@ let lib = {
 				if (!updated) return next('No properties changed');
 				db.models.queueSong.updateOne({_id: songId}, {$set}, {runValidators: true}, next);
 			}
-		], (err) => {
+		], async (err) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await  utils.getError(err);
 				logger.error("QUEUE_UPDATE", `Updating queuesong "${songId}" failed for user ${userId}. "${err}"`);
 				return cb({status: 'failure', message: err});
 			}
@@ -118,9 +121,9 @@ let lib = {
 			(next) => {
 				db.models.queueSong.deleteOne({_id: songId}, next);
 			}
-		], (err) => {
+		], async (err) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("QUEUE_REMOVE", `Removing queuesong "${songId}" failed for user ${userId}. "${err}"`);
 				return cb({status: 'failure', message: err});
 			}
@@ -191,9 +194,9 @@ let lib = {
 					}
 				});
 			}
-		], (err, newSong) => {
+		], async (err, newSong) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("QUEUE_ADD", `Adding queuesong "${songId}" failed for user ${userId}. "${err}"`);
 				return cb({status: 'failure', message: err});
 			}
@@ -230,9 +233,9 @@ let lib = {
 					});
 				}
 			}
-		], (err) => {
+		], async (err) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("QUEUE_IMPORT", `Importing a YouTube playlist to the queue failed for user "${userId}". "${err}"`);
 				return cb({ status: 'failure', message: err});
 			} else {

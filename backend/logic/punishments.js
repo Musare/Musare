@@ -1,73 +1,74 @@
 'use strict';
 
-const cache = require('./cache');
-const db = require('./db');
-const io = require('./io');
-const utils = require('./utils');
+const coreClass = require("../core");
+
 const async = require('async');
 const mongoose = require('mongoose');
 
-let initialized = false;
-let lockdown = false;
+module.exports = class extends coreClass {
+	constructor(name, moduleManager) {
+		super(name, moduleManager);
 
-module.exports = {
+		this.dependsOn = ["cache", "db", "utils"];
+	}
 
-	/**
-	 * Initializes the punishments module, and exits if it is unsuccessful
-	 *
-	 * @param {Function} cb - gets called once we're done initializing
-	 */
-	init: cb => {
-		async.waterfall([
-			(next) => {
-				cache.hgetall('punishments', next);
-			},
+	initialize() {
+		return new Promise((resolve, reject) => {
+			this.cache = this.moduleManager.modules['cache'];
+			this.db = this.moduleManager.modules['db'];
+			this.io = this.moduleManager.modules['io'];
+			this.utils = this.moduleManager.modules['utils'];
 
-			(punishments, next) => {
-				if (!punishments) return next();
-				let punishmentIds = Object.keys(punishments);
-				async.each(punishmentIds, (punishmentId, next) => {
-					db.models.punishment.findOne({_id: punishmentId}, (err, punishment) => {
-						if (err) next(err);
-						else if (!punishment) cache.hdel('punishments', punishmentId, next);
-						else next();
-					});
-				}, next);
-			},
-
-			(next) => {
-				db.models.punishment.find({}, next);
-			},
-
-			(punishments, next) => {
-				async.each(punishments, (punishment, next) => {
-					if (punishment.active === false || punishment.expiresAt < Date.now()) return next();
-					cache.hset('punishments', punishment._id, cache.schemas.punishment(punishment, punishment._id), next);
-				}, next);
-			}
-		], (err) => {
-			if (lockdown) return this._lockdown();
-			if (err) {
-				err = utils.getError(err);
-				cb(err);
-			} else {
-				initialized = true;
-				cb();
-			}
+			async.waterfall([
+				(next) => {
+					this.cache.hgetall('punishments', next);
+				},
+	
+				(punishments, next) => {
+					if (!punishments) return next();
+					let punishmentIds = Object.keys(punishments);
+					async.each(punishmentIds, (punishmentId, next) => {
+						this.db.models.punishment.findOne({_id: punishmentId}, (err, punishment) => {
+							if (err) next(err);
+							else if (!punishment) this.cache.hdel('punishments', punishmentId, next);
+							else next();
+						});
+					}, next);
+				},
+	
+				(next) => {
+					this.db.models.punishment.find({}, next);
+				},
+	
+				(punishments, next) => {
+					async.each(punishments, (punishment, next) => {
+						if (punishment.active === false || punishment.expiresAt < Date.now()) return next();
+						this.cache.hset('punishments', punishment._id, cache.schemas.punishment(punishment, punishment._id), next);
+					}, next);
+				}
+			], async (err) => {
+				if (err) {
+					err = await utils.getError(err);
+					reject(err);
+				} else {
+					resolve();
+				}
+			});
 		});
-	},
+	}
 
 	/**
 	 * Gets all punishments in the cache that are active, and removes those that have expired
 	 *
 	 * @param {Function} cb - gets called once we're done initializing
 	 */
-	getPunishments: function(cb) {
-		if (lockdown) return cb('Lockdown');
+	async getPunishments(cb) {
+		try { await this._validateHook(); } catch { return; }
+
 		let punishmentsToRemove = [];
 		async.waterfall([
 			(next) => {
-				cache.hgetall('punishments', next);
+				this.cache.hgetall('punishments', next);
 			},
 
 			(punishmentsObj, next) => {
@@ -88,7 +89,7 @@ module.exports = {
 				async.each(
 					punishmentsToRemove,
 					(punishment, next2) => {
-						cache.hdel('punishments', punishment.punishmentId, () => {
+						this.cache.hdel('punishments', punishment.punishmentId, () => {
 							next2();
 						});
 					},
@@ -102,7 +103,7 @@ module.exports = {
 
 			cb(null, punishments);
 		});
-	},
+	}
 
 	/**
 	 * Gets a punishment by id
@@ -110,23 +111,24 @@ module.exports = {
 	 * @param {String} id - the id of the punishment we are trying to get
 	 * @param {Function} cb - gets called once we're done initializing
 	 */
-	getPunishment: function(id, cb) {
-		if (lockdown) return cb('Lockdown');
+	async getPunishment(id, cb) {
+		try { await this._validateHook(); } catch { return; }
+
 		async.waterfall([
 
 			(next) => {
 				if (!mongoose.Types.ObjectId.isValid(id)) return next('Id is not a valid ObjectId.');
-				cache.hget('punishments', id, next);
+				this.cache.hget('punishments', id, next);
 			},
 
 			(punishment, next) => {
 				if (punishment) return next(true, punishment);
-				db.models.punishment.findOne({_id: id}, next);
+				this.db.models.punishment.findOne({_id: id}, next);
 			},
 
 			(punishment, next) => {
 				if (punishment) {
-					cache.hset('punishments', id, punishment, next);
+					this.cache.hset('punishments', id, punishment, next);
 				} else next('Punishment not found.');
 			},
 
@@ -135,7 +137,7 @@ module.exports = {
 
 			cb(null, punishment);
 		});
-	},
+	}
 
 	/**
 	 * Gets all punishments from a userId
@@ -143,11 +145,12 @@ module.exports = {
 	 * @param {String} userId - the userId of the punishment(s) we are trying to get
 	 * @param {Function} cb - gets called once we're done initializing
 	 */
-	getPunishmentsFromUserId: function(userId, cb) {
-		if (lockdown) return cb('Lockdown');
+	async getPunishmentsFromUserId(userId, cb) {
+		try { await this._validateHook(); } catch { return; }
+
 		async.waterfall([
 			(next) => {
-				module.exports.getPunishments(next);
+				this.getPunishments(next);
 			},
 			(punishments, next) => {
 				punishments = punishments.filter((punishment) => {
@@ -160,13 +163,14 @@ module.exports = {
 
 			cb(null, punishments);
 		});
-	},
+	}
 
-	addPunishment: function(type, value, reason, expiresAt, punishedBy, cb) {
-		if (lockdown) return cb('Lockdown');
+	async addPunishment(type, value, reason, expiresAt, punishedBy, cb) {
+		try { await this._validateHook(); } catch { return; }
+
 		async.waterfall([
 			(next) => {
-				const punishment = new db.models.punishment({
+				const punishment = new this.db.models.punishment({
 					type,
 					value,
 					reason,
@@ -182,7 +186,7 @@ module.exports = {
 			},
 
 			(punishment, next) => {
-				cache.hset('punishments', punishment._id, cache.schemas.punishment(punishment, punishment._id), (err) => {
+				this.cache.hset('punishments', punishment._id, this.cache.schemas.punishment(punishment, punishment._id), (err) => {
 					next(err, punishment);
 				});
 			},
@@ -194,13 +198,14 @@ module.exports = {
 		], (err, punishment) => {
 			cb(err, punishment);
 		});
-	},
+	}
 
-	removePunishmentFromCache: function(punishmentId, cb) {
-		if (lockdown) return cb('Lockdown');
+	async removePunishmentFromCache(punishmentId, cb) {
+		try { await this._validateHook(); } catch { return; }
+
 		async.waterfall([
 			(next) => {
-				const punishment = new db.models.punishment({
+				const punishment = new this.db.models.punishment({
 					type,
 					value,
 					reason,
@@ -217,7 +222,7 @@ module.exports = {
 			},
 
 			(punishment, next) => {
-				cache.hset('punishments', punishment._id, punishment, next);
+				this.cache.hset('punishments', punishment._id, punishment, next);
 			},
 
 			(punishment, next) => {
@@ -227,9 +232,6 @@ module.exports = {
 		], (err) => {
 			cb(err);
 		});
-	},
-
-	_lockdown: () => {
-		lockdown = true;
 	}
-};
+}
+

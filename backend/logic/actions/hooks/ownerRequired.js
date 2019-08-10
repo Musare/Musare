@@ -1,9 +1,12 @@
-const cache = require('../../cache');
-const db = require('../../db');
-const utils = require('../../utils');
-const logger = require('../../logger');
 const async = require('async');
-const stations = require('../../stations');
+
+const moduleManager = require("../../../index");
+
+const db = moduleManager.modules["db"];
+const cache = moduleManager.modules["cache"];
+const utils = moduleManager.modules["utils"];
+const logger = moduleManager.modules["logger"];
+const stations = moduleManager.modules["stations"];
 
 module.exports = function(next) {
 	return function(session, stationId) {
@@ -29,9 +32,9 @@ module.exports = function(next) {
 				if (station.type === 'community' && station.owner === session.userId) return next(true);
 				next('Invalid permissions.');
 			}
-		], (err) => {
+		], async (err) => {
 			if (err !== true) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.info("OWNER_REQUIRED", `User failed to pass owner required check for station "${stationId}". "${err}"`);
 				return cb({status: 'failure', message: err});
 			}

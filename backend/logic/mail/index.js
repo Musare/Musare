@@ -1,45 +1,38 @@
 'use strict';
 
+const coreClass = require("../../core");
+
 const config = require('config');
-const enabled = config.get('apis.mailgun.enabled');
+
 let mailgun = null;
-if (enabled) {
-	mailgun = require('mailgun-js')({
-		apiKey: config.get("apis.mailgun.key"),
-		domain: config.get("apis.mailgun.domain")
-	});
-}
 
-let initialized = false;
-let lockdown = false;
+module.exports = class extends coreClass {
+	initialize() {
+		return new Promise((resolve, reject) => {
+			this.schemas = {
+				verifyEmail: require('./schemas/verifyEmail'),
+				resetPasswordRequest: require('./schemas/resetPasswordRequest'),
+				passwordRequest: require('./schemas/passwordRequest')
+			};
 
-let lib = {
+			this.enabled = config.get('apis.mailgun.enabled');
 
-	schemas: {},
-
-	init: (cb) => {
-		lib.schemas = {
-			verifyEmail: require('./schemas/verifyEmail'),
-			resetPasswordRequest: require('./schemas/resetPasswordRequest'),
-			passwordRequest: require('./schemas/passwordRequest')
-		};
-
-		initialized = true;
-
-		if (lockdown) return this._lockdown();
-		cb();
-	},
-
-	sendMail: (data, cb) => {
-		if (lockdown) return cb('Lockdown');
-		if (!cb) cb = ()=>{};
-		if (enabled) mailgun.messages().send(data, cb);
-		else cb();
-	},
-
-	_lockdown: () => {
-		lockdown = true;
+			if (this.enabled)
+				mailgun = require('mailgun-js')({
+					apiKey: config.get("apis.mailgun.key"),
+					domain: config.get("apis.mailgun.domain")
+				});
+			
+			resolve();
+		});
 	}
-};
 
-module.exports = lib;
+	async sendMail(data, cb) {
+		try { await this._validateHook(); } catch { return; }
+
+		if (!cb) cb = ()=>{};
+
+		if (this.enabled) mailgun.messages().send(data, cb);
+		else cb();
+	}
+}

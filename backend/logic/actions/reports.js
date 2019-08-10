@@ -2,12 +2,16 @@
 
 const async = require('async');
 
-const db = require('../db');
-const cache = require('../cache');
-const utils = require('../utils');
-const logger = require('../logger');
 const hooks = require('./hooks');
-const songs = require('../songs');
+
+const moduleManager = require("../../index");
+
+const db = moduleManager.modules["db"];
+const cache = moduleManager.modules["cache"];
+const utils = moduleManager.modules["utils"];
+const logger = moduleManager.modules["logger"];
+const songs = moduleManager.modules["songs"];
+
 const reportableIssues = [
 	{
 		name: 'Video',
@@ -71,9 +75,9 @@ module.exports = {
 			(next) => {
 				db.models.report.find({ resolved: false }).sort({ released: 'desc' }).exec(next);
 			}
-		], (err, reports) => {
+		], async (err, reports) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("REPORTS_INDEX", `Indexing reports failed. "${err}"`);
 				return cb({ 'status': 'failure', 'message': err});
 			}
@@ -94,9 +98,9 @@ module.exports = {
 			(next) => {
 				db.models.report.findOne({ _id: reportId }).exec(next);
 			}
-		], (err, report) => {
+		], async (err, report) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("REPORTS_FIND_ONE", `Finding report "${reportId}" failed. "${err}"`);
 				return cb({ 'status': 'failure', 'message': err });
 			}
@@ -125,9 +129,9 @@ module.exports = {
 				}
 				next(null, data);
 			}
-		], (err, data) => {
+		], async (err, data) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("GET_REPORTS_FOR_SONG", `Indexing reports for song "${songId}" failed. "${err}"`);
 				return cb({ 'status': 'failure', 'message': err});
 			} else {
@@ -159,9 +163,9 @@ module.exports = {
 					else next();
 				});
 			}
-		], (err) => {
+		], async (err) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await  utils.getError(err);
 				logger.error("REPORTS_RESOLVE", `Resolving report "${reportId}" failed by user "${userId}". "${err}"`);
 				return cb({ 'status': 'failure', 'message': err});
 			} else {
@@ -227,9 +231,9 @@ module.exports = {
 				db.models.report.create(data, next);
 			}
 
-		], (err, report) => {
+		], async (err, report) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("REPORTS_CREATE", `Creating report for "${data.songId}" failed by user "${userId}". "${err}"`);
 				return cb({ 'status': 'failure', 'message': err });
 			} else {
