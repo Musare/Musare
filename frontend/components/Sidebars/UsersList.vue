@@ -35,7 +35,7 @@
 }
 
 .inner-wrapper {
-	top: 64px;
+	top: 60px;
 	position: relative;
 }
 

@@ -5,6 +5,7 @@ Thumbs.db
 .vscode/
 .vagrant/
 
+.env
 startRedis.cmd
 startMongo.cmd
 .database
@@ -26,7 +27,7 @@ frontend/dist/index.html
 frontend/dist/config/default.json
 
 npm
+node_modules
 
 # Logs
 log/
-.env

@@ -268,9 +268,9 @@ Run this command in your shell. You will have to do this command for every shell
 
    `yarn global add node-gyp`.
 
-5. In both `frontend` and `backend` folders, do `yarn install`.
+5. Run `yarn run bootstrap` to install dependencies and dev-dependencies for both the frontend and backend.
 
-6. `nodemon backend/index.js`
+6. Either execute `yarn run dev:frontend` and `yarn run dev:backend` separately, or in parallel with `yarn dev`.
 
 ### Calling Toasts
 
