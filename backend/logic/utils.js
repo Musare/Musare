@@ -303,17 +303,13 @@ module.exports = class extends coreClass {
 		}
 	}
 
-	async emitToRoom(room) {
+	async emitToRoom(room, ...args) {
 		try { await this._validateHook(); } catch { return; }
 		
 		let sockets = this.io.io.sockets.sockets;
 		for (let id in sockets) {
 			let socket = sockets[id];
 			if (socket.rooms[room]) {
-				let args = [];
-				for (let i = 1; i < Object.keys(arguments).length; i++) {
-					args.push(arguments[i]);
-				}
 				socket.emit.apply(socket, args);
 			}
 		}

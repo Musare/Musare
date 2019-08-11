@@ -162,24 +162,25 @@ export default {
 		const _this = this;
 		io.getSocket(socket => {
 			_this.socket = socket;
+			_this.socket.on("event:admin.song.added", song => {
+				_this.songs.push(song);
+			});
+			_this.socket.on("event:admin.song.removed", songId => {
+				_this.songs = _this.songs.filter(song => {
+					return song._id !== songId;
+				});
+			});
+			_this.socket.on("event:admin.song.updated", updatedSong => {
+				for (let i = 0; i < _this.songs.length; i += 1) {
+					const song = _this.songs[i];
+					if (song._id === updatedSong._id) {
+						_this.songs.$set(i, updatedSong);
+					}
+				}
+			});
+
 			if (_this.socket.connected) {
 				_this.init();
-				_this.socket.on("event:admin.song.added", song => {
-					_this.songs.push(song);
-				});
-				_this.socket.on("event:admin.song.removed", songId => {
-					_this.songs = _this.songs.filter(song => {
-						return song._id !== songId;
-					});
-				});
-				_this.socket.on("event:admin.song.updated", updatedSong => {
-					for (let i = 0; i < _this.songs.length; i += 1) {
-						const song = _this.songs[i];
-						if (song._id === updatedSong._id) {
-							_this.songs.$set(i, updatedSong);
-						}
-					}
-				});
 			}
 			io.onConnect(() => {
 				_this.init();

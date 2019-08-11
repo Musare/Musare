@@ -14,7 +14,7 @@ const logger = moduleManager.modules["logger"];
 const cache = moduleManager.modules["cache"];
 
 cache.sub('queue.newSong', songId => {
-	db.models.queueSong.findOne({songId}, (err, song) => {
+	db.models.queueSong.findOne({_id: songId}, (err, song) => {
 		utils.emitToRoom('admin.queue', 'event:admin.queueSong.added', song);
 	});
 });
@@ -24,7 +24,7 @@ cache.sub('queue.removedSong', songId => {
 });
 
 cache.sub('queue.update', songId => {
-	db.models.queueSong.findOne({songId}, (err, song) => {
+	db.models.queueSong.findOne({_id: songId}, (err, song) => {
 		utils.emitToRoom('admin.queue', 'event:admin.queueSong.updated', song);
 	});
 });
