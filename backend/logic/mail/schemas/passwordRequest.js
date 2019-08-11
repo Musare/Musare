@@ -1,5 +1,8 @@
 const config = require('config');
-const mail = require('../index');
+
+const moduleManager = require('../../../index');
+
+const mail = moduleManager.modules["mail"];
 
 /**
  * Sends a request password email
