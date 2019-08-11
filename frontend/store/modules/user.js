@@ -135,6 +135,8 @@ const modules = {
 								}
 							});
 						}
+					} else {
+						resolve(state.userIdMap[`Z${userId}`]);
 					}
 				});
 			}

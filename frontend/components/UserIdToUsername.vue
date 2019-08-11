@@ -1,36 +1,32 @@
 <template>
 	<router-link
-		v-if="$props.link && username"
-		:to="{ path: `/u/${userIdMap['Z' + $props.userId]}` }"
+		v-if="$props.link && username !== 'unknown'"
+		:to="{ path: `/u/${username}` }"
+		:title="userId"
 	>
-		{{ username ? username : "unknown" }}
+		{{ username }}
 	</router-link>
-	<span v-else>
-		{{ username ? username : "unknown" }}
+	<span :title="userId" v-else>
+		{{ username }}
 	</span>
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapActions } from "vuex";
 
 export default {
 	props: ["userId", "link"],
 	data() {
 		return {
-			username: ""
+			username: "unknown"
 		};
-	},
-	computed: {
-		...mapState("user/auth", {
-			userIdMap: state => state.userIdMap
-		})
 	},
 	methods: {
 		...mapActions("user/auth", ["getUsernameFromId"])
 	},
 	mounted() {
 		this.getUsernameFromId(this.$props.userId).then(res => {
-			this.username = res;
+			if (res) this.username = res;
 		});
 	}
 };
