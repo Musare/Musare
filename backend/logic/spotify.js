@@ -23,6 +23,7 @@ module.exports = class extends coreClass {
 			this.setStage(1);
 
 			this.cache = this.moduleManager.modules["cache"];
+			this.utils = this.moduleManager.modules["utils"];
 
 			const client = config.get("apis.spotify.client");
 			const secret = config.get("apis.spotify.secret");
