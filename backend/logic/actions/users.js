@@ -184,9 +184,9 @@ module.exports = {
 	 * @param {Object} recaptcha - the recaptcha data
 	 * @param {Function} cb - gets called with the result
 	 */
-	register: function(session, username, email, password, recaptcha, cb) {
+	register: async function(session, username, email, password, recaptcha, cb) {
 		email = email.toLowerCase();
-		let verificationToken = utils.generateRandomString(64);
+		let verificationToken = await utils.generateRandomString(64);
 		async.waterfall([
 
 			// verify the request with google recaptcha
@@ -233,10 +233,16 @@ module.exports = {
 				bcrypt.hash(sha256(password), salt, next)
 			},
 
-			// save the new user to the database
 			(hash, next) => {
+				utils.generateRandomString(12).then((_id) => {
+					next(null, hash, _id);
+				});
+			},
+
+			// save the new user to the database
+			(hash, _id, next) => {
 				db.models.user.create({
-					_id: utils.generateRandomString(12),//TODO Check if exists
+					_id,
 					username,
 					email: {
 						address: email,
