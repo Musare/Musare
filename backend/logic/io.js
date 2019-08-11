@@ -118,6 +118,10 @@ module.exports = class extends coreClass {
 							socket.on(name, async function() {
 								let args = Array.prototype.slice.call(arguments, 0, -1);
 								let cb = arguments[arguments.length - 1];
+								if (typeof cb !== "function")
+									cb = () => {
+										_this.logger.info("IO_MODULE", `There was no callback provided for ${name}.`);
+									}
 
 								try { await _this._validateHook(); } catch { return cb({status: 'failure', message: 'Lockdown'}); } 
 
