@@ -38,6 +38,8 @@ module.exports = class extends coreClass {
 
 			let time = getTimeFormatted();
 
+			this.logCbs = [];
+
 			this.colors = {
 				Reset: "\x1b[0m",
 				Bright: "\x1b[1m",
@@ -115,6 +117,15 @@ module.exports = class extends coreClass {
 		if (display) this.log(this.colors.FgCyan, message);
 	}
 
+	async debug(text, display = true) {
+		try { await this._validateHook(); } catch { return; }
+
+		const time = getTimeFormatted();
+		const message = `${time} DEBUG - ${text}`;
+
+		if (display) this.log(this.colors.FgMagenta, message);
+	}
+
 	async stationIssue(text, display = false) {
 		try { await this._validateHook(); } catch { return; }
 
@@ -127,14 +138,39 @@ module.exports = class extends coreClass {
 	}
 
 	log(color, message) {
-		process.stdout.moveCursor(0, -this.reservedLines);
-		process.stdout.write(`${color}${message}${this.colors.Reset}\n`);
+		this.logCbs.push(() => {
+			this.logCbs.shift();
+			this.logActive = true;
 
-		for(let i = 0; i < this.reservedLines; i++) {
-			process.stdout.write("\n");
+			const rows = process.stdout.rows;
+			const columns = process.stdout.columns;
+			const lineNumber = rows - this.reservedLines;
+
+			let lines = Math.floor(message.length / columns) + 1;
+
+			process.stdout.cursorTo(0, lineNumber);
+			process.stdout.write(`${color}${message}${this.colors.Reset}\n`);
+
+			process.stdout.cursorTo(0, (rows - this.logger.reservedLines) + lines);
+			process.stdout.clearScreenDown();
+
+			process.stdout.cursorTo(0, process.stdout.rows);
+			for(let i = 0; i < lines; i++) {
+				process.stdout.write(`\n`);
+			}
+
+			this.moduleManager.printStatus();
+
+			this.logActive = false;
+			this.nextLog();
+		});
+		this.nextLog();
+	}
+
+	nextLog() {
+		if (!this.logActive && this.logCbs.length > 0) {
+			this.logCbs[0]();
 		}
-
-		this.moduleManager.printStatus();
 	}
 
 	writeFile(fileName, message) {

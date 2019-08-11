@@ -28,7 +28,12 @@ class ModuleManager {
 	initialize() {
 		if (!this.modules["logger"]) return console.error("There is no logger module");
 		this.logger = this.modules["logger"];
-		this.logger.reservedLines = Object.keys(this.modules).length + 2;
+		console.log = (...args) => this.logger.debug(args.join(" "));
+		console.debug = (...args) => this.logger.debug(args.join(" "));
+		console.info = (...args) => this.logger.debug(args.join(" "));
+		console.warn = (...args) => this.logger.debug(args.join(" "));
+		console.error = (...args) => this.logger.error("CONSOLE", args.join(" "));
+		this.logger.reservedLines = Object.keys(this.modules).length + 5;
 		
 		for (let moduleName in this.modules) {
 			let module = this.modules[moduleName];
@@ -60,9 +65,13 @@ class ModuleManager {
 		
 		let colors = this.logger.colors;
 
-		process.stdout.moveCursor(0, -this.logger.reservedLines);
+		const rows = process.stdout.rows;
+
+		process.stdout.cursorTo(0, rows - this.logger.reservedLines);
 		process.stdout.clearScreenDown();
-		process.stdout.write(`\n`);
+
+		process.stdout.cursorTo(0, (rows - this.logger.reservedLines) + 2);
+
 		process.stdout.write(`${colors.FgYellow}Modules${colors.FgWhite}:\n`);
 
 		for (let moduleName in this.modules) {
@@ -147,3 +156,9 @@ process.stdin.on("data", function (data) {
        	moduleManager._lockdown();
     }
 });
+
+const rows = process.stdout.rows;
+
+for(let i = 0; i < rows; i++) {
+	process.stdout.write("\n");
+}
