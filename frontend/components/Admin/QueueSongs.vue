@@ -14,10 +14,9 @@
 					<tr>
 						<td>Thumbnail</td>
 						<td>Title</td>
-						<td>ID</td>
-						<td>YouTube ID</td>
 						<td>Artists</td>
 						<td>Genres</td>
+						<td>ID / YouTube ID</td>
 						<td>Requested By</td>
 						<td>Options</td>
 					</tr>
@@ -34,8 +33,11 @@
 						<td>
 							<strong>{{ song.title }}</strong>
 						</td>
-						<td>{{ song._id }}</td>
+						<td>{{ song.artists.join(", ") }}</td>
+						<td>{{ song.genres.join(", ") }}</td>
 						<td>
+							{{ song._id }}
+							<br />
 							<a
 								:href="
 									'https://www.youtube.com/watch?v=' +
@@ -46,8 +48,6 @@
 								{{ song.songId }}</a
 							>
 						</td>
-						<td>{{ song.artists.join(", ") }}</td>
-						<td>{{ song.genres.join(", ") }}</td>
 						<td>
 							<user-id-to-username
 								:userId="song.requestedBy"

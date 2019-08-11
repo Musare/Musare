@@ -14,10 +14,17 @@
 					<tr>
 						<td>Thumbnail</td>
 						<td>Title</td>
-						<td>ID</td>
-						<td>YouTube ID</td>
 						<td>Artists</td>
 						<td>Genres</td>
+						<td class="likesColumn">
+							<i class="material-icons thumbLike">thumb_up</i>
+						</td>
+						<td class="dislikesColumn">
+							<i class="material-icons thumbDislike"
+								>thumb_down</i
+							>
+						</td>
+						<td>ID / Youtube ID</td>
 						<td>Requested By</td>
 						<td>Options</td>
 					</tr>
@@ -34,8 +41,13 @@
 						<td>
 							<strong>{{ song.title }}</strong>
 						</td>
-						<td>{{ song._id }}</td>
+						<td>{{ song.artists.join(", ") }}</td>
+						<td>{{ song.genres.join(", ") }}</td>
+						<td>{{ song.likes }}</td>
+						<td>{{ song.dislikes }}</td>
 						<td>
+							{{ song._id }}
+							<br />
 							<a
 								:href="
 									'https://www.youtube.com/watch?v=' +
@@ -46,8 +58,6 @@
 								{{ song.songId }}</a
 							>
 						</td>
-						<td>{{ song.artists.join(", ") }}</td>
-						<td>{{ song.genres.join(", ") }}</td>
 						<td>
 							<user-id-to-username
 								:userId="song.requestedBy"
@@ -198,6 +208,20 @@ body {
 	width: 100px;
 	button {
 		width: 35px;
+	}
+}
+
+.likesColumn,
+.dislikesColumn {
+	width: 40px;
+	i {
+		font-size: 20px;
+	}
+	.thumbLike {
+		color: #87d37c !important;
+	}
+	.thumbDislike {
+		color: #ec644b !important;
 	}
 }
 
