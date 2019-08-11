@@ -1,5 +1,7 @@
 'use strict';
 
+const util = require("util");
+
 process.env.NODE_CONFIG_DIR = `${__dirname}/config`;
 
 process.on('uncaughtException', err => {
@@ -28,11 +30,11 @@ class ModuleManager {
 	initialize() {
 		if (!this.modules["logger"]) return console.error("There is no logger module");
 		this.logger = this.modules["logger"];
-		console.log = (...args) => this.logger.debug(args.join(" "));
-		console.debug = (...args) => this.logger.debug(args.join(" "));
-		console.info = (...args) => this.logger.debug(args.join(" "));
-		console.warn = (...args) => this.logger.debug(args.join(" "));
-		console.error = (...args) => this.logger.error("CONSOLE", args.join(" "));
+		console.log = (...args) => this.logger.debug(args.map(arg => util.format(arg)));
+		console.debug = (...args) => this.logger.debug(args.map(arg => util.format(arg)));
+		console.info = (...args) => this.logger.debug(args.map(arg => util.format(arg)));
+		console.warn = (...args) => this.logger.debug(args.map(arg => util.format(arg)));
+		console.error = (...args) => this.logger.error("CONSOLE", args.map(arg => util.format(arg)));
 		this.logger.reservedLines = Object.keys(this.modules).length + 5;
 		
 		for (let moduleName in this.modules) {

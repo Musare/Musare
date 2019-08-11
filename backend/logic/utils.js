@@ -305,7 +305,7 @@ module.exports = class extends coreClass {
 
 	async emitToRoom(room, ...args) {
 		try { await this._validateHook(); } catch { return; }
-		
+
 		let sockets = this.io.io.sockets.sockets;
 		for (let id in sockets) {
 			let socket = sockets[id];
