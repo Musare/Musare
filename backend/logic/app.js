@@ -156,11 +156,11 @@ module.exports = class extends coreClass {
 						db.models.user.findOne({'email.address': address}, next);
 					},
 
-					(user, next) => {
-						const verificationToken = this.utils.generateRandomString(64);
+					async (user, next) => {
+						const verificationToken = await this.utils.generateRandomString(64);
 						if (user) return next('An account with that email address already exists.');
 						db.models.user.create({
-							_id: this.utils.generateRandomString(12),//TODO Check if exists
+							_id: await this.utils.generateRandomString(12),//TODO Check if exists
 							username: body.login,
 							email: {
 								address,
