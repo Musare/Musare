@@ -29,7 +29,7 @@ module.exports = class extends coreClass {
 			const secret = config.get("apis.spotify.secret");
 
 			const OAuth2 = require('oauth').OAuth2;
-			const SpotifyOauth = new OAuth2(
+			this.SpotifyOauth = new OAuth2(
 				client,
 				secret, 
 				'https://accounts.spotify.com/', 
