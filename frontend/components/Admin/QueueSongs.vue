@@ -122,8 +122,12 @@ export default {
 	},
 	computed: {
 		filteredSongs() {
-			return this.songs;
-			// return this.songs.filter(song => song.indexOf(song.searchQuery) !== -1);
+			return this.songs.filter(
+				song =>
+					JSON.stringify(Object.values(song)).indexOf(
+						this.searchQuery
+					) !== -1
+			);
 		},
 		...mapState("modals", {
 			modals: state => state.modals.admin
