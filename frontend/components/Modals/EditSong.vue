@@ -186,29 +186,6 @@
 						v-model="editing.song.skipDuration"
 					/>
 				</p>
-				<article class="message" v-if="editing.type === 'songs'">
-					<div class="message-body">
-						<span class="reports-length">
-							{{ reports.length }}
-							<span
-								v-if="reports.length > 1 || reports.length <= 0"
-								>&nbsp;Reports</span
-							>
-							<span v-else>&nbsp;Report</span>
-						</span>
-						<div v-for="(report, index) in reports" :key="index">
-							<router-link
-								:to="{
-									path: '/admin/reports',
-									query: { id: report, returnToSong: true }
-								}"
-								class="report-link"
-							>
-								Report - {{ report }}
-							</router-link>
-						</div>
-					</div>
-				</article>
 				<hr />
 				<h5 class="has-text-centered">Spotify Information</h5>
 				<label class="label">Song title</label>
@@ -295,7 +272,6 @@ export default {
 	components: { Modal },
 	data() {
 		return {
-			reports: 0,
 			spotify: {
 				title: "",
 				artist: "",
@@ -629,16 +605,6 @@ export default {
 
 		io.getSocket(socket => {
 			this.socket = socket;
-
-			if (this.editing.type === "songs") {
-				socket.emit(
-					"reports.getReportsForSong",
-					this.editing.song.songId,
-					res => {
-						this.reports = res.data;
-					}
-				);
-			}
 		});
 
 		setInterval(() => {
@@ -885,16 +851,5 @@ h5 {
 
 .tag:not(:last-child) {
 	margin-right: 5px;
-}
-
-.reports-length {
-	color: #ff4545;
-	font-weight: bold;
-	display: flex;
-	justify-content: center;
-}
-
-.report-link {
-	color: #000;
 }
 </style>
