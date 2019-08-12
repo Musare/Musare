@@ -170,3 +170,9 @@ a {
 	color: #029ce3;
 }
 </style>
+
+<style lang="scss">
+.grecaptcha-badge {
+	z-index: 2000;
+}
+</style>
