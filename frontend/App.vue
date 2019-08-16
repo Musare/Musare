@@ -61,38 +61,37 @@ export default {
 				this.closeCurrentModal();
 		};
 
-		const _this = this;
 		if (localStorage.getItem("github_redirect")) {
 			this.$router.go(localStorage.getItem("github_redirect"));
 			localStorage.removeItem("github_redirect");
 		}
 		io.onConnect(true, () => {
-			_this.socketConnected = true;
+			this.socketConnected = true;
 		});
 		io.onConnectError(true, () => {
-			_this.socketConnected = false;
+			this.socketConnected = false;
 		});
 		io.onDisconnect(true, () => {
-			_this.socketConnected = false;
+			this.socketConnected = false;
 		});
 		lofig.get("serverDomain", res => {
-			_this.serverDomain = res;
+			this.serverDomain = res;
 		});
-		_this.$router.onReady(() => {
-			if (_this.$route.query.err) {
-				let { err } = _this.$route.query;
+		this.$router.onReady(() => {
+			if (this.$route.query.err) {
+				let { err } = this.$route.query;
 				err = err
 					.replace(new RegExp("<", "g"), "&lt;")
 					.replace(new RegExp(">", "g"), "&gt;");
-				_this.$router.push({ query: {} });
+				this.$router.push({ query: {} });
 				Toast.methods.addToast(err, 20000);
 			}
-			if (_this.$route.query.msg) {
-				let { msg } = _this.$route.query;
+			if (this.$route.query.msg) {
+				let { msg } = this.$route.query;
 				msg = msg
 					.replace(new RegExp("<", "g"), "&lt;")
 					.replace(new RegExp(">", "g"), "&gt;");
-				_this.$router.push({ query: {} });
+				this.$router.push({ query: {} });
 				Toast.methods.addToast(msg, 20000);
 			}
 		});

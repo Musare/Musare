@@ -192,7 +192,6 @@ export default {
 	},
 	methods: {
 		createStation() {
-			const _this = this;
 			const {
 				newStation: {
 					name,
@@ -219,7 +218,7 @@ export default {
 					3000
 				);
 
-			return _this.socket.emit(
+			return this.socket.emit(
 				"stations.create",
 				{
 					name,
@@ -301,30 +300,28 @@ export default {
 			this.newStation.blacklistedGenres.splice(index, 1);
 		},
 		init() {
-			const _this = this;
-			_this.socket.emit("stations.index", data => {
-				_this.stations = data.stations;
+			this.socket.emit("stations.index", data => {
+				this.stations = data.stations;
 			});
-			_this.socket.emit("apis.joinAdminRoom", "stations", () => {});
+			this.socket.emit("apis.joinAdminRoom", "stations", () => {});
 		},
 		...mapActions("modals", ["openModal"]),
 		...mapActions("admin/stations", ["editStation"])
 	},
 	mounted() {
-		const _this = this;
 		io.getSocket(socket => {
-			_this.socket = socket;
-			if (_this.socket.connected) _this.init();
-			_this.socket.on("event:admin.station.added", station => {
-				_this.stations.push(station);
+			this.socket = socket;
+			if (this.socket.connected) this.init();
+			this.socket.on("event:admin.station.added", station => {
+				this.stations.push(station);
 			});
-			_this.socket.on("event:admin.station.removed", stationId => {
-				_this.stations = _this.stations.filter(station => {
+			this.socket.on("event:admin.station.removed", stationId => {
+				this.stations = this.stations.filter(station => {
 					return station._id !== stationId;
 				});
 			});
 			io.onConnect(() => {
-				_this.init();
+				this.init();
 			});
 		});
 	}

@@ -122,21 +122,21 @@ module.exports = class extends coreClass {
 		try { await this._validateHook(); } catch { return; }
 
 		if (typeof cb !== 'function') cb = ()=>{};
-		let _this = this;
+
 		async.waterfall([
 			(next) => {
-				_this.getStation(stationId, next);
+				this.getStation(stationId, next);
 			},
 			(station, next) => {
 				if (!station) return next('Station not found.');
 				this.notifications.unschedule(`stations.nextSong?id=${station._id}`);
-				subscription = this.notifications.subscribe(`stations.nextSong?id=${station._id}`, _this.skipStation(station._id), true, station);
+				subscription = this.notifications.subscribe(`stations.nextSong?id=${station._id}`, this.skipStation(station._id), true, station);
 				if (station.paused) return next(true, station);
 				next(null, station);
 			},
 			(station, next) => {
 				if (!station.currentSong) {
-					return _this.skipStation(station._id)((err, station) => {
+					return this.skipStation(station._id)((err, station) => {
 						if (err) return next(err);
 						return next(true, station);
 					});
@@ -161,7 +161,6 @@ module.exports = class extends coreClass {
 	async calculateSongForStation(station, cb) {
 		try { await this._validateHook(); } catch { return; }
 
-		let _this = this;
 		let songList = [];
 		async.waterfall([
 			(next) => {
@@ -202,14 +201,14 @@ module.exports = class extends coreClass {
 			},
 
 			(playlist, next) => {
-				_this.calculateOfficialPlaylistList(station._id, playlist, () => {
+				this.calculateOfficialPlaylistList(station._id, playlist, () => {
 					next(null, playlist);
 				});
 			},
 
 			(playlist, next) => {
 				this.db.models.station.updateOne({_id: station._id}, {$set: {playlist: playlist}}, {runValidators: true}, (err) => {
-					_this.updateStation(station._id, () => {
+					this.updateStation(station._id, () => {
 						next(err, playlist);
 					});
 				});
@@ -224,7 +223,6 @@ module.exports = class extends coreClass {
 	async getStation(stationId, cb) {
 		try { await this._validateHook(); } catch { return; }
 
-		let _this = this;
 		async.waterfall([
 			(next) => {
 				this.cache.hget('stations', stationId, next);
@@ -238,7 +236,7 @@ module.exports = class extends coreClass {
 			(station, next) => {
 				if (station) {
 					if (station.type === 'official') {
-						_this.calculateOfficialPlaylistList(station._id, station.playlist, () => {});
+						this.calculateOfficialPlaylistList(station._id, station.playlist, () => {});
 					}
 					station = this.cache.schemas.station(station);
 					this.cache.hset('stations', stationId, station);
@@ -256,7 +254,6 @@ module.exports = class extends coreClass {
 	async getStationByName(stationName, cb) {
 		try { await this._validateHook(); } catch { return; }
 
-		let _this = this;
 		async.waterfall([
 
 			(next) => {
@@ -266,7 +263,7 @@ module.exports = class extends coreClass {
 			(station, next) => {
 				if (station) {
 					if (station.type === 'official') {
-						_this.calculateOfficialPlaylistList(station._id, station.playlist, ()=>{});
+						this.calculateOfficialPlaylistList(station._id, station.playlist, ()=>{});
 					}
 					station = this.cache.schemas.station(station);
 					this.cache.hset('stations', station._id, station);
@@ -283,7 +280,6 @@ module.exports = class extends coreClass {
 	async updateStation(stationId, cb) {
 		try { await this._validateHook(); } catch { return; }
 
-		let _this = this;
 		async.waterfall([
 
 			(next) => {
@@ -331,7 +327,6 @@ module.exports = class extends coreClass {
 
 	skipStation(stationId) {
 		this.logger.info("STATION_SKIP", `Skipping station ${stationId}.`, false);
-		let _this = this;
 		return async (cb) => {
 			try { await this._validateHook(); } catch { return; }
 
@@ -339,7 +334,7 @@ module.exports = class extends coreClass {
 
 			async.waterfall([
 				(next) => {
-					_this.getStation(stationId, next);
+					this.getStation(stationId, next);
 				},
 				(station, next) => {
 					if (!station) return next('Station not found.');
@@ -380,12 +375,12 @@ module.exports = class extends coreClass {
 						});
 					}
 					if (station.type === 'official' && station.playlist.length === 0) {
-						return _this.calculateSongForStation(station, (err, playlist) => {
+						return this.calculateSongForStation(station, (err, playlist) => {
 							if (err) return next(err);
-							if (playlist.length === 0) return next(null, _this.defaultSong, 0, station);
+							if (playlist.length === 0) return next(null, this.defaultSong, 0, station);
 							else {
 								this.songs.getSong(playlist[0], (err, song) => {
-									if (err || !song) return next(null, _this.defaultSong, 0, station);
+									if (err || !song) return next(null, this.defaultSong, 0, station);
 									return next(null, song, 0, station);
 								});
 							}
@@ -402,10 +397,10 @@ module.exports = class extends coreClass {
 									}
 								});
 							} else {
-								_this.calculateSongForStation(station, (err, newPlaylist) => {
-									if (err) return next(null, _this.defaultSong, 0);
+								this.calculateSongForStation(station, (err, newPlaylist) => {
+									if (err) return next(null, this.defaultSong, 0);
 									this.songs.getSong(newPlaylist[0], (err, song) => {
-										if (err || !song) return next(null, _this.defaultSong, 0);
+										if (err || !song) return next(null, this.defaultSong, 0);
 										station.playlist = newPlaylist;
 										next(null, song, 0);
 									});
@@ -452,7 +447,7 @@ module.exports = class extends coreClass {
 
 				($set, station, next) => {
 					this.db.models.station.updateOne({_id: station._id}, {$set}, (err) => {
-						_this.updateStation(station._id, (err, station) => {
+						this.updateStation(station._id, (err, station) => {
 							if (station.type === 'community' && station.partyMode === true)
 								this.cache.pub('station.queueUpdate', stationId);
 							next(null, station);

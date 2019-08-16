@@ -58,9 +58,8 @@ export default {
 		};
 	},
 	mounted() {
-		const _this = this;
 		io.getSocket(socket => {
-			_this.socket = socket;
+			this.socket = socket;
 		});
 	},
 	methods: {
@@ -114,8 +113,6 @@ export default {
 					8000
 				);
 
-			const _this = this;
-
 			return this.socket.emit(
 				"stations.create",
 				{
@@ -130,7 +127,7 @@ export default {
 							`You have added the station successfully`,
 							4000
 						);
-						_this.closeModal({
+						this.closeModal({
 							sector: "home",
 							modal: "createCommunityStation"
 						});

@@ -99,9 +99,8 @@ export default {
 		};
 	},
 	mounted() {
-		const _this = this;
 		lofig.get("recaptcha", obj => {
-			_this.recaptcha.key = obj.key;
+			this.recaptcha.key = obj.key;
 
 			const recaptchaScript = document.createElement("script");
 			recaptchaScript.onload = () => {
@@ -109,7 +108,7 @@ export default {
 					grecaptcha
 						.execute(this.recaptcha.key, { action: "login" })
 						.then(token => {
-							_this.recaptcha.token = token;
+							this.recaptcha.token = token;
 						});
 				});
 			};

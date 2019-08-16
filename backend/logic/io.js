@@ -86,8 +86,6 @@ module.exports = class extends coreClass {
 			this.io.on('connection', async socket => {
 				try { await this._validateHook(); } catch { return; }
 
-				let _this = this;
-
 				let sessionInfo = '';
 				if (socket.session.sessionId) sessionInfo = ` UserID: ${socket.session.userId}.`;
 				if (socket.banned) {
@@ -115,15 +113,14 @@ module.exports = class extends coreClass {
 							let name = `${namespace}.${action}`;
 
 							// listen for this action to be called
-							socket.on(name, async function() {
-								let args = Array.prototype.slice.call(arguments, 0, -1);
-								let cb = arguments[arguments.length - 1];
+							socket.on(name, async (...args) => {
+								let cb = args[args.length - 1];
 								if (typeof cb !== "function")
 									cb = () => {
-										_this.logger.info("IO_MODULE", `There was no callback provided for ${name}.`);
+										this.logger.info("IO_MODULE", `There was no callback provided for ${name}.`);
 									}
 
-								try { await _this._validateHook(); } catch { return cb({status: 'failure', message: 'Lockdown'}); } 
+								try { await this._validateHook(); } catch { return cb({status: 'failure', message: 'Lockdown'}); } 
 
 								// load the session from the cache
 								cache.hget('sessions', socket.session.sessionId, (err, session) => {

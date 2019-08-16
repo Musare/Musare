@@ -86,21 +86,19 @@ export default {
 			this.openModal({ sector: "admin", modal: "editUser" });
 		},
 		init() {
-			const _this = this;
-			_this.socket.emit("users.index", result => {
-				if (result.status === "success") _this.users = result.data;
+			this.socket.emit("users.index", result => {
+				if (result.status === "success") this.users = result.data;
 			});
-			_this.socket.emit("apis.joinAdminRoom", "users", () => {});
+			this.socket.emit("apis.joinAdminRoom", "users", () => {});
 		},
 		...mapActions("admin/users", ["editUser"]),
 		...mapActions("modals", ["openModal"])
 	},
 	mounted() {
-		const _this = this;
 		io.getSocket(socket => {
-			_this.socket = socket;
-			if (_this.socket.connected) _this.init();
-			io.onConnect(() => _this.init());
+			this.socket = socket;
+			if (this.socket.connected) this.init();
+			io.onConnect(() => this.init());
 		});
 	}
 };

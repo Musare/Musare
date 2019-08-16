@@ -163,9 +163,8 @@ export default {
 		editing: state => state.editing
 	}),
 	mounted() {
-		const _this = this;
 		io.getSocket(socket => {
-			_this.socket = socket;
+			this.socket = socket;
 			return socket;
 		});
 	},
@@ -264,8 +263,6 @@ export default {
 			);
 		},
 		updateDescription() {
-			const _this = this;
-
 			const { description } = this.editing;
 			if (!validation.isLength(description, 2, 200))
 				return Toast.methods.addToast(
@@ -288,13 +285,13 @@ export default {
 				description,
 				res => {
 					if (res.status === "success") {
-						if (_this.station) {
-							_this.station.description = description;
+						if (this.station) {
+							this.station.description = description;
 							return description;
 						}
-						_this.$parent.stations.forEach((station, index) => {
-							if (station._id === _this.editing._id) {
-								_this.$parent.stations[
+						this.$parent.stations.forEach((station, index) => {
+							if (station._id === this.editing._id) {
+								this.$parent.stations[
 									index
 								].description = description;
 								return description;
@@ -311,21 +308,21 @@ export default {
 			);
 		},
 		updatePrivacy() {
-			const _this = this;
 			this.socket.emit(
 				"stations.updatePrivacy",
 				this.editing._id,
 				this.editing.privacy,
 				res => {
 					if (res.status === "success") {
-						if (_this.station)
-							_this.station.privacy = _this.editing.privacy;
+						if (this.station)
+							this.station.privacy = this.editing.privacy;
 						else {
-							_this.$parent.stations.forEach((station, index) => {
-								if (station._id === _this.editing._id) {
-									_this.$parent.stations[index].privacy =
-										_this.editing.privacy;
-									return _this.editing.privacy;
+							this.$parent.stations.forEach((station, index) => {
+								if (station._id === this.editing._id) {
+									this.$parent.stations[
+										index
+									].privacy = this.editing.privacy;
+									return this.editing.privacy;
 								}
 
 								return false;
@@ -339,7 +336,6 @@ export default {
 			);
 		},
 		updateGenres() {
-			const _this = this;
 			this.socket.emit(
 				"stations.updateGenres",
 				this.editing._id,
@@ -347,12 +343,12 @@ export default {
 				res => {
 					if (res.status === "success") {
 						const genres = JSON.parse(
-							JSON.stringify(_this.editing.genres)
+							JSON.stringify(this.editing.genres)
 						);
-						if (_this.station) _this.station.genres = genres;
-						_this.$parent.stations.forEach((station, index) => {
-							if (station._id === _this.editing._id) {
-								_this.$parent.stations[index].genres = genres;
+						if (this.station) this.station.genres = genres;
+						this.$parent.stations.forEach((station, index) => {
+							if (station._id === this.editing._id) {
+								this.$parent.stations[index].genres = genres;
 								return genres;
 							}
 
@@ -366,7 +362,6 @@ export default {
 			);
 		},
 		updateBlacklistedGenres() {
-			const _this = this;
 			this.socket.emit(
 				"stations.updateBlacklistedGenres",
 				this.editing._id,
@@ -374,13 +369,13 @@ export default {
 				res => {
 					if (res.status === "success") {
 						const blacklistedGenres = JSON.parse(
-							JSON.stringify(_this.editing.blacklistedGenres)
+							JSON.stringify(this.editing.blacklistedGenres)
 						);
-						if (_this.station)
-							_this.station.blacklistedGenres = blacklistedGenres;
-						_this.$parent.stations.forEach((station, index) => {
-							if (station._id === _this.editing._id) {
-								_this.$parent.stations[
+						if (this.station)
+							this.station.blacklistedGenres = blacklistedGenres;
+						this.$parent.stations.forEach((station, index) => {
+							if (station._id === this.editing._id) {
+								this.$parent.stations[
 									index
 								].blacklistedGenres = blacklistedGenres;
 								return blacklistedGenres;
@@ -396,20 +391,20 @@ export default {
 			);
 		},
 		updatePartyMode() {
-			const _this = this;
 			this.socket.emit(
 				"stations.updatePartyMode",
 				this.editing._id,
 				this.editing.partyMode,
 				res => {
 					if (res.status === "success") {
-						if (_this.station)
-							_this.station.partyMode = _this.editing.partyMode;
-						_this.$parent.stations.forEach((station, index) => {
-							if (station._id === _this.editing._id) {
-								_this.$parent.stations[index].partyMode =
-									_this.editing.partyMode;
-								return _this.editing.partyMode;
+						if (this.station)
+							this.station.partyMode = this.editing.partyMode;
+						this.$parent.stations.forEach((station, index) => {
+							if (station._id === this.editing._id) {
+								this.$parent.stations[
+									index
+								].partyMode = this.editing.partyMode;
+								return this.editing.partyMode;
 							}
 
 							return false;

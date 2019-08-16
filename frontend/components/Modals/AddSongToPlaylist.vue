@@ -53,24 +53,22 @@ export default {
 		};
 	},
 	mounted() {
-		const _this = this;
 		this.songId = this.$parent.currentSong.songId;
 		this.song = this.$parent.currentSong;
 		io.getSocket(socket => {
-			_this.socket = socket;
-			_this.socket.emit("playlists.indexForUser", res => {
+			this.socket = socket;
+			this.socket.emit("playlists.indexForUser", res => {
 				if (res.status === "success") {
 					res.data.forEach(playlist => {
-						_this.playlists[playlist._id] = playlist;
+						this.playlists[playlist._id] = playlist;
 					});
-					_this.recalculatePlaylists();
+					this.recalculatePlaylists();
 				}
 			});
 		});
 	},
 	methods: {
 		addSongToPlaylist(playlistId) {
-			const _this = this;
 			this.socket.emit(
 				"playlists.addSongToPlaylist",
 				this.$parent.currentSong.songId,
@@ -78,53 +76,49 @@ export default {
 				res => {
 					Toast.methods.addToast(res.message, 4000);
 					if (res.status === "success") {
-						_this.playlists[playlistId].songs.push(_this.song);
+						this.playlists[playlistId].songs.push(this.song);
 					}
-					_this.recalculatePlaylists();
+					this.recalculatePlaylists();
 					// this.$parent.modals.addSongToPlaylist = false;
 				}
 			);
 		},
 		removeSongFromPlaylist(playlistId) {
-			const _this = this;
 			this.socket.emit(
 				"playlists.removeSongFromPlaylist",
-				_this.songId,
+				this.songId,
 				playlistId,
 				res => {
 					Toast.methods.addToast(res.message, 4000);
 					if (res.status === "success") {
-						_this.playlists[playlistId].songs.forEach(
+						this.playlists[playlistId].songs.forEach(
 							(song, index) => {
-								if (song.songId === _this.songId)
-									_this.playlists[playlistId].songs.splice(
+								if (song.songId === this.songId)
+									this.playlists[playlistId].songs.splice(
 										index,
 										1
 									);
 							}
 						);
 					}
-					_this.recalculatePlaylists();
+					this.recalculatePlaylists();
 					// this.$parent.modals.addSongToPlaylist = false;
 				}
 			);
 		},
 		recalculatePlaylists() {
-			const _this = this;
-			_this.playlistsArr = Object.values(_this.playlists).map(
-				playlist => {
-					let hasSong = false;
-					for (let i = 0; i < playlist.songs.length; i += 1) {
-						if (playlist.songs[i].songId === _this.songId) {
-							hasSong = true;
-						}
+			this.playlistsArr = Object.values(this.playlists).map(playlist => {
+				let hasSong = false;
+				for (let i = 0; i < playlist.songs.length; i += 1) {
+					if (playlist.songs[i].songId === this.songId) {
+						hasSong = true;
 					}
-
-					playlist.hasSong = hasSong; // eslint-disable-line no-param-reassign
-					_this.playlists[playlist._id] = playlist;
-					return playlist;
 				}
-			);
+
+				playlist.hasSong = hasSong; // eslint-disable-line no-param-reassign
+				this.playlists[playlist._id] = playlist;
+				return playlist;
+			});
 		}
 	}
 };

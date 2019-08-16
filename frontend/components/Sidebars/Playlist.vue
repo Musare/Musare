@@ -75,11 +75,10 @@ export default {
 			);
 		},
 		isNotSelected(id) {
-			const _this = this;
 			// TODO Also change this once it changes for a station
 			if (
-				_this.$parent.station &&
-				_this.$parent.station.privatePlaylist === id
+				this.$parent.station &&
+				this.$parent.station.privatePlaylist === id
 			)
 				return false;
 			return true;
@@ -89,44 +88,43 @@ export default {
 	},
 	mounted() {
 		// TODO: Update when playlist is removed/created
-		const _this = this;
 		io.getSocket(socket => {
-			_this.socket = socket;
-			_this.socket.emit("playlists.indexForUser", res => {
-				if (res.status === "success") _this.playlists = res.data;
+			this.socket = socket;
+			this.socket.emit("playlists.indexForUser", res => {
+				if (res.status === "success") this.playlists = res.data;
 			});
-			_this.socket.on("event:playlist.create", playlist => {
-				_this.playlists.push(playlist);
+			this.socket.on("event:playlist.create", playlist => {
+				this.playlists.push(playlist);
 			});
-			_this.socket.on("event:playlist.delete", playlistId => {
-				_this.playlists.forEach((playlist, index) => {
+			this.socket.on("event:playlist.delete", playlistId => {
+				this.playlists.forEach((playlist, index) => {
 					if (playlist._id === playlistId) {
-						_this.playlists.splice(index, 1);
+						this.playlists.splice(index, 1);
 					}
 				});
 			});
-			_this.socket.on("event:playlist.addSong", data => {
-				_this.playlists.forEach((playlist, index) => {
+			this.socket.on("event:playlist.addSong", data => {
+				this.playlists.forEach((playlist, index) => {
 					if (playlist._id === data.playlistId) {
-						_this.playlists[index].songs.push(data.song);
+						this.playlists[index].songs.push(data.song);
 					}
 				});
 			});
-			_this.socket.on("event:playlist.removeSong", data => {
-				_this.playlists.forEach((playlist, index) => {
+			this.socket.on("event:playlist.removeSong", data => {
+				this.playlists.forEach((playlist, index) => {
 					if (playlist._id === data.playlistId) {
-						_this.playlists[index].songs.forEach((song, index2) => {
+						this.playlists[index].songs.forEach((song, index2) => {
 							if (song._id === data.songId) {
-								_this.playlists[index].songs.splice(index2, 1);
+								this.playlists[index].songs.splice(index2, 1);
 							}
 						});
 					}
 				});
 			});
-			_this.socket.on("event:playlist.updateDisplayName", data => {
-				_this.playlists.forEach((playlist, index) => {
+			this.socket.on("event:playlist.updateDisplayName", data => {
+				this.playlists.forEach((playlist, index) => {
 					if (playlist._id === data.playlistId) {
-						_this.playlists[index].displayName = data.displayName;
+						this.playlists[index].displayName = data.displayName;
 					}
 				});
 			});

@@ -82,12 +82,11 @@ export default {
 		};
 	},
 	mounted() {
-		const _this = this;
 		io.getSocket(true, socket => {
-			_this.socket = socket;
-			_this.socket.emit("news.newest", res => {
-				_this.news = res.data;
-				if (_this.news && localStorage.getItem("firstVisited")) {
+			this.socket = socket;
+			this.socket.emit("news.newest", res => {
+				this.news = res.data;
+				if (this.news && localStorage.getItem("firstVisited")) {
 					if (localStorage.getItem("whatIsNew")) {
 						if (
 							parseInt(localStorage.getItem("whatIsNew")) <

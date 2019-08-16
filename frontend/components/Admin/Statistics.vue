@@ -144,11 +144,10 @@ export default {
 		};
 	},
 	mounted() {
-		const _this = this;
 		const minuteCtx = document.getElementById("minuteChart");
 		const hourCtx = document.getElementById("hourChart");
 
-		_this.minuteChart = new Chart(minuteCtx, {
+		this.minuteChart = new Chart(minuteCtx, {
 			type: "line",
 			data: {
 				labels: [
@@ -207,7 +206,7 @@ export default {
 			}
 		});
 
-		_this.hourChart = new Chart(hourCtx, {
+		this.hourChart = new Chart(hourCtx, {
 			type: "line",
 			data: {
 				labels: [
@@ -267,9 +266,9 @@ export default {
 		});
 
 		io.getSocket(socket => {
-			_this.socket = socket;
-			if (_this.socket.connected) _this.init();
-			io.onConnect(() => _this.init());
+			this.socket = socket;
+			if (this.socket.connected) this.init();
+			io.onConnect(() => this.init());
 		});
 	},
 	methods: {

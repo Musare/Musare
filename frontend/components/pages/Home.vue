@@ -175,14 +175,13 @@ export default {
 		userId: state => state.user.auth.userId
 	}),
 	mounted() {
-		const _this = this;
 		io.getSocket(socket => {
-			_this.socket = socket;
-			if (_this.socket.connected) _this.init();
+			this.socket = socket;
+			if (this.socket.connected) this.init();
 			io.onConnect(() => {
-				_this.init();
+				this.init();
 			});
-			_this.socket.on("event:stations.created", res => {
+			this.socket.on("event:stations.created", res => {
 				const station = res;
 
 				if (!station.currentSong)
@@ -192,19 +191,19 @@ export default {
 				if (station.currentSong && !station.currentSong.thumbnail)
 					station.currentSong.thumbnail =
 						"/assets/notes-transparent.png";
-				_this.stations[station.type].push(station);
+				this.stations[station.type].push(station);
 			});
-			_this.socket.on(
+			this.socket.on(
 				"event:userCount.updated",
 				(stationId, userCount) => {
-					_this.stations.official.forEach(s => {
+					this.stations.official.forEach(s => {
 						const station = s;
 						if (station._id === stationId) {
 							station.userCount = userCount;
 						}
 					});
 
-					_this.stations.community.forEach(s => {
+					this.stations.community.forEach(s => {
 						const station = s;
 						if (station._id === stationId) {
 							station.userCount = userCount;
@@ -212,9 +211,9 @@ export default {
 					});
 				}
 			);
-			_this.socket.on("event:station.nextSong", (stationId, song) => {
+			this.socket.on("event:station.nextSong", (stationId, song) => {
 				let newSong = song;
-				_this.stations.official.forEach(s => {
+				this.stations.official.forEach(s => {
 					const station = s;
 					if (station._id === stationId) {
 						if (!newSong)
@@ -227,7 +226,7 @@ export default {
 					}
 				});
 
-				_this.stations.community.forEach(s => {
+				this.stations.community.forEach(s => {
 					const station = s;
 					if (station._id === stationId) {
 						if (!newSong)
@@ -244,10 +243,9 @@ export default {
 	},
 	methods: {
 		init() {
-			const _this = this;
-			_this.socket.emit("stations.index", data => {
-				_this.stations.community = [];
-				_this.stations.official = [];
+			this.socket.emit("stations.index", data => {
+				this.stations.community = [];
+				this.stations.official = [];
 				if (data.status === "success")
 					data.stations.forEach(s => {
 						const station = s;
@@ -262,16 +260,15 @@ export default {
 							station.currentSong.thumbnail =
 								"/assets/notes-transparent.png";
 						if (station.type === "official")
-							_this.stations.official.push(station);
-						else _this.stations.community.push(station);
+							this.stations.official.push(station);
+						else this.stations.community.push(station);
 					});
 			});
-			_this.socket.emit("apis.joinRoom", "home", () => {});
+			this.socket.emit("apis.joinRoom", "home", () => {});
 		},
 		isOwner(station) {
-			const _this = this;
 			return (
-				station.owner === _this.userId && station.privacy === "public"
+				station.owner === this.userId && station.privacy === "public"
 			);
 		},
 		...mapActions("modals", ["openModal"])

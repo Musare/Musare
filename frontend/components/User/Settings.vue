@@ -173,33 +173,32 @@ export default {
 		userId: state => state.user.auth.userId
 	}),
 	mounted() {
-		const _this = this;
 		io.getSocket(socket => {
-			_this.socket = socket;
-			_this.socket.emit("users.findBySession", res => {
+			this.socket = socket;
+			this.socket.emit("users.findBySession", res => {
 				if (res.status === "success") {
-					_this.user = res.data;
-					_this.password = _this.user.password;
-					_this.github = _this.user.github;
+					this.user = res.data;
+					this.password = this.user.password;
+					this.github = this.user.github;
 				} else {
-					_this.$parent.isLoginActive = true;
+					this.$parent.isLoginActive = true;
 					Toast.methods.addToast(
 						"Your are currently not signed in",
 						3000
 					);
 				}
 			});
-			_this.socket.on("event:user.linkPassword", () => {
-				_this.password = true;
+			this.socket.on("event:user.linkPassword", () => {
+				this.password = true;
 			});
-			_this.socket.on("event:user.linkGitHub", () => {
-				_this.github = true;
+			this.socket.on("event:user.linkGitHub", () => {
+				this.github = true;
 			});
-			_this.socket.on("event:user.unlinkPassword", () => {
-				_this.password = false;
+			this.socket.on("event:user.unlinkPassword", () => {
+				this.password = false;
 			});
-			_this.socket.on("event:user.unlinkGitHub", () => {
-				_this.github = false;
+			this.socket.on("event:user.unlinkGitHub", () => {
+				this.github = false;
 			});
 		});
 	},

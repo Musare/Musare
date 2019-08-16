@@ -217,19 +217,17 @@ export default {
 		};
 	},
 	mounted() {
-		const _this = this;
 		io.getSocket(socket => {
-			_this.socket = socket;
+			this.socket = socket;
 		});
 	},
 	methods: {
 		create() {
-			const _this = this;
 			console.log(this.report);
-			_this.socket.emit("reports.create", _this.report, res => {
+			this.socket.emit("reports.create", this.report, res => {
 				Toast.methods.addToast(res.message, 4000);
 				if (res.status === "success")
-					_this.closeModal({
+					this.closeModal({
 						sector: "station",
 						modal: "report"
 					});

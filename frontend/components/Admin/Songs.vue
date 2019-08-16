@@ -141,53 +141,50 @@ export default {
 			});
 		},
 		getSet() {
-			const _this = this;
-			_this.socket.emit("songs.getSet", _this.position, data => {
+			this.socket.emit("songs.getSet", this.position, data => {
 				data.forEach(song => {
-					_this.songs.push(song);
+					this.songs.push(song);
 				});
-				_this.position += 1;
-				if (_this.maxPosition > _this.position - 1) _this.getSet();
+				this.position += 1;
+				if (this.maxPosition > this.position - 1) this.getSet();
 			});
 		},
 		init() {
-			const _this = this;
-			_this.songs = [];
-			_this.socket.emit("songs.length", length => {
-				_this.maxPosition = Math.ceil(length / 15);
-				_this.getSet();
+			this.songs = [];
+			this.socket.emit("songs.length", length => {
+				this.maxPosition = Math.ceil(length / 15);
+				this.getSet();
 			});
-			_this.socket.emit("apis.joinAdminRoom", "songs", () => {});
+			this.socket.emit("apis.joinAdminRoom", "songs", () => {});
 		},
 		...mapActions("admin/songs", ["stopVideo", "editSong"]),
 		...mapActions("modals", ["openModal", "closeModal"])
 	},
 	mounted() {
-		const _this = this;
 		io.getSocket(socket => {
-			_this.socket = socket;
-			_this.socket.on("event:admin.song.added", song => {
-				_this.songs.push(song);
+			this.socket = socket;
+			this.socket.on("event:admin.song.added", song => {
+				this.songs.push(song);
 			});
-			_this.socket.on("event:admin.song.removed", songId => {
-				_this.songs = _this.songs.filter(song => {
+			this.socket.on("event:admin.song.removed", songId => {
+				this.songs = this.songs.filter(song => {
 					return song._id !== songId;
 				});
 			});
-			_this.socket.on("event:admin.song.updated", updatedSong => {
-				for (let i = 0; i < _this.songs.length; i += 1) {
-					const song = _this.songs[i];
+			this.socket.on("event:admin.song.updated", updatedSong => {
+				for (let i = 0; i < this.songs.length; i += 1) {
+					const song = this.songs[i];
 					if (song._id === updatedSong._id) {
-						_this.songs.$set(i, updatedSong);
+						this.songs.$set(i, updatedSong);
 					}
 				}
 			});
 
-			if (_this.socket.connected) {
-				_this.init();
+			if (this.socket.connected) {
+				this.init();
 			}
 			io.onConnect(() => {
-				_this.init();
+				this.init();
 			});
 		});
 

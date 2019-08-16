@@ -206,9 +206,8 @@ export default {
 		...mapActions("modals", ["closeModal"])
 	},
 	mounted() {
-		const _this = this;
 		io.getSocket(socket => {
-			_this.socket = socket;
+			this.socket = socket;
 			return socket;
 		});
 	}

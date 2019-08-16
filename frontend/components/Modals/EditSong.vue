@@ -294,8 +294,6 @@ export default {
 	},
 	methods: {
 		save(song, close) {
-			const _this = this;
-
 			if (!song.title)
 				return Toast.methods.addToast(
 					"Please fill in all fields",
@@ -395,13 +393,13 @@ export default {
 			}
 
 			return this.socket.emit(
-				`${_this.editing.type}.update`,
+				`${this.editing.type}.update`,
 				song._id,
 				song,
 				res => {
 					Toast.methods.addToast(res.message, 4000);
 					if (res.status === "success") {
-						_this.$parent.songs.forEach(originalSong => {
+						this.$parent.songs.forEach(originalSong => {
 							const updatedSong = song;
 							if (originalSong._id === updatedSong._id) {
 								Object.keys(originalSong).forEach(n => {
@@ -412,7 +410,7 @@ export default {
 						});
 					}
 					if (close)
-						_this.closeModal({
+						this.closeModal({
 							sector: "admin",
 							modal: "editSong"
 						});
@@ -420,35 +418,33 @@ export default {
 			);
 		},
 		settings(type) {
-			const _this = this;
 			switch (type) {
 				default:
 					break;
 				case "stop":
-					_this.stopVideo();
-					_this.pauseVideo(true);
+					this.stopVideo();
+					this.pauseVideo(true);
 					break;
 				case "pause":
-					_this.pauseVideo(true);
+					this.pauseVideo(true);
 					break;
 				case "play":
-					_this.pauseVideo(false);
+					this.pauseVideo(false);
 					break;
 				case "skipToLast10Secs":
-					_this.video.player.seekTo(
-						_this.editing.song.duration -
+					this.video.player.seekTo(
+						this.editing.song.duration -
 							10 +
-							_this.editing.song.skipDuration
+							this.editing.song.skipDuration
 					);
 					break;
 			}
 		},
 		changeVolume() {
-			const local = this;
 			const volume = document.getElementById("volumeSlider").value;
 			localStorage.setItem("volume", volume);
-			local.video.player.setVolume(volume);
-			if (volume > 0) local.video.player.unMute();
+			this.video.player.setVolume(volume);
+			if (volume > 0) this.video.player.unMute();
 		},
 		addTag(type) {
 			if (type === "genres") {
@@ -588,8 +584,6 @@ export default {
 		...mapActions("modals", ["closeModal"])
 	},
 	mounted() {
-		const _this = this;
-
 		// if (this.modals.editSong = false) this.video.player.stopVideo();
 
 		// this.loadVideoById(
@@ -600,7 +594,7 @@ export default {
 		this.initCanvas();
 
 		lofig.get("cookie.secure", res => {
-			_this.useHTTPS = res;
+			this.useHTTPS = res;
 		});
 
 		io.getSocket(socket => {
@@ -609,23 +603,23 @@ export default {
 
 		setInterval(() => {
 			if (
-				_this.video.paused === false &&
-				_this.playerReady &&
-				_this.video.player.getCurrentTime() -
-					_this.editing.song.skipDuration >
-					_this.editing.song.duration
+				this.video.paused === false &&
+				this.playerReady &&
+				this.video.player.getCurrentTime() -
+					this.editing.song.skipDuration >
+					this.editing.song.duration
 			) {
-				_this.video.paused = false;
-				_this.video.player.stopVideo();
+				this.video.paused = false;
+				this.video.player.stopVideo();
 			}
 			if (this.playerReady) {
-				_this.getCurrentTime(3).then(time => {
+				this.getCurrentTime(3).then(time => {
 					this.youtubeVideoCurrentTime = time;
 					return time;
 				});
 			}
 
-			if (_this.video.paused === false) _this.drawCanvas();
+			if (this.video.paused === false) this.drawCanvas();
 		}, 200);
 
 		this.video.player = new window.YT.Player("player", {
@@ -639,44 +633,44 @@ export default {
 				showinfo: 0,
 				autoplay: 1
 			},
-			startSeconds: _this.editing.song.skipDuration,
+			startSeconds: this.editing.song.skipDuration,
 			events: {
 				onReady: () => {
 					let volume = parseInt(localStorage.getItem("volume"));
 					volume = typeof volume === "number" ? volume : 20;
-					console.log(`Seekto: ${_this.editing.song.skipDuration}`);
-					_this.video.player.seekTo(_this.editing.song.skipDuration);
-					_this.video.player.setVolume(volume);
-					if (volume > 0) _this.video.player.unMute();
-					this.youtubeVideoDuration = _this.video.player.getDuration();
+					console.log(`Seekto: ${this.editing.song.skipDuration}`);
+					this.video.player.seekTo(this.editing.song.skipDuration);
+					this.video.player.setVolume(volume);
+					if (volume > 0) this.video.player.unMute();
+					this.youtubeVideoDuration = this.video.player.getDuration();
 					this.youtubeVideoNote = "(~)";
-					_this.playerReady = true;
+					this.playerReady = true;
 
-					_this.drawCanvas();
+					this.drawCanvas();
 				},
 				onStateChange: event => {
 					if (event.data === 1) {
-						if (!_this.video.autoPlayed) {
-							_this.video.autoPlayed = true;
-							return _this.video.player.stopVideo();
+						if (!this.video.autoPlayed) {
+							this.video.autoPlayed = true;
+							return this.video.player.stopVideo();
 						}
 
-						_this.video.paused = false;
-						let youtubeDuration = _this.video.player.getDuration();
+						this.video.paused = false;
+						let youtubeDuration = this.video.player.getDuration();
 						this.youtubeVideoDuration = youtubeDuration;
 						this.youtubeVideoNote = "";
-						youtubeDuration -= _this.editing.song.skipDuration;
-						if (_this.editing.song.duration > youtubeDuration + 1) {
+						youtubeDuration -= this.editing.song.skipDuration;
+						if (this.editing.song.duration > youtubeDuration + 1) {
 							this.video.player.stopVideo();
-							_this.video.paused = true;
+							this.video.paused = true;
 							return Toast.methods.addToast(
 								"Video can't play. Specified duration is bigger than the YouTube song duration.",
 								4000
 							);
 						}
-						if (_this.editing.song.duration <= 0) {
+						if (this.editing.song.duration <= 0) {
 							this.video.player.stopVideo();
-							_this.video.paused = true;
+							this.video.paused = true;
 							return Toast.methods.addToast(
 								"Video can't play. Specified duration has to be more than 0 seconds.",
 								4000
@@ -684,11 +678,11 @@ export default {
 						}
 
 						if (
-							_this.video.player.getCurrentTime() <
-							_this.editing.song.skipDuration
+							this.video.player.getCurrentTime() <
+							this.editing.song.skipDuration
 						) {
-							return _this.video.player.seekTo(
-								_this.editing.song.skipDuration
+							return this.video.player.seekTo(
+								this.editing.song.skipDuration
 							);
 						}
 					} else if (event.data === 2) {

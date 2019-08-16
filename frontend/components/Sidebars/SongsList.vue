@@ -171,9 +171,9 @@ export default {
 		...mapActions("modals", ["openModal"])
 	},
 	mounted() {
-		/* let _this = this;
+		/*
 			io.getSocket((socket) => {
-				_this.socket = socket;
+				this.socket = socket;
 
 			}); */
 	},

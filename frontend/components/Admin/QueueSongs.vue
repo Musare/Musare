@@ -141,9 +141,8 @@ export default {
 	// },
 	methods: {
 		getSet(position) {
-			const _this = this;
 			this.socket.emit("queueSongs.getSet", position, data => {
-				_this.songs = data;
+				this.songs = data;
 				this.position = position;
 			});
 		},
@@ -171,43 +170,41 @@ export default {
 			});
 		},
 		init() {
-			const _this = this;
-			_this.socket.emit("queueSongs.index", data => {
-				_this.songs = data.songs;
-				_this.maxPosition = Math.round(data.maxLength / 50);
+			this.socket.emit("queueSongs.index", data => {
+				this.songs = data.songs;
+				this.maxPosition = Math.round(data.maxLength / 50);
 			});
-			_this.socket.emit("apis.joinAdminRoom", "queue", () => {});
+			this.socket.emit("apis.joinAdminRoom", "queue", () => {});
 		},
 		...mapActions("admin/songs", ["stopVideo", "editSong"]),
 		...mapActions("modals", ["openModal"])
 	},
 	mounted() {
-		const _this = this;
 		io.getSocket(socket => {
-			_this.socket = socket;
+			this.socket = socket;
 
-			_this.socket.on("event:admin.queueSong.added", queueSong => {
-				_this.songs.push(queueSong);
+			this.socket.on("event:admin.queueSong.added", queueSong => {
+				this.songs.push(queueSong);
 			});
-			_this.socket.on("event:admin.queueSong.removed", songId => {
-				_this.songs = _this.songs.filter(song => {
+			this.socket.on("event:admin.queueSong.removed", songId => {
+				this.songs = this.songs.filter(song => {
 					return song._id !== songId;
 				});
 			});
-			_this.socket.on("event:admin.queueSong.updated", updatedSong => {
-				for (let i = 0; i < _this.songs.length; i += 1) {
-					const song = _this.songs[i];
+			this.socket.on("event:admin.queueSong.updated", updatedSong => {
+				for (let i = 0; i < this.songs.length; i += 1) {
+					const song = this.songs[i];
 					if (song._id === updatedSong._id) {
-						_this.songs.$set(i, updatedSong);
+						this.songs.$set(i, updatedSong);
 					}
 				}
 			});
 
-			if (_this.socket.connected) {
-				_this.init();
+			if (this.socket.connected) {
+				this.init();
 			}
 			io.onConnect(() => {
-				_this.init();
+				this.init();
 			});
 		});
 	}

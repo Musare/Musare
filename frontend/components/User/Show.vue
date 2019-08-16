@@ -83,20 +83,19 @@ export default {
 		userId: state => state.user.auth.userId
 	}),
 	mounted() {
-		const _this = this;
 		io.getSocket(socket => {
-			_this.socket = socket;
-			_this.socket.emit(
+			this.socket = socket;
+			this.socket.emit(
 				"users.findByUsername",
-				_this.$route.params.username,
+				this.$route.params.username,
 				res => {
 					if (res.status === "error") this.$router.go("/404");
 					else {
-						_this.user = res.data;
+						this.user = res.data;
 						this.user.createdAt = moment(
 							this.user.createdAt
 						).format("LL");
-						_this.isUser = true;
+						this.isUser = true;
 					}
 				}
 			);

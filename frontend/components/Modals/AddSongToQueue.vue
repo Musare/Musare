@@ -116,26 +116,23 @@ export default {
 			return this.privatePlaylistQueueSelected === playlistId;
 		},
 		selectPlaylist(playlistId) {
-			const _this = this;
-			if (_this.$parent.type === "community") {
-				_this.privatePlaylistQueueSelected = playlistId;
-				_this.$parent.privatePlaylistQueueSelected = playlistId;
-				_this.$parent.addFirstPrivatePlaylistSongToQueue();
+			if (this.$parent.type === "community") {
+				this.privatePlaylistQueueSelected = playlistId;
+				this.$parent.privatePlaylistQueueSelected = playlistId;
+				this.$parent.addFirstPrivatePlaylistSongToQueue();
 			}
 		},
 		unSelectPlaylist() {
-			const _this = this;
-			if (_this.$parent.type === "community") {
-				_this.privatePlaylistQueueSelected = null;
-				_this.$parent.privatePlaylistQueueSelected = null;
+			if (this.$parent.type === "community") {
+				this.privatePlaylistQueueSelected = null;
+				this.$parent.privatePlaylistQueueSelected = null;
 			}
 		},
 		addSongToQueue(songId) {
-			const _this = this;
-			if (_this.$parent.type === "community") {
-				_this.socket.emit(
+			if (this.$parent.type === "community") {
+				this.socket.emit(
 					"stations.addToQueue",
-					_this.$parent.station._id,
+					this.$parent.station._id,
 					songId,
 					data => {
 						if (data.status !== "success")
@@ -147,7 +144,7 @@ export default {
 					}
 				);
 			} else {
-				_this.socket.emit("queueSongs.add", songId, data => {
+				this.socket.emit("queueSongs.add", songId, data => {
 					if (data.status !== "success")
 						Toast.methods.addToast(`Error: ${data.message}`, 8000);
 					else Toast.methods.addToast(`${data.message}`, 4000);
@@ -155,22 +152,20 @@ export default {
 			}
 		},
 		importPlaylist() {
-			const _this = this;
 			Toast.methods.addToast(
 				"Starting to import your playlist. This can take some time to do.",
 				4000
 			);
 			this.socket.emit(
 				"queueSongs.addSetToQueue",
-				_this.importQuery,
+				this.importQuery,
 				res => {
 					Toast.methods.addToast(res.message, 4000);
 				}
 			);
 		},
 		submitQuery() {
-			const _this = this;
-			let query = _this.querySearch;
+			let query = this.querySearch;
 			if (query.indexOf("&index=") !== -1) {
 				query = query.split("&index=");
 				query.pop();
@@ -181,12 +176,12 @@ export default {
 				query.pop();
 				query = query.join("");
 			}
-			_this.socket.emit("apis.searchYoutube", query, res => {
+			this.socket.emit("apis.searchYoutube", query, res => {
 				// check for error
 				const { data } = res;
-				_this.queryResults = [];
+				this.queryResults = [];
 				for (let i = 0; i < data.items.length; i += 1) {
-					_this.queryResults.push({
+					this.queryResults.push({
 						id: data.items[i].id.videoId,
 						url: `https://www.youtube.com/watch?v=${this.id}`,
 						title: data.items[i].snippet.title,
@@ -197,14 +192,12 @@ export default {
 		}
 	},
 	mounted() {
-		const _this = this;
 		io.getSocket(socket => {
-			_this.socket = socket;
-			_this.socket.emit("playlists.indexForUser", res => {
-				if (res.status === "success") _this.playlists = res.data;
+			this.socket = socket;
+			this.socket.emit("playlists.indexForUser", res => {
+				if (res.status === "success") this.playlists = res.data;
 			});
-			_this.privatePlaylistQueueSelected =
-				_this.$parent.privatePlaylistQueueSelected;
+			this.privatePlaylistQueueSelected = this.$parent.privatePlaylistQueueSelected;
 		});
 	},
 	components: { Modal }
