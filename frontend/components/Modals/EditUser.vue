@@ -109,6 +109,9 @@ export default {
 	computed: {
 		...mapState("admin/users", {
 			editing: state => state.editing
+		}),
+		...mapState({
+			userId: state => state.user.auth.userId
 		})
 	},
 	methods: {
@@ -166,7 +169,7 @@ export default {
 					if (
 						res.status === "success" &&
 						this.editing.role === "default" &&
-						this.editing._id === this.$parent.$parent.$parent.userId
+						this.editing._id === this.userId
 					)
 						window.location.reload();
 				}

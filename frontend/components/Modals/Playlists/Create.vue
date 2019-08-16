@@ -34,9 +34,7 @@ export default {
 		return {
 			playlist: {
 				displayName: null,
-				songs: [],
-				createdBy: this.$parent.$parent.username,
-				createdAt: Date.now()
+				songs: []
 			}
 		};
 	},

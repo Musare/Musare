@@ -61,7 +61,7 @@
 					<div class="group-title">
 						Community Stations&nbsp;
 						<a
-							v-if="$parent.loggedIn"
+							v-if="loggedIn"
 							href="#"
 							@click="
 								openModal({
@@ -155,7 +155,6 @@ import MainFooter from "../MainFooter.vue";
 import CreateCommunityStation from "../Modals/CreateCommunityStation.vue";
 import UserIdToUsername from "../UserIdToUsername.vue";
 
-import auth from "../../auth";
 import io from "../../io";
 
 export default {
@@ -170,77 +169,75 @@ export default {
 			}
 		};
 	},
-	computed: mapState("modals", {
-		modals: state => state.modals.home
+	computed: mapState({
+		modals: state => state.modals.modals.home,
+		loggedIn: state => state.user.auth.loggedIn,
+		userId: state => state.user.auth.userId
 	}),
 	mounted() {
 		const _this = this;
-		auth.getStatus(() => {
-			io.getSocket(socket => {
-				_this.socket = socket;
-				if (_this.socket.connected) _this.init();
-				io.onConnect(() => {
-					_this.init();
-				});
-				_this.socket.on("event:stations.created", res => {
-					const station = res;
+		io.getSocket(socket => {
+			_this.socket = socket;
+			if (_this.socket.connected) _this.init();
+			io.onConnect(() => {
+				_this.init();
+			});
+			_this.socket.on("event:stations.created", res => {
+				const station = res;
 
-					if (!station.currentSong)
-						station.currentSong = {
-							thumbnail: "/assets/notes-transparent.png"
-						};
-					if (station.currentSong && !station.currentSong.thumbnail)
-						station.currentSong.thumbnail =
-							"/assets/notes-transparent.png";
-					_this.stations[station.type].push(station);
-				});
-				_this.socket.on(
-					"event:userCount.updated",
-					(stationId, userCount) => {
-						_this.stations.official.forEach(s => {
-							const station = s;
-							if (station._id === stationId) {
-								station.userCount = userCount;
-							}
-						});
-
-						_this.stations.community.forEach(s => {
-							const station = s;
-							if (station._id === stationId) {
-								station.userCount = userCount;
-							}
-						});
-					}
-				);
-				_this.socket.on("event:station.nextSong", (stationId, song) => {
-					let newSong = song;
+				if (!station.currentSong)
+					station.currentSong = {
+						thumbnail: "/assets/notes-transparent.png"
+					};
+				if (station.currentSong && !station.currentSong.thumbnail)
+					station.currentSong.thumbnail =
+						"/assets/notes-transparent.png";
+				_this.stations[station.type].push(station);
+			});
+			_this.socket.on(
+				"event:userCount.updated",
+				(stationId, userCount) => {
 					_this.stations.official.forEach(s => {
 						const station = s;
 						if (station._id === stationId) {
-							if (!newSong)
-								newSong = {
-									thumbnail: "/assets/notes-transparent.png"
-								};
-							if (newSong && !newSong.thumbnail)
-								newSong.thumbnail =
-									"/assets/notes-transparent.png";
-							station.currentSong = newSong;
+							station.userCount = userCount;
 						}
 					});
 
 					_this.stations.community.forEach(s => {
 						const station = s;
 						if (station._id === stationId) {
-							if (!newSong)
-								newSong = {
-									thumbnail: "/assets/notes-transparent.png"
-								};
-							if (newSong && !newSong.thumbnail)
-								newSong.thumbnail =
-									"/assets/notes-transparent.png";
-							station.currentSong = newSong;
+							station.userCount = userCount;
 						}
 					});
+				}
+			);
+			_this.socket.on("event:station.nextSong", (stationId, song) => {
+				let newSong = song;
+				_this.stations.official.forEach(s => {
+					const station = s;
+					if (station._id === stationId) {
+						if (!newSong)
+							newSong = {
+								thumbnail: "/assets/notes-transparent.png"
+							};
+						if (newSong && !newSong.thumbnail)
+							newSong.thumbnail = "/assets/notes-transparent.png";
+						station.currentSong = newSong;
+					}
+				});
+
+				_this.stations.community.forEach(s => {
+					const station = s;
+					if (station._id === stationId) {
+						if (!newSong)
+							newSong = {
+								thumbnail: "/assets/notes-transparent.png"
+							};
+						if (newSong && !newSong.thumbnail)
+							newSong.thumbnail = "/assets/notes-transparent.png";
+						station.currentSong = newSong;
+					}
 				});
 			});
 		});
@@ -248,43 +245,33 @@ export default {
 	methods: {
 		init() {
 			const _this = this;
-			auth.getStatus((authenticated, role, username, userId) => {
-				_this.socket.emit("stations.index", data => {
-					_this.stations.community = [];
-					_this.stations.official = [];
-					if (data.status === "success")
-						data.stations.forEach(s => {
-							const station = s;
-							if (!station.currentSong)
-								station.currentSong = {
-									thumbnail: "/assets/notes-transparent.png"
-								};
-							if (
-								station.currentSong &&
-								!station.currentSong.thumbnail
-							)
-								station.currentSong.thumbnail =
-									"/assets/notes-transparent.png";
-							if (station.privacy !== "public")
-								station.class = { "station-red": true };
-							else if (
-								station.type === "community" &&
-								station.owner === userId
-							)
-								station.class = { "station-blue": true };
-							if (station.type === "official")
-								_this.stations.official.push(station);
-							else _this.stations.community.push(station);
-						});
-				});
-				_this.socket.emit("apis.joinRoom", "home", () => {});
+			_this.socket.emit("stations.index", data => {
+				_this.stations.community = [];
+				_this.stations.official = [];
+				if (data.status === "success")
+					data.stations.forEach(s => {
+						const station = s;
+						if (!station.currentSong)
+							station.currentSong = {
+								thumbnail: "/assets/notes-transparent.png"
+							};
+						if (
+							station.currentSong &&
+							!station.currentSong.thumbnail
+						)
+							station.currentSong.thumbnail =
+								"/assets/notes-transparent.png";
+						if (station.type === "official")
+							_this.stations.official.push(station);
+						else _this.stations.community.push(station);
+					});
 			});
+			_this.socket.emit("apis.joinRoom", "home", () => {});
 		},
 		isOwner(station) {
 			const _this = this;
 			return (
-				station.owner === _this.$parent.userId &&
-				station.privacy === "public"
+				station.owner === _this.userId && station.privacy === "public"
 			);
 		},
 		...mapActions("modals", ["openModal"])

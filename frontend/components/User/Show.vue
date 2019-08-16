@@ -6,9 +6,7 @@
 			<h2 class="has-text-centered username">@{{ user.username }}</h2>
 			<h5>A member since {{ user.createdAt }}</h5>
 			<div
-				v-if="
-					$parent.role === 'admin' && !($parent.userId === user._id)
-				"
+				v-if="role === 'admin' && userId !== user._id"
 				class="admin-functionality"
 			>
 				<a
@@ -64,6 +62,8 @@
 </template>
 
 <script>
+import { mapState } from "vuex";
+
 import { Toast } from "vue-roaster";
 
 import MainHeader from "../MainHeader.vue";
@@ -78,6 +78,10 @@ export default {
 			isUser: false
 		};
 	},
+	computed: mapState({
+		role: state => state.user.auth.role,
+		userId: state => state.user.auth.userId
+	}),
 	mounted() {
 		const _this = this;
 		io.getSocket(socket => {

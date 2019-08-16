@@ -22,26 +22,24 @@
 
 			<div class="nav-right nav-menu" :class="{ 'is-active': isMobile }">
 				<router-link
-					v-if="$parent.$parent.role === 'admin'"
+					v-if="role === 'admin'"
 					class="nav-item is-tab admin"
 					href="#"
 					:to="{ path: '/admin' }"
 				>
 					<strong>Admin</strong>
 				</router-link>
-				<span v-if="$parent.$parent.loggedIn" class="grouped">
+				<span v-if="loggedIn" class="grouped">
 					<router-link
 						class="nav-item is-tab"
 						href="#"
-						:to="{ path: '/u/' + $parent.$parent.username }"
+						:to="{ path: '/u/' + username }"
 						>Profile</router-link
 					>
 					<router-link class="nav-item is-tab" to="/settings"
 						>Settings</router-link
 					>
-					<a class="nav-item is-tab" @click="$parent.$parent.logout()"
-						>Logout</a
-					>
+					<a class="nav-item is-tab" @click="logout()">Logout</a>
 				</span>
 				<span v-else class="grouped">
 					<a
@@ -110,12 +108,9 @@
 					</a>
 					<hr />
 				</div>
-				<div v-if="$parent.$parent.loggedIn">
+				<div v-if="loggedIn">
 					<a
-						v-if="
-							$parent.type === 'official' &&
-								$parent.$parent.loggedIn
-						"
+						v-if="$parent.type === 'official' && loggedIn"
 						class="sidebar-item"
 						href="#"
 						@click="
@@ -131,11 +126,7 @@
 						<span class="icon-purpose">Add song to queue</span>
 					</a>
 					<a
-						v-if="
-							!isOwner() &&
-								$parent.$parent.loggedIn &&
-								!$parent.noSong
-						"
+						v-if="!isOwner() && loggedIn && !$parent.noSong"
 						class="sidebar-item"
 						href="#"
 						@click="$parent.voteSkipStation()"
@@ -150,9 +141,7 @@
 					</a>
 					<a
 						v-if="
-							$parent.$parent.loggedIn &&
-								!$parent.noSong &&
-								!$parent.simpleSong
+							loggedIn && !$parent.noSong && !$parent.simpleSong
 						"
 						class="sidebar-item"
 						href="#"
@@ -169,7 +158,7 @@
 						<span class="icon-purpose">Report a song</span>
 					</a>
 					<a
-						v-if="$parent.$parent.loggedIn && !$parent.noSong"
+						v-if="loggedIn && !$parent.noSong"
 						class="sidebar-item"
 						href="#"
 						@click="
@@ -216,7 +205,7 @@
 </template>
 
 <script>
-import { mapActions } from "vuex";
+import { mapState, mapActions } from "vuex";
 
 export default {
 	data() {
@@ -231,6 +220,11 @@ export default {
 			}
 		};
 	},
+	computed: mapState({
+		role: state => state.user.auth.role,
+		username: state => state.user.auth.username,
+		loggedIn: state => state.user.auth.loggedIn
+	}),
 	mounted() {
 		lofig.get("frontendDomain", res => {
 			this.frontendDomain = res;
@@ -243,10 +237,7 @@ export default {
 	},
 	methods: {
 		isOwner() {
-			return (
-				this.$parent.$parent.loggedIn &&
-				this.$parent.$parent.role === "admin"
-			);
+			return this.loggedIn && this.role === "admin";
 		},
 		settings() {
 			this.editStation({
@@ -264,7 +255,8 @@ export default {
 			});
 		},
 		...mapActions("modals", ["openModal"]),
-		...mapActions("station", ["editStation"])
+		...mapActions("station", ["editStation"]),
+		...mapActions("user/auth", ["logout"])
 	}
 };
 </script>

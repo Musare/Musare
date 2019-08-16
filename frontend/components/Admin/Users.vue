@@ -91,9 +91,6 @@ export default {
 				if (result.status === "success") _this.users = result.data;
 			});
 			_this.socket.emit("apis.joinAdminRoom", "users", () => {});
-			_this.socket.on("event:user.username.changed", username => {
-				_this.$parent.$parent.username = username;
-			});
 		},
 		...mapActions("admin/users", ["editUser"]),
 		...mapActions("modals", ["openModal"])

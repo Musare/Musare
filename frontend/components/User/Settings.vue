@@ -146,6 +146,8 @@
 </template>
 
 <script>
+import { mapState } from "vuex";
+
 import { Toast } from "vue-roaster";
 
 import MainHeader from "../MainHeader.vue";
@@ -167,6 +169,9 @@ export default {
 			passwordCode: ""
 		};
 	},
+	computed: mapState({
+		userId: state => state.user.auth.userId
+	}),
 	mounted() {
 		const _this = this;
 		io.getSocket(socket => {
@@ -183,9 +188,6 @@ export default {
 						3000
 					);
 				}
-			});
-			_this.socket.on("event:user.username.changed", username => {
-				_this.$parent.username = username;
 			});
 			_this.socket.on("event:user.linkPassword", () => {
 				_this.password = true;
@@ -217,7 +219,7 @@ export default {
 
 			return this.socket.emit(
 				"users.updateEmail",
-				this.$parent.userId,
+				this.userId,
 				email,
 				res => {
 					if (res.status !== "success")
@@ -245,7 +247,7 @@ export default {
 
 			return this.socket.emit(
 				"users.updateUsername",
-				this.$parent.userId,
+				this.userId,
 				username,
 				res => {
 					if (res.status !== "success")
@@ -340,13 +342,9 @@ export default {
 			});
 		},
 		removeSessions() {
-			this.socket.emit(
-				`users.removeSessions`,
-				this.$parent.userId,
-				res => {
-					Toast.methods.addToast(res.message, 4000);
-				}
-			);
+			this.socket.emit(`users.removeSessions`, this.userId, res => {
+				Toast.methods.addToast(res.message, 4000);
+			});
 		}
 	}
 };

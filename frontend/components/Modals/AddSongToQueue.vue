@@ -1,10 +1,7 @@
 <template>
 	<modal title="Add Song To Queue">
 		<div slot="body">
-			<aside
-				class="menu"
-				v-if="$parent.$parent.loggedIn && $parent.type === 'community'"
-			>
+			<aside class="menu" v-if="loggedIn && $parent.type === 'community'">
 				<ul class="menu-list">
 					<li v-for="(playlist, index) in playlists" :key="index">
 						<a
@@ -95,6 +92,8 @@
 </template>
 
 <script>
+import { mapState } from "vuex";
+
 import { Toast } from "vue-roaster";
 import Modal from "./Modal.vue";
 import io from "../../io";
@@ -109,6 +108,9 @@ export default {
 			importQuery: ""
 		};
 	},
+	computed: mapState({
+		loggedIn: state => state.user.auth.loggedIn
+	}),
 	methods: {
 		isPlaylistSelected(playlistId) {
 			return this.privatePlaylistQueueSelected === playlistId;

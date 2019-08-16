@@ -26,38 +26,26 @@ import WhatIsNew from "./components/Modals/WhatIsNew.vue";
 import MobileAlert from "./components/Modals/MobileAlert.vue";
 import LoginModal from "./components/Modals/Login.vue";
 import RegisterModal from "./components/Modals/Register.vue";
-import auth from "./auth";
 import io from "./io";
 
 export default {
 	replace: false,
 	data() {
 		return {
-			banned: false,
-			ban: {},
-			loggedIn: false,
-			role: "",
-			username: "",
-			userId: "",
 			serverDomain: "",
 			socketConnected: true
 		};
 	},
 	computed: mapState({
+		loggedIn: state => state.user.auth.loggedIn,
+		role: state => state.user.auth.role,
+		username: state => state.user.auth.username,
+		userId: state => state.user.auth.userId,
+		banned: state => state.user.auth.banned,
 		modals: state => state.modals.modals,
 		currentlyActive: state => state.modals.currentlyActive
 	}),
 	methods: {
-		logout() {
-			const _this = this;
-			_this.socket.emit("users.logout", result => {
-				if (result.status === "success") {
-					document.cookie =
-						"SID=;expires=Thu, 01 Jan 1970 00:00:01 GMT;";
-					window.location.reload();
-				} else Toast.methods.addToast(result.message, 4000);
-			});
-		},
 		submitOnEnter: (cb, event) => {
 			if (event.which === 13) cb();
 		},
@@ -78,17 +66,6 @@ export default {
 			this.$router.go(localStorage.getItem("github_redirect"));
 			localStorage.removeItem("github_redirect");
 		}
-		auth.isBanned((banned, ban) => {
-			_this.ban = ban;
-			_this.banned = banned;
-		});
-		auth.getStatus((authenticated, role, username, userId) => {
-			_this.socket = window.socket;
-			_this.loggedIn = authenticated;
-			_this.role = role;
-			_this.username = username;
-			_this.userId = userId;
-		});
 		io.onConnect(true, () => {
 			_this.socketConnected = true;
 		});

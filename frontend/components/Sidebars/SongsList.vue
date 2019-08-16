@@ -79,7 +79,7 @@
 			<div
 				v-if="
 					$parent.type === 'community' &&
-						$parent.$parent.loggedIn &&
+						loggedIn &&
 						$parent.station.partyMode === true
 				"
 			>
@@ -129,7 +129,7 @@
 </template>
 
 <script>
-import { mapActions } from "vuex";
+import { mapState, mapActions } from "vuex";
 
 import { Toast } from "vue-roaster";
 
@@ -141,18 +141,17 @@ export default {
 			dismissedWarning: false
 		};
 	},
+	computed: mapState({
+		loggedIn: state => state.user.auth.loggedIn,
+		userId: state => state.user.auth.userId,
+		role: state => state.user.auth.role
+	}),
 	methods: {
 		isOwnerOnly() {
-			return (
-				this.$parent.$parent.loggedIn &&
-				this.$parent.$parent.userId === this.$parent.station.owner
-			);
+			return this.loggedIn && this.userId === this.$parent.station.owner;
 		},
 		isAdminOnly() {
-			return (
-				this.$parent.$parent.loggedIn &&
-				this.$parent.$parent.role === "admin"
-			);
+			return this.loggedIn && this.role === "admin";
 		},
 		removeFromQueue(songId) {
 			window.socket.emit(

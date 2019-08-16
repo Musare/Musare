@@ -28,10 +28,10 @@
 					v-if="
 						type === 'community' &&
 							station.partyMode &&
+							this.loggedIn &&
 							(!station.locked ||
 								(station.locked &&
-									$parent.loggedIn &&
-									$parent.userId === station.owner))
+									this.userId === station.owner))
 					"
 				>
 					<a
@@ -50,7 +50,7 @@
 					v-if="
 						type === 'community' &&
 							!station.partyMode &&
-							$parent.userId === station.owner &&
+							this.userId === station.owner &&
 							!station.privatePlaylist
 					"
 				>
@@ -65,7 +65,7 @@
 					v-if="
 						type === 'community' &&
 							!station.partyMode &&
-							$parent.userId === station.owner &&
+							this.userId === station.owner &&
 							station.privatePlaylist
 					"
 				>
@@ -172,7 +172,7 @@
 						</div>
 					</article>
 					<a
-						v-if="type === 'community' && $parent.loggedIn"
+						v-if="type === 'community' && loggedIn"
 						class="button add-to-queue"
 						href="#"
 						@click="
@@ -181,7 +181,7 @@
 								modal: 'addSongToQueue'
 							})
 						"
-						>Add Song to Queue</a
+						>Add a song to the queue</a
 					>
 				</div>
 			</div>
@@ -482,17 +482,19 @@ export default {
 		}),
 		...mapState("station", {
 			station: state => state.station
+		}),
+		...mapState({
+			loggedIn: state => state.user.auth.loggedIn,
+			userId: state => state.user.auth.userId,
+			role: state => state.user.auth.role
 		})
 	},
 	methods: {
 		isOwnerOnly() {
-			return (
-				this.$parent.loggedIn &&
-				this.$parent.userId === this.station.owner
-			);
+			return this.loggedIn && this.userId === this.station.owner;
 		},
 		isAdminOnly() {
-			return this.$parent.loggedIn && this.$parent.role === "admin";
+			return this.loggedIn && this.role === "admin";
 		},
 		removeFromQueue(songId) {
 			window.socket.emit(
@@ -896,10 +898,9 @@ export default {
 		addFirstPrivatePlaylistSongToQueue() {
 			const _this = this;
 			let isInQueue = false;
-			const { userId } = _this.$parent;
 			if (_this.type === "community") {
 				_this.songsList.forEach(queueSong => {
-					if (queueSong.requestedBy === userId) isInQueue = true;
+					if (queueSong.requestedBy === this.userId) isInQueue = true;
 				});
 				if (!isInQueue && _this.privatePlaylistQueueSelected) {
 					_this.socket.emit(
@@ -1110,9 +1111,8 @@ export default {
 				}
 
 				let isInQueue = false;
-				const { userId } = _this.$parent;
 				_this.songsList.forEach(queueSong => {
-					if (queueSong.requestedBy === userId) isInQueue = true;
+					if (queueSong.requestedBy === this.userId) isInQueue = true;
 				});
 				if (
 					!isInQueue &&

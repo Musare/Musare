@@ -21,18 +21,18 @@
 
 		<div class="nav-right nav-menu" :class="{ 'is-active': isMobile }">
 			<router-link
-				v-if="$parent.$parent.role === 'admin'"
+				v-if="role === 'admin'"
 				class="nav-item is-tab admin"
 				to="/admin"
 			>
 				<strong>Admin</strong>
 			</router-link>
-			<span v-if="$parent.$parent.loggedIn" class="grouped">
+			<span v-if="loggedIn" class="grouped">
 				<router-link
 					class="nav-item is-tab"
 					:to="{
 						name: 'profile',
-						params: { username: $parent.$parent.username }
+						params: { username }
 					}"
 				>
 					Profile
@@ -40,12 +40,7 @@
 				<router-link class="nav-item is-tab" to="/settings"
 					>Settings</router-link
 				>
-				<a
-					class="nav-item is-tab"
-					href="#"
-					@click="$parent.$parent.logout()"
-					>Logout</a
-				>
+				<a class="nav-item is-tab" href="#" @click="logout()">Logout</a>
 			</span>
 			<span v-else class="grouped">
 				<a
@@ -99,11 +94,15 @@ export default {
 			return res;
 		});
 	},
-	computed: mapState("modals", {
-		modals: state => state.modals.header
+	computed: mapState({
+		modals: state => state.modals.modals.header,
+		role: state => state.user.auth.role,
+		loggedIn: state => state.user.auth.loggedIn,
+		username: state => state.user.auth.username
 	}),
 	methods: {
-		...mapActions("modals", ["openModal"])
+		...mapActions("modals", ["openModal"]),
+		...mapActions("user/auth", ["logout"])
 	}
 };
 </script>
