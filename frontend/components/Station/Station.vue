@@ -1237,6 +1237,8 @@ export default {
 </script>
 
 <style lang="scss">
+@import "styles/global.scss";
+
 .player-can-not-autoplay {
 	position: absolute;
 	width: 100%;
@@ -1263,7 +1265,7 @@ export default {
 }
 
 .no-song {
-	color: #03a9f4;
+	color: $primary-color;
 	text-align: center;
 }
 
@@ -1456,7 +1458,7 @@ export default {
 		height: 19px;
 		width: 19px;
 		border-radius: 15px;
-		background: #03a9f4;
+		background: $primary-color;
 		cursor: pointer;
 		-webkit-appearance: none;
 		margin-top: -6.5px;
@@ -1478,7 +1480,7 @@ export default {
 		height: 19px;
 		width: 19px;
 		border-radius: 15px;
-		background: #03a9f4;
+		background: $primary-color;
 		cursor: pointer;
 		-webkit-appearance: none;
 		margin-top: -6.5px;
@@ -1513,7 +1515,7 @@ export default {
 		height: 15px;
 		width: 15px;
 		border-radius: 15px;
-		background: #03a9f4;
+		background: $primary-color;
 		cursor: pointer;
 		-webkit-appearance: none;
 		margin-top: 1.5px;
@@ -1667,7 +1669,7 @@ h6 {
 }
 
 .light-blue {
-	background-color: #03a9f4 !important;
+	background-color: $primary-color !important;
 }
 
 .white {
@@ -1719,7 +1721,7 @@ h6 {
 .progress {
 	width: 50px;
 	animation: rotate 0.8s infinite linear;
-	border: 8px solid #03a9f4;
+	border: 8px solid $primary-color;
 	border-right-color: transparent;
 	height: 50px;
 	position: absolute;

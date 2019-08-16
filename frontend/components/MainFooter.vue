@@ -82,6 +82,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 .content a:not(.button) {
 	border: 0;
 }
@@ -123,15 +125,15 @@ export default {
 
 	.footerLinks {
 		:not(:last-child) {
-			border-right: solid 1px #03a9f4;
+			border-right: solid 1px $primary-color;
 		}
 		a {
 			padding: 0 5px;
 			font-size: 18px;
-			color: #03a9f4;
+			color: $primary-color;
 		}
 		a:hover {
-			color: #03a9f4;
+			color: $primary-color;
 			text-decoration: underline;
 		}
 	}

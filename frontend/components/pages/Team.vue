@@ -202,6 +202,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 li a {
 	color: dodgerblue;
 	border-bottom: 0 !important;

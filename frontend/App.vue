@@ -113,6 +113,8 @@ export default {
 </script>
 
 <style lang="scss">
+@import "styles/global.scss";
+
 .center {
 	text-align: center;
 }
@@ -232,7 +234,7 @@ html {
 }
 .input:focus,
 .input:active {
-	border-color: #03a9f4 !important;
+	border-color: $primary-color !important;
 }
 button.delete:focus {
 	background-color: rgba(10, 10, 10, 0.3);

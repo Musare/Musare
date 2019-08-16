@@ -114,6 +114,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 .button.is-github {
 	background-color: #333;
 	color: #fff !important;

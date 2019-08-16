@@ -350,6 +350,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 .container {
 	padding: 25px;
 }

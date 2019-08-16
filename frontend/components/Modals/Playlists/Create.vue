@@ -80,6 +80,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 .menu {
 	padding: 0 20px;
 }

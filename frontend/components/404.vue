@@ -8,6 +8,8 @@
 </template>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 * {
 	margin: 0;
 	padding: 0;

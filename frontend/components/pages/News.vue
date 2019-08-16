@@ -122,6 +122,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 .card {
 	margin-top: 50px;
 }

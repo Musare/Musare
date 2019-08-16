@@ -12,7 +12,8 @@ module.exports = merge(common, {
 	},
 	resolve: {
 		alias: {
-			vue: "vue/dist/vue.js"
+			vue: "vue/dist/vue.js",
+			styles: "styles"
 		}
 	},
 	devServer: {

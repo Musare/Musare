@@ -108,8 +108,10 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 .nav {
-	background-color: #03a9f4;
+	background-color: $primary-color;
 	height: 64px;
 	border-radius: 0% 0% 33% 33% / 0% 0% 7% 7%;
 

@@ -329,6 +329,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 .tag {
 	margin-top: 5px;
 	&:not(:last-child) {

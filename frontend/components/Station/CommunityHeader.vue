@@ -249,8 +249,10 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 .nav {
-	background-color: #03a9f4;
+	background-color: $primary-color;
 	line-height: 64px;
 	border-radius: 0% 0% 33% 33% / 0% 0% 7% 7%;
 
@@ -337,7 +339,7 @@ a.nav-item.is-tab:hover {
 .nav-center {
 	display: flex;
 	align-items: center;
-	color: #03a9f4;
+	color: $primary-color;
 	font-size: 22px;
 	position: absolute;
 	margin: auto;
@@ -347,7 +349,7 @@ a.nav-item.is-tab:hover {
 }
 
 .nav-right.is-active .nav-item {
-	background: #03a9f4;
+	background: $primary-color;
 	border: 0;
 }
 
@@ -358,7 +360,7 @@ a.nav-item.is-tab:hover {
 	left: 0;
 	width: 64px;
 	height: 100vh;
-	background-color: #03a9f4;
+	background-color: $primary-color;
 	box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16),
 		0 2px 10px 0 rgba(0, 0, 0, 0.12);
 

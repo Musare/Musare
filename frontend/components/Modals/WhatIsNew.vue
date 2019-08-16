@@ -129,6 +129,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 .modal-card-head {
 	border-bottom: none;
 	background-color: ghostwhite;

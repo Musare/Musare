@@ -266,6 +266,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 h6 {
 	margin-bottom: 15px;
 }
@@ -303,6 +305,6 @@ h6 {
 }
 
 .is-highlight-active {
-	border: 3px #03a9f4 solid;
+	border: 3px $primary-color solid;
 }
 </style>

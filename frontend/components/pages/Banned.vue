@@ -27,6 +27,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 .container {
 	display: flex;
 	justify-content: center;

@@ -283,6 +283,8 @@ export default {
 </script>
 
 <style lang="scss">
+@import "styles/global.scss";
+
 * {
 	box-sizing: border-box;
 }
@@ -338,7 +340,7 @@ html {
 
 	.official {
 		font-size: 18px;
-		color: #03a9f4;
+		color: $primary-color;
 		position: relative;
 		top: -5px;
 
@@ -354,10 +356,10 @@ html {
 		font-size: 15px;
 
 		.host {
-			color: #03a9f4;
+			color: $primary-color;
 
 			a {
-				color: #03a9f4;
+				color: $primary-color;
 			}
 		}
 	}
@@ -425,7 +427,7 @@ html {
 }
 
 .community-button:hover {
-	color: #03a9f4;
+	color: $primary-color;
 }
 
 .station-privacy {

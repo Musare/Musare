@@ -47,6 +47,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 @media (min-width: 735px) {
 	.modal {
 		display: none;

@@ -212,6 +212,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 .optionsColumn {
 	width: 140px;
 	button {

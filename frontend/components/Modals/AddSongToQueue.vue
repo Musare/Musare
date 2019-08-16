@@ -205,6 +205,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 tr td {
 	vertical-align: middle;
 

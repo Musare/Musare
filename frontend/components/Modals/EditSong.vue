@@ -702,6 +702,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 input[type="range"] {
 	-webkit-appearance: none;
 	width: 100%;
@@ -728,7 +730,7 @@ input[type="range"]::-webkit-slider-thumb {
 	height: 19px;
 	width: 19px;
 	border-radius: 15px;
-	background: #03a9f4;
+	background: $primary-color;
 	cursor: pointer;
 	-webkit-appearance: none;
 	margin-top: -6.5px;
@@ -750,7 +752,7 @@ input[type="range"]::-moz-range-thumb {
 	height: 19px;
 	width: 19px;
 	border-radius: 15px;
-	background: #03a9f4;
+	background: $primary-color;
 	cursor: pointer;
 	-webkit-appearance: none;
 	margin-top: -6.5px;
@@ -785,7 +787,7 @@ input[type="range"]::-ms-thumb {
 	height: 15px;
 	width: 15px;
 	border-radius: 15px;
-	background: #03a9f4;
+	background: $primary-color;
 	cursor: pointer;
 	-webkit-appearance: none;
 	margin-top: 1.5px;

@@ -125,6 +125,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 .icon.is-small {
 	margin-right: 10px !important;
 }

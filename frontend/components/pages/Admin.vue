@@ -168,6 +168,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 .tabs {
 	background-color: #ffffff;
 	.queueSongs {
@@ -175,8 +177,8 @@ export default {
 		border-color: #00d1b2;
 	}
 	.songs {
-		color: #03a9f4;
-		border-color: #03a9f4;
+		color: $primary-color;
+		border-color: $primary-color;
 	}
 	.stations {
 		color: #90298c;

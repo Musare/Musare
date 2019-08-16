@@ -348,6 +348,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 .tag:not(:last-child) {
 	margin-right: 5px;
 }
@@ -361,6 +363,6 @@ td {
 }
 
 .card-footer-item {
-	color: #03a9f4;
+	color: $primary-color;
 }
 </style>

@@ -128,6 +128,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 .tag:not(:last-child) {
 	margin-right: 5px;
 }
