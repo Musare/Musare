@@ -286,7 +286,8 @@ export default {
 	computed: {
 		...mapState("admin/songs", {
 			video: state => state.video,
-			editing: state => state.editing
+			editing: state => state.editing,
+			songs: state => state.songs
 		}),
 		...mapState("modals", {
 			modals: state => state.modals.admin
@@ -399,7 +400,7 @@ export default {
 				res => {
 					Toast.methods.addToast(res.message, 4000);
 					if (res.status === "success") {
-						this.$parent.songs.forEach(originalSong => {
+						this.songs.forEach(originalSong => {
 							const updatedSong = song;
 							if (originalSong._id === updatedSong._id) {
 								Object.keys(originalSong).forEach(n => {

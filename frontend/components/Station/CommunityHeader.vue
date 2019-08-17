@@ -15,7 +15,7 @@
 			</div>
 
 			<div class="nav-center stationDisplayName">
-				{{ $parent.station.displayName }}
+				{{ station.displayName }}
 			</div>
 
 			<span class="nav-toggle" v-on:click="controlBar = !controlBar">
@@ -90,7 +90,7 @@
 						<span class="icon-purpose">Skip current song</span>
 					</a>
 					<a
-						v-if="isOwner() && $parent.paused"
+						v-if="isOwner() && paused"
 						class="sidebar-item"
 						href="#"
 						@click="$parent.resumeStation()"
@@ -101,7 +101,7 @@
 						<span class="icon-purpose">Resume station</span>
 					</a>
 					<a
-						v-if="isOwner() && !$parent.paused"
+						v-if="isOwner() && !paused"
 						class="sidebar-item"
 						href="#"
 						@click="$parent.pauseStation()"
@@ -113,9 +113,9 @@
 					</a>
 					<hr />
 				</div>
-				<div v-if="loggedIn && !$parent.noSong">
+				<div v-if="loggedIn && !noSong">
 					<a
-						v-if="!isOwner() && loggedIn && !$parent.noSong"
+						v-if="!isOwner() && loggedIn && !noSong"
 						class="sidebar-item"
 						href="#"
 						@click="$parent.voteSkipStation()"
@@ -124,12 +124,12 @@
 							<i class="material-icons">skip_next</i>
 						</span>
 						<span class="skip-votes">{{
-							$parent.currentSong.skipVotes
+							currentSong.skipVotes
 						}}</span>
 						<span class="icon-purpose">Skip current song</span>
 					</a>
 					<a
-						v-if="loggedIn && !$parent.noSong"
+						v-if="loggedIn && !noSong"
 						class="sidebar-item"
 						href="#"
 						@click="
@@ -149,7 +149,7 @@
 					<hr />
 				</div>
 				<a
-					v-if="$parent.station.partyMode === true"
+					v-if="station.partyMode === true"
 					class="sidebar-item"
 					href="#"
 					@click="$parent.toggleSidebar('songslist')"
@@ -206,7 +206,11 @@ export default {
 	computed: mapState({
 		loggedIn: state => state.user.auth.loggedIn,
 		userId: state => state.user.auth.userId,
-		role: state => state.user.auth.role
+		username: state => state.user.auth.username,
+		role: state => state.user.auth.role,
+		station: state => state.station.station,
+		paused: state => state.station.paused,
+		noSong: state => state.station.noSong
 	}),
 	mounted() {
 		lofig.get("frontendDomain", res => {
@@ -222,19 +226,18 @@ export default {
 		isOwner() {
 			return (
 				this.loggedIn &&
-				(this.role === "admin" ||
-					this.userId === this.$parent.station.owner)
+				(this.role === "admin" || this.userId === this.station.owner)
 			);
 		},
 		settings() {
 			this.editStation({
-				_id: this.$parent.station._id,
-				name: this.$parent.station.name,
-				type: this.$parent.type,
-				partyMode: this.$parent.station.partyMode,
-				description: this.$parent.station.description,
-				privacy: this.$parent.station.privacy,
-				displayName: this.$parent.station.displayName
+				_id: this.station._id,
+				name: this.station.name,
+				type: this.station.type,
+				partyMode: this.station.partyMode,
+				description: this.station.description,
+				privacy: this.station.privacy,
+				displayName: this.station.displayName
 			});
 			this.openModal({
 				sector: "station",

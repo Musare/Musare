@@ -1,13 +1,13 @@
 <template>
 	<modal title="Add Song To Queue">
 		<div slot="body">
-			<aside class="menu" v-if="loggedIn && $parent.type === 'community'">
+			<aside class="menu" v-if="loggedIn && station.type === 'community'">
 				<ul class="menu-list">
 					<li v-for="(playlist, index) in playlists" :key="index">
 						<a
 							href="#"
 							target="_blank"
-							v-on:click="$parent.editPlaylist(playlist._id)"
+							v-on:click="editPlaylist(playlist._id)"
 							>{{ playlist.displayName }}</a
 						>
 						<div class="controls">
@@ -50,7 +50,7 @@
 					>
 				</p>
 			</div>
-			<div class="control is-grouped" v-if="$parent.type === 'official'">
+			<div class="control is-grouped" v-if="station.type === 'official'">
 				<p class="control is-expanded">
 					<input
 						class="input"
@@ -92,7 +92,7 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
+import { mapState, mapActions } from "vuex";
 
 import { Toast } from "vue-roaster";
 import Modal from "./Modal.vue";
@@ -109,30 +109,32 @@ export default {
 		};
 	},
 	computed: mapState({
-		loggedIn: state => state.user.auth.loggedIn
+		loggedIn: state => state.user.auth.loggedIn,
+		station: state => state.station.station
 	}),
 	methods: {
 		isPlaylistSelected(playlistId) {
 			return this.privatePlaylistQueueSelected === playlistId;
 		},
 		selectPlaylist(playlistId) {
-			if (this.$parent.type === "community") {
+			if (this.station.type === "community") {
 				this.privatePlaylistQueueSelected = playlistId;
 				this.$parent.privatePlaylistQueueSelected = playlistId;
 				this.$parent.addFirstPrivatePlaylistSongToQueue();
 			}
 		},
 		unSelectPlaylist() {
-			if (this.$parent.type === "community") {
+			if (this.station.type === "community") {
 				this.privatePlaylistQueueSelected = null;
 				this.$parent.privatePlaylistQueueSelected = null;
 			}
 		},
 		addSongToQueue(songId) {
-			if (this.$parent.type === "community") {
+			console.log(this.station.type);
+			if (this.station.type === "community") {
 				this.socket.emit(
 					"stations.addToQueue",
-					this.$parent.station._id,
+					this.station._id,
 					songId,
 					data => {
 						if (data.status !== "success")
@@ -189,7 +191,8 @@ export default {
 					});
 				}
 			});
-		}
+		},
+		...mapActions("user/playlists", ["editPlaylist"])
 	},
 	mounted() {
 		io.getSocket(socket => {

@@ -231,8 +231,7 @@ export default {
 				features: [],
 				improvements: [],
 				upcoming: []
-			},
-			editing: {}
+			}
 		};
 	},
 	mounted() {
@@ -255,6 +254,9 @@ export default {
 	computed: {
 		...mapState("modals", {
 			modals: state => state.modals.admin
+		}),
+		...mapState("admin/news", {
+			editing: state => state.editing
 		})
 	},
 	methods: {
@@ -303,25 +305,8 @@ export default {
 			);
 		},
 		editNews(news) {
-			this.editing = news;
+			this.editNews(news);
 			this.openModal({ sector: "admin", modal: "editNews" });
-		},
-		updateNews(close) {
-			this.socket.emit(
-				"news.update",
-				this.editing._id,
-				this.editing,
-				res => {
-					Toast.methods.addToast(res.message, 4000);
-					if (res.status === "success") {
-						if (close)
-							this.closeModal({
-								sector: "admin",
-								modal: "editNews"
-							});
-					}
-				}
-			);
 		},
 		addChange(type) {
 			const change = document.getElementById(`new-${type}`).value.trim();
@@ -342,7 +327,8 @@ export default {
 		init() {
 			this.socket.emit("apis.joinAdminRoom", "news", () => {});
 		},
-		...mapActions("modals", ["openModal", "closeModal"])
+		...mapActions("modals", ["openModal", "closeModal"]),
+		...mapActions("admin/news", ["editNews"])
 	}
 };
 </script>

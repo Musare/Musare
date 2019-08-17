@@ -14,7 +14,7 @@
 							<a
 								v-if="
 									isNotSelected(playlist._id) &&
-										!$parent.station.partyMode
+										!station.partyMode
 								"
 								href="#"
 								@click="selectPlaylist(playlist._id)"
@@ -46,7 +46,7 @@
 </template>
 
 <script>
-import { mapActions } from "vuex";
+import { mapState, mapActions } from "vuex";
 
 import { Toast } from "vue-roaster";
 import io from "../../io";
@@ -57,6 +57,11 @@ export default {
 			playlists: []
 		};
 	},
+	computed: {
+		...mapState("modals", {
+			modals: state => state.modals.station
+		})
+	},
 	methods: {
 		edit(id) {
 			this.editPlaylist(id);
@@ -65,7 +70,7 @@ export default {
 		selectPlaylist(id) {
 			this.socket.emit(
 				"stations.selectPrivatePlaylist",
-				this.$parent.station._id,
+				this.station._id,
 				id,
 				res => {
 					if (res.status === "failure")
@@ -76,10 +81,7 @@ export default {
 		},
 		isNotSelected(id) {
 			// TODO Also change this once it changes for a station
-			if (
-				this.$parent.station &&
-				this.$parent.station.privatePlaylist === id
-			)
+			if (this.station && this.station.privatePlaylist === id)
 				return false;
 			return true;
 		},

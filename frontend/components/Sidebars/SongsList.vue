@@ -1,18 +1,18 @@
 <template>
 	<div class="sidebar" transition="slide">
 		<div class="inner-wrapper">
-			<div v-if="$parent.type === 'community'" class="title">
+			<div v-if="station.type === 'community'" class="title">
 				Queue
 			</div>
 			<div v-else class="title">
 				Playlist
 			</div>
 
-			<article v-if="!$parent.noSong" class="media">
-				<figure v-if="$parent.currentSong.thumbnail" class="media-left">
+			<article v-if="!noSong" class="media">
+				<figure v-if="currentSong.thumbnail" class="media-left">
 					<p class="image is-64x64">
 						<img
-							:src="$parent.currentSong.thumbnail"
+							:src="currentSong.thumbnail"
 							onerror="this.src='/assets/notes-transparent.png'"
 						/>
 					</p>
@@ -21,22 +21,22 @@
 					<div class="content">
 						<p>
 							Current Song:
-							<strong>{{ $parent.currentSong.title }}</strong>
+							<strong>{{ currentSong.title }}</strong>
 							<br />
-							<small>{{ $parent.currentSong.artists }}</small>
+							<small>{{ currentSong.artists }}</small>
 						</p>
 					</div>
 				</div>
 				<div class="media-right">
-					{{ $parent.formatTime($parent.currentSong.duration) }}
+					{{ $parent.formatTime(currentSong.duration) }}
 				</div>
 			</article>
-			<p v-if="$parent.noSong" class="center">
+			<p v-if="noSong" class="center">
 				There is currently no song playing.
 			</p>
 
 			<article
-				v-for="(song, index) in $parent.songsList"
+				v-for="(song, index) in songsList"
 				:key="index"
 				class="media"
 			>
@@ -49,8 +49,8 @@
 						<small>{{ song.artists.join(", ") }}</small>
 						<div
 							v-if="
-								$parent.type === 'community' &&
-									$parent.station.partyMode === true
+								station.type === 'community' &&
+									station.partyMode === true
 							"
 						>
 							<small>
@@ -78,16 +78,16 @@
 			</article>
 			<div
 				v-if="
-					$parent.type === 'community' &&
+					station.type === 'community' &&
 						loggedIn &&
-						$parent.station.partyMode === true
+						station.partyMode === true
 				"
 			>
 				<button
 					v-if="
-						($parent.station.locked && isOwnerOnly()) ||
-							!$parent.station.locked ||
-							($parent.station.locked &&
+						(station.locked && isOwnerOnly()) ||
+							!station.locked ||
+							(station.locked &&
 								isAdminOnly() &&
 								dismissedWarning)
 					"
@@ -103,7 +103,7 @@
 				</button>
 				<button
 					v-if="
-						$parent.station.locked &&
+						station.locked &&
 							isAdminOnly() &&
 							!isOwnerOnly() &&
 							!dismissedWarning
@@ -114,11 +114,7 @@
 					THIS STATION'S QUEUE IS LOCKED.
 				</button>
 				<button
-					v-if="
-						$parent.station.locked &&
-							!isAdminOnly() &&
-							!isOwnerOnly()
-					"
+					v-if="station.locked && !isAdminOnly() && !isOwnerOnly()"
 					class="button add-to-queue add-to-queue-disabled"
 				>
 					THIS STATION'S QUEUE IS LOCKED.
@@ -144,11 +140,15 @@ export default {
 	computed: mapState({
 		loggedIn: state => state.user.auth.loggedIn,
 		userId: state => state.user.auth.userId,
-		role: state => state.user.auth.role
+		role: state => state.user.auth.role,
+		station: state => state.station.station,
+		currentSong: state => state.station.currentSong,
+		songsList: state => state.station.songsList,
+		noSong: state => state.station.noSong
 	}),
 	methods: {
 		isOwnerOnly() {
-			return this.loggedIn && this.userId === this.$parent.station.owner;
+			return this.loggedIn && this.userId === this.station.owner;
 		},
 		isAdminOnly() {
 			return this.loggedIn && this.role === "admin";
@@ -156,7 +156,7 @@ export default {
 		removeFromQueue(songId) {
 			window.socket.emit(
 				"stations.removeFromQueue",
-				this.$parent.station._id,
+				this.station._id,
 				songId,
 				res => {
 					if (res.status === "success") {
