@@ -2,10 +2,10 @@
 	<modal title="Add Song To Playlist">
 		<template v-slot:body>
 			<h4 class="songTitle">
-				{{ $parent.currentSong.title }}
+				{{ currentSong.title }}
 			</h4>
 			<h5 class="songArtist">
-				{{ $parent.currentSong.artists }}
+				{{ currentSong.artists }}
 			</h5>
 			<aside class="menu">
 				<p class="menu-label">
@@ -38,6 +38,8 @@
 </template>
 
 <script>
+import { mapState } from "vuex";
+
 import { Toast } from "vue-roaster";
 import Modal from "./Modal.vue";
 import io from "../../io";
@@ -53,8 +55,8 @@ export default {
 		};
 	},
 	mounted() {
-		this.songId = this.$parent.currentSong.songId;
-		this.song = this.$parent.currentSong;
+		this.songId = this.currentSong.songId;
+		this.song = this.currentSong;
 		io.getSocket(socket => {
 			this.socket = socket;
 			this.socket.emit("playlists.indexForUser", res => {
@@ -67,11 +69,16 @@ export default {
 			});
 		});
 	},
+	computed: {
+		...mapState("station", {
+			currentSong: state => state.currentSong
+		})
+	},
 	methods: {
 		addSongToPlaylist(playlistId) {
 			this.socket.emit(
 				"playlists.addSongToPlaylist",
-				this.$parent.currentSong.songId,
+				this.currentSong.songId,
 				playlistId,
 				res => {
 					Toast.methods.addToast(res.message, 4000);
@@ -79,7 +86,6 @@ export default {
 						this.playlists[playlistId].songs.push(this.song);
 					}
 					this.recalculatePlaylists();
-					// this.$parent.modals.addSongToPlaylist = false;
 				}
 			);
 		},
@@ -102,7 +108,6 @@ export default {
 						);
 					}
 					this.recalculatePlaylists();
-					// this.$parent.modals.addSongToPlaylist = false;
 				}
 			);
 		},

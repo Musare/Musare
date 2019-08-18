@@ -1,7 +1,7 @@
 <template>
 	<div>
-		<official-header v-if="type == 'official'" />
-		<community-header v-if="type == 'community'" />
+		<official-header v-if="station.type == 'official'" />
+		<community-header v-if="station.type == 'community'" />
 
 		<song-queue v-if="modals.addSongToQueue" />
 		<add-to-playlist v-if="modals.addSongToPlaylist" />
@@ -26,7 +26,7 @@
 				<h1>No song is currently playing</h1>
 				<h4
 					v-if="
-						type === 'community' &&
+						station.type === 'community' &&
 							station.partyMode &&
 							this.loggedIn &&
 							(!station.locked ||
@@ -48,7 +48,7 @@
 				</h4>
 				<h4
 					v-if="
-						type === 'community' &&
+						station.type === 'community' &&
 							!station.partyMode &&
 							this.userId === station.owner &&
 							!station.privatePlaylist
@@ -63,7 +63,7 @@
 				</h4>
 				<h1
 					v-if="
-						type === 'community' &&
+						station.type === 'community' &&
 							!station.partyMode &&
 							this.userId === station.owner &&
 							station.privatePlaylist
@@ -99,7 +99,7 @@
 				<div
 					class="desktop-only column is-3-desktop card playlistCard experimental"
 				>
-					<div v-if="type === 'community'" class="title">
+					<div v-if="station.type === 'community'" class="title">
 						Queue
 					</div>
 					<div v-else class="title">
@@ -172,7 +172,7 @@
 						</div>
 					</article>
 					<a
-						v-if="type === 'community' && loggedIn"
+						v-if="station.type === 'community' && loggedIn"
 						class="button add-to-queue"
 						href="#"
 						@click="
@@ -293,7 +293,7 @@
 							</div>
 						</div>
 						<div
-							v-if="!simpleSong"
+							v-if="!currentSong.simpleSong"
 							class="column is-3-desktop experimental"
 						>
 							<img
@@ -445,13 +445,9 @@ export default {
 			loading: true,
 			ready: false,
 			exists: true,
-			type: "",
 			playerReady: false,
-			previousSong: null,
-			currentSong: {},
 			player: undefined,
 			timePaused: 0,
-			paused: false,
 			muted: false,
 			timeElapsed: "0:00",
 			liked: false,
@@ -461,16 +457,11 @@ export default {
 				users: false,
 				playlist: false
 			},
-			noSong: false,
-			simpleSong: false,
-			songsList: [],
 			timeBeforePause: 0,
 			skipVotes: 0,
 			privatePlaylistQueueSelected: null,
 			automaticallyRequestedSongId: null,
 			systemDifference: 0,
-			users: [],
-			userCount: 0,
 			attemptsToPlayVideo: 0,
 			canAutoplay: true,
 			lastTimeRequestedIfCanAutoplay: 0
@@ -481,7 +472,11 @@ export default {
 			modals: state => state.modals.station
 		}),
 		...mapState("station", {
-			station: state => state.station
+			station: state => state.station,
+			currentSong: state => state.currentSong,
+			songsList: state => state.songsList,
+			paused: state => state.paused,
+			noSong: state => state.noSong
 		}),
 		...mapState({
 			loggedIn: state => state.user.auth.loggedIn,
@@ -739,7 +734,7 @@ export default {
 			}
 		},
 		resumeLocalStation() {
-			this.paused = false;
+			this.updatePaused(false);
 			if (!this.noSong) {
 				if (this.playerReady) {
 					this.player.seekTo(
@@ -751,7 +746,7 @@ export default {
 			}
 		},
 		pauseLocalStation() {
-			this.paused = true;
+			this.updatePaused(true);
 			if (!this.noSong) {
 				this.timeBeforePause = this.getTimeElapsed();
 				if (this.playerReady) this.player.pauseVideo();
@@ -880,7 +875,7 @@ export default {
 		},
 		addFirstPrivatePlaylistSongToQueue() {
 			let isInQueue = false;
-			if (this.type === "community") {
+			if (this.station.type === "community") {
 				this.songsList.forEach(queueSong => {
 					if (queueSong.requestedBy === this.userId) isInQueue = true;
 				});
@@ -951,7 +946,8 @@ export default {
 						locked,
 						partyMode,
 						owner,
-						privatePlaylist
+						privatePlaylist,
+						type
 					} = res.data;
 
 					document.title = `Musare - ${displayName}`;
@@ -965,30 +961,23 @@ export default {
 						locked,
 						partyMode,
 						owner,
-						privatePlaylist
+						privatePlaylist,
+						type
 					});
-					this.currentSong = res.data.currentSong
+					const currentSong = res.data.currentSong
 						? res.data.currentSong
 						: {};
-					if (this.currentSong.artists)
-						this.currentSong.artists = this.currentSong.artists.join(
-							", "
-						);
-					this.type = res.data.type;
+					if (currentSong.artists)
+						currentSong.artists = currentSong.artists.join(", ");
+					this.updateCurrentSong(currentSong);
 					this.startedAt = res.data.startedAt;
-					this.paused = res.data.paused;
+					this.updatePaused(res.data.paused);
 					this.timePaused = res.data.timePaused;
-					this.userCount = res.data.userCount;
-					this.users = res.data.users;
+					this.updateUserCount(res.data.userCount);
+					this.updateUsers(res.data.users);
 					this.pausedAt = res.data.pausedAt;
 					if (res.data.currentSong) {
-						this.noSong = false;
-						this.simpleSong =
-							res.data.currentSong.likes === -1 &&
-							res.data.currentSong.dislikes === -1;
-						if (this.simpleSong) {
-							this.currentSong.skipDuration = 0;
-						}
+						this.updateNoSong(false);
 						this.youtubeReady();
 						this.playVideo();
 						this.socket.emit(
@@ -1003,7 +992,7 @@ export default {
 						);
 					} else {
 						if (this.playerReady) this.player.pauseVideo();
-						this.noSong = true;
+						this.updateNoSong(true);
 					}
 					// UNIX client time before ping
 					const beforePing = Date.now();
@@ -1030,7 +1019,15 @@ export default {
 			});
 		},
 		...mapActions("modals", ["openModal"]),
-		...mapActions("station", ["joinStation"])
+		...mapActions("station", [
+			"joinStation",
+			"updateUserCount",
+			"updateUsers",
+			"updateCurrentSong",
+			"updateSongsList",
+			"updatePaused",
+			"updateNoSong"
+		])
 	},
 	mounted() {
 		Date.currently = () => {
@@ -1056,23 +1053,22 @@ export default {
 				}
 			});
 			this.socket.on("event:songs.next", data => {
-				this.previousSong = this.currentSong.songId
+				const previousSong = this.currentSong.songId
 					? this.currentSong
 					: null;
-				this.currentSong = data.currentSong ? data.currentSong : {};
+				this.updatePreviousSong(previousSong);
+				this.updateCurrentSong(
+					data.currentSong ? data.currentSong : {}
+				);
 				this.startedAt = data.startedAt;
-				this.paused = data.paused;
+				this.updatePaused(data.paused);
 				this.timePaused = data.timePaused;
 				if (data.currentSong) {
-					this.noSong = false;
+					this.updateNoSong(false);
 					if (this.currentSong.artists)
 						this.currentSong.artists = this.currentSong.artists.join(
 							", "
 						);
-					this.simpleSong =
-						data.currentSong.likes === -1 &&
-						data.currentSong.dislikes === -1;
-					if (this.simpleSong) this.currentSong.skipDuration = 0;
 					if (!this.playerReady) this.youtubeReady();
 					else this.playVideo();
 					this.socket.emit(
@@ -1087,7 +1083,7 @@ export default {
 					);
 				} else {
 					if (this.playerReady) this.player.pauseVideo();
-					this.noSong = true;
+					this.updateNoSong(true);
 				}
 
 				let isInQueue = false;
@@ -1166,7 +1162,8 @@ export default {
 			});
 
 			this.socket.on("event:queue.update", queue => {
-				if (this.type === "community") this.songsList = queue;
+				if (this.station.type === "community")
+					this.updateSongsList(queue);
 			});
 
 			this.socket.on("event:song.voteSkipSong", () => {
@@ -1174,29 +1171,29 @@ export default {
 			});
 
 			this.socket.on("event:privatePlaylist.selected", playlistId => {
-				if (this.type === "community") {
+				if (this.station.type === "community") {
 					this.station.privatePlaylist = playlistId;
 				}
 			});
 
 			this.socket.on("event:partyMode.updated", partyMode => {
-				if (this.type === "community") {
+				if (this.station.type === "community") {
 					this.station.partyMode = partyMode;
 				}
 			});
 
 			this.socket.on("event:newOfficialPlaylist", playlist => {
-				if (this.type === "official") {
-					this.songsList = playlist;
+				if (this.station.type === "official") {
+					this.updateSongsList(playlist);
 				}
 			});
 
 			this.socket.on("event:users.updated", users => {
-				this.users = users;
+				this.updateUsers(users);
 			});
 
 			this.socket.on("event:userCount.updated", userCount => {
-				this.userCount = userCount;
+				this.updateUserCount(userCount);
 			});
 
 			this.socket.on("event:queueLockToggled", locked => {

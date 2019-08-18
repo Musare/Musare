@@ -16,7 +16,8 @@ const modules = {
 				autoPlayed: false,
 				currentTime: 0
 			},
-			editing: {}
+			editing: {},
+			songs: []
 		},
 		getters: {},
 		actions: {
@@ -30,7 +31,11 @@ const modules = {
 					commit("getCurrentTime", fixedVal);
 					resolve(state.video.currentTime);
 				});
-			}
+			},
+			addSong: ({ commit }, song) => commit("addSong", song),
+			removeSong: ({ commit }, songId) => commit("removeSong", songId),
+			updateSong: ({ commit }, updatedSong) =>
+				commit("updateSong", updatedSong)
 		},
 		mutations: {
 			editSong(state, song) {
@@ -62,6 +67,20 @@ const modules = {
 						}
 					);
 				}
+			},
+			addSong(state, song) {
+				state.songs.push(song);
+			},
+			removeSong(state, songId) {
+				state.songs = state.songs.filter(song => {
+					return song._id !== songId;
+				});
+			},
+			updateSong(state, updatedSong) {
+				state.songs.forEach((song, index) => {
+					if (song._id === updatedSong._id)
+						state.songs.$set(index, updatedSong);
+				});
 			}
 		}
 	},
@@ -125,6 +144,31 @@ const modules = {
 		mutations: {
 			editUser(state, user) {
 				state.editing = user;
+			}
+		}
+	},
+	news: {
+		namespaced: true,
+		state: {
+			editing: {}
+		},
+		getters: {},
+		actions: {
+			editNews: ({ commit }, news) => commit("editNews", news),
+			addNews: ({ commit }, type, change) =>
+				commit("addChange", type, change),
+			removeChange: ({ commit }, type, index) =>
+				commit("removeChange", type, index)
+		},
+		mutations: {
+			editNews(state, news) {
+				state.editing = news;
+			},
+			addChange(state, type, change) {
+				state.editing[type].push(change);
+			},
+			removeChange(state, type, index) {
+				state.editing[type].splice(index, 1);
 			}
 		}
 	}

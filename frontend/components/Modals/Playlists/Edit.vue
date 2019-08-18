@@ -135,7 +135,7 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
+import { mapState, mapActions } from "vuex";
 
 import { Toast } from "vue-roaster";
 import Modal from "../Modal.vue";
@@ -343,8 +343,7 @@ export default {
 			this.socket.emit("playlists.remove", this.playlist._id, res => {
 				Toast.methods.addToast(res.message, 3000);
 				if (res.status === "success") {
-					this.$parent.modals.editPlaylist = !this.$parent.modals
-						.editPlaylist;
+					this.closeModal();
 				}
 			});
 		},
@@ -367,7 +366,8 @@ export default {
 					Toast.methods.addToast(res.message, 4000);
 				}
 			);
-		}
+		},
+		...mapActions("modals", ["closeModal"])
 	}
 };
 </script>

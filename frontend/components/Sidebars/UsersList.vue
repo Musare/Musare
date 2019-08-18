@@ -4,10 +4,10 @@
 			<div class="title">
 				Users
 			</div>
-			<h5 class="center">Total users: {{ $parent.userCount }}</h5>
+			<h5 class="center">Total users: {{ userCount }}</h5>
 			<aside class="menu">
 				<ul class="menu-list">
-					<li v-for="(username, index) in $parent.users" :key="index">
+					<li v-for="(username, index) in users" :key="index">
 						<router-link
 							:to="{ name: 'profile', params: { username } }"
 							target="_blank"
@@ -20,6 +20,17 @@
 		</div>
 	</div>
 </template>
+
+<script>
+import { mapState } from "vuex";
+
+export default {
+	computed: mapState({
+		users: state => state.station.users,
+		userCount: state => state.station.userCount
+	})
+};
+</script>
 
 <style lang="scss" scoped>
 @import "styles/global.scss";

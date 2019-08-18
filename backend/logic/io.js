@@ -119,6 +119,7 @@ module.exports = class extends coreClass {
 									cb = () => {
 										this.logger.info("IO_MODULE", `There was no callback provided for ${name}.`);
 									}
+								else args.pop();
 
 								try { await this._validateHook(); } catch { return cb({status: 'failure', message: 'Lockdown'}); } 
 

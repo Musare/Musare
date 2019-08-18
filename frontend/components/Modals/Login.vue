@@ -61,7 +61,7 @@
 				>
 				<a
 					class="button is-github"
-					:href="$parent.serverDomain + '/auth/github/authorize'"
+					:href="serverDomain + '/auth/github/authorize'"
 					@click="githubRedirect()"
 				>
 					<div class="icon">
@@ -86,7 +86,8 @@ export default {
 	data() {
 		return {
 			email: "",
-			password: ""
+			password: "",
+			serverDomain: ""
 		};
 	},
 	methods: {
@@ -109,6 +110,11 @@ export default {
 		},
 		...mapActions("modals", ["closeModal"]),
 		...mapActions("user/auth", ["login"])
+	},
+	mounted() {
+		lofig.get("serverDomain", res => {
+			this.serverDomain = res;
+		});
 	}
 };
 </script>

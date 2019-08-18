@@ -68,7 +68,7 @@
 				>
 				<a
 					class="button is-github"
-					:href="$parent.serverDomain + '/auth/github/authorize'"
+					:href="serverDomain + '/auth/github/authorize'"
 					@click="githubRedirect()"
 				>
 					<div class="icon">
@@ -95,10 +95,15 @@ export default {
 			recaptcha: {
 				key: "",
 				token: ""
-			}
+			},
+			serverDomain: ""
 		};
 	},
 	mounted() {
+		lofig.get("serverDomain", res => {
+			this.serverDomain = res;
+		});
+
 		lofig.get("recaptcha", obj => {
 			this.recaptcha.key = obj.key;
 

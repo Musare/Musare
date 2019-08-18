@@ -109,7 +109,7 @@
 			<a
 				v-if="!github"
 				class="button is-github"
-				:href="`${$parent.serverDomain}/auth/github/link`"
+				:href="`${serverDomain}/auth/github/link`"
 			>
 				<div class="icon">
 					<img class="invert" src="/assets/social/github.svg" />
@@ -166,13 +166,18 @@ export default {
 			github: false,
 			setNewPassword: "",
 			passwordStep: 1,
-			passwordCode: ""
+			passwordCode: "",
+			serverDomain: ""
 		};
 	},
 	computed: mapState({
 		userId: state => state.user.auth.userId
 	}),
 	mounted() {
+		lofig.get("serverDomain", res => {
+			this.serverDomain = res;
+		});
+
 		io.getSocket(socket => {
 			this.socket = socket;
 			this.socket.emit("users.findBySession", res => {
@@ -181,7 +186,6 @@ export default {
 					this.password = this.user.password;
 					this.github = this.user.github;
 				} else {
-					this.$parent.isLoginActive = true;
 					Toast.methods.addToast(
 						"Your are currently not signed in",
 						3000

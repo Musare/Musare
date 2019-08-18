@@ -102,7 +102,6 @@ export default {
 		return {
 			position: 1,
 			maxPosition: 1,
-			songs: [],
 			searchQuery: "",
 			editing: {
 				index: 0,
@@ -121,6 +120,9 @@ export default {
 		},
 		...mapState("modals", {
 			modals: state => state.modals.admin
+		}),
+		...mapState("admin/songs", {
+			songs: state => state.songs
 		})
 	},
 	watch: {
@@ -143,41 +145,39 @@ export default {
 		getSet() {
 			this.socket.emit("songs.getSet", this.position, data => {
 				data.forEach(song => {
-					this.songs.push(song);
+					this.addSong(song);
 				});
 				this.position += 1;
 				if (this.maxPosition > this.position - 1) this.getSet();
 			});
 		},
 		init() {
-			this.songs = [];
 			this.socket.emit("songs.length", length => {
 				this.maxPosition = Math.ceil(length / 15);
 				this.getSet();
 			});
 			this.socket.emit("apis.joinAdminRoom", "songs", () => {});
 		},
-		...mapActions("admin/songs", ["stopVideo", "editSong"]),
+		...mapActions("admin/songs", [
+			"stopVideo",
+			"editSong",
+			"addSong",
+			"removeSong",
+			"updateSong"
+		]),
 		...mapActions("modals", ["openModal", "closeModal"])
 	},
 	mounted() {
 		io.getSocket(socket => {
 			this.socket = socket;
 			this.socket.on("event:admin.song.added", song => {
-				this.songs.push(song);
+				this.addSong(song);
 			});
 			this.socket.on("event:admin.song.removed", songId => {
-				this.songs = this.songs.filter(song => {
-					return song._id !== songId;
-				});
+				this.removeSong(songId);
 			});
 			this.socket.on("event:admin.song.updated", updatedSong => {
-				for (let i = 0; i < this.songs.length; i += 1) {
-					const song = this.songs[i];
-					if (song._id === updatedSong._id) {
-						this.songs.$set(i, updatedSong);
-					}
-				}
+				this.updateSong(updatedSong);
 			});
 
 			if (this.socket.connected) {
