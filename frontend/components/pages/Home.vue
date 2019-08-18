@@ -48,7 +48,6 @@
 							</div>
 						</div>
 						<router-link
-							href="#"
 							class="absolute-a"
 							:to="{
 								name: 'official',
@@ -131,7 +130,6 @@
 							</div>
 						</div>
 						<router-link
-							href="#"
 							class="absolute-a"
 							:to="{
 								name: 'community',
@@ -292,7 +290,7 @@ export default {
 html {
 	width: 100%;
 	height: 100%;
-	color: rgba(0, 0, 0, 0.87);
+	color: $dark-grey-2;
 
 	body {
 		width: 100%;
@@ -347,7 +345,7 @@ html {
 		.badge {
 			position: relative;
 			padding-right: 2px;
-			color: #38d227;
+			color: $green;
 			top: +5px;
 		}
 	}
@@ -387,6 +385,7 @@ html {
 	margin: 10px;
 	cursor: pointer;
 	height: 475px;
+	background: $white;
 
 	transition: all ease-in-out 0.2s;
 
@@ -423,7 +422,7 @@ html {
 	cursor: pointer;
 	transition: 0.25s ease color;
 	font-size: 30px;
-	color: #4a4a4a;
+	color: $dark-grey;
 }
 
 .community-button:hover {

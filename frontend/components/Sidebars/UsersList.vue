@@ -31,7 +31,7 @@
 	right: 0;
 	width: 300px;
 	height: 100vh;
-	background-color: #fff;
+	background-color: $white;
 	box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16),
 		0 2px 10px 0 rgba(0, 0, 0, 0.12);
 }
@@ -55,7 +55,7 @@
 	background-color: rgb(3, 169, 244);
 	text-align: center;
 	padding: 10px;
-	color: white;
+	color: $white;
 	font-weight: 600;
 }
 

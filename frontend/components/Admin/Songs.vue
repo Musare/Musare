@@ -222,10 +222,10 @@ body {
 		font-size: 20px;
 	}
 	.thumbLike {
-		color: #87d37c !important;
+		color: $green !important;
 	}
 	.thumbDislike {
-		color: #ec644b !important;
+		color: $red !important;
 	}
 }
 
@@ -240,6 +240,6 @@ td {
 }
 
 .is-primary:focus {
-	background-color: #029ce3 !important;
+	background-color: $primary-color !important;
 }
 </style>

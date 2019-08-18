@@ -117,24 +117,25 @@ export default {
 
 	.nav-menu.is-active {
 		.nav-item {
-			color: #333;
+			color: $dark-grey-2;
 
 			&:hover {
-				color: #333;
+				color: $dark-grey-2;
 			}
 		}
 	}
 
 	a.nav-item.is-tab:hover {
 		border-bottom: none;
-		border-top: solid 1px #ffffff;
+		border-top: solid 1px $white;
+		padding-top: 9px;
 	}
 
 	.nav-toggle {
 		height: 64px;
 
 		&.is-active span {
-			background-color: #333;
+			background-color: $dark-grey-2;
 		}
 	}
 
@@ -142,7 +143,7 @@ export default {
 		font-size: 2.1rem !important;
 		line-height: 64px !important;
 		padding: 0 20px;
-		color: #ffffff;
+		color: $white;
 		font-family: Pacifico, cursive;
 		filter: brightness(0) invert(1);
 
@@ -153,10 +154,10 @@ export default {
 
 	.nav-item {
 		font-size: 17px;
-		color: #ffffff;
+		color: $white;
 
 		&:hover {
-			color: #ffffff;
+			color: $white;
 		}
 	}
 	.admin strong {

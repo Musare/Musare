@@ -218,7 +218,7 @@ export default {
 @import "styles/global.scss";
 
 .save-changes {
-	color: #fff;
+	color: $white;
 }
 
 .tag:not(:last-child) {
@@ -226,6 +226,6 @@ export default {
 }
 
 .select:after {
-	border-color: #029ce3;
+	border-color: $primary-color;
 }
 </style>

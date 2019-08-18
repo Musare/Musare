@@ -117,15 +117,15 @@ export default {
 @import "styles/global.scss";
 
 .button.is-github {
-	background-color: #333;
-	color: #fff !important;
+	background-color: $dark-grey-2;
+	color: $white !important;
 }
 
 .is-github:focus {
-	background-color: #1a1a1a;
+	background-color: $dark-grey-3;
 }
 .is-primary:focus {
-	background-color: #029ce3 !important;
+	background-color: $primary-color !important;
 }
 
 .invert {
@@ -133,6 +133,6 @@ export default {
 }
 
 a {
-	color: #029ce3;
+	color: $primary-color;
 }
 </style>

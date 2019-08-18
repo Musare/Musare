@@ -385,7 +385,7 @@ export default {
 }
 
 .menu-list a:hover {
-	color: #000 !important;
+	color: $black !important;
 }
 
 li a {

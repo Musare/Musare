@@ -247,7 +247,7 @@ ul {
 }
 
 .custom-tag.purple {
-	border-bottom: 2px #90298c solid;
+	border-bottom: 2px $purple solid;
 }
 
 .thanks {

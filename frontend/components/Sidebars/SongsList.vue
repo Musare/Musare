@@ -191,7 +191,7 @@ export default {
 	right: 0;
 	width: 300px;
 	height: 100vh;
-	background-color: #fff;
+	background-color: $white;
 	box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16),
 		0 2px 10px 0 rgba(0, 0, 0, 0.12);
 }
@@ -217,7 +217,7 @@ export default {
 	background-color: rgb(3, 169, 244);
 	text-align: center;
 	padding: 10px;
-	color: white;
+	color: $white;
 	font-weight: 600;
 }
 
@@ -245,7 +245,7 @@ export default {
 	height: 40px;
 	border-radius: 0;
 	background: rgb(3, 169, 244);
-	color: #fff !important;
+	color: $white !important;
 	border: 0;
 	&:active,
 	&:focus {
@@ -265,7 +265,7 @@ export default {
 }
 
 .add-to-queue:focus {
-	background: #029ce3;
+	background: $primary-color;
 }
 
 .media-right {

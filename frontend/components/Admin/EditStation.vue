@@ -490,6 +490,6 @@ h5 {
 }
 
 .select:after {
-	border-color: #029ce3;
+	border-color: $primary-color;
 }
 </style>

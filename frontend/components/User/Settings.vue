@@ -357,6 +357,6 @@ export default {
 }
 
 a {
-	color: #029ce3 !important;
+	color: $primary-color !important;
 }
 </style>

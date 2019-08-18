@@ -147,6 +147,6 @@ export default {
 
 .skip-step {
 	background-color: #7e7e7e;
-	color: #fff;
+	color: $white;
 }
 </style>
