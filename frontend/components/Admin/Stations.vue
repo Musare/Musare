@@ -22,7 +22,7 @@
 							<span>
 								<router-link
 									:to="{
-										name: station.type,
+										name: 'station',
 										params: { id: station.name }
 									}"
 								>
