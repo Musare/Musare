@@ -82,21 +82,9 @@ const router = new VueRouter({
 			}
 		},
 		{
-			name: "official",
-			path: "/official/:id",
-			alias: "/:id",
-			component: () => import("./components/Station/Station.vue"),
-			meta: {
-				officialStation: true
-			}
-		},
-		{
-			name: "community",
-			path: "/community/:id",
-			component: () => import("./components/Station/Station.vue"),
-			meta: {
-				communityStation: true
-			}
+			name: "station",
+			path: "/:id",
+			component: () => import("./components/Station/Station.vue")
 		}
 	]
 });
@@ -150,29 +138,15 @@ router.beforeEach((to, from, next) => {
 		}
 	} else next();
 
-	if (from.name === "community" || from.name === "official") {
+	if (from.name === "station") {
 		document.title = "Musare";
 	}
 
-	if (to.meta.officialStation) {
+	if (to.name === "station") {
 		io.getSocket(socket => {
 			socket.emit("stations.findByName", to.params.id, res => {
 				if (res.status === "success") {
-					if (res.data.type === "community")
-						next({ path: `/community/${to.params.id}` });
-					else next();
-				}
-			});
-		});
-	}
-
-	if (to.meta.communityStation) {
-		io.getSocket(socket => {
-			socket.emit("stations.findByName", to.params.id, res => {
-				if (res.status === "success") {
-					if (res.data.type === "official")
-						next({ path: `/official/${to.params.id}` });
-					else next();
+					next();
 				}
 			});
 		});

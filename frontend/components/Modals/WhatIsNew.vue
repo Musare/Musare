@@ -159,7 +159,7 @@ export default {
 		padding: 12px;
 		text-transform: uppercase;
 		font-weight: bold;
-		color: #fff;
+		color: $white;
 	}
 
 	.sect-head-features {

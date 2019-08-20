@@ -263,7 +263,7 @@ export default {
 		font-size: 2.1rem !important;
 		line-height: 64px !important;
 		padding: 0 20px;
-		color: #ffffff;
+		color: $white;
 		font-family: Pacifico, cursive;
 		filter: brightness(0) invert(1);
 
@@ -274,11 +274,11 @@ export default {
 }
 
 a.nav-item {
-	color: #ffffff;
+	color: $white;
 	font-size: 17px;
 
 	&:hover {
-		color: #ffffff;
+		color: $white;
 	}
 
 	padding: 0 12px;
@@ -295,11 +295,11 @@ a.nav-item {
 
 a.nav-item.is-tab:hover {
 	border-bottom: none;
-	border-top: solid 1px #ffffff;
+	border-top: solid 1px $white;
 }
 
 .admin strong {
-	color: #9d42b1;
+	color: $purple;
 }
 
 .grouped {
@@ -319,7 +319,7 @@ a.nav-item.is-tab:hover {
 
 @media screen and (max-width: 998px) {
 	.nav-menu {
-		background-color: white;
+		background-color: $white;
 		box-shadow: 0 4px 7px rgba(10, 10, 10, 0.1);
 		left: 0;
 		display: none;
@@ -407,7 +407,7 @@ a.nav-item.is-tab:hover {
 .control-sidebar .sidebar-item {
 	font-size: 2rem;
 	height: 50px;
-	color: white;
+	color: $white;
 	-webkit-box-align: center;
 	-ms-flex-align: center;
 	align-items: center;
@@ -434,7 +434,7 @@ a.nav-item.is-tab:hover {
 	width: 160px;
 	font-size: 12px;
 	background-color: rgba(3, 169, 244, 0.8);
-	color: #fff;
+	color: $white;
 	text-align: center;
 	border-radius: 6px;
 	padding: 5px;

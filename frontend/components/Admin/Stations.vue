@@ -19,7 +19,16 @@
 							<span>{{ station._id }}</span>
 						</td>
 						<td>
-							<span>{{ station.name }}</span>
+							<span>
+								<router-link
+									:to="{
+										name: 'station',
+										params: { id: station.name }
+									}"
+								>
+									{{ station.name }}
+								</router-link>
+							</span>
 						</td>
 						<td>
 							<span>{{ station.type }}</span>
@@ -31,7 +40,13 @@
 							<span>{{ station.description }}</span>
 						</td>
 						<td>
+							<span
+								v-if="station.type === 'official'"
+								title="Musare"
+								>Musare</span
+							>
 							<user-id-to-username
+								v-else
 								:userId="station.owner"
 								:link="true"
 							/>
@@ -345,7 +360,7 @@ td {
 }
 
 .is-info:focus {
-	background-color: #0398db;
+	background-color: $primary-color;
 }
 
 .genre-wrapper {
@@ -354,6 +369,6 @@ td {
 }
 
 .card-footer-item {
-	color: #029ce3;
+	color: $primary-color;
 }
 </style>

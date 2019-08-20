@@ -345,7 +345,7 @@ td {
 }
 
 .is-info:focus {
-	background-color: #0398db;
+	background-color: $primary-color;
 }
 
 .card-footer-item {

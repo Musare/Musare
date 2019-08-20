@@ -1246,7 +1246,7 @@ export default {
 	justify-content: center;
 
 	p {
-		color: white;
+		color: $white;
 		font-size: 26px;
 		text-align: center;
 	}
@@ -1286,7 +1286,7 @@ export default {
 }
 
 .stationDisplayName {
-	color: white !important;
+	color: $white !important;
 }
 
 .add-to-playlist {
@@ -1301,7 +1301,7 @@ export default {
 	position: fixed;
 	right: 0;
 	width: 350px;
-	background-color: white;
+	background-color: $white;
 	box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16),
 		0 2px 10px 0 rgba(0, 0, 0, 0.12);
 	.slideout-header {
@@ -1310,7 +1310,7 @@ export default {
 		margin: 0;
 		padding-top: 5px;
 		padding-bottom: 7px;
-		color: white;
+		color: $white;
 	}
 
 	.slideout-content {
@@ -1371,7 +1371,7 @@ export default {
 			background-color: rgb(3, 169, 244);
 			text-align: center;
 			padding: 10px;
-			color: white;
+			color: $white;
 			font-weight: 600;
 		}
 
@@ -1400,7 +1400,7 @@ export default {
 			height: 40px;
 			border-radius: 0;
 			background: rgb(3, 169, 244);
-			color: #fff !important;
+			color: $white !important;
 			border: 0;
 			&:active,
 			&:focus {
@@ -1409,7 +1409,7 @@ export default {
 		}
 
 		.add-to-queue:focus {
-			background: #029ce3;
+			background: $primary-color;
 		}
 
 		.media-right {
@@ -1444,7 +1444,7 @@ export default {
 		height: 5.2px;
 		cursor: pointer;
 		box-shadow: 0;
-		background: #c2c0c2;
+		background: $light-grey-2;
 		border-radius: 0;
 		border: 0;
 	}
@@ -1466,7 +1466,7 @@ export default {
 		height: 5.2px;
 		cursor: pointer;
 		box-shadow: 0;
-		background: #c2c0c2;
+		background: $light-grey-2;
 		border-radius: 0;
 		border: 0;
 	}
@@ -1488,19 +1488,19 @@ export default {
 		height: 5.2px;
 		cursor: pointer;
 		box-shadow: 0;
-		background: #c2c0c2;
+		background: $light-grey-2;
 		border-radius: 1.3px;
 	}
 
 	input[type="range"]::-ms-fill-lower {
-		background: #c2c0c2;
+		background: $light-grey-2;
 		border: 0;
 		border-radius: 0;
 		box-shadow: 0;
 	}
 
 	input[type="range"]::-ms-fill-upper {
-		background: #c2c0c2;
+		background: $light-grey-2;
 		border: 0;
 		border-radius: 0;
 		box-shadow: 0;
@@ -1564,12 +1564,12 @@ export default {
 
 #thumbs_up:hover,
 #thumbs_up.liked {
-	color: #87d37c !important;
+	color: $green !important;
 }
 
 #thumbs_down:hover,
 #thumbs_down.disliked {
-	color: #ec644b !important;
+	color: $red !important;
 }
 
 #song-thumbnail {
@@ -1670,7 +1670,7 @@ h6 {
 }
 
 .white {
-	background-color: #ffffff !important;
+	background-color: $white !important;
 }
 
 .btn-search {

@@ -232,6 +232,6 @@ td {
 }
 
 .is-primary:focus {
-	background-color: #029ce3 !important;
+	background-color: $primary-color !important;
 }
 </style>

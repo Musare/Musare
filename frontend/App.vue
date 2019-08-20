@@ -115,10 +115,6 @@ export default {
 <style lang="scss">
 @import "styles/global.scss";
 
-.center {
-	text-align: center;
-}
-
 #toast-container {
 	z-index: 10000 !important;
 }
@@ -141,8 +137,8 @@ html {
 
 .alert {
 	padding: 20px;
-	color: white;
-	background-color: red;
+	color: $white;
+	background-color: $red;
 	position: fixed;
 	top: 50px;
 	right: 50px;
@@ -161,9 +157,9 @@ html {
 		text-align: center;
 		padding: 7.5px 6px;
 		border-radius: 2px;
-		background-color: #323232;
+		background-color: $dark-grey;
 		font-size: 0.9em;
-		color: #fff;
+		color: $white;
 		content: attr(data-tooltip);
 		opacity: 0;
 		transition: all 0.2s ease-in-out 0.1s;
@@ -242,9 +238,5 @@ button.delete:focus {
 
 .tag {
 	padding-right: 6px !important;
-}
-
-.button.is-success {
-	background-color: #00b16a !important;
 }
 </style>

@@ -104,7 +104,7 @@ export default {
 	border-radius: 33% 33% 0% 0% / 7% 7% 0% 0%;
 	box-shadow: 0 4px 8px 0 rgba(3, 169, 244, 0.65),
 		0 6px 20px 0 rgba(3, 169, 244, 0.4);
-	background-color: #ffffff;
+	background-color: $white;
 	width: 100%;
 
 	.musareFooterLogo {

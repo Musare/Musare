@@ -5,61 +5,7 @@
 			<div class="content-wrapper">
 				<div class="group">
 					<div class="group-title">
-						Official Stations
-					</div>
-					<router-link
-						v-for="(station, index) in stations.official"
-						:key="index"
-						class="card station-card"
-						:to="{ name: 'official', params: { id: station.name } }"
-						:class="{ isPrivate: station.privacy === 'private' }"
-					>
-						<div class="card-image">
-							<figure class="image is-square">
-								<img
-									:src="station.currentSong.thumbnail"
-									onerror="this.src='/assets/notes-transparent.png'"
-								/>
-							</figure>
-						</div>
-						<div class="card-content">
-							<div class="media">
-								<div class="media-left displayName">
-									<h5>{{ station.displayName }}</h5>
-								</div>
-							</div>
-
-							<div class="content">
-								{{ station.description }}
-							</div>
-
-							<div class="under-content">
-								<span class="official"
-									><i class="badge material-icons"
-										>verified_user</i
-									>Official</span
-								>
-								<i
-									v-if="station.privacy !== 'public'"
-									class="material-icons right-icon"
-									title="This station is not visible to other users."
-									>lock</i
-								>
-							</div>
-						</div>
-						<router-link
-							href="#"
-							class="absolute-a"
-							:to="{
-								name: 'official',
-								params: { id: station.name }
-							}"
-						/>
-					</router-link>
-				</div>
-				<div class="group">
-					<div class="group-title">
-						Community Stations&nbsp;
+						Stations&nbsp;
 						<a
 							v-if="loggedIn"
 							href="#"
@@ -76,10 +22,10 @@
 						</a>
 					</div>
 					<router-link
-						v-for="(station, index) in stations.community"
+						v-for="(station, index) in filteredStations"
 						:key="index"
 						:to="{
-							name: 'community',
+							name: 'station',
 							params: { id: station.name }
 						}"
 						class="card station-card"
@@ -99,7 +45,14 @@
 						<div class="card-content">
 							<div class="media">
 								<div class="media-left displayName">
-									<h5>{{ station.displayName }}</h5>
+									<h5>
+										{{ station.displayName }}
+										<i
+											v-if="station.type === 'official'"
+											class="badge material-icons"
+											>verified_user</i
+										>
+									</h5>
 								</div>
 							</div>
 
@@ -110,7 +63,13 @@
 								<span class="hostedby"
 									>Hosted by
 									<span class="host">
+										<span
+											v-if="station.type === 'official'"
+											title="Musare"
+											>Musare</span
+										>
 										<user-id-to-username
+											v-else
 											:userId="station.owner"
 											:link="true"
 										/>
@@ -123,7 +82,10 @@
 									>lock</i
 								>
 								<i
-									v-if="isOwner(station)"
+									v-if="
+										station.type === 'community' &&
+											isOwner(station)
+									"
 									class="material-icons right-icon"
 									title="This is your station."
 									>home</i
@@ -131,10 +93,9 @@
 							</div>
 						</div>
 						<router-link
-							href="#"
 							class="absolute-a"
 							:to="{
-								name: 'community',
+								name: 'station',
 								params: { id: station.name }
 							}"
 						/>
@@ -163,17 +124,25 @@ export default {
 			recaptcha: {
 				key: ""
 			},
-			stations: {
-				official: [],
-				community: []
-			}
+			stations: [],
+			searchQuery: ""
 		};
 	},
-	computed: mapState({
-		modals: state => state.modals.modals.home,
-		loggedIn: state => state.user.auth.loggedIn,
-		userId: state => state.user.auth.userId
-	}),
+	computed: {
+		filteredStations() {
+			return this.stations.filter(
+				station =>
+					JSON.stringify(Object.values(station)).indexOf(
+						this.searchQuery
+					) !== -1
+			);
+		},
+		...mapState({
+			modals: state => state.modals.modals.home,
+			loggedIn: state => state.user.auth.loggedIn,
+			userId: state => state.user.auth.userId
+		})
+	},
 	mounted() {
 		io.getSocket(socket => {
 			this.socket = socket;
@@ -191,19 +160,12 @@ export default {
 				if (station.currentSong && !station.currentSong.thumbnail)
 					station.currentSong.thumbnail =
 						"/assets/notes-transparent.png";
-				this.stations[station.type].push(station);
+				this.stations.push(station);
 			});
 			this.socket.on(
 				"event:userCount.updated",
 				(stationId, userCount) => {
-					this.stations.official.forEach(s => {
-						const station = s;
-						if (station._id === stationId) {
-							station.userCount = userCount;
-						}
-					});
-
-					this.stations.community.forEach(s => {
+					this.stations.forEach(s => {
 						const station = s;
 						if (station._id === stationId) {
 							station.userCount = userCount;
@@ -213,20 +175,7 @@ export default {
 			);
 			this.socket.on("event:station.nextSong", (stationId, song) => {
 				let newSong = song;
-				this.stations.official.forEach(s => {
-					const station = s;
-					if (station._id === stationId) {
-						if (!newSong)
-							newSong = {
-								thumbnail: "/assets/notes-transparent.png"
-							};
-						if (newSong && !newSong.thumbnail)
-							newSong.thumbnail = "/assets/notes-transparent.png";
-						station.currentSong = newSong;
-					}
-				});
-
-				this.stations.community.forEach(s => {
+				this.stations.forEach(s => {
 					const station = s;
 					if (station._id === stationId) {
 						if (!newSong)
@@ -244,8 +193,7 @@ export default {
 	methods: {
 		init() {
 			this.socket.emit("stations.index", data => {
-				this.stations.community = [];
-				this.stations.official = [];
+				this.stations = [];
 				if (data.status === "success")
 					data.stations.forEach(s => {
 						const station = s;
@@ -259,9 +207,7 @@ export default {
 						)
 							station.currentSong.thumbnail =
 								"/assets/notes-transparent.png";
-						if (station.type === "official")
-							this.stations.official.push(station);
-						else this.stations.community.push(station);
+						this.stations.push(station);
 					});
 			});
 			this.socket.emit("apis.joinRoom", "home", () => {});
@@ -292,7 +238,7 @@ export default {
 html {
 	width: 100%;
 	height: 100%;
-	color: rgba(0, 0, 0, 0.87);
+	color: $dark-grey-2;
 
 	body {
 		width: 100%;
@@ -343,13 +289,6 @@ html {
 		color: $primary-color;
 		position: relative;
 		top: -5px;
-
-		.badge {
-			position: relative;
-			padding-right: 2px;
-			color: #38d227;
-			top: +5px;
-		}
 	}
 
 	.hostedby {
@@ -387,6 +326,7 @@ html {
 	margin: 10px;
 	cursor: pointer;
 	height: 475px;
+	background: $white;
 
 	transition: all ease-in-out 0.2s;
 
@@ -423,7 +363,7 @@ html {
 	cursor: pointer;
 	transition: 0.25s ease color;
 	font-size: 30px;
-	color: #4a4a4a;
+	color: $dark-grey;
 }
 
 .community-button:hover {
@@ -495,5 +435,12 @@ html {
 	-webkit-line-clamp: 1;
 	line-height: 30px;
 	max-height: 30px;
+
+	.badge {
+		position: relative;
+		padding-right: 2px;
+		color: $green;
+		top: +5px;
+	}
 }
 </style>

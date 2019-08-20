@@ -720,7 +720,7 @@ input[type="range"]::-webkit-slider-runnable-track {
 	height: 5.2px;
 	cursor: pointer;
 	box-shadow: 0;
-	background: #c2c0c2;
+	background: $light-grey-2;
 	border-radius: 0;
 	border: 0;
 }
@@ -742,7 +742,7 @@ input[type="range"]::-moz-range-track {
 	height: 5.2px;
 	cursor: pointer;
 	box-shadow: 0;
-	background: #c2c0c2;
+	background: $light-grey-2;
 	border-radius: 0;
 	border: 0;
 }
@@ -764,19 +764,19 @@ input[type="range"]::-ms-track {
 	height: 5.2px;
 	cursor: pointer;
 	box-shadow: 0;
-	background: #c2c0c2;
+	background: $light-grey-2;
 	border-radius: 1.3px;
 }
 
 input[type="range"]::-ms-fill-lower {
-	background: #c2c0c2;
+	background: $light-grey-2;
 	border: 0;
 	border-radius: 0;
 	box-shadow: 0;
 }
 
 input[type="range"]::-ms-fill-upper {
-	background: #c2c0c2;
+	background: $light-grey-2;
 	border: 0;
 	border-radius: 0;
 	box-shadow: 0;
@@ -843,7 +843,7 @@ h5 {
 }
 
 .save-changes {
-	color: #fff;
+	color: $white;
 }
 
 .tag:not(:last-child) {
