@@ -1024,6 +1024,7 @@ export default {
 			"updateUserCount",
 			"updateUsers",
 			"updateCurrentSong",
+			"updatePreviousSong",
 			"updateSongsList",
 			"updatePaused",
 			"updateNoSong"
