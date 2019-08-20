@@ -165,14 +165,14 @@ cache.sub('station.remove', stationId => {
 });
 
 cache.sub('station.create', stationId => {
-	stations.initializeStation(stationId, (err, station) => {
+	stations.initializeStation(stationId, async (err, station) => {
 		station.userCount = usersPerStationCount[stationId] || 0;
 		if (err) console.error(err);
 		utils.emitToRoom('admin.stations', 'event:admin.station.added', station);
 		// TODO If community, check if on whitelist
 		if (station.privacy === 'public') utils.emitToRoom('home', "event:stations.created", station);
 		else {
-			let sockets = utils.getRoomSockets('home');
+			let sockets = await utils.getRoomSockets('home');
 			for (let socketId in sockets) {
 				let socket = sockets[socketId];
 				let session = sockets[socketId].session;

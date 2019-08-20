@@ -564,9 +564,9 @@ module.exports = {
 	 * @param {Function} cb - gets called with the result
 	 * @param {String} userId - the userId automatically added by hooks
 	 */
-	updateEmail: hooks.loginRequired((session, updatingUserId, newEmail, cb, userId) => {
+	updateEmail: hooks.loginRequired(async (session, updatingUserId, newEmail, cb, userId) => {
 		newEmail = newEmail.toLowerCase();
-		let verificationToken = utils.generateRandomString(64);
+		let verificationToken = await utils.generateRandomString(64);
 		async.waterfall([
 			(next) => {
 				if (updatingUserId === userId) return next(null, true);
@@ -719,8 +719,8 @@ module.exports = {
 	 * @param {Function} cb - gets called with the result
 	 * @param {String} userId - the userId automatically added by hooks
 	 */
-	requestPassword: hooks.loginRequired((session, cb, userId) => {
-		let code = utils.generateRandomString(8);
+	requestPassword: hooks.loginRequired(async (session, cb, userId) => {
+		let code = await utils.generateRandomString(8);
 		async.waterfall([
 			(next) => {
 				db.models.user.findOne({_id: userId}, next);
@@ -921,8 +921,8 @@ module.exports = {
 	 * @param {String} email - the email of the user that requests a password reset
 	 * @param {Function} cb - gets called with the result
 	 */
-	requestPasswordReset: (session, email, cb) => {
-		let code = utils.generateRandomString(8);
+	requestPasswordReset: async (session, email, cb) => {
+		let code = await utils.generateRandomString(8);
 		async.waterfall([
 			(next) => {
 				if (!email || typeof email !== 'string') return next('Invalid email.');
