@@ -85,14 +85,18 @@ module.exports = class extends coreClass {
 					}, 'Invalid display name.');
 		
 		
-					this.schemas.station.path('owner').validate((owner, callback) => {
-						this.models.station.countDocuments({ owner: owner }, (err, c) => {
-							callback(!(err || c >= 3));
-						});
-					}, 'User already has 3 stations.');
+					this.schemas.station.path('owner').validate({
+						isAsync: true,
+						validator: (owner, callback) => {
+							this.models.station.countDocuments({ owner: owner }, (err, c) => {
+								callback(!(err || c >= 3))
+							});
+						},
+						message: 'User already has 3 stations.'
+					});
 		
 					/*
-					this.schemas.station.path('queue').validate((queue, callback) => {
+					this.schemas.station.path('queue').validate((queue, callback) => { //Callback no longer works, see station max count
 						let totalDuration = 0;
 						queue.forEach((song) => {
 							totalDuration += song.duration;
@@ -100,7 +104,7 @@ module.exports = class extends coreClass {
 						return callback(totalDuration <= 3600 * 3);
 					}, 'The max length of the queue is 3 hours.');
 		
-					this.schemas.station.path('queue').validate((queue, callback) => {
+					this.schemas.station.path('queue').validate((queue, callback) => { //Callback no longer works, see station max count
 						if (queue.length === 0) return callback(true);
 						let totalDuration = 0;
 						const userId = queue[queue.length - 1].requestedBy;
@@ -112,7 +116,7 @@ module.exports = class extends coreClass {
 						return callback(totalDuration <= 900);
 					}, 'The max length of songs per user is 15 minutes.');
 		
-					this.schemas.station.path('queue').validate((queue, callback) => {
+					this.schemas.station.path('queue').validate((queue, callback) => { //Callback no longer works, see station max count
 						if (queue.length === 0) return callback(true);
 						let totalSongs = 0;
 						const userId = queue[queue.length - 1].requestedBy;
