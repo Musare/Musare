@@ -60,6 +60,9 @@ export default {
 	computed: {
 		...mapState("modals", {
 			modals: state => state.modals.station
+		}),
+		...mapState({
+			station: state => state.station.station
 		})
 	},
 	methods: {
