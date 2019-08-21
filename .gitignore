@@ -20,6 +20,7 @@ backend/config/default.json
 
 # Frontend
 frontend/yarn-error.log
+frontend/bundle-stats.json
 frontend/node_modules/
 frontend/dist/build/
 !frontend/dist/lofig.min.js

@@ -9,6 +9,7 @@
   "repository": "https://github.com/Musare/MusareNode",
   "scripts": {
     "lint": "npx eslint . --ext .js,.vue",
+    "bundle-analyse": "webpack --config webpack.prod.js --profile --json > bundle-stats.json && npx webpack-bundle-analyzer bundle-stats.json",
     "dev": "webpack-dev-server --config webpack.dev.js",
     "prod": "webpack --config webpack.prod.js",
     "test": "snyk test"
@@ -37,6 +38,7 @@
     "vue-style-loader": "^4.1.2",
     "vue-template-compiler": "^2.6.10",
     "webpack": "^4.35.3",
+    "webpack-bundle-analyzer": "^3.4.1",
     "webpack-cli": "^3.3.5",
     "webpack-dev-server": "^3.7.2"
   },
