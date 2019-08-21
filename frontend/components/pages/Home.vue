@@ -36,7 +36,24 @@
 					>
 						<div class="card-image">
 							<figure class="image is-square">
+								<div
+									v-if="station.currentSong.ytThumbnail"
+									class="ytThumbnailBg"
+									v-bind:style="{
+										'background-image':
+											'url(' +
+											station.currentSong.ytThumbnail +
+											')'
+									}"
+								></div>
 								<img
+									v-if="station.currentSong.ytThumbnail"
+									:src="station.currentSong.ytThumbnail"
+									onerror="this.src='/assets/notes-transparent.png'"
+									class="ytThumbnail"
+								/>
+								<img
+									v-else
 									:src="station.currentSong.thumbnail"
 									onerror="this.src='/assets/notes-transparent.png'"
 								/>
@@ -158,8 +175,7 @@ export default {
 						thumbnail: "/assets/notes-transparent.png"
 					};
 				if (station.currentSong && !station.currentSong.thumbnail)
-					station.currentSong.thumbnail =
-						"/assets/notes-transparent.png";
+					station.currentSong.ytThumbnail = `https://img.youtube.com/vi/${station.currentSong.songId}/mqdefault.jpg`;
 				this.stations.push(station);
 			});
 			this.socket.on(
@@ -183,7 +199,7 @@ export default {
 								thumbnail: "/assets/notes-transparent.png"
 							};
 						if (newSong && !newSong.thumbnail)
-							newSong.thumbnail = "/assets/notes-transparent.png";
+							newSong.ytThumbnail = `https://img.youtube.com/vi/${newSong.songId}/mqdefault.jpg`;
 						station.currentSong = newSong;
 					}
 				});
@@ -205,8 +221,7 @@ export default {
 							station.currentSong &&
 							!station.currentSong.thumbnail
 						)
-							station.currentSong.thumbnail =
-								"/assets/notes-transparent.png";
+							station.currentSong.ytThumbnail = `https://img.youtube.com/vi/${station.currentSong.songId}/mqdefault.jpg`;
 						this.stations.push(station);
 					});
 			});
@@ -342,6 +357,30 @@ html {
 			-webkit-line-clamp: 3;
 			line-height: 20px;
 			max-height: 60px;
+		}
+	}
+
+	.card-image {
+		height: 300px;
+		width: 300px;
+		overflow: hidden;
+		.image {
+			.ytThumbnailBg {
+				background: url("/assets/notes-transparent.png") no-repeat
+					center center;
+				background-size: cover;
+				height: 300px;
+				width: 300px;
+				position: absolute;
+				top: 0;
+				filter: blur(5px);
+			}
+			.ytThumbnail {
+				height: auto;
+				top: 0;
+				margin-top: auto;
+				margin-bottom: auto;
+			}
 		}
 	}
 }
