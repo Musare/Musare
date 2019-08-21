@@ -26,38 +26,26 @@ import WhatIsNew from "./components/Modals/WhatIsNew.vue";
 import MobileAlert from "./components/Modals/MobileAlert.vue";
 import LoginModal from "./components/Modals/Login.vue";
 import RegisterModal from "./components/Modals/Register.vue";
-import auth from "./auth";
 import io from "./io";
 
 export default {
 	replace: false,
 	data() {
 		return {
-			banned: false,
-			ban: {},
-			loggedIn: false,
-			role: "",
-			username: "",
-			userId: "",
 			serverDomain: "",
 			socketConnected: true
 		};
 	},
 	computed: mapState({
+		loggedIn: state => state.user.auth.loggedIn,
+		role: state => state.user.auth.role,
+		username: state => state.user.auth.username,
+		userId: state => state.user.auth.userId,
+		banned: state => state.user.auth.banned,
 		modals: state => state.modals.modals,
 		currentlyActive: state => state.modals.currentlyActive
 	}),
 	methods: {
-		logout() {
-			const _this = this;
-			_this.socket.emit("users.logout", result => {
-				if (result.status === "success") {
-					document.cookie =
-						"SID=;expires=Thu, 01 Jan 1970 00:00:01 GMT;";
-					window.location.reload();
-				} else Toast.methods.addToast(result.message, 4000);
-			});
-		},
 		submitOnEnter: (cb, event) => {
 			if (event.which === 13) cb();
 		},
@@ -73,49 +61,37 @@ export default {
 				this.closeCurrentModal();
 		};
 
-		const _this = this;
 		if (localStorage.getItem("github_redirect")) {
 			this.$router.go(localStorage.getItem("github_redirect"));
 			localStorage.removeItem("github_redirect");
 		}
-		auth.isBanned((banned, ban) => {
-			_this.ban = ban;
-			_this.banned = banned;
-		});
-		auth.getStatus((authenticated, role, username, userId) => {
-			_this.socket = window.socket;
-			_this.loggedIn = authenticated;
-			_this.role = role;
-			_this.username = username;
-			_this.userId = userId;
-		});
 		io.onConnect(true, () => {
-			_this.socketConnected = true;
+			this.socketConnected = true;
 		});
 		io.onConnectError(true, () => {
-			_this.socketConnected = false;
+			this.socketConnected = false;
 		});
 		io.onDisconnect(true, () => {
-			_this.socketConnected = false;
+			this.socketConnected = false;
 		});
 		lofig.get("serverDomain", res => {
-			_this.serverDomain = res;
+			this.serverDomain = res;
 		});
-		_this.$router.onReady(() => {
-			if (_this.$route.query.err) {
-				let { err } = _this.$route.query;
+		this.$router.onReady(() => {
+			if (this.$route.query.err) {
+				let { err } = this.$route.query;
 				err = err
 					.replace(new RegExp("<", "g"), "&lt;")
 					.replace(new RegExp(">", "g"), "&gt;");
-				_this.$router.push({ query: {} });
+				this.$router.push({ query: {} });
 				Toast.methods.addToast(err, 20000);
 			}
-			if (_this.$route.query.msg) {
-				let { msg } = _this.$route.query;
+			if (this.$route.query.msg) {
+				let { msg } = this.$route.query;
 				msg = msg
 					.replace(new RegExp("<", "g"), "&lt;")
 					.replace(new RegExp(">", "g"), "&gt;");
-				_this.$router.push({ query: {} });
+				this.$router.push({ query: {} });
 				Toast.methods.addToast(msg, 20000);
 			}
 		});
@@ -137,9 +113,7 @@ export default {
 </script>
 
 <style lang="scss">
-.center {
-	text-align: center;
-}
+@import "styles/global.scss";
 
 #toast-container {
 	z-index: 10000 !important;
@@ -163,8 +137,8 @@ html {
 
 .alert {
 	padding: 20px;
-	color: white;
-	background-color: red;
+	color: $white;
+	background-color: $red;
 	position: fixed;
 	top: 50px;
 	right: 50px;
@@ -183,9 +157,9 @@ html {
 		text-align: center;
 		padding: 7.5px 6px;
 		border-radius: 2px;
-		background-color: #323232;
+		background-color: $dark-grey;
 		font-size: 0.9em;
-		color: #fff;
+		color: $white;
 		content: attr(data-tooltip);
 		opacity: 0;
 		transition: all 0.2s ease-in-out 0.1s;
@@ -256,7 +230,7 @@ html {
 }
 .input:focus,
 .input:active {
-	border-color: #03a9f4 !important;
+	border-color: $primary-color !important;
 }
 button.delete:focus {
 	background-color: rgba(10, 10, 10, 0.3);
@@ -264,9 +238,5 @@ button.delete:focus {
 
 .tag {
 	padding-right: 6px !important;
-}
-
-.button.is-success {
-	background-color: #00b16a !important;
 }
 </style>

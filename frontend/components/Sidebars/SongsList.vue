@@ -1,18 +1,18 @@
 <template>
 	<div class="sidebar" transition="slide">
 		<div class="inner-wrapper">
-			<div v-if="$parent.type === 'community'" class="title">
+			<div v-if="station.type === 'community'" class="title">
 				Queue
 			</div>
 			<div v-else class="title">
 				Playlist
 			</div>
 
-			<article v-if="!$parent.noSong" class="media">
-				<figure v-if="$parent.currentSong.thumbnail" class="media-left">
+			<article v-if="!noSong" class="media">
+				<figure v-if="currentSong.thumbnail" class="media-left">
 					<p class="image is-64x64">
 						<img
-							:src="$parent.currentSong.thumbnail"
+							:src="currentSong.thumbnail"
 							onerror="this.src='/assets/notes-transparent.png'"
 						/>
 					</p>
@@ -21,22 +21,22 @@
 					<div class="content">
 						<p>
 							Current Song:
-							<strong>{{ $parent.currentSong.title }}</strong>
+							<strong>{{ currentSong.title }}</strong>
 							<br />
-							<small>{{ $parent.currentSong.artists }}</small>
+							<small>{{ currentSong.artists }}</small>
 						</p>
 					</div>
 				</div>
 				<div class="media-right">
-					{{ $parent.formatTime($parent.currentSong.duration) }}
+					{{ $parent.formatTime(currentSong.duration) }}
 				</div>
 			</article>
-			<p v-if="$parent.noSong" class="center">
+			<p v-if="noSong" class="center">
 				There is currently no song playing.
 			</p>
 
 			<article
-				v-for="(song, index) in $parent.songsList"
+				v-for="(song, index) in songsList"
 				:key="index"
 				class="media"
 			>
@@ -49,8 +49,8 @@
 						<small>{{ song.artists.join(", ") }}</small>
 						<div
 							v-if="
-								$parent.type === 'community' &&
-									$parent.station.partyMode === true
+								station.type === 'community' &&
+									station.partyMode === true
 							"
 						>
 							<small>
@@ -78,16 +78,16 @@
 			</article>
 			<div
 				v-if="
-					$parent.type === 'community' &&
-						$parent.$parent.loggedIn &&
-						$parent.station.partyMode === true
+					station.type === 'community' &&
+						loggedIn &&
+						station.partyMode === true
 				"
 			>
 				<button
 					v-if="
-						($parent.station.locked && isOwnerOnly()) ||
-							!$parent.station.locked ||
-							($parent.station.locked &&
+						(station.locked && isOwnerOnly()) ||
+							!station.locked ||
+							(station.locked &&
 								isAdminOnly() &&
 								dismissedWarning)
 					"
@@ -103,7 +103,7 @@
 				</button>
 				<button
 					v-if="
-						$parent.station.locked &&
+						station.locked &&
 							isAdminOnly() &&
 							!isOwnerOnly() &&
 							!dismissedWarning
@@ -114,11 +114,7 @@
 					THIS STATION'S QUEUE IS LOCKED.
 				</button>
 				<button
-					v-if="
-						$parent.station.locked &&
-							!isAdminOnly() &&
-							!isOwnerOnly()
-					"
+					v-if="station.locked && !isAdminOnly() && !isOwnerOnly()"
 					class="button add-to-queue add-to-queue-disabled"
 				>
 					THIS STATION'S QUEUE IS LOCKED.
@@ -129,7 +125,7 @@
 </template>
 
 <script>
-import { mapActions } from "vuex";
+import { mapState, mapActions } from "vuex";
 
 import { Toast } from "vue-roaster";
 
@@ -141,23 +137,26 @@ export default {
 			dismissedWarning: false
 		};
 	},
+	computed: mapState({
+		loggedIn: state => state.user.auth.loggedIn,
+		userId: state => state.user.auth.userId,
+		role: state => state.user.auth.role,
+		station: state => state.station.station,
+		currentSong: state => state.station.currentSong,
+		songsList: state => state.station.songsList,
+		noSong: state => state.station.noSong
+	}),
 	methods: {
 		isOwnerOnly() {
-			return (
-				this.$parent.$parent.loggedIn &&
-				this.$parent.$parent.userId === this.$parent.station.owner
-			);
+			return this.loggedIn && this.userId === this.station.owner;
 		},
 		isAdminOnly() {
-			return (
-				this.$parent.$parent.loggedIn &&
-				this.$parent.$parent.role === "admin"
-			);
+			return this.loggedIn && this.role === "admin";
 		},
 		removeFromQueue(songId) {
 			window.socket.emit(
 				"stations.removeFromQueue",
-				this.$parent.station._id,
+				this.station._id,
 				songId,
 				res => {
 					if (res.status === "success") {
@@ -172,9 +171,9 @@ export default {
 		...mapActions("modals", ["openModal"])
 	},
 	mounted() {
-		/* let _this = this;
+		/*
 			io.getSocket((socket) => {
-				_this.socket = socket;
+				this.socket = socket;
 
 			}); */
 	},
@@ -183,6 +182,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 .sidebar {
 	position: fixed;
 	z-index: 1;
@@ -190,13 +191,13 @@ export default {
 	right: 0;
 	width: 300px;
 	height: 100vh;
-	background-color: #fff;
+	background-color: $white;
 	box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16),
 		0 2px 10px 0 rgba(0, 0, 0, 0.12);
 }
 
 .inner-wrapper {
-	top: 64px;
+	top: 60px;
 	position: relative;
 	overflow: auto;
 	height: 100%;
@@ -216,7 +217,7 @@ export default {
 	background-color: rgb(3, 169, 244);
 	text-align: center;
 	padding: 10px;
-	color: white;
+	color: $white;
 	font-weight: 600;
 }
 
@@ -244,7 +245,7 @@ export default {
 	height: 40px;
 	border-radius: 0;
 	background: rgb(3, 169, 244);
-	color: #fff !important;
+	color: $white !important;
 	border: 0;
 	&:active,
 	&:focus {
@@ -264,7 +265,7 @@ export default {
 }
 
 .add-to-queue:focus {
-	background: #029ce3;
+	background: $primary-color;
 }
 
 .media-right {

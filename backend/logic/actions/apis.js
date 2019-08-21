@@ -1,11 +1,14 @@
 'use strict';
 
-const 	request = require('request'),
-		config  = require('config'),
-		async 	= require('async'),
-		utils 	= require('../utils'),
-		logger 	= require('../logger'),
-		hooks 	= require('./hooks');
+const request = require("request");
+const config = require("config");
+const async = require("async");
+
+const hooks = require('./hooks');
+const moduleManager = require("../../index");
+
+const utils = moduleManager.modules["utils"];
+const logger = moduleManager.modules["logger"];
 
 module.exports = {
 
@@ -34,11 +37,11 @@ module.exports = {
 			(res, body, next) => {
 				next(null, JSON.parse(body));
 			}
-		], (err, data) => {
+		], async (err, data) => {
 			console.log(data.error);
 			if (err || data.error) {
 				if (!err) err = data.error.message;
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("APIS_SEARCH_YOUTUBE", `Searching youtube failed with query "${query}". "${err}"`);
 				return cb({status: 'failure', message: err});
 			}

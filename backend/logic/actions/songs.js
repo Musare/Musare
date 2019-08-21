@@ -1,27 +1,30 @@
 'use strict';
 
-const db = require('../db');
-const io = require('../io');
-const songs = require('../songs');
-const cache = require('../cache');
 const async = require('async');
-const utils = require('../utils');
-const logger = require('../logger');
+
 const hooks = require('./hooks');
 const queueSongs = require('./queueSongs');
+
+const moduleManager = require("../../index");
+
+const db = moduleManager.modules["db"];
+const songs = moduleManager.modules["songs"];
+const cache = moduleManager.modules["cache"];
+const utils = moduleManager.modules["utils"];
+const logger = moduleManager.modules["logger"];
 
 cache.sub('song.removed', songId => {
 	utils.emitToRoom('admin.songs', 'event:admin.song.removed', songId);
 });
 
 cache.sub('song.added', songId => {
-	db.models.song.findOne({songId}, (err, song) => {
+	db.models.song.findOne({_id: songId}, (err, song) => {
 		utils.emitToRoom('admin.songs', 'event:admin.song.added', song);
 	});
 });
 
 cache.sub('song.updated', songId => {
-	db.models.song.findOne({songId}, (err, song) => {
+	db.models.song.findOne({_id: songId}, (err, song) => {
 		utils.emitToRoom('admin.songs', 'event:admin.song.updated', song);
 	});
 });
@@ -75,9 +78,9 @@ module.exports = {
 			(next) => {
 				db.models.song.countDocuments({}, next);
 			}
-		], (err, count) => {
+		], async (err, count) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("SONGS_LENGTH", `Failed to get length from songs. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
@@ -98,9 +101,9 @@ module.exports = {
 			(next) => {
 				db.models.song.find({}).limit(15 * set).exec(next);
 			}
-		], (err, songs) => {
+		], async (err, songs) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("SONGS_GET_SET", `Failed to get set from songs. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
@@ -125,9 +128,9 @@ module.exports = {
 			(next) => {
 				db.models.song.findOne({ songId }).exec(next);
 			}
-		], (err, song) => {
+		], async (err, song) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("SONGS_GET_SONG", `Failed to get song ${songId}. "${err}"`);
 				return cb({ status: 'failure', message: err });
 			} else {
@@ -154,9 +157,9 @@ module.exports = {
 			(res, next) => {
 				songs.updateSong(songId, next);
 			}
-		], (err, song) => {
+		], async (err, song) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("SONGS_UPDATE", `Failed to update song "${songId}". "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
@@ -182,9 +185,9 @@ module.exports = {
 			(res, next) => {//TODO Check if res gets returned from above
 				cache.hdel('songs', songId, next);
 			}
-		], (err) => {
+		], async (err) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("SONGS_UPDATE", `Failed to remove song "${songId}". "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
@@ -225,9 +228,9 @@ module.exports = {
 					next();
 				});
 			},
-		], (err) => {
+		], async (err) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("SONGS_ADD", `User "${userId}" failed to add song. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
@@ -256,9 +259,9 @@ module.exports = {
 				if (!song) return next('No song found with that id.');
 				next(null, song);
 			}
-		], (err, song) => {
+		], async (err, song) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("SONGS_LIKE", `User "${userId}" failed to like song ${songId}. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
@@ -304,9 +307,9 @@ module.exports = {
 				if (!song) return next('No song found with that id.');
 				next(null, song);
 			}
-		], (err, song) => {
+		], async (err, song) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("SONGS_DISLIKE", `User "${userId}" failed to like song ${songId}. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
@@ -352,9 +355,9 @@ module.exports = {
 				if (!song) return next('No song found with that id.');
 				next(null, song);
 			}
-		], (err, song) => {
+		], async (err, song) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("SONGS_UNDISLIKE", `User "${userId}" failed to like song ${songId}. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
@@ -421,9 +424,9 @@ module.exports = {
 				if (!song) return next('No song found with that id.');
 				next(null, song);
 			}
-		], (err, song) => {
+		], async (err, song) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("SONGS_UNLIKE", `User "${userId}" failed to like song ${songId}. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
@@ -469,9 +472,9 @@ module.exports = {
 				if (!song) return next('No song found with that id.');
 				next(null, song);
 			}
-		], (err, song) => {
+		], async (err, song) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("SONGS_GET_OWN_RATINGS", `User "${userId}" failed to get ratings for ${songId}. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}

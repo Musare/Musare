@@ -34,16 +34,13 @@ export default {
 		return {
 			playlist: {
 				displayName: null,
-				songs: [],
-				createdBy: this.$parent.$parent.username,
-				createdAt: Date.now()
+				songs: []
 			}
 		};
 	},
 	mounted() {
-		const _this = this;
 		io.getSocket(socket => {
-			_this.socket = socket;
+			this.socket = socket;
 		});
 	},
 	methods: {
@@ -83,6 +80,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 .menu {
 	padding: 0 20px;
 }
@@ -93,7 +92,7 @@ export default {
 }
 
 .menu-list a:hover {
-	color: #000 !important;
+	color: $black !important;
 }
 
 li a {

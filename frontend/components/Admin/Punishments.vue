@@ -142,39 +142,38 @@ export default {
 			this.openModal({ sector: "admin", modal: "viewPunishment" });
 		},
 		banIP() {
-			const _this = this;
-			_this.socket.emit(
+			this.socket.emit(
 				"punishments.banIP",
-				_this.ipBan.ip,
-				_this.ipBan.reason,
-				_this.ipBan.expiresAt,
+				this.ipBan.ip,
+				this.ipBan.reason,
+				this.ipBan.expiresAt,
 				res => {
 					Toast.methods.addToast(res.message, 6000);
 				}
 			);
 		},
 		init() {
-			const _this = this;
-			_this.socket.emit("punishments.index", res => {
-				if (res.status === "success") _this.punishments = res.data;
+			this.socket.emit("punishments.index", res => {
+				if (res.status === "success") this.punishments = res.data;
 			});
-			// _this.socket.emit('apis.joinAdminRoom', 'punishments', () => {});
+			// this.socket.emit('apis.joinAdminRoom', 'punishments', () => {});
 		},
 		...mapActions("modals", ["openModal"]),
 		...mapActions("admin/punishments", ["viewPunishment"])
 	},
 	mounted() {
-		const _this = this;
 		io.getSocket(socket => {
-			_this.socket = socket;
-			if (_this.socket.connected) _this.init();
-			io.onConnect(() => _this.init());
+			this.socket = socket;
+			if (this.socket.connected) this.init();
+			io.onConnect(() => this.init());
 		});
 	}
 };
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 body {
 	font-family: "Roboto", sans-serif;
 }

@@ -30,9 +30,8 @@ export default {
 	},
 	methods: {
 		toggleModal() {
-			const _this = this;
-			_this.isModalActive = !_this.isModalActive;
-			if (_this.isModalActive) {
+			this.isModalActive = !this.isModalActive;
+			if (this.isModalActive) {
 				setTimeout(() => {
 					this.isModalActive = false;
 				}, 4000);
@@ -48,6 +47,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 @media (min-width: 735px) {
 	.modal {
 		display: none;

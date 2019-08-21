@@ -1,8 +1,11 @@
-const cache = require('../../cache');
-const db = require('../../db');
-const utils = require('../../utils');
-const logger = require('../../logger');
 const async = require('async');
+
+const moduleManager = require("../../../index");
+
+const db = moduleManager.modules["db"];
+const cache = moduleManager.modules["cache"];
+const utils = moduleManager.modules["utils"];
+const logger = moduleManager.modules["logger"];
 
 module.exports = function(next) {
 	return function(session) {
@@ -23,9 +26,9 @@ module.exports = function(next) {
 				if (user.role !== 'admin') return next('Insufficient permissions.');
 				next();
 			}
-		], (err) => {
+		], async (err) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.info("ADMIN_REQUIRED", `User failed to pass admin required check. "${err}"`);
 				return cb({status: 'failure', message: err});
 			}

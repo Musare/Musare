@@ -90,27 +90,26 @@ export default {
 		};
 	},
 	mounted() {
-		const _this = this;
 		io.getSocket(socket => {
-			_this.socket = socket;
-			_this.socket.emit("news.index", res => {
-				_this.news = res.data;
-				if (_this.news.length === 0) _this.noFound = true;
+			this.socket = socket;
+			this.socket.emit("news.index", res => {
+				this.news = res.data;
+				if (this.news.length === 0) this.noFound = true;
 			});
-			_this.socket.on("event:admin.news.created", news => {
-				_this.news.unshift(news);
-				_this.noFound = false;
+			this.socket.on("event:admin.news.created", news => {
+				this.news.unshift(news);
+				this.noFound = false;
 			});
-			_this.socket.on("event:admin.news.updated", news => {
-				for (let n = 0; n < _this.news.length; n += 1) {
-					if (_this.news[n]._id === news._id) {
-						_this.news.$set(n, news);
+			this.socket.on("event:admin.news.updated", news => {
+				for (let n = 0; n < this.news.length; n += 1) {
+					if (this.news[n]._id === news._id) {
+						this.news.$set(n, news);
 					}
 				}
 			});
-			_this.socket.on("event:admin.news.removed", news => {
-				_this.news = _this.news.filter(item => item._id !== news._id);
-				if (_this.news.length === 0) _this.noFound = true;
+			this.socket.on("event:admin.news.removed", news => {
+				this.news = this.news.filter(item => item._id !== news._id);
+				if (this.news.length === 0) this.noFound = true;
 			});
 		});
 	},
@@ -123,6 +122,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 .card {
 	margin-top: 50px;
 }
@@ -133,7 +134,7 @@ export default {
 		padding: 12px;
 		text-transform: uppercase;
 		font-weight: bold;
-		color: #fff;
+		color: $white;
 	}
 
 	.sect-head-features {

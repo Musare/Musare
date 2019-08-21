@@ -202,6 +202,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 li a {
 	color: dodgerblue;
 	border-bottom: 0 !important;
@@ -245,7 +247,7 @@ ul {
 }
 
 .custom-tag.purple {
-	border-bottom: 2px #90298c solid;
+	border-bottom: 2px $purple solid;
 }
 
 .thanks {

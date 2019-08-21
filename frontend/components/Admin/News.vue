@@ -231,37 +231,36 @@ export default {
 				features: [],
 				improvements: [],
 				upcoming: []
-			},
-			editing: {}
+			}
 		};
 	},
 	mounted() {
-		const _this = this;
 		io.getSocket(socket => {
-			_this.socket = socket;
-			_this.socket.emit("news.index", res => {
-				_this.news = res.data;
+			this.socket = socket;
+			this.socket.emit("news.index", res => {
+				this.news = res.data;
 				return res.data;
 			});
-			_this.socket.on("event:admin.news.created", news => {
-				_this.news.unshift(news);
+			this.socket.on("event:admin.news.created", news => {
+				this.news.unshift(news);
 			});
-			_this.socket.on("event:admin.news.removed", news => {
-				_this.news = _this.news.filter(item => item._id !== news._id);
+			this.socket.on("event:admin.news.removed", news => {
+				this.news = this.news.filter(item => item._id !== news._id);
 			});
-			if (_this.socket.connected) _this.init();
-			io.onConnect(() => _this.init());
+			if (this.socket.connected) this.init();
+			io.onConnect(() => this.init());
 		});
 	},
 	computed: {
 		...mapState("modals", {
 			modals: state => state.modals.admin
+		}),
+		...mapState("admin/news", {
+			editing: state => state.editing
 		})
 	},
 	methods: {
 		createNews() {
-			const _this = this;
-
 			const {
 				creating: { bugs, features, improvements, upcoming }
 			} = this;
@@ -287,10 +286,10 @@ export default {
 					3000
 				);
 
-			return _this.socket.emit("news.create", _this.creating, result => {
+			return this.socket.emit("news.create", this.creating, result => {
 				Toast.methods.addToast(result.message, 4000);
 				if (result.status === "success")
-					_this.creating = {
+					this.creating = {
 						title: "",
 						description: "",
 						bugs: [],
@@ -306,26 +305,8 @@ export default {
 			);
 		},
 		editNews(news) {
-			this.editing = news;
+			this.editNews(news);
 			this.openModal({ sector: "admin", modal: "editNews" });
-		},
-		updateNews(close) {
-			const _this = this;
-			this.socket.emit(
-				"news.update",
-				_this.editing._id,
-				_this.editing,
-				res => {
-					Toast.methods.addToast(res.message, 4000);
-					if (res.status === "success") {
-						if (close)
-							_this.closeModal({
-								sector: "admin",
-								modal: "editNews"
-							});
-					}
-				}
-			);
 		},
 		addChange(type) {
 			const change = document.getElementById(`new-${type}`).value.trim();
@@ -346,12 +327,15 @@ export default {
 		init() {
 			this.socket.emit("apis.joinAdminRoom", "news", () => {});
 		},
-		...mapActions("modals", ["openModal", "closeModal"])
+		...mapActions("modals", ["openModal", "closeModal"]),
+		...mapActions("admin/news", ["editNews"])
 	}
 };
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 .tag:not(:last-child) {
 	margin-right: 5px;
 }
@@ -361,10 +345,10 @@ td {
 }
 
 .is-info:focus {
-	background-color: #0398db;
+	background-color: $primary-color;
 }
 
 .card-footer-item {
-	color: #03a9f4;
+	color: $primary-color;
 }
 </style>

@@ -1,4 +1,5 @@
 
+  
 # MusareNode
 
 Based off of the original [Musare](https://github.com/Musare/MusareMeteor), which utilized Meteor.
@@ -56,41 +57,42 @@ Once you've installed the required tools:
 
 3. `cp backend/config/template.json backend/config/default.json`
 
-   Values:
-   The `mode` should be either "development" or "production". No more explanation needed.  
-   The `secret` key can be whatever. It's used by express's session module.  
-   The `domain` should be the url where the site will be accessible from, usually `http://localhost` for non-Docker.  
-   The `serverDomain` should be the url where the backend will be accessible from, usually `http://localhost:8080` for non-Docker.  
-   The `serverPort` should be the port where the backend will listen on, should always be `8080` for Docker, and is recommended for non-Docker.  
-   `isDocker` if you are using Docker or not.  
-   The `apis.youtube.key` value can be obtained by setting up a [YouTube API Key](https://developers.google.com/youtube/v3/getting-started). You need to use the YouTube Data API v3, and create an API key.  
-   The `apis.recaptcha.secret` value can be obtained by setting up a [ReCaptcha Site (v3)](https://www.google.com/recaptcha/admin).  
-   The `apis.github` values can be obtained by setting up a [GitHub OAuth Application](https://github.com/settings/developers). You need to fill in some values to create the OAuth application. The homepage is the homepage of frontend. The authorization callback url is the backend url with `/auth/github/authorize/callback` added at the end. For example `http://localhost:8080/auth/github/authorize/callback`.  
-   The `apis.discord.token` is the token for the Discord bot.  
-   The `apis.discord.loggingServer` is the Discord logging server id.  
-   The `apis.discord.loggingChannel` is the Discord logging channel id.  
-   The `apis.mailgun` values can be obtained by setting up a [Mailgun account](http://www.mailgun.com/), or you can disable it.  
-   The `apis.spotify` values can be obtained by setting up a [Spotify client id](https://developer.spotify.com/dashboard/applications), or you can disable it.  
-   The `redis.url` url should be left alone for Docker, and changed to `redis://localhost:6379/0` for non-Docker.  
-   The `redis.password` should be the Redis password you either put in your `startRedis.cmd` file for Windows, or `.env` for docker.  
-   The `mongo.url` needs to have the proper password for the MongoDB musare user, and for non-Docker you need to replace `@musare:27017` with `@localhost:27017`.  
-   The `cookie.domain` value should be the ip or address you use to access the site, without protocols (http/https), so for example `localhost`.  
-   The `cookie.secure` value should be `true` for SSL connections, and `false` for normal http connections.  
+|Property|Description|
+|--|--|
+|`mode`|Should be either `development` or `production`. No more explanation needed.|
+|`secret`|Whatever you want - used by express's session module.|
+|`domain`|Should be the url where the site will be accessible from,usually `http://localhost` for non-Docker.|
+|`serverDomain`|Should be the url where the backend will be accessible from, usually `http://localhost:8080` for non-Docker.|
+|`serverPort`|Should be the port where the backend will listen on, should always be `8080` for Docker, and is recommended for non-Docker.|
+|`isDocker`|Self-explanatory. Are you using Docker?|
+|`serverPort`|Should be the port where the backend will listen on, should always be `8080` for Docker, and is recommended for non-Docker.|
+|`apis.youtube.key`|Can be obtained by setting up a [YouTube API Key](https://developers.google.com/youtube/v3/getting-started). You need to use the YouTube Data API v3, and create an API key.|
+|`apis.recaptcha.secret`|Can be obtained by setting up a [ReCaptcha Site (v3)](https://www.google.com/recaptcha/admin).|
+|`apis.github`|Can be obtained by setting up a [GitHub OAuth Application](https://github.com/settings/developers). You need to fill in some values to create the OAuth application. The homepage is the homepage of frontend. The authorization callback url is the backend url with `/auth/github/authorize/callback` added at the end. For example `http://localhost:8080/auth/github/authorize/callback`.|
+|`apis.discord.token`|Token for the Discord bot.|
+|`apis.discord.loggingServer`|Server ID of the Discord logging server.|
+|`apis.discord.loggingChannel`|ID of the channel to be used in the Discord logging server.|
+|`apis.mailgun`|Can be obtained by setting up a [Mailgun account](http://www.mailgun.com/), or you can disable it.|
+|`apis.spotify`|Can be obtained by setting up a [Spotify client id](https://developer.spotify.com/dashboard/applications), or you can disable it.|
+|`redis.url`|Should be left alone for Docker, and changed to `redis://localhost:6379/0` for non-Docker.|
+|`redis.password`|Should be the Redis password you either put in your `startRedis.cmd` file for Windows, or `.env` for docker.|
+|`mongo.url`|Needs to have the proper password for the MongoDB musare user, and for non-Docker you need to replace `@musare:27017` with `@localhost:27017`.|
+|`cookie.domain`|Should be the ip or address you use to access the site, without protocols (http/https), so for example `localhost`.|
+|`cookie.secure`|Should be `true` for SSL connections, and `false` for normal http connections.|
 
 4. `cp frontend/build/config/template.json frontend/build/config/default.json`
 
-   Values:  
-   The `serverDomain` should be the url where the backend will be accessible from, usually `http://localhost:8080` for non-Docker.
-   The `frontendDomain` should be the url where the frontend will be accessible from, usually `http://localhost` for docker or `http://localhost:80` for non-Docker.
-   The `frontendPort` should be the port where the frontend will be accessible from, should always be port `81` for Docker, and is recommended to be port `80` for non-Docker.
-   The `recaptcha.key` value can be obtained by setting up a [ReCaptcha Site (v3)](https://www.google.com/recaptcha/admin).
-   The `cookie.domain` value should be the ip or address you use to access the site, without protocols (http/https), so for example `localhost`.
-   The `cookie.secure` value should be `true` for SSL connections, and `false` for normal http connections.
-   The `siteSettings.logo` should be the path to the logo image, by default it is `/assets/wordmark.png`.
-   The `siteSettings.siteName` should be the name of the site.
-   The `siteSettings.socialLinks.` `github`,`twitter`,`facebook` and `github` are set to the official Musare accounts by default but can be changed. 
-
-Now you have different paths here.
+|Property|Description|
+|--|--|
+|`serverDomain`|Should be the url where the backend will be accessible from, usually `http://localhost:8080` for non-Docker.|
+|`frontendDomain`|Should be the url where the frontend will be accessible from, usually `http://localhost` for docker or `http://localhost:80` for non-Docker.|
+|`frontendPort`|Should be the port where the frontend will be accessible from, should always be port `81` for Docker, and is recommended to be port `80` for non-Docker.|
+|`recaptcha.key`|Can be obtained by setting up a [ReCaptcha Site (v3)](https://www.google.com/recaptcha/admin).|
+|`cookie.domain`|Should be the ip or address you use to access the site, without protocols (http/https), so for example `localhost`.|
+|`cookie.secure`|Should be `true` for SSL connections, and `false` for normal http connections.|
+|`siteSettings.logo`|Path to the logo image, by default it is `/assets/wordmark.png`.|
+|`siteSettings.siteName`|Should be the name of the site.|
+|`siteSettings.socialLinks`|`github`, `twitter` and `facebook` are set to the official Musare accounts by default, but can be changed.|
 
 ### Installing with Docker
 

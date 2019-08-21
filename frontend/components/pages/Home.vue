@@ -5,63 +5,9 @@
 			<div class="content-wrapper">
 				<div class="group">
 					<div class="group-title">
-						Official Stations
-					</div>
-					<router-link
-						v-for="(station, index) in stations.official"
-						:key="index"
-						class="card station-card"
-						:to="{ name: 'official', params: { id: station.name } }"
-						:class="{ isPrivate: station.privacy === 'private' }"
-					>
-						<div class="card-image">
-							<figure class="image is-square">
-								<img
-									:src="station.currentSong.thumbnail"
-									onerror="this.src='/assets/notes-transparent.png'"
-								/>
-							</figure>
-						</div>
-						<div class="card-content">
-							<div class="media">
-								<div class="media-left displayName">
-									<h5>{{ station.displayName }}</h5>
-								</div>
-							</div>
-
-							<div class="content">
-								{{ station.description }}
-							</div>
-
-							<div class="under-content">
-								<span class="official"
-									><i class="badge material-icons"
-										>verified_user</i
-									>Official</span
-								>
-								<i
-									v-if="station.privacy !== 'public'"
-									class="material-icons right-icon"
-									title="This station is not visible to other users."
-									>lock</i
-								>
-							</div>
-						</div>
-						<router-link
-							href="#"
-							class="absolute-a"
-							:to="{
-								name: 'official',
-								params: { id: station.name }
-							}"
-						/>
-					</router-link>
-				</div>
-				<div class="group">
-					<div class="group-title">
-						Community Stations&nbsp;
+						Stations&nbsp;
 						<a
-							v-if="$parent.loggedIn"
+							v-if="loggedIn"
 							href="#"
 							@click="
 								openModal({
@@ -76,10 +22,10 @@
 						</a>
 					</div>
 					<router-link
-						v-for="(station, index) in stations.community"
+						v-for="(station, index) in filteredStations"
 						:key="index"
 						:to="{
-							name: 'community',
+							name: 'station',
 							params: { id: station.name }
 						}"
 						class="card station-card"
@@ -90,7 +36,24 @@
 					>
 						<div class="card-image">
 							<figure class="image is-square">
+								<div
+									v-if="station.currentSong.ytThumbnail"
+									class="ytThumbnailBg"
+									v-bind:style="{
+										'background-image':
+											'url(' +
+											station.currentSong.ytThumbnail +
+											')'
+									}"
+								></div>
 								<img
+									v-if="station.currentSong.ytThumbnail"
+									:src="station.currentSong.ytThumbnail"
+									onerror="this.src='/assets/notes-transparent.png'"
+									class="ytThumbnail"
+								/>
+								<img
+									v-else
 									:src="station.currentSong.thumbnail"
 									onerror="this.src='/assets/notes-transparent.png'"
 								/>
@@ -99,7 +62,14 @@
 						<div class="card-content">
 							<div class="media">
 								<div class="media-left displayName">
-									<h5>{{ station.displayName }}</h5>
+									<h5>
+										{{ station.displayName }}
+										<i
+											v-if="station.type === 'official'"
+											class="badge material-icons"
+											>verified_user</i
+										>
+									</h5>
 								</div>
 							</div>
 
@@ -110,7 +80,13 @@
 								<span class="hostedby"
 									>Hosted by
 									<span class="host">
+										<span
+											v-if="station.type === 'official'"
+											title="Musare"
+											>Musare</span
+										>
 										<user-id-to-username
+											v-else
 											:userId="station.owner"
 											:link="true"
 										/>
@@ -123,7 +99,10 @@
 									>lock</i
 								>
 								<i
-									v-if="isOwner(station)"
+									v-if="
+										station.type === 'community' &&
+											isOwner(station)
+									"
 									class="material-icons right-icon"
 									title="This is your station."
 									>home</i
@@ -131,10 +110,9 @@
 							</div>
 						</div>
 						<router-link
-							href="#"
 							class="absolute-a"
 							:to="{
-								name: 'community',
+								name: 'station',
 								params: { id: station.name }
 							}"
 						/>
@@ -155,7 +133,6 @@ import MainFooter from "../MainFooter.vue";
 import CreateCommunityStation from "../Modals/CreateCommunityStation.vue";
 import UserIdToUsername from "../UserIdToUsername.vue";
 
-import auth from "../../auth";
 import io from "../../io";
 
 export default {
@@ -164,127 +141,95 @@ export default {
 			recaptcha: {
 				key: ""
 			},
-			stations: {
-				official: [],
-				community: []
-			}
+			stations: [],
+			searchQuery: ""
 		};
 	},
-	computed: mapState("modals", {
-		modals: state => state.modals.home
-	}),
+	computed: {
+		filteredStations() {
+			return this.stations.filter(
+				station =>
+					JSON.stringify(Object.values(station)).indexOf(
+						this.searchQuery
+					) !== -1
+			);
+		},
+		...mapState({
+			modals: state => state.modals.modals.home,
+			loggedIn: state => state.user.auth.loggedIn,
+			userId: state => state.user.auth.userId
+		})
+	},
 	mounted() {
-		const _this = this;
-		auth.getStatus(() => {
-			io.getSocket(socket => {
-				_this.socket = socket;
-				if (_this.socket.connected) _this.init();
-				io.onConnect(() => {
-					_this.init();
-				});
-				_this.socket.on("event:stations.created", res => {
-					const station = res;
+		io.getSocket(socket => {
+			this.socket = socket;
+			if (this.socket.connected) this.init();
+			io.onConnect(() => {
+				this.init();
+			});
+			this.socket.on("event:stations.created", res => {
+				const station = res;
 
-					if (!station.currentSong)
-						station.currentSong = {
-							thumbnail: "/assets/notes-transparent.png"
-						};
-					if (station.currentSong && !station.currentSong.thumbnail)
-						station.currentSong.thumbnail =
-							"/assets/notes-transparent.png";
-					_this.stations[station.type].push(station);
-				});
-				_this.socket.on(
-					"event:userCount.updated",
-					(stationId, userCount) => {
-						_this.stations.official.forEach(s => {
-							const station = s;
-							if (station._id === stationId) {
-								station.userCount = userCount;
-							}
-						});
-
-						_this.stations.community.forEach(s => {
-							const station = s;
-							if (station._id === stationId) {
-								station.userCount = userCount;
-							}
-						});
+				if (!station.currentSong)
+					station.currentSong = {
+						thumbnail: "/assets/notes-transparent.png"
+					};
+				if (station.currentSong && !station.currentSong.thumbnail)
+					station.currentSong.ytThumbnail = `https://img.youtube.com/vi/${station.currentSong.songId}/mqdefault.jpg`;
+				this.stations.push(station);
+			});
+			this.socket.on(
+				"event:userCount.updated",
+				(stationId, userCount) => {
+					this.stations.forEach(s => {
+						const station = s;
+						if (station._id === stationId) {
+							station.userCount = userCount;
+						}
+					});
+				}
+			);
+			this.socket.on("event:station.nextSong", (stationId, song) => {
+				let newSong = song;
+				this.stations.forEach(s => {
+					const station = s;
+					if (station._id === stationId) {
+						if (!newSong)
+							newSong = {
+								thumbnail: "/assets/notes-transparent.png"
+							};
+						if (newSong && !newSong.thumbnail)
+							newSong.ytThumbnail = `https://img.youtube.com/vi/${newSong.songId}/mqdefault.jpg`;
+						station.currentSong = newSong;
 					}
-				);
-				_this.socket.on("event:station.nextSong", (stationId, song) => {
-					let newSong = song;
-					_this.stations.official.forEach(s => {
-						const station = s;
-						if (station._id === stationId) {
-							if (!newSong)
-								newSong = {
-									thumbnail: "/assets/notes-transparent.png"
-								};
-							if (newSong && !newSong.thumbnail)
-								newSong.thumbnail =
-									"/assets/notes-transparent.png";
-							station.currentSong = newSong;
-						}
-					});
-
-					_this.stations.community.forEach(s => {
-						const station = s;
-						if (station._id === stationId) {
-							if (!newSong)
-								newSong = {
-									thumbnail: "/assets/notes-transparent.png"
-								};
-							if (newSong && !newSong.thumbnail)
-								newSong.thumbnail =
-									"/assets/notes-transparent.png";
-							station.currentSong = newSong;
-						}
-					});
 				});
 			});
 		});
 	},
 	methods: {
 		init() {
-			const _this = this;
-			auth.getStatus((authenticated, role, username, userId) => {
-				_this.socket.emit("stations.index", data => {
-					_this.stations.community = [];
-					_this.stations.official = [];
-					if (data.status === "success")
-						data.stations.forEach(s => {
-							const station = s;
-							if (!station.currentSong)
-								station.currentSong = {
-									thumbnail: "/assets/notes-transparent.png"
-								};
-							if (
-								station.currentSong &&
-								!station.currentSong.thumbnail
-							)
-								station.currentSong.thumbnail =
-									"/assets/notes-transparent.png";
-							if (station.privacy !== "public")
-								station.class = { "station-red": true };
-							else if (
-								station.type === "community" &&
-								station.owner === userId
-							)
-								station.class = { "station-blue": true };
-							if (station.type === "official")
-								_this.stations.official.push(station);
-							else _this.stations.community.push(station);
-						});
-				});
-				_this.socket.emit("apis.joinRoom", "home", () => {});
+			this.socket.emit("stations.index", data => {
+				this.stations = [];
+				if (data.status === "success")
+					data.stations.forEach(s => {
+						const station = s;
+						if (!station.currentSong)
+							station.currentSong = {
+								thumbnail: "/assets/notes-transparent.png"
+							};
+						if (
+							station.currentSong &&
+							!station.currentSong.thumbnail
+						)
+							station.currentSong.ytThumbnail = `https://img.youtube.com/vi/${station.currentSong.songId}/mqdefault.jpg`;
+						this.stations.push(station);
+					});
 			});
+			this.socket.emit("apis.joinRoom", "home", () => {});
 		},
 		isOwner(station) {
-			const _this = this;
 			return (
-				station.owner === _this.$parent.userId &&
-				station.privacy === "public"
+				station.owner === this.userId && station.privacy === "public"
 			);
 		},
 		...mapActions("modals", ["openModal"])
@@ -299,6 +244,8 @@ export default {
 </script>
 
 <style lang="scss">
+@import "styles/global.scss";
+
 * {
 	box-sizing: border-box;
 }
@@ -306,7 +253,7 @@ export default {
 html {
 	width: 100%;
 	height: 100%;
-	color: rgba(0, 0, 0, 0.87);
+	color: $dark-grey-2;
 
 	body {
 		width: 100%;
@@ -354,26 +301,19 @@ html {
 
 	.official {
 		font-size: 18px;
-		color: #03a9f4;
+		color: $primary-color;
 		position: relative;
 		top: -5px;
-
-		.badge {
-			position: relative;
-			padding-right: 2px;
-			color: #38d227;
-			top: +5px;
-		}
 	}
 
 	.hostedby {
 		font-size: 15px;
 
 		.host {
-			color: #03a9f4;
+			color: $primary-color;
 
 			a {
-				color: #03a9f4;
+				color: $primary-color;
 			}
 		}
 	}
@@ -401,6 +341,7 @@ html {
 	margin: 10px;
 	cursor: pointer;
 	height: 475px;
+	background: $white;
 
 	transition: all ease-in-out 0.2s;
 
@@ -416,6 +357,30 @@ html {
 			-webkit-line-clamp: 3;
 			line-height: 20px;
 			max-height: 60px;
+		}
+	}
+
+	.card-image {
+		height: 300px;
+		width: 300px;
+		overflow: hidden;
+		.image {
+			.ytThumbnailBg {
+				background: url("/assets/notes-transparent.png") no-repeat
+					center center;
+				background-size: cover;
+				height: 300px;
+				width: 300px;
+				position: absolute;
+				top: 0;
+				filter: blur(5px);
+			}
+			.ytThumbnail {
+				height: auto;
+				top: 0;
+				margin-top: auto;
+				margin-bottom: auto;
+			}
 		}
 	}
 }
@@ -437,11 +402,11 @@ html {
 	cursor: pointer;
 	transition: 0.25s ease color;
 	font-size: 30px;
-	color: #4a4a4a;
+	color: $dark-grey;
 }
 
 .community-button:hover {
-	color: #03a9f4;
+	color: $primary-color;
 }
 
 .station-privacy {
@@ -509,5 +474,12 @@ html {
 	-webkit-line-clamp: 1;
 	line-height: 30px;
 	max-height: 30px;
+
+	.badge {
+		position: relative;
+		padding-right: 2px;
+		color: $green;
+		top: +5px;
+	}
 }
 </style>

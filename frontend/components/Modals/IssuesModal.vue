@@ -96,6 +96,8 @@ export default {
 </script>
 
 <style lang="scss">
+@import "styles/global.scss";
+
 .back-to-song {
 	display: flex;
 	margin-bottom: 20px;

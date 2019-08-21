@@ -9,7 +9,8 @@ module.exports = merge(common, {
 	},
 	resolve: {
 		alias: {
-			vue: "vue/dist/vue.min.js"
+			vue: "vue/dist/vue.min.js",
+			styles: "styles"
 		}
 	}
 });

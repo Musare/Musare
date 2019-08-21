@@ -109,6 +109,9 @@ export default {
 	computed: {
 		...mapState("admin/users", {
 			editing: state => state.editing
+		}),
+		...mapState({
+			userId: state => state.user.auth.userId
 		})
 	},
 	methods: {
@@ -166,7 +169,7 @@ export default {
 					if (
 						res.status === "success" &&
 						this.editing.role === "default" &&
-						this.editing._id === this.$parent.$parent.$parent.userId
+						this.editing._id === this.userId
 					)
 						window.location.reload();
 				}
@@ -203,9 +206,8 @@ export default {
 		...mapActions("modals", ["closeModal"])
 	},
 	mounted() {
-		const _this = this;
 		io.getSocket(socket => {
-			_this.socket = socket;
+			this.socket = socket;
 			return socket;
 		});
 	}
@@ -213,8 +215,10 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 .save-changes {
-	color: #fff;
+	color: $white;
 }
 
 .tag:not(:last-child) {
@@ -222,6 +226,6 @@ export default {
 }
 
 .select:after {
-	border-color: #029ce3;
+	border-color: $primary-color;
 }
 </style>

@@ -68,29 +68,28 @@ export default {
 		};
 	},
 	mounted() {
-		const _this = this;
 		io.getSocket(socket => {
-			_this.socket = socket;
-			if (_this.socket.connected) _this.init();
-			_this.socket.emit("reports.index", res => {
-				_this.reports = res.data;
+			this.socket = socket;
+			if (this.socket.connected) this.init();
+			this.socket.emit("reports.index", res => {
+				this.reports = res.data;
 			});
-			_this.socket.on("event:admin.report.resolved", reportId => {
-				_this.reports = _this.reports.filter(report => {
+			this.socket.on("event:admin.report.resolved", reportId => {
+				this.reports = this.reports.filter(report => {
 					return report._id !== reportId;
 				});
 			});
-			_this.socket.on("event:admin.report.created", report => {
-				_this.reports.push(report);
+			this.socket.on("event:admin.report.created", report => {
+				this.reports.push(report);
 			});
 			io.onConnect(() => {
-				_this.init();
+				this.init();
 			});
 		});
 
 		if (this.$route.query.id) {
 			this.socket.emit("reports.findOne", this.$route.query.id, res => {
-				if (res.status === "success") _this.view(res.data);
+				if (res.status === "success") this.view(res.data);
 				else
 					Toast.methods.addToast(
 						"Report with that ID not found",
@@ -113,11 +112,10 @@ export default {
 			this.openModal({ sector: "admin", modal: "viewReport" });
 		},
 		resolve(reportId) {
-			const _this = this;
 			this.socket.emit("reports.resolve", reportId, res => {
 				Toast.methods.addToast(res.message, 3000);
 				if (res.status === "success" && this.modals.viewReport)
-					_this.closeModal({
+					this.closeModal({
 						sector: "admin",
 						modal: "viewReport"
 					});
@@ -130,6 +128,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 .tag:not(:last-child) {
 	margin-right: 5px;
 }

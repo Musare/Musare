@@ -186,29 +186,6 @@
 						v-model="editing.song.skipDuration"
 					/>
 				</p>
-				<article class="message" v-if="editing.type === 'songs'">
-					<div class="message-body">
-						<span class="reports-length">
-							{{ reports.length }}
-							<span
-								v-if="reports.length > 1 || reports.length <= 0"
-								>&nbsp;Reports</span
-							>
-							<span v-else>&nbsp;Report</span>
-						</span>
-						<div v-for="(report, index) in reports" :key="index">
-							<router-link
-								:to="{
-									path: '/admin/reports',
-									query: { id: report, returnToSong: true }
-								}"
-								class="report-link"
-							>
-								Report - {{ report }}
-							</router-link>
-						</div>
-					</div>
-				</article>
 				<hr />
 				<h5 class="has-text-centered">Spotify Information</h5>
 				<label class="label">Song title</label>
@@ -295,7 +272,6 @@ export default {
 	components: { Modal },
 	data() {
 		return {
-			reports: 0,
 			spotify: {
 				title: "",
 				artist: "",
@@ -310,7 +286,8 @@ export default {
 	computed: {
 		...mapState("admin/songs", {
 			video: state => state.video,
-			editing: state => state.editing
+			editing: state => state.editing,
+			songs: state => state.songs
 		}),
 		...mapState("modals", {
 			modals: state => state.modals.admin
@@ -318,8 +295,6 @@ export default {
 	},
 	methods: {
 		save(song, close) {
-			const _this = this;
-
 			if (!song.title)
 				return Toast.methods.addToast(
 					"Please fill in all fields",
@@ -419,13 +394,13 @@ export default {
 			}
 
 			return this.socket.emit(
-				`${_this.editing.type}.update`,
+				`${this.editing.type}.update`,
 				song._id,
 				song,
 				res => {
 					Toast.methods.addToast(res.message, 4000);
 					if (res.status === "success") {
-						_this.$parent.songs.forEach(originalSong => {
+						this.songs.forEach(originalSong => {
 							const updatedSong = song;
 							if (originalSong._id === updatedSong._id) {
 								Object.keys(originalSong).forEach(n => {
@@ -436,7 +411,7 @@ export default {
 						});
 					}
 					if (close)
-						_this.closeModal({
+						this.closeModal({
 							sector: "admin",
 							modal: "editSong"
 						});
@@ -444,35 +419,33 @@ export default {
 			);
 		},
 		settings(type) {
-			const _this = this;
 			switch (type) {
 				default:
 					break;
 				case "stop":
-					_this.stopVideo();
-					_this.pauseVideo(true);
+					this.stopVideo();
+					this.pauseVideo(true);
 					break;
 				case "pause":
-					_this.pauseVideo(true);
+					this.pauseVideo(true);
 					break;
 				case "play":
-					_this.pauseVideo(false);
+					this.pauseVideo(false);
 					break;
 				case "skipToLast10Secs":
-					_this.video.player.seekTo(
-						_this.editing.song.duration -
+					this.video.player.seekTo(
+						this.editing.song.duration -
 							10 +
-							_this.editing.song.skipDuration
+							this.editing.song.skipDuration
 					);
 					break;
 			}
 		},
 		changeVolume() {
-			const local = this;
 			const volume = document.getElementById("volumeSlider").value;
 			localStorage.setItem("volume", volume);
-			local.video.player.setVolume(volume);
-			if (volume > 0) local.video.player.unMute();
+			this.video.player.setVolume(volume);
+			if (volume > 0) this.video.player.unMute();
 		},
 		addTag(type) {
 			if (type === "genres") {
@@ -612,8 +585,6 @@ export default {
 		...mapActions("modals", ["closeModal"])
 	},
 	mounted() {
-		const _this = this;
-
 		// if (this.modals.editSong = false) this.video.player.stopVideo();
 
 		// this.loadVideoById(
@@ -624,42 +595,32 @@ export default {
 		this.initCanvas();
 
 		lofig.get("cookie.secure", res => {
-			_this.useHTTPS = res;
+			this.useHTTPS = res;
 		});
 
 		io.getSocket(socket => {
 			this.socket = socket;
-
-			if (this.editing.type === "songs") {
-				socket.emit(
-					"reports.getReportsForSong",
-					this.editing.song.songId,
-					res => {
-						this.reports = res.data;
-					}
-				);
-			}
 		});
 
 		setInterval(() => {
 			if (
-				_this.video.paused === false &&
-				_this.playerReady &&
-				_this.video.player.getCurrentTime() -
-					_this.editing.song.skipDuration >
-					_this.editing.song.duration
+				this.video.paused === false &&
+				this.playerReady &&
+				this.video.player.getCurrentTime() -
+					this.editing.song.skipDuration >
+					this.editing.song.duration
 			) {
-				_this.video.paused = false;
-				_this.video.player.stopVideo();
+				this.video.paused = false;
+				this.video.player.stopVideo();
 			}
 			if (this.playerReady) {
-				_this.getCurrentTime(3).then(time => {
+				this.getCurrentTime(3).then(time => {
 					this.youtubeVideoCurrentTime = time;
 					return time;
 				});
 			}
 
-			if (_this.video.paused === false) _this.drawCanvas();
+			if (this.video.paused === false) this.drawCanvas();
 		}, 200);
 
 		this.video.player = new window.YT.Player("player", {
@@ -673,44 +634,44 @@ export default {
 				showinfo: 0,
 				autoplay: 1
 			},
-			startSeconds: _this.editing.song.skipDuration,
+			startSeconds: this.editing.song.skipDuration,
 			events: {
 				onReady: () => {
 					let volume = parseInt(localStorage.getItem("volume"));
 					volume = typeof volume === "number" ? volume : 20;
-					console.log(`Seekto: ${_this.editing.song.skipDuration}`);
-					_this.video.player.seekTo(_this.editing.song.skipDuration);
-					_this.video.player.setVolume(volume);
-					if (volume > 0) _this.video.player.unMute();
-					this.youtubeVideoDuration = _this.video.player.getDuration();
+					console.log(`Seekto: ${this.editing.song.skipDuration}`);
+					this.video.player.seekTo(this.editing.song.skipDuration);
+					this.video.player.setVolume(volume);
+					if (volume > 0) this.video.player.unMute();
+					this.youtubeVideoDuration = this.video.player.getDuration();
 					this.youtubeVideoNote = "(~)";
-					_this.playerReady = true;
+					this.playerReady = true;
 
-					_this.drawCanvas();
+					this.drawCanvas();
 				},
 				onStateChange: event => {
 					if (event.data === 1) {
-						if (!_this.video.autoPlayed) {
-							_this.video.autoPlayed = true;
-							return _this.video.player.stopVideo();
+						if (!this.video.autoPlayed) {
+							this.video.autoPlayed = true;
+							return this.video.player.stopVideo();
 						}
 
-						_this.video.paused = false;
-						let youtubeDuration = _this.video.player.getDuration();
+						this.video.paused = false;
+						let youtubeDuration = this.video.player.getDuration();
 						this.youtubeVideoDuration = youtubeDuration;
 						this.youtubeVideoNote = "";
-						youtubeDuration -= _this.editing.song.skipDuration;
-						if (_this.editing.song.duration > youtubeDuration + 1) {
+						youtubeDuration -= this.editing.song.skipDuration;
+						if (this.editing.song.duration > youtubeDuration + 1) {
 							this.video.player.stopVideo();
-							_this.video.paused = true;
+							this.video.paused = true;
 							return Toast.methods.addToast(
 								"Video can't play. Specified duration is bigger than the YouTube song duration.",
 								4000
 							);
 						}
-						if (_this.editing.song.duration <= 0) {
+						if (this.editing.song.duration <= 0) {
 							this.video.player.stopVideo();
-							_this.video.paused = true;
+							this.video.paused = true;
 							return Toast.methods.addToast(
 								"Video can't play. Specified duration has to be more than 0 seconds.",
 								4000
@@ -718,11 +679,11 @@ export default {
 						}
 
 						if (
-							_this.video.player.getCurrentTime() <
-							_this.editing.song.skipDuration
+							this.video.player.getCurrentTime() <
+							this.editing.song.skipDuration
 						) {
-							return _this.video.player.seekTo(
-								_this.editing.song.skipDuration
+							return this.video.player.seekTo(
+								this.editing.song.skipDuration
 							);
 						}
 					} else if (event.data === 2) {
@@ -742,6 +703,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 input[type="range"] {
 	-webkit-appearance: none;
 	width: 100%;
@@ -757,7 +720,7 @@ input[type="range"]::-webkit-slider-runnable-track {
 	height: 5.2px;
 	cursor: pointer;
 	box-shadow: 0;
-	background: #c2c0c2;
+	background: $light-grey-2;
 	border-radius: 0;
 	border: 0;
 }
@@ -768,7 +731,7 @@ input[type="range"]::-webkit-slider-thumb {
 	height: 19px;
 	width: 19px;
 	border-radius: 15px;
-	background: #03a9f4;
+	background: $primary-color;
 	cursor: pointer;
 	-webkit-appearance: none;
 	margin-top: -6.5px;
@@ -779,7 +742,7 @@ input[type="range"]::-moz-range-track {
 	height: 5.2px;
 	cursor: pointer;
 	box-shadow: 0;
-	background: #c2c0c2;
+	background: $light-grey-2;
 	border-radius: 0;
 	border: 0;
 }
@@ -790,7 +753,7 @@ input[type="range"]::-moz-range-thumb {
 	height: 19px;
 	width: 19px;
 	border-radius: 15px;
-	background: #03a9f4;
+	background: $primary-color;
 	cursor: pointer;
 	-webkit-appearance: none;
 	margin-top: -6.5px;
@@ -801,19 +764,19 @@ input[type="range"]::-ms-track {
 	height: 5.2px;
 	cursor: pointer;
 	box-shadow: 0;
-	background: #c2c0c2;
+	background: $light-grey-2;
 	border-radius: 1.3px;
 }
 
 input[type="range"]::-ms-fill-lower {
-	background: #c2c0c2;
+	background: $light-grey-2;
 	border: 0;
 	border-radius: 0;
 	box-shadow: 0;
 }
 
 input[type="range"]::-ms-fill-upper {
-	background: #c2c0c2;
+	background: $light-grey-2;
 	border: 0;
 	border-radius: 0;
 	box-shadow: 0;
@@ -825,7 +788,7 @@ input[type="range"]::-ms-thumb {
 	height: 15px;
 	width: 15px;
 	border-radius: 15px;
-	background: #03a9f4;
+	background: $primary-color;
 	cursor: pointer;
 	-webkit-appearance: none;
 	margin-top: 1.5px;
@@ -880,21 +843,10 @@ h5 {
 }
 
 .save-changes {
-	color: #fff;
+	color: $white;
 }
 
 .tag:not(:last-child) {
 	margin-right: 5px;
-}
-
-.reports-length {
-	color: #ff4545;
-	font-weight: bold;
-	display: flex;
-	justify-content: center;
-}
-
-.report-link {
-	color: #000;
 }
 </style>

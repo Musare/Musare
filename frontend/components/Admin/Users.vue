@@ -86,30 +86,27 @@ export default {
 			this.openModal({ sector: "admin", modal: "editUser" });
 		},
 		init() {
-			const _this = this;
-			_this.socket.emit("users.index", result => {
-				if (result.status === "success") _this.users = result.data;
+			this.socket.emit("users.index", result => {
+				if (result.status === "success") this.users = result.data;
 			});
-			_this.socket.emit("apis.joinAdminRoom", "users", () => {});
-			_this.socket.on("event:user.username.changed", username => {
-				_this.$parent.$parent.username = username;
-			});
+			this.socket.emit("apis.joinAdminRoom", "users", () => {});
 		},
 		...mapActions("admin/users", ["editUser"]),
 		...mapActions("modals", ["openModal"])
 	},
 	mounted() {
-		const _this = this;
 		io.getSocket(socket => {
-			_this.socket = socket;
-			if (_this.socket.connected) _this.init();
-			io.onConnect(() => _this.init());
+			this.socket = socket;
+			if (this.socket.connected) this.init();
+			io.onConnect(() => this.init());
 		});
 	}
 };
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 body {
 	font-family: "Roboto", sans-serif;
 }
@@ -125,6 +122,6 @@ td {
 }
 
 .is-primary:focus {
-	background-color: #029ce3 !important;
+	background-color: $primary-color !important;
 }
 </style>

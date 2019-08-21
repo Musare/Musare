@@ -82,6 +82,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 .content a:not(.button) {
 	border: 0;
 }
@@ -102,7 +104,7 @@ export default {
 	border-radius: 33% 33% 0% 0% / 7% 7% 0% 0%;
 	box-shadow: 0 4px 8px 0 rgba(3, 169, 244, 0.65),
 		0 6px 20px 0 rgba(3, 169, 244, 0.4);
-	background-color: #ffffff;
+	background-color: $white;
 	width: 100%;
 
 	.musareFooterLogo {
@@ -123,15 +125,15 @@ export default {
 
 	.footerLinks {
 		:not(:last-child) {
-			border-right: solid 1px #03a9f4;
+			border-right: solid 1px $primary-color;
 		}
 		a {
 			padding: 0 5px;
 			font-size: 18px;
-			color: #03a9f4;
+			color: $primary-color;
 		}
 		a:hover {
-			color: #03a9f4;
+			color: $primary-color;
 			text-decoration: underline;
 		}
 	}

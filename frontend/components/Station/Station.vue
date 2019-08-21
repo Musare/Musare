@@ -1,7 +1,7 @@
 <template>
 	<div>
-		<official-header v-if="type == 'official'" />
-		<community-header v-if="type == 'community'" />
+		<official-header v-if="station.type == 'official'" />
+		<community-header v-if="station.type == 'community'" />
 
 		<song-queue v-if="modals.addSongToQueue" />
 		<add-to-playlist v-if="modals.addSongToPlaylist" />
@@ -26,12 +26,12 @@
 				<h1>No song is currently playing</h1>
 				<h4
 					v-if="
-						type === 'community' &&
+						station.type === 'community' &&
 							station.partyMode &&
+							this.loggedIn &&
 							(!station.locked ||
 								(station.locked &&
-									$parent.loggedIn &&
-									$parent.userId === station.owner))
+									this.userId === station.owner))
 					"
 				>
 					<a
@@ -48,9 +48,9 @@
 				</h4>
 				<h4
 					v-if="
-						type === 'community' &&
+						station.type === 'community' &&
 							!station.partyMode &&
-							$parent.userId === station.owner &&
+							this.userId === station.owner &&
 							!station.privatePlaylist
 					"
 				>
@@ -63,9 +63,9 @@
 				</h4>
 				<h1
 					v-if="
-						type === 'community' &&
+						station.type === 'community' &&
 							!station.partyMode &&
-							$parent.userId === station.owner &&
+							this.userId === station.owner &&
 							station.privatePlaylist
 					"
 				>
@@ -99,7 +99,7 @@
 				<div
 					class="desktop-only column is-3-desktop card playlistCard experimental"
 				>
-					<div v-if="type === 'community'" class="title">
+					<div v-if="station.type === 'community'" class="title">
 						Queue
 					</div>
 					<div v-else class="title">
@@ -172,7 +172,7 @@
 						</div>
 					</article>
 					<a
-						v-if="type === 'community' && $parent.loggedIn"
+						v-if="station.type === 'community' && loggedIn"
 						class="button add-to-queue"
 						href="#"
 						@click="
@@ -181,7 +181,7 @@
 								modal: 'addSongToQueue'
 							})
 						"
-						>Add Song to Queue</a
+						>Add a song to the queue</a
 					>
 				</div>
 			</div>
@@ -293,7 +293,7 @@
 							</div>
 						</div>
 						<div
-							v-if="!simpleSong"
+							v-if="!currentSong.simpleSong"
 							class="column is-3-desktop experimental"
 						>
 							<img
@@ -445,13 +445,9 @@ export default {
 			loading: true,
 			ready: false,
 			exists: true,
-			type: "",
 			playerReady: false,
-			previousSong: null,
-			currentSong: {},
 			player: undefined,
 			timePaused: 0,
-			paused: false,
 			muted: false,
 			timeElapsed: "0:00",
 			liked: false,
@@ -461,16 +457,11 @@ export default {
 				users: false,
 				playlist: false
 			},
-			noSong: false,
-			simpleSong: false,
-			songsList: [],
 			timeBeforePause: 0,
 			skipVotes: 0,
 			privatePlaylistQueueSelected: null,
 			automaticallyRequestedSongId: null,
 			systemDifference: 0,
-			users: [],
-			userCount: 0,
 			attemptsToPlayVideo: 0,
 			canAutoplay: true,
 			lastTimeRequestedIfCanAutoplay: 0
@@ -481,18 +472,24 @@ export default {
 			modals: state => state.modals.station
 		}),
 		...mapState("station", {
-			station: state => state.station
+			station: state => state.station,
+			currentSong: state => state.currentSong,
+			songsList: state => state.songsList,
+			paused: state => state.paused,
+			noSong: state => state.noSong
+		}),
+		...mapState({
+			loggedIn: state => state.user.auth.loggedIn,
+			userId: state => state.user.auth.userId,
+			role: state => state.user.auth.role
 		})
 	},
 	methods: {
 		isOwnerOnly() {
-			return (
-				this.$parent.loggedIn &&
-				this.$parent.userId === this.station.owner
-			);
+			return this.loggedIn && this.userId === this.station.owner;
 		},
 		isAdminOnly() {
-			return this.$parent.loggedIn && this.$parent.role === "admin";
+			return this.loggedIn && this.role === "admin";
 		},
 		removeFromQueue(songId) {
 			window.socket.emit(
@@ -516,15 +513,14 @@ export default {
 			});
 		},
 		youtubeReady() {
-			const local = this;
-			if (!local.player) {
-				local.player = new window.YT.Player("player", {
+			if (!this.player) {
+				this.player = new window.YT.Player("player", {
 					height: 270,
 					width: 480,
-					videoId: local.currentSong.songId,
+					videoId: this.currentSong.songId,
 					startSeconds:
-						local.getTimeElapsed() / 1000 +
-						local.currentSong.skipDuration,
+						this.getTimeElapsed() / 1000 +
+						this.currentSong.skipDuration,
 					playerVars: {
 						controls: 0,
 						iv_load_policy: 3,
@@ -532,60 +528,60 @@ export default {
 						showinfo: 0
 					},
 					events: {
-						onReady() {
-							local.playerReady = true;
+						onReady: () => {
+							this.playerReady = true;
 							let volume = parseInt(
 								localStorage.getItem("volume")
 							);
 
 							volume = typeof volume === "number" ? volume : 20;
 
-							local.player.setVolume(volume);
+							this.player.setVolume(volume);
 
 							if (volume > 0) {
-								local.player.unMute();
+								this.player.unMute();
 							}
 
-							if (local.muted) local.player.mute();
+							if (this.muted) this.player.mute();
 
-							local.playVideo();
+							this.playVideo();
 						},
-						onError(err) {
+						onError: err => {
 							console.log("iframe error", err);
-							local.voteSkipStation();
+							this.voteSkipStation();
 						},
-						onStateChange(event) {
+						onStateChange: event => {
 							if (
 								event.data === 1 &&
-								local.videoLoading === true
+								this.videoLoading === true
 							) {
-								local.videoLoading = false;
-								local.player.seekTo(
-									local.getTimeElapsed() / 1000 +
-										local.currentSong.skipDuration,
+								this.videoLoading = false;
+								this.player.seekTo(
+									this.getTimeElapsed() / 1000 +
+										this.currentSong.skipDuration,
 									true
 								);
-								if (local.paused) local.player.pauseVideo();
-							} else if (event.data === 1 && local.paused) {
-								local.player.seekTo(
-									local.timeBeforePause / 1000,
+								if (this.paused) this.player.pauseVideo();
+							} else if (event.data === 1 && this.paused) {
+								this.player.seekTo(
+									this.timeBeforePause / 1000,
 									true
 								);
-								local.player.pauseVideo();
+								this.player.pauseVideo();
 							}
 							if (
 								event.data === 2 &&
-								!local.paused &&
-								!local.noSong &&
-								local.player.getDuration() / 1000 <
-									local.currentSong.duration
+								!this.paused &&
+								!this.noSong &&
+								this.player.getDuration() / 1000 <
+									this.currentSong.duration
 							) {
-								local.player.seekTo(
-									local.getTimeElapsed() / 1000 +
-										local.currentSong.skipDuration,
+								this.player.seekTo(
+									this.getTimeElapsed() / 1000 +
+										this.currentSong.skipDuration,
 									true
 								);
-								local.player.playVideo();
+								this.player.playVideo();
 							}
 						}
 					}
@@ -593,42 +589,35 @@ export default {
 			}
 		},
 		getTimeElapsed() {
-			const local = this;
-			if (local.currentSong) {
-				let { timePaused } = local;
-				if (local.paused)
-					timePaused += Date.currently() - local.pausedAt;
-				return Date.currently() - local.startedAt - timePaused;
+			if (this.currentSong) {
+				let { timePaused } = this;
+				if (this.paused) timePaused += Date.currently() - this.pausedAt;
+				return Date.currently() - this.startedAt - timePaused;
 			}
 			return 0;
 		},
 		playVideo() {
-			const local = this;
-			if (local.playerReady) {
-				local.videoLoading = true;
-				local.player.loadVideoById(
-					local.currentSong.songId,
-					local.getTimeElapsed() / 1000 +
-						local.currentSong.skipDuration
+			if (this.playerReady) {
+				this.videoLoading = true;
+				this.player.loadVideoById(
+					this.currentSong.songId,
+					this.getTimeElapsed() / 1000 + this.currentSong.skipDuration
 				);
 
 				if (window.stationInterval !== 0)
 					clearInterval(window.stationInterval);
 				window.stationInterval = setInterval(() => {
-					local.resizeSeekerbar();
-					local.calculateTimeElapsed();
+					this.resizeSeekerbar();
+					this.calculateTimeElapsed();
 				}, 150);
 			}
 		},
 		resizeSeekerbar() {
-			const local = this;
-			if (!local.paused) {
+			if (!this.paused) {
 				document.getElementsByClassName(
 					"seeker-bar"
 				)[0].style.width = `${parseFloat(
-					(local.getTimeElapsed() /
-						1000 /
-						local.currentSong.duration) *
+					(this.getTimeElapsed() / 1000 / this.currentSong.duration) *
 						100
 				)}%`;
 			}
@@ -650,79 +639,77 @@ export default {
 			}`;
 		},
 		calculateTimeElapsed() {
-			const local = this;
-
 			if (
-				local.playerReady &&
-				local.currentSong &&
-				local.player.getPlayerState() === -1
+				this.playerReady &&
+				this.currentSong &&
+				this.player.getPlayerState() === -1
 			) {
-				if (local.attemptsToPlayVideo >= 5) {
+				if (this.attemptsToPlayVideo >= 5) {
 					if (
-						Date.now() - local.lastTimeRequestedIfCanAutoplay >
+						Date.now() - this.lastTimeRequestedIfCanAutoplay >
 						2000
 					) {
-						local.lastTimeRequestedIfCanAutoplay = Date.now();
+						this.lastTimeRequestedIfCanAutoplay = Date.now();
 						window.canAutoplay.video().then(({ result }) => {
 							if (result) {
-								local.attemptsToPlayVideo = 0;
-								local.canAutoplay = true;
+								this.attemptsToPlayVideo = 0;
+								this.canAutoplay = true;
 							} else {
-								local.canAutoplay = false;
+								this.canAutoplay = false;
 							}
 						});
 					}
 				} else {
-					local.player.playVideo();
-					local.attemptsToPlayVideo += 1;
+					this.player.playVideo();
+					this.attemptsToPlayVideo += 1;
 				}
 			}
 
-			if (!local.paused) {
-				const timeElapsed = local.getTimeElapsed();
-				const currentPlayerTime = local.player.getCurrentTime() * 1000;
+			if (!this.paused) {
+				const timeElapsed = this.getTimeElapsed();
+				const currentPlayerTime = this.player.getCurrentTime() * 1000;
 
 				const difference = timeElapsed - currentPlayerTime;
 				// console.log(difference123);
 				if (difference < -200) {
 					// console.log("Difference0.8");
-					local.player.setPlaybackRate(0.8);
+					this.player.setPlaybackRate(0.8);
 				} else if (difference < -50) {
 					// console.log("Difference0.9");
-					local.player.setPlaybackRate(0.9);
+					this.player.setPlaybackRate(0.9);
 				} else if (difference < -25) {
 					// console.log("Difference0.99");
-					local.player.setPlaybackRate(0.99);
+					this.player.setPlaybackRate(0.99);
 				} else if (difference > 200) {
 					// console.log("Difference1.2");
-					local.player.setPlaybackRate(1.2);
+					this.player.setPlaybackRate(1.2);
 				} else if (difference > 50) {
 					// console.log("Difference1.1");
-					local.player.setPlaybackRate(1.1);
+					this.player.setPlaybackRate(1.1);
 				} else if (difference > 25) {
 					// console.log("Difference1.01");
-					local.player.setPlaybackRate(1.01);
-				} else if (local.player.getPlaybackRate !== 1.0) {
+					this.player.setPlaybackRate(1.01);
+				} else if (this.player.getPlaybackRate !== 1.0) {
 					// console.log("NDifference1.0");
-					local.player.setPlaybackRate(1.0);
+					this.player.setPlaybackRate(1.0);
 				}
 			}
 
-			/* if (local.currentTime !== undefined && local.paused) {
-				local.timePaused += Date.currently() - local.currentTime;
-				local.currentTime = undefined;
+			/* if (this.currentTime !== undefined && this.paused) {
+				this.timePaused += Date.currently() - this.currentTime;
+				this.currentTime = undefined;
 			} */
 
-			let { timePaused } = local;
-			if (local.paused) timePaused += Date.currently() - local.pausedAt;
+			let { timePaused } = this;
+			if (this.paused) timePaused += Date.currently() - this.pausedAt;
 
 			const duration =
-				(Date.currently() - local.startedAt - timePaused) / 1000;
+				(Date.currently() - this.startedAt - timePaused) / 1000;
 
-			const songDuration = local.currentSong.duration;
-			if (songDuration <= duration) local.player.pauseVideo();
-			if (!local.paused && duration <= songDuration)
-				local.timeElapsed = local.formatTime(duration);
+			const songDuration = this.currentSong.duration;
+			if (songDuration <= duration) this.player.pauseVideo();
+			if (!this.paused && duration <= songDuration)
+				this.timeElapsed = this.formatTime(duration);
 		},
 		toggleLock() {
 			window.socket.emit("stations.toggleLock", this.station._id, res => {
@@ -735,20 +722,19 @@ export default {
 			});
 		},
 		changeVolume() {
-			const local = this;
 			const volume = document.getElementById("volumeSlider").value;
 			localStorage.setItem("volume", volume / 100);
-			if (local.playerReady) {
-				local.player.setVolume(volume / 100);
+			if (this.playerReady) {
+				this.player.setVolume(volume / 100);
 				if (volume > 0) {
-					local.player.unMute();
+					this.player.unMute();
 					localStorage.setItem("muted", false);
-					local.muted = false;
+					this.muted = false;
 				}
 			}
 		},
 		resumeLocalStation() {
-			this.paused = false;
+			this.updatePaused(false);
 			if (!this.noSong) {
 				if (this.playerReady) {
 					this.player.seekTo(
@@ -760,15 +746,14 @@ export default {
 			}
 		},
 		pauseLocalStation() {
-			this.paused = true;
+			this.updatePaused(true);
 			if (!this.noSong) {
 				this.timeBeforePause = this.getTimeElapsed();
 				if (this.playerReady) this.player.pauseVideo();
 			}
 		},
 		skipStation() {
-			const _this = this;
-			_this.socket.emit("stations.forceSkip", _this.station._id, data => {
+			this.socket.emit("stations.forceSkip", this.station._id, data => {
 				if (data.status !== "success")
 					Toast.methods.addToast(`Error: ${data.message}`, 8000);
 				else
@@ -779,8 +764,7 @@ export default {
 			});
 		},
 		voteSkipStation() {
-			const _this = this;
-			_this.socket.emit("stations.voteSkip", _this.station._id, data => {
+			this.socket.emit("stations.voteSkip", this.station._id, data => {
 				if (data.status !== "success")
 					Toast.methods.addToast(`Error: ${data.message}`, 8000);
 				else
@@ -791,8 +775,7 @@ export default {
 			});
 		},
 		resumeStation() {
-			const _this = this;
-			_this.socket.emit("stations.resume", _this.station._id, data => {
+			this.socket.emit("stations.resume", this.station._id, data => {
 				if (data.status !== "success")
 					Toast.methods.addToast(`Error: ${data.message}`, 8000);
 				else
@@ -803,8 +786,7 @@ export default {
 			});
 		},
 		pauseStation() {
-			const _this = this;
-			_this.socket.emit("stations.pause", _this.station._id, data => {
+			this.socket.emit("stations.pause", this.station._id, data => {
 				if (data.status !== "success")
 					Toast.methods.addToast(`Error: ${data.message}`, 8000);
 				else
@@ -843,11 +825,10 @@ export default {
 			}
 		},
 		toggleLike() {
-			const _this = this;
-			if (_this.liked)
-				_this.socket.emit(
+			if (this.liked)
+				this.socket.emit(
 					"songs.unlike",
-					_this.currentSong.songId,
+					this.currentSong.songId,
 					data => {
 						if (data.status !== "success")
 							Toast.methods.addToast(
@@ -857,9 +838,9 @@ export default {
 					}
 				);
 			else
-				_this.socket.emit(
+				this.socket.emit(
 					"songs.like",
-					_this.currentSong.songId,
+					this.currentSong.songId,
 					data => {
 						if (data.status !== "success")
 							Toast.methods.addToast(
@@ -870,11 +851,10 @@ export default {
 				);
 		},
 		toggleDislike() {
-			const _this = this;
-			if (_this.disliked)
-				return _this.socket.emit(
+			if (this.disliked)
+				return this.socket.emit(
 					"songs.undislike",
-					_this.currentSong.songId,
+					this.currentSong.songId,
 					data => {
 						if (data.status !== "success")
 							Toast.methods.addToast(
@@ -884,9 +864,9 @@ export default {
 					}
 				);
 
-			return _this.socket.emit(
+			return this.socket.emit(
 				"songs.dislike",
-				_this.currentSong.songId,
+				this.currentSong.songId,
 				data => {
 					if (data.status !== "success")
 						Toast.methods.addToast(`Error: ${data.message}`, 8000);
@@ -894,31 +874,30 @@ export default {
 			);
 		},
 		addFirstPrivatePlaylistSongToQueue() {
-			const _this = this;
 			let isInQueue = false;
-			const { userId } = _this.$parent;
-			if (_this.type === "community") {
-				_this.songsList.forEach(queueSong => {
-					if (queueSong.requestedBy === userId) isInQueue = true;
+			if (this.station.type === "community") {
+				this.songsList.forEach(queueSong => {
+					if (queueSong.requestedBy === this.userId) isInQueue = true;
 				});
-				if (!isInQueue && _this.privatePlaylistQueueSelected) {
-					_this.socket.emit(
+				if (!isInQueue && this.privatePlaylistQueueSelected) {
+					this.socket.emit(
 						"playlists.getFirstSong",
-						_this.privatePlaylistQueueSelected,
+						this.privatePlaylistQueueSelected,
 						data => {
 							if (data.status === "success") {
 								if (data.song.duration < 15 * 60) {
-									_this.automaticallyRequestedSongId =
+									this.automaticallyRequestedSongId =
 										data.song.songId;
-									_this.socket.emit(
+									this.socket.emit(
 										"stations.addToQueue",
-										_this.station._id,
+										this.station._id,
 										data.song.songId,
 										data2 => {
 											if (data2.status === "success") {
-												_this.socket.emit(
+												this.socket.emit(
 													"playlists.moveSongToBottom",
-													_this.privatePlaylistQueueSelected,
+													this
+														.privatePlaylistQueueSelected,
 													data.song.songId,
 													data3 => {
 														if (
@@ -935,9 +914,9 @@ export default {
 										`Top song in playlist was too long to be added.`,
 										3000
 									);
-									_this.socket.emit(
+									this.socket.emit(
 										"playlists.moveSongToBottom",
-										_this.privatePlaylistQueueSelected,
+										this.privatePlaylistQueueSelected,
 										data.song.songId,
 										data3 => {
 											if (data3.status === "success") {
@@ -955,10 +934,9 @@ export default {
 			}
 		},
 		join() {
-			const _this = this;
-			_this.socket.emit("stations.join", _this.stationName, res => {
+			this.socket.emit("stations.join", this.stationName, res => {
 				if (res.status === "success") {
-					_this.loading = false;
+					this.loading = false;
 
 					const {
 						_id,
@@ -968,63 +946,57 @@ export default {
 						locked,
 						partyMode,
 						owner,
-						privatePlaylist
+						privatePlaylist,
+						type
 					} = res.data;
 
 					document.title = `Musare - ${displayName}`;
 
-					_this.joinStation({
+					this.joinStation({
 						_id,
-						name: _this.stationName,
+						name: this.stationName,
 						displayName,
 						description,
 						privacy,
 						locked,
 						partyMode,
 						owner,
-						privatePlaylist
+						privatePlaylist,
+						type
 					});
-					_this.currentSong = res.data.currentSong
+					const currentSong = res.data.currentSong
 						? res.data.currentSong
 						: {};
-					if (_this.currentSong.artists)
-						_this.currentSong.artists = _this.currentSong.artists.join(
-							", "
-						);
-					_this.type = res.data.type;
-					_this.startedAt = res.data.startedAt;
-					_this.paused = res.data.paused;
-					_this.timePaused = res.data.timePaused;
-					_this.userCount = res.data.userCount;
-					_this.users = res.data.users;
-					_this.pausedAt = res.data.pausedAt;
+					if (currentSong.artists)
+						currentSong.artists = currentSong.artists.join(", ");
+					this.updateCurrentSong(currentSong);
+					this.startedAt = res.data.startedAt;
+					this.updatePaused(res.data.paused);
+					this.timePaused = res.data.timePaused;
+					this.updateUserCount(res.data.userCount);
+					this.updateUsers(res.data.users);
+					this.pausedAt = res.data.pausedAt;
 					if (res.data.currentSong) {
-						_this.noSong = false;
-						_this.simpleSong =
-							res.data.currentSong.likes === -1 &&
-							res.data.currentSong.dislikes === -1;
-						if (_this.simpleSong) {
-							_this.currentSong.skipDuration = 0;
-						}
-						_this.youtubeReady();
-						_this.playVideo();
-						_this.socket.emit(
+						this.updateNoSong(false);
+						this.youtubeReady();
+						this.playVideo();
+						this.socket.emit(
 							"songs.getOwnSongRatings",
 							res.data.currentSong.songId,
 							data => {
-								if (_this.currentSong.songId === data.songId) {
-									_this.liked = data.liked;
-									_this.disliked = data.disliked;
+								if (this.currentSong.songId === data.songId) {
+									this.liked = data.liked;
+									this.disliked = data.disliked;
 								}
 							}
 						);
 					} else {
-						if (_this.playerReady) _this.player.pauseVideo();
-						_this.noSong = true;
+						if (this.playerReady) this.player.pauseVideo();
+						this.updateNoSong(true);
 					}
 					// UNIX client time before ping
 					const beforePing = Date.now();
-					_this.socket.emit("apis.ping", pong => {
+					this.socket.emit("apis.ping", pong => {
 						// UNIX client time after ping
 						const afterPing = Date.now();
 						// Average time in MS it took between the server responding and the client receiving
@@ -1041,186 +1013,192 @@ export default {
 								"System time difference is bigger than 3 seconds."
 							);
 						}
-						_this.systemDifference = difference;
+						this.systemDifference = difference;
 					});
 				}
 			});
 		},
 		...mapActions("modals", ["openModal"]),
-		...mapActions("station", ["joinStation"])
+		...mapActions("station", [
+			"joinStation",
+			"updateUserCount",
+			"updateUsers",
+			"updateCurrentSong",
+			"updatePreviousSong",
+			"updateSongsList",
+			"updatePaused",
+			"updateNoSong"
+		])
 	},
 	mounted() {
-		const _this = this;
-
 		Date.currently = () => {
-			return new Date().getTime() + _this.systemDifference;
+			return new Date().getTime() + this.systemDifference;
 		};
 
-		_this.stationName = _this.$route.params.id;
+		this.stationName = this.$route.params.id;
 
 		window.stationInterval = 0;
 
 		io.getSocket(socket => {
-			_this.socket = socket;
+			this.socket = socket;
 
 			io.removeAllListeners();
-			if (_this.socket.connected) _this.join();
-			io.onConnect(_this.join);
-			_this.socket.emit("stations.findByName", _this.stationName, res => {
+			if (this.socket.connected) this.join();
+			io.onConnect(this.join);
+			this.socket.emit("stations.findByName", this.stationName, res => {
 				if (res.status === "failure") {
-					_this.loading = false;
-					_this.exists = false;
+					this.loading = false;
+					this.exists = false;
 				} else {
-					_this.exists = true;
+					this.exists = true;
 				}
 			});
-			_this.socket.on("event:songs.next", data => {
-				_this.previousSong = _this.currentSong.songId
-					? _this.currentSong
+			this.socket.on("event:songs.next", data => {
+				const previousSong = this.currentSong.songId
+					? this.currentSong
 					: null;
-				_this.currentSong = data.currentSong ? data.currentSong : {};
-				_this.startedAt = data.startedAt;
-				_this.paused = data.paused;
-				_this.timePaused = data.timePaused;
+				this.updatePreviousSong(previousSong);
+				this.updateCurrentSong(
+					data.currentSong ? data.currentSong : {}
+				);
+				this.startedAt = data.startedAt;
+				this.updatePaused(data.paused);
+				this.timePaused = data.timePaused;
 				if (data.currentSong) {
-					_this.noSong = false;
-					if (_this.currentSong.artists)
-						_this.currentSong.artists = _this.currentSong.artists.join(
+					this.updateNoSong(false);
+					if (this.currentSong.artists)
+						this.currentSong.artists = this.currentSong.artists.join(
 							", "
 						);
-					_this.simpleSong =
-						data.currentSong.likes === -1 &&
-						data.currentSong.dislikes === -1;
-					if (_this.simpleSong) _this.currentSong.skipDuration = 0;
-					if (!_this.playerReady) _this.youtubeReady();
-					else _this.playVideo();
-					_this.socket.emit(
+					if (!this.playerReady) this.youtubeReady();
+					else this.playVideo();
+					this.socket.emit(
 						"songs.getOwnSongRatings",
 						data.currentSong.songId,
 						song => {
-							if (_this.currentSong.songId === song.songId) {
-								_this.liked = song.liked;
-								_this.disliked = song.disliked;
+							if (this.currentSong.songId === song.songId) {
+								this.liked = song.liked;
+								this.disliked = song.disliked;
 							}
 						}
 					);
 				} else {
-					if (_this.playerReady) _this.player.pauseVideo();
-					_this.noSong = true;
+					if (this.playerReady) this.player.pauseVideo();
+					this.updateNoSong(true);
 				}
 
 				let isInQueue = false;
-				const { userId } = _this.$parent;
-				_this.songsList.forEach(queueSong => {
-					if (queueSong.requestedBy === userId) isInQueue = true;
+				this.songsList.forEach(queueSong => {
+					if (queueSong.requestedBy === this.userId) isInQueue = true;
 				});
 				if (
 					!isInQueue &&
-					_this.privatePlaylistQueueSelected &&
-					(_this.automaticallyRequestedSongId !==
-						_this.currentSong.songId ||
-						!_this.currentSong.songId)
+					this.privatePlaylistQueueSelected &&
+					(this.automaticallyRequestedSongId !==
+						this.currentSong.songId ||
+						!this.currentSong.songId)
 				) {
-					_this.addFirstPrivatePlaylistSongToQueue();
+					this.addFirstPrivatePlaylistSongToQueue();
 				}
 			});
 
-			_this.socket.on("event:stations.pause", data => {
-				_this.pausedAt = data.pausedAt;
-				_this.pauseLocalStation();
+			this.socket.on("event:stations.pause", data => {
+				this.pausedAt = data.pausedAt;
+				this.pauseLocalStation();
 			});
 
-			_this.socket.on("event:stations.resume", data => {
-				_this.timePaused = data.timePaused;
-				_this.resumeLocalStation();
+			this.socket.on("event:stations.resume", data => {
+				this.timePaused = data.timePaused;
+				this.resumeLocalStation();
 			});
 
-			_this.socket.on("event:stations.remove", () => {
+			this.socket.on("event:stations.remove", () => {
 				window.location.href = "/";
 				return true;
 			});
 
-			_this.socket.on("event:song.like", data => {
+			this.socket.on("event:song.like", data => {
 				if (!this.noSong) {
-					if (data.songId === _this.currentSong.songId) {
-						_this.currentSong.dislikes = data.dislikes;
-						_this.currentSong.likes = data.likes;
+					if (data.songId === this.currentSong.songId) {
+						this.currentSong.dislikes = data.dislikes;
+						this.currentSong.likes = data.likes;
 					}
 				}
 			});
 
-			_this.socket.on("event:song.dislike", data => {
+			this.socket.on("event:song.dislike", data => {
 				if (!this.noSong) {
-					if (data.songId === _this.currentSong.songId) {
-						_this.currentSong.dislikes = data.dislikes;
-						_this.currentSong.likes = data.likes;
+					if (data.songId === this.currentSong.songId) {
+						this.currentSong.dislikes = data.dislikes;
+						this.currentSong.likes = data.likes;
 					}
 				}
 			});
 
-			_this.socket.on("event:song.unlike", data => {
+			this.socket.on("event:song.unlike", data => {
 				if (!this.noSong) {
-					if (data.songId === _this.currentSong.songId) {
-						_this.currentSong.dislikes = data.dislikes;
-						_this.currentSong.likes = data.likes;
+					if (data.songId === this.currentSong.songId) {
+						this.currentSong.dislikes = data.dislikes;
+						this.currentSong.likes = data.likes;
 					}
 				}
 			});
 
-			_this.socket.on("event:song.undislike", data => {
+			this.socket.on("event:song.undislike", data => {
 				if (!this.noSong) {
-					if (data.songId === _this.currentSong.songId) {
-						_this.currentSong.dislikes = data.dislikes;
-						_this.currentSong.likes = data.likes;
+					if (data.songId === this.currentSong.songId) {
+						this.currentSong.dislikes = data.dislikes;
+						this.currentSong.likes = data.likes;
 					}
 				}
 			});
 
-			_this.socket.on("event:song.newRatings", data => {
+			this.socket.on("event:song.newRatings", data => {
 				if (!this.noSong) {
-					if (data.songId === _this.currentSong.songId) {
-						_this.liked = data.liked;
-						_this.disliked = data.disliked;
+					if (data.songId === this.currentSong.songId) {
+						this.liked = data.liked;
+						this.disliked = data.disliked;
 					}
 				}
 			});
 
-			_this.socket.on("event:queue.update", queue => {
-				if (this.type === "community") this.songsList = queue;
+			this.socket.on("event:queue.update", queue => {
+				if (this.station.type === "community")
+					this.updateSongsList(queue);
 			});
 
-			_this.socket.on("event:song.voteSkipSong", () => {
+			this.socket.on("event:song.voteSkipSong", () => {
 				if (this.currentSong) this.currentSong.skipVotes += 1;
 			});
 
-			_this.socket.on("event:privatePlaylist.selected", playlistId => {
-				if (this.type === "community") {
+			this.socket.on("event:privatePlaylist.selected", playlistId => {
+				if (this.station.type === "community") {
 					this.station.privatePlaylist = playlistId;
 				}
 			});
 
-			_this.socket.on("event:partyMode.updated", partyMode => {
-				if (this.type === "community") {
+			this.socket.on("event:partyMode.updated", partyMode => {
+				if (this.station.type === "community") {
 					this.station.partyMode = partyMode;
 				}
 			});
 
-			_this.socket.on("event:newOfficialPlaylist", playlist => {
-				if (this.type === "official") {
-					this.songsList = playlist;
+			this.socket.on("event:newOfficialPlaylist", playlist => {
+				if (this.station.type === "official") {
+					this.updateSongsList(playlist);
 				}
 			});
 
-			_this.socket.on("event:users.updated", users => {
-				_this.users = users;
+			this.socket.on("event:users.updated", users => {
+				this.updateUsers(users);
 			});
 
-			_this.socket.on("event:userCount.updated", userCount => {
-				_this.userCount = userCount;
+			this.socket.on("event:userCount.updated", userCount => {
+				this.updateUserCount(userCount);
 			});
 
-			_this.socket.on("event:queueLockToggled", locked => {
-				_this.station.locked = locked;
+			this.socket.on("event:queueLockToggled", locked => {
+				this.station.locked = locked;
 			});
 		});
 
@@ -1257,6 +1235,8 @@ export default {
 </script>
 
 <style lang="scss">
+@import "styles/global.scss";
+
 .player-can-not-autoplay {
 	position: absolute;
 	width: 100%;
@@ -1267,7 +1247,7 @@ export default {
 	justify-content: center;
 
 	p {
-		color: white;
+		color: $white;
 		font-size: 26px;
 		text-align: center;
 	}
@@ -1283,7 +1263,7 @@ export default {
 }
 
 .no-song {
-	color: #03a9f4;
+	color: $primary-color;
 	text-align: center;
 }
 
@@ -1307,7 +1287,7 @@ export default {
 }
 
 .stationDisplayName {
-	color: white !important;
+	color: $white !important;
 }
 
 .add-to-playlist {
@@ -1322,7 +1302,7 @@ export default {
 	position: fixed;
 	right: 0;
 	width: 350px;
-	background-color: white;
+	background-color: $white;
 	box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16),
 		0 2px 10px 0 rgba(0, 0, 0, 0.12);
 	.slideout-header {
@@ -1331,7 +1311,7 @@ export default {
 		margin: 0;
 		padding-top: 5px;
 		padding-bottom: 7px;
-		color: white;
+		color: $white;
 	}
 
 	.slideout-content {
@@ -1392,7 +1372,7 @@ export default {
 			background-color: rgb(3, 169, 244);
 			text-align: center;
 			padding: 10px;
-			color: white;
+			color: $white;
 			font-weight: 600;
 		}
 
@@ -1421,7 +1401,7 @@ export default {
 			height: 40px;
 			border-radius: 0;
 			background: rgb(3, 169, 244);
-			color: #fff !important;
+			color: $white !important;
 			border: 0;
 			&:active,
 			&:focus {
@@ -1430,7 +1410,7 @@ export default {
 		}
 
 		.add-to-queue:focus {
-			background: #029ce3;
+			background: $primary-color;
 		}
 
 		.media-right {
@@ -1465,7 +1445,7 @@ export default {
 		height: 5.2px;
 		cursor: pointer;
 		box-shadow: 0;
-		background: #c2c0c2;
+		background: $light-grey-2;
 		border-radius: 0;
 		border: 0;
 	}
@@ -1476,7 +1456,7 @@ export default {
 		height: 19px;
 		width: 19px;
 		border-radius: 15px;
-		background: #03a9f4;
+		background: $primary-color;
 		cursor: pointer;
 		-webkit-appearance: none;
 		margin-top: -6.5px;
@@ -1487,7 +1467,7 @@ export default {
 		height: 5.2px;
 		cursor: pointer;
 		box-shadow: 0;
-		background: #c2c0c2;
+		background: $light-grey-2;
 		border-radius: 0;
 		border: 0;
 	}
@@ -1498,7 +1478,7 @@ export default {
 		height: 19px;
 		width: 19px;
 		border-radius: 15px;
-		background: #03a9f4;
+		background: $primary-color;
 		cursor: pointer;
 		-webkit-appearance: none;
 		margin-top: -6.5px;
@@ -1509,19 +1489,19 @@ export default {
 		height: 5.2px;
 		cursor: pointer;
 		box-shadow: 0;
-		background: #c2c0c2;
+		background: $light-grey-2;
 		border-radius: 1.3px;
 	}
 
 	input[type="range"]::-ms-fill-lower {
-		background: #c2c0c2;
+		background: $light-grey-2;
 		border: 0;
 		border-radius: 0;
 		box-shadow: 0;
 	}
 
 	input[type="range"]::-ms-fill-upper {
-		background: #c2c0c2;
+		background: $light-grey-2;
 		border: 0;
 		border-radius: 0;
 		box-shadow: 0;
@@ -1533,7 +1513,7 @@ export default {
 		height: 15px;
 		width: 15px;
 		border-radius: 15px;
-		background: #03a9f4;
+		background: $primary-color;
 		cursor: pointer;
 		-webkit-appearance: none;
 		margin-top: 1.5px;
@@ -1585,12 +1565,12 @@ export default {
 
 #thumbs_up:hover,
 #thumbs_up.liked {
-	color: #87d37c !important;
+	color: $green !important;
 }
 
 #thumbs_down:hover,
 #thumbs_down.disliked {
-	color: #ec644b !important;
+	color: $red !important;
 }
 
 #song-thumbnail {
@@ -1687,11 +1667,11 @@ h6 {
 }
 
 .light-blue {
-	background-color: #03a9f4 !important;
+	background-color: $primary-color !important;
 }
 
 .white {
-	background-color: #ffffff !important;
+	background-color: $white !important;
 }
 
 .btn-search {
@@ -1739,7 +1719,7 @@ h6 {
 .progress {
 	width: 50px;
 	animation: rotate 0.8s infinite linear;
-	border: 8px solid #03a9f4;
+	border: 8px solid $primary-color;
 	border-right-color: transparent;
 	height: 50px;
 	position: absolute;
