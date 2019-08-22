@@ -1,5 +1,6 @@
 <template>
 	<div class="app">
+		<metadata title="Terms of Service" />
 		<main-header />
 		<div class="content-wrapper">
 			<h1>MUSARE TERMS OF SERVICE</h1>

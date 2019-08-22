@@ -1,5 +1,6 @@
 <template>
 	<div class="app">
+		<metadata title="About" />
 		<main-header />
 		<div class="content-wrapper">
 			<div class="card is-fullwidth">

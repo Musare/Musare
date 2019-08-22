@@ -1,5 +1,6 @@
 <template>
 	<div class="container">
+		<metadata title="Admin | Statistics" />
 		<div class="columns">
 			<div
 				class="card column is-10-desktop is-offset-1-desktop is-12-mobile"

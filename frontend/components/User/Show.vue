@@ -1,5 +1,6 @@
 <template>
 	<div v-if="isUser">
+		<metadata v-bind:title="`Profile | ${user.username}`" />
 		<main-header />
 		<div class="container">
 			<img class="avatar" src="/assets/notes.png" />

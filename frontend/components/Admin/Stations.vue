@@ -1,5 +1,6 @@
 <template>
 	<div>
+		<metadata title="Admin | Stations" />
 		<div class="container">
 			<table class="table is-striped">
 				<thead>

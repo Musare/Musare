@@ -1,5 +1,6 @@
 <template>
 	<div class="app">
+		<metadata title="News" />
 		<main-header />
 		<div class="container">
 			<div

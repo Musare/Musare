@@ -1,5 +1,6 @@
 <template>
 	<div>
+		<metadata title="Admin | Punishments" />
 		<div class="container">
 			<table class="table is-striped">
 				<thead>

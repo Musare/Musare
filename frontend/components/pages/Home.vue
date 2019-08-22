@@ -1,5 +1,6 @@
 <template>
 	<div>
+		<metadata title="Home" />
 		<div class="app">
 			<main-header />
 			<div class="content-wrapper">

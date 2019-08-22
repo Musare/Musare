@@ -6,6 +6,25 @@ import store from "./store";
 import App from "./App.vue";
 import io from "./io";
 
+const handleMetadata = attrs => {
+	document.title = `Musare | ${attrs.title}`;
+};
+
+Vue.component("metadata", {
+	watch: {
+		$attrs: {
+			handler: attrs => {
+				handleMetadata(attrs);
+			},
+			deep: true,
+			immediate: true
+		}
+	},
+	render() {
+		return null;
+	}
+});
+
 Vue.use(VueRouter);
 
 const router = new VueRouter({
@@ -138,10 +157,6 @@ router.beforeEach((to, from, next) => {
 		}
 	} else next();
 
-	if (from.name === "station") {
-		document.title = "Musare";
-	}
-
 	if (to.name === "station") {
 		io.getSocket(socket => {
 			socket.emit("stations.findByName", to.params.id, res => {
@@ -152,8 +167,6 @@ router.beforeEach((to, from, next) => {
 		});
 	}
 });
-
-// router.afterEach(to => {});
 
 // eslint-disable-next-line no-new
 new Vue({

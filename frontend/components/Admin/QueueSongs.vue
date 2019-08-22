@@ -1,5 +1,6 @@
 <template>
 	<div>
+		<metadata title="Admin | Queue songs" />
 		<div class="container">
 			<input
 				v-model="searchQuery"

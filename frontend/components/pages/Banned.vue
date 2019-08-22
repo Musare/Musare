@@ -1,5 +1,6 @@
 <template>
 	<div class="container">
+		<metadata title="Banned" />
 		<i class="material-icons">not_interested</i>
 		<h4>
 			You are banned for

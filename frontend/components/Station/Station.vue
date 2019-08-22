@@ -1,5 +1,7 @@
 <template>
 	<div>
+		<metadata v-bind:title="`${station.displayName}`" />
+
 		<official-header v-if="station.type == 'official'" />
 		<community-header v-if="station.type == 'community'" />
 
@@ -442,6 +444,7 @@ import io from "../../io";
 export default {
 	data() {
 		return {
+			title: "Station",
 			loading: true,
 			ready: false,
 			exists: true,
@@ -949,8 +952,6 @@ export default {
 						privatePlaylist,
 						type
 					} = res.data;
-
-					document.title = `Musare - ${displayName}`;
 
 					this.joinStation({
 						_id,

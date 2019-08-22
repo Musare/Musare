@@ -1,5 +1,6 @@
 <template>
 	<div>
+		<metadata title="Settings" />
 		<main-header />
 		<div class="container">
 			<!--Implement Validation-->
