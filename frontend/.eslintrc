@@ -21,7 +21,6 @@
 	"globals": {
 		"lofig": "writable",
 		"grecaptcha": "readonly",
-		"ga": "readonly",
 		"moment": "readonly"
 	},
 	"rules": {

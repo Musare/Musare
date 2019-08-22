@@ -153,10 +153,7 @@ router.beforeEach((to, from, next) => {
 	}
 });
 
-router.afterEach(to => {
-	ga("set", "page", to.path);
-	ga("send", "pageview");
-});
+// router.afterEach(to => {});
 
 // eslint-disable-next-line no-new
 new Vue({
