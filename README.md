@@ -94,11 +94,20 @@ Once you've installed the required tools:
 |`siteSettings.siteName`|Should be the name of the site.|
 |`siteSettings.socialLinks`|`github`, `twitter` and `facebook` are set to the official Musare accounts by default, but can be changed.|
 
+5. Simply `cp .env.example .env` to setup your environment variables.
+
+6. To setup [snyk](https://snyk.io/) (which is what we use for our precommit git-hooks), you will need to:
+- Setup an account
+- Go to [settings](https://app.snyk.io/account)
+- Copy the API token and set it as your `SNYK_TOKEN` environment variable.
+
+We use snyk to test our dependencies / dev-dependencies for vulnerabilities.
+
 ### Installing with Docker
 
 _Configuration_
 
-To configure docker simply `cp .env.example .env` and configure the .env file to match your settings in `backend/config/default.json`.  
+To configure docker configure the `.env` file to match your settings in `backend/config/default.json`.  
 The configurable ports will be how you access the services on your machine, or what ports you will need to specify in your nginx files when using proxy_pass. 
 `COMPOSE_PROJECT_NAME` should be a unique name for this installation, especially if you have multiple instances of Musare on the same machine.
 `FRONTEND_MODE` should be either `dev` or `prod` (self-explanatory).
