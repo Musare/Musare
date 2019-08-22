@@ -36,7 +36,7 @@
 						<img src="/assets/social/discord.svg" />
 					</a>
 				</p>
-				<a href="https://musare.com" target="_blank"
+				<a href="/"
 					><img
 						class="musareFooterLogo"
 						src="/assets/wordmark.png"
