@@ -293,3 +293,13 @@ docker-compose exec mongo mongo admin
 use musare
 db.auth("MUSAREDBUSER","MUSAREDBPASSWORD")
 db.users.update({username: "USERNAME"}, {$set: {role: "admin"}})
+```
+
+### Adding a package
+
+We use lerna to add an additional package to either the frontend or the backend.
+
+For example, this is how we would to add the `webpack-bundle-analyser` package as a dev-dependency to the frontend:
+```
+npx lerna add webpack-bundle-analyser --scope=musare-frontend --dev
+```
