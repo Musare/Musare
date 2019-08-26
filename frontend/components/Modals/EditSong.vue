@@ -139,6 +139,10 @@
 										class="input"
 										type="text"
 										id="new-artist"
+										v-model="artistInputValue"
+										v-on:blur="blurArtistInput()"
+										v-on:focus="focusArtistInput()"
+										v-on:keydown="keydownArtistInput()"
 									/>
 									<button
 										class="button album-get-button"
@@ -155,6 +159,28 @@
 										<i class="material-icons">add</i>
 									</button>
 								</p>
+								<div
+									class="autosuggest-container"
+									v-if="
+										(artistInputFocussed ||
+											artistAutosuggestContainerFocussed) &&
+											artistAutosuggestItems.length > 0
+									"
+									@mouseover="focusArtistContainer()"
+									@mouseleave="blurArtistContainer()"
+								>
+									<span
+										class="autosuggest-item"
+										tabindex="0"
+										v-on:click="
+											selectArtistAutosuggest(item)
+										"
+										v-for="(item,
+										index) in artistAutosuggestItems"
+										:key="index"
+										>{{ item }}</span
+									>
+								</div>
 								<div class="list-container">
 									<div
 										class="list-item"
@@ -181,6 +207,10 @@
 										class="input"
 										type="text"
 										id="new-genre"
+										v-model="genreInputValue"
+										v-on:blur="blurGenreInput()"
+										v-on:focus="focusGenreInput()"
+										v-on:keydown="keydownGenreInput()"
 									/>
 									<button
 										class="button album-get-button"
@@ -197,6 +227,28 @@
 										<i class="material-icons">add</i>
 									</button>
 								</p>
+								<div
+									class="autosuggest-container"
+									v-if="
+										(genreInputFocussed ||
+											genreAutosuggestContainerFocussed) &&
+											genreAutosuggestItems.length > 0
+									"
+									@mouseover="focusGenreContainer()"
+									@mouseleave="blurGenreContainer()"
+								>
+									<span
+										class="autosuggest-item"
+										tabindex="0"
+										v-on:click="
+											selectGenreAutosuggest(item)
+										"
+										v-for="(item,
+										index) in genreAutosuggestItems"
+										:key="index"
+										>{{ item }}</span
+									>
+								</div>
 								<div class="list-container">
 									<div
 										class="list-item"
@@ -447,7 +499,17 @@ export default {
 			useHTTPS: false,
 			discogs: {
 				apiResults: []
-			}
+			},
+			artistInputValue: "",
+			genreInputValue: "",
+			artistInputFocussed: false,
+			genreInputFocussed: false,
+			genreAutosuggestContainerFocussed: false,
+			artistAutosuggestContainerFocussed: false,
+			keydownArtistInputTimeout: 0,
+			keydownGenreInputTimeout: 0,
+			artistAutosuggestItems: [],
+			genreAutosuggestItems: []
 		};
 	},
 	computed: {
@@ -687,6 +749,55 @@ export default {
 			delete apiResult.gotMoreInfo;
 
 			this.selectDiscogsInfo(apiResult);
+		},
+		blurArtistInput() {
+			this.artistInputFocussed = false;
+		},
+		focusArtistInput() {
+			this.artistInputFocussed = true;
+		},
+		blurArtistContainer() {
+			this.artistAutosuggestContainerFocussed = false;
+		},
+		focusArtistContainer() {
+			this.artistAutosuggestContainerFocussed = true;
+		},
+		keydownArtistInput() {
+			clearTimeout(this.keydownArtistInputTimeout);
+			this.keydownArtistInputTimeout = setTimeout(() => {
+				// Do things here to query the artist
+			}, 1000);
+		},
+		selectArtistAutosuggest(value) {
+			this.artistInputValue = value;
+		},
+		blurGenreInput() {
+			this.genreInputFocussed = false;
+		},
+		focusGenreInput() {
+			this.genreInputFocussed = true;
+		},
+		blurGenreContainer() {
+			this.genreAutosuggestContainerFocussed = false;
+		},
+		focusGenreContainer() {
+			this.genreAutosuggestContainerFocussed = true;
+		},
+		keydownGenreInput() {
+			clearTimeout(this.keydownGenreInputTimeout);
+			this.keydownGenreInputTimeout = setTimeout(() => {
+				if (this.genreInputValue.length > 1) {
+					const genres = ["EDM", "Pop", "Rock"];
+					this.genreAutosuggestItems = genres.filter(genre => {
+						return genre
+							.toLowerCase()
+							.startsWith(this.genreInputValue.toLowerCase());
+					});
+				} else this.genreAutosuggestItems = [];
+			}, 1000);
+		},
+		selectGenreAutosuggest(value) {
+			this.genreInputValue = value;
 		},
 		settings(type) {
 			switch (type) {
@@ -1089,12 +1200,14 @@ export default {
 
 		.artists-container {
 			width: calc((100% - 32px) / 3);
+			position: relative;
 		}
 
 		.genres-container {
 			width: calc((100% - 32px) / 3);
 			margin-left: 16px;
 			margin-right: 16px;
+			position: relative;
 		}
 
 		.youtube-id-container {
@@ -1141,6 +1254,43 @@ export default {
 
 		.list-item:last-child > p {
 			margin-bottom: 0;
+		}
+
+		.autosuggest-container {
+			position: absolute;
+			background: white;
+			width: calc(100% + 1px);
+			top: 57px;
+			z-index: 200;
+			overflow: auto;
+			max-height: 100%;
+			clear: both;
+
+			.autosuggest-item {
+				padding: 8px;
+				display: block;
+				border: 1px solid #dbdbdb;
+				margin-top: -1px;
+				line-height: 16px;
+				cursor: pointer;
+				-webkit-user-select: none;
+				-ms-user-select: none;
+				-moz-user-select: none;
+				user-select: none;
+			}
+
+			.autosuggest-item:hover,
+			.autosuggest-item:focus {
+				background-color: #eee;
+			}
+
+			.autosuggest-item:first-child {
+				border-top: none;
+			}
+
+			.autosuggest-item:last-child {
+				border-radius: 0 0 3px 3px;
+			}
 		}
 	}
 }
