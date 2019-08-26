@@ -91,7 +91,7 @@ module.exports = {
 	 * @param cb
 	 */
 	joinAdminRoom: hooks.adminRequired((session, page, cb) => {
-		if (page === 'queue' || page === 'songs' || page === 'stations' || page === 'reports' || page === 'news' || page === 'users' || page === 'statistics') {
+		if (page === 'queue' || page === 'songs' || page === 'stations' || page === 'reports' || page === 'news' || page === 'users' || page === 'statistics' || page === 'punishments') {
 			utils.socketJoinRoom(session.socketId, `admin.${page}`);
 		}
 		cb({});

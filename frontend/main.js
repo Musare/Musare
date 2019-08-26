@@ -121,7 +121,7 @@ lofig.get("serverDomain", res => {
 			});
 		});
 		socket.on("keep.event:banned", ban => {
-			store.dispatch("user/auth/banned", ban);
+			store.dispatch("user/auth/banUser", ban);
 		});
 		socket.on("event:user.username.changed", username => {
 			store.dispatch("user/auth/updateUsername", username);

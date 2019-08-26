@@ -161,8 +161,8 @@ const modules = {
 			authData: ({ commit }, data) => {
 				commit("authData", data);
 			},
-			banned: ({ commit }, ban) => {
-				commit("banned", ban);
+			banUser: ({ commit }, ban) => {
+				commit("banUser", ban);
 			},
 			updateUsername: ({ commit }, username) => {
 				commit("updateUsername", username);
@@ -193,7 +193,7 @@ const modules = {
 				state.userId = data.userId;
 				state.gotData = true;
 			},
-			banned(state, ban) {
+			banUser(state, ban) {
 				state.banned = true;
 				state.ban = ban;
 			},

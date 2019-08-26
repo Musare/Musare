@@ -157,7 +157,7 @@ export default {
 			this.socket.emit("punishments.index", res => {
 				if (res.status === "success") this.punishments = res.data;
 			});
-			// this.socket.emit('apis.joinAdminRoom', 'punishments', () => {});
+			this.socket.emit("apis.joinAdminRoom", "punishments", () => {});
 		},
 		...mapActions("modals", ["openModal"]),
 		...mapActions("admin/punishments", ["viewPunishment"])
@@ -167,6 +167,9 @@ export default {
 			this.socket = socket;
 			if (this.socket.connected) this.init();
 			io.onConnect(() => this.init());
+			socket.on("event:admin.punishment.added", punishment => {
+				this.punishments.push(punishment);
+			});
 		});
 	}
 };
