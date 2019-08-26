@@ -814,6 +814,8 @@ export default {
 		//   this.editing.song.skipDuration
 		// );
 
+		this.discogsQuery = this.editing.song.title;
+
 		lofig.get("cookie.secure", res => {
 			this.useHTTPS = res;
 		});
