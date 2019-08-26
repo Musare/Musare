@@ -64,8 +64,8 @@
 
 <script>
 import { mapState } from "vuex";
-
 import { Toast } from "vue-roaster";
+import { format } from "date-fns";
 
 import MainHeader from "../MainHeader.vue";
 import MainFooter from "../MainFooter.vue";
@@ -93,9 +93,10 @@ export default {
 					if (res.status === "error") this.$router.go("/404");
 					else {
 						this.user = res.data;
-						this.user.createdAt = moment(
-							this.user.createdAt
-						).format("LL");
+						this.user.createdAt = format(
+							this.user.createdAt,
+							"MMMM D YYYY"
+						);
 						this.isUser = true;
 					}
 				}

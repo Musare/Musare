@@ -105,6 +105,7 @@
 
 <script>
 import { Line } from "chart.js";
+import "chartjs-adapter-date-fns";
 
 import io from "../../io";
 

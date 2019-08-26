@@ -419,8 +419,8 @@
 
 <script>
 import { mapState, mapActions } from "vuex";
-
 import { Toast } from "vue-roaster";
+import { getSeconds, getMinutes, getHours } from "date-fns";
 
 import SongQueue from "../Modals/AddSongToQueue.vue";
 import AddToPlaylist from "../Modals/AddSongToPlaylist.vue";
@@ -626,19 +626,22 @@ export default {
 			}
 		},
 		formatTime(duration) {
-			const dur = moment.duration(duration, "seconds");
 			if (duration < 0) return "0:00";
 
-			const getHours = () => {
-				if (dur.hours > 0) {
-					if (dur.hours() < 10) return `0${dur.hours()}:`;
-					return `${dur.hours()}:`;
+			const seconds = getSeconds(duration);
+			const minutes = getMinutes(duration);
+			const hours = getHours(duration);
+
+			const formatHours = () => {
+				if (hours > 0) {
+					if (hours < 10) return `0${hours}:`;
+					return `${hours}:`;
 				}
 				return "";
 			};
 
-			return `${getHours()}${dur.minutes()}:${
-				dur.seconds() < 10 ? `0${dur.seconds()}` : dur.seconds()
+			return `${formatHours()}${minutes}:${
+				seconds < 10 ? `0${seconds}` : seconds
 			}`;
 		},
 		calculateTimeElapsed() {

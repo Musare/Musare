@@ -137,6 +137,7 @@
 <script>
 import { mapState, mapActions } from "vuex";
 
+import { format } from "date-fns";
 import { Toast } from "vue-roaster";
 import Modal from "../Modal.vue";
 import io from "../../../io";
@@ -202,44 +203,40 @@ export default {
 	},
 	methods: {
 		formatTime(length) {
-			const duration = moment.duration(length, "seconds");
-			const getHours = () => {
-				return Math.floor(duration.asHours());
-			};
-
 			if (length <= 0) return "0 seconds";
 
+			const hours = Math.floor(format(length, "HH"));
 			const formatHours = () => {
-				if (getHours() > 0) {
-					if (getHours() > 1) {
-						if (getHours() < 10) return `0${getHours()} hours `;
-						return `${getHours()} hours `;
+				if (hours > 0) {
+					if (hours > 1) {
+						if (hours < 10) return `0${hours} hours `;
+						return `${hours} hours `;
 					}
-					return `0${getHours()} hour `;
+					return `0${hours} hour `;
 				}
 				return "";
 			};
 
+			const minutes = format(length, "mm");
 			const formatMinutes = () => {
-				if (duration.minutes() > 0) {
-					if (duration.minutes() > 1) {
-						if (duration.minutes() < 10)
-							return `0${duration.minutes()} minutes `;
-						return `${duration.minutes()} minutes `;
+				if (minutes > 0) {
+					if (minutes > 1) {
+						if (minutes < 10) return `0${minutes} minutes `;
+						return `${minutes} minutes `;
 					}
-					return `0${duration.minutes()} minute `;
+					return `0${minutes} minute `;
 				}
 				return "";
 			};
 
+			const seconds = format(length, "ss");
 			const formatSeconds = () => {
-				if (duration.seconds() > 0) {
-					if (duration.seconds() > 1) {
-						if (duration.seconds() < 10)
-							return `0${duration.seconds()} seconds `;
-						return `${duration.seconds()} seconds `;
+				if (seconds > 0) {
+					if (seconds > 1) {
+						if (seconds < 10) return `0${seconds} seconds `;
+						return `${seconds} seconds `;
 					}
-					return `0${duration.seconds()} second `;
+					return `0${seconds} second `;
 				}
 				return "";
 			};

@@ -4,7 +4,9 @@
 		<i class="material-icons">not_interested</i>
 		<h4>
 			You are banned for
-			<strong>{{ moment(ban.expiresAt).fromNow(true) }}</strong>
+			<strong>{{
+				formatDistance(ban.expiresAt, Date.now(), { addSuffix: true })
+			}}</strong>
 		</h4>
 		<h5 class="reason">
 			<strong>Reason: </strong>
@@ -14,13 +16,9 @@
 </template>
 <script>
 import { mapState } from "vuex";
+import { formatDistance } from "date-fns"; // eslint-disable-line no-unused-vars
 
 export default {
-	data() {
-		return {
-			moment
-		};
-	},
 	computed: mapState({
 		ban: state => state.user.auth.ban
 	})

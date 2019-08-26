@@ -18,19 +18,23 @@
 						<br />
 						<strong>Expires at:</strong>
 						{{
-							moment(punishment.expiresAt).format(
+							format(
+								punishment.expiresAt,
 								"MMMM Do YYYY, h:mm:ss a"
 							)
 						}}
-						({{ moment(punishment.expiresAt).fromNow() }})
+						({{ formatDistance(punishment.expiresAt, new Date()) }})
 						<br />
 						<strong>Punished at:</strong>
 						{{
-							moment(punishment.punishedAt).format(
+							format(
+								punishment.punishedAt,
 								"MMMM Do YYYY, h:mm:ss a"
 							)
 						}}
-						({{ moment(punishment.punishedAt).fromNow() }})
+						({{
+							formatDistance(punishment.punishedAt, new Date())
+						}})
 						<br />
 						<strong>Punished by:</strong>
 						{{ punishment.punishedBy }}
@@ -57,6 +61,7 @@
 
 <script>
 import { mapState, mapActions } from "vuex";
+import { format, formatDistance } from "date-fns"; // eslint-disable-line no-unused-vars
 
 import io from "../../io";
 import Modal from "./Modal.vue";
@@ -65,8 +70,7 @@ export default {
 	components: { Modal },
 	data() {
 		return {
-			ban: {},
-			moment
+			ban: {}
 		};
 	},
 	computed: {

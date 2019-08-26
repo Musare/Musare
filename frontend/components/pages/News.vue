@@ -78,6 +78,8 @@
 </template>
 
 <script>
+import { format } from "date-fns";
+
 import MainHeader from "../MainHeader.vue";
 import MainFooter from "../MainFooter.vue";
 import io from "../../io";
@@ -116,7 +118,7 @@ export default {
 	},
 	methods: {
 		formatDate: unix => {
-			return moment(unix).format("DD-MM-YYYY");
+			return format(unix, "DD-MM-YYYY");
 		}
 	}
 };

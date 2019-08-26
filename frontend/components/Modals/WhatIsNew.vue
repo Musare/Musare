@@ -72,6 +72,8 @@
 </template>
 
 <script>
+import { format } from "date-fns";
+
 import io from "../../io";
 
 export default {
@@ -117,7 +119,7 @@ export default {
 			this.isModalActive = !this.isModalActive;
 		},
 		formatDate: unix => {
-			return moment(unix).format("DD-MM-YYYY");
+			return format(unix, "DD-MM-YYYY");
 		}
 	},
 	events: {

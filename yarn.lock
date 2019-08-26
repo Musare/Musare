@@ -2721,6 +2721,11 @@ chart.js@^2.5.0:
     chartjs-color "^2.1.0"
     moment "^2.10.2"
 
+chartjs-adapter-date-fns@^0.1.2:
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/chartjs-adapter-date-fns/-/chartjs-adapter-date-fns-0.1.2.tgz#54b1184b12f631f02839031bee9daeb3fe6c64a9"
+  integrity sha512-Q/k6OmGtcJcPG7YHAF2TmKD0egsDd4d1fVKMCRtQkzBDhcAPVKraVGk2Th1JzT4j5cQ8wS6VTtnbTsq+6M2fag==
+
 chartjs-color-string@^0.6.0:
   version "0.6.0"
   resolved "https://registry.yarnpkg.com/chartjs-color-string/-/chartjs-color-string-0.6.0.tgz#1df096621c0e70720a64f4135ea171d051402f71"
@@ -3474,6 +3479,11 @@ data-uri-to-buffer@2:
   integrity sha512-OkVVLrerfAKZlW2ZZ3Ve2y65jgiWqBKsTfUIAFbn8nVbPcCZg6l6gikKlEYv0kXcmzqGm6mFq/Jf2vriuEkv8A==
   dependencies:
     "@types/node" "^8.0.7"
+
+date-fns@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/date-fns/-/date-fns-2.0.1.tgz#c5f30e31d3294918e6b6a82753a4e719120e203d"
+  integrity sha512-C14oTzTZy8DH1Eq8N78owrCWvf3+cnJw88BTK/N3DYWVxDJuJzPaNdplzYxDYuuXXGvqBcO4Vy5SOrwAooXSWw==
 
 date-now@^0.1.4:
   version "0.1.4"

@@ -48,5 +48,8 @@ module.exports = {
 				use: ["vue-style-loader", "css-loader", "sass-loader"]
 			}
 		]
+	},
+	externals: {
+		moment: "moment"
 	}
 };
