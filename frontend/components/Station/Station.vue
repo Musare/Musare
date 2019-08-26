@@ -420,7 +420,6 @@
 <script>
 import { mapState, mapActions } from "vuex";
 import { Toast } from "vue-roaster";
-import { getSeconds, getMinutes, getHours } from "date-fns";
 
 import OfficialHeader from "./OfficialHeader.vue";
 import CommunityHeader from "./CommunityHeader.vue";
@@ -615,23 +614,28 @@ export default {
 			}
 		},
 		formatTime(duration) {
-			if (duration < 0) return "0:00";
+			if (duration) {
+				if (duration < 0) return "0:00";
 
-			const seconds = getSeconds(duration);
-			const minutes = getMinutes(duration);
-			const hours = getHours(duration);
+				const hours = Math.floor(duration / (60 * 60));
+				const minutes = Math.floor((duration - hours) / 60);
+				const seconds = Math.floor(
+					duration - hours * 60 * 60 - minutes * 60
+				);
 
-			const formatHours = () => {
-				if (hours > 0) {
-					if (hours < 10) return `0${hours}:`;
-					return `${hours}:`;
-				}
-				return "";
-			};
+				const formatHours = () => {
+					if (hours > 0) {
+						if (hours < 10) return `0${hours}:`;
+						return `${hours}:`;
+					}
+					return "";
+				};
 
-			return `${formatHours()}${minutes}:${
-				seconds < 10 ? `0${seconds}` : seconds
-			}`;
+				return `${formatHours()}${minutes}:${
+					seconds < 10 ? `0${seconds}` : seconds
+				}`;
+			}
+			return false;
 		},
 		calculateTimeElapsed() {
 			if (
