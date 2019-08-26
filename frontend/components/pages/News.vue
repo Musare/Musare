@@ -118,7 +118,7 @@ export default {
 	},
 	methods: {
 		formatDate: unix => {
-			return format(unix, "DD-MM-YYYY");
+			return format(unix, "dd-MM-yyyy");
 		}
 	}
 };

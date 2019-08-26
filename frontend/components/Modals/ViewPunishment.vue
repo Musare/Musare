@@ -19,21 +19,31 @@
 						<strong>Expires at:</strong>
 						{{
 							format(
-								punishment.expiresAt,
-								"MMMM Do YYYY, h:mm:ss a"
+								parseISO(punishment.expiresAt),
+								"MMMM do yyyy, h:mm:ss a"
 							)
 						}}
-						({{ formatDistance(punishment.expiresAt, new Date()) }})
+						({{
+							formatDistance(
+								parseISO(punishment.expiresAt),
+								new Date(),
+								{ addSuffix: true }
+							)
+						}})
 						<br />
 						<strong>Punished at:</strong>
 						{{
 							format(
-								punishment.punishedAt,
-								"MMMM Do YYYY, h:mm:ss a"
+								parseISO(punishment.punishedAt),
+								"MMMM do yyyy, h:mm:ss a"
 							)
 						}}
 						({{
-							formatDistance(punishment.punishedAt, new Date())
+							formatDistance(
+								parseISO(punishment.punishedAt),
+								new Date(),
+								{ addSuffix: true }
+							)
 						}})
 						<br />
 						<strong>Punished by:</strong>
@@ -61,7 +71,7 @@
 
 <script>
 import { mapState, mapActions } from "vuex";
-import { format, formatDistance } from "date-fns"; // eslint-disable-line no-unused-vars
+import { format, formatDistance, parseISO } from "date-fns"; // eslint-disable-line no-unused-vars
 
 import io from "../../io";
 import Modal from "./Modal.vue";
@@ -85,7 +95,10 @@ export default {
 		});
 	},
 	methods: {
-		...mapActions("modals", ["closeModal"])
+		...mapActions("modals", ["closeModal"]),
+		format,
+		formatDistance,
+		parseISO
 	}
 };
 </script>

@@ -119,7 +119,7 @@ export default {
 			this.isModalActive = !this.isModalActive;
 		},
 		formatDate: unix => {
-			return format(unix, "DD-MM-YYYY");
+			return format(unix, "dd-MM-yyyy");
 		}
 	},
 	events: {

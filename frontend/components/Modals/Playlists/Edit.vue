@@ -137,7 +137,6 @@
 <script>
 import { mapState, mapActions } from "vuex";
 
-import { format } from "date-fns";
 import { Toast } from "vue-roaster";
 import Modal from "../Modal.vue";
 import io from "../../../io";
@@ -202,10 +201,10 @@ export default {
 		});
 	},
 	methods: {
-		formatTime(length) {
-			if (length <= 0) return "0 seconds";
+		formatTime(duration) {
+			if (duration <= 0) return "0 seconds";
 
-			const hours = Math.floor(format(length, "HH"));
+			const hours = Math.floor(duration / (60 * 60));
 			const formatHours = () => {
 				if (hours > 0) {
 					if (hours > 1) {
@@ -217,7 +216,7 @@ export default {
 				return "";
 			};
 
-			const minutes = format(length, "mm");
+			const minutes = Math.floor((duration - hours) / 60);
 			const formatMinutes = () => {
 				if (minutes > 0) {
 					if (minutes > 1) {
@@ -229,7 +228,9 @@ export default {
 				return "";
 			};
 
-			const seconds = format(length, "ss");
+			const seconds = Math.floor(
+				duration - hours * 60 * 60 - minutes * 60
+			);
 			const formatSeconds = () => {
 				if (seconds > 0) {
 					if (seconds > 1) {

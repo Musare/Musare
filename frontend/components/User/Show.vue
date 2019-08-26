@@ -65,7 +65,7 @@
 <script>
 import { mapState } from "vuex";
 import { Toast } from "vue-roaster";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 
 import MainHeader from "../MainHeader.vue";
 import MainFooter from "../MainFooter.vue";
@@ -94,8 +94,8 @@ export default {
 					else {
 						this.user = res.data;
 						this.user.createdAt = format(
-							this.user.createdAt,
-							"MMMM D YYYY"
+							parseISO(this.user.createdAt),
+							"MMMM do yyyy"
 						);
 						this.isUser = true;
 					}

@@ -4,9 +4,7 @@
 		<i class="material-icons">not_interested</i>
 		<h4>
 			You are banned for
-			<strong>{{
-				formatDistance(ban.expiresAt, Date.now(), { addSuffix: true })
-			}}</strong>
+			<strong>{{ formatDistance(ban.expiresAt, Date.now()) }}</strong>
 		</h4>
 		<h5 class="reason">
 			<strong>Reason: </strong>
@@ -21,7 +19,8 @@ import { formatDistance } from "date-fns"; // eslint-disable-line no-unused-vars
 export default {
 	computed: mapState({
 		ban: state => state.user.auth.ban
-	})
+	}),
+	methods: { formatDistance }
 };
 </script>
 
