@@ -155,7 +155,7 @@ module.exports = class extends coreClass {
 		
 					let songGenres = (genres) => {
 						return genres.filter((genre) => {
-								return (isLength(genre, 1, 16) && regex.az09_.test(genre));
+								return (isLength(genre, 1, 16) && regex.azAZ09_.test(genre));
 							}).length === genres.length;
 					};
 					this.schemas.song.path('genres').validate(songGenres, 'Invalid genres.');

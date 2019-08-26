@@ -35,10 +35,15 @@ const modules = {
 			addSong: ({ commit }, song) => commit("addSong", song),
 			removeSong: ({ commit }, songId) => commit("removeSong", songId),
 			updateSong: ({ commit }, updatedSong) =>
-				commit("updateSong", updatedSong)
+				commit("updateSong", updatedSong),
+			updateSongField: ({ commit }, data) =>
+				commit("updateSongField", data),
+			selectDiscogsInfo: ({ commit }, discogsInfo) =>
+				commit("selectDiscogsInfo", discogsInfo)
 		},
 		mutations: {
 			editSong(state, song) {
+				if (song.song.discogs === undefined) song.song.discogs = null;
 				state.editing = { ...song };
 			},
 			stopVideo(state) {
@@ -81,6 +86,12 @@ const modules = {
 					if (song._id === updatedSong._id)
 						state.songs.$set(index, updatedSong);
 				});
+			},
+			updateSongField(state, data) {
+				state.editing.song[data.field] = data.value;
+			},
+			selectDiscogsInfo(state, discogsInfo) {
+				state.editing.song.discogs = discogsInfo;
 			}
 		}
 	},

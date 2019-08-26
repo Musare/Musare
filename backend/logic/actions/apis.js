@@ -70,6 +70,47 @@ module.exports = {
 	}),
 
 	/**
+	 * Gets Discogs data
+	 *
+	 * @param session
+	 * @param query - the query
+	 * @param cb
+	 */
+	searchDiscogs: hooks.adminRequired((session, query, cb, userId) => {
+		async.waterfall([
+			(next) => {
+				const params = [
+					`q=${encodeURIComponent(query)}`,
+					`per_page=20`
+				].join('&');
+		
+				const options = {
+					url: `https://api.discogs.com/database/search?${params}`,
+					headers: {
+						"User-Agent": "Request",
+						"Authorization": `Discogs key=${config.get("apis.discogs.client")}, secret=${config.get("apis.discogs.secret")}`
+					}
+				};
+		
+				request(options, (err, res, body) => {
+					if (err) next(err);
+					body = JSON.parse(body);
+					next(null, body.results);
+					if (body.error) next(body.error);
+				});
+			}
+		], async (err, results) => {
+			if (err) {
+				err = await utils.getError(err);
+				logger.error("APIS_SEARCH_DISCOGS", `Searching discogs failed with query "${query}". "${err}"`);
+				return cb({status: 'failure', message: err});
+			}
+			logger.success('APIS_SEARCH_DISCOGS', `User "${userId}" searched Discogs succesfully for query "${query}".`);
+			cb({status: 'success', results});
+		});
+	}),
+
+	/**
 	 * Joins a room
 	 *
 	 * @param session

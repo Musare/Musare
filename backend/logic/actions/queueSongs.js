@@ -169,12 +169,12 @@ let lib = {
 					next(null, song);
 				});
 			},
-			(newSong, next) => {
+			/*(newSong, next) => {
 				utils.getSongFromSpotify(newSong, (err, song) => {
 					if (!song) next(null, newSong);
 					else next(err, song);
 				});
-			},
+			},*/
 			(newSong, next) => {
 				const song = new db.models.queueSong(newSong);
 				song.save((err, song) => {

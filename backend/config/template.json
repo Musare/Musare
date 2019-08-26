@@ -32,6 +32,11 @@
 			"client": "",
 			"secret": "",
 			"enabled": false
+		},
+		"discogs": {
+			"client": "",
+			"secret": "",
+			"enabled": false
 		}
 	},
 	"cors": {
