@@ -479,7 +479,7 @@ html {
 	.badge {
 		position: relative;
 		padding-right: 2px;
-		color: $green;
+		color: $lime;
 		top: +5px;
 	}
 }
