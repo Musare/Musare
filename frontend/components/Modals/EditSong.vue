@@ -201,7 +201,15 @@
 								</div>
 							</div>
 							<div class="genres-container">
-								<label class="label">Genres</label>
+								<label class="label">
+									<span>Genres</span>
+									<i
+										class="material-icons"
+										@click="toggleGenreHelper"
+										@dblclick="resetGenreHelper"
+										>info</i
+									>
+								</label>
 								<p class="control has-addons">
 									<input
 										class="input"
@@ -477,6 +485,100 @@
 				</button>
 			</div>
 		</modal>
+		<div
+			id="genre-helper-container"
+			v-bind:style="{
+				width: genreHelper.width + 'px',
+				height: genreHelper.height + 'px',
+				top: genreHelper.top + 'px',
+				left: genreHelper.left + 'px'
+			}"
+			v-if="genreHelper.shown"
+			@mousedown="onResizeGenreHelper"
+		>
+			<div
+				class="genre-helper-header"
+				@mousedown="onDragGenreHelper"
+			></div>
+			<div class="genre-helper-body">
+				<span>Blues</span><span>Classic rock</span><span>Country</span
+				><span>Dance</span><span>Disco</span><span>Funk</span
+				><span>Grunge</span><span>Hip-Hop</span><span>Jazz</span
+				><span>Metal</span><span>New Age</span><span>Oldies</span
+				><span>Other</span><span>Pop</span><span>Rhythm and Blues</span
+				><span>Rap</span><span>Reggae</span><span>Rock</span
+				><span>Techno</span><span>Industrial</span
+				><span>Alternative</span><span>Ska</span><span>Death metal</span
+				><span>Pranks</span><span>Soundtrack</span
+				><span>Euro-Techno</span><span>Ambient</span
+				><span>Trip-Hop</span><span>Vocal</span><span>Jazz & Funk</span
+				><span>Fusion</span><span>Trance</span><span>Classical</span
+				><span>Instrumental</span><span>Acid</span><span>House</span
+				><span>Game</span><span>Sound clip</span><span>Gospel</span
+				><span>Noise</span><span>Alternative Rock</span><span>Bass</span
+				><span>Soul</span><span>Punk</span><span>Space</span
+				><span>Meditative</span><span>Instrumental Pop</span
+				><span>Instrumental Rock</span><span>Ethnic</span
+				><span>Gothic</span><span>Darkwave</span
+				><span>Techno-Industrial</span><span>Electronic</span
+				><span>Pop-Folk</span><span>Eurodance</span><span>Dream</span
+				><span>Southern Rock</span><span>Comedy</span><span>Cult</span
+				><span>Gangsta</span><span>Top 40</span
+				><span>Christian Rap</span><span>Pop/Funk</span
+				><span>Jungle</span><span>Native US</span><span>Cabaret</span
+				><span>New Wave</span><span>Psychedelic</span><span>Rave</span
+				><span>Show tunes</span><span>Trailer</span><span>Lo-Fi</span
+				><span>Tribal</span><span>Acid Punk</span><span>Acid Jazz</span
+				><span>Polka</span><span>Retro</span><span>Musical</span
+				><span>Rock ’n’ Roll </span><span>Hard Rock</span>
+				<span>Folk</span><span>Folk-Rock</span
+				><span>National Folk</span> <span>Swing</span
+				><span>Fast Fusion</span><span>Bebop</span><span>Latin</span
+				><span>Revival</span><span>Celtic</span><span>Bluegrass</span
+				><span>Avantgarde</span><span>Gothic Rock</span
+				><span>Progressive Rock</span><span>Psychedelic Rock</span
+				><span>Symphonic Rock</span><span>Slow rock</span
+				><span>Big Band</span><span>Chorus</span
+				><span>Easy Listening</span><span>Acoustic</span
+				><span>Humour</span><span>Speech</span><span>Chanson</span
+				><span>Opera</span><span>Chamber music</span><span>Sonata</span
+				><span>Symphony</span><span>Booty bass</span><span>Primus</span
+				><span>Porn groove</span><span>Satire</span><span>Slow jam</span
+				><span>Club</span><span>Tango</span><span>Samba</span
+				><span>Folklore</span><span>Ballad</span
+				><span>Power ballad</span><span>Rhythmic Soul</span
+				><span>Freestyle</span><span>Duet</span><span>Punk Rock</span
+				><span>Drum solo</span><span>A cappella</span
+				><span>Euro-House</span><span>Dance Hall</span><span>Goa</span
+				><span>Drum & Bass</span><span>Club-House</span
+				><span>Hardcore Techno</span><span>Terror</span
+				><span>Indie</span><span>BritPop</span><span>Negerpunk</span
+				><span>Polsk Punk</span><span>Beat</span
+				><span>Christian Gangsta Rap</span><span>Heavy Metal</span
+				><span>Black Metal</span><span>Crossover</span
+				><span>Contemporary Christian</span><span>Christian rock</span
+				><span>Merengue</span><span>Salsa</span><span>Thrash Metal</span
+				><span>Anime</span><span>Jpop</span><span>Synthpop</span
+				><span>Abstract</span><span>Art Rock</span><span>Baroque</span
+				><span>Bhangra</span><span>Big beat</span><span>Breakbeat</span
+				><span>Chillout</span><span>Downtempo</span><span>Dub</span
+				><span>EBM</span><span>Eclectic</span><span>Electro</span
+				><span>Electroclash</span><span>Emo</span
+				><span>Experimental</span><span>Garage</span><span>Global</span
+				><span>IDM</span><span>Illbient</span><span>Industro-Goth</span
+				><span>Jam Band</span><span>Krautrock</span
+				><span>Leftfield</span><span>Lounge</span><span>Math Rock</span
+				><span>New Romantic</span><span>Nu-Breakz</span
+				><span>Post-Punk</span><span>Post-Rock</span
+				><span>Psytrance</span><span>Shoegaze</span
+				><span>Space Rock</span><span>Trop Rock</span
+				><span>World Music</span><span>Neoclassical</span
+				><span>Audiobook</span><span>Audio theatre</span
+				><span>Neue Deutsche Welle</span><span>Podcast</span
+				><span>Indie-Rock</span><span>G-Funk</span><span>Dubstep</span
+				><span>Garage Rock</span><span>Psybient</span>
+			</div>
+		</div>
 	</div>
 </template>
 
@@ -509,7 +611,18 @@ export default {
 			keydownArtistInputTimeout: 0,
 			keydownGenreInputTimeout: 0,
 			artistAutosuggestItems: [],
-			genreAutosuggestItems: []
+			genreAutosuggestItems: [],
+			genreHelper: {
+				width: 200,
+				height: 200,
+				top: 0,
+				left: 0,
+				shown: false,
+				pos1: 0,
+				pos2: 0,
+				pos3: 0,
+				pos4: 0
+			}
 		};
 	},
 	computed: {
@@ -906,6 +1019,81 @@ export default {
 			ctx.fillStyle = currentDurationColor;
 			ctx.fillRect(widthCurrentTime, 0, 1, 20);
 		},
+		onDragGenreHelper(e) {
+			const e1 = e || window.event;
+			e1.preventDefault();
+
+			this.genreHelper.pos3 = e1.clientX;
+			this.genreHelper.pos4 = e1.clientY;
+
+			document.onmousemove = e => {
+				const e2 = e || window.event;
+				e2.preventDefault();
+				// calculate the new cursor position:
+				this.genreHelper.pos1 = this.genreHelper.pos3 - e.clientX;
+				this.genreHelper.pos2 = this.genreHelper.pos4 - e.clientY;
+				this.genreHelper.pos3 = e.clientX;
+				this.genreHelper.pos4 = e.clientY;
+				// set the element's new position:
+				this.genreHelper.top =
+					this.genreHelper.top - this.genreHelper.pos2;
+				this.genreHelper.left =
+					this.genreHelper.left - this.genreHelper.pos1;
+			};
+
+			document.onmouseup = () => {
+				document.onmouseup = null;
+				document.onmousemove = null;
+
+				this.saveGenreHelper();
+			};
+		},
+		onResizeGenreHelper(e) {
+			if (e.target.id !== "genre-helper-container") return;
+
+			document.onmouseup = () => {
+				document.onmouseup = null;
+
+				const { height, width } = e.target.style;
+
+				this.genreHelper.height = Number(
+					height
+						.split("")
+						.splice(0, height.length - 2)
+						.join("")
+				);
+				this.genreHelper.width = Number(
+					width
+						.split("")
+						.splice(0, width.length - 2)
+						.join("")
+				);
+
+				this.saveGenreHelper();
+			};
+		},
+		toggleGenreHelper() {
+			this.genreHelper.shown = !this.genreHelper.shown;
+		},
+		resetGenreHelper() {
+			this.genreHelper.top = 0;
+			this.genreHelper.left = 0;
+			this.genreHelper.width = 200;
+			this.genreHelper.height = 200;
+			this.saveGenreHelper();
+		},
+		saveGenreHelper() {
+			localStorage.setItem(
+				"genreHelper",
+				JSON.stringify({
+					height: this.genreHelper.height,
+					width: this.genreHelper.width,
+					top: this.genreHelper.top,
+					left: this.genreHelper.left,
+					shown: this.genreHelper.shown
+				})
+			);
+		},
 		...mapActions("admin/songs", [
 			"stopVideo",
 			"loadVideoById",
@@ -924,6 +1112,15 @@ export default {
 		//   this.editing.song.songId,
 		//   this.editing.song.skipDuration
 		// );
+
+		if (localStorage.genreHelper) {
+			const genreHelper = JSON.parse(localStorage.getItem("genreHelper"));
+			this.genreHelper.height = genreHelper.height;
+			this.genreHelper.width = genreHelper.width;
+			this.genreHelper.top = genreHelper.top;
+			this.genreHelper.left = genreHelper.left;
+			this.genreHelper.shown = genreHelper.shown;
+		}
 
 		lofig.get("cookie.secure", res => {
 			this.useHTTPS = res;
@@ -1038,6 +1235,37 @@ export default {
 
 <style lang="scss">
 @import "styles/global.scss";
+
+#genre-helper-container {
+	background-color: white;
+	position: fixed;
+	z-index: 10000000;
+	resize: both;
+	overflow: auto;
+	border: 1px solid #d3d3d3;
+	min-height: 50px !important;
+	min-width: 50px !important;
+
+	.genre-helper-header {
+		cursor: move;
+		z-index: 100000001;
+		background-color: $musareBlue;
+		padding: 10px;
+		display: block;
+		height: 10px;
+		width: 100%;
+	}
+
+	.genre-helper-body {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-evenly;
+
+		span {
+			padding: 3px 6px;
+		}
+	}
+}
 
 .song-modal {
 	.modal-card-title {
@@ -1208,6 +1436,22 @@ export default {
 			margin-left: 16px;
 			margin-right: 16px;
 			position: relative;
+
+			label {
+				display: flex;
+
+				i {
+					font-size: 15px;
+					align-self: center;
+					margin-left: 5px;
+					color: $musareBlue;
+					cursor: pointer;
+					-webkit-user-select: none;
+					-moz-user-select: none;
+					-ms-user-select: none;
+					user-select: none;
+				}
+			}
 		}
 
 		.youtube-id-container {
