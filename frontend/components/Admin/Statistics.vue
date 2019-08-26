@@ -104,7 +104,7 @@
 </template>
 
 <script>
-import Chart from "chart.js";
+import { Line } from "chart.js";
 
 import io from "../../io";
 
@@ -148,8 +148,7 @@ export default {
 		const minuteCtx = document.getElementById("minuteChart");
 		const hourCtx = document.getElementById("hourChart");
 
-		this.minuteChart = new Chart(minuteCtx, {
-			type: "line",
+		this.minuteChart = new Line(minuteCtx, {
 			data: {
 				labels: [
 					"-10",
@@ -207,8 +206,7 @@ export default {
 			}
 		});
 
-		this.hourChart = new Chart(hourCtx, {
-			type: "line",
+		this.hourChart = new Line(hourCtx, {
 			data: {
 				labels: [
 					"-10",
