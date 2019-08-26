@@ -422,17 +422,6 @@ import { mapState, mapActions } from "vuex";
 import { Toast } from "vue-roaster";
 import { getSeconds, getMinutes, getHours } from "date-fns";
 
-import SongQueue from "../Modals/AddSongToQueue.vue";
-import AddToPlaylist from "../Modals/AddSongToPlaylist.vue";
-import EditPlaylist from "../Modals/Playlists/Edit.vue";
-import CreatePlaylist from "../Modals/Playlists/Create.vue";
-import EditStation from "../Modals/EditStation.vue";
-import Report from "../Modals/Report.vue";
-
-import SongsListSidebar from "../Sidebars/SongsList.vue";
-import PlaylistSidebar from "../Sidebars/Playlist.vue";
-import UsersSidebar from "../Sidebars/UsersList.vue";
-
 import OfficialHeader from "./OfficialHeader.vue";
 import CommunityHeader from "./CommunityHeader.vue";
 
@@ -1223,15 +1212,15 @@ export default {
 	components: {
 		OfficialHeader,
 		CommunityHeader,
-		SongQueue,
-		AddToPlaylist,
-		EditPlaylist,
-		CreatePlaylist,
-		EditStation,
-		Report,
-		SongsListSidebar,
-		PlaylistSidebar,
-		UsersSidebar,
+		SongQueue: () => import("../Modals/AddSongToQueue.vue"),
+		AddToPlaylist: () => import("../Modals/AddSongToPlaylist.vue"),
+		EditPlaylist: () => import("../Modals/Playlists/Edit.vue"),
+		CreatePlaylist: () => import("../Modals/Playlists/Create.vue"),
+		EditStation: () => import("../Modals/EditStation.vue"),
+		Report: () => import("../Modals/Report.vue"),
+		SongsListSidebar: () => import("../Sidebars/SongsList.vue"),
+		PlaylistSidebar: () => import("../Sidebars/Playlist.vue"),
+		UsersSidebar: () => import("../Sidebars/UsersList.vue"),
 		UserIdToUsername,
 		Z404
 	}
