@@ -12,7 +12,7 @@
     "bundle-analyse": "webpack --config webpack.prod.js --profile --json > bundle-stats.json && npx webpack-bundle-analyzer bundle-stats.json --mode static --report bundle-report.html --no-open",
     "dev": "webpack-dev-server --config webpack.dev.js",
     "prod": "webpack --config webpack.prod.js",
-    "test": "snyk test"
+    "test": ""
   },
   "devDependencies": {
     "@babel/core": "^7.5.4",

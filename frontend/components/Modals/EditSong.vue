@@ -1,238 +1,406 @@
 <template>
 	<div>
-		<modal title="Edit Song">
+		<modal title="Edit Song" class="song-modal">
 			<div slot="body">
-				<h5 class="has-text-centered">Video Preview</h5>
-				<div class="video-container">
-					<div id="player"></div>
-					<canvas
-						id="durationCanvas"
-						height="40"
-						width="560"
-					></canvas>
-					<div class="controls">
-						<form action="#">
-							<p style="margin-top: 0; position: relative;">
-								<input
-									type="range"
-									id="volumeSlider"
-									min="0"
-									max="100"
-									class="active"
-									v-on:change="changeVolume()"
-									v-on:input="changeVolume()"
+				<div class="left-section">
+					<div class="top-section">
+						<div class="player-section">
+							<div id="player"></div>
+							<canvas
+								id="durationCanvas"
+								height="20"
+								width="530"
+							></canvas>
+							<div class="player-footer">
+								<div class="player-footer-left">
+									<i
+										class="material-icons player-play-pause"
+										v-on:click="settings('play')"
+										v-if="video.paused"
+										>play_arrow</i
+									>
+									<i
+										class="material-icons player-play-pause"
+										v-on:click="settings('pause')"
+										v-if="!video.paused"
+										>pause</i
+									>
+									<i
+										class="material-icons player-stop"
+										v-on:click="settings('stop')"
+										>stop</i
+									>
+									<i
+										class="material-icons player-fast-forward"
+										v-on:click="
+											settings('skipToLast10Secs')
+										"
+										>fast_forward</i
+									>
+								</div>
+								<div class="player-footer-center">
+									<img src="/assets/social/youtube.svg" />
+									<span>
+										<span>
+											{{ youtubeVideoCurrentTime }}
+										</span>
+										/
+										<span>
+											{{ youtubeVideoDuration }}
+											{{ youtubeVideoNote }}
+										</span>
+									</span>
+								</div>
+								<div class="player-footer-right">
+									<input
+										type="range"
+										id="volumeSlider"
+										min="0"
+										max="100"
+										class="active"
+										v-on:change="changeVolume()"
+										v-on:input="changeVolume()"
+									/>
+								</div>
+							</div>
+						</div>
+						<img
+							class="thumbnail-preview"
+							:src="editing.song.thumbnail"
+							onerror="this.src='/assets/notes-transparent.png'"
+						/>
+					</div>
+					<div class="edit-section">
+						<div class="control is-grouped">
+							<div class="title-container">
+								<label class="label">Title</label>
+								<p class="control has-addons">
+									<input
+										class="input"
+										type="text"
+										v-model="editing.song.title"
+									/>
+									<button
+										class="button album-get-button"
+										v-on:click="getAlbumData('title')"
+									>
+										<i class="material-icons album-get-icon"
+											>album</i
+										>
+									</button>
+								</p>
+							</div>
+							<div class="duration-container">
+								<label class="label">Duration</label>
+								<p class="control">
+									<input
+										class="input"
+										type="text"
+										v-model="editing.song.duration"
+									/>
+								</p>
+							</div>
+							<div class="skip-duration-container">
+								<label class="label">Skip duration</label>
+								<p class="control">
+									<input
+										class="input"
+										type="text"
+										v-model="editing.song.skipDuration"
+									/>
+								</p>
+							</div>
+						</div>
+						<div class="control is-grouped">
+							<div class="album-art-container">
+								<label class="label">Album art</label>
+								<p class="control has-addons">
+									<input
+										class="input"
+										type="text"
+										v-model="editing.song.thumbnail"
+									/>
+									<button
+										class="button album-get-button"
+										v-on:click="getAlbumData('albumArt')"
+									>
+										<i class="material-icons album-get-icon"
+											>album</i
+										>
+									</button>
+								</p>
+							</div>
+						</div>
+						<div class="control is-grouped">
+							<div class="artists-container">
+								<label class="label">Artists</label>
+								<p class="control has-addons">
+									<input
+										class="input"
+										type="text"
+										id="new-artist"
+									/>
+									<button
+										class="button album-get-button"
+										v-on:click="getAlbumData('artists')"
+									>
+										<i class="material-icons album-get-icon"
+											>album</i
+										>
+									</button>
+									<button
+										class="button is-info add-button"
+										v-on:click="addTag('artists')"
+									>
+										<i class="material-icons">add</i>
+									</button>
+								</p>
+								<div class="list-container">
+									<div
+										class="list-item"
+										v-for="(artist, index) in editing.song
+											.artists"
+										:key="index"
+									>
+										<div
+											class="list-item-circle"
+											v-on:click="
+												removeTag('artists', index)
+											"
+										>
+											<i class="material-icons">close</i>
+										</div>
+										<p>{{ artist }}</p>
+									</div>
+								</div>
+							</div>
+							<div class="genres-container">
+								<label class="label">Genres</label>
+								<p class="control has-addons">
+									<input
+										class="input"
+										type="text"
+										id="new-genre"
+									/>
+									<button
+										class="button album-get-button"
+										v-on:click="getAlbumData('genres')"
+									>
+										<i class="material-icons album-get-icon"
+											>album</i
+										>
+									</button>
+									<button
+										class="button is-info add-button"
+										v-on:click="addTag('genres')"
+									>
+										<i class="material-icons">add</i>
+									</button>
+								</p>
+								<div class="list-container">
+									<div
+										class="list-item"
+										v-for="(genre, index) in editing.song
+											.genres"
+										:key="index"
+									>
+										<div
+											class="list-item-circle"
+											v-on:click="
+												removeTag('genres', index)
+											"
+										>
+											<i class="material-icons">close</i>
+										</div>
+										<p>{{ genre }}</p>
+									</div>
+								</div>
+							</div>
+							<div class="youtube-id-container">
+								<label class="label">YouTube ID</label>
+								<p class="control">
+									<input
+										class="input"
+										type="text"
+										v-model="editing.song.songId"
+									/>
+								</p>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="right-section">
+					<div class="api-section">
+						<div
+							class="selected-discogs-info"
+							v-if="!editing.song.discogs"
+						>
+							<p class="selected-discogs-info-none">None</p>
+						</div>
+						<div
+							class="selected-discogs-info"
+							v-if="editing.song.discogs"
+						>
+							<div class="top-container">
+								<img
+									:src="editing.song.discogs.album.albumArt"
 								/>
-							</p>
-						</form>
-						<p class="control has-addons">
-							<button
-								class="button"
-								v-on:click="settings('pause')"
-								v-if="!video.paused"
-							>
-								<i class="material-icons">pause</i>
-							</button>
-							<button
-								class="button"
-								v-on:click="settings('play')"
-								v-if="video.paused"
-							>
-								<i class="material-icons">play_arrow</i>
-							</button>
-							<button
-								class="button"
-								v-on:click="settings('stop')"
-							>
-								<i class="material-icons">stop</i>
-							</button>
-							<button
-								class="button"
-								v-on:click="settings('skipToLast10Secs')"
-							>
-								<i class="material-icons">fast_forward</i>
-							</button>
-						</p>
-						<p>
-							YouTube:
-							<span>{{ youtubeVideoCurrentTime }}</span> /
-							<span>{{ youtubeVideoDuration }}</span>
-							{{ youtubeVideoNote }}
-						</p>
-					</div>
-				</div>
-				<h5 class="has-text-centered">Thumbnail Preview</h5>
-				<img
-					class="thumbnail-preview"
-					:src="editing.song.thumbnail"
-					onerror="this.src='/assets/notes-transparent.png'"
-				/>
-
-				<div class="control is-horizontal">
-					<div class="control-label">
-						<label class="label">Thumbnail URL</label>
-					</div>
-					<div class="control">
-						<input
-							class="input"
-							type="text"
-							v-model="editing.song.thumbnail"
-						/>
-					</div>
-				</div>
-
-				<h5 class="has-text-centered">Edit Information</h5>
-
-				<p class="control">
-					<label class="checkbox">
-						<input
-							type="checkbox"
-							v-model="editing.song.explicit"
-						/>
-						Explicit
-					</label>
-				</p>
-				<label class="label">Song ID & Title</label>
-				<div class="control is-horizontal">
-					<div class="control is-grouped">
+								<div class="right-container">
+									<p class="album-title">
+										{{ editing.song.discogs.album.title }}
+									</p>
+									<div class="bottom-row">
+										<p class="type-year">
+											<span>{{
+												editing.song.discogs.album.type
+											}}</span>
+											•
+											<span>{{
+												editing.song.discogs.album.year
+											}}</span>
+										</p>
+									</div>
+								</div>
+							</div>
+							<div class="bottom-container">
+								<p class="bottom-container-field">
+									Artists:
+									<span>{{
+										editing.song.discogs.album.artists.join(
+											", "
+										)
+									}}</span>
+								</p>
+								<p class="bottom-container-field">
+									Genres:
+									<span>{{
+										editing.song.discogs.album.genres.join(
+											", "
+										)
+									}}</span>
+								</p>
+								<p class="bottom-container-field">
+									Data quality:
+									<span>{{
+										editing.song.discogs.dataQuality
+									}}</span>
+								</p>
+								<p class="bottom-container-field">
+									Track:
+									<span
+										>{{
+											editing.song.discogs.track.position
+										}}.
+										{{
+											editing.song.discogs.track.title
+										}}</span
+									>
+								</p>
+							</div>
+						</div>
 						<p class="control is-expanded">
+							<label class="label">Search query</label>
 							<input
 								class="input"
 								type="text"
-								v-model="editing.song.songId"
+								v-model="discogsQuery"
 							/>
 						</p>
-						<p class="control is-expanded">
-							<input
-								class="input"
-								type="text"
-								v-model="editing.song.title"
-								autofocus
-							/>
-						</p>
-					</div>
-				</div>
-				<label class="label">Artists & Genres</label>
-				<div class="control is-horizontal">
-					<div class="control is-grouped artist-genres">
-						<div>
-							<p class="control has-addons">
-								<input
-									class="input"
-									id="new-artist"
-									type="text"
-									placeholder="Artist"
-								/>
-								<button
-									class="button is-info"
-									v-on:click="addTag('artists')"
-								>
-									Add Artist
-								</button>
-							</p>
-							<span
-								class="tag is-info"
-								v-for="(artist, index) in editing.song.artists"
+						<button
+							class="button is-info is-fullwidth"
+							v-on:click="searchDiscogs()"
+						>
+							Search
+						</button>
+						<label
+							class="label"
+							v-if="discogs.apiResults.length > 0"
+							>API results</label
+						>
+						<div
+							class="api-results-container"
+							v-if="discogs.apiResults.length > 0"
+						>
+							<div
+								class="api-result"
+								v-for="(result, index) in discogs.apiResults"
 								:key="index"
 							>
-								{{ artist }}
-								<button
-									class="delete is-info"
-									v-on:click="removeTag('artists', index)"
-								></button>
-							</span>
-						</div>
-						<div>
-							<p class="control has-addons">
-								<input
-									class="input"
-									id="new-genre"
-									type="text"
-									placeholder="Genre"
-								/>
-								<button
-									class="button is-info"
-									v-on:click="addTag('genres')"
+								<div class="top-container">
+									<img :src="result.album.albumArt" />
+									<div class="right-container">
+										<p class="album-title">
+											{{ result.album.title }}
+										</p>
+										<div class="bottom-row">
+											<img
+												src="/assets/arrow_up.svg"
+												v-if="result.expanded"
+												v-on:click="
+													toggleAPIResult(index)
+												"
+											/>
+											<img
+												src="/assets/arrow_down.svg"
+												v-if="!result.expanded"
+												v-on:click="
+													toggleAPIResult(index)
+												"
+											/>
+											<p class="type-year">
+												<span>{{
+													result.album.type
+												}}</span>
+												•
+												<span>{{
+													result.album.year
+												}}</span>
+											</p>
+										</div>
+									</div>
+								</div>
+								<div
+									class="bottom-container"
+									v-if="result.expanded"
 								>
-									Add Genre
-								</button>
-							</p>
-							<span
-								class="tag is-info"
-								v-for="(genre, index) in editing.song.genres"
-								:key="index"
-							>
-								{{ genre }}
-								<button
-									class="delete is-info"
-									v-on:click="removeTag('genres', index)"
-								></button>
-							</span>
+									<p class="bottom-container-field">
+										Artists:
+										<span>{{
+											result.album.artists.join(", ")
+										}}</span>
+									</p>
+									<p class="bottom-container-field">
+										Genres:
+										<span>{{
+											result.album.genres.join(", ")
+										}}</span>
+									</p>
+									<p class="bottom-container-field">
+										Data quality:
+										<span>{{ result.dataQuality }}</span>
+									</p>
+									<div class="tracks">
+										<div
+											class="track"
+											tabindex="0"
+											v-for="(track,
+											trackIndex) in result.tracks"
+											:key="trackIndex"
+											v-on:click="
+												selectTrack(index, trackIndex)
+											"
+										>
+											<span>{{ track.position }}.</span>
+											<p>{{ track.title }}</p>
+										</div>
+									</div>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>
-				<label class="label">Song Duration</label>
-				<p class="control">
-					<input
-						class="input"
-						type="text"
-						v-model="editing.song.duration"
-					/>
-				</p>
-				<label class="label">Skip Duration</label>
-				<p class="control">
-					<input
-						class="input"
-						type="text"
-						v-model="editing.song.skipDuration"
-					/>
-				</p>
-				<hr />
-				<h5 class="has-text-centered">Spotify Information</h5>
-				<label class="label">Song title</label>
-				<p class="control">
-					<input class="input" type="text" v-model="spotify.title" />
-				</p>
-				<label class="label">Song artist (1 artist full name)</label>
-				<p class="control">
-					<input class="input" type="text" v-model="spotify.artist" />
-				</p>
-				<button
-					class="button is-success"
-					v-on:click="getSpotifySongs()"
-				>
-					Get Spotify songs
-				</button>
-				<hr />
-				<article
-					class="media"
-					v-for="(song, index) in spotify.songs"
-					:key="index"
-				>
-					<figure class="media-left">
-						<p class="image is-64x64">
-							<img
-								:src="song.thumbnail"
-								onerror="this.src='/assets/notes-transparent.png'"
-							/>
-						</p>
-					</figure>
-					<div class="media-content">
-						<div class="content">
-							<p>
-								<strong>{{ song.title }}</strong>
-								<br />
-								<small>Artists: {{ song.artists }}</small
-								>, <small>Duration: {{ song.duration }}</small
-								>,
-								<small>Explicit: {{ song.explicit }}</small>
-								<br />
-								<small>Thumbnail: {{ song.thumbnail }}</small>
-							</p>
-						</div>
-					</div>
-				</article>
 			</div>
-			<div slot="footer">
+			<div slot="footer" class="footer-buttons">
 				<button
 					class="button is-success"
 					v-on:click="save(editing.song, false)"
@@ -272,15 +440,14 @@ export default {
 	components: { Modal },
 	data() {
 		return {
-			spotify: {
-				title: "",
-				artist: "",
-				songs: []
-			},
+			discogsQuery: "",
 			youtubeVideoDuration: 0.0,
 			youtubeVideoCurrentTime: 0.0,
 			youtubeVideoNote: "",
-			useHTTPS: false
+			useHTTPS: false,
+			discogs: {
+				apiResults: []
+			}
 		};
 	},
 	computed: {
@@ -294,7 +461,9 @@ export default {
 		})
 	},
 	methods: {
-		save(song, close) {
+		save(songToCopy, close) {
+			const song = JSON.parse(JSON.stringify(songToCopy));
+
 			if (!song.title)
 				return Toast.methods.addToast(
 					"Please fill in all fields",
@@ -363,7 +532,7 @@ export default {
 					error = "Genre must have between 1 and 16 characters.";
 					return error;
 				}
-				if (!validation.regex.az09_.test(genre)) {
+				if (!validation.regex.azAZ09_.test(genre)) {
 					error =
 						"Invalid genre format. Only ascii characters are allowed.";
 					return error;
@@ -386,7 +555,11 @@ export default {
 				);
 			}
 
-			if (!this.useHTTPS && song.thumbnail.indexOf("http://") !== 0) {
+			if (
+				!this.useHTTPS &&
+				(song.thumbnail.indexOf("http://") !== 0 &&
+					song.thumbnail.indexOf("https://") !== 0)
+			) {
 				return Toast.methods.addToast(
 					'Thumbnail must start with "http://".',
 					8000
@@ -417,6 +590,103 @@ export default {
 						});
 				}
 			);
+		},
+		toggleAPIResult(index) {
+			const apiResult = this.discogs.apiResults[index];
+			if (apiResult.expanded === true) apiResult.expanded = false;
+			else if (apiResult.gotMoreInfo === true) apiResult.expanded = true;
+			else {
+				fetch(apiResult.album.resourceUrl)
+					.then(response => {
+						return response.json();
+					})
+					.then(data => {
+						apiResult.album.artists = [];
+						apiResult.album.artistIds = [];
+						const artistRegex = new RegExp(" \\([0-9]\\)$");
+
+						apiResult.dataQuality = data.data_quality;
+						data.artists.forEach(artist => {
+							apiResult.album.artists.push(
+								artist.name.replace(artistRegex, "")
+							);
+							apiResult.album.artistIds.push(artist.id);
+						});
+						apiResult.tracks = data.tracklist.map(track => {
+							return {
+								position: track.position,
+								title: track.title
+							};
+						});
+						apiResult.expanded = true;
+						apiResult.gotMoreInfo = true;
+					});
+			}
+		},
+		getAlbumData(type) {
+			if (!this.editing.song.discogs) return;
+			if (type === "title")
+				this.updateSongField({
+					field: "title",
+					value: this.editing.song.discogs.track.title
+				});
+			if (type === "albumArt")
+				this.updateSongField({
+					field: "thumbnail",
+					value: this.editing.song.discogs.album.albumArt
+				});
+			if (type === "genres")
+				this.updateSongField({
+					field: "genres",
+					value: this.editing.song.discogs.album.genres
+				});
+			if (type === "artists")
+				this.updateSongField({
+					field: "artists",
+					value: this.editing.song.discogs.album.artists
+				});
+		},
+		searchDiscogs() {
+			const query = this.discogsQuery;
+
+			this.socket.emit("apis.searchDiscogs", query, res => {
+				if (res.status === "success") {
+					Toast.methods.addToast(
+						`Successfully searched. Got ${res.results.length} results.`,
+						4000
+					);
+					this.discogs.apiResults = res.results.map(result => {
+						const type =
+							result.type.charAt(0).toUpperCase() +
+							result.type.slice(1);
+
+						return {
+							expanded: false,
+							gotMoreInfo: false,
+							album: {
+								id: result.id,
+								title: result.title,
+								type,
+								year: result.year,
+								genres: result.genre,
+								albumArt: result.cover_image,
+								resourceUrl: result.resource_url
+							}
+						};
+					});
+				} else Toast.methods.addToast(res.message, 8000);
+			});
+		},
+		selectTrack(apiResultIndex, trackIndex) {
+			const apiResult = JSON.parse(
+				JSON.stringify(this.discogs.apiResults[apiResultIndex])
+			);
+			apiResult.track = apiResult.tracks[trackIndex];
+			delete apiResult.tracks;
+			delete apiResult.expanded;
+			delete apiResult.gotMoreInfo;
+
+			this.selectDiscogsInfo(apiResult);
 		},
 		settings(type) {
 			switch (type) {
@@ -485,56 +755,6 @@ export default {
 			else if (type === "artists")
 				this.editing.song.artists.splice(index, 1);
 		},
-		getSpotifySongs() {
-			this.socket.emit(
-				"apis.getSpotifySongs",
-				this.spotify.title,
-				this.spotify.artist,
-				res => {
-					if (res.status === "success") {
-						Toast.methods.addToast(
-							`Succesfully got ${res.songs.length} song${
-								res.songs.length !== 1 ? "s" : ""
-							}.`,
-							3000
-						);
-						this.spotify.songs = res.songs;
-					} else
-						Toast.methods.addToast(
-							`Failed to get songs. ${res.message}`,
-							3000
-						);
-				}
-			);
-		},
-		initCanvas() {
-			const canvasElement = document.getElementById("durationCanvas");
-			const ctx = canvasElement.getContext("2d");
-
-			const skipDurationColor = "#ef4a1c";
-			const durationColor = "#1dc146";
-			const afterDurationColor = "#ef731a";
-
-			ctx.font = "16px Arial";
-
-			ctx.fillStyle = skipDurationColor;
-			ctx.fillRect(0, 25, 20, 15);
-
-			ctx.fillStyle = "#000000";
-			ctx.fillText("Skip duration", 25, 38);
-
-			ctx.fillStyle = durationColor;
-			ctx.fillRect(130, 25, 20, 15);
-
-			ctx.fillStyle = "#000000";
-			ctx.fillText("Duration", 155, 38);
-
-			ctx.fillStyle = afterDurationColor;
-			ctx.fillRect(230, 25, 20, 15);
-
-			ctx.fillStyle = "#000000";
-			ctx.fillText("After duration", 255, 38);
-		},
 		drawCanvas() {
 			const canvasElement = document.getElementById("durationCanvas");
 			const ctx = canvasElement.getContext("2d");
@@ -555,9 +775,9 @@ export default {
 
 			const widthCurrentTime = (currentTime / videoDuration) * width;
 
-			const skipDurationColor = "#ef4a1c";
-			const durationColor = "#1dc146";
-			const afterDurationColor = "#ef731a";
+			const skipDurationColor = "#F42003";
+			const durationColor = "#03A9F4";
+			const afterDurationColor = "#41E841";
 			const currentDurationColor = "#3b25e8";
 
 			ctx.fillStyle = skipDurationColor;
@@ -580,7 +800,9 @@ export default {
 			"loadVideoById",
 			"pauseVideo",
 			"getCurrentTime",
-			"editSong"
+			"editSong",
+			"updateSongField",
+			"selectDiscogsInfo"
 		]),
 		...mapActions("modals", ["closeModal"])
 	},
@@ -592,8 +814,6 @@ export default {
 		//   this.editing.song.skipDuration
 		// );
 
-		this.initCanvas();
-
 		lofig.get("cookie.secure", res => {
 			this.useHTTPS = res;
 		});
@@ -602,7 +822,7 @@ export default {
 			this.socket = socket;
 		});
 
-		setInterval(() => {
+		this.interval = setInterval(() => {
 			if (
 				this.video.paused === false &&
 				this.playerReady &&
@@ -614,18 +834,17 @@ export default {
 				this.video.player.stopVideo();
 			}
 			if (this.playerReady) {
-				this.getCurrentTime(3).then(time => {
-					this.youtubeVideoCurrentTime = time;
-					return time;
-				});
+				this.youtubeVideoCurrentTime = this.video.player
+					.getCurrentTime()
+					.toFixed(3);
 			}
 
 			if (this.video.paused === false) this.drawCanvas();
 		}, 200);
 
 		this.video.player = new window.YT.Player("player", {
-			height: 315,
-			width: 560,
+			height: 298,
+			width: 530,
 			videoId: this.editing.song.songId,
 			playerVars: {
 				controls: 0,
@@ -698,155 +917,477 @@ export default {
 		let volume = parseInt(localStorage.getItem("volume"));
 		document.getElementById("volumeSlider").value = volume =
 			typeof volume === "number" ? volume : 20;
+	},
+	beforeDestroy() {
+		this.playerReady = false;
+		clearInterval(this.interval);
 	}
 };
 </script>
 
+<style lang="scss">
+@import "styles/global.scss";
+
+.song-modal {
+	.modal-card-title {
+		text-align: center;
+		margin-left: 24px;
+	}
+
+	.modal-card {
+		width: 1160px;
+		height: 100%;
+
+		.modal-card-body {
+			padding: 16px;
+		}
+	}
+}
+</style>
+
 <style lang="scss" scoped>
 @import "styles/global.scss";
+.modal-card-body > div {
+	display: flex;
+	height: 100%;
+}
+
+.left-section {
+	display: flex;
+	flex-direction: column;
+	margin-right: 16px;
+
+	.top-section {
+		display: flex;
+
+		.player-section {
+			width: 530px;
+			display: flex;
+			flex-direction: column;
+
+			.player-footer {
+				background-color: #f4f4f4;
+				border: 1px rgba(163, 224, 255, 0.75) solid;
+				border-radius: 0px 0px 5px 5px;
+				display: flex;
+				justify-content: space-between;
+				height: 54px;
+
+				> * {
+					width: 33.3%;
+					display: flex;
+					align-items: center;
+				}
+
+				.player-footer-left {
+					flex: 1;
+
+					.material-icons {
+						font-size: 38px;
+						cursor: pointer;
+					}
+
+					.player-play-pause {
+						color: $musareBlue;
+					}
+
+					.player-stop {
+						color: $red;
+					}
+
+					.player-fast-forward {
+						color: $green;
+					}
+				}
+
+				.player-footer-center {
+					justify-content: center;
+					align-items: center;
+					flex: 2;
+					font-size: 21px;
+					font-weight: 400;
+
+					img {
+						height: 21px;
+						margin-right: 12px;
+						filter: invert(26%) sepia(54%) saturate(6317%)
+							hue-rotate(2deg) brightness(92%) contrast(115%);
+					}
+				}
+
+				.player-footer-right {
+					justify-content: right;
+					flex: 1;
+
+					#volumeSlider {
+						width: 126px;
+						margin-right: 10px;
+						background-color: #f4f4f4;
+					}
+				}
+			}
+		}
+
+		.thumbnail-preview {
+			width: 189px;
+			height: 189px;
+			margin-left: 16px;
+		}
+	}
+
+	.edit-section {
+		width: 735px;
+		background-color: #f4f4f4;
+		border: 1px rgba(163, 224, 255, 0.75) solid;
+		margin-top: 16px;
+		flex: 1;
+		overflow: auto;
+		border-radius: 5px;
+
+		.album-get-button {
+			background-color: $purple;
+			color: white;
+			width: 32px;
+			text-align: center;
+			border-width: 0;
+		}
+
+		.add-button {
+			background-color: $musareBlue !important;
+			width: 32px;
+
+			i {
+				font-size: 32px;
+			}
+		}
+
+		> div {
+			margin: 16px;
+		}
+
+		input {
+			width: 100%;
+		}
+
+		.title-container {
+			width: calc((100% - 32px) / 2);
+		}
+
+		.duration-container {
+			margin-right: 16px;
+			margin-left: 16px;
+			width: calc((100% - 32px) / 4);
+		}
+
+		.skip-duration-container {
+			width: calc((100% - 32px) / 4);
+		}
+
+		.album-art-container {
+			width: 100%;
+		}
+
+		.artists-container {
+			width: calc((100% - 32px) / 3);
+		}
+
+		.genres-container {
+			width: calc((100% - 32px) / 3);
+			margin-left: 16px;
+			margin-right: 16px;
+		}
+
+		.youtube-id-container {
+			width: calc((100% - 32px) / 3);
+		}
+
+		.list-item-circle {
+			background-color: $musareBlue;
+			width: 16px;
+			height: 16px;
+			border-radius: 8px;
+			cursor: pointer;
+			margin-right: 8px;
+			float: left;
+			-webkit-touch-callout: none;
+			-webkit-user-select: none;
+			-khtml-user-select: none;
+			-moz-user-select: none;
+			-ms-user-select: none;
+			user-select: none;
+
+			i {
+				color: $musareBlue;
+				font-size: 14px;
+				margin-left: 1px;
+			}
+		}
+
+		.list-item-circle:hover,
+		.list-item-circle:focus {
+			i {
+				color: white;
+			}
+		}
+
+		.list-item > p {
+			line-height: 16px;
+			word-wrap: break-word;
+			width: calc(100% - 24px);
+			left: 24px;
+			float: left;
+			margin-bottom: 8px;
+		}
+
+		.list-item:last-child > p {
+			margin-bottom: 0;
+		}
+	}
+}
+
+.right-section {
+	display: flex;
+	flex-wrap: wrap;
+
+	.api-section {
+		width: 376px;
+		background-color: #f4f4f4;
+		border: 1px rgba(163, 224, 255, 0.75) solid;
+		border-radius: 5px;
+		padding: 16px;
+		overflow: auto;
+		height: 100%;
+
+		> label {
+			margin-top: 12px;
+		}
+
+		.top-container {
+			display: flex;
+
+			img {
+				height: 85px;
+				width: 85px;
+			}
+
+			.right-container {
+				padding: 8px;
+				display: flex;
+				flex-direction: column;
+				flex: 1;
+
+				> p {
+					flex: 1;
+				}
+
+				.bottom-row {
+					display: flex;
+					flex-flow: row;
+					line-height: 15px;
+
+					img {
+						height: 15px;
+						align-self: end;
+						flex: 1;
+						user-select: none;
+						-moz-user-select: none;
+						-ms-user-select: none;
+						-webkit-user-select: none;
+						cursor: pointer;
+					}
+
+					p {
+						text-align: right;
+					}
+
+					.album-title {
+						flex: 1;
+						font-weight: 600;
+					}
+
+					.type-year {
+						font-size: 13px;
+						align-self: end;
+					}
+				}
+			}
+		}
+
+		.bottom-container {
+			padding: 12px;
+
+			.bottom-container-field {
+				line-height: 16px;
+				margin-bottom: 8px;
+				font-weight: 600;
+
+				span {
+					font-weight: 400;
+				}
+			}
+
+			.bottom-container-field:last-of-type {
+				margin-bottom: 0;
+			}
+		}
+
+		.selected-discogs-info {
+			background-color: white;
+			border: 1px solid $purple;
+			border-radius: 5px;
+			margin-bottom: 16px;
+
+			.selected-discogs-info-none {
+				font-size: 18px;
+				text-align: center;
+			}
+
+			.bottom-row > p {
+				flex: 1;
+			}
+		}
+
+		.api-result {
+			background-color: white;
+			border: 0.5px solid $musareBlue;
+			border-radius: 5px;
+			margin-bottom: 16px;
+		}
+
+		button {
+			background-color: $musareBlue !important;
+		}
+
+		.tracks {
+			margin-top: 12px;
+
+			.track:first-child {
+				margin-top: 0;
+				border-radius: 3px 3px 0 0;
+			}
+
+			.track:last-child {
+				border-radius: 0 0 3px 3px;
+			}
+
+			.track {
+				border: 0.5px solid black;
+				margin-top: -1px;
+				line-height: 16px;
+				display: flex;
+				cursor: pointer;
+
+				span {
+					font-weight: 600;
+					display: inline-block;
+					margin-top: 7px;
+					margin-bottom: 7px;
+					margin-left: 7px;
+				}
+
+				p {
+					display: inline-block;
+					margin: 7px;
+					flex: 1;
+				}
+			}
+
+			.track:hover,
+			.track:focus {
+				background-color: #f4f4f4;
+			}
+		}
+	}
+}
+
+.footer-buttons {
+	margin-left: auto;
+	margin-right: auto;
+}
 
 input[type="range"] {
 	-webkit-appearance: none;
 	width: 100%;
-	margin: 7.3px 0;
+	margin: 8.5px 0;
 }
-
 input[type="range"]:focus {
 	outline: none;
 }
-
 input[type="range"]::-webkit-slider-runnable-track {
 	width: 100%;
-	height: 5.2px;
+	height: 3px;
 	cursor: pointer;
-	box-shadow: 0;
-	background: $light-grey-2;
-	border-radius: 0;
-	border: 0;
+	box-shadow: none;
+	background: #7e7e7e;
+	border-radius: none;
+	border: none;
 }
-
 input[type="range"]::-webkit-slider-thumb {
-	box-shadow: 0;
-	border: 0;
-	height: 19px;
-	width: 19px;
-	border-radius: 15px;
-	background: $primary-color;
+	box-shadow: none;
+	border: none;
+	height: 20px;
+	width: 20px;
+	border-radius: 100px;
+	background: #03a9f4;
 	cursor: pointer;
 	-webkit-appearance: none;
-	margin-top: -6.5px;
+	margin-top: -8.5px;
 }
-
+input[type="range"]:focus::-webkit-slider-runnable-track {
+	background: #7e7e7e;
+}
 input[type="range"]::-moz-range-track {
 	width: 100%;
-	height: 5.2px;
+	height: 3px;
 	cursor: pointer;
-	box-shadow: 0;
-	background: $light-grey-2;
-	border-radius: 0;
-	border: 0;
+	box-shadow: none;
+	background: #7e7e7e;
+	border-radius: none;
+	border: none;
 }
-
 input[type="range"]::-moz-range-thumb {
-	box-shadow: 0;
-	border: 0;
-	height: 19px;
-	width: 19px;
-	border-radius: 15px;
-	background: $primary-color;
+	box-shadow: none;
+	border: none;
+	height: 20px;
+	width: 20px;
+	border-radius: 100px;
+	background: #03a9f4;
 	cursor: pointer;
-	-webkit-appearance: none;
-	margin-top: -6.5px;
 }
-
 input[type="range"]::-ms-track {
 	width: 100%;
-	height: 5.2px;
+	height: 3px;
 	cursor: pointer;
-	box-shadow: 0;
-	background: $light-grey-2;
-	border-radius: 1.3px;
+	background: transparent;
+	border-color: transparent;
+	color: transparent;
 }
-
 input[type="range"]::-ms-fill-lower {
-	background: $light-grey-2;
-	border: 0;
-	border-radius: 0;
-	box-shadow: 0;
+	background: #717171;
+	border: none;
+	border-radius: none;
+	box-shadow: none;
 }
-
 input[type="range"]::-ms-fill-upper {
-	background: $light-grey-2;
-	border: 0;
-	border-radius: 0;
-	box-shadow: 0;
+	background: #7e7e7e;
+	border: none;
+	border-radius: none;
+	box-shadow: none;
 }
-
 input[type="range"]::-ms-thumb {
-	box-shadow: 0;
-	border: 0;
-	height: 15px;
-	width: 15px;
-	border-radius: 15px;
-	background: $primary-color;
+	box-shadow: none;
+	border: none;
+	height: 20px;
+	width: 20px;
+	border-radius: 100px;
+	background: #03a9f4;
 	cursor: pointer;
-	-webkit-appearance: none;
-	margin-top: 1.5px;
+	height: 3px;
 }
-
-.controls {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
+input[type="range"]:focus::-ms-fill-lower {
+	background: #7e7e7e;
 }
-
-.artist-genres {
-	display: flex;
-	justify-content: space-between;
-}
-
-#volumeSlider {
-	margin-bottom: 15px;
-}
-
-.has-text-centered {
-	padding: 10px;
-}
-
-.thumbnail-preview {
-	display: flex;
-	margin: 0 auto 25px auto;
-	max-width: 200px;
-	width: 100%;
-}
-
-.modal-card-body,
-.modal-card-foot {
-	border-top: 0;
-}
-
-.label,
-.checkbox,
-h5 {
-	font-weight: normal;
-}
-
-.video-container {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	padding: 10px;
-
-	iframe {
-		pointer-events: none;
-	}
-}
-
-.save-changes {
-	color: $white;
-}
-
-.tag:not(:last-child) {
-	margin-right: 5px;
+input[type="range"]:focus::-ms-fill-upper {
+	background: #7e7e7e;
 }
 </style>

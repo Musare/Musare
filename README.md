@@ -74,6 +74,7 @@ Once you've installed the required tools:
 |`apis.discord.loggingChannel`|ID of the channel to be used in the Discord logging server.|
 |`apis.mailgun`|Can be obtained by setting up a [Mailgun account](http://www.mailgun.com/), or you can disable it.|
 |`apis.spotify`|Can be obtained by setting up a [Spotify client id](https://developer.spotify.com/dashboard/applications), or you can disable it.|
+|`apis.discogs`|Can be obtained by setting up a [Discogs application](https://www.discogs.com/settings/developers), or you can disable it.|
 |`redis.url`|Should be left alone for Docker, and changed to `redis://localhost:6379/0` for non-Docker.|
 |`redis.password`|Should be the Redis password you either put in your `startRedis.cmd` file for Windows, or `.env` for docker.|
 |`mongo.url`|Needs to have the proper password for the MongoDB musare user, and for non-Docker you need to replace `@musare:27017` with `@localhost:27017`.|
