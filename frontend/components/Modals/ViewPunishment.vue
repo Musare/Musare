@@ -47,7 +47,10 @@
 						}})
 						<br />
 						<strong>Punished by:</strong>
-						{{ punishment.punishedBy }}
+						<user-id-to-username
+							:userId="punishment.punishedBy"
+							:alt="punishment.punishedBy"
+						/>
 						<br />
 					</div>
 				</article>
@@ -75,9 +78,10 @@ import { format, formatDistance, parseISO } from "date-fns"; // eslint-disable-l
 
 import io from "../../io";
 import Modal from "./Modal.vue";
+import UserIdToUsername from "../UserIdToUsername.vue";
 
 export default {
-	components: { Modal },
+	components: { Modal, UserIdToUsername },
 	data() {
 		return {
 			ban: {}
