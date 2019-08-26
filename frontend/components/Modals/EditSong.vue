@@ -1074,6 +1074,7 @@ export default {
 		},
 		toggleGenreHelper() {
 			this.genreHelper.shown = !this.genreHelper.shown;
+			this.saveGenreHelper();
 		},
 		resetGenreHelper() {
 			this.genreHelper.top = 0;
