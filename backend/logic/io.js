@@ -15,7 +15,7 @@ module.exports = class extends coreClass {
 	}
 
 	initialize() {
-		return new Promise((resolve, reject) => {
+		return new Promise(resolve => {
 			this.setStage(1);
 
 			const 	logger		= this.logger,
@@ -27,21 +27,22 @@ module.exports = class extends coreClass {
 			
 			const actions = require('../logic/actions');
 
-			//TODO Check every 30s/60s, for all sockets, if they are still allowed to be in the rooms they are in, and on socket at all (permission changing/banning)
+			// TODO: Check every 30s/60s, for all sockets, if they are still allowed to be in the rooms they are in, and on socket at all (permission changing/banning)
 			this.io = socketio(app.server);
 
 			this.io.use(async (socket, next) => {
 				try { await this._validateHook(); } catch { return; }
 
-				let cookies = socket.request.headers.cookie;
 				let SID;
 
 				socket.ip = socket.request.headers['x-forwarded-for'] || '0.0.0.0';
 
 				async.waterfall([
 					(next) => {
-						utils.parseCookies(cookies).then((parsedCookies) => {
-							SID = parsedCookies.SID;
+						utils.parseCookies(
+							socket.request.headers.cookie
+						).then(res => {
+							SID = res.SID;
 							next(null);
 						});
 					},
@@ -50,35 +51,43 @@ module.exports = class extends coreClass {
 						if (!SID) return next('No SID.');
 						next();
 					},
+
 					(next) => {
 						cache.hget('sessions', SID, next);
 					},
+
 					(session, next) => {
 						if (!session) return next('No session found.');
+
 						session.refreshDate = Date.now();
+						
 						socket.session = session;
 						cache.hset('sessions', SID, session, next);
 					},
+
 					(res, next) => {
+						// check if a session's user / IP is banned
 						punishments.getPunishments((err, punishments) => {
 							const isLoggedIn = !!(socket.session && socket.session.refreshDate);
 							const userId = (isLoggedIn) ? socket.session.userId : null;
-							let ban = 0;
-							let banned = false;
+
+							let banishment = { banned: false, ban: 0 };
+
 							punishments.forEach(punishment => {
-								if (punishment.expiresAt > ban) ban = punishment;
-								if (punishment.type === 'banUserId' && isLoggedIn && punishment.value === userId) banned = true;
-								if (punishment.type === 'banUserIp' && punishment.value === socket.ip) banned = true;
+								if (punishment.expiresAt > banishment.ban) banishment.ban = punishment;
+								if (punishment.type === 'banUserId' && isLoggedIn && punishment.value === userId) banishment.banned = true;
+								if (punishment.type === 'banUserIp' && punishment.value === socket.ip) banishment.banned = true;
 							});
-							socket.banned = banned;
-							socket.ban = ban;
+							
+							socket = { ...socket, ...banishment }
+
 							next();
 						});
 					}
 				], () => {
-					if (!socket.session) {
-						socket.session = { socketId: socket.id };
-					} else socket.session.socketId = socket.id;
+					if (!socket.session) socket.session = { socketId: socket.id };
+					else socket.session.socketId = socket.id;
+
 					next();
 				});
 			});
@@ -87,7 +96,10 @@ module.exports = class extends coreClass {
 				try { await this._validateHook(); } catch { return; }
 
 				let sessionInfo = '';
+				
 				if (socket.session.sessionId) sessionInfo = ` UserID: ${socket.session.userId}.`;
+
+				// if session is banned
 				if (socket.banned) {
 					logger.info('IO_BANNED_CONNECTION', `A user tried to connect, but is currently banned. IP: ${socket.ip}.${sessionInfo}`);
 					socket.emit('keep.event:banned', socket.ban);
@@ -96,18 +108,17 @@ module.exports = class extends coreClass {
 					logger.info('IO_CONNECTION', `User connected. IP: ${socket.ip}.${sessionInfo}`);
 
 					// catch when the socket has been disconnected
-					socket.on('disconnect', (reason) => {
-						let sessionInfo = '';
+					socket.on('disconnect', () => {
 						if (socket.session.sessionId) sessionInfo = ` UserID: ${socket.session.userId}.`;
 						logger.info('IO_DISCONNECTION', `User disconnected. IP: ${socket.ip}.${sessionInfo}`);
 					});
 
 					// catch errors on the socket (internal to socket.io)
-					socket.on('error', err => console.error(err));
+					socket.on('error', console.error);
 
 					// have the socket listen for each action
-					Object.keys(actions).forEach((namespace) => {
-						Object.keys(actions[namespace]).forEach((action) => {
+					Object.keys(actions).forEach(namespace => {
+						Object.keys(actions[namespace]).forEach(action => {
 
 							// the full name of the action
 							let name = `${namespace}.${action}`;
