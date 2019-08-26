@@ -141,7 +141,7 @@ export default {
 
 	.is-brand {
 		font-size: 2.1rem !important;
-		line-height: 64px !important;
+		line-height: 38px !important;
 		padding: 0 20px;
 		color: $white;
 		font-family: Pacifico, cursive;

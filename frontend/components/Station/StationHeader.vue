@@ -2,11 +2,7 @@
 	<div>
 		<nav class="nav">
 			<div class="nav-left">
-				<router-link
-					class="nav-item is-brand"
-					href="#"
-					:to="{ path: '/' }"
-				>
+				<router-link class="nav-item is-brand" :to="{ path: '/' }">
 					<img
 						:src="`${this.siteSettings.logo}`"
 						:alt="`${this.siteSettings.siteName}` || `Musare`"
@@ -28,7 +24,6 @@
 				<router-link
 					v-if="role === 'admin'"
 					class="nav-item is-tab admin"
-					href="#"
 					:to="{ path: '/admin' }"
 				>
 					<strong>Admin</strong>
@@ -42,9 +37,7 @@
 					<router-link class="nav-item is-tab" to="/settings"
 						>Settings</router-link
 					>
-					<a class="nav-item is-tab" href="#" @click="logout()"
-						>Logout</a
-					>
+					<a class="nav-item is-tab" @click="logout()">Logout</a>
 				</span>
 				<span v-else class="grouped">
 					<a
@@ -67,19 +60,14 @@
 		<div class="control-sidebar" :class="{ 'show-controlBar': controlBar }">
 			<div class="inner-wrapper">
 				<div v-if="isOwner()">
-					<a
-						v-if="isOwner()"
-						class="sidebar-item"
-						href="#"
-						@click="settings()"
-					>
+					<a class="sidebar-item" href="#" @click="settings()">
 						<span class="icon">
 							<i class="material-icons">settings</i>
 						</span>
 						<span class="icon-purpose">Station settings</span>
 					</a>
 					<a
-						v-if="isOwner()"
+						v-if="!noSong"
 						class="sidebar-item"
 						href="#"
 						@click="$parent.skipStation()"
@@ -90,7 +78,7 @@
 						<span class="icon-purpose">Skip current song</span>
 					</a>
 					<a
-						v-if="isOwner() && paused"
+						v-if="paused"
 						class="sidebar-item"
 						href="#"
 						@click="$parent.resumeStation()"
@@ -101,7 +89,7 @@
 						<span class="icon-purpose">Resume station</span>
 					</a>
 					<a
-						v-if="isOwner() && !paused"
+						v-if="!paused && !noSong"
 						class="sidebar-item"
 						href="#"
 						@click="$parent.pauseStation()"
@@ -113,9 +101,25 @@
 					</a>
 					<hr />
 				</div>
-				<div v-if="loggedIn && !noSong">
+				<div v-if="loggedIn">
 					<a
-						v-if="!isOwner() && loggedIn && !noSong"
+						v-if="station.type === 'official'"
+						class="sidebar-item"
+						href="#"
+						@click="
+							openModal({
+								sector: 'station',
+								modal: 'addSongToQueue'
+							})
+						"
+					>
+						<span class="icon">
+							<i class="material-icons">queue</i>
+						</span>
+						<span class="icon-purpose">Add song to queue</span>
+					</a>
+					<a
+						v-if="!isOwner() && !noSong"
 						class="sidebar-item"
 						href="#"
 						@click="$parent.voteSkipStation()"
@@ -129,7 +133,23 @@
 						<span class="icon-purpose">Skip current song</span>
 					</a>
 					<a
-						v-if="loggedIn && !noSong"
+						v-if="!noSong && !currentSong.simpleSong"
+						class="sidebar-item"
+						href="#"
+						@click="
+							openModal({
+								sector: 'station',
+								modal: 'report'
+							})
+						"
+					>
+						<span class="icon">
+							<i class="material-icons">report</i>
+						</span>
+						<span class="icon-purpose">Report a song</span>
+					</a>
+					<a
+						v-if="!noSong"
 						class="sidebar-item"
 						href="#"
 						@click="
@@ -146,10 +166,13 @@
 							>Add current song to playlist</span
 						>
 					</a>
-					<hr />
+					<hr v-if="!noSong" />
 				</div>
 				<a
-					v-if="station.partyMode === true"
+					v-if="
+						station.partyMode === true ||
+							station.type === 'official'
+					"
 					class="sidebar-item"
 					href="#"
 					@click="$parent.toggleSidebar('songslist')"
@@ -172,7 +195,7 @@
 					>
 				</a>
 				<a
-					v-if="loggedIn"
+					v-if="loggedIn && station.type === 'community'"
 					class="sidebar-item"
 					href="#"
 					@click="$parent.toggleSidebar('playlist')"
@@ -195,7 +218,7 @@ export default {
 		return {
 			title: this.$route.params.id,
 			isMobile: false,
-			controlBar: true,
+			controlBar: false,
 			frontendDomain: "",
 			siteSettings: {
 				logo: "",
@@ -210,7 +233,8 @@ export default {
 		role: state => state.user.auth.role,
 		station: state => state.station.station,
 		paused: state => state.station.paused,
-		noSong: state => state.station.noSong
+		noSong: state => state.station.noSong,
+		currentSong: state => state.station.currentSong
 	}),
 	mounted() {
 		lofig.get("frontendDomain", res => {
@@ -261,7 +285,7 @@ export default {
 
 	.is-brand {
 		font-size: 2.1rem !important;
-		line-height: 64px !important;
+		line-height: 38px !important;
 		padding: 0 20px;
 		color: $white;
 		font-family: Pacifico, cursive;
@@ -354,6 +378,10 @@ a.nav-item.is-tab:hover {
 .nav-right.is-active .nav-item {
 	background: $primary-color;
 	border: 0;
+}
+
+.hidden {
+	display: none;
 }
 
 .control-sidebar {

@@ -36,6 +36,7 @@
 			</p>
 
 			<article
+				v-else
 				v-for="(song, index) in songsList"
 				:key="index"
 				class="media"

@@ -2,8 +2,7 @@
 	<div>
 		<metadata v-bind:title="`${station.displayName}`" />
 
-		<official-header v-if="station.type == 'official'" />
-		<community-header v-if="station.type == 'community'" />
+		<station-header />
 
 		<song-queue v-if="modals.addSongToQueue" />
 		<add-to-playlist v-if="modals.addSongToPlaylist" />
@@ -421,8 +420,7 @@
 import { mapState, mapActions } from "vuex";
 import { Toast } from "vue-roaster";
 
-import OfficialHeader from "./OfficialHeader.vue";
-import CommunityHeader from "./CommunityHeader.vue";
+import StationHeader from "./StationHeader.vue";
 
 import UserIdToUsername from "../UserIdToUsername.vue";
 import Z404 from "../404.vue";
@@ -1214,8 +1212,7 @@ export default {
 		}
 	},
 	components: {
-		OfficialHeader,
-		CommunityHeader,
+		StationHeader,
 		SongQueue: () => import("../Modals/AddSongToQueue.vue"),
 		AddToPlaylist: () => import("../Modals/AddSongToPlaylist.vue"),
 		EditPlaylist: () => import("../Modals/Playlists/Edit.vue"),
