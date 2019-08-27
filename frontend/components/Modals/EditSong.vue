@@ -701,7 +701,7 @@ export default {
 			if (error) return Toast.methods.addToast(error, 8000);
 
 			// Genres
-			error = undefined;
+			/* error = undefined;
 			song.genres.forEach(genre => {
 				if (!validation.isLength(genre, 1, 16)) {
 					error = "Genre must have between 1 and 16 characters.";
@@ -715,7 +715,7 @@ export default {
 
 				return false;
 			});
-			if (error) return Toast.methods.addToast(error, 8000);
+			if (error) return Toast.methods.addToast(error, 8000); */
 
 			// Thumbnail
 			if (!validation.isLength(song.thumbnail, 8, 256))

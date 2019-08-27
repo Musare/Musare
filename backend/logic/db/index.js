@@ -153,13 +153,13 @@ module.exports = class extends coreClass {
 					this.schemas.song.path('artists').validate(songArtists, 'Invalid artists.');
 					this.schemas.queueSong.path('artists').validate(songArtists, 'Invalid artists.');
 		
-					let songGenres = (genres) => {
+					/*let songGenres = (genres) => {
 						return genres.filter((genre) => {
 								return (isLength(genre, 1, 16) && regex.azAZ09_.test(genre));
 							}).length === genres.length;
 					};
 					this.schemas.song.path('genres').validate(songGenres, 'Invalid genres.');
-					this.schemas.queueSong.path('genres').validate(songGenres, 'Invalid genres.');
+					this.schemas.queueSong.path('genres').validate(songGenres, 'Invalid genres.');*/
 		
 					this.schemas.song.path('thumbnail').validate((thumbnail) => {
 						return isLength(thumbnail, 8, 256);
