@@ -49,7 +49,7 @@ module.exports = class extends coreClass {
 					this.setStage(5);
 					async.each(punishments, (punishment, next) => {
 						if (punishment.active === false || punishment.expiresAt < Date.now()) return next();
-						this.cache.hset('punishments', punishment._id, cache.schemas.punishment(punishment, punishment._id), next);
+						this.cache.hset('punishments', punishment._id, this.cache.schemas.punishment(punishment, punishment._id), next);
 					}, next);
 				}
 			], async (err) => {
