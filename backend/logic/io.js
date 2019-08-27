@@ -103,7 +103,7 @@ module.exports = class extends coreClass {
 				if (socket.session.sessionId) sessionInfo = ` UserID: ${socket.session.userId}.`;
 
 				// if session is banned
-				if (socket.banishment.banned) {
+				if (socket.banishment && socket.banishment.banned) {
 					logger.info('IO_BANNED_CONNECTION', `A user tried to connect, but is currently banned. IP: ${socket.ip}.${sessionInfo}`);
 					socket.emit('keep.event:banned', socket.banishment.ban);
 					socket.disconnect(true);
