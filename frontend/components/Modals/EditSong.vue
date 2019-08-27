@@ -1573,8 +1573,9 @@ export default {
 				flex-direction: column;
 				flex: 1;
 
-				> p {
+				.album-title {
 					flex: 1;
+					font-weight: 600;
 				}
 
 				.bottom-row {
@@ -1595,11 +1596,6 @@ export default {
 
 					p {
 						text-align: right;
-					}
-
-					.album-title {
-						flex: 1;
-						font-weight: 600;
 					}
 
 					.type-year {
