@@ -67,7 +67,6 @@
 						<span class="icon-purpose">Station settings</span>
 					</a>
 					<a
-						v-if="!noSong"
 						class="sidebar-item"
 						href="#"
 						@click="$parent.skipStation()"
@@ -89,7 +88,7 @@
 						<span class="icon-purpose">Resume station</span>
 					</a>
 					<a
-						v-if="!paused && !noSong"
+						v-if="!paused"
 						class="sidebar-item"
 						href="#"
 						@click="$parent.pauseStation()"
