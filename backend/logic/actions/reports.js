@@ -110,7 +110,7 @@ module.exports = {
 	}),
 
 	/**
-	 * Gets all reports for a songId
+	 * Gets all reports for a songId (_id)
 	 *
 	 * @param {Object} session - the session object automatically added by socket.io
 	 * @param {String} songId - the id of the song to index reports for
@@ -119,7 +119,7 @@ module.exports = {
 	getReportsForSong: hooks.adminRequired((session, songId, cb) => {
 		async.waterfall([
 			(next) => {
-				db.models.report.find({ songId, resolved: false }).sort({ released: 'desc' }).exec(next);
+				db.models.report.find({ song: { _id: songId }, resolved: false }).sort({ released: 'desc' }).exec(next);
 			},
 
 			(reports, next) => {
@@ -199,6 +199,11 @@ module.exports = {
 			(song, next) => {
 				if (!song) return next('Song not found.');
 
+				delete data.songId;
+				data.song = {
+					_id: song._id,
+					songId: song.songId
+				}
 
 				for (let z = 0; z < data.issues.length; z++) {
 					if (reportableIssues.filter(issue => { return issue.name == data.issues[z].name; }).length > 0) {
@@ -234,7 +239,7 @@ module.exports = {
 		], async (err, report) => {
 			if (err) {
 				err = await utils.getError(err);
-				logger.error("REPORTS_CREATE", `Creating report for "${data.songId}" failed by user "${userId}". "${err}"`);
+				logger.error("REPORTS_CREATE", `Creating report for "${data.song._id}" failed by user "${userId}". "${err}"`);
 				return cb({ 'status': 'failure', 'message': err });
 			} else {
 				cache.pub('report.create', report);

@@ -15,7 +15,11 @@
 				<tbody>
 					<tr v-for="(report, index) in reports" :key="index">
 						<td>
-							<span>{{ report.songId }}</span>
+							<span>
+								{{ report.song.songId }}
+								<br />
+								{{ report.song._id }}
+							</span>
 						</td>
 						<td>
 							<user-id-to-username

@@ -6,7 +6,7 @@ const state = {
 	userCount: 0,
 	users: [],
 	currentSong: {},
-	previousSong: {},
+	previousSong: null,
 	songsList: [],
 	paused: true,
 	noSong: true

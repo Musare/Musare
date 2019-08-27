@@ -164,7 +164,7 @@ export default {
 			isCurrentSongActive: true,
 			report: {
 				resolved: false,
-				songId: this.currentSong.songId,
+				songId: "",
 				description: "",
 				issues: [
 					{ name: "Video", reasons: [] },
@@ -215,6 +215,8 @@ export default {
 		io.getSocket(socket => {
 			this.socket = socket;
 		});
+
+		this.report.songId = this.currentSong.songId;
 	},
 	methods: {
 		create() {
