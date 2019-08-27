@@ -5,7 +5,8 @@
 	"frontendPort": 80,
 	"serverDomain": "http://localhost:8080",
   	"serverPort": 8080,
-  	"isDocker": true,
+	"isDocker": true,
+	"fancyConsole": true,
 	"apis": {
 		"youtube": {
 			"key": ""

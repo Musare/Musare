@@ -14,6 +14,7 @@ module.exports = class {
 		this.lastTime = 0;
 		this.totalTimeInitialize = 0;
 		this.timeDifferences = [];
+		this.failed = false;
 	}
 
 	_initialize() {
@@ -24,7 +25,22 @@ module.exports = class {
 			this.setState("INITIALIZED");
 			this.setStage(0);
 			this.moduleManager.printStatus();
-		}).catch(() => {
+		}).catch(async (err) => {
+			if (this.moduleManager.fancyConsole) {
+				this.moduleManager.replaceLoggerWithConsole();
+			}
+			
+			this.failed = true;
+
+			console.error(`${this.logger.colors.FgRed}MODULE FAILED! Module ${this.name} has failed!${this.logger.colors.Reset}`);
+			console.error(err);
+
+			if (this.moduleManager.fancyConsole) {
+				for(let i = 0; i < this.logger.reservedLines; i++) {
+					process.stdout.write(`\n`);
+				}
+			}
+
 			this.moduleManager.aModuleFailed(this);
 		});
 	}

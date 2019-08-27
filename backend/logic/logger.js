@@ -74,8 +74,10 @@ module.exports = class extends coreClass {
 			fs.appendFile(this.configDirectory + '/info.log', `${time} BACKEND_RESTARTED\n`, ()=>{});
 			fs.appendFile(this.configDirectory + '/debugStation.log', `${time} BACKEND_RESTARTED\n`, ()=>{});
 
-			for(let i = 0; i < this.reservedLines; i++) {
-				process.stdout.write("\n");
+			if (this.moduleManager.fancyConsole) {
+				for(let i = 0; i < this.reservedLines; i++) {
+					process.stdout.write("\n");
+				}
 			}
 
 			resolve();
@@ -142,24 +144,26 @@ module.exports = class extends coreClass {
 			this.logCbs.shift();
 			this.logActive = true;
 
-			const rows = process.stdout.rows;
-			const columns = process.stdout.columns;
-			const lineNumber = rows - this.reservedLines;
+			if (this.moduleManager.fancyConsole) {
+				const rows = process.stdout.rows;
+				const columns = process.stdout.columns;
+				const lineNumber = rows - this.reservedLines;
 
-			let lines = Math.floor(message.length / columns) + 1;
+				let lines = Math.floor(message.length / columns) + 1;
 
-			process.stdout.cursorTo(0, lineNumber);
-			process.stdout.write(`${color}${message}${this.colors.Reset}\n`);
+				process.stdout.cursorTo(0, lineNumber);
+				process.stdout.write(`${color}${message}${this.colors.Reset}\n`);
 
-			process.stdout.cursorTo(0, (rows - this.logger.reservedLines) + lines);
-			process.stdout.clearScreenDown();
+				process.stdout.cursorTo(0, (rows - this.logger.reservedLines) + lines);
+				process.stdout.clearScreenDown();
 
-			process.stdout.cursorTo(0, process.stdout.rows);
-			for(let i = 0; i < lines; i++) {
-				process.stdout.write(`\n`);
-			}
+				process.stdout.cursorTo(0, process.stdout.rows);
+				for(let i = 0; i < lines; i++) {
+					process.stdout.write(`\n`);
+				}
 
-			this.moduleManager.printStatus();
+				this.moduleManager.printStatus();
+			} else console.log(`${color}${message}${this.colors.Reset}`);
 
 			this.logActive = false;
 			this.nextLog();

@@ -4,10 +4,14 @@ const util = require("util");
 
 process.env.NODE_CONFIG_DIR = `${__dirname}/config`;
 
+const config = require("config");
+
 process.on('uncaughtException', err => {
 	if (err.code === 'ECONNREFUSED' || err.code === 'UNCERTAIN_STATE') return;
 	console.log(`UNCAUGHT EXCEPTION: ${err.stack}`);
 });
+
+const fancyConsole = config.get("fancyConsole");
 
 class ModuleManager {
 	constructor() {
@@ -17,6 +21,7 @@ class ModuleManager {
 		this.modulesLeft = [];
 		this.i = 0;
 		this.lockdown = false;
+		this.fancyConsole = fancyConsole;
 	}
 
 	addModule(moduleName) {
@@ -30,12 +35,10 @@ class ModuleManager {
 	initialize() {
 		if (!this.modules["logger"]) return console.error("There is no logger module");
 		this.logger = this.modules["logger"];
-		console.log = (...args) => this.logger.debug(args.map(arg => util.format(arg)));
-		console.debug = (...args) => this.logger.debug(args.map(arg => util.format(arg)));
-		console.info = (...args) => this.logger.debug(args.map(arg => util.format(arg)));
-		console.warn = (...args) => this.logger.debug(args.map(arg => util.format(arg)));
-		console.error = (...args) => this.logger.error("CONSOLE", args.map(arg => util.format(arg)));
-		this.logger.reservedLines = Object.keys(this.modules).length + 5;
+		if (this.fancyConsole) {
+			this.replaceConsoleWithLogger();
+			this.logger.reservedLines = Object.keys(this.modules).length + 5;
+		}
 		
 		for (let moduleName in this.modules) {
 			let module = this.modules[moduleName];
@@ -64,6 +67,7 @@ class ModuleManager {
 
 	async printStatus() {
 		try { await Promise.race([this.logger._onInitialize, this.logger._isInitialized]); } catch { return; }
+		if (!this.fancyConsole) return;
 		
 		let colors = this.logger.colors;
 
@@ -92,7 +96,8 @@ class ModuleManager {
 			if (module.state === "NOT_INITIALIZED") stateColor = colors.FgWhite;
 			if (module.state === "INITIALIZING") stateColor = colors.FgYellow;
 			if (module.state === "INITIALIZED") stateColor = colors.FgGreen;
-			if (module.state === "LOCKDOWN") stateColor = colors.FgRed;
+			if (module.state === "LOCKDOWN" && !module.failed) stateColor = colors.FgRed;
+			if (module.state === "LOCKDOWN" && module.failed) stateColor = colors.FgMagenta;
 			
 			process.stdout.write(`${moduleName}${tabs}${stateColor}${module.state}\t${colors.FgYellow}Stage: ${colors.FgRed}${module.stage}${colors.FgWhite}. ${colors.FgYellow}Timing${colors.FgWhite}: [${timing}]${colors.FgWhite}${colors.FgWhite}. ${colors.FgYellow}Total time${colors.FgWhite}: ${colors.FgRed}${module.totalTimeInitialize}${colors.FgCyan}ms${colors.Reset}\n`);
 		}
@@ -117,6 +122,29 @@ class ModuleManager {
 		this.modules["discord"].sendAdminAlertMessage(`The backend server failed to start due to a failing module: ${failedModule.name}.`, "#AA0000", "Startup", false, []);
 
 		this._lockdown();
+	}
+
+	replaceConsoleWithLogger() {
+		this.oldConsole = {
+			log: console.log,
+			debug: console.debug,
+			info: console.info,
+			warn: console.warn,
+			error: console.error
+		};
+		console.log = (...args) => this.logger.debug(args.map(arg => util.format(arg)));
+		console.debug = (...args) => this.logger.debug(args.map(arg => util.format(arg)));
+		console.info = (...args) => this.logger.debug(args.map(arg => util.format(arg)));
+		console.warn = (...args) => this.logger.debug(args.map(arg => util.format(arg)));
+		console.error = (...args) => this.logger.error("CONSOLE", args.map(arg => util.format(arg)));
+	}
+
+	replaceLoggerWithConsole() {
+		console.log = this.oldConsole.log;
+		console.debug = this.oldConsole.debug;
+		console.info = this.oldConsole.info;
+		console.warn = this.oldConsole.warn;
+		console.error = this.oldConsole.error;
 	}
 
 	_lockdown() {
@@ -159,8 +187,11 @@ process.stdin.on("data", function (data) {
     }
 });
 
-const rows = process.stdout.rows;
 
-for(let i = 0; i < rows; i++) {
-	process.stdout.write("\n");
+if (fancyConsole) {
+	const rows = process.stdout.rows;
+
+	for(let i = 0; i < rows; i++) {
+		process.stdout.write("\n");
+	}
 }
