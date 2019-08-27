@@ -4,7 +4,9 @@
 		<i class="material-icons">not_interested</i>
 		<h4>
 			You are banned for
-			<strong>{{ formatDistance(ban.expiresAt, Date.now()) }}</strong>
+			<strong>{{
+				formatDistance(new Date(ban.expiresAt), Date.now())
+			}}</strong>
 		</h4>
 		<h5 class="reason">
 			<strong>Reason: </strong>
