@@ -6,12 +6,13 @@ const coreClass = require("../core");
 
 const socketio = require("socket.io");
 const async = require("async");
+const config = require("config");
 
 module.exports = class extends coreClass {
 	constructor(name, moduleManager) {
 		super(name, moduleManager);
 
-		this.dependsOn = ["app", "db", "cache"];
+		this.dependsOn = ["app", "db", "cache", "utils"];
 	}
 
 	initialize() {
@@ -26,6 +27,8 @@ module.exports = class extends coreClass {
 					punishments	= this.moduleManager.modules["punishments"];
 			
 			const actions = require('../logic/actions');
+
+			const SIDname = config.get("cookie.SIDname");
 
 			// TODO: Check every 30s/60s, for all sockets, if they are still allowed to be in the rooms they are in, and on socket at all (permission changing/banning)
 			this.io = socketio(app.server);
@@ -42,7 +45,7 @@ module.exports = class extends coreClass {
 						utils.parseCookies(
 							socket.request.headers.cookie
 						).then(res => {
-							SID = res.SID;
+							SID = res[SIDname];
 							next(null);
 						});
 					},

@@ -24,7 +24,7 @@ module.exports = class extends coreClass {
 			this.utils = this.moduleManager.modules["utils"];
 
 			let app = this.app = express();
-
+			const SIDname = config.get("cookie.SIDname");
 			this.server = app.listen(config.get('serverPort'));
 
 			app.use(cookieParser());
@@ -64,7 +64,7 @@ module.exports = class extends coreClass {
 					`client_id=${config.get('apis.github.client')}`,
 					`redirect_uri=${config.get('serverDomain')}/auth/github/authorize/callback`,
 					`scope=user:email`,
-					`state=${req.cookies.SID}`
+					`state=${req.cookies[SIDname]}`
 				].join('&');
 				res.redirect(`https://github.com/login/oauth/authorize?${params}`);
 			});
@@ -188,7 +188,7 @@ module.exports = class extends coreClass {
 						if (err) return redirectOnErr(res, err.message);
 						let date = new Date();
 						date.setTime(new Date().getTime() + (2 * 365 * 24 * 60 * 60 * 1000));
-						res.cookie('SID', sessionId, {
+						res.cookie(SIDname, sessionId, {
 							expires: date,
 							secure: config.get("cookie.secure"),
 							path: "/",

@@ -55,6 +55,7 @@
 	},
   	"cookie": {
 	  	"domain": "localhost",
-	  	"secure": false
+		"secure": false,
+		"SIDname": "SID"  
 	}
 }
