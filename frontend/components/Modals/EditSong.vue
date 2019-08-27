@@ -364,11 +364,12 @@
 								class="input"
 								type="text"
 								v-model="discogsQuery"
+								@change="onDiscogsQueryChange"
 							/>
 						</p>
 						<button
 							class="button is-info is-fullwidth"
-							v-on:click="searchDiscogs()"
+							v-on:click="searchDiscogsForPage(1)"
 						>
 							Search
 						</button>
@@ -457,6 +458,17 @@
 								</div>
 							</div>
 						</div>
+						<button
+							v-if="
+								discogs.apiResults.length > 0 &&
+									!discogs.disableLoadMore &&
+									discogs.page < discogs.pages
+							"
+							class="button is-fullwidth is-info discogs-load-more"
+							@click="loadNextDiscogsPage()"
+						>
+							Load more...
+						</button>
 					</div>
 				</div>
 			</div>
@@ -600,7 +612,10 @@ export default {
 			youtubeVideoNote: "",
 			useHTTPS: false,
 			discogs: {
-				apiResults: []
+				apiResults: [],
+				page: 1,
+				pages: 1,
+				disableLoadMore: false
 			},
 			artistInputValue: "",
 			genreInputValue: "",
@@ -821,36 +836,64 @@ export default {
 					value: this.editing.song.discogs.album.artists
 				});
 		},
-		searchDiscogs() {
+		searchDiscogsForPage(page) {
 			const query = this.discogsQuery;
 
-			this.socket.emit("apis.searchDiscogs", query, res => {
+			this.socket.emit("apis.searchDiscogs", query, page, res => {
 				if (res.status === "success") {
-					Toast.methods.addToast(
-						`Successfully searched. Got ${res.results.length} results.`,
-						4000
-					);
-					this.discogs.apiResults = res.results.map(result => {
-						const type =
-							result.type.charAt(0).toUpperCase() +
-							result.type.slice(1);
+					if (page === 1)
+						Toast.methods.addToast(
+							`Successfully searched. Got ${res.results.length} results.`,
+							4000
+						);
+					else
+						Toast.methods.addToast(
+							`Successfully got ${res.results.length} more results.`,
+							4000
+						);
 
-						return {
-							expanded: false,
-							gotMoreInfo: false,
-							album: {
-								id: result.id,
-								title: result.title,
-								type,
-								year: result.year,
-								genres: result.genre,
-								albumArt: result.cover_image,
-								resourceUrl: result.resource_url
-							}
-						};
-					});
+					if (page === 1) {
+						this.discogs.apiResults = [];
+					}
+
+					this.discogs.pages = res.pages;
+
+					this.discogs.apiResults = this.discogs.apiResults.concat(
+						res.results.map(result => {
+							const type =
+								result.type.charAt(0).toUpperCase() +
+								result.type.slice(1);
+
+							return {
+								expanded: false,
+								gotMoreInfo: false,
+								album: {
+									id: result.id,
+									title: result.title,
+									type,
+									year: result.year,
+									genres: result.genre,
+									albumArt: result.cover_image,
+									resourceUrl: result.resource_url
+								}
+							};
+						})
+					);
+
+					this.discogs.page = page;
+					this.discogs.disableLoadMore = false;
 				} else Toast.methods.addToast(res.message, 8000);
 			});
+		},
+		loadNextDiscogsPage() {
+			this.discogs.disableLoadMore = true;
+			this.searchDiscogsForPage(this.discogs.page + 1);
+		},
+		onDiscogsQueryChange() {
+			this.discogs.page = 1;
+			this.discogs.pages = 1;
+			this.discogs.apiResults = [];
+			this.discogs.disableLoadMore = false;
 		},
 		selectTrack(apiResultIndex, trackIndex) {
 			const apiResult = JSON.parse(
@@ -1689,6 +1732,10 @@ export default {
 			.track:focus {
 				background-color: #f4f4f4;
 			}
+		}
+
+		.discogs-load-more {
+			margin-bottom: 8px;
 		}
 	}
 }
