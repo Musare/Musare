@@ -27,7 +27,7 @@
 						<td>
 							<button
 								class="button is-primary"
-								@click="editNews(news)"
+								@click="editNewsClick(news)"
 							>
 								Edit
 							</button>
@@ -305,7 +305,7 @@ export default {
 				Toast.methods.addToast(res.message, 8000)
 			);
 		},
-		editNews(news) {
+		editNewsClick(news) {
 			this.editNews(news);
 			this.openModal({ sector: "admin", modal: "editNews" });
 		},

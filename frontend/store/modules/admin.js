@@ -166,20 +166,18 @@ const modules = {
 		getters: {},
 		actions: {
 			editNews: ({ commit }, news) => commit("editNews", news),
-			addNews: ({ commit }, type, change) =>
-				commit("addChange", type, change),
-			removeChange: ({ commit }, type, index) =>
-				commit("removeChange", type, index)
+			addChange: ({ commit }, data) => commit("addChange", data),
+			removeChange: ({ commit }, data) => commit("removeChange", data)
 		},
 		mutations: {
 			editNews(state, news) {
 				state.editing = news;
 			},
-			addChange(state, type, change) {
-				state.editing[type].push(change);
+			addChange(state, data) {
+				state.editing[data.type].push(data.change);
 			},
-			removeChange(state, type, index) {
-				state.editing[type].splice(index, 1);
+			removeChange(state, data) {
+				state.editing[data.type].splice(data.index, 1);
 			}
 		}
 	}

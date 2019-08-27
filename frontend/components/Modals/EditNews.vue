@@ -29,12 +29,12 @@
 							class="input"
 							type="text"
 							placeholder="Bug"
-							@keyup.enter="addChange('bugs')"
+							@keyup.enter="addChangeClick('bugs')"
 						/>
 						<a
 							class="button is-info"
 							href="#"
-							@click="addChange('bugs')"
+							@click="addChangeClick('bugs')"
 							>Add</a
 						>
 					</p>
@@ -46,7 +46,7 @@
 						{{ bug }}
 						<button
 							class="delete is-info"
-							@click="removeChange('bugs', index)"
+							@click="removeChangeClick('bugs', index)"
 						/>
 					</span>
 				</div>
@@ -58,12 +58,12 @@
 							class="input"
 							type="text"
 							placeholder="Feature"
-							@keyup.enter="addChange('features')"
+							@keyup.enter="addChangeClick('features')"
 						/>
 						<a
 							class="button is-info"
 							href="#"
-							@click="addChange('features')"
+							@click="addChangeClick('features')"
 							>Add</a
 						>
 					</p>
@@ -75,7 +75,7 @@
 						{{ feature }}
 						<button
 							class="delete is-info"
-							@click="removeChange('features', index)"
+							@click="removeChangeClick('features', index)"
 						/>
 					</span>
 				</div>
@@ -90,12 +90,12 @@
 							class="input"
 							type="text"
 							placeholder="Improvement"
-							@keyup.enter="addChange('improvements')"
+							@keyup.enter="addChangeClick('improvements')"
 						/>
 						<a
 							class="button is-info"
 							href="#"
-							@click="addChange('improvements')"
+							@click="addChangeClick('improvements')"
 							>Add</a
 						>
 					</p>
@@ -107,7 +107,7 @@
 						{{ improvement }}
 						<button
 							class="delete is-info"
-							@click="removeChange('improvements', index)"
+							@click="removeChangeClick('improvements', index)"
 						/>
 					</span>
 				</div>
@@ -119,12 +119,12 @@
 							class="input"
 							type="text"
 							placeholder="Upcoming"
-							@keyup.enter="addChange('upcoming')"
+							@keyup.enter="addChangeClick('upcoming')"
 						/>
 						<a
 							class="button is-info"
 							href="#"
-							@click="addChange('upcoming')"
+							@click="addChangeClick('upcoming')"
 							>Add</a
 						>
 					</p>
@@ -136,7 +136,7 @@
 						{{ upcoming }}
 						<button
 							class="delete is-info"
-							@click="removeChange('upcoming', index)"
+							@click="removeChangeClick('upcoming', index)"
 						/>
 					</span>
 				</div>
@@ -167,14 +167,20 @@
 </template>
 
 <script>
-import { mapActions } from "vuex";
+import { mapActions, mapState } from "vuex";
 
 import { Toast } from "vue-roaster";
+import io from "../../io";
 
 import Modal from "./Modal.vue";
 
 export default {
 	components: { Modal },
+	computed: {
+		...mapState("admin/news", {
+			editing: state => state.editing
+		})
+	},
 	methods: {
 		addChange(type) {
 			const change = document.getElementById(`edit-${type}`).value.trim();
@@ -182,14 +188,14 @@ export default {
 			if (this.editing[type].indexOf(change) !== -1)
 				return Toast.methods.addToast(`Tag already exists`, 3000);
 
-			if (change) this.addChange(type, change);
+			if (change) this.addChange({ type, change });
 			else Toast.methods.addToast(`${type} cannot be empty`, 3000);
 
 			document.getElementById(`edit-${type}`).value = "";
 			return true;
 		},
 		removeChange(type, index) {
-			this.removeChange(type, index);
+			this.removeChange({ type, index });
 		},
 		updateNews(close) {
 			this.socket.emit(
@@ -209,7 +215,12 @@ export default {
 			);
 		},
 		...mapActions("modals", ["closeModal"]),
-		...mapActions("admin/users", ["addChange", "removeChange"])
+		...mapActions("admin/news", ["addChange", "removeChange"])
+	},
+	mounted() {
+		io.getSocket(socket => {
+			this.socket = socket;
+		});
 	}
 };
 </script>
