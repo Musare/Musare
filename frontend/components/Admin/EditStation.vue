@@ -150,9 +150,9 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
-
+import { mapState, mapActions } from "vuex";
 import { Toast } from "vue-roaster";
+
 import Modal from "../Modals/Modal.vue";
 import io from "../../io";
 import validation from "../../validation";
@@ -455,9 +455,15 @@ export default {
 		},
 		deleteStation() {
 			this.socket.emit("stations.remove", this.editing._id, res => {
-				Toast.methods.addToast(res.message, 8000);
+				if (res.status === "success")
+					this.closeModal({
+						sector: "station",
+						modal: "editStation"
+					});
+				return Toast.methods.addToast(res.message, 8000);
 			});
-		}
+		},
+		...mapActions("modals", ["closeModal"])
 	},
 	components: { Modal }
 };
