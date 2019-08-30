@@ -83,10 +83,16 @@ module.exports = class extends coreClass {
 
 				async.waterfall([
 					(next) => {
+						if (req.query.error) return next(req.query.error_description);
+						next();
+					},
+
+					(next) => {
 						oauth2.getOAuthAccessToken(code, {redirect_uri}, next);
 					},
 
 					(_access_token, refresh_token, results, next) => {
+						if (results.error) return next(results.error_description);
 						access_token = _access_token;
 						request.get({
 							url: `https://api.github.com/user?access_token=${access_token}`,
@@ -96,6 +102,7 @@ module.exports = class extends coreClass {
 
 					(httpResponse, _body, next) => {
 						body = _body = JSON.parse(_body);
+						if (httpResponse.statusCode !== 200) return next(body.message);
 						if (state) {
 							return async.waterfall([
 								(next) => {
