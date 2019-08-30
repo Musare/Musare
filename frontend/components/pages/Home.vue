@@ -108,15 +108,27 @@
 									title="This is your station."
 									>home</i
 								>
+								<button
+									v-if="!isFavorite(station)"
+									@click="favoriteStation($event, station)"
+								>
+									Favorite
+								</button>
+								<button
+									v-if="isFavorite(station)"
+									@click="unfavoriteStation($event, station)"
+								>
+									Unfavorite
+								</button>
 							</div>
 						</div>
-						<router-link
+						<!--router-link
 							class="absolute-a"
 							:to="{
 								name: 'station',
 								params: { id: station.name }
 							}"
-						/>
+						/-->
 					</router-link>
 				</div>
 			</div>
@@ -128,6 +140,7 @@
 
 <script>
 import { mapState, mapActions } from "vuex";
+import { Toast } from "vue-roaster";
 
 import MainHeader from "../MainHeader.vue";
 import MainFooter from "../MainFooter.vue";
@@ -143,6 +156,7 @@ export default {
 				key: ""
 			},
 			stations: [],
+			favoriteStations: [],
 			searchQuery: ""
 		};
 	},
@@ -205,6 +219,12 @@ export default {
 					}
 				});
 			});
+			this.socket.on("event:user.favoritedStation", stationId => {
+				this.favoriteStations.push(stationId);
+			});
+			this.socket.on("event:user.unfavoritedStation", stationId => {
+				this.favoriteStations.$remove(stationId);
+			});
 		});
 	},
 	methods: {
@@ -226,12 +246,41 @@ export default {
 						this.stations.push(station);
 					});
 			});
+			this.socket.emit("users.getFavoriteStations", data => {
+				if (data.status === "success")
+					this.favoriteStations = data.favoriteStations;
+			});
 			this.socket.emit("apis.joinRoom", "home", () => {});
 		},
 		isOwner(station) {
 			return (
 				station.owner === this.userId && station.privacy === "public"
 			);
+		},
+		isFavorite(station) {
+			return this.favoriteStations.indexOf(station._id) !== -1;
+		},
+		favoriteStation(event, station) {
+			event.preventDefault();
+			this.socket.emit("stations.favoriteStation", station._id, res => {
+				if (res.status === "success") {
+					Toast.methods.addToast(
+						"Successfully favorited station.",
+						4000
+					);
+				} else Toast.methods.addToast(res.message, 8000);
+			});
+		},
+		unfavoriteStation(event, station) {
+			event.preventDefault();
+			this.socket.emit("stations.unfavoriteStation", station._id, res => {
+				if (res.status === "success") {
+					Toast.methods.addToast(
+						"Successfully unfavorited station.",
+						4000
+					);
+				} else Toast.methods.addToast(res.message, 8000);
+			});
 		},
 		...mapActions("modals", ["openModal"])
 	},

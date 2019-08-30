@@ -28,5 +28,6 @@ module.exports = {
 	},
 	liked: [{ type: String }],
 	disliked: [{ type: String }],
+	favoriteStations: [{ type: String }],
 	createdAt: { type: Date, default: Date.now() }
 };

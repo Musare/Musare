@@ -74,6 +74,22 @@ cache.sub('user.ban', data => {
 	});
 });
 
+cache.sub('user.favoritedStation', data => {
+	utils.socketsFromUser(data.userId, sockets => {
+		sockets.forEach(socket => {
+			socket.emit('event:user.favoritedStation', data.stationId);
+		});
+	});
+});
+
+cache.sub('user.unfavoritedStation', data => {
+	utils.socketsFromUser(data.userId, sockets => {
+		sockets.forEach(socket => {
+			socket.emit('event:user.unfavoritedStation', data.stationId);
+		});
+	});
+});
+
 module.exports = {
 
 	/**
@@ -1121,6 +1137,26 @@ module.exports = {
 				cb({
 					status: 'success',
 					message: 'Successfully banned user.'
+				});
+			}
+		});
+	}),
+
+	getFavoriteStations: hooks.loginRequired((session, cb, userId) => {
+		async.waterfall([
+			(next) => {
+				db.models.user.findOne({ _id: userId }, next);
+			}
+		], async (err, user) => {
+			if (err && err !== true) {
+				err = await utils.getError(err);
+				logger.error("GET_FAVORITE_STATIONS", `User ${userId} failed to get favorite stations. '${err}'`);
+				cb({status: 'failure', message: err});
+			} else {
+				logger.success("GET_FAVORITE_STATIONS", `User ${userId} got favorite stations.`);
+				cb({
+					status: 'success',
+					favoriteStations: user.favoriteStations
 				});
 			}
 		});

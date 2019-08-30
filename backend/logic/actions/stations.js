@@ -357,9 +357,9 @@ module.exports = {
 						if (station.owner === session.userId) return next(true);
 						next('An error occurred while joining the station.');
 					}
-				], (err) => {
+				], async (err) => {
 					if (err === true) return next(null, station);
-					next(utils.getError(err));
+					next(await utils.getError(err));
 				});
 			},
 
@@ -1178,6 +1178,80 @@ module.exports = {
 			if (!station.partyMode) stations.skipStation(stationId)();
 			cache.pub('privatePlaylist.selected', {playlistId, stationId});
 			return cb({'status': 'success', 'message': 'Successfully selected playlist.'});
+		});
+	}),
+
+	favoriteStation: hooks.loginRequired((session, stationId, cb, userId) => {
+		async.waterfall([
+			(next) => {
+				stations.getStation(stationId, next);
+			},
+
+			(station, next) => {
+				if (!station) return next('Station not found.');
+				async.waterfall([
+					(next) => {
+						if (station.privacy !== 'private') return next(true);
+						if (!session.userId) return next("You're not allowed to favorite this station.");
+						next();
+					},
+
+					(next) => {
+						db.models.user.findOne({ _id: userId }, next);
+					},
+
+					(user, next) => {
+						if (!user) return next("You're not allowed to favorite this station.");
+						if (user.role === 'admin') return next(true);
+						if (station.type === 'official') return next("You're not allowed to favorite this station.");
+						if (station.owner === session.userId) return next(true);
+						next("You're not allowed to favorite this station.");
+					}
+				], (err) => {
+					if (err === true) return next(null);
+					next(utils.getError(err));
+				});
+			},
+
+			(next) => {
+				db.models.user.updateOne({ _id: userId }, { $addToSet: { favoriteStations: stationId } }, next);
+			},
+
+			(res, next) => {
+				if (res.nModified === 0) return next("The station was already favorited.");
+				next();
+			}
+		], async (err) => {
+			if (err) {
+				err = await utils.getError(err);
+				logger.error("FAVORITE_STATION", `Favoriting station "${stationId}" failed. "${err}"`);
+				return cb({'status': 'failure', 'message': err});
+			}
+			logger.success("FAVORITE_STATION", `Favorited station "${stationId}" successfully.`);
+			cache.pub('user.favoritedStation', { userId, stationId });
+			return cb({'status': 'success', 'message': 'Succesfully favorited station.'});
+		});
+	}),
+
+	unfavoriteStation: hooks.loginRequired((session, stationId, cb, userId) => {
+		async.waterfall([
+			(next) => {
+				db.models.user.updateOne({ _id: userId }, { $pull: { favoriteStations: stationId } }, next);
+			},
+
+			(res, next) => {
+				if (res.nModified === 0) return next("The station wasn't favorited.");
+				next();
+			}
+		], async (err) => {
+			if (err) {
+				err = await utils.getError(err);
+				logger.error("UNFAVORITE_STATION", `Unfavoriting station "${stationId}" failed. "${err}"`);
+				return cb({'status': 'failure', 'message': err});
+			}
+			logger.success("UNFAVORITE_STATION", `Unfavorited station "${stationId}" successfully.`);
+			cache.pub('user.unfavoritedStation', { userId, stationId });
+			return cb({'status': 'success', 'message': 'Succesfully unfavorited station.'});
 		});
 	}),
 };
