@@ -129,6 +129,7 @@ module.exports = class extends coreClass {
 								}
 							], next);
 						}
+						if (!body.id) return next("Something went wrong, no id.");
 						db.models.user.findOne({'services.github.id': body.id}, (err, user) => {
 							next(err, user, body);
 						});
