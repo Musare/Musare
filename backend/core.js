@@ -25,21 +25,10 @@ module.exports = class {
 			this.setState("INITIALIZED");
 			this.setStage(0);
 			this.moduleManager.printStatus();
-		}).catch(async (err) => {
-			if (this.moduleManager.fancyConsole) {
-				this.moduleManager.replaceLoggerWithConsole();
-			}
-			
+		}).catch(async (err) => {			
 			this.failed = true;
 
-			console.error(`${this.logger.colors.FgRed}MODULE FAILED! Module ${this.name} has failed!${this.logger.colors.Reset}`);
-			console.error(err);
-
-			if (this.moduleManager.fancyConsole) {
-				for(let i = 0; i < this.logger.reservedLines; i++) {
-					process.stdout.write(`\n`);
-				}
-			}
+			this.logger.error(err.stack);
 
 			this.moduleManager.aModuleFailed(this);
 		});

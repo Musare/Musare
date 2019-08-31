@@ -80,9 +80,7 @@ module.exports = class extends coreClass {
 			fs.appendFile(this.configDirectory + '/debugStation.log', `${time} BACKEND_RESTARTED\n`, ()=>{});
 
 			if (this.moduleManager.fancyConsole) {
-				for(let i = 0; i < this.reservedLines; i++) {
-					process.stdout.write("\n");
-				}
+				process.stdout.write(Array(this.reservedLines).fill(`\n`).join(""));
 			}
 
 			resolve();
@@ -145,41 +143,32 @@ module.exports = class extends coreClass {
 	}
 
 	log(color, message) {
-		this.logCbs.push(() => {
-			this.logCbs.shift();
-			this.logActive = true;
+		if (this.moduleManager.fancyConsole) {
+			const rows = process.stdout.rows;
+			const columns = process.stdout.columns;
+			const lineNumber = rows - this.reservedLines;
 
-			if (this.moduleManager.fancyConsole) {
-				const rows = process.stdout.rows;
-				const columns = process.stdout.columns;
-				const lineNumber = rows - this.reservedLines;
+			
+			let lines = 0;
+			
+			message.split("\n").forEach((line) => {
+				lines += Math.floor(line.replace("\t", "    ").length / columns) + 1;
+			});
 
-				let lines = Math.floor(message.length / columns) + 1;
+			if (lines > this.logger.reservedLines)
+				lines = this.logger.reservedLines;
 
-				process.stdout.cursorTo(0, lineNumber);
-				process.stdout.write(`${color}${message}${this.colors.Reset}\n`);
+			process.stdout.cursorTo(0, rows - this.logger.reservedLines);
+			process.stdout.clearScreenDown();
 
-				process.stdout.cursorTo(0, (rows - this.logger.reservedLines) + lines);
-				process.stdout.clearScreenDown();
+			process.stdout.cursorTo(0, lineNumber);
+			process.stdout.write(`${color}${message}${this.colors.Reset}\n`);
 
-				process.stdout.cursorTo(0, process.stdout.rows);
-				for(let i = 0; i < lines; i++) {
-					process.stdout.write(`\n`);
-				}
+			process.stdout.cursorTo(0, process.stdout.rows);
+			process.stdout.write(Array(lines).fill(`\n!`).join(""));
 
-				this.moduleManager.printStatus();
-			} else console.log(`${color}${message}${this.colors.Reset}`);
-
-			this.logActive = false;
-			this.nextLog();
-		});
-		this.nextLog();
-	}
-
-	nextLog() {
-		if (!this.logActive && this.logCbs.length > 0) {
-			this.logCbs[0]();
-		}
+			this.moduleManager.printStatus();
+		} else console.log(`${color}${message}${this.colors.Reset}`);
 	}
 
 	writeFile(fileName, message) {

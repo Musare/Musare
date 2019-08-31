@@ -82,11 +82,9 @@ class ModuleManager {
 
 		for (let moduleName in this.modules) {
 			let module = this.modules[moduleName];
-			let tabsAmount = 2 - (moduleName.length / 8);
-			
-			let tabs = "";
-			for(let i = 0; i < tabsAmount; i++)
-				tabs += "\t";
+			let tabsAmount = Math.max(0, Math.ceil(2 - (moduleName.length / 8)));
+
+			let tabs = Array(tabsAmount).fill(`\t`).join("");
 
 			let timing = module.timeDifferences.map((timeDifference) => {
 				return `${colors.FgMagenta}${timeDifference}${colors.FgCyan}ms${colors.FgWhite}`;
