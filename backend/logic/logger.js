@@ -27,6 +27,11 @@ const getTimeFormatted = () => {
 }
 
 module.exports = class extends coreClass {
+	constructor(name, moduleManager) {
+		super(name, moduleManager);
+		this.lockdownImmune = true;
+	}
+
 	initialize() {
 		return new Promise((resolve, reject) => {
 			this.setStage(1);

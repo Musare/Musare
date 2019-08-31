@@ -152,6 +152,7 @@ class ModuleManager {
 		
 		for (let moduleName in this.modules) {
 			let module = this.modules[moduleName];
+			if (module.lockdownImmune) continue;
 			module._lockdown();
 		}
 	}
