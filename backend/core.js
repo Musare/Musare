@@ -86,6 +86,7 @@ module.exports = class {
 	}
 
 	_lockdown() {
+		if (this.lockdown) return;
 		this.lockdown = true;
 		this.setState("LOCKDOWN");
 		this.moduleManager.printStatus();

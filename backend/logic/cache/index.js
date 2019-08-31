@@ -31,18 +31,38 @@ module.exports = class extends coreClass {
 
 			this.client = redis.createClient({
 				url: this.url,
-				password: this.password
+				password: this.password,
+				retry_strategy: (options) => {
+					if (this.state === "LOCKDOWN") return;
+					if (this.state !== "RECONNECTING") this.setState("RECONNECTING");
+
+					this.logger.info("CACHE_MODULE", `Attempting to reconnect.`);
+
+					if (options.attempt >= 10) {
+						this.logger.error("CACHE_MODULE", `Stopped trying to reconnect.`);
+
+						this.failed = true;
+						this._lockdown();
+
+						return undefined;
+					}
+
+					return 3000;
+				}
 			});
 
 			this.client.on('error', err => {
-				if (this.lockdown) return;
-				//errorCb('Cache connection error.', err, 'Cache');
-				console.log("REDIS ERROR " + err);
-				reject(err);
+				if (this.state === "INITIALIZING") reject(err);
+				if(this.state === "LOCKDOWN") return;
+
+				this.logger.error("CACHE_MODULE", `Error ${err.message}.`);
 			});
 
 			this.client.on("connect", () => {
-				resolve();
+				this.logger.info("CACHE_MODULE", "Connected succesfully.");
+
+				if (this.state === "INITIALIZING") resolve();
+				else if (this.state === "LOCKDOWN" || this.state === "RECONNECTING") this.setState("INITIALIZED");
 			});
 		});
 	}

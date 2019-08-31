@@ -94,10 +94,10 @@ class ModuleManager {
 
 			let stateColor;
 			if (module.state === "NOT_INITIALIZED") stateColor = colors.FgWhite;
-			if (module.state === "INITIALIZING") stateColor = colors.FgYellow;
-			if (module.state === "INITIALIZED") stateColor = colors.FgGreen;
-			if (module.state === "LOCKDOWN" && !module.failed) stateColor = colors.FgRed;
-			if (module.state === "LOCKDOWN" && module.failed) stateColor = colors.FgMagenta;
+			else if (module.state === "INITIALIZED") stateColor = colors.FgGreen;
+			else if (module.state === "LOCKDOWN" && !module.failed) stateColor = colors.FgRed;
+			else if (module.state === "LOCKDOWN" && module.failed) stateColor = colors.FgMagenta;
+			else stateColor = colors.FgYellow;
 			
 			process.stdout.write(`${moduleName}${tabs}${stateColor}${module.state}\t${colors.FgYellow}Stage: ${colors.FgRed}${module.stage}${colors.FgWhite}. ${colors.FgYellow}Timing${colors.FgWhite}: [${timing}]${colors.FgWhite}${colors.FgWhite}. ${colors.FgYellow}Total time${colors.FgWhite}: ${colors.FgRed}${module.totalTimeInitialize}${colors.FgCyan}ms${colors.Reset}\n`);
 		}

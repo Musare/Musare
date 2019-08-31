@@ -33,7 +33,9 @@ module.exports = class extends coreClass {
 
 			mongoose.connect(mongoUrl, {
 				useNewUrlParser: true,
-				useCreateIndex: true
+				useCreateIndex: true,
+				reconnectInterval: 3000,
+				reconnectTries: 10
 			})
 				.then(() => {
 					this.schemas = {
@@ -57,6 +59,26 @@ module.exports = class extends coreClass {
 						report: mongoose.model('report', this.schemas.report),
 						punishment: mongoose.model('punishment', this.schemas.punishment)
 					};
+
+					mongoose.connection.on('error', err => {
+						this.logger.error("DB_MODULE", err);
+					});
+
+					mongoose.connection.on('disconnected', () => {
+						this.logger.error("DB_MODULE", "Disconnected, going to try to reconnect...");
+						this.setState("RECONNECTING");
+					});
+
+					mongoose.connection.on('reconnected', () => {
+						this.logger.success("DB_MODULE", "Reconnected.");
+						this.setState("INITIALIZED");
+					});
+
+					mongoose.connection.on('reconnectFailed', () => {
+						this.logger.error("DB_MODULE", "Reconnect failed, stopping reconnecting.");
+						this.failed = true;
+						this._lockdown();
+					});
 		
 					// this.schemas.user.path('username').validate((username) => {
 					// 	return (isLength(username, 2, 32) && regex.azAZ09_.test(username));
@@ -194,7 +216,7 @@ module.exports = class extends coreClass {
 					resolve();
 				})
 				.catch(err => {
-					console.error(err);
+					this.logger.error("DB_MODULE", err);
 					reject(err);
 				});
 		})

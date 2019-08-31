@@ -16,16 +16,76 @@ module.exports = class extends coreClass {
 			const url = this.url = config.get("redis").url;
 			const password = this.password = config.get("redis").password;
 
-			this.pub = redis.createClient({ url, password });
-			this.sub = redis.createClient({ url, password });
+			this.pub = redis.createClient({
+				url,
+				password,
+				retry_strategy: (options) => {
+					if (this.state === "LOCKDOWN") return;
+					if (this.state !== "RECONNECTING") this.setState("RECONNECTING");
+
+					this.logger.info("NOTIFICATIONS_MODULE", `Attempting to reconnect pub.`);
+
+					if (options.attempt >= 10) {
+						this.logger.error("NOTIFICATIONS_MODULE", `Stopped trying to reconnect pub.`);
+
+						this.failed = true;
+						this._lockdown();
+
+						return undefined;
+					}
+
+					return 3000;
+				}
+			});
+			this.sub = redis.createClient({
+				url,
+				password,
+				retry_strategy: (options) => {
+					if (this.state === "LOCKDOWN") return;
+					if (this.state !== "RECONNECTING") this.setState("RECONNECTING");
+
+					this.logger.info("NOTIFICATIONS_MODULE", `Attempting to reconnect sub.`);
+
+					if (options.attempt >= 10) {
+						this.logger.error("NOTIFICATIONS_MODULE", `Stopped trying to reconnect sub.`);
+
+						this.failed = true;
+						this._lockdown();
+
+						return undefined;
+					}
+
+					return 3000;
+				}
+			});
 
 			this.sub.on('error', (err) => {
-				errorCb('Cache connection error.', err, 'Notifications');
-				reject(err);
+				if (this.state === "INITIALIZING") reject(err);
+				if(this.state === "LOCKDOWN") return;
+
+				this.logger.error("NOTIFICATIONS_MODULE", `Sub error ${err.message}.`);
+			});
+
+			this.pub.on('error', (err) => {
+				if (this.state === "INITIALIZING") reject(err);
+				if(this.state === "LOCKDOWN") return; 
+
+				this.logger.error("NOTIFICATIONS_MODULE", `Pub error ${err.message}.`);
 			});
 
 			this.sub.on("connect", () => {
-				resolve();
+				this.logger.info("NOTIFICATIONS_MODULE", "Sub connected succesfully.");
+
+				if (this.state === "INITIALIZING") resolve();
+				else if (this.state === "LOCKDOWN" || this.state === "RECONNECTING") this.setState("INITIALIZED");
+				
+			});
+
+			this.pub.on("connect", () => {
+				this.logger.info("NOTIFICATIONS_MODULE", "Pub connected succesfully.");
+
+				if (this.state === "INITIALIZING") resolve();
+				else if (this.state === "LOCKDOWN" || this.state === "RECONNECTING") this.setState("INITIALIZED");
 			});
 
 			this.sub.on('pmessage', (pattern, channel, expiredKey) => {

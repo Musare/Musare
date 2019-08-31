@@ -12,38 +12,35 @@ module.exports = class extends coreClass {
 			this.setStage(1);
 
 			this.client = new Discord.Client();
-			
-			this.connected = false;
 			this.adminAlertChannelId = config.get("apis.discord").loggingChannel;
 			
 			this.client.on("ready", () => {
-				this.logger.info("DISCORD_READY", `Logged in as ${this.client.user.tag}!`);
-				this.connected = true;
+				this.logger.info("DISCORD_MODULE", `Logged in as ${this.client.user.tag}!`);
 
-				//bus.emit("discordConnected");
-
-				resolve();
-
-				/*messagesToSend.forEach(message => {
-					this.sendAdminAlertMessage(message.message, message.color, message.type, message.critical, message.extraFields);
-				});
-				messagesToSend = [];*/
+				if (this.state === "INITIALIZING") resolve();
+				else {
+					this.logger.info("DISCORD_MODULE", `Discord client reconnected.`);
+					this.setState("INITIALIZED");
+				}
 			});
 		  
 			this.client.on("disconnect", () => {
-				this.logger.info("DISCORD_DISCONNECT", `Discord client was disconnected.`);
-				this.connected = false;
+				this.logger.info("DISCORD_MODULE", `Discord client disconnected.`);
+
+				if (this.state === "INITIALIZING") reject();
+				else {
+					this.failed = true;
+					this._lockdown;
+				} 
 			});
 
 			this.client.on("reconnecting", () => {
-				this.logger.info("DISCORD_RECONNECTING", `Discord client reconnecting.`);
-				this.connected = false;
+				this.logger.info("DISCORD_MODULE", `Discord client reconnecting.`);
+				this.setState("RECONNECTING");
 			});
 		
 			this.client.on("error", err => {
-				this.logger.info("DISCORD_ERROR", `Discord client encountered an error: ${err.message}.`);
-
-				reject();
+				this.logger.info("DISCORD_MODULE", `Discord client encountered an error: ${err.message}.`);
 			});
 
 			this.client.login(config.get("apis.discord").token);
@@ -51,7 +48,7 @@ module.exports = class extends coreClass {
 	}
 
 	async sendAdminAlertMessage(message, color, type, critical, extraFields) {
-		try { await this._validateHook(); await this.connectedHook(); } catch { return; }
+		try { await this._validateHook(); } catch { return; }
 
 		const channel = this.client.channels.find("id", this.adminAlertChannelId);
 		if (channel !== null) {
@@ -90,14 +87,5 @@ module.exports = class extends coreClass {
 		} else {
 			this.logger.error("SEND_ADMIN_ALERT_MESSAGE", "Couldn't send admin alert message, channel was not found.");
 		}
-	}
-
-	connectedHook() {
-		return Promise.race([
-			new Promise(resolve => bus.once("discordConnected", resolve)),
-			new Promise(resolve => {
-				if (this.connected) resolve();
-			})
-		]);
 	}
 }
