@@ -4,24 +4,24 @@
 		<div class="app">
 			<main-header />
 			<div class="content-wrapper">
-				<div class="group">
-					<div class="group-title">
-						Stations&nbsp;
-						<a
-							v-if="loggedIn"
-							href="#"
-							@click="
-								openModal({
-									sector: 'home',
-									modal: 'createCommunityStation'
-								})
-							"
+				<div class="stationsTitle">
+					Stations&nbsp;
+					<a
+						v-if="loggedIn"
+						href="#"
+						@click="
+							openModal({
+								sector: 'home',
+								modal: 'createCommunityStation'
+							})
+						"
+					>
+						<i class="material-icons community-button"
+							>add_circle_outline</i
 						>
-							<i class="material-icons community-button"
-								>add_circle_outline</i
-							>
-						</a>
-					</div>
+					</a>
+				</div>
+				<div class="stations">
 					<router-link
 						v-for="(station, index) in filteredStations"
 						:key="index"
@@ -29,14 +29,10 @@
 							name: 'station',
 							params: { id: station.name }
 						}"
-						class="card station-card"
-						:class="{
-							isPrivate: station.privacy === 'private',
-							isMine: isOwner(station)
-						}"
+						class="stationCard"
 					>
-						<div class="card-image">
-							<figure class="image is-square">
+						<div class="topContent">
+							<div class="albumArt">
 								<div
 									v-if="station.currentSong.ytThumbnail"
 									class="ytThumbnailBg"
@@ -58,28 +54,34 @@
 									:src="station.currentSong.thumbnail"
 									onerror="this.src='/assets/notes-transparent.png'"
 								/>
-							</figure>
-						</div>
-						<div class="card-content">
-							<div class="media">
-								<div class="media-left displayName">
-									<h5>
-										{{ station.displayName }}
-										<i
-											v-if="station.type === 'official'"
-											class="badge material-icons"
-											>verified_user</i
-										>
-									</h5>
-								</div>
 							</div>
-
-							<div class="content">
-								{{ station.description }}
-							</div>
-							<div class="under-content">
-								<span class="hostedby"
-									>Hosted by
+							<div class="info">
+								<h5 class="displayName">
+									{{ station.displayName }}
+									<i
+										v-if="station.type === 'official'"
+										class="badge material-icons"
+									>
+										verified_user
+									</i>
+								</h5>
+								<i
+									v-if="loggedIn && !isFavorite(station)"
+									@click="favoriteStation($event, station)"
+									class="favorite material-icons"
+									>star_border</i
+								>
+								<i
+									v-if="loggedIn && isFavorite(station)"
+									@click="unfavoriteStation($event, station)"
+									class="favorite material-icons"
+									>star</i
+								>
+								<p class="description">
+									{{ station.description }}
+								</p>
+								<p class="hostedBy">
+									Hosted by
 									<span class="host">
 										<span
 											v-if="station.type === 'official'"
@@ -92,43 +94,43 @@
 											:link="true"
 										/>
 									</span>
-								</span>
-								<i
-									v-if="station.privacy !== 'public'"
-									class="material-icons right-icon"
-									title="This station is not visible to other users."
-									>lock</i
-								>
-								<i
-									v-if="
-										station.type === 'community' &&
-											isOwner(station)
-									"
-									class="material-icons right-icon"
-									title="This is your station."
-									>home</i
-								>
-								<button
-									v-if="!isFavorite(station)"
-									@click="favoriteStation($event, station)"
-								>
-									Favorite
-								</button>
-								<button
-									v-if="isFavorite(station)"
-									@click="unfavoriteStation($event, station)"
-								>
-									Unfavorite
-								</button>
+								</p>
+								<div class="bottomIcons">
+									<i
+										v-if="station.privacy !== 'public'"
+										class="privateIcon material-icons"
+										title="This station is not visible to other users."
+										>lock</i
+									>
+									<i
+										v-if="
+											station.type === 'community' &&
+												isOwner(station)
+										"
+										class="homeIcon material-icons"
+										title="This is your station."
+										>home</i
+									>
+								</div>
 							</div>
 						</div>
-						<!--router-link
-							class="absolute-a"
-							:to="{
-								name: 'station',
-								params: { id: station.name }
-							}"
-						/-->
+						<div class="bottomBar">
+							<i class="material-icons">music_note</i>
+							<span
+								v-if="station.currentSong.title"
+								class="songTitle"
+								>{{ station.currentSong.title }}</span
+							>
+							<span v-else class="songTitle"
+								>No Songs Playing</span
+							>
+							<div class="right">
+								<i class="material-icons">people</i>
+								<span class="currentUsers">{{
+									station.userCount
+								}}</span>
+							</div>
+						</div>
 					</router-link>
 				</div>
 			</div>
@@ -313,223 +315,212 @@ html {
 	}
 }
 
-@media only screen and (min-width: 1200px) {
-	html {
-		font-size: 15px;
-	}
+.stationsTitle {
+	width: 100%;
+	height: 64px;
+	line-height: 48px;
+	text-align: center;
+	font-size: 48px;
+	margin-bottom: 25px;
 }
-
-@media only screen and (min-width: 992px) {
-	html {
-		font-size: 14.5px;
-	}
-}
-
-@media only screen and (min-width: 0) {
-	html {
-		font-size: 14px;
-	}
-}
-
-.under-content {
-	width: calc(100% - 40px);
-	left: 20px;
-	right: 20px;
-	bottom: 10px;
-	text-align: left;
-	height: 25px;
-	position: absolute;
-	margin-bottom: 10px;
-	line-height: 1;
-	font-size: 24px;
-	vertical-align: middle;
-
-	* {
-		z-index: 10;
-		position: relative;
-	}
-
-	.official {
-		font-size: 18px;
-		color: $primary-color;
-		position: relative;
-		top: -5px;
-	}
-
-	.hostedby {
-		font-size: 15px;
-
-		.host {
-			color: $primary-color;
-
-			a {
-				color: $primary-color;
-			}
-		}
-	}
-
-	.right-icon {
-		float: right;
-	}
-}
-
-.users-count {
-	font-size: 20px;
-	position: relative;
-	top: -4px;
-}
-
-.right {
-	float: right;
-}
-
-.group {
-	min-height: 64px;
-}
-
-.station-card {
-	margin: 10px;
-	cursor: pointer;
-	height: 475px;
-	background: $white;
-
-	transition: all ease-in-out 0.2s;
-
-	.card-content {
-		max-height: 159px;
-
-		.content {
-			word-wrap: break-word;
-			overflow: hidden;
-			text-overflow: ellipsis;
-			display: -webkit-box;
-			-webkit-box-orient: vertical;
-			-webkit-line-clamp: 3;
-			line-height: 20px;
-			max-height: 60px;
-		}
-	}
-
-	.card-image {
-		height: 300px;
-		width: 300px;
-		overflow: hidden;
-		.image {
-			.ytThumbnailBg {
-				background: url("/assets/notes-transparent.png") no-repeat
-					center center;
-				background-size: cover;
-				height: 300px;
-				width: 300px;
-				position: absolute;
-				top: 0;
-				filter: blur(5px);
-			}
-			.ytThumbnail {
-				height: auto;
-				top: 0;
-				margin-top: auto;
-				margin-bottom: auto;
-			}
-		}
-	}
-}
-
-.station-card:hover {
-	box-shadow: 0 2px 3px rgba(10, 10, 10, 0.3), 0 0 10px rgba(10, 10, 10, 0.3);
-	transition: all ease-in-out 0.2s;
-}
-
-/*.isPrivate {
-		background-color: #F8BBD0;
-	}
-
-	.isMine {
-		background-color: #29B6F6;
-	}*/
-
 .community-button {
 	cursor: pointer;
 	transition: 0.25s ease color;
 	font-size: 30px;
 	color: $dark-grey;
-}
-
-.community-button:hover {
-	color: $primary-color;
-}
-
-.station-privacy {
-	text-transform: capitalize;
-}
-
-.label {
-	display: flex;
-}
-
-.g-recaptcha {
-	display: flex;
-	justify-content: center;
-	margin-top: 20px;
-}
-
-.group {
-	text-align: center;
-	width: 100%;
-
-	.group-title {
-		float: left;
-		clear: none;
-		width: 100%;
-		height: 64px;
-		line-height: 48px;
-		text-align: center;
-		font-size: 48px;
-		margin-bottom: 25px;
+	&:hover {
+		color: $primary-color;
 	}
 }
 
-.group .card {
+.stations {
+	display: flex;
+	flex: 1;
+	flex-wrap: wrap;
+	justify-content: center;
+	margin-left: 10px;
+	margin-right: 10px;
+}
+.stationCard {
 	display: inline-flex;
 	flex-direction: column;
+	width: 450px;
+	height: 180px;
+	background: $white;
+	box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.1);
+	color: $dark-grey;
+	margin: 10px;
+	transition: all ease-in-out 0.2s;
+	cursor: pointer;
 	overflow: hidden;
-
-	.content {
-		text-align: left;
-		word-wrap: break-word;
-	}
-
-	.media {
-		display: flex;
-		align-items: center;
-
-		.station-status {
-			line-height: 13px;
+	.albumArt {
+		display: inline-flex;
+		position: relative;
+		height: 150px;
+		width: 150px;
+		box-shadow: 1px 0px 3px rgba(7, 136, 191, 0.3);
+		overflow: hidden;
+		img {
+			width: auto;
+			height: 100%;
 		}
-
-		h5 {
-			margin: 0;
+		.ytThumbnailBg {
+			background: url("/assets/notes-transparent.png") no-repeat center
+				center;
+			background-size: cover;
+			height: 100%;
+			width: 100%;
+			position: absolute;
+			top: 0;
+			filter: blur(5px);
+		}
+		.ytThumbnail {
+			height: auto;
+			width: 100%;
+			top: 0;
+			margin-top: auto;
+			margin-bottom: auto;
+			z-index: 1;
+		}
+	}
+	.topContent {
+		width: 100%;
+		height: 100%;
+		display: inline-flex;
+		.info {
+			padding: 15px 12px 12px 15px;
+			position: relative;
+			width: 100%;
+			max-width: 300px;
+			.displayName {
+				color: $black;
+				margin: 0;
+				font-size: 20px;
+				font-weight: 500;
+				margin-bottom: 5px;
+				width: calc(100% - 30px);
+				word-wrap: break-word;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				display: -webkit-box;
+				-webkit-box-orient: vertical;
+				-webkit-line-clamp: 1;
+				line-height: 30px;
+				max-height: 30px;
+				.badge {
+					position: relative;
+					padding-right: 2px;
+					color: $lime;
+					top: 3px;
+					font-size: 22px;
+				}
+			}
+			.favorite {
+				color: $yellow;
+				top: 12px;
+				right: 12px;
+				position: absolute;
+			}
+			.description {
+				width: calc(100% - 30px);
+				margin: 0;
+				font-size: 14px;
+				font-weight: 400;
+				word-wrap: break-word;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				display: -webkit-box;
+				-webkit-box-orient: vertical;
+				-webkit-line-clamp: 3;
+				line-height: 20px;
+				max-height: 60px;
+			}
+			.hostedBy {
+				font-weight: 400;
+				font-size: 12px;
+				position: absolute;
+				bottom: 12px;
+				color: $black;
+				.host {
+					font-weight: 400;
+					color: $primary-color;
+				}
+			}
+			.bottomIcons {
+				position: absolute;
+				bottom: 12px;
+				right: 12px;
+				.material-icons {
+					margin-left: 5px;
+					font-size: 22px;
+				}
+				.privateIcon {
+					color: $dark-pink;
+				}
+				.homeIcon {
+					color: $light-purple;
+				}
+			}
+		}
+	}
+	.bottomBar {
+		background: $primary-color;
+		box-shadow: inset 0px 2px 4px rgba(7, 136, 191, 0.6);
+		width: 100%;
+		height: 30px;
+		line-height: 30px;
+		color: $white;
+		font-weight: 400;
+		font-size: 12px;
+		i.material-icons {
+			vertical-align: middle;
+			margin-left: 12px;
+			font-size: 22px;
+		}
+		.songTitle {
+			vertical-align: middle;
+			margin-left: 5px;
+		}
+		.right {
+			float: right;
+			margin-right: 12px;
+			.currentUsers {
+				vertical-align: middle;
+				margin-left: 5px;
+				font-size: 14px;
+			}
 		}
 	}
 }
+.stationCard:hover {
+	box-shadow: 0 2px 3px rgba(10, 10, 10, 0.3), 0 0 10px rgba(10, 10, 10, 0.3);
+	transition: all ease-in-out 0.2s;
+}
 
-.displayName {
-	word-wrap: break-word;
-	width: 80%;
-	word-wrap: break-word;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	display: -webkit-box;
-	-webkit-box-orient: vertical;
-	-webkit-line-clamp: 1;
-	line-height: 30px;
-	max-height: 30px;
-
-	.badge {
-		position: relative;
-		padding-right: 2px;
-		color: $lime;
-		top: +5px;
+@media screen and (max-width: 490px) {
+	.stationCard {
+		width: calc(100% - 20px);
+		height: auto;
+		.topContent {
+			.albumArt {
+				max-height: 100px;
+				max-width: 100px;
+			}
+			.info {
+				width: calc(100% - 100px);
+				padding: 5px 2px 2px 10px !important;
+				.displayName {
+					font-size: 16px !important;
+					margin-bottom: 3px !important;
+				}
+				.description {
+					font-size: 12px !important;
+					-webkit-line-clamp: 2;
+					line-height: 15px;
+					max-height: 30px;
+				}
+			}
+		}
 	}
 }
 </style>
