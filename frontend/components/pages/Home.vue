@@ -420,6 +420,7 @@ html {
 				top: 12px;
 				right: 12px;
 				position: absolute;
+				display: none;
 			}
 			.description {
 				width: calc(100% - 30px);
