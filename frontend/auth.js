@@ -17,11 +17,10 @@ export default {
 	},
 
 	setBanned(ban) {
-		const _this = this;
-		_this.banned = true;
-		_this.ban = ban;
+		this.banned = true;
+		this.ban = ban;
 		bannedCallbacks.forEach(callback => {
-			callback(true, _this.ban);
+			callback(true, this.ban);
 		});
 	},
 

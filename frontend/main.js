@@ -4,8 +4,26 @@ import VueRouter from "vue-router";
 import store from "./store";
 
 import App from "./App.vue";
-import auth from "./auth";
 import io from "./io";
+
+const handleMetadata = attrs => {
+	document.title = `Musare | ${attrs.title}`;
+};
+
+Vue.component("metadata", {
+	watch: {
+		$attrs: {
+			handler: attrs => {
+				handleMetadata(attrs);
+			},
+			deep: true,
+			immediate: true
+		}
+	},
+	render() {
+		return null;
+	}
+});
 
 Vue.use(VueRouter);
 
@@ -52,7 +70,9 @@ const router = new VueRouter({
 		{
 			path: "/settings",
 			component: () => import("./components/User/Settings.vue"),
-			loginRequired: true
+			meta: {
+				loginRequired: true
+			}
 		},
 		{
 			path: "/reset_password",
@@ -69,25 +89,21 @@ const router = new VueRouter({
 		{
 			path: "/admin",
 			component: () => import("./components/pages/Admin.vue"),
-			adminRequired: true
+			meta: {
+				adminRequired: true
+			}
 		},
 		{
 			path: "/admin/:page",
 			component: () => import("./components/pages/Admin.vue"),
-			adminRequired: true
+			meta: {
+				adminRequired: true
+			}
 		},
 		{
-			name: "official",
-			path: "/official/:id",
-			alias: "/:id",
-			component: () => import("./components/Station/Station.vue"),
-			officialRequired: true
-		},
-		{
-			name: "community",
-			path: "/community/:id",
-			component: () => import("./components/Station/Station.vue"),
-			communityRequired: true
+			name: "station",
+			path: "/:id",
+			component: () => import("./components/Station/Station.vue")
 		}
 	]
 });
@@ -96,11 +112,19 @@ lofig.folder = "../config/default.json";
 lofig.get("serverDomain", res => {
 	io.init(res);
 	io.getSocket(socket => {
-		socket.on("ready", (status, role, username, userId) => {
-			auth.data(status, role, username, userId);
+		socket.on("ready", (loggedIn, role, username, userId) => {
+			store.dispatch("user/auth/authData", {
+				loggedIn,
+				role,
+				username,
+				userId
+			});
 		});
 		socket.on("keep.event:banned", ban => {
-			auth.setBanned(ban);
+			store.dispatch("user/auth/banUser", ban);
+		});
+		socket.on("event:user.username.changed", username => {
+			store.dispatch("user/auth/updateUsername", username);
 		});
 	});
 });
@@ -112,46 +136,36 @@ router.beforeEach((to, from, next) => {
 	}
 	if (window.socket) io.removeAllListeners();
 	io.clear();
-	if (to.loginRequired || to.adminRequired) {
-		auth.getStatus((authenticated, role) => {
-			if (to.loginRequired && !authenticated) next({ path: "/login" });
-			else if (to.adminRequired && role !== "admin") next({ path: "/" });
+	if (to.meta.loginRequired || to.meta.adminRequired) {
+		const gotData = () => {
+			if (to.loginRequired && !store.state.user.auth.loggedIn)
+				next({ path: "/login" });
+			else if (to.adminRequired && store.state.user.auth.role !== "admin")
+				next({ path: "/" });
 			else next();
-		});
+		};
+
+		if (store.state.user.auth.gotData) gotData();
+		else {
+			const watcher = store.watch(
+				state => state.user.auth.gotData,
+				() => {
+					watcher();
+					gotData();
+				}
+			);
+		}
 	} else next();
 
-	if (from.name === "community" || from.name === "official") {
-		document.title = "Musare";
-	}
-
-	if (to.officialRequired) {
+	if (to.name === "station") {
 		io.getSocket(socket => {
 			socket.emit("stations.findByName", to.params.id, res => {
 				if (res.status === "success") {
-					if (res.data.type === "community")
-						next({ path: `/community/${to.params.id}` });
-					else next();
+					next();
 				}
 			});
 		});
 	}
-
-	if (to.communityRequired) {
-		io.getSocket(socket => {
-			socket.emit("stations.findByName", to.params.id, res => {
-				if (res.status === "success") {
-					if (res.data.type === "official")
-						next({ path: `/official/${to.params.id}` });
-					else next();
-				}
-			});
-		});
-	}
-});
-
-router.afterEach(to => {
-	ga("set", "page", to.path);
-	ga("send", "pageview");
 });
 
 // eslint-disable-next-line no-new

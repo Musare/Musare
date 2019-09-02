@@ -1,17 +1,20 @@
 'use strict';
 
-const 	hooks 	    = require('./hooks'),
-	 	async 	    = require('async'),
-	 	logger 	    = require('../logger'),
-	 	utils 	    = require('../utils'),
-		cache       = require('../cache'),
-	 	db 	        = require('../db'),
-		punishments = require('../punishments');
+const async = require('async');
+
+const hooks = require('./hooks');
+const moduleManager = require("../../index");
+
+const logger = moduleManager.modules["logger"];
+const utils = moduleManager.modules["utils"];
+const cache = moduleManager.modules["cache"];
+const db = moduleManager.modules["db"];
+const punishments = moduleManager.modules["punishments"];
 
 cache.sub('ip.ban', data => {
+	utils.emitToRoom('admin.punishments', 'event:admin.punishment.added', data.punishment);
 	utils.socketsFromIP(data.ip, sockets => {
 		sockets.forEach(socket => {
-			socket.emit('keep.event:banned', data.punishment);
 			socket.disconnect(true);
 		});
 	});
@@ -30,9 +33,9 @@ module.exports = {
 			(next) => {
 				db.models.punishment.find({}, next);
 			}
-		], (err, punishments) => {
+		], async (err, punishments) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("PUNISHMENTS_INDEX", `Indexing punishments failed. "${err}"`);
 				return cb({ 'status': 'failure', 'message': err});
 			}
@@ -99,24 +102,19 @@ module.exports = {
 
 			(next) => {
 				punishments.addPunishment('banUserIp', value, reason, expiresAt, userId, next)
-			},
-
-			(punishment, next) => {
-				cache.pub('ip.ban', {ip: value, punishment});
-				next();
-			},
-		], (err) => {
+			}
+		], async (err, punishment) => {
 			if (err && err !== true) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("BAN_IP", `User ${userId} failed to ban IP address ${value} with the reason ${reason}. '${err}'`);
 				cb({ status: 'failure', message: err });
-			} else {
-				logger.success("BAN_IP", `User ${userId} has successfully banned Ip address ${value} with the reason ${reason}.`);
-				cb({
-					status: 'success',
-					message: 'Successfully banned IP address.'
-				});
 			}
+			logger.success("BAN_IP", `User ${userId} has successfully banned IP address ${value} with the reason ${reason}.`);
+			cache.pub('ip.ban', { ip: value, punishment });
+			return cb({
+				status: 'success',
+				message: 'Successfully banned IP address.'
+			});
 		});
 	}),
 

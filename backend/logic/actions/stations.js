@@ -5,15 +5,18 @@ const async   = require('async'),
 	  config  = require('config'),
 	  _		  =  require('underscore')._;
 
-const io = require('../io');
-const db = require('../db');
-const cache = require('../cache');
-const notifications = require('../notifications');
-const utils = require('../utils');
-const logger = require('../logger');
-const stations = require('../stations');
-const songs = require('../songs');
 const hooks = require('./hooks');
+
+const moduleManager = require("../../index");
+
+const db = moduleManager.modules["db"];
+const cache = moduleManager.modules["cache"];
+const notifications = moduleManager.modules["notifications"];
+const utils = moduleManager.modules["utils"];
+const logger = moduleManager.modules["logger"];
+const stations = moduleManager.modules["stations"];
+const songs = moduleManager.modules["songs"];
+
 let userList = {};
 let usersPerStation = {};
 let usersPerStationCount = {};
@@ -29,39 +32,40 @@ setInterval(() => {
 	usersPerStationCount = {};
 
 	async.each(Object.keys(userList), function(socketId, next) {
-		let socket = utils.socketFromSession(socketId);
-		let stationId = userList[socketId];
-		if (!socket || Object.keys(socket.rooms).indexOf(`station.${stationId}`) === -1) {
-			if (stationsCountUpdated.indexOf(stationId) === -1) stationsCountUpdated.push(stationId);
-			if (stationsUpdated.indexOf(stationId) === -1) stationsUpdated.push(stationId);
-			delete userList[socketId];
-			return next();
-		}
-		if (!usersPerStationCount[stationId]) usersPerStationCount[stationId] = 0;
-		usersPerStationCount[stationId]++;
-		if (!usersPerStation[stationId]) usersPerStation[stationId] = [];
-
-		async.waterfall([
-			(next) => {
-				if (!socket.session || !socket.session.sessionId) return next('No session found.');
-				cache.hget('sessions', socket.session.sessionId, next);
-			},
-
-			(session, next) => {
-				if (!session) return next('Session not found.');
-				db.models.user.findOne({_id: session.userId}, next);
-			},
-
-			(user, next) => {
-				if (!user) return next('User not found.');
-				if (usersPerStation[stationId].indexOf(user.username) !== -1) return next('User already in the list.');
-				next(null, user.username);
+		utils.socketFromSession(socketId).then((socket) => {
+			let stationId = userList[socketId];
+			if (!socket || Object.keys(socket.rooms).indexOf(`station.${stationId}`) === -1) {
+				if (stationsCountUpdated.indexOf(stationId) === -1) stationsCountUpdated.push(stationId);
+				if (stationsUpdated.indexOf(stationId) === -1) stationsUpdated.push(stationId);
+				delete userList[socketId];
+				return next();
 			}
-		], (err, username) => {
-			if (!err) {
-				usersPerStation[stationId].push(username);
-			}
-			next();
+			if (!usersPerStationCount[stationId]) usersPerStationCount[stationId] = 0;
+			usersPerStationCount[stationId]++;
+			if (!usersPerStation[stationId]) usersPerStation[stationId] = [];
+
+			async.waterfall([
+				(next) => {
+					if (!socket.session || !socket.session.sessionId) return next('No session found.');
+					cache.hget('sessions', socket.session.sessionId, next);
+				},
+
+				(session, next) => {
+					if (!session) return next('Session not found.');
+					db.models.user.findOne({_id: session.userId}, next);
+				},
+
+				(user, next) => {
+					if (!user) return next('User not found.');
+					if (usersPerStation[stationId].indexOf(user.username) !== -1) return next('User already in the list.');
+					next(null, user.username);
+				}
+			], (err, username) => {
+				if (!err) {
+					usersPerStation[stationId].push(username);
+				}
+				next();
+			});
 		});
 		//TODO Code to show users
 	}, (err) => {
@@ -99,10 +103,10 @@ cache.sub('station.updateUsers', stationId => {
 cache.sub('station.updateUserCount', stationId => {
 	let count = usersPerStationCount[stationId] || 0;
 	utils.emitToRoom(`station.${stationId}`, "event:userCount.updated", count);
-	stations.getStation(stationId, (err, station) => {
+	stations.getStation(stationId, async (err, station) => {
 		if (station.privacy === 'public') utils.emitToRoom('home', "event:userCount.updated", stationId, count);
 		else {
-			let sockets = utils.getRoomSockets('home');
+			let sockets = await utils.getRoomSockets('home');
 			for (let socketId in sockets) {
 				let socket = sockets[socketId];
 				let session = sockets[socketId].session;
@@ -161,14 +165,14 @@ cache.sub('station.remove', stationId => {
 });
 
 cache.sub('station.create', stationId => {
-	stations.initializeStation(stationId, (err, station) => {
+	stations.initializeStation(stationId, async (err, station) => {
 		station.userCount = usersPerStationCount[stationId] || 0;
 		if (err) console.error(err);
 		utils.emitToRoom('admin.stations', 'event:admin.station.added', station);
 		// TODO If community, check if on whitelist
 		if (station.privacy === 'public') utils.emitToRoom('home', "event:stations.created", station);
 		else {
-			let sockets = utils.getRoomSockets('home');
+			let sockets = await utils.getRoomSockets('home');
 			for (let socketId in sockets) {
 				let socket = sockets[socketId];
 				let session = sockets[socketId].session;
@@ -241,9 +245,9 @@ module.exports = {
 					next(null, resultStations);
 				});
 			}
-		], (err, stations) => {
+		], async (err, stations) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("STATIONS_INDEX", `Indexing stations failed. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
@@ -269,9 +273,9 @@ module.exports = {
 				if (!station) return next('Station not found.');
 				next(null, station);
 			}
-		], (err, station) => {
+		], async (err, station) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("STATIONS_FIND_BY_NAME", `Finding station "${stationName}" failed. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
@@ -307,9 +311,9 @@ module.exports = {
 				if (!playlist) return next('Playlist not found.');
 				next(null, playlist);
 			}
-		], (err, playlist) => {
+		], async (err, playlist) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("STATIONS_GET_PLAYLIST", `Getting playlist for station "${stationId}" failed. "${err}"`);
 				return cb({ status: 'failure', message: err });
 			} else {
@@ -353,9 +357,9 @@ module.exports = {
 						if (station.owner === session.userId) return next(true);
 						next('An error occurred while joining the station.');
 					}
-				], (err) => {
+				], async (err) => {
 					if (err === true) return next(null, station);
-					next(utils.getError(err));
+					next(await utils.getError(err));
 				});
 			},
 
@@ -398,9 +402,9 @@ module.exports = {
 					next(null, data);
 				});
 			}
-		], (err, data) => {
+		], async (err, data) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("STATIONS_JOIN", `Joining station "${stationName}" failed. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
@@ -429,9 +433,9 @@ module.exports = {
 			(res, next) => {
 				stations.updateStation(stationId, next);
 			}
-		], (err, station) => {
+		], async (err, station) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("STATIONS_UPDATE_LOCKED_STATUS", `Toggling the queue lock for station "${stationId}" failed. "${err}"`);
 				return cb({ status: 'failure', message: err });
 			} else {
@@ -482,9 +486,9 @@ module.exports = {
 				if (!station) return next('Station not found.');
 				next(null, station);
 			}
-		], (err, station) => {
+		], async (err, station) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("STATIONS_VOTE_SKIP", `Vote skipping station "${stationId}" failed. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
@@ -512,9 +516,9 @@ module.exports = {
 				if (!station) return next('Station not found.');
 				next();
 			}
-		], (err) => {
+		], async (err) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("STATIONS_FORCE_SKIP", `Force skipping station "${stationId}" failed. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
@@ -543,9 +547,9 @@ module.exports = {
 				if (!station) return next('Station not found.');
 				next();
 			}
-		], (err, userCount) => {
+		], async (err, userCount) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("STATIONS_LEAVE", `Leaving station "${stationId}" failed. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
@@ -573,9 +577,9 @@ module.exports = {
 			(res, next) => {
 				stations.updateStation(stationId, next);
 			}
-		], (err) => {
+		], async (err) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("STATIONS_UPDATE_DISPLAY_NAME", `Updating station "${stationId}" displayName to "${newName}" failed. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
@@ -601,9 +605,9 @@ module.exports = {
 			(res, next) => {
 				stations.updateStation(stationId, next);
 			}
-		], (err) => {
+		], async (err) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("STATIONS_UPDATE_DISPLAY_NAME", `Updating station "${stationId}" displayName to "${newDisplayName}" failed. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
@@ -629,9 +633,9 @@ module.exports = {
 			(res, next) => {
 				stations.updateStation(stationId, next);
 			}
-		], (err) => {
+		], async (err) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("STATIONS_UPDATE_DESCRIPTION", `Updating station "${stationId}" description to "${newDescription}" failed. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
@@ -657,9 +661,9 @@ module.exports = {
 			(res, next) => {
 				stations.updateStation(stationId, next);
 			}
-		], (err) => {
+		], async (err) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("STATIONS_UPDATE_PRIVACY", `Updating station "${stationId}" privacy to "${newPrivacy}" failed. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
@@ -685,9 +689,9 @@ module.exports = {
 			(res, next) => {
 				stations.updateStation(stationId, next);
 			}
-		], (err) => {
+		], async (err) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("STATIONS_UPDATE_GENRES", `Updating station "${stationId}" genres to "${newGenres}" failed. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
@@ -713,9 +717,9 @@ module.exports = {
 			(res, next) => {
 				stations.updateStation(stationId, next);
 			}
-		], (err) => {
+		], async (err) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("STATIONS_UPDATE_BLACKLISTED_GENRES", `Updating station "${stationId}" blacklisted genres to "${newBlacklistedGenres}" failed. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
@@ -747,9 +751,9 @@ module.exports = {
 			(res, next) => {
 				stations.updateStation(stationId, next);
 			}
-		], (err) => {
+		], async (err) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("STATIONS_UPDATE_PARTY_MODE", `Updating station "${stationId}" party mode to "${newPartyMode}" failed. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
@@ -782,9 +786,9 @@ module.exports = {
 			(res, next) => {
 				stations.updateStation(stationId, next);
 			}
-		], (err) => {
+		], async (err) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("STATIONS_PAUSE", `Pausing station "${stationId}" failed. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
@@ -818,9 +822,9 @@ module.exports = {
 			(res, next) => {
 				stations.updateStation(stationId, next);
 			}
-		], (err) => {
+		], async (err) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("STATIONS_RESUME", `Resuming station "${stationId}" failed. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
@@ -846,9 +850,9 @@ module.exports = {
 			(next) => {
 				cache.hdel('stations', stationId, err => next(err));
 			}
-		], (err) => {
+		], async (err) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("STATIONS_REMOVE", `Removing station "${stationId}" failed. "${err}"`);
 				return cb({ 'status': 'failure', 'message': err });
 			}
@@ -913,9 +917,9 @@ module.exports = {
 					}, next);
 				}
 			}
-		], (err, station) => {
+		], async (err, station) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("STATIONS_CREATE", `Creating station failed. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
@@ -1037,9 +1041,9 @@ module.exports = {
 			(res, next) => {
 				stations.updateStation(stationId, next);
 			}
-		], (err, station) => {
+		], async (err, station) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("STATIONS_ADD_SONG_TO_QUEUE", `Adding song "${songId}" to station "${stationId}" queue failed. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
@@ -1084,9 +1088,9 @@ module.exports = {
 			(res, next) => {
 				stations.updateStation(stationId, next);
 			}
-		], (err, station) => {
+		], async (err, station) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("STATIONS_REMOVE_SONG_TO_QUEUE", `Removing song "${songId}" from station "${stationId}" queue failed. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
@@ -1121,9 +1125,9 @@ module.exports = {
 					return next('Insufficient permissions.');
 				});
 			}
-		], (err, station) => {
+		], async (err, station) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("STATIONS_GET_QUEUE", `Getting queue for station "${stationId}" failed. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
@@ -1163,9 +1167,9 @@ module.exports = {
 			(res, next) => {
 				stations.updateStation(stationId, next);
 			}
-		], (err, station) => {
+		], async (err, station) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("STATIONS_SELECT_PRIVATE_PLAYLIST", `Selecting private playlist "${playlistId}" for station "${stationId}" failed. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
@@ -1174,6 +1178,80 @@ module.exports = {
 			if (!station.partyMode) stations.skipStation(stationId)();
 			cache.pub('privatePlaylist.selected', {playlistId, stationId});
 			return cb({'status': 'success', 'message': 'Successfully selected playlist.'});
+		});
+	}),
+
+	favoriteStation: hooks.loginRequired((session, stationId, cb, userId) => {
+		async.waterfall([
+			(next) => {
+				stations.getStation(stationId, next);
+			},
+
+			(station, next) => {
+				if (!station) return next('Station not found.');
+				async.waterfall([
+					(next) => {
+						if (station.privacy !== 'private') return next(true);
+						if (!session.userId) return next("You're not allowed to favorite this station.");
+						next();
+					},
+
+					(next) => {
+						db.models.user.findOne({ _id: userId }, next);
+					},
+
+					(user, next) => {
+						if (!user) return next("You're not allowed to favorite this station.");
+						if (user.role === 'admin') return next(true);
+						if (station.type === 'official') return next("You're not allowed to favorite this station.");
+						if (station.owner === session.userId) return next(true);
+						next("You're not allowed to favorite this station.");
+					}
+				], (err) => {
+					if (err === true) return next(null);
+					next(utils.getError(err));
+				});
+			},
+
+			(next) => {
+				db.models.user.updateOne({ _id: userId }, { $addToSet: { favoriteStations: stationId } }, next);
+			},
+
+			(res, next) => {
+				if (res.nModified === 0) return next("The station was already favorited.");
+				next();
+			}
+		], async (err) => {
+			if (err) {
+				err = await utils.getError(err);
+				logger.error("FAVORITE_STATION", `Favoriting station "${stationId}" failed. "${err}"`);
+				return cb({'status': 'failure', 'message': err});
+			}
+			logger.success("FAVORITE_STATION", `Favorited station "${stationId}" successfully.`);
+			cache.pub('user.favoritedStation', { userId, stationId });
+			return cb({'status': 'success', 'message': 'Succesfully favorited station.'});
+		});
+	}),
+
+	unfavoriteStation: hooks.loginRequired((session, stationId, cb, userId) => {
+		async.waterfall([
+			(next) => {
+				db.models.user.updateOne({ _id: userId }, { $pull: { favoriteStations: stationId } }, next);
+			},
+
+			(res, next) => {
+				if (res.nModified === 0) return next("The station wasn't favorited.");
+				next();
+			}
+		], async (err) => {
+			if (err) {
+				err = await utils.getError(err);
+				logger.error("UNFAVORITE_STATION", `Unfavoriting station "${stationId}" failed. "${err}"`);
+				return cb({'status': 'failure', 'message': err});
+			}
+			logger.success("UNFAVORITE_STATION", `Unfavorited station "${stationId}" successfully.`);
+			cache.pub('user.unfavoritedStation', { userId, stationId });
+			return cb({'status': 'success', 'message': 'Succesfully unfavorited station.'});
 		});
 	}),
 };

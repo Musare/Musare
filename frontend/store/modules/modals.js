@@ -32,6 +32,7 @@ const getters = {};
 
 const actions = {
 	closeModal: ({ commit }, data) => {
+		if (data.modal === "register") window.location.reload();
 		commit("closeModal", data);
 	},
 	openModal: ({ commit }, data) => {

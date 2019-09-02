@@ -1,118 +1,142 @@
 'use strict';
 
-const cache = require('./cache');
-const db = require('./db');
-const io = require('./io');
-const utils = require('./utils');
-const logger = require('./logger');
-const songs = require('./songs');
-const notifications = require('./notifications');
+const coreClass = require("../core");
+
 const async = require('async');
 
 let subscription = null;
 
-let initialized = false;
-let lockdown = false;
+module.exports = class extends coreClass {
+	constructor(name, moduleManager) {
+		super(name, moduleManager);
 
-//TEMP
-cache.sub('station.pause', (stationId) => {
-	if (lockdown) return;
-	notifications.remove(`stations.nextSong?id=${stationId}`);
-});
+		this.dependsOn = ["cache", "db", "utils"];
+	}
 
-cache.sub('station.resume', (stationId) => {
-	if (lockdown) return;
-	module.exports.initializeStation(stationId)
-});
+	initialize() {
+		return new Promise(async (resolve, reject) => {
+			this.setStage(1);
 
-cache.sub('station.queueUpdate', (stationId) => {
-	if (lockdown) return;
-	module.exports.getStation(stationId, (err, station) => {
-		if (!station.currentSong && station.queue.length > 0) {
-			module.exports.initializeStation(stationId);
-		}
-	});
-});
+			this.cache = this.moduleManager.modules["cache"];
+			this.db = this.moduleManager.modules["db"];
+			this.utils = this.moduleManager.modules["utils"];
+			this.songs = this.moduleManager.modules["songs"];
+			this.notifications = this.moduleManager.modules["notifications"];
 
-cache.sub('station.newOfficialPlaylist', (stationId) => {
-	if (lockdown) return;
-	cache.hget("officialPlaylists", stationId, (err, playlistObj) => {
-		if (!err && playlistObj) {
-			utils.emitToRoom(`station.${stationId}`, "event:newOfficialPlaylist", playlistObj.songs);
-		}
-	})
-});
+			this.defaultSong = {
+				songId: '60ItHLz5WEA',
+				title: 'Faded - Alan Walker',
+				duration: 212,
+				skipDuration: 0,
+				likes: -1,
+				dislikes: -1
+			};
 
-module.exports = {
+			//TEMP
+			this.cache.sub('station.pause', async (stationId) => {
+				try { await this._validateHook(); } catch { return; }
 
-	init: function(cb) {
-		async.waterfall([
-			(next) => {
-				cache.hgetall('stations', next);
-			},
+				this.notifications.remove(`stations.nextSong?id=${stationId}`);
+			});
 
-			(stations, next) => {
-				if (!stations) return next();
-				let stationIds = Object.keys(stations);
-				async.each(stationIds, (stationId, next) => {
-					db.models.station.findOne({_id: stationId}, (err, station) => {
-						if (err) next(err);
-						else if (!station) {
-							cache.hdel('stations', stationId, next);
-						} else next();
-					});
-				}, next);
-			},
+			this.cache.sub('station.resume', async (stationId) => {
+				try { await this._validateHook(); } catch { return; }
 
-			(next) => {
-				db.models.station.find({}, next);
-			},
+				this.initializeStation(stationId)
+			});
 
-			(stations, next) => {
-				async.each(stations, (station, next) => {
-					async.waterfall([
-						(next) => {
-							cache.hset('stations', station._id, cache.schemas.station(station), next);
-						},
+			this.cache.sub('station.queueUpdate', async (stationId) => {
+				try { await this._validateHook(); } catch { return; }
 
-						(station, next) => {
-							this.initializeStation(station._id, next);
-						}
-					], (err) => {
-						next(err);
-					});
-				}, next);
-			}
-		], (err) => {
-			if (lockdown) return this._lockdown();
-			if (err) {
-				err = utils.getError(err);
-				cb(err);
-			} else {
-				initialized = true;
-				cb();
-			}
+				this.getStation(stationId, (err, station) => {
+					if (!station.currentSong && station.queue.length > 0) {
+						this.initializeStation(stationId);
+					}
+				});
+			});
+
+			this.cache.sub('station.newOfficialPlaylist', async (stationId) => {
+				try { await this._validateHook(); } catch { return; }
+
+				this.cache.hget("officialPlaylists", stationId, (err, playlistObj) => {
+					if (!err && playlistObj) {
+						this.utils.emitToRoom(`station.${stationId}`, "event:newOfficialPlaylist", playlistObj.songs);
+					}
+				})
+			});
+
+
+			async.waterfall([
+				(next) => {
+					this.setStage(2);
+					this.cache.hgetall('stations', next);
+				},
+	
+				(stations, next) => {
+					this.setStage(3);
+					if (!stations) return next();
+					let stationIds = Object.keys(stations);
+					async.each(stationIds, (stationId, next) => {
+						this.db.models.station.findOne({_id: stationId}, (err, station) => {
+							if (err) next(err);
+							else if (!station) {
+								this.cache.hdel('stations', stationId, next);
+							} else next();
+						});
+					}, next);
+				},
+	
+				(next) => {
+					this.setStage(4);
+					this.db.models.station.find({}, next);
+				},
+	
+				(stations, next) => {
+					this.setStage(4);
+					async.each(stations, (station, next) => {
+						async.waterfall([
+							(next) => {
+								this.cache.hset('stations', station._id, this.cache.schemas.station(station), next);
+							},
+	
+							(station, next) => {
+								this.initializeStation(station._id, next);
+							}
+						], (err) => {
+							next(err);
+						});
+					}, next);
+				}
+			], async (err) => {
+				if (err) {
+					err = await this.utils.getError(err);
+					reject(err);
+				} else {
+					resolve();
+				}
+			});
 		});
-	},
+	}
 
-	initializeStation: function(stationId, cb) {
-		if (lockdown) return;
+	async initializeStation(stationId, cb) {
+		try { await this._validateHook(); } catch { return; }
+
 		if (typeof cb !== 'function') cb = ()=>{};
-		let _this = this;
+
 		async.waterfall([
 			(next) => {
-				_this.getStation(stationId, next);
+				this.getStation(stationId, next);
 			},
 			(station, next) => {
 				if (!station) return next('Station not found.');
-				notifications.unschedule(`stations.nextSong?id=${station._id}`);
-				subscription = notifications.subscribe(`stations.nextSong?id=${station._id}`, _this.skipStation(station._id), true, station);
+				this.notifications.unschedule(`stations.nextSong?id=${station._id}`);
+				subscription = this.notifications.subscribe(`stations.nextSong?id=${station._id}`, this.skipStation(station._id), true, station);
 				if (station.paused) return next(true, station);
 				next(null, station);
 			},
 			(station, next) => {
 				if (!station.currentSong) {
-					return _this.skipStation(station._id)((err, station) => {
+					return this.skipStation(station._id)((err, station) => {
 						if (err) return next(err);
 						return next(true, station);
 					});
@@ -124,7 +148,7 @@ module.exports = {
 						next(err, station);
 					});
 				} else {
-					notifications.schedule(`stations.nextSong?id=${station._id}`, timeLeft, null, station);
+					this.notifications.schedule(`stations.nextSong?id=${station._id}`, timeLeft, null, station);
 					next(null, station);
 				}
 			}
@@ -132,17 +156,17 @@ module.exports = {
 			if (err && err !== true) return cb(err);
 			cb(null, station);
 		});
-	},
+	}
 
-	calculateSongForStation: function(station, cb) {
-		if (lockdown) return;
-		let _this = this;
+	async calculateSongForStation(station, cb) {
+		try { await this._validateHook(); } catch { return; }
+
 		let songList = [];
 		async.waterfall([
 			(next) => {
 				let genresDone = [];
 				station.genres.forEach((genre) => {
-					db.models.song.find({genres: genre}, (err, songs) => {
+					this.db.models.song.find({genres: genre}, (err, songs) => {
 						if (!err) {
 							songs.forEach((song) => {
 								if (songList.indexOf(song._id) === -1) {
@@ -171,16 +195,20 @@ module.exports = {
 					if (songList.indexOf(songId) !== -1) playlist.push(songId);
 				});
 
-				playlist = utils.shuffle(playlist);
-
-				_this.calculateOfficialPlaylistList(station._id, playlist, () => {
+				this.utils.shuffle(playlist).then((playlist) => {
 					next(null, playlist);
 				});
 			},
 
 			(playlist, next) => {
-				db.models.station.updateOne({_id: station._id}, {$set: {playlist: playlist}}, {runValidators: true}, (err) => {
-					_this.updateStation(station._id, () => {
+				this.calculateOfficialPlaylistList(station._id, playlist, () => {
+					next(null, playlist);
+				});
+			},
+
+			(playlist, next) => {
+				this.db.models.station.updateOne({_id: station._id}, {$set: {playlist: playlist}}, {runValidators: true}, (err) => {
+					this.updateStation(station._id, () => {
 						next(err, playlist);
 					});
 				});
@@ -189,29 +217,29 @@ module.exports = {
 		], (err, newPlaylist) => {
 			cb(err, newPlaylist);
 		});
-	},
+	}
 
 	// Attempts to get the station from Redis. If it's not in Redis, get it from Mongo and add it to Redis.
-	getStation: function(stationId, cb) {
-		if (lockdown) return;
-		let _this = this;
+	async getStation(stationId, cb) {
+		try { await this._validateHook(); } catch { return; }
+
 		async.waterfall([
 			(next) => {
-				cache.hget('stations', stationId, next);
+				this.cache.hget('stations', stationId, next);
 			},
 
 			(station, next) => {
 				if (station) return next(true, station);
-				db.models.station.findOne({ _id: stationId }, next);
+				this.db.models.station.findOne({ _id: stationId }, next);
 			},
 
 			(station, next) => {
 				if (station) {
 					if (station.type === 'official') {
-						_this.calculateOfficialPlaylistList(station._id, station.playlist, () => {});
+						this.calculateOfficialPlaylistList(station._id, station.playlist, () => {});
 					}
-					station = cache.schemas.station(station);
-					cache.hset('stations', stationId, station);
+					station = this.cache.schemas.station(station);
+					this.cache.hset('stations', stationId, station);
 					next(true, station);
 				} else next('Station not found');
 			},
@@ -220,25 +248,25 @@ module.exports = {
 			if (err && err !== true) return cb(err);
 			cb(null, station);
 		});
-	},
+	}
 
 	// Attempts to get the station from Redis. If it's not in Redis, get it from Mongo and add it to Redis.
-	getStationByName: function(stationName, cb) {
-		if (lockdown) return;
-		let _this = this;
+	async getStationByName(stationName, cb) {
+		try { await this._validateHook(); } catch { return; }
+
 		async.waterfall([
 
 			(next) => {
-				db.models.station.findOne({ name: stationName }, next);
+				this.db.models.station.findOne({ name: stationName }, next);
 			},
 
 			(station, next) => {
 				if (station) {
 					if (station.type === 'official') {
-						_this.calculateOfficialPlaylistList(station._id, station.playlist, ()=>{});
+						this.calculateOfficialPlaylistList(station._id, station.playlist, ()=>{});
 					}
-					station = cache.schemas.station(station);
-					cache.hset('stations', station._id, station);
+					station = this.cache.schemas.station(station);
+					this.cache.hset('stations', station._id, station);
 					next(true, station);
 				} else next('Station not found');
 			},
@@ -247,36 +275,37 @@ module.exports = {
 			if (err && err !== true) return cb(err);
 			cb(null, station);
 		});
-	},
+	}
 
-	updateStation: function(stationId, cb) {
-		if (lockdown) return;
-		let _this = this;
+	async updateStation(stationId, cb) {
+		try { await this._validateHook(); } catch { return; }
+
 		async.waterfall([
 
 			(next) => {
-				db.models.station.findOne({ _id: stationId }, next);
+				this.db.models.station.findOne({ _id: stationId }, next);
 			},
 
 			(station, next) => {
 				if (!station) {
-					cache.hdel('stations', stationId);
+					this.cache.hdel('stations', stationId);
 					return next('Station not found');
 				}
-				cache.hset('stations', stationId, station, next);
+				this.cache.hset('stations', stationId, station, next);
 			}
 
 		], (err, station) => {
 			if (err && err !== true) return cb(err);
 			cb(null, station);
 		});
-	},
+	}
 
-	calculateOfficialPlaylistList: (stationId, songList, cb) => {
-		if (lockdown) return;
+	async calculateOfficialPlaylistList(stationId, songList, cb) {
+		try { await this._validateHook(); } catch { return; }
+
 		let lessInfoPlaylist = [];
 		async.each(songList, (song, next) => {
-			songs.getSong(song, (err, song) => {
+			this.songs.getSong(song, (err, song) => {
 				if (!err && song) {
 					let newSong = {
 						songId: song.songId,
@@ -289,36 +318,35 @@ module.exports = {
 				next();
 			});
 		}, () => {
-			cache.hset("officialPlaylists", stationId, cache.schemas.officialPlaylist(stationId, lessInfoPlaylist), () => {
-				cache.pub("station.newOfficialPlaylist", stationId);
+			this.cache.hset("officialPlaylists", stationId, this.cache.schemas.officialPlaylist(stationId, lessInfoPlaylist), () => {
+				this.cache.pub("station.newOfficialPlaylist", stationId);
 				cb();
 			});
 		});
-	},
+	}
 
-	skipStation: function(stationId) {
-		if (lockdown) return;
-		logger.info("STATION_SKIP", `Skipping station ${stationId}.`, false);
-		let _this = this;
-		return (cb) => {
-			if (lockdown) return;
+	skipStation(stationId) {
+		this.logger.info("STATION_SKIP", `Skipping station ${stationId}.`, false);
+		return async (cb) => {
+			try { await this._validateHook(); } catch { return; }
+
 			if (typeof cb !== 'function') cb = ()=>{};
 
 			async.waterfall([
 				(next) => {
-					_this.getStation(stationId, next);
+					this.getStation(stationId, next);
 				},
 				(station, next) => {
 					if (!station) return next('Station not found.');
 					if (station.type === 'community' && station.partyMode && station.queue.length === 0) return next(null, null, -11, station); // Community station with party mode enabled and no songs in the queue
 					if (station.type === 'community' && station.partyMode && station.queue.length > 0) { // Community station with party mode enabled and songs in the queue
-						return db.models.station.updateOne({_id: stationId}, {$pull: {queue: {_id: station.queue[0]._id}}}, (err) => {
+						return this.db.models.station.updateOne({_id: stationId}, {$pull: {queue: {_id: station.queue[0]._id}}}, (err) => {
 							if (err) return next(err);
 							next(null, station.queue[0], -12, station);
 						});
 					}
 					if (station.type === 'community' && !station.partyMode) {
-						return db.models.playlist.findOne({_id: station.privatePlaylist}, (err, playlist) => {
+						return this.db.models.playlist.findOne({_id: station.privatePlaylist}, (err, playlist) => {
 							if (err) return next(err);
 							if (!playlist) return next(null, null, -13, station);
 							playlist = playlist.songs;
@@ -341,18 +369,18 @@ module.exports = {
 										return next(null, currentSong, currentSongIndex, station);
 									}
 								};
-								if (playlist[currentSongIndex]._id) songs.getSong(playlist[currentSongIndex]._id, callback);
-								else songs.getSongFromId(playlist[currentSongIndex].songId, callback);
+								if (playlist[currentSongIndex]._id) this.songs.getSong(playlist[currentSongIndex]._id, callback);
+								else this.songs.getSongFromId(playlist[currentSongIndex].songId, callback);
 							} else return next(null, null, -14, station);
 						});
 					}
 					if (station.type === 'official' && station.playlist.length === 0) {
-						return _this.calculateSongForStation(station, (err, playlist) => {
+						return this.calculateSongForStation(station, (err, playlist) => {
 							if (err) return next(err);
-							if (playlist.length === 0) return next(null, _this.defaultSong, 0, station);
+							if (playlist.length === 0) return next(null, this.defaultSong, 0, station);
 							else {
-								songs.getSong(playlist[0], (err, song) => {
-									if (err || !song) return next(null, _this.defaultSong, 0, station);
+								this.songs.getSong(playlist[0], (err, song) => {
+									if (err || !song) return next(null, this.defaultSong, 0, station);
 									return next(null, song, 0, station);
 								});
 							}
@@ -361,7 +389,7 @@ module.exports = {
 					if (station.type === 'official' && station.playlist.length > 0) {
 						async.doUntil((next) => {
 							if (station.currentSongIndex < station.playlist.length - 1) {
-								songs.getSong(station.playlist[station.currentSongIndex + 1], (err, song) => {
+								this.songs.getSong(station.playlist[station.currentSongIndex + 1], (err, song) => {
 									if (!err) return next(null, song, station.currentSongIndex + 1);
 									else {
 										station.currentSongIndex++;
@@ -369,10 +397,10 @@ module.exports = {
 									}
 								});
 							} else {
-								_this.calculateSongForStation(station, (err, newPlaylist) => {
-									if (err) return next(null, _this.defaultSong, 0);
-									songs.getSong(newPlaylist[0], (err, song) => {
-										if (err || !song) return next(null, _this.defaultSong, 0);
+								this.calculateSongForStation(station, (err, newPlaylist) => {
+									if (err) return next(null, this.defaultSong, 0);
+									this.songs.getSong(newPlaylist[0], (err, song) => {
+										if (err || !song) return next(null, this.defaultSong, 0);
 										station.playlist = newPlaylist;
 										next(null, song, 0);
 									});
@@ -418,37 +446,37 @@ module.exports = {
 				},
 
 				($set, station, next) => {
-					db.models.station.updateOne({_id: station._id}, {$set}, (err) => {
-						_this.updateStation(station._id, (err, station) => {
+					this.db.models.station.updateOne({_id: station._id}, {$set}, (err) => {
+						this.updateStation(station._id, (err, station) => {
 							if (station.type === 'community' && station.partyMode === true)
-								cache.pub('station.queueUpdate', stationId);
+								this.cache.pub('station.queueUpdate', stationId);
 							next(null, station);
 						});
 					});
 				},
-			], (err, station) => {
+			], async (err, station) => {
 				if (!err) {
 					if (station.currentSong !== null && station.currentSong.songId !== undefined) {
 						station.currentSong.skipVotes = 0;
 					}
 					//TODO Pub/Sub this
-					utils.emitToRoom(`station.${station._id}`, "event:songs.next", {
+					this.utils.emitToRoom(`station.${station._id}`, "event:songs.next", {
 						currentSong: station.currentSong,
 						startedAt: station.startedAt,
 						paused: station.paused,
 						timePaused: 0
 					});
 
-					if (station.privacy === 'public') utils.emitToRoom('home', "event:station.nextSong", station._id, station.currentSong);
+					if (station.privacy === 'public') this.utils.emitToRoom('home', "event:station.nextSong", station._id, station.currentSong);
 					else {
-						let sockets = utils.getRoomSockets('home');
+						let sockets = await this.utils.getRoomSockets('home');
 						for (let socketId in sockets) {
 							let socket = sockets[socketId];
 							let session = sockets[socketId].session;
 							if (session.sessionId) {
-								cache.hget('sessions', session.sessionId, (err, session) => {
+								this.cache.hget('sessions', session.sessionId, (err, session) => {
 									if (!err && session) {
-										db.models.user.findOne({_id: session.userId}, (err, user) => {
+										this.db.models.user.findOne({_id: session.userId}, (err, user) => {
 											if (!err && user) {
 												if (user.role === 'admin') socket.emit("event:station.nextSong", station._id, station.currentSong);
 												else if (station.type === "community" && station.owner === session.userId) socket.emit("event:station.nextSong", station._id, station.currentSong);
@@ -460,34 +488,20 @@ module.exports = {
 						}
 					}
 					if (station.currentSong !== null && station.currentSong.songId !== undefined) {
-						utils.socketsJoinSongRoom(utils.getRoomSockets(`station.${station._id}`), `song.${station.currentSong.songId}`);
+						this.utils.socketsJoinSongRoom(await this.utils.getRoomSockets(`station.${station._id}`), `song.${station.currentSong.songId}`);
 						if (!station.paused) {
-							notifications.schedule(`stations.nextSong?id=${station._id}`, station.currentSong.duration * 1000, null, station);
+							this.notifications.schedule(`stations.nextSong?id=${station._id}`, station.currentSong.duration * 1000, null, station);
 						}
 					} else {
-						utils.socketsLeaveSongRooms(utils.getRoomSockets(`station.${station._id}`));
+						this.utils.socketsLeaveSongRooms(await this.utils.getRoomSockets(`station.${station._id}`));
 					}
 					cb(null, station);
 				} else {
-					err = utils.getError(err);
+					err = await this.utils.getError(err);
 					logger.error('SKIP_STATION', `Skipping station "${stationId}" failed. "${err}"`);
 					cb(err);
 				}
 			});
 		}
-	},
-
-	defaultSong: {
-		songId: '60ItHLz5WEA',
-		title: 'Faded - Alan Walker',
-		duration: 212,
-		skipDuration: 0,
-		likes: -1,
-		dislikes: -1
-	},
-
-	_lockdown: () => {
-		lockdown = true;
 	}
-
-};
+}

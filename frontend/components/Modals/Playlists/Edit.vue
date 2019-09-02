@@ -135,7 +135,7 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
+import { mapState, mapActions } from "vuex";
 
 import { Toast } from "vue-roaster";
 import Modal from "../Modal.vue";
@@ -156,91 +156,88 @@ export default {
 		editing: state => state.editing
 	}),
 	mounted() {
-		const _this = this;
 		io.getSocket(socket => {
-			_this.socket = socket;
-			_this.socket.emit("playlists.getPlaylist", _this.editing, res => {
-				if (res.status === "success") _this.playlist = res.data;
-				_this.playlist.oldId = res.data._id;
+			this.socket = socket;
+			this.socket.emit("playlists.getPlaylist", this.editing, res => {
+				if (res.status === "success") this.playlist = res.data;
+				this.playlist.oldId = res.data._id;
 			});
-			_this.socket.on("event:playlist.addSong", data => {
-				if (_this.playlist._id === data.playlistId)
-					_this.playlist.songs.push(data.song);
+			this.socket.on("event:playlist.addSong", data => {
+				if (this.playlist._id === data.playlistId)
+					this.playlist.songs.push(data.song);
 			});
-			_this.socket.on("event:playlist.removeSong", data => {
-				if (_this.playlist._id === data.playlistId) {
-					_this.playlist.songs.forEach((song, index) => {
+			this.socket.on("event:playlist.removeSong", data => {
+				if (this.playlist._id === data.playlistId) {
+					this.playlist.songs.forEach((song, index) => {
 						if (song.songId === data.songId)
-							_this.playlist.songs.splice(index, 1);
+							this.playlist.songs.splice(index, 1);
 					});
 				}
 			});
-			_this.socket.on("event:playlist.updateDisplayName", data => {
-				if (_this.playlist._id === data.playlistId)
-					_this.playlist.displayName = data.displayName;
+			this.socket.on("event:playlist.updateDisplayName", data => {
+				if (this.playlist._id === data.playlistId)
+					this.playlist.displayName = data.displayName;
 			});
-			_this.socket.on("event:playlist.moveSongToBottom", data => {
-				if (_this.playlist._id === data.playlistId) {
+			this.socket.on("event:playlist.moveSongToBottom", data => {
+				if (this.playlist._id === data.playlistId) {
 					let songIndex;
-					_this.playlist.songs.forEach((song, index) => {
+					this.playlist.songs.forEach((song, index) => {
 						if (song.songId === data.songId) songIndex = index;
 					});
-					const song = _this.playlist.songs.splice(songIndex, 1)[0];
-					_this.playlist.songs.push(song);
+					const song = this.playlist.songs.splice(songIndex, 1)[0];
+					this.playlist.songs.push(song);
 				}
 			});
-			_this.socket.on("event:playlist.moveSongToTop", data => {
-				if (_this.playlist._id === data.playlistId) {
+			this.socket.on("event:playlist.moveSongToTop", data => {
+				if (this.playlist._id === data.playlistId) {
 					let songIndex;
-					_this.playlist.songs.forEach((song, index) => {
+					this.playlist.songs.forEach((song, index) => {
 						if (song.songId === data.songId) songIndex = index;
 					});
-					const song = _this.playlist.songs.splice(songIndex, 1)[0];
-					_this.playlist.songs.unshift(song);
+					const song = this.playlist.songs.splice(songIndex, 1)[0];
+					this.playlist.songs.unshift(song);
 				}
 			});
 		});
 	},
 	methods: {
-		formatTime(length) {
-			const duration = moment.duration(length, "seconds");
-			const getHours = () => {
-				return Math.floor(duration.asHours());
-			};
+		formatTime(duration) {
+			if (duration <= 0) return "0 seconds";
 
-			if (length <= 0) return "0 seconds";
-
+			const hours = Math.floor(duration / (60 * 60));
 			const formatHours = () => {
-				if (getHours() > 0) {
-					if (getHours() > 1) {
-						if (getHours() < 10) return `0${getHours()} hours `;
-						return `${getHours()} hours `;
+				if (hours > 0) {
+					if (hours > 1) {
+						if (hours < 10) return `0${hours} hours `;
+						return `${hours} hours `;
 					}
-					return `0${getHours()} hour `;
+					return `0${hours} hour `;
 				}
 				return "";
 			};
 
+			const minutes = Math.floor((duration - hours) / 60);
 			const formatMinutes = () => {
-				if (duration.minutes() > 0) {
-					if (duration.minutes() > 1) {
-						if (duration.minutes() < 10)
-							return `0${duration.minutes()} minutes `;
-						return `${duration.minutes()} minutes `;
+				if (minutes > 0) {
+					if (minutes > 1) {
+						if (minutes < 10) return `0${minutes} minutes `;
+						return `${minutes} minutes `;
 					}
-					return `0${duration.minutes()} minute `;
+					return `0${minutes} minute `;
 				}
 				return "";
 			};
 
+			const seconds = Math.floor(
+				duration - hours * 60 * 60 - minutes * 60
+			);
 			const formatSeconds = () => {
-				if (duration.seconds() > 0) {
-					if (duration.seconds() > 1) {
-						if (duration.seconds() < 10)
-							return `0${duration.seconds()} seconds `;
-						return `${duration.seconds()} seconds `;
+				if (seconds > 0) {
+					if (seconds > 1) {
+						if (seconds < 10) return `0${seconds} seconds `;
+						return `${seconds} seconds `;
 					}
-					return `0${duration.seconds()} second `;
+					return `0${seconds} second `;
 				}
 				return "";
 			};
@@ -255,8 +252,7 @@ export default {
 			return this.formatTime(length);
 		},
 		searchForSongs() {
-			const _this = this;
-			let query = _this.songQuery;
+			let query = this.songQuery;
 			if (query.indexOf("&index=") !== -1) {
 				query = query.split("&index=");
 				query.pop();
@@ -267,11 +263,11 @@ export default {
 				query.pop();
 				query = query.join("");
 			}
-			_this.socket.emit("apis.searchYoutube", query, res => {
+			this.socket.emit("apis.searchYoutube", query, res => {
 				if (res.status === "success") {
-					_this.songQueryResults = [];
+					this.songQueryResults = [];
 					for (let i = 0; i < res.data.items.length; i += 1) {
-						_this.songQueryResults.push({
+						this.songQueryResults.push({
 							id: res.data.items[i].id.videoId,
 							url: `https://www.youtube.com/watch?v=${this.id}`,
 							title: res.data.items[i].snippet.title,
@@ -284,39 +280,36 @@ export default {
 			});
 		},
 		addSongToPlaylist(id) {
-			const _this = this;
-			_this.socket.emit(
+			this.socket.emit(
 				"playlists.addSongToPlaylist",
 				id,
-				_this.playlist._id,
+				this.playlist._id,
 				res => {
 					Toast.methods.addToast(res.message, 4000);
 				}
 			);
 		},
 		importPlaylist() {
-			const _this = this;
 			Toast.methods.addToast(
 				"Starting to import your playlist. This can take some time to do.",
 				4000
 			);
 			this.socket.emit(
 				"playlists.addSetToPlaylist",
-				_this.importQuery,
-				_this.playlist._id,
+				this.importQuery,
+				this.playlist._id,
 				res => {
 					if (res.status === "success")
-						_this.playlist.songs = res.data;
+						this.playlist.songs = res.data;
 					Toast.methods.addToast(res.message, 4000);
 				}
 			);
 		},
 		removeSongFromPlaylist(id) {
-			const _this = this;
 			this.socket.emit(
 				"playlists.removeSongFromPlaylist",
 				id,
-				_this.playlist._id,
+				this.playlist._id,
 				res => {
 					Toast.methods.addToast(res.message, 4000);
 				}
@@ -345,20 +338,17 @@ export default {
 			);
 		},
 		removePlaylist() {
-			const _this = this;
-			_this.socket.emit("playlists.remove", _this.playlist._id, res => {
+			this.socket.emit("playlists.remove", this.playlist._id, res => {
 				Toast.methods.addToast(res.message, 3000);
 				if (res.status === "success") {
-					_this.$parent.modals.editPlaylist = !_this.$parent.modals
-						.editPlaylist;
+					this.closeModal();
 				}
 			});
 		},
 		promoteSong(songId) {
-			const _this = this;
-			_this.socket.emit(
+			this.socket.emit(
 				"playlists.moveSongToTop",
-				_this.playlist._id,
+				this.playlist._id,
 				songId,
 				res => {
 					Toast.methods.addToast(res.message, 4000);
@@ -366,21 +356,23 @@ export default {
 			);
 		},
 		demoteSong(songId) {
-			const _this = this;
-			_this.socket.emit(
+			this.socket.emit(
 				"playlists.moveSongToBottom",
-				_this.playlist._id,
+				this.playlist._id,
 				songId,
 				res => {
 					Toast.methods.addToast(res.message, 4000);
 				}
 			);
-		}
+		},
+		...mapActions("modals", ["closeModal"])
 	}
 };
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 .menu {
 	padding: 0 20px;
 }
@@ -391,7 +383,7 @@ export default {
 }
 
 .menu-list a:hover {
-	color: #000 !important;
+	color: $black !important;
 }
 
 li a {

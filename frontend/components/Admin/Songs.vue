@@ -1,5 +1,6 @@
 <template>
 	<div>
+		<metadata title="Admin | Songs" />
 		<div class="container">
 			<input
 				v-model="searchQuery"
@@ -14,10 +15,17 @@
 					<tr>
 						<td>Thumbnail</td>
 						<td>Title</td>
-						<td>ID</td>
-						<td>YouTube ID</td>
 						<td>Artists</td>
 						<td>Genres</td>
+						<td class="likesColumn">
+							<i class="material-icons thumbLike">thumb_up</i>
+						</td>
+						<td class="dislikesColumn">
+							<i class="material-icons thumbDislike"
+								>thumb_down</i
+							>
+						</td>
+						<td>ID / Youtube ID</td>
 						<td>Requested By</td>
 						<td>Options</td>
 					</tr>
@@ -34,8 +42,13 @@
 						<td>
 							<strong>{{ song.title }}</strong>
 						</td>
-						<td>{{ song._id }}</td>
+						<td>{{ song.artists.join(", ") }}</td>
+						<td>{{ song.genres.join(", ") }}</td>
+						<td>{{ song.likes }}</td>
+						<td>{{ song.dislikes }}</td>
 						<td>
+							{{ song._id }}
+							<br />
 							<a
 								:href="
 									'https://www.youtube.com/watch?v=' +
@@ -46,8 +59,6 @@
 								{{ song.songId }}</a
 							>
 						</td>
-						<td>{{ song.artists.join(", ") }}</td>
-						<td>{{ song.genres.join(", ") }}</td>
 						<td>
 							<user-id-to-username
 								:userId="song.requestedBy"
@@ -92,7 +103,6 @@ export default {
 		return {
 			position: 1,
 			maxPosition: 1,
-			songs: [],
 			searchQuery: "",
 			editing: {
 				index: 0,
@@ -102,11 +112,18 @@ export default {
 	},
 	computed: {
 		filteredSongs() {
-			return this.songs;
-			// return this.songs.filter(song => song.indexOf(song.searchQuery) !== -1);
+			return this.songs.filter(
+				song =>
+					JSON.stringify(Object.values(song)).indexOf(
+						this.searchQuery
+					) !== -1
+			);
 		},
 		...mapState("modals", {
 			modals: state => state.modals.admin
+		}),
+		...mapState("admin/songs", {
+			songs: state => state.songs
 		})
 	},
 	watch: {
@@ -127,52 +144,48 @@ export default {
 			});
 		},
 		getSet() {
-			const _this = this;
-			_this.socket.emit("songs.getSet", _this.position, data => {
+			this.socket.emit("songs.getSet", this.position, data => {
 				data.forEach(song => {
-					_this.songs.push(song);
+					this.addSong(song);
 				});
-				_this.position += 1;
-				if (_this.maxPosition > _this.position - 1) _this.getSet();
+				this.position += 1;
+				if (this.maxPosition > this.position - 1) this.getSet();
 			});
 		},
 		init() {
-			const _this = this;
-			_this.songs = [];
-			_this.socket.emit("songs.length", length => {
-				_this.maxPosition = Math.ceil(length / 15);
-				_this.getSet();
+			this.socket.emit("songs.length", length => {
+				this.maxPosition = Math.ceil(length / 15);
+				this.getSet();
 			});
-			_this.socket.emit("apis.joinAdminRoom", "songs", () => {});
+			this.socket.emit("apis.joinAdminRoom", "songs", () => {});
 		},
-		...mapActions("admin/songs", ["stopVideo", "editSong"]),
+		...mapActions("admin/songs", [
+			"stopVideo",
+			"editSong",
+			"addSong",
+			"removeSong",
+			"updateSong"
+		]),
 		...mapActions("modals", ["openModal", "closeModal"])
 	},
 	mounted() {
-		const _this = this;
 		io.getSocket(socket => {
-			_this.socket = socket;
-			if (_this.socket.connected) {
-				_this.init();
-				_this.socket.on("event:admin.song.added", song => {
-					_this.songs.push(song);
-				});
-				_this.socket.on("event:admin.song.removed", songId => {
-					_this.songs = _this.songs.filter(song => {
-						return song._id !== songId;
-					});
-				});
-				_this.socket.on("event:admin.song.updated", updatedSong => {
-					for (let i = 0; i < _this.songs.length; i += 1) {
-						const song = _this.songs[i];
-						if (song._id === updatedSong._id) {
-							_this.songs.$set(i, updatedSong);
-						}
-					}
-				});
+			this.socket = socket;
+			this.socket.on("event:admin.song.added", song => {
+				this.addSong(song);
+			});
+			this.socket.on("event:admin.song.removed", songId => {
+				this.removeSong(songId);
+			});
+			this.socket.on("event:admin.song.updated", updatedSong => {
+				this.updateSong(updatedSong);
+			});
+
+			if (this.socket.connected) {
+				this.init();
 			}
 			io.onConnect(() => {
-				_this.init();
+				this.init();
 			});
 		});
 
@@ -190,6 +203,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 body {
 	font-family: "Roboto", sans-serif;
 }
@@ -198,6 +213,20 @@ body {
 	width: 100px;
 	button {
 		width: 35px;
+	}
+}
+
+.likesColumn,
+.dislikesColumn {
+	width: 40px;
+	i {
+		font-size: 20px;
+	}
+	.thumbLike {
+		color: $green !important;
+	}
+	.thumbDislike {
+		color: $red !important;
 	}
 }
 
@@ -212,6 +241,6 @@ td {
 }
 
 .is-primary:focus {
-	background-color: #029ce3 !important;
+	background-color: $primary-color !important;
 }
 </style>

@@ -1,12 +1,14 @@
 {
   "name": "musare-backend",
-  "version": "0.0.1",
+  "private": true,
+  "version": "2.1.0",
   "description": "A modern, open-source, collaborative music app https://musare.com",
-  "main": "app.js",
+  "main": "index.js",
   "author": "Musare Team",
   "license": "GPL-3.0",
   "repository": "https://github.com/Musare/MusareNode",
   "scripts": {
+    "dev": "nodemon",
     "docker:dev": "nodemon -L /opt/app",
     "docker:prod": "node /opt/app"
   },

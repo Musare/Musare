@@ -14,7 +14,7 @@
 							<a
 								v-if="
 									isNotSelected(playlist._id) &&
-										!$parent.station.partyMode
+										!station.partyMode
 								"
 								href="#"
 								@click="selectPlaylist(playlist._id)"
@@ -46,7 +46,7 @@
 </template>
 
 <script>
-import { mapActions } from "vuex";
+import { mapState, mapActions } from "vuex";
 
 import { Toast } from "vue-roaster";
 import io from "../../io";
@@ -57,6 +57,14 @@ export default {
 			playlists: []
 		};
 	},
+	computed: {
+		...mapState("modals", {
+			modals: state => state.modals.station
+		}),
+		...mapState({
+			station: state => state.station.station
+		})
+	},
 	methods: {
 		edit(id) {
 			this.editPlaylist(id);
@@ -65,7 +73,7 @@ export default {
 		selectPlaylist(id) {
 			this.socket.emit(
 				"stations.selectPrivatePlaylist",
-				this.$parent.station._id,
+				this.station._id,
 				id,
 				res => {
 					if (res.status === "failure")
@@ -75,12 +83,8 @@ export default {
 			);
 		},
 		isNotSelected(id) {
-			const _this = this;
 			// TODO Also change this once it changes for a station
-			if (
-				_this.$parent.station &&
-				_this.$parent.station.privatePlaylist === id
-			)
+			if (this.station && this.station.privatePlaylist === id)
 				return false;
 			return true;
 		},
@@ -89,44 +93,43 @@ export default {
 	},
 	mounted() {
 		// TODO: Update when playlist is removed/created
-		const _this = this;
 		io.getSocket(socket => {
-			_this.socket = socket;
-			_this.socket.emit("playlists.indexForUser", res => {
-				if (res.status === "success") _this.playlists = res.data;
+			this.socket = socket;
+			this.socket.emit("playlists.indexForUser", res => {
+				if (res.status === "success") this.playlists = res.data;
 			});
-			_this.socket.on("event:playlist.create", playlist => {
-				_this.playlists.push(playlist);
+			this.socket.on("event:playlist.create", playlist => {
+				this.playlists.push(playlist);
 			});
-			_this.socket.on("event:playlist.delete", playlistId => {
-				_this.playlists.forEach((playlist, index) => {
+			this.socket.on("event:playlist.delete", playlistId => {
+				this.playlists.forEach((playlist, index) => {
 					if (playlist._id === playlistId) {
-						_this.playlists.splice(index, 1);
+						this.playlists.splice(index, 1);
 					}
 				});
 			});
-			_this.socket.on("event:playlist.addSong", data => {
-				_this.playlists.forEach((playlist, index) => {
+			this.socket.on("event:playlist.addSong", data => {
+				this.playlists.forEach((playlist, index) => {
 					if (playlist._id === data.playlistId) {
-						_this.playlists[index].songs.push(data.song);
+						this.playlists[index].songs.push(data.song);
 					}
 				});
 			});
-			_this.socket.on("event:playlist.removeSong", data => {
-				_this.playlists.forEach((playlist, index) => {
+			this.socket.on("event:playlist.removeSong", data => {
+				this.playlists.forEach((playlist, index) => {
 					if (playlist._id === data.playlistId) {
-						_this.playlists[index].songs.forEach((song, index2) => {
+						this.playlists[index].songs.forEach((song, index2) => {
 							if (song._id === data.songId) {
-								_this.playlists[index].songs.splice(index2, 1);
+								this.playlists[index].songs.splice(index2, 1);
 							}
 						});
 					}
 				});
 			});
-			_this.socket.on("event:playlist.updateDisplayName", data => {
-				_this.playlists.forEach((playlist, index) => {
+			this.socket.on("event:playlist.updateDisplayName", data => {
+				this.playlists.forEach((playlist, index) => {
 					if (playlist._id === data.playlistId) {
-						_this.playlists[index].displayName = data.displayName;
+						this.playlists[index].displayName = data.displayName;
 					}
 				});
 			});
@@ -136,6 +139,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 .sidebar {
 	position: fixed;
 	z-index: 1;
@@ -143,7 +148,7 @@ export default {
 	right: 0;
 	width: 300px;
 	height: 100vh;
-	background-color: #fff;
+	background-color: $white;
 	box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16),
 		0 2px 10px 0 rgba(0, 0, 0, 0.12);
 }
@@ -158,7 +163,7 @@ export default {
 }
 
 .inner-wrapper {
-	top: 64px;
+	top: 60px;
 	position: relative;
 }
 
@@ -176,7 +181,7 @@ export default {
 	background-color: rgb(3, 169, 244);
 	text-align: center;
 	padding: 10px;
-	color: white;
+	color: $white;
 	font-weight: 600;
 }
 
@@ -186,7 +191,7 @@ export default {
 	height: 40px;
 	border-radius: 0;
 	background: rgba(3, 169, 244, 1);
-	color: #fff !important;
+	color: $white !important;
 	border: 0;
 
 	&:active,
@@ -196,7 +201,7 @@ export default {
 }
 
 .create-playlist:focus {
-	background: #029ce3;
+	background: $primary-color;
 }
 
 .none-found {

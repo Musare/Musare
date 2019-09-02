@@ -61,7 +61,7 @@
 				>
 				<a
 					class="button is-github"
-					:href="$parent.serverDomain + '/auth/github/authorize'"
+					:href="serverDomain + '/auth/github/authorize'"
 					@click="githubRedirect()"
 				>
 					<div class="icon">
@@ -86,7 +86,8 @@ export default {
 	data() {
 		return {
 			email: "",
-			password: ""
+			password: "",
+			serverDomain: ""
 		};
 	},
 	methods: {
@@ -109,21 +110,28 @@ export default {
 		},
 		...mapActions("modals", ["closeModal"]),
 		...mapActions("user/auth", ["login"])
+	},
+	mounted() {
+		lofig.get("serverDomain", res => {
+			this.serverDomain = res;
+		});
 	}
 };
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 .button.is-github {
-	background-color: #333;
-	color: #fff !important;
+	background-color: $dark-grey-2;
+	color: $white !important;
 }
 
 .is-github:focus {
-	background-color: #1a1a1a;
+	background-color: $dark-grey-3;
 }
 .is-primary:focus {
-	background-color: #029ce3 !important;
+	background-color: $primary-color !important;
 }
 
 .invert {
@@ -131,6 +139,6 @@ export default {
 }
 
 a {
-	color: #029ce3;
+	color: $primary-color;
 }
 </style>

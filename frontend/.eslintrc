@@ -20,9 +20,7 @@
 	],
 	"globals": {
 		"lofig": "writable",
-		"grecaptcha": "readonly",
-		"ga": "readonly",
-		"moment": "readonly"
+		"grecaptcha": "readonly"
 	},
 	"rules": {
 		"no-console": 0,

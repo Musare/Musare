@@ -1,5 +1,6 @@
 <template>
 	<div class="app">
+		<metadata title="About" />
 		<main-header />
 		<div class="content-wrapper">
 			<div class="card is-fullwidth">
@@ -77,6 +78,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 .card {
 	margin-top: 50px;
 }

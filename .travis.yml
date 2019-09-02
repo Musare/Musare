@@ -32,11 +32,9 @@ jobs:
         - docker-compose build frontend # build frontend
         - docker-compose up -d frontend # start frontend
         - docker-compose exec frontend /bin/bash -c "cd app && yarn lint" # using eslint to check for formatting/linting issues
-        - docker-compose exec frontend /bin/bash -c "cd app && snyk test --dev" # scan for dependency/dev. dependency vunerabilities
     - stage: backend
       script:
         - docker-compose up -d mongo # start mongo (users automatically setup)
         - docker-compose up -d redis # start redis
         - docker-compose build backend # build backend
         - docker-compose up -d backend # start backend
-        - docker-compose exec backend /bin/bash -c "cd app && snyk test --dev" # scan for dependency/dev. dependency vunerabilities

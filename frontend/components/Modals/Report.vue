@@ -2,10 +2,7 @@
 	<modal title="Report">
 		<div slot="body">
 			<div class="columns song-types">
-				<div
-					v-if="$parent.previousSong !== null"
-					class="column song-type"
-				>
+				<div v-if="previousSong !== null" class="column song-type">
 					<div
 						class="card is-fullwidth"
 						:class="{ 'is-highlight-active': isPreviousSongActive }"
@@ -21,9 +18,7 @@
 								<figure class="media-left">
 									<p class="image is-64x64">
 										<img
-											:src="
-												$parent.previousSong.thumbnail
-											"
+											:src="previousSong.thumbnail"
 											onerror='this.src="/assets/notes-transparent.png"'
 										/>
 									</p>
@@ -32,13 +27,11 @@
 									<div class="content">
 										<p>
 											<strong>{{
-												$parent.previousSong.title
+												previousSong.title
 											}}</strong>
 											<br />
 											<small>{{
-												$parent.previousSong.artists.split(
-													" ,"
-												)
+												previousSong.artists.split(" ,")
 											}}</small>
 										</p>
 									</div>
@@ -52,7 +45,7 @@
 						/>
 					</div>
 				</div>
-				<div v-if="$parent.currentSong !== {}" class="column song-type">
+				<div v-if="currentSong !== {}" class="column song-type">
 					<div
 						class="card is-fullwidth"
 						:class="{ 'is-highlight-active': isCurrentSongActive }"
@@ -68,7 +61,7 @@
 								<figure class="media-left">
 									<p class="image is-64x64">
 										<img
-											:src="$parent.currentSong.thumbnail"
+											:src="currentSong.thumbnail"
 											onerror='this.src="/assets/notes-transparent.png"'
 										/>
 									</p>
@@ -77,13 +70,11 @@
 									<div class="content">
 										<p>
 											<strong>{{
-												$parent.currentSong.title
+												currentSong.title
 											}}</strong>
 											<br />
 											<small>{{
-												$parent.currentSong.artists.split(
-													" ,"
-												)
+												currentSong.artists.split(" ,")
 											}}</small>
 										</p>
 									</div>
@@ -158,7 +149,7 @@
 </template>
 
 <script>
-import { mapActions } from "vuex";
+import { mapState, mapActions } from "vuex";
 
 import { Toast } from "vue-roaster";
 import Modal from "./Modal.vue";
@@ -173,7 +164,7 @@ export default {
 			isCurrentSongActive: true,
 			report: {
 				resolved: false,
-				songId: this.$parent.currentSong.songId,
+				songId: "",
 				description: "",
 				issues: [
 					{ name: "Video", reasons: [] },
@@ -216,20 +207,24 @@ export default {
 			]
 		};
 	},
+	computed: mapState({
+		currentSong: state => state.station.currentSong,
+		previousSong: state => state.station.previousSong
+	}),
 	mounted() {
-		const _this = this;
 		io.getSocket(socket => {
-			_this.socket = socket;
+			this.socket = socket;
 		});
+
+		this.report.songId = this.currentSong.songId;
 	},
 	methods: {
 		create() {
-			const _this = this;
 			console.log(this.report);
-			_this.socket.emit("reports.create", _this.report, res => {
+			this.socket.emit("reports.create", this.report, res => {
 				Toast.methods.addToast(res.message, 4000);
 				if (res.status === "success")
-					_this.closeModal({
+					this.closeModal({
 						sector: "station",
 						modal: "report"
 					});
@@ -241,11 +236,11 @@ export default {
 		},
 		highlight(type) {
 			if (type === "currentSong") {
-				this.report.songId = this.$parent.currentSong.songId;
+				this.report.songId = this.currentSong.songId;
 				this.isPreviousSongActive = false;
 				this.isCurrentSongActive = true;
 			} else if (type === "previousSong") {
-				this.report.songId = this.$parent.previousSong.songId;
+				this.report.songId = this.previousSong.songId;
 				this.isCurrentSongActive = false;
 				this.isPreviousSongActive = true;
 			}
@@ -268,6 +263,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 h6 {
 	margin-bottom: 15px;
 }
@@ -305,6 +302,6 @@ h6 {
 }
 
 .is-highlight-active {
-	border: 3px #03a9f4 solid;
+	border: 3px $primary-color solid;
 }
 </style>

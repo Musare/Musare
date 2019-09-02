@@ -68,7 +68,7 @@
 				>
 				<a
 					class="button is-github"
-					:href="$parent.serverDomain + '/auth/github/authorize'"
+					:href="serverDomain + '/auth/github/authorize'"
 					@click="githubRedirect()"
 				>
 					<div class="icon">
@@ -95,13 +95,17 @@ export default {
 			recaptcha: {
 				key: "",
 				token: ""
-			}
+			},
+			serverDomain: ""
 		};
 	},
 	mounted() {
-		const _this = this;
+		lofig.get("serverDomain", res => {
+			this.serverDomain = res;
+		});
+
 		lofig.get("recaptcha", obj => {
-			_this.recaptcha.key = obj.key;
+			this.recaptcha.key = obj.key;
 
 			const recaptchaScript = document.createElement("script");
 			recaptchaScript.onload = () => {
@@ -109,7 +113,7 @@ export default {
 					grecaptcha
 						.execute(this.recaptcha.key, { action: "login" })
 						.then(token => {
-							_this.recaptcha.token = token;
+							this.recaptcha.token = token;
 						});
 				});
 			};
@@ -146,13 +150,15 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 .button.is-github {
-	background-color: #333;
-	color: #fff !important;
+	background-color: $dark-grey-2;
+	color: $white !important;
 }
 
 .is-github:focus {
-	background-color: #1a1a1a;
+	background-color: $dark-grey-3;
 }
 .is-primary:focus {
 	background-color: #028bca !important;
@@ -167,6 +173,14 @@ export default {
 }
 
 a {
-	color: #029ce3;
+	color: $primary-color;
+}
+</style>
+
+<style lang="scss">
+@import "styles/global.scss";
+
+.grecaptcha-badge {
+	z-index: 2000;
 }
 </style>

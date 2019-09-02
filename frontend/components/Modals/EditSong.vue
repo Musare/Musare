@@ -1,261 +1,478 @@
 <template>
 	<div>
-		<modal title="Edit Song">
+		<modal title="Edit Song" class="song-modal">
 			<div slot="body">
-				<h5 class="has-text-centered">Video Preview</h5>
-				<div class="video-container">
-					<div id="player"></div>
-					<canvas
-						id="durationCanvas"
-						height="40"
-						width="560"
-					></canvas>
-					<div class="controls">
-						<form action="#">
-							<p style="margin-top: 0; position: relative;">
-								<input
-									type="range"
-									id="volumeSlider"
-									min="0"
-									max="100"
-									class="active"
-									v-on:change="changeVolume()"
-									v-on:input="changeVolume()"
+				<div class="left-section">
+					<div class="top-section">
+						<div class="player-section">
+							<div id="player"></div>
+							<canvas
+								id="durationCanvas"
+								height="20"
+								width="530"
+							></canvas>
+							<div class="player-footer">
+								<div class="player-footer-left">
+									<i
+										class="material-icons player-play-pause"
+										v-on:click="settings('play')"
+										v-if="video.paused"
+										>play_arrow</i
+									>
+									<i
+										class="material-icons player-play-pause"
+										v-on:click="settings('pause')"
+										v-if="!video.paused"
+										>pause</i
+									>
+									<i
+										class="material-icons player-stop"
+										v-on:click="settings('stop')"
+										>stop</i
+									>
+									<i
+										class="material-icons player-fast-forward"
+										v-on:click="
+											settings('skipToLast10Secs')
+										"
+										>fast_forward</i
+									>
+								</div>
+								<div class="player-footer-center">
+									<img src="/assets/social/youtube.svg" />
+									<span>
+										<span>
+											{{ youtubeVideoCurrentTime }}
+										</span>
+										/
+										<span>
+											{{ youtubeVideoDuration }}
+											{{ youtubeVideoNote }}
+										</span>
+									</span>
+								</div>
+								<div class="player-footer-right">
+									<input
+										type="range"
+										id="volumeSlider"
+										min="0"
+										max="100"
+										class="active"
+										v-on:change="changeVolume()"
+										v-on:input="changeVolume()"
+									/>
+								</div>
+							</div>
+						</div>
+						<img
+							class="thumbnail-preview"
+							:src="editing.song.thumbnail"
+							onerror="this.src='/assets/notes-transparent.png'"
+						/>
+					</div>
+					<div class="edit-section">
+						<div class="control is-grouped">
+							<div class="title-container">
+								<label class="label">Title</label>
+								<p class="control has-addons">
+									<input
+										class="input"
+										type="text"
+										v-model="editing.song.title"
+									/>
+									<button
+										class="button album-get-button"
+										v-on:click="getAlbumData('title')"
+									>
+										<i class="material-icons album-get-icon"
+											>album</i
+										>
+									</button>
+								</p>
+							</div>
+							<div class="duration-container">
+								<label class="label">Duration</label>
+								<p class="control">
+									<input
+										class="input"
+										type="text"
+										v-model="editing.song.duration"
+									/>
+								</p>
+							</div>
+							<div class="skip-duration-container">
+								<label class="label">Skip duration</label>
+								<p class="control">
+									<input
+										class="input"
+										type="text"
+										v-model="editing.song.skipDuration"
+									/>
+								</p>
+							</div>
+						</div>
+						<div class="control is-grouped">
+							<div class="album-art-container">
+								<label class="label">Album art</label>
+								<p class="control has-addons">
+									<input
+										class="input"
+										type="text"
+										v-model="editing.song.thumbnail"
+									/>
+									<button
+										class="button album-get-button"
+										v-on:click="getAlbumData('albumArt')"
+									>
+										<i class="material-icons album-get-icon"
+											>album</i
+										>
+									</button>
+								</p>
+							</div>
+						</div>
+						<div class="control is-grouped">
+							<div class="artists-container">
+								<label class="label">Artists</label>
+								<p class="control has-addons">
+									<input
+										class="input"
+										type="text"
+										id="new-artist"
+										v-model="artistInputValue"
+										v-on:blur="blurArtistInput()"
+										v-on:focus="focusArtistInput()"
+										v-on:keydown="keydownArtistInput()"
+									/>
+									<button
+										class="button album-get-button"
+										v-on:click="getAlbumData('artists')"
+									>
+										<i class="material-icons album-get-icon"
+											>album</i
+										>
+									</button>
+									<button
+										class="button is-info add-button"
+										v-on:click="addTag('artists')"
+									>
+										<i class="material-icons">add</i>
+									</button>
+								</p>
+								<div
+									class="autosuggest-container"
+									v-if="
+										(artistInputFocussed ||
+											artistAutosuggestContainerFocussed) &&
+											artistAutosuggestItems.length > 0
+									"
+									@mouseover="focusArtistContainer()"
+									@mouseleave="blurArtistContainer()"
+								>
+									<span
+										class="autosuggest-item"
+										tabindex="0"
+										v-on:click="
+											selectArtistAutosuggest(item)
+										"
+										v-for="(item,
+										index) in artistAutosuggestItems"
+										:key="index"
+										>{{ item }}</span
+									>
+								</div>
+								<div class="list-container">
+									<div
+										class="list-item"
+										v-for="(artist, index) in editing.song
+											.artists"
+										:key="index"
+									>
+										<div
+											class="list-item-circle"
+											v-on:click="
+												removeTag('artists', index)
+											"
+										>
+											<i class="material-icons">close</i>
+										</div>
+										<p>{{ artist }}</p>
+									</div>
+								</div>
+							</div>
+							<div class="genres-container">
+								<label class="label">
+									<span>Genres</span>
+									<i
+										class="material-icons"
+										@click="toggleGenreHelper"
+										@dblclick="resetGenreHelper"
+										>info</i
+									>
+								</label>
+								<p class="control has-addons">
+									<input
+										class="input"
+										type="text"
+										id="new-genre"
+										v-model="genreInputValue"
+										v-on:blur="blurGenreInput()"
+										v-on:focus="focusGenreInput()"
+										v-on:keydown="keydownGenreInput()"
+									/>
+									<button
+										class="button album-get-button"
+										v-on:click="getAlbumData('genres')"
+									>
+										<i class="material-icons album-get-icon"
+											>album</i
+										>
+									</button>
+									<button
+										class="button is-info add-button"
+										v-on:click="addTag('genres')"
+									>
+										<i class="material-icons">add</i>
+									</button>
+								</p>
+								<div
+									class="autosuggest-container"
+									v-if="
+										(genreInputFocussed ||
+											genreAutosuggestContainerFocussed) &&
+											genreAutosuggestItems.length > 0
+									"
+									@mouseover="focusGenreContainer()"
+									@mouseleave="blurGenreContainer()"
+								>
+									<span
+										class="autosuggest-item"
+										tabindex="0"
+										v-on:click="
+											selectGenreAutosuggest(item)
+										"
+										v-for="(item,
+										index) in genreAutosuggestItems"
+										:key="index"
+										>{{ item }}</span
+									>
+								</div>
+								<div class="list-container">
+									<div
+										class="list-item"
+										v-for="(genre, index) in editing.song
+											.genres"
+										:key="index"
+									>
+										<div
+											class="list-item-circle"
+											v-on:click="
+												removeTag('genres', index)
+											"
+										>
+											<i class="material-icons">close</i>
+										</div>
+										<p>{{ genre }}</p>
+									</div>
+								</div>
+							</div>
+							<div class="youtube-id-container">
+								<label class="label">YouTube ID</label>
+								<p class="control">
+									<input
+										class="input"
+										type="text"
+										v-model="editing.song.songId"
+									/>
+								</p>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="right-section">
+					<div class="api-section">
+						<div
+							class="selected-discogs-info"
+							v-if="!editing.song.discogs"
+						>
+							<p class="selected-discogs-info-none">None</p>
+						</div>
+						<div
+							class="selected-discogs-info"
+							v-if="editing.song.discogs"
+						>
+							<div class="top-container">
+								<img
+									:src="editing.song.discogs.album.albumArt"
 								/>
-							</p>
-						</form>
-						<p class="control has-addons">
-							<button
-								class="button"
-								v-on:click="settings('pause')"
-								v-if="!video.paused"
-							>
-								<i class="material-icons">pause</i>
-							</button>
-							<button
-								class="button"
-								v-on:click="settings('play')"
-								v-if="video.paused"
-							>
-								<i class="material-icons">play_arrow</i>
-							</button>
-							<button
-								class="button"
-								v-on:click="settings('stop')"
-							>
-								<i class="material-icons">stop</i>
-							</button>
-							<button
-								class="button"
-								v-on:click="settings('skipToLast10Secs')"
-							>
-								<i class="material-icons">fast_forward</i>
-							</button>
-						</p>
-						<p>
-							YouTube:
-							<span>{{ youtubeVideoCurrentTime }}</span> /
-							<span>{{ youtubeVideoDuration }}</span>
-							{{ youtubeVideoNote }}
-						</p>
-					</div>
-				</div>
-				<h5 class="has-text-centered">Thumbnail Preview</h5>
-				<img
-					class="thumbnail-preview"
-					:src="editing.song.thumbnail"
-					onerror="this.src='/assets/notes-transparent.png'"
-				/>
-
-				<div class="control is-horizontal">
-					<div class="control-label">
-						<label class="label">Thumbnail URL</label>
-					</div>
-					<div class="control">
-						<input
-							class="input"
-							type="text"
-							v-model="editing.song.thumbnail"
-						/>
-					</div>
-				</div>
-
-				<h5 class="has-text-centered">Edit Information</h5>
-
-				<p class="control">
-					<label class="checkbox">
-						<input
-							type="checkbox"
-							v-model="editing.song.explicit"
-						/>
-						Explicit
-					</label>
-				</p>
-				<label class="label">Song ID & Title</label>
-				<div class="control is-horizontal">
-					<div class="control is-grouped">
+								<div class="right-container">
+									<p class="album-title">
+										{{ editing.song.discogs.album.title }}
+									</p>
+									<div class="bottom-row">
+										<p class="type-year">
+											<span>{{
+												editing.song.discogs.album.type
+											}}</span>
+											•
+											<span>{{
+												editing.song.discogs.album.year
+											}}</span>
+										</p>
+									</div>
+								</div>
+							</div>
+							<div class="bottom-container">
+								<p class="bottom-container-field">
+									Artists:
+									<span>{{
+										editing.song.discogs.album.artists.join(
+											", "
+										)
+									}}</span>
+								</p>
+								<p class="bottom-container-field">
+									Genres:
+									<span>{{
+										editing.song.discogs.album.genres.join(
+											", "
+										)
+									}}</span>
+								</p>
+								<p class="bottom-container-field">
+									Data quality:
+									<span>{{
+										editing.song.discogs.dataQuality
+									}}</span>
+								</p>
+								<p class="bottom-container-field">
+									Track:
+									<span
+										>{{
+											editing.song.discogs.track.position
+										}}.
+										{{
+											editing.song.discogs.track.title
+										}}</span
+									>
+								</p>
+							</div>
+						</div>
 						<p class="control is-expanded">
+							<label class="label">Search query</label>
 							<input
 								class="input"
 								type="text"
-								v-model="editing.song.songId"
+								v-model="discogsQuery"
+								@change="onDiscogsQueryChange"
 							/>
 						</p>
-						<p class="control is-expanded">
-							<input
-								class="input"
-								type="text"
-								v-model="editing.song.title"
-								autofocus
-							/>
-						</p>
-					</div>
-				</div>
-				<label class="label">Artists & Genres</label>
-				<div class="control is-horizontal">
-					<div class="control is-grouped artist-genres">
-						<div>
-							<p class="control has-addons">
-								<input
-									class="input"
-									id="new-artist"
-									type="text"
-									placeholder="Artist"
-								/>
-								<button
-									class="button is-info"
-									v-on:click="addTag('artists')"
-								>
-									Add Artist
-								</button>
-							</p>
-							<span
-								class="tag is-info"
-								v-for="(artist, index) in editing.song.artists"
+						<button
+							class="button is-info is-fullwidth"
+							v-on:click="searchDiscogsForPage(1)"
+						>
+							Search
+						</button>
+						<label
+							class="label"
+							v-if="discogs.apiResults.length > 0"
+							>API results</label
+						>
+						<div
+							class="api-results-container"
+							v-if="discogs.apiResults.length > 0"
+						>
+							<div
+								class="api-result"
+								v-for="(result, index) in discogs.apiResults"
 								:key="index"
 							>
-								{{ artist }}
-								<button
-									class="delete is-info"
-									v-on:click="removeTag('artists', index)"
-								></button>
-							</span>
-						</div>
-						<div>
-							<p class="control has-addons">
-								<input
-									class="input"
-									id="new-genre"
-									type="text"
-									placeholder="Genre"
-								/>
-								<button
-									class="button is-info"
-									v-on:click="addTag('genres')"
+								<div class="top-container">
+									<img :src="result.album.albumArt" />
+									<div class="right-container">
+										<p class="album-title">
+											{{ result.album.title }}
+										</p>
+										<div class="bottom-row">
+											<img
+												src="/assets/arrow_up.svg"
+												v-if="result.expanded"
+												v-on:click="
+													toggleAPIResult(index)
+												"
+											/>
+											<img
+												src="/assets/arrow_down.svg"
+												v-if="!result.expanded"
+												v-on:click="
+													toggleAPIResult(index)
+												"
+											/>
+											<p class="type-year">
+												<span>{{
+													result.album.type
+												}}</span>
+												•
+												<span>{{
+													result.album.year
+												}}</span>
+											</p>
+										</div>
+									</div>
+								</div>
+								<div
+									class="bottom-container"
+									v-if="result.expanded"
 								>
-									Add Genre
-								</button>
-							</p>
-							<span
-								class="tag is-info"
-								v-for="(genre, index) in editing.song.genres"
-								:key="index"
-							>
-								{{ genre }}
-								<button
-									class="delete is-info"
-									v-on:click="removeTag('genres', index)"
-								></button>
-							</span>
+									<p class="bottom-container-field">
+										Artists:
+										<span>{{
+											result.album.artists.join(", ")
+										}}</span>
+									</p>
+									<p class="bottom-container-field">
+										Genres:
+										<span>{{
+											result.album.genres.join(", ")
+										}}</span>
+									</p>
+									<p class="bottom-container-field">
+										Data quality:
+										<span>{{ result.dataQuality }}</span>
+									</p>
+									<div class="tracks">
+										<div
+											class="track"
+											tabindex="0"
+											v-for="(track,
+											trackIndex) in result.tracks"
+											:key="trackIndex"
+											v-on:click="
+												selectTrack(index, trackIndex)
+											"
+										>
+											<span>{{ track.position }}.</span>
+											<p>{{ track.title }}</p>
+										</div>
+									</div>
+								</div>
+							</div>
 						</div>
+						<button
+							v-if="
+								discogs.apiResults.length > 0 &&
+									!discogs.disableLoadMore &&
+									discogs.page < discogs.pages
+							"
+							class="button is-fullwidth is-info discogs-load-more"
+							@click="loadNextDiscogsPage()"
+						>
+							Load more...
+						</button>
 					</div>
 				</div>
-				<label class="label">Song Duration</label>
-				<p class="control">
-					<input
-						class="input"
-						type="text"
-						v-model="editing.song.duration"
-					/>
-				</p>
-				<label class="label">Skip Duration</label>
-				<p class="control">
-					<input
-						class="input"
-						type="text"
-						v-model="editing.song.skipDuration"
-					/>
-				</p>
-				<article class="message" v-if="editing.type === 'songs'">
-					<div class="message-body">
-						<span class="reports-length">
-							{{ reports.length }}
-							<span
-								v-if="reports.length > 1 || reports.length <= 0"
-								>&nbsp;Reports</span
-							>
-							<span v-else>&nbsp;Report</span>
-						</span>
-						<div v-for="(report, index) in reports" :key="index">
-							<router-link
-								:to="{
-									path: '/admin/reports',
-									query: { id: report, returnToSong: true }
-								}"
-								class="report-link"
-							>
-								Report - {{ report }}
-							</router-link>
-						</div>
-					</div>
-				</article>
-				<hr />
-				<h5 class="has-text-centered">Spotify Information</h5>
-				<label class="label">Song title</label>
-				<p class="control">
-					<input class="input" type="text" v-model="spotify.title" />
-				</p>
-				<label class="label">Song artist (1 artist full name)</label>
-				<p class="control">
-					<input class="input" type="text" v-model="spotify.artist" />
-				</p>
-				<button
-					class="button is-success"
-					v-on:click="getSpotifySongs()"
-				>
-					Get Spotify songs
-				</button>
-				<hr />
-				<article
-					class="media"
-					v-for="(song, index) in spotify.songs"
-					:key="index"
-				>
-					<figure class="media-left">
-						<p class="image is-64x64">
-							<img
-								:src="song.thumbnail"
-								onerror="this.src='/assets/notes-transparent.png'"
-							/>
-						</p>
-					</figure>
-					<div class="media-content">
-						<div class="content">
-							<p>
-								<strong>{{ song.title }}</strong>
-								<br />
-								<small>Artists: {{ song.artists }}</small
-								>, <small>Duration: {{ song.duration }}</small
-								>,
-								<small>Explicit: {{ song.explicit }}</small>
-								<br />
-								<small>Thumbnail: {{ song.thumbnail }}</small>
-							</p>
-						</div>
-					</div>
-				</article>
 			</div>
-			<div slot="footer">
+			<div slot="footer" class="footer-buttons">
 				<button
 					class="button is-success"
 					v-on:click="save(editing.song, false)"
@@ -280,6 +497,36 @@
 				</button>
 			</div>
 		</modal>
+		<div
+			id="genre-helper-container"
+			v-bind:style="{
+				width: genreHelper.width + 'px',
+				height: genreHelper.height + 'px',
+				top: genreHelper.top + 'px',
+				left: genreHelper.left + 'px'
+			}"
+			v-if="genreHelper.shown"
+			@mousedown="onResizeGenreHelper"
+		>
+			<div
+				class="genre-helper-header"
+				@mousedown="onDragGenreHelper"
+			></div>
+			<div class="genre-helper-body">
+				<span>Blues</span><span>Country</span><span>Disco</span
+				><span>Funk</span><span>Hip-Hop</span><span>Jazz</span
+				><span>Metal</span><span>Oldies</span><span>Other</span
+				><span>Pop</span><span>Rap</span><span>Reggae</span
+				><span>Rock</span><span>Techno</span><span>Trance</span
+				><span>Classical</span><span>Instrumental</span
+				><span>House</span><span>Electronic</span
+				><span>Christian Rap</span><span>Lo-Fi</span><span>Musical</span
+				><span>Rock 'n' Roll</span><span>Opera</span
+				><span>Drum & Bass</span><span>Club-House</span
+				><span>Indie</span><span>Heavy Metal</span
+				><span>Christian rock</span><span>Dubstep</span>
+			</div>
+		</div>
 	</div>
 </template>
 
@@ -295,30 +542,85 @@ export default {
 	components: { Modal },
 	data() {
 		return {
-			reports: 0,
-			spotify: {
-				title: "",
-				artist: "",
-				songs: []
-			},
+			discogsQuery: "",
 			youtubeVideoDuration: 0.0,
 			youtubeVideoCurrentTime: 0.0,
 			youtubeVideoNote: "",
-			useHTTPS: false
+			useHTTPS: false,
+			discogs: {
+				apiResults: [],
+				page: 1,
+				pages: 1,
+				disableLoadMore: false
+			},
+			artistInputValue: "",
+			genreInputValue: "",
+			artistInputFocussed: false,
+			genreInputFocussed: false,
+			genreAutosuggestContainerFocussed: false,
+			artistAutosuggestContainerFocussed: false,
+			keydownArtistInputTimeout: 0,
+			keydownGenreInputTimeout: 0,
+			artistAutosuggestItems: [],
+			genreAutosuggestItems: [],
+			genreHelper: {
+				width: 200,
+				height: 200,
+				top: 0,
+				left: 0,
+				shown: false,
+				pos1: 0,
+				pos2: 0,
+				pos3: 0,
+				pos4: 0
+			},
+			genres: [
+				"Blues",
+				"Country",
+				"Disco",
+				"Funk",
+				"Hip-Hop",
+				"Jazz",
+				"Metal",
+				"Oldies",
+				"Other",
+				"Pop",
+				"Rap",
+				"Reggae",
+				"Rock",
+				"Techno",
+				"Trance",
+				"Classical",
+				"Instrumental",
+				"House",
+				"Electronic",
+				"Christian Rap",
+				"Lo-Fi",
+				"Musical",
+				"Rock 'n' Roll",
+				"Opera",
+				"Drum & Bass",
+				"Club-House",
+				"Indie",
+				"Heavy Metal",
+				"Christian rock",
+				"Dubstep"
+			]
 		};
 	},
 	computed: {
 		...mapState("admin/songs", {
 			video: state => state.video,
-			editing: state => state.editing
+			editing: state => state.editing,
+			songs: state => state.songs
 		}),
 		...mapState("modals", {
 			modals: state => state.modals.admin
 		})
 	},
 	methods: {
-		save(song, close) {
-			const _this = this;
+		save(songToCopy, close) {
+			const song = JSON.parse(JSON.stringify(songToCopy));
 
 			if (!song.title)
 				return Toast.methods.addToast(
@@ -382,13 +684,13 @@ export default {
 			if (error) return Toast.methods.addToast(error, 8000);
 
 			// Genres
-			error = undefined;
+			/* error = undefined;
 			song.genres.forEach(genre => {
 				if (!validation.isLength(genre, 1, 16)) {
 					error = "Genre must have between 1 and 16 characters.";
 					return error;
 				}
-				if (!validation.regex.az09_.test(genre)) {
+				if (!validation.regex.azAZ09_.test(genre)) {
 					error =
 						"Invalid genre format. Only ascii characters are allowed.";
 					return error;
@@ -396,7 +698,7 @@ export default {
 
 				return false;
 			});
-			if (error) return Toast.methods.addToast(error, 8000);
+			if (error) return Toast.methods.addToast(error, 8000); */
 
 			// Thumbnail
 			if (!validation.isLength(song.thumbnail, 8, 256))
@@ -411,7 +713,11 @@ export default {
 				);
 			}
 
-			if (!this.useHTTPS && song.thumbnail.indexOf("http://") !== 0) {
+			if (
+				!this.useHTTPS &&
+				(song.thumbnail.indexOf("http://") !== 0 &&
+					song.thumbnail.indexOf("https://") !== 0)
+			) {
 				return Toast.methods.addToast(
 					'Thumbnail must start with "http://".',
 					8000
@@ -419,13 +725,13 @@ export default {
 			}
 
 			return this.socket.emit(
-				`${_this.editing.type}.update`,
+				`${this.editing.type}.update`,
 				song._id,
 				song,
 				res => {
 					Toast.methods.addToast(res.message, 4000);
 					if (res.status === "success") {
-						_this.$parent.songs.forEach(originalSong => {
+						this.songs.forEach(originalSong => {
 							const updatedSong = song;
 							if (originalSong._id === updatedSong._id) {
 								Object.keys(originalSong).forEach(n => {
@@ -436,43 +742,214 @@ export default {
 						});
 					}
 					if (close)
-						_this.closeModal({
+						this.closeModal({
 							sector: "admin",
 							modal: "editSong"
 						});
 				}
 			);
 		},
+		toggleAPIResult(index) {
+			const apiResult = this.discogs.apiResults[index];
+			if (apiResult.expanded === true) apiResult.expanded = false;
+			else if (apiResult.gotMoreInfo === true) apiResult.expanded = true;
+			else {
+				fetch(apiResult.album.resourceUrl)
+					.then(response => {
+						return response.json();
+					})
+					.then(data => {
+						apiResult.album.artists = [];
+						apiResult.album.artistIds = [];
+						const artistRegex = new RegExp(" \\([0-9]\\)$");
+
+						apiResult.dataQuality = data.data_quality;
+						data.artists.forEach(artist => {
+							apiResult.album.artists.push(
+								artist.name.replace(artistRegex, "")
+							);
+							apiResult.album.artistIds.push(artist.id);
+						});
+						apiResult.tracks = data.tracklist.map(track => {
+							return {
+								position: track.position,
+								title: track.title
+							};
+						});
+						apiResult.expanded = true;
+						apiResult.gotMoreInfo = true;
+					});
+			}
+		},
+		getAlbumData(type) {
+			if (!this.editing.song.discogs) return;
+			if (type === "title")
+				this.updateSongField({
+					field: "title",
+					value: this.editing.song.discogs.track.title
+				});
+			if (type === "albumArt")
+				this.updateSongField({
+					field: "thumbnail",
+					value: this.editing.song.discogs.album.albumArt
+				});
+			if (type === "genres")
+				this.updateSongField({
+					field: "genres",
+					value: this.editing.song.discogs.album.genres
+				});
+			if (type === "artists")
+				this.updateSongField({
+					field: "artists",
+					value: this.editing.song.discogs.album.artists
+				});
+		},
+		searchDiscogsForPage(page) {
+			const query = this.discogsQuery;
+
+			this.socket.emit("apis.searchDiscogs", query, page, res => {
+				if (res.status === "success") {
+					if (page === 1)
+						Toast.methods.addToast(
+							`Successfully searched. Got ${res.results.length} results.`,
+							4000
+						);
+					else
+						Toast.methods.addToast(
+							`Successfully got ${res.results.length} more results.`,
+							4000
+						);
+
+					if (page === 1) {
+						this.discogs.apiResults = [];
+					}
+
+					this.discogs.pages = res.pages;
+
+					this.discogs.apiResults = this.discogs.apiResults.concat(
+						res.results.map(result => {
+							const type =
+								result.type.charAt(0).toUpperCase() +
+								result.type.slice(1);
+
+							return {
+								expanded: false,
+								gotMoreInfo: false,
+								album: {
+									id: result.id,
+									title: result.title,
+									type,
+									year: result.year,
+									genres: result.genre,
+									albumArt: result.cover_image,
+									resourceUrl: result.resource_url
+								}
+							};
+						})
+					);
+
+					this.discogs.page = page;
+					this.discogs.disableLoadMore = false;
+				} else Toast.methods.addToast(res.message, 8000);
+			});
+		},
+		loadNextDiscogsPage() {
+			this.discogs.disableLoadMore = true;
+			this.searchDiscogsForPage(this.discogs.page + 1);
+		},
+		onDiscogsQueryChange() {
+			this.discogs.page = 1;
+			this.discogs.pages = 1;
+			this.discogs.apiResults = [];
+			this.discogs.disableLoadMore = false;
+		},
+		selectTrack(apiResultIndex, trackIndex) {
+			const apiResult = JSON.parse(
+				JSON.stringify(this.discogs.apiResults[apiResultIndex])
+			);
+			apiResult.track = apiResult.tracks[trackIndex];
+			delete apiResult.tracks;
+			delete apiResult.expanded;
+			delete apiResult.gotMoreInfo;
+
+			this.selectDiscogsInfo(apiResult);
+		},
+		blurArtistInput() {
+			this.artistInputFocussed = false;
+		},
+		focusArtistInput() {
+			this.artistInputFocussed = true;
+		},
+		blurArtistContainer() {
+			this.artistAutosuggestContainerFocussed = false;
+		},
+		focusArtistContainer() {
+			this.artistAutosuggestContainerFocussed = true;
+		},
+		keydownArtistInput() {
+			clearTimeout(this.keydownArtistInputTimeout);
+			this.keydownArtistInputTimeout = setTimeout(() => {
+				// Do things here to query the artist
+			}, 1000);
+		},
+		selectArtistAutosuggest(value) {
+			this.artistInputValue = value;
+		},
+		blurGenreInput() {
+			this.genreInputFocussed = false;
+		},
+		focusGenreInput() {
+			this.genreInputFocussed = true;
+		},
+		blurGenreContainer() {
+			this.genreAutosuggestContainerFocussed = false;
+		},
+		focusGenreContainer() {
+			this.genreAutosuggestContainerFocussed = true;
+		},
+		keydownGenreInput() {
+			clearTimeout(this.keydownGenreInputTimeout);
+			this.keydownGenreInputTimeout = setTimeout(() => {
+				if (this.genreInputValue.length > 1) {
+					this.genreAutosuggestItems = this.genres.filter(genre => {
+						return genre
+							.toLowerCase()
+							.startsWith(this.genreInputValue.toLowerCase());
+					});
+				} else this.genreAutosuggestItems = [];
+			}, 1000);
+		},
+		selectGenreAutosuggest(value) {
+			this.genreInputValue = value;
+		},
 		settings(type) {
-			const _this = this;
 			switch (type) {
 				default:
 					break;
 				case "stop":
-					_this.stopVideo();
-					_this.pauseVideo(true);
+					this.stopVideo();
+					this.pauseVideo(true);
 					break;
 				case "pause":
-					_this.pauseVideo(true);
+					this.pauseVideo(true);
 					break;
 				case "play":
-					_this.pauseVideo(false);
+					this.pauseVideo(false);
 					break;
 				case "skipToLast10Secs":
-					_this.video.player.seekTo(
-						_this.editing.song.duration -
+					this.video.player.seekTo(
+						this.editing.song.duration -
 							10 +
-							_this.editing.song.skipDuration
+							this.editing.song.skipDuration
 					);
 					break;
 			}
 		},
 		changeVolume() {
-			const local = this;
 			const volume = document.getElementById("volumeSlider").value;
 			localStorage.setItem("volume", volume);
-			local.video.player.setVolume(volume);
-			if (volume > 0) local.video.player.unMute();
+			this.video.player.setVolume(volume);
+			if (volume > 0) this.video.player.unMute();
 		},
 		addTag(type) {
 			if (type === "genres") {
@@ -512,56 +989,6 @@ export default {
 			else if (type === "artists")
 				this.editing.song.artists.splice(index, 1);
 		},
-		getSpotifySongs() {
-			this.socket.emit(
-				"apis.getSpotifySongs",
-				this.spotify.title,
-				this.spotify.artist,
-				res => {
-					if (res.status === "success") {
-						Toast.methods.addToast(
-							`Succesfully got ${res.songs.length} song${
-								res.songs.length !== 1 ? "s" : ""
-							}.`,
-							3000
-						);
-						this.spotify.songs = res.songs;
-					} else
-						Toast.methods.addToast(
-							`Failed to get songs. ${res.message}`,
-							3000
-						);
-				}
-			);
-		},
-		initCanvas() {
-			const canvasElement = document.getElementById("durationCanvas");
-			const ctx = canvasElement.getContext("2d");
-
-			const skipDurationColor = "#ef4a1c";
-			const durationColor = "#1dc146";
-			const afterDurationColor = "#ef731a";
-
-			ctx.font = "16px Arial";
-
-			ctx.fillStyle = skipDurationColor;
-			ctx.fillRect(0, 25, 20, 15);
-
-			ctx.fillStyle = "#000000";
-			ctx.fillText("Skip duration", 25, 38);
-
-			ctx.fillStyle = durationColor;
-			ctx.fillRect(130, 25, 20, 15);
-
-			ctx.fillStyle = "#000000";
-			ctx.fillText("Duration", 155, 38);
-
-			ctx.fillStyle = afterDurationColor;
-			ctx.fillRect(230, 25, 20, 15);
-
-			ctx.fillStyle = "#000000";
-			ctx.fillText("After duration", 255, 38);
-		},
 		drawCanvas() {
 			const canvasElement = document.getElementById("durationCanvas");
 			const ctx = canvasElement.getContext("2d");
@@ -582,9 +1009,9 @@ export default {
 
 			const widthCurrentTime = (currentTime / videoDuration) * width;
 
-			const skipDurationColor = "#ef4a1c";
-			const durationColor = "#1dc146";
-			const afterDurationColor = "#ef731a";
+			const skipDurationColor = "#F42003";
+			const durationColor = "#03A9F4";
+			const afterDurationColor = "#41E841";
 			const currentDurationColor = "#3b25e8";
 
 			ctx.fillStyle = skipDurationColor;
@@ -602,18 +1029,94 @@ export default {
 			ctx.fillStyle = currentDurationColor;
 			ctx.fillRect(widthCurrentTime, 0, 1, 20);
 		},
+		onDragGenreHelper(e) {
+			const e1 = e || window.event;
+			e1.preventDefault();
+
+			this.genreHelper.pos3 = e1.clientX;
+			this.genreHelper.pos4 = e1.clientY;
+
+			document.onmousemove = e => {
+				const e2 = e || window.event;
+				e2.preventDefault();
+				// calculate the new cursor position:
+				this.genreHelper.pos1 = this.genreHelper.pos3 - e.clientX;
+				this.genreHelper.pos2 = this.genreHelper.pos4 - e.clientY;
+				this.genreHelper.pos3 = e.clientX;
+				this.genreHelper.pos4 = e.clientY;
+				// set the element's new position:
+				this.genreHelper.top =
+					this.genreHelper.top - this.genreHelper.pos2;
+				this.genreHelper.left =
+					this.genreHelper.left - this.genreHelper.pos1;
+			};
+
+			document.onmouseup = () => {
+				document.onmouseup = null;
+				document.onmousemove = null;
+
+				this.saveGenreHelper();
+			};
+		},
+		onResizeGenreHelper(e) {
+			if (e.target.id !== "genre-helper-container") return;
+
+			document.onmouseup = () => {
+				document.onmouseup = null;
+
+				const { height, width } = e.target.style;
+
+				this.genreHelper.height = Number(
+					height
+						.split("")
+						.splice(0, height.length - 2)
+						.join("")
+				);
+				this.genreHelper.width = Number(
+					width
+						.split("")
+						.splice(0, width.length - 2)
+						.join("")
+				);
+
+				this.saveGenreHelper();
+			};
+		},
+		toggleGenreHelper() {
+			this.genreHelper.shown = !this.genreHelper.shown;
+			this.saveGenreHelper();
+		},
+		resetGenreHelper() {
+			this.genreHelper.top = 0;
+			this.genreHelper.left = 0;
+			this.genreHelper.width = 200;
+			this.genreHelper.height = 200;
+			this.saveGenreHelper();
+		},
+		saveGenreHelper() {
+			localStorage.setItem(
+				"genreHelper",
+				JSON.stringify({
+					height: this.genreHelper.height,
+					width: this.genreHelper.width,
+					top: this.genreHelper.top,
+					left: this.genreHelper.left,
+					shown: this.genreHelper.shown
+				})
+			);
+		},
 		...mapActions("admin/songs", [
 			"stopVideo",
 			"loadVideoById",
 			"pauseVideo",
 			"getCurrentTime",
-			"editSong"
+			"editSong",
+			"updateSongField",
+			"selectDiscogsInfo"
 		]),
 		...mapActions("modals", ["closeModal"])
 	},
 	mounted() {
-		const _this = this;
-
 		// if (this.modals.editSong = false) this.video.player.stopVideo();
 
 		// this.loadVideoById(
@@ -621,50 +1124,48 @@ export default {
 		//   this.editing.song.skipDuration
 		// );
 
-		this.initCanvas();
+		if (localStorage.genreHelper) {
+			const genreHelper = JSON.parse(localStorage.getItem("genreHelper"));
+			this.genreHelper.height = genreHelper.height;
+			this.genreHelper.width = genreHelper.width;
+			this.genreHelper.top = genreHelper.top;
+			this.genreHelper.left = genreHelper.left;
+			this.genreHelper.shown = genreHelper.shown;
+		}
+
+		this.discogsQuery = this.editing.song.title;
 
 		lofig.get("cookie.secure", res => {
-			_this.useHTTPS = res;
+			this.useHTTPS = res;
 		});
 
 		io.getSocket(socket => {
 			this.socket = socket;
-
-			if (this.editing.type === "songs") {
-				socket.emit(
-					"reports.getReportsForSong",
-					this.editing.song.songId,
-					res => {
-						this.reports = res.data;
-					}
-				);
-			}
 		});
 
-		setInterval(() => {
+		this.interval = setInterval(() => {
 			if (
-				_this.video.paused === false &&
-				_this.playerReady &&
-				_this.video.player.getCurrentTime() -
-					_this.editing.song.skipDuration >
-					_this.editing.song.duration
+				this.video.paused === false &&
+				this.playerReady &&
+				this.video.player.getCurrentTime() -
+					this.editing.song.skipDuration >
+					this.editing.song.duration
 			) {
-				_this.video.paused = false;
-				_this.video.player.stopVideo();
+				this.video.paused = false;
+				this.video.player.stopVideo();
 			}
 			if (this.playerReady) {
-				_this.getCurrentTime(3).then(time => {
-					this.youtubeVideoCurrentTime = time;
-					return time;
-				});
+				this.youtubeVideoCurrentTime = this.video.player
+					.getCurrentTime()
+					.toFixed(3);
 			}
 
-			if (_this.video.paused === false) _this.drawCanvas();
+			if (this.video.paused === false) this.drawCanvas();
 		}, 200);
 
 		this.video.player = new window.YT.Player("player", {
-			height: 315,
-			width: 560,
+			height: 298,
+			width: 530,
 			videoId: this.editing.song.songId,
 			playerVars: {
 				controls: 0,
@@ -673,44 +1174,44 @@ export default {
 				showinfo: 0,
 				autoplay: 1
 			},
-			startSeconds: _this.editing.song.skipDuration,
+			startSeconds: this.editing.song.skipDuration,
 			events: {
 				onReady: () => {
 					let volume = parseInt(localStorage.getItem("volume"));
 					volume = typeof volume === "number" ? volume : 20;
-					console.log(`Seekto: ${_this.editing.song.skipDuration}`);
-					_this.video.player.seekTo(_this.editing.song.skipDuration);
-					_this.video.player.setVolume(volume);
-					if (volume > 0) _this.video.player.unMute();
-					this.youtubeVideoDuration = _this.video.player.getDuration();
+					console.log(`Seekto: ${this.editing.song.skipDuration}`);
+					this.video.player.seekTo(this.editing.song.skipDuration);
+					this.video.player.setVolume(volume);
+					if (volume > 0) this.video.player.unMute();
+					this.youtubeVideoDuration = this.video.player.getDuration();
 					this.youtubeVideoNote = "(~)";
-					_this.playerReady = true;
+					this.playerReady = true;
 
-					_this.drawCanvas();
+					this.drawCanvas();
 				},
 				onStateChange: event => {
 					if (event.data === 1) {
-						if (!_this.video.autoPlayed) {
-							_this.video.autoPlayed = true;
-							return _this.video.player.stopVideo();
+						if (!this.video.autoPlayed) {
+							this.video.autoPlayed = true;
+							return this.video.player.stopVideo();
 						}
 
-						_this.video.paused = false;
-						let youtubeDuration = _this.video.player.getDuration();
+						this.video.paused = false;
+						let youtubeDuration = this.video.player.getDuration();
 						this.youtubeVideoDuration = youtubeDuration;
 						this.youtubeVideoNote = "";
-						youtubeDuration -= _this.editing.song.skipDuration;
-						if (_this.editing.song.duration > youtubeDuration + 1) {
+						youtubeDuration -= this.editing.song.skipDuration;
+						if (this.editing.song.duration > youtubeDuration + 1) {
 							this.video.player.stopVideo();
-							_this.video.paused = true;
+							this.video.paused = true;
 							return Toast.methods.addToast(
 								"Video can't play. Specified duration is bigger than the YouTube song duration.",
 								4000
 							);
 						}
-						if (_this.editing.song.duration <= 0) {
+						if (this.editing.song.duration <= 0) {
 							this.video.player.stopVideo();
-							_this.video.paused = true;
+							this.video.paused = true;
 							return Toast.methods.addToast(
 								"Video can't play. Specified duration has to be more than 0 seconds.",
 								4000
@@ -718,11 +1219,11 @@ export default {
 						}
 
 						if (
-							_this.video.player.getCurrentTime() <
-							_this.editing.song.skipDuration
+							this.video.player.getCurrentTime() <
+							this.editing.song.skipDuration
 						) {
-							return _this.video.player.seekTo(
-								_this.editing.song.skipDuration
+							return this.video.player.seekTo(
+								this.editing.song.skipDuration
 							);
 						}
 					} else if (event.data === 2) {
@@ -737,164 +1238,563 @@ export default {
 		let volume = parseInt(localStorage.getItem("volume"));
 		document.getElementById("volumeSlider").value = volume =
 			typeof volume === "number" ? volume : 20;
+	},
+	beforeDestroy() {
+		this.playerReady = false;
+		clearInterval(this.interval);
 	}
 };
 </script>
 
-<style lang="scss" scoped>
-input[type="range"] {
-	-webkit-appearance: none;
-	width: 100%;
-	margin: 7.3px 0;
-}
+<style lang="scss">
+@import "styles/global.scss";
 
-input[type="range"]:focus {
-	outline: none;
-}
+#genre-helper-container {
+	background-color: white;
+	position: fixed;
+	z-index: 10000000;
+	resize: both;
+	overflow: auto;
+	border: 1px solid #d3d3d3;
+	min-height: 50px !important;
+	min-width: 50px !important;
 
-input[type="range"]::-webkit-slider-runnable-track {
-	width: 100%;
-	height: 5.2px;
-	cursor: pointer;
-	box-shadow: 0;
-	background: #c2c0c2;
-	border-radius: 0;
-	border: 0;
-}
+	.genre-helper-header {
+		cursor: move;
+		z-index: 100000001;
+		background-color: $musareBlue;
+		padding: 10px;
+		display: block;
+		height: 10px;
+		width: 100%;
+	}
 
-input[type="range"]::-webkit-slider-thumb {
-	box-shadow: 0;
-	border: 0;
-	height: 19px;
-	width: 19px;
-	border-radius: 15px;
-	background: #03a9f4;
-	cursor: pointer;
-	-webkit-appearance: none;
-	margin-top: -6.5px;
-}
+	.genre-helper-body {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-evenly;
 
-input[type="range"]::-moz-range-track {
-	width: 100%;
-	height: 5.2px;
-	cursor: pointer;
-	box-shadow: 0;
-	background: #c2c0c2;
-	border-radius: 0;
-	border: 0;
-}
-
-input[type="range"]::-moz-range-thumb {
-	box-shadow: 0;
-	border: 0;
-	height: 19px;
-	width: 19px;
-	border-radius: 15px;
-	background: #03a9f4;
-	cursor: pointer;
-	-webkit-appearance: none;
-	margin-top: -6.5px;
-}
-
-input[type="range"]::-ms-track {
-	width: 100%;
-	height: 5.2px;
-	cursor: pointer;
-	box-shadow: 0;
-	background: #c2c0c2;
-	border-radius: 1.3px;
-}
-
-input[type="range"]::-ms-fill-lower {
-	background: #c2c0c2;
-	border: 0;
-	border-radius: 0;
-	box-shadow: 0;
-}
-
-input[type="range"]::-ms-fill-upper {
-	background: #c2c0c2;
-	border: 0;
-	border-radius: 0;
-	box-shadow: 0;
-}
-
-input[type="range"]::-ms-thumb {
-	box-shadow: 0;
-	border: 0;
-	height: 15px;
-	width: 15px;
-	border-radius: 15px;
-	background: #03a9f4;
-	cursor: pointer;
-	-webkit-appearance: none;
-	margin-top: 1.5px;
-}
-
-.controls {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-}
-
-.artist-genres {
-	display: flex;
-	justify-content: space-between;
-}
-
-#volumeSlider {
-	margin-bottom: 15px;
-}
-
-.has-text-centered {
-	padding: 10px;
-}
-
-.thumbnail-preview {
-	display: flex;
-	margin: 0 auto 25px auto;
-	max-width: 200px;
-	width: 100%;
-}
-
-.modal-card-body,
-.modal-card-foot {
-	border-top: 0;
-}
-
-.label,
-.checkbox,
-h5 {
-	font-weight: normal;
-}
-
-.video-container {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	padding: 10px;
-
-	iframe {
-		pointer-events: none;
+		span {
+			padding: 3px 6px;
+		}
 	}
 }
 
-.save-changes {
-	color: #fff;
-}
+.song-modal {
+	.modal-card-title {
+		text-align: center;
+		margin-left: 24px;
+	}
 
-.tag:not(:last-child) {
-	margin-right: 5px;
-}
+	.modal-card {
+		width: 1160px;
+		height: 100%;
 
-.reports-length {
-	color: #ff4545;
-	font-weight: bold;
+		.modal-card-body {
+			padding: 16px;
+		}
+	}
+}
+</style>
+
+<style lang="scss" scoped>
+@import "styles/global.scss";
+.modal-card-body > div {
 	display: flex;
-	justify-content: center;
+	height: 100%;
 }
 
-.report-link {
-	color: #000;
+.left-section {
+	display: flex;
+	flex-direction: column;
+	margin-right: 16px;
+
+	.top-section {
+		display: flex;
+
+		.player-section {
+			width: 530px;
+			display: flex;
+			flex-direction: column;
+
+			.player-footer {
+				background-color: #f4f4f4;
+				border: 1px rgba(163, 224, 255, 0.75) solid;
+				border-radius: 0px 0px 5px 5px;
+				display: flex;
+				justify-content: space-between;
+				height: 54px;
+
+				> * {
+					width: 33.3%;
+					display: flex;
+					align-items: center;
+				}
+
+				.player-footer-left {
+					flex: 1;
+
+					.material-icons {
+						font-size: 38px;
+						cursor: pointer;
+					}
+
+					.player-play-pause {
+						color: $musareBlue;
+					}
+
+					.player-stop {
+						color: $red;
+					}
+
+					.player-fast-forward {
+						color: $green;
+					}
+				}
+
+				.player-footer-center {
+					justify-content: center;
+					align-items: center;
+					flex: 2;
+					font-size: 21px;
+					font-weight: 400;
+
+					img {
+						height: 21px;
+						margin-right: 12px;
+						filter: invert(26%) sepia(54%) saturate(6317%)
+							hue-rotate(2deg) brightness(92%) contrast(115%);
+					}
+				}
+
+				.player-footer-right {
+					justify-content: right;
+					flex: 1;
+
+					#volumeSlider {
+						width: 126px;
+						margin-right: 10px;
+						background-color: #f4f4f4;
+					}
+				}
+			}
+		}
+
+		.thumbnail-preview {
+			width: 189px;
+			height: 189px;
+			margin-left: 16px;
+		}
+	}
+
+	.edit-section {
+		width: 735px;
+		background-color: #f4f4f4;
+		border: 1px rgba(163, 224, 255, 0.75) solid;
+		margin-top: 16px;
+		flex: 1;
+		overflow: auto;
+		border-radius: 5px;
+
+		.album-get-button {
+			background-color: $purple;
+			color: white;
+			width: 32px;
+			text-align: center;
+			border-width: 0;
+		}
+
+		.add-button {
+			background-color: $musareBlue !important;
+			width: 32px;
+
+			i {
+				font-size: 32px;
+			}
+		}
+
+		> div {
+			margin: 16px;
+		}
+
+		input {
+			width: 100%;
+		}
+
+		.title-container {
+			width: calc((100% - 32px) / 2);
+		}
+
+		.duration-container {
+			margin-right: 16px;
+			margin-left: 16px;
+			width: calc((100% - 32px) / 4);
+		}
+
+		.skip-duration-container {
+			width: calc((100% - 32px) / 4);
+		}
+
+		.album-art-container {
+			width: 100%;
+		}
+
+		.artists-container {
+			width: calc((100% - 32px) / 3);
+			position: relative;
+		}
+
+		.genres-container {
+			width: calc((100% - 32px) / 3);
+			margin-left: 16px;
+			margin-right: 16px;
+			position: relative;
+
+			label {
+				display: flex;
+
+				i {
+					font-size: 15px;
+					align-self: center;
+					margin-left: 5px;
+					color: $musareBlue;
+					cursor: pointer;
+					-webkit-user-select: none;
+					-moz-user-select: none;
+					-ms-user-select: none;
+					user-select: none;
+				}
+			}
+		}
+
+		.youtube-id-container {
+			width: calc((100% - 32px) / 3);
+		}
+
+		.list-item-circle {
+			background-color: $musareBlue;
+			width: 16px;
+			height: 16px;
+			border-radius: 8px;
+			cursor: pointer;
+			margin-right: 8px;
+			float: left;
+			-webkit-touch-callout: none;
+			-webkit-user-select: none;
+			-khtml-user-select: none;
+			-moz-user-select: none;
+			-ms-user-select: none;
+			user-select: none;
+
+			i {
+				color: $musareBlue;
+				font-size: 14px;
+				margin-left: 1px;
+			}
+		}
+
+		.list-item-circle:hover,
+		.list-item-circle:focus {
+			i {
+				color: white;
+			}
+		}
+
+		.list-item > p {
+			line-height: 16px;
+			word-wrap: break-word;
+			width: calc(100% - 24px);
+			left: 24px;
+			float: left;
+			margin-bottom: 8px;
+		}
+
+		.list-item:last-child > p {
+			margin-bottom: 0;
+		}
+
+		.autosuggest-container {
+			position: absolute;
+			background: white;
+			width: calc(100% + 1px);
+			top: 57px;
+			z-index: 200;
+			overflow: auto;
+			max-height: 100%;
+			clear: both;
+
+			.autosuggest-item {
+				padding: 8px;
+				display: block;
+				border: 1px solid #dbdbdb;
+				margin-top: -1px;
+				line-height: 16px;
+				cursor: pointer;
+				-webkit-user-select: none;
+				-ms-user-select: none;
+				-moz-user-select: none;
+				user-select: none;
+			}
+
+			.autosuggest-item:hover,
+			.autosuggest-item:focus {
+				background-color: #eee;
+			}
+
+			.autosuggest-item:first-child {
+				border-top: none;
+			}
+
+			.autosuggest-item:last-child {
+				border-radius: 0 0 3px 3px;
+			}
+		}
+	}
+}
+
+.right-section {
+	display: flex;
+	flex-wrap: wrap;
+
+	.api-section {
+		width: 376px;
+		background-color: #f4f4f4;
+		border: 1px rgba(163, 224, 255, 0.75) solid;
+		border-radius: 5px;
+		padding: 16px;
+		overflow: auto;
+		height: 100%;
+
+		> label {
+			margin-top: 12px;
+		}
+
+		.top-container {
+			display: flex;
+
+			img {
+				height: 85px;
+				width: 85px;
+			}
+
+			.right-container {
+				padding: 8px;
+				display: flex;
+				flex-direction: column;
+				flex: 1;
+
+				.album-title {
+					flex: 1;
+					font-weight: 600;
+				}
+
+				.bottom-row {
+					display: flex;
+					flex-flow: row;
+					line-height: 15px;
+
+					img {
+						height: 15px;
+						align-self: end;
+						flex: 1;
+						user-select: none;
+						-moz-user-select: none;
+						-ms-user-select: none;
+						-webkit-user-select: none;
+						cursor: pointer;
+					}
+
+					p {
+						text-align: right;
+					}
+
+					.type-year {
+						font-size: 13px;
+						align-self: end;
+					}
+				}
+			}
+		}
+
+		.bottom-container {
+			padding: 12px;
+
+			.bottom-container-field {
+				line-height: 16px;
+				margin-bottom: 8px;
+				font-weight: 600;
+
+				span {
+					font-weight: 400;
+				}
+			}
+
+			.bottom-container-field:last-of-type {
+				margin-bottom: 0;
+			}
+		}
+
+		.selected-discogs-info {
+			background-color: white;
+			border: 1px solid $purple;
+			border-radius: 5px;
+			margin-bottom: 16px;
+
+			.selected-discogs-info-none {
+				font-size: 18px;
+				text-align: center;
+			}
+
+			.bottom-row > p {
+				flex: 1;
+			}
+		}
+
+		.api-result {
+			background-color: white;
+			border: 0.5px solid $musareBlue;
+			border-radius: 5px;
+			margin-bottom: 16px;
+		}
+
+		button {
+			background-color: $musareBlue !important;
+		}
+
+		.tracks {
+			margin-top: 12px;
+
+			.track:first-child {
+				margin-top: 0;
+				border-radius: 3px 3px 0 0;
+			}
+
+			.track:last-child {
+				border-radius: 0 0 3px 3px;
+			}
+
+			.track {
+				border: 0.5px solid black;
+				margin-top: -1px;
+				line-height: 16px;
+				display: flex;
+				cursor: pointer;
+
+				span {
+					font-weight: 600;
+					display: inline-block;
+					margin-top: 7px;
+					margin-bottom: 7px;
+					margin-left: 7px;
+				}
+
+				p {
+					display: inline-block;
+					margin: 7px;
+					flex: 1;
+				}
+			}
+
+			.track:hover,
+			.track:focus {
+				background-color: #f4f4f4;
+			}
+		}
+
+		.discogs-load-more {
+			margin-bottom: 8px;
+		}
+	}
+}
+
+.footer-buttons {
+	margin-left: auto;
+	margin-right: auto;
+}
+
+input[type="range"] {
+	-webkit-appearance: none;
+	width: 100%;
+	margin: 8.5px 0;
+}
+input[type="range"]:focus {
+	outline: none;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+	width: 100%;
+	height: 3px;
+	cursor: pointer;
+	box-shadow: none;
+	background: #7e7e7e;
+	border-radius: none;
+	border: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+	box-shadow: none;
+	border: none;
+	height: 20px;
+	width: 20px;
+	border-radius: 100px;
+	background: #03a9f4;
+	cursor: pointer;
+	-webkit-appearance: none;
+	margin-top: -8.5px;
+}
+input[type="range"]:focus::-webkit-slider-runnable-track {
+	background: #7e7e7e;
+}
+input[type="range"]::-moz-range-track {
+	width: 100%;
+	height: 3px;
+	cursor: pointer;
+	box-shadow: none;
+	background: #7e7e7e;
+	border-radius: none;
+	border: none;
+}
+input[type="range"]::-moz-range-thumb {
+	box-shadow: none;
+	border: none;
+	height: 20px;
+	width: 20px;
+	border-radius: 100px;
+	background: #03a9f4;
+	cursor: pointer;
+}
+input[type="range"]::-ms-track {
+	width: 100%;
+	height: 3px;
+	cursor: pointer;
+	background: transparent;
+	border-color: transparent;
+	color: transparent;
+}
+input[type="range"]::-ms-fill-lower {
+	background: #717171;
+	border: none;
+	border-radius: none;
+	box-shadow: none;
+}
+input[type="range"]::-ms-fill-upper {
+	background: #7e7e7e;
+	border: none;
+	border-radius: none;
+	box-shadow: none;
+}
+input[type="range"]::-ms-thumb {
+	box-shadow: none;
+	border: none;
+	height: 20px;
+	width: 20px;
+	border-radius: 100px;
+	background: #03a9f4;
+	cursor: pointer;
+	height: 3px;
+}
+input[type="range"]:focus::-ms-fill-lower {
+	background: #7e7e7e;
+}
+input[type="range"]:focus::-ms-fill-upper {
+	background: #7e7e7e;
 }
 </style>

@@ -1,7 +1,10 @@
-const cache = require('../../cache');
-const utils = require('../../utils');
-const logger = require('../../logger');
 const async = require('async');
+
+const moduleManager = require("../../../index");
+
+const cache = moduleManager.modules["cache"];
+const utils = moduleManager.modules["utils"];
+const logger = moduleManager.modules["logger"];
 
 module.exports = function(next) {
 	return function(session) {
@@ -17,9 +20,9 @@ module.exports = function(next) {
 				this.session = session;
 				next();
 			}
-		], (err) => {
+		], async (err) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.info("LOGIN_REQUIRED", `User failed to pass login required check.`);
 				return cb({status: 'failure', message: err});
 			}

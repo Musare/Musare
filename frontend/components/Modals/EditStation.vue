@@ -105,9 +105,8 @@ export default {
 		editing: state => state.editing
 	}),
 	mounted() {
-		const _this = this;
 		io.getSocket(socket => {
-			_this.socket = socket;
+			this.socket = socket;
 			return socket;
 		});
 	},
@@ -197,8 +196,6 @@ export default {
 			);
 		},
 		updateDescription() {
-			const _this = this;
-
 			const { description } = this.editing;
 			if (!validation.isLength(description, 2, 200))
 				return Toast.methods.addToast(
@@ -223,14 +220,14 @@ export default {
 				description,
 				res => {
 					if (res.status === "success") {
-						if (_this.station) {
-							_this.station.description = description;
+						if (this.station) {
+							this.station.description = description;
 							return description;
 						}
 
-						_this.$parent.stations.forEach((station, index) => {
+						this.$parent.stations.forEach((station, index) => {
 							if (station._id === this.editing._id) {
-								_this.$parent.stations[
+								this.$parent.stations[
 									index
 								].description = description;
 								return description;
@@ -247,23 +244,23 @@ export default {
 			);
 		},
 		updatePrivacy() {
-			const _this = this;
 			return this.socket.emit(
 				"stations.updatePrivacy",
 				this.editing._id,
 				this.editing.privacy,
 				res => {
 					if (res.status === "success") {
-						if (_this.station) {
-							_this.station.privacy = _this.editing.privacy;
-							return _this.editing.privacy;
+						if (this.station) {
+							this.station.privacy = this.editing.privacy;
+							return this.editing.privacy;
 						}
 
-						_this.$parent.stations.forEach((station, index) => {
-							if (station._id === _this.editing._id) {
-								_this.$parent.stations[index].privacy =
-									_this.editing.privacy;
-								return _this.editing.privacy;
+						this.$parent.stations.forEach((station, index) => {
+							if (station._id === this.editing._id) {
+								this.$parent.stations[
+									index
+								].privacy = this.editing.privacy;
+								return this.editing.privacy;
 							}
 
 							return false;
@@ -277,23 +274,23 @@ export default {
 			);
 		},
 		updatePartyMode() {
-			const _this = this;
 			return this.socket.emit(
 				"stations.updatePartyMode",
 				this.editing._id,
 				this.editing.partyMode,
 				res => {
 					if (res.status === "success") {
-						if (_this.station) {
-							_this.station.partyMode = _this.editing.partyMode;
-							return _this.editing.partyMode;
+						if (this.station) {
+							this.station.partyMode = this.editing.partyMode;
+							return this.editing.partyMode;
 						}
 
-						_this.$parent.stations.forEach((station, index) => {
-							if (station._id === _this.editing._id) {
-								_this.$parent.stations[index].partyMode =
-									_this.editing.partyMode;
-								return _this.editing.partyMode;
+						this.$parent.stations.forEach((station, index) => {
+							if (station._id === this.editing._id) {
+								this.$parent.stations[
+									index
+								].partyMode = this.editing.partyMode;
+								return this.editing.partyMode;
 							}
 
 							return false;
@@ -317,6 +314,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 .controls {
 	display: flex;
 
@@ -341,6 +340,6 @@ h5 {
 }
 
 .select:after {
-	border-color: #029ce3;
+	border-color: $primary-color;
 }
 </style>

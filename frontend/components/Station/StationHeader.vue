@@ -2,11 +2,7 @@
 	<div>
 		<nav class="nav">
 			<div class="nav-left">
-				<router-link
-					class="nav-item is-brand"
-					href="#"
-					:to="{ path: '/' }"
-				>
+				<router-link class="nav-item is-brand" :to="{ path: '/' }">
 					<img
 						:src="`${this.siteSettings.logo}`"
 						:alt="`${this.siteSettings.siteName}` || `Musare`"
@@ -15,7 +11,7 @@
 			</div>
 
 			<div class="nav-center stationDisplayName">
-				{{ $parent.station.displayName }}
+				{{ station.displayName }}
 			</div>
 
 			<span class="nav-toggle" v-on:click="controlBar = !controlBar">
@@ -26,28 +22,22 @@
 
 			<div class="nav-right nav-menu" :class="{ 'is-active': isMobile }">
 				<router-link
-					v-if="$parent.$parent.role === 'admin'"
+					v-if="role === 'admin'"
 					class="nav-item is-tab admin"
-					href="#"
 					:to="{ path: '/admin' }"
 				>
 					<strong>Admin</strong>
 				</router-link>
-				<span v-if="$parent.$parent.loggedIn" class="grouped">
+				<span v-if="loggedIn" class="grouped">
 					<router-link
 						class="nav-item is-tab"
-						:to="{ path: '/u/' + $parent.$parent.username }"
+						:to="{ path: '/u/' + username }"
 						>Profile</router-link
 					>
 					<router-link class="nav-item is-tab" to="/settings"
 						>Settings</router-link
 					>
-					<a
-						class="nav-item is-tab"
-						href="#"
-						@click="$parent.$parent.logout()"
-						>Logout</a
-					>
+					<a class="nav-item is-tab" @click="logout()">Logout</a>
 				</span>
 				<span v-else class="grouped">
 					<a
@@ -70,19 +60,13 @@
 		<div class="control-sidebar" :class="{ 'show-controlBar': controlBar }">
 			<div class="inner-wrapper">
 				<div v-if="isOwner()">
-					<a
-						v-if="isOwner()"
-						class="sidebar-item"
-						href="#"
-						@click="settings()"
-					>
+					<a class="sidebar-item" href="#" @click="settings()">
 						<span class="icon">
 							<i class="material-icons">settings</i>
 						</span>
 						<span class="icon-purpose">Station settings</span>
 					</a>
 					<a
-						v-if="isOwner()"
 						class="sidebar-item"
 						href="#"
 						@click="$parent.skipStation()"
@@ -93,7 +77,7 @@
 						<span class="icon-purpose">Skip current song</span>
 					</a>
 					<a
-						v-if="isOwner() && $parent.paused"
+						v-if="paused"
 						class="sidebar-item"
 						href="#"
 						@click="$parent.resumeStation()"
@@ -104,7 +88,7 @@
 						<span class="icon-purpose">Resume station</span>
 					</a>
 					<a
-						v-if="isOwner() && !$parent.paused"
+						v-if="!paused"
 						class="sidebar-item"
 						href="#"
 						@click="$parent.pauseStation()"
@@ -116,13 +100,25 @@
 					</a>
 					<hr />
 				</div>
-				<div v-if="$parent.$parent.loggedIn && !$parent.noSong">
+				<div v-if="loggedIn">
 					<a
-						v-if="
-							!isOwner() &&
-								$parent.$parent.loggedIn &&
-								!$parent.noSong
+						v-if="station.type === 'official'"
+						class="sidebar-item"
+						href="#"
+						@click="
+							openModal({
+								sector: 'station',
+								modal: 'addSongToQueue'
+							})
 						"
+					>
+						<span class="icon">
+							<i class="material-icons">queue</i>
+						</span>
+						<span class="icon-purpose">Add song to queue</span>
+					</a>
+					<a
+						v-if="!isOwner() && !noSong"
 						class="sidebar-item"
 						href="#"
 						@click="$parent.voteSkipStation()"
@@ -131,12 +127,28 @@
 							<i class="material-icons">skip_next</i>
 						</span>
 						<span class="skip-votes">{{
-							$parent.currentSong.skipVotes
+							currentSong.skipVotes
 						}}</span>
 						<span class="icon-purpose">Skip current song</span>
 					</a>
 					<a
-						v-if="$parent.$parent.loggedIn && !$parent.noSong"
+						v-if="!noSong && !currentSong.simpleSong"
+						class="sidebar-item"
+						href="#"
+						@click="
+							openModal({
+								sector: 'station',
+								modal: 'report'
+							})
+						"
+					>
+						<span class="icon">
+							<i class="material-icons">report</i>
+						</span>
+						<span class="icon-purpose">Report a song</span>
+					</a>
+					<a
+						v-if="!noSong"
 						class="sidebar-item"
 						href="#"
 						@click="
@@ -153,10 +165,13 @@
 							>Add current song to playlist</span
 						>
 					</a>
-					<hr />
+					<hr v-if="!noSong" />
 				</div>
 				<a
-					v-if="$parent.station.partyMode === true"
+					v-if="
+						station.partyMode === true ||
+							station.type === 'official'
+					"
 					class="sidebar-item"
 					href="#"
 					@click="$parent.toggleSidebar('songslist')"
@@ -179,7 +194,7 @@
 					>
 				</a>
 				<a
-					v-if="$parent.$parent.loggedIn"
+					v-if="loggedIn && station.type === 'community'"
 					class="sidebar-item"
 					href="#"
 					@click="$parent.toggleSidebar('playlist')"
@@ -195,14 +210,14 @@
 </template>
 
 <script>
-import { mapActions } from "vuex";
+import { mapState, mapActions } from "vuex";
 
 export default {
 	data() {
 		return {
 			title: this.$route.params.id,
 			isMobile: false,
-			controlBar: true,
+			controlBar: false,
 			frontendDomain: "",
 			siteSettings: {
 				logo: "",
@@ -210,6 +225,16 @@ export default {
 			}
 		};
 	},
+	computed: mapState({
+		loggedIn: state => state.user.auth.loggedIn,
+		userId: state => state.user.auth.userId,
+		username: state => state.user.auth.username,
+		role: state => state.user.auth.role,
+		station: state => state.station.station,
+		paused: state => state.station.paused,
+		noSong: state => state.station.noSong,
+		currentSong: state => state.station.currentSong
+	}),
 	mounted() {
 		lofig.get("frontendDomain", res => {
 			this.frontendDomain = res;
@@ -223,20 +248,19 @@ export default {
 	methods: {
 		isOwner() {
 			return (
-				this.$parent.$parent.loggedIn &&
-				(this.$parent.$parent.role === "admin" ||
-					this.$parent.$parent.userId === this.$parent.station.owner)
+				this.loggedIn &&
+				(this.role === "admin" || this.userId === this.station.owner)
 			);
 		},
 		settings() {
 			this.editStation({
-				_id: this.$parent.station._id,
-				name: this.$parent.station.name,
-				type: this.$parent.type,
-				partyMode: this.$parent.station.partyMode,
-				description: this.$parent.station.description,
-				privacy: this.$parent.station.privacy,
-				displayName: this.$parent.station.displayName
+				_id: this.station._id,
+				name: this.station.name,
+				type: this.station.type,
+				partyMode: this.station.partyMode,
+				description: this.station.description,
+				privacy: this.station.privacy,
+				displayName: this.station.displayName
 			});
 			this.openModal({
 				sector: "station",
@@ -244,22 +268,25 @@ export default {
 			});
 		},
 		...mapActions("modals", ["openModal"]),
-		...mapActions("station", ["editStation"])
+		...mapActions("station", ["editStation"]),
+		...mapActions("user/auth", ["logout"])
 	}
 };
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 .nav {
-	background-color: #03a9f4;
+	background-color: $primary-color;
 	line-height: 64px;
 	border-radius: 0% 0% 33% 33% / 0% 0% 7% 7%;
 
 	.is-brand {
 		font-size: 2.1rem !important;
-		line-height: 64px !important;
+		line-height: 38px !important;
 		padding: 0 20px;
-		color: #ffffff;
+		color: $white;
 		font-family: Pacifico, cursive;
 		filter: brightness(0) invert(1);
 
@@ -270,11 +297,11 @@ export default {
 }
 
 a.nav-item {
-	color: #ffffff;
+	color: $white;
 	font-size: 17px;
 
 	&:hover {
-		color: #ffffff;
+		color: $white;
 	}
 
 	padding: 0 12px;
@@ -291,11 +318,11 @@ a.nav-item {
 
 a.nav-item.is-tab:hover {
 	border-bottom: none;
-	border-top: solid 1px #ffffff;
+	border-top: solid 1px $white;
 }
 
 .admin strong {
-	color: #9d42b1;
+	color: $purple;
 }
 
 .grouped {
@@ -315,7 +342,7 @@ a.nav-item.is-tab:hover {
 
 @media screen and (max-width: 998px) {
 	.nav-menu {
-		background-color: white;
+		background-color: $white;
 		box-shadow: 0 4px 7px rgba(10, 10, 10, 0.1);
 		left: 0;
 		display: none;
@@ -338,7 +365,7 @@ a.nav-item.is-tab:hover {
 .nav-center {
 	display: flex;
 	align-items: center;
-	color: #03a9f4;
+	color: $primary-color;
 	font-size: 22px;
 	position: absolute;
 	margin: auto;
@@ -348,8 +375,12 @@ a.nav-item.is-tab:hover {
 }
 
 .nav-right.is-active .nav-item {
-	background: #03a9f4;
+	background: $primary-color;
 	border: 0;
+}
+
+.hidden {
+	display: none;
 }
 
 .control-sidebar {
@@ -359,7 +390,7 @@ a.nav-item.is-tab:hover {
 	left: 0;
 	width: 64px;
 	height: 100vh;
-	background-color: #03a9f4;
+	background-color: $primary-color;
 	box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16),
 		0 2px 10px 0 rgba(0, 0, 0, 0.12);
 
@@ -403,7 +434,7 @@ a.nav-item.is-tab:hover {
 .control-sidebar .sidebar-item {
 	font-size: 2rem;
 	height: 50px;
-	color: white;
+	color: $white;
 	-webkit-box-align: center;
 	-ms-flex-align: center;
 	align-items: center;
@@ -430,7 +461,7 @@ a.nav-item.is-tab:hover {
 	width: 160px;
 	font-size: 12px;
 	background-color: rgba(3, 169, 244, 0.8);
-	color: #fff;
+	color: $white;
 	text-align: center;
 	border-radius: 6px;
 	padding: 5px;

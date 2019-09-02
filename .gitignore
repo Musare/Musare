@@ -5,6 +5,7 @@ Thumbs.db
 .vscode/
 .vagrant/
 
+.env
 startRedis.cmd
 startMongo.cmd
 .database
@@ -19,6 +20,8 @@ backend/config/default.json
 
 # Frontend
 frontend/yarn-error.log
+frontend/bundle-stats.json
+frontend/bundle-report.html
 frontend/node_modules/
 frontend/dist/build/
 !frontend/dist/lofig.min.js
@@ -26,7 +29,7 @@ frontend/dist/index.html
 frontend/dist/config/default.json
 
 npm
+node_modules
 
 # Logs
 log/
-.env

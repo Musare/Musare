@@ -5,7 +5,8 @@
 	"frontendPort": 80,
 	"serverDomain": "http://localhost:8080",
   	"serverPort": 8080,
-  	"isDocker": true,
+	"isDocker": true,
+	"fancyConsole": true,
 	"apis": {
 		"youtube": {
 			"key": ""
@@ -32,6 +33,11 @@
 			"client": "",
 			"secret": "",
 			"enabled": false
+		},
+		"discogs": {
+			"client": "",
+			"secret": "",
+			"enabled": false
 		}
 	},
 	"cors": {
@@ -50,6 +56,7 @@
 	},
   	"cookie": {
 	  	"domain": "localhost",
-	  	"secure": false
+		"secure": false,
+		"SIDname": "SID"  
 	}
 }

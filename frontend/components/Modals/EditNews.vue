@@ -4,7 +4,7 @@
 			<label class="label">Title</label>
 			<p class="control">
 				<input
-					v-model="$parent.editing.title"
+					v-model="editing.title"
 					class="input"
 					type="text"
 					placeholder="News Title"
@@ -14,7 +14,7 @@
 			<label class="label">Description</label>
 			<p class="control">
 				<input
-					v-model="$parent.editing.description"
+					v-model="editing.description"
 					class="input"
 					type="text"
 					placeholder="News Description"
@@ -29,24 +29,24 @@
 							class="input"
 							type="text"
 							placeholder="Bug"
-							@keyup.enter="addChange('bugs')"
+							@keyup.enter="addChangeClick('bugs')"
 						/>
 						<a
 							class="button is-info"
 							href="#"
-							@click="addChange('bugs')"
+							@click="addChangeClick('bugs')"
 							>Add</a
 						>
 					</p>
 					<span
-						v-for="(bug, index) in $parent.editing.bugs"
+						v-for="(bug, index) in editing.bugs"
 						class="tag is-info"
 						:key="index"
 					>
 						{{ bug }}
 						<button
 							class="delete is-info"
-							@click="removeChange('bugs', index)"
+							@click="removeChangeClick('bugs', index)"
 						/>
 					</span>
 				</div>
@@ -58,24 +58,24 @@
 							class="input"
 							type="text"
 							placeholder="Feature"
-							@keyup.enter="addChange('features')"
+							@keyup.enter="addChangeClick('features')"
 						/>
 						<a
 							class="button is-info"
 							href="#"
-							@click="addChange('features')"
+							@click="addChangeClick('features')"
 							>Add</a
 						>
 					</p>
 					<span
-						v-for="(feature, index) in $parent.editing.features"
+						v-for="(feature, index) in editing.features"
 						class="tag is-info"
 						:key="index"
 					>
 						{{ feature }}
 						<button
 							class="delete is-info"
-							@click="removeChange('features', index)"
+							@click="removeChangeClick('features', index)"
 						/>
 					</span>
 				</div>
@@ -90,25 +90,24 @@
 							class="input"
 							type="text"
 							placeholder="Improvement"
-							@keyup.enter="addChange('improvements')"
+							@keyup.enter="addChangeClick('improvements')"
 						/>
 						<a
 							class="button is-info"
 							href="#"
-							@click="addChange('improvements')"
+							@click="addChangeClick('improvements')"
 							>Add</a
 						>
 					</p>
 					<span
-						v-for="(improvement, index) in $parent.editing
-							.improvements"
+						v-for="(improvement, index) in editing.improvements"
 						class="tag is-info"
 						:key="index"
 					>
 						{{ improvement }}
 						<button
 							class="delete is-info"
-							@click="removeChange('improvements', index)"
+							@click="removeChangeClick('improvements', index)"
 						/>
 					</span>
 				</div>
@@ -120,38 +119,35 @@
 							class="input"
 							type="text"
 							placeholder="Upcoming"
-							@keyup.enter="addChange('upcoming')"
+							@keyup.enter="addChangeClick('upcoming')"
 						/>
 						<a
 							class="button is-info"
 							href="#"
-							@click="addChange('upcoming')"
+							@click="addChangeClick('upcoming')"
 							>Add</a
 						>
 					</p>
 					<span
-						v-for="(upcoming, index) in $parent.editing.upcoming"
+						v-for="(upcoming, index) in editing.upcoming"
 						class="tag is-info"
 						:key="index"
 					>
 						{{ upcoming }}
 						<button
 							class="delete is-info"
-							@click="removeChange('upcoming', index)"
+							@click="removeChangeClick('upcoming', index)"
 						/>
 					</span>
 				</div>
 			</div>
 		</div>
 		<div slot="footer">
-			<button
-				class="button is-success"
-				@click="$parent.updateNews(false)"
-			>
+			<button class="button is-success" @click="updateNews(false)">
 				<i class="material-icons save-changes">done</i>
 				<span>&nbsp;Save</span>
 			</button>
-			<button class="button is-success" @click="$parent.updateNews(true)">
+			<button class="button is-success" @click="updateNews(true)">
 				<i class="material-icons save-changes">done</i>
 				<span>&nbsp;Save and close</span>
 			</button>
@@ -171,36 +167,67 @@
 </template>
 
 <script>
-import { mapActions } from "vuex";
+import { mapActions, mapState } from "vuex";
 
 import { Toast } from "vue-roaster";
+import io from "../../io";
 
 import Modal from "./Modal.vue";
 
 export default {
 	components: { Modal },
+	computed: {
+		...mapState("admin/news", {
+			editing: state => state.editing
+		})
+	},
 	methods: {
 		addChange(type) {
 			const change = document.getElementById(`edit-${type}`).value.trim();
 
-			if (this.$parent.editing[type].indexOf(change) !== -1)
+			if (this.editing[type].indexOf(change) !== -1)
 				return Toast.methods.addToast(`Tag already exists`, 3000);
 
-			if (change) this.$parent.editing[type].push(change);
+			if (change) this.addChange({ type, change });
 			else Toast.methods.addToast(`${type} cannot be empty`, 3000);
 
 			document.getElementById(`edit-${type}`).value = "";
 			return true;
 		},
 		removeChange(type, index) {
-			this.$parent.editing[type].splice(index, 1);
+			this.removeChange({ type, index });
 		},
-		...mapActions("modals", ["closeModal"])
+		updateNews(close) {
+			this.socket.emit(
+				"news.update",
+				this.editing._id,
+				this.editing,
+				res => {
+					Toast.methods.addToast(res.message, 4000);
+					if (res.status === "success") {
+						if (close)
+							this.closeModal({
+								sector: "admin",
+								modal: "editNews"
+							});
+					}
+				}
+			);
+		},
+		...mapActions("modals", ["closeModal"]),
+		...mapActions("admin/news", ["addChange", "removeChange"])
+	},
+	mounted() {
+		io.getSocket(socket => {
+			this.socket = socket;
+		});
 	}
 };
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 input[type="range"] {
 	-webkit-appearance: none;
 	width: 100%;
@@ -216,7 +243,7 @@ input[type="range"]::-webkit-slider-runnable-track {
 	height: 5.2px;
 	cursor: pointer;
 	box-shadow: 0;
-	background: #c2c0c2;
+	background: $light-grey-2;
 	border-radius: 0;
 	border: 0;
 }
@@ -227,7 +254,7 @@ input[type="range"]::-webkit-slider-thumb {
 	height: 19px;
 	width: 19px;
 	border-radius: 15px;
-	background: #03a9f4;
+	background: $primary-color;
 	cursor: pointer;
 	-webkit-appearance: none;
 	margin-top: -6.5px;
@@ -238,7 +265,7 @@ input[type="range"]::-moz-range-track {
 	height: 5.2px;
 	cursor: pointer;
 	box-shadow: 0;
-	background: #c2c0c2;
+	background: $light-grey-2;
 	border-radius: 0;
 	border: 0;
 }
@@ -249,7 +276,7 @@ input[type="range"]::-moz-range-thumb {
 	height: 19px;
 	width: 19px;
 	border-radius: 15px;
-	background: #03a9f4;
+	background: $primary-color;
 	cursor: pointer;
 	-webkit-appearance: none;
 	margin-top: -6.5px;
@@ -260,19 +287,19 @@ input[type="range"]::-ms-track {
 	height: 5.2px;
 	cursor: pointer;
 	box-shadow: 0;
-	background: #c2c0c2;
+	background: $light-grey-2;
 	border-radius: 1.3px;
 }
 
 input[type="range"]::-ms-fill-lower {
-	background: #c2c0c2;
+	background: $light-grey-2;
 	border: 0;
 	border-radius: 0;
 	box-shadow: 0;
 }
 
 input[type="range"]::-ms-fill-upper {
-	background: #c2c0c2;
+	background: $light-grey-2;
 	border: 0;
 	border-radius: 0;
 	box-shadow: 0;
@@ -284,7 +311,7 @@ input[type="range"]::-ms-thumb {
 	height: 15px;
 	width: 15px;
 	border-radius: 15px;
-	background: #03a9f4;
+	background: $primary-color;
 	cursor: pointer;
 	-webkit-appearance: none;
 	margin-top: 1.5px;
@@ -339,7 +366,7 @@ h5 {
 }
 
 .save-changes {
-	color: #fff;
+	color: $white;
 }
 
 .tag:not(:last-child) {

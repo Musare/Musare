@@ -16,7 +16,8 @@ const modules = {
 				autoPlayed: false,
 				currentTime: 0
 			},
-			editing: {}
+			editing: {},
+			songs: []
 		},
 		getters: {},
 		actions: {
@@ -30,10 +31,19 @@ const modules = {
 					commit("getCurrentTime", fixedVal);
 					resolve(state.video.currentTime);
 				});
-			}
+			},
+			addSong: ({ commit }, song) => commit("addSong", song),
+			removeSong: ({ commit }, songId) => commit("removeSong", songId),
+			updateSong: ({ commit }, updatedSong) =>
+				commit("updateSong", updatedSong),
+			updateSongField: ({ commit }, data) =>
+				commit("updateSongField", data),
+			selectDiscogsInfo: ({ commit }, discogsInfo) =>
+				commit("selectDiscogsInfo", discogsInfo)
 		},
 		mutations: {
 			editSong(state, song) {
+				if (song.song.discogs === undefined) song.song.discogs = null;
 				state.editing = { ...song };
 			},
 			stopVideo(state) {
@@ -62,6 +72,26 @@ const modules = {
 						}
 					);
 				}
+			},
+			addSong(state, song) {
+				state.songs.push(song);
+			},
+			removeSong(state, songId) {
+				state.songs = state.songs.filter(song => {
+					return song._id !== songId;
+				});
+			},
+			updateSong(state, updatedSong) {
+				state.songs.forEach((song, index) => {
+					if (song._id === updatedSong._id)
+						state.songs.$set(index, updatedSong);
+				});
+			},
+			updateSongField(state, data) {
+				state.editing.song[data.field] = data.value;
+			},
+			selectDiscogsInfo(state, discogsInfo) {
+				state.editing.song.discogs = discogsInfo;
 			}
 		}
 	},
@@ -125,6 +155,29 @@ const modules = {
 		mutations: {
 			editUser(state, user) {
 				state.editing = user;
+			}
+		}
+	},
+	news: {
+		namespaced: true,
+		state: {
+			editing: {}
+		},
+		getters: {},
+		actions: {
+			editNews: ({ commit }, news) => commit("editNews", news),
+			addChange: ({ commit }, data) => commit("addChange", data),
+			removeChange: ({ commit }, data) => commit("removeChange", data)
+		},
+		mutations: {
+			editNews(state, news) {
+				state.editing = news;
+			},
+			addChange(state, data) {
+				state.editing[data.type].push(data.change);
+			},
+			removeChange(state, data) {
+				state.editing[data.type].splice(data.index, 1);
 			}
 		}
 	}

@@ -1,6 +1,7 @@
 {
   "name": "musare-frontend",
-  "version": "0.0.0",
+  "private": true,
+  "version": "2.1.0",
   "description": "A modern, open-source, collaborative music app https://musare.com",
   "main": "main.js",
   "author": "Musare Team",
@@ -8,9 +9,10 @@
   "repository": "https://github.com/Musare/MusareNode",
   "scripts": {
     "lint": "npx eslint . --ext .js,.vue",
+    "bundle-analyse": "webpack --config webpack.prod.js --profile --json > bundle-stats.json && npx webpack-bundle-analyzer bundle-stats.json --mode static --report bundle-report.html --no-open",
     "dev": "webpack-dev-server --config webpack.dev.js",
     "prod": "webpack --config webpack.prod.js",
-    "test": "snyk test"
+    "test": ""
   },
   "devDependencies": {
     "@babel/core": "^7.5.4",
@@ -36,13 +38,16 @@
     "vue-style-loader": "^4.1.2",
     "vue-template-compiler": "^2.6.10",
     "webpack": "^4.35.3",
+    "webpack-bundle-analyzer": "^3.4.1",
     "webpack-cli": "^3.3.5",
     "webpack-dev-server": "^3.7.2"
   },
   "dependencies": {
     "@babel/runtime": "^7.5.4",
     "chart.js": "^2.5.0",
+    "chartjs-adapter-date-fns": "^0.1.2",
     "config": "^3.2.2",
+    "date-fns": "^2.0.1",
     "eslint-config-airbnb-base": "^13.2.0",
     "html-webpack-plugin": "^3.2.0",
     "vue": "^2.6.10",

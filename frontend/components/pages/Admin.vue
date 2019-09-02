@@ -95,26 +95,17 @@
 <script>
 import MainHeader from "../MainHeader.vue";
 
-import QueueSongs from "../Admin/QueueSongs.vue";
-import Songs from "../Admin/Songs.vue";
-import Stations from "../Admin/Stations.vue";
-import Reports from "../Admin/Reports.vue";
-import News from "../Admin/News.vue";
-import Users from "../Admin/Users.vue";
-import Statistics from "../Admin/Statistics.vue";
-import Punishments from "../Admin/Punishments.vue";
-
 export default {
 	components: {
 		MainHeader,
-		QueueSongs,
-		Songs,
-		Stations,
-		Reports,
-		News,
-		Users,
-		Statistics,
-		Punishments
+		QueueSongs: () => import("../Admin/QueueSongs.vue"),
+		Songs: () => import("../Admin/Songs.vue"),
+		Stations: () => import("../Admin/Stations.vue"),
+		Reports: () => import("../Admin/Reports.vue"),
+		News: () => import("../Admin/News.vue"),
+		Users: () => import("../Admin/Users.vue"),
+		Statistics: () => import("../Admin/Statistics.vue"),
+		Punishments: () => import("../Admin/Punishments.vue")
 	},
 	data() {
 		return {
@@ -168,39 +159,41 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 .tabs {
-	background-color: #ffffff;
+	background-color: $white;
 	.queueSongs {
-		color: #00d1b2;
-		border-color: #00d1b2;
+		color: $teal;
+		border-color: $teal;
 	}
 	.songs {
-		color: #03a9f4;
-		border-color: #03a9f4;
+		color: $primary-color;
+		border-color: $primary-color;
 	}
 	.stations {
-		color: #90298c;
-		border-color: #90298c;
+		color: $purple;
+		border-color: $purple;
 	}
 	.reports {
-		color: #f7c218;
-		border-color: #f7c218;
+		color: $yellow;
+		border-color: $yellow;
 	}
 	.news {
-		color: #e49ba6;
-		border-color: #e49ba6;
+		color: $light-pink;
+		border-color: $light-pink;
 	}
 	.users {
-		color: #ea4962;
-		border-color: #ea4962;
+		color: $dark-pink;
+		border-color: $dark-pink;
 	}
 	.statistics {
-		color: #ff5e00;
-		border-color: #ff5e00;
+		color: $light-orange;
+		border-color: $light-orange;
 	}
 	.punishments {
-		color: #fc3200;
-		border-color: #fc3200;
+		color: $dark-orange;
+		border-color: $dark-orange;
 	}
 	.tab {
 		transition: all 0.2s ease-in-out;

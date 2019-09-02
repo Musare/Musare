@@ -72,6 +72,8 @@
 </template>
 
 <script>
+import { format } from "date-fns";
+
 import io from "../../io";
 
 export default {
@@ -82,12 +84,11 @@ export default {
 		};
 	},
 	mounted() {
-		const _this = this;
 		io.getSocket(true, socket => {
-			_this.socket = socket;
-			_this.socket.emit("news.newest", res => {
-				_this.news = res.data;
-				if (_this.news && localStorage.getItem("firstVisited")) {
+			this.socket = socket;
+			this.socket.emit("news.newest", res => {
+				this.news = res.data;
+				if (this.news && localStorage.getItem("firstVisited")) {
 					if (localStorage.getItem("whatIsNew")) {
 						if (
 							parseInt(localStorage.getItem("whatIsNew")) <
@@ -118,7 +119,7 @@ export default {
 			this.isModalActive = !this.isModalActive;
 		},
 		formatDate: unix => {
-			return moment(unix).format("DD-MM-YYYY");
+			return format(unix, "dd-MM-yyyy");
 		}
 	},
 	events: {
@@ -130,6 +131,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 .modal-card-head {
 	border-bottom: none;
 	background-color: ghostwhite;
@@ -158,7 +161,7 @@ export default {
 		padding: 12px;
 		text-transform: uppercase;
 		font-weight: bold;
-		color: #fff;
+		color: $white;
 	}
 
 	.sect-head-features {

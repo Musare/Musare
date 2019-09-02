@@ -18,22 +18,39 @@
 						<br />
 						<strong>Expires at:</strong>
 						{{
-							moment(punishment.expiresAt).format(
-								"MMMM Do YYYY, h:mm:ss a"
+							format(
+								parseISO(punishment.expiresAt),
+								"MMMM do yyyy, h:mm:ss a"
 							)
 						}}
-						({{ moment(punishment.expiresAt).fromNow() }})
+						({{
+							formatDistance(
+								parseISO(punishment.expiresAt),
+								new Date(),
+								{ addSuffix: true }
+							)
+						}})
 						<br />
 						<strong>Punished at:</strong>
 						{{
-							moment(punishment.punishedAt).format(
-								"MMMM Do YYYY, h:mm:ss a"
+							format(
+								parseISO(punishment.punishedAt),
+								"MMMM do yyyy, h:mm:ss a"
 							)
 						}}
-						({{ moment(punishment.punishedAt).fromNow() }})
+						({{
+							formatDistance(
+								parseISO(punishment.punishedAt),
+								new Date(),
+								{ addSuffix: true }
+							)
+						}})
 						<br />
 						<strong>Punished by:</strong>
-						{{ punishment.punishedBy }}
+						<user-id-to-username
+							:userId="punishment.punishedBy"
+							:alt="punishment.punishedBy"
+						/>
 						<br />
 					</div>
 				</article>
@@ -57,16 +74,17 @@
 
 <script>
 import { mapState, mapActions } from "vuex";
+import { format, formatDistance, parseISO } from "date-fns"; // eslint-disable-line no-unused-vars
 
 import io from "../../io";
 import Modal from "./Modal.vue";
+import UserIdToUsername from "../UserIdToUsername.vue";
 
 export default {
-	components: { Modal },
+	components: { Modal, UserIdToUsername },
 	data() {
 		return {
-			ban: {},
-			moment
+			ban: {}
 		};
 	},
 	computed: {
@@ -75,14 +93,16 @@ export default {
 		})
 	},
 	mounted() {
-		const _this = this;
 		io.getSocket(socket => {
-			_this.socket = socket;
+			this.socket = socket;
 			return socket;
 		});
 	},
 	methods: {
-		...mapActions("modals", ["closeModal"])
+		...mapActions("modals", ["closeModal"]),
+		format,
+		formatDistance,
+		parseISO
 	}
 };
 </script>

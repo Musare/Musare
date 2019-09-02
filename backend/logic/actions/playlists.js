@@ -1,14 +1,16 @@
 'use strict';
 
-const db = require('../db');
-const io = require('../io');
-const cache = require('../cache');
-const utils = require('../utils');
-const logger = require('../logger');
-const hooks = require('./hooks');
 const async = require('async');
-const playlists = require('../playlists');
-const songs = require('../songs');
+
+const hooks = require('./hooks');
+const moduleManager = require("../../index");
+
+const db = moduleManager.modules["db"];
+const cache = moduleManager.modules["cache"];
+const utils = moduleManager.modules["utils"];
+const logger = moduleManager.modules["logger"];
+const playlists = moduleManager.modules["playlists"];
+const songs = moduleManager.modules["songs"];
 
 cache.sub('playlist.create', playlistId => {
 	playlists.getPlaylist(playlistId, (err, playlist) => {
@@ -90,9 +92,9 @@ let lib = {
 				if (!playlist || playlist.createdBy !== userId) return next('Playlist not found.');
 				next(null, playlist.songs[0]);
 			}
-		], (err, song) => {
+		], async (err, song) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("PLAYLIST_GET_FIRST_SONG", `Getting the first song of playlist "${playlistId}" failed for user "${userId}". "${err}"`);
 				return cb({ status: 'failure', message: err});
 			}
@@ -116,9 +118,9 @@ let lib = {
 			(next) => {
 				db.models.playlist.find({ createdBy: userId }, next);
 			}
-		], (err, playlists) => {
+		], async (err, playlists) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("PLAYLIST_INDEX_FOR_USER", `Indexing playlists for user "${userId}" failed. "${err}"`);
 				return cb({ status: 'failure', message: err});
 			}
@@ -155,9 +157,9 @@ let lib = {
 				}, next);
 			}
 
-		], (err, playlist) => {
+		], async (err, playlist) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("PLAYLIST_CREATE", `Creating private playlist failed for user "${userId}". "${err}"`);
 				return cb({ status: 'failure', message: err});
 			}
@@ -187,9 +189,9 @@ let lib = {
 				if (!playlist || playlist.createdBy !== userId) return next('Playlist not found');
 				next(null, playlist);
 			}
-		], (err, playlist) => {
+		], async (err, playlist) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("PLAYLIST_GET", `Getting private playlist "${playlistId}" failed for user "${userId}". "${err}"`);
 				return cb({ status: 'failure', message: err});
 			}
@@ -220,9 +222,9 @@ let lib = {
 			(res, next) => {
 				playlists.updatePlaylist(playlistId, next)
 			}
-		], (err, playlist) => {
+		], async (err, playlist) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("PLAYLIST_UPDATE", `Updating private playlist "${playlistId}" failed for user "${userId}". "${err}"`);
 				return cb({ status: 'failure', message: err});
 			}
@@ -280,9 +282,9 @@ let lib = {
 				});
 			}
 		],
-		(err, playlist, newSong) => {
+		async (err, playlist, newSong) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("PLAYLIST_ADD_SONG", `Adding song "${songId}" to private playlist "${playlistId}" failed for user "${userId}". "${err}"`);
 				return cb({ status: 'failure', message: err});
 			} else {
@@ -329,9 +331,9 @@ let lib = {
 				if (!playlist || playlist.createdBy !== userId) return next('Playlist not found.');
 				next(null, playlist);
 			}
-		], (err, playlist) => {
+		], async (err, playlist) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("PLAYLIST_IMPORT", `Importing a YouTube playlist to private playlist "${playlistId}" failed for user "${userId}". "${err}"`);
 				return cb({ status: 'failure', message: err});
 			} else {
@@ -370,9 +372,9 @@ let lib = {
 			(res, next) => {
 				playlists.updatePlaylist(playlistId, next);
 			}
-		], (err, playlist) => {
+		], async (err, playlist) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("PLAYLIST_REMOVE_SONG", `Removing song "${songId}" from private playlist "${playlistId}" failed for user "${userId}". "${err}"`);
 				return cb({ status: 'failure', message: err});
 			} else {
@@ -400,9 +402,9 @@ let lib = {
 			(res, next) => {
 				playlists.updatePlaylist(playlistId, next);
 			}
-		], (err, playlist) => {
+		], async (err, playlist) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("PLAYLIST_UPDATE_DISPLAY_NAME", `Updating display name to "${displayName}" for private playlist "${playlistId}" failed for user "${userId}". "${err}"`);
 				return cb({ status: 'failure', message: err});
 			}
@@ -459,9 +461,9 @@ let lib = {
 			(res, next) => {
 				playlists.updatePlaylist(playlistId, next);
 			}
-		], (err, playlist) => {
+		], async (err, playlist) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("PLAYLIST_MOVE_SONG_TO_TOP", `Moving song "${songId}" to the top for private playlist "${playlistId}" failed for user "${userId}". "${err}"`);
 				return cb({ status: 'failure', message: err});
 			}
@@ -515,9 +517,9 @@ let lib = {
 			(res, next) => {
 				playlists.updatePlaylist(playlistId, next);
 			}
-		], (err, playlist) => {
+		], async (err, playlist) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("PLAYLIST_MOVE_SONG_TO_BOTTOM", `Moving song "${songId}" to the bottom for private playlist "${playlistId}" failed for user "${userId}". "${err}"`);
 				return cb({ status: 'failure', message: err});
 			}
@@ -540,9 +542,9 @@ let lib = {
 			(next) => {
 				playlists.deletePlaylist(playlistId, next);
 			}
-		], (err) => {
+		], async (err) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("PLAYLIST_REMOVE", `Removing private playlist "${playlistId}" failed for user "${userId}". "${err}"`);
 				return cb({ status: 'failure', message: err});
 			}

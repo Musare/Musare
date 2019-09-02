@@ -1,5 +1,6 @@
 <template>
 	<div>
+		<metadata title="Reset password" />
 		<main-header />
 		<div class="container">
 			<!--Implement Validation-->
@@ -86,9 +87,8 @@ export default {
 		};
 	},
 	mounted() {
-		const _this = this;
 		io.getSocket(socket => {
-			_this.socket = socket;
+			this.socket = socket;
 		});
 	},
 	methods: {
@@ -140,12 +140,14 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 .container {
 	padding: 25px;
 }
 
 .skip-step {
 	background-color: #7e7e7e;
-	color: #fff;
+	color: $white;
 }
 </style>

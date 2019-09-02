@@ -1,5 +1,6 @@
 <template>
 	<div>
+		<metadata title="Settings" />
 		<main-header />
 		<div class="container">
 			<!--Implement Validation-->
@@ -109,7 +110,7 @@
 			<a
 				v-if="!github"
 				class="button is-github"
-				:href="`${$parent.serverDomain}/auth/github/link`"
+				:href="`${serverDomain}/auth/github/link`"
 			>
 				<div class="icon">
 					<img class="invert" src="/assets/social/github.svg" />
@@ -146,6 +147,8 @@
 </template>
 
 <script>
+import { mapState } from "vuex";
+
 import { Toast } from "vue-roaster";
 
 import MainHeader from "../MainHeader.vue";
@@ -164,40 +167,43 @@ export default {
 			github: false,
 			setNewPassword: "",
 			passwordStep: 1,
-			passwordCode: ""
+			passwordCode: "",
+			serverDomain: ""
 		};
 	},
+	computed: mapState({
+		userId: state => state.user.auth.userId
+	}),
 	mounted() {
-		const _this = this;
+		lofig.get("serverDomain", res => {
+			this.serverDomain = res;
+		});
+
 		io.getSocket(socket => {
-			_this.socket = socket;
-			_this.socket.emit("users.findBySession", res => {
+			this.socket = socket;
+			this.socket.emit("users.findBySession", res => {
 				if (res.status === "success") {
-					_this.user = res.data;
-					_this.password = _this.user.password;
-					_this.github = _this.user.github;
+					this.user = res.data;
+					this.password = this.user.password;
+					this.github = this.user.github;
 				} else {
-					_this.$parent.isLoginActive = true;
 					Toast.methods.addToast(
 						"Your are currently not signed in",
 						3000
 					);
 				}
 			});
-			_this.socket.on("event:user.username.changed", username => {
-				_this.$parent.username = username;
+			this.socket.on("event:user.linkPassword", () => {
+				this.password = true;
 			});
-			_this.socket.on("event:user.linkPassword", () => {
-				_this.password = true;
+			this.socket.on("event:user.linkGitHub", () => {
+				this.github = true;
 			});
-			_this.socket.on("event:user.linkGitHub", () => {
-				_this.github = true;
+			this.socket.on("event:user.unlinkPassword", () => {
+				this.password = false;
 			});
-			_this.socket.on("event:user.unlinkPassword", () => {
-				_this.password = false;
-			});
-			_this.socket.on("event:user.unlinkGitHub", () => {
-				_this.github = false;
+			this.socket.on("event:user.unlinkGitHub", () => {
+				this.github = false;
 			});
 		});
 	},
@@ -217,7 +223,7 @@ export default {
 
 			return this.socket.emit(
 				"users.updateEmail",
-				this.$parent.userId,
+				this.userId,
 				email,
 				res => {
 					if (res.status !== "success")
@@ -245,7 +251,7 @@ export default {
 
 			return this.socket.emit(
 				"users.updateUsername",
-				this.$parent.userId,
+				this.userId,
 				username,
 				res => {
 					if (res.status !== "success")
@@ -340,24 +346,22 @@ export default {
 			});
 		},
 		removeSessions() {
-			this.socket.emit(
-				`users.removeSessions`,
-				this.$parent.userId,
-				res => {
-					Toast.methods.addToast(res.message, 4000);
-				}
-			);
+			this.socket.emit(`users.removeSessions`, this.userId, res => {
+				Toast.methods.addToast(res.message, 4000);
+			});
 		}
 	}
 };
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 .container {
 	padding: 25px;
 }
 
 a {
-	color: #029ce3 !important;
+	color: $primary-color !important;
 }
 </style>

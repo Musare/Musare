@@ -1,3 +1,4 @@
+import { Toast } from "vue-roaster";
 import io from "../io";
 
 // when Vuex needs to interact with socket.io
@@ -61,7 +62,7 @@ export default {
 							let domain = "";
 							if (cookie.domain !== "localhost")
 								domain = ` domain=${cookie.domain};`;
-							document.cookie = `SID=${
+							document.cookie = `${cookie.SIDname}=${
 								res.SID
 							}; expires=${date.toGMTString()}; ${domain}${secure}path=/`;
 							return resolve({ status: "success" });
@@ -69,6 +70,22 @@ export default {
 					}
 
 					return reject(new Error(res.message));
+				});
+			});
+		});
+	},
+	logout() {
+		return new Promise((resolve, reject) => {
+			io.getSocket(socket => {
+				socket.emit("users.logout", result => {
+					if (result.status === "success") {
+						return lofig.get("cookie", cookie => {
+							document.cookie = `${cookie.SIDname}=;expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
+							return window.location.reload();
+						});
+					}
+					Toast.methods.addToast(result.message, 4000);
+					return reject(new Error(result.message));
 				});
 			});
 		});

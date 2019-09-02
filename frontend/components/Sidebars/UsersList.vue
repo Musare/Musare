@@ -4,10 +4,10 @@
 			<div class="title">
 				Users
 			</div>
-			<h5 class="center">Total users: {{ $parent.userCount }}</h5>
+			<h5 class="center">Total users: {{ userCount }}</h5>
 			<aside class="menu">
 				<ul class="menu-list">
-					<li v-for="(username, index) in $parent.users" :key="index">
+					<li v-for="(username, index) in users" :key="index">
 						<router-link
 							:to="{ name: 'profile', params: { username } }"
 							target="_blank"
@@ -21,7 +21,20 @@
 	</div>
 </template>
 
+<script>
+import { mapState } from "vuex";
+
+export default {
+	computed: mapState({
+		users: state => state.station.users,
+		userCount: state => state.station.userCount
+	})
+};
+</script>
+
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 .sidebar {
 	position: fixed;
 	z-index: 1;
@@ -29,13 +42,13 @@
 	right: 0;
 	width: 300px;
 	height: 100vh;
-	background-color: #fff;
+	background-color: $white;
 	box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16),
 		0 2px 10px 0 rgba(0, 0, 0, 0.12);
 }
 
 .inner-wrapper {
-	top: 64px;
+	top: 60px;
 	position: relative;
 }
 
@@ -53,7 +66,7 @@
 	background-color: rgb(3, 169, 244);
 	text-align: center;
 	padding: 10px;
-	color: white;
+	color: $white;
 	font-weight: 600;
 }
 

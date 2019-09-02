@@ -15,9 +15,15 @@ const modules = {
 		state: {
 			userIdMap: {},
 			userIdRequested: {},
-			pendingUserIdCallbacks: {}
+			pendingUserIdCallbacks: {},
+			loggedIn: false,
+			role: "",
+			username: "",
+			userId: "",
+			banned: false,
+			ban: {},
+			gotData: false
 		},
-		getters: {},
 		actions: {
 			/* eslint-disable-next-line no-unused-vars */
 			register: ({ commit }, user) => {
@@ -96,6 +102,18 @@ const modules = {
 						});
 				});
 			},
+			logout: () => {
+				return new Promise((resolve, reject) => {
+					return auth
+						.logout()
+						.then(() => {
+							return resolve();
+						})
+						.catch(() => {
+							return reject();
+						});
+				});
+			},
 			getUsernameFromId: ({ commit, state }, userId) => {
 				return new Promise(resolve => {
 					if (typeof state.userIdMap[`Z${userId}`] !== "string") {
@@ -135,8 +153,19 @@ const modules = {
 								}
 							});
 						}
+					} else {
+						resolve(state.userIdMap[`Z${userId}`]);
 					}
 				});
+			},
+			authData: ({ commit }, data) => {
+				commit("authData", data);
+			},
+			banUser: ({ commit }, ban) => {
+				commit("banUser", ban);
+			},
+			updateUsername: ({ commit }, username) => {
+				commit("updateUsername", username);
 			}
 		},
 		mutations: {
@@ -156,6 +185,20 @@ const modules = {
 			},
 			clearPendingCallbacks(state, userId) {
 				state.pendingUserIdCallbacks[`Z${userId}`] = [];
+			},
+			authData(state, data) {
+				state.loggedIn = data.loggedIn;
+				state.role = data.role;
+				state.username = data.username;
+				state.userId = data.userId;
+				state.gotData = true;
+			},
+			banUser(state, ban) {
+				state.banned = true;
+				state.ban = ban;
+			},
+			updateUsername(state, username) {
+				state.username = username;
 			}
 		}
 	},

@@ -12,5 +12,6 @@ module.exports = {
 	requestedBy: { type: String, required: true },
 	requestedAt: { type: Date, required: true },
 	acceptedBy: { type: String, required: true },
-	acceptedAt: { type: Date, default: Date.now(), required: true }
+	acceptedAt: { type: Date, default: Date.now(), required: true },
+	discogs: { type: Object }
 };

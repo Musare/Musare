@@ -2,11 +2,13 @@
 
 const async = require('async');
 
-const db = require('../db');
-const cache = require('../cache');
-const utils = require('../utils');
-const logger = require('../logger');
 const hooks = require('./hooks');
+const moduleManager = require("../../index");
+
+const db = moduleManager.modules["db"];
+const cache = moduleManager.modules["cache"];
+const utils = moduleManager.modules["utils"];
+const logger = moduleManager.modules["logger"];
 
 cache.sub('news.create', news => {
 	utils.socketsFromUser(news.createdBy, sockets => {
@@ -45,9 +47,9 @@ module.exports = {
 			(next) => {
 				db.models.news.find({}).sort({ createdAt: 'desc' }).exec(next);
 			}
-		], (err, news) => {
+		], async (err, news) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("NEWS_INDEX", `Indexing news failed. "${err}"`);
 				return cb({status: 'failure', message: err});
 			}
@@ -71,9 +73,9 @@ module.exports = {
 				data.createdAt = Date.now();
 				db.models.news.create(data, next);
 			}
-		], (err, news) => {
+		], async (err, news) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("NEWS_CREATE", `Creating news failed. "${err}"`);
 				return cb({ 'status': 'failure', 'message': err });
 			}
@@ -94,9 +96,9 @@ module.exports = {
 			(next) => {
 				db.models.news.findOne({}).sort({ createdAt: 'desc' }).exec(next);
 			}
-		], (err, news) => {
+		], async (err, news) => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("NEWS_NEWEST", `Getting the latest news failed. "${err}"`);
 				return cb({ 'status': 'failure', 'message': err });
 			}
@@ -115,9 +117,9 @@ module.exports = {
 	//TODO Pass in an id, not an object
 	//TODO Fix this
 	remove: hooks.adminRequired((session, news, cb, userId) => {
-		db.models.news.deleteOne({ _id: news._id }, err => {
+		db.models.news.deleteOne({ _id: news._id }, async err => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("NEWS_REMOVE", `Removing news "${news._id}" failed for user "${userId}". "${err}"`);
 				return cb({ 'status': 'failure', 'message': err });
 			} else {
@@ -138,9 +140,9 @@ module.exports = {
 	 */
 	//TODO Fix this
 	update: hooks.adminRequired((session, _id, news, cb, userId) => {
-		db.models.news.updateOne({ _id }, news, { upsert: true }, err => {
+		db.models.news.updateOne({ _id }, news, { upsert: true }, async err => {
 			if (err) {
-				err = utils.getError(err);
+				err = await utils.getError(err);
 				logger.error("NEWS_UPDATE", `Updating news "${_id}" failed for user "${userId}". "${err}"`);
 				return cb({ 'status': 'failure', 'message': err });
 			} else {

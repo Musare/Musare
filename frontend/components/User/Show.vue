@@ -1,14 +1,13 @@
 <template>
 	<div v-if="isUser">
+		<metadata v-bind:title="`Profile | ${user.username}`" />
 		<main-header />
 		<div class="container">
 			<img class="avatar" src="/assets/notes.png" />
 			<h2 class="has-text-centered username">@{{ user.username }}</h2>
 			<h5>A member since {{ user.createdAt }}</h5>
 			<div
-				v-if="
-					$parent.role === 'admin' && !($parent.userId === user._id)
-				"
+				v-if="role === 'admin' && userId !== user._id"
 				class="admin-functionality"
 			>
 				<a
@@ -64,7 +63,9 @@
 </template>
 
 <script>
+import { mapState } from "vuex";
 import { Toast } from "vue-roaster";
+import { format, parseISO } from "date-fns";
 
 import MainHeader from "../MainHeader.vue";
 import MainFooter from "../MainFooter.vue";
@@ -78,21 +79,25 @@ export default {
 			isUser: false
 		};
 	},
+	computed: mapState({
+		role: state => state.user.auth.role,
+		userId: state => state.user.auth.userId
+	}),
 	mounted() {
-		const _this = this;
 		io.getSocket(socket => {
-			_this.socket = socket;
-			_this.socket.emit(
+			this.socket = socket;
+			this.socket.emit(
 				"users.findByUsername",
-				_this.$route.params.username,
+				this.$route.params.username,
 				res => {
 					if (res.status === "error") this.$router.go("/404");
 					else {
-						_this.user = res.data;
-						this.user.createdAt = moment(
-							this.user.createdAt
-						).format("LL");
-						_this.isUser = true;
+						this.user = res.data;
+						this.user.createdAt = format(
+							parseISO(this.user.createdAt),
+							"MMMM do yyyy"
+						);
+						this.isUser = true;
 					}
 				}
 			);
@@ -120,6 +125,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 .container {
 	padding: 25px;
 }

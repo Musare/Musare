@@ -1,5 +1,6 @@
 <template>
 	<div class="container">
+		<metadata title="Admin | Statistics" />
 		<div class="columns">
 			<div
 				class="card column is-10-desktop is-offset-1-desktop is-12-mobile"
@@ -103,7 +104,8 @@
 </template>
 
 <script>
-import Chart from "chart.js";
+import { Line } from "chart.js";
+import "chartjs-adapter-date-fns";
 
 import io from "../../io";
 
@@ -144,12 +146,10 @@ export default {
 		};
 	},
 	mounted() {
-		const _this = this;
 		const minuteCtx = document.getElementById("minuteChart");
 		const hourCtx = document.getElementById("hourChart");
 
-		_this.minuteChart = new Chart(minuteCtx, {
-			type: "line",
+		this.minuteChart = new Line(minuteCtx, {
 			data: {
 				labels: [
 					"-10",
@@ -207,8 +207,7 @@ export default {
 			}
 		});
 
-		_this.hourChart = new Chart(hourCtx, {
-			type: "line",
+		this.hourChart = new Line(hourCtx, {
 			data: {
 				labels: [
 					"-10",
@@ -267,9 +266,9 @@ export default {
 		});
 
 		io.getSocket(socket => {
-			_this.socket = socket;
-			if (_this.socket.connected) _this.init();
-			io.onConnect(() => _this.init());
+			this.socket = socket;
+			if (this.socket.connected) this.init();
+			io.onConnect(() => this.init());
 		});
 	},
 	methods: {
@@ -329,6 +328,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "styles/global.scss";
+
 body {
 	font-family: "Roboto", sans-serif;
 }
@@ -344,6 +345,6 @@ td {
 }
 
 .is-primary:focus {
-	background-color: #029ce3 !important;
+	background-color: $primary-color !important;
 }
 </style>
