@@ -1146,6 +1146,11 @@ module.exports = {
 		async.waterfall([
 			(next) => {
 				db.models.user.findOne({ _id: userId }, next);
+			},
+
+			(user, next) => {
+				if (!user) return next("User not found.");
+				next(null, user);
 			}
 		], async (err, user) => {
 			if (err && err !== true) {

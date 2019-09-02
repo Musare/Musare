@@ -513,82 +513,18 @@
 				@mousedown="onDragGenreHelper"
 			></div>
 			<div class="genre-helper-body">
-				<span>Blues</span><span>Classic rock</span><span>Country</span
-				><span>Dance</span><span>Disco</span><span>Funk</span
-				><span>Grunge</span><span>Hip-Hop</span><span>Jazz</span
-				><span>Metal</span><span>New Age</span><span>Oldies</span
-				><span>Other</span><span>Pop</span><span>Rhythm and Blues</span
-				><span>Rap</span><span>Reggae</span><span>Rock</span
-				><span>Techno</span><span>Industrial</span
-				><span>Alternative</span><span>Ska</span><span>Death metal</span
-				><span>Pranks</span><span>Soundtrack</span
-				><span>Euro-Techno</span><span>Ambient</span
-				><span>Trip-Hop</span><span>Vocal</span><span>Jazz & Funk</span
-				><span>Fusion</span><span>Trance</span><span>Classical</span
-				><span>Instrumental</span><span>Acid</span><span>House</span
-				><span>Game</span><span>Sound clip</span><span>Gospel</span
-				><span>Noise</span><span>Alternative Rock</span><span>Bass</span
-				><span>Soul</span><span>Punk</span><span>Space</span
-				><span>Meditative</span><span>Instrumental Pop</span
-				><span>Instrumental Rock</span><span>Ethnic</span
-				><span>Gothic</span><span>Darkwave</span
-				><span>Techno-Industrial</span><span>Electronic</span
-				><span>Pop-Folk</span><span>Eurodance</span><span>Dream</span
-				><span>Southern Rock</span><span>Comedy</span><span>Cult</span
-				><span>Gangsta</span><span>Top 40</span
-				><span>Christian Rap</span><span>Pop/Funk</span
-				><span>Jungle</span><span>Native US</span><span>Cabaret</span
-				><span>New Wave</span><span>Psychedelic</span><span>Rave</span
-				><span>Show tunes</span><span>Trailer</span><span>Lo-Fi</span
-				><span>Tribal</span><span>Acid Punk</span><span>Acid Jazz</span
-				><span>Polka</span><span>Retro</span><span>Musical</span
-				><span>Rock ’n’ Roll </span><span>Hard Rock</span>
-				<span>Folk</span><span>Folk-Rock</span
-				><span>National Folk</span> <span>Swing</span
-				><span>Fast Fusion</span><span>Bebop</span><span>Latin</span
-				><span>Revival</span><span>Celtic</span><span>Bluegrass</span
-				><span>Avantgarde</span><span>Gothic Rock</span
-				><span>Progressive Rock</span><span>Psychedelic Rock</span
-				><span>Symphonic Rock</span><span>Slow rock</span
-				><span>Big Band</span><span>Chorus</span
-				><span>Easy Listening</span><span>Acoustic</span
-				><span>Humour</span><span>Speech</span><span>Chanson</span
-				><span>Opera</span><span>Chamber music</span><span>Sonata</span
-				><span>Symphony</span><span>Booty bass</span><span>Primus</span
-				><span>Porn groove</span><span>Satire</span><span>Slow jam</span
-				><span>Club</span><span>Tango</span><span>Samba</span
-				><span>Folklore</span><span>Ballad</span
-				><span>Power ballad</span><span>Rhythmic Soul</span
-				><span>Freestyle</span><span>Duet</span><span>Punk Rock</span
-				><span>Drum solo</span><span>A cappella</span
-				><span>Euro-House</span><span>Dance Hall</span><span>Goa</span
+				<span>Blues</span><span>Country</span><span>Disco</span
+				><span>Funk</span><span>Hip-Hop</span><span>Jazz</span
+				><span>Metal</span><span>Oldies</span><span>Other</span
+				><span>Pop</span><span>Rap</span><span>Reggae</span
+				><span>Rock</span><span>Techno</span><span>Trance</span
+				><span>Classical</span><span>Instrumental</span
+				><span>House</span><span>Electronic</span
+				><span>Christian Rap</span><span>Lo-Fi</span><span>Musical</span
+				><span>Rock 'n' Roll</span><span>Opera</span
 				><span>Drum & Bass</span><span>Club-House</span
-				><span>Hardcore Techno</span><span>Terror</span
-				><span>Indie</span><span>BritPop</span><span>Negerpunk</span
-				><span>Polsk Punk</span><span>Beat</span
-				><span>Christian Gangsta Rap</span><span>Heavy Metal</span
-				><span>Black Metal</span><span>Crossover</span
-				><span>Contemporary Christian</span><span>Christian rock</span
-				><span>Merengue</span><span>Salsa</span><span>Thrash Metal</span
-				><span>Anime</span><span>Jpop</span><span>Synthpop</span
-				><span>Abstract</span><span>Art Rock</span><span>Baroque</span
-				><span>Bhangra</span><span>Big beat</span><span>Breakbeat</span
-				><span>Chillout</span><span>Downtempo</span><span>Dub</span
-				><span>EBM</span><span>Eclectic</span><span>Electro</span
-				><span>Electroclash</span><span>Emo</span
-				><span>Experimental</span><span>Garage</span><span>Global</span
-				><span>IDM</span><span>Illbient</span><span>Industro-Goth</span
-				><span>Jam Band</span><span>Krautrock</span
-				><span>Leftfield</span><span>Lounge</span><span>Math Rock</span
-				><span>New Romantic</span><span>Nu-Breakz</span
-				><span>Post-Punk</span><span>Post-Rock</span
-				><span>Psytrance</span><span>Shoegaze</span
-				><span>Space Rock</span><span>Trop Rock</span
-				><span>World Music</span><span>Neoclassical</span
-				><span>Audiobook</span><span>Audio theatre</span
-				><span>Neue Deutsche Welle</span><span>Podcast</span
-				><span>Indie-Rock</span><span>G-Funk</span><span>Dubstep</span
-				><span>Garage Rock</span><span>Psybient</span>
+				><span>Indie</span><span>Heavy Metal</span
+				><span>Christian rock</span><span>Dubstep</span>
 			</div>
 		</div>
 	</div>
@@ -637,7 +573,39 @@ export default {
 				pos2: 0,
 				pos3: 0,
 				pos4: 0
-			}
+			},
+			genres: [
+				"Blues",
+				"Country",
+				"Disco",
+				"Funk",
+				"Hip-Hop",
+				"Jazz",
+				"Metal",
+				"Oldies",
+				"Other",
+				"Pop",
+				"Rap",
+				"Reggae",
+				"Rock",
+				"Techno",
+				"Trance",
+				"Classical",
+				"Instrumental",
+				"House",
+				"Electronic",
+				"Christian Rap",
+				"Lo-Fi",
+				"Musical",
+				"Rock 'n' Roll",
+				"Opera",
+				"Drum & Bass",
+				"Club-House",
+				"Indie",
+				"Heavy Metal",
+				"Christian rock",
+				"Dubstep"
+			]
 		};
 	},
 	computed: {
@@ -943,8 +911,7 @@ export default {
 			clearTimeout(this.keydownGenreInputTimeout);
 			this.keydownGenreInputTimeout = setTimeout(() => {
 				if (this.genreInputValue.length > 1) {
-					const genres = ["EDM", "Pop", "Rock"];
-					this.genreAutosuggestItems = genres.filter(genre => {
+					this.genreAutosuggestItems = this.genres.filter(genre => {
 						return genre
 							.toLowerCase()
 							.startsWith(this.genreInputValue.toLowerCase());
