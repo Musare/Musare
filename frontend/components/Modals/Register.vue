@@ -31,7 +31,7 @@
 					<input
 						v-model="email"
 						class="input"
-						type="text"
+						type="email"
 						placeholder="Email..."
 						autofocus
 					/>
@@ -127,8 +127,6 @@ export default {
 	},
 	methods: {
 		submitModal() {
-			console.log(this.recaptcha.token);
-
 			this.register({
 				username: this.username,
 				email: this.email,

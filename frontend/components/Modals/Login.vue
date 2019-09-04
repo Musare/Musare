@@ -26,37 +26,39 @@
 			</header>
 			<section class="modal-card-body">
 				<!-- validation to check if exists http://bulma.io/documentation/elements/form/ -->
-				<label class="label">Email</label>
-				<p class="control">
-					<input
-						v-model="email"
-						class="input"
-						type="text"
-						placeholder="Email..."
-					/>
-				</p>
-				<label class="label">Password</label>
-				<p class="control">
-					<input
-						v-model="password"
-						class="input"
-						type="password"
-						placeholder="Password..."
-						@keypress="$parent.submitOnEnter(submitModal, $event)"
-					/>
-				</p>
-				<p>
-					By logging in/registering you agree to our
-					<router-link to="/terms"> Terms of Service </router-link
-					>&nbsp;and
-					<router-link to="/privacy"> Privacy Policy </router-link>.
-				</p>
+				<form>
+					<label class="label">Email</label>
+					<p class="control">
+						<input
+							v-model="email"
+							class="input"
+							type="email"
+							placeholder="Email..."
+						/>
+					</p>
+					<label class="label">Password</label>
+					<p class="control">
+						<input
+							v-model="password"
+							class="input"
+							type="password"
+							placeholder="Password..."
+							@keypress="
+								$parent.submitOnEnter(submitModal, $event)
+							"
+						/>
+					</p>
+					<p>
+						By logging in/registering you agree to our
+						<router-link to="/terms"> Terms of Service </router-link
+						>&nbsp;and
+						<router-link to="/privacy"> Privacy Policy </router-link
+						>.
+					</p>
+				</form>
 			</section>
 			<footer class="modal-card-foot">
-				<a
-					class="button is-primary"
-					href="#"
-					@click="submitModal('login')"
+				<a class="button is-primary" href="#" @click="submitModal()"
 					>Submit</a
 				>
 				<a
