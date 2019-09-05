@@ -1,6 +1,10 @@
 <template>
 	<div>
-		<metadata v-bind:title="`${station.displayName}`" />
+		<metadata
+			v-if="exists && !loading"
+			v-bind:title="`${station.displayName}`"
+		/>
+		<metadata v-else-if="!exists && !loading" v-bind:title="`Not found`" />
 
 		<station-header v-if="exists" />
 
