@@ -155,9 +155,7 @@ router.beforeEach((to, from, next) => {
 				}
 			);
 		}
-	} else next();
-
-	if (to.name === "station") {
+	} else if (to.name === "station") {
 		io.getSocket(socket => {
 			socket.emit("stations.findByName", to.params.id, res => {
 				if (res.status === "success") {
@@ -165,7 +163,7 @@ router.beforeEach((to, from, next) => {
 				}
 			});
 		});
-	}
+	} else next();
 });
 
 // eslint-disable-next-line no-new
