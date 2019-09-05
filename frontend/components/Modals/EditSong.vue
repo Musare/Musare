@@ -618,6 +618,16 @@ export default {
 			modals: state => state.modals.admin
 		})
 	},
+	watch: {
+		/* eslint-disable */
+		"editing.song.duration": function() {
+			this.drawCanvas();
+		},
+		"editing.song.skipDuration": function() {
+			this.drawCanvas();
+		}
+		/* eslint-enable */
+	},
 	methods: {
 		save(songToCopy, close) {
 			const song = JSON.parse(JSON.stringify(songToCopy));
@@ -937,6 +947,7 @@ export default {
 					this.pauseVideo(false);
 					break;
 				case "skipToLast10Secs":
+					if (this.video.paused) this.pauseVideo(false);
 					this.video.player.seekTo(
 						this.editing.song.duration -
 							10 +
@@ -999,7 +1010,7 @@ export default {
 			const duration = Number(this.editing.song.duration);
 			const afterDuration = videoDuration - (skipDuration + duration);
 
-			const width = 560;
+			const width = 530;
 
 			const currentTime = this.video.player.getCurrentTime();
 
@@ -1153,6 +1164,7 @@ export default {
 			) {
 				this.video.paused = false;
 				this.video.player.stopVideo();
+				this.drawCanvas();
 			}
 			if (this.playerReady) {
 				this.youtubeVideoCurrentTime = this.video.player
@@ -1190,6 +1202,8 @@ export default {
 					this.drawCanvas();
 				},
 				onStateChange: event => {
+					this.drawCanvas();
+
 					if (event.data === 1) {
 						if (!this.video.autoPlayed) {
 							this.video.autoPlayed = true;
