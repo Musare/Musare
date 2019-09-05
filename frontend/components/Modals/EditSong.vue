@@ -96,7 +96,7 @@
 									<input
 										class="input"
 										type="text"
-										v-model="editing.song.duration"
+										v-model.number="editing.song.duration"
 									/>
 								</p>
 							</div>
@@ -106,7 +106,9 @@
 									<input
 										class="input"
 										type="text"
-										v-model="editing.song.skipDuration"
+										v-model.number="
+											editing.song.skipDuration
+										"
 									/>
 								</p>
 							</div>
