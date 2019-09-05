@@ -808,12 +808,16 @@ export default {
 			if (type === "genres")
 				this.updateSongField({
 					field: "genres",
-					value: this.editing.song.discogs.album.genres
+					value: JSON.parse(
+						JSON.stringify(this.editing.song.discogs.album.genres)
+					)
 				});
 			if (type === "artists")
 				this.updateSongField({
 					field: "artists",
-					value: this.editing.song.discogs.album.artists
+					value: JSON.parse(
+						JSON.stringify(this.editing.song.discogs.album.artists)
+					)
 				});
 		},
 		searchDiscogsForPage(page) {
