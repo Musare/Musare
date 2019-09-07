@@ -1063,11 +1063,11 @@ module.exports = {
 	 * @param {String} expiresAt - the time the ban expires
 	 * @param {Function} cb - gets called with the result
 	 */
-	banUserById: hooks.adminRequired((session, value, reason, expiresAt, cb) => {
+	banUserById: hooks.adminRequired((session, userId, reason, expiresAt, cb) => {
 		async.waterfall([
 			(next) => {
-				if (value === '') return next('You must provide an IP address to ban.');
-				else if (reason === '') return next('You must provide a reason for the ban.');
+				if (!userId) return next('You must provide a userId to ban.');
+				else if (!reason) return next('You must provide a reason for the ban.');
 				else return next();
 			},
 
@@ -1110,20 +1110,20 @@ module.exports = {
 			},
 
 			(next) => {
-				punishments.addPunishment('banUserId', value, reason, expiresAt, userId, next)
+				punishments.addPunishment('banUserId', userId, reason, expiresAt, userId, next)
 			},
 
 			(punishment, next) => {
-				cache.pub('user.ban', {userId: value, punishment});
+				cache.pub('user.ban', { userId, punishment });
 				next();
 			},
 		], async (err) => {
 			if (err && err !== true) {
 				err = await utils.getError(err);
-				logger.error("BAN_USER_BY_ID", `User ${session.userId} failed to ban user ${value} with the reason ${reason}. '${err}'`);
+				logger.error("BAN_USER_BY_ID", `User ${session.userId} failed to ban user ${userId} with the reason ${reason}. '${err}'`);
 				cb({status: 'failure', message: err});
 			} else {
-				logger.success("BAN_USER_BY_ID", `User ${session.userId} has successfully banned user ${value} with the reason ${reason}.`);
+				logger.success("BAN_USER_BY_ID", `User ${session.userId} has successfully banned user ${userId} with the reason ${reason}.`);
 				cb({
 					status: 'success',
 					message: 'Successfully banned user.'

@@ -56,8 +56,8 @@ module.exports = {
 	banIP: hooks.adminRequired((session, value, reason, expiresAt, cb) => {
 		async.waterfall([
 			(next) => {
-				if (value === '') return next('You must provide an IP address to ban.');
-				else if (reason === '') return next('You must provide a reason for the ban.');
+				if (!value) return next('You must provide an IP address to ban.');
+				else if (!reason) return next('You must provide a reason for the ban.');
 				else return next();
 			},
 
