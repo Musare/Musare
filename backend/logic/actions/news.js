@@ -64,12 +64,11 @@ module.exports = {
 	 * @param {Object} session - the session object automatically added by socket.io
 	 * @param {Object} data - the object of the news data
 	 * @param {Function} cb - gets called with the result
-	 * @param {String} userId - the userId automatically added by hooks
 	 */
-	create: hooks.adminRequired((session, data, cb, userId) => {
+	create: hooks.adminRequired((session, data, cb) => {
 		async.waterfall([
 			(next) => {
-				data.createdBy = userId;
+				data.createdBy = session.userId;
 				data.createdAt = Date.now();
 				db.models.news.create(data, next);
 			}
@@ -116,15 +115,15 @@ module.exports = {
 	 */
 	//TODO Pass in an id, not an object
 	//TODO Fix this
-	remove: hooks.adminRequired((session, news, cb, userId) => {
+	remove: hooks.adminRequired((session, news, cb) => {
 		db.models.news.deleteOne({ _id: news._id }, async err => {
 			if (err) {
 				err = await utils.getError(err);
-				logger.error("NEWS_REMOVE", `Removing news "${news._id}" failed for user "${userId}". "${err}"`);
+				logger.error("NEWS_REMOVE", `Removing news "${news._id}" failed for user "${session.userId}". "${err}"`);
 				return cb({ 'status': 'failure', 'message': err });
 			} else {
 				cache.pub('news.remove', news);
-				logger.success("NEWS_REMOVE", `Removing news "${news._id}" successful by user "${userId}".`);
+				logger.success("NEWS_REMOVE", `Removing news "${news._id}" successful by user "${session.userId}".`);
 				return cb({ 'status': 'success', 'message': 'Successfully removed News' });
 			}
 		});
@@ -139,15 +138,15 @@ module.exports = {
 	 * @param {Function} cb - gets called with the result
 	 */
 	//TODO Fix this
-	update: hooks.adminRequired((session, _id, news, cb, userId) => {
+	update: hooks.adminRequired((session, _id, news, cb) => {
 		db.models.news.updateOne({ _id }, news, { upsert: true }, async err => {
 			if (err) {
 				err = await utils.getError(err);
-				logger.error("NEWS_UPDATE", `Updating news "${_id}" failed for user "${userId}". "${err}"`);
+				logger.error("NEWS_UPDATE", `Updating news "${_id}" failed for user "${session.userId}". "${err}"`);
 				return cb({ 'status': 'failure', 'message': err });
 			} else {
 				cache.pub('news.update', news);
-				logger.success("NEWS_UPDATE", `Updating news "${_id}" successful for user "${userId}".`);
+				logger.success("NEWS_UPDATE", `Updating news "${_id}" successful for user "${session.userId}".`);
 				return cb({ 'status': 'success', 'message': 'Successfully updated News' });
 			}
 		});

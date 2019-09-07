@@ -58,13 +58,13 @@ module.exports = {
 	 * @param artist - an artist for that song
 	 * @param cb
 	 */
-	getSpotifySongs: hooks.adminRequired((session, title, artist, cb, userId) => {
+	getSpotifySongs: hooks.adminRequired((session, title, artist, cb) => {
 		async.waterfall([
 			(next) => {
 				utils.getSongsFromSpotify(title, artist, next);
 			}
 		], (songs) => {
-			logger.success('APIS_GET_SPOTIFY_SONGS', `User "${userId}" got Spotify songs for title "${title}" successfully.`);
+			logger.success('APIS_GET_SPOTIFY_SONGS', `User "${session.userId}" got Spotify songs for title "${title}" successfully.`);
 			cb({status: 'success', songs: songs});
 		});
 	}),
@@ -76,7 +76,7 @@ module.exports = {
 	 * @param query - the query
 	 * @param cb
 	 */
-	searchDiscogs: hooks.adminRequired((session, query, page, cb, userId) => {
+	searchDiscogs: hooks.adminRequired((session, query, page, cb) => {
 		async.waterfall([
 			(next) => {
 				const params = [
@@ -106,7 +106,7 @@ module.exports = {
 				logger.error("APIS_SEARCH_DISCOGS", `Searching discogs failed with query "${query}". "${err}"`);
 				return cb({status: 'failure', message: err});
 			}
-			logger.success('APIS_SEARCH_DISCOGS', `User "${userId}" searched Discogs succesfully for query "${query}".`);
+			logger.success('APIS_SEARCH_DISCOGS', `User "${session.userId}" searched Discogs succesfully for query "${query}".`);
 			cb({status: 'success', results: body.results, pages: body.pagination.pages});
 		});
 	}),

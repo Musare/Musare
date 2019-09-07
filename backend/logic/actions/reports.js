@@ -147,9 +147,8 @@ module.exports = {
 	 * @param {Object} session - the session object automatically added by socket.io
 	 * @param {String} reportId - the id of the report that is getting resolved
 	 * @param {Function} cb - gets called with the result
-	 * @param {String} userId - the userId automatically added by hooks
 	 */
-	resolve: hooks.adminRequired((session, reportId, cb, userId) => {
+	resolve: hooks.adminRequired((session, reportId, cb) => {
 		async.waterfall([
 			(next) => {
 				db.models.report.findOne({ _id: reportId }).exec(next);
@@ -166,11 +165,11 @@ module.exports = {
 		], async (err) => {
 			if (err) {
 				err = await  utils.getError(err);
-				logger.error("REPORTS_RESOLVE", `Resolving report "${reportId}" failed by user "${userId}". "${err}"`);
+				logger.error("REPORTS_RESOLVE", `Resolving report "${reportId}" failed by user "${session.userId}". "${err}"`);
 				return cb({ 'status': 'failure', 'message': err});
 			} else {
 				cache.pub('report.resolve', reportId);
-				logger.success("REPORTS_RESOLVE", `User "${userId}" resolved report "${reportId}".`);
+				logger.success("REPORTS_RESOLVE", `User "${session.userId}" resolved report "${reportId}".`);
 				cb({ status: 'success', message: 'Successfully resolved Report' });
 			}
 		});
@@ -182,9 +181,8 @@ module.exports = {
 	 * @param {Object} session - the session object automatically added by socket.io
 	 * @param {Object} data - the object of the report data
 	 * @param {Function} cb - gets called with the result
-	 * @param {String} userId - the userId automatically added by hooks
 	 */
-	create: hooks.loginRequired((session, data, cb, userId) => {
+	create: hooks.loginRequired((session, data, cb) => {
 		async.waterfall([
 
 			(next) => {
@@ -231,7 +229,7 @@ module.exports = {
 			},
 
 			(next) => {
-				data.createdBy = userId;
+				data.createdBy = session.userId;
 				data.createdAt = Date.now();
 				db.models.report.create(data, next);
 			}
@@ -239,11 +237,11 @@ module.exports = {
 		], async (err, report) => {
 			if (err) {
 				err = await utils.getError(err);
-				logger.error("REPORTS_CREATE", `Creating report for "${data.song._id}" failed by user "${userId}". "${err}"`);
+				logger.error("REPORTS_CREATE", `Creating report for "${data.song._id}" failed by user "${session.userId}". "${err}"`);
 				return cb({ 'status': 'failure', 'message': err });
 			} else {
 				cache.pub('report.create', report);
-				logger.success("REPORTS_CREATE", `User "${userId}" created report for "${data.songId}".`);
+				logger.success("REPORTS_CREATE", `User "${session.userId}" created report for "${data.songId}".`);
 				return cb({ 'status': 'success', 'message': 'Successfully created report' });
 			}
 		});

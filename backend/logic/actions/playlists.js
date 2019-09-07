@@ -80,25 +80,24 @@ let lib = {
 	 * @param {Object} session - the session object automatically added by socket.io
 	 * @param {String} playlistId - the id of the playlist we are getting the first song from
 	 * @param {Function} cb - gets called with the result
-	 * @param {String} userId - the userId automatically added by hooks
 	 */
-	getFirstSong: hooks.loginRequired((session, playlistId, cb, userId) => {
+	getFirstSong: hooks.loginRequired((session, playlistId, cb) => {
 		async.waterfall([
 			(next) => {
 				playlists.getPlaylist(playlistId, next);
 			},
 
 			(playlist, next) => {
-				if (!playlist || playlist.createdBy !== userId) return next('Playlist not found.');
+				if (!playlist || playlist.createdBy !== session.userId) return next('Playlist not found.');
 				next(null, playlist.songs[0]);
 			}
 		], async (err, song) => {
 			if (err) {
 				err = await utils.getError(err);
-				logger.error("PLAYLIST_GET_FIRST_SONG", `Getting the first song of playlist "${playlistId}" failed for user "${userId}". "${err}"`);
+				logger.error("PLAYLIST_GET_FIRST_SONG", `Getting the first song of playlist "${playlistId}" failed for user "${session.userId}". "${err}"`);
 				return cb({ status: 'failure', message: err});
 			}
-			logger.success("PLAYLIST_GET_FIRST_SONG", `Successfully got the first song of playlist "${playlistId}" for user "${userId}".`);
+			logger.success("PLAYLIST_GET_FIRST_SONG", `Successfully got the first song of playlist "${playlistId}" for user "${session.userId}".`);
 			cb({
 				status: 'success',
 				song: song
@@ -111,20 +110,19 @@ let lib = {
 	 *
 	 * @param {Object} session - the session object automatically added by socket.io
 	 * @param {Function} cb - gets called with the result
-	 * @param {String} userId - the userId automatically added by hooks
 	 */
-	indexForUser: hooks.loginRequired((session, cb, userId) => {
+	indexForUser: hooks.loginRequired((session, cb) => {
 		async.waterfall([
 			(next) => {
-				db.models.playlist.find({ createdBy: userId }, next);
+				db.models.playlist.find({ createdBy: session.userId }, next);
 			}
 		], async (err, playlists) => {
 			if (err) {
 				err = await utils.getError(err);
-				logger.error("PLAYLIST_INDEX_FOR_USER", `Indexing playlists for user "${userId}" failed. "${err}"`);
+				logger.error("PLAYLIST_INDEX_FOR_USER", `Indexing playlists for user "${session.userId}" failed. "${err}"`);
 				return cb({ status: 'failure', message: err});
 			}
-			logger.success("PLAYLIST_INDEX_FOR_USER", `Successfully indexed playlists for user "${userId}".`);
+			logger.success("PLAYLIST_INDEX_FOR_USER", `Successfully indexed playlists for user "${session.userId}".`);
 			cb({
 				status: 'success',
 				data: playlists
@@ -138,9 +136,8 @@ let lib = {
 	 * @param {Object} session - the session object automatically added by socket.io
 	 * @param {Object} data - the data for the new private playlist
 	 * @param {Function} cb - gets called with the result
-	 * @param {String} userId - the userId automatically added by hooks
 	 */
-	create: hooks.loginRequired((session, data, cb, userId) => {
+	create: hooks.loginRequired((session, data, cb) => {
 		async.waterfall([
 
 			(next) => {
@@ -152,7 +149,7 @@ let lib = {
 				db.models.playlist.create({
 					displayName,
 					songs,
-					createdBy: userId,
+					createdBy: session.userId,
 					createdAt: Date.now()
 				}, next);
 			}
@@ -160,11 +157,11 @@ let lib = {
 		], async (err, playlist) => {
 			if (err) {
 				err = await utils.getError(err);
-				logger.error("PLAYLIST_CREATE", `Creating private playlist failed for user "${userId}". "${err}"`);
+				logger.error("PLAYLIST_CREATE", `Creating private playlist failed for user "${session.userId}". "${err}"`);
 				return cb({ status: 'failure', message: err});
 			}
 			cache.pub('playlist.create', playlist._id);
-			logger.success("PLAYLIST_CREATE", `Successfully created private playlist for user "${userId}".`);
+			logger.success("PLAYLIST_CREATE", `Successfully created private playlist for user "${session.userId}".`);
 			cb({ status: 'success', message: 'Successfully created playlist', data: {
 				_id: playlist._id
 			} });
@@ -177,25 +174,24 @@ let lib = {
 	 * @param {Object} session - the session object automatically added by socket.io
 	 * @param {String} playlistId - the id of the playlist we are getting
 	 * @param {Function} cb - gets called with the result
-	 * @param {String} userId - the userId automatically added by hooks
 	 */
-	getPlaylist: hooks.loginRequired((session, playlistId, cb, userId) => {
+	getPlaylist: hooks.loginRequired((session, playlistId, cb) => {
 		async.waterfall([
 			(next) => {
 				playlists.getPlaylist(playlistId, next);
 			},
 
 			(playlist, next) => {
-				if (!playlist || playlist.createdBy !== userId) return next('Playlist not found');
+				if (!playlist || playlist.createdBy !== session.userId) return next('Playlist not found');
 				next(null, playlist);
 			}
 		], async (err, playlist) => {
 			if (err) {
 				err = await utils.getError(err);
-				logger.error("PLAYLIST_GET", `Getting private playlist "${playlistId}" failed for user "${userId}". "${err}"`);
+				logger.error("PLAYLIST_GET", `Getting private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`);
 				return cb({ status: 'failure', message: err});
 			}
-			logger.success("PLAYLIST_GET", `Successfully got private playlist "${playlistId}" for user "${userId}".`);
+			logger.success("PLAYLIST_GET", `Successfully got private playlist "${playlistId}" for user "${session.userId}".`);
 			cb({
 				status: 'success',
 				data: playlist
@@ -211,12 +207,11 @@ let lib = {
 	 * @param {String} playlistId - the id of the playlist we are updating
 	 * @param {Object} playlist - the new private playlist object
 	 * @param {Function} cb - gets called with the result
-	 * @param {String} userId - the userId automatically added by hooks
 	 */
-	update: hooks.loginRequired((session, playlistId, playlist, cb, userId) => {
+	update: hooks.loginRequired((session, playlistId, playlist, cb) => {
 		async.waterfall([
 			(next) => {
-				db.models.playlist.updateOne({ _id: playlistId, createdBy: userId }, playlist, {runValidators: true}, next);
+				db.models.playlist.updateOne({ _id: playlistId, createdBy: session.userId }, playlist, {runValidators: true}, next);
 			},
 
 			(res, next) => {
@@ -225,10 +220,10 @@ let lib = {
 		], async (err, playlist) => {
 			if (err) {
 				err = await utils.getError(err);
-				logger.error("PLAYLIST_UPDATE", `Updating private playlist "${playlistId}" failed for user "${userId}". "${err}"`);
+				logger.error("PLAYLIST_UPDATE", `Updating private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`);
 				return cb({ status: 'failure', message: err});
 			}
-			logger.success("PLAYLIST_UPDATE", `Successfully updated private playlist "${playlistId}" for user "${userId}".`);
+			logger.success("PLAYLIST_UPDATE", `Successfully updated private playlist "${playlistId}" for user "${session.userId}".`);
 			cb({
 				status: 'success',
 				data: playlist
@@ -243,13 +238,12 @@ let lib = {
 	 * @param {String} songId - the id of the song we are trying to add
 	 * @param {String} playlistId - the id of the playlist we are adding the song to
 	 * @param {Function} cb - gets called with the result
-	 * @param {String} userId - the userId automatically added by hooks
 	 */
-	addSongToPlaylist: hooks.loginRequired((session, songId, playlistId, cb, userId) => {
+	addSongToPlaylist: hooks.loginRequired((session, songId, playlistId, cb) => {
 		async.waterfall([
 			(next) => {
 				playlists.getPlaylist(playlistId, (err, playlist) => {
-					if (err || !playlist || playlist.createdBy !== userId) return next('Something went wrong when trying to get the playlist');
+					if (err || !playlist || playlist.createdBy !== session.userId) return next('Something went wrong when trying to get the playlist');
 
 					async.each(playlist.songs, (song, next) => {
 						if (song.songId === songId) return next('That song is already in the playlist');
@@ -285,11 +279,11 @@ let lib = {
 		async (err, playlist, newSong) => {
 			if (err) {
 				err = await utils.getError(err);
-				logger.error("PLAYLIST_ADD_SONG", `Adding song "${songId}" to private playlist "${playlistId}" failed for user "${userId}". "${err}"`);
+				logger.error("PLAYLIST_ADD_SONG", `Adding song "${songId}" to private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`);
 				return cb({ status: 'failure', message: err});
 			} else {
-				logger.success("PLAYLIST_ADD_SONG", `Successfully added song "${songId}" to private playlist "${playlistId}" for user "${userId}".`);
-				cache.pub('playlist.addSong', { playlistId: playlist._id, song: newSong, userId });
+				logger.success("PLAYLIST_ADD_SONG", `Successfully added song "${songId}" to private playlist "${playlistId}" for user "${session.userId}".`);
+				cache.pub('playlist.addSong', { playlistId: playlist._id, song: newSong, userId: session.userId });
 				return cb({ status: 'success', message: 'Song has been successfully added to the playlist', data: playlist.songs });
 			}
 		});
@@ -302,9 +296,8 @@ let lib = {
 	 * @param {String} url - the url of the the YouTube playlist
 	 * @param {String} playlistId - the id of the playlist we are adding the set of songs to
 	 * @param {Function} cb - gets called with the result
-	 * @param {String} userId - the userId automatically added by hooks
 	 */
-	addSetToPlaylist: hooks.loginRequired((session, url, playlistId, cb, userId) => {
+	addSetToPlaylist: hooks.loginRequired((session, url, playlistId, cb) => {
 		async.waterfall([
 			(next) => {
 				utils.getPlaylistFromYouTube(url, songs => {
@@ -328,16 +321,16 @@ let lib = {
 			},
 
 			(playlist, next) => {
-				if (!playlist || playlist.createdBy !== userId) return next('Playlist not found.');
+				if (!playlist || playlist.createdBy !== session.userId) return next('Playlist not found.');
 				next(null, playlist);
 			}
 		], async (err, playlist) => {
 			if (err) {
 				err = await utils.getError(err);
-				logger.error("PLAYLIST_IMPORT", `Importing a YouTube playlist to private playlist "${playlistId}" failed for user "${userId}". "${err}"`);
+				logger.error("PLAYLIST_IMPORT", `Importing a YouTube playlist to private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`);
 				return cb({ status: 'failure', message: err});
 			} else {
-				logger.success("PLAYLIST_IMPORT", `Successfully imported a YouTube playlist to private playlist "${playlistId}" for user "${userId}".`);
+				logger.success("PLAYLIST_IMPORT", `Successfully imported a YouTube playlist to private playlist "${playlistId}" for user "${session.userId}".`);
 				cb({ status: 'success', message: 'Playlist has been successfully imported.', data: playlist.songs });
 			}
 		});
@@ -350,9 +343,8 @@ let lib = {
 	 * @param {String} songId - the id of the song we are removing from the private playlist
 	 * @param {String} playlistId - the id of the playlist we are removing the song from
 	 * @param {Function} cb - gets called with the result
-	 * @param {String} userId - the userId automatically added by hooks
 	 */
-	removeSongFromPlaylist: hooks.loginRequired((session, songId, playlistId, cb, userId) => {
+	removeSongFromPlaylist: hooks.loginRequired((session, songId, playlistId, cb) => {
 		async.waterfall([
 			(next) => {
 				if (!songId || typeof songId !== 'string') return next('Invalid song id.');
@@ -365,7 +357,7 @@ let lib = {
 			},
 
 			(playlist, next) => {
-				if (!playlist || playlist.createdBy !== userId) return next('Playlist not found');
+				if (!playlist || playlist.createdBy !== session.userId) return next('Playlist not found');
 				db.models.playlist.updateOne({_id: playlistId}, {$pull: {songs: {songId: songId}}}, next);
 			},
 
@@ -375,11 +367,11 @@ let lib = {
 		], async (err, playlist) => {
 			if (err) {
 				err = await utils.getError(err);
-				logger.error("PLAYLIST_REMOVE_SONG", `Removing song "${songId}" from private playlist "${playlistId}" failed for user "${userId}". "${err}"`);
+				logger.error("PLAYLIST_REMOVE_SONG", `Removing song "${songId}" from private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`);
 				return cb({ status: 'failure', message: err});
 			} else {
-				logger.success("PLAYLIST_REMOVE_SONG", `Successfully removed song "${songId}" from private playlist "${playlistId}" for user "${userId}".`);
-				cache.pub('playlist.removeSong', { playlistId: playlist._id, songId: songId, userId });
+				logger.success("PLAYLIST_REMOVE_SONG", `Successfully removed song "${songId}" from private playlist "${playlistId}" for user "${session.userId}".`);
+				cache.pub('playlist.removeSong', { playlistId: playlist._id, songId: songId, userId: session.userId });
 				return cb({ status: 'success', message: 'Song has been successfully removed from playlist', data: playlist.songs });
 			}
 		});
@@ -391,12 +383,11 @@ let lib = {
 	 * @param {Object} session - the session object automatically added by socket.io
 	 * @param {String} playlistId - the id of the playlist we are updating the displayName for
 	 * @param {Function} cb - gets called with the result
-	 * @param {String} userId - the userId automatically added by hooks
 	 */
-	updateDisplayName: hooks.loginRequired((session, playlistId, displayName, cb, userId) => {
+	updateDisplayName: hooks.loginRequired((session, playlistId, displayName, cb) => {
 		async.waterfall([
 			(next) => {
-				db.models.playlist.updateOne({ _id: playlistId, createdBy: userId }, { $set: { displayName } }, {runValidators: true}, next);
+				db.models.playlist.updateOne({ _id: playlistId, createdBy: session.userId }, { $set: { displayName } }, {runValidators: true}, next);
 			},
 
 			(res, next) => {
@@ -405,11 +396,11 @@ let lib = {
 		], async (err, playlist) => {
 			if (err) {
 				err = await utils.getError(err);
-				logger.error("PLAYLIST_UPDATE_DISPLAY_NAME", `Updating display name to "${displayName}" for private playlist "${playlistId}" failed for user "${userId}". "${err}"`);
+				logger.error("PLAYLIST_UPDATE_DISPLAY_NAME", `Updating display name to "${displayName}" for private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`);
 				return cb({ status: 'failure', message: err});
 			}
-			logger.success("PLAYLIST_UPDATE_DISPLAY_NAME", `Successfully updated display name to "${displayName}" for private playlist "${playlistId}" for user "${userId}".`);
-			cache.pub('playlist.updateDisplayName', {playlistId: playlistId, displayName: displayName, userId: userId});
+			logger.success("PLAYLIST_UPDATE_DISPLAY_NAME", `Successfully updated display name to "${displayName}" for private playlist "${playlistId}" for user "${session.userId}".`);
+			cache.pub('playlist.updateDisplayName', {playlistId: playlistId, displayName: displayName, userId: session.userId});
 			return cb({ status: 'success', message: 'Playlist has been successfully updated' });
 		});
 	}),
@@ -421,16 +412,15 @@ let lib = {
 	 * @param {String} playlistId - the id of the playlist we are moving the song to the top from
 	 * @param {String} songId - the id of the song we are moving to the top of the list
 	 * @param {Function} cb - gets called with the result
-	 * @param {String} userId - the userId automatically added by hooks
 	 */
-	moveSongToTop: hooks.loginRequired((session, playlistId, songId, cb, userId) => {
+	moveSongToTop: hooks.loginRequired((session, playlistId, songId, cb) => {
 		async.waterfall([
 			(next) => {
 				playlists.getPlaylist(playlistId, next);
 			},
 
 			(playlist, next) => {
-				if (!playlist || playlist.createdBy !== userId) return next('Playlist not found');
+				if (!playlist || playlist.createdBy !== session.userId) return next('Playlist not found');
 				async.each(playlist.songs, (song, next) => {
 					if (song.songId === songId) return next(song);
 					next();
@@ -464,11 +454,11 @@ let lib = {
 		], async (err, playlist) => {
 			if (err) {
 				err = await utils.getError(err);
-				logger.error("PLAYLIST_MOVE_SONG_TO_TOP", `Moving song "${songId}" to the top for private playlist "${playlistId}" failed for user "${userId}". "${err}"`);
+				logger.error("PLAYLIST_MOVE_SONG_TO_TOP", `Moving song "${songId}" to the top for private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`);
 				return cb({ status: 'failure', message: err});
 			}
-			logger.success("PLAYLIST_MOVE_SONG_TO_TOP", `Successfully moved song "${songId}" to the top for private playlist "${playlistId}" for user "${userId}".`);
-			cache.pub('playlist.moveSongToTop', {playlistId, songId, userId: userId});
+			logger.success("PLAYLIST_MOVE_SONG_TO_TOP", `Successfully moved song "${songId}" to the top for private playlist "${playlistId}" for user "${session.userId}".`);
+			cache.pub('playlist.moveSongToTop', {playlistId, songId, userId: session.userId});
 			return cb({ status: 'success', message: 'Playlist has been successfully updated' });
 		});
 	}),
@@ -480,16 +470,15 @@ let lib = {
 	 * @param {String} playlistId - the id of the playlist we are moving the song to the bottom from
 	 * @param {String} songId - the id of the song we are moving to the bottom of the list
 	 * @param {Function} cb - gets called with the result
-	 * @param {String} userId - the userId automatically added by hooks
 	 */
-	moveSongToBottom: hooks.loginRequired((session, playlistId, songId, cb, userId) => {
+	moveSongToBottom: hooks.loginRequired((session, playlistId, songId, cb) => {
 		async.waterfall([
 			(next) => {
 				playlists.getPlaylist(playlistId, next);
 			},
 
 			(playlist, next) => {
-				if (!playlist || playlist.createdBy !== userId) return next('Playlist not found');
+				if (!playlist || playlist.createdBy !== session.userId) return next('Playlist not found');
 				async.each(playlist.songs, (song, next) => {
 					if (song.songId === songId) return next(song);
 					next();
@@ -520,11 +509,11 @@ let lib = {
 		], async (err, playlist) => {
 			if (err) {
 				err = await utils.getError(err);
-				logger.error("PLAYLIST_MOVE_SONG_TO_BOTTOM", `Moving song "${songId}" to the bottom for private playlist "${playlistId}" failed for user "${userId}". "${err}"`);
+				logger.error("PLAYLIST_MOVE_SONG_TO_BOTTOM", `Moving song "${songId}" to the bottom for private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`);
 				return cb({ status: 'failure', message: err});
 			}
-			logger.success("PLAYLIST_MOVE_SONG_TO_BOTTOM", `Successfully moved song "${songId}" to the bottom for private playlist "${playlistId}" for user "${userId}".`);
-			cache.pub('playlist.moveSongToBottom', {playlistId, songId, userId: userId});
+			logger.success("PLAYLIST_MOVE_SONG_TO_BOTTOM", `Successfully moved song "${songId}" to the bottom for private playlist "${playlistId}" for user "${session.userId}".`);
+			cache.pub('playlist.moveSongToBottom', {playlistId, songId, userId: session.userId});
 			return cb({ status: 'success', message: 'Playlist has been successfully updated' });
 		});
 	}),
@@ -535,9 +524,8 @@ let lib = {
 	 * @param {Object} session - the session object automatically added by socket.io
 	 * @param {String} playlistId - the id of the playlist we are moving the song to the top from
 	 * @param {Function} cb - gets called with the result
-	 * @param {String} userId - the userId automatically added by hooks
 	 */
-	remove: hooks.loginRequired((session, playlistId, cb, userId) => {
+	remove: hooks.loginRequired((session, playlistId, cb) => {
 		async.waterfall([
 			(next) => {
 				playlists.deletePlaylist(playlistId, next);
@@ -545,11 +533,11 @@ let lib = {
 		], async (err) => {
 			if (err) {
 				err = await utils.getError(err);
-				logger.error("PLAYLIST_REMOVE", `Removing private playlist "${playlistId}" failed for user "${userId}". "${err}"`);
+				logger.error("PLAYLIST_REMOVE", `Removing private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`);
 				return cb({ status: 'failure', message: err});
 			}
-			logger.success("PLAYLIST_REMOVE", `Successfully removed private playlist "${playlistId}" for user "${userId}".`);
-			cache.pub('playlist.delete', {userId: userId, playlistId});
+			logger.success("PLAYLIST_REMOVE", `Successfully removed private playlist "${playlistId}" for user "${session.userId}".`);
+			cache.pub('playlist.delete', {userId: session.userId, playlistId});
 			return cb({ status: 'success', message: 'Playlist successfully removed' });
 		});
 	})

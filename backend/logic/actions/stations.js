@@ -432,9 +432,8 @@ module.exports = {
 	 * @param session
 	 * @param stationId - the station id
 	 * @param cb
-	 * @param userId
 	 */
-	voteSkip: hooks.loginRequired((session, stationId, cb, userId) => {
+	voteSkip: hooks.loginRequired((session, stationId, cb) => {
 		async.waterfall([
 			(next) => {
 				stations.getStation(stationId, next);
@@ -442,7 +441,7 @@ module.exports = {
 
 			(station, next) => {
 				if (!station) return next('Station not found.');
-				stations.canUserViewStation(station, userId, (err, canView) => {
+				stations.canUserViewStation(station, session.userId, (err, canView) => {
 					if (err) return next(err);
 					if (canView) return next(null, station);
 					return next('Insufficient permissions.');
@@ -451,12 +450,12 @@ module.exports = {
 
 			(station, next) => {
 				if (!station.currentSong) return next('There is currently no song to skip.');
-				if (station.currentSong.skipVotes.indexOf(userId) !== -1) return next('You have already voted to skip this song.');
+				if (station.currentSong.skipVotes.indexOf(session.userId) !== -1) return next('You have already voted to skip this song.');
 				next(null, station);
 			},
 
 			(station, next) => {
-				db.models.station.updateOne({_id: stationId}, {$push: {"currentSong.skipVotes": userId}}, next)
+				db.models.station.updateOne({_id: stationId}, {$push: {"currentSong.skipVotes": session.userId}}, next)
 			},
 
 			(res, next) => {
@@ -849,9 +848,8 @@ module.exports = {
 	 * @param session
 	 * @param data - the station data
 	 * @param cb
-	 * @param userId
 	 */
-	create: hooks.loginRequired((session, data, cb, userId) => {
+	create: hooks.loginRequired((session, data, cb) => {
 		data.name = data.name.toLowerCase();
 		let blacklist = ["country", "edm", "musare", "hip-hop", "rap", "top-hits", "todays-hits", "old-school", "christmas", "about", "support", "staff", "help", "news", "terms", "privacy", "profile", "c", "community", "tos", "login", "register", "p", "official", "o", "trap", "faq", "team", "donate", "buy", "shop", "forums", "explore", "settings", "admin", "auth", "reset_password"];
 		async.waterfall([
@@ -868,7 +866,7 @@ module.exports = {
 				if (station) return next('A station with that name or display name already exists.');
 				const { name, displayName, description, genres, playlist, type, blacklistedGenres } = data;
 				if (type === 'official') {
-					db.models.user.findOne({_id: userId}, (err, user) => {
+					db.models.user.findOne({_id: session.userId}, (err, user) => {
 						if (err) return next(err);
 						if (!user) return next('User not found.');
 						if (user.role !== 'admin') return next('Admin required.');
@@ -892,7 +890,7 @@ module.exports = {
 						description,
 						type,
 						privacy: 'private',
-						owner: userId,
+						owner: session.userId,
 						queue: [],
 						currentSong: null
 					}, next);
@@ -917,9 +915,8 @@ module.exports = {
 	 * @param stationId - the station id
 	 * @param songId - the song id
 	 * @param cb
-	 * @param userId
 	 */
-	addToQueue: hooks.loginRequired((session, stationId, songId, cb, userId) => {
+	addToQueue: hooks.loginRequired((session, stationId, songId, cb) => {
 		async.waterfall([
 			(next) => {
 				stations.getStation(stationId, next);
@@ -928,8 +925,8 @@ module.exports = {
 			(station, next) => {
 				if (!station) return next('Station not found.');
 				if (station.locked) {
-					db.models.user.findOne({ _id: userId }, (err, user) => {
-						if (user.role !== 'admin' && station.owner !== userId) return next('Only owners and admins can add songs to a locked queue.');
+					db.models.user.findOne({ _id: session.userId }, (err, user) => {
+						if (user.role !== 'admin' && station.owner !== session.userId) return next('Only owners and admins can add songs to a locked queue.');
 						else return next(null, station);
 					});
 				} else {
@@ -939,7 +936,7 @@ module.exports = {
 
 			(station, next) => {
 				if (station.type !== 'community') return next('That station is not a community station.');
-				stations.canUserViewStation(station, userId, (err, canView) => {
+				stations.canUserViewStation(station, session.userId, (err, canView) => {
 					if (err) return next(err);
 					if (canView) return next(null, station);
 					return next('Insufficient permissions.');
@@ -973,7 +970,7 @@ module.exports = {
 
 			(song, station, next) => {
 				let queue = station.queue;
-				song.requestedBy = userId;
+				song.requestedBy = session.userId;
 				queue.push(song);
 
 				let totalDuration = 0;
@@ -1042,9 +1039,8 @@ module.exports = {
 	 * @param stationId - the station id
 	 * @param songId - the song id
 	 * @param cb
-	 * @param userId
 	 */
-	removeFromQueue: hooks.ownerRequired((session, stationId, songId, cb, userId) => {
+	removeFromQueue: hooks.ownerRequired((session, stationId, songId, cb) => {
 		async.waterfall([
 			(next) => {
 				if (!songId) return next('Invalid song id.');
@@ -1126,9 +1122,8 @@ module.exports = {
 	 * @param stationId - the station id
 	 * @param playlistId - the private playlist id
 	 * @param cb
-	 * @param userId
 	 */
-	selectPrivatePlaylist: hooks.ownerRequired((session, stationId, playlistId, cb, userId) => {
+	selectPrivatePlaylist: hooks.ownerRequired((session, stationId, playlistId, cb) => {
 		async.waterfall([
 			(next) => {
 				stations.getStation(stationId, next);
@@ -1164,7 +1159,7 @@ module.exports = {
 		});
 	}),
 
-	favoriteStation: hooks.loginRequired((session, stationId, cb, userId) => {
+	favoriteStation: hooks.loginRequired((session, stationId, cb) => {
 		async.waterfall([
 			(next) => {
 				stations.getStation(stationId, next);
@@ -1180,7 +1175,7 @@ module.exports = {
 			},
 
 			(next) => {
-				db.models.user.updateOne({ _id: userId }, { $addToSet: { favoriteStations: stationId } }, next);
+				db.models.user.updateOne({ _id: session.userId }, { $addToSet: { favoriteStations: stationId } }, next);
 			},
 
 			(res, next) => {
@@ -1194,15 +1189,15 @@ module.exports = {
 				return cb({'status': 'failure', 'message': err});
 			}
 			logger.success("FAVORITE_STATION", `Favorited station "${stationId}" successfully.`);
-			cache.pub('user.favoritedStation', { userId, stationId });
+			cache.pub('user.favoritedStation', { userId: session.userId, stationId });
 			return cb({'status': 'success', 'message': 'Succesfully favorited station.'});
 		});
 	}),
 
-	unfavoriteStation: hooks.loginRequired((session, stationId, cb, userId) => {
+	unfavoriteStation: hooks.loginRequired((session, stationId, cb) => {
 		async.waterfall([
 			(next) => {
-				db.models.user.updateOne({ _id: userId }, { $pull: { favoriteStations: stationId } }, next);
+				db.models.user.updateOne({ _id: session.userId }, { $pull: { favoriteStations: stationId } }, next);
 			},
 
 			(res, next) => {
@@ -1216,7 +1211,7 @@ module.exports = {
 				return cb({'status': 'failure', 'message': err});
 			}
 			logger.success("UNFAVORITE_STATION", `Unfavorited station "${stationId}" successfully.`);
-			cache.pub('user.unfavoritedStation', { userId, stationId });
+			cache.pub('user.unfavoritedStation', { userId: session.userId, stationId });
 			return cb({'status': 'success', 'message': 'Succesfully unfavorited station.'});
 		});
 	}),
