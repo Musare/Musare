@@ -498,10 +498,36 @@ module.exports = class extends coreClass {
 					cb(null, station);
 				} else {
 					err = await this.utils.getError(err);
-					logger.error('SKIP_STATION', `Skipping station "${stationId}" failed. "${err}"`);
+					this.logger.error('SKIP_STATION', `Skipping station "${stationId}" failed. "${err}"`);
 					cb(err);
 				}
 			});
 		}
+	}
+
+	async canUserViewStation(station, userId, cb) {
+		try { await this._validateHook(); } catch { return; }
+		async.waterfall([
+			(next) => {
+				if (station.privacy !== 'private') return next(true);
+				if (!userId) return next("Not allowed");
+				next();
+			},
+			
+			(next) => {
+				this.db.models.user.findOne({_id: userId}, next);
+			},
+			
+			(user, next) => {
+				if (!user) return next("Not allowed");
+				if (user.role === 'admin') return next(true);
+				if (station.type === 'official') return next("Not allowed");
+				if (station.owner === userId) return next(true);
+				next("Not allowed");
+			}
+		], async (errOrResult) => {
+			if (errOrResult === true || errOrResult === "Not allowed") return cb(null, (errOrResult === true) ? true : false);
+			cb(await this.utils.getError(errOrResult));
+		});
 	}
 }

@@ -555,31 +555,4 @@ module.exports = class extends coreClass {
 		}
 		return error;
 	}
-
-	async canUserBeInStation(station, userId, cb) {
-		try { await this._validateHook(); } catch { return; }
-
-		async.waterfall([
-			(next) => {
-				if (station.privacy !== 'private') return next(true);
-				if (!userId) return next(false);
-				next();
-			},
-
-			(next) => {
-				this.db.models.user.findOne({_id: userId}, next);
-			},
-
-			(user, next) => {
-				if (!user) return next(false);
-				if (user.role === 'admin') return next(true);
-				if (station.type === 'official') return next(false);
-				if (station.owner === userId) return next(true);
-				next(false);
-			}
-		], (err) => {
-			if (err === true) return cb(true);
-			return cb(false);
-		});
-	}
 }

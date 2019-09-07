@@ -1047,8 +1047,8 @@ export default {
 			io.removeAllListeners();
 			if (this.socket.connected) this.join();
 			io.onConnect(this.join);
-			this.socket.emit("stations.findByName", this.stationName, res => {
-				if (res.status === "failure") {
+			this.socket.emit("stations.existsByName", this.stationName, res => {
+				if (res.status === "failure" || !res.exists) {
 					this.loading = false;
 					this.exists = false;
 				}

@@ -155,14 +155,6 @@ router.beforeEach((to, from, next) => {
 				}
 			);
 		}
-	} else if (to.name === "station") {
-		io.getSocket(socket => {
-			socket.emit("stations.findByName", to.params.id, res => {
-				if (res.status === "success") {
-					next();
-				}
-			});
-		});
 	} else next();
 });
 

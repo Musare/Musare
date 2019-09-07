@@ -214,31 +214,18 @@ module.exports = {
 				next(null, stations);
 			},
 
-			(stations, next) => {
+			(stationsArray, next) => {
 				let resultStations = [];
-				async.each(stations, (station, next) => {
+				async.each(stationsArray, (station, next) => {
 					async.waterfall([
 						(next) => {
-							if (station.privacy === 'public') return next(true);
-							if (!session.sessionId) return next(`Insufficient permissions.`);
-							cache.hget('sessions', session.sessionId, next);
-						},
-
-						(session, next) => {
-							if (!session) return next(`Insufficient permissions.`);
-							db.models.user.findOne({_id: session.userId}, next);
-						},
-
-						(user, next) => {
-							if (!user) return next(`Insufficient permissions.`);
-							if (user.role === 'admin') return next(true);
-							if (station.type === 'official') return next(`Insufficient permissions.`);
-							if (station.owner === session.userId) return next(true);
-							next(`Insufficient permissions.`);
+							stations.canUserViewStation(station, session.userId, (err, exists) => {
+								next(err, exists);
+							});
 						}
-					], (err) => {
+					], (err, exists) => {
 						station.userCount = usersPerStationCount[station._id] || 0;
-						if (err === true) resultStations.push(station);
+						if (exists) resultStations.push(station);
 						next();
 					});
 				}, () => {
@@ -257,30 +244,32 @@ module.exports = {
 	},
 
 	/**
-	 * Finds a station by name
+	 * Verifies that a station exists
 	 *
 	 * @param session
 	 * @param stationName - the station name
 	 * @param cb
 	 */
-	findByName: (session, stationName, cb) => {
+	existsByName: (session, stationName, cb) => {
 		async.waterfall([
 			(next) => {
 				stations.getStationByName(stationName, next);
 			},
 
 			(station, next) => {
-				if (!station) return next('Station not found.');
-				next(null, station);
+				if (!station) return next(null, false);
+				stations.canUserViewStation(station, session.userId, (err, exists) => {
+					next(err, exists);
+				});
 			}
-		], async (err, station) => {
+		], async (err, exists) => {
 			if (err) {
 				err = await utils.getError(err);
-				logger.error("STATIONS_FIND_BY_NAME", `Finding station "${stationName}" failed. "${err}"`);
+				logger.error("STATION_EXISTS_BY_NAME", `Checking if station "${stationName}" exists failed. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
-			logger.success("STATIONS_FIND_BY_NAME", `Found station "${stationName}" successfully.`, false);
-			cb({status: 'success', data: station});
+			logger.success("STATION_EXISTS_BY_NAME", `Station "${stationName}" exists successfully.`/*, false*/);
+			cb({status: 'success', exists});
 		});
 	},
 
@@ -295,6 +284,14 @@ module.exports = {
 		async.waterfall([
 			(next) => {
 				stations.getStation(stationId, next);
+			},
+
+			(station, next) => {
+				stations.canUserViewStation(station, session.userId, (err, canView) => {
+					if (err) return next(err);
+					if (canView) return next(null, station);
+					return next('Insufficient permissions.');
+				});
 			},
 
 			(station, next) => {
@@ -339,27 +336,10 @@ module.exports = {
 
 			(station, next) => {
 				if (!station) return next('Station not found.');
-				async.waterfall([
-					(next) => {
-						if (station.privacy !== 'private') return next(true);
-						if (!session.userId) return next('An error occurred while joining the station.');
-						next();
-					},
-
-					(next) => {
-						db.models.user.findOne({_id: session.userId}, next);
-					},
-
-					(user, next) => {
-						if (!user) return next('An error occurred while joining the station.');
-						if (user.role === 'admin') return next(true);
-						if (station.type === 'official') return next('An error occurred while joining the station.');
-						if (station.owner === session.userId) return next(true);
-						next('An error occurred while joining the station.');
-					}
-				], async (err) => {
-					if (err === true) return next(null, station);
-					next(await utils.getError(err));
+				stations.canUserViewStation(station, session.userId, (err, canView) => {
+					if (err) return next(err);
+					if (!canView) next("Not allowed to join station.");
+					else next(null, station);
 				});
 			},
 
@@ -462,8 +442,9 @@ module.exports = {
 
 			(station, next) => {
 				if (!station) return next('Station not found.');
-				utils.canUserBeInStation(station, userId, (canBe) => {
-					if (canBe) return next(null, station);
+				stations.canUserViewStation(station, userId, (err, canView) => {
+					if (err) return next(err);
+					if (canView) return next(null, station);
 					return next('Insufficient permissions.');
 				});
 			},
@@ -958,8 +939,9 @@ module.exports = {
 
 			(station, next) => {
 				if (station.type !== 'community') return next('That station is not a community station.');
-				utils.canUserBeInStation(station, userId, (canBe) => {
-					if (canBe) return next(null, station);
+				stations.canUserViewStation(station, userId, (err, canView) => {
+					if (err) return next(err);
+					if (canView) return next(null, station);
 					return next('Insufficient permissions.');
 				});
 			},
@@ -1120,8 +1102,9 @@ module.exports = {
 			},
 
 			(station, next) => {
-				utils.canUserBeInStation(station, session.userId, (canBe) => {
-					if (canBe) return next(null, station);
+				stations.canUserViewStation(station, session.userId, (err, canView) => {
+					if (err) return next(err);
+					if (canView) return next(null, station);
 					return next('Insufficient permissions.');
 				});
 			}
@@ -1189,27 +1172,10 @@ module.exports = {
 
 			(station, next) => {
 				if (!station) return next('Station not found.');
-				async.waterfall([
-					(next) => {
-						if (station.privacy !== 'private') return next(true);
-						if (!session.userId) return next("You're not allowed to favorite this station.");
-						next();
-					},
-
-					(next) => {
-						db.models.user.findOne({ _id: userId }, next);
-					},
-
-					(user, next) => {
-						if (!user) return next("You're not allowed to favorite this station.");
-						if (user.role === 'admin') return next(true);
-						if (station.type === 'official') return next("You're not allowed to favorite this station.");
-						if (station.owner === session.userId) return next(true);
-						next("You're not allowed to favorite this station.");
-					}
-				], (err) => {
-					if (err === true) return next(null);
-					next(utils.getError(err));
+				stations.canUserViewStation(station, session.userId, (err, canView) => {
+					if (err) return next(err);
+					if (canView) return next();
+					return next('Insufficient permissions.');
 				});
 			},
 
