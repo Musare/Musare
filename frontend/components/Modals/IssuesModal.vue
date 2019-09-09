@@ -15,7 +15,7 @@
 			<article class="message">
 				<div class="message-body">
 					<strong>Song ID:</strong>
-					{{ report.songId }}
+					{{ report.song.songId }} / {{ report.song._id }}
 					<br />
 					<strong>Created By:</strong>
 					{{ report.createdBy }}
@@ -55,6 +55,13 @@
 				@click="$parent.resolve(report._id)"
 			>
 				<span>Resolve</span>
+			</a>
+			<a
+				class="button is-primary"
+				:href="`/admin/songs?songId=${report.song.songId}`"
+				target="_blank"
+			>
+				<span>Go to song</span>
 			</a>
 			<a
 				class="button is-danger"
