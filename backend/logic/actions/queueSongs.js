@@ -32,30 +32,24 @@ cache.sub('queue.update', songId => {
 let lib = {
 
 	/**
-	 * Gets all queuesongs
+	 * Returns the length of the queue songs list
 	 *
-	 * @param {Object} session - the session object automatically added by socket.io
-	 * @param {Function} cb - gets called with the result
+	 * @param session
+	 * @param cb
 	 */
-	index: hooks.adminRequired((session, cb) => {
+	length: hooks.adminRequired((session, cb) => {
 		async.waterfall([
 			(next) => {
-				db.models.queueSong.find({}, next);
+				db.models.queueSong.countDocuments({}, next);
 			}
-		], async (err, songs) => {
+		], async (err, count) => {
 			if (err) {
 				err = await utils.getError(err);
-				logger.error("QUEUE_INDEX", `Indexing queuesongs failed. "${err}"`);
-				return cb({status: 'failure', message: err});
-			} else {
-				module.exports.getSet(session, 1, result => {
-					logger.success("QUEUE_INDEX", `Indexing queuesongs successful.`);
-					return cb({
-						songs: result,
-						maxLength: songs.length
-					});
-				});
+				logger.error("QUEUE_SONGS_LENGTH", `Failed to get length from queue songs. "${err}"`);
+				return cb({'status': 'failure', 'message': err});
 			}
+			logger.success("QUEUE_SONGS_LENGTH", `Got length from queue songs successfully.`);
+			cb(count);
 		});
 	}),
 
@@ -67,9 +61,18 @@ let lib = {
 	 * @param cb
 	 */
 	getSet: hooks.adminRequired((session, set, cb) => {
-		db.models.queueSong.find({}).limit(50 * set).exec((err, songs) => {
-			if (err) throw err;
-			cb(songs.splice(Math.max(songs.length - 50, 0)));
+		async.waterfall([
+			(next) => {
+				db.models.queueSong.find({}).skip(15 * (set - 1)).limit(15).exec(next);
+			},
+		], async (err, songs) => {
+			if (err) {
+				err = await utils.getError(err);
+				logger.error("QUEUE_SONGS_GET_SET", `Failed to get set from queue songs. "${err}"`);
+				return cb({'status': 'failure', 'message': err});
+			}
+			logger.success("QUEUE_SONGS_GET_SET", `Got set from queue songs successfully.`);
+			cb(songs);
 		});
 	}),
 

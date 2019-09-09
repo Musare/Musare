@@ -1,13 +1,25 @@
 <template>
 	<div>
 		<metadata title="Admin | Songs" />
-		<div class="container">
+		<div class="container" v-scroll="handleScroll">
+			<p>
+				<span>Sets loaded: {{ position - 1 }} / {{ maxPosition }}</span>
+				<br />
+				<span>Loaded songs: {{ this.songs.length }}</span>
+			</p>
 			<input
 				v-model="searchQuery"
 				type="text"
 				class="input"
 				placeholder="Search for Songs"
 			/>
+			<button
+				v-if="!getSetsAutomatically"
+				class="button is-primary"
+				@click="loadSongsAutomatically()"
+			>
+				Load songs automatically
+			</button>
 			<br />
 			<br />
 			<table class="table is-striped">
@@ -107,7 +119,9 @@ export default {
 			editing: {
 				index: 0,
 				song: {}
-			}
+			},
+			gettingSet: false,
+			getSetsAutomatically: false
 		};
 	},
 	computed: {
@@ -144,15 +158,38 @@ export default {
 			});
 		},
 		getSet() {
+			if (this.gettingSet) return;
+			if (this.position > this.maxPosition) return;
+			this.gettingSet = true;
 			this.socket.emit("songs.getSet", this.position, data => {
 				data.forEach(song => {
 					this.addSong(song);
 				});
 				this.position += 1;
-				if (this.maxPosition > this.position - 1) this.getSet();
+				this.gettingSet = false;
+				if (
+					this.getSetsAutomatically &&
+					this.maxPosition > this.position - 1
+				)
+					setTimeout(() => {
+						this.getSet();
+					}, 500);
 			});
 		},
+		handleScroll() {
+			if (this.getSetsAutomatically) return false;
+			if (window.scrollY + 50 >= window.scrollMaxY) this.getSet();
+
+			return this.maxPosition === this.position;
+		},
+		loadSongsAutomatically() {
+			this.getSetsAutomatically = true;
+			this.getSet();
+		},
 		init() {
+			if (this.songs.length > 0)
+				this.position = Math.ceil(this.songs.length / 15) + 1;
+
 			this.socket.emit("songs.length", length => {
 				this.maxPosition = Math.ceil(length / 15);
 				this.getSet();

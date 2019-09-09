@@ -99,8 +99,8 @@ module.exports = {
 	getSet: hooks.adminRequired((session, set, cb) => {
 		async.waterfall([
 			(next) => {
-				db.models.song.find({}).limit(15 * set).exec(next);
-			}
+				db.models.song.find({}).skip(15 * (set - 1)).limit(15).exec(next);
+			},
 		], async (err, songs) => {
 			if (err) {
 				err = await utils.getError(err);
@@ -108,9 +108,7 @@ module.exports = {
 				return cb({'status': 'failure', 'message': err});
 			}
 			logger.success("SONGS_GET_SET", `Got set from songs successfully.`);
-			logger.stationIssue(songs.length, true);
-			logger.stationIssue(Math.max(songs.length - 15, 0), true);
-			cb(songs.splice(Math.max(songs.length - 15, 0)));
+			cb(songs);
 		});
 	}),
 
