@@ -84,20 +84,24 @@
 										class="button album-get-button"
 										v-on:click="getAlbumData('title')"
 									>
-										<i class="material-icons album-get-icon"
-											>album</i
-										>
+										<i class="material-icons">album</i>
 									</button>
 								</p>
 							</div>
 							<div class="duration-container">
 								<label class="label">Duration</label>
-								<p class="control">
+								<p class="control has-addons">
 									<input
 										class="input"
 										type="text"
 										v-model.number="editing.song.duration"
 									/>
+									<button
+										class="button duration-fill-button"
+										v-on:click="fillDuration()"
+									>
+										<i class="material-icons">sync</i>
+									</button>
 								</p>
 							</div>
 							<div class="skip-duration-container">
@@ -126,9 +130,7 @@
 										class="button album-get-button"
 										v-on:click="getAlbumData('albumArt')"
 									>
-										<i class="material-icons album-get-icon"
-											>album</i
-										>
+										<i class="material-icons">album</i>
 									</button>
 								</p>
 							</div>
@@ -150,9 +152,7 @@
 										class="button album-get-button"
 										v-on:click="getAlbumData('artists')"
 									>
-										<i class="material-icons album-get-icon"
-											>album</i
-										>
+										<i class="material-icons">album</i>
 									</button>
 									<button
 										class="button is-info add-button"
@@ -226,9 +226,7 @@
 										class="button album-get-button"
 										v-on:click="getAlbumData('genres')"
 									>
-										<i class="material-icons album-get-icon"
-											>album</i
-										>
+										<i class="material-icons">album</i>
 									</button>
 									<button
 										class="button is-info add-button"
@@ -793,6 +791,10 @@ export default {
 					});
 			}
 		},
+		fillDuration() {
+			this.editing.song.duration =
+				this.youtubeVideoDuration - this.editing.song.skipDuration;
+		},
 		getAlbumData(type) {
 			if (!this.editing.song.discogs) return;
 			if (type === "title")
@@ -1162,6 +1164,7 @@ export default {
 
 		this.interval = setInterval(() => {
 			if (
+				this.editing.song.duration !== -1 &&
 				this.video.paused === false &&
 				this.playerReady &&
 				this.video.player.getCurrentTime() -
@@ -1220,6 +1223,10 @@ export default {
 						let youtubeDuration = this.video.player.getDuration();
 						this.youtubeVideoDuration = youtubeDuration;
 						this.youtubeVideoNote = "";
+
+						if (this.editing.song.duration === -1)
+							this.editing.song.duration = youtubeDuration;
+
 						youtubeDuration -= this.editing.song.skipDuration;
 						if (this.editing.song.duration > youtubeDuration + 1) {
 							this.video.player.stopVideo();
@@ -1419,6 +1426,14 @@ export default {
 		.album-get-button {
 			background-color: $purple;
 			color: white;
+			width: 32px;
+			text-align: center;
+			border-width: 0;
+		}
+
+		.duration-fill-button {
+			background-color: $red;
+			color: $white;
 			width: 32px;
 			text-align: center;
 			border-width: 0;

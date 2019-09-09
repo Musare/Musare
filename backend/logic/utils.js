@@ -352,7 +352,7 @@ module.exports = class extends coreClass {
 
 				body = JSON.parse(body);
 
-				//TODO Clean up duration converter
+				/*//TODO Clean up duration converter
   				let dur = body.items[0].contentDetails.duration;
 				dur = dur.replace('PT', '');
 				let duration = 0;
@@ -370,12 +370,12 @@ module.exports = class extends coreClass {
 					v2 = Number(v2);
 					duration += v2;
 					return '';
-				});
+				});*/
 
 				let song = {
 					songId: body.items[0].id,
-					title: body.items[0].snippet.title,
-					duration
+					title: body.items[0].snippet.title/*,
+					duration*/
 				};
 				cb(song);
 			});

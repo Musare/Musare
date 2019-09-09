@@ -159,6 +159,7 @@ let lib = {
 				if (song) return next('This song has already been added.');
 				//TODO Add err object as first param of callback
 				utils.getSongFromYouTube(songId, (song) => {
+					song.duration = -1;
 					song.artists = [];
 					song.genres = [];
 					song.skipDuration = 0;
