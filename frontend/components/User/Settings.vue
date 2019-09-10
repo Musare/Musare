@@ -175,8 +175,8 @@ export default {
 		userId: state => state.user.auth.userId
 	}),
 	mounted() {
-		lofig.get("serverDomain", res => {
-			this.serverDomain = res;
+		lofig.get("serverDomain").then(serverDomain => {
+			this.serverDomain = serverDomain;
 		});
 
 		io.getSocket(socket => {

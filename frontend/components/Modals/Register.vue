@@ -100,11 +100,11 @@ export default {
 		};
 	},
 	mounted() {
-		lofig.get("serverDomain", res => {
-			this.serverDomain = res;
+		lofig.get("serverDomain").then(serverDomain => {
+			this.serverDomain = serverDomain;
 		});
 
-		lofig.get("recaptcha", obj => {
+		lofig.get("recaptcha").then(obj => {
 			this.recaptcha.key = obj.key;
 
 			const recaptchaScript = document.createElement("script");

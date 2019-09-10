@@ -65,6 +65,7 @@ export default {
 			this.$router.go(localStorage.getItem("github_redirect"));
 			localStorage.removeItem("github_redirect");
 		}
+
 		io.onConnect(true, () => {
 			this.socketConnected = true;
 		});
@@ -74,9 +75,11 @@ export default {
 		io.onDisconnect(true, () => {
 			this.socketConnected = false;
 		});
-		lofig.get("serverDomain", res => {
-			this.serverDomain = res;
+
+		lofig.get("serverDomain").then(serverDomain => {
+			this.serverDomain = serverDomain;
 		});
+
 		this.$router.onReady(() => {
 			if (this.$route.query.err) {
 				let { err } = this.$route.query;

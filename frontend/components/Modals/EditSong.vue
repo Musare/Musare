@@ -1154,8 +1154,8 @@ export default {
 
 		this.discogsQuery = this.editing.song.title;
 
-		lofig.get("cookie.secure", res => {
-			this.useHTTPS = res;
+		lofig.get("cookie.secure").then(useHTTPS => {
+			this.useHTTPS = useHTTPS;
 		});
 
 		io.getSocket(socket => {

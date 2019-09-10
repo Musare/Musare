@@ -114,8 +114,8 @@ export default {
 		...mapActions("user/auth", ["login"])
 	},
 	mounted() {
-		lofig.get("serverDomain", res => {
-			this.serverDomain = res;
+		lofig.get("serverDomain").then(serverDomain => {
+			this.serverDomain = serverDomain;
 		});
 	}
 };

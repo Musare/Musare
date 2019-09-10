@@ -236,13 +236,12 @@ export default {
 		currentSong: state => state.station.currentSong
 	}),
 	mounted() {
-		lofig.get("frontendDomain", res => {
-			this.frontendDomain = res;
-			return res;
+		lofig.get("frontendDomain").then(frontendDomain => {
+			this.frontendDomain = frontendDomain;
 		});
-		lofig.get("siteSettings", res => {
-			this.siteSettings = res;
-			return res;
+
+		lofig.get("siteSettings").then(siteSettings => {
+			this.siteSettings = siteSettings;
 		});
 	},
 	methods: {

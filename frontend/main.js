@@ -123,8 +123,8 @@ const router = new VueRouter({
 });
 
 lofig.folder = "../config/default.json";
-lofig.get("serverDomain", res => {
-	io.init(res);
+lofig.get("serverDomain").then(serverDomain => {
+	io.init(serverDomain);
 	io.getSocket(socket => {
 		socket.on("ready", (loggedIn, role, username, userId) => {
 			store.dispatch("user/auth/authData", {
