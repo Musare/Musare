@@ -122,9 +122,9 @@ export default {
 					"Username must have between 2 and 32 characters.",
 					8000
 				);
-			if (!validation.regex.azAZ09_.test(username))
+			if (!validation.regex.custom("a-zA-Z0-9_-").test(username))
 				return Toast.methods.addToast(
-					"Invalid username format. Allowed characters: a-z, A-Z, 0-9 and _.",
+					"Invalid username format. Allowed characters: a-z, A-Z, 0-9, _ and -.",
 					8000
 				);
 
@@ -138,7 +138,7 @@ export default {
 			);
 		},
 		updateEmail() {
-			const { email } = this.editing;
+			const email = this.editing.email.address;
 			if (!validation.isLength(email, 3, 254))
 				return Toast.methods.addToast(
 					"Email must have between 3 and 254 characters.",
@@ -146,7 +146,8 @@ export default {
 				);
 			if (
 				email.indexOf("@") !== email.lastIndexOf("@") ||
-				!validation.regex.emailSimple.test(email)
+				!validation.regex.emailSimple.test(email) ||
+				!validation.regex.ascii.test(email)
 			)
 				return Toast.methods.addToast("Invalid email format.", 8000);
 

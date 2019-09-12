@@ -660,11 +660,6 @@ export default {
 					"Title must have between 1 and 100 characters.",
 					8000
 				);
-			/* if (!validation.regex.ascii.test(song.title))
-				return Toast.methods.addToast(
-					"Invalid title format. Only ascii characters are allowed.",
-					8000
-				); */
 
 			// Artists
 			if (song.artists.length < 1 || song.artists.length > 10)
@@ -674,13 +669,8 @@ export default {
 				);
 			let error;
 			song.artists.forEach(artist => {
-				if (!validation.isLength(artist, 1, 32)) {
-					error = "Artist must have between 1 and 32 characters.";
-					return error;
-				}
-				if (!validation.regex.ascii.test(artist)) {
-					error =
-						"Invalid artist format. Only ascii characters are allowed.";
+				if (!validation.isLength(artist, 1, 64)) {
+					error = "Artist must have between 1 and 64 characters.";
 					return error;
 				}
 				if (artist === "NONE") {
@@ -694,13 +684,13 @@ export default {
 			if (error) return Toast.methods.addToast(error, 8000);
 
 			// Genres
-			/* error = undefined;
+			error = undefined;
 			song.genres.forEach(genre => {
-				if (!validation.isLength(genre, 1, 16)) {
-					error = "Genre must have between 1 and 16 characters.";
+				if (!validation.isLength(genre, 1, 32)) {
+					error = "Genre must have between 1 and 32 characters.";
 					return error;
 				}
-				if (!validation.regex.azAZ09_.test(genre)) {
+				if (!validation.regex.ascii.test(genre)) {
 					error =
 						"Invalid genre format. Only ascii characters are allowed.";
 					return error;
@@ -708,10 +698,12 @@ export default {
 
 				return false;
 			});
-			if (error) return Toast.methods.addToast(error, 8000); */
+			if (song.genres.length < 1 || song.genres.length > 16)
+				error = "You must have between 1 and 16 genres.";
+			if (error) return Toast.methods.addToast(error, 8000);
 
 			// Thumbnail
-			if (!validation.isLength(song.thumbnail, 8, 256))
+			if (!validation.isLength(song.thumbnail, 1, 256))
 				return Toast.methods.addToast(
 					"Thumbnail must have between 8 and 256 characters.",
 					8000

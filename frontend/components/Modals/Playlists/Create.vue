@@ -51,9 +51,9 @@ export default {
 					"Display name must have between 2 and 32 characters.",
 					8000
 				);
-			if (!validation.regex.azAZ09_.test(displayName))
+			if (!validation.regex.ascii.test(displayName))
 				return Toast.methods.addToast(
-					"Invalid display name format. Allowed characters: a-z, A-Z, 0-9 and _.",
+					"Invalid display name format. Only ASCII characters are allowed.",
 					8000
 				);
 

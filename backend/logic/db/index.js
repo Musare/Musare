@@ -9,8 +9,8 @@ const regex = {
 	azAZ09_: /^[A-Za-z0-9_]+$/,
 	az09_: /^[a-z0-9_]+$/,
 	emailSimple: /^[\x00-\x7F]+@[a-z0-9]+\.[a-z0-9]+(\.[a-z0-9]+)?$/,
-	password: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$@$!%*?&])[A-Za-z\d$@$!%*?&]/,
-	ascii: /^[\x00-\x7F]+$/
+	ascii: /^[\x00-\x7F]+$/,
+	custom: regex => new RegExp(`^[${regex}]+$`)
 };
 
 const isLength = (string, min, max) => {
@@ -80,22 +80,24 @@ module.exports = class extends coreClass {
 						this._lockdown();
 					});
 		
-					// this.schemas.user.path('username').validate((username) => {
-					// 	return (isLength(username, 2, 32) && regex.azAZ09_.test(username));
-					// }, 'Invalid username.');
+					// User
+					this.schemas.user.path('username').validate((username) => {
+						return (isLength(username, 2, 32) && regex.custom("a-zA-Z0-9_-").test(username));
+					}, 'Invalid username.');
 		
 					this.schemas.user.path('email.address').validate((email) => {
 						if (!isLength(email, 3, 254)) return false;
 						if (email.indexOf('@') !== email.lastIndexOf('@')) return false;
-						return regex.emailSimple.test(email);
+						return regex.emailSimple.test(email) && regex.ascii.test(email);
 					}, 'Invalid email.');
-		
+
+					// Station
 					this.schemas.station.path('name').validate((id) => {
 						return (isLength(id, 2, 16) && regex.az09_.test(id));
 					}, 'Invalid station name.');
 		
 					this.schemas.station.path('displayName').validate((displayName) => {
-						return (isLength(displayName, 2, 32) && regex.azAZ09_.test(displayName));
+						return (isLength(displayName, 2, 32) && regex.ascii.test(displayName));
 					}, 'Invalid display name.');
 		
 					this.schemas.station.path('description').validate((description) => {
@@ -105,7 +107,6 @@ module.exports = class extends coreClass {
 							return character.charCodeAt(0) === 21328;
 						}).length === 0;
 					}, 'Invalid display name.');
-		
 		
 					this.schemas.station.path('owner').validate({
 						isAsync: true,
@@ -153,7 +154,9 @@ module.exports = class extends coreClass {
 						return callback(false);
 					}, 'The max amount of songs per user is 3, and only 2 in a row is allowed.');
 					*/
-		
+
+
+					// Song
 					let songTitle = (title) => {
 						return isLength(title, 1, 100);
 					};
@@ -169,29 +172,33 @@ module.exports = class extends coreClass {
 		
 					let songArtists = (artists) => {
 						return artists.filter((artist) => {
-								return (isLength(artist, 1, 32) && regex.ascii.test(artist) && artist !== "NONE");
+								return (isLength(artist, 1, 64) && artist !== "NONE");
 							}).length === artists.length;
 					};
 					this.schemas.song.path('artists').validate(songArtists, 'Invalid artists.');
 					this.schemas.queueSong.path('artists').validate(songArtists, 'Invalid artists.');
 		
-					/*let songGenres = (genres) => {
+					let songGenres = (genres) => {
+						if (genres.length < 1 || genres.length > 16) return false;
 						return genres.filter((genre) => {
-								return (isLength(genre, 1, 16) && regex.azAZ09_.test(genre));
+								return (isLength(genre, 1, 32) && regex.ascii.test(genre));
 							}).length === genres.length;
 					};
 					this.schemas.song.path('genres').validate(songGenres, 'Invalid genres.');
-					this.schemas.queueSong.path('genres').validate(songGenres, 'Invalid genres.');*/
+					this.schemas.queueSong.path('genres').validate(songGenres, 'Invalid genres.');
 		
-					this.schemas.song.path('thumbnail').validate((thumbnail) => {
-						return isLength(thumbnail, 8, 256);
-					}, 'Invalid thumbnail.');
-					this.schemas.queueSong.path('thumbnail').validate((thumbnail) => {
-						return isLength(thumbnail, 0, 256);
-					}, 'Invalid thumbnail.');
-		
+					let songThumbnail = (thumbnail) => {
+						if (!isLength(thumbnail, 1, 256)) return false;
+						let startWith = "https://";
+						if (config.get("cookie.secure") === false) startWith = "http://";
+						return thumbnail.startsWith(startWith);
+					};
+					this.schemas.song.path('thumbnail').validate(songThumbnail, 'Invalid thumbnail.');
+					this.schemas.queueSong.path('thumbnail').validate(songThumbnail, 'Invalid thumbnail.');
+
+					// Playlist
 					this.schemas.playlist.path('displayName').validate((displayName) => {
-						return (isLength(displayName, 1, 16) && regex.ascii.test(displayName));
+						return (isLength(displayName, 1, 32) && regex.ascii.test(displayName));
 					}, 'Invalid display name.');
 		
 					this.schemas.playlist.path('createdBy').validate((createdBy) => {
@@ -201,14 +208,15 @@ module.exports = class extends coreClass {
 					}, 'Max 10 playlists per user.');
 		
 					this.schemas.playlist.path('songs').validate((songs) => {
-						return songs.length <= 2000;
-					}, 'Max 2000 songs per playlist.');
+						return songs.length <= 5000;
+					}, 'Max 5000 songs per playlist.');
 		
 					this.schemas.playlist.path('songs').validate((songs) => {
 						if (songs.length === 0) return true;
 						return songs[0].duration <= 10800;
 					}, 'Max 3 hours per song.');
 		
+					// Report
 					this.schemas.report.path('description').validate((description) => {
 						return (!description || (isLength(description, 0, 400) && regex.ascii.test(description)));
 					}, 'Invalid description.');
@@ -223,7 +231,6 @@ module.exports = class extends coreClass {
 	}
 
 	passwordValid(password) {
-		if (!isLength(password, 6, 200)) return false;
-		return regex.password.test(password);
+		return isLength(password, 6, 200);
 	}
 }
