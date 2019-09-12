@@ -560,10 +560,10 @@ module.exports = {
 		], async (err) => {
 			if (err) {
 				err = await utils.getError(err);
-				logger.error("STATIONS_UPDATE_DISPLAY_NAME", `Updating station "${stationId}" displayName to "${newName}" failed. "${err}"`);
+				logger.error("STATIONS_UPDATE_NAME", `Updating station "${stationId}" name to "${newName}" failed. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
-			logger.success("STATIONS_UPDATE_DISPLAY_NAME", `Updated station "${stationId}" displayName to "${newName}" successfully.`);
+			logger.success("STATIONS_UPDATE_NAME", `Updated station "${stationId}" name to "${newName}" successfully.`);
 			return cb({'status': 'success', 'message': 'Successfully updated the name.'});
 		});
 	}),

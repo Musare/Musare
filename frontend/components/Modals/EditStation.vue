@@ -39,19 +39,19 @@
 				</span>
 			</p>
 			<br />
-			<p class="control">
+			<p class="control" v-if="station.type === 'community'">
 				<label class="checkbox party-mode-inner">
 					<input v-model="editing.partyMode" type="checkbox" />
 					&nbsp;Party mode
 				</label>
 			</p>
-			<small
+			<small v-if="station.type === 'community'"
 				>With party mode enabled, people can add songs to a queue that
 				plays. With party mode disabled you can play a private playlist
 				on loop.</small
 			>
 			<br />
-			<div v-if="station.partyMode">
+			<div v-if="station.type === 'community' && station.partyMode">
 				<br />
 				<br />
 				<label class="label">Queue lock</label>
@@ -75,6 +75,64 @@
 					Unlock the queue
 				</button>
 			</div>
+			<div
+				v-if="station.type === 'official' && station.genres"
+				class="control is-grouped genre-wrapper"
+			>
+				<div class="sector">
+					<p class="control has-addons">
+						<input
+							id="new-genre-edit"
+							class="input"
+							type="text"
+							placeholder="Genre"
+							@keyup.enter="addGenre()"
+						/>
+						<a class="button is-info" href="#" @click="addGenre()"
+							>Add genre</a
+						>
+					</p>
+					<span
+						v-for="(genre, index) in editing.genres"
+						:key="index"
+						class="tag is-info"
+					>
+						{{ genre }}
+						<button
+							class="delete is-info"
+							@click="removeGenre(index)"
+						/>
+					</span>
+				</div>
+				<div class="sector">
+					<p class="control has-addons">
+						<input
+							id="new-blacklisted-genre-edit"
+							class="input"
+							type="text"
+							placeholder="Blacklisted Genre"
+							@keyup.enter="addBlacklistedGenre()"
+						/>
+						<a
+							class="button is-info"
+							href="#"
+							@click="addBlacklistedGenre()"
+							>Add blacklisted genre</a
+						>
+					</p>
+					<span
+						v-for="(genre, index) in editing.blacklistedGenres"
+						:key="index"
+						class="tag is-info"
+					>
+						{{ genre }}
+						<button
+							class="delete is-info"
+							@click="removeBlacklistedGenre(index)"
+						/>
+					</span>
+				</div>
+			</div>
 		</template>
 		<template v-slot:footer>
 			<button class="button is-success" v-on:click="update()">
@@ -92,17 +150,23 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
-
+import { mapState, mapActions } from "vuex";
 import { Toast } from "vue-roaster";
+
 import Modal from "./Modal.vue";
 import io from "../../io";
 import validation from "../../validation";
 
 export default {
-	computed: mapState("station", {
-		station: state => state.station,
-		editing: state => state.editing
+	computed: mapState({
+		editing(state) {
+			return this.$props.store.split("/").reduce((a, v) => a[v], state)
+				.editing;
+		},
+		station(state) {
+			return this.$props.store.split("/").reduce((a, v) => a[v], state)
+				.station;
+		}
 	}),
 	mounted() {
 		io.getSocket(socket => {
@@ -110,6 +174,7 @@ export default {
 			return socket;
 		});
 	},
+	props: ["store"],
 	methods: {
 		update() {
 			if (this.station.name !== this.editing.name) this.updateName();
@@ -121,6 +186,18 @@ export default {
 				this.updatePrivacy();
 			if (this.station.partyMode !== this.editing.partyMode)
 				this.updatePartyMode();
+			if (this.$props.store !== "station") {
+				if (
+					this.station.genres.toString() !==
+					this.editing.genres.toString()
+				)
+					this.updateGenres();
+				if (
+					this.station.blacklistedGenres.toString() !==
+					this.editing.blacklistedGenres.toString()
+				)
+					this.updateBlacklistedGenres();
+			}
 		},
 		updateName() {
 			const { name } = this.editing;
@@ -141,11 +218,7 @@ export default {
 				name,
 				res => {
 					if (res.status === "success") {
-						if (this.station) {
-							this.station.name = name;
-							return name;
-						}
-
+						if (this.station) this.station.name = name;
 						this.$parent.stations.forEach((station, index) => {
 							if (station._id === this.editing._id) {
 								this.$parent.stations[index].name = name;
@@ -155,8 +228,7 @@ export default {
 							return false;
 						});
 					}
-
-					return Toast.methods.addToast(res.message, 8000);
+					Toast.methods.addToast(res.message, 8000);
 				}
 			);
 		},
@@ -179,19 +251,23 @@ export default {
 				displayName,
 				res => {
 					if (res.status === "success") {
-						if (this.station)
+						if (this.station) {
 							this.station.displayName = displayName;
-						else {
-							this.$parent.stations.forEach((station, index) => {
-								if (station._id === this.editing._id)
-									this.$parent.stations[
-										index
-									].displayName = displayName;
-								return displayName;
-							});
+							return displayName;
 						}
+						this.$parent.stations.forEach((station, index) => {
+							if (station._id === this.editing._id) {
+								this.$parent.stations[
+									index
+								].displayName = displayName;
+								return displayName;
+							}
+
+							return false;
+						});
 					}
-					Toast.methods.addToast(res.message, 8000);
+
+					return Toast.methods.addToast(res.message, 8000);
 				}
 			);
 		},
@@ -202,12 +278,10 @@ export default {
 					"Description must have between 2 and 200 characters.",
 					8000
 				);
-
 			let characters = description.split("");
 			characters = characters.filter(character => {
 				return character.charCodeAt(0) === 21328;
 			});
-
 			if (characters.length !== 0)
 				return Toast.methods.addToast(
 					"Invalid description format.",
@@ -224,7 +298,6 @@ export default {
 							this.station.description = description;
 							return description;
 						}
-
 						this.$parent.stations.forEach((station, index) => {
 							if (station._id === this.editing._id) {
 								this.$parent.stations[
@@ -244,28 +317,81 @@ export default {
 			);
 		},
 		updatePrivacy() {
-			return this.socket.emit(
+			this.socket.emit(
 				"stations.updatePrivacy",
 				this.editing._id,
 				this.editing.privacy,
 				res => {
 					if (res.status === "success") {
-						if (this.station) {
+						if (this.station)
 							this.station.privacy = this.editing.privacy;
-							return this.editing.privacy;
-						}
+						else {
+							this.$parent.stations.forEach((station, index) => {
+								if (station._id === this.editing._id) {
+									this.$parent.stations[
+										index
+									].privacy = this.editing.privacy;
+									return this.editing.privacy;
+								}
 
+								return false;
+							});
+						}
+						return Toast.methods.addToast(res.message, 4000);
+					}
+
+					return Toast.methods.addToast(res.message, 8000);
+				}
+			);
+		},
+		updateGenres() {
+			this.socket.emit(
+				"stations.updateGenres",
+				this.editing._id,
+				this.editing.genres,
+				res => {
+					if (res.status === "success") {
+						const genres = JSON.parse(
+							JSON.stringify(this.editing.genres)
+						);
+						if (this.station) this.station.genres = genres;
 						this.$parent.stations.forEach((station, index) => {
 							if (station._id === this.editing._id) {
-								this.$parent.stations[
-									index
-								].privacy = this.editing.privacy;
-								return this.editing.privacy;
+								this.$parent.stations[index].genres = genres;
+								return genres;
 							}
 
 							return false;
 						});
+						return Toast.methods.addToast(res.message, 4000);
+					}
 
+					return Toast.methods.addToast(res.message, 8000);
+				}
+			);
+		},
+		updateBlacklistedGenres() {
+			this.socket.emit(
+				"stations.updateBlacklistedGenres",
+				this.editing._id,
+				this.editing.blacklistedGenres,
+				res => {
+					if (res.status === "success") {
+						const blacklistedGenres = JSON.parse(
+							JSON.stringify(this.editing.blacklistedGenres)
+						);
+						if (this.station)
+							this.station.blacklistedGenres = blacklistedGenres;
+						this.$parent.stations.forEach((station, index) => {
+							if (station._id === this.editing._id) {
+								this.$parent.stations[
+									index
+								].blacklistedGenres = blacklistedGenres;
+								return blacklistedGenres;
+							}
+
+							return false;
+						});
 						return Toast.methods.addToast(res.message, 4000);
 					}
 
@@ -274,27 +400,24 @@ export default {
 			);
 		},
 		updatePartyMode() {
-			return this.socket.emit(
+			this.socket.emit(
 				"stations.updatePartyMode",
 				this.editing._id,
 				this.editing.partyMode,
 				res => {
 					if (res.status === "success") {
-						if (this.station) {
-							this.station.partyMode = this.editing.partyMode;
-							return this.editing.partyMode;
-						}
+						// if (this.station)
+						// 	this.station.partyMode = this.editing.partyMode;
+						// this.$parent.stations.forEach((station, index) => {
+						// 	if (station._id === this.editing._id) {
+						// 		this.$parent.stations[
+						// 			index
+						// 		].partyMode = this.editing.partyMode;
+						// 		return this.editing.partyMode;
+						// 	}
 
-						this.$parent.stations.forEach((station, index) => {
-							if (station._id === this.editing._id) {
-								this.$parent.stations[
-									index
-								].partyMode = this.editing.partyMode;
-								return this.editing.partyMode;
-							}
-
-							return false;
-						});
+						// 	return false;
+						// });
 
 						return Toast.methods.addToast(res.message, 4000);
 					}
@@ -303,11 +426,54 @@ export default {
 				}
 			);
 		},
+		addGenre() {
+			const genre = document
+				.getElementById(`new-genre-edit`)
+				.value.toLowerCase()
+				.trim();
+
+			if (this.editing.genres.indexOf(genre) !== -1)
+				return Toast.methods.addToast("Genre already exists", 3000);
+			if (genre) {
+				this.editing.genres.push(genre);
+				document.getElementById(`new-genre-edit`).value = "";
+				return true;
+			}
+			return Toast.methods.addToast("Genre cannot be empty", 3000);
+		},
+		removeGenre(index) {
+			this.editing.genres.splice(index, 1);
+		},
+		addBlacklistedGenre() {
+			const genre = document
+				.getElementById(`new-blacklisted$pa-genre-edit`)
+				.value.toLowerCase()
+				.trim();
+			if (this.editing.blacklistedGenres.indexOf(genre) !== -1)
+				return Toast.methods.addToast("Genre already exists", 3000);
+
+			if (genre) {
+				this.editing.blacklistedGenres.push(genre);
+				document.getElementById(`new-blacklisted-genre-edit`).value =
+					"";
+				return true;
+			}
+			return Toast.methods.addToast("Genre cannot be empty", 3000);
+		},
+		removeBlacklistedGenre(index) {
+			this.editing.blacklistedGenres.splice(index, 1);
+		},
 		deleteStation() {
 			this.socket.emit("stations.remove", this.editing._id, res => {
-				Toast.methods.addToast(res.message, 8000);
+				if (res.status === "success")
+					this.closeModal({
+						sector: "station",
+						modal: "editStation"
+					});
+				return Toast.methods.addToast(res.message, 8000);
 			});
-		}
+		},
+		...mapActions("modals", ["closeModal"])
 	},
 	components: { Modal }
 };

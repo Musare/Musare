@@ -177,7 +177,7 @@
 			</div>
 		</div>
 
-		<edit-station v-if="modals.editStation" />
+		<edit-station v-if="modals.editStation" store="admin/stations" />
 	</div>
 </template>
 
@@ -187,7 +187,7 @@ import { mapState, mapActions } from "vuex";
 import { Toast } from "vue-roaster";
 import io from "../../io";
 
-import EditStation from "./EditStation.vue";
+import EditStation from "../Modals/EditStation.vue";
 import UserIdToUsername from "../UserIdToUsername.vue";
 
 export default {

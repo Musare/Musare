@@ -12,7 +12,7 @@
 		<add-to-playlist v-if="modals.addSongToPlaylist" />
 		<edit-playlist v-if="modals.editPlaylist" />
 		<create-playlist v-if="modals.createPlaylist" />
-		<edit-station v-show="modals.editStation" />
+		<edit-station v-show="modals.editStation" store="station" />
 		<report v-if="modals.report" />
 
 		<transition name="slide">
