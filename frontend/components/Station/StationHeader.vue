@@ -259,7 +259,8 @@ export default {
 				partyMode: this.station.partyMode,
 				description: this.station.description,
 				privacy: this.station.privacy,
-				displayName: this.station.displayName
+				displayName: this.station.displayName,
+				locked: this.station.locked
 			});
 			this.openModal({
 				sector: "station",

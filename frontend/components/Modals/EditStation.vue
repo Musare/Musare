@@ -1,136 +1,279 @@
 <template>
-	<modal title="Edit Station">
+	<modal title="Edit Station" class="edit-station-modal">
 		<template v-slot:body>
-			<label class="label">Name</label>
-			<p class="control">
-				<input
-					v-model="editing.name"
-					class="input"
-					type="text"
-					placeholder="Station Name"
-				/>
-			</p>
-			<label class="label">Display name</label>
-			<p class="control">
-				<input
-					v-model="editing.displayName"
-					class="input"
-					type="text"
-					placeholder="Station Display Name"
-				/>
-			</p>
-			<label class="label">Description</label>
-			<p class="control">
-				<input
-					v-model="editing.description"
-					class="input"
-					type="text"
-					placeholder="Station Description"
-				/>
-			</p>
-			<label class="label">Privacy</label>
-			<p class="control">
-				<span class="select">
-					<select v-model="editing.privacy">
-						<option value="public">Public</option>
-						<option value="unlisted">Unlisted</option>
-						<option value="private">Private</option>
-					</select>
-				</span>
-			</p>
-			<br />
-			<p class="control" v-if="station.type === 'community'">
-				<label class="checkbox party-mode-inner">
-					<input v-model="editing.partyMode" type="checkbox" />
-					&nbsp;Party mode
-				</label>
-			</p>
-			<small v-if="station.type === 'community'"
-				>With party mode enabled, people can add songs to a queue that
-				plays. With party mode disabled you can play a private playlist
-				on loop.</small
-			>
-			<br />
-			<div v-if="station.type === 'community' && station.partyMode">
-				<br />
-				<br />
-				<label class="label">Queue lock</label>
-				<small v-if="station.partyMode"
-					>With the queue locked, only owners (you) can add songs to
-					the queue.</small
-				>
-				<br />
-				<button
-					v-if="!station.locked"
-					class="button is-danger"
-					@click="$parent.toggleLock()"
-				>
-					Lock the queue
-				</button>
-				<button
-					v-if="station.locked"
-					class="button is-success"
-					@click="$parent.toggleLock()"
-				>
-					Unlock the queue
-				</button>
-			</div>
-			<div
-				v-if="station.type === 'official' && station.genres"
-				class="control is-grouped genre-wrapper"
-			>
-				<div class="sector">
-					<p class="control has-addons">
-						<input
-							id="new-genre-edit"
-							class="input"
-							type="text"
-							placeholder="Genre"
-							@keyup.enter="addGenre()"
-						/>
-						<a class="button is-info" href="#" @click="addGenre()"
-							>Add genre</a
-						>
-					</p>
-					<span
-						v-for="(genre, index) in editing.genres"
-						:key="index"
-						class="tag is-info"
-					>
-						{{ genre }}
-						<button
-							class="delete is-info"
-							@click="removeGenre(index)"
-						/>
-					</span>
+			<div class="section left-section">
+				<div class="col col-2">
+					<div>
+						<label class="label">Name</label>
+						<p class="control">
+							<input
+								class="input"
+								type="text"
+								v-model="editing.name"
+							/>
+						</p>
+					</div>
+					<div>
+						<label class="label">Display name</label>
+						<p class="control">
+							<input
+								class="input"
+								type="text"
+								v-model="editing.displayName"
+							/>
+						</p>
+					</div>
 				</div>
-				<div class="sector">
-					<p class="control has-addons">
-						<input
-							id="new-blacklisted-genre-edit"
-							class="input"
-							type="text"
-							placeholder="Blacklisted Genre"
-							@keyup.enter="addBlacklistedGenre()"
-						/>
-						<a
-							class="button is-info"
-							href="#"
-							@click="addBlacklistedGenre()"
-							>Add blacklisted genre</a
+				<div class="col col-1">
+					<div>
+						<label class="label">Description</label>
+						<p class="control">
+							<input
+								class="input"
+								type="text"
+								v-model="editing.description"
+							/>
+						</p>
+					</div>
+				</div>
+				<div class="col col-2" v-if="editing.genres">
+					<div>
+						<label class="label">Genre(s)</label>
+						<p class="control has-addons">
+							<input
+								class="input"
+								type="text"
+								id="new-genre"
+								v-model="genreInputValue"
+								v-on:blur="blurGenreInput()"
+								v-on:focus="focusGenreInput()"
+								v-on:keydown="keydownGenreInput()"
+								v-on:keyup.enter="addTag('genres')"
+							/>
+							<button
+								class="button is-info add-button blue"
+								v-on:click="addTag('genres')"
+							>
+								<i class="material-icons">add</i>
+							</button>
+						</p>
+						<div
+							class="autosuggest-container"
+							v-if="
+								(genreInputFocussed ||
+									genreAutosuggestContainerFocussed) &&
+									genreAutosuggestItems.length > 0
+							"
+							@mouseover="focusGenreContainer()"
+							@mouseleave="blurGenreContainer()"
 						>
-					</p>
-					<span
-						v-for="(genre, index) in editing.blacklistedGenres"
-						:key="index"
-						class="tag is-info"
+							<span
+								class="autosuggest-item"
+								tabindex="0"
+								v-on:click="selectGenreAutosuggest(item)"
+								v-for="(item, index) in genreAutosuggestItems"
+								:key="index"
+								>{{ item }}</span
+							>
+						</div>
+						<div class="list-container">
+							<div
+								class="list-item"
+								v-for="(genre, index) in editing.genres"
+								:key="index"
+							>
+								<div
+									class="list-item-circle blue"
+									v-on:click="removeTag('genres', index)"
+								>
+									<i class="material-icons">close</i>
+								</div>
+								<p>{{ genre }}</p>
+							</div>
+						</div>
+					</div>
+					<div>
+						<label class="label">Blacklist genre(s)</label>
+						<p class="control has-addons">
+							<input
+								class="input"
+								type="text"
+								v-model="blacklistGenreInputValue"
+								v-on:blur="blurBlacklistGenreInput()"
+								v-on:focus="focusBlacklistGenreInput()"
+								v-on:keydown="keydownBlacklistGenreInput()"
+								v-on:keyup.enter="addTag('blacklist-genres')"
+							/>
+							<button
+								class="button is-info add-button red"
+								v-on:click="addTag('blacklist-genres')"
+							>
+								<i class="material-icons">add</i>
+							</button>
+						</p>
+						<div
+							class="autosuggest-container"
+							v-if="
+								(blacklistGenreInputFocussed ||
+									blacklistGenreAutosuggestContainerFocussed) &&
+									blacklistGenreAutosuggestItems.length > 0
+							"
+							@mouseover="focusBlacklistGenreContainer()"
+							@mouseleave="blurBlacklistGenreContainer()"
+						>
+							<span
+								class="autosuggest-item"
+								tabindex="0"
+								v-on:click="
+									selectBlacklistGenreAutosuggest(item)
+								"
+								v-for="(item,
+								index) in blacklistGenreAutosuggestItems"
+								:key="index"
+								>{{ item }}</span
+							>
+						</div>
+						<div class="list-container">
+							<div
+								class="list-item"
+								v-for="(genre,
+								index) in editing.blacklistedGenres"
+								:key="index"
+							>
+								<div
+									class="list-item-circle red"
+									v-on:click="
+										removeTag('blacklist-genres', index)
+									"
+								>
+									<i class="material-icons">close</i>
+								</div>
+								<p>{{ genre }}</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="section right-section">
+				<div>
+					<label class="label">Privacy</label>
+					<div
+						@mouseenter="privacyDropdownActive = true"
+						@mouseleave="privacyDropdownActive = false"
+						class="button-wrapper"
 					>
-						{{ genre }}
 						<button
-							class="delete is-info"
-							@click="removeBlacklistedGenre(index)"
-						/>
-					</span>
+							v-bind:class="{
+								green: true,
+								current: editing.privacy === 'public'
+							}"
+							v-if="
+								privacyDropdownActive ||
+									editing.privacy === 'public'
+							"
+							@click="updatePrivacyLocal('public')"
+						>
+							<i class="material-icons">people</i>
+							Public
+						</button>
+						<button
+							v-bind:class="{
+								orange: true,
+								current: editing.privacy === 'unlisted'
+							}"
+							v-if="
+								privacyDropdownActive ||
+									editing.privacy === 'unlisted'
+							"
+							@click="updatePrivacyLocal('unlisted')"
+						>
+							<i class="material-icons">people</i>
+							Unlisted
+						</button>
+						<button
+							v-bind:class="{
+								red: true,
+								current: editing.privacy === 'private'
+							}"
+							v-if="
+								privacyDropdownActive ||
+									editing.privacy === 'private'
+							"
+							@click="updatePrivacyLocal('private')"
+						>
+							<i class="material-icons">people</i>
+							Private
+						</button>
+					</div>
+				</div>
+				<div v-if="editing.type === 'community'">
+					<label class="label">Mode</label>
+					<div
+						@mouseenter="modeDropdownActive = true"
+						@mouseleave="modeDropdownActive = false"
+						class="button-wrapper"
+					>
+						<button
+							v-bind:class="{
+								blue: true,
+								current: editing.partyMode === false
+							}"
+							v-if="modeDropdownActive || !editing.partyMode"
+							@click="updatePartyModeLocal(false)"
+						>
+							<i class="material-icons">people</i>
+							Playlist
+						</button>
+						<button
+							v-bind:class="{
+								yellow: true,
+								current: editing.partyMode === true
+							}"
+							v-if="
+								modeDropdownActive || editing.partyMode === true
+							"
+							@click="updatePartyModeLocal(true)"
+						>
+							<i class="material-icons">people</i>
+							Party
+						</button>
+					</div>
+				</div>
+				<div
+					v-if="
+						editing.type === 'community' &&
+							editing.partyMode === true
+					"
+				>
+					<label class="label">Queue lock</label>
+					<div
+						@mouseenter="queueLockDropdownActive = true"
+						@mouseleave="queueLockDropdownActive = false"
+						class="button-wrapper"
+					>
+						<button
+							v-bind:class="{
+								green: true,
+								current: editing.locked
+							}"
+							v-if="queueLockDropdownActive || editing.locked"
+							@click="updateQueueLockLocal(true)"
+						>
+							<i class="material-icons">people</i>
+							On
+						</button>
+						<button
+							v-bind:class="{
+								red: true,
+								current: !editing.locked
+							}"
+							v-if="queueLockDropdownActive || !editing.locked"
+							@click="updateQueueLockLocal(false)"
+						>
+							<i class="material-icons">people</i>
+							Off
+						</button>
+					</div>
 				</div>
 			</div>
 		</template>
@@ -174,6 +317,55 @@ export default {
 			return socket;
 		});
 	},
+	data() {
+		return {
+			genreInputValue: "",
+			genreInputFocussed: false,
+			genreAutosuggestContainerFocussed: false,
+			keydownGenreInputTimeout: 0,
+			genreAutosuggestItems: [],
+			blacklistGenreInputValue: "",
+			blacklistGenreInputFocussed: false,
+			blacklistGenreAutosuggestContainerFocussed: false,
+			blacklistKeydownGenreInputTimeout: 0,
+			blacklistGenreAutosuggestItems: [],
+			privacyDropdownActive: false,
+			modeDropdownActive: false,
+			queueLockDropdownActive: false,
+			genres: [
+				"Blues",
+				"Country",
+				"Disco",
+				"Funk",
+				"Hip-Hop",
+				"Jazz",
+				"Metal",
+				"Oldies",
+				"Other",
+				"Pop",
+				"Rap",
+				"Reggae",
+				"Rock",
+				"Techno",
+				"Trance",
+				"Classical",
+				"Instrumental",
+				"House",
+				"Electronic",
+				"Christian Rap",
+				"Lo-Fi",
+				"Musical",
+				"Rock 'n' Roll",
+				"Opera",
+				"Drum & Bass",
+				"Club-House",
+				"Indie",
+				"Heavy Metal",
+				"Christian rock",
+				"Dubstep"
+			]
+		};
+	},
 	props: ["store"],
 	methods: {
 		update() {
@@ -184,8 +376,17 @@ export default {
 				this.updateDescription();
 			if (this.station.privacy !== this.editing.privacy)
 				this.updatePrivacy();
-			if (this.station.partyMode !== this.editing.partyMode)
+			if (
+				this.station.type === "community" &&
+				this.station.partyMode !== this.editing.partyMode
+			)
 				this.updatePartyMode();
+			if (
+				this.station.type === "community" &&
+				this.editing.partyMode &&
+				this.station.locked !== this.editing.locked
+			)
+				this.updateQueueLock();
 			if (this.$props.store !== "station") {
 				if (
 					this.station.genres.toString() !==
@@ -219,14 +420,16 @@ export default {
 				res => {
 					if (res.status === "success") {
 						if (this.station) this.station.name = name;
-						this.$parent.stations.forEach((station, index) => {
-							if (station._id === this.editing._id) {
-								this.$parent.stations[index].name = name;
-								return name;
-							}
+						else {
+							this.$parent.stations.forEach((station, index) => {
+								if (station._id === this.editing._id) {
+									this.$parent.stations[index].name = name;
+									return name;
+								}
 
-							return false;
-						});
+								return false;
+							});
+						}
 					}
 					Toast.methods.addToast(res.message, 8000);
 				}
@@ -251,20 +454,20 @@ export default {
 				displayName,
 				res => {
 					if (res.status === "success") {
-						if (this.station) {
+						if (this.station)
 							this.station.displayName = displayName;
-							return displayName;
-						}
-						this.$parent.stations.forEach((station, index) => {
-							if (station._id === this.editing._id) {
-								this.$parent.stations[
-									index
-								].displayName = displayName;
-								return displayName;
-							}
+						else {
+							this.$parent.stations.forEach((station, index) => {
+								if (station._id === this.editing._id) {
+									this.$parent.stations[
+										index
+									].displayName = displayName;
+									return displayName;
+								}
 
-							return false;
-						});
+								return false;
+							});
+						}
 					}
 
 					return Toast.methods.addToast(res.message, 8000);
@@ -294,27 +497,31 @@ export default {
 				description,
 				res => {
 					if (res.status === "success") {
-						if (this.station) {
+						if (this.station)
 							this.station.description = description;
-							return description;
-						}
-						this.$parent.stations.forEach((station, index) => {
-							if (station._id === this.editing._id) {
-								this.$parent.stations[
-									index
-								].description = description;
-								return description;
-							}
+						else {
+							this.$parent.stations.forEach((station, index) => {
+								if (station._id === this.editing._id) {
+									this.$parent.stations[
+										index
+									].description = description;
+									return description;
+								}
 
-							return false;
-						});
+								return false;
+							});
+						}
 
 						return Toast.methods.addToast(res.message, 4000);
 					}
-
 					return Toast.methods.addToast(res.message, 8000);
 				}
 			);
+		},
+		updatePrivacyLocal(privacy) {
+			if (this.editing.privacy === privacy) return;
+			this.editing.privacy = privacy;
+			this.privacyDropdownActive = false;
 		},
 		updatePrivacy() {
 			this.socket.emit(
@@ -399,6 +606,11 @@ export default {
 				}
 			);
 		},
+		updatePartyModeLocal(partyMode) {
+			if (this.editing.partyMode === partyMode) return;
+			this.editing.partyMode = partyMode;
+			this.modeDropdownActive = false;
+		},
 		updatePartyMode() {
 			this.socket.emit(
 				"stations.updatePartyMode",
@@ -406,6 +618,8 @@ export default {
 				this.editing.partyMode,
 				res => {
 					if (res.status === "success") {
+						if (this.station)
+							this.station.partyMode = this.editing.partyMode;
 						// if (this.station)
 						// 	this.station.partyMode = this.editing.partyMode;
 						// this.$parent.stations.forEach((station, index) => {
@@ -426,42 +640,26 @@ export default {
 				}
 			);
 		},
-		addGenre() {
-			const genre = document
-				.getElementById(`new-genre-edit`)
-				.value.toLowerCase()
-				.trim();
-
-			if (this.editing.genres.indexOf(genre) !== -1)
-				return Toast.methods.addToast("Genre already exists", 3000);
-			if (genre) {
-				this.editing.genres.push(genre);
-				document.getElementById(`new-genre-edit`).value = "";
-				return true;
-			}
-			return Toast.methods.addToast("Genre cannot be empty", 3000);
+		updateQueueLockLocal(locked) {
+			if (this.editing.locked === locked) return;
+			this.editing.locked = locked;
+			this.queueLockDropdownActive = false;
 		},
-		removeGenre(index) {
-			this.editing.genres.splice(index, 1);
-		},
-		addBlacklistedGenre() {
-			const genre = document
-				.getElementById(`new-blacklisted$pa-genre-edit`)
-				.value.toLowerCase()
-				.trim();
-			if (this.editing.blacklistedGenres.indexOf(genre) !== -1)
-				return Toast.methods.addToast("Genre already exists", 3000);
-
-			if (genre) {
-				this.editing.blacklistedGenres.push(genre);
-				document.getElementById(`new-blacklisted-genre-edit`).value =
-					"";
-				return true;
-			}
-			return Toast.methods.addToast("Genre cannot be empty", 3000);
-		},
-		removeBlacklistedGenre(index) {
-			this.editing.blacklistedGenres.splice(index, 1);
+		updateQueueLock() {
+			this.socket.emit("stations.toggleLock", this.editing._id, res => {
+				console.log(res);
+				if (res.status === "success") {
+					if (this.station) this.station.locked = res.data;
+					return Toast.methods.addToast(
+						`Toggled queue lock succesfully to ${res.data}`,
+						4000
+					);
+				}
+				return Toast.methods.addToast(
+					"Failed to toggle queue lock.",
+					8000
+				);
+			});
 		},
 		deleteStation() {
 			this.socket.emit("stations.remove", this.editing._id, res => {
@@ -473,39 +671,344 @@ export default {
 				return Toast.methods.addToast(res.message, 8000);
 			});
 		},
+		blurGenreInput() {
+			this.genreInputFocussed = false;
+		},
+		focusGenreInput() {
+			this.genreInputFocussed = true;
+		},
+		keydownGenreInput() {
+			clearTimeout(this.keydownGenreInputTimeout);
+			this.keydownGenreInputTimeout = setTimeout(() => {
+				if (this.genreInputValue.length > 1) {
+					this.genreAutosuggestItems = this.genres.filter(genre => {
+						return genre
+							.toLowerCase()
+							.startsWith(this.genreInputValue.toLowerCase());
+					});
+				} else this.genreAutosuggestItems = [];
+			}, 1000);
+		},
+		focusGenreContainer() {
+			this.genreAutosuggestContainerFocussed = true;
+		},
+		blurGenreContainer() {
+			this.genreAutosuggestContainerFocussed = false;
+		},
+		selectGenreAutosuggest(value) {
+			this.genreInputValue = value;
+		},
+		blurBlacklistGenreInput() {
+			this.blacklistGenreInputFocussed = false;
+		},
+		focusBlacklistGenreInput() {
+			this.blacklistGenreInputFocussed = true;
+		},
+		keydownBlacklistGenreInput() {
+			clearTimeout(this.keydownBlacklistGenreInputTimeout);
+			this.keydownBlacklistGenreInputTimeout = setTimeout(() => {
+				console.log(123, this.blacklistGenreInputValue);
+				if (this.blacklistGenreInputValue.length > 1) {
+					console.log(333);
+					this.blacklistGenreAutosuggestItems = this.genres.filter(
+						genre => {
+							console.log(444);
+							return genre
+								.toLowerCase()
+								.startsWith(
+									this.blacklistGenreInputValue.toLowerCase()
+								);
+						}
+					);
+				} else this.blacklistGenreAutosuggestItems = [];
+			}, 1000);
+		},
+		focusBlacklistGenreContainer() {
+			this.blacklistGenreAutosuggestContainerFocussed = true;
+		},
+		blurBlacklistGenreContainer() {
+			this.blacklistGenreAutosuggestContainerFocussed = false;
+		},
+		selectBlacklistGenreAutosuggest(value) {
+			this.blacklistGenreInputValue = value;
+		},
+		addTag(type) {
+			if (type === "genres") {
+				const genre = this.genreInputValue.toLowerCase().trim();
+				if (this.editing.genres.indexOf(genre) !== -1)
+					return Toast.methods.addToast("Genre already exists", 3000);
+				if (genre) {
+					this.editing.genres.push(genre);
+					this.genreInputValue = "";
+					return false;
+				}
+
+				return Toast.methods.addToast("Genre cannot be empty", 3000);
+			}
+			if (type === "blacklist-genres") {
+				const genre = this.blacklistGenreInputValue
+					.toLowerCase()
+					.trim();
+				if (this.editing.blacklistedGenres.indexOf(genre) !== -1)
+					return Toast.methods.addToast(
+						"Blacklist genre already exists",
+						3000
+					);
+				if (genre) {
+					this.editing.blacklistedGenres.push(genre);
+					this.blacklistGenreInputValue = "";
+					return false;
+				}
+
+				return Toast.methods.addToast(
+					"Blacklis genre cannot be empty",
+					3000
+				);
+			}
+
+			return false;
+		},
+		removeTag(type, index) {
+			if (type === "genres") this.editing.genres.splice(index, 1);
+			else if (type === "blacklist-genres")
+				this.editing.blacklistedGenres.splice(index, 1);
+		},
 		...mapActions("modals", ["closeModal"])
 	},
 	components: { Modal }
 };
 </script>
 
+<style lang="scss">
+.edit-station-modal {
+	.modal-card-title {
+		text-align: center;
+		margin-left: 24px;
+	}
+
+	.modal-card {
+		width: 800px;
+		height: 550px;
+
+		.modal-card-body {
+			padding: 16px;
+			display: flex;
+		}
+	}
+}
+</style>
+
 <style lang="scss" scoped>
 @import "styles/global.scss";
 
-.controls {
-	display: flex;
+.section {
+	border: 1px solid #a3e0ff;
+	background-color: #f4f4f4;
+	border-radius: 5px;
+	padding: 16px;
+}
 
-	a {
-		display: flex;
-		align-items: center;
+.left-section {
+	width: 595px;
+	display: grid;
+	gap: 16px;
+	grid-template-rows: min-content min-content auto;
+
+	.control {
+		input {
+			width: 100%;
+		}
+
+		.add-button {
+			width: 32px;
+
+			&.blue {
+				background-color: $musareBlue !important;
+			}
+
+			&.red {
+				background-color: $red !important;
+			}
+
+			i {
+				font-size: 32px;
+			}
+		}
+	}
+
+	.col {
+		> div {
+			position: relative;
+		}
+	}
+
+	.list-item-circle {
+		width: 16px;
+		height: 16px;
+		border-radius: 8px;
+		cursor: pointer;
+		margin-right: 8px;
+		float: left;
+		-webkit-touch-callout: none;
+		-webkit-user-select: none;
+		-khtml-user-select: none;
+		-moz-user-select: none;
+		-ms-user-select: none;
+		user-select: none;
+
+		&.blue {
+			background-color: $musareBlue;
+
+			i {
+				color: $musareBlue;
+			}
+		}
+
+		&.red {
+			background-color: $red;
+
+			i {
+				color: $red;
+			}
+		}
+
+		i {
+			font-size: 14px;
+			margin-left: 1px;
+		}
+	}
+
+	.list-item-circle:hover,
+	.list-item-circle:focus {
+		i {
+			color: white;
+		}
+	}
+
+	.list-item > p {
+		line-height: 16px;
+		word-wrap: break-word;
+		width: calc(100% - 24px);
+		left: 24px;
+		float: left;
+		margin-bottom: 8px;
+	}
+
+	.list-item:last-child > p {
+		margin-bottom: 0;
+	}
+
+	.autosuggest-container {
+		position: absolute;
+		background: white;
+		width: calc(100% + 1px);
+		top: 57px;
+		z-index: 200;
+		overflow: auto;
+		max-height: 100%;
+		clear: both;
+
+		.autosuggest-item {
+			padding: 8px;
+			display: block;
+			border: 1px solid #dbdbdb;
+			margin-top: -1px;
+			line-height: 16px;
+			cursor: pointer;
+			-webkit-user-select: none;
+			-ms-user-select: none;
+			-moz-user-select: none;
+			user-select: none;
+		}
+
+		.autosuggest-item:hover,
+		.autosuggest-item:focus {
+			background-color: #eee;
+		}
+
+		.autosuggest-item:first-child {
+			border-top: none;
+		}
+
+		.autosuggest-item:last-child {
+			border-radius: 0 0 3px 3px;
+		}
 	}
 }
 
-.table {
-	margin-bottom: 0;
+.right-section {
+	width: 157px;
+	margin-left: 16px;
+	display: grid;
+	gap: 16px;
+	grid-template-rows: min-content min-content min-content;
+
+	.button-wrapper {
+		display: flex;
+		flex-direction: column;
+	}
+
+	button {
+		width: 100%;
+		height: 36px;
+		border: 0;
+		border-radius: 10px;
+		font-size: 18px;
+		color: white;
+		box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.25);
+		display: block;
+		text-align: center;
+		justify-content: center;
+		display: inline-flex;
+		-ms-flex-align: center;
+		align-items: center;
+		-moz-user-select: none;
+		user-select: none;
+		cursor: pointer;
+		margin-bottom: 16px;
+		padding: 0;
+
+		&.current {
+			order: -1;
+		}
+
+		&.red {
+			background-color: $red;
+		}
+
+		&.green {
+			background-color: $green;
+		}
+
+		&.blue {
+			background-color: $musareBlue;
+		}
+
+		&.orange {
+			background-color: $light-orange;
+		}
+
+		&.yellow {
+			background-color: $yellow;
+		}
+
+		i {
+			font-size: 20px;
+			margin-right: 4px;
+		}
+	}
 }
 
-h5 {
-	padding: 20px 0;
+.col {
+	display: grid;
+	grid-column-gap: 16px;
 }
 
-.party-mode-inner,
-.party-mode-outer {
-	display: flex;
-	align-items: center;
+.col-1 {
+	grid-template-columns: auto;
 }
 
-.select:after {
-	border-color: $primary-color;
+.col-2 {
+	grid-template-columns: auto auto;
 }
 </style>
