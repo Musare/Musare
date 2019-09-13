@@ -24,7 +24,10 @@
 				<router-link
 					v-for="(station, index) in stations"
 					:key="index"
-					:to="{ name: 'community', params: { id: station.name } }"
+					:to="{
+						name: 'station',
+						params: { id: station.name }
+					}"
 					class="card station-card"
 					:class="{
 						isPrivate: station.privacy === 'private',
