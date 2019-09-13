@@ -3,11 +3,11 @@
 		<metadata title="Home" />
 		<div class="app">
 			<main-header />
-			<div class="content-wrapper">
-				<div class="stationsTitle">
+			<div class="group">
+				<div class="group-title">
 					Stations&nbsp;
 					<a
-						v-if="loggedIn"
+						v-if="$parent.loggedIn"
 						href="#"
 						@click="
 							openModal({
@@ -21,118 +21,97 @@
 						>
 					</a>
 				</div>
-				<div class="stations">
-					<router-link
-						v-for="(station, index) in filteredStations"
-						:key="index"
-						:to="{
-							name: 'station',
-							params: { id: station.name }
-						}"
-						class="stationCard"
-					>
-						<div class="topContent">
-							<div class="albumArt">
-								<div
-									v-if="station.currentSong.ytThumbnail"
-									class="ytThumbnailBg"
-									v-bind:style="{
-										'background-image':
-											'url(' +
-											station.currentSong.ytThumbnail +
-											')'
-									}"
-								></div>
-								<img
-									v-if="station.currentSong.ytThumbnail"
-									:src="station.currentSong.ytThumbnail"
-									onerror="this.src='/assets/notes-transparent.png'"
-									class="ytThumbnail"
-								/>
-								<img
-									v-else
-									:src="station.currentSong.thumbnail"
-									onerror="this.src='/assets/notes-transparent.png'"
-								/>
-							</div>
-							<div class="info">
-								<h5 class="displayName">
-									{{ station.displayName }}
-									<i
-										v-if="station.type === 'official'"
-										class="badge material-icons"
-									>
-										verified_user
-									</i>
-								</h5>
+				<router-link
+					v-for="(station, index) in stations"
+					:key="index"
+					:to="{ name: 'community', params: { id: station.name } }"
+					class="card station-card"
+					:class="{
+						isPrivate: station.privacy === 'private',
+						isMine: isOwner(station)
+					}"
+				>
+					<div class="card-image">
+						<figure class="image is-square">
+							<div
+								v-if="station.currentSong.ytThumbnail"
+								class="ytThumbnailBg"
+								v-bind:style="{
+									'background-image':
+										'url(' +
+										station.currentSong.ytThumbnail +
+										')'
+								}"
+							></div>
+							<img
+								v-if="station.currentSong.ytThumbnail"
+								:src="station.currentSong.ytThumbnail"
+								onerror="this.src='/assets/notes-transparent.png'"
+							/>
+							<img
+								v-else
+								:src="station.currentSong.thumbnail"
+								onerror="this.src='/assets/notes-transparent.png'"
+							/>
+						</figure>
+					</div>
+					<div class="card-content">
+						<div class="media">
+							<div class="media-left displayName">
 								<i
 									v-if="loggedIn && !isFavorite(station)"
-									@click="favoriteStation($event, station)"
-									class="favorite material-icons"
+									@click.stop.prevent="
+										favoriteStation($event, station)
+									"
+									class="material-icons yellow-icon"
 									>star_border</i
 								>
 								<i
 									v-if="loggedIn && isFavorite(station)"
-									@click="unfavoriteStation($event, station)"
-									class="favorite material-icons"
+									@click.stop.prevent="
+										unfavoriteStation($event, station)
+									"
+									class="material-icons yellow-icon"
 									>star</i
 								>
-								<p class="description">
-									{{ station.description }}
-								</p>
-								<p class="hostedBy">
-									Hosted by
-									<span class="host">
-										<span
-											v-if="station.type === 'official'"
-											title="Musare"
-											>Musare</span
-										>
-										<user-id-to-username
-											v-else
-											:userId="station.owner"
-											:link="true"
-										/>
-									</span>
-								</p>
-								<div class="bottomIcons">
-									<i
-										v-if="station.privacy !== 'public'"
-										class="privateIcon material-icons"
-										title="This station is not visible to other users."
-										>lock</i
-									>
-									<i
-										v-if="
-											station.type === 'community' &&
-												isOwner(station)
-										"
-										class="homeIcon material-icons"
-										title="This is your station."
-										>home</i
-									>
-								</div>
+								<h5>{{ station.displayName }}</h5>
+								<i
+									v-if="station.type === 'official'"
+									class="material-icons green-icon"
+									title="Verified station"
+								>
+									verified_user
+								</i>
 							</div>
 						</div>
-						<div class="bottomBar">
-							<i class="material-icons">music_note</i>
-							<span
-								v-if="station.currentSong.title"
-								class="songTitle"
-								>{{ station.currentSong.title }}</span
-							>
-							<span v-else class="songTitle"
-								>No Songs Playing</span
-							>
-							<div class="right">
-								<i class="material-icons">people</i>
-								<span class="currentUsers">{{
-									station.userCount
-								}}</span>
-							</div>
+
+						<div class="content">
+							{{ station.description }}
 						</div>
-					</router-link>
-				</div>
+						<div class="under-content">
+							<p v-if="station.type === 'community'">
+								Hosted by
+								<user-id-to-username
+									:userId="station.owner"
+									:link="true"
+								/>
+							</p>
+
+							<i
+								v-if="isOwner(station)"
+								class="material-icons right-icon purple-icon"
+								title="This is your station."
+								>home</i
+							>
+							<i
+								v-if="station.privacy !== 'public'"
+								class="material-icons right-icon red-icon"
+								title="This station is not visible to other users."
+								>lock</i
+							>
+						</div>
+					</div>
+				</router-link>
 			</div>
 			<main-footer />
 		</div>
@@ -255,9 +234,7 @@ export default {
 			this.socket.emit("apis.joinRoom", "home", () => {});
 		},
 		isOwner(station) {
-			return (
-				station.owner === this.userId && station.privacy === "public"
-			);
+			return station.owner === this.userId;
 		},
 		isFavorite(station) {
 			return this.favoriteStations.indexOf(station._id) !== -1;
@@ -301,12 +278,10 @@ export default {
 * {
 	box-sizing: border-box;
 }
-
 html {
 	width: 100%;
 	height: 100%;
-	color: $dark-grey-2;
-
+	color: rgba(0, 0, 0, 0.87);
 	body {
 		width: 100%;
 		height: 100%;
@@ -314,214 +289,203 @@ html {
 		padding: 0;
 	}
 }
-
-.stationsTitle {
-	width: 100%;
-	height: 64px;
-	line-height: 48px;
-	text-align: center;
-	font-size: 48px;
-	margin-bottom: 25px;
+@media only screen and (min-width: 1200px) {
+	html {
+		font-size: 15px;
+	}
 }
+@media only screen and (min-width: 992px) {
+	html {
+		font-size: 14.5px;
+	}
+}
+@media only screen and (min-width: 0) {
+	html {
+		font-size: 14px;
+	}
+}
+.under-content {
+	width: calc(100% - 40px);
+	left: 20px;
+	right: 20px;
+	bottom: 10px;
+	text-align: left;
+	height: 25px;
+	position: absolute;
+	margin-bottom: 10px;
+	line-height: 1;
+	font-size: 24px;
+	vertical-align: middle;
+
+	p {
+		font-size: 15px;
+		line-height: 15px;
+		display: inline;
+	}
+
+	* {
+		z-index: 10;
+		position: relative;
+	}
+	.right-icon {
+		float: right;
+	}
+
+	.purple-icon {
+		color: $light-purple;
+	}
+
+	.red-icon {
+		color: $dark-pink;
+	}
+}
+.users-count {
+	font-size: 20px;
+	position: relative;
+	top: -4px;
+}
+.right {
+	float: right;
+}
+.group {
+	min-height: 64px;
+}
+.station-card {
+	margin: 10px;
+	cursor: pointer;
+	height: 475px;
+	transition: all ease-in-out 0.2s;
+	.card-content {
+		max-height: 159px;
+
+		.content {
+			word-wrap: break-word;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			display: -webkit-box;
+			-webkit-box-orient: vertical;
+			-webkit-line-clamp: 3;
+			line-height: 20px;
+			max-height: 60px;
+		}
+	}
+
+	.card-image {
+		.image {
+			.ytThumbnailBg {
+				background: url("/assets/notes-transparent.png") no-repeat
+					center center;
+				background-size: cover;
+				height: 100%;
+				width: 100%;
+				position: absolute;
+				top: 0;
+				filter: blur(5px);
+			}
+			img {
+				height: auto;
+				width: 100%;
+				top: 0;
+				margin-top: auto;
+				margin-bottom: auto;
+				z-index: 1;
+			}
+		}
+	}
+}
+.station-card:hover {
+	box-shadow: 0 2px 3px rgba(10, 10, 10, 0.3), 0 0 10px rgba(10, 10, 10, 0.3);
+	transition: all ease-in-out 0.2s;
+}
+/*.isPrivate {
+		background-color: #F8BBD0;
+	}
+	.isMine {
+		background-color: #29B6F6;
+	}*/
 .community-button {
 	cursor: pointer;
 	transition: 0.25s ease color;
 	font-size: 30px;
-	color: $dark-grey;
-	&:hover {
-		color: $primary-color;
+	color: #4a4a4a;
+}
+.community-button:hover {
+	color: #03a9f4;
+}
+.station-privacy {
+	text-transform: capitalize;
+}
+.label {
+	display: flex;
+}
+.g-recaptcha {
+	display: flex;
+	justify-content: center;
+	margin-top: 20px;
+}
+.group {
+	text-align: center;
+	width: 100%;
+	margin: 64px 0 0 0;
+	padding-bottom: 240px;
+	.group-title {
+		float: left;
+		clear: none;
+		width: 100%;
+		height: 64px;
+		line-height: 48px;
+		text-align: center;
+		font-size: 48px;
+		margin-bottom: 25px;
 	}
 }
-
-.stations {
-	display: flex;
-	flex: 1;
-	flex-wrap: wrap;
-	justify-content: center;
-	margin-left: 10px;
-	margin-right: 10px;
-}
-.stationCard {
+.group .card {
 	display: inline-flex;
 	flex-direction: column;
-	width: 450px;
-	height: 180px;
-	background: $white;
-	box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.1);
-	color: $dark-grey;
-	margin: 10px;
-	transition: all ease-in-out 0.2s;
-	cursor: pointer;
 	overflow: hidden;
-	.albumArt {
-		display: inline-flex;
-		position: relative;
-		height: 150px;
-		width: 150px;
-		box-shadow: 1px 0px 3px rgba(7, 136, 191, 0.3);
-		overflow: hidden;
-		img {
-			width: auto;
-			height: 100%;
-		}
-		.ytThumbnailBg {
-			background: url("/assets/notes-transparent.png") no-repeat center
-				center;
-			background-size: cover;
-			height: 100%;
-			width: 100%;
-			position: absolute;
-			top: 0;
-			filter: blur(5px);
-		}
-		.ytThumbnail {
-			height: auto;
-			width: 100%;
-			top: 0;
-			margin-top: auto;
-			margin-bottom: auto;
-			z-index: 1;
-		}
+	.content {
+		text-align: left;
+		word-wrap: break-word;
 	}
-	.topContent {
-		width: 100%;
-		height: 100%;
-		display: inline-flex;
-		.info {
-			padding: 15px 12px 12px 15px;
-			position: relative;
-			width: 100%;
-			max-width: 300px;
-			.displayName {
-				color: $black;
-				margin: 0;
-				font-size: 20px;
-				font-weight: 500;
-				margin-bottom: 5px;
-				width: calc(100% - 30px);
-				word-wrap: break-word;
-				overflow: hidden;
-				text-overflow: ellipsis;
-				display: -webkit-box;
-				-webkit-box-orient: vertical;
-				-webkit-line-clamp: 1;
-				line-height: 30px;
-				max-height: 30px;
-				.badge {
-					position: relative;
-					padding-right: 2px;
-					color: $lime;
-					top: 3px;
-					font-size: 22px;
-				}
-			}
-			.favorite {
-				color: $yellow;
-				top: 12px;
-				right: 12px;
-				position: absolute;
-				display: none;
-			}
-			.description {
-				width: calc(100% - 30px);
-				margin: 0;
-				font-size: 14px;
-				font-weight: 400;
-				word-wrap: break-word;
-				overflow: hidden;
-				text-overflow: ellipsis;
-				display: -webkit-box;
-				-webkit-box-orient: vertical;
-				-webkit-line-clamp: 3;
-				line-height: 20px;
-				max-height: 60px;
-			}
-			.hostedBy {
-				font-weight: 400;
-				font-size: 12px;
-				position: absolute;
-				bottom: 12px;
-				color: $black;
-				.host {
-					font-weight: 400;
-					color: $primary-color;
-				}
-			}
-			.bottomIcons {
-				position: absolute;
-				bottom: 12px;
-				right: 12px;
-				.material-icons {
-					margin-left: 5px;
-					font-size: 22px;
-				}
-				.privateIcon {
-					color: $dark-pink;
-				}
-				.homeIcon {
-					color: $light-purple;
-				}
-			}
-		}
-	}
-	.bottomBar {
-		background: $primary-color;
-		box-shadow: inset 0px 2px 4px rgba(7, 136, 191, 0.6);
-		width: 100%;
-		height: 30px;
-		line-height: 30px;
-		color: $white;
-		font-weight: 400;
-		font-size: 12px;
-		i.material-icons {
-			vertical-align: middle;
-			margin-left: 12px;
-			font-size: 22px;
-		}
-		.songTitle {
-			vertical-align: middle;
-			margin-left: 5px;
-		}
-		.right {
-			float: right;
-			margin-right: 12px;
-			.currentUsers {
-				vertical-align: middle;
-				margin-left: 5px;
-				font-size: 14px;
-			}
-		}
-	}
-}
-.stationCard:hover {
-	box-shadow: 0 2px 3px rgba(10, 10, 10, 0.3), 0 0 10px rgba(10, 10, 10, 0.3);
-	transition: all ease-in-out 0.2s;
-}
+	.media {
+		display: flex;
+		align-items: center;
 
-@media screen and (max-width: 490px) {
-	.stationCard {
-		width: calc(100% - 20px);
-		height: auto;
-		.topContent {
-			.albumArt {
-				max-height: 100px;
-				max-width: 100px;
-			}
-			.info {
-				width: calc(100% - 100px);
-				padding: 5px 2px 2px 10px !important;
-				.displayName {
-					font-size: 16px !important;
-					margin-bottom: 3px !important;
-				}
-				.description {
-					font-size: 12px !important;
-					-webkit-line-clamp: 2;
-					line-height: 15px;
-					max-height: 30px;
-				}
-			}
+		.station-status {
+			line-height: 13px;
+		}
+
+		i {
+			font-size: 26px;
+		}
+
+		.yellow-icon {
+			color: $yellow;
+			margin-right: 6px;
+			font-size: 28px;
+		}
+
+		.green-icon {
+			color: $lime;
+		}
+
+		h5 {
+			margin: 0;
+			display: inline;
+			margin-right: 6px;
+			line-height: 30px;
 		}
 	}
+}
+.displayName {
+	word-wrap: break-word;
+	width: 80%;
+	word-wrap: break-word;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	display: flex;
+	line-height: 30px;
+	max-height: 30px;
+	//position: relative;
 }
 </style>

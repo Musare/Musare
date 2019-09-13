@@ -707,12 +707,9 @@ export default {
 		keydownBlacklistGenreInput() {
 			clearTimeout(this.keydownBlacklistGenreInputTimeout);
 			this.keydownBlacklistGenreInputTimeout = setTimeout(() => {
-				console.log(123, this.blacklistGenreInputValue);
 				if (this.blacklistGenreInputValue.length > 1) {
-					console.log(333);
 					this.blacklistGenreAutosuggestItems = this.genres.filter(
 						genre => {
-							console.log(444);
 							return genre
 								.toLowerCase()
 								.startsWith(
