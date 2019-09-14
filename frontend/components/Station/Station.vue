@@ -457,7 +457,9 @@ export default {
 			systemDifference: 0,
 			attemptsToPlayVideo: 0,
 			canAutoplay: true,
-			lastTimeRequestedIfCanAutoplay: 0
+			lastTimeRequestedIfCanAutoplay: 0,
+			seeking: false,
+			playbackRate: 1
 		};
 	},
 	computed: {
@@ -545,7 +547,7 @@ export default {
 						},
 						onStateChange: event => {
 							if (
-								event.data === 1 &&
+								event.data === window.YT.PlayerState.PLAYING &&
 								this.videoLoading === true
 							) {
 								this.videoLoading = false;
@@ -555,15 +557,23 @@ export default {
 									true
 								);
 								if (this.paused) this.player.pauseVideo();
-							} else if (event.data === 1 && this.paused) {
+							} else if (
+								event.data === window.YT.PlayerState.PLAYING &&
+								this.paused
+							) {
 								this.player.seekTo(
 									this.timeBeforePause / 1000,
 									true
 								);
 								this.player.pauseVideo();
+							} else if (
+								event.data === window.YT.PlayerState.PLAYING &&
+								this.seeking === true
+							) {
+								this.seeking = false;
 							}
 							if (
-								event.data === 2 &&
+								event.data === window.YT.PlayerState.PAUSED &&
 								!this.paused &&
 								!this.noSong &&
 								this.player.getDuration() / 1000 <
@@ -671,28 +681,52 @@ export default {
 				const currentPlayerTime = this.player.getCurrentTime() * 1000;
 
 				const difference = timeElapsed - currentPlayerTime;
-				// console.log(difference123);
-				if (difference < -200) {
+				// console.log(difference);
+
+				let playbackRate = 1;
+
+				if (difference < -2000) {
+					if (!this.seeking) {
+						this.seeking = true;
+						this.player.seekTo(
+							this.getTimeElapsed() / 1000 +
+								this.currentSong.skipDuration
+						);
+					}
+				} else if (difference < -200) {
 					// console.log("Difference0.8");
-					this.player.setPlaybackRate(0.8);
+					playbackRate = 0.8;
 				} else if (difference < -50) {
 					// console.log("Difference0.9");
-					this.player.setPlaybackRate(0.9);
+					playbackRate = 0.9;
 				} else if (difference < -25) {
 					// console.log("Difference0.99");
-					this.player.setPlaybackRate(0.99);
+					playbackRate = 0.95;
+				} else if (difference > 2000) {
+					if (!this.seeking) {
+						this.seeking = true;
+						this.player.seekTo(
+							this.getTimeElapsed() / 1000 +
+								this.currentSong.skipDuration
+						);
+					}
 				} else if (difference > 200) {
 					// console.log("Difference1.2");
-					this.player.setPlaybackRate(1.2);
+					playbackRate = 1.2;
 				} else if (difference > 50) {
 					// console.log("Difference1.1");
-					this.player.setPlaybackRate(1.1);
+					playbackRate = 1.1;
 				} else if (difference > 25) {
 					// console.log("Difference1.01");
-					this.player.setPlaybackRate(1.01);
+					playbackRate = 1.05;
 				} else if (this.player.getPlaybackRate !== 1.0) {
 					// console.log("NDifference1.0");
 					this.player.setPlaybackRate(1.0);
+				}
+
+				if (this.playbackRate !== playbackRate) {
+					this.player.setPlaybackRate(playbackRate);
+					this.playbackRate = playbackRate;
 				}
 			}
 
