@@ -2,6 +2,8 @@ const EventEmitter = require('events');
 
 const bus = new EventEmitter();
 
+bus.setMaxListeners(1000);
+
 module.exports = class {
 	constructor(name, moduleManager) {
 		this.name = name;
@@ -69,7 +71,7 @@ module.exports = class {
 	}
 
 	_validateHook() {
-		return Promise.race([this._onInitialize, this._isInitialized]).then(
+		return Promise.race([this._onInitialize(), this._isInitialized()]).then(
 			() => this._isNotLocked()
 		);
 	}
