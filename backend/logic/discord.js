@@ -50,7 +50,7 @@ module.exports = class extends coreClass {
 	async sendAdminAlertMessage(message, color, type, critical, extraFields) {
 		try { await this._validateHook(); } catch { return; }
 
-		const channel = this.client.channels.find("id", this.adminAlertChannelId);
+		const channel = this.client.channels.find(channel => channel.id === this.adminAlertChannelId);
 		if (channel !== null) {
 			let richEmbed = new Discord.RichEmbed();
 			richEmbed.setAuthor(
