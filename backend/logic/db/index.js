@@ -109,10 +109,13 @@ module.exports = class extends coreClass {
 					}, 'Invalid display name.');
 		
 					this.schemas.station.path('owner').validate({
-						isAsync: true,
-						validator: (owner, callback) => {
-							this.models.station.countDocuments({ owner: owner }, (err, c) => {
-								callback(!(err || c >= 3))
+						validator: (owner) => {
+							return new Promise((resolve, reject) => {
+								this.models.station.countDocuments({ owner: owner }, (err, c) => {
+									if (err) reject(new Error("A mongo error happened."));
+									else if (c >= 3) reject(new Error("User already has 3 stations."));
+									else resolve();
+								});
 							});
 						},
 						message: 'User already has 3 stations.'
