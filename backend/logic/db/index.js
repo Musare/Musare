@@ -192,9 +192,8 @@ module.exports = class extends coreClass {
 		
 					let songThumbnail = (thumbnail) => {
 						if (!isLength(thumbnail, 1, 256)) return false;
-						let startWith = "https://";
-						if (config.get("cookie.secure") === false) startWith = "http://";
-						return thumbnail.startsWith(startWith);
+						if (config.get("cookie.secure") === true) return thumbnail.startsWith("https://");
+						else return thumbnail.startsWith("http://") || thumbnail.startsWith("https://");
 					};
 					this.schemas.song.path('thumbnail').validate(songThumbnail, 'Invalid thumbnail.');
 					this.schemas.queueSong.path('thumbnail').validate(songThumbnail, 'Invalid thumbnail.');
