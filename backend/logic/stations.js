@@ -329,6 +329,7 @@ module.exports = class extends coreClass {
 		this.logger.info("STATION_SKIP", `Skipping station ${stationId}.`, false);
 		return async (cb) => {
 			try { await this._validateHook(); } catch { return; }
+			this.logger.stationIssue(`SKIP_STATION_CB - Station ID: ${stationId}.`);
 
 			if (typeof cb !== 'function') cb = ()=>{};
 
