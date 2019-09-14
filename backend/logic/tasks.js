@@ -3,6 +3,7 @@
 const coreClass = require("../core");
 
 const async = require("async");
+const fs = require("fs");
 
 let tasks = {};
 
@@ -19,6 +20,7 @@ module.exports = class extends coreClass {
 			//this.createTask("testTask", testTask, 5000, true);
 			this.createTask("stationSkipTask", this.checkStationSkipTask, 1000 * 60 * 30);
 			this.createTask("sessionClearTask", this.sessionClearingTask, 1000 * 60 * 60 * 6);
+			this.createTask("logFileSizeCheckTask", this.logFileSizeCheckTask, 1000 * 60 * 60);
 
 			resolve();
 		});
@@ -145,5 +147,27 @@ module.exports = class extends coreClass {
 		], () => {
 			callback();
 		});
+	}
+
+	async logFileSizeCheckTask(callback) {
+		this.logger.info("TASK_LOG_FILE_SIZE_CHECK", `Checking the size for the log files.`);
+		async.each(
+			["all.log", "debugStation.log", "error.log", "info.log", "success.log"],
+			(fileName, next) => {
+				const stats = fs.statSync(`${__dirname}/../../log/${fileName}`);
+				const mb = stats.size / 1000000;
+				if (mb > 25) return next(true);
+				else next();
+			},
+			(err) => {
+				if (err === true) {
+					this.logger.error("LOGGER_FILE_SIZE_WARNING", "************************************WARNING*************************************");
+					this.logger.error("LOGGER_FILE_SIZE_WARNING", "***************ONE OR MORE LOG FILES APPEAR TO BE MORE THAN 25MB****************");
+					this.logger.error("LOGGER_FILE_SIZE_WARNING", "****MAKE SURE TO REGULARLY CLEAR UP THE LOG FILES, MANUALLY OR AUTOMATICALLY****");
+					this.logger.error("LOGGER_FILE_SIZE_WARNING", "********************************************************************************");
+				}
+				callback();
+			}
+		);
 	}
 }
