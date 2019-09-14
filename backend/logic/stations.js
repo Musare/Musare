@@ -92,18 +92,20 @@ module.exports = class extends coreClass {
 				},
 	
 				(stations, next) => {
-					this.setStage(4);
-					async.each(stations, (station, next) => {
+					this.setStage(5);
+					async.each(stations, (station, next2) => {
 						async.waterfall([
 							(next) => {
 								this.cache.hset('stations', station._id, this.cache.schemas.station(station), next);
 							},
 	
 							(station, next) => {
-								this.initializeStation(station._id, next);
+								this.initializeStation(station._id, () => {
+									next()
+								}, true);
 							}
 						], (err) => {
-							next(err);
+							next2(err);
 						});
 					}, next);
 				}
@@ -118,14 +120,14 @@ module.exports = class extends coreClass {
 		});
 	}
 
-	async initializeStation(stationId, cb) {
-		try { await this._validateHook(); } catch { return; }
+	async initializeStation(stationId, cb, bypassValidate = false) {
+		if (!bypassValidate) try { await this._validateHook(); } catch { return; }
 
 		if (typeof cb !== 'function') cb = ()=>{};
 
 		async.waterfall([
 			(next) => {
-				this.getStation(stationId, next);
+				this.getStation(stationId, next, true);
 			},
 			(station, next) => {
 				if (!station) return next('Station not found.');
@@ -139,14 +141,14 @@ module.exports = class extends coreClass {
 					return this.skipStation(station._id)((err, station) => {
 						if (err) return next(err);
 						return next(true, station);
-					});
+					}, true);
 				}
 				let timeLeft = ((station.currentSong.duration * 1000) - (Date.now() - station.startedAt - station.timePaused));
 				if (isNaN(timeLeft)) timeLeft = -1;
 				if (station.currentSong.duration * 1000 < timeLeft || timeLeft < 0) {
 					this.skipStation(station._id)((err, station) => {
 						next(err, station);
-					});
+					}, true);
 				} else {
 					this.notifications.schedule(`stations.nextSong?id=${station._id}`, timeLeft, null, station);
 					next(null, station);
@@ -158,12 +160,13 @@ module.exports = class extends coreClass {
 		});
 	}
 
-	async calculateSongForStation(station, cb) {
-		try { await this._validateHook(); } catch { return; }
+	async calculateSongForStation(station, cb, bypassValidate = false) {
+		if (!bypassValidate) try { await this._validateHook(); } catch { return; }
 
 		let songList = [];
 		async.waterfall([
 			(next) => {
+				if (station.genres.length === 0) return next();
 				let genresDone = [];
 				station.genres.forEach((genre) => {
 					this.db.models.song.find({genres: genre}, (err, songs) => {
@@ -203,14 +206,14 @@ module.exports = class extends coreClass {
 			(playlist, next) => {
 				this.calculateOfficialPlaylistList(station._id, playlist, () => {
 					next(null, playlist);
-				});
+				}, true);
 			},
 
 			(playlist, next) => {
 				this.db.models.station.updateOne({_id: station._id}, {$set: {playlist: playlist}}, {runValidators: true}, (err) => {
 					this.updateStation(station._id, () => {
 						next(err, playlist);
-					});
+					}, true);
 				});
 			}
 
@@ -220,8 +223,8 @@ module.exports = class extends coreClass {
 	}
 
 	// Attempts to get the station from Redis. If it's not in Redis, get it from Mongo and add it to Redis.
-	async getStation(stationId, cb) {
-		try { await this._validateHook(); } catch { return; }
+	async getStation(stationId, cb, bypassValidate = false) {
+		if (!bypassValidate) try { await this._validateHook(); } catch { return; }
 
 		async.waterfall([
 			(next) => {
@@ -277,8 +280,8 @@ module.exports = class extends coreClass {
 		});
 	}
 
-	async updateStation(stationId, cb) {
-		try { await this._validateHook(); } catch { return; }
+	async updateStation(stationId, cb, bypassValidate = false) {
+		if (!bypassValidate) try { await this._validateHook(); } catch { return; }
 
 		async.waterfall([
 
@@ -300,8 +303,8 @@ module.exports = class extends coreClass {
 		});
 	}
 
-	async calculateOfficialPlaylistList(stationId, songList, cb) {
-		try { await this._validateHook(); } catch { return; }
+	async calculateOfficialPlaylistList(stationId, songList, cb, bypassValidate = false) {
+		if (!bypassValidate) try { await this._validateHook(); } catch { return; }
 
 		let lessInfoPlaylist = [];
 		async.each(songList, (song, next) => {
@@ -327,15 +330,15 @@ module.exports = class extends coreClass {
 
 	skipStation(stationId) {
 		this.logger.info("STATION_SKIP", `Skipping station ${stationId}.`, false);
-		return async (cb) => {
-			try { await this._validateHook(); } catch { return; }
+		return async (cb, bypassValidate = false) => {
+			if (!bypassValidate) try { await this._validateHook(); } catch { return; }
 			this.logger.stationIssue(`SKIP_STATION_CB - Station ID: ${stationId}.`);
 
 			if (typeof cb !== 'function') cb = ()=>{};
 
 			async.waterfall([
 				(next) => {
-					this.getStation(stationId, next);
+					this.getStation(stationId, next, true);
 				},
 				(station, next) => {
 					if (!station) return next('Station not found.');
@@ -385,7 +388,7 @@ module.exports = class extends coreClass {
 									return next(null, song, 0, station);
 								});
 							}
-						});
+						}, true);
 					}
 					if (station.type === 'official' && station.playlist.length > 0) {
 						async.doUntil((next) => {
@@ -405,7 +408,7 @@ module.exports = class extends coreClass {
 										station.playlist = newPlaylist;
 										next(null, song, 0);
 									});
-								});
+								}, true);
 							}
 						}, (song, currentSongIndex, next) => {
 							if (!!song) return next(null, true, currentSongIndex);
@@ -452,7 +455,7 @@ module.exports = class extends coreClass {
 							if (station.type === 'community' && station.partyMode === true)
 								this.cache.pub('station.queueUpdate', stationId);
 							next(null, station);
-						});
+						}, true);
 					});
 				},
 			], async (err, station) => {
