@@ -39,7 +39,7 @@
 				<a href="/"
 					><img
 						class="musareFooterLogo"
-						src="/assets/wordmark.png"
+						src="/assets/blue_wordmark.png"
 						alt="Musare"
 				/></a>
 				<p class="footerLinks">
