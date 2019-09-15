@@ -11,7 +11,8 @@
 		"SIDname": "SID"
 	},
 	"siteSettings": {
-		"logo": "/assets/wordmark.png",
+		"logo_white": "/assets/white_wordmark.png",
+		"logo_blue": "/assets/blue_wordmark.png",
 		"siteName": "Musare",
 		"socialLinks": {
 			"github": "https://github.com/Musare/MusareNode",
