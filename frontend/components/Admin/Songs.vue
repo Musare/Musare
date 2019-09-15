@@ -102,7 +102,7 @@
 <script>
 import { mapState, mapActions } from "vuex";
 
-import { Toast } from "vue-roaster";
+import Toast from "toasters";
 
 import EditSong from "../Modals/EditSong.vue";
 import UserIdToUsername from "../UserIdToUsername.vue";
@@ -153,8 +153,8 @@ export default {
 		remove(id) {
 			this.socket.emit("songs.remove", id, res => {
 				if (res.status === "success")
-					Toast.methods.addToast(res.message, 4000);
-				else Toast.methods.addToast(res.message, 8000);
+					new Toast({ content: res.message, timeout: 4000 });
+				else new Toast({ content: res.message, timeout: 8000 });
 			});
 		},
 		getSet() {
@@ -232,7 +232,10 @@ export default {
 					this.edit(res.data);
 					this.closeModal({ sector: "admin", modal: "viewReport" });
 				} else
-					Toast.methods.addToast("Song with that ID not found", 3000);
+					new Toast({
+						content: "Song with that ID not found",
+						timeout: 3000
+					});
 			});
 		}
 	}

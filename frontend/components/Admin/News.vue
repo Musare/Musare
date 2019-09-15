@@ -215,7 +215,7 @@
 <script>
 import { mapActions, mapState } from "vuex";
 
-import { Toast } from "vue-roaster";
+import Toast from "toasters";
 import io from "../../io";
 
 import EditNews from "../Modals/EditNews.vue";
@@ -267,28 +267,28 @@ export default {
 			} = this;
 
 			if (this.creating.title === "")
-				return Toast.methods.addToast(
-					"Field (Title) cannot be empty",
-					3000
-				);
+				return new Toast({
+					content: "Field (Title) cannot be empty",
+					timeout: 3000
+				});
 			if (this.creating.description === "")
-				return Toast.methods.addToast(
-					"Field (Description) cannot be empty",
-					3000
-				);
+				return new Toast({
+					content: "Field (Description) cannot be empty",
+					timeout: 3000
+				});
 			if (
 				bugs.length <= 0 &&
 				features.length <= 0 &&
 				improvements.length <= 0 &&
 				upcoming.length <= 0
 			)
-				return Toast.methods.addToast(
-					"You must have at least one News Item",
-					3000
-				);
+				return new Toast({
+					content: "You must have at least one News Item",
+					timeout: 3000
+				});
 
 			return this.socket.emit("news.create", this.creating, result => {
-				Toast.methods.addToast(result.message, 4000);
+				new Toast(result.message, 4000);
 				if (result.status === "success")
 					this.creating = {
 						title: "",
@@ -301,8 +301,10 @@ export default {
 			});
 		},
 		removeNews(news) {
-			this.socket.emit("news.remove", news, res =>
-				Toast.methods.addToast(res.message, 8000)
+			this.socket.emit(
+				"news.remove",
+				news,
+				res => new Toast({ content: res.message, timeout: 8000 })
 			);
 		},
 		editNewsClick(news) {
@@ -313,14 +315,20 @@ export default {
 			const change = document.getElementById(`new-${type}`).value.trim();
 
 			if (this.creating[type].indexOf(change) !== -1)
-				return Toast.methods.addToast(`Tag already exists`, 3000);
+				return new Toast({
+					content: `Tag already exists`,
+					timeout: 3000
+				});
 
 			if (change) {
 				document.getElementById(`new-${type}`).value = "";
 				this.creating[type].push(change);
 				return true;
 			}
-			return Toast.methods.addToast(`${type} cannot be empty`, 3000);
+			return new Toast({
+				content: `${type} cannot be empty`,
+				timeout: 3000
+			});
 		},
 		removeChange(type, index) {
 			this.creating[type].splice(index, 1);

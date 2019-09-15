@@ -59,7 +59,7 @@
 <script>
 import { mapState, mapActions } from "vuex";
 
-import { Toast } from "vue-roaster";
+import Toast from "toasters";
 import io from "../../io";
 
 import IssuesModal from "../Modals/IssuesModal.vue";
@@ -96,10 +96,10 @@ export default {
 			this.socket.emit("reports.findOne", this.$route.query.id, res => {
 				if (res.status === "success") this.view(res.data);
 				else
-					Toast.methods.addToast(
-						"Report with that ID not found",
-						3000
-					);
+					new Toast({
+						content: "Report with that ID not found",
+						timeout: 3000
+					});
 			});
 		}
 	},
@@ -118,7 +118,7 @@ export default {
 		},
 		resolve(reportId) {
 			this.socket.emit("reports.resolve", reportId, res => {
-				Toast.methods.addToast(res.message, 3000);
+				new Toast({ content: res.message, timeout: 3000 });
 				if (res.status === "success" && this.modals.viewReport)
 					this.closeModal({
 						sector: "admin",

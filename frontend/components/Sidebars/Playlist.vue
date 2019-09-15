@@ -48,7 +48,7 @@
 <script>
 import { mapState, mapActions } from "vuex";
 
-import { Toast } from "vue-roaster";
+import Toast from "toasters";
 import io from "../../io";
 
 export default {
@@ -77,8 +77,11 @@ export default {
 				id,
 				res => {
 					if (res.status === "failure")
-						return Toast.methods.addToast(res.message, 8000);
-					return Toast.methods.addToast(res.message, 4000);
+						return new Toast({
+							content: res.message,
+							timeout: 8000
+						});
+					return new Toast({ content: res.message, timeout: 4000 });
 				}
 			);
 		},

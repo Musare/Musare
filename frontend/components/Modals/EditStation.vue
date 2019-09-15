@@ -294,8 +294,8 @@
 
 <script>
 import { mapState, mapActions } from "vuex";
-import { Toast } from "vue-roaster";
 
+import Toast from "toasters";
 import Modal from "./Modal.vue";
 import io from "../../io";
 import validation from "../../validation";
@@ -403,15 +403,16 @@ export default {
 		updateName() {
 			const { name } = this.editing;
 			if (!validation.isLength(name, 2, 16))
-				return Toast.methods.addToast(
-					"Name must have between 2 and 16 characters.",
-					8000
-				);
+				return new Toast({
+					content: "Name must have between 2 and 16 characters.",
+					timeout: 8000
+				});
 			if (!validation.regex.az09_.test(name))
-				return Toast.methods.addToast(
-					"Invalid name format. Allowed characters: a-z, 0-9 and _.",
-					8000
-				);
+				return new Toast({
+					content:
+						"Invalid name format. Allowed characters: a-z, 0-9 and _.",
+					timeout: 8000
+				});
 
 			return this.socket.emit(
 				"stations.updateName",
@@ -431,22 +432,25 @@ export default {
 							});
 						}
 					}
-					Toast.methods.addToast(res.message, 8000);
+
+					new Toast({ content: res.message, timeout: 8000 });
 				}
 			);
 		},
 		updateDisplayName() {
 			const { displayName } = this.editing;
 			if (!validation.isLength(displayName, 2, 32))
-				return Toast.methods.addToast(
-					"Display name must have between 2 and 32 characters.",
-					8000
-				);
+				return new Toast({
+					content:
+						"Display name must have between 2 and 32 characters.",
+					timeout: 8000
+				});
 			if (!validation.regex.ascii.test(displayName))
-				return Toast.methods.addToast(
-					"Invalid display name format. Only ASCII characters are allowed.",
-					8000
-				);
+				return new Toast({
+					content:
+						"Invalid display name format. Only ASCII characters are allowed.",
+					timeout: 8000
+				});
 
 			return this.socket.emit(
 				"stations.updateDisplayName",
@@ -470,26 +474,28 @@ export default {
 						}
 					}
 
-					return Toast.methods.addToast(res.message, 8000);
+					new Toast({ content: res.message, timeout: 8000 });
 				}
 			);
 		},
 		updateDescription() {
 			const { description } = this.editing;
 			if (!validation.isLength(description, 2, 200))
-				return Toast.methods.addToast(
-					"Description must have between 2 and 200 characters.",
-					8000
-				);
+				return new Toast({
+					content:
+						"Description must have between 2 and 200 characters.",
+					timeout: 8000
+				});
+
 			let characters = description.split("");
 			characters = characters.filter(character => {
 				return character.charCodeAt(0) === 21328;
 			});
 			if (characters.length !== 0)
-				return Toast.methods.addToast(
-					"Invalid description format.",
-					8000
-				);
+				return new Toast({
+					content: "Invalid description format.",
+					timeout: 8000
+				});
 
 			return this.socket.emit(
 				"stations.updateDescription",
@@ -512,9 +518,13 @@ export default {
 							});
 						}
 
-						return Toast.methods.addToast(res.message, 4000);
+						return new Toast({
+							content: res.message,
+							timeout: 4000
+						});
 					}
-					return Toast.methods.addToast(res.message, 8000);
+
+					return new Toast({ content: res.message, timeout: 8000 });
 				}
 			);
 		},
@@ -570,10 +580,14 @@ export default {
 
 							return false;
 						});
-						return Toast.methods.addToast(res.message, 4000);
+
+						return new Toast({
+							content: res.message,
+							timeout: 4000
+						});
 					}
 
-					return Toast.methods.addToast(res.message, 8000);
+					return new Toast({ content: res.message, timeout: 8000 });
 				}
 			);
 		},
@@ -633,10 +647,13 @@ export default {
 						// 	return false;
 						// });
 
-						return Toast.methods.addToast(res.message, 4000);
+						return new Toast({
+							content: res.message,
+							timeout: 4000
+						});
 					}
 
-					return Toast.methods.addToast(res.message, 8000);
+					return new Toast({ content: res.message, timeout: 8000 });
 				}
 			);
 		},
@@ -668,7 +685,7 @@ export default {
 						sector: "station",
 						modal: "editStation"
 					});
-				return Toast.methods.addToast(res.message, 8000);
+				return new Toast({ content: res.message, timeout: 8000 });
 			});
 		},
 		blurGenreInput() {

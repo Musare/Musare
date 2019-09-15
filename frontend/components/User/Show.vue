@@ -64,7 +64,7 @@
 
 <script>
 import { mapState } from "vuex";
-import { Toast } from "vue-roaster";
+import Toast from "toasters";
 import { format, parseISO } from "date-fns";
 
 import MainHeader from "../MainHeader.vue";
@@ -111,12 +111,12 @@ export default {
 				newRank === "admin" ? "admin" : "default",
 				res => {
 					if (res.status === "error")
-						Toast.methods.addToast(res.message, 2000);
+						new Toast({ content: res.message, timeout: 2000 });
 					else this.user.role = newRank;
-					Toast.methods.addToast(
-						`User ${this.$route.params.username}'s rank has been changed to: ${newRank}`,
-						2000
-					);
+					new Toast({
+						content: `User ${this.$route.params.username}'s rank has been changed to: ${newRank}`,
+						timeout: 2000
+					});
 				}
 			);
 		}

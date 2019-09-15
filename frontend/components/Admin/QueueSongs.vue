@@ -98,7 +98,7 @@
 <script>
 import { mapState, mapActions } from "vuex";
 
-import { Toast } from "vue-roaster";
+import Toast from "toasters";
 
 import EditSong from "../Modals/EditSong.vue";
 import UserIdToUsername from "../UserIdToUsername.vue";
@@ -149,15 +149,15 @@ export default {
 		add(song) {
 			this.socket.emit("songs.add", song, res => {
 				if (res.status === "success")
-					Toast.methods.addToast(res.message, 2000);
-				else Toast.methods.addToast(res.message, 4000);
+					new Toast({ content: res.message, timeout: 2000 });
+				else new Toast({ content: res.message, timeout: 4000 });
 			});
 		},
 		remove(id) {
 			this.socket.emit("queueSongs.remove", id, res => {
 				if (res.status === "success")
-					Toast.methods.addToast(res.message, 2000);
-				else Toast.methods.addToast(res.message, 4000);
+					new Toast({ content: res.message, timeout: 2000 });
+				else new Toast({ content: res.message, timeout: 4000 });
 			});
 		},
 		getSet() {

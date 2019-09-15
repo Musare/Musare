@@ -69,7 +69,7 @@
 </template>
 
 <script>
-import { Toast } from "vue-roaster";
+import Toast from "toasters";
 
 import MainHeader from "../MainHeader.vue";
 import MainFooter from "../MainFooter.vue";
@@ -94,12 +94,15 @@ export default {
 	methods: {
 		submitEmail() {
 			if (!this.email)
-				return Toast.methods.addToast("Email cannot be empty", 8000);
+				return new Toast({
+					content: "Email cannot be empty",
+					timeout: 8000
+				});
 			return this.socket.emit(
 				"users.requestPasswordReset",
 				this.email,
 				res => {
-					Toast.methods.addToast(res.message, 8000);
+					new Toast({ content: res.message, timeout: 8000 });
 					if (res.status === "success") {
 						this.step = 2;
 					}
@@ -108,12 +111,15 @@ export default {
 		},
 		verifyCode() {
 			if (!this.code)
-				return Toast.methods.addToast("Code cannot be empty", 8000);
+				return new Toast({
+					content: "Code cannot be empty",
+					timeout: 8000
+				});
 			return this.socket.emit(
 				"users.verifyPasswordResetCode",
 				this.code,
 				res => {
-					Toast.methods.addToast(res.message, 8000);
+					new Toast({ content: res.message, timeout: 8000 });
 					if (res.status === "success") {
 						this.step = 3;
 					}
@@ -122,13 +128,16 @@ export default {
 		},
 		changePassword() {
 			if (!this.newPassword)
-				return Toast.methods.addToast("Password cannot be empty", 8000);
+				return new Toast({
+					content: "Password cannot be empty",
+					timeout: 8000
+				});
 			return this.socket.emit(
 				"users.changePasswordWithResetCode",
 				this.code,
 				this.newPassword,
 				res => {
-					Toast.methods.addToast(res.message, 8000);
+					new Toast({ content: res.message, timeout: 8000 });
 					if (res.status === "success") {
 						this.$router.go("/login");
 					}

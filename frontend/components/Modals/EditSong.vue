@@ -532,7 +532,7 @@
 
 <script>
 import { mapState, mapActions } from "vuex";
-import { Toast } from "vue-roaster";
+import Toast from "toasters";
 
 import io from "../../io";
 import validation from "../../validation";
@@ -633,40 +633,42 @@ export default {
 			const song = JSON.parse(JSON.stringify(songToCopy));
 
 			if (!song.title)
-				return Toast.methods.addToast(
-					"Please fill in all fields",
-					8000
-				);
+				return new Toast({
+					content: "Please fill in all fields",
+					timeout: 8000
+				});
 			if (!song.thumbnail)
-				return Toast.methods.addToast(
-					"Please fill in all fields",
-					8000
-				);
+				return new Toast({
+					content: "Please fill in all fields",
+					timeout: 8000
+				});
 
 			// Duration
 			if (
 				Number(song.skipDuration) + Number(song.duration) >
 				this.youtubeVideoDuration
 			) {
-				return Toast.methods.addToast(
-					"Duration can't be higher than the length of the video",
-					8000
-				);
+				return new Toast({
+					content:
+						"Duration can't be higher than the length of the video",
+					timeout: 8000
+				});
 			}
 
 			// Title
 			if (!validation.isLength(song.title, 1, 100))
-				return Toast.methods.addToast(
-					"Title must have between 1 and 100 characters.",
-					8000
-				);
+				return new Toast({
+					content: "Title must have between 1 and 100 characters.",
+					timeout: 8000
+				});
 
 			// Artists
 			if (song.artists.length < 1 || song.artists.length > 10)
-				return Toast.methods.addToast(
-					"Invalid artists. You must have at least 1 artist and a maximum of 10 artists.",
-					8000
-				);
+				return new Toast({
+					content:
+						"Invalid artists. You must have at least 1 artist and a maximum of 10 artists.",
+					timeout: 8000
+				});
 			let error;
 			song.artists.forEach(artist => {
 				if (!validation.isLength(artist, 1, 64)) {
@@ -681,7 +683,7 @@ export default {
 
 				return false;
 			});
-			if (error) return Toast.methods.addToast(error, 8000);
+			if (error) return new Toast({ content: error, timeout: 8000 });
 
 			// Genres
 			error = undefined;
@@ -700,19 +702,20 @@ export default {
 			});
 			if (song.genres.length < 1 || song.genres.length > 16)
 				error = "You must have between 1 and 16 genres.";
-			if (error) return Toast.methods.addToast(error, 8000);
+			if (error) return new Toast({ content: error, timeout: 8000 });
 
 			// Thumbnail
 			if (!validation.isLength(song.thumbnail, 1, 256))
-				return Toast.methods.addToast(
-					"Thumbnail must have between 8 and 256 characters.",
-					8000
-				);
+				return new Toast({
+					content:
+						"Thumbnail must have between 8 and 256 characters.",
+					timeout: 8000
+				});
 			if (this.useHTTPS && song.thumbnail.indexOf("https://") !== 0) {
-				return Toast.methods.addToast(
-					'Thumbnail must start with "https://".',
-					8000
-				);
+				return new Toast({
+					content: 'Thumbnail must start with "https://".',
+					timeout: 8000
+				});
 			}
 
 			if (
@@ -720,10 +723,10 @@ export default {
 				(song.thumbnail.indexOf("http://") !== 0 &&
 					song.thumbnail.indexOf("https://") !== 0)
 			) {
-				return Toast.methods.addToast(
-					'Thumbnail must start with "http://".',
-					8000
-				);
+				return new Toast({
+					content: 'Thumbnail must start with "http://".',
+					timeout: 8000
+				});
 			}
 
 			return this.socket.emit(
@@ -731,7 +734,7 @@ export default {
 				song._id,
 				song,
 				res => {
-					Toast.methods.addToast(res.message, 4000);
+					new Toast({ content: res.message, timeout: 4000 });
 					if (res.status === "success") {
 						this.songs.forEach(originalSong => {
 							const updatedSong = song;
@@ -820,15 +823,15 @@ export default {
 			this.socket.emit("apis.searchDiscogs", query, page, res => {
 				if (res.status === "success") {
 					if (page === 1)
-						Toast.methods.addToast(
-							`Successfully searched. Got ${res.results.length} results.`,
-							4000
-						);
+						new Toast({
+							content: `Successfully searched. Got ${res.results.length} results.`,
+							timeout: 4000
+						});
 					else
-						Toast.methods.addToast(
-							`Successfully got ${res.results.length} more results.`,
-							4000
-						);
+						new Toast({
+							content: `Successfully got ${res.results.length} more results.`,
+							timeout: 4000
+						});
 
 					if (page === 1) {
 						this.discogs.apiResults = [];
@@ -860,7 +863,7 @@ export default {
 
 					this.discogs.page = page;
 					this.discogs.disableLoadMore = false;
-				} else Toast.methods.addToast(res.message, 8000);
+				} else new Toast({ content: res.message, timeout: 8000 });
 			});
 		},
 		loadNextDiscogsPage() {
@@ -969,28 +972,37 @@ export default {
 					.value.toLowerCase()
 					.trim();
 				if (this.editing.song.genres.indexOf(genre) !== -1)
-					return Toast.methods.addToast("Genre already exists", 3000);
+					return new Toast({
+						content: "Genre already exists",
+						timeout: 3000
+					});
 				if (genre) {
 					this.editing.song.genres.push(genre);
 					document.getElementById("new-genre").value = "";
 					return false;
 				}
 
-				return Toast.methods.addToast("Genre cannot be empty", 3000);
+				return new Toast({
+					content: "Genre cannot be empty",
+					timeout: 3000
+				});
 			}
 			if (type === "artists") {
 				const artist = document.getElementById("new-artist").value;
 				if (this.editing.song.artists.indexOf(artist) !== -1)
-					return Toast.methods.addToast(
-						"Artist already exists",
-						3000
-					);
+					return new Toast({
+						content: "Artist already exists",
+						timeout: 3000
+					});
 				if (document.getElementById("new-artist").value !== "") {
 					this.editing.song.artists.push(artist);
 					document.getElementById("new-artist").value = "";
 					return false;
 				}
-				return Toast.methods.addToast("Artist cannot be empty", 3000);
+				return new Toast({
+					content: "Artist cannot be empty",
+					timeout: 3000
+				});
 			}
 
 			return false;
@@ -1223,18 +1235,20 @@ export default {
 						if (this.editing.song.duration > youtubeDuration + 1) {
 							this.video.player.stopVideo();
 							this.video.paused = true;
-							return Toast.methods.addToast(
-								"Video can't play. Specified duration is bigger than the YouTube song duration.",
-								4000
-							);
+							return new Toast({
+								content:
+									"Video can't play. Specified duration is bigger than the YouTube song duration.",
+								timeout: 4000
+							});
 						}
 						if (this.editing.song.duration <= 0) {
 							this.video.player.stopVideo();
 							this.video.paused = true;
-							return Toast.methods.addToast(
-								"Video can't play. Specified duration has to be more than 0 seconds.",
-								4000
-							);
+							return new Toast({
+								content:
+									"Video can't play. Specified duration has to be more than 0 seconds.",
+								timeout: 4000
+							});
 						}
 
 						if (

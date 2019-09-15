@@ -184,7 +184,7 @@
 <script>
 import { mapState, mapActions } from "vuex";
 
-import { Toast } from "vue-roaster";
+import Toast from "toasters";
 import io from "../../io";
 
 import EditStation from "../Modals/EditStation.vue";
@@ -219,20 +219,20 @@ export default {
 			} = this;
 
 			if (name === undefined)
-				return Toast.methods.addToast(
-					"Field (Name) cannot be empty",
-					3000
-				);
+				return new Toast({
+					content: "Field (Name) cannot be empty",
+					timeout: 3000
+				});
 			if (displayName === undefined)
-				return Toast.methods.addToast(
-					"Field (Display Name) cannot be empty",
-					3000
-				);
+				return new Toast({
+					content: "Field (Display Name) cannot be empty",
+					timeout: 3000
+				});
 			if (description === undefined)
-				return Toast.methods.addToast(
-					"Field (Description) cannot be empty",
-					3000
-				);
+				return new Toast({
+					content: "Field (Description) cannot be empty",
+					timeout: 3000
+				});
 
 			return this.socket.emit(
 				"stations.create",
@@ -245,7 +245,7 @@ export default {
 					blacklistedGenres
 				},
 				result => {
-					Toast.methods.addToast(result.message, 3000);
+					new Toast({ content: result.message, timeout: 3000 });
 					if (result.status === "success")
 						this.newStation = {
 							genres: [],
@@ -259,7 +259,7 @@ export default {
 				"stations.remove",
 				this.stations[index]._id,
 				res => {
-					Toast.methods.addToast(res.message, 3000);
+					new Toast({ content: res.message, timeout: 3000 });
 				}
 			);
 		},
@@ -286,13 +286,19 @@ export default {
 				.value.toLowerCase()
 				.trim();
 			if (this.newStation.genres.indexOf(genre) !== -1)
-				return Toast.methods.addToast("Genre already exists", 3000);
+				return new Toast({
+					content: "Genre already exists",
+					timeout: 3000
+				});
 			if (genre) {
 				this.newStation.genres.push(genre);
 				document.getElementById(`new-genre`).value = "";
 				return true;
 			}
-			return Toast.methods.addToast("Genre cannot be empty", 3000);
+			return new Toast({
+				content: "Genre cannot be empty",
+				timeout: 3000
+			});
 		},
 		removeGenre(index) {
 			this.newStation.genres.splice(index, 1);
@@ -303,14 +309,20 @@ export default {
 				.value.toLowerCase()
 				.trim();
 			if (this.newStation.blacklistedGenres.indexOf(genre) !== -1)
-				return Toast.methods.addToast("Genre already exists", 3000);
+				return new Toast({
+					content: "Genre already exists",
+					timeout: 3000
+				});
 
 			if (genre) {
 				this.newStation.blacklistedGenres.push(genre);
 				document.getElementById(`new-blacklisted-genre`).value = "";
 				return true;
 			}
-			return Toast.methods.addToast("Genre cannot be empty", 3000);
+			return new Toast({
+				content: "Genre cannot be empty",
+				timeout: 3000
+			});
 		},
 		removeBlacklistedGenre(index) {
 			this.newStation.blacklistedGenres.splice(index, 1);

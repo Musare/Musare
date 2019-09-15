@@ -84,7 +84,7 @@
 <script>
 import { mapActions } from "vuex";
 
-import { Toast } from "vue-roaster";
+import Toast from "toasters";
 
 export default {
 	data() {
@@ -136,7 +136,9 @@ export default {
 				.then(res => {
 					if (res.status === "success") window.location.reload();
 				})
-				.catch(err => Toast.methods.addToast(err.message, 5000));
+				.catch(
+					err => new Toast({ content: err.message, timeout: 5000 })
+				);
 		},
 		githubRedirect() {
 			localStorage.setItem("github_redirect", this.$route.path);

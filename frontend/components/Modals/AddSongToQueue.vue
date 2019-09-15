@@ -94,7 +94,7 @@
 <script>
 import { mapState, mapActions } from "vuex";
 
-import { Toast } from "vue-roaster";
+import Toast from "toasters";
 import Modal from "./Modal.vue";
 import io from "../../io";
 
@@ -138,31 +138,43 @@ export default {
 					songId,
 					data => {
 						if (data.status !== "success")
-							Toast.methods.addToast(
-								`Error: ${data.message}`,
-								8000
-							);
-						else Toast.methods.addToast(`${data.message}`, 4000);
+							new Toast({
+								content: `Error: ${data.message}`,
+								timeout: 8000
+							});
+						else
+							new Toast({
+								content: `${data.message}`,
+								timeout: 4000
+							});
 					}
 				);
 			} else {
 				this.socket.emit("queueSongs.add", songId, data => {
 					if (data.status !== "success")
-						Toast.methods.addToast(`Error: ${data.message}`, 8000);
-					else Toast.methods.addToast(`${data.message}`, 4000);
+						new Toast({
+							content: `Error: ${data.message}`,
+							timeout: 8000
+						});
+					else
+						new Toast({
+							content: `${data.message}`,
+							timeout: 4000
+						});
 				});
 			}
 		},
 		importPlaylist() {
-			Toast.methods.addToast(
-				"Starting to import your playlist. This can take some time to do.",
-				4000
-			);
+			new Toast({
+				content:
+					"Starting to import your playlist. This can take some time to do.",
+				timeout: 4000
+			});
 			this.socket.emit(
 				"queueSongs.addSetToQueue",
 				this.importQuery,
 				res => {
-					Toast.methods.addToast(res.message, 4000);
+					new Toast({ content: res.message, timeout: 4000 });
 				}
 			);
 		},

@@ -41,7 +41,7 @@
 <script>
 import { mapActions } from "vuex";
 
-import { Toast } from "vue-roaster";
+import Toast from "toasters";
 import Modal from "./Modal.vue";
 import io from "../../io";
 import validation from "../../validation";
@@ -67,39 +67,43 @@ export default {
 			const { name, displayName, description } = this.newCommunity;
 
 			if (!name || !displayName || !description)
-				return Toast.methods.addToast(
-					"Please fill in all fields",
-					8000
-				);
+				return new Toast({
+					content: "Please fill in all fields",
+					timeout: 8000
+				});
 
 			if (!validation.isLength(name, 2, 16))
-				return Toast.methods.addToast(
-					"Name must have between 2 and 16 characters.",
-					8000
-				);
+				return new Toast({
+					content: "Name must have between 2 and 16 characters.",
+					timeout: 8000
+				});
 
 			if (!validation.regex.az09_.test(name))
-				return Toast.methods.addToast(
-					"Invalid name format. Allowed characters: a-z, 0-9 and _.",
-					8000
-				);
+				return new Toast({
+					content:
+						"Invalid name format. Allowed characters: a-z, 0-9 and _.",
+					timeout: 8000
+				});
 
 			if (!validation.isLength(displayName, 2, 32))
-				return Toast.methods.addToast(
-					"Display name must have between 2 and 32 characters.",
-					8000
-				);
+				return new Toast({
+					content:
+						"Display name must have between 2 and 32 characters.",
+					timeout: 8000
+				});
 			if (!validation.regex.ascii.test(displayName))
-				return Toast.methods.addToast(
-					"Invalid display name format. Only ASCII characters are allowed.",
-					8000
-				);
+				return new Toast({
+					content:
+						"Invalid display name format. Only ASCII characters are allowed.",
+					timeout: 8000
+				});
 
 			if (!validation.isLength(description, 2, 200))
-				return Toast.methods.addToast(
-					"Description must have between 2 and 200 characters.",
-					8000
-				);
+				return new Toast({
+					content:
+						"Description must have between 2 and 200 characters.",
+					timeout: 8000
+				});
 
 			let characters = description.split("");
 
@@ -108,10 +112,10 @@ export default {
 			});
 
 			if (characters.length !== 0)
-				return Toast.methods.addToast(
-					"Invalid description format.",
-					8000
-				);
+				return new Toast({
+					content: "Invalid description format.",
+					timeout: 8000
+				});
 
 			return this.socket.emit(
 				"stations.create",
@@ -123,15 +127,15 @@ export default {
 				},
 				res => {
 					if (res.status === "success") {
-						Toast.methods.addToast(
-							`You have added the station successfully`,
-							4000
-						);
+						new Toast({
+							content: `You have added the station successfully`,
+							timeout: 4000
+						});
 						this.closeModal({
 							sector: "home",
 							modal: "createCommunityStation"
 						});
-					} else Toast.methods.addToast(res.message, 4000);
+					} else new Toast({ content: res.message, timeout: 4000 });
 				}
 			);
 		},

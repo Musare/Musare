@@ -137,7 +137,7 @@
 <script>
 import { mapState, mapActions } from "vuex";
 
-import { Toast } from "vue-roaster";
+import Toast from "toasters";
 import Modal from "../Modal.vue";
 import io from "../../../io";
 import validation from "../../../validation";
@@ -276,7 +276,7 @@ export default {
 						});
 					}
 				} else if (res.status === "error")
-					Toast.methods.addToast(res.message, 3000);
+					new Toast({ content: res.message, timeout: 3000 });
 			});
 		},
 		addSongToPlaylist(id) {
@@ -285,15 +285,16 @@ export default {
 				id,
 				this.playlist._id,
 				res => {
-					Toast.methods.addToast(res.message, 4000);
+					new Toast({ content: res.message, timeout: 4000 });
 				}
 			);
 		},
 		importPlaylist() {
-			Toast.methods.addToast(
-				"Starting to import your playlist. This can take some time to do.",
-				4000
-			);
+			new Toast({
+				content:
+					"Starting to import your playlist. This can take some time to do.",
+				timeout: 4000
+			});
 			this.socket.emit(
 				"playlists.addSetToPlaylist",
 				this.importQuery,
@@ -301,7 +302,7 @@ export default {
 				res => {
 					if (res.status === "success")
 						this.playlist.songs = res.data;
-					Toast.methods.addToast(res.message, 4000);
+					new Toast({ content: res.message, timeout: 4000 });
 				}
 			);
 		},
@@ -311,35 +312,37 @@ export default {
 				id,
 				this.playlist._id,
 				res => {
-					Toast.methods.addToast(res.message, 4000);
+					new Toast({ content: res.message, timeout: 4000 });
 				}
 			);
 		},
 		renamePlaylist() {
 			const { displayName } = this.playlist;
 			if (!validation.isLength(displayName, 2, 32))
-				return Toast.methods.addToast(
-					"Display name must have between 2 and 32 characters.",
-					8000
-				);
+				return new Toast({
+					content:
+						"Display name must have between 2 and 32 characters.",
+					timeout: 8000
+				});
 			if (!validation.regex.ascii.test(displayName))
-				return Toast.methods.addToast(
-					"Invalid display name format. Only ASCII characters are allowed.",
-					8000
-				);
+				return new Toast({
+					content:
+						"Invalid display name format. Only ASCII characters are allowed.",
+					timeout: 8000
+				});
 
 			return this.socket.emit(
 				"playlists.updateDisplayName",
 				this.playlist._id,
 				this.playlist.displayName,
 				res => {
-					Toast.methods.addToast(res.message, 4000);
+					new Toast({ content: res.message, timeout: 4000 });
 				}
 			);
 		},
 		removePlaylist() {
 			this.socket.emit("playlists.remove", this.playlist._id, res => {
-				Toast.methods.addToast(res.message, 3000);
+				new Toast({ content: res.message, timeout: 3000 });
 				if (res.status === "success") {
 					this.closeModal();
 				}
@@ -351,7 +354,7 @@ export default {
 				this.playlist._id,
 				songId,
 				res => {
-					Toast.methods.addToast(res.message, 4000);
+					new Toast({ content: res.message, timeout: 4000 });
 				}
 			);
 		},
@@ -361,7 +364,7 @@ export default {
 				this.playlist._id,
 				songId,
 				res => {
-					Toast.methods.addToast(res.message, 4000);
+					new Toast({ content: res.message, timeout: 4000 });
 				}
 			);
 		},

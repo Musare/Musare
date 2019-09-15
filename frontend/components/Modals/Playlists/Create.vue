@@ -23,7 +23,7 @@
 <script>
 import { mapActions } from "vuex";
 
-import { Toast } from "vue-roaster";
+import Toast from "toasters";
 import Modal from "../Modal.vue";
 import io from "../../../io";
 import validation from "../../../validation";
@@ -47,18 +47,20 @@ export default {
 		createPlaylist() {
 			const { displayName } = this.playlist;
 			if (!validation.isLength(displayName, 2, 32))
-				return Toast.methods.addToast(
-					"Display name must have between 2 and 32 characters.",
-					8000
-				);
+				return new Toast({
+					content:
+						"Display name must have between 2 and 32 characters.",
+					timeout: 8000
+				});
 			if (!validation.regex.ascii.test(displayName))
-				return Toast.methods.addToast(
-					"Invalid display name format. Only ASCII characters are allowed.",
-					8000
-				);
+				return new Toast({
+					content:
+						"Invalid display name format. Only ASCII characters are allowed.",
+					timeout: 8000
+				});
 
 			return this.socket.emit("playlists.create", this.playlist, res => {
-				Toast.methods.addToast(res.message, 3000);
+				new Toast({ content: res.message, timeout: 3000 });
 
 				if (res.status === "success") {
 					this.closeModal({

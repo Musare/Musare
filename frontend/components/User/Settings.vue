@@ -149,7 +149,7 @@
 <script>
 import { mapState } from "vuex";
 
-import { Toast } from "vue-roaster";
+import Toast from "toasters";
 
 import MainHeader from "../MainHeader.vue";
 import MainFooter from "../MainFooter.vue";
@@ -187,10 +187,10 @@ export default {
 					this.password = this.user.password;
 					this.github = this.user.github;
 				} else {
-					Toast.methods.addToast(
-						"Your are currently not signed in",
-						3000
-					);
+					new Toast({
+						content: "Your are currently not signed in",
+						timeout: 3000
+					});
 				}
 			});
 			this.socket.on("event:user.linkPassword", () => {
@@ -211,15 +211,18 @@ export default {
 		changeEmail() {
 			const email = this.user.email.address;
 			if (!validation.isLength(email, 3, 254))
-				return Toast.methods.addToast(
-					"Email must have between 3 and 254 characters.",
-					8000
-				);
+				return new Toast({
+					content: "Email must have between 3 and 254 characters.",
+					timeout: 8000
+				});
 			if (
 				email.indexOf("@") !== email.lastIndexOf("@") ||
 				!validation.regex.emailSimple.test(email)
 			)
-				return Toast.methods.addToast("Invalid email format.", 8000);
+				return new Toast({
+					content: "Invalid email format.",
+					timeout: 8000
+				});
 
 			return this.socket.emit(
 				"users.updateEmail",
@@ -227,27 +230,28 @@ export default {
 				email,
 				res => {
 					if (res.status !== "success")
-						Toast.methods.addToast(res.message, 8000);
+						new Toast({ content: res.message, timeout: 8000 });
 					else
-						Toast.methods.addToast(
-							"Successfully changed email address",
-							4000
-						);
+						new Toast({
+							content: "Successfully changed email address",
+							timeout: 4000
+						});
 				}
 			);
 		},
 		changeUsername() {
 			const { username } = this.user;
 			if (!validation.isLength(username, 2, 32))
-				return Toast.methods.addToast(
-					"Username must have between 2 and 32 characters.",
-					8000
-				);
+				return new Toast({
+					content: "Username must have between 2 and 32 characters.",
+					timeout: 8000
+				});
 			if (!validation.regex.azAZ09_.test(username))
-				return Toast.methods.addToast(
-					"Invalid username format. Allowed characters: a-z, A-Z, 0-9 and _.",
-					8000
-				);
+				return new Toast({
+					content:
+						"Invalid username format. Allowed characters: a-z, A-Z, 0-9 and _.",
+					timeout: 8000
+				});
 
 			return this.socket.emit(
 				"users.updateUsername",
@@ -255,45 +259,46 @@ export default {
 				username,
 				res => {
 					if (res.status !== "success")
-						Toast.methods.addToast(res.message, 8000);
+						new Toast({ content: res.message, timeout: 8000 });
 					else
-						Toast.methods.addToast(
-							"Successfully changed username",
-							4000
-						);
+						new Toast({
+							content: "Successfully changed username",
+							timeout: 4000
+						});
 				}
 			);
 		},
 		changePassword() {
 			const { newPassword } = this;
 			if (!validation.isLength(newPassword, 6, 200))
-				return Toast.methods.addToast(
-					"Password must have between 6 and 200 characters.",
-					8000
-				);
+				return new Toast({
+					content: "Password must have between 6 and 200 characters.",
+					timeout: 8000
+				});
 			if (!validation.regex.password.test(newPassword))
-				return Toast.methods.addToast(
-					"Invalid password format. Must have one lowercase letter, one uppercase letter, one number and one special character.",
-					8000
-				);
+				return new Toast({
+					content:
+						"Invalid password format. Must have one lowercase letter, one uppercase letter, one number and one special character.",
+					timeout: 8000
+				});
 
 			return this.socket.emit(
 				"users.updatePassword",
 				newPassword,
 				res => {
 					if (res.status !== "success")
-						Toast.methods.addToast(res.message, 8000);
+						new Toast({ content: res.message, timeout: 8000 });
 					else
-						Toast.methods.addToast(
-							"Successfully changed password",
-							4000
-						);
+						new Toast({
+							content: "Successfully changed password",
+							timeout: 4000
+						});
 				}
 			);
 		},
 		requestPassword() {
 			return this.socket.emit("users.requestPassword", res => {
-				Toast.methods.addToast(res.message, 8000);
+				new Toast({ content: res.message, timeout: 8000 });
 				if (res.status === "success") {
 					this.passwordStep = 2;
 				}
@@ -301,12 +306,15 @@ export default {
 		},
 		verifyCode() {
 			if (!this.passwordCode)
-				return Toast.methods.addToast("Code cannot be empty", 8000);
+				return new Toast({
+					content: "Code cannot be empty",
+					timeout: 8000
+				});
 			return this.socket.emit(
 				"users.verifyPasswordCode",
 				this.passwordCode,
 				res => {
-					Toast.methods.addToast(res.message, 8000);
+					new Toast({ content: res.message, timeout: 8000 });
 					if (res.status === "success") {
 						this.passwordStep = 3;
 					}
@@ -316,38 +324,39 @@ export default {
 		setPassword() {
 			const newPassword = this.setNewPassword;
 			if (!validation.isLength(newPassword, 6, 200))
-				return Toast.methods.addToast(
-					"Password must have between 6 and 200 characters.",
-					8000
-				);
+				return new Toast({
+					content: "Password must have between 6 and 200 characters.",
+					timeout: 8000
+				});
 			if (!validation.regex.password.test(newPassword))
-				return Toast.methods.addToast(
-					"Invalid password format. Must have one lowercase letter, one uppercase letter, one number and one special character.",
-					8000
-				);
+				return new Toast({
+					content:
+						"Invalid password format. Must have one lowercase letter, one uppercase letter, one number and one special character.",
+					timeout: 8000
+				});
 
 			return this.socket.emit(
 				"users.changePasswordWithCode",
 				this.passwordCode,
 				newPassword,
 				res => {
-					Toast.methods.addToast(res.message, 8000);
+					new Toast({ content: res.message, timeout: 8000 });
 				}
 			);
 		},
 		unlinkPassword() {
 			this.socket.emit("users.unlinkPassword", res => {
-				Toast.methods.addToast(res.message, 8000);
+				new Toast({ content: res.message, timeout: 8000 });
 			});
 		},
 		unlinkGitHub() {
 			this.socket.emit("users.unlinkGitHub", res => {
-				Toast.methods.addToast(res.message, 8000);
+				new Toast({ content: res.message, timeout: 8000 });
 			});
 		},
 		removeSessions() {
 			this.socket.emit(`users.removeSessions`, this.userId, res => {
-				Toast.methods.addToast(res.message, 4000);
+				new Toast({ content: res.message, timeout: 4000 });
 			});
 		}
 	}

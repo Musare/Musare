@@ -289,8 +289,8 @@ Run this command in your shell. You will have to do this command for every shell
 You can call Toasts using our custom package, [`vue-roaster`](https://github.com/atjonathan/vue-roaster), using the following code:
 
 ```js
-import { Toast } from "vue-roaster";
-Toast.methods.addToast("", 0);
+import Toast from "vue-roaster";
+new Toast({ content: "", persistant: true });
 ```
 
 ### Set user role

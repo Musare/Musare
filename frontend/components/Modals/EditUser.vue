@@ -92,7 +92,7 @@
 <script>
 import { mapState, mapActions } from "vuex";
 
-import { Toast } from "vue-roaster";
+import Toast from "toasters";
 import io from "../../io";
 import Modal from "./Modal.vue";
 import validation from "../../validation";
@@ -118,45 +118,49 @@ export default {
 		updateUsername() {
 			const { username } = this.editing;
 			if (!validation.isLength(username, 2, 32))
-				return Toast.methods.addToast(
-					"Username must have between 2 and 32 characters.",
-					8000
-				);
+				return new Toast({
+					content: "Username must have between 2 and 32 characters.",
+					timeout: 8000
+				});
 			if (!validation.regex.custom("a-zA-Z0-9_-").test(username))
-				return Toast.methods.addToast(
-					"Invalid username format. Allowed characters: a-z, A-Z, 0-9, _ and -.",
-					8000
-				);
+				return new Toast({
+					content:
+						"Invalid username format. Allowed characters: a-z, A-Z, 0-9, _ and -.",
+					timeout: 8000
+				});
 
 			return this.socket.emit(
 				`users.updateUsername`,
 				this.editing._id,
 				username,
 				res => {
-					Toast.methods.addToast(res.message, 4000);
+					new Toast({ content: res.message, timeout: 4000 });
 				}
 			);
 		},
 		updateEmail() {
 			const email = this.editing.email.address;
 			if (!validation.isLength(email, 3, 254))
-				return Toast.methods.addToast(
-					"Email must have between 3 and 254 characters.",
-					8000
-				);
+				return new Toast({
+					content: "Email must have between 3 and 254 characters.",
+					timeout: 8000
+				});
 			if (
 				email.indexOf("@") !== email.lastIndexOf("@") ||
 				!validation.regex.emailSimple.test(email) ||
 				!validation.regex.ascii.test(email)
 			)
-				return Toast.methods.addToast("Invalid email format.", 8000);
+				return new Toast({
+					content: "Invalid email format.",
+					timeout: 8000
+				});
 
 			return this.socket.emit(
 				`users.updateEmail`,
 				this.editing._id,
 				email,
 				res => {
-					Toast.methods.addToast(res.message, 4000);
+					new Toast({ content: res.message, timeout: 4000 });
 				}
 			);
 		},
@@ -166,7 +170,7 @@ export default {
 				this.editing._id,
 				this.editing.role,
 				res => {
-					Toast.methods.addToast(res.message, 4000);
+					new Toast({ content: res.message, timeout: 4000 });
 					if (
 						res.status === "success" &&
 						this.editing.role === "default" &&
@@ -179,15 +183,16 @@ export default {
 		banUser() {
 			const { reason } = this.ban;
 			if (!validation.isLength(reason, 1, 64))
-				return Toast.methods.addToast(
-					"Reason must have between 1 and 64 characters.",
-					8000
-				);
+				return new Toast({
+					content: "Reason must have between 1 and 64 characters.",
+					timeout: 8000
+				});
 			if (!validation.regex.ascii.test(reason))
-				return Toast.methods.addToast(
-					"Invalid reason format. Only ascii characters are allowed.",
-					8000
-				);
+				return new Toast({
+					content:
+						"Invalid reason format. Only ascii characters are allowed.",
+					timeout: 8000
+				});
 
 			return this.socket.emit(
 				`users.banUserById`,
@@ -195,13 +200,13 @@ export default {
 				this.ban.reason,
 				this.ban.expiresAt,
 				res => {
-					Toast.methods.addToast(res.message, 4000);
+					new Toast({ content: res.message, timeout: 4000 });
 				}
 			);
 		},
 		removeSessions() {
 			this.socket.emit(`users.removeSessions`, this.editing._id, res => {
-				Toast.methods.addToast(res.message, 4000);
+				new Toast({ content: res.message, timeout: 4000 });
 			});
 		},
 		...mapActions("modals", ["closeModal"])

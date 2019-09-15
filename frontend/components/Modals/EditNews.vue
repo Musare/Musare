@@ -169,7 +169,7 @@
 <script>
 import { mapActions, mapState } from "vuex";
 
-import { Toast } from "vue-roaster";
+import Toast from "toasters";
 import io from "../../io";
 
 import Modal from "./Modal.vue";
@@ -186,10 +186,17 @@ export default {
 			const change = document.getElementById(`edit-${type}`).value.trim();
 
 			if (this.editing[type].indexOf(change) !== -1)
-				return Toast.methods.addToast(`Tag already exists`, 3000);
+				return new Toast({
+					content: `Tag already exists`,
+					timeout: 3000
+				});
 
 			if (change) this.addChange({ type, change });
-			else Toast.methods.addToast(`${type} cannot be empty`, 3000);
+			else
+				new Toast({
+					content: `${type} cannot be empty`,
+					timeout: 3000
+				});
 
 			document.getElementById(`edit-${type}`).value = "";
 			return true;
@@ -203,7 +210,7 @@ export default {
 				this.editing._id,
 				this.editing,
 				res => {
-					Toast.methods.addToast(res.message, 4000);
+					new Toast({ content: res.message, timeout: 4000 });
 					if (res.status === "success") {
 						if (close)
 							this.closeModal({

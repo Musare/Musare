@@ -124,7 +124,7 @@
 
 <script>
 import { mapState, mapActions } from "vuex";
-import { Toast } from "vue-roaster";
+import Toast from "toasters";
 
 import MainHeader from "../MainHeader.vue";
 import MainFooter from "../MainFooter.vue";
@@ -246,22 +246,22 @@ export default {
 			event.preventDefault();
 			this.socket.emit("stations.favoriteStation", station._id, res => {
 				if (res.status === "success") {
-					Toast.methods.addToast(
-						"Successfully favorited station.",
-						4000
-					);
-				} else Toast.methods.addToast(res.message, 8000);
+					new Toast({
+						content: "Successfully favorited station.",
+						timeout: 4000
+					});
+				} else new Toast({ content: res.message, timeout: 8000 });
 			});
 		},
 		unfavoriteStation(event, station) {
 			event.preventDefault();
 			this.socket.emit("stations.unfavoriteStation", station._id, res => {
 				if (res.status === "success") {
-					Toast.methods.addToast(
-						"Successfully unfavorited station.",
-						4000
-					);
-				} else Toast.methods.addToast(res.message, 8000);
+					new Toast({
+						content: "Successfully unfavorited station.",
+						timeout: 4000
+					});
+				} else new Toast({ content: res.message, timeout: 8000 });
 			});
 		},
 		...mapActions("modals", ["openModal"])

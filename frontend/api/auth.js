@@ -1,4 +1,4 @@
-import { Toast } from "vue-roaster";
+import Toast from "toasters";
 import io from "../io";
 
 // when Vuex needs to interact with socket.io
@@ -84,7 +84,7 @@ export default {
 							return window.location.reload();
 						});
 					}
-					Toast.methods.addToast(result.message, 4000);
+					new Toast({ content: result.message, timeout: 4000 });
 					return reject(new Error(result.message));
 				});
 			});
