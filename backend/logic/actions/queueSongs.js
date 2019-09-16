@@ -178,7 +178,7 @@ let lib = {
 			},*/
 			(newSong, next) => {
 				const song = new db.models.queueSong(newSong);
-				song.save((err, song) => {
+				song.save({ validateBeforeSave: false }, (err, song) => {
 					if (err) return next(err);
 					next(null, song);
 				});
