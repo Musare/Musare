@@ -554,10 +554,13 @@ export default {
 								return false;
 							});
 						}
-						return Toast.methods.addToast(res.message, 4000);
+						return new Toast({
+							content: res.message,
+							timeout: 4000
+						});
 					}
 
-					return Toast.methods.addToast(res.message, 8000);
+					return new Toast({ content: res.message, timeout: 8000 });
 				}
 			);
 		},
@@ -613,10 +616,13 @@ export default {
 
 							return false;
 						});
-						return Toast.methods.addToast(res.message, 4000);
+						return new Toast({
+							content: res.message,
+							timeout: 4000
+						});
 					}
 
-					return Toast.methods.addToast(res.message, 8000);
+					return new Toast({ content: res.message, timeout: 8000 });
 				}
 			);
 		},
@@ -667,15 +673,15 @@ export default {
 				console.log(res);
 				if (res.status === "success") {
 					if (this.station) this.station.locked = res.data;
-					return Toast.methods.addToast(
-						`Toggled queue lock succesfully to ${res.data}`,
-						4000
-					);
+					return new Toast({
+						content: `Toggled queue lock succesfully to ${res.data}`,
+						timeout: 4000
+					});
 				}
-				return Toast.methods.addToast(
-					"Failed to toggle queue lock.",
-					8000
-				);
+				return new Toast({
+					content: "Failed to toggle queue lock.",
+					timeout: 8000
+				});
 			});
 		},
 		deleteStation() {
@@ -750,34 +756,40 @@ export default {
 			if (type === "genres") {
 				const genre = this.genreInputValue.toLowerCase().trim();
 				if (this.editing.genres.indexOf(genre) !== -1)
-					return Toast.methods.addToast("Genre already exists", 3000);
+					return new Toast({
+						content: "Genre already exists",
+						timeout: 3000
+					});
 				if (genre) {
 					this.editing.genres.push(genre);
 					this.genreInputValue = "";
 					return false;
 				}
 
-				return Toast.methods.addToast("Genre cannot be empty", 3000);
+				return new Toast({
+					content: "Genre cannot be empty",
+					timeout: 3000
+				});
 			}
 			if (type === "blacklist-genres") {
 				const genre = this.blacklistGenreInputValue
 					.toLowerCase()
 					.trim();
 				if (this.editing.blacklistedGenres.indexOf(genre) !== -1)
-					return Toast.methods.addToast(
-						"Blacklist genre already exists",
-						3000
-					);
+					return new Toast({
+						content: "Blacklist genre already exists",
+						timeout: 3000
+					});
 				if (genre) {
 					this.editing.blacklistedGenres.push(genre);
 					this.blacklistGenreInputValue = "";
 					return false;
 				}
 
-				return Toast.methods.addToast(
-					"Blacklis genre cannot be empty",
-					3000
-				);
+				return new Toast({
+					content: "Blacklist genre cannot be empty",
+					timeout: 3000
+				});
 			}
 
 			return false;
