@@ -177,6 +177,7 @@ export default {
 					station.currentSong.ytThumbnail = `https://img.youtube.com/vi/${station.currentSong.songId}/mqdefault.jpg`;
 				this.stations.push(station);
 			});
+
 			this.socket.on(
 				"event:userCount.updated",
 				(stationId, userCount) => {
@@ -188,6 +189,7 @@ export default {
 					});
 				}
 			);
+
 			this.socket.on("event:station.nextSong", (stationId, song) => {
 				let newSong = song;
 				this.stations.forEach(s => {
@@ -203,11 +205,14 @@ export default {
 					}
 				});
 			});
+
 			this.socket.on("event:user.favoritedStation", stationId => {
 				this.favoriteStations.push(stationId);
 			});
+
 			this.socket.on("event:user.unfavoritedStation", stationId => {
-				this.favoriteStations.$remove(stationId);
+				const index = this.favoriteStations.indexOf(stationId);
+				this.favoriteStations.splice(index, 1);
 			});
 		});
 	},
