@@ -17,11 +17,24 @@
 					<strong>Song ID:</strong>
 					{{ report.song.songId }} / {{ report.song._id }}
 					<br />
-					<strong>Created By:</strong>
-					{{ report.createdBy }}
+					<strong>Author:</strong>
+					<user-id-to-username
+						:userId="report.createdBy"
+						:alt="report.createdBy"
+					/>
 					<br />
-					<strong>Created At:</strong>
-					{{ report.createdAt }}
+					<strong>Time of report:</strong>
+					<span :title="report.createdAt">
+						{{
+							formatDistance(
+								new Date(report.createdAt),
+								new Date(),
+								{
+									addSuffix: true
+								}
+							)
+						}}
+					</span>
 					<br />
 					<span v-if="report.description">
 						<strong>Description:</strong>
@@ -81,7 +94,9 @@
 
 <script>
 import { mapActions, mapState } from "vuex";
+import { formatDistance } from "date-fns";
 
+import UserIdToUsername from "../UserIdToUsername.vue";
 import Modal from "./Modal.vue";
 
 export default {
@@ -96,9 +111,10 @@ export default {
 		}
 	},
 	methods: {
+		formatDistance,
 		...mapActions("modals", ["closeModal"])
 	},
-	components: { Modal }
+	components: { Modal, UserIdToUsername }
 };
 </script>
 
