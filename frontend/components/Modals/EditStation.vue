@@ -173,7 +173,7 @@
 							"
 							@click="updatePrivacyLocal('public')"
 						>
-							<i class="material-icons">people</i>
+							<i class="material-icons">public</i>
 							Public
 						</button>
 						<button
@@ -187,7 +187,7 @@
 							"
 							@click="updatePrivacyLocal('unlisted')"
 						>
-							<i class="material-icons">people</i>
+							<i class="material-icons">link</i>
 							Unlisted
 						</button>
 						<button
@@ -201,7 +201,7 @@
 							"
 							@click="updatePrivacyLocal('private')"
 						>
-							<i class="material-icons">people</i>
+							<i class="material-icons">lock</i>
 							Private
 						</button>
 					</div>
@@ -221,7 +221,7 @@
 							v-if="modeDropdownActive || !editing.partyMode"
 							@click="updatePartyModeLocal(false)"
 						>
-							<i class="material-icons">people</i>
+							<i class="material-icons">playlist_play</i>
 							Playlist
 						</button>
 						<button
@@ -234,7 +234,7 @@
 							"
 							@click="updatePartyModeLocal(true)"
 						>
-							<i class="material-icons">people</i>
+							<i class="material-icons">emoji_people</i>
 							Party
 						</button>
 					</div>
@@ -259,7 +259,7 @@
 							v-if="queueLockDropdownActive || editing.locked"
 							@click="updateQueueLockLocal(true)"
 						>
-							<i class="material-icons">people</i>
+							<i class="material-icons">lock</i>
 							On
 						</button>
 						<button
@@ -270,7 +270,7 @@
 							v-if="queueLockDropdownActive || !editing.locked"
 							@click="updateQueueLockLocal(false)"
 						>
-							<i class="material-icons">people</i>
+							<i class="material-icons">lock_open</i>
 							Off
 						</button>
 					</div>
