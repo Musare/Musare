@@ -10026,10 +10026,10 @@ to-regex@^3.0.1, to-regex@^3.0.2:
     regex-not "^1.0.2"
     safe-regex "^1.1.0"
 
-toasters@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/toasters/-/toasters-2.0.0.tgz#b104ca7c638f02bba362eb5029d460a602e45681"
-  integrity sha512-fm+LQoos6/ouDJbgRn+Wg6kzW5iAzRhApBI8PXgbSvksO+wpgmhrOm7+XCgHU5aLGwosHCyTUEo4lCEHBTNDNA==
+toasters@2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/toasters/-/toasters-2.0.1.tgz#a41c2e1652e51b9b782624027672363ed6547509"
+  integrity sha512-zqZz0itO/iQJhnLKkTGpj1FhWg0YKo2EnAGD0zjDPrR2rQgfSymCaHaQT0Gp9VIuPpu+3UY8m4w4HTI49HpdFw==
 
 toidentifier@1.0.0:
   version "1.0.0"

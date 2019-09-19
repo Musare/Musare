@@ -13,6 +13,7 @@ startMongo.cmd
 .redis
 *.rdb
 npm-debug.log
+lerna-debug.log
 
 # Backend
 backend/node_modules/
