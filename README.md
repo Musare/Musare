@@ -1,5 +1,4 @@
 
-  
 # MusareNode
 
 Based off of the original [Musare](https://github.com/Musare/MusareMeteor), which utilized Meteor.
@@ -34,6 +33,7 @@ The backend is a scalable NodeJS / Redis / MongoDB app. Each backend server hand
 We currently only utilize 1 backend, 1 MongoDB server and 1 Redis server running for production, though it is relatively easy to expand.
 
 ## Requirements
+
 Installing with Docker: (not recommended for Windows users)
 
 - [Docker](https://www.docker.com/)
@@ -57,56 +57,57 @@ Once you've installed the required tools:
 
 3. `cp backend/config/template.json backend/config/default.json`
 
-|Property|Description|
-|--|--|
-|`mode`|Should be either `development` or `production`. No more explanation needed.|
-|`secret`|Whatever you want - used by express's session module.|
-|`domain`|Should be the url where the site will be accessible from,usually `http://localhost` for non-Docker.|
-|`serverDomain`|Should be the url where the backend will be accessible from, usually `http://localhost:8080` for non-Docker.|
-|`serverPort`|Should be the port where the backend will listen on, should always be `8080` for Docker, and is recommended for non-Docker.|
-|`isDocker`|Self-explanatory. Are you using Docker?|
-|`serverPort`|Should be the port where the backend will listen on, should always be `8080` for Docker, and is recommended for non-Docker.|
-|`apis.youtube.key`|Can be obtained by setting up a [YouTube API Key](https://developers.google.com/youtube/v3/getting-started). You need to use the YouTube Data API v3, and create an API key.|
-|`apis.recaptcha.secret`|Can be obtained by setting up a [ReCaptcha Site (v3)](https://www.google.com/recaptcha/admin).|
-|`apis.github`|Can be obtained by setting up a [GitHub OAuth Application](https://github.com/settings/developers). You need to fill in some values to create the OAuth application. The homepage is the homepage of frontend. The authorization callback url is the backend url with `/auth/github/authorize/callback` added at the end. For example `http://localhost:8080/auth/github/authorize/callback`.|
-|`apis.discord.token`|Token for the Discord bot.|
-|`apis.discord.loggingServer`|Server ID of the Discord logging server.|
-|`apis.discord.loggingChannel`|ID of the channel to be used in the Discord logging server.|
-|`apis.mailgun`|Can be obtained by setting up a [Mailgun account](http://www.mailgun.com/), or you can disable it.|
-|`apis.spotify`|Can be obtained by setting up a [Spotify client id](https://developer.spotify.com/dashboard/applications), or you can disable it.|
-|`apis.discogs`|Can be obtained by setting up a [Discogs application](https://www.discogs.com/settings/developers), or you can disable it.|
-|`redis.url`|Should be left alone for Docker, and changed to `redis://localhost:6379/0` for non-Docker.|
-|`redis.password`|Should be the Redis password you either put in your `startRedis.cmd` file for Windows, or `.env` for docker.|
-|`mongo.url`|Needs to have the proper password for the MongoDB musare user, and for non-Docker you need to replace `@musare:27017` with `@localhost:27017`.|
-|`cookie.domain`|Should be the ip or address you use to access the site, without protocols (http/https), so for example `localhost`.|
-|`cookie.secure`|Should be `true` for SSL connections, and `false` for normal http connections.|
+   |Property|Description|
+   |--|--|
+   |`mode`|Should be either `development` or `production`. No more explanation needed.|
+   |`secret`|Whatever you want - used by express's session module.|
+   |`domain`|Should be the url where the site will be accessible from,usually `http://localhost` for non-Docker.|
+   |`serverDomain`|Should be the url where the backend will be accessible from, usually `http://localhost:8080` for non-Docker.|
+   |`serverPort`|Should be the port where the backend will listen on, should always be `8080` for Docker, and is recommended for non-Docker.|
+   |`isDocker`|Self-explanatory. Are you using Docker?|
+   |`serverPort`|Should be the port where the backend will listen on, should always be `8080` for Docker, and is recommended for non-Docker.|
+   |`apis.youtube.key`|Can be obtained by setting up a [YouTube API Key](https://developers.google.com/youtube/v3/getting-started). You need to use the YouTube Data API v3, and create an API key.|
+   |`apis.recaptcha.secret`|Can be obtained by setting up a [ReCaptcha Site (v3)](https://www.google.com/recaptcha/admin).|
+   |`apis.github`|Can be obtained by setting up a [GitHub OAuth Application](https://github.com/settings/developers). You need to fill in some values to create the OAuth application. The homepage is the homepage of frontend. The authorization callback url is the backend url with `/auth/github/authorize/callback` added at the end. For example `http://localhost:8080/auth/github/authorize/callback`.|
+   |`apis.discord.token`|Token for the Discord bot.|
+   |`apis.discord.loggingServer`|Server ID of the Discord logging server.|
+   |`apis.discord.loggingChannel`|ID of the channel to be used in the Discord logging server.|
+   |`apis.mailgun`|Can be obtained by setting up a [Mailgun account](http://www.mailgun.com/), or you can disable it.|
+   |`apis.spotify`|Can be obtained by setting up a [Spotify client id](https://developer.spotify.com/dashboard/applications), or you can disable it.|
+   |`apis.discogs`|Can be obtained by setting up a [Discogs application](https://www.discogs.com/settings/developers), or you can disable it.|
+   |`redis.url`|Should be left alone for Docker, and changed to `redis://localhost:6379/0` for non-Docker.|
+   |`redis.password`|Should be the Redis password you either put in your `startRedis.cmd` file for Windows, or `.env` for docker.|
+   |`mongo.url`|Needs to have the proper password for the MongoDB musare user, and for non-Docker you need to replace `@musare:27017` with `@localhost:27017`.|
+   |`cookie.domain`|Should be the ip or address you use to access the site, without protocols (http/https), so for example `localhost`.|
+   |`cookie.secure`|Should be `true` for SSL connections, and `false` for normal http connections.|
 
 4. `cp frontend/build/config/template.json frontend/build/config/default.json`
 
-|Property|Description|
-|--|--|
-|`serverDomain`|Should be the url where the backend will be accessible from, usually `http://localhost:8080` for non-Docker.|
-|`frontendDomain`|Should be the url where the frontend will be accessible from, usually `http://localhost` for docker or `http://localhost:80` for non-Docker.|
-|`frontendPort`|Should be the port where the frontend will be accessible from, should always be port `81` for Docker, and is recommended to be port `80` for non-Docker.|
-|`recaptcha.key`|Can be obtained by setting up a [ReCaptcha Site (v3)](https://www.google.com/recaptcha/admin).|
-|`cookie.domain`|Should be the ip or address you use to access the site, without protocols (http/https), so for example `localhost`.|
-|`cookie.secure`|Should be `true` for SSL connections, and `false` for normal http connections.|
-|`siteSettings.logo`|Path to the logo image, by default it is `/assets/wordmark.png`.|
-|`siteSettings.siteName`|Should be the name of the site.|
-|`siteSettings.socialLinks`|`github`, `twitter` and `facebook` are set to the official Musare accounts by default, but can be changed.|
+   |Property|Description|
+   |--|--|
+   |`serverDomain`|Should be the url where the backend will be accessible from, usually `http://localhost:8080` for non-Docker.|
+   |`frontendDomain`|Should be the url where the frontend will be accessible from, usually `http://localhost` for docker or `http://localhost:80` for non-Docker.|
+   |`frontendPort`|Should be the port where the frontend will be accessible from, should always be port `81` for Docker, and is recommended to be port `80` for non-Docker.|
+   |`recaptcha.key`|Can be obtained by setting up a [ReCaptcha Site (v3)](https://www.google.com/recaptcha/admin).|
+   |`cookie.domain`|Should be the ip or address you use to access the site, without protocols (http/https), so for example `localhost`.|
+   |`cookie.secure`|Should be `true` for SSL connections, and `false` for normal http connections.|
+   |`siteSettings.logo`|Path to the logo image, by default it is `/assets/wordmark.png`.|
+   |`siteSettings.siteName`|Should be the name of the site.|
+   |`siteSettings.socialLinks`|`github`, `twitter` and `facebook` are set to the official Musare accounts by default, but can be changed.|
 
 5. Simply `cp .env.example .env` to setup your environment variables.
 
 6. To setup [snyk](https://snyk.io/) (which is what we use for our precommit git-hooks), you will need to:
-- Setup an account
-- Go to [settings](https://app.snyk.io/account)
-- Copy the API token and set it as your `SNYK_TOKEN` environment variable.
+
+   - Setup an account
+   - Go to [settings](https://app.snyk.io/account)
+   - Copy the API token and set it as your `SNYK_TOKEN` environment variable.
 
 We use snyk to test our dependencies / dev-dependencies for vulnerabilities.
 
 ### Installing with Docker
 
-_Configuration_
+#### Configuration
 
 To configure docker configure the `.env` file to match your settings in `backend/config/default.json`.  
 The configurable ports will be how you access the services on your machine, or what ports you will need to specify in your nginx files when using proxy_pass. 
@@ -127,20 +128,19 @@ The configurable ports will be how you access the services on your machine, or w
 
       In `.env` set the environment variable of `MONGO_USER_USERNAME` and `MONGO_USER_PASSWORD`.
 
-   2. Start the database (in detached mode), which will generate the correct MongoDB users.
+   3. Start the database (in detached mode), which will generate the correct MongoDB users.
 
       `docker-compose up -d mongo`
 
-
-3) Start redis and the mongo client in the background, as we usually don't need to monitor these for errors
+3. Start redis and the mongo client in the background, as we usually don't need to monitor these for errors
 
    `docker-compose up -d mongoclient redis`
 
-4) Start the backend and frontend in the foreground, so we can watch for errors during development
+4. Start the backend and frontend in the foreground, so we can watch for errors during development
 
    `docker-compose up backend frontend`
 
-5) You should now be able to begin development! The backend is auto reloaded when
+5. You should now be able to begin development! The backend is auto reloaded when
    you make changes and the frontend is auto compiled and live reloaded by webpack
    when you make changes. You should be able to access Musare in your local browser
    at `http://<docker-machine-ip>:8080/` where `<docker-machine-ip>` can be found below:
@@ -150,24 +150,25 @@ The configurable ports will be how you access the services on your machine, or w
    - Docker ToolBox: The output of `docker-machine ip default`
 
 If you are using linting extensions in IDEs/want to run `yarn lint`, you need to install the following locally (outside of Docker):
-```
-yarn global add eslint
-yarn add eslint-config-airbnb-base
-```
+
+   ```bash
+   yarn global add eslint
+   yarn add eslint-config-airbnb-base
+   ```
 
 ### Standard Installation
 
 Steps 1-4 are things you only have to do once. The steps to start servers follow.
 
-1.  In the main folder, create a folder called `.database`
+1. In the main folder, create a folder called `.database`
 
-2.  Create a file called `startMongo.cmd` in the main folder with the contents:
+2. Create a file called `startMongo.cmd` in the main folder with the contents:
 
-        "C:\Program Files\MongoDB\Server\3.2\bin\mongod.exe" --dbpath "D:\Programming\HTML\MusareNode\.database"
+   "C:\Program Files\MongoDB\Server\3.2\bin\mongod.exe" --dbpath "D:\Programming\HTML\MusareNode\.database"
 
-    Make sure to adjust your paths accordingly.
+   Make sure to adjust your paths accordingly.
 
-3.  Set up the MongoDB database
+3. Set up the MongoDB database
 
     1. Start the database by executing the script `startMongo.cmd` you just made
 
@@ -195,21 +196,21 @@ Steps 1-4 are things you only have to do once. The steps to start servers follow
 
        In `startMongo.cmd` add `--auth` at the end of the first line
 
-4.  In the folder where you installed Redis, edit the `redis.windows.conf` file. In there, look for the property `notify-keyspace-events`. Make sure that property is uncommented and has the value `Ex`. It should look like `notify-keyspace-events Ex` when done.
+4. In the folder where you installed Redis, edit the `redis.windows.conf` file. In there, look for the property `notify-keyspace-events`. Make sure that property is uncommented and has the value `Ex`. It should look like `notify-keyspace-events Ex` when done.
 
-5.  Create a file called `startRedis.cmd` in the main folder with the contents:
+5. Create a file called `startRedis.cmd` in the main folder with the contents:
 
-        "D:\Redis\redis-server.exe" "D:\Redis\redis.windows.conf" "--requirepass" "PASSWORD"
+   "D:\Redis\redis-server.exe" "D:\Redis\redis.windows.conf" "--requirepass" "PASSWORD"
 
-    And again, make sure that the paths lead to the proper config and executable. Replace `PASSWORD` with your Redis password.
+   And again, make sure that the paths lead to the proper config and executable. Replace `PASSWORD` with your Redis password.
 
 ### Non-docker start servers
 
-**Automatic**
+#### Automatic
 
-1.  If you are on Windows you can run `windows-start.cmd` or just double click the `windows-start.cmd` file and all servers will automatically start up.
+1. If you are on Windows you can run `windows-start.cmd` or just double click the `windows-start.cmd` file and all servers will automatically start up.
 
-**Manual**
+#### Manual
 
 1. Run `startRedis.cmd` and `startMongo.cmd` to start Redis and Mongo.
 
@@ -297,7 +298,7 @@ new Toast({ content: "", persistant: true });
 
 When setting up you will need to grant yourself the admin role, using the following commands:
 
-```
+```bash
 docker-compose exec mongo mongo admin
 
 use musare
@@ -310,6 +311,7 @@ db.users.update({username: "USERNAME"}, {$set: {role: "admin"}})
 We use lerna to add an additional package to either the frontend or the backend.
 
 For example, this is how we would to add the `webpack-bundle-analyser` package as a dev-dependency to the frontend:
-```
+
+```bash
 npx lerna add webpack-bundle-analyser --scope=musare-frontend --dev
 ```
