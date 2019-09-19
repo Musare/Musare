@@ -61,29 +61,13 @@
 					<div class="card-content">
 						<div class="media">
 							<div class="media-left displayName">
-								<i
-									v-if="loggedIn && !isFavorite(station)"
-									@click.stop.prevent="
-										favoriteStation($event, station)
-									"
-									class="material-icons yellow-icon"
-									>star_border</i
-								>
-								<i
-									v-if="loggedIn && isFavorite(station)"
-									@click.stop.prevent="
-										unfavoriteStation($event, station)
-									"
-									class="material-icons yellow-icon"
-									>star</i
-								>
 								<h5>{{ station.displayName }}</h5>
 								<i
 									v-if="station.type === 'official'"
-									class="material-icons green-icon"
+									class="material-icons blue-icon"
 									title="Verified station"
 								>
-									verified_user
+									check_circle
 								</i>
 							</div>
 						</div>
@@ -99,20 +83,36 @@
 									:link="true"
 								/>
 							</p>
-
-							<i
-								v-if="isOwner(station)"
-								class="material-icons right-icon purple-icon"
-								title="This is your station."
-								>home</i
-							>
-							<i
-								v-if="station.privacy !== 'public'"
-								class="material-icons right-icon red-icon"
-								title="This station is not visible to other users."
-								>lock</i
-							>
+							<div class="icons">
+								<i
+									v-if="isOwner(station)"
+									class="material-icons dark-grey-icon"
+									title="This is your station."
+									>home</i
+								>
+								<i
+									v-if="station.privacy !== 'public'"
+									class="material-icons dark-grey-icon"
+									title="This station is not visible to other users."
+									>lock</i
+								>
+							</div>
 						</div>
+					</div>
+					<div class="bottomBar">
+						<i
+							v-if="station.currentSong.title"
+							class="material-icons"
+							>music_note</i
+						>
+						<i v-else class="material-icons">music_off</i>
+						<span
+							v-if="station.currentSong.title"
+							class="songTitle"
+							:title="'Now Playing: ' + station.currentSong.title"
+							>{{ station.currentSong.title }}</span
+						>
+						<span v-else class="songTitle">No Songs Playing</span>
 					</div>
 				</router-link>
 			</div>
@@ -286,6 +286,7 @@ export default {
 * {
 	box-sizing: border-box;
 }
+
 html {
 	width: 100%;
 	height: 100%;
@@ -297,33 +298,34 @@ html {
 		padding: 0;
 	}
 }
+
 @media only screen and (min-width: 1200px) {
 	html {
 		font-size: 15px;
 	}
 }
+
 @media only screen and (min-width: 992px) {
 	html {
 		font-size: 14.5px;
 	}
 }
+
 @media only screen and (min-width: 0) {
 	html {
 		font-size: 14px;
 	}
 }
+
 .under-content {
-	width: calc(100% - 40px);
-	left: 20px;
-	right: 20px;
-	bottom: 10px;
-	text-align: left;
 	height: 25px;
-	position: absolute;
-	margin-bottom: 10px;
+	position: relative;
 	line-height: 1;
 	font-size: 24px;
-	vertical-align: middle;
+	display: flex;
+	align-items: center;
+	text-align: left;
+	margin-top: 10px;
 
 	p {
 		font-size: 15px;
@@ -331,40 +333,80 @@ html {
 		display: inline;
 	}
 
+	i {
+		font-size: 19px;
+	}
+
 	* {
 		z-index: 10;
 		position: relative;
 	}
-	.right-icon {
-		float: right;
-	}
 
-	.purple-icon {
-		color: $light-purple;
-	}
+	.icons {
+		position: absolute;
+		right: 0;
 
-	.red-icon {
-		color: $dark-pink;
+		.dark-grey-icon {
+			color: $dark-grey-2;
+		}
 	}
 }
+
 .users-count {
 	font-size: 20px;
 	position: relative;
 	top: -4px;
 }
-.right {
-	float: right;
-}
+
 .group {
 	min-height: 64px;
 }
+
 .station-card {
+	display: inline-flex;
+	flex-direction: column;
+	overflow: hidden;
 	margin: 10px;
 	cursor: pointer;
-	height: 475px;
+	height: 480px;
 	transition: all ease-in-out 0.2s;
+
 	.card-content {
-		max-height: 159px;
+		padding: 10px 15px;
+
+		.media {
+			display: flex;
+			align-items: center;
+
+			.displayName {
+				display: flex;
+				align-items: center;
+				word-wrap: break-word;
+				width: 80%;
+				word-wrap: break-word;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				display: flex;
+				line-height: 30px;
+				max-height: 30px;
+
+				h5 {
+					font-weight: 900;
+					margin: 0;
+					display: inline;
+					margin-right: 6px;
+					line-height: 30px;
+				}
+
+				i {
+					font-size: 22px;
+				}
+
+				.blue-icon {
+					color: $musareBlue;
+				}
+			}
+		}
 
 		.content {
 			word-wrap: break-word;
@@ -374,7 +416,10 @@ html {
 			-webkit-box-orient: vertical;
 			-webkit-line-clamp: 3;
 			line-height: 20px;
-			max-height: 60px;
+			height: 60px;
+			text-align: left;
+			word-wrap: break-word;
+			margin-bottom: 0;
 		}
 	}
 
@@ -388,7 +433,7 @@ html {
 				width: 100%;
 				position: absolute;
 				top: 0;
-				filter: blur(5px);
+				filter: blur(3px);
 			}
 			img {
 				height: auto;
@@ -400,37 +445,75 @@ html {
 			}
 		}
 	}
+
+	.bottomBar {
+		position: relative;
+		display: flex;
+		align-items: center;
+		background: $primary-color;
+		width: 100%;
+		height: 25px;
+		line-height: 25px;
+		color: $white;
+		font-weight: 400;
+		font-size: 12px;
+
+		i.material-icons {
+			vertical-align: middle;
+			margin-left: 5px;
+			font-size: 18px;
+		}
+
+		.songTitle {
+			text-align: left;
+			vertical-align: middle;
+			margin-left: 5px;
+			line-height: 30px;
+			flex: 2 1 0;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+		}
+	}
 }
+
 .station-card:hover {
 	box-shadow: 0 2px 3px rgba(10, 10, 10, 0.3), 0 0 10px rgba(10, 10, 10, 0.3);
 	transition: all ease-in-out 0.2s;
 }
+
 /*.isPrivate {
 		background-color: #F8BBD0;
 	}
 	.isMine {
 		background-color: #29B6F6;
 	}*/
+
 .community-button {
 	cursor: pointer;
 	transition: 0.25s ease color;
 	font-size: 30px;
 	color: #4a4a4a;
 }
+
 .community-button:hover {
 	color: #03a9f4;
 }
+
 .station-privacy {
 	text-transform: capitalize;
 }
+
 .label {
 	display: flex;
 }
+
 .g-recaptcha {
 	display: flex;
 	justify-content: center;
 	margin-top: 20px;
 }
+
 .group {
 	text-align: center;
 	width: 100%;
@@ -446,54 +529,5 @@ html {
 		font-size: 48px;
 		margin-bottom: 25px;
 	}
-}
-.group .card {
-	display: inline-flex;
-	flex-direction: column;
-	overflow: hidden;
-	.content {
-		text-align: left;
-		word-wrap: break-word;
-	}
-	.media {
-		display: flex;
-		align-items: center;
-
-		.station-status {
-			line-height: 13px;
-		}
-
-		i {
-			font-size: 26px;
-		}
-
-		.yellow-icon {
-			color: $yellow;
-			margin-right: 6px;
-			font-size: 28px;
-		}
-
-		.green-icon {
-			color: $lime;
-		}
-
-		h5 {
-			margin: 0;
-			display: inline;
-			margin-right: 6px;
-			line-height: 30px;
-		}
-	}
-}
-.displayName {
-	word-wrap: break-word;
-	width: 80%;
-	word-wrap: break-word;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	display: flex;
-	line-height: 30px;
-	max-height: 30px;
-	//position: relative;
 }
 </style>
