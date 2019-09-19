@@ -397,7 +397,7 @@ module.exports = class extends coreClass {
 									if (!err) return next(null, song, station.currentSongIndex + 1);
 									else {
 										station.currentSongIndex++;
-										next(null, null);
+										next(null, null, null);
 									}
 								});
 							} else {
