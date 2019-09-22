@@ -334,7 +334,7 @@ html {
 	}
 
 	i {
-		font-size: 19px;
+		font-size: 20px;
 	}
 
 	* {
@@ -368,7 +368,7 @@ html {
 	overflow: hidden;
 	margin: 10px;
 	cursor: pointer;
-	height: 480px;
+	height: 485px;
 	transition: all ease-in-out 0.2s;
 
 	.card-content {
@@ -391,7 +391,7 @@ html {
 				max-height: 30px;
 
 				h5 {
-					font-weight: 900;
+					font-weight: 400;
 					margin: 0;
 					display: inline;
 					margin-right: 6px;
@@ -452,8 +452,8 @@ html {
 		align-items: center;
 		background: $primary-color;
 		width: 100%;
-		height: 25px;
-		line-height: 25px;
+		height: 30px;
+		line-height: 30px;
 		color: $white;
 		font-weight: 400;
 		font-size: 12px;
