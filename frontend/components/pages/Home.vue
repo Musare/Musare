@@ -112,7 +112,7 @@
 							:title="'Now Playing: ' + station.currentSong.title"
 							>{{ station.currentSong.title }}</span
 						>
-						<span v-else class="songTitle">No Songs Playing</span>
+						<span v-else class="songTitle">No song</span>
 					</div>
 				</router-link>
 			</div>
