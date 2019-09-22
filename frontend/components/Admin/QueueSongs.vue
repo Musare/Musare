@@ -14,11 +14,11 @@
 				placeholder="Search for Songs"
 			/>
 			<button
-				v-if="!getSetsAutomatically"
+				v-if="!loadAllSongs"
 				class="button is-primary"
-				@click="loadSongsAutomatically()"
+				@click="loadAll()"
 			>
-				Load songs automatically
+				Load all
 			</button>
 			<br />
 			<br />
@@ -114,7 +114,7 @@ export default {
 			searchQuery: "",
 			songs: [],
 			gettingSet: false,
-			getSetsAutomatically: false
+			loadAllSongs: false
 		};
 	},
 	computed: {
@@ -170,23 +170,20 @@ export default {
 				});
 				this.position += 1;
 				this.gettingSet = false;
-				if (
-					this.getSetsAutomatically &&
-					this.maxPosition > this.position - 1
-				)
+				if (this.loadAllSongs && this.maxPosition > this.position - 1)
 					setTimeout(() => {
 						this.getSet();
 					}, 500);
 			});
 		},
 		handleScroll() {
-			if (this.getSetsAutomatically) return false;
+			if (this.loadAllSongs) return false;
 			if (window.scrollY + 50 >= window.scrollMaxY) this.getSet();
 
 			return this.maxPosition === this.position;
 		},
-		loadSongsAutomatically() {
-			this.getSetsAutomatically = true;
+		loadAll() {
+			this.loadAllSongs = true;
 			this.getSet();
 		},
 		init() {
