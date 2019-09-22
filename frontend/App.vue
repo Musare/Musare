@@ -118,6 +118,10 @@ export default {
 
 #toasts-container {
 	z-index: 10000 !important;
+
+	.toast {
+		font-weight: 600;
+	}
 }
 
 .toast:not(:first-of-type) {
