@@ -12,11 +12,6 @@
 <style lang="scss" scoped>
 @import "styles/global.scss";
 
-* {
-	margin: 0;
-	padding: 0;
-}
-
 .wrapper {
 	height: 100vh;
 	display: flex;
