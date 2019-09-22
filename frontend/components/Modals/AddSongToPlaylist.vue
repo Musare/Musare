@@ -40,7 +40,7 @@
 <script>
 import { mapState } from "vuex";
 
-import { Toast } from "vue-roaster";
+import Toast from "toasters";
 import Modal from "./Modal.vue";
 import io from "../../io";
 
@@ -81,7 +81,7 @@ export default {
 				this.currentSong.songId,
 				playlistId,
 				res => {
-					Toast.methods.addToast(res.message, 4000);
+					new Toast({ content: res.message, timeout: 4000 });
 					if (res.status === "success") {
 						this.playlists[playlistId].songs.push(this.song);
 					}
@@ -95,7 +95,7 @@ export default {
 				this.songId,
 				playlistId,
 				res => {
-					Toast.methods.addToast(res.message, 4000);
+					new Toast({ content: res.message, timeout: 4000 });
 					if (res.status === "success") {
 						this.playlists[playlistId].songs.forEach(
 							(song, index) => {

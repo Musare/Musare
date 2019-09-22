@@ -39,7 +39,6 @@ module.exports = function(next) {
 				return cb({status: 'failure', message: err});
 			}
 			logger.info("OWNER_REQUIRED", `User "${session.userId}" passed owner required check for station "${stationId}"`, false);
-			args.push(session.userId);
 			next.apply(null, args);
 		});
 	}

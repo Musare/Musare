@@ -52,13 +52,12 @@ module.exports = {
 	 * @param {String} reason - the reason for the ban
 	 * @param {String} expiresAt - the time the ban expires
 	 * @param {Function} cb - gets called with the result
-	 * @param {String} userId - the userId automatically added by hooks
 	 */
-	banIP: hooks.adminRequired((session, value, reason, expiresAt, cb, userId) => {
+	banIP: hooks.adminRequired((session, value, reason, expiresAt, cb) => {
 		async.waterfall([
 			(next) => {
-				if (value === '') return next('You must provide an IP address to ban.');
-				else if (reason === '') return next('You must provide a reason for the ban.');
+				if (!value) return next('You must provide an IP address to ban.');
+				else if (!reason) return next('You must provide a reason for the ban.');
 				else return next();
 			},
 
@@ -101,15 +100,15 @@ module.exports = {
 			},
 
 			(next) => {
-				punishments.addPunishment('banUserIp', value, reason, expiresAt, userId, next)
+				punishments.addPunishment('banUserIp', value, reason, expiresAt, session.userId, next)
 			}
 		], async (err, punishment) => {
 			if (err && err !== true) {
 				err = await utils.getError(err);
-				logger.error("BAN_IP", `User ${userId} failed to ban IP address ${value} with the reason ${reason}. '${err}'`);
+				logger.error("BAN_IP", `User ${session.userId} failed to ban IP address ${value} with the reason ${reason}. '${err}'`);
 				cb({ status: 'failure', message: err });
 			}
-			logger.success("BAN_IP", `User ${userId} has successfully banned IP address ${value} with the reason ${reason}.`);
+			logger.success("BAN_IP", `User ${session.userId} has successfully banned IP address ${value} with the reason ${reason}.`);
 			cache.pub('ip.ban', { ip: value, punishment });
 			return cb({
 				status: 'success',

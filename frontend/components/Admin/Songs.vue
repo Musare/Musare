@@ -1,13 +1,25 @@
 <template>
 	<div>
 		<metadata title="Admin | Songs" />
-		<div class="container">
+		<div class="container" v-scroll="handleScroll">
+			<p>
+				<span>Sets loaded: {{ position - 1 }} / {{ maxPosition }}</span>
+				<br />
+				<span>Loaded songs: {{ this.songs.length }}</span>
+			</p>
 			<input
 				v-model="searchQuery"
 				type="text"
 				class="input"
 				placeholder="Search for Songs"
 			/>
+			<button
+				v-if="!loadAllSongs"
+				class="button is-primary"
+				@click="loadAll()"
+			>
+				Load all
+			</button>
 			<br />
 			<br />
 			<table class="table is-striped">
@@ -90,7 +102,7 @@
 <script>
 import { mapState, mapActions } from "vuex";
 
-import { Toast } from "vue-roaster";
+import Toast from "toasters";
 
 import EditSong from "../Modals/EditSong.vue";
 import UserIdToUsername from "../UserIdToUsername.vue";
@@ -107,7 +119,9 @@ export default {
 			editing: {
 				index: 0,
 				song: {}
-			}
+			},
+			gettingSet: false,
+			loadAllSongs: false
 		};
 	},
 	computed: {
@@ -139,20 +153,40 @@ export default {
 		remove(id) {
 			this.socket.emit("songs.remove", id, res => {
 				if (res.status === "success")
-					Toast.methods.addToast(res.message, 4000);
-				else Toast.methods.addToast(res.message, 8000);
+					new Toast({ content: res.message, timeout: 4000 });
+				else new Toast({ content: res.message, timeout: 8000 });
 			});
 		},
 		getSet() {
+			if (this.gettingSet) return;
+			if (this.position > this.maxPosition) return;
+			this.gettingSet = true;
 			this.socket.emit("songs.getSet", this.position, data => {
 				data.forEach(song => {
 					this.addSong(song);
 				});
 				this.position += 1;
-				if (this.maxPosition > this.position - 1) this.getSet();
+				this.gettingSet = false;
+				if (this.loadAllSongs && this.maxPosition > this.position - 1)
+					setTimeout(() => {
+						this.getSet();
+					}, 500);
 			});
 		},
+		handleScroll() {
+			if (this.loadAllSongs) return false;
+			if (window.scrollY + 50 >= window.scrollMaxY) this.getSet();
+
+			return this.maxPosition === this.position;
+		},
+		loadAll() {
+			this.loadAllSongs = true;
+			this.getSet();
+		},
 		init() {
+			if (this.songs.length > 0)
+				this.position = Math.ceil(this.songs.length / 15) + 1;
+
 			this.socket.emit("songs.length", length => {
 				this.maxPosition = Math.ceil(length / 15);
 				this.getSet();
@@ -189,13 +223,16 @@ export default {
 			});
 		});
 
-		if (this.$route.query.id) {
-			this.socket.emit("songs.getSong", this.$route.query.id, res => {
+		if (this.$route.query.songId) {
+			this.socket.emit("songs.getSong", this.$route.query.songId, res => {
 				if (res.status === "success") {
 					this.edit(res.data);
 					this.closeModal({ sector: "admin", modal: "viewReport" });
 				} else
-					Toast.methods.addToast("Song with that ID not found", 3000);
+					new Toast({
+						content: "Song with that ID not found",
+						timeout: 3000
+					});
 			});
 		}
 	}

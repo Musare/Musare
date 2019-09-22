@@ -84,20 +84,24 @@
 										class="button album-get-button"
 										v-on:click="getAlbumData('title')"
 									>
-										<i class="material-icons album-get-icon"
-											>album</i
-										>
+										<i class="material-icons">album</i>
 									</button>
 								</p>
 							</div>
 							<div class="duration-container">
 								<label class="label">Duration</label>
-								<p class="control">
+								<p class="control has-addons">
 									<input
 										class="input"
 										type="text"
-										v-model="editing.song.duration"
+										v-model.number="editing.song.duration"
 									/>
+									<button
+										class="button duration-fill-button"
+										v-on:click="fillDuration()"
+									>
+										<i class="material-icons">sync</i>
+									</button>
 								</p>
 							</div>
 							<div class="skip-duration-container">
@@ -106,7 +110,9 @@
 									<input
 										class="input"
 										type="text"
-										v-model="editing.song.skipDuration"
+										v-model.number="
+											editing.song.skipDuration
+										"
 									/>
 								</p>
 							</div>
@@ -124,9 +130,7 @@
 										class="button album-get-button"
 										v-on:click="getAlbumData('albumArt')"
 									>
-										<i class="material-icons album-get-icon"
-											>album</i
-										>
+										<i class="material-icons">album</i>
 									</button>
 								</p>
 							</div>
@@ -148,9 +152,7 @@
 										class="button album-get-button"
 										v-on:click="getAlbumData('artists')"
 									>
-										<i class="material-icons album-get-icon"
-											>album</i
-										>
+										<i class="material-icons">album</i>
 									</button>
 									<button
 										class="button is-info add-button"
@@ -224,9 +226,7 @@
 										class="button album-get-button"
 										v-on:click="getAlbumData('genres')"
 									>
-										<i class="material-icons album-get-icon"
-											>album</i
-										>
+										<i class="material-icons">album</i>
 									</button>
 									<button
 										class="button is-info add-button"
@@ -532,7 +532,7 @@
 
 <script>
 import { mapState, mapActions } from "vuex";
-import { Toast } from "vue-roaster";
+import Toast from "toasters";
 
 import io from "../../io";
 import validation from "../../validation";
@@ -618,59 +618,61 @@ export default {
 			modals: state => state.modals.admin
 		})
 	},
+	watch: {
+		/* eslint-disable */
+		"editing.song.duration": function() {
+			this.drawCanvas();
+		},
+		"editing.song.skipDuration": function() {
+			this.drawCanvas();
+		}
+		/* eslint-enable */
+	},
 	methods: {
 		save(songToCopy, close) {
 			const song = JSON.parse(JSON.stringify(songToCopy));
 
 			if (!song.title)
-				return Toast.methods.addToast(
-					"Please fill in all fields",
-					8000
-				);
+				return new Toast({
+					content: "Please fill in all fields",
+					timeout: 8000
+				});
 			if (!song.thumbnail)
-				return Toast.methods.addToast(
-					"Please fill in all fields",
-					8000
-				);
+				return new Toast({
+					content: "Please fill in all fields",
+					timeout: 8000
+				});
 
 			// Duration
 			if (
 				Number(song.skipDuration) + Number(song.duration) >
 				this.youtubeVideoDuration
 			) {
-				return Toast.methods.addToast(
-					"Duration can't be higher than the length of the video",
-					8000
-				);
+				return new Toast({
+					content:
+						"Duration can't be higher than the length of the video",
+					timeout: 8000
+				});
 			}
 
 			// Title
 			if (!validation.isLength(song.title, 1, 100))
-				return Toast.methods.addToast(
-					"Title must have between 1 and 100 characters.",
-					8000
-				);
-			/* if (!validation.regex.ascii.test(song.title))
-				return Toast.methods.addToast(
-					"Invalid title format. Only ascii characters are allowed.",
-					8000
-				); */
+				return new Toast({
+					content: "Title must have between 1 and 100 characters.",
+					timeout: 8000
+				});
 
 			// Artists
 			if (song.artists.length < 1 || song.artists.length > 10)
-				return Toast.methods.addToast(
-					"Invalid artists. You must have at least 1 artist and a maximum of 10 artists.",
-					8000
-				);
+				return new Toast({
+					content:
+						"Invalid artists. You must have at least 1 artist and a maximum of 10 artists.",
+					timeout: 8000
+				});
 			let error;
 			song.artists.forEach(artist => {
-				if (!validation.isLength(artist, 1, 32)) {
-					error = "Artist must have between 1 and 32 characters.";
-					return error;
-				}
-				if (!validation.regex.ascii.test(artist)) {
-					error =
-						"Invalid artist format. Only ascii characters are allowed.";
+				if (!validation.isLength(artist, 1, 64)) {
+					error = "Artist must have between 1 and 64 characters.";
 					return error;
 				}
 				if (artist === "NONE") {
@@ -681,16 +683,16 @@ export default {
 
 				return false;
 			});
-			if (error) return Toast.methods.addToast(error, 8000);
+			if (error) return new Toast({ content: error, timeout: 8000 });
 
 			// Genres
-			/* error = undefined;
+			error = undefined;
 			song.genres.forEach(genre => {
-				if (!validation.isLength(genre, 1, 16)) {
-					error = "Genre must have between 1 and 16 characters.";
+				if (!validation.isLength(genre, 1, 32)) {
+					error = "Genre must have between 1 and 32 characters.";
 					return error;
 				}
-				if (!validation.regex.azAZ09_.test(genre)) {
+				if (!validation.regex.ascii.test(genre)) {
 					error =
 						"Invalid genre format. Only ascii characters are allowed.";
 					return error;
@@ -698,19 +700,22 @@ export default {
 
 				return false;
 			});
-			if (error) return Toast.methods.addToast(error, 8000); */
+			if (song.genres.length < 1 || song.genres.length > 16)
+				error = "You must have between 1 and 16 genres.";
+			if (error) return new Toast({ content: error, timeout: 8000 });
 
 			// Thumbnail
-			if (!validation.isLength(song.thumbnail, 8, 256))
-				return Toast.methods.addToast(
-					"Thumbnail must have between 8 and 256 characters.",
-					8000
-				);
+			if (!validation.isLength(song.thumbnail, 1, 256))
+				return new Toast({
+					content:
+						"Thumbnail must have between 8 and 256 characters.",
+					timeout: 8000
+				});
 			if (this.useHTTPS && song.thumbnail.indexOf("https://") !== 0) {
-				return Toast.methods.addToast(
-					'Thumbnail must start with "https://".',
-					8000
-				);
+				return new Toast({
+					content: 'Thumbnail must start with "https://".',
+					timeout: 8000
+				});
 			}
 
 			if (
@@ -718,10 +723,10 @@ export default {
 				(song.thumbnail.indexOf("http://") !== 0 &&
 					song.thumbnail.indexOf("https://") !== 0)
 			) {
-				return Toast.methods.addToast(
-					'Thumbnail must start with "http://".',
-					8000
-				);
+				return new Toast({
+					content: 'Thumbnail must start with "http://".',
+					timeout: 8000
+				});
 			}
 
 			return this.socket.emit(
@@ -729,7 +734,7 @@ export default {
 				song._id,
 				song,
 				res => {
-					Toast.methods.addToast(res.message, 4000);
+					new Toast({ content: res.message, timeout: 4000 });
 					if (res.status === "success") {
 						this.songs.forEach(originalSong => {
 							const updatedSong = song;
@@ -761,7 +766,7 @@ export default {
 					.then(data => {
 						apiResult.album.artists = [];
 						apiResult.album.artistIds = [];
-						const artistRegex = new RegExp(" \\([0-9]\\)$");
+						const artistRegex = new RegExp(" \\([0-9]+\\)$");
 
 						apiResult.dataQuality = data.data_quality;
 						data.artists.forEach(artist => {
@@ -781,6 +786,10 @@ export default {
 					});
 			}
 		},
+		fillDuration() {
+			this.editing.song.duration =
+				this.youtubeVideoDuration - this.editing.song.skipDuration;
+		},
 		getAlbumData(type) {
 			if (!this.editing.song.discogs) return;
 			if (type === "title")
@@ -796,12 +805,16 @@ export default {
 			if (type === "genres")
 				this.updateSongField({
 					field: "genres",
-					value: this.editing.song.discogs.album.genres
+					value: JSON.parse(
+						JSON.stringify(this.editing.song.discogs.album.genres)
+					)
 				});
 			if (type === "artists")
 				this.updateSongField({
 					field: "artists",
-					value: this.editing.song.discogs.album.artists
+					value: JSON.parse(
+						JSON.stringify(this.editing.song.discogs.album.artists)
+					)
 				});
 		},
 		searchDiscogsForPage(page) {
@@ -810,15 +823,15 @@ export default {
 			this.socket.emit("apis.searchDiscogs", query, page, res => {
 				if (res.status === "success") {
 					if (page === 1)
-						Toast.methods.addToast(
-							`Successfully searched. Got ${res.results.length} results.`,
-							4000
-						);
+						new Toast({
+							content: `Successfully searched. Got ${res.results.length} results.`,
+							timeout: 4000
+						});
 					else
-						Toast.methods.addToast(
-							`Successfully got ${res.results.length} more results.`,
-							4000
-						);
+						new Toast({
+							content: `Successfully got ${res.results.length} more results.`,
+							timeout: 4000
+						});
 
 					if (page === 1) {
 						this.discogs.apiResults = [];
@@ -850,7 +863,7 @@ export default {
 
 					this.discogs.page = page;
 					this.discogs.disableLoadMore = false;
-				} else Toast.methods.addToast(res.message, 8000);
+				} else new Toast({ content: res.message, timeout: 8000 });
 			});
 		},
 		loadNextDiscogsPage() {
@@ -937,6 +950,7 @@ export default {
 					this.pauseVideo(false);
 					break;
 				case "skipToLast10Secs":
+					if (this.video.paused) this.pauseVideo(false);
 					this.video.player.seekTo(
 						this.editing.song.duration -
 							10 +
@@ -958,28 +972,37 @@ export default {
 					.value.toLowerCase()
 					.trim();
 				if (this.editing.song.genres.indexOf(genre) !== -1)
-					return Toast.methods.addToast("Genre already exists", 3000);
+					return new Toast({
+						content: "Genre already exists",
+						timeout: 3000
+					});
 				if (genre) {
 					this.editing.song.genres.push(genre);
 					document.getElementById("new-genre").value = "";
 					return false;
 				}
 
-				return Toast.methods.addToast("Genre cannot be empty", 3000);
+				return new Toast({
+					content: "Genre cannot be empty",
+					timeout: 3000
+				});
 			}
 			if (type === "artists") {
 				const artist = document.getElementById("new-artist").value;
 				if (this.editing.song.artists.indexOf(artist) !== -1)
-					return Toast.methods.addToast(
-						"Artist already exists",
-						3000
-					);
+					return new Toast({
+						content: "Artist already exists",
+						timeout: 3000
+					});
 				if (document.getElementById("new-artist").value !== "") {
 					this.editing.song.artists.push(artist);
 					document.getElementById("new-artist").value = "";
 					return false;
 				}
-				return Toast.methods.addToast("Artist cannot be empty", 3000);
+				return new Toast({
+					content: "Artist cannot be empty",
+					timeout: 3000
+				});
 			}
 
 			return false;
@@ -999,7 +1022,7 @@ export default {
 			const duration = Number(this.editing.song.duration);
 			const afterDuration = videoDuration - (skipDuration + duration);
 
-			const width = 560;
+			const width = 530;
 
 			const currentTime = this.video.player.getCurrentTime();
 
@@ -1135,8 +1158,8 @@ export default {
 
 		this.discogsQuery = this.editing.song.title;
 
-		lofig.get("cookie.secure", res => {
-			this.useHTTPS = res;
+		lofig.get("cookie.secure").then(useHTTPS => {
+			this.useHTTPS = useHTTPS;
 		});
 
 		io.getSocket(socket => {
@@ -1145,6 +1168,7 @@ export default {
 
 		this.interval = setInterval(() => {
 			if (
+				this.editing.song.duration !== -1 &&
 				this.video.paused === false &&
 				this.playerReady &&
 				this.video.player.getCurrentTime() -
@@ -1153,6 +1177,7 @@ export default {
 			) {
 				this.video.paused = false;
 				this.video.player.stopVideo();
+				this.drawCanvas();
 			}
 			if (this.playerReady) {
 				this.youtubeVideoCurrentTime = this.video.player
@@ -1190,6 +1215,8 @@ export default {
 					this.drawCanvas();
 				},
 				onStateChange: event => {
+					this.drawCanvas();
+
 					if (event.data === 1) {
 						if (!this.video.autoPlayed) {
 							this.video.autoPlayed = true;
@@ -1200,22 +1227,28 @@ export default {
 						let youtubeDuration = this.video.player.getDuration();
 						this.youtubeVideoDuration = youtubeDuration;
 						this.youtubeVideoNote = "";
+
+						if (this.editing.song.duration === -1)
+							this.editing.song.duration = youtubeDuration;
+
 						youtubeDuration -= this.editing.song.skipDuration;
 						if (this.editing.song.duration > youtubeDuration + 1) {
 							this.video.player.stopVideo();
 							this.video.paused = true;
-							return Toast.methods.addToast(
-								"Video can't play. Specified duration is bigger than the YouTube song duration.",
-								4000
-							);
+							return new Toast({
+								content:
+									"Video can't play. Specified duration is bigger than the YouTube song duration.",
+								timeout: 4000
+							});
 						}
 						if (this.editing.song.duration <= 0) {
 							this.video.player.stopVideo();
 							this.video.paused = true;
-							return Toast.methods.addToast(
-								"Video can't play. Specified duration has to be more than 0 seconds.",
-								4000
-							);
+							return new Toast({
+								content:
+									"Video can't play. Specified duration has to be more than 0 seconds.",
+								timeout: 4000
+							});
 						}
 
 						if (
@@ -1399,6 +1432,14 @@ export default {
 		.album-get-button {
 			background-color: $purple;
 			color: white;
+			width: 32px;
+			text-align: center;
+			border-width: 0;
+		}
+
+		.duration-fill-button {
+			background-color: $red;
+			color: $white;
 			width: 32px;
 			text-align: center;
 			border-width: 0;

@@ -39,7 +39,7 @@
 				<a href="/"
 					><img
 						class="musareFooterLogo"
-						src="/assets/wordmark.png"
+						src="/assets/blue_wordmark.png"
 						alt="Musare"
 				/></a>
 				<p class="footerLinks">
@@ -74,8 +74,8 @@ export default {
 		};
 	},
 	mounted() {
-		lofig.get("siteSettings.socialLinks", res => {
-			this.socialLinks = res;
+		lofig.get("siteSettings.socialLinks").then(socialLinks => {
+			this.socialLinks = socialLinks;
 		});
 	}
 };

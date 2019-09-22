@@ -172,7 +172,8 @@ module.exports = class extends coreClass {
 	async socketFromSession(socketId) {
 		try { await this._validateHook(); } catch { return; }
 
-		let ns = this.io.io.of("/");
+		let io = await this.io.io();
+		let ns = io.of("/");
 		if (ns) {
 			return ns.connected[socketId];
 		}
@@ -181,7 +182,8 @@ module.exports = class extends coreClass {
 	async socketsFromSessionId(sessionId, cb) {
 		try { await this._validateHook(); } catch { return; }
 
-		let ns = this.io.io.of("/");
+		let io = await this.io.io();
+		let ns = io.of("/");
 		let sockets = [];
 		if (ns) {
 			async.each(Object.keys(ns.connected), (id, next) => {
@@ -197,7 +199,8 @@ module.exports = class extends coreClass {
 	async socketsFromUser(userId, cb) {
 		try { await this._validateHook(); } catch { return; }
 
-		let ns = this.io.io.of("/");
+		let io = await this.io.io();
+		let ns = io.of("/");
 		let sockets = [];
 		if (ns) {
 			async.each(Object.keys(ns.connected), (id, next) => {
@@ -215,7 +218,8 @@ module.exports = class extends coreClass {
 	async socketsFromIP(ip, cb) {
 		try { await this._validateHook(); } catch { return; }
 
-		let ns = this.io.io.of("/");
+		let io = await this.io.io();
+		let ns = io.of("/");
 		let sockets = [];
 		if (ns) {
 			async.each(Object.keys(ns.connected), (id, next) => {
@@ -233,7 +237,8 @@ module.exports = class extends coreClass {
 	async socketsFromUserWithoutCache(userId, cb) {
 		try { await this._validateHook(); } catch { return; }
 
-		let ns = this.io.io.of("/");
+		let io = await this.io.io();
+		let ns = io.of("/");
 		let sockets = [];
 		if (ns) {
 			async.each(Object.keys(ns.connected), (id, next) => {
@@ -306,7 +311,8 @@ module.exports = class extends coreClass {
 	async emitToRoom(room, ...args) {
 		try { await this._validateHook(); } catch { return; }
 
-		let sockets = this.io.io.sockets.sockets;
+		let io = await this.io.io();
+		let sockets = io.sockets.sockets;
 		for (let id in sockets) {
 			let socket = sockets[id];
 			if (socket.rooms[room]) {
@@ -318,7 +324,8 @@ module.exports = class extends coreClass {
 	async getRoomSockets(room) {
 		try { await this._validateHook(); } catch { return; }
 
-		let sockets = this.io.io.sockets.sockets;
+		let io = await this.io.io();
+		let sockets = io.sockets.sockets;
 		let roomSockets = [];
 		for (let id in sockets) {
 			let socket = sockets[id];
@@ -554,32 +561,5 @@ module.exports = class extends coreClass {
 			else error = err.errors[Object.keys(err.errors)].message;
 		}
 		return error;
-	}
-
-	async canUserBeInStation(station, userId, cb) {
-		try { await this._validateHook(); } catch { return; }
-
-		async.waterfall([
-			(next) => {
-				if (station.privacy !== 'private') return next(true);
-				if (!userId) return next(false);
-				next();
-			},
-
-			(next) => {
-				this.db.models.user.findOne({_id: userId}, next);
-			},
-
-			(user, next) => {
-				if (!user) return next(false);
-				if (user.role === 'admin') return next(true);
-				if (station.type === 'official') return next(false);
-				if (station.owner === userId) return next(true);
-				next(false);
-			}
-		], (err) => {
-			if (err === true) return cb(true);
-			return cb(false);
-		});
 	}
 }

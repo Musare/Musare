@@ -99,8 +99,8 @@ module.exports = {
 	getSet: hooks.adminRequired((session, set, cb) => {
 		async.waterfall([
 			(next) => {
-				db.models.song.find({}).limit(15 * set).exec(next);
-			}
+				db.models.song.find({}).skip(15 * (set - 1)).limit(15).exec(next);
+			},
 		], async (err, songs) => {
 			if (err) {
 				err = await utils.getError(err);
@@ -108,9 +108,7 @@ module.exports = {
 				return cb({'status': 'failure', 'message': err});
 			}
 			logger.success("SONGS_GET_SET", `Got set from songs successfully.`);
-			logger.stationIssue(songs.length, true);
-			logger.stationIssue(Math.max(songs.length - 15, 0), true);
-			cb(songs.splice(Math.max(songs.length - 15, 0)));
+			cb(songs);
 		});
 	}),
 
@@ -203,9 +201,8 @@ module.exports = {
 	 * @param session
 	 * @param song - the song object
 	 * @param cb
-	 * @param userId
 	 */
-	add: hooks.adminRequired((session, song, cb, userId) => {
+	add: hooks.adminRequired((session, song, cb) => {
 		async.waterfall([
 			(next) => {
 				db.models.song.findOne({songId: song.songId}, next);
@@ -218,7 +215,7 @@ module.exports = {
 
 			(next) => {
 				const newSong = new db.models.song(song);
-				newSong.acceptedBy = userId;
+				newSong.acceptedBy = session.userId;
 				newSong.acceptedAt = Date.now();
 				newSong.save(next);
 			},
@@ -231,10 +228,10 @@ module.exports = {
 		], async (err) => {
 			if (err) {
 				err = await utils.getError(err);
-				logger.error("SONGS_ADD", `User "${userId}" failed to add song. "${err}"`);
+				logger.error("SONGS_ADD", `User "${session.userId}" failed to add song. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
-			logger.success("SONGS_ADD", `User "${userId}" successfully added song "${song.songId}".`);
+			logger.success("SONGS_ADD", `User "${session.userId}" successfully added song "${song.songId}".`);
 			cache.pub('song.added', song.songId);
 			cb({status: 'success', message: 'Song has been moved from the queue successfully.'});
 		});
@@ -247,9 +244,8 @@ module.exports = {
 	 * @param session
 	 * @param songId - the song id
 	 * @param cb
-	 * @param userId
 	 */
-	like: hooks.loginRequired((session, songId, cb, userId) => {
+	like: hooks.loginRequired((session, songId, cb) => {
 		async.waterfall([
 			(next) => {
 				db.models.song.findOne({songId}, next);
@@ -262,14 +258,14 @@ module.exports = {
 		], async (err, song) => {
 			if (err) {
 				err = await utils.getError(err);
-				logger.error("SONGS_LIKE", `User "${userId}" failed to like song ${songId}. "${err}"`);
+				logger.error("SONGS_LIKE", `User "${session.userId}" failed to like song ${songId}. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
 			let oldSongId = songId;
 			songId = song._id;
-			db.models.user.findOne({ _id: userId }, (err, user) => {
+			db.models.user.findOne({ _id: session.userId }, (err, user) => {
 				if (user.liked.indexOf(songId) !== -1) return cb({ status: 'failure', message: 'You have already liked this song.' });
-				db.models.user.updateOne({_id: userId}, {$push: {liked: songId}, $pull: {disliked: songId}}, err => {
+				db.models.user.updateOne({_id: session.userId}, {$push: {liked: songId}, $pull: {disliked: songId}}, err => {
 					if (!err) {
 						db.models.user.countDocuments({"liked": songId}, (err, likes) => {
 							if (err) return cb({ status: 'failure', message: 'Something went wrong while liking this song.' });
@@ -295,9 +291,8 @@ module.exports = {
 	 * @param session
 	 * @param songId - the song id
 	 * @param cb
-	 * @param userId
 	 */
-	dislike: hooks.loginRequired((session, songId, cb, userId) => {
+	dislike: hooks.loginRequired((session, songId, cb) => {
 		async.waterfall([
 			(next) => {
 				db.models.song.findOne({songId}, next);
@@ -310,14 +305,14 @@ module.exports = {
 		], async (err, song) => {
 			if (err) {
 				err = await utils.getError(err);
-				logger.error("SONGS_DISLIKE", `User "${userId}" failed to like song ${songId}. "${err}"`);
+				logger.error("SONGS_DISLIKE", `User "${session.userId}" failed to like song ${songId}. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
 			let oldSongId = songId;
 			songId = song._id;
-			db.models.user.findOne({ _id: userId }, (err, user) => {
+			db.models.user.findOne({ _id: session.userId }, (err, user) => {
 				if (user.disliked.indexOf(songId) !== -1) return cb({ status: 'failure', message: 'You have already disliked this song.' });
-				db.models.user.updateOne({_id: userId}, {$push: {disliked: songId}, $pull: {liked: songId}}, err => {
+				db.models.user.updateOne({_id: session.userId}, {$push: {disliked: songId}, $pull: {liked: songId}}, err => {
 					if (!err) {
 						db.models.user.countDocuments({"liked": songId}, (err, likes) => {
 							if (err) return cb({ status: 'failure', message: 'Something went wrong while disliking this song.' });
@@ -343,9 +338,8 @@ module.exports = {
 	 * @param session
 	 * @param songId - the song id
 	 * @param cb
-	 * @param userId
 	 */
-	undislike: hooks.loginRequired((session, songId, cb, userId) => {
+	undislike: hooks.loginRequired((session, songId, cb) => {
 		async.waterfall([
 			(next) => {
 				db.models.song.findOne({songId}, next);
@@ -358,17 +352,17 @@ module.exports = {
 		], async (err, song) => {
 			if (err) {
 				err = await utils.getError(err);
-				logger.error("SONGS_UNDISLIKE", `User "${userId}" failed to like song ${songId}. "${err}"`);
+				logger.error("SONGS_UNDISLIKE", `User "${session.userId}" failed to like song ${songId}. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
 			let oldSongId = songId;
 			songId = song._id;
-			db.models.user.findOne({_id: userId}, (err, user) => {
+			db.models.user.findOne({_id: session.userId}, (err, user) => {
 				if (user.disliked.indexOf(songId) === -1) return cb({
 					status: 'failure',
 					message: 'You have not disliked this song.'
 				});
-				db.models.user.updateOne({_id: userId}, {$pull: {liked: songId, disliked: songId}}, err => {
+				db.models.user.updateOne({_id: session.userId}, {$pull: {liked: songId, disliked: songId}}, err => {
 					if (!err) {
 						db.models.user.countDocuments({"liked": songId}, (err, likes) => {
 							if (err) return cb({
@@ -412,9 +406,8 @@ module.exports = {
 	 * @param session
 	 * @param songId - the song id
 	 * @param cb
-	 * @param userId
 	 */
-	unlike: hooks.loginRequired((session, songId, cb, userId) => {
+	unlike: hooks.loginRequired((session, songId, cb) => {
 		async.waterfall([
 			(next) => {
 				db.models.song.findOne({songId}, next);
@@ -427,14 +420,14 @@ module.exports = {
 		], async (err, song) => {
 			if (err) {
 				err = await utils.getError(err);
-				logger.error("SONGS_UNLIKE", `User "${userId}" failed to like song ${songId}. "${err}"`);
+				logger.error("SONGS_UNLIKE", `User "${session.userId}" failed to like song ${songId}. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
 			let oldSongId = songId;
 			songId = song._id;
-			db.models.user.findOne({ _id: userId }, (err, user) => {
+			db.models.user.findOne({ _id: session.userId }, (err, user) => {
 				if (user.liked.indexOf(songId) === -1) return cb({ status: 'failure', message: 'You have not liked this song.' });
-				db.models.user.updateOne({_id: userId}, {$pull: {liked: songId, disliked: songId}}, err => {
+				db.models.user.updateOne({_id: session.userId}, {$pull: {liked: songId, disliked: songId}}, err => {
 					if (!err) {
 						db.models.user.countDocuments({"liked": songId}, (err, likes) => {
 							if (err) return cb({ status: 'failure', message: 'Something went wrong while unliking this song.' });
@@ -460,9 +453,8 @@ module.exports = {
 	 * @param session
 	 * @param songId - the song id
 	 * @param cb
-	 * @param userId
 	 */
-	getOwnSongRatings: hooks.loginRequired((session, songId, cb, userId) => {
+	getOwnSongRatings: hooks.loginRequired((session, songId, cb) => {
 		async.waterfall([
 			(next) => {
 				db.models.song.findOne({songId}, next);
@@ -475,11 +467,11 @@ module.exports = {
 		], async (err, song) => {
 			if (err) {
 				err = await utils.getError(err);
-				logger.error("SONGS_GET_OWN_RATINGS", `User "${userId}" failed to get ratings for ${songId}. "${err}"`);
+				logger.error("SONGS_GET_OWN_RATINGS", `User "${session.userId}" failed to get ratings for ${songId}. "${err}"`);
 				return cb({'status': 'failure', 'message': err});
 			}
 			let newSongId = song._id;
-			db.models.user.findOne({_id: userId}, (err, user) => {
+			db.models.user.findOne({_id: session.userId}, (err, user) => {
 				if (!err && user) {
 					return cb({
 						status: 'success',

@@ -15,13 +15,26 @@
 			<article class="message">
 				<div class="message-body">
 					<strong>Song ID:</strong>
-					{{ report.songId }}
+					{{ report.song.songId }} / {{ report.song._id }}
 					<br />
-					<strong>Created By:</strong>
-					{{ report.createdBy }}
+					<strong>Author:</strong>
+					<user-id-to-username
+						:userId="report.createdBy"
+						:alt="report.createdBy"
+					/>
 					<br />
-					<strong>Created At:</strong>
-					{{ report.createdAt }}
+					<strong>Time of report:</strong>
+					<span :title="report.createdAt">
+						{{
+							formatDistance(
+								new Date(report.createdAt),
+								new Date(),
+								{
+									addSuffix: true
+								}
+							)
+						}}
+					</span>
 					<br />
 					<span v-if="report.description">
 						<strong>Description:</strong>
@@ -57,6 +70,13 @@
 				<span>Resolve</span>
 			</a>
 			<a
+				class="button is-primary"
+				:href="`/admin/songs?songId=${report.song.songId}`"
+				target="_blank"
+			>
+				<span>Go to song</span>
+			</a>
+			<a
 				class="button is-danger"
 				@click="
 					closeModal({
@@ -74,7 +94,9 @@
 
 <script>
 import { mapActions, mapState } from "vuex";
+import { formatDistance } from "date-fns";
 
+import UserIdToUsername from "../UserIdToUsername.vue";
 import Modal from "./Modal.vue";
 
 export default {
@@ -89,9 +111,10 @@ export default {
 		}
 	},
 	methods: {
+		formatDistance,
 		...mapActions("modals", ["closeModal"])
 	},
-	components: { Modal }
+	components: { Modal, UserIdToUsername }
 };
 </script>
 

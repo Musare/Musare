@@ -7,7 +7,6 @@
 			</h1>
 			<!-- should be a persistant toast -->
 			<router-view />
-			<toast />
 			<what-is-new />
 			<mobile-alert />
 			<login-modal v-if="modals.header.login" />
@@ -19,7 +18,7 @@
 <script>
 import { mapState, mapActions } from "vuex";
 
-import { Toast } from "vue-roaster";
+import Toast from "toasters";
 
 import Banned from "./components/pages/Banned.vue";
 import WhatIsNew from "./components/Modals/WhatIsNew.vue";
@@ -65,6 +64,7 @@ export default {
 			this.$router.go(localStorage.getItem("github_redirect"));
 			localStorage.removeItem("github_redirect");
 		}
+
 		io.onConnect(true, () => {
 			this.socketConnected = true;
 		});
@@ -74,9 +74,11 @@ export default {
 		io.onDisconnect(true, () => {
 			this.socketConnected = false;
 		});
-		lofig.get("serverDomain", res => {
-			this.serverDomain = res;
+
+		lofig.get("serverDomain").then(serverDomain => {
+			this.serverDomain = serverDomain;
 		});
+
 		this.$router.onReady(() => {
 			if (this.$route.query.err) {
 				let { err } = this.$route.query;
@@ -84,7 +86,7 @@ export default {
 					.replace(new RegExp("<", "g"), "&lt;")
 					.replace(new RegExp(">", "g"), "&gt;");
 				this.$router.push({ query: {} });
-				Toast.methods.addToast(err, 20000);
+				new Toast({ content: err, timeout: 20000 });
 			}
 			if (this.$route.query.msg) {
 				let { msg } = this.$route.query;
@@ -92,7 +94,7 @@ export default {
 					.replace(new RegExp("<", "g"), "&lt;")
 					.replace(new RegExp(">", "g"), "&gt;");
 				this.$router.push({ query: {} });
-				Toast.methods.addToast(msg, 20000);
+				new Toast({ content: msg, timeout: 20000 });
 			}
 		});
 		io.getSocket(true, socket => {
@@ -102,7 +104,6 @@ export default {
 		});
 	},
 	components: {
-		Toast,
 		WhatIsNew,
 		MobileAlert,
 		LoginModal,
@@ -115,8 +116,16 @@ export default {
 <style lang="scss">
 @import "styles/global.scss";
 
-#toast-container {
+#toasts-container {
 	z-index: 10000 !important;
+
+	.toast {
+		font-weight: 600;
+	}
+}
+
+.toast:not(:first-of-type) {
+	margin-top: 5px;
 }
 
 html {

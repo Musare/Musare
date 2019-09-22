@@ -151,7 +151,7 @@
 <script>
 import { mapState, mapActions } from "vuex";
 
-import { Toast } from "vue-roaster";
+import Toast from "toasters";
 import Modal from "./Modal.vue";
 import io from "../../io";
 
@@ -222,7 +222,7 @@ export default {
 		create() {
 			console.log(this.report);
 			this.socket.emit("reports.create", this.report, res => {
-				Toast.methods.addToast(res.message, 4000);
+				new Toast({ content: res.message, timeout: 4000 });
 				if (res.status === "success")
 					this.closeModal({
 						sector: "station",

@@ -128,7 +128,7 @@
 <script>
 import { mapState, mapActions } from "vuex";
 
-import { Toast } from "vue-roaster";
+import Toast from "toasters";
 
 import UserIdToUsername from "../UserIdToUsername.vue";
 
@@ -161,11 +161,12 @@ export default {
 				songId,
 				res => {
 					if (res.status === "success") {
-						Toast.methods.addToast(
-							"Successfully removed song from the queue.",
-							4000
-						);
-					} else Toast.methods.addToast(res.message, 8000);
+						new Toast({
+							content:
+								"Successfully removed song from the queue.",
+							timeout: 4000
+						});
+					} else new Toast({ content: res.message, timeout: 8000 });
 				}
 			);
 		},

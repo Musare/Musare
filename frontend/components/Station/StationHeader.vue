@@ -4,7 +4,7 @@
 			<div class="nav-left">
 				<router-link class="nav-item is-brand" :to="{ path: '/' }">
 					<img
-						:src="`${this.siteSettings.logo}`"
+						:src="`${this.siteSettings.logo_white}`"
 						:alt="`${this.siteSettings.siteName}` || `Musare`"
 					/>
 				</router-link>
@@ -236,13 +236,12 @@ export default {
 		currentSong: state => state.station.currentSong
 	}),
 	mounted() {
-		lofig.get("frontendDomain", res => {
-			this.frontendDomain = res;
-			return res;
+		lofig.get("frontendDomain").then(frontendDomain => {
+			this.frontendDomain = frontendDomain;
 		});
-		lofig.get("siteSettings", res => {
-			this.siteSettings = res;
-			return res;
+
+		lofig.get("siteSettings").then(siteSettings => {
+			this.siteSettings = siteSettings;
 		});
 	},
 	methods: {
@@ -260,7 +259,8 @@ export default {
 				partyMode: this.station.partyMode,
 				description: this.station.description,
 				privacy: this.station.privacy,
-				displayName: this.station.displayName
+				displayName: this.station.displayName,
+				locked: this.station.locked
 			});
 			this.openModal({
 				sector: "station",
@@ -286,12 +286,11 @@ export default {
 		font-size: 2.1rem !important;
 		line-height: 38px !important;
 		padding: 0 20px;
-		color: $white;
 		font-family: Pacifico, cursive;
-		filter: brightness(0) invert(1);
 
 		img {
 			max-height: 38px;
+			color: $musareBlue;
 		}
 	}
 }

@@ -66,7 +66,7 @@ class ModuleManager {
 	}
 
 	async printStatus() {
-		try { await Promise.race([this.logger._onInitialize, this.logger._isInitialized]); } catch { return; }
+		try { await Promise.race([this.logger._onInitialize(), this.logger._isInitialized()]); } catch { return; }
 		if (!this.fancyConsole) return;
 		
 		let colors = this.logger.colors;

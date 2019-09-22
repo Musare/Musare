@@ -1,4 +1,4 @@
-import { Toast } from "vue-roaster";
+import Toast from "toasters";
 import io from "../io";
 
 // when Vuex needs to interact with socket.io
@@ -18,7 +18,7 @@ export default {
 					res => {
 						if (res.status === "success") {
 							if (res.SID) {
-								return lofig.get("cookie", cookie => {
+								return lofig.get("cookie").then(cookie => {
 									const date = new Date();
 									date.setTime(
 										new Date().getTime() +
@@ -52,7 +52,7 @@ export default {
 			io.getSocket(socket => {
 				socket.emit("users.login", email, password, res => {
 					if (res.status === "success") {
-						return lofig.get("cookie", cookie => {
+						return lofig.get("cookie").then(cookie => {
 							const date = new Date();
 							date.setTime(
 								new Date().getTime() +
@@ -79,12 +79,12 @@ export default {
 			io.getSocket(socket => {
 				socket.emit("users.logout", result => {
 					if (result.status === "success") {
-						return lofig.get("cookie", cookie => {
+						return lofig.get("cookie").then(cookie => {
 							document.cookie = `${cookie.SIDname}=;expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
 							return window.location.reload();
 						});
 					}
-					Toast.methods.addToast(result.message, 4000);
+					new Toast({ content: result.message, timeout: 4000 });
 					return reject(new Error(result.message));
 				});
 			});

@@ -89,8 +89,9 @@ module.exports = class extends coreClass {
 			});
 
 			this.sub.on('pmessage', (pattern, channel, expiredKey) => {
-				this.logger.stationIssue(`PMESSAGE - Pattern: ${pattern}; Channel: ${channel}; ExpiredKey: ${expiredKey}`);
+				this.logger.stationIssue(`PMESSAGE1 - Pattern: ${pattern}; Channel: ${channel}; ExpiredKey: ${expiredKey}`);
 				subscriptions.forEach((sub) => {
+					this.logger.stationIssue(`PMESSAGE2 - Sub name: ${sub.name}; Calls cb: ${!(sub.name !== expiredKey)}`);
 					if (sub.name !== expiredKey) return;
 					sub.cb();
 				});

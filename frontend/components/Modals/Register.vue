@@ -31,7 +31,7 @@
 					<input
 						v-model="email"
 						class="input"
-						type="text"
+						type="email"
 						placeholder="Email..."
 						autofocus
 					/>
@@ -84,7 +84,7 @@
 <script>
 import { mapActions } from "vuex";
 
-import { Toast } from "vue-roaster";
+import Toast from "toasters";
 
 export default {
 	data() {
@@ -100,11 +100,11 @@ export default {
 		};
 	},
 	mounted() {
-		lofig.get("serverDomain", res => {
-			this.serverDomain = res;
+		lofig.get("serverDomain").then(serverDomain => {
+			this.serverDomain = serverDomain;
 		});
 
-		lofig.get("recaptcha", obj => {
+		lofig.get("recaptcha").then(obj => {
 			this.recaptcha.key = obj.key;
 
 			const recaptchaScript = document.createElement("script");
@@ -127,8 +127,6 @@ export default {
 	},
 	methods: {
 		submitModal() {
-			console.log(this.recaptcha.token);
-
 			this.register({
 				username: this.username,
 				email: this.email,
@@ -138,7 +136,9 @@ export default {
 				.then(res => {
 					if (res.status === "success") window.location.reload();
 				})
-				.catch(err => Toast.methods.addToast(err.message, 5000));
+				.catch(
+					err => new Toast({ content: err.message, timeout: 5000 })
+				);
 		},
 		githubRedirect() {
 			localStorage.setItem("github_redirect", this.$route.path);

@@ -1,13 +1,25 @@
 <template>
 	<div>
 		<metadata title="Admin | Queue songs" />
-		<div class="container">
+		<div class="container" v-scroll="handleScroll">
+			<p>
+				<span>Sets loaded: {{ position - 1 }} / {{ maxPosition }}</span>
+				<br />
+				<span>Loaded songs: {{ this.songs.length }}</span>
+			</p>
 			<input
 				v-model="searchQuery"
 				type="text"
 				class="input"
 				placeholder="Search for Songs"
 			/>
+			<button
+				v-if="!loadAllSongs"
+				class="button is-primary"
+				@click="loadAll()"
+			>
+				Load all
+			</button>
 			<br />
 			<br />
 			<table class="table is-striped">
@@ -79,24 +91,6 @@
 				</tbody>
 			</table>
 		</div>
-		<nav class="pagination">
-			<a
-				v-if="position > 1"
-				class="button"
-				href="#"
-				@click="getSet(position - 1)"
-			>
-				<i class="material-icons">navigate_before</i>
-			</a>
-			<a
-				v-if="maxPosition > position"
-				class="button"
-				href="#"
-				@click="getSet(position + 1)"
-			>
-				<i class="material-icons">navigate_next</i>
-			</a>
-		</nav>
 		<edit-song v-if="modals.editSong" />
 	</div>
 </template>
@@ -104,7 +98,7 @@
 <script>
 import { mapState, mapActions } from "vuex";
 
-import { Toast } from "vue-roaster";
+import Toast from "toasters";
 
 import EditSong from "../Modals/EditSong.vue";
 import UserIdToUsername from "../UserIdToUsername.vue";
@@ -118,7 +112,9 @@ export default {
 			position: 1,
 			maxPosition: 1,
 			searchQuery: "",
-			songs: []
+			songs: [],
+			gettingSet: false,
+			loadAllSongs: false
 		};
 	},
 	computed: {
@@ -141,12 +137,6 @@ export default {
 	//   }
 	// },
 	methods: {
-		getSet(position) {
-			this.socket.emit("queueSongs.getSet", position, data => {
-				this.songs = data;
-				this.position = position;
-			});
-		},
 		edit(song, index) {
 			const newSong = {};
 			Object.keys(song).forEach(n => {
@@ -159,21 +149,50 @@ export default {
 		add(song) {
 			this.socket.emit("songs.add", song, res => {
 				if (res.status === "success")
-					Toast.methods.addToast(res.message, 2000);
-				else Toast.methods.addToast(res.message, 4000);
+					new Toast({ content: res.message, timeout: 2000 });
+				else new Toast({ content: res.message, timeout: 4000 });
 			});
 		},
 		remove(id) {
 			this.socket.emit("queueSongs.remove", id, res => {
 				if (res.status === "success")
-					Toast.methods.addToast(res.message, 2000);
-				else Toast.methods.addToast(res.message, 4000);
+					new Toast({ content: res.message, timeout: 2000 });
+				else new Toast({ content: res.message, timeout: 4000 });
 			});
 		},
+		getSet() {
+			if (this.gettingSet) return;
+			if (this.position > this.maxPosition) return;
+			this.gettingSet = true;
+			this.socket.emit("queueSongs.getSet", this.position, data => {
+				data.forEach(song => {
+					this.songs.push(song);
+				});
+				this.position += 1;
+				this.gettingSet = false;
+				if (this.loadAllSongs && this.maxPosition > this.position - 1)
+					setTimeout(() => {
+						this.getSet();
+					}, 500);
+			});
+		},
+		handleScroll() {
+			if (this.loadAllSongs) return false;
+			if (window.scrollY + 50 >= window.scrollMaxY) this.getSet();
+
+			return this.maxPosition === this.position;
+		},
+		loadAll() {
+			this.loadAllSongs = true;
+			this.getSet();
+		},
 		init() {
-			this.socket.emit("queueSongs.index", data => {
-				this.songs = data.songs;
-				this.maxPosition = Math.round(data.maxLength / 50);
+			if (this.songs.length > 0)
+				this.position = Math.ceil(this.songs.length / 15) + 1;
+
+			this.socket.emit("queueSongs.length", length => {
+				this.maxPosition = Math.ceil(length / 15);
+				this.getSet();
 			});
 			this.socket.emit("apis.joinAdminRoom", "queue", () => {});
 		},

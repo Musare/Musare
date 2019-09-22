@@ -113,7 +113,7 @@
 
 <script>
 import { mapState, mapActions } from "vuex";
-import { Toast } from "vue-roaster";
+import Toast from "toasters";
 
 import ViewPunishment from "../Modals/ViewPunishment.vue";
 import io from "../../io";
@@ -149,7 +149,7 @@ export default {
 				this.ipBan.reason,
 				this.ipBan.expiresAt,
 				res => {
-					Toast.methods.addToast(res.message, 6000);
+					new Toast({ content: res.message, timeout: 6000 });
 				}
 			);
 		},

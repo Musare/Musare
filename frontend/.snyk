@@ -2,20 +2,4 @@
 version: v1.13.5
 # ignores vulnerabilities until expiry date; change duration by modifying expiry date
 ignore:
-  'npm:vue:20170401':
-    - vue-roaster > vue:
-        reason: temp
-        expires: '2019-09-04T02:07:16.079Z'
-  'npm:vue:20170829':
-    - vue-roaster > vue:
-        reason: temp
-        expires: '2019-09-04T02:07:16.079Z'
-  'npm:vue:20180222':
-    - vue-roaster > vue:
-        reason: temp
-        expires: '2019-09-04T02:07:16.079Z'
-  'npm:vue:20180802':
-    - vue-roaster > vue:
-        reason: temp
-        expires: '2019-09-04T02:07:16.079Z'
 patch: {}

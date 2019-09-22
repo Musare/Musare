@@ -138,7 +138,7 @@ module.exports = class extends coreClass {
 	async hdel(table, key, cb) {
 		try { await this._validateHook(); } catch { return; }
 
-		if (!key || !table) return cb(null, null);
+		if (!key || !table || typeof key !== "string") return cb(null, null);
 		if (mongoose.Types.ObjectId.isValid(key)) key = key.toString();
 
 		this.client.hdel(table, key, (err) => {

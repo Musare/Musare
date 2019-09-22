@@ -32,30 +32,24 @@ cache.sub('queue.update', songId => {
 let lib = {
 
 	/**
-	 * Gets all queuesongs
+	 * Returns the length of the queue songs list
 	 *
-	 * @param {Object} session - the session object automatically added by socket.io
-	 * @param {Function} cb - gets called with the result
+	 * @param session
+	 * @param cb
 	 */
-	index: hooks.adminRequired((session, cb) => {
+	length: hooks.adminRequired((session, cb) => {
 		async.waterfall([
 			(next) => {
-				db.models.queueSong.find({}, next);
+				db.models.queueSong.countDocuments({}, next);
 			}
-		], async (err, songs) => {
+		], async (err, count) => {
 			if (err) {
 				err = await utils.getError(err);
-				logger.error("QUEUE_INDEX", `Indexing queuesongs failed. "${err}"`);
-				return cb({status: 'failure', message: err});
-			} else {
-				module.exports.getSet(session, 1, result => {
-					logger.success("QUEUE_INDEX", `Indexing queuesongs successful.`);
-					return cb({
-						songs: result,
-						maxLength: songs.length
-					});
-				});
+				logger.error("QUEUE_SONGS_LENGTH", `Failed to get length from queue songs. "${err}"`);
+				return cb({'status': 'failure', 'message': err});
 			}
+			logger.success("QUEUE_SONGS_LENGTH", `Got length from queue songs successfully.`);
+			cb(count);
 		});
 	}),
 
@@ -67,9 +61,18 @@ let lib = {
 	 * @param cb
 	 */
 	getSet: hooks.adminRequired((session, set, cb) => {
-		db.models.queueSong.find({}).limit(50 * set).exec((err, songs) => {
-			if (err) throw err;
-			cb(songs.splice(Math.max(songs.length - 50, 0)));
+		async.waterfall([
+			(next) => {
+				db.models.queueSong.find({}).skip(15 * (set - 1)).limit(15).exec(next);
+			},
+		], async (err, songs) => {
+			if (err) {
+				err = await utils.getError(err);
+				logger.error("QUEUE_SONGS_GET_SET", `Failed to get set from queue songs. "${err}"`);
+				return cb({'status': 'failure', 'message': err});
+			}
+			logger.success("QUEUE_SONGS_GET_SET", `Got set from queue songs successfully.`);
+			cb(songs);
 		});
 	}),
 
@@ -80,9 +83,8 @@ let lib = {
 	 * @param {String} songId - the id of the queuesong that gets updated
 	 * @param {Object} updatedSong - the object of the updated queueSong
 	 * @param {Function} cb - gets called with the result
-	 * @param {String} userId - the userId automatically added by hooks
 	 */
-	update: hooks.adminRequired((session, songId, updatedSong, cb, userId) => {
+	update: hooks.adminRequired((session, songId, updatedSong, cb) => {
 		async.waterfall([
 			(next) => {
 				db.models.queueSong.findOne({_id: songId}, next);
@@ -99,11 +101,11 @@ let lib = {
 		], async (err) => {
 			if (err) {
 				err = await  utils.getError(err);
-				logger.error("QUEUE_UPDATE", `Updating queuesong "${songId}" failed for user ${userId}. "${err}"`);
+				logger.error("QUEUE_UPDATE", `Updating queuesong "${songId}" failed for user ${session.userId}. "${err}"`);
 				return cb({status: 'failure', message: err});
 			}
 			cache.pub('queue.update', songId);
-			logger.success("QUEUE_UPDATE", `User "${userId}" successfully update queuesong "${songId}".`);
+			logger.success("QUEUE_UPDATE", `User "${session.userId}" successfully update queuesong "${songId}".`);
 			return cb({status: 'success', message: 'Successfully updated song.'});
 		});
 	}),
@@ -114,7 +116,6 @@ let lib = {
 	 * @param {Object} session - the session object automatically added by socket.io
 	 * @param {String} songId - the id of the queuesong that gets removed
 	 * @param {Function} cb - gets called with the result
-	 * @param {String} userId - the userId automatically added by hooks
 	 */
 	remove: hooks.adminRequired((session, songId, cb, userId) => {
 		async.waterfall([
@@ -124,11 +125,11 @@ let lib = {
 		], async (err) => {
 			if (err) {
 				err = await utils.getError(err);
-				logger.error("QUEUE_REMOVE", `Removing queuesong "${songId}" failed for user ${userId}. "${err}"`);
+				logger.error("QUEUE_REMOVE", `Removing queuesong "${songId}" failed for user ${session.userId}. "${err}"`);
 				return cb({status: 'failure', message: err});
 			}
 			cache.pub('queue.removedSong', songId);
-			logger.success("QUEUE_REMOVE", `User "${userId}" successfully removed queuesong "${songId}".`);
+			logger.success("QUEUE_REMOVE", `User "${session.userId}" successfully removed queuesong "${songId}".`);
 			return cb({status: 'success', message: 'Successfully updated song.'});
 		});
 	}),
@@ -139,9 +140,8 @@ let lib = {
 	 * @param {Object} session - the session object automatically added by socket.io
 	 * @param {String} songId - the id of the song that gets added
 	 * @param {Function} cb - gets called with the result
-	 * @param {String} userId - the userId automatically added by hooks
 	 */
-	add: hooks.loginRequired((session, songId, cb, userId) => {
+	add: hooks.loginRequired((session, songId, cb) => {
 		let requestedAt = Date.now();
 
 		async.waterfall([
@@ -159,12 +159,13 @@ let lib = {
 				if (song) return next('This song has already been added.');
 				//TODO Add err object as first param of callback
 				utils.getSongFromYouTube(songId, (song) => {
+					song.duration = -1;
 					song.artists = [];
 					song.genres = [];
 					song.skipDuration = 0;
 					song.thumbnail = `${config.get("domain")}/assets/notes.png`;
 					song.explicit = false;
-					song.requestedBy = userId;
+					song.requestedBy = session.userId;
 					song.requestedAt = requestedAt;
 					next(null, song);
 				});
@@ -177,13 +178,13 @@ let lib = {
 			},*/
 			(newSong, next) => {
 				const song = new db.models.queueSong(newSong);
-				song.save((err, song) => {
+				song.save({ validateBeforeSave: false }, (err, song) => {
 					if (err) return next(err);
 					next(null, song);
 				});
 			},
 			(newSong, next) => {
-				db.models.user.findOne({ _id: userId }, (err, user) => {
+				db.models.user.findOne({ _id: session.userId }, (err, user) => {
 					if (err) next(err, newSong);
 					else {
 						user.statistics.songsRequested = user.statistics.songsRequested + 1;
@@ -197,11 +198,11 @@ let lib = {
 		], async (err, newSong) => {
 			if (err) {
 				err = await utils.getError(err);
-				logger.error("QUEUE_ADD", `Adding queuesong "${songId}" failed for user ${userId}. "${err}"`);
+				logger.error("QUEUE_ADD", `Adding queuesong "${songId}" failed for user ${session.userId}. "${err}"`);
 				return cb({status: 'failure', message: err});
 			}
 			cache.pub('queue.newSong', newSong._id);
-			logger.success("QUEUE_ADD", `User "${userId}" successfully added queuesong "${songId}".`);
+			logger.success("QUEUE_ADD", `User "${session.userId}" successfully added queuesong "${songId}".`);
 			return cb({ status: 'success', message: 'Successfully added that song to the queue' });
 		});
 	}),
@@ -212,9 +213,8 @@ let lib = {
 	 * @param {Object} session - the session object automatically added by socket.io
 	 * @param {String} url - the url of the the YouTube playlist
 	 * @param {Function} cb - gets called with the result
-	 * @param {String} userId - the userId automatically added by hooks
 	 */
-	addSetToQueue: hooks.loginRequired((session, url, cb, userId) => {
+	addSetToQueue: hooks.loginRequired((session, url, cb) => {
 		async.waterfall([
 			(next) => {
 				utils.getPlaylistFromYouTube(url, songs => {
@@ -236,10 +236,10 @@ let lib = {
 		], async (err) => {
 			if (err) {
 				err = await utils.getError(err);
-				logger.error("QUEUE_IMPORT", `Importing a YouTube playlist to the queue failed for user "${userId}". "${err}"`);
+				logger.error("QUEUE_IMPORT", `Importing a YouTube playlist to the queue failed for user "${session.userId}". "${err}"`);
 				return cb({ status: 'failure', message: err});
 			} else {
-				logger.success("QUEUE_IMPORT", `Successfully imported a YouTube playlist to the queue for user "${userId}".`);
+				logger.success("QUEUE_IMPORT", `Successfully imported a YouTube playlist to the queue for user "${session.userId}".`);
 				cb({ status: 'success', message: 'Playlist has been successfully imported.' });
 			}
 		});

@@ -27,6 +27,20 @@ Vue.component("metadata", {
 
 Vue.use(VueRouter);
 
+Vue.directive("scroll", {
+	inserted(el, binding) {
+		const f = evt => {
+			clearTimeout(window.scrollDebounceId);
+			window.scrollDebounceId = setTimeout(() => {
+				if (binding.value(evt, el)) {
+					window.removeEventListener("scroll", f);
+				}
+			}, 200);
+		};
+		window.addEventListener("scroll", f);
+	}
+});
+
 const router = new VueRouter({
 	mode: "history",
 	routes: [
@@ -109,8 +123,8 @@ const router = new VueRouter({
 });
 
 lofig.folder = "../config/default.json";
-lofig.get("serverDomain", res => {
-	io.init(res);
+lofig.get("serverDomain").then(serverDomain => {
+	io.init(serverDomain);
 	io.getSocket(socket => {
 		socket.on("ready", (loggedIn, role, username, userId) => {
 			store.dispatch("user/auth/authData", {
@@ -156,16 +170,6 @@ router.beforeEach((to, from, next) => {
 			);
 		}
 	} else next();
-
-	if (to.name === "station") {
-		io.getSocket(socket => {
-			socket.emit("stations.findByName", to.params.id, res => {
-				if (res.status === "success") {
-					next();
-				}
-			});
-		});
-	}
 });
 
 // eslint-disable-next-line no-new

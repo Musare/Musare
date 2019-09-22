@@ -6,8 +6,8 @@
 				<thead>
 					<tr>
 						<td>Song ID</td>
-						<td>Created By</td>
-						<td>Created At</td>
+						<td>Author</td>
+						<td>Time of report</td>
 						<td>Description</td>
 						<td>Options</td>
 					</tr>
@@ -28,7 +28,13 @@
 							/>
 						</td>
 						<td>
-							<span>{{ report.createdAt }}</span>
+							<span :title="report.createdAt">{{
+								formatDistance(
+									new Date(report.createdAt),
+									new Date(),
+									{ addSuffix: true }
+								)
+							}}</span>
 						</td>
 						<td>
 							<span>{{ report.description }}</span>
@@ -58,8 +64,9 @@
 
 <script>
 import { mapState, mapActions } from "vuex";
+import { formatDistance } from "date-fns";
 
-import { Toast } from "vue-roaster";
+import Toast from "toasters";
 import io from "../../io";
 
 import IssuesModal from "../Modals/IssuesModal.vue";
@@ -76,17 +83,21 @@ export default {
 		io.getSocket(socket => {
 			this.socket = socket;
 			if (this.socket.connected) this.init();
+
 			this.socket.emit("reports.index", res => {
 				this.reports = res.data;
 			});
+
 			this.socket.on("event:admin.report.resolved", reportId => {
 				this.reports = this.reports.filter(report => {
 					return report._id !== reportId;
 				});
 			});
+
 			this.socket.on("event:admin.report.created", report => {
 				this.reports.push(report);
 			});
+
 			io.onConnect(() => {
 				this.init();
 			});
@@ -96,10 +107,10 @@ export default {
 			this.socket.emit("reports.findOne", this.$route.query.id, res => {
 				if (res.status === "success") this.view(res.data);
 				else
-					Toast.methods.addToast(
-						"Report with that ID not found",
-						3000
-					);
+					new Toast({
+						content: "Report with that ID not found",
+						timeout: 3000
+					});
 			});
 		}
 	},
@@ -109,6 +120,7 @@ export default {
 		})
 	},
 	methods: {
+		formatDistance,
 		init() {
 			this.socket.emit("apis.joinAdminRoom", "reports", () => {});
 		},
@@ -118,7 +130,7 @@ export default {
 		},
 		resolve(reportId) {
 			this.socket.emit("reports.resolve", reportId, res => {
-				Toast.methods.addToast(res.message, 3000);
+				new Toast({ content: res.message, timeout: 3000 });
 				if (res.status === "success" && this.modals.viewReport)
 					this.closeModal({
 						sector: "admin",
