@@ -1,5 +1,7 @@
 /* eslint no-param-reassign: 0 */
 
+import Vue from "vue";
+
 const state = {};
 const getters = {};
 const actions = {};
@@ -84,7 +86,7 @@ const modules = {
 			updateSong(state, updatedSong) {
 				state.songs.forEach((song, index) => {
 					if (song._id === updatedSong._id)
-						state.songs.$set(index, updatedSong);
+						Vue.set(state.songs, index, updatedSong);
 				});
 			},
 			updateSongField(state, data) {

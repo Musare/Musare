@@ -141,7 +141,8 @@ export default {
 		})
 	},
 	watch: {
-		"modals.editSong": val => {
+		// eslint-disable-next-line func-names
+		"modals.editSong": function(val) {
 			if (!val) this.stopVideo();
 		}
 	},

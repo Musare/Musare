@@ -97,6 +97,7 @@
 
 <script>
 import { mapState, mapActions } from "vuex";
+import Vue from "vue";
 
 import Toast from "toasters";
 
@@ -130,12 +131,12 @@ export default {
 			modals: state => state.modals.admin
 		})
 	},
-	// watch: {
-	//   "modals.editSong": function(value) {
-	//     console.log(value);
-	//     if (value === false) this.stopVideo();
-	//   }
-	// },
+	watch: {
+		// eslint-disable-next-line func-names
+		"modals.editSong": function(value) {
+			if (value === false) this.stopVideo();
+		}
+	},
 	methods: {
 		edit(song, index) {
 			const newSong = {};
@@ -215,7 +216,7 @@ export default {
 				for (let i = 0; i < this.songs.length; i += 1) {
 					const song = this.songs[i];
 					if (song._id === updatedSong._id) {
-						this.songs.$set(i, updatedSong);
+						Vue.set(this.songs, i, updatedSong);
 					}
 				}
 			});
