@@ -161,6 +161,17 @@ export default {
 <style lang="scss" scoped>
 @import "styles/global.scss";
 
+.night-mode {
+	.tabs {
+		background-color: #333;
+		border: 0;
+
+		ul {
+			border-bottom: 0;
+		}
+	}
+}
+
 .tabs {
 	background-color: $white;
 	.queueSongs {

@@ -345,6 +345,45 @@ export default {
 <style lang="scss" scoped>
 @import "styles/global.scss";
 
+.night-mode {
+	.table {
+		color: #ddd;
+		background-color: #222;
+
+		thead tr {
+			background: $night-mode-secondary;
+			td {
+				color: #fff;
+			}
+		}
+
+		tbody tr:hover {
+			background-color: #111 !important;
+		}
+
+		tbody tr:nth-child(even) {
+			background-color: #444;
+		}
+
+		strong {
+			color: #ddd;
+		}
+	}
+
+	.card {
+		background: #222;
+
+		.card-header {
+			box-shadow: 0 1px 2px rgba(10, 10, 10, 0.8);
+		}
+
+		p,
+		.label {
+			color: #ddd;
+		}
+	}
+}
+
 .tag:not(:last-child) {
 	margin-right: 5px;
 }

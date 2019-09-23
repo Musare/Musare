@@ -126,6 +126,20 @@ export default {
 <style lang="scss" scoped>
 @import "styles/global.scss";
 
+.night-mode {
+	.modal-card,
+	.modal-card-head,
+	.modal-card-body,
+	.modal-card-foot {
+		background-color: $night-mode-secondary;
+	}
+
+	.label,
+	p {
+		color: #ddd;
+	}
+}
+
 .button.is-github {
 	background-color: $dark-grey-2;
 	color: $white !important;

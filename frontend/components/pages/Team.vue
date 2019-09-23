@@ -205,6 +205,15 @@ export default {
 <style lang="scss" scoped>
 @import "styles/global.scss";
 
+.night-mode {
+	.card {
+		background-color: $night-mode-secondary;
+		p {
+			color: #ddd;
+		}
+	}
+}
+
 li a {
 	color: dodgerblue;
 	border-bottom: 0 !important;

@@ -1287,6 +1287,13 @@ export default {
 <style lang="scss">
 @import "styles/global.scss";
 
+.night-mode {
+	.nav,
+	.control-sidebar {
+		background-color: #222;
+	}
+}
+
 .player-can-not-autoplay {
 	position: absolute;
 	width: 100%;

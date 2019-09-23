@@ -133,6 +133,19 @@ export default {
 <style lang="scss" scoped>
 @import "styles/global.scss";
 
+.night-mode {
+	.modal-card,
+	.modal-card-head,
+	.modal-card-body {
+		background-color: $night-mode-secondary;
+	}
+
+	strong,
+	p {
+		color: #ddd;
+	}
+}
+
 .modal-card-head {
 	border-bottom: none;
 	background-color: ghostwhite;

@@ -299,6 +299,22 @@ html {
 	}
 }
 
+.night-mode {
+	.card,
+	.card-content,
+	.card-content div {
+		background-color: $night-mode-secondary;
+	}
+
+	.card-content .icons i {
+		color: #ddd;
+	}
+
+	.card-image .image {
+		background-color: #333;
+	}
+}
+
 @media only screen and (min-width: 1200px) {
 	html {
 		font-size: 15px;

@@ -151,6 +151,16 @@ export default {
 <style lang="scss" scoped>
 @import "styles/global.scss";
 
+.night-mode {
+	.label {
+		color: #ddd;
+	}
+
+	.skip-step {
+		border: 0;
+	}
+}
+
 .container {
 	padding: 25px;
 }

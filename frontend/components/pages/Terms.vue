@@ -2,7 +2,7 @@
 	<div class="app">
 		<metadata title="Terms of Service" />
 		<main-header />
-		<div class="content-wrapper">
+		<div class="container">
 			<h1>MUSARE TERMS OF SERVICE</h1>
 			<h4>Last Updated: January 25, 2016</h4>
 

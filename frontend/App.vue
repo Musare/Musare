@@ -50,6 +50,14 @@ export default {
 		},
 		...mapActions("modals", ["closeCurrentModal"])
 	},
+	beforeMount() {
+		const nightmode = true || localStorage.getItem("nightmode");
+		if (nightmode) {
+			document
+				.getElementsByTagName("body")[0]
+				.classList.add("night-mode");
+		}
+	},
 	mounted() {
 		document.onkeydown = ev => {
 			const event = ev || window.event;
@@ -115,6 +123,22 @@ export default {
 
 <style lang="scss">
 @import "styles/global.scss";
+
+.night-mode {
+	div {
+		// background-color: #000;
+		color: #ddd;
+	}
+
+	#toasts-container .toast {
+		background-color: #ddd;
+		color: #333;
+	}
+}
+
+body.night-mode {
+	background-color: #000 !important;
+}
 
 #toasts-container {
 	z-index: 10000 !important;

@@ -186,6 +186,20 @@ export default {
 <style lang="scss" scoped>
 @import "styles/global.scss";
 
+.night-mode {
+	.sidebar {
+		background-color: $night-mode-secondary;
+
+		.title {
+			color: #fff;
+		}
+
+		* {
+			color: #ddd;
+		}
+	}
+}
+
 .sidebar {
 	position: fixed;
 	z-index: 1;

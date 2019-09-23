@@ -84,6 +84,18 @@ export default {
 <style lang="scss" scoped>
 @import "styles/global.scss";
 
+.night-mode {
+	footer.footer,
+	footer.footer .container,
+	footer.footer .container .content {
+		background-color: #222;
+	}
+
+	footer.footer .socialIcons img {
+		filter: invert(1);
+	}
+}
+
 .content a:not(.button) {
 	border: 0;
 }

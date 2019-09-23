@@ -806,6 +806,28 @@ export default {
 </script>
 
 <style lang="scss">
+@import "styles/global.scss";
+
+.night-mode {
+	.modal-card,
+	.modal-card-head,
+	.modal-card-body,
+	.modal-card-foot {
+		background-color: $night-mode-secondary;
+	}
+
+	.section {
+		background-color: #111 !important;
+		border: 0 !important;
+	}
+
+	.label,
+	p,
+	strong {
+		color: #ddd;
+	}
+}
+
 .edit-station-modal {
 	.modal-card-title {
 		text-align: center;

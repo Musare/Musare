@@ -366,6 +366,12 @@ export default {
 <style lang="scss" scoped>
 @import "styles/global.scss";
 
+.night-mode {
+	.label {
+		color: #ddd;
+	}
+}
+
 .container {
 	padding: 25px;
 }
