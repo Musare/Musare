@@ -131,12 +131,12 @@ export default {
 			modals: state => state.modals.admin
 		})
 	},
-	// watch: {
-	//   "modals.editSong": function(value) {
-	//     console.log(value);
-	//     if (value === false) this.stopVideo();
-	//   }
-	// },
+	watch: {
+		// eslint-disable-next-line func-names
+		"modals.editSong": function(value) {
+			if (value === false) this.stopVideo();
+		}
+	},
 	methods: {
 		edit(song, index) {
 			const newSong = {};
