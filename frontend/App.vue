@@ -2,10 +2,6 @@
 	<div>
 		<banned v-if="banned" />
 		<div v-else>
-			<h1 v-if="!socketConnected" class="alert">
-				Could not connect to the server.
-			</h1>
-			<!-- should be a persistant toast -->
 			<router-view />
 			<what-is-new />
 			<mobile-alert />
@@ -49,6 +45,29 @@ export default {
 			if (event.which === 13) cb();
 		},
 		...mapActions("modals", ["closeCurrentModal"])
+	},
+	watch: {
+		socketConnected: connected => {
+			console.log(connected);
+			if (!connected)
+				new Toast({
+					content: "Could not connect to the server.",
+					persistant: true
+				});
+			else {
+				// better implementation once vue-roaster is updated
+				document
+					.getElementById("toasts-content")
+					.childNodes.forEach(toast => {
+						if (
+							toast.innerHTML ===
+							"Could not connect to the server."
+						) {
+							toast.remove();
+						}
+					});
+			}
+		}
 	},
 	beforeMount() {
 		const nightmode =
