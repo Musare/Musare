@@ -97,6 +97,7 @@
 
 <script>
 import { mapState, mapActions } from "vuex";
+import Vue from "vue";
 
 import Toast from "toasters";
 
@@ -215,7 +216,7 @@ export default {
 				for (let i = 0; i < this.songs.length; i += 1) {
 					const song = this.songs[i];
 					if (song._id === updatedSong._id) {
-						this.songs.$set(i, updatedSong);
+						Vue.set(this.songs, i, updatedSong);
 					}
 				}
 			});

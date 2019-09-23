@@ -79,6 +79,7 @@
 
 <script>
 import { format } from "date-fns";
+import Vue from "vue";
 
 import MainHeader from "../MainHeader.vue";
 import MainFooter from "../MainFooter.vue";
@@ -106,7 +107,7 @@ export default {
 			this.socket.on("event:admin.news.updated", news => {
 				for (let n = 0; n < this.news.length; n += 1) {
 					if (this.news[n]._id === news._id) {
-						this.news.$set(n, news);
+						Vue.set(this.news, n, news);
 					}
 				}
 			});
