@@ -10,7 +10,9 @@
   "scripts": {
     "dev": "nodemon",
     "docker:dev": "nodemon -L /opt/app",
-    "docker:prod": "node /opt/app"
+    "docker:prod": "node /opt/app",
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
   },
   "dependencies": {
     "async": "3.1.0",
@@ -30,6 +32,8 @@
     "request": "^2.88.0",
     "sha256": "^0.2.0",
     "socket.io": "^2.2.0",
-    "underscore": "^1.9.1"
-  }
+    "underscore": "^1.9.1",
+    "snyk": "^1.230.5"
+  },
+  "snyk": true
 }
