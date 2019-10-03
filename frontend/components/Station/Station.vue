@@ -1044,6 +1044,15 @@ export default {
 						if (this.playerReady) this.player.pauseVideo();
 						this.updateNoSong(true);
 					}
+
+					if (type === "community" && partyMode === true) {
+						this.socket.emit("stations.getQueue", _id, res => {
+							if (res.status === "success") {
+								this.updateSongsList(res.queue);
+							}
+						});
+					}
+
 					// UNIX client time before ping
 					const beforePing = Date.now();
 					this.socket.emit("apis.ping", pong => {
