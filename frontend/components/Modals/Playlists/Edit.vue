@@ -344,7 +344,10 @@ export default {
 			this.socket.emit("playlists.remove", this.playlist._id, res => {
 				new Toast({ content: res.message, timeout: 3000 });
 				if (res.status === "success") {
-					this.closeModal();
+					this.closeModal({
+						sector: "station",
+						modal: "editPlaylist"
+					});
 				}
 			});
 		},
