@@ -216,7 +216,7 @@ export default {
 				return "";
 			};
 
-			const minutes = Math.floor((duration - hours) / 60);
+			const minutes = Math.floor((duration - hours * 60 * 60) / 60);
 			const formatMinutes = () => {
 				if (minutes > 0) {
 					if (minutes > 1) {
