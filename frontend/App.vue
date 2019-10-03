@@ -51,7 +51,8 @@ export default {
 		...mapActions("modals", ["closeCurrentModal"])
 	},
 	beforeMount() {
-		const nightmode = true || localStorage.getItem("nightmode");
+		const nightmode =
+			false || JSON.parse(localStorage.getItem("nightmode"));
 		if (nightmode) {
 			document
 				.getElementsByTagName("body")[0]
