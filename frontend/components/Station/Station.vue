@@ -930,7 +930,10 @@ export default {
 		},
 		addFirstPrivatePlaylistSongToQueue() {
 			let isInQueue = false;
-			if (this.station.type === "community") {
+			if (
+				this.station.type === "community" &&
+				this.station.partyMode === true
+			) {
 				this.songsList.forEach(queueSong => {
 					if (queueSong.requestedBy === this.userId) isInQueue = true;
 				});
