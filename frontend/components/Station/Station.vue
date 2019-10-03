@@ -626,27 +626,30 @@ export default {
 				)}%`;
 			}
 		},
-		formatTime(duration) {
-			if (duration) {
-				if (duration < 0) return "0:00";
+		formatTime(originalDuration) {
+			if (originalDuration) {
+				if (originalDuration < 0) return "0:00";
 
-				const hours = Math.floor(duration / (60 * 60));
-				const minutes = Math.floor((duration - hours) / 60);
-				const seconds = Math.floor(
-					duration - hours * 60 * 60 - minutes * 60
-				);
+				let duration = originalDuration;
+				let hours = Math.floor(duration / (60 * 60));
+				duration -= hours * 60 * 60;
+				let minutes = Math.floor(duration / 60);
+				duration -= minutes * 60;
+				let seconds = Math.floor(duration);
 
-				const formatHours = () => {
-					if (hours > 0) {
-						if (hours < 10) return `0${hours}:`;
-						return `${hours}:`;
-					}
-					return "";
-				};
+				if (hours === 0) {
+					hours = "";
+				}
 
-				return `${formatHours()}${minutes}:${
-					seconds < 10 ? `0${seconds}` : seconds
-				}`;
+				if (hours > 0) {
+					if (minutes < 10) minutes = `0${minutes}`;
+				}
+
+				if (seconds < 10) {
+					seconds = `0${seconds}`;
+				}
+
+				return `${hours}${hours ? ":" : ""}${minutes}:${seconds}`;
 			}
 			return false;
 		},
