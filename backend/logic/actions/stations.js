@@ -366,6 +366,7 @@ module.exports = {
 			},
 
 			(data, next) => {
+				data = JSON.parse(JSON.stringify(data));
 				data.userCount = usersPerStationCount[data._id] || 0;
 				data.users = usersPerStation[data._id] || [];
 				if (!data.currentSong || !data.currentSong.title) return next(null, data);
