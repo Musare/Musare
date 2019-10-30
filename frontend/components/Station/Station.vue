@@ -224,11 +224,11 @@
 											>volume_down</i
 										>
 										<input
-											id="volumeSlider"
+											v-model="volumeSliderValue"
 											type="range"
 											min="0"
 											max="10000"
-											class="active"
+											class="volumeSlider active"
 											@change="changeVolume()"
 											@input="changeVolume()"
 										/>
@@ -341,11 +341,11 @@
 											>volume_down</i
 										>
 										<input
-											id="volumeSlider"
+											v-model="volumeSliderValue"
 											type="range"
 											min="0"
 											max="10000"
-											class="active"
+											class="active volumeSlider"
 											@change="changeVolume()"
 											@input="changeVolume()"
 										/>
@@ -459,7 +459,8 @@ export default {
 			canAutoplay: true,
 			lastTimeRequestedIfCanAutoplay: 0,
 			seeking: false,
-			playbackRate: 1
+			playbackRate: 1,
+			volumeSliderValue: 0
 		};
 	},
 	computed: {
@@ -761,7 +762,7 @@ export default {
 			});
 		},
 		changeVolume() {
-			const volume = document.getElementById("volumeSlider").value;
+			const volume = this.volumeSliderValue;
 			localStorage.setItem("volume", volume / 100);
 			if (this.playerReady) {
 				this.player.setVolume(volume / 100);
@@ -857,7 +858,7 @@ export default {
 					this.player.getVolume() * 100 <= 0 ? previousVolume : 0;
 				this.muted = !this.muted;
 				localStorage.setItem("muted", this.muted);
-				document.getElementById("volumeSlider").value = volume * 100;
+				this.volumeSliderValue = volume * 100;
 				this.player.setVolume(volume);
 				if (!this.muted) localStorage.setItem("volume", volume);
 			}
@@ -871,7 +872,7 @@ export default {
 					localStorage.setItem("muted", false);
 				}
 				if (volume > 100) volume = 100;
-				document.getElementById("volumeSlider").value = volume * 100;
+				this.volumeSliderValue = volume * 100;
 				this.player.setVolume(volume);
 				localStorage.setItem("volume", volume);
 			}
@@ -1271,7 +1272,7 @@ export default {
 		if (JSON.parse(localStorage.getItem("muted"))) {
 			this.muted = true;
 			this.player.setVolume(0);
-			document.getElementById("volumeSlider").value = 0 * 100;
+			this.volumeSliderValue = 0 * 100;
 		} else {
 			let volume = parseFloat(localStorage.getItem("volume"));
 			volume =
@@ -1279,7 +1280,7 @@ export default {
 					? volume
 					: 20;
 			localStorage.setItem("volume", volume);
-			document.getElementById("volumeSlider").value = volume * 100;
+			this.volumeSliderValue = volume * 100;
 		}
 	},
 	components: {
@@ -1339,7 +1340,7 @@ export default {
 	text-align: center;
 }
 
-#volumeSlider {
+.volumeSlider {
 	padding: 0 15px;
 	background: transparent;
 }
