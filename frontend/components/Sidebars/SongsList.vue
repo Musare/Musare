@@ -37,8 +37,8 @@
 
 			<article
 				v-else
-				v-for="(song, index) in songsList"
-				:key="index"
+				v-for="song in songsList"
+				:key="song.songId"
 				class="media"
 			>
 				<div class="media-content">
