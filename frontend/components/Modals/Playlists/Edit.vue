@@ -57,7 +57,7 @@
 			<div class="control is-grouped">
 				<p class="control is-expanded">
 					<input
-						v-model="songQuery"
+						v-model="searchSongQuery"
 						class="input"
 						type="text"
 						placeholder="Search for Song to add"
@@ -95,11 +95,28 @@
 			<div class="control is-grouped">
 				<p class="control is-expanded">
 					<input
+						v-model="directSongQuery"
+						class="input"
+						type="text"
+						placeholder="Enter a YouTube id or URL directly"
+						autofocus
+						@keyup.enter="addSong()"
+					/>
+				</p>
+				<p class="control">
+					<a class="button is-info" @click="addSong()" href="#"
+						>Add</a
+					>
+				</p>
+			</div>
+			<div class="control is-grouped">
+				<p class="control is-expanded">
+					<input
 						v-model="importQuery"
 						class="input"
 						type="text"
 						placeholder="YouTube Playlist URL"
-						@keyup.enter="importPlaylist()"
+						@keyup.enter="importPlaylist(false)"
 					/>
 				</p>
 				<p class="control">
@@ -159,7 +176,8 @@ export default {
 		return {
 			playlist: { songs: [] },
 			songQueryResults: [],
-			songQuery: "",
+			searchSongQuery: "",
+			directSongQuery: "",
 			importQuery: ""
 		};
 	},
@@ -300,6 +318,19 @@ export default {
 				}
 			);
 		},
+		/* eslint-disable prefer-destructuring */
+		addSong() {
+			let id = "";
+
+			if (this.directSongQuery.length === 11) id = this.directSongQuery;
+			else {
+				const match = this.directSongQuery.match("v=([0-9A-Za-z_-]+)");
+				if (match.length > 0) id = match[1];
+			}
+
+			this.addSongToPlaylist(id);
+		},
+		/* eslint-enable prefer-destructuring */
 		importPlaylist(musicOnly) {
 			new Toast({
 				content:
