@@ -13,7 +13,6 @@
 
 <script>
 import { mapState, mapActions } from "vuex";
-
 import Toast from "toasters";
 
 import Banned from "./components/pages/Banned.vue";
@@ -22,13 +21,15 @@ import MobileAlert from "./components/Modals/MobileAlert.vue";
 import LoginModal from "./components/Modals/Login.vue";
 import RegisterModal from "./components/Modals/Register.vue";
 import io from "./io";
+import keyboardShortcuts from "./keyboardShortcuts";
 
 export default {
 	replace: false,
 	data() {
 		return {
 			serverDomain: "",
-			socketConnected: true
+			socketConnected: true,
+			keyIsDown: false
 		};
 	},
 	computed: mapState({
@@ -81,12 +82,31 @@ export default {
 	mounted() {
 		document.onkeydown = ev => {
 			const event = ev || window.event;
-			if (
-				event.keyCode === 27 &&
-				Object.keys(this.currentlyActive).length !== 0
-			)
-				this.closeCurrentModal();
+			const { keyCode } = event;
+			const shift = event.shiftKey;
+			const ctrl = event.ctrlKey;
+
+			const identifier = `${keyCode}.${shift}.${ctrl}`;
+
+			if (this.keyIsDown === identifier) return;
+			this.keyIsDown = identifier;
+
+			keyboardShortcuts.handleKeyDown(keyCode, shift, ctrl);
 		};
+
+		document.onkeyup = () => {
+			this.keyIsDown = "";
+		};
+
+		keyboardShortcuts.registerShortcut("closeModal", {
+			keyCode: 27,
+			shift: false,
+			ctrl: false,
+			handler: () => {
+				if (Object.keys(this.currentlyActive).length !== 0)
+					this.closeCurrentModal();
+			}
+		});
 
 		if (localStorage.getItem("github_redirect")) {
 			this.$router.go(localStorage.getItem("github_redirect"));

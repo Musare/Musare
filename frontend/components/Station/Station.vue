@@ -430,6 +430,7 @@ import UserIdToUsername from "../UserIdToUsername.vue";
 import Z404 from "../404.vue";
 
 import io from "../../io";
+import keyboardShortcuts from "../../keyboardShortcuts";
 
 export default {
 	data() {
@@ -486,6 +487,9 @@ export default {
 		},
 		isAdminOnly() {
 			return this.loggedIn && this.role === "admin";
+		},
+		isOwnerOrAdmin() {
+			return this.isOwnerOnly() || this.isAdminOnly();
 		},
 		removeFromQueue(songId) {
 			window.socket.emit(
@@ -1060,6 +1064,85 @@ export default {
 						});
 					}
 
+					if (this.isOwnerOrAdmin()) {
+						keyboardShortcuts.registerShortcut(
+							"station.pauseResume",
+							{
+								keyCode: 32,
+								shift: false,
+								ctrl: true,
+								handler: () => {
+									if (this.paused) this.resumeStation();
+									else this.pauseStation();
+								}
+							}
+						);
+
+						keyboardShortcuts.registerShortcut(
+							"station.skipStation",
+							{
+								keyCode: 39,
+								shift: false,
+								ctrl: true,
+								handler: () => {
+									this.skipStation();
+								}
+							}
+						);
+
+						keyboardShortcuts.registerShortcut(
+							"station.lowerVolumeLarge",
+							{
+								keyCode: 40,
+								shift: false,
+								ctrl: true,
+								handler: () => {
+									this.volumeSliderValue -= 1000;
+									this.changeVolume();
+								}
+							}
+						);
+
+						keyboardShortcuts.registerShortcut(
+							"station.lowerVolumeSmall",
+							{
+								keyCode: 40,
+								shift: true,
+								ctrl: true,
+								handler: () => {
+									this.volumeSliderValue -= 100;
+									this.changeVolume();
+								}
+							}
+						);
+
+						keyboardShortcuts.registerShortcut(
+							"station.increaseVolumeLarge",
+							{
+								keyCode: 38,
+								shift: false,
+								ctrl: true,
+								handler: () => {
+									this.volumeSliderValue += 1000;
+									this.changeVolume();
+								}
+							}
+						);
+
+						keyboardShortcuts.registerShortcut(
+							"station.increaseVolumeSmall",
+							{
+								keyCode: 38,
+								shift: true,
+								ctrl: true,
+								handler: () => {
+									this.volumeSliderValue += 100;
+									this.changeVolume();
+								}
+							}
+						);
+					}
+
 					// UNIX client time before ping
 					const beforePing = Date.now();
 					this.socket.emit("apis.ping", pong => {
@@ -1282,6 +1365,20 @@ export default {
 			localStorage.setItem("volume", volume);
 			this.volumeSliderValue = volume * 100;
 		}
+	},
+	beforeDestroy() {
+		const shortcutNames = [
+			"station.pauseResume",
+			"station.skipStation",
+			"station.lowerVolumeLarge",
+			"station.lowerVolumeSmall",
+			"station.increaseVolumeLarge",
+			"station.increaseVolumeSmall"
+		];
+
+		shortcutNames.forEach(shortcutName => {
+			keyboardShortcuts.unregisterShortcut(shortcutName);
+		});
 	},
 	components: {
 		StationHeader,
