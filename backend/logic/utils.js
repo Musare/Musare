@@ -393,8 +393,54 @@ module.exports = class extends coreClass {
 		}
 	}
 
-	async getPlaylistFromYouTube(url, cb) {
+	async filterMusicVideosYouTube(videoIds, cb) {
 		try { await this._validateHook(); } catch { return; }
+
+		function getNextPage(cb2) {
+			let localVideoIds = videoIds.splice(0, 50);
+
+			const youtubeParams = [
+				'part=topicDetails',
+				`id=${encodeURIComponent(localVideoIds.join(","))}`,
+				`maxResults=50`,
+				`key=${config.get('apis.youtube.key')}`
+			].join('&');
+
+			request(`https://www.googleapis.com/youtube/v3/videos?${youtubeParams}`, async (err, res, body) => {
+				if (err) {
+					console.error(err);
+					return next('Failed to find playlist from YouTube');
+				}
+
+				body = JSON.parse(body);
+
+				let songIds = [];
+				body.items.forEach(item => {
+					const songId = item.id;
+					if (!item.topicDetails) return;
+					else if (item.topicDetails.topicIds.indexOf("/m/04rlf") !== -1) {
+						songIds.push(songId);
+					}
+				});
+
+				if (videoIds.length > 0) {
+					getNextPage(newSongIds => {
+						cb2(songIds.concat(newSongIds));
+					});
+				} else cb2(songIds);
+			});
+		}
+
+		if (videoIds.length === 0) cb([]);
+		else getNextPage(songIds => {
+			cb(songIds);
+		});
+	}
+
+	async getPlaylistFromYouTube(url, musicOnly, cb) {
+		try { await this._validateHook(); } catch { return; }
+
+		let local = this;
 
 		let name = 'list'.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
 		var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
@@ -405,12 +451,12 @@ module.exports = class extends coreClass {
 			const youtubeParams = [
 				'part=contentDetails',
 				`playlistId=${encodeURIComponent(playlistId)}`,
-				`maxResults=5`,
+				`maxResults=50`,
 				`key=${config.get('apis.youtube.key')}`,
 				nextPageToken
 			].join('&');
 
-			request(`https://www.googleapis.com/youtube/v3/playlistItems?${youtubeParams}`, (err, res, body) => {
+			request(`https://www.googleapis.com/youtube/v3/playlistItems?${youtubeParams}`, async (err, res, body) => {
 				if (err) {
 					console.error(err);
 					return next('Failed to find playlist from YouTube');
@@ -420,8 +466,13 @@ module.exports = class extends coreClass {
 				songs = songs.concat(body.items);
 				if (body.nextPageToken) getPage(body.nextPageToken, songs);
 				else {
-					console.log(songs);
-					cb(songs);
+					songs = songs.map(song => song.contentDetails.videoId);
+					if (!musicOnly) cb(songs);
+					else {
+						local.filterMusicVideosYouTube(songs.slice(), (filteredSongs) => {
+							cb(filteredSongs, songs);
+						});
+					}
 				}
 			});
 		}

@@ -217,17 +217,17 @@ let lib = {
 	addSetToQueue: hooks.loginRequired((session, url, cb) => {
 		async.waterfall([
 			(next) => {
-				utils.getPlaylistFromYouTube(url, songs => {
-					next(null, songs);
+				utils.getPlaylistFromYouTube(url, false, songIds => {
+					next(null, songIds);
 				});
 			},
-			(songs, next) => {
+			(songIds, next) => {
 				let processed = 0;
 				function checkDone() {
-					if (processed === songs.length) next();
+					if (processed === songIds.length) next();
 				}
-				for (let s = 0; s < songs.length; s++) {
-					lib.add(session, songs[s].contentDetails.videoId, () => {
+				for (let s = 0; s < songIds.length; s++) {
+					lib.add(session, songIds[s], () => {
 						processed++;
 						checkDone();
 					});

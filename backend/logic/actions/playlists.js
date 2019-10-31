@@ -295,23 +295,36 @@ let lib = {
 	 * @param {Object} session - the session object automatically added by socket.io
 	 * @param {String} url - the url of the the YouTube playlist
 	 * @param {String} playlistId - the id of the playlist we are adding the set of songs to
+	 * @param {Boolean} musicOnly - whether to only add music to the playlist
 	 * @param {Function} cb - gets called with the result
 	 */
-	addSetToPlaylist: hooks.loginRequired((session, url, playlistId, cb) => {
+	addSetToPlaylist: hooks.loginRequired((session, url, playlistId, musicOnly, cb) => {
+		let videosInPlaylistTotal = 0;
+		let songsInPlaylistTotal = 0;
+		let songsSuccess = 0;
+		let songsFail = 0;
 		async.waterfall([
 			(next) => {
-				utils.getPlaylistFromYouTube(url, songs => {
-					next(null, songs);
+				utils.getPlaylistFromYouTube(url, musicOnly, (songIds, otherSongIds) => {
+					if (otherSongIds) {
+						videosInPlaylistTotal = songIds.length;
+						songsInPlaylistTotal = otherSongIds.length;
+					} else {
+						songsInPlaylistTotal = videosInPlaylistTotal = songIds.length;
+					}
+					next(null, songIds);
 				});
 			},
-			(songs, next) => {
+			(songIds, next) => {
 				let processed = 0;
 				function checkDone() {
-					if (processed === songs.length) next();
+					if (processed === songIds.length) next();
 				}
-				for (let s = 0; s < songs.length; s++) {
-					lib.addSongToPlaylist(session, songs[s].contentDetails.videoId, playlistId, () => {
+				for (let s = 0; s < songIds.length; s++) {
+					lib.addSongToPlaylist(session, songIds[s], playlistId, (res) => {
 						processed++;
+						if (res.status === "success") songsSuccess++;
+						else songsFail++;
 						checkDone();
 					});
 				}
@@ -330,8 +343,18 @@ let lib = {
 				logger.error("PLAYLIST_IMPORT", `Importing a YouTube playlist to private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`);
 				return cb({ status: 'failure', message: err});
 			} else {
-				logger.success("PLAYLIST_IMPORT", `Successfully imported a YouTube playlist to private playlist "${playlistId}" for user "${session.userId}".`);
-				cb({ status: 'success', message: 'Playlist has been successfully imported.', data: playlist.songs });
+				logger.success("PLAYLIST_IMPORT", `Successfully imported a YouTube playlist to private playlist "${playlistId}" for user "${session.userId}". Videos in playlist: ${videosInPlaylistTotal}, songs in playlist: ${songsInPlaylistTotal}, songs successfully added: ${songsSuccess}, songs failed: ${songsFail}.`);
+				cb({
+					status: 'success',
+					message: 'Playlist has been successfully imported.',
+					data: playlist.songs,
+					stats: {
+						videosInPlaylistTotal,
+						songsInPlaylistTotal,
+						songsAddedSuccessfully: songsSuccess,
+						songsFailedToAdd: songsFail
+					}
+				});
 			}
 		});
 	}),
