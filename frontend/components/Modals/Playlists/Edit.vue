@@ -136,6 +136,7 @@
 					>
 				</p>
 			</div>
+			<button class="button is-info" @click="shuffle()">Shuffle</button>
 			<h5>Edit playlist details:</h5>
 			<div class="control is-grouped">
 				<p class="control is-expanded">
@@ -331,6 +332,14 @@ export default {
 			this.addSongToPlaylist(id);
 		},
 		/* eslint-enable prefer-destructuring */
+		shuffle() {
+			this.socket.emit("playlists.shuffle", this.playlist._id, res => {
+				new Toast({ content: res.message, timeout: 4000 });
+				if (res.status === "success") {
+					this.playlist = res.data;
+				}
+			});
+		},
 		importPlaylist(musicOnly) {
 			new Toast({
 				content:

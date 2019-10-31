@@ -232,6 +232,48 @@ let lib = {
 	}),
 
 	/**
+	 * Updates a private playlist
+	 *
+	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {String} playlistId - the id of the playlist we are updating
+	 * @param {Function} cb - gets called with the result
+	 */
+	shuffle: hooks.loginRequired((session, playlistId, cb) => {
+		async.waterfall([
+			(next) => {
+				if (!playlistId) return next("No playlist id.");
+				db.models.playlist.findById(playlistId, next);
+			},
+
+			(playlist, next) => {
+				utils.shuffle(playlist.songs).then(songs => {
+					next(null, songs);
+				}).catch(next);
+			},
+
+			(songs, next) => {
+				db.models.playlist.updateOne({ _id: playlistId }, { $set: { songs } }, { runValidators: true }, next);
+			},
+
+			(res, next) => {
+				playlists.updatePlaylist(playlistId, next)
+			}
+		], async (err, playlist) => {
+			if (err) {
+				err = await utils.getError(err);
+				logger.error("PLAYLIST_SHUFFLE", `Updating private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`);
+				return cb({ status: 'failure', message: err});
+			}
+			logger.success("PLAYLIST_SHUFFLE", `Successfully updated private playlist "${playlistId}" for user "${session.userId}".`);
+			cb({
+				status: 'success',
+				message: "Successfully shuffled playlist.",
+				data: playlist
+			});
+		});
+	}),
+
+	/**
 	 * Adds a song to a private playlist
 	 *
 	 * @param {Object} session - the session object automatically added by socket.io
