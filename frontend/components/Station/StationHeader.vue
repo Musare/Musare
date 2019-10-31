@@ -118,7 +118,7 @@
 						<span class="icon-purpose">Add song to queue</span>
 					</a>
 					<a
-						v-if="!isOwner() && !noSong"
+						v-if="!noSong"
 						class="sidebar-item"
 						href="#"
 						@click="$parent.voteSkipStation()"

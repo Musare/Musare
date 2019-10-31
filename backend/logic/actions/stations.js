@@ -435,6 +435,9 @@ module.exports = {
 	 * @param cb
 	 */
 	voteSkip: hooks.loginRequired((session, stationId, cb) => {
+		let skipVotes = 0;
+		let shouldSkip = false;
+
 		async.waterfall([
 			(next) => {
 				stations.getStation(stationId, next);
@@ -466,6 +469,18 @@ module.exports = {
 			(station, next) => {
 				if (!station) return next('Station not found.');
 				next(null, station);
+			},
+
+			(station, next) => {
+				skipVotes = station.currentSong.skipVotes.length;
+				utils.getRoomSockets(`station.${stationId}`).then(sockets => {
+					next(null, sockets);
+				}).catch(next);
+			},
+
+			(sockets, next) => {
+				if (sockets.length <= skipVotes) shouldSkip = true;
+				next();
 			}
 		], async (err, station) => {
 			if (err) {
@@ -475,8 +490,8 @@ module.exports = {
 			}
 			logger.success("STATIONS_VOTE_SKIP", `Vote skipping "${stationId}" successful.`);
 			cache.pub('station.voteSkipSong', stationId);
-			if (station.currentSong && station.currentSong.skipVotes.length >= 3) stations.skipStation(stationId)();
 			cb({ status: 'success', message: 'Successfully voted to skip the song.' });
+			if (shouldSkip) stations.skipStation(stationId)();
 		});
 	}),
 
