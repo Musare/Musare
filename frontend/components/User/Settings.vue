@@ -54,6 +54,14 @@
 					</button>
 				</p>
 			</div>
+			<label v-if="password" class="label">Use nightmode</label>
+			<div v-if="password" class="control is-grouped">
+				<input
+					:checked="nightmode"
+					type="checkbox"
+					@click="toggleNightmode()"
+				/>
+			</div>
 
 			<label v-if="!password" class="label">Add password</label>
 			<div v-if="!password" class="control is-grouped">
@@ -147,7 +155,7 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
+import { mapState, mapActions } from "vuex";
 
 import Toast from "toasters";
 
@@ -172,7 +180,8 @@ export default {
 		};
 	},
 	computed: mapState({
-		userId: state => state.user.auth.userId
+		userId: state => state.user.auth.userId,
+		nightmode: state => state.user.preferences.nightmode
 	}),
 	mounted() {
 		lofig.get("serverDomain").then(serverDomain => {
@@ -358,7 +367,12 @@ export default {
 			this.socket.emit(`users.removeSessions`, this.userId, res => {
 				new Toast({ content: res.message, timeout: 4000 });
 			});
-		}
+		},
+		toggleNightmode() {
+			localStorage.setItem("nightmode", !this.nightmode);
+			this.changeNightmode(!this.nightmode);
+		},
+		...mapActions("user/preferences", ["changeNightmode"])
 	}
 };
 </script>

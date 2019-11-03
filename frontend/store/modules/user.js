@@ -216,6 +216,22 @@ const modules = {
 				state.editing = id;
 			}
 		}
+	},
+	preferences: {
+		namespaced: true,
+		state: {
+			nightmode: true
+		},
+		actions: {
+			changeNightmode: ({ commit }, nightmode) => {
+				commit("changeNightmode", nightmode);
+			}
+		},
+		mutations: {
+			changeNightmode(state, nightmode) {
+				state.nightmode = nightmode;
+			}
+		}
 	}
 };
 

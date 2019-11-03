@@ -39,13 +39,25 @@ export default {
 		userId: state => state.user.auth.userId,
 		banned: state => state.user.auth.banned,
 		modals: state => state.modals.modals,
-		currentlyActive: state => state.modals.currentlyActive
+		currentlyActive: state => state.modals.currentlyActive,
+		nightmode: state => state.user.preferences.nightmode
 	}),
 	methods: {
 		submitOnEnter: (cb, event) => {
 			if (event.which === 13) cb();
 		},
-		...mapActions("modals", ["closeCurrentModal"])
+		turnOnNightmode: () => {
+			document
+				.getElementsByTagName("body")[0]
+				.classList.add("night-mode");
+		},
+		turnOffNightmode: () => {
+			document
+				.getElementsByTagName("body")[0]
+				.classList.remove("night-mode");
+		},
+		...mapActions("modals", ["closeCurrentModal"]),
+		...mapActions("user/preferences", ["changeNightmode"])
 	},
 	watch: {
 		socketConnected: connected => {
@@ -68,16 +80,18 @@ export default {
 						}
 					});
 			}
+		},
+		nightmode(nightmode) {
+			if (nightmode) this.turnOnNightmode();
+			else this.turnOffNightmode();
 		}
 	},
 	beforeMount() {
 		const nightmode =
 			false || JSON.parse(localStorage.getItem("nightmode"));
-		if (nightmode) {
-			document
-				.getElementsByTagName("body")[0]
-				.classList.add("night-mode");
-		}
+		this.changeNightmode(nightmode);
+		if (nightmode) this.turnOnNightmode();
+		else this.turnOffNightmode();
 	},
 	mounted() {
 		document.onkeydown = ev => {
