@@ -502,7 +502,9 @@ module.exports = {
 					email: {
 						address: user.email.address
 					},
-					username: user.username
+					username: user.username,
+					location: user.location,
+					bio: user.bio
 				};
 				if (user.services.password && user.services.password.password) data.password = true;
 				if (user.services.github && user.services.github.id) data.github = true;
@@ -629,6 +631,78 @@ module.exports = {
 			} else {
 				logger.success("UPDATE_EMAIL", `Updated email for user "${updatingUserId}" to email "${newEmail}".`);
 				cb({ status: 'success', message: 'Email updated successfully.' });
+			}
+		});
+	}),
+
+	/**
+	 * Updates a user's location
+	 *
+	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {String} updatingUserId - the updating user's id
+	 * @param {String} newLocation - the new location
+	 * @param {Function} cb - gets called with the result
+	 */
+	updateLocation: hooks.loginRequired((session, updatingUserId, newLocation, cb) => {
+		async.waterfall([
+			(next) => {
+				if (updatingUserId === session.userId) return next(null, true);
+				db.models.user.findOne({_id: session.userId}, next);
+			},
+
+			(user, next) => {
+				if (user !== true && (!user || user.role !== 'admin')) return next('Invalid permissions.');
+				db.models.user.findOne({ _id: updatingUserId }, next);
+			},
+
+			(user, next) => {
+				if (!user) return next('User not found.');
+				db.models.user.updateOne({ _id: updatingUserId }, {$set: {location: newLocation}}, {runValidators: true}, next);
+			}
+		], async (err) => {
+			if (err && err !== true) {
+				err = await utils.getError(err);
+				logger.error("UPDATE_LOCATION", `Couldn't update location for user "${updatingUserId}" to location "${newLocation}". "${err}"`);
+				cb({status: 'failure', message: err});
+			} else {
+				logger.success("UPDATE_LOCATION", `Updated location for user "${updatingUserId}" to location "${newLocation}".`);
+				cb({ status: 'success', message: 'Location updated successfully' });
+			}
+		});
+	}),
+
+	/**
+	 * Updates a user's bio
+	 *
+	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {String} updatingUserId - the updating user's id
+	 * @param {String} newBio - the new bio
+	 * @param {Function} cb - gets called with the result
+	 */
+	updateBio: hooks.loginRequired((session, updatingUserId, newBio, cb) => {
+		async.waterfall([
+			(next) => {
+				if (updatingUserId === session.userId) return next(null, true);
+				db.models.user.findOne({_id: session.userId}, next);
+			},
+
+			(user, next) => {
+				if (user !== true && (!user || user.role !== 'admin')) return next('Invalid permissions.');
+				db.models.user.findOne({ _id: updatingUserId }, next);
+			},
+
+			(user, next) => {
+				if (!user) return next('User not found.');
+				db.models.user.updateOne({ _id: updatingUserId }, {$set: {bio: newBio}}, {runValidators: true}, next);
+			}
+		], async (err) => {
+			if (err && err !== true) {
+				err = await utils.getError(err);
+				logger.error("UPDATE_BIO", `Couldn't update bio for user "${updatingUserId}" to bio "${newBio}". "${err}"`);
+				cb({status: 'failure', message: err});
+			} else {
+				logger.success("UPDATE_BIO", `Updated bio for user "${updatingUserId}" to bio "${newBio}".`);
+				cb({ status: 'success', message: 'Bio updated successfully' });
 			}
 		});
 	}),

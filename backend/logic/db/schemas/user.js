@@ -29,5 +29,7 @@ module.exports = {
 	liked: [{ type: String }],
 	disliked: [{ type: String }],
 	favoriteStations: [{ type: String }],
+	location: { type: String, default: "" },
+	bio: { type: String, default: "" },
 	createdAt: { type: Date, default: Date.now() }
 };

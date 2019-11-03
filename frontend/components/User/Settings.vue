@@ -54,6 +54,38 @@
 					</button>
 				</p>
 			</div>
+			<label class="label">Location</label>
+			<div v-if="user" class="control is-grouped">
+				<p class="control is-expanded has-icon has-icon-right">
+					<input
+						v-model="user.location"
+						class="input"
+						type="text"
+						placeholder="Change location"
+					/>
+				</p>
+				<p class="control is-expanded">
+					<button class="button is-success" @click="changeLocation()">
+						Save changes
+					</button>
+				</p>
+			</div>
+			<label class="label">Bio</label>
+			<div v-if="user" class="control is-grouped">
+				<p class="control is-expanded has-icon has-icon-right">
+					<textarea
+						v-model="user.bio"
+						class="textarea"
+						type="text"
+						placeholder="Change bio"
+					/>
+				</p>
+				<p class="control is-expanded">
+					<button class="button is-success" @click="changeBio()">
+						Save changes
+					</button>
+				</p>
+			</div>
 			<label v-if="password" class="label">Use nightmode</label>
 			<div v-if="password" class="control is-grouped">
 				<input
@@ -62,7 +94,6 @@
 					@click="toggleNightmode()"
 				/>
 			</div>
-
 			<label v-if="!password" class="label">Add password</label>
 			<div v-if="!password" class="control is-grouped">
 				<button
@@ -140,7 +171,6 @@
 			>
 				Remove logging in with GitHub
 			</button>
-
 			<br />
 			<button
 				class="button is-warning"
@@ -272,6 +302,52 @@ export default {
 					else
 						new Toast({
 							content: "Successfully changed username",
+							timeout: 4000
+						});
+				}
+			);
+		},
+		changeLocation() {
+			const { location } = this.user;
+			if (!validation.isLength(location, 0, 50))
+				return new Toast({
+					content: "Location must have between 0 and 50 characters.",
+					timeout: 8000
+				});
+
+			return this.socket.emit(
+				"users.updateLocation",
+				this.userId,
+				location,
+				res => {
+					if (res.status !== "success")
+						new Toast({ content: res.message, timeout: 8000 });
+					else
+						new Toast({
+							content: "Successfully changed location",
+							timeout: 4000
+						});
+				}
+			);
+		},
+		changeBio() {
+			const { bio } = this.user;
+			if (!validation.isLength(bio, 0, 200))
+				return new Toast({
+					content: "Bio must have between 0 and 200 characters.",
+					timeout: 8000
+				});
+
+			return this.socket.emit(
+				"users.updateBio",
+				this.userId,
+				bio,
+				res => {
+					if (res.status !== "success")
+						new Toast({ content: res.message, timeout: 8000 });
+					else
+						new Toast({
+							content: "Successfully changed bio",
 							timeout: 4000
 						});
 				}
