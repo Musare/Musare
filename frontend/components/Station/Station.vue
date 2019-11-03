@@ -1089,59 +1089,59 @@ export default {
 								}
 							}
 						);
-
-						keyboardShortcuts.registerShortcut(
-							"station.lowerVolumeLarge",
-							{
-								keyCode: 40,
-								shift: false,
-								ctrl: true,
-								handler: () => {
-									this.volumeSliderValue -= 1000;
-									this.changeVolume();
-								}
-							}
-						);
-
-						keyboardShortcuts.registerShortcut(
-							"station.lowerVolumeSmall",
-							{
-								keyCode: 40,
-								shift: true,
-								ctrl: true,
-								handler: () => {
-									this.volumeSliderValue -= 100;
-									this.changeVolume();
-								}
-							}
-						);
-
-						keyboardShortcuts.registerShortcut(
-							"station.increaseVolumeLarge",
-							{
-								keyCode: 38,
-								shift: false,
-								ctrl: true,
-								handler: () => {
-									this.volumeSliderValue += 1000;
-									this.changeVolume();
-								}
-							}
-						);
-
-						keyboardShortcuts.registerShortcut(
-							"station.increaseVolumeSmall",
-							{
-								keyCode: 38,
-								shift: true,
-								ctrl: true,
-								handler: () => {
-									this.volumeSliderValue += 100;
-									this.changeVolume();
-								}
-							}
-						);
 					}
+
+					keyboardShortcuts.registerShortcut(
+						"station.lowerVolumeLarge",
+						{
+							keyCode: 40,
+							shift: false,
+							ctrl: true,
+							handler: () => {
+								this.volumeSliderValue -= 1000;
+								this.changeVolume();
+							}
+						}
+					);
+
+					keyboardShortcuts.registerShortcut(
+						"station.lowerVolumeSmall",
+						{
+							keyCode: 40,
+							shift: true,
+							ctrl: true,
+							handler: () => {
+								this.volumeSliderValue -= 100;
+								this.changeVolume();
+							}
+						}
+					);
+
+					keyboardShortcuts.registerShortcut(
+						"station.increaseVolumeLarge",
+						{
+							keyCode: 38,
+							shift: false,
+							ctrl: true,
+							handler: () => {
+								this.volumeSliderValue += 1000;
+								this.changeVolume();
+							}
+						}
+					);
+
+					keyboardShortcuts.registerShortcut(
+						"station.increaseVolumeSmall",
+						{
+							keyCode: 38,
+							shift: true,
+							ctrl: true,
+							handler: () => {
+								this.volumeSliderValue += 100;
+								this.changeVolume();
+							}
+						}
+					);
 
 					// UNIX client time before ping
 					const beforePing = Date.now();
