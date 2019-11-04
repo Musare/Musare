@@ -6,7 +6,7 @@
 			<p class="control">
 				<input
 					v-model="newCommunity.name"
-					class="input"
+					class="input station-id"
 					type="text"
 					placeholder="Name..."
 					autofocus
@@ -64,6 +64,7 @@ export default {
 	},
 	methods: {
 		submitModal() {
+			this.newCommunity.name = this.newCommunity.name.toLowerCase();
 			const { name, displayName, description } = this.newCommunity;
 
 			if (!name || !displayName || !description)
@@ -143,3 +144,13 @@ export default {
 	}
 };
 </script>
+
+<style lang="scss" scoped>
+.station-id {
+	text-transform: lowercase;
+
+	&::placeholder {
+		text-transform: none;
+	}
+}
+</style>
