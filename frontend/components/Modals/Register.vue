@@ -29,32 +29,53 @@
 				<label class="label">Email</label>
 				<p class="control">
 					<input
-						v-model="email"
+						v-model="email.value"
 						class="input"
 						type="email"
 						placeholder="Email..."
 						autofocus
 					/>
 				</p>
+				<p
+					class="help"
+					:class="email.valid ? 'is-success' : 'is-danger'"
+				>
+					{{ email.message }}
+				</p>
+				<br />
 				<label class="label">Username</label>
 				<p class="control">
 					<input
-						v-model="username"
+						v-model="username.value"
 						class="input"
 						type="text"
 						placeholder="Username..."
 					/>
 				</p>
+				<p
+					class="help"
+					:class="username.valid ? 'is-success' : 'is-danger'"
+				>
+					{{ username.message }}
+				</p>
+				<br />
 				<label class="label">Password</label>
 				<p class="control">
 					<input
-						v-model="password"
+						v-model="password.value"
 						class="input"
 						type="password"
 						placeholder="Password..."
 						@keypress="$parent.submitOnEnter(submitModal, $event)"
 					/>
 				</p>
+				<p
+					class="help"
+					:class="password.valid ? 'is-success' : 'is-danger'"
+				>
+					{{ password.message }}
+				</p>
+				<br />
 				<p>
 					By logging in/registering you agree to our
 					<router-link to="/terms"> Terms of Service </router-link
@@ -86,18 +107,81 @@ import { mapActions } from "vuex";
 
 import Toast from "toasters";
 
+import validation from "../../validation";
+
 export default {
 	data() {
 		return {
-			username: "",
-			email: "",
-			password: "",
+			username: {
+				value: "",
+				valid: false,
+				message: "Please enter a valid username."
+			},
+			email: {
+				value: "",
+				valid: false,
+				message: "Please enter a valid email address."
+			},
+			password: {
+				value: "",
+				valid: false,
+				message: "Please enter a valid password."
+			},
 			recaptcha: {
 				key: "",
 				token: ""
 			},
 			serverDomain: ""
 		};
+	},
+	watch: {
+		// eslint-disable-next-line func-names
+		"username.value": function(value) {
+			if (!validation.isLength(value, 2, 32)) {
+				this.username.message =
+					"Username must have between 2 and 32 characters.";
+				this.username.valid = false;
+			} else if (!validation.regex.azAZ09_.test(value)) {
+				this.username.message =
+					"Invalid username format. Allowed characters: a-z, A-Z, 0-9 and _.";
+				this.username.valid = false;
+			} else {
+				this.username.message = "Everything looks great!";
+				this.username.valid = true;
+			}
+		},
+		// eslint-disable-next-line func-names
+		"email.value": function(value) {
+			if (!validation.isLength(value, 3, 254)) {
+				this.email.message =
+					"Email must have between 3 and 254 characters.";
+				this.email.valid = false;
+			} else if (
+				value.indexOf("@") !== value.lastIndexOf("@") ||
+				!validation.regex.emailSimple.test(value)
+			) {
+				this.email.message = "Invalid Email format.";
+				this.email.valid = false;
+			} else {
+				this.email.message = "Everything looks great!";
+				this.email.valid = true;
+			}
+		},
+		// eslint-disable-next-line func-names
+		"password.value": function(value) {
+			if (!validation.isLength(value, 6, 200)) {
+				this.password.message =
+					"Password must have between 6 and 200 characters.";
+				this.password.valid = false;
+			} else if (!validation.regex.password.test(value)) {
+				this.password.message =
+					"Invalid password format. Must have one lowercase letter, one uppercase letter, one number and one special character.";
+				this.password.valid = false;
+			} else {
+				this.password.message = "Everything looks great!";
+				this.password.valid = true;
+			}
+		}
 	},
 	mounted() {
 		lofig.get("serverDomain").then(serverDomain => {
@@ -127,10 +211,20 @@ export default {
 	},
 	methods: {
 		submitModal() {
-			this.register({
-				username: this.username,
-				email: this.email,
-				password: this.password,
+			if (
+				!this.username.valid ||
+				!this.email.valid ||
+				!this.password.valid
+			)
+				return new Toast({
+					content: "Please ensure all fields are valid.",
+					timeout: 5000
+				});
+
+			return this.register({
+				username: this.username.value,
+				email: this.email.value,
+				password: this.password.value,
 				recaptchaToken: this.recaptcha.token
 			})
 				.then(res => {
