@@ -6,6 +6,7 @@ module.exports = {
 		verificationToken: String,
 		address: String
 	},
+	avatar: { type: String },
 	services: {
 		password: {
 			password: String,

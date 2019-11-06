@@ -2,9 +2,10 @@
 
 const coreClass = require("../core");
 
-const config  = require('config'),
-	  async	  = require('async'),
-	  request = require('request');
+const config = require('config');
+const async = require('async');
+const request = require('request');
+const crypto = require('crypto');
 
 class Timer {
 	constructor(callback, delay, paused) {
@@ -612,5 +613,13 @@ module.exports = class extends coreClass {
 			else error = err.errors[Object.keys(err.errors)].message;
 		}
 		return error;
+	}
+
+	async createGravatar(email) {
+		try { await this._validateHook(); } catch { return; }
+
+		const hash = crypto.createHash('md5').update(email).digest('hex');
+
+		return `https://www.gravatar.com/avatar/${hash}`;
 	}
 }
