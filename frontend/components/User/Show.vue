@@ -3,7 +3,15 @@
 		<metadata v-bind:title="`Profile | ${user.username}`" />
 		<main-header />
 		<div class="container">
-			<img class="avatar" src="/assets/notes.png" />
+			<img
+				class="avatar"
+				:src="
+					user.avatar
+						? `${user.avatar}?d=${notes}&s=250`
+						: '/assets/notes.png'
+				"
+				onerror="this.src='/assets/notes.png'; this.onerror=''"
+			/>
 			<h2 class="has-text-centered username">@{{ user.username }}</h2>
 			<h5>A member since {{ user.createdAt }}</h5>
 			<div
@@ -76,6 +84,7 @@ export default {
 	data() {
 		return {
 			user: {},
+			notes: "",
 			isUser: false
 		};
 	},
@@ -84,6 +93,11 @@ export default {
 		userId: state => state.user.auth.userId
 	}),
 	mounted() {
+		lofig.get("frontendDomain").then(frontendDomain => {
+			this.frontendDomain = frontendDomain;
+			this.notes = encodeURI(`${this.frontendDomain}/assets/notes.png`);
+		});
+
 		io.getSocket(socket => {
 			this.socket = socket;
 			this.socket.emit(
@@ -142,6 +156,7 @@ export default {
 	width: 250px;
 	display: block;
 	margin: auto;
+	background: #fff;
 }
 
 h5 {
