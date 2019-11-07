@@ -1,6 +1,8 @@
 <template>
 	<div v-if="isUser">
 		<metadata v-bind:title="`Profile | ${user.username}`" />
+		<edit-playlist v-if="modals.editPlaylist" />
+		<create-playlist v-if="modals.createPlaylist" />
 		<main-header />
 		<div class="info-section">
 			<div class="picture-name-row">
@@ -59,11 +61,51 @@
 		</div>
 		<div class="bottom-section">
 			<div class="buttons">
-				<button class="active">Recent activity</button>
-				<button>Playlists</button>
+				<button
+					:class="{ active: activeTab === 'recentActivity' }"
+					@click="switchTab('recentActivity')"
+				>
+					Recent activity
+				</button>
+				<button
+					:class="{ active: activeTab === 'playlists' }"
+					@click="switchTab('playlists')"
+					v-if="user._id === userId"
+				>
+					Playlists
+				</button>
 			</div>
-			<div class="content">
+			<div
+				class="content recent-activity-tab"
+				v-if="activeTab === 'recentActivity'"
+			>
 				Content here
+			</div>
+			<div class="content playlists-tab" v-if="activeTab === 'playlists'">
+				<div
+					class="playlist"
+					v-for="playlist in playlists"
+					:key="playlist._id"
+				>
+					<span>{{ playlist.displayName }}</span>
+					<button
+						class="button is-primary"
+						@click="editPlaylistClick(playlist._id)"
+					>
+						Edit
+					</button>
+				</div>
+				<button
+					class="button is-primary"
+					@click="
+						openModal({
+							sector: 'station',
+							modal: 'createPlaylist'
+						})
+					"
+				>
+					Make new playlist
+				</button>
 			</div>
 		</div>
 		<main-footer />
@@ -71,7 +113,7 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
+import { mapState, mapActions } from "vuex";
 import { format, parseISO } from "date-fns";
 
 import MainHeader from "../MainHeader.vue";
@@ -79,17 +121,27 @@ import MainFooter from "../MainFooter.vue";
 import io from "../../io";
 
 export default {
-	components: { MainHeader, MainFooter },
+	components: {
+		MainHeader,
+		MainFooter,
+		CreatePlaylist: () => import("../Modals/Playlists/Create.vue"),
+		EditPlaylist: () => import("../Modals/Playlists/Edit.vue")
+	},
 	data() {
 		return {
 			user: {},
 			notes: "",
-			isUser: false
+			isUser: false,
+			activeTab: "recentActivity",
+			playlists: []
 		};
 	},
 	computed: mapState({
 		role: state => state.user.auth.role,
-		userId: state => state.user.auth.userId
+		userId: state => state.user.auth.userId,
+		...mapState("modals", {
+			modals: state => state.modals.station
+		})
 	}),
 	mounted() {
 		lofig.get("frontendDomain").then(frontendDomain => {
@@ -111,12 +163,104 @@ export default {
 							"MMMM do yyyy"
 						);
 						this.isUser = true;
+
+						if (this.user._id === this.userId) {
+							this.socket.emit("playlists.indexForUser", res => {
+								if (res.status === "success")
+									this.playlists = res.data;
+							});
+							this.socket.on(
+								"event:playlist.create",
+								playlist => {
+									this.playlists.push(playlist);
+								}
+							);
+							this.socket.on(
+								"event:playlist.delete",
+								playlistId => {
+									this.playlists.forEach(
+										(playlist, index) => {
+											if (playlist._id === playlistId) {
+												this.playlists.splice(index, 1);
+											}
+										}
+									);
+								}
+							);
+							this.socket.on("event:playlist.addSong", data => {
+								this.playlists.forEach((playlist, index) => {
+									if (playlist._id === data.playlistId) {
+										this.playlists[index].songs.push(
+											data.song
+										);
+									}
+								});
+							});
+							this.socket.on(
+								"event:playlist.removeSong",
+								data => {
+									this.playlists.forEach(
+										(playlist, index) => {
+											if (
+												playlist._id === data.playlistId
+											) {
+												this.playlists[
+													index
+												].songs.forEach(
+													(song, index2) => {
+														if (
+															song._id ===
+															data.songId
+														) {
+															this.playlists[
+																index
+															].songs.splice(
+																index2,
+																1
+															);
+														}
+													}
+												);
+											}
+										}
+									);
+								}
+							);
+							this.socket.on(
+								"event:playlist.updateDisplayName",
+								data => {
+									this.playlists.forEach(
+										(playlist, index) => {
+											if (
+												playlist._id === data.playlistId
+											) {
+												this.playlists[
+													index
+												].displayName =
+													data.displayName;
+											}
+										}
+									);
+								}
+							);
+						}
 					}
 				}
 			);
 		});
 	},
-	methods: {}
+	methods: {
+		switchTab(tabName) {
+			this.activeTab = tabName;
+		},
+		editPlaylistClick(playlistId) {
+			console.log(playlistId);
+			this.editPlaylist(playlistId);
+			this.openModal({ sector: "station", modal: "editPlaylist" });
+		},
+		...mapActions("modals", ["openModal"]),
+		...mapActions("user/playlists", ["editPlaylist"])
+	}
 };
 </script>
 
