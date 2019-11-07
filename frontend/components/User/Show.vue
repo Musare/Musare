@@ -381,7 +381,7 @@ export default {
 }
 
 .bottom-section {
-	width: 960px;
+	width: 962px;
 	margin-left: auto;
 	margin-right: auto;
 	margin-top: 32px;
@@ -391,7 +391,7 @@ export default {
 
 	.buttons {
 		height: 100%;
-		width: 251px;
+		width: 250px;
 
 		button {
 			outline: none;
@@ -416,7 +416,7 @@ export default {
 
 	.content {
 		outline: 1px solid black;
-		width: 597px;
+		width: 600px;
 	}
 }
 
