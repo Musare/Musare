@@ -434,14 +434,13 @@ module.exports = {
 					status: 'success',
 					data: {
 						_id: account._id,
+						name: "Name goes here",
 						username: account.username,
+						location: account.location,
+						bio: account.bio,
 						role: account.role,
-						email: account.email.address,
 						avatar: account.avatar,
-						createdAt: account.createdAt,
-						statistics: account.statistics,
-						liked: account.liked,
-						disliked: account.disliked
+						createdAt: account.createdAt
 					}
 				});
 			}

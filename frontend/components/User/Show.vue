@@ -2,103 +2,58 @@
 	<div v-if="isUser">
 		<metadata v-bind:title="`Profile | ${user.username}`" />
 		<main-header />
-		<!--div class="container">
-			<img
-				class="avatar"
-				:src="
-					user.avatar
-						? `${user.avatar}?d=${notes}&s=250`
-						: '/assets/notes.png'
-				"
-				onerror="this.src='/assets/notes.png'; this.onerror=''"
-			/>
-			<h2 class="has-text-centered username">@{{ user.username }}</h2>
-			<h5>A member since {{ user.createdAt }}</h5>
-			<div
-				v-if="role === 'admin' && userId !== user._id"
-				class="admin-functionality"
-			>
-				<a
-					v-if="user.role == 'default'"
-					class="button is-small is-info is-outlined"
-					@click="changeRank('admin')"
-					>Promote to Admin</a
-				>
-				<a
-					v-if="user.role == 'admin'"
-					class="button is-small is-danger is-outlined"
-					@click="changeRank('default')"
-					>Demote to User</a
-				>
-			</div>
-			<nav class="level">
-				<div class="level-item has-text-centered">
-					<p class="heading">
-						Rank
-					</p>
-					<p class="title role">
-						{{ user.role }}
-					</p>
-				</div>
-				<div class="level-item has-text-centered">
-					<p class="heading">
-						Songs Requested
-					</p>
-					<p class="title">
-						{{ user.statistics.songsRequested }}
-					</p>
-				</div>
-				<div class="level-item has-text-centered">
-					<p class="heading">
-						Likes
-					</p>
-					<p class="title">
-						{{ user.liked.length }}
-					</p>
-				</div>
-				<div class="level-item has-text-centered">
-					<p class="heading">
-						Dislikes
-					</p>
-					<p class="title">
-						{{ user.disliked.length }}
-					</p>
-				</div>
-			</nav>
-		</div-->
 		<div class="info-section">
 			<div class="picture-name-row">
 				<img
 					class="profile-picture"
-					src="https://avatars3.githubusercontent.com/u/9784561?s=460&v=4"
+					:src="
+						user.avatar
+							? `${user.avatar}?d=${notes}&s=250`
+							: '/assets/notes.png'
+					"
+					onerror="this.src='/assets/notes.png'; this.onerror=''"
 				/>
 				<div>
 					<div class="name-role-row">
-						<p class="name">Kristian Vos</p>
-						<span class="role admin">admin</span>
+						<p class="name">{{ user.name }}</p>
+						<span class="role admin" v-if="user.role === 'admin'"
+							>admin</span
+						>
 					</div>
-					<p class="username">@Kris</p>
+					<p class="username">@{{ user.username }}</p>
 				</div>
 			</div>
-			<div class="buttons">
-				<button class="button is-primary">Edit</button>
-				<button class="button is-primary">Settings</button>
+			<div class="buttons" v-if="userId === user._id || role === 'admin'">
+				<router-link
+					:to="`/admin/users?userId=${user._id}`"
+					class="button is-primary"
+					v-if="role === 'admin'"
+				>
+					Edit
+				</router-link>
+				<router-link
+					to="/settings"
+					class="button is-primary"
+					v-if="userId === user._id"
+				>
+					Settings
+				</router-link>
 			</div>
-			<div class="bio-row">
+			<div class="bio-row" v-if="user.bio">
 				<i class="material-icons">notes</i>
-				<p>
-					Test Test Test Test Test Test Test Test Test Test Test Test
-					Test Test Test Test
-				</p>
+				<p>{{ user.bio }}</p>
 			</div>
-			<div class="date-location-row">
-				<div class="date">
+			<div
+				class="date-location-row"
+				v-if="user.createdAt || user.location"
+			>
+				<div class="date" v-if="user.createdAt">
 					<i class="material-icons">calendar_today</i>
-					<p>February 25, 2011</p>
+					<p>{{ user.createdAt }}</p>
 				</div>
-				<div class="location">
+				<div class="location" v-if="user.location">
 					<i class="material-icons">location_on</i>
-					<p>The Netherlands</p>
+					<p>{{ user.location }}</p>
 				</div>
 			</div>
 		</div>
@@ -117,7 +72,6 @@
 
 <script>
 import { mapState } from "vuex";
-import Toast from "toasters";
 import { format, parseISO } from "date-fns";
 
 import MainHeader from "../MainHeader.vue";
@@ -162,24 +116,7 @@ export default {
 			);
 		});
 	},
-	methods: {
-		changeRank(newRank) {
-			this.socket.emit(
-				"users.updateRole",
-				this.user._id,
-				newRank === "admin" ? "admin" : "default",
-				res => {
-					if (res.status === "error")
-						new Toast({ content: res.message, timeout: 2000 });
-					else this.user.role = newRank;
-					new Toast({
-						content: `User ${this.$route.params.username}'s rank has been changed to: ${newRank}`,
-						timeout: 2000
-					});
-				}
-			);
-		}
-	}
+	methods: {}
 };
 </script>
 
