@@ -201,8 +201,10 @@ module.exports = {
 	 * @param {Function} cb - gets called with the result
 	 */
 	register: async function(session, username, email, password, recaptcha, cb) {
+
 		email = email.toLowerCase();
 		let verificationToken = await utils.generateRandomString(64);
+
 		async.waterfall([
 
 			// verify the request with google recaptcha
@@ -255,9 +257,9 @@ module.exports = {
 				});
 			},
 
-			// save the new user to the database
+			// create the user object
 			(hash, _id, next) => {
-				db.models.user.create({
+				next(null, {
 					_id,
 					username,
 					email: {
@@ -269,12 +271,24 @@ module.exports = {
 							password: hash
 						}
 					}
-				}, next);
+				});
+			},
+
+			// generate the url for gravatar avatar
+			(user, next) => {
+				this.utils.createGravatar(user.email.address).then(url => {
+					user.avatar = url;
+					next(null, user);
+				});
+			},
+
+			// save the new user to the database
+			(user, next) => {
+				db.models.user.create(user, next);
 			},
 
 			// respond with the new user
 			(newUser, next) => {
-				//TODO Send verification email
 				mail.schemas.verifyEmail(email, username, verificationToken, () => {
 					next();
 				});
@@ -423,6 +437,7 @@ module.exports = {
 						username: account.username,
 						role: account.role,
 						email: account.email.address,
+						avatar: account.avatar,
 						createdAt: account.createdAt,
 						statistics: account.statistics,
 						liked: account.liked,
@@ -610,8 +625,20 @@ module.exports = {
 				next('That email is already in use.');
 			},
 
+			// regenerate the url for gravatar avatar
 			(next) => {
-				db.models.user.updateOne({_id: updatingUserId}, {$set: {"email.address": newEmail, "email.verified": false, "email.verificationToken": verificationToken}}, {runValidators: true}, next);
+				utils.createGravatar(newEmail).then(url => next(null, url));
+			},
+
+			(avatar, next) => {
+				db.models.user.updateOne({ _id: updatingUserId }, {
+					$set: {
+						"avatar": avatar,
+						"email.address": newEmail,
+						"email.verified": false,
+						"email.verificationToken": verificationToken
+					}
+				}, { runValidators: true }, next);
 			},
 
 			(res, next) => {

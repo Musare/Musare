@@ -75,11 +75,15 @@ module.exports = class extends coreClass {
 
 			app.get('/auth/github/authorize/callback', async (req, res) => {
 				try { await this._validateHook(); } catch { return; }
+
 				let code = req.query.code;
 				let access_token;
 				let body;
 				let address;
+
 				const state = req.query.state;
+
+				const verificationToken = await this.utils.generateRandomString(64);
 
 				async.waterfall([
 					(next) => {
@@ -158,26 +162,48 @@ module.exports = class extends coreClass {
 					(httpResponse, body2, next) => {
 						body2 = JSON.parse(body2);
 						if (!Array.isArray(body2)) return next(body2.message);
+
 						body2.forEach(email => {
 							if (email.primary) address = email.email.toLowerCase();
 						});
+
 						db.models.user.findOne({'email.address': address}, next);
 					},
 
-					async (user, next) => {
-						const verificationToken = await this.utils.generateRandomString(64);
+					
+					(user, next) => {
+						this.utils.generateRandomString(12).then((_id) => {
+							next(null, user, _id);
+						});
+					},
+
+					(user, _id, next) => {
 						if (user) return next('An account with that email address already exists.');
-						db.models.user.create({
-							_id: await this.utils.generateRandomString(12),//TODO Check if exists
+
+						next(null, {
+							_id, //TODO Check if exists
 							username: body.login,
 							email: {
 								address,
-								verificationToken: verificationToken
+								verificationToken
 							},
 							services: {
-								github: {id: body.id, access_token}
+								github: { id: body.id, access_token }
 							}
-						}, next);
+						});
+					},
+
+					// generate the url for gravatar avatar
+					(user, next) => {
+						this.utils.createGravatar(user.email.address).then(url => {
+							user.avatar = url;
+							next(null, user);
+						});
+					},
+
+					// save the new user to the database
+					(user, next) => {
+						db.models.user.create(user, next);
 					},
 
 					(user, next) => {
