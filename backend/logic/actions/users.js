@@ -434,7 +434,7 @@ module.exports = {
 					status: 'success',
 					data: {
 						_id: account._id,
-						name: "Name goes here",
+						name: account.name,
 						username: account.username,
 						location: account.location,
 						bio: account.bio,
@@ -517,6 +517,7 @@ module.exports = {
 						address: user.email.address
 					},
 					username: user.username,
+					name: user.name,
 					location: user.location,
 					bio: user.bio
 				};
@@ -657,6 +658,42 @@ module.exports = {
 			} else {
 				logger.success("UPDATE_EMAIL", `Updated email for user "${updatingUserId}" to email "${newEmail}".`);
 				cb({ status: 'success', message: 'Email updated successfully.' });
+			}
+		});
+	}),
+
+	/**
+	 * Updates a user's name
+	 *
+	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {String} updatingUserId - the updating user's id
+	 * @param {String} newBio - the new name
+	 * @param {Function} cb - gets called with the result
+	 */
+	updateName: hooks.loginRequired((session, updatingUserId, newName, cb) => {
+		async.waterfall([
+			(next) => {
+				if (updatingUserId === session.userId) return next(null, true);
+				db.models.user.findOne({_id: session.userId}, next);
+			},
+
+			(user, next) => {
+				if (user !== true && (!user || user.role !== 'admin')) return next('Invalid permissions.');
+				db.models.user.findOne({ _id: updatingUserId }, next);
+			},
+
+			(user, next) => {
+				if (!user) return next('User not found.');
+				db.models.user.updateOne({ _id: updatingUserId }, {$set: { name: newName }}, {runValidators: true}, next);
+			}
+		], async (err) => {
+			if (err && err !== true) {
+				err = await utils.getError(err);
+				logger.error("UPDATE_NAME", `Couldn't update name for user "${updatingUserId}" to name "${newName}". "${err}"`);
+				cb({status: 'failure', message: err});
+			} else {
+				logger.success("UPDATE_NAME", `Updated name for user "${updatingUserId}" to name "${newName}".`);
+				cb({ status: 'success', message: 'Name updated successfully' });
 			}
 		});
 	}),
