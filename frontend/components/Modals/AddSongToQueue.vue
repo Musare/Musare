@@ -4,12 +4,9 @@
 			<aside class="menu" v-if="loggedIn && station.type === 'community'">
 				<ul class="menu-list">
 					<li v-for="(playlist, index) in playlists" :key="index">
-						<a
-							href="#"
-							target="_blank"
-							v-on:click="editPlaylist(playlist._id)"
-							>{{ playlist.displayName }}</a
-						>
+						<a href="#" v-on:click="editPlaylist(playlist._id)">{{
+							playlist.displayName
+						}}</a>
 						<div class="controls">
 							<a
 								href="#"
