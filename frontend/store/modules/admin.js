@@ -1,6 +1,7 @@
 /* eslint no-param-reassign: 0 */
 
 import Vue from "vue";
+import admin from "../../api/admin/index";
 
 const state = {};
 const getters = {};
@@ -121,7 +122,20 @@ const modules = {
 		},
 		getters: {},
 		actions: {
-			viewReport: ({ commit }, report) => commit("viewReport", report)
+			viewReport: ({ commit }, report) => commit("viewReport", report),
+			/* eslint-disable-next-line no-unused-vars */
+			resolveReport: ({ commit }, reportId) => {
+				return new Promise((resolve, reject) => {
+					return admin.reports
+						.resolve(reportId)
+						.then(res => {
+							return resolve(res);
+						})
+						.catch(err => {
+							return reject(new Error(err.message));
+						});
+				});
+			}
 		},
 		mutations: {
 			viewReport(state, report) {

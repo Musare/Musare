@@ -76,11 +76,8 @@ const modules = {
 
 					return auth
 						.register(user)
-						.then(() => {
-							return resolve({
-								status: "success",
-								message: "Account registered!"
-							});
+						.then(res => {
+							return resolve(res);
 						})
 						.catch(err => {
 							return reject(new Error(err.message));
