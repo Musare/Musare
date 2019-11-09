@@ -201,7 +201,7 @@ export default {
 		};
 	},
 	computed: {
-		...mapState("admin/station", {
+		...mapState("admin/stations", {
 			stations: state => state.stations
 		}),
 		...mapState("modals", {
@@ -331,13 +331,14 @@ export default {
 		},
 		init() {
 			this.socket.emit("stations.index", data => {
-				this.stations = data.stations;
+				this.loadStations(data.stations);
 			});
 			this.socket.emit("apis.joinAdminRoom", "stations", () => {});
 		},
 		...mapActions("modals", ["openModal"]),
 		...mapActions("admin/stations", [
 			"editStation",
+			"loadStations",
 			"stationRemoved",
 			"stationAdded"
 		])

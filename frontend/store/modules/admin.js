@@ -109,6 +109,8 @@ const modules = {
 		actions: {
 			editStation: ({ commit }, station) =>
 				commit("editStation", station),
+			loadStations: ({ commit }, stations) =>
+				commit("loadStations", stations),
 			stationRemoved: ({ commit }, stationId) =>
 				commit("stationRemoved", stationId),
 			stationAdded: ({ commit }, station) =>
@@ -118,6 +120,9 @@ const modules = {
 			editStation(state, station) {
 				state.station = station;
 				state.editing = JSON.parse(JSON.stringify(station));
+			},
+			loadStations(state, stations) {
+				state.stations = stations;
 			},
 			stationAdded(state, station) {
 				state.stations.push(station);
