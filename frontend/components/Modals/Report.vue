@@ -232,7 +232,8 @@ export default {
 		},
 		updateCharactersRemaining() {
 			this.charactersRemaining =
-				400 - document.getElementsByClassName("textarea").value.length;
+				400 -
+				document.getElementsByClassName("textarea")[0].value.length;
 		},
 		highlight(type) {
 			if (type === "currentSong") {
