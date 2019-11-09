@@ -282,7 +282,7 @@ export default {
 			return this.formatTime(length);
 		},
 		searchForSongs() {
-			let query = this.directSongQuery;
+			let query = this.searchSongQuery;
 			if (query.indexOf("&index=") !== -1) {
 				query = query.split("&index=");
 				query.pop();
