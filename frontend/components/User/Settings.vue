@@ -102,8 +102,8 @@
 					</button>
 				</p>
 			</div>
-			<label v-if="password" class="label">Use nightmode</label>
-			<div v-if="password" class="control is-grouped">
+			<label v-if="user" class="label">Use nightmode</label>
+			<div v-if="user" class="control is-grouped">
 				<input
 					:checked="nightmode"
 					type="checkbox"
