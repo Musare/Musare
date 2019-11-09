@@ -62,7 +62,9 @@
 					<a
 						href="#"
 						class="no-song"
-						@click="sidebars.playlist = true"
+						@click="
+							openModal({ sector: 'station', sector: 'playlist' })
+						"
 						>Play a private playlist</a
 					>
 				</h4>
@@ -446,11 +448,6 @@ export default {
 			timeElapsed: "0:00",
 			liked: false,
 			disliked: false,
-			sidebars: {
-				songslist: false,
-				users: false,
-				playlist: false
-			},
 			timeBeforePause: 0,
 			skipVotes: 0,
 			privatePlaylistQueueSelected: null,
@@ -467,6 +464,9 @@ export default {
 	computed: {
 		...mapState("modals", {
 			modals: state => state.modals.station
+		}),
+		...mapState("sidebars", {
+			sidebars: state => state.sidebars.station
 		}),
 		...mapState("station", {
 			station: state => state.station,
@@ -506,12 +506,6 @@ export default {
 					} else new Toast({ content: res.message, timeout: 8000 });
 				}
 			);
-		},
-		toggleSidebar(type) {
-			Object.keys(this.sidebars).forEach(sidebar => {
-				if (sidebar !== type) this.sidebars[sidebar] = false;
-				else this.sidebars[type] = !this.sidebars[type];
-			});
 		},
 		youtubeReady() {
 			if (!this.player) {

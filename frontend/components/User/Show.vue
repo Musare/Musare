@@ -154,6 +154,7 @@ export default {
 .avatar {
 	border-radius: 50%;
 	width: 250px;
+	height: 250px;
 	display: block;
 	margin: auto;
 	background: #fff;
