@@ -296,7 +296,6 @@ export default {
 		display: flex;
 		flex-direction: row;
 		align-items: center;
-		column-gap: 32px;
 		justify-content: center;
 		margin-bottom: 24px;
 	}
@@ -305,13 +304,13 @@ export default {
 		width: 100px;
 		height: 100px;
 		border-radius: 100%;
+		margin-right: 32px;
 	}
 
 	.name-role-row {
 		display: flex;
 		flex-direction: row;
 		align-items: center;
-		column-gap: 12px;
 	}
 
 	.name {
@@ -328,6 +327,7 @@ export default {
 		line-height: 14px;
 		height: 18px;
 		border-radius: 5px;
+		margin-left: 12px;
 
 		&.admin {
 			background-color: $red;
@@ -344,7 +344,6 @@ export default {
 		width: 388px;
 		display: flex;
 		flex-direction: row;
-		column-gap: 20px;
 		margin-left: auto;
 		margin-right: auto;
 		margin-bottom: 24px;
@@ -353,6 +352,10 @@ export default {
 			flex: 1;
 			font-size: 17px;
 			line-height: 20px;
+
+			&:nth-child(2) {
+				margin-left: 20px;
+			}
 		}
 	}
 
@@ -389,7 +392,10 @@ export default {
 		display: flex;
 		width: max-content;
 		margin-bottom: 24px;
-		column-gap: 48px;
+
+		> div:nth-child(2) {
+			margin-left: 48px;
+		}
 	}
 
 	.date,
@@ -405,11 +411,11 @@ export default {
 	margin-top: 32px;
 	padding: 24px;
 	display: flex;
-	column-gap: 64px;
 
 	.buttons {
 		height: 100%;
 		width: 250px;
+		margin-right: 64px;
 
 		button {
 			outline: none;
@@ -433,7 +439,6 @@ export default {
 	}
 
 	.content {
-		// outline: 1px solid black;
 		width: 600px;
 
 		.item {
@@ -467,6 +472,10 @@ export default {
 			.right-part {
 				display: flex;
 				align-items: center;
+			}
+
+			button {
+				font-size: 17px;
 			}
 		}
 	}
