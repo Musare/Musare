@@ -170,11 +170,13 @@ import Toast from "toasters";
 import Modal from "../Modal.vue";
 import io from "../../../io";
 import validation from "../../../validation";
+import utils from "../../../js/utils";
 
 export default {
 	components: { Modal },
 	data() {
 		return {
+			utils,
 			playlist: { songs: [] },
 			songQueryResults: [],
 			searchSongQuery: "",
@@ -231,55 +233,12 @@ export default {
 		});
 	},
 	methods: {
-		formatTime(duration) {
-			if (duration <= 0) return "0 seconds";
-
-			const hours = Math.floor(duration / (60 * 60));
-			const formatHours = () => {
-				if (hours > 0) {
-					if (hours > 1) {
-						if (hours < 10) return `0${hours} hours `;
-						return `${hours} hours `;
-					}
-					return `0${hours} hour `;
-				}
-				return "";
-			};
-
-			const minutes = Math.floor((duration - hours * 60 * 60) / 60);
-			const formatMinutes = () => {
-				if (minutes > 0) {
-					if (minutes > 1) {
-						if (minutes < 10) return `0${minutes} minutes `;
-						return `${minutes} minutes `;
-					}
-					return `0${minutes} minute `;
-				}
-				return "";
-			};
-
-			const seconds = Math.floor(
-				duration - hours * 60 * 60 - minutes * 60
-			);
-			const formatSeconds = () => {
-				if (seconds > 0) {
-					if (seconds > 1) {
-						if (seconds < 10) return `0${seconds} seconds `;
-						return `${seconds} seconds `;
-					}
-					return `0${seconds} second `;
-				}
-				return "";
-			};
-
-			return formatHours() + formatMinutes() + formatSeconds();
-		},
 		totalLength() {
 			let length = 0;
 			this.playlist.songs.forEach(song => {
 				length += song.duration;
 			});
-			return this.formatTime(length);
+			return this.utils.formatTimeLong(length);
 		},
 		searchForSongs() {
 			let query = this.searchSongQuery;

@@ -83,17 +83,26 @@
 			</div>
 			<div class="content playlists-tab" v-if="activeTab === 'playlists'">
 				<div
-					class="playlist"
+					class="item playlist"
 					v-for="playlist in playlists"
 					:key="playlist._id"
 				>
-					<span>{{ playlist.displayName }}</span>
-					<button
-						class="button is-primary"
-						@click="editPlaylistClick(playlist._id)"
-					>
-						Edit
-					</button>
+					<div class="left-part">
+						<p class="top-text">{{ playlist.displayName }}</p>
+						<p class="bottom-text">
+							{{ totalLength(playlist) }} •
+							{{ playlist.songs.length }}
+							{{ playlist.songs.length === 1 ? "song" : "songs" }}
+						</p>
+					</div>
+					<div class="right-part">
+						<button
+							class="button is-primary"
+							@click="editPlaylistClick(playlist._id)"
+						>
+							Edit
+						</button>
+					</div>
 				</div>
 				<button
 					class="button is-primary"
@@ -104,7 +113,7 @@
 						})
 					"
 				>
-					Make new playlist
+					Create new playlist
 				</button>
 			</div>
 		</div>
@@ -119,6 +128,7 @@ import { format, parseISO } from "date-fns";
 import MainHeader from "../MainHeader.vue";
 import MainFooter from "../MainFooter.vue";
 import io from "../../io";
+import utils from "../../js/utils";
 
 export default {
 	components: {
@@ -129,6 +139,7 @@ export default {
 	},
 	data() {
 		return {
+			utils,
 			user: {},
 			notes: "",
 			isUser: false,
@@ -257,6 +268,13 @@ export default {
 			console.log(playlistId);
 			this.editPlaylist(playlistId);
 			this.openModal({ sector: "station", modal: "editPlaylist" });
+		},
+		totalLength(playlist) {
+			let length = 0;
+			playlist.songs.forEach(song => {
+				length += song.duration;
+			});
+			return this.utils.formatTimeLong(length);
 		},
 		...mapActions("modals", ["openModal"]),
 		...mapActions("user/playlists", ["editPlaylist"])
@@ -415,8 +433,47 @@ export default {
 	}
 
 	.content {
-		outline: 1px solid black;
+		// outline: 1px solid black;
 		width: 600px;
+
+		.item {
+			width: 100%;
+			height: 72px;
+			border: 0.5px $light-grey-2 solid;
+			margin-bottom: 12px;
+			border-radius: 5px;
+			padding: 12px;
+			display: flex;
+
+			.top-text {
+				color: $dark-grey-2;
+				font-size: 20px;
+				line-height: 23px;
+				margin-bottom: 0;
+			}
+
+			.bottom-text {
+				color: $dark-grey-2;
+				font-size: 16px;
+				line-height: 19px;
+				margin-bottom: 0;
+				margin-top: 6px;
+			}
+
+			.left-part {
+				flex: 1;
+			}
+
+			.right-part {
+				display: flex;
+				align-items: center;
+			}
+		}
+	}
+
+	.playlists-tab > button {
+		width: 100%;
+		font-size: 17px;
 	}
 }
 
