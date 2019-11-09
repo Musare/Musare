@@ -133,7 +133,7 @@
 							</div>
 						</div>
 						<div class="media-right">
-							{{ formatTime(currentSong.duration) }}
+							{{ utils.formatTime(currentSong.duration) }}
 						</div>
 					</article>
 					<p v-if="noSong" class="center">
@@ -175,7 +175,7 @@
 							</div>
 						</div>
 						<div class="media-right">
-							{{ formatTime(song.duration) }}
+							{{ utils.formatTime(song.duration) }}
 						</div>
 					</article>
 					<a
@@ -200,7 +200,7 @@
 						<div class="column is-12-desktop">
 							<h4 id="time-display">
 								{{ timeElapsed }} /
-								{{ formatTime(currentSong.duration) }}
+								{{ utils.formatTime(currentSong.duration) }}
 							</h4>
 							<h3>{{ currentSong.title }}</h3>
 							<h4 class="thin" style="margin-left: 0">
@@ -323,7 +323,7 @@
 							</h4>
 							<h5>
 								{{ timeElapsed }} /
-								{{ formatTime(currentSong.duration) }}
+								{{ utils.formatTime(currentSong.duration) }}
 							</h5>
 							<div>
 								<form class="columns" action="#">
@@ -433,10 +433,12 @@ import Z404 from "../404.vue";
 
 import io from "../../io";
 import keyboardShortcuts from "../../keyboardShortcuts";
+import utils from "../../js/utils";
 
 export default {
 	data() {
 		return {
+			utils,
 			title: "Station",
 			loading: true,
 			ready: false,
@@ -625,33 +627,6 @@ export default {
 				)}%`;
 			}
 		},
-		formatTime(originalDuration) {
-			if (originalDuration) {
-				if (originalDuration < 0) return "0:00";
-
-				let duration = originalDuration;
-				let hours = Math.floor(duration / (60 * 60));
-				duration -= hours * 60 * 60;
-				let minutes = Math.floor(duration / 60);
-				duration -= minutes * 60;
-				let seconds = Math.floor(duration);
-
-				if (hours === 0) {
-					hours = "";
-				}
-
-				if (hours > 0) {
-					if (minutes < 10) minutes = `0${minutes}`;
-				}
-
-				if (seconds < 10) {
-					seconds = `0${seconds}`;
-				}
-
-				return `${hours}${hours ? ":" : ""}${minutes}:${seconds}`;
-			}
-			return false;
-		},
 		calculateTimeElapsed() {
 			if (
 				this.playerReady &&
@@ -747,7 +722,7 @@ export default {
 			const songDuration = this.currentSong.duration;
 			if (songDuration <= duration) this.player.pauseVideo();
 			if (!this.paused && duration <= songDuration)
-				this.timeElapsed = this.formatTime(duration);
+				this.timeElapsed = utils.formatTime(duration);
 		},
 		toggleLock() {
 			window.socket.emit("stations.toggleLock", this.station._id, res => {

@@ -7,7 +7,7 @@
 				<div class="group-title">
 					Stations&nbsp;
 					<a
-						v-if="$parent.loggedIn"
+						v-if="loggedIn"
 						href="#"
 						@click="
 							openModal({
@@ -154,9 +154,9 @@ export default {
 			);
 		},
 		...mapState({
-			modals: state => state.modals.modals.home,
 			loggedIn: state => state.user.auth.loggedIn,
-			userId: state => state.user.auth.userId
+			userId: state => state.user.auth.userId,
+			modals: state => state.modals.modals.home
 		})
 	},
 	mounted() {

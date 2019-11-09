@@ -46,12 +46,12 @@ export default {
 		submitOnEnter: (cb, event) => {
 			if (event.which === 13) cb();
 		},
-		turnOnNightmode: () => {
+		enableNightMode: () => {
 			document
 				.getElementsByTagName("body")[0]
 				.classList.add("night-mode");
 		},
-		turnOffNightmode: () => {
+		disableNightMode: () => {
 			document
 				.getElementsByTagName("body")[0]
 				.classList.remove("night-mode");
@@ -82,16 +82,16 @@ export default {
 			}
 		},
 		nightmode(nightmode) {
-			if (nightmode) this.turnOnNightmode();
-			else this.turnOffNightmode();
+			if (nightmode) this.enableNightMode();
+			else this.disableNightMode();
 		}
 	},
 	beforeMount() {
 		const nightmode =
 			false || JSON.parse(localStorage.getItem("nightmode"));
 		this.changeNightmode(nightmode);
-		if (nightmode) this.turnOnNightmode();
-		else this.turnOffNightmode();
+		if (nightmode) this.enableNightMode();
+		else this.disableNightMode();
 	},
 	mounted() {
 		document.onkeydown = ev => {
