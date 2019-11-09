@@ -116,6 +116,22 @@ module.exports = class extends coreClass {
 						logger.info('IO_DISCONNECTION', `User disconnected. IP: ${socket.ip}.${sessionInfo}`);
 					});
 
+					socket.use((data, next) => {
+						if (data.length === 0) return next(new Error("Not enough arguments specified."));
+						else if (typeof data[0] !== "string") return next(new Error("First argument must be a string."));
+						else {
+							const namespaceAction = data[0];
+							if (!namespaceAction || namespaceAction.indexOf(".") === -1 || namespaceAction.indexOf(".") !== namespaceAction.lastIndexOf(".")) return next(new Error("Invalid first argument"));
+							const namespace = data[0].split(".")[0];
+							const action = data[0].split(".")[1];
+							if (!namespace) return next(new Error("Invalid namespace."));
+							else if (!action) return next(new Error("Invalid action."));
+							else if (!actions[namespace]) return next(new Error("Namespace not found."));
+							else if (!actions[namespace][action]) return next(new Error("Action not found."));
+							else return next();
+						}
+					});
+
 					// catch errors on the socket (internal to socket.io)
 					socket.on('error', console.error);
 
@@ -149,13 +165,21 @@ module.exports = class extends coreClass {
 									// make sure the sockets sessionId isn't set if there is no session
 									if (socket.session.sessionId && session === null) delete socket.session.sessionId;
 
-									// call the action, passing it the session, and the arguments socket.io passed us
-									actions[namespace][action].apply(null, [socket.session].concat(args).concat([
-										(result) => {
-											// respond to the socket with our message
-											if (typeof cb === 'function') return cb(result);
-										}
-									]));
+									try {
+										// call the action, passing it the session, and the arguments socket.io passed us
+										actions[namespace][action].apply(null, [socket.session].concat(args).concat([
+											(result) => {
+												// respond to the socket with our message
+												if (typeof cb === 'function') return cb(result);
+											}
+										]));
+									} catch(err) {
+										this.logger.error("IO_ACTION_ERROR", `Some type of exception occurred in the action ${namespace}.${action}. Error message: ${err.message}`);
+										if (typeof cb === 'function') return cb({
+											status: "error",
+											message: "An error occurred while executing the specified action."
+										});
+									}
 								});
 							})
 						})

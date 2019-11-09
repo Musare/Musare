@@ -88,7 +88,15 @@ export default {
 		},
 		init() {
 			this.socket.emit("users.index", result => {
-				if (result.status === "success") this.users = result.data;
+				if (result.status === "success") {
+					this.users = result.data;
+					if (this.$route.query.userId) {
+						const user = this.users.find(
+							user => user._id === this.$route.query.userId
+						);
+						if (user) this.edit(user);
+					}
+				}
 			});
 			this.socket.emit("apis.joinAdminRoom", "users", () => {});
 		},

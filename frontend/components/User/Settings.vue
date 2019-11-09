@@ -4,6 +4,22 @@
 		<main-header />
 		<div class="container">
 			<!--Implement Validation-->
+			<label class="label">Name</label>
+			<div class="control is-grouped">
+				<p class="control is-expanded has-icon has-icon-right">
+					<input
+						v-model="user.name"
+						class="input"
+						type="text"
+						placeholder="Change name"
+					/>
+				</p>
+				<p class="control">
+					<button class="button is-success" @click="changeName()">
+						Save changes
+					</button>
+				</p>
+			</div>
 			<label class="label">Username</label>
 			<div class="control is-grouped">
 				<p class="control is-expanded has-icon has-icon-right">
@@ -302,6 +318,29 @@ export default {
 					else
 						new Toast({
 							content: "Successfully changed username",
+							timeout: 4000
+						});
+				}
+			);
+		},
+		changeName() {
+			const { name } = this.user;
+			if (!validation.isLength(name, 1, 64))
+				return new Toast({
+					content: "Name must have between 1 and 64 characters.",
+					timeout: 8000
+				});
+
+			return this.socket.emit(
+				"users.updateName",
+				this.userId,
+				name,
+				res => {
+					if (res.status !== "success")
+						new Toast({ content: res.message, timeout: 8000 });
+					else
+						new Toast({
+							content: "Successfully changed name",
 							timeout: 4000
 						});
 				}
