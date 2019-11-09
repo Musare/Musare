@@ -63,7 +63,10 @@
 						href="#"
 						class="no-song"
 						@click="
-							openModal({ sector: 'station', sector: 'playlist' })
+							toggleSidebar({
+								sector: 'station',
+								sidebar: 'playlist'
+							})
 						"
 						>Play a private playlist</a
 					>
@@ -1138,6 +1141,7 @@ export default {
 				}
 			});
 		},
+		...mapActions("sidebars", ["toggleSidebar"]),
 		...mapActions("modals", ["openModal"]),
 		...mapActions("station", [
 			"joinStation",
