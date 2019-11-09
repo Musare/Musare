@@ -452,7 +452,6 @@ export default {
 			disliked: false,
 			timeBeforePause: 0,
 			skipVotes: 0,
-			privatePlaylistQueueSelected: null,
 			automaticallyRequestedSongId: null,
 			systemDifference: 0,
 			attemptsToPlayVideo: 0,

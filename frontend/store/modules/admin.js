@@ -101,17 +101,31 @@ const modules = {
 	stations: {
 		namespaced: true,
 		state: {
+			stations: [],
 			station: {},
 			editing: {}
 		},
 		getters: {},
 		actions: {
-			editStation: ({ commit }, station) => commit("editStation", station)
+			editStation: ({ commit }, station) =>
+				commit("editStation", station),
+			stationRemoved: ({ commit }, stationId) =>
+				commit("stationRemoved", stationId),
+			stationAdded: ({ commit }, station) =>
+				commit("stationAdded", station)
 		},
 		mutations: {
 			editStation(state, station) {
 				state.station = station;
 				state.editing = JSON.parse(JSON.stringify(station));
+			},
+			stationAdded(state, station) {
+				state.stations.push(station);
+			},
+			stationRemoved(state, stationId) {
+				state.stations = state.stations.filter(station => {
+					return station._id !== stationId;
+				});
 			}
 		}
 	},

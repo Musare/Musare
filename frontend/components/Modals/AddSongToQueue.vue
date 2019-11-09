@@ -104,13 +104,14 @@ export default {
 			querySearch: "",
 			queryResults: [],
 			playlists: [],
-			privatePlaylistQueueSelected: null,
 			importQuery: ""
 		};
 	},
 	computed: mapState({
 		loggedIn: state => state.user.auth.loggedIn,
-		station: state => state.station.station
+		station: state => state.station.station,
+		privatePlaylistQueueSelected: state =>
+			state.station.privatePlaylistQueueSelected
 	}),
 	methods: {
 		isPlaylistSelected(playlistId) {
@@ -118,15 +119,13 @@ export default {
 		},
 		selectPlaylist(playlistId) {
 			if (this.station.type === "community") {
-				this.privatePlaylistQueueSelected = playlistId;
-				this.$parent.privatePlaylistQueueSelected = playlistId;
+				this.updatePrivatePlaylistQueueSelected(playlistId);
 				this.$parent.addFirstPrivatePlaylistSongToQueue();
 			}
 		},
 		unSelectPlaylist() {
 			if (this.station.type === "community") {
-				this.privatePlaylistQueueSelected = null;
-				this.$parent.privatePlaylistQueueSelected = null;
+				this.updatePrivatePlaylistQueueSelected(null);
 			}
 		},
 		addSongToQueue(songId) {
@@ -204,6 +203,7 @@ export default {
 				}
 			});
 		},
+		...mapActions("station", ["updatePrivatePlaylistQueueSelected"]),
 		...mapActions("user/playlists", ["editPlaylist"])
 	},
 	mounted() {
@@ -212,7 +212,6 @@ export default {
 			this.socket.emit("playlists.indexForUser", res => {
 				if (res.status === "success") this.playlists = res.data;
 			});
-			this.privatePlaylistQueueSelected = this.$parent.privatePlaylistQueueSelected;
 		});
 	},
 	components: { Modal }
