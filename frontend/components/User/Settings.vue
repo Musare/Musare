@@ -3,198 +3,205 @@
 		<metadata title="Settings" />
 		<main-header />
 		<div class="container">
-			<!--Implement Validation-->
-			<label class="label">Name</label>
-			<div class="control is-grouped">
-				<p class="control is-expanded has-icon has-icon-right">
-					<input
-						v-model="user.name"
-						class="input"
-						type="text"
-						placeholder="Change name"
-					/>
-				</p>
-				<p class="control">
-					<button class="button is-success" @click="changeName()">
-						Save changes
-					</button>
-				</p>
-			</div>
-			<label class="label">Username</label>
-			<div class="control is-grouped">
-				<p class="control is-expanded has-icon has-icon-right">
-					<input
-						v-model="user.username"
-						class="input"
-						type="text"
-						placeholder="Change username"
-					/>
-					<!--Remove validation if it's their own without changing-->
-				</p>
-				<p class="control">
-					<button class="button is-success" @click="changeUsername()">
-						Save changes
-					</button>
-				</p>
-			</div>
-			<label class="label">Email</label>
-			<div v-if="user.email" class="control is-grouped">
-				<p class="control is-expanded has-icon has-icon-right">
-					<input
-						v-model="user.email.address"
-						class="input"
-						type="text"
-						placeholder="Change email address"
-					/>
-					<!--Remove validation if it's their own without changing-->
-				</p>
-				<p class="control is-expanded">
-					<button class="button is-success" @click="changeEmail()">
-						Save changes
-					</button>
-				</p>
-			</div>
-			<label v-if="password" class="label">Change Password</label>
-			<div v-if="password" class="control is-grouped">
-				<p class="control is-expanded has-icon has-icon-right">
-					<input
-						v-model="newPassword"
-						class="input"
-						type="password"
-						placeholder="Change password"
-					/>
-				</p>
-				<p class="control is-expanded">
-					<button class="button is-success" @click="changePassword()">
-						Change password
-					</button>
-				</p>
-			</div>
-			<label class="label">Location</label>
-			<div v-if="user" class="control is-grouped">
-				<p class="control is-expanded has-icon has-icon-right">
-					<input
-						v-model="user.location"
-						class="input"
-						type="text"
-						placeholder="Change location"
-					/>
-				</p>
-				<p class="control is-expanded">
-					<button class="button is-success" @click="changeLocation()">
-						Save changes
-					</button>
-				</p>
-			</div>
-			<label class="label">Bio</label>
-			<div v-if="user" class="control is-grouped">
-				<p class="control is-expanded has-icon has-icon-right">
-					<textarea
-						v-model="user.bio"
-						class="textarea"
-						type="text"
-						placeholder="Change bio"
-					/>
-				</p>
-				<p class="control is-expanded">
-					<button class="button is-success" @click="changeBio()">
-						Save changes
-					</button>
-				</p>
-			</div>
-			<label v-if="user" class="label">Use nightmode</label>
-			<div v-if="user" class="control is-grouped">
-				<input
-					:checked="nightmode"
-					type="checkbox"
-					@click="toggleNightmode()"
-				/>
-			</div>
-			<label v-if="!password" class="label">Add password</label>
-			<div v-if="!password" class="control is-grouped">
+			<div class="buttons">
 				<button
-					v-if="passwordStep === 1"
-					class="button is-success"
-					@click="requestPassword()"
+					:class="{ active: activeTab === 'profile' }"
+					@click="switchTab('profile')"
 				>
-					Request password email
+					Profile
+				</button>
+				<button
+					:class="{ active: activeTab === 'account' }"
+					@click="switchTab('account')"
+				>
+					Account
+				</button>
+				<button
+					:class="{ active: activeTab === 'security' }"
+					@click="switchTab('security')"
+				>
+					Security
+				</button>
+				<button
+					:class="{ active: activeTab === 'preferences' }"
+					@click="switchTab('preferences')"
+				>
+					Preferences
+				</button>
+			</div>
+			<div class="content profile-tab" v-if="activeTab === 'profile'">
+				<p class="control is-expanded">
+					<label for="name">Name</label>
+					<input
+						class="input"
+						id="name"
+						type="text"
+						placeholder="Name"
+						v-model="user.name"
+					/>
+				</p>
+				<p class="control is-expanded">
+					<label for="location">Location</label>
+					<input
+						class="input"
+						id="location"
+						type="text"
+						placeholder="Location"
+						v-model="user.location"
+					/>
+				</p>
+				<p class="control is-expanded">
+					<label for="bio">Bio</label>
+					<textarea
+						class="textarea"
+						id="bio"
+						placeholder="Bio"
+						v-model="user.bio"
+					/>
+				</p>
+				<button class="button is-primary" @click="saveChangesProfile()">
+					Save changes
+				</button>
+			</div>
+			<div class="content account-tab" v-if="activeTab === 'account'">
+				<p class="control is-expanded">
+					<label for="name">Username</label>
+					<input
+						class="input"
+						id="username"
+						type="text"
+						placeholder="Username"
+						v-model="user.username"
+					/>
+				</p>
+				<p class="control is-expanded">
+					<label for="location">Email</label>
+					<input
+						class="input"
+						id="email"
+						type="text"
+						placeholder="Email"
+						v-model="user.email.address"
+					/>
+				</p>
+				<button class="button is-primary" @click="saveChangesAccount()">
+					Save changes
+				</button>
+			</div>
+			<div class="content security-tab" v-if="activeTab === 'security'">
+				<label v-if="!password" class="label">Add password</label>
+				<div v-if="!password" class="control is-grouped">
+					<button
+						v-if="passwordStep === 1"
+						class="button is-success"
+						@click="requestPassword()"
+					>
+						Request password email
+					</button>
+					<br />
+
+					<p
+						v-if="passwordStep === 2"
+						class="control is-expanded has-icon has-icon-right"
+					>
+						<input
+							v-model="passwordCode"
+							class="input"
+							type="text"
+							placeholder="Code"
+						/>
+					</p>
+					<p v-if="passwordStep === 2" class="control is-expanded">
+						<button
+							class="button is-success"
+							v-on:click="verifyCode()"
+						>
+							Verify code
+						</button>
+					</p>
+
+					<p
+						v-if="passwordStep === 3"
+						class="control is-expanded has-icon has-icon-right"
+					>
+						<input
+							v-model="setNewPassword"
+							class="input"
+							type="password"
+							placeholder="New password"
+						/>
+					</p>
+					<p v-if="passwordStep === 3" class="control is-expanded">
+						<button
+							class="button is-success"
+							@click="setPassword()"
+						>
+							Set password
+						</button>
+					</p>
+				</div>
+				<a
+					v-if="passwordStep === 1 && !password"
+					href="#"
+					@click="passwordStep = 2"
+					>Skip this step</a
+				>
+
+				<a
+					v-if="!github"
+					class="button is-github"
+					:href="`${serverDomain}/auth/github/link`"
+				>
+					<div class="icon">
+						<img class="invert" src="/assets/social/github.svg" />
+					</div>
+					&nbsp; Link GitHub to account
+				</a>
+				<button
+					v-if="password && github"
+					class="button is-danger"
+					@click="unlinkPassword()"
+				>
+					Remove logging in with password
+				</button>
+				<button
+					v-if="password && github"
+					class="button is-danger"
+					@click="unlinkGitHub()"
+				>
+					Remove logging in with GitHub
 				</button>
 				<br />
-
-				<p
-					v-if="passwordStep === 2"
-					class="control is-expanded has-icon has-icon-right"
+				<button
+					class="button is-warning"
+					style="margin-top: 30px;"
+					@click="removeSessions()"
 				>
-					<input
-						v-model="passwordCode"
-						class="input"
-						type="text"
-						placeholder="Code"
-					/>
-				</p>
-				<p v-if="passwordStep === 2" class="control is-expanded">
-					<button class="button is-success" v-on:click="verifyCode()">
-						Verify code
-					</button>
-				</p>
-
-				<p
-					v-if="passwordStep === 3"
-					class="control is-expanded has-icon has-icon-right"
-				>
-					<input
-						v-model="setNewPassword"
-						class="input"
-						type="password"
-						placeholder="New password"
-					/>
-				</p>
-				<p v-if="passwordStep === 3" class="control is-expanded">
-					<button class="button is-success" @click="setPassword()">
-						Set password
-					</button>
-				</p>
+					Log out everywhere
+				</button>
 			</div>
-			<a
-				v-if="passwordStep === 1 && !password"
-				href="#"
-				@click="passwordStep = 2"
-				>Skip this step</a
+			<div
+				class="content preferences-tab"
+				v-if="activeTab === 'preferences'"
 			>
-
-			<a
-				v-if="!github"
-				class="button is-github"
-				:href="`${serverDomain}/auth/github/link`"
-			>
-				<div class="icon">
-					<img class="invert" src="/assets/social/github.svg" />
-				</div>
-				&nbsp; Link GitHub to account
-			</a>
-
-			<button
-				v-if="password && github"
-				class="button is-danger"
-				@click="unlinkPassword()"
-			>
-				Remove logging in with password
-			</button>
-			<button
-				v-if="password && github"
-				class="button is-danger"
-				@click="unlinkGitHub()"
-			>
-				Remove logging in with GitHub
-			</button>
-			<br />
-			<button
-				class="button is-warning"
-				style="margin-top: 30px;"
-				@click="removeSessions()"
-			>
-				Log out everywhere
-			</button>
+				<p class="control is-expanded checkbox-control">
+					<input
+						type="checkbox"
+						id="nightmode"
+						v-model="localNightmode"
+					/>
+					<label for="nightmode">
+						<p>Use nightmode</p>
+						<span></span>
+					</label>
+				</p>
+				<button
+					class="button is-primary"
+					@click="saveChangesPreferences()"
+				>
+					Save changes
+				</button>
+			</div>
 		</div>
 		<main-footer />
 	</div>
@@ -222,7 +229,9 @@ export default {
 			setNewPassword: "",
 			passwordStep: 1,
 			passwordCode: "",
-			serverDomain: ""
+			serverDomain: "",
+			activeTab: "profile",
+			localNightmode: false
 		};
 	},
 	computed: mapState({
@@ -230,6 +239,8 @@ export default {
 		nightmode: state => state.user.preferences.nightmode
 	}),
 	mounted() {
+		this.localNightmode = this.nightmode;
+
 		lofig.get("serverDomain").then(serverDomain => {
 			this.serverDomain = serverDomain;
 		});
@@ -263,6 +274,21 @@ export default {
 		});
 	},
 	methods: {
+		switchTab(tabName) {
+			this.activeTab = tabName;
+		},
+		saveChangesProfile() {
+			this.changeName();
+			this.changeLocation();
+			this.changeBio();
+		},
+		saveChangesAccount() {
+			this.changeUsername();
+			this.changeEmail();
+		},
+		saveChangesPreferences() {
+			this.changeNightmodeLocal();
+		},
 		changeEmail() {
 			const email = this.user.email.address;
 			if (!validation.isLength(email, 3, 254))
@@ -483,9 +509,9 @@ export default {
 				new Toast({ content: res.message, timeout: 4000 });
 			});
 		},
-		toggleNightmode() {
-			localStorage.setItem("nightmode", !this.nightmode);
-			this.changeNightmode(!this.nightmode);
+		changeNightmodeLocal() {
+			localStorage.setItem("nightmode", this.localNightmode);
+			this.changeNightmode(this.localNightmode);
 		},
 		...mapActions("user/preferences", ["changeNightmode"])
 	}
@@ -495,17 +521,106 @@ export default {
 <style lang="scss" scoped>
 @import "styles/global.scss";
 
-.night-mode {
-	.label {
-		color: #ddd;
+.container {
+	width: 962px;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 32px;
+	padding: 24px;
+	display: flex;
+
+	.buttons {
+		height: 100%;
+		width: 250px;
+		margin-right: 64px;
+
+		button {
+			outline: none;
+			border: none;
+			box-shadow: none;
+			color: $musareBlue;
+			font-size: 22px;
+			line-height: 26px;
+			padding: 7px 0 7px 12px;
+			width: 100%;
+			text-align: left;
+			cursor: pointer;
+			border-radius: 5px;
+			background-color: transparent;
+
+			&.active {
+				color: $white;
+				background-color: $musareBlue;
+			}
+		}
+	}
+
+	.content {
+		width: 600px;
+
+		.control {
+			margin-bottom: 24px;
+		}
+
+		label {
+			font-size: 14px;
+			color: $dark-grey-2;
+			padding-bottom: 4px;
+		}
+
+		input {
+			height: 32px;
+		}
+
+		textarea {
+			height: 96px;
+		}
+
+		input,
+		textarea {
+			border-radius: 3px;
+			border: 1px solid $light-grey-2;
+		}
+
+		button {
+			width: 100%;
+		}
+
+		.checkbox-control {
+			input[type="checkbox"] {
+				opacity: 0;
+				position: absolute;
+			}
+			label span {
+				cursor: pointer;
+				width: 24px;
+				height: 24px;
+				background-color: $white;
+				display: inline-block;
+				border: 1px solid $dark-grey-2;
+				position: relative;
+				border-radius: 3px;
+			}
+			label p {
+				margin-bottom: 4px;
+			}
+			input[type="checkbox"]:checked + label span::after {
+				content: "";
+				width: 18px;
+				height: 18px;
+				left: 2px;
+				top: 2px;
+				border-radius: 3px;
+				background-color: $musareBlue;
+				position: absolute;
+			}
+		}
 	}
 }
 
-.container {
-	padding: 25px;
-}
-
-a {
-	color: $primary-color !important;
+.night-mode {
+	label {
+		color: #ddd !important;
+	}
 }
 </style>
