@@ -79,7 +79,31 @@
 				class="content recent-activity-tab"
 				v-if="activeTab === 'recentActivity'"
 			>
-				Content here
+				<div class="item activity">
+					<div class="thumbnail">
+						<img
+							src="https://cdn8.openculture.com/2018/02/26214611/Arlo-safe-e1519715317729.jpg"
+							alt=""
+						/>
+						<i class="material-icons activity-type-icon"
+							>playlist_add</i
+						>
+					</div>
+					<div class="left-part">
+						<p class="top-text">
+							Added
+							<strong>3 songs</strong>
+							to the playlist
+							<strong>Blues</strong>
+						</p>
+						<p class="bottom-text">3 hours ago</p>
+					</div>
+					<div class="actions">
+						<a class="hide-icon" href="#" @click="hideActivity()">
+							<i class="material-icons">visibility_off</i>
+						</a>
+					</div>
+				</div>
 			</div>
 			<div class="content playlists-tab" v-if="activeTab === 'playlists'">
 				<div
@@ -95,7 +119,7 @@
 							{{ playlist.songs.length === 1 ? "song" : "songs" }}
 						</p>
 					</div>
-					<div class="right-part">
+					<div class="actions">
 						<button
 							class="button is-primary"
 							@click="editPlaylistClick(playlist._id)"
@@ -276,6 +300,9 @@ export default {
 			});
 			return this.utils.formatTimeLong(length);
 		},
+		hideActivity() {
+			console.log("hidden activity");
+		},
 		...mapActions("modals", ["openModal"]),
 		...mapActions("user/playlists", ["editPlaylist"])
 	}
@@ -446,8 +473,7 @@ export default {
 			height: 72px;
 			border: 0.5px $light-grey-2 solid;
 			margin-bottom: 12px;
-			border-radius: 5px;
-			padding: 12px;
+			border-radius: 0 5px 5px 0;
 			display: flex;
 
 			.top-text {
@@ -465,13 +491,42 @@ export default {
 				margin-top: 6px;
 			}
 
-			.left-part {
-				flex: 1;
-			}
-
-			.right-part {
+			.thumbnail {
 				display: flex;
 				align-items: center;
+				justify-content: center;
+				width: 70.5px;
+				height: 70.5px;
+				background-color: #000;
+
+				img {
+					opacity: 0.4;
+				}
+
+				.activity-type-icon {
+					position: absolute;
+					color: #fff;
+				}
+			}
+
+			.left-part {
+				flex: 1;
+				padding: 12px;
+			}
+
+			.actions {
+				display: flex;
+				align-items: center;
+				padding: 12px;
+
+				.hide-icon {
+					border-bottom: 0;
+					display: flex;
+
+					i {
+						color: #bdbdbd;
+					}
+				}
 			}
 
 			button {
