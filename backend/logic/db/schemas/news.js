@@ -6,5 +6,5 @@ module.exports = {
 	improvements: [{ type: String }],
 	upcoming: [{ type: String }],
 	createdBy: { type: String, required: true },
-	createdAt: { type: Number, default: Date.now(), required: true }
+	createdAt: { type: Number, default: Date.now, required: true }
 };

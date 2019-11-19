@@ -33,5 +33,5 @@ module.exports = {
 	name: { type: String, default: "" },
 	location: { type: String, default: "" },
 	bio: { type: String, default: "" },
-	createdAt: { type: Date, default: Date.now() }
+	createdAt: { type: Date, default: Date.now }
 };
