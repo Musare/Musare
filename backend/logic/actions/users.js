@@ -16,6 +16,7 @@ const cache = moduleManager.modules["cache"];
 const punishments = moduleManager.modules["punishments"];
 const utils = moduleManager.modules["utils"];
 const logger = moduleManager.modules["logger"];
+const activities = moduleManager.modules["activities"];
 
 cache.sub('user.updateUsername', user => {
 	utils.socketsFromUser(user._id, sockets => {
@@ -290,23 +291,24 @@ module.exports = {
 			// respond with the new user
 			(newUser, next) => {
 				mail.schemas.verifyEmail(email, username, verificationToken, () => {
-					next();
+					next(newUser);
 				});
 			}
 
-		], async (err) => {
+		], async (user, err) => {
 			if (err && err !== true) {
 				err = await utils.getError(err);
 				logger.error("USER_PASSWORD_REGISTER", `Register failed with password for user "${username}"."${err}"`);
-				cb({status: 'failure', message: err});
+				return cb({status: 'failure', message: err});
 			} else {
 				module.exports.login(session, email, password, (result) => {
 					let obj = {status: 'success', message: 'Successfully registered.'};
 					if (result.status === 'success') {
 						obj.SID = result.SID;
 					}
+					activities.addActivity(user._id, "created_account");
 					logger.success("USER_PASSWORD_REGISTER", `Register successful with password for user "${username}".`);
-					cb(obj);
+					return cb(obj);
 				});
 			}
 		});

@@ -16,10 +16,11 @@ module.exports = class extends coreClass {
 		return new Promise((resolve, reject) => {
 			this.setStage(1);
 
-			const 	logger 	= this.logger,
-					mail	= this.moduleManager.modules["mail"],
-					cache	= this.moduleManager.modules["cache"],
-					db		= this.moduleManager.modules["db"];
+			const 	logger 	    = this.logger,
+					mail	    = this.moduleManager.modules["mail"],
+					cache	    = this.moduleManager.modules["cache"],
+					db		    = this.moduleManager.modules["db"],
+					activities	= this.moduleManager.modules["activities"];
 			
 			this.utils = this.moduleManager.modules["utils"];
 
@@ -210,6 +211,12 @@ module.exports = class extends coreClass {
 					// save the new user to the database
 					(user, next) => {
 						db.models.user.create(user, next);
+					},
+
+					// add the activity of account creation
+					(user, next) => {
+						activities.addActivity(user._id, "created_account");
+						next(null, user);
 					},
 
 					(user, next) => {

@@ -379,6 +379,7 @@ export default {
 			console.log("activity", res);
 
 			const icons = {
+				created_account: "account_circle",
 				created_station: "radio",
 				deleted_station: "delete",
 				created_playlist: "playlist_add_check",
@@ -399,6 +400,10 @@ export default {
 
 			activity.icon = icons[activity.activityType];
 
+			if (activity.activityType === "created_account") {
+				activity.message = "Welcome to Musare!";
+				return cb(activity);
+			}
 			if (activity.activityType === "created_station") {
 				this.socket.emit(
 					"stations.getStationForActivity",

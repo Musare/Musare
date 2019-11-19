@@ -3,6 +3,7 @@ module.exports = {
 	hidden: { type: Boolean, default: false, required: true },
 	userId: { type: String, required: true },
 	activityType: { type: String, enum: [
+		"created_account",
 		"created_station",
 		"deleted_station",
 		"created_playlist",
