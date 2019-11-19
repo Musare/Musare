@@ -169,6 +169,7 @@ moduleManager.addModule("discord");
 moduleManager.addModule("io");
 moduleManager.addModule("logger");
 moduleManager.addModule("notifications");
+moduleManager.addModule("activities");
 moduleManager.addModule("playlists");
 moduleManager.addModule("punishments");
 moduleManager.addModule("songs");

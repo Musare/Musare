@@ -12,6 +12,7 @@ const songs = moduleManager.modules["songs"];
 const cache = moduleManager.modules["cache"];
 const utils = moduleManager.modules["utils"];
 const logger = moduleManager.modules["logger"];
+const activities = moduleManager.modules["activities"];
 
 cache.sub('song.removed', songId => {
 	utils.emitToRoom('admin.songs', 'event:admin.song.removed', songId);
@@ -124,7 +125,7 @@ module.exports = {
 
 		async.waterfall([
 			(next) => {
-				db.models.song.findOne({ songId }).exec(next);
+				song.getSong(songId, next);
 			}
 		], async (err, song) => {
 			if (err) {
@@ -137,6 +138,38 @@ module.exports = {
 			}
 		});
 	}),
+
+	/**
+	 * Obtains basic metadata of a song in order to format an activity
+	 *
+	 * @param session
+	 * @param songId - the song id
+	 * @param cb
+	 */
+	getSongForActivity: (session, songId, cb) => {
+		async.waterfall([
+			(next) => {
+				songs.getSongFromId(songId, next);
+			}
+		], async (err, song) => {
+			if (err) {
+				err = await utils.getError(err);
+				logger.error("SONGS_GET_SONG_FOR_ACTIVITY", `Failed to obtain metadata of song ${songId} for activity formatting. "${err}"`);
+				return cb({ status: 'failure', message: err });
+			} else {
+				if (song) {
+					logger.success("SONGS_GET_SONG_FOR_ACTIVITY", `Obtained metadata of song ${songId} for activity formatting successfully.`);
+					cb({ status: "success", data: {
+						title: song.title,
+						thumbnail: song.thumbnail
+					} });
+				} else {
+					logger.error("SONGS_GET_SONG_FOR_ACTIVITY", `Song ${songId} does not exist so failed to obtain for activity formatting.`);
+					cb({ status: "failure" });
+				}
+			}
+		});
+	},
 
 	/**
 	 * Updates a song
@@ -265,7 +298,7 @@ module.exports = {
 			songId = song._id;
 			db.models.user.findOne({ _id: session.userId }, (err, user) => {
 				if (user.liked.indexOf(songId) !== -1) return cb({ status: 'failure', message: 'You have already liked this song.' });
-				db.models.user.updateOne({_id: session.userId}, {$push: {liked: songId}, $pull: {disliked: songId}}, err => {
+				db.models.user.updateOne({ _id: session.userId }, { $push: { liked: songId }, $pull: { disliked: songId } }, err => {
 					if (!err) {
 						db.models.user.countDocuments({"liked": songId}, (err, likes) => {
 							if (err) return cb({ status: 'failure', message: 'Something went wrong while liking this song.' });
@@ -275,6 +308,7 @@ module.exports = {
 									if (err) return cb({ status: 'failure', message: 'Something went wrong while liking this song.' });
 									songs.updateSong(songId, (err, song) => {});
 									cache.pub('song.like', JSON.stringify({ songId: oldSongId, userId: session.userId, likes: likes, dislikes: dislikes }));
+									activities.addActivity(session.userId, "liked_song", [ songId ]);
 									return cb({ status: 'success', message: 'You have successfully liked this song.' });
 								});
 							});

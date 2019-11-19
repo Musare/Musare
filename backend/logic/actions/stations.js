@@ -16,6 +16,7 @@ const utils = moduleManager.modules["utils"];
 const logger = moduleManager.modules["logger"];
 const stations = moduleManager.modules["stations"];
 const songs = moduleManager.modules["songs"];
+const activities = moduleManager.modules["activities"];
 
 let userList = {};
 let usersPerStation = {};
@@ -240,6 +241,33 @@ module.exports = {
 			}
 			logger.success("STATIONS_INDEX", `Indexing stations successful.`, false);
 			return cb({'status': 'success', 'stations': stations});
+		});
+	},
+
+	/**
+	 * Obtains basic metadata of a station in order to format an activity
+	 *
+	 * @param session
+	 * @param stationId - the station id
+	 * @param cb
+	 */
+	getStationForActivity: (session, stationId, cb) => {
+		async.waterfall([
+			(next) => {
+				stations.getStation(stationId, next);
+			}
+		], async (err, station) => {
+			if (err) {
+				err = await utils.getError(err);
+				logger.error("STATIONS_GET_STATION_FOR_ACTIVITY", `Failed to obtain metadata of station ${stationId} for activity formatting. "${err}"`);
+				return cb({ status: 'failure', message: err });
+			} else {
+				logger.success("STATIONS_GET_STATION_FOR_ACTIVITY", `Obtained metadata of station ${stationId} for activity formatting successfully.`);
+				return cb({ status: "success", data: {
+					title: station.displayName,
+					thumbnail: station.currentSong ? station.currentSong.thumbnail : ""
+				} });
+			}
 		});
 	},
 
@@ -854,6 +882,7 @@ module.exports = {
 			}
 			logger.success("STATIONS_REMOVE", `Removing station "${stationId}" successfully.`);
 			cache.pub('station.remove', stationId);
+			activities.addActivity(session.userId, "deleted_station", [ stationId ]);
 			return cb({ 'status': 'success', 'message': 'Successfully removed.' });
 		});
 	}),
@@ -920,6 +949,7 @@ module.exports = {
 			}
 			logger.success("STATIONS_CREATE", `Created station "${station._id}" successfully.`);
 			cache.pub('station.create', station._id);
+			activities.addActivity(session.userId, "created_station", [ station._id ]);
 			return cb({'status': 'success', 'message': 'Successfully created station.'});
 		});
 	}),

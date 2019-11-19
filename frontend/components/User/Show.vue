@@ -79,30 +79,43 @@
 				class="content recent-activity-tab"
 				v-if="activeTab === 'recentActivity'"
 			>
-				<div class="item activity">
-					<div class="thumbnail">
-						<img
-							src="https://cdn8.openculture.com/2018/02/26214611/Arlo-safe-e1519715317729.jpg"
-							alt=""
-						/>
-						<i class="material-icons activity-type-icon"
-							>playlist_add</i
-						>
+				<div v-if="activities.length > 0">
+					<div
+						class="item activity"
+						v-for="activity in sortedActivities"
+						:key="activity._id"
+					>
+						<div class="thumbnail">
+							<img :src="activity.thumbnail" alt="" />
+							<i class="material-icons activity-type-icon">{{
+								activity.icon
+							}}</i>
+						</div>
+						<div class="left-part">
+							<p class="top-text" v-html="activity.message"></p>
+							<p class="bottom-text">
+								{{
+									formatDistance(
+										parseISO(activity.createdAt),
+										new Date(),
+										{ addSuffix: true }
+									)
+								}}
+							</p>
+						</div>
+						<div class="actions">
+							<a
+								class="hide-icon"
+								href="#"
+								@click="hideActivity(activity._id)"
+							>
+								<i class="material-icons">visibility_off</i>
+							</a>
+						</div>
 					</div>
-					<div class="left-part">
-						<p class="top-text">
-							Added
-							<strong>3 songs</strong>
-							to the playlist
-							<strong>Blues</strong>
-						</p>
-						<p class="bottom-text">3 hours ago</p>
-					</div>
-					<div class="actions">
-						<a class="hide-icon" href="#" @click="hideActivity()">
-							<i class="material-icons">visibility_off</i>
-						</a>
-					</div>
+				</div>
+				<div v-else>
+					<h2>No recent activity.</h2>
 				</div>
 			</div>
 			<div class="content playlists-tab" v-if="activeTab === 'playlists'">
@@ -147,7 +160,8 @@
 
 <script>
 import { mapState, mapActions } from "vuex";
-import { format, parseISO } from "date-fns";
+import { format, formatDistance, parseISO } from "date-fns";
+import Toast from "toasters";
 
 import MainHeader from "../MainHeader.vue";
 import MainFooter from "../MainFooter.vue";
@@ -168,16 +182,25 @@ export default {
 			notes: "",
 			isUser: false,
 			activeTab: "recentActivity",
-			playlists: []
+			playlists: [],
+			activities: []
 		};
 	},
-	computed: mapState({
-		role: state => state.user.auth.role,
-		userId: state => state.user.auth.userId,
-		...mapState("modals", {
-			modals: state => state.modals.station
-		})
-	}),
+	computed: {
+		...mapState({
+			role: state => state.user.auth.role,
+			userId: state => state.user.auth.userId,
+			...mapState("modals", {
+				modals: state => state.modals.station
+			})
+		}),
+		sortedActivities() {
+			const { activities } = this;
+			return activities.sort(
+				(x, y) => new Date(y.createdAt) - new Date(x.createdAt)
+			);
+		}
+	},
 	mounted() {
 		lofig.get("frontendDomain").then(frontendDomain => {
 			this.frontendDomain = frontendDomain;
@@ -204,12 +227,48 @@ export default {
 								if (res.status === "success")
 									this.playlists = res.data;
 							});
+
+							this.socket.emit(
+								"activities.getSet",
+								this.userId,
+								1,
+								res => {
+									if (res.status === "success") {
+										for (
+											let a = 0;
+											a < res.data.length;
+											a += 1
+										) {
+											this.formatActivity(
+												res.data[a],
+												activity => {
+													this.activities.unshift(
+														activity
+													);
+												}
+											);
+										}
+									}
+								}
+							);
+
+							this.socket.on(
+								"event:activity.create",
+								activity => {
+									console.log(activity);
+									this.formatActivity(activity, activity => {
+										this.activities.unshift(activity);
+									});
+								}
+							);
+
 							this.socket.on(
 								"event:playlist.create",
 								playlist => {
 									this.playlists.push(playlist);
 								}
 							);
+
 							this.socket.on(
 								"event:playlist.delete",
 								playlistId => {
@@ -222,6 +281,7 @@ export default {
 									);
 								}
 							);
+
 							this.socket.on("event:playlist.addSong", data => {
 								this.playlists.forEach((playlist, index) => {
 									if (playlist._id === data.playlistId) {
@@ -231,6 +291,7 @@ export default {
 									}
 								});
 							});
+
 							this.socket.on(
 								"event:playlist.removeSong",
 								data => {
@@ -261,6 +322,7 @@ export default {
 									);
 								}
 							);
+
 							this.socket.on(
 								"event:playlist.updateDisplayName",
 								data => {
@@ -285,6 +347,8 @@ export default {
 		});
 	},
 	methods: {
+		formatDistance,
+		parseISO,
 		switchTab(tabName) {
 			this.activeTab = tabName;
 		},
@@ -300,8 +364,132 @@ export default {
 			});
 			return this.utils.formatTimeLong(length);
 		},
-		hideActivity() {
-			console.log("hidden activity");
+		hideActivity(activityId) {
+			this.socket.emit("activities.hideActivity", activityId, res => {
+				if (res.status === "success") {
+					this.activities = this.activities.filter(
+						activity => activity._id !== activityId
+					);
+				} else {
+					new Toast({ content: res.message, timeout: 3000 });
+				}
+			});
+		},
+		formatActivity(res, cb) {
+			console.log("activity", res);
+
+			const icons = {
+				created_station: "radio",
+				deleted_station: "delete",
+				created_playlist: "playlist_add_check",
+				deleted_playlist: "delete_sweep",
+				liked_song: "favorite",
+				added_song_to_playlist: "playlist_add",
+				added_songs_to_playlist: "playlist_add"
+			};
+
+			const activity = {
+				...res,
+				thumbnail: "",
+				message: "",
+				icon: ""
+			};
+
+			const plural = activity.payload.length > 1;
+
+			activity.icon = icons[activity.activityType];
+
+			if (activity.activityType === "created_station") {
+				this.socket.emit(
+					"stations.getStationForActivity",
+					activity.payload[0],
+					res => {
+						if (res.status === "success") {
+							activity.message = `Created the station <strong>${res.data.title}</strong>`;
+							activity.thumbnail = res.data.thumbnail;
+							return cb(activity);
+						}
+						activity.message = "Created a station";
+						return cb(activity);
+					}
+				);
+			}
+			if (activity.activityType === "deleted_station") {
+				activity.message = `Deleted a station`;
+				return cb(activity);
+			}
+			if (activity.activityType === "created_playlist") {
+				this.socket.emit(
+					"playlists.getPlaylistForActivity",
+					activity.payload[0],
+					res => {
+						if (res.status === "success") {
+							activity.message = `Created the playlist <strong>${res.data.title}</strong>`;
+							// activity.thumbnail = res.data.thumbnail;
+							return cb(activity);
+						}
+						activity.message = "Created a playlist";
+						return cb(activity);
+					}
+				);
+			}
+			if (activity.activityType === "deleted_playlist") {
+				activity.message = `Deleted a playlist`;
+				return cb(activity);
+			}
+			if (activity.activityType === "liked_song") {
+				if (plural) {
+					activity.message = `Liked ${activity.payload.length} songs.`;
+					return cb(activity);
+				}
+				this.socket.emit(
+					"songs.getSongForActivity",
+					activity.payload[0],
+					res => {
+						if (res.status === "success") {
+							activity.message = `Liked the song <strong>${res.data.title}</strong>`;
+							activity.thumbnail = res.data.thumbnail;
+							return cb(activity);
+						}
+						activity.message = "Liked a song";
+						return cb(activity);
+					}
+				);
+			}
+			if (activity.activityType === "added_song_to_playlist") {
+				this.socket.emit(
+					"songs.getSongForActivity",
+					activity.payload[0].songId,
+					song => {
+						console.log(song);
+						this.socket.emit(
+							"playlists.getPlaylistForActivity",
+							activity.payload[0].playlistId,
+							playlist => {
+								if (song.status === "success") {
+									if (playlist.status === "success")
+										activity.message = `Added the song <strong>${song.data.title}</strong> to the playlist <strong>${playlist.data.title}</strong>`;
+									else
+										activity.message = `Added the song <strong>${song.data.title}</strong> to a playlist`;
+									activity.thumbnail = song.data.thumbnail;
+									return cb(activity);
+								}
+								if (playlist.status === "success") {
+									activity.message = `Added a song to the playlist <strong>${playlist.data.title}</strong>`;
+									return cb(activity);
+								}
+								activity.message = "Added a song to a playlist";
+								return cb(activity);
+							}
+						);
+					}
+				);
+			}
+			if (activity.activityType === "added_songs_to_playlist") {
+				activity.message = `Added ${activity.payload.length} songs to a playlist`;
+				return cb(activity);
+			}
+			return false;
 		},
 		...mapActions("modals", ["openModal"]),
 		...mapActions("user/playlists", ["editPlaylist"])
@@ -489,9 +677,14 @@ export default {
 				line-height: 19px;
 				margin-bottom: 0;
 				margin-top: 6px;
+
+				&:first-letter {
+					text-transform: uppercase;
+				}
 			}
 
 			.thumbnail {
+				position: relative;
 				display: flex;
 				align-items: center;
 				justify-content: center;

@@ -11,6 +11,7 @@ const utils = moduleManager.modules["utils"];
 const logger = moduleManager.modules["logger"];
 const playlists = moduleManager.modules["playlists"];
 const songs = moduleManager.modules["songs"];
+const activities = moduleManager.modules["activities"];
 
 cache.sub('playlist.create', playlistId => {
 	playlists.getPlaylist(playlistId, (err, playlist) => {
@@ -161,6 +162,7 @@ let lib = {
 				return cb({ status: 'failure', message: err});
 			}
 			cache.pub('playlist.create', playlist._id);
+			activities.addActivity(session.userId, "created_playlist", [ playlist._id ]);
 			logger.success("PLAYLIST_CREATE", `Successfully created private playlist for user "${session.userId}".`);
 			cb({ status: 'success', message: 'Successfully created playlist', data: {
 				_id: playlist._id
@@ -198,6 +200,34 @@ let lib = {
 			});
 		});
 	}),
+
+	/**
+	 * Obtains basic metadata of a playlist in order to format an activity
+	 *
+	 * @param session
+	 * @param playlistId - the playlist id
+	 * @param cb
+	 */
+	getPlaylistForActivity: (session, playlistId, cb) => {
+		async.waterfall([
+
+			(next) => {
+				playlists.getPlaylist(playlistId, next);
+			}
+
+		], async (err, playlist) => {
+			if (err) {
+				err = await utils.getError(err);
+				logger.error("PLAYLISTS_GET_PLAYLIST_FOR_ACTIVITY", `Failed to obtain metadata of playlist ${playlistId} for activity formatting. "${err}"`);
+				return cb({ status: 'failure', message: err });
+			} else {
+				logger.success("PLAYLISTS_GET_PLAYLIST_FOR_ACTIVITY", `Obtained metadata of playlist ${playlistId} for activity formatting successfully.`);
+				cb({ status: "success", data: {
+					title: playlist.displayName
+				} });
+			}
+		});
+	},
 
 	//TODO Remove this
 	/**
@@ -277,11 +307,12 @@ let lib = {
 	 * Adds a song to a private playlist
 	 *
 	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {Boolean} isSet - is the song part of a set of songs to be added
 	 * @param {String} songId - the id of the song we are trying to add
 	 * @param {String} playlistId - the id of the playlist we are adding the song to
 	 * @param {Function} cb - gets called with the result
 	 */
-	addSongToPlaylist: hooks.loginRequired((session, songId, playlistId, cb) => {
+	addSongToPlaylist: hooks.loginRequired((session, isSet, songId, playlistId, cb) => {
 		async.waterfall([
 			(next) => {
 				playlists.getPlaylist(playlistId, (err, playlist) => {
@@ -325,6 +356,7 @@ let lib = {
 				return cb({ status: 'failure', message: err});
 			} else {
 				logger.success("PLAYLIST_ADD_SONG", `Successfully added song "${songId}" to private playlist "${playlistId}" for user "${session.userId}".`);
+				if (!isSet) activities.addActivity(session.userId, "added_song_to_playlist", [ { songId, playlistId } ]);
 				cache.pub('playlist.addSong', { playlistId: playlist._id, song: newSong, userId: session.userId });
 				return cb({ status: 'success', message: 'Song has been successfully added to the playlist', data: playlist.songs });
 			}
@@ -345,6 +377,9 @@ let lib = {
 		let songsInPlaylistTotal = 0;
 		let songsSuccess = 0;
 		let songsFail = 0;
+
+		let addedSongs = [];
+
 		async.waterfall([
 			(next) => {
 				utils.getPlaylistFromYouTube(url, musicOnly, (songIds, otherSongIds) => {
@@ -363,14 +398,17 @@ let lib = {
 					if (processed === songIds.length) next();
 				}
 				for (let s = 0; s < songIds.length; s++) {
-					lib.addSongToPlaylist(session, songIds[s], playlistId, (res) => {
+					lib.addSongToPlaylist(session, true, songIds[s], playlistId, res => {
 						processed++;
-						if (res.status === "success") songsSuccess++;
-						else songsFail++;
+						if (res.status === "success") {
+							addedSongs.push(songIds[s]);
+							songsSuccess++;
+						} else songsFail++;
 						checkDone();
 					});
 				}
 			},
+			
 			(next) => {
 				playlists.getPlaylist(playlistId, next);
 			},
@@ -385,6 +423,7 @@ let lib = {
 				logger.error("PLAYLIST_IMPORT", `Importing a YouTube playlist to private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`);
 				return cb({ status: 'failure', message: err});
 			} else {
+				activities.addActivity(session.userId, "added_songs_to_playlist", addedSongs);
 				logger.success("PLAYLIST_IMPORT", `Successfully imported a YouTube playlist to private playlist "${playlistId}" for user "${session.userId}". Videos in playlist: ${videosInPlaylistTotal}, songs in playlist: ${songsInPlaylistTotal}, songs successfully added: ${songsSuccess}, songs failed: ${songsFail}.`);
 				cb({
 					status: 'success',
@@ -602,7 +641,8 @@ let lib = {
 				return cb({ status: 'failure', message: err});
 			}
 			logger.success("PLAYLIST_REMOVE", `Successfully removed private playlist "${playlistId}" for user "${session.userId}".`);
-			cache.pub('playlist.delete', {userId: session.userId, playlistId});
+			cache.pub('playlist.delete', { userId: session.userId, playlistId });
+			activities.addActivity(session.userId, "deleted_playlist", [ playlistId ]);
 			return cb({ status: 'success', message: 'Playlist successfully removed' });
 		});
 	})

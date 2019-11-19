@@ -5,9 +5,6 @@ const coreClass = require("../core");
 const async = require('async');
 const mongoose = require('mongoose');
 
-
-
-
 module.exports = class extends coreClass {
 	constructor(name, moduleManager) {
 		super(name, moduleManager);

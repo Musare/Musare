@@ -78,6 +78,7 @@ export default {
 		addSongToPlaylist(playlistId) {
 			this.socket.emit(
 				"playlists.addSongToPlaylist",
+				false,
 				this.currentSong.songId,
 				playlistId,
 				res => {

@@ -271,6 +271,7 @@ export default {
 		addSongToPlaylist(id) {
 			this.socket.emit(
 				"playlists.addSongToPlaylist",
+				false,
 				id,
 				this.playlist._id,
 				res => {

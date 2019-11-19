@@ -133,8 +133,9 @@ module.exports = class extends coreClass {
 								}
 							], next);
 						}
+						
 						if (!body.id) return next("Something went wrong, no id.");
-						db.models.user.findOne({'services.github.id': body.id}, (err, user) => {
+						db.models.user.findOne({ 'services.github.id': body.id }, (err, user) => {
 							next(err, user, body);
 						});
 					},
@@ -167,7 +168,7 @@ module.exports = class extends coreClass {
 							if (email.primary) address = email.email.toLowerCase();
 						});
 
-						db.models.user.findOne({'email.address': address}, next);
+						db.models.user.findOne({ 'email.address': address }, next);
 					},
 
 					
