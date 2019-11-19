@@ -92,7 +92,7 @@ module.exports = class extends coreClass {
 					},
 
 					(next) => {
-						oauth2.getOAuthAccessToken(code, {redirect_uri}, next);
+						oauth2.getOAuthAccessToken(code, { redirect_uri }, next);
 					},
 
 					(_access_token, refresh_token, results, next) => {
@@ -115,13 +115,15 @@ module.exports = class extends coreClass {
 
 								(session, next) => {
 									if (!session) return next('Invalid session.');
-									db.models.user.findOne({_id: session.userId}, next);
+									db.models.user.findOne({ _id: session.userId }, next);
 								},
 
 								(user, next) => {
 									if (!user) return next('User not found.');
 									if (user.services.github && user.services.github.id) return next('Account already has GitHub linked.');
-									db.models.user.updateOne({_id: user._id}, {$set: {"services.github": {id: body.id, access_token}}}, {runValidators: true}, (err) => {
+									db.models.user.updateOne({ _id: user._id }, { $set: {
+										"services.github": { id: body.id, access_token } }
+									}, { runValidators: true }, (err) => {
 										if (err) return next(err);
 										next(null, user, body);
 									});
@@ -184,6 +186,9 @@ module.exports = class extends coreClass {
 						next(null, {
 							_id, //TODO Check if exists
 							username: body.login,
+							name: body.name,
+							location: body.location,
+							bio: body.bio,
 							email: {
 								address,
 								verificationToken
