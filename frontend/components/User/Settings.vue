@@ -206,8 +206,8 @@
 						v-model="localNightmode"
 					/>
 					<label for="nightmode">
-						<p>Use nightmode</p>
 						<span></span>
+						<p>Use nightmode</p>
 					</label>
 				</p>
 				<button
@@ -619,20 +619,29 @@ export default {
 				opacity: 0;
 				position: absolute;
 			}
-			label span {
-				cursor: pointer;
-				width: 24px;
-				height: 24px;
-				background-color: $white;
-				display: inline-block;
-				border: 1px solid $dark-grey-2;
-				position: relative;
-				border-radius: 3px;
+
+			label {
+				display: flex;
+				flex-direction: row;
+				align-items: center;
+
+				span {
+					cursor: pointer;
+					width: 24px;
+					height: 24px;
+					background-color: $white;
+					display: inline-block;
+					border: 1px solid $dark-grey-2;
+					position: relative;
+					border-radius: 3px;
+				}
+
+				p {
+					margin-left: 10px;
+				}
 			}
-			label p {
-				margin-bottom: 4px;
-			}
-			input[type="checkbox"]:checked + label span::after {
+
+			label input[type="checkbox"]:checked + label span::after {
 				content: "";
 				width: 18px;
 				height: 18px;
