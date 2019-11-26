@@ -59,7 +59,19 @@
 						v-model="user.bio"
 					/>
 				</p>
-				<button class="button is-primary" @click="saveChangesProfile()">
+				<div class="control is-expanded avatar-select">
+					<label>Avatar</label>
+					<div class="select">
+						<select v-model="user.avatar.type">
+							<option value="gravatar">Using Gravatar</option>
+							<option value="initials">Based on initials</option>
+						</select>
+					</div>
+				</div>
+				<button
+					class="button is-primary"
+					@click="saveChangesToProfile()"
+				>
 					Save changes
 				</button>
 			</div>
@@ -84,7 +96,10 @@
 						v-model="user.email.address"
 					/>
 				</p>
-				<button class="button is-primary" @click="saveChangesAccount()">
+				<button
+					class="button is-primary"
+					@click="saveChangesToAccount()"
+				>
 					Save changes
 				</button>
 			</div>
@@ -277,12 +292,13 @@ export default {
 		switchTab(tabName) {
 			this.activeTab = tabName;
 		},
-		saveChangesProfile() {
+		saveChangesToProfile() {
 			this.changeName();
 			this.changeLocation();
 			this.changeBio();
+			this.changeAvatarType();
 		},
-		saveChangesAccount() {
+		saveChangesToAccount() {
 			this.changeUsername();
 			this.changeEmail();
 		},
@@ -415,6 +431,18 @@ export default {
 							content: "Successfully changed bio",
 							timeout: 4000
 						});
+				}
+			);
+		},
+		changeAvatarType() {
+			const { type } = this.user.avatar;
+
+			return this.socket.emit(
+				"users.updateAvatarType",
+				this.userId,
+				type,
+				res => {
+					new Toast({ content: res.message, timeout: 8000 });
 				}
 			);
 		},
@@ -615,6 +643,16 @@ export default {
 				position: absolute;
 			}
 		}
+	}
+}
+
+.avatar-select {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+
+	.select:after {
+		border-color: $musareBlue;
 	}
 }
 

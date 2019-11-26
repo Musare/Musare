@@ -6,7 +6,10 @@ module.exports = {
 		verificationToken: String,
 		address: String
 	},
-	avatar: { type: String },
+	avatar: {
+		type: { type: String, enum: ["gravatar", "initials"] },
+		url: { type: String, required: false }
+	},
 	services: {
 		password: {
 			password: String,

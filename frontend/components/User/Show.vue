@@ -9,8 +9,8 @@
 				<img
 					class="profile-picture"
 					:src="
-						user.avatar
-							? `${user.avatar}?d=${notes}&s=250`
+						user.avatar.url && user.avatar.type === 'gravatar'
+							? `${user.avatar.url}?d=${notes}&s=250`
 							: '/assets/notes.png'
 					"
 					onerror="this.src='/assets/notes.png'; this.onerror=''"

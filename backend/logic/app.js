@@ -203,7 +203,7 @@ module.exports = class extends coreClass {
 					// generate the url for gravatar avatar
 					(user, next) => {
 						this.utils.createGravatar(user.email.address).then(url => {
-							user.avatar = url;
+							user.avatar = { type: "gravatar", url };
 							next(null, user);
 						});
 					},

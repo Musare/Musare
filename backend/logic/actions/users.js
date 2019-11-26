@@ -518,6 +518,7 @@ module.exports = {
 					email: {
 						address: user.email.address
 					},
+					avatar: user.avatar,
 					username: user.username,
 					name: user.name,
 					location: user.location,
@@ -735,7 +736,7 @@ module.exports = {
 			}
 		});
 	}),
-
+	
 	/**
 	 * Updates a user's bio
 	 *
@@ -768,6 +769,42 @@ module.exports = {
 			} else {
 				logger.success("UPDATE_BIO", `Updated bio for user "${updatingUserId}" to bio "${newBio}".`);
 				cb({ status: 'success', message: 'Bio updated successfully' });
+			}
+		});
+	}),
+
+	/**
+	 * Updates the type of a user's avatar
+	 *
+	 * @param {Object} session - the session object automatically added by socket.io
+	 * @param {String} updatingUserId - the updating user's id
+	 * @param {String} newType - the new type
+	 * @param {Function} cb - gets called with the result
+	 */
+	updateAvatarType: hooks.loginRequired((session, updatingUserId, newType, cb) => {
+		async.waterfall([
+			(next) => {
+				if (updatingUserId === session.userId) return next(null, true);
+				db.models.user.findOne({ _id: session.userId }, next);
+			},
+
+			(user, next) => {
+				if (user !== true && (!user || user.role !== 'admin')) return next('Invalid permissions.');
+				db.models.user.findOne({ _id: updatingUserId }, next);
+			},
+
+			(user, next) => {
+				if (!user) return next('User not found.');
+				db.models.user.updateOne({ _id: updatingUserId }, {$set: { "avatar.type": newType }}, { runValidators: true }, next);
+			}
+		], async (err) => {
+			if (err && err !== true) {
+				err = await utils.getError(err);
+				logger.error("UPDATE_AVATAR_TYPE", `Couldn't update avatar type for user "${updatingUserId}" to type "${newType}". "${err}"`);
+				cb({ status: 'failure', message: err });
+			} else {
+				logger.success("UPDATE_AVATAR_TYPE", `Updated avatar type for user "${updatingUserId}" to type "${newType}".`);
+				cb({ status: 'success', message: 'Avatar type updated successfully' });
 			}
 		});
 	}),
