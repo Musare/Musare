@@ -512,7 +512,7 @@ module.exports = {
 			if (err && err !== true) {
 				err = await utils.getError(err);
 				logger.error("FIND_BY_SESSION", `User not found. "${err}"`);
-				cb({status: 'failure', message: err});
+				cb({ status: 'failure', message: err });
 			} else {
 				let data = {
 					email: {
