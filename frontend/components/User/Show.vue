@@ -745,7 +745,9 @@ export default {
 	.bio-row i,
 	.bio-row p,
 	.date-location-row i,
-	.date-location-row p {
+	.date-location-row p,
+	.item .left-part .top-text,
+	.item .left-part .bottom-text {
 		color: $light-grey;
 	}
 }

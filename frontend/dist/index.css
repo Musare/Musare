@@ -105,3 +105,7 @@ a.nav-item.is-tab {
 	border-width: 0;
 	color: #fff;
 }
+
+strong {
+	color: inherit;
+}
