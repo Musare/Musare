@@ -54,7 +54,7 @@
 					</router-link>
 				</p>
 				<p>
-					© Copyright Musare 2015 - 2019
+					© Copyright Musare 2015 - 2020
 				</p>
 			</div>
 		</div>
