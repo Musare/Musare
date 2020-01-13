@@ -1068,10 +1068,8 @@ export default {
 				this.genreHelper.pos3 = e.clientX;
 				this.genreHelper.pos4 = e.clientY;
 				// set the element's new position:
-				this.genreHelper.top =
-					this.genreHelper.top - this.genreHelper.pos2;
-				this.genreHelper.left =
-					this.genreHelper.left - this.genreHelper.pos1;
+				this.genreHelper.top -= this.genreHelper.pos2;
+				this.genreHelper.left -= this.genreHelper.pos1;
 			};
 
 			document.onmouseup = () => {

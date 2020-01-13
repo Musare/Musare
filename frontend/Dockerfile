@@ -3,7 +3,7 @@ FROM node:12
 RUN apt-get update
 RUN apt-get install nginx -y
 
-RUN npm install -g yarn
+RUN npm install -g yarn --force
 
 RUN yarn global add snyk
 RUN yarn global add webpack@4.35.3
