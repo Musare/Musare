@@ -277,7 +277,7 @@ module.exports = {
 
 			// generate the url for gravatar avatar
 			(user, next) => {
-				this.utils.createGravatar(user.email.address).then(url => {
+				utils.createGravatar(user.email.address).then(url => {
 					user.avatar = url;
 					next(null, user);
 				});
