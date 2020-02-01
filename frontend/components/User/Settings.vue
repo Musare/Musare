@@ -62,7 +62,7 @@
 				<div class="control is-expanded avatar-select">
 					<label>Avatar</label>
 					<div class="select">
-						<select v-model="user.avatar.type">
+						<select v-if="user.avatar" v-model="user.avatar.type">
 							<option value="gravatar">Using Gravatar</option>
 							<option value="initials">Based on initials</option>
 						</select>
