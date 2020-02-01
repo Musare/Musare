@@ -641,7 +641,7 @@ export default {
 				}
 			}
 
-			label input[type="checkbox"]:checked + label span::after {
+			input[type="checkbox"]:checked + label span::after {
 				content: "";
 				width: 18px;
 				height: 18px;
