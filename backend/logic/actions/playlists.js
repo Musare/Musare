@@ -633,6 +633,34 @@ let lib = {
 		async.waterfall([
 			(next) => {
 				playlists.deletePlaylist(playlistId, next);
+			},
+
+			(next) => {
+				db.models.station.find({ privatePlaylist: playlistId }, next);
+			},
+
+			(stations, next) => {
+				async.each(
+					stations,
+					(station, next) => {
+						async.waterfall([
+							(next) => {
+								db.models.station.updateOne({_id: station._id}, {$set: {privatePlaylist: null}}, {runValidators: true}, next);
+							},
+
+							(res, next) => {
+								if (!station.partyMode) moduleManager.modules["stations"].updateStation(station._id, next);
+								else next();
+							}
+						], (err) => {
+							next();
+						}
+						);
+					},
+					(err) => {
+						next();
+					}
+				);
 			}
 		], async (err) => {
 			if (err) {
