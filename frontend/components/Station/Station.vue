@@ -921,47 +921,58 @@ export default {
 						this.privatePlaylistQueueSelected,
 						data => {
 							if (data.status === "success") {
-								if (data.song.duration < 15 * 60) {
-									this.automaticallyRequestedSongId =
-										data.song.songId;
-									this.socket.emit(
-										"stations.addToQueue",
-										this.station._id,
-										data.song.songId,
-										data2 => {
-											if (data2.status === "success") {
-												this.socket.emit(
-													"playlists.moveSongToBottom",
-													this
-														.privatePlaylistQueueSelected,
-													data.song.songId,
-													data3 => {
-														if (
-															data3.status ===
-															"success"
-														) {} // eslint-disable-line
-													}
-												);
+								if (data.song) {
+									if (data.song.duration < 15 * 60) {
+										this.automaticallyRequestedSongId =
+											data.song.songId;
+										this.socket.emit(
+											"stations.addToQueue",
+											this.station._id,
+											data.song.songId,
+											data2 => {
+												if (
+													data2.status === "success"
+												) {
+													this.socket.emit(
+														"playlists.moveSongToBottom",
+														this
+															.privatePlaylistQueueSelected,
+														data.song.songId,
+														data3 => {
+															if (
+																data3.status ===
+																"success"
+															) {} // eslint-disable-line
+														}
+													);
+												}
 											}
-										}
-									);
+										);
+									} else {
+										new Toast({
+											content: `Top song in playlist was too long to be added.`,
+											timeout: 3000
+										});
+										this.socket.emit(
+											"playlists.moveSongToBottom",
+											this.privatePlaylistQueueSelected,
+											data.song.songId,
+											data3 => {
+												if (
+													data3.status === "success"
+												) {
+													setTimeout(() => {
+														this.addFirstPrivatePlaylistSongToQueue();
+													}, 3000);
+												}
+											}
+										);
+									}
 								} else {
 									new Toast({
-										content: `Top song in playlist was too long to be added.`,
-										timeout: 3000
+										content: `Selected playlist has no songs.`,
+										timeout: 4000
 									});
-									this.socket.emit(
-										"playlists.moveSongToBottom",
-										this.privatePlaylistQueueSelected,
-										data.song.songId,
-										data3 => {
-											if (data3.status === "success") {
-												setTimeout(() => {
-													this.addFirstPrivatePlaylistSongToQueue();
-												}, 3000);
-											}
-										}
-									);
 								}
 							}
 						}
