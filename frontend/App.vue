@@ -2,7 +2,7 @@
 	<div>
 		<banned v-if="banned" />
 		<div v-else>
-			<router-view />
+			<router-view :key="$route.fullPath" />
 			<what-is-new />
 			<mobile-alert />
 			<login-modal v-if="modals.header.login" />
