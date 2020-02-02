@@ -477,7 +477,9 @@ export default {
 			currentSong: state => state.currentSong,
 			songsList: state => state.songsList,
 			paused: state => state.paused,
-			noSong: state => state.noSong
+			noSong: state => state.noSong,
+			privatePlaylistQueueSelected: state =>
+				state.privatePlaylistQueueSelected
 		}),
 		...mapState({
 			loggedIn: state => state.user.auth.loggedIn,
