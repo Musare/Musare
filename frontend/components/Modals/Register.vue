@@ -33,11 +33,13 @@
 						class="input"
 						type="email"
 						placeholder="Email..."
+						@blur="onInputBlur('email')"
 						autofocus
 					/>
 				</p>
 				<p
 					class="help"
+					v-if="email.entered"
 					:class="email.valid ? 'is-success' : 'is-danger'"
 				>
 					{{ email.message }}
@@ -50,10 +52,12 @@
 						class="input"
 						type="text"
 						placeholder="Username..."
+						@blur="onInputBlur('username')"
 					/>
 				</p>
 				<p
 					class="help"
+					v-if="username.entered"
 					:class="username.valid ? 'is-success' : 'is-danger'"
 				>
 					{{ username.message }}
@@ -66,11 +70,13 @@
 						class="input"
 						type="password"
 						placeholder="Password..."
+						@blur="onInputBlur('password')"
 						@keypress="$parent.submitOnEnter(submitModal, $event)"
 					/>
 				</p>
 				<p
 					class="help"
+					v-if="password.entered"
 					:class="password.valid ? 'is-success' : 'is-danger'"
 				>
 					{{ password.message }}
@@ -115,16 +121,19 @@ export default {
 			username: {
 				value: "",
 				valid: false,
+				entered: false,
 				message: "Please enter a valid username."
 			},
 			email: {
 				value: "",
 				valid: false,
+				entered: false,
 				message: "Please enter a valid email address."
 			},
 			password: {
 				value: "",
 				valid: false,
+				entered: false,
 				message: "Please enter a valid password."
 			},
 			recaptcha: {
@@ -233,6 +242,9 @@ export default {
 				.catch(
 					err => new Toast({ content: err.message, timeout: 5000 })
 				);
+		},
+		onInputBlur(inputName) {
+			this[inputName].entered = true;
 		},
 		githubRedirect() {
 			localStorage.setItem("github_redirect", this.$route.path);
