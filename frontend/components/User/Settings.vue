@@ -238,6 +238,7 @@ export default {
 	data() {
 		return {
 			user: {},
+			originalUser: {},
 			newPassword: "",
 			password: false,
 			github: false,
@@ -265,6 +266,7 @@ export default {
 			this.socket.emit("users.findBySession", res => {
 				if (res.status === "success") {
 					this.user = res.data;
+					this.originalUser = JSON.parse(JSON.stringify(this.user));
 					this.password = this.user.password;
 					this.github = this.user.github;
 				} else {
@@ -293,17 +295,19 @@ export default {
 			this.activeTab = tabName;
 		},
 		saveChangesToProfile() {
-			this.changeName();
-			this.changeLocation();
-			this.changeBio();
-			this.changeAvatarType();
+			if (this.user.name !== this.originalUser.name) this.changeName();
+			if (this.user.location !== this.originalUser.location)
+				this.changeLocation();
+			if (this.user.bio !== this.originalUser.bio) this.changeBio();
+			if (this.user.avatar.type !== this.originalUser.avatar.type)
+				this.changeAvatarType();
 		},
 		saveChangesToAccount() {
-			this.changeUsername();
-			this.changeEmail();
+			if (this.user.username !== this.originalUser.username) this.changeUsername();
+			if (this.user.email.address !== this.originalUser.email.address) this.changeEmail();
 		},
 		saveChangesPreferences() {
-			this.changeNightmodeLocal();
+			if (this.localNightmode !== this.nightmode) this.changeNightmodeLocal();
 		},
 		changeEmail() {
 			const email = this.user.email.address;
@@ -328,11 +332,13 @@ export default {
 				res => {
 					if (res.status !== "success")
 						new Toast({ content: res.message, timeout: 8000 });
-					else
+					else {
 						new Toast({
 							content: "Successfully changed email address",
 							timeout: 4000
 						});
+						this.originalUser.email.address = email;
+					}
 				}
 			);
 		},
@@ -357,11 +363,13 @@ export default {
 				res => {
 					if (res.status !== "success")
 						new Toast({ content: res.message, timeout: 8000 });
-					else
+					else {
 						new Toast({
 							content: "Successfully changed username",
 							timeout: 4000
 						});
+						this.originalUser.username = username;
+					}
 				}
 			);
 		},
@@ -380,11 +388,13 @@ export default {
 				res => {
 					if (res.status !== "success")
 						new Toast({ content: res.message, timeout: 8000 });
-					else
+					else {
 						new Toast({
 							content: "Successfully changed name",
 							timeout: 4000
 						});
+						this.originalUser.name = name;
+					}
 				}
 			);
 		},
@@ -403,11 +413,13 @@ export default {
 				res => {
 					if (res.status !== "success")
 						new Toast({ content: res.message, timeout: 8000 });
-					else
+					else {
 						new Toast({
 							content: "Successfully changed location",
 							timeout: 4000
 						});
+						this.originalUser.location = location;
+					}
 				}
 			);
 		},
@@ -426,11 +438,13 @@ export default {
 				res => {
 					if (res.status !== "success")
 						new Toast({ content: res.message, timeout: 8000 });
-					else
+					else {
 						new Toast({
 							content: "Successfully changed bio",
 							timeout: 4000
 						});
+						this.originalUser.bio = bio;
+					}
 				}
 			);
 		},
@@ -442,7 +456,15 @@ export default {
 				this.userId,
 				type,
 				res => {
-					new Toast({ content: res.message, timeout: 8000 });
+					if (res.status !== "success")
+						new Toast({ content: res.message, timeout: 8000 });
+					else {
+						new Toast({
+							content: "Successfully updated avatar type",
+							timeout: 4000
+						});
+						this.originalUser.avatar.type = type;
+					}
 				}
 			);
 		},
