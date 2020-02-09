@@ -649,8 +649,10 @@ let lib = {
 							},
 
 							(res, next) => {
-								if (!station.partyMode) moduleManager.modules["stations"].updateStation(station._id, next);
-								else next();
+								if (!station.partyMode) {
+									moduleManager.modules["stations"].updateStation(station._id, next);
+									cache.pub('privatePlaylist.selected', { playlistId: null, stationId: station._id });
+								} else next();
 							}
 						], (err) => {
 							next();
