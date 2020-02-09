@@ -3,31 +3,31 @@
 		<metadata title="Settings" />
 		<main-header />
 		<div class="container">
-			<div class="buttons">
-				<button
+			<div class="nav-links">
+				<router-link
 					:class="{ active: activeTab === 'profile' }"
-					@click="switchTab('profile')"
+					to="#profile"
 				>
 					Profile
-				</button>
-				<button
+				</router-link>
+				<router-link
 					:class="{ active: activeTab === 'account' }"
-					@click="switchTab('account')"
+					to="#account"
 				>
 					Account
-				</button>
-				<button
+				</router-link>
+				<router-link
 					:class="{ active: activeTab === 'security' }"
-					@click="switchTab('security')"
+					to="#security"
 				>
 					Security
-				</button>
-				<button
+				</router-link>
+				<router-link
 					:class="{ active: activeTab === 'preferences' }"
-					@click="switchTab('preferences')"
+					to="#preferences"
 				>
 					Preferences
-				</button>
+				</router-link>
 			</div>
 			<div class="content profile-tab" v-if="activeTab === 'profile'">
 				<p class="control is-expanded">
@@ -93,6 +93,7 @@
 						id="email"
 						type="text"
 						placeholder="Email"
+						v-if="user.email"
 						v-model="user.email.address"
 					/>
 				</p>
@@ -246,7 +247,7 @@ export default {
 			passwordStep: 1,
 			passwordCode: "",
 			serverDomain: "",
-			activeTab: "profile",
+			activeTab: "",
 			localNightmode: false
 		};
 	},
@@ -255,45 +256,52 @@ export default {
 		nightmode: state => state.user.preferences.nightmode
 	}),
 	mounted() {
-		this.localNightmode = this.nightmode;
+		if (this.$route.hash === "") {
+			this.$router.push("#profile");
+		} else {
+			this.activeTab = this.$route.hash.replace("#", "");
+			this.localNightmode = this.nightmode;
 
-		lofig.get("serverDomain").then(serverDomain => {
-			this.serverDomain = serverDomain;
-		});
+			lofig.get("serverDomain").then(serverDomain => {
+				this.serverDomain = serverDomain;
+			});
 
-		io.getSocket(socket => {
-			this.socket = socket;
-			this.socket.emit("users.findBySession", res => {
-				if (res.status === "success") {
-					this.user = res.data;
-					this.originalUser = JSON.parse(JSON.stringify(this.user));
-					this.password = this.user.password;
-					this.github = this.user.github;
-				} else {
-					new Toast({
-						content: "Your are currently not signed in",
-						timeout: 3000
-					});
-				}
+			io.getSocket(socket => {
+				this.socket = socket;
+				this.socket.emit("users.findBySession", res => {
+					if (res.status === "success") {
+						this.user = res.data;
+						this.originalUser = JSON.parse(
+							JSON.stringify(this.user)
+						);
+						this.password = this.user.password;
+						this.github = this.user.github;
+					} else {
+						new Toast({
+							content: "Your are currently not signed in",
+							timeout: 3000
+						});
+					}
+				});
+				this.socket.on("event:user.linkPassword", () => {
+					this.password = true;
+				});
+				this.socket.on("event:user.linkGitHub", () => {
+					this.github = true;
+				});
+				this.socket.on("event:user.unlinkPassword", () => {
+					this.password = false;
+				});
+				this.socket.on("event:user.unlinkGitHub", () => {
+					this.github = false;
+				});
 			});
-			this.socket.on("event:user.linkPassword", () => {
-				this.password = true;
-			});
-			this.socket.on("event:user.linkGitHub", () => {
-				this.github = true;
-			});
-			this.socket.on("event:user.unlinkPassword", () => {
-				this.password = false;
-			});
-			this.socket.on("event:user.unlinkGitHub", () => {
-				this.github = false;
-			});
-		});
+		}
 	},
 	methods: {
-		switchTab(tabName) {
-			this.activeTab = tabName;
-		},
+		// switchTab(tabName) {
+		// 	this.activeTab = tabName;
+		// },
 		saveChangesToProfile() {
 			if (this.user.name !== this.originalUser.name) this.changeName();
 			if (this.user.location !== this.originalUser.location)
@@ -582,12 +590,12 @@ export default {
 	padding: 24px;
 	display: flex;
 
-	.buttons {
+	.nav-links {
 		height: 100%;
 		width: 250px;
 		margin-right: 64px;
 
-		button {
+		a {
 			outline: none;
 			border: none;
 			box-shadow: none;
@@ -600,6 +608,7 @@ export default {
 			cursor: pointer;
 			border-radius: 5px;
 			background-color: transparent;
+			display: inline-block;
 
 			&.active {
 				color: $white;
