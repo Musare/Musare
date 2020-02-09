@@ -4,154 +4,171 @@
 		<edit-playlist v-if="modals.editPlaylist" />
 		<create-playlist v-if="modals.createPlaylist" />
 		<main-header />
-		<div class="info-section">
-			<div class="picture-name-row">
-				<img
-					class="profile-picture"
-					:src="
-						user.avatar.url && user.avatar.type === 'gravatar'
-							? `${user.avatar.url}?d=${notes}&s=250`
-							: '/assets/notes.png'
-					"
-					onerror="this.src='/assets/notes.png'; this.onerror=''"
-				/>
-				<div>
-					<div class="name-role-row">
-						<p class="name">{{ user.name }}</p>
-						<span class="role admin" v-if="user.role === 'admin'"
-							>admin</span
-						>
-					</div>
-					<p class="username">@{{ user.username }}</p>
-				</div>
-			</div>
-			<div class="buttons" v-if="userId === user._id || role === 'admin'">
-				<router-link
-					:to="`/admin/users?userId=${user._id}`"
-					class="button is-primary"
-					v-if="role === 'admin'"
-				>
-					Edit
-				</router-link>
-				<router-link
-					to="/settings"
-					class="button is-primary"
-					v-if="userId === user._id"
-				>
-					Settings
-				</router-link>
-			</div>
-			<div class="bio-row" v-if="user.bio">
-				<i class="material-icons">notes</i>
-				<p>{{ user.bio }}</p>
-			</div>
-			<div
-				class="date-location-row"
-				v-if="user.createdAt || user.location"
-			>
-				<div class="date" v-if="user.createdAt">
-					<i class="material-icons">calendar_today</i>
-					<p>{{ user.createdAt }}</p>
-				</div>
-				<div class="location" v-if="user.location">
-					<i class="material-icons">location_on</i>
-					<p>{{ user.location }}</p>
-				</div>
-			</div>
-		</div>
-		<div class="bottom-section">
-			<div class="buttons">
-				<button
-					:class="{ active: activeTab === 'recentActivity' }"
-					@click="switchTab('recentActivity')"
-				>
-					Recent activity
-				</button>
-				<button
-					:class="{ active: activeTab === 'playlists' }"
-					@click="switchTab('playlists')"
-					v-if="user._id === userId"
-				>
-					Playlists
-				</button>
-			</div>
-			<div
-				class="content recent-activity-tab"
-				v-if="activeTab === 'recentActivity'"
-			>
-				<div v-if="activities.length > 0">
-					<div
-						class="item activity"
-						v-for="activity in sortedActivities"
-						:key="activity._id"
-					>
-						<div class="thumbnail">
-							<img :src="activity.thumbnail" alt="" />
-							<i class="material-icons activity-type-icon">{{
-								activity.icon
-							}}</i>
+		<div class="container">
+			<div class="info-section">
+				<div class="picture-name-row">
+					<img
+						class="profile-picture"
+						:src="
+							user.avatar.url && user.avatar.type === 'gravatar'
+								? `${user.avatar.url}?d=${notes}&s=250`
+								: '/assets/notes.png'
+						"
+						onerror="this.src='/assets/notes.png'; this.onerror=''"
+					/>
+					<div>
+						<div class="name-role-row">
+							<p class="name">{{ user.name }}</p>
+							<span
+								class="role admin"
+								v-if="user.role === 'admin'"
+								>admin</span
+							>
 						</div>
+						<p class="username">@{{ user.username }}</p>
+					</div>
+				</div>
+				<div
+					class="buttons"
+					v-if="userId === user._id || role === 'admin'"
+				>
+					<router-link
+						:to="`/admin/users?userId=${user._id}`"
+						class="button is-primary"
+						v-if="role === 'admin'"
+					>
+						Edit
+					</router-link>
+					<router-link
+						to="/settings"
+						class="button is-primary"
+						v-if="userId === user._id"
+					>
+						Settings
+					</router-link>
+				</div>
+				<div class="bio-row" v-if="user.bio">
+					<i class="material-icons">notes</i>
+					<p>{{ user.bio }}</p>
+				</div>
+				<div
+					class="date-location-row"
+					v-if="user.createdAt || user.location"
+				>
+					<div class="date" v-if="user.createdAt">
+						<i class="material-icons">calendar_today</i>
+						<p>{{ user.createdAt }}</p>
+					</div>
+					<div class="location" v-if="user.location">
+						<i class="material-icons">location_on</i>
+						<p>{{ user.location }}</p>
+					</div>
+				</div>
+			</div>
+			<div class="bottom-section">
+				<div class="buttons">
+					<button
+						:class="{ active: activeTab === 'recentActivity' }"
+						@click="switchTab('recentActivity')"
+					>
+						Recent activity
+					</button>
+					<button
+						:class="{ active: activeTab === 'playlists' }"
+						@click="switchTab('playlists')"
+						v-if="user._id === userId"
+					>
+						Playlists
+					</button>
+				</div>
+				<div
+					class="content recent-activity-tab"
+					v-if="activeTab === 'recentActivity'"
+				>
+					<div v-if="activities.length > 0">
+						<div
+							class="item activity"
+							v-for="activity in sortedActivities"
+							:key="activity._id"
+						>
+							<div class="thumbnail">
+								<img :src="activity.thumbnail" alt="" />
+								<i class="material-icons activity-type-icon">{{
+									activity.icon
+								}}</i>
+							</div>
+							<div class="left-part">
+								<p
+									class="top-text"
+									v-html="activity.message"
+								></p>
+								<p class="bottom-text">
+									{{
+										formatDistance(
+											parseISO(activity.createdAt),
+											new Date(),
+											{ addSuffix: true }
+										)
+									}}
+								</p>
+							</div>
+							<div class="actions">
+								<a
+									class="hide-icon"
+									href="#"
+									@click="hideActivity(activity._id)"
+								>
+									<i class="material-icons">visibility_off</i>
+								</a>
+							</div>
+						</div>
+					</div>
+					<div v-else>
+						<h2>No recent activity.</h2>
+					</div>
+				</div>
+				<div
+					class="content playlists-tab"
+					v-if="activeTab === 'playlists'"
+				>
+					<div
+						class="item playlist"
+						v-for="playlist in playlists"
+						:key="playlist._id"
+					>
 						<div class="left-part">
-							<p class="top-text" v-html="activity.message"></p>
+							<p class="top-text">{{ playlist.displayName }}</p>
 							<p class="bottom-text">
+								{{ totalLength(playlist) }} •
+								{{ playlist.songs.length }}
 								{{
-									formatDistance(
-										parseISO(activity.createdAt),
-										new Date(),
-										{ addSuffix: true }
-									)
+									playlist.songs.length === 1
+										? "song"
+										: "songs"
 								}}
 							</p>
 						</div>
 						<div class="actions">
-							<a
-								class="hide-icon"
-								href="#"
-								@click="hideActivity(activity._id)"
+							<button
+								class="button is-primary"
+								@click="editPlaylistClick(playlist._id)"
 							>
-								<i class="material-icons">visibility_off</i>
-							</a>
+								Edit
+							</button>
 						</div>
 					</div>
+					<button
+						class="button is-primary"
+						@click="
+							openModal({
+								sector: 'station',
+								modal: 'createPlaylist'
+							})
+						"
+					>
+						Create new playlist
+					</button>
 				</div>
-				<div v-else>
-					<h2>No recent activity.</h2>
-				</div>
-			</div>
-			<div class="content playlists-tab" v-if="activeTab === 'playlists'">
-				<div
-					class="item playlist"
-					v-for="playlist in playlists"
-					:key="playlist._id"
-				>
-					<div class="left-part">
-						<p class="top-text">{{ playlist.displayName }}</p>
-						<p class="bottom-text">
-							{{ totalLength(playlist) }} •
-							{{ playlist.songs.length }}
-							{{ playlist.songs.length === 1 ? "song" : "songs" }}
-						</p>
-					</div>
-					<div class="actions">
-						<button
-							class="button is-primary"
-							@click="editPlaylistClick(playlist._id)"
-						>
-							Edit
-						</button>
-					</div>
-				</div>
-				<button
-					class="button is-primary"
-					@click="
-						openModal({
-							sector: 'station',
-							modal: 'createPlaylist'
-						})
-					"
-				>
-					Create new playlist
-				</button>
 			</div>
 		</div>
 		<main-footer />
