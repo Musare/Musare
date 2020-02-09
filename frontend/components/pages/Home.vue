@@ -115,6 +115,7 @@
 						<span v-else class="songTitle">No song</span>
 					</div>
 				</router-link>
+				<h4 v-if="stations.length === 0">There are no stations to display</h4>
 			</div>
 			<main-footer />
 		</div>
