@@ -34,13 +34,9 @@
 			<p v-if="noSong" class="center">
 				There is currently no song playing.
 			</p>
+			<hr v-if="noSong" />
 
-			<article
-				v-else
-				v-for="song in songsList"
-				:key="song.songId"
-				class="media"
-			>
+			<article v-for="song in songsList" :key="song.songId" class="media">
 				<div class="media-content">
 					<div
 						class="content"

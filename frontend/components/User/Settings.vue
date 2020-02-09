@@ -303,11 +303,14 @@ export default {
 				this.changeAvatarType();
 		},
 		saveChangesToAccount() {
-			if (this.user.username !== this.originalUser.username) this.changeUsername();
-			if (this.user.email.address !== this.originalUser.email.address) this.changeEmail();
+			if (this.user.username !== this.originalUser.username)
+				this.changeUsername();
+			if (this.user.email.address !== this.originalUser.email.address)
+				this.changeEmail();
 		},
 		saveChangesPreferences() {
-			if (this.localNightmode !== this.nightmode) this.changeNightmodeLocal();
+			if (this.localNightmode !== this.nightmode)
+				this.changeNightmodeLocal();
 		},
 		changeEmail() {
 			const email = this.user.email.address;
