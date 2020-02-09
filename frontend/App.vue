@@ -1,8 +1,8 @@
 <template>
-	<div>
+	<div class="upper-container">
 		<banned v-if="banned" />
-		<div v-else>
-			<router-view :key="$route.fullPath" />
+		<div v-else class="upper-container">
+			<router-view :key="$route.fullPath" class="main-container" />
 			<what-is-new />
 			<mobile-alert />
 			<login-modal v-if="modals.header.login" />
@@ -208,12 +208,28 @@ body.night-mode {
 
 html {
 	overflow: auto !important;
+	height: 100%;
 }
 
 body {
 	background-color: $light-grey;
 	color: $dark-grey;
 	font-family: "Roboto", Helvetica, Arial, sans-serif;
+	height: 100%;
+}
+
+.upper-container {
+	height: 100%;
+}
+
+.main-container {
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+
+	> .container {
+		flex: 1 0 auto;
+	}
 }
 
 a {

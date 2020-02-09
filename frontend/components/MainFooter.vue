@@ -107,10 +107,7 @@ export default {
 }
 
 .footer {
-	position: absolute;
-	right: 0;
-	bottom: 0;
-	left: 0;
+	flex-shrink: 0;
 	height: 240px;
 	padding: 40px 20px 40px;
 	border-radius: 33% 33% 0% 0% / 7% 7% 0% 0%;

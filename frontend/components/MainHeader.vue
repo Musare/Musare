@@ -121,6 +121,7 @@ export default {
 }
 
 .nav {
+	flex-shrink: 0;
 	background-color: $primary-color;
 	height: 64px;
 	border-radius: 0% 0% 33% 33% / 0% 0% 7% 7%;
