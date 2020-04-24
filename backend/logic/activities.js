@@ -1,63 +1,68 @@
-'use strict';
+const CoreClass = require("../core.js");
 
-const coreClass = require("../core");
+class ActivitiesModule extends CoreClass {
+    constructor() {
+        super("activities");
+    }
 
-const async = require('async');
-const mongoose = require('mongoose');
+    initialize() {
+        return new Promise((resolve, reject) => {
+            this.db = this.moduleManager.modules["db"];
+            this.io = this.moduleManager.modules["io"];
+            this.utils = this.moduleManager.modules["utils"];
 
-module.exports = class extends coreClass {
-	constructor(name, moduleManager) {
-		super(name, moduleManager);
+            resolve();
+        });
+    }
 
-		this.dependsOn = ["db", "utils"];
-	}
+    // TODO: Migrate
+    ADD_ACTIVITY(payload) {
+        //userId, activityType, payload
+        return new Promise((resolve, reject) => {
+            async.waterfall(
+                [
+                    (next) => {
+                        this.db
+                            .runJob("GET_MODEL", { modelName: "activity" })
+                            .then((res) => {
+                                next(null, res);
+                            })
+                            .catch(next);
+                    },
+                    (activityModel, next) => {
+                        const activity = new activityModel({
+                            userId: payload.userId,
+                            activityType: payload.activityType,
+                            payload: payload.payload,
+                        });
 
-	initialize() {
-		return new Promise((resolve, reject) => {
-			this.setStage(1);
+                        activity.save((err, activity) => {
+                            if (err) return next(err);
+                            next(null, activity);
+                        });
+                    },
 
-			this.db = this.moduleManager.modules["db"];
-			this.io = this.moduleManager.modules["io"];
-			this.utils = this.moduleManager.modules["utils"];
-
-			resolve();
-		});
-	}
-
-	/**
-	 * 
-	 * @param {String} userId - the id of the user 
-	 * @param {String} activityType - what type of activity the user has completed e.g. liked a song
-	 * @param {Array} payload - what the activity was specifically related to e.g. the liked song(s)
-	 */
-	async addActivity(userId, activityType, payload) {
-		try { await this._validateHook(); } catch { return; }
-
-		async.waterfall([
-
-			next => {
-				const activity = new this.db.models.activity({
-					userId,
-					activityType,
-					payload
-				});
-
-				activity.save((err, activity) => {
-					if (err) return next(err);
-					next(null, activity);
-				});
-			},
-
-			(activity, next) => {
-				this.utils.socketsFromUser(activity.userId, sockets => {
-					sockets.forEach(socket => {
-						socket.emit('event:activity.create', activity);
-					});
-				});
-			}
-
-		], (err, activity) => {
-			// cb(err, activity);
-		});
-	}
+                    (activity, next) => {
+                        this.utils
+                            .runJob("SOCKETS_FROM_USER", {
+                                userId: activity.userId,
+                            })
+                            .then((sockets) =>
+                                sockets.forEach((socket) => {
+                                    socket.emit(
+                                        "event:activity.create",
+                                        activity
+                                    );
+                                })
+                            );
+                    },
+                ],
+                (err, activity) => {
+                    // cb(err, activity);
+                }
+            );
+        });
+    }
 }
+
+module.exports = new ActivitiesModule();

@@ -1,218 +1,377 @@
-'use strict';
-
-// This file contains all the logic for Socket.IO
-
-const coreClass = require("../core");
+const CoreClass = require("../core.js");
 
 const socketio = require("socket.io");
 const async = require("async");
 const config = require("config");
 
-module.exports = class extends coreClass {
-	constructor(name, moduleManager) {
-		super(name, moduleManager);
+class IOModule extends CoreClass {
+    constructor() {
+        super("io");
+    }
 
-		this.dependsOn = ["app", "db", "cache", "utils"];
-	}
+    initialize() {
+        return new Promise(async (resolve, reject) => {
+            this.setStage(1);
 
-	initialize() {
-		return new Promise(resolve => {
-			this.setStage(1);
+            const app = this.moduleManager.modules["app"],
+                cache = this.moduleManager.modules["cache"],
+                utils = this.moduleManager.modules["utils"],
+                db = this.moduleManager.modules["db"],
+                punishments = this.moduleManager.modules["punishments"];
 
-			const 	logger		= this.logger,
-					app			= this.moduleManager.modules["app"],
-					cache		= this.moduleManager.modules["cache"],
-					utils		= this.moduleManager.modules["utils"],
-					db			= this.moduleManager.modules["db"],
-					punishments	= this.moduleManager.modules["punishments"];
-			
-			const actions = require('../logic/actions');
+            const actions = require("./actions");
 
-			const SIDname = config.get("cookie.SIDname");
+            this.setStage(2);
 
-			// TODO: Check every 30s/60s, for all sockets, if they are still allowed to be in the rooms they are in, and on socket at all (permission changing/banning)
-			this._io = socketio(app.server);
+            const SIDname = config.get("cookie.SIDname");
 
-			this._io.use(async (socket, next) => {
-				try { await this._validateHook(); } catch { return; }
+            // TODO: Check every 30s/60s, for all sockets, if they are still allowed to be in the rooms they are in, and on socket at all (permission changing/banning)
+            this._io = socketio(await app.runJob("SERVER", {}));
 
-				let SID;
+            this.setStage(3);
 
-				socket.ip = socket.request.headers['x-forwarded-for'] || '0.0.0.0';
+            this._io.use(async (socket, next) => {
+                if (this.getStatus() !== "READY") {
+                    this.log(
+                        "INFO",
+                        "IO_REJECTED_CONNECTION",
+                        `A user tried to connect, but the IO module is currently not ready. IP: ${socket.ip}.${sessionInfo}`
+                    );
+                    return socket.disconnect(true);
+                }
 
-				async.waterfall([
-					(next) => {
-						utils.parseCookies(
-							socket.request.headers.cookie
-						).then(res => {
-							SID = res[SIDname];
-							next(null);
-						});
-					},
+                let SID;
 
-					(next) => {
-						if (!SID) return next('No SID.');
-						next();
-					},
+                socket.ip =
+                    socket.request.headers["x-forwarded-for"] || "0.0.0.0";
 
-					(next) => {
-						cache.hget('sessions', SID, next);
-					},
+                async.waterfall(
+                    [
+                        (next) => {
+                            utils
+                                .runJob("PARSE_COOKIES", {
+                                    cookieString: socket.request.headers.cookie,
+                                })
+                                .then((res) => {
+                                    SID = res[SIDname];
+                                    next(null);
+                                });
+                        },
 
-					(session, next) => {
-						if (!session) return next('No session found.');
+                        (next) => {
+                            if (!SID) return next("No SID.");
+                            next();
+                        },
 
-						session.refreshDate = Date.now();
-						
-						socket.session = session;
-						cache.hset('sessions', SID, session, next);
-					},
+                        (next) => {
+                            cache
+                                .runJob("HGET", { table: "sessions", key: SID })
+                                .then((session) => {
+                                    next(null, session);
+                                });
+                        },
 
-					(res, next) => {
-						// check if a session's user / IP is banned
-						punishments.getPunishments((err, punishments) => {
-							const isLoggedIn = !!(socket.session && socket.session.refreshDate);
-							const userId = (isLoggedIn) ? socket.session.userId : null;
+                        (session, next) => {
+                            if (!session) return next("No session found.");
 
-							let banishment = { banned: false, ban: 0 };
+                            session.refreshDate = Date.now();
 
-							punishments.forEach(punishment => {
-								if (punishment.expiresAt > banishment.ban) banishment.ban = punishment;
-								if (punishment.type === 'banUserId' && isLoggedIn && punishment.value === userId) banishment.banned = true;
-								if (punishment.type === 'banUserIp' && punishment.value === socket.ip) banishment.banned = true;
-							});
-							
-							socket.banishment = banishment;
+                            socket.session = session;
+                            cache
+                                .runJob("HSET", {
+                                    table: "sessions",
+                                    key: SID,
+                                    value: session,
+                                })
+                                .then((session) => {
+                                    next(null, session);
+                                });
+                        },
 
-							next();
-						});
-					}
-				], () => {
-					if (!socket.session) socket.session = { socketId: socket.id };
-					else socket.session.socketId = socket.id;
+                        (res, next) => {
+                            // check if a session's user / IP is banned
+                            punishments
+                                .runJob("GET_PUNISHMENTS", {})
+                                .then((punishments) => {
+                                    const isLoggedIn = !!(
+                                        socket.session &&
+                                        socket.session.refreshDate
+                                    );
+                                    const userId = isLoggedIn
+                                        ? socket.session.userId
+                                        : null;
 
-					next();
-				});
-			});
+                                    let banishment = { banned: false, ban: 0 };
 
-			this._io.on('connection', async socket => {
-				try { await this._validateHook(); } catch { return; }
+                                    punishments.forEach((punishment) => {
+                                        if (
+                                            punishment.expiresAt >
+                                            banishment.ban
+                                        )
+                                            banishment.ban = punishment;
+                                        if (
+                                            punishment.type === "banUserId" &&
+                                            isLoggedIn &&
+                                            punishment.value === userId
+                                        )
+                                            banishment.banned = true;
+                                        if (
+                                            punishment.type === "banUserIp" &&
+                                            punishment.value === socket.ip
+                                        )
+                                            banishment.banned = true;
+                                    });
 
-				let sessionInfo = '';
-				
-				if (socket.session.sessionId) sessionInfo = ` UserID: ${socket.session.userId}.`;
+                                    socket.banishment = banishment;
 
-				// if session is banned
-				if (socket.banishment && socket.banishment.banned) {
-					logger.info('IO_BANNED_CONNECTION', `A user tried to connect, but is currently banned. IP: ${socket.ip}.${sessionInfo}`);
-					socket.emit('keep.event:banned', socket.banishment.ban);
-					socket.disconnect(true);
-				} else {
-					logger.info('IO_CONNECTION', `User connected. IP: ${socket.ip}.${sessionInfo}`);
+                                    next();
+                                })
+                                .catch(() => {
+                                    next();
+                                });
+                        },
+                    ],
+                    () => {
+                        if (!socket.session)
+                            socket.session = { socketId: socket.id };
+                        else socket.session.socketId = socket.id;
 
-					// catch when the socket has been disconnected
-					socket.on('disconnect', () => {
-						if (socket.session.sessionId) sessionInfo = ` UserID: ${socket.session.userId}.`;
-						logger.info('IO_DISCONNECTION', `User disconnected. IP: ${socket.ip}.${sessionInfo}`);
-					});
+                        next();
+                    }
+                );
+            });
 
-					socket.use((data, next) => {
-						if (data.length === 0) return next(new Error("Not enough arguments specified."));
-						else if (typeof data[0] !== "string") return next(new Error("First argument must be a string."));
-						else {
-							const namespaceAction = data[0];
-							if (!namespaceAction || namespaceAction.indexOf(".") === -1 || namespaceAction.indexOf(".") !== namespaceAction.lastIndexOf(".")) return next(new Error("Invalid first argument"));
-							const namespace = data[0].split(".")[0];
-							const action = data[0].split(".")[1];
-							if (!namespace) return next(new Error("Invalid namespace."));
-							else if (!action) return next(new Error("Invalid action."));
-							else if (!actions[namespace]) return next(new Error("Namespace not found."));
-							else if (!actions[namespace][action]) return next(new Error("Action not found."));
-							else return next();
-						}
-					});
+            this.setStage(4);
 
-					// catch errors on the socket (internal to socket.io)
-					socket.on('error', console.error);
+            this._io.on("connection", async (socket) => {
+                if (this.getStatus() !== "READY") {
+                    this.log(
+                        "INFO",
+                        "IO_REJECTED_CONNECTION",
+                        `A user tried to connect, but the IO module is currently not ready. IP: ${socket.ip}.${sessionInfo}`
+                    );
+                    return socket.disconnect(true);
+                }
 
-					// have the socket listen for each action
-					Object.keys(actions).forEach(namespace => {
-						Object.keys(actions[namespace]).forEach(action => {
+                let sessionInfo = "";
 
-							// the full name of the action
-							let name = `${namespace}.${action}`;
+                if (socket.session.sessionId)
+                    sessionInfo = ` UserID: ${socket.session.userId}.`;
 
-							// listen for this action to be called
-							socket.on(name, async (...args) => {
-								let cb = args[args.length - 1];
-								if (typeof cb !== "function")
-									cb = () => {
-										this.logger.info("IO_MODULE", `There was no callback provided for ${name}.`);
-									}
-								else args.pop();
+                // if session is banned
+                if (socket.banishment && socket.banishment.banned) {
+                    this.log(
+                        "INFO",
+                        "IO_BANNED_CONNECTION",
+                        `A user tried to connect, but is currently banned. IP: ${socket.ip}.${sessionInfo}`
+                    );
+                    socket.emit("keep.event:banned", socket.banishment.ban);
+                    socket.disconnect(true);
+                } else {
+                    this.log(
+                        "INFO",
+                        "IO_CONNECTION",
+                        `User connected. IP: ${socket.ip}.${sessionInfo}`
+                    );
 
-								try { await this._validateHook(); } catch { return cb({status: 'failure', message: 'Lockdown'}); } 
+                    // catch when the socket has been disconnected
+                    socket.on("disconnect", () => {
+                        if (socket.session.sessionId)
+                            sessionInfo = ` UserID: ${socket.session.userId}.`;
+                        this.log(
+                            "INFO",
+                            "IO_DISCONNECTION",
+                            `User disconnected. IP: ${socket.ip}.${sessionInfo}`
+                        );
+                    });
 
-								// load the session from the cache
-								cache.hget('sessions', socket.session.sessionId, (err, session) => {
-									if (err && err !== true) {
-										if (typeof cb === 'function') return cb({
-											status: 'error',
-											message: 'An error occurred while obtaining your session'
-										});
-									}
+                    socket.use((data, next) => {
+                        if (data.length === 0)
+                            return next(
+                                new Error("Not enough arguments specified.")
+                            );
+                        else if (typeof data[0] !== "string")
+                            return next(
+                                new Error("First argument must be a string.")
+                            );
+                        else {
+                            const namespaceAction = data[0];
+                            if (
+                                !namespaceAction ||
+                                namespaceAction.indexOf(".") === -1 ||
+                                namespaceAction.indexOf(".") !==
+                                    namespaceAction.lastIndexOf(".")
+                            )
+                                return next(
+                                    new Error("Invalid first argument")
+                                );
+                            const namespace = data[0].split(".")[0];
+                            const action = data[0].split(".")[1];
+                            if (!namespace)
+                                return next(new Error("Invalid namespace."));
+                            else if (!action)
+                                return next(new Error("Invalid action."));
+                            else if (!actions[namespace])
+                                return next(new Error("Namespace not found."));
+                            else if (!actions[namespace][action])
+                                return next(new Error("Action not found."));
+                            else return next();
+                        }
+                    });
 
-									// make sure the sockets sessionId isn't set if there is no session
-									if (socket.session.sessionId && session === null) delete socket.session.sessionId;
+                    // catch errors on the socket (internal to socket.io)
+                    socket.on("error", console.error);
 
-									try {
-										// call the action, passing it the session, and the arguments socket.io passed us
-										actions[namespace][action].apply(null, [socket.session].concat(args).concat([
-											(result) => {
-												// respond to the socket with our message
-												if (typeof cb === 'function') return cb(result);
-											}
-										]));
-									} catch(err) {
-										this.logger.error("IO_ACTION_ERROR", `Some type of exception occurred in the action ${namespace}.${action}. Error message: ${err.message}`);
-										if (typeof cb === 'function') return cb({
-											status: "error",
-											message: "An error occurred while executing the specified action."
-										});
-									}
-								});
-							})
-						})
-					});
+                    // have the socket listen for each action
+                    Object.keys(actions).forEach((namespace) => {
+                        Object.keys(actions[namespace]).forEach((action) => {
+                            // the full name of the action
+                            let name = `${namespace}.${action}`;
 
-					if (socket.session.sessionId) {
-						cache.hget('sessions', socket.session.sessionId, (err, session) => {
-							if (err && err !== true) socket.emit('ready', false);
-							else if (session && session.userId) {
-								db.models.user.findOne({ _id: session.userId }, (err, user) => {
-									if (err || !user) return socket.emit('ready', false);
-									let role = '';
-									let username = '';
-									let userId = '';
-									if (user) {
-										role = user.role;
-										username = user.username;
-										userId = session.userId;
-									}
-									socket.emit('ready', true, role, username, userId);
-								});
-							} else socket.emit('ready', false);
-						})
-					} else socket.emit('ready', false);
-				}
-			});
+                            // listen for this action to be called
+                            socket.on(name, async (...args) => {
+                                let cb = args[args.length - 1];
+                                if (typeof cb !== "function")
+                                    cb = () => {
+                                        this.this.log(
+                                            "INFO",
+                                            "IO_MODULE",
+                                            `There was no callback provided for ${name}.`
+                                        );
+                                    };
+                                else args.pop();
 
-			resolve();
-		});
-	}
+                                if (this.getStatus() !== "READY") {
+                                    this.log(
+                                        "INFO",
+                                        "IO_REJECTED_ACTION",
+                                        `A user tried to execute an action, but the IO module is currently not ready. Action: ${namespace}.${action}.`
+                                    );
+                                    return;
+                                } else {
+                                    this.log(
+                                        "INFO",
+                                        "IO_ACTION",
+                                        `A user executed an action. Action: ${namespace}.${action}.`
+                                    );
+                                }
 
-	async io () {
-		try { await this._validateHook(); } catch { return; }
-		return this._io;
-	}
+                                // load the session from the cache
+                                cache
+                                    .runJob("HGET", {
+                                        table: "sessions",
+                                        key: socket.session.sessionId,
+                                    })
+                                    .then((session) => {
+                                        // make sure the sockets sessionId isn't set if there is no session
+                                        if (
+                                            socket.session.sessionId &&
+                                            session === null
+                                        )
+                                            delete socket.session.sessionId;
+
+                                        try {
+                                            // call the action, passing it the session, and the arguments socket.io passed us
+                                            actions[namespace][action].apply(
+                                                null,
+                                                [socket.session]
+                                                    .concat(args)
+                                                    .concat([
+                                                        (result) => {
+                                                            // respond to the socket with our message
+                                                            if (
+                                                                typeof cb ===
+                                                                "function"
+                                                            )
+                                                                return cb(
+                                                                    result
+                                                                );
+                                                        },
+                                                    ])
+                                            );
+                                        } catch (err) {
+                                            this.log(
+                                                "ERROR",
+                                                "IO_ACTION_ERROR",
+                                                `Some type of exception occurred in the action ${namespace}.${action}. Error message: ${err.message}`
+                                            );
+                                            if (typeof cb === "function")
+                                                return cb({
+                                                    status: "error",
+                                                    message:
+                                                        "An error occurred while executing the specified action.",
+                                                });
+                                        }
+                                    })
+                                    .catch((err) => {
+                                        if (typeof cb === "function")
+                                            return cb({
+                                                status: "error",
+                                                message:
+                                                    "An error occurred while obtaining your session",
+                                            });
+                                    });
+                            });
+                        });
+                    });
+
+                    if (socket.session.sessionId) {
+                        cache
+                            .runJob("HGET", {
+                                table: "sessions",
+                                key: socket.session.sessionId,
+                            })
+                            .then((session) => {
+                                if (session && session.userId) {
+                                    db.runJob("GET_MODEL", {
+                                        modelName: "user",
+                                    }).then((userModel) => {
+                                        userModel.findOne(
+                                            { _id: session.userId },
+                                            (err, user) => {
+                                                if (err || !user)
+                                                    return socket.emit(
+                                                        "ready",
+                                                        false
+                                                    );
+                                                let role = "";
+                                                let username = "";
+                                                let userId = "";
+                                                if (user) {
+                                                    role = user.role;
+                                                    username = user.username;
+                                                    userId = session.userId;
+                                                }
+                                                socket.emit(
+                                                    "ready",
+                                                    true,
+                                                    role,
+                                                    username,
+                                                    userId
+                                                );
+                                            }
+                                        );
+                                    });
+                                } else socket.emit("ready", false);
+                            })
+                            .catch((err) => {
+                                socket.emit("ready", false);
+                            });
+                    } else socket.emit("ready", false);
+                }
+            });
+
+            this.setStage(5);
+
+            resolve();
+        });
+    }
+
+    IO() {
+        return new Promise((resolve, reject) => {
+            resolve(this._io);
+        });
+    }
 }
+
+module.exports = new IOModule();

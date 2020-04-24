@@ -1,8 +1,8 @@
-const config = require('config');
+const config = require("config");
 
-const moduleManager = require('../../../index');
+// const moduleManager = require('../../../index');
 
-const mail = moduleManager.modules["mail"];
+const mail = require("../index");
 
 /**
  * Sends a verify email email
@@ -13,18 +13,27 @@ const mail = moduleManager.modules["mail"];
  * @param {Function} cb - gets called when an error occurred or when the operation was successful
  */
 module.exports = function(to, username, code, cb) {
-	let data = {
-		from: 'Musare <noreply@musare.com>',
-		to: to,
-		subject: 'Please verify your email',
-		html:
-			`
+    let data = {
+        from: "Musare <noreply@musare.com>",
+        to: to,
+        subject: "Please verify your email",
+        html: `
 				Hello there ${username},
 				<br>
 				<br>
-				To verify your email, please visit <a href="${config.get('serverDomain')}/auth/verify_email?code=${code}">${config.get('serverDomain')}/auth/verify_email?code=${code}</a>.
+				To verify your email, please visit <a href="${config.get(
+                    "serverDomain"
+                )}/auth/verify_email?code=${code}">${config.get(
+            "serverDomain"
+        )}/auth/verify_email?code=${code}</a>.
 			`
-	};
+    };
 
-	mail.sendMail(data, cb);
+    mail.runJob("SEND_MAIL", { data })
+        .then(() => {
+            cb();
+        })
+        .catch(err => {
+            cb(err);
+        });
 };
