@@ -265,8 +265,8 @@ module.exports = {
                 (song, next) => {
                     if (!song) return next("Song not found.");
                     songs
-                        .runJob("GET_SONG", { songId })
-                        .then((song) => next(null, song))
+                        .runJob("GET_SONG", { id: song._id })
+                        .then((response) => next(null, response.song))
                         .catch(next);
                 },
 

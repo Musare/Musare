@@ -18,8 +18,8 @@ cache.runJob("SUB", {
         playlists.runJob("GET_PLAYLIST", { playlistId }).then((playlist) => {
             utils
                 .runJob("SOCKETS_FROM_USER", { userId: playlist.createdBy })
-                .then((sockets) => {
-                    sockets.forEach((socket) => {
+                .then((response) => {
+                    response.sockets.forEach((socket) => {
                         socket.emit("event:playlist.create", playlist);
                     });
                 });
@@ -32,8 +32,8 @@ cache.runJob("SUB", {
     cb: (res) => {
         utils
             .runJob("SOCKETS_FROM_USER", { userId: res.userId })
-            .then((sockets) => {
-                sockets.forEach((socket) => {
+            .then((response) => {
+                response.sockets.forEach((socket) => {
                     socket.emit("event:playlist.delete", res.playlistId);
                 });
             });
@@ -45,8 +45,8 @@ cache.runJob("SUB", {
     cb: (res) => {
         utils
             .runJob("SOCKETS_FROM_USER", { userId: res.userId })
-            .then((sockets) => {
-                sockets.forEach((socket) => {
+            .then((response) => {
+                response.sockets.forEach((socket) => {
                     socket.emit("event:playlist.moveSongToTop", {
                         playlistId: res.playlistId,
                         songId: res.songId,
@@ -61,8 +61,8 @@ cache.runJob("SUB", {
     cb: (res) => {
         utils
             .runJob("SOCKETS_FROM_USER", { userId: res.userId })
-            .then((sockets) => {
-                sockets.forEach((socket) => {
+            .then((response) => {
+                response.sockets.forEach((socket) => {
                     socket.emit("event:playlist.moveSongToBottom", {
                         playlistId: res.playlistId,
                         songId: res.songId,
@@ -77,8 +77,8 @@ cache.runJob("SUB", {
     cb: (res) => {
         utils
             .runJob("SOCKETS_FROM_USER", { userId: res.userId })
-            .then((sockets) => {
-                sockets.forEach((socket) => {
+            .then((response) => {
+                response.sockets.forEach((socket) => {
                     socket.emit("event:playlist.addSong", {
                         playlistId: res.playlistId,
                         song: res.song,
@@ -93,8 +93,8 @@ cache.runJob("SUB", {
     cb: (res) => {
         utils
             .runJob("SOCKETS_FROM_USER", { userId: res.userId })
-            .then((sockets) => {
-                sockets.forEach((socket) => {
+            .then((response) => {
+                response.sockets.forEach((socket) => {
                     socket.emit("event:playlist.removeSong", {
                         playlistId: res.playlistId,
                         songId: res.songId,
@@ -109,8 +109,8 @@ cache.runJob("SUB", {
     cb: (res) => {
         utils
             .runJob("SOCKETS_FROM_USER", { userId: res.userId })
-            .then((sockets) => {
-                sockets.forEach((socket) => {
+            .then((response) => {
+                response.sockets.forEach((socket) => {
                     socket.emit("event:playlist.updateDisplayName", {
                         playlistId: res.playlistId,
                         displayName: res.displayName,
@@ -525,8 +525,9 @@ let lib = {
                     },
                     (next) => {
                         songs
-                            .runJob("GET_SONG", { songId })
-                            .then((song) => {
+                            .runJob("GET_SONG", { id: songId })
+                            .then((response) => {
+                                const song = response.song;
                                 next(null, {
                                     _id: song._id,
                                     songId: songId,
@@ -537,7 +538,9 @@ let lib = {
                             .catch(() => {
                                 utils
                                     .runJob("GET_SONG_FROM_YOUTUBE", { songId })
-                                    .then((song) => next(null, song))
+                                    .then((response) =>
+                                        next(null, response.song)
+                                    )
                                     .catch(next);
                             });
                     },

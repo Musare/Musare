@@ -21,131 +21,132 @@ let userList = {};
 let usersPerStation = {};
 let usersPerStationCount = {};
 
-setInterval(async () => {
-    let stationsCountUpdated = [];
-    let stationsUpdated = [];
+// Temporarily disabled until the messages in console can be limited
+// setInterval(async () => {
+//     let stationsCountUpdated = [];
+//     let stationsUpdated = [];
 
-    let oldUsersPerStation = usersPerStation;
-    usersPerStation = {};
+//     let oldUsersPerStation = usersPerStation;
+//     usersPerStation = {};
 
-    let oldUsersPerStationCount = usersPerStationCount;
-    usersPerStationCount = {};
+//     let oldUsersPerStationCount = usersPerStationCount;
+//     usersPerStationCount = {};
 
-    const userModel = await db.runJob("GET_MODEL", {
-        modelName: "user",
-    });
+//     const userModel = await db.runJob("GET_MODEL", {
+//         modelName: "user",
+//     });
+//
+//     async.each(
+//         Object.keys(userList),
+//         function(socketId, next) {
+//             utils.runJob("SOCKET_FROM_SESSION", { socketId }).then((socket) => {
+//                 let stationId = userList[socketId];
+//                 if (
+//                     !socket ||
+//                     Object.keys(socket.rooms).indexOf(
+//                         `station.${stationId}`
+//                     ) === -1
+//                 ) {
+//                     if (stationsCountUpdated.indexOf(stationId) === -1)
+//                         stationsCountUpdated.push(stationId);
+//                     if (stationsUpdated.indexOf(stationId) === -1)
+//                         stationsUpdated.push(stationId);
+//                     delete userList[socketId];
+//                     return next();
+//                 }
+//                 if (!usersPerStationCount[stationId])
+//                     usersPerStationCount[stationId] = 0;
+//                 usersPerStationCount[stationId]++;
+//                 if (!usersPerStation[stationId])
+//                     usersPerStation[stationId] = [];
 
-    async.each(
-        Object.keys(userList),
-        function(socketId, next) {
-            utils.runJob("SOCKET_FROM_SESSION", { socketId }).then((socket) => {
-                let stationId = userList[socketId];
-                if (
-                    !socket ||
-                    Object.keys(socket.rooms).indexOf(
-                        `station.${stationId}`
-                    ) === -1
-                ) {
-                    if (stationsCountUpdated.indexOf(stationId) === -1)
-                        stationsCountUpdated.push(stationId);
-                    if (stationsUpdated.indexOf(stationId) === -1)
-                        stationsUpdated.push(stationId);
-                    delete userList[socketId];
-                    return next();
-                }
-                if (!usersPerStationCount[stationId])
-                    usersPerStationCount[stationId] = 0;
-                usersPerStationCount[stationId]++;
-                if (!usersPerStation[stationId])
-                    usersPerStation[stationId] = [];
+//                 async.waterfall(
+//                     [
+//                         (next) => {
+//                             if (!socket.session || !socket.session.sessionId)
+//                                 return next("No session found.");
+//                             cache
+//                                 .runJob("HGET", {
+//                                     table: "sessions",
+//                                     key: socket.session.sessionId,
+//                                 })
+//                                 .then((session) => next(null, session))
+//                                 .catch(next);
+//                         },
 
-                async.waterfall(
-                    [
-                        (next) => {
-                            if (!socket.session || !socket.session.sessionId)
-                                return next("No session found.");
-                            cache
-                                .runJob("HGET", {
-                                    table: "sessions",
-                                    key: socket.session.sessionId,
-                                })
-                                .then((session) => next(null, session))
-                                .catch(next);
-                        },
+//                         (session, next) => {
+//                             if (!session) return next("Session not found.");
+//                             userModel.findOne({ _id: session.userId }, next);
+//                         },
 
-                        (session, next) => {
-                            if (!session) return next("Session not found.");
-                            userModel.findOne({ _id: session.userId }, next);
-                        },
+//                         (user, next) => {
+//                             if (!user) return next("User not found.");
+//                             if (
+//                                 usersPerStation[stationId].indexOf(
+//                                     user.username
+//                                 ) !== -1
+//                             )
+//                                 return next("User already in the list.");
+//                             next(null, user.username);
+//                         },
+//                     ],
+//                     (err, username) => {
+//                         if (!err) {
+//                             usersPerStation[stationId].push(username);
+//                         }
+//                         next();
+//                     }
+//                 );
+//             });
+//             //TODO Code to show users
+//         },
+//         (err) => {
+//             for (let stationId in usersPerStationCount) {
+//                 if (
+//                     oldUsersPerStationCount[stationId] !==
+//                     usersPerStationCount[stationId]
+//                 ) {
+//                     if (stationsCountUpdated.indexOf(stationId) === -1)
+//                         stationsCountUpdated.push(stationId);
+//                 }
+//             }
 
-                        (user, next) => {
-                            if (!user) return next("User not found.");
-                            if (
-                                usersPerStation[stationId].indexOf(
-                                    user.username
-                                ) !== -1
-                            )
-                                return next("User already in the list.");
-                            next(null, user.username);
-                        },
-                    ],
-                    (err, username) => {
-                        if (!err) {
-                            usersPerStation[stationId].push(username);
-                        }
-                        next();
-                    }
-                );
-            });
-            //TODO Code to show users
-        },
-        (err) => {
-            for (let stationId in usersPerStationCount) {
-                if (
-                    oldUsersPerStationCount[stationId] !==
-                    usersPerStationCount[stationId]
-                ) {
-                    if (stationsCountUpdated.indexOf(stationId) === -1)
-                        stationsCountUpdated.push(stationId);
-                }
-            }
+//             for (let stationId in usersPerStation) {
+//                 if (
+//                     _.difference(
+//                         usersPerStation[stationId],
+//                         oldUsersPerStation[stationId]
+//                     ).length > 0 ||
+//                     _.difference(
+//                         oldUsersPerStation[stationId],
+//                         usersPerStation[stationId]
+//                     ).length > 0
+//                 ) {
+//                     if (stationsUpdated.indexOf(stationId) === -1)
+//                         stationsUpdated.push(stationId);
+//                 }
+//             }
 
-            for (let stationId in usersPerStation) {
-                if (
-                    _.difference(
-                        usersPerStation[stationId],
-                        oldUsersPerStation[stationId]
-                    ).length > 0 ||
-                    _.difference(
-                        oldUsersPerStation[stationId],
-                        usersPerStation[stationId]
-                    ).length > 0
-                ) {
-                    if (stationsUpdated.indexOf(stationId) === -1)
-                        stationsUpdated.push(stationId);
-                }
-            }
+//             stationsCountUpdated.forEach((stationId) => {
+//                 //console.log("INFO", "UPDATE_STATION_USER_COUNT", `Updating user count of ${stationId}.`);
+//                 cache.runJob("PUB", {
+//                     table: "station.updateUserCount",
+//                     value: stationId,
+//                 });
+//             });
 
-            stationsCountUpdated.forEach((stationId) => {
-                //console.log("INFO", "UPDATE_STATION_USER_COUNT", `Updating user count of ${stationId}.`);
-                cache.runJob("PUB", {
-                    table: "station.updateUserCount",
-                    value: stationId,
-                });
-            });
+//             stationsUpdated.forEach((stationId) => {
+//                 //console.log("INFO", "UPDATE_STATION_USER_LIST", `Updating user list of ${stationId}.`);
+//                 cache.runJob("PUB", {
+//                     table: "station.updateUsers",
+//                     value: stationId,
+//                 });
+//             });
 
-            stationsUpdated.forEach((stationId) => {
-                //console.log("INFO", "UPDATE_STATION_USER_LIST", `Updating user list of ${stationId}.`);
-                cache.runJob("PUB", {
-                    table: "station.updateUsers",
-                    value: stationId,
-                });
-            });
-
-            //console.log("Userlist", usersPerStation);
-        }
-    );
-}, 3000);
+//             //console.log("Userlist", usersPerStation);
+//         }
+//     );
+// }, 3000);
 
 cache.runJob("SUB", {
     channel: "station.updateUsers",
@@ -234,26 +235,20 @@ cache.runJob("SUB", {
 cache.runJob("SUB", {
     channel: "station.updatePartyMode",
     cb: (data) => {
-        utils.runJob(
-            "EMIT_TO_ROOM",
-            {
-                room: `station.${data.stationId}`,
-                args: ["event:partyMode.updated", data],
-            }.partyMode
-        );
+        utils.runJob("EMIT_TO_ROOM", {
+            room: `station.${data.stationId}`,
+            args: ["event:partyMode.updated", data.partyMode],
+        });
     },
 });
 
 cache.runJob("SUB", {
     channel: "privatePlaylist.selected",
     cb: (data) => {
-        utils.runJob(
-            "EMIT_TO_ROOM",
-            {
-                room: `station.${data.stationId}`,
-                args: ["event:privatePlaylist.selected", data],
-            }.playlistId
-        );
+        utils.runJob("EMIT_TO_ROOM", {
+            room: `station.${data.stationId}`,
+            args: ["event:privatePlaylist.selected", data.playlistId],
+        });
     },
 });
 
@@ -327,7 +322,8 @@ cache.runJob("SUB", {
 
         stations
             .runJob("INITIALIZE_STATION", { stationId })
-            .then(async (station) => {
+            .then(async (response) => {
+                const station = response.station;
                 station.userCount = usersPerStationCount[stationId] || 0;
                 utils.runJob("EMIT_TO_ROOM", {
                     room: "admin.stations",
@@ -352,12 +348,8 @@ cache.runJob("SUB", {
                                     table: "sessions",
                                     key: session.sessionId,
                                 })
-                                .then(async (session) => {
+                                .then((session) => {
                                     if (session) {
-                                        const userModel = await db.runJob(
-                                            "GET_MODEL",
-                                            {}
-                                        );
                                         userModel.findOne(
                                             { _id: session.userId },
                                             (err, user) => {
@@ -399,6 +391,7 @@ module.exports = {
         async.waterfall(
             [
                 (next) => {
+                    console.log(111);
                     cache
                         .runJob("HGETALL", { table: "stations" })
                         .then((stations) => {
@@ -407,6 +400,8 @@ module.exports = {
                 },
 
                 (stations, next) => {
+                    console.log(222);
+
                     let resultStations = [];
                     for (let id in stations) {
                         resultStations.push(stations[id]);
@@ -415,6 +410,8 @@ module.exports = {
                 },
 
                 (stationsArray, next) => {
+                    console.log(333);
+
                     let resultStations = [];
                     async.each(
                         stationsArray,
@@ -428,12 +425,15 @@ module.exports = {
                                                 userId: session.userId,
                                             })
                                             .then((exists) => {
+                                                console.log(444, exists);
+
                                                 next(null, exists);
                                             })
                                             .catch(next);
                                     },
                                 ],
                                 (err, exists) => {
+                                    if (err) console.log(err);
                                     station.userCount =
                                         usersPerStationCount[station._id] || 0;
                                     if (exists) resultStations.push(station);
@@ -718,7 +718,8 @@ module.exports = {
                         .runJob("GET_SONG_FROM_ID", {
                             songId: data.currentSong.songId,
                         })
-                        .then((song) => {
+                        .then((response) => {
+                            const song = response.song;
                             if (song) {
                                 data.currentSong.likes = song.likes;
                                 data.currentSong.dislikes = song.dislikes;
@@ -1887,30 +1888,31 @@ module.exports = {
                 },
 
                 (station, next) => {
-                    songs
-                        .runJob("GET_SONG", { songId })
-                        .then((song) => {
-                            if (song) return next(null, song, station);
-                            else {
-                                utils
-                                    .runJob("GET_SONG_FROM_YOUTUBE", { songId })
-                                    .then((song) => {
-                                        song.artists = [];
-                                        song.skipDuration = 0;
-                                        song.likes = -1;
-                                        song.dislikes = -1;
-                                        song.thumbnail = "empty";
-                                        song.explicit = false;
-                                        next(null, song, station);
-                                    })
-                                    .catch((err) => {
-                                        next(err);
-                                    });
-                            }
+                    // songs
+                    //     .runJob("GET_SONG", { id: songId })
+                    //     .then((song) => {
+                    //         if (song) return next(null, song, station);
+                    //         else {
+                    utils
+                        .runJob("GET_SONG_FROM_YOUTUBE", { songId })
+                        .then((response) => {
+                            const song = response.song;
+                            song.artists = [];
+                            song.skipDuration = 0;
+                            song.likes = -1;
+                            song.dislikes = -1;
+                            song.thumbnail = "empty";
+                            song.explicit = false;
+                            next(null, song, station);
                         })
                         .catch((err) => {
                             next(err);
                         });
+                    //     }
+                    // })
+                    // .catch((err) => {
+                    //     next(err);
+                    // });
                 },
 
                 (song, station, next) => {
@@ -2174,6 +2176,9 @@ module.exports = {
             const stationModel = await db.runJob("GET_MODEL", {
                 modelName: "station",
             });
+            const playlistModel = await db.runJob("GET_MODEL", {
+                modelName: "playlist",
+            });
             async.waterfall(
                 [
                     (next) => {
@@ -2191,7 +2196,7 @@ module.exports = {
                             return next(
                                 "That private playlist is already selected."
                             );
-                        db.models.playlist.findOne({ _id: playlistId }, next);
+                        playlistModel.findOne({ _id: playlistId }, next);
                     },
 
                     (playlist, next) => {

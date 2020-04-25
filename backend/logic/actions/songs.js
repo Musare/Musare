@@ -66,8 +66,8 @@ cache.runJob("SUB", {
         });
         utils
             .runJob("SOCKETS_FROM_USER", { userId: data.userId })
-            .then((sockets) => {
-                sockets.forEach((socket) => {
+            .then((response) => {
+                response.sockets.forEach((socket) => {
                     socket.emit("event:song.newRatings", {
                         songId: data.songId,
                         liked: true,
@@ -94,8 +94,8 @@ cache.runJob("SUB", {
         });
         utils
             .runJob("SOCKETS_FROM_USER", { userId: data.userId })
-            .then((sockets) => {
-                sockets.forEach((socket) => {
+            .then((response) => {
+                response.sockets.forEach((socket) => {
                     socket.emit("event:song.newRatings", {
                         songId: data.songId,
                         liked: false,
@@ -122,8 +122,8 @@ cache.runJob("SUB", {
         });
         utils
             .runJob("SOCKETS_FROM_USER", { userId: data.userId })
-            .then((sockets) => {
-                sockets.forEach((socket) => {
+            .then((response) => {
+                response.sockets.forEach((socket) => {
                     socket.emit("event:song.newRatings", {
                         songId: data.songId,
                         liked: false,
@@ -150,8 +150,8 @@ cache.runJob("SUB", {
         });
         utils
             .runJob("SOCKETS_FROM_USER", { userId: data.userId })
-            .then((sockets) => {
-                sockets.forEach((socket) => {
+            .then((response) => {
+                response.sockets.forEach((socket) => {
                     socket.emit("event:song.newRatings", {
                         songId: data.songId,
                         liked: false,
@@ -286,7 +286,7 @@ module.exports = {
                 (next) => {
                     songs
                         .runJob("GET_SONG_FROM_ID", { songId })
-                        .then((song) => next(null, song))
+                        .then((responsesong) => next(null, response.song))
                         .catch(next);
                 },
             ],

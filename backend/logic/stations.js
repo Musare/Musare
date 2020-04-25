@@ -73,11 +73,13 @@ class StationsModule extends CoreClass {
                         })
                         .then((playlistObj) => {
                             if (playlistObj) {
-                                this.utils.emitToRoom(
-                                    `station.${stationId}`,
-                                    "event:newOfficialPlaylist",
-                                    playlistObj.songs
-                                );
+                                this.utils.runJob("EMIT_TO_ROOM", {
+                                    room: `station.${stationId}`,
+                                    args: [
+                                        "event:newOfficialPlaylist",
+                                        playlistObj.songs,
+                                    ],
+                                });
                             }
                         });
                 },
@@ -268,12 +270,12 @@ class StationsModule extends CoreClass {
                                 .then((station) => next(null, station))
                                 .catch(next);
                         } else {
-                            this.notifications.schedule(
-                                `stations.nextSong?id=${station._id}`,
-                                timeLeft,
-                                null,
-                                station
-                            );
+                            //name, time, cb, station
+                            this.notifications.runJob("SCHEDULE", {
+                                name: `stations.nextSong?id=${station._id}`,
+                                time: timeLeft,
+                                station,
+                            });
                             next(null, station);
                         }
                     },
@@ -293,10 +295,10 @@ class StationsModule extends CoreClass {
     CALCULATE_SONG_FOR_STATION(payload) {
         //station, cb, bypassValidate = false
         return new Promise(async (resolve, reject) => {
-            const songModel = await db.runJob("GET_MODEL", {
+            const songModel = await this.db.runJob("GET_MODEL", {
                 modelName: "song",
             });
-            const stationModel = await db.runJob("GET_MODEL", {
+            const stationModel = await this.db.runJob("GET_MODEL", {
                 modelName: "station",
             });
 
@@ -351,9 +353,6 @@ class StationsModule extends CoreClass {
                             .runJob("SHUFFLE", { array: playlist })
                             .then((playlist) => next(null, playlist))
                             .catch(next);
-                        this.utils.shuffle(playlist).then((playlist) => {
-                            next(null, playlist);
-                        });
                     },
 
                     (playlist, next) => {
@@ -406,7 +405,10 @@ class StationsModule extends CoreClass {
 
                     (station, next) => {
                         if (station) return next(true, station);
-                        this.stationModel.findOne({ _id: stationId }, next);
+                        this.stationModel.findOne(
+                            { _id: payload.stationId },
+                            next
+                        );
                     },
 
                     (station, next) => {
@@ -426,7 +428,7 @@ class StationsModule extends CoreClass {
                             this.cache
                                 .runJob("HSET", {
                                     table: "stations",
-                                    key: "stationId",
+                                    key: payload.stationId,
                                     value: station,
                                 })
                                 .then()
@@ -468,7 +470,10 @@ class StationsModule extends CoreClass {
                             if (station.type === "official") {
                                 this.runJob(
                                     "CALCULATE_OFFICIAL_PLAYLIST_LIST",
-                                    { stationId, songList: playlist }
+                                    {
+                                        stationId: station._id,
+                                        songList: station.playlist,
+                                    }
                                 );
                             }
                             this.cache
@@ -553,8 +558,9 @@ class StationsModule extends CoreClass {
                 payload.songList,
                 (song, next) => {
                     this.songs
-                        .runJob("GET_SONG", { song })
-                        .then((song) => {
+                        .runJob("GET_SONG", { id: song })
+                        .then((response) => {
+                            const song = response.song;
                             if (song) {
                                 let newSong = {
                                     songId: song.songId,
@@ -618,12 +624,14 @@ class StationsModule extends CoreClass {
                     },
                     (station, next) => {
                         if (!station) return next("Station not found.");
+
                         if (
                             station.type === "community" &&
                             station.partyMode &&
                             station.queue.length === 0
                         )
                             return next(null, null, -11, station); // Community station with party mode enabled and no songs in the queue
+
                         if (
                             station.type === "community" &&
                             station.partyMode &&
@@ -634,7 +642,7 @@ class StationsModule extends CoreClass {
                                 return next(null, null, -19, station);
                             } else {
                                 return this.stationModel.updateOne(
-                                    { _id: stationId },
+                                    { _id: payload.stationId },
                                     {
                                         $pull: {
                                             queue: {
@@ -719,13 +727,16 @@ class StationsModule extends CoreClass {
                                                 )
                                                     this.songs
                                                         .runJob("GET_SONG", {
-                                                            songId:
+                                                            id:
                                                                 playlist[
                                                                     currentSongIndex
                                                                 ]._id,
                                                         })
-                                                        .then((song) =>
-                                                            callback(null, song)
+                                                        .then((response) =>
+                                                            callback(
+                                                                null,
+                                                                response.song
+                                                            )
                                                         )
                                                         .catch(callback);
                                                 else
@@ -739,8 +750,11 @@ class StationsModule extends CoreClass {
                                                                     ].songId,
                                                             }
                                                         )
-                                                        .then((song) =>
-                                                            callback(null, song)
+                                                        .then((response) =>
+                                                            callback(
+                                                                null,
+                                                                response.song
+                                                            )
                                                         )
                                                         .catch(callback);
                                             } else
@@ -774,10 +788,15 @@ class StationsModule extends CoreClass {
                                     else {
                                         this.songs
                                             .runJob("GET_SONG", {
-                                                songId: playlist[0],
+                                                id: playlist[0],
                                             })
-                                            .then((song) => {
-                                                next(null, song, 0, station);
+                                            .then((response) => {
+                                                next(
+                                                    null,
+                                                    response.song,
+                                                    0,
+                                                    station
+                                                );
                                             })
                                             .catch((err) => {
                                                 return next(
@@ -803,16 +822,16 @@ class StationsModule extends CoreClass {
                                     ) {
                                         this.songs
                                             .runJob("GET_SONG", {
-                                                songId:
+                                                id:
                                                     station.playlist[
                                                         station.currentSongIndex +
                                                             1
                                                     ],
                                             })
-                                            .then((song) => {
+                                            .then((response) => {
                                                 return next(
                                                     null,
-                                                    song,
+                                                    response.song,
                                                     station.currentSongIndex + 1
                                                 );
                                             })
@@ -827,8 +846,7 @@ class StationsModule extends CoreClass {
                                                 station,
                                                 bypassQueue:
                                                     payload.bypassQueue,
-                                            },
-                                            { bypassQueue: payload.bypassQueue }
+                                            }
                                         )
                                             .then((newPlaylist) => {
                                                 this.songs.getSong(
@@ -908,14 +926,10 @@ class StationsModule extends CoreClass {
                             { _id: station._id },
                             { $set },
                             (err) => {
-                                this.runJob(
-                                    "UPDATE_STATION",
-                                    {
-                                        stationId: station._id,
-                                        bypassQueue: payload.bypassQueue,
-                                    },
-                                    { bypassQueue: payload.bypassQueue }
-                                )
+                                this.runJob("UPDATE_STATION", {
+                                    stationId: station._id,
+                                    bypassQueue: payload.bypassQueue,
+                                })
                                     .then((station) => {
                                         if (
                                             station.type === "community" &&
@@ -984,48 +998,62 @@ class StationsModule extends CoreClass {
                                 .then()
                                 .catch();
                         } else {
-                            let sockets = await this.utils.getRoomSockets(
-                                "home"
+                            let sockets = await this.utils.runJob(
+                                "GET_ROOM_SOCKETS",
+                                { room: "home" }
                             );
                             for (let socketId in sockets) {
                                 let socket = sockets[socketId];
                                 let session = sockets[socketId].session;
                                 if (session.sessionId) {
-                                    this.cache.hget(
-                                        "sessions",
-                                        session.sessionId,
-                                        (err, session) => {
-                                            if (!err && session) {
-                                                this.db.models.user.findOne(
-                                                    { _id: session.userId },
-                                                    (err, user) => {
-                                                        if (!err && user) {
-                                                            if (
-                                                                user.role ===
-                                                                "admin"
-                                                            )
-                                                                socket.emit(
-                                                                    "event:station.nextSong",
-                                                                    station._id,
-                                                                    station.currentSong
-                                                                );
-                                                            else if (
-                                                                station.type ===
-                                                                    "community" &&
-                                                                station.owner ===
-                                                                    session.userId
-                                                            )
-                                                                socket.emit(
-                                                                    "event:station.nextSong",
-                                                                    station._id,
-                                                                    station.currentSong
-                                                                );
-                                                        }
-                                                    }
-                                                );
+                                    this.cache
+                                        .runJob("HGET", {
+                                            table: "sessions",
+                                            key: session.sessionId,
+                                        })
+                                        .then((session) => {
+                                            if (session) {
+                                                this.db
+                                                    .runJob("GET_MODEL", {
+                                                        modelName: "user",
+                                                    })
+                                                    .then((userModel) => {
+                                                        userModel.findOne(
+                                                            {
+                                                                _id:
+                                                                    session.userId,
+                                                            },
+                                                            (err, user) => {
+                                                                if (
+                                                                    !err &&
+                                                                    user
+                                                                ) {
+                                                                    if (
+                                                                        user.role ===
+                                                                        "admin"
+                                                                    )
+                                                                        socket.emit(
+                                                                            "event:station.nextSong",
+                                                                            station._id,
+                                                                            station.currentSong
+                                                                        );
+                                                                    else if (
+                                                                        station.type ===
+                                                                            "community" &&
+                                                                        station.owner ===
+                                                                            session.userId
+                                                                    )
+                                                                        socket.emit(
+                                                                            "event:station.nextSong",
+                                                                            station._id,
+                                                                            station.currentSong
+                                                                        );
+                                                                }
+                                                            }
+                                                        );
+                                                    });
                                             }
-                                        }
-                                    );
+                                        });
                                 }
                             }
                         }
@@ -1034,19 +1062,19 @@ class StationsModule extends CoreClass {
                             station.currentSong !== null &&
                             station.currentSong.songId !== undefined
                         ) {
-                            this.utils.socketsJoinSongRoom(
-                                await this.utils.getRoomSockets(
-                                    `station.${station._id}`
+                            this.utils.runJob("SOCKETS_JOIN_SONG_ROOM", {
+                                sockets: await this.utils.runJob(
+                                    "GET_ROOM_SOCKETS",
+                                    { room: `station.${station._id}` }
                                 ),
-                                `song.${station.currentSong.songId}`
-                            );
+                                room: `song.${station.currentSong.songId}`,
+                            });
                             if (!station.paused) {
-                                this.notifications.schedule(
-                                    `stations.nextSong?id=${station._id}`,
-                                    station.currentSong.duration * 1000,
-                                    null,
-                                    station
-                                );
+                                this.notifications.runJob("SCHEDULE", {
+                                    name: `stations.nextSong?id=${station._id}`,
+                                    time: station.currentSong.duration * 1000,
+                                    station,
+                                });
                             }
                         } else {
                             this.utils
@@ -1079,11 +1107,17 @@ class StationsModule extends CoreClass {
                         next();
                     },
 
-                    async (next) => {
-                        const userModel = await this.db.runJob("GET_MODEL", {
-                            modelName: "user",
-                        });
-                        userModel.findOne({ _id: userId }, next);
+                    (next) => {
+                        this.db
+                            .runJob("GET_MODEL", {
+                                modelName: "user",
+                            })
+                            .then((userModel) => {
+                                userModel.findOne(
+                                    { _id: payload.userId },
+                                    next
+                                );
+                            });
                     },
 
                     (user, next) => {
@@ -1097,7 +1131,7 @@ class StationsModule extends CoreClass {
                     },
                 ],
                 async (errOrResult) => {
-                    if (errOrResult !== true && err !== "Not allowed") {
+                    if (errOrResult !== true && errOrResult !== "Not allowed") {
                         errOrResult = await this.utils.runJob("GET_ERROR", {
                             error: errOrResult,
                         });

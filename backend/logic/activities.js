@@ -1,5 +1,8 @@
 const CoreClass = require("../core.js");
 
+const async = require("async");
+const mongoose = require("mongoose");
+
 class ActivitiesModule extends CoreClass {
     constructor() {
         super("activities");
@@ -47,8 +50,8 @@ class ActivitiesModule extends CoreClass {
                             .runJob("SOCKETS_FROM_USER", {
                                 userId: activity.userId,
                             })
-                            .then((sockets) =>
-                                sockets.forEach((socket) => {
+                            .then((response) =>
+                                response.sockets.forEach((socket) => {
                                     socket.emit(
                                         "event:activity.create",
                                         activity

@@ -222,7 +222,7 @@ class ExampleModule extends CoreClass {
                             .runJob("HSET", {
                                 table: "playlists",
                                 key: payload.playlistId,
-                                value: playlists,
+                                value: playlist,
                             })
                             .then((playlist) => next(null, playlist))
                             .catch(next);
@@ -252,14 +252,17 @@ class ExampleModule extends CoreClass {
             async.waterfall(
                 [
                     (next) => {
-                        playlistModel.deleteOne({ _id: playlistId }, next);
+                        playlistModel.deleteOne(
+                            { _id: payload.playlistId },
+                            next
+                        );
                     },
 
                     (res, next) => {
                         this.cache
                             .runJob("HDEL", {
                                 table: "playlists",
-                                key: playlistId,
+                                key: payload.playlistId,
                             })
                             .then(() => next())
                             .catch(next);

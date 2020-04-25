@@ -1,5 +1,14 @@
 const CoreClass = require("../core.js");
 
+const config = require("config");
+const async = require("async");
+const request = require("request");
+const crypto = require("crypto");
+
+let youtubeRequestCallbacks = [];
+let youtubeRequestsPending = 0;
+let youtubeRequestsActive = false;
+
 class UtilsModule extends CoreClass {
     constructor() {
         super("utils");
@@ -366,7 +375,7 @@ class UtilsModule extends CoreClass {
         return new Promise((resolve, reject) => {
             for (let id in payload.sockets) {
                 let socket = payload.sockets[id];
-                let rooms = payload.socket.rooms;
+                let rooms = socket.rooms;
                 for (let room in rooms) {
                     if (room.indexOf("song.") !== -1) socket.leave(room);
                 }
@@ -633,7 +642,7 @@ class UtilsModule extends CoreClass {
         });
     }
 
-    GET_SONGS_FROM_SPOTIFY() {
+    GET_SONGS_FROM_SPOTIFY(payload) {
         //title, artist, cb
         return new Promise(async (resolve, reject) => {
             if (!config.get("apis.spotify.enabled"))
@@ -695,7 +704,7 @@ class UtilsModule extends CoreClass {
         });
     }
 
-    SHUFFLE() {
+    SHUFFLE(payload) {
         //array
         return new Promise((resolve, reject) => {
             const array = payload.array.slice();

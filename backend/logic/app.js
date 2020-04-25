@@ -15,7 +15,7 @@ class AppModule extends CoreClass {
     }
 
     initialize() {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             const mail = this.moduleManager.modules["mail"],
                 cache = this.moduleManager.modules["cache"],
                 db = this.moduleManager.modules["db"],
@@ -31,6 +31,10 @@ class AppModule extends CoreClass {
 
             app.use(bodyParser.json());
             app.use(bodyParser.urlencoded({ extended: true }));
+
+            const userModel = await db.runJob("GET_MODEL", {
+                modelName: "user",
+            });
 
             let corsOptions = Object.assign({}, config.get("cors"));
 
@@ -50,11 +54,18 @@ class AppModule extends CoreClass {
                 config.get("serverDomain") + "/auth/github/authorize/callback";
 
             app.get("/auth/github/authorize", async (req, res) => {
-                try {
-                    await this._validateHook();
-                } catch {
-                    return;
+                if (this.getStatus() !== "READY") {
+                    this.log(
+                        "INFO",
+                        "APP_REJECTED_GITHUB_AUTHORIZE",
+                        `A user tried to use github authorize, but the APP module is currently not ready.`
+                    );
+                    return redirectOnErr(
+                        res,
+                        "Something went wrong on our end. Please try again later."
+                    );
                 }
+
                 let params = [
                     `client_id=${config.get("apis.github.client")}`,
                     `redirect_uri=${config.get(
@@ -68,10 +79,16 @@ class AppModule extends CoreClass {
             });
 
             app.get("/auth/github/link", async (req, res) => {
-                try {
-                    await this._validateHook();
-                } catch {
-                    return;
+                if (this.getStatus() !== "READY") {
+                    this.log(
+                        "INFO",
+                        "APP_REJECTED_GITHUB_AUTHORIZE",
+                        `A user tried to use github authorize, but the APP module is currently not ready.`
+                    );
+                    return redirectOnErr(
+                        res,
+                        "Something went wrong on our end. Please try again later."
+                    );
                 }
                 let params = [
                     `client_id=${config.get("apis.github.client")}`,
@@ -93,10 +110,16 @@ class AppModule extends CoreClass {
             }
 
             app.get("/auth/github/authorize/callback", async (req, res) => {
-                try {
-                    await this._validateHook();
-                } catch {
-                    return;
+                if (this.getStatus() !== "READY") {
+                    this.log(
+                        "INFO",
+                        "APP_REJECTED_GITHUB_AUTHORIZE",
+                        `A user tried to use github authorize, but the APP module is currently not ready.`
+                    );
+                    return redirectOnErr(
+                        res,
+                        "Something went wrong on our end. Please try again later."
+                    );
                 }
 
                 let code = req.query.code;
@@ -106,8 +129,9 @@ class AppModule extends CoreClass {
 
                 const state = req.query.state;
 
-                const verificationToken = await this.utils.generateRandomString(
-                    64
+                const verificationToken = await this.utils.runJob(
+                    "GENERATE_RANDOM_STRING",
+                    { length: 64 }
                 );
 
                 async.waterfall(
@@ -147,13 +171,21 @@ class AppModule extends CoreClass {
                                 return async.waterfall(
                                     [
                                         (next) => {
-                                            cache.hget("sessions", state, next);
+                                            cache
+                                                .runJob("HGET", {
+                                                    table: "sessions",
+                                                    key: state,
+                                                })
+                                                .then((session) =>
+                                                    next(null, session)
+                                                )
+                                                .catch(next);
                                         },
 
                                         (session, next) => {
                                             if (!session)
                                                 return next("Invalid session.");
-                                            db.models.user.findOne(
+                                            userModel.findOne(
                                                 { _id: session.userId },
                                                 next
                                             );
@@ -169,7 +201,7 @@ class AppModule extends CoreClass {
                                                 return next(
                                                     "Account already has GitHub linked."
                                                 );
-                                            db.models.user.updateOne(
+                                            userModel.updateOne(
                                                 { _id: user._id },
                                                 {
                                                     $set: {
@@ -188,10 +220,10 @@ class AppModule extends CoreClass {
                                         },
 
                                         (user) => {
-                                            cache.pub(
-                                                "user.linkGitHub",
-                                                user._id
-                                            );
+                                            cache.runJob("PUB", {
+                                                channel: "user.linkGithub",
+                                                value: user._id,
+                                            });
                                             res.redirect(
                                                 `${config.get(
                                                     "domain"
@@ -205,7 +237,7 @@ class AppModule extends CoreClass {
 
                             if (!body.id)
                                 return next("Something went wrong, no id.");
-                            db.models.user.findOne(
+                            userModel.findOne(
                                 { "services.github.id": body.id },
                                 (err, user) => {
                                     next(err, user, body);
@@ -220,7 +252,7 @@ class AppModule extends CoreClass {
                                     next(true, user._id);
                                 });
                             }
-                            db.models.user.findOne(
+                            userModel.findOne(
                                 {
                                     username: new RegExp(
                                         `^${body.login}$`,
@@ -257,16 +289,20 @@ class AppModule extends CoreClass {
                                     address = email.email.toLowerCase();
                             });
 
-                            db.models.user.findOne(
+                            userModel.findOne(
                                 { "email.address": address },
                                 next
                             );
                         },
 
                         (user, next) => {
-                            this.utils.generateRandomString(12).then((_id) => {
-                                next(null, user, _id);
-                            });
+                            this.utils
+                                .runJob("GENERATE_RANDOM_STRING", {
+                                    length: 12,
+                                })
+                                .then((_id) => {
+                                    next(null, user, _id);
+                                });
                         },
 
                         (user, _id, next) => {
@@ -294,7 +330,9 @@ class AppModule extends CoreClass {
                         // generate the url for gravatar avatar
                         (user, next) => {
                             this.utils
-                                .createGravatar(user.email.address)
+                                .runJob("CREATE_GRAVATAR", {
+                                    email: user.email.address,
+                                })
                                 .then((url) => {
                                     user.avatar = { type: "gravatar", url };
                                     next(null, user);
@@ -303,22 +341,29 @@ class AppModule extends CoreClass {
 
                         // save the new user to the database
                         (user, next) => {
-                            db.models.user.create(user, next);
+                            userModel.create(user, next);
                         },
 
                         // add the activity of account creation
                         (user, next) => {
-                            activities.addActivity(user._id, "created_account");
+                            activities.runJob("ADD_ACTIVITY", {
+                                userId: user._id,
+                                activityType: "created_account",
+                            });
                             next(null, user);
                         },
 
                         (user, next) => {
-                            mail.schemas.verifyEmail(
-                                address,
-                                body.login,
-                                user.email.verificationToken
-                            );
-                            next(null, user._id);
+                            mail.runJob("GET_SCHEMA", {
+                                schemaName: "verifyEmail",
+                            }).then((verifyEmailSchema) => {
+                                verifyEmailSchema(
+                                    address,
+                                    body.login,
+                                    user.email.verificationToken
+                                );
+                                next(null, user._id);
+                            });
                         },
                     ],
                     async (err, userId) => {
@@ -331,13 +376,17 @@ class AppModule extends CoreClass {
                             return redirectOnErr(res, err);
                         }
 
-                        const sessionId = await this.utils.guid();
-                        cache.hset(
-                            "sessions",
-                            sessionId,
-                            cache.schemas.session(sessionId, userId),
-                            (err) => {
-                                if (err) return redirectOnErr(res, err.message);
+                        const sessionId = await this.utils.runJob("GUID", {});
+                        const sessionSchema = await cache.runJob("GET_SCHEMA", {
+                            schemaName: "session",
+                        });
+                        cache
+                            .runJob("HSET", {
+                                table: "sessions",
+                                key: sessionId,
+                                value: sessionSchema(sessionId, userId),
+                            })
+                            .then(() => {
                                 let date = new Date();
                                 date.setTime(
                                     new Date().getTime() +
@@ -354,17 +403,25 @@ class AppModule extends CoreClass {
                                     `User "${userId}" successfully authorized with GitHub.`
                                 );
                                 res.redirect(`${config.get("domain")}/`);
-                            }
-                        );
+                            })
+                            .catch((err) => {
+                                return redirectOnErr(res, err.message);
+                            });
                     }
                 );
             });
 
             app.get("/auth/verify_email", async (req, res) => {
-                try {
-                    await this._validateHook();
-                } catch {
-                    return;
+                if (this.getStatus() !== "READY") {
+                    this.log(
+                        "INFO",
+                        "APP_REJECTED_GITHUB_AUTHORIZE",
+                        `A user tried to use github authorize, but the APP module is currently not ready.`
+                    );
+                    return redirectOnErr(
+                        res,
+                        "Something went wrong on our end. Please try again later."
+                    );
                 }
 
                 let code = req.query.code;
@@ -377,7 +434,7 @@ class AppModule extends CoreClass {
                         },
 
                         (next) => {
-                            db.models.user.findOne(
+                            userModel.findOne(
                                 { "email.verificationToken": code },
                                 next
                             );
@@ -387,7 +444,7 @@ class AppModule extends CoreClass {
                             if (!user) return next("User not found.");
                             if (user.email.verified)
                                 return next("This email is already verified.");
-                            db.models.user.updateOne(
+                            userModel.updateOne(
                                 { "email.verificationToken": code },
                                 {
                                     $set: { "email.verified": true },

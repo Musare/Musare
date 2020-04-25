@@ -244,7 +244,7 @@ class CacheModule extends CoreClass {
                         try {
                             message = JSON.parse(message);
                         } catch (e) {}
-                        subs[channel].cbs.forEach((cb) => payload.cb(message));
+                        subs[channel].cbs.forEach((cb) => cb(message));
                     }
                 );
                 subs[payload.channel].client.subscribe(payload.channel);

@@ -1,6 +1,7 @@
 const CoreClass = require("../core.js");
 
 const async = require("async");
+const mongoose = require("mongoose");
 
 class SongsModule extends CoreClass {
     constructor() {
@@ -104,7 +105,7 @@ class SongsModule extends CoreClass {
     GET_SONG(payload) {
         //id, cb
         return new Promise(async (resolve, reject) => {
-            const songModel = await db.runJob("GET_MODEL", {
+            const songModel = await this.db.runJob("GET_MODEL", {
                 modelName: "song",
             });
 
@@ -138,7 +139,7 @@ class SongsModule extends CoreClass {
                 (err, song) => {
                     if (err && err !== true) return reject(new Error(err));
 
-                    resolve(song);
+                    resolve({ song });
                 }
             );
         });
@@ -153,7 +154,7 @@ class SongsModule extends CoreClass {
     GET_SONG_FROM_ID(payload) {
         //songId, cb
         return new Promise(async (resolve, reject) => {
-            const songModel = await db.runJob("GET_MODEL", {
+            const songModel = await this.db.runJob("GET_MODEL", {
                 modelName: "song",
             });
             async.waterfall(
@@ -164,7 +165,7 @@ class SongsModule extends CoreClass {
                 ],
                 (err, song) => {
                     if (err && err !== true) return reject(new Error(err));
-                    resolve(song);
+                    resolve({ song });
                 }
             );
         });
@@ -179,7 +180,7 @@ class SongsModule extends CoreClass {
     UPDATE_SONG(payload) {
         //songId, cb
         return new Promise(async (resolve, reject) => {
-            const songModel = await db.runJob("GET_MODEL", {
+            const songModel = await this.db.runJob("GET_MODEL", {
                 modelName: "song",
             });
             async.waterfall(
@@ -225,7 +226,7 @@ class SongsModule extends CoreClass {
     DELETE_SONG(payload) {
         //songId, cb
         return new Promise(async (resolve, reject) => {
-            const songModel = await db.runJob("GET_MODEL", {
+            const songModel = await this.db.runJob("GET_MODEL", {
                 modelName: "song",
             });
             async.waterfall(

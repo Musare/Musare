@@ -15,8 +15,8 @@ cache.runJob("SUB", {
     cb: (news) => {
         utils.runJob("SOCKETS_FROM_USER", {
             userId: news.createdBy,
-            cb: (sockets) => {
-                sockets.forEach((socket) => {
+            cb: (response) => {
+                response.sockets.forEach((socket) => {
                     socket.emit("event:admin.news.created", news);
                 });
             },
@@ -29,8 +29,8 @@ cache.runJob("SUB", {
     cb: (news) => {
         utils.runJob("SOCKETS_FROM_USER", {
             userId: news.createdBy,
-            cb: (sockets) => {
-                sockets.forEach((socket) => {
+            cb: (response) => {
+                response.sockets.forEach((socket) => {
                     socket.emit("event:admin.news.removed", news);
                 });
             },
@@ -43,8 +43,8 @@ cache.runJob("SUB", {
     cb: (news) => {
         utils.runJob("SOCKETS_FROM_USER", {
             userId: news.createdBy,
-            cb: (sockets) => {
-                sockets.forEach((socket) => {
+            cb: (response) => {
+                response.sockets.forEach((socket) => {
                     socket.emit("event:admin.news.updated", news);
                 });
             },

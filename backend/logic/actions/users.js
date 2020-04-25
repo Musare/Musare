@@ -23,8 +23,8 @@ cache.runJob("SUB", {
     cb: (user) => {
         utils.runJob("SOCKETS_FROM_USER", {
             userId: user._id,
-            cb: (sockets) => {
-                sockets.forEach((socket) => {
+            cb: (response) => {
+                response.sockets.forEach((socket) => {
                     socket.emit("event:user.username.changed", user.username);
                 });
             },
@@ -37,8 +37,8 @@ cache.runJob("SUB", {
     cb: (userId) => {
         utils.runJob("SOCKETS_FROM_USER_WITHOUT_CACHE", {
             userId: userId,
-            cb: (sockets) => {
-                sockets.forEach((socket) => {
+            cb: (response) => {
+                response.sockets.forEach((socket) => {
                     socket.emit("keep.event:user.session.removed");
                 });
             },
@@ -51,8 +51,8 @@ cache.runJob("SUB", {
     cb: (userId) => {
         utils.runJob("SOCKETS_FROM_USER", {
             userId: userId,
-            cb: (sockets) => {
-                sockets.forEach((socket) => {
+            cb: (response) => {
+                response.sockets.forEach((socket) => {
                     socket.emit("event:user.linkPassword");
                 });
             },
@@ -65,8 +65,8 @@ cache.runJob("SUB", {
     cb: (userId) => {
         utils.runJob("SOCKETS_FROM_USER", {
             userId: userId,
-            cb: (sockets) => {
-                sockets.forEach((socket) => {
+            cb: (response) => {
+                response.sockets.forEach((socket) => {
                     socket.emit("event:user.linkGitHub");
                 });
             },
@@ -79,8 +79,8 @@ cache.runJob("SUB", {
     cb: (userId) => {
         utils.runJob("SOCKETS_FROM_USER", {
             userId: userId,
-            cb: (sockets) => {
-                sockets.forEach((socket) => {
+            cb: (response) => {
+                response.sockets.forEach((socket) => {
                     socket.emit("event:user.unlinkPassword");
                 });
             },
@@ -93,8 +93,8 @@ cache.runJob("SUB", {
     cb: (userId) => {
         utils.runJob("SOCKETS_FROM_USER", {
             userId: userId,
-            cb: (sockets) => {
-                sockets.forEach((socket) => {
+            cb: (response) => {
+                response.sockets.forEach((socket) => {
                     socket.emit("event:user.unlinkGitHub");
                 });
             },
@@ -107,8 +107,8 @@ cache.runJob("SUB", {
     cb: (data) => {
         utils.runJob("SOCKETS_FROM_USER", {
             userId: data.userId,
-            cb: (sockets) => {
-                sockets.forEach((socket) => {
+            cb: (response) => {
+                response.sockets.forEach((socket) => {
                     socket.emit("keep.event:banned", data.punishment);
                     socket.disconnect(true);
                 });
@@ -122,8 +122,8 @@ cache.runJob("SUB", {
     cb: (data) => {
         utils.runJob("SOCKETS_FROM_USER", {
             userId: data.userId,
-            cb: (sockets) => {
-                sockets.forEach((socket) => {
+            cb: (response) => {
+                response.sockets.forEach((socket) => {
                     socket.emit("event:user.favoritedStation", data.stationId);
                 });
             },
@@ -136,8 +136,8 @@ cache.runJob("SUB", {
     cb: (data) => {
         utils.runJob("SOCKETS_FROM_USER", {
             userId: data.userId,
-            cb: (sockets) => {
-                sockets.forEach((socket) => {
+            cb: (response) => {
+                response.sockets.forEach((socket) => {
                     socket.emit(
                         "event:user.unfavoritedStation",
                         data.stationId

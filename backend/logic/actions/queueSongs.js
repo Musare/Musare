@@ -264,7 +264,8 @@ let lib = {
                     //TODO Add err object as first param of callback
                     utils
                         .runJob("GET_SONG_FROM_YOUTUBE", { songId })
-                        .then((song) => {
+                        .then((response) => {
+                            const song = response.song;
                             song.duration = -1;
                             song.artists = [];
                             song.genres = [];
