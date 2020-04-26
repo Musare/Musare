@@ -144,7 +144,7 @@ class StationsModule extends CoreClass {
                     (stations, next) => {
                         this.setStage(5);
                         async.each(
-                            [stations[0]],
+                            stations,
                             (station, next2) => {
                                 async.waterfall(
                                     [

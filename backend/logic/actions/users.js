@@ -385,7 +385,7 @@ module.exports = {
 
                 (hash, next) => {
                     utils
-                        .runJob("GENERATE_RANDOM_STRONG", { length: 12 })
+                        .runJob("GENERATE_RANDOM_STRING", { length: 12 })
                         .then((_id) => {
                             next(null, hash, _id);
                         });
@@ -432,12 +432,12 @@ module.exports = {
                         username,
                         verificationToken,
                         () => {
-                            next(newUser);
+                            next(null, newUser);
                         }
                     );
                 },
             ],
-            async (user, err) => {
+            async (err, user) => {
                 if (err && err !== true) {
                     err = await utils.runJob("GET_ERROR", { error: err });
                     console.log(

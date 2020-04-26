@@ -278,6 +278,11 @@ class IOModule extends CoreClass {
                                                     .concat(args)
                                                     .concat([
                                                         (result) => {
+                                                            this.log(
+                                                                "INFO",
+                                                                "IO_ACTION",
+                                                                `Response to action. Action: ${namespace}.${action}. Response status: ${result.status}`
+                                                            );
                                                             // respond to the socket with our message
                                                             if (
                                                                 typeof cb ===
