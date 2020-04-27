@@ -14,7 +14,6 @@ startMongo.cmd
 *.rdb
 
 npm-debug.log
-yarn-error.log
 lerna-debug.log
 
 # Backend
@@ -22,7 +21,6 @@ backend/node_modules/
 backend/config/default.json
 
 # Frontend
-frontend/yarn-error.log
 frontend/bundle-stats.json
 frontend/bundle-report.html
 frontend/node_modules/

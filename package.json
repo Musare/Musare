@@ -7,11 +7,11 @@
   "license": "GPL-3.0",
   "repository": "https://github.com/Musare/MusareNode",
   "scripts": {
-    "postinstall": "yarn run bootstrap",
+    "postinstall": "npm run bootstrap",
     "bootstrap": "npx lerna bootstrap --ci",
     "dev": "npx npm-run-all -p dev:*",
-    "dev:frontend": "cd ./frontend && yarn dev",
-    "dev:backend": "cd ./backend && yarn dev"
+    "dev:frontend": "cd ./frontend && npm dev",
+    "dev:backend": "cd ./backend && npm dev"
   },
   "devDependencies": {
     "eslint": "6.1.0",
