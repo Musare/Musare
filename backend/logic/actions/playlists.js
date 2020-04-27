@@ -495,6 +495,7 @@ let lib = {
             const playlistModel = await db.runJob("GET_MODEL", {
                 modelName: "playlist",
             });
+
             async.waterfall(
                 [
                     (next) => {
@@ -629,20 +630,18 @@ let lib = {
                                 url,
                                 musicOnly,
                             })
-                            .then(
-                                (songIds,
-                                (otherSongIds) => {
-                                    if (otherSongIds) {
-                                        videosInPlaylistTotal = songIds.length;
-                                        songsInPlaylistTotal =
-                                            otherSongIds.length;
-                                    } else {
-                                        songsInPlaylistTotal = videosInPlaylistTotal =
-                                            songIds.length;
-                                    }
-                                    next(null, songIds);
-                                })
-                            );
+                            .then((response) => {
+                                if (response.filteredSongs) {
+                                    videosInPlaylistTotal =
+                                        response.songs.length;
+                                    songsInPlaylistTotal =
+                                        response.filteredSongs.length;
+                                } else {
+                                    songsInPlaylistTotal = videosInPlaylistTotal =
+                                        response.songs.length;
+                                }
+                                next(null, response.songs);
+                            });
                     },
                     (songIds, next) => {
                         let processed = 0;

@@ -510,7 +510,7 @@ class UtilsModule extends CoreClass {
                             const songId = item.id;
                             if (!item.topicDetails) return;
                             else if (
-                                item.topicDetails.topicIds.indexOf(
+                                item.topicDetails.relevantTopicIds.indexOf(
                                     "/m/04rlf"
                                 ) !== -1
                             ) {
@@ -576,7 +576,7 @@ class UtilsModule extends CoreClass {
                                     .runJob("FILTER_MUSIC_VIDEOS_YOUTUBE", {
                                         videoIds: songs.slice(),
                                     })
-                                    .resolve((filteredSongs) => {
+                                    .then((filteredSongs) => {
                                         resolve({ filteredSongs, songs });
                                     });
                             }

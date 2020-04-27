@@ -33,7 +33,10 @@ module.exports = function(next) {
                 (user, next) => {
                     if (!user) return next("Login required.");
                     if (user.role === "admin") return next(true);
-                    stations.getStation(stationId, next);
+                    stations
+                        .runJob("GET_STATION", { stationId })
+                        .then((station) => next(null, station))
+                        .catch(next);
                 },
                 (station, next) => {
                     if (!station) return next("Station not found.");

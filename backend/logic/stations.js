@@ -926,10 +926,15 @@ class StationsModule extends CoreClass {
                             { _id: station._id },
                             { $set },
                             (err) => {
-                                this.runJob("UPDATE_STATION", {
-                                    stationId: station._id,
-                                    bypassQueue: payload.bypassQueue,
-                                })
+                                this.runJob(
+                                    "UPDATE_STATION",
+                                    {
+                                        stationId: station._id,
+                                        bypassQueue: payload.bypassQueue,
+                                    },
+
+                                    { bypassQueue: payload.bypassQueue }
+                                )
                                     .then((station) => {
                                         if (
                                             station.type === "community" &&
