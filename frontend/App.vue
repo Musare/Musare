@@ -1,12 +1,8 @@
 <template>
-	<div>
+	<div class="upper-container">
 		<banned v-if="banned" />
-		<div v-else>
-			<h1 v-if="!socketConnected" class="alert">
-				Could not connect to the server.
-			</h1>
-			<!-- should be a persistant toast -->
-			<router-view />
+		<div v-else class="upper-container">
+			<router-view :key="$route.fullPath" class="main-container" />
 			<what-is-new />
 			<mobile-alert />
 			<login-modal v-if="modals.header.login" />
@@ -17,7 +13,6 @@
 
 <script>
 import { mapState, mapActions } from "vuex";
-
 import Toast from "toasters";
 
 import Banned from "./components/pages/Banned.vue";
@@ -26,13 +21,15 @@ import MobileAlert from "./components/Modals/MobileAlert.vue";
 import LoginModal from "./components/Modals/Login.vue";
 import RegisterModal from "./components/Modals/Register.vue";
 import io from "./io";
+import keyboardShortcuts from "./keyboardShortcuts";
 
 export default {
 	replace: false,
 	data() {
 		return {
 			serverDomain: "",
-			socketConnected: true
+			socketConnected: true,
+			keyIsDown: false
 		};
 	},
 	computed: mapState({
@@ -42,32 +39,88 @@ export default {
 		userId: state => state.user.auth.userId,
 		banned: state => state.user.auth.banned,
 		modals: state => state.modals.modals,
-		currentlyActive: state => state.modals.currentlyActive
+		currentlyActive: state => state.modals.currentlyActive,
+		nightmode: state => state.user.preferences.nightmode
 	}),
 	methods: {
 		submitOnEnter: (cb, event) => {
 			if (event.which === 13) cb();
 		},
-		...mapActions("modals", ["closeCurrentModal"])
+		enableNightMode: () => {
+			document
+				.getElementsByTagName("body")[0]
+				.classList.add("night-mode");
+		},
+		disableNightMode: () => {
+			document
+				.getElementsByTagName("body")[0]
+				.classList.remove("night-mode");
+		},
+		...mapActions("modals", ["closeCurrentModal"]),
+		...mapActions("user/preferences", ["changeNightmode"])
+	},
+	watch: {
+		socketConnected: connected => {
+			console.log(connected);
+			if (!connected)
+				new Toast({
+					content: "Could not connect to the server.",
+					persistant: true
+				});
+			else {
+				// better implementation once vue-roaster is updated
+				document
+					.getElementById("toasts-content")
+					.childNodes.forEach(toast => {
+						if (
+							toast.innerHTML ===
+							"Could not connect to the server."
+						) {
+							toast.remove();
+						}
+					});
+			}
+		},
+		nightmode(nightmode) {
+			if (nightmode) this.enableNightMode();
+			else this.disableNightMode();
+		}
 	},
 	beforeMount() {
 		const nightmode =
 			false || JSON.parse(localStorage.getItem("nightmode"));
-		if (nightmode) {
-			document
-				.getElementsByTagName("body")[0]
-				.classList.add("night-mode");
-		}
+		this.changeNightmode(nightmode);
+		if (nightmode) this.enableNightMode();
+		else this.disableNightMode();
 	},
 	mounted() {
 		document.onkeydown = ev => {
 			const event = ev || window.event;
-			if (
-				event.keyCode === 27 &&
-				Object.keys(this.currentlyActive).length !== 0
-			)
-				this.closeCurrentModal();
+			const { keyCode } = event;
+			const shift = event.shiftKey;
+			const ctrl = event.ctrlKey;
+
+			const identifier = `${keyCode}.${shift}.${ctrl}`;
+
+			if (this.keyIsDown === identifier) return;
+			this.keyIsDown = identifier;
+
+			keyboardShortcuts.handleKeyDown(keyCode, shift, ctrl);
 		};
+
+		document.onkeyup = () => {
+			this.keyIsDown = "";
+		};
+
+		keyboardShortcuts.registerShortcut("closeModal", {
+			keyCode: 27,
+			shift: false,
+			ctrl: false,
+			handler: () => {
+				if (Object.keys(this.currentlyActive).length !== 0)
+					this.closeCurrentModal();
+			}
+		});
 
 		if (localStorage.getItem("github_redirect")) {
 			this.$router.go(localStorage.getItem("github_redirect"));
@@ -155,12 +208,28 @@ body.night-mode {
 
 html {
 	overflow: auto !important;
+	height: 100%;
 }
 
 body {
 	background-color: $light-grey;
 	color: $dark-grey;
 	font-family: "Roboto", Helvetica, Arial, sans-serif;
+	height: 100%;
+}
+
+.upper-container {
+	height: 100%;
+}
+
+.main-container {
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+
+	> .container {
+		flex: 1 0 auto;
+	}
 }
 
 a {

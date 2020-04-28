@@ -194,7 +194,6 @@ export default {
 	components: { EditStation, UserIdToUsername },
 	data() {
 		return {
-			stations: [],
 			newStation: {
 				genres: [],
 				blacklistedGenres: []
@@ -202,6 +201,9 @@ export default {
 		};
 	},
 	computed: {
+		...mapState("admin/stations", {
+			stations: state => state.stations
+		}),
 		...mapState("modals", {
 			modals: state => state.modals.station
 		})
@@ -329,24 +331,28 @@ export default {
 		},
 		init() {
 			this.socket.emit("stations.index", data => {
-				this.stations = data.stations;
+				this.loadStations(data.stations);
 			});
 			this.socket.emit("apis.joinAdminRoom", "stations", () => {});
 		},
 		...mapActions("modals", ["openModal"]),
-		...mapActions("admin/stations", ["editStation"])
+		...mapActions("admin/stations", [
+			"editStation",
+			"loadStations",
+			"stationRemoved",
+			"stationAdded"
+		])
 	},
 	mounted() {
 		io.getSocket(socket => {
 			this.socket = socket;
 			if (this.socket.connected) this.init();
+
 			this.socket.on("event:admin.station.added", station => {
-				this.stations.push(station);
+				this.stationAdded(station);
 			});
 			this.socket.on("event:admin.station.removed", stationId => {
-				this.stations = this.stations.filter(station => {
-					return station._id !== stationId;
-				});
+				this.stationRemoved(stationId);
 			});
 			io.onConnect(() => {
 				this.init();

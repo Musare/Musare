@@ -118,7 +118,6 @@
 							class="textarea"
 							maxlength="400"
 							placeholder="Any other details..."
-							@keyup="updateCharactersRemaining()"
 						/>
 						<div class="textarea-counter">
 							{{ charactersRemaining }}
@@ -159,7 +158,6 @@ export default {
 	components: { Modal },
 	data() {
 		return {
-			charactersRemaining: 400,
 			isPreviousSongActive: false,
 			isCurrentSongActive: true,
 			report: {
@@ -207,10 +205,15 @@ export default {
 			]
 		};
 	},
-	computed: mapState({
-		currentSong: state => state.station.currentSong,
-		previousSong: state => state.station.previousSong
-	}),
+	computed: {
+		charactersRemaining() {
+			return 400 - this.report.description.length;
+		},
+		...mapState({
+			currentSong: state => state.station.currentSong,
+			previousSong: state => state.station.previousSong
+		})
+	},
 	mounted() {
 		io.getSocket(socket => {
 			this.socket = socket;
@@ -229,10 +232,6 @@ export default {
 						modal: "report"
 					});
 			});
-		},
-		updateCharactersRemaining() {
-			this.charactersRemaining =
-				400 - document.getElementsByClassName("textarea").value.length;
 		},
 		highlight(type) {
 			if (type === "currentSong") {

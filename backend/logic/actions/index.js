@@ -7,6 +7,7 @@ module.exports = {
 	stations: require('./stations'),
 	playlists: require('./playlists'),
 	users: require('./users'),
+	activities: require('./activities'),
 	reports: require('./reports'),
 	news: require('./news'),
 	punishments: require('./punishments')

@@ -62,7 +62,12 @@
 					<a
 						href="#"
 						class="no-song"
-						@click="sidebars.playlist = true"
+						@click="
+							toggleSidebar({
+								sector: 'station',
+								sidebar: 'playlist'
+							})
+						"
 						>Play a private playlist</a
 					>
 				</h4>
@@ -131,7 +136,7 @@
 							</div>
 						</div>
 						<div class="media-right">
-							{{ formatTime(currentSong.duration) }}
+							{{ utils.formatTime(currentSong.duration) }}
 						</div>
 					</article>
 					<p v-if="noSong" class="center">
@@ -173,7 +178,7 @@
 							</div>
 						</div>
 						<div class="media-right">
-							{{ formatTime(song.duration) }}
+							{{ utils.formatTime(song.duration) }}
 						</div>
 					</article>
 					<a
@@ -198,7 +203,7 @@
 						<div class="column is-12-desktop">
 							<h4 id="time-display">
 								{{ timeElapsed }} /
-								{{ formatTime(currentSong.duration) }}
+								{{ utils.formatTime(currentSong.duration) }}
 							</h4>
 							<h3>{{ currentSong.title }}</h3>
 							<h4 class="thin" style="margin-left: 0">
@@ -224,11 +229,11 @@
 											>volume_down</i
 										>
 										<input
-											id="volumeSlider"
+											v-model="volumeSliderValue"
 											type="range"
 											min="0"
 											max="10000"
-											class="active"
+											class="volumeSlider active"
 											@change="changeVolume()"
 											@input="changeVolume()"
 										/>
@@ -321,7 +326,7 @@
 							</h4>
 							<h5>
 								{{ timeElapsed }} /
-								{{ formatTime(currentSong.duration) }}
+								{{ utils.formatTime(currentSong.duration) }}
 							</h5>
 							<div>
 								<form class="columns" action="#">
@@ -341,11 +346,11 @@
 											>volume_down</i
 										>
 										<input
-											id="volumeSlider"
+											v-model="volumeSliderValue"
 											type="range"
 											min="0"
 											max="10000"
-											class="active"
+											class="active volumeSlider"
 											@change="changeVolume()"
 											@input="changeVolume()"
 										/>
@@ -430,10 +435,13 @@ import UserIdToUsername from "../UserIdToUsername.vue";
 import Z404 from "../404.vue";
 
 import io from "../../io";
+import keyboardShortcuts from "../../keyboardShortcuts";
+import utils from "../../js/utils";
 
 export default {
 	data() {
 		return {
+			utils,
 			title: "Station",
 			loading: true,
 			ready: false,
@@ -445,33 +453,33 @@ export default {
 			timeElapsed: "0:00",
 			liked: false,
 			disliked: false,
-			sidebars: {
-				songslist: false,
-				users: false,
-				playlist: false
-			},
 			timeBeforePause: 0,
 			skipVotes: 0,
-			privatePlaylistQueueSelected: null,
 			automaticallyRequestedSongId: null,
 			systemDifference: 0,
 			attemptsToPlayVideo: 0,
 			canAutoplay: true,
 			lastTimeRequestedIfCanAutoplay: 0,
 			seeking: false,
-			playbackRate: 1
+			playbackRate: 1,
+			volumeSliderValue: 0
 		};
 	},
 	computed: {
 		...mapState("modals", {
 			modals: state => state.modals.station
 		}),
+		...mapState("sidebars", {
+			sidebars: state => state.sidebars.station
+		}),
 		...mapState("station", {
 			station: state => state.station,
 			currentSong: state => state.currentSong,
 			songsList: state => state.songsList,
 			paused: state => state.paused,
-			noSong: state => state.noSong
+			noSong: state => state.noSong,
+			privatePlaylistQueueSelected: state =>
+				state.privatePlaylistQueueSelected
 		}),
 		...mapState({
 			loggedIn: state => state.user.auth.loggedIn,
@@ -485,6 +493,9 @@ export default {
 		},
 		isAdminOnly() {
 			return this.loggedIn && this.role === "admin";
+		},
+		isOwnerOrAdmin() {
+			return this.isOwnerOnly() || this.isAdminOnly();
 		},
 		removeFromQueue(songId) {
 			window.socket.emit(
@@ -501,12 +512,6 @@ export default {
 					} else new Toast({ content: res.message, timeout: 8000 });
 				}
 			);
-		},
-		toggleSidebar(type) {
-			Object.keys(this.sidebars).forEach(sidebar => {
-				if (sidebar !== type) this.sidebars[sidebar] = false;
-				else this.sidebars[type] = !this.sidebars[type];
-			});
 		},
 		youtubeReady() {
 			if (!this.player) {
@@ -626,33 +631,6 @@ export default {
 				)}%`;
 			}
 		},
-		formatTime(originalDuration) {
-			if (originalDuration) {
-				if (originalDuration < 0) return "0:00";
-
-				let duration = originalDuration;
-				let hours = Math.floor(duration / (60 * 60));
-				duration -= hours * 60 * 60;
-				let minutes = Math.floor(duration / 60);
-				duration -= minutes * 60;
-				let seconds = Math.floor(duration);
-
-				if (hours === 0) {
-					hours = "";
-				}
-
-				if (hours > 0) {
-					if (minutes < 10) minutes = `0${minutes}`;
-				}
-
-				if (seconds < 10) {
-					seconds = `0${seconds}`;
-				}
-
-				return `${hours}${hours ? ":" : ""}${minutes}:${seconds}`;
-			}
-			return false;
-		},
 		calculateTimeElapsed() {
 			if (
 				this.playerReady &&
@@ -748,7 +726,7 @@ export default {
 			const songDuration = this.currentSong.duration;
 			if (songDuration <= duration) this.player.pauseVideo();
 			if (!this.paused && duration <= songDuration)
-				this.timeElapsed = this.formatTime(duration);
+				this.timeElapsed = utils.formatTime(duration);
 		},
 		toggleLock() {
 			window.socket.emit("stations.toggleLock", this.station._id, res => {
@@ -761,7 +739,7 @@ export default {
 			});
 		},
 		changeVolume() {
-			const volume = document.getElementById("volumeSlider").value;
+			const volume = this.volumeSliderValue;
 			localStorage.setItem("volume", volume / 100);
 			if (this.playerReady) {
 				this.player.setVolume(volume / 100);
@@ -857,7 +835,7 @@ export default {
 					this.player.getVolume() * 100 <= 0 ? previousVolume : 0;
 				this.muted = !this.muted;
 				localStorage.setItem("muted", this.muted);
-				document.getElementById("volumeSlider").value = volume * 100;
+				this.volumeSliderValue = volume * 100;
 				this.player.setVolume(volume);
 				if (!this.muted) localStorage.setItem("volume", volume);
 			}
@@ -871,7 +849,7 @@ export default {
 					localStorage.setItem("muted", false);
 				}
 				if (volume > 100) volume = 100;
-				document.getElementById("volumeSlider").value = volume * 100;
+				this.volumeSliderValue = volume * 100;
 				this.player.setVolume(volume);
 				localStorage.setItem("volume", volume);
 			}
@@ -943,47 +921,58 @@ export default {
 						this.privatePlaylistQueueSelected,
 						data => {
 							if (data.status === "success") {
-								if (data.song.duration < 15 * 60) {
-									this.automaticallyRequestedSongId =
-										data.song.songId;
-									this.socket.emit(
-										"stations.addToQueue",
-										this.station._id,
-										data.song.songId,
-										data2 => {
-											if (data2.status === "success") {
-												this.socket.emit(
-													"playlists.moveSongToBottom",
-													this
-														.privatePlaylistQueueSelected,
-													data.song.songId,
-													data3 => {
-														if (
-															data3.status ===
-															"success"
-														) {} // eslint-disable-line
-													}
-												);
+								if (data.song) {
+									if (data.song.duration < 15 * 60) {
+										this.automaticallyRequestedSongId =
+											data.song.songId;
+										this.socket.emit(
+											"stations.addToQueue",
+											this.station._id,
+											data.song.songId,
+											data2 => {
+												if (
+													data2.status === "success"
+												) {
+													this.socket.emit(
+														"playlists.moveSongToBottom",
+														this
+															.privatePlaylistQueueSelected,
+														data.song.songId,
+														data3 => {
+															if (
+																data3.status ===
+																"success"
+															) {} // eslint-disable-line
+														}
+													);
+												}
 											}
-										}
-									);
+										);
+									} else {
+										new Toast({
+											content: `Top song in playlist was too long to be added.`,
+											timeout: 3000
+										});
+										this.socket.emit(
+											"playlists.moveSongToBottom",
+											this.privatePlaylistQueueSelected,
+											data.song.songId,
+											data3 => {
+												if (
+													data3.status === "success"
+												) {
+													setTimeout(() => {
+														this.addFirstPrivatePlaylistSongToQueue();
+													}, 3000);
+												}
+											}
+										);
+									}
 								} else {
 									new Toast({
-										content: `Top song in playlist was too long to be added.`,
-										timeout: 3000
+										content: `Selected playlist has no songs.`,
+										timeout: 4000
 									});
-									this.socket.emit(
-										"playlists.moveSongToBottom",
-										this.privatePlaylistQueueSelected,
-										data.song.songId,
-										data3 => {
-											if (data3.status === "success") {
-												setTimeout(() => {
-													this.addFirstPrivatePlaylistSongToQueue();
-												}, 3000);
-											}
-										}
-									);
 								}
 							}
 						}
@@ -1059,6 +1048,85 @@ export default {
 						});
 					}
 
+					if (this.isOwnerOrAdmin()) {
+						keyboardShortcuts.registerShortcut(
+							"station.pauseResume",
+							{
+								keyCode: 32,
+								shift: false,
+								ctrl: true,
+								handler: () => {
+									if (this.paused) this.resumeStation();
+									else this.pauseStation();
+								}
+							}
+						);
+
+						keyboardShortcuts.registerShortcut(
+							"station.skipStation",
+							{
+								keyCode: 39,
+								shift: false,
+								ctrl: true,
+								handler: () => {
+									this.skipStation();
+								}
+							}
+						);
+					}
+
+					keyboardShortcuts.registerShortcut(
+						"station.lowerVolumeLarge",
+						{
+							keyCode: 40,
+							shift: false,
+							ctrl: true,
+							handler: () => {
+								this.volumeSliderValue -= 1000;
+								this.changeVolume();
+							}
+						}
+					);
+
+					keyboardShortcuts.registerShortcut(
+						"station.lowerVolumeSmall",
+						{
+							keyCode: 40,
+							shift: true,
+							ctrl: true,
+							handler: () => {
+								this.volumeSliderValue -= 100;
+								this.changeVolume();
+							}
+						}
+					);
+
+					keyboardShortcuts.registerShortcut(
+						"station.increaseVolumeLarge",
+						{
+							keyCode: 38,
+							shift: false,
+							ctrl: true,
+							handler: () => {
+								this.volumeSliderValue += 1000;
+								this.changeVolume();
+							}
+						}
+					);
+
+					keyboardShortcuts.registerShortcut(
+						"station.increaseVolumeSmall",
+						{
+							keyCode: 38,
+							shift: true,
+							ctrl: true,
+							handler: () => {
+								this.volumeSliderValue += 100;
+								this.changeVolume();
+							}
+						}
+					);
+
 					// UNIX client time before ping
 					const beforePing = Date.now();
 					this.socket.emit("apis.ping", pong => {
@@ -1086,6 +1154,7 @@ export default {
 				}
 			});
 		},
+		...mapActions("sidebars", ["toggleSidebar"]),
 		...mapActions("modals", ["openModal"]),
 		...mapActions("station", [
 			"joinStation",
@@ -1271,7 +1340,7 @@ export default {
 		if (JSON.parse(localStorage.getItem("muted"))) {
 			this.muted = true;
 			this.player.setVolume(0);
-			document.getElementById("volumeSlider").value = 0 * 100;
+			this.volumeSliderValue = 0 * 100;
 		} else {
 			let volume = parseFloat(localStorage.getItem("volume"));
 			volume =
@@ -1279,8 +1348,22 @@ export default {
 					? volume
 					: 20;
 			localStorage.setItem("volume", volume);
-			document.getElementById("volumeSlider").value = volume * 100;
+			this.volumeSliderValue = volume * 100;
 		}
+	},
+	beforeDestroy() {
+		const shortcutNames = [
+			"station.pauseResume",
+			"station.skipStation",
+			"station.lowerVolumeLarge",
+			"station.lowerVolumeSmall",
+			"station.increaseVolumeLarge",
+			"station.increaseVolumeSmall"
+		];
+
+		shortcutNames.forEach(shortcutName => {
+			keyboardShortcuts.unregisterShortcut(shortcutName);
+		});
 	},
 	components: {
 		StationHeader,
@@ -1339,7 +1422,7 @@ export default {
 	text-align: center;
 }
 
-#volumeSlider {
+.volumeSlider {
 	padding: 0 15px;
 	background: transparent;
 }

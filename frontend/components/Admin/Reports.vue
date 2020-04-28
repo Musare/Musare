@@ -129,17 +129,20 @@ export default {
 			this.openModal({ sector: "admin", modal: "viewReport" });
 		},
 		resolve(reportId) {
-			this.socket.emit("reports.resolve", reportId, res => {
-				new Toast({ content: res.message, timeout: 3000 });
-				if (res.status === "success" && this.modals.viewReport)
-					this.closeModal({
-						sector: "admin",
-						modal: "viewReport"
-					});
-			});
+			return this.resolveReport(reportId)
+				.then(res => {
+					if (res.status === "success" && this.modals.viewReport)
+						this.closeModal({
+							sector: "admin",
+							modal: "viewReport"
+						});
+				})
+				.catch(
+					err => new Toast({ content: err.message, timeout: 5000 })
+				);
 		},
 		...mapActions("modals", ["openModal", "closeModal"]),
-		...mapActions("admin/reports", ["viewReport"])
+		...mapActions("admin/reports", ["viewReport", "resolveReport"])
 	}
 };
 </script>

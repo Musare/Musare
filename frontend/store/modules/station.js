@@ -2,6 +2,7 @@
 
 const state = {
 	station: {},
+	privatePlaylistQueueSelected: null,
 	editing: {},
 	userCount: 0,
 	users: [],
@@ -41,6 +42,9 @@ const actions = {
 	},
 	updateNoSong: ({ commit }, noSong) => {
 		commit("updateNoSong", noSong);
+	},
+	updatePrivatePlaylistQueueSelected: ({ commit }, status) => {
+		commit("updatePrivatePlaylistQueueSelected", status);
 	}
 };
 
@@ -78,6 +82,9 @@ const mutations = {
 	},
 	updateNoSong(state, noSong) {
 		state.noSong = noSong;
+	},
+	updatePrivatePlaylistQueueSelected(state, status) {
+		state.privatePlaylistQueueSelected = status;
 	}
 };
 

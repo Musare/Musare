@@ -1,176 +1,258 @@
-'use strict';
+const CoreClass = require("../core.js");
 
-const coreClass = require("../core");
+const async = require("async");
+const mongoose = require("mongoose");
 
-const async = require('async');
-const mongoose = require('mongoose');
+class SongsModule extends CoreClass {
+    constructor() {
+        super("songs");
+    }
 
+    initialize() {
+        return new Promise(async (resolve, reject) => {
+            this.setStage(1);
 
+            this.cache = this.moduleManager.modules["cache"];
+            this.db = this.moduleManager.modules["db"];
+            this.io = this.moduleManager.modules["io"];
+            this.utils = this.moduleManager.modules["utils"];
 
+            const songModel = await this.db.runJob("GET_MODEL", {
+                modelName: "song",
+            });
 
-module.exports = class extends coreClass {
-	constructor(name, moduleManager) {
-		super(name, moduleManager);
+            const songSchema = await this.cache.runJob("GET_SCHEMA", {
+                schemaName: "song",
+            });
 
-		this.dependsOn = ["utils", "cache", "db"];
-	}
+            async.waterfall(
+                [
+                    (next) => {
+                        this.setStage(2);
+                        this.cache
+                            .runJob("HGETALL", { table: "songs" })
+                            .then((songs) => next(null, songs))
+                            .catch(next);
+                    },
 
-	initialize() {
-		return new Promise((resolve, reject) => {
-			this.setStage(1);
+                    (songs, next) => {
+                        this.setStage(3);
+                        if (!songs) return next();
+                        let songIds = Object.keys(songs);
+                        async.each(
+                            songIds,
+                            (songId, next) => {
+                                songModel.findOne({ songId }, (err, song) => {
+                                    if (err) next(err);
+                                    else if (!song)
+                                        this.cache
+                                            .runJob("HDEL", {
+                                                table: "songs",
+                                                key: songId,
+                                            })
+                                            .then(() => next())
+                                            .catch(next);
+                                    else next();
+                                });
+                            },
+                            next
+                        );
+                    },
 
-			this.cache = this.moduleManager.modules["cache"];
-			this.db = this.moduleManager.modules["db"];
-			this.io = this.moduleManager.modules["io"];
-			this.utils = this.moduleManager.modules["utils"];
+                    (next) => {
+                        this.setStage(4);
+                        songModel.find({}, next);
+                    },
 
-			async.waterfall([
-				(next) => {
-					this.setStage(2);
-					this.cache.hgetall('songs', next);
-				},
-	
-				(songs, next) => {
-					this.setStage(3);
-					if (!songs) return next();
-					let songIds = Object.keys(songs);
-					async.each(songIds, (songId, next) => {
-						this.db.models.song.findOne({songId}, (err, song) => {
-							if (err) next(err);
-							else if (!song) this.cache.hdel('songs', songId, next);
-							else next();
-						});
-					}, next);
-				},
-	
-				(next) => {
-					this.setStage(4);
-					this.db.models.song.find({}, next);
-				},
-	
-				(songs, next) => {
-					this.setStage(5);
-					async.each(songs, (song, next) => {
-						this.cache.hset('songs', song.songId, this.cache.schemas.song(song), next);
-					}, next);
-				}
-			], async (err) => {
-				if (err) {
-					err = await this.utils.getError(err);
-					reject(err);
-				} else {
-					resolve();
-				}
-			});
-		});
-	}
+                    (songs, next) => {
+                        this.setStage(5);
+                        async.each(
+                            songs,
+                            (song, next) => {
+                                this.cache
+                                    .runJob("HSET", {
+                                        table: "songs",
+                                        key: song.songId,
+                                        value: songSchema.song(song),
+                                    })
+                                    .then(() => next())
+                                    .catch(next);
+                            },
+                            next
+                        );
+                    },
+                ],
+                async (err) => {
+                    if (err) {
+                        err = await this.utils.runJob("GET_ERROR", {
+                            error: err,
+                        });
+                        reject(new Error(err));
+                    } else {
+                        resolve();
+                    }
+                }
+            );
+        });
+    }
 
-	/**
-	 * Gets a song by id from the cache or Mongo, and if it isn't in the cache yet, adds it the cache
-	 *
-	 * @param {String} id - the id of the song we are trying to get
-	 * @param {Function} cb - gets called once we're done initializing
-	 */
-	async getSong(id, cb) {
-		try { await this._validateHook(); } catch { return; }
+    /**
+     * Gets a song by id from the cache or Mongo, and if it isn't in the cache yet, adds it the cache
+     *
+     * @param {String} id - the id of the song we are trying to get
+     * @param {Function} cb - gets called once we're done initializing
+     */
+    GET_SONG(payload) {
+        //id, cb
+        return new Promise(async (resolve, reject) => {
+            const songModel = await this.db.runJob("GET_MODEL", {
+                modelName: "song",
+            });
 
-		async.waterfall([
-			(next) => {
-				if (!mongoose.Types.ObjectId.isValid(id)) return next('Id is not a valid ObjectId.');
-				this.cache.hget('songs', id, next);
-			},
+            async.waterfall(
+                [
+                    (next) => {
+                        if (!mongoose.Types.ObjectId.isValid(payload.id))
+                            return next("Id is not a valid ObjectId.");
+                        this.runJob("HGET", { table: "songs", key: payload.id })
+                            .then((song) => next(null, song))
+                            .catch(next);
+                    },
 
-			(song, next) => {
-				if (song) return next(true, song);
-				this.db.models.song.findOne({_id: id}, next);
-			},
+                    (song, next) => {
+                        if (song) return next(true, song);
+                        songModel.findOne({ _id: payload.id }, next);
+                    },
 
-			(song, next) => {
-				if (song) {
-					this.cache.hset('songs', id, song, next);
-				} else next('Song not found.');
-			},
+                    (song, next) => {
+                        if (song) {
+                            this.cache
+                                .runJob("HSET", {
+                                    table: "songs",
+                                    key: payload.id,
+                                    value: song,
+                                })
+                                .then((song) => next(null, song));
+                        } else next("Song not found.");
+                    },
+                ],
+                (err, song) => {
+                    if (err && err !== true) return reject(new Error(err));
 
-		], (err, song) => {
-			if (err && err !== true) return cb(err);
+                    resolve({ song });
+                }
+            );
+        });
+    }
 
-			cb(null, song);
-		});
-	}
+    /**
+     * Gets a song by song id from the cache or Mongo, and if it isn't in the cache yet, adds it the cache
+     *
+     * @param {String} songId - the mongo id of the song we are trying to get
+     * @param {Function} cb - gets called once we're done initializing
+     */
+    GET_SONG_FROM_ID(payload) {
+        //songId, cb
+        return new Promise(async (resolve, reject) => {
+            const songModel = await this.db.runJob("GET_MODEL", {
+                modelName: "song",
+            });
+            async.waterfall(
+                [
+                    (next) => {
+                        songModel.findOne({ songId: payload.songId }, next);
+                    },
+                ],
+                (err, song) => {
+                    if (err && err !== true) return reject(new Error(err));
+                    resolve({ song });
+                }
+            );
+        });
+    }
 
-	/**
-	 * Gets a song by song id from the cache or Mongo, and if it isn't in the cache yet, adds it the cache
-	 *
-	 * @param {String} songId - the mongo id of the song we are trying to get
-	 * @param {Function} cb - gets called once we're done initializing
-	 */
-	async getSongFromId(songId, cb) {
-		try { await this._validateHook(); } catch { return; }
+    /**
+     * Gets a song from id from Mongo and updates the cache with it
+     *
+     * @param {String} songId - the id of the song we are trying to update
+     * @param {Function} cb - gets called when an error occurred or when the operation was successful
+     */
+    UPDATE_SONG(payload) {
+        //songId, cb
+        return new Promise(async (resolve, reject) => {
+            const songModel = await this.db.runJob("GET_MODEL", {
+                modelName: "song",
+            });
+            async.waterfall(
+                [
+                    (next) => {
+                        songModel.findOne({ _id: payload.songId }, next);
+                    },
 
-		async.waterfall([
-			(next) => {
-				this.db.models.song.findOne({ songId }, next);
-			}
-		], (err, song) => {
-			if (err && err !== true) return cb(err);
-			else return cb(null, song);
-		});
-	}
+                    (song, next) => {
+                        if (!song) {
+                            this.cache.runJob("HDEL", {
+                                table: "songs",
+                                key: payload.songId,
+                            });
+                            return next("Song not found.");
+                        }
 
-	/**
-	 * Gets a song from id from Mongo and updates the cache with it
-	 *
-	 * @param {String} songId - the id of the song we are trying to update
-	 * @param {Function} cb - gets called when an error occurred or when the operation was successful
-	 */
-	async updateSong(songId, cb) {
-		try { await this._validateHook(); } catch { return; }
+                        this.cache
+                            .runJob("HSET", {
+                                table: "songs",
+                                key: payload.songId,
+                                value: song,
+                            })
+                            .then((song) => next(null, song))
+                            .catch(next);
+                    },
+                ],
+                (err, song) => {
+                    if (err && err !== true) return reject(new Error(err));
 
-		async.waterfall([
+                    resolve(song);
+                }
+            );
+        });
+    }
 
-			(next) => {
-				this.db.models.song.findOne({_id: songId}, next);
-			},
+    /**
+     * Deletes song from id from Mongo and cache
+     *
+     * @param {String} songId - the id of the song we are trying to delete
+     * @param {Function} cb - gets called when an error occurred or when the operation was successful
+     */
+    DELETE_SONG(payload) {
+        //songId, cb
+        return new Promise(async (resolve, reject) => {
+            const songModel = await this.db.runJob("GET_MODEL", {
+                modelName: "song",
+            });
+            async.waterfall(
+                [
+                    (next) => {
+                        songModel.deleteOne({ songId: payload.songId }, next);
+                    },
 
-			(song, next) => {
-				if (!song) {
-					this.cache.hdel('songs', songId);
-					return next('Song not found.');
-				}
+                    (next) => {
+                        this.cache
+                            .runJob("HDEL", {
+                                table: "songs",
+                                key: payload.songId,
+                            })
+                            .then(() => next())
+                            .catch(next);
+                    },
+                ],
+                (err) => {
+                    if (err && err !== true) return reject(new Error(err));
 
-				this.cache.hset('songs', songId, song, next);
-			}
-
-		], (err, song) => {
-			if (err && err !== true) return cb(err);
-
-			cb(null, song);
-		});
-	}
-
-	/**
-	 * Deletes song from id from Mongo and cache
-	 *
-	 * @param {String} songId - the id of the song we are trying to delete
-	 * @param {Function} cb - gets called when an error occurred or when the operation was successful
-	 */
-	async deleteSong(songId, cb) {
-		try { await this._validateHook(); } catch { return; }
-
-		async.waterfall([
-
-			(next) => {
-				this.db.models.song.deleteOne({ songId }, next);
-			},
-
-			(next) => {
-				this.cache.hdel('songs', songId, next);
-			}
-
-		], (err) => {
-			if (err && err !== true) cb(err);
-
-			cb(null);
-		});
-	}
+                    resolve();
+                }
+            );
+        });
+    }
 }
+
+module.exports = new SongsModule();

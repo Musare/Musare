@@ -7,7 +7,7 @@
 				<div class="group-title">
 					Stations&nbsp;
 					<a
-						v-if="$parent.loggedIn"
+						v-if="loggedIn"
 						href="#"
 						@click="
 							openModal({
@@ -115,6 +115,9 @@
 						<span v-else class="songTitle">No song</span>
 					</div>
 				</router-link>
+				<h4 v-if="stations.length === 0">
+					There are no stations to display
+				</h4>
 			</div>
 			<main-footer />
 		</div>
@@ -154,9 +157,9 @@ export default {
 			);
 		},
 		...mapState({
-			modals: state => state.modals.modals.home,
 			loggedIn: state => state.user.auth.loggedIn,
-			userId: state => state.user.auth.userId
+			userId: state => state.user.auth.userId,
+			modals: state => state.modals.modals.home
 		})
 	},
 	mounted() {

@@ -1,3 +1,5 @@
+import Toast from "toasters";
+
 const callbacks = {
 	general: {
 		temp: [],
@@ -80,6 +82,14 @@ export default {
 			console.log("IO: SOCKET CONNECT ERROR");
 			callbacks.onConnectError.temp.forEach(cb => cb());
 			callbacks.onConnectError.persist.forEach(cb => cb());
+		});
+
+		this.socket.on("error", err => {
+			console.log("IO: SOCKET ERROR", err);
+			new Toast({
+				content: err,
+				timeout: 8000
+			});
 		});
 
 		this.ready = true;

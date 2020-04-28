@@ -10,5 +10,5 @@ module.exports = {
 		reasons: Array
 	}],
 	createdBy: { type: String, required: true },
-	createdAt: { type: Date, default: Date.now(), required: true }
+	createdAt: { type: Date, default: Date.now, required: true }
 };

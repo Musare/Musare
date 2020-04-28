@@ -31,7 +31,7 @@ jobs:
       script:
         - docker-compose build frontend # build frontend
         - docker-compose up -d frontend # start frontend
-        - docker-compose exec frontend /bin/bash -c "cd app && yarn lint" # using eslint to check for formatting/linting issues
+        - docker-compose exec frontend /bin/bash -c "cd app && npm run lint" # using eslint to check for formatting/linting issues
     - stage: backend
       script:
         - docker-compose up -d mongo # start mongo (users automatically setup)

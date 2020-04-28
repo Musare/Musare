@@ -1,8 +1,8 @@
-const config = require('config');
+const config = require("config");
 
-const moduleManager = require('../../../index');
+// const moduleManager = require('../../../index');
 
-const mail = moduleManager.modules["mail"];
+const mail = require("../index");
 
 /**
  * Sends a request password email
@@ -13,12 +13,11 @@ const mail = moduleManager.modules["mail"];
  * @param {Function} cb - gets called when an error occurred or when the operation was successful
  */
 module.exports = function(to, username, code, cb) {
-	let data = {
-		from: 'Musare <noreply@musare.com>',
-		to: to,
-		subject: 'Password request',
-		html:
-			`
+    let data = {
+        from: "Musare <noreply@musare.com>",
+        to: to,
+        subject: "Password request",
+        html: `
 				Hello there ${username},
 				<br>
 				<br>
@@ -27,7 +26,13 @@ module.exports = function(to, username, code, cb) {
 				<br>
 				The code is <b>${code}</b>. You can enter this code on the page you requested the password on. This code will expire in 24 hours.
 			`
-	};
+    };
 
-	mail.sendMail(data, cb);
+    mail.runJob("SEND_MAIL", { data })
+        .then(() => {
+            cb();
+        })
+        .catch(err => {
+            cb(err);
+        });
 };

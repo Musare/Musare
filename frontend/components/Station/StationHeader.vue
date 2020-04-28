@@ -118,7 +118,7 @@
 						<span class="icon-purpose">Add song to queue</span>
 					</a>
 					<a
-						v-if="!isOwner() && !noSong"
+						v-if="!noSong"
 						class="sidebar-item"
 						href="#"
 						@click="$parent.voteSkipStation()"
@@ -174,7 +174,12 @@
 					"
 					class="sidebar-item"
 					href="#"
-					@click="$parent.toggleSidebar('songslist')"
+					@click="
+						toggleSidebar({
+							sector: 'station',
+							sidebar: 'songslist'
+						})
+					"
 				>
 					<span class="icon">
 						<i class="material-icons">queue_music</i>
@@ -184,7 +189,9 @@
 				<a
 					class="sidebar-item"
 					href="#"
-					@click="$parent.toggleSidebar('users')"
+					@click="
+						toggleSidebar({ sector: 'station', sidebar: 'users' })
+					"
 				>
 					<span class="icon">
 						<i class="material-icons">people</i>
@@ -197,7 +204,12 @@
 					v-if="loggedIn && station.type === 'community'"
 					class="sidebar-item"
 					href="#"
-					@click="$parent.toggleSidebar('playlist')"
+					@click="
+						toggleSidebar({
+							sector: 'station',
+							sidebar: 'playlist'
+						})
+					"
 				>
 					<span class="icon">
 						<i class="material-icons">library_music</i>
@@ -268,6 +280,7 @@ export default {
 			});
 		},
 		...mapActions("modals", ["openModal"]),
+		...mapActions("sidebars", ["toggleSidebar"]),
 		...mapActions("station", ["editStation"]),
 		...mapActions("user/auth", ["logout"])
 	}

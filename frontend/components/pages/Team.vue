@@ -225,6 +225,10 @@ ul {
 	list-style: none;
 }
 
+.columns {
+	margin: 0;
+}
+
 .card-content .content {
 	font-size: 15px;
 }

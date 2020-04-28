@@ -6,6 +6,10 @@ module.exports = {
 		verificationToken: String,
 		address: String
 	},
+	avatar: {
+		type: { type: String, enum: ["gravatar", "initials"] },
+		url: { type: String, required: false }
+	},
 	services: {
 		password: {
 			password: String,
@@ -29,5 +33,8 @@ module.exports = {
 	liked: [{ type: String }],
 	disliked: [{ type: String }],
 	favoriteStations: [{ type: String }],
-	createdAt: { type: Date, default: Date.now() }
+	name: { type: String, default: "" },
+	location: { type: String, default: "" },
+	bio: { type: String, default: "" },
+	createdAt: { type: Date, default: Date.now }
 };
