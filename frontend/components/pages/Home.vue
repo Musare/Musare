@@ -371,6 +371,11 @@ html {
 	}
 }
 
+.app {
+	display: flex;
+	flex-direction: column;
+}
+
 .users-count {
 	font-size: 20px;
 	position: relative;
@@ -379,6 +384,7 @@ html {
 
 .group {
 	min-height: 64px;
+	flex: 1 0 auto;
 }
 
 .station-card {
