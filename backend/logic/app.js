@@ -156,8 +156,11 @@ class AppModule extends CoreClass {
                             access_token = _access_token;
                             request.get(
                                 {
-                                    url: `https://api.github.com/user?access_token=${access_token}`,
-                                    headers: { "User-Agent": "request" },
+                                    url: `https://api.github.com/user`,
+                                    headers: {
+                                        "User-Agent": "request",
+                                        Authorization: `token ${access_token}`,
+                                    },
                                 },
                                 next
                             );
@@ -272,8 +275,11 @@ class AppModule extends CoreClass {
                                 );
                             request.get(
                                 {
-                                    url: `https://api.github.com/user/emails?access_token=${access_token}`,
-                                    headers: { "User-Agent": "request" },
+                                    url: `https://api.github.com/user/emails`,
+                                    headers: {
+                                        "User-Agent": "request",
+                                        Authorization: `token ${access_token}`,
+                                    },
                                 },
                                 next
                             );
@@ -368,8 +374,11 @@ class AppModule extends CoreClass {
                     ],
                     async (err, userId) => {
                         if (err && err !== true) {
-                            err = await this.utils.getError(err);
-                            logger.error(
+                            err = await this.utils.runJob("GET_ERROR", {
+                                error: err,
+                            });
+                            console.log(
+                                "ERROR",
                                 "AUTH_GITHUB_AUTHORIZE_CALLBACK",
                                 `Failed to authorize with GitHub. "${err}"`
                             );
@@ -460,7 +469,8 @@ class AppModule extends CoreClass {
                             let error = "An error occurred.";
                             if (typeof err === "string") error = err;
                             else if (err.message) error = err.message;
-                            logger.error(
+                            console.log(
+                                "ERROR",
                                 "VERIFY_EMAIL",
                                 `Verifying email failed. "${error}"`
                             );
