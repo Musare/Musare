@@ -19,6 +19,7 @@ services:
     - "${FRONTEND_PORT}:80"
     volumes:
     - ./frontend:/opt/app
+    - /opt/app/node_modules/
     environment:
     - FRONTEND_MODE=${FRONTEND_MODE}
     - SNYK_TOKEN=${SNYK_TOKEN}
