@@ -4,8 +4,6 @@ const cache = require("../../cache");
 const utils = require("../../utils");
 // const logger = moduleManager.modules["logger"];
 
-console.log(cache);
-
 module.exports = function(next) {
     return function(session) {
         let args = [];
@@ -13,13 +11,13 @@ module.exports = function(next) {
         let cb = args[args.length - 1];
         async.waterfall(
             [
-                next => {
+                (next) => {
                     cache
                         .runJob("HGET", {
                             table: "sessions",
-                            key: session.sessionId
+                            key: session.sessionId,
                         })
-                        .then(session => next(null, session))
+                        .then((session) => next(null, session))
                         .catch(next);
                 },
                 (session, next) => {
@@ -27,9 +25,9 @@ module.exports = function(next) {
                         return next("Login required.");
                     this.session = session;
                     next();
-                }
+                },
             ],
-            async err => {
+            async (err) => {
                 if (err) {
                     err = await utils.runJob("GET_ERROR", { error: err });
                     console.log(

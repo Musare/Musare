@@ -67,6 +67,18 @@
 					</router-link>
 				</li>
 				<li
+					:class="{ 'is-active': currentTab == 'newstatistics' }"
+					@click="showTab('newstatistics')"
+				>
+					<router-link
+						class="tab newstatistics"
+						to="/admin/newstatistics"
+					>
+						<i class="material-icons">show_chart</i>
+						<span>&nbsp;New Statistics</span>
+					</router-link>
+				</li>
+				<li
 					:class="{ 'is-active': currentTab == 'punishments' }"
 					@click="showTab('punishments')"
 				>
@@ -88,6 +100,7 @@
 		<news v-if="currentTab == 'news'" />
 		<users v-if="currentTab == 'users'" />
 		<statistics v-if="currentTab == 'statistics'" />
+		<new-statistics v-if="currentTab == 'newstatistics'" />
 		<punishments v-if="currentTab == 'punishments'" />
 	</div>
 </template>
@@ -105,6 +118,7 @@ export default {
 		News: () => import("../Admin/News.vue"),
 		Users: () => import("../Admin/Users.vue"),
 		Statistics: () => import("../Admin/Statistics.vue"),
+		NewStatistics: () => import("../Admin/NewStatistics.vue"),
 		Punishments: () => import("../Admin/Punishments.vue")
 	},
 	data() {
@@ -143,6 +157,9 @@ export default {
 					break;
 				case "/admin/statistics":
 					this.currentTab = "statistics";
+					break;
+				case "/admin/newstatistics":
+					this.currentTab = "newstatistics";
 					break;
 				case "/admin/punishments":
 					this.currentTab = "punishments";
@@ -199,6 +216,10 @@ export default {
 		border-color: $dark-pink;
 	}
 	.statistics {
+		color: $light-orange;
+		border-color: $light-orange;
+	}
+	.newstatistics {
 		color: $light-orange;
 		border-color: $light-orange;
 	}

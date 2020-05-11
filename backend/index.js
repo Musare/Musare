@@ -332,4 +332,14 @@ process.stdin.on("data", function(data) {
 
         console.log(moduleManager.modules[parts[1]].runningJobs);
     }
+    if (data.toString().startsWith("stats")) {
+        const parts = data
+            .toString()
+            .substr(0, data.toString().length - 2)
+            .split(" ");
+
+        console.log(moduleManager.modules[parts[1]].jobStatistics);
+    }
 });
+
+module.exports = moduleManager;

@@ -9,6 +9,28 @@ class DeferredPromise {
     }
 }
 
+class MovingAverageCalculator {
+    constructor() {
+        this.count = 0;
+        this._mean = 0;
+    }
+
+    update(newValue) {
+        this.count++;
+        const differential = (newValue - this._mean) / this.count;
+        this._mean += differential;
+    }
+
+    get mean() {
+        this.validate();
+        return this._mean;
+    }
+
+    validate() {
+        if (this.count === 0) throw new Error("Mean is undefined");
+    }
+}
+
 class CoreClass {
     constructor(name) {
         this.name = name;
@@ -22,6 +44,9 @@ class CoreClass {
         this.runningJobs = [];
         this.priorities = {};
         this.stage = 0;
+        this.jobStatistics = {};
+
+        this.registerJobs();
     }
 
     setStatus(status) {
@@ -77,6 +102,31 @@ class CoreClass {
         }
     }
 
+    registerJobs() {
+        let props = [];
+        let obj = this;
+        do {
+            props = props.concat(Object.getOwnPropertyNames(obj));
+        } while ((obj = Object.getPrototypeOf(obj)));
+
+        const jobNames = props
+            .sort()
+            .filter(
+                (prop) =>
+                    typeof this[prop] == "function" &&
+                    prop === prop.toUpperCase()
+            );
+
+        jobNames.forEach((jobName) => {
+            this.jobStatistics[jobName] = {
+                successful: 0,
+                failed: 0,
+                total: 0,
+                averageTiming: new MovingAverageCalculator(),
+            };
+        });
+    }
+
     runJob(name, payload, options = {}) {
         let deferredPromise = new DeferredPromise();
         const job = { name, payload, onFinish: deferredPromise };
@@ -97,17 +147,26 @@ class CoreClass {
 
     _runJob(job, cb) {
         this.log("INFO", `Running job ${job.name}`);
+        const startTime = Date.now();
         this.runningJobs.push(job);
         this[job.name](job.payload)
             .then((response) => {
                 this.log("INFO", `Ran job ${job.name} successfully`);
+                this.jobStatistics[job.name].successful++;
                 job.onFinish.resolve(response);
             })
             .catch((error) => {
                 this.log("INFO", `Running job ${job.name} failed`);
+                this.jobStatistics[job.name].failed++;
                 job.onFinish.reject(error);
             })
             .finally(() => {
+                const endTime = Date.now();
+                const executionTime = endTime - startTime;
+                this.jobStatistics[job.name].total++;
+                this.jobStatistics[job.name].averageTiming.update(
+                    executionTime
+                );
                 this.runningJobs.splice(this.runningJobs.indexOf(job), 1);
                 cb();
             });
