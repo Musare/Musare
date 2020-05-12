@@ -190,7 +190,7 @@ class NotificationsModule extends CoreClass {
                     (subscription) => subscription.originalName === payload.name
                 )
             )
-                return;
+                return reject(new Error("Already subscribed."));
             let subscription = {
                 originalName: payload.name,
                 name: crypto

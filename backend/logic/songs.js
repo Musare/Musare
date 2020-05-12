@@ -73,7 +73,7 @@ class SongsModule extends CoreClass {
                                     .runJob("HSET", {
                                         table: "songs",
                                         key: song.songId,
-                                        value: songSchema.song(song),
+                                        value: songSchema(song),
                                     })
                                     .then(() => next())
                                     .catch(next);
@@ -114,7 +114,8 @@ class SongsModule extends CoreClass {
                     (next) => {
                         if (!mongoose.Types.ObjectId.isValid(payload.id))
                             return next("Id is not a valid ObjectId.");
-                        this.runJob("HGET", { table: "songs", key: payload.id })
+                        this.cache
+                            .runJob("HGET", { table: "songs", key: payload.id })
                             .then((song) => next(null, song))
                             .catch(next);
                     },

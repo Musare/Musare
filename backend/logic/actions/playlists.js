@@ -437,7 +437,7 @@ let lib = {
                 (playlist, next) => {
                     utils
                         .runJob("SHUFFLE", { array: playlist.songs })
-                        .then((songs) => next(null, songs))
+                        .then((result) => next(null, result.array))
                         .catch(next);
                 },
 

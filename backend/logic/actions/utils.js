@@ -15,7 +15,7 @@ module.exports = {
                 },
 
                 (modules, next) => {
-                    console.log(modules, next);
+                    // console.log(modules, next);
                     next(
                         null,
                         Object.keys(modules).map((moduleName) => {
@@ -65,7 +65,10 @@ module.exports = {
                 },
             ],
             async (err, module) => {
-                console.log(module.runningJobs);
+                    return task.data;
+                });
+
+                // console.log(module.runningJobs);
                 if (err && err !== true) {
                     err = await utils.runJob("GET_ERROR", { error: err });
                     console.log(
@@ -85,6 +88,7 @@ module.exports = {
                         message: "Successfully got module info.",
                         runningJobs: module.runningJobs,
                         jobStatistics: module.jobStatistics,
+                        jobsInQueue,
                     });
                 }
             }

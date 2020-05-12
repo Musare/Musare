@@ -209,7 +209,10 @@ class StationsModule extends CoreClass {
                     (next) => {
                         this.runJob(
                             "GET_STATION",
-                            { stationId: payload.stationId },
+                            {
+                                stationId: payload.stationId,
+                                bypassQueue: payload.bypassQueue,
+                            },
                             { bypassQueue: payload.bypassQueue }
                         )
                             .then((station) => next(null, station))
@@ -264,7 +267,10 @@ class StationsModule extends CoreClass {
                         ) {
                             this.runJob(
                                 "SKIP_STATION",
-                                { stationId: station._id },
+                                {
+                                    stationId: station._id,
+                                    bypassQueue: payload.bypassQueue,
+                                },
                                 { bypassQueue: payload.bypassQueue }
                             )
                                 .then((station) => next(null, station))
@@ -351,28 +357,38 @@ class StationsModule extends CoreClass {
 
                         this.utils
                             .runJob("SHUFFLE", { array: playlist })
-                            .then((playlist) => next(null, playlist))
+                            .then((result) => next(null, result.array))
                             .catch(next);
                     },
 
                     (playlist, next) => {
-                        this.runJob("CALCULATE_OFFICIAL_PLAYLIST_LIST", {
-                            stationId,
-                            songList: playlist,
-                        })
+                        this.runJob(
+                            "CALCULATE_OFFICIAL_PLAYLIST_LIST",
+                            {
+                                stationId: payload.stationId,
+                                songList: playlist,
+                                bypassQueue: payload.bypassQueue,
+                            },
+                            { bypassQueue: payload.bypassQueue }
+                        )
                             .then(() => next(null, playlist))
                             .catch(next);
                     },
 
                     (playlist, next) => {
                         stationModel.updateOne(
-                            { _id: station._id },
+                            { _id: payload.station._id },
                             { $set: { playlist: playlist } },
                             { runValidators: true },
                             (err) => {
-                                this.runJob("UPDATE_STATION", {
-                                    stationId: station._id,
-                                })
+                                this.runJob(
+                                    "UPDATE_STATION",
+                                    {
+                                        stationId: payload.station._id,
+                                        bypassQueue: payload.bypassQueue,
+                                    },
+                                    { bypassQueue: payload.bypassQueue }
+                                )
                                     .then(() => next(null, playlist))
                                     .catch(next);
                             }
@@ -614,6 +630,7 @@ class StationsModule extends CoreClass {
                             "GET_STATION",
                             {
                                 stationId: payload.stationId,
+                                bypassQueue: payload.bypassQueue,
                             },
                             { bypassQueue: payload.bypassQueue }
                         )
@@ -846,7 +863,8 @@ class StationsModule extends CoreClass {
                                                 station,
                                                 bypassQueue:
                                                     payload.bypassQueue,
-                                            }
+                                            },
+                                            { bypassQueue: payload.bypassQueue }
                                         )
                                             .then((newPlaylist) => {
                                                 this.songs.getSong(

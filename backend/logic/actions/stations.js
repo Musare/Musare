@@ -577,11 +577,6 @@ module.exports = {
                         .runJob("GET_STATION", { stationId })
                         .then((station) => next(null, station))
                         .catch(next);
-
-                    stations
-                        .runJob("GET_STATION", { stationId })
-                        .then((station) => next(null, station))
-                        .catch(next);
                 },
 
                 (station, next) => {

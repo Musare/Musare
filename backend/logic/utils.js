@@ -725,7 +725,7 @@ class UtilsModule extends CoreClass {
                 array[randomIndex] = temporaryValue;
             }
 
-            return array;
+            resolve({ array });
         });
     }
 
