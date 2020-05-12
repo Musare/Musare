@@ -65,6 +65,7 @@ module.exports = {
                 },
             ],
             async (err, module) => {
+                const jobsInQueue = module.jobQueue._tasks.heap.map((task) => {
                     return task.data;
                 });
 
