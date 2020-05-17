@@ -149,7 +149,18 @@ class CoreClass {
         this.log("INFO", `Running job ${job.name}`);
         const startTime = Date.now();
         this.runningJobs.push(job);
-        this[job.name](job.payload)
+        const newThis = Object.assign(
+            Object.create(Object.getPrototypeOf(this)),
+            this
+        );
+        newThis.runJob = (...args) => {
+            if (args.length === 2) args.push({});
+            args[2].bypassQueue = true;
+            return this.runJob.apply(this, args);
+        };
+        this[job.name]
+            .apply(newThis, [job.payload])
+            // this[job.name](job.payload)
             .then((response) => {
                 this.log("INFO", `Ran job ${job.name} successfully`);
                 this.jobStatistics[job.name].successful++;

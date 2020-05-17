@@ -11,6 +11,39 @@ process.on("uncaughtException", (err) => {
     console.log(`UNCAUGHT EXCEPTION: ${err.stack}`);
 });
 
+const blacklistedConsoleLogs = [
+    "Running job IO",
+    "Ran job IO successfully",
+    "Running job HGET",
+    "Ran job HGET successfully",
+    "Running job HGETALL",
+    "Ran job HGETALL successfully",
+    "Running job GET_ERROR",
+    "Ran job GET_ERROR successfully",
+    "Running job GET_SCHEMA",
+    "Ran job GET_SCHEMA successfully",
+    "Running job SUB",
+    "Ran job SUB successfully",
+    "Running job GET_MODEL",
+    "Ran job GET_MODEL successfully",
+    "Running job HSET",
+    "Ran job HSET successfully",
+    "Running job CAN_USER_VIEW_STATION",
+    "Ran job CAN_USER_VIEW_STATION successfully",
+];
+
+const oldConsole = {};
+oldConsole.log = console.log;
+
+console.log = (...args) => {
+    const string = util.format.apply(null, args);
+    let blacklisted = false;
+    blacklistedConsoleLogs.forEach((blacklistedConsoleLog) => {
+        if (string.indexOf(blacklistedConsoleLog) !== -1) blacklisted = true;
+    });
+    if (!blacklisted) oldConsole.log.apply(null, args);
+};
+
 const fancyConsole = config.get("fancyConsole");
 
 // class ModuleManager {
@@ -339,6 +372,9 @@ process.stdin.on("data", function(data) {
             .split(" ");
 
         console.log(moduleManager.modules[parts[1]].jobStatistics);
+    }
+    if (data.toString().startsWith("debug")) {
+        moduleManager.modules["utils"].runJob("DEBUG");
     }
 });
 

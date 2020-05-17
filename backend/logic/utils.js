@@ -757,6 +757,12 @@ class UtilsModule extends CoreClass {
             resolve(`https://www.gravatar.com/avatar/${hash}`);
         });
     }
+
+    DEBUG(payload) {
+        return new Promise((resolve, reject) => {
+            resolve();
+        });
+    }
 }
 
 module.exports = new UtilsModule();
