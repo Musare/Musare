@@ -189,6 +189,10 @@ export default {
 	}
 }
 
+.main-container {
+	height: auto;
+}
+
 .tabs {
 	background-color: $white;
 	.queueSongs {

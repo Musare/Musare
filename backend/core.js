@@ -160,7 +160,6 @@ class CoreClass {
         };
         this[job.name]
             .apply(newThis, [job.payload])
-            // this[job.name](job.payload)
             .then((response) => {
                 this.log("INFO", `Ran job ${job.name} successfully`);
                 this.jobStatistics[job.name].successful++;
