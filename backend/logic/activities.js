@@ -50,18 +50,27 @@ class ActivitiesModule extends CoreClass {
                             .runJob("SOCKETS_FROM_USER", {
                                 userId: activity.userId,
                             })
-                            .then((response) =>
+                            .then((response) => {
                                 response.sockets.forEach((socket) => {
                                     socket.emit(
                                         "event:activity.create",
                                         activity
                                     );
-                                })
-                            );
+                                });
+                                next();
+                            })
+                            .catch(next);
                     },
                 ],
-                (err, activity) => {
-                    // cb(err, activity);
+                async (err, activity) => {
+                    if (err) {
+                        err = await this.utils.runJob("GET_ERROR", {
+                            error: err,
+                        });
+                        reject(new Error(err));
+                    } else {
+                        resolve({ activity });
+                    }
                 }
             );
         });
