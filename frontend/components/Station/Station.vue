@@ -246,7 +246,6 @@
 								</form>
 								<div
 									class="column is-8-mobile is-5-desktop"
-									style="float: right;"
 								>
 									<ul
 										v-if="
@@ -257,7 +256,7 @@
 									>
 										<li
 											id="like"
-											class="right"
+											style="margin-right: 10px;"
 											@click="toggleLike()"
 										>
 											<span class="flow-text">{{
@@ -277,8 +276,6 @@
 										</li>
 										<li
 											id="dislike"
-											style="margin-right: 10px;"
-											class="right"
 											@click="toggleDislike()"
 										>
 											<span class="flow-text">{{
@@ -1702,6 +1699,9 @@ export default {
 }
 
 #ratings {
+	display: flex;
+	justify-content: flex-end;
+
 	span {
 		font-size: 1.68rem;
 	}
@@ -1811,14 +1811,6 @@ h6 {
 
 .thin {
 	font-weight: 200;
-}
-
-.left {
-	float: left !important;
-}
-
-.right {
-	float: right !important;
 }
 
 .light-blue {
