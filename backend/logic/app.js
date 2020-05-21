@@ -240,6 +240,7 @@ class AppModule extends CoreClass {
 
                             if (!body.id)
                                 return next("Something went wrong, no id.");
+
                             userModel.findOne(
                                 { "services.github.id": body.id },
                                 (err, user) => {
@@ -255,6 +256,7 @@ class AppModule extends CoreClass {
                                     next(true, user._id);
                                 });
                             }
+
                             userModel.findOne(
                                 {
                                     username: new RegExp(
@@ -273,6 +275,7 @@ class AppModule extends CoreClass {
                                 return next(
                                     "An account with that username already exists."
                                 );
+
                             request.get(
                                 {
                                     url: `https://api.github.com/user/emails`,
@@ -377,11 +380,13 @@ class AppModule extends CoreClass {
                             err = await this.utils.runJob("GET_ERROR", {
                                 error: err,
                             });
-                            console.log(
+
+                            this.log(
                                 "ERROR",
                                 "AUTH_GITHUB_AUTHORIZE_CALLBACK",
                                 `Failed to authorize with GitHub. "${err}"`
                             );
+
                             return redirectOnErr(res, err);
                         }
 
@@ -401,16 +406,20 @@ class AppModule extends CoreClass {
                                     new Date().getTime() +
                                         2 * 365 * 24 * 60 * 60 * 1000
                                 );
+
                                 res.cookie(SIDname, sessionId, {
                                     expires: date,
                                     secure: config.get("cookie.secure"),
                                     path: "/",
                                     domain: config.get("cookie.domain"),
                                 });
-                                logger.success(
+
+                                this.log(
+                                    "INFO",
                                     "AUTH_GITHUB_AUTHORIZE_CALLBACK",
                                     `User "${userId}" successfully authorized with GitHub.`
                                 );
+
                                 res.redirect(`${config.get("domain")}/`);
                             })
                             .catch((err) => {
@@ -453,6 +462,7 @@ class AppModule extends CoreClass {
                             if (!user) return next("User not found.");
                             if (user.email.verified)
                                 return next("This email is already verified.");
+
                             userModel.updateOne(
                                 { "email.verificationToken": code },
                                 {
@@ -467,22 +477,28 @@ class AppModule extends CoreClass {
                     (err) => {
                         if (err) {
                             let error = "An error occurred.";
+
                             if (typeof err === "string") error = err;
                             else if (err.message) error = err.message;
-                            console.log(
+
+                            this.log(
                                 "ERROR",
                                 "VERIFY_EMAIL",
                                 `Verifying email failed. "${error}"`
                             );
+
                             return res.json({
                                 status: "failure",
                                 message: error,
                             });
                         }
-                        logger.success(
+
+                        this.log(
+                            "INFO",
                             "VERIFY_EMAIL",
                             `Successfully verified email.`
                         );
+
                         res.redirect(
                             `${config.get(
                                 "domain"
