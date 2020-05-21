@@ -583,12 +583,21 @@ export default {
 @import "styles/global.scss";
 
 .container {
-	width: 962px;
-	margin-left: auto;
-	margin-right: auto;
+	@media only screen and (min-width: 900px) {
+		width: 962px;
+		margin: 0 auto;
+		flex-direction: row;
+
+		.content {
+			width: 600px;
+			margin-top: 0px;
+		}
+	}
+
 	margin-top: 32px;
 	padding: 24px;
 	display: flex;
+	flex-direction: column;
 
 	.nav-links {
 		height: 100%;
@@ -618,7 +627,7 @@ export default {
 	}
 
 	.content {
-		width: 600px;
+		margin: 24px 0;
 
 		.control {
 			margin-bottom: 24px;
