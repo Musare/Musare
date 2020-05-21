@@ -273,7 +273,7 @@ class AppModule extends CoreClass {
                         (user, next) => {
                             if (user)
                                 return next(
-                                    "An account with that username already exists."
+                                    `An account with that username already exists.`
                                 );
 
                             request.get(
@@ -315,10 +315,12 @@ class AppModule extends CoreClass {
                         },
 
                         (user, _id, next) => {
-                            if (user)
-                                return next(
-                                    "An account with that email address already exists."
-                                );
+                            if (user) {
+                                if (Object.keys(JSON.parse(user.services.github)).length === 0)
+                                    return next(`An account with that email address exists, but is not linked to GitHub.`)    
+                                else
+                                    return next(`An account with that email address already exists.`);
+                            }
 
                             next(null, {
                                 _id, //TODO Check if exists
