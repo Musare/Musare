@@ -14,7 +14,6 @@ services:
     - SNYK_TOKEN=${SNYK_TOKEN}
   frontend:
     build: ./frontend
-    environment:
     ports:
     - "${FRONTEND_PORT}:80"
     volumes:

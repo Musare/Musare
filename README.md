@@ -15,11 +15,11 @@ You can also find us on [Facebook](https://www.facebook.com/MusareMusic) and [Tw
 
 ### Our Stack
 
--   NodeJS
--   MongoDB
--   Redis
--   Nginx (not required)
--   VueJS
+- NodeJS
+- MongoDB
+- Redis
+- Nginx (not required)
+- VueJS
 
 ### Frontend
 
@@ -35,15 +35,15 @@ We currently only utilize 1 backend, 1 MongoDB server and 1 Redis server running
 
 Installing with Docker: (not recommended for Windows users)
 
--   [Docker](https://www.docker.com/)
+- [Docker](https://www.docker.com/)
 
 Standard Installation:
 
--   [NodeJS](https://nodejs.org/en/download/)
-    _ nodemon: `npm install -g nodemon`
-    _ [node-gyp](https://github.com/nodejs/node-gyp#installation): `npm install -g node-gyp`
--   [MongoDB](https://www.mongodb.com/download-center) Currently version 4.0
--   [Redis (Windows)](https://github.com/MSOpenTech/redis/releases/tag/win-3.2.100) [Redis (Unix)](https://redis.io/download)
+- [NodeJS](https://nodejs.org/en/download/)
+  - [nodemon](https://nodemon.io/): `npm install -g nodemon`
+  - [node-gyp](https://github.com/nodejs/node-gyp#installation): `npm install -g node-gyp`
+- [MongoDB](https://www.mongodb.com/download-center) Currently version 4.0
+- [Redis (Windows)](https://github.com/MSOpenTech/redis/releases/tag/win-3.2.100) [Redis (Unix)](https://redis.io/download)
 
 ## Getting Started
 
@@ -147,12 +147,7 @@ The configurable ports will be how you access the services on your machine, or w
 
     - Docker ToolBox: The output of `docker-machine ip default`
 
-If you are using linting extensions in IDEs/want to run `npm run lint`, you need to install the following locally (outside of Docker):
-
-```bash
-npm install -g eslint
-npm install -g eslint-config-airbnb-base
-```
+If you want to use linting extensions in IDEs, then you must attach the IDE to the docker containers. This is entirely [possible with VS Code](https://code.visualstudio.com/docs/remote/containers).
 
 ### Standard Installation
 
@@ -275,13 +270,11 @@ Run this command in your shell. You will have to do this command for every shell
 
     `npm install -g webpack`
 
-4. Install node-gyp globally (first check out https://github.com/nodejs/node-gyp#installation)
+4. Install node-gyp globally (first check out <https://github.com/nodejs/node-gyp#installation)>
 
     `npm install -g node-gyp`.
 
-5. Run `npm run bootstrap` to install dependencies and dev-dependencies for both the frontend and backend.
-
-6. Either execute `npm run dev:frontend` and `npm run dev:backend` separately, or in parallel with `npm run dev`.
+5. Execute `cd frontend && npm dev` and `cd backend && npm dev` separately.
 
 ### Calling Toasts
 
@@ -302,14 +295,4 @@ docker-compose exec mongo mongo admin
 use musare
 db.auth("MUSAREDBUSER","MUSAREDBPASSWORD")
 db.users.update({username: "USERNAME"}, {$set: {role: "admin"}})
-```
-
-### Adding a package
-
-We use lerna to add an additional package to either the frontend or the backend.
-
-For example, this is how we would to add the `webpack-bundle-analyser` package as a dev-dependency to the frontend:
-
-```bash
-npx lerna add webpack-bundle-analyser --scope=musare-frontend --dev
 ```
