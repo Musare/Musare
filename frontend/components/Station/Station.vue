@@ -244,9 +244,7 @@
 										>
 									</p>
 								</form>
-								<div
-									class="column is-8-mobile is-5-desktop"
-								>
+								<div class="column is-8-mobile is-5-desktop">
 									<ul
 										v-if="
 											currentSong.likes !== -1 &&
