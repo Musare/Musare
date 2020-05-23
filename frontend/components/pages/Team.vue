@@ -109,16 +109,18 @@
 					</div>
 				</div>
 			</div>
-			<h4 class="center">
-				Special Thanks
-			</h4>
-			<br />
-			<p class="center thanks">
-				Special thanks to Owen Diffey, Zachery, Adryd, Cameron Kline,
-				Wesley McCann,
-				<strong>Akira Laine (Co-Founder)</strong>, Johannes Andersen and
-				Aaron Gildea for their contributions to Musare.
-			</p>
+			<div id="special-thanks">
+				<h4 class="center">
+					Special Thanks
+				</h4>
+				<br />
+				<p class="center thanks">
+					Special thanks to Owen Diffey, Zachery, Adryd, Cameron
+					Kline, Wesley McCann,
+					<strong>Akira Laine (Co-Founder)</strong>, Johannes Andersen
+					and Aaron Gildea for their contributions to Musare.
+				</p>
+			</div>
 		</div>
 		<main-footer />
 	</div>
@@ -195,7 +197,11 @@ ul {
 	border-bottom: 2px $purple solid;
 }
 
-.thanks {
-	font-size: 15px;
+#special-thanks {
+	margin-top: 60px;
+
+	.thanks {
+		font-size: 15px;
+	}
 }
 </style>
