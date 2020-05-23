@@ -237,7 +237,7 @@ export default {
 				recaptchaToken: this.recaptcha.token
 			})
 				.then(res => {
-					if (res.status === "success") window.location.reload();
+					if (res.status === "success") window.location.href = "/";
 				})
 				.catch(
 					err => new Toast({ content: err.message, timeout: 5000 })

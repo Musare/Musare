@@ -99,7 +99,7 @@ export default {
 				password: this.password
 			})
 				.then(res => {
-					if (res.status === "success") window.location.reload();
+					if (res.status === "success") window.location.href = "/";
 				})
 				.catch(
 					err => new Toast({ content: err.message, timeout: 5000 })

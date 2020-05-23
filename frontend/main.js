@@ -134,9 +134,11 @@ lofig.get("serverDomain").then(serverDomain => {
 				userId
 			});
 		});
+
 		socket.on("keep.event:banned", ban => {
 			store.dispatch("user/auth/banUser", ban);
 		});
+
 		socket.on("event:user.username.changed", username => {
 			store.dispatch("user/auth/updateUsername", username);
 		});
@@ -148,13 +150,19 @@ router.beforeEach((to, from, next) => {
 		clearInterval(window.stationInterval);
 		window.stationInterval = 0;
 	}
+
 	if (window.socket) io.removeAllListeners();
+
 	io.clear();
+
 	if (to.meta.loginRequired || to.meta.adminRequired) {
 		const gotData = () => {
-			if (to.loginRequired && !store.state.user.auth.loggedIn)
+			if (to.meta.loginRequired && !store.state.user.auth.loggedIn)
 				next({ path: "/login" });
-			else if (to.adminRequired && store.state.user.auth.role !== "admin")
+			else if (
+				to.meta.adminRequired &&
+				store.state.user.auth.role !== "admin"
+			)
 				next({ path: "/" });
 			else next();
 		};
