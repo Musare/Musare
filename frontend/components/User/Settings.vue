@@ -84,7 +84,17 @@
 						type="text"
 						placeholder="Username"
 						v-model="user.username"
+						@blur="onInputBlur('username')"
 					/>
+				</p>
+				<p
+					class="help"
+					v-if="validation.username.entered"
+					:class="
+						validation.username.valid ? 'is-success' : 'is-danger'
+					"
+				>
+					{{ validation.username.message }}
 				</p>
 				<p class="control is-expanded">
 					<label for="location">Email</label>
@@ -95,7 +105,15 @@
 						placeholder="Email"
 						v-if="user.email"
 						v-model="user.email.address"
+						@blur="onInputBlur('email')"
 					/>
+				</p>
+				<p
+					class="help"
+					v-if="validation.email.entered"
+					:class="validation.email.valid ? 'is-success' : 'is-danger'"
+				>
+					{{ validation.email.message }}
 				</p>
 				<button
 					class="button is-primary"
@@ -240,6 +258,18 @@ export default {
 		return {
 			user: {},
 			originalUser: {},
+			validation: {
+				username: {
+					entered: false,
+					valid: false,
+					message: "Please enter a valid username."
+				},
+				email: {
+					entered: false,
+					valid: false,
+					message: "Please enter a valid email address."
+				}
+			},
 			newPassword: "",
 			password: false,
 			github: false,
@@ -250,6 +280,43 @@ export default {
 			activeTab: "",
 			localNightmode: false
 		};
+	},
+	watch: {
+		// eslint-disable-next-line func-names
+		"user.username": function(value) {
+			if (!validation.isLength(value, 2, 32)) {
+				this.validation.username.message =
+					"Username must have between 2 and 32 characters.";
+				this.validation.username.valid = false;
+			} else if (
+				!validation.regex.azAZ09_.test(value) &&
+				value !== this.originalUser.username // Sometimes a username pulled from GitHub won't succeed validation
+			) {
+				this.validation.username.message =
+					"Invalid username format. Allowed characters: a-z, A-Z, 0-9 and _.";
+				this.validation.username.valid = false;
+			} else {
+				this.validation.username.message = "Everything looks great!";
+				this.validation.username.valid = true;
+			}
+		},
+		// eslint-disable-next-line func-names
+		"user.email.address": function(value) {
+			if (!validation.isLength(value, 3, 254)) {
+				this.validation.email.message =
+					"Email must have between 3 and 254 characters.";
+				this.validation.email.valid = false;
+			} else if (
+				value.indexOf("@") !== value.lastIndexOf("@") ||
+				!validation.regex.emailSimple.test(value)
+			) {
+				this.validation.email.message = "Invalid Email format.";
+				this.validation.email.valid = false;
+			} else {
+				this.validation.email.message = "Everything looks great!";
+				this.validation.email.valid = true;
+			}
+		}
 	},
 	computed: mapState({
 		userId: state => state.user.auth.userId,
@@ -299,9 +366,9 @@ export default {
 		}
 	},
 	methods: {
-		// switchTab(tabName) {
-		// 	this.activeTab = tabName;
-		// },
+		onInputBlur(inputName) {
+			this.validation[inputName].entered = true;
+		},
 		saveChangesToProfile() {
 			if (this.user.name !== this.originalUser.name) this.changeName();
 			if (this.user.location !== this.originalUser.location)
@@ -628,10 +695,6 @@ export default {
 
 	.content {
 		margin: 24px 0;
-
-		.control {
-			margin-bottom: 24px;
-		}
 
 		label {
 			font-size: 14px;
