@@ -337,11 +337,12 @@ moduleManager.addModule("utils");
 moduleManager.initialize();
 
 process.stdin.on("data", function(data) {
-    if (data.toString() === "lockdown\r\n") {
+    const command = data.toString().replace(/\r?\n|\r/g, "");
+    if (command === "lockdown") {
         console.log("Locking down.");
         moduleManager._lockdown();
     }
-    if (data.toString() === "status\r\n") {
+    if (command === "status") {
         console.log("Status:");
 
         for (let moduleName in moduleManager.modules) {
@@ -357,23 +358,19 @@ process.stdin.on("data", function(data) {
         }
         // moduleManager._lockdown();
     }
-    if (data.toString().startsWith("running")) {
-        const parts = data
-            .toString()
-            .substr(0, data.toString().length - 2)
+    if (command.startsWith("running")) {
+        const parts = command
             .split(" ");
 
         console.log(moduleManager.modules[parts[1]].runningJobs);
     }
-    if (data.toString().startsWith("stats")) {
-        const parts = data
-            .toString()
-            .substr(0, data.toString().length - 2)
+    if (command.startsWith("stats")) {
+        const parts = command
             .split(" ");
 
         console.log(moduleManager.modules[parts[1]].jobStatistics);
     }
-    if (data.toString().startsWith("debug")) {
+    if (command.startsWith("debug")) {
         moduleManager.modules["utils"].runJob("DEBUG");
     }
 });

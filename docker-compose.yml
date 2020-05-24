@@ -12,6 +12,8 @@ services:
     - redis
     environment:
     - SNYK_TOKEN=${SNYK_TOKEN}
+    stdin_open: true
+    tty: true
   frontend:
     build: ./frontend
     ports:
