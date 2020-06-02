@@ -3,31 +3,31 @@ services:
   backend:
     build: ./backend
     ports:
-    - "${BACKEND_PORT}:8080"
+      - "${BACKEND_PORT}:8080"
     volumes:
-    - ./backend:/opt/app
-    - ./log:/opt/log
+      - ./backend:/opt/app
+      - ./log:/opt/log
     links:
-    - mongo
-    - redis
+      - mongo
+      - redis
     environment:
-    - SNYK_TOKEN=${SNYK_TOKEN}
+      - SNYK_TOKEN=${SNYK_TOKEN}
     stdin_open: true
     tty: true
   frontend:
     build: ./frontend
     ports:
-    - "${FRONTEND_PORT}:80"
+      - "${FRONTEND_PORT}:80"
     volumes:
-    - ./frontend:/opt/app
-    - /opt/app/node_modules/
+      - ./frontend:/opt/app
+      - /opt/app/node_modules/
     environment:
-    - FRONTEND_MODE=${FRONTEND_MODE}
-    - SNYK_TOKEN=${SNYK_TOKEN}
+      - FRONTEND_MODE=${FRONTEND_MODE}
+      - SNYK_TOKEN=${SNYK_TOKEN}
   mongo:
     image: mongo:4.0
     ports:
-    - "${MONGO_PORT}:27017"
+      - "${MONGO_PORT}:27017"
     environment:
       - MONGO_INITDB_ROOT_USERNAME=admin
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
@@ -41,11 +41,13 @@ services:
   mongoclient:
     image: mongoclient/mongoclient
     ports:
-    - "${MONGOCLIENT_PORT}:3000"
+      - "${MONGOCLIENT_PORT}:3000"
+    environment:
+      - MONGOCLIENT_DEFAULT_CONNECTION_URL=mongodb://${MONGO_USER_USERNAME}:${MONGO_USER_PASSWORD}@mongo:27017/musare
   redis:
     image: redis
     command: "--notify-keyspace-events Ex --requirepass ${REDIS_PASSWORD}"
     volumes:
-    - .redis:/data
+      - .redis:/data
     ports:
-    - "${REDIS_PORT}:6379"
+      - "${REDIS_PORT}:6379"
