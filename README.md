@@ -1,3 +1,5 @@
+# Musare is no longer being maintained
+
 # MusareNode
 
 Based off of the original [Musare](https://github.com/Musare/MusareMeteor), which utilized Meteor.
