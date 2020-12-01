@@ -154,6 +154,7 @@
 					</div>
 				</div>
 			</div>
+			<!--  Buttons changing the privacy settings -->
 			<div class="section right-section">
 				<div>
 					<label class="label">Privacy</label>
@@ -163,49 +164,46 @@
 						class="button-wrapper"
 					>
 						<button
-							v-bind:class="{
-								green: true,
-								current: editing.privacy === 'public'
-							}"
-							v-if="
-								privacyDropdownActive ||
-									editing.privacy === 'public'
-							"
-							@click="updatePrivacyLocal('public')"
+							v-bind:class="privacyButtons[editing.privacy].style"
+							style="text-transform: capitalize;"
+							@click="updatePrivacyLocal(editing.privacy)"
 						>
-							<i class="material-icons">public</i>
-							Public
+							<i class="material-icons">{{ privacyButtons[editing.privacy].iconName }}</i>
+							{{ editing.privacy }}
 						</button>
-						<button
-							v-bind:class="{
-								orange: true,
-								current: editing.privacy === 'unlisted'
-							}"
-							v-if="
-								privacyDropdownActive ||
-									editing.privacy === 'unlisted'
-							"
-							@click="updatePrivacyLocal('unlisted')"
-						>
-							<i class="material-icons">link</i>
-							Unlisted
-						</button>
-						<button
-							v-bind:class="{
-								red: true,
-								current: editing.privacy === 'private'
-							}"
-							v-if="
-								privacyDropdownActive ||
-									editing.privacy === 'private'
-							"
-							@click="updatePrivacyLocal('private')"
-						>
-							<i class="material-icons">lock</i>
-							Private
-						</button>
+						<transition name="slide-down">
+							<button
+								class="green"
+								v-if="privacyDropdownActive && editing.privacy !== 'public'"
+								@click="updatePrivacyLocal('public')"
+							>
+								<i class="material-icons">{{ privacyButtons["public"].iconName }}</i>
+								Public
+							</button>
+						</transition>
+						<transition name="slide-down">
+							<button
+								class="orange"
+								v-if="privacyDropdownActive && editing.privacy !== 'unlisted'"
+								@click="updatePrivacyLocal('unlisted')"
+							>
+								<i class="material-icons">{{ privacyButtons["unlisted"].iconName }}</i>
+								Unlisted
+							</button>
+						</transition>
+						<transition name="slide-down">
+							<button
+								class="red"
+								v-if="privacyDropdownActive && editing.privacy !== 'private'"
+								@click="updatePrivacyLocal('private')"
+							>
+								<i class="material-icons">{{ privacyButtons["private"].iconName }}</i>
+								Private
+							</button>
+						</transition>
 					</div>
 				</div>
+				<!--  Buttons changing the mode of the station -->
 				<div v-if="editing.type === 'community'">
 					<label class="label">Mode</label>
 					<div
@@ -215,28 +213,34 @@
 					>
 						<button
 							v-bind:class="{
-								blue: true,
-								current: editing.partyMode === false
+								blue: !editing.partyMode,
+								yellow: editing.partyMode,
 							}"
-							v-if="modeDropdownActive || !editing.partyMode"
-							@click="updatePartyModeLocal(false)"
+							@click="editing.partyMode ? updatePartyModeLocal(true) : updatePartyModeLocal(false)"
 						>
-							<i class="material-icons">playlist_play</i>
-							Playlist
+							<i class="material-icons">{{ editing.partyMode ? "emoji_people" : "playlist_play" }}</i>
+							{{ editing.partyMode ? "Party" : "Playlist" }}
 						</button>
-						<button
-							v-bind:class="{
-								yellow: true,
-								current: editing.partyMode === true
-							}"
-							v-if="
-								modeDropdownActive || editing.partyMode === true
-							"
-							@click="updatePartyModeLocal(true)"
-						>
-							<i class="material-icons">emoji_people</i>
-							Party
-						</button>
+						<transition name="slide-down">
+							<button
+								class="blue"
+								v-if="modeDropdownActive && editing.partyMode"
+								@click="updatePartyModeLocal(false)"
+							>
+								<i class="material-icons">playlist_play</i>
+								Playlist
+							</button>
+						</transition>
+						<transition name="slide-down">
+							<button
+								class="yellow"
+								v-if="modeDropdownActive && !editing.partyMode"
+								@click="updatePartyModeLocal(true)"
+							>
+								<i class="material-icons">emoji_people</i>
+								Party
+							</button>
+						</transition>
 					</div>
 				</div>
 				<div
@@ -253,26 +257,34 @@
 					>
 						<button
 							v-bind:class="{
-								green: true,
-								current: editing.locked
+								green: editing.locked,
+								red: !editing.locked,
 							}"
-							v-if="queueLockDropdownActive || editing.locked"
-							@click="updateQueueLockLocal(true)"
+							@click="editing.locked ? updateQueueLockLocal(true) : updateQueueLockLocal(false)"
 						>
-							<i class="material-icons">lock</i>
-							On
+							<i class="material-icons">{{ editing.locked ? "lock" : "lock_open" }}</i>
+							{{ editing.locked ? "Locked" : "Unlocked" }}
 						</button>
-						<button
-							v-bind:class="{
-								red: true,
-								current: !editing.locked
-							}"
-							v-if="queueLockDropdownActive || !editing.locked"
-							@click="updateQueueLockLocal(false)"
-						>
-							<i class="material-icons">lock_open</i>
-							Off
-						</button>
+						<transition name="slide-down">
+							<button
+								class="green"
+								v-if="queueLockDropdownActive && !editing.locked"
+								@click="updateQueueLockLocal(true)"
+							>
+								<i class="material-icons">lock</i>
+								Locked
+							</button>
+						</transition>
+						<transition name="slide-down">
+							<button
+								class="red"
+								v-if="queueLockDropdownActive && editing.locked"
+								@click="updateQueueLockLocal(false)"
+							>
+								<i class="material-icons">lock_open</i>
+								Unlocked
+							</button>
+						</transition>
 					</div>
 				</div>
 			</div>
@@ -370,7 +382,21 @@ export default {
 				"Heavy Metal",
 				"Christian rock",
 				"Dubstep"
-			]
+			],
+			privacyButtons: {
+				"public": {
+					style: "green",
+					iconName: "public",
+				},
+				"private": {
+					style: "red",
+					iconName: "lock",
+				},
+				"unlisted": {
+					style: "orange",
+					iconName: "link",
+				},
+			}
 		};
 	},
 	props: ["store"],
@@ -1020,12 +1046,8 @@ export default {
 		-moz-user-select: none;
 		user-select: none;
 		cursor: pointer;
-		margin-bottom: 16px;
+		margin-bottom: 10px;
 		padding: 0;
-
-		&.current {
-			order: -1;
-		}
 
 		&.red {
 			background-color: $red;
@@ -1065,5 +1087,13 @@ export default {
 
 .col-2 {
 	grid-template-columns: auto auto;
+}
+
+.slide-down-enter-active {
+	transition: transform .25s;
+}
+
+.slide-down-enter {
+	transform: translateY(-10px);
 }
 </style>
