@@ -1,5 +1,3 @@
-# Musare is no longer being maintained
-
 # MusareNode
 
 Based off of the original [Musare](https://github.com/Musare/MusareMeteor), which utilized Meteor.
@@ -79,14 +77,6 @@ We currently only utilize 1 backend, 1 MongoDB server and 1 Redis server running
     | `siteSettings.socialLinks` | `github`, `twitter` and `facebook` are set to the official Musare accounts by default, but can be changed. |
 
 5. Simply `cp .env.example .env` to setup your environment variables.
-
-6. To setup [snyk](https://snyk.io/) (which is what we use for our precommit git-hooks), you will need to:
-
-    - Setup an account
-    - Go to [settings](https://app.snyk.io/account)
-    - Copy the API token and set it as your `SNYK_TOKEN` environment variable.
-    
-    We use snyk to test our dependencies / dev-dependencies for vulnerabilities.
 
 <br />
 
@@ -266,10 +256,10 @@ Run this command in your shell. You will have to do this command for every shell
 
 ### Calling Toasts
 
-You can call Toasts using our custom package, [`vue-roaster`](https://github.com/atjonathan/vue-roaster), using the following code:
+You can create Toast notifications using our custom package, [`toasters`](https://github.com/jonathan-grah/vue-roaster), using the following code:
 
 ```js
-import Toast from "vue-roaster";
+import Toast from "toasters";
 new Toast({ content: "Hi!", persistant: true });
 ```
 

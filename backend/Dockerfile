@@ -3,7 +3,6 @@ FROM node
 RUN apt-get update
 
 RUN npm install -g nodemon
-RUN npm install -g snyk
 
 RUN mkdir -p /opt
 WORKDIR /opt
