@@ -228,7 +228,7 @@ class StationsModule extends CoreClass {
                             .catch();
                         this.notifications
                             .runJob("SUBSCRIBE", {
-                                subscription: `stations.nextSong?id=${station._id}`,
+                                name: `stations.nextSong?id=${station._id}`,
                                 cb: () =>
                                     this.runJob("SKIP_STATION", {
                                         stationId: station._id,
