@@ -36,7 +36,12 @@
 			</p>
 			<hr v-if="noSong" />
 
-			<article v-for="song in songsList" :key="song.songId" class="media">
+			<article
+				v-for="song in songsList"
+				:key="song.songId"
+				class="media"
+				:class="{ 'is-playing': currentSong.songId === song.songId }"
+			>
 				<div class="media-content">
 					<div
 						class="content"
@@ -239,10 +244,16 @@ export default {
 	padding: 0 25px;
 }
 
+.media.is-playing {
+	background-color: $musareBlue;
+	color: white;
+}
+
 .media-content .content {
 	min-height: 64px;
 	display: flex;
 	align-items: center;
+	color: inherit;
 }
 
 .content p strong {
