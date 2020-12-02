@@ -47,8 +47,10 @@ We currently only utilize 1 backend, 1 MongoDB server and 1 Redis server running
     | `serverPort` | Should be the port where the backend will listen on, should always be `8080` for Docker, and is recommended for non-Docker. |
     | `isDocker` | Self-explanatory. Are you using Docker? |
     | `serverPort` | Should be the port where the backend will listen on, should always be `8080` for Docker, and is recommended for non-Docker. |
+    | `registrationDisabled` | If set to true, users can't register accounts. |
     | `apis.youtube.key`            | Can be obtained by setting up a [YouTube API Key](https://developers.google.com/youtube/v3/getting-started). You need to use the YouTube Data API v3, and create an API key. |
     | `apis.recaptcha.secret`       | Can be obtained by setting up a [ReCaptcha Site (v3)](https://www.google.com/recaptcha/admin). |
+    | `apis.recaptcha.enabled`       | Keep at false to keep disabled. |
     | `apis.github` | Can be obtained by setting up a [GitHub OAuth Application](https://github.com/settings/developers). You need to fill in some values to create the OAuth application. The homepage is the homepage of frontend. The authorization callback url is the backend url with `/auth/github/authorize/callback` added at the end. For example `http://localhost:8080/auth/github/authorize/callback`. |
     | `apis.discord.token` | Token for the Discord bot. |
     | `apis.discord.loggingServer`  | Server ID of the Discord logging server. |
@@ -70,6 +72,7 @@ We currently only utilize 1 backend, 1 MongoDB server and 1 Redis server running
     | `frontendDomain` | Should be the url where the frontend will be accessible from, usually `http://localhost` for docker or `http://localhost:80` for non-Docker. |
     | `frontendPort` | Should be the port where the frontend will be accessible from, should always be port `81` for Docker, and is recommended to be port `80` for non-Docker. |
     | `recaptcha.key` | Can be obtained by setting up a [ReCaptcha Site (v3)](https://www.google.com/recaptcha/admin). |
+    | `recaptcha.enabled` | Keep at false to keep disabled. |
     | `cookie.domain` | Should be the ip or address you use to access the site, without protocols (http/https), so for example `localhost`. |
     | `cookie.secure` | Should be `true` for SSL connections, and `false` for normal http connections. |
     | `siteSettings.logo` | Path to the logo image, by default it is `/assets/wordmark.png`. |

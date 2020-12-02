@@ -13,7 +13,8 @@
 			"key": ""
 		},
 		"recaptcha": {
-			"secret": ""
+			"secret": "",
+			"enabled": false
 		},
 		"github": {
 			"client": "",

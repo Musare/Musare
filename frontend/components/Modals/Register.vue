@@ -138,7 +138,8 @@ export default {
 			},
 			recaptcha: {
 				key: "",
-				token: ""
+				token: "",
+				enabled: false
 			},
 			serverDomain: ""
 		};
@@ -198,24 +199,27 @@ export default {
 		});
 
 		lofig.get("recaptcha").then(obj => {
-			this.recaptcha.key = obj.key;
+			this.recaptcha.enabled = obj.enabled;
+			if (obj.enabled === true) {
+				this.recaptcha.key = obj.key;
 
-			const recaptchaScript = document.createElement("script");
-			recaptchaScript.onload = () => {
-				grecaptcha.ready(() => {
-					grecaptcha
-						.execute(this.recaptcha.key, { action: "login" })
-						.then(token => {
-							this.recaptcha.token = token;
-						});
-				});
-			};
+				const recaptchaScript = document.createElement("script");
+				recaptchaScript.onload = () => {
+					grecaptcha.ready(() => {
+						grecaptcha
+							.execute(this.recaptcha.key, { action: "login" })
+							.then(token => {
+								this.recaptcha.token = token;
+							});
+					});
+				};
 
-			recaptchaScript.setAttribute(
-				"src",
-				`https://www.google.com/recaptcha/api.js?render=${this.recaptcha.key}`
-			);
-			document.head.appendChild(recaptchaScript);
+				recaptchaScript.setAttribute(
+					"src",
+					`https://www.google.com/recaptcha/api.js?render=${this.recaptcha.key}`
+				);
+				document.head.appendChild(recaptchaScript);
+			}
 		});
 	},
 	methods: {

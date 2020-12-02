@@ -1,6 +1,7 @@
 {
 	"recaptcha": {
-		"key": ""
+		"key": "",
+		"enabled": false
 	},
 	"serverDomain": "http://localhost:8080",
 	"frontendDomain": "http://localhost",
