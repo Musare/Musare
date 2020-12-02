@@ -407,4 +407,8 @@ button.delete:focus {
 		}
 	}
 }
+
+.page-title {
+	margin: 0 0 50px 0;
+}
 </style>

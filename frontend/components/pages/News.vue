@@ -3,70 +3,78 @@
 		<metadata title="News" />
 		<main-header />
 		<div class="container">
-			<div
-				v-for="(item, index) in news"
-				:key="index"
-				class="card is-fullwidth"
-			>
-				<header class="card-header">
-					<p class="card-header-title">
-						{{ item.title }} - {{ formatDate(item.createdAt) }}
-					</p>
-				</header>
-				<div class="card-content">
-					<div class="content">
-						<p>{{ item.description }}</p>
-					</div>
-					<div v-show="item.features.length > 0" class="sect">
-						<div class="sect-head-features">
-							The features are so great
+			<div class="content-wrapper">
+				<div
+					v-for="(item, index) in news"
+					:key="index"
+					class="card is-fullwidth"
+				>
+					<header class="card-header">
+						<p class="card-header-title">
+							{{ item.title }} - {{ formatDate(item.createdAt) }}
+						</p>
+					</header>
+					<div class="card-content">
+						<div class="content">
+							<p>{{ item.description }}</p>
 						</div>
-						<ul class="sect-body">
-							<li
-								v-for="(feature, index) in item.features"
-								:key="index"
-							>
-								{{ feature }}
-							</li>
-						</ul>
-					</div>
-					<div v-show="item.improvements.length > 0" class="sect">
-						<div class="sect-head-improvements">Improvements</div>
-						<ul class="sect-body">
-							<li
-								v-for="(improvement, ind) in item.improvements"
-								:key="ind"
-							>
-								{{ improvement }}
-							</li>
-						</ul>
-					</div>
-					<div v-show="item.bugs.length > 0" class="sect">
-						<div class="sect-head-bugs">Bugs Smashed</div>
-						<ul class="sect-body">
-							<li v-for="(bug, index) in item.bugs" :key="index">
-								{{ bug }}
-							</li>
-						</ul>
-					</div>
-					<div v-show="item.upcoming.length > 0" class="sect">
-						<div class="sect-head-upcoming">
-							Coming Soon to a Musare near you
+						<div v-show="item.features.length > 0" class="sect">
+							<div class="sect-head-features">
+								The features are so great
+							</div>
+							<ul class="sect-body">
+								<li
+									v-for="(feature, index) in item.features"
+									:key="index"
+								>
+									{{ feature }}
+								</li>
+							</ul>
 						</div>
-						<ul class="sect-body">
-							<li
-								v-for="(upcoming, index) in item.upcoming"
-								:key="index"
-							>
-								{{ upcoming }}
-							</li>
-						</ul>
+						<div v-show="item.improvements.length > 0" class="sect">
+							<div class="sect-head-improvements">
+								Improvements
+							</div>
+							<ul class="sect-body">
+								<li
+									v-for="(improvement,
+									ind) in item.improvements"
+									:key="ind"
+								>
+									{{ improvement }}
+								</li>
+							</ul>
+						</div>
+						<div v-show="item.bugs.length > 0" class="sect">
+							<div class="sect-head-bugs">Bugs Smashed</div>
+							<ul class="sect-body">
+								<li
+									v-for="(bug, index) in item.bugs"
+									:key="index"
+								>
+									{{ bug }}
+								</li>
+							</ul>
+						</div>
+						<div v-show="item.upcoming.length > 0" class="sect">
+							<div class="sect-head-upcoming">
+								Coming Soon to a Musare near you
+							</div>
+							<ul class="sect-body">
+								<li
+									v-for="(upcoming, index) in item.upcoming"
+									:key="index"
+								>
+									{{ upcoming }}
+								</li>
+							</ul>
+						</div>
 					</div>
 				</div>
+				<h3 v-if="noFound" class="has-text-centered page-title">
+					No news items were found.
+				</h3>
 			</div>
-			<h3 v-if="noFound" class="has-text-centered">
-				No news items were found.
-			</h3>
 		</div>
 		<main-footer />
 	</div>
