@@ -49,33 +49,6 @@ export default {
 	}
 }
 
-.sidebar {
-	position: fixed;
-	z-index: 1;
-	top: 0;
-	right: 0;
-	width: 300px;
-	height: 100vh;
-	background-color: $white;
-	box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16),
-		0 2px 10px 0 rgba(0, 0, 0, 0.12);
-}
-
-.inner-wrapper {
-	top: 60px;
-	position: relative;
-}
-
-.slide-transition {
-	transition: transform 0.6s ease-in-out;
-	transform: translateX(0);
-}
-
-.slide-enter,
-.slide-leave {
-	transform: translateX(100%);
-}
-
 .title {
 	background-color: rgb(3, 169, 244);
 	text-align: center;

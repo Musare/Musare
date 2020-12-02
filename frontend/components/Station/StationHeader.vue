@@ -294,6 +294,7 @@ export default {
 	background-color: $primary-color;
 	line-height: 64px;
 	border-radius: 0% 0% 33% 33% / 0% 0% 7% 7%;
+	transition: border-radius 0.1s 0s linear;
 
 	.is-brand {
 		font-size: 2.1rem !important;
@@ -306,6 +307,10 @@ export default {
 			color: $musareBlue;
 		}
 	}
+}
+
+.header-sidebar-active .nav {
+	border-radius: 0% 0% 0% 33% / 0% 0% 0% 7%;
 }
 
 a.nav-item {
