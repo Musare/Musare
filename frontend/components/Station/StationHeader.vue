@@ -334,8 +334,8 @@ a.nav-item {
 }
 
 a.nav-item.is-tab:hover {
-	border-bottom: none;
-	border-top: solid 1px $white;
+	border-bottom: 1px solid transparent;
+	border-top: 1px solid $white;
 }
 
 .admin strong {
