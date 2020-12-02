@@ -322,6 +322,12 @@ module.exports = {
 
         async.waterfall(
             [
+                (next) => {
+                    if (config.get("registrationDisabled") === true)
+                        return next("Registration is not allowed at this time.");
+                    return next();
+                },
+
                 // verify the request with google recaptcha
                 (next) => {
                     if (!db.passwordValid(password))
