@@ -119,16 +119,14 @@
 					</a>
 					<a
 						v-if="!noSong"
-						class="sidebar-item"
+						class="sidebar-item skip-votes"
 						href="#"
 						@click="$parent.voteSkipStation()"
 					>
 						<span class="icon">
 							<i class="material-icons">skip_next</i>
 						</span>
-						<span class="skip-votes">{{
-							currentSong.skipVotes
-						}}</span>
+						<span class="count">{{ currentSong.skipVotes }}</span>
 						<span class="icon-purpose">Skip current song</span>
 					</a>
 					<a
@@ -349,8 +347,10 @@ a.nav-item.is-tab:hover {
 }
 
 .skip-votes {
-	position: relative;
-	left: 11px;
+	flex-direction: column;
+	.count {
+		font-size: 18px;
+	}
 }
 
 .nav-toggle {
