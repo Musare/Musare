@@ -447,9 +447,7 @@ html {
 			.displayName {
 				display: flex;
 				align-items: center;
-				word-wrap: break-word;
 				width: 80%;
-				word-wrap: break-word;
 				overflow: hidden;
 				text-overflow: ellipsis;
 				display: flex;
@@ -463,6 +461,8 @@ html {
 					display: inline;
 					margin-right: 6px;
 					line-height: 30px;
+					text-overflow: ellipsis;
+					overflow: hidden;
 				}
 
 				i {
