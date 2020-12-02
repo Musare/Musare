@@ -1,9 +1,9 @@
 <template>
-	<div>
+	<div v-scroll="handleScroll">
 		<metadata title="Admin | Queue songs" />
-		<div class="container" v-scroll="handleScroll">
+		<div class="container">
 			<p>
-				<span>Sets loaded: {{ position - 1 }} / {{ maxPosition }}</span>
+				<span>Sets loaded: {{ setsLoaded }} / {{ maxSets }}</span>
 				<br />
 				<span>Loaded songs: {{ this.songs.length }}</span>
 			</p>
@@ -127,6 +127,12 @@ export default {
 					) !== -1
 			);
 		},
+		setsLoaded() {
+			return this.position - 1;
+		},
+		maxSets() {
+			return this.maxPosition - 1;
+		},
 		...mapState("modals", {
 			modals: state => state.modals.admin
 		})
@@ -163,7 +169,7 @@ export default {
 		},
 		getSet() {
 			if (this.gettingSet) return;
-			if (this.position > this.maxPosition) return;
+			if (this.position >= this.maxPosition) return;
 			this.gettingSet = true;
 			this.socket.emit("queueSongs.getSet", this.position, data => {
 				data.forEach(song => {
@@ -178,8 +184,11 @@ export default {
 			});
 		},
 		handleScroll() {
+			const scrollPosition = document.body.clientHeight + window.scrollY;
+			const bottomPosition = document.body.scrollHeight;
+
 			if (this.loadAllSongs) return false;
-			if (window.scrollY + 50 >= window.scrollMaxY) this.getSet();
+			if (scrollPosition + 50 >= bottomPosition) this.getSet();
 
 			return this.maxPosition === this.position;
 		},
@@ -192,7 +201,7 @@ export default {
 				this.position = Math.ceil(this.songs.length / 15) + 1;
 
 			this.socket.emit("queueSongs.length", length => {
-				this.maxPosition = Math.ceil(length / 15);
+				this.maxPosition = Math.ceil(length / 15) + 1;
 				this.getSet();
 			});
 			this.socket.emit("apis.joinAdminRoom", "queue", () => {});
