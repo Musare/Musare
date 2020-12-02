@@ -8,9 +8,7 @@
 				{{ currentSong.artists }}
 			</h5>
 			<aside class="menu">
-				<p class="menu-label">
-					Playlists
-				</p>
+				<p class="menu-label">Playlists</p>
 				<ul class="menu-list">
 					<li v-for="(playlist, index) in playlistsArr" :key="index">
 						<div class="playlist">

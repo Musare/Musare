@@ -4,8 +4,7 @@
 		"browser": true,
 		"amd": true,
 		"node": true,
-		"es6": true,
-		"jquery": true
+		"es6": true
 	},
 	"parserOptions": {
 		"ecmaVersion": 2018,
@@ -15,9 +14,11 @@
 	"extends": [
 		"airbnb-base",
 		"plugin:vue/essential",
-		"plugin:prettier/recommended",
-		"eslint:recommended"
+		"eslint:recommended",
+		"prettier",
+		"prettier/vue"
 	],
+	"plugins": [ "prettier" ],
 	"globals": {
 		"lofig": "writable",
 		"grecaptcha": "readonly"
@@ -30,6 +31,8 @@
 		"radix": 0,
 		"no-multi-assign": 0,
 		"no-shadow": 0,
-		"no-new": 0
+		"no-new": 0,
+		"import/no-unresolved": 0,
+		"prettier/prettier": ["error"]
 	}
 }

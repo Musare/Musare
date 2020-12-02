@@ -165,39 +165,56 @@
 					>
 						<button
 							v-bind:class="privacyButtons[editing.privacy].style"
-							style="text-transform: capitalize;"
+							style="text-transform: capitalize"
 							@click="updatePrivacyLocal(editing.privacy)"
 						>
-							<i class="material-icons">{{ privacyButtons[editing.privacy].iconName }}</i>
+							<i class="material-icons">{{
+								privacyButtons[editing.privacy].iconName
+							}}</i>
 							{{ editing.privacy }}
 						</button>
 						<transition name="slide-down">
 							<button
 								class="green"
-								v-if="privacyDropdownActive && editing.privacy !== 'public'"
+								v-if="
+									privacyDropdownActive &&
+										editing.privacy !== 'public'
+								"
 								@click="updatePrivacyLocal('public')"
 							>
-								<i class="material-icons">{{ privacyButtons["public"].iconName }}</i>
+								<i class="material-icons">{{
+									privacyButtons["public"].iconName
+								}}</i>
 								Public
 							</button>
 						</transition>
 						<transition name="slide-down">
 							<button
 								class="orange"
-								v-if="privacyDropdownActive && editing.privacy !== 'unlisted'"
+								v-if="
+									privacyDropdownActive &&
+										editing.privacy !== 'unlisted'
+								"
 								@click="updatePrivacyLocal('unlisted')"
 							>
-								<i class="material-icons">{{ privacyButtons["unlisted"].iconName }}</i>
+								<i class="material-icons">{{
+									privacyButtons["unlisted"].iconName
+								}}</i>
 								Unlisted
 							</button>
 						</transition>
 						<transition name="slide-down">
 							<button
 								class="red"
-								v-if="privacyDropdownActive && editing.privacy !== 'private'"
+								v-if="
+									privacyDropdownActive &&
+										editing.privacy !== 'private'
+								"
 								@click="updatePrivacyLocal('private')"
 							>
-								<i class="material-icons">{{ privacyButtons["private"].iconName }}</i>
+								<i class="material-icons">{{
+									privacyButtons["private"].iconName
+								}}</i>
 								Private
 							</button>
 						</transition>
@@ -214,11 +231,19 @@
 						<button
 							v-bind:class="{
 								blue: !editing.partyMode,
-								yellow: editing.partyMode,
+								yellow: editing.partyMode
 							}"
-							@click="editing.partyMode ? updatePartyModeLocal(true) : updatePartyModeLocal(false)"
+							@click="
+								editing.partyMode
+									? updatePartyModeLocal(true)
+									: updatePartyModeLocal(false)
+							"
 						>
-							<i class="material-icons">{{ editing.partyMode ? "emoji_people" : "playlist_play" }}</i>
+							<i class="material-icons">{{
+								editing.partyMode
+									? "emoji_people"
+									: "playlist_play"
+							}}</i>
 							{{ editing.partyMode ? "Party" : "Playlist" }}
 						</button>
 						<transition name="slide-down">
@@ -258,17 +283,25 @@
 						<button
 							v-bind:class="{
 								green: editing.locked,
-								red: !editing.locked,
+								red: !editing.locked
 							}"
-							@click="editing.locked ? updateQueueLockLocal(true) : updateQueueLockLocal(false)"
+							@click="
+								editing.locked
+									? updateQueueLockLocal(true)
+									: updateQueueLockLocal(false)
+							"
 						>
-							<i class="material-icons">{{ editing.locked ? "lock" : "lock_open" }}</i>
+							<i class="material-icons">{{
+								editing.locked ? "lock" : "lock_open"
+							}}</i>
 							{{ editing.locked ? "Locked" : "Unlocked" }}
 						</button>
 						<transition name="slide-down">
 							<button
 								class="green"
-								v-if="queueLockDropdownActive && !editing.locked"
+								v-if="
+									queueLockDropdownActive && !editing.locked
+								"
 								@click="updateQueueLockLocal(true)"
 							>
 								<i class="material-icons">lock</i>
@@ -384,18 +417,18 @@ export default {
 				"Dubstep"
 			],
 			privacyButtons: {
-				"public": {
+				public: {
 					style: "green",
-					iconName: "public",
+					iconName: "public"
 				},
-				"private": {
+				private: {
 					style: "red",
-					iconName: "lock",
+					iconName: "lock"
 				},
-				"unlisted": {
+				unlisted: {
 					style: "orange",
-					iconName: "link",
-				},
+					iconName: "link"
+				}
 			}
 		};
 	},
@@ -1090,7 +1123,7 @@ export default {
 }
 
 .slide-down-enter-active {
-	transition: transform .25s;
+	transition: transform 0.25s;
 }
 
 .slide-down-enter {

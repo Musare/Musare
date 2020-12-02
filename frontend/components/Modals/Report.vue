@@ -9,9 +9,7 @@
 						@click="highlight('previousSong')"
 					>
 						<header class="card-header">
-							<p class="card-header-title">
-								Previous Song
-							</p>
+							<p class="card-header-title">Previous Song</p>
 						</header>
 						<div class="card-content">
 							<article class="media">
@@ -52,9 +50,7 @@
 						@click="highlight('currentSong')"
 					>
 						<header class="card-header">
-							<p class="card-header-title">
-								Current Song
-							</p>
+							<p class="card-header-title">Current Song</p>
 						</header>
 						<div class="card-content">
 							<article class="media">

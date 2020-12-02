@@ -31,15 +31,9 @@
 						<td v-if="user.services.github">
 							{{ user.services.github.id }}
 						</td>
-						<td v-else>
-							Not Linked
-						</td>
-						<td v-if="user.hasPassword">
-							Yes
-						</td>
-						<td v-else>
-							Not Linked
-						</td>
+						<td v-else>Not Linked</td>
+						<td v-if="user.hasPassword">Yes</td>
+						<td v-else>Not Linked</td>
 						<td>{{ user.username }}</td>
 						<td>{{ user.role }}</td>
 						<td>{{ user.email.address }}</td>
@@ -143,7 +137,7 @@ export default {
 }
 
 body {
-	font-family: "Roboto", sans-serif;
+	font-family: "Hind", sans-serif;
 }
 
 .user-avatar {

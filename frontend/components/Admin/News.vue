@@ -44,9 +44,7 @@
 
 			<div class="card is-fullwidth">
 				<header class="card-header">
-					<p class="card-header-title">
-						Create News
-					</p>
+					<p class="card-header-title">Create News</p>
 				</header>
 				<div class="card-content">
 					<div class="content">

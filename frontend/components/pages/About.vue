@@ -4,11 +4,10 @@
 		<main-header />
 		<div class="container">
 			<div class="content-wrapper">
+				<h2 class="has-text-centered is-marginless">About</h2>
 				<div class="card is-fullwidth">
 					<header class="card-header">
-						<p class="card-header-title">
-							The project
-						</p>
+						<p class="card-header-title">The project</p>
 					</header>
 					<div class="card-content">
 						<div class="content">
@@ -23,9 +22,7 @@
 				</div>
 				<div class="card is-fullwidth">
 					<header class="card-header">
-						<p class="card-header-title">
-							How you can help
-						</p>
+						<p class="card-header-title">How you can help</p>
 					</header>
 					<div class="card-content">
 						<div class="content">

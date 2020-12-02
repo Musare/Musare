@@ -5,7 +5,7 @@
 			<main-header />
 			<div class="group">
 				<div class="group-title">
-					Stations&nbsp;
+					<h1>Stations&nbsp;</h1>
 					<a
 						v-if="loggedIn"
 						href="#"
@@ -544,15 +544,15 @@ html {
 	width: 100%;
 	margin: 64px 0 0 0;
 	padding-bottom: 240px;
+
 	.group-title {
-		float: left;
-		clear: none;
-		width: 100%;
-		height: 64px;
-		line-height: 48px;
-		text-align: center;
-		font-size: 48px;
-		margin-bottom: 25px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+
+		a {
+			display: flex;
+		}
 	}
 }
 </style>

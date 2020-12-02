@@ -25,7 +25,7 @@
 								>admin</span
 							>
 						</div>
-						<p class="username">@{{ user.username }}</p>
+						<h2 class="username">@{{ user.username }}</h2>
 					</div>
 				</div>
 				<div
@@ -575,6 +575,7 @@ export default {
 		font-size: 24px;
 		line-height: 28px;
 		color: $dark-grey;
+		margin: 0;
 	}
 
 	.buttons {

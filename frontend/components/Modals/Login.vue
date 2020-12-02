@@ -11,9 +11,7 @@
 		/>
 		<div class="modal-card">
 			<header class="modal-card-head">
-				<p class="modal-card-title">
-					Login
-				</p>
+				<p class="modal-card-title">Login</p>
 				<button
 					class="delete"
 					@click="

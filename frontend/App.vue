@@ -60,7 +60,7 @@ export default {
 		...mapActions("user/preferences", ["changeNightmode"])
 	},
 	watch: {
-		socketConnected: connected => {
+		socketConnected(connected) {
 			console.log(connected);
 			if (!connected)
 				new Toast({
@@ -214,8 +214,27 @@ html {
 body {
 	background-color: $light-grey;
 	color: $dark-grey;
-	font-family: "Roboto", Helvetica, Arial, sans-serif;
 	height: 100%;
+	font-family: "Karla", Helvetica, Arial, sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.sidebar-title {
+	font-family: "Hind", Helvetica, Arial, sans-serif;
+}
+
+.modal-card-title {
+	font-weight: 600;
+	font-family: "Hind", Helvetica, Arial, sans-serif;
+}
+
+p {
+	font-family: "Karla", Helvetica, Arial, sans-serif;
 }
 
 .upper-container {
@@ -387,9 +406,5 @@ button.delete:focus {
 			background-color: darken($blue, 5%) !important;
 		}
 	}
-}
-
-.center {
-	text-align: center;
 }
 </style>

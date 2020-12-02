@@ -12,7 +12,7 @@
 		<add-to-playlist v-if="modals.addSongToPlaylist" />
 		<edit-playlist v-if="modals.editPlaylist" />
 		<create-playlist v-if="modals.createPlaylist" />
-		<edit-station v-show="modals.editStation" store="station" />
+		<edit-station v-if="modals.editStation" store="station" />
 		<report v-if="modals.report" />
 
 		<transition name="slide">
@@ -103,7 +103,7 @@
 						id="preview-progress"
 						class="seeker-bar-container white"
 					>
-						<div class="seeker-bar light-blue" style="width: 0%;" />
+						<div class="seeker-bar light-blue" style="width: 0%" />
 					</div>
 				</div>
 				<div
@@ -112,9 +112,7 @@
 					<div v-if="station.type === 'community'" class="title">
 						Queue
 					</div>
-					<div v-else class="title">
-						Playlist
-					</div>
+					<div v-else class="title">Playlist</div>
 					<article v-if="!noSong" class="media">
 						<figure class="media-left">
 							<p class="image is-64x64">
@@ -139,7 +137,7 @@
 							{{ utils.formatTime(currentSong.duration) }}
 						</div>
 					</article>
-					<p v-if="noSong" class="center">
+					<p v-if="noSong" class="has-text-centered">
 						There is currently no song playing.
 					</p>
 
@@ -211,7 +209,7 @@
 							</h4>
 							<div class="columns is-mobile">
 								<form
-									style="margin-top: 12px; margin-bottom: 0;"
+									style="margin-top: 12px; margin-bottom: 0"
 									action="#"
 									class="column is-7-desktop is-4-mobile"
 								>
@@ -254,7 +252,7 @@
 									>
 										<li
 											id="like"
-											style="margin-right: 10px;"
+											style="margin-right: 10px"
 											@click="toggleLike()"
 										>
 											<span class="flow-text">{{
@@ -363,11 +361,14 @@
 												currentSong.dislikes !== -1
 										"
 										id="ratings"
-										style="display: inline-block;"
+										style="display: inline-block"
 									>
 										<li
 											id="dislike"
-											style="display: inline-block;margin-right: 10px;"
+											style="
+												display: inline-block;
+												margin-right: 10px;
+											"
 											@click="toggleDislike()"
 										>
 											<span class="flow-text">{{
@@ -389,7 +390,7 @@
 										</li>
 										<li
 											id="like"
-											style="display: inline-block;"
+											style="display: inline-block"
 											@click="toggleLike()"
 										>
 											<span class="flow-text">{{

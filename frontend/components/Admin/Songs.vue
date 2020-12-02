@@ -228,7 +228,10 @@ export default {
 			this.socket.emit("songs.getSong", this.$route.query.songId, res => {
 				if (res.status === "success") {
 					this.edit(res.data);
-					this.closeModal({ sector: "admin", modal: "viewReport" });
+					this.closeModal({
+						sector: "admin",
+						modal: "viewReport"
+					});
 				} else
 					new Toast({
 						content: "Song with that ID not found",
@@ -270,7 +273,7 @@ export default {
 }
 
 body {
-	font-family: "Roboto", sans-serif;
+	font-family: "Hind", sans-serif;
 }
 
 .optionsColumn {

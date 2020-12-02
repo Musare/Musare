@@ -31,23 +31,18 @@
 						</ul>
 					</div>
 					<div v-show="item.improvements.length > 0" class="sect">
-						<div class="sect-head-improvements">
-							Improvements
-						</div>
+						<div class="sect-head-improvements">Improvements</div>
 						<ul class="sect-body">
 							<li
-								v-for="(improvement,
-								index) in item.improvements"
-								:key="index"
+								v-for="(improvement, ind) in item.improvements"
+								:key="ind"
 							>
 								{{ improvement }}
 							</li>
 						</ul>
 					</div>
 					<div v-show="item.bugs.length > 0" class="sect">
-						<div class="sect-head-bugs">
-							Bugs Smashed
-						</div>
+						<div class="sect-head-bugs">Bugs Smashed</div>
 						<ul class="sect-body">
 							<li v-for="(bug, index) in item.bugs" :key="index">
 								{{ bug }}
@@ -69,7 +64,7 @@
 					</div>
 				</div>
 			</div>
-			<h3 v-if="noFound" class="center">
+			<h3 v-if="noFound" class="has-text-centered">
 				No news items were found.
 			</h3>
 		</div>

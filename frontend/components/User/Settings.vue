@@ -208,7 +208,7 @@
 				<br />
 				<button
 					class="button is-warning"
-					style="margin-top: 30px;"
+					style="margin-top: 30px"
 					@click="removeSessions()"
 				>
 					Log out everywhere
@@ -282,16 +282,17 @@ export default {
 		};
 	},
 	watch: {
+		// prettier-ignore
 		// eslint-disable-next-line func-names
-		"user.username": function(value) {
-			if (!validation.isLength(value, 2, 32)) {
-				this.validation.username.message =
-					"Username must have between 2 and 32 characters.";
-				this.validation.username.valid = false;
-			} else if (
-				!validation.regex.azAZ09_.test(value) &&
-				value !== this.originalUser.username // Sometimes a username pulled from GitHub won't succeed validation
-			) {
+		"user.username": function (value) {
+		if (!validation.isLength(value, 2, 32)) {
+			this.validation.username.message =
+				"Username must have between 2 and 32 characters.";
+			this.validation.username.valid = false;
+		} else if (
+			!validation.regex.azAZ09_.test(value) &&
+			value !== this.originalUser.username // Sometimes a username pulled from GitHub won't succeed validation
+		) {
 				this.validation.username.message =
 					"Invalid username format. Allowed characters: a-z, A-Z, 0-9 and _.";
 				this.validation.username.valid = false;
@@ -300,8 +301,9 @@ export default {
 				this.validation.username.valid = true;
 			}
 		},
+		// prettier-ignore
 		// eslint-disable-next-line func-names
-		"user.email.address": function(value) {
+		"user.email.address": function (value) {
 			if (!validation.isLength(value, 3, 254)) {
 				this.validation.email.message =
 					"Email must have between 3 and 254 characters.";

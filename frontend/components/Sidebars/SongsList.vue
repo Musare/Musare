@@ -1,12 +1,10 @@
 <template>
 	<div class="sidebar" transition="slide">
 		<div class="inner-wrapper">
-			<div v-if="station.type === 'community'" class="title">
+			<div v-if="station.type === 'community'" class="sidebar-title">
 				Queue
 			</div>
-			<div v-else class="title">
-				Playlist
-			</div>
+			<div v-else class="sidebar-title">Playlist</div>
 
 			<article v-if="!noSong" class="media">
 				<figure v-if="currentSong.thumbnail" class="media-left">
@@ -31,7 +29,7 @@
 					{{ utils.formatTime(currentSong.duration) }}
 				</div>
 			</article>
-			<p v-if="noSong" class="center">
+			<p v-if="noSong" class="has-text-centered">
 				There is currently no song playing.
 			</p>
 			<hr v-if="noSong" />
@@ -40,7 +38,7 @@
 				<div class="media-content">
 					<div
 						class="content"
-						style="display: block;padding-top: 10px;"
+						style="display: block; padding-top: 10px"
 					>
 						<strong class="songTitle">{{ song.title }}</strong>
 						<small>{{ song.artists.join(", ") }}</small>
@@ -62,7 +60,7 @@
 							<i
 								v-if="isOwnerOnly() || isAdminOnly()"
 								class="material-icons"
-								style="vertical-align: middle;"
+								style="vertical-align: middle"
 								@click="removeFromQueue(song.songId)"
 								>delete_forever</i
 							>
@@ -188,7 +186,7 @@ export default {
 	.sidebar {
 		background-color: $night-mode-secondary;
 
-		.title {
+		.sidebar-title {
 			color: #fff;
 		}
 
@@ -227,12 +225,13 @@ export default {
 	transform: translateX(100%);
 }
 
-.title {
+.sidebar-title {
 	background-color: rgb(3, 169, 244);
 	text-align: center;
 	padding: 10px;
 	color: $white;
 	font-weight: 600;
+	font-size: 20px;
 }
 
 .media {

@@ -6,9 +6,7 @@
 				class="card column is-10-desktop is-offset-1-desktop is-12-mobile"
 			>
 				<header class="card-header">
-					<p class="card-header-title">
-						Average Logs
-					</p>
+					<p class="card-header-title">Average Logs</p>
 				</header>
 				<div class="card-content">
 					<div class="content">
@@ -52,9 +50,7 @@
 				class="card column is-10-desktop is-offset-1-desktop is-12-mobile"
 			>
 				<header class="card-header">
-					<p class="card-header-title">
-						Average Logs
-					</p>
+					<p class="card-header-title">Average Logs</p>
 				</header>
 				<div class="card-content">
 					<div class="content">
@@ -87,9 +83,7 @@
 				class="card column is-10-desktop is-offset-1-desktop is-12-mobile"
 			>
 				<header class="card-header">
-					<p class="card-header-title">
-						Average Logs
-					</p>
+					<p class="card-header-title">Average Logs</p>
 				</header>
 				<div class="card-content">
 					<div class="content">
@@ -221,7 +215,7 @@ export default {
 }
 
 body {
-	font-family: "Roboto", sans-serif;
+	font-family: "Hind", sans-serif;
 }
 
 .user-avatar {

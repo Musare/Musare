@@ -11,7 +11,7 @@
 			</div>
 
 			<div class="nav-center stationDisplayName">
-				{{ station.displayName }}
+				<h4>{{ station.displayName }}</h4>
 			</div>
 
 			<span class="nav-toggle" v-on:click="controlBar = !controlBar">

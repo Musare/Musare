@@ -1,9 +1,7 @@
 <template>
 	<div class="sidebar" transition="slide">
 		<div class="inner-wrapper">
-			<div class="title">
-				Playlists
-			</div>
+			<div class="sidebar-title">Playlists</div>
 
 			<aside v-if="playlists.length > 0" class="menu">
 				<ul class="menu-list">
@@ -29,9 +27,7 @@
 				</ul>
 			</aside>
 
-			<div v-else class="none-found">
-				No Playlists found
-			</div>
+			<div v-else class="has-text-centered">No Playlists found</div>
 
 			<a
 				class="button create-playlist"
@@ -148,7 +144,7 @@ export default {
 	.sidebar {
 		background-color: $night-mode-secondary;
 
-		.title {
+		.sidebar-title {
 			color: #fff;
 		}
 
@@ -194,12 +190,13 @@ export default {
 	transform: translateX(100%);
 }
 
-.title {
+.sidebar-title {
 	background-color: rgb(3, 169, 244);
 	text-align: center;
 	padding: 10px;
 	color: $white;
 	font-weight: 600;
+	font-size: 20px;
 }
 
 .create-playlist {
@@ -219,9 +216,5 @@ export default {
 
 .create-playlist:focus {
 	background: $primary-color;
-}
-
-.none-found {
-	text-align: center;
 }
 </style>

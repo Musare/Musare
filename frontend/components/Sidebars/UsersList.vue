@@ -1,10 +1,8 @@
 <template>
 	<div class="sidebar" transition="slide">
 		<div class="inner-wrapper">
-			<div class="title">
-				Users
-			</div>
-			<h5 class="center">Total users: {{ userCount }}</h5>
+			<div class="sidebar-title">Users</div>
+			<h5 class="has-text-centered">Total users: {{ userCount }}</h5>
 			<aside class="menu">
 				<ul class="menu-list">
 					<li v-for="(username, index) in users" :key="index">
@@ -39,7 +37,7 @@ export default {
 	.sidebar {
 		background-color: $night-mode-secondary;
 
-		.title {
+		.sidebar-title {
 			color: #fff;
 		}
 
@@ -76,12 +74,13 @@ export default {
 	transform: translateX(100%);
 }
 
-.title {
+.sidebar-title {
 	background-color: rgb(3, 169, 244);
 	text-align: center;
 	padding: 10px;
 	color: $white;
 	font-weight: 600;
+	font-size: 20px;
 }
 
 .menu {

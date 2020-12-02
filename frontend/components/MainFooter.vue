@@ -49,13 +49,9 @@
 					<router-link title="The Musare Team" to="/team">
 						Team
 					</router-link>
-					<router-link title="News" to="/news">
-						News
-					</router-link>
+					<router-link title="News" to="/news"> News </router-link>
 				</p>
-				<p>
-					© Copyright Musare 2015 - 2020
-				</p>
+				<p>© Copyright Musare 2015 - 2020</p>
 			</div>
 		</div>
 	</footer>

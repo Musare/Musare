@@ -17,12 +17,8 @@
 						v-for="(punishment, index) in sortedPunishments"
 						:key="index"
 					>
-						<td v-if="punishment.type === 'banUserId'">
-							User ID
-						</td>
-						<td v-else>
-							IP Address
-						</td>
+						<td v-if="punishment.type === 'banUserId'">User ID</td>
+						<td v-else>IP Address</td>
 						<td>{{ punishment.value }}</td>
 						<td>{{ punishment.reason }}</td>
 						<td>
@@ -47,38 +43,20 @@
 			</table>
 			<div class="card is-fullwidth">
 				<header class="card-header">
-					<p class="card-header-title">
-						Ban an IP
-					</p>
+					<p class="card-header-title">Ban an IP</p>
 				</header>
 				<div class="card-content">
 					<div class="content">
 						<label class="label">Expires In</label>
 						<select v-model="ipBan.expiresAt">
-							<option value="1h">
-								1 Hour
-							</option>
-							<option value="12h">
-								12 Hours
-							</option>
-							<option value="1d">
-								1 Day
-							</option>
-							<option value="1w">
-								1 Week
-							</option>
-							<option value="1m">
-								1 Month
-							</option>
-							<option value="3m">
-								3 Months
-							</option>
-							<option value="6m">
-								6 Months
-							</option>
-							<option value="1y">
-								1 Year
-							</option>
+							<option value="1h">1 Hour</option>
+							<option value="12h">12 Hours</option>
+							<option value="1d">1 Day</option>
+							<option value="1w">1 Week</option>
+							<option value="1m">1 Month</option>
+							<option value="3m">3 Months</option>
+							<option value="6m">6 Months</option>
+							<option value="1y">1 Year</option>
 						</select>
 						<label class="label">IP</label>
 						<p class="control is-expanded">
@@ -218,7 +196,7 @@ export default {
 }
 
 body {
-	font-family: "Roboto", sans-serif;
+	font-family: "Hind", sans-serif;
 }
 
 td {

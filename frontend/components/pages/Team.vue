@@ -3,18 +3,14 @@
 		<metadata title="Team" />
 		<main-header />
 		<div class="content-wrapper">
-			<h3 class="center">
-				Our Team
-			</h3>
+			<h2 class="has-text-centered is-marginless">Our Team</h2>
 			<br />
 			<div class="columns">
 				<div
 					class="card column is-6-desktop is-offset-3-desktop is-12-mobile"
 				>
 					<header class="card-header">
-						<p class="card-header-title">
-							Kris
-						</p>
+						<p class="card-header-title">Kris</p>
 					</header>
 					<div class="card-content">
 						<div class="content">
@@ -49,9 +45,7 @@
 					class="card column is-6-desktop is-offset-3-desktop is-12-mobile"
 				>
 					<header class="card-header">
-						<p class="card-header-title">
-							Jonathan
-						</p>
+						<p class="card-header-title">Jonathan</p>
 					</header>
 					<div class="card-content">
 						<div class="content">
@@ -82,9 +76,7 @@
 					class="card column is-6-desktop is-offset-3-desktop is-12-mobile"
 				>
 					<header class="card-header">
-						<p class="card-header-title">
-							Antonio
-						</p>
+						<p class="card-header-title">Antonio</p>
 					</header>
 					<div class="card-content">
 						<div class="content">
@@ -110,11 +102,9 @@
 				</div>
 			</div>
 			<div id="special-thanks">
-				<h4 class="center">
-					Special Thanks
-				</h4>
+				<h4 class="has-text-centered">Special Thanks</h4>
 				<br />
-				<p class="center thanks">
+				<p class="has-text-centered thanks">
 					Special thanks to Owen Diffey, Zachery, Adryd, Cameron
 					Kline, Wesley McCann,
 					<strong>Akira Laine (Co-Founder)</strong>, Johannes Andersen

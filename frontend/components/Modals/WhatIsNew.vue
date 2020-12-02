@@ -31,9 +31,7 @@
 					</ul>
 				</div>
 				<div v-show="news.improvements.length > 0" class="sect">
-					<div class="sect-head-improvements">
-						Improvements
-					</div>
+					<div class="sect-head-improvements">Improvements</div>
 					<ul class="sect-body">
 						<li
 							v-for="(improvement, index) in news.improvements"
@@ -44,9 +42,7 @@
 					</ul>
 				</div>
 				<div v-show="news.bugs.length > 0" class="sect">
-					<div class="sect-head-bugs">
-						Bugs Smashed
-					</div>
+					<div class="sect-head-bugs">Bugs Smashed</div>
 					<ul class="sect-body">
 						<li v-for="(bug, index) in news.bugs" :key="index">
 							{{ bug }}

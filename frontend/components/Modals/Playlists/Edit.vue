@@ -4,9 +4,7 @@
 			<nav class="level">
 				<div class="level-item has-text-centered">
 					<div>
-						<p class="heading">
-							Total Length
-						</p>
+						<p class="heading">Total Length</p>
 						<p class="title">
 							{{ totalLength() }}
 						</p>

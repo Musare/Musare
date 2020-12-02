@@ -70,9 +70,7 @@
 		<div class="container">
 			<div class="card is-fullwidth">
 				<header class="card-header">
-					<p class="card-header-title">
-						Create official station
-					</p>
+					<p class="card-header-title">Create official station</p>
 				</header>
 				<div class="card-content">
 					<div class="content">
