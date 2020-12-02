@@ -13,13 +13,9 @@ const utils = require("../utils");
 cache.runJob("SUB", {
     channel: "news.create",
     cb: (news) => {
-        utils.runJob("SOCKETS_FROM_USER", {
-            userId: news.createdBy,
-            cb: (response) => {
-                response.sockets.forEach((socket) => {
-                    socket.emit("event:admin.news.created", news);
-                });
-            },
+        utils.runJob("EMIT_TO_ROOM", {
+            room: "admin.news",
+            args: ["event:admin.news.created", news],
         });
     },
 });
@@ -27,13 +23,9 @@ cache.runJob("SUB", {
 cache.runJob("SUB", {
     channel: "news.remove",
     cb: (news) => {
-        utils.runJob("SOCKETS_FROM_USER", {
-            userId: news.createdBy,
-            cb: (response) => {
-                response.sockets.forEach((socket) => {
-                    socket.emit("event:admin.news.removed", news);
-                });
-            },
+        utils.runJob("EMIT_TO_ROOM", {
+            room: "admin.news",
+            args: ["event:admin.news.removed", news],
         });
     },
 });
@@ -41,13 +33,9 @@ cache.runJob("SUB", {
 cache.runJob("SUB", {
     channel: "news.update",
     cb: (news) => {
-        utils.runJob("SOCKETS_FROM_USER", {
-            userId: news.createdBy,
-            cb: (response) => {
-                response.sockets.forEach((socket) => {
-                    socket.emit("event:admin.news.updated", news);
-                });
-            },
+        utils.runJob("EMIT_TO_ROOM", {
+            room: "admin.news",
+            args: ["event:admin.news.updated", news],
         });
     },
 });
