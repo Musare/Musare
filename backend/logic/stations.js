@@ -1119,13 +1119,18 @@ class StationsModule extends CoreClass {
     }
 
     CAN_USER_VIEW_STATION(payload) {
-        // station, userId, cb
+        // station, userId, hideUnlisted, cb
         return new Promise((resolve, reject) => {
             async.waterfall(
                 [
                     (next) => {
-                        if (payload.station.privacy !== "private")
+                        if (payload.station.privacy === "public")
                             return next(true);
+                        if (payload.station.privacy === "unlisted")
+                            if (payload.hideUnlisted === true)
+                                return next();
+                            else
+                                return next(true);
                         if (!payload.userId) return next("Not allowed");
                         next();
                     },
