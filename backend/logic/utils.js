@@ -442,6 +442,18 @@ class UtilsModule extends CoreClass {
 
                             body = JSON.parse(body);
 
+                            if (body.error) {
+                                console.log(
+                                    "ERROR",
+                                    "GET_SONG_FROM_YOUTUBE",
+                                    `${body.error.message}`
+                                );
+                                return reject(new Error("An error has occured. Please try again later."));
+                            }
+
+                            if (body.items[0] === undefined)
+                                return reject(new Error("The specified video does not exist or cannot be publicly accessed."));
+
                             //TODO Clean up duration converter
                             let dur = body.items[0].contentDetails.duration;
                             dur = dur.replace("PT", "");
@@ -505,6 +517,15 @@ class UtilsModule extends CoreClass {
 
                         body = JSON.parse(body);
 
+                        if (body.error) {
+                            console.log(
+                                "ERROR",
+                                "FILTER_MUSIC_VIDEOS_YOUTUBE",
+                                `${body.error.message}`
+                            );
+                            return reject(new Error("An error has occured. Please try again later."));
+                        }
+
                         let songIds = [];
                         body.items.forEach((item) => {
                             const songId = item.id;
@@ -563,7 +584,18 @@ class UtilsModule extends CoreClass {
                         }
 
                         body = JSON.parse(body);
+
+                        if (body.error) {
+                            console.log(
+                                "ERROR",
+                                "GET_PLAYLIST_FROM_YOUTUBE",
+                                `${body.error.message}`
+                            );
+                            return reject(new Error("An error has occured. Please try again later."));
+                        }
+
                         songs = songs.concat(body.items);
+
                         if (body.nextPageToken)
                             getPage(body.nextPageToken, songs);
                         else {

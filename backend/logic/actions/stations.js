@@ -391,7 +391,6 @@ module.exports = {
         async.waterfall(
             [
                 (next) => {
-                    console.log(111);
                     cache
                         .runJob("HGETALL", { table: "stations" })
                         .then((stations) => {
@@ -400,8 +399,6 @@ module.exports = {
                 },
 
                 (stations, next) => {
-                    console.log(222);
-
                     let resultStations = [];
                     for (let id in stations) {
                         resultStations.push(stations[id]);
@@ -410,8 +407,6 @@ module.exports = {
                 },
 
                 (stationsArray, next) => {
-                    console.log(333);
-
                     let resultStations = [];
                     async.each(
                         stationsArray,
@@ -423,10 +418,9 @@ module.exports = {
                                             .runJob("CAN_USER_VIEW_STATION", {
                                                 station,
                                                 userId: session.userId,
+                                                hideUnlisted: true
                                             })
                                             .then((exists) => {
-                                                console.log(444, exists);
-
                                                 next(null, exists);
                                             })
                                             .catch(next);

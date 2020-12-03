@@ -350,7 +350,7 @@ let lib = {
                             url,
                             musicOnly: false,
                         })
-                        .then((songIds) => next(null, songIds))
+                        .then((res) => next(null, res.songs))
                         .catch(next);
                 },
                 (songIds, next) => {
@@ -358,12 +358,12 @@ let lib = {
                     function checkDone() {
                         if (processed === songIds.length) next();
                     }
-                    for (let s = 0; s < songIds.length; s++) {
-                        lib.add(session, songIds[s], () => {
+                    songIds.forEach(songId => {
+                        lib.add(session, songId, () => {
                             processed++;
                             checkDone();
                         });
-                    }
+                    });
                 },
             ],
             async (err) => {

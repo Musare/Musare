@@ -76,25 +76,42 @@
 							{{ station.description }}
 						</div>
 						<div class="under-content">
-							<p v-if="station.type === 'community'">
+							<p class="hostedBy">
 								Hosted by
-								<user-id-to-username
-									:userId="station.owner"
-									:link="true"
-								/>
+								<span class="host">
+									<span
+										v-if="station.type === 'official'"
+										title="Musare"
+										>Musare</span
+									>
+									<user-id-to-username
+										v-else
+										:userId="station.owner"
+										:link="true"
+									/>
+								</span>
 							</p>
 							<div class="icons">
 								<i
-									v-if="isOwner(station)"
-									class="material-icons dark-grey-icon"
+									v-if="
+										station.type === 'community' &&
+											isOwner(station)
+									"
+									class="homeIcon material-icons"
 									title="This is your station."
 									>home</i
 								>
 								<i
-									v-if="station.privacy !== 'public'"
-									class="material-icons dark-grey-icon"
+									v-if="station.privacy === 'private'"
+									class="privateIcon material-icons"
 									title="This station is not visible to other users."
 									>lock</i
+								>
+								<i
+									v-if="station.privacy === 'unlisted'"
+									class="unlistedIcon material-icons"
+									title="Unlisted Station"
+									>link</i
 								>
 							</div>
 						</div>
@@ -112,7 +129,7 @@
 							:title="'Now Playing: ' + station.currentSong.title"
 							>{{ station.currentSong.title }}</span
 						>
-						<span v-else class="songTitle">No song</span>
+						<span v-else class="songTitle">No Songs Playing</span>
 					</div>
 				</router-link>
 				<h4 v-if="stations.length === 0">
@@ -365,8 +382,30 @@ html {
 		position: absolute;
 		right: 0;
 
-		.dark-grey-icon {
-			color: $dark-grey-2;
+		.material-icons {
+			font-size: 22px;
+		}
+		.material-icons:first-child {
+			margin-left: 5px;
+		}
+		.unlistedIcon {
+			color: $light-orange;
+		}
+		.privateIcon {
+			color: $dark-pink;
+		}
+		.homeIcon {
+			color: $light-purple;
+		}
+	}
+
+	.hostedBy {
+		font-weight: 400;
+		font-size: 12px;
+		color: $black;
+		.host {
+			font-weight: 400;
+			color: $primary-color;
 		}
 	}
 }
@@ -393,7 +432,8 @@ html {
 	overflow: hidden;
 	margin: 10px;
 	cursor: pointer;
-	height: 485px;
+	height: 480px;
+	box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.1);
 	transition: all ease-in-out 0.2s;
 
 	.card-content {
@@ -402,13 +442,12 @@ html {
 		.media {
 			display: flex;
 			align-items: center;
+			margin-bottom: 5px;
 
 			.displayName {
 				display: flex;
 				align-items: center;
-				word-wrap: break-word;
 				width: 80%;
-				word-wrap: break-word;
 				overflow: hidden;
 				text-overflow: ellipsis;
 				display: flex;
@@ -416,11 +455,15 @@ html {
 				max-height: 30px;
 
 				h5 {
+					font-size: 20px;
 					font-weight: 400;
 					margin: 0;
 					display: inline;
 					margin-right: 6px;
 					line-height: 30px;
+					text-overflow: ellipsis;
+					overflow: hidden;
+					white-space: nowrap;
 				}
 
 				i {
@@ -450,6 +493,7 @@ html {
 
 	.card-image {
 		.image {
+			box-shadow: 1px 0px 3px rgba(7, 136, 191, 0.3);
 			.ytThumbnailBg {
 				background: url("/assets/notes-transparent.png") no-repeat
 					center center;
@@ -476,12 +520,14 @@ html {
 		display: flex;
 		align-items: center;
 		background: $primary-color;
+		box-shadow: inset 0px 2px 4px rgba(darken($primary-color, 7), 0.7);
 		width: 100%;
 		height: 30px;
 		line-height: 30px;
 		color: $white;
 		font-weight: 400;
 		font-size: 12px;
+		padding: 0 5px;
 
 		i.material-icons {
 			vertical-align: middle;

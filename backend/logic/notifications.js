@@ -153,8 +153,9 @@ class NotificationsModule extends CoreClass {
                 "PX",
                 time,
                 "NX",
-                () => {
-                    resolve();
+                (err) => {
+                    if (err) reject(err);
+                    else resolve();
                 }
             );
         });
@@ -237,10 +238,12 @@ class NotificationsModule extends CoreClass {
                 crypto
                     .createHash("md5")
                     .update(`_notification:${payload.name}_`)
-                    .digest("hex")
+                    .digest("hex"),
+                (err) => {
+                    if (err) reject(err);
+                    else resolve();
+                }
             );
-
-            resolve();
         });
     }
 }

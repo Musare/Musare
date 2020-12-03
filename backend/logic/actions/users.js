@@ -322,7 +322,12 @@ module.exports = {
 
         async.waterfall(
             [
-                // verify the request with google recaptcha
+                (next) => {
+                    if (config.get("registrationDisabled") === true)
+                        return next("Registration is not allowed at this time.");
+                    return next();
+                },
+
                 (next) => {
                     if (!db.passwordValid(password))
                         return next(
@@ -331,29 +336,34 @@ module.exports = {
                     return next();
                 },
 
+                // verify the request with google recaptcha
                 (next) => {
-                    request(
-                        {
-                            url:
-                                "https://www.google.com/recaptcha/api/siteverify",
-                            method: "POST",
-                            form: {
-                                secret: config.get("apis").recaptcha.secret,
-                                response: recaptcha,
+                    if (config.get("apis.recaptcha.enabled") === true)
+                        request(
+                            {
+                                url:
+                                    "https://www.google.com/recaptcha/api/siteverify",
+                                method: "POST",
+                                form: {
+                                    secret: config.get("apis").recaptcha.secret,
+                                    response: recaptcha,
+                                },
                             },
-                        },
-                        next
-                    );
+                            next
+                        );
+                    else next(null, null, null);
                 },
 
                 // check if the response from Google recaptcha is successful
                 // if it is, we check if a user with the requested username already exists
                 (response, body, next) => {
-                    let json = JSON.parse(body);
-                    if (json.success !== true)
-                        return next(
-                            "Response from recaptcha was not successful."
-                        );
+                    if (config.get("apis.recaptcha.enabled") === true) {
+                        let json = JSON.parse(body);
+                        if (json.success !== true)
+                            return next(
+                                "Response from recaptcha was not successful."
+                            );
+                    }
                     userModel.findOne(
                         { username: new RegExp(`^${username}$`, "i") },
                         next

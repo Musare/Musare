@@ -34,7 +34,12 @@
 			</p>
 			<hr v-if="noSong" />
 
-			<article v-for="song in songsList" :key="song.songId" class="media">
+			<article
+				v-for="song in songsList"
+				:key="song.songId"
+				class="media"
+				:class="{ 'is-playing': currentSong.songId === song.songId }"
+			>
 				<div class="media-content">
 					<div
 						class="content"
@@ -196,21 +201,7 @@ export default {
 	}
 }
 
-.sidebar {
-	position: fixed;
-	z-index: 1;
-	top: 0;
-	right: 0;
-	width: 300px;
-	height: 100vh;
-	background-color: $white;
-	box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16),
-		0 2px 10px 0 rgba(0, 0, 0, 0.12);
-}
-
 .inner-wrapper {
-	top: 60px;
-	position: relative;
 	overflow: auto;
 	height: 100%;
 }
@@ -238,10 +229,16 @@ export default {
 	padding: 0 25px;
 }
 
+.media.is-playing {
+	background-color: $musareBlue;
+	color: white;
+}
+
 .media-content .content {
 	min-height: 64px;
 	display: flex;
 	align-items: center;
+	color: inherit;
 }
 
 .content p strong {
