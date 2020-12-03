@@ -1190,6 +1190,7 @@ export default {
 			height: 298,
 			width: 530,
 			videoId: this.editing.song.songId,
+			host: "https://www.youtube-nocookie.com",
 			playerVars: {
 				controls: 0,
 				iv_load_policy: 3,

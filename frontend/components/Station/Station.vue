@@ -536,6 +536,7 @@ export default {
 					height: 270,
 					width: 480,
 					videoId: this.currentSong.songId,
+					host: "https://www.youtube-nocookie.com",
 					startSeconds:
 						this.getTimeElapsed() / 1000 +
 						this.currentSong.skipDuration,
