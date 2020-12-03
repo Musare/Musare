@@ -136,26 +136,18 @@
 						v-for="playlist in playlists"
 						:key="playlist._id"
 					>
-						<div class="left-part">
-							<p class="top-text">{{ playlist.displayName }}</p>
-							<p class="bottom-text">
-								{{ totalLength(playlist) }} •
-								{{ playlist.songs.length }}
-								{{
-									playlist.songs.length === 1
-										? "song"
-										: "songs"
-								}}
-							</p>
-						</div>
-						<div class="actions">
-							<button
-								class="button is-primary"
-								@click="editPlaylistClick(playlist._id)"
-							>
-								Edit
-							</button>
-						</div>
+						<playlist-item :playlist="playlist">
+							<div slot="actions">
+								<button
+									class="button is-primary"
+									@click="editPlaylistClick(playlist._id)"
+								>
+									<i class="material-icons icon-with-button"
+										>create</i
+									>Edit
+								</button>
+							</div>
+						</playlist-item>
 					</div>
 					<button
 						class="button is-primary"
@@ -180,21 +172,22 @@ import { mapState, mapActions } from "vuex";
 import { format, formatDistance, parseISO } from "date-fns";
 import Toast from "toasters";
 
+import PlaylistItem from "../PlaylistItem.vue";
 import MainHeader from "../MainHeader.vue";
 import MainFooter from "../MainFooter.vue";
+
 import io from "../../io";
-import utils from "../../js/utils";
 
 export default {
 	components: {
 		MainHeader,
 		MainFooter,
+		PlaylistItem,
 		CreatePlaylist: () => import("../Modals/Playlists/Create.vue"),
 		EditPlaylist: () => import("../Modals/Playlists/Edit.vue")
 	},
 	data() {
 		return {
-			utils,
 			user: {},
 			notes: "",
 			isUser: false,
@@ -373,13 +366,6 @@ export default {
 			console.log(playlistId);
 			this.editPlaylist(playlistId);
 			this.openModal({ sector: "station", modal: "editPlaylist" });
-		},
-		totalLength(playlist) {
-			let length = 0;
-			playlist.songs.forEach(song => {
-				length += song.duration;
-			});
-			return this.utils.formatTimeLong(length);
 		},
 		hideActivity(activityId) {
 			this.socket.emit("activities.hideActivity", activityId, res => {
@@ -749,11 +735,6 @@ export default {
 				font-size: 17px;
 			}
 		}
-	}
-
-	.playlists-tab > button {
-		width: 100%;
-		font-size: 17px;
 	}
 }
 

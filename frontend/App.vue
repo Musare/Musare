@@ -411,4 +411,9 @@ button.delete:focus {
 .page-title {
 	margin: 0 0 50px 0;
 }
+
+.icon-with-button {
+	margin-right: 3px;
+	font-size: 18px;
+}
 </style>

@@ -1,89 +1,154 @@
 <template>
 	<modal title="Add Song To Queue">
 		<div slot="body">
-			<aside class="menu" v-if="loggedIn && station.type === 'community'">
-				<ul class="menu-list">
-					<li v-for="(playlist, index) in playlists" :key="index">
-						<a href="#" v-on:click="editPlaylist(playlist._id)">{{
-							playlist.displayName
-						}}</a>
-						<div class="controls">
-							<a
-								href="#"
-								v-on:click="selectPlaylist(playlist._id)"
-								v-if="!isPlaylistSelected(playlist._id)"
-							>
-								<i class="material-icons">panorama_fish_eye</i>
-							</a>
-							<a
-								href="#"
-								v-on:click="unSelectPlaylist()"
-								v-if="isPlaylistSelected(playlist._id)"
-							>
-								<i class="material-icons">lens</i>
-							</a>
-						</div>
-					</li>
-				</ul>
+			<div class="vertical-padding">
+				<h4 class="modal-section-title">Choose a song</h4>
+				<p class="modal-section-description">
+					Choose a song by searching or using a link from YouTube.
+				</p>
+
 				<br />
-			</aside>
-			<div class="control is-grouped">
-				<p class="control is-expanded">
-					<input
-						class="input"
-						type="text"
-						placeholder="YouTube Query"
-						v-model="querySearch"
-						autofocus
-						@keyup.enter="submitQuery()"
-					/>
-				</p>
-				<p class="control">
-					<a
-						class="button is-info"
-						v-on:click="submitQuery()"
-						href="#"
-						>Search</a
-					>
-				</p>
+
+				<div class="control is-grouped" id="youtube-search-input">
+					<p class="control is-expanded">
+						<input
+							class="input"
+							type="text"
+							placeholder="Enter your YouTube query here..."
+							v-model="querySearch"
+							autofocus
+							@keyup.enter="submitQuery()"
+						/>
+					</p>
+					<p class="control">
+						<a
+							class="button is-info"
+							v-on:click="submitQuery()"
+							href="#"
+							><i class="material-icons icon-with-button"
+								>search</i
+							>Search</a
+						>
+					</p>
+				</div>
+
+				<div
+					class="control is-grouped"
+					v-if="station.type === 'official'"
+				>
+					<p class="control is-expanded">
+						<input
+							class="input"
+							type="text"
+							placeholder="YouTube Playlist URL"
+							v-model="importQuery"
+							@keyup.enter="importPlaylist()"
+						/>
+					</p>
+					<p class="control">
+						<a
+							class="button is-info"
+							v-on:click="importPlaylist()"
+							href="#"
+							>Import</a
+						>
+					</p>
+				</div>
+				<table
+					class="table"
+					style="margin-top: 20px;"
+					v-if="queryResults.length > 0"
+				>
+					<tbody>
+						<tr
+							v-for="(result, index) in queryResults"
+							:key="index"
+						>
+							<td class="song-thumbnail">
+								<div
+									:style="
+										`background-image: url('${result.thumbnail}'`
+									"
+								></div>
+							</td>
+							<td><strong v-html="result.title"></strong></td>
+							<td class="song-actions">
+								<a
+									class="button is-success"
+									v-on:click="addSongToQueue(result.id)"
+									href="#"
+									><i class="material-icons icon-with-button"
+										>add</i
+									>Add to queue
+								</a>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+
+				<hr style="margin: 30px 0;" />
+
+				<aside
+					id="playlist-to-queue-selection"
+					v-if="
+						loggedIn &&
+							station.type === 'community' &&
+							playlists.length > 0
+					"
+				>
+					<h4 class="modal-section-title">Choose a playlist</h4>
+					<p class="modal-section-description">
+						Choose one of your playlists to add to the queue.
+					</p>
+
+					<br />
+
+					<div id="playlists">
+						<div
+							class="playlist"
+							v-for="(playlist, index) in playlists"
+							:key="index"
+						>
+							<playlist-item :playlist="playlist">
+								<div slot="actions">
+									<a
+										class="button is-danger"
+										v-on:click="addSongToQueue(result.id)"
+										href="#"
+										@click="
+											togglePlaylistSelection(
+												playlist._id
+											)
+										"
+										v-if="isPlaylistSelected(playlist._id)"
+									>
+										<i
+											class="material-icons icon-with-button"
+											>stop</i
+										>
+										Stop playing
+									</a>
+									<a
+										class="button is-success"
+										v-on:click="addSongToQueue(result.id)"
+										href="#"
+										@click="
+											togglePlaylistSelection(
+												playlist._id
+											)
+										"
+										v-else
+										><i
+											class="material-icons icon-with-button"
+											>play_arrow</i
+										>Play in queue
+									</a>
+								</div>
+							</playlist-item>
+						</div>
+					</div>
+				</aside>
 			</div>
-			<div class="control is-grouped" v-if="station.type === 'official'">
-				<p class="control is-expanded">
-					<input
-						class="input"
-						type="text"
-						placeholder="YouTube Playlist URL"
-						v-model="importQuery"
-						@keyup.enter="importPlaylist()"
-					/>
-				</p>
-				<p class="control">
-					<a
-						class="button is-info"
-						v-on:click="importPlaylist()"
-						href="#"
-						>Import</a
-					>
-				</p>
-			</div>
-			<table class="table" v-if="queryResults.length > 0">
-				<tbody>
-					<tr v-for="(result, index) in queryResults" :key="index">
-						<td>
-							<img :src="result.thumbnail" />
-						</td>
-						<td>{{ result.title }}</td>
-						<td>
-							<a
-								class="button is-success"
-								v-on:click="addSongToQueue(result.id)"
-								href="#"
-								>Add</a
-							>
-						</td>
-					</tr>
-				</tbody>
-			</table>
 		</div>
 	</modal>
 </template>
@@ -92,7 +157,10 @@
 import { mapState, mapActions } from "vuex";
 
 import Toast from "toasters";
+
+import PlaylistItem from "../PlaylistItem.vue";
 import Modal from "./Modal.vue";
+
 import io from "../../io";
 
 export default {
@@ -114,15 +182,17 @@ export default {
 		isPlaylistSelected(playlistId) {
 			return this.privatePlaylistQueueSelected === playlistId;
 		},
-		selectPlaylist(playlistId) {
+		togglePlaylistSelection(playlistId) {
+			console.log(this.isPlaylistSelected(playlistId), "sleect toggle");
 			if (this.station.type === "community") {
-				this.updatePrivatePlaylistQueueSelected(playlistId);
-				this.$parent.addFirstPrivatePlaylistSongToQueue();
-			}
-		},
-		unSelectPlaylist() {
-			if (this.station.type === "community") {
-				this.updatePrivatePlaylistQueueSelected(null);
+				if (this.isPlaylistSelected(playlistId)) {
+					this.updatePrivatePlaylistQueueSelected(null);
+				} else {
+					console.log("1");
+					this.updatePrivatePlaylistQueueSelected(playlistId);
+					this.$parent.addFirstPrivatePlaylistSongToQueue();
+					console.log(this.isPlaylistSelected(playlistId));
+				}
 			}
 		},
 		addSongToQueue(songId) {
@@ -170,26 +240,43 @@ export default {
 				"queueSongs.addSetToQueue",
 				this.importQuery,
 				res => {
-					new Toast({ content: res.message, timeout: 4000 });
+					return new Toast({ content: res.message, timeout: 4000 });
 				}
 			);
 		},
 		submitQuery() {
 			let query = this.querySearch;
+
+			if (!this.querySearch)
+				return new Toast({
+					content: "Please input a search query or a YouTube link",
+					timeout: 4000
+				});
+
 			if (query.indexOf("&index=") !== -1) {
 				query = query.split("&index=");
 				query.pop();
 				query = query.join("");
 			}
+
 			if (query.indexOf("&list=") !== -1) {
 				query = query.split("&list=");
 				query.pop();
 				query = query.join("");
 			}
-			this.socket.emit("apis.searchYoutube", query, res => {
-				// check for error
+
+			return this.socket.emit("apis.searchYoutube", query, res => {
+				if (res.status === "failure")
+					return new Toast({
+						content: "Error searching on YouTube",
+						timeout: 4000
+					});
+
 				const { data } = res;
 				this.queryResults = [];
+
+				console.log(res.data);
+
 				for (let i = 0; i < data.items.length; i += 1) {
 					this.queryResults.push({
 						id: data.items[i].id.videoId,
@@ -198,6 +285,8 @@ export default {
 						thumbnail: data.items[i].snippet.thumbnails.default.url
 					});
 				}
+
+				return this.queryResults;
 			});
 		},
 		...mapActions("station", ["updatePrivatePlaylistQueueSelected"]),
@@ -211,7 +300,7 @@ export default {
 			});
 		});
 	},
-	components: { Modal }
+	components: { Modal, PlaylistItem }
 };
 </script>
 
@@ -220,13 +309,99 @@ export default {
 
 tr td {
 	vertical-align: middle;
+}
 
-	img {
-		width: 55px;
+.song-thumbnail {
+	padding-left: 0;
+}
+
+.song-actions {
+	padding-right: 0;
+
+	.button {
+		height: 36px;
 	}
+}
+
+.song-thumbnail div {
+	width: 96px;
+	height: 54px;
+	background-position: center;
+	background-repeat: no-repeat;
 }
 
 .table {
 	margin-bottom: 0;
+}
+
+.night-mode {
+	.modal-section {
+		color: #000;
+	}
+
+	div {
+		color: #4d4d4d;
+	}
+}
+
+.modal-section {
+	margin-top: 20px;
+	padding: 10px 20px;
+	background-color: #f5f5f5;
+}
+
+.modal-section-title {
+	font-size: 26px;
+	margin: 0px;
+}
+
+.modal-section-description {
+	margin-bottom: 5px;
+}
+
+#playlist-to-queue-selection {
+	margin-top: 0;
+
+	#playlists {
+		font-size: 18px;
+
+		.radio {
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+
+			input {
+				transform: scale(1.25);
+			}
+		}
+	}
+}
+
+#youtube-search-input {
+	.control {
+		margin-right: 0px;
+	}
+
+	input {
+		height: 36px;
+		border-radius: 3px 0 3px 0;
+	}
+
+	.button {
+		height: 36px;
+		border-radius: 0 3px 3px 0;
+	}
+}
+
+.vertical-padding {
+	padding: 20px;
+}
+
+#playlists {
+	.playlist {
+		.button {
+			width: 146px;
+		}
+	}
 }
 </style>

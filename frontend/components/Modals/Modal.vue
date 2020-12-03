@@ -3,9 +3,9 @@
 		<div class="modal-background" @click="closeCurrentModal()" />
 		<div class="modal-card">
 			<header class="modal-card-head">
-				<p class="modal-card-title">
+				<h2 class="modal-card-title is-marginless">
 					{{ title }}
-				</p>
+				</h2>
 				<button class="delete" @click="closeCurrentModal()" />
 			</header>
 			<section class="modal-card-body">
@@ -41,3 +41,13 @@ export default {
 	}
 };
 </script>
+
+<style lang="scss" scoped>
+p {
+	font-size: 17px;
+}
+
+.modal-card-title {
+	font-size: 27px;
+}
+</style>
