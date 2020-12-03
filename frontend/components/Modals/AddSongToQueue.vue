@@ -2,6 +2,8 @@
 	<modal title="Add Song To Queue">
 		<div slot="body">
 			<div class="vertical-padding">
+				<!-- Choosing a song from youtube -->
+
 				<h4 class="modal-section-title">Choose a song</h4>
 				<p class="modal-section-description">
 					Choose a song by searching or using a link from YouTube.
@@ -9,7 +11,7 @@
 
 				<br />
 
-				<div class="control is-grouped" id="youtube-search-input">
+				<div class="control is-grouped input-with-button">
 					<p class="control is-expanded">
 						<input
 							class="input"
@@ -32,28 +34,8 @@
 					</p>
 				</div>
 
-				<div
-					class="control is-grouped"
-					v-if="station.type === 'official'"
-				>
-					<p class="control is-expanded">
-						<input
-							class="input"
-							type="text"
-							placeholder="YouTube Playlist URL"
-							v-model="importQuery"
-							@keyup.enter="importPlaylist()"
-						/>
-					</p>
-					<p class="control">
-						<a
-							class="button is-info"
-							v-on:click="importPlaylist()"
-							href="#"
-							>Import</a
-						>
-					</p>
-				</div>
+				<!-- Choosing a song from youtube - query results -->
+
 				<table
 					class="table"
 					style="margin-top: 20px;"
@@ -86,68 +68,115 @@
 					</tbody>
 				</table>
 
+				<!-- Import a playlist from youtube -->
+
 				<hr style="margin: 30px 0;" />
 
-				<aside
-					id="playlist-to-queue-selection"
+				<h4 class="modal-section-title">
+					Import a playlist
+				</h4>
+				<p class="modal-section-description">
+					Import a playlist by using a link from YouTube.
+				</p>
+
+				<br />
+
+				<div
+					class="control is-grouped input-with-button"
+					v-if="station.type === 'official'"
+				>
+					<p class="control is-expanded">
+						<input
+							class="input"
+							type="text"
+							placeholder="YouTube Playlist URL"
+							v-model="importQuery"
+							@keyup.enter="importPlaylist()"
+						/>
+					</p>
+					<p class="control">
+						<a
+							class="button is-info"
+							v-on:click="importPlaylist()"
+							href="#"
+							><i class="material-icons icon-with-button"
+								>publish</i
+							>Import</a
+						>
+					</p>
+				</div>
+
+				<!-- Choose a playlist from your account -->
+
+				<div
 					v-if="
 						loggedIn &&
 							station.type === 'community' &&
 							playlists.length > 0
 					"
 				>
-					<h4 class="modal-section-title">Choose a playlist</h4>
-					<p class="modal-section-description">
-						Choose one of your playlists to add to the queue.
-					</p>
+					<hr style="margin: 30px 0;" />
 
-					<br />
+					<aside id="playlist-to-queue-selection">
+						<h4 class="modal-section-title">Choose a playlist</h4>
+						<p class="modal-section-description">
+							Choose one of your playlists to add to the queue.
+						</p>
 
-					<div id="playlists">
-						<div
-							class="playlist"
-							v-for="(playlist, index) in playlists"
-							:key="index"
-						>
-							<playlist-item :playlist="playlist">
-								<div slot="actions">
-									<a
-										class="button is-danger"
-										v-on:click="addSongToQueue(result.id)"
-										href="#"
-										@click="
-											togglePlaylistSelection(
-												playlist._id
-											)
-										"
-										v-if="isPlaylistSelected(playlist._id)"
-									>
-										<i
-											class="material-icons icon-with-button"
-											>stop</i
+						<br />
+
+						<div id="playlists">
+							<div
+								class="playlist"
+								v-for="(playlist, index) in playlists"
+								:key="index"
+							>
+								<playlist-item :playlist="playlist">
+									<div slot="actions">
+										<a
+											class="button is-danger"
+											v-on:click="
+												addSongToQueue(result.id)
+											"
+											href="#"
+											@click="
+												togglePlaylistSelection(
+													playlist._id
+												)
+											"
+											v-if="
+												isPlaylistSelected(playlist._id)
+											"
 										>
-										Stop playing
-									</a>
-									<a
-										class="button is-success"
-										v-on:click="addSongToQueue(result.id)"
-										href="#"
-										@click="
-											togglePlaylistSelection(
-												playlist._id
-											)
-										"
-										v-else
-										><i
-											class="material-icons icon-with-button"
-											>play_arrow</i
-										>Play in queue
-									</a>
-								</div>
-							</playlist-item>
+											<i
+												class="material-icons icon-with-button"
+												>stop</i
+											>
+											Stop playing
+										</a>
+										<a
+											class="button is-success"
+											v-on:click="
+												addSongToQueue(result.id)
+											"
+											href="#"
+											@click="
+												togglePlaylistSelection(
+													playlist._id
+												)
+											"
+											v-else
+											><i
+												class="material-icons icon-with-button"
+												>play_arrow</i
+											>Play in queue
+										</a>
+									</div>
+								</playlist-item>
+							</div>
 						</div>
-					</div>
-				</aside>
+					</aside>
+				</div>
 			</div>
 		</div>
 	</modal>
@@ -183,12 +212,10 @@ export default {
 			return this.privatePlaylistQueueSelected === playlistId;
 		},
 		togglePlaylistSelection(playlistId) {
-			console.log(this.isPlaylistSelected(playlistId), "sleect toggle");
 			if (this.station.type === "community") {
 				if (this.isPlaylistSelected(playlistId)) {
 					this.updatePrivatePlaylistQueueSelected(null);
 				} else {
-					console.log("1");
 					this.updatePrivatePlaylistQueueSelected(playlistId);
 					this.$parent.addFirstPrivatePlaylistSongToQueue();
 					console.log(this.isPlaylistSelected(playlistId));
@@ -236,6 +263,7 @@ export default {
 					"Starting to import your playlist. This can take some time to do.",
 				timeout: 4000
 			});
+
 			this.socket.emit(
 				"queueSongs.addSetToQueue",
 				this.importQuery,
@@ -377,9 +405,9 @@ tr td {
 	}
 }
 
-#youtube-search-input {
+.input-with-button {
 	.control {
-		margin-right: 0px;
+		margin-right: 0px !important;
 	}
 
 	input {
