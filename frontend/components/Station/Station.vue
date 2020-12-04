@@ -426,9 +426,6 @@
 						<songs-list-sidebar v-if="sidebars.songslist" />
 					</transition>
 					<transition name="slide-inner">
-						<playlist-sidebar v-if="sidebars.playlist" />
-					</transition>
-					<transition name="slide-inner">
 						<users-sidebar v-if="sidebars.users" />
 					</transition>
 				</div>
@@ -1392,7 +1389,6 @@ export default {
 		EditStation: () => import("../Modals/EditStation.vue"),
 		Report: () => import("../Modals/Report.vue"),
 		SongsListSidebar: () => import("../Sidebars/SongsList.vue"),
-		PlaylistSidebar: () => import("../Sidebars/Playlist.vue"),
 		UsersSidebar: () => import("../Sidebars/UsersList.vue"),
 		UserIdToUsername,
 		Z404

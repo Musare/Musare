@@ -436,6 +436,31 @@ export default {
 					}
 				});
 			});
+			this.socket.on("event:playlist.addSong", data => {
+				this.playlists.forEach((playlist, index) => {
+					if (playlist._id === data.playlistId) {
+						this.playlists[index].songs.push(data.song);
+					}
+				});
+			});
+			this.socket.on("event:playlist.removeSong", data => {
+				this.playlists.forEach((playlist, index) => {
+					if (playlist._id === data.playlistId) {
+						this.playlists[index].songs.forEach((song, index2) => {
+							if (song._id === data.songId) {
+								this.playlists[index].songs.splice(index2, 1);
+							}
+						});
+					}
+				});
+			});
+			this.socket.on("event:playlist.updateDisplayName", data => {
+				this.playlists.forEach((playlist, index) => {
+					if (playlist._id === data.playlistId) {
+						this.playlists[index].displayName = data.displayName;
+					}
+				});
+			});
 
 			return socket;
 		});

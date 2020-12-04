@@ -4,8 +4,7 @@ const state = {
 	sidebars: {
 		station: {
 			songslist: false,
-			users: false,
-			playlist: false
+			users: false
 		}
 	},
 	currentlyActive: {}

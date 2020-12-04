@@ -198,22 +198,6 @@
 						>Display users in the station</span
 					>
 				</a>
-				<a
-					v-if="loggedIn && station.type === 'community'"
-					class="sidebar-item"
-					href="#"
-					@click="
-						toggleSidebar({
-							sector: 'station',
-							sidebar: 'playlist'
-						})
-					"
-				>
-					<span class="icon">
-						<i class="material-icons">library_music</i>
-					</span>
-					<span class="icon-purpose">Show your playlists</span>
-				</a>
 			</div>
 		</div>
 	</div>
