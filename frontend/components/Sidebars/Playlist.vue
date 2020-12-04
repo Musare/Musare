@@ -6,23 +6,25 @@
 			<aside v-if="playlists.length > 0" class="menu">
 				<ul class="menu-list">
 					<li v-for="(playlist, index) in playlists" :key="index">
-						<span>{{ playlist.displayName }}</span>
-						<!--Will play playlist in community station Kris-->
-						<div class="icons-group">
-							<a
-								v-if="
-									isNotSelected(playlist._id) &&
-										!station.partyMode
-								"
-								href="#"
-								@click="selectPlaylist(playlist._id)"
-							>
-								<i class="material-icons">play_arrow</i>
-							</a>
-							<a href="#" v-on:click="edit(playlist._id)">
-								<i class="material-icons">edit</i>
-							</a>
-						</div>
+						<playlist-item :playlist="playlist">
+							<div slot="actions">
+								<div class="icons-group">
+									<a
+										v-if="
+											isNotSelected(playlist._id) &&
+												!station.partyMode
+										"
+										href="#"
+										@click="selectPlaylist(playlist._id)"
+									>
+										<i class="material-icons">play_arrow</i>
+									</a>
+									<a href="#" v-on:click="edit(playlist._id)">
+										<i class="material-icons">edit</i>
+									</a>
+								</div>
+							</div>
+						</playlist-item>
 					</li>
 				</ul>
 			</aside>
@@ -45,6 +47,8 @@
 import { mapState, mapActions } from "vuex";
 
 import Toast from "toasters";
+import PlaylistItem from "../PlaylistItem.vue";
+
 import io from "../../io";
 
 export default {
@@ -90,23 +94,24 @@ export default {
 		...mapActions("modals", ["openModal"]),
 		...mapActions("user/playlists", ["editPlaylist"])
 	},
+	components: { PlaylistItem },
 	mounted() {
 		// TODO: Update when playlist is removed/created
 		io.getSocket(socket => {
 			this.socket = socket;
-			this.socket.emit("playlists.indexForUser", res => {
-				if (res.status === "success") this.playlists = res.data;
-			});
-			this.socket.on("event:playlist.create", playlist => {
-				this.playlists.push(playlist);
-			});
-			this.socket.on("event:playlist.delete", playlistId => {
-				this.playlists.forEach((playlist, index) => {
-					if (playlist._id === playlistId) {
-						this.playlists.splice(index, 1);
-					}
-				});
-			});
+			// this.socket.emit("playlists.indexForUser", res => {
+			// 	if (res.status === "success") this.playlists = res.data;
+			// });
+			// this.socket.on("event:playlist.create", playlist => {
+			// 	this.playlists.push(playlist);
+			// });
+			// this.socket.on("event:playlist.delete", playlistId => {
+			// 	this.playlists.forEach((playlist, index) => {
+			// 		if (playlist._id === playlistId) {
+			// 			this.playlists.splice(index, 1);
+			// 		}
+			// 	});
+			// });
 			this.socket.on("event:playlist.addSong", data => {
 				this.playlists.forEach((playlist, index) => {
 					if (playlist._id === data.playlistId) {

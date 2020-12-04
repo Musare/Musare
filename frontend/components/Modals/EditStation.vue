@@ -1,6 +1,7 @@
 <template>
 	<modal title="Edit Station" class="edit-station-modal">
 		<template v-slot:body>
+			<!--  Station Preferences -->
 			<div class="section left-section">
 				<div class="col col-2">
 					<div>
@@ -153,7 +154,58 @@
 						</div>
 					</div>
 				</div>
+
+				<!--  Choose a playlist -->
+				<div v-if="!editing.partyMode">
+					<hr style="margin: 10px 0 20px 0;" />
+
+					<h4 class="modal-section-title">Choose a playlist</h4>
+					<p class="modal-section-description">
+						Choose one of your playlists to add to the queue.
+					</p>
+
+					<br />
+
+					<div id="playlists">
+						<div
+							class="playlist"
+							v-for="(playlist, index) in playlists"
+							:key="index"
+						>
+							<playlist-item :playlist="playlist">
+								<div slot="actions">
+									<!-- <a
+										class="button is-danger"
+										href="#"
+										@click="
+											togglePlaylistSelection(
+												playlist._id
+											)
+										"
+										v-if="isPlaylistSelected(playlist._id)"
+									>
+										<i
+											class="material-icons icon-with-button"
+											>stop</i
+										>
+										Stop playing
+									</a> -->
+									<a
+										class="button is-success"
+										href="#"
+										@click="selectPlaylist(playlist._id)"
+										><i
+											class="material-icons icon-with-button"
+											>play_arrow</i
+										>Play in queue
+									</a>
+								</div>
+							</playlist-item>
+						</div>
+					</div>
+				</div>
 			</div>
+
 			<!--  Buttons changing the privacy settings -->
 			<div class="section right-section">
 				<div>
@@ -341,7 +393,10 @@
 import { mapState, mapActions } from "vuex";
 
 import Toast from "toasters";
+
+import PlaylistItem from "../PlaylistItem.vue";
 import Modal from "./Modal.vue";
+
 import io from "../../io";
 import validation from "../../validation";
 
@@ -366,6 +421,22 @@ export default {
 	mounted() {
 		io.getSocket(socket => {
 			this.socket = socket;
+
+			this.socket.emit("playlists.indexForUser", res => {
+				if (res.status === "success") this.playlists = res.data;
+			});
+
+			this.socket.on("event:playlist.create", playlist => {
+				this.playlists.push(playlist);
+			});
+			this.socket.on("event:playlist.delete", playlistId => {
+				this.playlists.forEach((playlist, index) => {
+					if (playlist._id === playlistId) {
+						this.playlists.splice(index, 1);
+					}
+				});
+			});
+
 			return socket;
 		});
 	},
@@ -429,11 +500,33 @@ export default {
 					style: "orange",
 					iconName: "link"
 				}
-			}
+			},
+			playlists: []
 		};
 	},
 	props: ["store"],
 	methods: {
+		isPlaylistSelected(id) {
+			// TODO Also change this once it changes for a station
+			if (this.station && this.station.privatePlaylist === id)
+				return true;
+			return false;
+		},
+		selectPlaylist(playlistId) {
+			this.socket.emit(
+				"stations.selectPrivatePlaylist",
+				this.station._id,
+				playlistId,
+				res => {
+					if (res.status === "failure")
+						return new Toast({
+							content: res.message,
+							timeout: 8000
+						});
+					return new Toast({ content: res.message, timeout: 4000 });
+				}
+			);
+		},
 		update() {
 			if (this.station.name !== this.editing.name) this.updateName();
 			if (this.station.displayName !== this.editing.displayName)
@@ -867,7 +960,7 @@ export default {
 		},
 		...mapActions("modals", ["closeModal"])
 	},
-	components: { Modal }
+	components: { Modal, PlaylistItem }
 };
 </script>
 
@@ -902,7 +995,7 @@ export default {
 
 	.modal-card {
 		width: 800px;
-		height: 550px;
+		font-size: 16px;
 
 		.modal-card-body {
 			padding: 16px;
@@ -910,10 +1003,6 @@ export default {
 		}
 	}
 }
-</style>
-
-<style lang="scss" scoped>
-@import "styles/global.scss";
 
 .section {
 	border: 1px solid #a3e0ff;
@@ -931,6 +1020,7 @@ export default {
 	.control {
 		input {
 			width: 100%;
+			height: 36px;
 		}
 
 		.add-button {
@@ -1052,6 +1142,7 @@ export default {
 
 .right-section {
 	width: 157px;
+	min-height: 375px;
 	margin-left: 16px;
 	display: grid;
 	gap: 16px;
@@ -1066,7 +1157,7 @@ export default {
 		width: 100%;
 		height: 36px;
 		border: 0;
-		border-radius: 10px;
+		border-radius: 3px;
 		font-size: 18px;
 		color: white;
 		box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.25);
@@ -1128,5 +1219,18 @@ export default {
 
 .slide-down-enter {
 	transform: translateY(-10px);
+}
+
+#playlists {
+	height: 168px;
+	overflow: auto;
+}
+
+.modal-card {
+	overflow: auto;
+}
+
+.modal-card-body {
+	overflow: unset;
 }
 </style>

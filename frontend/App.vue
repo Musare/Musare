@@ -233,7 +233,11 @@ h6,
 	font-family: "Hind", Helvetica, Arial, sans-serif;
 }
 
-p {
+p,
+button,
+input,
+select,
+textarea {
 	font-family: "Karla", Helvetica, Arial, sans-serif;
 }
 
@@ -415,5 +419,14 @@ button.delete:focus {
 .icon-with-button {
 	margin-right: 3px;
 	font-size: 18px;
+}
+
+.modal-section-title {
+	font-size: 26px;
+	margin: 0px;
+}
+
+.modal-section-description {
+	margin-bottom: 5px;
 }
 </style>

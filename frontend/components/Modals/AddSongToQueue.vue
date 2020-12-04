@@ -363,28 +363,9 @@ tr td {
 }
 
 .night-mode {
-	.modal-section {
-		color: #000;
-	}
-
 	div {
 		color: #4d4d4d;
 	}
-}
-
-.modal-section {
-	margin-top: 20px;
-	padding: 10px 20px;
-	background-color: #f5f5f5;
-}
-
-.modal-section-title {
-	font-size: 26px;
-	margin: 0px;
-}
-
-.modal-section-description {
-	margin-bottom: 5px;
 }
 
 #playlist-to-queue-selection {

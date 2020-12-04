@@ -50,9 +50,9 @@
 							href="#"
 							class="no-song"
 							@click="
-								toggleSidebar({
+								openModal({
 									sector: 'station',
-									sidebar: 'playlist'
+									modal: 'editStation'
 								})
 							"
 							>Play a private playlist</a
