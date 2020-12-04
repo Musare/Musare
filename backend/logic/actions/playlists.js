@@ -1079,12 +1079,14 @@ let lib = {
                 (next) => {
                     playlists
                         .runJob("DELETE_PLAYLIST", { playlistId })
-                        .then((playlist) => next(null, playlist))
+                        .then(next)
                         .catch(next);
                 },
 
                 (next) => {
-                    stationModel.find({ privatePlaylist: playlistId }, next);
+                    stationModel.find({ privatePlaylist: playlistId }, (err, res) => {
+                        next(err, res);
+                    });
                 },
 
                 (stations, next) => {
@@ -1123,6 +1125,7 @@ let lib = {
                                         } else next();
                                     },
                                 ],
+
                                 (err) => {
                                     next();
                                 }

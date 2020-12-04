@@ -156,7 +156,7 @@
 				</div>
 
 				<!--  Choose a playlist -->
-				<div v-if="!editing.partyMode">
+				<div v-if="!editing.partyMode && playlists.length > 0">
 					<hr style="margin: 10px 0 20px 0;" />
 
 					<h4 class="modal-section-title">Choose a playlist</h4>

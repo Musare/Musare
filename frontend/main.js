@@ -13,6 +13,7 @@ const handleMetadata = attrs => {
 Vue.component("metadata", {
 	watch: {
 		$attrs: {
+			// eslint-disable-next-line vue/no-arrow-functions-in-watch
 			handler: attrs => {
 				handleMetadata(attrs);
 			},
