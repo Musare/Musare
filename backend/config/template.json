@@ -29,7 +29,7 @@
 		"mailgun": {
 			"key": "",
 			"domain": "",
-		  	"enabled": false
+			"enabled": false
 		},
 		"spotify": {
 			"client": "",
@@ -49,16 +49,21 @@
 			"http://dev.musare.com"
 		]
 	},
-  	"redis": {
-	  	"url": "redis://redis:6379/0",
-	    "password": "PASSWORD"
+	"redis": {
+		"url": "redis://redis:6379/0",
+		"password": "PASSWORD"
 	},
-  	"mongo": {
-	  	"url": "mongodb://musare:OTHER_PASSWORD_HERE@mongo:27017/musare"
+	"mongo": {
+		"url": "mongodb://musare:OTHER_PASSWORD_HERE@mongo:27017/musare"
 	},
-  	"cookie": {
-	  	"domain": "localhost",
+	"cookie": {
+		"domain": "localhost",
 		"secure": false,
-		"SIDname": "SID"  
+		"SIDname": "SID"
+	},
+	"debug": {
+		"stationIssue": false,
+		"traceUnhandledPromises": false,
+		"captureJobs": []
 	}
 }
