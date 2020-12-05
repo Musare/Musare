@@ -230,7 +230,7 @@ class StationsModule extends CoreClass {
                         if (!station) return next("Station not found.");
                         this.notifications
                             .runJob("UNSCHEDULE", {
-                                subscription: `stations.nextSong?id=${station._id}`,
+                                name: `stations.nextSong?id=${station._id}`,
                             })
                             .then()
                             .catch();
