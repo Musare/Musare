@@ -379,7 +379,7 @@ class StationsModule extends CoreClass {
                         this.runJob(
                             "CALCULATE_OFFICIAL_PLAYLIST_LIST",
                             {
-                                stationId: payload.stationId,
+                                stationId: payload.station._id,
                                 songList: playlist,
                                 bypassQueue: payload.bypassQueue,
                             },
