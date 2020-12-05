@@ -206,16 +206,6 @@ export default {
 	height: 100%;
 }
 
-.slide-transition {
-	transition: transform 0.6s ease-in-out;
-	transform: translateX(0);
-}
-
-.slide-enter,
-.slide-leave {
-	transform: translateX(100%);
-}
-
 .sidebar-title {
 	background-color: rgb(3, 169, 244);
 	text-align: center;

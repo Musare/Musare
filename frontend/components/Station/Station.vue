@@ -92,7 +92,7 @@
 						>
 							<div
 								class="seeker-bar light-blue"
-								style="width: 0%;"
+								style="width: 0%"
 							/>
 						</div>
 					</div>
@@ -129,8 +129,7 @@
 								{{ utils.formatTime(currentSong.duration) }}
 							</div>
 						</article>
-
-						<p v-if="noSong" class="center">
+						<p v-if="noSong" class="has-text-centered">
 							There is currently no song playing.
 						</p>
 
@@ -206,7 +205,7 @@
 								</h4>
 								<div class="columns is-mobile">
 									<form
-										style="margin-top: 12px; margin-bottom: 0;"
+										style="margin-top: 12px; margin-bottom: 0"
 										action="#"
 										class="column is-7-desktop is-4-mobile"
 									>
@@ -251,7 +250,7 @@
 										>
 											<li
 												id="like"
-												style="margin-right: 10px;"
+												style="margin-right: 10px"
 												@click="toggleLike()"
 											>
 												<span class="flow-text">{{
@@ -360,7 +359,7 @@
 													currentSong.dislikes !== -1
 											"
 											id="ratings"
-											style="display: inline-block;"
+											style="display: inline-block"
 										>
 											<li
 												id="dislike"
@@ -386,7 +385,7 @@
 											</li>
 											<li
 												id="like"
-												style="display: inline-block;"
+												style="display: inline-block"
 												@click="toggleLike()"
 											>
 												<span class="flow-text">{{
@@ -417,7 +416,7 @@
 			<add-to-playlist v-if="modals.addSongToPlaylist" />
 			<edit-playlist v-if="modals.editPlaylist" />
 			<create-playlist v-if="modals.createPlaylist" />
-			<edit-station v-show="modals.editStation" store="station" />
+			<edit-station v-if="modals.editStation" store="station" />
 			<report v-if="modals.report" />
 
 			<transition name="slide-outer">
@@ -957,7 +956,8 @@ export default {
 															if (
 																data3.status ===
 																"success"
-															) {} // eslint-disable-line
+															) {
+															} // eslint-disable-line
 														}
 													);
 												}
