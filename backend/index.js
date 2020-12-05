@@ -46,6 +46,11 @@ console.log = (...args) => {
 
 const fancyConsole = config.get("fancyConsole");
 
+if (config.debug && config.debug.traceUnhandledPromises === true) {
+    console.log("Enabled trace-unhandled/register");
+    require("trace-unhandled/register");
+}
+
 // class ModuleManager {
 // 	constructor() {
 // 		this.modules = {};

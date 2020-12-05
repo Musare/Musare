@@ -31,5 +31,8 @@
     "sha256": "^0.2.0",
     "socket.io": "^2.2.0",
     "underscore": "^1.10.2"
+  },
+  "devDependencies": {
+    "trace-unhandled": "^1.2.1"
   }
 }

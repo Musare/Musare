@@ -139,7 +139,7 @@ class CoreClass {
         const job = { name, payload, onFinish: deferredPromise };
 
         if (config.debug && config.debug.stationIssue === true && config.debug.captureJobs && config.debug.captureJobs.indexOf(name) !== -1) {
-            this.moduleManager.debugJobs.stationIssue.all.push(job);
+            this.moduleManager.debugJobs.all.push(job);
         }
 
         if (options.bypassQueue) {
@@ -175,7 +175,7 @@ class CoreClass {
                 this.log("INFO", `Ran job ${job.name} successfully`);
                 this.jobStatistics[job.name].successful++;
                 if (config.debug && config.debug.stationIssue === true && config.debug.captureJobs && config.debug.captureJobs.indexOf(job.name) !== -1) {
-                    this.moduleManager.debugJobs.stationIssue.completed.push({ status: "success", job, response });
+                    this.moduleManager.debugJobs.completed.push({ status: "success", job, response });
                 }
                 job.onFinish.resolve(response);
             })
@@ -183,7 +183,7 @@ class CoreClass {
                 this.log("INFO", `Running job ${job.name} failed`);
                 this.jobStatistics[job.name].failed++;
                 if (config.debug && config.debug.stationIssue === true && config.debug.captureJobs && config.debug.captureJobs.indexOf(job.name) !== -1) {
-                    this.moduleManager.debugJobs.stationIssue.completed.push({ status: "error", job, error });
+                    this.moduleManager.debugJobs.completed.push({ status: "error", job, error });
                 }
                 job.onFinish.reject(error);
             })
