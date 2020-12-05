@@ -6,415 +6,429 @@
 		/>
 		<metadata v-else-if="!exists && !loading" v-bind:title="`Not found`" />
 
-		<station-header v-if="exists" />
+		<station-header
+			v-if="exists"
+			:class="{ 'header-sidebar-active': sidebarActive }"
+		/>
 
-		<song-queue v-if="modals.addSongToQueue" />
-		<add-to-playlist v-if="modals.addSongToPlaylist" />
-		<edit-playlist v-if="modals.editPlaylist" />
-		<create-playlist v-if="modals.createPlaylist" />
-		<edit-station v-if="modals.editStation" store="station" />
-		<report v-if="modals.report" />
-
-		<transition name="slide">
-			<songs-list-sidebar v-if="sidebars.songslist" />
-		</transition>
-		<transition name="slide">
-			<playlist-sidebar v-if="sidebars.playlist" />
-		</transition>
-		<transition name="slide">
-			<users-sidebar v-if="sidebars.users" />
-		</transition>
-
-		<div v-show="loading" class="progress" />
-		<div v-show="!loading && exists" class="station">
-			<div v-show="noSong" class="no-song">
-				<h1>No song is currently playing</h1>
-				<h4
-					v-if="
-						station.type === 'community' &&
-							station.partyMode &&
-							this.loggedIn &&
-							(!station.locked ||
-								(station.locked &&
-									this.userId === station.owner))
-					"
-				>
-					<a
-						href="#"
-						class="no-song"
-						@click="
-							openModal({
-								sector: 'station',
-								modal: 'addSongToQueue'
-							})
+		<div class="station-parent">
+			<div v-show="loading" class="progress" />
+			<div v-show="!loading && exists" class="station">
+				<div v-show="noSong" class="no-song">
+					<h1>No song is currently playing</h1>
+					<h4
+						v-if="
+							station.type === 'community' &&
+								station.partyMode &&
+								this.loggedIn &&
+								(!station.locked ||
+									(station.locked &&
+										this.userId === station.owner))
 						"
-						>Add a song to the queue</a
 					>
-				</h4>
-				<h4
-					v-if="
-						station.type === 'community' &&
-							!station.partyMode &&
-							this.userId === station.owner &&
-							!station.privatePlaylist
-					"
-				>
-					<a
-						href="#"
-						class="no-song"
-						@click="
-							toggleSidebar({
-								sector: 'station',
-								sidebar: 'playlist'
-							})
-						"
-						>Play a private playlist</a
-					>
-				</h4>
-				<h1
-					v-if="
-						station.type === 'community' &&
-							!station.partyMode &&
-							this.userId === station.owner &&
-							station.privatePlaylist
-					"
-				>
-					Maybe you can add some songs to your selected private
-					playlist and then press the skip button
-				</h1>
-			</div>
-			<div v-show="!noSong" class="columns">
-				<div
-					class="column is-8-desktop is-offset-2-desktop is-12-mobile"
-				>
-					<div class="video-container">
-						<div id="player" />
-						<div
-							class="player-can-not-autoplay"
-							v-if="!canAutoplay"
+						<a
+							href="#"
+							class="no-song"
+							@click="
+								openModal({
+									sector: 'station',
+									modal: 'addSongToQueue'
+								})
+							"
+							>Add a song to the queue</a
 						>
-							<p>
-								Please click anywhere on the screen for the
-								video to start
-							</p>
-						</div>
-					</div>
-					<div
-						id="preview-progress"
-						class="seeker-bar-container white"
+					</h4>
+					<h4
+						v-if="
+							station.type === 'community' &&
+								!station.partyMode &&
+								this.userId === station.owner &&
+								!station.privatePlaylist
+						"
 					>
-						<div class="seeker-bar light-blue" style="width: 0%" />
-					</div>
+						<a
+							href="#"
+							class="no-song"
+							@click="
+								openModal({
+									sector: 'station',
+									modal: 'editStation'
+								})
+							"
+							>Play a private playlist</a
+						>
+					</h4>
+					<h1
+						v-if="
+							station.type === 'community' &&
+								!station.partyMode &&
+								this.userId === station.owner &&
+								station.privatePlaylist
+						"
+					>
+						Maybe you can add some songs to your selected private
+						playlist and then press the skip button
+					</h1>
 				</div>
-				<div
-					class="desktop-only column is-3-desktop card playlistCard experimental"
-				>
-					<div v-if="station.type === 'community'" class="title">
-						Queue
-					</div>
-					<div v-else class="title">Playlist</div>
-					<article v-if="!noSong" class="media">
-						<figure class="media-left">
-							<p class="image is-64x64">
-								<img
-									:src="currentSong.thumbnail"
-									onerror="this.src='/assets/notes-transparent.png'"
-								/>
-							</p>
-						</figure>
-						<div class="media-content">
-							<div class="content">
+				<div v-show="!noSong" class="columns">
+					<div
+						class="column is-8-desktop is-offset-2-desktop is-12-mobile"
+					>
+						<div class="video-container">
+							<div id="player" />
+							<div
+								class="player-can-not-autoplay"
+								v-if="!canAutoplay"
+							>
 								<p>
-									Current Song:
-									<br />
-									<strong>{{ currentSong.title }}</strong>
-									<br />
-									<small>{{ currentSong.artists }}</small>
+									Please click anywhere on the screen for the
+									video to start
 								</p>
 							</div>
 						</div>
-						<div class="media-right">
-							{{ utils.formatTime(currentSong.duration) }}
-						</div>
-					</article>
-					<p v-if="noSong" class="has-text-centered">
-						There is currently no song playing.
-					</p>
-
-					<article
-						v-for="(song, index) in songsList"
-						:key="index"
-						class="media"
-					>
-						<div class="media-content">
-							<div class="content">
-								<strong class="songTitle">{{
-									song.title
-								}}</strong>
-								<br />
-								<small>{{ song.artists.join(", ") }}</small>
-								<br />
-								<div v-if="station.partyMode">
-									<br />
-									<small>
-										Requested by
-										<b>
-											<user-id-to-username
-												:userId="song.requestedBy"
-												:link="true"
-											/>
-										</b>
-									</small>
-									<button
-										v-if="isOwnerOnly() || isAdminOnly()"
-										class="button"
-										@click="removeFromQueue(song.songId)"
-									>
-										REMOVE
-									</button>
-								</div>
-							</div>
-						</div>
-						<div class="media-right">
-							{{ utils.formatTime(song.duration) }}
-						</div>
-					</article>
-					<a
-						v-if="station.type === 'community' && loggedIn"
-						class="button add-to-queue"
-						href="#"
-						@click="
-							openModal({
-								sector: 'station',
-								modal: 'addSongToQueue'
-							})
-						"
-						>Add a song to the queue</a
-					>
-				</div>
-			</div>
-			<div v-show="!noSong" class="desktop-only columns is-mobile">
-				<div
-					class="column is-8-desktop is-offset-2-desktop is-12-mobile"
-				>
-					<div class="columns is-mobile">
-						<div class="column is-12-desktop">
-							<h4 id="time-display">
-								{{ timeElapsed }} /
-								{{ utils.formatTime(currentSong.duration) }}
-							</h4>
-							<h3>{{ currentSong.title }}</h3>
-							<h4 class="thin" style="margin-left: 0">
-								{{ currentSong.artists }}
-							</h4>
-							<div class="columns is-mobile">
-								<form
-									style="margin-top: 12px; margin-bottom: 0"
-									action="#"
-									class="column is-7-desktop is-4-mobile"
-								>
-									<p class="volume-slider-wrapper">
-										<i
-											v-if="muted"
-											class="material-icons"
-											@click="toggleMute()"
-											>volume_mute</i
-										>
-										<i
-											v-else
-											class="material-icons"
-											@click="toggleMute()"
-											>volume_down</i
-										>
-										<input
-											v-model="volumeSliderValue"
-											type="range"
-											min="0"
-											max="10000"
-											class="volumeSlider active"
-											@change="changeVolume()"
-											@input="changeVolume()"
-										/>
-										<i
-											class="material-icons"
-											@click="increaseVolume()"
-											>volume_up</i
-										>
-									</p>
-								</form>
-								<div class="column is-8-mobile is-5-desktop">
-									<ul
-										v-if="
-											currentSong.likes !== -1 &&
-												currentSong.dislikes !== -1
-										"
-										id="ratings"
-									>
-										<li
-											id="like"
-											style="margin-right: 10px"
-											@click="toggleLike()"
-										>
-											<span class="flow-text">{{
-												currentSong.likes
-											}}</span>
-											<i
-												id="thumbs_up"
-												class="material-icons grey-text"
-												:class="{ liked: liked }"
-												>thumb_up</i
-											>
-											<a
-												class="absolute-a behind"
-												href="#"
-												@click="toggleLike()"
-											/>
-										</li>
-										<li
-											id="dislike"
-											@click="toggleDislike()"
-										>
-											<span class="flow-text">{{
-												currentSong.dislikes
-											}}</span>
-											<i
-												id="thumbs_down"
-												class="material-icons grey-text"
-												:class="{
-													disliked: disliked
-												}"
-												>thumb_down</i
-											>
-											<a
-												class="absolute-a behind"
-												href="#"
-												@click="toggleDislike()"
-											/>
-										</li>
-									</ul>
-								</div>
-							</div>
-						</div>
 						<div
-							v-if="!currentSong.simpleSong"
-							class="column is-3-desktop experimental"
+							id="preview-progress"
+							class="seeker-bar-container white"
 						>
-							<img
-								class="image"
-								:src="currentSong.thumbnail"
-								alt="Song Thumbnail"
-								onerror="this.src='/assets/notes-transparent.png'"
+							<div
+								class="seeker-bar light-blue"
+								style="width: 0%"
 							/>
 						</div>
 					</div>
+					<div
+						class="desktop-only column is-3-desktop card playlistCard experimental"
+					>
+						<div v-if="station.type === 'community'" class="title">
+							Queue
+						</div>
+						<div v-else class="title">
+							Playlist
+						</div>
+						<article v-if="!noSong" class="media">
+							<figure class="media-left">
+								<p class="image is-64x64">
+									<img
+										:src="currentSong.thumbnail"
+										onerror="this.src='/assets/notes-transparent.png'"
+									/>
+								</p>
+							</figure>
+							<div class="media-content">
+								<div class="content">
+									<p>
+										Current Song:
+										<br />
+										<strong>{{ currentSong.title }}</strong>
+										<br />
+										<small>{{ currentSong.artists }}</small>
+									</p>
+								</div>
+							</div>
+							<div class="media-right">
+								{{ utils.formatTime(currentSong.duration) }}
+							</div>
+						</article>
+						<p v-if="noSong" class="has-text-centered">
+							There is currently no song playing.
+						</p>
+
+						<article
+							v-for="(song, index) in songsList"
+							:key="index"
+							class="media"
+						>
+							<div class="media-content">
+								<div class="content">
+									<strong class="songTitle">{{
+										song.title
+									}}</strong>
+									<br />
+									<small>{{ song.artists.join(", ") }}</small>
+									<br />
+									<div v-if="station.partyMode">
+										<br />
+										<small>
+											Requested by
+											<b>
+												<user-id-to-username
+													:userId="song.requestedBy"
+													:link="true"
+												/>
+											</b>
+										</small>
+										<button
+											v-if="
+												isOwnerOnly() || isAdminOnly()
+											"
+											class="button"
+											@click="
+												removeFromQueue(song.songId)
+											"
+										>
+											REMOVE
+										</button>
+									</div>
+								</div>
+							</div>
+							<div class="media-right">
+								{{ utils.formatTime(song.duration) }}
+							</div>
+						</article>
+						<a
+							v-if="station.type === 'community' && loggedIn"
+							class="button add-to-queue"
+							href="#"
+							@click="
+								openModal({
+									sector: 'station',
+									modal: 'addSongToQueue'
+								})
+							"
+							>Add a song to the queue</a
+						>
+					</div>
 				</div>
-			</div>
-			<div v-show="!noSong" class="mobile-only">
-				<div>
+				<div v-show="!noSong" class="desktop-only columns is-mobile">
+					<div
+						class="column is-8-desktop is-offset-2-desktop is-12-mobile"
+					>
+						<div class="columns is-mobile">
+							<div class="column is-12-desktop">
+								<h4 id="time-display">
+									{{ timeElapsed }} /
+									{{ utils.formatTime(currentSong.duration) }}
+								</h4>
+								<h3>{{ currentSong.title }}</h3>
+								<h4 class="thin" style="margin-left: 0">
+									{{ currentSong.artists }}
+								</h4>
+								<div class="columns is-mobile">
+									<form
+										style="margin-top: 12px; margin-bottom: 0"
+										action="#"
+										class="column is-7-desktop is-4-mobile"
+									>
+										<p class="volume-slider-wrapper">
+											<i
+												v-if="muted"
+												class="material-icons"
+												@click="toggleMute()"
+												>volume_mute</i
+											>
+											<i
+												v-else
+												class="material-icons"
+												@click="toggleMute()"
+												>volume_down</i
+											>
+											<input
+												v-model="volumeSliderValue"
+												type="range"
+												min="0"
+												max="10000"
+												class="volumeSlider active"
+												@change="changeVolume()"
+												@input="changeVolume()"
+											/>
+											<i
+												class="material-icons"
+												@click="increaseVolume()"
+												>volume_up</i
+											>
+										</p>
+									</form>
+									<div
+										class="column is-8-mobile is-5-desktop"
+									>
+										<ul
+											v-if="
+												currentSong.likes !== -1 &&
+													currentSong.dislikes !== -1
+											"
+											id="ratings"
+										>
+											<li
+												id="like"
+												style="margin-right: 10px"
+												@click="toggleLike()"
+											>
+												<span class="flow-text">{{
+													currentSong.likes
+												}}</span>
+												<i
+													id="thumbs_up"
+													class="material-icons grey-text"
+													:class="{ liked: liked }"
+													>thumb_up</i
+												>
+												<a
+													class="absolute-a behind"
+													href="#"
+													@click="toggleLike()"
+												/>
+											</li>
+											<li
+												id="dislike"
+												@click="toggleDislike()"
+											>
+												<span class="flow-text">{{
+													currentSong.dislikes
+												}}</span>
+												<i
+													id="thumbs_down"
+													class="material-icons grey-text"
+													:class="{
+														disliked: disliked
+													}"
+													>thumb_down</i
+												>
+												<a
+													class="absolute-a behind"
+													href="#"
+													@click="toggleDislike()"
+												/>
+											</li>
+										</ul>
+									</div>
+								</div>
+							</div>
+							<div
+								v-if="!currentSong.simpleSong"
+								class="column is-3-desktop experimental"
+							>
+								<img
+									class="image"
+									:src="currentSong.thumbnail"
+									alt="Song Thumbnail"
+									onerror="this.src='/assets/notes-transparent.png'"
+								/>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div v-show="!noSong" class="mobile-only">
 					<div>
 						<div>
-							<h3>{{ currentSong.title }}</h3>
-							<h4 class="thin">
-								{{ currentSong.artists }}
-							</h4>
-							<h5>
-								{{ timeElapsed }} /
-								{{ utils.formatTime(currentSong.duration) }}
-							</h5>
 							<div>
-								<form class="columns" action="#">
-									<p
-										class="column is-11-mobile volume-slider-wrapper"
-									>
-										<i
-											v-if="muted"
-											class="material-icons"
-											@click="toggleMute()"
-											>volume_mute</i
-										>
-										<i
-											v-else
-											class="material-icons"
-											@click="toggleMute()"
-											>volume_down</i
-										>
-										<input
-											v-model="volumeSliderValue"
-											type="range"
-											min="0"
-											max="10000"
-											class="active volumeSlider"
-											@change="changeVolume()"
-											@input="changeVolume()"
-										/>
-										<i
-											class="material-icons"
-											@click="increaseVolume()"
-											>volume_up</i
-										>
-									</p>
-								</form>
+								<h3>{{ currentSong.title }}</h3>
+								<h4 class="thin">
+									{{ currentSong.artists }}
+								</h4>
+								<h5>
+									{{ timeElapsed }} /
+									{{ utils.formatTime(currentSong.duration) }}
+								</h5>
 								<div>
-									<ul
-										v-if="
-											currentSong.likes !== -1 &&
-												currentSong.dislikes !== -1
-										"
-										id="ratings"
-										style="display: inline-block"
-									>
-										<li
-											id="dislike"
-											style="
-												display: inline-block;
-												margin-right: 10px;
+									<form class="columns" action="#">
+										<p
+											class="column is-11-mobile volume-slider-wrapper"
+										>
+											<i
+												v-if="muted"
+												class="material-icons"
+												@click="toggleMute()"
+												>volume_mute</i
+											>
+											<i
+												v-else
+												class="material-icons"
+												@click="toggleMute()"
+												>volume_down</i
+											>
+											<input
+												v-model="volumeSliderValue"
+												type="range"
+												min="0"
+												max="10000"
+												class="active volumeSlider"
+												@change="changeVolume()"
+												@input="changeVolume()"
+											/>
+											<i
+												class="material-icons"
+												@click="increaseVolume()"
+												>volume_up</i
+											>
+										</p>
+									</form>
+									<div>
+										<ul
+											v-if="
+												currentSong.likes !== -1 &&
+													currentSong.dislikes !== -1
 											"
-											@click="toggleDislike()"
-										>
-											<span class="flow-text">{{
-												currentSong.dislikes
-											}}</span>
-											<i
-												id="thumbs_down"
-												class="material-icons grey-text"
-												:class="{
-													disliked: disliked
-												}"
-												>thumb_down</i
-											>
-											<a
-												class="absolute-a behind"
-												href="#"
-												@click="toggleDislike()"
-											/>
-										</li>
-										<li
-											id="like"
+											id="ratings"
 											style="display: inline-block"
-											@click="toggleLike()"
 										>
-											<span class="flow-text">{{
-												currentSong.likes
-											}}</span>
-											<i
-												id="thumbs_up"
-												class="material-icons grey-text"
-												:class="{ liked: liked }"
-												>thumb_up</i
+											<li
+												id="dislike"
+												style="display: inline-block;margin-right: 10px;"
+												@click="toggleDislike()"
 											>
-											<a
-												class="absolute-a behind"
-												href="#"
+												<span class="flow-text">{{
+													currentSong.dislikes
+												}}</span>
+												<i
+													id="thumbs_down"
+													class="material-icons grey-text"
+													:class="{
+														disliked: disliked
+													}"
+													>thumb_down</i
+												>
+												<a
+													class="absolute-a behind"
+													href="#"
+													@click="toggleDislike()"
+												/>
+											</li>
+											<li
+												id="like"
+												style="display: inline-block"
 												@click="toggleLike()"
-											/>
-										</li>
-									</ul>
+											>
+												<span class="flow-text">{{
+													currentSong.likes
+												}}</span>
+												<i
+													id="thumbs_up"
+													class="material-icons grey-text"
+													:class="{ liked: liked }"
+													>thumb_up</i
+												>
+												<a
+													class="absolute-a behind"
+													href="#"
+													@click="toggleLike()"
+												/>
+											</li>
+										</ul>
+									</div>
 								</div>
 							</div>
 						</div>
 					</div>
 				</div>
 			</div>
+
+			<song-queue v-if="modals.addSongToQueue" />
+			<add-to-playlist v-if="modals.addSongToPlaylist" />
+			<edit-playlist v-if="modals.editPlaylist" />
+			<create-playlist v-if="modals.createPlaylist" />
+			<edit-station v-if="modals.editStation" store="station" />
+			<report v-if="modals.report" />
+
+			<transition name="slide-outer">
+				<div class="sidebar-container" v-if="sidebarActive">
+					<transition name="slide-inner">
+						<songs-list-sidebar v-if="sidebars.songslist" />
+					</transition>
+					<transition name="slide-inner">
+						<users-sidebar v-if="sidebars.users" />
+					</transition>
+				</div>
+			</transition>
 		</div>
 
 		<Z404 v-if="!exists"></Z404>
@@ -481,7 +495,10 @@ export default {
 			loggedIn: state => state.user.auth.loggedIn,
 			userId: state => state.user.auth.userId,
 			role: state => state.user.auth.role
-		})
+		}),
+		sidebarActive() {
+			return Object.values(this.sidebars).indexOf(true) !== -1;
+		}
 	},
 	methods: {
 		isOwnerOnly() {
@@ -938,7 +955,8 @@ export default {
 															if (
 																data3.status ===
 																"success"
-															) {} // eslint-disable-line
+															) {
+															} // eslint-disable-line
 														}
 													);
 												}
@@ -1370,7 +1388,6 @@ export default {
 		EditStation: () => import("../Modals/EditStation.vue"),
 		Report: () => import("../Modals/Report.vue"),
 		SongsListSidebar: () => import("../Sidebars/SongsList.vue"),
-		PlaylistSidebar: () => import("../Sidebars/Playlist.vue"),
 		UsersSidebar: () => import("../Sidebars/UsersList.vue"),
 		UserIdToUsername,
 		Z404
@@ -1380,6 +1397,12 @@ export default {
 
 <style lang="scss">
 @import "styles/global.scss";
+
+.station-parent {
+	display: flex;
+	flex: 1;
+	overflow-x: hidden;
+}
 
 .night-mode {
 	.nav,
@@ -1404,13 +1427,85 @@ export default {
 	}
 }
 
-.slide-enter-active,
-.slide-leave-active {
-	transition: all 0.3s ease;
+// Starting state for enter. Added before element is inserted, removed one frame after element is inserted.
+.slide-outer-enter {
+	margin-right: -300px;
 }
-.slide-enter,
-.slide-leave-to {
+
+// Active state for enter. Applied during the entire entering phase. Added before element is inserted, removed when transition/animation finishes. This class can be used to define the duration, delay and easing curve for the entering transition.
+.slide-outer-enter-active {
+	transition: all 0.3s linear;
+}
+
+// Only available in versions 2.1.8+. Ending state for enter. Added one frame after element is inserted (at the same time v-enter is removed), removed when transition/animation finishes.
+.slide-outer-enter-to {
+	margin-right: 0;
+}
+
+// Starting state for leave. Added immediately when a leaving transition is triggered, removed after one frame.
+.slide-outer-leave {
+	margin-right: 0;
+}
+
+// Active state for leave. Applied during the entire leaving phase. Added immediately when leave transition is triggered, removed when the transition/animation finishes. This class can be used to define the duration, delay and easing curve for the leaving transition.
+.slide-outer-leave-active {
+	transition: all 0.3s linear;
+}
+
+// Only available in versions 2.1.8+. Ending state for leave. Added one frame after a leaving transition is triggered (at the same time v-leave is removed), removed when the transition/animation finishes.
+.slide-outer-leave-to {
+	margin-right: -300px;
+}
+
+// Starting state for enter. Added before element is inserted, removed one frame after element is inserted.
+.slide-inner-enter {
 	transform: translateX(300px);
+}
+
+// Active state for enter. Applied during the entire entering phase. Added before element is inserted, removed when transition/animation finishes. This class can be used to define the duration, delay and easing curve for the entering transition.
+.slide-inner-enter-active {
+	transition: all 0.3s linear;
+	z-index: 5;
+}
+
+// Only available in versions 2.1.8+. Ending state for enter. Added one frame after element is inserted (at the same time v-enter is removed), removed when transition/animation finishes.
+.slide-inner-enter-to {
+	transform: translateX(0px);
+}
+
+// Starting state for leave. Added immediately when a leaving transition is triggered, removed after one frame.
+.slide-inner-leave {
+	transform: translateX(0px);
+}
+
+// Active state for leave. Applied during the entire leaving phase. Added immediately when leave transition is triggered, removed when the transition/animation finishes. This class can be used to define the duration, delay and easing curve for the leaving transition.
+.slide-inner-leave-active {
+	transition: all 0.3s linear;
+	z-index: 0;
+}
+
+// Only available in versions 2.1.8+. Ending state for leave. Added one frame after a leaving transition is triggered (at the same time v-leave is removed), removed when the transition/animation finishes.
+.slide-inner-leave-to {
+	transform: translateX(300px);
+}
+
+.sidebar-container {
+	width: 300px;
+	max-width: 300px;
+	// background-color: blue;
+	position: relative;
+}
+
+.sidebar {
+	position: absolute;
+	// z-index: 1;
+	top: 0;
+	right: 0;
+	width: 300px;
+	height: 100%;
+	background-color: $white;
+	box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16),
+		0 2px 10px 0 rgba(0, 0, 0, 0.12);
 }
 
 .no-song {
@@ -1447,47 +1542,45 @@ export default {
 	justify-content: center;
 }
 
-.slideout {
-	top: 50px;
-	height: 100%;
-	position: fixed;
-	right: 0;
-	width: 350px;
-	background-color: $white;
-	box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16),
-		0 2px 10px 0 rgba(0, 0, 0, 0.12);
-	.slideout-header {
-		text-align: center;
-		background-color: rgb(3, 169, 244) !important;
-		margin: 0;
-		padding-top: 5px;
-		padding-bottom: 7px;
-		color: $white;
-	}
+// .slideout {
+// 	top: 50px;
+// 	height: 100%;
+// 	position: fixed;
+// 	right: 0;
+// 	width: 350px;
+// 	background-color: $white;
+// 	box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16),
+// 		0 2px 10px 0 rgba(0, 0, 0, 0.12);
+// 	.slideout-header {
+// 		text-align: center;
+// 		background-color: rgb(3, 169, 244) !important;
+// 		margin: 0;
+// 		padding-top: 5px;
+// 		padding-bottom: 7px;
+// 		color: $white;
+// 	}
 
-	.slideout-content {
-		height: 100%;
-	}
-}
+// 	.slideout-content {
+// 		height: 100%;
+// 	}
+// }
 
 .modal-large {
 	width: 75%;
 }
 
 .station {
-	flex: 1 0 auto;
 	padding-top: 0.5vw;
 	transition: all 0.1s;
 	margin: 0 auto;
-	max-width: 100%;
-	width: 90%;
+	flex: 0.9;
 
 	@media only screen and (min-width: 993px) {
-		width: 70%;
+		flex: 0.7;
 	}
 
 	@media only screen and (min-width: 601px) {
-		width: 85%;
+		flex: 0.85;
 	}
 
 	@media (min-width: 999px) {

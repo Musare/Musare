@@ -32,7 +32,11 @@ const getters = {};
 
 const actions = {
 	closeModal: ({ commit }, data) => {
-		if (data.modal === "register") window.location.reload();
+		if (data.modal === "register") {
+			lofig.get("recaptcha.enabled").then(recaptchaEnabled => {
+				if (recaptchaEnabled) window.location.reload();
+			});
+		}
 		commit("closeModal", data);
 	},
 	openModal: ({ commit }, data) => {

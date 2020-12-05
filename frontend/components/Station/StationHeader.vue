@@ -119,16 +119,14 @@
 					</a>
 					<a
 						v-if="!noSong"
-						class="sidebar-item"
+						class="sidebar-item skip-votes"
 						href="#"
 						@click="$parent.voteSkipStation()"
 					>
 						<span class="icon">
 							<i class="material-icons">skip_next</i>
 						</span>
-						<span class="skip-votes">{{
-							currentSong.skipVotes
-						}}</span>
+						<span class="count">{{ currentSong.skipVotes }}</span>
 						<span class="icon-purpose">Skip current song</span>
 					</a>
 					<a
@@ -294,6 +292,7 @@ export default {
 	background-color: $primary-color;
 	line-height: 64px;
 	border-radius: 0% 0% 33% 33% / 0% 0% 7% 7%;
+	transition: border-radius 0.1s 0s linear;
 
 	.is-brand {
 		font-size: 2.1rem !important;
@@ -306,6 +305,10 @@ export default {
 			color: $musareBlue;
 		}
 	}
+}
+
+.header-sidebar-active .nav {
+	border-radius: 0% 0% 0% 33% / 0% 0% 0% 7%;
 }
 
 a.nav-item {
@@ -329,8 +332,8 @@ a.nav-item {
 }
 
 a.nav-item.is-tab:hover {
-	border-bottom: none;
-	border-top: solid 1px $white;
+	border-bottom: 1px solid transparent;
+	border-top: 1px solid $white;
 }
 
 .admin strong {
@@ -344,8 +347,10 @@ a.nav-item.is-tab:hover {
 }
 
 .skip-votes {
-	position: relative;
-	left: 11px;
+	flex-direction: column;
+	.count {
+		font-size: 18px;
+	}
 }
 
 .nav-toggle {

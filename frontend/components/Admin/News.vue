@@ -33,7 +33,7 @@
 							</button>
 							<button
 								class="button is-danger"
-								@click="removeNews(news)"
+								@click="remove(news)"
 							>
 								Remove
 							</button>
@@ -222,7 +222,6 @@ export default {
 	components: { EditNews },
 	data() {
 		return {
-			news: [],
 			creating: {
 				title: "",
 				description: "",
@@ -233,30 +232,35 @@ export default {
 			}
 		};
 	},
-	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
-			this.socket.emit("news.index", res => {
-				this.news = res.data;
-				return res.data;
-			});
-			this.socket.on("event:admin.news.created", news => {
-				this.news.unshift(news);
-			});
-			this.socket.on("event:admin.news.removed", news => {
-				this.news = this.news.filter(item => item._id !== news._id);
-			});
-			if (this.socket.connected) this.init();
-			io.onConnect(() => this.init());
-		});
-	},
 	computed: {
 		...mapState("modals", {
 			modals: state => state.modals.admin
 		}),
 		...mapState("admin/news", {
-			editing: state => state.editing
+			editing: state => state.editing,
+			news: state => state.news
 		})
+	},
+	mounted() {
+		io.getSocket(socket => {
+			this.socket = socket;
+			this.socket.emit("news.index", res => {
+				res.data.forEach(news => {
+					this.addNews(news);
+				});
+			});
+			this.socket.on("event:admin.news.created", news => {
+				this.addNews(news);
+			});
+			this.socket.on("event:admin.news.updated", updatedNews => {
+				this.updateNews(updatedNews);
+			});
+			this.socket.on("event:admin.news.removed", news => {
+				this.removeNews(news._id);
+			});
+			if (this.socket.connected) this.init();
+			io.onConnect(() => this.init());
+		});
 	},
 	methods: {
 		createNews() {
@@ -298,7 +302,7 @@ export default {
 					};
 			});
 		},
-		removeNews(news) {
+		remove(news) {
 			this.socket.emit(
 				"news.remove",
 				news,
@@ -335,7 +339,12 @@ export default {
 			this.socket.emit("apis.joinAdminRoom", "news", () => {});
 		},
 		...mapActions("modals", ["openModal", "closeModal"]),
-		...mapActions("admin/news", ["editNews"])
+		...mapActions("admin/news", [
+			"editNews",
+			"addNews",
+			"removeNews",
+			"updateNews"
+		])
 	}
 };
 </script>

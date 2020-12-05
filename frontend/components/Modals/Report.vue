@@ -29,7 +29,7 @@
 											}}</strong>
 											<br />
 											<small>{{
-												previousSong.artists.split(" ,")
+												previousSong.artists
 											}}</small>
 										</p>
 									</div>
@@ -70,7 +70,7 @@
 											}}</strong>
 											<br />
 											<small>{{
-												currentSong.artists.split(" ,")
+												currentSong.artists
 											}}</small>
 										</p>
 									</div>

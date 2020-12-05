@@ -214,9 +214,10 @@ class CacheModule extends CoreClass {
                 value = JSON.stringify(value);
 
             //pubs[channel].publish(channel, value);
-            this.client.publish(payload.channel, value);
-
-            resolve();
+            this.client.publish(payload.channel, value, (err, res) => {
+                if (err) reject(err);
+                else resolve();
+            });
         });
     }
 
