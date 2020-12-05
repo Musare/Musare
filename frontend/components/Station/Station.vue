@@ -674,7 +674,12 @@ export default {
 
 			if (!this.paused) {
 				const timeElapsed = this.getTimeElapsed();
-				const currentPlayerTime = this.player.getCurrentTime() * 1000;
+				const currentPlayerTime =
+					Math.max(
+						this.player.getCurrentTime() -
+							this.currentSong.skipDuration,
+						0
+					) * 1000;
 
 				const difference = timeElapsed - currentPlayerTime;
 				// console.log(difference);
@@ -956,7 +961,11 @@ export default {
 															if (
 																data3.status ===
 																"success"
-															) {} // eslint-disable-line
+															) {
+																console.log(
+																	"This comment is just here because of eslint/prettier issues, ignore it"
+																);
+															}
 														}
 													);
 												}
