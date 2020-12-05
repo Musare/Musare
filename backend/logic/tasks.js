@@ -294,15 +294,22 @@ class TasksModule extends CoreClass {
                     "success.log",
                 ],
                 (fileName, next) => {
-                    const stats = fs.statSync(
-                        `${__dirname}/../../log/${fileName}`
-                    );
-                    const mb = stats.size / 1000000;
-                    if (mb > 25) return next(true);
-                    else next();
+                    try {
+                        const stats = fs.statSync(
+                            `${__dirname}/../../log/${fileName}`
+                        );
+                        const mb = stats.size / 1000000;
+                        if (mb > 25) return next(true);
+                        else next();
+                    } catch(err) {
+                        next(err);
+                    }
                 },
-                (err) => {
-                    if (err === true) {
+                async (err) => {
+                    if (err && err !== true) {
+                        err = await this.utils.runJob("GET_ERROR", { error: err });
+                        return reject(new Error(err));
+                    } else if (err === true) {
                         this.log(
                             "ERROR",
                             "LOGGER_FILE_SIZE_WARNING",
@@ -324,6 +331,7 @@ class TasksModule extends CoreClass {
                             "********************************************************************************"
                         );
                     }
+                    
                     resolve();
                 }
             );
