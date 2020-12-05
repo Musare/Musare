@@ -38,9 +38,8 @@ class DBModule extends CoreClass {
             mongoose
                 .connect(mongoUrl, {
                     useNewUrlParser: true,
-                    useCreateIndex: true,
-                    reconnectInterval: 3000,
-                    reconnectTries: 10,
+                    useUnifiedTopology: true,
+                    useCreateIndex: true
                 })
                 .then(() => {
                     this.schemas = {
