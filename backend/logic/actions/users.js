@@ -598,7 +598,9 @@ module.exports = {
                                         channel: "sessions",
                                         key: sessionId,
                                     })
-                                    .then(() => callback(null))
+                                    .then(() => {
+                                        callback(null);
+                                    })
                                     .catch(next);
                             }
                         },
