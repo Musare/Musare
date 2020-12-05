@@ -1,4 +1,5 @@
 const async = require("async");
+const config = require("config");
 
 class DeferredPromise {
     constructor() {
@@ -86,6 +87,12 @@ class CoreClass {
     log() {
         let _arguments = Array.from(arguments);
         const type = _arguments[0];
+
+        if (config.debug && config.debug.stationIssue === true && type === "STATION_ISSUE") {
+            this.moduleManager.debugLogs.stationIssue.push(_arguments);
+            return;
+        }
+
         _arguments.splice(0, 1);
         const start = `|${this.name.toUpperCase()}|`;
         const numberOfTabsNeeded = 4 - Math.ceil(start.length / 8);
@@ -131,6 +138,10 @@ class CoreClass {
         let deferredPromise = new DeferredPromise();
         const job = { name, payload, onFinish: deferredPromise };
 
+        if (config.debug && config.debug.stationIssue === true && config.debug.captureJobs && config.debug.captureJobs.indexOf(name) !== -1) {
+            this.moduleManager.debugJobs.stationIssue.all.push(job);
+        }
+
         if (options.bypassQueue) {
             this._runJob(job, () => {});
         } else {
@@ -163,11 +174,17 @@ class CoreClass {
             .then((response) => {
                 this.log("INFO", `Ran job ${job.name} successfully`);
                 this.jobStatistics[job.name].successful++;
+                if (config.debug && config.debug.stationIssue === true && config.debug.captureJobs && config.debug.captureJobs.indexOf(job.name) !== -1) {
+                    this.moduleManager.debugJobs.stationIssue.completed.push({ status: "success", job, response });
+                }
                 job.onFinish.resolve(response);
             })
             .catch((error) => {
                 this.log("INFO", `Running job ${job.name} failed`);
                 this.jobStatistics[job.name].failed++;
+                if (config.debug && config.debug.stationIssue === true && config.debug.captureJobs && config.debug.captureJobs.indexOf(job.name) !== -1) {
+                    this.moduleManager.debugJobs.stationIssue.completed.push({ status: "error", job, error });
+                }
                 job.onFinish.reject(error);
             })
             .finally(() => {

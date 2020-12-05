@@ -235,6 +235,13 @@ class ModuleManager {
         this.i = 0;
         this.lockdown = false;
         this.fancyConsole = fancyConsole;
+        this.debugLogs = {
+            stationIssue: []
+        };
+        this.debugJobs = {
+            all: [],
+            completed: []
+        };
     }
 
     addModule(moduleName) {

@@ -90,6 +90,16 @@ class APIModule extends CoreClass {
                                         next(err);
                                     })
                                 }, next);
+                            },
+
+                            next => {
+                                responseObject.debugLogs = this.moduleManager.debugLogs.stationIssue;
+                                next();
+                            },
+
+                            next => {
+                                responseObject.debugJobs = this.moduleManager.debugJobs;
+                                next();
                             }
                         ], (err, response) => {
                             if (err) {
