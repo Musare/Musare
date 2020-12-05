@@ -956,8 +956,7 @@ export default {
 															if (
 																data3.status ===
 																"success"
-															) {
-															} // eslint-disable-line
+															) {} // eslint-disable-line
 														}
 													);
 												}
