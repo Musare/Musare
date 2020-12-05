@@ -3,6 +3,7 @@ const CoreClass = require("../core.js");
 const crypto = require("crypto");
 const redis = require("redis");
 const config = require("config");
+const utils = require("./utils");
 
 const subscriptions = [];
 
@@ -92,6 +93,25 @@ class NotificationsModule extends CoreClass {
 
             this.pub.on("connect", () => {
                 this.log("INFO", "Pub connected succesfully.");
+
+                this.pub.config("GET", "notify-keyspace-events", async (err, response) => {
+                    if (err) {
+                        err = await utils.runJob("GET_ERROR", { error: err });
+                        this.log("ERROR", "NOTIFICATIONS_INITIALIZE", `Getting notify-keyspace-events gave an error. ${err}`);
+                        this.log(
+                            "STATION_ISSUE",
+                            `Getting notify-keyspace-events gave an error. ${err}. ${response}`
+                        );
+                        return;
+                    }
+                    if (response[1] === "xE") {
+                        this.log("INFO", "NOTIFICATIONS_INITIALIZE", `notify-keyspace-events is set correctly`);
+                        this.log("STATION_ISSUE", `notify-keyspace-events is set correctly`);
+                    } else {
+                        this.log("ERROR", "NOTIFICATIONS_INITIALIZE", `notify-keyspace-events is NOT correctly! It is set to: ${response[1]}`);
+                        this.log("STATION_ISSUE", `notify-keyspace-events is NOT correctly! It is set to: ${response[1]}`);
+                    }
+                });
 
                 if (this.getStatus() === "INITIALIZING") resolve();
                 else if (
