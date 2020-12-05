@@ -350,7 +350,9 @@ let lib = {
                             url,
                             musicOnly: false,
                         })
-                        .then((res) => next(null, res.songs))
+                        .then((res) => {
+                            next(null, res.songs);
+                        })
                         .catch(next);
                 },
                 (songIds, next) => {

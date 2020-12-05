@@ -17,7 +17,9 @@ module.exports = function(next) {
                             table: "sessions",
                             key: session.sessionId,
                         })
-                        .then((session) => next(null, session))
+                        .then((session) => {
+                            next(null, session);
+                        })
                         .catch(next);
                 },
                 (session, next) => {

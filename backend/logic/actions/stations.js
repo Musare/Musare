@@ -70,7 +70,9 @@ let usersPerStationCount = {};
 //                                     table: "sessions",
 //                                     key: socket.session.sessionId,
 //                                 })
-//                                 .then((session) => next(null, session))
+//                                 .then((session) => {
+//                                      next(null, session);
+//                                  })
 //                                 .catch(next);
 //                         },
 
@@ -475,7 +477,9 @@ module.exports = {
                 (next) => {
                     stations
                         .runJob("GET_STATION", { stationId })
-                        .then((station) => next(null, station))
+                        .then((station) => {
+                            next(null, station);
+                        })
                         .catch(next);
                 },
             ],
@@ -521,7 +525,9 @@ module.exports = {
                 (next) => {
                     stations
                         .runJob("GET_STATION_BY_NAME", { stationName })
-                        .then((station) => next(null, station))
+                        .then((station) => {
+                            next(null, station);
+                        })
                         .catch(next);
                 },
 
@@ -532,7 +538,9 @@ module.exports = {
                             station,
                             userId: session.userId,
                         })
-                        .then((exists) => next(null, exists))
+                        .then((exists) => {
+                            next(null, exists);
+                        })
                         .catch(next);
                 },
             ],
@@ -569,7 +577,9 @@ module.exports = {
                 (next) => {
                     stations
                         .runJob("GET_STATION", { stationId })
-                        .then((station) => next(null, station))
+                        .then((station) => {
+                            next(null, station);
+                        })
                         .catch(next);
                 },
 
@@ -601,7 +611,9 @@ module.exports = {
                             table: "officialPlaylists",
                             key: stationId,
                         })
-                        .then((playlist) => next(null, playlist))
+                        .then((playlist) => {
+                            next(null, playlist);
+                        })
                         .catch(next);
                 },
 
@@ -646,7 +658,9 @@ module.exports = {
                 (next) => {
                     stations
                         .runJob("GET_STATION_BY_NAME", { stationName })
-                        .then((station) => next(null, station))
+                        .then((station) => {
+                            next(null, station);
+                        })
                         .catch(next);
                 },
 
@@ -762,7 +776,9 @@ module.exports = {
                 (next) => {
                     stations
                         .runJob("GET_STATION", { stationId })
-                        .then((station) => next(null, station))
+                        .then((station) => {
+                            next(null, station);
+                        })
                         .catch(next);
                 },
 
@@ -777,7 +793,9 @@ module.exports = {
                 (res, next) => {
                     stations
                         .runJob("UPDATE_STATION", { stationId })
-                        .then((station) => next(null, station))
+                        .then((station) => {
+                            next(null, station);
+                        })
                         .catch(next);
                 },
             ],
@@ -829,7 +847,9 @@ module.exports = {
                 (next) => {
                     stations
                         .runJob("GET_STATION", { stationId })
-                        .then((station) => next(null, station))
+                        .then((station) => {
+                            next(null, station);
+                        })
                         .catch(next);
                 },
 
@@ -874,7 +894,9 @@ module.exports = {
                 (res, next) => {
                     stations
                         .runJob("UPDATE_STATION", { stationId })
-                        .then((station) => next(null, station))
+                        .then((station) => {
+                            next(null, station);
+                        })
                         .catch(next);
                 },
 
@@ -889,7 +911,9 @@ module.exports = {
                         .runJob("GET_ROOM_SOCKETS", {
                             room: `station.${stationId}`,
                         })
-                        .then((sockets) => next(null, sockets))
+                        .then((sockets) => {
+                            next(null, sockets);
+                        })
                         .catch(next);
                 },
 
@@ -939,7 +963,9 @@ module.exports = {
                 (next) => {
                     stations
                         .runJob("GET_STATION", { stationId })
-                        .then((station) => next(null, station))
+                        .then((station) => {
+                            next(null, station);
+                        })
                         .catch(next);
                 },
 
@@ -989,7 +1015,9 @@ module.exports = {
                 (next) => {
                     stations
                         .runJob("GET_STATION", { stationId })
-                        .then((station) => next(null, station))
+                        .then((station) => {
+                            next(null, station);
+                        })
                         .catch(next);
                 },
 
@@ -1050,7 +1078,9 @@ module.exports = {
                 (res, next) => {
                     stations
                         .runJob("UPDATE_STATION", { stationId })
-                        .then((station) => next(null, station))
+                        .then((station) => {
+                            next(null, station);
+                        })
                         .catch(next);
                 },
             ],
@@ -1104,7 +1134,9 @@ module.exports = {
                     (res, next) => {
                         stations
                             .runJob("UPDATE_STATION", { stationId })
-                            .then((station) => next(null, station))
+                            .then((station) => {
+                                next(null, station);
+                            })
                             .catch(next);
                     },
                 ],
@@ -1159,7 +1191,9 @@ module.exports = {
                     (res, next) => {
                         stations
                             .runJob("UPDATE_STATION", { stationId })
-                            .then((station) => next(null, station))
+                            .then((station) => {
+                                next(null, station);
+                            })
                             .catch(next);
                     },
                 ],
@@ -1214,7 +1248,9 @@ module.exports = {
                     (res, next) => {
                         stations
                             .runJob("UPDATE_STATION", { stationId })
-                            .then((station) => next(null, station))
+                            .then((station) => {
+                                next(null, station);
+                            })
                             .catch(next);
                     },
                 ],
@@ -1269,7 +1305,9 @@ module.exports = {
                     (res, next) => {
                         stations
                             .runJob("UPDATE_STATION", { stationId })
-                            .then((station) => next(null, station))
+                            .then((station) => {
+                                next(null, station);
+                            })
                             .catch(next);
                     },
                 ],
@@ -1328,7 +1366,9 @@ module.exports = {
                     (res, next) => {
                         stations
                             .runJob("UPDATE_STATION", { stationId })
-                            .then((station) => next(null, station))
+                            .then((station) => {
+                                next(null, station);
+                            })
                             .catch(next);
                     },
                 ],
@@ -1374,7 +1414,9 @@ module.exports = {
                     (next) => {
                         stations
                             .runJob("GET_STATION", { stationId })
-                            .then((station) => next(null, station))
+                            .then((station) => {
+                                next(null, station);
+                            })
                             .catch(next);
                     },
 
@@ -1396,7 +1438,9 @@ module.exports = {
                     (res, next) => {
                         stations
                             .runJob("UPDATE_STATION", { stationId })
-                            .then((station) => next(null, station))
+                            .then((station) => {
+                                next(null, station);
+                            })
                             .catch(next);
                     },
                 ],
@@ -1448,7 +1492,9 @@ module.exports = {
                 (next) => {
                     stations
                         .runJob("GET_STATION", { stationId })
-                        .then((station) => next(null, station))
+                        .then((station) => {
+                            next(null, station);
+                        })
                         .catch(next);
                 },
 
@@ -1466,7 +1512,9 @@ module.exports = {
                 (res, next) => {
                     stations
                         .runJob("UPDATE_STATION", { stationId })
-                        .then((station) => next(null, station))
+                        .then((station) => {
+                            next(null, station);
+                        })
                         .catch(next);
                 },
             ],
@@ -1516,7 +1564,9 @@ module.exports = {
                 (next) => {
                     stations
                         .runJob("GET_STATION", { stationId })
-                        .then((station) => next(null, station))
+                        .then((station) => {
+                            next(null, station);
+                        })
                         .catch(next);
                 },
 
@@ -1538,7 +1588,9 @@ module.exports = {
                 (res, next) => {
                     stations
                         .runJob("UPDATE_STATION", { stationId })
-                        .then((station) => next(null, station))
+                        .then((station) => {
+                            next(null, station);
+                        })
                         .catch(next);
                 },
             ],
@@ -1813,7 +1865,9 @@ module.exports = {
                 (next) => {
                     stations
                         .runJob("GET_STATION", { stationId })
-                        .then((station) => next(null, station))
+                        .then((station) => {
+                            next(null, station);
+                        })
                         .catch(next);
                 },
 
@@ -1974,7 +2028,9 @@ module.exports = {
                 (res, next) => {
                     stations
                         .runJob("UPDATE_STATION", { stationId })
-                        .then((station) => next(null, station))
+                        .then((station) => {
+                            next(null, station);
+                        })
                         .catch(next);
                 },
             ],
@@ -2024,7 +2080,9 @@ module.exports = {
                         if (!songId) return next("Invalid song id.");
                         stations
                             .runJob("GET_STATION", { stationId })
-                            .then((station) => next(null, station))
+                            .then((station) => {
+                                next(null, station);
+                            })
                             .catch(next);
                     },
 
@@ -2057,7 +2115,9 @@ module.exports = {
                     (res, next) => {
                         stations
                             .runJob("UPDATE_STATION", { stationId })
-                            .then((station) => next(null, station))
+                            .then((station) => {
+                                next(null, station);
+                            })
                             .catch(next);
                     },
                 ],
@@ -2102,7 +2162,9 @@ module.exports = {
                 (next) => {
                     stations
                         .runJob("GET_STATION", { stationId })
-                        .then((station) => next(null, station))
+                        .then((station) => {
+                            next(null, station);
+                        })
                         .catch(next);
                 },
 
@@ -2173,7 +2235,9 @@ module.exports = {
                     (next) => {
                         stations
                             .runJob("GET_STATION", { stationId })
-                            .then((station) => next(null, station))
+                            .then((station) => {
+                                next(null, station);
+                            })
                             .catch(next);
                     },
 
@@ -2210,7 +2274,9 @@ module.exports = {
                     (res, next) => {
                         stations
                             .runJob("UPDATE_STATION", { stationId })
-                            .then((station) => next(null, station))
+                            .then((station) => {
+                                next(null, station);
+                            })
                             .catch(next);
                     },
                 ],
@@ -2257,7 +2323,9 @@ module.exports = {
                 (next) => {
                     stations
                         .runJob("GET_STATION", { stationId })
-                        .then((station) => next(null, station))
+                        .then((station) => {
+                            next(null, station);
+                        })
                         .catch(next);
                 },
 

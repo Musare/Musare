@@ -77,7 +77,9 @@ module.exports = {
                 (next) => {
                     utils
                         .runJob("GET_SONGS_FROM_SPOTIFY", { title, artist })
-                        .then((songs) => next(null, songs))
+                        .then((songs) => {
+                            next(null, songs);
+                        })
                         .catch(next);
                 },
             ],

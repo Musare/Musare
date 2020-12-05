@@ -286,7 +286,9 @@ module.exports = {
                 (next) => {
                     songs
                         .runJob("GET_SONG_FROM_ID", { songId })
-                        .then((responsesong) => next(null, response.song))
+                        .then((responsesong) => {
+                            next(null, response.song);
+                        })
                         .catch(next);
                 },
             ],
@@ -350,7 +352,9 @@ module.exports = {
                 (res, next) => {
                     songs
                         .runJob("UPDATE_SONG", { songId })
-                        .then((song) => next(null, song))
+                        .then((song) => {
+                            next(null, song);
+                        })
                         .catch(next);
                 },
             ],
@@ -401,7 +405,9 @@ module.exports = {
                     //TODO Check if res gets returned from above
                     cache
                         .runJob("HDEL", { table: "songs", key: songId })
-                        .then(() => next())
+                        .then(() => {
+                            next();
+                        })
                         .catch(next);
                 },
             ],

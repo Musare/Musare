@@ -31,7 +31,9 @@ class ExampleModule extends CoreClass {
                         this.setStage(3);
                         this.cache
                             .runJob("HGETALL", { table: "playlists" })
-                            .then((playlists) => next(null, playlists))
+                            .then((playlists) => {
+                                next(null, playlists);
+                            })
                             .catch(next);
                     },
 
@@ -52,7 +54,9 @@ class ExampleModule extends CoreClass {
                                                     table: "playlists",
                                                     key: playlistId,
                                                 })
-                                                .then(() => next())
+                                                .then(() => {
+                                                    next();
+                                                })
                                                 .catch(next);
                                         } else next();
                                     }
@@ -119,7 +123,9 @@ class ExampleModule extends CoreClass {
                     (next) => {
                         this.cache
                             .runJob("HGETALL", { table: "playlists" })
-                            .then((playlists) => next(null, playlists))
+                            .then((playlists) => {
+                                next(null, playlists);
+                            })
                             .catch(next);
                     },
 
@@ -139,7 +145,9 @@ class ExampleModule extends CoreClass {
                                                     table: "playlists",
                                                     key: playlistId,
                                                 })
-                                                .then(() => next())
+                                                .then(() => {
+                                                    next();
+                                                })
                                                 .catch(next);
                                         } else next();
                                     }
@@ -155,7 +163,9 @@ class ExampleModule extends CoreClass {
                                 table: "playlists",
                                 key: payload.playlistId,
                             })
-                            .then((playlist) => next(null, playlist))
+                            .then((playlist) => {
+                                next(null, playlist);
+                            })
                             .catch(next);
                     },
 
@@ -175,7 +185,9 @@ class ExampleModule extends CoreClass {
                                     key: payload.playlistId,
                                     value: playlist,
                                 })
-                                .then((playlist) => next(null, playlist))
+                                .then((playlist) => {
+                                    next(null, playlist);
+                                })
                                 .catch(next);
                         } else next("Playlist not found");
                     },
@@ -224,7 +236,9 @@ class ExampleModule extends CoreClass {
                                 key: payload.playlistId,
                                 value: playlist,
                             })
-                            .then((playlist) => next(null, playlist))
+                            .then((playlist) => {
+                                next(null, playlist);
+                            })
                             .catch(next);
                     },
                 ],
@@ -264,7 +278,9 @@ class ExampleModule extends CoreClass {
                                 table: "playlists",
                                 key: payload.playlistId,
                             })
-                            .then(() => next())
+                            .then(() => {
+                                next();
+                            })
                             .catch(next);
                     },
                 ],

@@ -264,7 +264,9 @@ module.exports = {
                             key: sessionId,
                             value: sessionSchema(sessionId, user._id),
                         })
-                        .then(() => next(null, sessionId))
+                        .then(() => {
+                            next(null, sessionId);
+                        })
                         .catch(next);
                 },
             ],
@@ -496,7 +498,9 @@ module.exports = {
                             table: "sessions",
                             key: session.sessionId,
                         })
-                        .then((session) => next(null, session))
+                        .then((session) => {
+                            next(null, session);
+                        })
                         .catch(next);
                 },
 
@@ -511,7 +515,9 @@ module.exports = {
                             table: "sessions",
                             key: session.sessionId,
                         })
-                        .then(() => next())
+                        .then(() => {
+                            next();
+                        })
                         .catch(next);
                 },
             ],
@@ -560,7 +566,9 @@ module.exports = {
                 (next) => {
                     cache
                         .runJob("HGETALL", { table: "sessions" })
-                        .then((sessions) => next(null, sessions))
+                        .then((sessions) => {
+                            next(null, sessions);
+                        })
                         .catch(next);
                 },
 
@@ -744,7 +752,9 @@ module.exports = {
                             table: "sessions",
                             key: session.sessionId,
                         })
-                        .then((session) => next(null, session))
+                        .then((session) => {
+                            next(null, session);
+                        })
                         .catch(next);
                 },
 
@@ -951,7 +961,9 @@ module.exports = {
                     (next) => {
                         utils
                             .runJob("CREATE_GRAVATAR", { email: newEmail })
-                            .then((url) => next(null, url));
+                            .then((url) => {
+                                next(null, url);
+                            });
                     },
 
                     (avatar, next) => {
@@ -2026,7 +2038,9 @@ module.exports = {
                                 expiresAt,
                                 punishedBy,
                             })
-                            .then((punishment) => next(null, punishment))
+                            .then((punishment) => {
+                                next(null, punishment);
+                            })
                             .catch(next);
                     },
 

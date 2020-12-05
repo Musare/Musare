@@ -105,7 +105,9 @@ class StationsModule extends CoreClass {
                         this.setStage(2);
                         this.cache
                             .runJob("HGETALL", { table: "stations" })
-                            .then((stations) => next(null, stations))
+                            .then((stations) => {
+                                next(null, stations);
+                            })
                             .catch(next);
                     },
 
@@ -126,7 +128,9 @@ class StationsModule extends CoreClass {
                                                     table: "stations",
                                                     key: stationId,
                                                 })
-                                                .then(() => next())
+                                                .then(() => {
+                                                    next();
+                                                })
                                                 .catch(next);
                                         } else next();
                                     }
@@ -172,7 +176,9 @@ class StationsModule extends CoreClass {
                                                 },
                                                 { bypassQueue: true }
                                             )
-                                                .then(() => next())
+                                                .then(() => {
+                                                    next();
+                                                })
                                                 .catch(next); // bypassQueue is true because otherwise the module will never initialize
                                         },
                                     ],
@@ -215,7 +221,9 @@ class StationsModule extends CoreClass {
                             },
                             { bypassQueue: payload.bypassQueue }
                         )
-                            .then((station) => next(null, station))
+                            .then((station) => {
+                                next(null, station);
+                            })
                             .catch(next);
                     },
                     (station, next) => {
@@ -251,7 +259,9 @@ class StationsModule extends CoreClass {
                                 },
                                 { bypassQueue: payload.bypassQueue }
                             )
-                                .then((station) => next(true, station))
+                                .then((station) => {
+                                    next(true, station);
+                                })
                                 .catch(next)
                                 .finally(() => {});
                         }
@@ -273,7 +283,9 @@ class StationsModule extends CoreClass {
                                 },
                                 { bypassQueue: payload.bypassQueue }
                             )
-                                .then((station) => next(null, station))
+                                .then((station) => {
+                                    next(null, station);
+                                })
                                 .catch(next);
                         } else {
                             //name, time, cb, station
@@ -357,7 +369,9 @@ class StationsModule extends CoreClass {
 
                         this.utils
                             .runJob("SHUFFLE", { array: playlist })
-                            .then((result) => next(null, result.array))
+                            .then((result) => {
+                                next(null, result.array);
+                            })
                             .catch(next);
                     },
 
@@ -371,7 +385,9 @@ class StationsModule extends CoreClass {
                             },
                             { bypassQueue: payload.bypassQueue }
                         )
-                            .then(() => next(null, playlist))
+                            .then(() => {
+                                next(null, playlist);
+                            })
                             .catch(next);
                     },
 
@@ -389,7 +405,9 @@ class StationsModule extends CoreClass {
                                     },
                                     { bypassQueue: payload.bypassQueue }
                                 )
-                                    .then(() => next(null, playlist))
+                                    .then(() => {
+                                        next(null, playlist);
+                                    })
                                     .catch(next);
                             }
                         );
@@ -415,7 +433,9 @@ class StationsModule extends CoreClass {
                                 table: "stations",
                                 key: payload.stationId,
                             })
-                            .then((station) => next(null, station))
+                            .then((station) => {
+                                next(null, station);
+                            })
                             .catch(next);
                     },
 
@@ -543,7 +563,9 @@ class StationsModule extends CoreClass {
                                 key: payload.stationId,
                                 value: station,
                             })
-                            .then((station) => next(null, station))
+                            .then((station) => {
+                                next(null, station);
+                            })
                             .catch(next);
                     },
                 ],

@@ -134,7 +134,9 @@ let lib = {
                 (next) => {
                     playlists
                         .runJob("GET_PLAYLIST", { playlistId })
-                        .then((playlist) => next(null, playlist))
+                        .then((playlist) => {
+                            next(null, playlist);
+                        })
                         .catch(next);
                 },
 
@@ -286,7 +288,9 @@ let lib = {
                 (next) => {
                     playlists
                         .runJob("GET_PLAYLIST", { playlistId })
-                        .then((playlist) => next(null, playlist))
+                        .then((playlist) => {
+                            next(null, playlist);
+                        })
                         .catch(next);
                 },
 
@@ -332,7 +336,9 @@ let lib = {
                 (next) => {
                     playlists
                         .runJob("GET_PLAYLIST", { playlistId })
-                        .then((playlist) => next(null, playlist))
+                        .then((playlist) => {
+                            next(null, playlist);
+                        })
                         .catch(next);
                 },
             ],
@@ -389,7 +395,9 @@ let lib = {
                 (res, next) => {
                     playlists
                         .runJob("UPDATE_PLAYLIST", { playlistId })
-                        .then((playlist) => next(null, playlist))
+                        .then((playlist) => {
+                            next(null, playlist);
+                        })
                         .catch(next);
                 },
             ],
@@ -437,7 +445,9 @@ let lib = {
                 (playlist, next) => {
                     utils
                         .runJob("SHUFFLE", { array: playlist.songs })
-                        .then((result) => next(null, result.array))
+                        .then((result) => {
+                            next(null, result.array);
+                        })
                         .catch(next);
                 },
 
@@ -453,7 +463,9 @@ let lib = {
                 (res, next) => {
                     playlists
                         .runJob("UPDATE_PLAYLIST", { playlistId })
-                        .then((playlist) => next(null, playlist))
+                        .then((playlist) => {
+                            next(null, playlist);
+                        })
                         .catch(next);
                 },
             ],
@@ -669,7 +681,9 @@ let lib = {
                     (next) => {
                         playlists
                             .runJob("GET_PLAYLIST", { playlistId })
-                            .then((playlist) => next(null, playlist))
+                            .then((playlist) => {
+                                next(null, playlist);
+                            })
                             .catch(next);
                     },
 
@@ -742,7 +756,9 @@ let lib = {
                     (next) => {
                         playlists
                             .runJob("GET_PLAYLIST", { playlistId })
-                            .then((playlist) => next(null, playlist))
+                            .then((playlist) => {
+                                next(null, playlist);
+                            })
                             .catch(next);
                     },
 
@@ -759,7 +775,9 @@ let lib = {
                     (res, next) => {
                         playlists
                             .runJob("UPDATE_PLAYLIST", { playlistId })
-                            .then((playlist) => next(null, playlist))
+                            .then((playlist) => {
+                                next(null, playlist);
+                            })
                             .catch(next);
                     },
                 ],
@@ -824,7 +842,9 @@ let lib = {
                     (res, next) => {
                         playlists
                             .runJob("UPDATE_PLAYLIST", { playlistId })
-                            .then((playlist) => next(null, playlist))
+                            .then((playlist) => {
+                                next(null, playlist);
+                            })
                             .catch(next);
                     },
                 ],
@@ -878,7 +898,9 @@ let lib = {
                     (next) => {
                         playlists
                             .runJob("GET_PLAYLIST", { playlistId })
-                            .then((playlist) => next(null, playlist))
+                            .then((playlist) => {
+                                next(null, playlist);
+                            })
                             .catch(next);
                     },
 
@@ -927,7 +949,9 @@ let lib = {
                     (res, next) => {
                         playlists
                             .runJob("UPDATE_PLAYLIST", { playlistId })
-                            .then((playlist) => next(null, playlist))
+                            .then((playlist) => {
+                                next(null, playlist);
+                            })
                             .catch(next);
                     },
                 ],
@@ -981,7 +1005,9 @@ let lib = {
                     (next) => {
                         playlists
                             .runJob("GET_PLAYLIST", { playlistId })
-                            .then((playlist) => next(null, playlist))
+                            .then((playlist) => {
+                                next(null, playlist);
+                            })
                             .catch(next);
                     },
 
@@ -1027,7 +1053,9 @@ let lib = {
                     (res, next) => {
                         playlists
                             .runJob("UPDATE_PLAYLIST", { playlistId })
-                            .then((playlist) => next(null, playlist))
+                            .then((playlist) => {
+                                next(null, playlist);
+                            })
                             .catch(next);
                     },
                 ],

@@ -31,7 +31,9 @@ class PunishmentsModule extends CoreClass {
                         this.setStage(2);
                         this.cache
                             .runJob("HGETALL", { table: "punishments" })
-                            .then((punishments) => next(null, punishments))
+                            .then((punishments) => {
+                                next(null, punishments);
+                            })
                             .catch(next);
                     },
 
@@ -52,7 +54,9 @@ class PunishmentsModule extends CoreClass {
                                                     table: "punishments",
                                                     key: punishmentId,
                                                 })
-                                                .then(() => next())
+                                                .then(() => {
+                                                    next();
+                                                })
                                                 .catch(next);
                                         else next();
                                     }
@@ -86,7 +90,9 @@ class PunishmentsModule extends CoreClass {
                                             punishment._id
                                         ),
                                     })
-                                    .then(() => next())
+                                    .then(() => {
+                                        next();
+                                    })
                                     .catch(next);
                             },
                             next
@@ -149,7 +155,9 @@ class PunishmentsModule extends CoreClass {
                                         table: "punishments",
                                         key: punishment.punishmentId,
                                     })
-                                    .finally(() => next2());
+                                    .finally(() => {
+                                        next2()
+                                    });
                             },
                             () => {
                                 next(null, punishments);
@@ -189,7 +197,9 @@ class PunishmentsModule extends CoreClass {
                                 table: "punishments",
                                 key: payload.id,
                             })
-                            .then((punishment) => next(null, punishment))
+                            .then((punishment) => {
+                                next(null, punishment);
+                            })
                             .catch(next);
                     },
 
@@ -206,7 +216,9 @@ class PunishmentsModule extends CoreClass {
                                     key: payload.id,
                                     value: punishment,
                                 })
-                                .then((punishment) => next(null, punishment))
+                                .then((punishment) => {
+                                    next(null, punishment);
+                                })
                                 .catch(next);
                         } else next("Punishment not found.");
                     },
@@ -233,7 +245,9 @@ class PunishmentsModule extends CoreClass {
                 [
                     (next) => {
                         this.runJob("GET_PUNISHMENTS", {})
-                            .then((punishments) => next(null, punishments))
+                            .then((punishments) => {
+                                next(null, punishments);
+                            })
                             .catch(next);
                     },
                     (punishments, next) => {
@@ -294,7 +308,9 @@ class PunishmentsModule extends CoreClass {
                                     punishment._id
                                 ),
                             })
-                            .then(() => next())
+                            .then(() => {
+                                next();
+                            })
                             .catch(next);
                     },
 

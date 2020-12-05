@@ -21,7 +21,9 @@ module.exports = function(next) {
                             table: "sessions",
                             key: session.sessionId,
                         })
-                        .then((session) => next(null, session))
+                        .then((session) => {
+                            next(null, session)
+                        })
                         .catch(next);
                 },
                 (session, next) => {
@@ -35,7 +37,9 @@ module.exports = function(next) {
                     if (user.role === "admin") return next(true);
                     stations
                         .runJob("GET_STATION", { stationId })
-                        .then((station) => next(null, station))
+                        .then((station) => {
+                            next(null, station);
+                        })
                         .catch(next);
                 },
                 (station, next) => {

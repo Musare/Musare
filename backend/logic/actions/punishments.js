@@ -133,7 +133,9 @@ module.exports = {
                             expiresAt,
                             punishedBy: session.userId,
                         })
-                        .then((punishment) => next(null, punishment))
+                        .then((punishment) => {
+                            next(null, punishment);
+                        })
                         .catch(next);
                 },
             ],

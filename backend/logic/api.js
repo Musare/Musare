@@ -52,7 +52,9 @@ class APIModule extends CoreClass {
                             next => {
                                 this.cache
                                     .runJob("HGETALL", { table: "stations" })
-                                    .then(stations => next(null, stations))
+                                    .then(stations => {
+                                        next(null, stations);
+                                    })
                                     .catch(next);
                             },
 

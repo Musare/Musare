@@ -31,7 +31,9 @@ class SongsModule extends CoreClass {
                         this.setStage(2);
                         this.cache
                             .runJob("HGETALL", { table: "songs" })
-                            .then((songs) => next(null, songs))
+                            .then((songs) => {
+                                next(null, songs);
+                            })
                             .catch(next);
                     },
 
@@ -50,7 +52,9 @@ class SongsModule extends CoreClass {
                                                 table: "songs",
                                                 key: songId,
                                             })
-                                            .then(() => next())
+                                            .then(() => {
+                                                next();
+                                            })
                                             .catch(next);
                                     else next();
                                 });
@@ -75,7 +79,9 @@ class SongsModule extends CoreClass {
                                         key: song.songId,
                                         value: songSchema(song),
                                     })
-                                    .then(() => next())
+                                    .then(() => {
+                                        next();
+                                    })
                                     .catch(next);
                             },
                             next
@@ -116,7 +122,9 @@ class SongsModule extends CoreClass {
                             return next("Id is not a valid ObjectId.");
                         this.cache
                             .runJob("HGET", { table: "songs", key: payload.id })
-                            .then((song) => next(null, song))
+                            .then((song) => {
+                                next(null, song);
+                            })
                             .catch(next);
                     },
 
@@ -133,7 +141,9 @@ class SongsModule extends CoreClass {
                                     key: payload.id,
                                     value: song,
                                 })
-                                .then((song) => next(null, song));
+                                .then((song) => {
+                                    next(null, song);
+                                });
                         } else next("Song not found.");
                     },
                 ],
@@ -205,7 +215,9 @@ class SongsModule extends CoreClass {
                                 key: payload.songId,
                                 value: song,
                             })
-                            .then((song) => next(null, song))
+                            .then((song) => {
+                                next(null, song);
+                            })
                             .catch(next);
                     },
                 ],
@@ -242,7 +254,9 @@ class SongsModule extends CoreClass {
                                 table: "songs",
                                 key: payload.songId,
                             })
-                            .then(() => next())
+                            .then(() => {
+                                next();
+                            })
                             .catch(next);
                     },
                 ],

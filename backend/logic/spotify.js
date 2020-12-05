@@ -40,7 +40,9 @@ class SpotifyModule extends CoreClass {
                         this.setStage(2);
                         this.cache
                             .runJob("HGET", { table: "api", key: "spotify" })
-                            .then((data) => next(null, data))
+                            .then((data) => {
+                                next(null, data);
+                            })
                             .catch(next);
                     },
 
@@ -102,7 +104,9 @@ class SpotifyModule extends CoreClass {
                                 value: apiResults,
                                 stringifyJson: true,
                             })
-                            .finally(() => next());
+                            .finally(() => {
+                                next();
+                            });
                     },
                 ],
                 () => {

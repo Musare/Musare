@@ -112,7 +112,9 @@ class TasksModule extends CoreClass {
                             .runJob("HGETALL", {
                                 table: "stations",
                             })
-                            .then((response) => next(null, response))
+                            .then((response) => {
+                                next(null, response);
+                            })
                             .catch(next);
                     },
                     (stations, next) => {
@@ -204,7 +206,9 @@ class TasksModule extends CoreClass {
                                             table: "sessions",
                                             key: sessionId,
                                         })
-                                        .finally(() => next2());
+                                        .finally(() => {
+                                            next2();
+                                        });
                                 } else if (!session.refreshDate) {
                                     session.refreshDate = Date.now();
                                     this.cache
@@ -213,7 +217,9 @@ class TasksModule extends CoreClass {
                                             key: sessionId,
                                             value: session,
                                         })
-                                        .finally(() => next2());
+                                        .finally(() => {
+                                            next2()
+                                        });
                                 } else if (
                                     Date.now() - session.refreshDate >
                                     60 * 60 * 24 * 30 * 1000
@@ -231,7 +237,9 @@ class TasksModule extends CoreClass {
                                                         key: sessionId,
                                                         value: session,
                                                     })
-                                                    .finally(() => next2());
+                                                    .finally(() => {
+                                                        next2();
+                                                    });
                                             } else {
                                                 this.log(
                                                     "INFO",
@@ -243,7 +251,9 @@ class TasksModule extends CoreClass {
                                                         table: "sessions",
                                                         key: session.sessionId,
                                                     })
-                                                    .finally(() => next2());
+                                                    .finally(() => {
+                                                        next2();
+                                                    });
                                             }
                                         });
                                 } else {
