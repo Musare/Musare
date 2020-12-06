@@ -99,13 +99,14 @@ export default {
 			const { keyCode } = event;
 			const shift = event.shiftKey;
 			const ctrl = event.ctrlKey;
+			const alt = event.altKey;
 
 			const identifier = `${keyCode}.${shift}.${ctrl}`;
 
 			if (this.keyIsDown === identifier) return;
 			this.keyIsDown = identifier;
 
-			keyboardShortcuts.handleKeyDown(keyCode, shift, ctrl);
+			keyboardShortcuts.handleKeyDown(event, keyCode, shift, ctrl, alt);
 		};
 
 		document.onkeyup = () => {

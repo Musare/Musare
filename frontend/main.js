@@ -42,6 +42,12 @@ Vue.directive("scroll", {
 	}
 });
 
+Vue.directive("focus", {
+	inserted(el) {
+		el.focus();
+	}
+});
+
 const router = new VueRouter({
 	mode: "history",
 	routes: [

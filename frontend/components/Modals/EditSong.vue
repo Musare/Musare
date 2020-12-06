@@ -16,18 +16,24 @@
 									<i
 										class="material-icons player-play-pause"
 										v-on:click="settings('play')"
+										v-on:keyup.enter="settings('play')"
+										tabindex="0"
 										v-if="video.paused"
 										>play_arrow</i
 									>
 									<i
 										class="material-icons player-play-pause"
 										v-on:click="settings('pause')"
+										v-on:keyup.enter="settings('pause')"
+										tabindex="0"
 										v-if="!video.paused"
 										>pause</i
 									>
 									<i
 										class="material-icons player-stop"
 										v-on:click="settings('stop')"
+										v-on:keyup.enter="settings('stop')"
+										tabindex="0"
 										>stop</i
 									>
 									<i
@@ -35,6 +41,10 @@
 										v-on:click="
 											settings('skipToLast10Secs')
 										"
+										v-on:keyup.enter="
+											settings('skipToLast10Secs')
+										"
+										tabindex="0"
 										>fast_forward</i
 									>
 								</div>
@@ -54,9 +64,9 @@
 								<div class="player-footer-right">
 									<input
 										type="range"
-										id="volumeSlider"
+										v-model="volumeSliderValue"
 										min="0"
-										max="100"
+										max="10000"
 										class="active"
 										v-on:change="changeVolume()"
 										v-on:input="changeVolume()"
@@ -78,7 +88,11 @@
 									<input
 										class="input"
 										type="text"
+										id="title-input"
 										v-model="editing.song.title"
+										v-on:keyup.ctrl.alt.68="
+											getAlbumData('title')
+										"
 									/>
 									<button
 										class="button album-get-button"
@@ -125,6 +139,9 @@
 										class="input"
 										type="text"
 										v-model="editing.song.thumbnail"
+										v-on:keyup.ctrl.alt.68="
+											getAlbumData('albumArt')
+										"
 									/>
 									<button
 										class="button album-get-button"
@@ -147,6 +164,10 @@
 										v-on:blur="blurArtistInput()"
 										v-on:focus="focusArtistInput()"
 										v-on:keydown="keydownArtistInput()"
+										v-on:keyup.enter="addTag('artists')"
+										v-on:keyup.ctrl.alt.68="
+											getAlbumData('artists')
+										"
 									/>
 									<button
 										class="button album-get-button"
@@ -221,6 +242,10 @@
 										v-on:blur="blurGenreInput()"
 										v-on:focus="focusGenreInput()"
 										v-on:keydown="keydownGenreInput()"
+										v-on:keyup.enter="addTag('genres')"
+										v-on:keyup.ctrl.alt.68="
+											getAlbumData('genres')
+										"
 									/>
 									<button
 										class="button album-get-button"
@@ -247,7 +272,6 @@
 								>
 									<span
 										class="autosuggest-item"
-										tabindex="0"
 										v-on:click="
 											selectGenreAutosuggest(item)
 										"
@@ -363,8 +387,11 @@
 							<input
 								class="input"
 								type="text"
+								id="discogs-input"
 								v-model="discogsQuery"
+								v-on:keyup.enter="searchDiscogsForPage(1)"
 								@change="onDiscogsQueryChange"
+								v-focus
 							/>
 						</p>
 						<button
@@ -386,6 +413,9 @@
 								class="api-result"
 								v-for="(result, index) in discogs.apiResults"
 								:key="index"
+								tabindex="0"
+								v-on:keydown.prevent.32
+								v-on:keyup.13="toggleAPIResult(index)"
 							>
 								<div class="top-container">
 									<img :src="result.album.albumArt" />
@@ -448,6 +478,9 @@
 											trackIndex) in result.tracks"
 											:key="trackIndex"
 											v-on:click="
+												selectTrack(index, trackIndex)
+											"
+											v-on:keyup.enter="
 												selectTrack(index, trackIndex)
 											"
 										>
@@ -535,6 +568,7 @@ import { mapState, mapActions } from "vuex";
 import Toast from "toasters";
 
 import io from "../../io";
+import keyboardShortcuts from "../../keyboardShortcuts";
 import validation from "../../validation";
 import Modal from "./Modal.vue";
 
@@ -553,6 +587,7 @@ export default {
 				pages: 1,
 				disableLoadMore: false
 			},
+			volumeSliderValue: 0,
 			artistInputValue: "",
 			genreInputValue: "",
 			artistInputFocussed: false,
@@ -720,8 +755,8 @@ export default {
 
 			if (
 				!this.useHTTPS &&
-				(song.thumbnail.indexOf("http://") !== 0 &&
-					song.thumbnail.indexOf("https://") !== 0)
+				song.thumbnail.indexOf("http://") !== 0 &&
+				song.thumbnail.indexOf("https://") !== 0
 			) {
 				return new Toast({
 					content: 'Thumbnail must start with "http://".',
@@ -960,9 +995,9 @@ export default {
 			}
 		},
 		changeVolume() {
-			const volume = document.getElementById("volumeSlider").value;
-			localStorage.setItem("volume", volume);
-			this.video.player.setVolume(volume);
+			const volume = this.volumeSliderValue;
+			localStorage.setItem("volume", volume / 100);
+			this.video.player.setVolume(volume / 100);
 			if (volume > 0) this.video.player.unMute();
 		},
 		addTag(type) {
@@ -1267,13 +1302,195 @@ export default {
 			}
 		});
 
-		let volume = parseInt(localStorage.getItem("volume"));
-		document.getElementById("volumeSlider").value = volume =
-			typeof volume === "number" ? volume : 20;
+		let volume = parseFloat(localStorage.getItem("volume"));
+		volume =
+			typeof volume === "number" && !Number.isNaN(volume) ? volume : 20;
+		localStorage.setItem("volume", volume);
+		this.volumeSliderValue = volume * 100;
+
+		keyboardShortcuts.registerShortcut("editSong.pauseResumeVideo", {
+			keyCode: 101,
+			preventDefault: true,
+			handler: () => {
+				if (this.video.paused) this.settings("play");
+				else this.settings("pause");
+			}
+		});
+
+		keyboardShortcuts.registerShortcut("editSong.stopVideo", {
+			keyCode: 101,
+			ctrl: true,
+			preventDefault: true,
+			handler: () => {
+				this.settings("stop");
+			}
+		});
+
+		keyboardShortcuts.registerShortcut("editSong.skipToLast10Secs", {
+			keyCode: 102,
+			preventDefault: true,
+			handler: () => {
+				this.settings("skipToLast10Secs");
+			}
+		});
+
+		keyboardShortcuts.registerShortcut("editSong.lowerVolumeLarge", {
+			keyCode: 98,
+			preventDefault: true,
+			handler: () => {
+				this.volumeSliderValue = Math.max(
+					0,
+					this.volumeSliderValue - 1000
+				);
+				this.changeVolume();
+			}
+		});
+
+		keyboardShortcuts.registerShortcut("editSong.lowerVolumeSmall", {
+			keyCode: 98,
+			ctrl: true,
+			preventDefault: true,
+			handler: () => {
+				this.volumeSliderValue = Math.max(
+					0,
+					this.volumeSliderValue - 100
+				);
+				this.changeVolume();
+			}
+		});
+
+		keyboardShortcuts.registerShortcut("editSong.increaseVolumeLarge", {
+			keyCode: 104,
+			preventDefault: true,
+			handler: () => {
+				this.volumeSliderValue = Math.min(
+					10000,
+					this.volumeSliderValue + 1000
+				);
+				this.changeVolume();
+			}
+		});
+
+		keyboardShortcuts.registerShortcut("editSong.increaseVolumeSmall", {
+			keyCode: 104,
+			ctrl: true,
+			preventDefault: true,
+			handler: () => {
+				this.volumeSliderValue = Math.min(
+					10000,
+					this.volumeSliderValue + 100
+				);
+				this.changeVolume();
+			}
+		});
+
+		keyboardShortcuts.registerShortcut("editSong.save", {
+			keyCode: 83,
+			ctrl: true,
+			preventDefault: true,
+			handler: () => {
+				this.save(this.editing.song, false);
+			}
+		});
+
+		keyboardShortcuts.registerShortcut("editSong.close", {
+			keyCode: 88,
+			ctrl: true,
+			preventDefault: true,
+			handler: () => {
+				this.closeModal({
+					sector: "admin",
+					modal: "editSong"
+				});
+			}
+		});
+
+		keyboardShortcuts.registerShortcut("editSong.focusTitle", {
+			keyCode: 36,
+			preventDefault: true,
+			handler: () => {
+				document.getElementById("title-input").focus();
+			}
+		});
+
+		keyboardShortcuts.registerShortcut("editSong.focusDiscogs", {
+			keyCode: 35,
+			preventDefault: true,
+			handler: () => {
+				document.getElementById("discogs-input").focus();
+			}
+		});
+
+		keyboardShortcuts.registerShortcut("editSong.useAllDiscogs", {
+			keyCode: 68,
+			alt: true,
+			ctrl: true,
+			preventDefault: true,
+			handler: () => {
+				this.getAlbumData("title");
+				this.getAlbumData("albumArt");
+				this.getAlbumData("artists");
+				this.getAlbumData("genres");
+			}
+		});
+
+		keyboardShortcuts.registerShortcut("editSong.resetDuration", {
+			keyCode: 82,
+			alt: true,
+			ctrl: true,
+			preventDefault: true,
+			handler: () => {
+				this.fillDuration();
+			}
+		});
+
+		/*
+		
+		editSong.pauseResume - Num 5 - Pause/resume song
+		editSong.stopVideo - Ctrl - Num 5 - Stop
+		editSong.skipToLast10Secs - Num 6 - Skip to last 10 seconds
+
+		editSong.volumeDown5 - Num 2 - Volume down by 10
+		editSong.volumeDown1 - Ctrl - Num 2 - Volume down by 1
+		editSong.volumeUp5 - Num 8 - Volume up by 10
+		editSong.volumeUp1 - Ctrl - Num 8 - Volume up by 1
+
+		editSong.focusTitle - Home - Focus the title input
+		editSong.focusDicogs - End - Focus the discogs input
+
+		editSong.save - Ctrl - S - Saves song
+		editSong.close - Ctrl - X - Closes modal
+
+		editSong.useAllDiscogs - Ctrl - Alt - D - Sets all fields to the Discogs data
+		editSong.resetDuration - Ctrl - Alt - R - Resets the duration
+
+		Inside Discogs inputs: Ctrl - D - Sets this field to the Discogs data
+
+		*/
 	},
 	beforeDestroy() {
 		this.playerReady = false;
 		clearInterval(this.interval);
+
+		const shortcutNames = [
+			"editSong.pauseResume",
+			"editSong.stopVideo",
+			"editSong.skipToLast10Secs",
+			"editSong.volumeDown5",
+			"editSong.volumeDown1",
+			"editSong.volumeUp5",
+			"editSong.volumeUp1",
+			"editSong.focusTitle",
+			"editSong.focusDicogs",
+			"editSong.save",
+			"editSong.close",
+			"editSong.useAllDiscogs",
+			"editSong.resetDuration"
+		];
+
+		shortcutNames.forEach(shortcutName => {
+			keyboardShortcuts.unregisterShortcut(shortcutName);
+		});
 	}
 };
 </script>
@@ -1450,6 +1667,16 @@ export default {
 
 			i {
 				font-size: 32px;
+			}
+		}
+
+		.album-get-button,
+		.duration-fill-button,
+		.add-button {
+			&:focus,
+			&:hover {
+				filter: contrast(0.75);
+				border: 1px solid black !important;
 			}
 		}
 
@@ -1699,6 +1926,11 @@ export default {
 
 		button {
 			background-color: $musareBlue !important;
+
+			&:focus,
+			&:hover {
+				filter: contrast(0.75);
+			}
 		}
 
 		.tracks {
@@ -1758,7 +1990,7 @@ input[type="range"] {
 	margin: 8.5px 0;
 }
 input[type="range"]:focus {
-	outline: none;
+	outline-style: outset;
 }
 input[type="range"]::-webkit-slider-runnable-track {
 	width: 100%;
