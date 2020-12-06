@@ -138,7 +138,7 @@ class NotificationsModule extends CoreClass {
                 });
             });
 
-            this.sub.psubscribe("__keyevent@0__:expired");
+            this.sub.psubscribe(`__keyevent@${this.pub.options.db}__:expired`);
         });
     }
 
