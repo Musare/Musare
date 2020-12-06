@@ -199,11 +199,14 @@ body.night-mode {
 
 	.toast {
 		font-weight: 600;
+		background-color: $dark-grey !important;
+		&:last-of-type {
+			background-color: $dark-grey-2 !important;
+		}
+		&:not(:first-of-type) {
+			margin-top: 5px;
+		}
 	}
-}
-
-.toast:not(:first-of-type) {
-	margin-top: 5px;
 }
 
 html {
