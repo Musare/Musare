@@ -3,7 +3,7 @@ const WebpackMd5Hash = require("webpack-md5-hash");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = {
-	entry: "./main.js",
+	entry: "./src/main.js",
 	output: {
 		path: `${__dirname}/dist/build/`,
 		filename: "[name].[hash].js"
