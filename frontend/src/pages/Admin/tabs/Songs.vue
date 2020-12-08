@@ -107,21 +107,20 @@ import Toast from "toasters";
 import EditSong from "../../../components/modals/EditSong.vue";
 import UserIdToUsername from "../../../components/common/UserIdToUsername.vue";
 
+import ScrollAndFetchHandler from "../../../mixins/ScrollAndFetchHandler.vue";
+
 import io from "../../../io";
 
 export default {
+	mixins: [ScrollAndFetchHandler],
 	components: { EditSong, UserIdToUsername },
 	data() {
 		return {
-			position: 1,
-			maxPosition: 1,
 			searchQuery: "",
 			editing: {
 				index: 0,
 				song: {}
-			},
-			gettingSet: false,
-			loadAllSongs: false
+			}
 		};
 	},
 	computed: {
@@ -132,12 +131,6 @@ export default {
 						this.searchQuery
 					) !== -1
 			);
-		},
-		setsLoaded() {
-			return this.position - 1;
-		},
-		maxSets() {
-			return this.maxPosition - 1;
 		},
 		...mapState("modals", {
 			modals: state => state.modals.admin
@@ -177,20 +170,6 @@ export default {
 				this.position += 1;
 				this.gettingSet = false;
 			});
-		},
-		handleScroll() {
-			const scrollPosition = document.body.clientHeight + window.scrollY;
-			const bottomPosition = document.body.scrollHeight;
-
-			if (this.loadAllSongs) return false;
-
-			if (scrollPosition + 50 >= bottomPosition) this.getSet();
-
-			return this.maxPosition === this.position;
-		},
-		loadAll() {
-			this.loadAllSongs = true;
-			this.getSet();
 		},
 		init() {
 			if (this.songs.length > 0)
