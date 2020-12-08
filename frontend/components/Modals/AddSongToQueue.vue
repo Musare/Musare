@@ -55,14 +55,38 @@
 							</td>
 							<td><strong v-html="result.title"></strong></td>
 							<td class="song-actions">
-								<a
-									class="button is-success"
-									v-on:click="addSongToQueue(result.id)"
-									href="#"
-									><i class="material-icons icon-with-button"
-										>add</i
-									>Add to queue
-								</a>
+								<transition
+									name="song-actions-transition"
+									mode="out-in"
+								>
+									<a
+										class="button is-success"
+										v-if="result.isAddedToQueue"
+										href="#"
+										key="added-to-queue"
+									>
+										<i
+											class="material-icons icon-with-button"
+											>done</i
+										>
+										Added to queue
+									</a>
+									<a
+										class="button is-dark"
+										v-else
+										v-on:click="
+											addSongToQueue(result.id, index)
+										"
+										href="#"
+										key="add-to-queue"
+									>
+										<i
+											class="material-icons icon-with-button"
+											>add</i
+										>
+										Add to queue
+									</a>
+								</transition>
 							</td>
 						</tr>
 					</tbody>
@@ -222,8 +246,7 @@ export default {
 				}
 			}
 		},
-		addSongToQueue(songId) {
-			console.log(this.station.type);
+		addSongToQueue(songId, index) {
 			if (this.station.type === "community") {
 				this.socket.emit(
 					"stations.addToQueue",
@@ -235,11 +258,13 @@ export default {
 								content: `Error: ${data.message}`,
 								timeout: 8000
 							});
-						else
+						else {
+							this.queryResults[index].isAddedToQueue = true;
 							new Toast({
 								content: `${data.message}`,
 								timeout: 4000
 							});
+						}
 					}
 				);
 			} else {
@@ -249,11 +274,13 @@ export default {
 							content: `Error: ${data.message}`,
 							timeout: 8000
 						});
-					else
+					else {
+						this.queryResults[index].isAddedToQueue = true;
 						new Toast({
 							content: `${data.message}`,
 							timeout: 4000
 						});
+					}
 				});
 			}
 		},
@@ -310,7 +337,8 @@ export default {
 						id: data.items[i].id.videoId,
 						url: `https://www.youtube.com/watch?v=${this.id}`,
 						title: data.items[i].snippet.title,
-						thumbnail: data.items[i].snippet.thumbnails.default.url
+						thumbnail: data.items[i].snippet.thumbnails.default.url,
+						isAddedToQueue: false
 					});
 				}
 
@@ -344,10 +372,9 @@ tr td {
 }
 
 .song-actions {
-	padding-right: 0;
-
 	.button {
 		height: 36px;
+		width: 140px;
 	}
 }
 
@@ -412,5 +439,23 @@ tr td {
 			width: 146px;
 		}
 	}
+}
+
+.song-actions-transition-enter-active {
+	transition: all 0.2s ease;
+}
+
+.song-actions-transition-leave-active {
+	transition: all 0.2s cubic-bezier(1, 0.5, 0.8, 1);
+}
+
+.song-actions-transition-enter {
+	transform: translateX(-20px);
+	opacity: 0;
+}
+
+.song-actions-transition-leave-to {
+	transform: translateX(20px);
+	opacity: 0;
 }
 </style>
