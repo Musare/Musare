@@ -1,180 +1,185 @@
 <template>
 	<modal title="Edit Station" class="edit-station-modal">
 		<template v-slot:body>
-			<!--  Station Preferences -->
-			<div class="section left-section">
-				<div class="col col-2">
-					<div>
-						<label class="label">Name</label>
-						<p class="control">
-							<input
-								class="input"
-								type="text"
-								v-model="editing.name"
-							/>
-						</p>
-					</div>
-					<div>
-						<label class="label">Display name</label>
-						<p class="control">
-							<input
-								class="input"
-								type="text"
-								v-model="editing.displayName"
-							/>
-						</p>
-					</div>
-				</div>
-				<div class="col col-1">
-					<div>
-						<label class="label">Description</label>
-						<p class="control">
-							<input
-								class="input"
-								type="text"
-								v-model="editing.description"
-							/>
-						</p>
-					</div>
-				</div>
-				<div class="col col-2" v-if="editing.genres">
-					<div>
-						<label class="label">Genre(s)</label>
-						<p class="control has-addons">
-							<input
-								class="input"
-								type="text"
-								id="new-genre"
-								v-model="genreInputValue"
-								v-on:blur="blurGenreInput()"
-								v-on:focus="focusGenreInput()"
-								v-on:keydown="keydownGenreInput()"
-								v-on:keyup.enter="addTag('genres')"
-							/>
-							<button
-								class="button is-info add-button blue"
-								v-on:click="addTag('genres')"
-							>
-								<i class="material-icons">add</i>
-							</button>
-						</p>
-						<div
-							class="autosuggest-container"
-							v-if="
-								(genreInputFocussed ||
-									genreAutosuggestContainerFocussed) &&
-									genreAutosuggestItems.length > 0
-							"
-							@mouseover="focusGenreContainer()"
-							@mouseleave="blurGenreContainer()"
-						>
-							<span
-								class="autosuggest-item"
-								tabindex="0"
-								v-on:click="selectGenreAutosuggest(item)"
-								v-for="(item, index) in genreAutosuggestItems"
-								:key="index"
-								>{{ item }}</span
-							>
+			<div class="custom-modal-body">
+				<!--  Station Preferences -->
+				<div class="section left-section">
+					<div class="col col-2">
+						<div>
+							<label class="label">Name</label>
+							<p class="control">
+								<input
+									class="input"
+									type="text"
+									v-model="editing.name"
+								/>
+							</p>
 						</div>
-						<div class="list-container">
-							<div
-								class="list-item"
-								v-for="(genre, index) in editing.genres"
-								:key="index"
-							>
-								<div
-									class="list-item-circle blue"
-									v-on:click="removeTag('genres', index)"
+						<div>
+							<label class="label">Display name</label>
+							<p class="control">
+								<input
+									class="input"
+									type="text"
+									v-model="editing.displayName"
+								/>
+							</p>
+						</div>
+					</div>
+					<div class="col col-1">
+						<div>
+							<label class="label">Description</label>
+							<p class="control">
+								<input
+									class="input"
+									type="text"
+									v-model="editing.description"
+								/>
+							</p>
+						</div>
+					</div>
+					<div class="col col-2" v-if="editing.genres">
+						<div>
+							<label class="label">Genre(s)</label>
+							<p class="control has-addons">
+								<input
+									class="input"
+									type="text"
+									id="new-genre"
+									v-model="genreInputValue"
+									v-on:blur="blurGenreInput()"
+									v-on:focus="focusGenreInput()"
+									v-on:keydown="keydownGenreInput()"
+									v-on:keyup.enter="addTag('genres')"
+								/>
+								<button
+									class="button is-info add-button blue"
+									v-on:click="addTag('genres')"
 								>
-									<i class="material-icons">close</i>
-								</div>
-								<p>{{ genre }}</p>
-							</div>
-						</div>
-					</div>
-					<div>
-						<label class="label">Blacklist genre(s)</label>
-						<p class="control has-addons">
-							<input
-								class="input"
-								type="text"
-								v-model="blacklistGenreInputValue"
-								v-on:blur="blurBlacklistGenreInput()"
-								v-on:focus="focusBlacklistGenreInput()"
-								v-on:keydown="keydownBlacklistGenreInput()"
-								v-on:keyup.enter="addTag('blacklist-genres')"
-							/>
-							<button
-								class="button is-info add-button red"
-								v-on:click="addTag('blacklist-genres')"
-							>
-								<i class="material-icons">add</i>
-							</button>
-						</p>
-						<div
-							class="autosuggest-container"
-							v-if="
-								(blacklistGenreInputFocussed ||
-									blacklistGenreAutosuggestContainerFocussed) &&
-									blacklistGenreAutosuggestItems.length > 0
-							"
-							@mouseover="focusBlacklistGenreContainer()"
-							@mouseleave="blurBlacklistGenreContainer()"
-						>
-							<span
-								class="autosuggest-item"
-								tabindex="0"
-								v-on:click="
-									selectBlacklistGenreAutosuggest(item)
+									<i class="material-icons">add</i>
+								</button>
+							</p>
+							<div
+								class="autosuggest-container"
+								v-if="
+									(genreInputFocussed ||
+										genreAutosuggestContainerFocussed) &&
+										genreAutosuggestItems.length > 0
 								"
-								v-for="(item,
-								index) in blacklistGenreAutosuggestItems"
-								:key="index"
-								>{{ item }}</span
+								@mouseover="focusGenreContainer()"
+								@mouseleave="blurGenreContainer()"
 							>
-						</div>
-						<div class="list-container">
-							<div
-								class="list-item"
-								v-for="(genre,
-								index) in editing.blacklistedGenres"
-								:key="index"
-							>
-								<div
-									class="list-item-circle red"
-									v-on:click="
-										removeTag('blacklist-genres', index)
-									"
+								<span
+									class="autosuggest-item"
+									tabindex="0"
+									v-on:click="selectGenreAutosuggest(item)"
+									v-for="(item,
+									index) in genreAutosuggestItems"
+									:key="index"
+									>{{ item }}</span
 								>
-									<i class="material-icons">close</i>
+							</div>
+							<div class="list-container">
+								<div
+									class="list-item"
+									v-for="(genre, index) in editing.genres"
+									:key="index"
+								>
+									<div
+										class="list-item-circle blue"
+										v-on:click="removeTag('genres', index)"
+									>
+										<i class="material-icons">close</i>
+									</div>
+									<p>{{ genre }}</p>
 								</div>
-								<p>{{ genre }}</p>
+							</div>
+						</div>
+						<div>
+							<label class="label">Blacklist genre(s)</label>
+							<p class="control has-addons">
+								<input
+									class="input"
+									type="text"
+									v-model="blacklistGenreInputValue"
+									v-on:blur="blurBlacklistGenreInput()"
+									v-on:focus="focusBlacklistGenreInput()"
+									v-on:keydown="keydownBlacklistGenreInput()"
+									v-on:keyup.enter="
+										addTag('blacklist-genres')
+									"
+								/>
+								<button
+									class="button is-info add-button red"
+									v-on:click="addTag('blacklist-genres')"
+								>
+									<i class="material-icons">add</i>
+								</button>
+							</p>
+							<div
+								class="autosuggest-container"
+								v-if="
+									(blacklistGenreInputFocussed ||
+										blacklistGenreAutosuggestContainerFocussed) &&
+										blacklistGenreAutosuggestItems.length >
+											0
+								"
+								@mouseover="focusBlacklistGenreContainer()"
+								@mouseleave="blurBlacklistGenreContainer()"
+							>
+								<span
+									class="autosuggest-item"
+									tabindex="0"
+									v-on:click="
+										selectBlacklistGenreAutosuggest(item)
+									"
+									v-for="(item,
+									index) in blacklistGenreAutosuggestItems"
+									:key="index"
+									>{{ item }}</span
+								>
+							</div>
+							<div class="list-container">
+								<div
+									class="list-item"
+									v-for="(genre,
+									index) in editing.blacklistedGenres"
+									:key="index"
+								>
+									<div
+										class="list-item-circle red"
+										v-on:click="
+											removeTag('blacklist-genres', index)
+										"
+									>
+										<i class="material-icons">close</i>
+									</div>
+									<p>{{ genre }}</p>
+								</div>
 							</div>
 						</div>
 					</div>
-				</div>
 
-				<!--  Choose a playlist -->
-				<div v-if="!editing.partyMode && playlists.length > 0">
-					<hr style="margin: 10px 0 20px 0;" />
+					<!--  Choose a playlist -->
+					<div v-if="!editing.partyMode && playlists.length > 0">
+						<hr style="margin: 10px 0 20px 0;" />
 
-					<h4 class="modal-section-title">Choose a playlist</h4>
-					<p class="modal-section-description">
-						Choose one of your playlists to add to the queue.
-					</p>
+						<h4 class="modal-section-title">Choose a playlist</h4>
+						<p class="modal-section-description">
+							Choose one of your playlists to add to the queue.
+						</p>
 
-					<br />
+						<br />
 
-					<div id="playlists">
-						<div
-							class="playlist"
-							v-for="(playlist, index) in playlists"
-							:key="index"
-						>
-							<playlist-item :playlist="playlist">
-								<div slot="actions">
-									<!-- <a
+						<div id="playlists">
+							<div
+								class="playlist"
+								v-for="(playlist, index) in playlists"
+								:key="index"
+							>
+								<playlist-item :playlist="playlist">
+									<div slot="actions">
+										<!-- <a
 										class="button is-danger"
 										href="#"
 										@click="
@@ -190,186 +195,199 @@
 										>
 										Stop playing
 									</a> -->
-									<a
-										class="button is-success"
-										href="#"
-										@click="selectPlaylist(playlist._id)"
-										><i
-											class="material-icons icon-with-button"
-											>play_arrow</i
-										>Play in queue
-									</a>
-								</div>
-							</playlist-item>
+										<a
+											class="button is-success"
+											href="#"
+											@click="
+												selectPlaylist(playlist._id)
+											"
+											><i
+												class="material-icons icon-with-button"
+												>play_arrow</i
+											>Play in queue
+										</a>
+									</div>
+								</playlist-item>
+							</div>
 						</div>
 					</div>
 				</div>
-			</div>
 
-			<!--  Buttons changing the privacy settings -->
-			<div class="section right-section">
-				<div>
-					<label class="label">Privacy</label>
-					<div
-						@mouseenter="privacyDropdownActive = true"
-						@mouseleave="privacyDropdownActive = false"
-						class="button-wrapper"
-					>
-						<button
-							v-bind:class="privacyButtons[editing.privacy].style"
-							style="text-transform: capitalize"
-							@click="updatePrivacyLocal(editing.privacy)"
+				<!--  Buttons changing the privacy settings -->
+				<div class="section right-section">
+					<div>
+						<label class="label">Privacy</label>
+						<div
+							@mouseenter="privacyDropdownActive = true"
+							@mouseleave="privacyDropdownActive = false"
+							class="button-wrapper"
 						>
-							<i class="material-icons">{{
-								privacyButtons[editing.privacy].iconName
-							}}</i>
-							{{ editing.privacy }}
-						</button>
-						<transition name="slide-down">
 							<button
-								class="green"
-								v-if="
-									privacyDropdownActive &&
-										editing.privacy !== 'public'
+								v-bind:class="
+									privacyButtons[editing.privacy].style
 								"
-								@click="updatePrivacyLocal('public')"
+								style="text-transform: capitalize"
+								@click="updatePrivacyLocal(editing.privacy)"
 							>
 								<i class="material-icons">{{
-									privacyButtons["public"].iconName
+									privacyButtons[editing.privacy].iconName
 								}}</i>
-								Public
+								{{ editing.privacy }}
 							</button>
-						</transition>
-						<transition name="slide-down">
-							<button
-								class="orange"
-								v-if="
-									privacyDropdownActive &&
-										editing.privacy !== 'unlisted'
-								"
-								@click="updatePrivacyLocal('unlisted')"
-							>
-								<i class="material-icons">{{
-									privacyButtons["unlisted"].iconName
-								}}</i>
-								Unlisted
-							</button>
-						</transition>
-						<transition name="slide-down">
-							<button
-								class="red"
-								v-if="
-									privacyDropdownActive &&
-										editing.privacy !== 'private'
-								"
-								@click="updatePrivacyLocal('private')"
-							>
-								<i class="material-icons">{{
-									privacyButtons["private"].iconName
-								}}</i>
-								Private
-							</button>
-						</transition>
+							<transition name="slide-down">
+								<button
+									class="green"
+									v-if="
+										privacyDropdownActive &&
+											editing.privacy !== 'public'
+									"
+									@click="updatePrivacyLocal('public')"
+								>
+									<i class="material-icons">{{
+										privacyButtons["public"].iconName
+									}}</i>
+									Public
+								</button>
+							</transition>
+							<transition name="slide-down">
+								<button
+									class="orange"
+									v-if="
+										privacyDropdownActive &&
+											editing.privacy !== 'unlisted'
+									"
+									@click="updatePrivacyLocal('unlisted')"
+								>
+									<i class="material-icons">{{
+										privacyButtons["unlisted"].iconName
+									}}</i>
+									Unlisted
+								</button>
+							</transition>
+							<transition name="slide-down">
+								<button
+									class="red"
+									v-if="
+										privacyDropdownActive &&
+											editing.privacy !== 'private'
+									"
+									@click="updatePrivacyLocal('private')"
+								>
+									<i class="material-icons">{{
+										privacyButtons["private"].iconName
+									}}</i>
+									Private
+								</button>
+							</transition>
+						</div>
 					</div>
-				</div>
-				<!--  Buttons changing the mode of the station -->
-				<div v-if="editing.type === 'community'">
-					<label class="label">Mode</label>
-					<div
-						@mouseenter="modeDropdownActive = true"
-						@mouseleave="modeDropdownActive = false"
-						class="button-wrapper"
-					>
-						<button
-							v-bind:class="{
-								blue: !editing.partyMode,
-								yellow: editing.partyMode
-							}"
-							@click="
-								editing.partyMode
-									? updatePartyModeLocal(true)
-									: updatePartyModeLocal(false)
-							"
+					<!--  Buttons changing the mode of the station -->
+					<div v-if="editing.type === 'community'">
+						<label class="label">Mode</label>
+						<div
+							@mouseenter="modeDropdownActive = true"
+							@mouseleave="modeDropdownActive = false"
+							class="button-wrapper"
 						>
-							<i class="material-icons">{{
-								editing.partyMode
-									? "emoji_people"
-									: "playlist_play"
-							}}</i>
-							{{ editing.partyMode ? "Party" : "Playlist" }}
-						</button>
-						<transition name="slide-down">
 							<button
-								class="blue"
-								v-if="modeDropdownActive && editing.partyMode"
-								@click="updatePartyModeLocal(false)"
-							>
-								<i class="material-icons">playlist_play</i>
-								Playlist
-							</button>
-						</transition>
-						<transition name="slide-down">
-							<button
-								class="yellow"
-								v-if="modeDropdownActive && !editing.partyMode"
-								@click="updatePartyModeLocal(true)"
-							>
-								<i class="material-icons">emoji_people</i>
-								Party
-							</button>
-						</transition>
-					</div>
-				</div>
-				<div
-					v-if="
-						editing.type === 'community' &&
-							editing.partyMode === true
-					"
-				>
-					<label class="label">Queue lock</label>
-					<div
-						@mouseenter="queueLockDropdownActive = true"
-						@mouseleave="queueLockDropdownActive = false"
-						class="button-wrapper"
-					>
-						<button
-							v-bind:class="{
-								green: editing.locked,
-								red: !editing.locked
-							}"
-							@click="
-								editing.locked
-									? updateQueueLockLocal(true)
-									: updateQueueLockLocal(false)
-							"
-						>
-							<i class="material-icons">{{
-								editing.locked ? "lock" : "lock_open"
-							}}</i>
-							{{ editing.locked ? "Locked" : "Unlocked" }}
-						</button>
-						<transition name="slide-down">
-							<button
-								class="green"
-								v-if="
-									queueLockDropdownActive && !editing.locked
+								v-bind:class="{
+									blue: !editing.partyMode,
+									yellow: editing.partyMode
+								}"
+								@click="
+									editing.partyMode
+										? updatePartyModeLocal(true)
+										: updatePartyModeLocal(false)
 								"
-								@click="updateQueueLockLocal(true)"
 							>
-								<i class="material-icons">lock</i>
-								Locked
+								<i class="material-icons">{{
+									editing.partyMode
+										? "emoji_people"
+										: "playlist_play"
+								}}</i>
+								{{ editing.partyMode ? "Party" : "Playlist" }}
 							</button>
-						</transition>
-						<transition name="slide-down">
+							<transition name="slide-down">
+								<button
+									class="blue"
+									v-if="
+										modeDropdownActive && editing.partyMode
+									"
+									@click="updatePartyModeLocal(false)"
+								>
+									<i class="material-icons">playlist_play</i>
+									Playlist
+								</button>
+							</transition>
+							<transition name="slide-down">
+								<button
+									class="yellow"
+									v-if="
+										modeDropdownActive && !editing.partyMode
+									"
+									@click="updatePartyModeLocal(true)"
+								>
+									<i class="material-icons">emoji_people</i>
+									Party
+								</button>
+							</transition>
+						</div>
+					</div>
+					<div
+						v-if="
+							editing.type === 'community' &&
+								editing.partyMode === true
+						"
+					>
+						<label class="label">Queue lock</label>
+						<div
+							@mouseenter="queueLockDropdownActive = true"
+							@mouseleave="queueLockDropdownActive = false"
+							class="button-wrapper"
+						>
 							<button
-								class="red"
-								v-if="queueLockDropdownActive && editing.locked"
-								@click="updateQueueLockLocal(false)"
+								v-bind:class="{
+									green: editing.locked,
+									red: !editing.locked
+								}"
+								@click="
+									editing.locked
+										? updateQueueLockLocal(true)
+										: updateQueueLockLocal(false)
+								"
 							>
-								<i class="material-icons">lock_open</i>
-								Unlocked
+								<i class="material-icons">{{
+									editing.locked ? "lock" : "lock_open"
+								}}</i>
+								{{ editing.locked ? "Locked" : "Unlocked" }}
 							</button>
-						</transition>
+							<transition name="slide-down">
+								<button
+									class="green"
+									v-if="
+										queueLockDropdownActive &&
+											!editing.locked
+									"
+									@click="updateQueueLockLocal(true)"
+								>
+									<i class="material-icons">lock</i>
+									Locked
+								</button>
+							</transition>
+							<transition name="slide-down">
+								<button
+									class="red"
+									v-if="
+										queueLockDropdownActive &&
+											editing.locked
+									"
+									@click="updateQueueLockLocal(false)"
+								>
+									<i class="material-icons">lock_open</i>
+									Unlocked
+								</button>
+							</transition>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -989,7 +1007,7 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 @import "../../styles/global.scss";
 
 .night-mode {
@@ -1012,21 +1030,14 @@ export default {
 	}
 }
 
-.edit-station-modal {
-	.modal-card-title {
-		text-align: center;
-		margin-left: 24px;
-	}
+.modal-card-title {
+	text-align: center;
+	margin-left: 24px;
+}
 
-	.modal-card {
-		width: 800px;
-		font-size: 16px;
-
-		.modal-card-body {
-			padding: 16px;
-			display: flex;
-		}
-	}
+.custom-modal-body {
+	padding: 16px;
+	display: flex;
 }
 
 .section {
@@ -1247,7 +1258,6 @@ export default {
 }
 
 #playlists {
-	height: 168px;
 	overflow: auto;
 }
 

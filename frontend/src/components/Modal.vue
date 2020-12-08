@@ -45,6 +45,7 @@ export default {
 <style lang="scss" scoped>
 .modal-card {
 	width: 800px;
+	font-size: 16px;
 }
 
 p {

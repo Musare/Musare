@@ -131,18 +131,26 @@ export default {
 <style lang="scss" scoped>
 @import "../../styles/global.scss";
 
+.modal-card-body {
+	padding: 16px;
+	display: flex;
+}
+
 .icon.is-small {
 	margin-right: 10px !important;
 }
+
 .songTitle {
 	font-size: 22px;
 	padding: 0 10px;
 }
+
 .songArtist {
 	font-size: 19px;
 	font-weight: 200;
 	padding: 0 10px;
 }
+
 .menu-label {
 	font-size: 16px;
 }

@@ -94,40 +94,39 @@
 
 				<!-- Import a playlist from youtube -->
 
-				<hr style="margin: 30px 0;" />
+				<div v-if="station.type === 'official'">
+					<hr style="margin: 30px 0;" />
 
-				<h4 class="modal-section-title">
-					Import a playlist
-				</h4>
-				<p class="modal-section-description">
-					Import a playlist by using a link from YouTube.
-				</p>
-
-				<br />
-
-				<div
-					class="control is-grouped input-with-button"
-					v-if="station.type === 'official'"
-				>
-					<p class="control is-expanded">
-						<input
-							class="input"
-							type="text"
-							placeholder="YouTube Playlist URL"
-							v-model="importQuery"
-							@keyup.enter="importPlaylist()"
-						/>
+					<h4 class="modal-section-title">
+						Import a playlist
+					</h4>
+					<p class="modal-section-description">
+						Import a playlist by using a link from YouTube.
 					</p>
-					<p class="control">
-						<a
-							class="button is-info"
-							v-on:click="importPlaylist()"
-							href="#"
-							><i class="material-icons icon-with-button"
-								>publish</i
-							>Import</a
-						>
-					</p>
+
+					<br />
+
+					<div class="control is-grouped input-with-button">
+						<p class="control is-expanded">
+							<input
+								class="input"
+								type="text"
+								placeholder="YouTube Playlist URL"
+								v-model="importQuery"
+								@keyup.enter="importPlaylist()"
+							/>
+						</p>
+						<p class="control">
+							<a
+								class="button is-info"
+								v-on:click="importPlaylist()"
+								href="#"
+								><i class="material-icons icon-with-button"
+									>publish</i
+								>Import</a
+							>
+						</p>
+					</div>
 				</div>
 
 				<!-- Choose a playlist from your account -->
