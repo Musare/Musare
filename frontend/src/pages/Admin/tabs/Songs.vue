@@ -168,16 +168,14 @@ export default {
 			if (this.gettingSet) return;
 			if (this.position >= this.maxPosition) return;
 			this.gettingSet = true;
+
 			this.socket.emit("songs.getSet", this.position, data => {
 				data.forEach(song => {
 					this.addSong(song);
 				});
+
 				this.position += 1;
 				this.gettingSet = false;
-				if (this.loadAllSongs && this.maxPosition > this.position - 1)
-					setTimeout(() => {
-						this.getSet();
-					}, 500);
 			});
 		},
 		handleScroll() {
@@ -185,6 +183,7 @@ export default {
 			const bottomPosition = document.body.scrollHeight;
 
 			if (this.loadAllSongs) return false;
+
 			if (scrollPosition + 50 >= bottomPosition) this.getSet();
 
 			return this.maxPosition === this.position;
@@ -199,8 +198,18 @@ export default {
 
 			this.socket.emit("songs.length", length => {
 				this.maxPosition = Math.ceil(length / 15) + 1;
+
 				this.getSet();
+
+				setTimeout(() => {
+					if (
+						!this.loadAllSongs &&
+						this.maxPosition > this.position - 1
+					)
+						this.getSet();
+				}, 1000);
 			});
+
 			this.socket.emit("apis.joinAdminRoom", "songs", () => {});
 		},
 		...mapActions("admin/songs", [
@@ -215,19 +224,20 @@ export default {
 	mounted() {
 		io.getSocket(socket => {
 			this.socket = socket;
+
 			this.socket.on("event:admin.song.added", song => {
 				this.addSong(song);
 			});
+
 			this.socket.on("event:admin.song.removed", songId => {
 				this.removeSong(songId);
 			});
+
 			this.socket.on("event:admin.song.updated", updatedSong => {
 				this.updateSong(updatedSong);
 			});
 
-			if (this.socket.connected) {
-				this.init();
-			}
+			if (this.socket.connected) this.init();
 			io.onConnect(() => {
 				this.init();
 			});
@@ -237,6 +247,7 @@ export default {
 			this.socket.emit("songs.getSong", this.$route.query.songId, res => {
 				if (res.status === "success") {
 					this.edit(res.data);
+
 					this.closeModal({
 						sector: "admin",
 						modal: "viewReport"

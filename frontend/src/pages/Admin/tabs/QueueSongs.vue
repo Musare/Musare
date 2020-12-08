@@ -182,16 +182,12 @@ export default {
 			if (this.gettingSet) return;
 			if (this.position >= this.maxPosition) return;
 			this.gettingSet = true;
+
 			this.socket.emit("queueSongs.getSet", this.position, data => {
-				data.forEach(song => {
-					this.songs.push(song);
-				});
+				data.forEach(song => this.songs.push(song));
+
 				this.position += 1;
 				this.gettingSet = false;
-				if (this.loadAllSongs && this.maxPosition > this.position - 1)
-					setTimeout(() => {
-						this.getSet();
-					}, 500);
 			});
 		},
 		handleScroll() {
@@ -199,7 +195,8 @@ export default {
 			const bottomPosition = document.body.scrollHeight;
 
 			if (this.loadAllSongs) return false;
-			if (scrollPosition + 50 >= bottomPosition) this.getSet();
+
+			if (scrollPosition + 400 >= bottomPosition) this.getSet();
 
 			return this.maxPosition === this.position;
 		},
@@ -223,8 +220,18 @@ export default {
 
 			this.socket.emit("queueSongs.length", length => {
 				this.maxPosition = Math.ceil(length / 15) + 1;
+
 				this.getSet();
+
+				setTimeout(() => {
+					if (
+						!this.loadAllSongs &&
+						this.maxPosition > this.position - 1
+					)
+						this.getSet();
+				}, 1000);
 			});
+
 			this.socket.emit("apis.joinAdminRoom", "queue", () => {});
 		},
 		...mapActions("admin/songs", ["stopVideo", "editSong"]),
@@ -237,11 +244,13 @@ export default {
 			this.socket.on("event:admin.queueSong.added", queueSong => {
 				this.songs.push(queueSong);
 			});
+
 			this.socket.on("event:admin.queueSong.removed", songId => {
 				this.songs = this.songs.filter(song => {
 					return song._id !== songId;
 				});
 			});
+
 			this.socket.on("event:admin.queueSong.updated", updatedSong => {
 				for (let i = 0; i < this.songs.length; i += 1) {
 					const song = this.songs[i];
@@ -251,9 +260,7 @@ export default {
 				}
 			});
 
-			if (this.socket.connected) {
-				this.init();
-			}
+			if (this.socket.connected) this.init();
 			io.onConnect(() => {
 				this.init();
 			});
