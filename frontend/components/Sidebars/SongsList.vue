@@ -1,11 +1,6 @@
 <template>
-	<div class="sidebar" transition="slide">
-		<div class="inner-wrapper">
-			<div v-if="station.type === 'community'" class="sidebar-title">
-				Queue
-			</div>
-			<div v-else class="sidebar-title">Playlist</div>
-
+	<sidebar :title="station.type === 'community' ? 'Queue' : 'Playlist'">
+		<template v-slot:content>
 			<article v-if="!noSong" class="media">
 				<figure v-if="currentSong.thumbnail" class="media-left">
 					<p class="image is-64x64">
@@ -120,8 +115,8 @@
 					THIS STATION'S QUEUE IS LOCKED.
 				</button>
 			</div>
-		</div>
-	</div>
+		</template>
+	</sidebar>
 </template>
 
 <script>
@@ -129,6 +124,8 @@ import { mapState, mapActions } from "vuex";
 import Toast from "toasters";
 
 import utils from "../../js/utils";
+
+import Sidebar from "./Sidebar.vue";
 
 import UserIdToUsername from "../UserIdToUsername.vue";
 
@@ -173,46 +170,16 @@ export default {
 		},
 		...mapActions("modals", ["openModal"])
 	},
-	mounted() {
-		/*
-			io.getSocket((socket) => {
-				this.socket = socket;
-
-			}); */
-	},
-	components: { UserIdToUsername }
+	components: { UserIdToUsername, Sidebar }
 };
 </script>
 
 <style lang="scss" scoped>
 @import "styles/global.scss";
 
-.night-mode {
-	.sidebar {
-		background-color: $night-mode-secondary;
-
-		.sidebar-title {
-			color: #fff;
-		}
-
-		* {
-			color: #ddd;
-		}
-	}
-}
-
 .inner-wrapper {
 	overflow: auto;
 	height: 100%;
-}
-
-.sidebar-title {
-	background-color: rgb(3, 169, 244);
-	text-align: center;
-	padding: 10px;
-	color: $white;
-	font-weight: 600;
-	font-size: 20px;
 }
 
 .media {
