@@ -81,9 +81,10 @@ export default {
 			this.openModal({ sector: "admin", modal: "editUser" });
 		},
 		init() {
-			this.socket.emit("users.index", result => {
-				if (result.status === "success") {
-					this.users = result.data;
+			this.socket.emit("users.index", res => {
+				console.log(res);
+				if (res.status === "success") {
+					this.users = res.data;
 					if (this.$route.query.userId) {
 						const user = this.users.find(
 							user => user._id === this.$route.query.userId
@@ -98,6 +99,8 @@ export default {
 		...mapActions("modals", ["openModal"])
 	},
 	mounted() {
+		console.log("mounted");
+
 		io.getSocket(socket => {
 			this.socket = socket;
 			if (this.socket.connected) this.init();

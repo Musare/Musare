@@ -1005,6 +1005,8 @@ export default {
 		},
 		join() {
 			this.socket.emit("stations.join", this.stationName, res => {
+				console.log(res.data);
+
 				if (res.status === "success") {
 					this.loading = false;
 

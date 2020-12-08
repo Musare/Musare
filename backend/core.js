@@ -134,16 +134,16 @@ class CoreClass {
         });
     }
 
-    runJob(name, payload, options = {}) {
+    runJob(name, payload, options = { isQuiet: false, bypassQueue: false }) {
         let deferredPromise = new DeferredPromise();
-        const job = { name, payload, onFinish: deferredPromise };
+        const job = { name, payload, options, onFinish: deferredPromise };
 
         if (config.debug && config.debug.stationIssue === true && config.debug.captureJobs && config.debug.captureJobs.indexOf(name) !== -1) {
             this.moduleManager.debugJobs.all.push(job);
         }
 
         if (options.bypassQueue) {
-            this._runJob(job, () => {});
+            this._runJob(job, () => {}, false);
         } else {
             const priority = this.priorities[name] ? this.priorities[name] : 10;
             this.jobQueue.push(job, priority);
@@ -157,7 +157,9 @@ class CoreClass {
     }
 
     _runJob(job, cb) {
-        this.log("INFO", `Running job ${job.name}`);
+        const isQuiet = job.options.isQuiet;
+
+        if (!isQuiet) this.log("INFO", `Running job ${job.name}`);
         const startTime = Date.now();
         this.runningJobs.push(job);
         const newThis = Object.assign(
@@ -172,7 +174,7 @@ class CoreClass {
         this[job.name]
             .apply(newThis, [job.payload])
             .then((response) => {
-                this.log("INFO", `Ran job ${job.name} successfully`);
+                if (!isQuiet) this.log("INFO", `Ran job ${job.name} successfully`);
                 this.jobStatistics[job.name].successful++;
                 if (config.debug && config.debug.stationIssue === true && config.debug.captureJobs && config.debug.captureJobs.indexOf(job.name) !== -1) {
                     this.moduleManager.debugJobs.completed.push({ status: "success", job, response });
