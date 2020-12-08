@@ -563,7 +563,7 @@ export default {
 						},
 						onError: err => {
 							console.log("iframe error", err);
-							this.voteSkipStation();
+							if (this.loggedIn) this.voteSkipStation();
 						},
 						onStateChange: event => {
 							if (
