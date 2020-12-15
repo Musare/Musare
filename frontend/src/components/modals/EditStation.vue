@@ -1019,7 +1019,7 @@ export default {
 	}
 
 	.section {
-		background-color: #111 !important;
+		background-color: #222 !important;
 		border: 0 !important;
 	}
 

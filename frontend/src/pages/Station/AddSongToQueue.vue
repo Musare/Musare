@@ -362,12 +362,14 @@ export default {
 <style lang="scss" scoped>
 @import "../../styles/global.scss";
 
-tr td {
-	vertical-align: middle;
+.night-mode {
+	tr {
+		background-color: #222;
+	}
 }
 
-.song-thumbnail {
-	padding-left: 0;
+tr td {
+	vertical-align: middle;
 }
 
 .song-actions {

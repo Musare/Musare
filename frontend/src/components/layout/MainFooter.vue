@@ -2,7 +2,7 @@
 	<footer class="footer">
 		<div class="container">
 			<div class="content has-text-centered">
-				<p id="footer-social-icons">
+				<div id="footer-social-icons">
 					<a
 						class="icon"
 						:href="`${this.socialLinks.github}`"
@@ -35,22 +35,22 @@
 					>
 						<img src="/assets/social/discord.svg" />
 					</a>
-				</p>
+				</div>
 				<a href="/"
 					><img
 						id="footer-logo"
 						src="/assets/blue_wordmark.png"
 						alt="Musare"
 				/></a>
-				<p id="footer-links">
-					<router-link title="About Musare" to="/about">
-						About
-					</router-link>
-					<router-link title="The Musare Team" to="/team">
-						Team
-					</router-link>
-					<router-link title="News" to="/news"> News </router-link>
-				</p>
+				<div id="footer-links">
+					<router-link title="About Musare" to="/about"
+						>About</router-link
+					>
+					<router-link title="Musare Team" to="/team"
+						>Team</router-link
+					>
+					<router-link title="News" to="/news">News</router-link>
+				</div>
 				<p>© Copyright Musare 2015 - 2020</p>
 			</div>
 		</div>
@@ -87,7 +87,7 @@ export default {
 		background-color: #222;
 	}
 
-	footer.footer .socialIcons img {
+	footer.footer #footer-social-icons img {
 		filter: invert(1);
 	}
 }
@@ -137,9 +137,17 @@ export default {
 		}
 
 		a {
-			padding: 0 5px;
+			padding: 0 7px;
 			font-size: 18px;
 			color: $primary-color;
+
+			&:first-of-type {
+				padding: 0 7px 0 0;
+			}
+
+			&:last-of-type {
+				padding: 0 0 0 7px;
+			}
 
 			&:hover {
 				color: $primary-color;

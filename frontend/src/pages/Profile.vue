@@ -700,6 +700,7 @@ export default {
 				width: 70.5px;
 				height: 70.5px;
 				background-color: #000;
+				z-index: -1;
 
 				img {
 					opacity: 0.4;

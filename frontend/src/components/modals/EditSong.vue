@@ -1549,6 +1549,26 @@ export default {
 <style lang="scss" scoped>
 @import "../../styles/global.scss";
 
+.night-mode {
+	.edit-section,
+	.api-section,
+	.api-result,
+	.player-footer {
+		background-color: #222 !important;
+	}
+
+	.api-result .tracks .track:hover,
+	.selected-discogs-info {
+		background-color: #333 !important;
+	}
+
+	.label,
+	p,
+	strong {
+		color: #ddd;
+	}
+}
+
 .modal-card-body > div {
 	display: flex;
 	height: 100%;

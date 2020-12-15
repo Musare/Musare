@@ -41,6 +41,12 @@ export default {
 <style lang="scss" scoped>
 @import "../../styles/global.scss";
 
+.night-mode {
+	.playlist p {
+		color: #ddd !important;
+	}
+}
+
 .playlist {
 	width: 100%;
 	height: 72px;
