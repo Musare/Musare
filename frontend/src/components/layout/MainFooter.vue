@@ -2,7 +2,7 @@
 	<footer class="footer">
 		<div class="container">
 			<div class="content has-text-centered">
-				<p class="socialIcons">
+				<p id="footer-social-icons">
 					<a
 						class="icon"
 						:href="`${this.socialLinks.github}`"
@@ -38,11 +38,11 @@
 				</p>
 				<a href="/"
 					><img
-						class="musareFooterLogo"
+						id="footer-logo"
 						src="/assets/blue_wordmark.png"
 						alt="Musare"
 				/></a>
-				<p class="footerLinks">
+				<p id="footer-links">
 					<router-link title="About Musare" to="/about">
 						About
 					</router-link>
@@ -112,7 +112,7 @@ export default {
 	background-color: $white;
 	width: 100%;
 
-	.musareFooterLogo {
+	#footer-logo {
 		display: block;
 		margin-left: auto;
 		margin-right: auto;
@@ -120,7 +120,10 @@ export default {
 		width: 200px;
 	}
 
-	.socialIcons {
+	#footer-social-icons {
+		user-select: none;
+		-webkit-user-select: none;
+
 		.icon {
 			height: 28px;
 			line-height: 28px;
@@ -128,18 +131,20 @@ export default {
 		}
 	}
 
-	.footerLinks {
+	#footer-links {
 		:not(:last-child) {
 			border-right: solid 1px $primary-color;
 		}
+
 		a {
 			padding: 0 5px;
 			font-size: 18px;
 			color: $primary-color;
-		}
-		a:hover {
-			color: $primary-color;
-			text-decoration: underline;
+
+			&:hover {
+				color: $primary-color;
+				text-decoration: underline;
+			}
 		}
 	}
 }
@@ -147,12 +152,14 @@ export default {
 @media only screen and (min-width: 992px) {
 	.footer {
 		height: 180px;
-		.socialIcons {
+
+		#footer-social-icons {
 			left: 0;
 			top: 35px;
 			position: absolute;
 		}
-		.footerLinks {
+
+		#footer-links {
 			right: 0;
 			top: 35px;
 			position: absolute;

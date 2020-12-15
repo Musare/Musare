@@ -420,6 +420,11 @@ button.delete:focus {
 	margin: 0 0 50px 0;
 }
 
+.material-icons {
+	user-select: none;
+	-webkit-user-select: none;
+}
+
 .icon-with-button {
 	margin-right: 3px;
 	font-size: 18px;
