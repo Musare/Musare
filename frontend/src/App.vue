@@ -186,8 +186,12 @@ export default {
 	}
 
 	#toasts-container .toast {
-		background-color: #ddd;
 		color: #333;
+		background-color: $light-grey-2 !important;
+
+		&:last-of-type {
+			background-color: $light-grey !important;
+		}
 	}
 }
 
@@ -201,11 +205,9 @@ body.night-mode {
 	.toast {
 		font-weight: 600;
 		background-color: $dark-grey !important;
+
 		&:last-of-type {
 			background-color: $dark-grey-2 !important;
-		}
-		&:not(:first-of-type) {
-			margin-top: 5px;
 		}
 	}
 }
