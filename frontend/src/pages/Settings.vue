@@ -124,62 +124,10 @@
 			</div>
 			<div class="content security-tab" v-if="activeTab === 'security'">
 				<label v-if="!password" class="label">Add password</label>
-				<div v-if="!password" class="control is-grouped">
-					<button
-						v-if="passwordStep === 1"
-						class="button is-success"
-						@click="requestPassword()"
-					>
-						Request password email
-					</button>
-					<br />
 
-					<p
-						v-if="passwordStep === 2"
-						class="control is-expanded has-icon has-icon-right"
-					>
-						<input
-							v-model="passwordCode"
-							class="input"
-							type="text"
-							placeholder="Code"
-						/>
-					</p>
-					<p v-if="passwordStep === 2" class="control is-expanded">
-						<button
-							class="button is-success"
-							v-on:click="verifyCode()"
-						>
-							Verify code
-						</button>
-					</p>
-
-					<p
-						v-if="passwordStep === 3"
-						class="control is-expanded has-icon has-icon-right"
-					>
-						<input
-							v-model="setNewPassword"
-							class="input"
-							type="password"
-							placeholder="New password"
-						/>
-					</p>
-					<p v-if="passwordStep === 3" class="control is-expanded">
-						<button
-							class="button is-success"
-							@click="setPassword()"
-						>
-							Set password
-						</button>
-					</p>
-				</div>
-				<a
-					v-if="passwordStep === 1 && !password"
-					href="#"
-					@click="passwordStep = 2"
-					>Skip this step</a
-				>
+				<router-link v-if="!password" to="/set_password">
+					Set Password
+				</router-link>
 
 				<a
 					v-if="!github"
@@ -273,9 +221,6 @@ export default {
 			newPassword: "",
 			password: false,
 			github: false,
-			setNewPassword: "",
-			passwordStep: 1,
-			passwordCode: "",
 			serverDomain: "",
 			activeTab: "",
 			localNightmode: false
@@ -573,54 +518,6 @@ export default {
 							content: "Successfully changed password",
 							timeout: 4000
 						});
-				}
-			);
-		},
-		requestPassword() {
-			return this.socket.emit("users.requestPassword", res => {
-				new Toast({ content: res.message, timeout: 8000 });
-				if (res.status === "success") {
-					this.passwordStep = 2;
-				}
-			});
-		},
-		verifyCode() {
-			if (!this.passwordCode)
-				return new Toast({
-					content: "Code cannot be empty",
-					timeout: 8000
-				});
-			return this.socket.emit(
-				"users.verifyPasswordCode",
-				this.passwordCode,
-				res => {
-					new Toast({ content: res.message, timeout: 8000 });
-					if (res.status === "success") {
-						this.passwordStep = 3;
-					}
-				}
-			);
-		},
-		setPassword() {
-			const newPassword = this.setNewPassword;
-			if (!validation.isLength(newPassword, 6, 200))
-				return new Toast({
-					content: "Password must have between 6 and 200 characters.",
-					timeout: 8000
-				});
-			if (!validation.regex.password.test(newPassword))
-				return new Toast({
-					content:
-						"Invalid password format. Must have one lowercase letter, one uppercase letter, one number and one special character.",
-					timeout: 8000
-				});
-
-			return this.socket.emit(
-				"users.changePasswordWithCode",
-				this.passwordCode,
-				newPassword,
-				res => {
-					new Toast({ content: res.message, timeout: 8000 });
 				}
 			);
 		},

@@ -100,6 +100,11 @@ const router = new VueRouter({
 			component: () => import("./pages/ResetPassword.vue")
 		},
 		{
+			path: "/set_password",
+			props: { mode: "set" },
+			component: () => import("./pages/ResetPassword.vue")
+		},
+		{
 			path: "/login",
 			component: () => import("./components/modals/Login.vue")
 		},

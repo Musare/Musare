@@ -1,10 +1,14 @@
 <template>
 	<div>
-		<metadata title="Reset password" />
+		<metadata
+			:title="mode === 'reset' ? 'Reset password' : 'Set password'"
+		/>
 		<main-header />
 		<div class="container">
 			<div class="content-wrapper">
-				<h1 id="title">Reset your password</h1>
+				<h1 id="title">
+					{{ mode === "reset" ? "Reset" : "Set" }} your password
+				</h1>
 
 				<div id="steps">
 					<p class="step" :class="{ selected: step === 1 }">1</p>
@@ -222,7 +226,6 @@ export default {
 			code: "",
 			newPassword: "",
 			newPasswordAgain: "",
-			step: 1,
 			validation: {
 				email: {
 					entered: false,
@@ -239,8 +242,16 @@ export default {
 					valid: false,
 					message: "This password must match."
 				}
-			}
+			},
+			step: 1
 		};
+	},
+	props: {
+		mode: {
+			default: "reset",
+			enum: ["reset", "set"],
+			type: String
+		}
 	},
 	mounted() {
 		io.getSocket(socket => {
@@ -311,6 +322,16 @@ export default {
 					content: "Email cannot be empty",
 					timeout: 8000
 				});
+
+			if (this.mode === "set") {
+				return this.socket.emit("users.requestPassword", res => {
+					new Toast({ content: res.message, timeout: 8000 });
+					if (res.status === "success") {
+						this.step = 2;
+					}
+				});
+			}
+
 			return this.socket.emit(
 				"users.requestPasswordReset",
 				this.email,
@@ -331,7 +352,9 @@ export default {
 				});
 
 			return this.socket.emit(
-				"users.verifyPasswordResetCode",
+				this.mode === "set"
+					? "users.verifyPasswordCode"
+					: "users.verifyPasswordResetCode",
 				this.code,
 				res => {
 					new Toast({ content: res.message, timeout: 8000 });
@@ -358,7 +381,9 @@ export default {
 				});
 
 			return this.socket.emit(
-				"users.changePasswordWithResetCode",
+				this.mode === "set"
+					? "users.changePasswordWithCode"
+					: "users.changePasswordWithResetCode",
 				this.code,
 				this.newPassword,
 				res => {
