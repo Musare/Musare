@@ -90,7 +90,7 @@ const router = new VueRouter({
 		},
 		{
 			path: "/settings",
-			component: () => import("./pages/Settings.vue"),
+			component: () => import("./pages/Settings/index.vue"),
 			meta: {
 				loginRequired: true
 			}

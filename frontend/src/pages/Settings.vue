@@ -123,11 +123,39 @@
 				</button>
 			</div>
 			<div class="content security-tab" v-if="activeTab === 'security'">
+				<h4 class="modal-section-title">
+					Set a password
+				</h4>
+				<p class="modal-section-description">
+					Set a password, as an alternative to signing in with GitHub.
+				</p>
+
+				<br />
+
 				<label v-if="!password" class="label">Add password</label>
 
 				<router-link v-if="!password" to="/set_password">
 					Set Password
 				</router-link>
+
+				<button
+					v-if="password && github"
+					class="button is-danger"
+					@click="unlinkPassword()"
+				>
+					Remove logging in with password
+				</button>
+
+				<hr style="margin: 30px 0;" />
+
+				<h4 class="modal-section-title">
+					Link GitHub
+				</h4>
+				<p class="modal-section-description">
+					Link your Musare account with GitHub
+				</p>
+
+				<br />
 
 				<a
 					v-if="!github"
@@ -139,13 +167,7 @@
 					</div>
 					&nbsp; Link GitHub to account
 				</a>
-				<button
-					v-if="password && github"
-					class="button is-danger"
-					@click="unlinkPassword()"
-				>
-					Remove logging in with password
-				</button>
+
 				<button
 					v-if="password && github"
 					class="button is-danger"
@@ -153,12 +175,19 @@
 				>
 					Remove logging in with GitHub
 				</button>
+
+				<hr style="margin: 30px 0;" />
+
+				<h4 class="modal-section-title">
+					Log out everywhere
+				</h4>
+				<p class="modal-section-description">
+					Remove all sessions for your account.
+				</p>
+
 				<br />
-				<button
-					class="button is-warning"
-					style="margin-top: 30px"
-					@click="removeSessions()"
-				>
+
+				<button class="button is-warning" @click="removeSessions()">
 					Log out everywhere
 				</button>
 			</div>

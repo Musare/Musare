@@ -372,7 +372,11 @@ a {
 	border-color: #dbdbdb !important;
 }
 .input:focus,
-.input:active {
+.input:active,
+.textarea:focus,
+.textarea:active,
+.select select:focus,
+.select select:active {
 	border-color: $primary-color !important;
 }
 button.delete:focus {
