@@ -202,6 +202,40 @@
 							>
 						</div>
 					</div>
+
+					<div
+						class="content-box reset-status-box"
+						v-if="step === 4"
+						v-bind:key="step"
+					>
+						<i class="material-icons success-icon">check_circle</i>
+						<h2>Password successfully {{ mode }}</h2>
+						<router-link
+							class="button is-dark"
+							href="#"
+							to="/settings"
+							><i class="material-icons icon-with-button">undo</i
+							>Return to Settings</router-link
+						>
+					</div>
+
+					<div
+						class="content-box reset-status-box"
+						v-if="step === 5"
+						v-bind:key="step"
+					>
+						<i class="material-icons error-icon">error</i>
+						<h2>
+							Password {{ mode }} failed, please try again later
+						</h2>
+						<router-link
+							class="button is-dark"
+							href="#"
+							to="/settings"
+							><i class="material-icons icon-with-button">undo</i
+							>Return to Settings</router-link
+						>
+					</div>
 				</transition>
 			</div>
 		</div>
@@ -338,9 +372,9 @@ export default {
 				res => {
 					new Toast({ content: res.message, timeout: 8000 });
 					if (res.status === "success") {
-						this.step = 2;
 						this.code = ""; // in case: already have a code -> request another code
-					}
+						this.step = 2;
+					} else this.step = 5;
 				}
 			);
 		},
@@ -388,9 +422,8 @@ export default {
 				this.newPassword,
 				res => {
 					new Toast({ content: res.message, timeout: 8000 });
-					if (res.status === "success") {
-						this.$router.go("/login");
-					}
+					if (res.status === "success") this.step = 4;
+					else this.step = 5;
 				}
 			);
 		}
@@ -507,6 +540,38 @@ p {
 				margin-top: 36px;
 				width: 175px;
 			}
+		}
+	}
+
+	.reset-status-box {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		height: 356px;
+
+		h2 {
+			margin-top: 10px;
+			font-size: 21px;
+			font-weight: 800;
+			color: #000;
+		}
+
+		.success-icon {
+			color: #24a216;
+		}
+
+		.error-icon {
+			color: $red;
+		}
+
+		.success-icon,
+		.error-icon {
+			font-size: 125px;
+		}
+
+		.button {
+			margin-top: 36px;
 		}
 	}
 }

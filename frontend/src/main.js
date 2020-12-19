@@ -97,12 +97,18 @@ const router = new VueRouter({
 		},
 		{
 			path: "/reset_password",
-			component: () => import("./pages/ResetPassword.vue")
+			component: () => import("./pages/ResetPassword.vue"),
+			meta: {
+				loginRequired: true
+			}
 		},
 		{
 			path: "/set_password",
 			props: { mode: "set" },
-			component: () => import("./pages/ResetPassword.vue")
+			component: () => import("./pages/ResetPassword.vue"),
+			meta: {
+				loginRequired: true
+			}
 		},
 		{
 			path: "/login",
