@@ -455,12 +455,14 @@ button.delete:focus {
 	font-size: 18px;
 }
 
-.modal-section-title {
+.section-title,
+h4.section-title {
 	font-size: 26px;
 	margin: 0px;
 }
 
-.modal-section-description {
+.section-description {
+	font-size: 17px;
 	margin-bottom: 5px;
 }
 </style>
