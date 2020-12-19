@@ -99,11 +99,11 @@ export default {
 					this.updateOriginalUser("github", false)
 				);
 
-				this.socket.on("event:user.linkGitHub", () =>
+				this.socket.on("event:user.linkGithub", () =>
 					this.updateOriginalUser("github", true)
 				);
 
-				this.socket.on("event:user.unlinkGitHub", () =>
+				this.socket.on("event:user.unlinkGithub", () =>
 					this.updateOriginalUser("github", false)
 				);
 			});

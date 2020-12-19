@@ -193,7 +193,6 @@ class UtilsModule extends CoreClass {
     }
 
     SOCKETS_FROM_SESSION_ID(payload) {
-        //sessionId, cb
         return new Promise(async (resolve, reject) => {
             let io = await this.io.runJob("IO", {});
             let ns = io.of("/");
@@ -216,11 +215,11 @@ class UtilsModule extends CoreClass {
     }
 
     SOCKETS_FROM_USER(payload) {
-        //userId, cb
         return new Promise(async (resolve, reject) => {
             let io = await this.io.runJob("IO", {});
             let ns = io.of("/");
             let sockets = [];
+
             if (ns) {
                 async.each(
                     Object.keys(ns.connected),
@@ -239,12 +238,13 @@ class UtilsModule extends CoreClass {
                                     sockets.push(ns.connected[id]);
                                 next();
                             })
-                            .catch(() => {
-                                next();
+                            .catch(err => {
+                                next(err);
                             });
                     },
-                    () => {
-                        resolve({ sockets });
+                    err => {
+                        if (err) return reject(err);
+                        return resolve({ sockets });
                     }
                 );
             }
@@ -252,7 +252,6 @@ class UtilsModule extends CoreClass {
     }
 
     SOCKETS_FROM_IP(payload) {
-        //ip, cb
         return new Promise(async (resolve, reject) => {
             let io = await this.io.runJob("IO", {});
             let ns = io.of("/");
@@ -288,7 +287,6 @@ class UtilsModule extends CoreClass {
     }
 
     SOCKETS_FROM_USER_WITHOUT_CACHE(payload) {
-        //userId, cb
         return new Promise(async (resolve, reject) => {
             let io = await this.io.runJob("IO", {});
             let ns = io.of("/");
