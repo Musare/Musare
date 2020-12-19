@@ -470,14 +470,18 @@ p {
 		height: 50px;
 		margin-top: 36px;
 
+		@media screen and (max-width: 300px) {
+			display: none;
+		}
+
 		.step {
 			display: flex;
 			align-items: center;
 			justify-content: center;
 			border-radius: 100%;
 			border: 1px solid $dark-grey;
-			width: 50px;
-			height: 50px;
+			min-width: 50px;
+			min-height: 50px;
 			background-color: #fff;
 			font-size: 30px;
 			cursor: pointer;
@@ -503,8 +507,13 @@ p {
 		border-radius: 3px;
 		background-color: #fff;
 		border: 1px solid $dark-grey;
-		width: 580px;
+		max-width: 580px;
 		padding: 40px;
+
+		@media screen and (max-width: 300px) {
+			margin-top: 30px;
+			padding: 30px 20px;
+		}
 
 		.content-box-title {
 			font-size: 25px;
@@ -529,6 +538,10 @@ p {
 			.input-with-button {
 				.button {
 					width: 105px;
+				}
+
+				@media screen and (max-width: 450px) {
+					flex-direction: column;
 				}
 			}
 
@@ -555,6 +568,7 @@ p {
 			font-size: 21px;
 			font-weight: 800;
 			color: #000;
+			text-align: center;
 		}
 
 		.success-icon {
