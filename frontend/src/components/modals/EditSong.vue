@@ -1511,7 +1511,7 @@ export default {
 	.genre-helper-header {
 		cursor: move;
 		z-index: 100000001;
-		background-color: $musareBlue;
+		background-color: $musare-blue;
 		padding: 10px;
 		display: block;
 		height: 10px;
@@ -1610,7 +1610,7 @@ export default {
 					}
 
 					.player-play-pause {
-						color: $musareBlue;
+						color: $musare-blue;
 					}
 
 					.player-stop {
@@ -1683,7 +1683,7 @@ export default {
 		}
 
 		.add-button {
-			background-color: $musareBlue !important;
+			background-color: $musare-blue !important;
 			width: 32px;
 
 			i {
@@ -1745,7 +1745,7 @@ export default {
 					font-size: 15px;
 					align-self: center;
 					margin-left: 5px;
-					color: $musareBlue;
+					color: $musare-blue;
 					cursor: pointer;
 					-webkit-user-select: none;
 					-moz-user-select: none;
@@ -1760,7 +1760,7 @@ export default {
 		}
 
 		.list-item-circle {
-			background-color: $musareBlue;
+			background-color: $musare-blue;
 			width: 16px;
 			height: 16px;
 			border-radius: 8px;
@@ -1775,7 +1775,7 @@ export default {
 			user-select: none;
 
 			i {
-				color: $musareBlue;
+				color: $musare-blue;
 				font-size: 14px;
 				margin-left: 1px;
 			}
@@ -1940,13 +1940,13 @@ export default {
 
 		.api-result {
 			background-color: white;
-			border: 0.5px solid $musareBlue;
+			border: 0.5px solid $musare-blue;
 			border-radius: 5px;
 			margin-bottom: 16px;
 		}
 
 		button {
-			background-color: $musareBlue !important;
+			background-color: $musare-blue !important;
 
 			&:focus,
 			&:hover {

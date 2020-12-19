@@ -77,7 +77,7 @@
 			</div>
 			<div class="content account-tab" v-if="activeTab === 'account'">
 				<p class="control is-expanded">
-					<label for="name">Username</label>
+					<label for="username">Username</label>
 					<input
 						class="input"
 						id="username"
@@ -97,7 +97,7 @@
 					{{ validation.username.message }}
 				</p>
 				<p class="control is-expanded">
-					<label for="location">Email</label>
+					<label for="email">Email</label>
 					<input
 						class="input"
 						id="email"
@@ -677,7 +677,7 @@ export default {
 			outline: none;
 			border: none;
 			box-shadow: none;
-			color: $musareBlue;
+			color: $musare-blue;
 			font-size: 22px;
 			line-height: 26px;
 			padding: 7px 0 7px 12px;
@@ -690,7 +690,7 @@ export default {
 
 			&.active {
 				color: $white;
-				background-color: $musareBlue;
+				background-color: $musare-blue;
 			}
 		}
 	}
@@ -756,7 +756,7 @@ export default {
 				left: 2px;
 				top: 2px;
 				border-radius: 3px;
-				background-color: $musareBlue;
+				background-color: $musare-blue;
 				position: absolute;
 			}
 		}
@@ -769,7 +769,7 @@ export default {
 	align-items: flex-start;
 
 	.select:after {
-		border-color: $musareBlue;
+		border-color: $musare-blue;
 	}
 }
 

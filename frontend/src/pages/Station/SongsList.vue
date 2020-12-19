@@ -187,7 +187,7 @@ export default {
 }
 
 .media.is-playing {
-	background-color: $musareBlue;
+	background-color: $musare-blue;
 	color: white;
 }
 

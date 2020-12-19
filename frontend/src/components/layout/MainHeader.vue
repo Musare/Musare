@@ -158,7 +158,7 @@ export default {
 
 		img {
 			max-height: 38px;
-			color: $musareBlue;
+			color: $musare-blue;
 		}
 	}
 

@@ -1063,7 +1063,7 @@ export default {
 			width: 32px;
 
 			&.blue {
-				background-color: $musareBlue !important;
+				background-color: $musare-blue !important;
 			}
 
 			&.red {
@@ -1097,10 +1097,10 @@ export default {
 		user-select: none;
 
 		&.blue {
-			background-color: $musareBlue;
+			background-color: $musare-blue;
 
 			i {
-				color: $musareBlue;
+				color: $musare-blue;
 			}
 		}
 
@@ -1218,7 +1218,7 @@ export default {
 		}
 
 		&.blue {
-			background-color: $musareBlue;
+			background-color: $musare-blue;
 		}
 
 		&.orange {

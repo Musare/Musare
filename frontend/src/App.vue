@@ -392,6 +392,7 @@ button.delete:focus {
 			background-color: darken($green, 5%) !important;
 		}
 	}
+
 	&.is-primary {
 		background-color: $primary-color !important;
 
@@ -400,6 +401,7 @@ button.delete:focus {
 			background-color: darken($primary-color, 5%) !important;
 		}
 	}
+
 	&.is-danger {
 		background-color: $red !important;
 
@@ -408,6 +410,7 @@ button.delete:focus {
 			background-color: darken($red, 5%) !important;
 		}
 	}
+
 	&.is-info {
 		background-color: $blue !important;
 
@@ -415,6 +418,22 @@ button.delete:focus {
 		&:focus {
 			background-color: darken($blue, 5%) !important;
 		}
+	}
+}
+
+.input-with-button {
+	.control {
+		margin-right: 0px !important;
+	}
+
+	input {
+		height: 36px;
+		border-radius: 3px 0 3px 0;
+	}
+
+	.button {
+		height: 36px;
+		border-radius: 0 3px 3px 0;
 	}
 }
 

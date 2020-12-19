@@ -414,22 +414,6 @@ tr td {
 	}
 }
 
-.input-with-button {
-	.control {
-		margin-right: 0px !important;
-	}
-
-	input {
-		height: 36px;
-		border-radius: 3px 0 3px 0;
-	}
-
-	.button {
-		height: 36px;
-		border-radius: 0 3px 3px 0;
-	}
-}
-
 .vertical-padding {
 	padding: 20px;
 }
