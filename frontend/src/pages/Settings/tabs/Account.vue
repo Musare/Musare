@@ -112,7 +112,7 @@ export default {
 	},
 	methods: {
 		onInputBlur(inputName) {
-			this[inputName].entered = true;
+			this.validation[inputName].entered = true;
 		},
 		saveChangesToAccount() {
 			if (this.modifiedUser.username !== this.originalUser.username)

@@ -24,7 +24,8 @@ const mutations = {
 		state.originalUser[property] = value;
 	},
 	setUser(state, user) {
-		state.originalUser = state.modifiedUser = user;
+		state.originalUser = user;
+		state.modifiedUser = JSON.parse(JSON.stringify(user));
 	}
 };
 
