@@ -96,7 +96,7 @@ export default {
 				);
 
 				this.socket.on("event:user.unlinkPassword", () =>
-					this.updateOriginalUser("github", false)
+					this.updateOriginalUser("password", false)
 				);
 
 				this.socket.on("event:user.linkGithub", () =>
@@ -109,37 +109,7 @@ export default {
 			});
 		}
 	},
-	methods: {
-		// changePassword() {
-		// 	const { newPassword } = this;
-		// 	if (!validation.isLength(newPassword, 6, 200))
-		// 		return new Toast({
-		// 			content: "Password must have between 6 and 200 characters.",
-		// 			timeout: 8000
-		// 		});
-		// 	if (!validation.regex.password.test(newPassword))
-		// 		return new Toast({
-		// 			content:
-		// 				"Invalid password format. Must have one lowercase letter, one uppercase letter, one number and one special character.",
-		// 			timeout: 8000
-		// 		});
-
-		// 	return this.socket.emit(
-		// 		"users.updatePassword",
-		// 		newPassword,
-		// 		res => {
-		// 			if (res.status !== "success")
-		// 				new Toast({ content: res.message, timeout: 8000 });
-		// 			else
-		// 				new Toast({
-		// 					content: "Successfully changed password",
-		// 					timeout: 4000
-		// 				});
-		// 		}
-		// 	);
-		// },
-		...mapActions("settings", ["updateOriginalUser", "setUser"])
-	}
+	methods: mapActions("settings", ["updateOriginalUser", "setUser"])
 };
 </script>
 
