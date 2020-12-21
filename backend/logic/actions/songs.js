@@ -244,12 +244,17 @@ module.exports = {
      * @param cb
      */
     getSong: hooks.adminRequired((session, songId, cb) => {
-        console.log(songId);
-
         async.waterfall(
             [
                 (next) => {
-                    song.getSong(songId, next);
+                    songs
+                        .runJob("GET_SONG_FROM_ID", { songId: songId })
+                        .then(song => {
+                            next(null, song);
+                        })
+                        .catch(err => {
+                            next(err);
+                        });
                 },
             ],
             async (err, song) => {
