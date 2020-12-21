@@ -278,6 +278,12 @@ db.auth("MUSAREDBUSER","MUSAREDBPASSWORD")
 db.users.update({username: "USERNAME"}, {$set: {role: "admin"}})
 ```
 
+OR use the Linux script:
+
+```
+tools/linux/makeUserAdmin.sh YOUR_MUSARE_USERNAME YOUR_MONGO_MUSARE_PASSWORD
+```
+
 <br />
 
 ## Contact
