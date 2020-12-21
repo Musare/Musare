@@ -48,7 +48,7 @@ services:
 
   redis:
     image: redis
-    command: "--notify-keyspace-events Ex --requirepass ${REDIS_PASSWORD}"
+    command: "--notify-keyspace-events Ex --requirepass ${REDIS_PASSWORD} --appendonly yes"
     volumes:
       - .redis:/data
     ports:
