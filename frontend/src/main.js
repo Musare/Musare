@@ -90,7 +90,7 @@ const router = new VueRouter({
 		},
 		{
 			path: "/settings",
-			component: () => import("./pages/Settings.vue"),
+			component: () => import("./pages/Settings/index.vue"),
 			meta: {
 				loginRequired: true
 			}
@@ -98,6 +98,14 @@ const router = new VueRouter({
 		{
 			path: "/reset_password",
 			component: () => import("./pages/ResetPassword.vue")
+		},
+		{
+			path: "/set_password",
+			props: { mode: "set" },
+			component: () => import("./pages/ResetPassword.vue"),
+			meta: {
+				loginRequired: true
+			}
 		},
 		{
 			path: "/login",

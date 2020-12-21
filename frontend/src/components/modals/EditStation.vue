@@ -164,8 +164,8 @@
 					<div v-if="!editing.partyMode && playlists.length > 0">
 						<hr style="margin: 10px 0 20px 0;" />
 
-						<h4 class="modal-section-title">Choose a playlist</h4>
-						<p class="modal-section-description">
+						<h4 class="section-title">Choose a playlist</h4>
+						<p class="section-description">
 							Choose one of your playlists to add to the queue.
 						</p>
 
@@ -1019,7 +1019,7 @@ export default {
 	}
 
 	.section {
-		background-color: #111 !important;
+		background-color: #222 !important;
 		border: 0 !important;
 	}
 
@@ -1063,7 +1063,7 @@ export default {
 			width: 32px;
 
 			&.blue {
-				background-color: $musareBlue !important;
+				background-color: $musare-blue !important;
 			}
 
 			&.red {
@@ -1097,10 +1097,10 @@ export default {
 		user-select: none;
 
 		&.blue {
-			background-color: $musareBlue;
+			background-color: $musare-blue;
 
 			i {
-				color: $musareBlue;
+				color: $musare-blue;
 			}
 		}
 
@@ -1218,7 +1218,7 @@ export default {
 		}
 
 		&.blue {
-			background-color: $musareBlue;
+			background-color: $musare-blue;
 		}
 
 		&.orange {

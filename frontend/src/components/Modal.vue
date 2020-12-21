@@ -43,6 +43,34 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.night-mode {
+	.modal-card-head,
+	.modal-card-foot {
+		background-color: #222;
+		border-color: #333;
+	}
+
+	.modal-card-body {
+		background-color: #111 !important;
+	}
+
+	.modal-card-title {
+		color: #fff;
+	}
+
+	p,
+	label,
+	td,
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6 {
+		color: #ddd !important;
+	}
+}
+
 .modal-card {
 	width: 800px;
 	font-size: 16px;

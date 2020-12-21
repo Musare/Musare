@@ -1,67 +1,242 @@
 <template>
 	<div>
-		<metadata title="Reset password" />
+		<metadata
+			:title="mode === 'reset' ? 'Reset password' : 'Set password'"
+		/>
 		<main-header />
 		<div class="container">
-			<!--Implement Validation-->
-			<h1>Step {{ step }}</h1>
+			<div class="content-wrapper">
+				<h1 id="title">
+					{{ mode === "reset" ? "Reset" : "Set" }} your password
+				</h1>
 
-			<label v-if="step === 1" class="label">Email Address</label>
-			<div v-if="step === 1" class="control is-grouped">
-				<p class="control is-expanded has-icon has-icon-right">
-					<input
-						v-model="email"
-						class="input"
-						type="email"
-						placeholder="The email address associated with your account"
-					/>
-				</p>
-				<p class="control">
-					<button class="button is-success" @click="submitEmail()">
-						Request
-					</button>
-					<button
+				<div id="steps">
+					<p class="step" :class="{ selected: step === 1 }">1</p>
+					<span class="divider"></span>
+					<p class="step" :class="{ selected: step === 2 }">2</p>
+					<span class="divider"></span>
+					<p class="step" :class="{ selected: step === 3 }">3</p>
+				</div>
+
+				<transition name="steps-fade" mode="out-in">
+					<!-- Step 1 -- Enter email address -->
+					<div
+						class="content-box"
 						v-if="step === 1"
-						class="button is-default skip-step"
-						@click="step = 2"
+						v-bind:key="step"
 					>
-						Skip this step
-					</button>
-				</p>
-			</div>
+						<h2 class="content-box-title">
+							Enter your email address
+						</h2>
+						<p class="content-box-description">
+							We will send a code to your email address to verify
+							your identity.
+						</p>
 
-			<label v-if="step === 2" class="label">Reset Code</label>
-			<div v-if="step === 2" class="control is-grouped">
-				<p class="control is-expanded has-icon has-icon-right">
-					<input
-						v-model="code"
-						class="input"
-						type="text"
-						placeholder="The reset code that was sent to your account's email address"
-					/>
-				</p>
-				<p class="control">
-					<button class="button is-success" v-on:click="verifyCode()">
-						Verify reset code
-					</button>
-				</p>
-			</div>
+						<p class="content-box-optional-helper">
+							<a href="#" @click="step = 2"
+								>Already have a code?</a
+							>
+						</p>
 
-			<label v-if="step === 3" class="label">Change password</label>
-			<div v-if="step === 3" class="control is-grouped">
-				<p class="control is-expanded has-icon has-icon-right">
-					<input
-						v-model="newPassword"
-						class="input"
-						type="password"
-						placeholder="New password"
-					/>
-				</p>
-				<p class="control">
-					<button class="button is-success" @click="changePassword()">
-						Change password
-					</button>
-				</p>
+						<div class="content-box-inputs">
+							<div class="control is-grouped input-with-button">
+								<p class="control is-expanded">
+									<input
+										class="input"
+										type="email"
+										placeholder="Enter email address here..."
+										autofocus
+										v-model="email"
+										@keyup.enter="submitEmail()"
+										@blur="onInputBlur('email')"
+									/>
+								</p>
+								<p class="control">
+									<a
+										class="button is-info"
+										href="#"
+										@click="submitEmail()"
+										><i
+											class="material-icons icon-with-button"
+											>mail</i
+										>Request</a
+									>
+								</p>
+							</div>
+							<p
+								class="help"
+								v-if="validation.email.entered"
+								:class="
+									validation.email.valid
+										? 'is-success'
+										: 'is-danger'
+								"
+							>
+								{{ validation.email.message }}
+							</p>
+						</div>
+					</div>
+
+					<!-- Step 2 -- Enter code -->
+					<div
+						class="content-box"
+						v-if="step === 2"
+						v-bind:key="step"
+					>
+						<h2 class="content-box-title">
+							Enter the code sent to your email
+						</h2>
+						<p class="content-box-description">
+							A code has been sent to <strong>email</strong>.
+						</p>
+
+						<p class="content-box-optional-helper">
+							<a
+								href="#"
+								@click="email ? submitEmail() : (step = 1)"
+								>Request another code</a
+							>
+						</p>
+
+						<div class="content-box-inputs">
+							<div class="control is-grouped input-with-button">
+								<p class="control is-expanded">
+									<input
+										class="input"
+										type="text"
+										placeholder="Enter code here..."
+										autofocus
+										v-model="code"
+										@keyup.enter="verifyCode()"
+									/>
+								</p>
+								<p class="control">
+									<a
+										class="button is-info"
+										href="#"
+										@click="verifyCode()"
+										><i
+											class="material-icons icon-with-button"
+											>vpn_key</i
+										>Verify</a
+									>
+								</p>
+							</div>
+						</div>
+					</div>
+
+					<!-- Step 3 -- Set new password -->
+					<div
+						class="content-box"
+						v-if="step === 3"
+						v-bind:key="step"
+					>
+						<h2 class="content-box-title">
+							Set a new password
+						</h2>
+						<p class="content-box-description">
+							Create a new password for your account.
+						</p>
+
+						<div class="content-box-inputs">
+							<p class="control is-expanded">
+								<label for="new-password">New password</label>
+								<input
+									class="input"
+									id="new-password"
+									type="password"
+									placeholder="Enter password here..."
+									v-model="newPassword"
+									@blur="onInputBlur('newPassword')"
+								/>
+							</p>
+							<p
+								class="help"
+								v-if="validation.newPassword.entered"
+								:class="
+									validation.newPassword.valid
+										? 'is-success'
+										: 'is-danger'
+								"
+							>
+								{{ validation.newPassword.message }}
+							</p>
+
+							<p
+								id="new-password-again-input"
+								class="control is-expanded"
+							>
+								<label for="new-password-again"
+									>New password again</label
+								>
+								<input
+									class="input"
+									id="new-password-again"
+									type="password"
+									placeholder="Enter password here..."
+									v-model="newPasswordAgain"
+									@keyup.enter="changePassword()"
+									@blur="onInputBlur('newPasswordAgain')"
+								/>
+							</p>
+							<p
+								class="help"
+								v-if="validation.newPasswordAgain.entered"
+								:class="
+									validation.newPasswordAgain.valid
+										? 'is-success'
+										: 'is-danger'
+								"
+							>
+								{{ validation.newPasswordAgain.message }}
+							</p>
+
+							<a
+								id="change-password-button"
+								class="button is-success"
+								href="#"
+								@click="changePassword()"
+							>
+								Change password</a
+							>
+						</div>
+					</div>
+
+					<div
+						class="content-box reset-status-box"
+						v-if="step === 4"
+						v-bind:key="step"
+					>
+						<i class="material-icons success-icon">check_circle</i>
+						<h2>Password successfully {{ mode }}</h2>
+						<router-link
+							class="button is-dark"
+							href="#"
+							to="/settings"
+							><i class="material-icons icon-with-button">undo</i
+							>Return to Settings</router-link
+						>
+					</div>
+
+					<div
+						class="content-box reset-status-box"
+						v-if="step === 5"
+						v-bind:key="step"
+					>
+						<i class="material-icons error-icon">error</i>
+						<h2>
+							Password {{ mode }} failed, please try again later
+						</h2>
+						<router-link
+							class="button is-dark"
+							href="#"
+							to="/settings"
+							><i class="material-icons icon-with-button">undo</i
+							>Return to Settings</router-link
+						>
+					</div>
+				</transition>
 			</div>
 		</div>
 		<main-footer />
@@ -75,6 +250,7 @@ import MainHeader from "../components/layout/MainHeader.vue";
 import MainFooter from "../components/layout/MainFooter.vue";
 
 import io from "../io";
+import validation from "../validation";
 
 export default {
 	components: { MainHeader, MainFooter },
@@ -83,29 +259,122 @@ export default {
 			email: "",
 			code: "",
 			newPassword: "",
+			newPasswordAgain: "",
+			validation: {
+				email: {
+					entered: false,
+					valid: false,
+					message: "Please enter a valid email address."
+				},
+				newPassword: {
+					entered: false,
+					valid: false,
+					message: "Please enter a valid password."
+				},
+				newPasswordAgain: {
+					entered: false,
+					valid: false,
+					message: "This password must match."
+				}
+			},
 			step: 1
 		};
+	},
+	props: {
+		mode: {
+			default: "reset",
+			enum: ["reset", "set"],
+			type: String
+		}
 	},
 	mounted() {
 		io.getSocket(socket => {
 			this.socket = socket;
 		});
 	},
+	watch: {
+		email(value) {
+			if (
+				value.indexOf("@") !== value.lastIndexOf("@") ||
+				!validation.regex.emailSimple.test(value)
+			) {
+				this.validation.email.message =
+					"Please enter a valid email address.";
+				this.validation.email.valid = false;
+			} else {
+				this.validation.email.message = "Everything looks great!";
+				this.validation.email.valid = true;
+			}
+		},
+		newPassword(value) {
+			this.checkPasswordMatch(value, this.newPasswordAgain);
+
+			if (!validation.isLength(value, 6, 200)) {
+				this.validation.newPassword.message =
+					"Password must have between 6 and 200 characters.";
+				this.validation.newPassword.valid = false;
+			} else if (!validation.regex.password.test(value)) {
+				this.validation.newPassword.message =
+					"Invalid password format. Must have one lowercase letter, one uppercase letter, one number and one special character.";
+				this.validation.newPassword.valid = false;
+			} else {
+				this.validation.newPassword.message = "Everything looks great!";
+				this.validation.newPassword.valid = true;
+			}
+		},
+		newPasswordAgain(value) {
+			this.checkPasswordMatch(this.newPassword, value);
+		}
+	},
 	methods: {
+		checkPasswordMatch(newPassword, newPasswordAgain) {
+			if (newPasswordAgain !== newPassword) {
+				this.validation.newPasswordAgain.message =
+					"This password must match.";
+				this.validation.newPasswordAgain.valid = false;
+			} else {
+				this.validation.newPasswordAgain.message =
+					"Everything looks great!";
+				this.validation.newPasswordAgain.valid = true;
+			}
+		},
+		onInputBlur(inputName) {
+			this.validation[inputName].entered = true;
+		},
 		submitEmail() {
+			if (
+				this.email.indexOf("@") !== this.email.lastIndexOf("@") ||
+				!validation.regex.emailSimple.test(this.email)
+			)
+				return new Toast({
+					content: "Invalid email format.",
+					timeout: 8000
+				});
+
 			if (!this.email)
 				return new Toast({
 					content: "Email cannot be empty",
 					timeout: 8000
 				});
+
+			if (this.mode === "set") {
+				return this.socket.emit("users.requestPassword", res => {
+					new Toast({ content: res.message, timeout: 8000 });
+					if (res.status === "success") {
+						this.step = 2;
+					}
+				});
+			}
+
 			return this.socket.emit(
 				"users.requestPasswordReset",
 				this.email,
 				res => {
 					new Toast({ content: res.message, timeout: 8000 });
 					if (res.status === "success") {
+						this.code = ""; // in case: already have a code -> request another code
 						this.step = 2;
-					}
+					} else this.step = 5;
 				}
 			);
 		},
@@ -115,8 +384,11 @@ export default {
 					content: "Code cannot be empty",
 					timeout: 8000
 				});
+
 			return this.socket.emit(
-				"users.verifyPasswordResetCode",
+				this.mode === "set"
+					? "users.verifyPasswordCode"
+					: "users.verifyPasswordResetCode",
 				this.code,
 				res => {
 					new Toast({ content: res.message, timeout: 8000 });
@@ -127,20 +399,31 @@ export default {
 			);
 		},
 		changePassword() {
-			if (!this.newPassword)
+			if (
+				this.validation.newPassword.valid &&
+				!this.validation.newPasswordAgain.valid
+			)
 				return new Toast({
-					content: "Password cannot be empty",
+					content: "Please ensure the passwords match.",
 					timeout: 8000
 				});
+
+			if (!this.validation.newPassword.valid)
+				return new Toast({
+					content: "Please enter a valid password.",
+					timeout: 8000
+				});
+
 			return this.socket.emit(
-				"users.changePasswordWithResetCode",
+				this.mode === "set"
+					? "users.changePasswordWithCode"
+					: "users.changePasswordWithResetCode",
 				this.code,
 				this.newPassword,
 				res => {
 					new Toast({ content: res.message, timeout: 8000 });
-					if (res.status === "success") {
-						this.$router.go("/login");
-					}
+					if (res.status === "success") this.step = 4;
+					else this.step = 5;
 				}
 			);
 		}
@@ -161,8 +444,160 @@ export default {
 	}
 }
 
+h1,
+h2,
+p {
+	margin: 0;
+}
+
+.help {
+	margin-bottom: 5px;
+}
+
 .container {
 	padding: 25px;
+
+	#title {
+		color: #000;
+		font-size: 42px;
+		text-align: center;
+	}
+
+	#steps {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 50px;
+		margin-top: 36px;
+
+		@media screen and (max-width: 300px) {
+			display: none;
+		}
+
+		.step {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			border-radius: 100%;
+			border: 1px solid $dark-grey;
+			min-width: 50px;
+			min-height: 50px;
+			background-color: #fff;
+			font-size: 30px;
+			cursor: pointer;
+
+			&.selected {
+				background-color: $musare-blue;
+				color: #fff;
+				border: 0;
+			}
+		}
+
+		.divider {
+			display: flex;
+			justify-content: center;
+			width: 180px;
+			height: 1px;
+			background-color: $dark-grey;
+		}
+	}
+
+	.content-box {
+		margin-top: 90px;
+		border-radius: 3px;
+		background-color: #fff;
+		border: 1px solid $dark-grey;
+		max-width: 580px;
+		padding: 40px;
+
+		@media screen and (max-width: 300px) {
+			margin-top: 30px;
+			padding: 30px 20px;
+		}
+
+		.content-box-title {
+			font-size: 25px;
+			color: #000;
+		}
+
+		.content-box-description {
+			font-size: 14px;
+			color: $dark-grey;
+		}
+
+		.content-box-optional-helper {
+			margin-top: 15px;
+			color: $musare-blue;
+			text-decoration: underline;
+			font-size: 16px;
+		}
+
+		.content-box-inputs {
+			margin-top: 35px;
+
+			.input-with-button {
+				.button {
+					width: 105px;
+				}
+
+				@media screen and (max-width: 450px) {
+					flex-direction: column;
+				}
+			}
+
+			label {
+				font-size: 11px;
+			}
+
+			#change-password-button {
+				margin-top: 36px;
+				width: 175px;
+			}
+		}
+	}
+
+	.reset-status-box {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		height: 356px;
+
+		h2 {
+			margin-top: 10px;
+			font-size: 21px;
+			font-weight: 800;
+			color: #000;
+			text-align: center;
+		}
+
+		.success-icon {
+			color: #24a216;
+		}
+
+		.error-icon {
+			color: $red;
+		}
+
+		.success-icon,
+		.error-icon {
+			font-size: 125px;
+		}
+
+		.button {
+			margin-top: 36px;
+		}
+	}
+}
+
+.steps-fade-enter-active,
+.steps-fade-leave-active {
+	transition: all 0.3s ease;
+}
+
+.steps-fade-enter,
+.steps-fade-leave-to {
+	opacity: 0;
 }
 
 .skip-step {

@@ -2,7 +2,7 @@
 	<footer class="footer">
 		<div class="container">
 			<div class="content has-text-centered">
-				<p class="socialIcons">
+				<div id="footer-social-icons">
 					<a
 						class="icon"
 						:href="`${this.socialLinks.github}`"
@@ -35,22 +35,22 @@
 					>
 						<img src="/assets/social/discord.svg" />
 					</a>
-				</p>
+				</div>
 				<a href="/"
 					><img
-						class="musareFooterLogo"
+						id="footer-logo"
 						src="/assets/blue_wordmark.png"
 						alt="Musare"
 				/></a>
-				<p class="footerLinks">
-					<router-link title="About Musare" to="/about">
-						About
-					</router-link>
-					<router-link title="The Musare Team" to="/team">
-						Team
-					</router-link>
-					<router-link title="News" to="/news"> News </router-link>
-				</p>
+				<div id="footer-links">
+					<router-link title="About Musare" to="/about"
+						>About</router-link
+					>
+					<router-link title="Musare Team" to="/team"
+						>Team</router-link
+					>
+					<router-link title="News" to="/news">News</router-link>
+				</div>
 				<p>© Copyright Musare 2015 - 2020</p>
 			</div>
 		</div>
@@ -87,7 +87,7 @@ export default {
 		background-color: #222;
 	}
 
-	footer.footer .socialIcons img {
+	footer.footer #footer-social-icons img {
 		filter: invert(1);
 	}
 }
@@ -112,7 +112,7 @@ export default {
 	background-color: $white;
 	width: 100%;
 
-	.musareFooterLogo {
+	#footer-logo {
 		display: block;
 		margin-left: auto;
 		margin-right: auto;
@@ -120,7 +120,10 @@ export default {
 		width: 200px;
 	}
 
-	.socialIcons {
+	#footer-social-icons {
+		user-select: none;
+		-webkit-user-select: none;
+
 		.icon {
 			height: 28px;
 			line-height: 28px;
@@ -128,18 +131,28 @@ export default {
 		}
 	}
 
-	.footerLinks {
+	#footer-links {
 		:not(:last-child) {
 			border-right: solid 1px $primary-color;
 		}
+
 		a {
-			padding: 0 5px;
+			padding: 0 7px;
 			font-size: 18px;
 			color: $primary-color;
-		}
-		a:hover {
-			color: $primary-color;
-			text-decoration: underline;
+
+			&:first-of-type {
+				padding: 0 7px 0 0;
+			}
+
+			&:last-of-type {
+				padding: 0 0 0 7px;
+			}
+
+			&:hover {
+				color: $primary-color;
+				text-decoration: underline;
+			}
 		}
 	}
 }
@@ -147,12 +160,14 @@ export default {
 @media only screen and (min-width: 992px) {
 	.footer {
 		height: 180px;
-		.socialIcons {
+
+		#footer-social-icons {
 			left: 0;
 			top: 35px;
 			position: absolute;
 		}
-		.footerLinks {
+
+		#footer-links {
 			right: 0;
 			top: 35px;
 			position: absolute;

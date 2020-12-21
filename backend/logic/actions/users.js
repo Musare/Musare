@@ -21,13 +21,10 @@ const activities = require("../activities");
 cache.runJob("SUB", {
     channel: "user.updateUsername",
     cb: (user) => {
-        utils.runJob("SOCKETS_FROM_USER", {
-            userId: user._id,
-            cb: (response) => {
-                response.sockets.forEach((socket) => {
-                    socket.emit("event:user.username.changed", user.username);
-                });
-            },
+        utils.runJob("SOCKETS_FROM_USER", { userId: user._id }).then(response => {
+            response.sockets.forEach((socket) => {
+                socket.emit("event:user.username.changed", user.username);
+            });
         });
     },
 });
@@ -35,13 +32,10 @@ cache.runJob("SUB", {
 cache.runJob("SUB", {
     channel: "user.removeSessions",
     cb: (userId) => {
-        utils.runJob("SOCKETS_FROM_USER_WITHOUT_CACHE", {
-            userId: userId,
-            cb: (response) => {
-                response.sockets.forEach((socket) => {
-                    socket.emit("keep.event:user.session.removed");
-                });
-            },
+        utils.runJob("SOCKETS_FROM_USER_WITHOUT_CACHE", { userId }).then(response => {
+            response.sockets.forEach((socket) => {
+                socket.emit("keep.event:user.session.removed");
+            });
         });
     },
 });
@@ -49,55 +43,43 @@ cache.runJob("SUB", {
 cache.runJob("SUB", {
     channel: "user.linkPassword",
     cb: (userId) => {
-        utils.runJob("SOCKETS_FROM_USER", {
-            userId: userId,
-            cb: (response) => {
-                response.sockets.forEach((socket) => {
-                    socket.emit("event:user.linkPassword");
-                });
-            },
-        });
-    },
-});
-
-cache.runJob("SUB", {
-    channel: "user.linkGitHub",
-    cb: (userId) => {
-        utils.runJob("SOCKETS_FROM_USER", {
-            userId: userId,
-            cb: (response) => {
-                response.sockets.forEach((socket) => {
-                    socket.emit("event:user.linkGitHub");
-                });
-            },
+        utils.runJob("SOCKETS_FROM_USER", { userId }).then(response => {
+            response.sockets.forEach((socket) => {
+                socket.emit("event:user.linkPassword");
+            });
         });
     },
 });
 
 cache.runJob("SUB", {
     channel: "user.unlinkPassword",
-    cb: (userId) => {
-        utils.runJob("SOCKETS_FROM_USER", {
-            userId: userId,
-            cb: (response) => {
-                response.sockets.forEach((socket) => {
-                    socket.emit("event:user.unlinkPassword");
-                });
-            },
+    cb: userId => {
+        utils.runJob("SOCKETS_FROM_USER", { userId }).then(response => {
+            response.sockets.forEach((socket) => {
+                socket.emit("event:user.unlinkPassword");
+            });
         });
     },
 });
 
 cache.runJob("SUB", {
-    channel: "user.unlinkGitHub",
+    channel: "user.linkGithub",
     cb: (userId) => {
-        utils.runJob("SOCKETS_FROM_USER", {
-            userId: userId,
-            cb: (response) => {
-                response.sockets.forEach((socket) => {
-                    socket.emit("event:user.unlinkGitHub");
-                });
-            },
+        utils.runJob("SOCKETS_FROM_USER", { userId }).then(response => {
+            response.sockets.forEach((socket) => {
+                socket.emit("event:user.linkGithub");
+            });
+        });
+    },
+});
+
+cache.runJob("SUB", {
+    channel: "user.unlinkGithub",
+    cb: userId => {
+        utils.runJob("SOCKETS_FROM_USER", { userId }).then(response => {
+            response.sockets.forEach((socket) => {
+                socket.emit("event:user.unlinkGithub");
+            });
         });
     },
 });
@@ -105,14 +87,11 @@ cache.runJob("SUB", {
 cache.runJob("SUB", {
     channel: "user.ban",
     cb: (data) => {
-        utils.runJob("SOCKETS_FROM_USER", {
-            userId: data.userId,
-            cb: (response) => {
-                response.sockets.forEach((socket) => {
-                    socket.emit("keep.event:banned", data.punishment);
-                    socket.disconnect(true);
-                });
-            },
+        utils.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(response => {
+            response.sockets.forEach((socket) => {
+                socket.emit("keep.event:banned", data.punishment);
+                socket.disconnect(true);
+            });
         });
     },
 });
@@ -120,13 +99,10 @@ cache.runJob("SUB", {
 cache.runJob("SUB", {
     channel: "user.favoritedStation",
     cb: (data) => {
-        utils.runJob("SOCKETS_FROM_USER", {
-            userId: data.userId,
-            cb: (response) => {
-                response.sockets.forEach((socket) => {
-                    socket.emit("event:user.favoritedStation", data.stationId);
-                });
-            },
+        utils.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(response => {
+            response.sockets.forEach((socket) => {
+                socket.emit("event:user.favoritedStation", data.stationId);
+            });
         });
     },
 });
@@ -134,16 +110,13 @@ cache.runJob("SUB", {
 cache.runJob("SUB", {
     channel: "user.unfavoritedStation",
     cb: (data) => {
-        utils.runJob("SOCKETS_FROM_USER", {
-            userId: data.userId,
-            cb: (response) => {
-                response.sockets.forEach((socket) => {
-                    socket.emit(
-                        "event:user.unfavoritedStation",
-                        data.stationId
-                    );
-                });
-            },
+        utils.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(response => {
+            response.sockets.forEach((socket) => {
+                socket.emit(
+                    "event:user.unfavoritedStation",
+                    data.stationId
+                );
+            });
         });
     },
 });
@@ -1338,11 +1311,13 @@ module.exports = {
      * Updates a user's password
      *
      * @param {Object} session - the session object automatically added by socket.io
+     * @param {String} previousPassword - the previous password
      * @param {String} newPassword - the new password
      * @param {Function} cb - gets called with the result
      */
-    updatePassword: hooks.loginRequired(async (session, newPassword, cb) => {
+    updatePassword: hooks.loginRequired(async (session, previousPassword, newPassword, cb) => {
         const userModel = await db.runJob("GET_MODEL", { modelName: "user" });
+
         async.waterfall(
             [
                 (next) => {
@@ -1354,13 +1329,20 @@ module.exports = {
                         return next(
                             "This account does not have a password set."
                         );
-                    next();
+                    return next(null, user.services.password.password);
+                },
+
+                (storedPassword, next) => {
+                    bcrypt.compare(sha256(previousPassword), storedPassword).then(res => {
+                        if (res) return next();
+                        else return next("Please enter the correct previous password.")
+                    });
                 },
 
                 (next) => {
                     if (!db.passwordValid(newPassword))
                         return next(
-                            "Invalid password. Check if it meets all the requirements."
+                            "Invalid new password. Check if it meets all the requirements."
                         );
                     return next();
                 },
@@ -1502,7 +1484,7 @@ module.exports = {
             [
                 (next) => {
                     if (!code || typeof code !== "string")
-                        return next("Invalid code1.");
+                        return next("Invalid code.");
                     userModel.findOne(
                         {
                             "services.password.set.code": code,
@@ -1513,7 +1495,7 @@ module.exports = {
                 },
 
                 (user, next) => {
-                    if (!user) return next("Invalid code2.");
+                    if (!user) return next("Invalid code.");
                     if (user.services.password.set.expires < new Date())
                         return next("That code has expired.");
                     next(null);
@@ -1560,7 +1542,7 @@ module.exports = {
                 [
                     (next) => {
                         if (!code || typeof code !== "string")
-                            return next("Invalid code1.");
+                            return next("Invalid code.");
                         userModel.findOne(
                             { "services.password.set.code": code },
                             next
@@ -1568,7 +1550,7 @@ module.exports = {
                     },
 
                     (user, next) => {
-                        if (!user) return next("Invalid code2.");
+                        if (!user) return next("Invalid code.");
                         if (!user.services.password.set.expires > new Date())
                             return next("That code has expired.");
                         next();

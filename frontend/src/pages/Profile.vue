@@ -645,7 +645,7 @@ export default {
 			outline: none;
 			border: none;
 			box-shadow: none;
-			color: $musareBlue;
+			color: $musare-blue;
 			font-size: 22px;
 			line-height: 26px;
 			padding: 7px 0 7px 12px;
@@ -657,7 +657,7 @@ export default {
 
 			&.active {
 				color: $white;
-				background-color: $musareBlue;
+				background-color: $musare-blue;
 			}
 		}
 	}
@@ -700,6 +700,7 @@ export default {
 				width: 70.5px;
 				height: 70.5px;
 				background-color: #000;
+				z-index: -1;
 
 				img {
 					opacity: 0.4;

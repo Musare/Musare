@@ -4,8 +4,8 @@
 			<div class="vertical-padding">
 				<!-- Choosing a song from youtube -->
 
-				<h4 class="modal-section-title">Choose a song</h4>
-				<p class="modal-section-description">
+				<h4 class="section-title">Choose a song</h4>
+				<p class="section-description">
 					Choose a song by searching or using a link from YouTube.
 				</p>
 
@@ -97,10 +97,10 @@
 				<div v-if="station.type === 'official'">
 					<hr style="margin: 30px 0;" />
 
-					<h4 class="modal-section-title">
+					<h4 class="section-title">
 						Import a playlist
 					</h4>
-					<p class="modal-section-description">
+					<p class="section-description">
 						Import a playlist by using a link from YouTube.
 					</p>
 
@@ -141,8 +141,8 @@
 					<hr style="margin: 30px 0;" />
 
 					<aside id="playlist-to-queue-selection">
-						<h4 class="modal-section-title">Choose a playlist</h4>
-						<p class="modal-section-description">
+						<h4 class="section-title">Choose a playlist</h4>
+						<p class="section-description">
 							Choose one of your playlists to add to the queue.
 						</p>
 
@@ -362,12 +362,14 @@ export default {
 <style lang="scss" scoped>
 @import "../../styles/global.scss";
 
-tr td {
-	vertical-align: middle;
+.night-mode {
+	tr {
+		background-color: #222;
+	}
 }
 
-.song-thumbnail {
-	padding-left: 0;
+tr td {
+	vertical-align: middle;
 }
 
 .song-actions {
@@ -409,22 +411,6 @@ tr td {
 				transform: scale(1.25);
 			}
 		}
-	}
-}
-
-.input-with-button {
-	.control {
-		margin-right: 0px !important;
-	}
-
-	input {
-		height: 36px;
-		border-radius: 3px 0 3px 0;
-	}
-
-	.button {
-		height: 36px;
-		border-radius: 0 3px 3px 0;
 	}
 }
 

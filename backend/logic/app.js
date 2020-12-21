@@ -230,7 +230,7 @@ class AppModule extends CoreClass {
                                             res.redirect(
                                                 `${config.get(
                                                     "domain"
-                                                )}/settings`
+                                                )}/settings#security`
                                             );
                                         },
                                     ],

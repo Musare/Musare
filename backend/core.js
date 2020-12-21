@@ -38,7 +38,7 @@ class CoreClass {
         this.status = "UNINITIALIZED";
         // this.log("Core constructor");
         this.jobQueue = async.priorityQueue(
-            (job, callback) => this._runJob(job, callback),
+            ({ job, options }, callback) => this._runJob(job, options, callback),
             10 // How many jobs can run concurrently
         );
         this.jobQueue.pause();
@@ -136,17 +136,16 @@ class CoreClass {
 
     runJob(name, payload, options = { isQuiet: false, bypassQueue: false }) {
         let deferredPromise = new DeferredPromise();
-        const job = { name, payload, options, onFinish: deferredPromise };
+        const job = { name, payload, onFinish: deferredPromise };
 
         if (config.debug && config.debug.stationIssue === true && config.debug.captureJobs && config.debug.captureJobs.indexOf(name) !== -1) {
             this.moduleManager.debugJobs.all.push(job);
         }
 
-        if (options.bypassQueue) {
-            this._runJob(job, () => {}, false);
-        } else {
+        if (options.bypassQueue) this._runJob(job, options, () => {});
+        else {
             const priority = this.priorities[name] ? this.priorities[name] : 10;
-            this.jobQueue.push(job, priority);
+            this.jobQueue.push({ job, options }, priority);
         }
 
         return deferredPromise.promise;
@@ -156,25 +155,28 @@ class CoreClass {
         this.moduleManager = moduleManager;
     }
 
-    _runJob(job, cb) {
-        const isQuiet = job.options.isQuiet;
+    _runJob(job, options, cb) {
+        if (!options.isQuiet) this.log("INFO", `Running job ${job.name}`);
 
-        if (!isQuiet) this.log("INFO", `Running job ${job.name}`);
         const startTime = Date.now();
+
         this.runningJobs.push(job);
+
         const newThis = Object.assign(
             Object.create(Object.getPrototypeOf(this)),
             this
         );
+
         newThis.runJob = (...args) => {
             if (args.length === 2) args.push({});
             args[2].bypassQueue = true;
             return this.runJob.apply(this, args);
         };
+
         this[job.name]
             .apply(newThis, [job.payload])
             .then((response) => {
-                if (!isQuiet) this.log("INFO", `Ran job ${job.name} successfully`);
+                if (!options.isQuiet) this.log("INFO", `Ran job ${job.name} successfully`);
                 this.jobStatistics[job.name].successful++;
                 if (config.debug && config.debug.stationIssue === true && config.debug.captureJobs && config.debug.captureJobs.indexOf(job.name) !== -1) {
                     this.moduleManager.debugJobs.completed.push({ status: "success", job, response });

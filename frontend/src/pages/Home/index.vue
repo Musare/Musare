@@ -471,7 +471,7 @@ html {
 				}
 
 				.blue-icon {
-					color: $musareBlue;
+					color: $musare-blue;
 				}
 			}
 		}

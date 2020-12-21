@@ -186,8 +186,12 @@ export default {
 	}
 
 	#toasts-container .toast {
-		background-color: #ddd;
 		color: #333;
+		background-color: $light-grey-2 !important;
+
+		&:last-of-type {
+			background-color: $light-grey !important;
+		}
 	}
 }
 
@@ -201,11 +205,9 @@ body.night-mode {
 	.toast {
 		font-weight: 600;
 		background-color: $dark-grey !important;
+
 		&:last-of-type {
 			background-color: $dark-grey-2 !important;
-		}
-		&:not(:first-of-type) {
-			margin-top: 5px;
 		}
 	}
 }
@@ -370,7 +372,11 @@ a {
 	border-color: #dbdbdb !important;
 }
 .input:focus,
-.input:active {
+.input:active,
+.textarea:focus,
+.textarea:active,
+.select select:focus,
+.select select:active {
 	border-color: $primary-color !important;
 }
 button.delete:focus {
@@ -390,6 +396,7 @@ button.delete:focus {
 			background-color: darken($green, 5%) !important;
 		}
 	}
+
 	&.is-primary {
 		background-color: $primary-color !important;
 
@@ -398,6 +405,7 @@ button.delete:focus {
 			background-color: darken($primary-color, 5%) !important;
 		}
 	}
+
 	&.is-danger {
 		background-color: $red !important;
 
@@ -406,6 +414,7 @@ button.delete:focus {
 			background-color: darken($red, 5%) !important;
 		}
 	}
+
 	&.is-info {
 		background-color: $blue !important;
 
@@ -416,8 +425,29 @@ button.delete:focus {
 	}
 }
 
+.input-with-button {
+	.control {
+		margin-right: 0px !important;
+	}
+
+	input {
+		height: 36px;
+		border-radius: 3px 0 3px 0;
+	}
+
+	.button {
+		height: 36px;
+		border-radius: 0 3px 3px 0;
+	}
+}
+
 .page-title {
 	margin: 0 0 50px 0;
+}
+
+.material-icons {
+	user-select: none;
+	-webkit-user-select: none;
 }
 
 .icon-with-button {
@@ -425,12 +455,14 @@ button.delete:focus {
 	font-size: 18px;
 }
 
-.modal-section-title {
+.section-title,
+h4.section-title {
 	font-size: 26px;
 	margin: 0px;
 }
 
-.modal-section-description {
+.section-description {
+	font-size: 17px;
 	margin-bottom: 5px;
 }
 </style>
