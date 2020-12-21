@@ -9,7 +9,8 @@ const state = {
 	currentSong: {},
 	previousSong: null,
 	songsList: [],
-	paused: true,
+	stationPaused: true,
+	localPaused: false,
 	noSong: true
 };
 
@@ -37,8 +38,11 @@ const actions = {
 	updateSongsList: ({ commit }, songsList) => {
 		commit("updateSongsList", songsList);
 	},
-	updatePaused: ({ commit }, paused) => {
-		commit("updatePaused", paused);
+	updateStationPaused: ({ commit }, stationPaused) => {
+		commit("updateStationPaused", stationPaused);
+	},
+	updateLocalPaused: ({ commit }, localPaused) => {
+		commit("updateLocalPaused", localPaused);
 	},
 	updateNoSong: ({ commit }, noSong) => {
 		commit("updateNoSong", noSong);
@@ -77,8 +81,11 @@ const mutations = {
 	updateSongsList(state, songsList) {
 		state.songsList = songsList;
 	},
-	updatePaused(state, paused) {
-		state.paused = paused;
+	updateStationPaused(state, stationPaused) {
+		state.stationPaused = stationPaused;
+	},
+	updateLocalPaused(state, localPaused) {
+		state.localPaused = localPaused;
 	},
 	updateNoSong(state, noSong) {
 		state.noSong = noSong;

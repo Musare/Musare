@@ -486,7 +486,8 @@ export default {
 			station: state => state.station,
 			currentSong: state => state.currentSong,
 			songsList: state => state.songsList,
-			paused: state => state.paused,
+			stationPaused: state => state.stationPaused,
+			localPaused: state => state.localPaused,
 			noSong: state => state.noSong,
 			privatePlaylistQueueSelected: state =>
 				state.privatePlaylistQueueSelected
@@ -576,10 +577,11 @@ export default {
 										this.currentSong.skipDuration,
 									true
 								);
-								if (this.paused) this.player.pauseVideo();
+								if (this.localPaused || this.stationPaused)
+									this.player.pauseVideo();
 							} else if (
 								event.data === window.YT.PlayerState.PLAYING &&
-								this.paused
+								(this.localPaused || this.stationPaused)
 							) {
 								this.player.seekTo(
 									this.timeBeforePause / 1000,
@@ -594,7 +596,8 @@ export default {
 							}
 							if (
 								event.data === window.YT.PlayerState.PAUSED &&
-								!this.paused &&
+								!this.localPaused &&
+								!this.stationPaused &&
 								!this.noSong &&
 								this.player.getDuration() / 1000 <
 									this.currentSong.duration
@@ -614,7 +617,8 @@ export default {
 		getTimeElapsed() {
 			if (this.currentSong) {
 				let { timePaused } = this;
-				if (this.paused) timePaused += Date.currently() - this.pausedAt;
+				if (this.stationPaused)
+					timePaused += Date.currently() - this.pausedAt;
 				return Date.currently() - this.startedAt - timePaused;
 			}
 			return 0;
@@ -636,7 +640,7 @@ export default {
 			}
 		},
 		resizeSeekerbar() {
-			if (!this.paused) {
+			if (!this.stationPaused) {
 				document.getElementsByClassName(
 					"seeker-bar"
 				)[0].style.width = `${parseFloat(
@@ -672,7 +676,7 @@ export default {
 				}
 			}
 
-			if (!this.paused) {
+			if (!this.stationPaused && !this.localPaused) {
 				const timeElapsed = this.getTimeElapsed();
 				const currentPlayerTime =
 					Math.max(
@@ -737,14 +741,15 @@ export default {
 			} */
 
 			let { timePaused } = this;
-			if (this.paused) timePaused += Date.currently() - this.pausedAt;
+			if (this.stationPaused)
+				timePaused += Date.currently() - this.pausedAt;
 
 			const duration =
 				(Date.currently() - this.startedAt - timePaused) / 1000;
 
 			const songDuration = this.currentSong.duration;
 			if (songDuration <= duration) this.player.pauseVideo();
-			if (!this.paused && duration <= songDuration)
+			if (!this.stationPaused && duration <= songDuration)
 				this.timeElapsed = utils.formatTime(duration);
 		},
 		toggleLock() {
@@ -770,7 +775,14 @@ export default {
 			}
 		},
 		resumeLocalStation() {
-			this.updatePaused(false);
+			this.updateLocalPaused(false);
+			if (!this.stationPaused) this.resumeLocalPlayer();
+		},
+		pauseLocalStation() {
+			this.updateLocalPaused(true);
+			this.pauseLocalPlayer();
+		},
+		resumeLocalPlayer() {
 			if (!this.noSong) {
 				if (this.playerReady) {
 					this.player.seekTo(
@@ -781,8 +793,7 @@ export default {
 				}
 			}
 		},
-		pauseLocalStation() {
-			this.updatePaused(true);
+		pauseLocalPlayer() {
 			if (!this.noSong) {
 				this.timeBeforePause = this.getTimeElapsed();
 				if (this.playerReady) this.player.pauseVideo();
@@ -1041,7 +1052,7 @@ export default {
 						currentSong.artists = currentSong.artists.join(", ");
 					this.updateCurrentSong(currentSong);
 					this.startedAt = res.data.startedAt;
-					this.updatePaused(res.data.paused);
+					this.updateStationPaused(res.data.paused);
 					this.timePaused = res.data.timePaused;
 					this.updateUserCount(res.data.userCount);
 					this.updateUsers(res.data.users);
@@ -1081,7 +1092,8 @@ export default {
 								shift: false,
 								ctrl: true,
 								handler: () => {
-									if (this.paused) this.resumeStation();
+									if (this.stationPaused)
+										this.resumeStation();
 									else this.pauseStation();
 								}
 							}
@@ -1188,7 +1200,8 @@ export default {
 			"updateCurrentSong",
 			"updatePreviousSong",
 			"updateSongsList",
-			"updatePaused",
+			"updateStationPaused",
+			"updateLocalPaused",
 			"updateNoSong"
 		])
 	},
@@ -1222,7 +1235,7 @@ export default {
 					data.currentSong ? data.currentSong : {}
 				);
 				this.startedAt = data.startedAt;
-				this.updatePaused(data.paused);
+				this.updateStationPaused(data.paused);
 				this.timePaused = data.timePaused;
 				if (data.currentSong) {
 					this.updateNoSong(false);
@@ -1264,12 +1277,14 @@ export default {
 
 			this.socket.on("event:stations.pause", data => {
 				this.pausedAt = data.pausedAt;
-				this.pauseLocalStation();
+				this.updateStationPaused(true);
+				this.pauseLocalPlayer();
 			});
 
 			this.socket.on("event:stations.resume", data => {
 				this.timePaused = data.timePaused;
-				this.resumeLocalStation();
+				this.updateStationPaused(false);
+				if (!this.localPaused) this.resumeLocalPlayer();
 			});
 
 			this.socket.on("event:stations.remove", () => {

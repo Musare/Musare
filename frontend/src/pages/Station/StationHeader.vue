@@ -77,7 +77,7 @@
 						<span class="icon-purpose">Skip current song</span>
 					</a>
 					<a
-						v-if="paused"
+						v-if="stationPaused"
 						class="sidebar-item"
 						href="#"
 						@click="$parent.resumeStation()"
@@ -88,7 +88,7 @@
 						<span class="icon-purpose">Resume station</span>
 					</a>
 					<a
-						v-if="!paused"
+						v-if="!stationPaused"
 						class="sidebar-item"
 						href="#"
 						@click="$parent.pauseStation()"
@@ -100,6 +100,28 @@
 					</a>
 					<hr />
 				</div>
+				<a
+					v-if="localPaused"
+					class="sidebar-item"
+					href="#"
+					@click="$parent.resumeLocalStation()"
+				>
+					<span class="icon">
+						<i class="material-icons">play_arrow</i>
+					</span>
+					<span class="icon-purpose">Resume station ;pca;</span>
+				</a>
+				<a
+					v-if="!localPaused"
+					class="sidebar-item"
+					href="#"
+					@click="$parent.pauseLocalStation()"
+				>
+					<span class="icon">
+						<i class="material-icons">pause</i>
+					</span>
+					<span class="icon-purpose">Pause station local</span>
+				</a>
 				<div v-if="loggedIn">
 					<a
 						v-if="station.type === 'official'"
@@ -225,7 +247,8 @@ export default {
 		username: state => state.user.auth.username,
 		role: state => state.user.auth.role,
 		station: state => state.station.station,
-		paused: state => state.station.paused,
+		stationPaused: state => state.station.stationPaused,
+		localPaused: state => state.station.localPaused,
 		noSong: state => state.station.noSong,
 		currentSong: state => state.station.currentSong
 	}),
