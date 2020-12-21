@@ -889,20 +889,19 @@ class StationsModule extends CoreClass {
                                             { bypassQueue: payload.bypassQueue }
                                         )
                                             .then((newPlaylist) => {
-                                                this.songs.getSong(
-                                                    newPlaylist[0],
-                                                    (err, song) => {
-                                                        if (err || !song)
-                                                            return next(
-                                                                null,
-                                                                this
-                                                                    .defaultSong,
-                                                                0
-                                                            );
+                                                this.songs
+                                                    .runJob("GET_SONG", { id: newPlaylist[0] })
+                                                    .then((response) => {
                                                         station.playlist = newPlaylist;
-                                                        next(null, song, 0);
-                                                    }
-                                                );
+                                                        next(null, response.song, 0);
+                                                    })
+                                                    .catch(err => {
+                                                        return next(
+                                                            null,
+                                                            this.defaultSong,
+                                                            0
+                                                        );
+                                                    });
                                             })
                                             .catch((err) => {
                                                 next(null, this.defaultSong, 0);
