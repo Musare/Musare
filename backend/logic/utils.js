@@ -29,6 +29,7 @@ class UtilsModule extends CoreClass {
         //cookieString
         return new Promise((resolve, reject) => {
             let cookies = {};
+            if (typeof payload.cookieString !== "string") return reject("Cookie string is not a string");
             payload.cookieString.split("; ").map((cookie) => {
                 cookies[
                     cookie.substring(0, cookie.indexOf("="))

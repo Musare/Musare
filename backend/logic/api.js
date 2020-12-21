@@ -1,6 +1,7 @@
 const CoreClass = require("../core.js");
 
 const async = require("async");
+const config = require("config");
 const crypto = require("crypto");
 
 class APIModule extends CoreClass {
@@ -13,10 +14,111 @@ class APIModule extends CoreClass {
             this.app = this.moduleManager.modules["app"];
             this.stations = this.moduleManager.modules["stations"];
             this.db = this.moduleManager.modules["db"];
+            this.playlists = this.moduleManager.modules["playlists"];
+            this.utils = this.moduleManager.modules["utils"];
+            this.punishments = this.moduleManager.modules["punishments"];
             this.cache = this.moduleManager.modules["cache"];
             this.notifications = this.moduleManager.modules["notifications"];
 
+            const SIDname = config.get("cookie.SIDname");
+
             const actions = require("./actions");
+
+            const isLoggedIn = (req, res, next) => {
+                let SID;
+                async.waterfall(
+                    [
+                        next => {
+                            this.utils
+                                .runJob("PARSE_COOKIES", {
+                                    cookieString: req.headers.cookie,
+                                })
+                                .then(res => {
+                                    SID = res[SIDname];
+                                    next(null);
+                                }).catch(next);
+                        },
+
+                        next => {
+                            if (!SID) return next("No SID.");
+                            next();
+                        },
+
+                        (next) => {
+                            this.cache
+                                .runJob("HGET", { table: "sessions", key: SID })
+                                .then((session) => {
+                                    next(null, session);
+                                });
+                        },
+
+                        (session, next) => {
+                            if (!session) return next("No session found.");
+
+                            session.refreshDate = Date.now();
+
+                            req.session = session;
+                            this.cache
+                                .runJob("HSET", {
+                                    table: "sessions",
+                                    key: SID,
+                                    value: session,
+                                })
+                                .then((session) => {
+                                    next(null, session);
+                                });
+                        },
+
+                        (res, next) => {
+                            // check if a session's user / IP is banned
+                            this.punishments
+                                .runJob("GET_PUNISHMENTS", {})
+                                .then((punishments) => {
+                                    const isLoggedIn = !!(
+                                        req.session &&
+                                        req.session.refreshDate
+                                    );
+                                    const userId = isLoggedIn
+                                        ? req.session.userId
+                                        : null;
+
+                                    let banishment = { banned: false, ban: 0 };
+
+                                    punishments.forEach((punishment) => {
+                                        if (
+                                            punishment.expiresAt >
+                                            banishment.ban
+                                        )
+                                            banishment.ban = punishment;
+                                        if (
+                                            punishment.type === "banUserId" &&
+                                            isLoggedIn &&
+                                            punishment.value === userId
+                                        )
+                                            banishment.banned = true;
+                                        if (
+                                            punishment.type === "banUserIp" &&
+                                            punishment.value === req.ip
+                                        )
+                                            banishment.banned = true;
+                                    });
+
+                                    req.banishment = banishment;
+
+                                    next();
+                                })
+                                .catch(() => {
+                                    next();
+                                });
+                        },
+                    ],
+                    (err) => {
+                        if (err)
+                            return res.json({status: "error", message: "You are not logged in"});                        
+                        next();
+                    }
+                );
+            }
 
             this.app.runJob("GET_APP", {})
                 .then((response) => {
@@ -25,6 +127,20 @@ class APIModule extends CoreClass {
                             status: "success",
                             message: "Coming Soon",
                         });
+                    });
+
+                    response.app.get("/export/privatePlaylist/:playlistId", isLoggedIn, (req, res) => {
+                        const playlistId = req.params.playlistId;
+                        this.playlists.runJob("GET_PLAYLIST", { playlistId })
+                            .then(playlist => {
+                                if (playlist.createdBy === req.session.userId)
+                                    res.json({status: "success", playlist });
+                                else
+                                    res.json({status: "error", message: "You're not the owner."});
+                            })
+                            .catch(err => {
+                                res.json({status: "error", message: err.message});
+                            });
                     });
 
                     // response.app.get("/debug_station", async (req, res) => {
