@@ -18,6 +18,11 @@ export default {
 <style lang="scss" scoped>
 @import "../styles/global.scss";
 
+.inner-wrapper {
+	overflow: auto;
+	height: 100%;
+}
+
 .night-mode {
 	.sidebar {
 		background-color: $night-mode-secondary;

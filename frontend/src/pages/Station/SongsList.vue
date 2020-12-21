@@ -177,11 +177,6 @@ export default {
 <style lang="scss" scoped>
 @import "../../styles/global.scss";
 
-.inner-wrapper {
-	overflow: auto;
-	height: 100%;
-}
-
 .media {
 	padding: 0 25px;
 }
