@@ -116,23 +116,33 @@
 								@keyup.enter="importPlaylist(false)"
 							/>
 						</p>
-						<p class="control">
+						<p class="control has-addons">
+							<span class="select" id="playlist-import-type">
+								<select
+									v-model="isImportingOnlyMusicOfPlaylist"
+								>
+									<option :value="false">Import all</option>
+									<option :value="true"
+										>Import only music</option
+									>
+								</select>
+							</span>
 							<a
 								class="button is-info"
-								v-on:click="importPlaylist(false)"
+								v-on:click="importPlaylist()"
 								href="#"
 								><i class="material-icons icon-with-button"
 									>publish</i
 								>Import</a
 							>
-							<a
+							<!-- <a
 								class="button is-info"
 								v-on:click="importPlaylist(true)"
 								href="#"
 								><i class="material-icons icon-with-button"
 									>publish</i
 								>Import only music</a
-							>
+							> -->
 						</p>
 					</div>
 				</div>
@@ -229,7 +239,8 @@ export default {
 			querySearch: "",
 			queryResults: [],
 			playlists: [],
-			importQuery: ""
+			importQuery: "",
+			isImportingOnlyMusicOfPlaylist: false
 		};
 	},
 	computed: mapState({
@@ -291,18 +302,33 @@ export default {
 				});
 			}
 		},
-		importPlaylist(musicOnly) {
-			new Toast({
-				content:
-					"Starting to import your playlist. This can take some time to do.",
-				timeout: 4000
-			});
+		importPlaylist() {
+			let isImportingPlaylist = true;
 
-			this.socket.emit(
+			// import query is blank
+			if (!this.importQuery)
+				return new Toast({
+					content: "Please enter a YouTube playlist URL.",
+					timeout: 4000
+				});
+
+			// don't give starting import message instantly in case of instant error
+			setTimeout(() => {
+				if (isImportingPlaylist) {
+					new Toast({
+						content:
+							"Starting to import your playlist. This can take some time to do.",
+						timeout: 4000
+					});
+				}
+			}, 750);
+
+			return this.socket.emit(
 				"queueSongs.addSetToQueue",
 				this.importQuery,
-				musicOnly,
+				this.isImportingOnlyMusicOfPlaylist,
 				res => {
+					isImportingPlaylist = false;
 					return new Toast({ content: res.message, timeout: 4000 });
 				}
 			);
@@ -420,6 +446,16 @@ tr td {
 				transform: scale(1.25);
 			}
 		}
+	}
+}
+
+#playlist-import-type {
+	&:hover {
+		z-index: initial;
+	}
+
+	select {
+		border-radius: 0;
 	}
 }
 

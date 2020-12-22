@@ -556,13 +556,25 @@ class UtilsModule extends CoreClass {
     }
 
     GET_PLAYLIST_FROM_YOUTUBE(payload) {
-        //url, musicOnly, cb
+        // payload includes: url, musicOnly
         return new Promise((resolve, reject) => {
             let local = this;
 
             let name = "list".replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
-            var regex = new RegExp("[\\?&]" + name + "=([^&#]*)");
-            let playlistId = regex.exec(payload.url)[1];
+
+            const regex = new RegExp("[\\?&]" + name + "=([^&#]*)");
+            const splitQuery = regex.exec(payload.url);
+
+            if (!splitQuery) {
+                console.log(
+                    "ERROR",
+                    "GET_PLAYLIST_FROM_YOUTUBE",
+                    "Invalid YouTube playlist URL query."
+                );
+                return reject(new Error("An error has occured. Please try again later."));
+            }
+
+            let playlistId = splitQuery[1];
 
             function getPage(pageToken, songs) {
                 let nextPageToken = pageToken ? `pageToken=${pageToken}` : "";

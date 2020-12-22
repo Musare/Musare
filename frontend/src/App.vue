@@ -367,10 +367,23 @@ a {
 	}
 }
 
+.select {
+	&:after {
+		border-color: $musare-blue;
+		border-width: 1.5px;
+		margin-top: -3px;
+	}
+
+	select {
+		height: 36px;
+	}
+}
+
 .button:focus,
 .button:active {
 	border-color: #dbdbdb !important;
 }
+
 .input:focus,
 .input:active,
 .textarea:focus,
@@ -379,6 +392,7 @@ a {
 .select select:active {
 	border-color: $primary-color !important;
 }
+
 button.delete:focus {
 	background-color: rgba(10, 10, 10, 0.3);
 }
@@ -425,6 +439,11 @@ button.delete:focus {
 	}
 }
 
+.input,
+.button {
+	height: 36px;
+}
+
 .input-with-button {
 	.control {
 		margin-right: 0px !important;
@@ -432,7 +451,8 @@ button.delete:focus {
 
 	input {
 		height: 36px;
-		border-radius: 3px 0 3px 0;
+		border-radius: 3px 0 0 3px;
+		border-right: 0;
 	}
 
 	.button {
