@@ -23,7 +23,7 @@
 						</td>
 						<td>
 							<user-id-to-username
-								:userId="report.createdBy"
+								:user-id="report.createdBy"
 								:link="true"
 							/>
 						</td>

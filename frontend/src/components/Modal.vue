@@ -23,7 +23,7 @@ import { mapActions } from "vuex";
 
 export default {
 	props: {
-		title: { type: String }
+		title: { type: String, default: "Modal" }
 	},
 	methods: {
 		toCamelCase: str => {

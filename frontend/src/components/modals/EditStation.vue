@@ -1,6 +1,6 @@
 <template>
 	<modal title="Edit Station" class="edit-station-modal">
-		<template v-slot:body>
+		<template #body>
 			<div class="custom-modal-body">
 				<!--  Station Preferences -->
 				<div class="section left-section">
@@ -47,14 +47,14 @@
 									type="text"
 									id="new-genre"
 									v-model="genreInputValue"
-									v-on:blur="blurGenreInput()"
-									v-on:focus="focusGenreInput()"
-									v-on:keydown="keydownGenreInput()"
-									v-on:keyup.enter="addTag('genres')"
+									@blur="blurGenreInput()"
+									@focus="focusGenreInput()"
+									@keydown="keydownGenreInput()"
+									@keyup.enter="addTag('genres')"
 								/>
 								<button
 									class="button is-info add-button blue"
-									v-on:click="addTag('genres')"
+									@click="addTag('genres')"
 								>
 									<i class="material-icons">add</i>
 								</button>
@@ -72,7 +72,7 @@
 								<span
 									class="autosuggest-item"
 									tabindex="0"
-									v-on:click="selectGenreAutosuggest(item)"
+									@click="selectGenreAutosuggest(item)"
 									v-for="(item,
 									index) in genreAutosuggestItems"
 									:key="index"
@@ -87,7 +87,7 @@
 								>
 									<div
 										class="list-item-circle blue"
-										v-on:click="removeTag('genres', index)"
+										@click="removeTag('genres', index)"
 									>
 										<i class="material-icons">close</i>
 									</div>
@@ -102,16 +102,14 @@
 									class="input"
 									type="text"
 									v-model="blacklistGenreInputValue"
-									v-on:blur="blurBlacklistGenreInput()"
-									v-on:focus="focusBlacklistGenreInput()"
-									v-on:keydown="keydownBlacklistGenreInput()"
-									v-on:keyup.enter="
-										addTag('blacklist-genres')
-									"
+									@blur="blurBlacklistGenreInput()"
+									@focus="focusBlacklistGenreInput()"
+									@keydown="keydownBlacklistGenreInput()"
+									@keyup.enter="addTag('blacklist-genres')"
 								/>
 								<button
 									class="button is-info add-button red"
-									v-on:click="addTag('blacklist-genres')"
+									@click="addTag('blacklist-genres')"
 								>
 									<i class="material-icons">add</i>
 								</button>
@@ -130,7 +128,7 @@
 								<span
 									class="autosuggest-item"
 									tabindex="0"
-									v-on:click="
+									@click="
 										selectBlacklistGenreAutosuggest(item)
 									"
 									v-for="(item,
@@ -148,7 +146,7 @@
 								>
 									<div
 										class="list-item-circle red"
-										v-on:click="
+										@click="
 											removeTag('blacklist-genres', index)
 										"
 									>
@@ -223,9 +221,7 @@
 							class="button-wrapper"
 						>
 							<button
-								v-bind:class="
-									privacyButtons[editing.privacy].style
-								"
+								:class="privacyButtons[editing.privacy].style"
 								style="text-transform: capitalize"
 								@click="updatePrivacyLocal(editing.privacy)"
 							>
@@ -290,7 +286,7 @@
 							class="button-wrapper"
 						>
 							<button
-								v-bind:class="{
+								:class="{
 									blue: !editing.partyMode,
 									yellow: editing.partyMode
 								}"
@@ -346,7 +342,7 @@
 							class="button-wrapper"
 						>
 							<button
-								v-bind:class="{
+								:class="{
 									green: editing.locked,
 									red: !editing.locked
 								}"
@@ -392,8 +388,8 @@
 				</div>
 			</div>
 		</template>
-		<template v-slot:footer>
-			<button class="button is-success" v-on:click="update()">
+		<template #footer>
+			<button class="button is-success" @click="update()">
 				Update Settings
 			</button>
 			<button
@@ -547,7 +543,7 @@ export default {
 			playlists: []
 		};
 	},
-	props: ["store"],
+	props: { store: { type: Object, default: () => {} } },
 	methods: {
 		isPlaylistSelected(id) {
 			// TODO Also change this once it changes for a station

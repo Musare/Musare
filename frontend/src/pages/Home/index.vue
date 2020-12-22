@@ -39,7 +39,7 @@
 							<div
 								v-if="station.currentSong.ytThumbnail"
 								class="ytThumbnailBg"
-								v-bind:style="{
+								:style="{
 									'background-image':
 										'url(' +
 										station.currentSong.ytThumbnail +
@@ -86,7 +86,7 @@
 									>
 									<user-id-to-username
 										v-else
-										:userId="station.owner"
+										:user-id="station.owner"
 										:link="true"
 									/>
 								</span>

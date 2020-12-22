@@ -15,7 +15,10 @@
 import { mapActions } from "vuex";
 
 export default {
-	props: ["userId", "link"],
+	props: {
+		userId: { type: String, default: "" },
+		link: Boolean
+	},
 	data() {
 		return {
 			username: "unknown"

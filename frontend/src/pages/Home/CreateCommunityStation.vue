@@ -1,6 +1,6 @@
 <template>
 	<modal title="Create Community Station">
-		<template v-slot:body>
+		<template #body>
 			<!-- validation to check if exists http://bulma.io/documentation/elements/form/ -->
 			<label class="label">Name (unique lowercase station id)</label>
 			<p class="control">
@@ -32,8 +32,8 @@
 				/>
 			</p>
 		</template>
-		<template v-slot:footer>
-			<a class="button is-primary" v-on:click="submitModal()">Create</a>
+		<template #footer>
+			<a class="button is-primary" @click="submitModal()">Create</a>
 		</template>
 	</modal>
 </template>

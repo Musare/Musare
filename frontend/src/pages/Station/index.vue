@@ -1,10 +1,7 @@
 <template>
 	<div>
-		<metadata
-			v-if="exists && !loading"
-			v-bind:title="`${station.displayName}`"
-		/>
-		<metadata v-else-if="!exists && !loading" v-bind:title="`Not found`" />
+		<metadata v-if="exists && !loading" :title="`${station.displayName}`" />
+		<metadata v-else-if="!exists && !loading" :title="`Not found`" />
 
 		<station-header
 			v-if="exists"
@@ -152,7 +149,7 @@
 											Requested by
 											<b>
 												<user-id-to-username
-													:userId="song.requestedBy"
+													:user-id="song.requestedBy"
 													:link="true"
 												/>
 											</b>

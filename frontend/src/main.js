@@ -10,7 +10,7 @@ const handleMetadata = attrs => {
 	document.title = `Musare | ${attrs.title}`;
 };
 
-Vue.component("metadata", {
+Vue.component("Metadata", {
 	watch: {
 		$attrs: {
 			// eslint-disable-next-line vue/no-arrow-functions-in-watch

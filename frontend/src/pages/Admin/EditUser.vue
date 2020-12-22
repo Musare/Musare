@@ -10,7 +10,7 @@
 						placeholder="Username"
 						autofocus
 					/>
-					<a class="button is-info" v-on:click="updateUsername()"
+					<a class="button is-info" @click="updateUsername()"
 						>Update Username</a
 					>
 				</p>
@@ -22,7 +22,7 @@
 						placeholder="Email Address"
 						autofocus
 					/>
-					<a class="button is-info" v-on:click="updateEmail()"
+					<a class="button is-info" @click="updateEmail()"
 						>Update Email Address</a
 					>
 				</p>
@@ -33,7 +33,7 @@
 							<option>admin</option>
 						</select>
 					</span>
-					<a class="button is-info" v-on:click="updateRole()"
+					<a class="button is-info" @click="updateRole()"
 						>Update Role</a
 					>
 				</p>
@@ -58,9 +58,7 @@
 						placeholder="Ban reason"
 						autofocus
 					/>
-					<a class="button is-error" v-on:click="banUser()"
-						>Ban user</a
-					>
+					<a class="button is-error" @click="banUser()">Ban user</a>
 				</p>
 			</div>
 			<div slot="footer">
@@ -70,7 +68,7 @@
 				<button class='button is-warning'>
 					<span>&nbsp;Send Password Reset Email</span>
         </button-->
-				<button class="button is-warning" v-on:click="removeSessions()">
+				<button class="button is-warning" @click="removeSessions()">
 					<span>&nbsp;Remove all sessions</span>
 				</button>
 				<button

@@ -1,6 +1,6 @@
 <template>
 	<modal title="Add Song To Playlist">
-		<template v-slot:body>
+		<template #body>
 			<h4 class="songTitle">
 				{{ currentSong.title }}
 			</h4>

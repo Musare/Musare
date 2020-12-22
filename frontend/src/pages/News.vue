@@ -24,8 +24,9 @@
 							</div>
 							<ul class="sect-body">
 								<li
-									v-for="(feature, index) in item.features"
-									:key="index"
+									v-for="(feature,
+									itemIndex) in item.features"
+									:key="itemIndex"
 								>
 									{{ feature }}
 								</li>
@@ -38,8 +39,8 @@
 							<ul class="sect-body">
 								<li
 									v-for="(improvement,
-									ind) in item.improvements"
-									:key="ind"
+									itemIndex) in item.improvements"
+									:key="itemIndex"
 								>
 									{{ improvement }}
 								</li>
@@ -49,8 +50,8 @@
 							<div class="sect-head-bugs">Bugs Smashed</div>
 							<ul class="sect-body">
 								<li
-									v-for="(bug, index) in item.bugs"
-									:key="index"
+									v-for="(bug, itemIndex) in item.bugs"
+									:key="itemIndex"
 								>
 									{{ bug }}
 								</li>
@@ -62,8 +63,9 @@
 							</div>
 							<ul class="sect-body">
 								<li
-									v-for="(upcoming, index) in item.upcoming"
-									:key="index"
+									v-for="(upcoming,
+									itemIndex) in item.upcoming"
+									:key="itemIndex"
 								>
 									{{ upcoming }}
 								</li>

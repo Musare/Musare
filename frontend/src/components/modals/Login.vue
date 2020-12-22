@@ -69,7 +69,7 @@
 					</div>
 					&nbsp;&nbsp;Login with GitHub
 				</a>
-				<a href="/reset_password" v-on:click="resetPassword()"
+				<a href="/reset_password" @click="resetPassword()"
 					>Forgot password?</a
 				>
 			</footer>

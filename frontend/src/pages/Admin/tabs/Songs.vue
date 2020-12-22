@@ -73,7 +73,7 @@
 						</td>
 						<td>
 							<user-id-to-username
-								:userId="song.requestedBy"
+								:user-id="song.requestedBy"
 								:link="true"
 							/>
 						</td>

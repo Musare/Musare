@@ -79,7 +79,7 @@
 					</div>
 				</div>
 				<footer class="card-footer">
-					<a class="card-footer-item" v-on:click="banIP()" href="#"
+					<a class="card-footer-item" @click="banIP()" href="#"
 						>Ban IP</a
 					>
 				</footer>

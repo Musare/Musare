@@ -25,7 +25,7 @@
 					<p class="control">
 						<a
 							class="button is-info"
-							v-on:click="submitQuery()"
+							@click="submitQuery()"
 							href="#"
 							><i class="material-icons icon-with-button"
 								>search</i
@@ -74,7 +74,7 @@
 									<a
 										class="button is-dark"
 										v-else
-										v-on:click="
+										@click="
 											addSongToQueue(result.id, index)
 										"
 										href="#"
@@ -129,7 +129,7 @@
 							</span>
 							<a
 								class="button is-info"
-								v-on:click="importPlaylist()"
+								@click="importPlaylist()"
 								href="#"
 								><i class="material-icons icon-with-button"
 									>publish</i
@@ -176,14 +176,12 @@
 									<div slot="actions">
 										<a
 											class="button is-danger"
-											v-on:click="
-												addSongToQueue(result.id)
-											"
 											href="#"
 											@click="
-												togglePlaylistSelection(
-													playlist._id
-												)
+												addSongToQueue(result.id) &&
+													togglePlaylistSelection(
+														playlist._id
+													)
 											"
 											v-if="
 												isPlaylistSelected(playlist._id)
@@ -197,15 +195,13 @@
 										</a>
 										<a
 											class="button is-success"
-											v-on:click="
-												addSongToQueue(result.id)
+											@click="
+												addSongToQueue(result.id) &&
+													togglePlaylistSelection(
+														playlist._id
+													)
 											"
 											href="#"
-											@click="
-												togglePlaylistSelection(
-													playlist._id
-												)
-											"
 											v-else
 											><i
 												class="material-icons icon-with-button"

@@ -15,33 +15,31 @@
 								<div class="player-footer-left">
 									<i
 										class="material-icons player-play-pause"
-										v-on:click="settings('play')"
-										v-on:keyup.enter="settings('play')"
+										@click="settings('play')"
+										@keyup.enter="settings('play')"
 										tabindex="0"
 										v-if="video.paused"
 										>play_arrow</i
 									>
 									<i
 										class="material-icons player-play-pause"
-										v-on:click="settings('pause')"
-										v-on:keyup.enter="settings('pause')"
+										@click="settings('pause')"
+										@keyup.enter="settings('pause')"
 										tabindex="0"
 										v-if="!video.paused"
 										>pause</i
 									>
 									<i
 										class="material-icons player-stop"
-										v-on:click="settings('stop')"
-										v-on:keyup.enter="settings('stop')"
+										@click="settings('stop')"
+										@keyup.enter="settings('stop')"
 										tabindex="0"
 										>stop</i
 									>
 									<i
 										class="material-icons player-fast-forward"
-										v-on:click="
-											settings('skipToLast10Secs')
-										"
-										v-on:keyup.enter="
+										@click="settings('skipToLast10Secs')"
+										@keyup.enter="
 											settings('skipToLast10Secs')
 										"
 										tabindex="0"
@@ -68,8 +66,8 @@
 										min="0"
 										max="10000"
 										class="active"
-										v-on:change="changeVolume()"
-										v-on:input="changeVolume()"
+										@change="changeVolume()"
+										@input="changeVolume()"
 									/>
 								</div>
 							</div>
@@ -90,13 +88,13 @@
 										type="text"
 										id="title-input"
 										v-model="editing.song.title"
-										v-on:keyup.ctrl.alt.68="
+										@keyup.ctrl.alt.68="
 											getAlbumData('title')
 										"
 									/>
 									<button
 										class="button album-get-button"
-										v-on:click="getAlbumData('title')"
+										@click="getAlbumData('title')"
 									>
 										<i class="material-icons">album</i>
 									</button>
@@ -112,7 +110,7 @@
 									/>
 									<button
 										class="button duration-fill-button"
-										v-on:click="fillDuration()"
+										@click="fillDuration()"
 									>
 										<i class="material-icons">sync</i>
 									</button>
@@ -139,13 +137,13 @@
 										class="input"
 										type="text"
 										v-model="editing.song.thumbnail"
-										v-on:keyup.ctrl.alt.68="
+										@keyup.ctrl.alt.68="
 											getAlbumData('albumArt')
 										"
 									/>
 									<button
 										class="button album-get-button"
-										v-on:click="getAlbumData('albumArt')"
+										@click="getAlbumData('albumArt')"
 									>
 										<i class="material-icons">album</i>
 									</button>
@@ -161,23 +159,23 @@
 										type="text"
 										id="new-artist"
 										v-model="artistInputValue"
-										v-on:blur="blurArtistInput()"
-										v-on:focus="focusArtistInput()"
-										v-on:keydown="keydownArtistInput()"
-										v-on:keyup.enter="addTag('artists')"
-										v-on:keyup.ctrl.alt.68="
+										@blur="blurArtistInput()"
+										@focus="focusArtistInput()"
+										@keydown="keydownArtistInput()"
+										@keyup.enter="addTag('artists')"
+										@keyup.ctrl.alt.68="
 											getAlbumData('artists')
 										"
 									/>
 									<button
 										class="button album-get-button"
-										v-on:click="getAlbumData('artists')"
+										@click="getAlbumData('artists')"
 									>
 										<i class="material-icons">album</i>
 									</button>
 									<button
 										class="button is-info add-button"
-										v-on:click="addTag('artists')"
+										@click="addTag('artists')"
 									>
 										<i class="material-icons">add</i>
 									</button>
@@ -195,9 +193,7 @@
 									<span
 										class="autosuggest-item"
 										tabindex="0"
-										v-on:click="
-											selectArtistAutosuggest(item)
-										"
+										@click="selectArtistAutosuggest(item)"
 										v-for="(item,
 										index) in artistAutosuggestItems"
 										:key="index"
@@ -213,9 +209,7 @@
 									>
 										<div
 											class="list-item-circle"
-											v-on:click="
-												removeTag('artists', index)
-											"
+											@click="removeTag('artists', index)"
 										>
 											<i class="material-icons">close</i>
 										</div>
@@ -239,23 +233,23 @@
 										type="text"
 										id="new-genre"
 										v-model="genreInputValue"
-										v-on:blur="blurGenreInput()"
-										v-on:focus="focusGenreInput()"
-										v-on:keydown="keydownGenreInput()"
-										v-on:keyup.enter="addTag('genres')"
-										v-on:keyup.ctrl.alt.68="
+										@blur="blurGenreInput()"
+										@focus="focusGenreInput()"
+										@keydown="keydownGenreInput()"
+										@keyup.enter="addTag('genres')"
+										@keyup.ctrl.alt.68="
 											getAlbumData('genres')
 										"
 									/>
 									<button
 										class="button album-get-button"
-										v-on:click="getAlbumData('genres')"
+										@click="getAlbumData('genres')"
 									>
 										<i class="material-icons">album</i>
 									</button>
 									<button
 										class="button is-info add-button"
-										v-on:click="addTag('genres')"
+										@click="addTag('genres')"
 									>
 										<i class="material-icons">add</i>
 									</button>
@@ -272,9 +266,7 @@
 								>
 									<span
 										class="autosuggest-item"
-										v-on:click="
-											selectGenreAutosuggest(item)
-										"
+										@click="selectGenreAutosuggest(item)"
 										v-for="(item,
 										index) in genreAutosuggestItems"
 										:key="index"
@@ -290,9 +282,7 @@
 									>
 										<div
 											class="list-item-circle"
-											v-on:click="
-												removeTag('genres', index)
-											"
+											@click="removeTag('genres', index)"
 										>
 											<i class="material-icons">close</i>
 										</div>
@@ -389,14 +379,14 @@
 								type="text"
 								id="discogs-input"
 								v-model="discogsQuery"
-								v-on:keyup.enter="searchDiscogsForPage(1)"
+								@keyup.enter="searchDiscogsForPage(1)"
 								@change="onDiscogsQueryChange"
 								v-focus
 							/>
 						</p>
 						<button
 							class="button is-info is-fullwidth"
-							v-on:click="searchDiscogsForPage(1)"
+							@click="searchDiscogsForPage(1)"
 						>
 							Search
 						</button>
@@ -414,8 +404,8 @@
 								v-for="(result, index) in discogs.apiResults"
 								:key="index"
 								tabindex="0"
-								v-on:keydown.prevent.32
-								v-on:keyup.13="toggleAPIResult(index)"
+								@keydown.prevent.32
+								@keyup.13="toggleAPIResult(index)"
 							>
 								<div class="top-container">
 									<img :src="result.album.albumArt" />
@@ -427,16 +417,12 @@
 											<img
 												src="/assets/arrow_up.svg"
 												v-if="result.expanded"
-												v-on:click="
-													toggleAPIResult(index)
-												"
+												@click="toggleAPIResult(index)"
 											/>
 											<img
 												src="/assets/arrow_down.svg"
 												v-if="!result.expanded"
-												v-on:click="
-													toggleAPIResult(index)
-												"
+												@click="toggleAPIResult(index)"
 											/>
 											<p class="type-year">
 												<span>{{
@@ -477,10 +463,10 @@
 											v-for="(track,
 											trackIndex) in result.tracks"
 											:key="trackIndex"
-											v-on:click="
+											@click="
 												selectTrack(index, trackIndex)
 											"
-											v-on:keyup.enter="
+											@keyup.enter="
 												selectTrack(index, trackIndex)
 											"
 										>
@@ -508,23 +494,21 @@
 			<div slot="footer" class="footer-buttons">
 				<button
 					class="button is-success"
-					v-on:click="save(editing.song, false)"
+					@click="save(editing.song, false)"
 				>
 					<i class="material-icons save-changes">done</i>
 					<span>&nbsp;Save</span>
 				</button>
 				<button
 					class="button is-success"
-					v-on:click="save(editing.song, true)"
+					@click="save(editing.song, true)"
 				>
 					<i class="material-icons save-changes">done</i>
 					<span>&nbsp;Save and close</span>
 				</button>
 				<button
 					class="button is-danger"
-					v-on:click="
-						closeModal({ sector: 'admin', modal: 'editSong' })
-					"
+					@click="closeModal({ sector: 'admin', modal: 'editSong' })"
 				>
 					<span>&nbsp;Close</span>
 				</button>
@@ -532,7 +516,7 @@
 		</modal>
 		<div
 			id="genre-helper-container"
-			v-bind:style="{
+			:style="{
 				width: genreHelper.width + 'px',
 				height: genreHelper.height + 'px',
 				top: genreHelper.top + 'px',

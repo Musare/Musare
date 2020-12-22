@@ -11,7 +11,7 @@
 					<strong>{{ news.title }}</strong>
 					({{ formatDate(news.createdAt) }})
 				</p>
-				<button class="delete" v-on:click="toggleModal()" />
+				<button class="delete" @click="toggleModal()" />
 			</header>
 			<section class="modal-card-body">
 				<div class="content">

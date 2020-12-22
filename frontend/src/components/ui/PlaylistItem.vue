@@ -19,7 +19,7 @@ import utils from "../../../js/utils";
 
 export default {
 	props: {
-		playlist: Object
+		playlist: { type: Object, default: () => {} }
 	},
 	data() {
 		return {

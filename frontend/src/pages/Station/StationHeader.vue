@@ -14,7 +14,7 @@
 				<h4>{{ station.displayName }}</h4>
 			</div>
 
-			<span class="nav-toggle" v-on:click="controlBar = !controlBar">
+			<span class="nav-toggle" @click="controlBar = !controlBar">
 				<span />
 				<span />
 				<span />

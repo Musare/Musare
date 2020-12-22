@@ -1,6 +1,6 @@
 <template>
 	<sidebar :title="station.type === 'community' ? 'Queue' : 'Playlist'">
-		<template v-slot:content>
+		<template #content>
 			<article v-if="!noSong" class="media">
 				<figure v-if="currentSong.thumbnail" class="media-left">
 					<p class="image is-64x64">
@@ -52,7 +52,7 @@
 								Requested by
 								<b>
 									<user-id-to-username
-										:userId="song.requestedBy"
+										:user-id="song.requestedBy"
 										:link="true"
 									/>
 								</b>

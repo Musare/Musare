@@ -19,7 +19,7 @@
 					<br />
 					<strong>Author:</strong>
 					<user-id-to-username
-						:userId="report.createdBy"
+						:user-id="report.createdBy"
 						:alt="report.createdBy"
 					/>
 					<br />

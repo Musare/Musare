@@ -1,6 +1,6 @@
 <template>
 	<sidebar title="Users">
-		<template v-slot:content>
+		<template #content>
 			<h5 class="has-text-centered">Total users: {{ userCount }}</h5>
 			<aside class="menu">
 				<ul class="menu-list">

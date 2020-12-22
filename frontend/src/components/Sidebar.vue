@@ -10,7 +10,7 @@
 <script>
 export default {
 	props: {
-		title: { type: String }
+		title: { type: String, default: "Sidebar" }
 	}
 };
 </script>

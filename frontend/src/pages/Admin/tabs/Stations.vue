@@ -48,12 +48,12 @@
 							>
 							<user-id-to-username
 								v-else
-								:userId="station.owner"
+								:user-id="station.owner"
 								:link="true"
 							/>
 						</td>
 						<td>
-							<a class="button is-info" v-on:click="edit(station)"
+							<a class="button is-info" @click="edit(station)"
 								>Edit</a
 							>
 							<a

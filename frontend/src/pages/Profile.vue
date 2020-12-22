@@ -1,6 +1,6 @@
 <template>
 	<div v-if="isUser">
-		<metadata v-bind:title="`Profile | ${user.username}`" />
+		<metadata :title="`Profile | ${user.username}`" />
 		<edit-playlist v-if="modals.editPlaylist" />
 		<create-playlist v-if="modals.createPlaylist" />
 		<main-header />

@@ -20,11 +20,7 @@
 
 				<transition name="steps-fade" mode="out-in">
 					<!-- Step 1 -- Enter email address -->
-					<div
-						class="content-box"
-						v-if="step === 1"
-						v-bind:key="step"
-					>
+					<div class="content-box" v-if="step === 1" :key="step">
 						<h2 class="content-box-title">
 							Enter your email address
 						</h2>
@@ -79,11 +75,7 @@
 					</div>
 
 					<!-- Step 2 -- Enter code -->
-					<div
-						class="content-box"
-						v-if="step === 2"
-						v-bind:key="step"
-					>
+					<div class="content-box" v-if="step === 2" :key="step">
 						<h2 class="content-box-title">
 							Enter the code sent to your email
 						</h2>
@@ -127,11 +119,7 @@
 					</div>
 
 					<!-- Step 3 -- Set new password -->
-					<div
-						class="content-box"
-						v-if="step === 3"
-						v-bind:key="step"
-					>
+					<div class="content-box" v-if="step === 3" :key="step">
 						<h2 class="content-box-title">
 							Set a new password
 						</h2>
@@ -206,7 +194,7 @@
 					<div
 						class="content-box reset-status-box"
 						v-if="step === 4"
-						v-bind:key="step"
+						:key="step"
 					>
 						<i class="material-icons success-icon">check_circle</i>
 						<h2>Password successfully {{ mode }}</h2>
@@ -222,7 +210,7 @@
 					<div
 						class="content-box reset-status-box"
 						v-if="step === 5"
-						v-bind:key="step"
+						:key="step"
 					>
 						<i class="material-icons error-icon">error</i>
 						<h2>

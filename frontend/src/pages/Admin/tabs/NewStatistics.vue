@@ -23,20 +23,22 @@
 							</thead>
 							<tbody>
 								<tr
-									v-for="module_ in modules"
-									:key="module_.name"
+									v-for="moduleItem in modules"
+									:key="moduleItem.name"
 								>
 									<td>
 										<router-link
-											:to="'?moduleName=' + module_.name"
-											>{{ module_.name }}</router-link
+											:to="
+												'?moduleName=' + moduleItem.name
+											"
+											>{{ moduleItem.name }}</router-link
 										>
 									</td>
-									<td>{{ module_.status }}</td>
-									<td>{{ module_.stage }}</td>
-									<td>{{ module_.jobsInQueue }}</td>
-									<td>{{ module_.jobsInProgress }}</td>
-									<td>{{ module_.concurrency }}</td>
+									<td>{{ moduleItem.status }}</td>
+									<td>{{ moduleItem.stage }}</td>
+									<td>{{ moduleItem.jobsInQueue }}</td>
+									<td>{{ moduleItem.jobsInProgress }}</td>
+									<td>{{ moduleItem.concurrency }}</td>
 								</tr>
 							</tbody>
 						</table>
@@ -45,7 +47,7 @@
 			</div>
 		</div>
 		<br />
-		<div class="columns" v-if="module_">
+		<div class="columns" v-if="module">
 			<div
 				class="card column is-10-desktop is-offset-1-desktop is-12-mobile"
 			>
@@ -63,7 +65,7 @@
 							</thead>
 							<tbody>
 								<tr
-									v-for="job in module_.runningJobs"
+									v-for="job in module.runningJobs"
 									:key="JSON.stringify(job)"
 								>
 									<td>{{ job.name }}</td>
@@ -78,7 +80,7 @@
 			</div>
 		</div>
 		<br />
-		<div class="columns" v-if="module_">
+		<div class="columns" v-if="module">
 			<div
 				class="card column is-10-desktop is-offset-1-desktop is-12-mobile"
 			>
@@ -100,7 +102,7 @@
 							<tbody>
 								<tr
 									v-for="(job,
-									jobName) in module_.jobStatistics"
+									jobName) in module.jobStatistics"
 									:key="jobName"
 								>
 									<td>{{ jobName }}</td>
@@ -134,7 +136,7 @@ export default {
 	data() {
 		return {
 			modules: [],
-			module_: null
+			module: null
 		};
 	},
 	mounted() {
@@ -160,7 +162,7 @@ export default {
 					data => {
 						console.log(data);
 						if (data.status === "success") {
-							this.module_ = {
+							this.module = {
 								runningJobs: data.runningJobs,
 								jobStatistics: data.jobStatistics
 							};

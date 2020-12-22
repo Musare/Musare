@@ -1,6 +1,6 @@
 <template>
 	<modal title="Create Playlist">
-		<template v-slot:body>
+		<template #body>
 			<p class="control is-expanded">
 				<input
 					v-model="playlist.displayName"
@@ -12,8 +12,8 @@
 				/>
 			</p>
 		</template>
-		<template v-slot:footer>
-			<a class="button is-info" v-on:click="createPlaylist()"
+		<template #footer>
+			<a class="button is-info" @click="createPlaylist()"
 				>Create Playlist</a
 			>
 		</template>

@@ -48,7 +48,7 @@
 						<br />
 						<strong>Punished by:</strong>
 						<user-id-to-username
-							:userId="punishment.punishedBy"
+							:user-id="punishment.punishedBy"
 							:alt="punishment.punishedBy"
 						/>
 						<br />

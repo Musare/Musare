@@ -39,13 +39,13 @@
 						v-for="(song, index) in filteredSongs"
 						:key="index"
 						tabindex="0"
-						v-on:keydown.prevent.38
-						v-on:keydown.prevent.40
-						v-on:keyup.38="selectPrevious($event)"
-						v-on:keyup.40="selectNext($event)"
-						v-on:keyup.69="edit(song, index)"
-						v-on:keyup.65="add(song)"
-						v-on:keyup.88="remove(song._id, index)"
+						@keydown.prevent.38
+						@keydown.prevent.40
+						@keyup.38="selectPrevious($event)"
+						@keyup.40="selectNext($event)"
+						@keyup.69="edit(song, index)"
+						@keyup.65="add(song)"
+						@keyup.88="remove(song._id, index)"
 					>
 						<td>
 							<img
@@ -74,7 +74,7 @@
 						</td>
 						<td>
 							<user-id-to-username
-								:userId="song.requestedBy"
+								:user-id="song.requestedBy"
 								:link="true"
 							/>
 						</td>
