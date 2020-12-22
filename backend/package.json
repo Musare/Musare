@@ -24,7 +24,7 @@
     "express": "^4.17.1",
     "mailgun-js": "^0.22.0",
     "moment": "^2.24.0",
-    "mongoose": "^5.9.10",
+    "mongoose": "^5.11.8",
     "oauth": "^0.9.15",
     "redis": "^2.8.0",
     "request": "^2.88.0",
