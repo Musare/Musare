@@ -339,16 +339,17 @@ let lib = {
      *
      * @param {Object} session - the session object automatically added by socket.io
      * @param {String} url - the url of the the YouTube playlist
+     * @param {Boolean} musicOnly - whether to only get music from the playlist
      * @param {Function} cb - gets called with the result
      */
-    addSetToQueue: hooks.loginRequired((session, url, cb) => {
+    addSetToQueue: hooks.loginRequired((session, url, musicOnly, cb) => {
         async.waterfall(
             [
                 (next) => {
                     utils
                         .runJob("GET_PLAYLIST_FROM_YOUTUBE", {
                             url,
-                            musicOnly: false,
+                            musicOnly,
                         })
                         .then((res) => {
                             next(null, res.songs);

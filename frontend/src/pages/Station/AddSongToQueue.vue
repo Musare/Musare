@@ -113,17 +113,25 @@
 								type="text"
 								placeholder="YouTube Playlist URL"
 								v-model="importQuery"
-								@keyup.enter="importPlaylist()"
+								@keyup.enter="importPlaylist(false)"
 							/>
 						</p>
 						<p class="control">
 							<a
 								class="button is-info"
-								v-on:click="importPlaylist()"
+								v-on:click="importPlaylist(false)"
 								href="#"
 								><i class="material-icons icon-with-button"
 									>publish</i
 								>Import</a
+							>
+							<a
+								class="button is-info"
+								v-on:click="importPlaylist(true)"
+								href="#"
+								><i class="material-icons icon-with-button"
+									>publish</i
+								>Import only music</a
 							>
 						</p>
 					</div>
@@ -283,7 +291,7 @@ export default {
 				});
 			}
 		},
-		importPlaylist() {
+		importPlaylist(musicOnly) {
 			new Toast({
 				content:
 					"Starting to import your playlist. This can take some time to do.",
@@ -293,6 +301,7 @@ export default {
 			this.socket.emit(
 				"queueSongs.addSetToQueue",
 				this.importQuery,
+				musicOnly,
 				res => {
 					return new Toast({ content: res.message, timeout: 4000 });
 				}
