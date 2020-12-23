@@ -1,6 +1,6 @@
-const mongoose = require('mongoose');
+import mongoose from "mongoose";
 
-module.exports = {
+export default {
 	name: { type: String, lowercase: true, maxlength: 16, minlength: 2, index: true, unique: true, required: true },
 	type: { type: String, enum: ["official", "community"], required: true },
 	displayName: { type: String, minlength: 2, maxlength: 32, required: true, unique: true },
@@ -15,7 +15,7 @@ module.exports = {
 		thumbnail: { type: String },
 		likes: { type: Number, default: -1 },
 		dislikes: { type: Number, default: -1 },
-		skipVotes: [{ type: String }],
+		skipVotes: [{ type: String }]
 	},
 	currentSongIndex: { type: Number, default: 0, required: true },
 	timePaused: { type: Number, default: 0, required: true },
@@ -26,17 +26,19 @@ module.exports = {
 	blacklistedGenres: [{ type: String }],
 	privacy: { type: String, enum: ["public", "unlisted", "private"], default: "private" },
 	locked: { type: Boolean, default: false },
-	queue: [{
-		songId: { type: String, required: true },
-		title: { type: String },
-		artists: [{ type: String }],
-		duration: { type: Number },
-		skipDuration: { type: Number },
-		thumbnail: { type: String },
-		likes: { type: Number, default: -1 },
-		dislikes: { type: Number, default: -1 },
-		requestedBy: { type: String, required: true }
-	}],
+	queue: [
+		{
+			songId: { type: String, required: true },
+			title: { type: String },
+			artists: [{ type: String }],
+			duration: { type: Number },
+			skipDuration: { type: Number },
+			thumbnail: { type: String },
+			likes: { type: Number, default: -1 },
+			dislikes: { type: Number, default: -1 },
+			requestedBy: { type: String, required: true }
+		}
+	],
 	owner: { type: String },
 	privatePlaylist: { type: mongoose.Schema.Types.ObjectId },
 	partyMode: { type: Boolean }

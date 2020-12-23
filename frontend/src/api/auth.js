@@ -54,6 +54,7 @@ export default {
 
 			io.getSocket(socket => {
 				socket.emit("users.login", email, password, res => {
+					console.log(123, res);
 					if (res.status === "success") {
 						return lofig.get("cookie").then(cookie => {
 							const date = new Date();

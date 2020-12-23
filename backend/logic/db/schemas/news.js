@@ -1,4 +1,4 @@
-module.exports = {
+export default {
 	title: { type: String, required: true },
 	description: { type: String, required: true },
 	bugs: [{ type: String }],

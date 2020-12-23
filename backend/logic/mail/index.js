@@ -1,50 +1,44 @@
-const CoreClass = require("../../core.js");
+/* eslint-disable global-require */
+import mailgun from "mailgun-js";
 
-const config = require("config");
-
-let mailgun = null;
+import CoreClass from "../../core";
 
 class MailModule extends CoreClass {
-    constructor() {
-        super("mail");
-    }
+	constructor() {
+		super("mail");
+	}
 
-    initialize() {
-        return new Promise((resolve, reject) => {
-            this.schemas = {
-                verifyEmail: require("./schemas/verifyEmail"),
-                resetPasswordRequest: require("./schemas/resetPasswordRequest"),
-                passwordRequest: require("./schemas/passwordRequest"),
-            };
+	async initialize() {
+		const importSchema = schemaName =>
+			new Promise(resolve => {
+				import(`./schemas/${schemaName}`).then(schema => resolve(schema.default));
+			});
 
-            this.enabled = config.get("apis.mailgun.enabled");
+		this.schemas = {
+			verifyEmail: await importSchema("verifyEmail"),
+			resetPasswordRequest: await importSchema("resetPasswordRequest"),
+			passwordRequest: await importSchema("passwordRequest")
+		};
 
-            if (this.enabled)
-                mailgun = require("mailgun-js")({
-                    apiKey: config.get("apis.mailgun.key"),
-                    domain: config.get("apis.mailgun.domain"),
-                });
+		return new Promise(resolve => resolve());
+	}
 
-            resolve();
-        });
-    }
+	SEND_MAIL(payload) {
+		// data, cb
+		return new Promise(resolve => {
+			if (this.enabled)
+				mailgun.messages().send(payload.data, () => {
+					resolve();
+				});
+			else resolve();
+		});
+	}
 
-    SEND_MAIL(payload) {
-        //data, cb
-        return new Promise((resolve, reject) => {
-            if (this.enabled)
-                mailgun.messages().send(payload.data, () => {
-                    resolve();
-                });
-            else resolve();
-        });
-    }
-
-    GET_SCHEMA(payload) {
-        return new Promise((resolve, reject) => {
-            resolve(this.schemas[payload.schemaName]);
-        });
-    }
+	GET_SCHEMA(payload) {
+		return new Promise(resolve => {
+			resolve(this.schemas[payload.schemaName]);
+		});
+	}
 }
 
-module.exports = new MailModule();
+export default new MailModule();

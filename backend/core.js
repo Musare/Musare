@@ -1,207 +1,219 @@
-const async = require("async");
-const config = require("config");
+import async from "async";
+import config from "config";
 
 class DeferredPromise {
-    constructor() {
-        this.promise = new Promise((resolve, reject) => {
-            this.reject = reject;
-            this.resolve = resolve;
-        });
-    }
+	constructor() {
+		this.promise = new Promise((resolve, reject) => {
+			this.reject = reject;
+			this.resolve = resolve;
+		});
+	}
 }
 
 class MovingAverageCalculator {
-    constructor() {
-        this.count = 0;
-        this._mean = 0;
-    }
+	constructor() {
+		this.count = 0;
+		this._mean = 0;
+	}
 
-    update(newValue) {
-        this.count++;
-        const differential = (newValue - this._mean) / this.count;
-        this._mean += differential;
-    }
+	update(newValue) {
+		this.count += 1;
+		const differential = (newValue - this._mean) / this.count;
+		this._mean += differential;
+	}
 
-    get mean() {
-        this.validate();
-        return this._mean;
-    }
+	get mean() {
+		this.validate();
+		return this._mean;
+	}
 
-    validate() {
-        if (this.count === 0) throw new Error("Mean is undefined");
-    }
+	validate() {
+		if (this.count === 0) throw new Error("Mean is undefined");
+	}
 }
 
-class CoreClass {
-    constructor(name) {
-        this.name = name;
-        this.status = "UNINITIALIZED";
-        // this.log("Core constructor");
-        this.jobQueue = async.priorityQueue(
-            ({ job, options }, callback) => this._runJob(job, options, callback),
-            10 // How many jobs can run concurrently
-        );
-        this.jobQueue.pause();
-        this.runningJobs = [];
-        this.priorities = {};
-        this.stage = 0;
-        this.jobStatistics = {};
+export default class CoreClass {
+	constructor(name) {
+		this.name = name;
+		this.status = "UNINITIALIZED";
+		// this.log("Core constructor");
+		this.jobQueue = async.priorityQueue(
+			({ job, options }, callback) => this._runJob(job, options, callback),
+			10 // How many jobs can run concurrently
+		);
+		this.jobQueue.pause();
+		this.runningJobs = [];
+		this.priorities = {};
+		this.stage = 0;
+		this.jobStatistics = {};
 
-        this.registerJobs();
-    }
+		this.registerJobs();
+	}
 
-    setStatus(status) {
-        this.status = status;
-        this.log("INFO", `Status changed to: ${status}`);
-        if (this.status === "READY") this.jobQueue.resume();
-        else if (this.status === "FAIL" || this.status === "LOCKDOWN")
-            this.jobQueue.pause();
-    }
+	setStatus(status) {
+		this.status = status;
+		this.log("INFO", `Status changed to: ${status}`);
+		if (this.status === "READY") this.jobQueue.resume();
+		else if (this.status === "FAIL" || this.status === "LOCKDOWN") this.jobQueue.pause();
+	}
 
-    getStatus() {
-        return this.status;
-    }
+	getStatus() {
+		return this.status;
+	}
 
-    setStage(stage) {
-        this.stage = stage;
-    }
+	setStage(stage) {
+		this.stage = stage;
+	}
 
-    getStage() {
-        return this.stage;
-    }
+	getStage() {
+		return this.stage;
+	}
 
-    _initialize() {
-        this.setStatus("INITIALIZING");
-        this.initialize()
-            .then(() => {
-                this.setStatus("READY");
-                this.moduleManager.onInitialize(this);
-            })
-            .catch((err) => {
-                console.error(err);
-                this.setStatus("FAILED");
-                this.moduleManager.onFail(this);
-            });
-    }
+	_initialize() {
+		this.setStatus("INITIALIZING");
 
-    log() {
-        let _arguments = Array.from(arguments);
-        const type = _arguments[0];
+		this.initialize()
+			.then(() => {
+				this.setStatus("READY");
+				this.moduleManager.onInitialize(this);
+			})
+			.catch(err => {
+				console.error(err);
+				this.setStatus("FAILED");
+				this.moduleManager.onFail(this);
+			});
+	}
 
-        if (config.debug && config.debug.stationIssue === true && type === "STATION_ISSUE") {
-            this.moduleManager.debugLogs.stationIssue.push(_arguments);
-            return;
-        }
+	log(...args) {
+		const _arguments = Array.from(args);
+		const type = _arguments[0];
 
-        _arguments.splice(0, 1);
-        const start = `|${this.name.toUpperCase()}|`;
-        const numberOfTabsNeeded = 4 - Math.ceil(start.length / 8);
-        _arguments.unshift(`${start}${Array(numberOfTabsNeeded).join("\t")}`);
+		if (config.debug && config.debug.stationIssue === true && type === "STATION_ISSUE") {
+			this.moduleManager.debugLogs.stationIssue.push(_arguments);
+			return;
+		}
 
-        if (type === "INFO") {
-            _arguments[0] = _arguments[0] + "\x1b[36m";
-            _arguments.push("\x1b[0m");
-            console.log.apply(null, _arguments);
-        } else if (type === "ERROR") {
-            _arguments[0] = _arguments[0] + "\x1b[31m";
-            _arguments.push("\x1b[0m");
-            console.error.apply(null, _arguments);
-        }
-    }
+		_arguments.splice(0, 1);
+		const start = `|${this.name.toUpperCase()}|`;
+		const numberOfTabsNeeded = 4 - Math.ceil(start.length / 8);
+		_arguments.unshift(`${start}${Array(numberOfTabsNeeded).join("\t")}`);
 
-    registerJobs() {
-        let props = [];
-        let obj = this;
-        do {
-            props = props.concat(Object.getOwnPropertyNames(obj));
-        } while ((obj = Object.getPrototypeOf(obj)));
+		if (type === "INFO") {
+			_arguments[0] += "\x1b[36m";
+			_arguments.push("\x1b[0m");
+			console.log.apply(null, _arguments);
+		} else if (type === "ERROR") {
+			_arguments[0] += "\x1b[31m";
+			_arguments.push("\x1b[0m");
+			console.error.apply(null, _arguments);
+		}
+	}
 
-        const jobNames = props
-            .sort()
-            .filter(
-                (prop) =>
-                    typeof this[prop] == "function" &&
-                    prop === prop.toUpperCase()
-            );
+	registerJobs() {
+		let props = [];
+		let obj = this;
+		do {
+			props = props.concat(Object.getOwnPropertyNames(obj));
+			// eslint-disable-next-line no-cond-assign
+		} while ((obj = Object.getPrototypeOf(obj)));
 
-        jobNames.forEach((jobName) => {
-            this.jobStatistics[jobName] = {
-                successful: 0,
-                failed: 0,
-                total: 0,
-                averageTiming: new MovingAverageCalculator(),
-            };
-        });
-    }
+		const jobNames = props.sort().filter(prop => typeof this[prop] === "function" && prop === prop.toUpperCase());
 
-    runJob(name, payload, options = { isQuiet: false, bypassQueue: false }) {
-        let deferredPromise = new DeferredPromise();
-        const job = { name, payload, onFinish: deferredPromise };
+		jobNames.forEach(jobName => {
+			this.jobStatistics[jobName] = {
+				successful: 0,
+				failed: 0,
+				total: 0,
+				averageTiming: new MovingAverageCalculator()
+			};
+		});
+	}
 
-        if (config.debug && config.debug.stationIssue === true && config.debug.captureJobs && config.debug.captureJobs.indexOf(name) !== -1) {
-            this.moduleManager.debugJobs.all.push(job);
-        }
+	runJob(name, payload, options = { isQuiet: false, bypassQueue: false }) {
+		const deferredPromise = new DeferredPromise();
+		const job = { name, payload, onFinish: deferredPromise };
 
-        if (options.bypassQueue) this._runJob(job, options, () => {});
-        else {
-            const priority = this.priorities[name] ? this.priorities[name] : 10;
-            this.jobQueue.push({ job, options }, priority);
-        }
+		if (
+			config.debug &&
+			config.debug.stationIssue === true &&
+			config.debug.captureJobs &&
+			config.debug.captureJobs.indexOf(name) !== -1
+		) {
+			this.moduleManager.debugJobs.all.push(job);
+		}
 
-        return deferredPromise.promise;
-    }
+		if (options.bypassQueue) this._runJob(job, options, () => {});
+		else {
+			const priority = this.priorities[name] ? this.priorities[name] : 10;
+			this.jobQueue.push({ job, options }, priority);
+		}
 
-    setModuleManager(moduleManager) {
-        this.moduleManager = moduleManager;
-    }
+		return deferredPromise.promise;
+	}
 
-    _runJob(job, options, cb) {
-        if (!options.isQuiet) this.log("INFO", `Running job ${job.name}`);
+	setModuleManager(moduleManager) {
+		this.moduleManager = moduleManager;
+	}
 
-        const startTime = Date.now();
+	_runJob(job, options, cb) {
+		if (!options.isQuiet) this.log("INFO", `Running job ${job.name}`);
 
-        this.runningJobs.push(job);
+		const startTime = Date.now();
 
-        const newThis = Object.assign(
-            Object.create(Object.getPrototypeOf(this)),
-            this
-        );
+		this.runningJobs.push(job);
 
-        newThis.runJob = (...args) => {
-            if (args.length === 2) args.push({});
-            args[2].bypassQueue = true;
-            return this.runJob.apply(this, args);
-        };
+		const newThis = Object.assign(Object.create(Object.getPrototypeOf(this)), this);
 
-        this[job.name]
-            .apply(newThis, [job.payload])
-            .then((response) => {
-                if (!options.isQuiet) this.log("INFO", `Ran job ${job.name} successfully`);
-                this.jobStatistics[job.name].successful++;
-                if (config.debug && config.debug.stationIssue === true && config.debug.captureJobs && config.debug.captureJobs.indexOf(job.name) !== -1) {
-                    this.moduleManager.debugJobs.completed.push({ status: "success", job, response });
-                }
-                job.onFinish.resolve(response);
-            })
-            .catch((error) => {
-                this.log("INFO", `Running job ${job.name} failed`);
-                this.jobStatistics[job.name].failed++;
-                if (config.debug && config.debug.stationIssue === true && config.debug.captureJobs && config.debug.captureJobs.indexOf(job.name) !== -1) {
-                    this.moduleManager.debugJobs.completed.push({ status: "error", job, error });
-                }
-                job.onFinish.reject(error);
-            })
-            .finally(() => {
-                const endTime = Date.now();
-                const executionTime = endTime - startTime;
-                this.jobStatistics[job.name].total++;
-                this.jobStatistics[job.name].averageTiming.update(
-                    executionTime
-                );
-                this.runningJobs.splice(this.runningJobs.indexOf(job), 1);
-                cb();
-            });
-    }
+		newThis.runJob = (...args) => {
+			if (args.length === 1) args.push({});
+			args[1].bypassQueue = true;
+
+			return this.runJob(...args);
+		};
+
+		this[job.name]
+			.apply(newThis, [job.payload])
+			.then(response => {
+				if (!options.isQuiet) this.log("INFO", `Ran job ${job.name} successfully`);
+				this.jobStatistics[job.name].successful += 1;
+				if (
+					config.debug &&
+					config.debug.stationIssue === true &&
+					config.debug.captureJobs &&
+					config.debug.captureJobs.indexOf(job.name) !== -1
+				) {
+					this.moduleManager.debugJobs.completed.push({
+						status: "success",
+						job,
+						response
+					});
+				}
+				job.onFinish.resolve(response);
+			})
+			.catch(error => {
+				this.log("INFO", `Running job ${job.name} failed`);
+				this.jobStatistics[job.name].failed += 1;
+				if (
+					config.debug &&
+					config.debug.stationIssue === true &&
+					config.debug.captureJobs &&
+					config.debug.captureJobs.indexOf(job.name) !== -1
+				) {
+					this.moduleManager.debugJobs.completed.push({
+						status: "error",
+						job,
+						error
+					});
+				}
+				job.onFinish.reject(error);
+			})
+			.finally(() => {
+				const endTime = Date.now();
+				const executionTime = endTime - startTime;
+				this.jobStatistics[job.name].total += 1;
+				this.jobStatistics[job.name].averageTiming.update(executionTime);
+				this.runningJobs.splice(this.runningJobs.indexOf(job), 1);
+				cb();
+			});
+	}
 }
-
-module.exports = CoreClass;

@@ -1,6 +1,6 @@
-module.exports = {
+export default {
 	username: { type: String, required: true },
-	role: { type: String, default: 'default', required: true },
+	role: { type: String, default: "default", required: true },
 	email: {
 		verified: { type: Boolean, default: false, required: true },
 		verificationToken: String,

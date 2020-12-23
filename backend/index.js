@@ -1,54 +1,51 @@
-"use strict";
+import "./loadEnvVariables.js";
 
-const util = require("util");
+import util from "util";
+import config from "config";
 
-process.env.NODE_CONFIG_DIR = `${__dirname}/config`;
-
-const config = require("config");
-
-process.on("uncaughtException", (err) => {
-    if (err.code === "ECONNREFUSED" || err.code === "UNCERTAIN_STATE") return;
-    console.log(`UNCAUGHT EXCEPTION: ${err.stack}`);
+process.on("uncaughtException", err => {
+	if (err.code === "ECONNREFUSED" || err.code === "UNCERTAIN_STATE") return;
+	console.log(`UNCAUGHT EXCEPTION: ${err.stack}`);
 });
 
 const blacklistedConsoleLogs = [
-    "Running job IO",
-    "Ran job IO successfully",
-    "Running job HGET",
-    "Ran job HGET successfully",
-    "Running job HGETALL",
-    "Ran job HGETALL successfully",
-    "Running job GET_ERROR",
-    "Ran job GET_ERROR successfully",
-    "Running job GET_SCHEMA",
-    "Ran job GET_SCHEMA successfully",
-    "Running job SUB",
-    "Ran job SUB successfully",
-    "Running job GET_MODEL",
-    "Ran job GET_MODEL successfully",
-    "Running job HSET",
-    "Ran job HSET successfully",
-    "Running job CAN_USER_VIEW_STATION",
-    "Ran job CAN_USER_VIEW_STATION successfully",
+	"Running job IO",
+	"Ran job IO successfully",
+	"Running job HGET",
+	"Ran job HGET successfully",
+	"Running job HGETALL",
+	"Ran job HGETALL successfully",
+	"Running job GET_ERROR",
+	"Ran job GET_ERROR successfully",
+	"Running job GET_SCHEMA",
+	"Ran job GET_SCHEMA successfully",
+	"Running job SUB",
+	"Ran job SUB successfully",
+	"Running job GET_MODEL",
+	"Ran job GET_MODEL successfully",
+	"Running job HSET",
+	"Ran job HSET successfully",
+	"Running job CAN_USER_VIEW_STATION",
+	"Ran job CAN_USER_VIEW_STATION successfully"
 ];
 
 const oldConsole = {};
 oldConsole.log = console.log;
 
 console.log = (...args) => {
-    const string = util.format.apply(null, args);
-    let blacklisted = false;
-    blacklistedConsoleLogs.forEach((blacklistedConsoleLog) => {
-        if (string.indexOf(blacklistedConsoleLog) !== -1) blacklisted = true;
-    });
-    if (!blacklisted) oldConsole.log.apply(null, args);
+	const string = util.format.apply(null, args);
+	let blacklisted = false;
+	blacklistedConsoleLogs.forEach(blacklistedConsoleLog => {
+		if (string.indexOf(blacklistedConsoleLog) !== -1) blacklisted = true;
+	});
+	if (!blacklisted) oldConsole.log.apply(null, args);
 };
 
 const fancyConsole = config.get("fancyConsole");
 
 if (config.debug && config.debug.traceUnhandledPromises === true) {
-    console.log("Enabled trace-unhandled/register");
-    require("trace-unhandled/register");
+	console.log("Enabled trace-unhandled/register");
+	import("trace-unhandled/register");
 }
 
 // class ModuleManager {
@@ -234,97 +231,107 @@ if (config.debug && config.debug.traceUnhandledPromises === true) {
 // }
 
 class ModuleManager {
-    constructor() {
-        this.modules = {};
-        this.modulesNotInitialized = [];
-        this.i = 0;
-        this.lockdown = false;
-        this.fancyConsole = fancyConsole;
-        this.debugLogs = {
-            stationIssue: []
-        };
-        this.debugJobs = {
-            all: [],
-            completed: []
-        };
-    }
+	constructor() {
+		this.modules = {};
+		this.modulesNotInitialized = [];
+		this.i = 0;
+		this.lockdown = false;
+		this.fancyConsole = fancyConsole;
+		this.debugLogs = {
+			stationIssue: []
+		};
+		this.debugJobs = {
+			all: [],
+			completed: []
+		};
+	}
 
-    addModule(moduleName) {
-        console.log("add module", moduleName);
-        const module = require(`./logic/${moduleName}`);
-        this.modules[moduleName] = module;
-        this.modulesNotInitialized.push(module);
-    }
+	async addModule(moduleName) {
+		console.log("add module", moduleName);
+		// import(`./logic/${moduleName}`).then(Module => {
+		// 	// eslint-disable-next-line new-cap
 
-    initialize() {
-        // if (!this.modules["logger"]) return console.error("There is no logger module");
-        // this.logger = this.modules["logger"];
-        // if (this.fancyConsole) {
-        // this.replaceConsoleWithLogger();
-        this.reservedLines = Object.keys(this.modules).length + 5;
-        // }
+		// 	const instantiatedModule = new Module.default();
+		// 	this.modules[moduleName] = instantiatedModule;
+		// 	this.modulesNotInitialized.push(instantiatedModule);
+		// 	if (moduleName === "cache") console.log(56, this.modules);
+		// });
 
-        for (let moduleName in this.modules) {
-            let module = this.modules[moduleName];
-            module.setModuleManager(this);
+		this.modules[moduleName] = import(`./logic/${moduleName}`);
+	}
 
-            if (this.lockdown) break;
+	async initialize() {
+		// if (!this.modules["logger"]) return console.error("There is no logger module");
+		// this.logger = this.modules["logger"];
+		// if (this.fancyConsole) {
+		// this.replaceConsoleWithLogger();
+		this.reservedLines = Object.keys(this.modules).length + 5;
+		// }
 
-            module._initialize();
+		await Promise.all(Object.values(this.modules)).then(modules => {
+			for (let module = 0; module < modules.length; module += 1) {
+				this.modules[modules[module].default.name] = modules[module].default;
+				this.modulesNotInitialized.push(modules[module].default);
+			}
+		}); // ensures all modules are imported, then converts promise to the default export of the import
 
-            // let dependenciesInitializedPromises = [];
+		for (let moduleId = 0, moduleNames = Object.keys(this.modules); moduleId < moduleNames.length; moduleId += 1) {
+			const module = this.modules[moduleNames[moduleId]];
 
-            // module.dependsOn.forEach(dependencyName => {
-            // 	let dependency = this.modules[dependencyName];
-            // 	dependenciesInitializedPromises.push(dependency._onInitialize());
-            // });
+			module.setModuleManager(this);
 
-            // module.lastTime = Date.now();
+			if (this.lockdown) break;
 
-            // Promise.all(dependenciesInitializedPromises).then((res, res2) => {
-            // 	if (this.lockdown) return;
-            // 	this.logger.info("MODULE_MANAGER", `${moduleName} dependencies have been completed`);
-            // 	module._initialize();
-            // });
-        }
-    }
+			module._initialize();
 
-    onInitialize(module) {
-        if (this.modulesNotInitialized.indexOf(module) !== -1) {
-            this.modulesNotInitialized.splice(
-                this.modulesNotInitialized.indexOf(module),
-                1
-            );
+			// let dependenciesInitializedPromises = [];
 
-            console.log(
-                "MODULE_MANAGER",
-                `Initialized: ${Object.keys(this.modules).length -
-                    this.modulesNotInitialized.length}/${
-                    Object.keys(this.modules).length
-                }.`
-            );
+			// module.dependsOn.forEach(dependencyName => {
+			// 	let dependency = this.modules[dependencyName];
+			// 	dependenciesInitializedPromises.push(dependency._onInitialize());
+			// });
 
-            if (this.modulesNotInitialized.length === 0)
-                this.onAllModulesInitialized();
-        }
-    }
+			// module.lastTime = Date.now();
 
-    onFail(module) {
-        if (this.modulesNotInitialized.indexOf(module) !== -1) {
-            console.log("A module failed to initialize!");
-        }
-    }
+			// Promise.all(dependenciesInitializedPromises).then((res, res2) => {
+			// 	if (this.lockdown) return;
+			// 	this.logger.info("MODULE_MANAGER", `${moduleName} dependencies have been completed`);
+			// 	module._initialize();
+			// });
+		}
+	}
 
-    onAllModulesInitialized() {
-        console.log("All modules initialized!");
-        this.modules["discord"].runJob("SEND_ADMIN_ALERT_MESSAGE", {
-            message: "The backend server started successfully.",
-            color: "#00AA00",
-            type: "Startup",
-            critical: false,
-            extraFields: [],
-        });
-    }
+	onInitialize(module) {
+		if (this.modulesNotInitialized.indexOf(module) !== -1) {
+			this.modulesNotInitialized.splice(this.modulesNotInitialized.indexOf(module), 1);
+
+			console.log(
+				"MODULE_MANAGER",
+				`Initialized: ${Object.keys(this.modules).length - this.modulesNotInitialized.length}/${
+					Object.keys(this.modules).length
+				}.`
+			);
+
+			if (this.modulesNotInitialized.length === 0) this.onAllModulesInitialized();
+		}
+	}
+
+	onFail(module) {
+		if (this.modulesNotInitialized.indexOf(module) !== -1) {
+			console.log("A module failed to initialize!");
+		}
+	}
+
+	onAllModulesInitialized() {
+		console.log("All modules initialized!");
+		this.modules.discord.runJob("SEND_ADMIN_ALERT_MESSAGE", {
+			message: "The backend server started successfully.",
+			color: "#00AA00",
+			type: "Startup",
+			critical: false,
+			extraFields: []
+		});
+	}
 }
 
 const moduleManager = new ModuleManager();
@@ -348,43 +355,45 @@ moduleManager.addModule("utils");
 
 moduleManager.initialize();
 
-process.stdin.on("data", function(data) {
-    const command = data.toString().replace(/\r?\n|\r/g, "");
-    if (command === "lockdown") {
-        console.log("Locking down.");
-        moduleManager._lockdown();
-    }
-    if (command === "status") {
-        console.log("Status:");
+process.stdin.on("data", data => {
+	const command = data.toString().replace(/\r?\n|\r/g, "");
+	if (command === "lockdown") {
+		console.log("Locking down.");
+		moduleManager._lockdown();
+	}
+	if (command === "status") {
+		console.log("Status:");
 
-        for (let moduleName in moduleManager.modules) {
-            let module = moduleManager.modules[moduleName];
-            const tabsNeeded = 4 - Math.ceil((moduleName.length + 1) / 8);
-            console.log(
-                `${moduleName.toUpperCase()}${Array(tabsNeeded).join(
-                    "\t"
-                )}${module.getStatus()}. Jobs in queue: ${module.jobQueue.length()}. Jobs in progress: ${module.jobQueue.running()}. Concurrency: ${
-                    module.jobQueue.concurrency
-                }. Stage: ${module.getStage()}`
-            );
-        }
-        // moduleManager._lockdown();
-    }
-    if (command.startsWith("running")) {
-        const parts = command
-            .split(" ");
+		for (
+			let moduleName = 0, moduleKeys = Object.keys(moduleManager.modules);
+			moduleName < moduleKeys.length;
+			moduleName += 1
+		) {
+			const module = moduleManager.modules[moduleName];
+			const tabsNeeded = 4 - Math.ceil((moduleName.length + 1) / 8);
+			console.log(
+				`${moduleName.toUpperCase()}${Array(tabsNeeded).join(
+					"\t"
+				)}${module.getStatus()}. Jobs in queue: ${module.jobQueue.length()}. Jobs in progress: ${module.jobQueue.running()}. Concurrency: ${
+					module.jobQueue.concurrency
+				}. Stage: ${module.getStage()}`
+			);
+		}
+		// moduleManager._lockdown();
+	}
+	if (command.startsWith("running")) {
+		const parts = command.split(" ");
 
-        console.log(moduleManager.modules[parts[1]].runningJobs);
-    }
-    if (command.startsWith("stats")) {
-        const parts = command
-            .split(" ");
+		console.log(moduleManager.modules[parts[1]].runningJobs);
+	}
+	if (command.startsWith("stats")) {
+		const parts = command.split(" ");
 
-        console.log(moduleManager.modules[parts[1]].jobStatistics);
-    }
-    if (command.startsWith("debug")) {
-        moduleManager.modules["utils"].runJob("DEBUG");
-    }
+		console.log(moduleManager.modules[parts[1]].jobStatistics);
+	}
+	if (command.startsWith("debug")) {
+		moduleManager.modules.utils.runJob("DEBUG");
+	}
 });
 
-module.exports = moduleManager;
+export default moduleManager;

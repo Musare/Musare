@@ -1,4 +1,4 @@
-module.exports = {
+export default {
 	displayName: { type: String, min: 2, max: 32, required: true },
 	songs: { type: Array },
 	createdBy: { type: String, required: true },

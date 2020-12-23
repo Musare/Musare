@@ -2,15 +2,17 @@
   "name": "musare-backend",
   "private": true,
   "version": "2.1.0",
+  "type": "module",
   "description": "A modern, open-source, collaborative music app https://musare.com",
   "main": "index.js",
   "author": "Musare Team",
   "license": "GPL-3.0",
   "repository": "https://github.com/Musare/MusareNode",
   "scripts": {
-    "dev": "nodemon",
-    "docker:dev": "nodemon -L /opt/app",
-    "docker:prod": "node /opt/app"
+    "dev": "nodemon --es-module-specifier-resolution=node",
+    "docker:dev": "nodemon --es-module-specifier-resolution=node -L /opt/app",
+    "docker:prod": "node --es-module-specifier-resolution=node /opt/app",
+    "lint": "npx eslint logic"
   },
   "dependencies": {
     "async": "3.1.0",
@@ -33,6 +35,13 @@
     "underscore": "^1.10.2"
   },
   "devDependencies": {
+    "eslint": "^7.16.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-config-prettier": "^7.1.0",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-jsdoc": "^30.7.9",
+    "eslint-plugin-prettier": "^3.3.0",
+    "prettier": "^2.2.1",
     "trace-unhandled": "^1.2.1"
   }
 }
