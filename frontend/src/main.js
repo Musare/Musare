@@ -44,6 +44,7 @@ Vue.directive("scroll", {
 
 Vue.directive("focus", {
 	inserted(el) {
+		window.focusedElementBefore = document.activeElement;
 		el.focus();
 	}
 });

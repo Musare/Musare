@@ -151,6 +151,11 @@ export default {
 			this.openModal({ sector: "admin", modal: "editSong" });
 		},
 		remove(id) {
+			// eslint-disable-next-line
+			const dialogResult = window.confirm(
+				"Are you sure you want to delete this song?"
+			);
+			if (dialogResult !== true) return;
 			this.socket.emit("songs.remove", id, res => {
 				if (res.status === "success")
 					new Toast({ content: res.message, timeout: 4000 });

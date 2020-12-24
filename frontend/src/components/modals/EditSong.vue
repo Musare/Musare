@@ -560,6 +560,7 @@ export default {
 	components: { Modal },
 	data() {
 		return {
+			focusedElementBefore: null,
 			discogsQuery: "",
 			youtubeVideoDuration: 0.0,
 			youtubeVideoCurrentTime: 0.0,
@@ -1386,6 +1387,9 @@ export default {
 					sector: "admin",
 					modal: "editSong"
 				});
+				setTimeout(() => {
+					window.focusedElementBefore.focus();
+				}, 500);
 			}
 		});
 
