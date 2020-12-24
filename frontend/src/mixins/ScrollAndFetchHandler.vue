@@ -5,7 +5,8 @@ export default {
 			position: 1,
 			maxPosition: 1,
 			gettingSet: false,
-			loadAllSongs: false
+			loadAllSongs: false,
+			interval: null
 		};
 	},
 	computed: {
@@ -29,8 +30,18 @@ export default {
 		},
 		loadAll() {
 			this.loadAllSongs = true;
-			this.getSet();
+			this.interval = setInterval(() => {
+				if (this.loadAllSongs && this.maxPosition > this.position)
+					this.getSet();
+				else {
+					clearInterval(this.interval);
+					this.loadAllSongs = false;
+				}
+			}, 500);
 		}
+	},
+	unmounted() {
+		clearInterval(this.interval);
 	}
 };
 </script>

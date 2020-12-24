@@ -201,14 +201,6 @@ export default {
 				this.maxPosition = Math.ceil(length / 15) + 1;
 
 				this.getSet();
-
-				setTimeout(() => {
-					if (
-						!this.loadAllSongs &&
-						this.maxPosition > this.position - 1
-					)
-						this.getSet();
-				}, 1000);
 			});
 
 			this.socket.emit("apis.joinAdminRoom", "queue", () => {});
