@@ -514,22 +514,8 @@
 				</button>
 			</div>
 		</modal>
-		<div
-			id="genre-helper-container"
-			:style="{
-				width: genreHelper.width + 'px',
-				height: genreHelper.height + 'px',
-				top: genreHelper.top + 'px',
-				left: genreHelper.left + 'px'
-			}"
-			v-if="genreHelper.shown"
-			@mousedown="onResizeGenreHelper"
-		>
-			<div
-				class="genre-helper-header"
-				@mousedown="onDragGenreHelper"
-			></div>
-			<div class="genre-helper-body">
+		<floating-box id="genreHelper" ref="genreHelper">
+			<template #body>
 				<span>Blues</span><span>Country</span><span>Disco</span
 				><span>Funk</span><span>Hip-Hop</span><span>Jazz</span
 				><span>Metal</span><span>Oldies</span><span>Other</span
@@ -542,8 +528,8 @@
 				><span>Drum & Bass</span><span>Club-House</span
 				><span>Indie</span><span>Heavy Metal</span
 				><span>Christian rock</span><span>Dubstep</span>
-			</div>
-		</div>
+			</template>
+		</floating-box>
 	</div>
 </template>
 
@@ -555,9 +541,10 @@ import io from "../../io";
 import keyboardShortcuts from "../../keyboardShortcuts";
 import validation from "../../validation";
 import Modal from "../Modal.vue";
+import FloatingBox from "../ui/FloatingBox.vue";
 
 export default {
-	components: { Modal },
+	components: { Modal, FloatingBox },
 	data() {
 		return {
 			focusedElementBefore: null,
@@ -583,17 +570,6 @@ export default {
 			keydownGenreInputTimeout: 0,
 			artistAutosuggestItems: [],
 			genreAutosuggestItems: [],
-			genreHelper: {
-				width: 200,
-				height: 200,
-				top: 0,
-				left: 0,
-				shown: false,
-				pos1: 0,
-				pos2: 0,
-				pos3: 0,
-				pos4: 0
-			},
 			genres: [
 				"Blues",
 				"Country",
@@ -1072,79 +1048,11 @@ export default {
 			ctx.fillStyle = currentDurationColor;
 			ctx.fillRect(widthCurrentTime, 0, 1, 20);
 		},
-		onDragGenreHelper(e) {
-			const e1 = e || window.event;
-			e1.preventDefault();
-
-			this.genreHelper.pos3 = e1.clientX;
-			this.genreHelper.pos4 = e1.clientY;
-
-			document.onmousemove = e => {
-				const e2 = e || window.event;
-				e2.preventDefault();
-				// calculate the new cursor position:
-				this.genreHelper.pos1 = this.genreHelper.pos3 - e.clientX;
-				this.genreHelper.pos2 = this.genreHelper.pos4 - e.clientY;
-				this.genreHelper.pos3 = e.clientX;
-				this.genreHelper.pos4 = e.clientY;
-				// set the element's new position:
-				this.genreHelper.top -= this.genreHelper.pos2;
-				this.genreHelper.left -= this.genreHelper.pos1;
-			};
-
-			document.onmouseup = () => {
-				document.onmouseup = null;
-				document.onmousemove = null;
-
-				this.saveGenreHelper();
-			};
-		},
-		onResizeGenreHelper(e) {
-			if (e.target.id !== "genre-helper-container") return;
-
-			document.onmouseup = () => {
-				document.onmouseup = null;
-
-				const { height, width } = e.target.style;
-
-				this.genreHelper.height = Number(
-					height
-						.split("")
-						.splice(0, height.length - 2)
-						.join("")
-				);
-				this.genreHelper.width = Number(
-					width
-						.split("")
-						.splice(0, width.length - 2)
-						.join("")
-				);
-
-				this.saveGenreHelper();
-			};
-		},
 		toggleGenreHelper() {
-			this.genreHelper.shown = !this.genreHelper.shown;
-			this.saveGenreHelper();
+			this.$refs.genreHelper.toggleBox();
 		},
 		resetGenreHelper() {
-			this.genreHelper.top = 0;
-			this.genreHelper.left = 0;
-			this.genreHelper.width = 200;
-			this.genreHelper.height = 200;
-			this.saveGenreHelper();
-		},
-		saveGenreHelper() {
-			localStorage.setItem(
-				"genreHelper",
-				JSON.stringify({
-					height: this.genreHelper.height,
-					width: this.genreHelper.width,
-					top: this.genreHelper.top,
-					left: this.genreHelper.left,
-					shown: this.genreHelper.shown
-				})
-			);
+			this.$refs.genreHelper.resetBox();
 		},
 		...mapActions("admin/songs", [
 			"stopVideo",
@@ -1164,15 +1072,6 @@ export default {
 		//   this.editing.song.songId,
 		//   this.editing.song.skipDuration
 		// );
-
-		if (localStorage.genreHelper) {
-			const genreHelper = JSON.parse(localStorage.getItem("genreHelper"));
-			this.genreHelper.height = genreHelper.height;
-			this.genreHelper.width = genreHelper.width;
-			this.genreHelper.top = genreHelper.top;
-			this.genreHelper.left = genreHelper.left;
-			this.genreHelper.shown = genreHelper.shown;
-		}
 
 		this.discogsQuery = this.editing.song.title;
 
@@ -1485,37 +1384,6 @@ export default {
 
 <style lang="scss">
 @import "../../styles/global.scss";
-
-#genre-helper-container {
-	background-color: white;
-	position: fixed;
-	z-index: 10000000;
-	resize: both;
-	overflow: auto;
-	border: 1px solid #d3d3d3;
-	min-height: 50px !important;
-	min-width: 50px !important;
-
-	.genre-helper-header {
-		cursor: move;
-		z-index: 100000001;
-		background-color: $musare-blue;
-		padding: 10px;
-		display: block;
-		height: 10px;
-		width: 100%;
-	}
-
-	.genre-helper-body {
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: space-evenly;
-
-		span {
-			padding: 3px 6px;
-		}
-	}
-}
 
 .song-modal {
 	.modal-card-title {
