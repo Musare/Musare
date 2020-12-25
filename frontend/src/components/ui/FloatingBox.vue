@@ -2,6 +2,8 @@
 	<div
 		ref="box"
 		class="box"
+		:id="id"
+		v-if="shown"
 		:style="{
 			width: width + 'px',
 			height: height + 'px',
