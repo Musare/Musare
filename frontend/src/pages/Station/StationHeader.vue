@@ -220,6 +220,17 @@
 						>Display users in the station</span
 					>
 				</a>
+				<a
+					class="sidebar-item"
+					href="#"
+					@click="$parent.togglePlayerDebugBox()"
+					@dblclick="$parent.resetPlayerDebugBox()"
+				>
+					<span class="icon">
+						<i class="material-icons">bug_report</i>
+					</span>
+					<span class="icon-purpose">Toggle debug player box</span>
+				</a>
 			</div>
 		</div>
 	</div>
