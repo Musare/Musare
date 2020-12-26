@@ -28,6 +28,36 @@
 				Keyboard shortcuts helper
 			</button>
 			<br />
+			<div>
+				<input
+					type="text"
+					placeholder="Filter artist checkboxes"
+					v-model="artistFilterQuery"
+				/>
+				<label v-for="artist in filteredArtists" :key="artist">
+					<input
+						type="checkbox"
+						:checked="artistFilterSelected.indexOf(artist) !== -1"
+						@click="toggleArtistSelected(artist)"
+					/>
+					<span>{{ artist }}</span>
+				</label>
+			</div>
+			<div>
+				<input
+					type="text"
+					placeholder="Filter genre checkboxes"
+					v-model="genreFilterQuery"
+				/>
+				<label v-for="genre in filteredGenres" :key="genre">
+					<input
+						type="checkbox"
+						:checked="genreFilterSelected.indexOf(genre) !== -1"
+						@click="toggleGenreSelected(genre)"
+					/>
+					<span>{{ genre }}</span>
+				</label>
+			</div>
 			<br />
 			<table class="table is-striped">
 				<thead>
@@ -185,6 +215,10 @@ export default {
 	data() {
 		return {
 			searchQuery: "",
+			artistFilterQuery: "",
+			artistFilterSelected: [],
+			genreFilterQuery: "",
+			genreFilterSelected: [],
 			editing: {
 				index: 0,
 				song: {}
@@ -197,8 +231,62 @@ export default {
 				song =>
 					JSON.stringify(Object.values(song)).indexOf(
 						this.searchQuery
-					) !== -1
+					) !== -1 &&
+					(this.artistFilterSelected.length === 0 ||
+						song.artists.some(
+							artist =>
+								this.artistFilterSelected.indexOf(artist) !== -1
+						)) &&
+					(this.genreFilterSelected.length === 0 ||
+						song.genres.some(
+							genre =>
+								this.genreFilterSelected.indexOf(genre) !== -1
+						))
 			);
+		},
+		artists() {
+			const artists = [];
+			this.songs.forEach(song => {
+				song.artists.forEach(artist => {
+					if (artists.indexOf(artist) === -1) artists.push(artist);
+				});
+			});
+			return artists.sort();
+		},
+		filteredArtists() {
+			return this.artists
+				.filter(
+					artist =>
+						this.artistFilterSelected.indexOf(artist) !== -1 ||
+						artist.indexOf(this.artistFilterQuery) !== -1
+				)
+				.sort(
+					(a, b) =>
+						(this.artistFilterSelected.indexOf(a) === -1 ? 1 : 0) -
+						(this.artistFilterSelected.indexOf(b) === -1 ? 1 : 0)
+				);
+		},
+		genres() {
+			const genres = [];
+			this.songs.forEach(song => {
+				song.genres.forEach(genre => {
+					if (genres.indexOf(genre) === -1) genres.push(genre);
+				});
+			});
+			return genres.sort();
+		},
+		filteredGenres() {
+			return this.genres
+				.filter(
+					genre =>
+						this.genreFilterSelected.indexOf(genre) !== -1 ||
+						genre.indexOf(this.genreFilterQuery) !== -1
+				)
+				.sort(
+					(a, b) =>
+						(this.genreFilterSelected.indexOf(a) === -1 ? 1 : 0) -
+						(this.genreFilterSelected.indexOf(b) === -1 ? 1 : 0)
+				);
 		},
 		...mapState("modals", {
 			modals: state => state.modals.admin
@@ -243,6 +331,24 @@ export default {
 				this.position += 1;
 				this.gettingSet = false;
 			});
+		},
+		toggleArtistSelected(artist) {
+			if (this.artistFilterSelected.indexOf(artist) === -1)
+				this.artistFilterSelected.push(artist);
+			else
+				this.artistFilterSelected.splice(
+					this.artistFilterSelected.indexOf(artist),
+					1
+				);
+		},
+		toggleGenreSelected(genre) {
+			if (this.genreFilterSelected.indexOf(genre) === -1)
+				this.genreFilterSelected.push(genre);
+			else
+				this.genreFilterSelected.splice(
+					this.genreFilterSelected.indexOf(genre),
+					1
+				);
 		},
 		toggleKeyboardShortcutsHelper() {
 			this.$refs.keyboardShortcutsHelper.toggleBox();
