@@ -12,7 +12,9 @@
 		<span
 			class="nav-toggle"
 			:class="{ 'is-active': isMobile }"
+			tabindex="0"
 			@click="isMobile = !isMobile"
+			@keyup.enter="isMobile = !isMobile"
 		>
 			<span />
 			<span />
@@ -124,6 +126,7 @@ export default {
 	flex-shrink: 0;
 	background-color: $primary-color;
 	height: 64px;
+	overflow: hidden;
 	border-radius: 0% 0% 33% 33% / 0% 0% 7% 7%;
 
 	.nav-menu.is-active {
@@ -145,8 +148,13 @@ export default {
 	.nav-toggle {
 		height: 64px;
 
-		&.is-active span {
-			background-color: $dark-grey-2;
+		&:hover,
+		&:active {
+			background-color: darken($musare-blue, 10%);
+		}
+
+		span {
+			background-color: $white;
 		}
 	}
 

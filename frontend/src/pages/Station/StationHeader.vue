@@ -14,7 +14,12 @@
 				<h4>{{ station.displayName }}</h4>
 			</div>
 
-			<span class="nav-toggle" @click="controlBar = !controlBar">
+			<span
+				class="nav-toggle"
+				tab-index="0"
+				@click="controlBar = !controlBar"
+				@keyup.enter="isMobile = !isMobile"
+			>
 				<span />
 				<span />
 				<span />
@@ -309,6 +314,7 @@ export default {
 .nav {
 	background-color: $primary-color;
 	line-height: 64px;
+	overflow: hidden;
 	border-radius: 0% 0% 33% 33% / 0% 0% 7% 7%;
 	transition: border-radius 0.1s 0s linear;
 
@@ -371,8 +377,20 @@ a.nav-item.is-tab:hover {
 	}
 }
 
+.nav {
+}
+
 .nav-toggle {
 	height: 64px;
+
+	span {
+		background-color: $white;
+	}
+
+	&:hover,
+	&:active {
+		background-color: darken($musare-blue, 10%);
+	}
 }
 
 @media screen and (max-width: 998px) {
