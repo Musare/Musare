@@ -402,12 +402,7 @@ export default {
 		if (this.$route.query.songId) {
 			this.socket.emit("songs.getSong", this.$route.query.songId, res => {
 				if (res.status === "success") {
-					this.edit(res.data);
-
-					this.closeModal({
-						sector: "admin",
-						modal: "viewReport"
-					});
+					this.edit(res.data.song);
 				} else
 					new Toast({
 						content: "Song with that ID not found",
