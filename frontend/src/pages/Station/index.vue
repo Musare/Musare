@@ -431,6 +431,10 @@
 		<floating-box id="playerDebugBox" ref="playerDebugBox">
 			<template #body>
 				<span><b>YouTube id</b>: {{ currentSong.songId }}</span>
+				<span><b>Duration</b>: {{ currentSong.duration }}</span>
+				<span
+					><b>Skip duration</b>: {{ currentSong.skipDuration }}</span
+				>
 				<span><b>Can autoplay</b>: {{ canAutoplay }}</span>
 				<span
 					><b>Attempts to play video</b>:
