@@ -38,3 +38,4 @@ jobs:
         - docker-compose up -d redis # start redis
         - docker-compose build backend # build backend
         - docker-compose up -d backend # start backend
+        - docker-compose exec backend /bin/bash -c "cd app && npm run lint" # using eslint to check for formatting/linting issues
