@@ -326,12 +326,17 @@ html {
 		background-color: $night-mode-secondary;
 	}
 
-	.card-content .icons i {
+	.card-content .icons i,
+	.group-title i {
 		color: #ddd;
 	}
 
 	.card-image .image {
 		background-color: #333;
+	}
+
+	.card-content .under-content .hostedBy {
+		color: #ddd;
 	}
 }
 

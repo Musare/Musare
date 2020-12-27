@@ -116,6 +116,12 @@ export default {
 <style lang="scss" scoped>
 @import "../../styles/global.scss";
 
+.night-mode .content {
+	background-color: #222;
+	padding: 20px;
+	border-radius: 3px;
+}
+
 .container {
 	@media only screen and (min-width: 900px) {
 		width: 962px;
@@ -134,7 +140,6 @@ export default {
 	flex-direction: column;
 
 	.nav-links {
-		height: 100%;
 		width: 250px;
 		margin-right: 64px;
 
@@ -162,6 +167,7 @@ export default {
 
 	.content {
 		margin: 24px 0;
+		height: fit-content;
 
 		label {
 			font-size: 14px;
@@ -186,12 +192,6 @@ export default {
 		button {
 			width: 100%;
 		}
-	}
-}
-
-.night-mode {
-	label {
-		color: #ddd !important;
 	}
 }
 </style>

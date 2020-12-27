@@ -482,7 +482,7 @@ h4.section-title {
 }
 
 .section-description {
-	font-size: 17px;
+	font-size: 16px;
 	margin-bottom: 5px;
 }
 </style>

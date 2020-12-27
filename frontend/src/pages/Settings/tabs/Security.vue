@@ -265,4 +265,20 @@ export default {
 .section-description {
 	margin-bottom: 0 !important;
 }
+
+.night-mode {
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6 {
+		color: #fff !important;
+	}
+
+	p,
+	label {
+		color: #ddd !important;
+	}
+}
 </style>

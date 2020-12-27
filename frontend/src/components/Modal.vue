@@ -60,14 +60,17 @@ export default {
 
 	p,
 	label,
-	td,
+	td {
+		color: #ddd !important;
+	}
+
 	h1,
 	h2,
 	h3,
 	h4,
 	h5,
 	h6 {
-		color: #ddd !important;
+		color: #fff !important;
 	}
 }
 
