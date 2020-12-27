@@ -1,6 +1,6 @@
 import async from "async";
 
-import { isAdminRequired, isLoginRequired, isOwnerRequired } from "./hooks";
+import { isLoginRequired } from "./hooks";
 
 import db from "../db";
 import utils from "../utils";

@@ -2,7 +2,7 @@ import config from "config";
 
 import async from "async";
 
-import { isAdminRequired, isLoginRequired, isOwnerRequired } from "./hooks";
+import { isAdminRequired, isLoginRequired } from "./hooks";
 
 import db from "../db";
 
