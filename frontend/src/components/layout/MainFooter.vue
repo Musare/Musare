@@ -1,7 +1,7 @@
 <template>
 	<footer class="footer">
 		<div class="container">
-			<div class="content has-text-centered">
+			<div class="footer-content has-text-centered">
 				<div id="footer-social-icons">
 					<a
 						class="icon"
@@ -83,7 +83,7 @@ export default {
 .night-mode {
 	footer.footer,
 	footer.footer .container,
-	footer.footer .container .content {
+	footer.footer .container .footer-content {
 		background-color: #222;
 	}
 
@@ -92,11 +92,11 @@ export default {
 	}
 }
 
-.content a:not(.button) {
+.footer-content a:not(.button) {
 	border: 0;
 }
 
-.content {
+.footer-content {
 	display: flex;
 	align-items: center;
 	flex-direction: column;

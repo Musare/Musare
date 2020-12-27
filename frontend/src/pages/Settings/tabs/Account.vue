@@ -1,53 +1,81 @@
 <template>
 	<div class="content account-tab">
-		<p class="control is-expanded">
+		<h4 class="section-title">Change account details</h4>
+
+		<p class="section-description">
+			Keep these details up-to-date.
+		</p>
+
+		<hr class="section-horizontal-rule" />
+
+		<p class="control is-expanded margin-top-zero">
 			<label for="username">Username</label>
 			<input
 				class="input"
 				id="username"
 				type="text"
-				placeholder="Username"
+				placeholder="Enter username here..."
 				v-model="modifiedUser.username"
+				maxlength="32"
+				autocomplete="off"
 				@blur="onInputBlur('username')"
 			/>
+			<span v-if="modifiedUser.username" class="character-counter"
+				>{{ modifiedUser.username.length }}/32</span
+			>
 		</p>
-		<p
-			class="help"
-			v-if="validation.username.entered"
-			:class="validation.username.valid ? 'is-success' : 'is-danger'"
-		>
-			{{ validation.username.message }}
-		</p>
+		<transition name="fadein-helpbox">
+			<p
+				class="help"
+				v-if="validation.username.entered"
+				:class="validation.username.valid ? 'is-success' : 'is-danger'"
+			>
+				{{ validation.username.message }}
+			</p>
+		</transition>
 		<p class="control is-expanded">
 			<label for="email">Email</label>
 			<input
 				class="input"
 				id="email"
 				type="text"
-				placeholder="Email"
+				placeholder="Enter email address here..."
 				v-if="modifiedUser.email"
 				v-model="modifiedUser.email.address"
 				@blur="onInputBlur('email')"
 			/>
 		</p>
-		<p
-			class="help"
-			v-if="validation.email.entered"
-			:class="validation.email.valid ? 'is-success' : 'is-danger'"
-		>
-			{{ validation.email.message }}
-		</p>
-		<button class="button is-primary" @click="saveChangesToAccount()">
-			Save changes
-		</button>
+		<transition name="fadein-helpbox">
+			<p
+				class="help"
+				v-if="validation.email.entered"
+				:class="validation.email.valid ? 'is-success' : 'is-danger'"
+			>
+				{{ validation.email.message }}
+			</p>
+		</transition>
+		<transition name="saved-changes-transition" mode="out-in">
+			<button
+				class="button is-primary save-changes"
+				v-if="!savedChanges"
+				@click="saveChanges()"
+				key="save"
+			>
+				Save changes
+			</button>
+			<button class="button is-success save-changes" key="saved" v-else>
+				<i class="material-icons icon-with-button">done</i>Saved Changes
+			</button>
+		</transition>
 	</div>
 </template>
 
 <script>
-import { mapState } from "vuex";
+import { mapState, mapActions } from "vuex";
 import Toast from "toasters";
 
 import validation from "../../../validation";
+import io from "../../../io";
 
 export default {
 	data() {
@@ -63,7 +91,8 @@ export default {
 					valid: false,
 					message: "Please enter a valid email address."
 				}
-			}
+			},
+			savedChanges: false
 		};
 	},
 	computed: mapState({
@@ -74,7 +103,7 @@ export default {
 	watch: {
 		// prettier-ignore
 		// eslint-disable-next-line func-names
-		"user.username": function (value) {
+		"modifiedUser.username": function (value) {
 		if (!validation.isLength(value, 2, 32)) {
 			this.validation.username.message =
 				"Username must have between 2 and 32 characters.";
@@ -93,7 +122,7 @@ export default {
 		},
 		// prettier-ignore
 		// eslint-disable-next-line func-names
-		"user.email.address": function (value) {
+		"modifiedUser.email.address": function (value) {
 			if (!validation.isLength(value, 3, 254)) {
 				this.validation.email.message =
 					"Email must have between 3 and 254 characters.";
@@ -110,11 +139,22 @@ export default {
 			}
 		}
 	},
+	mounted() {
+		io.getSocket(socket => {
+			this.socket = socket;
+		});
+	},
 	methods: {
+		showSavedAnimation() {
+			this.savedChanges = true;
+			setTimeout(() => {
+				this.savedChanges = false;
+			}, 2000);
+		},
 		onInputBlur(inputName) {
 			this.validation[inputName].entered = true;
 		},
-		saveChangesToAccount() {
+		saveChanges() {
 			if (this.modifiedUser.username !== this.originalUser.username)
 				this.changeUsername();
 			if (
@@ -151,7 +191,13 @@ export default {
 							content: "Successfully changed email address",
 							timeout: 4000
 						});
-						this.originalUser.email.address = email;
+
+						this.updateOriginalUser({
+							property: "email.address",
+							value: email
+						});
+
+						if (!this.savedChanges) this.showSavedAnimation();
 					}
 				}
 			);
@@ -182,11 +228,18 @@ export default {
 							content: "Successfully changed username",
 							timeout: 4000
 						});
-						this.originalUser.username = username;
+
+						this.updateOriginalUser({
+							property: "username",
+							value: username
+						});
+
+						if (!this.savedChanges) this.showSavedAnimation();
 					}
 				}
 			);
-		}
+		},
+		...mapActions("settings", ["updateOriginalUser"])
 	}
 };
 </script>

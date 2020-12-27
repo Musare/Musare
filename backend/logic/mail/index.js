@@ -1,5 +1,6 @@
 /* eslint-disable global-require */
-import mailgun from "mailgun-js";
+import config from "config";
+import Mailgun from "mailgun-js";
 
 import CoreClass from "../../core";
 
@@ -20,14 +21,22 @@ class MailModule extends CoreClass {
 			passwordRequest: await importSchema("passwordRequest")
 		};
 
+		this.enabled = config.get("apis.mailgun.enabled");
+
+		if (this.enabled)
+			this.mailgun = new Mailgun({
+				apiKey: config.get("apis.mailgun.key"),
+				domain: config.get("apis.mailgun.domain")
+			});
+
 		return new Promise(resolve => resolve());
 	}
 
 	SEND_MAIL(payload) {
-		// data, cb
+		// data
 		return new Promise(resolve => {
 			if (this.enabled)
-				mailgun.messages().send(payload.data, () => {
+				this.mailgun.messages().send(payload.data, () => {
 					resolve();
 				});
 			else resolve();

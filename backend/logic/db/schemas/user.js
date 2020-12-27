@@ -7,7 +7,7 @@ export default {
 		address: String
 	},
 	avatar: {
-		type: { type: String, enum: ["gravatar", "initials"] },
+		type: { type: String, enum: ["gravatar", "initials"], required: true },
 		url: { type: String, required: false }
 	},
 	services: {

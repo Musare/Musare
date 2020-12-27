@@ -437,11 +437,60 @@ button.delete:focus {
 			background-color: darken($blue, 5%) !important;
 		}
 	}
+
+	&.is-warning {
+		background-color: $yellow !important;
+
+		&:hover,
+		&:focus {
+			background-color: darken($yellow, 5%) !important;
+		}
+	}
 }
 
 .input,
 .button {
 	height: 36px;
+}
+
+.input {
+	margin-top: 3px;
+}
+
+.help {
+	margin-top: 0 !important;
+	margin-bottom: 5px !important;
+	font-size: 12px;
+}
+
+.fadein-helpbox-enter-active {
+	transition-duration: 0.3s;
+	transition-timing-function: ease-in;
+}
+
+.fadein-helpbox-leave-active {
+	transition-duration: 0.3s;
+	transition-timing-function: cubic-bezier(0, 1, 0.5, 1);
+}
+
+.fadein-helpbox-enter-to,
+.fadein-helpbox-leave {
+	max-height: 100px;
+	overflow: hidden;
+}
+
+.fadein-helpbox-enter,
+.fadein-helpbox-leave-to {
+	overflow: hidden;
+	max-height: 0;
+}
+
+.control {
+	margin-bottom: 5px !important;
+
+	&.control:not(:first-of-type) {
+		margin: 15px 0;
+	}
 }
 
 .input-with-button {
@@ -453,6 +502,7 @@ button.delete:focus {
 		height: 36px;
 		border-radius: 3px 0 0 3px;
 		border-right: 0;
+		border-colour: $light-grey-2;
 	}
 
 	.button {
@@ -483,6 +533,18 @@ h4.section-title {
 
 .section-description {
 	font-size: 16px;
-	margin-bottom: 5px;
+	margin-bottom: 10px !important;
+}
+
+.section-horizontal-rule {
+	margin: 15px 0 30px 0;
+}
+
+.margin-top-zero {
+	margin-top: 0 !important;
+}
+
+.margin-bottom-zero {
+	margin-bottom: 0 !important;
 }
 </style>

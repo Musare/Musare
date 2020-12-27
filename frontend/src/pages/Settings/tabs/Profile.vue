@@ -1,14 +1,52 @@
 <template>
 	<div class="content profile-tab">
-		<p class="control is-expanded">
+		<h4 class="section-title">
+			Change Profile
+		</h4>
+		<p class="section-description">
+			Edit your public profile so other users can find out more about you.
+		</p>
+
+		<hr class="section-horizontal-rule" />
+
+		<div
+			class="control is-expanded avatar-selection-outer-container"
+			v-if="modifiedUser.avatar"
+		>
+			<label>Avatar</label>
+			<div id="avatar-selection-inner-container">
+				<div class="profile-picture">
+					<img
+						:src="
+							modifiedUser.avatar.url &&
+							modifiedUser.avatar.type === 'gravatar'
+								? `${modifiedUser.avatar.url}?d=${notesUri}&s=250`
+								: '/assets/notes.png'
+						"
+						onerror="this.src='/assets/notes.png'; this.onerror=''"
+					/>
+				</div>
+				<div class="select">
+					<select v-model="modifiedUser.avatar.type">
+						<option value="gravatar">Using Gravatar</option>
+						<option value="initials">Based on initials</option>
+					</select>
+				</div>
+			</div>
+		</div>
+		<p class="control is-expanded margin-top-zero">
 			<label for="name">Name</label>
 			<input
 				class="input"
 				id="name"
 				type="text"
-				placeholder="Name"
+				placeholder="Enter name here..."
+				maxlength="64"
 				v-model="modifiedUser.name"
 			/>
+			<span v-if="modifiedUser.name" class="character-counter"
+				>{{ modifiedUser.name.length }}/64</span
+			>
 		</p>
 		<p class="control is-expanded">
 			<label for="location">Location</label>
@@ -16,34 +54,44 @@
 				class="input"
 				id="location"
 				type="text"
-				placeholder="Location"
+				placeholder="Enter location here..."
+				maxlength="50"
 				v-model="modifiedUser.location"
 			/>
+			<span v-if="modifiedUser.location" class="character-counter"
+				>{{ modifiedUser.location.length }}/50</span
+			>
 		</p>
 		<p class="control is-expanded">
 			<label for="bio">Bio</label>
 			<textarea
 				class="textarea"
 				id="bio"
-				placeholder="Bio"
+				placeholder="Enter bio here..."
+				maxlength="200"
+				autocomplete="off"
 				v-model="modifiedUser.bio"
 			/>
+			<span
+				v-if="modifiedUser.bio"
+				class="character-counter"
+				style="height: initial"
+				>{{ modifiedUser.bio.length }}/200</span
+			>
 		</p>
-		<div class="control is-expanded avatar-select">
-			<label>Avatar</label>
-			<div class="select">
-				<select
-					v-if="modifiedUser.avatar"
-					v-model="modifiedUser.avatar.type"
-				>
-					<option value="gravatar">Using Gravatar</option>
-					<option value="initials">Based on initials</option>
-				</select>
-			</div>
-		</div>
-		<button class="button is-primary" @click="saveChangesToProfile()">
-			Save changes
-		</button>
+		<transition name="saved-changes-transition" mode="out-in">
+			<button
+				class="button is-primary save-changes"
+				v-if="!savedChanges"
+				@click="saveChanges()"
+				key="save"
+			>
+				Save changes
+			</button>
+			<button class="button is-success save-changes" key="saved" v-else>
+				<i class="material-icons icon-with-button">done</i>Saved Changes
+			</button>
+		</transition>
 	</div>
 </template>
 
@@ -55,18 +103,31 @@ import validation from "../../../validation";
 import io from "../../../io";
 
 export default {
+	data() {
+		return {
+			notesUri: "",
+			savedChanges: false
+		};
+	},
 	computed: mapState({
 		userId: state => state.user.auth.userId,
 		originalUser: state => state.settings.originalUser,
 		modifiedUser: state => state.settings.modifiedUser
 	}),
 	mounted() {
+		lofig.get("frontendDomain").then(frontendDomain => {
+			this.frontendDomain = frontendDomain;
+			this.notesUri = encodeURI(
+				`${this.frontendDomain}/assets/notes.png`
+			);
+		});
+
 		io.getSocket(socket => {
 			this.socket = socket;
 		});
 	},
 	methods: {
-		saveChangesToProfile() {
+		saveChanges() {
 			if (this.modifiedUser.name !== this.originalUser.name)
 				this.changeName();
 			if (this.modifiedUser.location !== this.originalUser.location)
@@ -75,6 +136,12 @@ export default {
 				this.changeBio();
 			if (this.modifiedUser.avatar.type !== this.originalUser.avatar.type)
 				this.changeAvatarType();
+		},
+		showSavedAnimation() {
+			this.savedChanges = true;
+			setTimeout(() => {
+				this.savedChanges = false;
+			}, 2000);
 		},
 		changeName() {
 			const { name } = this.modifiedUser;
@@ -98,7 +165,12 @@ export default {
 							timeout: 4000
 						});
 
-						this.updateOriginalUser("name", name);
+						this.updateOriginalUser({
+							property: "name",
+							value: name
+						});
+
+						if (!this.savedChanges) this.showSavedAnimation();
 					}
 				}
 			);
@@ -125,7 +197,12 @@ export default {
 							timeout: 4000
 						});
 
-						this.updateOriginalUser("location", location);
+						this.updateOriginalUser({
+							property: "location",
+							value: location
+						});
+
+						if (!this.savedChanges) this.showSavedAnimation();
 					}
 				}
 			);
@@ -152,18 +229,23 @@ export default {
 							timeout: 4000
 						});
 
-						this.updateOriginalUser("bio", bio);
+						this.updateOriginalUser({
+							property: "bio",
+							value: bio
+						});
+
+						if (!this.savedChanges) this.showSavedAnimation();
 					}
 				}
 			);
 		},
 		changeAvatarType() {
-			const { type } = this.modifiedUser.avatar;
+			const { avatar } = this.modifiedUser;
 
 			return this.socket.emit(
 				"users.updateAvatarType",
 				this.userId,
-				type,
+				avatar.type,
 				res => {
 					if (res.status !== "success")
 						new Toast({ content: res.message, timeout: 8000 });
@@ -173,7 +255,12 @@ export default {
 							timeout: 4000
 						});
 
-						this.updateOriginalUser("avatar.type", type);
+						this.updateOriginalUser({
+							property: "avatar",
+							value: avatar
+						});
+
+						if (!this.savedChanges) this.showSavedAnimation();
 					}
 				}
 			);
@@ -190,13 +277,33 @@ export default {
 	margin-bottom: 15px;
 }
 
-.avatar-select {
+.avatar-selection-outer-container {
 	display: flex;
 	flex-direction: column;
 	align-items: flex-start;
 
 	.select:after {
 		border-color: $musare-blue;
+	}
+
+	#avatar-selection-inner-container {
+		display: flex;
+		align-items: center;
+		margin-top: 5px;
+
+		.profile-picture {
+			line-height: 1;
+			cursor: pointer;
+
+			img {
+				background-color: #fff;
+				width: 50px;
+				height: 50px;
+				border-radius: 100%;
+				border: 2px solid $light-grey;
+				margin-right: 10px;
+			}
+		}
 	}
 }
 </style>

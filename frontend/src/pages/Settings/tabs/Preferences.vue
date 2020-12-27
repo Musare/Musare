@@ -7,7 +7,7 @@
 				<p>Use nightmode</p>
 			</label>
 		</p>
-		<button class="button is-primary" @click="saveChangesPreferences()">
+		<button class="button is-primary save-changes" @click="saveChanges()">
 			Save changes
 		</button>
 	</div>
@@ -26,7 +26,7 @@ export default {
 		nightmode: state => state.user.preferences.nightmode
 	}),
 	methods: {
-		saveChangesPreferences() {
+		saveChanges() {
 			if (this.localNightmode !== this.nightmode)
 				this.changeNightmodeLocal();
 		},

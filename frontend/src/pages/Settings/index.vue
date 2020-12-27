@@ -3,40 +3,47 @@
 		<metadata title="Settings" />
 		<main-header />
 		<div class="container">
-			<div class="nav-links">
-				<router-link
-					:class="{ active: activeTab === 'profile' }"
-					to="#profile"
-				>
-					Profile
-				</router-link>
-				<router-link
-					:class="{ active: activeTab === 'account' }"
-					to="#account"
-				>
-					Account
-				</router-link>
-				<router-link
-					:class="{ active: activeTab === 'security' }"
-					to="#security"
-				>
-					Security
-				</router-link>
-				<router-link
-					:class="{ active: activeTab === 'preferences' }"
-					to="#preferences"
-				>
-					Preferences
-				</router-link>
+			<h1 id="page-title">Settings</h1>
+			<div id="sidebar-with-content">
+				<div class="nav-links">
+					<router-link
+						:class="{ active: activeTab === 'profile' }"
+						to="#profile"
+					>
+						Profile
+					</router-link>
+					<router-link
+						:class="{ active: activeTab === 'account' }"
+						to="#account"
+					>
+						Account
+					</router-link>
+					<router-link
+						:class="{ active: activeTab === 'security' }"
+						to="#security"
+					>
+						Security
+					</router-link>
+					<router-link
+						:class="{ active: activeTab === 'preferences' }"
+						to="#preferences"
+					>
+						Preferences
+					</router-link>
+				</div>
+				<profile-settings
+					v-if="activeTab === 'profile'"
+				></profile-settings>
+				<account-settings
+					v-if="activeTab === 'account'"
+				></account-settings>
+				<security-settings
+					v-if="activeTab === 'security'"
+				></security-settings>
+				<preferences-settings
+					v-if="activeTab === 'preferences'"
+				></preferences-settings>
 			</div>
-			<profile-settings v-if="activeTab === 'profile'"></profile-settings>
-			<account-settings v-if="activeTab === 'account'"></account-settings>
-			<security-settings
-				v-if="activeTab === 'security'"
-			></security-settings>
-			<preferences-settings
-				v-if="activeTab === 'preferences'"
-			></preferences-settings>
 		</div>
 		<main-footer />
 	</div>
@@ -92,19 +99,31 @@ export default {
 				});
 
 				this.socket.on("event:user.linkPassword", () =>
-					this.updateOriginalUser("password", true)
+					this.updateOriginalUser({
+						property: "password",
+						value: true
+					})
 				);
 
 				this.socket.on("event:user.unlinkPassword", () =>
-					this.updateOriginalUser("password", false)
+					this.updateOriginalUser({
+						property: "password",
+						value: false
+					})
 				);
 
 				this.socket.on("event:user.linkGithub", () =>
-					this.updateOriginalUser("github", true)
+					this.updateOriginalUser({
+						property: "github",
+						value: true
+					})
 				);
 
 				this.socket.on("event:user.unlinkGithub", () =>
-					this.updateOriginalUser("github", false)
+					this.updateOriginalUser({
+						property: "github",
+						value: false
+					})
 				);
 			});
 		}
@@ -113,31 +132,73 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 @import "../../styles/global.scss";
 
-.night-mode .content {
-	background-color: #222;
-	padding: 20px;
-	border-radius: 3px;
+.night-mode {
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6 {
+		color: #fff !important;
+	}
+
+	p:not(.help),
+	label {
+		color: #ddd !important;
+	}
+
+	.content {
+		background-color: #222 !important;
+	}
+}
+
+.character-counter {
+	display: flex;
+	justify-content: flex-end;
+	height: 0;
 }
 
 .container {
-	@media only screen and (min-width: 900px) {
-		width: 962px;
-		margin: 0 auto;
-		flex-direction: row;
-
-		.content {
-			width: 600px;
-			margin-top: 0px;
-		}
-	}
-
 	margin-top: 32px;
 	padding: 24px;
-	display: flex;
-	flex-direction: column;
+
+	.content {
+		background-color: #fff;
+		padding: 50px;
+		border-radius: 3px;
+	}
+
+	#page-title {
+		margin-top: 0;
+		font-size: 35px;
+	}
+
+	#sidebar-with-content {
+		display: flex;
+		flex-direction: column;
+	}
+
+	@media only screen and (min-width: 900px) {
+		#page-title {
+			margin: 0;
+			font-size: 40px;
+		}
+
+		#sidebar-with-content {
+			width: 962px;
+			margin: 0 auto;
+			margin-top: 30px;
+			flex-direction: row;
+
+			.content {
+				width: 600px;
+				margin-top: 0px !important;
+			}
+		}
+	}
 
 	.nav-links {
 		width: 250px;
@@ -169,29 +230,31 @@ export default {
 		margin: 24px 0;
 		height: fit-content;
 
+		.save-changes {
+			margin-top: 15px;
+		}
+
 		label {
 			font-size: 14px;
 			color: $dark-grey-2;
-			padding-bottom: 4px;
-		}
-
-		input {
-			height: 32px;
 		}
 
 		textarea {
 			height: 96px;
 		}
 
-		input,
-		textarea {
-			border-radius: 3px;
-			border: 1px solid $light-grey-2;
-		}
-
 		button {
 			width: 100%;
 		}
 	}
+}
+
+.saved-changes-transition-enter-active {
+	transition: all 0.2s ease;
+}
+
+.saved-changes-transition-enter {
+	transform: translateX(20px);
+	opacity: 0;
 }
 </style>

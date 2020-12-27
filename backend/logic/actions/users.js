@@ -361,7 +361,10 @@ export default {
 							email: user.email.address
 						})
 						.then(url => {
-							user.avatar = url;
+							user.avatar = {
+								type: "gravatar",
+								url
+							};
 							next(null, user);
 						});
 				},
@@ -373,8 +376,8 @@ export default {
 
 				// respond with the new user
 				(newUser, next) => {
-					verifyEmailSchema(email, username, verificationToken, () => {
-						next(null, newUser);
+					verifyEmailSchema(email, username, verificationToken, err => {
+						next(err, newUser);
 					});
 				}
 			],
@@ -558,6 +561,7 @@ export default {
 	 */
 	findByUsername: async (session, username, cb) => {
 		const userModel = await db.runJob("GET_MODEL", { modelName: "user" });
+
 		async.waterfall(
 			[
 				next => {
@@ -651,6 +655,7 @@ export default {
 	 */
 	findBySession: async (session, cb) => {
 		const userModel = await db.runJob("GET_MODEL", { modelName: "user" });
+
 		async.waterfall(
 			[
 				next => {
@@ -685,6 +690,7 @@ export default {
 					console.log("ERROR", "FIND_BY_SESSION", `User not found. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
+
 				const data = {
 					email: {
 						address: user.email.address
@@ -695,8 +701,10 @@ export default {
 					location: user.location,
 					bio: user.bio
 				};
+
 				if (user.services.password && user.services.password.password) data.password = true;
 				if (user.services.github && user.services.github.id) data.github = true;
+
 				console.log("SUCCESS", "FIND_BY_SESSION", `User found. "${user.username}".`);
 				return cb({
 					status: "success",
@@ -802,12 +810,14 @@ export default {
 	updateEmail: isLoginRequired(async (session, updatingUserId, newEmail, cb) => {
 		newEmail = newEmail.toLowerCase();
 		const verificationToken = await utils.runJob("GENERATE_RANDOM_STRING", { length: 64 });
+
 		const userModel = await db.runJob("GET_MODEL", {
 			modelName: "user"
 		});
 		const verifyEmailSchema = await mail.runJob("GET_SCHEMA", {
 			schemaName: "verifyEmail"
 		});
+
 		async.waterfall(
 			[
 				next => {
@@ -865,8 +875,8 @@ export default {
 				},
 
 				(user, next) => {
-					verifyEmailSchema(newEmail, user.username, verificationToken, () => {
-						next();
+					verifyEmailSchema(newEmail, user.username, verificationToken, err => {
+						next(err);
 					});
 				}
 			],
@@ -1089,6 +1099,7 @@ export default {
 		const userModel = await db.runJob("GET_MODEL", {
 			modelName: "user"
 		});
+
 		async.waterfall(
 			[
 				next => {
@@ -1103,10 +1114,10 @@ export default {
 
 				(user, next) => {
 					if (!user) return next("User not found.");
-					return userModel.updateOne(
+					return userModel.findOneAndUpdate(
 						{ _id: updatingUserId },
 						{ $set: { "avatar.type": newType } },
-						{ runValidators: true },
+						{ new: true, runValidators: true },
 						next
 					);
 				}
@@ -1127,6 +1138,7 @@ export default {
 					"UPDATE_AVATAR_TYPE",
 					`Updated avatar type for user "${updatingUserId}" to type "${newType}".`
 				);
+
 				return cb({
 					status: "success",
 					message: "Avatar type updated successfully"

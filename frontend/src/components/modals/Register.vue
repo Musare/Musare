@@ -23,9 +23,8 @@
 				/>
 			</header>
 			<section class="modal-card-body">
-				<!-- validation to check if exists http://bulma.io/documentation/elements/form/ -->
-				<label class="label">Email</label>
 				<p class="control">
+					<label class="label">Email</label>
 					<input
 						v-model="email.value"
 						class="input"
@@ -35,16 +34,18 @@
 						autofocus
 					/>
 				</p>
-				<p
-					class="help"
-					v-if="email.entered"
-					:class="email.valid ? 'is-success' : 'is-danger'"
-				>
-					{{ email.message }}
-				</p>
-				<br />
-				<label class="label">Username</label>
+				<transition name="fadein-helpbox">
+					<p
+						class="help"
+						v-if="email.entered"
+						:class="email.valid ? 'is-success' : 'is-danger'"
+					>
+						{{ email.message }}
+					</p>
+				</transition>
+
 				<p class="control">
+					<label class="label">Username</label>
 					<input
 						v-model="username.value"
 						class="input"
@@ -53,16 +54,18 @@
 						@blur="onInputBlur('username')"
 					/>
 				</p>
-				<p
-					class="help"
-					v-if="username.entered"
-					:class="username.valid ? 'is-success' : 'is-danger'"
-				>
-					{{ username.message }}
-				</p>
-				<br />
-				<label class="label">Password</label>
+				<transition name="fadein-helpbox">
+					<p
+						class="help"
+						v-if="username.entered"
+						:class="username.valid ? 'is-success' : 'is-danger'"
+					>
+						{{ username.message }}
+					</p>
+				</transition>
+
 				<p class="control">
+					<label class="label">Password</label>
 					<input
 						v-model="password.value"
 						class="input"
@@ -72,14 +75,18 @@
 						@keypress="$parent.submitOnEnter(submitModal, $event)"
 					/>
 				</p>
-				<p
-					class="help"
-					v-if="password.entered"
-					:class="password.valid ? 'is-success' : 'is-danger'"
-				>
-					{{ password.message }}
-				</p>
+				<transition name="fadein-helpbox">
+					<p
+						class="help"
+						v-if="password.entered"
+						:class="password.valid ? 'is-success' : 'is-danger'"
+					>
+						{{ password.message }}
+					</p>
+				</transition>
+
 				<br />
+
 				<p>
 					By logging in/registering you agree to our
 					<router-link to="/terms"> Terms of Service </router-link
@@ -143,7 +150,7 @@ export default {
 		};
 	},
 	watch: {
-		// eslint-disable-next-line func-names
+		// eslint-disable-next-line
 		"username.value": function(value) {
 			if (!validation.isLength(value, 2, 32)) {
 				this.username.message =
@@ -158,7 +165,7 @@ export default {
 				this.username.valid = true;
 			}
 		},
-		// eslint-disable-next-line func-names
+		// eslint-disable-next-line
 		"email.value": function(value) {
 			if (!validation.isLength(value, 3, 254)) {
 				this.email.message =
@@ -175,7 +182,7 @@ export default {
 				this.email.valid = true;
 			}
 		},
-		// eslint-disable-next-line func-names
+		// eslint-disable-next-line
 		"password.value": function(value) {
 			if (!validation.isLength(value, 6, 200)) {
 				this.password.message =
@@ -269,7 +276,7 @@ export default {
 	}
 
 	.label,
-	p {
+	p:not(.help) {
 		color: #ddd;
 	}
 }

@@ -60,17 +60,19 @@
 									>
 								</p>
 							</div>
-							<p
-								class="help"
-								v-if="validation.email.entered"
-								:class="
-									validation.email.valid
-										? 'is-success'
-										: 'is-danger'
-								"
-							>
-								{{ validation.email.message }}
-							</p>
+							<transition name="fadein-helpbox">
+								<p
+									class="help"
+									v-if="validation.email.entered"
+									:class="
+										validation.email.valid
+											? 'is-success'
+											: 'is-danger'
+									"
+								>
+									{{ validation.email.message }}
+								</p>
+							</transition>
 						</div>
 					</div>
 
@@ -120,9 +122,7 @@
 
 					<!-- Step 3 -- Set new password -->
 					<div class="content-box" v-if="step === 3" :key="step">
-						<h2 class="content-box-title">
-							Set a new password
-						</h2>
+						<h2 class="content-box-title">Set a new password</h2>
 						<p class="content-box-description">
 							Create a new password for your account.
 						</p>
@@ -139,17 +139,20 @@
 									@blur="onInputBlur('newPassword')"
 								/>
 							</p>
-							<p
-								class="help"
-								v-if="validation.newPassword.entered"
-								:class="
-									validation.newPassword.valid
-										? 'is-success'
-										: 'is-danger'
-								"
-							>
-								{{ validation.newPassword.message }}
-							</p>
+
+							<transition name="fadein-helpbox">
+								<p
+									class="help"
+									v-if="validation.newPassword.entered"
+									:class="
+										validation.newPassword.valid
+											? 'is-success'
+											: 'is-danger'
+									"
+								>
+									{{ validation.newPassword.message }}
+								</p>
+							</transition>
 
 							<p
 								id="new-password-again-input"
@@ -168,17 +171,20 @@
 									@blur="onInputBlur('newPasswordAgain')"
 								/>
 							</p>
-							<p
-								class="help"
-								v-if="validation.newPasswordAgain.entered"
-								:class="
-									validation.newPasswordAgain.valid
-										? 'is-success'
-										: 'is-danger'
-								"
-							>
-								{{ validation.newPasswordAgain.message }}
-							</p>
+
+							<transition name="fadein-helpbox">
+								<p
+									class="help"
+									v-if="validation.newPasswordAgain.entered"
+									:class="
+										validation.newPasswordAgain.valid
+											? 'is-success'
+											: 'is-danger'
+									"
+								>
+									{{ validation.newPasswordAgain.message }}
+								</p>
+							</transition>
 
 							<a
 								id="change-password-button"
@@ -436,10 +442,6 @@ h1,
 h2,
 p {
 	margin: 0;
-}
-
-.help {
-	margin-bottom: 5px;
 }
 
 .container {

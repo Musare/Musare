@@ -256,9 +256,7 @@ class AppModule extends CoreClass {
 								.runJob("GENERATE_RANDOM_STRING", {
 									length: 12
 								})
-								.then(_id => {
-									next(null, user, _id);
-								});
+								.then(_id => next(null, user, _id));
 						},
 
 						(user, _id, next) => {
@@ -316,8 +314,9 @@ class AppModule extends CoreClass {
 							mail.runJob("GET_SCHEMA", {
 								schemaName: "verifyEmail"
 							}).then(verifyEmailSchema => {
-								verifyEmailSchema(address, body.login, user.email.verificationToken);
-								next(null, user._id);
+								verifyEmailSchema(address, body.login, user.email.verificationToken, err => {
+									next(err, user._id);
+								});
 							});
 						}
 					],

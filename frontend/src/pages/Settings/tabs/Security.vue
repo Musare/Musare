@@ -1,18 +1,15 @@
 <template>
 	<div class="content security-tab">
 		<div v-if="isPasswordLinked">
-			<h4 class="section-title">
-				Change password
-			</h4>
+			<h4 class="section-title">Change password</h4>
 
 			<p class="section-description">
-				To change your password, you will need to know your previous
-				password.
+				You will need to know your previous password.
 			</p>
 
-			<br />
+			<hr class="section-horizontal-rule" />
 
-			<p class="control is-expanded">
+			<p class="control is-expanded margin-top-zero">
 				<label for="previous-password">Previous password</label>
 				<input
 					class="input"
@@ -23,70 +20,69 @@
 				/>
 			</p>
 
-			<label for="new-password">New password</label>
-			<div class="control is-grouped input-with-button">
-				<p id="new-password-again-input" class="control is-expanded">
-					<input
-						class="input"
-						id="new-password"
-						type="password"
-						placeholder="Enter new password here..."
-						v-model="validation.newPassword.value"
-						@keyup.enter="changePassword()"
-						@blur="onInputBlur('newPassword')"
-					/>
-				</p>
-				<p class="control">
-					<a
-						id="change-password-button"
-						class="button is-success"
-						href="#"
-						@click.prevent="changePassword()"
-					>
-						Change password</a
-					>
-				</p>
-			</div>
-			<p
-				class="help"
-				v-if="validation.newPassword.entered"
-				:class="
-					validation.newPassword.valid ? 'is-success' : 'is-danger'
-				"
-			>
-				{{ validation.newPassword.message }}
+			<p id="new-password-again-input" class="control is-expanded">
+				<label for="new-password">New password</label>
+				<input
+					class="input"
+					id="new-password"
+					type="password"
+					placeholder="Enter new password here..."
+					v-model="validation.newPassword.value"
+					@keyup.enter="changePassword()"
+					@blur="onInputBlur('newPassword')"
+				/>
 			</p>
 
-			<hr style="margin: 30px 0;" />
+			<transition name="fadein-helpbox">
+				<p
+					class="help"
+					v-if="validation.newPassword.entered"
+					:class="
+						validation.newPassword.valid
+							? 'is-success'
+							: 'is-danger'
+					"
+				>
+					{{ validation.newPassword.message }}
+				</p>
+			</transition>
+
+			<p class="control">
+				<button
+					id="change-password-button"
+					class="button is-success"
+					@click.prevent="changePassword()"
+				>
+					Change password
+				</button>
+			</p>
+
+			<br /><br />
 		</div>
 
 		<div v-if="!isPasswordLinked">
-			<h4 class="section-title">
-				Add a password
-			</h4>
+			<h4 class="section-title">Add a password</h4>
 			<p class="section-description">
 				Add a password, as an alternative to signing in with GitHub.
 			</p>
 
-			<br />
+			<hr class="section-horizontal-rule" />
 
 			<router-link to="/set_password" class="button is-default" href="#"
 				><i class="material-icons icon-with-button">create</i>Set
 				Password
 			</router-link>
 
-			<hr style="margin: 30px 0;" />
+			<br /><br />
 		</div>
 
 		<div v-if="!isGithubLinked">
-			<h4 class="section-title">
-				Link GitHub
-			</h4>
+			<h4 class="section-title">Link GitHub</h4>
 			<p class="section-description">
 				Link your Musare account with GitHub.
 			</p>
 
-			<br />
+			<hr style="margin: 30px 0" />
 
 			<a
 				class="button is-github"
@@ -98,34 +94,37 @@
 				&nbsp; Link GitHub to account
 			</a>
 
-			<hr style="margin: 30px 0;" />
+			<br /><br />
 		</div>
 
 		<div v-if="isPasswordLinked && isGithubLinked">
-			<h4 class="section-title">
-				Remove login methods
-			</h4>
+			<h4 class="section-title">Remove login methods</h4>
 			<p class="section-description">
 				Remove your password as a login method or unlink GitHub.
 			</p>
 
-			<br />
+			<hr class="section-horizontal-rule" />
 
-			<a
-				v-if="isPasswordLinked"
-				class="button is-danger"
-				href="#"
-				@click.prevent="unlinkPassword()"
-				><i class="material-icons icon-with-button">close</i>Remove
-				password
-			</a>
+			<div id="remove-login-method-buttons">
+				<a
+					v-if="isPasswordLinked"
+					class="button is-danger"
+					href="#"
+					@click.prevent="unlinkPassword()"
+					><i class="material-icons icon-with-button">close</i>Remove
+					password
+				</a>
 
-			<a class="button is-danger" href="#" @click.prevent="unlinkGitHub()"
-				><i class="material-icons icon-with-button">link_off</i>Remove
-				GitHub from account
-			</a>
+				<a
+					class="button is-danger"
+					href="#"
+					@click.prevent="unlinkGitHub()"
+					><i class="material-icons icon-with-button">link_off</i
+					>Remove GitHub from account
+				</a>
+			</div>
 
-			<hr style="margin: 30px 0;" />
+			<br /><br />
 		</div>
 
 		<div>
@@ -134,7 +133,7 @@
 				Remove all currently logged-in sessions for your account.
 			</p>
 
-			<br />
+			<hr class="section-horizontal-rule" />
 
 			<a
 				class="button is-warning"
@@ -262,23 +261,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.section-description {
-	margin-bottom: 0 !important;
-}
-
-.night-mode {
-	h1,
-	h2,
-	h3,
-	h4,
-	h5,
-	h6 {
-		color: #fff !important;
-	}
-
-	p,
-	label {
-		color: #ddd !important;
-	}
+#change-password-button {
+	margin-top: 10px;
 }
 </style>

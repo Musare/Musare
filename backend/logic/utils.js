@@ -86,29 +86,23 @@ class UtilsModule extends CoreClass {
 		});
 	}
 
-	GENERATE_RANDOM_STRING(payload) {
+	async GENERATE_RANDOM_STRING(payload) {
 		// length
-		return new Promise((resolve, reject) => {
-			const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".split("");
 
-			let randomNum;
+		const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".split("");
+		const result = [];
+		for (let i = 0; i < payload.length; i += 1) {
+			result.push(
+				chars[
+					this.runJob("GET_RANDOM_NUMBER", {
+						min: 0,
+						max: chars.length - 1
+					})
+				]
+			);
+		}
 
-			try {
-				randomNum = this.runJob("GET_RANDOM_NUMBER", {
-					min: 0,
-					max: chars.length - 1
-				});
-			} catch (err) {
-				return reject(err);
-			}
-
-			const result = [];
-			for (let i = 0; i < payload.length; i += 1) {
-				result.push(chars[randomNum]);
-			}
-
-			return resolve(result.join(""));
-		});
+		return new Promise(resolve => resolve(result.join("")));
 	}
 
 	async GET_SOCKET_FROM_ID(payload) {
@@ -120,9 +114,7 @@ class UtilsModule extends CoreClass {
 
 	GET_RANDOM_NUMBER(payload) {
 		// min, max
-		return new Promise(resolve => {
-			resolve(Math.floor(Math.random() * (payload.max - payload.min + 1)) + payload.min);
-		});
+		return Math.floor(Math.random() * (payload.max - payload.min + 1)) + payload.min;
 	}
 
 	CONVERT_TIME(payload) {

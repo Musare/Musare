@@ -28,6 +28,8 @@ class DBModule extends CoreClass {
 
 			const mongoUrl = config.get("mongo").url;
 
+			mongoose.set("useFindAndModify", false);
+
 			mongoose
 				.connect(mongoUrl, {
 					useNewUrlParser: true,

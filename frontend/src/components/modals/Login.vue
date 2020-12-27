@@ -25,8 +25,8 @@
 			<section class="modal-card-body">
 				<!-- validation to check if exists http://bulma.io/documentation/elements/form/ -->
 				<form>
-					<label class="label">Email</label>
 					<p class="control">
+						<label class="label">Email</label>
 						<input
 							v-model="email"
 							class="input"
@@ -34,8 +34,8 @@
 							placeholder="Email..."
 						/>
 					</p>
-					<label class="label">Password</label>
 					<p class="control">
+						<label class="label">Password</label>
 						<input
 							v-model="password"
 							class="input"
@@ -46,6 +46,7 @@
 							"
 						/>
 					</p>
+					<br />
 					<p>
 						By logging in/registering you agree to our
 						<router-link to="/terms"> Terms of Service </router-link
@@ -133,7 +134,7 @@ export default {
 	}
 
 	.label,
-	p {
+	p:not(.help) {
 		color: #ddd;
 	}
 }

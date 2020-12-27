@@ -11,8 +11,8 @@ const getters = {
 };
 
 const actions = {
-	updateOriginalUser: ({ commit }, property, value) => {
-		commit("updateOriginalUser", property, value);
+	updateOriginalUser: ({ commit }, payload) => {
+		commit("updateOriginalUser", payload);
 	},
 	setUser: ({ commit }, user) => {
 		commit("setUser", user);
@@ -20,8 +20,9 @@ const actions = {
 };
 
 const mutations = {
-	updateOriginalUser(state, property, value) {
-		state.originalUser[property] = value;
+	updateOriginalUser(state, payload) {
+		const { property, value } = payload;
+		state.originalUser[property] = JSON.parse(JSON.stringify(value));
 	},
 	setUser(state, user) {
 		state.originalUser = user;
