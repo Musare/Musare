@@ -184,6 +184,8 @@ export default {
 				this.userId,
 				email,
 				res => {
+					console.log(res);
+
 					if (res.status !== "success")
 						new Toast({ content: res.message, timeout: 8000 });
 					else {
@@ -204,11 +206,13 @@ export default {
 		},
 		changeUsername() {
 			const { username } = this.modifiedUser;
+
 			if (!validation.isLength(username, 2, 32))
 				return new Toast({
 					content: "Username must have between 2 and 32 characters.",
 					timeout: 8000
 				});
+
 			if (!validation.regex.azAZ09_.test(username))
 				return new Toast({
 					content:

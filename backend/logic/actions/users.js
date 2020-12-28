@@ -854,12 +854,12 @@ export default {
 					});
 				},
 
-				(avatar, next) => {
+				(newAvatarUrl, next) => {
 					userModel.updateOne(
 						{ _id: updatingUserId },
 						{
 							$set: {
-								avatar,
+								"avatar.url": newAvatarUrl,
 								"email.address": newEmail,
 								"email.verified": false,
 								"email.verificationToken": verificationToken

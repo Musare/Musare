@@ -132,7 +132,7 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 @import "../../styles/global.scss";
 
 .night-mode {
@@ -155,7 +155,7 @@ export default {
 	}
 }
 
-.character-counter {
+/deep/ .character-counter {
 	display: flex;
 	justify-content: flex-end;
 	height: 0;
@@ -226,7 +226,7 @@ export default {
 		}
 	}
 
-	.content {
+	/deep/ .content {
 		margin: 24px 0;
 		height: fit-content;
 
@@ -249,11 +249,11 @@ export default {
 	}
 }
 
-.saved-changes-transition-enter-active {
+/deep/ .saved-changes-transition-enter-active {
 	transition: all 0.2s ease;
 }
 
-.saved-changes-transition-enter {
+/deep/ .saved-changes-transition-enter {
 	transform: translateX(20px);
 	opacity: 0;
 }
