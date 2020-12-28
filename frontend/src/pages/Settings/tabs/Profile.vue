@@ -79,18 +79,15 @@
 				>{{ modifiedUser.bio.length }}/200</span
 			>
 		</p>
-		<transition name="saved-changes-transition" mode="out-in">
+		<transition name="saving-changes-transition" mode="out-in">
 			<button
-				class="button is-primary save-changes"
-				v-if="!savedChanges"
+				class="button save-changes"
+				:class="saveButtonStyle"
 				@click="saveChanges()"
-				key="save"
-			>
-				Save changes
-			</button>
-			<button class="button is-success save-changes" key="saved" v-else>
-				<i class="material-icons icon-with-button">done</i>Saved Changes
-			</button>
+				:key="saveStatus"
+				:disabled="saveStatus === 'disabled'"
+				v-html="saveButtonMessage"
+			/>
 		</transition>
 	</div>
 </template>
@@ -102,11 +99,12 @@ import Toast from "toasters";
 import validation from "../../../validation";
 import io from "../../../io";
 
+import SaveButton from "../mixins/SaveButton.vue";
+
 export default {
 	data() {
 		return {
-			notesUri: "",
-			savedChanges: false
+			notesUri: ""
 		};
 	},
 	computed: mapState({
@@ -128,20 +126,32 @@ export default {
 	},
 	methods: {
 		saveChanges() {
-			if (this.modifiedUser.name !== this.originalUser.name)
-				this.changeName();
-			if (this.modifiedUser.location !== this.originalUser.location)
-				this.changeLocation();
-			if (this.modifiedUser.bio !== this.originalUser.bio)
-				this.changeBio();
-			if (this.modifiedUser.avatar.type !== this.originalUser.avatar.type)
-				this.changeAvatarType();
-		},
-		showSavedAnimation() {
-			this.savedChanges = true;
-			setTimeout(() => {
-				this.savedChanges = false;
-			}, 2000);
+			const nameChanged =
+				this.modifiedUser.name !== this.originalUser.name;
+			const locationChanged =
+				this.modifiedUser.location !== this.originalUser.location;
+			const bioChanged = this.modifiedUser.bio !== this.originalUser.bio;
+			const avatarChanged =
+				this.modifiedUser.avatar.type !== this.originalUser.avatar.type;
+
+			if (nameChanged) this.changeName();
+			if (locationChanged) this.changeLocation();
+			if (bioChanged) this.changeBio();
+			if (avatarChanged) this.changeAvatarType();
+
+			if (
+				!avatarChanged &&
+				!bioChanged &&
+				!locationChanged &&
+				!nameChanged
+			) {
+				this.failedSave();
+
+				new Toast({
+					content: "Please make a change before saving.",
+					timeout: 8000
+				});
+			}
 		},
 		changeName() {
 			const { name } = this.modifiedUser;
@@ -152,14 +162,17 @@ export default {
 					timeout: 8000
 				});
 
+			this.saveStatus = "disabled";
+
 			return this.socket.emit(
 				"users.updateName",
 				this.userId,
 				name,
 				res => {
-					if (res.status !== "success")
+					if (res.status !== "success") {
 						new Toast({ content: res.message, timeout: 8000 });
-					else {
+						this.failedSave();
+					} else {
 						new Toast({
 							content: "Successfully changed name",
 							timeout: 4000
@@ -170,7 +183,7 @@ export default {
 							value: name
 						});
 
-						if (!this.savedChanges) this.showSavedAnimation();
+						this.successfulSave();
 					}
 				}
 			);
@@ -184,14 +197,17 @@ export default {
 					timeout: 8000
 				});
 
+			this.saveStatus = "disabled";
+
 			return this.socket.emit(
 				"users.updateLocation",
 				this.userId,
 				location,
 				res => {
-					if (res.status !== "success")
+					if (res.status !== "success") {
 						new Toast({ content: res.message, timeout: 8000 });
-					else {
+						this.failedSave();
+					} else {
 						new Toast({
 							content: "Successfully changed location",
 							timeout: 4000
@@ -202,7 +218,7 @@ export default {
 							value: location
 						});
 
-						if (!this.savedChanges) this.showSavedAnimation();
+						this.successfulSave();
 					}
 				}
 			);
@@ -216,14 +232,17 @@ export default {
 					timeout: 8000
 				});
 
+			this.saveStatus = "disabled";
+
 			return this.socket.emit(
 				"users.updateBio",
 				this.userId,
 				bio,
 				res => {
-					if (res.status !== "success")
+					if (res.status !== "success") {
 						new Toast({ content: res.message, timeout: 8000 });
-					else {
+						this.failedSave();
+					} else {
 						new Toast({
 							content: "Successfully changed bio",
 							timeout: 4000
@@ -234,7 +253,7 @@ export default {
 							value: bio
 						});
 
-						if (!this.savedChanges) this.showSavedAnimation();
+						this.successfulSave();
 					}
 				}
 			);
@@ -242,14 +261,17 @@ export default {
 		changeAvatarType() {
 			const { avatar } = this.modifiedUser;
 
+			this.saveStatus = "disabled";
+
 			return this.socket.emit(
 				"users.updateAvatarType",
 				this.userId,
 				avatar.type,
 				res => {
-					if (res.status !== "success")
+					if (res.status !== "success") {
 						new Toast({ content: res.message, timeout: 8000 });
-					else {
+						this.failedSave();
+					} else {
 						new Toast({
 							content: "Successfully updated avatar type",
 							timeout: 4000
@@ -260,13 +282,14 @@ export default {
 							value: avatar
 						});
 
-						if (!this.savedChanges) this.showSavedAnimation();
+						this.successfulSave();
 					}
 				}
 			);
 		},
 		...mapActions("settings", ["updateOriginalUser"])
-	}
+	},
+	mixins: [SaveButton]
 };
 </script>
 

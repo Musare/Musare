@@ -136,20 +136,6 @@ export default {
 @import "../../styles/global.scss";
 
 .night-mode {
-	h1,
-	h2,
-	h3,
-	h4,
-	h5,
-	h6 {
-		color: #fff !important;
-	}
-
-	p:not(.help),
-	label {
-		color: #ddd !important;
-	}
-
 	.content {
 		background-color: #222 !important;
 	}
@@ -167,7 +153,7 @@ export default {
 
 	.content {
 		background-color: #fff;
-		padding: 50px;
+		padding: 30px 50px;
 		border-radius: 3px;
 	}
 
@@ -231,7 +217,12 @@ export default {
 		height: fit-content;
 
 		.save-changes {
-			margin-top: 15px;
+			margin-top: 20px;
+
+			&:disabled {
+				background-color: $light-grey !important;
+				color: #000;
+			}
 		}
 
 		label {
@@ -249,11 +240,11 @@ export default {
 	}
 }
 
-/deep/ .saved-changes-transition-enter-active {
-	transition: all 0.2s ease;
+/deep/ .saving-changes-transition-enter-active {
+	transition: all 0.1s ease;
 }
 
-/deep/ .saved-changes-transition-enter {
+/deep/ .saving-changes-transition-enter {
 	transform: translateX(20px);
 	opacity: 0;
 }

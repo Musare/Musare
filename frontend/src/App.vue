@@ -193,6 +193,20 @@ export default {
 			background-color: $light-grey !important;
 		}
 	}
+
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6 {
+		color: #fff !important;
+	}
+
+	p:not(.help),
+	label {
+		color: #ddd !important;
+	}
 }
 
 body.night-mode {

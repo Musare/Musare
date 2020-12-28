@@ -54,18 +54,15 @@
 				{{ validation.email.message }}
 			</p>
 		</transition>
-		<transition name="saved-changes-transition" mode="out-in">
+		<transition name="saving-changes-transition" mode="out-in">
 			<button
-				class="button is-primary save-changes"
-				v-if="!savedChanges"
+				class="button save-changes"
+				:class="saveButtonStyle"
 				@click="saveChanges()"
-				key="save"
-			>
-				Save changes
-			</button>
-			<button class="button is-success save-changes" key="saved" v-else>
-				<i class="material-icons icon-with-button">done</i>Saved Changes
-			</button>
+				:key="saveStatus"
+				:disabled="saveStatus === 'disabled'"
+				v-html="saveButtonMessage"
+			/>
 		</transition>
 	</div>
 </template>
@@ -76,6 +73,8 @@ import Toast from "toasters";
 
 import validation from "../../../validation";
 import io from "../../../io";
+
+import SaveButton from "../mixins/SaveButton.vue";
 
 export default {
 	data() {
@@ -91,8 +90,7 @@ export default {
 					valid: false,
 					message: "Please enter a valid email address."
 				}
-			},
-			savedChanges: false
+			}
 		};
 	},
 	computed: mapState({
@@ -145,23 +143,28 @@ export default {
 		});
 	},
 	methods: {
-		showSavedAnimation() {
-			this.savedChanges = true;
-			setTimeout(() => {
-				this.savedChanges = false;
-			}, 2000);
-		},
 		onInputBlur(inputName) {
 			this.validation[inputName].entered = true;
 		},
 		saveChanges() {
-			if (this.modifiedUser.username !== this.originalUser.username)
-				this.changeUsername();
-			if (
+			const usernameChanged =
+				this.modifiedUser.username !== this.originalUser.username;
+			const emailAddressChanged =
 				this.modifiedUser.email.address !==
-				this.originalUser.email.address
-			)
-				this.changeEmail();
+				this.originalUser.email.address;
+
+			if (usernameChanged) this.changeUsername();
+
+			if (emailAddressChanged) this.changeEmail();
+
+			if (!usernameChanged && !emailAddressChanged) {
+				this.failedSave();
+
+				new Toast({
+					content: "Please make a change before saving.",
+					timeout: 8000
+				});
+			}
 		},
 		changeEmail() {
 			const email = this.modifiedUser.email.address;
@@ -179,16 +182,17 @@ export default {
 					timeout: 8000
 				});
 
+			this.saveStatus = "disabled";
+
 			return this.socket.emit(
 				"users.updateEmail",
 				this.userId,
 				email,
 				res => {
-					console.log(res);
-
-					if (res.status !== "success")
+					if (res.status !== "success") {
 						new Toast({ content: res.message, timeout: 8000 });
-					else {
+						this.failedSave();
+					} else {
 						new Toast({
 							content: "Successfully changed email address",
 							timeout: 4000
@@ -199,7 +203,7 @@ export default {
 							value: email
 						});
 
-						if (!this.savedChanges) this.showSavedAnimation();
+						this.successfulSave();
 					}
 				}
 			);
@@ -220,14 +224,17 @@ export default {
 					timeout: 8000
 				});
 
+			this.saveStatus = "disabled";
+
 			return this.socket.emit(
 				"users.updateUsername",
 				this.userId,
 				username,
 				res => {
-					if (res.status !== "success")
+					if (res.status !== "success") {
 						new Toast({ content: res.message, timeout: 8000 });
-					else {
+						this.failedSave();
+					} else {
 						new Toast({
 							content: "Successfully changed username",
 							timeout: 4000
@@ -238,12 +245,13 @@ export default {
 							value: username
 						});
 
-						if (!this.savedChanges) this.showSavedAnimation();
+						this.successfulSave();
 					}
 				}
 			);
 		},
 		...mapActions("settings", ["updateOriginalUser"])
-	}
+	},
+	mixins: [SaveButton]
 };
 </script>

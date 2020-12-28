@@ -22,7 +22,17 @@ const actions = {
 const mutations = {
 	updateOriginalUser(state, payload) {
 		const { property, value } = payload;
-		state.originalUser[property] = JSON.parse(JSON.stringify(value));
+
+		property.split(".").reduce(
+			// eslint-disable-next-line no-return-assign
+			(o, p, i) =>
+				(o[p] =
+					// eslint-disable-next-line no-plusplus
+					property.split(".").length === ++i
+						? JSON.parse(JSON.stringify(value))
+						: o[p] || {}),
+			state.originalUser
+		);
 	},
 	setUser(state, user) {
 		state.originalUser = user;
