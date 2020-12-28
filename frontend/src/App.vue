@@ -475,6 +475,7 @@ button.delete:focus {
 	margin-top: 0 !important;
 	margin-bottom: 5px !important;
 	font-size: 12px;
+	height: 17px !important;
 }
 
 .fadein-helpbox-enter-active {

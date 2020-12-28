@@ -27,12 +27,12 @@
 		<transition name="fadein-helpbox">
 			<p
 				class="help"
-				v-if="validation.username.entered"
 				:class="validation.username.valid ? 'is-success' : 'is-danger'"
 			>
 				{{ validation.username.message }}
 			</p>
 		</transition>
+
 		<p class="control is-expanded">
 			<label for="email">Email</label>
 			<input
@@ -48,12 +48,12 @@
 		<transition name="fadein-helpbox">
 			<p
 				class="help"
-				v-if="validation.email.entered"
 				:class="validation.email.valid ? 'is-success' : 'is-danger'"
 			>
 				{{ validation.email.message }}
 			</p>
 		</transition>
+
 		<transition name="saving-changes-transition" mode="out-in">
 			<button
 				class="button save-changes"
