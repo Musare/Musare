@@ -428,6 +428,42 @@
 			</transition>
 		</div>
 
+		<floating-box id="playerDebugBox" ref="playerDebugBox">
+			<template #body>
+				<span><b>YouTube id</b>: {{ currentSong.songId }}</span>
+				<span><b>Duration</b>: {{ currentSong.duration }}</span>
+				<span
+					><b>Skip duration</b>: {{ currentSong.skipDuration }}</span
+				>
+				<span><b>Can autoplay</b>: {{ canAutoplay }}</span>
+				<span
+					><b>Attempts to play video</b>:
+					{{ attemptsToPlayVideo }}</span
+				>
+				<span
+					><b>Last time requested if can autoplay</b>:
+					{{ lastTimeRequestedIfCanAutoplay }}</span
+				>
+				<span><b>Loading</b>: {{ loading }}</span>
+				<span><b>Playback rate</b>: {{ playbackRate }}</span>
+				<span><b>Player ready</b>: {{ playerReady }}</span>
+				<span><b>Ready</b>: {{ ready }}</span>
+				<span><b>Seeking</b>: {{ seeking }}</span>
+				<span><b>System difference</b>: {{ systemDifference }}</span>
+				<span><b>Time before paused</b>: {{ timeBeforePause }}</span>
+				<span><b>Time elapsed</b>: {{ timeElapsed }}</span>
+				<span><b>Time paused</b>: {{ timePaused }}</span>
+				<span><b>Volume slider value</b>: {{ volumeSliderValue }}</span>
+				<span><b>Local paused</b>: {{ localPaused }}</span>
+				<span><b>No song</b>: {{ noSong }}</span>
+				<span
+					><b>Private playlist queue selected</b>:
+					{{ privatePlaylistQueueSelected }}</span
+				>
+				<span><b>Station paused</b>: {{ stationPaused }}</span>
+			</template>
+		</floating-box>
+
 		<Z404 v-if="!exists"></Z404>
 	</div>
 </template>
@@ -440,6 +476,8 @@ import StationHeader from "./StationHeader.vue";
 
 import UserIdToUsername from "../../components/common/UserIdToUsername.vue";
 import Z404 from "../404.vue";
+
+import FloatingBox from "../../components/ui/FloatingBox.vue";
 
 import io from "../../io";
 import keyboardShortcuts from "../../keyboardShortcuts";
@@ -1011,6 +1049,12 @@ export default {
 				}
 			}
 		},
+		togglePlayerDebugBox() {
+			this.$refs.playerDebugBox.toggleBox();
+		},
+		resetPlayerDebugBox() {
+			this.$refs.playerDebugBox.resetBox();
+		},
 		join() {
 			this.socket.emit("stations.join", this.stationName, res => {
 				console.log(res.data);
@@ -1414,7 +1458,8 @@ export default {
 		SongsListSidebar: () => import("./SongsList.vue"),
 		UsersSidebar: () => import("./UsersList.vue"),
 		UserIdToUsername,
-		Z404
+		Z404,
+		FloatingBox
 	}
 };
 </script>
@@ -2001,5 +2046,15 @@ h6 {
 
 .experimental {
 	display: none !important;
+}
+
+#playerDebugBox {
+	.box-body {
+		flex-direction: column;
+
+		b {
+			color: #000;
+		}
+	}
 }
 </style>

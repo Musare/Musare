@@ -5,7 +5,11 @@
 			<main-header />
 			<div class="group">
 				<div class="group-title">
-					<h1>Stations&nbsp;</h1>
+					<div>
+						<h1>
+							Stations
+						</h1>
+					</div>
 					<a
 						v-if="loggedIn"
 						href="#"
@@ -15,8 +19,7 @@
 								modal: 'createCommunityStation'
 							})
 						"
-					>
-						<i class="material-icons community-button"
+						><i class="material-icons community-button"
 							>add_circle_outline</i
 						>
 					</a>
@@ -601,8 +604,13 @@ html {
 		align-items: center;
 		justify-content: center;
 
+		h1 {
+			display: inline-block;
+		}
+
 		a {
 			display: flex;
+			margin-left: 8px;
 		}
 	}
 }
