@@ -15,7 +15,7 @@ class PlaylistsModule extends CoreClass {
 		this.utils = this.moduleManager.modules.utils;
 
 		const playlistModel = await this.db.runJob("GET_MODEL", { modelName: "playlist" });
-		const playlistSchema = await this.db.runJob("GET_SCHEMA", { schemaName: "playlist" });
+		const playlistSchema = await this.cache.runJob("GET_SCHEMA", { schemaName: "playlist" });
 
 		this.setStage(2);
 

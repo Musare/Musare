@@ -90,19 +90,25 @@ class UtilsModule extends CoreClass {
 		// length
 
 		const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".split("");
-		const result = [];
+
+		const promises = [];
 		for (let i = 0; i < payload.length; i += 1) {
-			result.push(
-				chars[
-					this.runJob("GET_RANDOM_NUMBER", {
-						min: 0,
-						max: chars.length - 1
-					})
-				]
+			promises.push(
+				this.runJob("GET_RANDOM_NUMBER", {
+					min: 0,
+					max: chars.length - 1
+				})
 			);
 		}
 
-		return new Promise(resolve => resolve(result.join("")));
+		const randomNums = await Promise.all(promises);
+
+		const randomChars = [];
+		for (let i = 0; i < payload.length; i += 1) {
+			randomChars.push(chars[randomNums[i]]);
+		}
+
+		return new Promise(resolve => resolve(randomChars.join("")));
 	}
 
 	async GET_SOCKET_FROM_ID(payload) {
@@ -114,7 +120,9 @@ class UtilsModule extends CoreClass {
 
 	GET_RANDOM_NUMBER(payload) {
 		// min, max
-		return Math.floor(Math.random() * (payload.max - payload.min + 1)) + payload.min;
+		return new Promise(resolve =>
+			resolve(Math.floor(Math.random() * (payload.max - payload.min + 1)) + payload.min)
+		);
 	}
 
 	CONVERT_TIME(payload) {
