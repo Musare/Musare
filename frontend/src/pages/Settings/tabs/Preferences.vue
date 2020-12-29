@@ -25,6 +25,9 @@ export default {
 	computed: mapState({
 		nightmode: state => state.user.preferences.nightmode
 	}),
+	mounted() {
+		this.localNightmode = this.nightmode;
+	},
 	methods: {
 		saveChanges() {
 			if (this.localNightmode !== this.nightmode)

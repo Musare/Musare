@@ -79,7 +79,9 @@ export default {
 	beforeMount() {
 		const nightmode =
 			false || JSON.parse(localStorage.getItem("nightmode"));
+
 		this.changeNightmode(nightmode);
+
 		if (nightmode) this.enableNightMode();
 		else this.disableNightMode();
 	},
