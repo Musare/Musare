@@ -16,7 +16,7 @@ class SongsModule extends CoreClass {
 		this.utils = this.moduleManager.modules.utils;
 
 		const songModel = await this.db.runJob("GET_MODEL", { modelName: "song" });
-		const songSchema = await this.db.runJob("GET_SCHEMA", { schemaName: "song" });
+		const songSchema = await this.cache.runJob("GET_SCHEMA", { schemaName: "song" });
 
 		this.setStage(2);
 
