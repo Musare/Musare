@@ -1,9 +1,10 @@
 import config from "config";
 import async from "async";
 import oauth from "oauth";
-const { OAuth2 } = oauth;
 
 import CoreClass from "../core";
+
+const { OAuth2 } = oauth;
 
 let apiResults = {
 	access_token: "",

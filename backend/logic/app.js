@@ -8,8 +8,9 @@ import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
 import express from "express";
 import oauth from "oauth";
-const { OAuth2 } = oauth;
 import CoreClass from "../core";
+
+const { OAuth2 } = oauth;
 
 class AppModule extends CoreClass {
 	constructor() {
