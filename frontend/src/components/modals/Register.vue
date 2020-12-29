@@ -35,13 +35,11 @@
 					/>
 				</p>
 				<transition name="fadein-helpbox">
-					<p
-						class="help"
+					<input-help-box
 						v-if="email.entered"
-						:class="email.valid ? 'is-success' : 'is-danger'"
-					>
-						{{ email.message }}
-					</p>
+						:valid="email.valid"
+						:message="email.message"
+					></input-help-box>
 				</transition>
 
 				<p class="control">
@@ -55,13 +53,11 @@
 					/>
 				</p>
 				<transition name="fadein-helpbox">
-					<p
-						class="help"
+					<input-help-box
 						v-if="username.entered"
-						:class="username.valid ? 'is-success' : 'is-danger'"
-					>
-						{{ username.message }}
-					</p>
+						:valid="username.valid"
+						:message="username.message"
+					></input-help-box>
 				</transition>
 
 				<p class="control">
@@ -76,13 +72,11 @@
 					/>
 				</p>
 				<transition name="fadein-helpbox">
-					<p
-						class="help"
+					<input-help-box
 						v-if="password.entered"
-						:class="password.valid ? 'is-success' : 'is-danger'"
-					>
-						{{ password.message }}
-					</p>
+						:valid="password.valid"
+						:message="password.message"
+					></input-help-box>
 				</transition>
 
 				<br />
@@ -115,12 +109,14 @@
 
 <script>
 import { mapActions } from "vuex";
-
 import Toast from "toasters";
+
+import InputHelpBox from "../ui/InputHelpBox.vue";
 
 import validation from "../../validation";
 
 export default {
+	components: { InputHelpBox },
 	data() {
 		return {
 			username: {

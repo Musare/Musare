@@ -34,17 +34,11 @@
 			</p>
 
 			<transition name="fadein-helpbox">
-				<p
-					class="help"
+				<input-help-box
 					v-if="validation.newPassword.entered"
-					:class="
-						validation.newPassword.valid
-							? 'is-success'
-							: 'is-danger'
-					"
-				>
-					{{ validation.newPassword.message }}
-				</p>
+					:valid="validation.newPassword.valid"
+					:message="validation.newPassword.message"
+				></input-help-box>
 			</transition>
 
 			<p class="control">
@@ -153,7 +147,10 @@ import { mapGetters, mapState } from "vuex";
 import io from "../../../io";
 import validation from "../../../validation";
 
+import InputHelpBox from "../../../components/ui/InputHelpBox.vue";
+
 export default {
+	components: { InputHelpBox },
 	data() {
 		return {
 			serverDomain: "",

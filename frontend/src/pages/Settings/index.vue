@@ -217,12 +217,16 @@ export default {
 		height: fit-content;
 
 		.save-changes {
-			margin-top: 20px;
+			margin-top: 30px;
 
 			&:disabled {
 				background-color: $light-grey !important;
 				color: #000;
 			}
+		}
+
+		.control:not(:first-of-type) {
+			margin: 10px 0;
 		}
 
 		label {

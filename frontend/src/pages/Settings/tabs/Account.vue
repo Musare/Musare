@@ -25,12 +25,10 @@
 			>
 		</p>
 		<transition name="fadein-helpbox">
-			<p
-				class="help"
-				:class="validation.username.valid ? 'is-success' : 'is-danger'"
-			>
-				{{ validation.username.message }}
-			</p>
+			<input-help-box
+				:valid="validation.username.valid"
+				:message="validation.username.message"
+			></input-help-box>
 		</transition>
 
 		<p class="control is-expanded">
@@ -43,15 +41,14 @@
 				v-if="modifiedUser.email"
 				v-model="modifiedUser.email.address"
 				@blur="onInputBlur('email')"
+				autocomplete="off"
 			/>
 		</p>
 		<transition name="fadein-helpbox">
-			<p
-				class="help"
-				:class="validation.email.valid ? 'is-success' : 'is-danger'"
-			>
-				{{ validation.email.message }}
-			</p>
+			<input-help-box
+				:valid="validation.email.valid"
+				:message="validation.email.message"
+			></input-help-box>
 		</transition>
 
 		<transition name="saving-changes-transition" mode="out-in">
@@ -74,9 +71,11 @@ import Toast from "toasters";
 import validation from "../../../validation";
 import io from "../../../io";
 
+import InputHelpBox from "../../../components/ui/InputHelpBox.vue";
 import SaveButton from "../mixins/SaveButton.vue";
 
 export default {
+	components: { InputHelpBox },
 	mixins: [SaveButton],
 	data() {
 		return {

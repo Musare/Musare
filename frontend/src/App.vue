@@ -467,17 +467,6 @@ button.delete:focus {
 	height: 36px;
 }
 
-.input {
-	margin-top: 3px;
-}
-
-.help {
-	margin-top: 0 !important;
-	margin-bottom: 5px !important;
-	font-size: 12px;
-	height: 17px !important;
-}
-
 .fadein-helpbox-enter-active {
 	transition-duration: 0.3s;
 	transition-timing-function: ease-in;
@@ -502,10 +491,6 @@ button.delete:focus {
 
 .control {
 	margin-bottom: 5px !important;
-
-	&.control:not(:first-of-type) {
-		margin: 15px 0;
-	}
 }
 
 .input-with-button {

@@ -61,17 +61,11 @@
 								</p>
 							</div>
 							<transition name="fadein-helpbox">
-								<p
-									class="help"
+								<input-help-box
 									v-if="validation.email.entered"
-									:class="
-										validation.email.valid
-											? 'is-success'
-											: 'is-danger'
-									"
-								>
-									{{ validation.email.message }}
-								</p>
+									:valid="validation.email.valid"
+									:message="validation.email.message"
+								></input-help-box>
 							</transition>
 						</div>
 					</div>
@@ -141,17 +135,11 @@
 							</p>
 
 							<transition name="fadein-helpbox">
-								<p
-									class="help"
+								<input-help-box
 									v-if="validation.newPassword.entered"
-									:class="
-										validation.newPassword.valid
-											? 'is-success'
-											: 'is-danger'
-									"
-								>
-									{{ validation.newPassword.message }}
-								</p>
+									:valid="validation.newPassword.valid"
+									:message="validation.newPassword.message"
+								></input-help-box>
 							</transition>
 
 							<p
@@ -173,17 +161,13 @@
 							</p>
 
 							<transition name="fadein-helpbox">
-								<p
-									class="help"
+								<input-help-box
 									v-if="validation.newPasswordAgain.entered"
-									:class="
-										validation.newPasswordAgain.valid
-											? 'is-success'
-											: 'is-danger'
+									:valid="validation.newPasswordAgain.valid"
+									:message="
+										validation.newPasswordAgain.message
 									"
-								>
-									{{ validation.newPasswordAgain.message }}
-								</p>
+								></input-help-box>
 							</transition>
 
 							<a
@@ -242,12 +226,13 @@ import Toast from "toasters";
 
 import MainHeader from "../components/layout/MainHeader.vue";
 import MainFooter from "../components/layout/MainFooter.vue";
+import InputHelpBox from "../components/ui/InputHelpBox.vue";
 
 import io from "../io";
 import validation from "../validation";
 
 export default {
-	components: { MainHeader, MainFooter },
+	components: { MainHeader, MainFooter, InputHelpBox },
 	props: {
 		mode: {
 			default: "reset",
