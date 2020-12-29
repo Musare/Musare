@@ -1,6 +1,7 @@
 import config from "config";
 import async from "async";
-import { OAuth2 } from "oauth";
+import oauth from "oauth";
+const { OAuth2 } = oauth;
 
 import CoreClass from "../core";
 

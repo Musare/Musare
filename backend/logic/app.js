@@ -7,7 +7,8 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
 import express from "express";
-import { OAuth2 } from "oauth";
+import oauth from "oauth";
+const { OAuth2 } = oauth;
 import CoreClass from "../core";
 
 class AppModule extends CoreClass {
