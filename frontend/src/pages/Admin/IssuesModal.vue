@@ -97,6 +97,7 @@ import UserIdToUsername from "../../components/common/UserIdToUsername.vue";
 import Modal from "../../components/Modal.vue";
 
 export default {
+	components: { Modal, UserIdToUsername },
 	computed: {
 		...mapState("admin/reports", {
 			report: state => state.report
@@ -124,8 +125,7 @@ export default {
 		},
 		...mapActions("admin/reports", ["resolveReport"]),
 		...mapActions("modals", ["closeModal"])
-	},
-	components: { Modal, UserIdToUsername }
+	}
 };
 </script>
 

@@ -215,6 +215,35 @@ export default {
 			if (value === false) this.stopVideo();
 		}
 	},
+	mounted() {
+		io.getSocket(socket => {
+			this.socket = socket;
+
+			this.socket.on("event:admin.queueSong.added", queueSong => {
+				this.songs.push(queueSong);
+			});
+
+			this.socket.on("event:admin.queueSong.removed", songId => {
+				this.songs = this.songs.filter(song => {
+					return song._id !== songId;
+				});
+			});
+
+			this.socket.on("event:admin.queueSong.updated", updatedSong => {
+				for (let i = 0; i < this.songs.length; i += 1) {
+					const song = this.songs[i];
+					if (song._id === updatedSong._id) {
+						Vue.set(this.songs, i, updatedSong);
+					}
+				}
+			});
+
+			if (this.socket.connected) this.init();
+			io.onConnect(() => {
+				this.init();
+			});
+		});
+	},
 	methods: {
 		edit(song, index) {
 			const newSong = {};
@@ -286,35 +315,6 @@ export default {
 		},
 		...mapActions("admin/songs", ["stopVideo", "editSong"]),
 		...mapActions("modals", ["openModal"])
-	},
-	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
-
-			this.socket.on("event:admin.queueSong.added", queueSong => {
-				this.songs.push(queueSong);
-			});
-
-			this.socket.on("event:admin.queueSong.removed", songId => {
-				this.songs = this.songs.filter(song => {
-					return song._id !== songId;
-				});
-			});
-
-			this.socket.on("event:admin.queueSong.updated", updatedSong => {
-				for (let i = 0; i < this.songs.length; i += 1) {
-					const song = this.songs[i];
-					if (song._id === updatedSong._id) {
-						Vue.set(this.songs, i, updatedSong);
-					}
-				}
-			});
-
-			if (this.socket.connected) this.init();
-			io.onConnect(() => {
-				this.init();
-			});
-		});
 	}
 };
 </script>

@@ -24,11 +24,11 @@ import { mapState } from "vuex";
 import Sidebar from "../../components/Sidebar.vue";
 
 export default {
+	components: { Sidebar },
 	computed: mapState({
 		users: state => state.station.users,
 		userCount: state => state.station.userCount
-	}),
-	components: { Sidebar }
+	})
 };
 </script>
 

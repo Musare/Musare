@@ -52,6 +52,11 @@ export default {
 			song: null
 		};
 	},
+	computed: {
+		...mapState("station", {
+			currentSong: state => state.currentSong
+		})
+	},
 	mounted() {
 		this.songId = this.currentSong.songId;
 		this.song = this.currentSong;
@@ -66,11 +71,6 @@ export default {
 				}
 			});
 		});
-	},
-	computed: {
-		...mapState("station", {
-			currentSong: state => state.currentSong
-		})
 	},
 	methods: {
 		addSongToPlaylist(playlistId) {

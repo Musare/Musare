@@ -210,8 +210,8 @@ import ScrollAndFetchHandler from "../../../mixins/ScrollAndFetchHandler.vue";
 import io from "../../../io";
 
 export default {
-	mixins: [ScrollAndFetchHandler],
 	components: { EditSong, UserIdToUsername, FloatingBox },
+	mixins: [ScrollAndFetchHandler],
 	data() {
 		return {
 			searchQuery: "",
@@ -301,6 +301,40 @@ export default {
 			if (!val) this.stopVideo();
 		}
 	},
+	mounted() {
+		io.getSocket(socket => {
+			this.socket = socket;
+
+			this.socket.on("event:admin.song.added", song => {
+				this.addSong(song);
+			});
+
+			this.socket.on("event:admin.song.removed", songId => {
+				this.removeSong(songId);
+			});
+
+			this.socket.on("event:admin.song.updated", updatedSong => {
+				this.updateSong(updatedSong);
+			});
+
+			if (this.socket.connected) this.init();
+			io.onConnect(() => {
+				this.init();
+			});
+		});
+
+		if (this.$route.query.songId) {
+			this.socket.emit("songs.getSong", this.$route.query.songId, res => {
+				if (res.status === "success") {
+					this.edit(res.data.song);
+				} else
+					new Toast({
+						content: "Song with that ID not found",
+						timeout: 3000
+					});
+			});
+		}
+	},
 	methods: {
 		edit(song) {
 			this.editSong({ song, type: "songs" });
@@ -376,40 +410,6 @@ export default {
 			"updateSong"
 		]),
 		...mapActions("modals", ["openModal", "closeModal"])
-	},
-	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
-
-			this.socket.on("event:admin.song.added", song => {
-				this.addSong(song);
-			});
-
-			this.socket.on("event:admin.song.removed", songId => {
-				this.removeSong(songId);
-			});
-
-			this.socket.on("event:admin.song.updated", updatedSong => {
-				this.updateSong(updatedSong);
-			});
-
-			if (this.socket.connected) this.init();
-			io.onConnect(() => {
-				this.init();
-			});
-		});
-
-		if (this.$route.query.songId) {
-			this.socket.emit("songs.getSong", this.$route.query.songId, res => {
-				if (res.status === "success") {
-					this.edit(res.data.song);
-				} else
-					new Toast({
-						content: "Song with that ID not found",
-						timeout: 3000
-					});
-			});
-		}
 	}
 };
 </script>

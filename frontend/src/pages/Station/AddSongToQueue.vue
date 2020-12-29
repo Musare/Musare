@@ -230,6 +230,7 @@ import Modal from "../../components/Modal.vue";
 import io from "../../io";
 
 export default {
+	components: { Modal, PlaylistItem },
 	data() {
 		return {
 			querySearch: "",
@@ -245,6 +246,14 @@ export default {
 		privatePlaylistQueueSelected: state =>
 			state.station.privatePlaylistQueueSelected
 	}),
+	mounted() {
+		io.getSocket(socket => {
+			this.socket = socket;
+			this.socket.emit("playlists.indexForUser", res => {
+				if (res.status === "success") this.playlists = res.data;
+			});
+		});
+	},
 	methods: {
 		isPlaylistSelected(playlistId) {
 			return this.privatePlaylistQueueSelected === playlistId;
@@ -377,16 +386,7 @@ export default {
 		},
 		...mapActions("station", ["updatePrivatePlaylistQueueSelected"]),
 		...mapActions("user/playlists", ["editPlaylist"])
-	},
-	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
-			this.socket.emit("playlists.indexForUser", res => {
-				if (res.status === "success") this.playlists = res.data;
-			});
-		});
-	},
-	components: { Modal, PlaylistItem }
+	}
 };
 </script>
 

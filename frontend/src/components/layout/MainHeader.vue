@@ -86,6 +86,12 @@ export default {
 			}
 		};
 	},
+	computed: mapState({
+		modals: state => state.modals.modals.header,
+		role: state => state.user.auth.role,
+		loggedIn: state => state.user.auth.loggedIn,
+		username: state => state.user.auth.username
+	}),
 	mounted() {
 		lofig.get("frontendDomain").then(frontendDomain => {
 			this.frontendDomain = frontendDomain;
@@ -95,12 +101,7 @@ export default {
 			this.siteSettings = siteSettings;
 		});
 	},
-	computed: mapState({
-		modals: state => state.modals.modals.header,
-		role: state => state.user.auth.role,
-		loggedIn: state => state.user.auth.loggedIn,
-		username: state => state.user.auth.username
-	}),
+
 	methods: {
 		...mapActions("modals", ["openModal"]),
 		...mapActions("user/auth", ["logout"])

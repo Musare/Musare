@@ -112,6 +112,12 @@ export default {
 			userId: state => state.user.auth.userId
 		})
 	},
+	mounted() {
+		io.getSocket(socket => {
+			this.socket = socket;
+			return socket;
+		});
+	},
 	methods: {
 		updateUsername() {
 			const { username } = this.editing;
@@ -208,12 +214,6 @@ export default {
 			});
 		},
 		...mapActions("modals", ["closeModal"])
-	},
-	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
-			return socket;
-		});
 	}
 };
 </script>

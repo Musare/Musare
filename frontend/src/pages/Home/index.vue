@@ -157,6 +157,12 @@ import UserIdToUsername from "../../components/common/UserIdToUsername.vue";
 import io from "../../io";
 
 export default {
+	components: {
+		MainHeader,
+		MainFooter,
+		CreateCommunityStation,
+		UserIdToUsername
+	},
 	data() {
 		return {
 			recaptcha: {
@@ -293,12 +299,6 @@ export default {
 			});
 		},
 		...mapActions("modals", ["openModal"])
-	},
-	components: {
-		MainHeader,
-		MainFooter,
-		CreateCommunityStation,
-		UserIdToUsername
 	}
 };
 </script>

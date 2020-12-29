@@ -79,6 +79,11 @@ export default {
 			reports: []
 		};
 	},
+	computed: {
+		...mapState("modals", {
+			modals: state => state.modals.admin
+		})
+	},
 	mounted() {
 		io.getSocket(socket => {
 			this.socket = socket;
@@ -113,11 +118,6 @@ export default {
 					});
 			});
 		}
-	},
-	computed: {
-		...mapState("modals", {
-			modals: state => state.modals.admin
-		})
 	},
 	methods: {
 		formatDistance,

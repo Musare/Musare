@@ -102,6 +102,7 @@ import io from "../../../io";
 import SaveButton from "../mixins/SaveButton.vue";
 
 export default {
+	mixins: [SaveButton],
 	data() {
 		return {
 			notesUri: ""
@@ -288,8 +289,7 @@ export default {
 			);
 		},
 		...mapActions("settings", ["updateOriginalUser"])
-	},
-	mixins: [SaveButton]
+	}
 };
 </script>
 

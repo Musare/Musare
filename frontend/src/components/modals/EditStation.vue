@@ -415,70 +415,8 @@ import io from "../../io";
 import validation from "../../validation";
 
 export default {
-	computed: {
-		...mapState("admin/station", {
-			stations: state => state.stations
-		}),
-		...mapState({
-			editing(state) {
-				return this.$props.store
-					.split("/")
-					.reduce((a, v) => a[v], state).editing;
-			},
-			station(state) {
-				return this.$props.store
-					.split("/")
-					.reduce((a, v) => a[v], state).station;
-			}
-		})
-	},
-	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
-
-			this.socket.emit("playlists.indexForUser", res => {
-				if (res.status === "success") this.playlists = res.data;
-			});
-
-			this.socket.on("event:playlist.create", playlist => {
-				this.playlists.push(playlist);
-			});
-			this.socket.on("event:playlist.delete", playlistId => {
-				this.playlists.forEach((playlist, index) => {
-					if (playlist._id === playlistId) {
-						this.playlists.splice(index, 1);
-					}
-				});
-			});
-			this.socket.on("event:playlist.addSong", data => {
-				this.playlists.forEach((playlist, index) => {
-					if (playlist._id === data.playlistId) {
-						this.playlists[index].songs.push(data.song);
-					}
-				});
-			});
-			this.socket.on("event:playlist.removeSong", data => {
-				this.playlists.forEach((playlist, index) => {
-					if (playlist._id === data.playlistId) {
-						this.playlists[index].songs.forEach((song, index2) => {
-							if (song._id === data.songId) {
-								this.playlists[index].songs.splice(index2, 1);
-							}
-						});
-					}
-				});
-			});
-			this.socket.on("event:playlist.updateDisplayName", data => {
-				this.playlists.forEach((playlist, index) => {
-					if (playlist._id === data.playlistId) {
-						this.playlists[index].displayName = data.displayName;
-					}
-				});
-			});
-
-			return socket;
-		});
-	},
+	components: { Modal, PlaylistItem },
+	props: { store: { type: Object, default: () => {} } },
 	data() {
 		return {
 			genreInputValue: "",
@@ -543,7 +481,70 @@ export default {
 			playlists: []
 		};
 	},
-	props: { store: { type: Object, default: () => {} } },
+	computed: {
+		...mapState("admin/station", {
+			stations: state => state.stations
+		}),
+		...mapState({
+			editing(state) {
+				return this.$props.store
+					.split("/")
+					.reduce((a, v) => a[v], state).editing;
+			},
+			station(state) {
+				return this.$props.store
+					.split("/")
+					.reduce((a, v) => a[v], state).station;
+			}
+		})
+	},
+	mounted() {
+		io.getSocket(socket => {
+			this.socket = socket;
+
+			this.socket.emit("playlists.indexForUser", res => {
+				if (res.status === "success") this.playlists = res.data;
+			});
+
+			this.socket.on("event:playlist.create", playlist => {
+				this.playlists.push(playlist);
+			});
+			this.socket.on("event:playlist.delete", playlistId => {
+				this.playlists.forEach((playlist, index) => {
+					if (playlist._id === playlistId) {
+						this.playlists.splice(index, 1);
+					}
+				});
+			});
+			this.socket.on("event:playlist.addSong", data => {
+				this.playlists.forEach((playlist, index) => {
+					if (playlist._id === data.playlistId) {
+						this.playlists[index].songs.push(data.song);
+					}
+				});
+			});
+			this.socket.on("event:playlist.removeSong", data => {
+				this.playlists.forEach((playlist, index) => {
+					if (playlist._id === data.playlistId) {
+						this.playlists[index].songs.forEach((song, index2) => {
+							if (song._id === data.songId) {
+								this.playlists[index].songs.splice(index2, 1);
+							}
+						});
+					}
+				});
+			});
+			this.socket.on("event:playlist.updateDisplayName", data => {
+				this.playlists.forEach((playlist, index) => {
+					if (playlist._id === data.playlistId) {
+						this.playlists[index].displayName = data.displayName;
+					}
+				});
+			});
+
+			return socket;
+		});
+	},
 	methods: {
 		isPlaylistSelected(id) {
 			// TODO Also change this once it changes for a station
@@ -998,8 +999,7 @@ export default {
 				this.editing.blacklistedGenres.splice(index, 1);
 		},
 		...mapActions("modals", ["closeModal"])
-	},
-	components: { Modal, PlaylistItem }
+	}
 };
 </script>
 

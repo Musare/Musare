@@ -75,6 +75,15 @@ export default {
 			modals: state => state.modals.admin
 		})
 	},
+	mounted() {
+		console.log("mounted");
+
+		io.getSocket(socket => {
+			this.socket = socket;
+			if (this.socket.connected) this.init();
+			io.onConnect(() => this.init());
+		});
+	},
 	methods: {
 		edit(user) {
 			this.editUser(user);
@@ -97,15 +106,6 @@ export default {
 		},
 		...mapActions("admin/users", ["editUser"]),
 		...mapActions("modals", ["openModal"])
-	},
-	mounted() {
-		console.log("mounted");
-
-		io.getSocket(socket => {
-			this.socket = socket;
-			if (this.socket.connected) this.init();
-			io.onConnect(() => this.init());
-		});
 	}
 };
 </script>

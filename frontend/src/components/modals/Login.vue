@@ -91,6 +91,11 @@ export default {
 			serverDomain: ""
 		};
 	},
+	mounted() {
+		lofig.get("serverDomain").then(serverDomain => {
+			this.serverDomain = serverDomain;
+		});
+	},
 	methods: {
 		submitModal() {
 			this.login({
@@ -113,11 +118,6 @@ export default {
 		},
 		...mapActions("modals", ["closeModal"]),
 		...mapActions("user/auth", ["login"])
-	},
-	mounted() {
-		lofig.get("serverDomain").then(serverDomain => {
-			this.serverDomain = serverDomain;
-		});
 	}
 };
 </script>

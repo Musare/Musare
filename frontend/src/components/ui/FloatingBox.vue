@@ -39,6 +39,16 @@ export default {
 			pos4: 0
 		};
 	},
+	mounted() {
+		if (this.id !== null && localStorage[`box:${this.id}`]) {
+			const json = JSON.parse(localStorage.getItem(`box:${this.id}`));
+			this.height = json.height;
+			this.width = json.width;
+			this.top = json.top;
+			this.left = json.left;
+			this.shown = json.shown;
+		}
+	},
 	methods: {
 		onDragBox(e) {
 			const e1 = e || window.event;
@@ -114,16 +124,6 @@ export default {
 					shown: this.shown
 				})
 			);
-		}
-	},
-	mounted() {
-		if (this.id !== null && localStorage[`box:${this.id}`]) {
-			const json = JSON.parse(localStorage.getItem(`box:${this.id}`));
-			this.height = json.height;
-			this.width = json.width;
-			this.top = json.top;
-			this.left = json.left;
-			this.shown = json.shown;
 		}
 	}
 };

@@ -248,6 +248,13 @@ import validation from "../validation";
 
 export default {
 	components: { MainHeader, MainFooter },
+	props: {
+		mode: {
+			default: "reset",
+			enum: ["reset", "set"],
+			type: String
+		}
+	},
 	data() {
 		return {
 			email: "",
@@ -273,18 +280,6 @@ export default {
 			},
 			step: 1
 		};
-	},
-	props: {
-		mode: {
-			default: "reset",
-			enum: ["reset", "set"],
-			type: String
-		}
-	},
-	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
-		});
 	},
 	watch: {
 		email(value) {
@@ -320,6 +315,12 @@ export default {
 			this.checkPasswordMatch(this.newPassword, value);
 		}
 	},
+	mounted() {
+		io.getSocket(socket => {
+			this.socket = socket;
+		});
+	},
+
 	methods: {
 		checkPasswordMatch(newPassword, newPasswordAgain) {
 			if (newPasswordAgain !== newPassword) {

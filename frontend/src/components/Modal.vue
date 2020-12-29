@@ -25,6 +25,9 @@ export default {
 	props: {
 		title: { type: String, default: "Modal" }
 	},
+	mounted() {
+		this.type = this.toCamelCase(this.title);
+	},
 	methods: {
 		toCamelCase: str => {
 			return str
@@ -35,9 +38,6 @@ export default {
 				.replace(/ /g, "");
 		},
 		...mapActions("modals", ["closeCurrentModal"])
-	},
-	mounted() {
-		this.type = this.toCamelCase(this.title);
 	}
 };
 </script>

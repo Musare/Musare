@@ -17,6 +17,9 @@ export default {
 			return this.maxPosition - 1;
 		}
 	},
+	unmounted() {
+		clearInterval(this.interval);
+	},
 	methods: {
 		handleScroll() {
 			const scrollPosition = document.body.clientHeight + window.scrollY;
@@ -39,9 +42,6 @@ export default {
 				}
 			}, 500);
 		}
-	},
-	unmounted() {
-		clearInterval(this.interval);
 	}
 };
 </script>

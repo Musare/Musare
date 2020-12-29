@@ -24,13 +24,13 @@ export default {
 			username: "unknown"
 		};
 	},
-	methods: {
-		...mapActions("user/auth", ["getUsernameFromId"])
-	},
 	mounted() {
 		this.getUsernameFromId(this.$props.userId).then(res => {
 			if (res) this.username = res;
 		});
+	},
+	methods: {
+		...mapActions("user/auth", ["getUsernameFromId"])
 	}
 };
 </script>

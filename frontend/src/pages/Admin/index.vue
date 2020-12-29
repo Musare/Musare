@@ -126,13 +126,13 @@ export default {
 			currentTab: "queueSongs"
 		};
 	},
-	mounted() {
-		this.changeTab(this.$route.path);
-	},
 	watch: {
 		$route(route) {
 			this.changeTab(route.path);
 		}
+	},
+	mounted() {
+		this.changeTab(this.$route.path);
 	},
 	methods: {
 		changeTab(path) {

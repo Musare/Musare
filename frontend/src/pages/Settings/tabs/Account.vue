@@ -77,6 +77,7 @@ import io from "../../../io";
 import SaveButton from "../mixins/SaveButton.vue";
 
 export default {
+	mixins: [SaveButton],
 	data() {
 		return {
 			validation: {
@@ -251,7 +252,6 @@ export default {
 			);
 		},
 		...mapActions("settings", ["updateOriginalUser"])
-	},
-	mixins: [SaveButton]
+	}
 };
 </script>

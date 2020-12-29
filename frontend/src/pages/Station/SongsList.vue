@@ -130,6 +130,7 @@ import Sidebar from "../../components/Sidebar.vue";
 import UserIdToUsername from "../../components/common/UserIdToUsername.vue";
 
 export default {
+	components: { UserIdToUsername, Sidebar },
 	data() {
 		return {
 			utils,
@@ -169,8 +170,7 @@ export default {
 			);
 		},
 		...mapActions("modals", ["openModal"])
-	},
-	components: { UserIdToUsername, Sidebar }
+	}
 };
 </script>
 

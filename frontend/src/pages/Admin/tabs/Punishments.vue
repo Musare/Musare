@@ -115,6 +115,16 @@ export default {
 			modals: state => state.modals.admin
 		})
 	},
+	mounted() {
+		io.getSocket(socket => {
+			this.socket = socket;
+			if (this.socket.connected) this.init();
+			io.onConnect(() => this.init());
+			socket.on("event:admin.punishment.added", punishment => {
+				this.punishments.push(punishment);
+			});
+		});
+	},
 	methods: {
 		view(punishment) {
 			this.viewPunishment(punishment);
@@ -139,16 +149,6 @@ export default {
 		},
 		...mapActions("modals", ["openModal"]),
 		...mapActions("admin/punishments", ["viewPunishment"])
-	},
-	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
-			if (this.socket.connected) this.init();
-			io.onConnect(() => this.init());
-			socket.on("event:admin.punishment.added", punishment => {
-				this.punishments.push(punishment);
-			});
-		});
 	}
 };
 </script>

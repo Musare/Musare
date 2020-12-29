@@ -206,6 +206,22 @@ export default {
 			modals: state => state.modals.station
 		})
 	},
+	mounted() {
+		io.getSocket(socket => {
+			this.socket = socket;
+			if (this.socket.connected) this.init();
+
+			this.socket.on("event:admin.station.added", station => {
+				this.stationAdded(station);
+			});
+			this.socket.on("event:admin.station.removed", stationId => {
+				this.stationRemoved(stationId);
+			});
+			io.onConnect(() => {
+				this.init();
+			});
+		});
+	},
 	methods: {
 		createStation() {
 			const {
@@ -340,22 +356,6 @@ export default {
 			"stationRemoved",
 			"stationAdded"
 		])
-	},
-	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
-			if (this.socket.connected) this.init();
-
-			this.socket.on("event:admin.station.added", station => {
-				this.stationAdded(station);
-			});
-			this.socket.on("event:admin.station.removed", stationId => {
-				this.stationRemoved(stationId);
-			});
-			io.onConnect(() => {
-				this.init();
-			});
-		});
 	}
 };
 </script>

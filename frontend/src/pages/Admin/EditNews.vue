@@ -181,6 +181,11 @@ export default {
 			editing: state => state.editing
 		})
 	},
+	mounted() {
+		io.getSocket(socket => {
+			this.socket = socket;
+		});
+	},
 	methods: {
 		addChange(type) {
 			const change = document.getElementById(`edit-${type}`).value.trim();
@@ -223,11 +228,6 @@ export default {
 		},
 		...mapActions("modals", ["closeModal"]),
 		...mapActions("admin/news", ["addChange", "removeChange"])
-	},
-	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
-		});
 	}
 };
 </script>

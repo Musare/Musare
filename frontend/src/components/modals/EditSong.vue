@@ -624,6 +624,320 @@ export default {
 		}
 		/* eslint-enable */
 	},
+	mounted() {
+		// if (this.modals.editSong = false) this.video.player.stopVideo();
+
+		// this.loadVideoById(
+		//   this.editing.song.songId,
+		//   this.editing.song.skipDuration
+		// );
+
+		this.discogsQuery = this.editing.song.title;
+
+		lofig.get("cookie.secure").then(useHTTPS => {
+			this.useHTTPS = useHTTPS;
+		});
+
+		io.getSocket(socket => {
+			this.socket = socket;
+		});
+
+		this.interval = setInterval(() => {
+			if (
+				this.editing.song.duration !== -1 &&
+				this.video.paused === false &&
+				this.playerReady &&
+				this.video.player.getCurrentTime() -
+					this.editing.song.skipDuration >
+					this.editing.song.duration
+			) {
+				this.video.paused = false;
+				this.video.player.stopVideo();
+				this.drawCanvas();
+			}
+			if (this.playerReady) {
+				this.youtubeVideoCurrentTime = this.video.player
+					.getCurrentTime()
+					.toFixed(3);
+			}
+
+			if (this.video.paused === false) this.drawCanvas();
+		}, 200);
+
+		this.video.player = new window.YT.Player("player", {
+			height: 298,
+			width: 530,
+			videoId: this.editing.song.songId,
+			host: "https://www.youtube-nocookie.com",
+			playerVars: {
+				controls: 0,
+				iv_load_policy: 3,
+				rel: 0,
+				showinfo: 0,
+				autoplay: 1
+			},
+			startSeconds: this.editing.song.skipDuration,
+			events: {
+				onReady: () => {
+					let volume = parseInt(localStorage.getItem("volume"));
+					volume = typeof volume === "number" ? volume : 20;
+					console.log(`Seekto: ${this.editing.song.skipDuration}`);
+					this.video.player.seekTo(this.editing.song.skipDuration);
+					this.video.player.setVolume(volume);
+					if (volume > 0) this.video.player.unMute();
+					this.youtubeVideoDuration = this.video.player.getDuration();
+					this.youtubeVideoNote = "(~)";
+					this.playerReady = true;
+
+					this.drawCanvas();
+				},
+				onStateChange: event => {
+					this.drawCanvas();
+
+					if (event.data === 1) {
+						if (!this.video.autoPlayed) {
+							this.video.autoPlayed = true;
+							return this.video.player.stopVideo();
+						}
+
+						this.video.paused = false;
+						let youtubeDuration = this.video.player.getDuration();
+						this.youtubeVideoDuration = youtubeDuration;
+						this.youtubeVideoNote = "";
+
+						if (this.editing.song.duration === -1)
+							this.editing.song.duration = youtubeDuration;
+
+						youtubeDuration -= this.editing.song.skipDuration;
+						if (this.editing.song.duration > youtubeDuration + 1) {
+							this.video.player.stopVideo();
+							this.video.paused = true;
+							return new Toast({
+								content:
+									"Video can't play. Specified duration is bigger than the YouTube song duration.",
+								timeout: 4000
+							});
+						}
+						if (this.editing.song.duration <= 0) {
+							this.video.player.stopVideo();
+							this.video.paused = true;
+							return new Toast({
+								content:
+									"Video can't play. Specified duration has to be more than 0 seconds.",
+								timeout: 4000
+							});
+						}
+
+						if (
+							this.video.player.getCurrentTime() <
+							this.editing.song.skipDuration
+						) {
+							return this.video.player.seekTo(
+								this.editing.song.skipDuration
+							);
+						}
+					} else if (event.data === 2) {
+						this.video.paused = true;
+					}
+
+					return false;
+				}
+			}
+		});
+
+		let volume = parseFloat(localStorage.getItem("volume"));
+		volume =
+			typeof volume === "number" && !Number.isNaN(volume) ? volume : 20;
+		localStorage.setItem("volume", volume);
+		this.volumeSliderValue = volume * 100;
+
+		keyboardShortcuts.registerShortcut("editSong.pauseResumeVideo", {
+			keyCode: 101,
+			preventDefault: true,
+			handler: () => {
+				if (this.video.paused) this.settings("play");
+				else this.settings("pause");
+			}
+		});
+
+		keyboardShortcuts.registerShortcut("editSong.stopVideo", {
+			keyCode: 101,
+			ctrl: true,
+			preventDefault: true,
+			handler: () => {
+				this.settings("stop");
+			}
+		});
+
+		keyboardShortcuts.registerShortcut("editSong.skipToLast10Secs", {
+			keyCode: 102,
+			preventDefault: true,
+			handler: () => {
+				this.settings("skipToLast10Secs");
+			}
+		});
+
+		keyboardShortcuts.registerShortcut("editSong.lowerVolumeLarge", {
+			keyCode: 98,
+			preventDefault: true,
+			handler: () => {
+				this.volumeSliderValue = Math.max(
+					0,
+					this.volumeSliderValue - 1000
+				);
+				this.changeVolume();
+			}
+		});
+
+		keyboardShortcuts.registerShortcut("editSong.lowerVolumeSmall", {
+			keyCode: 98,
+			ctrl: true,
+			preventDefault: true,
+			handler: () => {
+				this.volumeSliderValue = Math.max(
+					0,
+					this.volumeSliderValue - 100
+				);
+				this.changeVolume();
+			}
+		});
+
+		keyboardShortcuts.registerShortcut("editSong.increaseVolumeLarge", {
+			keyCode: 104,
+			preventDefault: true,
+			handler: () => {
+				this.volumeSliderValue = Math.min(
+					10000,
+					this.volumeSliderValue + 1000
+				);
+				this.changeVolume();
+			}
+		});
+
+		keyboardShortcuts.registerShortcut("editSong.increaseVolumeSmall", {
+			keyCode: 104,
+			ctrl: true,
+			preventDefault: true,
+			handler: () => {
+				this.volumeSliderValue = Math.min(
+					10000,
+					this.volumeSliderValue + 100
+				);
+				this.changeVolume();
+			}
+		});
+
+		keyboardShortcuts.registerShortcut("editSong.save", {
+			keyCode: 83,
+			ctrl: true,
+			preventDefault: true,
+			handler: () => {
+				this.save(this.editing.song, false);
+			}
+		});
+
+		keyboardShortcuts.registerShortcut("editSong.close", {
+			keyCode: 88,
+			ctrl: true,
+			preventDefault: true,
+			handler: () => {
+				this.closeModal({
+					sector: "admin",
+					modal: "editSong"
+				});
+				setTimeout(() => {
+					window.focusedElementBefore.focus();
+				}, 500);
+			}
+		});
+
+		keyboardShortcuts.registerShortcut("editSong.focusTitle", {
+			keyCode: 36,
+			preventDefault: true,
+			handler: () => {
+				document.getElementById("title-input").focus();
+			}
+		});
+
+		keyboardShortcuts.registerShortcut("editSong.focusDiscogs", {
+			keyCode: 35,
+			preventDefault: true,
+			handler: () => {
+				document.getElementById("discogs-input").focus();
+			}
+		});
+
+		keyboardShortcuts.registerShortcut("editSong.useAllDiscogs", {
+			keyCode: 68,
+			alt: true,
+			ctrl: true,
+			preventDefault: true,
+			handler: () => {
+				this.getAlbumData("title");
+				this.getAlbumData("albumArt");
+				this.getAlbumData("artists");
+				this.getAlbumData("genres");
+			}
+		});
+
+		keyboardShortcuts.registerShortcut("editSong.resetDuration", {
+			keyCode: 82,
+			alt: true,
+			ctrl: true,
+			preventDefault: true,
+			handler: () => {
+				this.fillDuration();
+			}
+		});
+
+		/*
+		
+		editSong.pauseResume - Num 5 - Pause/resume song
+		editSong.stopVideo - Ctrl - Num 5 - Stop
+		editSong.skipToLast10Secs - Num 6 - Skip to last 10 seconds
+
+		editSong.volumeDown5 - Num 2 - Volume down by 10
+		editSong.volumeDown1 - Ctrl - Num 2 - Volume down by 1
+		editSong.volumeUp5 - Num 8 - Volume up by 10
+		editSong.volumeUp1 - Ctrl - Num 8 - Volume up by 1
+
+		editSong.focusTitle - Home - Focus the title input
+		editSong.focusDicogs - End - Focus the discogs input
+
+		editSong.save - Ctrl - S - Saves song
+		editSong.close - Ctrl - X - Closes modal
+
+		editSong.useAllDiscogs - Ctrl - Alt - D - Sets all fields to the Discogs data
+		editSong.resetDuration - Ctrl - Alt - R - Resets the duration
+
+		Inside Discogs inputs: Ctrl - D - Sets this field to the Discogs data
+
+		*/
+	},
+	beforeDestroy() {
+		this.playerReady = false;
+		clearInterval(this.interval);
+
+		const shortcutNames = [
+			"editSong.pauseResume",
+			"editSong.stopVideo",
+			"editSong.skipToLast10Secs",
+			"editSong.volumeDown5",
+			"editSong.volumeDown1",
+			"editSong.volumeUp5",
+			"editSong.volumeUp1",
+			"editSong.focusTitle",
+			"editSong.focusDicogs",
+			"editSong.save",
+			"editSong.close",
+			"editSong.useAllDiscogs",
+			"editSong.resetDuration"
+		];
+
+		shortcutNames.forEach(shortcutName => {
+			keyboardShortcuts.unregisterShortcut(shortcutName);
+		});
+	},
 	methods: {
 		save(songToCopy, close) {
 			const song = JSON.parse(JSON.stringify(songToCopy));
@@ -1064,320 +1378,6 @@ export default {
 			"selectDiscogsInfo"
 		]),
 		...mapActions("modals", ["closeModal"])
-	},
-	mounted() {
-		// if (this.modals.editSong = false) this.video.player.stopVideo();
-
-		// this.loadVideoById(
-		//   this.editing.song.songId,
-		//   this.editing.song.skipDuration
-		// );
-
-		this.discogsQuery = this.editing.song.title;
-
-		lofig.get("cookie.secure").then(useHTTPS => {
-			this.useHTTPS = useHTTPS;
-		});
-
-		io.getSocket(socket => {
-			this.socket = socket;
-		});
-
-		this.interval = setInterval(() => {
-			if (
-				this.editing.song.duration !== -1 &&
-				this.video.paused === false &&
-				this.playerReady &&
-				this.video.player.getCurrentTime() -
-					this.editing.song.skipDuration >
-					this.editing.song.duration
-			) {
-				this.video.paused = false;
-				this.video.player.stopVideo();
-				this.drawCanvas();
-			}
-			if (this.playerReady) {
-				this.youtubeVideoCurrentTime = this.video.player
-					.getCurrentTime()
-					.toFixed(3);
-			}
-
-			if (this.video.paused === false) this.drawCanvas();
-		}, 200);
-
-		this.video.player = new window.YT.Player("player", {
-			height: 298,
-			width: 530,
-			videoId: this.editing.song.songId,
-			host: "https://www.youtube-nocookie.com",
-			playerVars: {
-				controls: 0,
-				iv_load_policy: 3,
-				rel: 0,
-				showinfo: 0,
-				autoplay: 1
-			},
-			startSeconds: this.editing.song.skipDuration,
-			events: {
-				onReady: () => {
-					let volume = parseInt(localStorage.getItem("volume"));
-					volume = typeof volume === "number" ? volume : 20;
-					console.log(`Seekto: ${this.editing.song.skipDuration}`);
-					this.video.player.seekTo(this.editing.song.skipDuration);
-					this.video.player.setVolume(volume);
-					if (volume > 0) this.video.player.unMute();
-					this.youtubeVideoDuration = this.video.player.getDuration();
-					this.youtubeVideoNote = "(~)";
-					this.playerReady = true;
-
-					this.drawCanvas();
-				},
-				onStateChange: event => {
-					this.drawCanvas();
-
-					if (event.data === 1) {
-						if (!this.video.autoPlayed) {
-							this.video.autoPlayed = true;
-							return this.video.player.stopVideo();
-						}
-
-						this.video.paused = false;
-						let youtubeDuration = this.video.player.getDuration();
-						this.youtubeVideoDuration = youtubeDuration;
-						this.youtubeVideoNote = "";
-
-						if (this.editing.song.duration === -1)
-							this.editing.song.duration = youtubeDuration;
-
-						youtubeDuration -= this.editing.song.skipDuration;
-						if (this.editing.song.duration > youtubeDuration + 1) {
-							this.video.player.stopVideo();
-							this.video.paused = true;
-							return new Toast({
-								content:
-									"Video can't play. Specified duration is bigger than the YouTube song duration.",
-								timeout: 4000
-							});
-						}
-						if (this.editing.song.duration <= 0) {
-							this.video.player.stopVideo();
-							this.video.paused = true;
-							return new Toast({
-								content:
-									"Video can't play. Specified duration has to be more than 0 seconds.",
-								timeout: 4000
-							});
-						}
-
-						if (
-							this.video.player.getCurrentTime() <
-							this.editing.song.skipDuration
-						) {
-							return this.video.player.seekTo(
-								this.editing.song.skipDuration
-							);
-						}
-					} else if (event.data === 2) {
-						this.video.paused = true;
-					}
-
-					return false;
-				}
-			}
-		});
-
-		let volume = parseFloat(localStorage.getItem("volume"));
-		volume =
-			typeof volume === "number" && !Number.isNaN(volume) ? volume : 20;
-		localStorage.setItem("volume", volume);
-		this.volumeSliderValue = volume * 100;
-
-		keyboardShortcuts.registerShortcut("editSong.pauseResumeVideo", {
-			keyCode: 101,
-			preventDefault: true,
-			handler: () => {
-				if (this.video.paused) this.settings("play");
-				else this.settings("pause");
-			}
-		});
-
-		keyboardShortcuts.registerShortcut("editSong.stopVideo", {
-			keyCode: 101,
-			ctrl: true,
-			preventDefault: true,
-			handler: () => {
-				this.settings("stop");
-			}
-		});
-
-		keyboardShortcuts.registerShortcut("editSong.skipToLast10Secs", {
-			keyCode: 102,
-			preventDefault: true,
-			handler: () => {
-				this.settings("skipToLast10Secs");
-			}
-		});
-
-		keyboardShortcuts.registerShortcut("editSong.lowerVolumeLarge", {
-			keyCode: 98,
-			preventDefault: true,
-			handler: () => {
-				this.volumeSliderValue = Math.max(
-					0,
-					this.volumeSliderValue - 1000
-				);
-				this.changeVolume();
-			}
-		});
-
-		keyboardShortcuts.registerShortcut("editSong.lowerVolumeSmall", {
-			keyCode: 98,
-			ctrl: true,
-			preventDefault: true,
-			handler: () => {
-				this.volumeSliderValue = Math.max(
-					0,
-					this.volumeSliderValue - 100
-				);
-				this.changeVolume();
-			}
-		});
-
-		keyboardShortcuts.registerShortcut("editSong.increaseVolumeLarge", {
-			keyCode: 104,
-			preventDefault: true,
-			handler: () => {
-				this.volumeSliderValue = Math.min(
-					10000,
-					this.volumeSliderValue + 1000
-				);
-				this.changeVolume();
-			}
-		});
-
-		keyboardShortcuts.registerShortcut("editSong.increaseVolumeSmall", {
-			keyCode: 104,
-			ctrl: true,
-			preventDefault: true,
-			handler: () => {
-				this.volumeSliderValue = Math.min(
-					10000,
-					this.volumeSliderValue + 100
-				);
-				this.changeVolume();
-			}
-		});
-
-		keyboardShortcuts.registerShortcut("editSong.save", {
-			keyCode: 83,
-			ctrl: true,
-			preventDefault: true,
-			handler: () => {
-				this.save(this.editing.song, false);
-			}
-		});
-
-		keyboardShortcuts.registerShortcut("editSong.close", {
-			keyCode: 88,
-			ctrl: true,
-			preventDefault: true,
-			handler: () => {
-				this.closeModal({
-					sector: "admin",
-					modal: "editSong"
-				});
-				setTimeout(() => {
-					window.focusedElementBefore.focus();
-				}, 500);
-			}
-		});
-
-		keyboardShortcuts.registerShortcut("editSong.focusTitle", {
-			keyCode: 36,
-			preventDefault: true,
-			handler: () => {
-				document.getElementById("title-input").focus();
-			}
-		});
-
-		keyboardShortcuts.registerShortcut("editSong.focusDiscogs", {
-			keyCode: 35,
-			preventDefault: true,
-			handler: () => {
-				document.getElementById("discogs-input").focus();
-			}
-		});
-
-		keyboardShortcuts.registerShortcut("editSong.useAllDiscogs", {
-			keyCode: 68,
-			alt: true,
-			ctrl: true,
-			preventDefault: true,
-			handler: () => {
-				this.getAlbumData("title");
-				this.getAlbumData("albumArt");
-				this.getAlbumData("artists");
-				this.getAlbumData("genres");
-			}
-		});
-
-		keyboardShortcuts.registerShortcut("editSong.resetDuration", {
-			keyCode: 82,
-			alt: true,
-			ctrl: true,
-			preventDefault: true,
-			handler: () => {
-				this.fillDuration();
-			}
-		});
-
-		/*
-		
-		editSong.pauseResume - Num 5 - Pause/resume song
-		editSong.stopVideo - Ctrl - Num 5 - Stop
-		editSong.skipToLast10Secs - Num 6 - Skip to last 10 seconds
-
-		editSong.volumeDown5 - Num 2 - Volume down by 10
-		editSong.volumeDown1 - Ctrl - Num 2 - Volume down by 1
-		editSong.volumeUp5 - Num 8 - Volume up by 10
-		editSong.volumeUp1 - Ctrl - Num 8 - Volume up by 1
-
-		editSong.focusTitle - Home - Focus the title input
-		editSong.focusDicogs - End - Focus the discogs input
-
-		editSong.save - Ctrl - S - Saves song
-		editSong.close - Ctrl - X - Closes modal
-
-		editSong.useAllDiscogs - Ctrl - Alt - D - Sets all fields to the Discogs data
-		editSong.resetDuration - Ctrl - Alt - R - Resets the duration
-
-		Inside Discogs inputs: Ctrl - D - Sets this field to the Discogs data
-
-		*/
-	},
-	beforeDestroy() {
-		this.playerReady = false;
-		clearInterval(this.interval);
-
-		const shortcutNames = [
-			"editSong.pauseResume",
-			"editSong.stopVideo",
-			"editSong.skipToLast10Secs",
-			"editSong.volumeDown5",
-			"editSong.volumeDown1",
-			"editSong.volumeUp5",
-			"editSong.volumeUp1",
-			"editSong.focusTitle",
-			"editSong.focusDicogs",
-			"editSong.save",
-			"editSong.close",
-			"editSong.useAllDiscogs",
-			"editSong.resetDuration"
-		];
-
-		shortcutNames.forEach(shortcutName => {
-			keyboardShortcuts.unregisterShortcut(shortcutName);
-		});
 	}
 };
 </script>

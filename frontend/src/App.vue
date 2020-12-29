@@ -24,6 +24,13 @@ import io from "./io";
 import keyboardShortcuts from "./keyboardShortcuts";
 
 export default {
+	components: {
+		WhatIsNew,
+		MobileAlert,
+		LoginModal,
+		RegisterModal,
+		Banned
+	},
 	replace: false,
 	data() {
 		return {
@@ -42,23 +49,6 @@ export default {
 		currentlyActive: state => state.modals.currentlyActive,
 		nightmode: state => state.user.preferences.nightmode
 	}),
-	methods: {
-		submitOnEnter: (cb, event) => {
-			if (event.which === 13) cb();
-		},
-		enableNightMode: () => {
-			document
-				.getElementsByTagName("body")[0]
-				.classList.add("night-mode");
-		},
-		disableNightMode: () => {
-			document
-				.getElementsByTagName("body")[0]
-				.classList.remove("night-mode");
-		},
-		...mapActions("modals", ["closeCurrentModal"]),
-		...mapActions("user/preferences", ["changeNightmode"])
-	},
 	watch: {
 		socketConnected(connected) {
 			console.log(connected);
@@ -166,12 +156,22 @@ export default {
 			});
 		});
 	},
-	components: {
-		WhatIsNew,
-		MobileAlert,
-		LoginModal,
-		RegisterModal,
-		Banned
+	methods: {
+		submitOnEnter: (cb, event) => {
+			if (event.which === 13) cb();
+		},
+		enableNightMode: () => {
+			document
+				.getElementsByTagName("body")[0]
+				.classList.add("night-mode");
+		},
+		disableNightMode: () => {
+			document
+				.getElementsByTagName("body")[0]
+				.classList.remove("night-mode");
+		},
+		...mapActions("modals", ["closeCurrentModal"]),
+		...mapActions("user/preferences", ["changeNightmode"])
 	}
 };
 </script>

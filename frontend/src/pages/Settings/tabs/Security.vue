@@ -177,6 +177,23 @@ export default {
 			userId: state => state.user.auth.userId
 		})
 	},
+	watch: {
+		// eslint-disable-next-line func-names
+		"validation.newPassword.value": function(value) {
+			if (!validation.isLength(value, 6, 200)) {
+				this.validation.newPassword.message =
+					"Password must have between 6 and 200 characters.";
+				this.validation.newPassword.valid = false;
+			} else if (!validation.regex.password.test(value)) {
+				this.validation.newPassword.message =
+					"Invalid password format. Must have one lowercase letter, one uppercase letter, one number and one special character.";
+				this.validation.newPassword.valid = false;
+			} else {
+				this.validation.newPassword.message = "Everything looks great!";
+				this.validation.newPassword.valid = true;
+			}
+		}
+	},
 	mounted() {
 		io.getSocket(socket => {
 			this.socket = socket;
@@ -238,23 +255,6 @@ export default {
 			this.socket.emit(`users.removeSessions`, this.userId, res => {
 				new Toast({ content: res.message, timeout: 4000 });
 			});
-		}
-	},
-	watch: {
-		// eslint-disable-next-line func-names
-		"validation.newPassword.value": function(value) {
-			if (!validation.isLength(value, 6, 200)) {
-				this.validation.newPassword.message =
-					"Password must have between 6 and 200 characters.";
-				this.validation.newPassword.valid = false;
-			} else if (!validation.regex.password.test(value)) {
-				this.validation.newPassword.message =
-					"Invalid password format. Must have one lowercase letter, one uppercase letter, one number and one special character.";
-				this.validation.newPassword.valid = false;
-			} else {
-				this.validation.newPassword.message = "Everything looks great!";
-				this.validation.newPassword.valid = true;
-			}
 		}
 	}
 };

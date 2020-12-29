@@ -484,6 +484,21 @@ import keyboardShortcuts from "../../keyboardShortcuts";
 import utils from "../../../js/utils";
 
 export default {
+	components: {
+		StationHeader,
+		SongQueue: () => import("./AddSongToQueue.vue"),
+		AddToPlaylist: () => import("./AddSongToPlaylist.vue"),
+		EditPlaylist: () => import("../../components/modals/EditPlaylist.vue"),
+		CreatePlaylist: () =>
+			import("../../components/modals/CreatePlaylist.vue"),
+		EditStation: () => import("../../components/modals/EditStation.vue"),
+		Report: () => import("./Report.vue"),
+		SongsListSidebar: () => import("./SongsList.vue"),
+		UsersSidebar: () => import("./UsersList.vue"),
+		UserIdToUsername,
+		Z404,
+		FloatingBox
+	},
 	data() {
 		return {
 			utils,
@@ -535,6 +550,206 @@ export default {
 		sidebarActive() {
 			return Object.values(this.sidebars).indexOf(true) !== -1;
 		}
+	},
+	mounted() {
+		Date.currently = () => {
+			return new Date().getTime() + this.systemDifference;
+		};
+
+		this.stationName = this.$route.params.id;
+
+		window.stationInterval = 0;
+
+		io.getSocket(socket => {
+			this.socket = socket;
+
+			io.removeAllListeners();
+			if (this.socket.connected) this.join();
+			io.onConnect(this.join);
+			this.socket.emit("stations.existsByName", this.stationName, res => {
+				if (res.status === "failure" || !res.exists) {
+					this.loading = false;
+					this.exists = false;
+				}
+			});
+			this.socket.on("event:songs.next", data => {
+				const previousSong = this.currentSong.songId
+					? this.currentSong
+					: null;
+				this.updatePreviousSong(previousSong);
+				this.updateCurrentSong(
+					data.currentSong ? data.currentSong : {}
+				);
+				this.startedAt = data.startedAt;
+				this.updateStationPaused(data.paused);
+				this.timePaused = data.timePaused;
+				if (data.currentSong) {
+					this.updateNoSong(false);
+					if (this.currentSong.artists)
+						this.currentSong.artists = this.currentSong.artists.join(
+							", "
+						);
+					if (!this.playerReady) this.youtubeReady();
+					else this.playVideo();
+					this.socket.emit(
+						"songs.getOwnSongRatings",
+						data.currentSong.songId,
+						song => {
+							if (this.currentSong.songId === song.songId) {
+								this.liked = song.liked;
+								this.disliked = song.disliked;
+							}
+						}
+					);
+				} else {
+					if (this.playerReady) this.player.pauseVideo();
+					this.updateNoSong(true);
+				}
+
+				let isInQueue = false;
+				this.songsList.forEach(queueSong => {
+					if (queueSong.requestedBy === this.userId) isInQueue = true;
+				});
+				if (
+					!isInQueue &&
+					this.privatePlaylistQueueSelected &&
+					(this.automaticallyRequestedSongId !==
+						this.currentSong.songId ||
+						!this.currentSong.songId)
+				) {
+					this.addFirstPrivatePlaylistSongToQueue();
+				}
+			});
+
+			this.socket.on("event:stations.pause", data => {
+				this.pausedAt = data.pausedAt;
+				this.updateStationPaused(true);
+				this.pauseLocalPlayer();
+			});
+
+			this.socket.on("event:stations.resume", data => {
+				this.timePaused = data.timePaused;
+				this.updateStationPaused(false);
+				if (!this.localPaused) this.resumeLocalPlayer();
+			});
+
+			this.socket.on("event:stations.remove", () => {
+				window.location.href = "/";
+				return true;
+			});
+
+			this.socket.on("event:song.like", data => {
+				if (!this.noSong) {
+					if (data.songId === this.currentSong.songId) {
+						this.currentSong.dislikes = data.dislikes;
+						this.currentSong.likes = data.likes;
+					}
+				}
+			});
+
+			this.socket.on("event:song.dislike", data => {
+				if (!this.noSong) {
+					if (data.songId === this.currentSong.songId) {
+						this.currentSong.dislikes = data.dislikes;
+						this.currentSong.likes = data.likes;
+					}
+				}
+			});
+
+			this.socket.on("event:song.unlike", data => {
+				if (!this.noSong) {
+					if (data.songId === this.currentSong.songId) {
+						this.currentSong.dislikes = data.dislikes;
+						this.currentSong.likes = data.likes;
+					}
+				}
+			});
+
+			this.socket.on("event:song.undislike", data => {
+				if (!this.noSong) {
+					if (data.songId === this.currentSong.songId) {
+						this.currentSong.dislikes = data.dislikes;
+						this.currentSong.likes = data.likes;
+					}
+				}
+			});
+
+			this.socket.on("event:song.newRatings", data => {
+				if (!this.noSong) {
+					if (data.songId === this.currentSong.songId) {
+						this.liked = data.liked;
+						this.disliked = data.disliked;
+					}
+				}
+			});
+
+			this.socket.on("event:queue.update", queue => {
+				if (this.station.type === "community")
+					this.updateSongsList(queue);
+			});
+
+			this.socket.on("event:song.voteSkipSong", () => {
+				if (this.currentSong) this.currentSong.skipVotes += 1;
+			});
+
+			this.socket.on("event:privatePlaylist.selected", playlistId => {
+				if (this.station.type === "community") {
+					this.station.privatePlaylist = playlistId;
+				}
+			});
+
+			this.socket.on("event:partyMode.updated", partyMode => {
+				if (this.station.type === "community") {
+					this.station.partyMode = partyMode;
+				}
+			});
+
+			this.socket.on("event:newOfficialPlaylist", playlist => {
+				if (this.station.type === "official") {
+					this.updateSongsList(playlist);
+				}
+			});
+
+			this.socket.on("event:users.updated", users => {
+				this.updateUsers(users);
+			});
+
+			this.socket.on("event:userCount.updated", userCount => {
+				this.updateUserCount(userCount);
+			});
+
+			this.socket.on("event:queueLockToggled", locked => {
+				this.station.locked = locked;
+			});
+		});
+
+		if (JSON.parse(localStorage.getItem("muted"))) {
+			this.muted = true;
+			this.player.setVolume(0);
+			this.volumeSliderValue = 0 * 100;
+		} else {
+			let volume = parseFloat(localStorage.getItem("volume"));
+			volume =
+				typeof volume === "number" && !Number.isNaN(volume)
+					? volume
+					: 20;
+			localStorage.setItem("volume", volume);
+			this.volumeSliderValue = volume * 100;
+		}
+	},
+	beforeDestroy() {
+		const shortcutNames = [
+			"station.pauseResume",
+			"station.skipStation",
+			"station.lowerVolumeLarge",
+			"station.lowerVolumeSmall",
+			"station.increaseVolumeLarge",
+			"station.increaseVolumeSmall"
+		];
+
+		shortcutNames.forEach(shortcutName => {
+			keyboardShortcuts.unregisterShortcut(shortcutName);
+		});
 	},
 	methods: {
 		isOwnerOnly() {
@@ -1245,221 +1460,6 @@ export default {
 			"updateLocalPaused",
 			"updateNoSong"
 		])
-	},
-	mounted() {
-		Date.currently = () => {
-			return new Date().getTime() + this.systemDifference;
-		};
-
-		this.stationName = this.$route.params.id;
-
-		window.stationInterval = 0;
-
-		io.getSocket(socket => {
-			this.socket = socket;
-
-			io.removeAllListeners();
-			if (this.socket.connected) this.join();
-			io.onConnect(this.join);
-			this.socket.emit("stations.existsByName", this.stationName, res => {
-				if (res.status === "failure" || !res.exists) {
-					this.loading = false;
-					this.exists = false;
-				}
-			});
-			this.socket.on("event:songs.next", data => {
-				const previousSong = this.currentSong.songId
-					? this.currentSong
-					: null;
-				this.updatePreviousSong(previousSong);
-				this.updateCurrentSong(
-					data.currentSong ? data.currentSong : {}
-				);
-				this.startedAt = data.startedAt;
-				this.updateStationPaused(data.paused);
-				this.timePaused = data.timePaused;
-				if (data.currentSong) {
-					this.updateNoSong(false);
-					if (this.currentSong.artists)
-						this.currentSong.artists = this.currentSong.artists.join(
-							", "
-						);
-					if (!this.playerReady) this.youtubeReady();
-					else this.playVideo();
-					this.socket.emit(
-						"songs.getOwnSongRatings",
-						data.currentSong.songId,
-						song => {
-							if (this.currentSong.songId === song.songId) {
-								this.liked = song.liked;
-								this.disliked = song.disliked;
-							}
-						}
-					);
-				} else {
-					if (this.playerReady) this.player.pauseVideo();
-					this.updateNoSong(true);
-				}
-
-				let isInQueue = false;
-				this.songsList.forEach(queueSong => {
-					if (queueSong.requestedBy === this.userId) isInQueue = true;
-				});
-				if (
-					!isInQueue &&
-					this.privatePlaylistQueueSelected &&
-					(this.automaticallyRequestedSongId !==
-						this.currentSong.songId ||
-						!this.currentSong.songId)
-				) {
-					this.addFirstPrivatePlaylistSongToQueue();
-				}
-			});
-
-			this.socket.on("event:stations.pause", data => {
-				this.pausedAt = data.pausedAt;
-				this.updateStationPaused(true);
-				this.pauseLocalPlayer();
-			});
-
-			this.socket.on("event:stations.resume", data => {
-				this.timePaused = data.timePaused;
-				this.updateStationPaused(false);
-				if (!this.localPaused) this.resumeLocalPlayer();
-			});
-
-			this.socket.on("event:stations.remove", () => {
-				window.location.href = "/";
-				return true;
-			});
-
-			this.socket.on("event:song.like", data => {
-				if (!this.noSong) {
-					if (data.songId === this.currentSong.songId) {
-						this.currentSong.dislikes = data.dislikes;
-						this.currentSong.likes = data.likes;
-					}
-				}
-			});
-
-			this.socket.on("event:song.dislike", data => {
-				if (!this.noSong) {
-					if (data.songId === this.currentSong.songId) {
-						this.currentSong.dislikes = data.dislikes;
-						this.currentSong.likes = data.likes;
-					}
-				}
-			});
-
-			this.socket.on("event:song.unlike", data => {
-				if (!this.noSong) {
-					if (data.songId === this.currentSong.songId) {
-						this.currentSong.dislikes = data.dislikes;
-						this.currentSong.likes = data.likes;
-					}
-				}
-			});
-
-			this.socket.on("event:song.undislike", data => {
-				if (!this.noSong) {
-					if (data.songId === this.currentSong.songId) {
-						this.currentSong.dislikes = data.dislikes;
-						this.currentSong.likes = data.likes;
-					}
-				}
-			});
-
-			this.socket.on("event:song.newRatings", data => {
-				if (!this.noSong) {
-					if (data.songId === this.currentSong.songId) {
-						this.liked = data.liked;
-						this.disliked = data.disliked;
-					}
-				}
-			});
-
-			this.socket.on("event:queue.update", queue => {
-				if (this.station.type === "community")
-					this.updateSongsList(queue);
-			});
-
-			this.socket.on("event:song.voteSkipSong", () => {
-				if (this.currentSong) this.currentSong.skipVotes += 1;
-			});
-
-			this.socket.on("event:privatePlaylist.selected", playlistId => {
-				if (this.station.type === "community") {
-					this.station.privatePlaylist = playlistId;
-				}
-			});
-
-			this.socket.on("event:partyMode.updated", partyMode => {
-				if (this.station.type === "community") {
-					this.station.partyMode = partyMode;
-				}
-			});
-
-			this.socket.on("event:newOfficialPlaylist", playlist => {
-				if (this.station.type === "official") {
-					this.updateSongsList(playlist);
-				}
-			});
-
-			this.socket.on("event:users.updated", users => {
-				this.updateUsers(users);
-			});
-
-			this.socket.on("event:userCount.updated", userCount => {
-				this.updateUserCount(userCount);
-			});
-
-			this.socket.on("event:queueLockToggled", locked => {
-				this.station.locked = locked;
-			});
-		});
-
-		if (JSON.parse(localStorage.getItem("muted"))) {
-			this.muted = true;
-			this.player.setVolume(0);
-			this.volumeSliderValue = 0 * 100;
-		} else {
-			let volume = parseFloat(localStorage.getItem("volume"));
-			volume =
-				typeof volume === "number" && !Number.isNaN(volume)
-					? volume
-					: 20;
-			localStorage.setItem("volume", volume);
-			this.volumeSliderValue = volume * 100;
-		}
-	},
-	beforeDestroy() {
-		const shortcutNames = [
-			"station.pauseResume",
-			"station.skipStation",
-			"station.lowerVolumeLarge",
-			"station.lowerVolumeSmall",
-			"station.increaseVolumeLarge",
-			"station.increaseVolumeSmall"
-		];
-
-		shortcutNames.forEach(shortcutName => {
-			keyboardShortcuts.unregisterShortcut(shortcutName);
-		});
-	},
-	components: {
-		StationHeader,
-		SongQueue: () => import("./AddSongToQueue.vue"),
-		AddToPlaylist: () => import("./AddSongToPlaylist.vue"),
-		EditPlaylist: () => import("../../components/modals/EditPlaylist.vue"),
-		CreatePlaylist: () =>
-			import("../../components/modals/CreatePlaylist.vue"),
-		EditStation: () => import("../../components/modals/EditStation.vue"),
-		Report: () => import("./Report.vue"),
-		SongsListSidebar: () => import("./SongsList.vue"),
-		UsersSidebar: () => import("./UsersList.vue"),
-		UserIdToUsername,
-		Z404,
-		FloatingBox
 	}
 };
 </script>
