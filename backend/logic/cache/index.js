@@ -10,10 +10,16 @@ const pubs = {};
 const subs = {};
 
 class CacheModule extends CoreClass {
+	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		super("cache");
 	}
 
+	/**
+	 * Initialises the cache/redis module
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	async initialize() {
 		const importSchema = schemaName =>
 			new Promise(resolve => {
@@ -71,6 +77,11 @@ class CacheModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Quits redis client
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	QUIT() {
 		return new Promise(resolve => {
 			if (this.client.connected) {
@@ -255,6 +266,13 @@ class CacheModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Returns a redis schema
+	 *
+	 * @param {object} payload - object containing the payload
+	 * @param {string} payload.schemaName - the name of the schema to get
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	GET_SCHEMA(payload) {
 		return new Promise(resolve => {
 			resolve(this.schemas[payload.schemaName]);

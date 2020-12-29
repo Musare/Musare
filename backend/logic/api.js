@@ -5,10 +5,16 @@ import async from "async";
 import CoreClass from "../core";
 
 class APIModule extends CoreClass {
+	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		super("api");
 	}
 
+	/**
+	 * Initialises the api module
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	initialize() {
 		return new Promise((resolve, reject) => {
 			this.app = this.moduleManager.modules.app;

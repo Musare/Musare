@@ -15,10 +15,16 @@ let apiResults = {
 };
 
 class SpotifyModule extends CoreClass {
+	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		super("spotify");
 	}
 
+	/**
+	 * Initialises the spotify module
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	initialize() {
 		return new Promise((resolve, reject) => {
 			this.cache = this.moduleManager.modules.cache;
@@ -61,6 +67,11 @@ class SpotifyModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Returns the request token for the Spotify api if one exists, otherwise creates a new one
+	 *
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
 	GET_TOKEN() {
 		return new Promise(resolve => {
 			if (Date.now() > apiResults.expires_at) {
@@ -71,6 +82,11 @@ class SpotifyModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Creates a request token for the Spotify api
+	 *
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
 	REQUEST_TOKEN() {
 		return new Promise(resolve => {
 			async.waterfall(

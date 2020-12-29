@@ -3,10 +3,16 @@ import async from "async";
 import CoreClass from "../core";
 
 class StationsModule extends CoreClass {
+	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		super("stations");
 	}
 
+	/**
+	 * Initialises the stations module
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	async initialize() {
 		this.cache = this.moduleManager.modules.cache;
 		this.db = this.moduleManager.modules.db;
@@ -180,8 +186,15 @@ class StationsModule extends CoreClass {
 		);
 	}
 
+	/**
+	 * Initialises a station
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.stationId - id of the station to initialise
+	 * @param {boolean} payload.bypassQueue - UNKNOWN
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
 	INITIALIZE_STATION(payload) {
-		// stationId, cb, bypassValidate = false
 		return new Promise((resolve, reject) => {
 			// if (typeof cb !== 'function') cb = ()=>{};
 
@@ -286,6 +299,14 @@ class StationsModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Calculates the next song for the station
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.station - station object to calculate song for
+	 * @param {boolean} payload.bypassQueue - UNKNOWN
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
 	async CALCULATE_SONG_FOR_STATION(payload) {
 		// station, bypassValidate = false
 		const stationModel = await this.db.runJob("GET_MODEL", { modelName: "station" });
@@ -388,9 +409,14 @@ class StationsModule extends CoreClass {
 		});
 	}
 
-	// Attempts to get the station from Redis. If it's not in Redis, get it from Mongo and add it to Redis.
+	/**
+	 * Attempts to get the station from Redis. If it's not in Redis, get it from Mongo and add it to Redis.
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.stationId - id of the station
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
 	GET_STATION(payload) {
-		// stationId, cb, bypassValidate = false
 		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
@@ -446,9 +472,14 @@ class StationsModule extends CoreClass {
 		});
 	}
 
-	// Attempts to get the station from Redis. If it's not in Redis, get it from Mongo and add it to Redis.
+	/**
+	 * Attempts to get a station by name, firstly from Redis. If it's not in Redis, get it from Mongo and add it to Redis.
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.stationName - the unique name of the station
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
 	async GET_STATION_BY_NAME(payload) {
-		// stationName
 		const stationModel = await this.db.runJob("GET_MODEL", { modelName: "station" });
 
 		return new Promise((resolve, reject) =>
@@ -486,8 +517,14 @@ class StationsModule extends CoreClass {
 		);
 	}
 
+	/**
+	 * Updates the station in cache from mongo or deletes station in cache if no longer in mongo.
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.stationId - the id of the station to update
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
 	UPDATE_STATION(payload) {
-		// stationId, cb, bypassValidate = false
 		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
@@ -531,9 +568,18 @@ class StationsModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Creates the official playlist for a station
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.stationId - the id of the station
+	 * @param {Array} payload.songList - list of songs to put in official playlist
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
 	async CALCULATE_OFFICIAL_PLAYLIST_LIST(payload) {
-		// stationId, songList, cb, bypassValidate = false
 		const officialPlaylistSchema = await this.cache.runJob("GET_SCHEMA", { schemaName: "officialPlaylist" });
+
+		console.log(typeof payload.songList, payload.songList);
 
 		return new Promise(resolve => {
 			const lessInfoPlaylist = [];
@@ -578,8 +624,15 @@ class StationsModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Skips a station
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.stationId - the id of the station to skip
+	 * @param {boolean} payload.bypassQueue - UNKNOWN
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
 	SKIP_STATION(payload) {
-		// stationId
 		return new Promise((resolve, reject) => {
 			this.log("INFO", `Skipping station ${payload.stationId}.`);
 
@@ -920,8 +973,16 @@ class StationsModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Checks if a user can view/access a station
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {object} payload.station - the station object of the station in question
+	 * @param {string} payload.userId - the id of the user in question
+	 * @param {boolean} payload.hideUnlisted - whether the user is allowed to see unlisted stations or not
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
 	CAN_USER_VIEW_STATION(payload) {
-		// station, userId, hideUnlisted
 		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[

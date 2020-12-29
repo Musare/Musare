@@ -231,6 +231,7 @@ if (config.debug && config.debug.traceUnhandledPromises === true) {
 // }
 
 class ModuleManager {
+	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		this.modules = {};
 		this.modulesNotInitialized = [];
@@ -246,6 +247,11 @@ class ModuleManager {
 		};
 	}
 
+	/**
+	 * Adds a new module to the backend server/module manager
+	 *
+	 * @param {string} moduleName - the name of the module (also needs to be the same as the filename of a module located in the logic folder or "logic/moduleName/index.js")
+	 */
 	async addModule(moduleName) {
 		console.log("add module", moduleName);
 		// import(`./logic/${moduleName}`).then(Module => {
@@ -260,6 +266,10 @@ class ModuleManager {
 		this.modules[moduleName] = import(`./logic/${moduleName}`);
 	}
 
+	/**
+	 * Initialises a new module to the backend server/module manager
+	 *
+	 */
 	async initialize() {
 		// if (!this.modules["logger"]) return console.error("There is no logger module");
 		// this.logger = this.modules["logger"];
@@ -301,6 +311,11 @@ class ModuleManager {
 		}
 	}
 
+	/**
+	 * Called when a module is initialised
+	 *
+	 * @param {object} module - the module object/class
+	 */
 	onInitialize(module) {
 		if (this.modulesNotInitialized.indexOf(module) !== -1) {
 			this.modulesNotInitialized.splice(this.modulesNotInitialized.indexOf(module), 1);
@@ -316,12 +331,21 @@ class ModuleManager {
 		}
 	}
 
+	/**
+	 * Called when a module fails to initialise
+	 *
+	 * @param {object} module - the module object/class
+	 */
 	onFail(module) {
 		if (this.modulesNotInitialized.indexOf(module) !== -1) {
 			console.log("A module failed to initialize!");
 		}
 	}
 
+	/**
+	 * Called when every module has initialised
+	 *
+	 */
 	onAllModulesInitialized() {
 		console.log("All modules initialized!");
 		this.modules.discord.runJob("SEND_ADMIN_ALERT_MESSAGE", {

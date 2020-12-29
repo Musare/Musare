@@ -13,10 +13,16 @@ import CoreClass from "../core";
 const { OAuth2 } = oauth;
 
 class AppModule extends CoreClass {
+	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		super("app");
 	}
 
+	/**
+	 * Initialises the app module
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	initialize() {
 		return new Promise(resolve => {
 			const { mail } = this.moduleManager.modules;
@@ -436,12 +442,22 @@ class AppModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Returns the express server
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	SERVER() {
 		return new Promise(resolve => {
 			resolve(this.server);
 		});
 	}
 
+	/**
+	 * Returns the app object
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	GET_APP() {
 		return new Promise(resolve => {
 			resolve({ app: this.app });

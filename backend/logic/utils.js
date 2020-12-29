@@ -6,6 +6,7 @@ import request from "request";
 import CoreClass from "../core";
 
 class UtilsModule extends CoreClass {
+	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		super("utils");
 
@@ -14,6 +15,11 @@ class UtilsModule extends CoreClass {
 		this.youtubeRequestsActive = false;
 	}
 
+	/**
+	 * Initialises the utils module
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	initialize() {
 		return new Promise(resolve => {
 			this.io = this.moduleManager.modules.io;
@@ -25,8 +31,14 @@ class UtilsModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Parses the cookie into a readable object
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.cookieString - the cookie string
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	PARSE_COOKIES(payload) {
-		// cookieString
 		return new Promise((resolve, reject) => {
 			const cookies = {};
 
@@ -54,8 +66,15 @@ class UtilsModule extends CoreClass {
 	//     });
 	// }
 
+	/**
+	 * Removes a cookie by name
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {object} payload.cookieString - the cookie string
+	 * @param {string} payload.cookieName - the unique name of the cookie
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	REMOVE_COOKIE(payload) {
-		// cookieString, cookieName
 		return new Promise((resolve, reject) => {
 			let cookies;
 
@@ -73,8 +92,14 @@ class UtilsModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Replaces any html reserved characters in a string with html entities
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.str - the string to replace characters with html entities
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	HTML_ENTITIES(payload) {
-		// str
 		return new Promise(resolve => {
 			resolve(
 				String(payload.str)
@@ -86,9 +111,14 @@ class UtilsModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Generates a random string of a specified length
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {number} payload.length - the length the random string should be
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	async GENERATE_RANDOM_STRING(payload) {
-		// length
-
 		const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".split("");
 
 		const promises = [];
@@ -111,6 +141,13 @@ class UtilsModule extends CoreClass {
 		return new Promise(resolve => resolve(randomChars.join("")));
 	}
 
+	/**
+	 * Returns a socket object from a socket identifier
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.socketId - the socket id
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	async GET_SOCKET_FROM_ID(payload) {
 		// socketId
 		const io = await this.io.runJob("IO", {});
@@ -118,6 +155,14 @@ class UtilsModule extends CoreClass {
 		return new Promise(resolve => resolve(io.sockets.sockets[payload.socketId]));
 	}
 
+	/**
+	 * Creates a random number within a range
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {number} payload.min - the minimum number the result should be
+	 * @param {number} payload.max - the maximum number the result should be
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	GET_RANDOM_NUMBER(payload) {
 		// min, max
 		return new Promise(resolve =>
@@ -125,6 +170,13 @@ class UtilsModule extends CoreClass {
 		);
 	}
 
+	/**
+	 * Converts ISO8601 time format (YouTube API) to HH:MM:SS
+	 *
+	 * @param  {object} payload - object contaiing the payload
+	 * @param {string} payload.duration - string in the format of ISO8601
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
 	CONVERT_TIME(payload) {
 		// duration
 		return new Promise(resolve => {
@@ -171,6 +223,11 @@ class UtilsModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Creates a random identifier for e.g. sessionId
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	GUID() {
 		return new Promise(resolve => {
 			resolve(
@@ -187,6 +244,8 @@ class UtilsModule extends CoreClass {
 		});
 	}
 
+	// UNKNOWN
+	// eslint-disable-next-line require-jsdoc
 	async SOCKET_FROM_SESSION(payload) {
 		// socketId
 		const io = await this.io.runJob("IO", {});
@@ -201,6 +260,13 @@ class UtilsModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Gets all sockets for a specified session id
+	 *
+	 * @param {object} payload - object containing the payload
+	 * @param {string} payload.sessionId - user session id
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	async SOCKETS_FROM_SESSION_ID(payload) {
 		const io = await this.io.runJob("IO", {});
 
@@ -226,6 +292,13 @@ class UtilsModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Returns any sockets for a specific user
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.userId - the user id
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	async SOCKETS_FROM_USER(payload) {
 		const io = await this.io.runJob("IO", {});
 
@@ -262,6 +335,13 @@ class UtilsModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Returns any sockets from a specific ip address
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.ip - the ip address in question
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	async SOCKETS_FROM_IP(payload) {
 		const io = await this.io.runJob("IO", {});
 
@@ -294,6 +374,13 @@ class UtilsModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Returns any sockets from a specific user without using redis/cache
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.userId - the id of the user in question
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	async SOCKETS_FROM_USER_WITHOUT_CACHE(payload) {
 		const io = await this.io.runJob("IO", {});
 
@@ -319,19 +406,19 @@ class UtilsModule extends CoreClass {
 		});
 	}
 
-	SOCKET_LEAVE_ROOMS(payload) {
-		// socketId
-		return new Promise((resolve, reject) => {
-			let socket;
+	/**
+	 * Allows a socket to leave any rooms they are connected to
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.socketId - the id of the socket which should leave all their rooms
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	async SOCKET_LEAVE_ROOMS(payload) {
+		const socket = await this.runJob("SOCKET_FROM_SESSION", {
+			socketId: payload.socketId
+		});
 
-			try {
-				socket = this.runJob("SOCKET_FROM_SESSION", {
-					socketId: payload.socketId
-				});
-			} catch (err) {
-				return reject(err);
-			}
-
+		return new Promise(resolve => {
 			const { rooms } = socket;
 			for (let room = 0, roomKeys = Object.keys(rooms); room < roomKeys.length; room += 1) {
 				socket.leave(room);
@@ -341,12 +428,19 @@ class UtilsModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Allows a socket to join a specified room
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.socketId - the id of the socket which should join the room
+	 * @param {object} payload.room - the object representing the room the socket should join
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	async SOCKET_JOIN_ROOM(payload) {
 		const socket = await this.runJob("SOCKET_FROM_SESSION", {
 			socketId: payload.socketId
 		});
 
-		// socketId, room
 		return new Promise(resolve => {
 			const { rooms } = socket;
 			for (let room = 0, roomKeys = Object.keys(rooms); room < roomKeys.length; room += 1) {
@@ -359,6 +453,8 @@ class UtilsModule extends CoreClass {
 		});
 	}
 
+	// UNKNOWN
+	// eslint-disable-next-line require-jsdoc
 	async SOCKET_JOIN_SONG_ROOM(payload) {
 		// socketId, room
 		const socket = await this.runJob("SOCKET_FROM_SESSION", {
@@ -377,6 +473,8 @@ class UtilsModule extends CoreClass {
 		});
 	}
 
+	// UNKNOWN
+	// eslint-disable-next-line require-jsdoc
 	SOCKETS_JOIN_SONG_ROOM(payload) {
 		// sockets, room
 		return new Promise(resolve => {
@@ -395,6 +493,8 @@ class UtilsModule extends CoreClass {
 		});
 	}
 
+	// UNKNOWN
+	// eslint-disable-next-line require-jsdoc
 	SOCKETS_LEAVE_SONG_ROOMS(payload) {
 		// sockets
 		return new Promise(resolve => {
@@ -409,8 +509,15 @@ class UtilsModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Emits arguments to any sockets that are in a specified a room
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.room - the name of the room to emit arguments
+	 * @param {object} payload.args - any arguments to be emitted to the sockets in the specific room
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	async EMIT_TO_ROOM(payload) {
-		// room, ...args
 		const io = await this.io.runJob("IO", {});
 
 		return new Promise(resolve => {
@@ -426,10 +533,16 @@ class UtilsModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Gets any sockets connected to a room
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.room - the name of the room
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	async GET_ROOM_SOCKETS(payload) {
 		const io = await this.io.runJob("IO", {});
 
-		// room
 		return new Promise(resolve => {
 			const { sockets } = io.sockets;
 			const roomSockets = [];
@@ -442,6 +555,13 @@ class UtilsModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Gets the details of a song using the YouTube API
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.songId - the YouTube API id of the song
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	GET_SONG_FROM_YOUTUBE(payload) {
 		// songId, cb
 		return new Promise((resolve, reject) => {
@@ -521,6 +641,13 @@ class UtilsModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Filters a list of YouTube videos so that they only contains videos with music
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {Array} payload.videoIds - an array of YouTube videoIds to filter through
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	FILTER_MUSIC_VIDEOS_YOUTUBE(payload) {
 		// videoIds, cb
 		return new Promise((resolve, reject) => {
@@ -574,6 +701,14 @@ class UtilsModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Returns an array of songs taken from a YouTube playlist
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {boolean} payload.musicOnly - whether to return music videos or all videos in the playlist
+	 * @param {string} payload.url - the url of the YouTube playlist
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	GET_PLAYLIST_FROM_YOUTUBE(payload) {
 		// payload includes: url, musicOnly
 		return new Promise((resolve, reject) => {
@@ -593,7 +728,7 @@ class UtilsModule extends CoreClass {
 
 			/**
 			 * @param {string} pageToken - page token for YouTube API
-			 * @param {Array} songs - array of sogns
+			 * @param {Array} songs - array of songs
 			 */
 			function getPage(pageToken, songs) {
 				const nextPageToken = pageToken ? `pageToken=${pageToken}` : "";
@@ -642,6 +777,13 @@ class UtilsModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Gets the details of a song from the Spotify API
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {object} payload.song - the song object (song.title etc.)
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	async GET_SONG_FROM_SPOTIFY(payload) {
 		// song
 		const token = await this.spotify.runJob("GET_TOKEN", {});
@@ -689,6 +831,13 @@ class UtilsModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Returns the details of multiple songs from the Spotify API
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {object} payload.title - the query/title of a song to search the API with
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	async GET_SONGS_FROM_SPOTIFY(payload) {
 		// title, artist
 		const token = await this.spotify.runJob("GET_TOKEN", {});
@@ -741,6 +890,13 @@ class UtilsModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Shuffles an array of songs
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {object} payload.array - an array of songs that should be shuffled
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	SHUFFLE(payload) {
 		// array
 		return new Promise(resolve => {
@@ -766,8 +922,16 @@ class UtilsModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Creates an error
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {object} payload.error - object that contains the error
+	 * @param {string} payload.message - possible error message
+	 * @param {object} payload.errors - possible object that contains multiple errors
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	GET_ERROR(payload) {
-		// err
 		return new Promise(resolve => {
 			let error = "An error occurred.";
 			if (typeof payload.error === "string") error = payload.error;
@@ -779,8 +943,14 @@ class UtilsModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Creates the gravatar url for a specified email address
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.email - the email address
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	CREATE_GRAVATAR(payload) {
-		// email
 		return new Promise(resolve => {
 			const hash = crypto.createHash("md5").update(payload.email).digest("hex");
 
@@ -788,6 +958,9 @@ class UtilsModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	DEBUG() {
 		return new Promise(resolve => resolve());
 	}

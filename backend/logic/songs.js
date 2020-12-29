@@ -3,10 +3,16 @@ import mongoose from "mongoose";
 import CoreClass from "../core";
 
 class SongsModule extends CoreClass {
+	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		super("songs");
 	}
 
+	/**
+	 * Initialises the songs module
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	async initialize() {
 		this.setStage(1);
 

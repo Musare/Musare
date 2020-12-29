@@ -7,12 +7,18 @@ import CoreClass from "../core";
 import utils from "./utils";
 
 class NotificationsModule extends CoreClass {
+	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		super("notifications");
 
 		this.subscriptions = [];
 	}
 
+	/**
+	 * Initialises the notifications module
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	initialize() {
 		return new Promise((resolve, reject) => {
 			const url = (this.url = config.get("redis").url);
@@ -147,10 +153,10 @@ class NotificationsModule extends CoreClass {
 	 * @param {object} payload - object containing the payload
 	 * @param {string} payload.name - the name of the notification we want to schedule
 	 * @param {number} payload.time - how long in milliseconds until the notification should be fired
+	 * @param {object} payload.station - the station object related to the notification
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	SCHEDULE(payload) {
-		// name, time, cb, station
 		return new Promise((resolve, reject) => {
 			const time = Math.round(payload.time);
 			this.log(
@@ -180,10 +186,10 @@ class NotificationsModule extends CoreClass {
 	 * @param {object} payload - object containing the payload
 	 * @param {string} payload.name - the name of the notification we want to subscribe to
 	 * @param {boolean} payload.unique - only subscribe if another subscription with the same name doesn't already exist
+	 * @param {object} payload.station - the station object related to the notification
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	SUBSCRIBE(payload) {
-		// name, cb, unique = false, station
 		return new Promise(resolve => {
 			this.log(
 				"STATION_ISSUE",
@@ -229,6 +235,13 @@ class NotificationsModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Unschedules a notification by name (each notification has a unique name)
+	 *
+	 * @param {object} payload - object containing the payload
+	 * @param {string} payload.name - the name of the notification we want to schedule
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
 	UNSCHEDULE(payload) {
 		// name
 		return new Promise((resolve, reject) => {

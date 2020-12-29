@@ -3,10 +3,16 @@ import async from "async";
 import CoreClass from "../core";
 
 class ActivitiesModule extends CoreClass {
+	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		super("activities");
 	}
 
+	/**
+	 * Initialises the activities module
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	initialize() {
 		return new Promise(resolve => {
 			this.db = this.moduleManager.modules.db;
@@ -18,8 +24,16 @@ class ActivitiesModule extends CoreClass {
 	}
 
 	// TODO: Migrate
+	/**
+	 * Adds a new activity to the database
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.userId - the id of the user who's activity is to be added
+	 * @param {string} payload.activityType - the type of activity (enum specified in schema)
+	 * @param {Array} payload.payload - the details of the activity e.g. an array of songs that were added
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	ADD_ACTIVITY(payload) {
-		// userId, activityType, payload
 		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[

@@ -10,10 +10,16 @@ import actions from "./actions";
 import CoreClass from "../core";
 
 class IOModule extends CoreClass {
+	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		super("io");
 	}
 
+	/**
+	 * Initialises the io module
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	async initialize() {
 		this.setStage(1);
 
@@ -308,6 +314,11 @@ class IOModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Returns the socket io variable
+	 *
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
 	IO() {
 		return new Promise(resolve => {
 			resolve(this._io);

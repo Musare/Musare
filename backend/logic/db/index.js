@@ -17,10 +17,16 @@ const isLength = (string, min, max) => !(typeof string !== "string" || string.le
 mongoose.Promise = bluebird;
 
 class DBModule extends CoreClass {
+	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		super("db");
 	}
 
+	/**
+	 * Initialises the database module
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	initialize() {
 		return new Promise((resolve, reject) => {
 			this.schemas = {};
@@ -256,18 +262,38 @@ class DBModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Returns a database model
+	 *
+	 * @param {object} payload - object containing the payload
+	 * @param {object} payload.modelName - name of the model to get
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	GET_MODEL(payload) {
 		return new Promise(resolve => {
 			resolve(this.models[payload.modelName]);
 		});
 	}
 
+	/**
+	 * Returns a database schema
+	 *
+	 * @param {object} payload - object containing the payload
+	 * @param {object} payload.schemaName - name of the schema to get
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	GET_SCHEMA(payload) {
 		return new Promise(resolve => {
 			resolve(this.schemas[payload.schemaName]);
 		});
 	}
 
+	/**
+	 * Checks if a password to be stored in the database has a valid length
+	 *
+	 * @param {object} password - the password itself
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	passwordValid(password) {
 		return isLength(password, 6, 200);
 	}

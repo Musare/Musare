@@ -3,10 +3,16 @@ import mongoose from "mongoose";
 import CoreClass from "../core";
 
 class PunishmentsModule extends CoreClass {
+	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		super("punishments");
 	}
 
+	/**
+	 * Initialises the punishments module
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	async initialize() {
 		this.setStage(1);
 
@@ -166,7 +172,6 @@ class PunishmentsModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	GET_PUNISHMENT(payload) {
-		// id, cb
 		return new Promise((resolve, reject) => {
 			let punishmentModel;
 
@@ -226,7 +231,6 @@ class PunishmentsModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	GET_PUNISHMENTS_FROM_USER_ID(payload) {
-		// userId, cb
 		return new Promise((resolve, reject) => {
 			async.waterfall(
 				[
@@ -253,14 +257,17 @@ class PunishmentsModule extends CoreClass {
 	}
 
 	/**
-	 * Gets all punishments from a userId
+	 * Adds a new punishment to the database
 	 *
 	 * @param {object} payload - object containing the payload
-	 * @param {string} payload.userId - the userId of the punishment(s) we are trying to get
+	 * @param {string} payload.reason - the reason for the punishment e.g. spam
+	 * @param {string} payload.type - the type of punishment (enum: ["banUserId", "banUserIp"])
+	 * @param {string} payload.value - the user id/ip address for the ban (depends on punishment type)
+	 * @param {Date} payload.expiresAt - the date at which the punishment expires at
+	 * @param {string} payload.punishedBy - the userId of the who initiated the punishment
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	ADD_PUNISHMENT(payload) {
-		// type, value, reason, expiresAt, punishedBy, cb
 		return new Promise((resolve, reject) => {
 			let PunishmentModel;
 			let PunishmentSchema;

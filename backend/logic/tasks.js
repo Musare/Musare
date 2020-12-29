@@ -9,12 +9,18 @@ import Timer from "../classes/Timer.class";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 class TasksModule extends CoreClass {
+	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		super("tasks");
 
 		this.tasks = {};
 	}
 
+	/**
+	 * Initialises the tasks module
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	initialize() {
 		return new Promise(resolve => {
 			// return reject(new Error("Not fully migrated yet."));
@@ -48,6 +54,16 @@ class TasksModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Creates a new task
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.name - the name of the task
+	 * @param {string} payload.fn - the function the task will run
+	 * @param {string} payload.paused - if the task is currently paused
+	 * @param {boolean} payload.timeout - how often to run the task
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	CREATE_TASK(payload) {
 		return new Promise((resolve, reject) => {
 			this.tasks[payload.name] = {
@@ -66,6 +82,13 @@ class TasksModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Pauses a task
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.taskName - the name of the task to pause
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	PAUSE_TASK(payload) {
 		const taskName = { payload };
 
@@ -75,6 +98,13 @@ class TasksModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Resumes a task
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.name - the name of the task to resume
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	RESUME_TASK(payload) {
 		return new Promise(resolve => {
 			this.tasks[payload.name].timer.resume();
@@ -82,6 +112,13 @@ class TasksModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Runs a task's function and restarts the timer
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.name - the name of the task to run
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	RUN_TASK(payload) {
 		return new Promise(resolve => {
 			const task = this.tasks[payload.name];
@@ -95,6 +132,11 @@ class TasksModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Periodically checks if any stations need to be skipped
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	checkStationSkipTask() {
 		return new Promise(resolve => {
 			this.log("INFO", "TASK_STATIONS_SKIP_CHECK", `Checking for stations to be skipped.`, false);
@@ -135,6 +177,11 @@ class TasksModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Periodically checks if any sessions are out of date and need to be cleared
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	sessionClearingTask() {
 		return new Promise(resolve => {
 			this.log("INFO", "TASK_SESSION_CLEAR", `Checking for sessions to be cleared.`);
@@ -229,6 +276,11 @@ class TasksModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Periodically warns about the size of any log files
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	logFileSizeCheckTask() {
 		return new Promise((resolve, reject) => {
 			this.log("INFO", "TASK_LOG_FILE_SIZE_CHECK", `Checking the size for the log files.`);

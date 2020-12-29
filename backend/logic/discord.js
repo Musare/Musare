@@ -4,10 +4,16 @@ import Discord from "discord.js";
 import CoreClass from "../core";
 
 class DiscordModule extends CoreClass {
+	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		super("discord");
 	}
 
+	/**
+	 * Initialises the discord module
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	initialize() {
 		return new Promise((resolve, reject) => {
 			this.log("INFO", "Discord initialize");
@@ -48,9 +54,21 @@ class DiscordModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Adds a new activity to the database
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.color - The colour of the alert title
+	 * @param {string} payload.message - The message to send as the alert
+	 * @param {string} payload.type - The type of alert e.g. Startup
+	 * @param {boolean} payload.critical - If the message is service critical
+	 * @param {Array} payload.extraFields - Any extra fields to show in the discord message
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	SEND_ADMIN_ALERT_MESSAGE(payload) {
 		return new Promise((resolve, reject) => {
 			const channel = this.client.channels.find(channel => channel.id === this.adminAlertChannelId);
+
 			if (channel !== null) {
 				const richEmbed = new Discord.RichEmbed();
 				richEmbed.setAuthor(

@@ -2,6 +2,7 @@ import async from "async";
 import config from "config";
 
 class DeferredPromise {
+	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		this.promise = new Promise((resolve, reject) => {
 			this.reject = reject;
@@ -11,28 +12,43 @@ class DeferredPromise {
 }
 
 class MovingAverageCalculator {
+	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		this.count = 0;
 		this._mean = 0;
 	}
 
+	/**
+	 * Updates the mean average
+	 *
+	 * @param {number} newValue - the new time it took to complete a job
+	 */
 	update(newValue) {
 		this.count += 1;
 		const differential = (newValue - this._mean) / this.count;
 		this._mean += differential;
 	}
 
+	/**
+	 * Returns the mean average
+	 *
+	 * @returns {number} - returns the mean average
+	 */
 	get mean() {
 		this.validate();
 		return this._mean;
 	}
 
+	/**
+	 * Checks that the mean is valid
+	 */
 	validate() {
 		if (this.count === 0) throw new Error("Mean is undefined");
 	}
 }
 
 export default class CoreClass {
+	// eslint-disable-next-line require-jsdoc
 	constructor(name) {
 		this.name = name;
 		this.status = "UNINITIALIZED";
@@ -50,6 +66,11 @@ export default class CoreClass {
 		this.registerJobs();
 	}
 
+	/**
+	 * Sets the status of a module
+	 *
+	 * @param {string} status - the new status of a module
+	 */
 	setStatus(status) {
 		this.status = status;
 		this.log("INFO", `Status changed to: ${status}`);
@@ -57,18 +78,36 @@ export default class CoreClass {
 		else if (this.status === "FAIL" || this.status === "LOCKDOWN") this.jobQueue.pause();
 	}
 
+	/**
+	 * Returns the status of a module
+	 *
+	 * @returns {string} - the status of a module
+	 */
 	getStatus() {
 		return this.status;
 	}
 
+	/**
+	 * Changes the current stage of a module
+	 *
+	 * @param {string} stage - the new stage of a module
+	 */
 	setStage(stage) {
 		this.stage = stage;
 	}
 
+	/**
+	 * Returns the current stage of a module
+	 *
+	 * @returns {string} - the current stage of a module
+	 */
 	getStage() {
 		return this.stage;
 	}
 
+	/**
+	 * Initialises a module and handles initialise successes and failures
+	 */
 	_initialize() {
 		this.setStatus("INITIALIZING");
 
@@ -84,6 +123,11 @@ export default class CoreClass {
 			});
 	}
 
+	/**
+	 * Creates a new log message
+	 *
+	 * @param {...any} args - anything to be included in the log message, the first argument is the type of log
+	 */
 	log(...args) {
 		const _arguments = Array.from(args);
 		const type = _arguments[0];
@@ -109,6 +153,9 @@ export default class CoreClass {
 		}
 	}
 
+	/**
+	 * Sets up each job with the statistics service (includes mean average for job completion)
+	 */
 	registerJobs() {
 		let props = [];
 		let obj = this;
@@ -129,6 +176,16 @@ export default class CoreClass {
 		});
 	}
 
+	/**
+	 * Runs a job
+	 *
+	 * @param {string} name - the name of the job e.g. GET_PLAYLIST
+	 * @param {object} payload - any expected payload for the job itself
+	 * @param {object} options - object containing any additional options for the job
+	 * @param {boolean} options.isQuiet - whether or not the job should be advertised in the logs, useful for repetitive/unimportant jobs
+	 * @param {boolean} options.bypassQueue - UNKNOWN
+	 * @returns {Promise} - returns a promise
+	 */
 	runJob(name, payload, options = { isQuiet: false, bypassQueue: false }) {
 		const deferredPromise = new DeferredPromise();
 		const job = { name, payload, onFinish: deferredPromise };
@@ -151,10 +208,27 @@ export default class CoreClass {
 		return deferredPromise.promise;
 	}
 
+	/**
+	 * UNKNOWN
+	 *
+	 * @param {object} moduleManager - UNKNOWN
+	 */
 	setModuleManager(moduleManager) {
 		this.moduleManager = moduleManager;
 	}
 
+	/**
+	 * Actually runs the job? UNKNOWN
+	 *
+	 * @param {object} job - object containing details of the job
+	 * @param {string} job.name - the name of the job e.g. GET_PLAYLIST
+	 * @param {string} job.payload - any expected payload for the job itself
+	 * @param {Promise} job.onFinish - deferred promise when the job is complete
+	 * @param {object} options - object containing any additional options for the job
+	 * @param {boolean} options.isQuiet - whether or not the job should be advertised in the logs, useful for repetitive/unimportant jobs
+	 * @param {boolean} options.bypassQueue - UNKNOWN
+	 * @param {Function} cb - Callback after the job has completed
+	 */
 	_runJob(job, options, cb) {
 		if (!options.isQuiet) this.log("INFO", `Running job ${job.name}`);
 

@@ -3,10 +3,16 @@ import async from "async";
 import CoreClass from "../core";
 
 class PlaylistsModule extends CoreClass {
+	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		super("playlists");
 	}
 
+	/**
+	 * Initialises the playlists module
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	async initialize() {
 		this.setStage(1);
 

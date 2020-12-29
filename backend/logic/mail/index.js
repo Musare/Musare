@@ -5,10 +5,16 @@ import Mailgun from "mailgun-js";
 import CoreClass from "../../core";
 
 class MailModule extends CoreClass {
+	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		super("mail");
 	}
 
+	/**
+	 * Initialises the mail module
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	async initialize() {
 		const importSchema = schemaName =>
 			new Promise(resolve => {
@@ -32,8 +38,14 @@ class MailModule extends CoreClass {
 		return new Promise(resolve => resolve());
 	}
 
+	/**
+	 * Sends an email
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {object} payload.data - information such as to, from in order to send the email
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	SEND_MAIL(payload) {
-		// data
 		return new Promise(resolve => {
 			if (this.enabled)
 				this.mailgun.messages().send(payload.data, () => {
@@ -43,6 +55,13 @@ class MailModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Returns an email schema
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.schemaName - name of the schema to get
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	GET_SCHEMA(payload) {
 		return new Promise(resolve => {
 			resolve(this.schemas[payload.schemaName]);
