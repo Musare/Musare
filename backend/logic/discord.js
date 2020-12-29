@@ -3,14 +3,9 @@ import Discord from "discord.js";
 
 import CoreClass from "../core";
 
-// const test = new CoreClass();
-// console.log(test.setModuleManager());
-
 class DiscordModule extends CoreClass {
 	constructor() {
 		super("discord");
-
-		console.log(this.setModuleManager());
 	}
 
 	initialize() {
