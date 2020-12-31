@@ -54,7 +54,7 @@ class _PlaylistsModule extends CoreClass {
 						return async.each(
 							playlistIds,
 							(playlistId, next) => {
-								playlistModel.findOne({ _id: playlistId }, (err, playlist) => {
+								PlaylistsModule.playlistModel.findOne({ _id: playlistId }, (err, playlist) => {
 									if (err) next(err);
 									else if (!playlist) {
 										CacheModule.runJob("HDEL", {
@@ -72,7 +72,7 @@ class _PlaylistsModule extends CoreClass {
 
 					next => {
 						this.setStage(5);
-						playlistModel.find({}, next);
+						PlaylistsModule.playlistModel.find({}, next);
 					},
 
 					(playlists, next) => {

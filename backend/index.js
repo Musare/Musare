@@ -420,27 +420,33 @@ process.stdin.on("data", data => {
 	if (command === "status") {
 		console.log("Status:");
 
-		for (
-			let moduleName = 0, moduleKeys = Object.keys(moduleManager.modules);
-			moduleName < moduleKeys.length;
-			moduleName += 1
-		) {
+		Object.keys(moduleManager.modules).forEach(moduleName => {
 			const module = moduleManager.modules[moduleName];
 			const tabsNeeded = 4 - Math.ceil((moduleName.length + 1) / 8);
 			console.log(
 				`${moduleName.toUpperCase()}${Array(tabsNeeded).join(
 					"\t"
-				)}${module.getStatus()}. Jobs in queue: ${module.jobQueue.length()}. Jobs in progress: ${module.jobQueue.running()}. Concurrency: ${
+				)}${module.getStatus()}. Jobs in queue: ${module.jobQueue.lengthQueue()}. Jobs in progress: ${module.jobQueue.lengthRunning()}. Concurrency: ${
 					module.jobQueue.concurrency
 				}. Stage: ${module.getStage()}`
 			);
-		}
+		});
 		// moduleManager._lockdown();
 	}
 	if (command.startsWith("running")) {
 		const parts = command.split(" ");
 
-		console.log(moduleManager.modules[parts[1]].runningJobs);
+		console.log(moduleManager.modules[parts[1]].jobQueue.runningTasks);
+	}
+	if (command.startsWith("queued")) {
+		const parts = command.split(" ");
+
+		console.log(moduleManager.modules[parts[1]].jobQueue.queue);
+	}
+	if (command.startsWith("paused")) {
+		const parts = command.split(" ");
+
+		console.log(moduleManager.modules[parts[1]].jobQueue.pausedTasks);
 	}
 	if (command.startsWith("stats")) {
 		const parts = command.split(" ");
