@@ -27,8 +27,8 @@ class _SongsModule extends CoreClass {
 		DBModule = this.moduleManager.modules.db;
 		UtilsModule = this.moduleManager.modules.utils;
 
-		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
-		const songSchema = await CacheModule.runJob("GET_SCHEMA", { schemaName: "song" });
+		this.songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
+		this.songSchemaCache = await CacheModule.runJob("GET_SCHEMA", { schemaName: "song" });
 
 		this.setStage(2);
 
@@ -54,7 +54,7 @@ class _SongsModule extends CoreClass {
 						return async.each(
 							songIds,
 							(songId, next) => {
-								songModel.findOne({ songId }, (err, song) => {
+								SongsModule.songModel.findOne({ songId }, (err, song) => {
 									if (err) next(err);
 									else if (!song)
 										CacheModule.runJob("HDEL", {
@@ -72,7 +72,7 @@ class _SongsModule extends CoreClass {
 
 					next => {
 						this.setStage(4);
-						songModel.find({}, next);
+						SongsModule.songModel.find({}, next);
 					},
 
 					(songs, next) => {
@@ -83,7 +83,7 @@ class _SongsModule extends CoreClass {
 								CacheModule.runJob("HSET", {
 									table: "songs",
 									key: song.songId,
-									value: songSchema(song)
+									value: SongsModule.songSchemaCache(song)
 								})
 									.then(() => next())
 									.catch(next);
@@ -110,17 +110,8 @@ class _SongsModule extends CoreClass {
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	GET_SONG(payload) {
-		return new Promise((resolve, reject) => {
-			let songModel;
-
-			SongsModule.log("ERROR", "HOW DOES THIS WORK!?!?!??!?!?!?!??!?!??!?!?!?!");
-			DBModule.runJob("GET_MODEL", { modelName: "song" }, this)
-				.then(model => {
-					songModel = model;
-				})
-				.catch(console.error);
-
-			return async.waterfall(
+		return new Promise((resolve, reject) =>
+			async.waterfall(
 				[
 					next => {
 						if (!mongoose.Types.ObjectId.isValid(payload.id)) return next("Id is not a valid ObjectId.");
@@ -133,7 +124,7 @@ class _SongsModule extends CoreClass {
 
 					(song, next) => {
 						if (song) return next(true, song);
-						return songModel.findOne({ _id: payload.id }, next);
+						return SongsModule.songModel.findOne({ _id: payload.id }, next);
 					},
 
 					(song, next) => {
@@ -154,8 +145,8 @@ class _SongsModule extends CoreClass {
 					if (err && err !== true) return reject(new Error(err));
 					return resolve({ song });
 				}
-			);
-		});
+			)
+		);
 	}
 
 	/**
@@ -166,28 +157,19 @@ class _SongsModule extends CoreClass {
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	GET_SONG_FROM_ID(payload) {
-		return new Promise((resolve, reject) => {
-			let songModel;
-
-			SongsModule.log("ERROR", "HOW DOES THIS WORK!?!?!??!?!?!?!??!?!??!?!?!?!");
-			DBModule.runJob("GET_MODEL", { modelName: "song" }, this)
-				.then(model => {
-					songModel = model;
-				})
-				.catch(console.error);
-
-			return async.waterfall(
+		return new Promise((resolve, reject) =>
+			async.waterfall(
 				[
 					next => {
-						songModel.findOne({ songId: payload.songId }, next);
+						SongsModule.songModel.findOne({ songId: payload.songId }, next);
 					}
 				],
 				(err, song) => {
 					if (err && err !== true) return reject(new Error(err));
 					return resolve({ song });
 				}
-			);
-		});
+			)
+		);
 	}
 
 	/**
@@ -199,20 +181,11 @@ class _SongsModule extends CoreClass {
 	 */
 	UPDATE_SONG(payload) {
 		// songId, cb
-		return new Promise((resolve, reject) => {
-			let songModel;
-
-			SongsModule.log("ERROR", "HOW DOES THIS WORK!?!?!??!?!?!?!??!?!??!?!?!?!");
-			DBModule.runJob("GET_MODEL", { modelName: "song" }, this)
-				.then(model => {
-					songModel = model;
-				})
-				.catch(console.error);
-
-			return async.waterfall(
+		return new Promise((resolve, reject) =>
+			async.waterfall(
 				[
 					next => {
-						songModel.findOne({ _id: payload.songId }, next);
+						SongsModule.songModel.findOne({ _id: payload.songId }, next);
 					},
 
 					(song, next) => {
@@ -243,8 +216,8 @@ class _SongsModule extends CoreClass {
 					if (err && err !== true) return reject(new Error(err));
 					return resolve(song);
 				}
-			);
-		});
+			)
+		);
 	}
 
 	/**
@@ -256,20 +229,11 @@ class _SongsModule extends CoreClass {
 	 */
 	DELETE_SONG(payload) {
 		// songId, cb
-		return new Promise((resolve, reject) => {
-			let songModel;
-
-			SongsModule.log("ERROR", "HOW DOES THIS WORK!?!?!??!?!?!?!??!?!??!?!?!?!");
-			DBModule.runJob("GET_MODEL", { modelName: "song" })
-				.then(model => {
-					songModel = model;
-				})
-				.catch(console.error);
-
-			return async.waterfall(
+		return new Promise((resolve, reject) =>
+			async.waterfall(
 				[
 					next => {
-						songModel.deleteOne({ songId: payload.songId }, next);
+						SongsModule.songModel.deleteOne({ songId: payload.songId }, next);
 					},
 
 					next => {
@@ -289,8 +253,8 @@ class _SongsModule extends CoreClass {
 					if (err && err !== true) return reject(new Error(err));
 					return resolve();
 				}
-			);
-		});
+			)
+		);
 	}
 }
 

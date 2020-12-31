@@ -130,8 +130,7 @@ class _TasksModule extends CoreClass {
 			const task = TasksModule.tasks[payload.name];
 			if (task.timer) task.timer.pause();
 
-			TasksModule.log("ERROR", "CHECK THIS?!?!?!??!?!?!?!?!??!?!");
-			task.fn.apply(this).then(() => {
+			task.fn.apply(null).then(() => {
 				task.lastRan = Date.now();
 				task.timer = new Timer(
 					() => TasksModule.runJob("RUN_TASK", { name: payload.name }),
@@ -154,7 +153,7 @@ class _TasksModule extends CoreClass {
 			async.waterfall(
 				[
 					next => {
-						CacheModule.runJob("HGETALL", { table: "stations" }, this)
+						CacheModule.runJob("HGETALL", { table: "stations" })
 							.then(response => next(null, response))
 							.catch(next);
 					},
@@ -172,13 +171,9 @@ class _TasksModule extends CoreClass {
 									"TASK_STATIONS_SKIP_CHECK",
 									`Skipping ${station._id} as it should have skipped already.`
 								);
-								return StationsModule.runJob(
-									"INITIALIZE_STATION",
-									{
-										stationId: station._id
-									},
-									this
-								).then(() => next2());
+								return StationsModule.runJob("INITIALIZE_STATION", {
+									stationId: station._id
+								}).then(() => next2());
 							},
 							() => next()
 						);
@@ -201,7 +196,7 @@ class _TasksModule extends CoreClass {
 			async.waterfall(
 				[
 					next => {
-						CacheModule.runJob("HGETALL", { table: "sessions" }, this)
+						CacheModule.runJob("HGETALL", { table: "sessions" })
 							.then(sessions => next(null, sessions))
 							.catch(next);
 					},
@@ -224,14 +219,10 @@ class _TasksModule extends CoreClass {
 
 								if (!session) {
 									TasksModule.log("INFO", "TASK_SESSION_CLEAR", "Removing an empty session.");
-									return CacheModule.runJob(
-										"HDEL",
-										{
-											table: "sessions",
-											key: sessionId
-										},
-										this
-									).finally(() => {
+									return CacheModule.runJob("HDEL", {
+										table: "sessions",
+										key: sessionId
+									}).finally(() => {
 										next2();
 									});
 								}
@@ -244,24 +235,16 @@ class _TasksModule extends CoreClass {
 									}).finally(() => next2());
 								}
 								if (Date.now() - session.refreshDate > 60 * 60 * 24 * 30 * 1000) {
-									return UtilsModule.runJob(
-										"SOCKETS_FROM_SESSION_ID",
-										{
-											sessionId: session.sessionId
-										},
-										this
-									).then(response => {
+									return UtilsModule.runJob("SOCKETS_FROM_SESSION_ID", {
+										sessionId: session.sessionId
+									}).then(response => {
 										if (response.sockets.length > 0) {
 											session.refreshDate = Date.now();
-											CacheModule.runJob(
-												"HSET",
-												{
-													table: "sessions",
-													key: sessionId,
-													value: session
-												},
-												this
-											).finally(() => {
+											CacheModule.runJob("HSET", {
+												table: "sessions",
+												key: sessionId,
+												value: session
+											}).finally(() => {
 												next2();
 											});
 										} else {
@@ -270,14 +253,10 @@ class _TasksModule extends CoreClass {
 												"TASK_SESSION_CLEAR",
 												`Removing session ${sessionId} for user ${session.userId} since inactive for 30 days and not currently in use.`
 											);
-											CacheModule.runJob(
-												"HDEL",
-												{
-													table: "sessions",
-													key: session.sessionId
-												},
-												this
-											).finally(() => next2());
+											CacheModule.runJob("HDEL", {
+												table: "sessions",
+												key: session.sessionId
+											}).finally(() => next2());
 										}
 									});
 								}
@@ -316,7 +295,7 @@ class _TasksModule extends CoreClass {
 				},
 				async err => {
 					if (err && err !== true) {
-						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						err = await UtilsModule.runJob("GET_ERROR", { error: err });
 						return reject(new Error(err));
 					}
 					if (err === true) {

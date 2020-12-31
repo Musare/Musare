@@ -27,8 +27,8 @@ class _PlaylistsModule extends CoreClass {
 		DBModule = this.moduleManager.modules.db;
 		UtilsModule = this.moduleManager.modules.utils;
 
-		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" });
-		const playlistSchema = await CacheModule.runJob("GET_SCHEMA", { schemaName: "playlist" });
+		this.playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" });
+		this.playlistSchemaCache = await CacheModule.runJob("GET_SCHEMA", { schemaName: "playlist" });
 
 		this.setStage(2);
 
@@ -83,7 +83,7 @@ class _PlaylistsModule extends CoreClass {
 								CacheModule.runJob("HSET", {
 									table: "playlists",
 									key: playlist._id,
-									value: playlistSchema(playlist)
+									value: playlistSchemaCache(playlist)
 								})
 									.then(() => cb())
 									.catch(next);
@@ -112,17 +112,8 @@ class _PlaylistsModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	GET_PLAYLIST(payload) {
-		return new Promise((resolve, reject) => {
-			let playlistModel;
-
-			PlaylistsModule.log("ERROR", "HOW DOES THIS WORK!?!?!??!?!?!?!??!?!??!?!?!?!");
-			DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this)
-				.then(model => {
-					playlistModel = model;
-				})
-				.catch(console.error);
-
-			return async.waterfall(
+		return new Promise((resolve, reject) =>
+			async.waterfall(
 				[
 					next => {
 						CacheModule.runJob("HGETALL", { table: "playlists" }, this)
@@ -140,7 +131,7 @@ class _PlaylistsModule extends CoreClass {
 						return async.each(
 							playlistIds,
 							(playlistId, next) => {
-								playlistModel.findOne({ _id: playlistId }, (err, playlist) => {
+								PlaylistsModule.playlistModel.findOne({ _id: playlistId }, (err, playlist) => {
 									if (err) next(err);
 									else if (!playlist) {
 										CacheModule.runJob(
@@ -175,7 +166,7 @@ class _PlaylistsModule extends CoreClass {
 
 					(playlist, next) => {
 						if (playlist) return next(true, playlist);
-						return playlistModel.findOne({ _id: payload.playlistId }, next);
+						return PlaylistsModule.playlistModel.findOne({ _id: payload.playlistId }, next);
 					},
 
 					(playlist, next) => {
@@ -200,8 +191,8 @@ class _PlaylistsModule extends CoreClass {
 					if (err && err !== true) return reject(new Error(err));
 					return resolve(playlist);
 				}
-			);
-		});
+			)
+		);
 	}
 
 	/**
@@ -213,20 +204,11 @@ class _PlaylistsModule extends CoreClass {
 	 */
 	UPDATE_PLAYLIST(payload) {
 		// playlistId, cb
-		return new Promise((resolve, reject) => {
-			let playlistModel;
-
-			PunishmentsModule.log("ERROR", "HOW DOES THIS WORK!?!?!??!?!?!?!??!?!??!?!?!?!");
-			DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this)
-				.then(model => {
-					playlistModel = model;
-				})
-				.catch(console.error);
-
-			return async.waterfall(
+		return new Promise((resolve, reject) =>
+			async.waterfall(
 				[
 					next => {
-						playlistModel.findOne({ _id: payload.playlistId }, next);
+						PlaylistsModule.playlistModel.findOne({ _id: payload.playlistId }, next);
 					},
 
 					(playlist, next) => {
@@ -258,8 +240,8 @@ class _PlaylistsModule extends CoreClass {
 					if (err && err !== true) return reject(new Error(err));
 					return resolve(playlist);
 				}
-			);
-		});
+			)
+		);
 	}
 
 	/**
@@ -271,20 +253,11 @@ class _PlaylistsModule extends CoreClass {
 	 */
 	DELETE_PLAYLIST(payload) {
 		// playlistId, cb
-		return new Promise((resolve, reject) => {
-			let playlistModel;
-
-			PunishmentsModule.log("ERROR", "HOW DOES THIS WORK!?!?!??!?!?!?!??!?!??!?!?!?!");
-			DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this)
-				.then(model => {
-					playlistModel = model;
-				})
-				.catch(console.error);
-
-			return async.waterfall(
+		return new Promise((resolve, reject) =>
+			async.waterfall(
 				[
 					next => {
-						playlistModel.deleteOne({ _id: payload.playlistId }, next);
+						PlaylistsModule.playlistModel.deleteOne({ _id: payload.playlistId }, next);
 					},
 
 					(res, next) => {
@@ -304,8 +277,8 @@ class _PlaylistsModule extends CoreClass {
 					if (err && err !== true) return reject(new Error(err));
 					return resolve();
 				}
-			);
-		});
+			)
+		);
 	}
 }
 

@@ -38,6 +38,8 @@ class _IOModule extends CoreClass {
 		DBModule = this.moduleManager.modules.db;
 		PunishmentsModule = this.moduleManager.modules.punishments;
 
+		this.userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
+
 		this.setStage(2);
 
 		const SIDname = config.get("cookie.SIDname");
@@ -212,21 +214,19 @@ class _IOModule extends CoreClass {
 					})
 						.then(session => {
 							if (session && session.userId) {
-								DBModule.runJob("GET_MODEL", { modelName: "user" }).then(userModel => {
-									userModel.findOne({ _id: session.userId }, (err, user) => {
-										if (err || !user) return socket.emit("ready", false);
+								IOModule.userModel.findOne({ _id: session.userId }, (err, user) => {
+									if (err || !user) return socket.emit("ready", false);
 
-										let role = "";
-										let username = "";
-										let userId = "";
-										if (user) {
-											role = user.role;
-											username = user.username;
-											userId = session.userId;
-										}
+									let role = "";
+									let username = "";
+									let userId = "";
+									if (user) {
+										role = user.role;
+										username = user.username;
+										userId = session.userId;
+									}
 
-										return socket.emit("ready", true, role, username, userId);
-									});
+									return socket.emit("ready", true, role, username, userId);
 								});
 							} else socket.emit("ready", false);
 						})
