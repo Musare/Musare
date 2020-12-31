@@ -139,8 +139,8 @@ export default class CoreClass {
 
 		_arguments.splice(0, 1);
 		const start = `|${this.name.toUpperCase()}|`;
-		const numberOfTabsNeeded = 4 - Math.ceil(start.length / 8);
-		_arguments.unshift(`${start}${Array(numberOfTabsNeeded).join("\t")}`);
+		const numberOfSpacesNeeded = 20 - start.length;
+		_arguments.unshift(`${start}${Array(numberOfSpacesNeeded).join(" ")}`);
 
 		if (type === "INFO") {
 			_arguments[0] += "\x1b[36m";
@@ -199,7 +199,7 @@ export default class CoreClass {
 			this.moduleManager.debugJobs.all.push(job);
 		}
 
-		if (options.bypassQueue) this._runJob(job, options, () => {});
+		if (options.bypassQueue) this._runJob(job, options, () => { });
 		else {
 			const priority = this.priorities[name] ? this.priorities[name] : 10;
 			this.jobQueue.push({ job, options }, priority);
