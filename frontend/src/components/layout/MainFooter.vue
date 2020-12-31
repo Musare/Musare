@@ -51,7 +51,7 @@
 					>
 					<router-link title="News" to="/news">News</router-link>
 				</div>
-				<p>© Copyright Musare 2015 - 2020</p>
+				<p>© Copyright Musare 2015 - 2021</p>
 			</div>
 		</div>
 	</footer>
