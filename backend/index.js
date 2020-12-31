@@ -328,8 +328,7 @@ class ModuleManager {
 
 			this.log(
 				"INFO",
-				`Initialized: ${Object.keys(this.modules).length - this.modulesNotInitialized.length}/${
-					Object.keys(this.modules).length
+				`Initialized: ${Object.keys(this.modules).length - this.modulesNotInitialized.length}/${Object.keys(this.modules).length
 				}.`
 			);
 
@@ -427,8 +426,7 @@ process.stdin.on("data", data => {
 			console.log(
 				`${moduleName.toUpperCase()}${Array(tabsNeeded).join(
 					"\t"
-				)}${module.getStatus()}. Jobs in queue: ${module.jobQueue.lengthQueue()}. Jobs in progress: ${module.jobQueue.lengthRunning()}. Concurrency: ${
-					module.jobQueue.concurrency
+				)}${module.getStatus()}. Jobs in queue: ${module.jobQueue.lengthQueue()}. Jobs in progress: ${module.jobQueue.lengthRunning()}. Concurrency: ${module.jobQueue.concurrency
 				}. Stage: ${module.getStage()}`
 			);
 		});

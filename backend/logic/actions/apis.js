@@ -151,10 +151,15 @@ export default {
 	 */
 	joinRoom: (session, page, cb) => {
 		if (page === "home") {
-			utils.runJob("SOCKET_JOIN_ROOM", {
-				socketId: session.socketId,
-				room: page
-			});
+			utils
+				.runJob("SOCKET_JOIN_ROOM", {
+					socketId: session.socketId,
+					room: page
+				})
+				.then()
+				.catch(err => {
+					console.log("ERROR", `Joining room failed: ${err.message}`);
+				});
 		}
 		cb({});
 	},

@@ -525,10 +525,10 @@ export default class CoreClass {
 				);
 				job.childJobs.forEach(childJob => {
 					if (childJob.responseType === "RESOLVE") {
-						childJob.onFinish.resolve(childJob.payload);
+						childJob.onFinish.resolve(childJob.response);
 						childJob.responseType = "RESOLVED";
 					} else if (childJob.responseType === "REJECT") {
-						childJob.onFinish.reject(childJob.payload);
+						childJob.onFinish.reject(childJob.response);
 						childJob.responseType = "REJECTED";
 					}
 				});
