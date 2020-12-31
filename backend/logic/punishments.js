@@ -27,7 +27,7 @@ class _PunishmentsModule extends CoreClass {
 		DBModule = this.moduleManager.modules.db;
 		UtilsModule = this.moduleManager.modules.utils;
 
-		this.punishmentModel = await DBModule.runJob("GET_MODEL", { modelName: "punishment" });
+		this.punishmentModel = this.PunishmentModel = await DBModule.runJob("GET_MODEL", { modelName: "punishment" });
 		this.punishmentSchemaCache = await DBModule.runJob("GET_SCHEMA", { schemaName: "punishment" });
 
 		return new Promise((resolve, reject) =>
@@ -273,7 +273,7 @@ class _PunishmentsModule extends CoreClass {
 			async.waterfall(
 				[
 					next => {
-						const punishment = new PunishmentsModule.punishmentModel({
+						const punishment = new PunishmentsModule.PunishmentModel({
 							type: payload.type,
 							value: payload.value,
 							reason: payload.reason,

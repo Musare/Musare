@@ -3,6 +3,7 @@ import "./loadEnvVariables.js";
 import util from "util";
 import config from "config";
 
+// eslint-disable-next-line no-extend-native
 Array.prototype.remove = function (item) {
 	this.splice(this.indexOf(item), 1);
 };

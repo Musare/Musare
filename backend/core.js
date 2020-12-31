@@ -84,12 +84,22 @@ class Queue {
 		this.runningTasks.remove(this.runningTasks.find(task => task.job.toString() === job.toString()));
 	}
 
+	/**
+	 * Pauses a job currently running from the queue.
+	 *
+	 * @param {object} job - the job to be pauses
+	 */
 	pauseRunningJob(job) {
 		const task = this.runningTasks.find(task => task.job.toString() === job.toString());
 		this.runningTasks.remove(task);
 		this.pausedTasks.push(task);
 	}
 
+	/**
+	 * Resumes a job currently paused, adding the job back to the front of the queue
+	 *
+	 * @param {object} job - the job to be pauses
+	 */
 	resumeRunningJob(job) {
 		const task = this.pausedTasks.find(task => task.job.toString() === job.toString());
 		this.pausedTasks.remove(task);
@@ -114,6 +124,11 @@ class Queue {
 		}
 	}
 
+	/**
+	 * Handles a task, calling the handleTaskFunction provided in the constructor
+	 *
+	 * @param {object} task - the task to be handled
+	 */
 	_handleTask(task) {
 		this.handleTaskFunction(task.job).finally(() => {
 			this.runningTasks.remove(task);
@@ -142,23 +157,48 @@ class Job {
 		this.status = "INITIALIZED";
 	}
 
+	/**
+	 * Adds a child job to this job
+	 *
+	 * @param {object} childJob - the child job
+	 */
 	addChildJob(childJob) {
 		this.childJobs.push(childJob);
 	}
 
+	/**
+	 * Sets the job status
+	 *
+	 * @param {string} status - the new status
+	 */
 	setStatus(status) {
 		// console.log(`Job ${this.toString()} has changed status from ${this.status} to ${status}`);
 		this.status = status;
 	}
 
+	/**
+	 * Returns the UUID of the job, allowing you to compare jobs with toString
+	 *
+	 * @returns {string} - the job's UUID/uniqueId
+	 */
 	toString() {
 		return this.uniqueId;
 	}
 
+	/**
+	 * Sets the response that will be provided to the onFinish DeferredPromise resolve/reject function, as soon as the job is done if it has no parent, or when the parent job is resumed
+	 *
+	 * @param {object} response - the response
+	 */
 	setResponse(response) {
 		this.response = response;
 	}
 
+	/**
+	 * Sets the response type that is paired with the response. If it is RESOLVE/REJECT, then it will resolve/reject with the response. If it is RESOLVED/REJECTED, then it has already resolved/rejected with the response.
+	 *
+	 * @param {string} responseType - the response type, so RESOLVE/REJECT/RESOLVED/REJECTED
+	 */
 	setResponseType(responseType) {
 		this.responseType = responseType;
 	}
@@ -393,13 +433,11 @@ export default class CoreClass {
 	 * @param {string} job.name - the name of the job e.g. GET_PLAYLIST
 	 * @param {string} job.payload - any expected payload for the job itself
 	 * @param {Promise} job.onFinish - deferred promise when the job is complete
-	 * @param {object} options - object containing any additional options for the job
 	 * @returns {Promise} - returns a promise
 	 */
-	_runJob(job, options) {
-		// if (!options.isQuiet)
+	_runJob(job) {
 		this.log("INFO", `Running job ${job.name} (${job.toString()})`);
-		return new Promise((resolve, reject) => {
+		return new Promise(resolve => {
 			const startTime = Date.now();
 
 			const previousStatus = job.status;

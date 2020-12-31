@@ -83,7 +83,7 @@ class _PlaylistsModule extends CoreClass {
 								CacheModule.runJob("HSET", {
 									table: "playlists",
 									key: playlist._id,
-									value: playlistSchemaCache(playlist)
+									value: PlaylistsModule.playlistSchemaCache(playlist)
 								})
 									.then(() => cb())
 									.catch(next);

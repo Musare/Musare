@@ -953,6 +953,7 @@ class _StationsModule extends CoreClass {
 											key: session.sessionId
 										},
 										this
+										// eslint-disable-next-line no-loop-func
 									).then(session => {
 										if (session) {
 											DBModule.runJob("GET_MODEL", { modelName: "user" }, this).then(

@@ -2,7 +2,7 @@ import async from "async";
 
 import CoreClass from "../core";
 
-let ActivitiesModule;
+// let ActivitiesModule;
 let DBModule;
 let UtilsModule;
 
@@ -11,7 +11,7 @@ class _ActivitiesModule extends CoreClass {
 	constructor() {
 		super("activities");
 
-		ActivitiesModule = this;
+		// ActivitiesModule = this;
 	}
 
 	/**
