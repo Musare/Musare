@@ -3,10 +3,14 @@ import Discord from "discord.js";
 
 import CoreClass from "../core";
 
-class DiscordModule extends CoreClass {
+let DiscordModule;
+
+class _DiscordModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		super("discord");
+
+		DiscordModule = this;
 	}
 
 	/**
@@ -67,7 +71,9 @@ class DiscordModule extends CoreClass {
 	 */
 	SEND_ADMIN_ALERT_MESSAGE(payload) {
 		return new Promise((resolve, reject) => {
-			const channel = this.client.channels.find(channel => channel.id === this.adminAlertChannelId);
+			const channel = DiscordModule.client.channels.find(
+				channel => channel.id === DiscordModule.adminAlertChannelId
+			);
 
 			if (channel !== null) {
 				const richEmbed = new Discord.RichEmbed();
@@ -111,4 +117,4 @@ class DiscordModule extends CoreClass {
 	}
 }
 
-export default new DiscordModule();
+export default new _DiscordModule();

@@ -2,10 +2,19 @@ import async from "async";
 
 import CoreClass from "../core";
 
-class StationsModule extends CoreClass {
+let StationsModule;
+let CacheModule;
+let DBModule;
+let UtilsModule;
+let SongsModule;
+let NotificationsModule;
+
+class _StationsModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		super("stations");
+
+		StationsModule = this;
 	}
 
 	/**
@@ -14,11 +23,11 @@ class StationsModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async initialize() {
-		this.cache = this.moduleManager.modules.cache;
-		this.db = this.moduleManager.modules.db;
-		this.utils = this.moduleManager.modules.utils;
-		this.songs = this.moduleManager.modules.songs;
-		this.notifications = this.moduleManager.modules.notifications;
+		CacheModule = this.moduleManager.modules.cache;
+		DBModule = this.moduleManager.modules.db;
+		UtilsModule = this.moduleManager.modules.utils;
+		SongsModule = this.moduleManager.modules.songs;
+		NotificationsModule = this.moduleManager.modules.notifications;
 
 		this.defaultSong = {
 			songId: "60ItHLz5WEA",
@@ -30,30 +39,28 @@ class StationsModule extends CoreClass {
 		};
 
 		// TEMP
-		this.cache.runJob("SUB", {
+		CacheModule.runJob("SUB", {
 			channel: "station.pause",
 			cb: async stationId => {
-				this.notifications
-					.runJob("REMOVE", {
-						subscription: `stations.nextSong?id=${stationId}`
-					})
-					.then();
+				NotificationsModule.runJob("REMOVE", {
+					subscription: `stations.nextSong?id=${stationId}`
+				}).then();
 			}
 		});
 
-		this.cache.runJob("SUB", {
+		CacheModule.runJob("SUB", {
 			channel: "station.resume",
 			cb: async stationId => {
-				this.runJob("INITIALIZE_STATION", { stationId }).then();
+				StationsModule.runJob("INITIALIZE_STATION", { stationId }).then();
 			}
 		});
 
-		this.cache.runJob("SUB", {
+		CacheModule.runJob("SUB", {
 			channel: "station.queueUpdate",
 			cb: async stationId => {
-				this.runJob("GET_STATION", { stationId }).then(station => {
+				StationsModule.runJob("GET_STATION", { stationId }).then(station => {
 					if (!station.currentSong && station.queue.length > 0) {
-						this.runJob("INITIALIZE_STATION", {
+						StationsModule.runJob("INITIALIZE_STATION", {
 							stationId
 						}).then();
 					}
@@ -61,35 +68,32 @@ class StationsModule extends CoreClass {
 			}
 		});
 
-		this.cache.runJob("SUB", {
+		CacheModule.runJob("SUB", {
 			channel: "station.newOfficialPlaylist",
 			cb: async stationId => {
-				this.cache
-					.runJob("HGET", {
-						table: "officialPlaylists",
-						key: stationId
-					})
-					.then(playlistObj => {
-						if (playlistObj) {
-							this.utils.runJob("EMIT_TO_ROOM", {
-								room: `station.${stationId}`,
-								args: ["event:newOfficialPlaylist", playlistObj.songs]
-							});
-						}
-					});
+				CacheModule.runJob("HGET", {
+					table: "officialPlaylists",
+					key: stationId
+				}).then(playlistObj => {
+					if (playlistObj) {
+						UtilsModule.runJob("EMIT_TO_ROOM", {
+							room: `station.${stationId}`,
+							args: ["event:newOfficialPlaylist", playlistObj.songs]
+						});
+					}
+				});
 			}
 		});
 
-		const stationModel = (this.stationModel = await this.db.runJob("GET_MODEL", { modelName: "station" }));
-		const stationSchema = (this.stationSchema = await this.cache.runJob("GET_SCHEMA", { schemaName: "station" }));
+		const stationModel = (this.stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }));
+		const stationSchema = (this.stationSchema = await CacheModule.runJob("GET_SCHEMA", { schemaName: "station" }));
 
 		return new Promise((resolve, reject) =>
 			async.waterfall(
 				[
 					next => {
 						this.setStage(2);
-						this.cache
-							.runJob("HGETALL", { table: "stations" })
+						CacheModule.runJob("HGETALL", { table: "stations" })
 							.then(stations => {
 								next(null, stations);
 							})
@@ -109,11 +113,10 @@ class StationsModule extends CoreClass {
 								stationModel.findOne({ _id: stationId }, (err, station) => {
 									if (err) next(err);
 									else if (!station) {
-										this.cache
-											.runJob("HDEL", {
-												table: "stations",
-												key: stationId
-											})
+										CacheModule.runJob("HDEL", {
+											table: "stations",
+											key: stationId
+										})
 											.then(() => {
 												next();
 											})
@@ -138,18 +141,17 @@ class StationsModule extends CoreClass {
 								async.waterfall(
 									[
 										next => {
-											this.cache
-												.runJob("HSET", {
-													table: "stations",
-													key: station._id,
-													value: stationSchema(station)
-												})
+											CacheModule.runJob("HSET", {
+												table: "stations",
+												key: station._id,
+												value: stationSchema(station)
+											})
 												.then(station => next(null, station))
 												.catch(next);
 										},
 
 										(station, next) => {
-											this.runJob(
+											StationsModule.runJob(
 												"INITIALIZE_STATION",
 												{
 													stationId: station._id,
@@ -174,7 +176,7 @@ class StationsModule extends CoreClass {
 				],
 				async err => {
 					if (err) {
-						err = await this.utils.runJob("GET_ERROR", {
+						err = await UtilsModule.runJob("GET_ERROR", {
 							error: err
 						});
 						reject(new Error(err));
@@ -201,13 +203,14 @@ class StationsModule extends CoreClass {
 			async.waterfall(
 				[
 					next => {
-						this.runJob(
+						StationsModule.runJob(
 							"GET_STATION",
 							{
 								stationId: payload.stationId,
 								bypassQueue: payload.bypassQueue
 							},
-							{ bypassQueue: payload.bypassQueue }
+							{ bypassQueue: payload.bypassQueue },
+							this
 						)
 							.then(station => {
 								next(null, station);
@@ -217,23 +220,33 @@ class StationsModule extends CoreClass {
 					(station, next) => {
 						if (!station) return next("Station not found.");
 
-						this.notifications
-							.runJob("UNSCHEDULE", {
+						NotificationsModule.runJob(
+							"UNSCHEDULE",
+							{
 								name: `stations.nextSong?id=${station._id}`
-							})
+							},
+							this
+						)
 							.then()
 							.catch();
 
-						this.notifications
-							.runJob("SUBSCRIBE", {
+						NotificationsModule.runJob(
+							"SUBSCRIBE",
+							{
 								name: `stations.nextSong?id=${station._id}`,
 								cb: () =>
-									this.runJob("SKIP_STATION", {
-										stationId: station._id
-									}),
+									StationsModule.runJob(
+										"SKIP_STATION",
+										{
+											stationId: station._id
+										},
+										this
+									),
 								unique: true,
 								station
-							})
+							},
+							this
+						)
 							.then()
 							.catch();
 
@@ -243,13 +256,13 @@ class StationsModule extends CoreClass {
 					},
 					(station, next) => {
 						if (!station.currentSong) {
-							return this.runJob(
+							return StationsModule.runJob(
 								"SKIP_STATION",
 								{
 									stationId: station._id,
 									bypassQueue: payload.bypassQueue
 								},
-								{ bypassQueue: payload.bypassQueue }
+								this
 							)
 								.then(station => {
 									next(true, station);
@@ -264,13 +277,13 @@ class StationsModule extends CoreClass {
 						if (Number.isNaN(timeLeft)) timeLeft = -1;
 
 						if (station.currentSong.duration * 1000 < timeLeft || timeLeft < 0) {
-							return this.runJob(
+							return StationsModule.runJob(
 								"SKIP_STATION",
 								{
 									stationId: station._id,
 									bypassQueue: payload.bypassQueue
 								},
-								{ bypassQueue: payload.bypassQueue }
+								this
 							)
 								.then(station => {
 									next(null, station);
@@ -278,20 +291,28 @@ class StationsModule extends CoreClass {
 								.catch(next);
 						}
 						// name, time, cb, station
-						this.notifications.runJob("SCHEDULE", {
-							name: `stations.nextSong?id=${station._id}`,
-							time: timeLeft,
-							station
-						});
+						NotificationsModule.runJob(
+							"SCHEDULE",
+							{
+								name: `stations.nextSong?id=${station._id}`,
+								time: timeLeft,
+								station
+							},
+							this
+						);
 
 						return next(null, station);
 					}
 				],
 				async (err, station) => {
 					if (err && err !== true) {
-						err = await this.utils.runJob("GET_ERROR", {
-							error: err
-						});
+						err = await UtilsModule.runJob(
+							"GET_ERROR",
+							{
+								error: err
+							},
+							this
+						);
 						reject(new Error(err));
 					} else resolve(station);
 				}
@@ -309,8 +330,8 @@ class StationsModule extends CoreClass {
 	 */
 	async CALCULATE_SONG_FOR_STATION(payload) {
 		// station, bypassValidate = false
-		const stationModel = await this.db.runJob("GET_MODEL", { modelName: "station" });
-		const songModel = await this.db.runJob("GET_MODEL", { modelName: "song" });
+		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 
 		return new Promise((resolve, reject) => {
 			const songList = [];
@@ -355,23 +376,22 @@ class StationsModule extends CoreClass {
 							if (songList.indexOf(songId) !== -1) playlist.push(songId);
 						});
 
-						this.utils
-							.runJob("SHUFFLE", { array: playlist })
+						UtilsModule.runJob("SHUFFLE", { array: playlist })
 							.then(result => {
 								next(null, result.array);
-							})
+							}, this)
 							.catch(next);
 					},
 
 					(playlist, next) => {
-						this.runJob(
+						StationsModule.runJob(
 							"CALCULATE_OFFICIAL_PLAYLIST_LIST",
 							{
 								stationId: payload.station._id,
 								songList: playlist,
 								bypassQueue: payload.bypassQueue
 							},
-							{ bypassQueue: payload.bypassQueue }
+							this
 						)
 							.then(() => {
 								next(null, playlist);
@@ -385,13 +405,13 @@ class StationsModule extends CoreClass {
 							{ $set: { playlist } },
 							{ runValidators: true },
 							() => {
-								this.runJob(
+								StationsModule.runJob(
 									"UPDATE_STATION",
 									{
 										stationId: payload.station._id,
 										bypassQueue: payload.bypassQueue
 									},
-									{ bypassQueue: payload.bypassQueue }
+									this
 								)
 									.then(() => {
 										next(null, playlist);
@@ -421,11 +441,14 @@ class StationsModule extends CoreClass {
 			async.waterfall(
 				[
 					next => {
-						this.cache
-							.runJob("HGET", {
+						CacheModule.runJob(
+							"HGET",
+							{
 								table: "stations",
 								key: payload.stationId
-							})
+							},
+							this
+						)
 							.then(station => {
 								next(null, station);
 							})
@@ -440,7 +463,7 @@ class StationsModule extends CoreClass {
 					(station, next) => {
 						if (station) {
 							if (station.type === "official") {
-								this.runJob("CALCULATE_OFFICIAL_PLAYLIST_LIST", {
+								StationsModule.runJob("CALCULATE_OFFICIAL_PLAYLIST_LIST", {
 									stationId: station._id,
 									songList: station.playlist
 								})
@@ -448,12 +471,11 @@ class StationsModule extends CoreClass {
 									.catch();
 							}
 							station = this.stationSchema(station);
-							this.cache
-								.runJob("HSET", {
-									table: "stations",
-									key: payload.stationId,
-									value: station
-								})
+							CacheModule.runJob("HSET", {
+								table: "stations",
+								key: payload.stationId,
+								value: station
+							})
 								.then()
 								.catch();
 							next(true, station);
@@ -462,9 +484,13 @@ class StationsModule extends CoreClass {
 				],
 				async (err, station) => {
 					if (err && err !== true) {
-						err = await this.utils.runJob("GET_ERROR", {
-							error: err
-						});
+						err = await UtilsModule.runJob(
+							"GET_ERROR",
+							{
+								error: err
+							},
+							this
+						);
 						reject(new Error(err));
 					} else resolve(station);
 				}
@@ -480,7 +506,7 @@ class StationsModule extends CoreClass {
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	async GET_STATION_BY_NAME(payload) {
-		const stationModel = await this.db.runJob("GET_MODEL", { modelName: "station" });
+		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
 
 		return new Promise((resolve, reject) =>
 			async.waterfall(
@@ -492,14 +518,14 @@ class StationsModule extends CoreClass {
 					(station, next) => {
 						if (station) {
 							if (station.type === "official") {
-								this.runJob("CALCULATE_OFFICIAL_PLAYLIST_LIST", {
+								StationsModule.runJob("CALCULATE_OFFICIAL_PLAYLIST_LIST", {
 									stationId: station._id,
 									songList: station.playlist
 								});
 							}
-							this.cache.runJob("GET_SCHEMA", { schemaName: "station" }).then(stationSchema => {
+							CacheModule.runJob("GET_SCHEMA", { schemaName: "station" }, this).then(stationSchema => {
 								station = stationSchema(station);
-								this.cache.runJob("HSET", {
+								CacheModule.runJob("HSET", {
 									table: "stations",
 									key: station._id,
 									value: station
@@ -534,22 +560,24 @@ class StationsModule extends CoreClass {
 
 					(station, next) => {
 						if (!station) {
-							this.cache
-								.runJob("HDEL", {
-									table: "stations",
-									key: payload.stationId
-								})
+							CacheModule.runJob("HDEL", {
+								table: "stations",
+								key: payload.stationId
+							})
 								.then()
 								.catch();
 							return next("Station not found");
 						}
 
-						return this.cache
-							.runJob("HSET", {
+						return CacheModule.runJob(
+							"HSET",
+							{
 								table: "stations",
 								key: payload.stationId,
 								value: station
-							})
+							},
+							this
+						)
 							.then(station => {
 								next(null, station);
 							})
@@ -558,9 +586,13 @@ class StationsModule extends CoreClass {
 				],
 				async (err, station) => {
 					if (err && err !== true) {
-						err = await this.utils.runJob("GET_ERROR", {
-							error: err
-						});
+						err = await UtilsModule.runJob(
+							"GET_ERROR",
+							{
+								error: err
+							},
+							this
+						);
 						reject(new Error(err));
 					} else resolve(station);
 				}
@@ -577,7 +609,7 @@ class StationsModule extends CoreClass {
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	async CALCULATE_OFFICIAL_PLAYLIST_LIST(payload) {
-		const officialPlaylistSchema = await this.cache.runJob("GET_SCHEMA", { schemaName: "officialPlaylist" });
+		const officialPlaylistSchema = await CacheModule.runJob("GET_SCHEMA", { schemaName: "officialPlaylist" }, this);
 
 		console.log(typeof payload.songList, payload.songList);
 
@@ -587,8 +619,7 @@ class StationsModule extends CoreClass {
 			return async.each(
 				payload.songList,
 				(song, next) => {
-					this.songs
-						.runJob("GET_SONG", { id: song })
+					SongsModule.runJob("GET_SONG", { id: song }, this)
 						.then(response => {
 							const { song } = response;
 							if (song) {
@@ -606,19 +637,21 @@ class StationsModule extends CoreClass {
 						});
 				},
 				() => {
-					this.cache
-						.runJob("HSET", {
+					CacheModule.runJob(
+						"HSET",
+						{
 							table: "officialPlaylists",
 							key: payload.stationId,
 							value: officialPlaylistSchema(payload.stationId, lessInfoPlaylist)
-						})
-						.finally(() => {
-							this.cache.runJob("PUB", {
-								channel: "station.newOfficialPlaylist",
-								value: payload.stationId
-							});
-							resolve();
+						},
+						this
+					).finally(() => {
+						CacheModule.runJob("PUB", {
+							channel: "station.newOfficialPlaylist",
+							value: payload.stationId
 						});
+						resolve();
+					});
 				}
 			);
 		});
@@ -634,20 +667,20 @@ class StationsModule extends CoreClass {
 	 */
 	SKIP_STATION(payload) {
 		return new Promise((resolve, reject) => {
-			this.log("INFO", `Skipping station ${payload.stationId}.`);
+			StationsModule.log("INFO", `Skipping station ${payload.stationId}.`);
 
-			this.log("STATION_ISSUE", `SKIP_STATION_CB - Station ID: ${payload.stationId}.`);
+			StationsModule.log("STATION_ISSUE", `SKIP_STATION_CB - Station ID: ${payload.stationId}.`);
 
 			async.waterfall(
 				[
 					next => {
-						this.runJob(
+						StationsModule.runJob(
 							"GET_STATION",
 							{
 								stationId: payload.stationId,
 								bypassQueue: payload.bypassQueue
 							},
-							{ bypassQueue: payload.bypassQueue }
+							this
 						)
 							.then(station => {
 								next(null, station);
@@ -682,7 +715,7 @@ class StationsModule extends CoreClass {
 						}
 
 						if (station.type === "community" && !station.partyMode) {
-							return this.db.runJob("GET_MODEL", { modelName: "playlist" }).then(playlistModel =>
+							return DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this).then(playlistModel =>
 								playlistModel.findOne({ _id: station.privatePlaylist }, (err, playlist) => {
 									if (err) return next(err);
 
@@ -713,16 +746,22 @@ class StationsModule extends CoreClass {
 										};
 
 										if (playlist[currentSongIndex]._id)
-											return this.songs
-												.runJob("GET_SONG", {
+											return SongsModule.runJob(
+												"GET_SONG",
+												{
 													id: playlist[currentSongIndex]._id
-												})
+												},
+												this
+											)
 												.then(response => callback(null, response.song))
 												.catch(callback);
-										return this.songs
-											.runJob("GET_SONG_FROM_ID", {
+										return SongsModule.runJob(
+											"GET_SONG_FROM_ID",
+											{
 												songId: playlist[currentSongIndex].songId
-											})
+											},
+											this
+										)
 											.then(response => callback(null, response.song))
 											.catch(callback);
 									}
@@ -733,18 +772,21 @@ class StationsModule extends CoreClass {
 						}
 
 						if (station.type === "official" && station.playlist.length === 0) {
-							return this.runJob(
+							return StationsModule.runJob(
 								"CALCULATE_SONG_FOR_STATION",
 								{ station, bypassQueue: payload.bypassQueue },
-								{ bypassQueue: payload.bypassQueue }
+								this
 							)
 								.then(playlist => {
 									if (playlist.length === 0) return next(null, this.defaultSong, 0, station);
 
-									return this.songs
-										.runJob("GET_SONG", {
+									return SongsModule.runJob(
+										"GET_SONG",
+										{
 											id: playlist[0]
-										})
+										},
+										this
+									)
 										.then(response => {
 											next(null, response.song, 0, station);
 										})
@@ -757,27 +799,29 @@ class StationsModule extends CoreClass {
 							return async.doUntil(
 								next => {
 									if (station.currentSongIndex < station.playlist.length - 1) {
-										this.songs
-											.runJob("GET_SONG", {
+										SongsModule.runJob(
+											"GET_SONG",
+											{
 												id: station.playlist[station.currentSongIndex + 1]
-											})
+											},
+											this
+										)
 											.then(response => next(null, response.song, station.currentSongIndex + 1))
 											.catch(() => {
 												station.currentSongIndex += 1;
 												next(null, null, null);
 											});
 									} else {
-										this.runJob(
+										StationsModule.runJob(
 											"CALCULATE_SONG_FOR_STATION",
 											{
 												station,
 												bypassQueue: payload.bypassQueue
 											},
-											{ bypassQueue: payload.bypassQueue }
+											this
 										)
 											.then(newPlaylist => {
-												this.songs
-													.runJob("GET_SONG", { id: newPlaylist[0] })
+												SongsModule.runJob("GET_SONG", { id: newPlaylist[0] }, this)
 													.then(response => {
 														station.playlist = newPlaylist;
 														next(null, response.song, 0);
@@ -830,22 +874,20 @@ class StationsModule extends CoreClass {
 
 					($set, station, next) => {
 						this.stationModel.updateOne({ _id: station._id }, { $set }, () => {
-							this.runJob(
+							StationsModule.runJob(
 								"UPDATE_STATION",
 								{
 									stationId: station._id,
 									bypassQueue: payload.bypassQueue
 								},
-
-								{ bypassQueue: payload.bypassQueue }
+								this
 							)
 								.then(station => {
 									if (station.type === "community" && station.partyMode === true)
-										this.cache
-											.runJob("PUB", {
-												channel: "station.queueUpdate",
-												value: payload.stationId
-											})
+										CacheModule.runJob("PUB", {
+											channel: "station.queueUpdate",
+											value: payload.stationId
+										})
 											.then()
 											.catch();
 									next(null, station);
@@ -856,10 +898,14 @@ class StationsModule extends CoreClass {
 				],
 				async (err, station) => {
 					if (err) {
-						err = await this.utils.runJob("GET_ERROR", {
-							error: err
-						});
-						this.log("ERROR", `Skipping station "${payload.stationId}" failed. "${err}"`);
+						err = await UtilsModule.runJob(
+							"GET_ERROR",
+							{
+								error: err
+							},
+							this
+						);
+						StationsModule.log("ERROR", `Skipping station "${payload.stationId}" failed. "${err}"`);
 						reject(new Error(err));
 					} else {
 						if (station.currentSong !== null && station.currentSong.songId !== undefined) {
@@ -867,32 +913,30 @@ class StationsModule extends CoreClass {
 						}
 						// TODO Pub/Sub this
 
-						this.utils
-							.runJob("EMIT_TO_ROOM", {
-								room: `station.${station._id}`,
-								args: [
-									"event:songs.next",
-									{
-										currentSong: station.currentSong,
-										startedAt: station.startedAt,
-										paused: station.paused,
-										timePaused: 0
-									}
-								]
-							})
+						UtilsModule.runJob("EMIT_TO_ROOM", {
+							room: `station.${station._id}`,
+							args: [
+								"event:songs.next",
+								{
+									currentSong: station.currentSong,
+									startedAt: station.startedAt,
+									paused: station.paused,
+									timePaused: 0
+								}
+							]
+						})
 							.then()
 							.catch();
 
 						if (station.privacy === "public") {
-							this.utils
-								.runJob("EMIT_TO_ROOM", {
-									room: "home",
-									args: ["event:station.nextSong", station._id, station.currentSong]
-								})
+							UtilsModule.runJob("EMIT_TO_ROOM", {
+								room: "home",
+								args: ["event:station.nextSong", station._id, station.currentSong]
+							})
 								.then()
 								.catch();
 						} else {
-							const sockets = await this.utils.runJob("GET_ROOM_SOCKETS", { room: "home" });
+							const sockets = await UtilsModule.runJob("GET_ROOM_SOCKETS", { room: "home" }, this);
 
 							for (
 								let socketId = 0, socketKeys = Object.keys(sockets);
@@ -902,14 +946,17 @@ class StationsModule extends CoreClass {
 								const socket = sockets[socketId];
 								const { session } = sockets[socketId];
 								if (session.sessionId) {
-									this.cache
-										.runJob("HGET", {
+									CacheModule.runJob(
+										"HGET",
+										{
 											table: "sessions",
 											key: session.sessionId
-										})
-										.then(session => {
-											if (session) {
-												this.db.runJob("GET_MODEL", { modelName: "user" }).then(userModel => {
+										},
+										this
+									).then(session => {
+										if (session) {
+											DBModule.runJob("GET_MODEL", { modelName: "user" }, this).then(
+												userModel => {
 													userModel.findOne(
 														{
 															_id: session.userId
@@ -934,34 +981,42 @@ class StationsModule extends CoreClass {
 															}
 														}
 													);
-												});
-											}
-										});
+												}
+											);
+										}
+									});
 								}
 							}
 						}
 
 						if (station.currentSong !== null && station.currentSong.songId !== undefined) {
-							this.utils.runJob("SOCKETS_JOIN_SONG_ROOM", {
-								sockets: await this.utils.runJob("GET_ROOM_SOCKETS", {
-									room: `station.${station._id}`
-								}),
+							UtilsModule.runJob("SOCKETS_JOIN_SONG_ROOM", {
+								sockets: await UtilsModule.runJob(
+									"GET_ROOM_SOCKETS",
+									{
+										room: `station.${station._id}`
+									},
+									this
+								),
 								room: `song.${station.currentSong.songId}`
 							});
 							if (!station.paused) {
-								this.notifications.runJob("SCHEDULE", {
+								NotificationsModule.runJob("SCHEDULE", {
 									name: `stations.nextSong?id=${station._id}`,
 									time: station.currentSong.duration * 1000,
 									station
 								});
 							}
 						} else {
-							this.utils
-								.runJob("SOCKETS_LEAVE_SONG_ROOMS", {
-									sockets: await this.utils.runJob("GET_ROOM_SOCKETS", {
+							UtilsModule.runJob("SOCKETS_LEAVE_SONG_ROOMS", {
+								sockets: await UtilsModule.runJob(
+									"GET_ROOM_SOCKETS",
+									{
 										room: `station.${station._id}`
-									})
-								})
+									},
+									this
+								)
+							})
 								.then()
 								.catch();
 						}
@@ -997,13 +1052,15 @@ class StationsModule extends CoreClass {
 					},
 
 					next => {
-						this.db
-							.runJob("GET_MODEL", {
+						DBModule.runJob(
+							"GET_MODEL",
+							{
 								modelName: "user"
-							})
-							.then(userModel => {
-								userModel.findOne({ _id: payload.userId }, next);
-							});
+							},
+							this
+						).then(userModel => {
+							userModel.findOne({ _id: payload.userId }, next);
+						});
 					},
 
 					(user, next) => {
@@ -1017,9 +1074,13 @@ class StationsModule extends CoreClass {
 				],
 				async errOrResult => {
 					if (errOrResult !== true && errOrResult !== "Not allowed") {
-						errOrResult = await this.utils.runJob("GET_ERROR", {
-							error: errOrResult
-						});
+						errOrResult = await UtilsModule.runJob(
+							"GET_ERROR",
+							{
+								error: errOrResult
+							},
+							this
+						);
 						reject(new Error(errOrResult));
 					} else {
 						resolve(errOrResult === true);
@@ -1030,4 +1091,4 @@ class StationsModule extends CoreClass {
 	}
 }
 
-export default new StationsModule();
+export default new _StationsModule();

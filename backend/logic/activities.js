@@ -2,10 +2,16 @@ import async from "async";
 
 import CoreClass from "../core";
 
-class ActivitiesModule extends CoreClass {
+let ActivitiesModule;
+let DBModule;
+let UtilsModule;
+
+class _ActivitiesModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		super("activities");
+
+		ActivitiesModule = this;
 	}
 
 	/**
@@ -15,9 +21,8 @@ class ActivitiesModule extends CoreClass {
 	 */
 	initialize() {
 		return new Promise(resolve => {
-			this.db = this.moduleManager.modules.db;
-			this.io = this.moduleManager.modules.io;
-			this.utils = this.moduleManager.modules.utils;
+			DBModule = this.moduleManager.modules.db;
+			UtilsModule = this.moduleManager.modules.utils;
 
 			resolve();
 		});
@@ -38,8 +43,7 @@ class ActivitiesModule extends CoreClass {
 			async.waterfall(
 				[
 					next => {
-						this.db
-							.runJob("GET_MODEL", { modelName: "activity" })
+						DBModule.runJob("GET_MODEL", { modelName: "activity" }, this)
 							.then(res => next(null, res))
 							.catch(next);
 					},
@@ -57,10 +61,13 @@ class ActivitiesModule extends CoreClass {
 					},
 
 					(activity, next) => {
-						this.utils
-							.runJob("SOCKETS_FROM_USER", {
+						UtilsModule.runJob(
+							"SOCKETS_FROM_USER",
+							{
 								userId: activity.userId
-							})
+							},
+							this
+						)
 							.then(response => {
 								response.sockets.forEach(socket => {
 									socket.emit("event:activity.create", activity);
@@ -72,9 +79,13 @@ class ActivitiesModule extends CoreClass {
 				],
 				async (err, activity) => {
 					if (err) {
-						err = await this.utils.runJob("GET_ERROR", {
-							error: err
-						});
+						err = await UtilsModule.runJob(
+							"GET_ERROR",
+							{
+								error: err
+							},
+							this
+						);
 						reject(new Error(err));
 					} else {
 						resolve({ activity });
@@ -85,4 +96,4 @@ class ActivitiesModule extends CoreClass {
 	}
 }
 
-export default new ActivitiesModule();
+export default new _ActivitiesModule();

@@ -14,10 +14,16 @@ let apiResults = {
 	scope: ""
 };
 
-class SpotifyModule extends CoreClass {
+let SpotifyModule;
+let CacheModule;
+let UtilsModule;
+
+class _SpotifyModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		super("spotify");
+
+		SpotifyModule = this;
 	}
 
 	/**
@@ -27,8 +33,8 @@ class SpotifyModule extends CoreClass {
 	 */
 	initialize() {
 		return new Promise((resolve, reject) => {
-			this.cache = this.moduleManager.modules.cache;
-			this.utils = this.moduleManager.modules.utils;
+			CacheModule = this.moduleManager.modules.cache;
+			UtilsModule = this.moduleManager.modules.utils;
 
 			const client = config.get("apis.spotify.client");
 			const secret = config.get("apis.spotify.secret");
@@ -39,8 +45,7 @@ class SpotifyModule extends CoreClass {
 				[
 					next => {
 						this.setStage(2);
-						this.cache
-							.runJob("HGET", { table: "api", key: "spotify" })
+						CacheModule.runJob("HGET", { table: "api", key: "spotify" })
 							.then(data => {
 								next(null, data);
 							})
@@ -55,7 +60,7 @@ class SpotifyModule extends CoreClass {
 				],
 				async err => {
 					if (err) {
-						err = await this.utils.runJob("GET_ERROR", {
+						err = await UtilsModule.runJob("GET_ERROR", {
 							error: err
 						});
 						reject(new Error(err));
@@ -75,7 +80,7 @@ class SpotifyModule extends CoreClass {
 	GET_TOKEN() {
 		return new Promise(resolve => {
 			if (Date.now() > apiResults.expires_at) {
-				this.runJob("REQUEST_TOKEN").then(() => {
+				SpotifyModule.runJob("REQUEST_TOKEN", null, this).then(() => {
 					resolve(apiResults.access_token);
 				});
 			} else resolve(apiResults.access_token);
@@ -92,21 +97,23 @@ class SpotifyModule extends CoreClass {
 			async.waterfall(
 				[
 					next => {
-						this.log("INFO", "SPOTIFY_REQUEST_TOKEN", "Requesting new Spotify token.");
-						this.SpotifyOauth.getOAuthAccessToken("", { grant_type: "client_credentials" }, next);
+						SpotifyModule.log("INFO", "SPOTIFY_REQUEST_TOKEN", "Requesting new Spotify token.");
+						SpotifyModule.SpotifyOauth.getOAuthAccessToken("", { grant_type: "client_credentials" }, next);
 					},
 					(accessToken, refreshToken, results, next) => {
 						apiResults = results;
 						apiResults.expires_at = Date.now() + results.expires_in * 1000;
 
-						this.cache
-							.runJob("HSET", {
+						CacheModule.runJob(
+							"HSET",
+							{
 								table: "api",
 								key: "spotify",
 								value: apiResults,
 								stringifyJson: true
-							})
-							.finally(() => next());
+							},
+							this
+						).finally(() => next());
 					}
 				],
 				() => resolve()
@@ -115,4 +122,4 @@ class SpotifyModule extends CoreClass {
 	}
 }
 
-export default new SpotifyModule();
+export default new _SpotifyModule();

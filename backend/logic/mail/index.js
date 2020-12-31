@@ -4,10 +4,14 @@ import Mailgun from "mailgun-js";
 
 import CoreClass from "../../core";
 
-class MailModule extends CoreClass {
+let MailModule;
+
+class _MailModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		super("mail");
+
+		MailModule = this;
 	}
 
 	/**
@@ -47,8 +51,8 @@ class MailModule extends CoreClass {
 	 */
 	SEND_MAIL(payload) {
 		return new Promise(resolve => {
-			if (this.enabled)
-				this.mailgun.messages().send(payload.data, () => {
+			if (MailModule.enabled)
+				MailModule.mailgun.messages().send(payload.data, () => {
 					resolve();
 				});
 			else resolve();
@@ -64,9 +68,9 @@ class MailModule extends CoreClass {
 	 */
 	GET_SCHEMA(payload) {
 		return new Promise(resolve => {
-			resolve(this.schemas[payload.schemaName]);
+			resolve(MailModule.schemas[payload.schemaName]);
 		});
 	}
 }
 
-export default new MailModule();
+export default new _MailModule();

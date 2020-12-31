@@ -5,7 +5,12 @@ import crypto from "crypto";
 import request from "request";
 import CoreClass from "../core";
 
-class UtilsModule extends CoreClass {
+let UtilsModule;
+let IOModule;
+let SpotifyModule;
+let CacheModule;
+
+class _UtilsModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		super("utils");
@@ -13,6 +18,8 @@ class UtilsModule extends CoreClass {
 		this.youtubeRequestCallbacks = [];
 		this.youtubeRequestsPending = 0;
 		this.youtubeRequestsActive = false;
+
+		UtilsModule = this;
 	}
 
 	/**
@@ -22,10 +29,9 @@ class UtilsModule extends CoreClass {
 	 */
 	initialize() {
 		return new Promise(resolve => {
-			this.io = this.moduleManager.modules.io;
-			this.db = this.moduleManager.modules.db;
-			this.spotify = this.moduleManager.modules.spotify;
-			this.cache = this.moduleManager.modules.cache;
+			IOModule = this.moduleManager.modules.io;
+			SpotifyModule = this.moduleManager.modules.spotify;
+			CacheModule = this.moduleManager.modules.cache;
 
 			resolve();
 		});
@@ -79,9 +85,13 @@ class UtilsModule extends CoreClass {
 			let cookies;
 
 			try {
-				cookies = this.runJob("PARSE_COOKIES", {
-					cookieString: payload.cookieString
-				});
+				cookies = UtilsModule.runJob(
+					"PARSE_COOKIES",
+					{
+						cookieString: payload.cookieString
+					},
+					this
+				);
 			} catch (err) {
 				return reject(err);
 			}
@@ -123,11 +133,19 @@ class UtilsModule extends CoreClass {
 
 		const promises = [];
 		for (let i = 0; i < payload.length; i += 1) {
+			this.log(
+				"ERROR",
+				"CHECK THIS!?!?!?!??!?!?!?!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+			);
 			promises.push(
-				this.runJob("GET_RANDOM_NUMBER", {
-					min: 0,
-					max: chars.length - 1
-				})
+				UtilsModule.runJob(
+					"GET_RANDOM_NUMBER",
+					{
+						min: 0,
+						max: chars.length - 1
+					},
+					this
+				)
 			);
 		}
 
@@ -150,7 +168,7 @@ class UtilsModule extends CoreClass {
 	 */
 	async GET_SOCKET_FROM_ID(payload) {
 		// socketId
-		const io = await this.io.runJob("IO", {});
+		const io = await IOModule.runJob("IO", {}, this);
 
 		return new Promise(resolve => resolve(io.sockets.sockets[payload.socketId]));
 	}
@@ -248,7 +266,7 @@ class UtilsModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
 	async SOCKET_FROM_SESSION(payload) {
 		// socketId
-		const io = await this.io.runJob("IO", {});
+		const io = await IOModule.runJob("IO", {}, this);
 
 		return new Promise((resolve, reject) => {
 			const ns = io.of("/");
@@ -268,7 +286,7 @@ class UtilsModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async SOCKETS_FROM_SESSION_ID(payload) {
-		const io = await this.io.runJob("IO", {});
+		const io = await IOModule.runJob("IO", {}, this);
 
 		return new Promise(resolve => {
 			const ns = io.of("/");
@@ -300,7 +318,7 @@ class UtilsModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async SOCKETS_FROM_USER(payload) {
-		const io = await this.io.runJob("IO", {});
+		const io = await IOModule.runJob("IO", {}, this);
 
 		return new Promise((resolve, reject) => {
 			const ns = io.of("/");
@@ -311,11 +329,14 @@ class UtilsModule extends CoreClass {
 					Object.keys(ns.connected),
 					(id, next) => {
 						const { session } = ns.connected[id];
-						this.cache
-							.runJob("HGET", {
+						CacheModule.runJob(
+							"HGET",
+							{
 								table: "sessions",
 								key: session.sessionId
-							})
+							},
+							this
+						)
 							.then(session => {
 								if (session && session.userId === payload.userId) sockets.push(ns.connected[id]);
 								next();
@@ -343,7 +364,7 @@ class UtilsModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async SOCKETS_FROM_IP(payload) {
-		const io = await this.io.runJob("IO", {});
+		const io = await IOModule.runJob("IO", {}, this);
 
 		return new Promise(resolve => {
 			const ns = io.of("/");
@@ -353,11 +374,14 @@ class UtilsModule extends CoreClass {
 					Object.keys(ns.connected),
 					(id, next) => {
 						const { session } = ns.connected[id];
-						this.cache
-							.runJob("HGET", {
+						CacheModule.runJob(
+							"HGET",
+							{
 								table: "sessions",
 								key: session.sessionId
-							})
+							},
+							this
+						)
 							.then(session => {
 								if (session && ns.connected[id].ip === payload.ip) sockets.push(ns.connected[id]);
 								next();
@@ -382,7 +406,7 @@ class UtilsModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async SOCKETS_FROM_USER_WITHOUT_CACHE(payload) {
-		const io = await this.io.runJob("IO", {});
+		const io = await IOModule.runJob("IO", {}, this);
 
 		return new Promise(resolve => {
 			const ns = io.of("/");
@@ -414,9 +438,13 @@ class UtilsModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async SOCKET_LEAVE_ROOMS(payload) {
-		const socket = await this.runJob("SOCKET_FROM_SESSION", {
-			socketId: payload.socketId
-		});
+		const socket = await UtilsModule.runJob(
+			"SOCKET_FROM_SESSION",
+			{
+				socketId: payload.socketId
+			},
+			this
+		);
 
 		return new Promise(resolve => {
 			const { rooms } = socket;
@@ -437,9 +465,13 @@ class UtilsModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async SOCKET_JOIN_ROOM(payload) {
-		const socket = await this.runJob("SOCKET_FROM_SESSION", {
-			socketId: payload.socketId
-		});
+		const socket = await UtilsModule.runJob(
+			"SOCKET_FROM_SESSION",
+			{
+				socketId: payload.socketId
+			},
+			this
+		);
 
 		return new Promise(resolve => {
 			const { rooms } = socket;
@@ -457,9 +489,13 @@ class UtilsModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
 	async SOCKET_JOIN_SONG_ROOM(payload) {
 		// socketId, room
-		const socket = await this.runJob("SOCKET_FROM_SESSION", {
-			socketId: payload.socketId
-		});
+		const socket = await UtilsModule.runJob(
+			"SOCKET_FROM_SESSION",
+			{
+				socketId: payload.socketId
+			},
+			this
+		);
 
 		return new Promise(resolve => {
 			const { rooms } = socket;
@@ -518,7 +554,7 @@ class UtilsModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async EMIT_TO_ROOM(payload) {
-		const io = await this.io.runJob("IO", {});
+		const io = await IOModule.runJob("IO", {}, this);
 
 		return new Promise(resolve => {
 			const { sockets } = io.sockets;
@@ -541,7 +577,7 @@ class UtilsModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async GET_ROOM_SOCKETS(payload) {
-		const io = await this.io.runJob("IO", {});
+		const io = await IOModule.runJob("IO", {}, this);
 
 		return new Promise(resolve => {
 			const { sockets } = io.sockets;
@@ -763,9 +799,13 @@ class UtilsModule extends CoreClass {
 
 						if (!payload.musicOnly) return resolve({ songs });
 						return local
-							.runJob("FILTER_MUSIC_VIDEOS_YOUTUBE", {
-								videoIds: songs.slice()
-							})
+							.runJob(
+								"FILTER_MUSIC_VIDEOS_YOUTUBE",
+								{
+									videoIds: songs.slice()
+								},
+								this
+							)
 							.then(filteredSongs => {
 								resolve({ filteredSongs, songs });
 							});
@@ -786,7 +826,7 @@ class UtilsModule extends CoreClass {
 	 */
 	async GET_SONG_FROM_SPOTIFY(payload) {
 		// song
-		const token = await this.spotify.runJob("GET_TOKEN", {});
+		const token = await SpotifyModule.runJob("GET_TOKEN", {}, this);
 
 		return new Promise((resolve, reject) => {
 			if (!config.get("apis.spotify.enabled")) return reject(new Error("Spotify is not enabled."));
@@ -840,7 +880,7 @@ class UtilsModule extends CoreClass {
 	 */
 	async GET_SONGS_FROM_SPOTIFY(payload) {
 		// title, artist
-		const token = await this.spotify.runJob("GET_TOKEN", {});
+		const token = await SpotifyModule.runJob("GET_TOKEN", {}, this);
 
 		return new Promise((resolve, reject) => {
 			if (!config.get("apis.spotify.enabled")) return reject(new Error("Spotify is not enabled."));
@@ -966,4 +1006,4 @@ class UtilsModule extends CoreClass {
 	}
 }
 
-export default new UtilsModule();
+export default new _UtilsModule();

@@ -8,12 +8,19 @@ import Timer from "../classes/Timer.class";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-class TasksModule extends CoreClass {
+let TasksModule;
+let CacheModule;
+let StationsModule;
+let UtilsModule;
+
+class _TasksModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		super("tasks");
 
 		this.tasks = {};
+
+		TasksModule = this;
 	}
 
 	/**
@@ -25,28 +32,27 @@ class TasksModule extends CoreClass {
 		return new Promise(resolve => {
 			// return reject(new Error("Not fully migrated yet."));
 
-			this.cache = this.moduleManager.modules.cache;
-			this.stations = this.moduleManager.modules.stations;
-			this.notifications = this.moduleManager.modules.notifications;
-			this.utils = this.moduleManager.modules.utils;
+			CacheModule = this.moduleManager.modules.cache;
+			StationsModule = this.moduleManager.modules.stations;
+			UtilsModule = this.moduleManager.modules.utils;
 
 			// this.createTask("testTask", testTask, 5000, true);
 
-			this.runJob("CREATE_TASK", {
+			TasksModule.runJob("CREATE_TASK", {
 				name: "stationSkipTask",
-				fn: this.checkStationSkipTask,
+				fn: TasksModule.checkStationSkipTask,
 				timeout: 1000 * 60 * 30
 			});
 
-			this.runJob("CREATE_TASK", {
+			TasksModule.runJob("CREATE_TASK", {
 				name: "sessionClearTask",
-				fn: this.sessionClearingTask,
+				fn: TasksModule.sessionClearingTask,
 				timeout: 1000 * 60 * 60 * 6
 			});
 
-			this.runJob("CREATE_TASK", {
+			TasksModule.runJob("CREATE_TASK", {
 				name: "logFileSizeCheckTask",
-				fn: this.logFileSizeCheckTask,
+				fn: TasksModule.logFileSizeCheckTask,
 				timeout: 1000 * 60 * 60
 			});
 
@@ -66,7 +72,7 @@ class TasksModule extends CoreClass {
 	 */
 	CREATE_TASK(payload) {
 		return new Promise((resolve, reject) => {
-			this.tasks[payload.name] = {
+			TasksModule.tasks[payload.name] = {
 				name: payload.name,
 				fn: payload.fn,
 				timeout: payload.timeout,
@@ -75,7 +81,7 @@ class TasksModule extends CoreClass {
 			};
 
 			if (!payload.paused) {
-				this.runJob("RUN_TASK", { name: payload.name })
+				TasksModule.runJob("RUN_TASK", { name: payload.name }, this)
 					.then(() => resolve())
 					.catch(err => reject(err));
 			} else resolve();
@@ -93,7 +99,7 @@ class TasksModule extends CoreClass {
 		const taskName = { payload };
 
 		return new Promise(resolve => {
-			if (this.tasks[taskName].timer) this.tasks[taskName].timer.pause();
+			if (TasksModule.tasks[taskName].timer) TasksModule.tasks[taskName].timer.pause();
 			resolve();
 		});
 	}
@@ -107,7 +113,7 @@ class TasksModule extends CoreClass {
 	 */
 	RESUME_TASK(payload) {
 		return new Promise(resolve => {
-			this.tasks[payload.name].timer.resume();
+			TasksModule.tasks[payload.name].timer.resume();
 			resolve();
 		});
 	}
@@ -121,12 +127,17 @@ class TasksModule extends CoreClass {
 	 */
 	RUN_TASK(payload) {
 		return new Promise(resolve => {
-			const task = this.tasks[payload.name];
+			const task = TasksModule.tasks[payload.name];
 			if (task.timer) task.timer.pause();
 
+			TasksModule.log("ERROR", "CHECK THIS?!?!?!??!?!?!?!?!??!?!");
 			task.fn.apply(this).then(() => {
 				task.lastRan = Date.now();
-				task.timer = new Timer(() => this.runJob("RUN_TASK", { name: payload.name }), task.timeout, false);
+				task.timer = new Timer(
+					() => TasksModule.runJob("RUN_TASK", { name: payload.name }),
+					task.timeout,
+					false
+				);
 				resolve();
 			});
 		});
@@ -139,12 +150,11 @@ class TasksModule extends CoreClass {
 	 */
 	checkStationSkipTask() {
 		return new Promise(resolve => {
-			this.log("INFO", "TASK_STATIONS_SKIP_CHECK", `Checking for stations to be skipped.`, false);
+			TasksModule.log("INFO", "TASK_STATIONS_SKIP_CHECK", `Checking for stations to be skipped.`, false);
 			async.waterfall(
 				[
 					next => {
-						this.cache
-							.runJob("HGETALL", { table: "stations" })
+						CacheModule.runJob("HGETALL", { table: "stations" }, this)
 							.then(response => next(null, response))
 							.catch(next);
 					},
@@ -157,16 +167,18 @@ class TasksModule extends CoreClass {
 								const timeElapsed = Date.now() - station.startedAt - station.timePaused;
 								if (timeElapsed <= station.currentSong.duration) return next2();
 
-								this.log(
+								TasksModule.log(
 									"ERROR",
 									"TASK_STATIONS_SKIP_CHECK",
 									`Skipping ${station._id} as it should have skipped already.`
 								);
-								return this.stations
-									.runJob("INITIALIZE_STATION", {
+								return StationsModule.runJob(
+									"INITIALIZE_STATION",
+									{
 										stationId: station._id
-									})
-									.then(() => next2());
+									},
+									this
+								).then(() => next2());
 							},
 							() => next()
 						);
@@ -184,13 +196,12 @@ class TasksModule extends CoreClass {
 	 */
 	sessionClearingTask() {
 		return new Promise(resolve => {
-			this.log("INFO", "TASK_SESSION_CLEAR", `Checking for sessions to be cleared.`);
+			TasksModule.log("INFO", "TASK_SESSION_CLEAR", `Checking for sessions to be cleared.`);
 
 			async.waterfall(
 				[
 					next => {
-						this.cache
-							.runJob("HGETALL", { table: "sessions" })
+						CacheModule.runJob("HGETALL", { table: "sessions" }, this)
 							.then(sessions => next(null, sessions))
 							.catch(next);
 					},
@@ -212,59 +223,65 @@ class TasksModule extends CoreClass {
 									return next2();
 
 								if (!session) {
-									this.log("INFO", "TASK_SESSION_CLEAR", "Removing an empty session.");
-									return this.cache
-										.runJob("HDEL", {
+									TasksModule.log("INFO", "TASK_SESSION_CLEAR", "Removing an empty session.");
+									return CacheModule.runJob(
+										"HDEL",
+										{
 											table: "sessions",
 											key: sessionId
-										})
-										.finally(() => {
-											next2();
-										});
+										},
+										this
+									).finally(() => {
+										next2();
+									});
 								}
 								if (!session.refreshDate) {
 									session.refreshDate = Date.now();
-									return this.cache
-										.runJob("HSET", {
-											table: "sessions",
-											key: sessionId,
-											value: session
-										})
-										.finally(() => next2());
+									return CacheModule.runJob("HSET", {
+										table: "sessions",
+										key: sessionId,
+										value: session
+									}).finally(() => next2());
 								}
 								if (Date.now() - session.refreshDate > 60 * 60 * 24 * 30 * 1000) {
-									return this.utils
-										.runJob("SOCKETS_FROM_SESSION_ID", {
+									return UtilsModule.runJob(
+										"SOCKETS_FROM_SESSION_ID",
+										{
 											sessionId: session.sessionId
-										})
-										.then(response => {
-											if (response.sockets.length > 0) {
-												session.refreshDate = Date.now();
-												this.cache
-													.runJob("HSET", {
-														table: "sessions",
-														key: sessionId,
-														value: session
-													})
-													.finally(() => {
-														next2();
-													});
-											} else {
-												this.log(
-													"INFO",
-													"TASK_SESSION_CLEAR",
-													`Removing session ${sessionId} for user ${session.userId} since inactive for 30 days and not currently in use.`
-												);
-												this.cache
-													.runJob("HDEL", {
-														table: "sessions",
-														key: session.sessionId
-													})
-													.finally(() => next2());
-											}
-										});
+										},
+										this
+									).then(response => {
+										if (response.sockets.length > 0) {
+											session.refreshDate = Date.now();
+											CacheModule.runJob(
+												"HSET",
+												{
+													table: "sessions",
+													key: sessionId,
+													value: session
+												},
+												this
+											).finally(() => {
+												next2();
+											});
+										} else {
+											TasksModule.log(
+												"INFO",
+												"TASK_SESSION_CLEAR",
+												`Removing session ${sessionId} for user ${session.userId} since inactive for 30 days and not currently in use.`
+											);
+											CacheModule.runJob(
+												"HDEL",
+												{
+													table: "sessions",
+													key: session.sessionId
+												},
+												this
+											).finally(() => next2());
+										}
+									});
 								}
-								this.log("ERROR", "TASK_SESSION_CLEAR", "This should never log.");
+								TasksModule.log("ERROR", "TASK_SESSION_CLEAR", "This should never log.");
 								return next2();
 							},
 							() => next()
@@ -283,7 +300,7 @@ class TasksModule extends CoreClass {
 	 */
 	logFileSizeCheckTask() {
 		return new Promise((resolve, reject) => {
-			this.log("INFO", "TASK_LOG_FILE_SIZE_CHECK", `Checking the size for the log files.`);
+			TasksModule.log("INFO", "TASK_LOG_FILE_SIZE_CHECK", `Checking the size for the log files.`);
 			async.each(
 				["all.log", "debugStation.log", "error.log", "info.log", "success.log"],
 				(fileName, next) => {
@@ -299,26 +316,26 @@ class TasksModule extends CoreClass {
 				},
 				async err => {
 					if (err && err !== true) {
-						err = await this.utils.runJob("GET_ERROR", { error: err });
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 						return reject(new Error(err));
 					}
 					if (err === true) {
-						this.log(
+						TasksModule.log(
 							"ERROR",
 							"LOGGER_FILE_SIZE_WARNING",
 							"************************************WARNING*************************************"
 						);
-						this.log(
+						TasksModule.log(
 							"ERROR",
 							"LOGGER_FILE_SIZE_WARNING",
 							"***************ONE OR MORE LOG FILES APPEAR TO BE MORE THAN 25MB****************"
 						);
-						this.log(
+						TasksModule.log(
 							"ERROR",
 							"LOGGER_FILE_SIZE_WARNING",
 							"****MAKE SURE TO REGULARLY CLEAR UP THE LOG FILES, MANUALLY OR AUTOMATICALLY****"
 						);
-						this.log(
+						TasksModule.log(
 							"ERROR",
 							"LOGGER_FILE_SIZE_WARNING",
 							"********************************************************************************"
@@ -332,4 +349,4 @@ class TasksModule extends CoreClass {
 	}
 }
 
-export default new TasksModule();
+export default new _TasksModule();

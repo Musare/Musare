@@ -2,10 +2,17 @@ import async from "async";
 
 import CoreClass from "../core";
 
-class PlaylistsModule extends CoreClass {
+let PlaylistsModule;
+let CacheModule;
+let DBModule;
+let UtilsModule;
+
+class _PlaylistsModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		super("playlists");
+
+		PlaylistsModule = this;
 	}
 
 	/**
@@ -16,12 +23,12 @@ class PlaylistsModule extends CoreClass {
 	async initialize() {
 		this.setStage(1);
 
-		this.cache = this.moduleManager.modules.cache;
-		this.db = this.moduleManager.modules.db;
-		this.utils = this.moduleManager.modules.utils;
+		CacheModule = this.moduleManager.modules.cache;
+		DBModule = this.moduleManager.modules.db;
+		UtilsModule = this.moduleManager.modules.utils;
 
-		const playlistModel = await this.db.runJob("GET_MODEL", { modelName: "playlist" });
-		const playlistSchema = await this.cache.runJob("GET_SCHEMA", { schemaName: "playlist" });
+		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" });
+		const playlistSchema = await CacheModule.runJob("GET_SCHEMA", { schemaName: "playlist" });
 
 		this.setStage(2);
 
@@ -30,8 +37,7 @@ class PlaylistsModule extends CoreClass {
 				[
 					next => {
 						this.setStage(3);
-						this.cache
-							.runJob("HGETALL", { table: "playlists" })
+						CacheModule.runJob("HGETALL", { table: "playlists" })
 							.then(playlists => {
 								next(null, playlists);
 							})
@@ -51,11 +57,10 @@ class PlaylistsModule extends CoreClass {
 								playlistModel.findOne({ _id: playlistId }, (err, playlist) => {
 									if (err) next(err);
 									else if (!playlist) {
-										this.cache
-											.runJob("HDEL", {
-												table: "playlists",
-												key: playlistId
-											})
+										CacheModule.runJob("HDEL", {
+											table: "playlists",
+											key: playlistId
+										})
 											.then(() => next())
 											.catch(next);
 									} else next();
@@ -75,12 +80,11 @@ class PlaylistsModule extends CoreClass {
 						async.each(
 							playlists,
 							(playlist, cb) => {
-								this.cache
-									.runJob("HSET", {
-										table: "playlists",
-										key: playlist._id,
-										value: playlistSchema(playlist)
-									})
+								CacheModule.runJob("HSET", {
+									table: "playlists",
+									key: playlist._id,
+									value: playlistSchema(playlist)
+								})
 									.then(() => cb())
 									.catch(next);
 							},
@@ -90,7 +94,7 @@ class PlaylistsModule extends CoreClass {
 				],
 				async err => {
 					if (err) {
-						const formattedErr = await this.utils.runJob("GET_ERROR", {
+						const formattedErr = await UtilsModule.runJob("GET_ERROR", {
 							error: err
 						});
 						reject(new Error(formattedErr));
@@ -111,8 +115,8 @@ class PlaylistsModule extends CoreClass {
 		return new Promise((resolve, reject) => {
 			let playlistModel;
 
-			this.db
-				.runJob("GET_MODEL", { modelName: "playlist" })
+			PlaylistsModule.log("ERROR", "HOW DOES THIS WORK!?!?!??!?!?!?!??!?!??!?!?!?!");
+			DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this)
 				.then(model => {
 					playlistModel = model;
 				})
@@ -121,8 +125,7 @@ class PlaylistsModule extends CoreClass {
 			return async.waterfall(
 				[
 					next => {
-						this.cache
-							.runJob("HGETALL", { table: "playlists" })
+						CacheModule.runJob("HGETALL", { table: "playlists" }, this)
 							.then(playlists => {
 								next(null, playlists);
 							})
@@ -140,11 +143,14 @@ class PlaylistsModule extends CoreClass {
 								playlistModel.findOne({ _id: playlistId }, (err, playlist) => {
 									if (err) next(err);
 									else if (!playlist) {
-										this.cache
-											.runJob("HDEL", {
+										CacheModule.runJob(
+											"HDEL",
+											{
 												table: "playlists",
 												key: playlistId
-											})
+											},
+											this
+										)
 											.then(() => next())
 											.catch(next);
 									} else next();
@@ -155,11 +161,14 @@ class PlaylistsModule extends CoreClass {
 					},
 
 					next => {
-						this.cache
-							.runJob("HGET", {
+						CacheModule.runJob(
+							"HGET",
+							{
 								table: "playlists",
 								key: payload.playlistId
-							})
+							},
+							this
+						)
 							.then(playlist => next(null, playlist))
 							.catch(next);
 					},
@@ -171,12 +180,15 @@ class PlaylistsModule extends CoreClass {
 
 					(playlist, next) => {
 						if (playlist) {
-							this.cache
-								.runJob("HSET", {
+							CacheModule.runJob(
+								"HSET",
+								{
 									table: "playlists",
 									key: payload.playlistId,
 									value: playlist
-								})
+								},
+								this
+							)
 								.then(playlist => {
 									next(null, playlist);
 								})
@@ -204,8 +216,8 @@ class PlaylistsModule extends CoreClass {
 		return new Promise((resolve, reject) => {
 			let playlistModel;
 
-			this.db
-				.runJob("GET_MODEL", { modelName: "playlist" })
+			PunishmentsModule.log("ERROR", "HOW DOES THIS WORK!?!?!??!?!?!?!??!?!??!?!?!?!");
+			DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this)
 				.then(model => {
 					playlistModel = model;
 				})
@@ -219,7 +231,7 @@ class PlaylistsModule extends CoreClass {
 
 					(playlist, next) => {
 						if (!playlist) {
-							this.cache.runJob("HDEL", {
+							CacheModule.runJob("HDEL", {
 								table: "playlists",
 								key: payload.playlistId
 							});
@@ -227,12 +239,15 @@ class PlaylistsModule extends CoreClass {
 							return next("Playlist not found");
 						}
 
-						return this.cache
-							.runJob("HSET", {
+						return CacheModule.runJob(
+							"HSET",
+							{
 								table: "playlists",
 								key: payload.playlistId,
 								value: playlist
-							})
+							},
+							this
+						)
 							.then(playlist => {
 								next(null, playlist);
 							})
@@ -259,8 +274,8 @@ class PlaylistsModule extends CoreClass {
 		return new Promise((resolve, reject) => {
 			let playlistModel;
 
-			this.db
-				.runJob("GET_MODEL", { modelName: "playlist" })
+			PunishmentsModule.log("ERROR", "HOW DOES THIS WORK!?!?!??!?!?!?!??!?!??!?!?!?!");
+			DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this)
 				.then(model => {
 					playlistModel = model;
 				})
@@ -273,11 +288,14 @@ class PlaylistsModule extends CoreClass {
 					},
 
 					(res, next) => {
-						this.cache
-							.runJob("HDEL", {
+						CacheModule.runJob(
+							"HDEL",
+							{
 								table: "playlists",
 								key: payload.playlistId
-							})
+							},
+							this
+						)
 							.then(() => next())
 							.catch(next);
 					}
@@ -291,4 +309,4 @@ class PlaylistsModule extends CoreClass {
 	}
 }
 
-export default new PlaylistsModule();
+export default new _PlaylistsModule();

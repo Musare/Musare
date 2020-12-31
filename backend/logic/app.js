@@ -12,10 +12,19 @@ import CoreClass from "../core";
 
 const { OAuth2 } = oauth;
 
-class AppModule extends CoreClass {
+let AppModule;
+let MailModule;
+let CacheModule;
+let DBModule;
+let ActivitiesModule;
+let UtilsModule;
+
+class _AppModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		super("app");
+
+		AppModule = this;
 	}
 
 	/**
@@ -25,12 +34,11 @@ class AppModule extends CoreClass {
 	 */
 	initialize() {
 		return new Promise(resolve => {
-			const { mail } = this.moduleManager.modules;
-			const { cache } = this.moduleManager.modules;
-			const { db } = this.moduleManager.modules;
-			const { activities } = this.moduleManager.modules;
-
-			this.utils = this.moduleManager.modules.utils;
+			MailModule = this.moduleManager.modules.mail;
+			CacheModule = this.moduleManager.modules.cache;
+			DBModule = this.moduleManager.modules.db;
+			ActivitiesModule = this.moduleManager.modules.activities;
+			UtilsModule = this.moduleManager.modules.utils;
 
 			const app = (this.app = express());
 			const SIDname = config.get("cookie.SIDname");
@@ -42,7 +50,7 @@ class AppModule extends CoreClass {
 			app.use(bodyParser.urlencoded({ extended: true }));
 
 			let userModel;
-			db.runJob("GET_MODEL", { modelName: "user" })
+			DBModule.runJob("GET_MODEL", { modelName: "user" })
 				.then(model => {
 					userModel = model;
 				})
@@ -126,7 +134,7 @@ class AppModule extends CoreClass {
 
 				const { state } = req.query;
 
-				const verificationToken = await this.utils.runJob("GENERATE_RANDOM_STRING", { length: 64 });
+				const verificationToken = await UtilsModule.runJob("GENERATE_RANDOM_STRING", { length: 64 });
 
 				return async.waterfall(
 					[
@@ -165,11 +173,10 @@ class AppModule extends CoreClass {
 								return async.waterfall(
 									[
 										next => {
-											cache
-												.runJob("HGET", {
-													table: "sessions",
-													key: state
-												})
+											CacheModule.runJob("HGET", {
+												table: "sessions",
+												key: state
+											})
 												.then(session => next(null, session))
 												.catch(next);
 										},
@@ -203,7 +210,7 @@ class AppModule extends CoreClass {
 										},
 
 										user => {
-											cache.runJob("PUB", {
+											CacheModule.runJob("PUB", {
 												channel: "user.linkGithub",
 												value: user._id
 											});
@@ -260,11 +267,9 @@ class AppModule extends CoreClass {
 						},
 
 						(user, next) => {
-							this.utils
-								.runJob("GENERATE_RANDOM_STRING", {
-									length: 12
-								})
-								.then(_id => next(null, user, _id));
+							UtilsModule.runJob("GENERATE_RANDOM_STRING", {
+								length: 12
+							}).then(_id => next(null, user, _id));
 						},
 
 						(user, _id, next) => {
@@ -294,14 +299,12 @@ class AppModule extends CoreClass {
 
 						// generate the url for gravatar avatar
 						(user, next) => {
-							this.utils
-								.runJob("CREATE_GRAVATAR", {
-									email: user.email.address
-								})
-								.then(url => {
-									user.avatar = { type: "gravatar", url };
-									next(null, user);
-								});
+							UtilsModule.runJob("CREATE_GRAVATAR", {
+								email: user.email.address
+							}).then(url => {
+								user.avatar = { type: "gravatar", url };
+								next(null, user);
+							});
 						},
 
 						// save the new user to the database
@@ -311,7 +314,7 @@ class AppModule extends CoreClass {
 
 						// add the activity of account creation
 						(user, next) => {
-							activities.runJob("ADD_ACTIVITY", {
+							ActivitiesModule.runJob("ADD_ACTIVITY", {
 								userId: user._id,
 								activityType: "created_account"
 							});
@@ -319,7 +322,7 @@ class AppModule extends CoreClass {
 						},
 
 						(user, next) => {
-							mail.runJob("GET_SCHEMA", {
+							MailModule.runJob("GET_SCHEMA", {
 								schemaName: "verifyEmail"
 							}).then(verifyEmailSchema => {
 								verifyEmailSchema(address, body.login, user.email.verificationToken, err => {
@@ -330,7 +333,7 @@ class AppModule extends CoreClass {
 					],
 					async (err, userId) => {
 						if (err && err !== true) {
-							err = await this.utils.runJob("GET_ERROR", {
+							err = await UtilsModule.runJob("GET_ERROR", {
 								error: err
 							});
 
@@ -343,17 +346,16 @@ class AppModule extends CoreClass {
 							return redirectOnErr(res, err);
 						}
 
-						const sessionId = await this.utils.runJob("GUID", {});
-						const sessionSchema = await cache.runJob("GET_SCHEMA", {
+						const sessionId = await UtilsModule.runJob("GUID", {});
+						const sessionSchema = await CacheModule.runJob("GET_SCHEMA", {
 							schemaName: "session"
 						});
 
-						return cache
-							.runJob("HSET", {
-								table: "sessions",
-								key: sessionId,
-								value: sessionSchema(sessionId, userId)
-							})
+						return CacheModule.runJob("HSET", {
+							table: "sessions",
+							key: sessionId,
+							value: sessionSchema(sessionId, userId)
+						})
 							.then(() => {
 								const date = new Date();
 								date.setTime(new Date().getTime() + 2 * 365 * 24 * 60 * 60 * 1000);
@@ -449,7 +451,7 @@ class AppModule extends CoreClass {
 	 */
 	SERVER() {
 		return new Promise(resolve => {
-			resolve(this.server);
+			resolve(AppModule.server);
 		});
 	}
 
@@ -460,7 +462,7 @@ class AppModule extends CoreClass {
 	 */
 	GET_APP() {
 		return new Promise(resolve => {
-			resolve({ app: this.app });
+			resolve({ app: AppModule.app });
 		});
 	}
 
@@ -472,4 +474,4 @@ class AppModule extends CoreClass {
 	// }
 }
 
-export default new AppModule();
+export default new _AppModule();

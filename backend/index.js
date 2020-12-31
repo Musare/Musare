@@ -3,6 +3,10 @@ import "./loadEnvVariables.js";
 import util from "util";
 import config from "config";
 
+Array.prototype.remove = function (item) {
+	this.splice(this.indexOf(item), 1);
+};
+
 process.on("uncaughtException", err => {
 	if (err.code === "ECONNREFUSED" || err.code === "UNCERTAIN_STATE") return;
 	console.log(`UNCAUGHT EXCEPTION: ${err.stack}`);
@@ -245,6 +249,7 @@ class ModuleManager {
 			all: [],
 			completed: []
 		};
+		this.name = "MODULE_MANAGER";
 	}
 
 	/**
@@ -253,7 +258,7 @@ class ModuleManager {
 	 * @param {string} moduleName - the name of the module (also needs to be the same as the filename of a module located in the logic folder or "logic/moduleName/index.js")
 	 */
 	async addModule(moduleName) {
-		console.log("add module", moduleName);
+		this.log("INFO", "Adding module", moduleName);
 		// import(`./logic/${moduleName}`).then(Module => {
 		// 	// eslint-disable-next-line new-cap
 
@@ -320,8 +325,8 @@ class ModuleManager {
 		if (this.modulesNotInitialized.indexOf(module) !== -1) {
 			this.modulesNotInitialized.splice(this.modulesNotInitialized.indexOf(module), 1);
 
-			console.log(
-				"MODULE_MANAGER",
+			this.log(
+				"INFO",
 				`Initialized: ${Object.keys(this.modules).length - this.modulesNotInitialized.length}/${
 					Object.keys(this.modules).length
 				}.`
@@ -338,7 +343,7 @@ class ModuleManager {
 	 */
 	onFail(module) {
 		if (this.modulesNotInitialized.indexOf(module) !== -1) {
-			console.log("A module failed to initialize!");
+			this.log("ERROR", "A module failed to initialize!");
 		}
 	}
 
@@ -347,14 +352,41 @@ class ModuleManager {
 	 *
 	 */
 	onAllModulesInitialized() {
-		console.log("All modules initialized!");
-		this.modules.discord.runJob("SEND_ADMIN_ALERT_MESSAGE", {
-			message: "The backend server started successfully.",
-			color: "#00AA00",
-			type: "Startup",
-			critical: false,
-			extraFields: []
-		});
+		this.log("INFO", "All modules initialized!");
+		if (this.modules.discord) {
+			this.modules.discord.runJob("SEND_ADMIN_ALERT_MESSAGE", {
+				message: "The backend server started successfully.",
+				color: "#00AA00",
+				type: "Startup",
+				critical: false,
+				extraFields: []
+			});
+		} else this.log("INFO", "No Discord module, so not sending an admin alert message.");
+	}
+
+	/**
+	 * Creates a new log message
+	 *
+	 * @param {...any} args - anything to be included in the log message, the first argument is the type of log
+	 */
+	log(...args) {
+		const _arguments = Array.from(args);
+		const type = _arguments[0];
+
+		_arguments.splice(0, 1);
+		const start = `|${this.name.toUpperCase()}|`;
+		const numberOfSpacesNeeded = 20 - start.length;
+		_arguments.unshift(`${start}${Array(numberOfSpacesNeeded).join(" ")}`);
+
+		if (type === "INFO") {
+			_arguments[0] += "\x1b[36m";
+			_arguments.push("\x1b[0m");
+			console.log.apply(null, _arguments);
+		} else if (type === "ERROR") {
+			_arguments[0] += "\x1b[31m";
+			_arguments.push("\x1b[0m");
+			console.error.apply(null, _arguments);
+		}
 	}
 }
 

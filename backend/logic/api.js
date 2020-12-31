@@ -4,10 +4,21 @@ import async from "async";
 
 import CoreClass from "../core";
 
-class APIModule extends CoreClass {
+// let APIModule;
+let AppModule;
+// let DBModule;
+let PlaylistsModule;
+let UtilsModule;
+let PunishmentsModule;
+let CacheModule;
+// let NotificationsModule;
+
+class _APIModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		super("api");
+
+		// APIModule = this;
 	}
 
 	/**
@@ -17,14 +28,13 @@ class APIModule extends CoreClass {
 	 */
 	initialize() {
 		return new Promise((resolve, reject) => {
-			this.app = this.moduleManager.modules.app;
-			this.stations = this.moduleManager.modules.stations;
-			this.db = this.moduleManager.modules.db;
-			this.playlists = this.moduleManager.modules.playlists;
-			this.utils = this.moduleManager.modules.utils;
-			this.punishments = this.moduleManager.modules.punishments;
-			this.cache = this.moduleManager.modules.cache;
-			this.notifications = this.moduleManager.modules.notifications;
+			AppModule = this.moduleManager.modules.app;
+			// DBModule = this.moduleManager.modules.db;
+			PlaylistsModule = this.moduleManager.modules.playlists;
+			UtilsModule = this.moduleManager.modules.utils;
+			PunishmentsModule = this.moduleManager.modules.punishments;
+			CacheModule = this.moduleManager.modules.cache;
+			// NotificationsModule = this.moduleManager.modules.notifications;
 
 			const SIDname = config.get("cookie.SIDname");
 
@@ -33,10 +43,9 @@ class APIModule extends CoreClass {
 				async.waterfall(
 					[
 						next => {
-							this.utils
-								.runJob("PARSE_COOKIES", {
-									cookieString: req.headers.cookie
-								})
+							UtilsModule.runJob("PARSE_COOKIES", {
+								cookieString: req.headers.cookie
+							})
 								.then(res => {
 									SID = res[SIDname];
 									next(null);
@@ -50,9 +59,9 @@ class APIModule extends CoreClass {
 						},
 
 						next => {
-							this.cache
-								.runJob("HGET", { table: "sessions", key: SID })
-								.then(session => next(null, session));
+							CacheModule.runJob("HGET", { table: "sessions", key: SID }).then(session =>
+								next(null, session)
+							);
 						},
 
 						(session, next) => {
@@ -62,21 +71,18 @@ class APIModule extends CoreClass {
 
 							req.session = session;
 
-							return this.cache
-								.runJob("HSET", {
-									table: "sessions",
-									key: SID,
-									value: session
-								})
-								.then(session => {
-									next(null, session);
-								});
+							return CacheModule.runJob("HSET", {
+								table: "sessions",
+								key: SID,
+								value: session
+							}).then(session => {
+								next(null, session);
+							});
 						},
 
 						(res, next) => {
 							// check if a session's user / IP is banned
-							this.punishments
-								.runJob("GET_PUNISHMENTS", {})
+							PunishmentsModule.runJob("GET_PUNISHMENTS", {})
 								.then(punishments => {
 									const isLoggedIn = !!(req.session && req.session.refreshDate);
 									const userId = isLoggedIn ? req.session.userId : null;
@@ -111,8 +117,7 @@ class APIModule extends CoreClass {
 				);
 			};
 
-			this.app
-				.runJob("GET_APP", {})
+			AppModule.runJob("GET_APP", {})
 				.then(response => {
 					response.app.get("/", (req, res) => {
 						res.json({
@@ -123,8 +128,7 @@ class APIModule extends CoreClass {
 
 					response.app.get("/export/privatePlaylist/:playlistId", isLoggedIn, (req, res) => {
 						const { playlistId } = req.params;
-						this.playlists
-							.runJob("GET_PLAYLIST", { playlistId })
+						PlaylistsModule.runJob("GET_PLAYLIST", { playlistId })
 							.then(playlist => {
 								if (playlist.createdBy === req.session.userId)
 									res.json({ status: "success", playlist });
@@ -138,7 +142,7 @@ class APIModule extends CoreClass {
 					// response.app.get("/debug_station", async (req, res) => {
 					//     const responseObject = {};
 
-					//     const stationModel = await this.db.runJob(
+					//     const stationModel = await DBModule.runJob(
 					//         "GET_MODEL",
 					//         {
 					//             modelName: "station",
@@ -158,7 +162,7 @@ class APIModule extends CoreClass {
 					//         },
 
 					//         next => {
-					//             this.cache
+					//             CacheModule
 					//                 .runJob("HGETALL", { table: "stations" })
 					//                 .then(stations => {
 					//                     next(null, stations);
@@ -186,7 +190,7 @@ class APIModule extends CoreClass {
 					//         },
 
 					//         next => {
-					//             this.notifications.pub.keys("*", next);
+					//             NotificationModule.pub.keys("*", next);
 					//         },
 
 					//         (redisKeys, next) => {
@@ -195,7 +199,7 @@ class APIModule extends CoreClass {
 					//                 ttl: {}
 					//             };
 					//             async.eachLimit(redisKeys, 1, (redisKey, next) => {
-					//                 this.notifications.pub.ttl(redisKey, (err, ttl) => {
+					//                 NotificationModule.pub.ttl(redisKey, (err, ttl) => {
 					//                     responseObject.redis.ttl[redisKey] = ttl;
 					//                     next(err);
 					//                 })
@@ -246,4 +250,4 @@ class APIModule extends CoreClass {
 	}
 }
 
-export default new APIModule();
+export default new _APIModule();

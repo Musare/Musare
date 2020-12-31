@@ -4,14 +4,18 @@ import crypto from "crypto";
 import redis from "redis";
 
 import CoreClass from "../core";
-import utils from "./utils";
 
-class NotificationsModule extends CoreClass {
+let NotificationsModule;
+let UtilsModule;
+
+class _NotificationsModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		super("notifications");
 
 		this.subscriptions = [];
+
+		NotificationsModule = this;
 	}
 
 	/**
@@ -23,6 +27,8 @@ class NotificationsModule extends CoreClass {
 		return new Promise((resolve, reject) => {
 			const url = (this.url = config.get("redis").url);
 			const password = (this.password = config.get("redis").password);
+
+			UtilsModule = this.moduleManager.modules.utils;
 
 			this.pub = redis.createClient({
 				url,
@@ -90,9 +96,13 @@ class NotificationsModule extends CoreClass {
 
 				this.pub.config("GET", "notify-keyspace-events", async (err, response) => {
 					if (err) {
-						const formattedErr = await utils.runJob("GET_ERROR", {
-							error: err
-						});
+						const formattedErr = await UtilsModule.runJob(
+							"GET_ERROR",
+							{
+								error: err
+							},
+							this
+						);
 						this.log(
 							"ERROR",
 							"NOTIFICATIONS_INITIALIZE",
@@ -159,14 +169,14 @@ class NotificationsModule extends CoreClass {
 	SCHEDULE(payload) {
 		return new Promise((resolve, reject) => {
 			const time = Math.round(payload.time);
-			this.log(
+			NotificationsModule.log(
 				"STATION_ISSUE",
 				`SCHEDULE - Time: ${time}; Name: ${payload.name}; Key: ${crypto
 					.createHash("md5")
 					.update(`_notification:${payload.name}_`)
 					.digest("hex")}; StationId: ${payload.station._id}; StationName: ${payload.station.name}`
 			);
-			this.pub.set(
+			NotificationsModule.pub.set(
 				crypto.createHash("md5").update(`_notification:${payload.name}_`).digest("hex"),
 				"",
 				"PX",
@@ -191,20 +201,25 @@ class NotificationsModule extends CoreClass {
 	 */
 	SUBSCRIBE(payload) {
 		return new Promise(resolve => {
-			this.log(
+			NotificationsModule.log(
 				"STATION_ISSUE",
 				`SUBSCRIBE - Name: ${payload.name}; Key: ${crypto
 					.createHash("md5")
 					.update(`_notification:${payload.name}_`)
 					.digest("hex")}, StationId: ${payload.station._id}; StationName: ${payload.station.name}; Unique: ${
 					payload.unique
-				}; SubscriptionExists: ${!!this.subscriptions.find(
+				}; SubscriptionExists: ${!!NotificationsModule.subscriptions.find(
 					subscription => subscription.originalName === payload.name
 				)};`
 			);
-			if (payload.unique && !!this.subscriptions.find(subscription => subscription.originalName === payload.name))
+			if (
+				payload.unique &&
+				!!NotificationsModule.subscriptions.find(subscription => subscription.originalName === payload.name)
+			)
 				return resolve({
-					subscription: this.subscriptions.find(subscription => subscription.originalName === payload.name)
+					subscription: NotificationsModule.subscriptions.find(
+						subscription => subscription.originalName === payload.name
+					)
 				});
 
 			const subscription = {
@@ -213,7 +228,7 @@ class NotificationsModule extends CoreClass {
 				cb: payload.cb
 			};
 
-			this.subscriptions.push(subscription);
+			NotificationsModule.subscriptions.push(subscription);
 
 			return resolve({ subscription });
 		});
@@ -229,8 +244,8 @@ class NotificationsModule extends CoreClass {
 	REMOVE(payload) {
 		// subscription
 		return new Promise(resolve => {
-			const index = this.subscriptions.indexOf(payload.subscription);
-			if (index) this.subscriptions.splice(index, 1);
+			const index = NotificationsModule.subscriptions.indexOf(payload.subscription);
+			if (index) NotificationsModule.subscriptions.splice(index, 1);
 			resolve();
 		});
 	}
@@ -245,19 +260,22 @@ class NotificationsModule extends CoreClass {
 	UNSCHEDULE(payload) {
 		// name
 		return new Promise((resolve, reject) => {
-			this.log(
+			NotificationsModule.log(
 				"STATION_ISSUE",
 				`UNSCHEDULE - Name: ${payload.name}; Key: ${crypto
 					.createHash("md5")
 					.update(`_notification:${payload.name}_`)
 					.digest("hex")}`
 			);
-			this.pub.del(crypto.createHash("md5").update(`_notification:${payload.name}_`).digest("hex"), err => {
-				if (err) reject(err);
-				else resolve();
-			});
+			NotificationsModule.pub.del(
+				crypto.createHash("md5").update(`_notification:${payload.name}_`).digest("hex"),
+				err => {
+					if (err) reject(err);
+					else resolve();
+				}
+			);
 		});
 	}
 }
 
-export default new NotificationsModule();
+export default new _NotificationsModule();

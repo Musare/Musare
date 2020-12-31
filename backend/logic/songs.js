@@ -2,10 +2,17 @@ import async from "async";
 import mongoose from "mongoose";
 import CoreClass from "../core";
 
-class SongsModule extends CoreClass {
+let SongsModule;
+let CacheModule;
+let DBModule;
+let UtilsModule;
+
+class _SongsModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		super("songs");
+
+		SongsModule = this;
 	}
 
 	/**
@@ -16,13 +23,12 @@ class SongsModule extends CoreClass {
 	async initialize() {
 		this.setStage(1);
 
-		this.cache = this.moduleManager.modules.cache;
-		this.db = this.moduleManager.modules.db;
-		this.io = this.moduleManager.modules.io;
-		this.utils = this.moduleManager.modules.utils;
+		CacheModule = this.moduleManager.modules.cache;
+		DBModule = this.moduleManager.modules.db;
+		UtilsModule = this.moduleManager.modules.utils;
 
-		const songModel = await this.db.runJob("GET_MODEL", { modelName: "song" });
-		const songSchema = await this.cache.runJob("GET_SCHEMA", { schemaName: "song" });
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
+		const songSchema = await CacheModule.runJob("GET_SCHEMA", { schemaName: "song" });
 
 		this.setStage(2);
 
@@ -31,8 +37,7 @@ class SongsModule extends CoreClass {
 				[
 					next => {
 						this.setStage(2);
-						this.cache
-							.runJob("HGETALL", { table: "songs" })
+						CacheModule.runJob("HGETALL", { table: "songs" })
 							.then(songs => {
 								next(null, songs);
 							})
@@ -52,11 +57,10 @@ class SongsModule extends CoreClass {
 								songModel.findOne({ songId }, (err, song) => {
 									if (err) next(err);
 									else if (!song)
-										this.cache
-											.runJob("HDEL", {
-												table: "songs",
-												key: songId
-											})
+										CacheModule.runJob("HDEL", {
+											table: "songs",
+											key: songId
+										})
 											.then(() => next())
 											.catch(next);
 									else next();
@@ -76,12 +80,11 @@ class SongsModule extends CoreClass {
 						async.each(
 							songs,
 							(song, next) => {
-								this.cache
-									.runJob("HSET", {
-										table: "songs",
-										key: song.songId,
-										value: songSchema(song)
-									})
+								CacheModule.runJob("HSET", {
+									table: "songs",
+									key: song.songId,
+									value: songSchema(song)
+								})
 									.then(() => next())
 									.catch(next);
 							},
@@ -91,7 +94,7 @@ class SongsModule extends CoreClass {
 				],
 				async err => {
 					if (err) {
-						err = await this.utils.runJob("GET_ERROR", { error: err });
+						err = await UtilsModule.runJob("GET_ERROR", { error: err });
 						reject(new Error(err));
 					} else resolve();
 				}
@@ -110,8 +113,8 @@ class SongsModule extends CoreClass {
 		return new Promise((resolve, reject) => {
 			let songModel;
 
-			this.db
-				.runJob("GET_MODEL", { modelName: "song" })
+			SongsModule.log("ERROR", "HOW DOES THIS WORK!?!?!??!?!?!?!??!?!??!?!?!?!");
+			DBModule.runJob("GET_MODEL", { modelName: "song" }, this)
 				.then(model => {
 					songModel = model;
 				})
@@ -121,8 +124,7 @@ class SongsModule extends CoreClass {
 				[
 					next => {
 						if (!mongoose.Types.ObjectId.isValid(payload.id)) return next("Id is not a valid ObjectId.");
-						return this.cache
-							.runJob("HGET", { table: "songs", key: payload.id })
+						return CacheModule.runJob("HGET", { table: "songs", key: payload.id }, this)
 							.then(song => {
 								next(null, song);
 							})
@@ -136,13 +138,15 @@ class SongsModule extends CoreClass {
 
 					(song, next) => {
 						if (song) {
-							this.cache
-								.runJob("HSET", {
+							CacheModule.runJob(
+								"HSET",
+								{
 									table: "songs",
 									key: payload.id,
 									value: song
-								})
-								.then(song => next(null, song));
+								},
+								this
+							).then(song => next(null, song));
 						} else next("Song not found.");
 					}
 				],
@@ -165,8 +169,8 @@ class SongsModule extends CoreClass {
 		return new Promise((resolve, reject) => {
 			let songModel;
 
-			this.db
-				.runJob("GET_MODEL", { modelName: "song" })
+			SongsModule.log("ERROR", "HOW DOES THIS WORK!?!?!??!?!?!?!??!?!??!?!?!?!");
+			DBModule.runJob("GET_MODEL", { modelName: "song" }, this)
 				.then(model => {
 					songModel = model;
 				})
@@ -198,8 +202,8 @@ class SongsModule extends CoreClass {
 		return new Promise((resolve, reject) => {
 			let songModel;
 
-			this.db
-				.runJob("GET_MODEL", { modelName: "song" })
+			SongsModule.log("ERROR", "HOW DOES THIS WORK!?!?!??!?!?!?!??!?!??!?!?!?!");
+			DBModule.runJob("GET_MODEL", { modelName: "song" }, this)
 				.then(model => {
 					songModel = model;
 				})
@@ -213,19 +217,22 @@ class SongsModule extends CoreClass {
 
 					(song, next) => {
 						if (!song) {
-							this.cache.runJob("HDEL", {
+							CacheModule.runJob("HDEL", {
 								table: "songs",
 								key: payload.songId
 							});
 							return next("Song not found.");
 						}
 
-						return this.cache
-							.runJob("HSET", {
+						return CacheModule.runJob(
+							"HSET",
+							{
 								table: "songs",
 								key: payload.songId,
 								value: song
-							})
+							},
+							this
+						)
 							.then(song => {
 								next(null, song);
 							})
@@ -252,8 +259,8 @@ class SongsModule extends CoreClass {
 		return new Promise((resolve, reject) => {
 			let songModel;
 
-			this.db
-				.runJob("GET_MODEL", { modelName: "song" })
+			SongsModule.log("ERROR", "HOW DOES THIS WORK!?!?!??!?!?!?!??!?!??!?!?!?!");
+			DBModule.runJob("GET_MODEL", { modelName: "song" })
 				.then(model => {
 					songModel = model;
 				})
@@ -266,11 +273,14 @@ class SongsModule extends CoreClass {
 					},
 
 					next => {
-						this.cache
-							.runJob("HDEL", {
+						CacheModule.runJob(
+							"HDEL",
+							{
 								table: "songs",
 								key: payload.songId
-							})
+							},
+							this
+						)
 							.then(() => next())
 							.catch(next);
 					}
@@ -284,4 +294,4 @@ class SongsModule extends CoreClass {
 	}
 }
 
-export default new SongsModule();
+export default new _SongsModule();
