@@ -22,8 +22,9 @@ export default {
 								name: module.name,
 								status: module.status,
 								stage: module.stage,
-								jobsInQueue: module.jobQueue.length(),
-								jobsInProgress: module.jobQueue.running(),
+								jobsInQueue: module.jobQueue.lengthQueue(),
+								jobsInProgress: module.jobQueue.lengthRunning(),
+								jobsPaused: module.jobQueue.lengthPaused(),
 								concurrency: module.jobQueue.concurrency
 							};
 						})
@@ -59,8 +60,6 @@ export default {
 				}
 			],
 			async (err, module) => {
-				const jobsInQueue = module.jobQueue._tasks.heap.map(task => task.data);
-
 				// console.log(module.runningJobs);
 				if (err && err !== true) {
 					err = await utils.runJob("GET_ERROR", { error: err });
@@ -75,9 +74,10 @@ export default {
 					cb({
 						status: "success",
 						message: "Successfully got module info.",
-						runningJobs: module.runningJobs,
-						jobStatistics: module.jobStatistics,
-						jobsInQueue
+						// runningTasks: module.jobQueue.runningTasks,
+						// pausedTasks: module.jobQueue.pausedTasks,
+						// queuedTasks: module.jobQueue.queue,
+						jobStatistics: module.jobStatistics
 					});
 				}
 			}

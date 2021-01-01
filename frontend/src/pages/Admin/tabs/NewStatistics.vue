@@ -18,6 +18,7 @@
 									<th>Stage</th>
 									<th>Jobs in queue</th>
 									<th>Jobs in progress</th>
+									<th>Jobs paused</th>
 									<th>Concurrency</th>
 								</tr>
 							</thead>
@@ -38,6 +39,7 @@
 									<td>{{ moduleItem.stage }}</td>
 									<td>{{ moduleItem.jobsInQueue }}</td>
 									<td>{{ moduleItem.jobsInProgress }}</td>
+									<td>{{ moduleItem.jobsPaused }}</td>
 									<td>{{ moduleItem.concurrency }}</td>
 								</tr>
 							</tbody>
@@ -52,7 +54,7 @@
 				class="card column is-10-desktop is-offset-1-desktop is-12-mobile"
 			>
 				<header class="card-header">
-					<p class="card-header-title">Average Logs</p>
+					<p class="card-header-title">Running tasks</p>
 				</header>
 				<div class="card-content">
 					<div class="content">
@@ -65,7 +67,67 @@
 							</thead>
 							<tbody>
 								<tr
-									v-for="job in module.runningJobs"
+									v-for="job in module.runningTasks"
+									:key="JSON.stringify(job)"
+								>
+									<td>{{ job.name }}</td>
+									<td>
+										{{ JSON.stringify(job.payload) }}
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+			<div
+				class="card column is-10-desktop is-offset-1-desktop is-12-mobile"
+			>
+				<header class="card-header">
+					<p class="card-header-title">Paused tasks</p>
+				</header>
+				<div class="card-content">
+					<div class="content">
+						<table class="table">
+							<thead>
+								<tr>
+									<th>Name</th>
+									<th>Payload</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr
+									v-for="job in module.pausedTasks"
+									:key="JSON.stringify(job)"
+								>
+									<td>{{ job.name }}</td>
+									<td>
+										{{ JSON.stringify(job.payload) }}
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+			<div
+				class="card column is-10-desktop is-offset-1-desktop is-12-mobile"
+			>
+				<header class="card-header">
+					<p class="card-header-title">Queued tasks</p>
+				</header>
+				<div class="card-content">
+					<div class="content">
+						<table class="table">
+							<thead>
+								<tr>
+									<th>Name</th>
+									<th>Payload</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr
+									v-for="job in module.queuedTasks"
 									:key="JSON.stringify(job)"
 								>
 									<td>{{ job.name }}</td>
