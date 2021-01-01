@@ -439,15 +439,6 @@ export default class CoreClass {
 
 		// console.log(321, parentJob);
 
-		if (
-			config.debug &&
-			config.debug.stationIssue === true &&
-			config.debug.captureJobs &&
-			config.debug.captureJobs.indexOf(name) !== -1
-		) {
-			this.moduleManager.debugJobs.all.push(job);
-		}
-
 		job.setStatus("QUEUED");
 
 		// if (options.bypassQueue) this._runJob(job, options, () => {});
@@ -458,6 +449,16 @@ export default class CoreClass {
 			this.priorities[name] ? this.priorities[name] : 10
 		);
 		this.jobQueue.push(job, _priority);
+
+		if (
+			config.debug &&
+			config.debug.stationIssue === true &&
+			config.debug.captureJobs &&
+			config.debug.captureJobs.indexOf(name) !== -1
+		) {
+			this.moduleManager.debugJobs.all.push({ job, _priority });
+		}
+
 		// }
 
 		return deferredPromise.promise;
@@ -510,6 +511,7 @@ export default class CoreClass {
 							this.moduleManager.debugJobs.completed.push({
 								status: "success",
 								job,
+								priority: job.task.priority,
 								response
 							});
 						}

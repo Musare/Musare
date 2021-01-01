@@ -231,7 +231,27 @@ class _APIModule extends CoreClass {
 					// 				});
 					// 			}
 
-					// 			res.json(responseObject);
+					// 			const responseJson = JSON.stringify(responseObject, (key, value) => {
+					// 				// console.log(key, value);
+					// 				if (
+					// 					key === "module" ||
+					// 					key === "task" ||
+					// 					key === "onFinish" ||
+					// 					key === "server" ||
+					// 					key === "nsp" ||
+					// 					key === "socket" ||
+					// 					key === "res" ||
+					// 					key === "client" ||
+					// 					key === "_idleNext" ||
+					// 					key === "_idlePrev"
+					// 				) {
+					// 					return undefined;
+					// 				}
+					// 				if (key === "parentJob" && value) return value.toString();
+					// 				return value;
+					// 			});
+
+					// 			res.end(responseJson);
 					// 		}
 					// 	);
 					// });

@@ -221,27 +221,28 @@ class _StationsModule extends CoreClass {
 							name: `stations.nextSong?id=${station._id}`
 						})
 							.then()
-							.catch();
+							.catch()
+							.finally(() => {
+								NotificationsModule.runJob(
+									"SUBSCRIBE",
+									{
+										name: `stations.nextSong?id=${station._id}`,
+										cb: () =>
+											StationsModule.runJob("SKIP_STATION", {
+												stationId: station._id
+											}),
+										unique: true,
+										station
+									},
+									this
+								)
+									.then()
+									.catch();
 
-						NotificationsModule.runJob(
-							"SUBSCRIBE",
-							{
-								name: `stations.nextSong?id=${station._id}`,
-								cb: () =>
-									StationsModule.runJob("SKIP_STATION", {
-										stationId: station._id
-									}),
-								unique: true,
-								station
-							},
-							this
-						)
-							.then()
-							.catch();
+								if (station.paused) return next(true, station);
 
-						if (station.paused) return next(true, station);
-
-						return next(null, station);
+								return next(null, station);
+							});
 					},
 					(station, next) => {
 						if (!station.currentSong) {
