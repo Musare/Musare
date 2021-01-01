@@ -52,11 +52,7 @@ We currently only utilize 1 backend, 1 MongoDB server and 1 Redis server running
     | `apis.recaptcha.secret`       | Can be obtained by setting up a [ReCaptcha Site (v3)](https://www.google.com/recaptcha/admin). |
     | `apis.recaptcha.enabled`       | Keep at false to keep disabled. |
     | `apis.github` | Can be obtained by setting up a [GitHub OAuth Application](https://github.com/settings/developers). You need to fill in some values to create the OAuth application. The homepage is the homepage of frontend. The authorization callback url is the backend url with `/auth/github/authorize/callback` added at the end. For example `http://localhost:8080/auth/github/authorize/callback`. |
-    | `apis.discord.token` | Token for the Discord bot. |
-    | `apis.discord.loggingServer`  | Server ID of the Discord logging server. |
-    | `apis.discord.loggingChannel` | ID of the channel to be used in the Discord logging server. |
     | `apis.mailgun` | Can be obtained by setting up a [Mailgun account](http://www.mailgun.com/), or you can disable it. |
-    | `apis.spotify` | Can be obtained by setting up a [Spotify client id](https://developer.spotify.com/dashboard/applications), or you can disable it. |
     | `apis.discogs` | Can be obtained by setting up a [Discogs application](https://www.discogs.com/settings/developers), or you can disable it. |
     | `redis.url` | Should be left alone for Docker, and changed to `redis://localhost:6379/0` for non-Docker. |
     | `redis.password` | Should be the Redis password you either put in your `startRedis.cmd` file for Windows, or `.env` for docker. |

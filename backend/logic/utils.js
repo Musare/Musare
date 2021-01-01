@@ -7,7 +7,6 @@ import CoreClass from "../core";
 
 let UtilsModule;
 let IOModule;
-let SpotifyModule;
 let CacheModule;
 
 class _UtilsModule extends CoreClass {
@@ -30,7 +29,6 @@ class _UtilsModule extends CoreClass {
 	initialize() {
 		return new Promise(resolve => {
 			IOModule = this.moduleManager.modules.io;
-			SpotifyModule = this.moduleManager.modules.spotify;
 			CacheModule = this.moduleManager.modules.cache;
 
 			resolve();
@@ -816,123 +814,6 @@ class _UtilsModule extends CoreClass {
 			}
 
 			return getPage(null, []);
-		});
-	}
-
-	/**
-	 * Gets the details of a song from the Spotify API
-	 *
-	 * @param {object} payload - object that contains the payload
-	 * @param {object} payload.song - the song object (song.title etc.)
-	 * @returns {Promise} - returns promise (reject, resolve)
-	 */
-	async GET_SONG_FROM_SPOTIFY(payload) {
-		// song
-		const token = await SpotifyModule.runJob("GET_TOKEN", {}, this);
-
-		return new Promise((resolve, reject) => {
-			if (!config.get("apis.spotify.enabled")) return reject(new Error("Spotify is not enabled."));
-
-			const song = { ...payload.song };
-
-			const spotifyParams = [`q=${encodeURIComponent(payload.song.title)}`, `type=track`].join("&");
-
-			const options = {
-				url: `https://api.spotify.com/v1/search?${spotifyParams}`,
-				headers: {
-					Authorization: `Bearer ${token}`
-				}
-			};
-
-			return request(options, (err, res, body) => {
-				if (err) console.error(err);
-				body = JSON.parse(body);
-				if (body.error) console.error(body.error);
-				Object.keys(body).forEach(bodyKey => {
-					const { items } = body[bodyKey];
-
-					Object.keys(items).every(itemsKey => {
-						const item = items[itemsKey];
-
-						let hasArtist = false;
-						for (let k = 0; k < item.artists.length; k += 1) {
-							const artist = item.artists[k];
-							if (song.title.indexOf(artist.name) !== -1) hasArtist = true;
-						}
-						if (hasArtist && song.title.indexOf(item.name) !== -1) {
-							song.duration = item.duration_ms / 1000;
-							song.artists = item.artists.map(artist => artist.name);
-							song.title = item.name;
-							song.explicit = item.explicit;
-							song.thumbnail = item.album.images[1].url;
-							return false;
-						}
-						return true;
-					});
-				});
-
-				resolve({ song });
-			});
-		});
-	}
-
-	/**
-	 * Returns the details of multiple songs from the Spotify API
-	 *
-	 * @param {object} payload - object that contains the payload
-	 * @param {object} payload.title - the query/title of a song to search the API with
-	 * @returns {Promise} - returns promise (reject, resolve)
-	 */
-	async GET_SONGS_FROM_SPOTIFY(payload) {
-		// title, artist
-		const token = await SpotifyModule.runJob("GET_TOKEN", {}, this);
-
-		return new Promise((resolve, reject) => {
-			if (!config.get("apis.spotify.enabled")) return reject(new Error("Spotify is not enabled."));
-
-			const spotifyParams = [`q=${encodeURIComponent(payload.title)}`, `type=track`].join("&");
-
-			const options = {
-				url: `https://api.spotify.com/v1/search?${spotifyParams}`,
-				headers: {
-					Authorization: `Bearer ${token}`
-				}
-			};
-
-			return request(options, (err, res, body) => {
-				if (err) return console.error(err);
-				body = JSON.parse(body);
-				if (body.error) return console.error(body.error);
-
-				const songs = [];
-
-				Object.keys(body).forEach(bodyKey => {
-					const { items } = body[bodyKey];
-
-					Object.keys(items).forEach(itemsKey => {
-						const item = items[itemsKey];
-						let hasArtist = false;
-						for (let k = 0; k < item.artists.length; k += 1) {
-							const localArtist = item.artists[k];
-							if (payload.artist.toLowerCase() === localArtist.name.toLowerCase()) hasArtist = true;
-						}
-						if (
-							hasArtist &&
-							(payload.title.indexOf(item.name) !== -1 || item.name.indexOf(payload.title) !== -1)
-						) {
-							const song = {};
-							song.duration = item.duration_ms / 1000;
-							song.artists = item.artists.map(artist => artist.name);
-							song.title = item.name;
-							song.explicit = item.explicit;
-							song.thumbnail = item.album.images[1].url;
-							songs.push(song);
-						}
-					});
-				});
-
-				return resolve({ songs });
-			});
 		});
 	}
 

@@ -152,12 +152,10 @@ if (config.debug && config.debug.traceUnhandledPromises === true) {
 
 // 	allModulesInitialized() {
 // 		this.logger.success("MODULE_MANAGER", "All modules have started!");
-// 		this.modules["discord"].sendAdminAlertMessage("The backend server started successfully.", "#00AA00", "Startup", false, []);
 // 	}
 
 // 	aModuleFailed(failedModule) {
 // 		this.logger.error("MODULE_MANAGER", `A module has failed, locking down. Module: ${failedModule.name}`);
-// 		this.modules["discord"].sendAdminAlertMessage(`The backend server failed to start due to a failing module: ${failedModule.name}.`, "#AA0000", "Startup", false, []);
 
 // 		this._lockdown();
 // 	}
@@ -205,7 +203,6 @@ if (config.debug && config.debug.traceUnhandledPromises === true) {
 // moduleManager.addModule("mail");
 // moduleManager.addModule("api");
 // moduleManager.addModule("app");
-// moduleManager.addModule("discord");
 // moduleManager.addModule("io");
 // moduleManager.addModule("logger");
 // moduleManager.addModule("notifications");
@@ -213,7 +210,6 @@ if (config.debug && config.debug.traceUnhandledPromises === true) {
 // moduleManager.addModule("playlists");
 // moduleManager.addModule("punishments");
 // moduleManager.addModule("songs");
-// moduleManager.addModule("spotify");
 // moduleManager.addModule("stations");
 // moduleManager.addModule("tasks");
 // moduleManager.addModule("utils");
@@ -355,15 +351,6 @@ class ModuleManager {
 	 */
 	onAllModulesInitialized() {
 		this.log("INFO", "All modules initialized!");
-		if (this.modules.discord) {
-			this.modules.discord.runJob("SEND_ADMIN_ALERT_MESSAGE", {
-				message: "The backend server started successfully.",
-				color: "#00AA00",
-				type: "Startup",
-				critical: false,
-				extraFields: []
-			});
-		} else this.log("INFO", "No Discord module, so not sending an admin alert message.");
 	}
 
 	/**
@@ -400,13 +387,11 @@ moduleManager.addModule("mail");
 moduleManager.addModule("activities");
 moduleManager.addModule("api");
 moduleManager.addModule("app");
-moduleManager.addModule("discord");
 moduleManager.addModule("io");
 moduleManager.addModule("notifications");
 moduleManager.addModule("playlists");
 moduleManager.addModule("punishments");
 moduleManager.addModule("songs");
-moduleManager.addModule("spotify");
 moduleManager.addModule("stations");
 moduleManager.addModule("tasks");
 moduleManager.addModule("utils");

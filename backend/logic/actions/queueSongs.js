@@ -261,12 +261,6 @@ const lib = {
 						})
 						.catch(next);
 				},
-				/* (newSong, next) => {
-				utils.getSongFromSpotify(newSong, (err, song) => {
-					if (!song) next(null, newSong);
-					else next(err, song);
-				});
-			}, */
 				(newSong, next) => {
 					const song = new QueueSongModel(newSong);
 					song.save({ validateBeforeSave: false }, (err, song) => {

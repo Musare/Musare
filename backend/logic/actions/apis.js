@@ -57,37 +57,6 @@ export default {
 	},
 
 	/**
-	 * Gets Spotify data
-	 *
-	 * @param session
-	 * @param title - the title of the song
-	 * @param artist - an artist for that song
-	 * @param cb
-	 */
-	getSpotifySongs: isAdminRequired((session, title, artist, cb) => {
-		async.waterfall(
-			[
-				next => {
-					utils
-						.runJob("GET_SONGS_FROM_SPOTIFY", { title, artist })
-						.then(songs => {
-							next(null, songs);
-						})
-						.catch(next);
-				}
-			],
-			songs => {
-				console.log(
-					"SUCCESS",
-					"APIS_GET_SPOTIFY_SONGS",
-					`User "${session.userId}" got Spotify songs for title "${title}" successfully.`
-				);
-				cb({ status: "success", songs });
-			}
-		);
-	}),
-
-	/**
 	 * Gets Discogs data
 	 *
 	 * @param session
