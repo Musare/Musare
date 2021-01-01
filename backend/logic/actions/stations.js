@@ -84,29 +84,21 @@ const usersPerStationCount = {};
 // 			// TODO Code to show users
 // 		},
 // 		() => {
-// 			for (
-// 				let stationId = 0, stationKeys = Object.keys(usersPerStationCount);
-// 				stationId < stationKeys.length;
-// 				stationId += 1
-// 			) {
-// 				if (oldUsersPerStationCount[stationId] !== usersPerStationCount[stationId]) {
-// 					if (stationsCountUpdated.indexOf(stationId) === -1) stationsCountUpdated.push(stationId);
-// 				}
-// 			}
-
-// 			for (
-// 				let stationId = 0, stationKeys = Object.keys(usersPerStation);
-// 				stationId < stationKeys.length;
-// 				stationId += 1
-// 			) {
-// 				if (
-// 					_.difference(usersPerStation[stationId], oldUsersPerStation[stationId]).length > 0 ||
-// 					_.difference(oldUsersPerStation[stationId], usersPerStation[stationId]).length > 0
-// 				) {
-// 					if (stationsUpdated.indexOf(stationId) === -1) stationsUpdated.push(stationId);
-// 				}
-// 			}
-
+//			Object.keys(usersPerStationCount).forEach(stationId => {
+//				if (oldUsersPerStationCount[stationId] !== usersPerStationCount[stationId]) {
+//					if (stationsCountUpdated.indexOf(stationId) === -1) stationsCountUpdated.push(stationId);
+//				}
+//			})
+//
+//			Object.keys(usersPerStation).forEach(stationId => {
+//				if (
+//					_.difference(usersPerStation[stationId], oldUsersPerStation[stationId]).length > 0 ||
+//					_.difference(oldUsersPerStation[stationId], usersPerStation[stationId]).length > 0
+//				) {
+//					if (stationsUpdated.indexOf(stationId) === -1) stationsUpdated.push(stationId);
+//				}
+//			});
+//
 // 			stationsCountUpdated.forEach(stationId => {
 // 				console.log("INFO", "UPDATE_STATION_USER_COUNT", `Updating user count of ${stationId}.`);
 // 				cache.runJob("PUB", {
@@ -157,9 +149,9 @@ cache.runJob("SUB", {
 				const sockets = await utils.runJob("GET_ROOM_SOCKETS", {
 					room: "home"
 				});
-				for (let socketId = 0, socketKeys = Object.keys(sockets); socketId < socketKeys.length; socketId += 1) {
-					const socket = sockets[socketKeys[socketId]];
-					const { session } = sockets[socketKeys[socketId]];
+				Object.keys(sockets).forEach(socketKey => {
+					const socket = sockets[socketKey];
+					const { session } = socket;
 					if (session.sessionId) {
 						cache
 							.runJob("HGET", {
@@ -180,7 +172,7 @@ cache.runJob("SUB", {
 									);
 							});
 					}
-				}
+				});
 			}
 		});
 	}
@@ -298,9 +290,9 @@ cache.runJob("SUB", {
 				const sockets = await utils.runJob("GET_ROOM_SOCKETS", {
 					room: "home"
 				});
-				for (let socketId = 0, socketKeys = Object.keys(sockets); socketId < socketKeys.length; socketId += 1) {
-					const socket = sockets[socketKeys[socketId]];
-					const { session } = sockets[socketKeys[socketId]];
+				Object.keys(sockets).forEach(socketKey => {
+					const socket = sockets[socketKey];
+					const { session } = socket;
 					if (session.sessionId) {
 						cache
 							.runJob("HGET", {
@@ -317,7 +309,7 @@ cache.runJob("SUB", {
 								}
 							});
 					}
-				}
+				});
 			}
 		});
 	}

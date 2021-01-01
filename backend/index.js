@@ -291,12 +291,12 @@ class ModuleManager {
 			}
 		}); // ensures all modules are imported, then converts promise to the default export of the import
 
-		for (let moduleId = 0, moduleNames = Object.keys(this.modules); moduleId < moduleNames.length; moduleId += 1) {
-			const module = this.modules[moduleNames[moduleId]];
+		Object.keys(this.modules).every(moduleKey => {
+			const module = this.modules[moduleKey];
 
 			module.setModuleManager(this);
 
-			if (this.lockdown) break;
+			if (this.lockdown) return false;
 
 			module._initialize();
 
@@ -314,7 +314,8 @@ class ModuleManager {
 			// 	this.logger.info("MODULE_MANAGER", `${moduleName} dependencies have been completed`);
 			// 	module._initialize();
 			// });
-		}
+			return true;
+		});
 	}
 
 	/**

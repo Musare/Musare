@@ -123,15 +123,11 @@ class _PunishmentsModule extends CoreClass {
 					(punishments, next) => {
 						let filteredPunishments = [];
 
-						for (
-							let id = 0, punishmentKeys = Object.keys(punishments);
-							id < punishmentKeys.length;
-							id += 1
-						) {
-							const punishment = punishments[id];
+						Object.keys(punishments).forEach(punishmentKey => {
+							const punishment = punishments[punishmentKey];
 							punishment.punishmentId = id;
 							punishments.push(punishment);
-						}
+						});
 
 						filteredPunishments = punishments.filter(punishment => {
 							if (punishment.expiresAt < Date.now()) punishmentsToRemove.push(punishment);

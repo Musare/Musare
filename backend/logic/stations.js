@@ -908,13 +908,9 @@ class _StationsModule extends CoreClass {
 						} else {
 							const sockets = await UtilsModule.runJob("GET_ROOM_SOCKETS", { room: "home" }, this);
 
-							for (
-								let socketId = 0, socketKeys = Object.keys(sockets);
-								socketId < socketKeys.length;
-								socketId += 1
-							) {
-								const socket = sockets[socketId];
-								const { session } = sockets[socketId];
+							Object.keys(sockets).forEach(socketKey => {
+								const socket = sockets[socketKey];
+								const { session } = socket;
 								if (session.sessionId) {
 									CacheModule.runJob(
 										"HGET",
@@ -957,7 +953,7 @@ class _StationsModule extends CoreClass {
 										}
 									});
 								}
-							}
+							});
 						}
 
 						if (station.currentSong !== null && station.currentSong.songId !== undefined) {

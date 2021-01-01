@@ -444,9 +444,11 @@ class _UtilsModule extends CoreClass {
 
 		return new Promise(resolve => {
 			const { rooms } = socket;
-			for (let room = 0, roomKeys = Object.keys(rooms); room < roomKeys.length; room += 1) {
+
+			Object.keys(rooms).forEach(roomKey => {
+				const room = rooms[roomKey];
 				socket.leave(room);
-			}
+			});
 
 			return resolve();
 		});
@@ -471,9 +473,10 @@ class _UtilsModule extends CoreClass {
 
 		return new Promise(resolve => {
 			const { rooms } = socket;
-			for (let room = 0, roomKeys = Object.keys(rooms); room < roomKeys.length; room += 1) {
+			Object.keys(rooms).forEach(roomKey => {
+				const room = rooms[roomKey];
 				socket.leave(room);
-			}
+			});
 
 			socket.join(payload.room);
 
@@ -495,9 +498,10 @@ class _UtilsModule extends CoreClass {
 
 		return new Promise(resolve => {
 			const { rooms } = socket;
-			for (let room = 0, roomKeys = Object.keys(rooms); room < roomKeys.length; room += 1) {
-				if (room.indexOf("song.") !== -1) socket.leave(rooms);
-			}
+			Object.keys(rooms).forEach(roomKey => {
+				const room = rooms[roomKey];
+				if (room.indexOf("song.") !== -1) socket.leave(room);
+			});
 
 			socket.join(payload.room);
 
@@ -510,16 +514,17 @@ class _UtilsModule extends CoreClass {
 	SOCKETS_JOIN_SONG_ROOM(payload) {
 		// sockets, room
 		return new Promise(resolve => {
-			for (let id = 0, socketKeys = Object.keys(payload.sockets); id < socketKeys.length; id += 1) {
-				const socket = payload.sockets[socketKeys[id]];
+			Object.keys(payload.sockets).forEach(socketKey => {
+				const socket = payload.sockets[socketKey];
 
 				const { rooms } = socket;
-				for (let room = 0, roomKeys = Object.keys(rooms); room < roomKeys.length; room += 1) {
+				Object.keys(rooms).forEach(roomKey => {
+					const room = rooms[roomKey];
 					if (room.indexOf("song.") !== -1) socket.leave(room);
-				}
+				});
 
 				socket.join(payload.room);
-			}
+			});
 
 			return resolve();
 		});
@@ -530,13 +535,14 @@ class _UtilsModule extends CoreClass {
 	SOCKETS_LEAVE_SONG_ROOMS(payload) {
 		// sockets
 		return new Promise(resolve => {
-			for (let id = 0, socketKeys = Object.keys(payload.sockets); id < socketKeys.length; id += 1) {
-				const socket = payload.sockets[socketKeys[id]];
+			Object.keys(payload.sockets).forEach(socketKey => {
+				const socket = payload.sockets[socketKey];
 				const { rooms } = socket;
-				for (let room = 0, roomKeys = Object.keys(rooms); room < roomKeys.length; room += 1) {
+				Object.keys(rooms).forEach(roomKey => {
+					const room = rooms[roomKey];
 					if (room.indexOf("song.") !== -1) socket.leave(room);
-				}
-			}
+				});
+			});
 			resolve();
 		});
 	}
@@ -554,12 +560,12 @@ class _UtilsModule extends CoreClass {
 
 		return new Promise(resolve => {
 			const { sockets } = io.sockets;
-			for (let id = 0, socketKeys = Object.keys(sockets); id < socketKeys.length; id += 1) {
-				const socket = sockets[socketKeys[id]];
+			Object.keys(sockets).forEach(socketKey => {
+				const socket = sockets[socketKey];
 				if (socket.rooms[payload.room]) {
 					socket.emit(...payload.args);
 				}
-			}
+			});
 
 			return resolve();
 		});
@@ -578,10 +584,10 @@ class _UtilsModule extends CoreClass {
 		return new Promise(resolve => {
 			const { sockets } = io.sockets;
 			const roomSockets = [];
-			for (let id = 0, socketKeys = Object.keys(sockets); id < socketKeys.length; id += 1) {
-				const socket = sockets[socketKeys[id]];
+			Object.keys(sockets).forEach(socketKey => {
+				const socket = sockets[socketKey];
 				if (socket.rooms[payload.room]) roomSockets.push(socket);
-			}
+			});
 
 			return resolve(roomSockets);
 		});
@@ -842,10 +848,12 @@ class _UtilsModule extends CoreClass {
 				if (err) console.error(err);
 				body = JSON.parse(body);
 				if (body.error) console.error(body.error);
-				for (let i = 0, bodyKeys = Object.keys(body); i < bodyKeys.length; i += 1) {
-					const { items } = body[i];
-					for (let j = 0, itemKeys = Object.keys(body); j < itemKeys.length; j += 1) {
-						const item = items[j];
+				Object.keys(body).forEach(bodyKey => {
+					const { items } = body[bodyKey];
+
+					Object.keys(items).every(itemsKey => {
+						const item = items[itemsKey];
+
 						let hasArtist = false;
 						for (let k = 0; k < item.artists.length; k += 1) {
 							const artist = item.artists[k];
@@ -857,10 +865,11 @@ class _UtilsModule extends CoreClass {
 							song.title = item.name;
 							song.explicit = item.explicit;
 							song.thumbnail = item.album.images[1].url;
-							break;
+							return false;
 						}
-					}
-				}
+						return true;
+					});
+				});
 
 				resolve({ song });
 			});
@@ -897,10 +906,11 @@ class _UtilsModule extends CoreClass {
 
 				const songs = [];
 
-				for (let i = 0, bodyKeys = Object.keys(body); i < bodyKeys.length; i += 1) {
-					const { items } = body[i];
-					for (let j = 0, itemKeys = Object.keys(body); j < itemKeys.length; j += 1) {
-						const item = items[j];
+				Object.keys(body).forEach(bodyKey => {
+					const { items } = body[bodyKey];
+
+					Object.keys(items).forEach(itemsKey => {
+						const item = items[itemsKey];
 						let hasArtist = false;
 						for (let k = 0; k < item.artists.length; k += 1) {
 							const localArtist = item.artists[k];
@@ -918,8 +928,8 @@ class _UtilsModule extends CoreClass {
 							song.thumbnail = item.album.images[1].url;
 							songs.push(song);
 						}
-					}
-				}
+					});
+				});
 
 				return resolve({ songs });
 			});
