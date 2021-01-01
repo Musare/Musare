@@ -66,6 +66,15 @@ class Queue {
 	}
 
 	/**
+	 * Returns the amount of running jobs.
+	 *
+	 * @returns {number} - amount of running jobs
+	 */
+	lengthPaused() {
+		return this.pausedTasks.length;
+	}
+
+	/**
 	 * Adds a job to the queue, with a given priority.
 	 *
 	 * @param {object} job - the job that is to be added
@@ -94,6 +103,12 @@ class Queue {
 	 */
 	pauseRunningJob(job) {
 		const task = this.runningTasks.find(task => task.job.toString() === job.toString());
+		if (!task) {
+			console.log(
+				`Attempted to pause job ${job.name} (${job.toString()}), but couldn't find it in running tasks.`
+			);
+			return;
+		}
 		this.runningTasks.remove(task);
 		this.pausedTasks.push(task);
 	}
@@ -105,6 +120,12 @@ class Queue {
 	 */
 	resumeRunningJob(job) {
 		const task = this.pausedTasks.find(task => task.job.toString() === job.toString());
+		if (!task) {
+			console.log(
+				`Attempted to resume job ${job.name} (${job.toString()}), but couldn't find it in paused tasks.`
+			);
+			return;
+		}
 		this.pausedTasks.remove(task);
 		this.queue.unshift(task);
 		setTimeout(() => {
@@ -117,7 +138,8 @@ class Queue {
 	 */
 	_handleQueue() {
 		if (this.queue.length > 0) {
-			const task = this.queue.reduce((a, b) => (a.priority < b.priority ? b : a));
+			const task = this.queue.reduce((a, b) => (a.priority < b.priority ? a : b));
+			// console.log(`First task: `, task);
 			if (task) {
 				if ((!this.paused && this.runningTasks.length < this.concurrency) || task.priority === -1) {
 					this.queue.remove(task);
@@ -435,7 +457,6 @@ export default class CoreClass {
 			parentJob ? parentJob.task.priority : Infinity,
 			this.priorities[name] ? this.priorities[name] : 10
 		);
-		console.log(_priority);
 		this.jobQueue.push(job, _priority);
 		// }
 

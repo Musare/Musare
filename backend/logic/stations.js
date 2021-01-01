@@ -217,13 +217,9 @@ class _StationsModule extends CoreClass {
 					(station, next) => {
 						if (!station) return next("Station not found.");
 
-						NotificationsModule.runJob(
-							"UNSCHEDULE",
-							{
-								name: `stations.nextSong?id=${station._id}`
-							},
-							this
-						)
+						NotificationsModule.runJob("UNSCHEDULE", {
+							name: `stations.nextSong?id=${station._id}`
+						})
 							.then()
 							.catch();
 
@@ -232,13 +228,9 @@ class _StationsModule extends CoreClass {
 							{
 								name: `stations.nextSong?id=${station._id}`,
 								cb: () =>
-									StationsModule.runJob(
-										"SKIP_STATION",
-										{
-											stationId: station._id
-										},
-										this
-									),
+									StationsModule.runJob("SKIP_STATION", {
+										stationId: station._id
+									}),
 								unique: true,
 								station
 							},
@@ -286,15 +278,11 @@ class _StationsModule extends CoreClass {
 								.catch(next);
 						}
 						// name, time, cb, station
-						NotificationsModule.runJob(
-							"SCHEDULE",
-							{
-								name: `stations.nextSong?id=${station._id}`,
-								time: timeLeft,
-								station
-							},
-							this
-						);
+						NotificationsModule.runJob("SCHEDULE", {
+							name: `stations.nextSong?id=${station._id}`,
+							time: timeLeft,
+							station
+						});
 
 						return next(null, station);
 					}
@@ -461,7 +449,7 @@ class _StationsModule extends CoreClass {
 									.then()
 									.catch();
 							}
-							station = this.stationSchema(station);
+							station = StationsModule.stationSchema(station);
 							CacheModule.runJob("HSET", {
 								table: "stations",
 								key: payload.stationId,
@@ -512,15 +500,13 @@ class _StationsModule extends CoreClass {
 									songList: station.playlist
 								});
 							}
-							CacheModule.runJob("GET_SCHEMA", { schemaName: "station" }, this).then(stationSchema => {
-								station = stationSchema(station);
-								CacheModule.runJob("HSET", {
-									table: "stations",
-									key: station._id,
-									value: station
-								});
-								next(true, station);
+							station = StationsModule.stationSchema(station);
+							CacheModule.runJob("HSET", {
+								table: "stations",
+								key: station._id,
+								value: station
 							});
+							next(true, station);
 						} else next("Station not found");
 					}
 				],
@@ -761,7 +747,8 @@ class _StationsModule extends CoreClass {
 						if (station.type === "official" && station.playlist.length === 0) {
 							return StationsModule.runJob("CALCULATE_SONG_FOR_STATION", { station }, this)
 								.then(playlist => {
-									if (playlist.length === 0) return next(null, this.defaultSong, 0, station);
+									if (playlist.length === 0)
+										return next(null, StationsModule.defaultSong, 0, station);
 
 									return SongsModule.runJob(
 										"GET_SONG",
@@ -773,9 +760,11 @@ class _StationsModule extends CoreClass {
 										.then(response => {
 											next(null, response.song, 0, station);
 										})
-										.catch(() => next(null, this.defaultSong, 0, station));
+										.catch(() => next(null, StationsModule.defaultSong, 0, station));
 								})
-								.catch(next);
+								.catch(err => {
+									next(err);
+								});
 						}
 
 						if (station.type === "official" && station.playlist.length > 0) {
@@ -808,10 +797,10 @@ class _StationsModule extends CoreClass {
 														station.playlist = newPlaylist;
 														next(null, response.song, 0);
 													})
-													.catch(() => next(null, this.defaultSong, 0));
+													.catch(() => next(null, StationsModule.defaultSong, 0));
 											})
 											.catch(() => {
-												next(null, this.defaultSong, 0);
+												next(null, StationsModule.defaultSong, 0);
 											});
 									}
 								},

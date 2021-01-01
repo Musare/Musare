@@ -427,7 +427,7 @@ process.stdin.on("data", data => {
 			console.log(
 				`${moduleName.toUpperCase()}${Array(tabsNeeded).join(
 					"\t"
-				)}${module.getStatus()}. Jobs in queue: ${module.jobQueue.lengthQueue()}. Jobs in progress: ${module.jobQueue.lengthRunning()}. Concurrency: ${
+				)}${module.getStatus()}. Jobs in queue: ${module.jobQueue.lengthQueue()}. Jobs in progress: ${module.jobQueue.lengthRunning()}. Jobs paused: ${module.jobQueue.lengthPaused()} Concurrency: ${
 					module.jobQueue.concurrency
 				}. Stage: ${module.getStage()}`
 			);
@@ -456,6 +456,13 @@ process.stdin.on("data", data => {
 	}
 	if (command.startsWith("debug")) {
 		moduleManager.modules.utils.runJob("DEBUG");
+	}
+
+	if (command.startsWith("eval")) {
+		const evalCommand = command.replace("eval ", "");
+		console.log(`Running eval command: ${evalCommand}`);
+		const response = eval(evalCommand);
+		console.log(`Eval response: `, response);
 	}
 });
 
