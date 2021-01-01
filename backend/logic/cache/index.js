@@ -254,12 +254,12 @@ class _CacheModule extends CoreClass {
 				};
 
 				subs[payload.channel].client.on("message", (channel, message) => {
-					try {
-						CacheModule.log("INFO", `Got message. Channel: ${channel}, message: ${message}`);
-						message = JSON.parse(message);
-					} catch (err) {
-						console.error(err);
-					}
+					if (message.startsWith("[") || message.startsWith("{"))
+						try {
+							message = JSON.parse(message);
+						} catch (err) {
+							console.error(err);
+						}
 
 					return subs[channel].cbs.forEach(cb => cb(message));
 				});
