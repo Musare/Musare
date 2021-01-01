@@ -21,19 +21,9 @@
 			"secret": "",
 			"redirect_uri": ""
 		},
-		"discord": {
-			"token": "",
-			"loggingChannel": "",
-			"loggingServer": ""
-		},
 		"mailgun": {
 			"key": "",
 			"domain": "",
-			"enabled": false
-		},
-		"spotify": {
-			"client": "",
-			"secret": "",
 			"enabled": false
 		},
 		"discogs": {
