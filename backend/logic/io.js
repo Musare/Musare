@@ -82,9 +82,11 @@ class _IOModule extends CoreClass {
 						},
 
 						next => {
-							CacheModule.runJob("HGET", { table: "sessions", key: SID }).then(session => {
-								next(null, session);
-							});
+							CacheModule.runJob("HGET", { table: "sessions", key: SID })
+								.then(session => {
+									next(null, session);
+								})
+								.catch(next);
 						},
 
 						(session, next) => {
@@ -230,7 +232,9 @@ class _IOModule extends CoreClass {
 								});
 							} else socket.emit("ready", false);
 						})
-						.catch(() => socket.emit("ready", false));
+						.catch(() => {
+							socket.emit("ready", false);
+						});
 				} else socket.emit("ready", false);
 
 				// have the socket listen for each action
@@ -259,52 +263,56 @@ class _IOModule extends CoreClass {
 							}
 							this.log("INFO", "IO_ACTION", `A user executed an action. Action: ${namespace}.${action}.`);
 
+							let failedGettingSession = false;
 							// load the session from the cache
-							CacheModule.runJob("HGET", {
-								table: "sessions",
-								key: socket.session.sessionId
-							})
-								.then(session => {
-									// make sure the sockets sessionId isn't set if there is no session
-									if (socket.session.sessionId && session === null) delete socket.session.sessionId;
-
-									try {
-										// call the action, passing it the session, and the arguments socket.io passed us
-										return actions[namespace][action].apply(
-											null,
-											[socket.session].concat(args).concat([
-												result => {
-													this.log(
-														"INFO",
-														"IO_ACTION",
-														`Response to action. Action: ${namespace}.${action}. Response status: ${result.status}`
-													);
-													// respond to the socket with our message
-													if (typeof cb === "function") cb(result);
-												}
-											])
-										);
-									} catch (err) {
+							if (socket.session.sessionId)
+								await CacheModule.runJob("HGET", {
+									table: "sessions",
+									key: socket.session.sessionId
+								})
+									.then(session => {
+										// make sure the sockets sessionId isn't set if there is no session
+										if (socket.session.sessionId && session === null)
+											delete socket.session.sessionId;
+									})
+									.catch(() => {
+										failedGettingSession = true;
 										if (typeof cb === "function")
 											cb({
 												status: "error",
-												message: "An error occurred while executing the specified action."
+												message: "An error occurred while obtaining your session"
 											});
-
-										return this.log(
-											"ERROR",
-											"IO_ACTION_ERROR",
-											`Some type of exception occurred in the action ${namespace}.${action}. Error message: ${err.message}`
-										);
-									}
-								})
-								.catch(() => {
+									});
+							if (!failedGettingSession)
+								try {
+									// call the action, passing it the session, and the arguments socket.io passed us
+									actions[namespace][action].apply(
+										null,
+										[socket.session].concat(args).concat([
+											result => {
+												this.log(
+													"INFO",
+													"IO_ACTION",
+													`Response to action. Action: ${namespace}.${action}. Response status: ${result.status}`
+												);
+												// respond to the socket with our message
+												if (typeof cb === "function") cb(result);
+											}
+										])
+									);
+								} catch (err) {
 									if (typeof cb === "function")
 										cb({
 											status: "error",
-											message: "An error occurred while obtaining your session"
+											message: "An error occurred while executing the specified action."
 										});
-								});
+
+									this.log(
+										"ERROR",
+										"IO_ACTION_ERROR",
+										`Some type of exception occurred in the action ${namespace}.${action}. Error message: ${err.message}`
+									);
+								}
 						});
 					});
 				});

@@ -154,15 +154,15 @@ class _StationsModule extends CoreClass {
 											StationsModule.runJob(
 												"INITIALIZE_STATION",
 												{
-													stationId: station._id,
-													bypassQueue: true
+													stationId: station._id
 												},
-												{ bypassQueue: true }
+												null,
+												-1
 											)
 												.then(() => {
 													next();
 												})
-												.catch(next); // bypassQueue is true because otherwise the module will never initialize
+												.catch(next);
 										}
 									],
 									err => {
@@ -193,7 +193,6 @@ class _StationsModule extends CoreClass {
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.stationId - id of the station to initialise
-	 * @param {boolean} payload.bypassQueue - UNKNOWN
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	INITIALIZE_STATION(payload) {
@@ -206,10 +205,8 @@ class _StationsModule extends CoreClass {
 						StationsModule.runJob(
 							"GET_STATION",
 							{
-								stationId: payload.stationId,
-								bypassQueue: payload.bypassQueue
+								stationId: payload.stationId
 							},
-							{ bypassQueue: payload.bypassQueue },
 							this
 						)
 							.then(station => {
@@ -259,8 +256,7 @@ class _StationsModule extends CoreClass {
 							return StationsModule.runJob(
 								"SKIP_STATION",
 								{
-									stationId: station._id,
-									bypassQueue: payload.bypassQueue
+									stationId: station._id
 								},
 								this
 							)
@@ -280,8 +276,7 @@ class _StationsModule extends CoreClass {
 							return StationsModule.runJob(
 								"SKIP_STATION",
 								{
-									stationId: station._id,
-									bypassQueue: payload.bypassQueue
+									stationId: station._id
 								},
 								this
 							)
@@ -325,12 +320,10 @@ class _StationsModule extends CoreClass {
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.station - station object to calculate song for
-	 * @param {boolean} payload.bypassQueue - UNKNOWN
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	async CALCULATE_SONG_FOR_STATION(payload) {
 		// station, bypassValidate = false
-		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 
 		return new Promise((resolve, reject) => {
@@ -388,8 +381,7 @@ class _StationsModule extends CoreClass {
 							"CALCULATE_OFFICIAL_PLAYLIST_LIST",
 							{
 								stationId: payload.station._id,
-								songList: playlist,
-								bypassQueue: payload.bypassQueue
+								songList: playlist
 							},
 							this
 						)
@@ -400,7 +392,7 @@ class _StationsModule extends CoreClass {
 					},
 
 					(playlist, next) => {
-						stationModel.updateOne(
+						StationsModule.stationModel.updateOne(
 							{ _id: payload.station._id },
 							{ $set: { playlist } },
 							{ runValidators: true },
@@ -408,8 +400,7 @@ class _StationsModule extends CoreClass {
 								StationsModule.runJob(
 									"UPDATE_STATION",
 									{
-										stationId: payload.station._id,
-										bypassQueue: payload.bypassQueue
+										stationId: payload.station._id
 									},
 									this
 								)
@@ -457,7 +448,7 @@ class _StationsModule extends CoreClass {
 
 					(station, next) => {
 						if (station) return next(true, station);
-						return this.stationModel.findOne({ _id: payload.stationId }, next);
+						return StationsModule.stationModel.findOne({ _id: payload.stationId }, next);
 					},
 
 					(station, next) => {
@@ -506,13 +497,11 @@ class _StationsModule extends CoreClass {
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	async GET_STATION_BY_NAME(payload) {
-		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
-
 		return new Promise((resolve, reject) =>
 			async.waterfall(
 				[
 					next => {
-						stationModel.findOne({ name: payload.stationName }, next);
+						StationsModule.stationModel.findOne({ name: payload.stationName }, next);
 					},
 
 					(station, next) => {
@@ -555,7 +544,7 @@ class _StationsModule extends CoreClass {
 			async.waterfall(
 				[
 					next => {
-						this.stationModel.findOne({ _id: payload.stationId }, next);
+						StationsModule.stationModel.findOne({ _id: payload.stationId }, next);
 					},
 
 					(station, next) => {
@@ -662,7 +651,6 @@ class _StationsModule extends CoreClass {
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.stationId - the id of the station to skip
-	 * @param {boolean} payload.bypassQueue - UNKNOWN
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	SKIP_STATION(payload) {
@@ -677,8 +665,7 @@ class _StationsModule extends CoreClass {
 						StationsModule.runJob(
 							"GET_STATION",
 							{
-								stationId: payload.stationId,
-								bypassQueue: payload.bypassQueue
+								stationId: payload.stationId
 							},
 							this
 						)
@@ -698,7 +685,7 @@ class _StationsModule extends CoreClass {
 							// Community station with party mode enabled and songs in the queue
 							if (station.paused) return next(null, null, -19, station);
 
-							return this.stationModel.updateOne(
+							return StationsModule.stationModel.updateOne(
 								{ _id: payload.stationId },
 								{
 									$pull: {
@@ -772,11 +759,7 @@ class _StationsModule extends CoreClass {
 						}
 
 						if (station.type === "official" && station.playlist.length === 0) {
-							return StationsModule.runJob(
-								"CALCULATE_SONG_FOR_STATION",
-								{ station, bypassQueue: payload.bypassQueue },
-								this
-							)
+							return StationsModule.runJob("CALCULATE_SONG_FOR_STATION", { station }, this)
 								.then(playlist => {
 									if (playlist.length === 0) return next(null, this.defaultSong, 0, station);
 
@@ -815,8 +798,7 @@ class _StationsModule extends CoreClass {
 										StationsModule.runJob(
 											"CALCULATE_SONG_FOR_STATION",
 											{
-												station,
-												bypassQueue: payload.bypassQueue
+												station
 											},
 											this
 										)
@@ -873,12 +855,11 @@ class _StationsModule extends CoreClass {
 					},
 
 					($set, station, next) => {
-						this.stationModel.updateOne({ _id: station._id }, { $set }, () => {
+						StationsModule.stationModel.updateOne({ _id: station._id }, { $set }, () => {
 							StationsModule.runJob(
 								"UPDATE_STATION",
 								{
-									stationId: station._id,
-									bypassQueue: payload.bypassQueue
+									stationId: station._id
 								},
 								this
 							)

@@ -29,7 +29,7 @@ export default destination => (session, ...args) => {
 				console.log("LOGIN_REQUIRED", `User failed to pass login required check.`);
 				return cb({ status: "failure", message: err });
 			}
-			console.log("LOGIN_REQUIRED", `User "${session.userId}" passed login required check.`, false);
+			console.log("LOGIN_REQUIRED", `User "${session.userId}" passed login required check.`);
 			return destination(session, ...args);
 		}
 	);

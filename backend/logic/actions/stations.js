@@ -1,5 +1,4 @@
 import async from "async";
-import underscore from "underscore";
 
 import { isLoginRequired, isOwnerRequired } from "./hooks";
 import db from "../db";
@@ -10,8 +9,6 @@ import cache from "../cache";
 import notifications from "../notifications";
 import stations from "../stations";
 import activities from "../activities";
-
-const { _ } = underscore;
 
 // const logger = moduleManager.modules["logger"];
 

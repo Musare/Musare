@@ -138,9 +138,11 @@ class _CacheModule extends CoreClass {
 		return new Promise((resolve, reject) => {
 			let { key } = payload;
 
+			if (!key) return reject(new Error("Invalid key!"));
+			if (!payload.table) return reject(new Error("Invalid table!"));
 			if (mongoose.Types.ObjectId.isValid(key)) key = key.toString();
 
-			CacheModule.client.hget(payload.table, key, (err, value) => {
+			return CacheModule.client.hget(payload.table, key, (err, value) => {
 				if (err) return reject(new Error(err));
 				try {
 					value = JSON.parse(value);

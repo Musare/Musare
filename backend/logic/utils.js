@@ -133,10 +133,6 @@ class _UtilsModule extends CoreClass {
 
 		const promises = [];
 		for (let i = 0; i < payload.length; i += 1) {
-			this.log(
-				"ERROR",
-				"CHECK THIS!?!?!?!??!?!?!?!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-			);
 			promises.push(
 				UtilsModule.runJob(
 					"GET_RANDOM_NUMBER",

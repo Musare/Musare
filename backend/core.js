@@ -15,6 +15,7 @@ class QueueTask {
 	constructor(job, priority) {
 		this.job = job;
 		this.priority = priority;
+		this.job.setTask(this);
 	}
 }
 
@@ -41,7 +42,9 @@ class Queue {
 	 */
 	resume() {
 		this.paused = false;
-		this._handleQueue();
+		setTimeout(() => {
+			this._handleQueue();
+		}, 0);
 	}
 
 	/**
@@ -113,14 +116,18 @@ class Queue {
 	 * Check if there's room for a job to be processed, and if there is, run it.
 	 */
 	_handleQueue() {
-		if (!this.paused && this.runningTasks.length < this.concurrency && this.queue.length > 0) {
+		if (this.queue.length > 0) {
 			const task = this.queue.reduce((a, b) => (a.priority < b.priority ? b : a));
-			this.queue.remove(task);
-			this.runningTasks.push(task);
-			this._handleTask(task);
-			setTimeout(() => {
-				this._handleQueue();
-			}, 0);
+			if (task) {
+				if ((!this.paused && this.runningTasks.length < this.concurrency) || task.priority === -1) {
+					this.queue.remove(task);
+					this.runningTasks.push(task);
+					this._handleTask(task);
+					setTimeout(() => {
+						this._handleQueue();
+					}, 0);
+				}
+			}
 		}
 	}
 
@@ -155,6 +162,7 @@ class Job {
 			return v.toString(16);
 		});
 		this.status = "INITIALIZED";
+		this.task = null;
 	}
 
 	/**
@@ -174,6 +182,10 @@ class Job {
 	setStatus(status) {
 		// console.log(`Job ${this.toString()} has changed status from ${this.status} to ${status}`);
 		this.status = status;
+	}
+
+	setTask(task) {
+		this.task = task;
 	}
 
 	/**
@@ -372,25 +384,33 @@ export default class CoreClass {
 	 * @param {string} name - the name of the job e.g. GET_PLAYLIST
 	 * @param {object} payload - any expected payload for the job itself
 	 * @param {object} parentJob - the parent job, if any
+	 * @param {number} priority - custom priority. Optional.
 	 * @returns {Promise} - returns a promise
 	 */
-	runJob(name, payload, parentJob) {
+	runJob(name, payload, parentJob, priority) {
 		const deferredPromise = new DeferredPromise();
 		const job = new Job(name, payload, deferredPromise, this, parentJob);
 		this.log("INFO", `Queuing job ${name} (${job.toString()})`);
 		if (parentJob) {
-			this.log(
-				"INFO",
-				`Pausing job ${parentJob.name} (${parentJob.toString()}) since a child job has to run first`
-			);
 			parentJob.addChildJob(job);
-			parentJob.setStatus("WAITING_ON_CHILD_JOB");
-			parentJob.module.jobQueue.pauseRunningJob(parentJob);
-			// console.log(111, parentJob.module.jobQueue.length());
-			// console.log(
-			// 	222,
-			// 	parentJob.module.jobQueue.workersList().map(data => data.data.job)
-			// );
+			if (parentJob.status === "RUNNING") {
+				this.log(
+					"INFO",
+					`Pausing job ${parentJob.name} (${parentJob.toString()}) since a child job has to run first`
+				);
+				parentJob.setStatus("WAITING_ON_CHILD_JOB");
+				parentJob.module.jobQueue.pauseRunningJob(parentJob);
+				// console.log(111, parentJob.module.jobQueue.length());
+				// console.log(
+				// 	222,
+				// 	parentJob.module.jobQueue.workersList().map(data => data.data.job)
+				// );
+			} else {
+				this.log(
+					"INFO",
+					`Not pausing job ${parentJob.name} (${parentJob.toString()}) since it's already paused`
+				);
+			}
 		}
 
 		// console.log(this);
@@ -410,8 +430,13 @@ export default class CoreClass {
 
 		// if (options.bypassQueue) this._runJob(job, options, () => {});
 		// else {
-		const priority = this.priorities[name] ? this.priorities[name] : 10;
-		this.jobQueue.push(job, priority);
+		const _priority = Math.min(
+			priority || Infinity,
+			parentJob ? parentJob.task.priority : Infinity,
+			this.priorities[name] ? this.priorities[name] : 10
+		);
+		console.log(_priority);
+		this.jobQueue.push(job, _priority);
 		// }
 
 		return deferredPromise.promise;
