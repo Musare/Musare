@@ -217,9 +217,13 @@ class _StationsModule extends CoreClass {
 					(station, next) => {
 						if (!station) return next("Station not found.");
 
-						NotificationsModule.runJob("UNSCHEDULE", {
-							name: `stations.nextSong?id=${station._id}`
-						})
+						NotificationsModule.runJob(
+							"UNSCHEDULE",
+							{
+								name: `stations.nextSong?id=${station._id}`
+							},
+							this
+						)
 							.then()
 							.catch()
 							.finally(() => {
