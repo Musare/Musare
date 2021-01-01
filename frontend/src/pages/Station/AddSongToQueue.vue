@@ -178,10 +178,9 @@
 											class="button is-danger"
 											href="#"
 											@click="
-												addSongToQueue(result.id) &&
-													togglePlaylistSelection(
-														playlist._id
-													)
+												togglePlaylistSelection(
+													playlist._id
+												)
 											"
 											v-if="
 												isPlaylistSelected(playlist._id)
@@ -196,10 +195,9 @@
 										<a
 											class="button is-success"
 											@click="
-												addSongToQueue(result.id) &&
-													togglePlaylistSelection(
-														playlist._id
-													)
+												togglePlaylistSelection(
+													playlist._id
+												)
 											"
 											href="#"
 											v-else

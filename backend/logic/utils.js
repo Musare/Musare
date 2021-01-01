@@ -96,7 +96,7 @@ class _UtilsModule extends CoreClass {
 
 			delete cookies[payload.cookieName];
 
-			return resolve(this.toString(cookies));
+			return resolve();
 		});
 	}
 
@@ -601,9 +601,9 @@ class _UtilsModule extends CoreClass {
 	GET_SONG_FROM_YOUTUBE(payload) {
 		// songId, cb
 		return new Promise((resolve, reject) => {
-			this.youtubeRequestCallbacks.push({
+			UtilsModule.youtubeRequestCallbacks.push({
 				cb: () => {
-					this.youtubeRequestsActive = true;
+					UtilsModule.youtubeRequestsActive = true;
 					const youtubeParams = [
 						"part=snippet,contentDetails,statistics,status",
 						`id=${encodeURIComponent(payload.songId)}`,
@@ -611,10 +611,10 @@ class _UtilsModule extends CoreClass {
 					].join("&");
 
 					request(`https://www.googleapis.com/youtube/v3/videos?${youtubeParams}`, (err, res, body) => {
-						this.youtubeRequestCallbacks.splice(0, 1);
-						if (this.youtubeRequestCallbacks.length > 0) {
-							this.youtubeRequestCallbacks[0].cb(this.youtubeRequestCallbacks[0].songId);
-						} else this.youtubeRequestsActive = false;
+						UtilsModule.youtubeRequestCallbacks.splice(0, 1);
+						if (UtilsModule.youtubeRequestCallbacks.length > 0) {
+							UtilsModule.youtubeRequestCallbacks[0].cb(UtilsModule.youtubeRequestCallbacks[0].songId);
+						} else UtilsModule.youtubeRequestsActive = false;
 
 						if (err) {
 							console.error(err);
@@ -671,8 +671,8 @@ class _UtilsModule extends CoreClass {
 				songId: payload.songId
 			});
 
-			if (!this.youtubeRequestsActive) {
-				this.youtubeRequestCallbacks[0].cb(this.youtubeRequestCallbacks[0].songId);
+			if (!UtilsModule.youtubeRequestsActive) {
+				UtilsModule.youtubeRequestCallbacks[0].cb(UtilsModule.youtubeRequestCallbacks[0].songId);
 			}
 		});
 	}
