@@ -16,6 +16,7 @@
 				Users
 			</button>
 			<button
+				v-if="loggedIn"
 				class="button is-default"
 				:class="{ selected: tab === 'my-playlists' }"
 				@click="tab = 'my-playlists'"
@@ -45,7 +46,8 @@ export default {
 	},
 	computed: mapState({
 		users: state => state.station.users,
-		userCount: state => state.station.userCount
+		userCount: state => state.station.userCount,
+		loggedIn: state => state.user.auth.loggedIn
 	}),
 	methods: {
 		...mapActions("modals", ["openModal"])
@@ -70,9 +72,9 @@ export default {
 		border: 0;
 		text-transform: uppercase;
 		font-size: 17px;
-		width: calc(33.3% - 2.5px);
 		color: #222;
 		background-color: #ddd;
+		width: -webkit-fill-available;
 
 		&:not(:first-of-type) {
 			margin-left: 5px;
