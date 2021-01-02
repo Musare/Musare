@@ -11,21 +11,14 @@
 				<div id="upper-row" class="row">
 					<div id="about-station-container" class="quadrant">
 						<div class="row" id="station-name">
-							<h1>
-								<!-- {{ station.displayName }} -->Owen's Station
-							</h1>
+							<h1>{{ station.displayName }}</h1>
 							<a href="#">
 								<!-- TODO: Add favourite functionality -->
 								<i class="material-icons">star</i>
 							</a>
 						</div>
 
-						<p>
-							<!-- {{ station.description }} -->Welcome to Owen's
-							channel! The description will go here and we will
-							explain what this station is for and what genres of
-							songs it has. Enjoy!!!
-						</p>
+						<p>{{ station.description }}</p>
 
 						<div id="admin-buttons" v-if="isOwnerOrAdmin()">
 							<!-- (Admin) Station Settings Button -->
@@ -1398,8 +1391,9 @@ export default {
 #station-outer-container {
 	margin: 0 auto;
 	max-width: 100%;
-	padding: 0 40px;
+	padding: 20px 40px;
 	margin-top: 5px;
+	height: 100%;
 
 	@media (max-width: 1040px) {
 		padding: 0;
@@ -1451,6 +1445,7 @@ export default {
 		display: flex;
 		align-items: center;
 		flex-direction: column;
+		height: 100%;
 
 		@media (min-height: 1050px) {
 			justify-content: center;
@@ -1554,6 +1549,7 @@ export default {
 				p {
 					font-size: 14px;
 					max-width: 700px;
+					flex-grow: 1;
 				}
 
 				#admin-buttons {
@@ -1574,11 +1570,10 @@ export default {
 
 		#lower-row {
 			margin-top: 20px;
+			flex-grow: 1;
 
 			.player-container {
 				background-color: #fff;
-				width: 1400px;
-				height: 770px;
 				display: flex;
 				flex-direction: column;
 

@@ -75,12 +75,4 @@ export default {
 		color: #fff;
 	}
 }
-
-.tab {
-	height: 670px;
-
-	@media (max-width: 1040px) {
-		height: fit-content;
-	}
-}
 </style>

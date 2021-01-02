@@ -23,7 +23,7 @@
 				{{ currentSong.title }}
 			</h4>
 			<h5 id="song-artists" v-if="currentSong.artists">
-				{{ currentSong.artists.join(", ") }}
+				{{ currentSong.artists }}
 			</h5>
 			<p id="song-request-time">
 				Requested <strong>15 minutes ago</strong>
@@ -110,6 +110,7 @@ export default {
 		flex-direction: column;
 		justify-content: center;
 		margin-left: 20px;
+		width: 100%;
 
 		*:not(i) {
 			margin: 0;
