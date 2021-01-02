@@ -15,9 +15,17 @@
 			>
 				Users
 			</button>
+			<button
+				class="button is-default"
+				:class="{ selected: tab === 'my-playlists' }"
+				@click="tab = 'my-playlists'"
+			>
+				My Playlists
+			</button>
 		</div>
 		<queue class="tab" v-if="tab === 'queue'" />
 		<users class="tab" v-if="tab === 'users'" />
+		<my-playlists class="tab" v-if="tab === 'my-playlists'" />
 	</div>
 </template>
 
@@ -25,10 +33,11 @@
 import { mapActions, mapState } from "vuex";
 
 import Queue from "./Queue/index.vue";
-import Users from "./Users/index.vue";
+import Users from "./Users.vue";
+import MyPlaylists from "./MyPlaylists.vue";
 
 export default {
-	components: { Queue, Users },
+	components: { Queue, Users, MyPlaylists },
 	data() {
 		return {
 			tab: "queue"
@@ -61,7 +70,7 @@ export default {
 		border: 0;
 		text-transform: uppercase;
 		font-size: 17px;
-		width: calc(50% - 2.5px);
+		width: calc(33.3% - 2.5px);
 		color: #222;
 		background-color: #ddd;
 

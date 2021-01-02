@@ -1613,6 +1613,11 @@ export default {
 			margin-top: 20px;
 			height: 90%;
 
+			.player-container.nothing-here {
+				border: 1px solid $light-grey-2;
+				border-radius: 5px;
+			}
+
 			.player-container {
 				width: 1400px;
 				background-color: #fff;

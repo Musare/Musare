@@ -15,12 +15,10 @@ import activities from "../activities";
 
 cache.runJob("SUB", {
 	channel: "playlist.create",
-	cb: playlistId => {
-		playlists.runJob("GET_PLAYLIST", { playlistId }).then(playlist => {
-			utils.runJob("SOCKETS_FROM_USER", { userId: playlist.createdBy }).then(response => {
-				response.sockets.forEach(socket => {
-					socket.emit("event:playlist.create", playlist);
-				});
+	cb: playlist => {
+		utils.runJob("SOCKETS_FROM_USER", { userId: playlist.createdBy }).then(response => {
+			response.sockets.forEach(socket => {
+				socket.emit("event:playlist.create", playlist);
 			});
 		});
 	}
@@ -232,20 +230,24 @@ const lib = {
 					);
 					return cb({ status: "failure", message: err });
 				}
+
 				cache.runJob("PUB", {
 					channel: "playlist.create",
-					value: playlist._id
+					value: playlist
 				});
+
 				activities.runJob("ADD_ACTIVITY", {
 					userId: session.userId,
 					activityType: "created_playlist",
 					payload: [playlist._id]
 				});
+
 				console.log(
 					"SUCCESS",
 					"PLAYLIST_CREATE",
 					`Successfully created private playlist for user "${session.userId}".`
 				);
+
 				return cb({
 					status: "success",
 					message: "Successfully created playlist",

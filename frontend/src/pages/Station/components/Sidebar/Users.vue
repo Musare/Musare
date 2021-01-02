@@ -28,7 +28,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../../../../../styles/global.scss";
+@import "../../../../styles/global.scss";
 
 .night-mode {
 	#users {
