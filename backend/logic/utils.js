@@ -5,7 +5,11 @@ import crypto from "crypto";
 import request from "request";
 import CoreClass from "../core";
 
-class UtilsModule extends CoreClass {
+let UtilsModule;
+let IOModule;
+let CacheModule;
+
+class _UtilsModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		super("utils");
@@ -13,6 +17,8 @@ class UtilsModule extends CoreClass {
 		this.youtubeRequestCallbacks = [];
 		this.youtubeRequestsPending = 0;
 		this.youtubeRequestsActive = false;
+
+		UtilsModule = this;
 	}
 
 	/**
@@ -22,10 +28,8 @@ class UtilsModule extends CoreClass {
 	 */
 	initialize() {
 		return new Promise(resolve => {
-			this.io = this.moduleManager.modules.io;
-			this.db = this.moduleManager.modules.db;
-			this.spotify = this.moduleManager.modules.spotify;
-			this.cache = this.moduleManager.modules.cache;
+			IOModule = this.moduleManager.modules.io;
+			CacheModule = this.moduleManager.modules.cache;
 
 			resolve();
 		});
@@ -79,16 +83,20 @@ class UtilsModule extends CoreClass {
 			let cookies;
 
 			try {
-				cookies = this.runJob("PARSE_COOKIES", {
-					cookieString: payload.cookieString
-				});
+				cookies = UtilsModule.runJob(
+					"PARSE_COOKIES",
+					{
+						cookieString: payload.cookieString
+					},
+					this
+				);
 			} catch (err) {
 				return reject(err);
 			}
 
 			delete cookies[payload.cookieName];
 
-			return resolve(this.toString(cookies));
+			return resolve();
 		});
 	}
 
@@ -124,10 +132,14 @@ class UtilsModule extends CoreClass {
 		const promises = [];
 		for (let i = 0; i < payload.length; i += 1) {
 			promises.push(
-				this.runJob("GET_RANDOM_NUMBER", {
-					min: 0,
-					max: chars.length - 1
-				})
+				UtilsModule.runJob(
+					"GET_RANDOM_NUMBER",
+					{
+						min: 0,
+						max: chars.length - 1
+					},
+					this
+				)
 			);
 		}
 
@@ -150,7 +162,7 @@ class UtilsModule extends CoreClass {
 	 */
 	async GET_SOCKET_FROM_ID(payload) {
 		// socketId
-		const io = await this.io.runJob("IO", {});
+		const io = await IOModule.runJob("IO", {}, this);
 
 		return new Promise(resolve => resolve(io.sockets.sockets[payload.socketId]));
 	}
@@ -248,7 +260,7 @@ class UtilsModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
 	async SOCKET_FROM_SESSION(payload) {
 		// socketId
-		const io = await this.io.runJob("IO", {});
+		const io = await IOModule.runJob("IO", {}, this);
 
 		return new Promise((resolve, reject) => {
 			const ns = io.of("/");
@@ -268,7 +280,7 @@ class UtilsModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async SOCKETS_FROM_SESSION_ID(payload) {
-		const io = await this.io.runJob("IO", {});
+		const io = await IOModule.runJob("IO", {}, this);
 
 		return new Promise(resolve => {
 			const ns = io.of("/");
@@ -300,7 +312,7 @@ class UtilsModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async SOCKETS_FROM_USER(payload) {
-		const io = await this.io.runJob("IO", {});
+		const io = await IOModule.runJob("IO", {}, this);
 
 		return new Promise((resolve, reject) => {
 			const ns = io.of("/");
@@ -311,11 +323,14 @@ class UtilsModule extends CoreClass {
 					Object.keys(ns.connected),
 					(id, next) => {
 						const { session } = ns.connected[id];
-						this.cache
-							.runJob("HGET", {
+						CacheModule.runJob(
+							"HGET",
+							{
 								table: "sessions",
 								key: session.sessionId
-							})
+							},
+							this
+						)
 							.then(session => {
 								if (session && session.userId === payload.userId) sockets.push(ns.connected[id]);
 								next();
@@ -343,7 +358,7 @@ class UtilsModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async SOCKETS_FROM_IP(payload) {
-		const io = await this.io.runJob("IO", {});
+		const io = await IOModule.runJob("IO", {}, this);
 
 		return new Promise(resolve => {
 			const ns = io.of("/");
@@ -353,11 +368,14 @@ class UtilsModule extends CoreClass {
 					Object.keys(ns.connected),
 					(id, next) => {
 						const { session } = ns.connected[id];
-						this.cache
-							.runJob("HGET", {
+						CacheModule.runJob(
+							"HGET",
+							{
 								table: "sessions",
 								key: session.sessionId
-							})
+							},
+							this
+						)
 							.then(session => {
 								if (session && ns.connected[id].ip === payload.ip) sockets.push(ns.connected[id]);
 								next();
@@ -382,7 +400,7 @@ class UtilsModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async SOCKETS_FROM_USER_WITHOUT_CACHE(payload) {
-		const io = await this.io.runJob("IO", {});
+		const io = await IOModule.runJob("IO", {}, this);
 
 		return new Promise(resolve => {
 			const ns = io.of("/");
@@ -414,15 +432,21 @@ class UtilsModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async SOCKET_LEAVE_ROOMS(payload) {
-		const socket = await this.runJob("SOCKET_FROM_SESSION", {
-			socketId: payload.socketId
-		});
+		const socket = await UtilsModule.runJob(
+			"SOCKET_FROM_SESSION",
+			{
+				socketId: payload.socketId
+			},
+			this
+		);
 
 		return new Promise(resolve => {
 			const { rooms } = socket;
-			for (let room = 0, roomKeys = Object.keys(rooms); room < roomKeys.length; room += 1) {
+
+			Object.keys(rooms).forEach(roomKey => {
+				const room = rooms[roomKey];
 				socket.leave(room);
-			}
+			});
 
 			return resolve();
 		});
@@ -437,15 +461,20 @@ class UtilsModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async SOCKET_JOIN_ROOM(payload) {
-		const socket = await this.runJob("SOCKET_FROM_SESSION", {
-			socketId: payload.socketId
-		});
+		const socket = await UtilsModule.runJob(
+			"SOCKET_FROM_SESSION",
+			{
+				socketId: payload.socketId
+			},
+			this
+		);
 
 		return new Promise(resolve => {
 			const { rooms } = socket;
-			for (let room = 0, roomKeys = Object.keys(rooms); room < roomKeys.length; room += 1) {
+			Object.keys(rooms).forEach(roomKey => {
+				const room = rooms[roomKey];
 				socket.leave(room);
-			}
+			});
 
 			socket.join(payload.room);
 
@@ -457,15 +486,20 @@ class UtilsModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
 	async SOCKET_JOIN_SONG_ROOM(payload) {
 		// socketId, room
-		const socket = await this.runJob("SOCKET_FROM_SESSION", {
-			socketId: payload.socketId
-		});
+		const socket = await UtilsModule.runJob(
+			"SOCKET_FROM_SESSION",
+			{
+				socketId: payload.socketId
+			},
+			this
+		);
 
 		return new Promise(resolve => {
 			const { rooms } = socket;
-			for (let room = 0, roomKeys = Object.keys(rooms); room < roomKeys.length; room += 1) {
-				if (room.indexOf("song.") !== -1) socket.leave(rooms);
-			}
+			Object.keys(rooms).forEach(roomKey => {
+				const room = rooms[roomKey];
+				if (room.indexOf("song.") !== -1) socket.leave(room);
+			});
 
 			socket.join(payload.room);
 
@@ -478,16 +512,17 @@ class UtilsModule extends CoreClass {
 	SOCKETS_JOIN_SONG_ROOM(payload) {
 		// sockets, room
 		return new Promise(resolve => {
-			for (let id = 0, socketKeys = Object.keys(payload.sockets); id < socketKeys.length; id += 1) {
-				const socket = payload.sockets[socketKeys[id]];
+			Object.keys(payload.sockets).forEach(socketKey => {
+				const socket = payload.sockets[socketKey];
 
 				const { rooms } = socket;
-				for (let room = 0, roomKeys = Object.keys(rooms); room < roomKeys.length; room += 1) {
+				Object.keys(rooms).forEach(roomKey => {
+					const room = rooms[roomKey];
 					if (room.indexOf("song.") !== -1) socket.leave(room);
-				}
+				});
 
 				socket.join(payload.room);
-			}
+			});
 
 			return resolve();
 		});
@@ -498,13 +533,14 @@ class UtilsModule extends CoreClass {
 	SOCKETS_LEAVE_SONG_ROOMS(payload) {
 		// sockets
 		return new Promise(resolve => {
-			for (let id = 0, socketKeys = Object.keys(payload.sockets); id < socketKeys.length; id += 1) {
-				const socket = payload.sockets[socketKeys[id]];
+			Object.keys(payload.sockets).forEach(socketKey => {
+				const socket = payload.sockets[socketKey];
 				const { rooms } = socket;
-				for (let room = 0, roomKeys = Object.keys(rooms); room < roomKeys.length; room += 1) {
+				Object.keys(rooms).forEach(roomKey => {
+					const room = rooms[roomKey];
 					if (room.indexOf("song.") !== -1) socket.leave(room);
-				}
-			}
+				});
+			});
 			resolve();
 		});
 	}
@@ -518,16 +554,16 @@ class UtilsModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async EMIT_TO_ROOM(payload) {
-		const io = await this.io.runJob("IO", {});
+		const io = await IOModule.runJob("IO", {}, this);
 
 		return new Promise(resolve => {
 			const { sockets } = io.sockets;
-			for (let id = 0, socketKeys = Object.keys(sockets); id < socketKeys.length; id += 1) {
-				const socket = sockets[socketKeys[id]];
+			Object.keys(sockets).forEach(socketKey => {
+				const socket = sockets[socketKey];
 				if (socket.rooms[payload.room]) {
 					socket.emit(...payload.args);
 				}
-			}
+			});
 
 			return resolve();
 		});
@@ -541,15 +577,15 @@ class UtilsModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async GET_ROOM_SOCKETS(payload) {
-		const io = await this.io.runJob("IO", {});
+		const io = await IOModule.runJob("IO", {}, this);
 
 		return new Promise(resolve => {
 			const { sockets } = io.sockets;
 			const roomSockets = [];
-			for (let id = 0, socketKeys = Object.keys(sockets); id < socketKeys.length; id += 1) {
-				const socket = sockets[socketKeys[id]];
+			Object.keys(sockets).forEach(socketKey => {
+				const socket = sockets[socketKey];
 				if (socket.rooms[payload.room]) roomSockets.push(socket);
-			}
+			});
 
 			return resolve(roomSockets);
 		});
@@ -565,9 +601,9 @@ class UtilsModule extends CoreClass {
 	GET_SONG_FROM_YOUTUBE(payload) {
 		// songId, cb
 		return new Promise((resolve, reject) => {
-			this.youtubeRequestCallbacks.push({
+			UtilsModule.youtubeRequestCallbacks.push({
 				cb: () => {
-					this.youtubeRequestsActive = true;
+					UtilsModule.youtubeRequestsActive = true;
 					const youtubeParams = [
 						"part=snippet,contentDetails,statistics,status",
 						`id=${encodeURIComponent(payload.songId)}`,
@@ -575,10 +611,10 @@ class UtilsModule extends CoreClass {
 					].join("&");
 
 					request(`https://www.googleapis.com/youtube/v3/videos?${youtubeParams}`, (err, res, body) => {
-						this.youtubeRequestCallbacks.splice(0, 1);
-						if (this.youtubeRequestCallbacks.length > 0) {
-							this.youtubeRequestCallbacks[0].cb(this.youtubeRequestCallbacks[0].songId);
-						} else this.youtubeRequestsActive = false;
+						UtilsModule.youtubeRequestCallbacks.splice(0, 1);
+						if (UtilsModule.youtubeRequestCallbacks.length > 0) {
+							UtilsModule.youtubeRequestCallbacks[0].cb(UtilsModule.youtubeRequestCallbacks[0].songId);
+						} else UtilsModule.youtubeRequestsActive = false;
 
 						if (err) {
 							console.error(err);
@@ -635,8 +671,8 @@ class UtilsModule extends CoreClass {
 				songId: payload.songId
 			});
 
-			if (!this.youtubeRequestsActive) {
-				this.youtubeRequestCallbacks[0].cb(this.youtubeRequestCallbacks[0].songId);
+			if (!UtilsModule.youtubeRequestsActive) {
+				UtilsModule.youtubeRequestCallbacks[0].cb(UtilsModule.youtubeRequestCallbacks[0].songId);
 			}
 		});
 	}
@@ -763,9 +799,13 @@ class UtilsModule extends CoreClass {
 
 						if (!payload.musicOnly) return resolve({ songs });
 						return local
-							.runJob("FILTER_MUSIC_VIDEOS_YOUTUBE", {
-								videoIds: songs.slice()
-							})
+							.runJob(
+								"FILTER_MUSIC_VIDEOS_YOUTUBE",
+								{
+									videoIds: songs.slice()
+								},
+								this
+							)
 							.then(filteredSongs => {
 								resolve({ filteredSongs, songs });
 							});
@@ -774,119 +814,6 @@ class UtilsModule extends CoreClass {
 			}
 
 			return getPage(null, []);
-		});
-	}
-
-	/**
-	 * Gets the details of a song from the Spotify API
-	 *
-	 * @param {object} payload - object that contains the payload
-	 * @param {object} payload.song - the song object (song.title etc.)
-	 * @returns {Promise} - returns promise (reject, resolve)
-	 */
-	async GET_SONG_FROM_SPOTIFY(payload) {
-		// song
-		const token = await this.spotify.runJob("GET_TOKEN", {});
-
-		return new Promise((resolve, reject) => {
-			if (!config.get("apis.spotify.enabled")) return reject(new Error("Spotify is not enabled."));
-
-			const song = { ...payload.song };
-
-			const spotifyParams = [`q=${encodeURIComponent(payload.song.title)}`, `type=track`].join("&");
-
-			const options = {
-				url: `https://api.spotify.com/v1/search?${spotifyParams}`,
-				headers: {
-					Authorization: `Bearer ${token}`
-				}
-			};
-
-			return request(options, (err, res, body) => {
-				if (err) console.error(err);
-				body = JSON.parse(body);
-				if (body.error) console.error(body.error);
-				for (let i = 0, bodyKeys = Object.keys(body); i < bodyKeys.length; i += 1) {
-					const { items } = body[i];
-					for (let j = 0, itemKeys = Object.keys(body); j < itemKeys.length; j += 1) {
-						const item = items[j];
-						let hasArtist = false;
-						for (let k = 0; k < item.artists.length; k += 1) {
-							const artist = item.artists[k];
-							if (song.title.indexOf(artist.name) !== -1) hasArtist = true;
-						}
-						if (hasArtist && song.title.indexOf(item.name) !== -1) {
-							song.duration = item.duration_ms / 1000;
-							song.artists = item.artists.map(artist => artist.name);
-							song.title = item.name;
-							song.explicit = item.explicit;
-							song.thumbnail = item.album.images[1].url;
-							break;
-						}
-					}
-				}
-
-				resolve({ song });
-			});
-		});
-	}
-
-	/**
-	 * Returns the details of multiple songs from the Spotify API
-	 *
-	 * @param {object} payload - object that contains the payload
-	 * @param {object} payload.title - the query/title of a song to search the API with
-	 * @returns {Promise} - returns promise (reject, resolve)
-	 */
-	async GET_SONGS_FROM_SPOTIFY(payload) {
-		// title, artist
-		const token = await this.spotify.runJob("GET_TOKEN", {});
-
-		return new Promise((resolve, reject) => {
-			if (!config.get("apis.spotify.enabled")) return reject(new Error("Spotify is not enabled."));
-
-			const spotifyParams = [`q=${encodeURIComponent(payload.title)}`, `type=track`].join("&");
-
-			const options = {
-				url: `https://api.spotify.com/v1/search?${spotifyParams}`,
-				headers: {
-					Authorization: `Bearer ${token}`
-				}
-			};
-
-			return request(options, (err, res, body) => {
-				if (err) return console.error(err);
-				body = JSON.parse(body);
-				if (body.error) return console.error(body.error);
-
-				const songs = [];
-
-				for (let i = 0, bodyKeys = Object.keys(body); i < bodyKeys.length; i += 1) {
-					const { items } = body[i];
-					for (let j = 0, itemKeys = Object.keys(body); j < itemKeys.length; j += 1) {
-						const item = items[j];
-						let hasArtist = false;
-						for (let k = 0; k < item.artists.length; k += 1) {
-							const localArtist = item.artists[k];
-							if (payload.artist.toLowerCase() === localArtist.name.toLowerCase()) hasArtist = true;
-						}
-						if (
-							hasArtist &&
-							(payload.title.indexOf(item.name) !== -1 || item.name.indexOf(payload.title) !== -1)
-						) {
-							const song = {};
-							song.duration = item.duration_ms / 1000;
-							song.artists = item.artists.map(artist => artist.name);
-							song.title = item.name;
-							song.explicit = item.explicit;
-							song.thumbnail = item.album.images[1].url;
-							songs.push(song);
-						}
-					}
-				}
-
-				return resolve({ songs });
-			});
 		});
 	}
 
@@ -966,4 +893,4 @@ class UtilsModule extends CoreClass {
 	}
 }
 
-export default new UtilsModule();
+export default new _UtilsModule();

@@ -2,10 +2,17 @@ import async from "async";
 import mongoose from "mongoose";
 import CoreClass from "../core";
 
-class SongsModule extends CoreClass {
+let SongsModule;
+let CacheModule;
+let DBModule;
+let UtilsModule;
+
+class _SongsModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		super("songs");
+
+		SongsModule = this;
 	}
 
 	/**
@@ -16,13 +23,12 @@ class SongsModule extends CoreClass {
 	async initialize() {
 		this.setStage(1);
 
-		this.cache = this.moduleManager.modules.cache;
-		this.db = this.moduleManager.modules.db;
-		this.io = this.moduleManager.modules.io;
-		this.utils = this.moduleManager.modules.utils;
+		CacheModule = this.moduleManager.modules.cache;
+		DBModule = this.moduleManager.modules.db;
+		UtilsModule = this.moduleManager.modules.utils;
 
-		const songModel = await this.db.runJob("GET_MODEL", { modelName: "song" });
-		const songSchema = await this.cache.runJob("GET_SCHEMA", { schemaName: "song" });
+		this.songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
+		this.songSchemaCache = await CacheModule.runJob("GET_SCHEMA", { schemaName: "song" });
 
 		this.setStage(2);
 
@@ -31,8 +37,7 @@ class SongsModule extends CoreClass {
 				[
 					next => {
 						this.setStage(2);
-						this.cache
-							.runJob("HGETALL", { table: "songs" })
+						CacheModule.runJob("HGETALL", { table: "songs" })
 							.then(songs => {
 								next(null, songs);
 							})
@@ -49,14 +54,13 @@ class SongsModule extends CoreClass {
 						return async.each(
 							songIds,
 							(songId, next) => {
-								songModel.findOne({ songId }, (err, song) => {
+								SongsModule.songModel.findOne({ songId }, (err, song) => {
 									if (err) next(err);
 									else if (!song)
-										this.cache
-											.runJob("HDEL", {
-												table: "songs",
-												key: songId
-											})
+										CacheModule.runJob("HDEL", {
+											table: "songs",
+											key: songId
+										})
 											.then(() => next())
 											.catch(next);
 									else next();
@@ -68,7 +72,7 @@ class SongsModule extends CoreClass {
 
 					next => {
 						this.setStage(4);
-						songModel.find({}, next);
+						SongsModule.songModel.find({}, next);
 					},
 
 					(songs, next) => {
@@ -76,12 +80,11 @@ class SongsModule extends CoreClass {
 						async.each(
 							songs,
 							(song, next) => {
-								this.cache
-									.runJob("HSET", {
-										table: "songs",
-										key: song.songId,
-										value: songSchema(song)
-									})
+								CacheModule.runJob("HSET", {
+									table: "songs",
+									key: song.songId,
+									value: SongsModule.songSchemaCache(song)
+								})
 									.then(() => next())
 									.catch(next);
 							},
@@ -91,7 +94,7 @@ class SongsModule extends CoreClass {
 				],
 				async err => {
 					if (err) {
-						err = await this.utils.runJob("GET_ERROR", { error: err });
+						err = await UtilsModule.runJob("GET_ERROR", { error: err });
 						reject(new Error(err));
 					} else resolve();
 				}
@@ -107,22 +110,12 @@ class SongsModule extends CoreClass {
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	GET_SONG(payload) {
-		return new Promise((resolve, reject) => {
-			let songModel;
-
-			this.db
-				.runJob("GET_MODEL", { modelName: "song" })
-				.then(model => {
-					songModel = model;
-				})
-				.catch(console.error);
-
-			return async.waterfall(
+		return new Promise((resolve, reject) =>
+			async.waterfall(
 				[
 					next => {
 						if (!mongoose.Types.ObjectId.isValid(payload.id)) return next("Id is not a valid ObjectId.");
-						return this.cache
-							.runJob("HGET", { table: "songs", key: payload.id })
+						return CacheModule.runJob("HGET", { table: "songs", key: payload.id }, this)
 							.then(song => {
 								next(null, song);
 							})
@@ -131,18 +124,20 @@ class SongsModule extends CoreClass {
 
 					(song, next) => {
 						if (song) return next(true, song);
-						return songModel.findOne({ _id: payload.id }, next);
+						return SongsModule.songModel.findOne({ _id: payload.id }, next);
 					},
 
 					(song, next) => {
 						if (song) {
-							this.cache
-								.runJob("HSET", {
+							CacheModule.runJob(
+								"HSET",
+								{
 									table: "songs",
 									key: payload.id,
 									value: song
-								})
-								.then(song => next(null, song));
+								},
+								this
+							).then(song => next(null, song));
 						} else next("Song not found.");
 					}
 				],
@@ -150,8 +145,8 @@ class SongsModule extends CoreClass {
 					if (err && err !== true) return reject(new Error(err));
 					return resolve({ song });
 				}
-			);
-		});
+			)
+		);
 	}
 
 	/**
@@ -162,28 +157,19 @@ class SongsModule extends CoreClass {
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	GET_SONG_FROM_ID(payload) {
-		return new Promise((resolve, reject) => {
-			let songModel;
-
-			this.db
-				.runJob("GET_MODEL", { modelName: "song" })
-				.then(model => {
-					songModel = model;
-				})
-				.catch(console.error);
-
-			return async.waterfall(
+		return new Promise((resolve, reject) =>
+			async.waterfall(
 				[
 					next => {
-						songModel.findOne({ songId: payload.songId }, next);
+						SongsModule.songModel.findOne({ songId: payload.songId }, next);
 					}
 				],
 				(err, song) => {
 					if (err && err !== true) return reject(new Error(err));
 					return resolve({ song });
 				}
-			);
-		});
+			)
+		);
 	}
 
 	/**
@@ -195,37 +181,31 @@ class SongsModule extends CoreClass {
 	 */
 	UPDATE_SONG(payload) {
 		// songId, cb
-		return new Promise((resolve, reject) => {
-			let songModel;
-
-			this.db
-				.runJob("GET_MODEL", { modelName: "song" })
-				.then(model => {
-					songModel = model;
-				})
-				.catch(console.error);
-
-			return async.waterfall(
+		return new Promise((resolve, reject) =>
+			async.waterfall(
 				[
 					next => {
-						songModel.findOne({ _id: payload.songId }, next);
+						SongsModule.songModel.findOne({ _id: payload.songId }, next);
 					},
 
 					(song, next) => {
 						if (!song) {
-							this.cache.runJob("HDEL", {
+							CacheModule.runJob("HDEL", {
 								table: "songs",
 								key: payload.songId
 							});
 							return next("Song not found.");
 						}
 
-						return this.cache
-							.runJob("HSET", {
+						return CacheModule.runJob(
+							"HSET",
+							{
 								table: "songs",
 								key: payload.songId,
 								value: song
-							})
+							},
+							this
+						)
 							.then(song => {
 								next(null, song);
 							})
@@ -236,8 +216,8 @@ class SongsModule extends CoreClass {
 					if (err && err !== true) return reject(new Error(err));
 					return resolve(song);
 				}
-			);
-		});
+			)
+		);
 	}
 
 	/**
@@ -249,28 +229,22 @@ class SongsModule extends CoreClass {
 	 */
 	DELETE_SONG(payload) {
 		// songId, cb
-		return new Promise((resolve, reject) => {
-			let songModel;
-
-			this.db
-				.runJob("GET_MODEL", { modelName: "song" })
-				.then(model => {
-					songModel = model;
-				})
-				.catch(console.error);
-
-			return async.waterfall(
+		return new Promise((resolve, reject) =>
+			async.waterfall(
 				[
 					next => {
-						songModel.deleteOne({ songId: payload.songId }, next);
+						SongsModule.songModel.deleteOne({ songId: payload.songId }, next);
 					},
 
 					next => {
-						this.cache
-							.runJob("HDEL", {
+						CacheModule.runJob(
+							"HDEL",
+							{
 								table: "songs",
 								key: payload.songId
-							})
+							},
+							this
+						)
 							.then(() => next())
 							.catch(next);
 					}
@@ -279,9 +253,9 @@ class SongsModule extends CoreClass {
 					if (err && err !== true) return reject(new Error(err));
 					return resolve();
 				}
-			);
-		});
+			)
+		);
 	}
 }
 
-export default new SongsModule();
+export default new _SongsModule();

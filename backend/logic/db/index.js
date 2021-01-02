@@ -16,10 +16,14 @@ const isLength = (string, min, max) => !(typeof string !== "string" || string.le
 
 mongoose.Promise = bluebird;
 
-class DBModule extends CoreClass {
+let DBModule;
+
+class _DBModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		super("db");
+
+		DBModule = this;
 	}
 
 	/**
@@ -271,7 +275,7 @@ class DBModule extends CoreClass {
 	 */
 	GET_MODEL(payload) {
 		return new Promise(resolve => {
-			resolve(this.models[payload.modelName]);
+			resolve(DBModule.models[payload.modelName]);
 		});
 	}
 
@@ -284,7 +288,7 @@ class DBModule extends CoreClass {
 	 */
 	GET_SCHEMA(payload) {
 		return new Promise(resolve => {
-			resolve(this.schemas[payload.schemaName]);
+			resolve(DBModule.schemas[payload.schemaName]);
 		});
 	}
 
@@ -299,4 +303,4 @@ class DBModule extends CoreClass {
 	}
 }
 
-export default new DBModule();
+export default new _DBModule();

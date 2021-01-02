@@ -118,7 +118,7 @@ cache.runJob("SUB", {
 	}
 });
 
-export default {
+const thisExport = {
 	/**
 	 * Lists all Users
 	 *
@@ -392,7 +392,7 @@ export default {
 					return cb({ status: "failure", message: err });
 				}
 
-				return module.exports.login(session, email, password, result => {
+				return thisExport.login(session, email, password, result => {
 					const obj = {
 						status: "success",
 						message: "Successfully registered."
@@ -1897,3 +1897,5 @@ export default {
 		);
 	})
 };
+
+export default thisExport;

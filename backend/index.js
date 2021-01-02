@@ -3,6 +3,11 @@ import "./loadEnvVariables.js";
 import util from "util";
 import config from "config";
 
+// eslint-disable-next-line no-extend-native
+Array.prototype.remove = function (item) {
+	this.splice(this.indexOf(item), 1);
+};
+
 process.on("uncaughtException", err => {
 	if (err.code === "ECONNREFUSED" || err.code === "UNCERTAIN_STATE") return;
 	console.log(`UNCAUGHT EXCEPTION: ${err.stack}`);
@@ -147,12 +152,10 @@ if (config.debug && config.debug.traceUnhandledPromises === true) {
 
 // 	allModulesInitialized() {
 // 		this.logger.success("MODULE_MANAGER", "All modules have started!");
-// 		this.modules["discord"].sendAdminAlertMessage("The backend server started successfully.", "#00AA00", "Startup", false, []);
 // 	}
 
 // 	aModuleFailed(failedModule) {
 // 		this.logger.error("MODULE_MANAGER", `A module has failed, locking down. Module: ${failedModule.name}`);
-// 		this.modules["discord"].sendAdminAlertMessage(`The backend server failed to start due to a failing module: ${failedModule.name}.`, "#AA0000", "Startup", false, []);
 
 // 		this._lockdown();
 // 	}
@@ -200,7 +203,6 @@ if (config.debug && config.debug.traceUnhandledPromises === true) {
 // moduleManager.addModule("mail");
 // moduleManager.addModule("api");
 // moduleManager.addModule("app");
-// moduleManager.addModule("discord");
 // moduleManager.addModule("io");
 // moduleManager.addModule("logger");
 // moduleManager.addModule("notifications");
@@ -208,7 +210,6 @@ if (config.debug && config.debug.traceUnhandledPromises === true) {
 // moduleManager.addModule("playlists");
 // moduleManager.addModule("punishments");
 // moduleManager.addModule("songs");
-// moduleManager.addModule("spotify");
 // moduleManager.addModule("stations");
 // moduleManager.addModule("tasks");
 // moduleManager.addModule("utils");
@@ -245,6 +246,7 @@ class ModuleManager {
 			all: [],
 			completed: []
 		};
+		this.name = "MODULE_MANAGER";
 	}
 
 	/**
@@ -253,7 +255,7 @@ class ModuleManager {
 	 * @param {string} moduleName - the name of the module (also needs to be the same as the filename of a module located in the logic folder or "logic/moduleName/index.js")
 	 */
 	async addModule(moduleName) {
-		console.log("add module", moduleName);
+		this.log("INFO", "Adding module", moduleName);
 		// import(`./logic/${moduleName}`).then(Module => {
 		// 	// eslint-disable-next-line new-cap
 
@@ -285,12 +287,12 @@ class ModuleManager {
 			}
 		}); // ensures all modules are imported, then converts promise to the default export of the import
 
-		for (let moduleId = 0, moduleNames = Object.keys(this.modules); moduleId < moduleNames.length; moduleId += 1) {
-			const module = this.modules[moduleNames[moduleId]];
+		Object.keys(this.modules).every(moduleKey => {
+			const module = this.modules[moduleKey];
 
 			module.setModuleManager(this);
 
-			if (this.lockdown) break;
+			if (this.lockdown) return false;
 
 			module._initialize();
 
@@ -308,7 +310,8 @@ class ModuleManager {
 			// 	this.logger.info("MODULE_MANAGER", `${moduleName} dependencies have been completed`);
 			// 	module._initialize();
 			// });
-		}
+			return true;
+		});
 	}
 
 	/**
@@ -320,8 +323,8 @@ class ModuleManager {
 		if (this.modulesNotInitialized.indexOf(module) !== -1) {
 			this.modulesNotInitialized.splice(this.modulesNotInitialized.indexOf(module), 1);
 
-			console.log(
-				"MODULE_MANAGER",
+			this.log(
+				"INFO",
 				`Initialized: ${Object.keys(this.modules).length - this.modulesNotInitialized.length}/${
 					Object.keys(this.modules).length
 				}.`
@@ -338,7 +341,7 @@ class ModuleManager {
 	 */
 	onFail(module) {
 		if (this.modulesNotInitialized.indexOf(module) !== -1) {
-			console.log("A module failed to initialize!");
+			this.log("ERROR", "A module failed to initialize!");
 		}
 	}
 
@@ -347,14 +350,32 @@ class ModuleManager {
 	 *
 	 */
 	onAllModulesInitialized() {
-		console.log("All modules initialized!");
-		this.modules.discord.runJob("SEND_ADMIN_ALERT_MESSAGE", {
-			message: "The backend server started successfully.",
-			color: "#00AA00",
-			type: "Startup",
-			critical: false,
-			extraFields: []
-		});
+		this.log("INFO", "All modules initialized!");
+	}
+
+	/**
+	 * Creates a new log message
+	 *
+	 * @param {...any} args - anything to be included in the log message, the first argument is the type of log
+	 */
+	log(...args) {
+		const _arguments = Array.from(args);
+		const type = _arguments[0];
+
+		_arguments.splice(0, 1);
+		const start = `|${this.name.toUpperCase()}|`;
+		const numberOfSpacesNeeded = 20 - start.length;
+		_arguments.unshift(`${start}${Array(numberOfSpacesNeeded).join(" ")}`);
+
+		if (type === "INFO") {
+			_arguments[0] += "\x1b[36m";
+			_arguments.push("\x1b[0m");
+			console.log.apply(null, _arguments);
+		} else if (type === "ERROR") {
+			_arguments[0] += "\x1b[31m";
+			_arguments.push("\x1b[0m");
+			console.error.apply(null, _arguments);
+		}
 	}
 }
 
@@ -366,13 +387,11 @@ moduleManager.addModule("mail");
 moduleManager.addModule("activities");
 moduleManager.addModule("api");
 moduleManager.addModule("app");
-moduleManager.addModule("discord");
 moduleManager.addModule("io");
 moduleManager.addModule("notifications");
 moduleManager.addModule("playlists");
 moduleManager.addModule("punishments");
 moduleManager.addModule("songs");
-moduleManager.addModule("spotify");
 moduleManager.addModule("stations");
 moduleManager.addModule("tasks");
 moduleManager.addModule("utils");
@@ -388,27 +407,33 @@ process.stdin.on("data", data => {
 	if (command === "status") {
 		console.log("Status:");
 
-		for (
-			let moduleName = 0, moduleKeys = Object.keys(moduleManager.modules);
-			moduleName < moduleKeys.length;
-			moduleName += 1
-		) {
+		Object.keys(moduleManager.modules).forEach(moduleName => {
 			const module = moduleManager.modules[moduleName];
 			const tabsNeeded = 4 - Math.ceil((moduleName.length + 1) / 8);
 			console.log(
 				`${moduleName.toUpperCase()}${Array(tabsNeeded).join(
 					"\t"
-				)}${module.getStatus()}. Jobs in queue: ${module.jobQueue.length()}. Jobs in progress: ${module.jobQueue.running()}. Concurrency: ${
+				)}${module.getStatus()}. Jobs in queue: ${module.jobQueue.lengthQueue()}. Jobs in progress: ${module.jobQueue.lengthRunning()}. Jobs paused: ${module.jobQueue.lengthPaused()} Concurrency: ${
 					module.jobQueue.concurrency
 				}. Stage: ${module.getStage()}`
 			);
-		}
+		});
 		// moduleManager._lockdown();
 	}
 	if (command.startsWith("running")) {
 		const parts = command.split(" ");
 
-		console.log(moduleManager.modules[parts[1]].runningJobs);
+		console.log(moduleManager.modules[parts[1]].jobQueue.runningTasks);
+	}
+	if (command.startsWith("queued")) {
+		const parts = command.split(" ");
+
+		console.log(moduleManager.modules[parts[1]].jobQueue.queue);
+	}
+	if (command.startsWith("paused")) {
+		const parts = command.split(" ");
+
+		console.log(moduleManager.modules[parts[1]].jobQueue.pausedTasks);
 	}
 	if (command.startsWith("stats")) {
 		const parts = command.split(" ");
@@ -417,6 +442,13 @@ process.stdin.on("data", data => {
 	}
 	if (command.startsWith("debug")) {
 		moduleManager.modules.utils.runJob("DEBUG");
+	}
+
+	if (command.startsWith("eval")) {
+		const evalCommand = command.replace("eval ", "");
+		console.log(`Running eval command: ${evalCommand}`);
+		const response = eval(evalCommand);
+		console.log(`Eval response: `, response);
 	}
 });
 

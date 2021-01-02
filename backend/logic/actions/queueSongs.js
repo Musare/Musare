@@ -137,9 +137,9 @@ const lib = {
 					let updated = false;
 
 					const $set = {};
-					for (let prop = 0, songKeys = Object.keys(updatedSong); prop < songKeys.length; prop += 1) {
+					Object.keys(updatedSong).forEach(prop => {
 						if (updatedSong[prop] !== song[prop]) $set[prop] = updatedSong[prop];
-					}
+					});
 
 					updated = true;
 					if (!updated) return next("No properties changed");
@@ -261,12 +261,6 @@ const lib = {
 						})
 						.catch(next);
 				},
-				/* (newSong, next) => {
-				utils.getSongFromSpotify(newSong, (err, song) => {
-					if (!song) next(null, newSong);
-					else next(err, song);
-				});
-			}, */
 				(newSong, next) => {
 					const song = new QueueSongModel(newSong);
 					song.save({ validateBeforeSave: false }, (err, song) => {

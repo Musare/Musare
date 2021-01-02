@@ -2,10 +2,17 @@ import async from "async";
 import mongoose from "mongoose";
 import CoreClass from "../core";
 
-class PunishmentsModule extends CoreClass {
+let PunishmentsModule;
+let CacheModule;
+let DBModule;
+let UtilsModule;
+
+class _PunishmentsModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		super("punishments");
+
+		PunishmentsModule = this;
 	}
 
 	/**
@@ -16,21 +23,19 @@ class PunishmentsModule extends CoreClass {
 	async initialize() {
 		this.setStage(1);
 
-		this.cache = this.moduleManager.modules.cache;
-		this.db = this.moduleManager.modules.db;
-		this.io = this.moduleManager.modules.io;
-		this.utils = this.moduleManager.modules.utils;
+		CacheModule = this.moduleManager.modules.cache;
+		DBModule = this.moduleManager.modules.db;
+		UtilsModule = this.moduleManager.modules.utils;
 
-		const punishmentModel = await this.db.runJob("GET_MODEL", { modelName: "punishment" });
-		const punishmentSchema = await this.db.runJob("GET_SCHEMA", { schemaName: "punishment" });
+		this.punishmentModel = this.PunishmentModel = await DBModule.runJob("GET_MODEL", { modelName: "punishment" });
+		this.punishmentSchemaCache = await DBModule.runJob("GET_SCHEMA", { schemaName: "punishment" });
 
 		return new Promise((resolve, reject) =>
 			async.waterfall(
 				[
 					next => {
 						this.setStage(2);
-						this.cache
-							.runJob("HGETALL", { table: "punishments" })
+						CacheModule.runJob("HGETALL", { table: "punishments" })
 							.then(punishments => {
 								next(null, punishments);
 							})
@@ -47,14 +52,13 @@ class PunishmentsModule extends CoreClass {
 						return async.each(
 							punishmentIds,
 							(punishmentId, cb) => {
-								punishmentModel.findOne({ _id: punishmentId }, (err, punishment) => {
+								PunishmentsModule.punishmentModel.findOne({ _id: punishmentId }, (err, punishment) => {
 									if (err) next(err);
 									else if (!punishment)
-										this.cache
-											.runJob("HDEL", {
-												table: "punishments",
-												key: punishmentId
-											})
+										CacheModule.runJob("HDEL", {
+											table: "punishments",
+											key: punishmentId
+										})
 											.then(() => {
 												cb();
 											})
@@ -68,7 +72,7 @@ class PunishmentsModule extends CoreClass {
 
 					next => {
 						this.setStage(4);
-						punishmentModel.find({}, next);
+						PunishmentsModule.punishmentModel.find({}, next);
 					},
 
 					(punishments, next) => {
@@ -78,12 +82,11 @@ class PunishmentsModule extends CoreClass {
 							(punishment, next) => {
 								if (punishment.active === false || punishment.expiresAt < Date.now()) return next();
 
-								return this.cache
-									.runJob("HSET", {
-										table: "punishments",
-										key: punishment._id,
-										value: punishmentSchema(punishment, punishment._id)
-									})
+								return CacheModule.runJob("HSET", {
+									table: "punishments",
+									key: punishment._id,
+									value: PunishmentsModule.punishmentSchemaCache(punishment, punishment._id)
+								})
 									.then(() => next())
 									.catch(next);
 							},
@@ -93,7 +96,7 @@ class PunishmentsModule extends CoreClass {
 				],
 				async err => {
 					if (err) {
-						const formattedErr = await this.utils.runJob("GET_ERROR", { error: err });
+						const formattedErr = await UtilsModule.runJob("GET_ERROR", { error: err });
 						reject(new Error(formattedErr));
 					} else resolve();
 				}
@@ -112,8 +115,7 @@ class PunishmentsModule extends CoreClass {
 			async.waterfall(
 				[
 					next => {
-						this.cache
-							.runJob("HGETALL", { table: "punishments" })
+						CacheModule.runJob("HGETALL", { table: "punishments" }, this)
 							.then(punishmentsObj => next(null, punishmentsObj))
 							.catch(next);
 					},
@@ -121,15 +123,11 @@ class PunishmentsModule extends CoreClass {
 					(punishments, next) => {
 						let filteredPunishments = [];
 
-						for (
-							let id = 0, punishmentKeys = Object.keys(punishments);
-							id < punishmentKeys.length;
-							id += 1
-						) {
-							const punishment = punishments[id];
+						Object.keys(punishments).forEach(punishmentKey => {
+							const punishment = punishments[punishmentKey];
 							punishment.punishmentId = id;
 							punishments.push(punishment);
-						}
+						});
 
 						filteredPunishments = punishments.filter(punishment => {
 							if (punishment.expiresAt < Date.now()) punishmentsToRemove.push(punishment);
@@ -143,12 +141,14 @@ class PunishmentsModule extends CoreClass {
 						async.each(
 							punishmentsToRemove,
 							(punishment, next2) => {
-								this.cache
-									.runJob("HDEL", {
+								CacheModule.runJob(
+									"HDEL",
+									{
 										table: "punishments",
 										key: punishment.punishmentId
-									})
-									.finally(() => next2());
+									},
+									this
+								).finally(() => next2());
 							},
 							() => {
 								next(null, punishments);
@@ -172,42 +172,39 @@ class PunishmentsModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	GET_PUNISHMENT(payload) {
-		return new Promise((resolve, reject) => {
-			let punishmentModel;
-
-			this.db
-				.runJob("GET_MODEL", { modelName: "punishment" })
-				.then(model => {
-					punishmentModel = model;
-				})
-				.catch(console.error);
-
-			return async.waterfall(
+		return new Promise((resolve, reject) =>
+			async.waterfall(
 				[
 					next => {
 						if (!mongoose.Types.ObjectId.isValid(payload.id)) return next("Id is not a valid ObjectId.");
-						return this.cache
-							.runJob("HGET", {
+						return CacheModule.runJob(
+							"HGET",
+							{
 								table: "punishments",
 								key: payload.id
-							})
+							},
+							this
+						)
 							.then(punishment => next(null, punishment))
 							.catch(next);
 					},
 
 					(punishment, next) => {
 						if (punishment) return next(true, punishment);
-						return punishmentModel.findOne({ _id: payload.id }, next);
+						return PunishmentsModule.punishmentModel.findOne({ _id: payload.id }, next);
 					},
 
 					(punishment, next) => {
 						if (punishment) {
-							this.cache
-								.runJob("HSET", {
+							CacheModule.runJob(
+								"HSET",
+								{
 									table: "punishments",
 									key: payload.id,
 									value: punishment
-								})
+								},
+								this
+							)
 								.then(punishment => {
 									next(null, punishment);
 								})
@@ -219,8 +216,8 @@ class PunishmentsModule extends CoreClass {
 					if (err && err !== true) return reject(new Error(err));
 					return resolve(punishment);
 				}
-			);
-		});
+			)
+		);
 	}
 
 	/**
@@ -235,7 +232,7 @@ class PunishmentsModule extends CoreClass {
 			async.waterfall(
 				[
 					next => {
-						this.runJob("GET_PUNISHMENTS", {})
+						PunishmentsModule.runJob("GET_PUNISHMENTS", {}, this)
 							.then(punishments => {
 								next(null, punishments);
 							})
@@ -268,28 +265,11 @@ class PunishmentsModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	ADD_PUNISHMENT(payload) {
-		return new Promise((resolve, reject) => {
-			let PunishmentModel;
-			let PunishmentSchema;
-
-			this.db
-				.runJob("GET_MODEL", { modelName: "punishment" })
-				.then(model => {
-					PunishmentModel = model;
-				})
-				.catch(console.error);
-
-			this.db
-				.runJob("GET_SCHEMA", { schemaName: "punishment" })
-				.then(model => {
-					PunishmentSchema = model;
-				})
-				.catch(console.error);
-
-			return async.waterfall(
+		return new Promise((resolve, reject) =>
+			async.waterfall(
 				[
 					next => {
-						const punishment = new PunishmentModel({
+						const punishment = new PunishmentsModule.PunishmentModel({
 							type: payload.type,
 							value: payload.value,
 							reason: payload.reason,
@@ -305,12 +285,15 @@ class PunishmentsModule extends CoreClass {
 					},
 
 					(punishment, next) => {
-						this.cache
-							.runJob("HSET", {
+						CacheModule.runJob(
+							"HSET",
+							{
 								table: "punishments",
 								key: punishment._id,
-								value: PunishmentSchema(punishment, punishment._id)
-							})
+								value: PunishmentsModule.punishmentSchemaCache(punishment, punishment._id)
+							},
+							this
+						)
 							.then(() => next())
 							.catch(next);
 					},
@@ -324,9 +307,9 @@ class PunishmentsModule extends CoreClass {
 					if (err) return reject(new Error(err));
 					return resolve(punishment);
 				}
-			);
-		});
+			)
+		);
 	}
 }
 
-export default new PunishmentsModule();
+export default new _PunishmentsModule();

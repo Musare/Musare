@@ -9,10 +9,19 @@ import socketio from "socket.io";
 import actions from "./actions";
 import CoreClass from "../core";
 
-class IOModule extends CoreClass {
+let IOModule;
+let AppModule;
+let CacheModule;
+let UtilsModule;
+let DBModule;
+let PunishmentsModule;
+
+class _IOModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		super("io");
+
+		IOModule = this;
 	}
 
 	/**
@@ -23,18 +32,20 @@ class IOModule extends CoreClass {
 	async initialize() {
 		this.setStage(1);
 
-		const { app } = this.moduleManager.modules;
-		const { cache } = this.moduleManager.modules;
-		const { utils } = this.moduleManager.modules;
-		const { db } = this.moduleManager.modules;
-		const { punishments } = this.moduleManager.modules;
+		AppModule = this.moduleManager.modules.app;
+		CacheModule = this.moduleManager.modules.cache;
+		UtilsModule = this.moduleManager.modules.utils;
+		DBModule = this.moduleManager.modules.db;
+		PunishmentsModule = this.moduleManager.modules.punishments;
+
+		this.userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
 
 		this.setStage(2);
 
 		const SIDname = config.get("cookie.SIDname");
 
 		// TODO: Check every 30s/, for all sockets, if they are still allowed to be in the rooms they are in, and on socket at all (permission changing/banning)
-		const server = await app.runJob("SERVER");
+		const server = await AppModule.runJob("SERVER");
 		this._io = socketio(server);
 
 		return new Promise(resolve => {
@@ -57,14 +68,12 @@ class IOModule extends CoreClass {
 				return async.waterfall(
 					[
 						next => {
-							utils
-								.runJob("PARSE_COOKIES", {
-									cookieString: socket.request.headers.cookie
-								})
-								.then(res => {
-									SID = res[SIDname];
-									next(null);
-								});
+							UtilsModule.runJob("PARSE_COOKIES", {
+								cookieString: socket.request.headers.cookie
+							}).then(res => {
+								SID = res[SIDname];
+								next(null);
+							});
 						},
 
 						next => {
@@ -73,9 +82,11 @@ class IOModule extends CoreClass {
 						},
 
 						next => {
-							cache.runJob("HGET", { table: "sessions", key: SID }).then(session => {
-								next(null, session);
-							});
+							CacheModule.runJob("HGET", { table: "sessions", key: SID })
+								.then(session => {
+									next(null, session);
+								})
+								.catch(next);
 						},
 
 						(session, next) => {
@@ -85,21 +96,18 @@ class IOModule extends CoreClass {
 
 							socket.session = session;
 
-							return cache
-								.runJob("HSET", {
-									table: "sessions",
-									key: SID,
-									value: session
-								})
-								.then(session => {
-									next(null, session);
-								});
+							return CacheModule.runJob("HSET", {
+								table: "sessions",
+								key: SID,
+								value: session
+							}).then(session => {
+								next(null, session);
+							});
 						},
 
 						(res, next) => {
 							// check if a session's user / IP is banned
-							punishments
-								.runJob("GET_PUNISHMENTS", {})
+							PunishmentsModule.runJob("GET_PUNISHMENTS", {})
 								.then(punishments => {
 									const isLoggedIn = !!(socket.session && socket.session.refreshDate);
 									const userId = isLoggedIn ? socket.session.userId : null;
@@ -202,32 +210,31 @@ class IOModule extends CoreClass {
 				socket.on("error", console.error);
 
 				if (socket.session.sessionId) {
-					cache
-						.runJob("HGET", {
-							table: "sessions",
-							key: socket.session.sessionId
-						})
+					CacheModule.runJob("HGET", {
+						table: "sessions",
+						key: socket.session.sessionId
+					})
 						.then(session => {
 							if (session && session.userId) {
-								db.runJob("GET_MODEL", { modelName: "user" }).then(userModel => {
-									userModel.findOne({ _id: session.userId }, (err, user) => {
-										if (err || !user) return socket.emit("ready", false);
+								IOModule.userModel.findOne({ _id: session.userId }, (err, user) => {
+									if (err || !user) return socket.emit("ready", false);
 
-										let role = "";
-										let username = "";
-										let userId = "";
-										if (user) {
-											role = user.role;
-											username = user.username;
-											userId = session.userId;
-										}
+									let role = "";
+									let username = "";
+									let userId = "";
+									if (user) {
+										role = user.role;
+										username = user.username;
+										userId = session.userId;
+									}
 
-										return socket.emit("ready", true, role, username, userId);
-									});
+									return socket.emit("ready", true, role, username, userId);
 								});
 							} else socket.emit("ready", false);
 						})
-						.catch(() => socket.emit("ready", false));
+						.catch(() => {
+							socket.emit("ready", false);
+						});
 				} else socket.emit("ready", false);
 
 				// have the socket listen for each action
@@ -256,53 +263,56 @@ class IOModule extends CoreClass {
 							}
 							this.log("INFO", "IO_ACTION", `A user executed an action. Action: ${namespace}.${action}.`);
 
+							let failedGettingSession = false;
 							// load the session from the cache
-							cache
-								.runJob("HGET", {
+							if (socket.session.sessionId)
+								await CacheModule.runJob("HGET", {
 									table: "sessions",
 									key: socket.session.sessionId
 								})
-								.then(session => {
-									// make sure the sockets sessionId isn't set if there is no session
-									if (socket.session.sessionId && session === null) delete socket.session.sessionId;
-
-									try {
-										// call the action, passing it the session, and the arguments socket.io passed us
-										return actions[namespace][action].apply(
-											null,
-											[socket.session].concat(args).concat([
-												result => {
-													this.log(
-														"INFO",
-														"IO_ACTION",
-														`Response to action. Action: ${namespace}.${action}. Response status: ${result.status}`
-													);
-													// respond to the socket with our message
-													if (typeof cb === "function") cb(result);
-												}
-											])
-										);
-									} catch (err) {
+									.then(session => {
+										// make sure the sockets sessionId isn't set if there is no session
+										if (socket.session.sessionId && session === null)
+											delete socket.session.sessionId;
+									})
+									.catch(() => {
+										failedGettingSession = true;
 										if (typeof cb === "function")
 											cb({
 												status: "error",
-												message: "An error occurred while executing the specified action."
+												message: "An error occurred while obtaining your session"
 											});
-
-										return this.log(
-											"ERROR",
-											"IO_ACTION_ERROR",
-											`Some type of exception occurred in the action ${namespace}.${action}. Error message: ${err.message}`
-										);
-									}
-								})
-								.catch(() => {
+									});
+							if (!failedGettingSession)
+								try {
+									// call the action, passing it the session, and the arguments socket.io passed us
+									actions[namespace][action].apply(
+										null,
+										[socket.session].concat(args).concat([
+											result => {
+												this.log(
+													"INFO",
+													"IO_ACTION",
+													`Response to action. Action: ${namespace}.${action}. Response status: ${result.status}`
+												);
+												// respond to the socket with our message
+												if (typeof cb === "function") cb(result);
+											}
+										])
+									);
+								} catch (err) {
 									if (typeof cb === "function")
 										cb({
 											status: "error",
-											message: "An error occurred while obtaining your session"
+											message: "An error occurred while executing the specified action."
 										});
-								});
+
+									this.log(
+										"ERROR",
+										"IO_ACTION_ERROR",
+										`Some type of exception occurred in the action ${namespace}.${action}. Error message: ${err.message}`
+									);
+								}
 						});
 					});
 				});
@@ -321,9 +331,9 @@ class IOModule extends CoreClass {
 	 */
 	IO() {
 		return new Promise(resolve => {
-			resolve(this._io);
+			resolve(IOModule._io);
 		});
 	}
 }
 
-export default new IOModule();
+export default new _IOModule();

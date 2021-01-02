@@ -1,13 +1,25 @@
 import config from "config";
 
 import async from "async";
+// import crypto from "crypto";
 
 import CoreClass from "../core";
 
-class APIModule extends CoreClass {
+// let APIModule;
+let AppModule;
+// let DBModule;
+let PlaylistsModule;
+let UtilsModule;
+let PunishmentsModule;
+let CacheModule;
+// let NotificationsModule;
+
+class _APIModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		super("api");
+
+		// APIModule = this;
 	}
 
 	/**
@@ -17,14 +29,13 @@ class APIModule extends CoreClass {
 	 */
 	initialize() {
 		return new Promise((resolve, reject) => {
-			this.app = this.moduleManager.modules.app;
-			this.stations = this.moduleManager.modules.stations;
-			this.db = this.moduleManager.modules.db;
-			this.playlists = this.moduleManager.modules.playlists;
-			this.utils = this.moduleManager.modules.utils;
-			this.punishments = this.moduleManager.modules.punishments;
-			this.cache = this.moduleManager.modules.cache;
-			this.notifications = this.moduleManager.modules.notifications;
+			AppModule = this.moduleManager.modules.app;
+			// DBModule = this.moduleManager.modules.db;
+			PlaylistsModule = this.moduleManager.modules.playlists;
+			UtilsModule = this.moduleManager.modules.utils;
+			PunishmentsModule = this.moduleManager.modules.punishments;
+			CacheModule = this.moduleManager.modules.cache;
+			// NotificationsModule = this.moduleManager.modules.notifications;
 
 			const SIDname = config.get("cookie.SIDname");
 
@@ -33,10 +44,9 @@ class APIModule extends CoreClass {
 				async.waterfall(
 					[
 						next => {
-							this.utils
-								.runJob("PARSE_COOKIES", {
-									cookieString: req.headers.cookie
-								})
+							UtilsModule.runJob("PARSE_COOKIES", {
+								cookieString: req.headers.cookie
+							})
 								.then(res => {
 									SID = res[SIDname];
 									next(null);
@@ -50,9 +60,9 @@ class APIModule extends CoreClass {
 						},
 
 						next => {
-							this.cache
-								.runJob("HGET", { table: "sessions", key: SID })
-								.then(session => next(null, session));
+							CacheModule.runJob("HGET", { table: "sessions", key: SID }).then(session =>
+								next(null, session)
+							);
 						},
 
 						(session, next) => {
@@ -62,21 +72,18 @@ class APIModule extends CoreClass {
 
 							req.session = session;
 
-							return this.cache
-								.runJob("HSET", {
-									table: "sessions",
-									key: SID,
-									value: session
-								})
-								.then(session => {
-									next(null, session);
-								});
+							return CacheModule.runJob("HSET", {
+								table: "sessions",
+								key: SID,
+								value: session
+							}).then(session => {
+								next(null, session);
+							});
 						},
 
 						(res, next) => {
 							// check if a session's user / IP is banned
-							this.punishments
-								.runJob("GET_PUNISHMENTS", {})
+							PunishmentsModule.runJob("GET_PUNISHMENTS", {})
 								.then(punishments => {
 									const isLoggedIn = !!(req.session && req.session.refreshDate);
 									const userId = isLoggedIn ? req.session.userId : null;
@@ -111,8 +118,7 @@ class APIModule extends CoreClass {
 				);
 			};
 
-			this.app
-				.runJob("GET_APP", {})
+			AppModule.runJob("GET_APP", {})
 				.then(response => {
 					response.app.get("/", (req, res) => {
 						res.json({
@@ -123,8 +129,7 @@ class APIModule extends CoreClass {
 
 					response.app.get("/export/privatePlaylist/:playlistId", isLoggedIn, (req, res) => {
 						const { playlistId } = req.params;
-						this.playlists
-							.runJob("GET_PLAYLIST", { playlistId })
+						PlaylistsModule.runJob("GET_PLAYLIST", { playlistId })
 							.then(playlist => {
 								if (playlist.createdBy === req.session.userId)
 									res.json({ status: "success", playlist });
@@ -136,105 +141,131 @@ class APIModule extends CoreClass {
 					});
 
 					// response.app.get("/debug_station", async (req, res) => {
-					//     const responseObject = {};
+					// 	const responseObject = {};
 
-					//     const stationModel = await this.db.runJob(
-					//         "GET_MODEL",
-					//         {
-					//             modelName: "station",
-					//         }
-					//     );
+					// 	const stationModel = await DBModule.runJob("GET_MODEL", {
+					// 		modelName: "station"
+					// 	});
 
-					//     async.waterfall([
-					//         next => {
-					//             stationModel.find({}, next);
-					//         },
+					// 	async.waterfall(
+					// 		[
+					// 			next => {
+					// 				stationModel.find({}, next);
+					// 			},
 
-					//         (stations, next) => {
-					//             responseObject.mongo = {
-					//                 stations
-					//             };
-					//             next();
-					//         },
+					// 			(stations, next) => {
+					// 				responseObject.mongo = {
+					// 					stations
+					// 				};
+					// 				next();
+					// 			},
 
-					//         next => {
-					//             this.cache
-					//                 .runJob("HGETALL", { table: "stations" })
-					//                 .then(stations => {
-					//                     next(null, stations);
-					//                 })
-					//                 .catch(next);
-					//         },
+					// 			next => {
+					// 				CacheModule.runJob("HGETALL", { table: "stations" })
+					// 					.then(stations => {
+					// 						next(null, stations);
+					// 					})
+					// 					.catch(err => {
+					// 						console.log(err);
+					// 						next(err);
+					// 					});
+					// 			},
 
-					//         (stations, next) => {
-					//             responseObject.redis = {
-					//                 stations
-					//             };
-					//             next();
-					//         },
+					// 			(stations, next) => {
+					// 				responseObject.redis = {
+					// 					stations
+					// 				};
+					// 				next();
+					// 			},
 
-					//         next => {
-					//             responseObject.cryptoExamples = {};
-					//             responseObject.mongo.stations.forEach(station => {
-					//                 const payloadName = `stations.nextSong?id=${station._id}`;
-					//                 responseObject.cryptoExamples[station._id] = crypto
-					//                     .createHash("md5")
-					//                     .update(`_notification:${payloadName}_`)
-					//                     .digest("hex")
-					//             });
-					//             next();
-					//         },
+					// 			next => {
+					// 				responseObject.cryptoExamples = {};
+					// 				responseObject.mongo.stations.forEach(station => {
+					// 					const payloadName = `stations.nextSong?id=${station._id}`;
+					// 					responseObject.cryptoExamples[station._id] = crypto
+					// 						.createHash("md5")
+					// 						.update(`_notification:${payloadName}_`)
+					// 						.digest("hex");
+					// 				});
+					// 				next();
+					// 			},
 
-					//         next => {
-					//             this.notifications.pub.keys("*", next);
-					//         },
+					// 			next => {
+					// 				NotificationsModule.pub.keys("*", next);
+					// 			},
 
-					//         (redisKeys, next) => {
-					//             responseObject.redis = {
-					//                 ...redisKeys,
-					//                 ttl: {}
-					//             };
-					//             async.eachLimit(redisKeys, 1, (redisKey, next) => {
-					//                 this.notifications.pub.ttl(redisKey, (err, ttl) => {
-					//                     responseObject.redis.ttl[redisKey] = ttl;
-					//                     next(err);
-					//                 })
-					//             }, next);
-					//         },
+					// 			(redisKeys, next) => {
+					// 				responseObject.redis = {
+					// 					...redisKeys,
+					// 					ttl: {}
+					// 				};
+					// 				async.eachLimit(
+					// 					redisKeys,
+					// 					1,
+					// 					(redisKey, next) => {
+					// 						NotificationsModule.pub.ttl(redisKey, (err, ttl) => {
+					// 							responseObject.redis.ttl[redisKey] = ttl;
+					// 							next(err);
+					// 						});
+					// 					},
+					// 					next
+					// 				);
+					// 			},
 
-					//         next => {
-					//             responseObject.debugLogs = this.moduleManager.debugLogs.stationIssue;
-					//             next();
-					//         },
+					// 			next => {
+					// 				responseObject.debugLogs = this.moduleManager.debugLogs.stationIssue;
+					// 				next();
+					// 			},
 
-					//         next => {
-					//             responseObject.debugJobs = this.moduleManager.debugJobs;
-					//             next();
-					//         }
-					//     ], (err, response) => {
-					//         if (err) {
-					//             console.log(err);
-					//             return res.json({
-					//                 error: err,
-					//                 objectSoFar: responseObject
-					//             });
-					//         }
+					// 			next => {
+					// 				responseObject.debugJobs = this.moduleManager.debugJobs;
+					// 				next();
+					// 			}
+					// 		],
+					// 		(err, response) => {
+					// 			if (err) {
+					// 				console.log(err);
+					// 				return res.json({
+					// 					error: err,
+					// 					objectSoFar: responseObject
+					// 				});
+					// 			}
 
-					//         res.json(responseObject);
-					//     });
+					// 			const responseJson = JSON.stringify(responseObject, (key, value) => {
+					// 				// console.log(key, value);
+					// 				if (
+					// 					key === "module" ||
+					// 					key === "task" ||
+					// 					key === "onFinish" ||
+					// 					key === "server" ||
+					// 					key === "nsp" ||
+					// 					key === "socket" ||
+					// 					key === "res" ||
+					// 					key === "client" ||
+					// 					key === "_idleNext" ||
+					// 					key === "_idlePrev"
+					// 				) {
+					// 					return undefined;
+					// 				}
+					// 				if (key === "parentJob" && value) return value.toString();
+					// 				return value;
+					// 			});
+
+					// 			res.end(responseJson);
+					// 		}
+					// 	);
 					// });
 
 					// Object.keys(actions).forEach(namespace => {
-					//     Object.keys(actions[namespace]).forEach(action => {
-					//         let name = `/${namespace}/${action}`;
+					// 	Object.keys(actions[namespace]).forEach(action => {
+					// 		const name = `/${namespace}/${action}`;
 
-					//         response.app.get(name, (req, res) => {
-					//             actions[namespace][action](null, result => {
-					//                 if (typeof cb === "function")
-					//                     return res.json(result);
-					//             });
-					//         });
-					//     });
+					// 		response.app.get(name, (req, res) => {
+					// 			actions[namespace][action](null, result => {
+					// 				if (typeof cb === "function") return res.json(result);
+					// 			});
+					// 		});
+					// 	});
 					// });
 
 					resolve();
@@ -246,4 +277,4 @@ class APIModule extends CoreClass {
 	}
 }
 
-export default new APIModule();
+export default new _APIModule();

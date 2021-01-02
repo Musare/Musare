@@ -9,10 +9,14 @@ import CoreClass from "../../core";
 const pubs = {};
 const subs = {};
 
-class CacheModule extends CoreClass {
+let CacheModule;
+
+class _CacheModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		super("cache");
+
+		CacheModule = this;
 	}
 
 	/**
@@ -84,8 +88,8 @@ class CacheModule extends CoreClass {
 	 */
 	QUIT() {
 		return new Promise(resolve => {
-			if (this.client.connected) {
-				this.client.quit();
+			if (CacheModule.client.connected) {
+				CacheModule.client.quit();
 				Object.keys(pubs).forEach(channel => pubs[channel].quit());
 				Object.keys(subs).forEach(channel => subs[channel].client.quit());
 			}
@@ -113,7 +117,7 @@ class CacheModule extends CoreClass {
 			// automatically stringify objects and arrays into JSON
 			if (["object", "array"].includes(typeof value)) value = JSON.stringify(value);
 
-			this.client.hset(payload.table, key, value, err => {
+			CacheModule.client.hset(payload.table, key, value, err => {
 				if (err) return reject(new Error(err));
 				return resolve(JSON.parse(value));
 			});
@@ -134,9 +138,11 @@ class CacheModule extends CoreClass {
 		return new Promise((resolve, reject) => {
 			let { key } = payload;
 
+			if (!key) return reject(new Error("Invalid key!"));
+			if (!payload.table) return reject(new Error("Invalid table!"));
 			if (mongoose.Types.ObjectId.isValid(key)) key = key.toString();
 
-			this.client.hget(payload.table, key, (err, value) => {
+			return CacheModule.client.hget(payload.table, key, (err, value) => {
 				if (err) return reject(new Error(err));
 				try {
 					value = JSON.parse(value);
@@ -167,7 +173,7 @@ class CacheModule extends CoreClass {
 
 			if (mongoose.Types.ObjectId.isValid(key)) key = key.toString();
 
-			this.client.hdel(payload.table, key, err => {
+			CacheModule.client.hdel(payload.table, key, err => {
 				if (err) return reject(new Error(err));
 				return resolve();
 			});
@@ -185,7 +191,7 @@ class CacheModule extends CoreClass {
 	HGETALL(payload) {
 		// table, cb, parseJson = true
 		return new Promise((resolve, reject) => {
-			this.client.hgetall(payload.table, (err, obj) => {
+			CacheModule.client.hgetall(payload.table, (err, obj) => {
 				if (err) return reject(new Error(err));
 				if (obj)
 					Object.keys(obj).forEach(key => {
@@ -211,7 +217,7 @@ class CacheModule extends CoreClass {
 		// channel, value, stringifyJson = true
 		return new Promise((resolve, reject) => {
 			/* if (pubs[channel] === undefined) {
-            pubs[channel] = redis.createClient({ url: this.url });
+            pubs[channel] = redis.createClient({ url: CacheModule.url });
             pubs[channel].on('error', (err) => console.error);
             } */
 
@@ -220,7 +226,7 @@ class CacheModule extends CoreClass {
 			if (["object", "array"].includes(typeof value)) value = JSON.stringify(value);
 
 			// pubs[channel].publish(channel, value);
-			this.client.publish(payload.channel, value, err => {
+			CacheModule.client.publish(payload.channel, value, err => {
 				if (err) reject(err);
 				else resolve();
 			});
@@ -241,18 +247,19 @@ class CacheModule extends CoreClass {
 			if (subs[payload.channel] === undefined) {
 				subs[payload.channel] = {
 					client: redis.createClient({
-						url: this.url,
-						password: this.password
+						url: CacheModule.url,
+						password: CacheModule.password
 					}),
 					cbs: []
 				};
 
 				subs[payload.channel].client.on("message", (channel, message) => {
-					try {
-						message = JSON.parse(message);
-					} catch (err) {
-						console.error(err);
-					}
+					if (message.startsWith("[") || message.startsWith("{"))
+						try {
+							message = JSON.parse(message);
+						} catch (err) {
+							console.error(err);
+						}
 
 					return subs[channel].cbs.forEach(cb => cb(message));
 				});
@@ -275,9 +282,9 @@ class CacheModule extends CoreClass {
 	 */
 	GET_SCHEMA(payload) {
 		return new Promise(resolve => {
-			resolve(this.schemas[payload.schemaName]);
+			resolve(CacheModule.schemas[payload.schemaName]);
 		});
 	}
 }
 
-export default new CacheModule();
+export default new _CacheModule();
