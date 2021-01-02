@@ -6,8 +6,8 @@ const state = {
 };
 
 const getters = {
-	isGithubLinked: state => state.modifiedUser.github,
-	isPasswordLinked: state => state.modifiedUser.password
+	isGithubLinked: state => state.originalUser.github,
+	isPasswordLinked: state => state.originalUser.password
 };
 
 const actions = {

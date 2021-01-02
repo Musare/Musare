@@ -76,7 +76,7 @@
 				Link your Musare account with GitHub.
 			</p>
 
-			<hr style="margin: 30px 0" />
+			<hr class="section-horizontal-rule" />
 
 			<a
 				class="button is-github"
@@ -87,9 +87,9 @@
 				</div>
 				&nbsp; Link GitHub to account
 			</a>
-
-			<br /><br />
 		</div>
+
+		<div v-if="!isGithubLinked"><br /><br /></div>
 
 		<div v-if="isPasswordLinked && isGithubLinked">
 			<h4 class="section-title">Remove login methods</h4>

@@ -119,12 +119,14 @@ export default {
 					})
 				);
 
-				this.socket.on("event:user.unlinkGithub", () =>
+				this.socket.on("event:user.unlinkGithub", () => {
 					this.updateOriginalUser({
 						property: "github",
 						value: false
-					})
-				);
+					});
+
+					console.log("unlink");
+				});
 			});
 		}
 	},
