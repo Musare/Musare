@@ -1649,9 +1649,11 @@ export default {
 	 */
 	addToQueue: isLoginRequired(async (session, stationId, songId, cb) => {
 		const userModel = await db.runJob("GET_MODEL", { modelName: "user" });
+
 		const stationModel = await db.runJob("GET_MODEL", {
 			modelName: "station"
 		});
+
 		async.waterfall(
 			[
 				next => {
@@ -1665,6 +1667,7 @@ export default {
 
 				(station, next) => {
 					if (!station) return next("Station not found.");
+
 					if (station.locked) {
 						return userModel.findOne({ _id: session.userId }, (err, user) => {
 							if (user.role !== "admin" && station.owner !== session.userId)
@@ -1672,11 +1675,13 @@ export default {
 							return next(null, station);
 						});
 					}
+
 					return next(null, station);
 				},
 
 				(station, next) => {
 					if (station.type !== "community") return next("That station is not a community station.");
+
 					return stations
 						.runJob("CAN_USER_VIEW_STATION", {
 							station,
@@ -1692,6 +1697,7 @@ export default {
 				(station, next) => {
 					if (station.currentSong && station.currentSong.songId === songId)
 						return next("That song is currently playing.");
+
 					return async.each(
 						station.queue,
 						(queueSong, next) => {
@@ -1703,31 +1709,27 @@ export default {
 				},
 
 				(station, next) => {
-					// songs
-					//     .runJob("GET_SONG", { id: songId })
-					//     .then((song) => {
-					//         if (song) return next(null, song, station);
-					//         else {
-					utils
-						.runJob("GET_SONG_FROM_YOUTUBE", { songId })
-						.then(response => {
-							const { song } = response;
-							song.artists = [];
-							song.skipDuration = 0;
-							song.likes = -1;
-							song.dislikes = -1;
-							song.thumbnail = "empty";
-							song.explicit = false;
-							next(null, song, station);
+					songs
+						.runJob("GET_SONG_FROM_ID", { songId })
+						.then(res => {
+							if (res.song) return next(null, res.song, station);
+
+							return utils
+								.runJob("GET_SONG_FROM_YOUTUBE", { songId })
+								.then(response => {
+									const { song } = response;
+									song.artists = [];
+									song.skipDuration = 0;
+									song.likes = -1;
+									song.dislikes = -1;
+									song.thumbnail = "empty";
+									song.explicit = false;
+
+									return next(null, song, station);
+								})
+								.catch(err => next(err));
 						})
-						.catch(err => {
-							next(err);
-						});
-					//     }
-					// })
-					// .catch((err) => {
-					//     next(err);
-					// });
+						.catch(err => next(err));
 				},
 
 				(song, station, next) => {
