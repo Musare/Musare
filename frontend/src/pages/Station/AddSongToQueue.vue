@@ -113,7 +113,7 @@
 								type="text"
 								placeholder="YouTube Playlist URL"
 								v-model="importQuery"
-								@keyup.enter="importPlaylist(false)"
+								@keyup.enter="importPlaylist()"
 							/>
 						</p>
 						<p class="control has-addons">
@@ -135,14 +135,6 @@
 									>publish</i
 								>Import</a
 							>
-							<!-- <a
-								class="button is-info"
-								v-on:click="importPlaylist(true)"
-								href="#"
-								><i class="material-icons icon-with-button"
-									>publish</i
-								>Import only music</a
-							> -->
 						</p>
 					</div>
 				</div>

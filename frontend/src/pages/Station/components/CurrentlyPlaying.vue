@@ -89,6 +89,7 @@ export default {
 	.thumbnail {
 		min-width: 140px;
 		max-height: 140px;
+		height: 100%;
 	}
 
 	#yt-thumbnail {

@@ -13,15 +13,23 @@
 		</div>
 		<div
 			id="queue-buttons"
-			v-if="loggedIn && station.type === 'community' && station.partyMode"
+			v-if="
+				(loggedIn &&
+					(station.type === 'community' && station.partyMode)) ||
+					station.type === 'official'
+			"
 		>
 			<button
 				id="add-song-to-queue"
 				class="button is-primary"
 				v-if="
-					(station.locked && isOwnerOnly()) ||
-						!station.locked ||
-						(station.locked && isAdminOnly() && dismissedWarning)
+					(station.type === 'community' &&
+						((station.locked && isOwnerOnly()) ||
+							!station.locked ||
+							(station.locked &&
+								isAdminOnly() &&
+								dismissedWarning))) ||
+						station.type === 'official'
 				"
 				@click="
 					openModal({
@@ -35,24 +43,21 @@
 					Add Song To Queue
 				</span>
 			</button>
-			<button
-				v-if="
-					station.locked &&
-						isAdminOnly() &&
-						!isOwnerOnly() &&
-						!dismissedWarning
-				"
-				class="button"
-				@click="dismissedWarning = true"
+			<div
+				id="queue-locked"
+				v-if="station.type === 'community' && station.locked"
 			>
-				THIS STATION'S QUEUE IS LOCKED.
-			</button>
-			<button
-				v-if="station.locked && !isAdminOnly() && !isOwnerOnly()"
-				class="button"
-			>
-				THIS STATION'S QUEUE IS LOCKED.
-			</button>
+				<button
+					v-if="isAdminOnly() && !isOwnerOnly() && !dismissedWarning"
+					class="button"
+					@click="dismissedWarning = true"
+				>
+					THIS STATION'S QUEUE IS LOCKED.
+				</button>
+				<button v-if="!isAdminOnly() && !isOwnerOnly()" class="button">
+					THIS STATION'S QUEUE IS LOCKED.
+				</button>
+			</div>
 		</div>
 	</div>
 </template>
