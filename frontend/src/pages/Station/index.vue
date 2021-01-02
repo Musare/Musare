@@ -55,7 +55,7 @@
 									bug_report
 								</i>
 								<span class="optional-desktop-only-text">
-									Toggle debug player box
+									Debug player box
 								</span>
 							</button>
 
@@ -1427,7 +1427,8 @@ export default {
 .night-mode {
 	#currently-playing-container,
 	#about-station-container,
-	#control-bar-container {
+	#control-bar-container,
+	.player-container.nothing-here {
 		background-color: #222 !important;
 	}
 
@@ -1435,14 +1436,6 @@ export default {
 	#video-container,
 	#control-bar-container {
 		border: 0 !important;
-	}
-}
-
-/** Ultrawide */
-
-@media (min-height: 1200px) {
-	#station-inner-container {
-		transform: scale(1.1);
 	}
 }
 
@@ -1507,7 +1500,6 @@ export default {
 
 		@media (min-height: 1050px) {
 			justify-content: center;
-			height: calc(100vh - 64px - 5px);
 		}
 
 		@media (min-width: 1040px) {
@@ -1521,13 +1513,6 @@ export default {
 			#about-station-container,
 			.player-container {
 				width: 800px !important;
-			}
-		}
-
-		@media (min-width: 1450px) and (max-width: 2200px) {
-			#about-station-container,
-			.player-container {
-				width: 1400px !important;
 			}
 		}
 
@@ -1605,9 +1590,7 @@ export default {
 				}
 
 				p {
-					font-size: 14px;
 					max-width: 700px;
-					flex-grow: 1;
 				}
 
 				#admin-buttons {
@@ -1628,9 +1611,10 @@ export default {
 
 		#lower-row {
 			margin-top: 20px;
-			flex-grow: 1;
+			height: 90%;
 
 			.player-container {
+				width: 1400px;
 				background-color: #fff;
 				display: flex;
 				flex-direction: column;
