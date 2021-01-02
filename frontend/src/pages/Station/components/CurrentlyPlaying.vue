@@ -32,7 +32,7 @@
 				<button
 					class="button"
 					id="report-icon"
-					v-if="!currentSong.simpleSong"
+					v-if="loggedIn && !currentSong.simpleSong"
 					@click="
 						openModal({
 							sector: 'station',
@@ -64,6 +64,9 @@ export default {
 	computed: {
 		...mapState("station", {
 			currentSong: state => state.currentSong
+		}),
+		...mapState({
+			loggedIn: state => state.user.auth.loggedIn
 		})
 	},
 	methods: {
@@ -111,6 +114,7 @@ export default {
 		justify-content: center;
 		margin-left: 20px;
 		width: 100%;
+		height: 100%;
 
 		*:not(i) {
 			margin: 0;
@@ -130,6 +134,7 @@ export default {
 
 		#song-artists {
 			font-size: 16px;
+			height: 100%;
 		}
 
 		#song-request-time {

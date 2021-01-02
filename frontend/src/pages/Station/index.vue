@@ -131,7 +131,7 @@
 							<div id="seeker-bar" style="width: 0%" />
 						</div>
 						<div id="control-bar-container">
-							<div id="left-buttons">
+							<div id="left-buttons" v-if="loggedIn">
 								<!-- Local Pause/Resume Button -->
 								<button
 									class="button is-primary"
@@ -207,13 +207,13 @@
 									>volume_up</i
 								>
 							</p>
-							<div id="right-buttons">
+							<div id="right-buttons" v-if="loggedIn">
 								<!-- Ratings (Like/Dislike) Buttons -->
 								<div
 									id="ratings"
 									v-if="
-										true
-										//currentSong.likes !== -1 && currentSong.dislikes !== -1
+										currentSong.likes !== -1 &&
+											currentSong.dislikes !== -1
 									"
 								>
 									<!-- Like Song Button -->
