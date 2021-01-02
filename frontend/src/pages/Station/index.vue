@@ -13,8 +13,19 @@
 						<div class="row" id="station-name">
 							<h1>{{ station.displayName }}</h1>
 							<a href="#">
-								<!-- TODO: Add favourite functionality -->
-								<i class="material-icons">star</i>
+								<!-- Favourite Station Button -->
+								<i
+									v-if="loggedIn && favoriteStation"
+									@click="unfavoriteStation($event)"
+									class="material-icons"
+									>star</i
+								>
+								<i
+									v-if="loggedIn && !favoriteStation"
+									@click="addfavoriteStation($event)"
+									class="material-icons"
+									>star_border</i
+								>
 							</a>
 						</div>
 
@@ -365,7 +376,8 @@ export default {
 			lastTimeRequestedIfCanAutoplay: 0,
 			seeking: false,
 			playbackRate: 1,
-			volumeSliderValue: 0
+			volumeSliderValue: 0,
+			favoriteStation: false
 		};
 	},
 	computed: {
@@ -564,6 +576,15 @@ export default {
 
 			this.socket.on("event:queueLockToggled", locked => {
 				this.station.locked = locked;
+			});
+
+			this.socket.on("event:user.favoritedStation", stationId => {
+				if (stationId === this.station._id) this.favoriteStation = true;
+			});
+
+			this.socket.on("event:user.unfavoritedStation", stationId => {
+				if (stationId === this.station._id)
+					this.favoriteStation = false;
 			});
 		});
 
@@ -1311,6 +1332,43 @@ export default {
 					this.exists = false;
 				}
 			});
+			this.socket.emit("users.getFavoriteStations", data => {
+				if (
+					data.status === "success" &&
+					data.favoriteStations.indexOf(this.station._id) !== -1
+				)
+					this.favoriteStation = true;
+			});
+		},
+		addfavoriteStation(event) {
+			event.preventDefault();
+			this.socket.emit(
+				"stations.favoriteStation",
+				this.station._id,
+				res => {
+					if (res.status === "success") {
+						new Toast({
+							content: "Successfully favorited station.",
+							timeout: 4000
+						});
+					} else new Toast({ content: res.message, timeout: 8000 });
+				}
+			);
+		},
+		unfavoriteStation(event) {
+			event.preventDefault();
+			this.socket.emit(
+				"stations.unfavoriteStation",
+				this.station._id,
+				res => {
+					if (res.status === "success") {
+						new Toast({
+							content: "Successfully unfavorited station.",
+							timeout: 4000
+						});
+					} else new Toast({ content: res.message, timeout: 8000 });
+				}
+			);
 		},
 		...mapActions("modals", ["openModal"]),
 		...mapActions("station", [

@@ -6,9 +6,7 @@
 			<div class="group">
 				<div class="group-title">
 					<div>
-						<h1>
-							Stations
-						</h1>
+						<h1>Stations</h1>
 					</div>
 					<a
 						v-if="loggedIn"
@@ -64,6 +62,18 @@
 					<div class="card-content">
 						<div class="media">
 							<div class="media-left displayName">
+								<i
+									v-if="loggedIn && !isFavorite(station)"
+									@click="favoriteStation($event, station)"
+									class="favorite material-icons"
+									>star_border</i
+								>
+								<i
+									v-if="loggedIn && isFavorite(station)"
+									@click="unfavoriteStation($event, station)"
+									class="favorite material-icons"
+									>star</i
+								>
 								<h5>{{ station.displayName }}</h5>
 								<i
 									v-if="station.type === 'official'"
@@ -461,7 +471,13 @@ html {
 				display: flex;
 				line-height: 30px;
 				max-height: 30px;
-
+				.favorite {
+					position: relative;
+					padding-right: 5px;
+					color: $yellow;
+					top: -1px;
+					font-size: 28px;
+				}
 				h5 {
 					font-size: 20px;
 					font-weight: 400;
