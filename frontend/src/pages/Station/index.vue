@@ -3,78 +3,118 @@
 		<metadata v-if="exists && !loading" :title="`${station.displayName}`" />
 		<metadata v-else-if="!exists && !loading" :title="`Not found`" />
 
-		<station-header
-			v-if="exists"
-			:class="{ 'header-sidebar-active': sidebarActive }"
-		/>
+		<main-header v-if="exists" />
 
-		<div class="station-parent">
+		<div id="station-outer-container">
 			<div v-show="loading" class="progress" />
-			<div v-show="!loading && exists" class="station">
-				<div v-show="noSong" class="no-song">
-					<h1>No song is currently playing</h1>
-					<h4
-						v-if="
-							station.type === 'community' &&
-								station.partyMode &&
-								this.loggedIn &&
-								(!station.locked ||
-									(station.locked &&
-										this.userId === station.owner))
-						"
-					>
-						<a
-							href="#"
-							class="no-song"
-							@click="
-								openModal({
-									sector: 'station',
-									modal: 'addSongToQueue'
-								})
-							"
-							>Add a song to the queue</a
+			<div v-show="!loading && exists" id="station-inner-container">
+				<div id="upper-row" class="row">
+					<div id="about-station-container" class="quadrant">
+						<div class="row" id="station-name">
+							<h1>
+								<!-- {{ station.displayName }} -->Owen's Station
+							</h1>
+							<a href="#">
+								<!-- TODO: Add favourite functionality -->
+								<i class="material-icons">star</i>
+							</a>
+						</div>
+
+						<p>
+							<!-- {{ station.description }} -->Welcome to Owen's
+							channel! The description will go here and we will
+							explain what this station is for and what genres of
+							songs it has. Enjoy!!!
+						</p>
+
+						<div id="admin-buttons" v-if="isOwnerOrAdmin()">
+							<!-- (Admin) Station Settings Button -->
+							<button
+								class="button is-primary"
+								@click="openSettings()"
+							>
+								<i class="material-icons icon-with-button"
+									>settings</i
+								>
+								<span class="optional-desktop-only-text">
+									Station settings
+								</span>
+							</button>
+
+							<!-- Debug Box -->
+							<button
+								class="button is-primary"
+								@click="togglePlayerDebugBox()"
+								@dblclick="resetPlayerDebugBox()"
+							>
+								<i class="material-icons icon-with-button">
+									bug_report
+								</i>
+								<span class="optional-desktop-only-text">
+									Toggle debug player box
+								</span>
+							</button>
+
+							<!-- (Admin) Skip Button -->
+							<button
+								class="button is-danger"
+								@click="skipStation()"
+							>
+								<i class="material-icons icon-with-button"
+									>skip_next</i
+								>
+								<span class="optional-desktop-only-text">
+									Force Skip
+								</span>
+							</button>
+
+							<!-- (Admin) Pause/Resume Button -->
+							<button
+								class="button is-danger"
+								v-if="stationPaused"
+								@click="resumeStation()"
+							>
+								<i class="material-icons icon-with-button"
+									>play_arrow</i
+								>
+								<span class="optional-desktop-only-text">
+									Resume Station
+								</span>
+							</button>
+							<button
+								class="button is-danger"
+								@click="pauseStation()"
+								v-else
+							>
+								<i class="material-icons icon-with-button"
+									>pause</i
+								>
+								<span class="optional-desktop-only-text">
+									Pause Station
+								</span>
+							</button>
+						</div>
+					</div>
+					<div id="currently-playing-container" class="quadrant">
+						<currently-playing v-if="!noSong" />
+						<p
+							v-else
+							class="nothing-here"
+							id="no-currently-playing"
 						>
-					</h4>
-					<h4
-						v-if="
-							station.type === 'community' &&
-								!station.partyMode &&
-								this.userId === station.owner &&
-								!station.privatePlaylist
-						"
-					>
-						<a
-							href="#"
-							class="no-song"
-							@click="
-								openModal({
-									sector: 'station',
-									modal: 'editStation'
-								})
-							"
-							>Play a private playlist</a
-						>
-					</h4>
-					<h1
-						v-if="
-							station.type === 'community' &&
-								!station.partyMode &&
-								this.userId === station.owner &&
-								station.privatePlaylist
-						"
-					>
-						Maybe you can add some songs to your selected private
-						playlist and then press the skip button
-					</h1>
+							No song is currently playing
+						</p>
+					</div>
 				</div>
-				<div v-show="!noSong" class="columns">
-					<div
-						class="column is-8-desktop is-offset-2-desktop is-12-mobile"
-					>
-						<div class="video-container">
-							<div id="player" />
+				<div id="lower-row" class="row">
+					<div class="player-container quadrant" v-show="!noSong">
+						<div id="video-container">
 							<div
-								class="player-can-not-autoplay"
+								id="player"
+								style="width: 100%; height: 100%"
+							/>
+							<div
+								class="player-cannot-autoplay"
 								v-if="!canAutoplay"
 							>
 								<p>
@@ -83,328 +123,148 @@
 								</p>
 							</div>
 						</div>
-						<div
-							id="preview-progress"
-							class="seeker-bar-container white"
-						>
-							<div
-								class="seeker-bar light-blue"
-								style="width: 0%"
-							/>
+						<div id="seeker-bar-container">
+							<div id="seeker-bar" style="width: 0%" />
 						</div>
-					</div>
-					<div
-						class="desktop-only column is-3-desktop card playlistCard experimental"
-					>
-						<div v-if="station.type === 'community'" class="title">
-							Queue
-						</div>
-						<div v-else class="title">
-							Playlist
-						</div>
-						<article v-if="!noSong" class="media">
-							<figure class="media-left">
-								<p class="image is-64x64">
-									<img
-										:src="currentSong.thumbnail"
-										onerror="this.src='/assets/notes-transparent.png'"
-									/>
-								</p>
-							</figure>
-							<div class="media-content">
-								<div class="content">
-									<p>
-										Current Song:
-										<br />
-										<strong>{{ currentSong.title }}</strong>
-										<br />
-										<small>{{ currentSong.artists }}</small>
-									</p>
-								</div>
-							</div>
-							<div class="media-right">
-								{{ utils.formatTime(currentSong.duration) }}
-							</div>
-						</article>
-						<p v-if="noSong" class="has-text-centered">
-							There is currently no song playing.
-						</p>
+						<div id="control-bar-container">
+							<div id="left-buttons">
+								<!-- Local Pause/Resume Button -->
+								<button
+									class="button is-primary"
+									@click="resumeLocalStation()"
+									id="local-resume"
+									v-if="localPaused"
+								>
+									<i class="material-icons">play_arrow</i>
+									<span class="optional-desktop-only-text"
+										>Play locally</span
+									>
+								</button>
+								<button
+									class="button is-primary"
+									@click="pauseLocalStation()"
+									id="local-pause"
+									v-else
+								>
+									<i class="material-icons">pause</i>
+									<span class="optional-desktop-only-text"
+										>Pause locally</span
+									>
+								</button>
 
-						<article
-							v-for="(song, index) in songsList"
-							:key="index"
-							class="media"
-						>
-							<div class="media-content">
-								<div class="content">
-									<strong class="songTitle">{{
-										song.title
-									}}</strong>
-									<br />
-									<small>{{ song.artists.join(", ") }}</small>
-									<br />
-									<div v-if="station.partyMode">
-										<br />
-										<small>
-											Requested by
-											<b>
-												<user-id-to-username
-													:user-id="song.requestedBy"
-													:link="true"
-												/>
-											</b>
-										</small>
-										<button
-											v-if="
-												isOwnerOnly() || isAdminOnly()
-											"
-											class="button"
-											@click="
-												removeFromQueue(song.songId)
-											"
-										>
-											REMOVE
-										</button>
-									</div>
-								</div>
+								<!-- Vote to Skip Button -->
+								<button
+									class="button is-primary"
+									@click="voteSkipStation()"
+								>
+									<i class="material-icons icon-with-button"
+										>skip_next</i
+									>
+									<span class="optional-desktop-only-text"
+										>Vote to skip (</span
+									>
+									{{ currentSong.skipVotes }}
+									<span class="optional-desktop-only-text"
+										>)</span
+									>
+								</button>
 							</div>
-							<div class="media-right">
-								{{ utils.formatTime(song.duration) }}
-							</div>
-						</article>
-						<a
-							v-if="station.type === 'community' && loggedIn"
-							class="button add-to-queue"
-							href="#"
-							@click="
-								openModal({
-									sector: 'station',
-									modal: 'addSongToQueue'
-								})
-							"
-							>Add a song to the queue</a
-						>
-					</div>
-				</div>
-				<div v-show="!noSong" class="desktop-only columns is-mobile">
-					<div
-						class="column is-8-desktop is-offset-2-desktop is-12-mobile"
-					>
-						<div class="columns is-mobile">
-							<div class="column is-12-desktop">
-								<h4 id="time-display">
+							<div id="duration">
+								<p>
 									{{ timeElapsed }} /
 									{{ utils.formatTime(currentSong.duration) }}
-								</h4>
-								<h3>{{ currentSong.title }}</h3>
-								<h4 class="thin" style="margin-left: 0">
-									{{ currentSong.artists }}
-								</h4>
-								<div class="columns is-mobile">
-									<form
-										style="margin-top: 12px; margin-bottom: 0"
-										action="#"
-										class="column is-7-desktop is-4-mobile"
-									>
-										<p class="volume-slider-wrapper">
-											<i
-												v-if="muted"
-												class="material-icons"
-												@click="toggleMute()"
-												>volume_mute</i
-											>
-											<i
-												v-else
-												class="material-icons"
-												@click="toggleMute()"
-												>volume_down</i
-											>
-											<input
-												v-model="volumeSliderValue"
-												type="range"
-												min="0"
-												max="10000"
-												class="volumeSlider active"
-												@change="changeVolume()"
-												@input="changeVolume()"
-											/>
-											<i
-												class="material-icons"
-												@click="increaseVolume()"
-												>volume_up</i
-											>
-										</p>
-									</form>
-									<div
-										class="column is-8-mobile is-5-desktop"
-									>
-										<ul
-											v-if="
-												currentSong.likes !== -1 &&
-													currentSong.dislikes !== -1
-											"
-											id="ratings"
-										>
-											<li
-												id="like"
-												style="margin-right: 10px"
-												@click="toggleLike()"
-											>
-												<span class="flow-text">{{
-													currentSong.likes
-												}}</span>
-												<i
-													id="thumbs_up"
-													class="material-icons grey-text"
-													:class="{ liked: liked }"
-													>thumb_up</i
-												>
-												<a
-													class="absolute-a behind"
-													href="#"
-													@click="toggleLike()"
-												/>
-											</li>
-											<li
-												id="dislike"
-												@click="toggleDislike()"
-											>
-												<span class="flow-text">{{
-													currentSong.dislikes
-												}}</span>
-												<i
-													id="thumbs_down"
-													class="material-icons grey-text"
-													:class="{
-														disliked: disliked
-													}"
-													>thumb_down</i
-												>
-												<a
-													class="absolute-a behind"
-													href="#"
-													@click="toggleDislike()"
-												/>
-											</li>
-										</ul>
-									</div>
-								</div>
+								</p>
 							</div>
-							<div
-								v-if="!currentSong.simpleSong"
-								class="column is-3-desktop experimental"
-							>
-								<img
-									class="image"
-									:src="currentSong.thumbnail"
-									alt="Song Thumbnail"
-									onerror="this.src='/assets/notes-transparent.png'"
+							<p id="volume-control">
+								<i
+									v-if="muted"
+									class="material-icons"
+									@click="toggleMute()"
+									>volume_mute</i
+								>
+								<i
+									v-else
+									class="material-icons"
+									@click="toggleMute()"
+									>volume_down</i
+								>
+								<input
+									v-model="volumeSliderValue"
+									type="range"
+									min="0"
+									max="10000"
+									class="volume-slider active"
+									@change="changeVolume()"
+									@input="changeVolume()"
 								/>
+								<i
+									class="material-icons"
+									@click="increaseVolume()"
+									>volume_up</i
+								>
+							</p>
+							<div id="right-buttons">
+								<!-- Ratings (Like/Dislike) Buttons -->
+								<div
+									id="ratings"
+									v-if="
+										true
+										//currentSong.likes !== -1 && currentSong.dislikes !== -1
+									"
+								>
+									<!-- Like Song Button -->
+									<button
+										class="button is-success"
+										id="like-song"
+										@click="toggleLike()"
+									>
+										<i
+											class="material-icons icon-with-button"
+											:class="{ liked: liked }"
+											>thumb_up_alt</i
+										>{{ currentSong.likes }}
+									</button>
+
+									<!-- Dislike Song Button -->
+									<button
+										class="button is-danger"
+										id="dislike-song"
+										@click="toggleDislike()"
+									>
+										<i
+											class="material-icons icon-with-button"
+											:class="{
+												disliked: disliked
+											}"
+											>thumb_down_alt</i
+										>{{ currentSong.dislikes }}
+									</button>
+								</div>
+
+								<!-- Add Song To Playlist Button (will be dropdown soon) -->
+								<button
+									class="button is-primary"
+									id="add-song-to-playlist"
+									@click="
+										openModal({
+											sector: 'station',
+											modal: 'addSongToPlaylist'
+										})
+									"
+								>
+									<i class="material-icons">queue</i>
+									<span class="optional-desktop-only-text"
+										>Add Song To Playlist</span
+									>
+								</button>
 							</div>
 						</div>
 					</div>
-				</div>
-				<div v-show="!noSong" class="mobile-only">
-					<div>
-						<div>
-							<div>
-								<h3>{{ currentSong.title }}</h3>
-								<h4 class="thin">
-									{{ currentSong.artists }}
-								</h4>
-								<h5>
-									{{ timeElapsed }} /
-									{{ utils.formatTime(currentSong.duration) }}
-								</h5>
-								<div>
-									<form class="columns" action="#">
-										<p
-											class="column is-11-mobile volume-slider-wrapper"
-										>
-											<i
-												v-if="muted"
-												class="material-icons"
-												@click="toggleMute()"
-												>volume_mute</i
-											>
-											<i
-												v-else
-												class="material-icons"
-												@click="toggleMute()"
-												>volume_down</i
-											>
-											<input
-												v-model="volumeSliderValue"
-												type="range"
-												min="0"
-												max="10000"
-												class="active volumeSlider"
-												@change="changeVolume()"
-												@input="changeVolume()"
-											/>
-											<i
-												class="material-icons"
-												@click="increaseVolume()"
-												>volume_up</i
-											>
-										</p>
-									</form>
-									<div>
-										<ul
-											v-if="
-												currentSong.likes !== -1 &&
-													currentSong.dislikes !== -1
-											"
-											id="ratings"
-											style="display: inline-block"
-										>
-											<li
-												id="dislike"
-												style="display: inline-block;margin-right: 10px;"
-												@click="toggleDislike()"
-											>
-												<span class="flow-text">{{
-													currentSong.dislikes
-												}}</span>
-												<i
-													id="thumbs_down"
-													class="material-icons grey-text"
-													:class="{
-														disliked: disliked
-													}"
-													>thumb_down</i
-												>
-												<a
-													class="absolute-a behind"
-													href="#"
-													@click="toggleDislike()"
-												/>
-											</li>
-											<li
-												id="like"
-												style="display: inline-block"
-												@click="toggleLike()"
-											>
-												<span class="flow-text">{{
-													currentSong.likes
-												}}</span>
-												<i
-													id="thumbs_up"
-													class="material-icons grey-text"
-													:class="{ liked: liked }"
-													>thumb_up</i
-												>
-												<a
-													class="absolute-a behind"
-													href="#"
-													@click="toggleLike()"
-												/>
-											</li>
-										</ul>
-									</div>
-								</div>
-							</div>
-						</div>
+					<p class="player-container nothing-here" v-if="noSong">
+						No song is currently playing
+					</p>
+					<div id="sidebar-container" class="quadrant">
+						<station-sidebar />
 					</div>
 				</div>
 			</div>
@@ -415,17 +275,6 @@
 			<create-playlist v-if="modals.createPlaylist" />
 			<edit-station v-if="modals.editStation" store="station" />
 			<report v-if="modals.report" />
-
-			<transition name="slide-outer">
-				<div class="sidebar-container" v-if="sidebarActive">
-					<transition name="slide-inner">
-						<songs-list-sidebar v-if="sidebars.songslist" />
-					</transition>
-					<transition name="slide-inner">
-						<users-sidebar v-if="sidebars.users" />
-					</transition>
-				</div>
-			</transition>
 		</div>
 
 		<floating-box id="playerDebugBox" ref="playerDebugBox">
@@ -472,9 +321,8 @@
 import { mapState, mapActions } from "vuex";
 import Toast from "toasters";
 
-import StationHeader from "./StationHeader.vue";
+import MainHeader from "../../components/layout/MainHeader.vue";
 
-import UserIdToUsername from "../../components/common/UserIdToUsername.vue";
 import Z404 from "../404.vue";
 
 import FloatingBox from "../../components/ui/FloatingBox.vue";
@@ -483,9 +331,12 @@ import io from "../../io";
 import keyboardShortcuts from "../../keyboardShortcuts";
 import utils from "../../../js/utils";
 
+import CurrentlyPlaying from "./components/CurrentlyPlaying.vue";
+import StationSidebar from "./components/Sidebar/index.vue";
+
 export default {
 	components: {
-		StationHeader,
+		MainHeader,
 		SongQueue: () => import("./AddSongToQueue.vue"),
 		AddToPlaylist: () => import("./AddSongToPlaylist.vue"),
 		EditPlaylist: () => import("../../components/modals/EditPlaylist.vue"),
@@ -493,11 +344,10 @@ export default {
 			import("../../components/modals/CreatePlaylist.vue"),
 		EditStation: () => import("../../components/modals/EditStation.vue"),
 		Report: () => import("./Report.vue"),
-		SongsListSidebar: () => import("./SongsList.vue"),
-		UsersSidebar: () => import("./UsersList.vue"),
-		UserIdToUsername,
 		Z404,
-		FloatingBox
+		FloatingBox,
+		CurrentlyPlaying,
+		StationSidebar
 	},
 	data() {
 		return {
@@ -529,9 +379,6 @@ export default {
 		...mapState("modals", {
 			modals: state => state.modals.station
 		}),
-		...mapState("sidebars", {
-			sidebars: state => state.sidebars.station
-		}),
 		...mapState("station", {
 			station: state => state.station,
 			currentSong: state => state.currentSong,
@@ -546,10 +393,7 @@ export default {
 			loggedIn: state => state.user.auth.loggedIn,
 			userId: state => state.user.auth.userId,
 			role: state => state.user.auth.role
-		}),
-		sidebarActive() {
-			return Object.values(this.sidebars).indexOf(true) !== -1;
-		}
+		})
 	},
 	mounted() {
 		Date.currently = () => {
@@ -576,14 +420,21 @@ export default {
 				const previousSong = this.currentSong.songId
 					? this.currentSong
 					: null;
+
 				this.updatePreviousSong(previousSong);
-				this.updateCurrentSong(
-					data.currentSong ? data.currentSong : {}
-				);
+
+				const { currentSong } = data;
+
+				if (currentSong && !currentSong.thumbnail)
+					currentSong.ytThumbnail = `https://img.youtube.com/vi/${currentSong.songId}/mqdefault.jpg`;
+
+				this.updateCurrentSong(currentSong || {});
+
 				this.startedAt = data.startedAt;
 				this.updateStationPaused(data.paused);
 				this.timePaused = data.timePaused;
-				if (data.currentSong) {
+
+				if (currentSong) {
 					this.updateNoSong(false);
 					if (this.currentSong.artists)
 						this.currentSong.artists = this.currentSong.artists.join(
@@ -761,6 +612,22 @@ export default {
 		isOwnerOrAdmin() {
 			return this.isOwnerOnly() || this.isAdminOnly();
 		},
+		openSettings() {
+			this.editStation({
+				_id: this.station._id,
+				name: this.station.name,
+				type: this.station.type,
+				partyMode: this.station.partyMode,
+				description: this.station.description,
+				privacy: this.station.privacy,
+				displayName: this.station.displayName,
+				locked: this.station.locked
+			});
+			this.openModal({
+				sector: "station",
+				modal: "editStation"
+			});
+		},
 		removeFromQueue(songId) {
 			window.socket.emit(
 				"stations.removeFromQueue",
@@ -891,9 +758,9 @@ export default {
 		},
 		resizeSeekerbar() {
 			if (!this.stationPaused) {
-				document.getElementsByClassName(
+				document.getElementById(
 					"seeker-bar"
-				)[0].style.width = `${parseFloat(
+				).style.width = `${parseFloat(
 					(this.getTimeElapsed() / 1000 / this.currentSong.duration) *
 						100
 				)}%`;
@@ -1272,8 +1139,6 @@ export default {
 		},
 		join() {
 			this.socket.emit("stations.join", this.stationName, res => {
-				console.log(res.data);
-
 				if (res.status === "success") {
 					this.loading = false;
 
@@ -1301,12 +1166,19 @@ export default {
 						privatePlaylist,
 						type
 					});
+
 					const currentSong = res.data.currentSong
 						? res.data.currentSong
 						: {};
+
 					if (currentSong.artists)
 						currentSong.artists = currentSong.artists.join(", ");
+
+					if (currentSong && !currentSong.thumbnail)
+						currentSong.ytThumbnail = `https://img.youtube.com/vi/${currentSong.songId}/mqdefault.jpg`;
+
 					this.updateCurrentSong(currentSong);
+
 					this.startedAt = res.data.startedAt;
 					this.updateStationPaused(res.data.paused);
 					this.timePaused = res.data.timePaused;
@@ -1447,7 +1319,6 @@ export default {
 				}
 			});
 		},
-		...mapActions("sidebars", ["toggleSidebar"]),
 		...mapActions("modals", ["openModal"]),
 		...mapActions("station", [
 			"joinStation",
@@ -1458,571 +1329,15 @@ export default {
 			"updateSongsList",
 			"updateStationPaused",
 			"updateLocalPaused",
-			"updateNoSong"
+			"updateNoSong",
+			"editStation"
 		])
 	}
 };
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 @import "../../styles/global.scss";
-
-.station-parent {
-	display: flex;
-	flex: 1;
-	overflow-x: hidden;
-}
-
-.night-mode {
-	.nav,
-	.control-sidebar {
-		background-color: #222;
-	}
-}
-
-.player-can-not-autoplay {
-	position: absolute;
-	width: 100%;
-	height: 100%;
-	background: rgba(3, 169, 244, 0.95);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-
-	p {
-		color: $white;
-		font-size: 26px;
-		text-align: center;
-	}
-}
-
-// Starting state for enter. Added before element is inserted, removed one frame after element is inserted.
-.slide-outer-enter {
-	margin-right: -300px;
-}
-
-// Active state for enter. Applied during the entire entering phase. Added before element is inserted, removed when transition/animation finishes. This class can be used to define the duration, delay and easing curve for the entering transition.
-.slide-outer-enter-active {
-	transition: all 0.3s linear;
-}
-
-// Only available in versions 2.1.8+. Ending state for enter. Added one frame after element is inserted (at the same time v-enter is removed), removed when transition/animation finishes.
-.slide-outer-enter-to {
-	margin-right: 0;
-}
-
-// Starting state for leave. Added immediately when a leaving transition is triggered, removed after one frame.
-.slide-outer-leave {
-	margin-right: 0;
-}
-
-// Active state for leave. Applied during the entire leaving phase. Added immediately when leave transition is triggered, removed when the transition/animation finishes. This class can be used to define the duration, delay and easing curve for the leaving transition.
-.slide-outer-leave-active {
-	transition: all 0.3s linear;
-}
-
-// Only available in versions 2.1.8+. Ending state for leave. Added one frame after a leaving transition is triggered (at the same time v-leave is removed), removed when the transition/animation finishes.
-.slide-outer-leave-to {
-	margin-right: -300px;
-}
-
-// Starting state for enter. Added before element is inserted, removed one frame after element is inserted.
-.slide-inner-enter {
-	transform: translateX(300px);
-}
-
-// Active state for enter. Applied during the entire entering phase. Added before element is inserted, removed when transition/animation finishes. This class can be used to define the duration, delay and easing curve for the entering transition.
-.slide-inner-enter-active {
-	transition: all 0.3s linear;
-	z-index: 5;
-}
-
-// Only available in versions 2.1.8+. Ending state for enter. Added one frame after element is inserted (at the same time v-enter is removed), removed when transition/animation finishes.
-.slide-inner-enter-to {
-	transform: translateX(0px);
-}
-
-// Starting state for leave. Added immediately when a leaving transition is triggered, removed after one frame.
-.slide-inner-leave {
-	transform: translateX(0px);
-}
-
-// Active state for leave. Applied during the entire leaving phase. Added immediately when leave transition is triggered, removed when the transition/animation finishes. This class can be used to define the duration, delay and easing curve for the leaving transition.
-.slide-inner-leave-active {
-	transition: all 0.3s linear;
-	z-index: 0;
-}
-
-// Only available in versions 2.1.8+. Ending state for leave. Added one frame after a leaving transition is triggered (at the same time v-leave is removed), removed when the transition/animation finishes.
-.slide-inner-leave-to {
-	transform: translateX(300px);
-}
-
-.sidebar-container {
-	width: 300px;
-	max-width: 300px;
-	// background-color: blue;
-	position: relative;
-}
-
-.sidebar {
-	position: absolute;
-	// z-index: 1;
-	top: 0;
-	right: 0;
-	width: 300px;
-	height: 100%;
-	background-color: $white;
-	box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16),
-		0 2px 10px 0 rgba(0, 0, 0, 0.12);
-}
-
-.no-song {
-	color: $primary-color;
-	text-align: center;
-}
-
-.volumeSlider {
-	padding: 0 15px;
-	background: transparent;
-}
-
-.volume-slider-wrapper {
-	margin-top: 0;
-	position: relative;
-	display: flex;
-	align-items: center;
-	.material-icons {
-		user-select: none;
-	}
-}
-
-.material-icons {
-	cursor: pointer;
-}
-
-.stationDisplayName {
-	color: $white !important;
-}
-
-.add-to-playlist {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-}
-
-// .slideout {
-// 	top: 50px;
-// 	height: 100%;
-// 	position: fixed;
-// 	right: 0;
-// 	width: 350px;
-// 	background-color: $white;
-// 	box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16),
-// 		0 2px 10px 0 rgba(0, 0, 0, 0.12);
-// 	.slideout-header {
-// 		text-align: center;
-// 		background-color: rgb(3, 169, 244) !important;
-// 		margin: 0;
-// 		padding-top: 5px;
-// 		padding-bottom: 7px;
-// 		color: $white;
-// 	}
-
-// 	.slideout-content {
-// 		height: 100%;
-// 	}
-// }
-
-.modal-large {
-	width: 75%;
-}
-
-.station {
-	padding-top: 0.5vw;
-	transition: all 0.1s;
-	margin: 0 auto;
-	flex: 0.9;
-
-	@media only screen and (min-width: 993px) {
-		flex: 0.7;
-	}
-
-	@media only screen and (min-width: 601px) {
-		flex: 0.85;
-	}
-
-	@media (min-width: 999px) {
-		.mobile-only {
-			display: none;
-		}
-		.desktop-only {
-			display: block;
-		}
-	}
-	@media (max-width: 998px) {
-		.mobile-only {
-			display: block;
-		}
-		.desktop-only {
-			display: none;
-			visibility: hidden;
-		}
-	}
-
-	.mobile-only {
-		text-align: center;
-	}
-
-	.playlistCard {
-		margin: 10px;
-		position: relative;
-		padding-bottom: calc(31.25% + 7px);
-		height: 0;
-		overflow-y: scroll;
-
-		.title {
-			background-color: rgb(3, 169, 244);
-			text-align: center;
-			padding: 10px;
-			color: $white;
-			font-weight: 600;
-		}
-
-		.media {
-			padding: 0 25px;
-		}
-
-		.media-content .content {
-			min-height: 64px;
-			max-height: 64px;
-			display: flex;
-			align-items: center;
-		}
-
-		.content p strong {
-			word-break: break-word;
-		}
-
-		.content p small {
-			word-break: break-word;
-		}
-
-		.add-to-queue {
-			width: 100%;
-			margin-top: 25px;
-			height: 40px;
-			border-radius: 0;
-			background: rgb(3, 169, 244);
-			color: $white !important;
-			border: 0;
-			&:active,
-			&:focus {
-				border: 0;
-			}
-		}
-
-		.add-to-queue:focus {
-			background: $primary-color;
-		}
-
-		.media-right {
-			line-height: 64px;
-		}
-
-		.songTitle {
-			word-wrap: break-word;
-			overflow: hidden;
-			text-overflow: ellipsis;
-			display: -webkit-box;
-			-webkit-box-orient: vertical;
-			-webkit-line-clamp: 2;
-			line-height: 20px;
-			max-height: 40px;
-			width: 100%;
-		}
-	}
-
-	input[type="range"] {
-		-webkit-appearance: none;
-		width: 100%;
-		margin: 7.3px 0;
-	}
-
-	input[type="range"]:focus {
-		outline: none;
-	}
-
-	input[type="range"]::-webkit-slider-runnable-track {
-		width: 100%;
-		height: 5.2px;
-		cursor: pointer;
-		box-shadow: 0;
-		background: $light-grey-2;
-		border-radius: 0;
-		border: 0;
-	}
-
-	input[type="range"]::-webkit-slider-thumb {
-		box-shadow: 0;
-		border: 0;
-		height: 19px;
-		width: 19px;
-		border-radius: 15px;
-		background: $primary-color;
-		cursor: pointer;
-		-webkit-appearance: none;
-		margin-top: -6.5px;
-	}
-
-	input[type="range"]::-moz-range-track {
-		width: 100%;
-		height: 5.2px;
-		cursor: pointer;
-		box-shadow: 0;
-		background: $light-grey-2;
-		border-radius: 0;
-		border: 0;
-	}
-
-	input[type="range"]::-moz-range-thumb {
-		box-shadow: 0;
-		border: 0;
-		height: 19px;
-		width: 19px;
-		border-radius: 15px;
-		background: $primary-color;
-		cursor: pointer;
-		-webkit-appearance: none;
-		margin-top: -6.5px;
-	}
-
-	input[type="range"]::-ms-track {
-		width: 100%;
-		height: 5.2px;
-		cursor: pointer;
-		box-shadow: 0;
-		background: $light-grey-2;
-		border-radius: 1.3px;
-	}
-
-	input[type="range"]::-ms-fill-lower {
-		background: $light-grey-2;
-		border: 0;
-		border-radius: 0;
-		box-shadow: 0;
-	}
-
-	input[type="range"]::-ms-fill-upper {
-		background: $light-grey-2;
-		border: 0;
-		border-radius: 0;
-		box-shadow: 0;
-	}
-
-	input[type="range"]::-ms-thumb {
-		box-shadow: 0;
-		border: 0;
-		height: 15px;
-		width: 15px;
-		border-radius: 15px;
-		background: $primary-color;
-		cursor: pointer;
-		-webkit-appearance: none;
-		margin-top: 1.5px;
-	}
-
-	.video-container {
-		position: relative;
-		padding-bottom: 56.25%;
-		height: 0;
-		overflow: hidden;
-
-		iframe {
-			position: absolute;
-			top: 0;
-			left: 0;
-			width: 100%;
-			height: 100%;
-		}
-	}
-	.video-col {
-		padding-right: 0.75rem;
-		padding-left: 0.75rem;
-	}
-}
-
-.room-title {
-	left: 50%;
-	-webkit-transform: translateX(-50%);
-	transform: translateX(-50%);
-	font-size: 2.1em;
-}
-
-#ratings {
-	display: flex;
-	justify-content: flex-end;
-
-	span {
-		font-size: 1.68rem;
-	}
-
-	i {
-		color: #9e9e9e !important;
-		cursor: pointer;
-		transition: 0.1s color;
-	}
-}
-
-#time-display {
-	margin-top: 30px;
-	float: right;
-}
-
-#thumbs_up:hover,
-#thumbs_up.liked {
-	color: $green !important;
-}
-
-#thumbs_down:hover,
-#thumbs_down.disliked {
-	color: $red !important;
-}
-
-#song-thumbnail {
-	max-width: 100%;
-	width: 85%;
-}
-
-.seeker-bar-container {
-	position: relative;
-	height: 7px;
-	display: block;
-	width: 100%;
-	overflow: hidden;
-}
-
-.seeker-bar {
-	top: 0;
-	left: 0;
-	bottom: 0;
-	position: absolute;
-}
-
-ul {
-	list-style: none;
-	margin: 0;
-	display: block;
-}
-
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-	font-weight: 400;
-	line-height: 1.1;
-}
-
-h1 a,
-h2 a,
-h3 a,
-h4 a,
-h5 a,
-h6 a {
-	font-weight: inherit;
-}
-
-h1 {
-	font-size: 4.2rem;
-	line-height: 110%;
-	margin: 2.1rem 0 1.68rem 0;
-}
-
-h2 {
-	font-size: 3.56rem;
-	line-height: 110%;
-	margin: 1.78rem 0 1.424rem 0;
-}
-
-h3 {
-	font-size: 2.92rem;
-	line-height: 110%;
-	margin: 1.46rem 0 1.168rem 0;
-}
-
-h4 {
-	font-size: 2.28rem;
-	line-height: 110%;
-	margin: 1.14rem 0 0.912rem 0;
-}
-
-h5 {
-	font-size: 1.64rem;
-	line-height: 110%;
-	margin: 0.82rem 0 0.656rem 0;
-}
-
-h6 {
-	font-size: 1rem;
-	line-height: 110%;
-	margin: 0.5rem 0 0.4rem 0;
-}
-
-.thin {
-	font-weight: 200;
-}
-
-.light-blue {
-	background-color: $primary-color !important;
-}
-
-.white {
-	background-color: $white !important;
-}
-
-.btn-search {
-	font-size: 14px;
-}
-
-.menu {
-	padding: 0 10px;
-}
-
-.menu-list li a:hover {
-	color: #000 !important;
-}
-
-.menu-list li {
-	display: flex;
-	justify-content: space-between;
-}
-
-.menu-list a {
-	/*padding: 0 10px !important;*/
-}
-
-.menu-list a:hover {
-	background-color: transparent;
-}
-
-.icons-group {
-	display: flex;
-}
-
-#like,
-#dislike {
-	position: relative;
-}
-
-.behind {
-	z-index: -1;
-}
-
-.behind:focus {
-	z-index: 0;
-}
 
 .progress {
 	width: 50px;
@@ -2056,5 +1371,443 @@ h6 {
 			color: #000;
 		}
 	}
+}
+
+.night-mode {
+	#currently-playing-container,
+	#about-station-container,
+	#control-bar-container {
+		background-color: #222 !important;
+	}
+
+	#upper-row .quadrant,
+	#video-container,
+	#control-bar-container {
+		border: 0 !important;
+	}
+}
+
+/** Ultrawide */
+
+@media (min-height: 1200px) {
+	#station-inner-container {
+		transform: scale(1.1);
+	}
+}
+
+#station-outer-container {
+	margin: 0 auto;
+	max-width: 100%;
+	padding: 0 40px;
+	margin-top: 5px;
+
+	@media (max-width: 1040px) {
+		padding: 0;
+		margin-top: 0 !important;
+
+		#station-inner-container {
+			justify-content: flex-start !important;
+		}
+
+		.row {
+			width: 100%;
+			flex-direction: column !important;
+		}
+
+		.quadrant,
+		.player-container {
+			width: 100% !important;
+			border: 0 !important;
+			background: transparent !important;
+		}
+
+		#lower-row {
+			margin-top: 0 !important;
+		}
+
+		.player-container {
+			height: 450px !important;
+		}
+
+		.player-container.nothing-here {
+			height: 50px !important;
+		}
+
+		#no-currently-playing {
+			display: none;
+		}
+
+		#control-bar-container {
+			#left-buttons,
+			#duration,
+			#volume-control,
+			#right-buttons {
+				margin: 3px;
+			}
+		}
+	}
+
+	#station-inner-container {
+		display: flex;
+		align-items: center;
+		flex-direction: column;
+
+		@media (min-height: 1050px) {
+			justify-content: center;
+			height: calc(100vh - 64px - 5px);
+		}
+
+		@media (min-width: 1040px) {
+			#currently-playing-container,
+			#sidebar-container {
+				margin-left: 75px;
+			}
+		}
+
+		@media (min-width: 1040px) and (max-width: 1450px) {
+			#about-station-container,
+			.player-container {
+				width: 800px !important;
+			}
+		}
+
+		@media (min-width: 1450px) and (max-width: 2200px) {
+			#about-station-container,
+			.player-container {
+				width: 1400px !important;
+			}
+		}
+
+		@media (min-width: 1040px) and (max-width: 1950px) {
+			#control-bar-container {
+				.optional-desktop-only-text {
+					display: none;
+				}
+
+				.button {
+					width: 75px;
+				}
+
+				#add-song-to-playlist,
+				#local-resume,
+				#local-pause {
+					i {
+						margin-right: 0 !important;
+					}
+				}
+			}
+
+			#currently-playing-container,
+			#sidebar-container {
+				margin-left: 40px;
+			}
+		}
+
+		@media (min-width: 1950px) {
+			#currently-playing-container,
+			#sidebar-container {
+				margin-left: 100px;
+			}
+		}
+
+		.row {
+			display: flex;
+			flex-direction: row;
+			max-width: 100%;
+
+			.quadrant {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				flex-direction: column;
+				max-width: 100%;
+				border-radius: 5px;
+			}
+		}
+
+		#upper-row {
+			.quadrant {
+				border: 1px solid $light-grey-2;
+				background-color: #fff;
+			}
+
+			#about-station-container {
+				width: 1400px;
+				align-items: flex-start;
+				padding: 20px;
+
+				#station-name {
+					flex-direction: row !important;
+
+					h1 {
+						margin: 0;
+						font-size: 36px;
+					}
+
+					i {
+						margin-left: 10px;
+						font-size: 30px;
+						color: $yellow;
+					}
+				}
+
+				p {
+					font-size: 14px;
+					max-width: 700px;
+				}
+
+				#admin-buttons {
+					margin-top: 15px;
+
+					@media (max-width: 650px) {
+						.optional-desktop-only-text {
+							display: none;
+						}
+					}
+				}
+			}
+
+			#currently-playing-container {
+				width: 550px;
+			}
+		}
+
+		#lower-row {
+			margin-top: 20px;
+
+			.player-container {
+				background-color: #fff;
+				width: 1400px;
+				height: 770px;
+				display: flex;
+				flex-direction: column;
+
+				#video-container {
+					width: 100%;
+					height: 100%;
+					border: 1px solid $light-grey-2;
+					border-bottom: 0;
+
+					.player-cannot-autoplay {
+						position: absolute;
+						width: 100%;
+						height: 100%;
+						background: rgba(3, 169, 244, 0.95);
+						display: flex;
+						align-items: center;
+						justify-content: center;
+
+						p {
+							color: $white;
+							font-size: 26px;
+							text-align: center;
+						}
+					}
+				}
+
+				#seeker-bar-container {
+					background-color: #fff;
+					position: relative;
+					height: 7px;
+					display: block;
+					width: 100%;
+					overflow: hidden;
+
+					#seeker-bar {
+						background-color: $musare-blue;
+						top: 0;
+						left: 0;
+						bottom: 0;
+						position: absolute;
+					}
+				}
+
+				#control-bar-container {
+					display: flex;
+					justify-content: space-around;
+					padding: 10px 0;
+					width: 100%;
+					background: #fff;
+					border: 1px solid $light-grey-2;
+					border-radius: 0 0 5px 5px;
+					border-top: 0;
+
+					@media (max-width: 1450px) {
+						flex-direction: column;
+						flex-flow: wrap;
+
+						#right-buttons {
+							order: -1;
+						}
+					}
+
+					#left-buttons,
+					#right-buttons {
+						i {
+							margin-right: 3px;
+						}
+					}
+
+					#left-buttons {
+						display: flex;
+
+						.button:not(:first-of-type) {
+							margin-left: 5px;
+						}
+					}
+
+					#duration {
+						display: flex;
+						align-items: center;
+
+						p {
+							font-size: 22px;
+						}
+					}
+
+					#volume-control {
+						margin-top: 0;
+						position: relative;
+						display: flex;
+						align-items: center;
+						cursor: pointer;
+
+						.volume-slider {
+							width: 500px;
+							padding: 0 15px;
+							background: transparent;
+
+							@media (max-width: 1650px) {
+								width: 250px !important;
+							}
+						}
+
+						input[type="range"] {
+							-webkit-appearance: none;
+							margin: 7.3px 0;
+						}
+
+						input[type="range"]:focus {
+							outline: none;
+						}
+
+						input[type="range"]::-webkit-slider-runnable-track {
+							width: 100%;
+							height: 5.2px;
+							cursor: pointer;
+							box-shadow: 0;
+							background: $light-grey-2;
+							border-radius: 0;
+							border: 0;
+						}
+
+						input[type="range"]::-webkit-slider-thumb {
+							box-shadow: 0;
+							border: 0;
+							height: 19px;
+							width: 19px;
+							border-radius: 15px;
+							background: $primary-color;
+							cursor: pointer;
+							-webkit-appearance: none;
+							margin-top: -6.5px;
+						}
+
+						input[type="range"]::-moz-range-track {
+							width: 100%;
+							height: 5.2px;
+							cursor: pointer;
+							box-shadow: 0;
+							background: $light-grey-2;
+							border-radius: 0;
+							border: 0;
+						}
+
+						input[type="range"]::-moz-range-thumb {
+							box-shadow: 0;
+							border: 0;
+							height: 19px;
+							width: 19px;
+							border-radius: 15px;
+							background: $primary-color;
+							cursor: pointer;
+							-webkit-appearance: none;
+							margin-top: -6.5px;
+						}
+						input[type="range"]::-ms-track {
+							width: 100%;
+							height: 5.2px;
+							cursor: pointer;
+							box-shadow: 0;
+							background: $light-grey-2;
+							border-radius: 1.3px;
+						}
+
+						input[type="range"]::-ms-fill-lower {
+							background: $light-grey-2;
+							border: 0;
+							border-radius: 0;
+							box-shadow: 0;
+						}
+
+						input[type="range"]::-ms-fill-upper {
+							background: $light-grey-2;
+							border: 0;
+							border-radius: 0;
+							box-shadow: 0;
+						}
+
+						input[type="range"]::-ms-thumb {
+							box-shadow: 0;
+							border: 0;
+							height: 15px;
+							width: 15px;
+							border-radius: 15px;
+							background: $primary-color;
+							cursor: pointer;
+							-webkit-appearance: none;
+							margin-top: 1.5px;
+						}
+					}
+
+					#right-buttons {
+						display: flex;
+
+						#dislike-song,
+						#add-song-to-playlist {
+							margin-left: 5px;
+						}
+
+						#ratings {
+							display: flex;
+
+							#like-song:hover,
+							#like-song.liked {
+								background-color: darken($green, 5%) !important;
+							}
+
+							#dislike-song:hover,
+							#dislike-song.disliked {
+								background-color: darken($red, 5%) !important;
+							}
+						}
+					}
+				}
+			}
+
+			#sidebar-container {
+				position: relative;
+				width: 550px;
+			}
+		}
+	}
+}
+
+/deep/ .nothing-here {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: inherit;
+	height: -webkit-fill-available;
 }
 </style>

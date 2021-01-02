@@ -4,7 +4,6 @@ import Vuex from "vuex";
 import user from "./modules/user";
 import settings from "./modules/settings";
 import modals from "./modules/modals";
-import sidebars from "./modules/sidebars";
 import station from "./modules/station";
 import admin from "./modules/admin";
 
@@ -15,7 +14,6 @@ export default new Vuex.Store({
 		user,
 		settings,
 		modals,
-		sidebars,
 		station,
 		admin
 	},
