@@ -171,6 +171,9 @@ export default {
 
 .menu-list li {
 	align-items: center;
+	.playlist {
+		border: 0.5px $light-grey-2 solid;
+	}
 }
 
 .create-playlist {

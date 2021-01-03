@@ -131,7 +131,7 @@
 					</div>
 					<div class="bottomBar">
 						<i
-							v-if="station.paused"
+							v-if="station.paused && station.currentSong.title"
 							class="material-icons"
 							title="Station Paused"
 							>pause</i

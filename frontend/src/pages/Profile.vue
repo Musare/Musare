@@ -670,8 +670,9 @@ export default {
 			height: 72px;
 			border: 0.5px $light-grey-2 solid;
 			margin-bottom: 12px;
-			border-radius: 0 5px 5px 0;
+			border-radius: 5px;
 			display: flex;
+			overflow: hidden;
 
 			.top-text {
 				color: $dark-grey-2;
