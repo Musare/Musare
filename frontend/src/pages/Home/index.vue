@@ -23,7 +23,7 @@
 					</a>
 				</div>
 				<router-link
-					v-for="(station, index) in stations"
+					v-for="(station, index) in filteredStations()"
 					:key="index"
 					:to="{
 						name: 'station',
@@ -131,7 +131,13 @@
 					</div>
 					<div class="bottomBar">
 						<i
-							v-if="station.currentSong.title"
+							v-if="station.paused"
+							class="material-icons"
+							title="Station Paused"
+							>pause</i
+						>
+						<i
+							v-else-if="station.currentSong.title"
 							class="material-icons"
 							>music_note</i
 						>
@@ -184,14 +190,6 @@ export default {
 		};
 	},
 	computed: {
-		filteredStations() {
-			return this.stations.filter(
-				station =>
-					JSON.stringify(Object.values(station)).indexOf(
-						this.searchQuery
-					) !== -1
-			);
-		},
 		...mapState({
 			loggedIn: state => state.user.auth.loggedIn,
 			userId: state => state.user.auth.userId,
@@ -279,6 +277,25 @@ export default {
 					this.favoriteStations = data.favoriteStations;
 			});
 			this.socket.emit("apis.joinRoom", "home", () => {});
+		},
+		filteredStations() {
+			const favoriteStations = [];
+			const otherStations = [];
+			this.stations
+				.filter(
+					station =>
+						JSON.stringify(Object.values(station)).indexOf(
+							this.searchQuery
+						) !== -1
+				)
+				.forEach(station => {
+					if (this.favoriteStations.indexOf(station._id) !== -1) {
+						favoriteStations.push(station);
+					} else {
+						otherStations.push(station);
+					}
+				});
+			return [...favoriteStations, ...otherStations];
 		},
 		isOwner(station) {
 			return station.owner === this.userId;

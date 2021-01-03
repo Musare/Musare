@@ -150,6 +150,7 @@ export default {
 	border: 1px solid $light-grey-2;
 	margin-bottom: 20px;
 	padding: 10px;
+	border-radius: 0 0 5px 5px;
 
 	.icons-group {
 		display: flex;
@@ -175,7 +176,7 @@ export default {
 .create-playlist {
 	width: 100%;
 	height: 40px;
-	border-radius: 0;
+	border-radius: 5px;
 	background-color: rgba(3, 169, 244, 1);
 	color: $white !important;
 	border: 0;

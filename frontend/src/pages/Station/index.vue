@@ -1591,6 +1591,7 @@ export default {
 
 				p {
 					max-width: 700px;
+					flex-grow: 1;
 				}
 
 				#admin-buttons {
