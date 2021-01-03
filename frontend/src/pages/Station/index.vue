@@ -45,20 +45,6 @@
 								</span>
 							</button>
 
-							<!-- Debug Box -->
-							<button
-								class="button is-primary"
-								@click="togglePlayerDebugBox()"
-								@dblclick="resetPlayerDebugBox()"
-							>
-								<i class="material-icons icon-with-button">
-									bug_report
-								</i>
-								<span class="optional-desktop-only-text">
-									Debug player box
-								</span>
-							</button>
-
 							<!-- (Admin) Skip Button -->
 							<button
 								class="button is-danger"
@@ -131,7 +117,21 @@
 							<div id="seeker-bar" style="width: 0%" />
 						</div>
 						<div id="control-bar-container">
-							<div id="left-buttons" v-if="loggedIn">
+							<div id="left-buttons">
+								<!-- Debug Box -->
+								<button
+									class="button is-primary"
+									@click="togglePlayerDebugBox()"
+									@dblclick="resetPlayerDebugBox()"
+								>
+									<i class="material-icons icon-with-button">
+										bug_report
+									</i>
+									<span class="optional-desktop-only-text">
+										Debug
+									</span>
+								</button>
+
 								<!-- Local Pause/Resume Button -->
 								<button
 									class="button is-primary"
@@ -158,6 +158,7 @@
 
 								<!-- Vote to Skip Button -->
 								<button
+									v-if="loggedIn"
 									class="button is-primary"
 									@click="voteSkipStation()"
 								>
@@ -609,7 +610,8 @@ export default {
 			"station.lowerVolumeLarge",
 			"station.lowerVolumeSmall",
 			"station.increaseVolumeLarge",
-			"station.increaseVolumeSmall"
+			"station.increaseVolumeSmall",
+			"station.toggleDebug"
 		];
 
 		shortcutNames.forEach(shortcutName => {
@@ -1233,6 +1235,7 @@ export default {
 								keyCode: 32,
 								shift: false,
 								ctrl: true,
+								preventDefault: true,
 								handler: () => {
 									if (this.stationPaused)
 										this.resumeStation();
@@ -1247,6 +1250,7 @@ export default {
 								keyCode: 39,
 								shift: false,
 								ctrl: true,
+								preventDefault: true,
 								handler: () => {
 									this.skipStation();
 								}
@@ -1260,6 +1264,7 @@ export default {
 							keyCode: 40,
 							shift: false,
 							ctrl: true,
+							preventDefault: true,
 							handler: () => {
 								this.volumeSliderValue -= 1000;
 								this.changeVolume();
@@ -1273,6 +1278,7 @@ export default {
 							keyCode: 40,
 							shift: true,
 							ctrl: true,
+							preventDefault: true,
 							handler: () => {
 								this.volumeSliderValue -= 100;
 								this.changeVolume();
@@ -1286,6 +1292,7 @@ export default {
 							keyCode: 38,
 							shift: false,
 							ctrl: true,
+							preventDefault: true,
 							handler: () => {
 								this.volumeSliderValue += 1000;
 								this.changeVolume();
@@ -1299,12 +1306,23 @@ export default {
 							keyCode: 38,
 							shift: true,
 							ctrl: true,
+							preventDefault: true,
 							handler: () => {
 								this.volumeSliderValue += 100;
 								this.changeVolume();
 							}
 						}
 					);
+
+					keyboardShortcuts.registerShortcut("station.toggleDebug", {
+						keyCode: 68,
+						shift: false,
+						ctrl: true,
+						preventDefault: true,
+						handler: () => {
+							this.togglePlayerDebugBox();
+						}
+					});
 
 					// UNIX client time before ping
 					const beforePing = Date.now();
@@ -1624,12 +1642,13 @@ export default {
 				background-color: #fff;
 				display: flex;
 				flex-direction: column;
+				border: 1px solid $light-grey-2;
+				border-radius: 5px;
+				overflow: hidden;
 
 				#video-container {
 					width: 100%;
 					height: 100%;
-					border: 1px solid $light-grey-2;
-					border-bottom: 0;
 
 					.player-cannot-autoplay {
 						position: absolute;
@@ -1671,9 +1690,6 @@ export default {
 					padding: 10px 0;
 					width: 100%;
 					background: #fff;
-					border: 1px solid $light-grey-2;
-					border-radius: 0 0 5px 5px;
-					border-top: 0;
 
 					@media (max-width: 1450px) {
 						flex-direction: column;
