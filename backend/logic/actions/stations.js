@@ -9,6 +9,7 @@ import cache from "../cache";
 import notifications from "../notifications";
 import stations from "../stations";
 import activities from "../activities";
+import YouTubeModule from "../youtube";
 
 // const logger = moduleManager.modules["logger"];
 
@@ -1714,8 +1715,7 @@ export default {
 						.then(res => {
 							if (res.song) return next(null, res.song, station);
 
-							return utils
-								.runJob("GET_SONG_FROM_YOUTUBE", { songId })
+							return YouTubeModule.runJob("GET_SONG", { songId })
 								.then(response => {
 									const { song } = response;
 									song.artists = [];

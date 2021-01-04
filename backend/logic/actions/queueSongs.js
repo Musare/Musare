@@ -7,6 +7,7 @@ import { isAdminRequired, isLoginRequired } from "./hooks";
 import db from "../db";
 
 import utils from "../utils";
+import YouTubeModule from "../youtube";
 
 import cache from "../cache";
 // const logger = moduleManager.modules["logger"];
@@ -245,8 +246,7 @@ const lib = {
 				(song, next) => {
 					if (song) return next("This song has already been added.");
 					// TODO Add err object as first param of callback
-					return utils
-						.runJob("GET_SONG_FROM_YOUTUBE", { songId })
+					return YouTubeModule.runJob("GET_SONG", { songId })
 						.then(response => {
 							const { song } = response;
 							song.duration = -1;
@@ -320,11 +320,10 @@ const lib = {
 		async.waterfall(
 			[
 				next => {
-					utils
-						.runJob("GET_PLAYLIST_FROM_YOUTUBE", {
-							url,
-							musicOnly
-						})
+					YouTubeModule.runJob("GET_PLAYLIST", {
+						url,
+						musicOnly
+					})
 						.then(res => {
 							next(null, res.songs);
 						})

@@ -11,6 +11,7 @@ import cache from "../cache";
 import moduleManager from "../../index";
 
 import playlists from "../playlists";
+import YouTubeModule from "../youtube";
 import activities from "../activities";
 
 cache.runJob("SUB", {
@@ -517,8 +518,7 @@ const lib = {
 							});
 						})
 						.catch(() => {
-							utils
-								.runJob("GET_SONG_FROM_YOUTUBE", { songId })
+							YouTubeModule.runJob("GET_SONG", { songId })
 								.then(response => next(null, response.song))
 								.catch(next);
 						});
@@ -597,20 +597,18 @@ const lib = {
 		async.waterfall(
 			[
 				next => {
-					utils
-						.runJob("GET_PLAYLIST_FROM_YOUTUBE", {
-							url,
-							musicOnly
-						})
-						.then(response => {
-							if (response.filteredSongs) {
-								videosInPlaylistTotal = response.songs.length;
-								songsInPlaylistTotal = response.filteredSongs.length;
-							} else {
-								songsInPlaylistTotal = videosInPlaylistTotal = response.songs.length;
-							}
-							next(null, response.songs);
-						});
+					YouTubeModule.runJob("GET_PLAYLIST", {
+						url,
+						musicOnly
+					}).then(response => {
+						if (response.filteredSongs) {
+							videosInPlaylistTotal = response.songs.length;
+							songsInPlaylistTotal = response.filteredSongs.length;
+						} else {
+							songsInPlaylistTotal = videosInPlaylistTotal = response.songs.length;
+						}
+						next(null, response.songs);
+					});
 				},
 				(songIds, next) => {
 					let processed = 0;
