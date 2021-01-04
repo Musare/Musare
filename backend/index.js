@@ -381,20 +381,20 @@ class ModuleManager {
 
 const moduleManager = new ModuleManager();
 
-// moduleManager.addModule("cache");
-// moduleManager.addModule("db");
-// moduleManager.addModule("mail");
-// moduleManager.addModule("activities");
-// moduleManager.addModule("api");
-// moduleManager.addModule("app");
-// moduleManager.addModule("io");
-// moduleManager.addModule("notifications");
-// moduleManager.addModule("playlists");
-// moduleManager.addModule("punishments");
-// moduleManager.addModule("songs");
-// moduleManager.addModule("stations");
-// moduleManager.addModule("tasks");
-// moduleManager.addModule("utils");
+moduleManager.addModule("cache");
+moduleManager.addModule("db");
+moduleManager.addModule("mail");
+moduleManager.addModule("activities");
+moduleManager.addModule("api");
+moduleManager.addModule("app");
+moduleManager.addModule("io");
+moduleManager.addModule("notifications");
+moduleManager.addModule("playlists");
+moduleManager.addModule("punishments");
+moduleManager.addModule("songs");
+moduleManager.addModule("stations");
+moduleManager.addModule("tasks");
+moduleManager.addModule("utils");
 moduleManager.addModule("youtube");
 
 moduleManager.initialize();
