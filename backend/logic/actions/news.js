@@ -2,14 +2,17 @@ import async from "async";
 
 import { isAdminRequired } from "./hooks";
 
-import DBModule from "../db";
-import UtilsModule from "../utils";
-import CacheModule from "../cache";
+import moduleManager from "../../index";
+
+const DBModule = moduleManager.modules.db;
+const UtilsModule = moduleManager.modules.utils;
+const IOModule = moduleManager.modules.io;
+const CacheModule = moduleManager.modules.cache;
 
 CacheModule.runJob("SUB", {
 	channel: "news.create",
 	cb: news => {
-		UtilsModule.runJob("EMIT_TO_ROOM", {
+		IOModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.news",
 			args: ["event:admin.news.created", news]
 		});
@@ -19,7 +22,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "news.remove",
 	cb: news => {
-		UtilsModule.runJob("EMIT_TO_ROOM", {
+		IOModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.news",
 			args: ["event:admin.news.removed", news]
 		});
@@ -29,7 +32,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "news.update",
 	cb: news => {
-		UtilsModule.runJob("EMIT_TO_ROOM", {
+		IOModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.news",
 			args: ["event:admin.news.updated", news]
 		});

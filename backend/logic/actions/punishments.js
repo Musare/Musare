@@ -1,21 +1,23 @@
 import async from "async";
 
 import { isAdminRequired } from "./hooks";
-// const moduleManager = require("../../index");
 
-import DBModule from "../db";
-import UtilsModule from "../utils";
-import CacheModule from "../cache";
-import PunishmentsModule from "../punishments";
+import moduleManager from "../../index";
+
+const DBModule = moduleManager.modules.db;
+const UtilsModule = moduleManager.modules.utils;
+const IOModule = moduleManager.modules.io;
+const CacheModule = moduleManager.modules.cache;
+const PunishmentsModule = moduleManager.modules.punishments;
 
 CacheModule.runJob("SUB", {
 	channel: "ip.ban",
 	cb: data => {
-		UtilsModule.runJob("EMIT_TO_ROOM", {
+		IOModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.punishments",
 			args: ["event:admin.punishment.added", data.punishment]
 		});
-		UtilsModule.runJob("SOCKETS_FROM_IP", { ip: data.ip }).then(sockets => {
+		IOModule.runJob("SOCKETS_FROM_IP", { ip: data.ip }).then(sockets => {
 			sockets.forEach(socket => {
 				socket.disconnect(true);
 			});

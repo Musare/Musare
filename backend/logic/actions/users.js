@@ -7,19 +7,20 @@ import bcrypt from "bcrypt";
 import sha256 from "sha256";
 import { isAdminRequired, isLoginRequired } from "./hooks";
 
-// const moduleManager = require("../../index");
+import moduleManager from "../../index";
 
-import DBModule from "../db";
-import UtilsModule from "../utils";
-import CacheModule from "../cache";
-import MailModule from "../mail";
-import PunishmentsModule from "../punishments";
-import ActivitiesModule from "../activities";
+const DBModule = moduleManager.modules.db;
+const UtilsModule = moduleManager.modules.utils;
+const IOModule = moduleManager.modules.io;
+const CacheModule = moduleManager.modules.cache;
+const MailModule = moduleManager.modules.mail;
+const PunishmentsModule = moduleManager.modules.punishments;
+const ActivitiesModule = moduleManager.modules.activities;
 
 CacheModule.runJob("SUB", {
 	channel: "user.updateUsername",
 	cb: user => {
-		UtilsModule.runJob("SOCKETS_FROM_USER", { userId: user._id }).then(response => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: user._id }).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("event:user.username.changed", user.username);
 			});
@@ -30,7 +31,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "user.removeSessions",
 	cb: userId => {
-		UtilsModule.runJob("SOCKETS_FROM_USER_WITHOUT_CACHE", { userId }).then(response => {
+		IOModule.runJob("SOCKETS_FROM_USER_WITHOUT_CACHE", { userId }).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("keep.event:user.session.removed");
 			});
@@ -41,7 +42,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "user.linkPassword",
 	cb: userId => {
-		UtilsModule.runJob("SOCKETS_FROM_USER", { userId }).then(response => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId }).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("event:user.linkPassword");
 			});
@@ -52,7 +53,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "user.unlinkPassword",
 	cb: userId => {
-		UtilsModule.runJob("SOCKETS_FROM_USER", { userId }).then(response => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId }).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("event:user.unlinkPassword");
 			});
@@ -63,7 +64,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "user.linkGithub",
 	cb: userId => {
-		UtilsModule.runJob("SOCKETS_FROM_USER", { userId }).then(response => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId }).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("event:user.linkGithub");
 			});
@@ -74,7 +75,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "user.unlinkGithub",
 	cb: userId => {
-		UtilsModule.runJob("SOCKETS_FROM_USER", { userId }).then(response => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId }).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("event:user.unlinkGithub");
 			});
@@ -85,7 +86,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "user.ban",
 	cb: data => {
-		UtilsModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(response => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("keep.event:banned", data.punishment);
 				socket.disconnect(true);
@@ -97,7 +98,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "user.favoritedStation",
 	cb: data => {
-		UtilsModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(response => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("event:user.favoritedStation", data.stationId);
 			});
@@ -108,7 +109,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "user.unfavoritedStation",
 	cb: data => {
-		UtilsModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(response => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("event:user.unfavoritedStation", data.stationId);
 			});

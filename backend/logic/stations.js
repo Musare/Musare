@@ -6,6 +6,7 @@ let StationsModule;
 let CacheModule;
 let DBModule;
 let UtilsModule;
+let IOModule;
 let SongsModule;
 let NotificationsModule;
 
@@ -26,6 +27,7 @@ class _StationsModule extends CoreClass {
 		CacheModule = this.moduleManager.modules.cache;
 		DBModule = this.moduleManager.modules.db;
 		UtilsModule = this.moduleManager.modules.utils;
+		IOModule = this.moduleManager.modules.io;
 		SongsModule = this.moduleManager.modules.songs;
 		NotificationsModule = this.moduleManager.modules.notifications;
 
@@ -76,7 +78,7 @@ class _StationsModule extends CoreClass {
 					key: stationId
 				}).then(playlistObj => {
 					if (playlistObj) {
-						UtilsModule.runJob("EMIT_TO_ROOM", {
+						IOModule.runJob("EMIT_TO_ROOM", {
 							room: `station.${stationId}`,
 							args: ["event:newOfficialPlaylist", playlistObj.songs]
 						});
@@ -888,7 +890,7 @@ class _StationsModule extends CoreClass {
 						}
 						// TODO Pub/Sub this
 
-						UtilsModule.runJob("EMIT_TO_ROOM", {
+						IOModule.runJob("EMIT_TO_ROOM", {
 							room: `station.${station._id}`,
 							args: [
 								"event:songs.next",
@@ -904,14 +906,14 @@ class _StationsModule extends CoreClass {
 							.catch();
 
 						if (station.privacy === "public") {
-							UtilsModule.runJob("EMIT_TO_ROOM", {
+							IOModule.runJob("EMIT_TO_ROOM", {
 								room: "home",
 								args: ["event:station.nextSong", station._id, station.currentSong]
 							})
 								.then()
 								.catch();
 						} else {
-							const sockets = await UtilsModule.runJob("GET_ROOM_SOCKETS", { room: "home" }, this);
+							const sockets = await IOModule.runJob("GET_ROOM_SOCKETS", { room: "home" }, this);
 
 							Object.keys(sockets).forEach(socketKey => {
 								const socket = sockets[socketKey];
@@ -962,8 +964,8 @@ class _StationsModule extends CoreClass {
 						}
 
 						if (station.currentSong !== null && station.currentSong.songId !== undefined) {
-							UtilsModule.runJob("SOCKETS_JOIN_SONG_ROOM", {
-								sockets: await UtilsModule.runJob(
+							IOModule.runJob("SOCKETS_JOIN_SONG_ROOM", {
+								sockets: await IOModule.runJob(
 									"GET_ROOM_SOCKETS",
 									{
 										room: `station.${station._id}`
@@ -980,8 +982,8 @@ class _StationsModule extends CoreClass {
 								});
 							}
 						} else {
-							UtilsModule.runJob("SOCKETS_LEAVE_SONG_ROOMS", {
-								sockets: await UtilsModule.runJob(
+							IOModule.runJob("SOCKETS_LEAVE_SONG_ROOMS", {
+								sockets: await IOModule.runJob(
 									"GET_ROOM_SOCKETS",
 									{
 										room: `station.${station._id}`

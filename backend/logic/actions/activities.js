@@ -2,8 +2,10 @@ import async from "async";
 
 import { isLoginRequired } from "./hooks";
 
-import DBModule from "../db";
-import UtilsModule from "../utils";
+import moduleManager from "../../index";
+
+const DBModule = moduleManager.modules.db;
+const UtilsModule = moduleManager.modules.utils;
 
 export default {
 	/**

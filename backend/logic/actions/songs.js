@@ -2,20 +2,21 @@ import async from "async";
 
 import { isAdminRequired, isLoginRequired } from "./hooks";
 
-// const moduleManager = require("../../index");
-
-import DBModule from "../db";
-import UtilsModule from "../utils";
-import CacheModule from "../cache";
-import SongsModule from "../songs";
-import ActivitiesModule from "../activities";
+import moduleManager from "../../index";
 
 import queueSongs from "./queueSongs";
+
+const DBModule = moduleManager.modules.db;
+const UtilsModule = moduleManager.modules.utils;
+const IOModule = moduleManager.modules.io;
+const CacheModule = moduleManager.modules.cache;
+const SongsModule = moduleManager.modules.songs;
+const ActivitiesModule = moduleManager.modules.activities;
 
 CacheModule.runJob("SUB", {
 	channel: "song.removed",
 	cb: songId => {
-		UtilsModule.runJob("EMIT_TO_ROOM", {
+		IOModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.songs",
 			args: ["event:admin.song.removed", songId]
 		});
@@ -27,7 +28,7 @@ CacheModule.runJob("SUB", {
 	cb: async songId => {
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
 		songModel.findOne({ _id: songId }, (err, song) => {
-			UtilsModule.runJob("EMIT_TO_ROOM", {
+			IOModule.runJob("EMIT_TO_ROOM", {
 				room: "admin.songs",
 				args: ["event:admin.song.added", song]
 			});
@@ -40,7 +41,7 @@ CacheModule.runJob("SUB", {
 	cb: async songId => {
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
 		songModel.findOne({ _id: songId }, (err, song) => {
-			UtilsModule.runJob("EMIT_TO_ROOM", {
+			IOModule.runJob("EMIT_TO_ROOM", {
 				room: "admin.songs",
 				args: ["event:admin.song.updated", song]
 			});
@@ -51,7 +52,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "song.like",
 	cb: data => {
-		UtilsModule.runJob("EMIT_TO_ROOM", {
+		IOModule.runJob("EMIT_TO_ROOM", {
 			room: `song.${data.songId}`,
 			args: [
 				"event:song.like",
@@ -62,7 +63,7 @@ CacheModule.runJob("SUB", {
 				}
 			]
 		});
-		UtilsModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(response => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("event:song.newRatings", {
 					songId: data.songId,
@@ -77,7 +78,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "song.dislike",
 	cb: data => {
-		UtilsModule.runJob("EMIT_TO_ROOM", {
+		IOModule.runJob("EMIT_TO_ROOM", {
 			room: `song.${data.songId}`,
 			args: [
 				"event:song.dislike",
@@ -88,7 +89,7 @@ CacheModule.runJob("SUB", {
 				}
 			]
 		});
-		UtilsModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(response => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("event:song.newRatings", {
 					songId: data.songId,
@@ -103,7 +104,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "song.unlike",
 	cb: data => {
-		UtilsModule.runJob("EMIT_TO_ROOM", {
+		IOModule.runJob("EMIT_TO_ROOM", {
 			room: `song.${data.songId}`,
 			args: [
 				"event:song.unlike",
@@ -114,7 +115,7 @@ CacheModule.runJob("SUB", {
 				}
 			]
 		});
-		UtilsModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(response => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("event:song.newRatings", {
 					songId: data.songId,
@@ -129,7 +130,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "song.undislike",
 	cb: data => {
-		UtilsModule.runJob("EMIT_TO_ROOM", {
+		IOModule.runJob("EMIT_TO_ROOM", {
 			room: `song.${data.songId}`,
 			args: [
 				"event:song.undislike",
@@ -140,7 +141,7 @@ CacheModule.runJob("SUB", {
 				}
 			]
 		});
-		UtilsModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(response => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("event:song.newRatings", {
 					songId: data.songId,

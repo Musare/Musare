@@ -1,8 +1,10 @@
 import async from "async";
 
-import DBModule from "../../db";
-import CacheModule from "../../cache";
-import UtilsModule from "../../utils";
+import moduleManager from "../../../index";
+
+const DBModule = moduleManager.modules.db;
+const CacheModule = moduleManager.modules.cache;
+const UtilsModule = moduleManager.modules.utils;
 
 export default destination => async (session, ...args) => {
 	const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });

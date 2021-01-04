@@ -2,10 +2,13 @@ import async from "async";
 
 import { isAdminRequired, isLoginRequired } from "./hooks";
 
-import DBModule from "../db";
-import UtilsModule from "../utils";
-import SongsModule from "../songs";
-import CacheModule from "../cache";
+import moduleManager from "../../index";
+
+const DBModule = moduleManager.modules.db;
+const UtilsModule = moduleManager.modules.utils;
+const IOModule = moduleManager.modules.io;
+const SongsModule = moduleManager.modules.songs;
+const CacheModule = moduleManager.modules.cache;
 
 const reportableIssues = [
 	{
@@ -33,7 +36,7 @@ const reportableIssues = [
 CacheModule.runJob("SUB", {
 	channel: "report.resolve",
 	cb: reportId => {
-		UtilsModule.runJob("EMIT_TO_ROOM", {
+		IOModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.reports",
 			args: ["event:admin.report.resolved", reportId]
 		});
@@ -43,7 +46,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "report.create",
 	cb: report => {
-		UtilsModule.runJob("EMIT_TO_ROOM", {
+		IOModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.reports",
 			args: ["event:admin.report.created", report]
 		});

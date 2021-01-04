@@ -3,9 +3,11 @@ import async from "async";
 import request from "request";
 
 import { isAdminRequired } from "./hooks";
-// const moduleManager = require("../../index");
 
-import UtilsModule from "../utils";
+import moduleManager from "../../index";
+
+const UtilsModule = moduleManager.modules.utils;
+const IOModule = moduleManager.modules.io;
 
 export default {
 	/**
@@ -117,7 +119,7 @@ export default {
 	 */
 	joinRoom: (session, page, cb) => {
 		if (page === "home") {
-			UtilsModule.runJob("SOCKET_JOIN_ROOM", {
+			IOModule.runJob("SOCKET_JOIN_ROOM", {
 				socketId: session.socketId,
 				room: page
 			})
@@ -147,7 +149,7 @@ export default {
 			page === "statistics" ||
 			page === "punishments"
 		) {
-			UtilsModule.runJob("SOCKET_JOIN_ROOM", {
+			IOModule.runJob("SOCKET_JOIN_ROOM", {
 				socketId: session.socketId,
 				room: `admin.${page}`
 			});

@@ -4,18 +4,19 @@ import { isLoginRequired } from "./hooks";
 
 import moduleManager from "../../index";
 
-import DBModule from "../db";
-import UtilsModule from "../utils";
-import SongsModule from "../songs";
-import CacheModule from "../cache";
-import PlaylistsModule from "../playlists";
-import YouTubeModule from "../youtube";
-import ActivitiesModule from "../activities";
+const DBModule = moduleManager.modules.db;
+const UtilsModule = moduleManager.modules.utils;
+const IOModule = moduleManager.modules.io;
+const SongsModule = moduleManager.modules.songs;
+const CacheModule = moduleManager.modules.cache;
+const PlaylistsModule = moduleManager.modules.playlists;
+const YouTubeModule = moduleManager.modules.youtube;
+const ActivitiesModule = moduleManager.modules.activities;
 
 CacheModule.runJob("SUB", {
 	channel: "playlist.create",
 	cb: playlist => {
-		UtilsModule.runJob("SOCKETS_FROM_USER", { userId: playlist.createdBy }).then(response => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: playlist.createdBy }).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("event:playlist.create", playlist);
 			});
@@ -26,7 +27,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "playlist.delete",
 	cb: res => {
-		UtilsModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }).then(response => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("event:playlist.delete", res.playlistId);
 			});
@@ -37,7 +38,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "playlist.moveSongToTop",
 	cb: res => {
-		UtilsModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }).then(response => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("event:playlist.moveSongToTop", {
 					playlistId: res.playlistId,
@@ -51,7 +52,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "playlist.moveSongToBottom",
 	cb: res => {
-		UtilsModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }).then(response => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("event:playlist.moveSongToBottom", {
 					playlistId: res.playlistId,
@@ -65,7 +66,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "playlist.addSong",
 	cb: res => {
-		UtilsModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }).then(response => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("event:playlist.addSong", {
 					playlistId: res.playlistId,
@@ -79,7 +80,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "playlist.removeSong",
 	cb: res => {
-		UtilsModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }).then(response => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("event:playlist.removeSong", {
 					playlistId: res.playlistId,
@@ -93,7 +94,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "playlist.updateDisplayName",
 	cb: res => {
-		UtilsModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }).then(response => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("event:playlist.updateDisplayName", {
 					playlistId: res.playlistId,

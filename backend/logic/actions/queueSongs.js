@@ -4,10 +4,13 @@ import async from "async";
 
 import { isAdminRequired, isLoginRequired } from "./hooks";
 
-import DBModule from "../db";
-import UtilsModule from "../utils";
-import YouTubeModule from "../youtube";
-import CacheModule from "../cache";
+import moduleManager from "../../index";
+
+const DBModule = moduleManager.modules.db;
+const UtilsModule = moduleManager.modules.utils;
+const IOModule = moduleManager.modules.io;
+const YouTubeModule = moduleManager.modules.youtube;
+const CacheModule = moduleManager.modules.cache;
 
 CacheModule.runJob("SUB", {
 	channel: "queue.newSong",
@@ -16,7 +19,7 @@ CacheModule.runJob("SUB", {
 			modelName: "queueSong"
 		});
 		queueSongModel.findOne({ _id: songId }, (err, song) => {
-			UtilsModule.runJob("EMIT_TO_ROOM", {
+			IOModule.runJob("EMIT_TO_ROOM", {
 				room: "admin.queue",
 				args: ["event:admin.queueSong.added", song]
 			});
@@ -27,7 +30,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "queue.removedSong",
 	cb: songId => {
-		UtilsModule.runJob("EMIT_TO_ROOM", {
+		IOModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.queue",
 			args: ["event:admin.queueSong.removed", songId]
 		});
@@ -41,7 +44,7 @@ CacheModule.runJob("SUB", {
 			modelName: "queueSong"
 		});
 		queueSongModel.findOne({ _id: songId }, (err, song) => {
-			UtilsModule.runJob("EMIT_TO_ROOM", {
+			IOModule.runJob("EMIT_TO_ROOM", {
 				room: "admin.queue",
 				args: ["event:admin.queueSong.updated", song]
 			});

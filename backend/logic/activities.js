@@ -5,6 +5,7 @@ import CoreClass from "../core";
 // let ActivitiesModule;
 let DBModule;
 let UtilsModule;
+let IOModule;
 
 class _ActivitiesModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
@@ -23,6 +24,7 @@ class _ActivitiesModule extends CoreClass {
 		return new Promise(resolve => {
 			DBModule = this.moduleManager.modules.db;
 			UtilsModule = this.moduleManager.modules.utils;
+			IOModule = this.moduleManager.modules.io;
 
 			resolve();
 		});
@@ -61,7 +63,7 @@ class _ActivitiesModule extends CoreClass {
 					},
 
 					(activity, next) => {
-						UtilsModule.runJob(
+						IOModule.runJob(
 							"SOCKETS_FROM_USER",
 							{
 								userId: activity.userId

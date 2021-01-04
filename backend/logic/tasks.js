@@ -12,6 +12,7 @@ let TasksModule;
 let CacheModule;
 let StationsModule;
 let UtilsModule;
+let IOModule;
 
 class _TasksModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
@@ -35,6 +36,7 @@ class _TasksModule extends CoreClass {
 			CacheModule = this.moduleManager.modules.cache;
 			StationsModule = this.moduleManager.modules.stations;
 			UtilsModule = this.moduleManager.modules.utils;
+			IOModule = this.moduleManager.modules.io;
 
 			// this.createTask("testTask", testTask, 5000, true);
 
@@ -235,7 +237,7 @@ class _TasksModule extends CoreClass {
 									}).finally(() => next2());
 								}
 								if (Date.now() - session.refreshDate > 60 * 60 * 24 * 30 * 1000) {
-									return UtilsModule.runJob("SOCKETS_FROM_SESSION_ID", {
+									return IOModule.runJob("SOCKETS_FROM_SESSION_ID", {
 										sessionId: session.sessionId
 									}).then(response => {
 										if (response.sockets.length > 0) {

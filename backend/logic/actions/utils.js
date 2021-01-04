@@ -2,7 +2,9 @@ import async from "async";
 
 import { isAdminRequired } from "./hooks";
 
-import UtilsModule from "../utils";
+import moduleManager from "../../index";
+
+const UtilsModule = moduleManager.modules.utils;
 
 export default {
 	getModules: isAdminRequired((session, cb) => {

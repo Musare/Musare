@@ -1,7 +1,9 @@
 import async from "async";
 
-import CacheModule from "../../cache";
-import UtilsModule from "../../utils";
+import moduleManager from "../../../index";
+
+const CacheModule = moduleManager.modules.cache;
+const UtilsModule = moduleManager.modules.utils;
 
 export default destination => (session, ...args) => {
 	const cb = args[args.length - 1];

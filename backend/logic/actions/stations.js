@@ -2,16 +2,17 @@ import async from "async";
 
 import { isLoginRequired, isOwnerRequired } from "./hooks";
 
-import DBModule from "../db";
-import UtilsModule from "../utils";
-import SongsModule from "../songs";
-import CacheModule from "../cache";
-import NotificationsModule from "../notifications";
-import StationsModule from "../stations";
-import ActivitiesModule from "../activities";
-import YouTubeModule from "../youtube";
+import moduleManager from "../../index";
 
-// const logger = moduleManager.modules["logger"];
+const DBModule = moduleManager.modules.db;
+const UtilsModule = moduleManager.modules.utils;
+const IOModule = moduleManager.modules.io;
+const SongsModule = moduleManager.modules.songs;
+const CacheModule = moduleManager.modules.cache;
+const NotificationsModule = moduleManager.modules.notifications;
+const StationsModule = moduleManager.modules.stations;
+const ActivitiesModule = moduleManager.modules.activities;
+const YouTubeModule = moduleManager.modules.youtube;
 
 const userList = {};
 const usersPerStation = {};
@@ -35,7 +36,7 @@ const usersPerStationCount = {};
 // 	async.each(
 // 		Object.keys(userList),
 // 		(socketId, next) => {
-// 			UtilsModule.runJob("SOCKET_FROM_SESSION", { socketId }, { isQuiet: true }).then(socket => {
+// 			IOModule.runJob("SOCKET_FROM_SESSION", { socketId }, { isQuiet: true }).then(socket => {
 // 				const stationId = userList[socketId];
 // 				if (!socket || Object.keys(socket.rooms).indexOf(`station.${stationId}`) === -1) {
 // 					if (stationsCountUpdated.indexOf(stationId) === -1) stationsCountUpdated.push(stationId);
@@ -125,7 +126,7 @@ CacheModule.runJob("SUB", {
 	channel: "station.updateUsers",
 	cb: stationId => {
 		const list = usersPerStation[stationId] || [];
-		UtilsModule.runJob("EMIT_TO_ROOM", {
+		IOModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${stationId}`,
 			args: ["event:users.updated", list]
 		});
@@ -136,18 +137,18 @@ CacheModule.runJob("SUB", {
 	channel: "station.updateUserCount",
 	cb: stationId => {
 		const count = usersPerStationCount[stationId] || 0;
-		UtilsModule.runJob("EMIT_TO_ROOM", {
+		IOModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${stationId}`,
 			args: ["event:userCount.updated", count]
 		});
 		StationsModule.runJob("GET_STATION", { stationId }).then(async station => {
 			if (station.privacy === "public")
-				UtilsModule.runJob("EMIT_TO_ROOM", {
+				IOModule.runJob("EMIT_TO_ROOM", {
 					room: "home",
 					args: ["event:userCount.updated", stationId, count]
 				});
 			else {
-				const sockets = await UtilsModule.runJob("GET_ROOM_SOCKETS", {
+				const sockets = await IOModule.runJob("GET_ROOM_SOCKETS", {
 					room: "home"
 				});
 				Object.keys(sockets).forEach(socketKey => {
@@ -180,7 +181,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "station.queueLockToggled",
 	cb: data => {
-		UtilsModule.runJob("EMIT_TO_ROOM", {
+		IOModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${data.stationId}`,
 			args: ["event:queueLockToggled", data.locked]
 		});
@@ -190,7 +191,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "station.updatePartyMode",
 	cb: data => {
-		UtilsModule.runJob("EMIT_TO_ROOM", {
+		IOModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${data.stationId}`,
 			args: ["event:partyMode.updated", data.partyMode]
 		});
@@ -200,7 +201,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "privatePlaylist.selected",
 	cb: data => {
-		UtilsModule.runJob("EMIT_TO_ROOM", {
+		IOModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${data.stationId}`,
 			args: ["event:privatePlaylist.selected", data.playlistId]
 		});
@@ -211,7 +212,7 @@ CacheModule.runJob("SUB", {
 	channel: "station.pause",
 	cb: stationId => {
 		StationsModule.runJob("GET_STATION", { stationId }).then(station => {
-			UtilsModule.runJob("EMIT_TO_ROOM", {
+			IOModule.runJob("EMIT_TO_ROOM", {
 				room: `station.${stationId}`,
 				args: ["event:stations.pause", { pausedAt: station.pausedAt }]
 			});
@@ -223,7 +224,7 @@ CacheModule.runJob("SUB", {
 	channel: "station.resume",
 	cb: stationId => {
 		StationsModule.runJob("GET_STATION", { stationId }).then(station => {
-			UtilsModule.runJob("EMIT_TO_ROOM", {
+			IOModule.runJob("EMIT_TO_ROOM", {
 				room: `station.${stationId}`,
 				args: ["event:stations.resume", { timePaused: station.timePaused }]
 			});
@@ -235,7 +236,7 @@ CacheModule.runJob("SUB", {
 	channel: "station.queueUpdate",
 	cb: stationId => {
 		StationsModule.runJob("GET_STATION", { stationId }).then(station => {
-			UtilsModule.runJob("EMIT_TO_ROOM", {
+			IOModule.runJob("EMIT_TO_ROOM", {
 				room: `station.${stationId}`,
 				args: ["event:queue.update", station.queue]
 			});
@@ -246,7 +247,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "station.voteSkipSong",
 	cb: stationId => {
-		UtilsModule.runJob("EMIT_TO_ROOM", {
+		IOModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${stationId}`,
 			args: ["event:song.voteSkipSong"]
 		});
@@ -256,11 +257,11 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "station.remove",
 	cb: stationId => {
-		UtilsModule.runJob("EMIT_TO_ROOM", {
+		IOModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${stationId}`,
 			args: ["event:stations.remove"]
 		});
-		UtilsModule.runJob("EMIT_TO_ROOM", {
+		IOModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.stations",
 			args: ["event:admin.station.removed", stationId]
 		});
@@ -275,18 +276,18 @@ CacheModule.runJob("SUB", {
 		StationsModule.runJob("INITIALIZE_STATION", { stationId }).then(async response => {
 			const { station } = response;
 			station.userCount = usersPerStationCount[stationId] || 0;
-			UtilsModule.runJob("EMIT_TO_ROOM", {
+			IOModule.runJob("EMIT_TO_ROOM", {
 				room: "admin.stations",
 				args: ["event:admin.station.added", station]
 			});
 			// TODO If community, check if on whitelist
 			if (station.privacy === "public")
-				UtilsModule.runJob("EMIT_TO_ROOM", {
+				IOModule.runJob("EMIT_TO_ROOM", {
 					room: "home",
 					args: ["event:stations.created", station]
 				});
 			else {
-				const sockets = await UtilsModule.runJob("GET_ROOM_SOCKETS", {
+				const sockets = await IOModule.runJob("GET_ROOM_SOCKETS", {
 					room: "home"
 				});
 				Object.keys(sockets).forEach(socketKey => {
@@ -570,7 +571,7 @@ export default {
 				},
 
 				(station, next) => {
-					UtilsModule.runJob("SOCKET_JOIN_ROOM", {
+					IOModule.runJob("SOCKET_JOIN_ROOM", {
 						socketId: session.socketId,
 						room: `station.${station._id}`
 					});
@@ -599,7 +600,7 @@ export default {
 					data.userCount = usersPerStationCount[data._id] || 0;
 					data.users = usersPerStation[data._id] || [];
 					if (!data.currentSong || !data.currentSong.title) return next(null, data);
-					UtilsModule.runJob("SOCKET_JOIN_SONG_ROOM", {
+					IOModule.runJob("SOCKET_JOIN_SONG_ROOM", {
 						socketId: session.socketId,
 						room: `song.${data.currentSong.songId}`
 					});
@@ -766,7 +767,7 @@ export default {
 
 				(station, next) => {
 					skipVotes = station.currentSong.skipVotes.length;
-					UtilsModule.runJob("GET_ROOM_SOCKETS", {
+					IOModule.runJob("GET_ROOM_SOCKETS", {
 						room: `station.${stationId}`
 					})
 						.then(sockets => {
@@ -878,7 +879,7 @@ export default {
 					return cb({ status: "failure", message: err });
 				}
 				console.log("SUCCESS", "STATIONS_LEAVE", `Left station "${stationId}" successfully.`);
-				UtilsModule.runJob("SOCKET_LEAVE_ROOMS", { socketId: session });
+				IOModule.runJob("SOCKET_LEAVE_ROOMS", { socketId: session });
 				delete userList[session.socketId];
 				return cb({
 					status: "success",
