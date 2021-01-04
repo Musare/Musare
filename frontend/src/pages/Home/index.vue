@@ -279,23 +279,18 @@ export default {
 			this.socket.emit("apis.joinRoom", "home", () => {});
 		},
 		filteredStations() {
-			const favoriteStations = [];
-			const otherStations = [];
-			this.stations
+			return this.stations
 				.filter(
 					station =>
 						JSON.stringify(Object.values(station)).indexOf(
 							this.searchQuery
 						) !== -1
 				)
-				.forEach(station => {
-					if (this.favoriteStations.indexOf(station._id) !== -1) {
-						favoriteStations.push(station);
-					} else {
-						otherStations.push(station);
-					}
-				});
-			return [...favoriteStations, ...otherStations];
+				.sort(
+					(a, b) =>
+						this.isFavorite(b) - this.isFavorite(a) ||
+						this.isOwner(b) - this.isOwner(a)
+				);
 		},
 		isOwner(station) {
 			return station.owner === this.userId;
@@ -543,7 +538,7 @@ html {
 				width: 100%;
 				position: absolute;
 				top: 0;
-				filter: blur(3px);
+				filter: blur(1px);
 			}
 			img {
 				height: auto;

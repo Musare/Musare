@@ -16,6 +16,7 @@
 				v-if="
 					loggedIn &&
 						((station.type === 'community' &&
+							station.partyMode &&
 							((station.locked && isOwnerOnly()) ||
 								!station.locked ||
 								(station.locked &&

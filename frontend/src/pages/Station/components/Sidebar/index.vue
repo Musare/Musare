@@ -68,7 +68,7 @@ export default {
 	display: flex;
 
 	.button {
-		border-radius: 0;
+		border-radius: 5px 5px 0 0;
 		border: 0;
 		text-transform: uppercase;
 		font-size: 17px;
