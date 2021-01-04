@@ -154,9 +154,16 @@ class _YouTubeModule extends CoreClass {
 					},
 
 					(songs, next) => {
+						next(
+							null,
+							songs.map(song => song.contentDetails.videoId)
+						);
+					},
+
+					(songs, next) => {
 						if (!payload.musicOnly) return next(true, { songs });
 						return YouTubeModule.runJob(
-							"FILTER_MUSIC_VIDEOS_YOUTUBE",
+							"FILTER_MUSIC_VIDEOS",
 							{
 								videoIds: songs.slice()
 							},
@@ -173,7 +180,7 @@ class _YouTubeModule extends CoreClass {
 						YouTubeModule.log("ERROR", "GET_PLAYLIST", "Some error has occurred.", err.message);
 						reject(new Error("Some error has occurred."));
 					} else {
-						resolve(response);
+						resolve({ songs: response.filteredSongs ? response.filteredSongs.songIds : response.songs });
 					}
 				}
 			);
