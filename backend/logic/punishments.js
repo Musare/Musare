@@ -125,7 +125,7 @@ class _PunishmentsModule extends CoreClass {
 
 						Object.keys(punishments).forEach(punishmentKey => {
 							const punishment = punishments[punishmentKey];
-							punishment.punishmentId = id;
+							punishment.punishmentId = punishmentKey;
 							punishments.push(punishment);
 						});
 
