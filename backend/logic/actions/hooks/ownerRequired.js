@@ -1,23 +1,22 @@
 import async from "async";
 
-import db from "../../db";
-import cache from "../../cache";
-import utils from "../../utils";
-import stations from "../../stations";
+import DBModule from "../../db";
+import CacheModule from "../../cache";
+import UtilsModule from "../../utils";
+import StationsModule from "../../stations";
 
 export default destination => async (session, stationId, ...args) => {
-	const userModel = await db.runJob("GET_MODEL", { modelName: "user" });
+	const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
 
 	const cb = args[args.length - 1];
 
 	async.waterfall(
 		[
 			next => {
-				cache
-					.runJob("HGET", {
-						table: "sessions",
-						key: session.sessionId
-					})
+				CacheModule.runJob("HGET", {
+					table: "sessions",
+					key: session.sessionId
+				})
 					.then(session => {
 						next(null, session);
 					})
@@ -30,8 +29,7 @@ export default destination => async (session, stationId, ...args) => {
 			(user, next) => {
 				if (!user) return next("Login required.");
 				if (user.role === "admin") return next(true);
-				return stations
-					.runJob("GET_STATION", { stationId })
+				return StationsModule.runJob("GET_STATION", { stationId })
 					.then(station => {
 						next(null, station);
 					})
@@ -45,7 +43,7 @@ export default destination => async (session, stationId, ...args) => {
 		],
 		async err => {
 			if (err !== true) {
-				err = await utils.runJob("GET_ERROR", { error: err });
+				err = await UtilsModule.runJob("GET_ERROR", { error: err });
 				console.log(
 					"INFO",
 					"OWNER_REQUIRED",

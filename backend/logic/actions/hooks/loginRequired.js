@@ -1,8 +1,7 @@
 import async from "async";
 
-import cache from "../../cache";
-import utils from "../../utils";
-// const logger = moduleManager.modules["logger"];
+import CacheModule from "../../cache";
+import UtilsModule from "../../utils";
 
 export default destination => (session, ...args) => {
 	const cb = args[args.length - 1];
@@ -10,11 +9,10 @@ export default destination => (session, ...args) => {
 	async.waterfall(
 		[
 			next => {
-				cache
-					.runJob("HGET", {
-						table: "sessions",
-						key: session.sessionId
-					})
+				CacheModule.runJob("HGET", {
+					table: "sessions",
+					key: session.sessionId
+				})
 					.then(session => next(null, session))
 					.catch(next);
 			},
@@ -25,7 +23,7 @@ export default destination => (session, ...args) => {
 		],
 		async err => {
 			if (err) {
-				err = await utils.runJob("GET_ERROR", { error: err });
+				err = await UtilsModule.runJob("GET_ERROR", { error: err });
 				console.log("LOGIN_REQUIRED", `User failed to pass login required check.`);
 				return cb({ status: "failure", message: err });
 			}

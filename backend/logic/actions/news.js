@@ -2,36 +2,34 @@ import async from "async";
 
 import { isAdminRequired } from "./hooks";
 
-import db from "../db";
-import utils from "../utils";
+import DBModule from "../db";
+import UtilsModule from "../utils";
+import CacheModule from "../cache";
 
-import cache from "../cache";
-// const logger = require("logger");
-
-cache.runJob("SUB", {
+CacheModule.runJob("SUB", {
 	channel: "news.create",
 	cb: news => {
-		utils.runJob("EMIT_TO_ROOM", {
+		UtilsModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.news",
 			args: ["event:admin.news.created", news]
 		});
 	}
 });
 
-cache.runJob("SUB", {
+CacheModule.runJob("SUB", {
 	channel: "news.remove",
 	cb: news => {
-		utils.runJob("EMIT_TO_ROOM", {
+		UtilsModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.news",
 			args: ["event:admin.news.removed", news]
 		});
 	}
 });
 
-cache.runJob("SUB", {
+CacheModule.runJob("SUB", {
 	channel: "news.update",
 	cb: news => {
-		utils.runJob("EMIT_TO_ROOM", {
+		UtilsModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.news",
 			args: ["event:admin.news.updated", news]
 		});
@@ -46,7 +44,7 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	index: async (session, cb) => {
-		const newsModel = await db.runJob("GET_MODEL", { modelName: "news" });
+		const newsModel = await DBModule.runJob("GET_MODEL", { modelName: "news" });
 		async.waterfall(
 			[
 				next => {
@@ -55,7 +53,7 @@ export default {
 			],
 			async (err, news) => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log("ERROR", "NEWS_INDEX", `Indexing news failed. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
@@ -73,7 +71,7 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	create: isAdminRequired(async (session, data, cb) => {
-		const newsModel = await db.runJob("GET_MODEL", { modelName: "news" });
+		const newsModel = await DBModule.runJob("GET_MODEL", { modelName: "news" });
 		async.waterfall(
 			[
 				next => {
@@ -84,11 +82,11 @@ export default {
 			],
 			async (err, news) => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log("ERROR", "NEWS_CREATE", `Creating news failed. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
-				cache.runJob("PUB", { channel: "news.create", value: news });
+				CacheModule.runJob("PUB", { channel: "news.create", value: news });
 				console.log("SUCCESS", "NEWS_CREATE", `Creating news successful.`);
 				return cb({
 					status: "success",
@@ -105,7 +103,7 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	newest: async (session, cb) => {
-		const newsModel = await db.runJob("GET_MODEL", { modelName: "news" });
+		const newsModel = await DBModule.runJob("GET_MODEL", { modelName: "news" });
 		async.waterfall(
 			[
 				next => {
@@ -114,7 +112,7 @@ export default {
 			],
 			async (err, news) => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log("ERROR", "NEWS_NEWEST", `Getting the latest news failed. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
@@ -134,10 +132,10 @@ export default {
 	// TODO Pass in an id, not an object
 	// TODO Fix this
 	remove: isAdminRequired(async (session, news, cb) => {
-		const newsModel = await db.runJob("GET_MODEL", { modelName: "news" });
+		const newsModel = await DBModule.runJob("GET_MODEL", { modelName: "news" });
 		newsModel.deleteOne({ _id: news._id }, async err => {
 			if (err) {
-				err = await utils.runJob("GET_ERROR", { error: err });
+				err = await UtilsModule.runJob("GET_ERROR", { error: err });
 				console.log(
 					"ERROR",
 					"NEWS_REMOVE",
@@ -145,7 +143,7 @@ export default {
 				);
 				return cb({ status: "failure", message: err });
 			}
-			cache.runJob("PUB", { channel: "news.remove", value: news });
+			CacheModule.runJob("PUB", { channel: "news.remove", value: news });
 			console.log(
 				"SUCCESS",
 				"NEWS_REMOVE",
@@ -168,10 +166,10 @@ export default {
 	 */
 	// TODO Fix this
 	update: isAdminRequired(async (session, _id, news, cb) => {
-		const newsModel = await db.runJob("GET_MODEL", { modelName: "news" });
+		const newsModel = await DBModule.runJob("GET_MODEL", { modelName: "news" });
 		newsModel.updateOne({ _id }, news, { upsert: true }, async err => {
 			if (err) {
-				err = await utils.runJob("GET_ERROR", { error: err });
+				err = await UtilsModule.runJob("GET_ERROR", { error: err });
 				console.log(
 					"ERROR",
 					"NEWS_UPDATE",
@@ -179,7 +177,7 @@ export default {
 				);
 				return cb({ status: "failure", message: err });
 			}
-			cache.runJob("PUB", { channel: "news.update", value: news });
+			CacheModule.runJob("PUB", { channel: "news.update", value: news });
 			console.log("SUCCESS", "NEWS_UPDATE", `Updating news "${_id}" successful for user "${session.userId}".`);
 			return cb({
 				status: "success",

@@ -11,10 +11,6 @@ class _UtilsModule extends CoreClass {
 	constructor() {
 		super("utils");
 
-		this.youtubeRequestCallbacks = [];
-		this.youtubeRequestsPending = 0;
-		this.youtubeRequestsActive = false;
-
 		UtilsModule = this;
 	}
 

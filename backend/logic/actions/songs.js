@@ -4,31 +4,30 @@ import { isAdminRequired, isLoginRequired } from "./hooks";
 
 // const moduleManager = require("../../index");
 
-import db from "../db";
-import utils from "../utils";
-import cache from "../cache";
+import DBModule from "../db";
+import UtilsModule from "../utils";
+import CacheModule from "../cache";
+import SongsModule from "../songs";
+import ActivitiesModule from "../activities";
 
-import songs from "../songs";
 import queueSongs from "./queueSongs";
-import activities from "../activities";
-// const logger = moduleManager.modules["logger"];
 
-cache.runJob("SUB", {
+CacheModule.runJob("SUB", {
 	channel: "song.removed",
 	cb: songId => {
-		utils.runJob("EMIT_TO_ROOM", {
+		UtilsModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.songs",
 			args: ["event:admin.song.removed", songId]
 		});
 	}
 });
 
-cache.runJob("SUB", {
+CacheModule.runJob("SUB", {
 	channel: "song.added",
 	cb: async songId => {
-		const songModel = await db.runJob("GET_MODEL", { modelName: "song" });
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
 		songModel.findOne({ _id: songId }, (err, song) => {
-			utils.runJob("EMIT_TO_ROOM", {
+			UtilsModule.runJob("EMIT_TO_ROOM", {
 				room: "admin.songs",
 				args: ["event:admin.song.added", song]
 			});
@@ -36,12 +35,12 @@ cache.runJob("SUB", {
 	}
 });
 
-cache.runJob("SUB", {
+CacheModule.runJob("SUB", {
 	channel: "song.updated",
 	cb: async songId => {
-		const songModel = await db.runJob("GET_MODEL", { modelName: "song" });
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
 		songModel.findOne({ _id: songId }, (err, song) => {
-			utils.runJob("EMIT_TO_ROOM", {
+			UtilsModule.runJob("EMIT_TO_ROOM", {
 				room: "admin.songs",
 				args: ["event:admin.song.updated", song]
 			});
@@ -49,10 +48,10 @@ cache.runJob("SUB", {
 	}
 });
 
-cache.runJob("SUB", {
+CacheModule.runJob("SUB", {
 	channel: "song.like",
 	cb: data => {
-		utils.runJob("EMIT_TO_ROOM", {
+		UtilsModule.runJob("EMIT_TO_ROOM", {
 			room: `song.${data.songId}`,
 			args: [
 				"event:song.like",
@@ -63,7 +62,7 @@ cache.runJob("SUB", {
 				}
 			]
 		});
-		utils.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(response => {
+		UtilsModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("event:song.newRatings", {
 					songId: data.songId,
@@ -75,10 +74,10 @@ cache.runJob("SUB", {
 	}
 });
 
-cache.runJob("SUB", {
+CacheModule.runJob("SUB", {
 	channel: "song.dislike",
 	cb: data => {
-		utils.runJob("EMIT_TO_ROOM", {
+		UtilsModule.runJob("EMIT_TO_ROOM", {
 			room: `song.${data.songId}`,
 			args: [
 				"event:song.dislike",
@@ -89,7 +88,7 @@ cache.runJob("SUB", {
 				}
 			]
 		});
-		utils.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(response => {
+		UtilsModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("event:song.newRatings", {
 					songId: data.songId,
@@ -101,10 +100,10 @@ cache.runJob("SUB", {
 	}
 });
 
-cache.runJob("SUB", {
+CacheModule.runJob("SUB", {
 	channel: "song.unlike",
 	cb: data => {
-		utils.runJob("EMIT_TO_ROOM", {
+		UtilsModule.runJob("EMIT_TO_ROOM", {
 			room: `song.${data.songId}`,
 			args: [
 				"event:song.unlike",
@@ -115,7 +114,7 @@ cache.runJob("SUB", {
 				}
 			]
 		});
-		utils.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(response => {
+		UtilsModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("event:song.newRatings", {
 					songId: data.songId,
@@ -127,10 +126,10 @@ cache.runJob("SUB", {
 	}
 });
 
-cache.runJob("SUB", {
+CacheModule.runJob("SUB", {
 	channel: "song.undislike",
 	cb: data => {
-		utils.runJob("EMIT_TO_ROOM", {
+		UtilsModule.runJob("EMIT_TO_ROOM", {
 			room: `song.${data.songId}`,
 			args: [
 				"event:song.undislike",
@@ -141,7 +140,7 @@ cache.runJob("SUB", {
 				}
 			]
 		});
-		utils.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(response => {
+		UtilsModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("event:song.newRatings", {
 					songId: data.songId,
@@ -161,7 +160,7 @@ export default {
 	 * @param cb
 	 */
 	length: isAdminRequired(async (session, cb) => {
-		const songModel = await db.runJob("GET_MODEL", { modelName: "song" });
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
 		async.waterfall(
 			[
 				next => {
@@ -170,7 +169,7 @@ export default {
 			],
 			async (err, count) => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log("ERROR", "SONGS_LENGTH", `Failed to get length from songs. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
@@ -188,7 +187,7 @@ export default {
 	 * @param cb
 	 */
 	getSet: isAdminRequired(async (session, set, cb) => {
-		const songModel = await db.runJob("GET_MODEL", { modelName: "song" });
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
 		async.waterfall(
 			[
 				next => {
@@ -201,7 +200,7 @@ export default {
 			],
 			async (err, songs) => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log("ERROR", "SONGS_GET_SET", `Failed to get set from songs. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
@@ -222,8 +221,7 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					songs
-						.runJob("GET_SONG_FROM_ID", { songId })
+					SongsModule.runJob("GET_SONG_FROM_ID", { songId })
 						.then(song => {
 							next(null, song);
 						})
@@ -234,7 +232,7 @@ export default {
 			],
 			async (err, song) => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log("ERROR", "SONGS_GET_SONG", `Failed to get song ${songId}. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
@@ -255,15 +253,14 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					songs
-						.runJob("GET_SONG_FROM_ID", { songId })
+					SongsModule.runJob("GET_SONG_FROM_ID", { songId })
 						.then(response => next(null, response.song))
 						.catch(next);
 				}
 			],
 			async (err, song) => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 
 					console.log(
 						"ERROR",
@@ -310,7 +307,7 @@ export default {
 	 * @param {Function} cb
 	 */
 	update: isAdminRequired(async (session, songId, song, cb) => {
-		const songModel = await db.runJob("GET_MODEL", { modelName: "song" });
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
 		async.waterfall(
 			[
 				next => {
@@ -318,8 +315,7 @@ export default {
 				},
 
 				(res, next) => {
-					songs
-						.runJob("UPDATE_SONG", { songId })
+					SongsModule.runJob("UPDATE_SONG", { songId })
 						.then(song => {
 							next(null, song);
 						})
@@ -328,7 +324,7 @@ export default {
 			],
 			async (err, song) => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 
 					console.log("ERROR", "SONGS_UPDATE", `Failed to update song "${songId}". "${err}"`);
 
@@ -337,7 +333,7 @@ export default {
 
 				console.log("SUCCESS", "SONGS_UPDATE", `Successfully updated song "${songId}".`);
 
-				cache.runJob("PUB", {
+				CacheModule.runJob("PUB", {
 					channel: "song.updated",
 					value: song.songId
 				});
@@ -359,7 +355,7 @@ export default {
 	 * @param cb
 	 */
 	remove: isAdminRequired(async (session, songId, cb) => {
-		const songModel = await db.runJob("GET_MODEL", { modelName: "song" });
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
 		async.waterfall(
 			[
 				next => {
@@ -368,8 +364,7 @@ export default {
 
 				(res, next) => {
 					// TODO Check if res gets returned from above
-					cache
-						.runJob("HDEL", { table: "songs", key: songId })
+					CacheModule.runJob("HDEL", { table: "songs", key: songId })
 						.then(() => {
 							next();
 						})
@@ -378,7 +373,7 @@ export default {
 			],
 			async err => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 
 					console.log("ERROR", "SONGS_UPDATE", `Failed to remove song "${songId}". "${err}"`);
 
@@ -387,7 +382,7 @@ export default {
 
 				console.log("SUCCESS", "SONGS_UPDATE", `Successfully remove song "${songId}".`);
 
-				cache.runJob("PUB", { channel: "song.removed", value: songId });
+				CacheModule.runJob("PUB", { channel: "song.removed", value: songId });
 
 				return cb({
 					status: "success",
@@ -405,7 +400,7 @@ export default {
 	 * @param cb
 	 */
 	add: isAdminRequired(async (session, song, cb) => {
-		const SongModel = await db.runJob("GET_MODEL", { modelName: "song" });
+		const SongModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
 		async.waterfall(
 			[
 				next => {
@@ -432,7 +427,7 @@ export default {
 			],
 			async err => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 
 					console.log("ERROR", "SONGS_ADD", `User "${session.userId}" failed to add song. "${err}"`);
 
@@ -445,7 +440,7 @@ export default {
 					`User "${session.userId}" successfully added song "${song.songId}".`
 				);
 
-				cache.runJob("PUB", {
+				CacheModule.runJob("PUB", {
 					channel: "song.added",
 					value: song.songId
 				});
@@ -467,8 +462,8 @@ export default {
 	 * @param cb
 	 */
 	like: isLoginRequired(async (session, songId, cb) => {
-		const userModel = await db.runJob("GET_MODEL", { modelName: "user" });
-		const songModel = await db.runJob("GET_MODEL", { modelName: "song" });
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
 		async.waterfall(
 			[
 				next => {
@@ -482,7 +477,7 @@ export default {
 			],
 			async (err, song) => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"SONGS_LIKE",
@@ -538,9 +533,9 @@ export default {
 														message: "Something went wrong while liking this song."
 													});
 
-												songs.runJob("UPDATE_SONG", { songId });
+												SongsModule.runJob("UPDATE_SONG", { songId });
 
-												cache.runJob("PUB", {
+												CacheModule.runJob("PUB", {
 													channel: "song.like",
 													value: JSON.stringify({
 														songId: oldSongId,
@@ -550,7 +545,7 @@ export default {
 													})
 												});
 
-												activities.runJob("ADD_ACTIVITY", {
+												ActivitiesModule.runJob("ADD_ACTIVITY", {
 													userId: session.userId,
 													activityType: "liked_song",
 													payload: [songId]
@@ -584,8 +579,8 @@ export default {
 	 * @param cb
 	 */
 	dislike: isLoginRequired(async (session, songId, cb) => {
-		const userModel = await db.runJob("GET_MODEL", { modelName: "user" });
-		const songModel = await db.runJob("GET_MODEL", { modelName: "song" });
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
 		async.waterfall(
 			[
 				next => {
@@ -599,7 +594,7 @@ export default {
 			],
 			async (err, song) => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"SONGS_DISLIKE",
@@ -653,8 +648,8 @@ export default {
 														message: "Something went wrong while disliking this song."
 													});
 
-												songs.runJob("UPDATE_SONG", { songId });
-												cache.runJob("PUB", {
+												SongsModule.runJob("UPDATE_SONG", { songId });
+												CacheModule.runJob("PUB", {
 													channel: "song.dislike",
 													value: JSON.stringify({
 														songId: oldSongId,
@@ -692,8 +687,8 @@ export default {
 	 * @param cb
 	 */
 	undislike: isLoginRequired(async (session, songId, cb) => {
-		const userModel = await db.runJob("GET_MODEL", { modelName: "user" });
-		const songModel = await db.runJob("GET_MODEL", { modelName: "song" });
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
 		async.waterfall(
 			[
 				next => {
@@ -707,7 +702,7 @@ export default {
 			],
 			async (err, song) => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"SONGS_UNDISLIKE",
@@ -757,8 +752,8 @@ export default {
 														status: "failure",
 														message: "Something went wrong while undisliking this song."
 													});
-												songs.runJob("UPDATE_SONG", { songId });
-												cache.runJob("PUB", {
+												SongsModule.runJob("UPDATE_SONG", { songId });
+												CacheModule.runJob("PUB", {
 													channel: "song.undislike",
 													value: JSON.stringify({
 														songId: oldSongId,
@@ -795,8 +790,8 @@ export default {
 	 * @param cb
 	 */
 	unlike: isLoginRequired(async (session, songId, cb) => {
-		const userModel = await db.runJob("GET_MODEL", { modelName: "user" });
-		const songModel = await db.runJob("GET_MODEL", { modelName: "song" });
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
 		async.waterfall(
 			[
 				next => {
@@ -810,7 +805,7 @@ export default {
 			],
 			async (err, song) => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"SONGS_UNLIKE",
@@ -859,8 +854,8 @@ export default {
 														status: "failure",
 														message: "Something went wrong while unliking this song."
 													});
-												songs.runJob("UPDATE_SONG", { songId });
-												cache.runJob("PUB", {
+												SongsModule.runJob("UPDATE_SONG", { songId });
+												CacheModule.runJob("PUB", {
 													channel: "song.unlike",
 													value: JSON.stringify({
 														songId: oldSongId,
@@ -897,8 +892,8 @@ export default {
 	 * @param cb
 	 */
 	getOwnSongRatings: isLoginRequired(async (session, songId, cb) => {
-		const userModel = await db.runJob("GET_MODEL", { modelName: "user" });
-		const songModel = await db.runJob("GET_MODEL", { modelName: "song" });
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
 		async.waterfall(
 			[
 				next => {
@@ -912,7 +907,7 @@ export default {
 			],
 			async (err, song) => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"SONGS_GET_OWN_RATINGS",
@@ -932,7 +927,7 @@ export default {
 					}
 					return cb({
 						status: "failure",
-						message: await utils.runJob("GET_ERROR", {
+						message: await UtilsModule.runJob("GET_ERROR", {
 							error: err
 						})
 					});

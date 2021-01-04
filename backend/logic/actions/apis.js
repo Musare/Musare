@@ -1,14 +1,11 @@
 import config from "config";
-
 import async from "async";
-
 import request from "request";
+
 import { isAdminRequired } from "./hooks";
 // const moduleManager = require("../../index");
 
-import utils from "../utils";
-
-// const logger = moduleManager.modules["logger"];
+import UtilsModule from "../utils";
 
 export default {
 	/**
@@ -42,7 +39,7 @@ export default {
 				console.log(data.error);
 				if (err || data.error) {
 					if (!err) err = data.error.message;
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"APIS_SEARCH_YOUTUBE",
@@ -89,7 +86,7 @@ export default {
 			],
 			async (err, body) => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"APIS_SEARCH_DISCOGS",
@@ -120,11 +117,10 @@ export default {
 	 */
 	joinRoom: (session, page, cb) => {
 		if (page === "home") {
-			utils
-				.runJob("SOCKET_JOIN_ROOM", {
-					socketId: session.socketId,
-					room: page
-				})
+			UtilsModule.runJob("SOCKET_JOIN_ROOM", {
+				socketId: session.socketId,
+				room: page
+			})
 				.then()
 				.catch(err => {
 					console.log("ERROR", `Joining room failed: ${err.message}`);
@@ -151,7 +147,7 @@ export default {
 			page === "statistics" ||
 			page === "punishments"
 		) {
-			utils.runJob("SOCKET_JOIN_ROOM", {
+			UtilsModule.runJob("SOCKET_JOIN_ROOM", {
 				socketId: session.socketId,
 				room: `admin.${page}`
 			});
