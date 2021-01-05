@@ -74,7 +74,7 @@ export default {
 		font-size: 17px;
 		color: #222;
 		background-color: #ddd;
-		width: -webkit-fill-available;
+		flex-grow: 1;
 
 		&:not(:first-of-type) {
 			margin-left: 5px;

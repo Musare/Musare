@@ -279,6 +279,7 @@ export default {
 			this.socket.emit("apis.joinRoom", "home", () => {});
 		},
 		filteredStations() {
+			const privacyOrder = ["public", "unlisted", "private"];
 			return this.stations
 				.filter(
 					station =>
@@ -289,7 +290,11 @@ export default {
 				.sort(
 					(a, b) =>
 						this.isFavorite(b) - this.isFavorite(a) ||
-						this.isOwner(b) - this.isOwner(a)
+						this.isOwner(b) - this.isOwner(a) ||
+						this.isPlaying(b) - this.isPlaying(a) ||
+						a.paused - b.paused ||
+						privacyOrder.indexOf(a.privacy) -
+							privacyOrder.indexOf(b.privacy)
 				);
 		},
 		isOwner(station) {
@@ -297,6 +302,9 @@ export default {
 		},
 		isFavorite(station) {
 			return this.favoriteStations.indexOf(station._id) !== -1;
+		},
+		isPlaying(station) {
+			return typeof station.currentSong.title !== "undefined";
 		},
 		favoriteStation(event, station) {
 			event.preventDefault();

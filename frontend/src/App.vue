@@ -446,11 +446,11 @@ button.delete:focus {
 	}
 
 	&.is-info {
-		background-color: $blue !important;
+		background-color: $musare-blue !important;
 
 		&:hover,
 		&:focus {
-			background-color: darken($blue, 5%) !important;
+			background-color: darken($musare-blue, 5%) !important;
 		}
 	}
 

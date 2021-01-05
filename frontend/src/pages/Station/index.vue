@@ -1651,9 +1651,10 @@ export default {
 					height: 100%;
 
 					.player-cannot-autoplay {
-						position: absolute;
+						position: relative;
 						width: 100%;
 						height: 100%;
+						bottom: calc(100% + 5px);
 						background: rgba(3, 169, 244, 0.95);
 						display: flex;
 						align-items: center;
