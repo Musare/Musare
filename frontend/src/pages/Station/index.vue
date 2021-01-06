@@ -282,6 +282,8 @@
 			<report v-if="modals.report" />
 		</div>
 
+		<main-footer />
+
 		<floating-box id="playerDebugBox" ref="playerDebugBox">
 			<template #body>
 				<span><b>YouTube id</b>: {{ currentSong.songId }}</span>
@@ -327,6 +329,7 @@ import { mapState, mapActions } from "vuex";
 import Toast from "toasters";
 
 import MainHeader from "../../components/layout/MainHeader.vue";
+import MainFooter from "../../components/layout/MainFooter.vue";
 
 import Z404 from "../404.vue";
 
@@ -342,6 +345,7 @@ import StationSidebar from "./components/Sidebar/index.vue";
 export default {
 	components: {
 		MainHeader,
+		MainFooter,
 		SongQueue: () => import("./AddSongToQueue.vue"),
 		AddToPlaylist: () => import("./AddSongToPlaylist.vue"),
 		EditPlaylist: () => import("../../components/modals/EditPlaylist.vue"),
@@ -455,6 +459,8 @@ export default {
 							if (this.currentSong.songId === song.songId) {
 								this.liked = song.liked;
 								this.disliked = song.disliked;
+								if (song.disliked === true)
+									this.voteSkipStation();
 							}
 						}
 					);
@@ -1407,6 +1413,10 @@ export default {
 
 <style lang="scss" scoped>
 @import "../../styles/global.scss";
+
+.main-container {
+	min-height: calc(100vh + 180px);
+}
 
 .progress {
 	width: 50px;
