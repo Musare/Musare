@@ -216,6 +216,10 @@
 										currentSong.likes !== -1 &&
 											currentSong.dislikes !== -1
 									"
+									:class="{
+										liked: liked,
+										disliked: disliked
+									}"
 								>
 									<!-- Like Song Button -->
 									<button
@@ -1859,6 +1863,17 @@ export default {
 							#dislike-song:hover,
 							#dislike-song.disliked {
 								background-color: darken($red, 5%) !important;
+							}
+
+							&.liked #dislike-song,
+							&.disliked #like-song {
+								background-color: $grey !important;
+								&:hover {
+									background-color: darken(
+										$grey,
+										5%
+									) !important;
+								}
 							}
 						}
 					}

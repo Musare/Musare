@@ -183,7 +183,7 @@ export default {
 			}
 
 			#report-icon {
-				background-color: #6b6a6a;
+				background-color: $grey;
 			}
 
 			#youtube-icon {
