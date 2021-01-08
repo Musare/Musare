@@ -294,7 +294,8 @@ export default {
 						this.isPlaying(b) - this.isPlaying(a) ||
 						a.paused - b.paused ||
 						privacyOrder.indexOf(a.privacy) -
-							privacyOrder.indexOf(b.privacy)
+							privacyOrder.indexOf(b.privacy) ||
+						b.userCount - a.userCount
 				);
 		},
 		isOwner(station) {
