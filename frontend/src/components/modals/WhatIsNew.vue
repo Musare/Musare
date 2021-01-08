@@ -133,12 +133,12 @@ export default {
 	.modal-card,
 	.modal-card-head,
 	.modal-card-body {
-		background-color: $night-mode-secondary;
+		background-color: $night-mode-bg-secondary;
 	}
 
 	strong,
 	p {
-		color: #ddd;
+		color: $night-mode-text;
 	}
 }
 

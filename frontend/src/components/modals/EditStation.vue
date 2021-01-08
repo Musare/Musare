@@ -1011,18 +1011,18 @@ export default {
 	.modal-card-head,
 	.modal-card-body,
 	.modal-card-foot {
-		background-color: $night-mode-secondary;
+		background-color: $night-mode-bg-secondary;
 	}
 
 	.section {
-		background-color: #222 !important;
+		background-color: $night-mode-bg-secondary !important;
 		border: 0 !important;
 	}
 
 	.label,
 	p,
 	strong {
-		color: #ddd;
+		color: $night-mode-text;
 	}
 }
 

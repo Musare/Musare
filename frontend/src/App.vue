@@ -184,7 +184,7 @@ export default {
 .night-mode {
 	div {
 		// background-color: #000;
-		color: #ddd;
+		color: $night-mode-text;
 	}
 
 	#toasts-container .toast {
@@ -207,7 +207,7 @@ export default {
 
 	p:not(.help),
 	label {
-		color: #ddd !important;
+		color: $night-mode-text !important;
 	}
 }
 

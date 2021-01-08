@@ -246,11 +246,11 @@ export default {
 
 .night-mode {
 	.table {
-		color: #ddd;
-		background-color: #222;
+		color: $night-mode-text;
+		background-color: $night-mode-bg-secondary;
 
 		thead tr {
-			background: $night-mode-secondary;
+			background: $night-mode-bg-secondary;
 			td {
 				color: #fff;
 			}
@@ -265,15 +265,15 @@ export default {
 		}
 
 		strong {
-			color: #ddd;
+			color: $night-mode-text;
 		}
 	}
 
 	.card {
-		background-color: $night-mode-secondary;
+		background-color: $night-mode-bg-secondary;
 
 		p {
-			color: #ddd;
+			color: $night-mode-text;
 		}
 	}
 }

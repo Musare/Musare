@@ -385,7 +385,7 @@ export default {
 
 .night-mode {
 	tr {
-		background-color: #222;
+		background-color: $night-mode-bg-secondary;
 	}
 }
 

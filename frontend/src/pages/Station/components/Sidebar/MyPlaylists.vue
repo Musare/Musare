@@ -164,7 +164,7 @@ export default {
 
 .night-mode {
 	#my-playlists {
-		background-color: #222 !important;
+		background-color: $night-mode-bg-secondary !important;
 		border: 0 !important;
 	}
 }

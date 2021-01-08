@@ -137,7 +137,7 @@ export default {
 
 .night-mode {
 	.content {
-		background-color: #222 !important;
+		background-color: $night-mode-bg-secondary !important;
 	}
 }
 

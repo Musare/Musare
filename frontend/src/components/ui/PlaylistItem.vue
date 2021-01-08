@@ -43,7 +43,7 @@ export default {
 
 .night-mode {
 	.playlist p {
-		color: #ddd !important;
+		color: $night-mode-text !important;
 	}
 }
 

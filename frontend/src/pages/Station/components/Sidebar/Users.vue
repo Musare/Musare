@@ -32,12 +32,12 @@ export default {
 
 .night-mode {
 	#users {
-		background-color: #222 !important;
+		background-color: $night-mode-bg-secondary !important;
 		border: 0 !important;
 	}
 
 	a {
-		color: #ddd;
+		color: $night-mode-text;
 	}
 }
 

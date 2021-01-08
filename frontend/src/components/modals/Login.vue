@@ -130,12 +130,12 @@ export default {
 	.modal-card-head,
 	.modal-card-body,
 	.modal-card-foot {
-		background-color: $night-mode-secondary;
+		background-color: $night-mode-bg-secondary;
 	}
 
 	.label,
 	p:not(.help) {
-		color: #ddd;
+		color: $night-mode-text;
 	}
 }
 

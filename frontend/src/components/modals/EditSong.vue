@@ -1410,7 +1410,7 @@ export default {
 	.api-section,
 	.api-result,
 	.player-footer {
-		background-color: #222 !important;
+		background-color: $night-mode-bg-secondary !important;
 	}
 
 	.api-result .tracks .track:hover,
@@ -1421,7 +1421,7 @@ export default {
 	.label,
 	p,
 	strong {
-		color: #ddd;
+		color: $night-mode-text;
 	}
 }
 

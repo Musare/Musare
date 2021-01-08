@@ -115,11 +115,11 @@ export default {
 .night-mode {
 	.nav-left,
 	.nav-right {
-		background-color: #222;
+		background-color: $night-mode-bg-secondary;
 	}
 
 	.nav-item {
-		color: #ddd !important;
+		color: $night-mode-text !important;
 	}
 }
 

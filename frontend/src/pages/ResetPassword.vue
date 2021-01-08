@@ -416,7 +416,7 @@ export default {
 
 .night-mode {
 	.label {
-		color: #ddd;
+		color: $night-mode-text;
 	}
 
 	.skip-step {

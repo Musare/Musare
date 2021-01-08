@@ -135,7 +135,7 @@ export default {
 
 .night-mode {
 	p {
-		color: #ddd;
+		color: $night-mode-text;
 	}
 }
 

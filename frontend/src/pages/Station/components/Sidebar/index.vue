@@ -72,8 +72,8 @@ export default {
 		border: 0;
 		text-transform: uppercase;
 		font-size: 17px;
-		color: #222;
-		background-color: #ddd;
+		color: $night-mode-bg-secondary;
+		background-color: $night-mode-text;
 		flex-grow: 1;
 
 		&:not(:first-of-type) {
@@ -82,7 +82,7 @@ export default {
 	}
 
 	.selected {
-		background-color: #222;
+		background-color: $night-mode-bg-secondary;
 		color: #fff;
 	}
 }

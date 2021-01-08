@@ -84,11 +84,11 @@ export default {
 
 .night-mode {
 	.card {
-		background-color: $night-mode-secondary;
+		background-color: $night-mode-bg-secondary;
 	}
 
 	p {
-		color: #ddd;
+		color: $night-mode-text;
 	}
 }
 

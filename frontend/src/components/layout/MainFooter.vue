@@ -84,7 +84,7 @@ export default {
 	footer.footer,
 	footer.footer .container,
 	footer.footer .container .footer-content {
-		background-color: #222;
+		background-color: $night-mode-bg-secondary;
 	}
 
 	footer.footer #footer-social-icons img {

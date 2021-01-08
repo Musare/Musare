@@ -356,12 +356,12 @@ html {
 	.card,
 	.card-content,
 	.card-content div {
-		background-color: $night-mode-secondary;
+		background-color: $night-mode-bg-secondary;
 	}
 
 	.card-content .icons i,
 	.group-title i {
-		color: #ddd;
+		color: $night-mode-text;
 	}
 
 	.card-image .image {
@@ -369,7 +369,7 @@ html {
 	}
 
 	.card-content .under-content .hostedBy {
-		color: #ddd;
+		color: $night-mode-text;
 	}
 }
 

@@ -1481,7 +1481,7 @@ export default {
 	#about-station-container,
 	#control-bar-container,
 	.player-container.nothing-here {
-		background-color: #222 !important;
+		background-color: $night-mode-bg-secondary !important;
 	}
 
 	#upper-row .quadrant,

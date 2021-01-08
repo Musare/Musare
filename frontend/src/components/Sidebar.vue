@@ -25,14 +25,14 @@ export default {
 
 .night-mode {
 	.sidebar {
-		background-color: $night-mode-secondary;
+		background-color: $night-mode-bg-secondary;
 
 		.sidebar-title {
 			color: #fff;
 		}
 
 		* {
-			color: #ddd;
+			color: $night-mode-text;
 		}
 	}
 }
