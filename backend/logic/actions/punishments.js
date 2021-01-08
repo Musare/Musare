@@ -1,24 +1,23 @@
 import async from "async";
 
 import { isAdminRequired } from "./hooks";
-import db from "../db";
-// const moduleManager = require("../../index");
 
-// const logger = require("logger");
-import utils from "../utils";
+import moduleManager from "../../index";
 
-import cache from "../cache";
+const DBModule = moduleManager.modules.db;
+const UtilsModule = moduleManager.modules.utils;
+const IOModule = moduleManager.modules.io;
+const CacheModule = moduleManager.modules.cache;
+const PunishmentsModule = moduleManager.modules.punishments;
 
-import punishments from "../punishments";
-
-cache.runJob("SUB", {
+CacheModule.runJob("SUB", {
 	channel: "ip.ban",
 	cb: data => {
-		utils.runJob("EMIT_TO_ROOM", {
+		IOModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.punishments",
 			args: ["event:admin.punishment.added", data.punishment]
 		});
-		utils.runJob("SOCKETS_FROM_IP", { ip: data.ip }).then(sockets => {
+		IOModule.runJob("SOCKETS_FROM_IP", { ip: data.ip }).then(sockets => {
 			sockets.forEach(socket => {
 				socket.disconnect(true);
 			});
@@ -34,7 +33,7 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	index: isAdminRequired(async (session, cb) => {
-		const punishmentModel = await db.runJob("GET_MODEL", {
+		const punishmentModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "punishment"
 		});
 		async.waterfall(
@@ -45,7 +44,7 @@ export default {
 			],
 			async (err, punishments) => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log("ERROR", "PUNISHMENTS_INDEX", `Indexing punishments failed. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
@@ -112,14 +111,13 @@ export default {
 				},
 
 				next => {
-					punishments
-						.runJob("ADD_PUNISHMENT", {
-							type: "banUserIp",
-							value,
-							reason,
-							expiresAt,
-							punishedBy: session.userId
-						})
+					PunishmentsModule.runJob("ADD_PUNISHMENT", {
+						type: "banUserIp",
+						value,
+						reason,
+						expiresAt,
+						punishedBy: session.userId
+					})
 						.then(punishment => {
 							next(null, punishment);
 						})
@@ -128,7 +126,7 @@ export default {
 			],
 			async (err, punishment) => {
 				if (err && err !== true) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"BAN_IP",
@@ -141,7 +139,7 @@ export default {
 					"BAN_IP",
 					`User ${session.userId} has successfully banned IP address ${value} with the reason ${reason}.`
 				);
-				cache.runJob("PUB", {
+				CacheModule.runJob("PUB", {
 					channel: "ip.ban",
 					value: { ip: value, punishment }
 				});

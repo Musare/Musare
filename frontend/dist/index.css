@@ -123,10 +123,6 @@ h6 {
 	float: right !important;
 }
 
-.light-blue {
-	background-color: #ff4545 !important;
-}
-
 .white {
 	background-color: #FFFFFF !important;
 }
@@ -141,7 +137,6 @@ a.nav-item.is-tab {
 }
 
 .button.is-info {
-	background-color: #ff4545;
 	border-width: 0;
 	color: #fff;
 }

@@ -1,22 +1,23 @@
 import async from "async";
 
-import db from "../../db";
-import cache from "../../cache";
-import utils from "../../utils";
+import moduleManager from "../../../index";
+
+const DBModule = moduleManager.modules.db;
+const CacheModule = moduleManager.modules.cache;
+const UtilsModule = moduleManager.modules.utils;
 
 export default destination => async (session, ...args) => {
-	const userModel = await db.runJob("GET_MODEL", { modelName: "user" });
+	const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
 
 	const cb = args[args.length - 1];
 
 	async.waterfall(
 		[
 			next => {
-				cache
-					.runJob("HGET", {
-						table: "sessions",
-						key: session.sessionId
-					})
+				CacheModule.runJob("HGET", {
+					table: "sessions",
+					key: session.sessionId
+				})
 					.then(session => {
 						next(null, session);
 					})
@@ -34,7 +35,7 @@ export default destination => async (session, ...args) => {
 		],
 		async err => {
 			if (err) {
-				err = await utils.runJob("GET_ERROR", { error: err });
+				err = await UtilsModule.runJob("GET_ERROR", { error: err });
 				console.log("INFO", "ADMIN_REQUIRED", `User failed to pass admin required check. "${err}"`);
 				return cb({ status: "failure", message: err });
 			}

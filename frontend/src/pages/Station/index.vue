@@ -45,20 +45,6 @@
 								</span>
 							</button>
 
-							<!-- Debug Box -->
-							<button
-								class="button is-primary"
-								@click="togglePlayerDebugBox()"
-								@dblclick="resetPlayerDebugBox()"
-							>
-								<i class="material-icons icon-with-button">
-									bug_report
-								</i>
-								<span class="optional-desktop-only-text">
-									Debug player box
-								</span>
-							</button>
-
 							<!-- (Admin) Skip Button -->
 							<button
 								class="button is-danger"
@@ -131,7 +117,21 @@
 							<div id="seeker-bar" style="width: 0%" />
 						</div>
 						<div id="control-bar-container">
-							<div id="left-buttons" v-if="loggedIn">
+							<div id="left-buttons">
+								<!-- Debug Box -->
+								<button
+									class="button is-primary"
+									@click="togglePlayerDebugBox()"
+									@dblclick="resetPlayerDebugBox()"
+								>
+									<i class="material-icons icon-with-button">
+										bug_report
+									</i>
+									<span class="optional-desktop-only-text">
+										Debug
+									</span>
+								</button>
+
 								<!-- Local Pause/Resume Button -->
 								<button
 									class="button is-primary"
@@ -158,6 +158,7 @@
 
 								<!-- Vote to Skip Button -->
 								<button
+									v-if="loggedIn"
 									class="button is-primary"
 									@click="voteSkipStation()"
 								>
@@ -215,6 +216,10 @@
 										currentSong.likes !== -1 &&
 											currentSong.dislikes !== -1
 									"
+									:class="{
+										liked: liked,
+										disliked: disliked
+									}"
 								>
 									<!-- Like Song Button -->
 									<button
@@ -299,6 +304,8 @@
 			<report v-if="modals.report" />
 		</div>
 
+		<main-footer />
+
 		<floating-box id="playerDebugBox" ref="playerDebugBox">
 			<template #body>
 				<span><b>YouTube id</b>: {{ currentSong.songId }}</span>
@@ -344,6 +351,7 @@ import { mapState, mapActions } from "vuex";
 import Toast from "toasters";
 
 import MainHeader from "../../components/layout/MainHeader.vue";
+import MainFooter from "../../components/layout/MainFooter.vue";
 
 import Z404 from "../404.vue";
 
@@ -360,6 +368,7 @@ import StationSidebar from "./components/Sidebar/index.vue";
 export default {
 	components: {
 		MainHeader,
+		MainFooter,
 		SongQueue: () => import("./AddSongToQueue.vue"),
 		EditPlaylist: () => import("../../components/modals/EditPlaylist.vue"),
 		CreatePlaylist: () =>
@@ -474,6 +483,8 @@ export default {
 							if (this.currentSong.songId === song.songId) {
 								this.liked = song.liked;
 								this.disliked = song.disliked;
+								if (song.disliked === true)
+									this.voteSkipStation();
 							}
 						}
 					);
@@ -629,7 +640,8 @@ export default {
 			"station.lowerVolumeLarge",
 			"station.lowerVolumeSmall",
 			"station.increaseVolumeLarge",
-			"station.increaseVolumeSmall"
+			"station.increaseVolumeSmall",
+			"station.toggleDebug"
 		];
 
 		shortcutNames.forEach(shortcutName => {
@@ -1253,6 +1265,7 @@ export default {
 								keyCode: 32,
 								shift: false,
 								ctrl: true,
+								preventDefault: true,
 								handler: () => {
 									if (this.stationPaused)
 										this.resumeStation();
@@ -1267,6 +1280,7 @@ export default {
 								keyCode: 39,
 								shift: false,
 								ctrl: true,
+								preventDefault: true,
 								handler: () => {
 									this.skipStation();
 								}
@@ -1280,6 +1294,7 @@ export default {
 							keyCode: 40,
 							shift: false,
 							ctrl: true,
+							preventDefault: true,
 							handler: () => {
 								this.volumeSliderValue -= 1000;
 								this.changeVolume();
@@ -1293,6 +1308,7 @@ export default {
 							keyCode: 40,
 							shift: true,
 							ctrl: true,
+							preventDefault: true,
 							handler: () => {
 								this.volumeSliderValue -= 100;
 								this.changeVolume();
@@ -1306,6 +1322,7 @@ export default {
 							keyCode: 38,
 							shift: false,
 							ctrl: true,
+							preventDefault: true,
 							handler: () => {
 								this.volumeSliderValue += 1000;
 								this.changeVolume();
@@ -1319,12 +1336,23 @@ export default {
 							keyCode: 38,
 							shift: true,
 							ctrl: true,
+							preventDefault: true,
 							handler: () => {
 								this.volumeSliderValue += 100;
 								this.changeVolume();
 							}
 						}
 					);
+
+					keyboardShortcuts.registerShortcut("station.toggleDebug", {
+						keyCode: 68,
+						shift: false,
+						ctrl: true,
+						preventDefault: true,
+						handler: () => {
+							this.togglePlayerDebugBox();
+						}
+					});
 
 					// UNIX client time before ping
 					const beforePing = Date.now();
@@ -1409,6 +1437,10 @@ export default {
 
 <style lang="scss" scoped>
 @import "../../styles/global.scss";
+
+.main-container {
+	min-height: calc(100vh + 180px);
+}
 
 .progress {
 	width: 50px;
@@ -1620,6 +1652,7 @@ export default {
 
 				p {
 					max-width: 700px;
+					flex-grow: 1;
 				}
 
 				#admin-buttons {
@@ -1652,17 +1685,19 @@ export default {
 				background-color: #fff;
 				display: flex;
 				flex-direction: column;
+				border: 1px solid $light-grey-2;
+				border-radius: 5px;
+				overflow: hidden;
 
 				#video-container {
 					width: 100%;
 					height: 100%;
-					border: 1px solid $light-grey-2;
-					border-bottom: 0;
 
 					.player-cannot-autoplay {
-						position: absolute;
+						position: relative;
 						width: 100%;
 						height: 100%;
+						bottom: calc(100% + 5px);
 						background: rgba(3, 169, 244, 0.95);
 						display: flex;
 						align-items: center;
@@ -1700,9 +1735,6 @@ export default {
 					width: 100%;
 					// height: 62px;
 					background: #fff;
-					border: 1px solid $light-grey-2;
-					border-radius: 0 0 5px 5px;
-					border-top: 0;
 
 					@media (max-width: 1450px) {
 						flex-direction: column;
@@ -1864,6 +1896,17 @@ export default {
 							#dislike-song:hover,
 							#dislike-song.disliked {
 								background-color: darken($red, 5%) !important;
+							}
+
+							&.liked #dislike-song,
+							&.disliked #like-song {
+								background-color: $grey !important;
+								&:hover {
+									background-color: darken(
+										$grey,
+										5%
+									) !important;
+								}
 							}
 						}
 

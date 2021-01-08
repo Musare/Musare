@@ -10,26 +10,19 @@
 			<p class="nothing-here" v-if="songsList.length < 1">
 				There are no songs currently queued
 			</p>
-		</div>
-		<div
-			id="queue-buttons"
-			v-if="
-				(loggedIn &&
-					(station.type === 'community' && station.partyMode)) ||
-					station.type === 'official'
-			"
-		>
 			<button
 				id="add-song-to-queue"
 				class="button is-primary"
 				v-if="
-					(station.type === 'community' &&
-						((station.locked && isOwnerOnly()) ||
-							!station.locked ||
-							(station.locked &&
-								isAdminOnly() &&
-								dismissedWarning))) ||
-						station.type === 'official'
+					loggedIn &&
+						((station.type === 'community' &&
+							station.partyMode &&
+							((station.locked && isOwnerOnly()) ||
+								!station.locked ||
+								(station.locked &&
+									isAdminOnly() &&
+									dismissedWarning))) ||
+							station.type === 'official')
 				"
 				@click="
 					openModal({
@@ -159,10 +152,19 @@ export default {
 
 	#add-song-to-queue {
 		width: 100%;
-		height: 45px;
+		height: 40px;
+		border-radius: 5px;
+		background-color: rgba(3, 169, 244, 1);
+		color: $white !important;
+		border: 0;
+		margin-top: 10px;
+		&:active,
+		&:focus {
+			border: 0;
+		}
 
-		@media (min-width: 1040px) {
-			border-radius: 5px;
+		&:focus {
+			background-color: $primary-color;
 		}
 	}
 }

@@ -68,13 +68,13 @@ export default {
 	display: flex;
 
 	.button {
-		border-radius: 0;
+		border-radius: 5px 5px 0 0;
 		border: 0;
 		text-transform: uppercase;
 		font-size: 17px;
 		color: #222;
 		background-color: #ddd;
-		width: -webkit-fill-available;
+		flex-grow: 1;
 
 		&:not(:first-of-type) {
 			margin-left: 5px;

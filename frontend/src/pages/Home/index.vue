@@ -23,7 +23,7 @@
 					</a>
 				</div>
 				<router-link
-					v-for="(station, index) in stations"
+					v-for="(station, index) in filteredStations()"
 					:key="index"
 					:to="{
 						name: 'station',
@@ -131,7 +131,13 @@
 					</div>
 					<div class="bottomBar">
 						<i
-							v-if="station.currentSong.title"
+							v-if="station.paused && station.currentSong.title"
+							class="material-icons"
+							title="Station Paused"
+							>pause</i
+						>
+						<i
+							v-else-if="station.currentSong.title"
 							class="material-icons"
 							>music_note</i
 						>
@@ -184,14 +190,6 @@ export default {
 		};
 	},
 	computed: {
-		filteredStations() {
-			return this.stations.filter(
-				station =>
-					JSON.stringify(Object.values(station)).indexOf(
-						this.searchQuery
-					) !== -1
-			);
-		},
 		...mapState({
 			loggedIn: state => state.user.auth.loggedIn,
 			userId: state => state.user.auth.userId,
@@ -280,11 +278,33 @@ export default {
 			});
 			this.socket.emit("apis.joinRoom", "home", () => {});
 		},
+		filteredStations() {
+			const privacyOrder = ["public", "unlisted", "private"];
+			return this.stations
+				.filter(
+					station =>
+						JSON.stringify(Object.values(station)).indexOf(
+							this.searchQuery
+						) !== -1
+				)
+				.sort(
+					(a, b) =>
+						this.isFavorite(b) - this.isFavorite(a) ||
+						this.isOwner(b) - this.isOwner(a) ||
+						this.isPlaying(b) - this.isPlaying(a) ||
+						a.paused - b.paused ||
+						privacyOrder.indexOf(a.privacy) -
+							privacyOrder.indexOf(b.privacy)
+				);
+		},
 		isOwner(station) {
 			return station.owner === this.userId;
 		},
 		isFavorite(station) {
 			return this.favoriteStations.indexOf(station._id) !== -1;
+		},
+		isPlaying(station) {
+			return typeof station.currentSong.title !== "undefined";
 		},
 		favoriteStation(event, station) {
 			event.preventDefault();
@@ -526,7 +546,7 @@ html {
 				width: 100%;
 				position: absolute;
 				top: 0;
-				filter: blur(3px);
+				filter: blur(1px);
 			}
 			img {
 				height: auto;

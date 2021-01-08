@@ -2,12 +2,13 @@ import async from "async";
 
 import { isAdminRequired, isLoginRequired } from "./hooks";
 
-import db from "../db";
-import utils from "../utils";
-// const logger = require("../logger");
-import songs from "../songs";
+import moduleManager from "../../index";
 
-import cache from "../cache";
+const DBModule = moduleManager.modules.db;
+const UtilsModule = moduleManager.modules.utils;
+const IOModule = moduleManager.modules.io;
+const SongsModule = moduleManager.modules.songs;
+const CacheModule = moduleManager.modules.cache;
 
 const reportableIssues = [
 	{
@@ -32,20 +33,20 @@ const reportableIssues = [
 	}
 ];
 
-cache.runJob("SUB", {
+CacheModule.runJob("SUB", {
 	channel: "report.resolve",
 	cb: reportId => {
-		utils.runJob("EMIT_TO_ROOM", {
+		IOModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.reports",
 			args: ["event:admin.report.resolved", reportId]
 		});
 	}
 });
 
-cache.runJob("SUB", {
+CacheModule.runJob("SUB", {
 	channel: "report.create",
 	cb: report => {
-		utils.runJob("EMIT_TO_ROOM", {
+		IOModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.reports",
 			args: ["event:admin.report.created", report]
 		});
@@ -60,7 +61,7 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	index: isAdminRequired(async (session, cb) => {
-		const reportModel = await db.runJob("GET_MODEL", {
+		const reportModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "report"
 		});
 		async.waterfall(
@@ -71,7 +72,7 @@ export default {
 			],
 			async (err, reports) => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log("ERROR", "REPORTS_INDEX", `Indexing reports failed. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
@@ -89,7 +90,7 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	findOne: isAdminRequired(async (session, reportId, cb) => {
-		const reportModel = await db.runJob("GET_MODEL", {
+		const reportModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "report"
 		});
 		async.waterfall(
@@ -100,7 +101,7 @@ export default {
 			],
 			async (err, report) => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log("ERROR", "REPORTS_FIND_ONE", `Finding report "${reportId}" failed. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
@@ -118,7 +119,7 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	getReportsForSong: isAdminRequired(async (session, songId, cb) => {
-		const reportModel = await db.runJob("GET_MODEL", {
+		const reportModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "report"
 		});
 		async.waterfall(
@@ -140,7 +141,7 @@ export default {
 			],
 			async (err, data) => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"GET_REPORTS_FOR_SONG",
@@ -162,7 +163,7 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	resolve: isAdminRequired(async (session, reportId, cb) => {
-		const reportModel = await db.runJob("GET_MODEL", {
+		const reportModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "report"
 		});
 		async.waterfall(
@@ -182,7 +183,7 @@ export default {
 			],
 			async err => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"REPORTS_RESOLVE",
@@ -190,7 +191,7 @@ export default {
 					);
 					return cb({ status: "failure", message: err });
 				}
-				cache.runJob("PUB", {
+				CacheModule.runJob("PUB", {
 					channel: "report.resolve",
 					value: reportId
 				});
@@ -211,10 +212,10 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	create: isLoginRequired(async (session, data, cb) => {
-		const reportModel = await db.runJob("GET_MODEL", {
+		const reportModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "report"
 		});
-		const songModel = await db.runJob("GET_MODEL", { modelName: "song" });
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
 		async.waterfall(
 			[
 				next => {
@@ -223,8 +224,7 @@ export default {
 
 				(song, next) => {
 					if (!song) return next("Song not found.");
-					return songs
-						.runJob("GET_SONG", { id: song._id })
+					return SongsModule.runJob("GET_SONG", { id: song._id })
 						.then(response => {
 							next(null, response.song);
 						})
@@ -284,7 +284,7 @@ export default {
 			],
 			async (err, report) => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"REPORTS_CREATE",
@@ -292,7 +292,7 @@ export default {
 					);
 					return cb({ status: "failure", message: err });
 				}
-				cache.runJob("PUB", {
+				CacheModule.runJob("PUB", {
 					channel: "report.create",
 					value: report
 				});

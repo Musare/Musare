@@ -4,21 +4,22 @@ import async from "async";
 
 import { isAdminRequired, isLoginRequired } from "./hooks";
 
-import db from "../db";
+import moduleManager from "../../index";
 
-import utils from "../utils";
+const DBModule = moduleManager.modules.db;
+const UtilsModule = moduleManager.modules.utils;
+const IOModule = moduleManager.modules.io;
+const YouTubeModule = moduleManager.modules.youtube;
+const CacheModule = moduleManager.modules.cache;
 
-import cache from "../cache";
-// const logger = moduleManager.modules["logger"];
-
-cache.runJob("SUB", {
+CacheModule.runJob("SUB", {
 	channel: "queue.newSong",
 	cb: async songId => {
-		const queueSongModel = await db.runJob("GET_MODEL", {
+		const queueSongModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "queueSong"
 		});
 		queueSongModel.findOne({ _id: songId }, (err, song) => {
-			utils.runJob("EMIT_TO_ROOM", {
+			IOModule.runJob("EMIT_TO_ROOM", {
 				room: "admin.queue",
 				args: ["event:admin.queueSong.added", song]
 			});
@@ -26,24 +27,24 @@ cache.runJob("SUB", {
 	}
 });
 
-cache.runJob("SUB", {
+CacheModule.runJob("SUB", {
 	channel: "queue.removedSong",
 	cb: songId => {
-		utils.runJob("EMIT_TO_ROOM", {
+		IOModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.queue",
 			args: ["event:admin.queueSong.removed", songId]
 		});
 	}
 });
 
-cache.runJob("SUB", {
+CacheModule.runJob("SUB", {
 	channel: "queue.update",
 	cb: async songId => {
-		const queueSongModel = await db.runJob("GET_MODEL", {
+		const queueSongModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "queueSong"
 		});
 		queueSongModel.findOne({ _id: songId }, (err, song) => {
-			utils.runJob("EMIT_TO_ROOM", {
+			IOModule.runJob("EMIT_TO_ROOM", {
 				room: "admin.queue",
 				args: ["event:admin.queueSong.updated", song]
 			});
@@ -59,7 +60,7 @@ const lib = {
 	 * @param cb
 	 */
 	length: isAdminRequired(async (session, cb) => {
-		const queueSongModel = await db.runJob("GET_MODEL", {
+		const queueSongModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "queueSong"
 		});
 		async.waterfall(
@@ -70,7 +71,7 @@ const lib = {
 			],
 			async (err, count) => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log("ERROR", "QUEUE_SONGS_LENGTH", `Failed to get length from queue songs. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
@@ -88,7 +89,7 @@ const lib = {
 	 * @param cb
 	 */
 	getSet: isAdminRequired(async (session, set, cb) => {
-		const queueSongModel = await db.runJob("GET_MODEL", {
+		const queueSongModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "queueSong"
 		});
 		async.waterfall(
@@ -103,7 +104,7 @@ const lib = {
 			],
 			async (err, songs) => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log("ERROR", "QUEUE_SONGS_GET_SET", `Failed to get set from queue songs. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
@@ -122,7 +123,7 @@ const lib = {
 	 * @param {Function} cb - gets called with the result
 	 */
 	update: isAdminRequired(async (session, songId, updatedSong, cb) => {
-		const queueSongModel = await db.runJob("GET_MODEL", {
+		const queueSongModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "queueSong"
 		});
 		async.waterfall(
@@ -149,7 +150,7 @@ const lib = {
 			],
 			async err => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"QUEUE_UPDATE",
@@ -157,7 +158,7 @@ const lib = {
 					);
 					return cb({ status: "failure", message: err });
 				}
-				cache.runJob("PUB", { channel: "queue.update", value: songId });
+				CacheModule.runJob("PUB", { channel: "queue.update", value: songId });
 				console.log(
 					"SUCCESS",
 					"QUEUE_UPDATE",
@@ -179,7 +180,7 @@ const lib = {
 	 * @param {Function} cb - gets called with the result
 	 */
 	remove: isAdminRequired(async (session, songId, cb) => {
-		const queueSongModel = await db.runJob("GET_MODEL", {
+		const queueSongModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "queueSong"
 		});
 		async.waterfall(
@@ -190,7 +191,7 @@ const lib = {
 			],
 			async err => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"QUEUE_REMOVE",
@@ -198,7 +199,7 @@ const lib = {
 					);
 					return cb({ status: "failure", message: err });
 				}
-				cache.runJob("PUB", {
+				CacheModule.runJob("PUB", {
 					channel: "queue.removedSong",
 					value: songId
 				});
@@ -224,9 +225,9 @@ const lib = {
 	 */
 	add: isLoginRequired(async (session, songId, cb) => {
 		const requestedAt = Date.now();
-		const songModel = await db.runJob("GET_MODEL", { modelName: "song" });
-		const userModel = await db.runJob("GET_MODEL", { modelName: "user" });
-		const QueueSongModel = await db.runJob("GET_MODEL", {
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
+		const QueueSongModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "queueSong"
 		});
 
@@ -245,8 +246,7 @@ const lib = {
 				(song, next) => {
 					if (song) return next("This song has already been added.");
 					// TODO Add err object as first param of callback
-					return utils
-						.runJob("GET_SONG_FROM_YOUTUBE", { songId })
+					return YouTubeModule.runJob("GET_SONG", { songId })
 						.then(response => {
 							const { song } = response;
 							song.duration = -1;
@@ -283,7 +283,7 @@ const lib = {
 			],
 			async (err, newSong) => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"QUEUE_ADD",
@@ -291,7 +291,7 @@ const lib = {
 					);
 					return cb({ status: "failure", message: err });
 				}
-				cache.runJob("PUB", {
+				CacheModule.runJob("PUB", {
 					channel: "queue.newSong",
 					value: newSong._id
 				});
@@ -320,11 +320,10 @@ const lib = {
 		async.waterfall(
 			[
 				next => {
-					utils
-						.runJob("GET_PLAYLIST_FROM_YOUTUBE", {
-							url,
-							musicOnly
-						})
+					YouTubeModule.runJob("GET_PLAYLIST", {
+						url,
+						musicOnly
+					})
 						.then(res => {
 							next(null, res.songs);
 						})
@@ -348,7 +347,7 @@ const lib = {
 			],
 			async err => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"QUEUE_IMPORT",

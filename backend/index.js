@@ -395,6 +395,7 @@ moduleManager.addModule("songs");
 moduleManager.addModule("stations");
 moduleManager.addModule("tasks");
 moduleManager.addModule("utils");
+moduleManager.addModule("youtube");
 
 moduleManager.initialize();
 
@@ -441,7 +442,14 @@ process.stdin.on("data", data => {
 		console.log(moduleManager.modules[parts[1]].jobStatistics);
 	}
 	if (command.startsWith("debug")) {
-		moduleManager.modules.utils.runJob("DEBUG");
+		moduleManager.modules.youtube
+			.runJob("GET_PLAYLIST", { url: "https://www.youtube.com/playlist?list=PLN-cFDG8y28Pz4dkAFwDNH0as0-prFfvR" })
+			.then(response => {
+				console.log(1111, response);
+			})
+			.catch(err => {
+				console.log(1112, err);
+			});
 	}
 
 	if (command.startsWith("eval")) {

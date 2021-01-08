@@ -1,19 +1,24 @@
 <template>
 	<div id="currently-playing">
-		<div
-			v-if="currentSong.ytThumbnail"
-			class="thumbnail"
-			id="yt-thumbnail"
-			:style="{
-				'background-image': 'url(' + currentSong.ytThumbnail + ')'
-			}"
-		/>
-		<img
-			v-if="currentSong.thumbnail"
-			class="thumbnail"
-			:src="currentSong.thumbnail"
-			onerror="this.src='/assets/notes-transparent.png'"
-		/>
+		<figure class="thumbnail">
+			<div
+				v-if="currentSong.ytThumbnail"
+				class="ytThumbnailBg"
+				:style="{
+					'background-image': 'url(' + currentSong.ytThumbnail + ')'
+				}"
+			></div>
+			<img
+				v-if="currentSong.ytThumbnail"
+				:src="currentSong.ytThumbnail"
+				onerror="this.src='/assets/notes-transparent.png'"
+			/>
+			<img
+				v-else
+				:src="currentSong.thumbnail"
+				onerror="this.src='/assets/notes-transparent.png'"
+			/>
+		</figure>
 		<div id="song-info">
 			<h6>Currently playing...</h6>
 			<h4
@@ -84,12 +89,36 @@ export default {
 	align-items: center;
 	width: 100%;
 	height: 100%;
-	padding: 10px 20px;
+	padding: 10px;
 
 	.thumbnail {
 		min-width: 140px;
 		max-height: 140px;
 		height: 100%;
+		position: relative;
+
+		.ytThumbnailBg {
+			height: 100%;
+			width: 100%;
+			position: absolute;
+			top: 0;
+			filter: blur(1px);
+			background: url("/assets/notes-transparent.png") no-repeat center
+				center;
+		}
+
+		img {
+			height: auto;
+			width: 100%;
+			margin-top: auto;
+			margin-bottom: auto;
+			z-index: 1;
+			position: absolute;
+			top: 0;
+			bottom: 0;
+			left: 0;
+			right: 0;
+		}
 	}
 
 	#yt-thumbnail {
@@ -154,7 +183,7 @@ export default {
 			}
 
 			#report-icon {
-				background-color: #6b6a6a;
+				background-color: $grey;
 			}
 
 			#youtube-icon {

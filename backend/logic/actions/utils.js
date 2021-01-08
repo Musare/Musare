@@ -2,14 +2,16 @@ import async from "async";
 
 import { isAdminRequired } from "./hooks";
 
-import utils from "../utils";
+import moduleManager from "../../index";
+
+const UtilsModule = moduleManager.modules.utils;
 
 export default {
 	getModules: isAdminRequired((session, cb) => {
 		async.waterfall(
 			[
 				next => {
-					next(null, utils.moduleManager.modules);
+					next(null, UtilsModule.moduleManager.modules);
 				},
 
 				(modules, next) => {
@@ -33,7 +35,7 @@ export default {
 			],
 			async (err, modules) => {
 				if (err && err !== true) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log("ERROR", "GET_MODULES", `User ${session.userId} failed to get modules. '${err}'`);
 					cb({ status: "failure", message: err });
 				} else {
@@ -56,13 +58,13 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					next(null, utils.moduleManager.modules[moduleName]);
+					next(null, UtilsModule.moduleManager.modules[moduleName]);
 				}
 			],
 			async (err, module) => {
 				// console.log(module.runningJobs);
 				if (err && err !== true) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log("ERROR", "GET_MODULE", `User ${session.userId} failed to get module. '${err}'`);
 					cb({ status: "failure", message: err });
 				} else {

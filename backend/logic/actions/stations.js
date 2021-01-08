@@ -1,16 +1,18 @@
 import async from "async";
 
 import { isLoginRequired, isOwnerRequired } from "./hooks";
-import db from "../db";
 
-import utils from "../utils";
-import songs from "../songs";
-import cache from "../cache";
-import notifications from "../notifications";
-import stations from "../stations";
-import activities from "../activities";
+import moduleManager from "../../index";
 
-// const logger = moduleManager.modules["logger"];
+const DBModule = moduleManager.modules.db;
+const UtilsModule = moduleManager.modules.utils;
+const IOModule = moduleManager.modules.io;
+const SongsModule = moduleManager.modules.songs;
+const CacheModule = moduleManager.modules.cache;
+const NotificationsModule = moduleManager.modules.notifications;
+const StationsModule = moduleManager.modules.stations;
+const ActivitiesModule = moduleManager.modules.activities;
+const YouTubeModule = moduleManager.modules.youtube;
 
 const userList = {};
 const usersPerStation = {};
@@ -27,14 +29,14 @@ const usersPerStationCount = {};
 // 	const oldUsersPerStationCount = usersPerStationCount;
 // 	usersPerStationCount = {};
 
-// 	const userModel = await db.runJob("GET_MODEL", {
+// 	const userModel = await DBModule.runJob("GET_MODEL", {
 // 		modelName: "user"
 // 	});
 
 // 	async.each(
 // 		Object.keys(userList),
 // 		(socketId, next) => {
-// 			utils.runJob("SOCKET_FROM_SESSION", { socketId }, { isQuiet: true }).then(socket => {
+// 			IOModule.runJob("SOCKET_FROM_SESSION", { socketId }, { isQuiet: true }).then(socket => {
 // 				const stationId = userList[socketId];
 // 				if (!socket || Object.keys(socket.rooms).indexOf(`station.${stationId}`) === -1) {
 // 					if (stationsCountUpdated.indexOf(stationId) === -1) stationsCountUpdated.push(stationId);
@@ -50,7 +52,7 @@ const usersPerStationCount = {};
 // 					[
 // 						next => {
 // 							if (!socket.session || !socket.session.sessionId) return next("No session found.");
-// 							return cache
+// 							return CacheModule
 // 								.runJob("HGET", {
 // 									table: "sessions",
 // 									key: socket.session.sessionId
@@ -101,7 +103,7 @@ const usersPerStationCount = {};
 //
 // 			stationsCountUpdated.forEach(stationId => {
 // 				console.log("INFO", "UPDATE_STATION_USER_COUNT", `Updating user count of ${stationId}.`);
-// 				cache.runJob("PUB", {
+// 				CacheModule.runJob("PUB", {
 // 					table: "station.updateUserCount",
 // 					value: stationId
 // 				});
@@ -109,7 +111,7 @@ const usersPerStationCount = {};
 
 // 			stationsUpdated.forEach(stationId => {
 // 				console.log("INFO", "UPDATE_STATION_USER_LIST", `Updating user list of ${stationId}.`);
-// 				cache.runJob("PUB", {
+// 				CacheModule.runJob("PUB", {
 // 					table: "station.updateUsers",
 // 					value: stationId
 // 				});
@@ -120,57 +122,55 @@ const usersPerStationCount = {};
 // 	);
 // }, 3000);
 
-cache.runJob("SUB", {
+CacheModule.runJob("SUB", {
 	channel: "station.updateUsers",
 	cb: stationId => {
 		const list = usersPerStation[stationId] || [];
-		utils.runJob("EMIT_TO_ROOM", {
+		IOModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${stationId}`,
 			args: ["event:users.updated", list]
 		});
 	}
 });
 
-cache.runJob("SUB", {
+CacheModule.runJob("SUB", {
 	channel: "station.updateUserCount",
 	cb: stationId => {
 		const count = usersPerStationCount[stationId] || 0;
-		utils.runJob("EMIT_TO_ROOM", {
+		IOModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${stationId}`,
 			args: ["event:userCount.updated", count]
 		});
-		stations.runJob("GET_STATION", { stationId }).then(async station => {
+		StationsModule.runJob("GET_STATION", { stationId }).then(async station => {
 			if (station.privacy === "public")
-				utils.runJob("EMIT_TO_ROOM", {
+				IOModule.runJob("EMIT_TO_ROOM", {
 					room: "home",
 					args: ["event:userCount.updated", stationId, count]
 				});
 			else {
-				const sockets = await utils.runJob("GET_ROOM_SOCKETS", {
+				const sockets = await IOModule.runJob("GET_ROOM_SOCKETS", {
 					room: "home"
 				});
 				Object.keys(sockets).forEach(socketKey => {
 					const socket = sockets[socketKey];
 					const { session } = socket;
 					if (session.sessionId) {
-						cache
-							.runJob("HGET", {
-								table: "sessions",
-								key: session.sessionId
-							})
-							.then(session => {
-								if (session)
-									db.runJob("GET_MODEL", {
-										modelName: "user"
-									}).then(userModel =>
-										userModel.findOne({ _id: session.userId }, (err, user) => {
-											if (user.role === "admin")
-												socket.emit("event:userCount.updated", stationId, count);
-											else if (station.type === "community" && station.owner === session.userId)
-												socket.emit("event:userCount.updated", stationId, count);
-										})
-									);
-							});
+						CacheModule.runJob("HGET", {
+							table: "sessions",
+							key: session.sessionId
+						}).then(session => {
+							if (session)
+								DBModule.runJob("GET_MODEL", {
+									modelName: "user"
+								}).then(userModel =>
+									userModel.findOne({ _id: session.userId }, (err, user) => {
+										if (user.role === "admin")
+											socket.emit("event:userCount.updated", stationId, count);
+										else if (station.type === "community" && station.owner === session.userId)
+											socket.emit("event:userCount.updated", stationId, count);
+									})
+								);
+						});
 					}
 				});
 			}
@@ -178,41 +178,41 @@ cache.runJob("SUB", {
 	}
 });
 
-cache.runJob("SUB", {
+CacheModule.runJob("SUB", {
 	channel: "station.queueLockToggled",
 	cb: data => {
-		utils.runJob("EMIT_TO_ROOM", {
+		IOModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${data.stationId}`,
 			args: ["event:queueLockToggled", data.locked]
 		});
 	}
 });
 
-cache.runJob("SUB", {
+CacheModule.runJob("SUB", {
 	channel: "station.updatePartyMode",
 	cb: data => {
-		utils.runJob("EMIT_TO_ROOM", {
+		IOModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${data.stationId}`,
 			args: ["event:partyMode.updated", data.partyMode]
 		});
 	}
 });
 
-cache.runJob("SUB", {
+CacheModule.runJob("SUB", {
 	channel: "privatePlaylist.selected",
 	cb: data => {
-		utils.runJob("EMIT_TO_ROOM", {
+		IOModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${data.stationId}`,
 			args: ["event:privatePlaylist.selected", data.playlistId]
 		});
 	}
 });
 
-cache.runJob("SUB", {
+CacheModule.runJob("SUB", {
 	channel: "station.pause",
 	cb: stationId => {
-		stations.runJob("GET_STATION", { stationId }).then(station => {
-			utils.runJob("EMIT_TO_ROOM", {
+		StationsModule.runJob("GET_STATION", { stationId }).then(station => {
+			IOModule.runJob("EMIT_TO_ROOM", {
 				room: `station.${stationId}`,
 				args: ["event:stations.pause", { pausedAt: station.pausedAt }]
 			});
@@ -220,11 +220,11 @@ cache.runJob("SUB", {
 	}
 });
 
-cache.runJob("SUB", {
+CacheModule.runJob("SUB", {
 	channel: "station.resume",
 	cb: stationId => {
-		stations.runJob("GET_STATION", { stationId }).then(station => {
-			utils.runJob("EMIT_TO_ROOM", {
+		StationsModule.runJob("GET_STATION", { stationId }).then(station => {
+			IOModule.runJob("EMIT_TO_ROOM", {
 				room: `station.${stationId}`,
 				args: ["event:stations.resume", { timePaused: station.timePaused }]
 			});
@@ -232,11 +232,11 @@ cache.runJob("SUB", {
 	}
 });
 
-cache.runJob("SUB", {
+CacheModule.runJob("SUB", {
 	channel: "station.queueUpdate",
 	cb: stationId => {
-		stations.runJob("GET_STATION", { stationId }).then(station => {
-			utils.runJob("EMIT_TO_ROOM", {
+		StationsModule.runJob("GET_STATION", { stationId }).then(station => {
+			IOModule.runJob("EMIT_TO_ROOM", {
 				room: `station.${stationId}`,
 				args: ["event:queue.update", station.queue]
 			});
@@ -244,70 +244,68 @@ cache.runJob("SUB", {
 	}
 });
 
-cache.runJob("SUB", {
+CacheModule.runJob("SUB", {
 	channel: "station.voteSkipSong",
 	cb: stationId => {
-		utils.runJob("EMIT_TO_ROOM", {
+		IOModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${stationId}`,
 			args: ["event:song.voteSkipSong"]
 		});
 	}
 });
 
-cache.runJob("SUB", {
+CacheModule.runJob("SUB", {
 	channel: "station.remove",
 	cb: stationId => {
-		utils.runJob("EMIT_TO_ROOM", {
+		IOModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${stationId}`,
 			args: ["event:stations.remove"]
 		});
-		utils.runJob("EMIT_TO_ROOM", {
+		IOModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.stations",
 			args: ["event:admin.station.removed", stationId]
 		});
 	}
 });
 
-cache.runJob("SUB", {
+CacheModule.runJob("SUB", {
 	channel: "station.create",
 	cb: async stationId => {
-		const userModel = await db.runJob("GET_MODEL", { modelName: "user" });
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
 
-		stations.runJob("INITIALIZE_STATION", { stationId }).then(async response => {
+		StationsModule.runJob("INITIALIZE_STATION", { stationId }).then(async response => {
 			const { station } = response;
 			station.userCount = usersPerStationCount[stationId] || 0;
-			utils.runJob("EMIT_TO_ROOM", {
+			IOModule.runJob("EMIT_TO_ROOM", {
 				room: "admin.stations",
 				args: ["event:admin.station.added", station]
 			});
 			// TODO If community, check if on whitelist
 			if (station.privacy === "public")
-				utils.runJob("EMIT_TO_ROOM", {
+				IOModule.runJob("EMIT_TO_ROOM", {
 					room: "home",
 					args: ["event:stations.created", station]
 				});
 			else {
-				const sockets = await utils.runJob("GET_ROOM_SOCKETS", {
+				const sockets = await IOModule.runJob("GET_ROOM_SOCKETS", {
 					room: "home"
 				});
 				Object.keys(sockets).forEach(socketKey => {
 					const socket = sockets[socketKey];
 					const { session } = socket;
 					if (session.sessionId) {
-						cache
-							.runJob("HGET", {
-								table: "sessions",
-								key: session.sessionId
-							})
-							.then(session => {
-								if (session) {
-									userModel.findOne({ _id: session.userId }, (err, user) => {
-										if (user.role === "admin") socket.emit("event:stations.created", station);
-										else if (station.type === "community" && station.owner === session.userId)
-											socket.emit("event:stations.created", station);
-									});
-								}
-							});
+						CacheModule.runJob("HGET", {
+							table: "sessions",
+							key: session.sessionId
+						}).then(session => {
+							if (session) {
+								userModel.findOne({ _id: session.userId }, (err, user) => {
+									if (user.role === "admin") socket.emit("event:stations.created", station);
+									else if (station.type === "community" && station.owner === session.userId)
+										socket.emit("event:stations.created", station);
+								});
+							}
+						});
 					}
 				});
 			}
@@ -326,7 +324,7 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					cache.runJob("HGETALL", { table: "stations" }).then(stations => {
+					CacheModule.runJob("HGETALL", { table: "stations" }).then(stations => {
 						next(null, stations);
 					});
 				},
@@ -339,12 +337,11 @@ export default {
 							async.waterfall(
 								[
 									next => {
-										stations
-											.runJob("CAN_USER_VIEW_STATION", {
-												station,
-												userId: session.userId,
-												hideUnlisted: true
-											})
+										StationsModule.runJob("CAN_USER_VIEW_STATION", {
+											station,
+											userId: session.userId,
+											hideUnlisted: true
+										})
 											.then(exists => {
 												next(null, exists);
 											})
@@ -365,7 +362,7 @@ export default {
 			],
 			async (err, stations) => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log("ERROR", "STATIONS_INDEX", `Indexing stations failed. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
@@ -386,8 +383,7 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					stations
-						.runJob("GET_STATION", { stationId })
+					StationsModule.runJob("GET_STATION", { stationId })
 						.then(station => {
 							next(null, station);
 						})
@@ -396,7 +392,7 @@ export default {
 			],
 			async (err, station) => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"STATIONS_GET_STATION_FOR_ACTIVITY",
@@ -431,8 +427,7 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					stations
-						.runJob("GET_STATION_BY_NAME", { stationName })
+					StationsModule.runJob("GET_STATION_BY_NAME", { stationName })
 						.then(station => {
 							next(null, station);
 						})
@@ -441,11 +436,10 @@ export default {
 
 				(station, next) => {
 					if (!station) return next(null, false);
-					return stations
-						.runJob("CAN_USER_VIEW_STATION", {
-							station,
-							userId: session.userId
-						})
+					return StationsModule.runJob("CAN_USER_VIEW_STATION", {
+						station,
+						userId: session.userId
+					})
 						.then(exists => {
 							next(null, exists);
 						})
@@ -454,7 +448,7 @@ export default {
 			],
 			async (err, exists) => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"STATION_EXISTS_BY_NAME",
@@ -483,8 +477,7 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					stations
-						.runJob("GET_STATION", { stationId })
+					StationsModule.runJob("GET_STATION", { stationId })
 						.then(station => {
 							next(null, station);
 						})
@@ -492,11 +485,10 @@ export default {
 				},
 
 				(station, next) => {
-					stations
-						.runJob("CAN_USER_VIEW_STATION", {
-							station,
-							userId: session.userId
-						})
+					StationsModule.runJob("CAN_USER_VIEW_STATION", {
+						station,
+						userId: session.userId
+					})
 						.then(canView => {
 							if (canView) return next(null, station);
 							return next("Insufficient permissions.");
@@ -511,11 +503,10 @@ export default {
 				},
 
 				next => {
-					cache
-						.runJob("HGET", {
-							table: "officialPlaylists",
-							key: stationId
-						})
+					CacheModule.runJob("HGET", {
+						table: "officialPlaylists",
+						key: stationId
+					})
 						.then(playlist => {
 							next(null, playlist);
 						})
@@ -529,7 +520,7 @@ export default {
 			],
 			async (err, playlist) => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"STATIONS_GET_PLAYLIST",
@@ -559,8 +550,7 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					stations
-						.runJob("GET_STATION_BY_NAME", { stationName })
+					StationsModule.runJob("GET_STATION_BY_NAME", { stationName })
 						.then(station => {
 							next(null, station);
 						})
@@ -569,11 +559,10 @@ export default {
 
 				(station, next) => {
 					if (!station) return next("Station not found.");
-					return stations
-						.runJob("CAN_USER_VIEW_STATION", {
-							station,
-							userId: session.userId
-						})
+					return StationsModule.runJob("CAN_USER_VIEW_STATION", {
+						station,
+						userId: session.userId
+					})
 						.then(canView => {
 							if (!canView) next("Not allowed to join station.");
 							else next(null, station);
@@ -582,7 +571,7 @@ export default {
 				},
 
 				(station, next) => {
-					utils.runJob("SOCKET_JOIN_ROOM", {
+					IOModule.runJob("SOCKET_JOIN_ROOM", {
 						socketId: session.socketId,
 						room: `station.${station._id}`
 					});
@@ -611,15 +600,14 @@ export default {
 					data.userCount = usersPerStationCount[data._id] || 0;
 					data.users = usersPerStation[data._id] || [];
 					if (!data.currentSong || !data.currentSong.title) return next(null, data);
-					utils.runJob("SOCKET_JOIN_SONG_ROOM", {
+					IOModule.runJob("SOCKET_JOIN_SONG_ROOM", {
 						socketId: session.socketId,
 						room: `song.${data.currentSong.songId}`
 					});
 					data.currentSong.skipVotes = data.currentSong.skipVotes.length;
-					return songs
-						.runJob("GET_SONG_FROM_ID", {
-							songId: data.currentSong.songId
-						})
+					return SongsModule.runJob("GET_SONG_FROM_ID", {
+						songId: data.currentSong.songId
+					})
 						.then(response => {
 							const { song } = response;
 							if (song) {
@@ -641,7 +629,7 @@ export default {
 			],
 			async (err, data) => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log("ERROR", "STATIONS_JOIN", `Joining station "${stationName}" failed. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
@@ -659,14 +647,13 @@ export default {
 	 * @param cb
 	 */
 	toggleLock: isOwnerRequired(async (session, stationId, cb) => {
-		const stationModel = await db.runJob("GET_MODEL", {
+		const stationModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "station"
 		});
 		async.waterfall(
 			[
 				next => {
-					stations
-						.runJob("GET_STATION", { stationId })
+					StationsModule.runJob("GET_STATION", { stationId })
 						.then(station => {
 							next(null, station);
 						})
@@ -678,8 +665,7 @@ export default {
 				},
 
 				(res, next) => {
-					stations
-						.runJob("UPDATE_STATION", { stationId })
+					StationsModule.runJob("UPDATE_STATION", { stationId })
 						.then(station => {
 							next(null, station);
 						})
@@ -688,7 +674,7 @@ export default {
 			],
 			async (err, station) => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"STATIONS_UPDATE_LOCKED_STATUS",
@@ -701,7 +687,7 @@ export default {
 					"STATIONS_UPDATE_LOCKED_STATUS",
 					`Toggled the queue lock for station "${stationId}" successfully to "${station.locked}".`
 				);
-				cache.runJob("PUB", {
+				CacheModule.runJob("PUB", {
 					channel: "station.queueLockToggled",
 					value: {
 						stationId,
@@ -721,7 +707,7 @@ export default {
 	 * @param cb
 	 */
 	voteSkip: isLoginRequired(async (session, stationId, cb) => {
-		const stationModel = await db.runJob("GET_MODEL", {
+		const stationModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "station"
 		});
 
@@ -731,8 +717,7 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					stations
-						.runJob("GET_STATION", { stationId })
+					StationsModule.runJob("GET_STATION", { stationId })
 						.then(station => {
 							next(null, station);
 						})
@@ -741,11 +726,10 @@ export default {
 
 				(station, next) => {
 					if (!station) return next("Station not found.");
-					return stations
-						.runJob("CAN_USER_VIEW_STATION", {
-							station,
-							userId: session.userId
-						})
+					return StationsModule.runJob("CAN_USER_VIEW_STATION", {
+						station,
+						userId: session.userId
+					})
 						.then(canView => {
 							if (canView) return next(null, station);
 							return next("Insufficient permissions.");
@@ -769,8 +753,7 @@ export default {
 				},
 
 				(res, next) => {
-					stations
-						.runJob("UPDATE_STATION", { stationId })
+					StationsModule.runJob("UPDATE_STATION", { stationId })
 						.then(station => {
 							next(null, station);
 						})
@@ -784,10 +767,9 @@ export default {
 
 				(station, next) => {
 					skipVotes = station.currentSong.skipVotes.length;
-					utils
-						.runJob("GET_ROOM_SOCKETS", {
-							room: `station.${stationId}`
-						})
+					IOModule.runJob("GET_ROOM_SOCKETS", {
+						room: `station.${stationId}`
+					})
 						.then(sockets => {
 							next(null, sockets);
 						})
@@ -801,17 +783,17 @@ export default {
 			],
 			async err => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log("ERROR", "STATIONS_VOTE_SKIP", `Vote skipping station "${stationId}" failed. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
 				console.log("SUCCESS", "STATIONS_VOTE_SKIP", `Vote skipping "${stationId}" successful.`);
-				cache.runJob("PUB", {
+				CacheModule.runJob("PUB", {
 					channel: "station.voteSkipSong",
 					value: stationId
 				});
 
-				if (shouldSkip) stations.runJob("SKIP_STATION", { stationId });
+				if (shouldSkip) StationsModule.runJob("SKIP_STATION", { stationId });
 
 				return cb({
 					status: "success",
@@ -832,8 +814,7 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					stations
-						.runJob("GET_STATION", { stationId })
+					StationsModule.runJob("GET_STATION", { stationId })
 						.then(station => {
 							next(null, station);
 						})
@@ -847,7 +828,7 @@ export default {
 			],
 			async err => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"STATIONS_FORCE_SKIP",
@@ -855,10 +836,10 @@ export default {
 					);
 					return cb({ status: "failure", message: err });
 				}
-				notifications.runJob("UNSCHEDULE", {
+				NotificationsModule.runJob("UNSCHEDULE", {
 					name: `stations.nextSong?id=${stationId}`
 				});
-				stations.runJob("SKIP_STATION", { stationId });
+				StationsModule.runJob("SKIP_STATION", { stationId });
 				console.log("SUCCESS", "STATIONS_FORCE_SKIP", `Force skipped station "${stationId}" successfully.`);
 				return cb({
 					status: "success",
@@ -879,8 +860,7 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					stations
-						.runJob("GET_STATION", { stationId })
+					StationsModule.runJob("GET_STATION", { stationId })
 						.then(station => {
 							next(null, station);
 						})
@@ -894,12 +874,12 @@ export default {
 			],
 			async (err, userCount) => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log("ERROR", "STATIONS_LEAVE", `Leaving station "${stationId}" failed. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
 				console.log("SUCCESS", "STATIONS_LEAVE", `Left station "${stationId}" successfully.`);
-				utils.runJob("SOCKET_LEAVE_ROOMS", { socketId: session });
+				IOModule.runJob("SOCKET_LEAVE_ROOMS", { socketId: session });
 				delete userList[session.socketId];
 				return cb({
 					status: "success",
@@ -919,7 +899,7 @@ export default {
 	 * @param cb
 	 */
 	updateName: isOwnerRequired(async (session, stationId, newName, cb) => {
-		const stationModel = await db.runJob("GET_MODEL", {
+		const stationModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "station"
 		});
 		async.waterfall(
@@ -934,8 +914,7 @@ export default {
 				},
 
 				(res, next) => {
-					stations
-						.runJob("UPDATE_STATION", { stationId })
+					StationsModule.runJob("UPDATE_STATION", { stationId })
 						.then(station => {
 							next(null, station);
 						})
@@ -944,7 +923,7 @@ export default {
 			],
 			async err => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"STATIONS_UPDATE_NAME",
@@ -974,7 +953,7 @@ export default {
 	 * @param cb
 	 */
 	updateDisplayName: isOwnerRequired(async (session, stationId, newDisplayName, cb) => {
-		const stationModel = await db.runJob("GET_MODEL", {
+		const stationModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "station"
 		});
 
@@ -990,8 +969,7 @@ export default {
 				},
 
 				(res, next) => {
-					stations
-						.runJob("UPDATE_STATION", { stationId })
+					StationsModule.runJob("UPDATE_STATION", { stationId })
 						.then(station => {
 							next(null, station);
 						})
@@ -1000,7 +978,7 @@ export default {
 			],
 			async err => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"STATIONS_UPDATE_DISPLAY_NAME",
@@ -1030,7 +1008,7 @@ export default {
 	 * @param cb
 	 */
 	updateDescription: isOwnerRequired(async (session, stationId, newDescription, cb) => {
-		const stationModel = await db.runJob("GET_MODEL", {
+		const stationModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "station"
 		});
 
@@ -1046,8 +1024,7 @@ export default {
 				},
 
 				(res, next) => {
-					stations
-						.runJob("UPDATE_STATION", { stationId })
+					StationsModule.runJob("UPDATE_STATION", { stationId })
 						.then(station => {
 							next(null, station);
 						})
@@ -1056,7 +1033,7 @@ export default {
 			],
 			async err => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"STATIONS_UPDATE_DESCRIPTION",
@@ -1086,7 +1063,7 @@ export default {
 	 * @param cb
 	 */
 	updatePrivacy: isOwnerRequired(async (session, stationId, newPrivacy, cb) => {
-		const stationModel = await db.runJob("GET_MODEL", {
+		const stationModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "station"
 		});
 		async.waterfall(
@@ -1101,8 +1078,7 @@ export default {
 				},
 
 				(res, next) => {
-					stations
-						.runJob("UPDATE_STATION", { stationId })
+					StationsModule.runJob("UPDATE_STATION", { stationId })
 						.then(station => {
 							next(null, station);
 						})
@@ -1111,7 +1087,7 @@ export default {
 			],
 			async err => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"STATIONS_UPDATE_PRIVACY",
@@ -1141,7 +1117,7 @@ export default {
 	 * @param cb
 	 */
 	updateGenres: isOwnerRequired(async (session, stationId, newGenres, cb) => {
-		const stationModel = await db.runJob("GET_MODEL", {
+		const stationModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "station"
 		});
 		async.waterfall(
@@ -1156,8 +1132,7 @@ export default {
 				},
 
 				(res, next) => {
-					stations
-						.runJob("UPDATE_STATION", { stationId })
+					StationsModule.runJob("UPDATE_STATION", { stationId })
 						.then(station => {
 							next(null, station);
 						})
@@ -1166,7 +1141,7 @@ export default {
 			],
 			async err => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"STATIONS_UPDATE_GENRES",
@@ -1196,7 +1171,7 @@ export default {
 	 * @param cb
 	 */
 	updateBlacklistedGenres: isOwnerRequired(async (session, stationId, newBlacklistedGenres, cb) => {
-		const stationModel = await db.runJob("GET_MODEL", {
+		const stationModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "station"
 		});
 		async.waterfall(
@@ -1215,8 +1190,7 @@ export default {
 				},
 
 				(res, next) => {
-					stations
-						.runJob("UPDATE_STATION", { stationId })
+					StationsModule.runJob("UPDATE_STATION", { stationId })
 						.then(station => {
 							next(null, station);
 						})
@@ -1225,7 +1199,7 @@ export default {
 			],
 			async err => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"STATIONS_UPDATE_BLACKLISTED_GENRES",
@@ -1255,14 +1229,13 @@ export default {
 	 * @param cb
 	 */
 	updatePartyMode: isOwnerRequired(async (session, stationId, newPartyMode, cb) => {
-		const stationModel = await db.runJob("GET_MODEL", {
+		const stationModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "station"
 		});
 		async.waterfall(
 			[
 				next => {
-					stations
-						.runJob("GET_STATION", { stationId })
+					StationsModule.runJob("GET_STATION", { stationId })
 						.then(station => {
 							next(null, station);
 						})
@@ -1282,8 +1255,7 @@ export default {
 				},
 
 				(res, next) => {
-					stations
-						.runJob("UPDATE_STATION", { stationId })
+					StationsModule.runJob("UPDATE_STATION", { stationId })
 						.then(station => {
 							next(null, station);
 						})
@@ -1292,7 +1264,7 @@ export default {
 			],
 			async err => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"STATIONS_UPDATE_PARTY_MODE",
@@ -1305,14 +1277,14 @@ export default {
 					"STATIONS_UPDATE_PARTY_MODE",
 					`Updated station "${stationId}" party mode to "${newPartyMode}" successfully.`
 				);
-				cache.runJob("PUB", {
+				CacheModule.runJob("PUB", {
 					channel: "station.updatePartyMode",
 					value: {
 						stationId,
 						partyMode: newPartyMode
 					}
 				});
-				stations.runJob("SKIP_STATION", { stationId });
+				StationsModule.runJob("SKIP_STATION", { stationId });
 				return cb({
 					status: "success",
 					message: "Successfully updated the party mode."
@@ -1329,14 +1301,13 @@ export default {
 	 * @param cb
 	 */
 	pause: isOwnerRequired(async (session, stationId, cb) => {
-		const stationModel = await db.runJob("GET_MODEL", {
+		const stationModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "station"
 		});
 		async.waterfall(
 			[
 				next => {
-					stations
-						.runJob("GET_STATION", { stationId })
+					StationsModule.runJob("GET_STATION", { stationId })
 						.then(station => {
 							next(null, station);
 						})
@@ -1354,8 +1325,7 @@ export default {
 				},
 
 				(res, next) => {
-					stations
-						.runJob("UPDATE_STATION", { stationId })
+					StationsModule.runJob("UPDATE_STATION", { stationId })
 						.then(station => {
 							next(null, station);
 						})
@@ -1364,16 +1334,16 @@ export default {
 			],
 			async err => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log("ERROR", "STATIONS_PAUSE", `Pausing station "${stationId}" failed. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
 				console.log("SUCCESS", "STATIONS_PAUSE", `Paused station "${stationId}" successfully.`);
-				cache.runJob("PUB", {
+				CacheModule.runJob("PUB", {
 					channel: "station.pause",
 					value: stationId
 				});
-				notifications.runJob("UNSCHEDULE", {
+				NotificationsModule.runJob("UNSCHEDULE", {
 					name: `stations.nextSong?id=${stationId}`
 				});
 				return cb({
@@ -1392,14 +1362,13 @@ export default {
 	 * @param cb
 	 */
 	resume: isOwnerRequired(async (session, stationId, cb) => {
-		const stationModel = await db.runJob("GET_MODEL", {
+		const stationModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "station"
 		});
 		async.waterfall(
 			[
 				next => {
-					stations
-						.runJob("GET_STATION", { stationId })
+					StationsModule.runJob("GET_STATION", { stationId })
 						.then(station => {
 							next(null, station);
 						})
@@ -1421,8 +1390,7 @@ export default {
 				},
 
 				(res, next) => {
-					stations
-						.runJob("UPDATE_STATION", { stationId })
+					StationsModule.runJob("UPDATE_STATION", { stationId })
 						.then(station => {
 							next(null, station);
 						})
@@ -1431,12 +1399,12 @@ export default {
 			],
 			async err => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log("ERROR", "STATIONS_RESUME", `Resuming station "${stationId}" failed. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
 				console.log("SUCCESS", "STATIONS_RESUME", `Resuming station "${stationId}" successfully.`);
-				cache.runJob("PUB", {
+				CacheModule.runJob("PUB", {
 					channel: "station.resume",
 					value: stationId
 				});
@@ -1456,7 +1424,7 @@ export default {
 	 * @param cb
 	 */
 	remove: isOwnerRequired(async (session, stationId, cb) => {
-		const stationModel = await db.runJob("GET_MODEL", {
+		const stationModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "station"
 		});
 
@@ -1467,21 +1435,21 @@ export default {
 				},
 
 				next => {
-					cache.runJob("HDEL", { table: "stations", key: stationId }).then(next).catch(next);
+					CacheModule.runJob("HDEL", { table: "stations", key: stationId }).then(next).catch(next);
 				}
 			],
 			async err => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log("ERROR", "STATIONS_REMOVE", `Removing station "${stationId}" failed. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
 				console.log("SUCCESS", "STATIONS_REMOVE", `Removing station "${stationId}" successfully.`);
-				cache.runJob("PUB", {
+				CacheModule.runJob("PUB", {
 					channel: "station.remove",
 					value: stationId
 				});
-				activities.runJob("ADD_ACTIVITY", {
+				ActivitiesModule.runJob("ADD_ACTIVITY", {
 					userId: session.userId,
 					activityType: "deleted_station",
 					payload: [stationId]
@@ -1502,8 +1470,8 @@ export default {
 	 * @param cb
 	 */
 	create: isLoginRequired(async (session, data, cb) => {
-		const userModel = await db.runJob("GET_MODEL", { modelName: "user" });
-		const stationModel = await db.runJob("GET_MODEL", {
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
+		const stationModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "station"
 		});
 
@@ -1590,7 +1558,7 @@ export default {
 									playlist,
 									genres,
 									blacklistedGenres,
-									currentSong: stations.defaultSong
+									currentSong: StationsModule.defaultSong
 								},
 								next
 							);
@@ -1617,16 +1585,16 @@ export default {
 			],
 			async (err, station) => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log("ERROR", "STATIONS_CREATE", `Creating station failed. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
 				console.log("SUCCESS", "STATIONS_CREATE", `Created station "${station._id}" successfully.`);
-				cache.runJob("PUB", {
+				CacheModule.runJob("PUB", {
 					channel: "station.create",
 					value: station._id
 				});
-				activities.runJob("ADD_ACTIVITY", {
+				ActivitiesModule.runJob("ADD_ACTIVITY", {
 					userId: session.userId,
 					activityType: "created_station",
 					payload: [station._id]
@@ -1648,17 +1616,16 @@ export default {
 	 * @param cb
 	 */
 	addToQueue: isLoginRequired(async (session, stationId, songId, cb) => {
-		const userModel = await db.runJob("GET_MODEL", { modelName: "user" });
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
 
-		const stationModel = await db.runJob("GET_MODEL", {
+		const stationModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "station"
 		});
 
 		async.waterfall(
 			[
 				next => {
-					stations
-						.runJob("GET_STATION", { stationId })
+					StationsModule.runJob("GET_STATION", { stationId })
 						.then(station => {
 							next(null, station);
 						})
@@ -1682,11 +1649,10 @@ export default {
 				(station, next) => {
 					if (station.type !== "community") return next("That station is not a community station.");
 
-					return stations
-						.runJob("CAN_USER_VIEW_STATION", {
-							station,
-							userId: session.userId
-						})
+					return StationsModule.runJob("CAN_USER_VIEW_STATION", {
+						station,
+						userId: session.userId
+					})
 						.then(canView => {
 							if (canView) return next(null, station);
 							return next("Insufficient permissions.");
@@ -1709,13 +1675,11 @@ export default {
 				},
 
 				(station, next) => {
-					songs
-						.runJob("GET_SONG_FROM_ID", { songId })
+					SongsModule.runJob("GET_SONG_FROM_ID", { songId })
 						.then(res => {
 							if (res.song) return next(null, res.song, station);
 
-							return utils
-								.runJob("GET_SONG_FROM_YOUTUBE", { songId })
+							return YouTubeModule.runJob("GET_SONG", { songId })
 								.then(response => {
 									const { song } = response;
 									song.artists = [];
@@ -1790,8 +1754,7 @@ export default {
 				},
 
 				(res, next) => {
-					stations
-						.runJob("UPDATE_STATION", { stationId })
+					StationsModule.runJob("UPDATE_STATION", { stationId })
 						.then(station => {
 							next(null, station);
 						})
@@ -1800,7 +1763,7 @@ export default {
 			],
 			async err => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"STATIONS_ADD_SONG_TO_QUEUE",
@@ -1813,7 +1776,7 @@ export default {
 					"STATIONS_ADD_SONG_TO_QUEUE",
 					`Added song "${songId}" to station "${stationId}" successfully.`
 				);
-				cache.runJob("PUB", {
+				CacheModule.runJob("PUB", {
 					channel: "station.queueUpdate",
 					value: stationId
 				});
@@ -1834,15 +1797,14 @@ export default {
 	 * @param cb
 	 */
 	removeFromQueue: isOwnerRequired(async (session, stationId, songId, cb) => {
-		const stationModel = await db.runJob("GET_MODEL", {
+		const stationModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "station"
 		});
 		async.waterfall(
 			[
 				next => {
 					if (!songId) return next("Invalid song id.");
-					return stations
-						.runJob("GET_STATION", { stationId })
+					return StationsModule.runJob("GET_STATION", { stationId })
 						.then(station => {
 							next(null, station);
 						})
@@ -1870,8 +1832,7 @@ export default {
 				},
 
 				(res, next) => {
-					stations
-						.runJob("UPDATE_STATION", { stationId })
+					StationsModule.runJob("UPDATE_STATION", { stationId })
 						.then(station => {
 							next(null, station);
 						})
@@ -1880,7 +1841,7 @@ export default {
 			],
 			async err => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"STATIONS_REMOVE_SONG_TO_QUEUE",
@@ -1893,7 +1854,7 @@ export default {
 					"STATIONS_REMOVE_SONG_TO_QUEUE",
 					`Removed song "${songId}" from station "${stationId}" successfully.`
 				);
-				cache.runJob("PUB", {
+				CacheModule.runJob("PUB", {
 					channel: "station.queueUpdate",
 					value: stationId
 				});
@@ -1916,8 +1877,7 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					stations
-						.runJob("GET_STATION", { stationId })
+					StationsModule.runJob("GET_STATION", { stationId })
 						.then(station => {
 							next(null, station);
 						})
@@ -1931,11 +1891,10 @@ export default {
 				},
 
 				(station, next) => {
-					stations
-						.runJob("CAN_USER_VIEW_STATION", {
-							station,
-							userId: session.userId
-						})
+					StationsModule.runJob("CAN_USER_VIEW_STATION", {
+						station,
+						userId: session.userId
+					})
 						.then(canView => {
 							if (canView) return next(null, station);
 							return next("Insufficient permissions.");
@@ -1945,7 +1904,7 @@ export default {
 			],
 			async (err, station) => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"STATIONS_GET_QUEUE",
@@ -1972,17 +1931,16 @@ export default {
 	 * @param cb
 	 */
 	selectPrivatePlaylist: isOwnerRequired(async (session, stationId, playlistId, cb) => {
-		const stationModel = await db.runJob("GET_MODEL", {
+		const stationModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "station"
 		});
-		const playlistModel = await db.runJob("GET_MODEL", {
+		const playlistModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "playlist"
 		});
 		async.waterfall(
 			[
 				next => {
-					stations
-						.runJob("GET_STATION", { stationId })
+					StationsModule.runJob("GET_STATION", { stationId })
 						.then(station => {
 							next(null, station);
 						})
@@ -2014,8 +1972,7 @@ export default {
 				},
 
 				(res, next) => {
-					stations
-						.runJob("UPDATE_STATION", { stationId })
+					StationsModule.runJob("UPDATE_STATION", { stationId })
 						.then(station => {
 							next(null, station);
 						})
@@ -2024,7 +1981,7 @@ export default {
 			],
 			async (err, station) => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"STATIONS_SELECT_PRIVATE_PLAYLIST",
@@ -2037,11 +1994,11 @@ export default {
 					"STATIONS_SELECT_PRIVATE_PLAYLIST",
 					`Selected private playlist "${playlistId}" for station "${stationId}" successfully.`
 				);
-				notifications.runJob("UNSCHEDULE", {
+				NotificationsModule.runJob("UNSCHEDULE", {
 					name: `stations.nextSong?id${stationId}`
 				});
-				if (!station.partyMode) stations.runJob("SKIP_STATION", { stationId });
-				cache.runJob("PUB", {
+				if (!station.partyMode) StationsModule.runJob("SKIP_STATION", { stationId });
+				CacheModule.runJob("PUB", {
 					channel: "privatePlaylist.selected",
 					value: {
 						playlistId,
@@ -2057,12 +2014,11 @@ export default {
 	}),
 
 	favoriteStation: isLoginRequired(async (session, stationId, cb) => {
-		const userModel = await db.runJob("GET_MODEL", { modelName: "user" });
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
 		async.waterfall(
 			[
 				next => {
-					stations
-						.runJob("GET_STATION", { stationId })
+					StationsModule.runJob("GET_STATION", { stationId })
 						.then(station => {
 							next(null, station);
 						})
@@ -2071,11 +2027,10 @@ export default {
 
 				(station, next) => {
 					if (!station) return next("Station not found.");
-					return stations
-						.runJob("CAN_USER_VIEW_STATION", {
-							station,
-							userId: session.userId
-						})
+					return StationsModule.runJob("CAN_USER_VIEW_STATION", {
+						station,
+						userId: session.userId
+					})
 						.then(canView => {
 							if (canView) return next();
 							return next("Insufficient permissions.");
@@ -2094,12 +2049,12 @@ export default {
 			],
 			async err => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log("ERROR", "FAVORITE_STATION", `Favoriting station "${stationId}" failed. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
 				console.log("SUCCESS", "FAVORITE_STATION", `Favorited station "${stationId}" successfully.`);
-				cache.runJob("PUB", {
+				CacheModule.runJob("PUB", {
 					channel: "user.favoritedStation",
 					value: {
 						userId: session.userId,
@@ -2115,7 +2070,7 @@ export default {
 	}),
 
 	unfavoriteStation: isLoginRequired(async (session, stationId, cb) => {
-		const userModel = await db.runJob("GET_MODEL", { modelName: "user" });
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
 		async.waterfall(
 			[
 				next => {
@@ -2129,12 +2084,12 @@ export default {
 			],
 			async err => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log("ERROR", "UNFAVORITE_STATION", `Unfavoriting station "${stationId}" failed. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
 				console.log("SUCCESS", "UNFAVORITE_STATION", `Unfavorited station "${stationId}" successfully.`);
-				cache.runJob("PUB", {
+				CacheModule.runJob("PUB", {
 					channel: "user.unfavoritedStation",
 					value: {
 						userId: session.userId,

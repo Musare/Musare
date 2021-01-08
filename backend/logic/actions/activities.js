@@ -1,10 +1,11 @@
 import async from "async";
 
 import { isLoginRequired } from "./hooks";
-import db from "../db";
-import utils from "../utils";
 
-// const logger = moduleManager.modules["logger"];
+import moduleManager from "../../index";
+
+const DBModule = moduleManager.modules.db;
+const UtilsModule = moduleManager.modules.utils;
 
 export default {
 	/**
@@ -16,7 +17,7 @@ export default {
 	 * @param {Function} cb - callback
 	 */
 	getSet: async (session, userId, set, cb) => {
-		const activityModel = await db.runJob("GET_MODEL", {
+		const activityModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "activity"
 		});
 		async.waterfall(
@@ -32,7 +33,7 @@ export default {
 			],
 			async (err, activities) => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log("ERROR", "ACTIVITIES_GET_SET", `Failed to get set ${set} from activities. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
@@ -51,7 +52,7 @@ export default {
 	 * @param cb
 	 */
 	hideActivity: isLoginRequired(async (session, activityId, cb) => {
-		const activityModel = await db.runJob("GET_MODEL", {
+		const activityModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "activity"
 		});
 		async.waterfall(
@@ -62,7 +63,7 @@ export default {
 			],
 			async err => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log("ERROR", "ACTIVITIES_HIDE_ACTIVITY", `Failed to hide activity ${activityId}. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}

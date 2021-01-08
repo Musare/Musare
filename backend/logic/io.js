@@ -6,7 +6,6 @@ import config from "config";
 import async from "async";
 import socketio from "socket.io";
 
-import actions from "./actions";
 import CoreClass from "../core";
 
 let IOModule;
@@ -37,6 +36,8 @@ class _IOModule extends CoreClass {
 		UtilsModule = this.moduleManager.modules.utils;
 		DBModule = this.moduleManager.modules.db;
 		PunishmentsModule = this.moduleManager.modules.punishments;
+
+		const actions = (await import("./actions")).default;
 
 		this.userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
 
@@ -332,6 +333,327 @@ class _IOModule extends CoreClass {
 	IO() {
 		return new Promise(resolve => {
 			resolve(IOModule._io);
+		});
+	}
+
+	// UNKNOWN
+	// eslint-disable-next-line require-jsdoc
+	async SOCKET_FROM_SESSION(payload) {
+		// socketId
+		return new Promise((resolve, reject) => {
+			const ns = IOModule._io.of("/");
+			if (ns) {
+				return resolve(ns.connected[payload.socketId]);
+			}
+
+			return reject();
+		});
+	}
+
+	/**
+	 * Gets all sockets for a specified session id
+	 *
+	 * @param {object} payload - object containing the payload
+	 * @param {string} payload.sessionId - user session id
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	async SOCKETS_FROM_SESSION_ID(payload) {
+		return new Promise(resolve => {
+			const ns = IOModule._io.of("/");
+			const sockets = [];
+
+			if (ns) {
+				return async.each(
+					Object.keys(ns.connected),
+					(id, next) => {
+						const { session } = ns.connected[id];
+						if (session.sessionId === payload.sessionId) sockets.push(session.sessionId);
+						next();
+					},
+					() => {
+						resolve({ sockets });
+					}
+				);
+			}
+
+			return resolve();
+		});
+	}
+
+	/**
+	 * Returns any sockets for a specific user
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.userId - the user id
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	async SOCKETS_FROM_USER(payload) {
+		return new Promise((resolve, reject) => {
+			const ns = IOModule._io.of("/");
+			const sockets = [];
+
+			if (ns) {
+				return async.each(
+					Object.keys(ns.connected),
+					(id, next) => {
+						const { session } = ns.connected[id];
+						CacheModule.runJob(
+							"HGET",
+							{
+								table: "sessions",
+								key: session.sessionId
+							},
+							this
+						)
+							.then(session => {
+								if (session && session.userId === payload.userId) sockets.push(ns.connected[id]);
+								next();
+							})
+							.catch(err => {
+								next(err);
+							});
+					},
+					err => {
+						if (err) return reject(err);
+						return resolve({ sockets });
+					}
+				);
+			}
+
+			return resolve();
+		});
+	}
+
+	/**
+	 * Returns any sockets from a specific ip address
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.ip - the ip address in question
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	async SOCKETS_FROM_IP(payload) {
+		return new Promise(resolve => {
+			const ns = IOModule._io.of("/");
+			const sockets = [];
+			if (ns) {
+				return async.each(
+					Object.keys(ns.connected),
+					(id, next) => {
+						const { session } = ns.connected[id];
+						CacheModule.runJob(
+							"HGET",
+							{
+								table: "sessions",
+								key: session.sessionId
+							},
+							this
+						)
+							.then(session => {
+								if (session && ns.connected[id].ip === payload.ip) sockets.push(ns.connected[id]);
+								next();
+							})
+							.catch(() => next());
+					},
+					() => {
+						resolve({ sockets });
+					}
+				);
+			}
+
+			return resolve();
+		});
+	}
+
+	/**
+	 * Returns any sockets from a specific user without using redis/cache
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.userId - the id of the user in question
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	async SOCKETS_FROM_USER_WITHOUT_CACHE(payload) {
+		return new Promise(resolve => {
+			const ns = IOModule._io.of("/");
+			const sockets = [];
+
+			if (ns) {
+				return async.each(
+					Object.keys(ns.connected),
+					(id, next) => {
+						const { session } = ns.connected[id];
+						if (session.userId === payload.userId) sockets.push(ns.connected[id]);
+						next();
+					},
+					() => {
+						resolve({ sockets });
+					}
+				);
+			}
+
+			return resolve();
+		});
+	}
+
+	/**
+	 * Allows a socket to leave any rooms they are connected to
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.socketId - the id of the socket which should leave all their rooms
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	async SOCKET_LEAVE_ROOMS(payload) {
+		const socket = await IOModule.runJob(
+			"SOCKET_FROM_SESSION",
+			{
+				socketId: payload.socketId
+			},
+			this
+		);
+
+		return new Promise(resolve => {
+			const { rooms } = socket;
+
+			Object.keys(rooms).forEach(roomKey => {
+				const room = rooms[roomKey];
+				socket.leave(room);
+			});
+
+			return resolve();
+		});
+	}
+
+	/**
+	 * Allows a socket to join a specified room
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.socketId - the id of the socket which should join the room
+	 * @param {object} payload.room - the object representing the room the socket should join
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	async SOCKET_JOIN_ROOM(payload) {
+		const socket = await IOModule.runJob(
+			"SOCKET_FROM_SESSION",
+			{
+				socketId: payload.socketId
+			},
+			this
+		);
+
+		return new Promise(resolve => {
+			const { rooms } = socket;
+			Object.keys(rooms).forEach(roomKey => {
+				const room = rooms[roomKey];
+				socket.leave(room);
+			});
+
+			socket.join(payload.room);
+
+			return resolve();
+		});
+	}
+
+	// UNKNOWN
+	// eslint-disable-next-line require-jsdoc
+	async SOCKET_JOIN_SONG_ROOM(payload) {
+		// socketId, room
+		const socket = await IOModule.runJob(
+			"SOCKET_FROM_SESSION",
+			{
+				socketId: payload.socketId
+			},
+			this
+		);
+
+		return new Promise(resolve => {
+			const { rooms } = socket;
+			Object.keys(rooms).forEach(roomKey => {
+				const room = rooms[roomKey];
+				if (room.indexOf("song.") !== -1) socket.leave(room);
+			});
+
+			socket.join(payload.room);
+
+			return resolve();
+		});
+	}
+
+	// UNKNOWN
+	// eslint-disable-next-line require-jsdoc
+	SOCKETS_JOIN_SONG_ROOM(payload) {
+		// sockets, room
+		return new Promise(resolve => {
+			Object.keys(payload.sockets).forEach(socketKey => {
+				const socket = payload.sockets[socketKey];
+
+				const { rooms } = socket;
+				Object.keys(rooms).forEach(roomKey => {
+					const room = rooms[roomKey];
+					if (room.indexOf("song.") !== -1) socket.leave(room);
+				});
+
+				socket.join(payload.room);
+			});
+
+			return resolve();
+		});
+	}
+
+	// UNKNOWN
+	// eslint-disable-next-line require-jsdoc
+	SOCKETS_LEAVE_SONG_ROOMS(payload) {
+		// sockets
+		return new Promise(resolve => {
+			Object.keys(payload.sockets).forEach(socketKey => {
+				const socket = payload.sockets[socketKey];
+				const { rooms } = socket;
+				Object.keys(rooms).forEach(roomKey => {
+					const room = rooms[roomKey];
+					if (room.indexOf("song.") !== -1) socket.leave(room);
+				});
+			});
+			resolve();
+		});
+	}
+
+	/**
+	 * Emits arguments to any sockets that are in a specified a room
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.room - the name of the room to emit arguments
+	 * @param {object} payload.args - any arguments to be emitted to the sockets in the specific room
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	async EMIT_TO_ROOM(payload) {
+		return new Promise(resolve => {
+			const { sockets } = IOModule._io.sockets;
+			Object.keys(sockets).forEach(socketKey => {
+				const socket = sockets[socketKey];
+				if (socket.rooms[payload.room]) {
+					socket.emit(...payload.args);
+				}
+			});
+
+			return resolve();
+		});
+	}
+
+	/**
+	 * Gets any sockets connected to a room
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.room - the name of the room
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	async GET_ROOM_SOCKETS(payload) {
+		return new Promise(resolve => {
+			const { sockets } = IOModule._io.sockets;
+			const roomSockets = [];
+			Object.keys(sockets).forEach(socketKey => {
+				const socket = sockets[socketKey];
+				if (socket.rooms[payload.room]) roomSockets.push(socket);
+			});
+
+			return resolve(roomSockets);
 		});
 	}
 }

@@ -7,21 +7,20 @@ import bcrypt from "bcrypt";
 import sha256 from "sha256";
 import { isAdminRequired, isLoginRequired } from "./hooks";
 
-// const moduleManager = require("../../index");
+import moduleManager from "../../index";
 
-import db from "../db";
-import utils from "../utils";
-import cache from "../cache";
+const DBModule = moduleManager.modules.db;
+const UtilsModule = moduleManager.modules.utils;
+const IOModule = moduleManager.modules.io;
+const CacheModule = moduleManager.modules.cache;
+const MailModule = moduleManager.modules.mail;
+const PunishmentsModule = moduleManager.modules.punishments;
+const ActivitiesModule = moduleManager.modules.activities;
 
-import mail from "../mail";
-import punishments from "../punishments";
-// const logger = require("../logger");
-import activities from "../activities";
-
-cache.runJob("SUB", {
+CacheModule.runJob("SUB", {
 	channel: "user.updateUsername",
 	cb: user => {
-		utils.runJob("SOCKETS_FROM_USER", { userId: user._id }).then(response => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: user._id }).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("event:user.username.changed", user.username);
 			});
@@ -29,10 +28,10 @@ cache.runJob("SUB", {
 	}
 });
 
-cache.runJob("SUB", {
+CacheModule.runJob("SUB", {
 	channel: "user.removeSessions",
 	cb: userId => {
-		utils.runJob("SOCKETS_FROM_USER_WITHOUT_CACHE", { userId }).then(response => {
+		IOModule.runJob("SOCKETS_FROM_USER_WITHOUT_CACHE", { userId }).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("keep.event:user.session.removed");
 			});
@@ -40,10 +39,10 @@ cache.runJob("SUB", {
 	}
 });
 
-cache.runJob("SUB", {
+CacheModule.runJob("SUB", {
 	channel: "user.linkPassword",
 	cb: userId => {
-		utils.runJob("SOCKETS_FROM_USER", { userId }).then(response => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId }).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("event:user.linkPassword");
 			});
@@ -51,10 +50,10 @@ cache.runJob("SUB", {
 	}
 });
 
-cache.runJob("SUB", {
+CacheModule.runJob("SUB", {
 	channel: "user.unlinkPassword",
 	cb: userId => {
-		utils.runJob("SOCKETS_FROM_USER", { userId }).then(response => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId }).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("event:user.unlinkPassword");
 			});
@@ -62,10 +61,10 @@ cache.runJob("SUB", {
 	}
 });
 
-cache.runJob("SUB", {
+CacheModule.runJob("SUB", {
 	channel: "user.linkGithub",
 	cb: userId => {
-		utils.runJob("SOCKETS_FROM_USER", { userId }).then(response => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId }).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("event:user.linkGithub");
 			});
@@ -73,10 +72,10 @@ cache.runJob("SUB", {
 	}
 });
 
-cache.runJob("SUB", {
+CacheModule.runJob("SUB", {
 	channel: "user.unlinkGithub",
 	cb: userId => {
-		utils.runJob("SOCKETS_FROM_USER", { userId }).then(response => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId }).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("event:user.unlinkGithub");
 			});
@@ -84,10 +83,10 @@ cache.runJob("SUB", {
 	}
 });
 
-cache.runJob("SUB", {
+CacheModule.runJob("SUB", {
 	channel: "user.ban",
 	cb: data => {
-		utils.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(response => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("keep.event:banned", data.punishment);
 				socket.disconnect(true);
@@ -96,10 +95,10 @@ cache.runJob("SUB", {
 	}
 });
 
-cache.runJob("SUB", {
+CacheModule.runJob("SUB", {
 	channel: "user.favoritedStation",
 	cb: data => {
-		utils.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(response => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("event:user.favoritedStation", data.stationId);
 			});
@@ -107,10 +106,10 @@ cache.runJob("SUB", {
 	}
 });
 
-cache.runJob("SUB", {
+CacheModule.runJob("SUB", {
 	channel: "user.unfavoritedStation",
 	cb: data => {
-		utils.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(response => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("event:user.unfavoritedStation", data.stationId);
 			});
@@ -126,7 +125,7 @@ const thisExport = {
 	 * @param {Function} cb - gets called with the result
 	 */
 	index: isAdminRequired(async (session, cb) => {
-		const userModel = await db.runJob("GET_MODEL", { modelName: "user" });
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
 
 		async.waterfall(
 			[
@@ -136,7 +135,7 @@ const thisExport = {
 			],
 			async (err, users) => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log("ERROR", "USER_INDEX", `Indexing users failed. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
@@ -173,8 +172,8 @@ const thisExport = {
 	 */
 	login: async (session, identifier, password, cb) => {
 		identifier = identifier.toLowerCase();
-		const userModel = await db.runJob("GET_MODEL", { modelName: "user" });
-		const sessionSchema = await cache.runJob("GET_SCHEMA", {
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
+		const sessionSchema = await CacheModule.runJob("GET_SCHEMA", {
 			schemaName: "session"
 		});
 
@@ -205,18 +204,17 @@ const thisExport = {
 				},
 
 				(user, next) => {
-					utils.runJob("GUID", {}).then(sessionId => {
+					UtilsModule.runJob("GUID", {}).then(sessionId => {
 						next(null, user, sessionId);
 					});
 				},
 
 				(user, sessionId, next) => {
-					cache
-						.runJob("HSET", {
-							table: "sessions",
-							key: sessionId,
-							value: sessionSchema(sessionId, user._id)
-						})
+					CacheModule.runJob("HSET", {
+						table: "sessions",
+						key: sessionId,
+						value: sessionSchema(sessionId, user._id)
+					})
 						.then(() => {
 							next(null, sessionId);
 						})
@@ -225,7 +223,7 @@ const thisExport = {
 			],
 			async (err, sessionId) => {
 				if (err && err !== true) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"USER_PASSWORD_LOGIN",
@@ -262,11 +260,11 @@ const thisExport = {
 	 */
 	async register(session, username, email, password, recaptcha, cb) {
 		email = email.toLowerCase();
-		const verificationToken = await utils.runJob("GENERATE_RANDOM_STRING", {
+		const verificationToken = await UtilsModule.runJob("GENERATE_RANDOM_STRING", {
 			length: 64
 		});
-		const userModel = await db.runJob("GET_MODEL", { modelName: "user" });
-		const verifyEmailSchema = await mail.runJob("GET_SCHEMA", {
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
+		const verifyEmailSchema = await MailModule.runJob("GET_SCHEMA", {
 			schemaName: "verifyEmail"
 		});
 
@@ -279,7 +277,7 @@ const thisExport = {
 				},
 
 				next => {
-					if (!db.passwordValid(password))
+					if (!DBModule.passwordValid(password))
 						return next("Invalid password. Check if it meets all the requirements.");
 					return next();
 				},
@@ -332,7 +330,7 @@ const thisExport = {
 				},
 
 				(hash, next) => {
-					utils.runJob("GENERATE_RANDOM_STRING", { length: 12 }).then(_id => {
+					UtilsModule.runJob("GENERATE_RANDOM_STRING", { length: 12 }).then(_id => {
 						next(null, hash, _id);
 					});
 				},
@@ -356,17 +354,15 @@ const thisExport = {
 
 				// generate the url for gravatar avatar
 				(user, next) => {
-					utils
-						.runJob("CREATE_GRAVATAR", {
-							email: user.email.address
-						})
-						.then(url => {
-							user.avatar = {
-								type: "gravatar",
-								url
-							};
-							next(null, user);
-						});
+					UtilsModule.runJob("CREATE_GRAVATAR", {
+						email: user.email.address
+					}).then(url => {
+						user.avatar = {
+							type: "gravatar",
+							url
+						};
+						next(null, user);
+					});
 				},
 
 				// save the new user to the database
@@ -383,7 +379,7 @@ const thisExport = {
 			],
 			async (err, user) => {
 				if (err && err !== true) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"USER_PASSWORD_REGISTER",
@@ -400,7 +396,7 @@ const thisExport = {
 					if (result.status === "success") {
 						obj.SID = result.SID;
 					}
-					activities.runJob("ADD_ACTIVITY", {
+					ActivitiesModule.runJob("ADD_ACTIVITY", {
 						userId: user._id,
 						activityType: "created_account"
 					});
@@ -425,11 +421,10 @@ const thisExport = {
 		async.waterfall(
 			[
 				next => {
-					cache
-						.runJob("HGET", {
-							table: "sessions",
-							key: session.sessionId
-						})
+					CacheModule.runJob("HGET", {
+						table: "sessions",
+						key: session.sessionId
+					})
 						.then(session => {
 							next(null, session);
 						})
@@ -442,11 +437,10 @@ const thisExport = {
 				},
 
 				(session, next) => {
-					cache
-						.runJob("HDEL", {
-							table: "sessions",
-							key: session.sessionId
-						})
+					CacheModule.runJob("HDEL", {
+						table: "sessions",
+						key: session.sessionId
+					})
 						.then(() => {
 							next();
 						})
@@ -455,7 +449,7 @@ const thisExport = {
 			],
 			async err => {
 				if (err && err !== true) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log("ERROR", "USER_LOGOUT", `Logout failed. "${err}" `);
 					cb({ status: "failure", message: err });
 				} else {
@@ -477,7 +471,7 @@ const thisExport = {
 	 * @param {Function} cb - gets called with the result
 	 */
 	removeSessions: isLoginRequired(async (session, userId, cb) => {
-		const userModel = await db.runJob("GET_MODEL", { modelName: "user" });
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
 		async.waterfall(
 			[
 				next => {
@@ -490,8 +484,7 @@ const thisExport = {
 				},
 
 				next => {
-					cache
-						.runJob("HGETALL", { table: "sessions" })
+					CacheModule.runJob("HGETALL", { table: "sessions" })
 						.then(sessions => {
 							next(null, sessions);
 						})
@@ -507,7 +500,7 @@ const thisExport = {
 				},
 
 				(keys, sessions, next) => {
-					cache.runJob("PUB", {
+					CacheModule.runJob("PUB", {
 						channel: "user.removeSessions",
 						value: userId
 					});
@@ -516,11 +509,10 @@ const thisExport = {
 						(sessionId, callback) => {
 							const session = sessions[sessionId];
 							if (session.userId === userId) {
-								cache
-									.runJob("HDEL", {
-										channel: "sessions",
-										key: sessionId
-									})
+								CacheModule.runJob("HDEL", {
+									channel: "sessions",
+									key: sessionId
+								})
 									.then(() => {
 										callback(null);
 									})
@@ -535,7 +527,7 @@ const thisExport = {
 			],
 			async err => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"REMOVE_SESSIONS_FOR_USER",
@@ -560,7 +552,7 @@ const thisExport = {
 	 * @param {Function} cb - gets called with the result
 	 */
 	findByUsername: async (session, username, cb) => {
-		const userModel = await db.runJob("GET_MODEL", { modelName: "user" });
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
 
 		async.waterfall(
 			[
@@ -575,7 +567,7 @@ const thisExport = {
 			],
 			async (err, account) => {
 				if (err && err !== true) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 
 					console.log("ERROR", "FIND_BY_USERNAME", `User not found for username "${username}". "${err}"`);
 
@@ -609,7 +601,7 @@ const thisExport = {
 	 * @param {Function} cb - gets called with the result
 	 */
 	getUsernameFromId: async (session, userId, cb) => {
-		const userModel = await db.runJob("GET_MODEL", { modelName: "user" });
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
 		userModel
 			.findById(userId)
 			.then(user => {
@@ -635,7 +627,7 @@ const thisExport = {
 			})
 			.catch(async err => {
 				if (err && err !== true) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"GET_USERNAME_FROM_ID",
@@ -654,16 +646,15 @@ const thisExport = {
 	 * @param {Function} cb - gets called with the result
 	 */
 	findBySession: async (session, cb) => {
-		const userModel = await db.runJob("GET_MODEL", { modelName: "user" });
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
 
 		async.waterfall(
 			[
 				next => {
-					cache
-						.runJob("HGET", {
-							table: "sessions",
-							key: session.sessionId
-						})
+					CacheModule.runJob("HGET", {
+						table: "sessions",
+						key: session.sessionId
+					})
 						.then(session => {
 							next(null, session);
 						})
@@ -686,7 +677,7 @@ const thisExport = {
 			],
 			async (err, user) => {
 				if (err && err !== true) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log("ERROR", "FIND_BY_SESSION", `User not found. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
@@ -723,7 +714,7 @@ const thisExport = {
 	 * @param {Function} cb - gets called with the result
 	 */
 	updateUsername: isLoginRequired(async (session, updatingUserId, newUsername, cb) => {
-		const userModel = await db.runJob("GET_MODEL", {
+		const userModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "user"
 		});
 		async.waterfall(
@@ -766,7 +757,7 @@ const thisExport = {
 			],
 			async err => {
 				if (err && err !== true) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 
 					console.log(
 						"ERROR",
@@ -777,7 +768,7 @@ const thisExport = {
 					return cb({ status: "failure", message: err });
 				}
 
-				cache.runJob("PUB", {
+				CacheModule.runJob("PUB", {
 					channel: "user.updateUsername",
 					value: {
 						username: newUsername,
@@ -809,12 +800,12 @@ const thisExport = {
 	 */
 	updateEmail: isLoginRequired(async (session, updatingUserId, newEmail, cb) => {
 		newEmail = newEmail.toLowerCase();
-		const verificationToken = await utils.runJob("GENERATE_RANDOM_STRING", { length: 64 });
+		const verificationToken = await UtilsModule.runJob("GENERATE_RANDOM_STRING", { length: 64 });
 
-		const userModel = await db.runJob("GET_MODEL", {
+		const userModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "user"
 		});
-		const verifyEmailSchema = await mail.runJob("GET_SCHEMA", {
+		const verifyEmailSchema = await MailModule.runJob("GET_SCHEMA", {
 			schemaName: "verifyEmail"
 		});
 
@@ -849,7 +840,7 @@ const thisExport = {
 
 				// regenerate the url for gravatar avatar
 				next => {
-					utils.runJob("CREATE_GRAVATAR", { email: newEmail }).then(url => {
+					UtilsModule.runJob("CREATE_GRAVATAR", { email: newEmail }).then(url => {
 						next(null, url);
 					});
 				},
@@ -882,7 +873,7 @@ const thisExport = {
 			],
 			async err => {
 				if (err && err !== true) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 
 					console.log(
 						"ERROR",
@@ -916,7 +907,7 @@ const thisExport = {
 	 * @param {Function} cb - gets called with the result
 	 */
 	updateName: isLoginRequired(async (session, updatingUserId, newName, cb) => {
-		const userModel = await db.runJob("GET_MODEL", {
+		const userModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "user"
 		});
 
@@ -944,7 +935,7 @@ const thisExport = {
 			],
 			async err => {
 				if (err && err !== true) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"UPDATE_NAME",
@@ -975,7 +966,7 @@ const thisExport = {
 	 * @param {Function} cb - gets called with the result
 	 */
 	updateLocation: isLoginRequired(async (session, updatingUserId, newLocation, cb) => {
-		const userModel = await db.runJob("GET_MODEL", {
+		const userModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "user"
 		});
 
@@ -1003,7 +994,7 @@ const thisExport = {
 			],
 			async err => {
 				if (err && err !== true) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 
 					console.log(
 						"ERROR",
@@ -1037,7 +1028,7 @@ const thisExport = {
 	 * @param {Function} cb - gets called with the result
 	 */
 	updateBio: isLoginRequired(async (session, updatingUserId, newBio, cb) => {
-		const userModel = await db.runJob("GET_MODEL", {
+		const userModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "user"
 		});
 
@@ -1065,7 +1056,7 @@ const thisExport = {
 			],
 			async err => {
 				if (err && err !== true) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"UPDATE_BIO",
@@ -1096,7 +1087,7 @@ const thisExport = {
 	 * @param {Function} cb - gets called with the result
 	 */
 	updateAvatarType: isLoginRequired(async (session, updatingUserId, newType, cb) => {
-		const userModel = await db.runJob("GET_MODEL", {
+		const userModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "user"
 		});
 
@@ -1124,7 +1115,7 @@ const thisExport = {
 			],
 			async err => {
 				if (err && err !== true) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"UPDATE_AVATAR_TYPE",
@@ -1157,7 +1148,7 @@ const thisExport = {
 	 */
 	updateRole: isAdminRequired(async (session, updatingUserId, newRole, cb) => {
 		newRole = newRole.toLowerCase();
-		const userModel = await db.runJob("GET_MODEL", {
+		const userModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "user"
 		});
 		async.waterfall(
@@ -1182,7 +1173,7 @@ const thisExport = {
 			],
 			async err => {
 				if (err && err !== true) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 
 					console.log(
 						"ERROR",
@@ -1216,7 +1207,7 @@ const thisExport = {
 	 * @param {Function} cb - gets called with the result
 	 */
 	updatePassword: isLoginRequired(async (session, previousPassword, newPassword, cb) => {
-		const userModel = await db.runJob("GET_MODEL", { modelName: "user" });
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
 
 		async.waterfall(
 			[
@@ -1237,7 +1228,7 @@ const thisExport = {
 				},
 
 				next => {
-					if (!db.passwordValid(newPassword))
+					if (!DBModule.passwordValid(newPassword))
 						return next("Invalid new password. Check if it meets all the requirements.");
 					return next();
 				},
@@ -1265,7 +1256,7 @@ const thisExport = {
 			],
 			async err => {
 				if (err) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"UPDATE_PASSWORD",
@@ -1291,11 +1282,11 @@ const thisExport = {
 	 * @param {Function} cb - gets called with the result
 	 */
 	requestPassword: isLoginRequired(async (session, cb) => {
-		const code = await utils.runJob("GENERATE_RANDOM_STRING", { length: 8 });
-		const passwordRequestSchema = await mail.runJob("GET_SCHEMA", {
+		const code = await UtilsModule.runJob("GENERATE_RANDOM_STRING", { length: 8 });
+		const passwordRequestSchema = await MailModule.runJob("GET_SCHEMA", {
 			schemaName: "passwordRequest"
 		});
-		const userModel = await db.runJob("GET_MODEL", { modelName: "user" });
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
 		async.waterfall(
 			[
 				next => {
@@ -1332,7 +1323,7 @@ const thisExport = {
 			],
 			async err => {
 				if (err && err !== true) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 
 					console.log(
 						"ERROR",
@@ -1365,7 +1356,7 @@ const thisExport = {
 	 * @param {Function} cb - gets called with the result
 	 */
 	verifyPasswordCode: isLoginRequired(async (session, code, cb) => {
-		const userModel = await db.runJob("GET_MODEL", { modelName: "user" });
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
 		async.waterfall(
 			[
 				next => {
@@ -1387,7 +1378,7 @@ const thisExport = {
 			],
 			async err => {
 				if (err && err !== true) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log("ERROR", "VERIFY_PASSWORD_CODE", `Code '${code}' failed to verify. '${err}'`);
 					cb({ status: "failure", message: err });
 				} else {
@@ -1410,7 +1401,7 @@ const thisExport = {
 	 * @param {Function} cb - gets called with the result
 	 */
 	changePasswordWithCode: isLoginRequired(async (session, code, newPassword, cb) => {
-		const userModel = await db.runJob("GET_MODEL", {
+		const userModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "user"
 		});
 		async.waterfall(
@@ -1427,7 +1418,7 @@ const thisExport = {
 				},
 
 				next => {
-					if (!db.passwordValid(newPassword))
+					if (!DBModule.passwordValid(newPassword))
 						return next("Invalid password. Check if it meets all the requirements.");
 					return next();
 				},
@@ -1457,12 +1448,12 @@ const thisExport = {
 			],
 			async err => {
 				if (err && err !== true) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log("ERROR", "ADD_PASSWORD_WITH_CODE", `Code '${code}' failed to add password. '${err}'`);
 					cb({ status: "failure", message: err });
 				} else {
 					console.log("SUCCESS", "ADD_PASSWORD_WITH_CODE", `Code '${code}' successfully added password.`);
-					cache.runJob("PUB", {
+					CacheModule.runJob("PUB", {
 						channel: "user.linkPassword",
 						value: session.userId
 					});
@@ -1482,7 +1473,7 @@ const thisExport = {
 	 * @param {Function} cb - gets called with the result
 	 */
 	unlinkPassword: isLoginRequired(async (session, cb) => {
-		const userModel = await db.runJob("GET_MODEL", { modelName: "user" });
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
 		async.waterfall(
 			[
 				next => {
@@ -1498,7 +1489,7 @@ const thisExport = {
 			],
 			async err => {
 				if (err && err !== true) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"UNLINK_PASSWORD",
@@ -1511,7 +1502,7 @@ const thisExport = {
 						"UNLINK_PASSWORD",
 						`Unlinking password successful for userId '${session.userId}'.`
 					);
-					cache.runJob("PUB", {
+					CacheModule.runJob("PUB", {
 						channel: "user.unlinkPassword",
 						value: session.userId
 					});
@@ -1531,7 +1522,7 @@ const thisExport = {
 	 * @param {Function} cb - gets called with the result
 	 */
 	unlinkGitHub: isLoginRequired(async (session, cb) => {
-		const userModel = await db.runJob("GET_MODEL", { modelName: "user" });
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
 		async.waterfall(
 			[
 				next => {
@@ -1547,7 +1538,7 @@ const thisExport = {
 			],
 			async err => {
 				if (err && err !== true) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"UNLINK_GITHUB",
@@ -1560,7 +1551,7 @@ const thisExport = {
 						"UNLINK_GITHUB",
 						`Unlinking GitHub successful for userId '${session.userId}'.`
 					);
-					cache.runJob("PUB", {
+					CacheModule.runJob("PUB", {
 						channel: "user.unlinkGithub",
 						value: session.userId
 					});
@@ -1581,10 +1572,10 @@ const thisExport = {
 	 * @param {Function} cb - gets called with the result
 	 */
 	requestPasswordReset: async (session, email, cb) => {
-		const code = await utils.runJob("GENERATE_RANDOM_STRING", { length: 8 });
-		const userModel = await db.runJob("GET_MODEL", { modelName: "user" });
+		const code = await UtilsModule.runJob("GENERATE_RANDOM_STRING", { length: 8 });
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
 
-		const resetPasswordRequestSchema = await mail.runJob("GET_SCHEMA", {
+		const resetPasswordRequestSchema = await MailModule.runJob("GET_SCHEMA", {
 			schemaName: "resetPasswordRequest"
 		});
 
@@ -1627,7 +1618,7 @@ const thisExport = {
 			],
 			async err => {
 				if (err && err !== true) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"REQUEST_PASSWORD_RESET",
@@ -1657,7 +1648,7 @@ const thisExport = {
 	 * @param {Function} cb - gets called with the result
 	 */
 	verifyPasswordResetCode: async (session, code, cb) => {
-		const userModel = await db.runJob("GET_MODEL", { modelName: "user" });
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
 		async.waterfall(
 			[
 				next => {
@@ -1673,7 +1664,7 @@ const thisExport = {
 			],
 			async err => {
 				if (err && err !== true) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log("ERROR", "VERIFY_PASSWORD_RESET_CODE", `Code '${code}' failed to verify. '${err}'`);
 					cb({ status: "failure", message: err });
 				} else {
@@ -1696,7 +1687,7 @@ const thisExport = {
 	 * @param {Function} cb - gets called with the result
 	 */
 	changePasswordWithResetCode: async (session, code, newPassword, cb) => {
-		const userModel = await db.runJob("GET_MODEL", { modelName: "user" });
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
 		async.waterfall(
 			[
 				next => {
@@ -1711,7 +1702,7 @@ const thisExport = {
 				},
 
 				next => {
-					if (!db.passwordValid(newPassword))
+					if (!DBModule.passwordValid(newPassword))
 						return next("Invalid password. Check if it meets all the requirements.");
 					return next();
 				},
@@ -1741,7 +1732,7 @@ const thisExport = {
 			],
 			async err => {
 				if (err && err !== true) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"CHANGE_PASSWORD_WITH_RESET_CODE",
@@ -1820,20 +1811,19 @@ const thisExport = {
 				},
 
 				next => {
-					punishments
-						.runJob("ADD_PUNISHMENT", {
-							type: "banUserId",
-							value: userId,
-							reason,
-							expiresAt,
-							punishedBy: "" // needs changed
-						})
+					PunishmentsModule.runJob("ADD_PUNISHMENT", {
+						type: "banUserId",
+						value: userId,
+						reason,
+						expiresAt,
+						punishedBy: "" // needs changed
+					})
 						.then(punishment => next(null, punishment))
 						.catch(next);
 				},
 
 				(punishment, next) => {
-					cache.runJob("PUB", {
+					CacheModule.runJob("PUB", {
 						channel: "user.ban",
 						value: { userId, punishment }
 					});
@@ -1842,7 +1832,7 @@ const thisExport = {
 			],
 			async err => {
 				if (err && err !== true) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"BAN_USER_BY_ID",
@@ -1865,7 +1855,7 @@ const thisExport = {
 	}),
 
 	getFavoriteStations: isLoginRequired(async (session, cb) => {
-		const userModel = await db.runJob("GET_MODEL", { modelName: "user" });
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
 		async.waterfall(
 			[
 				next => {
@@ -1879,7 +1869,7 @@ const thisExport = {
 			],
 			async (err, user) => {
 				if (err && err !== true) {
-					err = await utils.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					console.log(
 						"ERROR",
 						"GET_FAVORITE_STATIONS",
