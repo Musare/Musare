@@ -1511,6 +1511,7 @@ export default {
 	@media (max-width: 1040px) {
 		padding: 0;
 		margin-top: 0 !important;
+		height: auto !important;
 
 		#station-inner-container {
 			justify-content: flex-start !important;
@@ -1558,7 +1559,7 @@ export default {
 
 		/** Change height of YouTube embed  */
 		.player-container:not(.nothing-here) {
-			height: 450px !important;
+			height: 800px !important;
 		}
 
 		.player-container {
@@ -1921,6 +1922,7 @@ export default {
 			#sidebar-container {
 				position: relative;
 				width: 550px;
+				height: inherit;
 				margin-left: 50px;
 			}
 		}

@@ -154,15 +154,18 @@ export default {
 		}
 	}
 
+	button {
+		width: 100%;
+		height: 40px;
+		border-radius: 5px;
+	}
+
 	#queue-locked {
 		display: flex;
 		justify-content: center;
 	}
 
 	#add-song-to-queue {
-		width: 100%;
-		height: 40px;
-		border-radius: 5px;
 		background-color: rgba(3, 169, 244, 1);
 		color: $white !important;
 		border: 0;
