@@ -245,22 +245,41 @@
 									</button>
 								</div>
 
-								<!-- Add Song To Playlist Button (will be dropdown soon) -->
-								<button
-									class="button is-primary"
-									id="add-song-to-playlist"
-									@click="
-										openModal({
-											sector: 'station',
-											modal: 'addSongToPlaylist'
-										})
-									"
-								>
-									<i class="material-icons">queue</i>
-									<span class="optional-desktop-only-text"
-										>Add Song To Playlist</span
-									>
-								</button>
+								<!-- Add Song To Playlist Button & Dropdown -->
+								<div id="add-song-to-playlist">
+									<div class="control has-addons">
+										<button
+											class="button is-primary"
+											@click="
+												showPlaylistDropdown = !showPlaylistDropdown
+											"
+										>
+											<i class="material-icons">queue</i>
+											<span
+												class="optional-desktop-only-text"
+												>Add Song To Playlist</span
+											>
+										</button>
+										<button
+											class="button"
+											id="dropdown-toggle"
+											@click="
+												showPlaylistDropdown = !showPlaylistDropdown
+											"
+										>
+											<i class="material-icons">
+												{{
+													showPlaylistDropdown
+														? "expand_more"
+														: "expand_less"
+												}}
+											</i>
+										</button>
+									</div>
+									<add-to-playlist-dropdown
+										v-if="showPlaylistDropdown"
+									/>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -274,7 +293,6 @@
 			</div>
 
 			<song-queue v-if="modals.addSongToQueue" />
-			<add-to-playlist v-if="modals.addSongToPlaylist" />
 			<edit-playlist v-if="modals.editPlaylist" />
 			<create-playlist v-if="modals.createPlaylist" />
 			<edit-station v-if="modals.editStation" store="station" />
@@ -330,6 +348,7 @@ import MainHeader from "../../components/layout/MainHeader.vue";
 import Z404 from "../404.vue";
 
 import FloatingBox from "../../components/ui/FloatingBox.vue";
+import AddToPlaylistDropdown from "./components/AddToPlaylistDropdown.vue";
 
 import io from "../../io";
 import keyboardShortcuts from "../../keyboardShortcuts";
@@ -342,7 +361,6 @@ export default {
 	components: {
 		MainHeader,
 		SongQueue: () => import("./AddSongToQueue.vue"),
-		AddToPlaylist: () => import("./AddSongToPlaylist.vue"),
 		EditPlaylist: () => import("../../components/modals/EditPlaylist.vue"),
 		CreatePlaylist: () =>
 			import("../../components/modals/CreatePlaylist.vue"),
@@ -351,7 +369,8 @@ export default {
 		Z404,
 		FloatingBox,
 		CurrentlyPlaying,
-		StationSidebar
+		StationSidebar,
+		AddToPlaylistDropdown
 	},
 	data() {
 		return {
@@ -377,7 +396,8 @@ export default {
 			seeking: false,
 			playbackRate: 1,
 			volumeSliderValue: 0,
-			favoriteStation: false
+			favoriteStation: false,
+			showPlaylistDropdown: false
 		};
 	},
 	computed: {
@@ -1437,6 +1457,15 @@ export default {
 	#control-bar-container {
 		border: 0 !important;
 	}
+
+	#dropdown-toggle {
+		background-color: $dark-grey !important;
+		border: 0;
+
+		i {
+			color: #fff;
+		}
+	}
 }
 
 #station-outer-container {
@@ -1522,11 +1551,11 @@ export default {
 					display: none;
 				}
 
-				.button {
+				.button:not(#dropdown-toggle) {
 					width: 75px;
 				}
 
-				#add-song-to-playlist,
+				#add-song-to-playlist .button,
 				#local-resume,
 				#local-pause {
 					i {
@@ -1669,6 +1698,7 @@ export default {
 					justify-content: space-around;
 					padding: 10px 0;
 					width: 100%;
+					// height: 62px;
 					background: #fff;
 					border: 1px solid $light-grey-2;
 					border-radius: 0 0 5px 5px;
@@ -1704,6 +1734,9 @@ export default {
 
 						p {
 							font-size: 22px;
+							/** prevents duration width slightly varying and shifting other controls slightly */
+							width: 125px;
+							text-align: center;
 						}
 					}
 
@@ -1816,7 +1849,7 @@ export default {
 						display: flex;
 
 						#dislike-song,
-						#add-song-to-playlist {
+						#add-song-to-playlist .button:not(#dropdown-toggle) {
 							margin-left: 5px;
 						}
 
@@ -1831,6 +1864,17 @@ export default {
 							#dislike-song:hover,
 							#dislike-song.disliked {
 								background-color: darken($red, 5%) !important;
+							}
+						}
+
+						#add-song-to-playlist {
+							display: flex;
+							flex-direction: column-reverse;
+							width: 224px;
+
+							.control {
+								width: fit-content;
+								margin-bottom: 0 !important;
 							}
 						}
 					}

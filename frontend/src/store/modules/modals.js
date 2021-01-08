@@ -13,7 +13,6 @@ const state = {
 			addSongToQueue: false,
 			editPlaylist: false,
 			createPlaylist: false,
-			addSongToPlaylist: false,
 			editStation: false,
 			report: false
 		},
