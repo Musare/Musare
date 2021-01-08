@@ -170,14 +170,13 @@
 						<br />
 
 						<div id="playlists">
-							<div
-								class="playlist"
+							<playlist-item
+								:playlist="playlist"
 								v-for="(playlist, index) in playlists"
 								:key="index"
 							>
-								<playlist-item :playlist="playlist">
-									<div slot="actions">
-										<!-- <a
+								<div slot="actions">
+									<!-- <a
 										class="button is-danger"
 										href="#"
 										@click="
@@ -193,20 +192,17 @@
 										>
 										Stop playing
 									</a> -->
-										<a
-											class="button is-success"
-											href="#"
-											@click="
-												selectPlaylist(playlist._id)
-											"
-											><i
-												class="material-icons icon-with-button"
-												>play_arrow</i
-											>Play in queue
-										</a>
-									</div>
-								</playlist-item>
-							</div>
+									<a
+										class="button is-success"
+										href="#"
+										@click="selectPlaylist(playlist._id)"
+										><i
+											class="material-icons icon-with-button"
+											>play_arrow</i
+										>Play in queue
+									</a>
+								</div>
+							</playlist-item>
 						</div>
 					</div>
 				</div>
@@ -416,7 +412,7 @@ import validation from "../../validation";
 
 export default {
 	components: { Modal, PlaylistItem },
-	props: { store: { type: Object, default: () => {} } },
+	props: { store: { type: String, default: "" } },
 	data() {
 		return {
 			genreInputValue: "",

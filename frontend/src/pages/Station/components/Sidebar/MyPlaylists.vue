@@ -28,7 +28,9 @@
 			</ul>
 		</aside>
 
-		<div v-else class="has-text-centered">No Playlists found</div>
+		<p v-else class="nothing-here">
+			No Playlists found
+		</p>
 
 		<a
 			class="button create-playlist"
@@ -152,6 +154,10 @@ export default {
 	padding: 10px;
 	border-radius: 0 0 5px 5px;
 
+	.nothing-here {
+		margin-bottom: 10px;
+	}
+
 	.icons-group {
 		display: flex;
 		align-items: center;
@@ -171,9 +177,6 @@ export default {
 
 .menu-list li {
 	align-items: center;
-	.playlist {
-		border: 0.5px $light-grey-2 solid;
-	}
 }
 
 .create-playlist {

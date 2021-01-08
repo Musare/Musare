@@ -24,9 +24,9 @@
 				My Playlists
 			</button>
 		</div>
-		<queue class="tab" v-if="tab === 'queue'" />
-		<users class="tab" v-if="tab === 'users'" />
-		<my-playlists class="tab" v-if="tab === 'my-playlists'" />
+		<queue class="tab" v-show="tab === 'queue'" />
+		<users class="tab" v-show="tab === 'users'" />
+		<my-playlists class="tab" v-show="tab === 'my-playlists'" />
 	</div>
 </template>
 

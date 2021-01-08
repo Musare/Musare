@@ -115,10 +115,7 @@ export default {
 	}),
 	mounted() {
 		lofig.get("frontendDomain").then(frontendDomain => {
-			this.frontendDomain = frontendDomain;
-			this.notesUri = encodeURI(
-				`${this.frontendDomain}/assets/notes.png`
-			);
+			this.notesUri = encodeURI(`${frontendDomain}/assets/notes.png`);
 		});
 
 		io.getSocket(socket => {

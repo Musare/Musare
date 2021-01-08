@@ -1669,7 +1669,7 @@ export default {
 
 		#lower-row {
 			margin-top: 20px;
-			height: 90%;
+			height: calc(100% - 75px); // accounts for footer
 
 			.player-container.nothing-here {
 				border: 1px solid $light-grey-2;
@@ -1677,6 +1677,7 @@ export default {
 			}
 
 			.player-container {
+				height: inherit;
 				width: 1400px;
 				background-color: #fff;
 				display: flex;
