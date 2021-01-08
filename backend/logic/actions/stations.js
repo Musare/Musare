@@ -589,7 +589,9 @@ export default {
 						locked: station.locked,
 						partyMode: station.partyMode,
 						owner: station.owner,
-						privatePlaylist: station.privatePlaylist
+						privatePlaylist: station.privatePlaylist,
+						genres: station.genres,
+						blacklistedGenres: station.blacklistedGenres
 					};
 					userList[session.socketId] = station._id;
 					next(null, data);
