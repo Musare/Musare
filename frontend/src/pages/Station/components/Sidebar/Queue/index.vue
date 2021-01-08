@@ -141,6 +141,10 @@ export default {
 		height: inherit;
 		padding: 10px;
 
+		.nothing-here {
+			margin-bottom: 10px;
+		}
+
 		@media (min-width: 1040px) {
 			margin-bottom: 20px;
 		}
@@ -150,6 +154,11 @@ export default {
 		}
 	}
 
+	#queue-locked {
+		display: flex;
+		justify-content: center;
+	}
+
 	#add-song-to-queue {
 		width: 100%;
 		height: 40px;
@@ -157,7 +166,7 @@ export default {
 		background-color: rgba(3, 169, 244, 1);
 		color: $white !important;
 		border: 0;
-		margin-top: 10px;
+
 		&:active,
 		&:focus {
 			border: 0;

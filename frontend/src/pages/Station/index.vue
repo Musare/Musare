@@ -85,13 +85,13 @@
 							</button>
 						</div>
 					</div>
-					<div id="currently-playing-container" class="quadrant">
+					<div
+						id="currently-playing-container"
+						class="quadrant"
+						:class="{ 'no-currently-playing': noSong }"
+					>
 						<currently-playing v-if="!noSong" />
-						<p
-							v-else
-							class="nothing-here"
-							id="no-currently-playing"
-						>
+						<p v-else class="nothing-here">
 							No song is currently playing
 						</p>
 					</div>
@@ -306,7 +306,7 @@
 
 		<main-footer />
 
-		<floating-box id="playerDebugBox" ref="playerDebugBox">
+		<floating-box id="player-debug-box" ref="playerDebugBox">
 			<template #body>
 				<span><b>YouTube id</b>: {{ currentSong.songId }}</span>
 				<span><b>Duration</b>: {{ currentSong.duration }}</span>
@@ -1466,7 +1466,7 @@ export default {
 	display: none !important;
 }
 
-#playerDebugBox {
+#player-debug-box {
 	.box-body {
 		flex-direction: column;
 
@@ -1507,6 +1507,7 @@ export default {
 	margin-top: 5px;
 	height: 100%;
 
+	/** Mobile Row  */
 	@media (max-width: 1040px) {
 		padding: 0;
 		margin-top: 0 !important;
@@ -1524,32 +1525,49 @@ export default {
 		.player-container {
 			width: 100% !important;
 			border: 0 !important;
+		}
+
+		.quadrant,
+		.player-container {
 			background: transparent !important;
+		}
+
+		/** padding fixes on mobile */
+		#about-station-container,
+		#currently-playing-container {
+			padding: 15px 10px !important;
+		}
+
+		#about-station-container:not(.nothing-here) {
+			padding-bottom: 0 !important;
+		}
+
+		#currently-playing {
+			padding: 0;
+		}
+
+		/** no column gap between quadrants on mobile  */
+		#currently-playing-container,
+		#sidebar-container {
+			margin-left: 0 !important;
 		}
 
 		#lower-row {
 			margin-top: 0 !important;
 		}
 
-		.player-container {
+		/** Change height of YouTube embed  */
+		.player-container:not(.nothing-here) {
 			height: 450px !important;
 		}
 
-		.player-container.nothing-here {
-			height: 50px !important;
+		.player-container {
+			height: 50px;
 		}
 
-		#no-currently-playing {
-			display: none;
-		}
-
-		#control-bar-container {
-			#left-buttons,
-			#duration,
-			#volume-control,
-			#right-buttons {
-				margin: 3px;
-			}
+		/** mainly irrelevant on mobile */
+		.no-currently-playing {
+			display: none !important;
 		}
 	}
 
@@ -1563,21 +1581,7 @@ export default {
 			justify-content: center;
 		}
 
-		@media (min-width: 1040px) {
-			#currently-playing-container,
-			#sidebar-container {
-				margin-left: 75px;
-			}
-		}
-
-		@media (min-width: 1040px) and (max-width: 1450px) {
-			#about-station-container,
-			.player-container {
-				width: 800px !important;
-			}
-		}
-
-		@media (min-width: 1040px) and (max-width: 1950px) {
+		@media (min-width: 1040px) and (max-width: 2100px) {
 			#control-bar-container {
 				.optional-desktop-only-text {
 					display: none;
@@ -1594,18 +1598,6 @@ export default {
 						margin-right: 0 !important;
 					}
 				}
-			}
-
-			#currently-playing-container,
-			#sidebar-container {
-				margin-left: 40px;
-			}
-		}
-
-		@media (min-width: 1950px) {
-			#currently-playing-container,
-			#sidebar-container {
-				margin-left: 100px;
 			}
 		}
 
@@ -1658,7 +1650,7 @@ export default {
 				#admin-buttons {
 					margin-top: 15px;
 
-					@media (max-width: 650px) {
+					@media (max-width: 450px) {
 						.optional-desktop-only-text {
 							display: none;
 						}
@@ -1668,6 +1660,7 @@ export default {
 
 			#currently-playing-container {
 				width: 550px;
+				margin-left: 50px;
 			}
 		}
 
@@ -1733,20 +1726,14 @@ export default {
 					justify-content: space-around;
 					padding: 10px 0;
 					width: 100%;
-					// height: 62px;
 					background: #fff;
-
-					@media (max-width: 1450px) {
-						flex-direction: column;
-						flex-flow: wrap;
-
-						#right-buttons {
-							order: -1;
-						}
-					}
+					flex-direction: column;
+					flex-flow: wrap;
 
 					#left-buttons,
 					#right-buttons {
+						margin: 3px;
+
 						i {
 							margin-right: 3px;
 						}
@@ -1761,6 +1748,7 @@ export default {
 					}
 
 					#duration {
+						margin: 3px;
 						display: flex;
 						align-items: center;
 
@@ -1773,6 +1761,7 @@ export default {
 					}
 
 					#volume-control {
+						margin: 3px;
 						margin-top: 0;
 						position: relative;
 						display: flex;
@@ -1784,7 +1773,7 @@ export default {
 							padding: 0 15px;
 							background: transparent;
 
-							@media (max-width: 1650px) {
+							@media (max-width: 2150px) {
 								width: 250px !important;
 							}
 						}
@@ -1880,6 +1869,10 @@ export default {
 					#right-buttons {
 						display: flex;
 
+						#dropdown-toggle {
+							width: 35px;
+						}
+
 						#dislike-song,
 						#add-song-to-playlist .button:not(#dropdown-toggle) {
 							margin-left: 5px;
@@ -1913,7 +1906,8 @@ export default {
 						#add-song-to-playlist {
 							display: flex;
 							flex-direction: column-reverse;
-							width: 224px;
+							align-items: center;
+							width: 212px;
 
 							.control {
 								width: fit-content;
@@ -1927,6 +1921,7 @@ export default {
 			#sidebar-container {
 				position: relative;
 				width: 550px;
+				margin-left: 50px;
 			}
 		}
 	}
@@ -1936,7 +1931,6 @@ export default {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	height: inherit;
-	height: -webkit-fill-available;
+	text-transform: uppercase;
 }
 </style>

@@ -3,7 +3,7 @@
 		<figure class="thumbnail">
 			<div
 				v-if="currentSong.ytThumbnail"
-				class="ytThumbnailBg"
+				id="yt-thumbnail-bg"
 				:style="{
 					'background-image': 'url(' + currentSong.ytThumbnail + ')'
 				}"
@@ -97,7 +97,7 @@ export default {
 		height: 100%;
 		position: relative;
 
-		.ytThumbnailBg {
+		#yt-thumbnail-bg {
 			height: 100%;
 			width: 100%;
 			position: absolute;
@@ -121,12 +121,7 @@ export default {
 		}
 	}
 
-	#yt-thumbnail {
-		background: url("/assets/notes-transparent.png") no-repeat center center;
-		background-size: cover;
-	}
-
-	@media (max-width: 2200px) {
+	@media (max-width: 1500px) {
 		#song-actions {
 			.button {
 				padding: 0 10px !important;
@@ -134,7 +129,11 @@ export default {
 		}
 
 		#song-info {
-			margin-left: 0;
+			margin-left: 0 !important;
+		}
+
+		.thumbnail {
+			display: none;
 		}
 	}
 
@@ -164,7 +163,6 @@ export default {
 
 		#song-artists {
 			font-size: 16px;
-			height: 100%;
 		}
 
 		#song-request-time {
