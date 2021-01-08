@@ -336,8 +336,13 @@ class _IOModule extends CoreClass {
 		});
 	}
 
-	// UNKNOWN
-	// eslint-disable-next-line require-jsdoc
+	/**
+	 * Returns whether there is a socket for a session id or not
+	 *
+	 * @param {object} payload - object containing the payload
+	 * @param {string} payload.sessionId - user session id
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	async SOCKET_FROM_SESSION(payload) {
 		// socketId
 		return new Promise((resolve, reject) => {
