@@ -1441,7 +1441,7 @@ export default {
 @import "../../styles/global.scss";
 
 .main-container {
-	min-height: calc(100vh + 180px);
+	min-height: calc(100vh + 100px);
 }
 
 .progress {
