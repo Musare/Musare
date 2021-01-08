@@ -5,11 +5,8 @@
 				<div id="footer-copyright">
 					<p>© Copyright Musare 2015 - 2021</p>
 				</div>
-				<a href="/"
-					><img
-						id="footer-logo"
-						src="/assets/blue_wordmark.png"
-						alt="Musare"
+				<a id="footer-logo" href="/"
+					><img src="/assets/blue_wordmark.png" alt="Musare"
 				/></a>
 				<div id="footer-links">
 					<a
@@ -80,12 +77,13 @@ export default {
 		0 6px 20px 0 rgba(3, 169, 244, 0.2);
 	background-color: $white;
 	width: 100%;
+	height: 160px;
 
 	#footer-logo {
 		display: block;
 		margin-left: auto;
 		margin-right: auto;
-		width: 200px;
+		width: 160px;
 		order: 1;
 	}
 
@@ -122,18 +120,19 @@ export default {
 
 @media only screen and (min-width: 992px) {
 	.footer {
+		height: 100px;
 		#footer-copyright {
 			left: 0;
-			top: 20px;
+			top: 0;
 			position: absolute;
-			line-height: 25px;
+			line-height: 50px;
 		}
 
 		#footer-links {
 			right: 0;
-			top: 20px;
+			top: 0;
 			position: absolute;
-			line-height: 25px;
+			line-height: 50px;
 		}
 	}
 }

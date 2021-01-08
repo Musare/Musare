@@ -38,7 +38,10 @@
 							</p>
 						</div>
 					</div>
-					<div class="col col-2" v-if="editing.genres">
+					<div
+						class="col col-2"
+						v-if="editing.type === 'official' && editing.genres"
+					>
 						<div>
 							<label class="label">Genre(s)</label>
 							<p class="control has-addons">
@@ -159,8 +162,14 @@
 					</div>
 
 					<!--  Choose a playlist -->
-					<div v-if="!editing.partyMode && playlists.length > 0">
-						<hr style="margin: 10px 0 20px 0;" />
+					<div
+						v-if="
+							editing.type === 'community' &&
+								!editing.partyMode &&
+								playlists.length > 0
+						"
+					>
+						<hr style="margin: 10px 0 20px 0" />
 
 						<h4 class="section-title">Choose a playlist</h4>
 						<p class="section-description">

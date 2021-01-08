@@ -669,7 +669,9 @@ export default {
 				description: this.station.description,
 				privacy: this.station.privacy,
 				displayName: this.station.displayName,
-				locked: this.station.locked
+				locked: this.station.locked,
+				genres: this.station.genres,
+				blacklistedGenres: this.station.blacklistedGenres
 			});
 			this.openModal({
 				sector: "station",
@@ -1199,7 +1201,9 @@ export default {
 						partyMode,
 						owner,
 						privatePlaylist,
-						type
+						type,
+						genres,
+						blacklistedGenres
 					} = res.data;
 
 					this.joinStation({
@@ -1212,7 +1216,9 @@ export default {
 						partyMode,
 						owner,
 						privatePlaylist,
-						type
+						type,
+						genres,
+						blacklistedGenres
 					});
 
 					const currentSong = res.data.currentSong
@@ -1441,7 +1447,7 @@ export default {
 @import "../../styles/global.scss";
 
 .main-container {
-	min-height: calc(100vh + 180px);
+	min-height: calc(100vh + 100px);
 }
 
 .progress {
