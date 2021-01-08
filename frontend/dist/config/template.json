@@ -15,11 +15,6 @@
 		"logo_white": "/assets/white_wordmark.png",
 		"logo_blue": "/assets/blue_wordmark.png",
 		"siteName": "Musare",
-		"socialLinks": {
-			"github": "https://github.com/Musare/MusareNode",
-			"twitter": "https://twitter.com/MusareApp",
-			"facebook": "https://facebook.com/MusareMusic/",
-			"discord": "https://discord.gg/Y5NxYGP"
-		}
+		"github": "https://github.com/Musare/MusareNode"
 	}
 }

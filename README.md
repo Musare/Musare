@@ -73,7 +73,7 @@ We currently only utilize 1 backend, 1 MongoDB server and 1 Redis server running
     | `cookie.secure` | Should be `true` for SSL connections, and `false` for normal http connections. |
     | `siteSettings.logo` | Path to the logo image, by default it is `/assets/wordmark.png`. |
     | `siteSettings.siteName` | Should be the name of the site. |
-    | `siteSettings.socialLinks` | `github`, `twitter` and `facebook` are set to the official Musare accounts by default, but can be changed. |
+    | `siteSettings.github` | URL of GitHub repository, defaults to `https://github.com/Musare/MusareNode`. |
 
 5. Simply `cp .env.example .env` to setup your environment variables.
 

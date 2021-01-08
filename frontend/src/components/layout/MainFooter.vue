@@ -13,7 +13,7 @@
 				/></a>
 				<div id="footer-links">
 					<a
-						:href="`${this.socialLinks.github}`"
+						:href="`${this.github}`"
 						target="_blank"
 						title="GitHub Repository"
 					>
@@ -36,17 +36,12 @@
 export default {
 	data() {
 		return {
-			socialLinks: {
-				github: "",
-				twitter: "",
-				facebook: "",
-				discord: ""
-			}
+			github: "#"
 		};
 	},
 	mounted() {
-		lofig.get("siteSettings.socialLinks").then(socialLinks => {
-			this.socialLinks = socialLinks;
+		lofig.get("siteSettings.github").then(github => {
+			this.github = github;
 		});
 	}
 };
@@ -70,7 +65,7 @@ export default {
 .footer-content {
 	display: flex;
 	align-items: center;
-	flex-direction: column-reverse;
+	flex-direction: column;
 	& > * {
 		margin: 5px 0;
 	}
@@ -91,9 +86,11 @@ export default {
 		margin-left: auto;
 		margin-right: auto;
 		width: 200px;
+		order: 1;
 	}
 
 	#footer-links {
+		order: 2;
 		:not(:last-child) {
 			border-right: solid 1px $primary-color;
 		}
@@ -116,6 +113,10 @@ export default {
 				text-decoration: underline;
 			}
 		}
+	}
+
+	#footer-copyright {
+		order: 3;
 	}
 }
 
