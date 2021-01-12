@@ -294,6 +294,10 @@ export default class CoreClass {
 		this.stage = 0;
 		this.jobStatistics = {};
 
+		this.logRules = config.get("customLoggingPerModule")[name]
+			? config.get("customLoggingPerModule")[name]
+			: config.get("defaultLogging");
+
 		this.registerJobs();
 	}
 
@@ -368,10 +372,15 @@ export default class CoreClass {
 			return;
 		}
 
+		if (this.logRules.hideType.indexOf(type) !== -1) return;
+
 		_arguments.splice(0, 1);
 		const start = `|${this.name.toUpperCase()}|`;
 		const numberOfSpacesNeeded = 20 - start.length;
 		_arguments.unshift(`${start}${Array(numberOfSpacesNeeded).join(" ")}`);
+
+		if (this.logRules.blacklistedTerms.some(blacklistedTerm => _arguments.join().indexOf(blacklistedTerm) !== -1))
+			return;
 
 		if (type === "INFO") {
 			_arguments[0] += "\x1b[36m";

@@ -55,5 +55,20 @@
 		"stationIssue": false,
 		"traceUnhandledPromises": false,
 		"captureJobs": []
-	}
+	},
+	"defaultLogging": {
+        "hideType": [
+            "INFO"
+        ],
+        "blacklistedTerms": [
+        ]
+    },
+    "customLoggingPerModule": {
+        // "cache": {
+        //     "hideType": [
+
+        //     ],
+        //     "blacklistedTerms": []
+        // }
+    }
 }
