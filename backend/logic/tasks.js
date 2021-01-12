@@ -342,20 +342,20 @@ class _TasksModule extends CoreClass {
 	 *
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
-	collectStationUsersTask() {
-		return new Promise(async resolve => {
+	async collectStationUsersTask() {
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
+
+		return new Promise(resolve => {
 			TasksModule.log("INFO", "TASK_COLLECT_STATION_USERS_TASK", `Checking for users in stations.`, false);
 
 			const stationsCountUpdated = [];
 			const stationsUpdated = [];
 
-			const oldUsersPerStation = JSON.parse(JSON.stringify(StationsModule.usersPerStation));
+			// const oldUsersPerStation = JSON.parse(JSON.stringify(StationsModule.usersPerStation));
 			const usersPerStation = {};
 
 			const oldUsersPerStationCount = JSON.parse(JSON.stringify(StationsModule.usersPerStationCount));
 			const usersPerStationCount = {};
-
-			const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
 
 			async.each(
 				Object.keys(StationsModule.userList),
