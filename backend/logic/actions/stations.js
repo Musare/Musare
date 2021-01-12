@@ -849,9 +849,6 @@ export default {
 					);
 					return cb({ status: "failure", message: err });
 				}
-				NotificationsModule.runJob("UNSCHEDULE", {
-					name: `stations.nextSong?id=${stationId}`
-				});
 				StationsModule.runJob("SKIP_STATION", { stationId });
 				console.log("SUCCESS", "STATIONS_FORCE_SKIP", `Force skipped station "${stationId}" successfully.`);
 				return cb({

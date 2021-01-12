@@ -655,6 +655,16 @@ class _StationsModule extends CoreClass {
 			async.waterfall(
 				[
 					next => {
+						NotificationsModule.runJob("UNSCHEDULE", {
+							name: `stations.nextSong?id=${payload.stationId}`
+						})
+							.then(() => {
+								next();
+							})
+							.catch(next);
+					},
+
+					next => {
 						StationsModule.runJob(
 							"GET_STATION",
 							{
