@@ -13,6 +13,7 @@ let CacheModule;
 let StationsModule;
 let UtilsModule;
 let IOModule;
+let DBModule;
 
 class _TasksModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
@@ -37,6 +38,7 @@ class _TasksModule extends CoreClass {
 			StationsModule = this.moduleManager.modules.stations;
 			UtilsModule = this.moduleManager.modules.utils;
 			IOModule = this.moduleManager.modules.io;
+			DBModule = this.moduleManager.modules.db;
 
 			// this.createTask("testTask", testTask, 5000, true);
 
@@ -52,10 +54,16 @@ class _TasksModule extends CoreClass {
 				timeout: 1000 * 60 * 60 * 6
 			});
 
+			// TasksModule.runJob("CREATE_TASK", {
+			// 	name: "logFileSizeCheckTask",
+			// 	fn: TasksModule.logFileSizeCheckTask,
+			// 	timeout: 1000 * 60 * 60
+			// });
+
 			TasksModule.runJob("CREATE_TASK", {
-				name: "logFileSizeCheckTask",
-				fn: TasksModule.logFileSizeCheckTask,
-				timeout: 1000 * 60 * 60
+				name: "collectStationUsersTask",
+				fn: TasksModule.collectStationUsersTask,
+				timeout: 1000 * 3
 			});
 
 			resolve();
@@ -326,6 +334,122 @@ class _TasksModule extends CoreClass {
 					return resolve();
 				}
 			);
+		});
+	}
+
+	/**
+	 * Periodically collect users in stations
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	collectStationUsersTask() {
+		return new Promise(async resolve => {
+			TasksModule.log("INFO", "TASK_COLLECT_STATION_USERS_TASK", `Checking for users in stations.`, false);
+
+			const stationsCountUpdated = [];
+			const stationsUpdated = [];
+
+			const oldUsersPerStation = JSON.parse(JSON.stringify(StationsModule.usersPerStation));
+			const usersPerStation = {};
+
+			const oldUsersPerStationCount = JSON.parse(JSON.stringify(StationsModule.usersPerStationCount));
+			const usersPerStationCount = {};
+
+			const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
+
+			async.each(
+				Object.keys(StationsModule.userList),
+				(socketId, next) => {
+					IOModule.runJob("SOCKET_FROM_SESSION", { socketId }).then(socket => {
+						const stationId = StationsModule.userList[socketId];
+
+						if (!socket || Object.keys(socket.rooms).indexOf(`station.${stationId}`) === -1) {
+							if (stationsCountUpdated.indexOf(stationId) === -1) stationsCountUpdated.push(stationId);
+							if (stationsUpdated.indexOf(stationId) === -1) stationsUpdated.push(stationId);
+							delete StationsModule.userList[socketId];
+							return next();
+						}
+
+						if (!usersPerStationCount[stationId]) usersPerStationCount[stationId] = 0;
+						usersPerStationCount[stationId] += 1;
+						if (!usersPerStation[stationId]) usersPerStation[stationId] = [];
+
+						return async.waterfall(
+							[
+								next => {
+									if (!socket.session || !socket.session.sessionId) return next("No session found.");
+									return CacheModule.runJob("HGET", {
+										table: "sessions",
+										key: socket.session.sessionId
+									})
+										.then(session => {
+											next(null, session);
+										})
+										.catch(next);
+								},
+
+								(session, next) => {
+									if (!session) return next("Session not found.");
+									return userModel.findOne({ _id: session.userId }, next);
+								},
+
+								(user, next) => {
+									if (!user) return next("User not found.");
+									if (usersPerStation[stationId].indexOf(user.username) !== -1)
+										return next("User already in the list.");
+									return next(null, { username: user.username, avatar: user.avatar });
+								}
+							],
+							(err, user) => {
+								if (!err) {
+									usersPerStation[stationId].push(user);
+								}
+								next();
+							}
+						);
+					});
+					// TODO Code to show users
+				},
+				() => {
+					Object.keys(usersPerStationCount).forEach(stationId => {
+						if (oldUsersPerStationCount[stationId] !== usersPerStationCount[stationId]) {
+							if (stationsCountUpdated.indexOf(stationId) === -1) stationsCountUpdated.push(stationId);
+						}
+					});
+
+					// Object.keys(usersPerStation).forEach(stationId => {
+					// 	if (
+					// 		_.difference(usersPerStation[stationId], oldUsersPerStation[stationId]).length > 0 ||
+					// 		_.difference(oldUsersPerStation[stationId], usersPerStation[stationId]).length > 0
+					// 	) {
+					// 		if (stationsUpdated.indexOf(stationId) === -1) stationsUpdated.push(stationId);
+					// 	}
+					// });
+
+					StationsModule.usersPerStationCount = usersPerStationCount;
+					StationsModule.usersPerStation = usersPerStation;
+
+					stationsCountUpdated.forEach(stationId => {
+						console.log("INFO", "UPDATE_STATION_USER_COUNT", `Updating user count of ${stationId}.`);
+						CacheModule.runJob("PUB", {
+							table: "station.updateUserCount",
+							value: stationId
+						});
+					});
+
+					stationsUpdated.forEach(stationId => {
+						console.log("INFO", "UPDATE_STATION_USER_LIST", `Updating user list of ${stationId}.`);
+						CacheModule.runJob("PUB", {
+							table: "station.updateUsers",
+							value: stationId
+						});
+					});
+
+					// console.log("Userlist", StationsModule.usersPerStation);
+				}
+			);
+
+			resolve();
 		});
 	}
 }

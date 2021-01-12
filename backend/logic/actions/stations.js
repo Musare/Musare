@@ -14,129 +14,10 @@ const StationsModule = moduleManager.modules.stations;
 const ActivitiesModule = moduleManager.modules.activities;
 const YouTubeModule = moduleManager.modules.youtube;
 
-const userList = {};
-let usersPerStation = {};
-let usersPerStationCount = {};
-
-// Temporarily disabled until the messages in console can be limited
-setInterval(async () => {
-	const stationsCountUpdated = [];
-	const stationsUpdated = [];
-
-	// const oldUsersPerStation = usersPerStation;
-	usersPerStation = {};
-
-	const oldUsersPerStationCount = usersPerStationCount;
-	usersPerStationCount = {};
-
-	const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, { isQuiet: true });
-
-	async.each(
-		Object.keys(userList),
-		(socketId, next) => {
-			IOModule.runJob("SOCKET_FROM_SESSION", { socketId }, { isQuiet: true }).then(socket => {
-				const stationId = userList[socketId];
-
-				if (!socket || Object.keys(socket.rooms).indexOf(`station.${stationId}`) === -1) {
-					if (stationsCountUpdated.indexOf(stationId) === -1) stationsCountUpdated.push(stationId);
-					if (stationsUpdated.indexOf(stationId) === -1) stationsUpdated.push(stationId);
-					delete userList[socketId];
-					return next();
-				}
-
-				if (!usersPerStationCount[stationId]) usersPerStationCount[stationId] = 0;
-				usersPerStationCount[stationId] += 1;
-				if (!usersPerStation[stationId]) usersPerStation[stationId] = [];
-
-				return async.waterfall(
-					[
-						next => {
-							if (!socket.session || !socket.session.sessionId) return next("No session found.");
-							return CacheModule.runJob(
-								"HGET",
-								{
-									table: "sessions",
-									key: socket.session.sessionId
-								},
-								{ isQuiet: true }
-							)
-								.then(session => {
-									next(null, session);
-								})
-								.catch(next);
-						},
-
-						(session, next) => {
-							if (!session) return next("Session not found.");
-							return userModel.findOne({ _id: session.userId }, next);
-						},
-
-						(user, next) => {
-							if (!user) return next("User not found.");
-							if (usersPerStation[stationId].indexOf(user.username) !== -1)
-								return next("User already in the list.");
-							return next(null, { username: user.username, avatar: user.avatar });
-						}
-					],
-					(err, user) => {
-						if (!err) {
-							usersPerStation[stationId].push(user);
-						}
-						next();
-					}
-				);
-			});
-			// TODO Code to show users
-		},
-		() => {
-			Object.keys(usersPerStationCount).forEach(stationId => {
-				if (oldUsersPerStationCount[stationId] !== usersPerStationCount[stationId]) {
-					if (stationsCountUpdated.indexOf(stationId) === -1) stationsCountUpdated.push(stationId);
-				}
-			});
-
-			// Object.keys(usersPerStation).forEach(stationId => {
-			// 	if (
-			// 		_.difference(usersPerStation[stationId], oldUsersPerStation[stationId]).length > 0 ||
-			// 		_.difference(oldUsersPerStation[stationId], usersPerStation[stationId]).length > 0
-			// 	) {
-			// 		if (stationsUpdated.indexOf(stationId) === -1) stationsUpdated.push(stationId);
-			// 	}
-			// });
-
-			stationsCountUpdated.forEach(stationId => {
-				console.log("INFO", "UPDATE_STATION_USER_COUNT", `Updating user count of ${stationId}.`);
-				CacheModule.runJob(
-					"PUB",
-					{
-						table: "station.updateUserCount",
-						value: stationId
-					},
-					{ isQuiet: true }
-				);
-			});
-
-			stationsUpdated.forEach(stationId => {
-				console.log("INFO", "UPDATE_STATION_USER_LIST", `Updating user list of ${stationId}.`);
-				CacheModule.runJob(
-					"PUB",
-					{
-						table: "station.updateUsers",
-						value: stationId
-					},
-					{ isQuiet: true }
-				);
-			});
-
-			// console.log("Userlist", usersPerStation);
-		}
-	);
-}, 3000);
-
 CacheModule.runJob("SUB", {
 	channel: "station.updateUsers",
 	cb: stationId => {
-		const list = usersPerStation[stationId] || [];
+		const list = StationsModule.usersPerStation[stationId] || [];
 		IOModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${stationId}`,
 			args: ["event:users.updated", list]
@@ -147,7 +28,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "station.updateUserCount",
 	cb: stationId => {
-		const count = usersPerStationCount[stationId] || 0;
+		const count = StationsModule.usersPerStationCount[stationId] || 0;
 		IOModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${stationId}`,
 			args: ["event:userCount.updated", count]
@@ -286,7 +167,7 @@ CacheModule.runJob("SUB", {
 
 		StationsModule.runJob("INITIALIZE_STATION", { stationId }).then(async response => {
 			const { station } = response;
-			station.userCount = usersPerStationCount[stationId] || 0;
+			station.userCount = StationsModule.usersPerStationCount[stationId] || 0;
 			IOModule.runJob("EMIT_TO_ROOM", {
 				room: "admin.stations",
 				args: ["event:admin.station.added", station]
@@ -361,7 +242,7 @@ export default {
 								],
 								(err, exists) => {
 									if (err) console.log(err);
-									station.userCount = usersPerStationCount[station._id] || 0;
+									station.userCount = StationsModule.usersPerStationCount[station._id] || 0;
 									if (exists) filteredStations.push(station);
 									next();
 								}
@@ -604,14 +485,14 @@ export default {
 						genres: station.genres,
 						blacklistedGenres: station.blacklistedGenres
 					};
-					userList[session.socketId] = station._id;
+					StationsModule.userList[session.socketId] = station._id;
 					next(null, data);
 				},
 
 				(data, next) => {
 					data = JSON.parse(JSON.stringify(data));
-					data.userCount = usersPerStationCount[data._id] || 0;
-					data.users = usersPerStation[data._id] || [];
+					data.userCount = StationsModule.usersPerStationCount[data._id] || 0;
+					data.users = StationsModule.usersPerStation[data._id] || [];
 					if (!data.currentSong || !data.currentSong.title) return next(null, data);
 					IOModule.runJob("SOCKET_JOIN_SONG_ROOM", {
 						socketId: session.socketId,
@@ -890,7 +771,7 @@ export default {
 				}
 				console.log("SUCCESS", "STATIONS_LEAVE", `Left station "${stationId}" successfully.`);
 				IOModule.runJob("SOCKET_LEAVE_ROOMS", { socketId: session });
-				delete userList[session.socketId];
+				delete StationsModule.userList[session.socketId];
 				return cb({
 					status: "success",
 					message: "Successfully left station.",

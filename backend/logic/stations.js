@@ -40,6 +40,10 @@ class _StationsModule extends CoreClass {
 			dislikes: -1
 		};
 
+		this.userList = {};
+		this.usersPerStation = {};
+		this.usersPerStationCount = {};
+
 		// TEMP
 		CacheModule.runJob("SUB", {
 			channel: "station.pause",
