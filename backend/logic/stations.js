@@ -233,19 +233,15 @@ class _StationsModule extends CoreClass {
 							.then()
 							.catch()
 							.finally(() => {
-								NotificationsModule.runJob(
-									"SUBSCRIBE",
-									{
-										name: `stations.nextSong?id=${station._id}`,
-										cb: () =>
-											StationsModule.runJob("SKIP_STATION", {
-												stationId: station._id
-											}),
-										unique: true,
-										station
-									},
-									this
-								)
+								NotificationsModule.runJob("SUBSCRIBE", {
+									name: `stations.nextSong?id=${station._id}`,
+									cb: () =>
+										StationsModule.runJob("SKIP_STATION", {
+											stationId: station._id
+										}),
+									unique: true,
+									station
+								})
 									.then()
 									.catch();
 

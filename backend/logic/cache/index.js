@@ -171,6 +171,9 @@ class _CacheModule extends CoreClass {
 
 			let { key } = payload;
 
+			if (!payload.table) return reject(new Error("Invalid table!"));
+			if (!key) return reject(new Error("Invalid key!"));
+
 			if (mongoose.Types.ObjectId.isValid(key)) key = key.toString();
 
 			CacheModule.client.hdel(payload.table, key, err => {
@@ -191,6 +194,8 @@ class _CacheModule extends CoreClass {
 	HGETALL(payload) {
 		// table, cb, parseJson = true
 		return new Promise((resolve, reject) => {
+			if (!payload.table) return reject(new Error("Invalid table!"));
+
 			CacheModule.client.hgetall(payload.table, (err, obj) => {
 				if (err) return reject(new Error(err));
 				if (obj)
@@ -221,12 +226,15 @@ class _CacheModule extends CoreClass {
             pubs[channel].on('error', (err) => console.error);
             } */
 
-			let { value } = payload;
+			let { channel, value } = payload;
+
+			if (!channel) return reject(new Error("Invalid channel!"));
+			if (!value) return reject(new Error("Invalid value!"));
 
 			if (["object", "array"].includes(typeof value)) value = JSON.stringify(value);
 
 			// pubs[channel].publish(channel, value);
-			CacheModule.client.publish(payload.channel, value, err => {
+			CacheModule.client.publish(channel, value, err => {
 				if (err) reject(err);
 				else resolve();
 			});
@@ -244,6 +252,8 @@ class _CacheModule extends CoreClass {
 	SUB(payload) {
 		// channel, cb, parseJson = true
 		return new Promise(resolve => {
+			if (!payload.channel) return reject(new Error("Invalid channel!"));
+
 			if (subs[payload.channel] === undefined) {
 				subs[payload.channel] = {
 					client: redis.createClient({

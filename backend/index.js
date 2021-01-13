@@ -13,9 +13,7 @@ process.on("uncaughtException", err => {
 	console.log(`UNCAUGHT EXCEPTION: ${err.stack}`);
 });
 
-const blacklistedConsoleLogs = [
-	
-];
+const blacklistedConsoleLogs = [];
 
 const oldConsole = {};
 oldConsole.log = console.log;
