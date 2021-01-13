@@ -176,7 +176,7 @@ class _CacheModule extends CoreClass {
 
 			if (mongoose.Types.ObjectId.isValid(key)) key = key.toString();
 
-			CacheModule.client.hdel(payload.table, key, err => {
+			return CacheModule.client.hdel(payload.table, key, err => {
 				if (err) return reject(new Error(err));
 				return resolve();
 			});
@@ -196,7 +196,7 @@ class _CacheModule extends CoreClass {
 		return new Promise((resolve, reject) => {
 			if (!payload.table) return reject(new Error("Invalid table!"));
 
-			CacheModule.client.hgetall(payload.table, (err, obj) => {
+			return CacheModule.client.hgetall(payload.table, (err, obj) => {
 				if (err) return reject(new Error(err));
 				if (obj)
 					Object.keys(obj).forEach(key => {
@@ -226,15 +226,15 @@ class _CacheModule extends CoreClass {
             pubs[channel].on('error', (err) => console.error);
             } */
 
-			let { channel, value } = payload;
+			let { value } = payload;
 
-			if (!channel) return reject(new Error("Invalid channel!"));
+			if (!payload.channel) return reject(new Error("Invalid channel!"));
 			if (!value) return reject(new Error("Invalid value!"));
 
 			if (["object", "array"].includes(typeof value)) value = JSON.stringify(value);
 
 			// pubs[channel].publish(channel, value);
-			CacheModule.client.publish(channel, value, err => {
+			return CacheModule.client.publish(payload.channel, value, err => {
 				if (err) reject(err);
 				else resolve();
 			});
@@ -251,7 +251,7 @@ class _CacheModule extends CoreClass {
 	 */
 	SUB(payload) {
 		// channel, cb, parseJson = true
-		return new Promise(resolve => {
+		return new Promise((resolve, reject) => {
 			if (!payload.channel) return reject(new Error("Invalid channel!"));
 
 			if (subs[payload.channel] === undefined) {
@@ -279,7 +279,7 @@ class _CacheModule extends CoreClass {
 
 			subs[payload.channel].cbs.push(payload.cb);
 
-			resolve();
+			return resolve();
 		});
 	}
 
