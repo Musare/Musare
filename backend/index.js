@@ -456,6 +456,36 @@ process.stdin.on("data", data => {
 
 		console.log(moduleManager.modules[parts[1]].jobStatistics);
 	}
+	if (command.startsWith("jobinfo")) {
+		const parts = command.split(" ");
+
+		const uuid = parts[1];
+		let jobFound = null;
+
+		Object.keys(moduleManager.modules).forEach(moduleName => {
+			const module = moduleManager.modules[moduleName];
+			const task1 = module.jobQueue.runningTasks.find(task => task.job.uniqueId === uuid);
+			const task2 = module.jobQueue.queue.find(task => task.job.uniqueId === uuid);
+			const task3 = module.jobQueue.pausedTasks.find(task => task.job.uniqueId === uuid);
+			if (task1) jobFound = task1.job;
+			if (task2) jobFound = task2.job;
+			if (task3) jobFound = task3.job;
+		});
+
+		if (jobFound) {
+			let topParent = jobFound;
+			let levelsDeep = 0;
+			while (topParent.parentJob && topParent !== topParent.parentJob) {
+				topParent = jobFound.parentJob;
+				levelsDeep += 1;
+			}
+			console.log(
+				`Found job, displaying that job and the full tree from the top parent job. The job is ${levelsDeep} levels deep from the top parent.`
+			);
+			console.log(jobFound);
+			printJob(topParent, 1);
+		} else console.log("Could not find job in any running, queued or paused lists in any module.");
+	}
 	// if (command.startsWith("debug")) {
 	// }
 

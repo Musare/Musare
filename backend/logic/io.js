@@ -736,6 +736,7 @@ class _IOModule extends CoreClass {
 					IOModule.runJob("RUN_ACTION2", { session: socket.session, namespace, action, args })
 						.then(response => {
 							cb(response);
+							resolve();
 						})
 						.catch(err => {
 							if (typeof cb === "function")
