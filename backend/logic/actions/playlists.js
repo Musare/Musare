@@ -599,8 +599,7 @@ export default {
 	addSetToPlaylist: isLoginRequired(function addSetToPlaylist(session, url, playlistId, musicOnly, cb) {
 		let videosInPlaylistTotal = 0;
 		let songsInPlaylistTotal = 0;
-		let songsSuccess = 0;
-		let songsFail = 0;
+		let addSongsStats = null;
 
 		const addedSongs = [];
 
@@ -626,41 +625,41 @@ export default {
 				},
 				(songIds, next) => {
 					let processed = 0;
+					let successful = 0;
+					let failed = 0;
+					let alreadyInPlaylist = 0;
 
-					/**
-					 *
-					 */
-					function checkDone() {
-						if (processed === songIds.length) next();
-					}
-					for (let s = 0; s < songIds.length; s += 1) {
+					if (songIds.length === 0) next();
+
+					songIds.forEach(songId => {
 						IOModule.runJob(
 							"RUN_ACTION2",
 							{
 								session,
 								namespace: "playlists",
 								action: "addSongToPlaylist",
-								args: [true, songIds[s], playlistId]
+								args: [true, songId, playlistId]
 							},
 							this
 						)
-							// eslint-disable-next-line no-loop-func
 							.then(res => {
 								if (res.status === "success") {
-									addedSongs.push(songIds[s]);
-									songsSuccess += 1;
-								} else songsFail += 1;
+									successful += 1;
+									addedSongs.push(songId);
+								} else failed += 1;
+								if (res.message === "That song is already in the playlist") alreadyInPlaylist += 1;
 							})
-							// eslint-disable-next-line no-loop-func
 							.catch(() => {
-								songsFail += 1;
+								failed += 1;
 							})
-							// eslint-disable-next-line no-loop-func
 							.finally(() => {
 								processed += 1;
-								checkDone();
+								if (processed === songIds.length) {
+									addSongsStats = { successful, failed, alreadyInPlaylist };
+									next(null);
+								}
 							});
-					}
+					});
 				},
 
 				next => {
@@ -694,17 +693,15 @@ export default {
 				this.log(
 					"SUCCESS",
 					"PLAYLIST_IMPORT",
-					`Successfully imported a YouTube playlist to private playlist "${playlistId}" for user "${session.userId}". Videos in playlist: ${videosInPlaylistTotal}, songs in playlist: ${songsInPlaylistTotal}, songs successfully added: ${songsSuccess}, songs failed: ${songsFail}.`
+					`Successfully imported a YouTube playlist to private playlist "${playlistId}" for user "${session.userId}". Videos in playlist: ${videosInPlaylistTotal}, songs in playlist: ${songsInPlaylistTotal}, songs successfully added: ${addSongsStats.successful}, songs failed: ${addSongsStats.failed}, already in playlist: ${addSongsStats.alreadyInPlaylist}.`
 				);
 				return cb({
 					status: "success",
-					message: "Playlist has been successfully imported.",
+					message: `Playlist has been imported. ${addSongsStats.successful} were addedd successfully, ${addSongsStats.failed} failed (${addSongsStats.alreadyInPlaylist} were already in the playlist)`,
 					data: playlist.songs,
 					stats: {
 						videosInPlaylistTotal,
-						songsInPlaylistTotal,
-						songsAddedSuccessfully: songsSuccess,
-						songsFailedToAdd: songsFail
+						songsInPlaylistTotal
 					}
 				});
 			}

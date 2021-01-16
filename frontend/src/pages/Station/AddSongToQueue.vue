@@ -324,7 +324,7 @@ export default {
 				this.isImportingOnlyMusicOfPlaylist,
 				res => {
 					isImportingPlaylist = false;
-					return new Toast({ content: res.message, timeout: 4000 });
+					return new Toast({ content: res.message, timeout: 20000 });
 				}
 			);
 		},

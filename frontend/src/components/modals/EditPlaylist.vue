@@ -310,16 +310,12 @@ export default {
 				this.playlist._id,
 				musicOnly,
 				res => {
-					new Toast({ content: res.message, timeout: 4000 });
+					new Toast({ content: res.message, timeout: 20000 });
 					if (res.status === "success") {
-						new Toast({
-							content: `Successfully added ${res.stats.songsAddedSuccessfully} songs. Failed to add ${res.stats.songsFailedToAdd} songs.`,
-							timeout: 4000
-						});
 						if (musicOnly) {
 							new Toast({
 								content: `${res.stats.songsInPlaylistTotal} of the ${res.stats.videosInPlaylistTotal} videos in the playlist were songs.`,
-								timeout: 4000
+								timeout: 20000
 							});
 						}
 					}
