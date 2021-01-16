@@ -7,7 +7,7 @@ import moduleManager from "../../index";
 const UtilsModule = moduleManager.modules.utils;
 
 export default {
-	getModules: isAdminRequired((session, cb) => {
+	getModules: isAdminRequired(function getModules(session, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -15,7 +15,7 @@ export default {
 				},
 
 				(modules, next) => {
-					// console.log(modules, next);
+					// this.log(modules, next);
 					next(
 						null,
 						Object.keys(modules).map(moduleName => {
@@ -35,15 +35,11 @@ export default {
 			],
 			async (err, modules) => {
 				if (err && err !== true) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log("ERROR", "GET_MODULES", `User ${session.userId} failed to get modules. '${err}'`);
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "GET_MODULES", `User ${session.userId} failed to get modules. '${err}'`);
 					cb({ status: "failure", message: err });
 				} else {
-					console.log(
-						"SUCCESS",
-						"GET_MODULES",
-						`User ${session.userId} has successfully got the modules info.`
-					);
+					this.log("SUCCESS", "GET_MODULES", `User ${session.userId} has successfully got the modules info.`);
 					cb({
 						status: "success",
 						message: "Successfully got modules.",
@@ -54,7 +50,7 @@ export default {
 		);
 	}),
 
-	getModule: isAdminRequired((session, moduleName, cb) => {
+	getModule: isAdminRequired(function getModule(session, moduleName, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -62,17 +58,13 @@ export default {
 				}
 			],
 			async (err, module) => {
-				// console.log(module.runningJobs);
+				// this.log(module.runningJobs);
 				if (err && err !== true) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log("ERROR", "GET_MODULE", `User ${session.userId} failed to get module. '${err}'`);
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "GET_MODULE", `User ${session.userId} failed to get module. '${err}'`);
 					cb({ status: "failure", message: err });
 				} else {
-					console.log(
-						"SUCCESS",
-						"GET_MODULE",
-						`User ${session.userId} has successfully got the module info.`
-					);
+					this.log("SUCCESS", "GET_MODULE", `User ${session.userId} has successfully got the module info.`);
 					cb({
 						status: "success",
 						message: "Successfully got module info.",

@@ -243,6 +243,16 @@ class Job {
 	setResponseType(responseType) {
 		this.responseType = responseType;
 	}
+
+	/**
+	 * Logs to the module of the job
+	 *
+	 * @param  {any} args
+	 */
+	log(...args) {
+		args.splice(1, 0, this.name); // Adds the name of the job as the first argument (after INFO/SUCCESS/ERROR).
+		this.module.log.apply(this.module, args);
+	}
 }
 
 class MovingAverageCalculator {
@@ -382,7 +392,7 @@ export default class CoreClass {
 		if (this.logRules.blacklistedTerms.some(blacklistedTerm => _arguments.join().indexOf(blacklistedTerm) !== -1))
 			return;
 
-		if (type === "INFO") {
+		if (type === "INFO" || type === "SUCCESS") {
 			_arguments[0] += "\x1b[36m";
 			_arguments.push("\x1b[0m");
 			console.log.apply(null, _arguments);

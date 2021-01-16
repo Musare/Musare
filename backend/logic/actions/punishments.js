@@ -17,7 +17,7 @@ CacheModule.runJob("SUB", {
 			room: "admin.punishments",
 			args: ["event:admin.punishment.added", data.punishment]
 		});
-		IOModule.runJob("SOCKETS_FROM_IP", { ip: data.ip }).then(sockets => {
+		IOModule.runJob("SOCKETS_FROM_IP", { ip: data.ip }, this).then(sockets => {
 			sockets.forEach(socket => {
 				socket.disconnect(true);
 			});
@@ -32,10 +32,14 @@ export default {
 	 * @param {object} session - the session object automatically added by socket.io
 	 * @param {Function} cb - gets called with the result
 	 */
-	index: isAdminRequired(async (session, cb) => {
-		const punishmentModel = await DBModule.runJob("GET_MODEL", {
-			modelName: "punishment"
-		});
+	index: isAdminRequired(async function index(session, cb) {
+		const punishmentModel = await DBModule.runJob(
+			"GET_MODEL",
+			{
+				modelName: "punishment"
+			},
+			this
+		);
 		async.waterfall(
 			[
 				next => {
@@ -44,11 +48,11 @@ export default {
 			],
 			async (err, punishments) => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log("ERROR", "PUNISHMENTS_INDEX", `Indexing punishments failed. "${err}"`);
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "PUNISHMENTS_INDEX", `Indexing punishments failed. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
-				console.log("SUCCESS", "PUNISHMENTS_INDEX", "Indexing punishments successful.");
+				this.log("SUCCESS", "PUNISHMENTS_INDEX", "Indexing punishments successful.");
 				return cb({ status: "success", data: punishments });
 			}
 		);
@@ -63,7 +67,7 @@ export default {
 	 * @param {string} expiresAt - the time the ban expires
 	 * @param {Function} cb - gets called with the result
 	 */
-	banIP: isAdminRequired((session, value, reason, expiresAt, cb) => {
+	banIP: isAdminRequired(function banIP(session, value, reason, expiresAt, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -111,13 +115,17 @@ export default {
 				},
 
 				next => {
-					PunishmentsModule.runJob("ADD_PUNISHMENT", {
-						type: "banUserIp",
-						value,
-						reason,
-						expiresAt,
-						punishedBy: session.userId
-					})
+					PunishmentsModule.runJob(
+						"ADD_PUNISHMENT",
+						{
+							type: "banUserIp",
+							value,
+							reason,
+							expiresAt,
+							punishedBy: session.userId
+						},
+						this
+					)
 						.then(punishment => {
 							next(null, punishment);
 						})
@@ -126,15 +134,15 @@ export default {
 			],
 			async (err, punishment) => {
 				if (err && err !== true) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log(
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
 						"ERROR",
 						"BAN_IP",
 						`User ${session.userId} failed to ban IP address ${value} with the reason ${reason}. '${err}'`
 					);
 					cb({ status: "failure", message: err });
 				}
-				console.log(
+				this.log(
 					"SUCCESS",
 					"BAN_IP",
 					`User ${session.userId} has successfully banned IP address ${value} with the reason ${reason}.`

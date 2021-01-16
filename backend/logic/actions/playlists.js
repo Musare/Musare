@@ -16,7 +16,7 @@ const ActivitiesModule = moduleManager.modules.activities;
 CacheModule.runJob("SUB", {
 	channel: "playlist.create",
 	cb: playlist => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: playlist.createdBy }).then(response => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: playlist.createdBy }, this).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("event:playlist.create", playlist);
 			});
@@ -27,7 +27,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "playlist.delete",
 	cb: res => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }).then(response => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("event:playlist.delete", res.playlistId);
 			});
@@ -38,7 +38,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "playlist.moveSongToTop",
 	cb: res => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }).then(response => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("event:playlist.moveSongToTop", {
 					playlistId: res.playlistId,
@@ -52,7 +52,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "playlist.moveSongToBottom",
 	cb: res => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }).then(response => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("event:playlist.moveSongToBottom", {
 					playlistId: res.playlistId,
@@ -66,7 +66,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "playlist.addSong",
 	cb: res => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }).then(response => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("event:playlist.addSong", {
 					playlistId: res.playlistId,
@@ -80,7 +80,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "playlist.removeSong",
 	cb: res => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }).then(response => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("event:playlist.removeSong", {
 					playlistId: res.playlistId,
@@ -94,7 +94,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "playlist.updateDisplayName",
 	cb: res => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }).then(response => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("event:playlist.updateDisplayName", {
 					playlistId: res.playlistId,
@@ -113,11 +113,11 @@ const lib = {
 	 * @param {string} playlistId - the id of the playlist we are getting the first song from
 	 * @param {Function} cb - gets called with the result
 	 */
-	getFirstSong: isLoginRequired((session, playlistId, cb) => {
+	getFirstSong: isLoginRequired(function getFirstSong(session, playlistId, cb) {
 		async.waterfall(
 			[
 				next => {
-					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId })
+					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
 						.then(playlist => {
 							next(null, playlist);
 						})
@@ -131,15 +131,15 @@ const lib = {
 			],
 			async (err, song) => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log(
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
 						"ERROR",
 						"PLAYLIST_GET_FIRST_SONG",
 						`Getting the first song of playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
 					);
 					return cb({ status: "failure", message: err });
 				}
-				console.log(
+				this.log(
 					"SUCCESS",
 					"PLAYLIST_GET_FIRST_SONG",
 					`Successfully got the first song of playlist "${playlistId}" for user "${session.userId}".`
@@ -158,10 +158,14 @@ const lib = {
 	 * @param {object} session - the session object automatically added by socket.io
 	 * @param {Function} cb - gets called with the result
 	 */
-	indexForUser: isLoginRequired(async (session, cb) => {
-		const playlistModel = await DBModule.runJob("GET_MODEL", {
-			modelName: "playlist"
-		});
+	indexForUser: isLoginRequired(async function indexForUser(session, cb) {
+		const playlistModel = await DBModule.runJob(
+			"GET_MODEL",
+			{
+				modelName: "playlist"
+			},
+			this
+		);
 		async.waterfall(
 			[
 				next => {
@@ -170,15 +174,15 @@ const lib = {
 			],
 			async (err, playlists) => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log(
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
 						"ERROR",
 						"PLAYLIST_INDEX_FOR_USER",
 						`Indexing playlists for user "${session.userId}" failed. "${err}"`
 					);
 					return cb({ status: "failure", message: err });
 				}
-				console.log(
+				this.log(
 					"SUCCESS",
 					"PLAYLIST_INDEX_FOR_USER",
 					`Successfully indexed playlists for user "${session.userId}".`
@@ -198,10 +202,14 @@ const lib = {
 	 * @param {object} data - the data for the new private playlist
 	 * @param {Function} cb - gets called with the result
 	 */
-	create: isLoginRequired(async (session, data, cb) => {
-		const playlistModel = await DBModule.runJob("GET_MODEL", {
-			modelName: "playlist"
-		});
+	create: isLoginRequired(async function create(session, data, cb) {
+		const playlistModel = await DBModule.runJob(
+			"GET_MODEL",
+			{
+				modelName: "playlist"
+			},
+			this
+		);
 		async.waterfall(
 			[
 				next => (data ? next() : cb({ status: "failure", message: "Invalid data" })),
@@ -221,8 +229,8 @@ const lib = {
 			],
 			async (err, playlist) => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log(
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
 						"ERROR",
 						"PLAYLIST_CREATE",
 						`Creating private playlist failed for user "${session.userId}". "${err}"`
@@ -241,7 +249,7 @@ const lib = {
 					payload: [playlist._id]
 				});
 
-				console.log(
+				this.log(
 					"SUCCESS",
 					"PLAYLIST_CREATE",
 					`Successfully created private playlist for user "${session.userId}".`
@@ -265,11 +273,11 @@ const lib = {
 	 * @param {string} playlistId - the id of the playlist we are getting
 	 * @param {Function} cb - gets called with the result
 	 */
-	getPlaylist: isLoginRequired((session, playlistId, cb) => {
+	getPlaylist: isLoginRequired(function getPlaylist(session, playlistId, cb) {
 		async.waterfall(
 			[
 				next => {
-					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId })
+					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
 						.then(playlist => {
 							next(null, playlist);
 						})
@@ -283,15 +291,15 @@ const lib = {
 			],
 			async (err, playlist) => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log(
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
 						"ERROR",
 						"PLAYLIST_GET",
 						`Getting private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
 					);
 					return cb({ status: "failure", message: err });
 				}
-				console.log(
+				this.log(
 					"SUCCESS",
 					"PLAYLIST_GET",
 					`Successfully got private playlist "${playlistId}" for user "${session.userId}".`
@@ -311,11 +319,11 @@ const lib = {
 	 * @param {string} playlistId - the playlist id
 	 * @param {Function} cb - callback
 	 */
-	getPlaylistForActivity: (session, playlistId, cb) => {
+	getPlaylistForActivity(session, playlistId, cb) {
 		async.waterfall(
 			[
 				next => {
-					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId })
+					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
 						.then(playlist => {
 							next(null, playlist);
 						})
@@ -324,15 +332,15 @@ const lib = {
 			],
 			async (err, playlist) => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log(
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
 						"ERROR",
 						"PLAYLISTS_GET_PLAYLIST_FOR_ACTIVITY",
 						`Failed to obtain metadata of playlist ${playlistId} for activity formatting. "${err}"`
 					);
 					return cb({ status: "failure", message: err });
 				}
-				console.log(
+				this.log(
 					"SUCCESS",
 					"PLAYLISTS_GET_PLAYLIST_FOR_ACTIVITY",
 					`Obtained metadata of playlist ${playlistId} for activity formatting successfully.`
@@ -356,10 +364,14 @@ const lib = {
 	 * @param {object} playlist - the new private playlist object
 	 * @param {Function} cb - gets called with the result
 	 */
-	update: isLoginRequired(async (session, playlistId, playlist, cb) => {
-		const playlistModel = await DBModule.runJob("GET_MODEL", {
-			modelName: "playlist"
-		});
+	update: isLoginRequired(async function update(session, playlistId, playlist, cb) {
+		const playlistModel = await DBModule.runJob(
+			"GET_MODEL",
+			{
+				modelName: "playlist"
+			},
+			this
+		);
 		async.waterfall(
 			[
 				next => {
@@ -372,7 +384,7 @@ const lib = {
 				},
 
 				(res, next) => {
-					PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId })
+					PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId }, this)
 						.then(playlist => {
 							next(null, playlist);
 						})
@@ -381,15 +393,15 @@ const lib = {
 			],
 			async (err, playlist) => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log(
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
 						"ERROR",
 						"PLAYLIST_UPDATE",
 						`Updating private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
 					);
 					return cb({ status: "failure", message: err });
 				}
-				console.log(
+				this.log(
 					"SUCCESS",
 					"PLAYLIST_UPDATE",
 					`Successfully updated private playlist "${playlistId}" for user "${session.userId}".`
@@ -409,10 +421,14 @@ const lib = {
 	 * @param {string} playlistId - the id of the playlist we are updating
 	 * @param {Function} cb - gets called with the result
 	 */
-	shuffle: isLoginRequired(async (session, playlistId, cb) => {
-		const playlistModel = await DBModule.runJob("GET_MODEL", {
-			modelName: "playlist"
-		});
+	shuffle: isLoginRequired(async function shuffle(session, playlistId, cb) {
+		const playlistModel = await DBModule.runJob(
+			"GET_MODEL",
+			{
+				modelName: "playlist"
+			},
+			this
+		);
 		async.waterfall(
 			[
 				next => {
@@ -421,7 +437,7 @@ const lib = {
 				},
 
 				(playlist, next) => {
-					UtilsModule.runJob("SHUFFLE", { array: playlist.songs })
+					UtilsModule.runJob("SHUFFLE", { array: playlist.songs }, this)
 						.then(result => {
 							next(null, result.array);
 						})
@@ -433,7 +449,7 @@ const lib = {
 				},
 
 				(res, next) => {
-					PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId })
+					PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId }, this)
 						.then(playlist => {
 							next(null, playlist);
 						})
@@ -442,15 +458,15 @@ const lib = {
 			],
 			async (err, playlist) => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log(
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
 						"ERROR",
 						"PLAYLIST_SHUFFLE",
 						`Updating private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
 					);
 					return cb({ status: "failure", message: err });
 				}
-				console.log(
+				this.log(
 					"SUCCESS",
 					"PLAYLIST_SHUFFLE",
 					`Successfully updated private playlist "${playlistId}" for user "${session.userId}".`
@@ -473,15 +489,19 @@ const lib = {
 	 * @param {string} playlistId - the id of the playlist we are adding the song to
 	 * @param {Function} cb - gets called with the result
 	 */
-	addSongToPlaylist: isLoginRequired(async (session, isSet, songId, playlistId, cb) => {
-		const playlistModel = await DBModule.runJob("GET_MODEL", {
-			modelName: "playlist"
-		});
+	addSongToPlaylist: isLoginRequired(async function addSongToPlaylist(session, isSet, songId, playlistId, cb) {
+		const playlistModel = await DBModule.runJob(
+			"GET_MODEL",
+			{
+				modelName: "playlist"
+			},
+			this
+		);
 
 		async.waterfall(
 			[
 				next => {
-					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId })
+					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
 						.then(playlist => {
 							if (!playlist || playlist.createdBy !== session.userId)
 								return next("Something went wrong when trying to get the playlist");
@@ -498,7 +518,7 @@ const lib = {
 						.catch(next);
 				},
 				next => {
-					SongsModule.runJob("GET_SONG", { id: songId })
+					SongsModule.runJob("GET_SONG", { id: songId }, this)
 						.then(response => {
 							const { song } = response;
 							next(null, {
@@ -509,7 +529,7 @@ const lib = {
 							});
 						})
 						.catch(() => {
-							YouTubeModule.runJob("GET_SONG", { songId })
+							YouTubeModule.runJob("GET_SONG", { songId }, this)
 								.then(response => next(null, response.song))
 								.catch(next);
 						});
@@ -521,7 +541,7 @@ const lib = {
 						{ runValidators: true },
 						err => {
 							if (err) return next(err);
-							return PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId })
+							return PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId }, this)
 								.then(playlist => next(null, playlist, newSong))
 								.catch(next);
 						}
@@ -530,15 +550,15 @@ const lib = {
 			],
 			async (err, playlist, newSong) => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log(
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
 						"ERROR",
 						"PLAYLIST_ADD_SONG",
 						`Adding song "${songId}" to private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
 					);
 					return cb({ status: "failure", message: err });
 				}
-				console.log(
+				this.log(
 					"SUCCESS",
 					"PLAYLIST_ADD_SONG",
 					`Successfully added song "${songId}" to private playlist "${playlistId}" for user "${session.userId}".`
@@ -576,7 +596,7 @@ const lib = {
 	 * @param {boolean} musicOnly - whether to only add music to the playlist
 	 * @param {Function} cb - gets called with the result
 	 */
-	addSetToPlaylist: isLoginRequired((session, url, playlistId, musicOnly, cb) => {
+	addSetToPlaylist: isLoginRequired(function addSetToPlaylist(session, url, playlistId, musicOnly, cb) {
 		let videosInPlaylistTotal = 0;
 		let songsInPlaylistTotal = 0;
 		let songsSuccess = 0;
@@ -587,10 +607,14 @@ const lib = {
 		async.waterfall(
 			[
 				next => {
-					YouTubeModule.runJob("GET_PLAYLIST", {
-						url,
-						musicOnly
-					}).then(response => {
+					YouTubeModule.runJob(
+						"GET_PLAYLIST",
+						{
+							url,
+							musicOnly
+						},
+						this
+					).then(response => {
 						if (response.filteredSongs) {
 							videosInPlaylistTotal = response.songs.length;
 							songsInPlaylistTotal = response.filteredSongs.length;
@@ -623,7 +647,7 @@ const lib = {
 				},
 
 				next => {
-					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId })
+					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
 						.then(playlist => {
 							next(null, playlist);
 						})
@@ -637,8 +661,8 @@ const lib = {
 			],
 			async (err, playlist) => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log(
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
 						"ERROR",
 						"PLAYLIST_IMPORT",
 						`Importing a YouTube playlist to private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
@@ -650,7 +674,7 @@ const lib = {
 					activityType: "added_songs_to_playlist",
 					payload: addedSongs
 				});
-				console.log(
+				this.log(
 					"SUCCESS",
 					"PLAYLIST_IMPORT",
 					`Successfully imported a YouTube playlist to private playlist "${playlistId}" for user "${session.userId}". Videos in playlist: ${videosInPlaylistTotal}, songs in playlist: ${songsInPlaylistTotal}, songs successfully added: ${songsSuccess}, songs failed: ${songsFail}.`
@@ -678,10 +702,14 @@ const lib = {
 	 * @param {string} playlistId - the id of the playlist we are removing the song from
 	 * @param {Function} cb - gets called with the result
 	 */
-	removeSongFromPlaylist: isLoginRequired(async (session, songId, playlistId, cb) => {
-		const playlistModel = await DBModule.runJob("GET_MODEL", {
-			modelName: "playlist"
-		});
+	removeSongFromPlaylist: isLoginRequired(async function removeSongFromPlaylist(session, songId, playlistId, cb) {
+		const playlistModel = await DBModule.runJob(
+			"GET_MODEL",
+			{
+				modelName: "playlist"
+			},
+			this
+		);
 		async.waterfall(
 			[
 				next => {
@@ -691,7 +719,7 @@ const lib = {
 				},
 
 				next => {
-					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId })
+					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
 						.then(playlist => {
 							next(null, playlist);
 						})
@@ -704,7 +732,7 @@ const lib = {
 				},
 
 				(res, next) => {
-					PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId })
+					PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId }, this)
 						.then(playlist => {
 							next(null, playlist);
 						})
@@ -713,15 +741,15 @@ const lib = {
 			],
 			async (err, playlist) => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log(
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
 						"ERROR",
 						"PLAYLIST_REMOVE_SONG",
 						`Removing song "${songId}" from private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
 					);
 					return cb({ status: "failure", message: err });
 				}
-				console.log(
+				this.log(
 					"SUCCESS",
 					"PLAYLIST_REMOVE_SONG",
 					`Successfully removed song "${songId}" from private playlist "${playlistId}" for user "${session.userId}".`
@@ -750,10 +778,14 @@ const lib = {
 	 * @param {string} playlistId - the id of the playlist we are updating the displayName for
 	 * @param {Function} cb - gets called with the result
 	 */
-	updateDisplayName: isLoginRequired(async (session, playlistId, displayName, cb) => {
-		const playlistModel = await DBModule.runJob("GET_MODEL", {
-			modelName: "playlist"
-		});
+	updateDisplayName: isLoginRequired(async function updateDisplayName(session, playlistId, displayName, cb) {
+		const playlistModel = await DBModule.runJob(
+			"GET_MODEL",
+			{
+				modelName: "playlist"
+			},
+			this
+		);
 		async.waterfall(
 			[
 				next => {
@@ -766,7 +798,7 @@ const lib = {
 				},
 
 				(res, next) => {
-					PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId })
+					PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId }, this)
 						.then(playlist => {
 							next(null, playlist);
 						})
@@ -775,15 +807,15 @@ const lib = {
 			],
 			async err => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log(
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
 						"ERROR",
 						"PLAYLIST_UPDATE_DISPLAY_NAME",
 						`Updating display name to "${displayName}" for private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
 					);
 					return cb({ status: "failure", message: err });
 				}
-				console.log(
+				this.log(
 					"SUCCESS",
 					"PLAYLIST_UPDATE_DISPLAY_NAME",
 					`Successfully updated display name to "${displayName}" for private playlist "${playlistId}" for user "${session.userId}".`
@@ -812,14 +844,18 @@ const lib = {
 	 * @param {string} songId - the id of the song we are moving to the top of the list
 	 * @param {Function} cb - gets called with the result
 	 */
-	moveSongToTop: isLoginRequired(async (session, playlistId, songId, cb) => {
-		const playlistModel = await DBModule.runJob("GET_MODEL", {
-			modelName: "playlist"
-		});
+	moveSongToTop: isLoginRequired(async function moveSongToTop(session, playlistId, songId, cb) {
+		const playlistModel = await DBModule.runJob(
+			"GET_MODEL",
+			{
+				modelName: "playlist"
+			},
+			this
+		);
 		async.waterfall(
 			[
 				next => {
-					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId })
+					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
 						.then(playlist => {
 							next(null, playlist);
 						})
@@ -864,7 +900,7 @@ const lib = {
 				},
 
 				(res, next) => {
-					PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId })
+					PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId }, this)
 						.then(playlist => {
 							next(null, playlist);
 						})
@@ -873,8 +909,8 @@ const lib = {
 			],
 			async err => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log(
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
 						"ERROR",
 						"PLAYLIST_MOVE_SONG_TO_TOP",
 						`Moving song "${songId}" to the top for private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
@@ -882,7 +918,7 @@ const lib = {
 					return cb({ status: "failure", message: err });
 				}
 
-				console.log(
+				this.log(
 					"SUCCESS",
 					"PLAYLIST_MOVE_SONG_TO_TOP",
 					`Successfully moved song "${songId}" to the top for private playlist "${playlistId}" for user "${session.userId}".`
@@ -913,14 +949,18 @@ const lib = {
 	 * @param {string} songId - the id of the song we are moving to the bottom of the list
 	 * @param {Function} cb - gets called with the result
 	 */
-	moveSongToBottom: isLoginRequired(async (session, playlistId, songId, cb) => {
-		const playlistModel = await DBModule.runJob("GET_MODEL", {
-			modelName: "playlist"
-		});
+	moveSongToBottom: isLoginRequired(async function moveSongToBottom(session, playlistId, songId, cb) {
+		const playlistModel = await DBModule.runJob(
+			"GET_MODEL",
+			{
+				modelName: "playlist"
+			},
+			this
+		);
 		async.waterfall(
 			[
 				next => {
-					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId })
+					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
 						.then(playlist => {
 							next(null, playlist);
 						})
@@ -962,7 +1002,7 @@ const lib = {
 				},
 
 				(res, next) => {
-					PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId })
+					PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId }, this)
 						.then(playlist => {
 							next(null, playlist);
 						})
@@ -971,8 +1011,8 @@ const lib = {
 			],
 			async err => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log(
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
 						"ERROR",
 						"PLAYLIST_MOVE_SONG_TO_BOTTOM",
 						`Moving song "${songId}" to the bottom for private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
@@ -980,7 +1020,7 @@ const lib = {
 					return cb({ status: "failure", message: err });
 				}
 
-				console.log(
+				this.log(
 					"SUCCESS",
 					"PLAYLIST_MOVE_SONG_TO_BOTTOM",
 					`Successfully moved song "${songId}" to the bottom for private playlist "${playlistId}" for user "${session.userId}".`
@@ -1010,15 +1050,19 @@ const lib = {
 	 * @param {string} playlistId - the id of the playlist we are moving the song to the top from
 	 * @param {Function} cb - gets called with the result
 	 */
-	remove: isLoginRequired(async (session, playlistId, cb) => {
-		const stationModel = await DBModule.runJob("GET_MODEL", {
-			modelName: "station"
-		});
+	remove: isLoginRequired(async function remove(session, playlistId, cb) {
+		const stationModel = await DBModule.runJob(
+			"GET_MODEL",
+			{
+				modelName: "station"
+			},
+			this
+		);
 
 		async.waterfall(
 			[
 				next => {
-					PlaylistsModule.runJob("DELETE_PLAYLIST", { playlistId }).then(next).catch(next);
+					PlaylistsModule.runJob("DELETE_PLAYLIST", { playlistId }, this).then(next).catch(next);
 				},
 
 				next => {
@@ -1045,9 +1089,13 @@ const lib = {
 									(res, next) => {
 										if (!station.partyMode) {
 											moduleManager.modules.stations
-												.runJob("UPDATE_STATION", {
-													stationId: station._id
-												})
+												.runJob(
+													"UPDATE_STATION",
+													{
+														stationId: station._id
+													},
+													this
+												)
 												.then(station => next(null, station))
 												.catch(next);
 											CacheModule.runJob("PUB", {
@@ -1074,8 +1122,8 @@ const lib = {
 			],
 			async err => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log(
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
 						"ERROR",
 						"PLAYLIST_REMOVE",
 						`Removing private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
@@ -1083,7 +1131,7 @@ const lib = {
 					return cb({ status: "failure", message: err });
 				}
 
-				console.log(
+				this.log(
 					"SUCCESS",
 					"PLAYLIST_REMOVE",
 					`Successfully removed private playlist "${playlistId}" for user "${session.userId}".`

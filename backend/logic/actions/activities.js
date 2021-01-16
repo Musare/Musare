@@ -16,10 +16,14 @@ export default {
 	 * @param {number} set - the set number to return
 	 * @param {Function} cb - callback
 	 */
-	getSet: async (session, userId, set, cb) => {
-		const activityModel = await DBModule.runJob("GET_MODEL", {
-			modelName: "activity"
-		});
+	async getSet(session, userId, set, cb) {
+		const activityModel = await DBModule.runJob(
+			"GET_MODEL",
+			{
+				modelName: "activity"
+			},
+			this
+		);
 		async.waterfall(
 			[
 				next => {
@@ -33,12 +37,12 @@ export default {
 			],
 			async (err, activities) => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log("ERROR", "ACTIVITIES_GET_SET", `Failed to get set ${set} from activities. "${err}"`);
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "ACTIVITIES_GET_SET", `Failed to get set ${set} from activities. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
 
-				console.log("SUCCESS", "ACTIVITIES_GET_SET", `Set ${set} from activities obtained successfully.`);
+				this.log("SUCCESS", "ACTIVITIES_GET_SET", `Set ${set} from activities obtained successfully.`);
 				return cb({ status: "success", data: activities });
 			}
 		);
@@ -51,10 +55,14 @@ export default {
 	 * @param {string} activityId - the activity which should be hidden
 	 * @param cb
 	 */
-	hideActivity: isLoginRequired(async (session, activityId, cb) => {
-		const activityModel = await DBModule.runJob("GET_MODEL", {
-			modelName: "activity"
-		});
+	hideActivity: isLoginRequired(async function hideActivity(session, activityId, cb) {
+		const activityModel = await DBModule.runJob(
+			"GET_MODEL",
+			{
+				modelName: "activity"
+			},
+			this
+		);
 		async.waterfall(
 			[
 				next => {
@@ -63,12 +71,12 @@ export default {
 			],
 			async err => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log("ERROR", "ACTIVITIES_HIDE_ACTIVITY", `Failed to hide activity ${activityId}. "${err}"`);
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "ACTIVITIES_HIDE_ACTIVITY", `Failed to hide activity ${activityId}. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
 
-				console.log("SUCCESS", "ACTIVITIES_HIDE_ACTIVITY", `Successfully hid activity ${activityId}.`);
+				this.log("SUCCESS", "ACTIVITIES_HIDE_ACTIVITY", `Successfully hid activity ${activityId}.`);
 				return cb({ status: "success" });
 			}
 		);

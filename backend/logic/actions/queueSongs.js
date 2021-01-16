@@ -59,10 +59,14 @@ const lib = {
 	 * @param session
 	 * @param cb
 	 */
-	length: isAdminRequired(async (session, cb) => {
-		const queueSongModel = await DBModule.runJob("GET_MODEL", {
-			modelName: "queueSong"
-		});
+	length: isAdminRequired(async function length(session, cb) {
+		const queueSongModel = await DBModule.runJob(
+			"GET_MODEL",
+			{
+				modelName: "queueSong"
+			},
+			this
+		);
 		async.waterfall(
 			[
 				next => {
@@ -71,11 +75,11 @@ const lib = {
 			],
 			async (err, count) => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log("ERROR", "QUEUE_SONGS_LENGTH", `Failed to get length from queue songs. "${err}"`);
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "QUEUE_SONGS_LENGTH", `Failed to get length from queue songs. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
-				console.log("SUCCESS", "QUEUE_SONGS_LENGTH", `Got length from queue songs successfully.`);
+				this.log("SUCCESS", "QUEUE_SONGS_LENGTH", `Got length from queue songs successfully.`);
 				return cb(count);
 			}
 		);
@@ -88,10 +92,14 @@ const lib = {
 	 * @param set - the set number to return
 	 * @param cb
 	 */
-	getSet: isAdminRequired(async (session, set, cb) => {
-		const queueSongModel = await DBModule.runJob("GET_MODEL", {
-			modelName: "queueSong"
-		});
+	getSet: isAdminRequired(async function getSet(session, set, cb) {
+		const queueSongModel = await DBModule.runJob(
+			"GET_MODEL",
+			{
+				modelName: "queueSong"
+			},
+			this
+		);
 		async.waterfall(
 			[
 				next => {
@@ -104,11 +112,11 @@ const lib = {
 			],
 			async (err, songs) => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log("ERROR", "QUEUE_SONGS_GET_SET", `Failed to get set from queue songs. "${err}"`);
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "QUEUE_SONGS_GET_SET", `Failed to get set from queue songs. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
-				console.log("SUCCESS", "QUEUE_SONGS_GET_SET", `Got set from queue songs successfully.`);
+				this.log("SUCCESS", "QUEUE_SONGS_GET_SET", `Got set from queue songs successfully.`);
 				return cb(songs);
 			}
 		);
@@ -122,10 +130,14 @@ const lib = {
 	 * @param {object} updatedSong - the object of the updated queueSong
 	 * @param {Function} cb - gets called with the result
 	 */
-	update: isAdminRequired(async (session, songId, updatedSong, cb) => {
-		const queueSongModel = await DBModule.runJob("GET_MODEL", {
-			modelName: "queueSong"
-		});
+	update: isAdminRequired(async function update(session, songId, updatedSong, cb) {
+		const queueSongModel = await DBModule.runJob(
+			"GET_MODEL",
+			{
+				modelName: "queueSong"
+			},
+			this
+		);
 		async.waterfall(
 			[
 				next => {
@@ -150,8 +162,8 @@ const lib = {
 			],
 			async err => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log(
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
 						"ERROR",
 						"QUEUE_UPDATE",
 						`Updating queuesong "${songId}" failed for user ${session.userId}. "${err}"`
@@ -159,7 +171,7 @@ const lib = {
 					return cb({ status: "failure", message: err });
 				}
 				CacheModule.runJob("PUB", { channel: "queue.update", value: songId });
-				console.log(
+				this.log(
 					"SUCCESS",
 					"QUEUE_UPDATE",
 					`User "${session.userId}" successfully update queuesong "${songId}".`
@@ -179,10 +191,14 @@ const lib = {
 	 * @param {string} songId - the id of the queuesong that gets removed
 	 * @param {Function} cb - gets called with the result
 	 */
-	remove: isAdminRequired(async (session, songId, cb) => {
-		const queueSongModel = await DBModule.runJob("GET_MODEL", {
-			modelName: "queueSong"
-		});
+	remove: isAdminRequired(async function remove(session, songId, cb) {
+		const queueSongModel = await DBModule.runJob(
+			"GET_MODEL",
+			{
+				modelName: "queueSong"
+			},
+			this
+		);
 		async.waterfall(
 			[
 				next => {
@@ -191,8 +207,8 @@ const lib = {
 			],
 			async err => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log(
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
 						"ERROR",
 						"QUEUE_REMOVE",
 						`Removing queuesong "${songId}" failed for user ${session.userId}. "${err}"`
@@ -203,7 +219,7 @@ const lib = {
 					channel: "queue.removedSong",
 					value: songId
 				});
-				console.log(
+				this.log(
 					"SUCCESS",
 					"QUEUE_REMOVE",
 					`User "${session.userId}" successfully removed queuesong "${songId}".`
@@ -223,13 +239,17 @@ const lib = {
 	 * @param {string} songId - the id of the song that gets added
 	 * @param {Function} cb - gets called with the result
 	 */
-	add: isLoginRequired(async (session, songId, cb) => {
+	add: isLoginRequired(async function add(session, songId, cb) {
 		const requestedAt = Date.now();
-		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
-		const QueueSongModel = await DBModule.runJob("GET_MODEL", {
-			modelName: "queueSong"
-		});
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+		const QueueSongModel = await DBModule.runJob(
+			"GET_MODEL",
+			{
+				modelName: "queueSong"
+			},
+			this
+		);
 
 		async.waterfall(
 			[
@@ -246,7 +266,7 @@ const lib = {
 				(song, next) => {
 					if (song) return next("This song has already been added.");
 					// TODO Add err object as first param of callback
-					return YouTubeModule.runJob("GET_SONG", { songId })
+					return YouTubeModule.runJob("GET_SONG", { songId }, this)
 						.then(response => {
 							const { song } = response;
 							song.duration = -1;
@@ -283,8 +303,8 @@ const lib = {
 			],
 			async (err, newSong) => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log(
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
 						"ERROR",
 						"QUEUE_ADD",
 						`Adding queuesong "${songId}" failed for user ${session.userId}. "${err}"`
@@ -295,11 +315,7 @@ const lib = {
 					channel: "queue.newSong",
 					value: newSong._id
 				});
-				console.log(
-					"SUCCESS",
-					"QUEUE_ADD",
-					`User "${session.userId}" successfully added queuesong "${songId}".`
-				);
+				this.log("SUCCESS", "QUEUE_ADD", `User "${session.userId}" successfully added queuesong "${songId}".`);
 				return cb({
 					status: "success",
 					message: "Successfully added that song to the queue"
@@ -316,14 +332,18 @@ const lib = {
 	 * @param {boolean} musicOnly - whether to only get music from the playlist
 	 * @param {Function} cb - gets called with the result
 	 */
-	addSetToQueue: isLoginRequired((session, url, musicOnly, cb) => {
+	addSetToQueue: isLoginRequired(function addSetToQueue(session, url, musicOnly, cb) {
 		async.waterfall(
 			[
 				next => {
-					YouTubeModule.runJob("GET_PLAYLIST", {
-						url,
-						musicOnly
-					})
+					YouTubeModule.runJob(
+						"GET_PLAYLIST",
+						{
+							url,
+							musicOnly
+						},
+						this
+					)
 						.then(res => {
 							next(null, res.songs);
 						})
@@ -347,15 +367,15 @@ const lib = {
 			],
 			async err => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log(
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
 						"ERROR",
 						"QUEUE_IMPORT",
 						`Importing a YouTube playlist to the queue failed for user "${session.userId}". "${err}"`
 					);
 					return cb({ status: "failure", message: err });
 				}
-				console.log(
+				this.log(
 					"SUCCESS",
 					"QUEUE_IMPORT",
 					`Successfully imported a YouTube playlist to the queue for user "${session.userId}".`

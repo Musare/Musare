@@ -430,7 +430,7 @@ class _TasksModule extends CoreClass {
 					StationsModule.usersPerStation = usersPerStation;
 
 					stationsCountUpdated.forEach(stationId => {
-						console.log("INFO", "UPDATE_STATION_USER_COUNT", `Updating user count of ${stationId}.`);
+						this.log("INFO", "UPDATE_STATION_USER_COUNT", `Updating user count of ${stationId}.`);
 						CacheModule.runJob("PUB", {
 							table: "station.updateUserCount",
 							value: stationId
@@ -438,7 +438,7 @@ class _TasksModule extends CoreClass {
 					});
 
 					stationsUpdated.forEach(stationId => {
-						console.log("INFO", "UPDATE_STATION_USER_LIST", `Updating user list of ${stationId}.`);
+						this.log("INFO", "UPDATE_STATION_USER_LIST", `Updating user list of ${stationId}.`);
 						CacheModule.runJob("PUB", {
 							table: "station.updateUsers",
 							value: stationId

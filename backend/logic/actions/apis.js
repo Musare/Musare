@@ -18,7 +18,7 @@ export default {
 	 * @param {Function} cb - callback
 	 * @returns {{status: string, data: object}} - returns an object
 	 */
-	searchYoutube: (session, query, cb) => {
+	searchYoutube(session, query, cb) {
 		const params = [
 			"part=snippet",
 			`q=${encodeURIComponent(query)}`,
@@ -41,15 +41,15 @@ export default {
 				console.log(data.error);
 				if (err || data.error) {
 					if (!err) err = data.error.message;
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log(
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
 						"ERROR",
 						"APIS_SEARCH_YOUTUBE",
 						`Searching youtube failed with query "${query}". "${err}"`
 					);
 					return cb({ status: "failure", message: err });
 				}
-				console.log("SUCCESS", "APIS_SEARCH_YOUTUBE", `Searching YouTube successful with query "${query}".`);
+				this.log("SUCCESS", "APIS_SEARCH_YOUTUBE", `Searching YouTube successful with query "${query}".`);
 				return cb({ status: "success", data });
 			}
 		);
@@ -62,7 +62,7 @@ export default {
 	 * @param query - the query
 	 * @param {Function} cb
 	 */
-	searchDiscogs: isAdminRequired((session, query, page, cb) => {
+	searchDiscogs: isAdminRequired(function searchDiscogs(session, query, page, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -88,15 +88,15 @@ export default {
 			],
 			async (err, body) => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log(
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
 						"ERROR",
 						"APIS_SEARCH_DISCOGS",
 						`Searching discogs failed with query "${query}". "${err}"`
 					);
 					return cb({ status: "failure", message: err });
 				}
-				console.log(
+				this.log(
 					"SUCCESS",
 					"APIS_SEARCH_DISCOGS",
 					`User "${session.userId}" searched Discogs succesfully for query "${query}".`
@@ -117,7 +117,7 @@ export default {
 	 * @param {string} page - the room to join
 	 * @param {Function} cb - callback
 	 */
-	joinRoom: (session, page, cb) => {
+	joinRoom(session, page, cb) {
 		if (page === "home") {
 			IOModule.runJob("SOCKET_JOIN_ROOM", {
 				socketId: session.socketId,
@@ -125,7 +125,7 @@ export default {
 			})
 				.then()
 				.catch(err => {
-					console.log("ERROR", `Joining room failed: ${err.message}`);
+					this.log("ERROR", `Joining room failed: ${err.message}`);
 				});
 		}
 		cb({});
@@ -163,7 +163,7 @@ export default {
 	 * @param {object} session - user session
 	 * @param {Function} cb - callback
 	 */
-	ping: (session, cb) => {
+	ping(session, cb) {
 		cb({ date: Date.now() });
 	}
 };

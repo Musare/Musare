@@ -380,6 +380,34 @@ moduleManager.addModule("youtube");
 
 moduleManager.initialize();
 
+/**
+ * Prints a job
+ *
+ * @param {Job} job - the job
+ * @param {number} layer - the layer
+ */
+function printJob(job, layer) {
+	const tabs = Array(layer).join("\t");
+	console.log(`${tabs}${job.name} (${job.toString()}) ${job.status}`);
+	job.childJobs.forEach(childJob => {
+		printJob(childJob, layer + 1);
+	});
+}
+
+/**
+ * Prints a task
+ *
+ * @param {Task} task - the task
+ * @param {number} layer - the layer
+ */
+function printTask(task, layer) {
+	const tabs = Array(layer).join("\t");
+	console.log(`${tabs}${task.job.name} (${task.job.toString()}) ${task.job.status} (priority: ${task.priority})`);
+	task.job.childJobs.forEach(childJob => {
+		printJob(childJob, layer + 1);
+	});
+}
+
 process.stdin.on("data", data => {
 	const command = data.toString().replace(/\r?\n|\r/g, "");
 	if (command === "lockdown") {
@@ -405,33 +433,31 @@ process.stdin.on("data", data => {
 	if (command.startsWith("running")) {
 		const parts = command.split(" ");
 
-		console.log(moduleManager.modules[parts[1]].jobQueue.runningTasks);
+		moduleManager.modules[parts[1]].jobQueue.runningTasks.forEach(task => {
+			printTask(task, 1);
+		});
 	}
 	if (command.startsWith("queued")) {
 		const parts = command.split(" ");
 
-		console.log(moduleManager.modules[parts[1]].jobQueue.queue);
+		moduleManager.modules[parts[1]].jobQueue.queue.forEach(task => {
+			printTask(task, 1);
+		});
 	}
 	if (command.startsWith("paused")) {
 		const parts = command.split(" ");
 
-		console.log(moduleManager.modules[parts[1]].jobQueue.pausedTasks);
+		moduleManager.modules[parts[1]].jobQueue.pausedTasks.forEach(task => {
+			printTask(task, 1);
+		});
 	}
 	if (command.startsWith("stats")) {
 		const parts = command.split(" ");
 
 		console.log(moduleManager.modules[parts[1]].jobStatistics);
 	}
-	if (command.startsWith("debug")) {
-		moduleManager.modules.youtube
-			.runJob("GET_PLAYLIST", { url: "https://www.youtube.com/playlist?list=PLN-cFDG8y28Pz4dkAFwDNH0as0-prFfvR" })
-			.then(response => {
-				console.log(1111, response);
-			})
-			.catch(err => {
-				console.log(1112, err);
-			});
-	}
+	// if (command.startsWith("debug")) {
+	// }
 
 	if (command.startsWith("eval")) {
 		const evalCommand = command.replace("eval ", "");

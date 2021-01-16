@@ -160,8 +160,8 @@ export default {
 	 * @param {object} session - the session object automatically added by socket.io
 	 * @param cb
 	 */
-	length: isAdminRequired(async (session, cb) => {
-		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
+	length: isAdminRequired(async function length(session, cb) {
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 		async.waterfall(
 			[
 				next => {
@@ -170,11 +170,11 @@ export default {
 			],
 			async (err, count) => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log("ERROR", "SONGS_LENGTH", `Failed to get length from songs. "${err}"`);
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "SONGS_LENGTH", `Failed to get length from songs. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
-				console.log("SUCCESS", "SONGS_LENGTH", `Got length from songs successfully.`);
+				this.log("SUCCESS", "SONGS_LENGTH", `Got length from songs successfully.`);
 				return cb(count);
 			}
 		);
@@ -187,8 +187,8 @@ export default {
 	 * @param set - the set number to return
 	 * @param cb
 	 */
-	getSet: isAdminRequired(async (session, set, cb) => {
-		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
+	getSet: isAdminRequired(async function getSet(session, set, cb) {
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 		async.waterfall(
 			[
 				next => {
@@ -201,11 +201,11 @@ export default {
 			],
 			async (err, songs) => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log("ERROR", "SONGS_GET_SET", `Failed to get set from songs. "${err}"`);
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "SONGS_GET_SET", `Failed to get set from songs. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
-				console.log("SUCCESS", "SONGS_GET_SET", `Got set from songs successfully.`);
+				this.log("SUCCESS", "SONGS_GET_SET", `Got set from songs successfully.`);
 				return cb(songs);
 			}
 		);
@@ -218,11 +218,11 @@ export default {
 	 * @param {string} songId - the song id
 	 * @param {Function} cb
 	 */
-	getSong: isAdminRequired((session, songId, cb) => {
+	getSong: isAdminRequired(function getSong(session, songId, cb) {
 		async.waterfall(
 			[
 				next => {
-					SongsModule.runJob("GET_SONG_FROM_ID", { songId })
+					SongsModule.runJob("GET_SONG_FROM_ID", { songId }, this)
 						.then(song => {
 							next(null, song);
 						})
@@ -233,11 +233,11 @@ export default {
 			],
 			async (err, song) => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log("ERROR", "SONGS_GET_SONG", `Failed to get song ${songId}. "${err}"`);
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "SONGS_GET_SONG", `Failed to get song ${songId}. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
-				console.log("SUCCESS", "SONGS_GET_SONG", `Got song ${songId} successfully.`);
+				this.log("SUCCESS", "SONGS_GET_SONG", `Got song ${songId} successfully.`);
 				return cb({ status: "success", data: song });
 			}
 		);
@@ -250,20 +250,20 @@ export default {
 	 * @param {string} songId - the song id
 	 * @param {Function} cb - callback
 	 */
-	getSongForActivity: (session, songId, cb) => {
+	getSongForActivity(session, songId, cb) {
 		async.waterfall(
 			[
 				next => {
-					SongsModule.runJob("GET_SONG_FROM_ID", { songId })
+					SongsModule.runJob("GET_SONG_FROM_ID", { songId }, this)
 						.then(response => next(null, response.song))
 						.catch(next);
 				}
 			],
 			async (err, song) => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 
-					console.log(
+					this.log(
 						"ERROR",
 						"SONGS_GET_SONG_FOR_ACTIVITY",
 						`Failed to obtain metadata of song ${songId} for activity formatting. "${err}"`
@@ -273,7 +273,7 @@ export default {
 				}
 
 				if (song) {
-					console.log(
+					this.log(
 						"SUCCESS",
 						"SONGS_GET_SONG_FOR_ACTIVITY",
 						`Obtained metadata of song ${songId} for activity formatting successfully.`
@@ -288,7 +288,7 @@ export default {
 					});
 				}
 
-				console.log(
+				this.log(
 					"ERROR",
 					"SONGS_GET_SONG_FOR_ACTIVITY",
 					`Song ${songId} does not exist so failed to obtain for activity formatting.`
@@ -307,8 +307,8 @@ export default {
 	 * @param {object} song - the updated song object
 	 * @param {Function} cb
 	 */
-	update: isAdminRequired(async (session, songId, song, cb) => {
-		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
+	update: isAdminRequired(async function update(session, songId, song, cb) {
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 		async.waterfall(
 			[
 				next => {
@@ -316,7 +316,7 @@ export default {
 				},
 
 				(res, next) => {
-					SongsModule.runJob("UPDATE_SONG", { songId })
+					SongsModule.runJob("UPDATE_SONG", { songId }, this)
 						.then(song => {
 							next(null, song);
 						})
@@ -325,14 +325,14 @@ export default {
 			],
 			async (err, song) => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 
-					console.log("ERROR", "SONGS_UPDATE", `Failed to update song "${songId}". "${err}"`);
+					this.log("ERROR", "SONGS_UPDATE", `Failed to update song "${songId}". "${err}"`);
 
 					return cb({ status: "failure", message: err });
 				}
 
-				console.log("SUCCESS", "SONGS_UPDATE", `Successfully updated song "${songId}".`);
+				this.log("SUCCESS", "SONGS_UPDATE", `Successfully updated song "${songId}".`);
 
 				CacheModule.runJob("PUB", {
 					channel: "song.updated",
@@ -355,8 +355,8 @@ export default {
 	 * @param songId - the song id
 	 * @param cb
 	 */
-	remove: isAdminRequired(async (session, songId, cb) => {
-		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
+	remove: isAdminRequired(async function remove(session, songId, cb) {
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 		async.waterfall(
 			[
 				next => {
@@ -365,7 +365,7 @@ export default {
 
 				(res, next) => {
 					// TODO Check if res gets returned from above
-					CacheModule.runJob("HDEL", { table: "songs", key: songId })
+					CacheModule.runJob("HDEL", { table: "songs", key: songId }, this)
 						.then(() => {
 							next();
 						})
@@ -374,14 +374,14 @@ export default {
 			],
 			async err => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 
-					console.log("ERROR", "SONGS_UPDATE", `Failed to remove song "${songId}". "${err}"`);
+					this.log("ERROR", "SONGS_UPDATE", `Failed to remove song "${songId}". "${err}"`);
 
 					return cb({ status: "failure", message: err });
 				}
 
-				console.log("SUCCESS", "SONGS_UPDATE", `Successfully remove song "${songId}".`);
+				this.log("SUCCESS", "SONGS_UPDATE", `Successfully remove song "${songId}".`);
 
 				CacheModule.runJob("PUB", { channel: "song.removed", value: songId });
 
@@ -400,8 +400,8 @@ export default {
 	 * @param song - the song object
 	 * @param cb
 	 */
-	add: isAdminRequired(async (session, song, cb) => {
-		const SongModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
+	add: isAdminRequired(async function add(session, song, cb) {
+		const SongModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 		async.waterfall(
 			[
 				next => {
@@ -428,18 +428,14 @@ export default {
 			],
 			async err => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 
-					console.log("ERROR", "SONGS_ADD", `User "${session.userId}" failed to add song. "${err}"`);
+					this.log("ERROR", "SONGS_ADD", `User "${session.userId}" failed to add song. "${err}"`);
 
 					return cb({ status: "failure", message: err });
 				}
 
-				console.log(
-					"SUCCESS",
-					"SONGS_ADD",
-					`User "${session.userId}" successfully added song "${song.songId}".`
-				);
+				this.log("SUCCESS", "SONGS_ADD", `User "${session.userId}" successfully added song "${song.songId}".`);
 
 				CacheModule.runJob("PUB", {
 					channel: "song.added",
@@ -462,9 +458,9 @@ export default {
 	 * @param songId - the song id
 	 * @param cb
 	 */
-	like: isLoginRequired(async (session, songId, cb) => {
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
-		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
+	like: isLoginRequired(async function like(session, songId, cb) {
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 		async.waterfall(
 			[
 				next => {
@@ -478,12 +474,8 @@ export default {
 			],
 			async (err, song) => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log(
-						"ERROR",
-						"SONGS_LIKE",
-						`User "${session.userId}" failed to like song ${songId}. "${err}"`
-					);
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "SONGS_LIKE", `User "${session.userId}" failed to like song ${songId}. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
 
@@ -579,9 +571,9 @@ export default {
 	 * @param songId - the song id
 	 * @param cb
 	 */
-	dislike: isLoginRequired(async (session, songId, cb) => {
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
-		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
+	dislike: isLoginRequired(async function dislike(session, songId, cb) {
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 		async.waterfall(
 			[
 				next => {
@@ -595,8 +587,8 @@ export default {
 			],
 			async (err, song) => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log(
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
 						"ERROR",
 						"SONGS_DISLIKE",
 						`User "${session.userId}" failed to like song ${songId}. "${err}"`
@@ -687,9 +679,9 @@ export default {
 	 * @param songId - the song id
 	 * @param cb
 	 */
-	undislike: isLoginRequired(async (session, songId, cb) => {
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
-		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
+	undislike: isLoginRequired(async function undislike(session, songId, cb) {
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 		async.waterfall(
 			[
 				next => {
@@ -703,8 +695,8 @@ export default {
 			],
 			async (err, song) => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log(
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
 						"ERROR",
 						"SONGS_UNDISLIKE",
 						`User "${session.userId}" failed to like song ${songId}. "${err}"`
@@ -790,9 +782,9 @@ export default {
 	 * @param songId - the song id
 	 * @param cb
 	 */
-	unlike: isLoginRequired(async (session, songId, cb) => {
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
-		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
+	unlike: isLoginRequired(async function unlike(session, songId, cb) {
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 		async.waterfall(
 			[
 				next => {
@@ -806,8 +798,8 @@ export default {
 			],
 			async (err, song) => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log(
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
 						"ERROR",
 						"SONGS_UNLIKE",
 						`User "${session.userId}" failed to like song ${songId}. "${err}"`
@@ -892,9 +884,9 @@ export default {
 	 * @param songId - the song id
 	 * @param cb
 	 */
-	getOwnSongRatings: isLoginRequired(async (session, songId, cb) => {
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
-		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
+	getOwnSongRatings: isLoginRequired(async function getOwnSongRatings(session, songId, cb) {
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 		async.waterfall(
 			[
 				next => {
@@ -908,8 +900,8 @@ export default {
 			],
 			async (err, song) => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log(
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
 						"ERROR",
 						"SONGS_GET_OWN_RATINGS",
 						`User "${session.userId}" failed to get ratings for ${songId}. "${err}"`
@@ -928,9 +920,13 @@ export default {
 					}
 					return cb({
 						status: "failure",
-						message: await UtilsModule.runJob("GET_ERROR", {
-							error: err
-						})
+						message: await UtilsModule.runJob(
+							"GET_ERROR",
+							{
+								error: err
+							},
+							this
+						)
 					});
 				});
 			}

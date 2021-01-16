@@ -60,10 +60,14 @@ export default {
 	 * @param {object} session - the session object automatically added by socket.io
 	 * @param {Function} cb - gets called with the result
 	 */
-	index: isAdminRequired(async (session, cb) => {
-		const reportModel = await DBModule.runJob("GET_MODEL", {
-			modelName: "report"
-		});
+	index: isAdminRequired(async function index(session, cb) {
+		const reportModel = await DBModule.runJob(
+			"GET_MODEL",
+			{
+				modelName: "report"
+			},
+			this
+		);
 		async.waterfall(
 			[
 				next => {
@@ -72,11 +76,11 @@ export default {
 			],
 			async (err, reports) => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log("ERROR", "REPORTS_INDEX", `Indexing reports failed. "${err}"`);
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "REPORTS_INDEX", `Indexing reports failed. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
-				console.log("SUCCESS", "REPORTS_INDEX", "Indexing reports successful.");
+				this.log("SUCCESS", "REPORTS_INDEX", "Indexing reports successful.");
 				return cb({ status: "success", data: reports });
 			}
 		);
@@ -89,10 +93,14 @@ export default {
 	 * @param {string} reportId - the id of the report to return
 	 * @param {Function} cb - gets called with the result
 	 */
-	findOne: isAdminRequired(async (session, reportId, cb) => {
-		const reportModel = await DBModule.runJob("GET_MODEL", {
-			modelName: "report"
-		});
+	findOne: isAdminRequired(async function findOne(session, reportId, cb) {
+		const reportModel = await DBModule.runJob(
+			"GET_MODEL",
+			{
+				modelName: "report"
+			},
+			this
+		);
 		async.waterfall(
 			[
 				next => {
@@ -101,11 +109,11 @@ export default {
 			],
 			async (err, report) => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log("ERROR", "REPORTS_FIND_ONE", `Finding report "${reportId}" failed. "${err}"`);
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "REPORTS_FIND_ONE", `Finding report "${reportId}" failed. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
-				console.log("SUCCESS", "REPORTS_FIND_ONE", `Finding report "${reportId}" successful.`);
+				this.log("SUCCESS", "REPORTS_FIND_ONE", `Finding report "${reportId}" successful.`);
 				return cb({ status: "success", data: report });
 			}
 		);
@@ -118,10 +126,14 @@ export default {
 	 * @param {string} songId - the id of the song to index reports for
 	 * @param {Function} cb - gets called with the result
 	 */
-	getReportsForSong: isAdminRequired(async (session, songId, cb) => {
-		const reportModel = await DBModule.runJob("GET_MODEL", {
-			modelName: "report"
-		});
+	getReportsForSong: isAdminRequired(async function getReportsForSong(session, songId, cb) {
+		const reportModel = await DBModule.runJob(
+			"GET_MODEL",
+			{
+				modelName: "report"
+			},
+			this
+		);
 		async.waterfall(
 			[
 				next => {
@@ -141,15 +153,11 @@ export default {
 			],
 			async (err, data) => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log(
-						"ERROR",
-						"GET_REPORTS_FOR_SONG",
-						`Indexing reports for song "${songId}" failed. "${err}"`
-					);
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "GET_REPORTS_FOR_SONG", `Indexing reports for song "${songId}" failed. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
-				console.log("SUCCESS", "GET_REPORTS_FOR_SONG", `Indexing reports for song "${songId}" successful.`);
+				this.log("SUCCESS", "GET_REPORTS_FOR_SONG", `Indexing reports for song "${songId}" successful.`);
 				return cb({ status: "success", data });
 			}
 		);
@@ -162,10 +170,14 @@ export default {
 	 * @param {string} reportId - the id of the report that is getting resolved
 	 * @param {Function} cb - gets called with the result
 	 */
-	resolve: isAdminRequired(async (session, reportId, cb) => {
-		const reportModel = await DBModule.runJob("GET_MODEL", {
-			modelName: "report"
-		});
+	resolve: isAdminRequired(async function resolve(session, reportId, cb) {
+		const reportModel = await DBModule.runJob(
+			"GET_MODEL",
+			{
+				modelName: "report"
+			},
+			this
+		);
 		async.waterfall(
 			[
 				next => {
@@ -183,8 +195,8 @@ export default {
 			],
 			async err => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log(
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
 						"ERROR",
 						"REPORTS_RESOLVE",
 						`Resolving report "${reportId}" failed by user "${session.userId}". "${err}"`
@@ -195,7 +207,7 @@ export default {
 					channel: "report.resolve",
 					value: reportId
 				});
-				console.log("SUCCESS", "REPORTS_RESOLVE", `User "${session.userId}" resolved report "${reportId}".`);
+				this.log("SUCCESS", "REPORTS_RESOLVE", `User "${session.userId}" resolved report "${reportId}".`);
 				return cb({
 					status: "success",
 					message: "Successfully resolved Report"
@@ -211,11 +223,15 @@ export default {
 	 * @param {object} data - the object of the report data
 	 * @param {Function} cb - gets called with the result
 	 */
-	create: isLoginRequired(async (session, data, cb) => {
-		const reportModel = await DBModule.runJob("GET_MODEL", {
-			modelName: "report"
-		});
-		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
+	create: isLoginRequired(async function create(session, data, cb) {
+		const reportModel = await DBModule.runJob(
+			"GET_MODEL",
+			{
+				modelName: "report"
+			},
+			this
+		);
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 		async.waterfall(
 			[
 				next => {
@@ -224,7 +240,7 @@ export default {
 
 				(song, next) => {
 					if (!song) return next("Song not found.");
-					return SongsModule.runJob("GET_SONG", { id: song._id })
+					return SongsModule.runJob("GET_SONG", { id: song._id }, this)
 						.then(response => {
 							next(null, response.song);
 						})
@@ -284,8 +300,8 @@ export default {
 			],
 			async (err, report) => {
 				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err });
-					console.log(
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
 						"ERROR",
 						"REPORTS_CREATE",
 						`Creating report for "${data.song._id}" failed by user "${session.userId}". "${err}"`
@@ -296,11 +312,7 @@ export default {
 					channel: "report.create",
 					value: report
 				});
-				console.log(
-					"SUCCESS",
-					"REPORTS_CREATE",
-					`User "${session.userId}" created report for "${data.songId}".`
-				);
+				this.log("SUCCESS", "REPORTS_CREATE", `User "${session.userId}" created report for "${data.songId}".`);
 				return cb({
 					status: "success",
 					message: "Successfully created report"
