@@ -731,40 +731,65 @@ class _IOModule extends CoreClass {
 						});
 			})
 				.then(() => {
-					try {
-						// call the action, passing it the session, and the arguments socket.io passed us
+					// call the job that calls the action, passing it the session, and the arguments socket.io passed us
 
-						IOModule.actions[namespace][action].apply(
-							this,
-							[socket.session].concat(args).concat([
-								result => {
-									IOModule.log(
-										"INFO",
-										"RUN_ACTION",
-										`Response to action. Action: ${namespace}.${action}. Response status: ${result.status}`
-									);
-									// respond to the socket with our message
-									if (typeof cb === "function") cb(result);
-									resolve();
-								}
-							])
-						);
-					} catch (err) {
-						if (typeof cb === "function")
-							cb({
-								status: "error",
-								message: "An error occurred while executing the specified action."
-							});
-						reject(err);
+					IOModule.runJob("RUN_ACTION2", { session: socket.session, namespace, action, args })
+						.then(response => {
+							cb(response);
+						})
+						.catch(err => {
+							if (typeof cb === "function")
+								cb({
+									status: "error",
+									message: "An error occurred while executing the specified action."
+								});
+							reject(err);
 
-						IOModule.log(
-							"ERROR",
-							"IO_ACTION_ERROR",
-							`Some type of exception occurred in the action ${namespace}.${action}. Error message: ${err.message}`
-						);
-					}
+							IOModule.log(
+								"ERROR",
+								"IO_ACTION_ERROR",
+								`Some type of exception occurred in the action ${namespace}.${action}. Error message: ${err.message}`
+							);
+						});
 				})
 				.catch(reject);
+		});
+	}
+
+	/**
+	 * Runs an action
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	async RUN_ACTION2(payload) {
+		return new Promise((resolve, reject) => {
+			const { session, namespace, action, args } = payload;
+
+			try {
+				// call the the action, passing it the session, and the arguments socket.io passed us
+				IOModule.actions[namespace][action].apply(
+					this,
+					[session].concat(args).concat([
+						result => {
+							IOModule.log(
+								"INFO",
+								"RUN_ACTION2",
+								`Response to action. Action: ${namespace}.${action}. Response status: ${result.status}`
+							);
+							resolve(result);
+						}
+					])
+				);
+			} catch (err) {
+				reject(err);
+
+				IOModule.log(
+					"ERROR",
+					"IO_ACTION_ERROR",
+					`Some type of exception occurred in the action ${namespace}.${action}. Error message: ${err.message}`
+				);
+			}
 		});
 	}
 }

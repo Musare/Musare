@@ -117,7 +117,7 @@ CacheModule.runJob("SUB", {
 	}
 });
 
-const thisExport = {
+export default {
 	/**
 	 * Lists all Users
 	 *
@@ -404,25 +404,36 @@ const thisExport = {
 					return cb({ status: "failure", message: err });
 				}
 
-				return thisExport.login(session, email, password, result => {
-					const obj = {
-						status: "success",
-						message: "Successfully registered."
-					};
-					if (result.status === "success") {
-						obj.SID = result.SID;
-					}
-					ActivitiesModule.runJob("ADD_ACTIVITY", {
-						userId: user._id,
-						activityType: "created_account"
-					});
-					this.log(
-						"SUCCESS",
-						"USER_PASSWORD_REGISTER",
-						`Register successful with password for user "${username}".`
-					);
-					return cb(obj);
+				ActivitiesModule.runJob("ADD_ACTIVITY", {
+					userId: user._id,
+					activityType: "created_account"
 				});
+				this.log(
+					"SUCCESS",
+					"USER_PASSWORD_REGISTER",
+					`Register successful with password for user "${username}".`
+				);
+
+				const result = await this.module.runJob(
+					"RUN_ACTION2",
+					{
+						session,
+						namespace: "users",
+						action: "login",
+						args: [email, password]
+					},
+					this
+				);
+
+				const obj = {
+					status: "success",
+					message: "Successfully registered."
+				};
+				if (result.status === "success") {
+					obj.SID = result.SID;
+				}
+
+				return cb(obj);
 			}
 		);
 	},
@@ -1956,5 +1967,3 @@ const thisExport = {
 		);
 	})
 };
-
-export default thisExport;

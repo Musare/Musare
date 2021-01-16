@@ -105,7 +105,7 @@ CacheModule.runJob("SUB", {
 	}
 });
 
-const lib = {
+export default {
 	/**
 	 * Gets the first song from a private playlist
 	 *
@@ -634,15 +634,32 @@ const lib = {
 						if (processed === songIds.length) next();
 					}
 					for (let s = 0; s < songIds.length; s += 1) {
-						// eslint-disable-next-line no-loop-func
-						lib.addSongToPlaylist(session, true, songIds[s], playlistId, res => {
-							processed += 1;
-							if (res.status === "success") {
-								addedSongs.push(songIds[s]);
-								songsSuccess += 1;
-							} else songsFail += 1;
-							checkDone();
-						});
+						IOModule.runJob(
+							"RUN_ACTION2",
+							{
+								session,
+								namespace: "playlists",
+								action: "addSongToPlaylist",
+								args: [true, songIds[s], playlistId]
+							},
+							this
+						)
+							// eslint-disable-next-line no-loop-func
+							.then(res => {
+								if (res.status === "success") {
+									addedSongs.push(songIds[s]);
+									songsSuccess += 1;
+								} else songsFail += 1;
+							})
+							// eslint-disable-next-line no-loop-func
+							.catch(() => {
+								songsFail += 1;
+							})
+							// eslint-disable-next-line no-loop-func
+							.finally(() => {
+								processed += 1;
+								checkDone();
+							});
 					}
 				},
 
@@ -1159,5 +1176,3 @@ const lib = {
 		);
 	})
 };
-
-export default lib;

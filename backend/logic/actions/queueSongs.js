@@ -52,7 +52,7 @@ CacheModule.runJob("SUB", {
 	}
 });
 
-const lib = {
+export default {
 	/**
 	 * Returns the length of the queue songs list
 	 *
@@ -358,7 +358,16 @@ const lib = {
 						if (processed === songIds.length) next();
 					}
 					songIds.forEach(songId => {
-						lib.add(session, songId, () => {
+						IOModule.runJob(
+							"RUN_ACTION2",
+							{
+								session,
+								namespace: "queueSongs",
+								action: "add",
+								args: [songId]
+							},
+							this
+						).finally(() => {
 							processed += 1;
 							checkDone();
 						});
@@ -388,5 +397,3 @@ const lib = {
 		);
 	})
 };
-
-export default lib;
