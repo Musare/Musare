@@ -140,7 +140,7 @@ class _TasksModule extends CoreClass {
 			const task = TasksModule.tasks[payload.name];
 			if (task.timer) task.timer.pause();
 
-			task.fn.apply(null).then(() => {
+			task.fn.apply(this).then(() => {
 				task.lastRan = Date.now();
 				task.timer = new Timer(
 					() => TasksModule.runJob("RUN_TASK", { name: payload.name }),
@@ -432,7 +432,7 @@ class _TasksModule extends CoreClass {
 					stationsCountUpdated.forEach(stationId => {
 						this.log("INFO", "UPDATE_STATION_USER_COUNT", `Updating user count of ${stationId}.`);
 						CacheModule.runJob("PUB", {
-							table: "station.updateUserCount",
+							channel: "station.updateUserCount",
 							value: stationId
 						});
 					});
@@ -440,7 +440,7 @@ class _TasksModule extends CoreClass {
 					stationsUpdated.forEach(stationId => {
 						this.log("INFO", "UPDATE_STATION_USER_LIST", `Updating user list of ${stationId}.`);
 						CacheModule.runJob("PUB", {
-							table: "station.updateUsers",
+							channel: "station.updateUsers",
 							value: stationId
 						});
 					});

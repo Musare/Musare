@@ -270,6 +270,8 @@ class _CacheModule extends CoreClass {
 						} catch (err) {
 							console.error(err);
 						}
+					else if (message.startsWith('"') && message.endsWith('"'))
+						message = message.substring(1).substring(0, message.length - 2);
 
 					return subs[channel].cbs.forEach(cb => cb(message));
 				});
