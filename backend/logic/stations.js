@@ -330,15 +330,18 @@ class _StationsModule extends CoreClass {
 						if (payload.station.genres.length === 0) return next();
 
 						const genresDone = [];
+						const blacklistedGenres = payload.station.blacklistedGenres.map(blacklistedGenre =>
+							blacklistedGenre.toLowerCase()
+						);
 
 						return payload.station.genres.forEach(genre => {
-							songModel.find({ genres: genre }, (err, songs) => {
+							songModel.find({ genres: { $regex: genre, $options: "i" } }, (err, songs) => {
 								if (!err) {
 									songs.forEach(song => {
 										if (songList.indexOf(song._id) === -1) {
 											let found = false;
 											song.genres.forEach(songGenre => {
-												if (payload.station.blacklistedGenres.indexOf(songGenre) !== -1)
+												if (blacklistedGenres.indexOf(songGenre.toLowerCase()) !== -1)
 													found = true;
 											});
 											if (!found) {

@@ -487,7 +487,7 @@ export default {
 		};
 	},
 	computed: {
-		...mapState("admin/station", {
+		...mapState("admin/stations", {
 			stations: state => state.stations
 		}),
 		...mapState({
