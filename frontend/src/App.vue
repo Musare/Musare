@@ -542,6 +542,10 @@ h4.section-title {
 	margin: 15px 0 30px 0;
 }
 
+.section-margin-bottom {
+	height: 30px;
+}
+
 .margin-top-zero {
 	margin-top: 0 !important;
 }

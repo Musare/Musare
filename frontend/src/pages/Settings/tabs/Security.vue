@@ -51,7 +51,7 @@
 				</button>
 			</p>
 
-			<br /><br />
+			<div class="section-margin-bottom" />
 		</div>
 
 		<div v-if="!isPasswordLinked">
@@ -67,7 +67,7 @@
 				Password
 			</router-link>
 
-			<br /><br />
+			<div class="section-margin-bottom" />
 		</div>
 
 		<div v-if="!isGithubLinked">
@@ -87,9 +87,9 @@
 				</div>
 				&nbsp; Link GitHub to account
 			</a>
-		</div>
 
-		<div v-if="!isGithubLinked"><br /><br /></div>
+			<div class="section-margin-bottom" />
+		</div>
 
 		<div v-if="isPasswordLinked && isGithubLinked">
 			<h4 class="section-title">Remove login methods</h4>
@@ -118,7 +118,7 @@
 				</a>
 			</div>
 
-			<br /><br />
+			<div class="section-margin-bottom" />
 		</div>
 
 		<div>
