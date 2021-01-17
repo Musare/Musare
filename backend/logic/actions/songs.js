@@ -4,8 +4,6 @@ import { isAdminRequired, isLoginRequired } from "./hooks";
 
 import moduleManager from "../../index";
 
-import queueSongs from "./queueSongs";
-
 const DBModule = moduleManager.modules.db;
 const UtilsModule = moduleManager.modules.utils;
 const IOModule = moduleManager.modules.io;
@@ -421,9 +419,20 @@ export default {
 				},
 
 				(res, next) => {
-					queueSongs.remove(session, song._id, () => {
-						next();
-					});
+					this.module
+						.runJob(
+							"RUN_ACTION2",
+							{
+								session,
+								namespace: "queueSongs",
+								action: "remove",
+								args: [song._id]
+							},
+							this
+						)
+						.finally(() => {
+							next();
+						});
 				}
 			],
 			async err => {
