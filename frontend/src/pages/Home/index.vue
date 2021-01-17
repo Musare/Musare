@@ -23,7 +23,7 @@
 					</a>
 				</div>
 				<router-link
-					v-for="(station, index) in filteredStations()"
+					v-for="(station, index) in filteredStations"
 					:key="index"
 					:to="{
 						name: 'station',
@@ -194,7 +194,27 @@ export default {
 			loggedIn: state => state.user.auth.loggedIn,
 			userId: state => state.user.auth.userId,
 			modals: state => state.modals.modals.home
-		})
+		}),
+		filteredStations() {
+			const privacyOrder = ["public", "unlisted", "private"];
+			return this.stations
+				.filter(
+					station =>
+						JSON.stringify(Object.values(station)).indexOf(
+							this.searchQuery
+						) !== -1
+				)
+				.sort(
+					(a, b) =>
+						this.isFavorite(b) - this.isFavorite(a) ||
+						this.isOwner(b) - this.isOwner(a) ||
+						this.isPlaying(b) - this.isPlaying(a) ||
+						a.paused - b.paused ||
+						privacyOrder.indexOf(a.privacy) -
+							privacyOrder.indexOf(b.privacy) ||
+						b.userCount - a.userCount
+				);
+		}
 	},
 	mounted() {
 		io.getSocket(socket => {
@@ -277,26 +297,6 @@ export default {
 					this.favoriteStations = data.favoriteStations;
 			});
 			this.socket.emit("apis.joinRoom", "home", () => {});
-		},
-		filteredStations() {
-			const privacyOrder = ["public", "unlisted", "private"];
-			return this.stations
-				.filter(
-					station =>
-						JSON.stringify(Object.values(station)).indexOf(
-							this.searchQuery
-						) !== -1
-				)
-				.sort(
-					(a, b) =>
-						this.isFavorite(b) - this.isFavorite(a) ||
-						this.isOwner(b) - this.isOwner(a) ||
-						this.isPlaying(b) - this.isPlaying(a) ||
-						a.paused - b.paused ||
-						privacyOrder.indexOf(a.privacy) -
-							privacyOrder.indexOf(b.privacy) ||
-						b.userCount - a.userCount
-				);
 		},
 		isOwner(station) {
 			return station.owner === this.userId;
