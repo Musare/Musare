@@ -149,7 +149,7 @@ export default {
 			margin-bottom: 20px;
 		}
 
-		.queue-item:not(:last-of-type) {
+		.queue-item {
 			margin-bottom: 10px;
 		}
 	}

@@ -636,6 +636,9 @@ export default {
 		}
 	},
 	beforeDestroy() {
+		/** Reset Songslist */
+		this.updateSongsList([]);
+
 		const shortcutNames = [
 			"station.pauseResume",
 			"station.skipStation",

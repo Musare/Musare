@@ -612,7 +612,8 @@ class _StationsModule extends CoreClass {
 									songId: song.songId,
 									title: song.title,
 									artists: song.artists,
-									duration: song.duration
+									duration: song.duration,
+									thumbnail: song.thumbnail
 								};
 								lessInfoPlaylist.push(newSong);
 							}
