@@ -422,7 +422,8 @@ class _IOModule extends CoreClass {
 			return async.waterfall(
 				[
 					next => {
-						UtilsModule.runJob(
+						if (!socket.request.headers.cookie) return next("No cookie exists yet.");
+						return UtilsModule.runJob(
 							"PARSE_COOKIES",
 							{
 								cookieString: socket.request.headers.cookie
