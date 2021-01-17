@@ -729,6 +729,7 @@ class _IOModule extends CoreClass {
 								});
 							reject(new Error("An error occurred while obtaining the session"));
 						});
+				else resolve();
 			})
 				.then(() => {
 					// call the job that calls the action, passing it the session, and the arguments socket.io passed us
