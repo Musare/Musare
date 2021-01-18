@@ -4,7 +4,7 @@ import util from "util";
 import config from "config";
 
 // eslint-disable-next-line no-extend-native
-Array.prototype.remove = function (item) {
+Array.prototype.remove = item => {
 	this.splice(this.indexOf(item), 1);
 };
 
@@ -383,7 +383,7 @@ moduleManager.initialize();
 /**
  * Prints a job
  *
- * @param {Job} job - the job
+ * @param {object} job - the job
  * @param {number} layer - the layer
  */
 function printJob(job, layer) {
@@ -397,7 +397,7 @@ function printJob(job, layer) {
 /**
  * Prints a task
  *
- * @param {Task} task - the task
+ * @param {object} task - the task
  * @param {number} layer - the layer
  */
 function printTask(task, layer) {
@@ -492,6 +492,7 @@ process.stdin.on("data", data => {
 	if (command.startsWith("eval")) {
 		const evalCommand = command.replace("eval ", "");
 		console.log(`Running eval command: ${evalCommand}`);
+		// eslint-disable-next-line no-eval
 		const response = eval(evalCommand);
 		console.log(`Eval response: `, response);
 	}

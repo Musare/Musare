@@ -247,11 +247,11 @@ class Job {
 	/**
 	 * Logs to the module of the job
 	 *
-	 * @param  {any} args
+	 * @param  {any} args - Anything to be added to the log e.g. log type, log message
 	 */
 	log(...args) {
 		args.splice(1, 0, this.name); // Adds the name of the job as the first argument (after INFO/SUCCESS/ERROR).
-		this.module.log.apply(this.module, args);
+		this.module.log(...args);
 	}
 }
 
