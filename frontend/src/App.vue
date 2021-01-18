@@ -237,7 +237,7 @@ body {
 	background-color: $light-grey;
 	color: $dark-grey;
 	height: 100%;
-	font-family: "Karla", Helvetica, Arial, sans-serif;
+	font-family: "Inter", Helvetica, Arial, sans-serif;
 }
 
 h1,
@@ -247,12 +247,12 @@ h4,
 h5,
 h6,
 .sidebar-title {
-	font-family: "Hind", Helvetica, Arial, sans-serif;
+	font-family: "Inter", Helvetica, Arial, sans-serif;
 }
 
 .modal-card-title {
 	font-weight: 600;
-	font-family: "Hind", Helvetica, Arial, sans-serif;
+	font-family: "Inter", Helvetica, Arial, sans-serif;
 }
 
 p,
@@ -260,7 +260,7 @@ button,
 input,
 select,
 textarea {
-	font-family: "Karla", Helvetica, Arial, sans-serif;
+	font-family: "Inter", Helvetica, Arial, sans-serif;
 }
 
 .upper-container {
@@ -530,11 +530,13 @@ button.delete:focus {
 .section-title,
 h4.section-title {
 	font-size: 26px;
+	font-weight: 600;
 	margin: 0px;
 }
 
 .section-description {
 	font-size: 16px;
+	font-weight: 400;
 	margin-bottom: 10px !important;
 }
 

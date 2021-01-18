@@ -640,9 +640,11 @@ html {
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		margin: 25px 0;
 
 		h1 {
 			display: inline-block;
+			margin: 0;
 		}
 
 		a {
