@@ -15,7 +15,8 @@ export default {
 		thumbnail: { type: String },
 		likes: { type: Number, default: -1 },
 		dislikes: { type: Number, default: -1 },
-		skipVotes: [{ type: String }]
+		skipVotes: [{ type: String }],
+		requestedAt: { type: Number }
 	},
 	currentSongIndex: { type: Number, default: 0, required: true },
 	timePaused: { type: Number, default: 0, required: true },
@@ -36,7 +37,8 @@ export default {
 			thumbnail: { type: String },
 			likes: { type: Number, default: -1 },
 			dislikes: { type: Number, default: -1 },
-			requestedBy: { type: String, required: true }
+			requestedBy: { type: String, required: true },
+			requestedAt: { type: Number }
 		}
 	],
 	owner: { type: String },

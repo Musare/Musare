@@ -31,7 +31,12 @@
 				{{ currentSong.artists }}
 			</h5>
 			<p id="song-request-time">
-				Requested <strong>15 minutes ago</strong>
+				Requested
+				<strong>{{
+					formatDistance(currentSong.requestedAt, Date.now(), {
+						addSuffix: true
+					})
+				}}</strong>
 			</p>
 			<div id="song-actions">
 				<button
@@ -64,6 +69,7 @@
 
 <script>
 import { mapState, mapActions } from "vuex";
+import { formatDistance } from "date-fns";
 
 export default {
 	computed: {
@@ -75,7 +81,8 @@ export default {
 		})
 	},
 	methods: {
-		...mapActions("modals", ["openModal"])
+		...mapActions("modals", ["openModal"]),
+		formatDistance
 	}
 };
 </script>

@@ -31,6 +31,11 @@
 							:user-id="song.requestedBy"
 							:link="true"
 						/>
+						{{
+							formatDistance(song.requestedAt, new Date(), {
+								addSuffix: true
+							})
+						}}
 					</strong>
 				</p>
 			</div>
@@ -51,6 +56,8 @@
 </template>
 
 <script>
+import { formatDistance } from "date-fns";
+
 import UserIdToUsername from "../../../../../components/common/UserIdToUsername.vue";
 import utils from "../../../../../../js/utils";
 
@@ -72,6 +79,9 @@ export default {
 		return {
 			utils
 		};
+	},
+	methods: {
+		formatDistance
 	}
 };
 </script>

@@ -37,7 +37,8 @@ class _StationsModule extends CoreClass {
 			duration: 212,
 			skipDuration: 0,
 			likes: -1,
-			dislikes: -1
+			dislikes: -1,
+			requestedAt: Date.now()
 		};
 
 		this.userList = {};
@@ -613,7 +614,8 @@ class _StationsModule extends CoreClass {
 									title: song.title,
 									artists: song.artists,
 									duration: song.duration,
-									thumbnail: song.thumbnail
+									thumbnail: song.thumbnail,
+									requestedAt: song.requestedAt
 								};
 								lessInfoPlaylist.push(newSong);
 							}
@@ -733,7 +735,8 @@ class _StationsModule extends CoreClass {
 												title: playlist[currentSongIndex].title,
 												duration: playlist[currentSongIndex].duration,
 												likes: -1,
-												dislikes: -1
+												dislikes: -1,
+												requestedAt: playlist[currentSongIndex].requestedAt
 											};
 
 											return next(null, currentSong, currentSongIndex, station);
@@ -843,7 +846,8 @@ class _StationsModule extends CoreClass {
 								duration: song.duration,
 								skipDuration: 0,
 								likes: -1,
-								dislikes: -1
+								dislikes: -1,
+								requestedAt: song.requestedAt
 							};
 						} else {
 							$set.currentSong = {
@@ -854,7 +858,8 @@ class _StationsModule extends CoreClass {
 								likes: song.likes,
 								dislikes: song.dislikes,
 								skipDuration: song.skipDuration,
-								thumbnail: song.thumbnail
+								thumbnail: song.thumbnail,
+								requestedAt: song.requestedAt
 							};
 						}
 						if (currentSongIndex >= 0) $set.currentSongIndex = currentSongIndex;

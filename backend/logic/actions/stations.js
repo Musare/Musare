@@ -1683,6 +1683,7 @@ export default {
 				(song, station, next) => {
 					const { queue } = station;
 					song.requestedBy = session.userId;
+					song.requestedAt = Date.now();
 					queue.push(song);
 
 					let totalDuration = 0;
