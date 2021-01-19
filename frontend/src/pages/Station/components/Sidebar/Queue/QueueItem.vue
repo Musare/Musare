@@ -49,7 +49,10 @@
 				{{ utils.formatTime(song.duration) }}
 			</p>
 			<i
-				v-if="$parent.isOwnerOnly() || $parent.isAdminOnly()"
+				v-if="
+					station.type === 'community' &&
+						($parent.isOwnerOnly() || $parent.isAdminOnly())
+				"
 				class="material-icons"
 				id="remove-queue-item"
 				@click="$parent.removeFromQueue(song.songId)"

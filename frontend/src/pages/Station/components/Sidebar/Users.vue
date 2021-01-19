@@ -66,7 +66,6 @@ export default {
 
 #users {
 	background-color: #fff;
-	border: 1px solid $light-grey-2;
 	margin-bottom: 20px;
 	padding: 10px;
 	border-radius: 0 0 5px 5px;
