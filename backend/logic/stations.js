@@ -862,6 +862,7 @@ class _StationsModule extends CoreClass {
 								requestedAt: song.requestedAt
 							};
 						}
+
 						if (currentSongIndex >= 0) $set.currentSongIndex = currentSongIndex;
 						$set.startedAt = Date.now();
 						$set.timePaused = 0;
@@ -870,8 +871,10 @@ class _StationsModule extends CoreClass {
 					},
 
 					($set, station, next) => {
-						StationsModule.stationModel.updateOne({ _id: station._id }, { $set }, () => {
-							StationsModule.runJob(
+						StationsModule.stationModel.updateOne({ _id: station._id }, { $set }, err => {
+							if (err) return next(err);
+
+							return StationsModule.runJob(
 								"UPDATE_STATION",
 								{
 									stationId: station._id

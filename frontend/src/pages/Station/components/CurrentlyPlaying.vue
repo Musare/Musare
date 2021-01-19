@@ -33,9 +33,13 @@
 			<p id="song-request-time">
 				Requested
 				<strong>{{
-					formatDistance(currentSong.requestedAt, Date.now(), {
-						addSuffix: true
-					})
+					formatDistance(
+						parseISO(currentSong.requestedAt),
+						Date.now(),
+						{
+							addSuffix: true
+						}
+					)
 				}}</strong>
 			</p>
 			<div id="song-actions">
@@ -69,7 +73,7 @@
 
 <script>
 import { mapState, mapActions } from "vuex";
-import { formatDistance } from "date-fns";
+import { formatDistance, parseISO } from "date-fns";
 
 export default {
 	computed: {
@@ -82,7 +86,8 @@ export default {
 	},
 	methods: {
 		...mapActions("modals", ["openModal"]),
-		formatDistance
+		formatDistance,
+		parseISO
 	}
 };
 </script>

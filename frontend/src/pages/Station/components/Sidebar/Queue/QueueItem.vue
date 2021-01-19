@@ -32,9 +32,13 @@
 							:link="true"
 						/>
 						{{
-							formatDistance(song.requestedAt, new Date(), {
-								addSuffix: true
-							})
+							formatDistance(
+								parseISO(song.requestedAt),
+								new Date(),
+								{
+									addSuffix: true
+								}
+							)
 						}}
 					</strong>
 				</p>
@@ -56,7 +60,7 @@
 </template>
 
 <script>
-import { formatDistance } from "date-fns";
+import { formatDistance, parseISO } from "date-fns";
 
 import UserIdToUsername from "../../../../../components/common/UserIdToUsername.vue";
 import utils from "../../../../../../js/utils";
@@ -81,7 +85,8 @@ export default {
 		};
 	},
 	methods: {
-		formatDistance
+		formatDistance,
+		parseISO
 	}
 };
 </script>
