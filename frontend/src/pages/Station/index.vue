@@ -1603,9 +1603,9 @@ export default {
 			border-radius: 5px;
 		}
 
-		.quadrant {
-			border: 1px solid $light-grey-2;
+		.quadrant:not(#sidebar-container) {
 			background-color: #fff;
+			border: 1px solid $light-grey-2;
 		}
 
 		#about-station-container {

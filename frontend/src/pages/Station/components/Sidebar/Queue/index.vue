@@ -10,47 +10,47 @@
 			<p class="nothing-here" v-if="songsList.length < 1">
 				There are no songs currently queued
 			</p>
+		</div>
+		<button
+			id="add-song-to-queue"
+			class="button is-primary"
+			v-if="
+				loggedIn &&
+					((station.type === 'community' &&
+						station.partyMode &&
+						((station.locked && isOwnerOnly()) ||
+							!station.locked ||
+							(station.locked &&
+								isAdminOnly() &&
+								dismissedWarning))) ||
+						station.type === 'official')
+			"
+			@click="
+				openModal({
+					sector: 'station',
+					modal: 'addSongToQueue'
+				})
+			"
+		>
+			<i class="material-icons icon-with-button">queue</i>
+			<span class="optional-desktop-only-text">
+				Add Song To Queue
+			</span>
+		</button>
+		<div
+			id="queue-locked"
+			v-if="station.type === 'community' && station.locked"
+		>
 			<button
-				id="add-song-to-queue"
-				class="button is-primary"
-				v-if="
-					loggedIn &&
-						((station.type === 'community' &&
-							station.partyMode &&
-							((station.locked && isOwnerOnly()) ||
-								!station.locked ||
-								(station.locked &&
-									isAdminOnly() &&
-									dismissedWarning))) ||
-							station.type === 'official')
-				"
-				@click="
-					openModal({
-						sector: 'station',
-						modal: 'addSongToQueue'
-					})
-				"
+				v-if="isAdminOnly() && !isOwnerOnly() && !dismissedWarning"
+				class="button"
+				@click="dismissedWarning = true"
 			>
-				<i class="material-icons icon-with-button">queue</i>
-				<span class="optional-desktop-only-text">
-					Add Song To Queue
-				</span>
+				THIS STATION'S QUEUE IS LOCKED.
 			</button>
-			<div
-				id="queue-locked"
-				v-if="station.type === 'community' && station.locked"
-			>
-				<button
-					v-if="isAdminOnly() && !isOwnerOnly() && !dismissedWarning"
-					class="button"
-					@click="dismissedWarning = true"
-				>
-					THIS STATION'S QUEUE IS LOCKED.
-				</button>
-				<button v-if="!isAdminOnly() && !isOwnerOnly()" class="button">
-					THIS STATION'S QUEUE IS LOCKED.
-				</button>
-			</div>
+			<button v-if="!isAdminOnly() && !isOwnerOnly()" class="button">
+				THIS STATION'S QUEUE IS LOCKED.
+			</button>
 		</div>
 	</div>
 </template>
@@ -137,7 +137,9 @@ export default {
 		border-radius: 0 0 5px 5px;
 		width: 100%;
 		overflow: auto;
-		max-height: 100%;
+		max-height: calc(
+			100% - 20px /** margin bottom */ - 40px /** add-song-to-queue */
+		);
 		padding: 10px;
 
 		.nothing-here {
@@ -148,7 +150,7 @@ export default {
 			margin-bottom: 20px;
 		}
 
-		.queue-item {
+		.queue-item:not(:last-of-type) {
 			margin-bottom: 10px;
 		}
 	}
