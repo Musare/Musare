@@ -549,6 +549,11 @@ export default {
 
 			return socket;
 		});
+
+		this.editing.genres = JSON.parse(JSON.stringify(this.editing.genres));
+		this.editing.blacklistedGenres = JSON.parse(
+			JSON.stringify(this.editing.blacklistedGenres)
+		);
 	},
 	methods: {
 		isPlaylistSelected(id) {
@@ -591,18 +596,16 @@ export default {
 				this.station.locked !== this.editing.locked
 			)
 				this.updateQueueLock();
-			if (this.$props.store !== "station") {
-				if (
-					this.station.genres.toString() !==
-					this.editing.genres.toString()
-				)
-					this.updateGenres();
-				if (
-					this.station.blacklistedGenres.toString() !==
-					this.editing.blacklistedGenres.toString()
-				)
-					this.updateBlacklistedGenres();
-			}
+			if (
+				this.station.genres.toString() !==
+				this.editing.genres.toString()
+			)
+				this.updateGenres();
+			if (
+				this.station.blacklistedGenres.toString() !==
+				this.editing.blacklistedGenres.toString()
+			)
+				this.updateBlacklistedGenres();
 		},
 		updateName() {
 			const { name } = this.editing;
