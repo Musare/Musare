@@ -79,6 +79,10 @@ export default {
 	width: 100%;
 	height: 160px;
 
+	@media (max-width: 650px) {
+		border-radius: 0;
+	}
+
 	#footer-logo {
 		display: block;
 		margin-left: auto;

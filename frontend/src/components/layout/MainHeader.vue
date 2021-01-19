@@ -130,6 +130,10 @@ export default {
 	overflow: hidden;
 	border-radius: 0% 0% 33% 33% / 0% 0% 7% 7%;
 
+	@media (max-width: 650px) {
+		border-radius: 0;
+	}
+
 	.nav-menu.is-active {
 		.nav-item {
 			color: $dark-grey-2;

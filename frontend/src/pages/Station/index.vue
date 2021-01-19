@@ -1448,11 +1448,6 @@ export default {
 
 <style lang="scss" scoped>
 @import "../../styles/global.scss";
-
-.main-container {
-	min-height: calc(100vh + 100px);
-}
-
 .progress {
 	width: 50px;
 	animation: rotate 0.8s infinite linear;
@@ -1544,24 +1539,31 @@ export default {
 			background: transparent !important;
 		}
 
-		/** padding fixes on mobile */
-		#about-station-container,
-		#currently-playing-container {
-			padding: 15px 10px !important;
-		}
-
-		#about-station-container:not(.nothing-here) {
-			padding-bottom: 0 !important;
-		}
-
-		#currently-playing {
-			padding: 0;
-		}
-
-		/** no column gap between quadrants on mobile  */
-		#currently-playing-container,
 		#sidebar-container {
 			margin-left: 0 !important;
+			margin-top: 15px;
+		}
+
+		#upper-row {
+			background-color: #fff;
+
+			/** padding fixes on mobile */
+			#about-station-container {
+				padding: 15px 10px !important;
+
+				&:not(.nothing-here) {
+					padding-bottom: 0 !important;
+				}
+			}
+
+			#currently-playing-container {
+				margin-left: 0 !important;
+				padding: 15px 10px !important;
+
+				#currently-playing {
+					padding: 0;
+				}
+			}
 		}
 
 		#lower-row {
@@ -1570,7 +1572,7 @@ export default {
 
 		/** Change height of YouTube embed  */
 		.player-container:not(.nothing-here) {
-			height: 800px !important;
+			height: 1000px !important;
 		}
 
 		.player-container {
@@ -1678,7 +1680,8 @@ export default {
 
 		#lower-row {
 			margin-top: 20px;
-			height: calc(100% - 75px); // accounts for footer
+			// height: calc(100% - 75px); // accounts for footer
+			height: 60vh;
 
 			.player-container.nothing-here {
 				border: 1px solid $light-grey-2;
@@ -1893,6 +1896,7 @@ export default {
 
 						#ratings {
 							display: flex;
+							margin-right: 5px;
 
 							#like-song:hover,
 							#like-song.liked {
@@ -1939,6 +1943,10 @@ export default {
 			}
 		}
 	}
+}
+
+.footer {
+	margin-top: 15px;
 }
 
 /deep/ .nothing-here {
