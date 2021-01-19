@@ -8,292 +8,274 @@
 		<div id="station-outer-container">
 			<div v-show="loading" class="progress" />
 			<div v-show="!loading && exists" id="station-inner-container">
-				<div id="upper-row" class="row">
-					<div id="about-station-container" class="quadrant">
-						<div class="row" id="station-name">
-							<h1>{{ station.displayName }}</h1>
-							<a href="#">
-								<!-- Favourite Station Button -->
-								<i
-									v-if="loggedIn && favoriteStation"
-									@click="unfavoriteStation($event)"
-									class="material-icons"
-									>star</i
-								>
-								<i
-									v-if="loggedIn && !favoriteStation"
-									@click="addfavoriteStation($event)"
-									class="material-icons"
-									>star_border</i
-								>
-							</a>
+				<div id="about-station-container" class="quadrant">
+					<div class="row" id="station-name">
+						<h1>{{ station.displayName }}</h1>
+						<a href="#">
+							<!-- Favourite Station Button -->
+							<i
+								v-if="loggedIn && favoriteStation"
+								@click="unfavoriteStation($event)"
+								class="material-icons"
+								>star</i
+							>
+							<i
+								v-if="loggedIn && !favoriteStation"
+								@click="addfavoriteStation($event)"
+								class="material-icons"
+								>star_border</i
+							>
+						</a>
+					</div>
+
+					<p>{{ station.description }}</p>
+
+					<div id="admin-buttons" v-if="isOwnerOrAdmin()">
+						<!-- (Admin) Station Settings Button -->
+						<button
+							class="button is-primary"
+							@click="openSettings()"
+						>
+							<i class="material-icons icon-with-button"
+								>settings</i
+							>
+							<span class="optional-desktop-only-text">
+								Station settings
+							</span>
+						</button>
+
+						<!-- (Admin) Skip Button -->
+						<button class="button is-danger" @click="skipStation()">
+							<i class="material-icons icon-with-button"
+								>skip_next</i
+							>
+							<span class="optional-desktop-only-text">
+								Force Skip
+							</span>
+						</button>
+
+						<!-- (Admin) Pause/Resume Button -->
+						<button
+							class="button is-danger"
+							v-if="stationPaused"
+							@click="resumeStation()"
+						>
+							<i class="material-icons icon-with-button"
+								>play_arrow</i
+							>
+							<span class="optional-desktop-only-text">
+								Resume Station
+							</span>
+						</button>
+						<button
+							class="button is-danger"
+							@click="pauseStation()"
+							v-else
+						>
+							<i class="material-icons icon-with-button">pause</i>
+							<span class="optional-desktop-only-text">
+								Pause Station
+							</span>
+						</button>
+					</div>
+				</div>
+				<div class="player-container quadrant" v-show="!noSong">
+					<div id="video-container">
+						<div id="player" style="width: 100%; height: 100%" />
+						<div class="player-cannot-autoplay" v-if="!canAutoplay">
+							<p>
+								Please click anywhere on the screen for the
+								video to start
+							</p>
 						</div>
-
-						<p>{{ station.description }}</p>
-
-						<div id="admin-buttons" v-if="isOwnerOrAdmin()">
-							<!-- (Admin) Station Settings Button -->
+					</div>
+					<div id="seeker-bar-container">
+						<div id="seeker-bar" style="width: 0%" />
+					</div>
+					<div id="control-bar-container">
+						<div id="left-buttons">
+							<!-- Debug Box -->
 							<button
 								class="button is-primary"
-								@click="openSettings()"
+								@click="togglePlayerDebugBox()"
+								@dblclick="resetPlayerDebugBox()"
 							>
-								<i class="material-icons icon-with-button"
-									>settings</i
-								>
+								<i class="material-icons icon-with-button">
+									bug_report
+								</i>
 								<span class="optional-desktop-only-text">
-									Station settings
+									Debug
 								</span>
 							</button>
 
-							<!-- (Admin) Skip Button -->
+							<!-- Local Pause/Resume Button -->
 							<button
-								class="button is-danger"
-								@click="skipStation()"
+								class="button is-primary"
+								@click="resumeLocalStation()"
+								id="local-resume"
+								v-if="localPaused"
+							>
+								<i class="material-icons">play_arrow</i>
+								<span class="optional-desktop-only-text"
+									>Play locally</span
+								>
+							</button>
+							<button
+								class="button is-primary"
+								@click="pauseLocalStation()"
+								id="local-pause"
+								v-else
+							>
+								<i class="material-icons">pause</i>
+								<span class="optional-desktop-only-text"
+									>Pause locally</span
+								>
+							</button>
+
+							<!-- Vote to Skip Button -->
+							<button
+								v-if="loggedIn"
+								class="button is-primary"
+								@click="voteSkipStation()"
 							>
 								<i class="material-icons icon-with-button"
 									>skip_next</i
 								>
-								<span class="optional-desktop-only-text">
-									Force Skip
-								</span>
-							</button>
-
-							<!-- (Admin) Pause/Resume Button -->
-							<button
-								class="button is-danger"
-								v-if="stationPaused"
-								@click="resumeStation()"
-							>
-								<i class="material-icons icon-with-button"
-									>play_arrow</i
+								<span class="optional-desktop-only-text"
+									>Vote to skip (</span
 								>
-								<span class="optional-desktop-only-text">
-									Resume Station
-								</span>
-							</button>
-							<button
-								class="button is-danger"
-								@click="pauseStation()"
-								v-else
-							>
-								<i class="material-icons icon-with-button"
-									>pause</i
+								{{ currentSong.skipVotes }}
+								<span class="optional-desktop-only-text"
+									>)</span
 								>
-								<span class="optional-desktop-only-text">
-									Pause Station
-								</span>
 							</button>
 						</div>
-					</div>
-					<div
-						id="currently-playing-container"
-						class="quadrant"
-						:class="{ 'no-currently-playing': noSong }"
-					>
-						<currently-playing v-if="!noSong" />
-						<p v-else class="nothing-here">
-							No song is currently playing
+						<div id="duration">
+							<p>
+								{{ timeElapsed }} /
+								{{ utils.formatTime(currentSong.duration) }}
+							</p>
+						</div>
+						<p id="volume-control">
+							<i
+								v-if="muted"
+								class="material-icons"
+								@click="toggleMute()"
+								>volume_mute</i
+							>
+							<i
+								v-else
+								class="material-icons"
+								@click="toggleMute()"
+								>volume_down</i
+							>
+							<input
+								v-model="volumeSliderValue"
+								type="range"
+								min="0"
+								max="10000"
+								class="volume-slider active"
+								@change="changeVolume()"
+								@input="changeVolume()"
+							/>
+							<i class="material-icons" @click="increaseVolume()"
+								>volume_up</i
+							>
 						</p>
+						<div id="right-buttons" v-if="loggedIn">
+							<!-- Ratings (Like/Dislike) Buttons -->
+							<div
+								id="ratings"
+								v-if="
+									currentSong.likes !== -1 &&
+										currentSong.dislikes !== -1
+								"
+								:class="{
+									liked: liked,
+									disliked: disliked
+								}"
+							>
+								<!-- Like Song Button -->
+								<button
+									class="button is-success"
+									id="like-song"
+									@click="toggleLike()"
+								>
+									<i
+										class="material-icons icon-with-button"
+										:class="{ liked: liked }"
+										>thumb_up_alt</i
+									>{{ currentSong.likes }}
+								</button>
+
+								<!-- Dislike Song Button -->
+								<button
+									class="button is-danger"
+									id="dislike-song"
+									@click="toggleDislike()"
+								>
+									<i
+										class="material-icons icon-with-button"
+										:class="{
+											disliked: disliked
+										}"
+										>thumb_down_alt</i
+									>{{ currentSong.dislikes }}
+								</button>
+							</div>
+
+							<!-- Add Song To Playlist Button & Dropdown -->
+							<div id="add-song-to-playlist">
+								<div class="control has-addons">
+									<button
+										class="button is-primary"
+										@click="
+											showPlaylistDropdown = !showPlaylistDropdown
+										"
+									>
+										<i class="material-icons">queue</i>
+										<span class="optional-desktop-only-text"
+											>Add Song To Playlist</span
+										>
+									</button>
+									<button
+										class="button"
+										id="dropdown-toggle"
+										@click="
+											showPlaylistDropdown = !showPlaylistDropdown
+										"
+									>
+										<i class="material-icons">
+											{{
+												showPlaylistDropdown
+													? "expand_more"
+													: "expand_less"
+											}}
+										</i>
+									</button>
+								</div>
+								<add-to-playlist-dropdown
+									v-if="showPlaylistDropdown"
+								/>
+							</div>
+						</div>
 					</div>
 				</div>
-				<div id="lower-row" class="row">
-					<div class="player-container quadrant" v-show="!noSong">
-						<div id="video-container">
-							<div
-								id="player"
-								style="width: 100%; height: 100%"
-							/>
-							<div
-								class="player-cannot-autoplay"
-								v-if="!canAutoplay"
-							>
-								<p>
-									Please click anywhere on the screen for the
-									video to start
-								</p>
-							</div>
-						</div>
-						<div id="seeker-bar-container">
-							<div id="seeker-bar" style="width: 0%" />
-						</div>
-						<div id="control-bar-container">
-							<div id="left-buttons">
-								<!-- Debug Box -->
-								<button
-									class="button is-primary"
-									@click="togglePlayerDebugBox()"
-									@dblclick="resetPlayerDebugBox()"
-								>
-									<i class="material-icons icon-with-button">
-										bug_report
-									</i>
-									<span class="optional-desktop-only-text">
-										Debug
-									</span>
-								</button>
-
-								<!-- Local Pause/Resume Button -->
-								<button
-									class="button is-primary"
-									@click="resumeLocalStation()"
-									id="local-resume"
-									v-if="localPaused"
-								>
-									<i class="material-icons">play_arrow</i>
-									<span class="optional-desktop-only-text"
-										>Play locally</span
-									>
-								</button>
-								<button
-									class="button is-primary"
-									@click="pauseLocalStation()"
-									id="local-pause"
-									v-else
-								>
-									<i class="material-icons">pause</i>
-									<span class="optional-desktop-only-text"
-										>Pause locally</span
-									>
-								</button>
-
-								<!-- Vote to Skip Button -->
-								<button
-									v-if="loggedIn"
-									class="button is-primary"
-									@click="voteSkipStation()"
-								>
-									<i class="material-icons icon-with-button"
-										>skip_next</i
-									>
-									<span class="optional-desktop-only-text"
-										>Vote to skip (</span
-									>
-									{{ currentSong.skipVotes }}
-									<span class="optional-desktop-only-text"
-										>)</span
-									>
-								</button>
-							</div>
-							<div id="duration">
-								<p>
-									{{ timeElapsed }} /
-									{{ utils.formatTime(currentSong.duration) }}
-								</p>
-							</div>
-							<p id="volume-control">
-								<i
-									v-if="muted"
-									class="material-icons"
-									@click="toggleMute()"
-									>volume_mute</i
-								>
-								<i
-									v-else
-									class="material-icons"
-									@click="toggleMute()"
-									>volume_down</i
-								>
-								<input
-									v-model="volumeSliderValue"
-									type="range"
-									min="0"
-									max="10000"
-									class="volume-slider active"
-									@change="changeVolume()"
-									@input="changeVolume()"
-								/>
-								<i
-									class="material-icons"
-									@click="increaseVolume()"
-									>volume_up</i
-								>
-							</p>
-							<div id="right-buttons" v-if="loggedIn">
-								<!-- Ratings (Like/Dislike) Buttons -->
-								<div
-									id="ratings"
-									v-if="
-										currentSong.likes !== -1 &&
-											currentSong.dislikes !== -1
-									"
-									:class="{
-										liked: liked,
-										disliked: disliked
-									}"
-								>
-									<!-- Like Song Button -->
-									<button
-										class="button is-success"
-										id="like-song"
-										@click="toggleLike()"
-									>
-										<i
-											class="material-icons icon-with-button"
-											:class="{ liked: liked }"
-											>thumb_up_alt</i
-										>{{ currentSong.likes }}
-									</button>
-
-									<!-- Dislike Song Button -->
-									<button
-										class="button is-danger"
-										id="dislike-song"
-										@click="toggleDislike()"
-									>
-										<i
-											class="material-icons icon-with-button"
-											:class="{
-												disliked: disliked
-											}"
-											>thumb_down_alt</i
-										>{{ currentSong.dislikes }}
-									</button>
-								</div>
-
-								<!-- Add Song To Playlist Button & Dropdown -->
-								<div id="add-song-to-playlist">
-									<div class="control has-addons">
-										<button
-											class="button is-primary"
-											@click="
-												showPlaylistDropdown = !showPlaylistDropdown
-											"
-										>
-											<i class="material-icons">queue</i>
-											<span
-												class="optional-desktop-only-text"
-												>Add Song To Playlist</span
-											>
-										</button>
-										<button
-											class="button"
-											id="dropdown-toggle"
-											@click="
-												showPlaylistDropdown = !showPlaylistDropdown
-											"
-										>
-											<i class="material-icons">
-												{{
-													showPlaylistDropdown
-														? "expand_more"
-														: "expand_less"
-												}}
-											</i>
-										</button>
-									</div>
-									<add-to-playlist-dropdown
-										v-if="showPlaylistDropdown"
-									/>
-								</div>
-							</div>
-						</div>
-					</div>
-					<p class="player-container nothing-here" v-if="noSong">
+				<p class="player-container nothing-here" v-if="noSong">
+					No song is currently playing
+				</p>
+				<div id="sidebar-container" class="quadrant">
+					<station-sidebar />
+				</div>
+				<div
+					id="currently-playing-container"
+					class="quadrant"
+					:class="{ 'no-currently-playing': noSong }"
+				>
+					<currently-playing v-if="!noSong" />
+					<p v-else class="nothing-here">
 						No song is currently playing
 					</p>
-					<div id="sidebar-container" class="quadrant">
-						<station-sidebar />
-					</div>
 				</div>
 			</div>
 
@@ -1490,7 +1472,6 @@ export default {
 		background-color: $night-mode-bg-secondary !important;
 	}
 
-	#upper-row .quadrant,
 	#video-container,
 	#control-bar-container {
 		border: 0 !important;
@@ -1508,24 +1489,24 @@ export default {
 
 #station-outer-container {
 	margin: 0 auto;
-	max-width: 100%;
 	padding: 20px 40px;
 	margin-top: 5px;
 	height: 100%;
+	width: 100%;
+	max-width: 2000px;
 
-	/** Mobile Row  */
 	@media (max-width: 1040px) {
 		padding: 0;
 		margin-top: 0 !important;
 		height: auto !important;
 
 		#station-inner-container {
-			justify-content: flex-start !important;
-		}
-
-		.row {
-			width: 100%;
-			flex-direction: column !important;
+			grid-template-columns: 100% !important;
+			grid-template-areas:
+				"about-station"
+				"player"
+				"currently-playing"
+				"sidebar" !important;
 		}
 
 		.quadrant,
@@ -1539,40 +1520,32 @@ export default {
 			background: transparent !important;
 		}
 
+		/** padding fixes on mobile */
+		#about-station-container {
+			margin-top: 30px;
+			padding: 0 10px !important;
+
+			&:not(.nothing-here) {
+				padding-bottom: 0 !important;
+			}
+		}
+
+		#currently-playing-container {
+			padding: 0 10px !important;
+
+			#currently-playing {
+				padding: 0;
+			}
+		}
+
 		#sidebar-container {
-			margin-left: 0 !important;
-			margin-top: 15px;
-		}
-
-		#upper-row {
-			background-color: #fff;
-
-			/** padding fixes on mobile */
-			#about-station-container {
-				padding: 15px 10px !important;
-
-				&:not(.nothing-here) {
-					padding-bottom: 0 !important;
-				}
-			}
-
-			#currently-playing-container {
-				margin-left: 0 !important;
-				padding: 15px 10px !important;
-
-				#currently-playing {
-					padding: 0;
-				}
-			}
-		}
-
-		#lower-row {
-			margin-top: 0 !important;
+			max-height: 500px !important;
+			min-height: 200px;
 		}
 
 		/** Change height of YouTube embed  */
 		.player-container:not(.nothing-here) {
-			height: 1000px !important;
+			height: 500px !important;
 		}
 
 		.player-container {
@@ -1586,14 +1559,14 @@ export default {
 	}
 
 	#station-inner-container {
-		display: flex;
-		align-items: center;
-		flex-direction: column;
+		display: grid;
 		height: 100%;
-
-		@media (min-height: 1050px) {
-			justify-content: center;
-		}
+		grid-template-columns: 66% 33%;
+		grid-template-rows: 150px auto;
+		grid-template-areas:
+			"about-station currently-playing"
+			"player sidebar";
+		gap: 30px;
 
 		@media (min-width: 1040px) and (max-width: 2100px) {
 			#control-bar-container {
@@ -1619,334 +1592,327 @@ export default {
 			display: flex;
 			flex-direction: row;
 			max-width: 100%;
+		}
 
-			.quadrant {
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				flex-direction: column;
-				max-width: 100%;
-				border-radius: 5px;
+		.column {
+			display: flex;
+			flex-direction: column;
+		}
+
+		.quadrant {
+			border-radius: 5px;
+		}
+
+		.quadrant {
+			border: 1px solid $light-grey-2;
+			background-color: #fff;
+		}
+
+		#about-station-container {
+			align-items: flex-start;
+			padding: 20px;
+			grid-area: about-station;
+
+			#station-name {
+				flex-direction: row !important;
+
+				h1 {
+					margin: 0;
+					font-size: 36px;
+					line-height: 0.8;
+				}
+
+				i {
+					margin-left: 10px;
+					font-size: 30px;
+					color: $yellow;
+				}
+			}
+
+			p {
+				max-width: 700px;
+				flex-grow: 1;
+			}
+
+			#admin-buttons {
+				margin-top: 15px;
+
+				@media (max-width: 450px) {
+					.optional-desktop-only-text {
+						display: none;
+					}
+				}
 			}
 		}
 
-		#upper-row {
-			.quadrant {
-				border: 1px solid $light-grey-2;
-				background-color: #fff;
-			}
+		#currently-playing-container {
+			grid-area: currently-playing;
 
-			#about-station-container {
-				width: 1400px;
-				align-items: flex-start;
-				padding: 20px;
-
-				#station-name {
-					flex-direction: row !important;
-
-					h1 {
-						margin: 0;
-						font-size: 36px;
-					}
-
-					i {
-						margin-left: 10px;
-						font-size: 30px;
-						color: $yellow;
-					}
-				}
-
-				p {
-					max-width: 700px;
-					flex-grow: 1;
-				}
-
-				#admin-buttons {
-					margin-top: 15px;
-
-					@media (max-width: 450px) {
-						.optional-desktop-only-text {
-							display: none;
-						}
-					}
-				}
-			}
-
-			#currently-playing-container {
-				width: 550px;
-				margin-left: 50px;
+			.nothing-here {
+				height: 100%;
 			}
 		}
 
-		#lower-row {
-			margin-top: 20px;
-			// height: calc(100% - 75px); // accounts for footer
-			height: 60vh;
+		.player-container {
+			height: inherit;
+			background-color: #fff;
+			display: flex;
+			flex-direction: column;
+			border: 1px solid $light-grey-2;
+			border-radius: 5px;
+			overflow: hidden;
+			grid-area: player;
 
-			.player-container.nothing-here {
+			&.nothing-here {
 				border: 1px solid $light-grey-2;
 				border-radius: 5px;
 			}
 
-			.player-container {
-				height: inherit;
-				width: 1400px;
-				background-color: #fff;
-				display: flex;
-				flex-direction: column;
-				border: 1px solid $light-grey-2;
-				border-radius: 5px;
-				overflow: hidden;
+			#video-container {
+				width: 100%;
+				height: 100%;
 
-				#video-container {
+				.player-cannot-autoplay {
+					position: relative;
 					width: 100%;
 					height: 100%;
-
-					.player-cannot-autoplay {
-						position: relative;
-						width: 100%;
-						height: 100%;
-						bottom: calc(100% + 5px);
-						background: rgba(3, 169, 244, 0.95);
-						display: flex;
-						align-items: center;
-						justify-content: center;
-
-						p {
-							color: $white;
-							font-size: 26px;
-							text-align: center;
-						}
-					}
-				}
-
-				#seeker-bar-container {
-					background-color: #fff;
-					position: relative;
-					height: 7px;
-					display: block;
-					width: 100%;
-					overflow: hidden;
-
-					#seeker-bar {
-						background-color: $musare-blue;
-						top: 0;
-						left: 0;
-						bottom: 0;
-						position: absolute;
-					}
-				}
-
-				#control-bar-container {
+					bottom: calc(100% + 5px);
+					background: rgba(3, 169, 244, 0.95);
 					display: flex;
-					justify-content: space-around;
-					padding: 10px 0;
-					width: 100%;
-					background: #fff;
-					flex-direction: column;
-					flex-flow: wrap;
+					align-items: center;
+					justify-content: center;
 
-					#left-buttons,
-					#right-buttons {
-						margin: 3px;
-
-						i {
-							margin-right: 3px;
-						}
-					}
-
-					#left-buttons {
-						display: flex;
-
-						.button:not(:first-of-type) {
-							margin-left: 5px;
-						}
-					}
-
-					#duration {
-						margin: 3px;
-						display: flex;
-						align-items: center;
-
-						p {
-							font-size: 22px;
-							/** prevents duration width slightly varying and shifting other controls slightly */
-							width: 125px;
-							text-align: center;
-						}
-					}
-
-					#volume-control {
-						margin: 3px;
-						margin-top: 0;
-						position: relative;
-						display: flex;
-						align-items: center;
-						cursor: pointer;
-
-						.volume-slider {
-							width: 500px;
-							padding: 0 15px;
-							background: transparent;
-
-							@media (max-width: 2150px) {
-								width: 250px !important;
-							}
-						}
-
-						input[type="range"] {
-							-webkit-appearance: none;
-							margin: 7.3px 0;
-						}
-
-						input[type="range"]:focus {
-							outline: none;
-						}
-
-						input[type="range"]::-webkit-slider-runnable-track {
-							width: 100%;
-							height: 5.2px;
-							cursor: pointer;
-							box-shadow: 0;
-							background: $light-grey-2;
-							border-radius: 0;
-							border: 0;
-						}
-
-						input[type="range"]::-webkit-slider-thumb {
-							box-shadow: 0;
-							border: 0;
-							height: 19px;
-							width: 19px;
-							border-radius: 15px;
-							background: $primary-color;
-							cursor: pointer;
-							-webkit-appearance: none;
-							margin-top: -6.5px;
-						}
-
-						input[type="range"]::-moz-range-track {
-							width: 100%;
-							height: 5.2px;
-							cursor: pointer;
-							box-shadow: 0;
-							background: $light-grey-2;
-							border-radius: 0;
-							border: 0;
-						}
-
-						input[type="range"]::-moz-range-thumb {
-							box-shadow: 0;
-							border: 0;
-							height: 19px;
-							width: 19px;
-							border-radius: 15px;
-							background: $primary-color;
-							cursor: pointer;
-							-webkit-appearance: none;
-							margin-top: -6.5px;
-						}
-						input[type="range"]::-ms-track {
-							width: 100%;
-							height: 5.2px;
-							cursor: pointer;
-							box-shadow: 0;
-							background: $light-grey-2;
-							border-radius: 1.3px;
-						}
-
-						input[type="range"]::-ms-fill-lower {
-							background: $light-grey-2;
-							border: 0;
-							border-radius: 0;
-							box-shadow: 0;
-						}
-
-						input[type="range"]::-ms-fill-upper {
-							background: $light-grey-2;
-							border: 0;
-							border-radius: 0;
-							box-shadow: 0;
-						}
-
-						input[type="range"]::-ms-thumb {
-							box-shadow: 0;
-							border: 0;
-							height: 15px;
-							width: 15px;
-							border-radius: 15px;
-							background: $primary-color;
-							cursor: pointer;
-							-webkit-appearance: none;
-							margin-top: 1.5px;
-						}
-					}
-
-					#right-buttons {
-						display: flex;
-
-						#dropdown-toggle {
-							width: 35px;
-						}
-
-						#dislike-song,
-						#add-song-to-playlist .button:not(#dropdown-toggle) {
-							margin-left: 5px;
-						}
-
-						#ratings {
-							display: flex;
-							margin-right: 5px;
-
-							#like-song:hover,
-							#like-song.liked {
-								background-color: darken($green, 5%) !important;
-							}
-
-							#dislike-song:hover,
-							#dislike-song.disliked {
-								background-color: darken($red, 5%) !important;
-							}
-
-							&.liked #dislike-song,
-							&.disliked #like-song {
-								background-color: $grey !important;
-								&:hover {
-									background-color: darken(
-										$grey,
-										5%
-									) !important;
-								}
-							}
-						}
-
-						#add-song-to-playlist {
-							display: flex;
-							flex-direction: column-reverse;
-							align-items: center;
-							width: 212px;
-
-							.control {
-								width: fit-content;
-								margin-bottom: 0 !important;
-							}
-						}
+					p {
+						color: $white;
+						font-size: 26px;
+						text-align: center;
 					}
 				}
 			}
 
-			#sidebar-container {
+			#seeker-bar-container {
+				background-color: #fff;
 				position: relative;
-				width: 550px;
-				height: inherit;
-				margin-left: 50px;
+				height: 7px;
+				display: block;
+				width: 100%;
+				overflow: hidden;
+
+				#seeker-bar {
+					background-color: $musare-blue;
+					top: 0;
+					left: 0;
+					bottom: 0;
+					position: absolute;
+				}
 			}
+
+			#control-bar-container {
+				display: flex;
+				justify-content: space-around;
+				padding: 10px 0;
+				width: 100%;
+				background: #fff;
+				flex-direction: column;
+				flex-flow: wrap;
+
+				#left-buttons,
+				#right-buttons {
+					margin: 3px;
+
+					i {
+						margin-right: 3px;
+					}
+				}
+
+				#left-buttons {
+					display: flex;
+
+					.button:not(:first-of-type) {
+						margin-left: 5px;
+					}
+				}
+
+				#duration {
+					margin: 3px;
+					display: flex;
+					align-items: center;
+
+					p {
+						font-size: 22px;
+						/** prevents duration width slightly varying and shifting other controls slightly */
+						width: 125px;
+						text-align: center;
+					}
+				}
+
+				#volume-control {
+					margin: 3px;
+					margin-top: 0;
+					position: relative;
+					display: flex;
+					align-items: center;
+					cursor: pointer;
+
+					.volume-slider {
+						width: 500px;
+						padding: 0 15px;
+						background: transparent;
+
+						@media (max-width: 2150px) {
+							width: 250px !important;
+						}
+					}
+
+					input[type="range"] {
+						-webkit-appearance: none;
+						margin: 7.3px 0;
+					}
+
+					input[type="range"]:focus {
+						outline: none;
+					}
+
+					input[type="range"]::-webkit-slider-runnable-track {
+						width: 100%;
+						height: 5.2px;
+						cursor: pointer;
+						box-shadow: 0;
+						background: $light-grey-2;
+						border-radius: 0;
+						border: 0;
+					}
+
+					input[type="range"]::-webkit-slider-thumb {
+						box-shadow: 0;
+						border: 0;
+						height: 19px;
+						width: 19px;
+						border-radius: 15px;
+						background: $primary-color;
+						cursor: pointer;
+						-webkit-appearance: none;
+						margin-top: -6.5px;
+					}
+
+					input[type="range"]::-moz-range-track {
+						width: 100%;
+						height: 5.2px;
+						cursor: pointer;
+						box-shadow: 0;
+						background: $light-grey-2;
+						border-radius: 0;
+						border: 0;
+					}
+
+					input[type="range"]::-moz-range-thumb {
+						box-shadow: 0;
+						border: 0;
+						height: 19px;
+						width: 19px;
+						border-radius: 15px;
+						background: $primary-color;
+						cursor: pointer;
+						-webkit-appearance: none;
+						margin-top: -6.5px;
+					}
+					input[type="range"]::-ms-track {
+						width: 100%;
+						height: 5.2px;
+						cursor: pointer;
+						box-shadow: 0;
+						background: $light-grey-2;
+						border-radius: 1.3px;
+					}
+
+					input[type="range"]::-ms-fill-lower {
+						background: $light-grey-2;
+						border: 0;
+						border-radius: 0;
+						box-shadow: 0;
+					}
+
+					input[type="range"]::-ms-fill-upper {
+						background: $light-grey-2;
+						border: 0;
+						border-radius: 0;
+						box-shadow: 0;
+					}
+
+					input[type="range"]::-ms-thumb {
+						box-shadow: 0;
+						border: 0;
+						height: 15px;
+						width: 15px;
+						border-radius: 15px;
+						background: $primary-color;
+						cursor: pointer;
+						-webkit-appearance: none;
+						margin-top: 1.5px;
+					}
+				}
+
+				#right-buttons {
+					display: flex;
+
+					#dropdown-toggle {
+						width: 35px;
+					}
+
+					#dislike-song,
+					#add-song-to-playlist .button:not(#dropdown-toggle) {
+						margin-left: 5px;
+					}
+
+					#ratings {
+						display: flex;
+						margin-right: 5px;
+
+						#like-song:hover,
+						#like-song.liked {
+							background-color: darken($green, 5%) !important;
+						}
+
+						#dislike-song:hover,
+						#dislike-song.disliked {
+							background-color: darken($red, 5%) !important;
+						}
+
+						&.liked #dislike-song,
+						&.disliked #like-song {
+							background-color: $grey !important;
+							&:hover {
+								background-color: darken($grey, 5%) !important;
+							}
+						}
+					}
+
+					#add-song-to-playlist {
+						display: flex;
+						flex-direction: column-reverse;
+						align-items: center;
+						width: 212px;
+
+						.control {
+							width: fit-content;
+							margin-bottom: 0 !important;
+						}
+					}
+				}
+			}
+		}
+
+		#sidebar-container {
+			border-top: 0;
+			position: relative;
+			height: inherit;
+			grid-area: sidebar;
 		}
 	}
 }
 
 .footer {
-	margin-top: 15px;
+	margin-top: 30px;
 }
 
 /deep/ .nothing-here {

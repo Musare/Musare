@@ -134,7 +134,6 @@ export default {
 
 	#queue-items {
 		background-color: #fff;
-		border: 1px solid $light-grey-2;
 		border-radius: 0 0 5px 5px;
 		width: 100%;
 		overflow: auto;

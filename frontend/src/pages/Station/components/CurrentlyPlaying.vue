@@ -30,7 +30,12 @@
 			<h5 id="song-artists" v-if="currentSong.artists">
 				{{ currentSong.artists }}
 			</h5>
-			<p id="song-request-time">
+			<p
+				id="song-request-time"
+				v-if="
+					station.type === 'community' && station.partyMode === true
+				"
+			>
 				Requested
 				<strong>{{
 					formatDistance(
@@ -78,7 +83,8 @@ import { formatDistance, parseISO } from "date-fns";
 export default {
 	computed: {
 		...mapState("station", {
-			currentSong: state => state.currentSong
+			currentSong: state => state.currentSong,
+			station: state => state.station
 		}),
 		...mapState({
 			loggedIn: state => state.user.auth.loggedIn
@@ -104,8 +110,8 @@ export default {
 	padding: 10px;
 
 	.thumbnail {
-		min-width: 140px;
-		max-height: 140px;
+		min-width: 120px;
+		max-height: 120px;
 		height: 100%;
 		position: relative;
 
@@ -138,14 +144,6 @@ export default {
 			.button {
 				padding: 0 10px !important;
 			}
-		}
-
-		#song-info {
-			margin-left: 0 !important;
-		}
-
-		.thumbnail {
-			display: none;
 		}
 	}
 
