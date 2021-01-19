@@ -138,7 +138,7 @@ export default {
 		border-radius: 0 0 5px 5px;
 		width: 100%;
 		overflow: auto;
-		height: inherit;
+		max-height: 100%;
 		padding: 10px;
 
 		.nothing-here {

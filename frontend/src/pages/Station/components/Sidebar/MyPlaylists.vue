@@ -153,6 +153,7 @@ export default {
 	margin-bottom: 20px;
 	padding: 10px;
 	border-radius: 0 0 5px 5px;
+	max-height: 100%;
 
 	.nothing-here {
 		margin-bottom: 10px;

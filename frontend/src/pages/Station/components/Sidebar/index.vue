@@ -92,6 +92,11 @@ export default {
 	width: 100%;
 	top: 0;
 	position: absolute;
+	height: calc(100% - 36px);
+
+	.tab {
+		height: 100%;
+	}
 }
 
 #tab-selection {
