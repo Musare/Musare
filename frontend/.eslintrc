@@ -21,7 +21,8 @@
 	"plugins": [ "prettier" ],
 	"globals": {
 		"lofig": "writable",
-		"grecaptcha": "readonly"
+		"grecaptcha": "readonly",
+		"history": "readonly"
 	},
 	"rules": {
 		"no-console": 0,
