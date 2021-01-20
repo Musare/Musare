@@ -102,7 +102,7 @@ export default {
 	flex-direction: row;
 	align-items: center;
 	justify-content: space-between;
-	padding: 5px 10px;
+	padding: 7.5px;
 	border: 1px solid $light-grey-2;
 	border-radius: 3px;
 
@@ -113,8 +113,8 @@ export default {
 	}
 
 	#thumbnail {
-		width: 80px;
-		height: 80px;
+		width: 70px;
+		height: 70px;
 	}
 
 	#song-info {

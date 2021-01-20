@@ -139,14 +139,6 @@ export default {
 		}
 	}
 
-	@media (max-width: 1500px) {
-		#song-actions {
-			.button {
-				padding: 0 10px !important;
-			}
-		}
-	}
-
 	#song-info {
 		display: flex;
 		flex-direction: column;

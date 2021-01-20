@@ -137,9 +137,7 @@ export default {
 		border-radius: 0 0 5px 5px;
 		width: 100%;
 		overflow: auto;
-		max-height: calc(
-			100% - 20px /** margin bottom */ - 40px /** add-song-to-queue */
-		);
+		max-height: calc(100% - 20px - 40px);
 		padding: 10px;
 
 		.nothing-here {

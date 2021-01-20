@@ -1561,7 +1561,7 @@ export default {
 	#station-inner-container {
 		display: grid;
 		height: 100%;
-		grid-template-columns: 66% 33%;
+		grid-template-columns: 70% 30%;
 		grid-template-rows: 150px auto;
 		grid-template-areas:
 			"about-station currently-playing"
