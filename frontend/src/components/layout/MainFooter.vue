@@ -78,6 +78,7 @@ export default {
 	background-color: $white;
 	width: 100%;
 	height: 160px;
+	font-size: 16px;
 
 	@media (max-width: 650px) {
 		border-radius: 0;
@@ -99,7 +100,6 @@ export default {
 
 		a {
 			padding: 0 7px;
-			font-size: 18px;
 			color: $primary-color;
 
 			&:first-of-type {

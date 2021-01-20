@@ -33,9 +33,7 @@
 			"
 		>
 			<i class="material-icons icon-with-button">queue</i>
-			<span class="optional-desktop-only-text">
-				Add Song To Queue
-			</span>
+			<span class="optional-desktop-only-text"> Add Song To Queue </span>
 		</button>
 		<div
 			id="queue-locked"
@@ -115,6 +113,8 @@ export default {
 }
 
 #queue {
+	background-color: #fff;
+	border-radius: 0 0 5px 5px;
 	::-webkit-scrollbar {
 		width: 10px;
 	}
@@ -133,20 +133,10 @@ export default {
 	}
 
 	#queue-items {
-		background-color: #fff;
-		border-radius: 0 0 5px 5px;
 		width: 100%;
 		overflow: auto;
 		max-height: calc(100% - 20px - 40px);
 		padding: 10px;
-
-		.nothing-here {
-			margin-bottom: 10px;
-		}
-
-		@media (min-width: 1040px) {
-			margin-bottom: 20px;
-		}
 
 		.queue-item:not(:last-of-type) {
 			margin-bottom: 10px;
@@ -154,9 +144,10 @@ export default {
 	}
 
 	button {
-		width: 100%;
+		width: calc(100% - 20px);
 		height: 40px;
 		border-radius: 5px;
+		margin: 10px;
 	}
 
 	#queue-locked {

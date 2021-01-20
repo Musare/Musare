@@ -9,51 +9,29 @@
 			<div v-show="loading" class="progress" />
 			<div v-show="!loading && exists" id="station-inner-container">
 				<div id="about-station-container" class="quadrant">
-					<div class="row" id="station-name">
-						<h1>{{ station.displayName }}</h1>
-						<a href="#">
-							<!-- Favourite Station Button -->
-							<i
-								v-if="loggedIn && favoriteStation"
-								@click="unfavoriteStation($event)"
-								class="material-icons"
-								>star</i
-							>
-							<i
-								v-if="loggedIn && !favoriteStation"
-								@click="addfavoriteStation($event)"
-								class="material-icons"
-								>star_border</i
-							>
-						</a>
+					<div id="station-info">
+						<div class="row" id="station-name">
+							<h1>{{ station.displayName }}</h1>
+							<a href="#">
+								<!-- Favourite Station Button -->
+								<i
+									v-if="loggedIn && favoriteStation"
+									@click="unfavoriteStation($event)"
+									class="material-icons"
+									>star</i
+								>
+								<i
+									v-if="loggedIn && !favoriteStation"
+									@click="addfavoriteStation($event)"
+									class="material-icons"
+									>star_border</i
+								>
+							</a>
+						</div>
+						<p>{{ station.description }}</p>
 					</div>
 
-					<p>{{ station.description }}</p>
-
 					<div id="admin-buttons" v-if="isOwnerOrAdmin()">
-						<!-- (Admin) Station Settings Button -->
-						<button
-							class="button is-primary"
-							@click="openSettings()"
-						>
-							<i class="material-icons icon-with-button"
-								>settings</i
-							>
-							<span class="optional-desktop-only-text">
-								Station settings
-							</span>
-						</button>
-
-						<!-- (Admin) Skip Button -->
-						<button class="button is-danger" @click="skipStation()">
-							<i class="material-icons icon-with-button"
-								>skip_next</i
-							>
-							<span class="optional-desktop-only-text">
-								Force Skip
-							</span>
-						</button>
-
 						<!-- (Admin) Pause/Resume Button -->
 						<button
 							class="button is-danger"
@@ -75,6 +53,29 @@
 							<i class="material-icons icon-with-button">pause</i>
 							<span class="optional-desktop-only-text">
 								Pause Station
+							</span>
+						</button>
+
+						<!-- (Admin) Skip Button -->
+						<button class="button is-danger" @click="skipStation()">
+							<i class="material-icons icon-with-button"
+								>skip_next</i
+							>
+							<span class="optional-desktop-only-text">
+								Force Skip
+							</span>
+						</button>
+
+						<!-- (Admin) Station Settings Button -->
+						<button
+							class="button is-primary"
+							@click="openSettings()"
+						>
+							<i class="material-icons icon-with-button"
+								>settings</i
+							>
+							<span class="optional-desktop-only-text">
+								Station settings
 							</span>
 						</button>
 					</div>
@@ -321,6 +322,14 @@
 					{{ privatePlaylistQueueSelected }}</span
 				>
 				<span><b>Station paused</b>: {{ stationPaused }}</span>
+				<span
+					><b>Station Genres</b>:
+					{{ station.genres.join(", ") }}</span
+				>
+				<span
+					><b>Station Blacklisted Genres</b>:
+					{{ station.blacklistedGenres.join(", ") }}</span
+				>
 			</template>
 		</floating-box>
 
@@ -1561,12 +1570,13 @@ export default {
 	#station-inner-container {
 		display: grid;
 		height: 100%;
+		width: calc(100% - 25px);
 		grid-template-columns: 70% 30%;
 		grid-template-rows: 150px auto;
 		grid-template-areas:
 			"about-station currently-playing"
 			"player sidebar";
-		gap: 30px;
+		gap: 25px;
 
 		@media (min-width: 1040px) and (max-width: 2100px) {
 			#control-bar-container {
@@ -1612,35 +1622,38 @@ export default {
 			align-items: flex-start;
 			padding: 20px;
 			grid-area: about-station;
+			display: flex;
+			flex-direction: row;
+			flex-wrap: wrap;
 
-			#station-name {
-				flex-direction: row !important;
-
-				h1 {
-					margin: 0;
-					font-size: 36px;
-					line-height: 0.8;
-				}
-
-				i {
-					margin-left: 10px;
-					font-size: 30px;
-					color: $yellow;
-				}
-			}
-
-			p {
-				max-width: 700px;
+			#station-info {
 				flex-grow: 1;
+
+				#station-name {
+					flex-direction: row !important;
+
+					h1 {
+						margin: 0;
+						font-size: 36px;
+						line-height: 0.8;
+					}
+
+					i {
+						margin-left: 10px;
+						font-size: 30px;
+						color: $yellow;
+					}
+				}
+
+				p {
+					max-width: 700px;
+					flex-grow: 1;
+				}
 			}
 
-			#admin-buttons {
-				margin-top: 15px;
-
-				@media (max-width: 450px) {
-					.optional-desktop-only-text {
-						display: none;
-					}
+			@media (max-width: 450px) {
+				#admin-buttons .optional-desktop-only-text {
+					display: none;
 				}
 			}
 		}

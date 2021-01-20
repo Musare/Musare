@@ -113,8 +113,8 @@ export default {
 	}
 
 	#thumbnail {
-		width: 70px;
-		height: 70px;
+		width: 60px;
+		height: 60px;
 	}
 
 	#song-info {
@@ -129,11 +129,11 @@ export default {
 		}
 
 		#song-title {
-			font-size: 22px;
+			font-size: 20px;
 		}
 
 		#song-artists {
-			font-size: 16px;
+			font-size: 14px;
 		}
 
 		#song-request-time {
@@ -143,7 +143,7 @@ export default {
 	}
 
 	#song-duration {
-		font-size: 22px;
+		font-size: 20px;
 	}
 
 	#remove-queue-item {
