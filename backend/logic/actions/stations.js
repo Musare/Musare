@@ -357,6 +357,22 @@ export default {
 								[
 									next => {
 										StationsModule.runJob(
+											"HAS_USER_FAVORITED_STATION",
+											{
+												userId: session.userId,
+												stationId: station._id
+											},
+											this
+										)
+											.then(isStationFavorited => {
+												station.isFavorited = isStationFavorited;
+												return next();
+											})
+											.catch(err => next(err));
+									},
+
+									next => {
+										StationsModule.runJob(
 											"CAN_USER_VIEW_STATION",
 											{
 												station,
@@ -365,15 +381,15 @@ export default {
 											},
 											this
 										)
-											.then(exists => {
-												next(null, exists);
-											})
+											.then(exists => next(null, exists))
 											.catch(next);
 									}
 								],
 								(err, exists) => {
 									if (err) this.log(err);
+
 									station.userCount = StationsModule.usersPerStationCount[station._id] || 0;
+
 									if (exists) filteredStations.push(station);
 									next();
 								}
@@ -614,6 +630,7 @@ export default {
 						socketId: session.socketId,
 						room: `station.${station._id}`
 					});
+
 					const data = {
 						_id: station._id,
 						type: station.type,
@@ -632,20 +649,27 @@ export default {
 						genres: station.genres,
 						blacklistedGenres: station.blacklistedGenres
 					};
+
 					StationsModule.userList[session.socketId] = station._id;
+
 					next(null, data);
 				},
 
 				(data, next) => {
 					data = JSON.parse(JSON.stringify(data));
+
 					data.userCount = StationsModule.usersPerStationCount[data._id] || 0;
 					data.users = StationsModule.usersPerStation[data._id] || [];
+
 					if (!data.currentSong || !data.currentSong.title) return next(null, data);
+
 					IOModule.runJob("SOCKET_JOIN_SONG_ROOM", {
 						socketId: session.socketId,
 						room: `song.${data.currentSong.songId}`
 					});
+
 					data.currentSong.skipVotes = data.currentSong.skipVotes.length;
+
 					return SongsModule.runJob(
 						"GET_SONG_FROM_ID",
 						{
@@ -667,10 +691,23 @@ export default {
 							data.currentSong.likes = -1;
 							data.currentSong.dislikes = -1;
 						})
-						.finally(() => {
-							next(null, data);
-						});
-				}
+						.finally(() => next(null, data));
+				},
+
+				(data, next) =>
+					StationsModule.runJob(
+						"HAS_USER_FAVORITED_STATION",
+						{
+							userId: session.userId,
+							stationId: data._id
+						},
+						this
+					)
+						.then(isStationFavorited => {
+							data.isFavorited = isStationFavorited;
+							return next(null, data);
+						})
+						.catch(err => next(err))
 			],
 			async (err, data) => {
 				if (err) {

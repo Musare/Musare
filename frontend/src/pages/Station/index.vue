@@ -22,14 +22,14 @@
 							<a href="#">
 								<!-- Favorite Station Button -->
 								<i
-									v-if="loggedIn && favoriteStation"
-									@click.prevent="removefavoriteStation()"
+									v-if="loggedIn && station.isFavorited"
+									@click.prevent="unfavoriteStation()"
 									class="material-icons"
 									>star</i
 								>
 								<i
-									v-if="loggedIn && !favoriteStation"
-									@click.prevent="addFavoriteStation()"
+									v-if="loggedIn && !station.isFavorited"
+									@click.prevent="favoriteStation()"
 									class="material-icons"
 									>star_border</i
 								>
@@ -406,7 +406,6 @@ export default {
 			seeking: false,
 			playbackRate: 1,
 			volumeSliderValue: 0,
-			favoriteStation: false,
 			showPlaylistDropdown: false
 		};
 	},
@@ -613,12 +612,13 @@ export default {
 			});
 
 			this.socket.on("event:user.favoritedStation", stationId => {
-				if (stationId === this.station._id) this.favoriteStation = true;
+				if (stationId === this.station._id)
+					this.updateIfStationIsFavorited({ isFavorited: true });
 			});
 
 			this.socket.on("event:user.unfavoritedStation", stationId => {
 				if (stationId === this.station._id)
-					this.favoriteStation = false;
+					this.updateIfStationIsFavorited({ isFavorited: false });
 			});
 		});
 
@@ -1207,7 +1207,8 @@ export default {
 						privatePlaylist,
 						type,
 						genres,
-						blacklistedGenres
+						blacklistedGenres,
+						isFavorited
 					} = res.data;
 
 					this.joinStation({
@@ -1222,7 +1223,8 @@ export default {
 						privatePlaylist,
 						type,
 						genres,
-						blacklistedGenres
+						blacklistedGenres,
+						isFavorited
 					});
 
 					const currentSong = res.data.currentSong
@@ -1270,16 +1272,6 @@ export default {
 							}
 						});
 					}
-
-					/** Check if station is favorited */
-					this.socket.emit("users.getFavoriteStations", data => {
-						if (
-							data.status === "success" &&
-							data.favoriteStations.indexOf(this.station._id) !==
-								-1
-						)
-							this.favoriteStation = true;
-					});
 
 					if (this.isOwnerOrAdmin()) {
 						keyboardShortcuts.registerShortcut(
@@ -1404,7 +1396,7 @@ export default {
 				}
 			});
 		},
-		addFavoriteStation() {
+		favoriteStation() {
 			this.socket.emit(
 				"stations.favoriteStation",
 				this.station._id,
@@ -1418,7 +1410,7 @@ export default {
 				}
 			);
 		},
-		removeFavoriteStation() {
+		unfavoriteStation() {
 			this.socket.emit(
 				"stations.unfavoriteStation",
 				this.station._id,
@@ -1443,7 +1435,8 @@ export default {
 			"updateStationPaused",
 			"updateLocalPaused",
 			"updateNoSong",
-			"editStation"
+			"editStation",
+			"updateIfStationIsFavorited"
 		])
 	}
 };

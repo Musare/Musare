@@ -1087,6 +1087,48 @@ class _StationsModule extends CoreClass {
 	}
 
 	/**
+	 * Checks if a user has favorited a station or not
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {object} payload.stationId - the id of the station in question
+	 * @param {string} payload.userId - the id of the user in question
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	HAS_USER_FAVORITED_STATION(payload) {
+		return new Promise((resolve, reject) => {
+			async.waterfall(
+				[
+					next => {
+						DBModule.runJob(
+							"GET_MODEL",
+							{
+								modelName: "user"
+							},
+							this
+						).then(userModel => {
+							userModel.findOne({ _id: payload.userId }, next);
+						});
+					},
+
+					(user, next) => {
+						if (!user) return next("User not found.");
+						if (user.favoriteStations.indexOf(payload.stationId) !== -1) return next(null, true);
+						return next(null, false);
+					}
+				],
+				async (err, isStationFavorited) => {
+					if (err && err !== true) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						return reject(new Error(err));
+					}
+
+					return resolve(isStationFavorited);
+				}
+			);
+		});
+	}
+
+	/**
 	 * Returns a list of sockets in a room that can and can't know about a station
 	 *
 	 * @param {object} payload - the payload object

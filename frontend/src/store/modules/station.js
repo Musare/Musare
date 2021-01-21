@@ -49,6 +49,9 @@ const actions = {
 	},
 	updatePrivatePlaylistQueueSelected: ({ commit }, status) => {
 		commit("updatePrivatePlaylistQueueSelected", status);
+	},
+	updateIfStationIsFavorited: ({ commit }, { isFavorited }) => {
+		commit("updateIfStationIsFavorited", isFavorited);
 	}
 };
 
@@ -92,6 +95,9 @@ const mutations = {
 	},
 	updatePrivatePlaylistQueueSelected(state, status) {
 		state.privatePlaylistQueueSelected = status;
+	},
+	updateIfStationIsFavorited(state, isFavorited) {
+		state.station.isFavorited = isFavorited;
 	}
 };
 

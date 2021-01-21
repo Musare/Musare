@@ -1932,38 +1932,5 @@ export default {
 				}
 			}
 		);
-	}),
-
-	getFavoriteStations: isLoginRequired(async function getFavoriteStations(session, cb) {
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-		async.waterfall(
-			[
-				next => {
-					userModel.findOne({ _id: session.userId }, next);
-				},
-
-				(user, next) => {
-					if (!user) return next("User not found.");
-					return next(null, user);
-				}
-			],
-			async (err, user) => {
-				if (err && err !== true) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"GET_FAVORITE_STATIONS",
-						`User ${session.userId} failed to get favorite stations. '${err}'`
-					);
-					cb({ status: "failure", message: err });
-				} else {
-					this.log("SUCCESS", "GET_FAVORITE_STATIONS", `User ${session.userId} got favorite stations.`);
-					cb({
-						status: "success",
-						favoriteStations: user.favoriteStations
-					});
-				}
-			}
-		);
 	})
 };

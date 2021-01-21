@@ -63,16 +63,14 @@
 						<div class="media">
 							<div class="media-left displayName">
 								<i
-									v-if="loggedIn && !isFavorite(station)"
-									@click.prevent="addFavoriteStation(station)"
+									v-if="loggedIn && !station.isFavorited"
+									@click.prevent="favoriteStation(station)"
 									class="favorite material-icons"
 									>star_border</i
 								>
 								<i
-									v-if="loggedIn && isFavorite(station)"
-									@click.prevent="
-										removeFavoriteStation(station)
-									"
+									v-if="loggedIn && station.isFavorited"
+									@click.prevent="unfavoriteStation(station)"
 									class="favorite material-icons"
 									>star</i
 								>
@@ -187,7 +185,6 @@ export default {
 				key: ""
 			},
 			stations: [],
-			favoriteStations: [],
 			searchQuery: ""
 		};
 	},
@@ -208,7 +205,7 @@ export default {
 				)
 				.sort(
 					(a, b) =>
-						this.isFavorite(b) - this.isFavorite(a) ||
+						b.isFavorited - a.isFavorited ||
 						this.isOwner(b) - this.isOwner(a) ||
 						this.isPlaying(b) - this.isPlaying(a) ||
 						a.paused - b.paused ||
@@ -347,12 +344,21 @@ export default {
 			});
 
 			this.socket.on("event:user.favoritedStation", stationId => {
-				this.favoriteStations.push(stationId);
+				this.stations.forEach(s => {
+					const station = s;
+					if (station._id === stationId) {
+						station.isFavorited = true;
+					}
+				});
 			});
 
 			this.socket.on("event:user.unfavoritedStation", stationId => {
-				const index = this.favoriteStations.indexOf(stationId);
-				this.favoriteStations.splice(index, 1);
+				this.stations.forEach(s => {
+					const station = s;
+					if (station._id === stationId) {
+						station.isFavorited = false;
+					}
+				});
 			});
 		});
 	},
@@ -375,22 +381,16 @@ export default {
 						this.stations.push(station);
 					});
 			});
-			this.socket.emit("users.getFavoriteStations", data => {
-				if (data.status === "success")
-					this.favoriteStations = data.favoriteStations;
-			});
+
 			this.socket.emit("apis.joinRoom", "home", () => {});
 		},
 		isOwner(station) {
 			return station.owner === this.userId;
 		},
-		isFavorite(station) {
-			return this.favoriteStations.indexOf(station._id) !== -1;
-		},
 		isPlaying(station) {
 			return typeof station.currentSong.title !== "undefined";
 		},
-		addFavoriteStation(station) {
+		favoriteStation(station) {
 			this.socket.emit("stations.favoriteStation", station._id, res => {
 				if (res.status === "success") {
 					new Toast({
@@ -400,7 +400,7 @@ export default {
 				} else new Toast({ content: res.message, timeout: 8000 });
 			});
 		},
-		removeFavoriteStation(station) {
+		unfavoriteStation(station) {
 			this.socket.emit("stations.unfavoriteStation", station._id, res => {
 				if (res.status === "success") {
 					new Toast({
@@ -410,7 +410,8 @@ export default {
 				} else new Toast({ content: res.message, timeout: 8000 });
 			});
 		},
-		...mapActions("modals", ["openModal"])
+		...mapActions("modals", ["openModal"]),
+		...mapActions("station", ["updateIfStationIsFavorited"])
 	}
 };
 </script>
