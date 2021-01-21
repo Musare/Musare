@@ -292,15 +292,22 @@ class MovingAverageCalculator {
 }
 
 export default class CoreClass {
-	// eslint-disable-next-line require-jsdoc
-	constructor(name) {
+	/**
+	 *
+	 * @param {string} name - the name of the class
+	 * @param {object} options - optional options
+	 * @param {number} options.concurrency - how many jobs can run at the same time
+	 * @param {object} options.priorities - custom priorities for jobs
+	 */
+	constructor(name, options) {
 		this.name = name;
 		this.status = "UNINITIALIZED";
 		// this.log("Core constructor");
-		this.jobQueue = new Queue((job, options) => this._runJob(job, options), 10);
+		this.concurrency = options && options.concurrency ? options.concurrency : 10;
+		this.jobQueue = new Queue((job, options) => this._runJob(job, options), this.concurrency);
 		this.jobQueue.pause();
 		this.runningJobs = [];
-		this.priorities = {};
+		this.priorities = options && options.priorities ? options.priorities : {};
 		this.stage = 0;
 		this.jobStatistics = {};
 
@@ -499,11 +506,12 @@ export default class CoreClass {
 
 		// if (options.bypassQueue) this._runJob(job, options, () => {});
 		// else {
-		const calculatedPriority = Math.min(
-			_priority || Infinity,
-			_parentJob ? _parentJob.task.priority : Infinity,
-			this.priorities[name] ? this.priorities[name] : 10
-		);
+		let calculatedPriority = null;
+		if (_priority) calculatedPriority = _priority;
+		else if (this.priorities[name]) calculatedPriority = this.priorities[name];
+		else if (_parentJob) calculatedPriority = _parentJob.task.priority;
+		else calculatedPriority = 10;
+
 		this.jobQueue.push(job, _options, calculatedPriority);
 
 		if (
