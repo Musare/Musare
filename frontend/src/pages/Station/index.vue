@@ -20,16 +20,16 @@
 						<div class="row" id="station-name">
 							<h1>{{ station.displayName }}</h1>
 							<a href="#">
-								<!-- Favourite Station Button -->
+								<!-- Favorite Station Button -->
 								<i
 									v-if="loggedIn && favoriteStation"
-									@click="unfavoriteStation($event)"
+									@click.prevent="removefavoriteStation()"
 									class="material-icons"
 									>star</i
 								>
 								<i
 									v-if="loggedIn && !favoriteStation"
-									@click="addfavoriteStation($event)"
+									@click.prevent="addFavoriteStation()"
 									class="material-icons"
 									>star_border</i
 								>
@@ -1271,7 +1271,7 @@ export default {
 						});
 					}
 
-					/** Check if station is favourited */
+					/** Check if station is favorited */
 					this.socket.emit("users.getFavoriteStations", data => {
 						if (
 							data.status === "success" &&
@@ -1404,8 +1404,7 @@ export default {
 				}
 			});
 		},
-		addfavoriteStation(event) {
-			event.preventDefault();
+		addFavoriteStation() {
 			this.socket.emit(
 				"stations.favoriteStation",
 				this.station._id,
@@ -1419,8 +1418,7 @@ export default {
 				}
 			);
 		},
-		unfavoriteStation(event) {
-			event.preventDefault();
+		removeFavoriteStation() {
 			this.socket.emit(
 				"stations.unfavoriteStation",
 				this.station._id,

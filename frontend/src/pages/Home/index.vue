@@ -64,13 +64,15 @@
 							<div class="media-left displayName">
 								<i
 									v-if="loggedIn && !isFavorite(station)"
-									@click="favoriteStation($event, station)"
+									@click.prevent="addFavoriteStation(station)"
 									class="favorite material-icons"
 									>star_border</i
 								>
 								<i
 									v-if="loggedIn && isFavorite(station)"
-									@click="unfavoriteStation($event, station)"
+									@click.prevent="
+										removeFavoriteStation(station)
+									"
 									class="favorite material-icons"
 									>star</i
 								>
@@ -388,8 +390,7 @@ export default {
 		isPlaying(station) {
 			return typeof station.currentSong.title !== "undefined";
 		},
-		favoriteStation(event, station) {
-			event.preventDefault();
+		addFavoriteStation(station) {
 			this.socket.emit("stations.favoriteStation", station._id, res => {
 				if (res.status === "success") {
 					new Toast({
@@ -399,8 +400,7 @@ export default {
 				} else new Toast({ content: res.message, timeout: 8000 });
 			});
 		},
-		unfavoriteStation(event, station) {
-			event.preventDefault();
+		removeFavoriteStation(station) {
 			this.socket.emit("stations.unfavoriteStation", station._id, res => {
 				if (res.status === "success") {
 					new Toast({

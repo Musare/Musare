@@ -88,7 +88,7 @@
 										type="text"
 										id="title-input"
 										v-model="editing.song.title"
-										@keyup.ctrl.alt.68="
+										@keyup.ctrl.alt.d="
 											getAlbumData('title')
 										"
 									/>
@@ -137,7 +137,7 @@
 										class="input"
 										type="text"
 										v-model="editing.song.thumbnail"
-										@keyup.ctrl.alt.68="
+										@keyup.ctrl.alt.d="
 											getAlbumData('albumArt')
 										"
 									/>
@@ -163,7 +163,7 @@
 										@focus="focusArtistInput()"
 										@keydown="keydownArtistInput()"
 										@keyup.enter="addTag('artists')"
-										@keyup.ctrl.alt.68="
+										@keyup.ctrl.alt.d="
 											getAlbumData('artists')
 										"
 									/>
@@ -237,7 +237,7 @@
 										@focus="focusGenreInput()"
 										@keydown="keydownGenreInput()"
 										@keyup.enter="addTag('genres')"
-										@keyup.ctrl.alt.68="
+										@keyup.ctrl.alt.d="
 											getAlbumData('genres')
 										"
 									/>
@@ -404,8 +404,8 @@
 								v-for="(result, index) in discogs.apiResults"
 								:key="index"
 								tabindex="0"
-								@keydown.prevent.32
-								@keyup.13="toggleAPIResult(index)"
+								@keydown.space.prevent
+								@keyup.enter="toggleAPIResult(index)"
 							>
 								<div class="top-container">
 									<img :src="result.album.albumArt" />

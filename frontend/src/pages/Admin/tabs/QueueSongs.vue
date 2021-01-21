@@ -46,13 +46,13 @@
 						v-for="(song, index) in filteredSongs"
 						:key="index"
 						tabindex="0"
-						@keydown.prevent.38
-						@keydown.prevent.40
-						@keyup.38="selectPrevious($event)"
-						@keyup.40="selectNext($event)"
-						@keyup.69="edit(song, index)"
-						@keyup.65="add(song)"
-						@keyup.88="remove(song._id, index)"
+						@keydown.up.prevent
+						@keydown.down.prevent
+						@keyup.up="selectPrevious($event)"
+						@keyup.down="selectNext($event)"
+						@keyup.e="edit(song, index)"
+						@keyup.a="add(song)"
+						@keyup.x="remove(song._id, index)"
 					>
 						<td>
 							<img
@@ -286,12 +286,10 @@ export default {
 			});
 		},
 		selectPrevious(event) {
-			event.preventDefault();
 			if (event.srcElement.previousElementSibling)
 				event.srcElement.previousElementSibling.focus();
 		},
 		selectNext(event) {
-			event.preventDefault();
 			if (event.srcElement.nextElementSibling)
 				event.srcElement.nextElementSibling.focus();
 		},
