@@ -108,6 +108,17 @@ CacheModule.runJob("SUB", {
 				room: `station.${stationId}`,
 				args: ["event:stations.pause", { pausedAt: station.pausedAt }]
 			});
+
+			StationsModule.runJob("GET_SOCKETS_THAT_CAN_KNOW_ABOUT_STATION", {
+				room: `home`,
+				station
+			})
+				.then(response => {
+					const { socketsThatCan } = response;
+					socketsThatCan.forEach(socket => {
+						socket.emit("event:station.pause", { stationId });
+					});
+				});
 		});
 	}
 });
@@ -119,6 +130,118 @@ CacheModule.runJob("SUB", {
 			IOModule.runJob("EMIT_TO_ROOM", {
 				room: `station.${stationId}`,
 				args: ["event:stations.resume", { timePaused: station.timePaused }]
+			});
+
+			StationsModule.runJob("GET_SOCKETS_THAT_CAN_KNOW_ABOUT_STATION", {
+				room: `home`,
+				station
+			})
+				.then(response => {
+					const { socketsThatCan } = response;
+					socketsThatCan.forEach(socket => {
+						socket.emit("event:station.resume", { stationId });
+					});
+				})
+				.catch(console.log);
+		});
+	}
+});
+
+CacheModule.runJob("SUB", {
+	channel: "station.privacyUpdate",
+	cb: response => {
+		const { stationId, previousPrivacy } = response;
+		StationsModule.runJob("GET_STATION", { stationId }).then(station => {
+			if (previousPrivacy !== station.privacy) {
+				if (station.privacy === "public") {
+					// Station became public
+
+					IOModule.runJob("EMIT_TO_ROOM", {
+						room: "home",
+						args: ["event:stations.created", station]
+					});
+				} else if (previousPrivacy === "public") {
+					// Station became hidden
+
+					StationsModule.runJob("GET_SOCKETS_THAT_CAN_KNOW_ABOUT_STATION", {
+						room: `home`,
+						station
+					}).then(response => {
+						const { socketsThatCan, socketsThatCannot } = response;
+						socketsThatCan.forEach(socket => {
+							socket.emit("event:station.updatePrivacy", { stationId, privacy: station.privacy });
+						});
+						socketsThatCannot.forEach(socket => {
+							socket.emit("event:station.removed", { stationId });
+						});
+					});
+				} else {
+					// Station was hidden and is still hidden
+
+					StationsModule.runJob("GET_SOCKETS_THAT_CAN_KNOW_ABOUT_STATION", {
+						room: `home`,
+						station
+					}).then(response => {
+						const { socketsThatCan } = response;
+						socketsThatCan.forEach(socket => {
+							socket.emit("event:station.updatePrivacy", { stationId, privacy: station.privacy });
+						});
+					});
+				}
+			}
+		});
+	}
+});
+
+CacheModule.runJob("SUB", {
+	channel: "station.nameUpdate",
+	cb: response => {
+		const { stationId } = response;
+		StationsModule.runJob("GET_STATION", { stationId }).then(station => {
+			StationsModule.runJob("GET_SOCKETS_THAT_CAN_KNOW_ABOUT_STATION", {
+				room: `home`,
+				station
+			}).then(response => {
+				const { socketsThatCan } = response;
+				socketsThatCan.forEach(socket => {
+					socket.emit("event:station.updateName", { stationId, name: station.name });
+				});
+			});
+		});
+	}
+});
+
+CacheModule.runJob("SUB", {
+	channel: "station.displayNameUpdate",
+	cb: response => {
+		const { stationId } = response;
+		StationsModule.runJob("GET_STATION", { stationId }).then(station => {
+			StationsModule.runJob("GET_SOCKETS_THAT_CAN_KNOW_ABOUT_STATION", {
+				room: `home`,
+				station
+			}).then(response => {
+				const { socketsThatCan } = response;
+				socketsThatCan.forEach(socket => {
+					socket.emit("event:station.updateDisplayName", { stationId, displayName: station.displayName });
+				});
+			});
+		});
+	}
+});
+
+CacheModule.runJob("SUB", {
+	channel: "station.descriptionUpdate",
+	cb: response => {
+		const { stationId } = response;
+		StationsModule.runJob("GET_STATION", { stationId }).then(station => {
+			StationsModule.runJob("GET_SOCKETS_THAT_CAN_KNOW_ABOUT_STATION", {
+				room: `home`,
+				station
+			}).then(response => {
+				const { socketsThatCan } = response;
+				socketsThatCan.forEach(socket => {
+					socket.emit("event:station.updateDescription", { stationId, description: station.description });
+				});
 			});
 		});
 	}
@@ -152,6 +275,11 @@ CacheModule.runJob("SUB", {
 		IOModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${stationId}`,
 			args: ["event:stations.remove"]
+		});
+		console.log(111, "REMOVED");
+		IOModule.runJob("EMIT_TO_ROOM", {
+			room: `home`,
+			args: ["event:station.removed", { stationId }]
 		});
 		IOModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.stations",
@@ -867,6 +995,10 @@ export default {
 					"STATIONS_UPDATE_NAME",
 					`Updated station "${stationId}" name to "${newName}" successfully.`
 				);
+				CacheModule.runJob("PUB", {
+					channel: "station.nameUpdate",
+					value: { stationId }
+				});
 				return cb({
 					status: "success",
 					message: "Successfully updated the name."
@@ -926,6 +1058,10 @@ export default {
 					"STATIONS_UPDATE_DISPLAY_NAME",
 					`Updated station "${stationId}" displayName to "${newDisplayName}" successfully.`
 				);
+				CacheModule.runJob("PUB", {
+					channel: "station.displayNameUpdate",
+					value: { stationId }
+				});
 				return cb({
 					status: "success",
 					message: "Successfully updated the display name."
@@ -985,6 +1121,10 @@ export default {
 					"STATIONS_UPDATE_DESCRIPTION",
 					`Updated station "${stationId}" description to "${newDescription}" successfully.`
 				);
+				CacheModule.runJob("PUB", {
+					channel: "station.descriptionUpdate",
+					value: { stationId }
+				});
 				return cb({
 					status: "success",
 					message: "Successfully updated the description."
@@ -1009,8 +1149,21 @@ export default {
 			},
 			this
 		);
+		let previousPrivacy = null;
 		async.waterfall(
 			[
+				next => {
+					stationModel.findOne({ _id: stationId }, next);
+				},
+
+				(station, next) => {
+					if (!station) next("No station found.");
+					else {
+						previousPrivacy = station.privacy;
+						next();
+					}
+				},
+
 				next => {
 					stationModel.updateOne(
 						{ _id: stationId },
@@ -1043,6 +1196,10 @@ export default {
 					"STATIONS_UPDATE_PRIVACY",
 					`Updated station "${stationId}" privacy to "${newPrivacy}" successfully.`
 				);
+				CacheModule.runJob("PUB", {
+					channel: "station.privacyUpdate",
+					value: { stationId, previousPrivacy }
+				});
 				return cb({
 					status: "success",
 					message: "Successfully updated the privacy."

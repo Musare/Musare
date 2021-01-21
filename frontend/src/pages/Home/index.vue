@@ -225,14 +225,35 @@ export default {
 			});
 			this.socket.on("event:stations.created", res => {
 				const station = res;
+				if (
+					this.stations.find(_station => _station._id === station._id)
+				) {
+					this.stations.forEach(s => {
+						const _station = s;
+						if (_station._id === station._id) {
+							_station.privacy = station.privacy;
+						}
+					});
+				} else {
+					if (!station.currentSong)
+						station.currentSong = {
+							thumbnail: "/assets/notes-transparent.png"
+						};
+					if (station.currentSong && !station.currentSong.thumbnail)
+						station.currentSong.ytThumbnail = `https://img.youtube.com/vi/${station.currentSong.songId}/mqdefault.jpg`;
+					this.stations.push(station);
+				}
+			});
 
-				if (!station.currentSong)
-					station.currentSong = {
-						thumbnail: "/assets/notes-transparent.png"
-					};
-				if (station.currentSong && !station.currentSong.thumbnail)
-					station.currentSong.ytThumbnail = `https://img.youtube.com/vi/${station.currentSong.songId}/mqdefault.jpg`;
-				this.stations.push(station);
+			this.socket.on("event:station.removed", response => {
+				const { stationId } = response;
+				const station = this.stations.find(
+					station => station._id === stationId
+				);
+				if (station) {
+					const stationIndex = this.stations.indexOf(station);
+					this.stations.splice(stationIndex, 1);
+				}
 			});
 
 			this.socket.on(
@@ -247,6 +268,46 @@ export default {
 				}
 			);
 
+			this.socket.on("event:station.updatePrivacy", response => {
+				const { stationId, privacy } = response;
+				this.stations.forEach(s => {
+					const station = s;
+					if (station._id === stationId) {
+						station.privacy = privacy;
+					}
+				});
+			});
+
+			this.socket.on("event:station.updateName", response => {
+				const { stationId, name } = response;
+				this.stations.forEach(s => {
+					const station = s;
+					if (station._id === stationId) {
+						station.name = name;
+					}
+				});
+			});
+
+			this.socket.on("event:station.updateDisplayName", response => {
+				const { stationId, displayName } = response;
+				this.stations.forEach(s => {
+					const station = s;
+					if (station._id === stationId) {
+						station.displayName = displayName;
+					}
+				});
+			});
+
+			this.socket.on("event:station.updateDescription", response => {
+				const { stationId, description } = response;
+				this.stations.forEach(s => {
+					const station = s;
+					if (station._id === stationId) {
+						station.description = description;
+					}
+				});
+			});
+
 			this.socket.on("event:station.nextSong", (stationId, song) => {
 				let newSong = song;
 				this.stations.forEach(s => {
@@ -259,6 +320,26 @@ export default {
 						if (newSong && !newSong.thumbnail)
 							newSong.ytThumbnail = `https://img.youtube.com/vi/${newSong.songId}/mqdefault.jpg`;
 						station.currentSong = newSong;
+					}
+				});
+			});
+
+			this.socket.on("event:station.pause", response => {
+				const { stationId } = response;
+				this.stations.forEach(s => {
+					const station = s;
+					if (station._id === stationId) {
+						station.paused = true;
+					}
+				});
+			});
+
+			this.socket.on("event:station.resume", response => {
+				const { stationId } = response;
+				this.stations.forEach(s => {
+					const station = s;
+					if (station._id === stationId) {
+						station.paused = false;
 					}
 				});
 			});
