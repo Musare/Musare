@@ -55,20 +55,9 @@ export default {
 	}
 }
 
-.footer-content a:not(.button) {
-	border: 0;
-}
-
-.footer-content {
-	display: flex;
-	align-items: center;
-	flex-direction: column;
-	& > * {
-		margin: 5px 0;
-	}
-}
-
 .footer {
+	position: relative;
+	bottom: 0;
 	flex-shrink: 0;
 	height: auto;
 	padding: 20px;
@@ -79,6 +68,20 @@ export default {
 	width: 100%;
 	height: 160px;
 	font-size: 16px;
+
+	.footer-content {
+		display: flex;
+		align-items: center;
+		flex-direction: column;
+
+		& > * {
+			margin: 5px 0;
+		}
+
+		a:not(.button) {
+			border: 0;
+		}
+	}
 
 	@media (max-width: 650px) {
 		border-radius: 0;
@@ -122,9 +125,10 @@ export default {
 	}
 }
 
-@media only screen and (min-width: 992px) {
+@media only screen and (min-width: 990px) {
 	.footer {
 		height: 100px;
+
 		#footer-copyright {
 			left: 0;
 			top: 0;

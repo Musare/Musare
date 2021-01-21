@@ -28,7 +28,7 @@
 			</ul>
 		</aside>
 
-		<p v-else class="nothing-here">
+		<p v-else class="nothing-here-text">
 			No Playlists found
 		</p>
 
@@ -154,7 +154,7 @@ export default {
 	border-radius: 0 0 5px 5px;
 	max-height: 100%;
 
-	.nothing-here {
+	.nothing-here-text {
 		margin-bottom: 10px;
 	}
 

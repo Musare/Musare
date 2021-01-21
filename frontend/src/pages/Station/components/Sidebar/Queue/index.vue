@@ -5,9 +5,12 @@
 				v-for="song in songsList"
 				:key="song.songId"
 				:song="song"
-				:station="{ type: station.type, partyMode: station.partyMode }"
+				:station="{
+					type: station.type,
+					partyMode: station.partyMode
+				}"
 			/>
-			<p class="nothing-here" v-if="songsList.length < 1">
+			<p class="nothing-here-text" v-if="songsList.length < 1">
 				There are no songs currently queued
 			</p>
 		</div>
@@ -113,8 +116,11 @@ export default {
 }
 
 #queue {
+	position: absolute;
+	width: 100%;
 	background-color: #fff;
 	border-radius: 0 0 5px 5px;
+
 	::-webkit-scrollbar {
 		width: 10px;
 	}
@@ -156,6 +162,8 @@ export default {
 	}
 
 	#add-song-to-queue {
+		position: absolute;
+		bottom: 0;
 		background-color: rgba(3, 169, 244, 1);
 		color: $white !important;
 		border: 0;

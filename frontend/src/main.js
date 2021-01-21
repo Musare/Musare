@@ -57,11 +57,8 @@ const router = new VueRouter({
 			component: () => import("./pages/Home/index.vue")
 		},
 		{
-			path: "*",
-			component: () => import("./pages/404.vue")
-		},
-		{
 			path: "/404",
+			alias: ["*"],
 			component: () => import("./pages/404.vue")
 		},
 		{

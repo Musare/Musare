@@ -5,9 +5,16 @@
 
 		<main-header v-if="exists" />
 
-		<div id="station-outer-container">
+		<div
+			id="station-outer-container"
+			:style="[!exists ? { margin: 0, padding: 0 } : {}]"
+		>
 			<div v-show="loading" class="progress" />
-			<div v-show="!loading && exists" id="station-inner-container">
+			<div
+				v-show="!loading && exists"
+				id="station-inner-container"
+				:class="{ 'nothing-here': noSong }"
+			>
 				<div id="about-station-container" class="quadrant">
 					<div id="station-info">
 						<div class="row" id="station-name">
@@ -80,6 +87,7 @@
 						</button>
 					</div>
 				</div>
+
 				<div class="player-container quadrant" v-show="!noSong">
 					<div id="video-container">
 						<div id="player" style="width: 100%; height: 100%" />
@@ -262,19 +270,21 @@
 						</div>
 					</div>
 				</div>
-				<p class="player-container nothing-here" v-if="noSong">
+				<p class="player-container nothing-here-text" v-if="noSong">
 					No song is currently playing
 				</p>
+
 				<div id="sidebar-container" class="quadrant">
 					<station-sidebar />
 				</div>
+
 				<div
 					id="currently-playing-container"
 					class="quadrant"
 					:class="{ 'no-currently-playing': noSong }"
 				>
 					<currently-playing v-if="!noSong" />
-					<p v-else class="nothing-here">
+					<p v-else class="nothing-here-text">
 						No song is currently playing
 					</p>
 				</div>
@@ -287,7 +297,7 @@
 			<report v-if="modals.report" />
 		</div>
 
-		<main-footer />
+		<main-footer v-if="exists" />
 
 		<floating-box id="player-debug-box" ref="playerDebugBox">
 			<template #body>
@@ -1477,7 +1487,7 @@ export default {
 	#currently-playing-container,
 	#about-station-container,
 	#control-bar-container,
-	.player-container.nothing-here {
+	.player-container.nothing-here-text {
 		background-color: $night-mode-bg-secondary !important;
 	}
 
@@ -1499,7 +1509,6 @@ export default {
 #station-outer-container {
 	margin: 0 auto;
 	padding: 20px 40px;
-	margin-top: 5px;
 	height: 100%;
 	width: 100%;
 	max-width: 2000px;
@@ -1509,6 +1518,14 @@ export default {
 		margin-top: 0 !important;
 		height: auto !important;
 
+		#station-inner-container.nothing-here {
+			grid-template-areas:
+				"about-station"
+				"player"
+				"sidebar" !important;
+			grid-template-rows: min-content 50px auto !important;
+		}
+
 		#station-inner-container {
 			grid-template-columns: 100% !important;
 			grid-template-areas:
@@ -1516,11 +1533,11 @@ export default {
 				"player"
 				"currently-playing"
 				"sidebar" !important;
+			grid-template-rows: auto !important;
 		}
 
 		.quadrant,
 		.player-container {
-			width: 100% !important;
 			border: 0 !important;
 		}
 
@@ -1533,10 +1550,6 @@ export default {
 		#about-station-container {
 			margin-top: 30px;
 			padding: 0 10px !important;
-
-			&:not(.nothing-here) {
-				padding-bottom: 0 !important;
-			}
 		}
 
 		#currently-playing-container {
@@ -1548,17 +1561,14 @@ export default {
 		}
 
 		#sidebar-container {
+			padding: 0 10px !important;
 			max-height: 500px !important;
-			min-height: 200px;
+			min-height: 250px;
 		}
 
 		/** Change height of YouTube embed  */
-		.player-container:not(.nothing-here) {
+		.player-container:not(.nothing-here-text) {
 			height: 500px !important;
-		}
-
-		.player-container {
-			height: 50px;
 		}
 
 		/** mainly irrelevant on mobile */
@@ -1570,13 +1580,14 @@ export default {
 	#station-inner-container {
 		display: grid;
 		height: 100%;
-		width: calc(100% - 25px);
+		width: 100%;
 		grid-template-columns: 70% 30%;
 		grid-template-rows: 150px auto;
 		grid-template-areas:
 			"about-station currently-playing"
 			"player sidebar";
 		gap: 25px;
+		min-height: calc(100vh - 64px - 190px);
 
 		@media (min-width: 1040px) and (max-width: 2100px) {
 			#control-bar-container {
@@ -1660,8 +1671,9 @@ export default {
 
 		#currently-playing-container {
 			grid-area: currently-playing;
+			margin-right: 25px;
 
-			.nothing-here {
+			.nothing-here-text {
 				height: 100%;
 			}
 		}
@@ -1676,7 +1688,7 @@ export default {
 			overflow: hidden;
 			grid-area: player;
 
-			&.nothing-here {
+			&.nothing-here-text {
 				border: 1px solid $light-grey-2;
 				border-radius: 5px;
 			}
@@ -1920,6 +1932,7 @@ export default {
 			position: relative;
 			height: inherit;
 			grid-area: sidebar;
+			margin-right: 25px;
 		}
 	}
 }
@@ -1928,10 +1941,9 @@ export default {
 	margin-top: 30px;
 }
 
-/deep/ .nothing-here {
+/deep/ .nothing-here-text {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	text-transform: uppercase;
 }
 </style>

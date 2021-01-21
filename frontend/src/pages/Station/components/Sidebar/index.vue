@@ -92,7 +92,8 @@ export default {
 	width: 100%;
 	top: 0;
 	position: absolute;
-	height: calc(100% - 36px);
+	max-height: calc(100% - 36px);
+	height: inherit;
 
 	.tab {
 		height: 100%;
