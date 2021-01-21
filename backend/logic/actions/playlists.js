@@ -697,7 +697,7 @@ export default {
 				);
 				return cb({
 					status: "success",
-					message: `Playlist has been imported. ${addSongsStats.successful} were addedd successfully, ${addSongsStats.failed} failed (${addSongsStats.alreadyInPlaylist} were already in the playlist)`,
+					message: `Playlist has been imported. ${addSongsStats.successful} were added successfully, ${addSongsStats.failed} failed (${addSongsStats.alreadyInPlaylist} were already in the playlist)`,
 					data: playlist.songs,
 					stats: {
 						videosInPlaylistTotal,

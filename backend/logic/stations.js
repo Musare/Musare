@@ -1085,6 +1085,107 @@ class _StationsModule extends CoreClass {
 			);
 		});
 	}
+
+	/**
+	 * Returns a list of sockets in a room that can and can't know about a station
+	 *
+	 * @param {object} payload - the payload object
+	 * @param {object} payload.station - the station object
+	 * @param {string} payload.room - the socket.io room to get the sockets from
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	GET_SOCKETS_THAT_CAN_KNOW_ABOUT_STATION(payload) {
+		return new Promise((resolve, reject) => {
+			IOModule.runJob("GET_ROOM_SOCKETS", { room: payload.room }, this)
+				.then(socketsObject => {
+					const sockets = Object.keys(socketsObject).map(socketKey => socketsObject[socketKey]);
+					let socketsThatCan = [];
+					const socketsThatCannot = [];
+
+					if (payload.station.privacy === "public") {
+						socketsThatCan = sockets;
+						resolve({ socketsThatCan, socketsThatCannot });
+					} else {
+						async.eachLimit(
+							sockets,
+							1,
+							(socket, next) => {
+								const { session } = socket;
+
+								async.waterfall(
+									[
+										next => {
+											if (!session.sessionId) next("No session id");
+											else next();
+										},
+
+										next => {
+											CacheModule.runJob(
+												"HGET",
+												{
+													table: "sessions",
+													key: session.sessionId
+												},
+												this
+											)
+												.then(response => {
+													next(null, response);
+												})
+												.catch(next);
+										},
+
+										(session, next) => {
+											if (!session) next("No session");
+											else {
+												DBModule.runJob("GET_MODEL", { modelName: "user" }, this)
+													.then(userModel => {
+														next(null, userModel);
+													})
+													.catch(next);
+											}
+										},
+
+										(userModel, next) => {
+											if (!userModel) next("No user model");
+											else
+												userModel.findOne(
+													{
+														_id: session.userId
+													},
+													next
+												);
+										},
+
+										(user, next) => {
+											if (!user) next("No user found");
+											else if (user.role === "admin") {
+												socketsThatCan.push(socket);
+												next();
+											} else if (
+												payload.station.type === "community" &&
+												payload.station.owner === session.userId
+											) {
+												socketsThatCan.push(socket);
+												next();
+											}
+										}
+									],
+									err => {
+										if (err) socketsThatCannot.push(socket);
+										next();
+									}
+								);
+							},
+							err => {
+								if (err) reject(err);
+								else resolve({ socketsThatCan, socketsThatCannot });
+							}
+						);
+					}
+				})
+				.catch(reject);
+		});
+	}
 }
 
 export default new _StationsModule();
