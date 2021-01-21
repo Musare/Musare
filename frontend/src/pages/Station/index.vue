@@ -1243,6 +1243,7 @@ export default {
 					this.updateUserCount(res.data.userCount);
 					this.updateUsers(res.data.users);
 					this.pausedAt = res.data.pausedAt;
+
 					if (res.data.currentSong) {
 						this.updateNoSong(false);
 						this.youtubeReady();
@@ -1269,6 +1270,16 @@ export default {
 							}
 						});
 					}
+
+					/** Check if station is favourited */
+					this.socket.emit("users.getFavoriteStations", data => {
+						if (
+							data.status === "success" &&
+							data.favoriteStations.indexOf(this.station._id) !==
+								-1
+						)
+							this.favoriteStation = true;
+					});
 
 					if (this.isOwnerOrAdmin()) {
 						keyboardShortcuts.registerShortcut(
@@ -1391,13 +1402,6 @@ export default {
 					this.loading = false;
 					this.exists = false;
 				}
-			});
-			this.socket.emit("users.getFavoriteStations", data => {
-				if (
-					data.status === "success" &&
-					data.favoriteStations.indexOf(this.station._id) !== -1
-				)
-					this.favoriteStation = true;
 			});
 		},
 		addfavoriteStation(event) {
