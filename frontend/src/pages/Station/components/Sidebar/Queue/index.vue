@@ -1,6 +1,6 @@
 <template>
 	<div id="queue">
-		<div id="queue-items">
+		<div id="queue-items" class="scrollable-list">
 			<queue-item
 				v-for="song in songsList"
 				:key="song.songId"
@@ -16,7 +16,7 @@
 		</div>
 		<button
 			id="add-song-to-queue"
-			class="button is-primary"
+			class="button is-primary tab-actionable-button"
 			v-if="
 				loggedIn &&
 					((station.type === 'community' &&
@@ -44,12 +44,15 @@
 		>
 			<button
 				v-if="isAdminOnly() && !isOwnerOnly() && !dismissedWarning"
-				class="button"
+				class="button tab-actionable-button"
 				@click="dismissedWarning = true"
 			>
 				THIS STATION'S QUEUE IS LOCKED.
 			</button>
-			<button v-if="!isAdminOnly() && !isOwnerOnly()" class="button">
+			<button
+				v-if="!isAdminOnly() && !isOwnerOnly()"
+				class="button tab-actionable-button"
+			>
 				THIS STATION'S QUEUE IS LOCKED.
 			</button>
 		</div>
@@ -116,44 +119,11 @@ export default {
 }
 
 #queue {
-	position: absolute;
-	width: 100%;
 	background-color: #fff;
 	border-radius: 0 0 5px 5px;
 
-	::-webkit-scrollbar {
-		width: 10px;
-	}
-
-	::-webkit-scrollbar-track {
-		background-color: #fff;
-		border: 1px solid $light-grey-2;
-	}
-
-	::-webkit-scrollbar-thumb {
-		background-color: $dark-grey;
-
-		&:hover {
-			background-color: darken($dark-grey, 10%);
-		}
-	}
-
-	#queue-items {
-		width: 100%;
-		overflow: auto;
-		max-height: calc(100% - 20px - 40px);
-		padding: 10px;
-
-		.queue-item:not(:last-of-type) {
-			margin-bottom: 10px;
-		}
-	}
-
-	button {
-		width: calc(100% - 20px);
-		height: 40px;
-		border-radius: 5px;
-		margin: 10px;
+	.queue-item:not(:last-of-type) {
+		margin-bottom: 10px;
 	}
 
 	#queue-locked {
@@ -162,16 +132,8 @@ export default {
 	}
 
 	#add-song-to-queue {
-		position: absolute;
-		bottom: 0;
 		background-color: rgba(3, 169, 244, 1);
 		color: $white !important;
-		border: 0;
-
-		&:active,
-		&:focus {
-			border: 0;
-		}
 
 		&:focus {
 			background-color: $primary-color;

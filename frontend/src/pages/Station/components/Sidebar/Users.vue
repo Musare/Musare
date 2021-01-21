@@ -79,7 +79,7 @@ export default {
 			align-items: center;
 			padding: 5px 10px;
 			border: 0.5px $light-grey-2 solid;
-			border-radius: 5px;
+			border-radius: 3px;
 			cursor: pointer;
 			color: #000 !important;
 

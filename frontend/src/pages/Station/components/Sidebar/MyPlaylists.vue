@@ -1,39 +1,35 @@
 <template>
 	<div id="my-playlists">
-		<aside v-if="playlists.length > 0" class="menu">
-			<ul class="menu-list">
-				<li v-for="(playlist, index) in playlists" :key="index">
-					<playlist-item :playlist="playlist">
-						<div class="icons-group" slot="actions">
-							<button
-								v-if="
-									station.type === 'community' &&
-										isNotSelected(playlist._id) &&
-										!station.partyMode
-								"
-								class="button is-primary"
-								@click="selectPlaylist(playlist._id)"
-							>
-								<i class="material-icons">play_arrow</i>
-							</button>
-							<button
-								class="button is-primary"
-								@click="edit(playlist._id)"
-							>
-								<i class="material-icons">edit</i>
-							</button>
-						</div>
-					</playlist-item>
-				</li>
-			</ul>
-		</aside>
-
-		<p v-else class="nothing-here-text">
+		<ul class="menu-list scrollable-list" v-if="playlists.length > 0">
+			<li v-for="(playlist, index) in playlists" :key="index">
+				<playlist-item :playlist="playlist">
+					<div class="icons-group" slot="actions">
+						<button
+							v-if="
+								station.type === 'community' &&
+									isNotSelected(playlist._id) &&
+									!station.partyMode
+							"
+							class="button is-primary"
+							@click="selectPlaylist(playlist._id)"
+						>
+							<i class="material-icons">play_arrow</i>
+						</button>
+						<button
+							class="button is-primary"
+							@click="edit(playlist._id)"
+						>
+							<i class="material-icons">edit</i>
+						</button>
+					</div>
+				</playlist-item>
+			</li>
+		</ul>
+		<p v-else class="nothing-here-text scrollable-list">
 			No Playlists found
 		</p>
-
 		<a
-			class="button create-playlist"
+			class="button create-playlist tab-actionable-button"
 			href="#"
 			@click="openModal({ sector: 'station', modal: 'createPlaylist' })"
 			>Create Playlist</a
@@ -150,7 +146,6 @@ export default {
 #my-playlists {
 	background-color: #fff;
 	margin-bottom: 20px;
-	padding: 10px;
 	border-radius: 0 0 5px 5px;
 	max-height: 100%;
 
@@ -177,6 +172,10 @@ export default {
 
 .menu-list li {
 	align-items: center;
+
+	&:not(:last-of-type) {
+		margin-bottom: 10px;
+	}
 }
 
 .create-playlist {
@@ -186,6 +185,7 @@ export default {
 	background-color: rgba(3, 169, 244, 1);
 	color: $white !important;
 	border: 0;
+
 	&:active,
 	&:focus {
 		border: 0;

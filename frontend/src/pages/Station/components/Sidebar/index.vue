@@ -96,7 +96,9 @@ export default {
 	height: inherit;
 
 	.tab {
+		width: 100%;
 		height: 100%;
+		position: absolute;
 	}
 }
 
@@ -120,6 +122,49 @@ export default {
 	.selected {
 		background-color: $night-mode-bg-secondary;
 		color: #fff;
+	}
+}
+
+/deep/ .tab-actionable-button {
+	width: calc(100% - 20px);
+	height: 40px;
+	border-radius: 5px;
+	margin: 10px;
+	position: absolute;
+	bottom: 0;
+	border: 0;
+
+	&:active,
+	&:focus {
+		border: 0;
+	}
+}
+
+/deep/ .scrollable-list {
+	width: 100%;
+	overflow: auto;
+	max-height: calc(100% - 20px - 40px);
+	padding: 10px;
+
+	.queue-item:not(:last-of-type) {
+		margin-bottom: 10px;
+	}
+}
+
+/deep/ ::-webkit-scrollbar {
+	width: 10px;
+}
+
+/deep/ ::-webkit-scrollbar-track {
+	background-color: #fff;
+	border: 1px solid $light-grey-2;
+}
+
+/deep/ ::-webkit-scrollbar-thumb {
+	background-color: $dark-grey;
+
+	&:hover {
+		background-color: darken($dark-grey, 10%);
 	}
 }
 </style>

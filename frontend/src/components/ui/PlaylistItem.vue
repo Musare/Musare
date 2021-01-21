@@ -50,9 +50,8 @@ export default {
 .playlist {
 	width: 100%;
 	height: 72px;
-	margin-bottom: 10px;
 	border: 0.5px $light-grey-2 solid;
-	border-radius: 5px;
+	border-radius: 3px;
 	display: flex;
 
 	.top-text {
