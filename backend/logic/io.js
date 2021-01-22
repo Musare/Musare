@@ -141,8 +141,9 @@ class _IOModule extends CoreClass {
 			const sockets = [];
 
 			if (ns) {
-				return async.each(
+				return async.eachLimit(
 					Object.keys(ns.connected),
+					1,
 					(id, next) => {
 						const { session } = ns.connected[id];
 						CacheModule.runJob(

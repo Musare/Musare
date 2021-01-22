@@ -443,7 +443,6 @@ export default {
 		io.getSocket(socket => {
 			this.socket = socket;
 
-			io.removeAllListeners();
 			if (this.socket.connected) this.join();
 			io.onConnect(this.join);
 			this.socket.emit("stations.existsByName", this.stationName, res => {
