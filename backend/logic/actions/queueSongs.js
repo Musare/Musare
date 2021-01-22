@@ -350,7 +350,6 @@ export default {
 						.catch(next);
 				},
 				(songIds, next) => {
-					let processed = 0;
 					let successful = 0;
 					let failed = 0;
 					let alreadyInQueue = 0;
@@ -358,33 +357,37 @@ export default {
 
 					if (songIds.length === 0) next();
 
-					songIds.forEach(songId => {
-						IOModule.runJob(
-							"RUN_ACTION2",
-							{
-								session,
-								namespace: "queueSongs",
-								action: "add",
-								args: [songId]
-							},
-							this
-						)
-							.then(res => {
-								if (res.status === "success") successful += 1;
-								else failed += 1;
-								if (res.message === "This song is already in the queue.") alreadyInQueue += 1;
-								if (res.message === "This song has already been added.") alreadyAdded += 1;
-							})
-							.catch(() => {
-								failed += 1;
-							})
-							.finally(() => {
-								processed += 1;
-								if (processed === songIds.length) {
-									next(null, { successful, failed, alreadyInQueue, alreadyAdded });
-								}
-							});
-					});
+					async.eachLimit(
+						songIds,
+						1,
+						(songId, next) => {
+							IOModule.runJob(
+								"RUN_ACTION2",
+								{
+									session,
+									namespace: "queueSongs",
+									action: "add",
+									args: [songId]
+								},
+								this
+							)
+								.then(res => {
+									if (res.status === "success") successful += 1;
+									else failed += 1;
+									if (res.message === "This song is already in the queue.") alreadyInQueue += 1;
+									if (res.message === "This song has already been added.") alreadyAdded += 1;
+								})
+								.catch(() => {
+									failed += 1;
+								})
+								.finally(() => {
+									next();
+								});
+						},
+						() => {
+							next(null, { successful, failed, alreadyInQueue, alreadyAdded });
+						}
+					);
 				}
 			],
 			async (err, response) => {
