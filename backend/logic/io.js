@@ -735,7 +735,7 @@ class _IOModule extends CoreClass {
 				.then(() => {
 					// call the job that calls the action, passing it the session, and the arguments socket.io passed us
 
-					IOModule.runJob("RUN_ACTION2", { session: socket.session, namespace, action, args })
+					IOModule.runJob("RUN_ACTION2", { session: socket.session, namespace, action, args }, this)
 						.then(response => {
 							cb(response);
 							resolve();
