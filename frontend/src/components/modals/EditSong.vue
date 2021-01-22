@@ -685,7 +685,9 @@ export default {
 					this.video.player.seekTo(this.editing.song.skipDuration);
 					this.video.player.setVolume(volume);
 					if (volume > 0) this.video.player.unMute();
-					this.youtubeVideoDuration = this.video.player.getDuration();
+					this.youtubeVideoDuration = this.video.player
+						.getDuration()
+						.toFixed(3);
 					this.youtubeVideoNote = "(~)";
 					this.playerReady = true;
 
@@ -702,7 +704,7 @@ export default {
 
 						this.video.paused = false;
 						let youtubeDuration = this.video.player.getDuration();
-						this.youtubeVideoDuration = youtubeDuration;
+						this.youtubeVideoDuration = youtubeDuration.toFixed(3);
 						this.youtubeVideoNote = "";
 
 						if (this.editing.song.duration === -1)
