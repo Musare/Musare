@@ -624,42 +624,45 @@ export default {
 					});
 				},
 				(songIds, next) => {
-					let processed = 0;
 					let successful = 0;
 					let failed = 0;
 					let alreadyInPlaylist = 0;
 
 					if (songIds.length === 0) next();
 
-					songIds.forEach(songId => {
-						IOModule.runJob(
-							"RUN_ACTION2",
-							{
-								session,
-								namespace: "playlists",
-								action: "addSongToPlaylist",
-								args: [true, songId, playlistId]
-							},
-							this
-						)
-							.then(res => {
-								if (res.status === "success") {
-									successful += 1;
-									addedSongs.push(songId);
-								} else failed += 1;
-								if (res.message === "That song is already in the playlist") alreadyInPlaylist += 1;
-							})
-							.catch(() => {
-								failed += 1;
-							})
-							.finally(() => {
-								processed += 1;
-								if (processed === songIds.length) {
-									addSongsStats = { successful, failed, alreadyInPlaylist };
-									next(null);
-								}
-							});
-					});
+					async.eachLimit(
+						songIds,
+						1,
+						(songId, next) => {
+							IOModule.runJob(
+								"RUN_ACTION2",
+								{
+									session,
+									namespace: "playlists",
+									action: "addSongToPlaylist",
+									args: [true, songId, playlistId]
+								},
+								this
+							)
+								.then(res => {
+									if (res.status === "success") {
+										successful += 1;
+										addedSongs.push(songId);
+									} else failed += 1;
+									if (res.message === "That song is already in the playlist") alreadyInPlaylist += 1;
+								})
+								.catch(() => {
+									failed += 1;
+								})
+								.finally(() => {
+									next();
+								});
+						},
+						() => {
+							addSongsStats = { successful, failed, alreadyInPlaylist };
+							next(null);
+						}
+					);
 				},
 
 				next => {
