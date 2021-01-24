@@ -84,6 +84,11 @@ export default {
 
 		if (nightmode) this.enableNightMode();
 		else this.disableNightMode();
+
+		const autoSkipDisliked =
+			false || JSON.parse(localStorage.getItem("autoSkipDisliked"));
+
+		this.changeAutoSkipDisliked(autoSkipDisliked);
 	},
 	mounted() {
 		document.onkeydown = ev => {
@@ -173,7 +178,10 @@ export default {
 				.classList.remove("night-mode");
 		},
 		...mapActions("modals", ["closeCurrentModal"]),
-		...mapActions("user/preferences", ["changeNightmode"])
+		...mapActions("user/preferences", [
+			"changeNightmode",
+			"changeAutoSkipDisliked"
+		])
 	}
 };
 </script>
@@ -504,7 +512,7 @@ button.delete:focus {
 		height: 36px;
 		border-radius: 3px 0 0 3px;
 		border-right: 0;
-		border-colour: $light-grey-2;
+		border-color: $light-grey-2;
 	}
 
 	.button {

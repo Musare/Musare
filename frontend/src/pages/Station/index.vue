@@ -484,7 +484,10 @@ export default {
 							if (this.currentSong.songId === song.songId) {
 								this.liked = song.liked;
 								this.disliked = song.disliked;
-								if (song.disliked === true)
+								if (
+									this.autoSkipDisliked &&
+									song.disliked === true
+								)
 									this.voteSkipStation();
 							}
 						}

@@ -217,16 +217,23 @@ const modules = {
 	preferences: {
 		namespaced: true,
 		state: {
-			nightmode: true
+			nightmode: true,
+			autoSkipDisliked: true
 		},
 		actions: {
 			changeNightmode: ({ commit }, nightmode) => {
 				commit("changeNightmode", nightmode);
+			},
+			changeAutoSkipDisliked: ({ commit }, autoSkipDisliked) => {
+				commit("changeAutoSkipDisliked", autoSkipDisliked);
 			}
 		},
 		mutations: {
 			changeNightmode(state, nightmode) {
 				state.nightmode = nightmode;
+			},
+			changeAutoSkipDisliked(state, autoSkipDisliked) {
+				state.autoSkipDisliked = autoSkipDisliked;
 			}
 		}
 	}
