@@ -586,6 +586,12 @@ export default {
 				}
 			});
 
+			this.socket.on("event:privatePlaylist.deselected", () => {
+				if (this.station.type === "community") {
+					this.station.privatePlaylist = null;
+				}
+			});
+
 			this.socket.on("event:partyMode.updated", partyMode => {
 				if (this.station.type === "community") {
 					this.station.partyMode = partyMode;

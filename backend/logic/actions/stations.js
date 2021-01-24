@@ -101,6 +101,16 @@ CacheModule.runJob("SUB", {
 });
 
 CacheModule.runJob("SUB", {
+	channel: "privatePlaylist.deselected",
+	cb: data => {
+		IOModule.runJob("EMIT_TO_ROOM", {
+			room: `station.${data.stationId}`,
+			args: ["event:privatePlaylist.deselected"]
+		});
+	}
+});
+
+CacheModule.runJob("SUB", {
 	channel: "station.pause",
 	cb: stationId => {
 		StationsModule.runJob("GET_STATION", { stationId }).then(station => {
@@ -2202,6 +2212,96 @@ export default {
 				return cb({
 					status: "success",
 					message: "Successfully selected playlist."
+				});
+			}
+		);
+	}),
+
+	/**
+	 * Deselects the private playlist selected in a station
+	 *
+	 * @param session
+	 * @param stationId - the station id
+	 * @param cb
+	 */
+	deselectPrivatePlaylist: isOwnerRequired(async function deselectPrivatePlaylist(session, stationId, cb) {
+		const stationModel = await DBModule.runJob(
+			"GET_MODEL",
+			{
+				modelName: "station"
+			},
+			this
+		);
+
+		async.waterfall(
+			[
+				next => {
+					StationsModule.runJob("GET_STATION", { stationId }, this)
+						.then(station => {
+							next(null, station);
+						})
+						.catch(next);
+				},
+
+				(station, next) => {
+					if (!station) return next("Station not found.");
+					if (station.type !== "community") return next("Station is not a community station.");
+					if (!station.privatePlaylist) return next("No private playlist is currently selected.");
+
+					return stationModel.updateOne(
+						{ _id: stationId },
+						{
+							$set: {
+								privatePlaylist: null,
+								currentSongIndex: 0
+							}
+						},
+						{ runValidators: true },
+						next
+					);
+				},
+
+				(res, next) => {
+					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
+						.then(station => {
+							next(null, station);
+						})
+						.catch(next);
+				}
+			],
+			async (err, station) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"STATIONS_DESELECT_PRIVATE_PLAYLIST",
+						`Deselecting private playlist for station "${stationId}" failed. "${err}"`
+					);
+					return cb({ status: "failure", message: err });
+				}
+
+				this.log(
+					"SUCCESS",
+					"STATIONS_DESELECT_PRIVATE_PLAYLIST",
+					`Deselected private playlist for station "${stationId}" successfully.`
+				);
+
+				NotificationsModule.runJob("UNSCHEDULE", {
+					name: `stations.nextSong?id${stationId}`
+				});
+
+				if (!station.partyMode) StationsModule.runJob("SKIP_STATION", { stationId });
+
+				CacheModule.runJob("PUB", {
+					channel: "privatePlaylist.deselected",
+					value: {
+						stationId
+					}
+				});
+
+				return cb({
+					status: "success",
+					message: "Successfully deselected playlist."
 				});
 			}
 		);

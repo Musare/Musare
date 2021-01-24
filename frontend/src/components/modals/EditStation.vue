@@ -185,14 +185,10 @@
 								:key="index"
 							>
 								<div slot="actions">
-									<!-- <a
+									<a
 										class="button is-danger"
 										href="#"
-										@click="
-											togglePlaylistSelection(
-												playlist._id
-											)
-										"
+										@click="deselectPlaylist()"
 										v-if="isPlaylistSelected(playlist._id)"
 									>
 										<i
@@ -200,11 +196,12 @@
 											>stop</i
 										>
 										Stop playing
-									</a> -->
+									</a>
 									<a
 										class="button is-success"
 										href="#"
 										@click="selectPlaylist(playlist._id)"
+										v-else
 										><i
 											class="material-icons icon-with-button"
 											>play_arrow</i
@@ -567,6 +564,20 @@ export default {
 				"stations.selectPrivatePlaylist",
 				this.station._id,
 				playlistId,
+				res => {
+					if (res.status === "failure")
+						return new Toast({
+							content: res.message,
+							timeout: 8000
+						});
+					return new Toast({ content: res.message, timeout: 4000 });
+				}
+			);
+		},
+		deselectPlaylist() {
+			this.socket.emit(
+				"stations.deselectPrivatePlaylist",
+				this.station._id,
 				res => {
 					if (res.status === "failure")
 						return new Toast({
@@ -1263,6 +1274,14 @@ export default {
 
 #playlists {
 	overflow: auto;
+
+	.playlist:not(:last-of-type) {
+		margin-bottom: 10px;
+	}
+
+	.button {
+		width: 148px;
+	}
 }
 
 .modal-card {
