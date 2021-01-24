@@ -75,8 +75,12 @@
 						<h2 class="content-box-title">
 							Enter the code sent to your email
 						</h2>
-						<p class="content-box-description">
-							A code has been sent to <strong>email</strong>.
+						<p
+							class="content-box-description"
+							v-if="!this.hasEmailBeenSentAlready"
+						>
+							A code has been sent to
+							<strong>{{ email }}.</strong>
 						</p>
 
 						<p class="content-box-optional-helper">
@@ -243,6 +247,7 @@ export default {
 	data() {
 		return {
 			email: "",
+			hasEmailBeenSentAlready: true,
 			code: "",
 			newPassword: "",
 			newPasswordAgain: "",
@@ -336,6 +341,8 @@ export default {
 					content: "Email cannot be empty",
 					timeout: 8000
 				});
+
+			this.hasEmailBeenSentAlready = false;
 
 			if (this.mode === "set") {
 				return this.socket.emit("users.requestPassword", res => {
