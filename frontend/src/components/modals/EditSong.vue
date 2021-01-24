@@ -74,11 +74,12 @@
 						</div>
 						<img
 							class="thumbnail-preview"
-							:src="editing.song.thumbnail"
+							:src="song.thumbnail"
 							onerror="this.src='/assets/notes-transparent.png'"
+							v-if="songDataLoaded"
 						/>
 					</div>
-					<div class="edit-section">
+					<div class="edit-section" v-if="songDataLoaded">
 						<div class="control is-grouped">
 							<div class="title-container">
 								<label class="label">Title</label>
@@ -87,7 +88,7 @@
 										class="input"
 										type="text"
 										id="title-input"
-										v-model="editing.song.title"
+										v-model="song.title"
 										@keyup.ctrl.alt.d="
 											getAlbumData('title')
 										"
@@ -106,7 +107,7 @@
 									<input
 										class="input"
 										type="text"
-										v-model.number="editing.song.duration"
+										v-model.number="song.duration"
 									/>
 									<button
 										class="button duration-fill-button"
@@ -122,9 +123,7 @@
 									<input
 										class="input"
 										type="text"
-										v-model.number="
-											editing.song.skipDuration
-										"
+										v-model.number="song.skipDuration"
 									/>
 								</p>
 							</div>
@@ -136,7 +135,7 @@
 									<input
 										class="input"
 										type="text"
-										v-model="editing.song.thumbnail"
+										v-model="song.thumbnail"
 										@keyup.ctrl.alt.d="
 											getAlbumData('albumArt')
 										"
@@ -203,8 +202,7 @@
 								<div class="list-container">
 									<div
 										class="list-item"
-										v-for="(artist, index) in editing.song
-											.artists"
+										v-for="(artist, index) in song.artists"
 										:key="index"
 									>
 										<div
@@ -276,8 +274,7 @@
 								<div class="list-container">
 									<div
 										class="list-item"
-										v-for="(genre, index) in editing.song
-											.genres"
+										v-for="(genre, index) in song.genres"
 										:key="index"
 									>
 										<div
@@ -296,41 +293,33 @@
 									<input
 										class="input"
 										type="text"
-										v-model="editing.song.songId"
+										v-model="song.songId"
 									/>
 								</p>
 							</div>
 						</div>
 					</div>
 				</div>
-				<div class="right-section">
+				<div class="right-section" v-if="songDataLoaded">
 					<div class="api-section">
-						<div
-							class="selected-discogs-info"
-							v-if="!editing.song.discogs"
-						>
+						<div class="selected-discogs-info" v-if="!song.discogs">
 							<p class="selected-discogs-info-none">None</p>
 						</div>
-						<div
-							class="selected-discogs-info"
-							v-if="editing.song.discogs"
-						>
+						<div class="selected-discogs-info" v-if="song.discogs">
 							<div class="top-container">
-								<img
-									:src="editing.song.discogs.album.albumArt"
-								/>
+								<img :src="song.discogs.album.albumArt" />
 								<div class="right-container">
 									<p class="album-title">
-										{{ editing.song.discogs.album.title }}
+										{{ song.discogs.album.title }}
 									</p>
 									<div class="bottom-row">
 										<p class="type-year">
 											<span>{{
-												editing.song.discogs.album.type
+												song.discogs.album.type
 											}}</span>
 											•
 											<span>{{
-												editing.song.discogs.album.year
+												song.discogs.album.year
 											}}</span>
 										</p>
 									</div>
@@ -340,34 +329,24 @@
 								<p class="bottom-container-field">
 									Artists:
 									<span>{{
-										editing.song.discogs.album.artists.join(
-											", "
-										)
+										song.discogs.album.artists.join(", ")
 									}}</span>
 								</p>
 								<p class="bottom-container-field">
 									Genres:
 									<span>{{
-										editing.song.discogs.album.genres.join(
-											", "
-										)
+										song.discogs.album.genres.join(", ")
 									}}</span>
 								</p>
 								<p class="bottom-container-field">
 									Data quality:
-									<span>{{
-										editing.song.discogs.dataQuality
-									}}</span>
+									<span>{{ song.discogs.dataQuality }}</span>
 								</p>
 								<p class="bottom-container-field">
 									Track:
 									<span
-										>{{
-											editing.song.discogs.track.position
-										}}.
-										{{
-											editing.song.discogs.track.title
-										}}</span
+										>{{ song.discogs.track.position }}.
+										{{ song.discogs.track.title }}</span
 									>
 								</p>
 							</div>
@@ -492,17 +471,11 @@
 				</div>
 			</div>
 			<div slot="footer" class="footer-buttons">
-				<button
-					class="button is-success"
-					@click="save(editing.song, false)"
-				>
+				<button class="button is-success" @click="save(song, false)">
 					<i class="material-icons save-changes">done</i>
 					<span>&nbsp;Save</span>
 				</button>
-				<button
-					class="button is-success"
-					@click="save(editing.song, true)"
-				>
+				<button class="button is-success" @click="save(song, true)">
 					<i class="material-icons save-changes">done</i>
 					<span>&nbsp;Save and close</span>
 				</button>
@@ -545,8 +518,13 @@ import FloatingBox from "../ui/FloatingBox.vue";
 
 export default {
 	components: { Modal, FloatingBox },
+	props: {
+		songId: { type: String, default: null },
+		songType: { type: String, default: null }
+	},
 	data() {
 		return {
+			songDataLoaded: false,
 			focusedElementBefore: null,
 			discogsQuery: "",
 			youtubeVideoDuration: 0.0,
@@ -605,10 +583,9 @@ export default {
 		};
 	},
 	computed: {
-		...mapState("admin/songs", {
+		...mapState("editSongModal", {
 			video: state => state.video,
-			editing: state => state.editing,
-			songs: state => state.songs
+			song: state => state.song
 		}),
 		...mapState("modals", {
 			modals: state => state.modals.admin
@@ -616,10 +593,10 @@ export default {
 	},
 	watch: {
 		/* eslint-disable */
-		"editing.song.duration": function() {
+		"song.duration": function() {
 			this.drawCanvas();
 		},
-		"editing.song.skipDuration": function() {
+		"song.skipDuration": function() {
 			this.drawCanvas();
 		}
 		/* eslint-enable */
@@ -628,11 +605,9 @@ export default {
 		// if (this.modals.editSong = false) this.video.player.stopVideo();
 
 		// this.loadVideoById(
-		//   this.editing.song.songId,
-		//   this.editing.song.skipDuration
+		//   this.song.songId,
+		//   this.song.skipDuration
 		// );
-
-		this.discogsQuery = this.editing.song.title;
 
 		lofig.get("cookie.secure").then(useHTTPS => {
 			this.useHTTPS = useHTTPS;
@@ -640,111 +615,155 @@ export default {
 
 		io.getSocket(socket => {
 			this.socket = socket;
-		});
 
-		this.interval = setInterval(() => {
-			if (
-				this.editing.song.duration !== -1 &&
-				this.video.paused === false &&
-				this.playerReady &&
-				this.video.player.getCurrentTime() -
-					this.editing.song.skipDuration >
-					this.editing.song.duration
-			) {
-				this.video.paused = false;
-				this.video.player.stopVideo();
-				this.drawCanvas();
-			}
-			if (this.playerReady) {
-				this.youtubeVideoCurrentTime = this.video.player
-					.getCurrentTime()
-					.toFixed(3);
-			}
+			this.socket.emit(
+				`${this.songType}.getSongFromMusareId`,
+				this.songId,
+				res => {
+					if (res.status === "success") {
+						const { song } = res.data;
+						// this.song = { ...song };
+						// if (this.song.discogs === undefined)
+						// 	this.song.discogs = null;
+						this.editSong(song);
 
-			if (this.video.paused === false) this.drawCanvas();
-		}, 200);
+						this.songDataLoaded = true;
 
-		this.video.player = new window.YT.Player("player", {
-			height: 298,
-			width: 530,
-			videoId: this.editing.song.songId,
-			host: "https://www.youtube-nocookie.com",
-			playerVars: {
-				controls: 0,
-				iv_load_policy: 3,
-				rel: 0,
-				showinfo: 0,
-				autoplay: 1
-			},
-			startSeconds: this.editing.song.skipDuration,
-			events: {
-				onReady: () => {
-					let volume = parseInt(localStorage.getItem("volume"));
-					volume = typeof volume === "number" ? volume : 20;
-					console.log(`Seekto: ${this.editing.song.skipDuration}`);
-					this.video.player.seekTo(this.editing.song.skipDuration);
-					this.video.player.setVolume(volume);
-					if (volume > 0) this.video.player.unMute();
-					this.youtubeVideoDuration = this.video.player
-						.getDuration()
-						.toFixed(3);
-					this.youtubeVideoNote = "(~)";
-					this.playerReady = true;
+						// this.edit(res.data.song);
 
-					this.drawCanvas();
-				},
-				onStateChange: event => {
-					this.drawCanvas();
+						this.discogsQuery = this.song.title;
 
-					if (event.data === 1) {
-						if (!this.video.autoPlayed) {
-							this.video.autoPlayed = true;
-							return this.video.player.stopVideo();
-						}
+						this.interval = setInterval(() => {
+							if (
+								this.song.duration !== -1 &&
+								this.video.paused === false &&
+								this.playerReady &&
+								this.video.player.getCurrentTime() -
+									this.song.skipDuration >
+									this.song.duration
+							) {
+								this.video.paused = false;
+								this.video.player.stopVideo();
+								this.drawCanvas();
+							}
+							if (this.playerReady) {
+								this.youtubeVideoCurrentTime = this.video.player
+									.getCurrentTime()
+									.toFixed(3);
+							}
 
-						this.video.paused = false;
-						let youtubeDuration = this.video.player.getDuration();
-						this.youtubeVideoDuration = youtubeDuration.toFixed(3);
-						this.youtubeVideoNote = "";
+							if (this.video.paused === false) this.drawCanvas();
+						}, 200);
 
-						if (this.editing.song.duration === -1)
-							this.editing.song.duration = youtubeDuration;
+						this.video.player = new window.YT.Player("player", {
+							height: 298,
+							width: 530,
+							videoId: this.song.songId,
+							host: "https://www.youtube-nocookie.com",
+							playerVars: {
+								controls: 0,
+								iv_load_policy: 3,
+								rel: 0,
+								showinfo: 0,
+								autoplay: 1
+							},
+							startSeconds: this.song.skipDuration,
+							events: {
+								onReady: () => {
+									let volume = parseInt(
+										localStorage.getItem("volume")
+									);
+									volume =
+										typeof volume === "number"
+											? volume
+											: 20;
+									console.log(
+										`Seekto: ${this.song.skipDuration}`
+									);
+									this.video.player.seekTo(
+										this.song.skipDuration
+									);
+									this.video.player.setVolume(volume);
+									if (volume > 0) this.video.player.unMute();
+									this.youtubeVideoDuration = this.video.player
+										.getDuration()
+										.toFixed(3);
+									this.youtubeVideoNote = "(~)";
+									this.playerReady = true;
 
-						youtubeDuration -= this.editing.song.skipDuration;
-						if (this.editing.song.duration > youtubeDuration + 1) {
-							this.video.player.stopVideo();
-							this.video.paused = true;
-							return new Toast({
-								content:
-									"Video can't play. Specified duration is bigger than the YouTube song duration.",
-								timeout: 4000
-							});
-						}
-						if (this.editing.song.duration <= 0) {
-							this.video.player.stopVideo();
-							this.video.paused = true;
-							return new Toast({
-								content:
-									"Video can't play. Specified duration has to be more than 0 seconds.",
-								timeout: 4000
-							});
-						}
+									this.drawCanvas();
+								},
+								onStateChange: event => {
+									this.drawCanvas();
 
-						if (
-							this.video.player.getCurrentTime() <
-							this.editing.song.skipDuration
-						) {
-							return this.video.player.seekTo(
-								this.editing.song.skipDuration
-							);
-						}
-					} else if (event.data === 2) {
-						this.video.paused = true;
+									if (event.data === 1) {
+										if (!this.video.autoPlayed) {
+											this.video.autoPlayed = true;
+											return this.video.player.stopVideo();
+										}
+
+										this.video.paused = false;
+										let youtubeDuration = this.video.player.getDuration();
+										this.youtubeVideoDuration = youtubeDuration.toFixed(
+											3
+										);
+										this.youtubeVideoNote = "";
+
+										if (this.song.duration === -1)
+											this.song.duration = youtubeDuration;
+
+										youtubeDuration -= this.song
+											.skipDuration;
+										if (
+											this.song.duration >
+											youtubeDuration + 1
+										) {
+											this.video.player.stopVideo();
+											this.video.paused = true;
+											return new Toast({
+												content:
+													"Video can't play. Specified duration is bigger than the YouTube song duration.",
+												timeout: 4000
+											});
+										}
+										if (this.song.duration <= 0) {
+											this.video.player.stopVideo();
+											this.video.paused = true;
+											return new Toast({
+												content:
+													"Video can't play. Specified duration has to be more than 0 seconds.",
+												timeout: 4000
+											});
+										}
+
+										if (
+											this.video.player.getCurrentTime() <
+											this.song.skipDuration
+										) {
+											return this.video.player.seekTo(
+												this.song.skipDuration
+											);
+										}
+									} else if (event.data === 2) {
+										this.video.paused = true;
+									}
+
+									return false;
+								}
+							}
+						});
+					} else {
+						new Toast({
+							content: "Song with that ID not found",
+							timeout: 3000
+						});
+						this.closeModal({
+							sector: "admin",
+							modal: "editSong"
+						});
 					}
-
-					return false;
 				}
-			}
+			);
 		});
 
 		let volume = parseFloat(localStorage.getItem("volume"));
@@ -834,7 +853,7 @@ export default {
 			ctrl: true,
 			preventDefault: true,
 			handler: () => {
-				this.save(this.editing.song, false);
+				this.save(this.song, false);
 			}
 		});
 
@@ -1042,21 +1061,21 @@ export default {
 			}
 
 			return this.socket.emit(
-				`${this.editing.type}.update`,
+				`${this.songType}.update`,
 				song._id,
 				song,
 				res => {
 					new Toast({ content: res.message, timeout: 4000 });
 					if (res.status === "success") {
-						this.songs.forEach(originalSong => {
-							const updatedSong = song;
-							if (originalSong._id === updatedSong._id) {
-								Object.keys(originalSong).forEach(n => {
-									updatedSong[n] = originalSong[n];
-									return originalSong[n];
-								});
-							}
-						});
+						// this.songs.forEach(originalSong => {
+						// 	const updatedSong = song;
+						// 	if (originalSong._id === updatedSong._id) {
+						// 		Object.keys(originalSong).forEach(n => {
+						// 			updatedSong[n] = originalSong[n];
+						// 			return originalSong[n];
+						// 		});
+						// 	}
+						// });
 					}
 					if (close)
 						this.closeModal({
@@ -1099,33 +1118,33 @@ export default {
 			}
 		},
 		fillDuration() {
-			this.editing.song.duration =
-				this.youtubeVideoDuration - this.editing.song.skipDuration;
+			this.song.duration =
+				this.youtubeVideoDuration - this.song.skipDuration;
 		},
 		getAlbumData(type) {
-			if (!this.editing.song.discogs) return;
+			if (!this.song.discogs) return;
 			if (type === "title")
 				this.updateSongField({
 					field: "title",
-					value: this.editing.song.discogs.track.title
+					value: this.song.discogs.track.title
 				});
 			if (type === "albumArt")
 				this.updateSongField({
 					field: "thumbnail",
-					value: this.editing.song.discogs.album.albumArt
+					value: this.song.discogs.album.albumArt
 				});
 			if (type === "genres")
 				this.updateSongField({
 					field: "genres",
 					value: JSON.parse(
-						JSON.stringify(this.editing.song.discogs.album.genres)
+						JSON.stringify(this.song.discogs.album.genres)
 					)
 				});
 			if (type === "artists")
 				this.updateSongField({
 					field: "artists",
 					value: JSON.parse(
-						JSON.stringify(this.editing.song.discogs.album.artists)
+						JSON.stringify(this.song.discogs.album.artists)
 					)
 				});
 		},
@@ -1264,9 +1283,7 @@ export default {
 				case "skipToLast10Secs":
 					if (this.video.paused) this.pauseVideo(false);
 					this.video.player.seekTo(
-						this.editing.song.duration -
-							10 +
-							this.editing.song.skipDuration
+						this.song.duration - 10 + this.song.skipDuration
 					);
 					break;
 			}
@@ -1283,13 +1300,13 @@ export default {
 					.getElementById("new-genre")
 					.value.toLowerCase()
 					.trim();
-				if (this.editing.song.genres.indexOf(genre) !== -1)
+				if (this.song.genres.indexOf(genre) !== -1)
 					return new Toast({
 						content: "Genre already exists",
 						timeout: 3000
 					});
 				if (genre) {
-					this.editing.song.genres.push(genre);
+					this.song.genres.push(genre);
 					document.getElementById("new-genre").value = "";
 					return false;
 				}
@@ -1301,13 +1318,13 @@ export default {
 			}
 			if (type === "artists") {
 				const artist = document.getElementById("new-artist").value;
-				if (this.editing.song.artists.indexOf(artist) !== -1)
+				if (this.song.artists.indexOf(artist) !== -1)
 					return new Toast({
 						content: "Artist already exists",
 						timeout: 3000
 					});
 				if (document.getElementById("new-artist").value !== "") {
-					this.editing.song.artists.push(artist);
+					this.song.artists.push(artist);
 					document.getElementById("new-artist").value = "";
 					return false;
 				}
@@ -1320,9 +1337,8 @@ export default {
 			return false;
 		},
 		removeTag(type, index) {
-			if (type === "genres") this.editing.song.genres.splice(index, 1);
-			else if (type === "artists")
-				this.editing.song.artists.splice(index, 1);
+			if (type === "genres") this.song.genres.splice(index, 1);
+			else if (type === "artists") this.song.artists.splice(index, 1);
 		},
 		drawCanvas() {
 			const canvasElement = document.getElementById("durationCanvas");
@@ -1330,13 +1346,16 @@ export default {
 
 			const videoDuration = Number(this.youtubeVideoDuration);
 
-			const skipDuration = Number(this.editing.song.skipDuration);
-			const duration = Number(this.editing.song.duration);
+			const skipDuration = Number(this.song.skipDuration);
+			const duration = Number(this.song.duration);
 			const afterDuration = videoDuration - (skipDuration + duration);
 
 			const width = 530;
 
-			const currentTime = this.video.player.getCurrentTime();
+			const currentTime =
+				this.video.player && this.video.player.getCurrentTime
+					? this.video.player.getCurrentTime()
+					: 0;
 
 			const widthSkipDuration = (skipDuration / videoDuration) * width;
 			const widthDuration = (duration / videoDuration) * width;
@@ -1370,7 +1389,7 @@ export default {
 		resetGenreHelper() {
 			this.$refs.genreHelper.resetBox();
 		},
-		...mapActions("admin/songs", [
+		...mapActions("editSongModal", [
 			"stopVideo",
 			"loadVideoById",
 			"pauseVideo",

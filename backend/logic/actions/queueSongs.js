@@ -123,6 +123,40 @@ export default {
 	}),
 
 	/**
+	 * Gets a song from the Musare song id
+	 *
+	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {string} songId - the Musare song id
+	 * @param {Function} cb
+	 */
+	getSongFromMusareId: isAdminRequired(async function getSong(session, songId, cb) {
+		const queueSongModel = await DBModule.runJob(
+			"GET_MODEL",
+			{
+				modelName: "queueSong"
+			},
+			this
+		);
+
+		async.waterfall(
+			[
+				next => {
+					queueSongModel.findOne({ _id: songId }, next);
+				}
+			],
+			async (err, song) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "QUEUE_SONGS_GET_SONG_FROM_MUSARE_ID", `Failed to get song ${songId}. "${err}"`);
+					return cb({ status: "failure", message: err });
+				}
+				this.log("SUCCESS", "QUEUE_SONGS_GET_SONG_FROM_MUSARE_ID", `Got song ${songId} successfully.`);
+				return cb({ status: "success", data: { song } });
+			}
+		);
+	}),
+
+	/**
 	 * Updates a queuesong
 	 *
 	 * @param {object} session - the session object automatically added by socket.io
