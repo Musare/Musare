@@ -7,6 +7,7 @@ export default {
 	description: { type: String, minlength: 2, maxlength: 128, required: true },
 	paused: { type: Boolean, default: false, required: true },
 	currentSong: {
+		_id: { type: String },
 		songId: { type: String },
 		title: { type: String },
 		artists: [{ type: String }],

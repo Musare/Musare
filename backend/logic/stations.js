@@ -610,6 +610,7 @@ class _StationsModule extends CoreClass {
 							const { song } = response;
 							if (song) {
 								const newSong = {
+									_id: song._id,
 									songId: song.songId,
 									title: song.title,
 									artists: song.artists,
@@ -851,6 +852,7 @@ class _StationsModule extends CoreClass {
 							};
 						} else {
 							$set.currentSong = {
+								_id: song._id,
 								songId: song.songId,
 								title: song.title,
 								artists: song.artists,

@@ -48,21 +48,48 @@
 			<p id="song-duration">
 				{{ utils.formatTime(song.duration) }}
 			</p>
-			<i
-				v-if="
-					station.type === 'community' &&
-						($parent.isOwnerOnly() || $parent.isAdminOnly())
-				"
-				class="material-icons"
-				id="remove-queue-item"
-				@click="$parent.removeFromQueue(song.songId)"
-				>delete_forever</i
-			>
+			<div id="queue-item-buttons">
+				<i
+					v-if="
+						$parent.loggedIn &&
+							!song.simpleSong &&
+							song.likes !== -1 &&
+							song.dislikes !== -1
+					"
+					class="material-icons"
+					id="report-queue-item"
+					@click="openModal({ sector: 'station', modal: 'report' })"
+					>flag</i
+				>
+				<i
+					v-if="
+						$parent.isAdminOnly() &&
+							!song.simpleSong &&
+							song.likes !== -1 &&
+							song.dislikes !== -1
+					"
+					class="material-icons"
+					id="edit-queue-item"
+					@click="$parent.$parent.$parent.editSong(song)"
+					>edit</i
+				>
+				<i
+					v-if="
+						station.type === 'community' &&
+							($parent.isOwnerOnly() || $parent.isAdminOnly())
+					"
+					class="material-icons"
+					id="remove-queue-item"
+					@click="$parent.removeFromQueue(song.songId)"
+					>delete_forever</i
+				>
+			</div>
 		</div>
 	</div>
 </template>
 
 <script>
+import { mapActions } from "vuex";
 import { formatDistance, parseISO } from "date-fns";
 
 import UserIdToUsername from "../../../../../components/common/UserIdToUsername.vue";
@@ -88,6 +115,7 @@ export default {
 		};
 	},
 	methods: {
+		...mapActions("modals", ["openModal"]),
 		formatDistance,
 		parseISO
 	}
@@ -110,6 +138,14 @@ export default {
 	#duration-and-actions {
 		display: flex;
 		align-items: center;
+	}
+	#duration-and-actions {
+		margin-left: 5px;
+	}
+	#queue-item-buttons {
+		display: flex;
+		flex-direction: column;
+		margin-left: 10px;
 	}
 
 	#thumbnail {
@@ -146,9 +182,31 @@ export default {
 		font-size: 20px;
 	}
 
+	#report-queue-item {
+		cursor: pointer;
+		color: $yellow;
+		&:hover,
+		&:focus {
+			color: darken($yellow, 5%);
+		}
+	}
+
+	#edit-queue-item {
+		cursor: pointer;
+		color: $musare-blue;
+		&:hover,
+		&:focus {
+			color: darken($musare-blue, 5%);
+		}
+	}
+
 	#remove-queue-item {
 		cursor: pointer;
-		margin-left: 10px;
+		color: $red;
+		&:hover,
+		&:focus {
+			color: darken($red, 5%);
+		}
 	}
 }
 </style>

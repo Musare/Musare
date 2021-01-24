@@ -5,7 +5,7 @@
 				<div class="left-section">
 					<div class="top-section">
 						<div class="player-section">
-							<div id="player"></div>
+							<div id="editSongPlayer"></div>
 							<canvas
 								id="durationCanvas"
 								height="20"
@@ -481,7 +481,7 @@
 				</button>
 				<button
 					class="button is-danger"
-					@click="closeModal({ sector: 'admin', modal: 'editSong' })"
+					@click="closeModal({ sector: sector, modal: 'editSong' })"
 				>
 					<span>&nbsp;Close</span>
 				</button>
@@ -520,7 +520,8 @@ export default {
 	components: { Modal, FloatingBox },
 	props: {
 		songId: { type: String, default: null },
-		songType: { type: String, default: null }
+		songType: { type: String, default: null },
+		sector: { type: String, default: "admin" }
 	},
 	data() {
 		return {
@@ -593,10 +594,10 @@ export default {
 	},
 	watch: {
 		/* eslint-disable */
-		"song.duration": function() {
+		"song.duration": function () {
 			this.drawCanvas();
 		},
-		"song.skipDuration": function() {
+		"song.skipDuration": function () {
 			this.drawCanvas();
 		}
 		/* eslint-enable */
@@ -655,110 +656,114 @@ export default {
 							if (this.video.paused === false) this.drawCanvas();
 						}, 200);
 
-						this.video.player = new window.YT.Player("player", {
-							height: 298,
-							width: 530,
-							videoId: this.song.songId,
-							host: "https://www.youtube-nocookie.com",
-							playerVars: {
-								controls: 0,
-								iv_load_policy: 3,
-								rel: 0,
-								showinfo: 0,
-								autoplay: 1
-							},
-							startSeconds: this.song.skipDuration,
-							events: {
-								onReady: () => {
-									let volume = parseInt(
-										localStorage.getItem("volume")
-									);
-									volume =
-										typeof volume === "number"
-											? volume
-											: 20;
-									console.log(
-										`Seekto: ${this.song.skipDuration}`
-									);
-									this.video.player.seekTo(
-										this.song.skipDuration
-									);
-									this.video.player.setVolume(volume);
-									if (volume > 0) this.video.player.unMute();
-									this.youtubeVideoDuration = this.video.player
-										.getDuration()
-										.toFixed(3);
-									this.youtubeVideoNote = "(~)";
-									this.playerReady = true;
-
-									this.drawCanvas();
+						this.video.player = new window.YT.Player(
+							"editSongPlayer",
+							{
+								height: 298,
+								width: 530,
+								videoId: this.song.songId,
+								host: "https://www.youtube-nocookie.com",
+								playerVars: {
+									controls: 0,
+									iv_load_policy: 3,
+									rel: 0,
+									showinfo: 0,
+									autoplay: 1
 								},
-								onStateChange: event => {
-									this.drawCanvas();
-
-									if (event.data === 1) {
-										if (!this.video.autoPlayed) {
-											this.video.autoPlayed = true;
-											return this.video.player.stopVideo();
-										}
-
-										this.video.paused = false;
-										let youtubeDuration = this.video.player.getDuration();
-										this.youtubeVideoDuration = youtubeDuration.toFixed(
-											3
+								startSeconds: this.song.skipDuration,
+								events: {
+									onReady: () => {
+										let volume = parseInt(
+											localStorage.getItem("volume")
 										);
-										this.youtubeVideoNote = "";
-
-										if (this.song.duration === -1)
-											this.song.duration = youtubeDuration;
-
-										youtubeDuration -= this.song
-											.skipDuration;
-										if (
-											this.song.duration >
-											youtubeDuration + 1
-										) {
-											this.video.player.stopVideo();
-											this.video.paused = true;
-											return new Toast({
-												content:
-													"Video can't play. Specified duration is bigger than the YouTube song duration.",
-												timeout: 4000
-											});
-										}
-										if (this.song.duration <= 0) {
-											this.video.player.stopVideo();
-											this.video.paused = true;
-											return new Toast({
-												content:
-													"Video can't play. Specified duration has to be more than 0 seconds.",
-												timeout: 4000
-											});
-										}
-
-										if (
-											this.video.player.getCurrentTime() <
+										volume =
+											typeof volume === "number"
+												? volume
+												: 20;
+										console.log(
+											`Seekto: ${this.song.skipDuration}`
+										);
+										this.video.player.seekTo(
 											this.song.skipDuration
-										) {
-											return this.video.player.seekTo(
-												this.song.skipDuration
-											);
-										}
-									} else if (event.data === 2) {
-										this.video.paused = true;
-									}
+										);
+										this.video.player.setVolume(volume);
+										if (volume > 0)
+											this.video.player.unMute();
+										this.youtubeVideoDuration = this.video.player
+											.getDuration()
+											.toFixed(3);
+										this.youtubeVideoNote = "(~)";
+										this.playerReady = true;
 
-									return false;
+										this.drawCanvas();
+									},
+									onStateChange: event => {
+										this.drawCanvas();
+
+										if (event.data === 1) {
+											if (!this.video.autoPlayed) {
+												this.video.autoPlayed = true;
+												return this.video.player.stopVideo();
+											}
+
+											this.video.paused = false;
+											let youtubeDuration = this.video.player.getDuration();
+											this.youtubeVideoDuration = youtubeDuration.toFixed(
+												3
+											);
+											this.youtubeVideoNote = "";
+
+											if (this.song.duration === -1)
+												this.song.duration = youtubeDuration;
+
+											youtubeDuration -= this.song
+												.skipDuration;
+											if (
+												this.song.duration >
+												youtubeDuration + 1
+											) {
+												this.video.player.stopVideo();
+												this.video.paused = true;
+												return new Toast({
+													content:
+														"Video can't play. Specified duration is bigger than the YouTube song duration.",
+													timeout: 4000
+												});
+											}
+											if (this.song.duration <= 0) {
+												this.video.player.stopVideo();
+												this.video.paused = true;
+												return new Toast({
+													content:
+														"Video can't play. Specified duration has to be more than 0 seconds.",
+													timeout: 4000
+												});
+											}
+
+											if (
+												this.video.player.getCurrentTime() <
+												this.song.skipDuration
+											) {
+												return this.video.player.seekTo(
+													this.song.skipDuration
+												);
+											}
+										} else if (event.data === 2) {
+											this.video.paused = true;
+										}
+
+										return false;
+									}
 								}
 							}
-						});
+						);
 					} else {
 						new Toast({
 							content: "Song with that ID not found",
 							timeout: 3000
 						});
 						this.closeModal({
-							sector: "admin",
+							sector: this.sector,
 							modal: "editSong"
 						});
 					}
@@ -863,7 +868,7 @@ export default {
 			preventDefault: true,
 			handler: () => {
 				this.closeModal({
-					sector: "admin",
+					sector: this.sector,
 					modal: "editSong"
 				});
 				setTimeout(() => {
@@ -1079,7 +1084,7 @@ export default {
 					}
 					if (close)
 						this.closeModal({
-							sector: "admin",
+							sector: this.sector,
 							modal: "editSong"
 						});
 				}
