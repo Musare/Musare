@@ -7,6 +7,17 @@
 				<p>Use nightmode</p>
 			</label>
 		</p>
+		<p class="control is-expanded checkbox-control">
+			<input
+				type="checkbox"
+				id="autoSkipDisliked"
+				v-model="localAutoSkipDisliked"
+			/>
+			<label for="autoSkipDisliked">
+				<span></span>
+				<p>Automatically vote to skip disliked songs</p>
+			</label>
+		</p>
 		<button class="button is-primary save-changes" @click="saveChanges()">
 			Save changes
 		</button>
@@ -19,25 +30,40 @@ import { mapState, mapActions } from "vuex";
 export default {
 	data() {
 		return {
-			localNightmode: false
+			localNightmode: false,
+			localAutoSkipDisliked: false
 		};
 	},
 	computed: mapState({
-		nightmode: state => state.user.preferences.nightmode
+		nightmode: state => state.user.preferences.nightmode,
+		autoSkipDisliked: state => state.user.preferences.autoSkipDisliked
 	}),
 	mounted() {
 		this.localNightmode = this.nightmode;
+		this.localAutoSkipDisliked = this.autoSkipDisliked;
 	},
 	methods: {
 		saveChanges() {
 			if (this.localNightmode !== this.nightmode)
 				this.changeNightmodeLocal();
+			if (this.localAutoSkipDisliked !== this.autoSkipDisliked)
+				this.changeAutoSkipDislikedLocal();
 		},
 		changeNightmodeLocal() {
 			localStorage.setItem("nightmode", this.localNightmode);
 			this.changeNightmode(this.localNightmode);
 		},
-		...mapActions("user/preferences", ["changeNightmode"])
+		changeAutoSkipDislikedLocal() {
+			localStorage.setItem(
+				"autoSkipDisliked",
+				this.localAutoSkipDisliked
+			);
+			this.changeAutoSkipDisliked(this.localAutoSkipDisliked);
+		},
+		...mapActions("user/preferences", [
+			"changeNightmode",
+			"changeAutoSkipDisliked"
+		])
 	}
 };
 </script>

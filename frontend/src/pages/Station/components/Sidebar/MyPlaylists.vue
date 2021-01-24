@@ -16,6 +16,17 @@
 							<i class="material-icons">play_arrow</i>
 						</button>
 						<button
+							v-if="
+								station.type === 'community' &&
+									!isNotSelected(playlist._id) &&
+									!station.partyMode
+							"
+							class="button is-danger"
+							@click="deselectPlaylist()"
+						>
+							<i class="material-icons">stop</i>
+						</button>
+						<button
 							class="button is-primary"
 							@click="edit(playlist._id)"
 						>
@@ -118,6 +129,20 @@ export default {
 				"stations.selectPrivatePlaylist",
 				this.station._id,
 				id,
+				res => {
+					if (res.status === "failure")
+						return new Toast({
+							content: res.message,
+							timeout: 8000
+						});
+					return new Toast({ content: res.message, timeout: 4000 });
+				}
+			);
+		},
+		deselectPlaylist() {
+			this.socket.emit(
+				"stations.deselectPrivatePlaylist",
+				this.station._id,
 				res => {
 					if (res.status === "failure")
 						return new Toast({

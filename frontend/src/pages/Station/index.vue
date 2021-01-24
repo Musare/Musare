@@ -484,7 +484,10 @@ export default {
 							if (this.currentSong.songId === song.songId) {
 								this.liked = song.liked;
 								this.disliked = song.disliked;
-								if (song.disliked === true)
+								if (
+									this.autoSkipDisliked &&
+									song.disliked === true
+								)
 									this.voteSkipStation();
 							}
 						}
@@ -583,6 +586,12 @@ export default {
 			this.socket.on("event:privatePlaylist.selected", playlistId => {
 				if (this.station.type === "community") {
 					this.station.privatePlaylist = playlistId;
+				}
+			});
+
+			this.socket.on("event:privatePlaylist.deselected", () => {
+				if (this.station.type === "community") {
+					this.station.privatePlaylist = null;
 				}
 			});
 
