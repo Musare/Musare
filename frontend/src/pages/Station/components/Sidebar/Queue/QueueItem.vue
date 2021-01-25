@@ -58,7 +58,7 @@
 					"
 					class="material-icons"
 					id="report-queue-item"
-					@click="openModal({ sector: 'station', modal: 'report' })"
+					@click="reportQueueSong(song)"
 					>flag</i
 				>
 				<i
@@ -115,6 +115,11 @@ export default {
 		};
 	},
 	methods: {
+		reportQueueSong(song) {
+			this.updateReportQueueSong(song);
+			this.openModal({ sector: "station", modal: "report" });
+		},
+		...mapActions("station", ["updateReportQueueSong"]),
 		...mapActions("modals", ["openModal"]),
 		formatDistance,
 		parseISO
@@ -149,15 +154,17 @@ export default {
 	}
 
 	#thumbnail {
-		width: 60px;
-		height: 60px;
+		width: 65px;
+		height: 65px;
+		margin: -7.5px;
+		border-radius: 3px 0 0 3px;
 	}
 
 	#song-info {
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
-		margin-left: 25px;
+		margin-left: 20px;
 
 		*:not(i) {
 			margin: 0;
