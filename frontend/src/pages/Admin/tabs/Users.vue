@@ -34,7 +34,11 @@
 						<td v-else>Not Linked</td>
 						<td v-if="user.hasPassword">Yes</td>
 						<td v-else>Not Linked</td>
-						<td>{{ user.username }}</td>
+						<td>
+							<a :href="'/u/' + user.username" target="_blank">{{
+								user.username
+							}}</a>
+						</td>
 						<td>{{ user.role }}</td>
 						<td>{{ user.email.address }}</td>
 						<td>{{ user.email.verified }}</td>

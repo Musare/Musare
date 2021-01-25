@@ -86,7 +86,7 @@ export default {
 		else this.disableNightMode();
 
 		const autoSkipDisliked =
-			false || JSON.parse(localStorage.getItem("autoSkipDisliked"));
+			true || JSON.parse(localStorage.getItem("autoSkipDisliked"));
 
 		this.changeAutoSkipDisliked(autoSkipDisliked);
 	},
