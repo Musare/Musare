@@ -74,7 +74,7 @@ export default {
 			this.socket = socket;
 
 			/** Get playlists for user */
-			this.socket.emit("playlists.indexForUser", res => {
+			this.socket.emit("playlists.indexForUser", true, res => {
 				if (res.status === "success") this.playlists = res.data;
 			});
 

@@ -170,9 +170,10 @@ export default {
 	 * Gets all playlists for the user requesting it
 	 *
 	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {boolean} showNonModifiablePlaylists - whether or not to show non modifiable playlists e.g. liked songs
 	 * @param {Function} cb - gets called with the result
 	 */
-	indexForUser: isLoginRequired(async function indexForUser(session, cb) {
+	indexForUser: isLoginRequired(async function indexForUser(session, showNonModifiablePlaylists, cb) {
 		const playlistModel = await DBModule.runJob(
 			"GET_MODEL",
 			{
@@ -183,7 +184,8 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					playlistModel.find({ createdBy: session.userId }, next);
+					if (showNonModifiablePlaylists) playlistModel.find({ createdBy: session.userId }, next);
+					else playlistModel.find({ createdBy: session.userId, isUserModifiable: true }, next);
 				}
 			],
 			async (err, playlists) => {

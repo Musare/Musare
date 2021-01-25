@@ -246,10 +246,14 @@ export default {
 						this.isUser = true;
 
 						if (this.user._id === this.userId) {
-							this.socket.emit("playlists.indexForUser", res => {
-								if (res.status === "success")
-									this.playlists = res.data;
-							});
+							this.socket.emit(
+								"playlists.indexForUser",
+								true,
+								res => {
+									if (res.status === "success")
+										this.playlists = res.data;
+								}
+							);
 
 							this.socket.emit(
 								"activities.getSet",

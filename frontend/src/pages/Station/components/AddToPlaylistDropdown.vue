@@ -31,7 +31,7 @@
 			</button>
 		</div>
 		<p class="nav-dropdown-items" id="no-playlists" v-else>
-			You haven't created any playlists
+			You haven't created any playlists.
 		</p>
 	</div>
 </template>
@@ -61,7 +61,7 @@ export default {
 		this.song = this.currentSong;
 		io.getSocket(socket => {
 			this.socket = socket;
-			this.socket.emit("playlists.indexForUser", res => {
+			this.socket.emit("playlists.indexForUser", false, res => {
 				if (res.status === "success") {
 					res.data.forEach(playlist => {
 						this.playlists[playlist._id] = playlist;
