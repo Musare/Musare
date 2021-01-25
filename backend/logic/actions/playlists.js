@@ -105,6 +105,20 @@ CacheModule.runJob("SUB", {
 	}
 });
 
+CacheModule.runJob("SUB", {
+	channel: "playlist.updatePrivacy",
+	cb: res => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(response => {
+			response.sockets.forEach(socket => {
+				socket.emit("event:playlist.updatePrivacy", {
+					playlistId: res.playlistId,
+					privacy: res.privacy
+				});
+			});
+		});
+	}
+});
+
 export default {
 	/**
 	 * Gets the first song from a private playlist
@@ -1172,6 +1186,71 @@ export default {
 				return cb({
 					status: "success",
 					message: "Playlist successfully removed"
+				});
+			}
+		);
+	}),
+
+	/**
+	 * Updates the privacy of a private playlist
+	 *
+	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {string} playlistId - the id of the playlist we are updating the displayName for
+	 * @param {Function} cb - gets called with the result
+	 */
+	updatePrivacy: isLoginRequired(async function updatePrivacy(session, playlistId, privacy, cb) {
+		const playlistModel = await DBModule.runJob(
+			"GET_MODEL",
+			{
+				modelName: "playlist"
+			},
+			this
+		);
+		async.waterfall(
+			[
+				next => {
+					playlistModel.updateOne(
+						{ _id: playlistId, createdBy: session.userId },
+						{ $set: { privacy } },
+						{ runValidators: true },
+						next
+					);
+				},
+
+				(res, next) => {
+					PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId }, this)
+						.then(playlist => {
+							next(null, playlist);
+						})
+						.catch(next);
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"PLAYLIST_UPDATE_PRIVACY",
+						`Updating privacy to "${privacy}" for private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
+					);
+					return cb({ status: "failure", message: err });
+				}
+				this.log(
+					"SUCCESS",
+					"PLAYLIST_UPDATE_PRIVACY",
+					`Successfully updated privacy to "${privacy}" for private playlist "${playlistId}" for user "${session.userId}".`
+				);
+				CacheModule.runJob("PUB", {
+					channel: "playlist.updatePrivacy",
+					value: {
+						playlistId,
+						privacy,
+						userId: session.userId
+					}
+				});
+				return cb({
+					status: "success",
+					message: "Playlist has been successfully updated"
 				});
 			}
 		);

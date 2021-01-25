@@ -2,7 +2,10 @@
 	<modal title="Report">
 		<div slot="body">
 			<div class="columns song-types">
-				<div v-if="previousSong !== null" class="column song-type">
+				<div
+					v-if="previousSong !== null && localQueueSong === null"
+					class="column song-type"
+				>
 					<div
 						class="card is-fullwidth"
 						:class="{ 'is-highlight-active': isPreviousSongActive }"
@@ -43,7 +46,10 @@
 						/>
 					</div>
 				</div>
-				<div v-if="currentSong !== {}" class="column song-type">
+				<div
+					v-if="currentSong !== {} && localQueueSong === null"
+					class="column song-type"
+				>
 					<div
 						class="card is-fullwidth"
 						:class="{ 'is-highlight-active': isCurrentSongActive }"
@@ -82,6 +88,38 @@
 							class="absolute-a"
 							@click="highlight('currentSong')"
 						/>
+					</div>
+				</div>
+				<div v-if="localQueueSong !== null" class="column song-type">
+					<div class="card is-fullwidth">
+						<header class="card-header">
+							<p class="card-header-title">Queue Song</p>
+						</header>
+						<div class="card-content">
+							<article class="media">
+								<figure class="media-left">
+									<p class="image is-64x64">
+										<img
+											:src="localQueueSong.thumbnail"
+											onerror='this.src="/assets/notes-transparent.png"'
+										/>
+									</p>
+								</figure>
+								<div class="media-content">
+									<div class="content">
+										<p>
+											<strong>{{
+												localQueueSong.title
+											}}</strong>
+											<br />
+											<small>{{
+												localQueueSong.artists
+											}}</small>
+										</p>
+									</div>
+								</div>
+							</article>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -156,6 +194,7 @@ export default {
 		return {
 			isPreviousSongActive: false,
 			isCurrentSongActive: true,
+			localQueueSong: null,
 			report: {
 				resolved: false,
 				songId: "",
@@ -174,7 +213,8 @@ export default {
 					reasons: [
 						"Doesn't exist",
 						"It's private",
-						"It's not available in my country"
+						"It's not available in my country",
+						"Unofficial"
 					]
 				},
 				{
@@ -207,7 +247,8 @@ export default {
 		},
 		...mapState({
 			currentSong: state => state.station.currentSong,
-			previousSong: state => state.station.previousSong
+			previousSong: state => state.station.previousSong,
+			queueSong: state => state.station.reportQueueSong
 		})
 	},
 	mounted() {
@@ -216,6 +257,12 @@ export default {
 		});
 
 		this.report.songId = this.currentSong.songId;
+
+		if (this.queueSong !== null) {
+			this.localQueueSong = this.queueSong;
+			this.report.songId = this.queueSong.songId;
+			this.updateReportQueueSong(null);
+		}
 	},
 	methods: {
 		create() {
@@ -252,6 +299,7 @@ export default {
 				}
 			}
 		},
+		...mapActions("station", ["updateReportQueueSong"]),
 		...mapActions("modals", ["closeModal"])
 	}
 };

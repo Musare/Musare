@@ -76,7 +76,6 @@
 					<button
 						:class="{ active: activeTab === 'playlists' }"
 						@click="switchTab('playlists')"
-						v-if="user._id === userId"
 					>
 						Playlists
 					</button>
@@ -131,35 +130,49 @@
 					class="content playlists-tab"
 					v-if="activeTab === 'playlists'"
 				>
-					<div
-						class="item playlist"
-						v-for="playlist in playlists"
-						:key="playlist._id"
-					>
-						<playlist-item :playlist="playlist">
-							<div slot="actions">
-								<button
-									class="button is-primary"
-									@click="editPlaylistClick(playlist._id)"
-								>
-									<i class="material-icons icon-with-button"
-										>create</i
-									>Edit
-								</button>
-							</div>
-						</playlist-item>
+					<div v-if="playlists.length > 0">
+						<div
+							class="item playlist"
+							v-for="playlist in playlists"
+							:key="playlist._id"
+						>
+							<playlist-item
+								v-if="
+									playlist.privacy === 'public' ||
+										(playlist.privacy === 'private' &&
+											playlist.createdBy === userId)
+								"
+								:playlist="playlist"
+							>
+								<div v-if="user._id === userId" slot="actions">
+									<button
+										class="button is-primary"
+										@click="editPlaylistClick(playlist._id)"
+									>
+										<i
+											class="material-icons icon-with-button"
+											>create</i
+										>Edit
+									</button>
+								</div>
+							</playlist-item>
+						</div>
+						<button
+							v-if="user._id === userId"
+							class="button is-primary"
+							@click="
+								openModal({
+									sector: 'station',
+									modal: 'createPlaylist'
+								})
+							"
+						>
+							Create new playlist
+						</button>
 					</div>
-					<button
-						class="button is-primary"
-						@click="
-							openModal({
-								sector: 'station',
-								modal: 'createPlaylist'
-							})
-						"
-					>
-						Create new playlist
-					</button>
+					<div v-else>
+						<h2>No playlists here.</h2>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -345,6 +358,22 @@ export default {
 													index
 												].displayName =
 													data.displayName;
+											}
+										}
+									);
+								}
+							);
+
+							this.socket.on(
+								"event:playlist.updatePrivacy",
+								data => {
+									this.playlists.forEach(
+										(playlist, index) => {
+											if (
+												playlist._id === data.playlistId
+											) {
+												this.playlists[index].privacy =
+													data.privacy;
 											}
 										}
 									);

@@ -71,6 +71,14 @@
 				>
 					<div class="icon"></div>
 				</a>
+				<button
+					class="button is-primary"
+					id="editsong-icon"
+					v-if="$parent.isAdminOnly() && !currentSong.simpleSong"
+					@click="$parent.editSong(currentSong)"
+				>
+					<i class="material-icons icon-with-button">edit</i>Edit
+				</button>
 			</div>
 		</div>
 	</div>

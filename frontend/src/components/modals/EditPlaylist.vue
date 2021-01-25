@@ -152,6 +152,19 @@
 					>
 				</p>
 			</div>
+			<div class="control is-grouped">
+				<div class="control select">
+					<select v-model="playlist.privacy">
+						<option value="private">Private</option>
+						<option value="public">Public</option>
+					</select>
+				</div>
+				<p class="control">
+					<a class="button is-info" @click="updatePrivacy()" href="#"
+						>Update Privacy</a
+					>
+				</p>
+			</div>
 		</div>
 		<div slot="footer">
 			<a class="button is-danger" @click="removePlaylist()" href="#"
@@ -387,6 +400,19 @@ export default {
 				}
 			);
 		},
+		updatePrivacy() {
+			const { privacy } = this.playlist;
+			if (privacy === "public" || privacy === "private") {
+				this.socket.emit(
+					"playlists.updatePrivacy",
+					this.playlist._id,
+					privacy,
+					res => {
+						new Toast({ content: res.message, timeout: 4000 });
+					}
+				);
+			}
+		},
 		...mapActions("modals", ["closeModal"])
 	}
 };
@@ -428,5 +454,12 @@ li a {
 
 h5 {
 	padding: 20px 0;
+}
+
+.control.select {
+	flex-grow: 1;
+	select {
+		width: 100%;
+	}
 }
 </style>

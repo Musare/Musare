@@ -12,70 +12,16 @@ const modules = {
 	songs: {
 		namespaced: true,
 		state: {
-			video: {
-				player: null,
-				paused: true,
-				playerReady: false,
-				autoPlayed: false,
-				currentTime: 0
-			},
-			editing: {},
 			songs: []
 		},
 		getters: {},
 		actions: {
-			editSong: ({ commit }, song) => commit("editSong", song),
-			stopVideo: ({ commit }) => commit("stopVideo"),
-			loadVideoById: ({ commit }, id, skipDuration) =>
-				commit("loadVideoById", id, skipDuration),
-			pauseVideo: ({ commit }, status) => commit("pauseVideo", status),
-			getCurrentTime: ({ commit, state }, fixedVal) => {
-				return new Promise(resolve => {
-					commit("getCurrentTime", fixedVal);
-					resolve(state.video.currentTime);
-				});
-			},
 			addSong: ({ commit }, song) => commit("addSong", song),
 			removeSong: ({ commit }, songId) => commit("removeSong", songId),
 			updateSong: ({ commit }, updatedSong) =>
-				commit("updateSong", updatedSong),
-			updateSongField: ({ commit }, data) =>
-				commit("updateSongField", data),
-			selectDiscogsInfo: ({ commit }, discogsInfo) =>
-				commit("selectDiscogsInfo", discogsInfo)
+				commit("updateSong", updatedSong)
 		},
 		mutations: {
-			editSong(state, song) {
-				if (song.song.discogs === undefined) song.song.discogs = null;
-				state.editing = { ...song };
-			},
-			stopVideo(state) {
-				state.video.player.stopVideo();
-			},
-			loadVideoById(state, id, skipDuration) {
-				state.video.player.loadVideoById(id, skipDuration);
-			},
-			pauseVideo(state, status) {
-				if (status) state.video.player.pauseVideo();
-				else state.video.player.playVideo();
-				state.video.paused = status;
-			},
-			getCurrentTime(state, fixedVal) {
-				if (!state.playerReady) state.video.currentTime = 0;
-				else {
-					Promise.resolve(state.video.player.getCurrentTime()).then(
-						time => {
-							if (fixedVal)
-								Promise.resolve(time.toFixed(fixedVal)).then(
-									fixedTime => {
-										state.video.currentTime = fixedTime;
-									}
-								);
-							else state.video.currentTime = time;
-						}
-					);
-				}
-			},
 			addSong(state, song) {
 				state.songs.push(song);
 			},
@@ -89,12 +35,6 @@ const modules = {
 					if (song._id === updatedSong._id)
 						Vue.set(state.songs, index, updatedSong);
 				});
-			},
-			updateSongField(state, data) {
-				state.editing.song[data.field] = data.value;
-			},
-			selectDiscogsInfo(state, discogsInfo) {
-				state.editing.song.discogs = discogsInfo;
 			}
 		}
 	},

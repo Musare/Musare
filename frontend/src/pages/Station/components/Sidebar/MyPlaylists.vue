@@ -117,6 +117,14 @@ export default {
 					}
 				});
 			});
+
+			this.socket.on("event:playlist.updatePrivacy", data => {
+				this.playlists.forEach((playlist, index) => {
+					if (playlist._id === data.playlistId) {
+						this.playlists[index].privacy = data.privacy;
+					}
+				});
+			});
 		});
 	},
 	methods: {

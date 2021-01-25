@@ -210,10 +210,10 @@ export default {
 	}),
 
 	/**
-	 * Gets a song
+	 * Gets a song from the YouTube song id
 	 *
 	 * @param {object} session - the session object automatically added by socket.io
-	 * @param {string} songId - the song id
+	 * @param {string} songId - the YouTube song id
 	 * @param {Function} cb
 	 */
 	getSong: isAdminRequired(function getSong(session, songId, cb) {
@@ -237,6 +237,38 @@ export default {
 				}
 				this.log("SUCCESS", "SONGS_GET_SONG", `Got song ${songId} successfully.`);
 				return cb({ status: "success", data: song });
+			}
+		);
+	}),
+
+	/**
+	 * Gets a song from the Musare song id
+	 *
+	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {string} songId - the Musare song id
+	 * @param {Function} cb
+	 */
+	getSongFromMusareId: isAdminRequired(function getSong(session, songId, cb) {
+		async.waterfall(
+			[
+				next => {
+					SongsModule.runJob("GET_SONG", { id: songId }, this)
+						.then(response => {
+							next(null, response.song);
+						})
+						.catch(err => {
+							next(err);
+						});
+				}
+			],
+			async (err, song) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "SONGS_GET_SONG_FROM_MUSARE_ID", `Failed to get song ${songId}. "${err}"`);
+					return cb({ status: "failure", message: err });
+				}
+				this.log("SUCCESS", "SONGS_GET_SONG_FROM_MUSARE_ID", `Got song ${songId} successfully.`);
+				return cb({ status: "success", data: { song } });
 			}
 		);
 	}),

@@ -1,7 +1,15 @@
 <template>
 	<div class="playlist">
 		<div class="left-part">
-			<p class="top-text">{{ playlist.displayName }}</p>
+			<p class="top-text">
+				{{ playlist.displayName }}
+				<i
+					v-if="playlist.privacy === 'private'"
+					class="privateIcon material-icons"
+					title="This playlist is not visible to other users."
+					>lock</i
+				>
+			</p>
 			<p class="bottom-text">
 				{{ totalLength(playlist) }} •
 				{{ playlist.songs.length }}
@@ -59,6 +67,11 @@ export default {
 		font-size: 20px;
 		line-height: 23px;
 		margin-bottom: 0;
+
+		.privateIcon {
+			color: $dark-pink;
+			font-size: 18px;
+		}
 	}
 
 	.bottom-text {

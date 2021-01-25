@@ -90,7 +90,10 @@
 
 				<div class="player-container quadrant" v-show="!noSong">
 					<div id="video-container">
-						<div id="player" style="width: 100%; height: 100%" />
+						<div
+							id="stationPlayer"
+							style="width: 100%; height: 100%"
+						/>
 						<div class="player-cannot-autoplay" v-if="!canAutoplay">
 							<p>
 								Please click anywhere on the screen for the
@@ -299,6 +302,13 @@
 
 		<main-footer v-if="exists" />
 
+		<edit-song
+			v-if="modals.editSong"
+			:song-id="editingSongId"
+			song-type="songs"
+			sector="station"
+		/>
+
 		<floating-box id="player-debug-box" ref="playerDebugBox">
 			<template #body>
 				<span><b>YouTube id</b>: {{ currentSong.songId }}</span>
@@ -380,7 +390,8 @@ export default {
 		FloatingBox,
 		CurrentlyPlaying,
 		StationSidebar,
-		AddToPlaylistDropdown
+		AddToPlaylistDropdown,
+		EditSong: () => import("../../components/modals/EditSong.vue")
 	},
 	data() {
 		return {
@@ -406,7 +417,8 @@ export default {
 			seeking: false,
 			playbackRate: 1,
 			volumeSliderValue: 0,
-			showPlaylistDropdown: false
+			showPlaylistDropdown: false,
+			editingSongId: ""
 		};
 	},
 	computed: {
@@ -484,8 +496,17 @@ export default {
 							if (this.currentSong.songId === song.songId) {
 								this.liked = song.liked;
 								this.disliked = song.disliked;
-								if (song.disliked === true)
+								if (
+									this.autoSkipDisliked &&
+									song.disliked === true
+								) {
 									this.voteSkipStation();
+									new Toast({
+										content:
+											"Automatically voted to skip disliked song.",
+										timeout: 4000
+									});
+								}
 							}
 						}
 					);
@@ -705,7 +726,7 @@ export default {
 		},
 		youtubeReady() {
 			if (!this.player) {
-				this.player = new window.YT.Player("player", {
+				this.player = new window.YT.Player("stationPlayer", {
 					height: 270,
 					width: 480,
 					videoId: this.currentSong.songId,
@@ -740,7 +761,19 @@ export default {
 						},
 						onError: err => {
 							console.log("iframe error", err);
-							if (this.loggedIn) this.voteSkipStation();
+							if (this.loggedIn) {
+								new Toast({
+									content:
+										"Error with YouTube Embed, voted to skip the current song.",
+									timeout: 8000
+								});
+								this.voteSkipStation();
+							} else {
+								new Toast({
+									content: "Error with YouTube Embed",
+									timeout: 8000
+								});
+							}
 						},
 						onStateChange: event => {
 							if (
@@ -1429,6 +1462,10 @@ export default {
 				}
 			);
 		},
+		editSong(song) {
+			this.editingSongId = song._id;
+			this.openModal({ sector: "station", modal: "editSong" });
+		},
 		...mapActions("modals", ["openModal"]),
 		...mapActions("station", [
 			"joinStation",
@@ -1442,7 +1479,8 @@ export default {
 			"updateNoSong",
 			"editStation",
 			"updateIfStationIsFavorited"
-		])
+		]),
+		...mapActions("editSongModal", ["stopVideo"])
 	}
 };
 </script>

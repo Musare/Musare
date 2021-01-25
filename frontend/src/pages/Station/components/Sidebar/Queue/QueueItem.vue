@@ -48,21 +48,48 @@
 			<p id="song-duration">
 				{{ utils.formatTime(song.duration) }}
 			</p>
-			<i
-				v-if="
-					station.type === 'community' &&
-						($parent.isOwnerOnly() || $parent.isAdminOnly())
-				"
-				class="material-icons"
-				id="remove-queue-item"
-				@click="$parent.removeFromQueue(song.songId)"
-				>delete_forever</i
-			>
+			<div id="queue-item-buttons">
+				<i
+					v-if="
+						$parent.loggedIn &&
+							!song.simpleSong &&
+							song.likes !== -1 &&
+							song.dislikes !== -1
+					"
+					class="material-icons"
+					id="report-queue-item"
+					@click="reportQueueSong(song)"
+					>flag</i
+				>
+				<i
+					v-if="
+						$parent.isAdminOnly() &&
+							!song.simpleSong &&
+							song.likes !== -1 &&
+							song.dislikes !== -1
+					"
+					class="material-icons"
+					id="edit-queue-item"
+					@click="$parent.$parent.$parent.editSong(song)"
+					>edit</i
+				>
+				<i
+					v-if="
+						station.type === 'community' &&
+							($parent.isOwnerOnly() || $parent.isAdminOnly())
+					"
+					class="material-icons"
+					id="remove-queue-item"
+					@click="$parent.removeFromQueue(song.songId)"
+					>delete_forever</i
+				>
+			</div>
 		</div>
 	</div>
 </template>
 
 <script>
+import { mapActions } from "vuex";
 import { formatDistance, parseISO } from "date-fns";
 
 import UserIdToUsername from "../../../../../components/common/UserIdToUsername.vue";
@@ -88,6 +115,12 @@ export default {
 		};
 	},
 	methods: {
+		reportQueueSong(song) {
+			this.updateReportQueueSong(song);
+			this.openModal({ sector: "station", modal: "report" });
+		},
+		...mapActions("station", ["updateReportQueueSong"]),
+		...mapActions("modals", ["openModal"]),
 		formatDistance,
 		parseISO
 	}
@@ -111,17 +144,27 @@ export default {
 		display: flex;
 		align-items: center;
 	}
+	#duration-and-actions {
+		margin-left: 5px;
+	}
+	#queue-item-buttons {
+		display: flex;
+		flex-direction: column;
+		margin-left: 10px;
+	}
 
 	#thumbnail {
-		width: 60px;
-		height: 60px;
+		width: 65px;
+		height: 65px;
+		margin: -7.5px;
+		border-radius: 3px 0 0 3px;
 	}
 
 	#song-info {
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
-		margin-left: 25px;
+		margin-left: 20px;
 
 		*:not(i) {
 			margin: 0;
@@ -146,9 +189,31 @@ export default {
 		font-size: 20px;
 	}
 
+	#report-queue-item {
+		cursor: pointer;
+		color: $yellow;
+		&:hover,
+		&:focus {
+			color: darken($yellow, 5%);
+		}
+	}
+
+	#edit-queue-item {
+		cursor: pointer;
+		color: $musare-blue;
+		&:hover,
+		&:focus {
+			color: darken($musare-blue, 5%);
+		}
+	}
+
 	#remove-queue-item {
 		cursor: pointer;
-		margin-left: 10px;
+		color: $red;
+		&:hover,
+		&:focus {
+			color: darken($red, 5%);
+		}
 	}
 }
 </style>
