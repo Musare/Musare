@@ -366,19 +366,23 @@ export default {
 		init() {
 			this.socket.emit("stations.index", data => {
 				this.stations = [];
+
 				if (data.status === "success")
-					data.stations.forEach(s => {
-						const station = s;
-						if (!station.currentSong)
-							station.currentSong = {
+					data.stations.forEach(station => {
+						const modifiableStation = station;
+
+						if (!modifiableStation.currentSong)
+							modifiableStation.currentSong = {
 								thumbnail: "/assets/notes-transparent.png"
 							};
+
 						if (
-							station.currentSong &&
-							!station.currentSong.thumbnail
+							modifiableStation.currentSong &&
+							!modifiableStation.currentSong.thumbnail
 						)
-							station.currentSong.ytThumbnail = `https://img.youtube.com/vi/${station.currentSong.songId}/mqdefault.jpg`;
-						this.stations.push(station);
+							modifiableStation.currentSong.ytThumbnail = `https://img.youtube.com/vi/${station.currentSong.songId}/mqdefault.jpg`;
+
+						this.stations.push(modifiableStation);
 					});
 			});
 

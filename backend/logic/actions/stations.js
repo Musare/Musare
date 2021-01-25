@@ -362,26 +362,31 @@ export default {
 					const filteredStations = [];
 					async.each(
 						items,
-						(station, next) => {
+						(station, nextStation) => {
 							async.waterfall(
 								[
-									next => {
-										StationsModule.runJob(
-											"HAS_USER_FAVORITED_STATION",
-											{
-												userId: session.userId,
-												stationId: station._id
-											},
-											this
-										)
-											.then(isStationFavorited => {
-												station.isFavorited = isStationFavorited;
-												return next();
-											})
-											.catch(err => next(err));
+									callback => {
+										// only relevant if user logged in
+										if (session.userId) {
+											return StationsModule.runJob(
+												"HAS_USER_FAVORITED_STATION",
+												{
+													userId: session.userId,
+													stationId: station._id
+												},
+												this
+											)
+												.then(isStationFavorited => {
+													station.isFavorited = isStationFavorited;
+													return callback();
+												})
+												.catch(err => callback(err));
+										}
+
+										return callback();
 									},
 
-									next => {
+									callback => {
 										StationsModule.runJob(
 											"CAN_USER_VIEW_STATION",
 											{
@@ -391,17 +396,18 @@ export default {
 											},
 											this
 										)
-											.then(exists => next(null, exists))
-											.catch(next);
+											.then(exists => callback(null, exists))
+											.catch(callback);
 									}
 								],
 								(err, exists) => {
-									if (err) this.log(err);
+									if (err) return this.log("ERROR", "STATIONS_INDEX", err);
 
 									station.userCount = StationsModule.usersPerStationCount[station._id] || 0;
 
 									if (exists) filteredStations.push(station);
-									next();
+
+									return nextStation();
 								}
 							);
 						},
@@ -704,20 +710,26 @@ export default {
 						.finally(() => next(null, data));
 				},
 
-				(data, next) =>
-					StationsModule.runJob(
-						"HAS_USER_FAVORITED_STATION",
-						{
-							userId: session.userId,
-							stationId: data._id
-						},
-						this
-					)
-						.then(isStationFavorited => {
-							data.isFavorited = isStationFavorited;
-							return next(null, data);
-						})
-						.catch(err => next(err))
+				(data, next) => {
+					// only relevant if user logged in
+					if (session.userId) {
+						return StationsModule.runJob(
+							"HAS_USER_FAVORITED_STATION",
+							{
+								userId: session.userId,
+								stationId: data._id
+							},
+							this
+						)
+							.then(isStationFavorited => {
+								data.isFavorited = isStationFavorited;
+								return next(null, data);
+							})
+							.catch(err => next(err));
+					}
+
+					return next(null, data);
+				}
 			],
 			async (err, data) => {
 				if (err) {
