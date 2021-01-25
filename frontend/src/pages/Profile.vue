@@ -328,7 +328,7 @@ export default {
 												].songs.forEach(
 													(song, index2) => {
 														if (
-															song._id ===
+															song.songId ===
 															data.songId
 														) {
 															this.playlists[
