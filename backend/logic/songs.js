@@ -228,7 +228,6 @@ class _SongsModule extends CoreClass {
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	DELETE_SONG(payload) {
-		// songId, cb
 		return new Promise((resolve, reject) =>
 			async.waterfall(
 				[
@@ -255,6 +254,61 @@ class _SongsModule extends CoreClass {
 				}
 			)
 		);
+	}
+
+	/**
+	 * Recalculates dislikes and likes for a song
+	 *
+	 * @param {object} payload - returns an object containing the payload
+	 * @param {string} payload.musareSongId - the (musare) id of the song
+	 * @param {string} payload.songId - the (mongodb) id of the song
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	async RECALCULATE_SONG_RATINGS(payload) {
+		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
+
+		return new Promise((resolve, reject) => {
+			async.waterfall(
+				[
+					next => {
+						playlistModel.countDocuments(
+							{ songs: { $elemMatch: { songId: payload.musareSongId } }, displayName: "Liked Songs" },
+							(err, likes) => {
+								if (err) return next(err);
+								return next(null, likes);
+							}
+						);
+					},
+
+					(likes, next) => {
+						playlistModel.countDocuments(
+							{ songs: { $elemMatch: { songId: payload.musareSongId } }, displayName: "Disliked Songs" },
+							(err, dislikes) => {
+								if (err) return next(err);
+								return next(err, { likes, dislikes });
+							}
+						);
+					},
+
+					({ likes, dislikes }, next) => {
+						SongsModule.songModel.updateOne(
+							{ _id: payload.songId },
+							{
+								$set: {
+									likes,
+									dislikes
+								}
+							},
+							err => next(err, { likes, dislikes })
+						);
+					}
+				],
+				(err, { likes, dislikes }) => {
+					if (err) return reject(new Error(err));
+					return resolve({ likes, dislikes });
+				}
+			);
+		});
 	}
 }
 

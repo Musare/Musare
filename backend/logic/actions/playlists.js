@@ -210,6 +210,7 @@ export default {
 			},
 			this
 		);
+
 		async.waterfall(
 			[
 				next => (data ? next() : cb({ status: "failure", message: "Invalid data" })),
@@ -731,7 +732,7 @@ export default {
 			[
 				next => {
 					if (!songId || typeof songId !== "string") return next("Invalid song id.");
-					if (!playlistId || typeof playlistId !== "string") return next("Invalid playlist id.");
+					if (!playlistId) return next("Invalid playlist id.");
 					return next();
 				},
 

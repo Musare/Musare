@@ -105,6 +105,32 @@ class _PlaylistsModule extends CoreClass {
 	}
 
 	/**
+	 * Creates a playlist that is not generated or editable by a user e.g. liked songs playlist
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.userId - the id of the user to create the playlist for
+	 * @param {string} payload.displayName - the display name of the playlist
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	CREATE_READ_ONLY_PLAYLIST(payload) {
+		return new Promise((resolve, reject) => {
+			PlaylistsModule.playlistModel.create(
+				{
+					isUserModifiable: false,
+					displayName: payload.displayName,
+					songs: [],
+					createdBy: payload.userId,
+					createdAt: Date.now()
+				},
+				(err, playlist) => {
+					if (err) return reject(new Error(err));
+					return resolve(playlist._id);
+				}
+			);
+		});
+	}
+
+	/**
 	 * Gets a playlist by id from the cache or Mongo, and if it isn't in the cache yet, adds it the cache
 	 *
 	 * @param {object} payload - object that contains the payload

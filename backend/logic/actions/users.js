@@ -16,6 +16,7 @@ const CacheModule = moduleManager.modules.cache;
 const MailModule = moduleManager.modules.mail;
 const PunishmentsModule = moduleManager.modules.punishments;
 const ActivitiesModule = moduleManager.modules.activities;
+const PlaylistsModule = moduleManager.modules.playlists;
 
 CacheModule.runJob("SUB", {
 	channel: "user.updateUsername",
@@ -387,10 +388,47 @@ export default {
 				},
 
 				// respond with the new user
-				(newUser, next) => {
+				(user, next) => {
 					verifyEmailSchema(email, username, verificationToken, err => {
-						next(err, newUser);
+						next(err, user._id);
 					});
+				},
+
+				// create a liked songs playlist for the new user
+				(userId, next) => {
+					PlaylistsModule.runJob("CREATE_READ_ONLY_PLAYLIST", {
+						userId,
+						displayName: "Liked Songs"
+					})
+						.then(likedSongsPlaylist => {
+							next(null, likedSongsPlaylist, userId);
+						})
+						.catch(err => next(err));
+				},
+
+				// create a disliked songs playlist for the new user
+				(likedSongsPlaylist, userId, next) => {
+					PlaylistsModule.runJob("CREATE_READ_ONLY_PLAYLIST", {
+						userId,
+						displayName: "Disliked Songs"
+					})
+						.then(dislikedSongsPlaylist => {
+							next(null, { likedSongsPlaylist, dislikedSongsPlaylist }, userId);
+						})
+						.catch(err => next(err));
+				},
+
+				// associate liked + disliked songs playlist to the user object
+				({ likedSongsPlaylist, dislikedSongsPlaylist }, userId, next) => {
+					userModel.updateOne(
+						{ _id: userId },
+						{ $set: { likedSongsPlaylist, dislikedSongsPlaylist } },
+						{ runValidators: true },
+						err => {
+							if (err) return next(err);
+							return next(null, userId);
+						}
+					);
 				}
 			],
 			async (err, user) => {

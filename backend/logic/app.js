@@ -17,6 +17,7 @@ let MailModule;
 let CacheModule;
 let DBModule;
 let ActivitiesModule;
+let PlaylistsModule;
 let UtilsModule;
 
 class _AppModule extends CoreClass {
@@ -38,6 +39,7 @@ class _AppModule extends CoreClass {
 			CacheModule = this.moduleManager.modules.cache;
 			DBModule = this.moduleManager.modules.db;
 			ActivitiesModule = this.moduleManager.modules.activities;
+			PlaylistsModule = this.moduleManager.modules.playlists;
 			UtilsModule = this.moduleManager.modules.utils;
 
 			const app = (this.app = express());
@@ -312,15 +314,6 @@ class _AppModule extends CoreClass {
 							userModel.create(user, next);
 						},
 
-						// add the activity of account creation
-						(user, next) => {
-							ActivitiesModule.runJob("ADD_ACTIVITY", {
-								userId: user._id,
-								activityType: "created_account"
-							});
-							next(null, user);
-						},
-
 						(user, next) => {
 							MailModule.runJob("GET_SCHEMA", {
 								schemaName: "verifyEmail"
@@ -329,6 +322,53 @@ class _AppModule extends CoreClass {
 									next(err, user._id);
 								});
 							});
+						},
+
+						// create a liked songs playlist for the new user
+						(userId, next) => {
+							PlaylistsModule.runJob("CREATE_READ_ONLY_PLAYLIST", {
+								userId,
+								displayName: "Liked Songs"
+							})
+								.then(likedSongsPlaylist => {
+									next(null, likedSongsPlaylist, userId);
+								})
+								.catch(err => next(err));
+						},
+
+						// create a disliked songs playlist for the new user
+						(likedSongsPlaylist, userId, next) => {
+							PlaylistsModule.runJob("CREATE_READ_ONLY_PLAYLIST", {
+								userId,
+								displayName: "Disliked Songs"
+							})
+								.then(dislikedSongsPlaylist => {
+									next(null, { likedSongsPlaylist, dislikedSongsPlaylist }, userId);
+								})
+								.catch(err => next(err));
+						},
+
+						// associate liked + disliked songs playlist to the user object
+						({ likedSongsPlaylist, dislikedSongsPlaylist }, userId, next) => {
+							userModel.updateOne(
+								{ _id: userId },
+								{ $set: { likedSongsPlaylist, dislikedSongsPlaylist } },
+								{ runValidators: true },
+								err => {
+									if (err) return next(err);
+									return next(null, userId);
+								}
+							);
+						},
+
+						// add the activity of account creation
+						(userId, next) => {
+							ActivitiesModule.runJob("ADD_ACTIVITY", {
+								userId,
+								activityType: "created_account"
+							});
+
+							next(null, userId);
 						}
 					],
 					async (err, userId) => {

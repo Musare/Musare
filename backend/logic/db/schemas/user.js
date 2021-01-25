@@ -1,3 +1,5 @@
+import mongoose from "mongoose";
+
 export default {
 	username: { type: String, required: true },
 	role: { type: String, default: "default", required: true },
@@ -30,8 +32,8 @@ export default {
 	statistics: {
 		songsRequested: { type: Number, default: 0, required: true }
 	},
-	liked: [{ type: String }],
-	disliked: [{ type: String }],
+	likedSongsPlaylist: { type: mongoose.Schema.Types.ObjectId },
+	dislikedSongsPlaylist: { type: mongoose.Schema.Types.ObjectId },
 	favoriteStations: [{ type: String }],
 	name: { type: String, default: "" },
 	location: { type: String, default: "" },
