@@ -59,7 +59,7 @@
 						})
 					"
 				>
-					<i class="material-icons icon-with-button">flag</i>Report
+					<i class="material-icons icon-with-button">flag</i>
 				</button>
 				<a
 					class="button"
@@ -77,7 +77,7 @@
 					v-if="$parent.isAdminOnly() && !currentSong.simpleSong"
 					@click="$parent.editSong(currentSong)"
 				>
-					<i class="material-icons icon-with-button">edit</i>Edit
+					<i class="material-icons icon-with-button">edit</i>
 				</button>
 			</div>
 		</div>
@@ -122,6 +122,11 @@ export default {
 		max-height: 120px;
 		height: 100%;
 		position: relative;
+
+		@media screen and (max-width: 1200px) {
+			min-width: 100px;
+			max-height: 100px;
+		}
 
 		#yt-thumbnail-bg {
 			height: 100%;
@@ -196,14 +201,6 @@ export default {
 
 			#youtube-icon {
 				background-color: #bd2e2e;
-
-				&:after {
-					content: "View on YouTube";
-
-					@media (max-width: 1800px) {
-						content: "Open";
-					}
-				}
 
 				.icon {
 					margin-right: 3px;

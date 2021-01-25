@@ -115,9 +115,6 @@
 								<i class="material-icons icon-with-button">
 									bug_report
 								</i>
-								<span class="optional-desktop-only-text">
-									Debug
-								</span>
 							</button>
 
 							<!-- Local Pause/Resume Button -->
@@ -128,9 +125,6 @@
 								v-if="localPaused"
 							>
 								<i class="material-icons">play_arrow</i>
-								<span class="optional-desktop-only-text"
-									>Play locally</span
-								>
 							</button>
 							<button
 								class="button is-primary"
@@ -139,9 +133,6 @@
 								v-else
 							>
 								<i class="material-icons">pause</i>
-								<span class="optional-desktop-only-text"
-									>Pause locally</span
-								>
 							</button>
 
 							<!-- Vote to Skip Button -->
@@ -153,13 +144,7 @@
 								<i class="material-icons icon-with-button"
 									>skip_next</i
 								>
-								<span class="optional-desktop-only-text"
-									>Vote to skip (</span
-								>
-								{{ currentSong.skipVotes }}
-								<span class="optional-desktop-only-text"
-									>)</span
-								>
+								({{ currentSong.skipVotes }})
 							</button>
 						</div>
 						<div id="duration">
@@ -246,9 +231,6 @@
 										"
 									>
 										<i class="material-icons">queue</i>
-										<span class="optional-desktop-only-text"
-											>Add Song To Playlist</span
-										>
 									</button>
 									<button
 										class="button"
@@ -1577,11 +1559,11 @@ export default {
 		.quadrant,
 		.player-container {
 			border: 0 !important;
+			background: transparent !important;
 		}
 
-		.quadrant,
 		.player-container {
-			background: transparent !important;
+			padding: 0 10px;
 		}
 
 		/** padding fixes on mobile */
@@ -1619,33 +1601,13 @@ export default {
 		display: grid;
 		height: 100%;
 		width: 100%;
-		grid-template-columns: 70% 30%;
+		grid-template-columns: 65% 35%;
 		grid-template-rows: 150px auto;
 		grid-template-areas:
 			"about-station currently-playing"
 			"player sidebar";
 		gap: 25px;
 		min-height: calc(100vh - 64px - 190px);
-
-		@media (min-width: 1040px) and (max-width: 2100px) {
-			#control-bar-container {
-				.optional-desktop-only-text {
-					display: none;
-				}
-
-				.button:not(#dropdown-toggle) {
-					width: 75px;
-				}
-
-				#add-song-to-playlist .button,
-				#local-resume,
-				#local-pause {
-					i {
-						margin-right: 0 !important;
-					}
-				}
-			}
-		}
 
 		.row {
 			display: flex;
@@ -1779,13 +1741,13 @@ export default {
 				flex-direction: column;
 				flex-flow: wrap;
 
+				.button:not(#dropdown-toggle) {
+					width: 75px;
+				}
+
 				#left-buttons,
 				#right-buttons {
 					margin: 3px;
-
-					i {
-						margin-right: 3px;
-					}
 				}
 
 				#left-buttons {
@@ -1818,7 +1780,7 @@ export default {
 					cursor: pointer;
 
 					.volume-slider {
-						width: 500px;
+						width: 400px;
 						padding: 0 15px;
 						background: transparent;
 
