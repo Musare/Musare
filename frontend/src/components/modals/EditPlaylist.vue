@@ -16,7 +16,7 @@
 				<ul class="menu-list">
 					<li v-for="(song, index) in playlist.songs" :key="index">
 						<a href="#" target="_blank">{{ song.title }}</a>
-						<div class="controls">
+						<div class="controls" v-if="playlist.isUserModifiable">
 							<a href="#" @click="promoteSong(song.songId)">
 								<i class="material-icons" v-if="index > 0"
 									>keyboard_arrow_up</i
@@ -52,7 +52,7 @@
 				</ul>
 				<br />
 			</aside>
-			<div class="control is-grouped">
+			<div class="control is-grouped" v-if="playlist.isUserModifiable">
 				<p class="control is-expanded">
 					<input
 						v-model="searchSongQuery"
@@ -69,7 +69,10 @@
 					>
 				</p>
 			</div>
-			<table v-if="songQueryResults.length > 0" class="table">
+			<table
+				v-if="songQueryResults.length > 0 && playlist.isUserModifiable"
+				class="table"
+			>
 				<tbody>
 					<tr
 						v-for="(result, index) in songQueryResults"
@@ -90,7 +93,7 @@
 					</tr>
 				</tbody>
 			</table>
-			<div class="control is-grouped">
+			<div class="control is-grouped" v-if="playlist.isUserModifiable">
 				<p class="control is-expanded">
 					<input
 						v-model="directSongQuery"
@@ -107,7 +110,7 @@
 					>
 				</p>
 			</div>
-			<div class="control is-grouped">
+			<div class="control is-grouped" v-if="playlist.isUserModifiable">
 				<p class="control is-expanded">
 					<input
 						v-model="importQuery"
@@ -134,9 +137,15 @@
 					>
 				</p>
 			</div>
-			<button class="button is-info" @click="shuffle()">Shuffle</button>
+			<button
+				class="button is-info"
+				@click="shuffle()"
+				v-if="playlist.isUserModifiable"
+			>
+				Shuffle
+			</button>
 			<h5>Edit playlist details:</h5>
-			<div class="control is-grouped">
+			<div class="control is-grouped" v-if="playlist.isUserModifiable">
 				<p class="control is-expanded">
 					<input
 						v-model="playlist.displayName"
@@ -166,7 +175,7 @@
 				</p>
 			</div>
 		</div>
-		<div slot="footer">
+		<div slot="footer" v-if="playlist.isUserModifiable">
 			<a class="button is-danger" @click="removePlaylist()" href="#"
 				>Remove Playlist</a
 			>

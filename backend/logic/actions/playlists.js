@@ -452,10 +452,10 @@ export default {
 				},
 
 				(playlist, next) => {
-					UtilsModule.runJob("SHUFFLE", { array: playlist.songs }, this)
-						.then(result => {
-							next(null, result.array);
-						})
+					if (!playlist.isUserModifiable) return next("Playlist cannot be shuffled.");
+
+					return UtilsModule.runJob("SHUFFLE", { array: playlist.songs }, this)
+						.then(result => next(null, result.array))
 						.catch(next);
 				},
 
@@ -690,6 +690,8 @@ export default {
 
 				(playlist, next) => {
 					if (!playlist || playlist.createdBy !== session.userId) return next("Playlist not found.");
+					if (!playlist.isUserModifiable) return next("Playlist cannot be modified.");
+
 					return next(null, playlist);
 				}
 			],
@@ -821,6 +823,17 @@ export default {
 		async.waterfall(
 			[
 				next => {
+					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+						.then(playlist => next(null, playlist))
+						.catch(next);
+				},
+
+				(playlist, next) => {
+					if (!playlist.isUserModifiable) return next("Playlist cannot be modified.");
+					return next(null);
+				},
+
+				next => {
 					playlistModel.updateOne(
 						{ _id: playlistId, createdBy: session.userId },
 						{ $set: { displayName } },
@@ -896,6 +909,8 @@ export default {
 
 				(playlist, next) => {
 					if (!playlist || playlist.createdBy !== session.userId) return next("Playlist not found");
+					if (!playlist.isUserModifiable) return next("Playlist cannot be modified.");
+
 					return async.each(
 						playlist.songs,
 						(song, next) => {
@@ -1001,6 +1016,8 @@ export default {
 
 				(playlist, next) => {
 					if (!playlist || playlist.createdBy !== session.userId) return next("Playlist not found");
+					if (!playlist.isUserModifiable) return next("Playlist cannot be modified.");
+
 					return async.each(
 						playlist.songs,
 						(song, next) => {
@@ -1093,6 +1110,17 @@ export default {
 
 		async.waterfall(
 			[
+				next => {
+					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+						.then(playlist => next(null, playlist))
+						.catch(next);
+				},
+
+				(playlist, next) => {
+					if (!playlist.isUserModifiable) return next("Playlist cannot be removed.");
+					return next(null);
+				},
+
 				next => {
 					PlaylistsModule.runJob("DELETE_PLAYLIST", { playlistId }, this).then(next).catch(next);
 				},
