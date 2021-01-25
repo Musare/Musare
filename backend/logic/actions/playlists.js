@@ -225,13 +225,19 @@ export default {
 			this
 		);
 
+		const blacklist = ["liked songs", "likedsongs", "disliked songs", "dislikedsongs"];
+
 		async.waterfall(
 			[
 				next => (data ? next() : cb({ status: "failure", message: "Invalid data" })),
 
 				next => {
 					const { displayName, songs } = data;
-					playlistModel.create(
+
+					if (blacklist.indexOf(displayName.toLowerCase()) !== -1)
+						return next("That playlist name is blacklisted. Please use a different name.");
+
+					return playlistModel.create(
 						{
 							displayName,
 							songs,
