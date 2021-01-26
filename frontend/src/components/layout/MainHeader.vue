@@ -113,9 +113,8 @@ export default {
 @import "../../styles/global.scss";
 
 .night-mode {
-	.nav-left,
-	.nav-right {
-		background-color: $night-mode-bg-secondary;
+	.nav {
+		background-color: $night-mode-bg-secondary !important;
 	}
 
 	.nav-item {

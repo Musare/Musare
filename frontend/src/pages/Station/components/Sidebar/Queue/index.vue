@@ -132,11 +132,12 @@ export default {
 	}
 
 	#add-song-to-queue {
-		background-color: rgba(3, 169, 244, 1);
+		background-color: var(--station-theme) !important;
 		color: $white !important;
 
+		&:hover,
 		&:focus {
-			background-color: $primary-color;
+			filter: brightness(90%);
 		}
 	}
 }

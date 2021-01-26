@@ -202,10 +202,10 @@ export default {
 
 	#edit-queue-item {
 		cursor: pointer;
-		color: $musare-blue;
+		color: var(--station-theme);
 		&:hover,
 		&:focus {
-			color: darken($musare-blue, 5%);
+			filter: brightness(90%);
 		}
 	}
 

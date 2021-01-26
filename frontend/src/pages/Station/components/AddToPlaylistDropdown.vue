@@ -229,7 +229,7 @@ export default {
 				left: 2px;
 				top: 2px;
 				border-radius: 3px;
-				background-color: $musare-blue;
+				background-color: var(--station-theme);
 				position: absolute;
 			}
 		}

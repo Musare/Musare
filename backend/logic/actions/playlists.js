@@ -1231,7 +1231,7 @@ export default {
 	 * Updates the privacy of a private playlist
 	 *
 	 * @param {object} session - the session object automatically added by socket.io
-	 * @param {string} playlistId - the id of the playlist we are updating the displayName for
+	 * @param {string} playlistId - the id of the playlist we are updating the privacy for
 	 * @param {Function} cb - gets called with the result
 	 */
 	updatePrivacy: isLoginRequired(async function updatePrivacy(session, playlistId, privacy, cb) {

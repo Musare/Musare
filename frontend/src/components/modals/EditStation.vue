@@ -387,6 +387,62 @@
 							</transition>
 						</div>
 					</div>
+					<div>
+						<label class="label">Theme</label>
+						<div
+							@mouseenter="themeDropdownActive = true"
+							@mouseleave="themeDropdownActive = false"
+							class="button-wrapper"
+						>
+							<button
+								style="text-transform: capitalize"
+								:class="editing.theme"
+								@click="updateThemeLocal(editing.theme)"
+							>
+								<i class="material-icons">palette</i>
+								{{ editing.theme }}
+							</button>
+							<transition name="slide-down">
+								<button
+									class="blue"
+									v-if="
+										themeDropdownActive &&
+											editing.theme !== 'blue'
+									"
+									@click="updateThemeLocal('blue')"
+								>
+									<i class="material-icons">palette</i>
+									Blue
+								</button>
+							</transition>
+							<transition name="slide-down">
+								<button
+									class="purple"
+									v-if="
+										themeDropdownActive &&
+											editing.theme !== 'purple'
+									"
+									@click="updateThemeLocal('purple')"
+								>
+									<i class="material-icons">palette</i>
+									Purple
+								</button>
+							</transition>
+							<transition name="slide-down">
+								<button
+									class="teal"
+									v-if="
+										themeDropdownActive &&
+											editing.theme !== 'teal'
+									"
+									@click="updateThemeLocal('teal')"
+								>
+									<i class="material-icons">palette</i>
+									Teal
+								</button>
+							</transition>
+						</div>
+					</div>
 				</div>
 			</div>
 		</template>
@@ -434,6 +490,7 @@ export default {
 			privacyDropdownActive: false,
 			modeDropdownActive: false,
 			queueLockDropdownActive: false,
+			themeDropdownActive: false,
 			genres: [
 				"Blues",
 				"Country",
@@ -617,6 +674,7 @@ export default {
 				this.editing.blacklistedGenres.toString()
 			)
 				this.updateBlacklistedGenres();
+			if (this.station.theme !== this.editing.theme) this.updateTheme();
 		},
 		updateName() {
 			const { name } = this.editing;
@@ -901,6 +959,42 @@ export default {
 					timeout: 8000
 				});
 			});
+		},
+		updateThemeLocal(theme) {
+			if (this.editing.theme === theme) return;
+			this.editing.theme = theme;
+			this.themeDropdownActive = false;
+		},
+		updateTheme() {
+			this.socket.emit(
+				"stations.updateTheme",
+				this.editing._id,
+				this.editing.theme,
+				res => {
+					if (res.status === "success") {
+						if (this.station)
+							this.station.theme = this.editing.theme;
+						else {
+							this.stations.forEach((station, index) => {
+								if (station._id === this.editing._id) {
+									this.stations[
+										index
+									].theme = this.editing.theme;
+									return this.editing.theme;
+								}
+
+								return false;
+							});
+						}
+						return new Toast({
+							content: res.message,
+							timeout: 4000
+						});
+					}
+
+					return new Toast({ content: res.message, timeout: 8000 });
+				}
+			);
 		},
 		deleteStation() {
 			this.socket.emit("stations.remove", this.editing._id, res => {
@@ -1242,6 +1336,14 @@ export default {
 
 		&.yellow {
 			background-color: $yellow;
+		}
+
+		&.purple {
+			background-color: $purple;
+		}
+
+		&.teal {
+			background-color: $teal;
 		}
 
 		i {

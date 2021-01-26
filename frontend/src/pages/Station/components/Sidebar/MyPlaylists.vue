@@ -190,8 +190,15 @@ export default {
 		display: flex;
 		align-items: center;
 
-		button:not(:first-of-type) {
-			margin-left: 5px;
+		button {
+			background-color: var(--station-theme) !important;
+			&:not(:first-of-type) {
+				margin-left: 5px;
+			}
+			&:hover,
+			&:focus {
+				filter: brightness(90%);
+			}
 		}
 	}
 }
@@ -215,7 +222,7 @@ export default {
 	width: 100%;
 	height: 40px;
 	border-radius: 5px;
-	background-color: rgba(3, 169, 244, 1);
+	background-color: var(--station-theme);
 	color: $white !important;
 	border: 0;
 
@@ -224,8 +231,9 @@ export default {
 		border: 0;
 	}
 
+	&:hover,
 	&:focus {
-		background-color: $primary-color;
+		filter: brightness(90%);
 	}
 }
 </style>

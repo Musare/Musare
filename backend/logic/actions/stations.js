@@ -71,6 +71,16 @@ CacheModule.runJob("SUB", {
 });
 
 CacheModule.runJob("SUB", {
+	channel: "station.updateTheme",
+	cb: data => {
+		IOModule.runJob("EMIT_TO_ROOM", {
+			room: `station.${data.stationId}`,
+			args: ["event:theme.updated", data.theme]
+		});
+	}
+});
+
+CacheModule.runJob("SUB", {
 	channel: "station.queueLockToggled",
 	cb: data => {
 		IOModule.runJob("EMIT_TO_ROOM", {
@@ -251,6 +261,19 @@ CacheModule.runJob("SUB", {
 				socketsThatCan.forEach(socket => {
 					socket.emit("event:station.updateDescription", { stationId, description: station.description });
 				});
+			});
+		});
+	}
+});
+
+CacheModule.runJob("SUB", {
+	channel: "station.themeUpdate",
+	cb: response => {
+		const { stationId } = response;
+		StationsModule.runJob("GET_STATION", { stationId }).then(station => {
+			IOModule.runJob("EMIT_TO_ROOM", {
+				room: `station.${stationId}`,
+				args: ["event:theme.updated", station.theme]
 			});
 		});
 	}
@@ -663,7 +686,8 @@ export default {
 						owner: station.owner,
 						privatePlaylist: station.privatePlaylist,
 						genres: station.genres,
-						blacklistedGenres: station.blacklistedGenres
+						blacklistedGenres: station.blacklistedGenres,
+						theme: station.theme
 					};
 
 					StationsModule.userList[session.socketId] = station._id;
@@ -1463,6 +1487,79 @@ export default {
 				return cb({
 					status: "success",
 					message: "Successfully updated the party mode."
+				});
+			}
+		);
+	}),
+
+	/**
+	 * Updates a station's theme
+	 *
+	 * @param session
+	 * @param stationId - the station id
+	 * @param newTheme - the new station theme
+	 * @param cb
+	 */
+	updateTheme: isOwnerRequired(async function updateTheme(session, stationId, newTheme, cb) {
+		const stationModel = await DBModule.runJob(
+			"GET_MODEL",
+			{
+				modelName: "station"
+			},
+			this
+		);
+		async.waterfall(
+			[
+				next => {
+					StationsModule.runJob("GET_STATION", { stationId }, this)
+						.then(station => {
+							next(null, station);
+						})
+						.catch(next);
+				},
+
+				(station, next) => {
+					if (!station) return next("Station not found.");
+					if (station.theme === newTheme)
+						return next("No change in theme.");
+					return stationModel.updateOne(
+						{ _id: stationId },
+						{ $set: { theme: newTheme } },
+						{ runValidators: true },
+						next
+					);
+				},
+
+				(res, next) => {
+					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
+						.then(station => {
+							next(null, station);
+						})
+						.catch(next);
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"STATIONS_UPDATE_THEME",
+						`Updating station "${stationId}" theme to "${newTheme}" failed. "${err}"`
+					);
+					return cb({ status: "failure", message: err });
+				}
+				this.log(
+					"SUCCESS",
+					"STATIONS_UPDATE_THEME",
+					`Updated station "${stationId}" theme to "${newTheme}" successfully.`
+				);
+				CacheModule.runJob("PUB", {
+					channel: "station.themeUpdate",
+					value: { stationId }
+				});
+				return cb({
+					status: "success",
+					message: "Successfully updated the theme."
 				});
 			}
 		);

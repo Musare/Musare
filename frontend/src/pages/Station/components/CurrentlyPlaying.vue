@@ -173,7 +173,7 @@ export default {
 			flex-direction: column;
 			flex-grow: 1;
 			h6 {
-				color: $musare-blue !important;
+				color: var(--station-theme) !important;
 				font-weight: bold;
 				font-size: 17px;
 			}
@@ -220,6 +220,14 @@ export default {
 						center;
 					mask: url("/assets/social/youtube.svg") no-repeat center;
 					background-color: #fff;
+				}
+			}
+
+			#editsong-icon.button.is-primary {
+				background-color: var(--station-theme) !important;
+				&:hover,
+				&:focus {
+					filter: brightness(90%);
 				}
 			}
 		}

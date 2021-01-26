@@ -1,5 +1,5 @@
 <template>
-	<div>
+	<div :style="'--station-theme: ' + theme">
 		<metadata v-if="exists && !loading" :title="`${station.displayName}`" />
 		<metadata v-else-if="!exists && !loading" :title="`Not found`" />
 
@@ -413,7 +413,8 @@ export default {
 			playbackRate: 1,
 			volumeSliderValue: 0,
 			showPlaylistDropdown: false,
-			editingSongId: ""
+			editingSongId: "",
+			theme: "rgb(2, 166, 242)"
 		};
 	},
 	computed: {
@@ -614,6 +615,17 @@ export default {
 				}
 			});
 
+			this.socket.on("event:theme.updated", theme => {
+				this.station.theme = theme;
+				if (theme === "blue") {
+					this.theme = "rgb(2, 166, 242)";
+				} else if (theme === "purple") {
+					this.theme = "rgb(143, 40, 140)";
+				} else if (theme === "teal") {
+					this.theme = "rgb(0, 209, 178)";
+				}
+			});
+
 			this.socket.on("event:newOfficialPlaylist", playlist => {
 				if (this.station.type === "official") {
 					this.updateSongsList(playlist);
@@ -696,7 +708,8 @@ export default {
 				displayName: this.station.displayName,
 				locked: this.station.locked,
 				genres: this.station.genres,
-				blacklistedGenres: this.station.blacklistedGenres
+				blacklistedGenres: this.station.blacklistedGenres,
+				theme: this.station.theme
 			});
 			this.openModal({
 				sector: "station",
@@ -1241,7 +1254,8 @@ export default {
 						type,
 						genres,
 						blacklistedGenres,
-						isFavorited
+						isFavorited,
+						theme
 					} = res.data;
 
 					this.joinStation({
@@ -1257,8 +1271,17 @@ export default {
 						type,
 						genres,
 						blacklistedGenres,
-						isFavorited
+						isFavorited,
+						theme
 					});
+
+					if (this.station.theme === "blue") {
+						this.theme = "rgb(2, 166, 242)";
+					} else if (this.station.theme === "purple") {
+						this.theme = "rgb(143, 40, 140)";
+					} else if (this.station.theme === "teal") {
+						this.theme = "rgb(0, 209, 178)";
+					}
 
 					const currentSong = res.data.currentSong
 						? res.data.currentSong
@@ -1502,8 +1525,13 @@ export default {
 	}
 }
 
-.experimental {
-	display: none !important;
+.nav,
+.button.is-primary {
+	background-color: var(--station-theme) !important;
+}
+.button.is-primary:hover,
+.button.is-primary:focus {
+	filter: brightness(90%);
 }
 
 #player-debug-box {
@@ -1520,13 +1548,17 @@ export default {
 	#currently-playing-container,
 	#about-station-container,
 	#control-bar-container,
-	.player-container.nothing-here-text {
+	.player-container {
 		background-color: $night-mode-bg-secondary !important;
 	}
 
 	#video-container,
 	#control-bar-container {
 		border: 0 !important;
+	}
+
+	#seeker-bar-container {
+		background-color: $night-mode-bg-secondary !important;
 	}
 
 	#dropdown-toggle {
@@ -1649,6 +1681,7 @@ export default {
 			&.nothing-here-text {
 				border: 1px solid $light-grey-2;
 				border-radius: 5px;
+				margin: 10px;
 			}
 
 			#video-container {
@@ -1660,7 +1693,7 @@ export default {
 					width: 100%;
 					height: 100%;
 					bottom: calc(100% + 5px);
-					background: rgba(3, 169, 244, 0.95);
+					background: var(--station-theme);
 					display: flex;
 					align-items: center;
 					justify-content: center;
@@ -1682,7 +1715,7 @@ export default {
 				overflow: hidden;
 
 				#seeker-bar {
-					background-color: $musare-blue;
+					background-color: var(--station-theme);
 					top: 0;
 					left: 0;
 					bottom: 0;
@@ -1768,7 +1801,7 @@ export default {
 						height: 19px;
 						width: 19px;
 						border-radius: 15px;
-						background: $primary-color;
+						background: var(--station-theme);
 						cursor: pointer;
 						-webkit-appearance: none;
 						margin-top: -6.5px;
@@ -1790,7 +1823,7 @@ export default {
 						height: 19px;
 						width: 19px;
 						border-radius: 15px;
-						background: $primary-color;
+						background: var(--station-theme);
 						cursor: pointer;
 						-webkit-appearance: none;
 						margin-top: -6.5px;
@@ -1824,7 +1857,7 @@ export default {
 						height: 15px;
 						width: 15px;
 						border-radius: 15px;
-						background: $primary-color;
+						background: var(--station-theme);
 						cursor: pointer;
 						-webkit-appearance: none;
 						margin-top: 1.5px;
