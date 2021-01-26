@@ -34,6 +34,7 @@
 						isPrivate: station.privacy === 'private',
 						isMine: isOwner(station)
 					}"
+					:style="'--station-theme: ' + station.themeCode"
 				>
 					<div class="card-image">
 						<figure class="image is-square">
@@ -77,7 +78,7 @@
 								<h5>{{ station.displayName }}</h5>
 								<i
 									v-if="station.type === 'official'"
-									class="material-icons blue-icon"
+									class="material-icons verified-station"
 									title="Verified station"
 								>
 									check_circle
@@ -145,8 +146,22 @@
 						<span
 							v-if="station.currentSong.title"
 							class="songTitle"
-							:title="'Now Playing: ' + station.currentSong.title"
-							>{{ station.currentSong.title }}</span
+							:title="
+								station.currentSong.artists.length > 0
+									? 'Now Playing: ' +
+									  station.currentSong.title +
+									  ' by ' +
+									  station.currentSong.artists.join(',')
+									: 'Now Playing: ' +
+									  station.currentSong.title
+							"
+							>{{ station.currentSong.title }}
+							{{
+								station.currentSong.artists.length > 0
+									? " by " +
+									  station.currentSong.artists.join(",")
+									: ""
+							}}</span
 						>
 						<span v-else class="songTitle">No Songs Playing</span>
 					</div>
@@ -307,6 +322,25 @@ export default {
 				});
 			});
 
+			this.socket.on("event:station.updateTheme", response => {
+				const { stationId, theme } = response;
+				this.stations.forEach(s => {
+					const station = s;
+					if (station._id === stationId) {
+						station.theme = theme;
+						if (theme === "blue") {
+							station.themeCode = "rgb(2, 166, 242)";
+						} else if (theme === "purple") {
+							station.themeCode = "rgb(143, 40, 140)";
+						} else if (theme === "teal") {
+							station.themeCode = "rgb(0, 209, 178)";
+						} else {
+							station.themeCode = "rgb(2, 166, 242)";
+						}
+					}
+				});
+			});
+
 			this.socket.on("event:station.nextSong", (stationId, song) => {
 				let newSong = song;
 				this.stations.forEach(s => {
@@ -381,6 +415,16 @@ export default {
 							!modifiableStation.currentSong.thumbnail
 						)
 							modifiableStation.currentSong.ytThumbnail = `https://img.youtube.com/vi/${station.currentSong.songId}/mqdefault.jpg`;
+
+						if (modifiableStation.theme === "blue") {
+							station.themeCode = "rgb(2, 166, 242)";
+						} else if (modifiableStation.theme === "purple") {
+							station.themeCode = "rgb(143, 40, 140)";
+						} else if (modifiableStation.theme === "teal") {
+							station.themeCode = "rgb(0, 209, 178)";
+						} else {
+							station.themeCode = "rgb(2, 166, 242)";
+						}
 
 						this.stations.push(modifiableStation);
 					});
@@ -528,9 +572,14 @@ html {
 		font-weight: 400;
 		font-size: 12px;
 		color: $black;
-		.host {
+		.host,
+		.host a {
 			font-weight: 400;
-			color: $primary-color;
+			color: var(--station-theme);
+			&:hover,
+			&:focus {
+				filter: brightness(90%);
+			}
 		}
 	}
 }
@@ -601,8 +650,8 @@ html {
 					font-size: 22px;
 				}
 
-				.blue-icon {
-					color: $musare-blue;
+				.verified-station {
+					color: var(--station-theme);
 				}
 			}
 		}
@@ -624,7 +673,7 @@ html {
 
 	.card-image {
 		.image {
-			box-shadow: 1px 0px 3px rgba(7, 136, 191, 0.3);
+			box-shadow: 1px 0 3px rgba(100, 100, 100, 0.3);
 			.ytThumbnailBg {
 				background: url("/assets/notes-transparent.png") no-repeat
 					center center;
@@ -650,8 +699,8 @@ html {
 		position: relative;
 		display: flex;
 		align-items: center;
-		background: $primary-color;
-		box-shadow: inset 0px 2px 4px rgba(darken($primary-color, 7), 0.7);
+		background: var(--station-theme);
+		box-shadow: inset 0px 2px 4px rgba(100, 100, 100, 0.3);
 		width: 100%;
 		height: 30px;
 		line-height: 30px;

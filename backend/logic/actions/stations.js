@@ -275,6 +275,15 @@ CacheModule.runJob("SUB", {
 				room: `station.${stationId}`,
 				args: ["event:theme.updated", station.theme]
 			});
+			StationsModule.runJob("GET_SOCKETS_THAT_CAN_KNOW_ABOUT_STATION", {
+				room: `home`,
+				station
+			}).then(response => {
+				const { socketsThatCan } = response;
+				socketsThatCan.forEach(socket => {
+					socket.emit("event:station.updateTheme", { stationId, theme: station.theme });
+				});
+			});
 		});
 	}
 });
