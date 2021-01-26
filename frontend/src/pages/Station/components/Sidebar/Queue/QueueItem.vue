@@ -149,8 +149,10 @@ export default {
 	}
 	#queue-item-buttons {
 		display: flex;
-		flex-direction: column;
+		flex-direction: row;
+		flex-wrap: wrap;
 		margin-left: 10px;
+		justify-content: center;
 	}
 
 	#thumbnail {

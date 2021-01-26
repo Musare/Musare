@@ -35,7 +35,7 @@
 					@click="showTab('reports')"
 				>
 					<router-link class="tab reports" to="/admin/reports">
-						<i class="material-icons">report_problem</i>
+						<i class="material-icons">flag</i>
 						<span>&nbsp;Reports</span>
 					</router-link>
 				</li>
@@ -194,6 +194,8 @@ export default {
 }
 
 .tabs {
+	padding-top: 10px;
+	margin-top: -10px;
 	background-color: $white;
 	.queueSongs {
 		color: $teal;

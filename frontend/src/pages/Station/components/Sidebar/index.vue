@@ -88,18 +88,12 @@ export default {
 <style lang="scss" scoped>
 @import "../../../../styles/global.scss";
 
-#tabs-container {
+#tabs-container .tab {
 	width: 100%;
-	top: 0;
+	height: calc(100% - 36px);
 	position: absolute;
-	max-height: calc(100% - 36px);
-	height: inherit;
-
-	.tab {
-		width: 100%;
-		height: 100%;
-		position: absolute;
-	}
+	border: 1px solid $light-grey-2;
+	border-top: 0;
 }
 
 #tab-selection {

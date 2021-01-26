@@ -159,7 +159,6 @@ export default {
 	margin-left: 4px;
 	z-index: 1;
 	margin-bottom: 36px;
-	width: inherit;
 }
 
 #nav-dropdown-triangle {

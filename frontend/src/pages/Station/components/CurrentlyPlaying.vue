@@ -20,33 +20,36 @@
 			/>
 		</figure>
 		<div id="song-info">
-			<h6>Currently playing...</h6>
-			<h4
-				id="song-title"
-				:style="!currentSong.artists ? { fontSize: '17px' } : null"
-			>
-				{{ currentSong.title }}
-			</h4>
-			<h5 id="song-artists" v-if="currentSong.artists">
-				{{ currentSong.artists }}
-			</h5>
-			<p
-				id="song-request-time"
-				v-if="
-					station.type === 'community' && station.partyMode === true
-				"
-			>
-				Requested
-				<strong>{{
-					formatDistance(
-						parseISO(currentSong.requestedAt),
-						Date.now(),
-						{
-							addSuffix: true
-						}
-					)
-				}}</strong>
-			</p>
+			<div id="song-details">
+				<h6>Currently playing...</h6>
+				<h4
+					id="song-title"
+					:style="!currentSong.artists ? { fontSize: '17px' } : null"
+				>
+					{{ currentSong.title }}
+				</h4>
+				<h5 id="song-artists" v-if="currentSong.artists">
+					{{ currentSong.artists }}
+				</h5>
+				<p
+					id="song-request-time"
+					v-if="
+						station.type === 'community' &&
+							station.partyMode === true
+					"
+				>
+					Requested
+					<strong>{{
+						formatDistance(
+							parseISO(currentSong.requestedAt),
+							Date.now(),
+							{
+								addSuffix: true
+							}
+						)
+					}}</strong>
+				</p>
+			</div>
 			<div id="song-actions">
 				<button
 					class="button"
@@ -116,17 +119,16 @@ export default {
 	width: 100%;
 	height: 100%;
 	padding: 10px;
+	min-height: 130px;
 
 	.thumbnail {
-		min-width: 120px;
-		max-height: 120px;
+		min-width: 130px;
+		max-height: 130px;
 		height: 100%;
 		position: relative;
-
-		@media screen and (max-width: 1200px) {
-			min-width: 100px;
-			max-height: 100px;
-		}
+		margin-top: -15px;
+		margin-bottom: -15px;
+		margin-left: -10px;
 
 		#yt-thumbnail-bg {
 			height: 100%;
@@ -154,8 +156,8 @@ export default {
 
 	#song-info {
 		display: flex;
-		flex-direction: column;
-		justify-content: center;
+		flex-direction: row;
+		flex-wrap: wrap;
 		margin-left: 20px;
 		width: 100%;
 		height: 100%;
@@ -165,34 +167,42 @@ export default {
 			font-family: Karla, Arial, sans-serif;
 		}
 
-		h6 {
-			color: $musare-blue !important;
-			font-weight: bold;
-			font-size: 17px;
-		}
+		#song-details {
+			display: flex;
+			justify-content: center;
+			flex-direction: column;
+			flex-grow: 1;
+			h6 {
+				color: $musare-blue !important;
+				font-weight: bold;
+				font-size: 17px;
+			}
 
-		#song-title {
-			margin-top: 7px;
-			font-size: 22px;
-		}
+			#song-title {
+				margin-top: 7px;
+				font-size: 22px;
+			}
 
-		#song-artists {
-			font-size: 16px;
-		}
+			#song-artists {
+				font-size: 16px;
+				margin-bottom: 5px;
+			}
 
-		#song-request-time {
-			font-size: 12px;
-			margin-top: 7px;
-			color: $dark-grey;
+			#song-request-time {
+				font-size: 12px;
+				margin-top: 7px;
+				color: $dark-grey;
+			}
 		}
 
 		#song-actions {
-			margin-top: 10px;
+			display: flex;
 
 			.button {
 				color: #fff;
 				padding: 0 15px;
 				border: 0;
+				margin: auto 3px;
 			}
 
 			#report-icon {

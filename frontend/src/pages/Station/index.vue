@@ -15,263 +15,276 @@
 				id="station-inner-container"
 				:class="{ 'nothing-here': noSong }"
 			>
-				<div id="about-station-container" class="quadrant">
-					<div id="station-info">
-						<div class="row" id="station-name">
-							<h1>{{ station.displayName }}</h1>
-							<a href="#">
-								<!-- Favorite Station Button -->
-								<i
-									v-if="loggedIn && station.isFavorited"
-									@click.prevent="unfavoriteStation()"
-									class="material-icons"
-									>star</i
-								>
-								<i
-									v-if="loggedIn && !station.isFavorited"
-									@click.prevent="favoriteStation()"
-									class="material-icons"
-									>star_border</i
-								>
-							</a>
+				<div id="station-left-column" class="column">
+					<div class="player-container quadrant" v-show="!noSong">
+						<div id="video-container">
+							<div
+								id="stationPlayer"
+								style="width: 100%; height: 100%"
+							/>
+							<div
+								class="player-cannot-autoplay"
+								v-if="!canAutoplay"
+							>
+								<p>
+									Please click anywhere on the screen for the
+									video to start
+								</p>
+							</div>
 						</div>
-						<p>{{ station.description }}</p>
+						<div id="seeker-bar-container">
+							<div id="seeker-bar" style="width: 0%" />
+						</div>
+						<div id="control-bar-container">
+							<div id="left-buttons">
+								<!-- Debug Box -->
+								<button
+									class="button is-primary"
+									@click="togglePlayerDebugBox()"
+									@dblclick="resetPlayerDebugBox()"
+								>
+									<i class="material-icons icon-with-button">
+										bug_report
+									</i>
+								</button>
+
+								<!-- Local Pause/Resume Button -->
+								<button
+									class="button is-primary"
+									@click="resumeLocalStation()"
+									id="local-resume"
+									v-if="localPaused"
+								>
+									<i class="material-icons">play_arrow</i>
+								</button>
+								<button
+									class="button is-primary"
+									@click="pauseLocalStation()"
+									id="local-pause"
+									v-else
+								>
+									<i class="material-icons">pause</i>
+								</button>
+
+								<!-- Vote to Skip Button -->
+								<button
+									v-if="loggedIn"
+									class="button is-primary"
+									@click="voteSkipStation()"
+								>
+									<i class="material-icons icon-with-button"
+										>skip_next</i
+									>
+									{{ currentSong.skipVotes }}
+								</button>
+							</div>
+							<div id="duration">
+								<p>
+									{{ timeElapsed }} /
+									{{ utils.formatTime(currentSong.duration) }}
+								</p>
+							</div>
+							<p id="volume-control">
+								<i
+									v-if="muted"
+									class="material-icons"
+									@click="toggleMute()"
+									>volume_mute</i
+								>
+								<i
+									v-else
+									class="material-icons"
+									@click="toggleMute()"
+									>volume_down</i
+								>
+								<input
+									v-model="volumeSliderValue"
+									type="range"
+									min="0"
+									max="10000"
+									class="volume-slider active"
+									@change="changeVolume()"
+									@input="changeVolume()"
+								/>
+								<i
+									class="material-icons"
+									@click="increaseVolume()"
+									>volume_up</i
+								>
+							</p>
+							<div id="right-buttons" v-if="loggedIn">
+								<!-- Ratings (Like/Dislike) Buttons -->
+								<div
+									id="ratings"
+									v-if="
+										currentSong.likes !== -1 &&
+											currentSong.dislikes !== -1
+									"
+									:class="{
+										liked: liked,
+										disliked: disliked
+									}"
+								>
+									<!-- Like Song Button -->
+									<button
+										class="button is-success"
+										id="like-song"
+										@click="toggleLike()"
+									>
+										<i
+											class="material-icons icon-with-button"
+											:class="{ liked: liked }"
+											>thumb_up_alt</i
+										>{{ currentSong.likes }}
+									</button>
+
+									<!-- Dislike Song Button -->
+									<button
+										class="button is-danger"
+										id="dislike-song"
+										@click="toggleDislike()"
+									>
+										<i
+											class="material-icons icon-with-button"
+											:class="{
+												disliked: disliked
+											}"
+											>thumb_down_alt</i
+										>{{ currentSong.dislikes }}
+									</button>
+								</div>
+
+								<!-- Add Song To Playlist Button & Dropdown -->
+								<div id="add-song-to-playlist">
+									<div class="control has-addons">
+										<button
+											class="button is-primary"
+											@click="
+												showPlaylistDropdown = !showPlaylistDropdown
+											"
+										>
+											<i class="material-icons">queue</i>
+										</button>
+										<button
+											class="button"
+											id="dropdown-toggle"
+											@click="
+												showPlaylistDropdown = !showPlaylistDropdown
+											"
+										>
+											<i class="material-icons">
+												{{
+													showPlaylistDropdown
+														? "expand_more"
+														: "expand_less"
+												}}
+											</i>
+										</button>
+									</div>
+									<add-to-playlist-dropdown
+										v-if="showPlaylistDropdown"
+									/>
+								</div>
+							</div>
+						</div>
 					</div>
-
-					<div id="admin-buttons" v-if="isOwnerOrAdmin()">
-						<!-- (Admin) Pause/Resume Button -->
-						<button
-							class="button is-danger"
-							v-if="stationPaused"
-							@click="resumeStation()"
+					<p class="player-container nothing-here-text" v-if="noSong">
+						No song is currently playing
+					</p>
+					<div v-if="!noSong" id="current-next-row">
+						<div
+							id="currently-playing-container"
+							class="quadrant"
+							:class="{ 'no-currently-playing': noSong }"
 						>
-							<i class="material-icons icon-with-button"
-								>play_arrow</i
-							>
-							<span class="optional-desktop-only-text">
-								Resume Station
-							</span>
-						</button>
-						<button
-							class="button is-danger"
-							@click="pauseStation()"
-							v-else
-						>
-							<i class="material-icons icon-with-button">pause</i>
-							<span class="optional-desktop-only-text">
-								Pause Station
-							</span>
-						</button>
-
-						<!-- (Admin) Skip Button -->
-						<button class="button is-danger" @click="skipStation()">
-							<i class="material-icons icon-with-button"
-								>skip_next</i
-							>
-							<span class="optional-desktop-only-text">
-								Force Skip
-							</span>
-						</button>
-
-						<!-- (Admin) Station Settings Button -->
-						<button
-							class="button is-primary"
-							@click="openSettings()"
-						>
-							<i class="material-icons icon-with-button"
-								>settings</i
-							>
-							<span class="optional-desktop-only-text">
-								Station settings
-							</span>
-						</button>
+							<currently-playing />
+							<!-- <p v-else class="nothing-here-text">
+								No song is currently playing
+							</p> -->
+						</div>
 					</div>
 				</div>
-
-				<div class="player-container quadrant" v-show="!noSong">
-					<div id="video-container">
-						<div
-							id="stationPlayer"
-							style="width: 100%; height: 100%"
-						/>
-						<div class="player-cannot-autoplay" v-if="!canAutoplay">
-							<p>
-								Please click anywhere on the screen for the
-								video to start
-							</p>
+				<div id="station-right-column" class="column">
+					<div id="about-station-container" class="quadrant">
+						<div id="station-info">
+							<div class="row" id="station-name">
+								<h1>{{ station.displayName }}</h1>
+								<a href="#">
+									<!-- Favorite Station Button -->
+									<i
+										v-if="loggedIn && station.isFavorited"
+										@click.prevent="unfavoriteStation()"
+										class="material-icons"
+										>star</i
+									>
+									<i
+										v-if="loggedIn && !station.isFavorited"
+										@click.prevent="favoriteStation()"
+										class="material-icons"
+										>star_border</i
+									>
+								</a>
+							</div>
+							<p>{{ station.description }}</p>
 						</div>
-					</div>
-					<div id="seeker-bar-container">
-						<div id="seeker-bar" style="width: 0%" />
-					</div>
-					<div id="control-bar-container">
-						<div id="left-buttons">
-							<!-- Debug Box -->
-							<button
-								class="button is-primary"
-								@click="togglePlayerDebugBox()"
-								@dblclick="resetPlayerDebugBox()"
-							>
-								<i class="material-icons icon-with-button">
-									bug_report
-								</i>
-							</button>
 
-							<!-- Local Pause/Resume Button -->
+						<div id="admin-buttons" v-if="isOwnerOrAdmin()">
+							<!-- (Admin) Pause/Resume Button -->
 							<button
-								class="button is-primary"
-								@click="resumeLocalStation()"
-								id="local-resume"
-								v-if="localPaused"
+								class="button is-danger"
+								v-if="stationPaused"
+								@click="resumeStation()"
 							>
-								<i class="material-icons">play_arrow</i>
+								<i class="material-icons icon-with-button"
+									>play_arrow</i
+								>
+								<span class="optional-desktop-only-text">
+									Resume Station
+								</span>
 							</button>
 							<button
-								class="button is-primary"
-								@click="pauseLocalStation()"
-								id="local-pause"
+								class="button is-danger"
+								@click="pauseStation()"
 								v-else
 							>
-								<i class="material-icons">pause</i>
+								<i class="material-icons icon-with-button"
+									>pause</i
+								>
+								<span class="optional-desktop-only-text">
+									Pause Station
+								</span>
 							</button>
 
-							<!-- Vote to Skip Button -->
+							<!-- (Admin) Skip Button -->
 							<button
-								v-if="loggedIn"
-								class="button is-primary"
-								@click="voteSkipStation()"
+								class="button is-danger"
+								@click="skipStation()"
 							>
 								<i class="material-icons icon-with-button"
 									>skip_next</i
 								>
-								({{ currentSong.skipVotes }})
+								<span class="optional-desktop-only-text">
+									Force Skip
+								</span>
+							</button>
+
+							<!-- (Admin) Station Settings Button -->
+							<button
+								class="button is-primary"
+								@click="openSettings()"
+							>
+								<i class="material-icons icon-with-button"
+									>settings</i
+								>
+								<span class="optional-desktop-only-text">
+									Station settings
+								</span>
 							</button>
 						</div>
-						<div id="duration">
-							<p>
-								{{ timeElapsed }} /
-								{{ utils.formatTime(currentSong.duration) }}
-							</p>
-						</div>
-						<p id="volume-control">
-							<i
-								v-if="muted"
-								class="material-icons"
-								@click="toggleMute()"
-								>volume_mute</i
-							>
-							<i
-								v-else
-								class="material-icons"
-								@click="toggleMute()"
-								>volume_down</i
-							>
-							<input
-								v-model="volumeSliderValue"
-								type="range"
-								min="0"
-								max="10000"
-								class="volume-slider active"
-								@change="changeVolume()"
-								@input="changeVolume()"
-							/>
-							<i class="material-icons" @click="increaseVolume()"
-								>volume_up</i
-							>
-						</p>
-						<div id="right-buttons" v-if="loggedIn">
-							<!-- Ratings (Like/Dislike) Buttons -->
-							<div
-								id="ratings"
-								v-if="
-									currentSong.likes !== -1 &&
-										currentSong.dislikes !== -1
-								"
-								:class="{
-									liked: liked,
-									disliked: disliked
-								}"
-							>
-								<!-- Like Song Button -->
-								<button
-									class="button is-success"
-									id="like-song"
-									@click="toggleLike()"
-								>
-									<i
-										class="material-icons icon-with-button"
-										:class="{ liked: liked }"
-										>thumb_up_alt</i
-									>{{ currentSong.likes }}
-								</button>
-
-								<!-- Dislike Song Button -->
-								<button
-									class="button is-danger"
-									id="dislike-song"
-									@click="toggleDislike()"
-								>
-									<i
-										class="material-icons icon-with-button"
-										:class="{
-											disliked: disliked
-										}"
-										>thumb_down_alt</i
-									>{{ currentSong.dislikes }}
-								</button>
-							</div>
-
-							<!-- Add Song To Playlist Button & Dropdown -->
-							<div id="add-song-to-playlist">
-								<div class="control has-addons">
-									<button
-										class="button is-primary"
-										@click="
-											showPlaylistDropdown = !showPlaylistDropdown
-										"
-									>
-										<i class="material-icons">queue</i>
-									</button>
-									<button
-										class="button"
-										id="dropdown-toggle"
-										@click="
-											showPlaylistDropdown = !showPlaylistDropdown
-										"
-									>
-										<i class="material-icons">
-											{{
-												showPlaylistDropdown
-													? "expand_more"
-													: "expand_less"
-											}}
-										</i>
-									</button>
-								</div>
-								<add-to-playlist-dropdown
-									v-if="showPlaylistDropdown"
-								/>
-							</div>
-						</div>
 					</div>
-				</div>
-				<p class="player-container nothing-here-text" v-if="noSong">
-					No song is currently playing
-				</p>
-
-				<div id="sidebar-container" class="quadrant">
-					<station-sidebar />
-				</div>
-
-				<div
-					id="currently-playing-container"
-					class="quadrant"
-					:class="{ 'no-currently-playing': noSong }"
-				>
-					<currently-playing v-if="!noSong" />
-					<p v-else class="nothing-here-text">
-						No song is currently playing
-					</p>
+					<div id="sidebar-container" class="quadrant">
+						<station-sidebar />
+					</div>
 				</div>
 			</div>
 
@@ -1531,83 +1544,16 @@ export default {
 	padding: 20px 40px;
 	height: 100%;
 	width: 100%;
-	max-width: 2000px;
-
-	@media (max-width: 1040px) {
-		padding: 0;
-		margin-top: 0 !important;
-		height: auto !important;
-
-		#station-inner-container.nothing-here {
-			grid-template-areas:
-				"about-station"
-				"player"
-				"sidebar" !important;
-			grid-template-rows: min-content 50px auto !important;
-		}
-
-		#station-inner-container {
-			grid-template-columns: 100% !important;
-			grid-template-areas:
-				"about-station"
-				"player"
-				"currently-playing"
-				"sidebar" !important;
-			grid-template-rows: auto !important;
-		}
-
-		.quadrant,
-		.player-container {
-			border: 0 !important;
-			background: transparent !important;
-		}
-
-		.player-container {
-			padding: 0 10px;
-		}
-
-		/** padding fixes on mobile */
-		#about-station-container {
-			margin-top: 30px;
-			padding: 0 10px !important;
-		}
-
-		#currently-playing-container {
-			padding: 0 10px !important;
-
-			#currently-playing {
-				padding: 0;
-			}
-		}
-
-		#sidebar-container {
-			padding: 0 10px !important;
-			max-height: 500px !important;
-			min-height: 250px;
-		}
-
-		/** Change height of YouTube embed  */
-		.player-container:not(.nothing-here-text) {
-			height: 500px !important;
-		}
-
-		/** mainly irrelevant on mobile */
-		.no-currently-playing {
-			display: none !important;
-		}
-	}
+	max-width: 1800px;
+	display: flex;
 
 	#station-inner-container {
-		display: grid;
 		height: 100%;
 		width: 100%;
-		grid-template-columns: 65% 35%;
-		grid-template-rows: 150px auto;
-		grid-template-areas:
-			"about-station currently-playing"
-			"player sidebar";
-		gap: 25px;
 		min-height: calc(100vh - 64px - 190px);
+		display: flex;
+		flex-direction: row;
+		flex-wrap: wrap;
 
 		.row {
 			display: flex;
@@ -1622,6 +1568,8 @@ export default {
 
 		.quadrant {
 			border-radius: 5px;
+			margin: 10px;
+			flex-grow: 1;
 		}
 
 		.quadrant:not(#sidebar-container) {
@@ -1629,17 +1577,21 @@ export default {
 			border: 1px solid $light-grey-2;
 		}
 
+		#station-left-column {
+			padding: 0;
+		}
+		#station-right-column {
+			max-width: 650px;
+			padding: 0;
+		}
+
 		#about-station-container {
-			align-items: flex-start;
 			padding: 20px;
-			grid-area: about-station;
 			display: flex;
-			flex-direction: row;
-			flex-wrap: wrap;
+			flex-direction: column;
+			flex-grow: unset;
 
 			#station-info {
-				flex-grow: 1;
-
 				#station-name {
 					flex-direction: row !important;
 
@@ -1658,23 +1610,29 @@ export default {
 
 				p {
 					max-width: 700px;
-					flex-grow: 1;
+					margin-bottom: 10px;
 				}
 			}
 
-			@media (max-width: 450px) {
-				#admin-buttons .optional-desktop-only-text {
-					display: none;
+			#admin-buttons {
+				display: flex;
+				.button {
+					margin: 3px;
 				}
 			}
 		}
 
-		#currently-playing-container {
-			grid-area: currently-playing;
-			margin-right: 25px;
+		#current-next-row {
+			display: flex;
+			flex-direction: row;
 
-			.nothing-here-text {
-				height: 100%;
+			#currently-playing-container,
+			#next-up-container {
+				overflow: hidden;
+				flex-basis: 50%;
+				.nothing-here-text {
+					height: 100%;
+				}
 			}
 		}
 
@@ -1686,7 +1644,7 @@ export default {
 			border: 1px solid $light-grey-2;
 			border-radius: 5px;
 			overflow: hidden;
-			grid-area: player;
+			flex-grow: 1;
 
 			&.nothing-here-text {
 				border: 1px solid $light-grey-2;
@@ -1766,7 +1724,7 @@ export default {
 					p {
 						font-size: 22px;
 						/** prevents duration width slightly varying and shifting other controls slightly */
-						width: 125px;
+						width: 150px;
 						text-align: center;
 					}
 				}
@@ -1774,19 +1732,15 @@ export default {
 				#volume-control {
 					margin: 3px;
 					margin-top: 0;
-					position: relative;
 					display: flex;
 					align-items: center;
 					cursor: pointer;
 
 					.volume-slider {
-						width: 400px;
+						width: 100%;
 						padding: 0 15px;
 						background: transparent;
-
-						@media (max-width: 2150px) {
-							width: 250px !important;
-						}
+						min-width: 100px;
 					}
 
 					input[type="range"] {
@@ -1891,7 +1845,6 @@ export default {
 
 					#ratings {
 						display: flex;
-						margin-right: 5px;
 
 						#like-song:hover,
 						#like-song.liked {
@@ -1915,8 +1868,6 @@ export default {
 					#add-song-to-playlist {
 						display: flex;
 						flex-direction: column-reverse;
-						align-items: center;
-						width: 212px;
 
 						.control {
 							width: fit-content;
@@ -1931,8 +1882,6 @@ export default {
 			border-top: 0;
 			position: relative;
 			height: inherit;
-			grid-area: sidebar;
-			margin-right: 25px;
 		}
 	}
 }
@@ -1945,5 +1894,60 @@ export default {
 	display: flex;
 	align-items: center;
 	justify-content: center;
+}
+
+@media (max-width: 1300px) {
+	#station-outer-container {
+		padding: 10px;
+		height: unset;
+		max-width: 700px;
+		#station-inner-container {
+			flex-direction: column;
+			#station-left-column {
+				#current-next-row {
+					flex-direction: column;
+				}
+				#video-container {
+					min-height: 200px;
+				}
+				#control-bar-container {
+					#duration,
+					#volume-control,
+					#right-buttons,
+					#left-buttons {
+						margin-bottom: 5px;
+						justify-content: center;
+					}
+					#duration {
+						order: 1;
+					}
+					#volume-control {
+						order: 2;
+						max-width: 400px;
+					}
+					#right-buttons {
+						order: 3;
+						flex-wrap: wrap;
+						#ratings {
+							flex-wrap: wrap;
+						}
+					}
+					#left-buttons {
+						order: 4;
+						flex-wrap: wrap;
+					}
+				}
+			}
+			#station-right-column {
+				max-width: unset;
+				#about-station-container #admin-buttons {
+					flex-wrap: wrap;
+				}
+				#sidebar-container {
+					min-height: 350px;
+				}
+			}
+		}
+	}
 }
 </style>
