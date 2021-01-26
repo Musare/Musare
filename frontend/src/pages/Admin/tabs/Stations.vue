@@ -289,7 +289,8 @@ export default {
 				privacy: station.privacy,
 				displayName: station.displayName,
 				genres: station.genres,
-				blacklistedGenres: station.blacklistedGenres
+				blacklistedGenres: station.blacklistedGenres,
+				theme: station.theme
 			});
 			this.openModal({
 				sector: "station",

@@ -417,13 +417,13 @@ export default {
 							modifiableStation.currentSong.ytThumbnail = `https://img.youtube.com/vi/${station.currentSong.songId}/mqdefault.jpg`;
 
 						if (modifiableStation.theme === "blue") {
-							station.themeCode = "rgb(2, 166, 242)";
+							modifiableStation.themeCode = "rgb(2, 166, 242)";
 						} else if (modifiableStation.theme === "purple") {
-							station.themeCode = "rgb(143, 40, 140)";
+							modifiableStation.themeCode = "rgb(143, 40, 140)";
 						} else if (modifiableStation.theme === "teal") {
-							station.themeCode = "rgb(0, 209, 178)";
+							modifiableStation.themeCode = "rgb(0, 209, 178)";
 						} else {
-							station.themeCode = "rgb(2, 166, 242)";
+							modifiableStation.themeCode = "rgb(2, 166, 242)";
 						}
 
 						this.stations.push(modifiableStation);
