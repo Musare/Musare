@@ -460,6 +460,7 @@ export default {
 					this.exists = false;
 				}
 			});
+
 			this.socket.on("event:songs.next", data => {
 				const previousSong = this.currentSong.songId
 					? this.currentSong

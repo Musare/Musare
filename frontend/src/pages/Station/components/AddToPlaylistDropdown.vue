@@ -45,10 +45,7 @@ import io from "../../../io";
 export default {
 	data() {
 		return {
-			playlists: [],
-			playlistsArr: [],
-			songId: null,
-			song: null
+			playlists: []
 		};
 	},
 	computed: {
@@ -57,26 +54,19 @@ export default {
 		})
 	},
 	mounted() {
-		this.songId = this.currentSong.songId;
-		this.song = this.currentSong;
 		io.getSocket(socket => {
 			this.socket = socket;
 
 			this.socket.emit("playlists.indexMyPlaylists", false, res => {
 				if (res.status === "success") {
-					res.data.forEach(playlist => {
-						let hasSong = false;
-						for (let i = 0; i < playlist.songs.length; i += 1) {
-							if (playlist.songs[i].songId === this.songId) {
-								hasSong = true;
-							}
-						}
-
-						// eslint-disable-next-line no-param-reassign
-						playlist.hasSong = hasSong;
-						this.playlists.push(playlist);
-					});
+					this.playlists = res.data;
+					this.checkIfPlaylistsHaveSong();
 				}
+			});
+
+			this.socket.on("event:songs.next", () => {
+				console.log("next song");
+				this.checkIfPlaylistsHaveSong();
 			});
 
 			this.socket.on("event:playlist.create", playlist => {
@@ -112,7 +102,7 @@ export default {
 						new Toast({ content: res.message, timeout: 4000 });
 
 						if (res.status === "success") {
-							this.playlists[index].songs.push(this.song);
+							this.playlists[index].songs.push(this.currentSong);
 							this.playlists[index].hasSong = true;
 						}
 					}
@@ -120,7 +110,7 @@ export default {
 			} else {
 				this.socket.emit(
 					"playlists.removeSongFromPlaylist",
-					this.songId,
+					this.currentSong.songId,
 					playlistId,
 					res => {
 						new Toast({ content: res.message, timeout: 4000 });
@@ -128,7 +118,7 @@ export default {
 						if (res.status === "success") {
 							this.playlists[index].songs.forEach(
 								(song, index) => {
-									if (song.songId === this.songId)
+									if (song.songId === this.currentSong.songId)
 										this.playlists[index].songs.splice(
 											index,
 											1
@@ -141,6 +131,18 @@ export default {
 					}
 				);
 			}
+		},
+		checkIfPlaylistsHaveSong() {
+			this.playlists.forEach((playlist, index) => {
+				let hasSong = false;
+
+				for (let song = 0; song < playlist.songs.length; song += 1) {
+					if (playlist.songs[song].songId === this.currentSong.songId)
+						hasSong = true;
+				}
+
+				this.$set(this.playlists[index], "hasSong", hasSong);
+			});
 		}
 	}
 };
