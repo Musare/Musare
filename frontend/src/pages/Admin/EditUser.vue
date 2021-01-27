@@ -1,10 +1,10 @@
 <template>
 	<div>
 		<modal title="Edit User">
-			<div slot="body">
+			<div slot="body" v-if="user && user._id">
 				<p class="control has-addons">
 					<input
-						v-model="editing.username"
+						v-model="user.username"
 						class="input is-expanded"
 						type="text"
 						placeholder="Username"
@@ -16,7 +16,7 @@
 				</p>
 				<p class="control has-addons">
 					<input
-						v-model="editing.email.address"
+						v-model="user.email.address"
 						class="input is-expanded"
 						type="text"
 						placeholder="Email Address"
@@ -28,7 +28,7 @@
 				</p>
 				<p class="control has-addons">
 					<span class="select">
-						<select v-model="editing.role">
+						<select v-model="user.role">
 							<option>default</option>
 							<option>admin</option>
 						</select>
@@ -75,7 +75,7 @@
 					class="button is-danger"
 					@click="
 						closeModal({
-							sector: 'admin',
+							sector: this.sector,
 							modal: 'editUser'
 						})
 					"
@@ -97,6 +97,10 @@ import validation from "../../validation";
 
 export default {
 	components: { Modal },
+	props: {
+		userId: { type: String, default: "" },
+		sector: { type: String, default: "admin" }
+	},
 	data() {
 		return {
 			ban: {
@@ -105,22 +109,27 @@ export default {
 		};
 	},
 	computed: {
-		...mapState("admin/users", {
-			editing: state => state.editing
-		}),
-		...mapState({
-			userId: state => state.user.auth.userId
+		...mapState("editUserModal", {
+			user: state => state.user
 		})
 	},
 	mounted() {
 		io.getSocket(socket => {
 			this.socket = socket;
+
+			this.socket.emit(`users.getUserFromId`, this.userId, res => {
+				if (res.status === "success") {
+					const user = res.data;
+					this.editUser(user);
+				}
+			});
+
 			return socket;
 		});
 	},
 	methods: {
 		updateUsername() {
-			const { username } = this.editing;
+			const { username } = this.user;
 			if (!validation.isLength(username, 2, 32))
 				return new Toast({
 					content: "Username must have between 2 and 32 characters.",
@@ -135,7 +144,7 @@ export default {
 
 			return this.socket.emit(
 				`users.updateUsername`,
-				this.editing._id,
+				this.user._id,
 				username,
 				res => {
 					new Toast({ content: res.message, timeout: 4000 });
@@ -143,7 +152,7 @@ export default {
 			);
 		},
 		updateEmail() {
-			const email = this.editing.email.address;
+			const email = this.user.email.address;
 			if (!validation.isLength(email, 3, 254))
 				return new Toast({
 					content: "Email must have between 3 and 254 characters.",
@@ -161,7 +170,7 @@ export default {
 
 			return this.socket.emit(
 				`users.updateEmail`,
-				this.editing._id,
+				this.user._id,
 				email,
 				res => {
 					new Toast({ content: res.message, timeout: 4000 });
@@ -171,16 +180,10 @@ export default {
 		updateRole() {
 			this.socket.emit(
 				`users.updateRole`,
-				this.editing._id,
-				this.editing.role,
+				this.user._id,
+				this.user.role,
 				res => {
 					new Toast({ content: res.message, timeout: 4000 });
-					if (
-						res.status === "success" &&
-						this.editing.role === "default" &&
-						this.editing._id === this.userId
-					)
-						window.location.reload();
 				}
 			);
 		},
@@ -200,7 +203,7 @@ export default {
 
 			return this.socket.emit(
 				`users.banUserById`,
-				this.editing._id,
+				this.user._id,
 				this.ban.reason,
 				this.ban.expiresAt,
 				res => {
@@ -209,10 +212,11 @@ export default {
 			);
 		},
 		removeSessions() {
-			this.socket.emit(`users.removeSessions`, this.editing._id, res => {
+			this.socket.emit(`users.removeSessions`, this.user._id, res => {
 				new Toast({ content: res.message, timeout: 4000 });
 			});
 		},
+		...mapActions("editUserModal", ["editUser"]),
 		...mapActions("modals", ["closeModal"])
 	}
 };

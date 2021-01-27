@@ -41,14 +41,10 @@ const modules = {
 	stations: {
 		namespaced: true,
 		state: {
-			stations: [],
-			station: {},
-			editing: {}
+			stations: []
 		},
 		getters: {},
 		actions: {
-			editStation: ({ commit }, station) =>
-				commit("editStation", station),
 			loadStations: ({ commit }, stations) =>
 				commit("loadStations", stations),
 			stationRemoved: ({ commit }, stationId) =>
@@ -57,10 +53,6 @@ const modules = {
 				commit("stationAdded", station)
 		},
 		mutations: {
-			editStation(state, station) {
-				state.station = station;
-				state.editing = JSON.parse(JSON.stringify(station));
-			},
 			loadStations(state, stations) {
 				state.stations = stations;
 			},
@@ -120,18 +112,10 @@ const modules = {
 	},
 	users: {
 		namespaced: true,
-		state: {
-			editing: {}
-		},
+		state: {},
 		getters: {},
-		actions: {
-			editUser: ({ commit }, user) => commit("editUser", user)
-		},
-		mutations: {
-			editUser(state, user) {
-				state.editing = user;
-			}
-		}
+		actions: {},
+		mutations: {}
 	},
 	news: {
 		namespaced: true,

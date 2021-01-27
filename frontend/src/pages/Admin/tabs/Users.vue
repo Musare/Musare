@@ -13,8 +13,8 @@
 						<td>Role</td>
 						<td>Email Address</td>
 						<td>Email Verified</td>
-						<td>Likes</td>
-						<td>Dislikes</td>
+						<!-- <td>Likes</td>
+						<td>Dislikes</td> -->
 						<td>Songs Requested</td>
 						<td>Options</td>
 					</tr>
@@ -42,8 +42,8 @@
 						<td>{{ user.role }}</td>
 						<td>{{ user.email.address }}</td>
 						<td>{{ user.email.verified }}</td>
-						<td>{{ user.liked.length }}</td>
-						<td>{{ user.disliked.length }}</td>
+						<!-- <td>{{ user.liked.length }}</td>
+						<td>{{ user.disliked.length }}</td> -->
 						<td>{{ user.songsRequested }}</td>
 						<td>
 							<button
@@ -57,7 +57,11 @@
 				</tbody>
 			</table>
 		</div>
-		<edit-user v-if="modals.editUser" />
+		<edit-user
+			v-if="modals.editUser"
+			:user-id="editingUserId"
+			sector="admin"
+		/>
 	</div>
 </template>
 
@@ -71,6 +75,7 @@ export default {
 	components: { EditUser },
 	data() {
 		return {
+			editingUserId: "",
 			users: []
 		};
 	},
@@ -90,7 +95,7 @@ export default {
 	},
 	methods: {
 		edit(user) {
-			this.editUser(user);
+			this.editingUserId = user._id;
 			this.openModal({ sector: "admin", modal: "editUser" });
 		},
 		init() {
@@ -108,7 +113,6 @@ export default {
 			});
 			this.socket.emit("apis.joinAdminRoom", "users", () => {});
 		},
-		...mapActions("admin/users", ["editUser"]),
 		...mapActions("modals", ["openModal"])
 	}
 };

@@ -8,6 +8,7 @@ import station from "./modules/station";
 import admin from "./modules/admin";
 import editSongModal from "./modules/editSongModal";
 import editStationModal from "./modules/editStationModal";
+import editUserModal from "./modules/editUserModal";
 
 Vue.use(Vuex);
 
@@ -19,7 +20,8 @@ export default new Vuex.Store({
 		station,
 		admin,
 		editSongModal,
-		editStationModal
+		editStationModal,
+		editUserModal
 	},
 	strict: false
 });

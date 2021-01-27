@@ -712,6 +712,60 @@ export default {
 			});
 	},
 
+	/**
+	 * Gets a user from a userId
+	 *
+	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {string} userId - the userId of the person we are trying to get the username from
+	 * @param {Function} cb - gets called with the result
+	 */
+	getUserFromId: isAdminRequired(async function getUserFromId(session, userId, cb) {
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+		userModel
+			.findById(userId)
+			.then(user => {
+				if (user) {
+					this.log("SUCCESS", "GET_USER_FROM_ID", `Found user for userId "${userId}".`);
+
+					return cb({
+						status: "success",
+						data: {
+							_id: user._id,
+							username: user.username,
+							role: user.role,
+							liked: user.liked,
+							disliked: user.disliked,
+							songsRequested: user.statistics.songsRequested,
+							email: {
+								address: user.email.address,
+								verified: user.email.verified
+							},
+							hasPassword: !!user.services.password,
+							services: { github: user.services.github }
+						}
+					});
+				}
+
+				this.log(
+					"ERROR",
+					"GET_USER_FROM_ID",
+					`Getting the user from userId "${userId}" failed. User not found.`
+				);
+
+				return cb({
+					status: "failure",
+					message: "Couldn't find the user."
+				});
+			})
+			.catch(async err => {
+				if (err && err !== true) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "GET_USER_FROM_ID", `Getting the user from userId "${userId}" failed. "${err}"`);
+					cb({ status: "failure", message: err });
+				}
+			});
+	}),
+
 	// TODO Fix security issues
 	/**
 	 * Gets user info from session
