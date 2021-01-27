@@ -441,6 +441,19 @@
 									Teal
 								</button>
 							</transition>
+							<transition name="slide-down">
+								<button
+									class="orange"
+									v-if="
+										themeDropdownActive &&
+											editing.theme !== 'orange'
+									"
+									@click="updateThemeLocal('orange')"
+								>
+									<i class="material-icons">palette</i>
+									Orange
+								</button>
+							</transition>
 						</div>
 					</div>
 				</div>

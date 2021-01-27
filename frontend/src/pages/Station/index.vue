@@ -434,8 +434,15 @@ export default {
 		...mapState({
 			loggedIn: state => state.user.auth.loggedIn,
 			userId: state => state.user.auth.userId,
-			role: state => state.user.auth.role
+			role: state => state.user.auth.role,
+			autoSkipDisliked: state => state.user.preferences.autoSkipDisliked
 		})
+	},
+	beforeMount() {
+		const autoSkipDisliked =
+			true || JSON.parse(localStorage.getItem("autoSkipDisliked"));
+
+		this.changeAutoSkipDisliked(autoSkipDisliked);
 	},
 	mounted() {
 		window.scrollTo(0, 0);
@@ -631,6 +638,8 @@ export default {
 					this.theme = "rgb(143, 40, 140)";
 				} else if (theme === "teal") {
 					this.theme = "rgb(0, 209, 178)";
+				} else if (theme === "orange") {
+					this.theme = "rgb(255, 94, 0)";
 				}
 			});
 
@@ -1289,6 +1298,8 @@ export default {
 						this.theme = "rgb(143, 40, 140)";
 					} else if (this.station.theme === "teal") {
 						this.theme = "rgb(0, 209, 178)";
+					} else if (this.station.theme === "orange") {
+						this.theme = "rgb(255, 94, 0)";
 					}
 
 					const currentSong = res.data.currentSong
@@ -1506,7 +1517,8 @@ export default {
 			"editStation",
 			"updateIfStationIsFavorited"
 		]),
-		...mapActions("editSongModal", ["stopVideo"])
+		...mapActions("editSongModal", ["stopVideo"]),
+		...mapActions("user/preferences", ["changeAutoSkipDisliked"])
 	}
 };
 </script>

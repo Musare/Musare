@@ -84,11 +84,6 @@ export default {
 
 		if (nightmode) this.enableNightMode();
 		else this.disableNightMode();
-
-		const autoSkipDisliked =
-			true || JSON.parse(localStorage.getItem("autoSkipDisliked"));
-
-		this.changeAutoSkipDisliked(autoSkipDisliked);
 	},
 	mounted() {
 		document.onkeydown = ev => {
@@ -178,10 +173,7 @@ export default {
 				.classList.remove("night-mode");
 		},
 		...mapActions("modals", ["closeCurrentModal"]),
-		...mapActions("user/preferences", [
-			"changeNightmode",
-			"changeAutoSkipDisliked"
-		])
+		...mapActions("user/preferences", ["changeNightmode"])
 	}
 };
 </script>

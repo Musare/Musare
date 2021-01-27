@@ -182,9 +182,6 @@ export default {
 			color: $white;
 		}
 	}
-	.admin strong {
-		color: #9d42b1;
-	}
 }
 .grouped {
 	margin: 0;
