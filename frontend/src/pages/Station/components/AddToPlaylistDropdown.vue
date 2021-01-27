@@ -169,10 +169,12 @@ export default {
 
 .nav-dropdown-items {
 	border: 1px solid $light-grey-2;
-	border-bottom: 0;
+	box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
 	background-color: #fff;
 	padding: 5px;
 	border-radius: 5px;
+	position: relative;
+	right: calc(100% - 110px);
 
 	.nav-item {
 		width: 100%;
