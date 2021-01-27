@@ -79,7 +79,6 @@ export default {
 			});
 
 			this.socket.on("event:playlist.create", playlist => {
-				console.log("create");
 				this.playlists.push(playlist);
 			});
 
@@ -121,8 +120,8 @@ export default {
 
 			this.socket.on("event:playlist.updatePrivacy", data => {
 				this.playlists.forEach((playlist, index) => {
-					if (playlist._id === data.playlistId) {
-						this.playlists[index].privacy = data.privacy;
+					if (playlist._id === data.playlist._id) {
+						this.playlists[index].privacy = data.playlist.privacy;
 					}
 				});
 			});

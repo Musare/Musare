@@ -1,6 +1,6 @@
 <template>
 	<div id="nav-dropdown">
-		<div class="nav-dropdown-items" v-if="playlistsArr.length > 0">
+		<div class="nav-dropdown-items" v-if="playlists.length > 0">
 			<!-- <a class="nav-item" id="nightmode-toggle">
 				<span>Nightmode</span>
 				<label class="switch">
@@ -12,16 +12,16 @@
 			<button
 				class="nav-item"
 				href="#"
-				v-for="(playlist, index) in playlistsArr"
+				v-for="(playlist, index) in playlists"
 				:key="index"
-				@click.prevent="toggleSongInPlaylist(playlist._id)"
+				@click.prevent="toggleSongInPlaylist(index, playlist._id)"
 				:title="playlist.displayName"
 			>
 				<p class="control is-expanded checkbox-control">
 					<input
 						type="checkbox"
 						:id="index"
-						v-model="playlists[playlist._id].hasSong"
+						v-model="playlist.hasSong"
 					/>
 					<label :for="index">
 						<span></span>
@@ -45,7 +45,7 @@ import io from "../../../io";
 export default {
 	data() {
 		return {
-			playlists: {},
+			playlists: [],
 			playlistsArr: [],
 			songId: null,
 			song: null
@@ -61,20 +61,48 @@ export default {
 		this.song = this.currentSong;
 		io.getSocket(socket => {
 			this.socket = socket;
+
 			this.socket.emit("playlists.indexMyPlaylists", false, res => {
 				if (res.status === "success") {
 					res.data.forEach(playlist => {
-						this.playlists[playlist._id] = playlist;
-					});
+						let hasSong = false;
+						for (let i = 0; i < playlist.songs.length; i += 1) {
+							if (playlist.songs[i].songId === this.songId) {
+								hasSong = true;
+							}
+						}
 
-					this.recalculatePlaylists();
+						// eslint-disable-next-line no-param-reassign
+						playlist.hasSong = hasSong;
+						this.playlists.push(playlist);
+					});
 				}
+			});
+
+			this.socket.on("event:playlist.create", playlist => {
+				this.playlists.push(playlist);
+			});
+
+			this.socket.on("event:playlist.delete", playlistId => {
+				this.playlists.forEach((playlist, index) => {
+					if (playlist._id === playlistId) {
+						this.playlists.splice(index, 1);
+					}
+				});
+			});
+
+			this.socket.on("event:playlist.updateDisplayName", data => {
+				this.playlists.forEach((playlist, index) => {
+					if (playlist._id === data.playlistId) {
+						this.playlists[index].displayName = data.displayName;
+					}
+				});
 			});
 		});
 	},
 	methods: {
-		toggleSongInPlaylist(playlistId) {
-			if (!this.playlists[playlistId].hasSong) {
+		toggleSongInPlaylist(index, playlistId) {
+			if (!this.playlists[index].hasSong) {
 				this.socket.emit(
 					"playlists.addSongToPlaylist",
 					false,
@@ -84,10 +112,9 @@ export default {
 						new Toast({ content: res.message, timeout: 4000 });
 
 						if (res.status === "success") {
-							this.playlists[playlistId].songs.push(this.song);
+							this.playlists[index].songs.push(this.song);
+							this.playlists[index].hasSong = true;
 						}
-
-						this.recalculatePlaylists();
 					}
 				);
 			} else {
@@ -99,35 +126,21 @@ export default {
 						new Toast({ content: res.message, timeout: 4000 });
 
 						if (res.status === "success") {
-							this.playlists[playlistId].songs.forEach(
+							this.playlists[index].songs.forEach(
 								(song, index) => {
 									if (song.songId === this.songId)
-										this.playlists[playlistId].songs.splice(
+										this.playlists[index].songs.splice(
 											index,
 											1
 										);
 								}
 							);
-						}
 
-						this.recalculatePlaylists();
+							this.playlists[index].hasSong = false;
+						}
 					}
 				);
 			}
-		},
-		recalculatePlaylists() {
-			this.playlistsArr = Object.values(this.playlists).map(playlist => {
-				let hasSong = false;
-				for (let i = 0; i < playlist.songs.length; i += 1) {
-					if (playlist.songs[i].songId === this.songId) {
-						hasSong = true;
-					}
-				}
-
-				playlist.hasSong = hasSong; // eslint-disable-line no-param-reassign
-				this.playlists[playlist._id] = playlist;
-				return playlist;
-			});
 		}
 	}
 };

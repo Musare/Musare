@@ -313,9 +313,9 @@ export default {
 
 						this.socket.on("event:playlist.updatePrivacy", data => {
 							this.playlists.forEach((playlist, index) => {
-								if (playlist._id === data.playlistId) {
+								if (playlist._id === data.playlist._id) {
 									this.playlists[index].privacy =
-										data.privacy;
+										data.playlist.privacy;
 								}
 							});
 						});
