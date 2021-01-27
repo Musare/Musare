@@ -1,7 +1,7 @@
 <template>
 	<modal title="Edit Station" class="edit-station-modal">
 		<template #body>
-			<div class="custom-modal-body">
+			<div class="custom-modal-body" v-if="station && station._id">
 				<!--  Station Preferences -->
 				<div class="section left-section">
 					<div class="col col-2">
@@ -11,7 +11,7 @@
 								<input
 									class="input"
 									type="text"
-									v-model="editing.name"
+									v-model="station.name"
 								/>
 							</p>
 						</div>
@@ -21,7 +21,7 @@
 								<input
 									class="input"
 									type="text"
-									v-model="editing.displayName"
+									v-model="station.displayName"
 								/>
 							</p>
 						</div>
@@ -33,14 +33,14 @@
 								<input
 									class="input"
 									type="text"
-									v-model="editing.description"
+									v-model="station.description"
 								/>
 							</p>
 						</div>
 					</div>
 					<div
 						class="col col-2"
-						v-if="editing.type === 'official' && editing.genres"
+						v-if="station.type === 'official' && station.genres"
 					>
 						<div>
 							<label class="label">Genre(s)</label>
@@ -85,7 +85,7 @@
 							<div class="list-container">
 								<div
 									class="list-item"
-									v-for="(genre, index) in editing.genres"
+									v-for="(genre, index) in station.genres"
 									:key="index"
 								>
 									<div
@@ -144,7 +144,7 @@
 								<div
 									class="list-item"
 									v-for="(genre,
-									index) in editing.blacklistedGenres"
+									index) in station.blacklistedGenres"
 									:key="index"
 								>
 									<div
@@ -164,8 +164,8 @@
 					<!--  Choose a playlist -->
 					<div
 						v-if="
-							editing.type === 'community' &&
-								!editing.partyMode &&
+							station.type === 'community' &&
+								!station.partyMode &&
 								playlists.length > 0
 						"
 					>
@@ -223,21 +223,21 @@
 							class="button-wrapper"
 						>
 							<button
-								:class="privacyButtons[editing.privacy].style"
+								:class="privacyButtons[station.privacy].style"
 								style="text-transform: capitalize"
-								@click="updatePrivacyLocal(editing.privacy)"
+								@click="updatePrivacyLocal(station.privacy)"
 							>
 								<i class="material-icons">{{
-									privacyButtons[editing.privacy].iconName
+									privacyButtons[station.privacy].iconName
 								}}</i>
-								{{ editing.privacy }}
+								{{ station.privacy }}
 							</button>
 							<transition name="slide-down">
 								<button
 									class="green"
 									v-if="
 										privacyDropdownActive &&
-											editing.privacy !== 'public'
+											station.privacy !== 'public'
 									"
 									@click="updatePrivacyLocal('public')"
 								>
@@ -252,7 +252,7 @@
 									class="orange"
 									v-if="
 										privacyDropdownActive &&
-											editing.privacy !== 'unlisted'
+											station.privacy !== 'unlisted'
 									"
 									@click="updatePrivacyLocal('unlisted')"
 								>
@@ -267,7 +267,7 @@
 									class="red"
 									v-if="
 										privacyDropdownActive &&
-											editing.privacy !== 'private'
+											station.privacy !== 'private'
 									"
 									@click="updatePrivacyLocal('private')"
 								>
@@ -280,7 +280,7 @@
 						</div>
 					</div>
 					<!--  Buttons changing the mode of the station -->
-					<div v-if="editing.type === 'community'">
+					<div v-if="station.type === 'community'">
 						<label class="label">Mode</label>
 						<div
 							@mouseenter="modeDropdownActive = true"
@@ -289,27 +289,27 @@
 						>
 							<button
 								:class="{
-									blue: !editing.partyMode,
-									yellow: editing.partyMode
+									blue: !station.partyMode,
+									yellow: station.partyMode
 								}"
 								@click="
-									editing.partyMode
+									station.partyMode
 										? updatePartyModeLocal(true)
 										: updatePartyModeLocal(false)
 								"
 							>
 								<i class="material-icons">{{
-									editing.partyMode
+									station.partyMode
 										? "emoji_people"
 										: "playlist_play"
 								}}</i>
-								{{ editing.partyMode ? "Party" : "Playlist" }}
+								{{ station.partyMode ? "Party" : "Playlist" }}
 							</button>
 							<transition name="slide-down">
 								<button
 									class="blue"
 									v-if="
-										modeDropdownActive && editing.partyMode
+										modeDropdownActive && station.partyMode
 									"
 									@click="updatePartyModeLocal(false)"
 								>
@@ -321,7 +321,7 @@
 								<button
 									class="yellow"
 									v-if="
-										modeDropdownActive && !editing.partyMode
+										modeDropdownActive && !station.partyMode
 									"
 									@click="updatePartyModeLocal(true)"
 								>
@@ -333,8 +333,8 @@
 					</div>
 					<div
 						v-if="
-							editing.type === 'community' &&
-								editing.partyMode === true
+							station.type === 'community' &&
+								station.partyMode === true
 						"
 					>
 						<label class="label">Queue lock</label>
@@ -345,26 +345,26 @@
 						>
 							<button
 								:class="{
-									green: editing.locked,
-									red: !editing.locked
+									green: station.locked,
+									red: !station.locked
 								}"
 								@click="
-									editing.locked
+									station.locked
 										? updateQueueLockLocal(true)
 										: updateQueueLockLocal(false)
 								"
 							>
 								<i class="material-icons">{{
-									editing.locked ? "lock" : "lock_open"
+									station.locked ? "lock" : "lock_open"
 								}}</i>
-								{{ editing.locked ? "Locked" : "Unlocked" }}
+								{{ station.locked ? "Locked" : "Unlocked" }}
 							</button>
 							<transition name="slide-down">
 								<button
 									class="green"
 									v-if="
 										queueLockDropdownActive &&
-											!editing.locked
+											!station.locked
 									"
 									@click="updateQueueLockLocal(true)"
 								>
@@ -377,7 +377,7 @@
 									class="red"
 									v-if="
 										queueLockDropdownActive &&
-											editing.locked
+											station.locked
 									"
 									@click="updateQueueLockLocal(false)"
 								>
@@ -396,18 +396,18 @@
 						>
 							<button
 								style="text-transform: capitalize"
-								:class="editing.theme"
-								@click="updateThemeLocal(editing.theme)"
+								:class="station.theme"
+								@click="updateThemeLocal(station.theme)"
 							>
 								<i class="material-icons">palette</i>
-								{{ editing.theme }}
+								{{ station.theme }}
 							</button>
 							<transition name="slide-down">
 								<button
 									class="blue"
 									v-if="
 										themeDropdownActive &&
-											editing.theme !== 'blue'
+											station.theme !== 'blue'
 									"
 									@click="updateThemeLocal('blue')"
 								>
@@ -420,7 +420,7 @@
 									class="purple"
 									v-if="
 										themeDropdownActive &&
-											editing.theme !== 'purple'
+											station.theme !== 'purple'
 									"
 									@click="updateThemeLocal('purple')"
 								>
@@ -433,7 +433,7 @@
 									class="teal"
 									v-if="
 										themeDropdownActive &&
-											editing.theme !== 'teal'
+											station.theme !== 'teal'
 									"
 									@click="updateThemeLocal('teal')"
 								>
@@ -446,7 +446,7 @@
 									class="orange"
 									v-if="
 										themeDropdownActive &&
-											editing.theme !== 'orange'
+											station.theme !== 'orange'
 									"
 									@click="updateThemeLocal('orange')"
 								>
@@ -487,7 +487,10 @@ import validation from "../../validation";
 
 export default {
 	components: { Modal, PlaylistItem },
-	props: { store: { type: String, default: "" } },
+	props: {
+		stationId: { type: String, default: "" },
+		sector: { type: String, default: "admin" }
+	},
 	data() {
 		return {
 			genreInputValue: "",
@@ -554,25 +557,45 @@ export default {
 		};
 	},
 	computed: {
-		...mapState("admin/stations", {
-			stations: state => state.stations
-		}),
-		...mapState({
-			editing(state) {
-				return this.$props.store
-					.split("/")
-					.reduce((a, v) => a[v], state).editing;
-			},
-			station(state) {
-				return this.$props.store
-					.split("/")
-					.reduce((a, v) => a[v], state).station;
-			}
+		// ...mapState("admin/stations", {
+		// 	stations: state => state.stations
+		// }),
+		...mapState("editStationModal", {
+			station: state => state.station,
+			originalStation: state => state.originalStation
 		})
 	},
 	mounted() {
 		io.getSocket(socket => {
 			this.socket = socket;
+
+			this.socket.emit(`stations.getStationById`, this.stationId, res => {
+				if (res.status === "success") {
+					const { station } = res;
+					// this.song = { ...song };
+					// if (this.song.discogs === undefined)
+					// 	this.song.discogs = null;
+					this.editStation(station);
+
+					// this.songDataLoaded = true;
+
+					this.station.genres = JSON.parse(
+						JSON.stringify(this.station.genres)
+					);
+					this.station.blacklistedGenres = JSON.parse(
+						JSON.stringify(this.station.blacklistedGenres)
+					);
+				} else {
+					new Toast({
+						content: "Station with that ID not found",
+						timeout: 3000
+					});
+					this.closeModal({
+						sector: this.sector,
+						modal: "editStation"
+					});
+				}
+			});
 
 			this.socket.emit("playlists.indexMyPlaylists", true, res => {
 				if (res.status === "success") this.playlists = res.data;
@@ -616,23 +639,21 @@ export default {
 
 			return socket;
 		});
-
-		this.editing.genres = JSON.parse(JSON.stringify(this.editing.genres));
-		this.editing.blacklistedGenres = JSON.parse(
-			JSON.stringify(this.editing.blacklistedGenres)
-		);
 	},
 	methods: {
 		isPlaylistSelected(id) {
 			// TODO Also change this once it changes for a station
-			if (this.station && this.station.privatePlaylist === id)
+			if (
+				this.originalStation &&
+				this.originalStation.privatePlaylist === id
+			)
 				return true;
 			return false;
 		},
 		selectPlaylist(playlistId) {
 			this.socket.emit(
 				"stations.selectPrivatePlaylist",
-				this.station._id,
+				this.originalStation._id,
 				playlistId,
 				res => {
 					if (res.status === "failure")
@@ -647,7 +668,7 @@ export default {
 		deselectPlaylist() {
 			this.socket.emit(
 				"stations.deselectPrivatePlaylist",
-				this.station._id,
+				this.originalStation._id,
 				res => {
 					if (res.status === "failure")
 						return new Toast({
@@ -659,38 +680,40 @@ export default {
 			);
 		},
 		update() {
-			if (this.station.name !== this.editing.name) this.updateName();
-			if (this.station.displayName !== this.editing.displayName)
+			if (this.originalStation.name !== this.station.name)
+				this.updateName();
+			if (this.originalStation.displayName !== this.station.displayName)
 				this.updateDisplayName();
-			if (this.station.description !== this.editing.description)
+			if (this.originalStation.description !== this.station.description)
 				this.updateDescription();
-			if (this.station.privacy !== this.editing.privacy)
+			if (this.originalStation.privacy !== this.station.privacy)
 				this.updatePrivacy();
 			if (
-				this.station.type === "community" &&
-				this.station.partyMode !== this.editing.partyMode
+				this.originalStation.type === "community" &&
+				this.originalStation.partyMode !== this.station.partyMode
 			)
 				this.updatePartyMode();
 			if (
-				this.station.type === "community" &&
-				this.editing.partyMode &&
-				this.station.locked !== this.editing.locked
+				this.originalStation.type === "community" &&
+				this.station.partyMode &&
+				this.originalStation.locked !== this.station.locked
 			)
 				this.updateQueueLock();
 			if (
-				this.station.genres.toString() !==
-				this.editing.genres.toString()
+				this.originalStation.genres.toString() !==
+				this.station.genres.toString()
 			)
 				this.updateGenres();
 			if (
-				this.station.blacklistedGenres.toString() !==
-				this.editing.blacklistedGenres.toString()
+				this.originalStation.blacklistedGenres.toString() !==
+				this.station.blacklistedGenres.toString()
 			)
 				this.updateBlacklistedGenres();
-			if (this.station.theme !== this.editing.theme) this.updateTheme();
+			if (this.originalStation.theme !== this.station.theme)
+				this.updateTheme();
 		},
 		updateName() {
-			const { name } = this.editing;
+			const { name } = this.station;
 			if (!validation.isLength(name, 2, 16))
 				return new Toast({
 					content: "Name must have between 2 and 16 characters.",
@@ -705,15 +728,16 @@ export default {
 
 			return this.socket.emit(
 				"stations.updateName",
-				this.editing._id,
+				this.station._id,
 				name,
 				res => {
 					if (res.status === "success") {
-						if (this.station) this.station.name = name;
+						if (this.originalStation)
+							this.originalStation.name = name;
 						else {
-							this.stations.forEach((station, index) => {
-								if (station._id === this.editing._id) {
-									this.stations[index].name = name;
+							this.originalStations.forEach((station, index) => {
+								if (station._id === this.station._id) {
+									this.originalStations[index].name = name;
 									return name;
 								}
 
@@ -727,7 +751,7 @@ export default {
 			);
 		},
 		updateDisplayName() {
-			const { displayName } = this.editing;
+			const { displayName } = this.station;
 			if (!validation.isLength(displayName, 2, 32))
 				return new Toast({
 					content:
@@ -743,16 +767,16 @@ export default {
 
 			return this.socket.emit(
 				"stations.updateDisplayName",
-				this.editing._id,
+				this.station._id,
 				displayName,
 				res => {
 					if (res.status === "success") {
-						if (this.station)
-							this.station.displayName = displayName;
+						if (this.originalStation)
+							this.originalStation.displayName = displayName;
 						else {
-							this.stations.forEach((station, index) => {
-								if (station._id === this.editing._id) {
-									this.stations[
+							this.originalStations.forEach((station, index) => {
+								if (station._id === this.station._id) {
+									this.originalStations[
 										index
 									].displayName = displayName;
 									return displayName;
@@ -768,7 +792,7 @@ export default {
 			);
 		},
 		updateDescription() {
-			const { description } = this.editing;
+			const { description } = this.station;
 			if (!validation.isLength(description, 2, 200))
 				return new Toast({
 					content:
@@ -788,16 +812,16 @@ export default {
 
 			return this.socket.emit(
 				"stations.updateDescription",
-				this.editing._id,
+				this.station._id,
 				description,
 				res => {
 					if (res.status === "success") {
-						if (this.station)
-							this.station.description = description;
+						if (this.originalStation)
+							this.originalStation.description = description;
 						else {
-							this.stations.forEach((station, index) => {
-								if (station._id === this.editing._id) {
-									this.stations[
+							this.originalStations.forEach((station, index) => {
+								if (station._id === this.station._id) {
+									this.originalStations[
 										index
 									].description = description;
 									return description;
@@ -818,26 +842,26 @@ export default {
 			);
 		},
 		updatePrivacyLocal(privacy) {
-			if (this.editing.privacy === privacy) return;
-			this.editing.privacy = privacy;
+			if (this.station.privacy === privacy) return;
+			this.station.privacy = privacy;
 			this.privacyDropdownActive = false;
 		},
 		updatePrivacy() {
 			this.socket.emit(
 				"stations.updatePrivacy",
-				this.editing._id,
-				this.editing.privacy,
+				this.station._id,
+				this.station.privacy,
 				res => {
 					if (res.status === "success") {
-						if (this.station)
-							this.station.privacy = this.editing.privacy;
+						if (this.originalStation)
+							this.originalStation.privacy = this.station.privacy;
 						else {
-							this.stations.forEach((station, index) => {
-								if (station._id === this.editing._id) {
-									this.stations[
+							this.originalStations.forEach((station, index) => {
+								if (station._id === this.station._id) {
+									this.originalStations[
 										index
-									].privacy = this.editing.privacy;
-									return this.editing.privacy;
+									].privacy = this.station.privacy;
+									return this.station.privacy;
 								}
 
 								return false;
@@ -856,17 +880,18 @@ export default {
 		updateGenres() {
 			this.socket.emit(
 				"stations.updateGenres",
-				this.editing._id,
-				this.editing.genres,
+				this.station._id,
+				this.station.genres,
 				res => {
 					if (res.status === "success") {
 						const genres = JSON.parse(
-							JSON.stringify(this.editing.genres)
+							JSON.stringify(this.station.genres)
 						);
-						if (this.station) this.station.genres = genres;
-						this.stations.forEach((station, index) => {
-							if (station._id === this.editing._id) {
-								this.stations[index].genres = genres;
+						if (this.originalStation)
+							this.originalStation.genres = genres;
+						this.originalStations.forEach((station, index) => {
+							if (station._id === this.station._id) {
+								this.originalStations[index].genres = genres;
 								return genres;
 							}
 
@@ -886,18 +911,18 @@ export default {
 		updateBlacklistedGenres() {
 			this.socket.emit(
 				"stations.updateBlacklistedGenres",
-				this.editing._id,
-				this.editing.blacklistedGenres,
+				this.station._id,
+				this.station.blacklistedGenres,
 				res => {
 					if (res.status === "success") {
 						const blacklistedGenres = JSON.parse(
-							JSON.stringify(this.editing.blacklistedGenres)
+							JSON.stringify(this.station.blacklistedGenres)
 						);
-						if (this.station)
-							this.station.blacklistedGenres = blacklistedGenres;
-						this.stations.forEach((station, index) => {
-							if (station._id === this.editing._id) {
-								this.stations[
+						if (this.originalStation)
+							this.originalStation.blacklistedGenres = blacklistedGenres;
+						this.originalStations.forEach((station, index) => {
+							if (station._id === this.station._id) {
+								this.originalStations[
 									index
 								].blacklistedGenres = blacklistedGenres;
 								return blacklistedGenres;
@@ -916,27 +941,27 @@ export default {
 			);
 		},
 		updatePartyModeLocal(partyMode) {
-			if (this.editing.partyMode === partyMode) return;
-			this.editing.partyMode = partyMode;
+			if (this.station.partyMode === partyMode) return;
+			this.station.partyMode = partyMode;
 			this.modeDropdownActive = false;
 		},
 		updatePartyMode() {
 			this.socket.emit(
 				"stations.updatePartyMode",
-				this.editing._id,
-				this.editing.partyMode,
+				this.station._id,
+				this.station.partyMode,
 				res => {
 					if (res.status === "success") {
-						if (this.station)
-							this.station.partyMode = this.editing.partyMode;
-						// if (this.station)
-						// 	this.station.partyMode = this.editing.partyMode;
-						// this.stations.forEach((station, index) => {
-						// 	if (station._id === this.editing._id) {
-						// 		this.stations[
+						if (this.originalStation)
+							this.originalStation.partyMode = this.station.partyMode;
+						// if (this.originalStation)
+						// 	this.originalStation.partyMode = this.station.partyMode;
+						// this.originalStations.forEach((station, index) => {
+						// 	if (station._id === this.station._id) {
+						// 		this.originalStations[
 						// 			index
-						// 		].partyMode = this.editing.partyMode;
-						// 		return this.editing.partyMode;
+						// 		].partyMode = this.station.partyMode;
+						// 		return this.station.partyMode;
 						// 	}
 
 						// 	return false;
@@ -953,15 +978,16 @@ export default {
 			);
 		},
 		updateQueueLockLocal(locked) {
-			if (this.editing.locked === locked) return;
-			this.editing.locked = locked;
+			if (this.station.locked === locked) return;
+			this.station.locked = locked;
 			this.queueLockDropdownActive = false;
 		},
 		updateQueueLock() {
-			this.socket.emit("stations.toggleLock", this.editing._id, res => {
+			this.socket.emit("stations.toggleLock", this.station._id, res => {
 				console.log(res);
 				if (res.status === "success") {
-					if (this.station) this.station.locked = res.data;
+					if (this.originalStation)
+						this.originalStation.locked = res.data;
 					return new Toast({
 						content: `Toggled queue lock succesfully to ${res.data}`,
 						timeout: 4000
@@ -974,26 +1000,26 @@ export default {
 			});
 		},
 		updateThemeLocal(theme) {
-			if (this.editing.theme === theme) return;
-			this.editing.theme = theme;
+			if (this.station.theme === theme) return;
+			this.station.theme = theme;
 			this.themeDropdownActive = false;
 		},
 		updateTheme() {
 			this.socket.emit(
 				"stations.updateTheme",
-				this.editing._id,
-				this.editing.theme,
+				this.station._id,
+				this.station.theme,
 				res => {
 					if (res.status === "success") {
-						if (this.station)
-							this.station.theme = this.editing.theme;
+						if (this.originalStation)
+							this.originalStation.theme = this.station.theme;
 						else {
-							this.stations.forEach((station, index) => {
-								if (station._id === this.editing._id) {
-									this.stations[
+							this.originalStations.forEach((station, index) => {
+								if (station._id === this.station._id) {
+									this.originalStations[
 										index
-									].theme = this.editing.theme;
-									return this.editing.theme;
+									].theme = this.station.theme;
+									return this.station.theme;
 								}
 
 								return false;
@@ -1010,7 +1036,7 @@ export default {
 			);
 		},
 		deleteStation() {
-			this.socket.emit("stations.remove", this.editing._id, res => {
+			this.socket.emit("stations.remove", this.station._id, res => {
 				if (res.status === "success")
 					this.closeModal({
 						sector: "station",
@@ -1080,13 +1106,13 @@ export default {
 		addTag(type) {
 			if (type === "genres") {
 				const genre = this.genreInputValue.toLowerCase().trim();
-				if (this.editing.genres.indexOf(genre) !== -1)
+				if (this.station.genres.indexOf(genre) !== -1)
 					return new Toast({
 						content: "Genre already exists",
 						timeout: 3000
 					});
 				if (genre) {
-					this.editing.genres.push(genre);
+					this.station.genres.push(genre);
 					this.genreInputValue = "";
 					return false;
 				}
@@ -1100,13 +1126,13 @@ export default {
 				const genre = this.blacklistGenreInputValue
 					.toLowerCase()
 					.trim();
-				if (this.editing.blacklistedGenres.indexOf(genre) !== -1)
+				if (this.station.blacklistedGenres.indexOf(genre) !== -1)
 					return new Toast({
 						content: "Blacklist genre already exists",
 						timeout: 3000
 					});
 				if (genre) {
-					this.editing.blacklistedGenres.push(genre);
+					this.station.blacklistedGenres.push(genre);
 					this.blacklistGenreInputValue = "";
 					return false;
 				}
@@ -1120,10 +1146,11 @@ export default {
 			return false;
 		},
 		removeTag(type, index) {
-			if (type === "genres") this.editing.genres.splice(index, 1);
+			if (type === "genres") this.station.genres.splice(index, 1);
 			else if (type === "blacklist-genres")
-				this.editing.blacklistedGenres.splice(index, 1);
+				this.station.blacklistedGenres.splice(index, 1);
 		},
+		...mapActions("editStationModal", ["editStation"]),
 		...mapActions("modals", ["closeModal"])
 	}
 };
@@ -1349,14 +1376,6 @@ export default {
 
 		&.yellow {
 			background-color: $yellow;
-		}
-
-		&.purple {
-			background-color: $purple;
-		}
-
-		&.teal {
-			background-color: $teal;
 		}
 
 		i {

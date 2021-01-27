@@ -20,6 +20,7 @@ const state = {
 			editNews: false,
 			editUser: false,
 			editSong: false,
+			editStation: false,
 			viewReport: false,
 			viewPunishment: false
 		}

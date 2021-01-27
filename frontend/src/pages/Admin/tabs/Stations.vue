@@ -175,7 +175,11 @@
 			</div>
 		</div>
 
-		<edit-station v-if="modals.editStation" store="admin/stations" />
+		<edit-station
+			v-if="modals.editStation"
+			:station-id="editingStationId"
+			sector="admin"
+		/>
 	</div>
 </template>
 
@@ -192,6 +196,7 @@ export default {
 	components: { EditStation, UserIdToUsername },
 	data() {
 		return {
+			editingStationId: "",
 			newStation: {
 				genres: [],
 				blacklistedGenres: []
@@ -203,7 +208,7 @@ export default {
 			stations: state => state.stations
 		}),
 		...mapState("modals", {
-			modals: state => state.modals.station
+			modals: state => state.modals.admin
 		})
 	},
 	mounted() {
@@ -280,20 +285,9 @@ export default {
 			);
 		},
 		edit(station) {
-			this.editStation({
-				_id: station._id,
-				name: station.name,
-				type: station.type,
-				partyMode: station.partyMode,
-				description: station.description,
-				privacy: station.privacy,
-				displayName: station.displayName,
-				genres: station.genres,
-				blacklistedGenres: station.blacklistedGenres,
-				theme: station.theme
-			});
+			this.editingStationId = station._id;
 			this.openModal({
-				sector: "station",
+				sector: "admin",
 				modal: "editStation"
 			});
 		},

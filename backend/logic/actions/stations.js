@@ -777,6 +777,73 @@ export default {
 	},
 
 	/**
+	 * Gets a station by id
+	 *
+	 * @param {object} session - user session
+	 * @param {string} stationId - the station id
+	 * @param {Function} cb - callback
+	 */
+	getStationById(session, stationId, cb) {
+		async.waterfall(
+			[
+				next => {
+					StationsModule.runJob("GET_STATION", { stationId }, this)
+						.then(station => {
+							next(null, station);
+						})
+						.catch(next);
+				},
+
+				(station, next) => {
+					if (!station) return next("Station not found.");
+					return StationsModule.runJob(
+						"CAN_USER_VIEW_STATION",
+						{
+							station,
+							userId: session.userId
+						},
+						this
+					)
+						.then(canView => {
+							if (!canView) next("Not allowed to get station.");
+							else next(null, station);
+						})
+						.catch(err => next(err));
+				},
+
+				(station, next) => {
+					const data = {
+						_id: station._id,
+						type: station.type,
+						description: station.description,
+						displayName: station.displayName,
+						name: station.name,
+						privacy: station.privacy,
+						locked: station.locked,
+						partyMode: station.partyMode,
+						owner: station.owner,
+						privatePlaylist: station.privatePlaylist,
+						genres: station.genres,
+						blacklistedGenres: station.blacklistedGenres,
+						theme: station.theme
+					};
+
+					next(null, data);
+				}
+			],
+			async (err, data) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "GET_STATION_BY_ID", `Getting station "${stationId}" failed. "${err}"`);
+					return cb({ status: "failure", message: err });
+				}
+				this.log("SUCCESS", "GET_STATION_BY_ID", `Got station "${stationId}" successfully.`);
+				return cb({ status: "success", station: data });
+			}
+		);
+	},
+
+	/**
 	 * Toggles if a station is locked
 	 *
 	 * @param session

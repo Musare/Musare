@@ -291,7 +291,11 @@
 			<song-queue v-if="modals.addSongToQueue" />
 			<edit-playlist v-if="modals.editPlaylist" />
 			<create-playlist v-if="modals.createPlaylist" />
-			<edit-station v-if="modals.editStation" store="station" />
+			<edit-station
+				v-if="modals.editStation"
+				:station-id="station._id"
+				sector="station"
+			/>
 			<report v-if="modals.report" />
 		</div>
 
@@ -715,19 +719,6 @@ export default {
 			return this.isOwnerOnly() || this.isAdminOnly();
 		},
 		openSettings() {
-			this.editStation({
-				_id: this.station._id,
-				name: this.station.name,
-				type: this.station.type,
-				partyMode: this.station.partyMode,
-				description: this.station.description,
-				privacy: this.station.privacy,
-				displayName: this.station.displayName,
-				locked: this.station.locked,
-				genres: this.station.genres,
-				blacklistedGenres: this.station.blacklistedGenres,
-				theme: this.station.theme
-			});
 			this.openModal({
 				sector: "station",
 				modal: "editStation"
@@ -1514,7 +1505,6 @@ export default {
 			"updateStationPaused",
 			"updateLocalPaused",
 			"updateNoSong",
-			"editStation",
 			"updateIfStationIsFavorited"
 		]),
 		...mapActions("editSongModal", ["stopVideo"]),
