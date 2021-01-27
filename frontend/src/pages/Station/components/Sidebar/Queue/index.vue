@@ -2,8 +2,8 @@
 	<div id="queue">
 		<div id="queue-items" class="scrollable-list">
 			<queue-item
-				v-for="song in songsList"
-				:key="song.songId"
+				v-for="(song, index) in songsList"
+				:key="index + song.songId"
 				:song="song"
 				:station="{
 					type: station.type,

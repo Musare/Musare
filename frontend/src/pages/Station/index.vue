@@ -453,6 +453,7 @@ export default {
 
 			if (this.socket.connected) this.join();
 			io.onConnect(this.join);
+
 			this.socket.emit("stations.existsByName", this.stationName, res => {
 				if (res.status === "failure" || !res.exists) {
 					this.loading = false;
@@ -479,12 +480,15 @@ export default {
 
 				if (currentSong) {
 					this.updateNoSong(false);
+
 					if (this.currentSong.artists)
 						this.currentSong.artists = this.currentSong.artists.join(
 							", "
 						);
+
 					if (!this.playerReady) this.youtubeReady();
 					else this.playVideo();
+
 					this.socket.emit(
 						"songs.getOwnSongRatings",
 						data.currentSong.songId,
@@ -492,6 +496,7 @@ export default {
 							if (this.currentSong.songId === song.songId) {
 								this.liked = song.liked;
 								this.disliked = song.disliked;
+
 								if (
 									this.autoSkipDisliked &&
 									song.disliked === true
@@ -512,9 +517,11 @@ export default {
 				}
 
 				let isInQueue = false;
+
 				this.songsList.forEach(queueSong => {
 					if (queueSong.requestedBy === this.userId) isInQueue = true;
 				});
+
 				if (
 					!isInQueue &&
 					this.privatePlaylistQueueSelected &&
