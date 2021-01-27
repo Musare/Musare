@@ -206,7 +206,11 @@
 			</div>
 		</div>
 
-		<edit-news v-if="modals.editNews" />
+		<edit-news
+			v-if="modals.editNews"
+			:news-id="editingNewsId"
+			sector="admin"
+		/>
 	</div>
 </template>
 
@@ -222,6 +226,7 @@ export default {
 	components: { EditNews },
 	data() {
 		return {
+			editingNewsId: "",
 			creating: {
 				title: "",
 				description: "",
@@ -237,7 +242,6 @@ export default {
 			modals: state => state.modals.admin
 		}),
 		...mapState("admin/news", {
-			editing: state => state.editing,
 			news: state => state.news
 		})
 	},
@@ -310,7 +314,7 @@ export default {
 			);
 		},
 		editNewsClick(news) {
-			this.editNews(news);
+			this.editingNewsId = news._id;
 			this.openModal({ sector: "admin", modal: "editNews" });
 		},
 		addChange(type) {

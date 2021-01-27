@@ -67,6 +67,32 @@ export default {
 	},
 
 	/**
+	 * Gets a news item by id
+	 *
+	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {string} newsId - the news id
+	 * @param {Function} cb - gets called with the result
+	 */
+	async getNewsFromId(session, newsId, cb) {
+		const newsModel = await DBModule.runJob("GET_MODEL", { modelName: "news" }, this);
+		async.waterfall(
+			[
+				next => {
+					newsModel.findOne({ _id: newsId }, next);
+				}
+			],
+			async (err, news) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "GET_NEWS_FROM_ID", `Getting news failed. "${err}"`);
+					return cb({ status: "failure", message: err });
+				}
+				this.log("SUCCESS", "GET_NEWS_FROM_ID", `Got news successful.`, false);
+				return cb({ status: "success", data: news });
+			}
+		);
+	},
+	/**
 	 * Creates a news item
 	 *
 	 * @param {object} session - the session object automatically added by socket.io

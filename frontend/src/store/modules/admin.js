@@ -120,29 +120,16 @@ const modules = {
 	news: {
 		namespaced: true,
 		state: {
-			editing: {},
 			news: []
 		},
 		getters: {},
 		actions: {
-			editNews: ({ commit }, news) => commit("editNews", news),
-			addChange: ({ commit }, data) => commit("addChange", data),
-			removeChange: ({ commit }, data) => commit("removeChange", data),
 			addNews: ({ commit }, news) => commit("addNews", news),
 			removeNews: ({ commit }, newsId) => commit("removeNews", newsId),
 			updateNews: ({ commit }, updatedNews) =>
 				commit("updateNews", updatedNews)
 		},
 		mutations: {
-			editNews(state, news) {
-				state.editing = news;
-			},
-			addChange(state, data) {
-				state.editing[data.type].push(data.change);
-			},
-			removeChange(state, data) {
-				state.editing[data.type].splice(data.index, 1);
-			},
 			addNews(state, news) {
 				state.news.push(news);
 			},

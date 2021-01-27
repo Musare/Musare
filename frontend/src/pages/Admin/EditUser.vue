@@ -75,7 +75,7 @@
 					class="button is-danger"
 					@click="
 						closeModal({
-							sector: this.sector,
+							sector,
 							modal: 'editUser'
 						})
 					"
@@ -121,6 +121,15 @@ export default {
 				if (res.status === "success") {
 					const user = res.data;
 					this.editUser(user);
+				} else {
+					new Toast({
+						content: "User with that ID not found",
+						timeout: 3000
+					});
+					this.closeModal({
+						sector: this.sector,
+						modal: "editUser"
+					});
 				}
 			});
 

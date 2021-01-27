@@ -1,10 +1,10 @@
 <template>
 	<modal title="Edit News">
-		<div slot="body">
+		<div slot="body" v-if="news && news._id">
 			<label class="label">Title</label>
 			<p class="control">
 				<input
-					v-model="editing.title"
+					v-model="news.title"
 					class="input"
 					type="text"
 					placeholder="News Title"
@@ -14,7 +14,7 @@
 			<label class="label">Description</label>
 			<p class="control">
 				<input
-					v-model="editing.description"
+					v-model="news.description"
 					class="input"
 					type="text"
 					placeholder="News Description"
@@ -39,7 +39,7 @@
 						>
 					</p>
 					<span
-						v-for="(bug, index) in editing.bugs"
+						v-for="(bug, index) in news.bugs"
 						class="tag is-info"
 						:key="index"
 					>
@@ -68,7 +68,7 @@
 						>
 					</p>
 					<span
-						v-for="(feature, index) in editing.features"
+						v-for="(feature, index) in news.features"
 						class="tag is-info"
 						:key="index"
 					>
@@ -100,7 +100,7 @@
 						>
 					</p>
 					<span
-						v-for="(improvement, index) in editing.improvements"
+						v-for="(improvement, index) in news.improvements"
 						class="tag is-info"
 						:key="index"
 					>
@@ -129,7 +129,7 @@
 						>
 					</p>
 					<span
-						v-for="(upcoming, index) in editing.upcoming"
+						v-for="(upcoming, index) in news.upcoming"
 						class="tag is-info"
 						:key="index"
 					>
@@ -155,7 +155,7 @@
 				class="button is-danger"
 				@click="
 					closeModal({
-						sector: 'admin',
+						sector,
 						modal: 'editNews'
 					})
 				"
@@ -176,21 +176,41 @@ import Modal from "../../components/Modal.vue";
 
 export default {
 	components: { Modal },
+	props: {
+		newsId: { type: String, default: "" },
+		sector: { type: String, default: "admin" }
+	},
 	computed: {
-		...mapState("admin/news", {
-			editing: state => state.editing
+		...mapState("editNewsModal", {
+			news: state => state.news
 		})
 	},
 	mounted() {
 		io.getSocket(socket => {
 			this.socket = socket;
+
+			this.socket.emit(`news.getNewsFromId`, this.newsId, res => {
+				if (res.status === "success") {
+					const news = res.data;
+					this.editNews(news);
+				} else {
+					new Toast({
+						content: "News with that ID not found",
+						timeout: 3000
+					});
+					this.closeModal({
+						sector: this.sector,
+						modal: "editNews"
+					});
+				}
+			});
 		});
 	},
 	methods: {
 		addChange(type) {
 			const change = document.getElementById(`edit-${type}`).value.trim();
 
-			if (this.editing[type].indexOf(change) !== -1)
+			if (this.news[type].indexOf(change) !== -1)
 				return new Toast({
 					content: `Tag already exists`,
 					timeout: 3000
@@ -210,24 +230,23 @@ export default {
 			this.removeChange({ type, index });
 		},
 		updateNews(close) {
-			this.socket.emit(
-				"news.update",
-				this.editing._id,
-				this.editing,
-				res => {
-					new Toast({ content: res.message, timeout: 4000 });
-					if (res.status === "success") {
-						if (close)
-							this.closeModal({
-								sector: "admin",
-								modal: "editNews"
-							});
-					}
+			this.socket.emit("news.update", this.news._id, this.news, res => {
+				new Toast({ content: res.message, timeout: 4000 });
+				if (res.status === "success") {
+					if (close)
+						this.closeModal({
+							sector: this.sector,
+							modal: "editNews"
+						});
 				}
-			);
+			});
 		},
 		...mapActions("modals", ["closeModal"]),
-		...mapActions("admin/news", ["addChange", "removeChange"])
+		...mapActions("editNewsModal", [
+			"editNews",
+			"addChange",
+			"removeChange"
+		])
 	}
 };
 </script>
