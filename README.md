@@ -39,7 +39,7 @@ We currently only utilize 1 backend, 1 MongoDB server and 1 Redis server running
 3. `cp backend/config/template.json backend/config/default.json`
 
     | Property | Description |
-    | - | - |
+    | --- | --- |
     | `mode` | Should be either `development` or `production`. No more explanation needed. |
     | `secret` | Whatever you want - used by express's session module. |
     | `domain` | Should be the url where the site will be accessible from,usually `http://localhost` for non-Docker. |

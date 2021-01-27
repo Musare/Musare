@@ -334,6 +334,8 @@ export default {
 							station.themeCode = "rgb(143, 40, 140)";
 						} else if (theme === "teal") {
 							station.themeCode = "rgb(0, 209, 178)";
+						} else if (theme === "orange") {
+							station.themeCode = "rgb(255, 94, 0)";
 						} else {
 							station.themeCode = "rgb(2, 166, 242)";
 						}
@@ -422,6 +424,8 @@ export default {
 							modifiableStation.themeCode = "rgb(143, 40, 140)";
 						} else if (modifiableStation.theme === "teal") {
 							modifiableStation.themeCode = "rgb(0, 209, 178)";
+						} else if (modifiableStation.theme === "orange") {
+							modifiableStation.themeCode = "rgb(255, 94, 0)";
 						} else {
 							modifiableStation.themeCode = "rgb(2, 166, 242)";
 						}
@@ -607,6 +611,7 @@ html {
 	margin: 10px;
 	cursor: pointer;
 	height: 480px;
+	border-radius: 5px;
 	box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.1);
 	transition: all ease-in-out 0.2s;
 
