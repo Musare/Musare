@@ -74,11 +74,12 @@ export default {
 			this.socket = socket;
 
 			/** Get playlists for user */
-			this.socket.emit("playlists.indexForUser", true, res => {
+			this.socket.emit("playlists.indexMyPlaylists", true, res => {
 				if (res.status === "success") this.playlists = res.data;
 			});
 
 			this.socket.on("event:playlist.create", playlist => {
+				console.log("create");
 				this.playlists.push(playlist);
 			});
 

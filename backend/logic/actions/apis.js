@@ -118,12 +118,12 @@ export default {
 	 * @param {Function} cb - callback
 	 */
 	joinRoom(session, page, cb) {
-		if (page === "home") {
+		if (page === "home" || page.startsWith("profile-")) {
 			IOModule.runJob("SOCKET_JOIN_ROOM", {
 				socketId: session.socketId,
 				room: page
 			})
-				.then()
+				.then(() => {})
 				.catch(err => {
 					this.log("ERROR", `Joining room failed: ${err.message}`);
 				});

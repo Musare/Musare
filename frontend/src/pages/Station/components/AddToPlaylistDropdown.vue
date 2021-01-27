@@ -61,7 +61,7 @@ export default {
 		this.song = this.currentSong;
 		io.getSocket(socket => {
 			this.socket = socket;
-			this.socket.emit("playlists.indexForUser", false, res => {
+			this.socket.emit("playlists.indexMyPlaylists", false, res => {
 				if (res.status === "success") {
 					res.data.forEach(playlist => {
 						this.playlists[playlist._id] = playlist;

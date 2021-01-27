@@ -21,6 +21,12 @@ CacheModule.runJob("SUB", {
 				socket.emit("event:playlist.create", playlist);
 			});
 		});
+
+		if (playlist.privacy === "public")
+			IOModule.runJob("EMIT_TO_ROOM", {
+				room: `profile-${playlist.createdBy}`,
+				args: ["event:playlist.create", playlist]
+			});
 	}
 });
 
@@ -31,6 +37,11 @@ CacheModule.runJob("SUB", {
 			response.sockets.forEach(socket => {
 				socket.emit("event:playlist.delete", res.playlistId);
 			});
+		});
+
+		IOModule.runJob("EMIT_TO_ROOM", {
+			room: `profile-${res.userId}`,
+			args: ["event:playlist.delete", res.playlistId]
 		});
 	}
 });
@@ -74,6 +85,18 @@ CacheModule.runJob("SUB", {
 				});
 			});
 		});
+
+		if (res.privacy === "public")
+			IOModule.runJob("EMIT_TO_ROOM", {
+				room: `profile-${res.userId}`,
+				args: [
+					"event:playlist.addSong",
+					{
+						playlistId: res.playlistId,
+						song: res.song
+					}
+				]
+			});
 	}
 });
 
@@ -88,6 +111,18 @@ CacheModule.runJob("SUB", {
 				});
 			});
 		});
+
+		if (res.privacy === "public")
+			IOModule.runJob("EMIT_TO_ROOM", {
+				room: `profile-${res.userId}`,
+				args: [
+					"event:playlist.removeSong",
+					{
+						playlistId: res.playlistId,
+						songId: res.songId
+					}
+				]
+			});
 	}
 });
 
@@ -102,6 +137,18 @@ CacheModule.runJob("SUB", {
 				});
 			});
 		});
+
+		if (res.privacy === "public")
+			IOModule.runJob("EMIT_TO_ROOM", {
+				room: `profile-${res.userId}`,
+				args: [
+					"event:playlist.updateDisplayName",
+					{
+						playlistId: res.playlistId,
+						displayName: res.displayName
+					}
+				]
+			});
 	}
 });
 
@@ -110,11 +157,19 @@ CacheModule.runJob("SUB", {
 	cb: res => {
 		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(response => {
 			response.sockets.forEach(socket => {
-				socket.emit("event:playlist.updatePrivacy", {
-					playlistId: res.playlistId,
-					privacy: res.privacy
-				});
+				socket.emit("event:playlist.updatePrivacy");
 			});
+		});
+
+		if (res.playlist.privacy === "public")
+			return IOModule.runJob("EMIT_TO_ROOM", {
+				room: `profile-${res.userId}`,
+				args: ["event:playlist.create", res.playlist]
+			});
+
+		return IOModule.runJob("EMIT_TO_ROOM", {
+			room: `profile-${res.userId}`,
+			args: ["event:playlist.delete", res.playlist._id]
 		});
 	}
 });
@@ -167,13 +222,71 @@ export default {
 	}),
 
 	/**
+	 * Gets a list of all the playlists for a specific user
+	 *
+	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {string} userId - the user id in question
+	 * @param {Function} cb - gets called with the result
+	 */
+	indexForUser: async function indexForUser(session, userId, cb) {
+		const playlistModel = await DBModule.runJob(
+			"GET_MODEL",
+			{
+				modelName: "playlist"
+			},
+			this
+		);
+
+		async.waterfall(
+			[
+				next => {
+					playlistModel.find({ createdBy: userId }, next);
+				},
+
+				(playlists, next) => {
+					if (session.userId === userId) return next(null, playlists); // user requesting playlists is the owner of the playlists
+
+					const filteredPlaylists = [];
+
+					return async.each(
+						playlists,
+						(playlist, nextPlaylist) => {
+							if (playlist.privacy === "public") filteredPlaylists.push(playlist);
+							return nextPlaylist();
+						},
+						() => next(null, filteredPlaylists)
+					);
+				}
+			],
+			async (err, playlists) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"PLAYLIST_INDEX_FOR_USER",
+						`Indexing playlists for user "${userId}" failed. "${err}"`
+					);
+					return cb({ status: "failure", message: err });
+				}
+
+				this.log("SUCCESS", "PLAYLIST_INDEX_FOR_USER", `Successfully indexed playlists for user "${userId}".`);
+
+				return cb({
+					status: "success",
+					data: playlists
+				});
+			}
+		);
+	},
+
+	/**
 	 * Gets all playlists for the user requesting it
 	 *
 	 * @param {object} session - the session object automatically added by socket.io
 	 * @param {boolean} showNonModifiablePlaylists - whether or not to show non modifiable playlists e.g. liked songs
 	 * @param {Function} cb - gets called with the result
 	 */
-	indexForUser: isLoginRequired(async function indexForUser(session, showNonModifiablePlaylists, cb) {
+	indexMyPlaylists: isLoginRequired(async function indexMyPlaylists(session, showNonModifiablePlaylists, cb) {
 		const playlistModel = await DBModule.runJob(
 			"GET_MODEL",
 			{
@@ -193,14 +306,14 @@ export default {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
 						"ERROR",
-						"PLAYLIST_INDEX_FOR_USER",
+						"PLAYLIST_INDEX_FOR_ME",
 						`Indexing playlists for user "${session.userId}" failed. "${err}"`
 					);
 					return cb({ status: "failure", message: err });
 				}
 				this.log(
 					"SUCCESS",
-					"PLAYLIST_INDEX_FOR_USER",
+					"PLAYLIST_INDEX_FOR_ME",
 					`Successfully indexed playlists for user "${session.userId}".`
 				);
 				return cb({
@@ -598,7 +711,8 @@ export default {
 					value: {
 						playlistId: playlist._id,
 						song: newSong,
-						userId: session.userId
+						userId: session.userId,
+						privacy: playlist.privacy
 					}
 				});
 				return cb({
@@ -801,7 +915,8 @@ export default {
 					value: {
 						playlistId: playlist._id,
 						songId,
-						userId: session.userId
+						userId: session.userId,
+						privacy: playlist.privacy
 					}
 				});
 				return cb({
@@ -858,7 +973,7 @@ export default {
 						.catch(next);
 				}
 			],
-			async err => {
+			async (err, playlist) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
@@ -878,7 +993,8 @@ export default {
 					value: {
 						playlistId,
 						displayName,
-						userId: session.userId
+						userId: session.userId,
+						privacy: playlist.privacy
 					}
 				});
 				return cb({
@@ -1232,6 +1348,7 @@ export default {
 	 *
 	 * @param {object} session - the session object automatically added by socket.io
 	 * @param {string} playlistId - the id of the playlist we are updating the privacy for
+	 * @param {string} privacy - what the new privacy of the playlist should be e.g. public
 	 * @param {Function} cb - gets called with the result
 	 */
 	updatePrivacy: isLoginRequired(async function updatePrivacy(session, playlistId, privacy, cb) {
@@ -1261,7 +1378,7 @@ export default {
 						.catch(next);
 				}
 			],
-			async err => {
+			async (err, playlist) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
@@ -1279,9 +1396,8 @@ export default {
 				CacheModule.runJob("PUB", {
 					channel: "playlist.updatePrivacy",
 					value: {
-						playlistId,
-						privacy,
-						userId: session.userId
+						userId: session.userId,
+						playlist
 					}
 				});
 				return cb({

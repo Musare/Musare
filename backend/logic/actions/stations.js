@@ -1529,8 +1529,7 @@ export default {
 
 				(station, next) => {
 					if (!station) return next("Station not found.");
-					if (station.theme === newTheme)
-						return next("No change in theme.");
+					if (station.theme === newTheme) return next("No change in theme.");
 					return stationModel.updateOne(
 						{ _id: stationId },
 						{ $set: { theme: newTheme } },

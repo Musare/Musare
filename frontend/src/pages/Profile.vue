@@ -232,6 +232,7 @@ export default {
 
 		io.getSocket(socket => {
 			this.socket = socket;
+
 			this.socket.emit(
 				"users.findByUsername",
 				this.$route.params.username,
@@ -245,16 +246,81 @@ export default {
 						);
 						this.isUser = true;
 
-						if (this.user._id === this.userId) {
+						if (this.user._id !== this.userId) {
 							this.socket.emit(
-								"playlists.indexForUser",
-								true,
-								res => {
-									if (res.status === "success")
-										this.playlists = res.data;
-								}
+								"apis.joinRoom",
+								`profile-${res.data._id}`,
+								() => {}
 							);
+						}
 
+						this.socket.emit(
+							"playlists.indexForUser",
+							this.user._id,
+							res => {
+								if (res.status === "success")
+									this.playlists = res.data;
+							}
+						);
+
+						this.socket.on("event:playlist.create", playlist => {
+							this.playlists.push(playlist);
+						});
+
+						this.socket.on("event:playlist.delete", playlistId => {
+							this.playlists.forEach((playlist, index) => {
+								if (playlist._id === playlistId) {
+									this.playlists.splice(index, 1);
+								}
+							});
+						});
+
+						this.socket.on("event:playlist.addSong", data => {
+							this.playlists.forEach((playlist, index) => {
+								if (playlist._id === data.playlistId) {
+									this.playlists[index].songs.push(data.song);
+								}
+							});
+						});
+
+						this.socket.on("event:playlist.removeSong", data => {
+							this.playlists.forEach((playlist, index) => {
+								if (playlist._id === data.playlistId) {
+									this.playlists[index].songs.forEach(
+										(song, index2) => {
+											if (song.songId === data.songId) {
+												this.playlists[
+													index
+												].songs.splice(index2, 1);
+											}
+										}
+									);
+								}
+							});
+						});
+
+						this.socket.on(
+							"event:playlist.updateDisplayName",
+							data => {
+								this.playlists.forEach((playlist, index) => {
+									if (playlist._id === data.playlistId) {
+										this.playlists[index].displayName =
+											data.displayName;
+									}
+								});
+							}
+						);
+
+						this.socket.on("event:playlist.updatePrivacy", data => {
+							this.playlists.forEach((playlist, index) => {
+								if (playlist._id === data.playlistId) {
+									this.playlists[index].privacy =
+										data.privacy;
+								}
+							});
+						});
+
+						if (this.user._id === this.userId) {
 							this.socket.emit(
 								"activities.getSet",
 								this.userId,
@@ -286,101 +352,6 @@ export default {
 									this.formatActivity(activity, activity => {
 										this.activities.unshift(activity);
 									});
-								}
-							);
-
-							this.socket.on(
-								"event:playlist.create",
-								playlist => {
-									this.playlists.push(playlist);
-								}
-							);
-
-							this.socket.on(
-								"event:playlist.delete",
-								playlistId => {
-									this.playlists.forEach(
-										(playlist, index) => {
-											if (playlist._id === playlistId) {
-												this.playlists.splice(index, 1);
-											}
-										}
-									);
-								}
-							);
-
-							this.socket.on("event:playlist.addSong", data => {
-								this.playlists.forEach((playlist, index) => {
-									if (playlist._id === data.playlistId) {
-										this.playlists[index].songs.push(
-											data.song
-										);
-									}
-								});
-							});
-
-							this.socket.on(
-								"event:playlist.removeSong",
-								data => {
-									this.playlists.forEach(
-										(playlist, index) => {
-											if (
-												playlist._id === data.playlistId
-											) {
-												this.playlists[
-													index
-												].songs.forEach(
-													(song, index2) => {
-														if (
-															song.songId ===
-															data.songId
-														) {
-															this.playlists[
-																index
-															].songs.splice(
-																index2,
-																1
-															);
-														}
-													}
-												);
-											}
-										}
-									);
-								}
-							);
-
-							this.socket.on(
-								"event:playlist.updateDisplayName",
-								data => {
-									this.playlists.forEach(
-										(playlist, index) => {
-											if (
-												playlist._id === data.playlistId
-											) {
-												this.playlists[
-													index
-												].displayName =
-													data.displayName;
-											}
-										}
-									);
-								}
-							);
-
-							this.socket.on(
-								"event:playlist.updatePrivacy",
-								data => {
-									this.playlists.forEach(
-										(playlist, index) => {
-											if (
-												playlist._id === data.playlistId
-											) {
-												this.playlists[index].privacy =
-													data.privacy;
-											}
-										}
-									);
 								}
 							);
 						}

@@ -239,7 +239,7 @@ export default {
 	mounted() {
 		io.getSocket(socket => {
 			this.socket = socket;
-			this.socket.emit("playlists.indexForUser", true, res => {
+			this.socket.emit("playlists.indexMyPlaylists", true, res => {
 				if (res.status === "success") this.playlists = res.data;
 			});
 		});
