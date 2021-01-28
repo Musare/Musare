@@ -85,7 +85,11 @@
 				</footer>
 			</div>
 		</div>
-		<view-punishment v-if="modals.viewPunishment" />
+		<view-punishment
+			v-if="modals.viewPunishment"
+			:punishment-id="viewingPunishmentId"
+			sector="admin"
+		/>
 	</div>
 </template>
 
@@ -100,6 +104,7 @@ export default {
 	components: { ViewPunishment },
 	data() {
 		return {
+			viewingPunishmentId: "",
 			punishments: [],
 			ipBan: {
 				expiresAt: "1h"
@@ -127,7 +132,8 @@ export default {
 	},
 	methods: {
 		view(punishment) {
-			this.viewPunishment(punishment);
+			// this.viewPunishment(punishment);
+			this.viewingPunishmentId = punishment._id;
 			this.openModal({ sector: "admin", modal: "viewPunishment" });
 		},
 		banIP() {

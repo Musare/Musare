@@ -94,22 +94,6 @@ const modules = {
 			}
 		}
 	},
-	punishments: {
-		namespaced: true,
-		state: {
-			punishment: {}
-		},
-		getters: {},
-		actions: {
-			viewPunishment: ({ commit }, punishment) =>
-				commit("viewPunishment", punishment)
-		},
-		mutations: {
-			viewPunishment(state, punishment) {
-				state.punishment = punishment;
-			}
-		}
-	},
 	users: {
 		namespaced: true,
 		state: {},

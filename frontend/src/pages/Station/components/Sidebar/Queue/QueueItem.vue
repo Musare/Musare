@@ -148,7 +148,7 @@ export default {
 	#duration-and-actions {
 		margin-left: 5px;
 	}
-	
+
 	#queue-item-buttons {
 		display: flex;
 		flex-direction: row;

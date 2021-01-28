@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<modal title="View Punishment">
-			<div slot="body">
+			<div slot="body" v-if="punishment && punishment._id">
 				<article class="message">
 					<div class="message-body">
 						<strong>Type:</strong>
@@ -60,7 +60,7 @@
 					class="button is-danger"
 					@click="
 						closeModal({
-							sector: 'admin',
+							sector,
 							modal: 'viewPunishment'
 						})
 					"
@@ -76,30 +76,57 @@
 import { mapState, mapActions } from "vuex";
 import { format, formatDistance, parseISO } from "date-fns"; // eslint-disable-line no-unused-vars
 
+import Toast from "toasters";
 import io from "../../io";
 import Modal from "../../components/Modal.vue";
 import UserIdToUsername from "../../components/common/UserIdToUsername.vue";
 
 export default {
 	components: { Modal, UserIdToUsername },
+	props: {
+		punishmentId: { type: String, default: "" },
+		sector: { type: String, default: "admin" }
+	},
 	data() {
 		return {
 			ban: {}
 		};
 	},
 	computed: {
-		...mapState("admin/punishments", {
+		...mapState("viewPunishmentModal", {
 			punishment: state => state.punishment
 		})
 	},
 	mounted() {
 		io.getSocket(socket => {
 			this.socket = socket;
+
+			this.socket.emit(
+				`punishments.getPunishmentById`,
+				this.punishmentId,
+				res => {
+					if (res.status === "success") {
+						const punishment = res.data;
+						this.viewPunishment(punishment);
+					} else {
+						new Toast({
+							content: "Punishment with that ID not found",
+							timeout: 3000
+						});
+						this.closeModal({
+							sector: this.sector,
+							modal: "viewPunishment"
+						});
+					}
+				}
+			);
+
 			return socket;
 		});
 	},
 	methods: {
 		...mapActions("modals", ["closeModal"]),
+		...mapActions("viewPunishmentModal", ["viewPunishment"]),
 		format,
 		formatDistance,
 		parseISO

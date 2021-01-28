@@ -59,6 +59,43 @@ export default {
 	}),
 
 	/**
+	 * Gets a punishment by id
+	 *
+	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {string} punishmentId - the punishment id
+	 * @param {Function} cb - gets called with the result
+	 */
+	getPunishmentById: isAdminRequired(async function index(session, punishmentId, cb) {
+		const punishmentModel = await DBModule.runJob(
+			"GET_MODEL",
+			{
+				modelName: "punishment"
+			},
+			this
+		);
+		async.waterfall(
+			[
+				next => {
+					punishmentModel.findOne({ _id: punishmentId }, next);
+				}
+			],
+			async (err, punishment) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"GET_PUNISHMENT_BY_ID",
+						`Getting punishment with id ${punishmentId} failed. "${err}"`
+					);
+					return cb({ status: "failure", message: err });
+				}
+				this.log("SUCCESS", "GET_PUNISHMENT_BY_ID", `Got punishment with id ${punishmentId} successful.`);
+				return cb({ status: "success", data: punishment });
+			}
+		);
+	}),
+
+	/**
 	 * Bans an IP address
 	 *
 	 * @param {object} session - the session object automatically added by socket.io

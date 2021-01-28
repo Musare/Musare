@@ -28,7 +28,7 @@ class _PunishmentsModule extends CoreClass {
 		UtilsModule = this.moduleManager.modules.utils;
 
 		this.punishmentModel = this.PunishmentModel = await DBModule.runJob("GET_MODEL", { modelName: "punishment" });
-		this.punishmentSchemaCache = await DBModule.runJob("GET_SCHEMA", { schemaName: "punishment" });
+		this.punishmentSchemaCache = await CacheModule.runJob("GET_SCHEMA", { schemaName: "punishment" });
 
 		return new Promise((resolve, reject) =>
 			async.waterfall(
@@ -120,16 +120,14 @@ class _PunishmentsModule extends CoreClass {
 							.catch(next);
 					},
 
-					(punishments, next) => {
-						let filteredPunishments = [];
-
-						Object.keys(punishments).forEach(punishmentKey => {
-							const punishment = punishments[punishmentKey];
+					(punishmentsObj, next) => {
+						const punishments = Object.keys(punishmentsObj).map(punishmentKey => {
+							const punishment = punishmentsObj[punishmentKey];
 							punishment.punishmentId = punishmentKey;
-							punishments.push(punishment);
+							return punishment;
 						});
 
-						filteredPunishments = punishments.filter(punishment => {
+						const filteredPunishments = punishments.filter(punishment => {
 							if (punishment.expiresAt < Date.now()) punishmentsToRemove.push(punishment);
 							return punishment.expiresAt > Date.now();
 						});
@@ -294,13 +292,8 @@ class _PunishmentsModule extends CoreClass {
 							},
 							this
 						)
-							.then(() => next())
+							.then(() => next(null, punishment))
 							.catch(next);
-					},
-
-					(punishment, next) => {
-						// DISCORD MESSAGE
-						next(null, punishment);
 					}
 				],
 				(err, punishment) => {
