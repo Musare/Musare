@@ -11,6 +11,7 @@ import editStationModal from "./modules/editStationModal";
 import editUserModal from "./modules/editUserModal";
 import editNewsModal from "./modules/editNewsModal";
 import viewPunishmentModal from "./modules/viewPunishmentModal";
+import viewReportModal from "./modules/viewReportModal";
 
 Vue.use(Vuex);
 
@@ -25,7 +26,8 @@ export default new Vuex.Store({
 		editStationModal,
 		editUserModal,
 		editNewsModal,
-		viewPunishmentModal
+		viewPunishmentModal,
+		viewReportModal
 	},
 	strict: false
 });

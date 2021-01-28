@@ -1,6 +1,6 @@
 <template>
-	<modal title="Report">
-		<div slot="body">
+	<modal title="View Report">
+		<div slot="body" v-if="report && report._id">
 			<router-link
 				v-if="$route.query.returnToSong"
 				class="button is-dark back-to-song"
@@ -61,7 +61,7 @@
 				</tbody>
 			</table>
 		</div>
-		<div slot="footer">
+		<div slot="footer" v-if="report && report._id">
 			<a class="button is-primary" href="#" @click="resolve(report._id)">
 				<span>Resolve</span>
 			</a>
@@ -76,7 +76,7 @@
 				class="button is-danger"
 				@click="
 					closeModal({
-						sector: 'admin',
+						sector,
 						modal: 'viewReport'
 					})
 				"
@@ -93,20 +93,48 @@ import { mapActions, mapState } from "vuex";
 import { formatDistance } from "date-fns";
 import Toast from "toasters";
 
+import io from "../../io";
+
 import UserIdToUsername from "../../components/common/UserIdToUsername.vue";
 import Modal from "../../components/Modal.vue";
 
 export default {
 	components: { Modal, UserIdToUsername },
+	props: {
+		reportId: { type: String, default: "" },
+		sector: { type: String, default: "admin" }
+	},
 	computed: {
-		...mapState("admin/reports", {
+		...mapState("viewReportModal", {
 			report: state => state.report
 		})
 	},
 	mounted() {
 		if (this.$route.query.returnToSong) {
-			this.closeModal({ sector: "admin", modal: "editSong" });
+			this.closeModal({ sector: this.sector, modal: "editSong" });
 		}
+
+		io.getSocket(socket => {
+			this.socket = socket;
+
+			this.socket.emit(`reports.findOne`, this.reportId, res => {
+				if (res.status === "success") {
+					const report = res.data;
+					this.viewReport(report);
+				} else {
+					new Toast({
+						content: "Report with that ID not found",
+						timeout: 3000
+					});
+					this.closeModal({
+						sector: this.sector,
+						modal: "viewReport"
+					});
+				}
+			});
+
+			return socket;
+		});
 	},
 	methods: {
 		formatDistance,
@@ -115,7 +143,7 @@ export default {
 				.then(res => {
 					if (res.status === "success")
 						this.closeModal({
-							sector: "admin",
+							sector: this.sector,
 							modal: "viewReport"
 						});
 				})
@@ -123,7 +151,7 @@ export default {
 					err => new Toast({ content: err.message, timeout: 5000 })
 				);
 		},
-		...mapActions("admin/reports", ["resolveReport"]),
+		...mapActions("viewReportModal", ["viewReport", "resolveReport"]),
 		...mapActions("modals", ["closeModal"])
 	}
 };

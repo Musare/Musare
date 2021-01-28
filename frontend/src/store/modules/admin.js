@@ -68,12 +68,9 @@ const modules = {
 	},
 	reports: {
 		namespaced: true,
-		state: {
-			report: {}
-		},
+		state: {},
 		getters: {},
 		actions: {
-			viewReport: ({ commit }, report) => commit("viewReport", report),
 			/* eslint-disable-next-line no-unused-vars */
 			resolveReport: ({ commit }, reportId) => {
 				return new Promise((resolve, reject) => {
@@ -88,11 +85,7 @@ const modules = {
 				});
 			}
 		},
-		mutations: {
-			viewReport(state, report) {
-				state.report = report;
-			}
-		}
+		mutations: {}
 	},
 	users: {
 		namespaced: true,

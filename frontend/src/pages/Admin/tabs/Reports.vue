@@ -58,7 +58,11 @@
 			</table>
 		</div>
 
-		<issues-modal v-if="modals.viewReport" />
+		<view-report
+			v-if="modals.viewReport"
+			:report-id="viewingReportId"
+			sector="admin"
+		/>
 	</div>
 </template>
 
@@ -69,13 +73,14 @@ import { formatDistance } from "date-fns";
 import Toast from "toasters";
 import io from "../../../io";
 
-import IssuesModal from "../IssuesModal.vue";
+import ViewReport from "../ViewReport.vue";
 import UserIdToUsername from "../../../components/common/UserIdToUsername.vue";
 
 export default {
-	components: { IssuesModal, UserIdToUsername },
+	components: { ViewReport, UserIdToUsername },
 	data() {
 		return {
+			viewingReportId: "",
 			reports: []
 		};
 	},
@@ -125,7 +130,8 @@ export default {
 			this.socket.emit("apis.joinAdminRoom", "reports", () => {});
 		},
 		view(report) {
-			this.viewReport(report);
+			// this.viewReport(report);
+			this.viewingReportId = report._id;
 			this.openModal({ sector: "admin", modal: "viewReport" });
 		},
 		resolve(reportId) {
@@ -142,7 +148,7 @@ export default {
 				);
 		},
 		...mapActions("modals", ["openModal", "closeModal"]),
-		...mapActions("admin/reports", ["viewReport", "resolveReport"])
+		...mapActions("admin/reports", ["resolveReport"])
 	}
 };
 </script>
