@@ -144,9 +144,11 @@ export default {
 		display: flex;
 		align-items: center;
 	}
+
 	#duration-and-actions {
 		margin-left: 5px;
 	}
+	
 	#queue-item-buttons {
 		display: flex;
 		flex-direction: row;
@@ -162,11 +164,16 @@ export default {
 		border-radius: 3px 0 0 3px;
 	}
 
+	#thumbnail-and-info {
+		width: calc(100% - 120px);
+	}
+
 	#song-info {
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
 		margin-left: 20px;
+		width: calc(100% - 65px);
 
 		*:not(i) {
 			margin: 0;
@@ -175,10 +182,16 @@ export default {
 
 		#song-title {
 			font-size: 20px;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
 		}
 
 		#song-artists {
 			font-size: 14px;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
 		}
 
 		#song-request-time {

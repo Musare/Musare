@@ -65,7 +65,6 @@ export default {
 			});
 
 			this.socket.on("event:songs.next", () => {
-				console.log("next song");
 				this.checkIfPlaylistsHaveSong();
 			});
 
