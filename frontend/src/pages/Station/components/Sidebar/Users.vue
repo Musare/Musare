@@ -81,10 +81,10 @@ export default {
 			border: 0.5px $light-grey-2 solid;
 			border-radius: 3px;
 			cursor: pointer;
-			color: #000 !important;
 
 			&:hover {
 				background-color: #eee;
+				color: #000 !important;
 			}
 
 			img {

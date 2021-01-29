@@ -112,7 +112,7 @@ export default {
 @import "../../../../../styles/global.scss";
 
 .night-mode {
-	#queue-items {
+	#queue {
 		background-color: $night-mode-bg-secondary !important;
 		border: 0 !important;
 	}
