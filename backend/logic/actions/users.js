@@ -645,7 +645,7 @@ export default {
 				next => {
 					userModel.updateOne(
 						{ _id: session.userId },
-						{ $set: { preferences: { orderOfPlaylists } } },
+						{ $set: { "preferences.orderOfPlaylists": orderOfPlaylists } },
 						{ runValidators: true },
 						next
 					);
@@ -683,7 +683,7 @@ export default {
 	 *
 	 * @param {object} session - the session object automatically added by socket.io
 	 * @param {object} preferences - object containing preferences
-	 * @param {boolean} preferences.nightMode - whether or not the user is using the night mode theme
+	 * @param {boolean} preferences.nightmode - whether or not the user is using the night mode theme
 	 * @param {boolean} preferences.autoSkipDisliked - whether to automatically skip disliked songs
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -695,7 +695,12 @@ export default {
 				next => {
 					userModel.updateOne(
 						{ _id: session.userId },
-						{ $set: { preferences } },
+						{
+							$set: {
+								nightmode: preferences.nightmode,
+								autoSkipDisliked: preferences.autoSkipDisliked
+							}
+						},
 						{ runValidators: true },
 						next
 					);
