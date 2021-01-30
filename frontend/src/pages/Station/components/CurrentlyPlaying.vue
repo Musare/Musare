@@ -123,8 +123,7 @@ export default {
 
 	.thumbnail {
 		min-width: 130px;
-		max-height: 130px;
-		height: 100%;
+		height: 130px;
 		position: relative;
 		margin-top: -15px;
 		margin-bottom: -15px;

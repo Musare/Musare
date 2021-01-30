@@ -329,15 +329,19 @@ export default {
 		});
 
 		if (this.$route.query.songId) {
-			this.socket.emit("songs.getSong", this.$route.query.songId, res => {
-				if (res.status === "success") {
-					this.edit(res.data.song);
-				} else
-					new Toast({
-						content: "Song with that ID not found",
-						timeout: 3000
-					});
-			});
+			this.socket.emit(
+				"songs.getSongFromMusareId",
+				this.$route.query.songId,
+				res => {
+					if (res.status === "success") {
+						this.edit(res.data.song);
+					} else
+						new Toast({
+							content: "Song with that ID not found",
+							timeout: 3000
+						});
+				}
+			);
 		}
 	},
 	methods: {

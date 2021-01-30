@@ -67,7 +67,7 @@
 			</a>
 			<a
 				class="button is-primary"
-				:href="`/admin/songs?songId=${report.song.songId}`"
+				:href="`/admin/songs?songId=${report.song._id}`"
 				target="_blank"
 			>
 				<span>Go to song</span>

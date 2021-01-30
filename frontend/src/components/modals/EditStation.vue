@@ -160,57 +160,6 @@
 							</div>
 						</div>
 					</div>
-
-					<!--  Choose a playlist -->
-					<div
-						v-if="
-							station.type === 'community' &&
-								!station.partyMode &&
-								playlists.length > 0
-						"
-					>
-						<hr style="margin: 10px 0 20px 0" />
-
-						<h4 class="section-title">Choose a playlist</h4>
-						<p class="section-description">
-							Choose one of your playlists to add to the queue.
-						</p>
-
-						<br />
-
-						<div id="playlists">
-							<playlist-item
-								:playlist="playlist"
-								v-for="(playlist, index) in playlists"
-								:key="index"
-							>
-								<div slot="actions">
-									<a
-										class="button is-danger"
-										href="#"
-										@click="deselectPlaylist()"
-										v-if="isPlaylistSelected(playlist._id)"
-									>
-										<i
-											class="material-icons icon-with-button"
-											>stop</i
-										>
-										Stop playing
-									</a>
-									<a
-										class="button is-success"
-										href="#"
-										@click="selectPlaylist(playlist._id)"
-										v-else
-										><i
-											class="material-icons icon-with-button"
-											>play_arrow</i
-										>Play in queue
-									</a>
-								</div>
-							</playlist-item>
-						</div>
-					</div>
 				</div>
 
 				<!--  Buttons changing the privacy settings -->
@@ -479,14 +428,13 @@ import { mapState, mapActions } from "vuex";
 
 import Toast from "toasters";
 
-import PlaylistItem from "../ui/PlaylistItem.vue";
 import Modal from "../Modal.vue";
 
 import io from "../../io";
 import validation from "../../validation";
 
 export default {
-	components: { Modal, PlaylistItem },
+	components: { Modal },
 	props: {
 		stationId: { type: String, default: "" },
 		sector: { type: String, default: "admin" }
@@ -552,8 +500,7 @@ export default {
 					style: "orange",
 					iconName: "link"
 				}
-			},
-			playlists: []
+			}
 		};
 	},
 	computed: {
@@ -597,88 +544,10 @@ export default {
 				}
 			});
 
-			this.socket.emit("playlists.indexMyPlaylists", true, res => {
-				if (res.status === "success") this.playlists = res.data;
-			});
-
-			this.socket.on("event:playlist.create", playlist => {
-				this.playlists.push(playlist);
-			});
-			this.socket.on("event:playlist.delete", playlistId => {
-				this.playlists.forEach((playlist, index) => {
-					if (playlist._id === playlistId) {
-						this.playlists.splice(index, 1);
-					}
-				});
-			});
-			this.socket.on("event:playlist.addSong", data => {
-				this.playlists.forEach((playlist, index) => {
-					if (playlist._id === data.playlistId) {
-						this.playlists[index].songs.push(data.song);
-					}
-				});
-			});
-			this.socket.on("event:playlist.removeSong", data => {
-				this.playlists.forEach((playlist, index) => {
-					if (playlist._id === data.playlistId) {
-						this.playlists[index].songs.forEach((song, index2) => {
-							if (song.songId === data.songId) {
-								this.playlists[index].songs.splice(index2, 1);
-							}
-						});
-					}
-				});
-			});
-			this.socket.on("event:playlist.updateDisplayName", data => {
-				this.playlists.forEach((playlist, index) => {
-					if (playlist._id === data.playlistId) {
-						this.playlists[index].displayName = data.displayName;
-					}
-				});
-			});
-
 			return socket;
 		});
 	},
 	methods: {
-		isPlaylistSelected(id) {
-			// TODO Also change this once it changes for a station
-			if (
-				this.originalStation &&
-				this.originalStation.privatePlaylist === id
-			)
-				return true;
-			return false;
-		},
-		selectPlaylist(playlistId) {
-			this.socket.emit(
-				"stations.selectPrivatePlaylist",
-				this.originalStation._id,
-				playlistId,
-				res => {
-					if (res.status === "failure")
-						return new Toast({
-							content: res.message,
-							timeout: 8000
-						});
-					return new Toast({ content: res.message, timeout: 4000 });
-				}
-			);
-		},
-		deselectPlaylist() {
-			this.socket.emit(
-				"stations.deselectPrivatePlaylist",
-				this.originalStation._id,
-				res => {
-					if (res.status === "failure")
-						return new Toast({
-							content: res.message,
-							timeout: 8000
-						});
-					return new Toast({ content: res.message, timeout: 4000 });
-				}
-			);
-		},
 		update() {
 			if (this.originalStation.name !== this.station.name)
 				this.updateName();
@@ -1378,6 +1247,14 @@ export default {
 			background-color: $yellow;
 		}
 
+		&.purple {
+			background-color: $purple;
+		}
+
+		&.teal {
+			background-color: $teal;
+		}
+
 		i {
 			font-size: 20px;
 			margin-right: 4px;
@@ -1404,18 +1281,6 @@ export default {
 
 .slide-down-enter {
 	transform: translateY(-10px);
-}
-
-#playlists {
-	overflow: auto;
-
-	.playlist:not(:last-of-type) {
-		margin-bottom: 10px;
-	}
-
-	.button {
-		width: 148px;
-	}
 }
 
 .modal-card {

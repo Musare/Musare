@@ -1932,7 +1932,7 @@ export default {
 	justify-content: center;
 }
 
-@media (max-width: 1300px) {
+@media (max-width: 950px) {
 	#station-outer-container {
 		padding: 10px;
 		height: unset;

@@ -12,10 +12,15 @@
 					:style="
 						song.artists.length < 1 ? { fontSize: '16px' } : null
 					"
+					:title="song.title"
 				>
 					{{ song.title }}
 				</h4>
-				<h5 id="song-artists" v-if="song.artists">
+				<h5
+					id="song-artists"
+					v-if="song.artists"
+					:title="song.artists.join(', ')"
+				>
 					{{ song.artists.join(", ") }}
 				</h5>
 				<p
