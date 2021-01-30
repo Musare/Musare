@@ -76,15 +76,6 @@ export default {
 			else this.disableNightMode();
 		}
 	},
-	beforeMount() {
-		const nightmode =
-			false || JSON.parse(localStorage.getItem("nightmode"));
-
-		this.changeNightmode(nightmode);
-
-		if (nightmode) this.enableNightMode();
-		else this.disableNightMode();
-	},
 	mounted() {
 		document.onkeydown = ev => {
 			const event = ev || window.event;
@@ -153,9 +144,21 @@ export default {
 			}
 		});
 		io.getSocket(true, socket => {
-			socket.on("keep.event:user.session.removed", () => {
-				window.location.reload();
+			this.socket = socket;
+
+			this.socket.emit("users.getPreferences", res => {
+				if (res.status === "success") {
+					this.changeAutoSkipDisliked(res.data.autoSkipDisliked);
+
+					this.changeNightmode(res.data.nightmode);
+					if (this.nightmode) this.enableNightMode();
+					else this.disableNightMode();
+				}
 			});
+
+			this.socket.on("keep.event:user.session.removed", () =>
+				window.location.reload()
+			);
 		});
 	},
 	methods: {
@@ -173,7 +176,10 @@ export default {
 				.classList.remove("night-mode");
 		},
 		...mapActions("modals", ["closeCurrentModal"]),
-		...mapActions("user/preferences", ["changeNightmode"])
+		...mapActions("user/preferences", [
+			"changeNightmode",
+			"changeAutoSkipDisliked"
+		])
 	}
 };
 </script>

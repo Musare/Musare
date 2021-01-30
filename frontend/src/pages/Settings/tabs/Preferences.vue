@@ -1,5 +1,13 @@
 <template>
 	<div class="content preferences-tab">
+		<h4 class="section-title">Change preferences</h4>
+
+		<p class="section-description">
+			Tailor these settings to your liking.
+		</p>
+
+		<hr class="section-horizontal-rule" />
+
 		<p class="control is-expanded checkbox-control">
 			<input type="checkbox" id="nightmode" v-model="localNightmode" />
 			<label for="nightmode">
@@ -18,16 +26,28 @@
 				<p>Automatically vote to skip disliked songs</p>
 			</label>
 		</p>
-		<button class="button is-primary save-changes" @click="saveChanges()">
-			Save changes
-		</button>
+		<transition name="saving-changes-transition" mode="out-in">
+			<button
+				class="button save-changes"
+				:class="saveButtonStyle"
+				@click="saveChanges()"
+				:key="saveStatus"
+				:disabled="saveStatus === 'disabled'"
+				v-html="saveButtonMessage"
+			/>
+		</transition>
 	</div>
 </template>
 
 <script>
 import { mapState, mapActions } from "vuex";
+import Toast from "toasters";
+
+import io from "../../../io";
+import SaveButton from "../mixins/SaveButton.vue";
 
 export default {
+	mixins: [SaveButton],
 	data() {
 		return {
 			localNightmode: false,
@@ -39,26 +59,59 @@ export default {
 		autoSkipDisliked: state => state.user.preferences.autoSkipDisliked
 	}),
 	mounted() {
-		this.localNightmode = this.nightmode;
-		this.localAutoSkipDisliked = this.autoSkipDisliked;
+		io.getSocket(socket => {
+			this.socket = socket;
+
+			this.socket.emit("users.getPreferences", res => {
+				if (res.status === "success") {
+					this.localNightmode = res.data.nightmode;
+					this.localAutoSkipDisliked = res.data.autoSkipDisliked;
+				}
+			});
+
+			socket.on("keep.event:user.preferences.changed", preferences => {
+				this.localNightmode = preferences.nightmode;
+				this.localAutoSkipDisliked = preferences.autoSkipDisliked;
+			});
+		});
 	},
 	methods: {
 		saveChanges() {
-			if (this.localNightmode !== this.nightmode)
-				this.changeNightmodeLocal();
-			if (this.localAutoSkipDisliked !== this.autoSkipDisliked)
-				this.changeAutoSkipDislikedLocal();
-		},
-		changeNightmodeLocal() {
-			localStorage.setItem("nightmode", this.localNightmode);
-			this.changeNightmode(this.localNightmode);
-		},
-		changeAutoSkipDislikedLocal() {
-			localStorage.setItem(
-				"autoSkipDisliked",
-				this.localAutoSkipDisliked
+			if (
+				this.localNightmode === this.nightmode &&
+				this.localAutoSkipDisliked === this.autoSkipDisliked
+			) {
+				new Toast({
+					content: "Please make a change before saving.",
+					timeout: 5000
+				});
+
+				return this.failedSave();
+			}
+
+			this.saveStatus = "disabled";
+
+			return this.socket.emit(
+				"users.updatePreferences",
+				{
+					nightmode: this.localNightmode,
+					autoSkipDisliked: this.localAutoSkipDisliked
+				},
+				res => {
+					if (res.status !== "success") {
+						new Toast({ content: res.message, timeout: 8000 });
+
+						return this.failedSave();
+					}
+
+					new Toast({
+						content: "Successfully updated preferences",
+						timeout: 4000
+					});
+
+					return this.successfulSave();
+				}
 			);
-			this.changeAutoSkipDisliked(this.localAutoSkipDisliked);
 		},
 		...mapActions("user/preferences", [
 			"changeNightmode",

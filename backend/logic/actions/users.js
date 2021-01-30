@@ -19,6 +19,17 @@ const ActivitiesModule = moduleManager.modules.activities;
 const PlaylistsModule = moduleManager.modules.playlists;
 
 CacheModule.runJob("SUB", {
+	channel: "user.updatePreferences",
+	cb: res => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }).then(response => {
+			response.sockets.forEach(socket => {
+				socket.emit("keep.event:user.preferences.changed", res.preferences);
+			});
+		});
+	}
+});
+
+CacheModule.runJob("SUB", {
 	channel: "user.updateUsername",
 	cb: user => {
 		IOModule.runJob("SOCKETS_FROM_USER", { userId: user._id }).then(response => {
@@ -619,6 +630,13 @@ export default {
 		);
 	}),
 
+	/**
+	 * Updates the order of a user's playlists
+	 *
+	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {Array} orderOfPlaylists - array of playlist ids (with a specific order)
+	 * @param {Function} cb - gets called with the result
+	 */
 	updateOrderOfPlaylists: isLoginRequired(async function updateOrderOfPlaylists(session, orderOfPlaylists, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
@@ -655,6 +673,107 @@ export default {
 				return cb({
 					status: "success",
 					message: "Order of playlists successfully updated"
+				});
+			}
+		);
+	}),
+
+	/**
+	 * Updates a user's preferences
+	 *
+	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} preferences - object containing preferences
+	 * @param {boolean} preferences.nightMode - whether or not the user is using the night mode theme
+	 * @param {boolean} preferences.autoSkipDisliked - whether to automatically skip disliked songs
+	 * @param {Function} cb - gets called with the result
+	 */
+	updatePreferences: isLoginRequired(async function updatePreferences(session, preferences, cb) {
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+
+		async.waterfall(
+			[
+				next => {
+					userModel.updateOne(
+						{ _id: session.userId },
+						{ $set: { preferences } },
+						{ runValidators: true },
+						next
+					);
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+
+					this.log(
+						"ERROR",
+						"UPDATE_USER_PREFERENCES",
+						`Couldn't update preferences for user "${session.userId}" to "${preferences}". "${err}"`
+					);
+
+					return cb({ status: "failure", message: err });
+				}
+
+				CacheModule.runJob("PUB", {
+					channel: "user.updatePreferences",
+					value: {
+						preferences,
+						userId: session.userId
+					}
+				});
+
+				this.log(
+					"SUCCESS",
+					"UPDATE_USER_PREFERENCES",
+					`Updated preferences for user "${session.userId}" to "${preferences}".`
+				);
+
+				return cb({
+					status: "success",
+					message: "Preferences successfully updated"
+				});
+			}
+		);
+	}),
+
+	/**
+	 * Retrieves a user's preferences
+	 *
+	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {Function} cb - gets called with the result
+	 */
+	getPreferences: isLoginRequired(async function updatePreferences(session, cb) {
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+
+		async.waterfall(
+			[
+				next => {
+					userModel.findById(session.userId).select({ preferences: -1 }).exec(next);
+				}
+			],
+			async (err, { preferences }) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+
+					this.log(
+						"ERROR",
+						"GET_USER_PREFERENCES",
+						`Couldn't retrieve preferences for user "${session.userId}". "${err}"`
+					);
+
+					return cb({ status: "failure", message: err });
+				}
+
+				this.log(
+					"SUCCESS",
+					"GET_USER_PREFERENCES",
+					`Successfully obtained preferences for user "${session.userId}".`
+				);
+
+				return cb({
+					status: "success",
+					message: "Preferences successfully retrieved",
+					data: preferences
 				});
 			}
 		);

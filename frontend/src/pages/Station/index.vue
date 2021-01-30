@@ -442,12 +442,6 @@ export default {
 			autoSkipDisliked: state => state.user.preferences.autoSkipDisliked
 		})
 	},
-	beforeMount() {
-		const autoSkipDisliked =
-			true || JSON.parse(localStorage.getItem("autoSkipDisliked"));
-
-		this.changeAutoSkipDisliked(autoSkipDisliked);
-	},
 	mounted() {
 		window.scrollTo(0, 0);
 
@@ -1507,8 +1501,7 @@ export default {
 			"updateNoSong",
 			"updateIfStationIsFavorited"
 		]),
-		...mapActions("editSongModal", ["stopVideo"]),
-		...mapActions("user/preferences", ["changeAutoSkipDisliked"])
+		...mapActions("editSongModal", ["stopVideo"])
 	}
 };
 </script>

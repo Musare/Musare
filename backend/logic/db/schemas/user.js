@@ -41,7 +41,7 @@ export default {
 	createdAt: { type: Date, default: Date.now },
 	preferences: {
 		orderOfPlaylists: [{ type: mongoose.Schema.Types.ObjectId }],
-		nightMode: { type: Boolean, default: false },
-		autoSkipDisabled: { type: Boolean, default: true }
+		nightmode: { type: Boolean, default: false, required: true },
+		autoSkipDisliked: { type: Boolean, default: true, required: true }
 	}
 };

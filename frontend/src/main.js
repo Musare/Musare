@@ -148,12 +148,26 @@ lofig.get("serverDomain").then(serverDomain => {
 			});
 		});
 
-		socket.on("keep.event:banned", ban => {
-			store.dispatch("user/auth/banUser", ban);
-		});
+		socket.on("keep.event:banned", ban =>
+			store.dispatch("user/auth/banUser", ban)
+		);
 
-		socket.on("event:user.username.changed", username => {
-			store.dispatch("user/auth/updateUsername", username);
+		socket.on("event:user.username.changed", username =>
+			store.dispatch("user/auth/updateUsername", username)
+		);
+
+		socket.on("keep.event:user.preferences.changed", preferences => {
+			console.log("changed");
+
+			store.dispatch(
+				"user/preferences/changeAutoSkipDisliked",
+				preferences.autoSkipDisliked
+			);
+
+			store.dispatch(
+				"user/preferences/changeNightmode",
+				preferences.nightmode
+			);
 		});
 	});
 });
