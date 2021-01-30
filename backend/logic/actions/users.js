@@ -545,6 +545,7 @@ export default {
 	 */
 	removeSessions: isLoginRequired(async function removeSessions(session, userId, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+
 		async.waterfall(
 			[
 				next => {
@@ -613,6 +614,47 @@ export default {
 				return cb({
 					status: "success",
 					message: "Successfully removed all sessions."
+				});
+			}
+		);
+	}),
+
+	updateOrderOfPlaylists: isLoginRequired(async function updateOrderOfPlaylists(session, orderOfPlaylists, cb) {
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+
+		async.waterfall(
+			[
+				next => {
+					userModel.updateOne(
+						{ _id: session.userId },
+						{ $set: { preferences: { orderOfPlaylists } } },
+						{ runValidators: true },
+						next
+					);
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+
+					this.log(
+						"ERROR",
+						"UPDATE_ORDER_OF_USER_PLAYLISTS",
+						`Couldn't update order of playlists for user "${session.userId}" to "${orderOfPlaylists}". "${err}"`
+					);
+
+					return cb({ status: "failure", message: err });
+				}
+
+				this.log(
+					"SUCCESS",
+					"UPDATE_ORDER_OF_USER_PLAYLISTS",
+					`Updated order of playlists for user "${session.userId}" to "${orderOfPlaylists}".`
+				);
+
+				return cb({
+					status: "success",
+					message: "Order of playlists successfully updated"
 				});
 			}
 		);

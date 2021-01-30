@@ -1,8 +1,22 @@
 <template>
 	<div id="my-playlists">
-		<ul class="menu-list scrollable-list" v-if="playlists.length > 0">
-			<li v-for="(playlist, index) in playlists" :key="index">
-				<playlist-item :playlist="playlist">
+		<draggable
+			class="menu-list scrollable-list"
+			v-if="playlists.length > 0"
+			v-model="playlists"
+			v-bind="dragOptions"
+			@start="drag = true"
+			@end="drag = false"
+		>
+			<transition-group
+				type="transition"
+				:name="!drag ? 'draggable-list-transition' : null"
+			>
+				<playlist-item
+					v-for="(playlist, index) in playlists"
+					:playlist="playlist"
+					:key="index"
+				>
 					<div class="icons-group" slot="actions">
 						<button
 							v-if="
@@ -34,8 +48,8 @@
 						</button>
 					</div>
 				</playlist-item>
-			</li>
-		</ul>
+			</transition-group>
+		</draggable>
 		<p v-else class="nothing-here-text scrollable-list">
 			No Playlists found
 		</p>
@@ -51,14 +65,19 @@
 <script>
 import { mapState, mapActions } from "vuex";
 import Toast from "toasters";
+import draggable from "vuedraggable";
+
 import PlaylistItem from "../../../../components/ui/PlaylistItem.vue";
 import io from "../../../../io";
 
 export default {
-	components: { PlaylistItem },
+	components: { PlaylistItem, draggable },
 	data() {
 		return {
-			playlists: []
+			orderOfPlaylists: [],
+			interval: null,
+			playlists: [],
+			drag: false
 		};
 	},
 	computed: {
@@ -66,8 +85,17 @@ export default {
 			modals: state => state.modals.station
 		}),
 		...mapState({
-			station: state => state.station.station
-		})
+			station: state => state.station.station,
+			userId: state => state.user.auth.userId
+		}),
+		dragOptions() {
+			return {
+				animation: 200,
+				group: "description",
+				disabled: false,
+				ghostClass: "draggable-list-ghost"
+			};
+		}
 	},
 	mounted() {
 		io.getSocket(socket => {
@@ -76,6 +104,7 @@ export default {
 			/** Get playlists for user */
 			this.socket.emit("playlists.indexMyPlaylists", true, res => {
 				if (res.status === "success") this.playlists = res.data;
+				this.orderOfPlaylists = this.calculatePlaylistOrder(); // order in regards to the database
 			});
 
 			this.socket.on("event:playlist.create", playlist => {
@@ -125,7 +154,14 @@ export default {
 					}
 				});
 			});
+
+			// checks if playlist order has changed every 1/2 second
+			this.interval = setInterval(() => this.savePlaylistOrder(), 500);
 		});
+	},
+	beforeDestroy() {
+		clearInterval(this.interval);
+		this.savePlaylistOrder();
 	},
 	methods: {
 		edit(id) {
@@ -166,6 +202,37 @@ export default {
 			if (this.station && this.station.privatePlaylist === id)
 				return false;
 			return true;
+		},
+		calculatePlaylistOrder() {
+			const calculatedOrder = [];
+			this.playlists.forEach(playlist =>
+				calculatedOrder.push(playlist._id)
+			);
+
+			return calculatedOrder;
+		},
+		savePlaylistOrder() {
+			const recalculatedOrder = this.calculatePlaylistOrder();
+			if (
+				JSON.stringify(this.orderOfPlaylists) ===
+				JSON.stringify(recalculatedOrder)
+			)
+				return; // nothing has changed
+
+			this.socket.emit(
+				"users.updateOrderOfPlaylists",
+				recalculatedOrder,
+				res => {
+					if (res.status === "failure")
+						return new Toast({
+							content: res.message,
+							timeout: 8000
+						});
+
+					this.orderOfPlaylists = this.calculatePlaylistOrder(); // new order in regards to the database
+					return new Toast({ content: res.message, timeout: 4000 });
+				}
+			);
 		},
 		...mapActions("modals", ["openModal"]),
 		...mapActions("user/playlists", ["editPlaylist"])
@@ -210,8 +277,9 @@ export default {
 	}
 }
 
-.menu-list li {
+.menu-list .playlist {
 	align-items: center;
+	cursor: move;
 
 	&:not(:last-of-type) {
 		margin-bottom: 10px;
@@ -235,5 +303,20 @@ export default {
 	&:focus {
 		filter: brightness(90%);
 	}
+}
+
+.draggable-list-transition-move {
+	transition: transform 0.5s;
+}
+
+.night-mode {
+	.draggable-list-ghost {
+		background-color: darken($night-mode-bg-secondary, 5%);
+	}
+}
+
+.draggable-list-ghost {
+	opacity: 0.5;
+	background-color: darken(#fff, 5%);
 }
 </style>

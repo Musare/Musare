@@ -287,18 +287,36 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	indexMyPlaylists: isLoginRequired(async function indexMyPlaylists(session, showNonModifiablePlaylists, cb) {
-		const playlistModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "playlist"
-			},
-			this
-		);
+		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+
 		async.waterfall(
 			[
 				next => {
-					if (showNonModifiablePlaylists) playlistModel.find({ createdBy: session.userId }, next);
-					else playlistModel.find({ createdBy: session.userId, isUserModifiable: true }, next);
+					userModel.findById(session.userId).select({ "preferences.orderOfPlaylists": -1 }).exec(next);
+				},
+
+				({ preferences }, next) => {
+					const { orderOfPlaylists } = preferences;
+
+					const match = {
+						createdBy: session.userId
+					};
+
+					// if non modifiable playlists should be shown as well
+					if (!showNonModifiablePlaylists) match.isUserModifiable = true;
+
+					// if a playlist order exists
+					if (orderOfPlaylists > 0) match._id = { $in: orderOfPlaylists };
+
+					playlistModel
+						.aggregate()
+						.match(match)
+						.addFields({
+							weight: { $indexOfArray: [orderOfPlaylists, "$_id"] }
+						})
+						.sort({ weight: 1 })
+						.exec(next);
 				}
 			],
 			async (err, playlists) => {
@@ -332,13 +350,8 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	create: isLoginRequired(async function create(session, data, cb) {
-		const playlistModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "playlist"
-			},
-			this
-		);
+		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
 		const blacklist = ["liked songs", "likedsongs", "disliked songs", "dislikedsongs"];
 
@@ -360,6 +373,17 @@ export default {
 							createdAt: Date.now()
 						},
 						next
+					);
+				},
+
+				(playlist, next) => {
+					userModel.updateOne(
+						{ _id: session.userId },
+						{ $push: { "preferences.orderOfPlaylists": playlist._id } },
+						err => {
+							if (err) return next(err);
+							return next(null, playlist);
+						}
 					);
 				}
 			],
@@ -1224,13 +1248,8 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	remove: isLoginRequired(async function remove(session, playlistId, cb) {
-		const stationModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "station"
-			},
-			this
-		);
+		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
 		async.waterfall(
 			[
@@ -1242,7 +1261,18 @@ export default {
 
 				(playlist, next) => {
 					if (!playlist.isUserModifiable) return next("Playlist cannot be removed.");
-					return next(null);
+					return next(null, playlist);
+				},
+
+				(playlist, next) => {
+					userModel.updateOne(
+						{ _id: playlist.createdBy },
+						{ $pull: { "preferences.orderOfPlaylists": playlist._id } },
+						err => {
+							if (err) return next(err);
+							return next(null);
+						}
+					);
 				},
 
 				next => {

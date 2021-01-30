@@ -38,5 +38,10 @@ export default {
 	name: { type: String, default: "" },
 	location: { type: String, default: "" },
 	bio: { type: String, default: "" },
-	createdAt: { type: Date, default: Date.now }
+	createdAt: { type: Date, default: Date.now },
+	preferences: {
+		orderOfPlaylists: [{ type: mongoose.Schema.Types.ObjectId }],
+		nightMode: { type: Boolean, default: false },
+		autoSkipDisabled: { type: Boolean, default: true }
+	}
 };
