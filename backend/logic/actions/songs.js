@@ -971,7 +971,7 @@ export default {
 						}
 					)
 			],
-			async (err, { isLiked, isDisliked }) => {
+			async (err, ratings) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
@@ -981,6 +981,8 @@ export default {
 					);
 					return cb({ status: "failure", message: err });
 				}
+
+				const { isLiked, isDisliked } = ratings;
 
 				return cb({
 					status: "success",
