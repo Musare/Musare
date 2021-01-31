@@ -105,7 +105,7 @@ export default {
 		sector: { type: String, default: "admin" }
 	},
 	computed: {
-		...mapState("viewReportModal", {
+		...mapState("viewReport", {
 			report: state => state.report
 		})
 	},
@@ -151,8 +151,8 @@ export default {
 					err => new Toast({ content: err.message, timeout: 5000 })
 				);
 		},
-		...mapActions("viewReportModal", ["viewReport", "resolveReport"]),
-		...mapActions("modals", ["closeModal"])
+		...mapActions("modals/viewReport", ["viewReport", "resolveReport"]),
+		...mapActions("modalVisibility", ["closeModal"])
 	}
 };
 </script>

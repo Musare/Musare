@@ -140,7 +140,7 @@ export default {
 				}
 			);
 		},
-		...mapActions("modals", ["closeModal"])
+		...mapActions("modalVisibility", ["closeModal"])
 	}
 };
 </script>

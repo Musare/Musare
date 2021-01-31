@@ -103,7 +103,7 @@ export default {
 				}
 			);
 		},
-		...mapActions("modals", ["openModal"])
+		...mapActions("modalVisibility", ["openModal"])
 	}
 };
 </script>

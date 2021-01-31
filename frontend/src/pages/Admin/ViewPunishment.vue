@@ -93,7 +93,7 @@ export default {
 		};
 	},
 	computed: {
-		...mapState("viewPunishmentModal", {
+		...mapState("modals/viewPunishment", {
 			punishment: state => state.punishment
 		})
 	},
@@ -125,8 +125,8 @@ export default {
 		});
 	},
 	methods: {
-		...mapActions("modals", ["closeModal"]),
-		...mapActions("viewPunishmentModal", ["viewPunishment"]),
+		...mapActions("modalVisibility", ["closeModal"]),
+		...mapActions("modals/viewPunishment", ["viewPunishment"]),
 		format,
 		formatDistance,
 		parseISO

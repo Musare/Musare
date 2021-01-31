@@ -472,7 +472,7 @@ export default {
 		};
 	},
 	computed: {
-		...mapState("modals", {
+		...mapState("modalVisibility", {
 			modals: state => state.modals.station
 		}),
 		...mapState("station", {
@@ -1538,7 +1538,7 @@ export default {
 			this.editingSongId = song._id;
 			this.openModal({ sector: "station", modal: "editSong" });
 		},
-		...mapActions("modals", ["openModal"]),
+		...mapActions("modalVisibility", ["openModal"]),
 		...mapActions("station", [
 			"joinStation",
 			"updateUserCount",
@@ -1551,7 +1551,7 @@ export default {
 			"updateNoSong",
 			"updateIfStationIsFavorited"
 		]),
-		...mapActions("editSongModal", ["stopVideo"])
+		...mapActions("modals/editSong", ["stopVideo"])
 	}
 };
 </script>

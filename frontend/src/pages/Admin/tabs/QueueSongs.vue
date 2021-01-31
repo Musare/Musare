@@ -210,7 +210,7 @@ export default {
 					) !== -1
 			);
 		},
-		...mapState("modals", {
+		...mapState("modalVisibility", {
 			modals: state => state.modals.admin
 		})
 	},
@@ -318,8 +318,8 @@ export default {
 			this.socket.emit("apis.joinAdminRoom", "queue", () => {});
 		},
 		// ...mapActions("admin/songs", ["editSong"]),
-		...mapActions("editSongModal", ["stopVideo"]),
-		...mapActions("modals", ["openModal"])
+		...mapActions("modals/editSong", ["stopVideo"]),
+		...mapActions("modalVisibility", ["openModal"])
 	}
 };
 </script>

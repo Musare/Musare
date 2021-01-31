@@ -238,7 +238,7 @@ export default {
 		};
 	},
 	computed: {
-		...mapState("modals", {
+		...mapState("modalVisibility", {
 			modals: state => state.modals.admin
 		}),
 		...mapState("admin/news", {
@@ -342,7 +342,7 @@ export default {
 		init() {
 			this.socket.emit("apis.joinAdminRoom", "news", () => {});
 		},
-		...mapActions("modals", ["openModal", "closeModal"]),
+		...mapActions("modalVisibility", ["openModal", "closeModal"]),
 		...mapActions("admin/news", [
 			"editNews",
 			"addNews",

@@ -80,7 +80,7 @@ export default {
 		};
 	},
 	computed: {
-		...mapState("modals", {
+		...mapState("modalVisibility", {
 			modals: state => state.modals.admin
 		})
 	},
@@ -113,7 +113,7 @@ export default {
 			});
 			this.socket.emit("apis.joinAdminRoom", "users", () => {});
 		},
-		...mapActions("modals", ["openModal"])
+		...mapActions("modalVisibility", ["openModal"])
 	}
 };
 </script>

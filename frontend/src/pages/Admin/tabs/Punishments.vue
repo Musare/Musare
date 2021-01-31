@@ -116,7 +116,7 @@ export default {
 			//   return _.orderBy(this.punishments, -1);
 			return this.punishments;
 		},
-		...mapState("modals", {
+		...mapState("modalVisibility", {
 			modals: state => state.modals.admin
 		})
 	},
@@ -153,7 +153,7 @@ export default {
 			});
 			this.socket.emit("apis.joinAdminRoom", "punishments", () => {});
 		},
-		...mapActions("modals", ["openModal"]),
+		...mapActions("modalVisibility", ["openModal"]),
 		...mapActions("admin/punishments", ["viewPunishment"])
 	}
 };

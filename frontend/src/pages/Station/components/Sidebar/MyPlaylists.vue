@@ -81,7 +81,7 @@ export default {
 		};
 	},
 	computed: {
-		...mapState("modals", {
+		...mapState("modalVisibility", {
 			modals: state => state.modals.station
 		}),
 		...mapState({
@@ -234,7 +234,7 @@ export default {
 				}
 			);
 		},
-		...mapActions("modals", ["openModal"]),
+		...mapActions("modalVisibility", ["openModal"]),
 		...mapActions("user/playlists", ["editPlaylist"])
 	}
 };

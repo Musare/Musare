@@ -109,7 +109,7 @@ export default {
 		};
 	},
 	computed: {
-		...mapState("editUserModal", {
+		...mapState("modals/editUser", {
 			user: state => state.user
 		})
 	},
@@ -225,8 +225,8 @@ export default {
 				new Toast({ content: res.message, timeout: 4000 });
 			});
 		},
-		...mapActions("editUserModal", ["editUser"]),
-		...mapActions("modals", ["closeModal"])
+		...mapActions("modals/editUser", ["editUser"]),
+		...mapActions("modalVisibility", ["closeModal"])
 	}
 };
 </script>

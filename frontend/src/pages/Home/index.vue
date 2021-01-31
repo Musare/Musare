@@ -207,7 +207,7 @@ export default {
 		...mapState({
 			loggedIn: state => state.user.auth.loggedIn,
 			userId: state => state.user.auth.userId,
-			modals: state => state.modals.modals.home
+			modals: state => state.modalVisibility.modals.home
 		}),
 		filteredStations() {
 			const privacyOrder = ["public", "unlisted", "private"];
@@ -462,7 +462,7 @@ export default {
 				} else new Toast({ content: res.message, timeout: 8000 });
 			});
 		},
-		...mapActions("modals", ["openModal"]),
+		...mapActions("modalVisibility", ["openModal"]),
 		...mapActions("station", ["updateIfStationIsFavorited"])
 	}
 };

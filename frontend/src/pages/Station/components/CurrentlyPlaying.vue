@@ -102,7 +102,7 @@ export default {
 		})
 	},
 	methods: {
-		...mapActions("modals", ["openModal"]),
+		...mapActions("modalVisibility", ["openModal"]),
 		formatDistance,
 		parseISO
 	}

@@ -178,7 +178,7 @@ export default {
 		sector: { type: String, default: "admin" }
 	},
 	computed: {
-		...mapState("editNewsModal", {
+		...mapState("modals/editNews", {
 			news: state => state.news
 		})
 	},
@@ -238,8 +238,8 @@ export default {
 				}
 			});
 		},
-		...mapActions("modals", ["closeModal"]),
-		...mapActions("editNewsModal", [
+		...mapActions("modalVisibility", ["closeModal"]),
+		...mapActions("modals/editNews", [
 			"editNews",
 			"addChange",
 			"removeChange"

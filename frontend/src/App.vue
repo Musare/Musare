@@ -45,7 +45,7 @@ export default {
 		username: state => state.user.auth.username,
 		userId: state => state.user.auth.userId,
 		banned: state => state.user.auth.banned,
-		modals: state => state.modals.modals,
+		modals: state => state.modalVisibility.modals,
 		currentlyActive: state => state.modals.currentlyActive,
 		nightmode: state => state.user.preferences.nightmode
 	}),
@@ -175,7 +175,7 @@ export default {
 				.getElementsByTagName("body")[0]
 				.classList.remove("night-mode");
 		},
-		...mapActions("modals", ["closeCurrentModal"]),
+		...mapActions("modalVisibility", ["closeCurrentModal"]),
 		...mapActions("user/preferences", [
 			"changeNightmode",
 			"changeAutoSkipDisliked"

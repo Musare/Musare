@@ -85,7 +85,7 @@ export default {
 		};
 	},
 	computed: {
-		...mapState("modals", {
+		...mapState("modalVisibility", {
 			modals: state => state.modals.admin
 		})
 	},
@@ -147,7 +147,7 @@ export default {
 					err => new Toast({ content: err.message, timeout: 5000 })
 				);
 		},
-		...mapActions("modals", ["openModal", "closeModal"]),
+		...mapActions("modalVisibility", ["openModal", "closeModal"]),
 		...mapActions("admin/reports", ["resolveReport"])
 	}
 };

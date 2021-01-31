@@ -125,7 +125,7 @@ export default {
 			this.openModal({ sector: "station", modal: "report" });
 		},
 		...mapActions("station", ["updateReportQueueSong"]),
-		...mapActions("modals", ["openModal"]),
+		...mapActions("modalVisibility", ["openModal"]),
 		formatDistance,
 		parseISO
 	}

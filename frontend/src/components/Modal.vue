@@ -37,7 +37,7 @@ export default {
 				.replace(/ (.)/g, $1 => $1.toUpperCase())
 				.replace(/ /g, "");
 		},
-		...mapActions("modals", ["closeCurrentModal"])
+		...mapActions("modalVisibility", ["closeCurrentModal"])
 	}
 };
 </script>

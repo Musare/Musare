@@ -584,11 +584,11 @@ export default {
 		};
 	},
 	computed: {
-		...mapState("editSongModal", {
+		...mapState("modals/editSong", {
 			video: state => state.video,
 			song: state => state.song
 		}),
-		...mapState("modals", {
+		...mapState("modalVisibility", {
 			modals: state => state.modals.admin
 		})
 	},
@@ -1394,7 +1394,7 @@ export default {
 		resetGenreHelper() {
 			this.$refs.genreHelper.resetBox();
 		},
-		...mapActions("editSongModal", [
+		...mapActions("modals/editSong", [
 			"stopVideo",
 			"loadVideoById",
 			"pauseVideo",
@@ -1403,7 +1403,7 @@ export default {
 			"updateSongField",
 			"selectDiscogsInfo"
 		]),
-		...mapActions("modals", ["closeModal"])
+		...mapActions("modalVisibility", ["closeModal"])
 	}
 };
 </script>

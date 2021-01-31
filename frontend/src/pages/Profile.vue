@@ -213,7 +213,7 @@ export default {
 		...mapState({
 			role: state => state.user.auth.role,
 			userId: state => state.user.auth.userId,
-			...mapState("modals", {
+			...mapState("modalVisibility", {
 				modals: state => state.modals.station
 			})
 		}),
@@ -503,7 +503,7 @@ export default {
 			}
 			return false;
 		},
-		...mapActions("modals", ["openModal"]),
+		...mapActions("modalVisibility", ["openModal"]),
 		...mapActions("user/playlists", ["editPlaylist"])
 	}
 };

@@ -58,7 +58,7 @@ export default {
 			this.tab = this.$route.query.tab;
 	},
 	methods: {
-		...mapActions("modals", ["openModal"]),
+		...mapActions("modalVisibility", ["openModal"]),
 		showTab(tab) {
 			const queries = this.$route.query.tab
 				? this.$route.query

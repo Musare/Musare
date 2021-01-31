@@ -207,7 +207,7 @@ export default {
 		...mapState("admin/stations", {
 			stations: state => state.stations
 		}),
-		...mapState("modals", {
+		...mapState("modalVisibility", {
 			modals: state => state.modals.admin
 		})
 	},
@@ -344,7 +344,7 @@ export default {
 			});
 			this.socket.emit("apis.joinAdminRoom", "stations", () => {});
 		},
-		...mapActions("modals", ["openModal"]),
+		...mapActions("modalVisibility", ["openModal"]),
 		...mapActions("admin/stations", [
 			"editStation",
 			"loadStations",

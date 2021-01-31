@@ -75,7 +75,7 @@ export default {
 				}
 			});
 		},
-		...mapActions("modals", ["closeModal", "openModal"]),
+		...mapActions("modalVisibility", ["closeModal", "openModal"]),
 		...mapActions("user/playlists", ["editPlaylist"])
 	}
 };

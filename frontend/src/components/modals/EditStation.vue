@@ -507,7 +507,7 @@ export default {
 		// ...mapState("admin/stations", {
 		// 	stations: state => state.stations
 		// }),
-		...mapState("editStationModal", {
+		...mapState("modals/editStation", {
 			station: state => state.station,
 			originalStation: state => state.originalStation
 		})
@@ -1019,8 +1019,8 @@ export default {
 			else if (type === "blacklist-genres")
 				this.station.blacklistedGenres.splice(index, 1);
 		},
-		...mapActions("editStationModal", ["editStation"]),
-		...mapActions("modals", ["closeModal"])
+		...mapActions("modals/editStation", ["editStation"]),
+		...mapActions("modalVisibility", ["closeModal"])
 	}
 };
 </script>

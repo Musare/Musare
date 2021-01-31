@@ -3,15 +3,16 @@ import Vuex from "vuex";
 
 import user from "./modules/user";
 import settings from "./modules/settings";
-import modals from "./modules/modals";
+import modalVisibility from "./modules/modalVisibility";
 import station from "./modules/station";
 import admin from "./modules/admin";
-import editSongModal from "./modules/editSongModal";
-import editStationModal from "./modules/editStationModal";
-import editUserModal from "./modules/editUserModal";
-import editNewsModal from "./modules/editNewsModal";
-import viewPunishmentModal from "./modules/viewPunishmentModal";
-import viewReportModal from "./modules/viewReportModal";
+
+import editSongModal from "./modules/modals/editSong";
+import editStationModal from "./modules/modals/editStation";
+import editUserModal from "./modules/modals/editUser";
+import editNewsModal from "./modules/modals/editNews";
+import viewPunishmentModal from "./modules/modals/viewPunishment";
+import viewReportModal from "./modules/modals/viewReport";
 
 Vue.use(Vuex);
 
@@ -19,15 +20,20 @@ export default new Vuex.Store({
 	modules: {
 		user,
 		settings,
-		modals,
 		station,
 		admin,
-		editSongModal,
-		editStationModal,
-		editUserModal,
-		editNewsModal,
-		viewPunishmentModal,
-		viewReportModal
+		modalVisibility,
+		modals: {
+			namespaced: true,
+			modules: {
+				editSong: editSongModal,
+				editStation: editStationModal,
+				editUser: editUserModal,
+				editNews: editNewsModal,
+				viewPunishment: viewPunishmentModal,
+				viewReport: viewReportModal
+			}
+		}
 	},
 	strict: false
 });

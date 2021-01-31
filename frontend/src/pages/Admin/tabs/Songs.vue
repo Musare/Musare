@@ -293,7 +293,7 @@ export default {
 						(this.genreFilterSelected.indexOf(b) === -1 ? 1 : 0)
 				);
 		},
-		...mapState("modals", {
+		...mapState("modalVisibility", {
 			modals: state => state.modals.admin
 		}),
 		...mapState("admin/songs", {
@@ -419,8 +419,8 @@ export default {
 			"removeSong",
 			"updateSong"
 		]),
-		...mapActions("editSongModal", ["stopVideo"]),
-		...mapActions("modals", ["openModal", "closeModal"])
+		...mapActions("modals/editSong", ["stopVideo"]),
+		...mapActions("modalVisibility", ["openModal", "closeModal"])
 	}
 };
 </script>

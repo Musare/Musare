@@ -300,7 +300,7 @@ export default {
 			}
 		},
 		...mapActions("station", ["updateReportQueueSong"]),
-		...mapActions("modals", ["closeModal"])
+		...mapActions("modalVisibility", ["closeModal"])
 	}
 };
 </script>

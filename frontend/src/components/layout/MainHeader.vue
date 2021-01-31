@@ -87,7 +87,7 @@ export default {
 		};
 	},
 	computed: mapState({
-		modals: state => state.modals.modals.header,
+		modals: state => state.modalVisibility.modals.header,
 		role: state => state.user.auth.role,
 		loggedIn: state => state.user.auth.loggedIn,
 		username: state => state.user.auth.username
@@ -103,7 +103,7 @@ export default {
 	},
 
 	methods: {
-		...mapActions("modals", ["openModal"]),
+		...mapActions("modalVisibility", ["openModal"]),
 		...mapActions("user/auth", ["logout"])
 	}
 };

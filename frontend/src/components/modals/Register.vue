@@ -254,7 +254,7 @@ export default {
 		githubRedirect() {
 			localStorage.setItem("github_redirect", this.$route.path);
 		},
-		...mapActions("modals", ["closeModal"]),
+		...mapActions("modalVisibility", ["closeModal"]),
 		...mapActions("user/auth", ["register"])
 	}
 };
