@@ -29,12 +29,9 @@
 							class="input"
 							type="text"
 							placeholder="Bug"
-							@keyup.enter="addChangeClick('bugs')"
+							@keyup.enter="add('bugs')"
 						/>
-						<a
-							class="button is-info"
-							href="#"
-							@click="addChangeClick('bugs')"
+						<a class="button is-info" href="#" @click="add('bugs')"
 							>Add</a
 						>
 					</p>
@@ -46,7 +43,7 @@
 						{{ bug }}
 						<button
 							class="delete is-info"
-							@click="removeChangeClick('bugs', index)"
+							@click="remove('bugs', index)"
 						/>
 					</span>
 				</div>
@@ -58,12 +55,12 @@
 							class="input"
 							type="text"
 							placeholder="Feature"
-							@keyup.enter="addChangeClick('features')"
+							@keyup.enter="add('features')"
 						/>
 						<a
 							class="button is-info"
 							href="#"
-							@click="addChangeClick('features')"
+							@click="add('features')"
 							>Add</a
 						>
 					</p>
@@ -75,7 +72,7 @@
 						{{ feature }}
 						<button
 							class="delete is-info"
-							@click="removeChangeClick('features', index)"
+							@click="remove('features', index)"
 						/>
 					</span>
 				</div>
@@ -90,12 +87,12 @@
 							class="input"
 							type="text"
 							placeholder="Improvement"
-							@keyup.enter="addChangeClick('improvements')"
+							@keyup.enter="add('improvements')"
 						/>
 						<a
 							class="button is-info"
 							href="#"
-							@click="addChangeClick('improvements')"
+							@click="add('improvements')"
 							>Add</a
 						>
 					</p>
@@ -107,7 +104,7 @@
 						{{ improvement }}
 						<button
 							class="delete is-info"
-							@click="removeChangeClick('improvements', index)"
+							@click="remove('improvements', index)"
 						/>
 					</span>
 				</div>
@@ -119,12 +116,12 @@
 							class="input"
 							type="text"
 							placeholder="Upcoming"
-							@keyup.enter="addChangeClick('upcoming')"
+							@keyup.enter="add('upcoming')"
 						/>
 						<a
 							class="button is-info"
 							href="#"
-							@click="addChangeClick('upcoming')"
+							@click="add('upcoming')"
 							>Add</a
 						>
 					</p>
@@ -136,7 +133,7 @@
 						{{ upcoming }}
 						<button
 							class="delete is-info"
-							@click="removeChangeClick('upcoming', index)"
+							@click="remove('upcoming', index)"
 						/>
 					</span>
 				</div>
@@ -207,7 +204,7 @@ export default {
 		});
 	},
 	methods: {
-		addChange(type) {
+		add(type) {
 			const change = document.getElementById(`edit-${type}`).value.trim();
 
 			if (this.news[type].indexOf(change) !== -1)
@@ -226,7 +223,7 @@ export default {
 			document.getElementById(`edit-${type}`).value = "";
 			return true;
 		},
-		removeChange(type, index) {
+		remove(type, index) {
 			this.removeChange({ type, index });
 		},
 		updateNews(close) {
