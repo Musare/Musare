@@ -3,303 +3,351 @@
 		<metadata v-if="exists && !loading" :title="`${station.displayName}`" />
 		<metadata v-else-if="!exists && !loading" :title="`Not found`" />
 
-		<main-header v-if="exists" />
-
-		<div
-			id="station-outer-container"
-			:style="[!exists ? { margin: 0, padding: 0 } : {}]"
-		>
-			<div v-show="loading" class="progress" />
-			<div
-				v-show="!loading && exists"
-				id="station-inner-container"
-				:class="{ 'nothing-here': noSong }"
+		<div id="content-loader-container" v-if="loading">
+			<content-loader
+				width="1920"
+				height="1080"
+				primary-color="#f3f3f3"
+				secondary-color="#cccccc"
+				preserve-aspect-ratio="none"
+				style="position: absolute; height: inherit; max-width: 1800px; transform: translateX(-50%); left: 50%;"
 			>
-				<div id="station-left-column" class="column">
-					<div class="player-container quadrant" v-show="!noSong">
-						<div id="video-container">
-							<div
-								id="stationPlayer"
-								style="width: 100%; height: 100%"
-							/>
-							<div
-								class="player-cannot-autoplay"
-								v-if="!canAutoplay"
-							>
-								<p>
-									Please click anywhere on the screen for the
-									video to start
+				<rect x="100" y="108" rx="5" ry="5" width="1048" height="672" />
+				<rect x="100" y="810" rx="5" ry="5" width="1048" height="110" />
+				<rect x="1190" y="110" rx="5" ry="5" width="630" height="149" />
+				<rect x="1190" y="288" rx="5" ry="5" width="630" height="630" />
+			</content-loader>
+
+			<content-loader
+				width="1920"
+				height="1080"
+				primary-color="#f3f3f3"
+				secondary-color="#cccccc"
+				preserve-aspect-ratio="none"
+				style="height: inherit"
+			>
+				<rect x="0" y="0" rx="0" ry="0" width="1920" height="64" />
+				<rect x="0" y="980" rx="0" ry="0" width="1920" height="100" />
+			</content-loader>
+		</div>
+
+		<!-- More simplistic loading animation for mobile users -->
+		<div v-show="loading" id="mobile-progress-animation" />
+
+		<div v-show="!loading">
+			<main-header v-if="exists" />
+
+			<div
+				id="station-outer-container"
+				:style="[!exists ? { margin: 0, padding: 0 } : {}]"
+			>
+				<div
+					v-show="exists"
+					id="station-inner-container"
+					:class="{ 'nothing-here': noSong }"
+				>
+					<div id="station-left-column" class="column">
+						<div class="player-container quadrant" v-show="!noSong">
+							<div id="video-container">
+								<div
+									id="stationPlayer"
+									style="width: 100%; height: 100%; min-height: 200px;"
+								/>
+								<div
+									class="player-cannot-autoplay"
+									v-if="!canAutoplay"
+								>
+									<p>
+										Please click anywhere on the screen for
+										the video to start
+									</p>
+								</div>
+							</div>
+							<div id="seeker-bar-container">
+								<div id="seeker-bar" style="width: 0%" />
+							</div>
+							<div id="control-bar-container">
+								<div id="left-buttons">
+									<!-- Debug Box -->
+									<button
+										class="button is-primary"
+										@click="togglePlayerDebugBox()"
+										@dblclick="resetPlayerDebugBox()"
+									>
+										<i
+											class="material-icons icon-with-button"
+										>
+											bug_report
+										</i>
+									</button>
+
+									<!-- Local Pause/Resume Button -->
+									<button
+										class="button is-primary"
+										@click="resumeLocalStation()"
+										id="local-resume"
+										v-if="localPaused"
+									>
+										<i class="material-icons">play_arrow</i>
+									</button>
+									<button
+										class="button is-primary"
+										@click="pauseLocalStation()"
+										id="local-pause"
+										v-else
+									>
+										<i class="material-icons">pause</i>
+									</button>
+
+									<!-- Vote to Skip Button -->
+									<button
+										v-if="loggedIn"
+										class="button is-primary"
+										@click="voteSkipStation()"
+									>
+										<i
+											class="material-icons icon-with-button"
+											>skip_next</i
+										>
+										{{ currentSong.skipVotes }}
+									</button>
+								</div>
+								<div id="duration">
+									<p>
+										{{ timeElapsed }} /
+										{{
+											utils.formatTime(
+												currentSong.duration
+											)
+										}}
+									</p>
+								</div>
+								<p id="volume-control">
+									<i
+										v-if="muted"
+										class="material-icons"
+										@click="toggleMute()"
+										>volume_mute</i
+									>
+									<i
+										v-else
+										class="material-icons"
+										@click="toggleMute()"
+										>volume_down</i
+									>
+									<input
+										v-model="volumeSliderValue"
+										type="range"
+										min="0"
+										max="10000"
+										class="volume-slider active"
+										@change="changeVolume()"
+										@input="changeVolume()"
+									/>
+									<i
+										class="material-icons"
+										@click="increaseVolume()"
+										>volume_up</i
+									>
 								</p>
+								<div id="right-buttons" v-if="loggedIn">
+									<!-- Ratings (Like/Dislike) Buttons -->
+									<div
+										id="ratings"
+										v-if="
+											currentSong.likes !== -1 &&
+												currentSong.dislikes !== -1
+										"
+										:class="{
+											liked: liked,
+											disliked: disliked
+										}"
+									>
+										<!-- Like Song Button -->
+										<button
+											class="button is-success"
+											id="like-song"
+											@click="toggleLike()"
+										>
+											<i
+												class="material-icons icon-with-button"
+												:class="{ liked: liked }"
+												>thumb_up_alt</i
+											>{{ currentSong.likes }}
+										</button>
+
+										<!-- Dislike Song Button -->
+										<button
+											class="button is-danger"
+											id="dislike-song"
+											@click="toggleDislike()"
+										>
+											<i
+												class="material-icons icon-with-button"
+												:class="{
+													disliked: disliked
+												}"
+												>thumb_down_alt</i
+											>{{ currentSong.dislikes }}
+										</button>
+									</div>
+
+									<!-- Add Song To Playlist Button & Dropdown -->
+									<div id="add-song-to-playlist">
+										<div class="control has-addons">
+											<button
+												class="button is-primary"
+												@click="
+													showPlaylistDropdown = !showPlaylistDropdown
+												"
+											>
+												<i class="material-icons"
+													>queue</i
+												>
+											</button>
+											<button
+												class="button"
+												id="dropdown-toggle"
+												@click="
+													showPlaylistDropdown = !showPlaylistDropdown
+												"
+											>
+												<i class="material-icons">
+													{{
+														showPlaylistDropdown
+															? "expand_more"
+															: "expand_less"
+													}}
+												</i>
+											</button>
+										</div>
+										<add-to-playlist-dropdown
+											v-if="showPlaylistDropdown"
+										/>
+									</div>
+								</div>
 							</div>
 						</div>
-						<div id="seeker-bar-container">
-							<div id="seeker-bar" style="width: 0%" />
+						<p
+							class="player-container nothing-here-text"
+							v-if="noSong"
+						>
+							No song is currently playing
+						</p>
+						<div v-if="!noSong" id="current-next-row">
+							<div
+								id="currently-playing-container"
+								class="quadrant"
+								:class="{ 'no-currently-playing': noSong }"
+							>
+								<currently-playing />
+								<!-- <p v-else class="nothing-here-text">
+								No song is currently playing
+							</p> -->
+							</div>
 						</div>
-						<div id="control-bar-container">
-							<div id="left-buttons">
-								<!-- Debug Box -->
-								<button
-									class="button is-primary"
-									@click="togglePlayerDebugBox()"
-									@dblclick="resetPlayerDebugBox()"
-								>
-									<i class="material-icons icon-with-button">
-										bug_report
-									</i>
-								</button>
+					</div>
+					<div id="station-right-column" class="column">
+						<div id="about-station-container" class="quadrant">
+							<div id="station-info">
+								<div class="row" id="station-name">
+									<h1>{{ station.displayName }}</h1>
+									<a href="#">
+										<!-- Favorite Station Button -->
+										<i
+											v-if="
+												loggedIn && station.isFavorited
+											"
+											@click.prevent="unfavoriteStation()"
+											class="material-icons"
+											>star</i
+										>
+										<i
+											v-if="
+												loggedIn && !station.isFavorited
+											"
+											@click.prevent="favoriteStation()"
+											class="material-icons"
+											>star_border</i
+										>
+									</a>
+								</div>
+								<p>{{ station.description }}</p>
+							</div>
 
-								<!-- Local Pause/Resume Button -->
+							<div id="admin-buttons" v-if="isOwnerOrAdmin()">
+								<!-- (Admin) Pause/Resume Button -->
 								<button
-									class="button is-primary"
-									@click="resumeLocalStation()"
-									id="local-resume"
-									v-if="localPaused"
+									class="button is-danger"
+									v-if="stationPaused"
+									@click="resumeStation()"
 								>
-									<i class="material-icons">play_arrow</i>
+									<i class="material-icons icon-with-button"
+										>play_arrow</i
+									>
+									<span class="optional-desktop-only-text">
+										Resume Station
+									</span>
 								</button>
 								<button
-									class="button is-primary"
-									@click="pauseLocalStation()"
-									id="local-pause"
+									class="button is-danger"
+									@click="pauseStation()"
 									v-else
 								>
-									<i class="material-icons">pause</i>
+									<i class="material-icons icon-with-button"
+										>pause</i
+									>
+									<span class="optional-desktop-only-text">
+										Pause Station
+									</span>
 								</button>
 
-								<!-- Vote to Skip Button -->
+								<!-- (Admin) Skip Button -->
 								<button
-									v-if="loggedIn"
-									class="button is-primary"
-									@click="voteSkipStation()"
+									class="button is-danger"
+									@click="skipStation()"
 								>
 									<i class="material-icons icon-with-button"
 										>skip_next</i
 									>
-									{{ currentSong.skipVotes }}
+									<span class="optional-desktop-only-text">
+										Force Skip
+									</span>
+								</button>
+
+								<!-- (Admin) Station Settings Button -->
+								<button
+									class="button is-primary"
+									@click="openSettings()"
+								>
+									<i class="material-icons icon-with-button"
+										>settings</i
+									>
+									<span class="optional-desktop-only-text">
+										Station settings
+									</span>
 								</button>
 							</div>
-							<div id="duration">
-								<p>
-									{{ timeElapsed }} /
-									{{ utils.formatTime(currentSong.duration) }}
-								</p>
-							</div>
-							<p id="volume-control">
-								<i
-									v-if="muted"
-									class="material-icons"
-									@click="toggleMute()"
-									>volume_mute</i
-								>
-								<i
-									v-else
-									class="material-icons"
-									@click="toggleMute()"
-									>volume_down</i
-								>
-								<input
-									v-model="volumeSliderValue"
-									type="range"
-									min="0"
-									max="10000"
-									class="volume-slider active"
-									@change="changeVolume()"
-									@input="changeVolume()"
-								/>
-								<i
-									class="material-icons"
-									@click="increaseVolume()"
-									>volume_up</i
-								>
-							</p>
-							<div id="right-buttons" v-if="loggedIn">
-								<!-- Ratings (Like/Dislike) Buttons -->
-								<div
-									id="ratings"
-									v-if="
-										currentSong.likes !== -1 &&
-											currentSong.dislikes !== -1
-									"
-									:class="{
-										liked: liked,
-										disliked: disliked
-									}"
-								>
-									<!-- Like Song Button -->
-									<button
-										class="button is-success"
-										id="like-song"
-										@click="toggleLike()"
-									>
-										<i
-											class="material-icons icon-with-button"
-											:class="{ liked: liked }"
-											>thumb_up_alt</i
-										>{{ currentSong.likes }}
-									</button>
-
-									<!-- Dislike Song Button -->
-									<button
-										class="button is-danger"
-										id="dislike-song"
-										@click="toggleDislike()"
-									>
-										<i
-											class="material-icons icon-with-button"
-											:class="{
-												disliked: disliked
-											}"
-											>thumb_down_alt</i
-										>{{ currentSong.dislikes }}
-									</button>
-								</div>
-
-								<!-- Add Song To Playlist Button & Dropdown -->
-								<div id="add-song-to-playlist">
-									<div class="control has-addons">
-										<button
-											class="button is-primary"
-											@click="
-												showPlaylistDropdown = !showPlaylistDropdown
-											"
-										>
-											<i class="material-icons">queue</i>
-										</button>
-										<button
-											class="button"
-											id="dropdown-toggle"
-											@click="
-												showPlaylistDropdown = !showPlaylistDropdown
-											"
-										>
-											<i class="material-icons">
-												{{
-													showPlaylistDropdown
-														? "expand_more"
-														: "expand_less"
-												}}
-											</i>
-										</button>
-									</div>
-									<add-to-playlist-dropdown
-										v-if="showPlaylistDropdown"
-									/>
-								</div>
-							</div>
 						</div>
-					</div>
-					<p class="player-container nothing-here-text" v-if="noSong">
-						No song is currently playing
-					</p>
-					<div v-if="!noSong" id="current-next-row">
-						<div
-							id="currently-playing-container"
-							class="quadrant"
-							:class="{ 'no-currently-playing': noSong }"
-						>
-							<currently-playing />
-							<!-- <p v-else class="nothing-here-text">
-								No song is currently playing
-							</p> -->
+						<div id="sidebar-container" class="quadrant">
+							<station-sidebar />
 						</div>
 					</div>
 				</div>
-				<div id="station-right-column" class="column">
-					<div id="about-station-container" class="quadrant">
-						<div id="station-info">
-							<div class="row" id="station-name">
-								<h1>{{ station.displayName }}</h1>
-								<a href="#">
-									<!-- Favorite Station Button -->
-									<i
-										v-if="loggedIn && station.isFavorited"
-										@click.prevent="unfavoriteStation()"
-										class="material-icons"
-										>star</i
-									>
-									<i
-										v-if="loggedIn && !station.isFavorited"
-										@click.prevent="favoriteStation()"
-										class="material-icons"
-										>star_border</i
-									>
-								</a>
-							</div>
-							<p>{{ station.description }}</p>
-						</div>
 
-						<div id="admin-buttons" v-if="isOwnerOrAdmin()">
-							<!-- (Admin) Pause/Resume Button -->
-							<button
-								class="button is-danger"
-								v-if="stationPaused"
-								@click="resumeStation()"
-							>
-								<i class="material-icons icon-with-button"
-									>play_arrow</i
-								>
-								<span class="optional-desktop-only-text">
-									Resume Station
-								</span>
-							</button>
-							<button
-								class="button is-danger"
-								@click="pauseStation()"
-								v-else
-							>
-								<i class="material-icons icon-with-button"
-									>pause</i
-								>
-								<span class="optional-desktop-only-text">
-									Pause Station
-								</span>
-							</button>
-
-							<!-- (Admin) Skip Button -->
-							<button
-								class="button is-danger"
-								@click="skipStation()"
-							>
-								<i class="material-icons icon-with-button"
-									>skip_next</i
-								>
-								<span class="optional-desktop-only-text">
-									Force Skip
-								</span>
-							</button>
-
-							<!-- (Admin) Station Settings Button -->
-							<button
-								class="button is-primary"
-								@click="openSettings()"
-							>
-								<i class="material-icons icon-with-button"
-									>settings</i
-								>
-								<span class="optional-desktop-only-text">
-									Station settings
-								</span>
-							</button>
-						</div>
-					</div>
-					<div id="sidebar-container" class="quadrant">
-						<station-sidebar />
-					</div>
-				</div>
+				<song-queue v-if="modals.addSongToQueue" />
+				<edit-playlist v-if="modals.editPlaylist" />
+				<create-playlist v-if="modals.createPlaylist" />
+				<edit-station
+					v-if="modals.editStation"
+					:station-id="station._id"
+					sector="station"
+				/>
+				<report v-if="modals.report" />
 			</div>
 
-			<song-queue v-if="modals.addSongToQueue" />
-			<edit-playlist v-if="modals.editPlaylist" />
-			<create-playlist v-if="modals.createPlaylist" />
-			<edit-station
-				v-if="modals.editStation"
-				:station-id="station._id"
-				sector="station"
-			/>
-			<report v-if="modals.report" />
+			<main-footer v-if="exists" />
 		</div>
-
-		<main-footer v-if="exists" />
 
 		<edit-song
 			v-if="modals.editSong"
@@ -359,6 +407,7 @@
 <script>
 import { mapState, mapActions } from "vuex";
 import Toast from "toasters";
+import { ContentLoader } from "vue-content-loader";
 
 import MainHeader from "../../components/layout/MainHeader.vue";
 import MainFooter from "../../components/layout/MainFooter.vue";
@@ -377,6 +426,7 @@ import StationSidebar from "./components/Sidebar/index.vue";
 
 export default {
 	components: {
+		ContentLoader,
 		MainHeader,
 		MainFooter,
 		SongQueue: () => import("./AddSongToQueue.vue"),
@@ -1517,6 +1567,7 @@ export default {
 	position: absolute;
 	top: 50%;
 	left: 50%;
+	display: none;
 }
 
 @keyframes rotate {
@@ -1585,7 +1636,7 @@ export default {
 	#station-inner-container {
 		height: 100%;
 		width: 100%;
-		min-height: calc(100vh - 64px - 190px);
+		min-height: calc(100vh - 428px);
 		display: flex;
 		flex-direction: row;
 		flex-wrap: wrap;
@@ -1933,19 +1984,27 @@ export default {
 }
 
 @media (max-width: 950px) {
+	#mobile-progress-animation {
+		display: block;
+	}
+
+	#content-loader-container {
+		display: none;
+	}
+
 	#station-outer-container {
 		padding: 10px;
 		height: unset;
 		max-width: 700px;
+
 		#station-inner-container {
 			flex-direction: column;
+
 			#station-left-column {
 				#current-next-row {
 					flex-direction: column;
 				}
-				#video-container {
-					min-height: 200px;
-				}
+
 				#control-bar-container {
 					#duration,
 					#volume-control,
@@ -1954,31 +2013,39 @@ export default {
 						margin-bottom: 5px;
 						justify-content: center;
 					}
+
 					#duration {
 						order: 1;
 					}
+
 					#volume-control {
 						order: 2;
 						max-width: 400px;
 					}
+
 					#right-buttons {
 						order: 3;
 						flex-wrap: wrap;
+
 						#ratings {
 							flex-wrap: wrap;
 						}
 					}
+
 					#left-buttons {
 						order: 4;
 						flex-wrap: wrap;
 					}
 				}
 			}
+
 			#station-right-column {
 				max-width: unset;
+
 				#about-station-container #admin-buttons {
 					flex-wrap: wrap;
 				}
+
 				#sidebar-container {
 					min-height: 350px;
 				}

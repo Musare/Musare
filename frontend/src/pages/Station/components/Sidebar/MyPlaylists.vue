@@ -13,9 +13,9 @@
 				:name="!drag ? 'draggable-list-transition' : null"
 			>
 				<playlist-item
-					v-for="(playlist, index) in playlists"
 					:playlist="playlist"
-					:key="index"
+					v-for="(playlist, index) in playlists"
+					:key="'key-' + index"
 				>
 					<div class="icons-group" slot="actions">
 						<button
