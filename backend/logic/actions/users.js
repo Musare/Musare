@@ -697,8 +697,10 @@ export default {
 						{ _id: session.userId },
 						{
 							$set: {
-								nightmode: preferences.nightmode,
-								autoSkipDisliked: preferences.autoSkipDisliked
+								preferences: {
+									nightmode: preferences.nightmode,
+									autoSkipDisliked: preferences.autoSkipDisliked
+								}
 							}
 						},
 						{ runValidators: true },
@@ -713,7 +715,9 @@ export default {
 					this.log(
 						"ERROR",
 						"UPDATE_USER_PREFERENCES",
-						`Couldn't update preferences for user "${session.userId}" to "${preferences}". "${err}"`
+						`Couldn't update preferences for user "${session.userId}" to "${JSON.stringify(
+							preferences
+						)}". "${err}"`
 					);
 
 					return cb({ status: "failure", message: err });
@@ -730,7 +734,7 @@ export default {
 				this.log(
 					"SUCCESS",
 					"UPDATE_USER_PREFERENCES",
-					`Updated preferences for user "${session.userId}" to "${preferences}".`
+					`Updated preferences for user "${session.userId}" to "${JSON.stringify(preferences)}".`
 				);
 
 				return cb({
