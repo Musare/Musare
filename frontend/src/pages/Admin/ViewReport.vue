@@ -105,7 +105,7 @@ export default {
 		sector: { type: String, default: "admin" }
 	},
 	computed: {
-		...mapState("viewReport", {
+		...mapState("modals/viewReport", {
 			report: state => state.report
 		})
 	},
@@ -157,8 +157,20 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 @import "../../styles/global.scss";
+
+.night-mode {
+	.message,
+	.table {
+		color: $night-mode-text;
+		background-color: $night-mode-bg-secondary;
+	}
+
+	.table tr:hover {
+		background-color: darken($night-mode-bg-secondary, 5%);
+	}
+}
 
 .back-to-song {
 	display: flex;
