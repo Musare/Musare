@@ -88,6 +88,13 @@ export default {
 <style lang="scss" scoped>
 @import "../../../../styles/global.scss";
 
+.night-mode {
+	#tab-selection .button {
+		background: $dark-grey;
+		color: #fff;
+	}
+}
+
 #tabs-container .tab {
 	width: 100%;
 	height: calc(100% - 36px);
@@ -114,8 +121,8 @@ export default {
 	}
 
 	.selected {
-		background-color: $night-mode-bg-secondary;
-		color: #fff;
+		background-color: $night-mode-bg-secondary !important;
+		color: #fff !important;
 	}
 }
 

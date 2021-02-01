@@ -135,6 +135,13 @@ export default {
 <style lang="scss" scoped>
 @import "../../../../../styles/global.scss";
 
+.night-mode {
+	.queue-item {
+		background-color: $dark-grey-2 !important;
+		border: 0 !important;
+	}
+}
+
 .queue-item {
 	display: flex;
 	flex-direction: row;

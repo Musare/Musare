@@ -153,6 +153,7 @@ export default {
 .night-mode {
 	.nav-dropdown-items {
 		background-color: $dark-grey-2;
+		border: 0 !important;
 
 		.nav-item {
 			background-color: $dark-grey;
@@ -163,6 +164,10 @@ export default {
 
 			p {
 				color: #fff;
+			}
+
+			.checkbox-control label span {
+				background-color: $dark-grey-2;
 			}
 		}
 	}

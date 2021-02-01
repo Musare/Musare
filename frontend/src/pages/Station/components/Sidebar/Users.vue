@@ -61,6 +61,8 @@ export default {
 
 	a {
 		color: $night-mode-text;
+		background-color: $dark-grey-2 !important;
+		border: 0 !important;
 	}
 }
 

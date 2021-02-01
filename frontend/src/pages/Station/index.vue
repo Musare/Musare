@@ -1630,7 +1630,9 @@ export default {
 	}
 
 	#video-container,
-	#control-bar-container {
+	#control-bar-container,
+	.quadrant:not(#sidebar-container),
+	.player-container {
 		border: 0 !important;
 	}
 
@@ -1639,7 +1641,7 @@ export default {
 	}
 
 	#dropdown-toggle {
-		background-color: $dark-grey !important;
+		background-color: $dark-grey-2 !important;
 		border: 0;
 
 		i {
@@ -1756,8 +1758,6 @@ export default {
 			flex-grow: 1;
 
 			&.nothing-here-text {
-				border: 1px solid $light-grey-2;
-				border-radius: 5px;
 				margin: 10px;
 			}
 
