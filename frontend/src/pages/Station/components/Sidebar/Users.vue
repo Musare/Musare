@@ -63,6 +63,10 @@ export default {
 		color: $night-mode-text;
 		background-color: $dark-grey-2 !important;
 		border: 0 !important;
+
+		&:hover {
+			color: lighten($night-mode-text, 10%) !important;
+		}
 	}
 }
 
@@ -86,7 +90,7 @@ export default {
 
 			&:hover {
 				background-color: #eee;
-				color: #000 !important;
+				color: #000;
 			}
 
 			img {
