@@ -217,7 +217,7 @@ const modules = {
 	preferences: {
 		namespaced: true,
 		state: {
-			nightmode: true,
+			nightmode: false,
 			autoSkipDisliked: true
 		},
 		actions: {

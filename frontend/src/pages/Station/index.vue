@@ -3,14 +3,14 @@
 		<metadata v-if="exists && !loading" :title="`${station.displayName}`" />
 		<metadata v-else-if="!exists && !loading" :title="`Not found`" />
 
-		<div id="content-loader-container" v-if="loading">
+		<div id="page-loader-container" v-if="loading">
 			<content-loader
 				width="1920"
 				height="1080"
-				primary-color="#f3f3f3"
-				secondary-color="#cccccc"
+				:primary-color="nightmode ? '#222' : '#fff'"
+				:secondary-color="nightmode ? '#444' : '#ddd'"
 				preserve-aspect-ratio="none"
-				id="content-loader content-loader-content"
+				id="page-loader-content"
 			>
 				<rect x="100" y="108" rx="5" ry="5" width="1048" height="672" />
 				<rect x="100" y="810" rx="5" ry="5" width="1048" height="110" />
@@ -21,10 +21,10 @@
 			<content-loader
 				width="1920"
 				height="1080"
-				primary-color="#f3f3f3"
-				secondary-color="#cccccc"
+				:primary-color="nightmode ? '#222' : '#fff'"
+				:secondary-color="nightmode ? '#444' : '#ddd'"
 				preserve-aspect-ratio="none"
-				id="content-loader"
+				id="page-loader-layout"
 			>
 				<rect x="0" y="0" rx="0" ry="0" width="1920" height="64" />
 				<rect x="0" y="980" rx="0" ry="0" width="1920" height="100" />
@@ -489,6 +489,7 @@ export default {
 			loggedIn: state => state.user.auth.loggedIn,
 			userId: state => state.user.auth.userId,
 			role: state => state.user.auth.role,
+			nightmode: state => state.user.preferences.nightmode,
 			autoSkipDisliked: state => state.user.preferences.autoSkipDisliked
 		})
 	},
@@ -1292,7 +1293,9 @@ export default {
 		join() {
 			this.socket.emit("stations.join", this.stationName, res => {
 				if (res.status === "success") {
-					this.loading = false;
+					setTimeout(() => {
+						this.loading = false;
+					}, 1000); // prevents popping in of youtube embed etc.
 
 					const {
 						_id,
@@ -1559,23 +1562,30 @@ export default {
 <style lang="scss" scoped>
 @import "../../styles/global.scss";
 
-#content-loader {
+#page-loader-container {
 	height: inherit;
+
+	#page-loader-content {
+		height: inherit;
+		position: absolute;
+		max-width: 100%;
+		width: 1800px;
+		transform: translateX(-50%);
+		left: 50%;
+	}
+
+	#page-loader-layout {
+		height: inherit;
+		width: 100%;
+	}
 }
 
-#content-loader-content {
-	position: absolute;
-	height: inherit;
-	max-width: 1800px;
-	transform: translateX(-50%);
-	left: 50%;
-}
-
-.progress {
+#mobile-progress-animation {
 	width: 50px;
 	animation: rotate 0.8s infinite linear;
 	border: 8px solid $primary-color;
 	border-right-color: transparent;
+	border-radius: 50%;
 	height: 50px;
 	position: absolute;
 	top: 50%;
@@ -2001,7 +2011,7 @@ export default {
 		display: block;
 	}
 
-	#content-loader-container {
+	#page-loader-container {
 		display: none;
 	}
 
