@@ -36,11 +36,7 @@
 
 				<!-- Choosing a song from youtube - query results -->
 
-				<table
-					class="table"
-					style="margin-top: 20px;"
-					v-if="queryResults.length > 0"
-				>
+				<table class="table" v-if="queryResults.length > 0">
 					<tbody>
 						<tr
 							v-for="(result, index) in queryResults"
@@ -95,7 +91,7 @@
 				<!-- Import a playlist from youtube -->
 
 				<div v-if="station.type === 'official'">
-					<hr style="margin: 30px 0;" />
+					<hr class="section-horizontal-rule" />
 
 					<h4 class="section-title">
 						Import a playlist
@@ -148,7 +144,7 @@
 							playlists.length > 0
 					"
 				>
-					<hr style="margin: 30px 0;" />
+					<hr class="section-horizontal-rule" />
 
 					<aside id="playlist-to-queue-selection">
 						<h4 class="section-title">Choose a playlist</h4>
@@ -409,6 +405,7 @@ tr td {
 
 .table {
 	margin-bottom: 0;
+	margin-top: 20px;
 }
 
 .night-mode {

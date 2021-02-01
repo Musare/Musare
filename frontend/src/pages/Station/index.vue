@@ -10,7 +10,7 @@
 				primary-color="#f3f3f3"
 				secondary-color="#cccccc"
 				preserve-aspect-ratio="none"
-				style="position: absolute; height: inherit; max-width: 1800px; transform: translateX(-50%); left: 50%;"
+				id="content-loader content-loader-content"
 			>
 				<rect x="100" y="108" rx="5" ry="5" width="1048" height="672" />
 				<rect x="100" y="810" rx="5" ry="5" width="1048" height="110" />
@@ -24,7 +24,7 @@
 				primary-color="#f3f3f3"
 				secondary-color="#cccccc"
 				preserve-aspect-ratio="none"
-				style="height: inherit"
+				id="content-loader"
 			>
 				<rect x="0" y="0" rx="0" ry="0" width="1920" height="64" />
 				<rect x="0" y="980" rx="0" ry="0" width="1920" height="100" />
@@ -1558,6 +1558,19 @@ export default {
 
 <style lang="scss" scoped>
 @import "../../styles/global.scss";
+
+#content-loader {
+	height: inherit;
+}
+
+#content-loader-content {
+	position: absolute;
+	height: inherit;
+	max-width: 1800px;
+	transform: translateX(-50%);
+	left: 50%;
+}
+
 .progress {
 	width: 50px;
 	animation: rotate 0.8s infinite linear;

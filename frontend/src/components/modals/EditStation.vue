@@ -173,7 +173,6 @@
 						>
 							<button
 								:class="privacyButtons[station.privacy].style"
-								style="text-transform: capitalize"
 								@click="updatePrivacyLocal(station.privacy)"
 							>
 								<i class="material-icons">{{
@@ -344,7 +343,6 @@
 							class="button-wrapper"
 						>
 							<button
-								style="text-transform: capitalize"
 								:class="station.theme"
 								@click="updateThemeLocal(station.theme)"
 							>
@@ -1205,59 +1203,60 @@ export default {
 	.button-wrapper {
 		display: flex;
 		flex-direction: column;
-	}
 
-	button {
-		width: 100%;
-		height: 36px;
-		border: 0;
-		border-radius: 3px;
-		font-size: 18px;
-		color: white;
-		box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.25);
-		display: block;
-		text-align: center;
-		justify-content: center;
-		display: inline-flex;
-		-ms-flex-align: center;
-		align-items: center;
-		-moz-user-select: none;
-		user-select: none;
-		cursor: pointer;
-		margin-bottom: 10px;
-		padding: 0;
+		button {
+			width: 100%;
+			height: 36px;
+			border: 0;
+			border-radius: 3px;
+			font-size: 18px;
+			color: white;
+			box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.25);
+			display: block;
+			text-align: center;
+			justify-content: center;
+			display: inline-flex;
+			-ms-flex-align: center;
+			align-items: center;
+			-moz-user-select: none;
+			user-select: none;
+			cursor: pointer;
+			margin-bottom: 10px;
+			padding: 0;
+			text-transform: capitalize;
 
-		&.red {
-			background-color: $red;
-		}
+			&.red {
+				background-color: $red;
+			}
 
-		&.green {
-			background-color: $green;
-		}
+			&.green {
+				background-color: $green;
+			}
 
-		&.blue {
-			background-color: $musare-blue;
-		}
+			&.blue {
+				background-color: $musare-blue;
+			}
 
-		&.orange {
-			background-color: $light-orange;
-		}
+			&.orange {
+				background-color: $light-orange;
+			}
 
-		&.yellow {
-			background-color: $yellow;
-		}
+			&.yellow {
+				background-color: $yellow;
+			}
 
-		&.purple {
-			background-color: $purple;
-		}
+			&.purple {
+				background-color: $purple;
+			}
 
-		&.teal {
-			background-color: $teal;
-		}
+			&.teal {
+				background-color: $teal;
+			}
 
-		i {
-			font-size: 20px;
-			margin-right: 4px;
+			i {
+				font-size: 20px;
+				margin-right: 4px;
+			}
 		}
 	}
 }

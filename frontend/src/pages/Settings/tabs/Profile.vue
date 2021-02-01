@@ -72,10 +72,7 @@
 				autocomplete="off"
 				v-model="modifiedUser.bio"
 			/>
-			<span
-				v-if="modifiedUser.bio"
-				class="character-counter"
-				style="height: initial"
+			<span v-if="modifiedUser.bio" class="character-counter"
 				>{{ modifiedUser.bio.length }}/200</span
 			>
 		</p>
@@ -295,6 +292,10 @@ export default {
 
 .content .control {
 	margin-bottom: 15px;
+}
+
+.character-counter {
+	height: initial;
 }
 
 .avatar-selection-outer-container {
