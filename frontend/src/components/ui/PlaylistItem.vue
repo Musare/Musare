@@ -50,8 +50,12 @@ export default {
 @import "../../styles/global.scss";
 
 .night-mode {
-	.playlist p {
-		color: $night-mode-text !important;
+	.playlist {
+		background-color: $dark-grey-2 !important;
+		border: 0 !important;
+		p {
+			color: $night-mode-text !important;
+		}
 	}
 }
 
