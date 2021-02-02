@@ -193,7 +193,13 @@
 									</div>
 
 									<!-- Add Song To Playlist Button & Dropdown -->
-									<div id="add-song-to-playlist">
+									<div
+										id="add-song-to-playlist"
+										v-click-outside="
+											() =>
+												(this.showPlaylistDropdown = false)
+										"
+									>
 										<div class="control has-addons">
 											<button
 												class="button is-primary"

@@ -207,6 +207,21 @@ router.beforeEach((to, from, next) => {
 	} else next();
 });
 
+Vue.directive("click-outside", {
+	bind(element, binding) {
+		window.handleOutsideClick = event => {
+			if (!(element === event.target || element.contains(event.target))) {
+				binding.value();
+			}
+		};
+
+		document.body.addEventListener("click", window.handleOutsideClick);
+	},
+	unbind() {
+		document.body.removeEventListener("click", window.handleOutsideClick);
+	}
+});
+
 // eslint-disable-next-line no-new
 new Vue({
 	router,
