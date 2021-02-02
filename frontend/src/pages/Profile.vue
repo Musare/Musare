@@ -85,8 +85,22 @@
 					v-if="activeTab === 'recentActivity'"
 				>
 					<div v-if="activities.length > 0">
+						<h4 class="section-title">Recent activity</h4>
+
+						<p class="section-description">
+							This is a log of all actions
+							{{
+								userId === user._id
+									? "you have"
+									: `${user.name} has`
+							}}
+							taken recently.
+						</p>
+
+						<hr class="section-horizontal-rule" />
+
 						<div
-							class="item activity"
+							class="item activity-item"
 							v-for="activity in sortedActivities"
 							:key="activity._id"
 						>
@@ -123,7 +137,7 @@
 						</div>
 					</div>
 					<div v-else>
-						<h2>No recent activity.</h2>
+						<h3>No recent activity.</h3>
 					</div>
 				</div>
 				<div
@@ -131,8 +145,24 @@
 					v-if="activeTab === 'playlists'"
 				>
 					<div v-if="playlists.length > 0">
+						<h4 class="section-title">
+							{{ isUser ? "My" : null }} Playlists
+						</h4>
+
+						<p class="section-description">
+							View
+							{{
+								userId === user._id
+									? "and manage your personal"
+									: `${user.name}'s`
+							}}
+							playlists.
+						</p>
+
+						<hr class="section-horizontal-rule" />
+
 						<div
-							class="item playlist"
+							class="item"
 							v-for="playlist in playlists"
 							:key="playlist._id"
 						>
@@ -160,6 +190,7 @@
 						<button
 							v-if="user._id === userId"
 							class="button is-primary"
+							id="create-new-playlist-button"
 							@click="
 								openModal({
 									sector: 'station',
@@ -171,7 +202,7 @@
 						</button>
 					</div>
 					<div v-else>
-						<h2>No playlists here.</h2>
+						<h3>No playlists here.</h3>
 					</div>
 				</div>
 			</div>
@@ -512,7 +543,7 @@ export default {
 <style lang="scss" scoped>
 @import "../styles/global.scss";
 
-@media only screen and (max-width: 1000px) {
+@media only screen and (max-width: 750px) {
 	// #page-title {
 	// 	margin: 0;
 	// 	font-size: 40px;
@@ -586,6 +617,7 @@ export default {
 		width: 100px;
 		height: 100px;
 		border-radius: 100%;
+		border: 0.5px solid $light-grey-2;
 		margin-right: 32px;
 	}
 
@@ -693,7 +725,6 @@ export default {
 	max-width: 100%;
 	margin-left: auto;
 	margin-right: auto;
-	margin-top: 32px;
 	padding: 24px;
 	display: flex;
 
@@ -726,77 +757,96 @@ export default {
 	.content {
 		width: 600px;
 		max-width: 100%;
+		background-color: #fff;
+		padding: 30px 50px;
+		border-radius: 3px;
+
+		h3 {
+			font-weight: 400;
+		}
 
 		.item {
-			height: 72px;
-			border: 0.5px $light-grey-2 solid;
-			margin-bottom: 12px;
-			border-radius: 5px;
-			display: flex;
 			overflow: hidden;
 
-			.top-text {
-				color: $dark-grey-2;
-				font-size: 20px;
-				line-height: 23px;
-				margin-bottom: 0;
+			&:not(:last-of-type) {
+				margin-bottom: 10px;
 			}
 
-			.bottom-text {
-				color: $dark-grey-2;
-				font-size: 16px;
-				line-height: 19px;
-				margin-bottom: 0;
-				margin-top: 6px;
+			/** temp code - will be put into a separate component */
 
-				&:first-letter {
-					text-transform: uppercase;
-				}
-			}
-
-			.thumbnail {
-				position: relative;
+			&.activity-item {
 				display: flex;
-				align-items: center;
-				justify-content: center;
-				width: 70.5px;
-				height: 70.5px;
-				background-color: #000;
-				z-index: -1;
+				height: 72px;
+				border: 0.5px $light-grey-2 solid;
+				border-radius: 3px;
 
-				img {
-					opacity: 0.4;
+				.top-text {
+					color: $dark-grey-2;
+					font-size: 20px;
+					line-height: 23px;
+					margin-bottom: 0;
 				}
 
-				.activity-type-icon {
-					position: absolute;
-					color: #fff;
-				}
-			}
+				.bottom-text {
+					color: $dark-grey-2;
+					font-size: 16px;
+					line-height: 19px;
+					margin-bottom: 0;
+					margin-top: 6px;
 
-			.left-part {
-				flex: 1;
-				padding: 12px;
-			}
-
-			.actions {
-				display: flex;
-				align-items: center;
-				padding: 12px;
-
-				.hide-icon {
-					border-bottom: 0;
-					display: flex;
-
-					i {
-						color: #bdbdbd;
+					&:first-letter {
+						text-transform: uppercase;
 					}
 				}
-			}
 
-			button {
-				font-size: 17px;
+				.thumbnail {
+					position: relative;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					width: 70.5px;
+					height: 70.5px;
+
+					img {
+						opacity: 0.4;
+					}
+
+					.activity-type-icon {
+						position: absolute;
+						color: $dark-grey;
+						font-size: 30px;
+					}
+				}
+
+				.left-part {
+					flex: 1;
+					padding: 12px;
+				}
+
+				.actions {
+					display: flex;
+					align-items: center;
+					padding: 12px;
+
+					.hide-icon {
+						border-bottom: 0;
+						display: flex;
+
+						i {
+							color: #bdbdbd;
+						}
+					}
+				}
+
+				button {
+					font-size: 17px;
+				}
 			}
+		}
+
+		#create-new-playlist-button {
+			margin-top: 30px;
+			width: 100%;
 		}
 	}
 }
