@@ -382,6 +382,22 @@ export default {
 							});
 						});
 
+						this.socket.on(
+							"event:user.orderOfPlaylists.changed",
+							orderOfPlaylists => {
+								const sortedPlaylists = [];
+
+								this.playlists.forEach(playlist => {
+									sortedPlaylists[
+										orderOfPlaylists.indexOf(playlist._id)
+									] = playlist;
+								});
+
+								this.playlists = sortedPlaylists;
+								this.orderOfPlaylists = this.calculatePlaylistOrder();
+							}
+						);
+
 						if (this.user._id === this.userId) {
 							this.socket.emit(
 								"activities.getSet",

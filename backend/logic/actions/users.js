@@ -30,6 +30,22 @@ CacheModule.runJob("SUB", {
 });
 
 CacheModule.runJob("SUB", {
+	channel: "user.updateOrderOfPlaylists",
+	cb: res => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(response => {
+			response.sockets.forEach(socket => {
+				socket.emit("event:user.orderOfPlaylists.changed", res.orderOfPlaylists);
+			});
+		});
+
+		IOModule.runJob("EMIT_TO_ROOM", {
+			room: `profile-${res.userId}`,
+			args: ["event:user.orderOfPlaylists.changed", res.orderOfPlaylists]
+		});
+	}
+});
+
+CacheModule.runJob("SUB", {
 	channel: "user.updateUsername",
 	cb: user => {
 		IOModule.runJob("SOCKETS_FROM_USER", { userId: user._id }).then(response => {
@@ -589,6 +605,7 @@ export default {
 						channel: "user.removeSessions",
 						value: userId
 					});
+
 					async.each(
 						keys,
 						(sessionId, callback) => {
@@ -663,6 +680,14 @@ export default {
 
 					return cb({ status: "failure", message: err });
 				}
+
+				CacheModule.runJob("PUB", {
+					channel: "user.updateOrderOfPlaylists",
+					value: {
+						orderOfPlaylists,
+						userId: session.userId
+					}
+				});
 
 				this.log(
 					"SUCCESS",
