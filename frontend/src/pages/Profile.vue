@@ -161,32 +161,58 @@
 
 						<hr class="section-horizontal-rule" />
 
-						<div
-							class="item"
-							v-for="playlist in playlists"
-							:key="playlist._id"
+						<draggable
+							class="menu-list scrollable-list"
+							v-if="playlists.length > 0"
+							v-model="playlists"
+							v-bind="dragOptions"
+							@start="drag = true"
+							@end="drag = false"
 						>
-							<playlist-item
-								v-if="
-									playlist.privacy === 'public' ||
-										(playlist.privacy === 'private' &&
-											playlist.createdBy === userId)
+							<transition-group
+								type="transition"
+								:name="
+									!drag ? 'draggable-list-transition' : null
 								"
-								:playlist="playlist"
 							>
-								<div v-if="user._id === userId" slot="actions">
-									<button
-										class="button is-primary"
-										@click="editPlaylistClick(playlist._id)"
+								<div
+									class="item"
+									v-for="playlist in playlists"
+									:key="playlist._id"
+								>
+									<playlist-item
+										v-if="
+											playlist.privacy === 'public' ||
+												(playlist.privacy ===
+													'private' &&
+													playlist.createdBy ===
+														userId)
+										"
+										:playlist="playlist"
 									>
-										<i
-											class="material-icons icon-with-button"
-											>create</i
-										>Edit
-									</button>
+										<div
+											v-if="user._id === userId"
+											slot="actions"
+										>
+											<button
+												class="button is-primary"
+												@click="
+													editPlaylistClick(
+														playlist._id
+													)
+												"
+											>
+												<i
+													class="material-icons icon-with-button"
+													>create</i
+												>Edit
+											</button>
+										</div>
+									</playlist-item>
 								</div>
-							</playlist-item>
-						</div>
+							</transition-group>
+						</draggable>
+
 						<button
 							v-if="user._id === userId"
 							class="button is-primary"
@@ -215,8 +241,10 @@
 import { mapState, mapActions } from "vuex";
 import { format, formatDistance, parseISO } from "date-fns";
 import Toast from "toasters";
+import draggable from "vuedraggable";
 
 import PlaylistItem from "../components/ui/PlaylistItem.vue";
+import SortablePlaylists from "../mixins/SortablePlaylists.vue";
 import MainHeader from "../components/layout/MainHeader.vue";
 import MainFooter from "../components/layout/MainFooter.vue";
 
@@ -228,8 +256,10 @@ export default {
 		MainFooter,
 		PlaylistItem,
 		CreatePlaylist: () => import("../components/modals/CreatePlaylist.vue"),
-		EditPlaylist: () => import("../components/modals/EditPlaylist.vue")
+		EditPlaylist: () => import("../components/modals/EditPlaylist.vue"),
+		draggable
 	},
+	mixins: [SortablePlaylists],
 	data() {
 		return {
 			user: {},
@@ -291,6 +321,7 @@ export default {
 							res => {
 								if (res.status === "success")
 									this.playlists = res.data;
+								this.orderOfPlaylists = this.calculatePlaylistOrder(); // order in regards to the database
 							}
 						);
 
@@ -544,23 +575,6 @@ export default {
 @import "../styles/global.scss";
 
 @media only screen and (max-width: 750px) {
-	// #page-title {
-	// 	margin: 0;
-	// 	font-size: 40px;
-	// }
-
-	// #sidebar-with-content {
-	// 	width: 962px;
-	// 	margin: 0 auto;
-	// 	margin-top: 30px;
-	// 	flex-direction: row;
-
-	// 	.content {
-	// 		width: 600px;
-	// 		margin-top: 0px !important;
-	// 	}
-	// }
-
 	.info-section {
 		margin-top: 0 !important;
 
@@ -572,7 +586,7 @@ export default {
 			margin-top: 24px;
 		}
 
-		.buttons .button:not(last-of-type) {
+		.buttons .button:not(:last-of-type) {
 			margin-bottom: 10px;
 			margin-right: 5px;
 		}
@@ -767,6 +781,10 @@ export default {
 
 		.item {
 			overflow: hidden;
+
+			.playlist {
+				cursor: move;
+			}
 
 			&:not(:last-of-type) {
 				margin-bottom: 10px;

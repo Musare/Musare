@@ -99,13 +99,22 @@ export default {
 		display: flex;
 		align-items: center;
 		padding: 12px;
-	}
 
-	button,
-	.button {
-		width: 100%;
-		font-size: 17px;
-		height: 36px;
+		div {
+			display: flex;
+			align-items: center;
+
+			button,
+			.button {
+				width: 100%;
+				font-size: 17px;
+				height: 36px;
+
+				&:not(:last-of-type) {
+					margin-right: 5px;
+				}
+			}
+		}
 	}
 }
 </style>

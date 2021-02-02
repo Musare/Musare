@@ -67,36 +67,21 @@ import { mapState, mapActions } from "vuex";
 import Toast from "toasters";
 import draggable from "vuedraggable";
 
-import PlaylistItem from "../../../../components/ui/PlaylistItem.vue";
 import io from "../../../../io";
+import PlaylistItem from "../../../../components/ui/PlaylistItem.vue";
+import SortablePlaylists from "../../../../mixins/SortablePlaylists.vue";
 
 export default {
 	components: { PlaylistItem, draggable },
+	mixins: [SortablePlaylists],
 	data() {
 		return {
-			orderOfPlaylists: [],
-			interval: null,
-			playlists: [],
-			drag: false
+			playlists: []
 		};
 	},
-	computed: {
-		...mapState("modalVisibility", {
-			modals: state => state.modals.station
-		}),
-		...mapState({
-			station: state => state.station.station,
-			userId: state => state.user.auth.userId
-		}),
-		dragOptions() {
-			return {
-				animation: 200,
-				group: "description",
-				disabled: false,
-				ghostClass: "draggable-list-ghost"
-			};
-		}
-	},
+	computed: mapState({
+		station: state => state.station.station
+	}),
 	mounted() {
 		io.getSocket(socket => {
 			this.socket = socket;
@@ -154,9 +139,6 @@ export default {
 					}
 				});
 			});
-
-			// checks if playlist order has changed every 1/2 second
-			this.interval = setInterval(() => this.savePlaylistOrder(), 500);
 		});
 	},
 	beforeDestroy() {
@@ -203,37 +185,6 @@ export default {
 				return false;
 			return true;
 		},
-		calculatePlaylistOrder() {
-			const calculatedOrder = [];
-			this.playlists.forEach(playlist =>
-				calculatedOrder.push(playlist._id)
-			);
-
-			return calculatedOrder;
-		},
-		savePlaylistOrder() {
-			const recalculatedOrder = this.calculatePlaylistOrder();
-			if (
-				JSON.stringify(this.orderOfPlaylists) ===
-				JSON.stringify(recalculatedOrder)
-			)
-				return; // nothing has changed
-
-			this.socket.emit(
-				"users.updateOrderOfPlaylists",
-				recalculatedOrder,
-				res => {
-					if (res.status === "failure")
-						return new Toast({
-							content: res.message,
-							timeout: 8000
-						});
-
-					this.orderOfPlaylists = this.calculatePlaylistOrder(); // new order in regards to the database
-					return new Toast({ content: res.message, timeout: 4000 });
-				}
-			);
-		},
 		...mapActions("modalVisibility", ["openModal"]),
 		...mapActions("user/playlists", ["editPlaylist"])
 	}
@@ -248,32 +199,32 @@ export default {
 	margin-bottom: 20px;
 	border-radius: 0 0 5px 5px;
 	max-height: 100%;
-
-	.nothing-here-text {
-		margin-bottom: 10px;
-	}
-
-	.icons-group {
-		display: flex;
-		align-items: center;
-
-		button {
-			background-color: var(--station-theme) !important;
-			&:not(:first-of-type) {
-				margin-left: 5px;
-			}
-			&:hover,
-			&:focus {
-				filter: brightness(90%);
-			}
-		}
-	}
 }
 
 .night-mode {
 	#my-playlists {
 		background-color: $night-mode-bg-secondary !important;
 		border: 0 !important;
+	}
+}
+
+.nothing-here-text {
+	margin-bottom: 10px;
+}
+
+.icons-group {
+	display: flex;
+	align-items: center;
+
+	button {
+		background-color: var(--station-theme) !important;
+		&:not(:first-of-type) {
+			margin-left: 5px;
+		}
+		&:hover,
+		&:focus {
+			filter: brightness(90%);
+		}
 	}
 }
 

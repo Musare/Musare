@@ -229,18 +229,33 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	indexForUser: async function indexForUser(session, userId, cb) {
-		const playlistModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "playlist"
-			},
-			this
-		);
+		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
 		async.waterfall(
 			[
 				next => {
-					playlistModel.find({ createdBy: userId }, next);
+					userModel.findById(userId).select({ "preferences.orderOfPlaylists": -1 }).exec(next);
+				},
+
+				({ preferences }, next) => {
+					const { orderOfPlaylists } = preferences;
+
+					const match = {
+						createdBy: userId
+					};
+
+					// if a playlist order exists
+					if (orderOfPlaylists > 0) match._id = { $in: orderOfPlaylists };
+
+					playlistModel
+						.aggregate()
+						.match(match)
+						.addFields({
+							weight: { $indexOfArray: [orderOfPlaylists, "$_id"] }
+						})
+						.sort({ weight: 1 })
+						.exec(next);
 				},
 
 				(playlists, next) => {
