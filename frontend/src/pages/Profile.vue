@@ -512,8 +512,63 @@ export default {
 <style lang="scss" scoped>
 @import "../styles/global.scss";
 
+@media only screen and (max-width: 1000px) {
+	// #page-title {
+	// 	margin: 0;
+	// 	font-size: 40px;
+	// }
+
+	// #sidebar-with-content {
+	// 	width: 962px;
+	// 	margin: 0 auto;
+	// 	margin-top: 30px;
+	// 	flex-direction: row;
+
+	// 	.content {
+	// 		width: 600px;
+	// 		margin-top: 0px !important;
+	// 	}
+	// }
+
+	.info-section {
+		margin-top: 0 !important;
+
+		.picture-name-row {
+			flex-direction: column !important;
+		}
+
+		.name-role-row {
+			margin-top: 24px;
+		}
+
+		.buttons .button:not(last-of-type) {
+			margin-bottom: 10px;
+			margin-right: 5px;
+		}
+
+		.date-location-row {
+			flex-direction: column;
+			width: auto !important;
+		}
+
+		.date-location-row > div:nth-child(2),
+		.buttons .button:nth-child(2) {
+			margin-left: 0 !important;
+		}
+	}
+
+	.bottom-section {
+		flex-direction: column;
+	}
+
+	.content {
+		margin: 24px 0;
+	}
+}
+
 .info-section {
 	width: 912px;
+	max-width: 100%;
 	margin-left: auto;
 	margin-right: auto;
 	margin-top: 32px;
@@ -570,6 +625,7 @@ export default {
 
 	.buttons {
 		width: 388px;
+		max-width: 100%;
 		display: flex;
 		flex-direction: row;
 		margin-left: auto;
@@ -634,6 +690,7 @@ export default {
 
 .bottom-section {
 	width: 962px;
+	max-width: 100%;
 	margin-left: auto;
 	margin-right: auto;
 	margin-top: 32px;
@@ -668,9 +725,9 @@ export default {
 
 	.content {
 		width: 600px;
+		max-width: 100%;
 
 		.item {
-			width: 100%;
 			height: 72px;
 			border: 0.5px $light-grey-2 solid;
 			margin-bottom: 12px;
