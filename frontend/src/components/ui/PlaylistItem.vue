@@ -1,22 +1,22 @@
 <template>
-	<div class="playlist">
+	<div class="playlist-item universal-item">
 		<div class="left-part">
-			<p class="top-text">
+			<p class="item-title">
 				{{ playlist.displayName }}
 				<i
 					v-if="playlist.privacy === 'private'"
-					class="privateIcon material-icons"
+					class="private-playlist-icon material-icons"
 					title="This playlist is not visible to other users."
 					>lock</i
 				>
 			</p>
-			<p class="bottom-text">
+			<p class="item-description">
 				{{ totalLength(playlist) }} •
 				{{ playlist.songs.length }}
 				{{ playlist.songs.length === 1 ? "song" : "songs" }}
 			</p>
 		</div>
-		<div class="actions">
+		<div class="universal-item-actions">
 			<slot name="actions" />
 		</div>
 	</div>
@@ -50,43 +50,32 @@ export default {
 @import "../../styles/global.scss";
 
 .night-mode {
-	.playlist {
+	.playlist-item {
 		background-color: $dark-grey-2 !important;
 		border: 0 !important;
+
 		p {
 			color: $night-mode-text !important;
 		}
 	}
 }
 
-.playlist {
+.playlist-item {
 	width: 100%;
 	height: 72px;
-	border: 0.5px $light-grey-2 solid;
-	border-radius: 3px;
-	display: flex;
 
-	.top-text {
+	.item-title {
 		color: $dark-grey-2;
 		font-size: 20px;
 		line-height: 23px;
 		margin-bottom: 0;
+		display: flex;
+		align-items: center;
 
-		.privateIcon {
+		.private-playlist-icon {
 			color: $dark-pink;
 			font-size: 18px;
-		}
-	}
-
-	.bottom-text {
-		color: $dark-grey-2;
-		font-size: 16px;
-		line-height: 19px;
-		margin-bottom: 0;
-		margin-top: 6px;
-
-		&:first-letter {
-			text-transform: uppercase;
+			margin-left: 5px;
 		}
 	}
 
@@ -95,11 +84,7 @@ export default {
 		padding: 12px;
 	}
 
-	.actions {
-		display: flex;
-		align-items: center;
-		padding: 12px;
-
+	.universal-item-actions {
 		div {
 			display: flex;
 			align-items: center;

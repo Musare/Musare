@@ -561,4 +561,75 @@ h4.section-title {
 .margin-bottom-zero {
 	margin-bottom: 0 !important;
 }
+
+/** Universial items e.g. playlist items, queue items, activity items */
+.item-draggable {
+	cursor: move;
+}
+
+.universal-item {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: space-between;
+	padding: 7.5px;
+	border: 1px solid $light-grey-2;
+	border-radius: 3px;
+
+	.item-title {
+		font-size: 20px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.item-description {
+		font-size: 14px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.universal-item-actions {
+		display: flex;
+		flex-direction: row;
+		flex-wrap: wrap;
+		margin-left: 10px;
+		justify-content: center;
+
+		i {
+			cursor: pointer;
+
+			&:hover,
+			&:focus {
+				filter: brightness(90%);
+			}
+
+			&:not(:first-of-type) {
+				margin-left: 5px;
+			}
+		}
+
+		.play-icon {
+			color: $green;
+		}
+
+		.edit-icon {
+			color: $primary-color;
+		}
+
+		.hide-icon {
+			color: #bdbdbd;
+		}
+
+		.stop-icon,
+		.remove-from-queue-icon {
+			color: $red;
+		}
+
+		.report-icon {
+			color: $yellow;
+		}
+	}
+}
 </style>

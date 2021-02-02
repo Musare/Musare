@@ -1194,7 +1194,7 @@ export default {
 
 .right-section {
 	width: 157px;
-	min-height: 375px;
+	min-height: 515px;
 	margin-left: 16px;
 	display: grid;
 	gap: 16px;

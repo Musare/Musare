@@ -420,6 +420,10 @@ tr td {
 	#playlists {
 		font-size: 18px;
 
+		.playlist:not(:last-of-type) {
+			margin-bottom: 10px;
+		}
+
 		.radio {
 			display: flex;
 			flex-direction: row;
@@ -447,7 +451,7 @@ tr td {
 }
 
 #playlists {
-	.playlist {
+	.playlist-item {
 		.button {
 			width: 146px;
 		}

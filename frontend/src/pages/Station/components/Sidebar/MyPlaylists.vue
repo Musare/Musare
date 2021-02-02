@@ -16,36 +16,34 @@
 					:playlist="playlist"
 					v-for="(playlist, index) in playlists"
 					:key="'key-' + index"
+					class="item-draggable"
 				>
 					<div class="icons-group" slot="actions">
-						<button
+						<i
 							v-if="
 								station.type === 'community' &&
 									isNotSelected(playlist._id) &&
 									!station.partyMode
 							"
-							class="button is-primary"
 							@click="selectPlaylist(playlist._id)"
+							class="material-icons play-icon"
+							>play_arrow</i
 						>
-							<i class="material-icons">play_arrow</i>
-						</button>
-						<button
+						<i
 							v-if="
 								station.type === 'community' &&
 									!isNotSelected(playlist._id) &&
 									!station.partyMode
 							"
-							class="button is-danger"
 							@click="deselectPlaylist()"
+							class="material-icons stop-icon"
+							>stop</i
 						>
-							<i class="material-icons">stop</i>
-						</button>
-						<button
-							class="button is-primary"
+						<i
 							@click="edit(playlist._id)"
+							class="material-icons edit-icon"
+							>edit</i
 						>
-							<i class="material-icons">edit</i>
-						</button>
 					</div>
 				</playlist-item>
 			</transition-group>
@@ -232,25 +230,13 @@ export default {
 	display: flex;
 	align-items: center;
 
-	button {
-		background-color: var(--station-theme) !important;
-		&:not(:first-of-type) {
-			margin-left: 5px;
-		}
-		&:hover,
-		&:focus {
-			filter: brightness(90%);
-		}
+	.edit-icon {
+		color: var(--station-theme);
 	}
 }
 
-.menu-list .playlist {
-	align-items: center;
-	cursor: move;
-
-	&:not(:last-of-type) {
-		margin-bottom: 10px;
-	}
+.menu-list .playlist-item:not(:last-of-type) {
+	margin-bottom: 10px;
 }
 
 .create-playlist {

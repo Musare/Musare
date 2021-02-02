@@ -100,7 +100,7 @@
 						<hr class="section-horizontal-rule" />
 
 						<div
-							class="item activity-item"
+							class="item activity-item universal-item"
 							v-for="activity in sortedActivities"
 							:key="activity._id"
 						>
@@ -112,10 +112,10 @@
 							</div>
 							<div class="left-part">
 								<p
-									class="top-text"
+									class="item-title"
 									v-html="activity.message"
 								></p>
-								<p class="bottom-text">
+								<p class="item-description">
 									{{
 										formatDistance(
 											parseISO(activity.createdAt),
@@ -125,13 +125,11 @@
 									}}
 								</p>
 							</div>
-							<div class="actions">
-								<a
-									class="hide-icon"
-									href="#"
-									@click="hideActivity(activity._id)"
-								>
-									<i class="material-icons">visibility_off</i>
+							<div class="universal-item-actions">
+								<a href="#" @click="hideActivity(activity._id)">
+									<i class="material-icons hide-icon"
+										>visibility_off</i
+									>
 								</a>
 							</div>
 						</div>
@@ -176,7 +174,7 @@
 								"
 							>
 								<div
-									class="item"
+									class="item item-draggable"
 									v-for="playlist in playlists"
 									:key="playlist._id"
 								>
@@ -194,19 +192,15 @@
 											v-if="user._id === userId"
 											slot="actions"
 										>
-											<button
-												class="button is-primary"
+											<i
 												@click="
 													editPlaylistClick(
 														playlist._id
 													)
 												"
+												class="material-icons edit-icon"
+												>edit</i
 											>
-												<i
-													class="material-icons icon-with-button"
-													>create</i
-												>Edit
-											</button>
 										</div>
 									</playlist-item>
 								</div>
@@ -798,10 +792,6 @@ export default {
 		.item {
 			overflow: hidden;
 
-			.playlist {
-				cursor: move;
-			}
-
 			&:not(:last-of-type) {
 				margin-bottom: 10px;
 			}
@@ -809,29 +799,9 @@ export default {
 			/** temp code - will be put into a separate component */
 
 			&.activity-item {
-				display: flex;
 				height: 72px;
 				border: 0.5px $light-grey-2 solid;
 				border-radius: 3px;
-
-				.top-text {
-					color: $dark-grey-2;
-					font-size: 20px;
-					line-height: 23px;
-					margin-bottom: 0;
-				}
-
-				.bottom-text {
-					color: $dark-grey-2;
-					font-size: 16px;
-					line-height: 19px;
-					margin-bottom: 0;
-					margin-top: 6px;
-
-					&:first-letter {
-						text-transform: uppercase;
-					}
-				}
 
 				.thumbnail {
 					position: relative;
@@ -855,25 +825,14 @@ export default {
 				.left-part {
 					flex: 1;
 					padding: 12px;
-				}
 
-				.actions {
-					display: flex;
-					align-items: center;
-					padding: 12px;
-
-					.hide-icon {
-						border-bottom: 0;
-						display: flex;
-
-						i {
-							color: #bdbdbd;
-						}
+					.item-title {
+						margin: 0;
 					}
 				}
 
-				button {
-					font-size: 17px;
+				.universal-item-actions a {
+					border-bottom: 0;
 				}
 			}
 		}

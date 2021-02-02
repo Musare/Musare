@@ -12,7 +12,7 @@
 		}"
 		@mousedown="onResizeBox"
 	>
-		<div class="box-header" @mousedown="onDragBox">
+		<div class="box-header item-draggable" @mousedown="onDragBox">
 			<slot name="header"></slot>
 		</div>
 		<div class="box-body">
@@ -143,7 +143,6 @@ export default {
 	min-width: 50px !important;
 
 	.box-header {
-		cursor: move;
 		z-index: 100000001;
 		background-color: $musare-blue;
 		padding: 10px;

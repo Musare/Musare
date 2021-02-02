@@ -1,5 +1,5 @@
 <template>
-	<div class="queue-item">
+	<div class="universal-item queue-item">
 		<div id="thumbnail-and-info">
 			<img
 				id="thumbnail"
@@ -8,7 +8,7 @@
 			/>
 			<div id="song-info">
 				<h4
-					id="song-title"
+					class="item-title"
 					:style="
 						song.artists.length < 1 ? { fontSize: '16px' } : null
 					"
@@ -17,7 +17,7 @@
 					{{ song.title }}
 				</h4>
 				<h5
-					id="song-artists"
+					class="item-description"
 					v-if="song.artists"
 					:title="song.artists.join(', ')"
 				>
@@ -53,7 +53,7 @@
 			<p id="song-duration">
 				{{ utils.formatTime(song.duration) }}
 			</p>
-			<div id="queue-item-buttons">
+			<div class="universal-item-actions">
 				<i
 					v-if="
 						$parent.loggedIn &&
@@ -61,8 +61,7 @@
 							song.likes !== -1 &&
 							song.dislikes !== -1
 					"
-					class="material-icons"
-					id="report-queue-item"
+					class="material-icons report-icon"
 					@click="reportQueueSong(song)"
 					>flag</i
 				>
@@ -73,8 +72,7 @@
 							song.likes !== -1 &&
 							song.dislikes !== -1
 					"
-					class="material-icons"
-					id="edit-queue-item"
+					class="material-icons edit-icon"
 					@click="$parent.$parent.$parent.editSong(song)"
 					>edit</i
 				>
@@ -83,8 +81,7 @@
 						station.type === 'community' &&
 							($parent.isOwnerOnly() || $parent.isAdminOnly())
 					"
-					class="material-icons"
-					id="remove-queue-item"
+					class="material-icons remove-from-queue-icon"
 					@click="$parent.removeFromQueue(song.songId)"
 					>delete_forever</i
 				>
@@ -143,14 +140,6 @@ export default {
 }
 
 .queue-item {
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	justify-content: space-between;
-	padding: 7.5px;
-	border: 1px solid $light-grey-2;
-	border-radius: 3px;
-
 	#thumbnail-and-info,
 	#duration-and-actions {
 		display: flex;
@@ -159,14 +148,6 @@ export default {
 
 	#duration-and-actions {
 		margin-left: 5px;
-	}
-
-	#queue-item-buttons {
-		display: flex;
-		flex-direction: row;
-		flex-wrap: wrap;
-		margin-left: 10px;
-		justify-content: center;
 	}
 
 	#thumbnail {
@@ -192,20 +173,6 @@ export default {
 			font-family: Karla, Arial, sans-serif;
 		}
 
-		#song-title {
-			font-size: 20px;
-			overflow: hidden;
-			text-overflow: ellipsis;
-			white-space: nowrap;
-		}
-
-		#song-artists {
-			font-size: 14px;
-			overflow: hidden;
-			text-overflow: ellipsis;
-			white-space: nowrap;
-		}
-
 		#song-request-time {
 			font-size: 12px;
 			margin-top: 7px;
@@ -216,31 +183,8 @@ export default {
 		font-size: 20px;
 	}
 
-	#report-queue-item {
-		cursor: pointer;
-		color: $yellow;
-		&:hover,
-		&:focus {
-			color: darken($yellow, 5%);
-		}
-	}
-
-	#edit-queue-item {
-		cursor: pointer;
+	.edit-icon {
 		color: var(--station-theme);
-		&:hover,
-		&:focus {
-			filter: brightness(90%);
-		}
-	}
-
-	#remove-queue-item {
-		cursor: pointer;
-		color: $red;
-		&:hover,
-		&:focus {
-			color: darken($red, 5%);
-		}
 	}
 }
 </style>
