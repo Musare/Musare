@@ -22,11 +22,11 @@ module.exports = merge(common, {
 		hot: true,
 		port: config.get("frontendPort"),
 		public: config.get("frontendDomain"),
-		watchOptions: {
-			aggregateTimeout: 300,
-			poll: 1000
-		},
 		host: "0.0.0.0",
-		disableHostCheck: true
+		watchOptions: {
+			ignored: /node_modules/
+		},
+		disableHostCheck: true,
+		stats: { chunks: false, children: false }
 	}
 });

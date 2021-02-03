@@ -1,5 +1,4 @@
 const VueLoaderPlugin = require("vue-loader/lib/plugin");
-const WebpackMd5Hash = require("webpack-md5-hash");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = {
@@ -10,7 +9,6 @@ module.exports = {
 	},
 	plugins: [
 		new VueLoaderPlugin(),
-		new WebpackMd5Hash(),
 		new HtmlWebpackPlugin({
 			hash: true,
 			template: "dist/index.tpl.html",
