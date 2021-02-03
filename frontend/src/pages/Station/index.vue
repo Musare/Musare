@@ -56,6 +56,9 @@
 								<div
 									class="player-cannot-autoplay"
 									v-if="!canAutoplay"
+									@click="
+										increaseVolume() && decreaseVolume()
+									"
 								>
 									<p>
 										Please click anywhere on the screen for
@@ -805,7 +808,8 @@ export default {
 						controls: 0,
 						iv_load_policy: 3,
 						rel: 0,
-						showinfo: 0
+						showinfo: 0,
+						disablekb: 1
 					},
 					events: {
 						onReady: () => {
