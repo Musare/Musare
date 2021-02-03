@@ -223,7 +223,6 @@ export default {
 		return {
 			utils,
 			drag: false,
-			interval: null,
 			playlist: { songs: [] },
 			songQueryResults: [],
 			searchSongQuery: "",

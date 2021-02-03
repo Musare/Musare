@@ -7,6 +7,7 @@
 			v-bind="dragOptions"
 			@start="drag = true"
 			@end="drag = false"
+			@change="savePlaylistOrder"
 		>
 			<transition-group
 				type="transition"
@@ -154,10 +155,6 @@ export default {
 				}
 			);
 		});
-	},
-	beforeDestroy() {
-		clearInterval(this.interval);
-		this.savePlaylistOrder();
 	},
 	methods: {
 		edit(id) {

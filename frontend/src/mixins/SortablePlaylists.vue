@@ -8,7 +8,6 @@ export default {
 	data() {
 		return {
 			orderOfPlaylists: [],
-			interval: null,
 			drag: false
 		};
 	},
@@ -24,10 +23,6 @@ export default {
 				ghostClass: "draggable-list-ghost"
 			};
 		}
-	},
-	mounted() {
-		// checks if playlist order has changed every 1/2 second
-		this.interval = setInterval(() => this.savePlaylistOrder(), 500);
 	},
 	methods: {
 		calculatePlaylistOrder() {
