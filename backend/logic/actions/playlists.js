@@ -659,17 +659,6 @@ export default {
 
 		async.waterfall(
 			[
-				// get current playlist object (before changes)
-				next =>
-					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
-						.then(playlist => next(null, playlist))
-						.catch(next),
-
-				(playlist, next) => {
-					if (!playlist.isUserModifiable) return next("Playlist cannot be modified.");
-					return next(null);
-				},
-
 				// update playlist object with each song's new position
 				next =>
 					async.each(
