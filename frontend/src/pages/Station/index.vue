@@ -1236,26 +1236,13 @@ export default {
 											this.station._id,
 											data.song.songId,
 											data2 => {
-												if (
-													data2.status === "success"
-												) {
+												if (data2.status === "success")
 													this.socket.emit(
 														"playlists.moveSongToBottom",
 														this
 															.privatePlaylistQueueSelected,
-														data.song.songId,
-														data3 => {
-															if (
-																data3.status ===
-																"success"
-															) {
-																console.log(
-																	"This comment is just here because of eslint/prettier issues, ignore it"
-																);
-															}
-														}
+														data.song.songId
 													);
-												}
 											}
 										);
 									} else {
@@ -1263,27 +1250,26 @@ export default {
 											content: `Top song in playlist was too long to be added.`,
 											timeout: 3000
 										});
+
 										this.socket.emit(
 											"playlists.moveSongToBottom",
 											this.privatePlaylistQueueSelected,
 											data.song.songId,
 											data3 => {
-												if (
-													data3.status === "success"
-												) {
-													setTimeout(() => {
-														this.addFirstPrivatePlaylistSongToQueue();
-													}, 3000);
-												}
+												if (data3.status === "success")
+													setTimeout(
+														() =>
+															this.addFirstPrivatePlaylistSongToQueue(),
+														3000
+													);
 											}
 										);
 									}
-								} else {
+								} else
 									new Toast({
 										content: `Selected playlist has no songs.`,
 										timeout: 4000
 									});
-								}
 							}
 						}
 					);

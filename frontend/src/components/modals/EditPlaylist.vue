@@ -13,43 +13,67 @@
 			</nav>
 			<hr />
 			<aside class="menu">
-				<ul class="menu-list">
-					<li v-for="(song, index) in playlist.songs" :key="index">
-						<a href="#" target="_blank">{{ song.title }}</a>
-						<div class="controls" v-if="playlist.isUserModifiable">
-							<a href="#" @click="promoteSong(song.songId)">
-								<i class="material-icons" v-if="index > 0"
-									>keyboard_arrow_up</i
-								>
-								<i
-									v-else
-									class="material-icons"
-									style="opacity: 0"
-									>error</i
-								>
-							</a>
-							<a href="#" @click="demoteSong(song.songId)">
-								<i
-									v-if="playlist.songs.length - 1 !== index"
-									class="material-icons"
-									>keyboard_arrow_down</i
-								>
-								<i
-									v-else
-									class="material-icons"
-									style="opacity: 0"
-									>error</i
-								>
-							</a>
-							<a
-								href="#"
-								@click="removeSongFromPlaylist(song.songId)"
+				<draggable
+					class="menu-list scrollable-list"
+					tag="ul"
+					v-if="playlist.songs.length > 0"
+					v-model="playlist.songs"
+					v-bind="dragOptions"
+					@start="drag = true"
+					@end="drag = false"
+					@change="updateSongPositioning"
+				>
+					<transition-group
+						type="transition"
+						:name="!drag ? 'draggable-list-transition' : null"
+					>
+						<li
+							v-for="(song, index) in playlist.songs"
+							:key="'key-' + index"
+						>
+							<a href="#" target="_blank"
+								>({{ song.position }}) {{ song.title }}</a
 							>
-								<i class="material-icons">delete</i>
-							</a>
-						</div>
-					</li>
-				</ul>
+							<div
+								class="controls"
+								v-if="playlist.isUserModifiable"
+							>
+								<a href="#" @click="moveSongToTop(index)">
+									<i class="material-icons" v-if="index > 0"
+										>keyboard_arrow_up</i
+									>
+									<i
+										v-else
+										class="material-icons"
+										style="opacity: 0"
+										>error</i
+									>
+								</a>
+								<a href="#" @click="moveSongToBottom(index)">
+									<i
+										v-if="
+											playlist.songs.length - 1 !== index
+										"
+										class="material-icons"
+										>keyboard_arrow_down</i
+									>
+									<i
+										v-else
+										class="material-icons"
+										style="opacity: 0"
+										>error</i
+									>
+								</a>
+								<a
+									href="#"
+									@click="removeSongFromPlaylist(song.songId)"
+								>
+									<i class="material-icons">delete</i>
+								</a>
+							</div>
+						</li>
+					</transition-group>
+				</draggable>
 				<br />
 			</aside>
 			<div class="control is-grouped" v-if="playlist.isUserModifiable">
@@ -185,6 +209,7 @@
 
 <script>
 import { mapState, mapActions } from "vuex";
+import draggable from "vuedraggable";
 
 import Toast from "toasters";
 import Modal from "../Modal.vue";
@@ -193,10 +218,12 @@ import validation from "../../validation";
 import utils from "../../../js/utils";
 
 export default {
-	components: { Modal },
+	components: { Modal, draggable },
 	data() {
 		return {
 			utils,
+			drag: false,
+			interval: null,
 			playlist: { songs: [] },
 			songQueryResults: [],
 			searchSongQuery: "",
@@ -204,20 +231,33 @@ export default {
 			importQuery: ""
 		};
 	},
-	computed: mapState("user/playlists", {
-		editing: state => state.editing
-	}),
+	computed: {
+		...mapState("user/playlists", {
+			editing: state => state.editing
+		}),
+		dragOptions() {
+			return {
+				animation: 200,
+				group: "description",
+				disabled: false,
+				ghostClass: "draggable-list-ghost"
+			};
+		}
+	},
 	mounted() {
 		io.getSocket(socket => {
 			this.socket = socket;
+
 			this.socket.emit("playlists.getPlaylist", this.editing, res => {
 				if (res.status === "success") this.playlist = res.data;
 				this.playlist.oldId = res.data._id;
 			});
+
 			this.socket.on("event:playlist.addSong", data => {
 				if (this.playlist._id === data.playlistId)
 					this.playlist.songs.push(data.song);
 			});
+
 			this.socket.on("event:playlist.removeSong", data => {
 				if (this.playlist._id === data.playlistId) {
 					this.playlist.songs.forEach((song, index) => {
@@ -226,33 +266,60 @@ export default {
 					});
 				}
 			});
+
 			this.socket.on("event:playlist.updateDisplayName", data => {
 				if (this.playlist._id === data.playlistId)
 					this.playlist.displayName = data.displayName;
 			});
-			this.socket.on("event:playlist.moveSongToBottom", data => {
+
+			this.socket.on("event:playlist.repositionSongs", data => {
 				if (this.playlist._id === data.playlistId) {
-					let songIndex;
-					this.playlist.songs.forEach((song, index) => {
-						if (song.songId === data.songId) songIndex = index;
+					// for each song that has a new position
+					data.songsBeingChanged.forEach(changedSong => {
+						this.playlist.songs.forEach((song, index) => {
+							// find song locally
+							if (song.songId === changedSong.songId) {
+								// change song position attribute
+								this.playlist.songs[index].position =
+									changedSong.position;
+
+								// reposition in array if needed
+								if (index !== changedSong.position - 1)
+									this.playlist.songs.splice(
+										changedSong.position - 1,
+										0,
+										this.playlist.songs.splice(index, 1)[0]
+									);
+							}
+						});
 					});
-					const song = this.playlist.songs.splice(songIndex, 1)[0];
-					this.playlist.songs.push(song);
-				}
-			});
-			this.socket.on("event:playlist.moveSongToTop", data => {
-				if (this.playlist._id === data.playlistId) {
-					let songIndex;
-					this.playlist.songs.forEach((song, index) => {
-						if (song.songId === data.songId) songIndex = index;
-					});
-					const song = this.playlist.songs.splice(songIndex, 1)[0];
-					this.playlist.songs.unshift(song);
 				}
 			});
 		});
 	},
 	methods: {
+		updateSongPositioning({ moved }) {
+			if (!moved) return; // we only need to update when song is moved
+
+			const songsBeingChanged = [];
+
+			this.playlist.songs.forEach((song, index) => {
+				if (song.position !== index + 1)
+					songsBeingChanged.push({
+						songId: song.songId,
+						position: index + 1
+					});
+			});
+
+			this.socket.emit(
+				"playlists.repositionSongs",
+				this.playlist._id,
+				songsBeingChanged,
+				res => {
+					new Toast({ content: res.message, timeout: 4000 });
+				}
+			);
+		},
 		totalLength() {
 			let length = 0;
 			this.playlist.songs.forEach(song => {
@@ -389,25 +456,23 @@ export default {
 				}
 			});
 		},
-		promoteSong(songId) {
-			this.socket.emit(
-				"playlists.moveSongToTop",
-				this.playlist._id,
-				songId,
-				res => {
-					new Toast({ content: res.message, timeout: 4000 });
-				}
+		moveSongToTop(index) {
+			this.playlist.songs.splice(
+				0,
+				0,
+				this.playlist.songs.splice(index, 1)[0]
 			);
+
+			this.updateSongPositioning({ moved: {} });
 		},
-		demoteSong(songId) {
-			this.socket.emit(
-				"playlists.moveSongToBottom",
-				this.playlist._id,
-				songId,
-				res => {
-					new Toast({ content: res.message, timeout: 4000 });
-				}
+		moveSongToBottom(index) {
+			this.playlist.songs.splice(
+				this.playlist.songs.length,
+				0,
+				this.playlist.songs.splice(index, 1)[0]
 			);
+
+			this.updateSongPositioning({ moved: {} });
 		},
 		updatePrivacy() {
 			const { privacy } = this.playlist;
@@ -437,15 +502,16 @@ export default {
 .menu-list li {
 	display: flex;
 	justify-content: space-between;
-}
 
-.menu-list a:hover {
-	color: $black !important;
-}
+	a {
+		display: flex;
+		align-items: center;
+		cursor: move;
 
-li a {
-	display: flex;
-	align-items: center;
+		&:hover {
+			color: $black !important;
+		}
+	}
 }
 
 .controls {

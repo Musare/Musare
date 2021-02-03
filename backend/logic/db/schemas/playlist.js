@@ -1,7 +1,14 @@
 export default {
 	displayName: { type: String, min: 2, max: 32, required: true },
 	isUserModifiable: { type: Boolean, default: true, required: true },
-	songs: { type: Array },
+	songs: [
+		{
+			songId: { type: String },
+			title: { type: String },
+			duration: { type: Number },
+			position: { type: Number }
+		}
+	],
 	createdBy: { type: String, required: true },
 	createdAt: { type: Date, default: Date.now, required: true },
 	privacy: { type: String, enum: ["public", "private"], default: "private" }

@@ -47,30 +47,16 @@ CacheModule.runJob("SUB", {
 });
 
 CacheModule.runJob("SUB", {
-	channel: "playlist.moveSongToTop",
+	channel: "playlist.repositionSongs",
 	cb: res => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(response => {
-			response.sockets.forEach(socket => {
-				socket.emit("event:playlist.moveSongToTop", {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(response =>
+			response.sockets.forEach(socket =>
+				socket.emit("event:playlist.repositionSongs", {
 					playlistId: res.playlistId,
-					songId: res.songId
-				});
-			});
-		});
-	}
-});
-
-CacheModule.runJob("SUB", {
-	channel: "playlist.moveSongToBottom",
-	cb: res => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(response => {
-			response.sockets.forEach(socket => {
-				socket.emit("event:playlist.moveSongToBottom", {
-					playlistId: res.playlistId,
-					songId: res.songId
-				});
-			});
-		});
+					songsBeingChanged: res.songsBeingChanged
+				})
+			)
+		);
 	}
 });
 
@@ -474,11 +460,16 @@ export default {
 					);
 					return cb({ status: "failure", message: err });
 				}
+
+				const sortedSongs = playlist.songs.sort((a, b) => a.position - b.position);
+				playlist.songs = sortedSongs;
+
 				this.log(
 					"SUCCESS",
 					"PLAYLIST_GET",
 					`Successfully got private playlist "${playlistId}" for user "${session.userId}".`
 				);
+
 				return cb({
 					status: "success",
 					data: playlist
@@ -590,7 +581,7 @@ export default {
 	}),
 
 	/**
-	 * Updates a private playlist
+	 * Shuffles songs in a private playlist
 	 *
 	 * @param {object} session - the session object automatically added by socket.io
 	 * @param {string} playlistId - the id of the playlist we are updating
@@ -656,6 +647,178 @@ export default {
 	}),
 
 	/**
+	 * Changes the order of song(s) in a private playlist
+	 *
+	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {string} playlistId - the id of the playlist we are targeting
+	 * @param {Array} songsBeingChanged - the songs to be repositioned, each element contains "songId" and "position" properties
+	 * @param {Function} cb - gets called with the result
+	 */
+	repositionSongs: isLoginRequired(async function repositionSongs(session, playlistId, songsBeingChanged, cb) {
+		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
+
+		async.waterfall(
+			[
+				// get current playlist object (before changes)
+				next =>
+					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+						.then(playlist => next(null, playlist))
+						.catch(next),
+
+				(playlist, next) => {
+					if (!playlist.isUserModifiable) return next("Playlist cannot be modified.");
+					return next(null);
+				},
+
+				// update playlist object with each song's new position
+				next =>
+					async.each(
+						songsBeingChanged,
+						(song, nextSong) =>
+							playlistModel.updateOne(
+								{ _id: playlistId, "songs.songId": song.songId },
+								{
+									$set: {
+										"songs.$.position": song.position
+									}
+								},
+								err => {
+									if (err) return next(err);
+									return nextSong();
+								}
+							),
+						next
+					),
+
+				// update the cache with the new songs positioning
+				next => {
+					PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId }, this)
+						.then(playlist => next(null, playlist))
+						.catch(next);
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+
+					this.log(
+						"ERROR",
+						"PLAYLIST_REPOSITION_SONGS",
+						`Repositioning songs for private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
+					);
+
+					return cb({ status: "failure", message: err });
+				}
+
+				this.log(
+					"SUCCESS",
+					"PLAYLIST_REPOSITION_SONGS",
+					`Successfully repositioned songs for private playlist "${playlistId}" for user "${session.userId}".`
+				);
+
+				CacheModule.runJob("PUB", {
+					channel: "playlist.repositionSongs",
+					value: {
+						userId: session.userId,
+						playlistId,
+						songsBeingChanged
+					}
+				});
+
+				return cb({
+					status: "success",
+					message: "Order of songs successfully updated"
+				});
+			}
+		);
+	}),
+
+	/**
+	 * Moves a song to the bottom of the list in a private playlist
+	 *
+	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {string} playlistId - the id of the playlist we are moving the song to the bottom from
+	 * @param {string} songId - the id of the song we are moving to the bottom of the list
+	 * @param {Function} cb - gets called with the result
+	 */
+	moveSongToBottom: isLoginRequired(async function moveSongToBottom(session, playlistId, songId, cb) {
+		async.waterfall(
+			[
+				next => {
+					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+						.then(playlist => next(null, playlist))
+						.catch(next);
+				},
+
+				(playlist, next) => {
+					if (!playlist || playlist.createdBy !== session.userId) return next("Playlist not found");
+					if (!playlist.isUserModifiable) return next("Playlist cannot be modified.");
+
+					// sort array by position
+					playlist.songs.sort((a, b) => a.position - b.position);
+
+					// find index of songId
+					playlist.songs.forEach((song, index) => {
+						// reorder array (simulates what would be done with a drag and drop interface)
+						if (song.songId === songId)
+							playlist.songs.splice(playlist.songs.length, 0, playlist.songs.splice(index, 1)[0]);
+					});
+
+					const songsBeingChanged = [];
+
+					playlist.songs.forEach((song, index) => {
+						// check if position needs updated based on index
+						if (song.position !== index + 1)
+							songsBeingChanged.push({
+								songId: song.songId,
+								position: index + 1
+							});
+					});
+
+					// update position property on songs that need to be changed
+					return IOModule.runJob(
+						"RUN_ACTION2",
+						{
+							session,
+							namespace: "playlists",
+							action: "repositionSongs",
+							args: [playlistId, songsBeingChanged]
+						},
+						this
+					)
+						.then(res => {
+							if (res.status === "success") return next();
+							return next("Unable to reposition song in playlist.");
+						})
+						.catch(next);
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"PLAYLIST_MOVE_SONG_TO_BOTTOM",
+						`Moving song "${songId}" to the bottom for private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
+					);
+					return cb({ status: "failure", message: err });
+				}
+
+				this.log(
+					"SUCCESS",
+					"PLAYLIST_MOVE_SONG_TO_BOTTOM",
+					`Successfully moved song "${songId}" to the bottom for private playlist "${playlistId}" for user "${session.userId}".`
+				);
+
+				return cb({
+					status: "success",
+					message: "Order of songs successfully updated"
+				});
+			}
+		);
+	}),
+
+	/**
 	 * Adds a song to a private playlist
 	 *
 	 * @param {object} session - the session object automatically added by socket.io
@@ -665,13 +828,7 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	addSongToPlaylist: isLoginRequired(async function addSongToPlaylist(session, isSet, songId, playlistId, cb) {
-		const playlistModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "playlist"
-			},
-			this
-		);
+		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
 
 		async.waterfall(
 			[
@@ -683,16 +840,16 @@ export default {
 
 							return async.each(
 								playlist.songs,
-								(song, next) => {
+								(song, nextSong) => {
 									if (song.songId === songId) return next("That song is already in the playlist");
-									return next();
+									return nextSong();
 								},
-								next
+								err => next(err, playlist.songs.length + 1)
 							);
 						})
 						.catch(next);
 				},
-				next => {
+				(position, next) => {
 					SongsModule.runJob("GET_SONG", { id: songId }, this)
 						.then(response => {
 							const { song } = response;
@@ -700,12 +857,13 @@ export default {
 								_id: song._id,
 								songId,
 								title: song.title,
-								duration: song.duration
+								duration: song.duration,
+								position
 							});
 						})
 						.catch(() => {
 							YouTubeModule.runJob("GET_SONG", { songId }, this)
-								.then(response => next(null, response.song))
+								.then(response => next(null, { ...response.song, position }))
 								.catch(next);
 						});
 				},
@@ -898,13 +1056,7 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	removeSongFromPlaylist: isLoginRequired(async function removeSongFromPlaylist(session, songId, playlistId, cb) {
-		const playlistModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "playlist"
-			},
-			this
-		);
+		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
 		async.waterfall(
 			[
 				next => {
@@ -915,22 +1067,56 @@ export default {
 
 				next => {
 					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
-						.then(playlist => {
-							next(null, playlist);
-						})
+						.then(playlist => next(null, playlist))
 						.catch(next);
 				},
 
 				(playlist, next) => {
 					if (!playlist || playlist.createdBy !== session.userId) return next("Playlist not found");
-					return playlistModel.updateOne({ _id: playlistId }, { $pull: { songs: { songId } } }, next);
+
+					// sort array by position
+					playlist.songs.sort((a, b) => a.position - b.position);
+
+					// find index of songId
+					playlist.songs.forEach((song, ind) => {
+						// remove song from array
+						if (song.songId === songId) playlist.songs.splice(ind, 1);
+					});
+
+					const songsBeingChanged = [];
+
+					playlist.songs.forEach((song, index) => {
+						// check if position needs updated based on index
+						if (song.position !== index + 1)
+							songsBeingChanged.push({
+								songId: song.songId,
+								position: index + 1
+							});
+					});
+
+					// update position property on songs that need to be changed
+					return IOModule.runJob(
+						"RUN_ACTION2",
+						{
+							session,
+							namespace: "playlists",
+							action: "repositionSongs",
+							args: [playlistId, songsBeingChanged]
+						},
+						this
+					)
+						.then(res => {
+							if (res.status === "success") return next();
+							return next("Unable to reposition song in playlist.");
+						})
+						.catch(next);
 				},
+
+				next => playlistModel.updateOne({ _id: playlistId }, { $pull: { songs: { songId } } }, next),
 
 				(res, next) => {
 					PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId }, this)
-						.then(playlist => {
-							next(null, playlist);
-						})
+						.then(playlist => next(null, playlist))
 						.catch(next);
 				}
 			],
@@ -975,13 +1161,8 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	updateDisplayName: isLoginRequired(async function updateDisplayName(session, playlistId, displayName, cb) {
-		const playlistModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "playlist"
-			},
-			this
-		);
+		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
+
 		async.waterfall(
 			[
 				next => {
@@ -1036,217 +1217,6 @@ export default {
 						privacy: playlist.privacy
 					}
 				});
-				return cb({
-					status: "success",
-					message: "Playlist has been successfully updated"
-				});
-			}
-		);
-	}),
-
-	/**
-	 * Moves a song to the top of the list in a private playlist
-	 *
-	 * @param {object} session - the session object automatically added by socket.io
-	 * @param {string} playlistId - the id of the playlist we are moving the song to the top from
-	 * @param {string} songId - the id of the song we are moving to the top of the list
-	 * @param {Function} cb - gets called with the result
-	 */
-	moveSongToTop: isLoginRequired(async function moveSongToTop(session, playlistId, songId, cb) {
-		const playlistModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "playlist"
-			},
-			this
-		);
-		async.waterfall(
-			[
-				next => {
-					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
-						.then(playlist => {
-							next(null, playlist);
-						})
-						.catch(next);
-				},
-
-				(playlist, next) => {
-					if (!playlist || playlist.createdBy !== session.userId) return next("Playlist not found");
-					if (!playlist.isUserModifiable) return next("Playlist cannot be modified.");
-
-					return async.each(
-						playlist.songs,
-						(song, next) => {
-							if (song.songId === songId) return next(song);
-							return next();
-						},
-						err => {
-							if (err && err.songId) return next(null, err);
-							return next("Song not found");
-						}
-					);
-				},
-
-				(song, next) => {
-					playlistModel.updateOne({ _id: playlistId }, { $pull: { songs: { songId } } }, err => {
-						if (err) return next(err);
-						return next(null, song);
-					});
-				},
-
-				(song, next) => {
-					playlistModel.updateOne(
-						{ _id: playlistId },
-						{
-							$push: {
-								songs: {
-									$each: [song],
-									$position: 0
-								}
-							}
-						},
-						next
-					);
-				},
-
-				(res, next) => {
-					PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId }, this)
-						.then(playlist => {
-							next(null, playlist);
-						})
-						.catch(next);
-				}
-			],
-			async err => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"PLAYLIST_MOVE_SONG_TO_TOP",
-						`Moving song "${songId}" to the top for private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
-					);
-					return cb({ status: "failure", message: err });
-				}
-
-				this.log(
-					"SUCCESS",
-					"PLAYLIST_MOVE_SONG_TO_TOP",
-					`Successfully moved song "${songId}" to the top for private playlist "${playlistId}" for user "${session.userId}".`
-				);
-
-				CacheModule.runJob("PUB", {
-					channel: "playlist.moveSongToTop",
-					value: {
-						playlistId,
-						songId,
-						userId: session.userId
-					}
-				});
-
-				return cb({
-					status: "success",
-					message: "Playlist has been successfully updated"
-				});
-			}
-		);
-	}),
-
-	/**
-	 * Moves a song to the bottom of the list in a private playlist
-	 *
-	 * @param {object} session - the session object automatically added by socket.io
-	 * @param {string} playlistId - the id of the playlist we are moving the song to the bottom from
-	 * @param {string} songId - the id of the song we are moving to the bottom of the list
-	 * @param {Function} cb - gets called with the result
-	 */
-	moveSongToBottom: isLoginRequired(async function moveSongToBottom(session, playlistId, songId, cb) {
-		const playlistModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "playlist"
-			},
-			this
-		);
-		async.waterfall(
-			[
-				next => {
-					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
-						.then(playlist => {
-							next(null, playlist);
-						})
-						.catch(next);
-				},
-
-				(playlist, next) => {
-					if (!playlist || playlist.createdBy !== session.userId) return next("Playlist not found");
-					if (!playlist.isUserModifiable) return next("Playlist cannot be modified.");
-
-					return async.each(
-						playlist.songs,
-						(song, next) => {
-							if (song.songId === songId) return next(song);
-							return next();
-						},
-						err => {
-							if (err && err.songId) return next(null, err);
-							return next("Song not found");
-						}
-					);
-				},
-
-				(song, next) => {
-					playlistModel.updateOne({ _id: playlistId }, { $pull: { songs: { songId } } }, err => {
-						if (err) return next(err);
-						return next(null, song);
-					});
-				},
-
-				(song, next) => {
-					playlistModel.updateOne(
-						{ _id: playlistId },
-						{
-							$push: {
-								songs: song
-							}
-						},
-						next
-					);
-				},
-
-				(res, next) => {
-					PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId }, this)
-						.then(playlist => {
-							next(null, playlist);
-						})
-						.catch(next);
-				}
-			],
-			async err => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"PLAYLIST_MOVE_SONG_TO_BOTTOM",
-						`Moving song "${songId}" to the bottom for private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
-					);
-					return cb({ status: "failure", message: err });
-				}
-
-				this.log(
-					"SUCCESS",
-					"PLAYLIST_MOVE_SONG_TO_BOTTOM",
-					`Successfully moved song "${songId}" to the bottom for private playlist "${playlistId}" for user "${session.userId}".`
-				);
-
-				CacheModule.runJob("PUB", {
-					channel: "playlist.moveSongToBottom",
-					value: {
-						playlistId,
-						songId,
-						userId: session.userId
-					}
-				});
-
 				return cb({
 					status: "success",
 					message: "Playlist has been successfully updated"
@@ -1397,13 +1367,8 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	updatePrivacy: isLoginRequired(async function updatePrivacy(session, playlistId, privacy, cb) {
-		const playlistModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "playlist"
-			},
-			this
-		);
+		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
+
 		async.waterfall(
 			[
 				next => {
