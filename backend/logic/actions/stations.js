@@ -17,7 +17,7 @@ const YouTubeModule = moduleManager.modules.youtube;
 CacheModule.runJob("SUB", {
 	channel: "station.updateUsers",
 	cb: stationId => {
-		const list = StationsModule.usersPerStation[stationId] || [];
+		const list = Object.values(StationsModule.usersPerStation[stationId]) || [];
 		IOModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${stationId}`,
 			args: ["event:users.updated", list]
