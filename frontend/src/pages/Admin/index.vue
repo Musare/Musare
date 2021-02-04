@@ -31,6 +31,15 @@
 					</router-link>
 				</li>
 				<li
+					:class="{ 'is-active': currentTab == 'playlists' }"
+					@click="showTab('playlists')"
+				>
+					<router-link class="tab playlists" to="/admin/playlists">
+						<i class="material-icons">library_music</i>
+						<span>&nbsp;Playlists</span>
+					</router-link>
+				</li>
+				<li
 					:class="{ 'is-active': currentTab == 'reports' }"
 					@click="showTab('reports')"
 				>
@@ -96,6 +105,7 @@
 		<queue-songs v-if="currentTab == 'queueSongs'" />
 		<songs v-if="currentTab == 'songs'" />
 		<stations v-if="currentTab == 'stations'" />
+		<playlists v-if="currentTab == 'playlists'" />
 		<reports v-if="currentTab == 'reports'" />
 		<news v-if="currentTab == 'news'" />
 		<users v-if="currentTab == 'users'" />
@@ -114,6 +124,7 @@ export default {
 		QueueSongs: () => import("./tabs/QueueSongs.vue"),
 		Songs: () => import("./tabs/Songs.vue"),
 		Stations: () => import("./tabs/Stations.vue"),
+		Playlists: () => import("./tabs/Playlists.vue"),
 		Reports: () => import("./tabs/Reports.vue"),
 		News: () => import("./tabs/News.vue"),
 		Users: () => import("./tabs/Users.vue"),
@@ -145,6 +156,9 @@ export default {
 					break;
 				case "/admin/stations":
 					this.currentTab = "stations";
+					break;
+				case "/admin/playlists":
+					this.currentTab = "playlists";
 					break;
 				case "/admin/reports":
 					this.currentTab = "reports";
@@ -208,6 +222,10 @@ export default {
 	.stations {
 		color: $purple;
 		border-color: $purple;
+	}
+	.playlists {
+		color: $light-purple;
+		border-color: $light-purple;
 	}
 	.reports {
 		color: $yellow;

@@ -24,9 +24,9 @@ module.exports = merge(common, {
 		public: config.get("frontendDomain"),
 		host: "0.0.0.0",
 		watchOptions: {
-			ignored: /node_modules/
+			aggregateTimeout: 300,
+			poll: 1000
 		},
-		disableHostCheck: true,
-		stats: { chunks: false, children: false }
+		disableHostCheck: true
 	}
 });
