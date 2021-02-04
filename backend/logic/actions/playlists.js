@@ -461,9 +461,6 @@ export default {
 					return cb({ status: "failure", message: err });
 				}
 
-				const sortedSongs = playlist.songs.sort((a, b) => a.position - b.position);
-				playlist.songs = sortedSongs;
-
 				this.log(
 					"SUCCESS",
 					"PLAYLIST_GET",
@@ -588,13 +585,8 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	shuffle: isLoginRequired(async function shuffle(session, playlistId, cb) {
-		const playlistModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "playlist"
-			},
-			this
-		);
+		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
+
 		async.waterfall(
 			[
 				next => {
@@ -616,9 +608,7 @@ export default {
 
 				(res, next) => {
 					PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId }, this)
-						.then(playlist => {
-							next(null, playlist);
-						})
+						.then(playlist => next(null, playlist))
 						.catch(next);
 				}
 			],
@@ -632,11 +622,13 @@ export default {
 					);
 					return cb({ status: "failure", message: err });
 				}
+
 				this.log(
 					"SUCCESS",
 					"PLAYLIST_SHUFFLE",
 					`Successfully updated private playlist "${playlistId}" for user "${session.userId}".`
 				);
+
 				return cb({
 					status: "success",
 					message: "Successfully shuffled playlist.",

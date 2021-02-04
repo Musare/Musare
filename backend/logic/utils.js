@@ -247,7 +247,7 @@ class _UtilsModule extends CoreClass {
 	}
 
 	/**
-	 * Shuffles an array of songs
+	 * Shuffles an array of songs by their position property
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {object} payload.array - an array of songs that should be shuffled
@@ -256,9 +256,14 @@ class _UtilsModule extends CoreClass {
 	SHUFFLE(payload) {
 		// array
 		return new Promise(resolve => {
-			const array = payload.array.slice();
+			const { array } = payload;
 
-			let currentIndex = payload.array.length;
+			// get array of positions
+			const positions = [];
+			array.forEach(song => positions.push(song.position));
+
+			// sort the positions array
+			let currentIndex = positions.length;
 			let temporaryValue;
 			let randomIndex;
 
@@ -269,10 +274,15 @@ class _UtilsModule extends CoreClass {
 				currentIndex -= 1;
 
 				// And swap it with the current element.
-				temporaryValue = array[currentIndex];
-				array[currentIndex] = array[randomIndex];
-				array[randomIndex] = temporaryValue;
+				temporaryValue = positions[currentIndex];
+				positions[currentIndex] = positions[randomIndex];
+				positions[randomIndex] = temporaryValue;
 			}
+
+			// assign new positions
+			array.forEach((song, index) => {
+				song.position = positions[index];
+			});
 
 			resolve({ array });
 		});

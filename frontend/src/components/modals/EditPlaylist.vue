@@ -248,7 +248,10 @@ export default {
 			this.socket = socket;
 
 			this.socket.emit("playlists.getPlaylist", this.editing, res => {
-				if (res.status === "success") this.playlist = res.data;
+				if (res.status === "success") {
+					this.playlist = res.data;
+					this.playlist.songs.sort((a, b) => a.position - b.position);
+				}
 				this.playlist.oldId = res.data._id;
 			});
 
@@ -382,7 +385,9 @@ export default {
 			this.socket.emit("playlists.shuffle", this.playlist._id, res => {
 				new Toast({ content: res.message, timeout: 4000 });
 				if (res.status === "success") {
-					this.playlist = res.data;
+					this.playlist.songs = res.data.songs.sort(
+						(a, b) => a.position - b.position
+					);
 				}
 			});
 		},
