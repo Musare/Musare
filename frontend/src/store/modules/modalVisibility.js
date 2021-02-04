@@ -21,6 +21,7 @@ const state = {
 			editUser: false,
 			editSong: false,
 			editStation: false,
+			editPlaylist: false,
 			viewReport: false,
 			viewPunishment: false
 		}
