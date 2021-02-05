@@ -486,9 +486,21 @@ process.stdin.on("data", data => {
 			printJob(topParent, 1);
 		} else console.log("Could not find job in any running, queued or paused lists in any module.");
 	}
-	// if (command.startsWith("debug")) {
-	// }
+	if (command.startsWith("runjob")) {
+		const parts = command.split(" ");
+		const module = parts[1];
+		const jobName = parts[2];
+		const payload = JSON.parse(parts[3]);
 
+		moduleManager.modules[module]
+			.runJob(jobName, payload)
+			.then(response => {
+				console.log("runjob success", response);
+			})
+			.catch(err => {
+				console.log("runjob error", err);
+			});
+	}
 	if (command.startsWith("eval")) {
 		const evalCommand = command.replace("eval ", "");
 		console.log(`Running eval command: ${evalCommand}`);

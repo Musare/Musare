@@ -10,6 +10,7 @@ const IOModule = moduleManager.modules.io;
 const CacheModule = moduleManager.modules.cache;
 const SongsModule = moduleManager.modules.songs;
 const ActivitiesModule = moduleManager.modules.activities;
+const PlaylistsModule = moduleManager.modules.playlists;
 
 CacheModule.runJob("SUB", {
 	channel: "song.removed",
@@ -339,15 +340,30 @@ export default {
 	 */
 	update: isAdminRequired(async function update(session, songId, song, cb) {
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
+		let existingSong = null;
 		async.waterfall(
 			[
 				next => {
+					songModel.findOne({ _id: songId }, next);
+				},
+
+				(_existingSong, next) => {
+					existingSong = _existingSong;
 					songModel.updateOne({ _id: songId }, song, { runValidators: true }, next);
 				},
 
 				(res, next) => {
 					SongsModule.runJob("UPDATE_SONG", { songId }, this)
 						.then(song => {
+							existingSong.genres
+								.concat(song.genres)
+								.filter((value, index, self) => self.indexOf(value) === index)
+								.forEach(genre => {
+									PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre })
+										.then(() => {})
+										.catch(() => {});
+								});
+
 							next(null, song);
 						})
 						.catch(next);
@@ -387,9 +403,15 @@ export default {
 	 */
 	remove: isAdminRequired(async function remove(session, songId, cb) {
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
+		let song = null;
 		async.waterfall(
 			[
 				next => {
+					songModel.findOne({ _id: songId }, next);
+				},
+
+				(_song, next) => {
+					song = _song;
 					songModel.deleteOne({ _id: songId }, next);
 				},
 
@@ -399,7 +421,14 @@ export default {
 						.then(() => {
 							next();
 						})
-						.catch(next);
+						.catch(next)
+						.finally(() => {
+							song.genres.forEach(genre => {
+								PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre })
+									.then(() => {})
+									.catch(() => {});
+							});
+						});
 				}
 			],
 			async err => {
@@ -463,6 +492,12 @@ export default {
 							this
 						)
 						.finally(() => {
+							song.genres.forEach(genre => {
+								PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre })
+									.then(() => {})
+									.catch(() => {});
+							});
+
 							next();
 						});
 				}

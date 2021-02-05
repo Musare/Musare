@@ -248,6 +248,8 @@ class _DBModule extends CoreClass {
 						return songs[0].duration <= 10800;
 					}, "Max 3 hours per song.");
 
+					this.schemas.playlist.index({ createdFor: 1, type: 1 }, { unique: true });
+
 					// Report
 					this.schemas.report
 						.path("description")

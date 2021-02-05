@@ -3,6 +3,7 @@ import async from "async";
 import CoreClass from "../core";
 
 let PlaylistsModule;
+let SongsModule;
 let CacheModule;
 let DBModule;
 let UtilsModule;
@@ -26,6 +27,7 @@ class _PlaylistsModule extends CoreClass {
 		CacheModule = this.moduleManager.modules.cache;
 		DBModule = this.moduleManager.modules.db;
 		UtilsModule = this.moduleManager.modules.utils;
+		SongsModule = this.moduleManager.modules.songs;
 
 		this.playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" });
 		this.playlistSchemaCache = await CacheModule.runJob("GET_SCHEMA", { schemaName: "playlist" });
@@ -121,11 +123,252 @@ class _PlaylistsModule extends CoreClass {
 					songs: [],
 					createdBy: payload.userId,
 					createdAt: Date.now(),
+					createdFor: null,
 					type: payload.type
 				},
 				(err, playlist) => {
 					if (err) return reject(new Error(err));
 					return resolve(playlist._id);
+				}
+			);
+		});
+	}
+
+	/**
+	 * Creates a playlist that contains all songs of a specific genre
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.genre - the genre
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	CREATE_GENRE_PLAYLIST(payload) {
+		return new Promise((resolve, reject) => {
+			PlaylistsModule.runJob("GET_GENRE_PLAYLIST", { genre: payload.genre.toLowerCase() }, this)
+				.then(() => {
+					reject(new Error("Playlist already exists"));
+				})
+				.catch(err => {
+					if (err.message === "Playlist not found") {
+						PlaylistsModule.playlistModel.create(
+							{
+								isUserModifiable: false,
+								displayName: `Genre - ${payload.genre}`,
+								songs: [],
+								createdBy: "Musare",
+								createdFor: `${payload.genre.toLowerCase()}`,
+								createdAt: Date.now(),
+								type: "genre"
+							},
+							(err, playlist) => {
+								if (err) return reject(new Error(err));
+								return resolve(playlist._id);
+							}
+						);
+					} else reject(new Error(err));
+				});
+		});
+	}
+
+	/**
+	 * Gets all genre playlists
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.includeSongs - include the songs
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	GET_ALL_GENRE_PLAYLISTS(payload) {
+		return new Promise((resolve, reject) => {
+			const includeObject = payload.includeSongs ? null : { songs: false };
+			PlaylistsModule.playlistModel.find({ type: "genre" }, includeObject, (err, playlists) => {
+				if (err) reject(new Error(err));
+				else resolve({ playlists });
+			});
+		});
+	}
+
+	/**
+	 * Gets a genre playlist
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.genre - the genre
+	 * @param {string} payload.includeSongs - include the songs
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	GET_GENRE_PLAYLIST(payload) {
+		return new Promise((resolve, reject) => {
+			const includeObject = payload.includeSongs ? null : { songs: false };
+			PlaylistsModule.playlistModel.findOne(
+				{ type: "genre", createdFor: payload.genre },
+				includeObject,
+				(err, playlist) => {
+					if (err) reject(new Error(err));
+					else if (!playlist) reject(new Error("Playlist not found"));
+					else resolve({ playlist });
+				}
+			);
+		});
+	}
+
+	/**
+	 * Adds a song to a playlist
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.playlistId - the playlist id
+	 * @param {string} payload.song - the song
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	ADD_SONG_TO_PLAYLIST(payload) {
+		return new Promise((resolve, reject) => {
+			const song = {
+				_id: payload.song._id,
+				songId: payload.song.songId,
+				title: payload.song.title,
+				duration: payload.song.duration
+			};
+
+			PlaylistsModule.playlistModel.updateOne(
+				{ _id: payload.playlistId },
+				{ $push: { songs: song } },
+				{ runValidators: true },
+				err => {
+					if (err) reject(new Error(err));
+					else {
+						PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId: payload.playlistId }, this)
+							.then(() => resolve())
+							.catch(err => {
+								reject(new Error(err));
+							});
+					}
+				}
+			);
+		});
+	}
+
+	/**
+	 * Deletes a song from a playlist based on the songId
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.playlistId - the playlist id
+	 * @param {string} payload.songId - the songId
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	DELETE_SONG_FROM_PLAYLIST_BY_SONGID(payload) {
+		return new Promise((resolve, reject) => {
+			PlaylistsModule.playlistModel.updateOne(
+				{ _id: payload.playlistId },
+				{ $pull: { songs: { songId: payload.songId } } },
+				err => {
+					if (err) reject(new Error(err));
+					else {
+						PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId: payload.playlistId }, this)
+							.then(() => resolve())
+							.catch(err => {
+								reject(new Error(err));
+							});
+					}
+				}
+			);
+		});
+	}
+
+	/**
+	 * Fills a genre playlist with songs
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.genre - the genre
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	AUTOFILL_GENRE_PLAYLIST(payload) {
+		return new Promise((resolve, reject) => {
+			async.waterfall(
+				[
+					next => {
+						PlaylistsModule.runJob(
+							"GET_GENRE_PLAYLIST",
+							{ genre: payload.genre.toLowerCase(), includeSongs: true },
+							this
+						)
+							.then(response => {
+								next(null, { playlist: response.playlist });
+							})
+							.catch(err => {
+								if (err.message === "Playlist not found") {
+									PlaylistsModule.runJob("CREATE_GENRE_PLAYLIST", { genre: payload.genre }, this)
+										.then(playlistId => {
+											next(null, { playlist: { _id: playlistId, songs: [] } });
+										})
+										.catch(err => {
+											next(err);
+										});
+								} else next(err);
+							});
+					},
+
+					(data, next) => {
+						SongsModule.runJob("GET_ALL_SONGS_WITH_GENRE", { genre: payload.genre }, this)
+							.then(response => {
+								data.songs = response.songs;
+								next(null, data);
+							})
+							.catch(err => {
+								console.log(err);
+								next(err);
+							});
+					},
+
+					(data, next) => {
+						data.songsToDelete = [];
+						data.songsToAdd = [];
+
+						data.playlist.songs.forEach(playlistSong => {
+							const found = data.songs.find(song => playlistSong.songId === song.songId);
+							if (!found) data.songsToDelete.push(playlistSong);
+						});
+
+						data.songs.forEach(song => {
+							const found = data.playlist.songs.find(playlistSong => song.songId === playlistSong.songId);
+							if (!found) data.songsToAdd.push(song);
+						});
+
+						next(null, data);
+					},
+
+					(data, next) => {
+						const promises = [];
+						data.songsToAdd.forEach(song => {
+							promises.push(
+								PlaylistsModule.runJob(
+									"ADD_SONG_TO_PLAYLIST",
+									{ playlistId: data.playlist._id, song },
+									this
+								)
+							);
+						});
+						data.songsToDelete.forEach(song => {
+							promises.push(
+								PlaylistsModule.runJob(
+									"DELETE_SONG_FROM_PLAYLIST_BY_SONGID",
+									{
+										playlistId: data.playlist._id,
+										songId: song.songId
+									},
+									this
+								)
+							);
+						});
+
+						Promise.allSettled(promises)
+							.then(() => {
+								next();
+							})
+							.catch(err => {
+								next(err);
+							});
+					}
+				],
+				err => {
+					if (err && err !== true) return reject(new Error(err));
+					return resolve({});
 				}
 			);
 		});

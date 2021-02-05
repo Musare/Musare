@@ -404,6 +404,7 @@ export default {
 							songs,
 							createdBy: session.userId,
 							createdAt: Date.now(),
+							createdFor: null,
 							type: "user"
 						},
 						next

@@ -310,6 +310,67 @@ class _SongsModule extends CoreClass {
 			);
 		});
 	}
+
+	/**
+	 * Gets an array of all genres
+	 *
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	GET_ALL_GENRES() {
+		return new Promise((resolve, reject) =>
+			async.waterfall(
+				[
+					next => {
+						SongsModule.songModel.find({}, { genres: 1, _id: false }, next);
+					},
+
+					(songs, next) => {
+						let allGenres = [];
+						songs.forEach(song => {
+							allGenres = allGenres.concat(song.genres);
+						});
+
+						const lowerCaseGenres = allGenres.map(genre => genre.toLowerCase());
+						const uniqueGenres = lowerCaseGenres.filter(
+							(value, index, self) => self.indexOf(value) === index
+						);
+
+						next(null, uniqueGenres);
+					}
+				],
+				(err, genres) => {
+					if (err && err !== true) return reject(new Error(err));
+					return resolve({ genres });
+				}
+			)
+		);
+	}
+
+	/**
+	 * Gets an array of all songs with a specific genre
+	 *
+	 * @param {object} payload - returns an object containing the payload
+	 * @param {string} payload.genre - the genre
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	GET_ALL_SONGS_WITH_GENRE(payload) {
+		return new Promise((resolve, reject) =>
+			async.waterfall(
+				[
+					next => {
+						SongsModule.songModel.find(
+							{ genres: { $regex: new RegExp(`^${payload.genre.toLowerCase()}$`, "i") } },
+							next
+						);
+					}
+				],
+				(err, songs) => {
+					if (err && err !== true) return reject(new Error(err));
+					return resolve({ songs });
+				}
+			)
+		);
+	}
 }
 
 export default new _SongsModule();
