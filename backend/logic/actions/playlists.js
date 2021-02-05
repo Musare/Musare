@@ -403,7 +403,8 @@ export default {
 							displayName,
 							songs,
 							createdBy: session.userId,
-							createdAt: Date.now()
+							createdAt: Date.now(),
+							type: "user"
 						},
 						next
 					);

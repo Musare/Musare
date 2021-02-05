@@ -11,5 +11,7 @@ export default {
 	],
 	createdBy: { type: String, required: true },
 	createdAt: { type: Date, default: Date.now, required: true },
-	privacy: { type: String, enum: ["public", "private"], default: "private" }
+	createdFor: { type: String },
+	privacy: { type: String, enum: ["public", "private"], default: "private" },
+	type: { type: String, enum: ["user", "genre"], required: true }
 };

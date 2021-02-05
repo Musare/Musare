@@ -120,7 +120,8 @@ class _PlaylistsModule extends CoreClass {
 					displayName: payload.displayName,
 					songs: [],
 					createdBy: payload.userId,
-					createdAt: Date.now()
+					createdAt: Date.now(),
+					type: payload.type
 				},
 				(err, playlist) => {
 					if (err) return reject(new Error(err));

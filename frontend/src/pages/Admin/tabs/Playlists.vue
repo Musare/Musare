@@ -6,11 +6,13 @@
 				<thead>
 					<tr>
 						<td>Display name</td>
+						<td>Type</td>
 						<td>Is user modifiable</td>
 						<td>Songs #</td>
 						<td>Playlist length</td>
 						<td>Created by</td>
 						<td>Created at</td>
+						<td>Created for</td>
 						<td>Playlist id</td>
 						<!-- <td>Options</td> -->
 					</tr>
@@ -18,10 +20,12 @@
 				<tbody>
 					<tr v-for="playlist in playlists" :key="playlist._id">
 						<td>{{ playlist.displayName }}</td>
+						<td>{{ playlist.type }}</td>
 						<td>{{ playlist.isUserModifiable }}</td>
 						<td>{{ playlist.songs.length }}</td>
 						<td>{{ totalLengthForPlaylist(playlist.songs) }}</td>
-						<td>
+						<td v-if="playlist.createdBy === 'Musare'">Musare</td>
+						<td v-else>
 							<user-id-to-username
 								:user-id="playlist.createdBy"
 								:link="true"
@@ -30,6 +34,7 @@
 						<td :title="new Date(playlist.createdAt)">
 							{{ getDateFormatted(playlist.createdAt) }}
 						</td>
+						<td>{{ playlist.createdFor }}</td>
 						<td>{{ playlist._id }}</td>
 						<!-- <td>
 							<button
