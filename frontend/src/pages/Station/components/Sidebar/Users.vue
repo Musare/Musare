@@ -1,6 +1,30 @@
 <template>
 	<div id="users">
 		<h5 class="has-text-centered">Total users: {{ userCount }}</h5>
+
+		<transition-group name="notification-box">
+			<h6
+				class="has-text-centered"
+				v-if="users.loggedOut.length > 0"
+				key="logged-out-users"
+			>
+				{{ users.loggedOut.length }}
+				{{ users.loggedOut.length > 1 ? "users are" : "user is" }}
+				logged-out.
+			</h6>
+			<h6
+				class="has-text-centered"
+				v-else-if="
+					users.loggedIn.length === 1 && users.loggedOut.length === 0
+				"
+				key="only-me"
+			>
+				It's just you in the station!
+			</h6>
+		</transition-group>
+
+		<br />
+
 		<aside class="menu">
 			<ul class="menu-list">
 				<li v-for="(user, index) in users.loggedIn" :key="index">
@@ -70,6 +94,15 @@ export default {
 	}
 }
 
+.notification-box-enter-active,
+.fade-leave-active {
+	transition: opacity 0.5s;
+}
+.notification-box-enter,
+.notification-box-leave-to {
+	opacity: 0;
+}
+
 #users {
 	background-color: #fff;
 	margin-bottom: 20px;
@@ -106,7 +139,7 @@ export default {
 
 	h5 {
 		font-size: 20px;
-		margin: 5px;
+		margin-top: 20px;
 	}
 }
 </style>

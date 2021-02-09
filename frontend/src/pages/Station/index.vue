@@ -702,18 +702,17 @@ export default {
 			});
 
 			this.socket.on("event:newOfficialPlaylist", playlist => {
-				if (this.station.type === "official") {
+				if (this.station.type === "official")
 					this.updateSongsList(playlist);
-				}
 			});
 
-			this.socket.on("event:users.updated", users => {
-				this.updateUsers(users);
-			});
+			this.socket.on("event:users.updated", users =>
+				this.updateUsers(users)
+			);
 
-			this.socket.on("event:userCount.updated", userCount => {
-				this.updateUserCount(userCount);
-			});
+			this.socket.on("event:userCount.updated", userCount =>
+				this.updateUserCount(userCount)
+			);
 
 			this.socket.on("event:queueLockToggled", locked => {
 				this.station.locked = locked;
