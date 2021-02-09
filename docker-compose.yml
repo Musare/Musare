@@ -39,13 +39,6 @@ services:
     volumes:
       - ./tools/docker/setup-mongo.sh:/docker-entrypoint-initdb.d/setup-mongo.sh
 
-  mongoclient:
-    image: mongoclient/mongoclient
-    ports:
-      - "${MONGOCLIENT_PORT}:3000"
-    environment:
-      - MONGOCLIENT_DEFAULT_CONNECTION_URL=mongodb://${MONGO_USER_USERNAME}:${MONGO_USER_PASSWORD}@mongo:27017/musare
-
   redis:
     image: redis
     command: "--notify-keyspace-events Ex --requirepass ${REDIS_PASSWORD} --appendonly yes"
