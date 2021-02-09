@@ -7,6 +7,7 @@
 					<tr>
 						<td>Display name</td>
 						<td>Type</td>
+						<td>Is user modifiable</td>
 						<td>Songs #</td>
 						<td>Playlist length</td>
 						<td>Created by</td>
@@ -20,6 +21,7 @@
 					<tr v-for="playlist in playlists" :key="playlist._id">
 						<td>{{ playlist.displayName }}</td>
 						<td>{{ playlist.type }}</td>
+						<td>{{ playlist.isUserModifiable }}</td>
 						<td>{{ playlist.songs.length }}</td>
 						<td>{{ totalLengthForPlaylist(playlist.songs) }}</td>
 						<td v-if="playlist.createdBy === 'Musare'">Musare</td>

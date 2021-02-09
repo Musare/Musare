@@ -1,5 +1,6 @@
 export default {
 	displayName: { type: String, min: 2, max: 32, required: true },
+	isUserModifiable: { type: Boolean, default: true, required: true },
 	songs: [
 		{
 			songId: { type: String },
@@ -12,5 +13,5 @@ export default {
 	createdAt: { type: Date, default: Date.now, required: true },
 	createdFor: { type: String },
 	privacy: { type: String, enum: ["public", "private"], default: "private" },
-	type: { type: String, enum: ["user", "userSystem", "genre"], required: true }
+	type: { type: String, enum: ["user", "genre"], required: true }
 };

@@ -337,7 +337,7 @@ export default {
 					};
 
 					// if non modifiable playlists should be shown as well
-					if (!showNonModifiablePlaylists) match.type = "user";
+					if (!showNonModifiablePlaylists) match.isUserModifiable = true;
 
 					// if a playlist order exists
 					if (orderOfPlaylists > 0) match._id = { $in: orderOfPlaylists };
@@ -629,7 +629,7 @@ export default {
 				},
 
 				(playlist, next) => {
-					if (playlist.type !== "user") return next("Playlist cannot be shuffled.");
+					if (!playlist.isUserModifiable) return next("Playlist cannot be shuffled.");
 
 					return UtilsModule.runJob("SHUFFLE", { array: playlist.songs }, this)
 						.then(result => next(null, result.array))
@@ -767,7 +767,7 @@ export default {
 
 				(playlist, next) => {
 					if (!playlist || playlist.createdBy !== session.userId) return next("Playlist not found");
-					if (playlist.type !== "user" && playlist.type !== "userSystem") return next("Playlist cannot be modified.");
+					if (!playlist.isUserModifiable) return next("Playlist cannot be modified.");
 
 					// sort array by position
 					playlist.songs.sort((a, b) => a.position - b.position);
@@ -1024,7 +1024,7 @@ export default {
 
 				(playlist, next) => {
 					if (!playlist || playlist.createdBy !== session.userId) return next("Playlist not found.");
-					if (playlist.type !== "user") return next("Playlist cannot be modified.");
+					if (!playlist.isUserModifiable) return next("Playlist cannot be modified.");
 
 					return next(null, playlist);
 				}
@@ -1187,7 +1187,7 @@ export default {
 				},
 
 				(playlist, next) => {
-					if (playlist.type !== "user") return next("Playlist cannot be modified.");
+					if (!playlist.isUserModifiable) return next("Playlist cannot be modified.");
 					return next(null);
 				},
 
@@ -1260,7 +1260,7 @@ export default {
 				},
 
 				(playlist, next) => {
-					if (playlist.type !== "user" && playlist.type !== "userSystem") return next("Playlist cannot be removed.");
+					if (!playlist.isUserModifiable) return next("Playlist cannot be removed.");
 					return next(null, playlist);
 				},
 

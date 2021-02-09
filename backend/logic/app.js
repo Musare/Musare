@@ -329,7 +329,7 @@ class _AppModule extends CoreClass {
 							PlaylistsModule.runJob("CREATE_READ_ONLY_PLAYLIST", {
 								userId,
 								displayName: "Liked Songs",
-								type: "userSystem"
+								type: "user"
 							})
 								.then(likedSongsPlaylist => {
 									next(null, likedSongsPlaylist, userId);
@@ -342,7 +342,7 @@ class _AppModule extends CoreClass {
 							PlaylistsModule.runJob("CREATE_READ_ONLY_PLAYLIST", {
 								userId,
 								displayName: "Disliked Songs",
-								type: "userSystem"
+								type: "user"
 							})
 								.then(dislikedSongsPlaylist => {
 									next(null, { likedSongsPlaylist, dislikedSongsPlaylist }, userId);

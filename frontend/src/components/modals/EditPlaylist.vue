@@ -36,10 +36,7 @@
 							>
 							<div
 								class="controls"
-								v-if="
-									playlist.type === 'user' ||
-										playlist.type === 'userSystem'
-								"
+								v-if="playlist.isUserModifiable"
 							>
 								<a href="#" @click="moveSongToTop(index)">
 									<i class="material-icons" v-if="index > 0"
@@ -79,7 +76,7 @@
 				</draggable>
 				<br />
 			</aside>
-			<div class="control is-grouped" v-if="playlist.type === 'user'">
+			<div class="control is-grouped" v-if="playlist.isUserModifiable">
 				<p class="control is-expanded">
 					<input
 						v-model="searchSongQuery"
@@ -97,7 +94,7 @@
 				</p>
 			</div>
 			<table
-				v-if="songQueryResults.length > 0 && playlist.type === 'user'"
+				v-if="songQueryResults.length > 0 && playlist.isUserModifiable"
 				class="table"
 			>
 				<tbody>
@@ -120,7 +117,7 @@
 					</tr>
 				</tbody>
 			</table>
-			<div class="control is-grouped" v-if="playlist.type === 'user'">
+			<div class="control is-grouped" v-if="playlist.isUserModifiable">
 				<p class="control is-expanded">
 					<input
 						v-model="directSongQuery"
@@ -137,7 +134,7 @@
 					>
 				</p>
 			</div>
-			<div class="control is-grouped" v-if="playlist.type === 'user'">
+			<div class="control is-grouped" v-if="playlist.isUserModifiable">
 				<p class="control is-expanded">
 					<input
 						v-model="importQuery"
@@ -167,12 +164,12 @@
 			<button
 				class="button is-info"
 				@click="shuffle()"
-				v-if="playlist.type === 'user'"
+				v-if="playlist.isUserModifiable"
 			>
 				Shuffle
 			</button>
 			<h5>Edit playlist details:</h5>
-			<div class="control is-grouped" v-if="playlist.type === 'user'">
+			<div class="control is-grouped" v-if="playlist.isUserModifiable">
 				<p class="control is-expanded">
 					<input
 						v-model="playlist.displayName"
@@ -202,7 +199,7 @@
 				</p>
 			</div>
 		</div>
-		<div slot="footer" v-if="playlist.type === 'user'">
+		<div slot="footer" v-if="playlist.isUserModifiable">
 			<a class="button is-danger" @click="removePlaylist()" href="#"
 				>Remove Playlist</a
 			>
@@ -241,9 +238,7 @@ export default {
 			return {
 				animation: 200,
 				group: "description",
-				disabled:
-					this.playlist.type !== "user" &&
-					this.playlist.type !== "userSystem",
+				disabled: !this.playlist.isUserModifiable,
 				ghostClass: "draggable-list-ghost"
 			};
 		}

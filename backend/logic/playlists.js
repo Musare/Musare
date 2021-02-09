@@ -118,6 +118,7 @@ class _PlaylistsModule extends CoreClass {
 		return new Promise((resolve, reject) => {
 			PlaylistsModule.playlistModel.create(
 				{
+					isUserModifiable: false,
 					displayName: payload.displayName,
 					songs: [],
 					createdBy: payload.userId,
@@ -150,6 +151,7 @@ class _PlaylistsModule extends CoreClass {
 					if (err.message === "Playlist not found") {
 						PlaylistsModule.playlistModel.create(
 							{
+								isUserModifiable: false,
 								displayName: `Genre - ${payload.genre}`,
 								songs: [],
 								createdBy: "Musare",
