@@ -16,19 +16,19 @@ const YouTubeModule = moduleManager.modules.youtube;
 
 CacheModule.runJob("SUB", {
 	channel: "station.updateUsers",
-	cb: stationId => {
-		const list = Object.values(StationsModule.usersPerStation[stationId]) || [];
+	cb: ({ stationId, usersPerStation }) => {
 		IOModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${stationId}`,
-			args: ["event:users.updated", list]
+			args: ["event:users.updated", usersPerStation]
 		});
 	}
 });
 
 CacheModule.runJob("SUB", {
 	channel: "station.updateUserCount",
-	cb: stationId => {
-		const count = StationsModule.usersPerStationCount[stationId] || 0;
+	cb: ({ stationId, usersPerStationCount }) => {
+		const count = usersPerStationCount || 0;
+
 		IOModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${stationId}`,
 			args: ["event:userCount.updated", count]

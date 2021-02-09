@@ -3,7 +3,7 @@
 		<h5 class="has-text-centered">Total users: {{ userCount }}</h5>
 		<aside class="menu">
 			<ul class="menu-list">
-				<li v-for="(user, index) in users" :key="index">
+				<li v-for="(user, index) in users.loggedIn" :key="index">
 					<router-link
 						:to="{
 							name: 'profile',

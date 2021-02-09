@@ -352,7 +352,7 @@ class _TasksModule extends CoreClass {
 			const stationsUpdated = [];
 
 			const oldUsersPerStation = StationsModule.usersPerStation;
-			const usersPerStation = [];
+			const usersPerStation = { loggedIn: [], loggedOut: [] };
 
 			const oldUsersPerStationCount = JSON.parse(JSON.stringify(StationsModule.usersPerStationCount));
 			const usersPerStationCount = {};
@@ -373,12 +373,14 @@ class _TasksModule extends CoreClass {
 						}
 
 						if (!usersPerStationCount[stationId]) usersPerStationCount[stationId] = 0; // start count for station
-						if (!usersPerStation[stationId]) usersPerStation[stationId] = [];
+						if (!usersPerStation[stationId]) usersPerStation[stationId] = { loggedIn: [], loggedOut: [] };
 
 						return async.waterfall(
 							[
 								next => {
-									if (!socket.session || !socket.session.sessionId) return next("No session found.");
+									if (!socket.session || !socket.session.sessionId) {
+										return next("No session found.", { ip: socket.ip });
+									}
 
 									return CacheModule.runJob("HGET", {
 										table: "sessions",
@@ -396,7 +398,7 @@ class _TasksModule extends CoreClass {
 								(user, next) => {
 									if (!user) return next("User not found.");
 
-									if (usersPerStation[stationId].some(u => user.username === u.username))
+									if (usersPerStation[stationId].loggedIn.some(u => user.username === u.username))
 										return next("User already in the list.");
 
 									usersPerStationCount[stationId] += 1; // increment user count for station
@@ -405,7 +407,17 @@ class _TasksModule extends CoreClass {
 								}
 							],
 							(err, user) => {
-								if (!err) usersPerStation[stationId].push(user);
+								if (!err) usersPerStation[stationId].loggedIn.push(user);
+
+								// if user is logged out (an ip can only be counted once)
+								if (
+									err === "No session found." &&
+									!usersPerStation[stationId].loggedOut.some(u => user.ip === u.ip)
+								) {
+									usersPerStationCount[stationId] += 1; // increment user count for station
+									usersPerStation[stationId].loggedOut.push(user);
+								}
+
 								next();
 							}
 						);
@@ -418,9 +430,10 @@ class _TasksModule extends CoreClass {
 							stationsCountUpdated.indexOf(stationId) === -1
 						) {
 							this.log("INFO", "UPDATE_STATION_USER_COUNT", `Updating user count of ${stationId}.`);
+
 							CacheModule.runJob("PUB", {
 								channel: "station.updateUserCount",
-								value: stationId
+								value: { stationId, usersPerStationCount: usersPerStationCount[stationId] }
 							});
 						}
 					});
@@ -433,9 +446,10 @@ class _TasksModule extends CoreClass {
 							oldUsersPerStationCount[stationId] !== usersPerStationCount[stationId]
 						) {
 							this.log("INFO", "UPDATE_STATION_USER_LIST", `Updating user list of ${stationId}.`);
+
 							CacheModule.runJob("PUB", {
 								channel: "station.updateUsers",
-								value: stationId
+								value: { stationId, usersPerStation: usersPerStation[stationId] }
 							});
 						}
 					});
