@@ -15,7 +15,6 @@
 			</p>
 		</div>
 		<button
-			id="add-song-to-queue"
 			class="button is-primary tab-actionable-button"
 			v-if="
 				loggedIn &&
@@ -129,16 +128,6 @@ export default {
 	#queue-locked {
 		display: flex;
 		justify-content: center;
-	}
-
-	#add-song-to-queue {
-		background-color: var(--station-theme) !important;
-		color: $white !important;
-
-		&:hover,
-		&:focus {
-			filter: brightness(90%);
-		}
 	}
 }
 </style>

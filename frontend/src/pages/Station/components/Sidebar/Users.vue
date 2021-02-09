@@ -5,7 +5,7 @@
 		<transition-group name="notification-box">
 			<h6
 				class="has-text-centered"
-				v-if="users.loggedOut.length > 0"
+				v-if="users && users.loggedOut.length > 0"
 				key="logged-out-users"
 			>
 				{{ users.loggedOut.length }}
@@ -15,7 +15,9 @@
 			<h6
 				class="has-text-centered"
 				v-else-if="
-					users.loggedIn.length === 1 && users.loggedOut.length === 0
+					users &&
+						users.loggedIn.length === 1 &&
+						users.loggedOut.length === 0
 				"
 				key="only-me"
 			>
@@ -23,10 +25,8 @@
 			</h6>
 		</transition-group>
 
-		<br />
-
 		<aside class="menu">
-			<ul class="menu-list">
+			<ul class="menu-list scrollable-list">
 				<li v-for="(user, index) in users.loggedIn" :key="index">
 					<router-link
 						:to="{
@@ -50,16 +50,28 @@
 				</li>
 			</ul>
 		</aside>
+
+		<button
+			class="button is-primary tab-actionable-button"
+			@click="copyToClipboard()"
+		>
+			<i class="material-icons icon-with-button">share</i>
+			<span class="optional-desktop-only-text">
+				Share (copy to clipboard)
+			</span>
+		</button>
 	</div>
 </template>
 
 <script>
 import { mapState } from "vuex";
+import Toast from "toasters";
 
 export default {
 	data() {
 		return {
-			notesUri: ""
+			notesUri: "",
+			frontendDomain: ""
 		};
 	},
 	computed: mapState({
@@ -69,7 +81,22 @@ export default {
 	mounted() {
 		lofig.get("frontendDomain").then(frontendDomain => {
 			this.notesUri = encodeURI(`${frontendDomain}/assets/notes.png`);
+			this.frontendDomain = frontendDomain;
 		});
+	},
+	methods: {
+		async copyToClipboard() {
+			try {
+				await navigator.clipboard.writeText(
+					this.frontendDomain + this.$route.fullPath
+				);
+			} catch (err) {
+				new Toast({
+					content: "Failed to copy to clipboard.",
+					timeout: 8000
+				});
+			}
+		}
 	}
 };
 </script>
@@ -106,33 +133,46 @@ export default {
 #users {
 	background-color: #fff;
 	margin-bottom: 20px;
-	padding: 10px;
 	border-radius: 0 0 5px 5px;
 	max-height: 100%;
 
-	li {
-		margin-top: 10px;
+	.menu {
+		padding: 0 10px;
+		margin-top: 20px;
+		width: 100%;
+		overflow: auto;
+		height: calc(100% - 20px - 40px);
 
-		a {
-			display: flex;
-			align-items: center;
-			padding: 5px 10px;
-			border: 0.5px $light-grey-2 solid;
-			border-radius: 3px;
-			cursor: pointer;
+		.menu-list {
+			padding: 0 10px;
+		}
 
-			&:hover {
-				background-color: #eee;
-				color: #000;
+		li {
+			&:not(:first-of-type) {
+				margin-top: 10px;
 			}
 
-			img {
-				background-color: #fff;
-				width: 35px;
-				height: 35px;
-				border-radius: 100%;
-				border: 2px solid $light-grey;
-				margin-right: 10px;
+			a {
+				display: flex;
+				align-items: center;
+				padding: 5px 10px;
+				border: 0.5px $light-grey-2 solid;
+				border-radius: 3px;
+				cursor: pointer;
+
+				&:hover {
+					background-color: #eee;
+					color: #000;
+				}
+
+				img {
+					background-color: #fff;
+					width: 35px;
+					height: 35px;
+					border-radius: 100%;
+					border: 2px solid $light-grey;
+					margin-right: 10px;
+				}
 			}
 		}
 	}

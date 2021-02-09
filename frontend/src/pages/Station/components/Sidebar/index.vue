@@ -134,10 +134,18 @@ export default {
 	position: absolute;
 	bottom: 0;
 	border: 0;
+	background-color: var(--station-theme) !important;
+	color: $white !important;
 
 	&:active,
 	&:focus {
 		border: 0;
+	}
+
+	&:hover,
+	&:focus {
+		background-color: var(--station-theme) !important;
+		filter: brightness(90%);
 	}
 }
 

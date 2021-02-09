@@ -56,8 +56,12 @@
 			class="button create-playlist tab-actionable-button"
 			href="#"
 			@click="openModal({ sector: 'station', modal: 'createPlaylist' })"
-			>Create Playlist</a
 		>
+			<i class="material-icons icon-with-button">create</i>
+			<span class="optional-desktop-only-text">
+				Create Playlist
+			</span>
+		</a>
 	</div>
 </template>
 
@@ -240,18 +244,11 @@ export default {
 	width: 100%;
 	height: 40px;
 	border-radius: 5px;
-	background-color: var(--station-theme);
-	color: $white !important;
 	border: 0;
 
 	&:active,
 	&:focus {
 		border: 0;
-	}
-
-	&:hover,
-	&:focus {
-		filter: brightness(90%);
 	}
 }
 

@@ -5,7 +5,10 @@ const state = {
 	privatePlaylistQueueSelected: null,
 	editing: {},
 	userCount: 0,
-	users: {},
+	users: {
+		loggedIn: [],
+		loggedOut: []
+	},
 	currentSong: {},
 	previousSong: null,
 	songsList: [],
