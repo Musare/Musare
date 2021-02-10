@@ -33,12 +33,15 @@
 <script>
 import { mapActions, mapState } from "vuex";
 
+import TabQueryHandler from "../../../../mixins/TabQueryHandler.vue";
+
 import Queue from "./Queue/index.vue";
 import Users from "./Users.vue";
 import MyPlaylists from "./MyPlaylists.vue";
 
 export default {
 	components: { Queue, Users, MyPlaylists },
+	mixins: [TabQueryHandler],
 	data() {
 		return {
 			tab: "queue"
@@ -58,29 +61,7 @@ export default {
 			this.tab = this.$route.query.tab;
 	},
 	methods: {
-		...mapActions("modalVisibility", ["openModal"]),
-		showTab(tab) {
-			const queries = this.$route.query.tab
-				? this.$route.query
-				: { ...this.$route.query, tab };
-
-			queries.tab = tab;
-			this.$route.query.tab = tab;
-			this.tab = this.$route.query.tab;
-
-			// eslint-disable-next-line no-restricted-globals
-			history.pushState(
-				{},
-				null,
-				`${this.$route.path}?${Object.keys(queries)
-					.map(key => {
-						return `${encodeURIComponent(key)}=${encodeURIComponent(
-							queries[key]
-						)}`;
-					})
-					.join("&")}`
-			);
-		}
+		...mapActions("modalVisibility", ["openModal"])
 	}
 };
 </script>

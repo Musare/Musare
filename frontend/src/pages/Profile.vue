@@ -68,21 +68,21 @@
 			<div class="bottom-section">
 				<div class="buttons">
 					<button
-						:class="{ active: activeTab === 'recentActivity' }"
-						@click="switchTab('recentActivity')"
+						:class="{ active: tab === 'recent-activity' }"
+						@click="showTab('recent-activity')"
 					>
 						Recent activity
 					</button>
 					<button
-						:class="{ active: activeTab === 'playlists' }"
-						@click="switchTab('playlists')"
+						:class="{ active: tab === 'playlists' }"
+						@click="showTab('playlists')"
 					>
 						Playlists
 					</button>
 				</div>
 				<div
 					class="content recent-activity-tab"
-					v-if="activeTab === 'recentActivity'"
+					v-if="tab === 'recent-activity'"
 				>
 					<div v-if="activities.length > 0">
 						<h4 class="section-title">Recent activity</h4>
@@ -138,10 +138,7 @@
 						<h3>No recent activity.</h3>
 					</div>
 				</div>
-				<div
-					class="content playlists-tab"
-					v-if="activeTab === 'playlists'"
-				>
+				<div class="content playlists-tab" v-if="tab === 'playlists'">
 					<div v-if="playlists.length > 0">
 						<h4 class="section-title">
 							{{ isUser ? "My" : null }} Playlists
@@ -238,6 +235,8 @@ import { format, formatDistance, parseISO } from "date-fns";
 import Toast from "toasters";
 import draggable from "vuedraggable";
 
+import TabQueryHandler from "../mixins/TabQueryHandler.vue";
+
 import PlaylistItem from "../components/ui/PlaylistItem.vue";
 import SortablePlaylists from "../mixins/SortablePlaylists.vue";
 import MainHeader from "../components/layout/MainHeader.vue";
@@ -254,13 +253,13 @@ export default {
 		EditPlaylist: () => import("../components/modals/EditPlaylist.vue"),
 		draggable
 	},
-	mixins: [SortablePlaylists],
+	mixins: [SortablePlaylists, TabQueryHandler],
 	data() {
 		return {
 			user: {},
 			notes: "",
 			isUser: false,
-			activeTab: "recentActivity",
+			tab: "recent-activity",
 			playlists: [],
 			activities: []
 		};
@@ -281,6 +280,12 @@ export default {
 		}
 	},
 	mounted() {
+		if (
+			this.$route.query.tab === "recent-activity" ||
+			this.$route.query.tab === "playlists"
+		)
+			this.tab = this.$route.query.tab;
+
 		lofig.get("frontendDomain").then(frontendDomain => {
 			this.frontendDomain = frontendDomain;
 			this.notes = encodeURI(`${this.frontendDomain}/assets/notes.png`);
@@ -436,9 +441,6 @@ export default {
 	methods: {
 		formatDistance,
 		parseISO,
-		switchTab(tabName) {
-			this.activeTab = tabName;
-		},
 		editPlaylistClick(playlistId) {
 			console.log(playlistId);
 			this.editPlaylist(playlistId);
