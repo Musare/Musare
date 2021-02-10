@@ -1,6 +1,12 @@
 <template>
 	<div id="queue">
-		<div id="queue-items" class="scrollable-list">
+		<div
+			id="queue-items"
+			:class="{
+				'actionable-button-hidden': !actionableButtonVisible,
+				'scrollable-list': true
+			}"
+		>
 			<queue-item
 				v-for="(song, index) in songsList"
 				:key="index + song.songId"
@@ -68,7 +74,8 @@ export default {
 	components: { QueueItem },
 	data() {
 		return {
-			dismissedWarning: false
+			dismissedWarning: false,
+			actionableButtonVisible: false
 		};
 	},
 	computed: mapState({
@@ -79,6 +86,16 @@ export default {
 		songsList: state => state.station.songsList,
 		noSong: state => state.station.noSong
 	}),
+	updated() {
+		// check if actionable button is visible, if not: set max-height of queue items to 100%
+		if (
+			document
+				.getElementById("queue")
+				.querySelectorAll(".tab-actionable-button").length > 0
+		)
+			this.actionableButtonVisible = true;
+		else this.actionableButtonVisible = false;
+	},
 	methods: {
 		isOwnerOnly() {
 			return this.loggedIn && this.userId === this.station.owner;
@@ -120,6 +137,10 @@ export default {
 #queue {
 	background-color: #fff;
 	border-radius: 0 0 5px 5px;
+
+	.actionable-button-hidden {
+		max-height: 100%;
+	}
 
 	.queue-item:not(:last-of-type) {
 		margin-bottom: 10px;
