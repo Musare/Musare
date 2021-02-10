@@ -1722,6 +1722,7 @@ export default {
 
 			#admin-buttons {
 				display: flex;
+
 				.button {
 					margin: 3px;
 				}

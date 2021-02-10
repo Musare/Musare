@@ -2,19 +2,31 @@
 	<modal title="Create Playlist">
 		<template #body>
 			<p class="control is-expanded">
+				<label class="label">Display Name</label>
 				<input
 					v-model="playlist.displayName"
 					class="input"
 					type="text"
-					placeholder="Playlist Display Name"
+					placeholder="Enter display name..."
 					autofocus
 					@keyup.enter="createPlaylist()"
 				/>
 			</p>
+
+			<div class="control" id="privacy-selection">
+				<label class="label">Privacy</label>
+				<p class="control select">
+					<select v-model="playlist.privacy">
+						<option value="private">Private</option>
+						<option value="public" selected>Public</option>
+					</select>
+				</p>
+			</div>
 		</template>
 		<template #footer>
 			<a class="button is-info" @click="createPlaylist()"
-				>Create Playlist</a
+				><i class="material-icons icon-with-button">create</i>Create
+				Playlist</a
 			>
 		</template>
 	</modal>
@@ -33,7 +45,8 @@ export default {
 	data() {
 		return {
 			playlist: {
-				displayName: null,
+				displayName: "",
+				privacy: "public",
 				songs: []
 			}
 		};
@@ -46,6 +59,7 @@ export default {
 	methods: {
 		createPlaylist() {
 			const { displayName } = this.playlist;
+
 			if (!validation.isLength(displayName, 2, 32))
 				return new Toast({
 					content:
@@ -102,6 +116,10 @@ li a {
 	align-items: center;
 }
 
+#privacy-selection {
+	margin-top: 15px;
+}
+
 .controls {
 	display: flex;
 
@@ -111,11 +129,7 @@ li a {
 	}
 }
 
-.table {
-	margin-bottom: 0;
-}
-
-h5 {
-	padding: 20px 0;
+.label {
+	font-size: 1rem;
 }
 </style>

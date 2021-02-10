@@ -393,7 +393,7 @@ export default {
 				next => (data ? next() : cb({ status: "failure", message: "Invalid data" })),
 
 				next => {
-					const { displayName, songs } = data;
+					const { displayName, songs, privacy } = data;
 
 					if (blacklist.indexOf(displayName.toLowerCase()) !== -1)
 						return next("That playlist name is blacklisted. Please use a different name.");
@@ -402,6 +402,7 @@ export default {
 						{
 							displayName,
 							songs,
+							privacy,
 							createdBy: session.userId,
 							createdAt: Date.now(),
 							createdFor: null,
