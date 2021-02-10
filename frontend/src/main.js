@@ -157,8 +157,6 @@ lofig.get("serverDomain").then(serverDomain => {
 		);
 
 		socket.on("keep.event:user.preferences.changed", preferences => {
-			console.log("changed");
-
 			store.dispatch(
 				"user/preferences/changeAutoSkipDisliked",
 				preferences.autoSkipDisliked

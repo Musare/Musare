@@ -215,6 +215,10 @@ export default {
 	label {
 		color: $night-mode-text !important;
 	}
+
+	.content {
+		background-color: $night-mode-bg-secondary !important;
+	}
 }
 
 body.night-mode {
@@ -593,9 +597,12 @@ h4.section-title {
 	.universal-item-actions {
 		display: flex;
 		flex-direction: row;
-		flex-wrap: wrap;
 		margin-left: 10px;
 		justify-content: center;
+
+		@media screen and (max-width: 800px) {
+			flex-wrap: wrap;
+		}
 
 		i {
 			cursor: pointer;

@@ -6,42 +6,38 @@
 			<h1 id="page-title">Settings</h1>
 			<div id="sidebar-with-content">
 				<div class="nav-links">
-					<router-link
-						:class="{ active: activeTab === 'profile' }"
-						to="#profile"
+					<a
+						:class="{ active: tab === 'profile' }"
+						@click="showTab('profile')"
 					>
 						Profile
-					</router-link>
-					<router-link
-						:class="{ active: activeTab === 'account' }"
-						to="#account"
+					</a>
+					<a
+						:class="{ active: tab === 'account' }"
+						@click="showTab('account')"
 					>
 						Account
-					</router-link>
-					<router-link
-						:class="{ active: activeTab === 'security' }"
-						to="#security"
+					</a>
+					<a
+						:class="{ active: tab === 'security' }"
+						@click="showTab('security')"
 					>
 						Security
-					</router-link>
-					<router-link
-						:class="{ active: activeTab === 'preferences' }"
-						to="#preferences"
+					</a>
+					<a
+						:class="{ active: tab === 'preferences' }"
+						@click="showTab('preferences')"
 					>
 						Preferences
-					</router-link>
+					</a>
 				</div>
-				<profile-settings
-					v-if="activeTab === 'profile'"
-				></profile-settings>
-				<account-settings
-					v-if="activeTab === 'account'"
-				></account-settings>
+				<profile-settings v-if="tab === 'profile'"></profile-settings>
+				<account-settings v-if="tab === 'account'"></account-settings>
 				<security-settings
-					v-if="activeTab === 'security'"
+					v-if="tab === 'security'"
 				></security-settings>
 				<preferences-settings
-					v-if="activeTab === 'preferences'"
+					v-if="tab === 'preferences'"
 				></preferences-settings>
 			</div>
 		</div>
@@ -52,6 +48,8 @@
 <script>
 import { mapActions } from "vuex";
 import Toast from "toasters";
+
+import TabQueryHandler from "../../mixins/TabQueryHandler.vue";
 
 import MainHeader from "../../components/layout/MainHeader.vue";
 import MainFooter from "../../components/layout/MainFooter.vue";
@@ -72,61 +70,65 @@ export default {
 		ProfileSettings,
 		PreferencesSettings
 	},
+	mixins: [TabQueryHandler],
 	data() {
 		return {
-			activeTab: ""
+			tab: "profile"
 		};
 	},
 	mounted() {
-		if (this.$route.hash === "") {
-			this.$router.push("#profile");
-		} else {
-			this.activeTab = this.$route.hash.replace("#", "");
-			this.localNightmode = this.nightmode;
+		if (
+			this.$route.query.tab === "profile" ||
+			this.$route.query.tab === "security" ||
+			this.$route.query.tab === "account" ||
+			this.$route.query.tab === "preferences"
+		)
+			this.tab = this.$route.query.tab;
 
-			io.getSocket(socket => {
-				this.socket = socket;
+		this.localNightmode = this.nightmode;
 
-				this.socket.emit("users.findBySession", res => {
-					if (res.status === "success") {
-						this.setUser(res.data);
-					} else {
-						new Toast({
-							content: "You're not currently signed in.",
-							timeout: 3000
-						});
-					}
-				});
+		io.getSocket(socket => {
+			this.socket = socket;
 
-				this.socket.on("event:user.linkPassword", () =>
-					this.updateOriginalUser({
-						property: "password",
-						value: true
-					})
-				);
-
-				this.socket.on("event:user.unlinkPassword", () =>
-					this.updateOriginalUser({
-						property: "password",
-						value: false
-					})
-				);
-
-				this.socket.on("event:user.linkGithub", () =>
-					this.updateOriginalUser({
-						property: "github",
-						value: true
-					})
-				);
-
-				this.socket.on("event:user.unlinkGithub", () =>
-					this.updateOriginalUser({
-						property: "github",
-						value: false
-					})
-				);
+			this.socket.emit("users.findBySession", res => {
+				if (res.status === "success") {
+					this.setUser(res.data);
+				} else {
+					new Toast({
+						content: "You're not currently signed in.",
+						timeout: 3000
+					});
+				}
 			});
-		}
+
+			this.socket.on("event:user.linkPassword", () =>
+				this.updateOriginalUser({
+					property: "password",
+					value: true
+				})
+			);
+
+			this.socket.on("event:user.unlinkPassword", () =>
+				this.updateOriginalUser({
+					property: "password",
+					value: false
+				})
+			);
+
+			this.socket.on("event:user.linkGithub", () =>
+				this.updateOriginalUser({
+					property: "github",
+					value: true
+				})
+			);
+
+			this.socket.on("event:user.unlinkGithub", () =>
+				this.updateOriginalUser({
+					property: "github",
+					value: false
+				})
+			);
+		});
 	},
 	methods: mapActions("settings", ["updateOriginalUser", "setUser"])
 };
@@ -134,12 +136,6 @@ export default {
 
 <style lang="scss" scoped>
 @import "../../styles/global.scss";
-
-.night-mode {
-	.content {
-		background-color: $night-mode-bg-secondary !important;
-	}
-}
 
 /deep/ .character-counter {
 	display: flex;

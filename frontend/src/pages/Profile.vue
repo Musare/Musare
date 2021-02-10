@@ -855,7 +855,12 @@ export default {
 	.date-location-row i,
 	.date-location-row p,
 	.item .left-part .top-text,
-	.item .left-part .bottom-text {
+	.item .left-part .bottom-text,
+	.bottom-section
+		.content
+		.item.activity-item
+		.thumbnail
+		.activity-type-icon {
 		color: $light-grey;
 	}
 }

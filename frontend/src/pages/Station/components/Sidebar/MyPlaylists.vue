@@ -221,6 +221,10 @@ export default {
 		background-color: $night-mode-bg-secondary !important;
 		border: 0 !important;
 	}
+
+	.draggable-list-ghost {
+		background-color: darken($night-mode-bg-secondary, 5%);
+	}
 }
 
 .nothing-here-text {
@@ -254,12 +258,6 @@ export default {
 
 .draggable-list-transition-move {
 	transition: transform 0.5s;
-}
-
-.night-mode {
-	.draggable-list-ghost {
-		background-color: darken($night-mode-bg-secondary, 5%);
-	}
 }
 
 .draggable-list-ghost {
