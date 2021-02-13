@@ -2,26 +2,239 @@
 	<div>
 		<metadata title="Home" />
 		<div class="app">
-			<main-header />
-			<div class="group">
+			<main-header
+				:hide-logo="true"
+				:transparent="true"
+				:hide-logged-out="true"
+			/>
+			<div class="header" :class="{ loggedIn }">
+				<img
+					class="background"
+					src="/assets/homebg.jpeg"
+				/>
+				<div class="overlay"></div>
+				<div class="content-container">
+					<div class="content">
+						<img
+							class="logo"
+							src="/assets/white_wordmark.png"
+							:alt="`${this.siteName}` || `Musare`"
+						/>
+						<div v-if="!loggedIn" class="buttons">
+							<button
+								class="button login"
+								@click="
+									openModal({
+										sector: 'header',
+										modal: 'login'
+									})
+								"
+							>
+								Login
+							</button>
+							<button
+								class="button register"
+								@click="
+									openModal({
+										sector: 'header',
+										modal: 'register'
+									})
+								"
+							>
+								Register
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div v-if="favoriteStations.length > 0" class="group">
+				<div class="group-title">
+					<div>
+						<h2>My Favorites</h2>
+					</div>
+				</div>
+				<router-link
+					v-for="(station, index) in favoriteStations"
+					:key="index"
+					:to="{
+						name: 'station',
+						params: { id: station.name }
+					}"
+					class="card station-card"
+					:class="{
+						isPrivate: station.privacy === 'private',
+						isMine: isOwner(station)
+					}"
+					:style="'--station-theme: ' + station.themeCode"
+				>
+					<div class="card-image">
+						<figure class="image is-square">
+							<div
+								v-if="station.currentSong.ytThumbnail"
+								class="ytThumbnailBg"
+								:style="{
+									'background-image':
+										'url(' +
+										station.currentSong.ytThumbnail +
+										')'
+								}"
+							></div>
+							<img
+								v-if="station.currentSong.ytThumbnail"
+								:src="station.currentSong.ytThumbnail"
+								onerror="this.src='/assets/notes-transparent.png'"
+							/>
+							<img
+								v-else
+								:src="station.currentSong.thumbnail"
+								onerror="this.src='/assets/notes-transparent.png'"
+							/>
+						</figure>
+					</div>
+					<div class="card-content">
+						<div class="media">
+							<div class="media-left displayName">
+								<i
+									v-if="loggedIn && !station.isFavorited"
+									@click.prevent="favoriteStation(station)"
+									class="favorite material-icons"
+									>star_border</i
+								>
+								<i
+									v-if="loggedIn && station.isFavorited"
+									@click.prevent="unfavoriteStation(station)"
+									class="favorite material-icons"
+									>star</i
+								>
+								<h5>{{ station.displayName }}</h5>
+								<i
+									v-if="station.type === 'official'"
+									class="material-icons verified-station"
+									title="Verified station"
+								>
+									check_circle
+								</i>
+							</div>
+						</div>
+
+						<div class="content">
+							{{ station.description }}
+						</div>
+						<div class="under-content">
+							<p class="hostedBy">
+								Hosted by
+								<span class="host">
+									<span
+										v-if="station.type === 'official'"
+										title="Musare"
+										>Musare</span
+									>
+									<user-id-to-username
+										v-else
+										:user-id="station.owner"
+										:link="true"
+									/>
+								</span>
+							</p>
+							<div class="icons">
+								<i
+									v-if="
+										station.type === 'community' &&
+											isOwner(station)
+									"
+									class="homeIcon material-icons"
+									title="This is your station."
+									>home</i
+								>
+								<i
+									v-if="station.privacy === 'private'"
+									class="privateIcon material-icons"
+									title="This station is not visible to other users."
+									>lock</i
+								>
+								<i
+									v-if="station.privacy === 'unlisted'"
+									class="unlistedIcon material-icons"
+									title="Unlisted Station"
+									>link</i
+								>
+							</div>
+						</div>
+					</div>
+					<div class="bottomBar">
+						<i
+							v-if="station.paused && station.currentSong.title"
+							class="material-icons"
+							title="Station Paused"
+							>pause</i
+						>
+						<i
+							v-else-if="station.currentSong.title"
+							class="material-icons"
+							>music_note</i
+						>
+						<i v-else class="material-icons">music_off</i>
+						<span
+							v-if="station.currentSong.title"
+							class="songTitle"
+							:title="
+								station.currentSong.artists.length > 0
+									? 'Now Playing: ' +
+									  station.currentSong.title +
+									  ' by ' +
+									  station.currentSong.artists.join(',')
+									: 'Now Playing: ' +
+									  station.currentSong.title
+							"
+							>{{ station.currentSong.title }}
+							{{
+								station.currentSong.artists.length > 0
+									? " by " +
+									  station.currentSong.artists.join(",")
+									: ""
+							}}</span
+						>
+						<span v-else class="songTitle">No Songs Playing</span>
+					</div>
+				</router-link>
+			</div>
+			<div class="group bottom">
 				<div class="group-title">
 					<div>
 						<h1>Stations</h1>
 					</div>
-					<a
-						v-if="loggedIn"
-						href="#"
-						@click="
-							openModal({
-								sector: 'home',
-								modal: 'createCommunityStation'
-							})
-						"
-						><i class="material-icons community-button"
-							>add_circle_outline</i
-						>
-					</a>
 				</div>
+				<a
+					v-if="loggedIn"
+					@click="
+						openModal({
+							sector: 'home',
+							modal: 'createCommunityStation'
+						})
+					"
+					class="card station-card createStation"
+					:style="'--station-theme: rgb(2, 166, 242)'"
+				>
+					<div class="card-image">
+						<figure class="image is-square">
+							<i class="material-icons">radio</i>
+							<!-- <img src="/assets/notes-transparent.png" /> -->
+						</figure>
+					</div>
+					<div class="card-content">
+						<div class="media">
+							<div class="media-left displayName">
+								<h5>Create Station</h5>
+							</div>
+						</div>
+
+						<div class="content">
+							Click here to create your own station!
+						</div>
+					</div>
+					<div class="bottomBar"></div>
+				</a>
+
 				<router-link
 					v-for="(station, index) in filteredStations"
 					:key="index"
@@ -200,7 +413,8 @@ export default {
 				key: ""
 			},
 			stations: [],
-			searchQuery: ""
+			searchQuery: "",
+			siteName: "Musare"
 		};
 	},
 	computed: {
@@ -220,7 +434,6 @@ export default {
 				)
 				.sort(
 					(a, b) =>
-						b.isFavorited - a.isFavorited ||
 						this.isOwner(b) - this.isOwner(a) ||
 						this.isPlaying(b) - this.isPlaying(a) ||
 						a.paused - b.paused ||
@@ -228,9 +441,18 @@ export default {
 							privacyOrder.indexOf(b.privacy) ||
 						b.userCount - a.userCount
 				);
+		},
+		favoriteStations() {
+			return this.filteredStations.filter(
+				station => station.isFavorited === true
+			);
 		}
 	},
 	mounted() {
+		lofig.get("siteSettings.siteName").then(siteName => {
+			this.siteName = siteName;
+		});
+
 		io.getSocket(socket => {
 			this.socket = socket;
 			if (this.socket.connected) this.init();
@@ -488,6 +710,15 @@ html {
 }
 
 .night-mode {
+	.header .overlay {
+		background: linear-gradient(
+			180deg,
+			rgba(34, 34, 34, 0.8) 0%,
+			rgba(34, 34, 34, 0.95) 31.25%,
+			rgba(34, 34, 34, 0.9) 54.17%,
+			rgba(34, 34, 34, 0.8) 100%
+		);
+	}
 	.card,
 	.card-content,
 	.card-content div {
@@ -526,8 +757,109 @@ html {
 	}
 }
 
+.header {
+	display: flex;
+	height: 35vh;
+	margin-top: -64px;
+	border-radius: 0% 0% 33% 33% / 0% 0% 7% 7%;
+
+	img.background {
+		height: 35vh;
+		width: 100%;
+		object-fit: cover;
+		object-position: center;
+		filter: blur(1px);
+		border-radius: 0% 0% 33% 33% / 0% 0% 7% 7%;
+		overflow: hidden;
+	}
+	.overlay {
+		background: linear-gradient(
+			180deg,
+			rgba(3, 169, 244, 0.8) 0%,
+			rgba(3, 169, 244, 0.95) 31.25%,
+			rgba(3, 169, 244, 0.9) 54.17%,
+			rgba(3, 169, 244, 0.8) 100%
+		);
+		position: absolute;
+		height: 35vh;
+		width: 100%;
+		border-radius: 0% 0% 33% 33% / 0% 0% 7% 7%;
+		overflow: hidden;
+	}
+	.content-container {
+		position: absolute;
+		left: 0;
+		right: 0;
+		margin-left: auto;
+		margin-right: auto;
+		text-align: center;
+		height: 100%;
+		height: 35vh;
+		.content {
+			position: absolute;
+			top: 50%;
+			left: 0;
+			right: 0;
+			transform: translateY(-50%);
+			background-color: transparent !important;
+			img.logo {
+				max-height: 90px;
+				font-size: 40px;
+				color: white;
+				font-family: Pacifico, cursive;
+			}
+			.buttons {
+				display: flex;
+				justify-content: center;
+				margin-top: 20px;
+				flex-wrap: wrap;
+
+				.login,
+				.register {
+					margin: 5px 10px;
+					padding: 10px 15px;
+					border-radius: 5px;
+					font-size: 18px;
+					width: 100%;
+					max-width: 250px;
+					font-weight: 600;
+					border: 0;
+					height: inherit;
+				}
+				.login {
+					background: white;
+					color: $musare-blue;
+				}
+				.register {
+					background: $purple;
+					color: white;
+				}
+			}
+		}
+	}
+	&.loggedIn {
+		height: 20vh;
+		.overlay,
+		.content-container,
+		img.background {
+			height: 20vh;
+		}
+	}
+}
+
+@media only screen and (max-width: 550px) {
+	.header {
+		height: 45vh;
+		.overlay,
+		.content-container,
+		img.background {
+			height: 45vh;
+		}
+	}
+}
+
 .under-content {
-	height: 25px;
+	height: 20px;
 	position: relative;
 	line-height: 1;
 	font-size: 24px;
@@ -606,37 +938,44 @@ html {
 
 .station-card {
 	display: inline-flex;
-	flex-direction: column;
+	flex-direction: row;
 	overflow: hidden;
 	margin: 10px;
 	cursor: pointer;
-	height: 480px;
+	height: 150px;
+	width: calc(100% - 30px);
+	max-width: 400px;
+	flex-wrap: wrap;
 	border-radius: 5px;
 	box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.1);
 	transition: all ease-in-out 0.2s;
 
 	.card-content {
-		padding: 10px 15px;
+		padding: 10px 10px 10px 15px;
+		display: flex;
+		flex-direction: column;
+		flex-grow: 1;
+		-webkit-line-clamp: 2;
 
 		.media {
 			display: flex;
 			align-items: center;
-			margin-bottom: 5px;
+			margin-bottom: 0;
 
 			.displayName {
 				display: flex;
 				align-items: center;
-				width: 80%;
+				width: 100%;
 				overflow: hidden;
 				text-overflow: ellipsis;
 				display: flex;
 				line-height: 30px;
 				max-height: 30px;
 				.favorite {
-					position: relative;
-					padding-right: 5px;
+					position: absolute;
 					color: $yellow;
-					top: -1px;
+					right: 10px;
+					top: 10px;
 					font-size: 28px;
 				}
 				h5 {
@@ -649,6 +988,7 @@ html {
 					text-overflow: ellipsis;
 					overflow: hidden;
 					white-space: nowrap;
+					max-width: 200px;
 				}
 
 				i {
@@ -669,7 +1009,7 @@ html {
 			-webkit-box-orient: vertical;
 			-webkit-line-clamp: 3;
 			line-height: 20px;
-			height: 60px;
+			flex-grow: 1;
 			text-align: left;
 			word-wrap: break-word;
 			margin-bottom: 0;
@@ -677,6 +1017,7 @@ html {
 	}
 
 	.card-image {
+		width: 120px;
 		.image {
 			box-shadow: 1px 0 3px rgba(100, 100, 100, 0.3);
 			.ytThumbnailBg {
@@ -691,7 +1032,7 @@ html {
 			}
 			img {
 				height: auto;
-				width: 100%;
+				width: 120px;
 				top: 0;
 				margin-top: auto;
 				margin-bottom: auto;
@@ -705,7 +1046,7 @@ html {
 		display: flex;
 		align-items: center;
 		background: var(--station-theme);
-		box-shadow: inset 0px 2px 4px rgba(100, 100, 100, 0.3);
+		// box-shadow: inset 0px 2px 4px rgba(100, 100, 100, 0.3);
 		width: 100%;
 		height: 30px;
 		line-height: 30px;
@@ -713,6 +1054,7 @@ html {
 		font-weight: 400;
 		font-size: 12px;
 		padding: 0 5px;
+		flex-basis: 100%;
 
 		i.material-icons {
 			vertical-align: middle;
@@ -729,6 +1071,31 @@ html {
 			overflow: hidden;
 			text-overflow: ellipsis;
 			white-space: nowrap;
+		}
+	}
+
+	&.createStation {
+		.card-image .image.is-square .material-icons {
+			position: absolute;
+			top: 25px;
+			bottom: 25px;
+			left: 0;
+			right: 0;
+			text-align: center;
+			font-size: 70px;
+			color: var(--station-theme);
+		}
+		.card-content {
+			.media {
+				margin-top: auto;
+				.displayName h5 {
+					font-weight: 600;
+				}
+			}
+			.content {
+				flex-grow: unset;
+				margin-bottom: auto;
+			}
 		}
 	}
 }
@@ -773,9 +1140,7 @@ html {
 .group {
 	text-align: center;
 	width: 100%;
-	margin: 40px 0 0 0;
-	padding-bottom: 240px;
-
+	margin: 10px 0;
 	.group-title {
 		display: flex;
 		align-items: center;
@@ -784,6 +1149,12 @@ html {
 
 		h1 {
 			display: inline-block;
+			font-size: 45px;
+			margin: 0;
+		}
+
+		h2 {
+			font-size: 35px;
 			margin: 0;
 		}
 
@@ -791,6 +1162,9 @@ html {
 			display: flex;
 			margin-left: 8px;
 		}
+	}
+	&.bottom {
+		margin-bottom: 40px;
 	}
 }
 </style>

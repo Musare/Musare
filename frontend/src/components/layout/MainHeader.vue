@@ -1,7 +1,7 @@
 <template>
-	<nav class="nav is-info">
+	<nav class="nav is-info" :class="{ transparent }">
 		<div class="nav-left">
-			<router-link class="nav-item is-brand" to="/">
+			<router-link v-if="!hideLogo" class="nav-item is-brand" to="/">
 				<img
 					:src="`${this.siteSettings.logo_white}`"
 					:alt="`${this.siteSettings.siteName}` || `Musare`"
@@ -44,7 +44,7 @@
 				>
 				<a class="nav-item is-tab" href="#" @click="logout()">Logout</a>
 			</span>
-			<span v-else class="grouped">
+			<span v-if="!loggedIn && !hideLoggedOut" class="grouped">
 				<a
 					class="nav-item"
 					href="#"
@@ -76,6 +76,11 @@
 import { mapState, mapActions } from "vuex";
 
 export default {
+	props: {
+		hideLogo: { type: Boolean, default: false },
+		transparent: { type: Boolean, default: false },
+		hideLoggedOut: { type: Boolean, default: false }
+	},
 	data() {
 		return {
 			isMobile: false,
@@ -126,8 +131,11 @@ export default {
 	flex-shrink: 0;
 	background-color: $primary-color;
 	height: 64px;
-	overflow: hidden;
 	border-radius: 0% 0% 33% 33% / 0% 0% 7% 7%;
+
+	&.transparent {
+		background-color: transparent !important;
+	}
 
 	@media (max-width: 650px) {
 		border-radius: 0;

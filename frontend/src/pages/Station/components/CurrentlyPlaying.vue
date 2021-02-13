@@ -205,7 +205,7 @@ export default {
 			}
 
 			#report-icon {
-				background-color: $grey;
+				background-color: $yellow;
 			}
 
 			#youtube-icon {
