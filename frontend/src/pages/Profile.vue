@@ -126,7 +126,10 @@
 								</p>
 							</div>
 							<div class="universal-item-actions">
-								<a href="#" @click="hideActivity(activity._id)">
+								<a
+									href="#"
+									@click.prevent="hideActivity(activity._id)"
+								>
 									<i class="material-icons hide-icon"
 										>visibility_off</i
 									>

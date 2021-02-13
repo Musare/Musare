@@ -25,7 +25,7 @@
 					<p class="control">
 						<a
 							class="button is-info"
-							@click="submitQuery()"
+							@click.prevent="submitQuery()"
 							href="#"
 							><i class="material-icons icon-with-button"
 								>search</i
@@ -61,7 +61,9 @@
 								<a
 									class="button is-dark"
 									v-else
-									@click="addSongToQueue(result.id, index)"
+									@click.prevent="
+										addSongToQueue(result.id, index)
+									"
 									href="#"
 									key="add-to-queue"
 								>
@@ -112,7 +114,7 @@
 							</span>
 							<a
 								class="button is-info"
-								@click="importPlaylist()"
+								@click.prevent="importPlaylist()"
 								href="#"
 								><i class="material-icons icon-with-button"
 									>publish</i
@@ -152,7 +154,7 @@
 										<a
 											class="button is-danger"
 											href="#"
-											@click="
+											@click.prevent="
 												togglePlaylistSelection(
 													playlist._id
 												)
@@ -169,7 +171,7 @@
 										</a>
 										<a
 											class="button is-success"
-											@click="
+											@click.prevent="
 												togglePlaylistSelection(
 													playlist._id
 												)
@@ -317,7 +319,7 @@ export default {
 
 			if (!this.querySearch)
 				return new Toast({
-					content: "Please input a search query or a YouTube link",
+					content: "Please input a search query or a YouTube link.",
 					timeout: 4000
 				});
 
@@ -397,6 +399,16 @@ export default {
 
 	#playlists {
 		font-size: 18px;
+
+		.playlist {
+			.button {
+				width: 150px;
+			}
+
+			i {
+				color: #fff;
+			}
+		}
 
 		.playlist:not(:last-of-type) {
 			margin-bottom: 10px;

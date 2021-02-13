@@ -55,7 +55,7 @@
 								<p class="control">
 									<a
 										class="button is-info"
-										@click="renamePlaylist()"
+										@click.prevent="renamePlaylist()"
 										href="#"
 										>Rename</a
 									>
@@ -77,7 +77,7 @@
 								<p class="control">
 									<a
 										class="button is-info"
-										@click="updatePrivacy()"
+										@click.prevent="updatePrivacy()"
 										href="#"
 										>Update Privacy</a
 									>
@@ -130,7 +130,7 @@
 								</span>
 								<a
 									class="button is-info"
-									@click="importPlaylist()"
+									@click.prevent="importPlaylist()"
 									href="#"
 									><i class="material-icons icon-with-button"
 										>publish</i
@@ -156,7 +156,7 @@
 							<p class="control">
 								<a
 									class="button is-info"
-									@click="searchForSongs()"
+									@click.prevent="searchForSongs()"
 									href="#"
 									><i class="material-icons icon-with-button"
 										>search</i
@@ -191,7 +191,7 @@
 										<a
 											class="button is-dark"
 											v-else
-											@click="
+											@click.prevent="
 												addSongToPlaylist(
 													result.id,
 													index
@@ -535,6 +535,13 @@ export default {
 		importPlaylist() {
 			let isImportingPlaylist = true;
 
+			// import query is blank
+			if (!this.importQuery)
+				return new Toast({
+					content: "Please enter a YouTube playlist URL.",
+					timeout: 4000
+				});
+
 			// don't give starting import message instantly in case of instant error
 			setTimeout(() => {
 				if (isImportingPlaylist) {
@@ -546,7 +553,7 @@ export default {
 				}
 			}, 750);
 
-			this.socket.emit(
+			return this.socket.emit(
 				"playlists.addSetToPlaylist",
 				this.importQuery,
 				this.playlist._id,
@@ -750,6 +757,12 @@ export default {
 				max-width: 100%;
 			}
 		}
+	}
+
+	.nothing-here-text {
+		display: flex;
+		align-items: center;
+		justify-content: center;
 	}
 
 	.section {
