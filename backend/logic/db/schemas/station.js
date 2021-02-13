@@ -24,6 +24,7 @@ export default {
 	pausedAt: { type: Number, default: 0, required: true },
 	startedAt: { type: Number, default: 0, required: true },
 	playlist: { type: Array },
+	playlist2: { type: mongoose.Schema.Types.ObjectId, required: true },
 	genres: [{ type: String }],
 	blacklistedGenres: [{ type: String }],
 	privacy: { type: String, enum: ["public", "unlisted", "private"], default: "private" },
@@ -46,5 +47,7 @@ export default {
 	privatePlaylist: { type: mongoose.Schema.Types.ObjectId },
 	partyMode: { type: Boolean },
 	theme: { type: String, enum: ["blue", "purple", "teal", "orange"], default: "blue" },
+	// includedPlaylists: [{ type: mongoose.Schema.Types.ObjectId }],
+	// excludedPlaylists: [{ type: mongoose.Schema.Types.ObjectId }],
 	documentVersion: { type: Number, default: 1, required: true }
 };
