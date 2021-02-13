@@ -5,320 +5,304 @@
 		"
 		class="edit-playlist-modal"
 	>
-		<div slot="body">
-			<div
-				:class="{
-					'view-only': !isEditable(),
-					'edit-playlist-modal-inner-container': true
-				}"
-			>
-				<div id="first-column">
-					<div id="playlist-info-section" class="section">
-						<h3>{{ playlist.displayName }}</h3>
-						<h5>Duration: {{ totalLength() }}</h5>
-					</div>
+		<div
+			slot="body"
+			:class="{
+				'view-only': !isEditable(),
+				'edit-playlist-modal-inner-container': true
+			}"
+		>
+			<div id="first-column">
+				<div id="playlist-info-section" class="section">
+					<h3>{{ playlist.displayName }}</h3>
+					<h5>Duration: {{ totalLength() }}</h5>
+				</div>
 
-					<div
-						class="section-margin-bottom"
-						v-if="
-							(!playlist.isUserModifiable &&
-								userId === playlist.createdBy) ||
-								isEditable()
-						"
-					/>
+				<div
+					class="section-margin-bottom"
+					v-if="
+						(!playlist.isUserModifiable &&
+							userId === playlist.createdBy) ||
+							isEditable()
+					"
+				/>
 
-					<div id="playlist-settings-section" class="section">
-						<div v-if="isEditable()">
-							<h4 class="section-title">Edit Details</h4>
-
-							<p class="section-description">
-								Change the display name and privacy of the
-								playlist.
-							</p>
-
-							<hr class="section-horizontal-rule" />
-
-							<label class="label">
-								Change display name
-							</label>
-
-							<div class="control is-grouped input-with-button">
-								<p class="control is-expanded">
-									<input
-										v-model="playlist.displayName"
-										class="input"
-										type="text"
-										placeholder="Playlist Display Name"
-										@keyup.enter="renamePlaylist()"
-									/>
-								</p>
-								<p class="control">
-									<a
-										class="button is-info"
-										@click.prevent="renamePlaylist()"
-										href="#"
-										>Rename</a
-									>
-								</p>
-							</div>
-						</div>
-
-						<div v-if="userId === playlist.createdBy">
-							<label class="label">
-								Change privacy
-							</label>
-							<div class="control is-grouped input-with-button">
-								<div class="control is-expanded select">
-									<select v-model="playlist.privacy">
-										<option value="private">Private</option>
-										<option value="public">Public</option>
-									</select>
-								</div>
-								<p class="control">
-									<a
-										class="button is-info"
-										@click.prevent="updatePrivacy()"
-										href="#"
-										>Update Privacy</a
-									>
-								</p>
-							</div>
-						</div>
-
-						<div class="section-margin-bottom" />
-					</div>
-
-					<div
-						id="import-from-youtube-section"
-						class="section"
-						v-if="isEditable()"
-					>
-						<h4 class="section-title">Import from YouTube</h4>
+				<div id="playlist-settings-section" class="section">
+					<div v-if="isEditable()">
+						<h4 class="section-title">Edit Details</h4>
 
 						<p class="section-description">
-							Import a playlist or song by searching or using a
-							link from YouTube.
+							Change the display name and privacy of the playlist.
 						</p>
 
 						<hr class="section-horizontal-rule" />
 
-						<label class="label">
-							Search for a playlist from YouTube
-						</label>
-						<div class="control is-grouped input-with-button">
-							<p class="control is-expanded">
-								<input
-									class="input"
-									type="text"
-									placeholder="Enter YouTube Playlist URL here..."
-									v-model="importQuery"
-									@keyup.enter="importPlaylist()"
-								/>
-							</p>
-							<p class="control has-addons">
-								<span class="select" id="playlist-import-type">
-									<select
-										v-model="isImportingOnlyMusicOfPlaylist"
-									>
-										<option :value="false"
-											>Import all</option
-										>
-										<option :value="true"
-											>Import only music</option
-										>
-									</select>
-								</span>
-								<a
-									class="button is-info"
-									@click.prevent="importPlaylist()"
-									href="#"
-									><i class="material-icons icon-with-button"
-										>publish</i
-									>Import</a
-								>
-							</p>
-						</div>
+						<label class="label"> Change display name </label>
 
-						<label class="label">
-							Search for a song from YouTube
-						</label>
 						<div class="control is-grouped input-with-button">
 							<p class="control is-expanded">
 								<input
+									v-model="playlist.displayName"
 									class="input"
 									type="text"
-									placeholder="Enter your YouTube query here..."
-									v-model="searchSongQuery"
-									autofocus
-									@keyup.enter="searchForSongs()"
+									placeholder="Playlist Display Name"
+									@keyup.enter="renamePlaylist()"
 								/>
 							</p>
 							<p class="control">
 								<a
 									class="button is-info"
-									@click.prevent="searchForSongs()"
+									@click.prevent="renamePlaylist()"
 									href="#"
-									><i class="material-icons icon-with-button"
-										>search</i
-									>Search</a
+									>Rename</a
 								>
 							</p>
 						</div>
-
-						<div id="song-query-results">
-							<search-query-item
-								v-for="(result, index) in queryResults"
-								:key="index"
-								:result="result"
-							>
-								<div slot="actions">
-									<transition
-										name="search-query-actions"
-										mode="out-in"
-									>
-										<a
-											class="button is-success"
-											v-if="result.isAddedToQueue"
-											href="#"
-											key="added-to-playlist"
-										>
-											<i
-												class="material-icons icon-with-button"
-												>done</i
-											>
-											Added to playlist
-										</a>
-										<a
-											class="button is-dark"
-											v-else
-											@click.prevent="
-												addSongToPlaylist(
-													result.id,
-													index
-												)
-											"
-											href="#"
-											key="add-to-playlist"
-										>
-											<i
-												class="material-icons icon-with-button"
-												>add</i
-											>
-											Add to playlist
-										</a>
-									</transition>
-								</div>
-							</search-query-item>
-						</div>
-
-						<div class="section-margin-bottom" />
 					</div>
-				</div>
 
-				<div id="second-column">
-					<div id="rearrange-songs-section" class="section">
-						<div v-if="isEditable()">
-							<h4 class="section-title">Rearrange Songs</h4>
-
-							<p class="section-description">
-								Drag and drop songs to change their order
-							</p>
-
-							<hr class="section-horizontal-rule" />
-						</div>
-
-						<aside class="menu">
-							<draggable
-								class="menu-list scrollable-list"
-								tag="ul"
-								v-if="playlist.songs.length > 0"
-								v-model="playlist.songs"
-								v-bind="dragOptions"
-								@start="drag = true"
-								@end="drag = false"
-								@change="updateSongPositioning"
-							>
-								<transition-group
-									type="transition"
-									:name="
-										!drag
-											? 'draggable-list-transition'
-											: null
-									"
+					<div v-if="userId === playlist.createdBy">
+						<label class="label"> Change privacy </label>
+						<div class="control is-grouped input-with-button">
+							<div class="control is-expanded select">
+								<select v-model="playlist.privacy">
+									<option value="private">Private</option>
+									<option value="public">Public</option>
+								</select>
+							</div>
+							<p class="control">
+								<a
+									class="button is-info"
+									@click.prevent="updatePrivacy()"
+									href="#"
+									>Update Privacy</a
 								>
-									<li
-										v-for="(song, index) in playlist.songs"
-										:key="'key-' + index"
-									>
-										<playlist-song-item
-											:song="song"
-											:class="{
-												'item-draggable':
-													playlist.isUserModifiable
-											}"
-										>
-											<div
-												slot="actions"
-												v-if="playlist.isUserModifiable"
-											>
-												<i
-													class="material-icons"
-													v-if="index > 0"
-													@click="
-														moveSongToTop(index)
-													"
-													>vertical_align_top</i
-												>
-												<i
-													v-else
-													class="material-icons"
-													style="opacity: 0"
-													>error</i
-												>
-
-												<i
-													v-if="
-														playlist.songs.length -
-															1 !==
-															index
-													"
-													@click="
-														moveSongToBottom(index)
-													"
-													class="material-icons"
-													>vertical_align_bottom</i
-												>
-												<i
-													v-else
-													class="material-icons"
-													style="opacity: 0"
-													>error</i
-												>
-
-												<i
-													@click="
-														removeSongFromPlaylist(
-															song.songId
-														)
-													"
-													class="material-icons delete-icon"
-													>delete</i
-												>
-											</div>
-										</playlist-song-item>
-									</li>
-								</transition-group>
-							</draggable>
-							<p v-else class="nothing-here-text">
-								This playlist doesn't have any songs.
 							</p>
-						</aside>
+						</div>
 					</div>
 
 					<div class="section-margin-bottom" />
 				</div>
 
-				<!--
+				<div
+					id="import-from-youtube-section"
+					class="section"
+					v-if="isEditable()"
+				>
+					<h4 class="section-title">Import from YouTube</h4>
+
+					<p class="section-description">
+						Import a playlist or song by searching or using a link
+						from YouTube.
+					</p>
+
+					<hr class="section-horizontal-rule" />
+
+					<label class="label">
+						Search for a playlist from YouTube
+					</label>
+					<div class="control is-grouped input-with-button">
+						<p class="control is-expanded">
+							<input
+								class="input"
+								type="text"
+								placeholder="Enter YouTube Playlist URL here..."
+								v-model="importQuery"
+								@keyup.enter="importPlaylist()"
+							/>
+						</p>
+						<p class="control has-addons">
+							<span class="select" id="playlist-import-type">
+								<select
+									v-model="isImportingOnlyMusicOfPlaylist"
+								>
+									<option :value="false">Import all</option>
+									<option :value="true">
+										Import only music
+									</option>
+								</select>
+							</span>
+							<a
+								class="button is-info"
+								@click.prevent="importPlaylist()"
+								href="#"
+								><i class="material-icons icon-with-button"
+									>publish</i
+								>Import</a
+							>
+						</p>
+					</div>
+
+					<label class="label">
+						Search for a song from YouTube
+					</label>
+					<div class="control is-grouped input-with-button">
+						<p class="control is-expanded">
+							<input
+								class="input"
+								type="text"
+								placeholder="Enter your YouTube query here..."
+								v-model="searchSongQuery"
+								autofocus
+								@keyup.enter="searchForSongs()"
+							/>
+						</p>
+						<p class="control">
+							<a
+								class="button is-info"
+								@click.prevent="searchForSongs()"
+								href="#"
+								><i class="material-icons icon-with-button"
+									>search</i
+								>Search</a
+							>
+						</p>
+					</div>
+
+					<div v-if="queryResults.length > 0" id="song-query-results">
+						<search-query-item
+							v-for="(result, index) in queryResults"
+							:key="index"
+							:result="result"
+						>
+							<div slot="actions">
+								<transition
+									name="search-query-actions"
+									mode="out-in"
+								>
+									<a
+										class="button is-success"
+										v-if="result.isAddedToQueue"
+										href="#"
+										key="added-to-playlist"
+									>
+										<i
+											class="material-icons icon-with-button"
+											>done</i
+										>
+										Added to playlist
+									</a>
+									<a
+										class="button is-dark"
+										v-else
+										@click.prevent="
+											addSongToPlaylist(result.id, index)
+										"
+										href="#"
+										key="add-to-playlist"
+									>
+										<i
+											class="material-icons icon-with-button"
+											>add</i
+										>
+										Add to playlist
+									</a>
+								</transition>
+							</div>
+						</search-query-item>
+					</div>
+
+					<div class="section-margin-bottom" />
+				</div>
+			</div>
+
+			<div id="second-column">
+				<div id="rearrange-songs-section" class="section">
+					<div v-if="isEditable()">
+						<h4 class="section-title">Rearrange Songs</h4>
+
+						<p class="section-description">
+							Drag and drop songs to change their order
+						</p>
+
+						<hr class="section-horizontal-rule" />
+					</div>
+
+					<aside class="menu">
+						<draggable
+							class="menu-list scrollable-list"
+							tag="ul"
+							v-if="playlist.songs.length > 0"
+							v-model="playlist.songs"
+							v-bind="dragOptions"
+							@start="drag = true"
+							@end="drag = false"
+							@change="updateSongPositioning"
+						>
+							<transition-group
+								type="transition"
+								:name="
+									!drag ? 'draggable-list-transition' : null
+								"
+							>
+								<li
+									v-for="(song, index) in playlist.songs"
+									:key="'key-' + index"
+								>
+									<playlist-song-item
+										:song="song"
+										:class="{
+											'item-draggable':
+												playlist.isUserModifiable
+										}"
+									>
+										<div
+											slot="actions"
+											v-if="playlist.isUserModifiable"
+										>
+											<i
+												class="material-icons"
+												v-if="index > 0"
+												@click="moveSongToTop(index)"
+												>vertical_align_top</i
+											>
+											<i
+												v-else
+												class="material-icons"
+												style="opacity: 0"
+												>error</i
+											>
+
+											<i
+												v-if="
+													playlist.songs.length -
+														1 !==
+														index
+												"
+												@click="moveSongToBottom(index)"
+												class="material-icons"
+												>vertical_align_bottom</i
+											>
+											<i
+												v-else
+												class="material-icons"
+												style="opacity: 0"
+												>error</i
+											>
+
+											<i
+												@click="
+													removeSongFromPlaylist(
+														song.songId
+													)
+												"
+												class="material-icons delete-icon"
+												>delete</i
+											>
+										</div>
+									</playlist-song-item>
+								</li>
+							</transition-group>
+						</draggable>
+						<p v-else class="nothing-here-text">
+							This playlist doesn't have any songs.
+						</p>
+					</aside>
+				</div>
+
+				<div class="section-margin-bottom" />
+			</div>
+
+			<!--
 			
 			
 			<button
@@ -330,7 +314,6 @@
 			</button>
 			<h5>Edit playlist details:</h5>
 			 -->
-			</div>
 		</div>
 		<div slot="footer">
 			<a
@@ -697,11 +680,6 @@ export default {
 	}
 }
 
-.menu {
-	max-height: 800px;
-	overflow: auto;
-}
-
 .menu-list li {
 	display: flex;
 	justify-content: space-between;
@@ -725,20 +703,23 @@ export default {
 }
 
 @media screen and (max-width: 1300px) {
-	#import-from-youtube-section #song-query-results,
-	.section {
-		max-width: 100% !important;
-	}
+	.edit-playlist-modal .edit-playlist-modal-inner-container {
+		height: auto !important;
+		#import-from-youtube-section #song-query-results,
+		.section {
+			max-width: 100% !important;
+		}
 
-	#first-column {
-		width: 100%;
-	}
+		#first-column {
+			width: 100%;
+		}
 
-	#second-column {
-		width: 100%;
+		#second-column {
+			width: 100%;
 
-		.section-margin-bottom:first-child {
-			display: block !important;
+			.section-margin-bottom:first-child {
+				display: block !important;
+			}
 		}
 	}
 }
@@ -747,7 +728,7 @@ export default {
 	.edit-playlist-modal-inner-container {
 		display: flex;
 		flex-wrap: wrap;
-		max-height: 950px;
+		height: 100%;
 
 		/** playlist isn't able to modified */
 		&.view-only {
@@ -786,6 +767,8 @@ export default {
 
 	#first-column {
 		max-width: 100%;
+		height: 100%;
+		overflow-y: auto;
 
 		.section {
 			width: auto;
@@ -819,8 +802,6 @@ export default {
 			#song-query-results {
 				padding: 10px;
 				margin-top: 10px;
-				height: 230px;
-				overflow: auto;
 				border: 1px solid $light-grey-2;
 				border-radius: 3px;
 				max-width: 565px;
@@ -835,6 +816,8 @@ export default {
 	#second-column {
 		max-width: 100%;
 		flex-grow: 1;
+		height: 100%;
+		overflow-y: auto;
 
 		.section-margin-bottom:first-child {
 			display: none;
