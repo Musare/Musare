@@ -5,23 +5,25 @@
 		<transition-group name="notification-box">
 			<h6
 				class="has-text-centered"
-				v-if="users && users.loggedOut.length > 0"
+				v-if="
+					users &&
+						((users.loggedIn.length === 1 &&
+							users.loggedOut.length === 0) ||
+							(users.loggedIn.length === 0 &&
+								users.loggedOut.length === 1))
+				"
+				key="only-me"
+			>
+				It's just you in the station!
+			</h6>
+			<h6
+				class="has-text-centered"
+				v-else-if="users && users.loggedOut.length > 0"
 				key="logged-out-users"
 			>
 				{{ users.loggedOut.length }}
 				{{ users.loggedOut.length > 1 ? "users are" : "user is" }}
 				logged-out.
-			</h6>
-			<h6
-				class="has-text-centered"
-				v-else-if="
-					users &&
-						users.loggedIn.length === 1 &&
-						users.loggedOut.length === 0
-				"
-				key="only-me"
-			>
-				It's just you in the station!
 			</h6>
 		</transition-group>
 
