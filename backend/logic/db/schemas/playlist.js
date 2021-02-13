@@ -6,6 +6,8 @@ export default {
 			songId: { type: String },
 			title: { type: String },
 			duration: { type: Number },
+			thumbnail: { type: String, required: false },
+			artists: { type: Array, required: false },
 			position: { type: Number }
 		}
 	],

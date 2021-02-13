@@ -36,57 +36,44 @@
 
 				<!-- Choosing a song from youtube - query results -->
 
-				<table class="table" v-if="queryResults.length > 0">
-					<tbody>
-						<tr
-							v-for="(result, index) in queryResults"
-							:key="index"
-						>
-							<td class="song-thumbnail">
-								<div
-									:style="
-										`background-image: url('${result.thumbnail}'`
-									"
-								></div>
-							</td>
-							<td><strong v-html="result.title"></strong></td>
-							<td class="song-actions">
-								<transition
-									name="song-actions-transition"
-									mode="out-in"
+				<div id="song-query-results" v-if="queryResults.length > 0">
+					<search-query-item
+						v-for="(result, index) in queryResults"
+						:key="index"
+						:result="result"
+					>
+						<div slot="actions">
+							<transition
+								name="search-query-actions"
+								mode="out-in"
+							>
+								<a
+									class="button is-success"
+									v-if="result.isAddedToQueue"
+									href="#"
+									key="added-to-playlist"
 								>
-									<a
-										class="button is-success"
-										v-if="result.isAddedToQueue"
-										href="#"
-										key="added-to-queue"
+									<i class="material-icons icon-with-button"
+										>done</i
 									>
-										<i
-											class="material-icons icon-with-button"
-											>done</i
-										>
-										Added to queue
-									</a>
-									<a
-										class="button is-dark"
-										v-else
-										@click="
-											addSongToQueue(result.id, index)
-										"
-										href="#"
-										key="add-to-queue"
+									Added to queue
+								</a>
+								<a
+									class="button is-dark"
+									v-else
+									@click="addSongToQueue(result.id, index)"
+									href="#"
+									key="add-to-queue"
+								>
+									<i class="material-icons icon-with-button"
+										>add</i
 									>
-										<i
-											class="material-icons icon-with-button"
-											>add</i
-										>
-										Add to queue
-									</a>
-								</transition>
-							</td>
-						</tr>
-					</tbody>
-				</table>
+									Add to queue
+								</a>
+							</transition>
+						</div>
+					</search-query-item>
+				</div>
 
 				<!-- Import a playlist from youtube -->
 
@@ -211,12 +198,13 @@ import { mapState, mapActions } from "vuex";
 import Toast from "toasters";
 
 import PlaylistItem from "../../components/ui/PlaylistItem.vue";
+import SearchQueryItem from "../../components/ui/SearchQueryItem.vue";
 import Modal from "../../components/Modal.vue";
 
 import io from "../../io";
 
 export default {
-	components: { Modal, PlaylistItem },
+	components: { Modal, PlaylistItem, SearchQueryItem },
 	data() {
 		return {
 			querySearch: "",
@@ -380,13 +368,9 @@ export default {
 @import "../../styles/global.scss";
 
 .night-mode {
-	tr {
-		background-color: $night-mode-bg-secondary;
+	div {
+		color: #4d4d4d;
 	}
-}
-
-tr td {
-	vertical-align: middle;
 }
 
 .song-actions {
@@ -406,12 +390,6 @@ tr td {
 .table {
 	margin-bottom: 0;
 	margin-top: 20px;
-}
-
-.night-mode {
-	div {
-		color: #4d4d4d;
-	}
 }
 
 #playlist-to-queue-selection {
@@ -450,29 +428,15 @@ tr td {
 	padding: 20px;
 }
 
-#playlists {
-	.playlist-item {
-		.button {
-			width: 146px;
-		}
+#song-query-results {
+	padding: 10px;
+	max-height: 500px;
+	overflow: auto;
+	border: 1px solid $light-grey-2;
+	border-radius: 3px;
+
+	.search-query-item:not(:last-of-type) {
+		margin-bottom: 10px;
 	}
-}
-
-.song-actions-transition-enter-active {
-	transition: all 0.2s ease;
-}
-
-.song-actions-transition-leave-active {
-	transition: all 0.2s cubic-bezier(1, 0.5, 0.8, 1);
-}
-
-.song-actions-transition-enter {
-	transform: translateX(-20px);
-	opacity: 0;
-}
-
-.song-actions-transition-leave-to {
-	transform: translateX(20px);
-	opacity: 0;
 }
 </style>

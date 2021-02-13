@@ -1409,8 +1409,6 @@ export default {
 </script>
 
 <style lang="scss">
-@import "../../styles/global.scss";
-
 .song-modal {
 	.modal-card-title {
 		text-align: center;

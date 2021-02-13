@@ -59,7 +59,7 @@
 <script>
 import { mapState, mapActions } from "vuex";
 
-// import EditPlaylist from "../../../components/modals/EditPlaylist.vue";
+// import EditPlaylist from "../../../components/modals/EditPlaylist/index.vue";
 import UserIdToUsername from "../../../components/common/UserIdToUsername.vue";
 
 import io from "../../../io";

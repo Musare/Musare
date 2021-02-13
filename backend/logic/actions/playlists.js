@@ -866,14 +866,17 @@ export default {
 						.catch(next);
 				},
 				(position, next) => {
-					SongsModule.runJob("GET_SONG", { id: songId }, this)
-						.then(response => {
-							const { song } = response;
+					SongsModule.runJob("GET_SONG_FROM_ID", { songId }, this)
+						.then(res => {
+							const { song } = res;
+
 							next(null, {
 								_id: song._id,
 								songId,
 								title: song.title,
 								duration: song.duration,
+								thumbnail: song.thumbnail,
+								artists: song.artists,
 								position
 							});
 						})

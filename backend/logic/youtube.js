@@ -99,6 +99,7 @@ class _YouTubeModule extends CoreClass {
 					const song = {
 						songId: body.items[0].id,
 						title: body.items[0].snippet.title,
+						thumbnail: body.items[0].snippet.thumbnails.default.url,
 						duration
 					};
 

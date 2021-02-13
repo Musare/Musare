@@ -510,7 +510,9 @@ button.delete:focus {
 		margin-right: 0px !important;
 	}
 
-	input {
+	input,
+	select {
+		width: 100%;
 		height: 36px;
 		border-radius: 3px 0 0 3px;
 		border-right: 0;
@@ -580,6 +582,13 @@ h4.section-title {
 	border: 1px solid $light-grey-2;
 	border-radius: 3px;
 
+	.item-thumbnail {
+		width: 65px;
+		height: 65px;
+		margin: -7.5px;
+		border-radius: 3px 0 0 3px;
+	}
+
 	.item-title {
 		font-size: 20px;
 		overflow: hidden;
@@ -604,8 +613,13 @@ h4.section-title {
 			flex-wrap: wrap;
 		}
 
+		.button {
+			width: 146px;
+		}
+
 		i {
 			cursor: pointer;
+			color: #4a4a4a;
 
 			&:hover,
 			&:focus {
@@ -630,7 +644,7 @@ h4.section-title {
 		}
 
 		.stop-icon,
-		.remove-from-queue-icon {
+		.delete-icon {
 			color: $red;
 		}
 

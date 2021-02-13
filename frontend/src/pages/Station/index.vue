@@ -439,7 +439,8 @@ export default {
 		MainHeader,
 		MainFooter,
 		SongQueue: () => import("./AddSongToQueue.vue"),
-		EditPlaylist: () => import("../../components/modals/EditPlaylist.vue"),
+		EditPlaylist: () =>
+			import("../../components/modals/EditPlaylist/index.vue"),
 		CreatePlaylist: () =>
 			import("../../components/modals/CreatePlaylist.vue"),
 		EditStation: () => import("../../components/modals/EditStation.vue"),

@@ -250,7 +250,8 @@ export default {
 		MainFooter,
 		PlaylistItem,
 		CreatePlaylist: () => import("../components/modals/CreatePlaylist.vue"),
-		EditPlaylist: () => import("../components/modals/EditPlaylist.vue"),
+		EditPlaylist: () =>
+			import("../components/modals/EditPlaylist/index.vue"),
 		draggable
 	},
 	mixins: [SortablePlaylists, TabQueryHandler],
