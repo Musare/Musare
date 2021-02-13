@@ -1,5 +1,6 @@
 {
 	"mode": "development",
+    "migration": false,
 	"secret": "default",
 	"domain": "http://localhost",
 	"frontendPort": 80,
@@ -69,6 +70,20 @@
 
         //     ],
         //     "blacklistedTerms": []
-        // }
+		// },
+		"migration": {
+            "hideType": [
+
+            ],
+            "blacklistedTerms": [
+                "Ran job",
+                "Running job",
+                "Queuing job",
+                "Pausing job",
+                "is queued",
+                "is re-queued",
+                "Requeing"
+            ]
+        }
     }
 }

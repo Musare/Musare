@@ -5,5 +5,6 @@ export default {
 	active: { type: Boolean, required: true, default: true },
 	expiresAt: { type: Date, required: true },
 	punishedAt: { type: Date, default: Date.now, required: true },
-	punishedBy: { type: String, required: true }
+	punishedBy: { type: String, required: true },
+	documentVersion: { type: Number, default: 1, required: true }
 };
