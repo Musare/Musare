@@ -12,5 +12,6 @@ export default {
 		}
 	],
 	createdBy: { type: String, required: true },
-	createdAt: { type: Date, default: Date.now, required: true }
+	createdAt: { type: Date, default: Date.now, required: true },
+	documentVersion: { type: Number, default: 1, required: true }
 };

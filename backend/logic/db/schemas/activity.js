@@ -16,5 +16,6 @@ export default {
 		],
 		required: true
 	},
-	payload: { type: Array, required: true }
+	payload: { type: Array, required: true },
+	documentVersion: { type: Number, default: 1, required: true }
 };

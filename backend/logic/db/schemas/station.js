@@ -45,5 +45,6 @@ export default {
 	owner: { type: String },
 	privatePlaylist: { type: mongoose.Schema.Types.ObjectId },
 	partyMode: { type: Boolean },
-	theme: { type: String, enum: ["blue", "purple", "teal", "orange"], default: "blue" }
+	theme: { type: String, enum: ["blue", "purple", "teal", "orange"], default: "blue" },
+	documentVersion: { type: Number, default: 1, required: true }
 };

@@ -13,5 +13,6 @@ export default {
 	requestedAt: { type: Date, required: true },
 	acceptedBy: { type: String, required: true },
 	acceptedAt: { type: Date, default: Date.now, required: true },
-	discogs: { type: Object }
+	discogs: { type: Object },
+	documentVersion: { type: Number, default: 1, required: true }
 };
