@@ -327,7 +327,12 @@
 								<!-- (Admin) Station Settings Button -->
 								<button
 									class="button is-primary"
-									@click="openSettings()"
+									@click="
+										openModal({
+											sector: 'station',
+											modal: 'editStation'
+										})
+									"
 								>
 									<i class="material-icons icon-with-button"
 										>settings</i
@@ -772,12 +777,6 @@ export default {
 		isOwnerOrAdmin() {
 			return this.isOwnerOnly() || this.isAdminOnly();
 		},
-		openSettings() {
-			this.openModal({
-				sector: "station",
-				modal: "editStation"
-			});
-		},
 		removeFromQueue(songId) {
 			window.socket.emit(
 				"stations.removeFromQueue",
@@ -814,6 +813,7 @@ export default {
 					events: {
 						onReady: () => {
 							this.playerReady = true;
+
 							let volume = parseInt(
 								localStorage.getItem("volume")
 							);
@@ -822,26 +822,65 @@ export default {
 
 							this.player.setVolume(volume);
 
-							if (volume > 0) {
-								this.player.unMute();
-							}
-
+							if (volume > 0) this.player.unMute();
 							if (this.muted) this.player.mute();
 
 							this.playVideo();
 						},
 						onError: err => {
-							console.log("iframe error", err);
-							if (this.loggedIn) {
+							console.log("error with youtube video", err);
+
+							if (err.data === 150 && this.loggedIn) {
 								new Toast({
 									content:
-										"Error with YouTube Embed, voted to skip the current song.",
-									timeout: 8000
+										"Automatically voted to skip as this song isn't available for you.",
+									timeout: 4000
 								});
+
+								// automatically vote to skip
 								this.voteSkipStation();
+
+								// persistent message while song is playing
+								const toastMessage =
+									"This song is unavailable for you, but is playing for everyone else.";
+								new Toast({
+									content: toastMessage,
+									persistant: true
+								});
+
+								// save current song id
+								const erroredSongId = this.currentSong.songId;
+
+								// remove persistent toast if video has finished
+								window.isSongErroredInterval = setInterval(
+									() => {
+										if (
+											this.currentSong.songId !==
+											erroredSongId
+										) {
+											document
+												.getElementById(
+													"toasts-content"
+												)
+												.childNodes.forEach(toast => {
+													if (
+														toast.innerHTML ===
+														toastMessage
+													)
+														toast.remove();
+												});
+
+											clearInterval(
+												window.isSongErroredInterval
+											);
+										}
+									},
+									150
+								);
 							} else {
 								new Toast({
-									content: "Error with YouTube Embed",
+									content:
+										"There has been an error with the YouTube Embed",
 									timeout: 8000
 								});
 							}
