@@ -141,7 +141,8 @@
 				<div class="content playlists-tab" v-if="tab === 'playlists'">
 					<div v-if="playlists.length > 0">
 						<h4 class="section-title">
-							{{ isUser ? "My" : null }} Playlists
+							{{ user._id === userId ? "My" : null }}
+							Playlists
 						</h4>
 
 						<p class="section-description">
@@ -186,18 +187,22 @@
 										"
 										:playlist="playlist"
 									>
-										<div
-											v-if="user._id === userId"
-											slot="actions"
-										>
+										<div slot="actions">
 											<i
+												v-if="user._id === userId"
 												@click="
-													editPlaylistClick(
-														playlist._id
-													)
+													showPlaylist(playlist._id)
 												"
 												class="material-icons edit-icon"
 												>edit</i
+											>
+											<i
+												v-else
+												@click="
+													showPlaylist(playlist._id)
+												"
+												class="material-icons view-icon"
+												>visibility</i
 											>
 										</div>
 									</playlist-item>
@@ -442,8 +447,7 @@ export default {
 	methods: {
 		formatDistance,
 		parseISO,
-		editPlaylistClick(playlistId) {
-			console.log(playlistId);
+		showPlaylist(playlistId) {
 			this.editPlaylist(playlistId);
 			this.openModal({ sector: "station", modal: "editPlaylist" });
 		},

@@ -635,7 +635,8 @@ h4.section-title {
 			color: $green;
 		}
 
-		.edit-icon {
+		.edit-icon,
+		.view-icon {
 			color: $primary-color;
 		}
 

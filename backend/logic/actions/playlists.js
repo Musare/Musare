@@ -168,13 +168,8 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	index: isAdminRequired(async function index(session, cb) {
-		const playlistModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "playlist"
-			},
-			this
-		);
+		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
+
 		async.waterfall(
 			[
 				next => {
@@ -205,9 +200,7 @@ export default {
 			[
 				next => {
 					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
-						.then(playlist => {
-							next(null, playlist);
-						})
+						.then(playlist => next(null, playlist))
 						.catch(next);
 				},
 
@@ -469,19 +462,20 @@ export default {
 	 * @param {string} playlistId - the id of the playlist we are getting
 	 * @param {Function} cb - gets called with the result
 	 */
-	getPlaylist: isLoginRequired(function getPlaylist(session, playlistId, cb) {
+	getPlaylist: function getPlaylist(session, playlistId, cb) {
 		async.waterfall(
 			[
 				next => {
 					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
-						.then(playlist => {
-							next(null, playlist);
-						})
+						.then(playlist => next(null, playlist))
 						.catch(next);
 				},
 
 				(playlist, next) => {
-					if (!playlist || playlist.createdBy !== session.userId) return next("Playlist not found");
+					if (!playlist) return next("Playlist not found");
+					if (playlist.privacy !== "public" && playlist.createdBy !== session.userId)
+						return next("User unauthorised to view playlist.");
+
 					return next(null, playlist);
 				}
 			],
@@ -508,7 +502,7 @@ export default {
 				});
 			}
 		);
-	}),
+	},
 
 	/**
 	 * Obtains basic metadata of a playlist in order to format an activity

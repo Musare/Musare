@@ -1,9 +1,14 @@
 <template>
-	<modal title="Edit Playlist" class="edit-playlist-modal">
+	<modal
+		:title="
+			userId === playlist.createdBy ? 'Edit Playlist' : 'View Playlist'
+		"
+		class="edit-playlist-modal"
+	>
 		<div slot="body">
 			<div
 				:class="{
-					'view-only': !playlist.isUserModifiable,
+					'view-only': !isEditable(),
 					'edit-playlist-modal-inner-container': true
 				}"
 			>
@@ -13,10 +18,17 @@
 						<h5>Duration: {{ totalLength() }}</h5>
 					</div>
 
-					<div class="section-margin-bottom" />
+					<div
+						class="section-margin-bottom"
+						v-if="
+							(!playlist.isUserModifiable &&
+								userId === playlist.createdBy) ||
+								isEditable()
+						"
+					/>
 
 					<div id="playlist-settings-section" class="section">
-						<div v-if="playlist.isUserModifiable">
+						<div v-if="isEditable()">
 							<h4 class="section-title">Edit Details</h4>
 
 							<p class="section-description">
@@ -51,33 +63,35 @@
 							</div>
 						</div>
 
-						<label class="label">
-							Change privacy
-						</label>
-						<div class="control is-grouped input-with-button">
-							<div class="control is-expanded select">
-								<select v-model="playlist.privacy">
-									<option value="private">Private</option>
-									<option value="public">Public</option>
-								</select>
+						<div v-if="userId === playlist.createdBy">
+							<label class="label">
+								Change privacy
+							</label>
+							<div class="control is-grouped input-with-button">
+								<div class="control is-expanded select">
+									<select v-model="playlist.privacy">
+										<option value="private">Private</option>
+										<option value="public">Public</option>
+									</select>
+								</div>
+								<p class="control">
+									<a
+										class="button is-info"
+										@click="updatePrivacy()"
+										href="#"
+										>Update Privacy</a
+									>
+								</p>
 							</div>
-							<p class="control">
-								<a
-									class="button is-info"
-									@click="updatePrivacy()"
-									href="#"
-									>Update Privacy</a
-								>
-							</p>
 						</div>
-					</div>
 
-					<div class="section-margin-bottom" />
+						<div class="section-margin-bottom" />
+					</div>
 
 					<div
 						id="import-from-youtube-section"
 						class="section"
-						v-if="playlist.isUserModifiable"
+						v-if="isEditable()"
 					>
 						<h4 class="section-title">Import from YouTube</h4>
 
@@ -203,7 +217,7 @@
 
 				<div id="second-column">
 					<div id="rearrange-songs-section" class="section">
-						<div v-if="playlist.isUserModifiable">
+						<div v-if="isEditable()">
 							<h4 class="section-title">Rearrange Songs</h4>
 
 							<p class="section-description">
@@ -295,8 +309,13 @@
 									</li>
 								</transition-group>
 							</draggable>
+							<p v-else class="nothing-here-text">
+								This playlist doesn't have any songs.
+							</p>
 						</aside>
 					</div>
+
+					<div class="section-margin-bottom" />
 				</div>
 
 				<!--
@@ -318,7 +337,7 @@
 				class="button is-danger"
 				@click="removePlaylist()"
 				href="#"
-				v-if="playlist.isUserModifiable"
+				v-if="isEditable()"
 			>
 				Remove Playlist
 			</a>
@@ -368,6 +387,7 @@ export default {
 		...mapState("user/playlists", {
 			editing: state => state.editing
 		}),
+		...mapState({ userId: state => state.user.auth.userId }),
 		dragOptions() {
 			return {
 				animation: 200,
@@ -382,10 +402,13 @@ export default {
 			this.socket = socket;
 
 			this.socket.emit("playlists.getPlaylist", this.editing, res => {
+				console.log(res);
+
 				if (res.status === "success") {
 					this.playlist = res.data;
 					this.playlist.songs.sort((a, b) => a.position - b.position);
 				}
+
 				this.playlist.oldId = res.data._id;
 			});
 
@@ -434,6 +457,12 @@ export default {
 		});
 	},
 	methods: {
+		isEditable() {
+			return (
+				this.playlist.isUserModifiable &&
+				this.userId === this.playlist.createdBy
+			);
+		},
 		updateSongPositioning({ moved }) {
 			if (!moved) return; // we only need to update when song is moved
 
@@ -694,10 +723,14 @@ export default {
 		max-width: 100% !important;
 	}
 
+	#first-column {
+		width: 100%;
+	}
+
 	#second-column {
 		width: 100%;
 
-		.section-margin-bottom {
+		.section-margin-bottom:first-child {
 			display: block !important;
 		}
 	}
@@ -720,7 +753,8 @@ export default {
 	}
 
 	.section {
-		padding: 5px !important;
+		// padding: 5px !important;
+		padding: 0 !important;
 		margin: 0 20px;
 		max-width: 600px;
 		display: flex;
@@ -738,7 +772,6 @@ export default {
 	}
 
 	#first-column {
-		flex-grow: 1;
 		max-width: 100%;
 
 		.section {
@@ -788,8 +821,9 @@ export default {
 
 	#second-column {
 		max-width: 100%;
+		flex-grow: 1;
 
-		.section-margin-bottom {
+		.section-margin-bottom:first-child {
 			display: none;
 		}
 	}

@@ -387,9 +387,7 @@ class _PlaylistsModule extends CoreClass {
 				[
 					next => {
 						CacheModule.runJob("HGETALL", { table: "playlists" }, this)
-							.then(playlists => {
-								next(null, playlists);
-							})
+							.then(playlists => next(null, playlists))
 							.catch(next);
 					},
 
