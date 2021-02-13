@@ -8,10 +8,7 @@
 				:hide-logged-out="true"
 			/>
 			<div class="header" :class="{ loggedIn }">
-				<img
-					class="background"
-					src="/assets/homebg.jpeg"
-				/>
+				<img class="background" src="/assets/homebg.jpeg" />
 				<div class="overlay"></div>
 				<div class="content-container">
 					<div class="content">

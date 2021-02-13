@@ -143,7 +143,9 @@ CacheModule.runJob("SUB", {
 	cb: res => {
 		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(response => {
 			response.sockets.forEach(socket => {
-				socket.emit("event:playlist.updatePrivacy");
+				socket.emit("event:playlist.updatePrivacy", {
+					playlist: res.playlist
+				});
 			});
 		});
 
@@ -1395,9 +1397,7 @@ export default {
 
 				(res, next) => {
 					PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId }, this)
-						.then(playlist => {
-							next(null, playlist);
-						})
+						.then(playlist => next(null, playlist))
 						.catch(next);
 				}
 			],
@@ -1411,11 +1411,13 @@ export default {
 					);
 					return cb({ status: "failure", message: err });
 				}
+
 				this.log(
 					"SUCCESS",
 					"PLAYLIST_UPDATE_PRIVACY",
 					`Successfully updated privacy to "${privacy}" for private playlist "${playlistId}" for user "${session.userId}".`
 				);
+
 				CacheModule.runJob("PUB", {
 					channel: "playlist.updatePrivacy",
 					value: {
@@ -1423,6 +1425,7 @@ export default {
 						playlist
 					}
 				});
+
 				return cb({
 					status: "success",
 					message: "Playlist has been successfully updated"

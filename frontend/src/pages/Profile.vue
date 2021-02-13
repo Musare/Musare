@@ -307,10 +307,12 @@ export default {
 					if (res.status === "error") this.$router.go("/404");
 					else {
 						this.user = res.data;
+
 						this.user.createdAt = format(
 							parseISO(this.user.createdAt),
 							"MMMM do yyyy"
 						);
+
 						this.isUser = true;
 
 						if (this.user._id !== this.userId) {
