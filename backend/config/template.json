@@ -22,11 +22,6 @@
 			"secret": "",
 			"redirect_uri": ""
 		},
-		"mailgun": {
-			"key": "",
-			"domain": "",
-			"enabled": false
-		},
 		"discogs": {
 			"client": "",
 			"secret": "",
@@ -39,6 +34,16 @@
 			"http://192.168.99.100",
 			"http://dev.musare.com"
 		]
+	},
+	"smtp": {
+		"host": "smtp.mailgun.org",
+		"port": 587,
+		"auth" : {
+			"user": "",
+			"pass": ""
+		},
+		"secure": false,
+		"enabled": false
 	},
 	"redis": {
 		"url": "redis://redis:6379/0",
