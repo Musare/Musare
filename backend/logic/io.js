@@ -49,6 +49,8 @@ class _IOModule extends CoreClass {
 		const server = await AppModule.runJob("SERVER");
 		this._io = socketio(server);
 
+		this._io.origins(config.get("cors.origin"));
+
 		return new Promise(resolve => {
 			this.setStage(3);
 
