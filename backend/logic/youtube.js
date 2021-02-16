@@ -32,6 +32,43 @@ class _YouTubeModule extends CoreClass {
 	}
 
 	/**
+	 * Fetches a list of songs from Youtube's API
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.query - the query we'll pass to youtubes api
+	 * @param {string} payload.pageToken - (optional) if this exists, will search search youtube for a specific page reference
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	SEARCH(payload) {
+		const params = [
+			"part=snippet",
+			`q=${encodeURIComponent(payload.query)}`,
+			`key=${config.get("apis.youtube.key")}`,
+			"type=video",
+			"maxResults=10",
+			payload.pageToken ? `pageToken=${payload.pageToken}` : null
+		].join("&");
+
+		return new Promise((resolve, reject) => {
+			request(`https://www.googleapis.com/youtube/v3/search?${params}`, (err, res, body) => {
+				if (err) {
+					YouTubeModule.log("ERROR", "SEARCH", `${err.message}`);
+					return reject(new Error("An error has occured. Please try again later."));
+				}
+
+				body = JSON.parse(body);
+
+				if (body.err) {
+					YouTubeModule.log("ERROR", "SEARCH", `${body.error.message}`);
+					return reject(new Error("An error has occured. Please try again later."));
+				}
+
+				return resolve(body);
+			});
+		});
+	}
+
+	/**
 	 * Gets the details of a song using the YouTube API
 	 *
 	 * @param {object} payload - object that contains the payload

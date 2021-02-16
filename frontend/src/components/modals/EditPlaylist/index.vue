@@ -106,14 +106,16 @@
 								class="input"
 								type="text"
 								placeholder="Enter YouTube Playlist URL here..."
-								v-model="importQuery"
+								v-model="search.playlist.query"
 								@keyup.enter="importPlaylist()"
 							/>
 						</p>
 						<p class="control has-addons">
 							<span class="select" id="playlist-import-type">
 								<select
-									v-model="isImportingOnlyMusicOfPlaylist"
+									v-model="
+										search.playlist.isImportingOnlyMusic
+									"
 								>
 									<option :value="false">Import all</option>
 									<option :value="true">
@@ -141,7 +143,7 @@
 								class="input"
 								type="text"
 								placeholder="Enter your YouTube query here..."
-								v-model="searchSongQuery"
+								v-model="search.songs.query"
 								autofocus
 								@keyup.enter="searchForSongs()"
 							/>
@@ -158,9 +160,12 @@
 						</p>
 					</div>
 
-					<div v-if="queryResults.length > 0" id="song-query-results">
+					<div
+						v-if="search.songs.results.length > 0"
+						id="song-query-results"
+					>
 						<search-query-item
-							v-for="(result, index) in queryResults"
+							v-for="(result, index) in search.songs.results"
 							:key="index"
 							:result="result"
 						>
@@ -199,6 +204,14 @@
 								</transition>
 							</div>
 						</search-query-item>
+
+						<a
+							class="button is-default load-more-button"
+							@click.prevent="loadMoreSongs()"
+							href="#"
+						>
+							Load more...
+						</a>
 					</div>
 
 					<div class="section-margin-bottom" />
@@ -344,6 +357,8 @@ import { mapState, mapActions } from "vuex";
 import draggable from "vuedraggable";
 import Toast from "toasters";
 
+import SearchYoutube from "../../../mixins/SearchYoutube.vue";
+
 import Modal from "../../Modal.vue";
 import SearchQueryItem from "../../ui/SearchQueryItem.vue";
 import PlaylistSongItem from "./components/PlaylistSongItem.vue";
@@ -354,16 +369,12 @@ import utils from "../../../../js/utils";
 
 export default {
 	components: { Modal, draggable, SearchQueryItem, PlaylistSongItem },
+	mixins: [SearchYoutube],
 	data() {
 		return {
 			utils,
 			drag: false,
-			playlist: { songs: [] },
-			queryResults: [],
-			searchSongQuery: "",
-			directSongQuery: "",
-			importQuery: "",
-			isImportingOnlyMusicOfPlaylist: true
+			playlist: { songs: [] }
 		};
 	},
 	computed: {
@@ -440,6 +451,46 @@ export default {
 		});
 	},
 	methods: {
+		importPlaylist() {
+			let isImportingPlaylist = true;
+
+			// import query is blank
+			if (!this.search.playlist.query)
+				return new Toast({
+					content: "Please enter a YouTube playlist URL.",
+					timeout: 4000
+				});
+
+			// don't give starting import message instantly in case of instant error
+			setTimeout(() => {
+				if (isImportingPlaylist) {
+					new Toast({
+						content:
+							"Starting to import your playlist. This can take some time to do.",
+						timeout: 4000
+					});
+				}
+			}, 750);
+
+			return this.socket.emit(
+				"playlists.addSetToPlaylist",
+				this.search.playlist.query,
+				this.playlist._id,
+				this.search.playlist.isImportingOnlyMusic,
+				res => {
+					new Toast({ content: res.message, timeout: 20000 });
+					if (res.status === "success") {
+						isImportingPlaylist = false;
+						if (this.search.playlist.isImportingOnlyMusic) {
+							new Toast({
+								content: `${res.stats.songsInPlaylistTotal} of the ${res.stats.videosInPlaylistTotal} videos in the playlist were songs.`,
+								timeout: 20000
+							});
+						}
+					}
+				}
+			);
+		},
 		isEditable() {
 			return (
 				this.playlist.isUserModifiable &&
@@ -475,36 +526,6 @@ export default {
 			});
 			return this.utils.formatTimeLong(length);
 		},
-		searchForSongs() {
-			let query = this.searchSongQuery;
-			if (query.indexOf("&index=") !== -1) {
-				query = query.split("&index=");
-				query.pop();
-				query = query.join("");
-			}
-			if (query.indexOf("&list=") !== -1) {
-				query = query.split("&list=");
-				query.pop();
-				query = query.join("");
-			}
-			this.socket.emit("apis.searchYoutube", query, res => {
-				if (res.status === "success") {
-					this.queryResults = [];
-					for (let i = 0; i < res.data.items.length; i += 1) {
-						this.queryResults.push({
-							id: res.data.items[i].id.videoId,
-							url: `https://www.youtube.com/watch?v=${this.id}`,
-							title: res.data.items[i].snippet.title,
-							thumbnail:
-								res.data.items[i].snippet.thumbnails.default
-									.url,
-							isAddedToQueue: false
-						});
-					}
-				} else if (res.status === "error")
-					new Toast({ content: res.message, timeout: 3000 });
-			});
-		},
 		shuffle() {
 			this.socket.emit("playlists.shuffle", this.playlist._id, res => {
 				new Toast({ content: res.message, timeout: 4000 });
@@ -515,46 +536,6 @@ export default {
 				}
 			});
 		},
-		importPlaylist() {
-			let isImportingPlaylist = true;
-
-			// import query is blank
-			if (!this.importQuery)
-				return new Toast({
-					content: "Please enter a YouTube playlist URL.",
-					timeout: 4000
-				});
-
-			// don't give starting import message instantly in case of instant error
-			setTimeout(() => {
-				if (isImportingPlaylist) {
-					new Toast({
-						content:
-							"Starting to import your playlist. This can take some time to do.",
-						timeout: 4000
-					});
-				}
-			}, 750);
-
-			return this.socket.emit(
-				"playlists.addSetToPlaylist",
-				this.importQuery,
-				this.playlist._id,
-				this.isImportingOnlyMusicOfPlaylist,
-				res => {
-					new Toast({ content: res.message, timeout: 20000 });
-					if (res.status === "success") {
-						isImportingPlaylist = false;
-						if (this.isImportingOnlyMusicOfPlaylist) {
-							new Toast({
-								content: `${res.stats.songsInPlaylistTotal} of the ${res.stats.videosInPlaylistTotal} videos in the playlist were songs.`,
-								timeout: 20000
-							});
-						}
-					}
-				}
-			);
-		},
 		addSongToPlaylist(id, index) {
 			this.socket.emit(
 				"playlists.addSongToPlaylist",
@@ -564,7 +545,7 @@ export default {
 				res => {
 					new Toast({ content: res.message, timeout: 4000 });
 					if (res.status === "success")
-						this.queryResults[index].isAddedToQueue = true;
+						this.search.songs.results[index].isAddedToQueue = true;
 				}
 			);
 		},
@@ -809,6 +790,11 @@ export default {
 				.search-query-item:not(:last-of-type) {
 					margin-bottom: 10px;
 				}
+			}
+
+			.load-more-button {
+				width: 100%;
+				margin-top: 10px;
 			}
 		}
 	}

@@ -8,10 +8,11 @@ import moduleManager from "../../index";
 
 const UtilsModule = moduleManager.modules.utils;
 const IOModule = moduleManager.modules.io;
+const YouTubeModule = moduleManager.modules.youtube;
 
 export default {
 	/**
-	 * Fetches a list of songs from Youtubes API
+	 * Fetches a list of songs from Youtube's API
 	 *
 	 * @param {object} session - user session
 	 * @param {string} query - the query we'll pass to youtubes api
@@ -19,40 +20,46 @@ export default {
 	 * @returns {{status: string, data: object}} - returns an object
 	 */
 	searchYoutube(session, query, cb) {
-		const params = [
-			"part=snippet",
-			`q=${encodeURIComponent(query)}`,
-			`key=${config.get("apis.youtube.key")}`,
-			"type=video",
-			"maxResults=15"
-		].join("&");
-
-		return async.waterfall(
-			[
-				next => {
-					request(`https://www.googleapis.com/youtube/v3/search?${params}`, next);
-				},
-
-				(res, body, next) => {
-					next(null, JSON.parse(body));
-				}
-			],
-			async (err, data) => {
-				console.log(data.error);
-				if (err || data.error) {
-					if (!err) err = data.error.message;
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"APIS_SEARCH_YOUTUBE",
-						`Searching youtube failed with query "${query}". "${err}"`
-					);
-					return cb({ status: "failure", message: err });
-				}
+		return YouTubeModule.runJob("SEARCH", { query }, this)
+			.then(data => {
 				this.log("SUCCESS", "APIS_SEARCH_YOUTUBE", `Searching YouTube successful with query "${query}".`);
 				return cb({ status: "success", data });
-			}
-		);
+			})
+			.catch(async err => {
+				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				this.log("ERROR", "APIS_SEARCH_YOUTUBE", `Searching youtube failed with query "${query}". "${err}"`);
+				return cb({ status: "failure", message: err });
+			});
+	},
+
+	/**
+	 * Fetches a list of songs from Youtube's API
+	 *
+	 * @param {object} session - user session
+	 * @param {string} query - the query we'll pass to youtubes api
+	 * @param {string} pageToken - identifies a specific page in the result set that should be retrieved
+	 * @param {Function} cb - callback
+	 * @returns {{status: string, data: object}} - returns an object
+	 */
+	searchYoutubeForPage(session, query, pageToken, cb) {
+		return YouTubeModule.runJob("SEARCH", { query, pageToken }, this)
+			.then(data => {
+				this.log(
+					"SUCCESS",
+					"APIS_SEARCH_YOUTUBE_FOR_PAGE",
+					`Searching YouTube successful with query "${query}".`
+				);
+				return cb({ status: "success", data });
+			})
+			.catch(async err => {
+				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				this.log(
+					"ERROR",
+					"APIS_SEARCH_YOUTUBE_FOR_PAGE",
+					`Searching youtube failed with query "${query}". "${err}"`
+				);
+				return cb({ status: "failure", message: err });
+			});
 	},
 
 	/**

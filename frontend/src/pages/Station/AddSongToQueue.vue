@@ -17,15 +17,15 @@
 							class="input"
 							type="text"
 							placeholder="Enter your YouTube query here..."
-							v-model="querySearch"
+							v-model="search.songs.query"
 							autofocus
-							@keyup.enter="submitQuery()"
+							@keyup.enter="searchForSongs()"
 						/>
 					</p>
 					<p class="control">
 						<a
 							class="button is-info"
-							@click.prevent="submitQuery()"
+							@click.prevent="searchForSongs()"
 							href="#"
 							><i class="material-icons icon-with-button"
 								>search</i
@@ -36,9 +36,12 @@
 
 				<!-- Choosing a song from youtube - query results -->
 
-				<div id="song-query-results" v-if="queryResults.length > 0">
+				<div
+					id="song-query-results"
+					v-if="search.songs.results.length > 0"
+				>
 					<search-query-item
-						v-for="(result, index) in queryResults"
+						v-for="(result, index) in search.songs.results"
 						:key="index"
 						:result="result"
 					>
@@ -75,6 +78,14 @@
 							</transition>
 						</div>
 					</search-query-item>
+
+					<a
+						class="button is-default load-more-button"
+						@click.prevent="loadMoreSongs()"
+						href="#"
+					>
+						Load more...
+					</a>
 				</div>
 
 				<!-- Import a playlist from youtube -->
@@ -97,14 +108,16 @@
 								class="input"
 								type="text"
 								placeholder="YouTube Playlist URL"
-								v-model="importQuery"
+								v-model="search.playlist.query"
 								@keyup.enter="importPlaylist()"
 							/>
 						</p>
 						<p class="control has-addons">
 							<span class="select" id="playlist-import-type">
 								<select
-									v-model="isImportingOnlyMusicOfPlaylist"
+									v-model="
+										search.playlist.isImportingOnlyMusic
+									"
 								>
 									<option :value="false">Import all</option>
 									<option :value="true"
@@ -199,6 +212,8 @@ import { mapState, mapActions } from "vuex";
 
 import Toast from "toasters";
 
+import SearchYoutube from "../../mixins/SearchYoutube.vue";
+
 import PlaylistItem from "../../components/ui/PlaylistItem.vue";
 import SearchQueryItem from "../../components/ui/SearchQueryItem.vue";
 import Modal from "../../components/Modal.vue";
@@ -207,13 +222,10 @@ import io from "../../io";
 
 export default {
 	components: { Modal, PlaylistItem, SearchQueryItem },
+	mixins: [SearchYoutube],
 	data() {
 		return {
-			querySearch: "",
-			queryResults: [],
-			playlists: [],
-			importQuery: "",
-			isImportingOnlyMusicOfPlaylist: false
+			playlists: []
 		};
 	},
 	computed: mapState({
@@ -258,7 +270,10 @@ export default {
 								timeout: 8000
 							});
 						else {
-							this.queryResults[index].isAddedToQueue = true;
+							this.search.songs.results[
+								index
+							].isAddedToQueue = true;
+
 							new Toast({
 								content: `${data.message}`,
 								timeout: 4000
@@ -274,7 +289,8 @@ export default {
 							timeout: 8000
 						});
 					else {
-						this.queryResults[index].isAddedToQueue = true;
+						this.search.songs.results[index].isAddedToQueue = true;
+
 						new Toast({
 							content: `${data.message}`,
 							timeout: 4000
@@ -287,7 +303,7 @@ export default {
 			let isImportingPlaylist = true;
 
 			// import query is blank
-			if (!this.importQuery)
+			if (!this.search.playlist.query)
 				return new Toast({
 					content: "Please enter a YouTube playlist URL.",
 					timeout: 4000
@@ -306,59 +322,13 @@ export default {
 
 			return this.socket.emit(
 				"queueSongs.addSetToQueue",
-				this.importQuery,
-				this.isImportingOnlyMusicOfPlaylist,
+				this.search.playlist.query,
+				this.search.playlist.isImportingOnlyMusic,
 				res => {
 					isImportingPlaylist = false;
 					return new Toast({ content: res.message, timeout: 20000 });
 				}
 			);
-		},
-		submitQuery() {
-			let query = this.querySearch;
-
-			if (!this.querySearch)
-				return new Toast({
-					content: "Please input a search query or a YouTube link.",
-					timeout: 4000
-				});
-
-			if (query.indexOf("&index=") !== -1) {
-				query = query.split("&index=");
-				query.pop();
-				query = query.join("");
-			}
-
-			if (query.indexOf("&list=") !== -1) {
-				query = query.split("&list=");
-				query.pop();
-				query = query.join("");
-			}
-
-			return this.socket.emit("apis.searchYoutube", query, res => {
-				if (res.status === "failure")
-					return new Toast({
-						content: "Error searching on YouTube",
-						timeout: 4000
-					});
-
-				const { data } = res;
-				this.queryResults = [];
-
-				console.log(res.data);
-
-				for (let i = 0; i < data.items.length; i += 1) {
-					this.queryResults.push({
-						id: data.items[i].id.videoId,
-						url: `https://www.youtube.com/watch?v=${this.id}`,
-						title: data.items[i].snippet.title,
-						thumbnail: data.items[i].snippet.thumbnails.default.url,
-						isAddedToQueue: false
-					});
-				}
-
-				return this.queryResults;
-			});
 		},
 		...mapActions("station", ["updatePrivatePlaylistQueueSelected"]),
 		...mapActions("user/playlists", ["editPlaylist"])
@@ -449,6 +419,11 @@ export default {
 
 	.search-query-item:not(:last-of-type) {
 		margin-bottom: 10px;
+	}
+
+	.load-more-button {
+		width: 100%;
+		margin-top: 10px;
 	}
 }
 </style>
