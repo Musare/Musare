@@ -7,15 +7,7 @@
 		<div class="container">
 			<div class="info-section">
 				<div class="picture-name-row">
-					<img
-						class="profile-picture"
-						:src="
-							user.avatar.url && user.avatar.type === 'gravatar'
-								? `${user.avatar.url}?d=${notes}&s=250`
-								: '/assets/notes.png'
-						"
-						onerror="this.src='/assets/notes.png'; this.onerror=''"
-					/>
+					<profile-picture :avatar="user.avatar" :name="user.name" />
 					<div>
 						<div class="name-role-row">
 							<p class="name">{{ user.name }}</p>
@@ -245,6 +237,7 @@ import draggable from "vuedraggable";
 
 import TabQueryHandler from "../mixins/TabQueryHandler.vue";
 
+import ProfilePicture from "../components/ui/ProfilePicture.vue";
 import PlaylistItem from "../components/ui/PlaylistItem.vue";
 import SortablePlaylists from "../mixins/SortablePlaylists.vue";
 import MainHeader from "../components/layout/MainHeader.vue";
@@ -257,6 +250,7 @@ export default {
 		MainHeader,
 		MainFooter,
 		PlaylistItem,
+		ProfilePicture,
 		CreatePlaylist: () => import("../components/modals/CreatePlaylist.vue"),
 		EditPlaylist: () =>
 			import("../components/modals/EditPlaylist/index.vue"),
@@ -266,7 +260,6 @@ export default {
 	data() {
 		return {
 			user: {},
-			notes: "",
 			isUser: false,
 			tab: "recent-activity",
 			playlists: [],
@@ -294,11 +287,6 @@ export default {
 			this.$route.query.tab === "playlists"
 		)
 			this.tab = this.$route.query.tab;
-
-		lofig.get("frontendDomain").then(frontendDomain => {
-			this.frontendDomain = frontendDomain;
-			this.notes = encodeURI(`${this.frontendDomain}/assets/notes.png`);
-		});
 
 		io.getSocket(socket => {
 			this.socket = socket;
@@ -648,14 +636,10 @@ export default {
 		align-items: center;
 		justify-content: center;
 		margin-bottom: 24px;
-	}
 
-	.profile-picture {
-		width: 100px;
-		height: 100px;
-		border-radius: 100%;
-		border: 0.5px solid $light-grey-2;
-		margin-right: 32px;
+		.profile-picture {
+			margin-right: 32px;
+		}
 	}
 
 	.name-role-row {

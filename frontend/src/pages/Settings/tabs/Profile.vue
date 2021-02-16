@@ -15,17 +15,10 @@
 		>
 			<label>Avatar</label>
 			<div id="avatar-selection-inner-container">
-				<div class="profile-picture">
-					<img
-						:src="
-							modifiedUser.avatar.url &&
-							modifiedUser.avatar.type === 'gravatar'
-								? `${modifiedUser.avatar.url}?d=${notesUri}&s=250`
-								: '/assets/notes.png'
-						"
-						onerror="this.src='/assets/notes.png'; this.onerror=''"
-					/>
-				</div>
+				<profile-picture
+					:avatar="modifiedUser.avatar"
+					:name="modifiedUser.name"
+				/>
 				<div class="select">
 					<select v-model="modifiedUser.avatar.type">
 						<option value="gravatar">Using Gravatar</option>
@@ -96,25 +89,18 @@ import Toast from "toasters";
 import validation from "../../../validation";
 import io from "../../../io";
 
+import ProfilePicture from "../../../components/ui/ProfilePicture.vue";
 import SaveButton from "../mixins/SaveButton.vue";
 
 export default {
+	components: { ProfilePicture },
 	mixins: [SaveButton],
-	data() {
-		return {
-			notesUri: ""
-		};
-	},
 	computed: mapState({
 		userId: state => state.user.auth.userId,
 		originalUser: state => state.settings.originalUser,
 		modifiedUser: state => state.settings.modifiedUser
 	}),
 	mounted() {
-		lofig.get("frontendDomain").then(frontendDomain => {
-			this.notesUri = encodeURI(`${frontendDomain}/assets/notes.png`);
-		});
-
 		io.getSocket(socket => {
 			this.socket = socket;
 		});
@@ -313,17 +299,10 @@ export default {
 		margin-top: 5px;
 
 		.profile-picture {
-			line-height: 1;
-			cursor: pointer;
-
-			img {
-				background-color: #fff;
-				width: 50px;
-				height: 50px;
-				border-radius: 100%;
-				border: 2px solid $light-grey;
-				margin-right: 10px;
-			}
+			margin-right: 10px;
+			width: 50px;
+			height: 50px;
+			font-size: 25px;
 		}
 	}
 }
