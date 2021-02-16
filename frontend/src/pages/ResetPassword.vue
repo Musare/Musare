@@ -422,6 +422,11 @@ export default {
 @import "../styles/global.scss";
 
 .night-mode {
+	.content-box,
+	.step:not(.selected) {
+		background-color: $night-mode-bg-secondary !important;
+	}
+
 	.label {
 		color: $night-mode-text;
 	}
@@ -471,7 +476,7 @@ p {
 
 			&.selected {
 				background-color: $musare-blue;
-				color: #fff;
+				color: #fff !important;
 				border: 0;
 			}
 		}

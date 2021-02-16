@@ -871,7 +871,7 @@ export default {
 		.item.activity-item
 		.thumbnail
 		.activity-type-icon {
-		color: $light-grey;
+		color: $night-mode-text;
 	}
 }
 </style>

@@ -705,6 +705,7 @@ export default {
 @media screen and (max-width: 1300px) {
 	.edit-playlist-modal .edit-playlist-modal-inner-container {
 		height: auto !important;
+
 		#import-from-youtube-section #song-query-results,
 		.section {
 			max-width: 100% !important;
@@ -747,8 +748,7 @@ export default {
 	}
 
 	.section {
-		// padding: 5px !important;
-		padding: 0 !important;
+		padding: 15px !important;
 		margin: 0 20px;
 		max-width: 600px;
 		display: flex;
