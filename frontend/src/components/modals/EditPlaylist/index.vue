@@ -730,7 +730,7 @@ export default {
 
 	.section {
 		padding: 15px !important;
-		margin: 0 20px;
+		margin: 0 10px;
 		max-width: 600px;
 		display: flex;
 		flex-direction: column;
@@ -747,7 +747,8 @@ export default {
 	}
 
 	#first-column {
-		max-width: 100%;
+		width: 50%;
+		flex-grow: 1;
 		height: 100%;
 		overflow-y: auto;
 
@@ -800,7 +801,7 @@ export default {
 	}
 
 	#second-column {
-		max-width: 100%;
+		width: 50%;
 		flex-grow: 1;
 		height: 100%;
 		overflow-y: auto;

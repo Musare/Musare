@@ -1,7 +1,17 @@
 <template>
 	<div class="universal-item playlist-song-item">
 		<div id="thumbnail-and-info">
-			<img class="item-thumbnail" :src="song.thumbnail" />
+			<img
+				v-if="song.thumbnail"
+				class="item-thumbnail"
+				:src="song.thumbnail"
+				onerror="this.src='/assets/notes-transparent.png'"
+			/>
+			<img
+				v-else
+				class="item-thumbnail"
+				src="/assets/notes-transparent.png"
+			/>
 			<div id="song-info">
 				<h4 class="item-title" :title="song.title">
 					{{ song.title }}

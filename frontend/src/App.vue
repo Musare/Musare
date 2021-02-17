@@ -4,7 +4,6 @@
 		<div v-else class="upper-container">
 			<router-view :key="$route.fullPath" class="main-container" />
 			<what-is-new />
-			<mobile-alert />
 			<login-modal v-if="modals.header.login" />
 			<register-modal v-if="modals.header.register" />
 		</div>
@@ -17,7 +16,6 @@ import Toast from "toasters";
 
 import Banned from "./pages/Banned.vue";
 import WhatIsNew from "./components/modals/WhatIsNew.vue";
-import MobileAlert from "./components/common/MobileAlert.vue";
 import LoginModal from "./components/modals/Login.vue";
 import RegisterModal from "./components/modals/Register.vue";
 import io from "./io";
@@ -26,7 +24,6 @@ import keyboardShortcuts from "./keyboardShortcuts";
 export default {
 	components: {
 		WhatIsNew,
-		MobileAlert,
 		LoginModal,
 		RegisterModal,
 		Banned
