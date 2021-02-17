@@ -37,14 +37,9 @@
 						}"
 						target="_blank"
 					>
-						<img
-							:src="
-								user.avatar.url &&
-								user.avatar.type === 'gravatar'
-									? `${user.avatar.url}?d=${notesUri}&s=250`
-									: '/assets/notes.png'
-							"
-							onerror="this.src='/assets/notes.png'; this.onerror=''"
+						<profile-picture
+							:avatar="user.avatar"
+							:name="user.name"
 						/>
 
 						{{ user.username }}
@@ -69,7 +64,10 @@
 import { mapState } from "vuex";
 import Toast from "toasters";
 
+import ProfilePicture from "../../../../components/ui/ProfilePicture.vue";
+
 export default {
+	components: { ProfilePicture },
 	data() {
 		return {
 			notesUri: "",
@@ -167,13 +165,11 @@ export default {
 					color: #000;
 				}
 
-				img {
-					background-color: #fff;
+				.profile-picture {
+					margin-right: 10px;
 					width: 35px;
 					height: 35px;
-					border-radius: 100%;
-					border: 2px solid $light-grey;
-					margin-right: 10px;
+					font-size: 15px;
 				}
 			}
 		}

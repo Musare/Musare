@@ -403,7 +403,11 @@ class _TasksModule extends CoreClass {
 
 									usersPerStationCount[stationId] += 1; // increment user count for station
 
-									return next(null, { username: user.username, avatar: user.avatar });
+									return next(null, {
+										username: user.username,
+										name: user.name,
+										avatar: user.avatar
+									});
 								}
 							],
 							(err, user) => {
