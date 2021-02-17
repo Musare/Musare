@@ -3,6 +3,7 @@ import async from "async";
 import CoreClass from "../core";
 
 let PlaylistsModule;
+let StationsModule;
 let SongsModule;
 let CacheModule;
 let DBModule;
@@ -24,6 +25,7 @@ class _PlaylistsModule extends CoreClass {
 	async initialize() {
 		this.setStage(1);
 
+		StationsModule = this.moduleManager.modules.stations;
 		CacheModule = this.moduleManager.modules.cache;
 		DBModule = this.moduleManager.modules.db;
 		UtilsModule = this.moduleManager.modules.utils;
@@ -371,6 +373,76 @@ class _PlaylistsModule extends CoreClass {
 					return resolve({});
 				}
 			);
+		});
+	}
+
+	/**
+	 * Gets a orphaned station playlists
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	GET_ORPHANED_STATION_PLAYLISTS() {
+		return new Promise((resolve, reject) => {
+			PlaylistsModule.playlistModel.find({ type: "station" }, { songs: false }, (err, playlists) => {
+				if (err) reject(new Error(err));
+				else {
+					const orphanedPlaylists = [];
+					async.eachLimit(
+						playlists,
+						1,
+						(playlist, next) => {
+							StationsModule.runJob("GET_STATION", { stationId: playlist.createdFor }, this)
+								.then(() => {
+									next();
+								})
+								.catch(err => {
+									if (err.message === "Station not found") {
+										orphanedPlaylists.push(playlist);
+										next();
+									} else next(err);
+								});
+						},
+						err => {
+							if (err) reject(new Error(err));
+							else resolve({ playlists: orphanedPlaylists });
+						}
+					);
+				}
+			});
+		});
+	}
+
+	/**
+	 * Deletes all orphaned station playlists
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	DELETE_ORPHANED_STATION_PLAYLISTS() {
+		return new Promise((resolve, reject) => {
+			PlaylistsModule.runJob("GET_ORPHANED_STATION_PLAYLISTS", {}, this)
+				.then(response => {
+					async.eachLimit(
+						response.playlists,
+						1,
+						(playlist, next) => {
+							PlaylistsModule.runJob("DELETE_PLAYLIST", { playlistId: playlist._id }, this)
+								.then(() => {
+									this.log("INFO", "Deleting orphaned station playlist");
+									next();
+								})
+								.catch(err => {
+									next(err);
+								});
+						},
+						err => {
+							if (err) reject(new Error(err));
+							else resolve({});
+						}
+					);
+				})
+				.catch(err => {
+					reject(new Error(err));
+				});
 		});
 	}
 
