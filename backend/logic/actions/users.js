@@ -172,6 +172,7 @@ export default {
 				users.forEach(user => {
 					filteredUsers.push({
 						_id: user._id,
+						name: user.name,
 						username: user.username,
 						role: user.role,
 						liked: user.liked,
@@ -180,6 +181,10 @@ export default {
 						email: {
 							address: user.email.address,
 							verified: user.email.verified
+						},
+						avatar: {
+							type: user.avatar.type,
+							url: user.avatar.url
 						},
 						hasPassword: !!user.services.password,
 						services: { github: user.services.github }

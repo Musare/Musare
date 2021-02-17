@@ -5,7 +5,7 @@
 			<table class="table is-striped">
 				<thead>
 					<tr>
-						<td>Profile Picture</td>
+						<td class="ppRow">Profile Picture</td>
 						<td>User ID</td>
 						<td>GitHub ID</td>
 						<td>Password</td>
@@ -22,9 +22,9 @@
 				<tbody>
 					<tr v-for="(user, index) in users" :key="index">
 						<td>
-							<img
-								class="user-avatar"
-								src="/assets/notes-transparent.png"
+							<profile-picture
+								:avatar="user.avatar"
+								:name="user.name"
 							/>
 						</td>
 						<td>{{ user._id }}</td>
@@ -69,10 +69,11 @@
 import { mapState, mapActions } from "vuex";
 
 import EditUser from "../EditUser.vue";
+import ProfilePicture from "../../../components/ui/ProfilePicture.vue";
 import io from "../../../io";
 
 export default {
-	components: { EditUser },
+	components: { EditUser, ProfilePicture },
 	data() {
 		return {
 			editingUserId: "",
@@ -151,14 +152,18 @@ body {
 	font-family: "Hind", sans-serif;
 }
 
-.user-avatar {
-	display: block;
-	max-width: 50px;
-	margin: 0 auto;
+.profile-picture {
+	max-width: 50px !important;
+	max-height: 50px !important;
+	font-size: 25px !important;
 }
 
 td {
 	vertical-align: middle;
+
+	&.ppRow {
+		max-width: 50px;
+	}
 }
 
 .is-primary:focus {
