@@ -18,15 +18,6 @@
 					<h5>Duration: {{ totalLength() }}</h5>
 				</div>
 
-				<div
-					class="section-margin-bottom"
-					v-if="
-						(!playlist.isUserModifiable &&
-							userId === playlist.createdBy) ||
-							isEditable()
-					"
-				/>
-
 				<div id="playlist-settings-section" class="section">
 					<div v-if="isEditable()">
 						<h4 class="section-title">Edit Details</h4>
@@ -60,7 +51,7 @@
 						</div>
 					</div>
 
-					<div v-if="userId === playlist.createdBy">
+					<div v-if="isEditable()">
 						<label class="label"> Change privacy </label>
 						<div class="control is-grouped input-with-button">
 							<div class="control is-expanded select">
@@ -79,8 +70,6 @@
 							</p>
 						</div>
 					</div>
-
-					<div class="section-margin-bottom" />
 				</div>
 
 				<div
@@ -213,8 +202,6 @@
 							Load more...
 						</a>
 					</div>
-
-					<div class="section-margin-bottom" />
 				</div>
 			</div>
 
@@ -254,14 +241,10 @@
 									<playlist-song-item
 										:song="song"
 										:class="{
-											'item-draggable':
-												playlist.isUserModifiable
+											'item-draggable': isEditable()
 										}"
 									>
-										<div
-											slot="actions"
-											v-if="playlist.isUserModifiable"
-										>
+										<div slot="actions" v-if="isEditable()">
 											<i
 												class="material-icons"
 												v-if="index > 0"
@@ -311,8 +294,6 @@
 						</p>
 					</aside>
 				</div>
-
-				<div class="section-margin-bottom" />
 			</div>
 
 			<!--
@@ -337,17 +318,6 @@
 			>
 				Remove Playlist
 			</a>
-			<a
-				class="button is-default"
-				@click="
-					closeModal({
-						sector: 'station',
-						modal: 'editPlaylist'
-					})
-				"
-				href="#"
-				>Close Modal</a
-			>
 		</div>
 	</modal>
 </template>
@@ -691,18 +661,6 @@ export default {
 		.section {
 			max-width: 100% !important;
 		}
-
-		#first-column {
-			width: 100%;
-		}
-
-		#second-column {
-			width: 100%;
-
-			.section-margin-bottom:first-child {
-				display: block !important;
-			}
-		}
 	}
 }
 
@@ -712,12 +670,15 @@ export default {
 		flex-wrap: wrap;
 		height: 100%;
 
-		/** playlist isn't able to modified */
 		&.view-only {
-			flex-direction: column;
+			height: auto !important;
+
+			#first-column {
+				break-after: always;
+			}
 
 			.section {
-				max-width: 100%;
+				max-width: 100% !important;
 			}
 		}
 	}
@@ -747,10 +708,10 @@ export default {
 	}
 
 	#first-column {
-		width: 50%;
-		flex-grow: 1;
+		max-width: 100%;
 		height: 100%;
 		overflow-y: auto;
+		flex-grow: 1;
 
 		.section {
 			width: auto;
@@ -801,14 +762,10 @@ export default {
 	}
 
 	#second-column {
-		width: 50%;
-		flex-grow: 1;
+		max-width: 100%;
 		height: 100%;
 		overflow-y: auto;
-
-		.section-margin-bottom:first-child {
-			display: none;
-		}
+		flex-grow: 1;
 	}
 }
 </style>
