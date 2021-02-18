@@ -51,7 +51,7 @@
 						</div>
 					</div>
 
-					<div v-if="isEditable()">
+					<div v-if="userId === playlist.createdBy">
 						<label class="label"> Change privacy </label>
 						<div class="control is-grouped input-with-button">
 							<div class="control is-expanded select">
@@ -244,10 +244,10 @@
 											'item-draggable': isEditable()
 										}"
 									>
-										<div slot="actions" v-if="isEditable()">
+										<div slot="actions">
 											<i
 												class="material-icons"
-												v-if="index > 0"
+												v-if="isEditable() && index > 0"
 												@click="moveSongToTop(index)"
 												>vertical_align_top</i
 											>
@@ -260,9 +260,10 @@
 
 											<i
 												v-if="
-													playlist.songs.length -
-														1 !==
-														index
+													isEditable() &&
+														playlist.songs.length -
+															1 !==
+															index
 												"
 												@click="moveSongToBottom(index)"
 												class="material-icons"
@@ -276,6 +277,10 @@
 											>
 
 											<i
+												v-if="
+													userId ===
+														playlist.createdBy
+												"
 												@click="
 													removeSongFromPlaylist(
 														song.songId
@@ -529,14 +534,25 @@ export default {
 			);
 		},
 		removeSongFromPlaylist(id) {
-			this.socket.emit(
-				"playlists.removeSongFromPlaylist",
-				id,
-				this.playlist._id,
-				res => {
+			if (this.playlist.displayName === "Liked Songs") {
+				this.socket.emit("songs.unlike", id, res => {
 					new Toast({ content: res.message, timeout: 4000 });
-				}
-			);
+				});
+			}
+			if (this.playlist.displayName === "Disliked Songs") {
+				this.socket.emit("songs.undislike", id, res => {
+					new Toast({ content: res.message, timeout: 4000 });
+				});
+			} else {
+				this.socket.emit(
+					"playlists.removeSongFromPlaylist",
+					id,
+					this.playlist._id,
+					res => {
+						new Toast({ content: res.message, timeout: 4000 });
+					}
+				);
+			}
 		},
 		renamePlaylist() {
 			const { displayName } = this.playlist;

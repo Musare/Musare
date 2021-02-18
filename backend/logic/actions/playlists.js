@@ -1072,6 +1072,7 @@ export default {
 	 */
 	removeSongFromPlaylist: isLoginRequired(async function removeSongFromPlaylist(session, songId, playlistId, cb) {
 		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
+
 		async.waterfall(
 			[
 				next => {
