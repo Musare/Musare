@@ -38,10 +38,9 @@ export default {
 				.toUpperCase();
 		}
 	},
-	mounted() {
-		lofig.get("frontendDomain").then(frontendDomain => {
-			this.notes = encodeURI(`${frontendDomain}/assets/notes.png`);
-		});
+	async mounted() {
+		const frontendDomain = await lofig.get("frontendDomain");
+		this.notes = encodeURI(`${frontendDomain}/assets/notes.png`);
 	}
 };
 </script>

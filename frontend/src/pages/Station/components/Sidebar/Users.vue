@@ -78,11 +78,9 @@ export default {
 		users: state => state.station.users,
 		userCount: state => state.station.userCount
 	}),
-	mounted() {
-		lofig.get("frontendDomain").then(frontendDomain => {
-			this.notesUri = encodeURI(`${frontendDomain}/assets/notes.png`);
-			this.frontendDomain = frontendDomain;
-		});
+	async mounted() {
+		this.frontendDomain = await lofig.get("frontendDomain");
+		this.notesUri = encodeURI(`${this.frontendDomain}/assets/notes.png`);
 	},
 	methods: {
 		async copyToClipboard() {

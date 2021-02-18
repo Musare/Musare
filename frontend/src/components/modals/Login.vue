@@ -91,10 +91,8 @@ export default {
 			serverDomain: ""
 		};
 	},
-	mounted() {
-		lofig.get("serverDomain").then(serverDomain => {
-			this.serverDomain = serverDomain;
-		});
+	async mounted() {
+		this.serverDomain = await lofig.get("serverDomain");
 	},
 	methods: {
 		submitModal() {

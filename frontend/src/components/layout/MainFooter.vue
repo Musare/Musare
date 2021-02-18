@@ -36,10 +36,8 @@ export default {
 			github: "#"
 		};
 	},
-	mounted() {
-		lofig.get("siteSettings.github").then(github => {
-			this.github = github;
-		});
+	async mounted() {
+		this.github = await lofig.get("siteSettings.github");
 	}
 };
 </script>

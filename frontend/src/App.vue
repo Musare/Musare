@@ -73,7 +73,7 @@ export default {
 			else this.disableNightMode();
 		}
 	},
-	mounted() {
+	async mounted() {
 		document.onkeydown = ev => {
 			const event = ev || window.event;
 			const { keyCode } = event;
@@ -118,9 +118,7 @@ export default {
 			this.socketConnected = false;
 		});
 
-		lofig.get("serverDomain").then(serverDomain => {
-			this.serverDomain = serverDomain;
-		});
+		this.serverDomain = await lofig.get("serverDomain");
 
 		this.$router.onReady(() => {
 			if (this.$route.query.err) {

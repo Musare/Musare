@@ -445,17 +445,15 @@ export default {
 			);
 		}
 	},
-	mounted() {
-		lofig.get("siteSettings.siteName").then(siteName => {
-			this.siteName = siteName;
-		});
+	async mounted() {
+		this.siteName = await lofig.get("siteSettings.siteName");
 
 		io.getSocket(socket => {
 			this.socket = socket;
+
 			if (this.socket.connected) this.init();
-			io.onConnect(() => {
-				this.init();
-			});
+			io.onConnect(() => this.init());
+
 			this.socket.on("event:stations.created", res => {
 				const station = res;
 				if (

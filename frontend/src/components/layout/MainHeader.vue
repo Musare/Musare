@@ -97,14 +97,9 @@ export default {
 		loggedIn: state => state.user.auth.loggedIn,
 		username: state => state.user.auth.username
 	}),
-	mounted() {
-		lofig.get("frontendDomain").then(frontendDomain => {
-			this.frontendDomain = frontendDomain;
-		});
-
-		lofig.get("siteSettings").then(siteSettings => {
-			this.siteSettings = siteSettings;
-		});
+	async mounted() {
+		this.frontendDomain = await lofig.get("frontendDomain");
+		this.siteSettings = await lofig.get("siteSettings");
 	},
 
 	methods: {

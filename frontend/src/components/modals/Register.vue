@@ -194,10 +194,8 @@ export default {
 			}
 		}
 	},
-	mounted() {
-		lofig.get("serverDomain").then(serverDomain => {
-			this.serverDomain = serverDomain;
-		});
+	async mounted() {
+		this.serverDomain = await lofig.get("serverDomain");
 
 		lofig.get("recaptcha").then(obj => {
 			this.recaptcha.enabled = obj.enabled;

@@ -602,7 +602,7 @@ export default {
 		}
 		/* eslint-enable */
 	},
-	mounted() {
+	async mounted() {
 		// if (this.modals.editSong = false) this.video.player.stopVideo();
 
 		// this.loadVideoById(
@@ -610,9 +610,7 @@ export default {
 		//   this.song.skipDuration
 		// );
 
-		lofig.get("cookie.secure").then(useHTTPS => {
-			this.useHTTPS = useHTTPS;
-		});
+		this.useHTTPS = await lofig.get("cookie.secure");
 
 		io.getSocket(socket => {
 			this.socket = socket;

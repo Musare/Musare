@@ -191,14 +191,12 @@ export default {
 			}
 		}
 	},
-	mounted() {
+	async mounted() {
 		io.getSocket(socket => {
 			this.socket = socket;
 		});
 
-		lofig.get("serverDomain").then(serverDomain => {
-			this.serverDomain = serverDomain;
-		});
+		this.serverDomain = await lofig.get("serverDomain");
 	},
 	methods: {
 		onInputBlur(inputName) {
