@@ -2,7 +2,7 @@ import config from "config";
 
 import async from "async";
 
-import request from "request";
+import axios from "axios";
 import bcrypt from "bcrypt";
 import sha256 from "sha256";
 import { isAdminRequired, isLoginRequired } from "./hooks";
@@ -330,27 +330,23 @@ export default {
 				// verify the request with google recaptcha
 				next => {
 					if (config.get("apis.recaptcha.enabled") === true)
-						request(
-							{
-								url: "https://www.google.com/recaptcha/api/siteverify",
-								method: "POST",
-								form: {
+						axios
+							.post("https://www.google.com/recaptcha/api/siteverify", {
+								data: {
 									secret: config.get("apis").recaptcha.secret,
 									response: recaptcha
 								}
-							},
-							next
-						);
+							})
+							.then(res => next(null, res.data))
+							.catch(err => next(err));
 					else next(null, null, null);
 				},
 
 				// check if the response from Google recaptcha is successful
 				// if it is, we check if a user with the requested username already exists
-				(response, body, next) => {
-					if (config.get("apis.recaptcha.enabled") === true) {
-						const json = JSON.parse(body);
-						if (json.success !== true) return next("Response from recaptcha was not successful.");
-					}
+				(body, next) => {
+					if (config.get("apis.recaptcha.enabled") === true)
+						if (body.success !== true) return next("Response from recaptcha was not successful.");
 
 					return userModel.findOne({ username: new RegExp(`^${username}$`, "i") }, next);
 				},

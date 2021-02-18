@@ -1,6 +1,6 @@
 import config from "config";
 import async from "async";
-import request from "request";
+import axios from "axios";
 
 import { isAdminRequired } from "./hooks";
 
@@ -73,10 +73,8 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					const params = [`q=${encodeURIComponent(query)}`, `per_page=20`, `page=${page}`].join("&");
-
 					const options = {
-						url: `https://api.discogs.com/database/search?${params}`,
+						params: { q: query, per_page: 20, page },
 						headers: {
 							"User-Agent": "Request",
 							Authorization: `Discogs key=${config.get("apis.discogs.client")}, secret=${config.get(
@@ -85,12 +83,10 @@ export default {
 						}
 					};
 
-					request(options, (err, res, body) => {
-						if (err) next(err);
-						body = JSON.parse(body);
-						next(null, body);
-						if (body.error) next(body.error);
-					});
+					axios
+						.get("https://api.discogs.com/database/search", options)
+						.then(res => next(null, res.data))
+						.catch(err => next(err));
 				}
 			],
 			async (err, body) => {

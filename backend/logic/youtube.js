@@ -1,7 +1,7 @@
 import async from "async";
 import config from "config";
 
-import request from "request";
+import axios from "axios";
 
 import CoreClass from "../core";
 
@@ -40,31 +40,31 @@ class _YouTubeModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	SEARCH(payload) {
-		const params = [
-			"part=snippet",
-			`q=${encodeURIComponent(payload.query)}`,
-			`key=${config.get("apis.youtube.key")}`,
-			"type=video",
-			"maxResults=10",
-			payload.pageToken ? `pageToken=${payload.pageToken}` : null
-		].join("&");
+		const params = {
+			part: "snippet",
+			q: payload.query,
+			key: config.get("apis.youtube.key"),
+			type: "video",
+			maxResults: 10
+		};
+
+		if (payload.pageToken) params.pageToken = payload.pageToken;
 
 		return new Promise((resolve, reject) => {
-			request(`https://www.googleapis.com/youtube/v3/search?${params}`, (err, res, body) => {
-				if (err) {
+			axios
+				.get("https://www.googleapis.com/youtube/v3/search", { params })
+				.then(res => {
+					if (res.data.err) {
+						YouTubeModule.log("ERROR", "SEARCH", `${res.data.error.message}`);
+						return reject(new Error("An error has occured. Please try again later."));
+					}
+
+					return resolve(res.data);
+				})
+				.catch(err => {
 					YouTubeModule.log("ERROR", "SEARCH", `${err.message}`);
 					return reject(new Error("An error has occured. Please try again later."));
-				}
-
-				body = JSON.parse(body);
-
-				if (body.err) {
-					YouTubeModule.log("ERROR", "SEARCH", `${body.error.message}`);
-					return reject(new Error("An error has occured. Please try again later."));
-				}
-
-				return resolve(body);
-			});
+				});
 		});
 	}
 
@@ -76,39 +76,33 @@ class _YouTubeModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	GET_SONG(payload) {
-		// songId, cb
 		return new Promise((resolve, reject) => {
-			const youtubeParams = [
-				"part=snippet,contentDetails,statistics,status",
-				`id=${encodeURIComponent(payload.songId)}`,
-				`key=${config.get("apis.youtube.key")}`
-			].join("&");
+			const params = {
+				part: "snippet,contentDetails,statistics,status",
+				id: payload.songId,
+				key: config.get("apis.youtube.key")
+			};
 
-			request(
-				{
-					url: `https://www.googleapis.com/youtube/v3/videos?${youtubeParams}`,
-					timeout: 30000,
-					agent: false,
-					pool: { maxSockets: 100 }
-				},
-				(err, res, body) => {
-					if (err) {
-						YouTubeModule.log("ERROR", "GET_SONG", `${err.message}`);
+			if (payload.pageToken) params.pageToken = payload.pageToken;
+
+			axios
+				.get("https://www.googleapis.com/youtube/v3/videos", {
+					params,
+					timeout: 30000
+					// agent: false,
+					// pool: { maxSockets: 100 }
+				})
+				.then(res => {
+					if (res.data.error) {
+						YouTubeModule.log("ERROR", "GET_SONG", `${res.data.error.message}`);
 						return reject(new Error("An error has occured. Please try again later."));
 					}
 
-					body = JSON.parse(body);
-
-					if (body.error) {
-						YouTubeModule.log("ERROR", "GET_SONG", `${body.error.message}`);
-						return reject(new Error("An error has occured. Please try again later."));
-					}
-
-					if (body.items[0] === undefined)
+					if (res.data.items[0] === undefined)
 						return reject(new Error("The specified video does not exist or cannot be publicly accessed."));
 
 					// TODO Clean up duration converter
-					let dur = body.items[0].contentDetails.duration;
+					let dur = res.data.items[0].contentDetails.duration;
 
 					dur = dur.replace("PT", "");
 
@@ -134,16 +128,18 @@ class _YouTubeModule extends CoreClass {
 					});
 
 					const song = {
-						songId: body.items[0].id,
-						title: body.items[0].snippet.title,
-						thumbnail: body.items[0].snippet.thumbnails.default.url,
+						songId: res.data.items[0].id,
+						title: res.data.items[0].snippet.title,
+						thumbnail: res.data.items[0].snippet.thumbnails.default.url,
 						duration
 					};
 
 					return resolve({ song });
-				}
-			);
-			// songId: payload.songId
+				})
+				.catch(err => {
+					YouTubeModule.log("ERROR", "GET_SONG", `${err.message}`);
+					return reject(new Error("An error has occured. Please try again later."));
+				});
 		});
 	}
 
@@ -251,44 +247,39 @@ class _YouTubeModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	GET_PLAYLIST_PAGE(payload) {
-		// payload includes: playlistId, nextPageToken
 		return new Promise((resolve, reject) => {
-			const nextPageToken = payload.nextPageToken ? `pageToken=${payload.nextPageToken}` : "";
-			const videosPerPage = 50;
-			const youtubeParams = [
-				"part=contentDetails",
-				`playlistId=${encodeURIComponent(payload.playlistId)}`,
-				`maxResults=${videosPerPage}`,
-				`key=${config.get("apis.youtube.key")}`,
-				nextPageToken
-			].join("&");
+			const params = {
+				part: "contentDetails",
+				playlistId: payload.playlistId,
+				key: config.get("apis.youtube.key"),
+				maxResults: 50
+			};
 
-			request(
-				{
-					url: `https://www.googleapis.com/youtube/v3/playlistItems?${youtubeParams}`,
-					timeout: 30000,
-					agent: false,
-					pool: { maxSockets: 100 }
-				},
-				async (err, res, body) => {
-					if (err) {
-						YouTubeModule.log("ERROR", "GET_PLAYLIST_PAGE", `${err.message}`);
+			if (payload.nextPageToken) params.pageToken = payload.nextPageToken;
+
+			axios
+				.get("https://www.googleapis.com/youtube/v3/playlistItems", {
+					params,
+					timeout: 30000
+					// agent: false,
+					// pool: { maxSockets: 100 }
+				})
+				.then(res => {
+					if (res.data.err) {
+						YouTubeModule.log("ERROR", "GET_PLAYLIST_PAGE", `${res.data.error.message}`);
 						return reject(new Error("An error has occured. Please try again later."));
 					}
 
-					body = JSON.parse(body);
+					const songs = res.data.items;
 
-					if (body.error) {
-						YouTubeModule.log("ERROR", "GET_PLAYLIST_PAGE", `${body.error.message}`);
-						return reject(new Error("An error has occured. Please try again later."));
-					}
+					if (res.data.nextPageToken) return resolve({ nextPageToken: res.data.nextPageToken, songs });
 
-					const songs = body.items;
-
-					if (body.nextPageToken) return resolve({ nextPageToken: body.nextPageToken, songs });
 					return resolve({ songs });
-				}
-			);
+				})
+				.catch(err => {
+					YouTubeModule.log("ERROR", "GET_PLAYLIST_PAGE", `${err.message}`);
+					return reject(new Error("An error has occured. Please try again later."));
+				});
 		});
 	}
 
@@ -303,42 +294,38 @@ class _YouTubeModule extends CoreClass {
 	FILTER_MUSIC_VIDEOS(payload) {
 		return new Promise((resolve, reject) => {
 			const page = payload.page ? payload.page : 0;
-			const videosPerPage = 50; // 50 is the max I believe
+
+			const videosPerPage = 50;
+
 			const localVideoIds = payload.videoIds.splice(page * 50, videosPerPage);
 
 			if (localVideoIds.length === 0) {
 				return resolve({ videoIds: [] });
 			}
 
-			const youtubeParams = [
-				"part=topicDetails",
-				`id=${encodeURIComponent(localVideoIds.join(","))}`,
-				`maxResults=${videosPerPage}`,
-				`key=${config.get("apis.youtube.key")}`
-			].join("&");
+			const params = {
+				part: "topicDetails",
+				id: localVideoIds.join(","),
+				key: config.get("apis.youtube.key"),
+				maxResults: videosPerPage
+			};
 
-			return request(
-				{
-					url: `https://www.googleapis.com/youtube/v3/videos?${youtubeParams}`,
-					timeout: 30000,
-					agent: false,
-					pool: { maxSockets: 100 }
-				},
-				(err, res, body) => {
-					if (err) {
-						YouTubeModule.log("ERROR", "FILTER_MUSIC_VIDEOS", `${err.message}`);
-						return reject(new Error("Failed to find playlist from YouTube"));
-					}
-
-					body = JSON.parse(body);
-
-					if (body.error) {
-						YouTubeModule.log("ERROR", "FILTER_MUSIC_VIDEOS", `${body.error.message}`);
+			return axios
+				.get("https://www.googleapis.com/youtube/v3/videos", {
+					params,
+					timeout: 30000
+					// agent: false,
+					// pool: { maxSockets: 100 }
+				})
+				.then(res => {
+					if (res.data.err) {
+						YouTubeModule.log("ERROR", "FILTER_MUSIC_VIDEOS", `${res.data.error.message}`);
 						return reject(new Error("An error has occured. Please try again later."));
 					}
 
 					const songIds = [];
-					body.items.forEach(item => {
+
+					res.data.items.forEach(item => {
 						const songId = item.id;
 						if (!item.topicDetails) return;
 						if (item.topicDetails.relevantTopicIds.indexOf("/m/04rlf") !== -1) {
@@ -351,14 +338,13 @@ class _YouTubeModule extends CoreClass {
 						{ videoIds: payload.videoIds, page: page + 1 },
 						this
 					)
-						.then(result => {
-							resolve({ songIds: songIds.concat(result.songIds) });
-						})
-						.catch(err => {
-							reject(err);
-						});
-				}
-			);
+						.then(result => resolve({ songIds: songIds.concat(result.songIds) }))
+						.catch(err => reject(err));
+				})
+				.catch(err => {
+					YouTubeModule.log("ERROR", "FILTER_MUSIC_VIDEOS", `${err.message}`);
+					return reject(new Error("Failed to find playlist from YouTube"));
+				});
 		});
 	}
 }
