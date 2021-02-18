@@ -33,7 +33,7 @@ export default {
 	},
 
 	/**
-	 * Fetches a list of songs from Youtube's API
+	 * Fetches a specific page of search results from Youtube's API
 	 *
 	 * @param {object} session - user session
 	 * @param {string} query - the query we'll pass to youtubes api
