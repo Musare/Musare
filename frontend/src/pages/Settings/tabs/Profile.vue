@@ -98,6 +98,21 @@ export default {
 		originalUser: state => state.settings.originalUser,
 		modifiedUser: state => state.settings.modifiedUser
 	}),
+	watch: {
+		"modifiedUser.avatar.type": function watchAvatarType(newType, oldType) {
+			if (
+				oldType &&
+				this.modifiedUser.avatar.type !==
+					this.originalUser.avatar.type &&
+				newType === "initials"
+			) {
+				const colors = ["blue", "orange", "green", "purple", "teal"];
+				const color = colors[Math.floor(Math.random() * colors.length)];
+
+				this.modifiedUser.avatar.color = color;
+			}
+		}
+	},
 	mounted() {
 		io.getSocket(socket => {
 			this.socket = socket;
@@ -116,21 +131,7 @@ export default {
 			if (nameChanged) this.changeName();
 			if (locationChanged) this.changeLocation();
 			if (bioChanged) this.changeBio();
-			if (avatarChanged) {
-				if (this.modifiedUser.avatar.type === "initials") {
-					const colors = [
-						"blue",
-						"orange",
-						"green",
-						"purple",
-						"teal"
-					];
-					const color =
-						colors[Math.floor(Math.random() * colors.length)];
-					this.modifiedUser.avatar.color = color;
-				}
-				this.changeAvatarType();
-			}
+			if (avatarChanged) this.changeAvatarType();
 
 			if (
 				!avatarChanged &&
