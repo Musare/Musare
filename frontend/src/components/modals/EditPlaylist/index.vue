@@ -356,7 +356,7 @@ export default {
 			return {
 				animation: 200,
 				group: "description",
-				disabled: !this.playlist.isUserModifiable,
+				disabled: !this.isEditable(),
 				ghostClass: "draggable-list-ghost"
 			};
 		}
