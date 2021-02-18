@@ -598,20 +598,8 @@ export default {
 				this.station._id,
 				name,
 				res => {
-					if (res.status === "success") {
-						if (this.originalStation)
-							this.originalStation.name = name;
-						else {
-							this.originalStations.forEach((station, index) => {
-								if (station._id === this.station._id) {
-									this.originalStations[index].name = name;
-									return name;
-								}
-
-								return false;
-							});
-						}
-					}
+					if (res.status === "success")
+						this.originalStation.name = name;
 
 					new Toast({ content: res.message, timeout: 8000 });
 				}
@@ -637,22 +625,8 @@ export default {
 				this.station._id,
 				displayName,
 				res => {
-					if (res.status === "success") {
-						if (this.originalStation)
-							this.originalStation.displayName = displayName;
-						else {
-							this.originalStations.forEach((station, index) => {
-								if (station._id === this.station._id) {
-									this.originalStations[
-										index
-									].displayName = displayName;
-									return displayName;
-								}
-
-								return false;
-							});
-						}
-					}
+					if (res.status === "success")
+						this.originalStation.displayName = displayName;
 
 					new Toast({ content: res.message, timeout: 8000 });
 				}
@@ -682,27 +656,8 @@ export default {
 				this.station._id,
 				description,
 				res => {
-					if (res.status === "success") {
-						if (this.originalStation)
-							this.originalStation.description = description;
-						else {
-							this.originalStations.forEach((station, index) => {
-								if (station._id === this.station._id) {
-									this.originalStations[
-										index
-									].description = description;
-									return description;
-								}
-
-								return false;
-							});
-						}
-
-						return new Toast({
-							content: res.message,
-							timeout: 4000
-						});
-					}
+					if (res.status === "success")
+						this.originalStation.description = description;
 
 					return new Toast({ content: res.message, timeout: 8000 });
 				}
@@ -719,26 +674,8 @@ export default {
 				this.station._id,
 				this.station.privacy,
 				res => {
-					if (res.status === "success") {
-						if (this.originalStation)
-							this.originalStation.privacy = this.station.privacy;
-						else {
-							this.originalStations.forEach((station, index) => {
-								if (station._id === this.station._id) {
-									this.originalStations[
-										index
-									].privacy = this.station.privacy;
-									return this.station.privacy;
-								}
-
-								return false;
-							});
-						}
-						return new Toast({
-							content: res.message,
-							timeout: 4000
-						});
-					}
+					if (res.status === "success")
+						this.originalStation.privacy = this.station.privacy;
 
 					return new Toast({ content: res.message, timeout: 8000 });
 				}
@@ -750,20 +687,13 @@ export default {
 				this.station._id,
 				this.station.genres,
 				res => {
+					console.log(res);
 					if (res.status === "success") {
 						const genres = JSON.parse(
 							JSON.stringify(this.station.genres)
 						);
 						if (this.originalStation)
 							this.originalStation.genres = genres;
-						this.originalStations.forEach((station, index) => {
-							if (station._id === this.station._id) {
-								this.originalStations[index].genres = genres;
-								return genres;
-							}
-
-							return false;
-						});
 
 						return new Toast({
 							content: res.message,
@@ -785,22 +715,8 @@ export default {
 						const blacklistedGenres = JSON.parse(
 							JSON.stringify(this.station.blacklistedGenres)
 						);
-						if (this.originalStation)
-							this.originalStation.blacklistedGenres = blacklistedGenres;
-						this.originalStations.forEach((station, index) => {
-							if (station._id === this.station._id) {
-								this.originalStations[
-									index
-								].blacklistedGenres = blacklistedGenres;
-								return blacklistedGenres;
-							}
 
-							return false;
-						});
-						return new Toast({
-							content: res.message,
-							timeout: 4000
-						});
+						this.originalStation.blacklistedGenres = blacklistedGenres;
 					}
 
 					return new Toast({ content: res.message, timeout: 8000 });
@@ -818,27 +734,8 @@ export default {
 				this.station._id,
 				this.station.partyMode,
 				res => {
-					if (res.status === "success") {
-						if (this.originalStation)
-							this.originalStation.partyMode = this.station.partyMode;
-						// if (this.originalStation)
-						// 	this.originalStation.partyMode = this.station.partyMode;
-						// this.originalStations.forEach((station, index) => {
-						// 	if (station._id === this.station._id) {
-						// 		this.originalStations[
-						// 			index
-						// 		].partyMode = this.station.partyMode;
-						// 		return this.station.partyMode;
-						// 	}
-
-						// 	return false;
-						// });
-
-						return new Toast({
-							content: res.message,
-							timeout: 4000
-						});
-					}
+					if (res.status === "success")
+						this.originalStation.partyMode = this.station.partyMode;
 
 					return new Toast({ content: res.message, timeout: 8000 });
 				}
@@ -877,26 +774,8 @@ export default {
 				this.station._id,
 				this.station.theme,
 				res => {
-					if (res.status === "success") {
-						if (this.originalStation)
-							this.originalStation.theme = this.station.theme;
-						else {
-							this.originalStations.forEach((station, index) => {
-								if (station._id === this.station._id) {
-									this.originalStations[
-										index
-									].theme = this.station.theme;
-									return this.station.theme;
-								}
-
-								return false;
-							});
-						}
-						return new Toast({
-							content: res.message,
-							timeout: 4000
-						});
-					}
+					if (res.status === "success")
+						this.originalStation.theme = this.station.theme;
 
 					return new Toast({ content: res.message, timeout: 8000 });
 				}
