@@ -10,7 +10,8 @@ export default {
 	},
 	avatar: {
 		type: { type: String, enum: ["gravatar", "initials"], required: true },
-		url: { type: String, required: false }
+		url: { type: String, required: false },
+		color: { type: String, enum: ["blue", "orange", "green", "purple", "teal"], required: false }
 	},
 	services: {
 		password: {

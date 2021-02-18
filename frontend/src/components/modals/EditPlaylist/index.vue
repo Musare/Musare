@@ -317,7 +317,10 @@
 		<div slot="footer">
 			<a
 				class="button is-default"
-				v-if="this.userId === this.playlist.createdBy"
+				v-if="
+					this.userId === this.playlist.createdBy ||
+						this.playlist.privacy === 'public'
+				"
 				@click="downloadPlaylist()"
 				href="#"
 			>

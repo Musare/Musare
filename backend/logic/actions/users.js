@@ -184,7 +184,8 @@ export default {
 						},
 						avatar: {
 							type: user.avatar.type,
-							url: user.avatar.url
+							url: user.avatar.url,
+							color: user.avatar.color
 						},
 						hasPassword: !!user.services.password,
 						services: { github: user.services.github }
@@ -1436,7 +1437,7 @@ export default {
 	 * @param {string} newType - the new type
 	 * @param {Function} cb - gets called with the result
 	 */
-	updateAvatarType: isLoginRequired(async function updateAvatarType(session, updatingUserId, newType, cb) {
+	updateAvatarType: isLoginRequired(async function updateAvatarType(session, updatingUserId, newAvatar, cb) {
 		const userModel = await DBModule.runJob(
 			"GET_MODEL",
 			{
@@ -1461,7 +1462,7 @@ export default {
 					if (!user) return next("User not found.");
 					return userModel.findOneAndUpdate(
 						{ _id: updatingUserId },
-						{ $set: { "avatar.type": newType } },
+						{ $set: { "avatar.type": newAvatar.type, "avatar.color": newAvatar.color } },
 						{ new: true, runValidators: true },
 						next
 					);
@@ -1473,7 +1474,7 @@ export default {
 					this.log(
 						"ERROR",
 						"UPDATE_AVATAR_TYPE",
-						`Couldn't update avatar type for user "${updatingUserId}" to type "${newType}". "${err}"`
+						`Couldn't update avatar type for user "${updatingUserId}" to type "${newAvatar.type}". "${err}"`
 					);
 					return cb({ status: "failure", message: err });
 				}
@@ -1481,7 +1482,7 @@ export default {
 				this.log(
 					"SUCCESS",
 					"UPDATE_AVATAR_TYPE",
-					`Updated avatar type for user "${updatingUserId}" to type "${newType}".`
+					`Updated avatar type for user "${updatingUserId}" to type "${newAvatar.type}".`
 				);
 
 				return cb({

@@ -1,8 +1,6 @@
 <template>
 	<div class="content profile-tab">
-		<h4 class="section-title">
-			Change Profile
-		</h4>
+		<h4 class="section-title">Change Profile</h4>
 		<p class="section-description">
 			Edit your public profile so users can find out more about you.
 		</p>
@@ -118,7 +116,21 @@ export default {
 			if (nameChanged) this.changeName();
 			if (locationChanged) this.changeLocation();
 			if (bioChanged) this.changeBio();
-			if (avatarChanged) this.changeAvatarType();
+			if (avatarChanged) {
+				if (this.modifiedUser.avatar.type === "initials") {
+					const colors = [
+						"blue",
+						"orange",
+						"green",
+						"purple",
+						"teal"
+					];
+					const color =
+						colors[Math.floor(Math.random() * colors.length)];
+					this.modifiedUser.avatar.color = color;
+				}
+				this.changeAvatarType();
+			}
 
 			if (
 				!avatarChanged &&
@@ -247,7 +259,7 @@ export default {
 			return this.socket.emit(
 				"users.updateAvatarType",
 				this.userId,
-				avatar.type,
+				avatar,
 				res => {
 					if (res.status !== "success") {
 						new Toast({ content: res.message, timeout: 8000 });

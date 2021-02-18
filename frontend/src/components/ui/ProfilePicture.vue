@@ -7,7 +7,7 @@
 		"
 		onerror="this.src='/assets/notes.png'; this.onerror=''"
 	/>
-	<div class="profile-picture using-initials" v-else>
+	<div class="profile-picture using-initials" :class="avatar.color" v-else>
 		{{ initials }}
 	</div>
 </template>
@@ -64,6 +64,26 @@ export default {
 		font-size: 50px;
 		user-select: none;
 		-webkit-user-select: none;
+		&.blue {
+			background-color: $musare-blue;
+			color: white;
+		}
+		&.orange {
+			background-color: $light-orange;
+			color: white;
+		}
+		&.green {
+			background-color: $green;
+			color: white;
+		}
+		&.purple {
+			background-color: $purple;
+			color: white;
+		}
+		&.teal {
+			background-color: $teal;
+			color: white;
+		}
 	}
 }
 </style>
