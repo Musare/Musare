@@ -58,7 +58,7 @@ class _AppModule extends CoreClass {
 				})
 				.catch(console.error);
 
-			const corsOptions = { ...config.get("cors") };
+			const corsOptions = { ...config.get("cors"), credentials: true };
 
 			app.use(cors(corsOptions));
 			app.options("*", cors(corsOptions));

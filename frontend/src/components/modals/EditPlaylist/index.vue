@@ -311,6 +311,14 @@
 		</div>
 		<div slot="footer">
 			<a
+				class="button is-default"
+				v-if="this.userId === this.playlist.createdBy"
+				@click="downloadPlaylist()"
+				href="#"
+			>
+				Download Playlist
+			</a>
+			<a
 				class="button is-danger"
 				@click="removePlaylist()"
 				href="#"
@@ -344,6 +352,7 @@ export default {
 		return {
 			utils,
 			drag: false,
+			serverDomain: "",
 			playlist: { songs: [] }
 		};
 	},
@@ -563,6 +572,43 @@ export default {
 					});
 				}
 			});
+		},
+		async downloadPlaylist() {
+			if (this.serverDomain === "")
+				this.serverDomain = await lofig.get("serverDomain");
+
+			fetch(
+				`${this.serverDomain}/export/privatePlaylist/${this.playlist._id}`,
+				{ credentials: "include" }
+			)
+				.then(res => res.blob())
+				.then(blob => {
+					const url = window.URL.createObjectURL(blob);
+
+					const a = document.createElement("a");
+					a.style.display = "none";
+					a.href = url;
+
+					a.download = `musare-privateplaylist-${
+						this.playlist._id
+					}-${new Date().toISOString()}.json`;
+
+					document.body.appendChild(a);
+					a.click();
+					window.URL.revokeObjectURL(url);
+
+					new Toast({
+						content: "Successfully downloaded playlist.",
+						timeout: 3000
+					});
+				})
+				.catch(
+					() =>
+						new Toast({
+							content: "Failed to export and download playlist.",
+							timeout: 3000
+						})
+				);
 		},
 		moveSongToTop(index) {
 			this.playlist.songs.splice(
