@@ -86,8 +86,6 @@ export default {
 		})
 	},
 	mounted() {
-		console.log("mounted");
-
 		io.getSocket(socket => {
 			this.socket = socket;
 			if (this.socket.connected) this.init();

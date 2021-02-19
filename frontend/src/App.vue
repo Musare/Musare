@@ -43,7 +43,7 @@ export default {
 		userId: state => state.user.auth.userId,
 		banned: state => state.user.auth.banned,
 		modals: state => state.modalVisibility.modals,
-		currentlyActive: state => state.modals.currentlyActive,
+		currentlyActive: state => state.modalVisibility.currentlyActive,
 		nightmode: state => state.user.preferences.nightmode
 	}),
 	watch: {
@@ -98,6 +98,7 @@ export default {
 			shift: false,
 			ctrl: false,
 			handler: () => {
+				console.log(this.currentlyActive);
 				if (Object.keys(this.currentlyActive).length !== 0)
 					this.closeCurrentModal();
 			}
