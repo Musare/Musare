@@ -73,7 +73,7 @@ import { formatDistance } from "date-fns";
 import Toast from "toasters";
 import io from "../../../io";
 
-import ViewReport from "../ViewReport.vue";
+import ViewReport from "../../../components/modals/ViewReport.vue";
 import UserIdToUsername from "../../../components/common/UserIdToUsername.vue";
 
 export default {

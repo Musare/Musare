@@ -54,7 +54,7 @@ const router = new VueRouter({
 	routes: [
 		{
 			path: "/",
-			component: () => import("./pages/Home/index.vue")
+			component: () => import("./pages/Home.vue")
 		},
 		{
 			path: "/404",

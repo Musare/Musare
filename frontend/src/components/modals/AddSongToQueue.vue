@@ -214,9 +214,9 @@ import Toast from "toasters";
 
 import SearchYoutube from "../../mixins/SearchYoutube.vue";
 
-import PlaylistItem from "../../components/ui/PlaylistItem.vue";
-import SearchQueryItem from "../../components/ui/SearchQueryItem.vue";
-import Modal from "../../components/Modal.vue";
+import PlaylistItem from "../ui/PlaylistItem.vue";
+import SearchQueryItem from "../ui/SearchQueryItem.vue";
+import Modal from "../Modal.vue";
 
 import io from "../../io";
 

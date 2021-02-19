@@ -443,13 +443,13 @@ export default {
 		ContentLoader,
 		MainHeader,
 		MainFooter,
-		SongQueue: () => import("./AddSongToQueue.vue"),
+		SongQueue: () => import("../../components/modals/AddSongToQueue.vue"),
 		EditPlaylist: () =>
 			import("../../components/modals/EditPlaylist/index.vue"),
 		CreatePlaylist: () =>
 			import("../../components/modals/CreatePlaylist.vue"),
 		EditStation: () => import("../../components/modals/EditStation.vue"),
-		Report: () => import("./Report.vue"),
+		Report: () => import("../../components/modals/Report.vue"),
 		Z404,
 		FloatingBox,
 		CurrentlyPlaying,

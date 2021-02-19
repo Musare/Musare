@@ -95,8 +95,8 @@ import Toast from "toasters";
 
 import io from "../../io";
 
-import UserIdToUsername from "../../components/common/UserIdToUsername.vue";
-import Modal from "../../components/Modal.vue";
+import UserIdToUsername from "../common/UserIdToUsername.vue";
+import Modal from "../Modal.vue";
 
 export default {
 	components: { Modal, UserIdToUsername },

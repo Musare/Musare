@@ -390,12 +390,12 @@
 import { mapState, mapActions } from "vuex";
 import Toast from "toasters";
 
-import MainHeader from "../../components/layout/MainHeader.vue";
-import MainFooter from "../../components/layout/MainFooter.vue";
-import CreateCommunityStation from "./CreateCommunityStation.vue";
-import UserIdToUsername from "../../components/common/UserIdToUsername.vue";
+import MainHeader from "../components/layout/MainHeader.vue";
+import MainFooter from "../components/layout/MainFooter.vue";
+import CreateCommunityStation from "../components/modals/CreateCommunityStation.vue";
+import UserIdToUsername from "../components/common/UserIdToUsername.vue";
 
-import io from "../../io";
+import io from "../io";
 
 export default {
 	components: {
@@ -686,7 +686,7 @@ export default {
 </script>
 
 <style lang="scss">
-@import "../../styles/global.scss";
+@import "../styles/global.scss";
 
 * {
 	box-sizing: border-box;

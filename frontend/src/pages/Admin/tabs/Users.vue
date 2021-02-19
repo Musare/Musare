@@ -68,7 +68,7 @@
 <script>
 import { mapState, mapActions } from "vuex";
 
-import EditUser from "../EditUser.vue";
+import EditUser from "../../../components/modals/EditUser.vue";
 import ProfilePicture from "../../../components/ui/ProfilePicture.vue";
 import io from "../../../io";
 
