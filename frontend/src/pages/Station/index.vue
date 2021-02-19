@@ -694,7 +694,7 @@ export default {
 				}
 			});
 
-			this.socket.on("event:theme.updated", theme => {
+			this.socket.on("event:station.themeUpdated", theme => {
 				this.station.theme = theme;
 				if (theme === "blue") {
 					this.theme = "rgb(2, 166, 242)";
@@ -705,6 +705,30 @@ export default {
 				} else if (theme === "orange") {
 					this.theme = "rgb(255, 94, 0)";
 				}
+			});
+
+			this.socket.on("event:station.updateName", res => {
+				this.station.name = res.name;
+				// eslint-disable-next-line no-restricted-globals
+				history.pushState(
+					{},
+					null,
+					`${res.name}?${Object.keys(this.$route.query)
+						.map(key => {
+							return `${encodeURIComponent(
+								key
+							)}=${encodeURIComponent(this.$route.query[key])}`;
+						})
+						.join("&")}`
+				);
+			});
+
+			this.socket.on("event:station.updateDisplayName", res => {
+				this.station.displayName = res.displayName;
+			});
+
+			this.socket.on("event:station.updateDescription", res => {
+				this.station.description = res.description;
 			});
 
 			this.socket.on("event:newOfficialPlaylist", playlist => {

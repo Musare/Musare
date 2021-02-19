@@ -33,6 +33,7 @@ CacheModule.runJob("SUB", {
 			room: `station.${stationId}`,
 			args: ["event:userCount.updated", count]
 		});
+
 		StationsModule.runJob("GET_STATION", { stationId }).then(async station => {
 			if (station.privacy === "public")
 				IOModule.runJob("EMIT_TO_ROOM", {
@@ -43,6 +44,7 @@ CacheModule.runJob("SUB", {
 				const sockets = await IOModule.runJob("GET_ROOM_SOCKETS", {
 					room: "home"
 				});
+
 				Object.keys(sockets).forEach(socketKey => {
 					const socket = sockets[socketKey];
 					const { session } = socket;
@@ -214,18 +216,22 @@ CacheModule.runJob("SUB", {
 
 CacheModule.runJob("SUB", {
 	channel: "station.nameUpdate",
-	cb: response => {
-		const { stationId } = response;
-		StationsModule.runJob("GET_STATION", { stationId }).then(station => {
+	cb: res => {
+		const { stationId, name } = res;
+
+		StationsModule.runJob("GET_STATION", { stationId }).then(station =>
 			StationsModule.runJob("GET_SOCKETS_THAT_CAN_KNOW_ABOUT_STATION", {
 				room: `home`,
 				station
 			}).then(response => {
 				const { socketsThatCan } = response;
-				socketsThatCan.forEach(socket => {
-					socket.emit("event:station.updateName", { stationId, name: station.name });
-				});
-			});
+				socketsThatCan.forEach(socket => socket.emit("event:station.updateName", { stationId, name }));
+			})
+		);
+
+		IOModule.runJob("EMIT_TO_ROOM", {
+			room: `station.${stationId}`,
+			args: ["event:station.updateName", { stationId, name }]
 		});
 	}
 });
@@ -233,17 +239,23 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "station.displayNameUpdate",
 	cb: response => {
-		const { stationId } = response;
-		StationsModule.runJob("GET_STATION", { stationId }).then(station => {
+		const { stationId, displayName } = response;
+
+		StationsModule.runJob("GET_STATION", { stationId }).then(station =>
 			StationsModule.runJob("GET_SOCKETS_THAT_CAN_KNOW_ABOUT_STATION", {
 				room: `home`,
 				station
 			}).then(response => {
 				const { socketsThatCan } = response;
-				socketsThatCan.forEach(socket => {
-					socket.emit("event:station.updateDisplayName", { stationId, displayName: station.displayName });
-				});
-			});
+				socketsThatCan.forEach(socket =>
+					socket.emit("event:station.updateDisplayName", { stationId, displayName })
+				);
+			})
+		);
+
+		IOModule.runJob("EMIT_TO_ROOM", {
+			room: `station.${stationId}`,
+			args: ["event:station.updateDisplayName", { stationId, displayName }]
 		});
 	}
 });
@@ -251,17 +263,23 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "station.descriptionUpdate",
 	cb: response => {
-		const { stationId } = response;
-		StationsModule.runJob("GET_STATION", { stationId }).then(station => {
+		const { stationId, description } = response;
+
+		StationsModule.runJob("GET_STATION", { stationId }).then(station =>
 			StationsModule.runJob("GET_SOCKETS_THAT_CAN_KNOW_ABOUT_STATION", {
 				room: `home`,
 				station
 			}).then(response => {
 				const { socketsThatCan } = response;
-				socketsThatCan.forEach(socket => {
-					socket.emit("event:station.updateDescription", { stationId, description: station.description });
-				});
-			});
+				socketsThatCan.forEach(socket =>
+					socket.emit("event:station.updateDescription", { stationId, description })
+				);
+			})
+		);
+
+		IOModule.runJob("EMIT_TO_ROOM", {
+			room: `station.${stationId}`,
+			args: ["event:station.updateDescription", { stationId, description }]
 		});
 	}
 });
@@ -273,7 +291,7 @@ CacheModule.runJob("SUB", {
 		StationsModule.runJob("GET_STATION", { stationId }).then(station => {
 			IOModule.runJob("EMIT_TO_ROOM", {
 				room: `station.${stationId}`,
-				args: ["event:theme.updated", station.theme]
+				args: ["event:station.themeUpdated", station.theme]
 			});
 			StationsModule.runJob("GET_SOCKETS_THAT_CAN_KNOW_ABOUT_STATION", {
 				room: `home`,
@@ -281,7 +299,7 @@ CacheModule.runJob("SUB", {
 			}).then(response => {
 				const { socketsThatCan } = response;
 				socketsThatCan.forEach(socket => {
-					socket.emit("event:station.updateTheme", { stationId, theme: station.theme });
+					socket.emit("event:station.themeUpdated", { stationId, theme: station.theme });
 				});
 			});
 		});
@@ -1091,9 +1109,13 @@ export default {
 					this.log("ERROR", "STATIONS_LEAVE", `Leaving station "${stationId}" failed. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
+
 				this.log("SUCCESS", "STATIONS_LEAVE", `Left station "${stationId}" successfully.`);
+
 				IOModule.runJob("SOCKET_LEAVE_ROOMS", { socketId: session });
+
 				delete StationsModule.userList[session.socketId];
+
 				return cb({
 					status: "success",
 					message: "Successfully left station.",
@@ -1148,15 +1170,18 @@ export default {
 					);
 					return cb({ status: "failure", message: err });
 				}
+
 				this.log(
 					"SUCCESS",
 					"STATIONS_UPDATE_NAME",
 					`Updated station "${stationId}" name to "${newName}" successfully.`
 				);
+
 				CacheModule.runJob("PUB", {
 					channel: "station.nameUpdate",
-					value: { stationId }
+					value: { stationId, name: newName }
 				});
+
 				return cb({
 					status: "success",
 					message: "Successfully updated the name."
@@ -1211,15 +1236,18 @@ export default {
 					);
 					return cb({ status: "failure", message: err });
 				}
+
 				this.log(
 					"SUCCESS",
 					"STATIONS_UPDATE_DISPLAY_NAME",
 					`Updated station "${stationId}" displayName to "${newDisplayName}" successfully.`
 				);
+
 				CacheModule.runJob("PUB", {
 					channel: "station.displayNameUpdate",
-					value: { stationId }
+					value: { stationId, displayName: newDisplayName }
 				});
+
 				return cb({
 					status: "success",
 					message: "Successfully updated the display name."
@@ -1274,15 +1302,18 @@ export default {
 					);
 					return cb({ status: "failure", message: err });
 				}
+
 				this.log(
 					"SUCCESS",
 					"STATIONS_UPDATE_DESCRIPTION",
 					`Updated station "${stationId}" description to "${newDescription}" successfully.`
 				);
+
 				CacheModule.runJob("PUB", {
 					channel: "station.descriptionUpdate",
-					value: { stationId }
+					value: { stationId, description: newDescription }
 				});
+
 				return cb({
 					status: "success",
 					message: "Successfully updated the description."
