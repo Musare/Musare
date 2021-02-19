@@ -44,7 +44,7 @@ import { mapState, mapActions } from "vuex";
 import Toast from "toasters";
 
 import io from "../../../io";
-import SaveButton from "../mixins/SaveButton.vue";
+import SaveButton from "../../../mixins/SaveButton.vue";
 
 export default {
 	mixins: [SaveButton],
@@ -86,7 +86,7 @@ export default {
 					timeout: 5000
 				});
 
-				return this.failedSave();
+				return this.handleFailedSave();
 			}
 
 			this.saveStatus = "disabled";
@@ -101,7 +101,7 @@ export default {
 					if (res.status !== "success") {
 						new Toast({ content: res.message, timeout: 8000 });
 
-						return this.failedSave();
+						return this.handleFailedSave();
 					}
 
 					new Toast({
@@ -109,7 +109,7 @@ export default {
 						timeout: 4000
 					});
 
-					return this.successfulSave();
+					return this.handleSuccessfulSave();
 				}
 			);
 		},

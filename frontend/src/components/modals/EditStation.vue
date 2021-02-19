@@ -753,7 +753,7 @@ export default {
 					if (this.originalStation)
 						this.originalStation.locked = res.data;
 					return new Toast({
-						content: `Toggled queue lock succesfully to ${res.data}`,
+						content: `Toggled queue lock successfully to ${res.data}`,
 						timeout: 4000
 					});
 				}
