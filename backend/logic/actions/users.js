@@ -39,7 +39,7 @@ CacheModule.runJob("SUB", {
 		});
 
 		IOModule.runJob("EMIT_TO_ROOM", {
-			room: `profile-${res.userId}`,
+			room: `profile-${res.userId}-playlists`,
 			args: ["event:user.orderOfPlaylists.changed", res.orderOfPlaylists]
 		});
 	}

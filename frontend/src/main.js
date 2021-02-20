@@ -84,7 +84,7 @@ const router = new VueRouter({
 		{
 			name: "profile",
 			path: "/u/:username",
-			component: () => import("./pages/Profile.vue")
+			component: () => import("./pages/Profile/index.vue")
 		},
 		{
 			path: "/settings",

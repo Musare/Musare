@@ -1,0 +1,391 @@
+<template>
+	<div v-if="isUser">
+		<metadata :title="`Profile | ${user.username}`" />
+		<main-header />
+		<div class="container">
+			<div class="info-section">
+				<div class="picture-name-row">
+					<profile-picture :avatar="user.avatar" :name="user.name" />
+					<div>
+						<div class="name-role-row">
+							<p class="name">{{ user.name }}</p>
+							<span
+								class="role admin"
+								v-if="user.role === 'admin'"
+								>admin</span
+							>
+						</div>
+						<h2 class="username">@{{ user.username }}</h2>
+					</div>
+				</div>
+				<div
+					class="buttons"
+					v-if="myUserId === userId || role === 'admin'"
+				>
+					<router-link
+						:to="`/admin/users?userId=${user._id}`"
+						class="button is-primary"
+						v-if="role === 'admin'"
+					>
+						Edit
+					</router-link>
+					<router-link
+						to="/settings"
+						class="button is-primary"
+						v-if="myUserId === userId"
+					>
+						Settings
+					</router-link>
+				</div>
+				<div class="bio-row" v-if="user.bio">
+					<i class="material-icons">notes</i>
+					<p>{{ user.bio }}</p>
+				</div>
+				<div
+					class="date-location-row"
+					v-if="user.createdAt || user.location"
+				>
+					<div class="date" v-if="user.createdAt">
+						<i class="material-icons">calendar_today</i>
+						<p>{{ user.createdAt }}</p>
+					</div>
+					<div class="location" v-if="user.location">
+						<i class="material-icons">location_on</i>
+						<p>{{ user.location }}</p>
+					</div>
+				</div>
+			</div>
+			<div class="bottom-section">
+				<div class="buttons">
+					<button
+						:class="{ active: tab === 'recent-activity' }"
+						@click="showTab('recent-activity')"
+					>
+						Recent activity
+					</button>
+					<button
+						:class="{ active: tab === 'playlists' }"
+						@click="showTab('playlists')"
+					>
+						Playlists
+					</button>
+				</div>
+				<playlists :user-id="userId" v-show="tab === 'playlists'" />
+				<recent-activity
+					:user-id="userId"
+					v-show="tab === 'recent-activity'"
+				/>
+			</div>
+		</div>
+		<main-footer />
+	</div>
+</template>
+
+<script>
+import { mapState } from "vuex";
+import { format, parseISO } from "date-fns";
+
+import TabQueryHandler from "../../mixins/TabQueryHandler.vue";
+
+import RecentActivity from "./tabs/RecentActivity.vue";
+import Playlists from "./tabs/Playlists.vue";
+
+import ProfilePicture from "../../components/ui/ProfilePicture.vue";
+import MainHeader from "../../components/layout/MainHeader.vue";
+import MainFooter from "../../components/layout/MainFooter.vue";
+
+import io from "../../io";
+
+export default {
+	components: {
+		MainHeader,
+		MainFooter,
+		ProfilePicture,
+		RecentActivity,
+		Playlists
+	},
+	mixins: [TabQueryHandler],
+	data() {
+		return {
+			user: {},
+			userId: "",
+			isUser: false,
+			tab: "recent-activity"
+		};
+	},
+	computed: {
+		...mapState({
+			role: state => state.user.auth.role,
+			myUserId: state => state.user.auth.userId
+		})
+	},
+	mounted() {
+		if (
+			this.$route.query.tab === "recent-activity" ||
+			this.$route.query.tab === "playlists"
+		)
+			this.tab = this.$route.query.tab;
+
+		io.getSocket(socket => {
+			this.socket = socket;
+
+			this.socket.emit(
+				"users.findByUsername",
+				this.$route.params.username,
+				res => {
+					if (res.status === "error") this.$router.go("/404");
+					else {
+						this.user = res.data;
+
+						this.user.createdAt = format(
+							parseISO(this.user.createdAt),
+							"MMMM do yyyy"
+						);
+
+						this.isUser = true;
+						this.userId = this.user._id;
+					}
+				}
+			);
+		});
+	}
+};
+</script>
+
+<style lang="scss" scoped>
+@import "../../styles/global.scss";
+
+@media only screen and (max-width: 750px) {
+	.info-section {
+		margin-top: 0 !important;
+
+		.picture-name-row {
+			flex-direction: column !important;
+		}
+
+		.name-role-row {
+			margin-top: 24px;
+		}
+
+		.buttons .button:not(:last-of-type) {
+			margin-bottom: 10px;
+			margin-right: 5px;
+		}
+
+		.date-location-row {
+			flex-direction: column;
+			width: auto !important;
+		}
+
+		.date-location-row > div:nth-child(2),
+		.buttons .button:nth-child(2) {
+			margin-left: 0 !important;
+		}
+	}
+
+	.bottom-section {
+		flex-direction: column;
+	}
+
+	.content {
+		margin: 24px 0;
+	}
+}
+
+.info-section {
+	width: 912px;
+	max-width: 100%;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 32px;
+	padding: 24px;
+
+	.picture-name-row {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: center;
+		margin-bottom: 24px;
+
+		.profile-picture {
+			margin-right: 32px;
+		}
+	}
+
+	.name-role-row {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+	}
+
+	.name {
+		font-size: 34px;
+		line-height: 40px;
+		color: $dark-grey-3;
+	}
+
+	.role {
+		padding: 2px 24px;
+		color: $white;
+		text-transform: uppercase;
+		font-size: 12px;
+		line-height: 14px;
+		height: 18px;
+		border-radius: 5px;
+		margin-left: 12px;
+
+		&.admin {
+			background-color: $red;
+		}
+	}
+
+	.username {
+		font-size: 24px;
+		line-height: 28px;
+		color: $dark-grey;
+		margin: 0;
+	}
+
+	.buttons {
+		width: 388px;
+		max-width: 100%;
+		display: flex;
+		flex-direction: row;
+		margin-left: auto;
+		margin-right: auto;
+		margin-bottom: 24px;
+
+		.button {
+			flex: 1;
+			font-size: 17px;
+			line-height: 20px;
+
+			&:nth-child(2) {
+				margin-left: 20px;
+			}
+		}
+	}
+
+	.bio-row,
+	.date-location-row {
+		i {
+			font-size: 24px;
+			color: $dark-grey-2;
+			margin-right: 12px;
+		}
+
+		p {
+			font-size: 17px;
+			line-height: 20px;
+			color: $dark-grey-2;
+			word-break: break-word;
+		}
+	}
+
+	.bio-row {
+		max-width: 608px;
+		margin-bottom: 24px;
+		margin-left: auto;
+		margin-right: auto;
+		display: flex;
+		width: max-content;
+	}
+
+	.date-location-row {
+		max-width: 608px;
+		margin-left: auto;
+		margin-right: auto;
+		margin-bottom: 24px;
+		display: flex;
+		width: max-content;
+		margin-bottom: 24px;
+
+		> div:nth-child(2) {
+			margin-left: 48px;
+		}
+	}
+
+	.date,
+	.location {
+		display: flex;
+	}
+}
+
+.bottom-section {
+	width: 962px;
+	max-width: 100%;
+	margin-left: auto;
+	margin-right: auto;
+	padding: 24px;
+	display: flex;
+
+	.buttons {
+		height: 100%;
+		width: 250px;
+		margin-right: 64px;
+
+		button {
+			outline: none;
+			border: none;
+			box-shadow: none;
+			color: $musare-blue;
+			font-size: 22px;
+			line-height: 26px;
+			padding: 7px 0 7px 12px;
+			width: 100%;
+			text-align: left;
+			cursor: pointer;
+			border-radius: 5px;
+			background-color: transparent;
+
+			&.active {
+				color: $white;
+				background-color: $musare-blue;
+			}
+		}
+	}
+
+	.content /deep/ {
+		width: 600px;
+		max-width: 100%;
+		background-color: #fff;
+		padding: 30px 50px;
+		border-radius: 3px;
+
+		h3 {
+			font-weight: 400;
+		}
+
+		.item {
+			overflow: hidden;
+
+			&:not(:last-of-type) {
+				margin-bottom: 10px;
+			}
+		}
+
+		#create-new-playlist-button {
+			margin-top: 30px;
+			width: 100%;
+		}
+	}
+}
+
+.night-mode {
+	.name,
+	.username,
+	.bio-row i,
+	.bio-row p,
+	.date-location-row i,
+	.date-location-row p,
+	.item .left-part .top-text,
+	.item .left-part .bottom-text,
+	.bottom-section
+		.content
+		.item.activity-item
+		.thumbnail
+		.activity-type-icon {
+		color: $night-mode-text;
+	}
+}
+</style>

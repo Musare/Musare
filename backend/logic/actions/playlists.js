@@ -24,7 +24,7 @@ CacheModule.runJob("SUB", {
 
 		if (playlist.privacy === "public")
 			IOModule.runJob("EMIT_TO_ROOM", {
-				room: `profile-${playlist.createdBy}`,
+				room: `profile-${playlist.createdBy}-playlists`,
 				args: ["event:playlist.create", playlist]
 			});
 	}
@@ -40,7 +40,7 @@ CacheModule.runJob("SUB", {
 		});
 
 		IOModule.runJob("EMIT_TO_ROOM", {
-			room: `profile-${res.userId}`,
+			room: `profile-${res.userId}-playlists`,
 			args: ["event:playlist.delete", res.playlistId]
 		});
 	}
@@ -74,7 +74,7 @@ CacheModule.runJob("SUB", {
 
 		if (res.privacy === "public")
 			IOModule.runJob("EMIT_TO_ROOM", {
-				room: `profile-${res.userId}`,
+				room: `profile-${res.userId}-playlists`,
 				args: [
 					"event:playlist.addSong",
 					{
@@ -100,7 +100,7 @@ CacheModule.runJob("SUB", {
 
 		if (res.privacy === "public")
 			IOModule.runJob("EMIT_TO_ROOM", {
-				room: `profile-${res.userId}`,
+				room: `profile-${res.userId}-playlists`,
 				args: [
 					"event:playlist.removeSong",
 					{
@@ -126,7 +126,7 @@ CacheModule.runJob("SUB", {
 
 		if (res.privacy === "public")
 			IOModule.runJob("EMIT_TO_ROOM", {
-				room: `profile-${res.userId}`,
+				room: `profile-${res.userId}-playlists`,
 				args: [
 					"event:playlist.updateDisplayName",
 					{
@@ -151,12 +151,12 @@ CacheModule.runJob("SUB", {
 
 		if (res.playlist.privacy === "public")
 			return IOModule.runJob("EMIT_TO_ROOM", {
-				room: `profile-${res.userId}`,
+				room: `profile-${res.userId}-playlists`,
 				args: ["event:playlist.create", res.playlist]
 			});
 
 		return IOModule.runJob("EMIT_TO_ROOM", {
-			room: `profile-${res.userId}`,
+			room: `profile-${res.userId}-playlists`,
 			args: ["event:playlist.delete", res.playlist._id]
 		});
 	}

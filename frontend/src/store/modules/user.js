@@ -199,18 +199,51 @@ const modules = {
 			}
 		}
 	},
+	activities: {
+		namespaced: true,
+		state: {
+			activities: [],
+			sets: []
+		},
+		actions: {
+			getSetOfActivities: ({ commit }, data) =>
+				commit("getSetOfActivities", data),
+			removeActivity: ({ commit }, activityId) =>
+				commit("removeActivity", activityId)
+		},
+		mutations: {
+			getSetOfActivities(state, data) {
+				const { activities, set } = data;
+
+				if (!state.sets.includes(set)) {
+					state.activities.push(...activities);
+					state.sets.push(set);
+				}
+			},
+			removeActivity(state, activityId) {
+				state.activities = state.activities.filter(
+					activity => activity._id !== activityId
+				);
+			}
+		}
+	},
 	playlists: {
 		namespaced: true,
 		state: {
-			editing: ""
+			editing: "",
+			playlists: []
 		},
-		getters: {},
 		actions: {
-			editPlaylist: ({ commit }, id) => commit("editPlaylist", id)
+			editPlaylist: ({ commit }, id) => commit("editPlaylist", id),
+			setPlaylists: ({ commit }, playlists) =>
+				commit("setPlaylists", playlists)
 		},
 		mutations: {
 			editPlaylist(state, id) {
 				state.editing = id;
+			},
+			setPlaylists(state, playlists) {
+				state.playlists = playlists;
 			}
 		}
 	},
