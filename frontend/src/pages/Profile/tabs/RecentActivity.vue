@@ -74,30 +74,26 @@ export default {
 				);
 			}
 
-			// instead, check on backend
-			// user preference for showing/hiding all activities
-			if (this.myUserId === this.userId) {
-				this.socket.emit("activities.getSet", this.userId, 1, res => {
-					if (res.status === "success") {
-						// for (let a = 0; a < res.data.length; a += 1) {
-						// 	this.formatActivity(res.data[a], activity => {
-						// 		this.activities.unshift(activity);
-						// 	});
-						// }
-						this.getSetOfActivities({
-							activities: res.data,
-							set: 1
-						});
-					}
-				});
-
-				this.socket.on("event:activity.create", activity => {
-					console.log("activity created (socket event): ", activity);
-					this.formatActivity(activity, activity => {
-						this.activities.unshift(activity);
+			this.socket.emit("activities.getSet", this.userId, 1, res => {
+				if (res.status === "success") {
+					// for (let a = 0; a < res.data.length; a += 1) {
+					// 	this.formatActivity(res.data[a], activity => {
+					// 		this.activities.unshift(activity);
+					// 	});
+					// }
+					this.getSetOfActivities({
+						activities: res.data,
+						set: 1
 					});
+				}
+			});
+
+			this.socket.on("event:activity.create", activity => {
+				console.log("activity created (socket event): ", activity);
+				this.formatActivity(activity, activity => {
+					this.activities.unshift(activity);
 				});
-			}
+			});
 		});
 	},
 	methods: {

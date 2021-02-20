@@ -166,6 +166,11 @@ lofig.get("serverDomain").then(serverDomain => {
 				"user/preferences/changeNightmode",
 				preferences.nightmode
 			);
+
+			store.dispatch(
+				"user/preferences/changeActivityLogPublic",
+				preferences.activityLogPublic
+			);
 		});
 	});
 });

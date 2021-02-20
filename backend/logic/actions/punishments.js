@@ -17,6 +17,7 @@ CacheModule.runJob("SUB", {
 			room: "admin.punishments",
 			args: ["event:admin.punishment.added", data.punishment]
 		});
+
 		IOModule.runJob("SOCKETS_FROM_IP", { ip: data.ip }, this).then(sockets => {
 			sockets.forEach(socket => {
 				socket.disconnect(true);

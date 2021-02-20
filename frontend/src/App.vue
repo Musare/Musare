@@ -145,8 +145,9 @@ export default {
 			this.socket.emit("users.getPreferences", res => {
 				if (res.status === "success") {
 					this.changeAutoSkipDisliked(res.data.autoSkipDisliked);
-
 					this.changeNightmode(res.data.nightmode);
+					this.changeActivityLogPublic(res.data.activityLogPublic);
+
 					if (this.nightmode) this.enableNightMode();
 					else this.disableNightMode();
 				}
@@ -174,7 +175,8 @@ export default {
 		...mapActions("modalVisibility", ["closeCurrentModal"]),
 		...mapActions("user/preferences", [
 			"changeNightmode",
-			"changeAutoSkipDisliked"
+			"changeAutoSkipDisliked",
+			"changeActivityLogPublic"
 		])
 	}
 };

@@ -14,7 +14,7 @@
 				{{
 					userId === myUserId
 						? "and manage your personal"
-						: `${user.name}'s`
+						: `${username}'s`
 				}}
 				playlists.
 			</p>
@@ -116,14 +116,15 @@ export default {
 			...mapState("modalVisibility", {
 				modals: state => state.modals.station
 			}),
-			myUserId: state => state.user.auth.userId
+			myUserId: state => state.user.auth.userId,
+			username: state => state.user.auth.username
 		}),
 		playlists: {
 			get() {
 				return this.$store.state.user.playlists.playlists;
 			},
 			set(playlists) {
-				this.$store.commit("user/playlists/getPlaylists", playlists);
+				this.$store.commit("user/playlists/setPlaylists", playlists);
 			}
 		}
 	},

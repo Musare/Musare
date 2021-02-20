@@ -251,7 +251,8 @@ const modules = {
 		namespaced: true,
 		state: {
 			nightmode: false,
-			autoSkipDisliked: true
+			autoSkipDisliked: true,
+			activityLogPublic: false
 		},
 		actions: {
 			changeNightmode: ({ commit }, nightmode) => {
@@ -259,6 +260,9 @@ const modules = {
 			},
 			changeAutoSkipDisliked: ({ commit }, autoSkipDisliked) => {
 				commit("changeAutoSkipDisliked", autoSkipDisliked);
+			},
+			changeActivityLogPublic: ({ commit }, activityLogPublic) => {
+				commit("changeActivityLogPublic", activityLogPublic);
 			}
 		},
 		mutations: {
@@ -267,6 +271,9 @@ const modules = {
 			},
 			changeAutoSkipDisliked(state, autoSkipDisliked) {
 				state.autoSkipDisliked = autoSkipDisliked;
+			},
+			changeActivityLogPublic(state, activityLogPublic) {
+				state.activityLogPublic = activityLogPublic;
 			}
 		}
 	}

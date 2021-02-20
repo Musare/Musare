@@ -17,15 +17,29 @@ export default {
 	 * @param {Function} cb - callback
 	 */
 	async getSet(session, userId, set, cb) {
-		const activityModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "activity"
-			},
-			this
-		);
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+		const activityModel = await DBModule.runJob("GET_MODEL", { modelName: "activity" }, this);
+
 		async.waterfall(
 			[
+				next => {
+					// activities should only be viewed if public/owned by the user
+					if (session.userId !== userId) {
+						return userModel
+							.findById(userId)
+							.then(user => {
+								if (user) {
+									if (user.preferences.activityLogPublic) return next();
+									return next("User's activity log isn't public.");
+								}
+								return next("User does not exist.");
+							})
+							.catch(next);
+					}
+
+					return next();
+				},
+
 				next => {
 					activityModel
 						.find({ userId, hidden: false })
@@ -56,13 +70,8 @@ export default {
 	 * @param cb
 	 */
 	hideActivity: isLoginRequired(async function hideActivity(session, activityId, cb) {
-		const activityModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "activity"
-			},
-			this
-		);
+		const activityModel = await DBModule.runJob("GET_MODEL", { modelName: "activity" }, this);
+
 		async.waterfall(
 			[
 				next => {
