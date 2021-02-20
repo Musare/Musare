@@ -18,7 +18,11 @@
 				:activity="activity"
 			>
 				<div slot="actions">
-					<a href="#" @click.prevent="hideActivity(activity._id)">
+					<a
+						v-if="userId === myUserId"
+						href="#"
+						@click.prevent="hideActivity(activity._id)"
+					>
 						<i class="material-icons hide-icon">visibility_off</i>
 					</a>
 				</div>
@@ -94,14 +98,17 @@ export default {
 					this.activities.unshift(activity);
 				});
 			});
+
+			this.socket.on("event:activity.hide", activityId => {
+				this.removeActivity(activityId);
+			});
 		});
 	},
 	methods: {
 		hideActivity(activityId) {
 			this.socket.emit("activities.hideActivity", activityId, res => {
-				if (res.status === "success")
-					return this.removeActivity(activityId);
-				return new Toast({ content: res.message, timeout: 3000 });
+				if (res.status !== "success")
+					new Toast({ content: res.message, timeout: 3000 });
 			});
 		},
 		formatActivity(res, cb) {

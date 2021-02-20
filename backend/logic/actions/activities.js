@@ -5,7 +5,23 @@ import { isLoginRequired } from "./hooks";
 import moduleManager from "../../index";
 
 const DBModule = moduleManager.modules.db;
+const CacheModule = moduleManager.modules.cache;
+const IOModule = moduleManager.modules.io;
 const UtilsModule = moduleManager.modules.utils;
+
+CacheModule.runJob("SUB", {
+	channel: "activity.hide",
+	cb: res => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(response =>
+			response.sockets.forEach(socket => socket.emit("event:activity.hide", res.activityId))
+		);
+
+		IOModule.runJob("EMIT_TO_ROOM", {
+			room: `profile-${res.userId}-activities`,
+			args: ["event:activity.hide", res.activityId]
+		});
+	}
+});
 
 export default {
 	/**
@@ -85,8 +101,17 @@ export default {
 					return cb({ status: "failure", message: err });
 				}
 
+				CacheModule.runJob("PUB", {
+					channel: "activity.hide",
+					value: {
+						userId: session.userId,
+						activityId
+					}
+				});
+
 				this.log("SUCCESS", "ACTIVITIES_HIDE_ACTIVITY", `Successfully hid activity ${activityId}.`);
-				return cb({ status: "success" });
+
+				return cb({ status: "success", message: "Successfully hid activity." });
 			}
 		);
 	})
