@@ -131,8 +131,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../styles/global.scss";
-
 .night-mode {
 	p {
 		color: var(--light-grey-2);

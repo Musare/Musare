@@ -583,8 +583,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../styles/global.scss";
-
 @media only screen and (max-width: 750px) {
 	.info-section {
 		margin-top: 0 !important;

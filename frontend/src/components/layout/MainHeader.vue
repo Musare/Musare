@@ -110,8 +110,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../../styles/global.scss";
-
 .night-mode {
 	.nav {
 		background-color: var(--dark-grey-3) !important;

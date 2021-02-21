@@ -190,8 +190,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../../styles/global.scss";
-
 .night-mode {
 	.tabs {
 		background-color: var(--dark-grey-2);

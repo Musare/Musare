@@ -1595,8 +1595,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../../styles/global.scss";
-
 #page-loader-container {
 	height: inherit;
 

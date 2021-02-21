@@ -47,8 +47,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../../styles/global.scss";
-
 .night-mode {
 	.playlist-item {
 		background-color: var(--dark-grey-2) !important;

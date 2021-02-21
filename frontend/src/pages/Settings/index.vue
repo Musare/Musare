@@ -135,8 +135,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../../styles/global.scss";
-
 /deep/ .character-counter {
 	display: flex;
 	justify-content: flex-end;

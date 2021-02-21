@@ -180,8 +180,6 @@ export default {
 </script>
 
 <style lang="scss">
-@import "./styles/global.scss";
-
 :root {
 	--primary-color: var(--blue);
 	--blue: rgb(2, 166, 242);
@@ -200,15 +198,15 @@ export default {
 	--white: rgb(255, 255, 255);
 	--black: rgb(0, 0, 0);
 	--light-grey: rgb(245, 245, 245);
-	--light-grey-2: rgb(221, 221, 221); //was night-mode-text
-	--light-grey-3: rgb(195, 193, 195); //was light-grey-2
+	--light-grey-2: rgb(221, 221, 221);
+	--light-grey-3: rgb(195, 193, 195);
 	--grey: rgb(107, 107, 107);
 	--grey-2: rgb(113, 113, 113);
 	--grey-3: rgb(126, 126, 126);
 	--dark-grey: rgb(77, 77, 77);
 	--dark-grey-2: rgb(51, 51, 51);
-	--dark-grey-3: rgb(34, 34, 34); //was night-mode-bg-secondary
-	--dark-grey-4: rgb(26, 26, 26); // was dark-grey-3
+	--dark-grey-3: rgb(34, 34, 34);
+	--dark-grey-4: rgb(26, 26, 26);
 	--youtube: rgb(189, 46, 46);
 }
 

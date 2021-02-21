@@ -110,8 +110,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../../../styles/global.scss";
-
 #currently-playing {
 	display: flex;
 	flex-direction: row;

@@ -249,8 +249,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../../styles/global.scss";
-
 input[type="range"] {
 	-webkit-appearance: none;
 	width: 100%;

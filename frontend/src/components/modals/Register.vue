@@ -259,8 +259,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../../styles/global.scss";
-
 .night-mode {
 	.modal-card,
 	.modal-card-head,
@@ -298,8 +296,6 @@ a {
 </style>
 
 <style lang="scss">
-@import "../../styles/global.scss";
-
 .grecaptcha-badge {
 	z-index: 2000;
 }

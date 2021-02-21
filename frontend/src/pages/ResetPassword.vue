@@ -419,8 +419,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../styles/global.scss";
-
 .night-mode {
 	.content-box,
 	.step:not(.selected) {

@@ -1425,8 +1425,6 @@ export default {
 </style>
 
 <style lang="scss" scoped>
-@import "../../styles/global.scss";
-
 .night-mode {
 	.edit-section,
 	.api-section,

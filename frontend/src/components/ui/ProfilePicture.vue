@@ -46,8 +46,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../../styles/global.scss";
-
 .profile-picture {
 	width: 100px;
 	height: 100px;

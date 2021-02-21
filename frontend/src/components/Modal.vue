@@ -43,8 +43,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../styles/global.scss";
-
 .night-mode {
 	.modal-card-head,
 	.modal-card-foot {

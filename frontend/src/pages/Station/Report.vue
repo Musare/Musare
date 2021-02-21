@@ -306,8 +306,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../../styles/global.scss";
-
 h6 {
 	margin-bottom: 15px;
 }

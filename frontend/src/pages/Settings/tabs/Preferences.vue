@@ -120,8 +120,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../../../styles/global.scss";
-
 .checkbox-control {
 	input[type="checkbox"] {
 		opacity: 0;

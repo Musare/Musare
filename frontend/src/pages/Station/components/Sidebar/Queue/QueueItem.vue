@@ -130,8 +130,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../../../../../styles/global.scss";
-
 .night-mode {
 	.queue-item {
 		background-color: var(--dark-grey-2) !important;

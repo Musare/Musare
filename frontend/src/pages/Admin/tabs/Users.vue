@@ -120,8 +120,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../../../styles/global.scss";
-
 .night-mode {
 	.table {
 		color: var(--light-grey-2);

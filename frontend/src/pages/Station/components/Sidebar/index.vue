@@ -67,8 +67,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../../../../styles/global.scss";
-
 .night-mode {
 	#tab-selection .button {
 		background: var(--dark-grey);

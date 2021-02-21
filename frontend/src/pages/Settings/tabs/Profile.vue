@@ -287,8 +287,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../../../styles/global.scss";
-
 .content .control {
 	margin-bottom: 15px;
 }

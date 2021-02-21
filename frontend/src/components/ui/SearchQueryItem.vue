@@ -75,8 +75,6 @@ export default {
 </style>
 
 <style lang="scss" scoped>
-@import "../../styles/global.scss";
-
 .night-mode {
 	.search-query-item {
 		background-color: var(--dark-grey-3) !important;

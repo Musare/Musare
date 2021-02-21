@@ -51,8 +51,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../../../styles/global.scss";
-
 .save-changes {
 	margin-top: 20px;
 

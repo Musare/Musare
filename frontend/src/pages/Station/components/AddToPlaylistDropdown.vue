@@ -148,8 +148,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../../../styles/global.scss";
-
 .night-mode {
 	.nav-dropdown-items {
 		background-color: var(--dark-grey-2);

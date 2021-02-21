@@ -43,8 +43,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "./../../styles/global.scss";
-
 .night-mode {
 	footer.footer,
 	footer.footer .container,
