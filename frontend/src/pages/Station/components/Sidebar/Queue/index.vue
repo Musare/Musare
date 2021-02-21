@@ -43,6 +43,20 @@
 			<i class="material-icons icon-with-button">queue</i>
 			<span class="optional-desktop-only-text"> Add Song To Queue </span>
 		</button>
+		<button
+			class="button is-primary tab-actionable-button tooltip tooltip-top tooltip-center disabled"
+			v-if="
+				!loggedIn &&
+					((station.type === 'community' &&
+						station.partyMode &&
+						!station.locked) ||
+						station.type === 'official')
+			"
+			data-tooltip="Login to add songs to queue"
+		>
+			<i class="material-icons icon-with-button">queue</i>
+			<span class="optional-desktop-only-text"> Add Song To Queue </span>
+		</button>
 		<div
 			id="queue-locked"
 			v-if="station.type === 'community' && station.locked"
@@ -147,6 +161,10 @@ export default {
 	#queue-locked {
 		display: flex;
 		justify-content: center;
+	}
+
+	button.disabled {
+		filter: grayscale(0.4);
 	}
 }
 </style>

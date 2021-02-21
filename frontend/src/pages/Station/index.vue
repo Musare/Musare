@@ -51,7 +51,11 @@
 							<div id="video-container">
 								<div
 									id="stationPlayer"
-									style="width: 100%; height: 100%; min-height: 200px;"
+									style="
+										width: 100%;
+										height: 100%;
+										min-height: 200px;
+									"
 								/>
 								<div
 									class="player-cannot-autoplay"
@@ -114,6 +118,17 @@
 										>
 										{{ currentSong.skipVotes }}
 									</button>
+									<button
+										v-else
+										class="button is-primary tooltip tooltip-top disabled"
+										data-tooltip="Login to vote to skip songs"
+									>
+										<i
+											class="material-icons icon-with-button"
+											>skip_next</i
+										>
+										{{ currentSong.skipVotes }}
+									</button>
 								</div>
 								<div id="duration">
 									<p>
@@ -168,7 +183,7 @@
 									>
 										<!-- Like Song Button -->
 										<button
-											class="button is-success"
+											class="button is-success like-song"
 											id="like-song"
 											@click="toggleLike()"
 										>
@@ -181,7 +196,7 @@
 
 										<!-- Dislike Song Button -->
 										<button
-											class="button is-danger"
+											class="button is-danger dislike-song"
 											id="dislike-song"
 											@click="toggleDislike()"
 										>
@@ -233,6 +248,53 @@
 										<add-to-playlist-dropdown
 											v-if="showPlaylistDropdown"
 										/>
+									</div>
+								</div>
+								<div id="right-buttons" v-else>
+									<!-- Disabled Ratings (Like/Dislike) Buttons -->
+									<div
+										id="ratings"
+										v-if="
+											currentSong.likes !== -1 &&
+												currentSong.dislikes !== -1
+										"
+									>
+										<!-- Disabled Like Song Button -->
+										<button
+											class="button is-success tooltip tooltip-top disabled"
+											id="like-song"
+											data-tooltip="Login to like songs"
+										>
+											<i
+												class="material-icons icon-with-button"
+												>thumb_up_alt</i
+											>{{ currentSong.likes }}
+										</button>
+
+										<!-- Disabled Dislike Song Button -->
+										<button
+											class="button is-danger tooltip tooltip-top disabled"
+											id="dislike-song"
+											data-tooltip="Login to dislike songs"
+										>
+											<i
+												class="material-icons icon-with-button"
+												>thumb_down_alt</i
+											>{{ currentSong.dislikes }}
+										</button>
+									</div>
+									<!-- Disabled Add Song To Playlist Button & Dropdown -->
+									<div id="add-song-to-playlist">
+										<div class="control has-addons">
+											<button
+												class="button is-primary tooltip tooltip-top disabled"
+												data-tooltip="Login to add songs to playlist"
+											>
+												<i class="material-icons"
+													>queue</i
+												>
+											</button>
+										</div>
 									</div>
 								</div>
 							</div>
@@ -1858,6 +1920,10 @@ export default {
 					.button:not(:first-of-type) {
 						margin-left: 5px;
 					}
+
+					.disabled {
+						filter: grayscale(0.4);
+					}
 				}
 
 				#duration {
@@ -1994,6 +2060,10 @@ export default {
 						&.disliked #like-song {
 							background-color: var(--grey) !important;
 						}
+						#like-song.disabled,
+						#dislike-song.disabled {
+							filter: grayscale(0.4);
+						}
 					}
 
 					#add-song-to-playlist {
@@ -2003,6 +2073,13 @@ export default {
 						.control {
 							width: fit-content;
 							margin-bottom: 0 !important;
+							button.disabled {
+								filter: grayscale(0.4);
+								border-radius: 3px;
+								&::after {
+									margin-right: 100%;
+								}
+							}
 						}
 					}
 				}

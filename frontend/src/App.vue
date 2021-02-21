@@ -350,15 +350,19 @@ a {
 		padding: 7.5px 6px;
 		border-radius: 2px;
 		background-color: var(--dark-grey);
-		font-size: 0.9em;
+		font-size: 14px;
+		line-height: 24px;
+		text-transform: none;
 		color: var(--white);
 		content: attr(data-tooltip);
 		opacity: 0;
 		transition: all 0.2s ease-in-out 0.1s;
 		visibility: hidden;
+		z-index: 5;
 	}
 
-	&:hover:after {
+	&:hover:after,
+	&:focus:after {
 		opacity: 1;
 		visibility: visible;
 	}
@@ -412,6 +416,18 @@ a {
 	&:hover {
 		&:after {
 			left: 200%;
+		}
+	}
+}
+
+.tooltip-center {
+	&:after {
+		margin-left: 0;
+	}
+
+	&:hover {
+		&:after {
+			margin-left: 0;
 		}
 	}
 }

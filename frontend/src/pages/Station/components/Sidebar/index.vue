@@ -23,6 +23,13 @@
 			>
 				My Playlists
 			</button>
+			<button
+				v-else
+				class="button is-default tooltip tooltip-top tooltip-center"
+				data-tooltip="Login to manage playlists"
+			>
+				My Playlists
+			</button>
 		</div>
 		<queue class="tab" v-show="tab === 'queue'" />
 		<users class="tab" v-show="tab === 'users'" />
