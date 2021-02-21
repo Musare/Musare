@@ -215,7 +215,6 @@
 					<div class="card-image">
 						<figure class="image is-square">
 							<i class="material-icons">radio</i>
-							<!-- <img src="/assets/notes-transparent.png" /> -->
 						</figure>
 					</div>
 					<div class="card-content">
@@ -228,6 +227,27 @@
 						<div class="content">
 							Click here to create your own station!
 						</div>
+					</div>
+					<div class="bottomBar"></div>
+				</a>
+				<a
+					v-else
+					class="card station-card createStation"
+					:style="'--station-theme: rgb(2, 166, 242)'"
+				>
+					<div class="card-image">
+						<figure class="image is-square">
+							<i class="material-icons">radio</i>
+						</figure>
+					</div>
+					<div class="card-content">
+						<div class="media">
+							<div class="media-left displayName">
+								<h5>Create Station</h5>
+							</div>
+						</div>
+
+						<div class="content">Login to create a station!</div>
 					</div>
 					<div class="bottomBar"></div>
 				</a>
