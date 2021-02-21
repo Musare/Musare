@@ -104,17 +104,17 @@ export default {
 
 .night-mode {
 	#users {
-		background-color: $night-mode-bg-secondary !important;
+		background-color: var(--dark-grey-3) !important;
 		border: 0 !important;
 	}
 
 	a {
-		color: $night-mode-text;
-		background-color: $dark-grey-2 !important;
+		color: var(--light-grey-2);
+		background-color: var(--dark-grey-2) !important;
 		border: 0 !important;
 
 		&:hover {
-			color: lighten($night-mode-text, 10%) !important;
+			color: var(--light-grey) !important;
 		}
 	}
 }
@@ -129,7 +129,7 @@ export default {
 }
 
 #users {
-	background-color: #fff;
+	background-color: var(--white);
 	margin-bottom: 20px;
 	border-radius: 0 0 5px 5px;
 	max-height: 100%;
@@ -154,13 +154,13 @@ export default {
 				display: flex;
 				align-items: center;
 				padding: 5px 10px;
-				border: 0.5px $light-grey-2 solid;
+				border: 0.5px var(--light-grey-3) solid;
 				border-radius: 3px;
 				cursor: pointer;
 
 				&:hover {
-					background-color: #eee;
-					color: #000;
+					background-color: var(--light-grey);
+					color: var(--black);
 				}
 
 				.profile-picture {

@@ -2,9 +2,7 @@
 	<div class="content preferences-tab">
 		<h4 class="section-title">Change preferences</h4>
 
-		<p class="section-description">
-			Tailor these settings to your liking.
-		</p>
+		<p class="section-description">Tailor these settings to your liking.</p>
 
 		<hr class="section-horizontal-rule" />
 
@@ -139,9 +137,9 @@ export default {
 			cursor: pointer;
 			width: 24px;
 			height: 24px;
-			background-color: $white;
+			background-color: var(--white);
 			display: inline-block;
-			border: 1px solid $dark-grey-2;
+			border: 1px solid var(--dark-grey-2);
 			position: relative;
 			border-radius: 3px;
 		}
@@ -158,7 +156,7 @@ export default {
 		left: 2px;
 		top: 2px;
 		border-radius: 3px;
-		background-color: $musare-blue;
+		background-color: var(--primary-color);
 		position: absolute;
 	}
 }

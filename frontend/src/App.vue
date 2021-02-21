@@ -182,18 +182,48 @@ export default {
 <style lang="scss">
 @import "./styles/global.scss";
 
+:root {
+	--primary-color: var(--blue);
+	--blue: rgb(2, 166, 242);
+	--light-blue: rgb(163, 224, 255);
+	--dark-blue: rgb(0, 102, 244);
+	--teal: rgb(0, 209, 178);
+	--purple: rgb(143, 40, 140);
+	--light-purple: rgb(170, 141, 216);
+	--yellow: rgb(241, 196, 15);
+	--light-pink: rgb(228, 155, 166);
+	--dark-pink: rgb(234, 72, 97);
+	--light-orange: rgb(255, 94, 0);
+	--dark-orange: rgb(250, 50, 0);
+	--green: rgb(68, 189, 50);
+	--red: rgb(231, 77, 60);
+	--white: rgb(255, 255, 255);
+	--black: rgb(0, 0, 0);
+	--light-grey: rgb(245, 245, 245);
+	--light-grey-2: rgb(221, 221, 221); //was night-mode-text
+	--light-grey-3: rgb(195, 193, 195); //was light-grey-2
+	--grey: rgb(107, 107, 107);
+	--grey-2: rgb(113, 113, 113);
+	--grey-3: rgb(126, 126, 126);
+	--dark-grey: rgb(77, 77, 77);
+	--dark-grey-2: rgb(51, 51, 51);
+	--dark-grey-3: rgb(34, 34, 34); //was night-mode-bg-secondary
+	--dark-grey-4: rgb(26, 26, 26); // was dark-grey-3
+	--youtube: rgb(189, 46, 46);
+}
+
 .night-mode {
 	div {
-		// background-color: #000;
-		color: $night-mode-text;
+		// background-color: var(--black);
+		color: var(--light-grey-2);
 	}
 
 	#toasts-container .toast {
-		color: #333;
-		background-color: $light-grey-2 !important;
+		color: var(--dark-grey-2);
+		background-color: var(--light-grey-3) !important;
 
 		&:last-of-type {
-			background-color: $light-grey !important;
+			background-color: var(--light-grey) !important;
 		}
 	}
 
@@ -203,21 +233,21 @@ export default {
 	h4,
 	h5,
 	h6 {
-		color: #fff !important;
+		color: var(--white) !important;
 	}
 
 	p:not(.help),
 	label {
-		color: $night-mode-text !important;
+		color: var(--light-grey-2) !important;
 	}
 
 	.content {
-		background-color: $night-mode-bg-secondary !important;
+		background-color: var(--dark-grey-3) !important;
 	}
 }
 
 body.night-mode {
-	background-color: #000 !important;
+	background-color: var(--black) !important;
 }
 
 #toasts-container {
@@ -225,10 +255,10 @@ body.night-mode {
 
 	.toast {
 		font-weight: 600;
-		background-color: $dark-grey !important;
+		background-color: var(--dark-grey) !important;
 
 		&:last-of-type {
-			background-color: $dark-grey-2 !important;
+			background-color: var(--dark-grey-2) !important;
 		}
 	}
 }
@@ -239,8 +269,8 @@ html {
 }
 
 body {
-	background-color: $light-grey;
-	color: $dark-grey;
+	background-color: var(--light-grey);
+	color: var(--dark-grey);
 	height: 100%;
 	font-family: "Inter", Helvetica, Arial, sans-serif;
 }
@@ -283,7 +313,7 @@ textarea {
 }
 
 a {
-	color: $primary-color;
+	color: var(--primary-color);
 	text-decoration: none;
 }
 
@@ -301,8 +331,8 @@ a {
 
 .alert {
 	padding: 20px;
-	color: $white;
-	background-color: $red;
+	color: var(--white);
+	background-color: var(--red);
 	position: fixed;
 	top: 50px;
 	right: 50px;
@@ -321,9 +351,9 @@ a {
 		text-align: center;
 		padding: 7.5px 6px;
 		border-radius: 2px;
-		background-color: $dark-grey;
+		background-color: var(--dark-grey);
 		font-size: 0.9em;
-		color: $white;
+		color: var(--white);
 		content: attr(data-tooltip);
 		opacity: 0;
 		transition: all 0.2s ease-in-out 0.1s;
@@ -390,7 +420,7 @@ a {
 
 .select {
 	&:after {
-		border-color: $musare-blue;
+		border-color: var(--primary-color);
 		border-width: 1.5px;
 		margin-top: -3px;
 	}
@@ -402,7 +432,7 @@ a {
 
 .button:focus,
 .button:active {
-	border-color: #dbdbdb !important;
+	border-color: var(--light-grey-2) !important;
 }
 
 .input:focus,
@@ -411,7 +441,7 @@ a {
 .textarea:active,
 .select select:focus,
 .select select:active {
-	border-color: $primary-color !important;
+	border-color: var(--primary-color) !important;
 }
 
 button.delete:focus {
@@ -423,49 +453,29 @@ button.delete:focus {
 }
 
 .button {
-	&.is-success {
-		background-color: $green !important;
+	&:hover,
+	&:focus {
+		filter: brightness(95%);
+	}
 
-		&:hover,
-		&:focus {
-			background-color: darken($green, 5%) !important;
-		}
+	&.is-success {
+		background-color: var(--green) !important;
 	}
 
 	&.is-primary {
-		background-color: $primary-color !important;
-
-		&:hover,
-		&:focus {
-			background-color: darken($primary-color, 5%) !important;
-		}
+		background-color: var(--primary-color) !important;
 	}
 
 	&.is-danger {
-		background-color: $red !important;
-
-		&:hover,
-		&:focus {
-			background-color: darken($red, 5%) !important;
-		}
+		background-color: var(--red) !important;
 	}
 
 	&.is-info {
-		background-color: $musare-blue !important;
-
-		&:hover,
-		&:focus {
-			background-color: darken($musare-blue, 5%) !important;
-		}
+		background-color: var(--primary-color) !important;
 	}
 
 	&.is-warning {
-		background-color: $yellow !important;
-
-		&:hover,
-		&:focus {
-			background-color: darken($yellow, 5%) !important;
-		}
+		background-color: var(--yellow) !important;
 	}
 }
 
@@ -511,7 +521,7 @@ button.delete:focus {
 		height: 36px;
 		border-radius: 3px 0 0 3px;
 		border-right: 0;
-		border-color: $light-grey-2;
+		border-color: var(--light-grey-3);
 	}
 
 	.button {
@@ -574,7 +584,7 @@ h4.section-title {
 	align-items: center;
 	justify-content: space-between;
 	padding: 7.5px;
-	border: 1px solid $light-grey-2;
+	border: 1px solid var(--light-grey-3);
 	border-radius: 3px;
 
 	.item-thumbnail {
@@ -614,7 +624,7 @@ h4.section-title {
 
 		i {
 			cursor: pointer;
-			color: #4a4a4a;
+			color: var(--dark-grey);
 
 			&:hover,
 			&:focus {
@@ -627,25 +637,25 @@ h4.section-title {
 		}
 
 		.play-icon {
-			color: $green;
+			color: var(--green);
 		}
 
 		.edit-icon,
 		.view-icon {
-			color: $primary-color;
+			color: var(--primary-color);
 		}
 
 		.hide-icon {
-			color: #bdbdbd;
+			color: var(--light-grey-3);
 		}
 
 		.stop-icon,
 		.delete-icon {
-			color: $red;
+			color: var(--red);
 		}
 
 		.report-icon {
-			color: $yellow;
+			color: var(--yellow);
 		}
 	}
 }

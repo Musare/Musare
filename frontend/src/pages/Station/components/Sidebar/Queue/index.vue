@@ -129,13 +129,13 @@ export default {
 
 .night-mode {
 	#queue {
-		background-color: $night-mode-bg-secondary !important;
+		background-color: var(--dark-grey-3) !important;
 		border: 0 !important;
 	}
 }
 
 #queue {
-	background-color: #fff;
+	background-color: var(--white);
 	border-radius: 0 0 5px 5px;
 
 	.actionable-button-hidden {

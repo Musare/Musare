@@ -686,13 +686,13 @@ export default {
 
 .night-mode {
 	.section {
-		background-color: $night-mode-bg-secondary !important;
+		background-color: var(--dark-grey-3) !important;
 	}
 
 	.label,
 	p,
 	strong {
-		color: $night-mode-text;
+		color: var(--light-grey-2);
 	}
 }
 
@@ -783,7 +783,7 @@ export default {
 		}
 
 		#playlist-info-section {
-			border: 1px solid $light-grey-2;
+			border: 1px solid var(--light-grey-3);
 			border-radius: 3px;
 			padding: 15px !important;
 
@@ -810,7 +810,7 @@ export default {
 			#song-query-results {
 				padding: 10px;
 				margin-top: 10px;
-				border: 1px solid $light-grey-2;
+				border: 1px solid var(--light-grey-3);
 				border-radius: 3px;
 				max-width: 565px;
 

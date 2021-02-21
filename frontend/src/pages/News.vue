@@ -135,7 +135,7 @@ export default {
 
 .night-mode {
 	p {
-		color: $night-mode-text;
+		color: var(--light-grey-2);
 	}
 }
 
@@ -149,7 +149,7 @@ export default {
 		padding: 12px;
 		text-transform: uppercase;
 		font-weight: bold;
-		color: $white;
+		color: var(--white);
 	}
 
 	.sect-head-features {

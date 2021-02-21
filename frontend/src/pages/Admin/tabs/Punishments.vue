@@ -164,31 +164,31 @@ export default {
 
 .night-mode {
 	.table {
-		color: $night-mode-text;
-		background-color: $night-mode-bg-secondary;
+		color: var(--light-grey-2);
+		background-color: var(--dark-grey-3);
 
 		thead tr {
-			background: $night-mode-bg-secondary;
+			background: var(--dark-grey-3);
 			td {
-				color: #fff;
+				color: var(--white);
 			}
 		}
 
 		tbody tr:hover {
-			background-color: #111 !important;
+			background-color: var(--dark-grey-4) !important;
 		}
 
 		tbody tr:nth-child(even) {
-			background-color: #444;
+			background-color: var(--dark-grey-2);
 		}
 
 		strong {
-			color: $night-mode-text;
+			color: var(--light-grey-2);
 		}
 	}
 
 	.card {
-		background: $night-mode-bg-secondary;
+		background: var(--dark-grey-3);
 
 		.card-header {
 			box-shadow: 0 1px 2px rgba(10, 10, 10, 0.8);
@@ -196,7 +196,7 @@ export default {
 
 		p,
 		.label {
-			color: $night-mode-text;
+			color: var(--light-grey-2);
 		}
 	}
 }

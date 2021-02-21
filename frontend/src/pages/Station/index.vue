@@ -1618,7 +1618,7 @@ export default {
 #mobile-progress-animation {
 	width: 50px;
 	animation: rotate 0.8s infinite linear;
-	border: 8px solid $primary-color;
+	border: 8px solid var(--primary-color);
 	border-right-color: transparent;
 	border-radius: 50%;
 	height: 50px;
@@ -1651,7 +1651,7 @@ export default {
 		flex-direction: column;
 
 		b {
-			color: #000;
+			color: var(--black);
 		}
 	}
 }
@@ -1661,7 +1661,7 @@ export default {
 	#about-station-container,
 	#control-bar-container,
 	.player-container {
-		background-color: $night-mode-bg-secondary !important;
+		background-color: var(--dark-grey-3) !important;
 	}
 
 	#video-container,
@@ -1672,15 +1672,15 @@ export default {
 	}
 
 	#seeker-bar-container {
-		background-color: $night-mode-bg-secondary !important;
+		background-color: var(--dark-grey-3) !important;
 	}
 
 	#dropdown-toggle {
-		background-color: $dark-grey-2 !important;
+		background-color: var(--dark-grey-2) !important;
 		border: 0;
 
 		i {
-			color: #fff;
+			color: var(--white);
 		}
 	}
 }
@@ -1719,8 +1719,8 @@ export default {
 		}
 
 		.quadrant:not(#sidebar-container) {
-			background-color: #fff;
-			border: 1px solid $light-grey-2;
+			background-color: var(--white);
+			border: 1px solid var(--light-grey-3);
 		}
 
 		#station-left-column {
@@ -1750,7 +1750,7 @@ export default {
 					i {
 						margin-left: 10px;
 						font-size: 30px;
-						color: $yellow;
+						color: var(--yellow);
 					}
 				}
 
@@ -1785,10 +1785,10 @@ export default {
 
 		.player-container {
 			height: inherit;
-			background-color: #fff;
+			background-color: var(--white);
 			display: flex;
 			flex-direction: column;
-			border: 1px solid $light-grey-2;
+			border: 1px solid var(--light-grey-3);
 			border-radius: 5px;
 			overflow: hidden;
 			flex-grow: 1;
@@ -1812,7 +1812,7 @@ export default {
 					justify-content: center;
 
 					p {
-						color: $white;
+						color: var(--white);
 						font-size: 26px;
 						text-align: center;
 					}
@@ -1820,7 +1820,7 @@ export default {
 			}
 
 			#seeker-bar-container {
-				background-color: #fff;
+				background-color: var(--white);
 				position: relative;
 				height: 7px;
 				display: block;
@@ -1841,7 +1841,7 @@ export default {
 				justify-content: space-around;
 				padding: 10px 0;
 				width: 100%;
-				background: #fff;
+				background: var(--white);
 				flex-direction: column;
 				flex-flow: wrap;
 
@@ -1903,7 +1903,7 @@ export default {
 						height: 5.2px;
 						cursor: pointer;
 						box-shadow: 0;
-						background: $light-grey-2;
+						background: var(--light-grey-3);
 						border-radius: 0;
 						border: 0;
 					}
@@ -1925,7 +1925,7 @@ export default {
 						height: 5.2px;
 						cursor: pointer;
 						box-shadow: 0;
-						background: $light-grey-2;
+						background: var(--light-grey-3);
 						border-radius: 0;
 						border: 0;
 					}
@@ -1946,19 +1946,19 @@ export default {
 						height: 5.2px;
 						cursor: pointer;
 						box-shadow: 0;
-						background: $light-grey-2;
+						background: var(--light-grey-3);
 						border-radius: 1.3px;
 					}
 
 					input[type="range"]::-ms-fill-lower {
-						background: $light-grey-2;
+						background: var(--light-grey-3);
 						border: 0;
 						border-radius: 0;
 						box-shadow: 0;
 					}
 
 					input[type="range"]::-ms-fill-upper {
-						background: $light-grey-2;
+						background: var(--light-grey-3);
 						border: 0;
 						border-radius: 0;
 						box-shadow: 0;
@@ -1992,22 +1992,9 @@ export default {
 					#ratings {
 						display: flex;
 
-						#like-song:hover,
-						#like-song.liked {
-							background-color: darken($green, 5%) !important;
-						}
-
-						#dislike-song:hover,
-						#dislike-song.disliked {
-							background-color: darken($red, 5%) !important;
-						}
-
 						&.liked #dislike-song,
 						&.disliked #like-song {
-							background-color: $grey !important;
-							&:hover {
-								background-color: darken($grey, 5%) !important;
-							}
+							background-color: var(--grey) !important;
 						}
 					}
 

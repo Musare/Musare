@@ -1432,18 +1432,18 @@ export default {
 	.api-section,
 	.api-result,
 	.player-footer {
-		background-color: $night-mode-bg-secondary !important;
+		background-color: var(--dark-grey-3) !important;
 	}
 
 	.api-result .tracks .track:hover,
 	.selected-discogs-info {
-		background-color: #333 !important;
+		background-color: var(--dark-grey-2) !important;
 	}
 
 	.label,
 	p,
 	strong {
-		color: $night-mode-text;
+		color: var(--light-grey-2);
 	}
 }
 
@@ -1466,7 +1466,7 @@ export default {
 			flex-direction: column;
 
 			.player-footer {
-				background-color: #f4f4f4;
+				background-color: var(--light-grey);
 				border: 1px rgba(163, 224, 255, 0.75) solid;
 				border-radius: 0px 0px 5px 5px;
 				display: flex;
@@ -1488,15 +1488,15 @@ export default {
 					}
 
 					.player-play-pause {
-						color: $musare-blue;
+						color: var(--primary-color);
 					}
 
 					.player-stop {
-						color: $red;
+						color: var(--red);
 					}
 
 					.player-fast-forward {
-						color: $green;
+						color: var(--green);
 					}
 				}
 
@@ -1522,7 +1522,7 @@ export default {
 					#volumeSlider {
 						width: 126px;
 						margin-right: 10px;
-						background-color: #f4f4f4;
+						background-color: var(--light-grey);
 					}
 				}
 			}
@@ -1537,7 +1537,7 @@ export default {
 
 	.edit-section {
 		width: 735px;
-		background-color: #f4f4f4;
+		background-color: var(--light-grey);
 		border: 1px rgba(163, 224, 255, 0.75) solid;
 		margin-top: 16px;
 		flex: 1;
@@ -1545,23 +1545,23 @@ export default {
 		border-radius: 5px;
 
 		.album-get-button {
-			background-color: $purple;
-			color: white;
+			background-color: var(--purple);
+			color: var(--white);
 			width: 32px;
 			text-align: center;
 			border-width: 0;
 		}
 
 		.duration-fill-button {
-			background-color: $red;
-			color: $white;
+			background-color: var(--red);
+			color: var(--white);
 			width: 32px;
 			text-align: center;
 			border-width: 0;
 		}
 
 		.add-button {
-			background-color: $musare-blue !important;
+			background-color: var(--primary-color) !important;
 			width: 32px;
 
 			i {
@@ -1575,7 +1575,7 @@ export default {
 			&:focus,
 			&:hover {
 				filter: contrast(0.75);
-				border: 1px solid black !important;
+				border: 1px solid var(--black) !important;
 			}
 		}
 
@@ -1623,7 +1623,7 @@ export default {
 					font-size: 15px;
 					align-self: center;
 					margin-left: 5px;
-					color: $musare-blue;
+					color: var(--primary-color);
 					cursor: pointer;
 					-webkit-user-select: none;
 					-moz-user-select: none;
@@ -1638,7 +1638,7 @@ export default {
 		}
 
 		.list-item-circle {
-			background-color: $musare-blue;
+			background-color: var(--primary-color);
 			width: 16px;
 			height: 16px;
 			border-radius: 8px;
@@ -1653,7 +1653,7 @@ export default {
 			user-select: none;
 
 			i {
-				color: $musare-blue;
+				color: var(--primary-color);
 				font-size: 14px;
 				margin-left: 1px;
 			}
@@ -1662,7 +1662,7 @@ export default {
 		.list-item-circle:hover,
 		.list-item-circle:focus {
 			i {
-				color: white;
+				color: var(--white);
 			}
 		}
 
@@ -1681,7 +1681,7 @@ export default {
 
 		.autosuggest-container {
 			position: absolute;
-			background: white;
+			background: var(--white);
 			width: calc(100% + 1px);
 			top: 57px;
 			z-index: 200;
@@ -1692,7 +1692,7 @@ export default {
 			.autosuggest-item {
 				padding: 8px;
 				display: block;
-				border: 1px solid #dbdbdb;
+				border: 1px solid var(--light-grey-2);
 				margin-top: -1px;
 				line-height: 16px;
 				cursor: pointer;
@@ -1704,7 +1704,7 @@ export default {
 
 			.autosuggest-item:hover,
 			.autosuggest-item:focus {
-				background-color: #eee;
+				background-color: var(--light-grey);
 			}
 
 			.autosuggest-item:first-child {
@@ -1724,7 +1724,7 @@ export default {
 
 	.api-section {
 		width: 376px;
-		background-color: #f4f4f4;
+		background-color: var(--light-grey);
 		border: 1px rgba(163, 224, 255, 0.75) solid;
 		border-radius: 5px;
 		padding: 16px;
@@ -1801,8 +1801,8 @@ export default {
 		}
 
 		.selected-discogs-info {
-			background-color: white;
-			border: 1px solid $purple;
+			background-color: var(--white);
+			border: 1px solid var(--purple);
 			border-radius: 5px;
 			margin-bottom: 16px;
 
@@ -1817,14 +1817,14 @@ export default {
 		}
 
 		.api-result {
-			background-color: white;
-			border: 0.5px solid $musare-blue;
+			background-color: var(--white);
+			border: 0.5px solid var(--primary-color);
 			border-radius: 5px;
 			margin-bottom: 16px;
 		}
 
 		button {
-			background-color: $musare-blue !important;
+			background-color: var(--primary-color) !important;
 
 			&:focus,
 			&:hover {
@@ -1845,7 +1845,7 @@ export default {
 			}
 
 			.track {
-				border: 0.5px solid black;
+				border: 0.5px solid var(--black);
 				margin-top: -1px;
 				line-height: 16px;
 				display: flex;
@@ -1868,7 +1868,7 @@ export default {
 
 			.track:hover,
 			.track:focus {
-				background-color: #f4f4f4;
+				background-color: var(--light-grey);
 			}
 		}
 
@@ -1896,7 +1896,7 @@ input[type="range"]::-webkit-slider-runnable-track {
 	height: 3px;
 	cursor: pointer;
 	box-shadow: none;
-	background: #7e7e7e;
+	background: var(--grey-3);
 	border-radius: none;
 	border: none;
 }
@@ -1906,20 +1906,20 @@ input[type="range"]::-webkit-slider-thumb {
 	height: 20px;
 	width: 20px;
 	border-radius: 100px;
-	background: #03a9f4;
+	background: var(--primary-color);
 	cursor: pointer;
 	-webkit-appearance: none;
 	margin-top: -8.5px;
 }
 input[type="range"]:focus::-webkit-slider-runnable-track {
-	background: #7e7e7e;
+	background: var(--grey-3);
 }
 input[type="range"]::-moz-range-track {
 	width: 100%;
 	height: 3px;
 	cursor: pointer;
 	box-shadow: none;
-	background: #7e7e7e;
+	background: var(--grey-3);
 	border-radius: none;
 	border: none;
 }
@@ -1929,7 +1929,7 @@ input[type="range"]::-moz-range-thumb {
 	height: 20px;
 	width: 20px;
 	border-radius: 100px;
-	background: #03a9f4;
+	background: var(--primary-color);
 	cursor: pointer;
 }
 input[type="range"]::-ms-track {
@@ -1941,13 +1941,13 @@ input[type="range"]::-ms-track {
 	color: transparent;
 }
 input[type="range"]::-ms-fill-lower {
-	background: #717171;
+	background: var(--grey-2);
 	border: none;
 	border-radius: none;
 	box-shadow: none;
 }
 input[type="range"]::-ms-fill-upper {
-	background: #7e7e7e;
+	background: var(--grey-3);
 	border: none;
 	border-radius: none;
 	box-shadow: none;
@@ -1958,14 +1958,14 @@ input[type="range"]::-ms-thumb {
 	height: 20px;
 	width: 20px;
 	border-radius: 100px;
-	background: #03a9f4;
+	background: var(--primary-color);
 	cursor: pointer;
 	height: 3px;
 }
 input[type="range"]:focus::-ms-fill-lower {
-	background: #7e7e7e;
+	background: var(--grey-3);
 }
 input[type="range"]:focus::-ms-fill-upper {
-	background: #7e7e7e;
+	background: var(--grey-3);
 }
 </style>

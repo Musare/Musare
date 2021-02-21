@@ -93,9 +93,7 @@
 				<div v-if="station.type === 'official'">
 					<hr class="section-horizontal-rule" />
 
-					<h4 class="section-title">
-						Import a playlist
-					</h4>
+					<h4 class="section-title">Import a playlist</h4>
 					<p class="section-description">
 						Import a playlist by using a link from YouTube.
 					</p>
@@ -120,9 +118,9 @@
 									"
 								>
 									<option :value="false">Import all</option>
-									<option :value="true"
-										>Import only music</option
-									>
+									<option :value="true">
+										Import only music
+									</option>
 								</select>
 							</span>
 							<a
@@ -341,7 +339,7 @@ export default {
 
 .night-mode {
 	div {
-		color: #4d4d4d;
+		color: var(--dark-grey);
 	}
 }
 
@@ -376,7 +374,7 @@ export default {
 			}
 
 			i {
-				color: #fff;
+				color: var(--white);
 			}
 		}
 
@@ -414,7 +412,7 @@ export default {
 	padding: 10px;
 	max-height: 500px;
 	overflow: auto;
-	border: 1px solid $light-grey-2;
+	border: 1px solid var(--light-grey-3);
 	border-radius: 3px;
 
 	.search-query-item:not(:last-of-type) {

@@ -910,18 +910,18 @@ export default {
 	.modal-card-head,
 	.modal-card-body,
 	.modal-card-foot {
-		background-color: $night-mode-bg-secondary;
+		background-color: var(--dark-grey-3);
 	}
 
 	.section {
-		background-color: $night-mode-bg-secondary !important;
+		background-color: var(--dark-grey-3) !important;
 		border: 0 !important;
 	}
 
 	.label,
 	p,
 	strong {
-		color: $night-mode-text;
+		color: var(--light-grey-2);
 	}
 }
 
@@ -936,8 +936,8 @@ export default {
 }
 
 .section {
-	border: 1px solid #a3e0ff;
-	background-color: #f4f4f4;
+	border: 1px solid var(--light-blue);
+	background-color: var(--light-grey);
 	border-radius: 5px;
 	padding: 16px;
 }
@@ -958,11 +958,11 @@ export default {
 			width: 32px;
 
 			&.blue {
-				background-color: $musare-blue !important;
+				background-color: var(--primary-color) !important;
 			}
 
 			&.red {
-				background-color: $red !important;
+				background-color: var(--red) !important;
 			}
 
 			i {
@@ -992,18 +992,18 @@ export default {
 		user-select: none;
 
 		&.blue {
-			background-color: $musare-blue;
+			background-color: var(--primary-color);
 
 			i {
-				color: $musare-blue;
+				color: var(--primary-color);
 			}
 		}
 
 		&.red {
-			background-color: $red;
+			background-color: var(--red);
 
 			i {
-				color: $red;
+				color: var(--red);
 			}
 		}
 
@@ -1016,7 +1016,7 @@ export default {
 	.list-item-circle:hover,
 	.list-item-circle:focus {
 		i {
-			color: white;
+			color: var(--white);
 		}
 	}
 
@@ -1035,7 +1035,7 @@ export default {
 
 	.autosuggest-container {
 		position: absolute;
-		background: white;
+		background: var(--white);
 		width: calc(100% + 1px);
 		top: 57px;
 		z-index: 200;
@@ -1046,7 +1046,7 @@ export default {
 		.autosuggest-item {
 			padding: 8px;
 			display: block;
-			border: 1px solid #dbdbdb;
+			border: 1px solid var(--light-grey-2);
 			margin-top: -1px;
 			line-height: 16px;
 			cursor: pointer;
@@ -1058,7 +1058,7 @@ export default {
 
 		.autosuggest-item:hover,
 		.autosuggest-item:focus {
-			background-color: #eee;
+			background-color: var(--light-grey);
 		}
 
 		.autosuggest-item:first-child {
@@ -1089,7 +1089,7 @@ export default {
 			border: 0;
 			border-radius: 3px;
 			font-size: 18px;
-			color: white;
+			color: var(--white);
 			box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.25);
 			display: block;
 			text-align: center;
@@ -1105,31 +1105,31 @@ export default {
 			text-transform: capitalize;
 
 			&.red {
-				background-color: $red;
+				background-color: var(--red);
 			}
 
 			&.green {
-				background-color: $green;
+				background-color: var(--green);
 			}
 
 			&.blue {
-				background-color: $musare-blue;
+				background-color: var(--primary-color);
 			}
 
 			&.orange {
-				background-color: $light-orange;
+				background-color: var(--light-orange);
 			}
 
 			&.yellow {
-				background-color: $yellow;
+				background-color: var(--yellow);
 			}
 
 			&.purple {
-				background-color: $purple;
+				background-color: var(--purple);
 			}
 
 			&.teal {
-				background-color: $teal;
+				background-color: var(--teal);
 			}
 
 			i {

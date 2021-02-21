@@ -128,25 +128,25 @@ export default {
 	.modal-card-head,
 	.modal-card-body,
 	.modal-card-foot {
-		background-color: $night-mode-bg-secondary;
+		background-color: var(--dark-grey-3);
 	}
 
 	.label,
 	p:not(.help) {
-		color: $night-mode-text;
+		color: var(--light-grey-2);
 	}
 }
 
 .button.is-github {
-	background-color: $dark-grey-2;
-	color: $white !important;
+	background-color: var(--dark-grey-2);
+	color: var(--white) !important;
 }
 
 .is-github:focus {
-	background-color: $dark-grey-3;
+	background-color: var(--dark-grey-4);
 }
 .is-primary:focus {
-	background-color: $primary-color !important;
+	background-color: var(--primary-color) !important;
 }
 
 .invert {
@@ -154,6 +154,6 @@ export default {
 }
 
 a {
-	color: $primary-color;
+	color: var(--primary-color);
 }
 </style>

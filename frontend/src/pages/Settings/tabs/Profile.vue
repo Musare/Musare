@@ -303,7 +303,7 @@ export default {
 	align-items: flex-start;
 
 	.select:after {
-		border-color: $musare-blue;
+		border-color: var(--primary-color);
 	}
 
 	#avatar-selection-inner-container {

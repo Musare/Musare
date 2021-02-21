@@ -57,8 +57,8 @@ export default {
 	margin-top: 20px;
 
 	&:disabled {
-		background-color: $light-grey !important;
-		color: #000;
+		background-color: var(--light-grey) !important;
+		color: var(--black);
 	}
 }
 

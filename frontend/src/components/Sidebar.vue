@@ -25,23 +25,23 @@ export default {
 
 .night-mode {
 	.sidebar {
-		background-color: $night-mode-bg-secondary;
+		background-color: var(--dark-grey-3);
 
 		.sidebar-title {
-			color: #fff;
+			color: var(--white);
 		}
 
 		* {
-			color: $night-mode-text;
+			color: var(--light-grey-2);
 		}
 	}
 }
 
 .sidebar-title {
-	background-color: rgb(3, 169, 244);
+	background-color: var(--primary-color);
 	text-align: center;
 	padding: 10px;
-	color: $white;
+	color: var(--white);
 	font-weight: 600;
 	font-size: 20px;
 }

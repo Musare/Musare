@@ -424,11 +424,11 @@ export default {
 .night-mode {
 	.content-box,
 	.step:not(.selected) {
-		background-color: $night-mode-bg-secondary !important;
+		background-color: var(--dark-grey-3) !important;
 	}
 
 	.label {
-		color: $night-mode-text;
+		color: var(--light-grey-2);
 	}
 
 	.skip-step {
@@ -446,7 +446,7 @@ p {
 	padding: 25px;
 
 	#title {
-		color: #000;
+		color: var(--black);
 		font-size: 42px;
 		text-align: center;
 	}
@@ -467,16 +467,16 @@ p {
 			align-items: center;
 			justify-content: center;
 			border-radius: 100%;
-			border: 1px solid $dark-grey;
+			border: 1px solid var(--dark-grey);
 			min-width: 50px;
 			min-height: 50px;
-			background-color: #fff;
+			background-color: var(--white);
 			font-size: 30px;
 			cursor: pointer;
 
 			&.selected {
-				background-color: $musare-blue;
-				color: #fff !important;
+				background-color: var(--primary-color);
+				color: var(--white) !important;
 				border: 0;
 			}
 		}
@@ -486,15 +486,15 @@ p {
 			justify-content: center;
 			width: 180px;
 			height: 1px;
-			background-color: $dark-grey;
+			background-color: var(--dark-grey);
 		}
 	}
 
 	.content-box {
 		margin-top: 90px;
 		border-radius: 3px;
-		background-color: #fff;
-		border: 1px solid $dark-grey;
+		background-color: var(--white);
+		border: 1px solid var(--dark-grey);
 		max-width: 580px;
 		padding: 40px;
 
@@ -505,17 +505,17 @@ p {
 
 		.content-box-title {
 			font-size: 25px;
-			color: #000;
+			color: var(--black);
 		}
 
 		.content-box-description {
 			font-size: 14px;
-			color: $dark-grey;
+			color: var(--dark-grey);
 		}
 
 		.content-box-optional-helper {
 			margin-top: 15px;
-			color: $musare-blue;
+			color: var(--primary-color);
 			text-decoration: underline;
 			font-size: 16px;
 		}
@@ -555,16 +555,16 @@ p {
 			margin-top: 10px;
 			font-size: 21px;
 			font-weight: 800;
-			color: #000;
+			color: var(--black);
 			text-align: center;
 		}
 
 		.success-icon {
-			color: #24a216;
+			color: var(--green);
 		}
 
 		.error-icon {
-			color: $red;
+			color: var(--red);
 		}
 
 		.success-icon,
@@ -589,7 +589,7 @@ p {
 }
 
 .skip-step {
-	background-color: #7e7e7e;
-	color: $white;
+	background-color: var(--grey-3);
+	color: var(--white);
 }
 </style>

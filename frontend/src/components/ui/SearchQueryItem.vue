@@ -52,7 +52,7 @@ export default {
 
 <style lang="scss">
 .search-query-item .universal-item-actions i {
-	color: #fff !important;
+	color: var(--white) !important;
 }
 
 .search-query-actions-enter-active {
@@ -79,7 +79,7 @@ export default {
 
 .night-mode {
 	.search-query-item {
-		background-color: $night-mode-bg-secondary !important;
+		background-color: var(--dark-grey-3) !important;
 		border: 0 !important;
 	}
 }

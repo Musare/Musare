@@ -194,7 +194,7 @@ export default {
 
 .night-mode {
 	.tabs {
-		background-color: #333;
+		background-color: var(--dark-grey-2);
 		border: 0;
 
 		ul {
@@ -210,46 +210,46 @@ export default {
 .tabs {
 	padding-top: 10px;
 	margin-top: -10px;
-	background-color: $white;
+	background-color: var(--white);
 	.queueSongs {
-		color: $teal;
-		border-color: $teal;
+		color: var(--teal);
+		border-color: var(--teal);
 	}
 	.songs {
-		color: $primary-color;
-		border-color: $primary-color;
+		color: var(--primary-color);
+		border-color: var(--primary-color);
 	}
 	.stations {
-		color: $purple;
-		border-color: $purple;
+		color: var(--purple);
+		border-color: var(--purple);
 	}
 	.playlists {
-		color: $light-purple;
-		border-color: $light-purple;
+		color: var(--light-purple);
+		border-color: var(--light-purple);
 	}
 	.reports {
-		color: $yellow;
-		border-color: $yellow;
+		color: var(--yellow);
+		border-color: var(--yellow);
 	}
 	.news {
-		color: $light-pink;
-		border-color: $light-pink;
+		color: var(--light-pink);
+		border-color: var(--light-pink);
 	}
 	.users {
-		color: $dark-pink;
-		border-color: $dark-pink;
+		color: var(--dark-pink);
+		border-color: var(--dark-pink);
 	}
 	.statistics {
-		color: $light-orange;
-		border-color: $light-orange;
+		color: var(--light-orange);
+		border-color: var(--light-orange);
 	}
 	.newstatistics {
-		color: $light-orange;
-		border-color: $light-orange;
+		color: var(--light-orange);
+		border-color: var(--light-orange);
 	}
 	.punishments {
-		color: $dark-orange;
-		border-color: $dark-orange;
+		color: var(--dark-orange);
+		border-color: var(--dark-orange);
 	}
 	.tab {
 		transition: all 0.2s ease-in-out;

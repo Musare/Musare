@@ -345,6 +345,6 @@ h6 {
 }
 
 .is-highlight-active {
-	border: 3px $primary-color solid;
+	border: 3px var(--primary-color) solid;
 }
 </style>

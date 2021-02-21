@@ -717,20 +717,20 @@ html {
 	.card,
 	.card-content,
 	.card-content div {
-		background-color: $night-mode-bg-secondary;
+		background-color: var(--dark-grey-3);
 	}
 
 	.card-content .icons i,
 	.group-title i {
-		color: $night-mode-text;
+		color: var(--light-grey-2);
 	}
 
 	.card-image .image {
-		background-color: #333;
+		background-color: var(--dark-grey-2);
 	}
 
 	.card-content .under-content .hostedBy {
-		color: $night-mode-text;
+		color: var(--light-grey-2);
 	}
 }
 
@@ -800,7 +800,7 @@ html {
 			img.logo {
 				max-height: 90px;
 				font-size: 40px;
-				color: white;
+				color: var(--white);
 				font-family: Pacifico, cursive;
 			}
 			.buttons {
@@ -822,12 +822,12 @@ html {
 					height: inherit;
 				}
 				.login {
-					background: white;
-					color: $musare-blue;
+					background: var(--white);
+					color: var(--primary-color);
 				}
 				.register {
-					background: $purple;
-					color: white;
+					background: var(--purple);
+					color: var(--white);
 				}
 			}
 		}
@@ -889,20 +889,20 @@ html {
 			margin-left: 5px;
 		}
 		.unlistedIcon {
-			color: $light-orange;
+			color: var(--light-orange);
 		}
 		.privateIcon {
-			color: $dark-pink;
+			color: var(--dark-pink);
 		}
 		.homeIcon {
-			color: $light-purple;
+			color: var(--light-purple);
 		}
 	}
 
 	.hostedBy {
 		font-weight: 400;
 		font-size: 12px;
-		color: $black;
+		color: var(--black);
 		.host,
 		.host a {
 			font-weight: 400;
@@ -968,7 +968,7 @@ html {
 				max-height: 30px;
 				.favorite {
 					position: absolute;
-					color: $yellow;
+					color: var(--yellow);
 					right: 10px;
 					top: 10px;
 					font-size: 28px;
@@ -1045,7 +1045,7 @@ html {
 		width: 100%;
 		height: 30px;
 		line-height: 30px;
-		color: $white;
+		color: var(--white);
 		font-weight: 400;
 		font-size: 12px;
 		padding: 0 5px;
@@ -1100,22 +1100,15 @@ html {
 	transition: all ease-in-out 0.2s;
 }
 
-/*.isPrivate {
-		background-color: #F8BBD0;
-	}
-	.isMine {
-		background-color: #29B6F6;
-	}*/
-
 .community-button {
 	cursor: pointer;
 	transition: 0.25s ease color;
 	font-size: 30px;
-	color: #4a4a4a;
+	color: var(--dark-grey);
 }
 
 .community-button:hover {
-	color: #03a9f4;
+	color: var(--primary-color);
 }
 
 .station-privacy {

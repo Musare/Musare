@@ -52,7 +52,7 @@ export default {
 	width: 100px;
 	height: 100px;
 	border-radius: 100%;
-	border: 0.5px solid $light-grey-2;
+	border: 0.5px solid var(--light-grey-3);
 
 	&.using-initials {
 		display: flex;
@@ -65,24 +65,24 @@ export default {
 		user-select: none;
 		-webkit-user-select: none;
 		&.blue {
-			background-color: $musare-blue;
-			color: white;
+			background-color: var(--primary-color);
+			color: var(--white);
 		}
 		&.orange {
-			background-color: $light-orange;
-			color: white;
+			background-color: var(--light-orange);
+			color: var(--white);
 		}
 		&.green {
-			background-color: $green;
-			color: white;
+			background-color: var(--green);
+			color: var(--white);
 		}
 		&.purple {
-			background-color: $purple;
-			color: white;
+			background-color: var(--purple);
+			color: var(--white);
 		}
 		&.teal {
-			background-color: $teal;
-			color: white;
+			background-color: var(--teal);
+			color: var(--white);
 		}
 	}
 }

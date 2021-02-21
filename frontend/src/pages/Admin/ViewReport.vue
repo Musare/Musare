@@ -163,12 +163,12 @@ export default {
 .night-mode {
 	.message,
 	.table {
-		color: $night-mode-text;
-		background-color: $night-mode-bg-secondary;
+		color: var(--light-grey-2);
+		background-color: var(--dark-grey-3);
 	}
 
 	.table tr:hover {
-		background-color: darken($night-mode-bg-secondary, 5%);
+		filter: brightness(95%);
 	}
 }
 

@@ -114,17 +114,17 @@ export default {
 
 .night-mode {
 	.nav {
-		background-color: $night-mode-bg-secondary !important;
+		background-color: var(--dark-grey-3) !important;
 	}
 
 	.nav-item {
-		color: $night-mode-text !important;
+		color: var(--light-grey-2) !important;
 	}
 }
 
 .nav {
 	flex-shrink: 0;
-	background-color: $primary-color;
+	background-color: var(--primary-color);
 	height: 64px;
 	border-radius: 0% 0% 33% 33% / 0% 0% 7% 7%;
 
@@ -138,17 +138,17 @@ export default {
 
 	.nav-menu.is-active {
 		.nav-item {
-			color: $dark-grey-2;
+			color: var(--dark-grey-2);
 
 			&:hover {
-				color: $dark-grey-2;
+				color: var(--dark-grey-2);
 			}
 		}
 	}
 
 	a.nav-item.is-tab:hover {
 		border-bottom: none;
-		border-top: solid 1px $white;
+		border-top: solid 1px var(--white);
 		padding-top: 9px;
 	}
 
@@ -157,11 +157,11 @@ export default {
 
 		&:hover,
 		&:active {
-			background-color: darken($musare-blue, 10%);
+			filter: brightness(95%);
 		}
 
 		span {
-			background-color: $white;
+			background-color: var(--white);
 		}
 	}
 
@@ -173,16 +173,16 @@ export default {
 
 		img {
 			max-height: 38px;
-			color: $musare-blue;
+			color: var(--primary-color);
 		}
 	}
 
 	.nav-item {
 		font-size: 17px;
-		color: $white;
+		color: var(--white);
 
 		&:hover {
-			color: $white;
+			color: var(--white);
 		}
 	}
 }

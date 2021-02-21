@@ -152,22 +152,22 @@ export default {
 
 .night-mode {
 	.nav-dropdown-items {
-		background-color: $dark-grey-2;
+		background-color: var(--dark-grey-2);
 		border: 0 !important;
 
 		.nav-item {
-			background-color: $dark-grey;
+			background-color: var(--dark-grey);
 
 			&:focus {
-				outline-color: $dark-grey;
+				outline-color: var(--dark-grey);
 			}
 
 			p {
-				color: #fff;
+				color: var(--white);
 			}
 
 			.checkbox-control label span {
-				background-color: $dark-grey-2;
+				background-color: var(--dark-grey-2);
 			}
 		}
 	}
@@ -183,13 +183,13 @@ export default {
 #nav-dropdown-triangle {
 	border-style: solid;
 	border-width: 15px 15px 0 15px;
-	border-color: $dark-grey-2 transparent transparent transparent;
+	border-color: var(--dark-grey-2) transparent transparent transparent;
 }
 
 .nav-dropdown-items {
-	border: 1px solid $light-grey-2;
+	border: 1px solid var(--light-grey-3);
 	box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
-	background-color: #fff;
+	background-color: var(--white);
 	padding: 5px;
 	border-radius: 5px;
 	position: relative;
@@ -202,7 +202,7 @@ export default {
 		padding: 10px;
 		font-size: 15.5px;
 		height: 36px;
-		background: #eee;
+		background: var(--light-grey);
 		border-radius: 5px;
 		cursor: pointer;
 
@@ -229,9 +229,9 @@ export default {
 					cursor: pointer;
 					width: 24px;
 					height: 24px;
-					background-color: $white;
+					background-color: var(--white);
 					display: inline-block;
-					border: 1px solid $dark-grey-2;
+					border: 1px solid var(--dark-grey-2);
 					position: relative;
 					border-radius: 3px;
 				}
@@ -239,7 +239,7 @@ export default {
 				p {
 					margin-left: 10px;
 					cursor: pointer;
-					color: #000;
+					color: var(--black);
 				}
 			}
 
@@ -256,7 +256,7 @@ export default {
 		}
 
 		&:focus {
-			outline-color: $light-grey-2;
+			outline-color: var(--light-grey-3);
 		}
 
 		&:not(:last-of-type) {
@@ -292,7 +292,7 @@ export default {
 	left: 0;
 	right: 0;
 	bottom: 0;
-	background-color: #ccc;
+	background-color: var(--light-grey-3);
 	transition: 0.4s;
 	border-radius: 34px;
 
@@ -303,18 +303,18 @@ export default {
 		width: 16px;
 		left: 4px;
 		bottom: 4px;
-		background-color: white;
+		background-color: var(--white);
 		transition: 0.4s;
 		border-radius: 50%;
 	}
 }
 
 input:checked + .slider {
-	background-color: $primary-color;
+	background-color: var(--primary-color);
 }
 
 input:focus + .slider {
-	box-shadow: 0 0 1px $primary-color;
+	box-shadow: 0 0 1px var(--primary-color);
 }
 
 input:checked + .slider:before {

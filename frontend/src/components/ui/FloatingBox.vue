@@ -133,18 +133,18 @@ export default {
 @import "../../styles/global.scss";
 
 .box {
-	background-color: white;
+	background-color: var(--white);
 	position: fixed;
 	z-index: 10000000;
 	resize: both;
 	overflow: auto;
-	border: 1px solid #d3d3d3;
+	border: 1px solid var(--light-grey-2);
 	min-height: 50px !important;
 	min-width: 50px !important;
 
 	.box-header {
 		z-index: 100000001;
-		background-color: $musare-blue;
+		background-color: var(--primary-color);
 		padding: 10px;
 		display: block;
 		height: 10px;

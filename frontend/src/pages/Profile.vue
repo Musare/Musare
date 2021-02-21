@@ -651,12 +651,12 @@ export default {
 	.name {
 		font-size: 34px;
 		line-height: 40px;
-		color: $dark-grey-3;
+		color: var(--dark-grey-4);
 	}
 
 	.role {
 		padding: 2px 24px;
-		color: $white;
+		color: var(--white);
 		text-transform: uppercase;
 		font-size: 12px;
 		line-height: 14px;
@@ -665,14 +665,14 @@ export default {
 		margin-left: 12px;
 
 		&.admin {
-			background-color: $red;
+			background-color: var(--red);
 		}
 	}
 
 	.username {
 		font-size: 24px;
 		line-height: 28px;
-		color: $dark-grey;
+		color: var(--dark-grey);
 		margin: 0;
 	}
 
@@ -700,14 +700,14 @@ export default {
 	.date-location-row {
 		i {
 			font-size: 24px;
-			color: $dark-grey-2;
+			color: var(--dark-grey-2);
 			margin-right: 12px;
 		}
 
 		p {
 			font-size: 17px;
 			line-height: 20px;
-			color: $dark-grey-2;
+			color: var(--dark-grey-2);
 			word-break: break-word;
 		}
 	}
@@ -758,7 +758,7 @@ export default {
 			outline: none;
 			border: none;
 			box-shadow: none;
-			color: $musare-blue;
+			color: var(--primary-color);
 			font-size: 22px;
 			line-height: 26px;
 			padding: 7px 0 7px 12px;
@@ -769,8 +769,8 @@ export default {
 			background-color: transparent;
 
 			&.active {
-				color: $white;
-				background-color: $musare-blue;
+				color: var(--white);
+				background-color: var(--primary-color);
 			}
 		}
 	}
@@ -778,7 +778,7 @@ export default {
 	.content {
 		width: 600px;
 		max-width: 100%;
-		background-color: #fff;
+		background-color: var(--white);
 		padding: 30px 50px;
 		border-radius: 3px;
 
@@ -797,7 +797,7 @@ export default {
 
 			&.activity-item {
 				height: 72px;
-				border: 0.5px $light-grey-2 solid;
+				border: 0.5px var(--light-grey-3) solid;
 				border-radius: 3px;
 
 				.thumbnail {
@@ -814,7 +814,7 @@ export default {
 
 					.activity-type-icon {
 						position: absolute;
-						color: $dark-grey;
+						color: var(--dark-grey);
 						font-size: 30px;
 					}
 				}
@@ -855,7 +855,7 @@ export default {
 		.item.activity-item
 		.thumbnail
 		.activity-type-icon {
-		color: $night-mode-text;
+		color: var(--light-grey-2);
 	}
 }
 </style>

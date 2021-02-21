@@ -108,7 +108,7 @@ export default {
 }
 
 .menu-list a:hover {
-	color: $black !important;
+	color: var(--black) !important;
 }
 
 li a {

@@ -134,7 +134,7 @@ export default {
 
 .night-mode {
 	.queue-item {
-		background-color: $dark-grey-2 !important;
+		background-color: var(--dark-grey-2) !important;
 		border: 0 !important;
 	}
 }
