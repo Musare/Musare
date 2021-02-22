@@ -30,7 +30,7 @@ export default {
 		}
 	},
 	methods: {
-		successfulSave() {
+		handleSuccessfulSave() {
 			if (this.saveStatus !== "save-success") {
 				this.saveStatus = "save-success";
 				setTimeout(() => {
@@ -38,7 +38,7 @@ export default {
 				}, 2000);
 			}
 		},
-		failedSave() {
+		handleFailedSave() {
 			if (this.saveStatus !== "save-failure") {
 				this.saveStatus = "save-failure";
 				setTimeout(() => {

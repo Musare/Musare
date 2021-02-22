@@ -518,13 +518,13 @@ export default {
 		ContentLoader,
 		MainHeader,
 		MainFooter,
-		SongQueue: () => import("./AddSongToQueue.vue"),
+		SongQueue: () => import("../../components/modals/AddSongToQueue.vue"),
 		EditPlaylist: () =>
 			import("../../components/modals/EditPlaylist/index.vue"),
 		CreatePlaylist: () =>
 			import("../../components/modals/CreatePlaylist.vue"),
 		EditStation: () => import("../../components/modals/EditStation.vue"),
-		Report: () => import("./Report.vue"),
+		Report: () => import("../../components/modals/Report.vue"),
 		Z404,
 		FloatingBox,
 		CurrentlyPlaying,
@@ -769,8 +769,32 @@ export default {
 				}
 			});
 
-			this.socket.on("event:theme.updated", theme => {
+			this.socket.on("event:station.themeUpdated", theme => {
 				this.station.theme = theme;
+			});
+
+			this.socket.on("event:station.updateName", res => {
+				this.station.name = res.name;
+				// eslint-disable-next-line no-restricted-globals
+				history.pushState(
+					{},
+					null,
+					`${res.name}?${Object.keys(this.$route.query)
+						.map(key => {
+							return `${encodeURIComponent(
+								key
+							)}=${encodeURIComponent(this.$route.query[key])}`;
+						})
+						.join("&")}`
+				);
+			});
+
+			this.socket.on("event:station.updateDisplayName", res => {
+				this.station.displayName = res.displayName;
+			});
+
+			this.socket.on("event:station.updateDescription", res => {
+				this.station.description = res.description;
 			});
 
 			this.socket.on("event:newOfficialPlaylist", playlist => {

@@ -54,7 +54,7 @@ const router = new VueRouter({
 	routes: [
 		{
 			path: "/",
-			component: () => import("./pages/Home/index.vue")
+			component: () => import("./pages/Home.vue")
 		},
 		{
 			path: "/404",
@@ -84,7 +84,7 @@ const router = new VueRouter({
 		{
 			name: "profile",
 			path: "/u/:username",
-			component: () => import("./pages/Profile.vue")
+			component: () => import("./pages/Profile/index.vue")
 		},
 		{
 			path: "/settings",
@@ -165,6 +165,11 @@ lofig.get("serverDomain").then(serverDomain => {
 			store.dispatch(
 				"user/preferences/changeNightmode",
 				preferences.nightmode
+			);
+
+			store.dispatch(
+				"user/preferences/changeActivityLogPublic",
+				preferences.activityLogPublic
 			);
 		});
 	});

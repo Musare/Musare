@@ -169,7 +169,7 @@ import { mapActions, mapState } from "vuex";
 import Toast from "toasters";
 import io from "../../io";
 
-import Modal from "../../components/Modal.vue";
+import Modal from "../Modal.vue";
 
 export default {
 	components: { Modal },

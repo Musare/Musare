@@ -68,7 +68,7 @@
 <script>
 import { mapState, mapActions } from "vuex";
 
-import EditUser from "../EditUser.vue";
+import EditUser from "../../../components/modals/EditUser.vue";
 import ProfilePicture from "../../../components/ui/ProfilePicture.vue";
 import io from "../../../io";
 
@@ -86,8 +86,6 @@ export default {
 		})
 	},
 	mounted() {
-		console.log("mounted");
-
 		io.getSocket(socket => {
 			this.socket = socket;
 			if (this.socket.connected) this.init();

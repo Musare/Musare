@@ -6,31 +6,6 @@
 				<h4 class="item-title" :title="result.title">
 					{{ result.title }}
 				</h4>
-
-				<!-- <p
-					id="song-request-time"
-					v-if="
-						station.type === 'community' &&
-							station.partyMode === true
-					"
-				>
-					Requested by
-					<strong>
-						<user-id-to-username
-							:user-id="song.requestedBy"
-							:link="true"
-						/>
-						{{
-							formatDistance(
-								parseISO(song.requestedAt),
-								new Date(),
-								{
-									addSuffix: true
-								}
-							)
-						}}
-					</strong>
-				</p> -->
 			</div>
 		</div>
 		<div class="universal-item-actions">

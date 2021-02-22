@@ -6,7 +6,8 @@
 			<h6
 				class="has-text-centered"
 				v-if="
-					users &&
+					users.loggedIn &&
+						users.loggedOut &&
 						((users.loggedIn.length === 1 &&
 							users.loggedOut.length === 0) ||
 							(users.loggedIn.length === 0 &&
@@ -18,7 +19,11 @@
 			</h6>
 			<h6
 				class="has-text-centered"
-				v-else-if="users && users.loggedOut.length > 0"
+				v-else-if="
+					users.loggedIn &&
+						users.loggedOut &&
+						users.loggedOut.length > 0
+				"
 				key="logged-out-users"
 			>
 				{{ users.loggedOut.length }}

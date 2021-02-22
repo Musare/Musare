@@ -21,7 +21,7 @@ const PlaylistsModule = moduleManager.modules.playlists;
 CacheModule.runJob("SUB", {
 	channel: "user.updatePreferences",
 	cb: res => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }).then(response => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("keep.event:user.preferences.changed", res.preferences);
 			});
@@ -39,7 +39,7 @@ CacheModule.runJob("SUB", {
 		});
 
 		IOModule.runJob("EMIT_TO_ROOM", {
-			room: `profile-${res.userId}`,
+			room: `profile-${res.userId}-playlists`,
 			args: ["event:user.orderOfPlaylists.changed", res.orderOfPlaylists]
 		});
 	}
@@ -714,6 +714,7 @@ export default {
 	 * @param {object} preferences - object containing preferences
 	 * @param {boolean} preferences.nightmode - whether or not the user is using the night mode theme
 	 * @param {boolean} preferences.autoSkipDisliked - whether to automatically skip disliked songs
+	 * @param {boolean} preferences.activityLogPublic - whether or not a user's activity log can be publicly viewed
 	 * @param {Function} cb - gets called with the result
 	 */
 	updatePreferences: isLoginRequired(async function updatePreferences(session, preferences, cb) {
@@ -728,7 +729,8 @@ export default {
 							$set: {
 								preferences: {
 									nightmode: preferences.nightmode,
-									autoSkipDisliked: preferences.autoSkipDisliked
+									autoSkipDisliked: preferences.autoSkipDisliked,
+									activityLogPublic: preferences.activityLogPublic
 								}
 							}
 						},

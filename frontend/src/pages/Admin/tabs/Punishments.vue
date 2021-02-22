@@ -97,7 +97,7 @@
 import { mapState, mapActions } from "vuex";
 import Toast from "toasters";
 
-import ViewPunishment from "../ViewPunishment.vue";
+import ViewPunishment from "../../../components/modals/ViewPunishment.vue";
 import io from "../../../io";
 
 export default {

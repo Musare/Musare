@@ -220,7 +220,7 @@ import { mapActions, mapState } from "vuex";
 import Toast from "toasters";
 import io from "../../../io";
 
-import EditNews from "../EditNews.vue";
+import EditNews from "../../../components/modals/EditNews.vue";
 
 export default {
 	components: { EditNews },

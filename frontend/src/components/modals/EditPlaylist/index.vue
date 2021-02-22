@@ -364,6 +364,7 @@ export default {
 			playlist: { songs: [] }
 		};
 	},
+
 	computed: {
 		...mapState("user/playlists", {
 			editing: state => state.editing
@@ -378,13 +379,23 @@ export default {
 			};
 		}
 	},
+	watch: {
+		"search.songs.results": function checkIfSongInPlaylist(songs) {
+			songs.forEach((searchItem, index) =>
+				this.playlist.songs.find(song => {
+					if (song.songId === searchItem.id)
+						this.search.songs.results[index].isAddedToQueue = true;
+
+					return song.songId === searchItem.id;
+				})
+			);
+		}
+	},
 	mounted() {
 		io.getSocket(socket => {
 			this.socket = socket;
 
 			this.socket.emit("playlists.getPlaylist", this.editing, res => {
-				console.log(res);
-
 				if (res.status === "success") {
 					this.playlist = res.data;
 					this.playlist.songs.sort((a, b) => a.position - b.position);
@@ -400,9 +411,19 @@ export default {
 
 			this.socket.on("event:playlist.removeSong", data => {
 				if (this.playlist._id === data.playlistId) {
+					// remove song from array of playlists
 					this.playlist.songs.forEach((song, index) => {
 						if (song.songId === data.songId)
 							this.playlist.songs.splice(index, 1);
+					});
+
+					// if this song is in search results, mark it available to add to the playlist again
+					this.search.songs.results.forEach((searchItem, index) => {
+						if (data.songId === searchItem.id) {
+							this.search.songs.results[
+								index
+							].isAddedToQueue = false;
+						}
 					});
 				}
 			});

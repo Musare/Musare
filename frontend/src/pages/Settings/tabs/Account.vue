@@ -72,7 +72,7 @@ import validation from "../../../validation";
 import io from "../../../io";
 
 import InputHelpBox from "../../../components/ui/InputHelpBox.vue";
-import SaveButton from "../mixins/SaveButton.vue";
+import SaveButton from "../../../mixins/SaveButton.vue";
 
 export default {
 	components: { InputHelpBox },
@@ -158,7 +158,7 @@ export default {
 			if (emailAddressChanged) this.changeEmail();
 
 			if (!usernameChanged && !emailAddressChanged) {
-				this.failedSave();
+				this.handleFailedSave();
 
 				new Toast({
 					content: "Please make a change before saving.",
@@ -191,7 +191,7 @@ export default {
 				res => {
 					if (res.status !== "success") {
 						new Toast({ content: res.message, timeout: 8000 });
-						this.failedSave();
+						this.handleFailedSave();
 					} else {
 						new Toast({
 							content: "Successfully changed email address",
@@ -203,7 +203,7 @@ export default {
 							value: email
 						});
 
-						this.successfulSave();
+						this.handleSuccessfulSave();
 					}
 				}
 			);
@@ -233,7 +233,7 @@ export default {
 				res => {
 					if (res.status !== "success") {
 						new Toast({ content: res.message, timeout: 8000 });
-						this.failedSave();
+						this.handleFailedSave();
 					} else {
 						new Toast({
 							content: "Successfully changed username",
@@ -245,7 +245,7 @@ export default {
 							value: username
 						});
 
-						this.successfulSave();
+						this.handleSuccessfulSave();
 					}
 				}
 			);

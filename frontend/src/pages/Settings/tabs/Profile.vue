@@ -88,7 +88,7 @@ import validation from "../../../validation";
 import io from "../../../io";
 
 import ProfilePicture from "../../../components/ui/ProfilePicture.vue";
-import SaveButton from "../mixins/SaveButton.vue";
+import SaveButton from "../../../mixins/SaveButton.vue";
 
 export default {
 	components: { ProfilePicture },
@@ -139,7 +139,7 @@ export default {
 				!locationChanged &&
 				!nameChanged
 			) {
-				this.failedSave();
+				this.handleFailedSave();
 
 				new Toast({
 					content: "Please make a change before saving.",
@@ -165,7 +165,7 @@ export default {
 				res => {
 					if (res.status !== "success") {
 						new Toast({ content: res.message, timeout: 8000 });
-						this.failedSave();
+						this.handleFailedSave();
 					} else {
 						new Toast({
 							content: "Successfully changed name",
@@ -177,7 +177,7 @@ export default {
 							value: name
 						});
 
-						this.successfulSave();
+						this.handleSuccessfulSave();
 					}
 				}
 			);
@@ -200,7 +200,7 @@ export default {
 				res => {
 					if (res.status !== "success") {
 						new Toast({ content: res.message, timeout: 8000 });
-						this.failedSave();
+						this.handleFailedSave();
 					} else {
 						new Toast({
 							content: "Successfully changed location",
@@ -212,7 +212,7 @@ export default {
 							value: location
 						});
 
-						this.successfulSave();
+						this.handleSuccessfulSave();
 					}
 				}
 			);
@@ -235,7 +235,7 @@ export default {
 				res => {
 					if (res.status !== "success") {
 						new Toast({ content: res.message, timeout: 8000 });
-						this.failedSave();
+						this.handleFailedSave();
 					} else {
 						new Toast({
 							content: "Successfully changed bio",
@@ -247,7 +247,7 @@ export default {
 							value: bio
 						});
 
-						this.successfulSave();
+						this.handleSuccessfulSave();
 					}
 				}
 			);
@@ -264,7 +264,7 @@ export default {
 				res => {
 					if (res.status !== "success") {
 						new Toast({ content: res.message, timeout: 8000 });
-						this.failedSave();
+						this.handleFailedSave();
 					} else {
 						new Toast({
 							content: "Successfully updated avatar type",
@@ -276,7 +276,7 @@ export default {
 							value: avatar
 						});
 
-						this.successfulSave();
+						this.handleSuccessfulSave();
 					}
 				}
 			);
