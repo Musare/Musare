@@ -203,21 +203,29 @@ const modules = {
 		namespaced: true,
 		state: {
 			activities: [],
-			sets: []
+			position: 0,
+			maxPosition: 1,
+			offsettedFromNextSet: 0
 		},
 		actions: {
-			getSetOfActivities: ({ commit }, data) =>
-				commit("getSetOfActivities", data),
+			addSetOfActivities: ({ commit }, data) =>
+				commit("addSetOfActivities", data),
+			addActivity: ({ commit }, activity) =>
+				commit("addActivity", activity),
 			removeActivity: ({ commit }, activityId) =>
 				commit("removeActivity", activityId)
 		},
 		mutations: {
-			getSetOfActivities(state, data) {
+			addActivity(state, activity) {
+				state.activities.unshift(activity);
+				state.offsettedFromNextSet += 1;
+			},
+			addSetOfActivities(state, data) {
 				const { activities, set } = data;
 
-				if (!state.sets.includes(set)) {
+				if (set > state.position && set <= state.maxPosition) {
 					state.activities.push(...activities);
-					state.sets.push(set);
+					state.position = set;
 				}
 			},
 			removeActivity(state, activityId) {

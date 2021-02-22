@@ -36,7 +36,7 @@ class _AppModule extends CoreClass {
 			MailModule = this.moduleManager.modules.mail;
 			CacheModule = this.moduleManager.modules.cache;
 			DBModule = this.moduleManager.modules.db;
-			ActivitiesModule = this.moduleManager.modules.activities;
+			// ActivitiesModule = this.moduleManager.modules.activities;
 			PlaylistsModule = this.moduleManager.modules.playlists;
 			UtilsModule = this.moduleManager.modules.utils;
 
@@ -363,7 +363,8 @@ class _AppModule extends CoreClass {
 						(userId, next) => {
 							ActivitiesModule.runJob("ADD_ACTIVITY", {
 								userId,
-								activityType: "created_account"
+								type: "user__joined",
+								payload: { message: "Welcome to Musare!" }
 							});
 
 							next(null, userId);

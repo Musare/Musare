@@ -48,6 +48,7 @@ export default {
 									if (user.preferences.activityLogPublic) return next();
 									return next("User's activity log isn't public.");
 								}
+
 								return next("User does not exist.");
 							})
 							.catch(next);
