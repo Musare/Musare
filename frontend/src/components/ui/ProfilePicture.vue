@@ -67,7 +67,7 @@ export default {
 			color: var(--white);
 		}
 		&.orange {
-			background-color: var(--light-orange);
+			background-color: var(--orange);
 			color: var(--white);
 		}
 		&.green {

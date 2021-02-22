@@ -248,7 +248,7 @@ export default {
 				left: 2px;
 				top: 2px;
 				border-radius: 3px;
-				background-color: var(--station-theme);
+				background-color: var(--primary-color);
 				position: absolute;
 			}
 		}

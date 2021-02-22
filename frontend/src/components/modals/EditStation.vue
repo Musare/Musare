@@ -1115,7 +1115,7 @@ export default {
 			}
 
 			&.orange {
-				background-color: var(--light-orange);
+				background-color: var(--orange);
 			}
 
 			&.yellow {

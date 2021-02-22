@@ -170,7 +170,7 @@ export default {
 			flex-direction: column;
 			flex-grow: 1;
 			h6 {
-				color: var(--station-theme) !important;
+				color: var(--primary-color) !important;
 				font-weight: bold;
 				font-size: 17px;
 			}
@@ -221,7 +221,7 @@ export default {
 			}
 
 			#editsong-icon.button.is-primary {
-				background-color: var(--station-theme) !important;
+				background-color: var(--primary-color) !important;
 				&:hover,
 				&:focus {
 					filter: brightness(90%);

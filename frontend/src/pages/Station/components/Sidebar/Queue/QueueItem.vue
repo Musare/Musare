@@ -175,7 +175,7 @@ export default {
 	}
 
 	.edit-icon {
-		color: var(--station-theme);
+		color: var(--primary-color);
 	}
 }
 </style>

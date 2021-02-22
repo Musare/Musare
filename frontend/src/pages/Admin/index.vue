@@ -238,12 +238,12 @@ export default {
 		border-color: var(--dark-pink);
 	}
 	.statistics {
-		color: var(--light-orange);
-		border-color: var(--light-orange);
+		color: var(--orange);
+		border-color: var(--orange);
 	}
 	.newstatistics {
-		color: var(--light-orange);
-		border-color: var(--light-orange);
+		color: var(--orange);
+		border-color: var(--orange);
 	}
 	.punishments {
 		color: var(--dark-orange);

@@ -232,7 +232,7 @@ export default {
 	align-items: center;
 
 	.edit-icon {
-		color: var(--station-theme);
+		color: var(--primary-color);
 	}
 }
 

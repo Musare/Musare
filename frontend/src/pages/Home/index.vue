@@ -62,7 +62,7 @@
 						isPrivate: station.privacy === 'private',
 						isMine: isOwner(station)
 					}"
-					:style="'--station-theme: ' + station.themeCode"
+					:style="'--station-theme: var(--' + station.theme + ')'"
 				>
 					<div class="card-image">
 						<figure class="image is-square">
@@ -210,7 +210,6 @@
 						})
 					"
 					class="card station-card createStation"
-					:style="'--station-theme: rgb(2, 166, 242)'"
 				>
 					<div class="card-image">
 						<figure class="image is-square">
@@ -230,11 +229,7 @@
 					</div>
 					<div class="bottomBar"></div>
 				</a>
-				<a
-					v-else
-					class="card station-card createStation"
-					:style="'--station-theme: rgb(2, 166, 242)'"
-				>
+				<a v-else class="card station-card createStation">
 					<div class="card-image">
 						<figure class="image is-square">
 							<i class="material-icons">radio</i>
@@ -264,7 +259,7 @@
 						isPrivate: station.privacy === 'private',
 						isMine: isOwner(station)
 					}"
-					:style="'--station-theme: ' + station.themeCode"
+					:style="'--station-theme: var(--' + station.theme + ')'"
 				>
 					<div class="card-image">
 						<figure class="image is-square">
@@ -565,17 +560,6 @@ export default {
 					const station = s;
 					if (station._id === stationId) {
 						station.theme = theme;
-						if (theme === "blue") {
-							station.themeCode = "rgb(2, 166, 242)";
-						} else if (theme === "purple") {
-							station.themeCode = "rgb(143, 40, 140)";
-						} else if (theme === "teal") {
-							station.themeCode = "rgb(0, 209, 178)";
-						} else if (theme === "orange") {
-							station.themeCode = "rgb(255, 94, 0)";
-						} else {
-							station.themeCode = "rgb(2, 166, 242)";
-						}
 					}
 				});
 			});
@@ -654,18 +638,6 @@ export default {
 							!modifiableStation.currentSong.thumbnail
 						)
 							modifiableStation.currentSong.ytThumbnail = `https://img.youtube.com/vi/${station.currentSong.songId}/mqdefault.jpg`;
-
-						if (modifiableStation.theme === "blue") {
-							modifiableStation.themeCode = "rgb(2, 166, 242)";
-						} else if (modifiableStation.theme === "purple") {
-							modifiableStation.themeCode = "rgb(143, 40, 140)";
-						} else if (modifiableStation.theme === "teal") {
-							modifiableStation.themeCode = "rgb(0, 209, 178)";
-						} else if (modifiableStation.theme === "orange") {
-							modifiableStation.themeCode = "rgb(255, 94, 0)";
-						} else {
-							modifiableStation.themeCode = "rgb(2, 166, 242)";
-						}
 
 						this.stations.push(modifiableStation);
 					});
@@ -907,7 +879,7 @@ html {
 			margin-left: 5px;
 		}
 		.unlistedIcon {
-			color: var(--light-orange);
+			color: var(--orange);
 		}
 		.privateIcon {
 			color: var(--dark-pink);
@@ -924,7 +896,7 @@ html {
 		.host,
 		.host a {
 			font-weight: 400;
-			color: var(--station-theme);
+			color: var(--primary-color);
 			&:hover,
 			&:focus {
 				filter: brightness(90%);
@@ -962,6 +934,8 @@ html {
 	border-radius: 5px;
 	box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.1);
 	transition: all ease-in-out 0.2s;
+
+	--primary-color: var(--station-theme);
 
 	.card-content {
 		padding: 10px 10px 10px 15px;
@@ -1009,7 +983,7 @@ html {
 				}
 
 				.verified-station {
-					color: var(--station-theme);
+					color: var(--primary-color);
 				}
 			}
 		}
@@ -1058,7 +1032,7 @@ html {
 		position: relative;
 		display: flex;
 		align-items: center;
-		background: var(--station-theme);
+		background: var(--primary-color);
 		// box-shadow: inset 0px 2px 4px rgba(100, 100, 100, 0.3);
 		width: 100%;
 		height: 30px;
@@ -1096,7 +1070,7 @@ html {
 			right: 0;
 			text-align: center;
 			font-size: 70px;
-			color: var(--station-theme);
+			color: var(--primary-color);
 		}
 		.card-content {
 			.media {

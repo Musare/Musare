@@ -120,7 +120,7 @@ export default {
 	position: absolute;
 	bottom: 0;
 	border: 0;
-	background-color: var(--station-theme) !important;
+	background-color: var(--primary-color) !important;
 	color: var(--white) !important;
 
 	&:active,
@@ -130,7 +130,7 @@ export default {
 
 	&:hover,
 	&:focus {
-		background-color: var(--station-theme) !important;
+		background-color: var(--primary-color) !important;
 		filter: brightness(90%);
 	}
 }

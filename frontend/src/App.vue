@@ -191,7 +191,7 @@ export default {
 	--yellow: rgb(241, 196, 15);
 	--light-pink: rgb(228, 155, 166);
 	--dark-pink: rgb(234, 72, 97);
-	--light-orange: rgb(255, 94, 0);
+	--orange: rgb(255, 94, 0);
 	--dark-orange: rgb(250, 50, 0);
 	--green: rgb(68, 189, 50);
 	--red: rgb(231, 77, 60);

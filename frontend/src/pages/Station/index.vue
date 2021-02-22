@@ -1,5 +1,5 @@
 <template>
-	<div :style="'--station-theme: ' + theme">
+	<div :style="'--station-theme: var(--' + station.theme + ')'">
 		<metadata v-if="exists && !loading" :title="`${station.displayName}`" />
 		<metadata v-else-if="!exists && !loading" :title="`Not found`" />
 
@@ -545,7 +545,7 @@ export default {
 			volumeSliderValue: 0,
 			showPlaylistDropdown: false,
 			editingSongId: "",
-			theme: "rgb(2, 166, 242)"
+			theme: "var(--primary-color)"
 		};
 	},
 	computed: {
@@ -758,15 +758,6 @@ export default {
 
 			this.socket.on("event:theme.updated", theme => {
 				this.station.theme = theme;
-				if (theme === "blue") {
-					this.theme = "rgb(2, 166, 242)";
-				} else if (theme === "purple") {
-					this.theme = "rgb(143, 40, 140)";
-				} else if (theme === "teal") {
-					this.theme = "rgb(0, 209, 178)";
-				} else if (theme === "orange") {
-					this.theme = "rgb(255, 94, 0)";
-				}
 			});
 
 			this.socket.on("event:newOfficialPlaylist", playlist => {
@@ -1427,16 +1418,6 @@ export default {
 						theme
 					});
 
-					if (this.station.theme === "blue") {
-						this.theme = "rgb(2, 166, 242)";
-					} else if (this.station.theme === "purple") {
-						this.theme = "rgb(143, 40, 140)";
-					} else if (this.station.theme === "teal") {
-						this.theme = "rgb(0, 209, 178)";
-					} else if (this.station.theme === "orange") {
-						this.theme = "rgb(255, 94, 0)";
-					}
-
 					const currentSong = res.data.currentSong
 						? res.data.currentSong
 						: {};
@@ -1657,6 +1638,10 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.main-container {
+	--primary-color: var(--station-theme);
+}
+
 #page-loader-container {
 	height: inherit;
 
@@ -1699,7 +1684,7 @@ export default {
 
 .nav,
 .button.is-primary {
-	background-color: var(--station-theme) !important;
+	background-color: var(--primary-color) !important;
 }
 .button.is-primary:hover,
 .button.is-primary:focus {
@@ -1866,7 +1851,7 @@ export default {
 					width: 100%;
 					height: 100%;
 					bottom: calc(100% + 5px);
-					background: var(--station-theme);
+					background: var(--primary-color);
 					display: flex;
 					align-items: center;
 					justify-content: center;
@@ -1888,7 +1873,7 @@ export default {
 				overflow: hidden;
 
 				#seeker-bar {
-					background-color: var(--station-theme);
+					background-color: var(--primary-color);
 					top: 0;
 					left: 0;
 					bottom: 0;
@@ -1978,7 +1963,7 @@ export default {
 						height: 19px;
 						width: 19px;
 						border-radius: 15px;
-						background: var(--station-theme);
+						background: var(--primary-color);
 						cursor: pointer;
 						-webkit-appearance: none;
 						margin-top: -6.5px;
@@ -2000,7 +1985,7 @@ export default {
 						height: 19px;
 						width: 19px;
 						border-radius: 15px;
-						background: var(--station-theme);
+						background: var(--primary-color);
 						cursor: pointer;
 						-webkit-appearance: none;
 						margin-top: -6.5px;
@@ -2034,7 +2019,7 @@ export default {
 						height: 15px;
 						width: 15px;
 						border-radius: 15px;
-						background: var(--station-theme);
+						background: var(--primary-color);
 						cursor: pointer;
 						-webkit-appearance: none;
 						margin-top: 1.5px;
