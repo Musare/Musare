@@ -62,7 +62,7 @@
 						isPrivate: station.privacy === 'private',
 						isMine: isOwner(station)
 					}"
-					:style="'--station-theme: var(--' + station.theme + ')'"
+					:style="'--primary-color: var(--' + station.theme + ')'"
 				>
 					<div class="card-image">
 						<figure class="image is-square">
@@ -259,7 +259,7 @@
 						isPrivate: station.privacy === 'private',
 						isMine: isOwner(station)
 					}"
-					:style="'--station-theme: var(--' + station.theme + ')'"
+					:style="'--primary-color: var(--' + station.theme + ')'"
 				>
 					<div class="card-image">
 						<figure class="image is-square">
@@ -934,8 +934,6 @@ html {
 	border-radius: 5px;
 	box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.1);
 	transition: all ease-in-out 0.2s;
-
-	--primary-color: var(--station-theme);
 
 	.card-content {
 		padding: 10px 10px 10px 15px;

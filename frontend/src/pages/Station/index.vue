@@ -1,5 +1,5 @@
 <template>
-	<div :style="'--station-theme: var(--' + station.theme + ')'">
+	<div :style="'--primary-color: var(--' + station.theme + ')'">
 		<metadata v-if="exists && !loading" :title="`${station.displayName}`" />
 		<metadata v-else-if="!exists && !loading" :title="`Not found`" />
 
@@ -1638,10 +1638,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.main-container {
-	--primary-color: var(--station-theme);
-}
-
 #page-loader-container {
 	height: inherit;
 
