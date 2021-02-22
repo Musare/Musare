@@ -192,6 +192,19 @@
 							}}</span
 						>
 						<span v-else class="songTitle">No Songs Playing</span>
+						<i
+							class="material-icons stationMode"
+							:title="
+								station.partyMode
+									? 'Station in Party mode'
+									: 'Station in Playlist mode'
+							"
+							>{{
+								station.partyMode
+									? "emoji_people"
+									: "playlist_play"
+							}}</i
+						>
 					</div>
 				</router-link>
 			</div>
@@ -389,6 +402,19 @@
 							}}</span
 						>
 						<span v-else class="songTitle">No Songs Playing</span>
+						<i
+							class="material-icons stationMode"
+							:title="
+								station.partyMode
+									? 'Station in Party mode'
+									: 'Station in Playlist mode'
+							"
+							>{{
+								station.partyMode
+									? "emoji_people"
+									: "playlist_play"
+							}}</i
+						>
 					</div>
 				</router-link>
 				<h4 v-if="stations.length === 0">
@@ -1044,7 +1070,7 @@ html {
 		i.material-icons {
 			vertical-align: middle;
 			margin-left: 5px;
-			font-size: 18px;
+			font-size: 22px;
 		}
 
 		.songTitle {

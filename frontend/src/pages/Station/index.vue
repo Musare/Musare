@@ -342,6 +342,19 @@
 											>star_border</i
 										>
 									</a>
+									<i
+										class="material-icons stationMode"
+										:title="
+											station.partyMode
+												? 'Station in Party mode'
+												: 'Station in Playlist mode'
+										"
+										>{{
+											station.partyMode
+												? "emoji_people"
+												: "playlist_play"
+										}}</i
+									>
 								</div>
 								<p>{{ station.description }}</p>
 							</div>
@@ -1792,6 +1805,11 @@ export default {
 						margin-left: 10px;
 						font-size: 30px;
 						color: var(--yellow);
+						&.stationMode {
+							padding-left: 10px;
+							margin-left: auto;
+							color: var(--primary-color);
+						}
 					}
 				}
 
