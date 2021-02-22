@@ -36,8 +36,13 @@ class _ActivitiesModule extends CoreClass {
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.userId - the id of the user who's activity is to be added
-	 * @param {string} payload.activityType - the type of activity (enum specified in schema)
-	 * @param {Array} payload.payload - the details of the activity e.g. an array of songs that were added
+	 * @param {string} payload.type - the type of activity (enum specified in schema)
+	 * @param {object} payload.payload - the details of the activity e.g. an array of songs that were added
+	 * @param {string} payload.payload.message - the main message describing the activity e.g. 50 songs added to playlist 'playlist name'
+	 * @param {string} payload.payload.thumbnail - url to a thumbnail e.g. song album art to be used when display an activity
+	 * @param {string} payload.payload.songId - (optional) if relevant, the id of the song related to the activity
+	 * @param {string} payload.payload.playlistId - (optional) if relevant, the id of the playlist related to the activity
+	 * @param {string} payload.payload.stationId - (optional) if relevant, the id of the station related to the activity
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	ADD_ACTIVITY(payload) {
@@ -50,47 +55,41 @@ class _ActivitiesModule extends CoreClass {
 							.catch(next);
 					},
 					(ActivityModel, next) => {
+						const { userId, type } = payload;
+
 						const activity = new ActivityModel({
-							userId: payload.userId,
-							activityType: payload.activityType,
+							userId,
+							type,
 							payload: payload.payload
 						});
 
-						activity.save((err, activity) => {
-							if (err) return next(err);
-							return next(null, activity);
-						});
+						activity.save(next);
 					},
 
 					(activity, next) => {
-						IOModule.runJob(
-							"SOCKETS_FROM_USER",
-							{
-								userId: activity.userId
-							},
-							this
-						)
-							.then(response => {
-								response.sockets.forEach(socket => {
-									socket.emit("event:activity.create", activity);
-								});
-								next();
+						IOModule.runJob("SOCKETS_FROM_USER", { userId: activity.userId }, this)
+							.then(res => {
+								res.sockets.forEach(socket => socket.emit("event:activity.create", activity));
+								next(null, activity);
 							})
 							.catch(next);
+					},
+
+					(activity, next) => {
+						IOModule.runJob("EMIT_TO_ROOM", {
+							room: `profile-${activity.userId}-activities`,
+							args: ["event:activity.create", activity]
+						});
+
+						return next(null, activity);
 					}
 				],
 				async (err, activity) => {
 					if (err) {
-						err = await UtilsModule.runJob(
-							"GET_ERROR",
-							{
-								error: err
-							},
-							this
-						);
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 						reject(new Error(err));
 					} else {
-						resolve({ activity });
+						resolve(activity);
 					}
 				}
 			);

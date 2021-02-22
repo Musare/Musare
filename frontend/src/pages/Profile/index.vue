@@ -155,7 +155,13 @@ export default {
 <style lang="scss" scoped>
 @import "../../styles/global.scss";
 
-@media only screen and (max-width: 750px) {
+@media only screen and (max-width: 1250px) {
+	.bottom-section .content {
+		width: 650px !important;
+	}
+}
+
+@media only screen and (max-width: 900px) {
 	.info-section {
 		margin-top: 0 !important;
 
@@ -312,7 +318,6 @@ export default {
 }
 
 .bottom-section {
-	width: 962px;
 	max-width: 100%;
 	margin-left: auto;
 	margin-right: auto;
@@ -346,7 +351,7 @@ export default {
 	}
 
 	.content /deep/ {
-		width: 600px;
+		width: 800px;
 		max-width: 100%;
 		background-color: #fff;
 		padding: 30px 50px;

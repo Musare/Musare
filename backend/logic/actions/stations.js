@@ -645,12 +645,14 @@ export default {
 					);
 					return cb({ status: "failure", message: err });
 				}
+
 				this.log(
 					"SUCCESS",
 					"STATIONS_GET_PLAYLIST",
 					`Got playlist for station "${stationId}" successfully.`,
 					false
 				);
+
 				return cb({ status: "success", data: playlist.songs });
 			}
 		);
@@ -1134,13 +1136,8 @@ export default {
 	 * @param cb
 	 */
 	updateName: isOwnerRequired(async function updateName(session, stationId, newName, cb) {
-		const stationModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "station"
-			},
-			this
-		);
+		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
+
 		async.waterfall(
 			[
 				next => {
@@ -1154,20 +1151,20 @@ export default {
 
 				(res, next) => {
 					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
-						.then(station => {
-							next(null, station);
-						})
+						.then(station => next(null, station))
 						.catch(next);
 				}
 			],
-			async err => {
+			async (err, station) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+
 					this.log(
 						"ERROR",
 						"STATIONS_UPDATE_NAME",
 						`Updating station "${stationId}" name to "${newName}" failed. "${err}"`
 					);
+
 					return cb({ status: "failure", message: err });
 				}
 
@@ -1180,6 +1177,15 @@ export default {
 				CacheModule.runJob("PUB", {
 					channel: "station.nameUpdate",
 					value: { stationId, name: newName }
+				});
+
+				ActivitiesModule.runJob("ADD_ACTIVITY", {
+					userId: session.userId,
+					type: "station__edit_name",
+					payload: {
+						message: `Changed name of station <stationId>${station.displayName}</stationId> to ${newName}`,
+						stationId
+					}
 				});
 
 				return cb({
@@ -1199,13 +1205,7 @@ export default {
 	 * @param cb
 	 */
 	updateDisplayName: isOwnerRequired(async function updateDisplayName(session, stationId, newDisplayName, cb) {
-		const stationModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "station"
-			},
-			this
-		);
+		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
 
 		async.waterfall(
 			[
@@ -1220,9 +1220,7 @@ export default {
 
 				(res, next) => {
 					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
-						.then(station => {
-							next(null, station);
-						})
+						.then(station => next(null, station))
 						.catch(next);
 				}
 			],
@@ -1248,6 +1246,15 @@ export default {
 					value: { stationId, displayName: newDisplayName }
 				});
 
+				ActivitiesModule.runJob("ADD_ACTIVITY", {
+					userId: session.userId,
+					type: "station__edit_display_name",
+					payload: {
+						message: `Changed display name of station <stationId>${newDisplayName}</stationId>`,
+						stationId
+					}
+				});
+
 				return cb({
 					status: "success",
 					message: "Successfully updated the display name."
@@ -1265,13 +1272,7 @@ export default {
 	 * @param cb
 	 */
 	updateDescription: isOwnerRequired(async function updateDescription(session, stationId, newDescription, cb) {
-		const stationModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "station"
-			},
-			this
-		);
+		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
 
 		async.waterfall(
 			[
@@ -1286,13 +1287,11 @@ export default {
 
 				(res, next) => {
 					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
-						.then(station => {
-							next(null, station);
-						})
+						.then(station => next(null, station))
 						.catch(next);
 				}
 			],
-			async err => {
+			async (err, station) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
@@ -1308,6 +1307,15 @@ export default {
 					"STATIONS_UPDATE_DESCRIPTION",
 					`Updated station "${stationId}" description to "${newDescription}" successfully.`
 				);
+
+				ActivitiesModule.runJob("ADD_ACTIVITY", {
+					userId: session.userId,
+					type: "station__edit_description",
+					payload: {
+						message: `Changed description of station <stationId>${station.displayName}</stationId> to ${newDescription}`,
+						stationId
+					}
+				});
 
 				CacheModule.runJob("PUB", {
 					channel: "station.descriptionUpdate",
@@ -1331,14 +1339,10 @@ export default {
 	 * @param cb
 	 */
 	updatePrivacy: isOwnerRequired(async function updatePrivacy(session, stationId, newPrivacy, cb) {
-		const stationModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "station"
-			},
-			this
-		);
+		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
+
 		let previousPrivacy = null;
+
 		async.waterfall(
 			[
 				next => {
@@ -1364,13 +1368,11 @@ export default {
 
 				(res, next) => {
 					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
-						.then(station => {
-							next(null, station);
-						})
+						.then(station => next(null, station))
 						.catch(next);
 				}
 			],
-			async err => {
+			async (err, station) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
@@ -1385,10 +1387,21 @@ export default {
 					"STATIONS_UPDATE_PRIVACY",
 					`Updated station "${stationId}" privacy to "${newPrivacy}" successfully.`
 				);
+
 				CacheModule.runJob("PUB", {
 					channel: "station.privacyUpdate",
 					value: { stationId, previousPrivacy }
 				});
+
+				ActivitiesModule.runJob("ADD_ACTIVITY", {
+					userId: session.userId,
+					type: "station__edit_privacy",
+					payload: {
+						message: `Changed privacy of station <stationId>${station.displayName}</stationId> to ${newPrivacy}`,
+						stationId
+					}
+				});
+
 				return cb({
 					status: "success",
 					message: "Successfully updated the privacy."
@@ -1426,13 +1439,11 @@ export default {
 
 				(res, next) => {
 					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
-						.then(station => {
-							next(null, station);
-						})
+						.then(station => next(null, station))
 						.catch(next);
 				}
 			],
-			async err => {
+			async (err, station) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err });
 					this.log(
@@ -1442,11 +1453,23 @@ export default {
 					);
 					return cb({ status: "failure", message: err });
 				}
+
 				this.log(
 					"SUCCESS",
 					"STATIONS_UPDATE_GENRES",
 					`Updated station "${stationId}" genres to "${newGenres}" successfully.`
 				);
+
+				ActivitiesModule.runJob("ADD_ACTIVITY", {
+					userId: session.userId,
+					type: "station__edit_genres",
+					payload: {
+						message: `Updated genres of station <stationId>${station.displayName}</stationId> to 
+						${newGenres.join(", ")}`,
+						stationId
+					}
+				});
+
 				return cb({
 					status: "success",
 					message: "Successfully updated the genres."
@@ -1469,13 +1492,8 @@ export default {
 		newBlacklistedGenres,
 		cb
 	) {
-		const stationModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "station"
-			},
-			this
-		);
+		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
+
 		async.waterfall(
 			[
 				next => {
@@ -1493,13 +1511,11 @@ export default {
 
 				(res, next) => {
 					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
-						.then(station => {
-							next(null, station);
-						})
+						.then(station => next(null, station))
 						.catch(next);
 				}
 			],
-			async err => {
+			async (err, station) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
@@ -1509,11 +1525,24 @@ export default {
 					);
 					return cb({ status: "failure", message: err });
 				}
+
 				this.log(
 					"SUCCESS",
 					"STATIONS_UPDATE_BLACKLISTED_GENRES",
 					`Updated station "${stationId}" blacklisted genres to "${newBlacklistedGenres}" successfully.`
 				);
+
+				ActivitiesModule.runJob("ADD_ACTIVITY", {
+					userId: session.userId,
+					type: "station__edit_blacklisted_genres",
+					payload: {
+						message: `Updated blacklisted genres of station <stationId>${
+							station.displayName
+						}</stationId> to ${newBlacklistedGenres.join(", ")}`,
+						stationId
+					}
+				});
+
 				return cb({
 					status: "success",
 					message: "Successfully updated the blacklisted genres."
@@ -1531,13 +1560,8 @@ export default {
 	 * @param cb
 	 */
 	updatePartyMode: isOwnerRequired(async function updatePartyMode(session, stationId, newPartyMode, cb) {
-		const stationModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "station"
-			},
-			this
-		);
+		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
+
 		async.waterfall(
 			[
 				next => {
@@ -1608,13 +1632,8 @@ export default {
 	 * @param cb
 	 */
 	updateTheme: isOwnerRequired(async function updateTheme(session, stationId, newTheme, cb) {
-		const stationModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "station"
-			},
-			this
-		);
+		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
+
 		async.waterfall(
 			[
 				next => {
@@ -1638,13 +1657,11 @@ export default {
 
 				(res, next) => {
 					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
-						.then(station => {
-							next(null, station);
-						})
+						.then(station => next(null, station))
 						.catch(next);
 				}
 			],
-			async err => {
+			async (err, station) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
@@ -1654,15 +1671,27 @@ export default {
 					);
 					return cb({ status: "failure", message: err });
 				}
+
 				this.log(
 					"SUCCESS",
 					"STATIONS_UPDATE_THEME",
 					`Updated station "${stationId}" theme to "${newTheme}" successfully.`
 				);
+
 				CacheModule.runJob("PUB", {
 					channel: "station.themeUpdate",
 					value: { stationId }
 				});
+
+				ActivitiesModule.runJob("ADD_ACTIVITY", {
+					userId: session.userId,
+					type: "station__edit_theme",
+					payload: {
+						message: `Changed theme of station <stationId>${station.displayName}</stationId> to ${newTheme}`,
+						stationId
+					}
+				});
+
 				return cb({
 					status: "success",
 					message: "Successfully updated the theme."
@@ -1810,40 +1839,47 @@ export default {
 	 * @param cb
 	 */
 	remove: isOwnerRequired(async function remove(session, stationId, cb) {
-		const stationModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "station"
-			},
-			this
-		);
+		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
 
 		async.waterfall(
 			[
 				next => {
-					stationModel.deleteOne({ _id: stationId }, err => next(err));
+					stationModel.findById(stationId, (err, station) => {
+						if (err) return next(err);
+						return next(null, station);
+					});
 				},
 
-				next => {
-					CacheModule.runJob("HDEL", { table: "stations", key: stationId }, this).then(next).catch(next);
+				(station, next) => {
+					stationModel.deleteOne({ _id: stationId }, err => next(err, station));
+				},
+
+				(station, next) => {
+					CacheModule.runJob("HDEL", { table: "stations", key: stationId }, this)
+						.then(next(null, station))
+						.catch(next);
 				}
 			],
-			async err => {
+			async (err, station) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "STATIONS_REMOVE", `Removing station "${stationId}" failed. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
+
 				this.log("SUCCESS", "STATIONS_REMOVE", `Removing station "${stationId}" successfully.`);
+
 				CacheModule.runJob("PUB", {
 					channel: "station.remove",
 					value: stationId
 				});
+
 				ActivitiesModule.runJob("ADD_ACTIVITY", {
 					userId: session.userId,
-					activityType: "deleted_station",
-					payload: [stationId]
+					type: "station__remove",
+					payload: { message: `Removed a station named <stationId>${station.displayName}</stationId>` }
 				});
+
 				return cb({
 					status: "success",
 					message: "Successfully removed."
@@ -1861,13 +1897,7 @@ export default {
 	 */
 	create: isLoginRequired(async function create(session, data, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-		const stationModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "station"
-			},
-			this
-		);
+		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
 
 		data.name = data.name.toLowerCase();
 
@@ -1910,6 +1940,7 @@ export default {
 			"auth",
 			"reset_password"
 		];
+
 		async.waterfall(
 			[
 				next => {
@@ -1984,15 +2015,21 @@ export default {
 					return cb({ status: "failure", message: err });
 				}
 				this.log("SUCCESS", "STATIONS_CREATE", `Created station "${station._id}" successfully.`);
+
 				CacheModule.runJob("PUB", {
 					channel: "station.create",
 					value: station._id
 				});
+
 				ActivitiesModule.runJob("ADD_ACTIVITY", {
 					userId: session.userId,
-					activityType: "created_station",
-					payload: [station._id]
+					type: "station__create",
+					payload: {
+						message: `Created a station named <stationId>${station.displayName}</stationId>`,
+						stationId: station._id
+					}
 				});
+
 				return cb({
 					status: "success",
 					message: "Successfully created station."
@@ -2150,7 +2187,7 @@ export default {
 				(song, next) => {
 					stationModel.updateOne(
 						{ _id: stationId },
-						{ $push: { queue: song } },
+						{ $pushr: { queue: song } },
 						{ runValidators: true },
 						next
 					);
@@ -2158,9 +2195,7 @@ export default {
 
 				(res, next) => {
 					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
-						.then(station => {
-							next(null, station);
-						})
+						.then(station => next(null, station))
 						.catch(next);
 				}
 			],
@@ -2174,15 +2209,18 @@ export default {
 					);
 					return cb({ status: "failure", message: err });
 				}
+
 				this.log(
 					"SUCCESS",
 					"STATIONS_ADD_SONG_TO_QUEUE",
 					`Added song "${songId}" to station "${stationId}" successfully.`
 				);
+
 				CacheModule.runJob("PUB", {
 					channel: "station.queueUpdate",
 					value: stationId
 				});
+
 				return cb({
 					status: "success",
 					message: "Successfully added song to queue."
@@ -2200,27 +2238,21 @@ export default {
 	 * @param cb
 	 */
 	removeFromQueue: isOwnerRequired(async function removeFromQueue(session, stationId, songId, cb) {
-		const stationModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "station"
-			},
-			this
-		);
+		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
+
 		async.waterfall(
 			[
 				next => {
 					if (!songId) return next("Invalid song id.");
 					return StationsModule.runJob("GET_STATION", { stationId }, this)
-						.then(station => {
-							next(null, station);
-						})
+						.then(station => next(null, station))
 						.catch(next);
 				},
 
 				(station, next) => {
 					if (!station) return next("Station not found.");
 					if (station.type !== "community") return next("Station is not a community station.");
+
 					return async.each(
 						station.queue,
 						(queueSong, next) => {
@@ -2240,9 +2272,7 @@ export default {
 
 				(res, next) => {
 					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
-						.then(station => {
-							next(null, station);
-						})
+						.then(station => next(null, station))
 						.catch(next);
 				}
 			],
@@ -2256,15 +2286,18 @@ export default {
 					);
 					return cb({ status: "failure", message: err });
 				}
+
 				this.log(
 					"SUCCESS",
 					"STATIONS_REMOVE_SONG_TO_QUEUE",
 					`Removed song "${songId}" from station "${stationId}" successfully.`
 				);
+
 				CacheModule.runJob("PUB", {
 					channel: "station.queueUpdate",
 					value: stationId
 				});
+
 				return cb({
 					status: "success",
 					message: "Successfully removed song from queue."
@@ -2285,9 +2318,7 @@ export default {
 			[
 				next => {
 					StationsModule.runJob("GET_STATION", { stationId }, this)
-						.then(station => {
-							next(null, station);
-						})
+						.then(station => next(null, station))
 						.catch(next);
 				},
 
@@ -2298,14 +2329,7 @@ export default {
 				},
 
 				(station, next) => {
-					StationsModule.runJob(
-						"CAN_USER_VIEW_STATION",
-						{
-							station,
-							userId: session.userId
-						},
-						this
-					)
+					StationsModule.runJob("CAN_USER_VIEW_STATION", { station, userId: session.userId }, this)
 						.then(canView => {
 							if (canView) return next(null, station);
 							return next("Insufficient permissions.");
@@ -2323,7 +2347,9 @@ export default {
 					);
 					return cb({ status: "failure", message: err });
 				}
+
 				this.log("SUCCESS", "STATIONS_GET_QUEUE", `Got queue for station "${stationId}" successfully.`);
+
 				return cb({
 					status: "success",
 					message: "Successfully got queue.",
@@ -2342,27 +2368,14 @@ export default {
 	 * @param cb
 	 */
 	selectPrivatePlaylist: isOwnerRequired(async function selectPrivatePlaylist(session, stationId, playlistId, cb) {
-		const stationModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "station"
-			},
-			this
-		);
-		const playlistModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "playlist"
-			},
-			this
-		);
+		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
+		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
+
 		async.waterfall(
 			[
 				next => {
 					StationsModule.runJob("GET_STATION", { stationId }, this)
-						.then(station => {
-							next(null, station);
-						})
+						.then(station => next(null, station))
 						.catch(next);
 				},
 
@@ -2392,9 +2405,7 @@ export default {
 
 				(res, next) => {
 					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
-						.then(station => {
-							next(null, station);
-						})
+						.then(station => next(null, station))
 						.catch(next);
 				}
 			],
@@ -2408,15 +2419,19 @@ export default {
 					);
 					return cb({ status: "failure", message: err });
 				}
+
 				this.log(
 					"SUCCESS",
 					"STATIONS_SELECT_PRIVATE_PLAYLIST",
 					`Selected private playlist "${playlistId}" for station "${stationId}" successfully.`
 				);
+
 				NotificationsModule.runJob("UNSCHEDULE", {
 					name: `stations.nextSong?id${stationId}`
 				});
+
 				if (!station.partyMode) StationsModule.runJob("SKIP_STATION", { stationId });
+
 				CacheModule.runJob("PUB", {
 					channel: "privatePlaylist.selected",
 					value: {
@@ -2424,6 +2439,7 @@ export default {
 						stationId
 					}
 				});
+
 				return cb({
 					status: "success",
 					message: "Successfully selected playlist."
@@ -2528,45 +2544,42 @@ export default {
 			[
 				next => {
 					StationsModule.runJob("GET_STATION", { stationId }, this)
-						.then(station => {
-							next(null, station);
-						})
+						.then(station => next(null, station))
 						.catch(next);
 				},
 
 				(station, next) => {
 					if (!station) return next("Station not found.");
-					return StationsModule.runJob(
-						"CAN_USER_VIEW_STATION",
-						{
-							station,
-							userId: session.userId
-						},
-						this
-					)
+					return StationsModule.runJob("CAN_USER_VIEW_STATION", { station, userId: session.userId }, this)
 						.then(canView => {
-							if (canView) return next();
+							if (canView) return next(null, station);
 							return next("Insufficient permissions.");
 						})
 						.catch(err => next(err));
 				},
 
-				next => {
-					userModel.updateOne({ _id: session.userId }, { $addToSet: { favoriteStations: stationId } }, next);
+				(station, next) => {
+					userModel.updateOne(
+						{ _id: session.userId },
+						{ $addToSet: { favoriteStations: stationId } },
+						(err, res) => next(err, station, res)
+					);
 				},
 
-				(res, next) => {
+				(station, res, next) => {
 					if (res.nModified === 0) return next("The station was already favorited.");
-					return next();
+					return next(null, station);
 				}
 			],
-			async err => {
+			async (err, station) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "FAVORITE_STATION", `Favoriting station "${stationId}" failed. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
+
 				this.log("SUCCESS", "FAVORITE_STATION", `Favorited station "${stationId}" successfully.`);
+
 				CacheModule.runJob("PUB", {
 					channel: "user.favoritedStation",
 					value: {
@@ -2574,6 +2587,16 @@ export default {
 						stationId
 					}
 				});
+
+				ActivitiesModule.runJob("ADD_ACTIVITY", {
+					userId: session.userId,
+					type: "station__favorite",
+					payload: {
+						message: `Favorited station <stationId>${station.displayName}</stationId>`,
+						stationId
+					}
+				});
+
 				return cb({
 					status: "success",
 					message: "Succesfully favorited station."
@@ -2584,6 +2607,7 @@ export default {
 
 	unfavoriteStation: isLoginRequired(async function unfavoriteStation(session, stationId, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+
 		async.waterfall(
 			[
 				next => {
@@ -2593,15 +2617,23 @@ export default {
 				(res, next) => {
 					if (res.nModified === 0) return next("The station wasn't favorited.");
 					return next();
+				},
+
+				next => {
+					StationsModule.runJob("GET_STATION", { stationId }, this)
+						.then(station => next(null, station))
+						.catch(next);
 				}
 			],
-			async err => {
+			async (err, station) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "UNFAVORITE_STATION", `Unfavoriting station "${stationId}" failed. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
+
 				this.log("SUCCESS", "UNFAVORITE_STATION", `Unfavorited station "${stationId}" successfully.`);
+
 				CacheModule.runJob("PUB", {
 					channel: "user.unfavoritedStation",
 					value: {
@@ -2609,6 +2641,16 @@ export default {
 						stationId
 					}
 				});
+
+				ActivitiesModule.runJob("ADD_ACTIVITY", {
+					userId: session.userId,
+					type: "station__unfavorite",
+					payload: {
+						message: `Unfavorited station <stationId>${station.displayName}</stationId>`,
+						stationId
+					}
+				});
+
 				return cb({
 					status: "success",
 					message: "Succesfully unfavorited station."

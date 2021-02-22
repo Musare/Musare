@@ -540,18 +540,16 @@ export default {
 
 		async.waterfall(
 			[
-				next => {
-					songModel.findOne({ songId: musareSongId }, next);
-				},
+				next => songModel.findOne({ songId: musareSongId }, next),
 
 				(song, next) => {
 					if (!song) return next("No song found with that id.");
-					return next(null, song._id);
+					return next(null, song);
 				},
 
-				(songId, next) => userModel.findOne({ _id: session.userId }, (err, user) => next(err, songId, user)),
+				(song, next) => userModel.findOne({ _id: session.userId }, (err, user) => next(err, song, user)),
 
-				(songId, user, next) => {
+				(song, user, next) => {
 					if (!user) return next("User does not exist.");
 
 					return this.module
@@ -568,12 +566,12 @@ export default {
 						.then(res => {
 							if (res.status === "failure")
 								return next("Unable to add song to the 'Liked Songs' playlist.");
-							return next(null, songId, user.dislikedSongsPlaylist);
+							return next(null, song, user.dislikedSongsPlaylist);
 						})
 						.catch(err => next(err));
 				},
 
-				(songId, dislikedSongsPlaylist, next) => {
+				(song, dislikedSongsPlaylist, next) => {
 					this.module
 						.runJob(
 							"RUN_ACTION2",
@@ -588,18 +586,18 @@ export default {
 						.then(res => {
 							if (res.status === "failure")
 								return next("Unable to remove song from the 'Disliked Songs' playlist.");
-							return next(null, songId);
+							return next(null, song);
 						})
 						.catch(err => next(err));
 				},
 
-				(songId, next) => {
-					SongsModule.runJob("RECALCULATE_SONG_RATINGS", { songId, musareSongId })
-						.then(ratings => next(null, songId, ratings))
+				(song, next) => {
+					SongsModule.runJob("RECALCULATE_SONG_RATINGS", { songId: song._id, musareSongId })
+						.then(ratings => next(null, song, ratings))
 						.catch(err => next(err));
 				}
 			],
-			async (err, songId, { likes, dislikes }) => {
+			async (err, song, { likes, dislikes }) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
@@ -610,7 +608,7 @@ export default {
 					return cb({ status: "failure", message: err });
 				}
 
-				SongsModule.runJob("UPDATE_SONG", { songId });
+				SongsModule.runJob("UPDATE_SONG", { songId: song._id });
 
 				CacheModule.runJob("PUB", {
 					channel: "song.like",
@@ -624,8 +622,12 @@ export default {
 
 				ActivitiesModule.runJob("ADD_ACTIVITY", {
 					userId: session.userId,
-					activityType: "liked_song",
-					payload: [songId]
+					type: "song__like",
+					payload: {
+						message: `Liked song <songId>${song.title} by ${song.artists.join(", ")}</songId>`,
+						songId: song._id,
+						thumbnail: song.thumbnail
+					}
 				});
 
 				return cb({
@@ -657,12 +659,12 @@ export default {
 
 				(song, next) => {
 					if (!song) return next("No song found with that id.");
-					return next(null, song._id);
+					return next(null, song);
 				},
 
-				(songId, next) => userModel.findOne({ _id: session.userId }, (err, user) => next(err, songId, user)),
+				(song, next) => userModel.findOne({ _id: session.userId }, (err, user) => next(err, song, user)),
 
-				(songId, user, next) => {
+				(song, user, next) => {
 					if (!user) return next("User does not exist.");
 
 					return this.module
@@ -679,12 +681,12 @@ export default {
 						.then(res => {
 							if (res.status === "failure")
 								return next("Unable to add song to the 'Disliked Songs' playlist.");
-							return next(null, songId, user.likedSongsPlaylist);
+							return next(null, song, user.likedSongsPlaylist);
 						})
 						.catch(err => next(err));
 				},
 
-				(songId, likedSongsPlaylist, next) => {
+				(song, likedSongsPlaylist, next) => {
 					this.module
 						.runJob(
 							"RUN_ACTION2",
@@ -699,18 +701,18 @@ export default {
 						.then(res => {
 							if (res.status === "failure")
 								return next("Unable to remove song from the 'Liked Songs' playlist.");
-							return next(null, songId);
+							return next(null, song);
 						})
 						.catch(err => next(err));
 				},
 
-				(songId, next) => {
-					SongsModule.runJob("RECALCULATE_SONG_RATINGS", { songId, musareSongId })
-						.then(ratings => next(null, songId, ratings))
+				(song, next) => {
+					SongsModule.runJob("RECALCULATE_SONG_RATINGS", { songId: song._id, musareSongId })
+						.then(ratings => next(null, song, ratings))
 						.catch(err => next(err));
 				}
 			],
-			async (err, songId, { likes, dislikes }) => {
+			async (err, song, { likes, dislikes }) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
@@ -721,7 +723,7 @@ export default {
 					return cb({ status: "failure", message: err });
 				}
 
-				SongsModule.runJob("UPDATE_SONG", { songId });
+				SongsModule.runJob("UPDATE_SONG", { songId: song._id });
 
 				CacheModule.runJob("PUB", {
 					channel: "song.dislike",
@@ -731,6 +733,16 @@ export default {
 						likes,
 						dislikes
 					})
+				});
+
+				ActivitiesModule.runJob("ADD_ACTIVITY", {
+					userId: session.userId,
+					type: "song__dislike",
+					payload: {
+						message: `Disliked song <songId>${song.title} by ${song.artists.join(", ")}</songId>`,
+						songId: song._id,
+						thumbnail: song.thumbnail
+					}
 				});
 
 				return cb({
@@ -760,12 +772,12 @@ export default {
 
 				(song, next) => {
 					if (!song) return next("No song found with that id.");
-					return next(null, song._id);
+					return next(null, song);
 				},
 
-				(songId, next) => userModel.findOne({ _id: session.userId }, (err, user) => next(err, songId, user)),
+				(song, next) => userModel.findOne({ _id: session.userId }, (err, user) => next(err, song, user)),
 
-				(songId, user, next) => {
+				(song, user, next) => {
 					if (!user) return next("User does not exist.");
 
 					return this.module
@@ -782,12 +794,12 @@ export default {
 						.then(res => {
 							if (res.status === "failure")
 								return next("Unable to remove song from the 'Disliked Songs' playlist.");
-							return next(null, songId, user.likedSongsPlaylist);
+							return next(null, song, user.likedSongsPlaylist);
 						})
 						.catch(err => next(err));
 				},
 
-				(songId, likedSongsPlaylist, next) => {
+				(song, likedSongsPlaylist, next) => {
 					this.module
 						.runJob(
 							"RUN_ACTION2",
@@ -802,18 +814,18 @@ export default {
 						.then(res => {
 							if (res.status === "failure")
 								return next("Unable to remove song from the 'Liked Songs' playlist.");
-							return next(null, songId);
+							return next(null, song);
 						})
 						.catch(err => next(err));
 				},
 
-				(songId, next) => {
-					SongsModule.runJob("RECALCULATE_SONG_RATINGS", { songId, musareSongId })
-						.then(ratings => next(null, songId, ratings))
+				(song, next) => {
+					SongsModule.runJob("RECALCULATE_SONG_RATINGS", { songId: song._id, musareSongId })
+						.then(ratings => next(null, song, ratings))
 						.catch(err => next(err));
 				}
 			],
-			async (err, songId, { likes, dislikes }) => {
+			async (err, song, { likes, dislikes }) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
@@ -824,7 +836,7 @@ export default {
 					return cb({ status: "failure", message: err });
 				}
 
-				SongsModule.runJob("UPDATE_SONG", { songId });
+				SongsModule.runJob("UPDATE_SONG", { songId: song._id });
 
 				CacheModule.runJob("PUB", {
 					channel: "song.undislike",
@@ -834,6 +846,18 @@ export default {
 						likes,
 						dislikes
 					})
+				});
+
+				ActivitiesModule.runJob("ADD_ACTIVITY", {
+					userId: session.userId,
+					type: "song__undislike",
+					payload: {
+						message: `Removed <songId>${song.title} by ${song.artists.join(
+							", "
+						)}</songId> from your Disliked Songs`,
+						songId: song._id,
+						thumbnail: song.thumbnail
+					}
 				});
 
 				return cb({
@@ -863,12 +887,12 @@ export default {
 
 				(song, next) => {
 					if (!song) return next("No song found with that id.");
-					return next(null, song._id);
+					return next(null, song);
 				},
 
-				(songId, next) => userModel.findOne({ _id: session.userId }, (err, user) => next(err, songId, user)),
+				(song, next) => userModel.findOne({ _id: session.userId }, (err, user) => next(err, song, user)),
 
-				(songId, user, next) => {
+				(song, user, next) => {
 					if (!user) return next("User does not exist.");
 
 					return this.module
@@ -885,12 +909,12 @@ export default {
 						.then(res => {
 							if (res.status === "failure")
 								return next("Unable to remove song from the 'Disliked Songs' playlist.");
-							return next(null, songId, user.likedSongsPlaylist);
+							return next(null, song, user.likedSongsPlaylist);
 						})
 						.catch(err => next(err));
 				},
 
-				(songId, likedSongsPlaylist, next) => {
+				(song, likedSongsPlaylist, next) => {
 					this.module
 						.runJob(
 							"RUN_ACTION2",
@@ -905,18 +929,18 @@ export default {
 						.then(res => {
 							if (res.status === "failure")
 								return next("Unable to remove song from the 'Liked Songs' playlist.");
-							return next(null, songId);
+							return next(null, song);
 						})
 						.catch(err => next(err));
 				},
 
-				(songId, next) => {
-					SongsModule.runJob("RECALCULATE_SONG_RATINGS", { songId, musareSongId })
-						.then(ratings => next(null, songId, ratings))
+				(song, next) => {
+					SongsModule.runJob("RECALCULATE_SONG_RATINGS", { songId: song._id, musareSongId })
+						.then(ratings => next(null, song, ratings))
 						.catch(err => next(err));
 				}
 			],
-			async (err, songId, { likes, dislikes }) => {
+			async (err, song, { likes, dislikes }) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
@@ -927,7 +951,7 @@ export default {
 					return cb({ status: "failure", message: err });
 				}
 
-				SongsModule.runJob("UPDATE_SONG", { songId });
+				SongsModule.runJob("UPDATE_SONG", { songId: song._id });
 
 				CacheModule.runJob("PUB", {
 					channel: "song.unlike",
@@ -937,6 +961,18 @@ export default {
 						likes,
 						dislikes
 					})
+				});
+
+				ActivitiesModule.runJob("ADD_ACTIVITY", {
+					userId: session.userId,
+					type: "song__unlike",
+					payload: {
+						message: `Removed <songId>${song.title} by ${song.artists.join(
+							", "
+						)}</songId> from your Liked Songs`,
+						songId: song._id,
+						thumbnail: song.thumbnail
+					}
 				});
 
 				return cb({
