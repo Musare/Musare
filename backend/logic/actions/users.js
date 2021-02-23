@@ -197,6 +197,63 @@ export default {
 	}),
 
 	/**
+	 * Removes all data held on a user, including their ability to login
+	 *
+	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {Function} cb - gets called with the result
+	 */
+	remove: isLoginRequired(async function remove(session, cb) {
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
+		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
+		const activityModel = await DBModule.runJob("GET_MODEL", { modelName: "activity" }, this);
+
+		async.waterfall(
+			[
+				next => {
+					activityModel.deleteMany({ userId: session.userId }, next);
+				},
+
+				(res, next) => {
+					stationModel.deleteMany({ owner: session.userId }, next);
+				},
+
+				(res, next) => {
+					playlistModel.deleteMany({ createdBy: session.userId }, next);
+				},
+
+				(res, next) => {
+					userModel.deleteMany({ _id: session.userId }, next);
+				}
+			],
+			async err => {
+				console.log(err);
+
+				if (err && err !== true) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"USER_REMOVE",
+						`Removing data and account for user "${session.userId}" failed. "${err}"`
+					);
+					return cb({ status: "failure", message: err });
+				}
+
+				this.log(
+					"SUCCESS",
+					"USER_REMOVE",
+					`Successfully removed data and account for user "${session.userId}"`
+				);
+
+				return cb({
+					status: "success",
+					message: "Successfully removed data and account."
+				});
+			}
+		);
+	}),
+
+	/**
 	 * Logs user in
 	 *
 	 * @param {object} session - the session object automatically added by socket.io
@@ -207,13 +264,7 @@ export default {
 	async login(session, identifier, password, cb) {
 		identifier = identifier.toLowerCase();
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-		const sessionSchema = await CacheModule.runJob(
-			"GET_SCHEMA",
-			{
-				schemaName: "session"
-			},
-			this
-		);
+		const sessionSchema = await CacheModule.runJob("GET_SCHEMA", { schemaName: "session" }, this);
 
 		async.waterfall(
 			[
@@ -519,17 +570,8 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					CacheModule.runJob(
-						"HGET",
-						{
-							table: "sessions",
-							key: session.sessionId
-						},
-						this
-					)
-						.then(session => {
-							next(null, session);
-						})
+					CacheModule.runJob("HGET", { table: "sessions", key: session.sessionId }, this)
+						.then(session => next(null, session))
 						.catch(next);
 				},
 
@@ -539,17 +581,8 @@ export default {
 				},
 
 				(session, next) => {
-					CacheModule.runJob(
-						"HDEL",
-						{
-							table: "sessions",
-							key: session.sessionId
-						},
-						this
-					)
-						.then(() => {
-							next();
-						})
+					CacheModule.runJob("HDEL", { table: "sessions", key: session.sessionId }, this)
+						.then(() => next())
 						.catch(next);
 				}
 			],

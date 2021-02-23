@@ -99,22 +99,24 @@
 
 			<hr class="section-horizontal-rule" />
 
-			<div id="remove-login-method-buttons">
+			<div>
 				<a
 					v-if="isPasswordLinked"
 					class="button is-danger"
 					href="#"
 					@click.prevent="unlinkPassword()"
-					><i class="material-icons icon-with-button">close</i>Remove
-					password
+				>
+					<i class="material-icons icon-with-button">close</i>
+					Remove password
 				</a>
 
 				<a
 					class="button is-danger"
 					href="#"
 					@click.prevent="unlinkGitHub()"
-					><i class="material-icons icon-with-button">link_off</i
-					>Remove GitHub from account
+				>
+					<i class="material-icons icon-with-button">link_off</i>
+					Remove GitHub from account
 				</a>
 			</div>
 
@@ -133,27 +135,9 @@
 				class="button is-warning"
 				href="#"
 				@click.prevent="removeSessions()"
-				><i class="material-icons icon-with-button">exit_to_app</i>Log
-				out everywhere
-			</a>
-
-			<div class="section-margin-bottom" />
-		</div>
-
-		<div>
-			<h4 class="section-title">Clear my activities</h4>
-			<p class="section-description">
-				Permanently remove all my logged activity on Musare to date.
-			</p>
-
-			<hr class="section-horizontal-rule" />
-
-			<a
-				class="button is-warning"
-				href="#"
-				@click.prevent="deleteActivities()"
-				><i class="material-icons icon-with-button">delete</i>Clear my
-				activities
+			>
+				<i class="material-icons icon-with-button">exit_to_app</i>
+				Log out everywhere
 			</a>
 		</div>
 	</div>
@@ -267,11 +251,6 @@ export default {
 		},
 		removeSessions() {
 			this.socket.emit(`users.removeSessions`, this.userId, res => {
-				new Toast({ content: res.message, timeout: 4000 });
-			});
-		},
-		deleteActivities() {
-			this.socket.emit(`activities.removeAllForUser`, res => {
 				new Toast({ content: res.message, timeout: 4000 });
 			});
 		}
