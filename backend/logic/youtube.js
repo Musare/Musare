@@ -89,8 +89,6 @@ class _YouTubeModule extends CoreClass {
 				.get("https://www.googleapis.com/youtube/v3/videos", {
 					params,
 					timeout: 30000
-					// agent: false,
-					// pool: { maxSockets: 100 }
 				})
 				.then(res => {
 					if (res.data.error) {
@@ -152,7 +150,6 @@ class _YouTubeModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	GET_PLAYLIST(payload) {
-		// payload includes: url, musicOnly
 		return new Promise((resolve, reject) => {
 			const name = "list".replace(/[\\[]/, "\\[").replace(/[\]]/, "\\]");
 
@@ -185,43 +182,28 @@ class _YouTubeModule extends CoreClass {
 								// Add 250ms delay between each job request
 								setTimeout(() => {
 									YouTubeModule.runJob("GET_PLAYLIST_PAGE", { playlistId, nextPageToken }, this)
-										// eslint-disable-next-line no-loop-func
 										.then(response => {
 											songs = songs.concat(response.songs);
 											nextPageToken = response.nextPageToken;
 											next();
 										})
-										// eslint-disable-next-line no-loop-func
-										.catch(err => {
-											next(err);
-										});
+										.catch(err => next(err));
 								}, 250);
 							},
-							err => {
-								next(err, songs);
-							}
+							err => next(err, songs)
 						);
 					},
 
-					(songs, next) => {
+					(songs, next) =>
 						next(
 							null,
 							songs.map(song => song.contentDetails.videoId)
-						);
-					},
+						),
 
 					(songs, next) => {
 						if (!payload.musicOnly) return next(true, { songs });
-						return YouTubeModule.runJob(
-							"FILTER_MUSIC_VIDEOS",
-							{
-								videoIds: songs.slice()
-							},
-							this
-						)
-							.then(filteredSongs => {
-								next(null, { filteredSongs, songs });
-							})
+						return YouTubeModule.runJob("FILTER_MUSIC_VIDEOS", { videoIds: songs.slice() }, this)
+							.then(filteredSongs => next(null, { filteredSongs, songs }))
 							.catch(next);
 					}
 				],
@@ -261,8 +243,6 @@ class _YouTubeModule extends CoreClass {
 				.get("https://www.googleapis.com/youtube/v3/playlistItems", {
 					params,
 					timeout: 30000
-					// agent: false,
-					// pool: { maxSockets: 100 }
 				})
 				.then(res => {
 					if (res.data.err) {
@@ -314,8 +294,6 @@ class _YouTubeModule extends CoreClass {
 				.get("https://www.googleapis.com/youtube/v3/videos", {
 					params,
 					timeout: 30000
-					// agent: false,
-					// pool: { maxSockets: 100 }
 				})
 				.then(res => {
 					if (res.data.err) {
@@ -327,10 +305,10 @@ class _YouTubeModule extends CoreClass {
 
 					res.data.items.forEach(item => {
 						const songId = item.id;
+
 						if (!item.topicDetails) return;
-						if (item.topicDetails.relevantTopicIds.indexOf("/m/04rlf") !== -1) {
+						if (item.topicDetails.topicCategories.indexOf("https://en.wikipedia.org/wiki/Music") !== -1)
 							songIds.push(songId);
-						}
 					});
 
 					return YouTubeModule.runJob(
