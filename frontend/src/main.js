@@ -6,6 +6,8 @@ import store from "./store";
 import App from "./App.vue";
 import io from "./io";
 
+const REQUIRED_CONFIG_VERSION = 1;
+
 const handleMetadata = attrs => {
 	document.title = `Musare | ${attrs.title}`;
 };
@@ -136,6 +138,15 @@ const router = new VueRouter({
 });
 
 lofig.folder = "../config/default.json";
+lofig.get("configVersion").then(configVersion => {
+	if (configVersion !== REQUIRED_CONFIG_VERSION) {
+		// eslint-disable-next-line no-alert
+		alert(
+			"CONFIG VERSION IS WRONG. PLEASE UPDATE YOUR CONFIG WITH THE HELP OF THE TEMPLATE FILE AND THE README FILE."
+		);
+		window.stop();
+	}
+});
 lofig.get("serverDomain").then(serverDomain => {
 	io.init(serverDomain);
 	io.getSocket(socket => {

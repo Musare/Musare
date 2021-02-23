@@ -3,6 +3,8 @@ import "./loadEnvVariables.js";
 import util from "util";
 import config from "config";
 
+const REQUIRED_CONFIG_VERSION = 1;
+
 // eslint-disable-next-line
 Array.prototype.remove = function (item) {
 	this.splice(this.indexOf(item), 1);
@@ -26,6 +28,11 @@ console.log = (...args) => {
 	});
 	if (!blacklisted) oldConsole.log.apply(null, args);
 };
+
+if (!config.has("configVersion") || config.get("configVersion") !== REQUIRED_CONFIG_VERSION) {
+	console.log("CONFIG VERSION IS WRONG. PLEASE UPDATE YOUR CONFIG WITH THE HELP OF THE TEMPLATE FILE AND THE README FILE.");
+	process.exit();
+}
 
 const fancyConsole = config.get("fancyConsole");
 

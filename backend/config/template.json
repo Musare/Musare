@@ -90,5 +90,6 @@
                 "Requeing"
             ]
         }
-    }
+	},
+	"configVersion": 1
 }
