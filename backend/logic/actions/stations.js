@@ -1460,15 +1460,26 @@ export default {
 					`Updated station "${stationId}" genres to "${newGenres}" successfully.`
 				);
 
-				ActivitiesModule.runJob("ADD_ACTIVITY", {
-					userId: session.userId,
-					type: "station__edit_genres",
-					payload: {
-						message: `Updated genres of station <stationId>${station.displayName}</stationId> to 
-						${newGenres.join(", ")}`,
-						stationId
-					}
-				});
+				if (newGenres.length > 0) {
+					ActivitiesModule.runJob("ADD_ACTIVITY", {
+						userId: session.userId,
+						type: "station__edit_genres",
+						payload: {
+							message: `Updated genres of station <stationId>${station.displayName}</stationId> to 
+							${newGenres.join(", ")}`,
+							stationId
+						}
+					});
+				} else {
+					ActivitiesModule.runJob("ADD_ACTIVITY", {
+						userId: session.userId,
+						type: "station__edit_genres",
+						payload: {
+							message: `Removed all genres of station <stationId>${station.displayName}</stationId>`,
+							stationId
+						}
+					});
+				}
 
 				return cb({
 					status: "success",
@@ -1532,16 +1543,27 @@ export default {
 					`Updated station "${stationId}" blacklisted genres to "${newBlacklistedGenres}" successfully.`
 				);
 
-				ActivitiesModule.runJob("ADD_ACTIVITY", {
-					userId: session.userId,
-					type: "station__edit_blacklisted_genres",
-					payload: {
-						message: `Updated blacklisted genres of station <stationId>${
-							station.displayName
-						}</stationId> to ${newBlacklistedGenres.join(", ")}`,
-						stationId
-					}
-				});
+				if (newBlacklistedGenres.length > 0) {
+					ActivitiesModule.runJob("ADD_ACTIVITY", {
+						userId: session.userId,
+						type: "station__edit_blacklisted_genres",
+						payload: {
+							message: `Updated blacklisted genres of station <stationId>${
+								station.displayName
+							}</stationId> to ${newBlacklistedGenres.join(", ")}`,
+							stationId
+						}
+					});
+				} else {
+					ActivitiesModule.runJob("ADD_ACTIVITY", {
+						userId: session.userId,
+						type: "station__edit_blacklisted_genres",
+						payload: {
+							message: `Removed all blacklisted genres of station <stationId>${station.displayName}</stationId>`,
+							stationId
+						}
+					});
+				}
 
 				return cb({
 					status: "success",

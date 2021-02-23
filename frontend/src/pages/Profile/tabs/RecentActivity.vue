@@ -93,6 +93,10 @@ export default {
 			this.socket.on("event:activity.hide", activityId =>
 				this.removeActivity(activityId)
 			);
+
+			this.socket.on("event:activity.removeAllForUser", () =>
+				this.removeAllActivities()
+			);
 		});
 	},
 	methods: {
@@ -105,7 +109,8 @@ export default {
 		...mapActions("user/activities", [
 			"addSetOfActivities",
 			"addActivity",
-			"removeActivity"
+			"removeActivity",
+			"removeAllActivities"
 		])
 	}
 };

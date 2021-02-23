@@ -213,7 +213,8 @@ const modules = {
 			addActivity: ({ commit }, activity) =>
 				commit("addActivity", activity),
 			removeActivity: ({ commit }, activityId) =>
-				commit("removeActivity", activityId)
+				commit("removeActivity", activityId),
+			removeAllActivities: ({ commit }) => commit("removeAllActivities")
 		},
 		mutations: {
 			addActivity(state, activity) {
@@ -232,6 +233,12 @@ const modules = {
 				state.activities = state.activities.filter(
 					activity => activity._id !== activityId
 				);
+			},
+			removeAllActivities(state) {
+				state.activities = [];
+				state.position = 0;
+				state.maxPosition = 1;
+				state.offsettedFromNextSet = 0;
 			}
 		}
 	},
