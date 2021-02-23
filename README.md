@@ -41,6 +41,7 @@ We currently only utilize 1 backend, 1 MongoDB server and 1 Redis server running
     | Property | Description |
     | --- | --- |
     | `mode` | Should be either `development` or `production`. No more explanation needed. |
+    | `migration` | Should be set to true if you need to update DB documents to a newer version after an update. Should be false at all other times. |
     | `secret` | Whatever you want - used by express's session module. |
     | `domain` | Should be the url where the site will be accessible from,usually `http://localhost` for non-Docker. |
     | `serverDomain` | Should be the url where the backend will be accessible from, usually `http://localhost:8080` for non-Docker. |
@@ -59,6 +60,9 @@ We currently only utilize 1 backend, 1 MongoDB server and 1 Redis server running
     | `mongo.url` | Needs to have the proper password for the MongoDB musare user, and for non-Docker you need to replace `@musare:27017` with `@localhost:27017`. |
     | `cookie.domain` | Should be the ip or address you use to access the site, without protocols (http/https), so for example `localhost`. |
     | `cookie.secure` | Should be `true` for SSL connections, and `false` for normal http connections. |
+    | `skipConfigVersionCheck` | Skips checking if the config version is outdated or not. Should almost always be set to false. |
+    | `skipDbDocumentsVersionCheck` | Skips checking if there are any DB documents outdated or not. Should almost always be set to false. |
+    | `configVersion` | Version of the config. Every time the template changes, you should change your config accordingly and update the configVersion. |
 
 4. `cp frontend/build/config/template.json frontend/build/config/default.json`
 
@@ -74,6 +78,8 @@ We currently only utilize 1 backend, 1 MongoDB server and 1 Redis server running
     | `siteSettings.logo` | Path to the logo image, by default it is `/assets/wordmark.png`. |
     | `siteSettings.siteName` | Should be the name of the site. |
     | `siteSettings.github` | URL of GitHub repository, defaults to `https://github.com/Musare/MusareNode`. |
+    | `skipConfigVersionCheck` | Skips checking if the config version is outdated or not. Should almost always be set to false. |
+    | `configVersion` | Version of the config. Every time the template changes, you should change your config accordingly and update the configVersion. |
 
 5. Simply `cp .env.example .env` to setup your environment variables.
 
