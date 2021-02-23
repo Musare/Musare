@@ -16,5 +16,7 @@
 		"logo_blue": "/assets/blue_wordmark.png",
 		"siteName": "Musare",
 		"github": "https://github.com/Musare/MusareNode"
-	}
+	},
+	"skipConfigVersionCheck": false,
+	"configVersion": 1
 }

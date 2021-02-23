@@ -1,8 +1,21 @@
 import config from "config";
 import mongoose from "mongoose";
 import bluebird from "bluebird";
+import async from "async";
 
 import CoreClass from "../../core";
+
+const REQUIRED_DOCUMENT_VERSIONS = {
+	activity: 1,
+	news: 1,
+	playlist: 1,
+	punishment: 1,
+	queueSong: 1,
+	report: 1,
+	song: 1,
+	station: 1,
+	user: 1
+};
 
 const regex = {
 	azAZ09_: /^[A-Za-z0-9_]+$/,
@@ -259,12 +272,50 @@ class _DBModule extends CoreClass {
 							"Invalid description."
 						);
 
-					resolve();
+					if (config.get("skipDbDocumentsVersionCheck")) resolve();
+					else {
+						this.runJob("CHECK_DOCUMENT_VERSIONS", {}, null, -1)
+							.then(() => {
+								resolve();
+							})
+							.catch(err => {
+								reject(err);
+							});
+					}
 				})
 				.catch(err => {
 					this.log("ERROR", err);
 					reject(err);
 				});
+		});
+	}
+
+	/**
+	 * Checks if all documents have the correct document version
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	CHECK_DOCUMENT_VERSIONS() {
+		return new Promise((resolve, reject) => {
+			async.each(
+				Object.keys(REQUIRED_DOCUMENT_VERSIONS),
+				(modelName, next) => {
+					const model = DBModule.models[modelName];
+					const requiredDocumentVersion = REQUIRED_DOCUMENT_VERSIONS[modelName];
+					model.countDocuments({ documentVersion: { $ne: requiredDocumentVersion } }, (err, count) => {
+						if (err) next(err);
+						else if (count > 0)
+							next(
+								`Collection "${modelName}" has ${count} documents with a wrong document version. Run migration.`
+							);
+						else next();
+					});
+				},
+				err => {
+					if (err) reject(new Error(err));
+					else resolve();
+				}
+			);
 		});
 	}
 
