@@ -57,6 +57,8 @@
 		"secure": false,
 		"SIDname": "SID"
 	},
+	"skipConfigVersionCheck": false,
+	"skipDbDocumentsVersionCheck": false,
 	"debug": {
 		"stationIssue": false,
 		"traceUnhandledPromises": false,

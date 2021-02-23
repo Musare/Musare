@@ -29,8 +29,13 @@ console.log = (...args) => {
 	if (!blacklisted) oldConsole.log.apply(null, args);
 };
 
-if (!config.has("configVersion") || config.get("configVersion") !== REQUIRED_CONFIG_VERSION) {
-	console.log("CONFIG VERSION IS WRONG. PLEASE UPDATE YOUR CONFIG WITH THE HELP OF THE TEMPLATE FILE AND THE README FILE.");
+if (
+	(!config.has("configVersion") || config.get("configVersion") !== REQUIRED_CONFIG_VERSION) &&
+	!(config.has("skipConfigVersionCheck") && config.get("skipConfigVersionCheck"))
+) {
+	console.log(
+		"CONFIG VERSION IS WRONG. PLEASE UPDATE YOUR CONFIG WITH THE HELP OF THE TEMPLATE FILE AND THE README FILE."
+	);
 	process.exit();
 }
 

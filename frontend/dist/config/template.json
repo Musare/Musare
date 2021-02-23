@@ -17,5 +17,6 @@
 		"siteName": "Musare",
 		"github": "https://github.com/Musare/MusareNode"
 	},
+	"skipConfigVersionCheck": false,
 	"configVersion": 1
 }
