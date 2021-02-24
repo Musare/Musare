@@ -1452,6 +1452,12 @@ export default {
 						theme
 					} = res.data;
 
+					// change url to use station name instead of station id
+					if (name !== this.stationIdentifier) {
+						// eslint-disable-next-line no-restricted-globals
+						history.pushState({}, null, name);
+					}
+
 					this.joinStation({
 						_id,
 						name,
