@@ -447,6 +447,114 @@ class _PlaylistsModule extends CoreClass {
 	}
 
 	/**
+	 * Fills a station playlist with songs
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.stationId - the station id
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	AUTOFILL_STATION_PLAYLIST(payload) {
+		return new Promise((resolve, reject) => {
+			async.waterfall(
+				[
+					next => {
+						if (!payload.stationId) next("Please specify a station id");
+						else next();
+					},
+
+					next => {
+						StationsModule.runJob("GET_STATION", { stationId: payload.stationId }, this)
+							.then(station => {
+								next(null, station);
+							})
+							.catch(next);
+					},
+
+					(station, next) => {
+						PlaylistsModule.runJob("GET_PLAYLIST", { playlistId: station.playlist2 }, this)
+							.then(() => {
+								next(null, station);
+							})
+							.catch(err => {
+								next(err);
+							});
+					},
+
+					(station, next) => {
+						const includedPlaylists = [];
+						async.eachLimit(
+							station.includedPlaylists,
+							1,
+							(playlistId, next) => {
+								PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+									.then(playlist => {
+										includedPlaylists.push(playlist);
+										next();
+									})
+									.catch(next);
+							},
+							err => {
+								next(err, station, includedPlaylists);
+							}
+						);
+					},
+
+					(station, includedPlaylists, next) => {
+						const excludedPlaylists = [];
+						async.eachLimit(
+							station.excludedPlaylists,
+							1,
+							(playlistId, next) => {
+								PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+									.then(playlist => {
+										excludedPlaylists.push(playlist);
+										next();
+									})
+									.catch(next);
+							},
+							err => {
+								next(err, station, includedPlaylists, excludedPlaylists);
+							}
+						);
+					},
+
+					(station, includedPlaylists, excludedPlaylists, next) => {
+						const excludedSongs = excludedPlaylists
+							.flatMap(excludedPlaylist => excludedPlaylist.songs)
+							.reduce(
+								(items, item) =>
+									items.find(x => x.songId === item.songId) ? [...items] : [...items, item],
+								[]
+							);
+						const includedSongs = includedPlaylists
+							.flatMap(includedPlaylist => includedPlaylist.songs)
+							.reduce(
+								(songs, song) =>
+									songs.find(x => x.songId === song.songId) ? [...songs] : [...songs, song],
+								[]
+							)
+							.filter(song => !excludedSongs.find(x => x.songId === song.songId));
+
+						next(null, station, includedSongs);
+					},
+
+					(station, includedSongs, next) => {
+						PlaylistsModule.playlistModel.updateOne(
+							{ _id: station.playlist2 },
+							{ $set: { songs: includedSongs } },
+							next
+						);
+					}
+				],
+				err => {
+					if (err && err !== true) return reject(new Error(err));
+					return resolve({});
+				}
+			);
+		});
+	}
+
+	/**
 	 * Gets a playlist by id from the cache or Mongo, and if it isn't in the cache yet, adds it the cache
 	 *
 	 * @param {object} payload - object that contains the payload

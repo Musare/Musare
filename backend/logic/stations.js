@@ -1252,7 +1252,7 @@ class _StationsModule extends CoreClass {
 					},
 
 					next => {
-						StationsModule.runJob("GET_STATION", { stationId: payload.stationId })
+						StationsModule.runJob("GET_STATION", { stationId: payload.stationId }, this)
 							.then(station => {
 								next(null, station);
 							})
@@ -1268,7 +1268,7 @@ class _StationsModule extends CoreClass {
 								"This playlist is currently excluded, please remove it from there before including it"
 							);
 						else
-							PlaylistsModule.runJob("GET_PLAYLIST", { playlistId: payload.playlistId })
+							PlaylistsModule.runJob("GET_PLAYLIST", { playlistId: payload.playlistId }, this)
 								.then(() => {
 									next(null);
 								})
@@ -1336,7 +1336,7 @@ class _StationsModule extends CoreClass {
 					},
 
 					next => {
-						StationsModule.runJob("GET_STATION", { stationId: payload.stationId })
+						StationsModule.runJob("GET_STATION", { stationId: payload.stationId }, this)
 							.then(station => {
 								next(null, station);
 							})
@@ -1410,7 +1410,7 @@ class _StationsModule extends CoreClass {
 					},
 
 					next => {
-						StationsModule.runJob("GET_STATION", { stationId: payload.stationId })
+						StationsModule.runJob("GET_STATION", { stationId: payload.stationId }, this)
 							.then(station => {
 								next(null, station);
 							})
@@ -1426,7 +1426,7 @@ class _StationsModule extends CoreClass {
 								"This playlist is currently included, please remove it from there before excluding it"
 							);
 						else
-							PlaylistsModule.runJob("GET_PLAYLIST", { playlistId: payload.playlistId })
+							PlaylistsModule.runJob("GET_PLAYLIST", { playlistId: payload.playlistId }, this)
 								.then(() => {
 									next(null);
 								})
@@ -1494,7 +1494,7 @@ class _StationsModule extends CoreClass {
 					},
 
 					next => {
-						StationsModule.runJob("GET_STATION", { stationId: payload.stationId })
+						StationsModule.runJob("GET_STATION", { stationId: payload.stationId }, this)
 							.then(station => {
 								next(null, station);
 							})
