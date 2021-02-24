@@ -227,6 +227,9 @@ const modules = {
 				if (set > state.position && set <= state.maxPosition) {
 					state.activities.push(...activities);
 					state.position = set;
+				} else {
+					state.activities = activities;
+					state.position = set;
 				}
 			},
 			removeActivity(state, activityId) {

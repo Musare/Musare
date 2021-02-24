@@ -741,6 +741,7 @@ export default {
 						pausedAt: station.pausedAt,
 						description: station.description,
 						displayName: station.displayName,
+						name: station.name,
 						privacy: station.privacy,
 						locked: station.locked,
 						partyMode: station.partyMode,
