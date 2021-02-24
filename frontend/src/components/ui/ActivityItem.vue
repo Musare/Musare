@@ -1,6 +1,6 @@
 <template>
 	<div class="item activity-item universal-item">
-		<div class="thumbnail">
+		<div :class="[theme, 'thumbnail']">
 			<img
 				v-if="activity.payload.thumbnail"
 				:src="activity.payload.thumbnail"
@@ -38,6 +38,11 @@ export default {
 			type: Object,
 			default: () => {}
 		}
+	},
+	data() {
+		return {
+			theme: "blue"
+		};
 	},
 	computed: {
 		formattedMessage() {
@@ -91,6 +96,13 @@ export default {
 
 			return message;
 		}
+	},
+	mounted() {
+		if (this.activity.type === "station__edit_theme")
+			this.theme = this.activity.payload.message.replace(
+				/to\s(\w+)/g,
+				"$1"
+			);
 	},
 	methods: {
 		getIcon() {
@@ -170,7 +182,34 @@ export default {
 		min-width: 70.5px;
 		max-width: 70.5px;
 		height: 70.5px;
-		background-color: var(--primary-color);
+
+		&.red {
+			background-color: var(--red);
+		}
+
+		&.green {
+			background-color: var(--green);
+		}
+
+		&.blue {
+			background-color: var(--primary-color);
+		}
+
+		&.orange {
+			background-color: var(--orange);
+		}
+
+		&.yellow {
+			background-color: var(--yellow);
+		}
+
+		&.purple {
+			background-color: var(--purple);
+		}
+
+		&.teal {
+			background-color: var(--teal);
+		}
 
 		.activity-type-icon {
 			position: absolute;
