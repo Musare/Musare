@@ -23,6 +23,13 @@
 			>
 				My Playlists
 			</button>
+			<button
+				v-else
+				class="button is-default tooltip tooltip-top tooltip-center"
+				data-tooltip="Login to manage playlists"
+			>
+				My Playlists
+			</button>
 		</div>
 		<queue class="tab" v-show="tab === 'queue'" />
 		<users class="tab" v-show="tab === 'users'" />
@@ -67,12 +74,10 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../../../../styles/global.scss";
-
 .night-mode {
 	#tab-selection .button {
-		background: $dark-grey;
-		color: #fff;
+		background: var(--dark-grey);
+		color: var(--white);
 	}
 }
 
@@ -80,7 +85,7 @@ export default {
 	width: 100%;
 	height: calc(100% - 36px);
 	position: absolute;
-	border: 1px solid $light-grey-2;
+	border: 1px solid var(--light-grey-3);
 	border-top: 0;
 }
 
@@ -92,8 +97,8 @@ export default {
 		border: 0;
 		text-transform: uppercase;
 		font-size: 17px;
-		color: $night-mode-bg-secondary;
-		background-color: $night-mode-text;
+		color: var(--dark-grey-3);
+		background-color: var(--light-grey-2);
 		flex-grow: 1;
 
 		&:not(:first-of-type) {
@@ -102,8 +107,8 @@ export default {
 	}
 
 	.selected {
-		background-color: $night-mode-bg-secondary !important;
-		color: #fff !important;
+		background-color: var(--dark-grey-3) !important;
+		color: var(--white) !important;
 	}
 }
 
@@ -115,8 +120,8 @@ export default {
 	position: absolute;
 	bottom: 0;
 	border: 0;
-	background-color: var(--station-theme) !important;
-	color: $white !important;
+	background-color: var(--primary-color) !important;
+	color: var(--white) !important;
 
 	&:active,
 	&:focus {
@@ -125,7 +130,7 @@ export default {
 
 	&:hover,
 	&:focus {
-		background-color: var(--station-theme) !important;
+		background-color: var(--primary-color) !important;
 		filter: brightness(90%);
 	}
 }
@@ -146,15 +151,15 @@ export default {
 }
 
 /deep/ ::-webkit-scrollbar-track {
-	background-color: #fff;
-	border: 1px solid $light-grey-2;
+	background-color: var(--white);
+	border: 1px solid var(--light-grey-3);
 }
 
 /deep/ ::-webkit-scrollbar-thumb {
-	background-color: $dark-grey;
+	background-color: var(--dark-grey);
 
 	&:hover {
-		background-color: darken($dark-grey, 10%);
+		filter: brightness(95%);
 	}
 }
 </style>

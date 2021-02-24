@@ -169,7 +169,7 @@ import { mapActions, mapState } from "vuex";
 import Toast from "toasters";
 import io from "../../io";
 
-import Modal from "../../components/Modal.vue";
+import Modal from "../Modal.vue";
 
 export default {
 	components: { Modal },
@@ -249,8 +249,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../../styles/global.scss";
-
 input[type="range"] {
 	-webkit-appearance: none;
 	width: 100%;
@@ -266,7 +264,7 @@ input[type="range"]::-webkit-slider-runnable-track {
 	height: 5.2px;
 	cursor: pointer;
 	box-shadow: 0;
-	background: $light-grey-2;
+	background: var(--light-grey-3);
 	border-radius: 0;
 	border: 0;
 }
@@ -277,7 +275,7 @@ input[type="range"]::-webkit-slider-thumb {
 	height: 19px;
 	width: 19px;
 	border-radius: 15px;
-	background: $primary-color;
+	background: var(--primary-color);
 	cursor: pointer;
 	-webkit-appearance: none;
 	margin-top: -6.5px;
@@ -288,7 +286,7 @@ input[type="range"]::-moz-range-track {
 	height: 5.2px;
 	cursor: pointer;
 	box-shadow: 0;
-	background: $light-grey-2;
+	background: var(--light-grey-3);
 	border-radius: 0;
 	border: 0;
 }
@@ -299,7 +297,7 @@ input[type="range"]::-moz-range-thumb {
 	height: 19px;
 	width: 19px;
 	border-radius: 15px;
-	background: $primary-color;
+	background: var(--primary-color);
 	cursor: pointer;
 	-webkit-appearance: none;
 	margin-top: -6.5px;
@@ -310,19 +308,19 @@ input[type="range"]::-ms-track {
 	height: 5.2px;
 	cursor: pointer;
 	box-shadow: 0;
-	background: $light-grey-2;
+	background: var(--light-grey-3);
 	border-radius: 1.3px;
 }
 
 input[type="range"]::-ms-fill-lower {
-	background: $light-grey-2;
+	background: var(--light-grey-3);
 	border: 0;
 	border-radius: 0;
 	box-shadow: 0;
 }
 
 input[type="range"]::-ms-fill-upper {
-	background: $light-grey-2;
+	background: var(--light-grey-3);
 	border: 0;
 	border-radius: 0;
 	box-shadow: 0;
@@ -334,7 +332,7 @@ input[type="range"]::-ms-thumb {
 	height: 15px;
 	width: 15px;
 	border-radius: 15px;
-	background: $primary-color;
+	background: var(--primary-color);
 	cursor: pointer;
 	-webkit-appearance: none;
 	margin-top: 1.5px;
@@ -389,7 +387,7 @@ h5 {
 }
 
 .save-changes {
-	color: $white;
+	color: var(--white);
 }
 
 .tag:not(:last-child) {

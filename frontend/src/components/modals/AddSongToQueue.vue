@@ -17,15 +17,15 @@
 							class="input"
 							type="text"
 							placeholder="Enter your YouTube query here..."
-							v-model="querySearch"
+							v-model="search.songs.query"
 							autofocus
-							@keyup.enter="submitQuery()"
+							@keyup.enter="searchForSongs()"
 						/>
 					</p>
 					<p class="control">
 						<a
 							class="button is-info"
-							@click="submitQuery()"
+							@click.prevent="searchForSongs()"
 							href="#"
 							><i class="material-icons icon-with-button"
 								>search</i
@@ -36,66 +36,64 @@
 
 				<!-- Choosing a song from youtube - query results -->
 
-				<table class="table" v-if="queryResults.length > 0">
-					<tbody>
-						<tr
-							v-for="(result, index) in queryResults"
-							:key="index"
-						>
-							<td class="song-thumbnail">
-								<div
-									:style="
-										`background-image: url('${result.thumbnail}'`
-									"
-								></div>
-							</td>
-							<td><strong v-html="result.title"></strong></td>
-							<td class="song-actions">
-								<transition
-									name="song-actions-transition"
-									mode="out-in"
+				<div
+					id="song-query-results"
+					v-if="search.songs.results.length > 0"
+				>
+					<search-query-item
+						v-for="(result, index) in search.songs.results"
+						:key="index"
+						:result="result"
+					>
+						<div slot="actions">
+							<transition
+								name="search-query-actions"
+								mode="out-in"
+							>
+								<a
+									class="button is-success"
+									v-if="result.isAddedToQueue"
+									href="#"
+									key="added-to-playlist"
 								>
-									<a
-										class="button is-success"
-										v-if="result.isAddedToQueue"
-										href="#"
-										key="added-to-queue"
+									<i class="material-icons icon-with-button"
+										>done</i
 									>
-										<i
-											class="material-icons icon-with-button"
-											>done</i
-										>
-										Added to queue
-									</a>
-									<a
-										class="button is-dark"
-										v-else
-										@click="
-											addSongToQueue(result.id, index)
-										"
-										href="#"
-										key="add-to-queue"
+									Added to queue
+								</a>
+								<a
+									class="button is-dark"
+									v-else
+									@click.prevent="
+										addSongToQueue(result.id, index)
+									"
+									href="#"
+									key="add-to-queue"
+								>
+									<i class="material-icons icon-with-button"
+										>add</i
 									>
-										<i
-											class="material-icons icon-with-button"
-											>add</i
-										>
-										Add to queue
-									</a>
-								</transition>
-							</td>
-						</tr>
-					</tbody>
-				</table>
+									Add to queue
+								</a>
+							</transition>
+						</div>
+					</search-query-item>
+
+					<a
+						class="button is-default load-more-button"
+						@click.prevent="loadMoreSongs()"
+						href="#"
+					>
+						Load more...
+					</a>
+				</div>
 
 				<!-- Import a playlist from youtube -->
 
 				<div v-if="station.type === 'official'">
 					<hr class="section-horizontal-rule" />
 
-					<h4 class="section-title">
-						Import a playlist
-					</h4>
+					<h4 class="section-title">Import a playlist</h4>
 					<p class="section-description">
 						Import a playlist by using a link from YouTube.
 					</p>
@@ -108,24 +106,26 @@
 								class="input"
 								type="text"
 								placeholder="YouTube Playlist URL"
-								v-model="importQuery"
+								v-model="search.playlist.query"
 								@keyup.enter="importPlaylist()"
 							/>
 						</p>
 						<p class="control has-addons">
 							<span class="select" id="playlist-import-type">
 								<select
-									v-model="isImportingOnlyMusicOfPlaylist"
+									v-model="
+										search.playlist.isImportingOnlyMusic
+									"
 								>
 									<option :value="false">Import all</option>
-									<option :value="true"
-										>Import only music</option
-									>
+									<option :value="true">
+										Import only music
+									</option>
 								</select>
 							</span>
 							<a
 								class="button is-info"
-								@click="importPlaylist()"
+								@click.prevent="importPlaylist()"
 								href="#"
 								><i class="material-icons icon-with-button"
 									>publish</i
@@ -165,7 +165,7 @@
 										<a
 											class="button is-danger"
 											href="#"
-											@click="
+											@click.prevent="
 												togglePlaylistSelection(
 													playlist._id
 												)
@@ -182,7 +182,7 @@
 										</a>
 										<a
 											class="button is-success"
-											@click="
+											@click.prevent="
 												togglePlaylistSelection(
 													playlist._id
 												)
@@ -210,20 +210,20 @@ import { mapState, mapActions } from "vuex";
 
 import Toast from "toasters";
 
-import PlaylistItem from "../../components/ui/PlaylistItem.vue";
-import Modal from "../../components/Modal.vue";
+import SearchYoutube from "../../mixins/SearchYoutube.vue";
+
+import PlaylistItem from "../ui/PlaylistItem.vue";
+import SearchQueryItem from "../ui/SearchQueryItem.vue";
+import Modal from "../Modal.vue";
 
 import io from "../../io";
 
 export default {
-	components: { Modal, PlaylistItem },
+	components: { Modal, PlaylistItem, SearchQueryItem },
+	mixins: [SearchYoutube],
 	data() {
 		return {
-			querySearch: "",
-			queryResults: [],
-			playlists: [],
-			importQuery: "",
-			isImportingOnlyMusicOfPlaylist: false
+			playlists: []
 		};
 	},
 	computed: mapState({
@@ -268,7 +268,10 @@ export default {
 								timeout: 8000
 							});
 						else {
-							this.queryResults[index].isAddedToQueue = true;
+							this.search.songs.results[
+								index
+							].isAddedToQueue = true;
+
 							new Toast({
 								content: `${data.message}`,
 								timeout: 4000
@@ -284,7 +287,8 @@ export default {
 							timeout: 8000
 						});
 					else {
-						this.queryResults[index].isAddedToQueue = true;
+						this.search.songs.results[index].isAddedToQueue = true;
+
 						new Toast({
 							content: `${data.message}`,
 							timeout: 4000
@@ -297,7 +301,7 @@ export default {
 			let isImportingPlaylist = true;
 
 			// import query is blank
-			if (!this.importQuery)
+			if (!this.search.playlist.query)
 				return new Toast({
 					content: "Please enter a YouTube playlist URL.",
 					timeout: 4000
@@ -316,59 +320,13 @@ export default {
 
 			return this.socket.emit(
 				"queueSongs.addSetToQueue",
-				this.importQuery,
-				this.isImportingOnlyMusicOfPlaylist,
+				this.search.playlist.query,
+				this.search.playlist.isImportingOnlyMusic,
 				res => {
 					isImportingPlaylist = false;
 					return new Toast({ content: res.message, timeout: 20000 });
 				}
 			);
-		},
-		submitQuery() {
-			let query = this.querySearch;
-
-			if (!this.querySearch)
-				return new Toast({
-					content: "Please input a search query or a YouTube link",
-					timeout: 4000
-				});
-
-			if (query.indexOf("&index=") !== -1) {
-				query = query.split("&index=");
-				query.pop();
-				query = query.join("");
-			}
-
-			if (query.indexOf("&list=") !== -1) {
-				query = query.split("&list=");
-				query.pop();
-				query = query.join("");
-			}
-
-			return this.socket.emit("apis.searchYoutube", query, res => {
-				if (res.status === "failure")
-					return new Toast({
-						content: "Error searching on YouTube",
-						timeout: 4000
-					});
-
-				const { data } = res;
-				this.queryResults = [];
-
-				console.log(res.data);
-
-				for (let i = 0; i < data.items.length; i += 1) {
-					this.queryResults.push({
-						id: data.items[i].id.videoId,
-						url: `https://www.youtube.com/watch?v=${this.id}`,
-						title: data.items[i].snippet.title,
-						thumbnail: data.items[i].snippet.thumbnails.default.url,
-						isAddedToQueue: false
-					});
-				}
-
-				return this.queryResults;
-			});
 		},
 		...mapActions("station", ["updatePrivatePlaylistQueueSelected"]),
 		...mapActions("user/playlists", ["editPlaylist"])
@@ -377,16 +335,10 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../../styles/global.scss";
-
 .night-mode {
-	tr {
-		background-color: $night-mode-bg-secondary;
+	div {
+		color: var(--dark-grey);
 	}
-}
-
-tr td {
-	vertical-align: middle;
 }
 
 .song-actions {
@@ -408,17 +360,21 @@ tr td {
 	margin-top: 20px;
 }
 
-.night-mode {
-	div {
-		color: #4d4d4d;
-	}
-}
-
 #playlist-to-queue-selection {
 	margin-top: 0;
 
 	#playlists {
 		font-size: 18px;
+
+		.playlist {
+			.button {
+				width: 150px;
+			}
+
+			i {
+				color: var(--white);
+			}
+		}
 
 		.playlist:not(:last-of-type) {
 			margin-bottom: 10px;
@@ -450,29 +406,20 @@ tr td {
 	padding: 20px;
 }
 
-#playlists {
-	.playlist-item {
-		.button {
-			width: 146px;
-		}
+#song-query-results {
+	padding: 10px;
+	max-height: 500px;
+	overflow: auto;
+	border: 1px solid var(--light-grey-3);
+	border-radius: 3px;
+
+	.search-query-item:not(:last-of-type) {
+		margin-bottom: 10px;
 	}
-}
 
-.song-actions-transition-enter-active {
-	transition: all 0.2s ease;
-}
-
-.song-actions-transition-leave-active {
-	transition: all 0.2s cubic-bezier(1, 0.5, 0.8, 1);
-}
-
-.song-actions-transition-enter {
-	transform: translateX(-20px);
-	opacity: 0;
-}
-
-.song-actions-transition-leave-to {
-	transform: translateX(20px);
-	opacity: 0;
+	.load-more-button {
+		width: 100%;
+		margin-top: 10px;
+	}
 }
 </style>

@@ -78,8 +78,8 @@ import { format, formatDistance, parseISO } from "date-fns"; // eslint-disable-l
 
 import Toast from "toasters";
 import io from "../../io";
-import Modal from "../../components/Modal.vue";
-import UserIdToUsername from "../../components/common/UserIdToUsername.vue";
+import Modal from "../Modal.vue";
+import UserIdToUsername from "../common/UserIdToUsername.vue";
 
 export default {
 	components: { Modal, UserIdToUsername },

@@ -47,15 +47,13 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../../styles/global.scss";
-
 .night-mode {
 	.playlist-item {
-		background-color: $dark-grey-2 !important;
+		background-color: var(--dark-grey-2) !important;
 		border: 0 !important;
 
 		p {
-			color: $night-mode-text !important;
+			color: var(--light-grey-2) !important;
 		}
 	}
 }
@@ -65,7 +63,7 @@ export default {
 	height: 72px;
 
 	.item-title {
-		color: $dark-grey-2;
+		color: var(--dark-grey-2);
 		font-size: 20px;
 		line-height: 23px;
 		margin-bottom: 0;
@@ -73,7 +71,7 @@ export default {
 		align-items: center;
 
 		.private-playlist-icon {
-			color: $dark-pink;
+			color: var(--dark-pink);
 			font-size: 18px;
 			margin-left: 5px;
 		}

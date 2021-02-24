@@ -1,6 +1,6 @@
 /* eslint-disable global-require */
 import config from "config";
-import Mailgun from "mailgun-js";
+import nodemailer from "nodemailer";
 
 import CoreClass from "../../core";
 
@@ -31,12 +31,17 @@ class _MailModule extends CoreClass {
 			passwordRequest: await importSchema("passwordRequest")
 		};
 
-		this.enabled = config.get("apis.mailgun.enabled");
+		this.enabled = config.get("smtp.enabled");
 
 		if (this.enabled)
-			this.mailgun = new Mailgun({
-				apiKey: config.get("apis.mailgun.key"),
-				domain: config.get("apis.mailgun.domain")
+			this.transporter = nodemailer.createTransport({
+				host: config.get("smtp.host"),
+				port: config.get("smtp.port"),
+				secure: config.get("smtp.secure"),
+				auth: {
+					user: config.get("smtp.auth.user"),
+					pass: config.get("smtp.auth.pass")
+				}
 			});
 
 		return new Promise(resolve => resolve());
@@ -50,12 +55,20 @@ class _MailModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	SEND_MAIL(payload) {
-		return new Promise(resolve => {
+		return new Promise((resolve, reject) => {
 			if (MailModule.enabled)
-				MailModule.mailgun.messages().send(payload.data, () => {
-					resolve();
-				});
-			else resolve();
+				return MailModule.transporter
+					.sendMail(payload.data)
+					.then(info => {
+						MailModule.log("SUCCESS", "MAIL_SEND", `Successfully sent email ${info.messageId}`);
+						return resolve();
+					})
+					.catch(err => {
+						MailModule.log("ERROR", "MAIL_SEND", `Failed to send email. ${err}`);
+						return reject();
+					});
+
+			return resolve();
 		});
 	}
 

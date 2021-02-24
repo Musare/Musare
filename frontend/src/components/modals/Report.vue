@@ -185,7 +185,7 @@
 import { mapState, mapActions } from "vuex";
 
 import Toast from "toasters";
-import Modal from "../../components/Modal.vue";
+import Modal from "../Modal.vue";
 import io from "../../io";
 
 export default {
@@ -306,8 +306,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../../styles/global.scss";
-
 h6 {
 	margin-bottom: 15px;
 }
@@ -345,6 +343,6 @@ h6 {
 }
 
 .is-highlight-active {
-	border: 3px $primary-color solid;
+	border: 3px var(--primary-color) solid;
 }
 </style>

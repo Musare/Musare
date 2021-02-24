@@ -10,7 +10,8 @@ export default {
 	},
 	avatar: {
 		type: { type: String, enum: ["gravatar", "initials"], required: true },
-		url: { type: String, required: false }
+		url: { type: String, required: false },
+		color: { type: String, enum: ["blue", "orange", "green", "purple", "teal"], required: false }
 	},
 	services: {
 		password: {
@@ -42,7 +43,8 @@ export default {
 	preferences: {
 		orderOfPlaylists: [{ type: mongoose.Schema.Types.ObjectId }],
 		nightmode: { type: Boolean, default: false, required: true },
-		autoSkipDisliked: { type: Boolean, default: true, required: true }
+		autoSkipDisliked: { type: Boolean, default: true, required: true },
+		activityLogPublic: { type: Boolean, default: false, required: true }
 	},
 	documentVersion: { type: Number, default: 1, required: true }
 };

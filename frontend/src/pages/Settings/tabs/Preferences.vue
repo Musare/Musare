@@ -2,9 +2,7 @@
 	<div class="content preferences-tab">
 		<h4 class="section-title">Change preferences</h4>
 
-		<p class="section-description">
-			Tailor these settings to your liking.
-		</p>
+		<p class="section-description">Tailor these settings to your liking.</p>
 
 		<hr class="section-horizontal-rule" />
 
@@ -26,6 +24,17 @@
 				<p>Automatically vote to skip disliked songs</p>
 			</label>
 		</p>
+		<p class="control is-expanded checkbox-control">
+			<input
+				type="checkbox"
+				id="activityLogPublic"
+				v-model="localActivityLogPublic"
+			/>
+			<label for="activityLogPublic">
+				<span></span>
+				<p>Allow my activity log to be viewed publicly</p>
+			</label>
+		</p>
 		<transition name="saving-changes-transition" mode="out-in">
 			<button
 				class="button save-changes"
@@ -44,19 +53,21 @@ import { mapState, mapActions } from "vuex";
 import Toast from "toasters";
 
 import io from "../../../io";
-import SaveButton from "../mixins/SaveButton.vue";
+import SaveButton from "../../../mixins/SaveButton.vue";
 
 export default {
 	mixins: [SaveButton],
 	data() {
 		return {
 			localNightmode: false,
-			localAutoSkipDisliked: false
+			localAutoSkipDisliked: false,
+			localActivityLogPublic: false
 		};
 	},
 	computed: mapState({
 		nightmode: state => state.user.preferences.nightmode,
-		autoSkipDisliked: state => state.user.preferences.autoSkipDisliked
+		autoSkipDisliked: state => state.user.preferences.autoSkipDisliked,
+		activityLogPublic: state => state.user.preferences.activityLogPublic
 	}),
 	mounted() {
 		io.getSocket(socket => {
@@ -66,12 +77,15 @@ export default {
 				if (res.status === "success") {
 					this.localNightmode = res.data.nightmode;
 					this.localAutoSkipDisliked = res.data.autoSkipDisliked;
+					this.localActivityLogPublic = res.data.activityLogPublic;
 				}
 			});
 
 			socket.on("keep.event:user.preferences.changed", preferences => {
+				console.log("changed");
 				this.localNightmode = preferences.nightmode;
 				this.localAutoSkipDisliked = preferences.autoSkipDisliked;
+				this.localActivityLogPublic = preferences.activityLogPublic;
 			});
 		});
 	},
@@ -79,14 +93,15 @@ export default {
 		saveChanges() {
 			if (
 				this.localNightmode === this.nightmode &&
-				this.localAutoSkipDisliked === this.autoSkipDisliked
+				this.localAutoSkipDisliked === this.autoSkipDisliked &&
+				this.localActivityLogPublic === this.activityLogPublic
 			) {
 				new Toast({
 					content: "Please make a change before saving.",
 					timeout: 5000
 				});
 
-				return this.failedSave();
+				return this.handleFailedSave();
 			}
 
 			this.saveStatus = "disabled";
@@ -95,13 +110,14 @@ export default {
 				"users.updatePreferences",
 				{
 					nightmode: this.localNightmode,
-					autoSkipDisliked: this.localAutoSkipDisliked
+					autoSkipDisliked: this.localAutoSkipDisliked,
+					activityLogPublic: this.localActivityLogPublic
 				},
 				res => {
 					if (res.status !== "success") {
 						new Toast({ content: res.message, timeout: 8000 });
 
-						return this.failedSave();
+						return this.handleFailedSave();
 					}
 
 					new Toast({
@@ -109,21 +125,20 @@ export default {
 						timeout: 4000
 					});
 
-					return this.successfulSave();
+					return this.handleSuccessfulSave();
 				}
 			);
 		},
 		...mapActions("user/preferences", [
 			"changeNightmode",
-			"changeAutoSkipDisliked"
+			"changeAutoSkipDisliked",
+			"changeActivityLogPublic"
 		])
 	}
 };
 </script>
 
 <style lang="scss" scoped>
-@import "../../../styles/global.scss";
-
 .checkbox-control {
 	input[type="checkbox"] {
 		opacity: 0;
@@ -139,9 +154,9 @@ export default {
 			cursor: pointer;
 			width: 24px;
 			height: 24px;
-			background-color: $white;
+			background-color: var(--white);
 			display: inline-block;
-			border: 1px solid $dark-grey-2;
+			border: 1px solid var(--dark-grey-2);
 			position: relative;
 			border-radius: 3px;
 		}
@@ -158,7 +173,7 @@ export default {
 		left: 2px;
 		top: 2px;
 		border-radius: 3px;
-		background-color: $musare-blue;
+		background-color: var(--primary-color);
 		position: absolute;
 	}
 }

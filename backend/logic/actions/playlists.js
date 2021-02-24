@@ -24,7 +24,7 @@ CacheModule.runJob("SUB", {
 
 		if (playlist.privacy === "public")
 			IOModule.runJob("EMIT_TO_ROOM", {
-				room: `profile-${playlist.createdBy}`,
+				room: `profile-${playlist.createdBy}-playlists`,
 				args: ["event:playlist.create", playlist]
 			});
 	}
@@ -40,7 +40,7 @@ CacheModule.runJob("SUB", {
 		});
 
 		IOModule.runJob("EMIT_TO_ROOM", {
-			room: `profile-${res.userId}`,
+			room: `profile-${res.userId}-playlists`,
 			args: ["event:playlist.delete", res.playlistId]
 		});
 	}
@@ -74,7 +74,7 @@ CacheModule.runJob("SUB", {
 
 		if (res.privacy === "public")
 			IOModule.runJob("EMIT_TO_ROOM", {
-				room: `profile-${res.userId}`,
+				room: `profile-${res.userId}-playlists`,
 				args: [
 					"event:playlist.addSong",
 					{
@@ -100,7 +100,7 @@ CacheModule.runJob("SUB", {
 
 		if (res.privacy === "public")
 			IOModule.runJob("EMIT_TO_ROOM", {
-				room: `profile-${res.userId}`,
+				room: `profile-${res.userId}-playlists`,
 				args: [
 					"event:playlist.removeSong",
 					{
@@ -126,7 +126,7 @@ CacheModule.runJob("SUB", {
 
 		if (res.privacy === "public")
 			IOModule.runJob("EMIT_TO_ROOM", {
-				room: `profile-${res.userId}`,
+				room: `profile-${res.userId}-playlists`,
 				args: [
 					"event:playlist.updateDisplayName",
 					{
@@ -143,18 +143,20 @@ CacheModule.runJob("SUB", {
 	cb: res => {
 		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(response => {
 			response.sockets.forEach(socket => {
-				socket.emit("event:playlist.updatePrivacy");
+				socket.emit("event:playlist.updatePrivacy", {
+					playlist: res.playlist
+				});
 			});
 		});
 
 		if (res.playlist.privacy === "public")
 			return IOModule.runJob("EMIT_TO_ROOM", {
-				room: `profile-${res.userId}`,
+				room: `profile-${res.userId}-playlists`,
 				args: ["event:playlist.create", res.playlist]
 			});
 
 		return IOModule.runJob("EMIT_TO_ROOM", {
-			room: `profile-${res.userId}`,
+			room: `profile-${res.userId}-playlists`,
 			args: ["event:playlist.delete", res.playlist._id]
 		});
 	}
@@ -168,13 +170,8 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	index: isAdminRequired(async function index(session, cb) {
-		const playlistModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "playlist"
-			},
-			this
-		);
+		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
+
 		async.waterfall(
 			[
 				next => {
@@ -205,9 +202,7 @@ export default {
 			[
 				next => {
 					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
-						.then(playlist => {
-							next(null, playlist);
-						})
+						.then(playlist => next(null, playlist))
 						.catch(next);
 				},
 
@@ -440,9 +435,12 @@ export default {
 				});
 
 				ActivitiesModule.runJob("ADD_ACTIVITY", {
-					userId: session.userId,
-					activityType: "created_playlist",
-					payload: [playlist._id]
+					userId: playlist.createdBy,
+					type: "playlist__create",
+					payload: {
+						message: `Created playlist <playlistId>${playlist.displayName}</playlistId>`,
+						playlistId: playlist._id
+					}
 				});
 
 				this.log(
@@ -469,19 +467,20 @@ export default {
 	 * @param {string} playlistId - the id of the playlist we are getting
 	 * @param {Function} cb - gets called with the result
 	 */
-	getPlaylist: isLoginRequired(function getPlaylist(session, playlistId, cb) {
+	getPlaylist: function getPlaylist(session, playlistId, cb) {
 		async.waterfall(
 			[
 				next => {
 					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
-						.then(playlist => {
-							next(null, playlist);
-						})
+						.then(playlist => next(null, playlist))
 						.catch(next);
 				},
 
 				(playlist, next) => {
-					if (!playlist || playlist.createdBy !== session.userId) return next("Playlist not found");
+					if (!playlist) return next("Playlist not found");
+					if (playlist.privacy !== "public" && playlist.createdBy !== session.userId)
+						return next("User unauthorised to view playlist.");
+
 					return next(null, playlist);
 				}
 			],
@@ -508,7 +507,7 @@ export default {
 				});
 			}
 		);
-	}),
+	},
 
 	/**
 	 * Obtains basic metadata of a playlist in order to format an activity
@@ -599,11 +598,13 @@ export default {
 					);
 					return cb({ status: "failure", message: err });
 				}
+
 				this.log(
 					"SUCCESS",
 					"PLAYLIST_UPDATE",
 					`Successfully updated private playlist "${playlistId}" for user "${session.userId}".`
 				);
+
 				return cb({
 					status: "success",
 					data: playlist
@@ -866,14 +867,17 @@ export default {
 						.catch(next);
 				},
 				(position, next) => {
-					SongsModule.runJob("GET_SONG", { id: songId }, this)
-						.then(response => {
-							const { song } = response;
+					SongsModule.runJob("GET_SONG_FROM_ID", { songId }, this)
+						.then(res => {
+							const { song } = res;
+
 							next(null, {
 								_id: song._id,
 								songId,
 								title: song.title,
 								duration: song.duration,
+								thumbnail: song.thumbnail,
+								artists: song.artists,
 								position
 							});
 						})
@@ -907,17 +911,29 @@ export default {
 					);
 					return cb({ status: "failure", message: err });
 				}
+
 				this.log(
 					"SUCCESS",
 					"PLAYLIST_ADD_SONG",
 					`Successfully added song "${songId}" to private playlist "${playlistId}" for user "${session.userId}".`
 				);
-				if (!isSet)
+
+				if (!isSet && playlist.displayName !== "Liked Songs" && playlist.displayName !== "Disliked Songs") {
+					const songName = newSong.artists
+						? `${newSong.title} by ${newSong.artists.join(", ")}`
+						: newSong.title;
+
 					ActivitiesModule.runJob("ADD_ACTIVITY", {
 						userId: session.userId,
-						activityType: "added_song_to_playlist",
-						payload: [{ songId, playlistId }]
+						type: "playlist__add_song",
+						payload: {
+							message: `Added <songId>${songName}</songId> to playlist <playlistId>${playlist.displayName}</playlistId>`,
+							thumbnail: newSong.thumbnail,
+							playlistId,
+							songId
+						}
 					});
+				}
 
 				CacheModule.runJob("PUB", {
 					channel: "playlist.addSong",
@@ -928,6 +944,7 @@ export default {
 						privacy: playlist.privacy
 					}
 				});
+
 				return cb({
 					status: "success",
 					message: "Song has been successfully added to the playlist",
@@ -956,21 +973,14 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					YouTubeModule.runJob(
-						"GET_PLAYLIST",
-						{
-							url,
-							musicOnly
-						},
-						this
-					).then(response => {
-						if (response.filteredSongs) {
-							videosInPlaylistTotal = response.songs.length;
-							songsInPlaylistTotal = response.filteredSongs.length;
+					YouTubeModule.runJob("GET_PLAYLIST", { url, musicOnly }, this).then(res => {
+						if (res.filteredSongs) {
+							videosInPlaylistTotal = res.songs.length;
+							songsInPlaylistTotal = res.filteredSongs.length;
 						} else {
-							songsInPlaylistTotal = videosInPlaylistTotal = response.songs.length;
+							songsInPlaylistTotal = videosInPlaylistTotal = res.songs.length;
 						}
-						next(null, response.songs);
+						next(null, res.songs);
 					});
 				},
 				(songIds, next) => {
@@ -979,6 +989,8 @@ export default {
 					let alreadyInPlaylist = 0;
 
 					if (songIds.length === 0) next();
+
+					console.log(songIds);
 
 					async.eachLimit(
 						songIds,
@@ -1004,9 +1016,7 @@ export default {
 								.catch(() => {
 									failed += 1;
 								})
-								.finally(() => {
-									next();
-								});
+								.finally(() => next());
 						},
 						() => {
 							addSongsStats = { successful, failed, alreadyInPlaylist };
@@ -1017,9 +1027,7 @@ export default {
 
 				next => {
 					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
-						.then(playlist => {
-							next(null, playlist);
-						})
+						.then(playlist => next(null, playlist))
 						.catch(next);
 				},
 
@@ -1040,16 +1048,22 @@ export default {
 					);
 					return cb({ status: "failure", message: err });
 				}
+
 				ActivitiesModule.runJob("ADD_ACTIVITY", {
 					userId: session.userId,
-					activityType: "added_songs_to_playlist",
-					payload: addedSongs
+					type: "playlist__import_playlist",
+					payload: {
+						message: `Imported ${addSongsStats.successful} songs to playlist <playlistId>${playlist.displayName}</playlistId>`,
+						playlistId
+					}
 				});
+
 				this.log(
 					"SUCCESS",
 					"PLAYLIST_IMPORT",
 					`Successfully imported a YouTube playlist to private playlist "${playlistId}" for user "${session.userId}". Videos in playlist: ${videosInPlaylistTotal}, songs in playlist: ${songsInPlaylistTotal}, songs successfully added: ${addSongsStats.successful}, songs failed: ${addSongsStats.failed}, already in playlist: ${addSongsStats.alreadyInPlaylist}.`
 				);
+
 				return cb({
 					status: "success",
 					message: `Playlist has been imported. ${addSongsStats.successful} were added successfully, ${addSongsStats.failed} failed (${addSongsStats.alreadyInPlaylist} were already in the playlist)`,
@@ -1073,6 +1087,7 @@ export default {
 	 */
 	removeSongFromPlaylist: isLoginRequired(async function removeSongFromPlaylist(session, songId, playlistId, cb) {
 		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
+
 		async.waterfall(
 			[
 				next => {
@@ -1134,6 +1149,41 @@ export default {
 					PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId }, this)
 						.then(playlist => next(null, playlist))
 						.catch(next);
+				},
+
+				(playlist, next) => {
+					SongsModule.runJob("GET_SONG_FROM_ID", { songId }, this)
+						.then(res =>
+							next(null, playlist, {
+								title: res.song.title,
+								thumbnail: res.song.thumbnail,
+								artists: res.song.artists
+							})
+						)
+						.catch(() => {
+							YouTubeModule.runJob("GET_SONG", { songId }, this)
+								.then(response => next(null, playlist, response.song))
+								.catch(next);
+						});
+				},
+
+				(playlist, song, next) => {
+					const songName = song.artists ? `${song.title} by ${song.artists.join(", ")}` : song.title;
+
+					if (playlist.displayName !== "Liked Songs" && playlist.displayName !== "Disliked Songs") {
+						ActivitiesModule.runJob("ADD_ACTIVITY", {
+							userId: session.userId,
+							type: "playlist__remove_song",
+							payload: {
+								message: `Removed <songId>${songName}</songId> from playlist <playlistId>${playlist.displayName}</playlistId>`,
+								thumbnail: song.thumbnail,
+								playlistId,
+								songId
+							}
+						});
+					}
+
+					return next(null, playlist);
 				}
 			],
 			async (err, playlist) => {
@@ -1146,11 +1196,13 @@ export default {
 					);
 					return cb({ status: "failure", message: err });
 				}
+
 				this.log(
 					"SUCCESS",
 					"PLAYLIST_REMOVE_SONG",
 					`Successfully removed song "${songId}" from private playlist "${playlistId}" for user "${session.userId}".`
 				);
+
 				CacheModule.runJob("PUB", {
 					channel: "playlist.removeSong",
 					value: {
@@ -1160,6 +1212,7 @@ export default {
 						privacy: playlist.privacy
 					}
 				});
+
 				return cb({
 					status: "success",
 					message: "Song has been successfully removed from playlist",
@@ -1203,9 +1256,7 @@ export default {
 
 				(res, next) => {
 					PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId }, this)
-						.then(playlist => {
-							next(null, playlist);
-						})
+						.then(playlist => next(null, playlist))
 						.catch(next);
 				}
 			],
@@ -1219,11 +1270,13 @@ export default {
 					);
 					return cb({ status: "failure", message: err });
 				}
+
 				this.log(
 					"SUCCESS",
 					"PLAYLIST_UPDATE_DISPLAY_NAME",
 					`Successfully updated display name to "${displayName}" for private playlist "${playlistId}" for user "${session.userId}".`
 				);
+
 				CacheModule.runJob("PUB", {
 					channel: "playlist.updateDisplayName",
 					value: {
@@ -1233,6 +1286,16 @@ export default {
 						privacy: playlist.privacy
 					}
 				});
+
+				ActivitiesModule.runJob("ADD_ACTIVITY", {
+					userId: session.userId,
+					type: "playlist__edit_display_name",
+					payload: {
+						message: `Changed display name of playlist <playlistId>${displayName}</playlistId>`,
+						playlistId
+					}
+				});
+
 				return cb({
 					status: "success",
 					message: "Playlist has been successfully updated"
@@ -1269,24 +1332,23 @@ export default {
 					userModel.updateOne(
 						{ _id: playlist.createdBy },
 						{ $pull: { "preferences.orderOfPlaylists": playlist._id } },
-						err => {
-							if (err) return next(err);
-							return next(null);
-						}
+						err => next(err, playlist)
 					);
 				},
 
-				next => {
-					PlaylistsModule.runJob("DELETE_PLAYLIST", { playlistId }, this).then(next).catch(next);
+				(playlist, next) => {
+					PlaylistsModule.runJob("DELETE_PLAYLIST", { playlistId }, this)
+						.then(() => next(null, playlist))
+						.catch(next);
 				},
 
-				next => {
+				(playlist, next) => {
 					stationModel.find({ privatePlaylist: playlistId }, (err, res) => {
-						next(err, res);
+						next(err, playlist, res);
 					});
 				},
 
-				(stations, next) => {
+				(playlist, stations, next) => {
 					async.each(
 						stations,
 						(station, next) => {
@@ -1304,13 +1366,7 @@ export default {
 									(res, next) => {
 										if (!station.partyMode) {
 											moduleManager.modules.stations
-												.runJob(
-													"UPDATE_STATION",
-													{
-														stationId: station._id
-													},
-													this
-												)
+												.runJob("UPDATE_STATION", { stationId: station._id }, this)
 												.then(station => next(null, station))
 												.catch(next);
 											CacheModule.runJob("PUB", {
@@ -1324,18 +1380,14 @@ export default {
 									}
 								],
 
-								() => {
-									next();
-								}
+								() => next()
 							);
 						},
-						() => {
-							next();
-						}
+						() => next(null, playlist)
 					);
 				}
 			],
-			async err => {
+			async (err, playlist) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
@@ -1361,9 +1413,12 @@ export default {
 				});
 
 				ActivitiesModule.runJob("ADD_ACTIVITY", {
-					userId: session.userId,
-					activityType: "deleted_playlist",
-					payload: [playlistId]
+					userId: playlist.createdBy,
+					type: "playlist__remove",
+					payload: {
+						message: `Removed playlist <playlistId>${playlist.displayName}</playlistId>`,
+						playlistId
+					}
 				});
 
 				return cb({
@@ -1398,27 +1453,29 @@ export default {
 
 				(res, next) => {
 					PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId }, this)
-						.then(playlist => {
-							next(null, playlist);
-						})
+						.then(playlist => next(null, playlist))
 						.catch(next);
 				}
 			],
 			async (err, playlist) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+
 					this.log(
 						"ERROR",
 						"PLAYLIST_UPDATE_PRIVACY",
 						`Updating privacy to "${privacy}" for private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
 					);
+
 					return cb({ status: "failure", message: err });
 				}
+
 				this.log(
 					"SUCCESS",
 					"PLAYLIST_UPDATE_PRIVACY",
 					`Successfully updated privacy to "${privacy}" for private playlist "${playlistId}" for user "${session.userId}".`
 				);
+
 				CacheModule.runJob("PUB", {
 					channel: "playlist.updatePrivacy",
 					value: {
@@ -1426,6 +1483,16 @@ export default {
 						playlist
 					}
 				});
+
+				ActivitiesModule.runJob("ADD_ACTIVITY", {
+					userId: session.userId,
+					type: "playlist__edit_privacy",
+					payload: {
+						message: `Changed privacy of playlist <playlistId>${playlist.displayName}</playlistId> to ${privacy}`,
+						playlistId
+					}
+				});
+
 				return cb({
 					status: "success",
 					message: "Playlist has been successfully updated"

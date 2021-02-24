@@ -5,7 +5,7 @@
 			<table class="table is-striped">
 				<thead>
 					<tr>
-						<td>Profile Picture</td>
+						<td class="ppRow">Profile Picture</td>
 						<td>User ID</td>
 						<td>GitHub ID</td>
 						<td>Password</td>
@@ -22,9 +22,9 @@
 				<tbody>
 					<tr v-for="(user, index) in users" :key="index">
 						<td>
-							<img
-								class="user-avatar"
-								src="/assets/notes-transparent.png"
+							<profile-picture
+								:avatar="user.avatar"
+								:name="user.name"
 							/>
 						</td>
 						<td>{{ user._id }}</td>
@@ -68,11 +68,12 @@
 <script>
 import { mapState, mapActions } from "vuex";
 
-import EditUser from "../EditUser.vue";
+import EditUser from "../../../components/modals/EditUser.vue";
+import ProfilePicture from "../../../components/ui/ProfilePicture.vue";
 import io from "../../../io";
 
 export default {
-	components: { EditUser },
+	components: { EditUser, ProfilePicture },
 	data() {
 		return {
 			editingUserId: "",
@@ -85,8 +86,6 @@ export default {
 		})
 	},
 	mounted() {
-		console.log("mounted");
-
 		io.getSocket(socket => {
 			this.socket = socket;
 			if (this.socket.connected) this.init();
@@ -119,30 +118,28 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../../../styles/global.scss";
-
 .night-mode {
 	.table {
-		color: $night-mode-text;
-		background-color: $night-mode-bg-secondary;
+		color: var(--light-grey-2);
+		background-color: var(--dark-grey-3);
 
 		thead tr {
-			background: $night-mode-bg-secondary;
+			background: var(--dark-grey-3);
 			td {
-				color: #fff;
+				color: var(--white);
 			}
 		}
 
 		tbody tr:hover {
-			background-color: #111 !important;
+			background-color: var(--dark-grey-4) !important;
 		}
 
 		tbody tr:nth-child(even) {
-			background-color: #444;
+			background-color: var(--dark-grey-2);
 		}
 
 		strong {
-			color: $night-mode-text;
+			color: var(--light-grey-2);
 		}
 	}
 }
@@ -151,17 +148,21 @@ body {
 	font-family: "Hind", sans-serif;
 }
 
-.user-avatar {
-	display: block;
-	max-width: 50px;
-	margin: 0 auto;
+.profile-picture {
+	max-width: 50px !important;
+	max-height: 50px !important;
+	font-size: 25px !important;
 }
 
 td {
 	vertical-align: middle;
+
+	&.ppRow {
+		max-width: 50px;
+	}
 }
 
 .is-primary:focus {
-	background-color: $primary-color !important;
+	background-color: var(--primary-color) !important;
 }
 </style>

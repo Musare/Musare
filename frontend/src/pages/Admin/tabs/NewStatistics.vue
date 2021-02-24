@@ -242,38 +242,36 @@ export default {
 
 //
 <style lang="scss" scoped>
-@import "../../../styles/global.scss";
-
 .night-mode {
 	.table {
-		color: $night-mode-text;
-		background-color: $night-mode-bg-secondary;
+		color: var(--light-grey-2);
+		background-color: var(--dark-grey-3);
 
 		thead tr {
-			background: $night-mode-bg-secondary;
+			background: var(--dark-grey-3);
 			td {
-				color: #fff;
+				color: var(--white);
 			}
 		}
 
 		tbody tr:hover {
-			background-color: #111 !important;
+			background-color: var(--dark-grey-4) !important;
 		}
 
 		tbody tr:nth-child(even) {
-			background-color: #444;
+			background-color: var(--dark-grey-2);
 		}
 
 		strong {
-			color: $night-mode-text;
+			color: var(--light-grey-2);
 		}
 	}
 
 	.card {
-		background-color: $night-mode-bg-secondary;
+		background-color: var(--dark-grey-3);
 
 		p {
-			color: $night-mode-text;
+			color: var(--light-grey-2);
 		}
 	}
 }
@@ -293,6 +291,6 @@ td {
 }
 
 .is-primary:focus {
-	background-color: $primary-color !important;
+	background-color: var(--primary-color) !important;
 }
 </style>

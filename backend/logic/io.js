@@ -47,7 +47,9 @@ class _IOModule extends CoreClass {
 
 		// TODO: Check every 30s/, for all sockets, if they are still allowed to be in the rooms they are in, and on socket at all (permission changing/banning)
 		const server = await AppModule.runJob("SERVER");
+
 		this._io = socketio(server);
+		// this._io.origins(config.get("cors.origin"));
 
 		return new Promise(resolve => {
 			this.setStage(3);
@@ -146,21 +148,15 @@ class _IOModule extends CoreClass {
 					1,
 					(id, next) => {
 						const { session } = ns.connected[id];
-						CacheModule.runJob(
-							"HGET",
-							{
-								table: "sessions",
-								key: session.sessionId
-							},
-							this
-						)
-							.then(session => {
-								if (session && session.userId === payload.userId) sockets.push(ns.connected[id]);
-								next();
-							})
-							.catch(err => {
-								next(err);
-							});
+
+						if (session.sessionId) {
+							CacheModule.runJob("HGET", { table: "sessions", key: session.sessionId }, this)
+								.then(session => {
+									if (session && session.userId === payload.userId) sockets.push(ns.connected[id]);
+									next();
+								})
+								.catch(err => next(err));
+						} else next();
 					},
 					err => {
 						if (err) return reject(err);
@@ -189,6 +185,7 @@ class _IOModule extends CoreClass {
 					Object.keys(ns.connected),
 					(id, next) => {
 						const { session } = ns.connected[id];
+
 						CacheModule.runJob(
 							"HGET",
 							{
@@ -204,7 +201,7 @@ class _IOModule extends CoreClass {
 							.catch(() => next());
 					},
 					() => {
-						resolve({ sockets });
+						resolve(sockets);
 					}
 				);
 			}

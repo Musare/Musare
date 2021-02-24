@@ -1,5 +1,5 @@
 <template>
-	<div :style="'--station-theme: ' + theme">
+	<div :style="'--primary-color: var(--' + station.theme + ')'">
 		<metadata v-if="exists && !loading" :title="`${station.displayName}`" />
 		<metadata v-else-if="!exists && !loading" :title="`Not found`" />
 
@@ -51,7 +51,11 @@
 							<div id="video-container">
 								<div
 									id="stationPlayer"
-									style="width: 100%; height: 100%; min-height: 200px;"
+									style="
+										width: 100%;
+										height: 100%;
+										min-height: 200px;
+									"
 								/>
 								<div
 									class="player-cannot-autoplay"
@@ -114,6 +118,17 @@
 										>
 										{{ currentSong.skipVotes }}
 									</button>
+									<button
+										v-else
+										class="button is-primary tooltip tooltip-top disabled"
+										data-tooltip="Login to vote to skip songs"
+									>
+										<i
+											class="material-icons icon-with-button"
+											>skip_next</i
+										>
+										{{ currentSong.skipVotes }}
+									</button>
 								</div>
 								<div id="duration">
 									<p>
@@ -168,7 +183,7 @@
 									>
 										<!-- Like Song Button -->
 										<button
-											class="button is-success"
+											class="button is-success like-song"
 											id="like-song"
 											@click="toggleLike()"
 										>
@@ -181,7 +196,7 @@
 
 										<!-- Dislike Song Button -->
 										<button
-											class="button is-danger"
+											class="button is-danger dislike-song"
 											id="dislike-song"
 											@click="toggleDislike()"
 										>
@@ -235,6 +250,53 @@
 										/>
 									</div>
 								</div>
+								<div id="right-buttons" v-else>
+									<!-- Disabled Ratings (Like/Dislike) Buttons -->
+									<div
+										id="ratings"
+										v-if="
+											currentSong.likes !== -1 &&
+												currentSong.dislikes !== -1
+										"
+									>
+										<!-- Disabled Like Song Button -->
+										<button
+											class="button is-success tooltip tooltip-top disabled"
+											id="like-song"
+											data-tooltip="Login to like songs"
+										>
+											<i
+												class="material-icons icon-with-button"
+												>thumb_up_alt</i
+											>{{ currentSong.likes }}
+										</button>
+
+										<!-- Disabled Dislike Song Button -->
+										<button
+											class="button is-danger tooltip tooltip-top disabled"
+											id="dislike-song"
+											data-tooltip="Login to dislike songs"
+										>
+											<i
+												class="material-icons icon-with-button"
+												>thumb_down_alt</i
+											>{{ currentSong.dislikes }}
+										</button>
+									</div>
+									<!-- Disabled Add Song To Playlist Button & Dropdown -->
+									<div id="add-song-to-playlist">
+										<div class="control has-addons">
+											<button
+												class="button is-primary tooltip tooltip-top disabled"
+												data-tooltip="Login to add songs to playlist"
+											>
+												<i class="material-icons"
+													>queue</i
+												>
+											</button>
+										</div>
+									</div>
+								</div>
 							</div>
 						</div>
 						<p
@@ -280,6 +342,19 @@
 											>star_border</i
 										>
 									</a>
+									<i
+										class="material-icons stationMode"
+										:title="
+											station.partyMode
+												? 'Station in Party mode'
+												: 'Station in Playlist mode'
+										"
+										>{{
+											station.partyMode
+												? "emoji_people"
+												: "playlist_play"
+										}}</i
+									>
 								</div>
 								<p>{{ station.description }}</p>
 							</div>
@@ -327,7 +402,12 @@
 								<!-- (Admin) Station Settings Button -->
 								<button
 									class="button is-primary"
-									@click="openSettings()"
+									@click="
+										openModal({
+											sector: 'station',
+											modal: 'editStation'
+										})
+									"
 								>
 									<i class="material-icons icon-with-button"
 										>settings</i
@@ -438,12 +518,13 @@ export default {
 		ContentLoader,
 		MainHeader,
 		MainFooter,
-		SongQueue: () => import("./AddSongToQueue.vue"),
-		EditPlaylist: () => import("../../components/modals/EditPlaylist.vue"),
+		SongQueue: () => import("../../components/modals/AddSongToQueue.vue"),
+		EditPlaylist: () =>
+			import("../../components/modals/EditPlaylist/index.vue"),
 		CreatePlaylist: () =>
 			import("../../components/modals/CreatePlaylist.vue"),
 		EditStation: () => import("../../components/modals/EditStation.vue"),
-		Report: () => import("./Report.vue"),
+		Report: () => import("../../components/modals/Report.vue"),
 		Z404,
 		FloatingBox,
 		CurrentlyPlaying,
@@ -477,7 +558,7 @@ export default {
 			volumeSliderValue: 0,
 			showPlaylistDropdown: false,
 			editingSongId: "",
-			theme: "rgb(2, 166, 242)"
+			theme: "var(--primary-color)"
 		};
 	},
 	computed: {
@@ -688,17 +769,32 @@ export default {
 				}
 			});
 
-			this.socket.on("event:theme.updated", theme => {
+			this.socket.on("event:station.themeUpdated", theme => {
 				this.station.theme = theme;
-				if (theme === "blue") {
-					this.theme = "rgb(2, 166, 242)";
-				} else if (theme === "purple") {
-					this.theme = "rgb(143, 40, 140)";
-				} else if (theme === "teal") {
-					this.theme = "rgb(0, 209, 178)";
-				} else if (theme === "orange") {
-					this.theme = "rgb(255, 94, 0)";
-				}
+			});
+
+			this.socket.on("event:station.updateName", res => {
+				this.station.name = res.name;
+				// eslint-disable-next-line no-restricted-globals
+				history.pushState(
+					{},
+					null,
+					`${res.name}?${Object.keys(this.$route.query)
+						.map(key => {
+							return `${encodeURIComponent(
+								key
+							)}=${encodeURIComponent(this.$route.query[key])}`;
+						})
+						.join("&")}`
+				);
+			});
+
+			this.socket.on("event:station.updateDisplayName", res => {
+				this.station.displayName = res.displayName;
+			});
+
+			this.socket.on("event:station.updateDescription", res => {
+				this.station.description = res.description;
 			});
 
 			this.socket.on("event:newOfficialPlaylist", playlist => {
@@ -771,12 +867,6 @@ export default {
 		isOwnerOrAdmin() {
 			return this.isOwnerOnly() || this.isAdminOnly();
 		},
-		openSettings() {
-			this.openModal({
-				sector: "station",
-				modal: "editStation"
-			});
-		},
 		removeFromQueue(songId) {
 			window.socket.emit(
 				"stations.removeFromQueue",
@@ -813,6 +903,7 @@ export default {
 					events: {
 						onReady: () => {
 							this.playerReady = true;
+
 							let volume = parseInt(
 								localStorage.getItem("volume")
 							);
@@ -821,26 +912,65 @@ export default {
 
 							this.player.setVolume(volume);
 
-							if (volume > 0) {
-								this.player.unMute();
-							}
-
+							if (volume > 0) this.player.unMute();
 							if (this.muted) this.player.mute();
 
 							this.playVideo();
 						},
 						onError: err => {
-							console.log("iframe error", err);
-							if (this.loggedIn) {
+							console.log("error with youtube video", err);
+
+							if (err.data === 150 && this.loggedIn) {
 								new Toast({
 									content:
-										"Error with YouTube Embed, voted to skip the current song.",
-									timeout: 8000
+										"Automatically voted to skip as this song isn't available for you.",
+									timeout: 4000
 								});
+
+								// automatically vote to skip
 								this.voteSkipStation();
+
+								// persistent message while song is playing
+								const toastMessage =
+									"This song is unavailable for you, but is playing for everyone else.";
+								new Toast({
+									content: toastMessage,
+									persistant: true
+								});
+
+								// save current song id
+								const erroredSongId = this.currentSong.songId;
+
+								// remove persistent toast if video has finished
+								window.isSongErroredInterval = setInterval(
+									() => {
+										if (
+											this.currentSong.songId !==
+											erroredSongId
+										) {
+											document
+												.getElementById(
+													"toasts-content"
+												)
+												.childNodes.forEach(toast => {
+													if (
+														toast.innerHTML ===
+														toastMessage
+													)
+														toast.remove();
+												});
+
+											clearInterval(
+												window.isSongErroredInterval
+											);
+										}
+									},
+									150
+								);
 							} else {
 								new Toast({
-									content: "Error with YouTube Embed",
+									content:
+										"There has been an error with the YouTube Embed",
 									timeout: 8000
 								});
 							}
@@ -1325,16 +1455,6 @@ export default {
 						theme
 					});
 
-					if (this.station.theme === "blue") {
-						this.theme = "rgb(2, 166, 242)";
-					} else if (this.station.theme === "purple") {
-						this.theme = "rgb(143, 40, 140)";
-					} else if (this.station.theme === "teal") {
-						this.theme = "rgb(0, 209, 178)";
-					} else if (this.station.theme === "orange") {
-						this.theme = "rgb(255, 94, 0)";
-					}
-
 					const currentSong = res.data.currentSong
 						? res.data.currentSong
 						: {};
@@ -1555,8 +1675,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../../styles/global.scss";
-
 #page-loader-container {
 	height: inherit;
 
@@ -1578,7 +1696,7 @@ export default {
 #mobile-progress-animation {
 	width: 50px;
 	animation: rotate 0.8s infinite linear;
-	border: 8px solid $primary-color;
+	border: 8px solid var(--primary-color);
 	border-right-color: transparent;
 	border-radius: 50%;
 	height: 50px;
@@ -1599,7 +1717,7 @@ export default {
 
 .nav,
 .button.is-primary {
-	background-color: var(--station-theme) !important;
+	background-color: var(--primary-color) !important;
 }
 .button.is-primary:hover,
 .button.is-primary:focus {
@@ -1611,7 +1729,7 @@ export default {
 		flex-direction: column;
 
 		b {
-			color: #000;
+			color: var(--black);
 		}
 	}
 }
@@ -1621,7 +1739,7 @@ export default {
 	#about-station-container,
 	#control-bar-container,
 	.player-container {
-		background-color: $night-mode-bg-secondary !important;
+		background-color: var(--dark-grey-3) !important;
 	}
 
 	#video-container,
@@ -1632,15 +1750,15 @@ export default {
 	}
 
 	#seeker-bar-container {
-		background-color: $night-mode-bg-secondary !important;
+		background-color: var(--dark-grey-3) !important;
 	}
 
 	#dropdown-toggle {
-		background-color: $dark-grey-2 !important;
+		background-color: var(--dark-grey-2) !important;
 		border: 0;
 
 		i {
-			color: #fff;
+			color: var(--white);
 		}
 	}
 }
@@ -1679,8 +1797,8 @@ export default {
 		}
 
 		.quadrant:not(#sidebar-container) {
-			background-color: #fff;
-			border: 1px solid $light-grey-2;
+			background-color: var(--white);
+			border: 1px solid var(--light-grey-3);
 		}
 
 		#station-left-column {
@@ -1710,7 +1828,12 @@ export default {
 					i {
 						margin-left: 10px;
 						font-size: 30px;
-						color: $yellow;
+						color: var(--yellow);
+						&.stationMode {
+							padding-left: 10px;
+							margin-left: auto;
+							color: var(--primary-color);
+						}
 					}
 				}
 
@@ -1745,10 +1868,10 @@ export default {
 
 		.player-container {
 			height: inherit;
-			background-color: #fff;
+			background-color: var(--white);
 			display: flex;
 			flex-direction: column;
-			border: 1px solid $light-grey-2;
+			border: 1px solid var(--light-grey-3);
 			border-radius: 5px;
 			overflow: hidden;
 			flex-grow: 1;
@@ -1766,13 +1889,13 @@ export default {
 					width: 100%;
 					height: 100%;
 					bottom: calc(100% + 5px);
-					background: var(--station-theme);
+					background: var(--primary-color);
 					display: flex;
 					align-items: center;
 					justify-content: center;
 
 					p {
-						color: $white;
+						color: var(--white);
 						font-size: 26px;
 						text-align: center;
 					}
@@ -1780,7 +1903,7 @@ export default {
 			}
 
 			#seeker-bar-container {
-				background-color: #fff;
+				background-color: var(--white);
 				position: relative;
 				height: 7px;
 				display: block;
@@ -1788,7 +1911,7 @@ export default {
 				overflow: hidden;
 
 				#seeker-bar {
-					background-color: var(--station-theme);
+					background-color: var(--primary-color);
 					top: 0;
 					left: 0;
 					bottom: 0;
@@ -1801,7 +1924,7 @@ export default {
 				justify-content: space-around;
 				padding: 10px 0;
 				width: 100%;
-				background: #fff;
+				background: var(--white);
 				flex-direction: column;
 				flex-flow: wrap;
 
@@ -1819,6 +1942,10 @@ export default {
 
 					.button:not(:first-of-type) {
 						margin-left: 5px;
+					}
+
+					.disabled {
+						filter: grayscale(0.4);
 					}
 				}
 
@@ -1863,7 +1990,7 @@ export default {
 						height: 5.2px;
 						cursor: pointer;
 						box-shadow: 0;
-						background: $light-grey-2;
+						background: var(--light-grey-3);
 						border-radius: 0;
 						border: 0;
 					}
@@ -1874,7 +2001,7 @@ export default {
 						height: 19px;
 						width: 19px;
 						border-radius: 15px;
-						background: var(--station-theme);
+						background: var(--primary-color);
 						cursor: pointer;
 						-webkit-appearance: none;
 						margin-top: -6.5px;
@@ -1885,7 +2012,7 @@ export default {
 						height: 5.2px;
 						cursor: pointer;
 						box-shadow: 0;
-						background: $light-grey-2;
+						background: var(--light-grey-3);
 						border-radius: 0;
 						border: 0;
 					}
@@ -1896,7 +2023,7 @@ export default {
 						height: 19px;
 						width: 19px;
 						border-radius: 15px;
-						background: var(--station-theme);
+						background: var(--primary-color);
 						cursor: pointer;
 						-webkit-appearance: none;
 						margin-top: -6.5px;
@@ -1906,19 +2033,19 @@ export default {
 						height: 5.2px;
 						cursor: pointer;
 						box-shadow: 0;
-						background: $light-grey-2;
+						background: var(--light-grey-3);
 						border-radius: 1.3px;
 					}
 
 					input[type="range"]::-ms-fill-lower {
-						background: $light-grey-2;
+						background: var(--light-grey-3);
 						border: 0;
 						border-radius: 0;
 						box-shadow: 0;
 					}
 
 					input[type="range"]::-ms-fill-upper {
-						background: $light-grey-2;
+						background: var(--light-grey-3);
 						border: 0;
 						border-radius: 0;
 						box-shadow: 0;
@@ -1930,7 +2057,7 @@ export default {
 						height: 15px;
 						width: 15px;
 						border-radius: 15px;
-						background: var(--station-theme);
+						background: var(--primary-color);
 						cursor: pointer;
 						-webkit-appearance: none;
 						margin-top: 1.5px;
@@ -1952,22 +2079,13 @@ export default {
 					#ratings {
 						display: flex;
 
-						#like-song:hover,
-						#like-song.liked {
-							background-color: darken($green, 5%) !important;
-						}
-
-						#dislike-song:hover,
-						#dislike-song.disliked {
-							background-color: darken($red, 5%) !important;
-						}
-
 						&.liked #dislike-song,
 						&.disliked #like-song {
-							background-color: $grey !important;
-							&:hover {
-								background-color: darken($grey, 5%) !important;
-							}
+							background-color: var(--grey) !important;
+						}
+						#like-song.disabled,
+						#dislike-song.disabled {
+							filter: grayscale(0.4);
 						}
 					}
 
@@ -1978,6 +2096,13 @@ export default {
 						.control {
 							width: fit-content;
 							margin-bottom: 0 !important;
+							button.disabled {
+								filter: grayscale(0.4);
+								border-radius: 3px;
+								&::after {
+									margin-right: 100%;
+								}
+							}
 						}
 					}
 				}

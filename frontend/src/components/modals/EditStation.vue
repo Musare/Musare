@@ -598,20 +598,8 @@ export default {
 				this.station._id,
 				name,
 				res => {
-					if (res.status === "success") {
-						if (this.originalStation)
-							this.originalStation.name = name;
-						else {
-							this.originalStations.forEach((station, index) => {
-								if (station._id === this.station._id) {
-									this.originalStations[index].name = name;
-									return name;
-								}
-
-								return false;
-							});
-						}
-					}
+					if (res.status === "success")
+						this.originalStation.name = name;
 
 					new Toast({ content: res.message, timeout: 8000 });
 				}
@@ -637,22 +625,8 @@ export default {
 				this.station._id,
 				displayName,
 				res => {
-					if (res.status === "success") {
-						if (this.originalStation)
-							this.originalStation.displayName = displayName;
-						else {
-							this.originalStations.forEach((station, index) => {
-								if (station._id === this.station._id) {
-									this.originalStations[
-										index
-									].displayName = displayName;
-									return displayName;
-								}
-
-								return false;
-							});
-						}
-					}
+					if (res.status === "success")
+						this.originalStation.displayName = displayName;
 
 					new Toast({ content: res.message, timeout: 8000 });
 				}
@@ -682,27 +656,8 @@ export default {
 				this.station._id,
 				description,
 				res => {
-					if (res.status === "success") {
-						if (this.originalStation)
-							this.originalStation.description = description;
-						else {
-							this.originalStations.forEach((station, index) => {
-								if (station._id === this.station._id) {
-									this.originalStations[
-										index
-									].description = description;
-									return description;
-								}
-
-								return false;
-							});
-						}
-
-						return new Toast({
-							content: res.message,
-							timeout: 4000
-						});
-					}
+					if (res.status === "success")
+						this.originalStation.description = description;
 
 					return new Toast({ content: res.message, timeout: 8000 });
 				}
@@ -719,26 +674,8 @@ export default {
 				this.station._id,
 				this.station.privacy,
 				res => {
-					if (res.status === "success") {
-						if (this.originalStation)
-							this.originalStation.privacy = this.station.privacy;
-						else {
-							this.originalStations.forEach((station, index) => {
-								if (station._id === this.station._id) {
-									this.originalStations[
-										index
-									].privacy = this.station.privacy;
-									return this.station.privacy;
-								}
-
-								return false;
-							});
-						}
-						return new Toast({
-							content: res.message,
-							timeout: 4000
-						});
-					}
+					if (res.status === "success")
+						this.originalStation.privacy = this.station.privacy;
 
 					return new Toast({ content: res.message, timeout: 8000 });
 				}
@@ -750,20 +687,13 @@ export default {
 				this.station._id,
 				this.station.genres,
 				res => {
+					console.log(res);
 					if (res.status === "success") {
 						const genres = JSON.parse(
 							JSON.stringify(this.station.genres)
 						);
 						if (this.originalStation)
 							this.originalStation.genres = genres;
-						this.originalStations.forEach((station, index) => {
-							if (station._id === this.station._id) {
-								this.originalStations[index].genres = genres;
-								return genres;
-							}
-
-							return false;
-						});
 
 						return new Toast({
 							content: res.message,
@@ -785,22 +715,8 @@ export default {
 						const blacklistedGenres = JSON.parse(
 							JSON.stringify(this.station.blacklistedGenres)
 						);
-						if (this.originalStation)
-							this.originalStation.blacklistedGenres = blacklistedGenres;
-						this.originalStations.forEach((station, index) => {
-							if (station._id === this.station._id) {
-								this.originalStations[
-									index
-								].blacklistedGenres = blacklistedGenres;
-								return blacklistedGenres;
-							}
 
-							return false;
-						});
-						return new Toast({
-							content: res.message,
-							timeout: 4000
-						});
+						this.originalStation.blacklistedGenres = blacklistedGenres;
 					}
 
 					return new Toast({ content: res.message, timeout: 8000 });
@@ -818,27 +734,8 @@ export default {
 				this.station._id,
 				this.station.partyMode,
 				res => {
-					if (res.status === "success") {
-						if (this.originalStation)
-							this.originalStation.partyMode = this.station.partyMode;
-						// if (this.originalStation)
-						// 	this.originalStation.partyMode = this.station.partyMode;
-						// this.originalStations.forEach((station, index) => {
-						// 	if (station._id === this.station._id) {
-						// 		this.originalStations[
-						// 			index
-						// 		].partyMode = this.station.partyMode;
-						// 		return this.station.partyMode;
-						// 	}
-
-						// 	return false;
-						// });
-
-						return new Toast({
-							content: res.message,
-							timeout: 4000
-						});
-					}
+					if (res.status === "success")
+						this.originalStation.partyMode = this.station.partyMode;
 
 					return new Toast({ content: res.message, timeout: 8000 });
 				}
@@ -856,7 +753,7 @@ export default {
 					if (this.originalStation)
 						this.originalStation.locked = res.data;
 					return new Toast({
-						content: `Toggled queue lock succesfully to ${res.data}`,
+						content: `Toggled queue lock successfully to ${res.data}`,
 						timeout: 4000
 					});
 				}
@@ -877,26 +774,8 @@ export default {
 				this.station._id,
 				this.station.theme,
 				res => {
-					if (res.status === "success") {
-						if (this.originalStation)
-							this.originalStation.theme = this.station.theme;
-						else {
-							this.originalStations.forEach((station, index) => {
-								if (station._id === this.station._id) {
-									this.originalStations[
-										index
-									].theme = this.station.theme;
-									return this.station.theme;
-								}
-
-								return false;
-							});
-						}
-						return new Toast({
-							content: res.message,
-							timeout: 4000
-						});
-					}
+					if (res.status === "success")
+						this.originalStation.theme = this.station.theme;
 
 					return new Toast({ content: res.message, timeout: 8000 });
 				}
@@ -1024,25 +903,23 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../../styles/global.scss";
-
 .night-mode {
 	.modal-card,
 	.modal-card-head,
 	.modal-card-body,
 	.modal-card-foot {
-		background-color: $night-mode-bg-secondary;
+		background-color: var(--dark-grey-3);
 	}
 
 	.section {
-		background-color: $night-mode-bg-secondary !important;
+		background-color: var(--dark-grey-3) !important;
 		border: 0 !important;
 	}
 
 	.label,
 	p,
 	strong {
-		color: $night-mode-text;
+		color: var(--light-grey-2);
 	}
 }
 
@@ -1057,8 +934,8 @@ export default {
 }
 
 .section {
-	border: 1px solid #a3e0ff;
-	background-color: #f4f4f4;
+	border: 1px solid var(--light-blue);
+	background-color: var(--light-grey);
 	border-radius: 5px;
 	padding: 16px;
 }
@@ -1079,11 +956,11 @@ export default {
 			width: 32px;
 
 			&.blue {
-				background-color: $musare-blue !important;
+				background-color: var(--primary-color) !important;
 			}
 
 			&.red {
-				background-color: $red !important;
+				background-color: var(--red) !important;
 			}
 
 			i {
@@ -1113,18 +990,18 @@ export default {
 		user-select: none;
 
 		&.blue {
-			background-color: $musare-blue;
+			background-color: var(--primary-color);
 
 			i {
-				color: $musare-blue;
+				color: var(--primary-color);
 			}
 		}
 
 		&.red {
-			background-color: $red;
+			background-color: var(--red);
 
 			i {
-				color: $red;
+				color: var(--red);
 			}
 		}
 
@@ -1137,7 +1014,7 @@ export default {
 	.list-item-circle:hover,
 	.list-item-circle:focus {
 		i {
-			color: white;
+			color: var(--white);
 		}
 	}
 
@@ -1156,7 +1033,7 @@ export default {
 
 	.autosuggest-container {
 		position: absolute;
-		background: white;
+		background: var(--white);
 		width: calc(100% + 1px);
 		top: 57px;
 		z-index: 200;
@@ -1167,7 +1044,7 @@ export default {
 		.autosuggest-item {
 			padding: 8px;
 			display: block;
-			border: 1px solid #dbdbdb;
+			border: 1px solid var(--light-grey-2);
 			margin-top: -1px;
 			line-height: 16px;
 			cursor: pointer;
@@ -1179,7 +1056,7 @@ export default {
 
 		.autosuggest-item:hover,
 		.autosuggest-item:focus {
-			background-color: #eee;
+			background-color: var(--light-grey);
 		}
 
 		.autosuggest-item:first-child {
@@ -1210,7 +1087,7 @@ export default {
 			border: 0;
 			border-radius: 3px;
 			font-size: 18px;
-			color: white;
+			color: var(--white);
 			box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.25);
 			display: block;
 			text-align: center;
@@ -1226,31 +1103,31 @@ export default {
 			text-transform: capitalize;
 
 			&.red {
-				background-color: $red;
+				background-color: var(--red);
 			}
 
 			&.green {
-				background-color: $green;
+				background-color: var(--green);
 			}
 
 			&.blue {
-				background-color: $musare-blue;
+				background-color: var(--primary-color);
 			}
 
 			&.orange {
-				background-color: $light-orange;
+				background-color: var(--orange);
 			}
 
 			&.yellow {
-				background-color: $yellow;
+				background-color: var(--yellow);
 			}
 
 			&.purple {
-				background-color: $purple;
+				background-color: var(--purple);
 			}
 
 			&.teal {
-				background-color: $teal;
+				background-color: var(--teal);
 			}
 
 			i {

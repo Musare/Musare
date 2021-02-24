@@ -127,18 +127,16 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../../styles/global.scss";
-
 .night-mode {
 	.modal-card,
 	.modal-card-head,
 	.modal-card-body {
-		background-color: $night-mode-bg-secondary;
+		background-color: var(--dark-grey-3);
 	}
 
 	strong,
 	p {
-		color: $night-mode-text;
+		color: var(--light-grey-2);
 	}
 }
 
@@ -160,7 +158,7 @@ export default {
 
 	&:before,
 	&:after {
-		background-color: #bbb;
+		background-color: var(--light-grey-3);
 	}
 }
 
@@ -170,7 +168,7 @@ export default {
 		padding: 12px;
 		text-transform: uppercase;
 		font-weight: bold;
-		color: $white;
+		color: var(--white);
 	}
 
 	.sect-head-features {

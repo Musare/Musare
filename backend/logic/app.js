@@ -1,8 +1,6 @@
 import config from "config";
-
+import axios from "axios";
 import async from "async";
-import request from "request";
-
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
@@ -38,7 +36,7 @@ class _AppModule extends CoreClass {
 			MailModule = this.moduleManager.modules.mail;
 			CacheModule = this.moduleManager.modules.cache;
 			DBModule = this.moduleManager.modules.db;
-			ActivitiesModule = this.moduleManager.modules.activities;
+			// ActivitiesModule = this.moduleManager.modules.activities;
 			PlaylistsModule = this.moduleManager.modules.playlists;
 			UtilsModule = this.moduleManager.modules.utils;
 
@@ -58,7 +56,7 @@ class _AppModule extends CoreClass {
 				})
 				.catch(console.error);
 
-			const corsOptions = { ...config.get("cors") };
+			const corsOptions = { ...config.get("cors"), credentials: true };
 
 			app.use(cors(corsOptions));
 			app.options("*", cors(corsOptions));
@@ -154,22 +152,21 @@ class _AppModule extends CoreClass {
 
 							accessToken = _accessToken;
 
-							return request.get(
-								{
-									url: `https://api.github.com/user`,
-									headers: {
-										"User-Agent": "request",
-										Authorization: `token ${accessToken}`
-									}
-								},
-								next
-							);
+							const options = {
+								headers: {
+									"User-Agent": "request",
+									Authorization: `token ${accessToken}`
+								}
+							};
+
+							return axios
+								.get("https://api.github.com/user", options)
+								.then(res => next(null, res))
+								.catch(err => next(err));
 						},
 
-						(httpResponse, _body, next) => {
-							body = _body = JSON.parse(_body);
-
-							if (httpResponse.statusCode !== 200) return next(body.message);
+						(res, next) => {
+							if (res.status !== 200) return next(res.data.message);
 
 							if (state) {
 								return async.waterfall(
@@ -198,7 +195,7 @@ class _AppModule extends CoreClass {
 												{
 													$set: {
 														"services.github": {
-															id: body.id,
+															id: res.data.id,
 															accessToken
 														}
 													}
@@ -206,7 +203,7 @@ class _AppModule extends CoreClass {
 												{ runValidators: true },
 												err => {
 													if (err) return next(err);
-													return next(null, user, body);
+													return next(null, user, res.data);
 												}
 											);
 										},
@@ -223,14 +220,16 @@ class _AppModule extends CoreClass {
 								);
 							}
 
-							if (!body.id) return next("Something went wrong, no id.");
+							if (!res.data.id) return next("Something went wrong, no id.");
 
-							return userModel.findOne({ "services.github.id": body.id }, (err, user) => {
-								next(err, user, body);
+							return userModel.findOne({ "services.github.id": res.data.id }, (err, user) => {
+								next(err, user, res.data);
 							});
 						},
 
-						(user, body, next) => {
+						(user, _body, next) => {
+							body = _body;
+
 							if (user) {
 								user.services.github.access_token = accessToken;
 								return user.save(() => next(true, user._id));
@@ -244,24 +243,21 @@ class _AppModule extends CoreClass {
 						(user, next) => {
 							if (user) return next(`An account with that username already exists.`);
 
-							return request.get(
-								{
-									url: `https://api.github.com/user/emails`,
+							return axios
+								.get("https://api.github.com/user/emails", {
 									headers: {
 										"User-Agent": "request",
 										Authorization: `token ${accessToken}`
 									}
-								},
-								next
-							);
+								})
+								.then(res => next(null, res.data))
+								.catch(err => next(err));
 						},
 
-						(httpResponse, body2, next) => {
-							body2 = JSON.parse(body2);
+						(body, next) => {
+							if (!Array.isArray(body)) return next(body.message);
 
-							if (!Array.isArray(body2)) return next(body2.message);
-
-							body2.forEach(email => {
+							body.forEach(email => {
 								if (email.primary) address = email.email.toLowerCase();
 							});
 
@@ -367,7 +363,8 @@ class _AppModule extends CoreClass {
 						(userId, next) => {
 							ActivitiesModule.runJob("ADD_ACTIVITY", {
 								userId,
-								activityType: "created_account"
+								type: "user__joined",
+								payload: { message: "Welcome to Musare!" }
 							});
 
 							next(null, userId);

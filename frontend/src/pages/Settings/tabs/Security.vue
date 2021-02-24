@@ -99,22 +99,24 @@
 
 			<hr class="section-horizontal-rule" />
 
-			<div id="remove-login-method-buttons">
+			<div>
 				<a
 					v-if="isPasswordLinked"
 					class="button is-danger"
 					href="#"
 					@click.prevent="unlinkPassword()"
-					><i class="material-icons icon-with-button">close</i>Remove
-					password
+				>
+					<i class="material-icons icon-with-button">close</i>
+					Remove password
 				</a>
 
 				<a
 					class="button is-danger"
 					href="#"
 					@click.prevent="unlinkGitHub()"
-					><i class="material-icons icon-with-button">link_off</i
-					>Remove GitHub from account
+				>
+					<i class="material-icons icon-with-button">link_off</i>
+					Remove GitHub from account
 				</a>
 			</div>
 
@@ -133,8 +135,9 @@
 				class="button is-warning"
 				href="#"
 				@click.prevent="removeSessions()"
-				><i class="material-icons icon-with-button">exit_to_app</i>Log
-				out everywhere
+			>
+				<i class="material-icons icon-with-button">exit_to_app</i>
+				Log out everywhere
 			</a>
 		</div>
 	</div>
@@ -191,14 +194,12 @@ export default {
 			}
 		}
 	},
-	mounted() {
+	async mounted() {
 		io.getSocket(socket => {
 			this.socket = socket;
 		});
 
-		lofig.get("serverDomain").then(serverDomain => {
-			this.serverDomain = serverDomain;
-		});
+		this.serverDomain = await lofig.get("serverDomain");
 	},
 	methods: {
 		onInputBlur(inputName) {

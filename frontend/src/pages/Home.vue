@@ -8,10 +8,7 @@
 				:hide-logged-out="true"
 			/>
 			<div class="header" :class="{ loggedIn }">
-				<img
-					class="background"
-					src="/assets/homebg.jpeg"
-				/>
+				<img class="background" src="/assets/homebg.jpeg" />
 				<div class="overlay"></div>
 				<div class="content-container">
 					<div class="content">
@@ -65,7 +62,7 @@
 						isPrivate: station.privacy === 'private',
 						isMine: isOwner(station)
 					}"
-					:style="'--station-theme: ' + station.themeCode"
+					:style="'--primary-color: var(--' + station.theme + ')'"
 				>
 					<div class="card-image">
 						<figure class="image is-square">
@@ -195,6 +192,19 @@
 							}}</span
 						>
 						<span v-else class="songTitle">No Songs Playing</span>
+						<i
+							class="material-icons stationMode"
+							:title="
+								station.partyMode
+									? 'Station in Party mode'
+									: 'Station in Playlist mode'
+							"
+							>{{
+								station.partyMode
+									? "emoji_people"
+									: "playlist_play"
+							}}</i
+						>
 					</div>
 				</router-link>
 			</div>
@@ -213,12 +223,10 @@
 						})
 					"
 					class="card station-card createStation"
-					:style="'--station-theme: rgb(2, 166, 242)'"
 				>
 					<div class="card-image">
 						<figure class="image is-square">
 							<i class="material-icons">radio</i>
-							<!-- <img src="/assets/notes-transparent.png" /> -->
 						</figure>
 					</div>
 					<div class="card-content">
@@ -231,6 +239,23 @@
 						<div class="content">
 							Click here to create your own station!
 						</div>
+					</div>
+					<div class="bottomBar"></div>
+				</a>
+				<a v-else class="card station-card createStation">
+					<div class="card-image">
+						<figure class="image is-square">
+							<i class="material-icons">radio</i>
+						</figure>
+					</div>
+					<div class="card-content">
+						<div class="media">
+							<div class="media-left displayName">
+								<h5>Create Station</h5>
+							</div>
+						</div>
+
+						<div class="content">Login to create a station!</div>
 					</div>
 					<div class="bottomBar"></div>
 				</a>
@@ -247,7 +272,7 @@
 						isPrivate: station.privacy === 'private',
 						isMine: isOwner(station)
 					}"
-					:style="'--station-theme: ' + station.themeCode"
+					:style="'--primary-color: var(--' + station.theme + ')'"
 				>
 					<div class="card-image">
 						<figure class="image is-square">
@@ -377,6 +402,19 @@
 							}}</span
 						>
 						<span v-else class="songTitle">No Songs Playing</span>
+						<i
+							class="material-icons stationMode"
+							:title="
+								station.partyMode
+									? 'Station in Party mode'
+									: 'Station in Playlist mode'
+							"
+							>{{
+								station.partyMode
+									? "emoji_people"
+									: "playlist_play"
+							}}</i
+						>
 					</div>
 				</router-link>
 				<h4 v-if="stations.length === 0">
@@ -393,12 +431,12 @@
 import { mapState, mapActions } from "vuex";
 import Toast from "toasters";
 
-import MainHeader from "../../components/layout/MainHeader.vue";
-import MainFooter from "../../components/layout/MainFooter.vue";
-import CreateCommunityStation from "./CreateCommunityStation.vue";
-import UserIdToUsername from "../../components/common/UserIdToUsername.vue";
+import MainHeader from "../components/layout/MainHeader.vue";
+import MainFooter from "../components/layout/MainFooter.vue";
+import CreateCommunityStation from "../components/modals/CreateCommunityStation.vue";
+import UserIdToUsername from "../components/common/UserIdToUsername.vue";
 
-import io from "../../io";
+import io from "../io";
 
 export default {
 	components: {
@@ -448,17 +486,15 @@ export default {
 			);
 		}
 	},
-	mounted() {
-		lofig.get("siteSettings.siteName").then(siteName => {
-			this.siteName = siteName;
-		});
+	async mounted() {
+		this.siteName = await lofig.get("siteSettings.siteName");
 
 		io.getSocket(socket => {
 			this.socket = socket;
+
 			if (this.socket.connected) this.init();
-			io.onConnect(() => {
-				this.init();
-			});
+			io.onConnect(() => this.init());
+
 			this.socket.on("event:stations.created", res => {
 				const station = res;
 				if (
@@ -550,17 +586,6 @@ export default {
 					const station = s;
 					if (station._id === stationId) {
 						station.theme = theme;
-						if (theme === "blue") {
-							station.themeCode = "rgb(2, 166, 242)";
-						} else if (theme === "purple") {
-							station.themeCode = "rgb(143, 40, 140)";
-						} else if (theme === "teal") {
-							station.themeCode = "rgb(0, 209, 178)";
-						} else if (theme === "orange") {
-							station.themeCode = "rgb(255, 94, 0)";
-						} else {
-							station.themeCode = "rgb(2, 166, 242)";
-						}
 					}
 				});
 			});
@@ -640,18 +665,6 @@ export default {
 						)
 							modifiableStation.currentSong.ytThumbnail = `https://img.youtube.com/vi/${station.currentSong.songId}/mqdefault.jpg`;
 
-						if (modifiableStation.theme === "blue") {
-							modifiableStation.themeCode = "rgb(2, 166, 242)";
-						} else if (modifiableStation.theme === "purple") {
-							modifiableStation.themeCode = "rgb(143, 40, 140)";
-						} else if (modifiableStation.theme === "teal") {
-							modifiableStation.themeCode = "rgb(0, 209, 178)";
-						} else if (modifiableStation.theme === "orange") {
-							modifiableStation.themeCode = "rgb(255, 94, 0)";
-						} else {
-							modifiableStation.themeCode = "rgb(2, 166, 242)";
-						}
-
 						this.stations.push(modifiableStation);
 					});
 			});
@@ -691,8 +704,6 @@ export default {
 </script>
 
 <style lang="scss">
-@import "../../styles/global.scss";
-
 * {
 	box-sizing: border-box;
 }
@@ -722,20 +733,20 @@ html {
 	.card,
 	.card-content,
 	.card-content div {
-		background-color: $night-mode-bg-secondary;
+		background-color: var(--dark-grey-3);
 	}
 
 	.card-content .icons i,
 	.group-title i {
-		color: $night-mode-text;
+		color: var(--light-grey-2);
 	}
 
 	.card-image .image {
-		background-color: #333;
+		background-color: var(--dark-grey-2);
 	}
 
 	.card-content .under-content .hostedBy {
-		color: $night-mode-text;
+		color: var(--light-grey-2);
 	}
 }
 
@@ -805,7 +816,7 @@ html {
 			img.logo {
 				max-height: 90px;
 				font-size: 40px;
-				color: white;
+				color: var(--white);
 				font-family: Pacifico, cursive;
 			}
 			.buttons {
@@ -827,12 +838,12 @@ html {
 					height: inherit;
 				}
 				.login {
-					background: white;
-					color: $musare-blue;
+					background: var(--white);
+					color: var(--primary-color);
 				}
 				.register {
-					background: $purple;
-					color: white;
+					background: var(--purple);
+					color: var(--white);
 				}
 			}
 		}
@@ -894,24 +905,24 @@ html {
 			margin-left: 5px;
 		}
 		.unlistedIcon {
-			color: $light-orange;
+			color: var(--orange);
 		}
 		.privateIcon {
-			color: $dark-pink;
+			color: var(--dark-pink);
 		}
 		.homeIcon {
-			color: $light-purple;
+			color: var(--light-purple);
 		}
 	}
 
 	.hostedBy {
 		font-weight: 400;
 		font-size: 12px;
-		color: $black;
+		color: var(--black);
 		.host,
 		.host a {
 			font-weight: 400;
-			color: var(--station-theme);
+			color: var(--primary-color);
 			&:hover,
 			&:focus {
 				filter: brightness(90%);
@@ -973,7 +984,7 @@ html {
 				max-height: 30px;
 				.favorite {
 					position: absolute;
-					color: $yellow;
+					color: var(--yellow);
 					right: 10px;
 					top: 10px;
 					font-size: 28px;
@@ -996,7 +1007,7 @@ html {
 				}
 
 				.verified-station {
-					color: var(--station-theme);
+					color: var(--primary-color);
 				}
 			}
 		}
@@ -1045,12 +1056,12 @@ html {
 		position: relative;
 		display: flex;
 		align-items: center;
-		background: var(--station-theme);
+		background: var(--primary-color);
 		// box-shadow: inset 0px 2px 4px rgba(100, 100, 100, 0.3);
 		width: 100%;
 		height: 30px;
 		line-height: 30px;
-		color: $white;
+		color: var(--white);
 		font-weight: 400;
 		font-size: 12px;
 		padding: 0 5px;
@@ -1059,7 +1070,7 @@ html {
 		i.material-icons {
 			vertical-align: middle;
 			margin-left: 5px;
-			font-size: 18px;
+			font-size: 22px;
 		}
 
 		.songTitle {
@@ -1083,7 +1094,7 @@ html {
 			right: 0;
 			text-align: center;
 			font-size: 70px;
-			color: var(--station-theme);
+			color: var(--primary-color);
 		}
 		.card-content {
 			.media {
@@ -1105,22 +1116,15 @@ html {
 	transition: all ease-in-out 0.2s;
 }
 
-/*.isPrivate {
-		background-color: #F8BBD0;
-	}
-	.isMine {
-		background-color: #29B6F6;
-	}*/
-
 .community-button {
 	cursor: pointer;
 	transition: 0.25s ease color;
 	font-size: 30px;
-	color: #4a4a4a;
+	color: var(--dark-grey);
 }
 
 .community-button:hover {
-	color: #03a9f4;
+	color: var(--primary-color);
 }
 
 .station-privacy {

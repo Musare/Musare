@@ -92,7 +92,7 @@ import { mapState, mapActions } from "vuex";
 
 import Toast from "toasters";
 import io from "../../io";
-import Modal from "../../components/Modal.vue";
+import Modal from "../Modal.vue";
 import validation from "../../validation";
 
 export default {
@@ -232,10 +232,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../../styles/global.scss";
-
 .save-changes {
-	color: $white;
+	color: var(--white);
 }
 
 .tag:not(:last-child) {
@@ -243,6 +241,6 @@ export default {
 }
 
 .select:after {
-	border-color: $primary-color;
+	border-color: var(--primary-color);
 }
 </style>

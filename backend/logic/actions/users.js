@@ -2,7 +2,7 @@ import config from "config";
 
 import async from "async";
 
-import request from "request";
+import axios from "axios";
 import bcrypt from "bcrypt";
 import sha256 from "sha256";
 import { isAdminRequired, isLoginRequired } from "./hooks";
@@ -21,7 +21,7 @@ const PlaylistsModule = moduleManager.modules.playlists;
 CacheModule.runJob("SUB", {
 	channel: "user.updatePreferences",
 	cb: res => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }).then(response => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(response => {
 			response.sockets.forEach(socket => {
 				socket.emit("keep.event:user.preferences.changed", res.preferences);
 			});
@@ -39,7 +39,7 @@ CacheModule.runJob("SUB", {
 		});
 
 		IOModule.runJob("EMIT_TO_ROOM", {
-			room: `profile-${res.userId}`,
+			room: `profile-${res.userId}-playlists`,
 			args: ["event:user.orderOfPlaylists.changed", res.orderOfPlaylists]
 		});
 	}
@@ -172,6 +172,7 @@ export default {
 				users.forEach(user => {
 					filteredUsers.push({
 						_id: user._id,
+						name: user.name,
 						username: user.username,
 						role: user.role,
 						liked: user.liked,
@@ -181,11 +182,73 @@ export default {
 							address: user.email.address,
 							verified: user.email.verified
 						},
+						avatar: {
+							type: user.avatar.type,
+							url: user.avatar.url,
+							color: user.avatar.color
+						},
 						hasPassword: !!user.services.password,
 						services: { github: user.services.github }
 					});
 				});
 				return cb({ status: "success", data: filteredUsers });
+			}
+		);
+	}),
+
+	/**
+	 * Removes all data held on a user, including their ability to login
+	 *
+	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {Function} cb - gets called with the result
+	 */
+	remove: isLoginRequired(async function remove(session, cb) {
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
+		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
+		const activityModel = await DBModule.runJob("GET_MODEL", { modelName: "activity" }, this);
+
+		async.waterfall(
+			[
+				next => {
+					activityModel.deleteMany({ userId: session.userId }, next);
+				},
+
+				(res, next) => {
+					stationModel.deleteMany({ owner: session.userId }, next);
+				},
+
+				(res, next) => {
+					playlistModel.deleteMany({ createdBy: session.userId }, next);
+				},
+
+				(res, next) => {
+					userModel.deleteMany({ _id: session.userId }, next);
+				}
+			],
+			async err => {
+				console.log(err);
+
+				if (err && err !== true) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"USER_REMOVE",
+						`Removing data and account for user "${session.userId}" failed. "${err}"`
+					);
+					return cb({ status: "failure", message: err });
+				}
+
+				this.log(
+					"SUCCESS",
+					"USER_REMOVE",
+					`Successfully removed data and account for user "${session.userId}"`
+				);
+
+				return cb({
+					status: "success",
+					message: "Successfully removed data and account."
+				});
 			}
 		);
 	}),
@@ -201,13 +264,7 @@ export default {
 	async login(session, identifier, password, cb) {
 		identifier = identifier.toLowerCase();
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-		const sessionSchema = await CacheModule.runJob(
-			"GET_SCHEMA",
-			{
-				schemaName: "session"
-			},
-			this
-		);
+		const sessionSchema = await CacheModule.runJob("GET_SCHEMA", { schemaName: "session" }, this);
 
 		async.waterfall(
 			[
@@ -325,27 +382,23 @@ export default {
 				// verify the request with google recaptcha
 				next => {
 					if (config.get("apis.recaptcha.enabled") === true)
-						request(
-							{
-								url: "https://www.google.com/recaptcha/api/siteverify",
-								method: "POST",
-								form: {
+						axios
+							.post("https://www.google.com/recaptcha/api/siteverify", {
+								data: {
 									secret: config.get("apis").recaptcha.secret,
 									response: recaptcha
 								}
-							},
-							next
-						);
+							})
+							.then(res => next(null, res.data))
+							.catch(err => next(err));
 					else next(null, null, null);
 				},
 
 				// check if the response from Google recaptcha is successful
 				// if it is, we check if a user with the requested username already exists
-				(response, body, next) => {
-					if (config.get("apis.recaptcha.enabled") === true) {
-						const json = JSON.parse(body);
-						if (json.success !== true) return next("Response from recaptcha was not successful.");
-					}
+				(body, next) => {
+					if (config.get("apis.recaptcha.enabled") === true)
+						if (body.success !== true) return next("Response from recaptcha was not successful.");
 
 					return userModel.findOne({ username: new RegExp(`^${username}$`, "i") }, next);
 				},
@@ -460,7 +513,7 @@ export default {
 					);
 				}
 			],
-			async (err, user) => {
+			async (err, userId) => {
 				if (err && err !== true) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
@@ -472,9 +525,11 @@ export default {
 				}
 
 				ActivitiesModule.runJob("ADD_ACTIVITY", {
-					userId: user._id,
-					activityType: "created_account"
+					userId,
+					type: "user__joined",
+					payload: { message: "Welcome to Musare!" }
 				});
+
 				this.log(
 					"SUCCESS",
 					"USER_PASSWORD_REGISTER",
@@ -515,17 +570,8 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					CacheModule.runJob(
-						"HGET",
-						{
-							table: "sessions",
-							key: session.sessionId
-						},
-						this
-					)
-						.then(session => {
-							next(null, session);
-						})
+					CacheModule.runJob("HGET", { table: "sessions", key: session.sessionId }, this)
+						.then(session => next(null, session))
 						.catch(next);
 				},
 
@@ -535,17 +581,8 @@ export default {
 				},
 
 				(session, next) => {
-					CacheModule.runJob(
-						"HDEL",
-						{
-							table: "sessions",
-							key: session.sessionId
-						},
-						this
-					)
-						.then(() => {
-							next();
-						})
+					CacheModule.runJob("HDEL", { table: "sessions", key: session.sessionId }, this)
+						.then(() => next())
 						.catch(next);
 				}
 			],
@@ -712,6 +749,7 @@ export default {
 	 * @param {object} preferences - object containing preferences
 	 * @param {boolean} preferences.nightmode - whether or not the user is using the night mode theme
 	 * @param {boolean} preferences.autoSkipDisliked - whether to automatically skip disliked songs
+	 * @param {boolean} preferences.activityLogPublic - whether or not a user's activity log can be publicly viewed
 	 * @param {Function} cb - gets called with the result
 	 */
 	updatePreferences: isLoginRequired(async function updatePreferences(session, preferences, cb) {
@@ -720,22 +758,23 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					userModel.updateOne(
-						{ _id: session.userId },
+					userModel.findByIdAndUpdate(
+						session.userId,
 						{
 							$set: {
 								preferences: {
 									nightmode: preferences.nightmode,
-									autoSkipDisliked: preferences.autoSkipDisliked
+									autoSkipDisliked: preferences.autoSkipDisliked,
+									activityLogPublic: preferences.activityLogPublic
 								}
 							}
 						},
-						{ runValidators: true },
+						{ new: false },
 						next
 					);
 				}
 			],
-			async err => {
+			async (err, user) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 
@@ -757,6 +796,24 @@ export default {
 						userId: session.userId
 					}
 				});
+
+				if (preferences.nightmode !== user.preferences.nightmode)
+					ActivitiesModule.runJob("ADD_ACTIVITY", {
+						userId: session.userId,
+						type: "user__toggle_nightmode",
+						payload: { message: preferences.nightmode ? "Enabled nightmode" : "Disabled nightmode" }
+					});
+
+				if (preferences.autoSkipDisliked !== user.preferences.autoSkipDisliked)
+					ActivitiesModule.runJob("ADD_ACTIVITY", {
+						userId: session.userId,
+						type: "user__toggle_autoskip_disliked_songs",
+						payload: {
+							message: preferences.autoSkipDisliked
+								? "Enabled the autoskipping of your disliked songs"
+								: "Disabled the autoskipping of your disliked songs"
+						}
+					});
 
 				this.log(
 					"SUCCESS",
@@ -984,9 +1041,7 @@ export default {
 						},
 						this
 					)
-						.then(session => {
-							next(null, session);
-						})
+						.then(session => next(null, session))
 						.catch(next);
 				},
 
@@ -1043,13 +1098,8 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	updateUsername: isLoginRequired(async function updateUsername(session, updatingUserId, newUsername, cb) {
-		const userModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "user"
-			},
-			this
-		);
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+
 		async.waterfall(
 			[
 				next => {
@@ -1135,20 +1185,8 @@ export default {
 		newEmail = newEmail.toLowerCase();
 		const verificationToken = await UtilsModule.runJob("GENERATE_RANDOM_STRING", { length: 64 }, this);
 
-		const userModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "user"
-			},
-			this
-		);
-		const verifyEmailSchema = await MailModule.runJob(
-			"GET_SCHEMA",
-			{
-				schemaName: "verifyEmail"
-			},
-			this
-		);
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+		const verifyEmailSchema = await MailModule.runJob("GET_SCHEMA", { schemaName: "verifyEmail" }, this);
 
 		async.waterfall(
 			[
@@ -1286,18 +1324,21 @@ export default {
 						"UPDATE_NAME",
 						`Couldn't update name for user "${updatingUserId}" to name "${newName}". "${err}"`
 					);
-					cb({ status: "failure", message: err });
-				} else {
-					this.log(
-						"SUCCESS",
-						"UPDATE_NAME",
-						`Updated name for user "${updatingUserId}" to name "${newName}".`
-					);
-					cb({
-						status: "success",
-						message: "Name updated successfully"
-					});
+					return cb({ status: "failure", message: err });
 				}
+
+				ActivitiesModule.runJob("ADD_ACTIVITY", {
+					userId: updatingUserId,
+					type: "user__edit_name",
+					payload: { message: `Changed name to ${newName}` }
+				});
+
+				this.log("SUCCESS", "UPDATE_NAME", `Updated name for user "${updatingUserId}" to name "${newName}".`);
+
+				return cb({
+					status: "success",
+					message: "Name updated successfully"
+				});
 			}
 		);
 	}),
@@ -1354,6 +1395,12 @@ export default {
 					return cb({ status: "failure", message: err });
 				}
 
+				ActivitiesModule.runJob("ADD_ACTIVITY", {
+					userId: updatingUserId,
+					type: "user__edit_location",
+					payload: { message: `Changed location to ${newLocation}` }
+				});
+
 				this.log(
 					"SUCCESS",
 					"UPDATE_LOCATION",
@@ -1377,13 +1424,7 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	updateBio: isLoginRequired(async function updateBio(session, updatingUserId, newBio, cb) {
-		const userModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "user"
-			},
-			this
-		);
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
 		async.waterfall(
 			[
@@ -1415,14 +1456,21 @@ export default {
 						"UPDATE_BIO",
 						`Couldn't update bio for user "${updatingUserId}" to bio "${newBio}". "${err}"`
 					);
-					cb({ status: "failure", message: err });
-				} else {
-					this.log("SUCCESS", "UPDATE_BIO", `Updated bio for user "${updatingUserId}" to bio "${newBio}".`);
-					cb({
-						status: "success",
-						message: "Bio updated successfully"
-					});
+					return cb({ status: "failure", message: err });
 				}
+
+				ActivitiesModule.runJob("ADD_ACTIVITY", {
+					userId: updatingUserId,
+					type: "user__edit_bio",
+					payload: { message: `Changed bio to ${newBio}` }
+				});
+
+				this.log("SUCCESS", "UPDATE_BIO", `Updated bio for user "${updatingUserId}" to bio "${newBio}".`);
+
+				return cb({
+					status: "success",
+					message: "Bio updated successfully"
+				});
 			}
 		);
 	}),
@@ -1435,14 +1483,8 @@ export default {
 	 * @param {string} newType - the new type
 	 * @param {Function} cb - gets called with the result
 	 */
-	updateAvatarType: isLoginRequired(async function updateAvatarType(session, updatingUserId, newType, cb) {
-		const userModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "user"
-			},
-			this
-		);
+	updateAvatarType: isLoginRequired(async function updateAvatarType(session, updatingUserId, newAvatar, cb) {
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
 		async.waterfall(
 			[
@@ -1460,7 +1502,7 @@ export default {
 					if (!user) return next("User not found.");
 					return userModel.findOneAndUpdate(
 						{ _id: updatingUserId },
-						{ $set: { "avatar.type": newType } },
+						{ $set: { "avatar.type": newAvatar.type, "avatar.color": newAvatar.color } },
 						{ new: true, runValidators: true },
 						next
 					);
@@ -1472,15 +1514,21 @@ export default {
 					this.log(
 						"ERROR",
 						"UPDATE_AVATAR_TYPE",
-						`Couldn't update avatar type for user "${updatingUserId}" to type "${newType}". "${err}"`
+						`Couldn't update avatar type for user "${updatingUserId}" to type "${newAvatar.type}". "${err}"`
 					);
 					return cb({ status: "failure", message: err });
 				}
 
+				ActivitiesModule.runJob("ADD_ACTIVITY", {
+					userId: updatingUserId,
+					type: "user__edit_avatar",
+					payload: { message: `Changed avatar to use ${newAvatar.type}` }
+				});
+
 				this.log(
 					"SUCCESS",
 					"UPDATE_AVATAR_TYPE",
-					`Updated avatar type for user "${updatingUserId}" to type "${newType}".`
+					`Updated avatar type for user "${updatingUserId}" to type "${newAvatar.type}".`
 				);
 
 				return cb({
@@ -1501,13 +1549,8 @@ export default {
 	 */
 	updateRole: isAdminRequired(async function updateRole(session, updatingUserId, newRole, cb) {
 		newRole = newRole.toLowerCase();
-		const userModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "user"
-			},
-			this
-		);
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+
 		async.waterfall(
 			[
 				next => {
@@ -1623,6 +1666,7 @@ export default {
 				}
 
 				this.log("SUCCESS", "UPDATE_PASSWORD", `User '${session.userId}' updated their password.`);
+
 				return cb({
 					status: "success",
 					message: "Password successfully updated."
@@ -1815,18 +1859,20 @@ export default {
 				if (err && err !== true) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "ADD_PASSWORD_WITH_CODE", `Code '${code}' failed to add password. '${err}'`);
-					cb({ status: "failure", message: err });
-				} else {
-					this.log("SUCCESS", "ADD_PASSWORD_WITH_CODE", `Code '${code}' successfully added password.`);
-					CacheModule.runJob("PUB", {
-						channel: "user.linkPassword",
-						value: session.userId
-					});
-					cb({
-						status: "success",
-						message: "Successfully added password."
-					});
+					return cb({ status: "failure", message: err });
 				}
+
+				this.log("SUCCESS", "ADD_PASSWORD_WITH_CODE", `Code '${code}' successfully added password.`);
+
+				CacheModule.runJob("PUB", {
+					channel: "user.linkPassword",
+					value: session.userId
+				});
+
+				return cb({
+					status: "success",
+					message: "Successfully added password."
+				});
 			}
 		);
 	}),
@@ -1860,22 +1906,20 @@ export default {
 						"UNLINK_PASSWORD",
 						`Unlinking password failed for userId '${session.userId}'. '${err}'`
 					);
-					cb({ status: "failure", message: err });
-				} else {
-					this.log(
-						"SUCCESS",
-						"UNLINK_PASSWORD",
-						`Unlinking password successful for userId '${session.userId}'.`
-					);
-					CacheModule.runJob("PUB", {
-						channel: "user.unlinkPassword",
-						value: session.userId
-					});
-					cb({
-						status: "success",
-						message: "Successfully unlinked password."
-					});
+					return cb({ status: "failure", message: err });
 				}
+
+				this.log("SUCCESS", "UNLINK_PASSWORD", `Unlinking password successful for userId '${session.userId}'.`);
+
+				CacheModule.runJob("PUB", {
+					channel: "user.unlinkPassword",
+					value: session.userId
+				});
+
+				return cb({
+					status: "success",
+					message: "Successfully unlinked password."
+				});
 			}
 		);
 	}),
@@ -1909,18 +1953,20 @@ export default {
 						"UNLINK_GITHUB",
 						`Unlinking GitHub failed for userId '${session.userId}'. '${err}'`
 					);
-					cb({ status: "failure", message: err });
-				} else {
-					this.log("SUCCESS", "UNLINK_GITHUB", `Unlinking GitHub successful for userId '${session.userId}'.`);
-					CacheModule.runJob("PUB", {
-						channel: "user.unlinkGithub",
-						value: session.userId
-					});
-					cb({
-						status: "success",
-						message: "Successfully unlinked GitHub."
-					});
+					return cb({ status: "failure", message: err });
 				}
+
+				this.log("SUCCESS", "UNLINK_GITHUB", `Unlinking GitHub successful for userId '${session.userId}'.`);
+
+				CacheModule.runJob("PUB", {
+					channel: "user.unlinkGithub",
+					value: session.userId
+				});
+
+				return cb({
+					status: "success",
+					message: "Successfully unlinked GitHub."
+				});
 			}
 		);
 	}),
@@ -1938,9 +1984,7 @@ export default {
 
 		const resetPasswordRequestSchema = await MailModule.runJob(
 			"GET_SCHEMA",
-			{
-				schemaName: "resetPasswordRequest"
-			},
+			{ schemaName: "resetPasswordRequest" },
 			this
 		);
 
@@ -1989,18 +2033,19 @@ export default {
 						"REQUEST_PASSWORD_RESET",
 						`Email '${email}' failed to request password reset. '${err}'`
 					);
-					cb({ status: "failure", message: err });
-				} else {
-					this.log(
-						"SUCCESS",
-						"REQUEST_PASSWORD_RESET",
-						`Email '${email}' successfully requested a password reset.`
-					);
-					cb({
-						status: "success",
-						message: "Successfully requested password reset."
-					});
+					return cb({ status: "failure", message: err });
 				}
+
+				this.log(
+					"SUCCESS",
+					"REQUEST_PASSWORD_RESET",
+					`Email '${email}' successfully requested a password reset.`
+				);
+
+				return cb({
+					status: "success",
+					message: "Successfully requested password reset."
+				});
 			}
 		);
 	},
@@ -2031,14 +2076,15 @@ export default {
 				if (err && err !== true) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "VERIFY_PASSWORD_RESET_CODE", `Code '${code}' failed to verify. '${err}'`);
-					cb({ status: "failure", message: err });
-				} else {
-					this.log("SUCCESS", "VERIFY_PASSWORD_RESET_CODE", `Code '${code}' successfully verified.`);
-					cb({
-						status: "success",
-						message: "Successfully verified password reset code."
-					});
+					return cb({ status: "failure", message: err });
 				}
+
+				this.log("SUCCESS", "VERIFY_PASSWORD_RESET_CODE", `Code '${code}' successfully verified.`);
+
+				return cb({
+					status: "success",
+					message: "Successfully verified password reset code."
+				});
 			}
 		);
 	},
@@ -2103,18 +2149,15 @@ export default {
 						"CHANGE_PASSWORD_WITH_RESET_CODE",
 						`Code '${code}' failed to change password. '${err}'`
 					);
-					cb({ status: "failure", message: err });
-				} else {
-					this.log(
-						"SUCCESS",
-						"CHANGE_PASSWORD_WITH_RESET_CODE",
-						`Code '${code}' successfully changed password.`
-					);
-					cb({
-						status: "success",
-						message: "Successfully changed password."
-					});
+					return cb({ status: "failure", message: err });
 				}
+
+				this.log("SUCCESS", "CHANGE_PASSWORD_WITH_RESET_CODE", `Code '${code}' successfully changed password.`);
+
+				return cb({
+					status: "success",
+					message: "Successfully changed password."
+				});
 			}
 		);
 	},
@@ -2207,18 +2250,19 @@ export default {
 						"BAN_USER_BY_ID",
 						`User ${session.userId} failed to ban user ${userId} with the reason ${reason}. '${err}'`
 					);
-					cb({ status: "failure", message: err });
-				} else {
-					this.log(
-						"SUCCESS",
-						"BAN_USER_BY_ID",
-						`User ${session.userId} has successfully banned user ${userId} with the reason ${reason}.`
-					);
-					cb({
-						status: "success",
-						message: "Successfully banned user."
-					});
+					return cb({ status: "failure", message: err });
 				}
+
+				this.log(
+					"SUCCESS",
+					"BAN_USER_BY_ID",
+					`User ${session.userId} has successfully banned user ${userId} with the reason ${reason}.`
+				);
+
+				return cb({
+					status: "success",
+					message: "Successfully banned user."
+				});
 			}
 		);
 	})

@@ -135,8 +135,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../../styles/global.scss";
-
 /deep/ .character-counter {
 	display: flex;
 	justify-content: flex-end;
@@ -148,7 +146,7 @@ export default {
 	padding: 24px;
 
 	.content {
-		background-color: #fff;
+		background-color: var(--white);
 		padding: 30px 50px;
 		border-radius: 3px;
 	}
@@ -190,7 +188,7 @@ export default {
 			outline: none;
 			border: none;
 			box-shadow: none;
-			color: $musare-blue;
+			color: var(--primary-color);
 			font-size: 22px;
 			line-height: 26px;
 			padding: 7px 0 7px 12px;
@@ -202,8 +200,8 @@ export default {
 			display: inline-block;
 
 			&.active {
-				color: $white;
-				background-color: $musare-blue;
+				color: var(--white);
+				background-color: var(--primary-color);
 			}
 		}
 	}
@@ -216,8 +214,8 @@ export default {
 			margin-top: 30px;
 
 			&:disabled {
-				background-color: $light-grey !important;
-				color: #000;
+				background-color: var(--light-grey) !important;
+				color: var(--black);
 			}
 		}
 
@@ -227,7 +225,7 @@ export default {
 
 		label {
 			font-size: 14px;
-			color: $dark-grey-2;
+			color: var(--dark-grey-2);
 		}
 
 		textarea {

@@ -5,23 +5,30 @@
 		<transition-group name="notification-box">
 			<h6
 				class="has-text-centered"
-				v-if="users && users.loggedOut.length > 0"
+				v-if="
+					users.loggedIn &&
+						users.loggedOut &&
+						((users.loggedIn.length === 1 &&
+							users.loggedOut.length === 0) ||
+							(users.loggedIn.length === 0 &&
+								users.loggedOut.length === 1))
+				"
+				key="only-me"
+			>
+				It's just you in the station!
+			</h6>
+			<h6
+				class="has-text-centered"
+				v-else-if="
+					users.loggedIn &&
+						users.loggedOut &&
+						users.loggedOut.length > 0
+				"
 				key="logged-out-users"
 			>
 				{{ users.loggedOut.length }}
 				{{ users.loggedOut.length > 1 ? "users are" : "user is" }}
 				logged-out.
-			</h6>
-			<h6
-				class="has-text-centered"
-				v-else-if="
-					users &&
-						users.loggedIn.length === 1 &&
-						users.loggedOut.length === 0
-				"
-				key="only-me"
-			>
-				It's just you in the station!
 			</h6>
 		</transition-group>
 
@@ -35,14 +42,9 @@
 						}"
 						target="_blank"
 					>
-						<img
-							:src="
-								user.avatar.url &&
-								user.avatar.type === 'gravatar'
-									? `${user.avatar.url}?d=${notesUri}&s=250`
-									: '/assets/notes.png'
-							"
-							onerror="this.src='/assets/notes.png'; this.onerror=''"
+						<profile-picture
+							:avatar="user.avatar"
+							:name="user.name"
 						/>
 
 						{{ user.username }}
@@ -67,7 +69,10 @@
 import { mapState } from "vuex";
 import Toast from "toasters";
 
+import ProfilePicture from "../../../../components/ui/ProfilePicture.vue";
+
 export default {
+	components: { ProfilePicture },
 	data() {
 		return {
 			notesUri: "",
@@ -78,11 +83,9 @@ export default {
 		users: state => state.station.users,
 		userCount: state => state.station.userCount
 	}),
-	mounted() {
-		lofig.get("frontendDomain").then(frontendDomain => {
-			this.notesUri = encodeURI(`${frontendDomain}/assets/notes.png`);
-			this.frontendDomain = frontendDomain;
-		});
+	async mounted() {
+		this.frontendDomain = await lofig.get("frontendDomain");
+		this.notesUri = encodeURI(`${this.frontendDomain}/assets/notes.png`);
 	},
 	methods: {
 		async copyToClipboard() {
@@ -102,21 +105,19 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../../../../styles/global.scss";
-
 .night-mode {
 	#users {
-		background-color: $night-mode-bg-secondary !important;
+		background-color: var(--dark-grey-3) !important;
 		border: 0 !important;
 	}
 
 	a {
-		color: $night-mode-text;
-		background-color: $dark-grey-2 !important;
+		color: var(--light-grey-2);
+		background-color: var(--dark-grey-2) !important;
 		border: 0 !important;
 
 		&:hover {
-			color: lighten($night-mode-text, 10%) !important;
+			color: var(--light-grey) !important;
 		}
 	}
 }
@@ -131,7 +132,7 @@ export default {
 }
 
 #users {
-	background-color: #fff;
+	background-color: var(--white);
 	margin-bottom: 20px;
 	border-radius: 0 0 5px 5px;
 	max-height: 100%;
@@ -156,22 +157,20 @@ export default {
 				display: flex;
 				align-items: center;
 				padding: 5px 10px;
-				border: 0.5px $light-grey-2 solid;
+				border: 0.5px var(--light-grey-3) solid;
 				border-radius: 3px;
 				cursor: pointer;
 
 				&:hover {
-					background-color: #eee;
-					color: #000;
+					background-color: var(--light-grey);
+					color: var(--black);
 				}
 
-				img {
-					background-color: #fff;
+				.profile-picture {
+					margin-right: 10px;
 					width: 35px;
 					height: 35px;
-					border-radius: 100%;
-					border: 2px solid $light-grey;
-					margin-right: 10px;
+					font-size: 15px;
 				}
 			}
 		}

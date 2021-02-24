@@ -2,7 +2,7 @@
 	<div class="universal-item queue-item">
 		<div id="thumbnail-and-info">
 			<img
-				id="thumbnail"
+				class="item-thumbnail"
 				:src="song.ytThumbnail ? song.ytThumbnail : song.thumbnail"
 				onerror="this.src='/assets/notes-transparent.png'"
 			/>
@@ -81,7 +81,7 @@
 						station.type === 'community' &&
 							($parent.isOwnerOnly() || $parent.isAdminOnly())
 					"
-					class="material-icons remove-from-queue-icon"
+					class="material-icons delete-icon"
 					@click="$parent.removeFromQueue(song.songId)"
 					>delete_forever</i
 				>
@@ -130,11 +130,9 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../../../../../styles/global.scss";
-
 .night-mode {
 	.queue-item {
-		background-color: $dark-grey-2 !important;
+		background-color: var(--dark-grey-2) !important;
 		border: 0 !important;
 	}
 }
@@ -148,13 +146,6 @@ export default {
 
 	#duration-and-actions {
 		margin-left: 5px;
-	}
-
-	#thumbnail {
-		width: 65px;
-		height: 65px;
-		margin: -7.5px;
-		border-radius: 3px 0 0 3px;
 	}
 
 	#thumbnail-and-info {
@@ -184,7 +175,7 @@ export default {
 	}
 
 	.edit-icon {
-		color: var(--station-theme);
+		color: var(--primary-color);
 	}
 }
 </style>

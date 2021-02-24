@@ -58,9 +58,7 @@
 			@click="openModal({ sector: 'station', modal: 'createPlaylist' })"
 		>
 			<i class="material-icons icon-with-button">create</i>
-			<span class="optional-desktop-only-text">
-				Create Playlist
-			</span>
+			<span class="optional-desktop-only-text"> Create Playlist </span>
 		</a>
 	</div>
 </template>
@@ -207,10 +205,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../../../../styles/global.scss";
-
 #my-playlists {
-	background-color: #fff;
+	background-color: var(--white);
 	margin-bottom: 20px;
 	border-radius: 0 0 5px 5px;
 	max-height: 100%;
@@ -218,12 +214,12 @@ export default {
 
 .night-mode {
 	#my-playlists {
-		background-color: $night-mode-bg-secondary !important;
+		background-color: var(--dark-grey-3) !important;
 		border: 0 !important;
 	}
 
 	.draggable-list-ghost {
-		background-color: darken($night-mode-bg-secondary, 5%);
+		filter: brightness(95%);
 	}
 }
 
@@ -236,7 +232,7 @@ export default {
 	align-items: center;
 
 	.edit-icon {
-		color: var(--station-theme);
+		color: var(--primary-color);
 	}
 }
 
@@ -262,6 +258,6 @@ export default {
 
 .draggable-list-ghost {
 	opacity: 0.5;
-	background-color: darken(#fff, 5%);
+	filter: brightness(95%);
 }
 </style>

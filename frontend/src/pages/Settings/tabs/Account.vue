@@ -61,6 +61,46 @@
 				v-html="saveButtonMessage"
 			/>
 		</transition>
+
+		<!-- <div class="section-margin-bottom" />
+
+		<h4 class="section-title">Export my data</h4>
+
+		<p class="section-description">
+			Download a copy of all data we store on you in JSON format.
+		</p>
+
+		<hr class="section-horizontal-rule" /> -->
+
+		<div class="section-margin-bottom" />
+
+		<h4 class="section-title">Remove any data we hold on you</h4>
+
+		<p class="section-description">
+			Permanently remove your account and/or data we store on you.
+		</p>
+
+		<hr class="section-horizontal-rule" />
+
+		<div>
+			<a
+				class="button is-warning"
+				href="#"
+				@click.prevent="removeActivities()"
+			>
+				<i class="material-icons icon-with-button">clear</i>
+				Clear my activities
+			</a>
+
+			<a
+				class="button is-danger"
+				href="#"
+				@click.prevent="removeAccount()"
+			>
+				<i class="material-icons icon-with-button">delete</i>
+				Remove my account
+			</a>
+		</div>
 	</div>
 </template>
 
@@ -72,7 +112,7 @@ import validation from "../../../validation";
 import io from "../../../io";
 
 import InputHelpBox from "../../../components/ui/InputHelpBox.vue";
-import SaveButton from "../mixins/SaveButton.vue";
+import SaveButton from "../../../mixins/SaveButton.vue";
 
 export default {
 	components: { InputHelpBox },
@@ -158,7 +198,7 @@ export default {
 			if (emailAddressChanged) this.changeEmail();
 
 			if (!usernameChanged && !emailAddressChanged) {
-				this.failedSave();
+				this.handleFailedSave();
 
 				new Toast({
 					content: "Please make a change before saving.",
@@ -191,7 +231,7 @@ export default {
 				res => {
 					if (res.status !== "success") {
 						new Toast({ content: res.message, timeout: 8000 });
-						this.failedSave();
+						this.handleFailedSave();
 					} else {
 						new Toast({
 							content: "Successfully changed email address",
@@ -203,7 +243,7 @@ export default {
 							value: email
 						});
 
-						this.successfulSave();
+						this.handleSuccessfulSave();
 					}
 				}
 			);
@@ -233,7 +273,7 @@ export default {
 				res => {
 					if (res.status !== "success") {
 						new Toast({ content: res.message, timeout: 8000 });
-						this.failedSave();
+						this.handleFailedSave();
 					} else {
 						new Toast({
 							content: "Successfully changed username",
@@ -245,10 +285,29 @@ export default {
 							value: username
 						});
 
-						this.successfulSave();
+						this.handleSuccessfulSave();
 					}
 				}
 			);
+		},
+		removeAccount() {
+			return this.socket.emit("users.remove", res => {
+				if (res.status === "success") {
+					return this.socket.emit("users.logout", () => {
+						return lofig.get("cookie").then(cookie => {
+							document.cookie = `${cookie.SIDname}=;expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
+							return window.location.reload();
+						});
+					});
+				}
+
+				return new Toast({ content: res.message, timeout: 8000 });
+			});
+		},
+		removeActivities() {
+			this.socket.emit("activities.removeAllForUser", res => {
+				new Toast({ content: res.message, timeout: 4000 });
+			});
 		},
 		...mapActions("settings", ["updateOriginalUser"])
 	}

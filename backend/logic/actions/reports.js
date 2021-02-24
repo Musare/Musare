@@ -9,6 +9,7 @@ const UtilsModule = moduleManager.modules.utils;
 const IOModule = moduleManager.modules.io;
 const SongsModule = moduleManager.modules.songs;
 const CacheModule = moduleManager.modules.cache;
+const ActivitiesModule = moduleManager.modules.activities;
 
 const reportableIssues = [
 	{
@@ -224,14 +225,9 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	create: isLoginRequired(async function create(session, data, cb) {
-		const reportModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "report"
-			},
-			this
-		);
+		const reportModel = await DBModule.runJob("GET_MODEL", { modelName: "report" }, this);
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
+
 		async.waterfall(
 			[
 				next => {
@@ -240,10 +236,9 @@ export default {
 
 				(song, next) => {
 					if (!song) return next("Song not found.");
+
 					return SongsModule.runJob("GET_SONG", { id: song._id }, this)
-						.then(response => {
-							next(null, response.song);
-						})
+						.then(res => next(null, res.song))
 						.catch(next);
 				},
 
@@ -277,10 +272,10 @@ export default {
 							});
 					}
 
-					return next();
+					return next(null, { title: song.title, artists: song.artists, thumbnail: song.thumbnail });
 				},
 
-				next => {
+				(song, next) => {
 					const issues = [];
 
 					for (let r = 0; r < data.issues.length; r += 1) {
@@ -289,16 +284,17 @@ export default {
 
 					data.issues = issues;
 
-					next();
+					next(null, song);
 				},
 
-				next => {
+				(song, next) => {
 					data.createdBy = session.userId;
 					data.createdAt = Date.now();
-					reportModel.create(data, next);
+
+					reportModel.create(data, (err, report) => next(err, report, song));
 				}
 			],
-			async (err, report) => {
+			async (err, report, song) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
@@ -308,11 +304,24 @@ export default {
 					);
 					return cb({ status: "failure", message: err });
 				}
+
 				CacheModule.runJob("PUB", {
 					channel: "report.create",
 					value: report
 				});
+
+				ActivitiesModule.runJob("ADD_ACTIVITY", {
+					userId: report.createdBy,
+					type: "song__report",
+					payload: {
+						message: `Reported song <songId>${song.title} by ${song.artists.join(", ")}</songId>`,
+						songId: data.song._id,
+						thumbnail: song.thumbnail
+					}
+				});
+
 				this.log("SUCCESS", "REPORTS_CREATE", `User "${session.userId}" created report for "${data.songId}".`);
+
 				return cb({
 					status: "success",
 					message: "Successfully created report"

@@ -80,15 +80,13 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../styles/global.scss";
-
 .night-mode {
 	.card {
-		background-color: $night-mode-bg-secondary;
+		background-color: var(--dark-grey-3);
 	}
 
 	p {
-		color: $night-mode-text;
+		color: var(--light-grey-2);
 	}
 }
 

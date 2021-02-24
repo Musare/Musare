@@ -30,7 +30,7 @@ export default {
 		}
 	},
 	methods: {
-		successfulSave() {
+		handleSuccessfulSave() {
 			if (this.saveStatus !== "save-success") {
 				this.saveStatus = "save-success";
 				setTimeout(() => {
@@ -38,7 +38,7 @@ export default {
 				}, 2000);
 			}
 		},
-		failedSave() {
+		handleFailedSave() {
 			if (this.saveStatus !== "save-failure") {
 				this.saveStatus = "save-failure";
 				setTimeout(() => {
@@ -51,14 +51,12 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../../../styles/global.scss";
-
 .save-changes {
 	margin-top: 20px;
 
 	&:disabled {
-		background-color: $light-grey !important;
-		color: #000;
+		background-color: var(--light-grey) !important;
+		color: var(--black);
 	}
 }
 

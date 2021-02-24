@@ -36,22 +36,18 @@ export default {
 			github: "#"
 		};
 	},
-	mounted() {
-		lofig.get("siteSettings.github").then(github => {
-			this.github = github;
-		});
+	async mounted() {
+		this.github = await lofig.get("siteSettings.github");
 	}
 };
 </script>
 
 <style lang="scss" scoped>
-@import "./../../styles/global.scss";
-
 .night-mode {
 	footer.footer,
 	footer.footer .container,
 	footer.footer .container .footer-content {
-		background-color: $night-mode-bg-secondary;
+		background-color: var(--dark-grey-3);
 	}
 }
 
@@ -64,7 +60,7 @@ export default {
 	border-radius: 33% 33% 0% 0% / 7% 7% 0% 0%;
 	box-shadow: 0 4px 8px 0 rgba(3, 169, 244, 0.4),
 		0 6px 20px 0 rgba(3, 169, 244, 0.2);
-	background-color: $white;
+	background-color: var(--white);
 	width: 100%;
 	height: 160px;
 	font-size: 16px;
@@ -98,12 +94,12 @@ export default {
 	#footer-links {
 		order: 2;
 		:not(:last-child) {
-			border-right: solid 1px $primary-color;
+			border-right: solid 1px var(--primary-color);
 		}
 
 		a {
 			padding: 0 7px;
-			color: $primary-color;
+			color: var(--primary-color);
 
 			&:first-of-type {
 				padding: 0 7px 0 0;
@@ -114,7 +110,7 @@ export default {
 			}
 
 			&:hover {
-				color: $primary-color;
+				color: var(--primary-color);
 				text-decoration: underline;
 			}
 		}

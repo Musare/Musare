@@ -128,13 +128,11 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../styles/global.scss";
-
 .night-mode {
 	.card {
-		background-color: $night-mode-bg-secondary;
+		background-color: var(--dark-grey-3);
 		p {
-			color: $night-mode-text;
+			color: var(--light-grey-2);
 		}
 	}
 }
@@ -169,24 +167,24 @@ ul {
 }
 
 .custom-tag.blue {
-	border-bottom: 2px #0066f4 solid;
+	border-bottom: 2px var(--dark-blue) solid;
 }
 
 .custom-tag.pink {
-	border-bottom: 2px #ff99dd solid;
+	border-bottom: 2px var(--light-pink) solid;
 }
 
 .custom-tag.light-blue {
-	border-bottom: 2px #00baf4 solid;
+	border-bottom: 2px var(--blue) solid;
 	background-color: transparent !important;
 }
 
 .custom-tag.light-green {
-	border-bottom: 2px #019875 solid;
+	border-bottom: 2px var(--teal) solid;
 }
 
 .custom-tag.purple {
-	border-bottom: 2px $purple solid;
+	border-bottom: 2px var(--purple) solid;
 }
 
 #special-thanks {

@@ -1,8 +1,6 @@
 <template>
 	<div class="content profile-tab">
-		<h4 class="section-title">
-			Change Profile
-		</h4>
+		<h4 class="section-title">Change Profile</h4>
 		<p class="section-description">
 			Edit your public profile so users can find out more about you.
 		</p>
@@ -15,17 +13,10 @@
 		>
 			<label>Avatar</label>
 			<div id="avatar-selection-inner-container">
-				<div class="profile-picture">
-					<img
-						:src="
-							modifiedUser.avatar.url &&
-							modifiedUser.avatar.type === 'gravatar'
-								? `${modifiedUser.avatar.url}?d=${notesUri}&s=250`
-								: '/assets/notes.png'
-						"
-						onerror="this.src='/assets/notes.png'; this.onerror=''"
-					/>
-				</div>
+				<profile-picture
+					:avatar="modifiedUser.avatar"
+					:name="modifiedUser.name"
+				/>
 				<div class="select">
 					<select v-model="modifiedUser.avatar.type">
 						<option value="gravatar">Using Gravatar</option>
@@ -96,25 +87,33 @@ import Toast from "toasters";
 import validation from "../../../validation";
 import io from "../../../io";
 
-import SaveButton from "../mixins/SaveButton.vue";
+import ProfilePicture from "../../../components/ui/ProfilePicture.vue";
+import SaveButton from "../../../mixins/SaveButton.vue";
 
 export default {
+	components: { ProfilePicture },
 	mixins: [SaveButton],
-	data() {
-		return {
-			notesUri: ""
-		};
-	},
 	computed: mapState({
 		userId: state => state.user.auth.userId,
 		originalUser: state => state.settings.originalUser,
 		modifiedUser: state => state.settings.modifiedUser
 	}),
-	mounted() {
-		lofig.get("frontendDomain").then(frontendDomain => {
-			this.notesUri = encodeURI(`${frontendDomain}/assets/notes.png`);
-		});
+	watch: {
+		"modifiedUser.avatar.type": function watchAvatarType(newType, oldType) {
+			if (
+				oldType &&
+				this.modifiedUser.avatar.type !==
+					this.originalUser.avatar.type &&
+				newType === "initials"
+			) {
+				const colors = ["blue", "orange", "green", "purple", "teal"];
+				const color = colors[Math.floor(Math.random() * colors.length)];
 
+				this.modifiedUser.avatar.color = color;
+			}
+		}
+	},
+	mounted() {
 		io.getSocket(socket => {
 			this.socket = socket;
 		});
@@ -140,7 +139,7 @@ export default {
 				!locationChanged &&
 				!nameChanged
 			) {
-				this.failedSave();
+				this.handleFailedSave();
 
 				new Toast({
 					content: "Please make a change before saving.",
@@ -166,7 +165,7 @@ export default {
 				res => {
 					if (res.status !== "success") {
 						new Toast({ content: res.message, timeout: 8000 });
-						this.failedSave();
+						this.handleFailedSave();
 					} else {
 						new Toast({
 							content: "Successfully changed name",
@@ -178,7 +177,7 @@ export default {
 							value: name
 						});
 
-						this.successfulSave();
+						this.handleSuccessfulSave();
 					}
 				}
 			);
@@ -201,7 +200,7 @@ export default {
 				res => {
 					if (res.status !== "success") {
 						new Toast({ content: res.message, timeout: 8000 });
-						this.failedSave();
+						this.handleFailedSave();
 					} else {
 						new Toast({
 							content: "Successfully changed location",
@@ -213,7 +212,7 @@ export default {
 							value: location
 						});
 
-						this.successfulSave();
+						this.handleSuccessfulSave();
 					}
 				}
 			);
@@ -236,7 +235,7 @@ export default {
 				res => {
 					if (res.status !== "success") {
 						new Toast({ content: res.message, timeout: 8000 });
-						this.failedSave();
+						this.handleFailedSave();
 					} else {
 						new Toast({
 							content: "Successfully changed bio",
@@ -248,7 +247,7 @@ export default {
 							value: bio
 						});
 
-						this.successfulSave();
+						this.handleSuccessfulSave();
 					}
 				}
 			);
@@ -261,11 +260,11 @@ export default {
 			return this.socket.emit(
 				"users.updateAvatarType",
 				this.userId,
-				avatar.type,
+				avatar,
 				res => {
 					if (res.status !== "success") {
 						new Toast({ content: res.message, timeout: 8000 });
-						this.failedSave();
+						this.handleFailedSave();
 					} else {
 						new Toast({
 							content: "Successfully updated avatar type",
@@ -277,7 +276,7 @@ export default {
 							value: avatar
 						});
 
-						this.successfulSave();
+						this.handleSuccessfulSave();
 					}
 				}
 			);
@@ -288,8 +287,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../../../styles/global.scss";
-
 .content .control {
 	margin-bottom: 15px;
 }
@@ -304,7 +301,7 @@ export default {
 	align-items: flex-start;
 
 	.select:after {
-		border-color: $musare-blue;
+		border-color: var(--primary-color);
 	}
 
 	#avatar-selection-inner-container {
@@ -313,17 +310,10 @@ export default {
 		margin-top: 5px;
 
 		.profile-picture {
-			line-height: 1;
-			cursor: pointer;
-
-			img {
-				background-color: #fff;
-				width: 50px;
-				height: 50px;
-				border-radius: 100%;
-				border: 2px solid $light-grey;
-				margin-right: 10px;
-			}
+			margin-right: 10px;
+			width: 50px;
+			height: 50px;
+			font-size: 25px;
 		}
 	}
 }

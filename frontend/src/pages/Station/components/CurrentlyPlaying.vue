@@ -110,8 +110,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../../../styles/global.scss";
-
 #currently-playing {
 	display: flex;
 	flex-direction: row;
@@ -172,7 +170,7 @@ export default {
 			flex-direction: column;
 			flex-grow: 1;
 			h6 {
-				color: var(--station-theme) !important;
+				color: var(--primary-color) !important;
 				font-weight: bold;
 				font-size: 17px;
 			}
@@ -190,7 +188,7 @@ export default {
 			#song-request-time {
 				font-size: 12px;
 				margin-top: 7px;
-				color: $dark-grey;
+				color: var(--dark-grey);
 			}
 		}
 
@@ -198,18 +196,18 @@ export default {
 			display: flex;
 
 			.button {
-				color: #fff;
+				color: var(--white);
 				padding: 0 15px;
 				border: 0;
 				margin: auto 3px;
 			}
 
 			#report-icon {
-				background-color: $yellow;
+				background-color: var(--yellow);
 			}
 
 			#youtube-icon {
-				background-color: #bd2e2e;
+				background-color: var(--youtube);
 
 				.icon {
 					margin-right: 3px;
@@ -218,12 +216,12 @@ export default {
 					-webkit-mask: url("/assets/social/youtube.svg") no-repeat
 						center;
 					mask: url("/assets/social/youtube.svg") no-repeat center;
-					background-color: #fff;
+					background-color: var(--white);
 				}
 			}
 
 			#editsong-icon.button.is-primary {
-				background-color: var(--station-theme) !important;
+				background-color: var(--primary-color) !important;
 				&:hover,
 				&:focus {
 					filter: brightness(90%);

@@ -147,7 +147,7 @@ export default {
 	},
 	watch: {
 		// eslint-disable-next-line
-		"username.value": function(value) {
+		"username.value": function (value) {
 			if (!validation.isLength(value, 2, 32)) {
 				this.username.message =
 					"Username must have between 2 and 32 characters.";
@@ -162,7 +162,7 @@ export default {
 			}
 		},
 		// eslint-disable-next-line
-		"email.value": function(value) {
+		"email.value": function (value) {
 			if (!validation.isLength(value, 3, 254)) {
 				this.email.message =
 					"Email must have between 3 and 254 characters.";
@@ -179,7 +179,7 @@ export default {
 			}
 		},
 		// eslint-disable-next-line
-		"password.value": function(value) {
+		"password.value": function (value) {
 			if (!validation.isLength(value, 6, 200)) {
 				this.password.message =
 					"Password must have between 6 and 200 characters.";
@@ -194,10 +194,8 @@ export default {
 			}
 		}
 	},
-	mounted() {
-		lofig.get("serverDomain").then(serverDomain => {
-			this.serverDomain = serverDomain;
-		});
+	async mounted() {
+		this.serverDomain = await lofig.get("serverDomain");
 
 		lofig.get("recaptcha").then(obj => {
 			this.recaptcha.enabled = obj.enabled;
@@ -261,32 +259,27 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../../styles/global.scss";
-
 .night-mode {
 	.modal-card,
 	.modal-card-head,
 	.modal-card-body,
 	.modal-card-foot {
-		background-color: $night-mode-bg-secondary;
+		background-color: var(--dark-grey-3);
 	}
 
 	.label,
 	p:not(.help) {
-		color: $night-mode-text;
+		color: var(--light-grey-2);
 	}
 }
 
 .button.is-github {
-	background-color: $dark-grey-2;
-	color: $white !important;
+	background-color: var(--dark-grey-2);
+	color: var(--white) !important;
 }
 
 .is-github:focus {
-	background-color: $dark-grey-3;
-}
-.is-primary:focus {
-	background-color: #028bca !important;
+	background-color: var(--dark-grey-4);
 }
 
 .invert {
@@ -298,13 +291,11 @@ export default {
 }
 
 a {
-	color: $primary-color;
+	color: var(--primary-color);
 }
 </style>
 
 <style lang="scss">
-@import "../../styles/global.scss";
-
 .grecaptcha-badge {
 	z-index: 2000;
 }

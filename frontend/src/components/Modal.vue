@@ -43,27 +43,25 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../styles/global.scss";
-
 .night-mode {
 	.modal-card-head,
 	.modal-card-foot {
-		background-color: $night-mode-bg-secondary;
-		border-color: #333;
+		background-color: var(--dark-grey-3);
+		border-color: var(--dark-grey-2);
 	}
 
 	.modal-card-body {
-		background-color: #111 !important;
+		background-color: var(--dark-grey-4) !important;
 	}
 
 	.modal-card-title {
-		color: #fff;
+		color: var(--white);
 	}
 
 	p,
 	label,
 	td {
-		color: $night-mode-text !important;
+		color: var(--light-grey-2) !important;
 	}
 
 	h1,
@@ -72,7 +70,7 @@ export default {
 	h4,
 	h5,
 	h6 {
-		color: #fff !important;
+		color: var(--white) !important;
 	}
 }
 

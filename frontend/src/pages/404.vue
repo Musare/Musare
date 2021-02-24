@@ -22,8 +22,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../styles/global.scss";
-
 .wrapper {
 	min-height: calc(100vh - 100px);
 	display: flex;

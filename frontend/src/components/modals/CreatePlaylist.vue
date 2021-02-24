@@ -96,8 +96,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../../styles/global.scss";
-
 .menu {
 	padding: 0 20px;
 }
@@ -108,7 +106,7 @@ export default {
 }
 
 .menu-list a:hover {
-	color: $black !important;
+	color: var(--black) !important;
 }
 
 li a {
