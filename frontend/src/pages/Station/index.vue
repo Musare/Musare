@@ -590,7 +590,7 @@ export default {
 			return new Date().getTime() + this.systemDifference;
 		};
 
-		this.stationName = this.$route.params.id;
+		this.stationIdentifier = this.$route.params.id;
 
 		window.stationInterval = 0;
 
@@ -600,12 +600,25 @@ export default {
 			if (this.socket.connected) this.join();
 			io.onConnect(this.join);
 
-			this.socket.emit("stations.existsByName", this.stationName, res => {
-				if (res.status === "failure" || !res.exists) {
-					this.loading = false;
-					this.exists = false;
+			this.socket.emit(
+				"stations.existsByName",
+				this.stationIdentifier,
+				res => {
+					if (res.status === "failure" || !res.exists) {
+						// station identifier may be using stationid instead
+						this.socket.emit(
+							"stations.existsById",
+							this.stationIdentifier,
+							res => {
+								if (res.status === "failure" || !res.exists) {
+									this.loading = false;
+									this.exists = false;
+								}
+							}
+						);
+					}
 				}
-			});
+			);
 
 			this.socket.on("event:songs.next", data => {
 				const previousSong = this.currentSong.songId
@@ -1416,7 +1429,7 @@ export default {
 			this.$refs.playerDebugBox.resetBox();
 		},
 		join() {
-			this.socket.emit("stations.join", this.stationName, res => {
+			this.socket.emit("stations.join", this.stationIdentifier, res => {
 				if (res.status === "success") {
 					setTimeout(() => {
 						this.loading = false;
@@ -1425,6 +1438,7 @@ export default {
 					const {
 						_id,
 						displayName,
+						name,
 						description,
 						privacy,
 						locked,
@@ -1440,7 +1454,7 @@ export default {
 
 					this.joinStation({
 						_id,
-						name: this.stationName,
+						name,
 						displayName,
 						description,
 						privacy,

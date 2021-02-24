@@ -4,16 +4,16 @@
 			<img
 				v-if="activity.payload.thumbnail"
 				:src="activity.payload.thumbnail"
-				:alt="formattedMessage()"
+				:alt="textOnlyMessage"
 			/>
 			<i class="material-icons activity-type-icon">{{ getIcon() }}</i>
 		</div>
 		<div class="left-part">
-			<p
+			<component
 				class="item-title"
-				v-html="formattedMessage()"
-				:title="formattedMessage()"
-			></p>
+				:title="textOnlyMessage"
+				:is="formattedMessage"
+			/>
 			<p class="item-description">
 				{{
 					formatDistance(parseISO(activity.createdAt), new Date(), {
@@ -29,6 +29,7 @@
 </template>
 
 <script>
+import { mapActions } from "vuex";
 import { formatDistance, parseISO } from "date-fns";
 
 export default {
@@ -38,35 +39,60 @@ export default {
 			default: () => {}
 		}
 	},
-	methods: {
+	computed: {
 		formattedMessage() {
-			// const { songId, playlistId, stationId } = this.activity.payload;
+			const { songId, playlistId, stationId } = this.activity.payload;
+			let { message } = this.activity.payload;
 
-			// console.log(stationId);
+			if (songId) {
+				message = message.replace(/<songId>(.*)<\/songId>/g, "$1");
+			}
 
-			// if (songId) {
-			// 	return this.activity.payload.message.replace(
-			// 		/<songId>(.*)<\/songId>/g,
-			// 		"$1"
-			// 	);
-			// }
+			if (playlistId) {
+				message = message.replace(
+					/<playlistId>(.*)<\/playlistId>/g,
+					`<a href='#' class='activity-item-link' @click='showPlaylist("${playlistId}")'>$1</a>`
+				);
+			}
 
-			// if (playlistId) {
-			// 	return this.activity.payload.message.replace(
-			// 		/<playlistId>(.*)<\/playlistId>/g,
-			// 		"$1"
-			// 	);
-			// }
+			if (stationId) {
+				message = message.replace(
+					/<stationId>(.*)<\/stationId>/g,
+					`<router-link class='activity-item-link' :to="{ name: 'station', params: { id: '${stationId}' } }">$1</router-link>`
+				);
+			}
 
-			// if (stationId) {
-			// 	return this.activity.payload.message.replace(
-			// 		/<stationId>(.*)<\/stationId>/g,
-			// 		"$1"
-			// 	);
-			// }
-
-			return this.activity.payload.message;
+			return {
+				template: `<p>${message}</p>`,
+				methods: { showPlaylist: this.showPlaylist }
+			};
 		},
+		textOnlyMessage() {
+			const { songId, playlistId, stationId } = this.activity.payload;
+			let { message } = this.activity.payload;
+
+			if (songId) {
+				message = message.replace(/<songId>(.*)<\/songId>/g, "$1");
+			}
+
+			if (playlistId) {
+				message = message.replace(
+					/<playlistId>(.*)<\/playlistId>/g,
+					`$1`
+				);
+			}
+
+			if (stationId) {
+				message = message.replace(
+					/<stationId>(.*)<\/stationId>/g,
+					`$1`
+				);
+			}
+
+			return message;
+		}
+	},
+	methods: {
 		getIcon() {
 			const icons = {
 				/** User */
@@ -107,11 +133,27 @@ export default {
 
 			return icons[this.activity.type];
 		},
+		showPlaylist(playlistId) {
+			this.editPlaylist(playlistId);
+			this.openModal({ sector: "station", modal: "editPlaylist" });
+		},
+		...mapActions("user/playlists", ["editPlaylist"]),
 		formatDistance,
-		parseISO
+		parseISO,
+		...mapActions("modalVisibility", ["openModal"])
 	}
 };
 </script>
+
+<style lang="scss">
+.activity-item-link {
+	color: var(--primary-color) !important;
+
+	&:hover {
+		border-color: #dbdbdb !important;
+	}
+}
+</style>
 
 <style lang="scss" scoped>
 .activity-item {

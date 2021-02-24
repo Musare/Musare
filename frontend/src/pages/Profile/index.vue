@@ -1,5 +1,7 @@
 <template>
 	<div v-if="isUser">
+		<edit-playlist v-if="modals.editPlaylist" />
+
 		<metadata :title="`Profile | ${user.username}`" />
 		<main-header />
 		<div class="container">
@@ -102,7 +104,9 @@ export default {
 		MainFooter,
 		ProfilePicture,
 		RecentActivity,
-		Playlists
+		Playlists,
+		EditPlaylist: () =>
+			import("../../components/modals/EditPlaylist/index.vue")
 	},
 	mixins: [TabQueryHandler],
 	data() {
@@ -116,7 +120,10 @@ export default {
 	computed: {
 		...mapState({
 			role: state => state.user.auth.role,
-			myUserId: state => state.user.auth.userId
+			myUserId: state => state.user.auth.userId,
+			...mapState("modalVisibility", {
+				modals: state => state.modals.station
+			})
 		})
 	},
 	mounted() {

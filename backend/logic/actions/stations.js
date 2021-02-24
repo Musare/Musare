@@ -522,7 +522,7 @@ export default {
 	},
 
 	/**
-	 * Verifies that a station exists
+	 * Verifies that a station exists from its name
 	 *
 	 * @param {object} session - user session
 	 * @param {string} stationName - the station name
@@ -533,25 +533,14 @@ export default {
 			[
 				next => {
 					StationsModule.runJob("GET_STATION_BY_NAME", { stationName }, this)
-						.then(station => {
-							next(null, station);
-						})
+						.then(station => next(null, station))
 						.catch(next);
 				},
 
 				(station, next) => {
 					if (!station) return next(null, false);
-					return StationsModule.runJob(
-						"CAN_USER_VIEW_STATION",
-						{
-							station,
-							userId: session.userId
-						},
-						this
-					)
-						.then(exists => {
-							next(null, exists);
-						})
+					return StationsModule.runJob("CAN_USER_VIEW_STATION", { station, userId: session.userId }, this)
+						.then(exists => next(null, exists))
 						.catch(next);
 				}
 			],
@@ -565,11 +554,58 @@ export default {
 					);
 					return cb({ status: "failure", message: err });
 				}
+
 				this.log(
 					"SUCCESS",
 					"STATION_EXISTS_BY_NAME",
 					`Station "${stationName}" exists successfully.` /* , false */
 				);
+
+				return cb({ status: "success", exists });
+			}
+		);
+	},
+
+	/**
+	 * Verifies that a station exists from its id
+	 *
+	 * @param {object} session - user session
+	 * @param {string} stationId - the station id
+	 * @param {Function} cb - callback
+	 */
+	existsById(session, stationId, cb) {
+		async.waterfall(
+			[
+				next => {
+					StationsModule.runJob("GET_STATION", { stationId }, this)
+						.then(station => next(null, station))
+						.catch(next);
+				},
+
+				(station, next) => {
+					if (!station) return next(null, false);
+					return StationsModule.runJob("CAN_USER_VIEW_STATION", { station, userId: session.userId }, this)
+						.then(exists => next(null, exists))
+						.catch(next);
+				}
+			],
+			async (err, exists) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"STATION_EXISTS_BY_ID",
+						`Checking if station "${stationId}" exists failed. "${err}"`
+					);
+					return cb({ status: "failure", message: err });
+				}
+
+				this.log(
+					"SUCCESS",
+					"STATION_EXISTS_BY_ID",
+					`Station "${stationId}" exists successfully.` /* , false */
+				);
+
 				return cb({ status: "success", exists });
 			}
 		);
@@ -662,30 +698,26 @@ export default {
 	 * Joins the station by its name
 	 *
 	 * @param {object} session - user session
-	 * @param {string} stationName - the station name
+	 * @param {string} stationIdentifier - the station name or station id
 	 * @param {Function} cb - callback
 	 */
-	join(session, stationName, cb) {
+	join(session, stationIdentifier, cb) {
 		async.waterfall(
 			[
 				next => {
-					StationsModule.runJob("GET_STATION_BY_NAME", { stationName }, this)
-						.then(station => {
-							next(null, station);
-						})
-						.catch(next);
+					StationsModule.runJob("GET_STATION_BY_NAME", { stationName: stationIdentifier }, this)
+						.then(station => next(null, station))
+						.catch(() =>
+							// station identifier may be using stationid instead
+							StationsModule.runJob("GET_STATION", { stationId: stationIdentifier }, this)
+								.then(station => next(null, station))
+								.catch(next)
+						);
 				},
 
 				(station, next) => {
 					if (!station) return next("Station not found.");
-					return StationsModule.runJob(
-						"CAN_USER_VIEW_STATION",
-						{
-							station,
-							userId: session.userId
-						},
-						this
-					)
+					return StationsModule.runJob("CAN_USER_VIEW_STATION", { station, userId: session.userId }, this)
 						.then(canView => {
 							if (!canView) next("Not allowed to join station.");
 							else next(null, station);
@@ -787,7 +819,7 @@ export default {
 			async (err, data) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log("ERROR", "STATIONS_JOIN", `Joining station "${stationName}" failed. "${err}"`);
+					this.log("ERROR", "STATIONS_JOIN", `Joining station "${stationIdentifier}" failed. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
 				this.log("SUCCESS", "STATIONS_JOIN", `Joined station "${data._id}" successfully.`);

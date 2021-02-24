@@ -431,17 +431,8 @@ class _StationsModule extends CoreClass {
 			async.waterfall(
 				[
 					next => {
-						CacheModule.runJob(
-							"HGET",
-							{
-								table: "stations",
-								key: payload.stationId
-							},
-							this
-						)
-							.then(station => {
-								next(null, station);
-							})
+						CacheModule.runJob("HGET", { table: "stations", key: payload.stationId }, this)
+							.then(station => next(null, station))
 							.catch(next);
 					},
 

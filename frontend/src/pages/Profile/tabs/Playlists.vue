@@ -1,6 +1,5 @@
 <template>
 	<div class="content playlists-tab">
-		<edit-playlist v-if="modals.editPlaylist" />
 		<create-playlist v-if="modals.createPlaylist" />
 
 		<div v-if="playlists.length > 0">
@@ -100,9 +99,7 @@ export default {
 		PlaylistItem,
 		draggable,
 		CreatePlaylist: () =>
-			import("../../../components/modals/CreatePlaylist.vue"),
-		EditPlaylist: () =>
-			import("../../../components/modals/EditPlaylist/index.vue")
+			import("../../../components/modals/CreatePlaylist.vue")
 	},
 	mixins: [SortablePlaylists],
 	props: {
