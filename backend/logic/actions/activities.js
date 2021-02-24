@@ -39,14 +39,49 @@ CacheModule.runJob("SUB", {
 
 export default {
 	/**
+	 * Returns how many activities there are for a user
+	 *
+	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {string} userId - the id of the user in question
+	 * @param {Function} cb - callback
+	 */
+	async length(session, userId, cb) {
+		const activityModel = await DBModule.runJob("GET_MODEL", { modelName: "activity" }, this);
+
+		async.waterfall(
+			[
+				next => {
+					activityModel.countDocuments({ userId, hidden: false }, next);
+				}
+			],
+			async (err, count) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"SONGS_LENGTH",
+						`Failed to get length of activities for user ${userId}. "${err}"`
+					);
+					return cb({ status: "failure", message: err });
+				}
+
+				this.log("SUCCESS", "ACTIVITIES_LENGTH", `Got length of activities for user ${userId} successfully.`);
+
+				return cb(count);
+			}
+		);
+	},
+
+	/**
 	 * Gets a set of activities
 	 *
 	 * @param {object} session - user session
 	 * @param {string} userId - the user whose activities we are looking for
 	 * @param {number} set - the set number to return
+	 * @param {number} offset - how many activities to skip (keeps frontend and backend in sync)
 	 * @param {Function} cb - callback
 	 */
-	async getSet(session, userId, set, cb) {
+	async getSet(session, userId, set, offset, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 		const activityModel = await DBModule.runJob("GET_MODEL", { modelName: "activity" }, this);
 
@@ -74,7 +109,7 @@ export default {
 				next => {
 					activityModel
 						.find({ userId, hidden: false })
-						.skip(15 * (set - 1))
+						.skip(15 * (set - 1) + offset)
 						.limit(15)
 						.sort({ createdAt: -1 })
 						.exec(next);

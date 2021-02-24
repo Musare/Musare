@@ -199,52 +199,6 @@ const modules = {
 			}
 		}
 	},
-	activities: {
-		namespaced: true,
-		state: {
-			activities: [],
-			position: 0,
-			maxPosition: 1,
-			offsettedFromNextSet: 0
-		},
-		actions: {
-			addSetOfActivities: ({ commit }, data) =>
-				commit("addSetOfActivities", data),
-			addActivity: ({ commit }, activity) =>
-				commit("addActivity", activity),
-			removeActivity: ({ commit }, activityId) =>
-				commit("removeActivity", activityId),
-			removeAllActivities: ({ commit }) => commit("removeAllActivities")
-		},
-		mutations: {
-			addActivity(state, activity) {
-				state.activities.unshift(activity);
-				state.offsettedFromNextSet += 1;
-			},
-			addSetOfActivities(state, data) {
-				const { activities, set } = data;
-
-				if (set > state.position && set <= state.maxPosition) {
-					state.activities.push(...activities);
-					state.position = set;
-				} else {
-					state.activities = activities;
-					state.position = set;
-				}
-			},
-			removeActivity(state, activityId) {
-				state.activities = state.activities.filter(
-					activity => activity._id !== activityId
-				);
-			},
-			removeAllActivities(state) {
-				state.activities = [];
-				state.position = 0;
-				state.maxPosition = 1;
-				state.offsettedFromNextSet = 0;
-			}
-		}
-	},
 	playlists: {
 		namespaced: true,
 		state: {

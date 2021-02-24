@@ -1,5 +1,5 @@
 <template>
-	<div v-scroll="handleScroll">
+	<div @scroll="handleScroll">
 		<metadata title="Admin | Queue songs" />
 		<div class="container">
 			<p>
@@ -280,15 +280,15 @@ export default {
 			});
 		},
 		getSet() {
-			if (this.gettingSet) return;
+			if (this.isGettingSet) return;
 			if (this.position >= this.maxPosition) return;
-			this.gettingSet = true;
+			this.isGettingSet = true;
 
 			this.socket.emit("queueSongs.getSet", this.position, data => {
 				data.forEach(song => this.songs.push(song));
 
 				this.position += 1;
-				this.gettingSet = false;
+				this.isGettingSet = false;
 			});
 		},
 		selectPrevious(event) {

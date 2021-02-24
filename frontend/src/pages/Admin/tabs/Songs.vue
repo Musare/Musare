@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<metadata title="Admin | Songs" />
-		<div class="container" v-scroll="handleScroll">
+		<div class="container" @scroll="handleScroll">
 			<p>
 				<span>Sets loaded: {{ setsLoaded }} / {{ maxSets }}</span>
 				<br />
@@ -363,9 +363,9 @@ export default {
 			});
 		},
 		getSet() {
-			if (this.gettingSet) return;
+			if (this.isGettingSet) return;
 			if (this.position >= this.maxPosition) return;
-			this.gettingSet = true;
+			this.isGettingSet = true;
 
 			this.socket.emit("songs.getSet", this.position, data => {
 				data.forEach(song => {
@@ -373,7 +373,7 @@ export default {
 				});
 
 				this.position += 1;
-				this.gettingSet = false;
+				this.isGettingSet = false;
 			});
 		},
 		toggleArtistSelected(artist) {

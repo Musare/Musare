@@ -4,7 +4,7 @@ export default {
 		return {
 			position: 1,
 			maxPosition: 1,
-			gettingSet: false,
+			isGettingSet: false,
 			loadAllSongs: false,
 			interval: null
 		};
