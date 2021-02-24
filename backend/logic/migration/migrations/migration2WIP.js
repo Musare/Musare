@@ -3,7 +3,7 @@ import async from "async";
 /**
  * Migration 2
  *
- *
+ * Changes to keep in mind: includedPlaylists, excludedPlaylists, playlist2
  *
  * @param {object} MigrationModule - the MigrationModule
  * @returns {Promise} - returns promise

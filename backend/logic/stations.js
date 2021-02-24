@@ -8,6 +8,7 @@ let DBModule;
 let UtilsModule;
 let IOModule;
 let SongsModule;
+let PlaylistsModule;
 let NotificationsModule;
 
 class _StationsModule extends CoreClass {
@@ -29,6 +30,7 @@ class _StationsModule extends CoreClass {
 		UtilsModule = this.moduleManager.modules.utils;
 		IOModule = this.moduleManager.modules.io;
 		SongsModule = this.moduleManager.modules.songs;
+		PlaylistsModule = this.moduleManager.modules.playlists;
 		NotificationsModule = this.moduleManager.modules.notifications;
 
 		this.defaultSong = {
@@ -1228,6 +1230,322 @@ class _StationsModule extends CoreClass {
 					}
 				})
 				.catch(reject);
+		});
+	}
+
+	/**
+	 * Adds a playlist to be included in a station
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {object} payload.stationId - the id of the station to include the playlist in
+	 * @param {object} payload.playlistId - the id of the playlist to be included
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	INCLUDE_PLAYLIST(payload) {
+		return new Promise((resolve, reject) => {
+			async.waterfall(
+				[
+					next => {
+						if (!payload.stationId) next("Please specify a station id");
+						else if (!payload.playlistId) next("Please specify a playlist id");
+						else next();
+					},
+
+					next => {
+						StationsModule.runJob("GET_STATION", { stationId: payload.stationId })
+							.then(station => {
+								next(null, station);
+							})
+							.catch(next);
+					},
+
+					(station, next) => {
+						if (station.playlist2 === payload.playlistId) next("You cannot include the station playlist");
+						else if (station.includedPlaylists.indexOf(payload.playlistId) !== -1)
+							next("This playlist is already included");
+						else if (station.excludedPlaylists.indexOf(payload.playlistId) !== -1)
+							next(
+								"This playlist is currently excluded, please remove it from there before including it"
+							);
+						else
+							PlaylistsModule.runJob("GET_PLAYLIST", { playlistId: payload.playlistId })
+								.then(() => {
+									next(null);
+								})
+								.catch(next);
+					},
+
+					next => {
+						DBModule.runJob(
+							"GET_MODEL",
+							{
+								modelName: "station"
+							},
+							this
+						).then(stationModel => {
+							stationModel.updateOne(
+								{ _id: payload.stationId },
+								{ $push: { includedPlaylists: payload.playlistId } },
+								next
+							);
+						});
+					},
+
+					(res, next) => {
+						StationsModule.runJob(
+							"UPDATE_STATION",
+							{
+								stationId: payload.stationId
+							},
+							this
+						)
+							.then(() => {
+								next();
+							})
+							.catch(next);
+					}
+				],
+				async err => {
+					if (err && err !== true) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						return reject(new Error(err));
+					}
+
+					return resolve();
+				}
+			);
+		});
+	}
+
+	/**
+	 * Removes a playlist that is included in a station
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {object} payload.stationId - the id of the station
+	 * @param {object} payload.playlistId - the id of the playlist
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	REMOVE_INCLUDED_PLAYLIST(payload) {
+		return new Promise((resolve, reject) => {
+			async.waterfall(
+				[
+					next => {
+						if (!payload.stationId) next("Please specify a station id");
+						else if (!payload.playlistId) next("Please specify a playlist id");
+						else next();
+					},
+
+					next => {
+						StationsModule.runJob("GET_STATION", { stationId: payload.stationId })
+							.then(station => {
+								next(null, station);
+							})
+							.catch(next);
+					},
+
+					(station, next) => {
+						if (station.includedPlaylists.indexOf(payload.playlistId) === -1)
+							next("This playlist isn't included");
+						else next();
+					},
+
+					next => {
+						DBModule.runJob(
+							"GET_MODEL",
+							{
+								modelName: "station"
+							},
+							this
+						).then(stationModel => {
+							stationModel.updateOne(
+								{ _id: payload.stationId },
+								{ $pull: { includedPlaylists: payload.playlistId } },
+								next
+							);
+						});
+					},
+
+					(res, next) => {
+						StationsModule.runJob(
+							"UPDATE_STATION",
+							{
+								stationId: payload.stationId
+							},
+							this
+						)
+							.then(() => {
+								next();
+							})
+							.catch(next);
+					}
+				],
+				async err => {
+					if (err && err !== true) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						return reject(new Error(err));
+					}
+
+					return resolve();
+				}
+			);
+		});
+	}
+
+	/**
+	 * Adds a playlist to be excluded in a station
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {object} payload.stationId - the id of the station
+	 * @param {object} payload.playlistId - the id of the playlist
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	EXCLUDE_PLAYLIST(payload) {
+		return new Promise((resolve, reject) => {
+			async.waterfall(
+				[
+					next => {
+						if (!payload.stationId) next("Please specify a station id");
+						else if (!payload.playlistId) next("Please specify a playlist id");
+						else next();
+					},
+
+					next => {
+						StationsModule.runJob("GET_STATION", { stationId: payload.stationId })
+							.then(station => {
+								next(null, station);
+							})
+							.catch(next);
+					},
+
+					(station, next) => {
+						if (station.playlist2 === payload.playlistId) next("You cannot exclude the station playlist");
+						else if (station.excludedPlaylists.indexOf(payload.playlistId) !== -1)
+							next("This playlist is already excluded");
+						else if (station.includedPlaylists.indexOf(payload.playlistId) !== -1)
+							next(
+								"This playlist is currently included, please remove it from there before excluding it"
+							);
+						else
+							PlaylistsModule.runJob("GET_PLAYLIST", { playlistId: payload.playlistId })
+								.then(() => {
+									next(null);
+								})
+								.catch(next);
+					},
+
+					next => {
+						DBModule.runJob(
+							"GET_MODEL",
+							{
+								modelName: "station"
+							},
+							this
+						).then(stationModel => {
+							stationModel.updateOne(
+								{ _id: payload.stationId },
+								{ $push: { excludedPlaylists: payload.playlistId } },
+								next
+							);
+						});
+					},
+
+					(res, next) => {
+						StationsModule.runJob(
+							"UPDATE_STATION",
+							{
+								stationId: payload.stationId
+							},
+							this
+						)
+							.then(() => {
+								next();
+							})
+							.catch(next);
+					}
+				],
+				async err => {
+					if (err && err !== true) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						return reject(new Error(err));
+					}
+
+					return resolve();
+				}
+			);
+		});
+	}
+
+	/**
+	 * Removes a playlist that is excluded in a station
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {object} payload.stationId - the id of the station
+	 * @param {object} payload.playlistId - the id of the playlist
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	REMOVE_EXCLUDED_PLAYLIST(payload) {
+		return new Promise((resolve, reject) => {
+			async.waterfall(
+				[
+					next => {
+						if (!payload.stationId) next("Please specify a station id");
+						else if (!payload.playlistId) next("Please specify a playlist id");
+						else next();
+					},
+
+					next => {
+						StationsModule.runJob("GET_STATION", { stationId: payload.stationId })
+							.then(station => {
+								next(null, station);
+							})
+							.catch(next);
+					},
+
+					(station, next) => {
+						if (station.excludedPlaylists.indexOf(payload.playlistId) === -1)
+							next("This playlist isn't excluded");
+						else next();
+					},
+
+					next => {
+						DBModule.runJob(
+							"GET_MODEL",
+							{
+								modelName: "station"
+							},
+							this
+						).then(stationModel => {
+							stationModel.updateOne(
+								{ _id: payload.stationId },
+								{ $pull: { excludedPlaylists: payload.playlistId } },
+								next
+							);
+						});
+					},
+
+					(res, next) => {
+						StationsModule.runJob(
+							"UPDATE_STATION",
+							{
+								stationId: payload.stationId
+							},
+							this
+						)
+							.then(() => {
+								next();
+							})
+							.catch(next);
+					}
+				],
+				async err => {
+					if (err && err !== true) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						return reject(new Error(err));
+					}
+
+					return resolve();
+				}
+			);
 		});
 	}
 }
