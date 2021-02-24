@@ -242,7 +242,16 @@
 					</div>
 					<div class="bottomBar"></div>
 				</a>
-				<a v-else class="card station-card createStation">
+				<a
+					v-else
+					@click="
+						openModal({
+							sector: 'header',
+							modal: 'login'
+						})
+					"
+					class="card station-card createStation"
+				>
 					<div class="card-image">
 						<figure class="image is-square">
 							<i class="material-icons">radio</i>
