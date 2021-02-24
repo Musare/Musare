@@ -9,6 +9,7 @@ const DBModule = moduleManager.modules.db;
 const UtilsModule = moduleManager.modules.utils;
 const IOModule = moduleManager.modules.io;
 const SongsModule = moduleManager.modules.songs;
+const PlaylistsModule = moduleManager.modules.playlists;
 const CacheModule = moduleManager.modules.cache;
 const NotificationsModule = moduleManager.modules.notifications;
 const StationsModule = moduleManager.modules.stations;
@@ -1207,6 +1208,7 @@ export default {
 	 */
 	updateDisplayName: isOwnerRequired(async function updateDisplayName(session, stationId, newDisplayName, cb) {
 		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
+		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
 
 		async.waterfall(
 			[
@@ -1223,6 +1225,16 @@ export default {
 					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
 						.then(station => next(null, station))
 						.catch(next);
+				},
+
+				(station, next) => {
+					playlistModel.updateOne(
+						{ _id: station.playlist2 },
+						{ $set: { displayName: `Station - ${station.displayName}` } },
+						err => {
+							next(err, station);
+						}
+					);
 				}
 			],
 			async err => {
@@ -1881,6 +1893,12 @@ export default {
 					CacheModule.runJob("HDEL", { table: "stations", key: stationId }, this)
 						.then(next(null, station))
 						.catch(next);
+				},
+
+				(station, next) => {
+					if (station.playlist2)
+						PlaylistsModule.runJob("DELETE_PLAYLIST", { playlistId: station.playlist2 }).then().catch();
+					next(null, station);
 				}
 			],
 			async (err, station) => {
@@ -1921,7 +1939,7 @@ export default {
 	create: isLoginRequired(async function create(session, data, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
-		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" },	this);
+		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
 
 		data.name = data.name.toLowerCase();
 
@@ -2003,7 +2021,7 @@ export default {
 							return playlistModel.create(
 								{
 									isUserModifiable: false,
-									displayName: `Station - ${name}`,
+									displayName: `Station - ${displayName}`,
 									songs: [],
 									createdBy: "Musare",
 									createdFor: `${stationId}`,
@@ -2112,14 +2130,6 @@ export default {
 	 */
 	addToQueue: isLoginRequired(async function addToQueue(session, stationId, songId, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-
-		const stationModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "station"
-			},
-			this
-		);
 
 		const playlistModel = await DBModule.runJob(
 			"GET_MODEL",
@@ -2279,13 +2289,13 @@ export default {
 						{ runValidators: true },
 						next
 					);
-				},
-
-				(res, next) => {
-					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
-						.then(station => next(null, station))
-						.catch(next);
 				}
+
+				// (res, next) => {
+				// 	StationsModule.runJob("UPDATE_STATION", { stationId }, this)
+				// 		.then(station => next(null, station))
+				// 		.catch(next);
+				// }
 
 				// (res, next) => {
 				// 	StationsModule.runJob("UPDATE_STATION", { stationId }, this)
