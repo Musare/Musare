@@ -36,7 +36,8 @@ class _CacheModule extends CoreClass {
 			playlist: await importSchema("playlist"),
 			officialPlaylist: await importSchema("officialPlaylist"),
 			song: await importSchema("song"),
-			punishment: await importSchema("punishment")
+			punishment: await importSchema("punishment"),
+			recentActivity: await importSchema("recentActivity")
 		};
 
 		return new Promise((resolve, reject) => {
@@ -108,7 +109,6 @@ class _CacheModule extends CoreClass {
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	HSET(payload) {
-		// table, key, value, cb, stringifyJson = true
 		return new Promise((resolve, reject) => {
 			let { key } = payload;
 			let { value } = payload;
@@ -134,7 +134,6 @@ class _CacheModule extends CoreClass {
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	HGET(payload) {
-		// table, key, parseJson = true
 		return new Promise((resolve, reject) => {
 			let { key } = payload;
 
@@ -164,7 +163,6 @@ class _CacheModule extends CoreClass {
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	HDEL(payload) {
-		// table, key, cb
 		return new Promise((resolve, reject) => {
 			// if (!payload.key || !table || typeof key !== "string")
 			// return cb(null, null);
@@ -192,7 +190,6 @@ class _CacheModule extends CoreClass {
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	HGETALL(payload) {
-		// table, cb, parseJson = true
 		return new Promise((resolve, reject) => {
 			if (!payload.table) return reject(new Error("Invalid table!"));
 
@@ -219,7 +216,6 @@ class _CacheModule extends CoreClass {
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	PUB(payload) {
-		// channel, value, stringifyJson = true
 		return new Promise((resolve, reject) => {
 			/* if (pubs[channel] === undefined) {
             pubs[channel] = redis.createClient({ url: CacheModule.url });
@@ -250,7 +246,6 @@ class _CacheModule extends CoreClass {
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	SUB(payload) {
-		// channel, cb, parseJson = true
 		return new Promise((resolve, reject) => {
 			if (!payload.channel) return reject(new Error("Invalid channel!"));
 

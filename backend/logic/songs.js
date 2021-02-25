@@ -178,7 +178,6 @@ class _SongsModule extends CoreClass {
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	UPDATE_SONG(payload) {
-		// songId, cb
 		return new Promise((resolve, reject) =>
 			async.waterfall(
 				[

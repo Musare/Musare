@@ -103,6 +103,8 @@ export default {
 			});
 
 			this.socket.on("event:activity.removeAllForUser", () => {
+				console.log("jasdasdsad");
+
 				this.activities = [];
 				this.position = 1;
 				this.maxPosition = 1;
@@ -156,6 +158,7 @@ export default {
 <style lang="scss" scoped>
 #activity-items {
 	overflow: auto;
-	height: 600px;
+	min-height: auto;
+	max-height: 600px;
 }
 </style>

@@ -471,7 +471,6 @@ class _PlaylistsModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	UPDATE_PLAYLIST(payload) {
-		// playlistId, cb
 		return new Promise((resolve, reject) =>
 			async.waterfall(
 				[
@@ -520,7 +519,6 @@ class _PlaylistsModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	DELETE_PLAYLIST(payload) {
-		// playlistId, cb
 		return new Promise((resolve, reject) =>
 			async.waterfall(
 				[
