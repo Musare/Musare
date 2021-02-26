@@ -1432,25 +1432,115 @@ export default {
 	 * @param cb
 	 */
 	updateGenres: isOwnerRequired(async function updateGenres(session, stationId, newGenres, cb) {
-		const stationModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "station"
-			},
-			this
-		);
 		async.waterfall(
 			[
 				next => {
-					stationModel.updateOne(
-						{ _id: stationId },
-						{ $set: { genres: newGenres } },
-						{ runValidators: true },
-						next
+					StationsModule.runJob("GET_STATION", { stationId }, this)
+						.then(station => {
+							next(null, station);
+						})
+						.catch(next);
+				},
+
+				(station, next) => {
+					const playlists = [];
+					async.eachLimit(
+						newGenres,
+						1,
+						(genre, next) => {
+							PlaylistsModule.runJob("GET_GENRE_PLAYLIST", { genre, includeSongs: false }, this).then(
+								response => {
+									playlists.push(response.playlist);
+									next();
+								}
+							);
+						},
+						err => {
+							next(
+								err,
+								station,
+								playlists.map(playlist => playlist._id.toString())
+							);
+						}
 					);
 				},
 
-				(res, next) => {
+				(station, playlists, next) => {
+					const playlistsToRemoveFromExcluded = playlists.filter(
+						playlistId => station.excludedPlaylists.indexOf(playlistId) !== -1
+					);
+					console.log(
+						`playlistsToRemoveFromExcluded: ${playlistsToRemoveFromExcluded.length}`,
+						playlistsToRemoveFromExcluded
+					);
+
+					async.eachLimit(
+						playlistsToRemoveFromExcluded,
+						1,
+						(playlistId, next) => {
+							StationsModule.runJob("REMOVE_EXCLUDED_PLAYLIST", { stationId, playlistId }, this)
+								.then(() => {
+									next();
+								})
+								.catch(next);
+						},
+						err => {
+							next(err, station, playlists);
+						}
+					);
+				},
+
+				(station, playlists, next) => {
+					const playlistsToRemoveFromIncluded = station.includedPlaylists.filter(
+						playlistId => playlists.indexOf(playlistId) === -1
+					);
+					console.log(
+						`playlistsToRemoveFromIncluded: ${playlistsToRemoveFromIncluded.length}`,
+						playlistsToRemoveFromIncluded
+					);
+
+					async.eachLimit(
+						playlistsToRemoveFromIncluded,
+						1,
+						(playlistId, next) => {
+							StationsModule.runJob("REMOVE_INCLUDED_PLAYLIST", { stationId, playlistId }, this)
+								.then(() => {
+									next();
+								})
+								.catch(next);
+						},
+						err => {
+							next(err, station, playlists);
+						}
+					);
+				},
+
+				(station, playlists, next) => {
+					const playlistsToAddToIncluded = playlists.filter(
+						playlistId => station.includedPlaylists.indexOf(playlistId) === -1
+					);
+					console.log(
+						`playlistsToAddToIncluded: ${playlistsToAddToIncluded.length}`,
+						playlistsToAddToIncluded
+					);
+
+					async.eachLimit(
+						playlistsToAddToIncluded,
+						1,
+						(playlistId, next) => {
+							StationsModule.runJob("INCLUDE_PLAYLIST", { stationId, playlistId }, this)
+								.then(() => {
+									next();
+								})
+								.catch(next);
+						},
+						err => {
+							next(err);
+						}
+					);
+				},
+
+				next => {
 					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
 						.then(station => next(null, station))
 						.catch(next);

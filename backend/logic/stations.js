@@ -1,4 +1,5 @@
 import async from "async";
+import mongoose from "mongoose";
 
 import CoreClass from "../core";
 
@@ -1485,6 +1486,7 @@ class _StationsModule extends CoreClass {
 	 */
 	REMOVE_EXCLUDED_PLAYLIST(payload) {
 		return new Promise((resolve, reject) => {
+			console.log(112, payload);
 			async.waterfall(
 				[
 					next => {

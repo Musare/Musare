@@ -47,7 +47,7 @@ export default {
 	privatePlaylist: { type: mongoose.Schema.Types.ObjectId },
 	partyMode: { type: Boolean },
 	theme: { type: String, enum: ["blue", "purple", "teal", "orange"], default: "blue" },
-	includedPlaylists: [{ type: mongoose.Schema.Types.ObjectId }],
-	excludedPlaylists: [{ type: mongoose.Schema.Types.ObjectId }],
+	includedPlaylists: [{ type: String }],
+	excludedPlaylists: [{ type: String }],
 	documentVersion: { type: Number, default: 1, required: true }
 };
