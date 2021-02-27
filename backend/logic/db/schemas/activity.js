@@ -35,7 +35,9 @@ export default {
 			"playlist__create",
 			"playlist__remove",
 			"playlist__remove_song",
+			"playlist__remove_songs",
 			"playlist__add_song",
+			"playlist__add_songs",
 			"playlist__edit_privacy",
 			"playlist__edit_display_name",
 			"playlist__import_playlist"

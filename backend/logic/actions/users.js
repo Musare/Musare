@@ -810,8 +810,8 @@ export default {
 						type: "user__toggle_autoskip_disliked_songs",
 						payload: {
 							message: preferences.autoSkipDisliked
-								? "Enabled the autoskipping of your disliked songs"
-								: "Disabled the autoskipping of your disliked songs"
+								? "Enabled the autoskipping of disliked songs"
+								: "Disabled the autoskipping of disliked songs"
 						}
 					});
 

@@ -7,6 +7,7 @@ let DBModule;
 let CacheModule;
 let UtilsModule;
 let IOModule;
+let PlaylistsModule;
 
 class _ActivitiesModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
@@ -27,6 +28,7 @@ class _ActivitiesModule extends CoreClass {
 			CacheModule = this.moduleManager.modules.cache;
 			UtilsModule = this.moduleManager.modules.utils;
 			IOModule = this.moduleManager.modules.io;
+			PlaylistsModule = this.moduleManager.modules.playlists;
 
 			resolve();
 		});
@@ -88,7 +90,9 @@ class _ActivitiesModule extends CoreClass {
 					},
 
 					(activity, next) => {
-						const activitiesToCheckFor = [
+						const mergeableActivities = ["playlist__remove_song", "playlist__add_song"];
+
+						const spammableActivities = [
 							"user__toggle_nightmode",
 							"user__toggle_autoskip_disliked_songs",
 							"song__like",
@@ -100,24 +104,50 @@ class _ActivitiesModule extends CoreClass {
 						CacheModule.runJob("HGET", { table: "recentActivities", key: activity.userId })
 							.then(recentActivity => {
 								if (recentActivity) {
-									const FifteenMinsTimeDifference =
-										new Date() - new Date(recentActivity.createdAt) < 15 * 60 * 1000;
+									const timeDifference = mins =>
+										new Date() - new Date(recentActivity.createdAt) < mins * 60 * 1000;
 
-									// check if most recent and the new activity have the same type, if it was in the last 15 mins,
-									// and if it is within the activitiesToCheckFor array
+									// if both activities have the same type, if within last 15 mins and if activity is within the spammableActivities array
 									if (
 										recentActivity.type === activity.type &&
-										!!FifteenMinsTimeDifference &&
-										activitiesToCheckFor.includes(activity.type)
+										!!timeDifference(15) &&
+										spammableActivities.includes(activity.type)
 									)
 										return ActivitiesModule.runJob(
-											"CHECK_FOR_ACTIVITY_SPAM",
+											"CHECK_FOR_ACTIVITY_SPAM_TO_HIDE",
 											{ userId: activity.userId, type: activity.type },
 											this
 										)
 											.then(() => next(null, activity))
 											.catch(next);
 
+									// if activity is within the mergeableActivities array, if both activities are about removing/adding and if within last 5 mins
+									if (
+										mergeableActivities.includes(activity.type) &&
+										recentActivity.type === activity.type &&
+										!!timeDifference(5)
+									) {
+										return PlaylistsModule.runJob("GET_PLAYLIST", {
+											playlistId: activity.payload.playlistId
+										})
+											.then(playlist =>
+												ActivitiesModule.runJob(
+													"CHECK_FOR_ACTIVITY_SPAM_TO_MERGE",
+													{
+														userId: activity.userId,
+														type: activity.type,
+														playlist: {
+															playlistId: playlist._id,
+															displayName: playlist.displayName
+														}
+													},
+													this
+												)
+													.then(() => next(null, activity))
+													.catch(next)
+											)
+											.catch(next);
+									}
 									return next(null, activity);
 								}
 
@@ -153,14 +183,124 @@ class _ActivitiesModule extends CoreClass {
 	}
 
 	/**
-	 * Removes any activities of the same type within a 15-minute period to prevent spam
+	 * Merges activities about adding/removing songs from a playlist within a 5-minute period to prevent spam
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.userId - the id of the user to check for duplicates
+	 * @param {object} payload.playlist - object that contains info about the relevant playlist
+	 * @param {string} payload.playlist.playlistId - the id of the playlist
+	 * @param {string} payload.playlist.displayName - the display name of the playlist
+	 * @param {string} payload.type - the type of activity to check for duplicates
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	async CHECK_FOR_ACTIVITY_SPAM_TO_MERGE(payload) {
+		const activityModel = await DBModule.runJob("GET_MODEL", { modelName: "activity" }, this);
+
+		return new Promise((resolve, reject) => {
+			async.waterfall(
+				[
+					// find all activities of this type from the last 5 minutes
+					next => {
+						activityModel
+							.find(
+								{
+									userId: payload.userId,
+									type: { $in: [payload.type, `${payload.type}s`] },
+									hidden: false,
+									createdAt: {
+										$gte: new Date(new Date() - 5 * 60 * 1000)
+									},
+									"payload.playlistId": payload.playlist.playlistId
+								},
+								["_id", "type", "payload.message"]
+							)
+							.sort({ createdAt: -1 })
+							.exec(next);
+					},
+
+					// hide these activities, emit to socket listeners and count number of songs in each
+					(activities, next) => {
+						let howManySongs = 0; // how many songs added/removed
+
+						activities.forEach(activity => {
+							activityModel.updateOne({ _id: activity._id }, { $set: { hidden: true } }).catch(next);
+
+							IOModule.runJob("SOCKETS_FROM_USER", { userId: payload.userId }, this)
+								.then(res =>
+									res.sockets.forEach(socket => socket.emit("event:activity.hide", activity._id))
+								)
+								.catch(next);
+
+							IOModule.runJob("EMIT_TO_ROOM", {
+								room: `profile-${payload.userId}-activities`,
+								args: ["event:activity.hide", activity._id]
+							});
+
+							if (activity.type === payload.type) howManySongs += 1;
+							else if (activity.type === `${payload.type}s`)
+								howManySongs += parseInt(
+									activity.payload.message.replace(
+										/(?:Removed|Added)\s(?<songs>\d+)\ssongs.+/g,
+										"$<songs>"
+									)
+								);
+						});
+
+						return next(null, howManySongs);
+					},
+
+					// // delete in cache the most recent activity to avoid issues when adding a new activity
+					(howManySongs, next) => {
+						CacheModule.runJob("HDEL", { table: "recentActivities", key: payload.userId }, this)
+							.then(() => next(null, howManySongs))
+							.catch(next);
+					},
+
+					// add a new activity that merges the activities together
+					(howManySongs, next) => {
+						const activity = {
+							userId: payload.userId,
+							type: "",
+							payload: {
+								message: "",
+								playlistId: payload.playlist.playlistId
+							}
+						};
+
+						if (payload.type === "playlist__remove_song" || payload.type === "playlist__remove_songs") {
+							activity.payload.message = `Removed ${howManySongs} songs from playlist <playlistId>${payload.playlist.displayName}</playlistId>`;
+							activity.type = "playlist__remove_songs";
+						} else if (payload.type === "playlist__add_song" || payload.type === "playlist__add_songs") {
+							activity.payload.message = `Added ${howManySongs} songs to playlist <playlistId>${payload.playlist.displayName}</playlistId>`;
+							activity.type = "playlist__add_songs";
+						}
+
+						ActivitiesModule.runJob("ADD_ACTIVITY", activity, this)
+							.then(() => next())
+							.catch(next);
+					}
+				],
+				async err => {
+					if (err) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						return reject(new Error(err));
+					}
+
+					return resolve();
+				}
+			);
+		});
+	}
+
+	/**
+	 * Hides any activities of the same type within a 15-minute period to prevent spam
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.userId - the id of the user to check for duplicates
 	 * @param {string} payload.type - the type of activity to check for duplicates
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
-	async CHECK_FOR_ACTIVITY_SPAM(payload) {
+	async CHECK_FOR_ACTIVITY_SPAM_TO_HIDE(payload) {
 		const activityModel = await DBModule.runJob("GET_MODEL", { modelName: "activity" }, this);
 
 		return new Promise((resolve, reject) => {

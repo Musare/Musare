@@ -179,6 +179,12 @@ export default {
 			[
 				next => {
 					activityModel.deleteMany({ userId: session.userId }, next);
+				},
+
+				(res, next) => {
+					CacheModule.runJob("HDEL", { table: "recentActivities", key: session.userId }, this)
+						.then(() => next())
+						.catch(next);
 				}
 			],
 			async err => {

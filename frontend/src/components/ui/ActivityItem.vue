@@ -137,7 +137,9 @@ export default {
 				playlist__create: "create",
 				playlist__remove: "delete",
 				playlist__remove_song: "not_interested",
+				playlist__remove_songs: "not_interested",
 				playlist__add_song: "library_add",
+				playlist__add_songs: "library_add",
 				playlist__edit_privacy: "security",
 				playlist__edit_display_name: "create",
 				playlist__import_playlist: "publish"
