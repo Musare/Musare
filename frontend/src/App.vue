@@ -676,4 +676,22 @@ h4.section-title {
 		}
 	}
 }
+
+.save-button-mixin {
+	min-width: 200px;
+
+	&:disabled {
+		background-color: var(--light-grey) !important;
+		color: var(--black);
+	}
+}
+
+.save-button-transition-enter-active {
+	transition: all 0.1s ease;
+}
+
+.save-button-transition-enter {
+	transform: translateX(20px);
+	opacity: 0;
+}
 </style>

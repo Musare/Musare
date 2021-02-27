@@ -210,15 +210,6 @@ export default {
 		margin: 24px 0;
 		height: fit-content;
 
-		.save-changes {
-			margin-top: 30px;
-
-			&:disabled {
-				background-color: var(--light-grey) !important;
-				color: var(--black);
-			}
-		}
-
 		.control:not(:first-of-type) {
 			margin: 10px 0;
 		}
@@ -234,16 +225,8 @@ export default {
 
 		button {
 			width: 100%;
+			margin-top: 30px;
 		}
 	}
-}
-
-/deep/ .saving-changes-transition-enter-active {
-	transition: all 0.1s ease;
-}
-
-/deep/ .saving-changes-transition-enter {
-	transform: translateX(20px);
-	opacity: 0;
 }
 </style>

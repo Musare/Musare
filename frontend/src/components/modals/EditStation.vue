@@ -407,9 +407,17 @@
 			</div>
 		</template>
 		<template #footer>
-			<button class="button is-success" @click="update()">
-				Update Settings
-			</button>
+			<transition name="save-button-transition" mode="out-in">
+				<button
+					class="button save-button-mixin"
+					:class="saveButtonStyle"
+					@click="saveChanges()"
+					:key="saveStatus"
+					:disabled="saveStatus === 'disabled'"
+					v-html="saveButtonMessage"
+				/>
+			</transition>
+
 			<button
 				v-if="station.type === 'community'"
 				class="button is-danger"
@@ -427,12 +435,13 @@ import { mapState, mapActions } from "vuex";
 import Toast from "toasters";
 
 import Modal from "../Modal.vue";
-
 import io from "../../io";
 import validation from "../../validation";
+import SaveButton from "../../mixins/SaveButton.vue";
 
 export default {
 	components: { Modal },
+	mixins: [SaveButton],
 	props: {
 		stationId: { type: String, default: "" },
 		sector: { type: String, default: "admin" }
@@ -546,38 +555,58 @@ export default {
 		});
 	},
 	methods: {
-		update() {
-			if (this.originalStation.name !== this.station.name)
-				this.updateName();
-			if (this.originalStation.displayName !== this.station.displayName)
-				this.updateDisplayName();
-			if (this.originalStation.description !== this.station.description)
-				this.updateDescription();
-			if (this.originalStation.privacy !== this.station.privacy)
-				this.updatePrivacy();
-			if (
+		saveChanges() {
+			const nameChanged = this.originalStation.name !== this.station.name;
+			const displayNameChanged =
+				this.originalStation.displayName !== this.station.displayName;
+			const descriptionChanged =
+				this.originalStation.description !== this.station.description;
+			const privacyChanged =
+				this.originalStation.privacy !== this.station.privacy;
+			const partyModeChanged =
 				this.originalStation.type === "community" &&
-				this.originalStation.partyMode !== this.station.partyMode
-			)
-				this.updatePartyMode();
-			if (
+				this.originalStation.partyMode !== this.station.partyMode;
+			const queueLockChanged =
 				this.originalStation.type === "community" &&
 				this.station.partyMode &&
-				this.originalStation.locked !== this.station.locked
-			)
-				this.updateQueueLock();
-			if (
+				this.originalStation.locked !== this.station.locked;
+			const genresChanged =
 				this.originalStation.genres.toString() !==
-				this.station.genres.toString()
-			)
-				this.updateGenres();
-			if (
+				this.station.genres.toString();
+			const blacklistedGenresChanged =
 				this.originalStation.blacklistedGenres.toString() !==
-				this.station.blacklistedGenres.toString()
-			)
-				this.updateBlacklistedGenres();
-			if (this.originalStation.theme !== this.station.theme)
-				this.updateTheme();
+				this.station.blacklistedGenres.toString();
+			const themeChanged =
+				this.originalStation.theme !== this.station.theme;
+
+			if (nameChanged) this.updateName();
+			if (displayNameChanged) this.updateDisplayName();
+			if (descriptionChanged) this.updateDescription();
+			if (privacyChanged) this.updatePrivacy();
+			if (partyModeChanged) this.updatePartyMode();
+			if (queueLockChanged) this.updateQueueLock();
+			if (genresChanged) this.updateGenres();
+			if (blacklistedGenresChanged) this.updateBlacklistedGenres();
+			if (themeChanged) this.updateTheme();
+
+			if (
+				!nameChanged &&
+				!displayNameChanged &&
+				!descriptionChanged &&
+				!privacyChanged &&
+				!partyModeChanged &&
+				!queueLockChanged &&
+				!genresChanged &&
+				!blacklistedGenresChanged &&
+				!themeChanged
+			) {
+				this.handleFailedSave();
+
+				new Toast({
+					content: "Please make a change before saving.",
+					timeout: 8000
+				});
+			}
 		},
 		updateName() {
 			const { name } = this.station;
@@ -593,15 +622,21 @@ export default {
 					timeout: 8000
 				});
 
+			this.saveStatus = "disabled";
+
 			return this.socket.emit(
 				"stations.updateName",
 				this.station._id,
 				name,
 				res => {
-					if (res.status === "success")
-						this.originalStation.name = name;
-
 					new Toast({ content: res.message, timeout: 8000 });
+
+					if (res.status === "success") {
+						this.originalStation.name = name;
+						return this.handleSuccessfulSave();
+					}
+
+					return this.handleFailedSave();
 				}
 			);
 		},
@@ -620,15 +655,21 @@ export default {
 					timeout: 8000
 				});
 
+			this.saveStatus = "disabled";
+
 			return this.socket.emit(
 				"stations.updateDisplayName",
 				this.station._id,
 				displayName,
 				res => {
-					if (res.status === "success")
-						this.originalStation.displayName = displayName;
-
 					new Toast({ content: res.message, timeout: 8000 });
+
+					if (res.status === "success") {
+						this.originalStation.displayName = displayName;
+						return this.handleSuccessfulSave();
+					}
+
+					return this.handleFailedSave();
 				}
 			);
 		},
@@ -651,15 +692,21 @@ export default {
 					timeout: 8000
 				});
 
+			this.saveStatus = "disabled";
+
 			return this.socket.emit(
 				"stations.updateDescription",
 				this.station._id,
 				description,
 				res => {
-					if (res.status === "success")
-						this.originalStation.description = description;
+					new Toast({ content: res.message, timeout: 8000 });
 
-					return new Toast({ content: res.message, timeout: 8000 });
+					if (res.status === "success") {
+						this.originalStation.description = description;
+						return this.handleSuccessfulSave();
+					}
+
+					return this.handleFailedSave();
 				}
 			);
 		},
@@ -669,57 +716,70 @@ export default {
 			this.privacyDropdownActive = false;
 		},
 		updatePrivacy() {
+			this.saveStatus = "disabled";
+
 			this.socket.emit(
 				"stations.updatePrivacy",
 				this.station._id,
 				this.station.privacy,
 				res => {
-					if (res.status === "success")
-						this.originalStation.privacy = this.station.privacy;
+					new Toast({ content: res.message, timeout: 8000 });
 
-					return new Toast({ content: res.message, timeout: 8000 });
+					if (res.status === "success") {
+						this.originalStation.privacy = this.station.privacy;
+						return this.handleSuccessfulSave();
+					}
+
+					return this.handleFailedSave();
 				}
 			);
 		},
 		updateGenres() {
+			this.saveStatus = "disabled";
+
 			this.socket.emit(
 				"stations.updateGenres",
 				this.station._id,
 				this.station.genres,
 				res => {
-					console.log(res);
+					new Toast({ content: res.message, timeout: 8000 });
+
 					if (res.status === "success") {
 						const genres = JSON.parse(
 							JSON.stringify(this.station.genres)
 						);
+
 						if (this.originalStation)
 							this.originalStation.genres = genres;
 
-						return new Toast({
-							content: res.message,
-							timeout: 4000
-						});
+						return this.handleSuccessfulSave();
 					}
 
-					return new Toast({ content: res.message, timeout: 8000 });
+					return this.handleFailedSave();
 				}
 			);
 		},
 		updateBlacklistedGenres() {
+			this.saveStatus = "disabled";
+
 			this.socket.emit(
 				"stations.updateBlacklistedGenres",
 				this.station._id,
 				this.station.blacklistedGenres,
 				res => {
+					new Toast({ content: res.message, timeout: 8000 });
+
 					if (res.status === "success") {
 						const blacklistedGenres = JSON.parse(
 							JSON.stringify(this.station.blacklistedGenres)
 						);
 
 						this.originalStation.blacklistedGenres = blacklistedGenres;
+
+						return this.handleSuccessfulSave();
 					}
 
-					return new Toast({ content: res.message, timeout: 8000 });
+					return this.handleFailedSave();
 				}
 			);
 		},
@@ -729,15 +789,21 @@ export default {
 			this.modeDropdownActive = false;
 		},
 		updatePartyMode() {
+			this.saveStatus = "disabled";
+
 			this.socket.emit(
 				"stations.updatePartyMode",
 				this.station._id,
 				this.station.partyMode,
 				res => {
-					if (res.status === "success")
-						this.originalStation.partyMode = this.station.partyMode;
+					new Toast({ content: res.message, timeout: 8000 });
 
-					return new Toast({ content: res.message, timeout: 8000 });
+					if (res.status === "success") {
+						this.originalStation.partyMode = this.station.partyMode;
+						return this.handleSuccessfulSave();
+					}
+
+					return this.handleFailedSave();
 				}
 			);
 		},
@@ -747,20 +813,27 @@ export default {
 			this.queueLockDropdownActive = false;
 		},
 		updateQueueLock() {
+			this.saveStatus = "disabled";
+
 			this.socket.emit("stations.toggleLock", this.station._id, res => {
-				console.log(res);
 				if (res.status === "success") {
 					if (this.originalStation)
 						this.originalStation.locked = res.data;
-					return new Toast({
+
+					new Toast({
 						content: `Toggled queue lock successfully to ${res.data}`,
 						timeout: 4000
 					});
+
+					return this.handleSuccessfulSave();
 				}
-				return new Toast({
+
+				new Toast({
 					content: "Failed to toggle queue lock.",
 					timeout: 8000
 				});
+
+				return this.handleFailedSave();
 			});
 		},
 		updateThemeLocal(theme) {
@@ -769,15 +842,21 @@ export default {
 			this.themeDropdownActive = false;
 		},
 		updateTheme() {
+			this.saveStatus = "disabled";
+
 			this.socket.emit(
 				"stations.updateTheme",
 				this.station._id,
 				this.station.theme,
 				res => {
-					if (res.status === "success")
-						this.originalStation.theme = this.station.theme;
+					new Toast({ content: res.message, timeout: 8000 });
 
-					return new Toast({ content: res.message, timeout: 8000 });
+					if (res.status === "success") {
+						this.originalStation.theme = this.station.theme;
+						return this.handleSuccessfulSave();
+					}
+
+					return this.handleFailedSave();
 				}
 			);
 		},
@@ -901,6 +980,12 @@ export default {
 	}
 };
 </script>
+
+<style lang="scss">
+.edit-station-modal .modal-card-foot {
+	justify-content: flex-end;
+}
+</style>
 
 <style lang="scss" scoped>
 .night-mode {

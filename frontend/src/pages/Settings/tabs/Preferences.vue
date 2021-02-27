@@ -35,9 +35,9 @@
 				<p>Allow my activity log to be viewed publicly</p>
 			</label>
 		</p>
-		<transition name="saving-changes-transition" mode="out-in">
+		<transition name="save-button-transition" mode="out-in">
 			<button
-				class="button save-changes"
+				class="button save-button-mixin"
 				:class="saveButtonStyle"
 				@click="saveChanges()"
 				:key="saveStatus"

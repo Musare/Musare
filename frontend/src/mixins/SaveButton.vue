@@ -49,23 +49,3 @@ export default {
 	}
 };
 </script>
-
-<style lang="scss" scoped>
-.save-changes {
-	margin-top: 20px;
-
-	&:disabled {
-		background-color: var(--light-grey) !important;
-		color: var(--black);
-	}
-}
-
-.saving-changes-transition-enter-active {
-	transition: all 0.1s ease;
-}
-
-.saving-changes-transition-enter {
-	transform: translateX(20px);
-	opacity: 0;
-}
-</style>
