@@ -470,15 +470,18 @@
 					</div>
 				</div>
 			</div>
-			<div slot="footer" class="footer-buttons">
-				<button class="button is-success" @click="save(song, false)">
-					<i class="material-icons save-changes">done</i>
-					<span>&nbsp;Save</span>
-				</button>
-				<button class="button is-success" @click="save(song, true)">
-					<i class="material-icons save-changes">done</i>
-					<span>&nbsp;Save and close</span>
-				</button>
+			<div slot="footer">
+				<transition name="save-button-transition" mode="out-in">
+					<button
+						class="button save-button-mixin"
+						:class="saveButtonStyle"
+						@click="save(song, false)"
+						:key="saveStatus"
+						:disabled="saveStatus === 'disabled'"
+						v-html="saveButtonMessage"
+					/>
+				</transition>
+
 				<button
 					class="button is-danger"
 					@click="closeModal({ sector: sector, modal: 'editSong' })"
@@ -515,9 +518,11 @@ import keyboardShortcuts from "../../keyboardShortcuts";
 import validation from "../../validation";
 import Modal from "../Modal.vue";
 import FloatingBox from "../ui/FloatingBox.vue";
+import SaveButton from "../../mixins/SaveButton.vue";
 
 export default {
 	components: { Modal, FloatingBox },
+	mixins: [SaveButton],
 	props: {
 		songId: { type: String, default: null },
 		songType: { type: String, default: null },
@@ -966,22 +971,28 @@ export default {
 		save(songToCopy, close) {
 			const song = JSON.parse(JSON.stringify(songToCopy));
 
-			if (!song.title)
+			if (!song.title) {
+				this.handleFailedSave();
 				return new Toast({
 					content: "Please fill in all fields",
 					timeout: 8000
 				});
-			if (!song.thumbnail)
+			}
+
+			if (!song.thumbnail) {
+				this.handleFailedSave();
 				return new Toast({
 					content: "Please fill in all fields",
 					timeout: 8000
 				});
+			}
 
 			// Duration
 			if (
 				Number(song.skipDuration) + Number(song.duration) >
 				this.youtubeVideoDuration
 			) {
+				this.handleFailedSave();
 				return new Toast({
 					content:
 						"Duration can't be higher than the length of the video",
@@ -990,19 +1001,24 @@ export default {
 			}
 
 			// Title
-			if (!validation.isLength(song.title, 1, 100))
+			if (!validation.isLength(song.title, 1, 100)) {
+				this.handleFailedSave();
 				return new Toast({
 					content: "Title must have between 1 and 100 characters.",
 					timeout: 8000
 				});
+			}
 
 			// Artists
-			if (song.artists.length < 1 || song.artists.length > 10)
+			if (song.artists.length < 1 || song.artists.length > 10) {
+				this.handleFailedSave();
 				return new Toast({
 					content:
 						"Invalid artists. You must have at least 1 artist and a maximum of 10 artists.",
 					timeout: 8000
 				});
+			}
+
 			let error;
 			song.artists.forEach(artist => {
 				if (!validation.isLength(artist, 1, 64)) {
@@ -1017,7 +1033,11 @@ export default {
 
 				return false;
 			});
-			if (error) return new Toast({ content: error, timeout: 8000 });
+
+			if (error) {
+				this.handleFailedSave();
+				return new Toast({ content: error, timeout: 8000 });
+			}
 
 			// Genres
 			error = undefined;
@@ -1034,18 +1054,26 @@ export default {
 
 				return false;
 			});
+
 			if (song.genres.length < 1 || song.genres.length > 16)
 				error = "You must have between 1 and 16 genres.";
-			if (error) return new Toast({ content: error, timeout: 8000 });
+
+			if (error) {
+				this.handleFailedSave();
+				return new Toast({ content: error, timeout: 8000 });
+			}
 
 			// Thumbnail
-			if (!validation.isLength(song.thumbnail, 1, 256))
+			if (!validation.isLength(song.thumbnail, 1, 256)) {
+				this.handleFailedSave();
 				return new Toast({
 					content:
 						"Thumbnail must have between 8 and 256 characters.",
 					timeout: 8000
 				});
+			}
 			if (this.useHTTPS && song.thumbnail.indexOf("https://") !== 0) {
+				this.handleFailedSave();
 				return new Toast({
 					content: 'Thumbnail must start with "https://".',
 					timeout: 8000
@@ -1057,11 +1085,14 @@ export default {
 				song.thumbnail.indexOf("http://") !== 0 &&
 				song.thumbnail.indexOf("https://") !== 0
 			) {
+				this.handleFailedSave();
 				return new Toast({
 					content: 'Thumbnail must start with "http://".',
 					timeout: 8000
 				});
 			}
+
+			this.saveStatus = "disabled";
 
 			return this.socket.emit(
 				`${this.songType}.update`,
@@ -1069,17 +1100,10 @@ export default {
 				song,
 				res => {
 					new Toast({ content: res.message, timeout: 4000 });
-					if (res.status === "success") {
-						// this.songs.forEach(originalSong => {
-						// 	const updatedSong = song;
-						// 	if (originalSong._id === updatedSong._id) {
-						// 		Object.keys(originalSong).forEach(n => {
-						// 			updatedSong[n] = originalSong[n];
-						// 			return originalSong[n];
-						// 		});
-						// 	}
-						// });
-					}
+
+					if (res.status === "success") this.handleSuccessfulSave();
+					else this.handleFailedSave();
+
 					if (close)
 						this.closeModal({
 							sector: this.sector,
@@ -1419,6 +1443,10 @@ export default {
 
 		.modal-card-body {
 			padding: 16px;
+		}
+
+		.modal-card-foot {
+			justify-content: flex-end;
 		}
 	}
 }
@@ -1876,9 +1904,8 @@ export default {
 	}
 }
 
-.footer-buttons {
-	margin-left: auto;
-	margin-right: auto;
+.modal-card-foot .is-primary {
+	width: 200px;
 }
 
 input[type="range"] {
