@@ -119,10 +119,10 @@ export default {
 
 						if (res.status === "success") {
 							this.playlists[index].songs.forEach(
-								(song, index) => {
+								(song, songIndex) => {
 									if (song.songId === this.song.songId)
 										this.playlists[index].songs.splice(
-											index,
+											songIndex,
 											1
 										);
 								}
