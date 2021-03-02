@@ -407,16 +407,7 @@
 			</div>
 		</template>
 		<template #footer>
-			<transition name="save-button-transition" mode="out-in">
-				<button
-					class="button save-button-mixin"
-					:class="saveButtonStyle"
-					@click="saveChanges()"
-					:key="saveStatus"
-					:disabled="saveStatus === 'disabled'"
-					v-html="saveButtonMessage"
-				/>
-			</transition>
+			<save-button ref="saveButton" @clicked="saveChanges()" />
 
 			<button
 				v-if="station.type === 'community'"
@@ -437,11 +428,10 @@ import Toast from "toasters";
 import Modal from "../Modal.vue";
 import io from "../../io";
 import validation from "../../validation";
-import SaveButton from "../../mixins/SaveButton.vue";
+import SaveButton from "../ui/SaveButton.vue";
 
 export default {
-	components: { Modal },
-	mixins: [SaveButton],
+	components: { Modal, SaveButton },
 	props: {
 		stationId: { type: String, default: "" },
 		sector: { type: String, default: "admin" }
@@ -600,7 +590,7 @@ export default {
 				!blacklistedGenresChanged &&
 				!themeChanged
 			) {
-				this.handleFailedSave();
+				this.$refs.saveButton.handleFailedSave();
 
 				new Toast({
 					content: "Please make a change before saving.",
@@ -622,7 +612,7 @@ export default {
 					timeout: 8000
 				});
 
-			this.saveStatus = "disabled";
+			this.$refs.saveButton.status = "disabled";
 
 			return this.socket.emit(
 				"stations.updateName",
@@ -633,21 +623,23 @@ export default {
 
 					if (res.status === "success") {
 						this.originalStation.name = name;
-						return this.handleSuccessfulSave();
+						return this.$refs.saveButton.handleSuccessfulSave();
 					}
 
-					return this.handleFailedSave();
+					return this.$refs.saveButton.handleFailedSave();
 				}
 			);
 		},
 		updateDisplayName() {
 			const { displayName } = this.station;
+
 			if (!validation.isLength(displayName, 2, 32))
 				return new Toast({
 					content:
 						"Display name must have between 2 and 32 characters.",
 					timeout: 8000
 				});
+
 			if (!validation.regex.ascii.test(displayName))
 				return new Toast({
 					content:
@@ -655,7 +647,7 @@ export default {
 					timeout: 8000
 				});
 
-			this.saveStatus = "disabled";
+			this.$refs.saveButton.status = "disabled";
 
 			return this.socket.emit(
 				"stations.updateDisplayName",
@@ -666,10 +658,10 @@ export default {
 
 					if (res.status === "success") {
 						this.originalStation.displayName = displayName;
-						return this.handleSuccessfulSave();
+						return this.$refs.saveButton.handleSuccessfulSave();
 					}
 
-					return this.handleFailedSave();
+					return this.$refs.saveButton.handleFailedSave();
 				}
 			);
 		},
@@ -692,7 +684,7 @@ export default {
 					timeout: 8000
 				});
 
-			this.saveStatus = "disabled";
+			this.$refs.saveButton.status = "disabled";
 
 			return this.socket.emit(
 				"stations.updateDescription",
@@ -703,10 +695,10 @@ export default {
 
 					if (res.status === "success") {
 						this.originalStation.description = description;
-						return this.handleSuccessfulSave();
+						return this.$refs.saveButton.handleSuccessfulSave();
 					}
 
-					return this.handleFailedSave();
+					return this.$refs.saveButton.handleFailedSave();
 				}
 			);
 		},
@@ -716,7 +708,7 @@ export default {
 			this.privacyDropdownActive = false;
 		},
 		updatePrivacy() {
-			this.saveStatus = "disabled";
+			this.$refs.saveButton.status = "disabled";
 
 			this.socket.emit(
 				"stations.updatePrivacy",
@@ -727,15 +719,15 @@ export default {
 
 					if (res.status === "success") {
 						this.originalStation.privacy = this.station.privacy;
-						return this.handleSuccessfulSave();
+						return this.$refs.saveButton.handleSuccessfulSave();
 					}
 
-					return this.handleFailedSave();
+					return this.$refs.saveButton.handleFailedSave();
 				}
 			);
 		},
 		updateGenres() {
-			this.saveStatus = "disabled";
+			this.$refs.saveButton.status = "disabled";
 
 			this.socket.emit(
 				"stations.updateGenres",
@@ -752,15 +744,15 @@ export default {
 						if (this.originalStation)
 							this.originalStation.genres = genres;
 
-						return this.handleSuccessfulSave();
+						return this.$refs.saveButton.handleSuccessfulSave();
 					}
 
-					return this.handleFailedSave();
+					return this.$refs.saveButton.handleFailedSave();
 				}
 			);
 		},
 		updateBlacklistedGenres() {
-			this.saveStatus = "disabled";
+			this.$refs.saveButton.status = "disabled";
 
 			this.socket.emit(
 				"stations.updateBlacklistedGenres",
@@ -776,10 +768,10 @@ export default {
 
 						this.originalStation.blacklistedGenres = blacklistedGenres;
 
-						return this.handleSuccessfulSave();
+						return this.$refs.saveButton.handleSuccessfulSave();
 					}
 
-					return this.handleFailedSave();
+					return this.$refs.saveButton.handleFailedSave();
 				}
 			);
 		},
@@ -789,7 +781,7 @@ export default {
 			this.modeDropdownActive = false;
 		},
 		updatePartyMode() {
-			this.saveStatus = "disabled";
+			this.$refs.saveButton.status = "disabled";
 
 			this.socket.emit(
 				"stations.updatePartyMode",
@@ -800,10 +792,10 @@ export default {
 
 					if (res.status === "success") {
 						this.originalStation.partyMode = this.station.partyMode;
-						return this.handleSuccessfulSave();
+						return this.$refs.saveButton.handleSuccessfulSave();
 					}
 
-					return this.handleFailedSave();
+					return this.$refs.saveButton.handleFailedSave();
 				}
 			);
 		},
@@ -813,7 +805,7 @@ export default {
 			this.queueLockDropdownActive = false;
 		},
 		updateQueueLock() {
-			this.saveStatus = "disabled";
+			this.$refs.saveButton.status = "disabled";
 
 			this.socket.emit("stations.toggleLock", this.station._id, res => {
 				if (res.status === "success") {
@@ -825,7 +817,7 @@ export default {
 						timeout: 4000
 					});
 
-					return this.handleSuccessfulSave();
+					return this.$refs.saveButton.handleSuccessfulSave();
 				}
 
 				new Toast({
@@ -833,7 +825,7 @@ export default {
 					timeout: 8000
 				});
 
-				return this.handleFailedSave();
+				return this.$refs.saveButton.handleFailedSave();
 			});
 		},
 		updateThemeLocal(theme) {
@@ -842,7 +834,7 @@ export default {
 			this.themeDropdownActive = false;
 		},
 		updateTheme() {
-			this.saveStatus = "disabled";
+			this.$refs.saveButton.status = "disabled";
 
 			this.socket.emit(
 				"stations.updateTheme",
@@ -853,10 +845,10 @@ export default {
 
 					if (res.status === "success") {
 						this.originalStation.theme = this.station.theme;
-						return this.handleSuccessfulSave();
+						return this.$refs.saveButton.handleSuccessfulSave();
 					}
 
-					return this.handleFailedSave();
+					return this.$refs.saveButton.handleFailedSave();
 				}
 			);
 		},

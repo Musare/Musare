@@ -471,16 +471,12 @@
 				</div>
 			</div>
 			<div slot="footer">
-				<transition name="save-button-transition" mode="out-in">
-					<button
-						class="button save-button-mixin"
-						:class="saveButtonStyle"
-						@click="save(song, false)"
-						:key="saveStatus"
-						:disabled="saveStatus === 'disabled'"
-						v-html="saveButtonMessage"
-					/>
-				</transition>
+				<save-button ref="saveButton" @clicked="save(song, false)" />
+				<save-button
+					ref="saveAndCloseButton"
+					type="save-and-close"
+					@clicked="save(song, true)"
+				/>
 
 				<button
 					class="button is-danger"
@@ -518,11 +514,10 @@ import keyboardShortcuts from "../../keyboardShortcuts";
 import validation from "../../validation";
 import Modal from "../Modal.vue";
 import FloatingBox from "../ui/FloatingBox.vue";
-import SaveButton from "../../mixins/SaveButton.vue";
+import SaveButton from "../ui/SaveButton.vue";
 
 export default {
-	components: { Modal, FloatingBox },
-	mixins: [SaveButton],
+	components: { Modal, FloatingBox, SaveButton },
 	props: {
 		songId: { type: String, default: null },
 		songType: { type: String, default: null },
@@ -971,8 +966,11 @@ export default {
 		save(songToCopy, close) {
 			const song = JSON.parse(JSON.stringify(songToCopy));
 
+			let saveButtonRef = this.$refs.saveButton;
+			if (close) saveButtonRef = this.$refs.saveAndCloseButton;
+
 			if (!song.title) {
-				this.handleFailedSave();
+				saveButtonRef.handleFailedSave();
 				return new Toast({
 					content: "Please fill in all fields",
 					timeout: 8000
@@ -980,7 +978,7 @@ export default {
 			}
 
 			if (!song.thumbnail) {
-				this.handleFailedSave();
+				saveButtonRef.handleFailedSave();
 				return new Toast({
 					content: "Please fill in all fields",
 					timeout: 8000
@@ -992,7 +990,7 @@ export default {
 				Number(song.skipDuration) + Number(song.duration) >
 				this.youtubeVideoDuration
 			) {
-				this.handleFailedSave();
+				saveButtonRef.handleFailedSave();
 				return new Toast({
 					content:
 						"Duration can't be higher than the length of the video",
@@ -1002,7 +1000,7 @@ export default {
 
 			// Title
 			if (!validation.isLength(song.title, 1, 100)) {
-				this.handleFailedSave();
+				saveButtonRef.handleFailedSave();
 				return new Toast({
 					content: "Title must have between 1 and 100 characters.",
 					timeout: 8000
@@ -1011,7 +1009,7 @@ export default {
 
 			// Artists
 			if (song.artists.length < 1 || song.artists.length > 10) {
-				this.handleFailedSave();
+				saveButtonRef.handleFailedSave();
 				return new Toast({
 					content:
 						"Invalid artists. You must have at least 1 artist and a maximum of 10 artists.",
@@ -1035,7 +1033,7 @@ export default {
 			});
 
 			if (error) {
-				this.handleFailedSave();
+				saveButtonRef.handleFailedSave();
 				return new Toast({ content: error, timeout: 8000 });
 			}
 
@@ -1059,13 +1057,13 @@ export default {
 				error = "You must have between 1 and 16 genres.";
 
 			if (error) {
-				this.handleFailedSave();
+				saveButtonRef.handleFailedSave();
 				return new Toast({ content: error, timeout: 8000 });
 			}
 
 			// Thumbnail
 			if (!validation.isLength(song.thumbnail, 1, 256)) {
-				this.handleFailedSave();
+				saveButtonRef.handleFailedSave();
 				return new Toast({
 					content:
 						"Thumbnail must have between 8 and 256 characters.",
@@ -1073,7 +1071,7 @@ export default {
 				});
 			}
 			if (this.useHTTPS && song.thumbnail.indexOf("https://") !== 0) {
-				this.handleFailedSave();
+				saveButtonRef.handleFailedSave();
 				return new Toast({
 					content: 'Thumbnail must start with "https://".',
 					timeout: 8000
@@ -1085,14 +1083,14 @@ export default {
 				song.thumbnail.indexOf("http://") !== 0 &&
 				song.thumbnail.indexOf("https://") !== 0
 			) {
-				this.handleFailedSave();
+				saveButtonRef.handleFailedSave();
 				return new Toast({
 					content: 'Thumbnail must start with "http://".',
 					timeout: 8000
 				});
 			}
 
-			this.saveStatus = "disabled";
+			saveButtonRef.status = "disabled";
 
 			return this.socket.emit(
 				`${this.songType}.update`,
@@ -1101,8 +1099,9 @@ export default {
 				res => {
 					new Toast({ content: res.message, timeout: 4000 });
 
-					if (res.status === "success") this.handleSuccessfulSave();
-					else this.handleFailedSave();
+					if (res.status === "success")
+						saveButtonRef.handleSuccessfulSave();
+					else saveButtonRef.handleFailedSave();
 
 					if (close)
 						this.closeModal({
@@ -1447,6 +1446,14 @@ export default {
 
 		.modal-card-foot {
 			justify-content: flex-end;
+
+			div {
+				display: flex;
+
+				div {
+					margin-right: 5px;
+				}
+			}
 		}
 	}
 }

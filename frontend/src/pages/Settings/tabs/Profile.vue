@@ -67,16 +67,8 @@
 				>{{ modifiedUser.bio.length }}/200</span
 			>
 		</p>
-		<transition name="save-button-transition" mode="out-in">
-			<button
-				class="button save-button-mixin"
-				:class="saveButtonStyle"
-				@click="saveChanges()"
-				:key="saveStatus"
-				:disabled="saveStatus === 'disabled'"
-				v-html="saveButtonMessage"
-			/>
-		</transition>
+
+		<save-button ref="saveButton" @clicked="saveChanges()" />
 	</div>
 </template>
 
@@ -88,11 +80,10 @@ import validation from "../../../validation";
 import io from "../../../io";
 
 import ProfilePicture from "../../../components/ui/ProfilePicture.vue";
-import SaveButton from "../../../mixins/SaveButton.vue";
+import SaveButton from "../../../components/ui/SaveButton.vue";
 
 export default {
-	components: { ProfilePicture },
-	mixins: [SaveButton],
+	components: { ProfilePicture, SaveButton },
 	computed: mapState({
 		userId: state => state.user.auth.userId,
 		originalUser: state => state.settings.originalUser,
@@ -139,7 +130,7 @@ export default {
 				!locationChanged &&
 				!nameChanged
 			) {
-				this.handleFailedSave();
+				this.$refs.saveButton.handleFailedSave();
 
 				new Toast({
 					content: "Please make a change before saving.",
@@ -156,7 +147,7 @@ export default {
 					timeout: 8000
 				});
 
-			this.saveStatus = "disabled";
+			this.$refs.saveButton.status = "disabled";
 
 			return this.socket.emit(
 				"users.updateName",
@@ -165,7 +156,7 @@ export default {
 				res => {
 					if (res.status !== "success") {
 						new Toast({ content: res.message, timeout: 8000 });
-						this.handleFailedSave();
+						this.$refs.saveButton.handleFailedSave();
 					} else {
 						new Toast({
 							content: "Successfully changed name",
@@ -177,7 +168,7 @@ export default {
 							value: name
 						});
 
-						this.handleSuccessfulSave();
+						this.$refs.saveButton.handleSuccessfulSave();
 					}
 				}
 			);
@@ -191,7 +182,7 @@ export default {
 					timeout: 8000
 				});
 
-			this.saveStatus = "disabled";
+			this.$refs.saveButton.status = "disabled";
 
 			return this.socket.emit(
 				"users.updateLocation",
@@ -200,7 +191,7 @@ export default {
 				res => {
 					if (res.status !== "success") {
 						new Toast({ content: res.message, timeout: 8000 });
-						this.handleFailedSave();
+						this.$refs.saveButton.handleFailedSave();
 					} else {
 						new Toast({
 							content: "Successfully changed location",
@@ -212,7 +203,7 @@ export default {
 							value: location
 						});
 
-						this.handleSuccessfulSave();
+						this.$refs.saveButton.handleSuccessfulSave();
 					}
 				}
 			);
@@ -226,7 +217,7 @@ export default {
 					timeout: 8000
 				});
 
-			this.saveStatus = "disabled";
+			this.$refs.saveButton.status = "disabled";
 
 			return this.socket.emit(
 				"users.updateBio",
@@ -235,7 +226,7 @@ export default {
 				res => {
 					if (res.status !== "success") {
 						new Toast({ content: res.message, timeout: 8000 });
-						this.handleFailedSave();
+						this.$refs.saveButton.handleFailedSave();
 					} else {
 						new Toast({
 							content: "Successfully changed bio",
@@ -247,7 +238,7 @@ export default {
 							value: bio
 						});
 
-						this.handleSuccessfulSave();
+						this.$refs.saveButton.handleSuccessfulSave();
 					}
 				}
 			);
@@ -255,7 +246,7 @@ export default {
 		changeAvatarType() {
 			const { avatar } = this.modifiedUser;
 
-			this.saveStatus = "disabled";
+			this.$refs.saveButton.status = "disabled";
 
 			return this.socket.emit(
 				"users.updateAvatarType",
@@ -264,7 +255,7 @@ export default {
 				res => {
 					if (res.status !== "success") {
 						new Toast({ content: res.message, timeout: 8000 });
-						this.handleFailedSave();
+						this.$refs.saveButton.handleFailedSave();
 					} else {
 						new Toast({
 							content: "Successfully updated avatar type",
@@ -276,7 +267,7 @@ export default {
 							value: avatar
 						});
 
-						this.handleSuccessfulSave();
+						this.$refs.saveButton.handleSuccessfulSave();
 					}
 				}
 			);

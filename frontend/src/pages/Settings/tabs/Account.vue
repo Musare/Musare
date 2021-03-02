@@ -51,16 +51,7 @@
 			></input-help-box>
 		</transition>
 
-		<transition name="save-button-transition" mode="out-in">
-			<button
-				class="button save-button-mixin"
-				:class="saveButtonStyle"
-				@click="saveChanges()"
-				:key="saveStatus"
-				:disabled="saveStatus === 'disabled'"
-				v-html="saveButtonMessage"
-			/>
-		</transition>
+		<save-button ref="saveButton" @clicked="saveChanges()" />
 
 		<!-- <div class="section-margin-bottom" />
 
@@ -112,11 +103,10 @@ import validation from "../../../validation";
 import io from "../../../io";
 
 import InputHelpBox from "../../../components/ui/InputHelpBox.vue";
-import SaveButton from "../../../mixins/SaveButton.vue";
+import SaveButton from "../../../components/ui/SaveButton.vue";
 
 export default {
-	components: { InputHelpBox },
-	mixins: [SaveButton],
+	components: { InputHelpBox, SaveButton },
 	data() {
 		return {
 			validation: {
@@ -198,7 +188,7 @@ export default {
 			if (emailAddressChanged) this.changeEmail();
 
 			if (!usernameChanged && !emailAddressChanged) {
-				this.handleFailedSave();
+				this.$refs.saveButton.handleFailedSave();
 
 				new Toast({
 					content: "Please make a change before saving.",
@@ -222,7 +212,7 @@ export default {
 					timeout: 8000
 				});
 
-			this.saveStatus = "disabled";
+			this.$refs.saveButton.saveStatus = "disabled";
 
 			return this.socket.emit(
 				"users.updateEmail",
@@ -231,7 +221,7 @@ export default {
 				res => {
 					if (res.status !== "success") {
 						new Toast({ content: res.message, timeout: 8000 });
-						this.handleFailedSave();
+						this.$refs.saveButton.handleFailedSave();
 					} else {
 						new Toast({
 							content: "Successfully changed email address",
@@ -243,7 +233,7 @@ export default {
 							value: email
 						});
 
-						this.handleSuccessfulSave();
+						this.$refs.saveButton.handleSuccessfulSave();
 					}
 				}
 			);
@@ -264,7 +254,7 @@ export default {
 					timeout: 8000
 				});
 
-			this.saveStatus = "disabled";
+			this.$refs.saveButton.saveStatus = "disabled";
 
 			return this.socket.emit(
 				"users.updateUsername",
@@ -273,7 +263,7 @@ export default {
 				res => {
 					if (res.status !== "success") {
 						new Toast({ content: res.message, timeout: 8000 });
-						this.handleFailedSave();
+						this.$refs.saveButton.handleFailedSave();
 					} else {
 						new Toast({
 							content: "Successfully changed username",
@@ -285,7 +275,7 @@ export default {
 							value: username
 						});
 
-						this.handleSuccessfulSave();
+						this.$refs.saveButton.handleSuccessfulSave();
 					}
 				}
 			);

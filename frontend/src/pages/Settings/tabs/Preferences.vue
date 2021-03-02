@@ -35,16 +35,8 @@
 				<p>Allow my activity log to be viewed publicly</p>
 			</label>
 		</p>
-		<transition name="save-button-transition" mode="out-in">
-			<button
-				class="button save-button-mixin"
-				:class="saveButtonStyle"
-				@click="saveChanges()"
-				:key="saveStatus"
-				:disabled="saveStatus === 'disabled'"
-				v-html="saveButtonMessage"
-			/>
-		</transition>
+
+		<save-button ref="saveButton" @clicked="saveChanges()" />
 	</div>
 </template>
 
@@ -53,10 +45,10 @@ import { mapState, mapActions } from "vuex";
 import Toast from "toasters";
 
 import io from "../../../io";
-import SaveButton from "../../../mixins/SaveButton.vue";
+import SaveButton from "../../../components/ui/SaveButton.vue";
 
 export default {
-	mixins: [SaveButton],
+	components: { SaveButton },
 	data() {
 		return {
 			localNightmode: false,
@@ -82,7 +74,6 @@ export default {
 			});
 
 			socket.on("keep.event:user.preferences.changed", preferences => {
-				console.log("changed");
 				this.localNightmode = preferences.nightmode;
 				this.localAutoSkipDisliked = preferences.autoSkipDisliked;
 				this.localActivityLogPublic = preferences.activityLogPublic;
@@ -101,10 +92,10 @@ export default {
 					timeout: 5000
 				});
 
-				return this.handleFailedSave();
+				return this.$refs.saveButton.handleFailedSave();
 			}
 
-			this.saveStatus = "disabled";
+			this.$refs.saveButton.status = "disabled";
 
 			return this.socket.emit(
 				"users.updatePreferences",
@@ -117,7 +108,7 @@ export default {
 					if (res.status !== "success") {
 						new Toast({ content: res.message, timeout: 8000 });
 
-						return this.handleFailedSave();
+						return this.$refs.saveButton.handleFailedSave();
 					}
 
 					new Toast({
@@ -125,7 +116,7 @@ export default {
 						timeout: 4000
 					});
 
-					return this.handleSuccessfulSave();
+					return this.$refs.saveButton.handleSuccessfulSave();
 				}
 			);
 		},
