@@ -1683,6 +1683,7 @@ export default {
 				},
 
 				next => {
+					PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();
 					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
 						.then(station => next(null, station))
 						.catch(next);
@@ -1857,6 +1858,7 @@ export default {
 				},
 
 				next => {
+					PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();
 					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
 						.then(station => next(null, station))
 						.catch(next);
@@ -2530,6 +2532,11 @@ export default {
 									},
 									next
 								);
+							},
+
+							next => {
+								PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();
+								next();
 							}
 						],
 						async err => {

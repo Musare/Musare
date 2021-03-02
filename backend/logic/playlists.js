@@ -361,11 +361,24 @@ class _PlaylistsModule extends CoreClass {
 
 						Promise.allSettled(promises)
 							.then(() => {
-								next();
+								next(null, data.playlist._id);
 							})
 							.catch(err => {
 								next(err);
 							});
+					},
+
+					(playlistId, next) => {
+						StationsModule.runJob("GET_STATIONS_THAT_INCLUDE_OR_EXCLUDE_PLAYLIST", { playlistId })
+							.then(response => {
+								response.stationIds.forEach(stationId => {
+									PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId })
+										.then()
+										.catch();
+								});
+							})
+							.catch();
+						next();
 					}
 				],
 				err => {

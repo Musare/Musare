@@ -1549,6 +1549,33 @@ class _StationsModule extends CoreClass {
 			);
 		});
 	}
+
+	/**
+	 * Gets stations that include or exclude a specific playlist
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.playlistId - the playlist id
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	GET_STATIONS_THAT_INCLUDE_OR_EXCLUDE_PLAYLIST(payload) {
+		return new Promise((resolve, reject) => {
+			DBModule.runJob(
+				"GET_MODEL",
+				{
+					modelName: "station"
+				},
+				this
+			).then(stationModel => {
+				stationModel.find(
+					{ $or: [{ includedPlaylists: payload.playlistId }, { excludedPlaylists: payload.playlistId }] },
+					(err, stations) => {
+						if (err) reject(err);
+						else resolve({ stationIds: stations.map(station => station._id) });
+					}
+				);
+			});
+		});
+	}
 }
 
 export default new _StationsModule();
