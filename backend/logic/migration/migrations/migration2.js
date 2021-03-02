@@ -52,7 +52,8 @@ export default async function migrate(MigrationModule) {
 												$set: {
 													playlist2: playlist2._id,
 													includedPlaylists: [],
-													excludedPlaylists: []
+													excludedPlaylists: [],
+													documentVersion: 2
 												}
 											},
 											(err, res) => {
