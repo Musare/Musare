@@ -2,6 +2,14 @@
 	<div>
 		<metadata title="Admin | Playlists" />
 		<div class="container">
+			<button
+				class="button is-primary"
+				@click="deleteOrphanedStationPlaylists()"
+			>
+				Delete orphaned station playlists
+			</button>
+			<br />
+			<br />
 			<table class="table is-striped">
 				<thead>
 					<tr>
@@ -58,6 +66,8 @@
 
 <script>
 import { mapState, mapActions } from "vuex";
+
+import Toast from "toasters";
 
 // import EditPlaylist from "../../../components/modals/EditPlaylist/index.vue";
 import UserIdToUsername from "../../../components/common/UserIdToUsername.vue";
@@ -121,6 +131,24 @@ export default {
 				length += song.duration;
 			});
 			return this.utils.formatTimeLong(length);
+		},
+		deleteOrphanedStationPlaylists() {
+			this.socket.emit(
+				"playlists.deleteOrphanedStationPlaylists",
+				res => {
+					if (res.status === "success") {
+						new Toast({
+							content: `${res.message}`,
+							timeout: 4000
+						});
+					} else {
+						new Toast({
+							content: `Error: ${res.message}`,
+							timeout: 8000
+						});
+					}
+				}
+			);
 		},
 		...mapActions("modalVisibility", ["openModal"])
 	}
