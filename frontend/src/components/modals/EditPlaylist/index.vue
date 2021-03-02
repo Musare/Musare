@@ -277,6 +277,25 @@
 											>
 
 											<i
+												v-if="!song.simpleSong"
+												class="material-icons report-icon"
+												@click="
+													reportSongInPlaylist(song)
+												"
+											>
+												flag
+											</i>
+											<i
+												v-if="!song.simpleSong"
+												class="material-icons edit-icon"
+												@click="
+													editSongInPlaylist(song)
+												"
+											>
+												edit
+											</i>
+
+											<i
 												v-if="
 													userId ===
 														playlist.createdBy
@@ -459,6 +478,14 @@ export default {
 		});
 	},
 	methods: {
+		editSongInPlaylist(song) {
+			this.$parent.editingSongId = song._id;
+			this.openModal({ sector: "station", modal: "editSong" });
+		},
+		reportSongInPlaylist(song) {
+			this.reportSong(song);
+			this.openModal({ sector: "station", modal: "report" });
+		},
 		importPlaylist() {
 			let isImportingPlaylist = true;
 
@@ -681,7 +708,8 @@ export default {
 				);
 			}
 		},
-		...mapActions("modalVisibility", ["closeModal"])
+		...mapActions("modals/report", ["reportSong"]),
+		...mapActions("modalVisibility", ["openModal", "closeModal"])
 	}
 };
 </script>

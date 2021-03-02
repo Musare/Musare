@@ -63,7 +63,7 @@
 							song.dislikes !== -1
 					"
 					class="material-icons report-icon"
-					@click="reportQueueSong(song)"
+					@click="report(song)"
 				>
 					flag
 				</i>
@@ -127,11 +127,11 @@ export default {
 		};
 	},
 	methods: {
-		reportQueueSong(song) {
-			this.updateReportQueueSong(song);
+		report(song) {
+			this.reportSong(song);
 			this.openModal({ sector: "station", modal: "report" });
 		},
-		...mapActions("station", ["updateReportQueueSong"]),
+		...mapActions("modals/report", ["reportSong"]),
 		...mapActions("modalVisibility", ["openModal"]),
 		formatDistance,
 		parseISO

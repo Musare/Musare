@@ -3,7 +3,7 @@
 		<div slot="body">
 			<div class="columns song-types">
 				<div
-					v-if="previousSong !== null && localQueueSong === null"
+					v-if="previousSong !== null && localSong === null"
 					class="column song-type"
 				>
 					<div
@@ -32,7 +32,7 @@
 											}}</strong>
 											<br />
 											<small>{{
-												previousSong.artists
+												previousSong.artists.join(", ")
 											}}</small>
 										</p>
 									</div>
@@ -47,7 +47,7 @@
 					</div>
 				</div>
 				<div
-					v-if="currentSong !== {} && localQueueSong === null"
+					v-if="currentSong !== {} && localSong === null"
 					class="column song-type"
 				>
 					<div
@@ -76,7 +76,7 @@
 											}}</strong>
 											<br />
 											<small>{{
-												currentSong.artists
+												currentSong.artists.join(", ")
 											}}</small>
 										</p>
 									</div>
@@ -90,17 +90,17 @@
 						/>
 					</div>
 				</div>
-				<div v-if="localQueueSong !== null" class="column song-type">
+				<div v-if="localSong !== null" class="column song-type">
 					<div class="card is-fullwidth">
 						<header class="card-header">
-							<p class="card-header-title">Queue Song</p>
+							<p class="card-header-title">Song</p>
 						</header>
 						<div class="card-content">
 							<article class="media">
 								<figure class="media-left">
 									<p class="image is-64x64">
 										<img
-											:src="localQueueSong.thumbnail"
+											:src="localSong.thumbnail"
 											onerror='this.src="/assets/notes-transparent.png"'
 										/>
 									</p>
@@ -109,11 +109,11 @@
 									<div class="content">
 										<p>
 											<strong>{{
-												localQueueSong.title
+												localSong.title
 											}}</strong>
 											<br />
 											<small>{{
-												localQueueSong.artists
+												localSong.artists.join(", ")
 											}}</small>
 										</p>
 									</div>
@@ -194,7 +194,7 @@ export default {
 		return {
 			isPreviousSongActive: false,
 			isCurrentSongActive: true,
-			localQueueSong: null,
+			localSong: null,
 			report: {
 				resolved: false,
 				songId: "",
@@ -248,7 +248,7 @@ export default {
 		...mapState({
 			currentSong: state => state.station.currentSong,
 			previousSong: state => state.station.previousSong,
-			queueSong: state => state.station.reportQueueSong
+			song: state => state.modals.report.song
 		})
 	},
 	mounted() {
@@ -258,10 +258,10 @@ export default {
 
 		this.report.songId = this.currentSong.songId;
 
-		if (this.queueSong !== null) {
-			this.localQueueSong = this.queueSong;
-			this.report.songId = this.queueSong.songId;
-			this.updateReportQueueSong(null);
+		if (this.song !== null) {
+			this.localSong = this.song;
+			this.report.songId = this.song.songId;
+			this.reportSong(null);
 		}
 	},
 	methods: {
@@ -299,7 +299,7 @@ export default {
 				}
 			}
 		},
-		...mapActions("station", ["updateReportQueueSong"]),
+		...mapActions("modals/report", ["reportSong"]),
 		...mapActions("modalVisibility", ["closeModal"])
 	}
 };

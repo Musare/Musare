@@ -13,6 +13,7 @@ import editUserModal from "./modules/modals/editUser";
 import editNewsModal from "./modules/modals/editNews";
 import viewPunishmentModal from "./modules/modals/viewPunishment";
 import viewReportModal from "./modules/modals/viewReport";
+import reportModal from "./modules/modals/report";
 
 Vue.use(Vuex);
 
@@ -31,7 +32,8 @@ export default new Vuex.Store({
 				editUser: editUserModal,
 				editNews: editNewsModal,
 				viewPunishment: viewPunishmentModal,
-				viewReport: viewReportModal
+				viewReport: viewReportModal,
+				report: reportModal
 			}
 		}
 	},
