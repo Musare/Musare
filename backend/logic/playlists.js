@@ -212,6 +212,29 @@ class _PlaylistsModule extends CoreClass {
 	}
 
 	/**
+	 * Gets a station playlist
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.staationId - the station id
+	 * @param {string} payload.includeSongs - include the songs
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	GET_STATION_PLAYLIST(payload) {
+		return new Promise((resolve, reject) => {
+			const includeObject = payload.includeSongs ? null : { songs: false };
+			PlaylistsModule.playlistModel.findOne(
+				{ type: "station", createdFor: payload.stationId },
+				includeObject,
+				(err, playlist) => {
+					if (err) reject(new Error(err));
+					else if (!playlist) reject(new Error("Playlist not found"));
+					else resolve({ playlist });
+				}
+			);
+		});
+	}
+
+	/**
 	 * Adds a song to a playlist
 	 *
 	 * @param {object} payload - object that contains the payload
@@ -372,9 +395,7 @@ class _PlaylistsModule extends CoreClass {
 						StationsModule.runJob("GET_STATIONS_THAT_INCLUDE_OR_EXCLUDE_PLAYLIST", { playlistId })
 							.then(response => {
 								response.stationIds.forEach(stationId => {
-									PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId })
-										.then()
-										.catch();
+									PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();
 								});
 							})
 							.catch();
