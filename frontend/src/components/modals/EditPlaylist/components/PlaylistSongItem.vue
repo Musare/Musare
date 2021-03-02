@@ -34,8 +34,9 @@
 			<i
 				class="material-icons"
 				@click="showPlaylistDropdown = !showPlaylistDropdown"
-				>queue</i
 			>
+				queue
+			</i>
 		</div>
 	</div>
 </template>

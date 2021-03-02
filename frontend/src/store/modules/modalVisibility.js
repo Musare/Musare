@@ -26,7 +26,7 @@ const state = {
 			viewPunishment: false
 		}
 	},
-	currentlyActive: {}
+	currentlyActive: []
 };
 
 const getters = {};
@@ -37,7 +37,9 @@ const actions = {
 			const recaptchaEnabled = await lofig.get("recaptcha.enabled");
 			if (recaptchaEnabled) window.location.reload();
 		}
+
 		commit("closeModal", data);
+		commit("closeCurrentModal");
 	},
 	openModal: ({ commit }, data) => {
 		commit("openModal", data);
@@ -49,18 +51,17 @@ const actions = {
 
 const mutations = {
 	closeModal(state, data) {
-		const { sector, modal } = data;
-		state.modals[sector][modal] = false;
+		state.modals[data.sector][data.modal] = false;
 	},
 	openModal(state, data) {
-		const { sector, modal } = data;
-		state.modals[sector][modal] = true;
-		state.currentlyActive = { sector, modal };
+		state.modals[data.sector][data.modal] = true;
+		state.currentlyActive.unshift(data);
 	},
 	closeCurrentModal(state) {
-		const { sector, modal } = state.currentlyActive;
+		const { sector, modal } = state.currentlyActive[0];
 		state.modals[sector][modal] = false;
-		state.currentlyActive = {};
+
+		state.currentlyActive.shift();
 	}
 };
 

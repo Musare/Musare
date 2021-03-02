@@ -98,7 +98,6 @@ export default {
 			shift: false,
 			ctrl: false,
 			handler: () => {
-				console.log(this.currentlyActive);
 				if (Object.keys(this.currentlyActive).length !== 0)
 					this.closeCurrentModal();
 			}
