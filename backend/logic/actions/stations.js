@@ -2332,7 +2332,7 @@ export default {
 					this.log(station);
 
 					if (station) return next("A station with that name or display name already exists.");
-					const { name, displayName, description, genres, playlist, type, blacklistedGenres } = data;
+					const { name, displayName, description, playlist, type, genres, blacklistedGenres } = data;
 					const stationId = mongoose.Types.ObjectId();
 
 					if (type === "official") {
@@ -2341,37 +2341,116 @@ export default {
 							if (!user) return next("User not found.");
 							if (user.role !== "admin") return next("Admin required.");
 
-							return playlistModel.create(
-								{
-									isUserModifiable: false,
-									displayName: `Station - ${displayName}`,
-									songs: [],
-									createdBy: "Musare",
-									createdFor: `${stationId}`,
-									createdAt: Date.now(),
-									type: "station"
-								},
-
-								(err, playlist2) => {
-									if (err) next(err);
-									else {
-										stationModel.create(
-											{
-												_id: stationId,
-												name,
-												displayName,
-												description,
-												type,
-												privacy: "private",
-												playlist2: playlist2._id,
-												playlist,
-												genres,
-												blacklistedGenres,
-												currentSong: StationsModule.defaultSong
+							return async.waterfall(
+								[
+									next => {
+										const playlists = [];
+										async.eachLimit(
+											genres,
+											1,
+											(genre, next) => {
+												PlaylistsModule.runJob(
+													"GET_GENRE_PLAYLIST",
+													{ genre, includeSongs: false },
+													this
+												).then(response => {
+													playlists.push(response.playlist);
+													next();
+												});
 											},
-											next
+											err => {
+												next(
+													err,
+													playlists.map(playlist => playlist._id.toString())
+												);
+											}
 										);
+									},
+
+									(genrePlaylistIds, next) => {
+										const playlists = [];
+										async.eachLimit(
+											blacklistedGenres,
+											1,
+											(genre, next) => {
+												PlaylistsModule.runJob(
+													"GET_GENRE_PLAYLIST",
+													{ genre, includeSongs: false },
+													this
+												).then(response => {
+													playlists.push(response.playlist);
+													next();
+												});
+											},
+											err => {
+												next(
+													err,
+													genrePlaylistIds,
+													playlists.map(playlist => playlist._id.toString())
+												);
+											}
+										);
+									},
+
+									(genrePlaylistIds, blacklistedGenrePlaylistIds, next) => {
+										const duplicateGenre =
+											genrePlaylistIds.length !== new Set(genrePlaylistIds).size;
+										const duplicateBlacklistedGenre =
+											genrePlaylistIds.length !== new Set(genrePlaylistIds).size;
+										const duplicateCross =
+											genrePlaylistIds.length + blacklistedGenrePlaylistIds.length !==
+											new Set([...genrePlaylistIds, ...blacklistedGenrePlaylistIds]).size;
+										if (duplicateGenre)
+											return next("You cannot have the same genre included twice.");
+										if (duplicateBlacklistedGenre)
+											return next("You cannot have the same blacklisted genre included twice.");
+										if (duplicateCross)
+											return next(
+												"You cannot have the same genre included and blacklisted at the same time."
+											);
+										return next(null, genrePlaylistIds, blacklistedGenrePlaylistIds);
 									}
+								],
+								(err, genrePlaylistIds, blacklistedGenrePlaylistIds) => {
+									if (err) return next(err);
+									return playlistModel.create(
+										{
+											isUserModifiable: false,
+											displayName: `Station - ${displayName}`,
+											songs: [],
+											createdBy: "Musare",
+											createdFor: `${stationId}`,
+											createdAt: Date.now(),
+											type: "station"
+										},
+
+										(err, playlist2) => {
+											if (err) next(err);
+											else {
+												stationModel.create(
+													{
+														_id: stationId,
+														name,
+														displayName,
+														description,
+														type,
+														privacy: "private",
+														playlist2: playlist2._id,
+														playlist,
+														currentSong: StationsModule.defaultSong
+													},
+													(err, station) => {
+														next(
+															err,
+															station,
+															genrePlaylistIds,
+															blacklistedGenrePlaylistIds
+														);
+													}
+												);
+											}
+										}
+									);
 								}
 							);
 						});
@@ -2405,40 +2484,102 @@ export default {
 											queue: [],
 											currentSong: null
 										},
-										next
+										(err, station) => {
+											next(err, station, null, null);
+										}
 									);
 								}
 							}
 						);
 					}
+				},
+
+				(station, genrePlaylistIds, blacklistedGenrePlaylistIds, next) => {
+					if (station.type !== "official") return next(null, station);
+
+					const stationId = station._id;
+					console.log(111, station, genrePlaylistIds, blacklistedGenrePlaylistIds, next);
+
+					return async.waterfall(
+						[
+							next => {
+								async.eachLimit(
+									genrePlaylistIds,
+									1,
+									(playlistId, next) => {
+										StationsModule.runJob("INCLUDE_PLAYLIST", { stationId, playlistId }, this)
+											.then(() => {
+												next();
+											})
+											.catch(next);
+									},
+									next
+								);
+							},
+
+							next => {
+								async.eachLimit(
+									blacklistedGenrePlaylistIds,
+									1,
+									(playlistId, next) => {
+										StationsModule.runJob("EXCLUDE_PLAYLIST", { stationId, playlistId }, this)
+											.then(() => {
+												next();
+											})
+											.catch(next);
+									},
+									next
+								);
+							}
+						],
+						async err => {
+							if (err) {
+								err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+								this.log(
+									"ERROR",
+									"STATIONS_CREATE",
+									`Created station ${stationId} successfully, but an error occurred during playing including/excluding. Error: ${err}`
+								);
+							}
+							next(null, station, err);
+						}
+					);
 				}
 			],
-			async (err, station) => {
+			async (err, station, extraError) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "STATIONS_CREATE", `Creating station failed. "${err}"`);
-					return cb({ status: "failure", message: err });
-				}
-				this.log("SUCCESS", "STATIONS_CREATE", `Created station "${station._id}" successfully.`);
+					cb({ status: "failure", message: err });
+				} else {
+					this.log("SUCCESS", "STATIONS_CREATE", `Created station "${station._id}" successfully.`);
 
-				CacheModule.runJob("PUB", {
-					channel: "station.create",
-					value: station._id
-				});
+					CacheModule.runJob("PUB", {
+						channel: "station.create",
+						value: station._id
+					});
 
-				ActivitiesModule.runJob("ADD_ACTIVITY", {
-					userId: session.userId,
-					type: "station__create",
-					payload: {
-						message: `Created a station named <stationId>${station.displayName}</stationId>`,
-						stationId: station._id
+					ActivitiesModule.runJob("ADD_ACTIVITY", {
+						userId: session.userId,
+						type: "station__create",
+						payload: {
+							message: `Created a station named <stationId>${station.displayName}</stationId>`,
+							stationId: station._id
+						}
+					});
+
+					if (!extraError) {
+						cb({
+							status: "success",
+							message: "Successfully created station."
+						});
+					} else {
+						cb({
+							status: "success",
+							message: `Successfully created station, but with one error at the end: ${extraError}`
+						});
 					}
-				});
-
-				return cb({
-					status: "success",
-					message: "Successfully created station."
-				});
+				}
 			}
 		);
 	}),
