@@ -1,5 +1,6 @@
 <template>
 	<div class="universal-item queue-item">
+		<add-to-playlist-dropdown v-if="showPlaylistDropdown" :song="song" />
 		<div id="thumbnail-and-info">
 			<img
 				class="item-thumbnail"
@@ -63,7 +64,13 @@
 					"
 					class="material-icons report-icon"
 					@click="reportQueueSong(song)"
-					>flag</i
+				>
+					flag
+				</i>
+				<i
+					class="material-icons"
+					@click="showPlaylistDropdown = !showPlaylistDropdown"
+					>queue</i
 				>
 				<i
 					v-if="
@@ -74,8 +81,9 @@
 					"
 					class="material-icons edit-icon"
 					@click="$parent.$parent.$parent.editSong(song)"
-					>edit</i
 				>
+					edit
+				</i>
 				<i
 					v-if="
 						station.type === 'community' &&
@@ -94,11 +102,12 @@
 import { mapActions } from "vuex";
 import { formatDistance, parseISO } from "date-fns";
 
+import AddToPlaylistDropdown from "../../../../../components/ui/AddToPlaylistDropdown.vue";
 import UserIdToUsername from "../../../../../components/common/UserIdToUsername.vue";
 import utils from "../../../../../../js/utils";
 
 export default {
-	components: { UserIdToUsername },
+	components: { UserIdToUsername, AddToPlaylistDropdown },
 	props: {
 		song: {
 			type: Object,
@@ -113,7 +122,8 @@ export default {
 	},
 	data() {
 		return {
-			utils
+			utils,
+			showPlaylistDropdown: false
 		};
 	},
 	methods: {
@@ -137,6 +147,15 @@ export default {
 	}
 }
 
+/deep/ #nav-dropdown {
+	margin-top: 36px;
+
+	/deep/ .nav-dropdown-items {
+		position: absolute;
+		right: 0;
+	}
+}
+
 .queue-item {
 	#thumbnail-and-info,
 	#duration-and-actions {
@@ -146,6 +165,10 @@ export default {
 
 	#duration-and-actions {
 		margin-left: 5px;
+
+		.universal-item-actions div i {
+			margin-left: 5px;
+		}
 	}
 
 	#thumbnail-and-info {

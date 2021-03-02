@@ -1,5 +1,6 @@
 <template>
 	<div class="universal-item playlist-song-item">
+		<add-to-playlist-dropdown v-if="showPlaylistDropdown" :song="song" />
 		<div id="thumbnail-and-info">
 			<img
 				v-if="song.thumbnail"
@@ -30,17 +31,30 @@
 		</div>
 		<div class="universal-item-actions">
 			<slot name="actions" />
+			<i
+				class="material-icons"
+				@click="showPlaylistDropdown = !showPlaylistDropdown"
+				>queue</i
+			>
 		</div>
 	</div>
 </template>
 
 <script>
+import AddToPlaylistDropdown from "../../../ui/AddToPlaylistDropdown.vue";
+
 export default {
+	components: { AddToPlaylistDropdown },
 	props: {
 		song: {
 			type: Object,
 			default: () => {}
 		}
+	},
+	data() {
+		return {
+			showPlaylistDropdown: false
+		};
 	}
 };
 </script>
@@ -50,6 +64,15 @@ export default {
 	.playlist-song-item {
 		background-color: var(--dark-grey-3) !important;
 		border: 0 !important;
+	}
+}
+
+/deep/ #nav-dropdown {
+	margin-top: 36px;
+
+	/deep/ .nav-dropdown-items {
+		position: absolute;
+		right: 20px;
 	}
 }
 
@@ -64,6 +87,10 @@ export default {
 
 	.universal-item-actions {
 		margin-left: 5px;
+
+		i {
+			margin-left: 5px;
+		}
 	}
 
 	.item-thumbnail {
@@ -72,7 +99,7 @@ export default {
 	}
 
 	#thumbnail-and-info {
-		width: calc(100% - 160px);
+		width: calc(100% - 120px);
 	}
 
 	#song-info {

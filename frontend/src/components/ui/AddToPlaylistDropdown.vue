@@ -1,6 +1,10 @@
 <template>
 	<div id="nav-dropdown">
-		<div class="nav-dropdown-items" v-if="playlists.length > 0">
+		<div
+			class="nav-dropdown-items"
+			v-if="playlists.length > 0"
+			v-click-outside="() => (this.$parent.showPlaylistDropdown = false)"
+		>
 			<!-- <a class="nav-item" id="nightmode-toggle">
 				<span>Nightmode</span>
 				<label class="switch">
@@ -37,21 +41,20 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
-
 import Toast from "toasters";
-import io from "../../../io";
+import io from "../../io";
 
 export default {
+	props: {
+		song: {
+			type: Object,
+			default: () => {}
+		}
+	},
 	data() {
 		return {
 			playlists: []
 		};
-	},
-	computed: {
-		...mapState("station", {
-			currentSong: state => state.currentSong
-		})
 	},
 	mounted() {
 		io.getSocket(socket => {
@@ -95,13 +98,13 @@ export default {
 				this.socket.emit(
 					"playlists.addSongToPlaylist",
 					false,
-					this.currentSong.songId,
+					this.song.songId,
 					playlistId,
 					res => {
 						new Toast({ content: res.message, timeout: 4000 });
 
 						if (res.status === "success") {
-							this.playlists[index].songs.push(this.currentSong);
+							this.playlists[index].songs.push(this.song);
 							this.playlists[index].hasSong = true;
 						}
 					}
@@ -109,7 +112,7 @@ export default {
 			} else {
 				this.socket.emit(
 					"playlists.removeSongFromPlaylist",
-					this.currentSong.songId,
+					this.song.songId,
 					playlistId,
 					res => {
 						new Toast({ content: res.message, timeout: 4000 });
@@ -117,7 +120,7 @@ export default {
 						if (res.status === "success") {
 							this.playlists[index].songs.forEach(
 								(song, index) => {
-									if (song.songId === this.currentSong.songId)
+									if (song.songId === this.song.songId)
 										this.playlists[index].songs.splice(
 											index,
 											1
@@ -136,7 +139,7 @@ export default {
 				let hasSong = false;
 
 				for (let song = 0; song < playlist.songs.length; song += 1) {
-					if (playlist.songs[song].songId === this.currentSong.songId)
+					if (playlist.songs[song].songId === this.song.songId)
 						hasSong = true;
 				}
 
@@ -172,10 +175,7 @@ export default {
 }
 
 #nav-dropdown {
-	position: absolute;
-	margin-left: 4px;
 	z-index: 1;
-	margin-bottom: 36px;
 }
 
 #nav-dropdown-triangle {
@@ -190,8 +190,7 @@ export default {
 	background-color: var(--white);
 	padding: 5px;
 	border-radius: 5px;
-	position: relative;
-	right: calc(100% - 110px);
+	z-index: 1;
 
 	.nav-item {
 		width: 100%;

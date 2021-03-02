@@ -247,6 +247,7 @@
 										</div>
 										<add-to-playlist-dropdown
 											v-if="showPlaylistDropdown"
+											:song="currentSong"
 										/>
 									</div>
 								</div>
@@ -504,7 +505,7 @@ import MainFooter from "../../components/layout/MainFooter.vue";
 import Z404 from "../404.vue";
 
 import FloatingBox from "../../components/ui/FloatingBox.vue";
-import AddToPlaylistDropdown from "./components/AddToPlaylistDropdown.vue";
+import AddToPlaylistDropdown from "../../components/ui/AddToPlaylistDropdown.vue";
 
 import io from "../../io";
 import keyboardShortcuts from "../../keyboardShortcuts";
@@ -2112,6 +2113,17 @@ export default {
 					#add-song-to-playlist {
 						display: flex;
 						flex-direction: column-reverse;
+
+						#nav-dropdown {
+							position: absolute;
+							margin-left: 4px;
+							margin-bottom: 36px;
+
+							.nav-dropdown-items {
+								position: relative;
+								right: calc(100% - 110px);
+							}
+						}
 
 						.control {
 							width: fit-content;
