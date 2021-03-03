@@ -20,7 +20,10 @@ export default async function migrate(MigrationModule) {
 					stationModel.find({ documentVersion: 1 }, (err, stations) => {
 						this.log("INFO", `Migration 2. Found ${stations.length} stations with document version 1.`);
 
-						next(null, stations);
+						next(
+							null,
+							stations.map(station => station._doc)
+						);
 					});
 				},
 
@@ -41,7 +44,6 @@ export default async function migrate(MigrationModule) {
 									type: "station",
 									documentVersion: 1
 								},
-
 								(err, playlist2) => {
 									if (err) next(err);
 									else {
@@ -53,6 +55,7 @@ export default async function migrate(MigrationModule) {
 													playlist2: playlist2._id,
 													includedPlaylists: [],
 													excludedPlaylists: [],
+													playlist: station.type === "official" ? [] : station.playlist,
 													documentVersion: 2
 												}
 											},

@@ -49,5 +49,5 @@ export default {
 	theme: { type: String, enum: ["blue", "purple", "teal", "orange"], default: "blue" },
 	includedPlaylists: [{ type: String }],
 	excludedPlaylists: [{ type: String }],
-	documentVersion: { type: Number, default: 1, required: true }
+	documentVersion: { type: Number, default: 2, required: true }
 };
