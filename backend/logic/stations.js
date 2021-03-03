@@ -570,7 +570,7 @@ class _StationsModule extends CoreClass {
 					},
 
 					(station, next) => {
-						if (station.playlist.length === 0) next(true, "No songs available.");
+						if (station.playlist.length === 0) next("No songs available.");
 						else {
 							next(null, station.playlist[0]);
 						}
@@ -795,7 +795,7 @@ class _StationsModule extends CoreClass {
 													next(null, response.song, 0, station);
 												})
 												.catch(err => {
-													if (err === "No songs available") next(null, null, 0, station);
+													if (err === "No songs available.") next(null, null, 0, station);
 													else next(err);
 												});
 										})

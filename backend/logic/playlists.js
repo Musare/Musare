@@ -426,7 +426,13 @@ class _PlaylistsModule extends CoreClass {
 						1,
 						(playlist, next) => {
 							StationsModule.runJob("GET_STATION", { stationId: playlist.createdFor }, this)
-								.then(() => {
+								.then(station => {
+									console.log(111);
+									console.dir(station.playlist2);
+									console.dir(playlist._id);
+									if (station.playlist2 !== playlist._id.toString()) {
+										orphanedPlaylists.push(playlist);
+									}
 									next();
 								})
 								.catch(err => {
