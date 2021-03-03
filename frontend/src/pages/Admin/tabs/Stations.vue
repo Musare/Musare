@@ -255,7 +255,7 @@ export default {
 					timeout: 3000
 				});
 
-			return this.socket.emit(
+			return this.socket.dispatch(
 				"stations.create",
 				{
 					name,
@@ -276,7 +276,7 @@ export default {
 			);
 		},
 		removeStation(index) {
-			this.socket.emit(
+			this.socket.dispatch(
 				"stations.remove",
 				this.stations[index]._id,
 				res => {
@@ -339,10 +339,10 @@ export default {
 			this.newStation.blacklistedGenres.splice(index, 1);
 		},
 		init() {
-			this.socket.emit("stations.index", data => {
+			this.socket.dispatch("stations.index", data => {
 				this.loadStations(data.stations);
 			});
-			this.socket.emit("apis.joinAdminRoom", "stations", () => {});
+			this.socket.dispatch("apis.joinAdminRoom", "stations", () => {});
 		},
 		...mapActions("modalVisibility", ["openModal"]),
 		...mapActions("admin/stations", [

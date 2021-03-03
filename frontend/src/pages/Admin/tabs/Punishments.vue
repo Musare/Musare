@@ -137,7 +137,7 @@ export default {
 			this.openModal({ sector: "admin", modal: "viewPunishment" });
 		},
 		banIP() {
-			this.socket.emit(
+			this.socket.dispatch(
 				"punishments.banIP",
 				this.ipBan.ip,
 				this.ipBan.reason,
@@ -148,10 +148,10 @@ export default {
 			);
 		},
 		init() {
-			this.socket.emit("punishments.index", res => {
+			this.socket.dispatch("punishments.index", res => {
 				if (res.status === "success") this.punishments = res.data;
 			});
-			this.socket.emit("apis.joinAdminRoom", "punishments", () => {});
+			this.socket.dispatch("apis.joinAdminRoom", "punishments", () => {});
 		},
 		...mapActions("modalVisibility", ["openModal"]),
 		...mapActions("admin/punishments", ["viewPunishment"])

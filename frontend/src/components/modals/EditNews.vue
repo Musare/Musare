@@ -186,7 +186,7 @@ export default {
 		io.getSocket(socket => {
 			this.socket = socket;
 
-			this.socket.emit(`news.getNewsFromId`, this.newsId, res => {
+			this.socket.dispatch(`news.getNewsFromId`, this.newsId, res => {
 				if (res.status === "success") {
 					const news = res.data;
 					this.editNews(news);
@@ -227,16 +227,21 @@ export default {
 			this.removeChange({ type, index });
 		},
 		updateNews(close) {
-			this.socket.emit("news.update", this.news._id, this.news, res => {
-				new Toast({ content: res.message, timeout: 4000 });
-				if (res.status === "success") {
-					if (close)
-						this.closeModal({
-							sector: this.sector,
-							modal: "editNews"
-						});
+			this.socket.dispatch(
+				"news.update",
+				this.news._id,
+				this.news,
+				res => {
+					new Toast({ content: res.message, timeout: 4000 });
+					if (res.status === "success") {
+						if (close)
+							this.closeModal({
+								sector: this.sector,
+								modal: "editNews"
+							});
+					}
 				}
-			});
+			);
 		},
 		...mapActions("modalVisibility", ["closeModal"]),
 		...mapActions("modals/editNews", [

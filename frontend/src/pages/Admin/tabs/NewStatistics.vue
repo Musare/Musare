@@ -210,7 +210,7 @@ export default {
 	},
 	methods: {
 		init() {
-			this.socket.emit("utils.getModules", data => {
+			this.socket.dispatch("utils.getModules", data => {
 				console.log(data);
 				if (data.status === "success") {
 					this.modules = data.modules;
@@ -218,7 +218,7 @@ export default {
 			});
 
 			if (this.$route.query.moduleName) {
-				this.socket.emit(
+				this.socket.dispatch(
 					"utils.getModule",
 					this.$route.query.moduleName,
 					data => {

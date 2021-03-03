@@ -148,10 +148,12 @@ lofig.fetchConfig().then(config => {
 		window.stop();
 	}
 
-	const { serverDomain } = config;
-	io.init(serverDomain);
+	// const { serverDomain } = config;
+	io.init("ws://localhost:8080/ws");
 	io.getSocket(socket => {
 		socket.on("ready", (loggedIn, role, username, userId) => {
+			console.log("READY", loggedIn, role, username, userId);
+
 			store.dispatch("user/auth/authData", {
 				loggedIn,
 				role,
@@ -244,3 +246,14 @@ new Vue({
 	el: "#root",
 	render: wrapper => wrapper(App)
 });
+
+// const ws = new WebSocket("ws://localhost:8080/ws");
+
+// ws.onopen = () => {
+// 	// eslint-disable-next-line no-alert
+// 	alert("Now connected");
+// };
+
+// ws.onmessage = e => {
+// 	console.log("Message from server:", e.data);
+// };

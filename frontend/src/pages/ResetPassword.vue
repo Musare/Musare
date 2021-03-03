@@ -345,7 +345,7 @@ export default {
 			this.hasEmailBeenSentAlready = false;
 
 			if (this.mode === "set") {
-				return this.socket.emit("users.requestPassword", res => {
+				return this.socket.dispatch("users.requestPassword", res => {
 					new Toast({ content: res.message, timeout: 8000 });
 					if (res.status === "success") {
 						this.step = 2;
@@ -353,7 +353,7 @@ export default {
 				});
 			}
 
-			return this.socket.emit(
+			return this.socket.dispatch(
 				"users.requestPasswordReset",
 				this.email,
 				res => {
@@ -372,7 +372,7 @@ export default {
 					timeout: 8000
 				});
 
-			return this.socket.emit(
+			return this.socket.dispatch(
 				this.mode === "set"
 					? "users.verifyPasswordCode"
 					: "users.verifyPasswordResetCode",
@@ -401,7 +401,7 @@ export default {
 					timeout: 8000
 				});
 
-			return this.socket.emit(
+			return this.socket.dispatch(
 				this.mode === "set"
 					? "users.changePasswordWithCode"
 					: "users.changePasswordWithResetCode",

@@ -271,7 +271,7 @@ export default {
 	},
 	methods: {
 		init() {
-			this.socket.emit("apis.joinAdminRoom", "statistics", () => {});
+			this.socket.dispatch("apis.joinAdminRoom", "statistics", () => {});
 			this.socket.on(
 				"event:admin.statistics.success.units.minute",
 				units => {

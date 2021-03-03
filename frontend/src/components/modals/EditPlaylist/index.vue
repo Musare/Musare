@@ -414,7 +414,7 @@ export default {
 		io.getSocket(socket => {
 			this.socket = socket;
 
-			this.socket.emit("playlists.getPlaylist", this.editing, res => {
+			this.socket.dispatch("playlists.getPlaylist", this.editing, res => {
 				if (res.status === "success") {
 					this.playlist = res.data;
 					this.playlist.songs.sort((a, b) => a.position - b.position);
@@ -507,7 +507,7 @@ export default {
 				}
 			}, 750);
 
-			return this.socket.emit(
+			return this.socket.dispatch(
 				"playlists.addSetToPlaylist",
 				this.search.playlist.query,
 				this.playlist._id,
@@ -545,7 +545,7 @@ export default {
 					});
 			});
 
-			this.socket.emit(
+			this.socket.dispatch(
 				"playlists.repositionSongs",
 				this.playlist._id,
 				songsBeingChanged,
@@ -562,17 +562,21 @@ export default {
 			return this.utils.formatTimeLong(length);
 		},
 		shuffle() {
-			this.socket.emit("playlists.shuffle", this.playlist._id, res => {
-				new Toast({ content: res.message, timeout: 4000 });
-				if (res.status === "success") {
-					this.playlist.songs = res.data.songs.sort(
-						(a, b) => a.position - b.position
-					);
+			this.socket.dispatch(
+				"playlists.shuffle",
+				this.playlist._id,
+				res => {
+					new Toast({ content: res.message, timeout: 4000 });
+					if (res.status === "success") {
+						this.playlist.songs = res.data.songs.sort(
+							(a, b) => a.position - b.position
+						);
+					}
 				}
-			});
+			);
 		},
 		addSongToPlaylist(id, index) {
-			this.socket.emit(
+			this.socket.dispatch(
 				"playlists.addSongToPlaylist",
 				false,
 				id,
@@ -586,16 +590,16 @@ export default {
 		},
 		removeSongFromPlaylist(id) {
 			if (this.playlist.displayName === "Liked Songs") {
-				this.socket.emit("songs.unlike", id, res => {
+				this.socket.dispatch("songs.unlike", id, res => {
 					new Toast({ content: res.message, timeout: 4000 });
 				});
 			}
 			if (this.playlist.displayName === "Disliked Songs") {
-				this.socket.emit("songs.undislike", id, res => {
+				this.socket.dispatch("songs.undislike", id, res => {
 					new Toast({ content: res.message, timeout: 4000 });
 				});
 			} else {
-				this.socket.emit(
+				this.socket.dispatch(
 					"playlists.removeSongFromPlaylist",
 					id,
 					this.playlist._id,
@@ -620,7 +624,7 @@ export default {
 					timeout: 8000
 				});
 
-			return this.socket.emit(
+			return this.socket.dispatch(
 				"playlists.updateDisplayName",
 				this.playlist._id,
 				this.playlist.displayName,
@@ -630,7 +634,7 @@ export default {
 			);
 		},
 		removePlaylist() {
-			this.socket.emit("playlists.remove", this.playlist._id, res => {
+			this.socket.dispatch("playlists.remove", this.playlist._id, res => {
 				new Toast({ content: res.message, timeout: 3000 });
 				if (res.status === "success") {
 					this.closeModal({
@@ -698,7 +702,7 @@ export default {
 		updatePrivacy() {
 			const { privacy } = this.playlist;
 			if (privacy === "public" || privacy === "private") {
-				this.socket.emit(
+				this.socket.dispatch(
 					"playlists.updatePrivacy",
 					this.playlist._id,
 					privacy,

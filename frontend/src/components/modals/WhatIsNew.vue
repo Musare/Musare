@@ -82,7 +82,7 @@ export default {
 	mounted() {
 		io.getSocket(true, socket => {
 			this.socket = socket;
-			this.socket.emit("news.newest", res => {
+			this.socket.dispatch("news.newest", res => {
 				this.news = res.data;
 				if (this.news && localStorage.getItem("firstVisited")) {
 					if (localStorage.getItem("whatIsNew")) {

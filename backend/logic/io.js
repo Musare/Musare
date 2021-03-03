@@ -4,7 +4,8 @@
 
 import config from "config";
 import async from "async";
-import socketio from "socket.io";
+import WebSocket from "ws";
+import { EventEmitter } from "events";
 
 import CoreClass from "../core";
 
@@ -48,20 +49,34 @@ class _IOModule extends CoreClass {
 		// TODO: Check every 30s/, for all sockets, if they are still allowed to be in the rooms they are in, and on socket at all (permission changing/banning)
 		const server = await AppModule.runJob("SERVER");
 
-		this._io = socketio(server);
 		// this._io.origins(config.get("cors.origin"));
+
+		// this._io = socketio(server);
+
+		this._io = new WebSocket.Server({ server, path: "/ws" });
 
 		return new Promise(resolve => {
 			this.setStage(3);
 
-			this._io.use(async (socket, cb) => {
-				IOModule.runJob("HANDLE_IO_USE", { socket, cb });
-			});
+			// this._io.use(async (socket, cb) => {
+			// 	IOModule.runJob("HANDLE_IO_USE", { socket, cb });
+			// });
 
 			this.setStage(4);
 
-			this._io.on("connection", async socket => {
-				IOModule.runJob("HANDLE_IO_CONNECTION", { socket });
+			this._io.on("connection", async (socket, req) => {
+				socket.dispatch = (...args) => socket.send(JSON.stringify(args));
+
+				console.log(socket.actions);
+
+				socket.actions = new EventEmitter();
+				socket.actions.setMaxListeners(0);
+				socket.listen = (target, cb) => socket.actions.addListener(target, args => cb(args));
+
+				socket.dispatch("test2", { color: "red" }, 9);
+				IOModule.runJob("HANDLE_IO_USE", { socket, req }).then(socket =>
+					IOModule.runJob("HANDLE_IO_CONNECTION", { socket })
+				);
 			});
 
 			this.setStage(5);
@@ -370,17 +385,17 @@ class _IOModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async EMIT_TO_ROOM(payload) {
-		return new Promise(resolve => {
-			const { sockets } = IOModule._io.sockets;
-			Object.keys(sockets).forEach(socketKey => {
-				const socket = sockets[socketKey];
-				if (socket.rooms[payload.room]) {
-					socket.emit(...payload.args);
-				}
-			});
+		return new Promise(resolve =>
+			// const { sockets } = IOModule._io.sockets;
+			// Object.keys(sockets).forEach(socketKey => {
+			// 	const socket = sockets[socketKey];
+			// 	if (socket.rooms[payload.room]) {
+			// 		socket.dispatch(...payload.args);
+			// 	}
+			// });
 
-			return resolve();
-		});
+			resolve()
+		);
 	}
 
 	/**
@@ -410,27 +425,25 @@ class _IOModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async HANDLE_IO_USE(payload) {
+		console.log("io use");
+
 		return new Promise(resolve => {
-			const { socket, cb } = payload;
+			const { socket, req } = payload;
 
 			let SID;
 
-			socket.ip = socket.request.headers["x-forwarded-for"] || "0.0.0.0";
+			socket.ip = req.headers["x-forwarded-for"] || "0.0.0.0";
 
 			return async.waterfall(
 				[
 					next => {
-						if (!socket.request.headers.cookie) return next("No cookie exists yet.");
-						return UtilsModule.runJob(
-							"PARSE_COOKIES",
-							{
-								cookieString: socket.request.headers.cookie
-							},
-							this
-						).then(res => {
-							SID = res[IOModule.SIDname];
-							next(null);
-						});
+						if (!req.headers.cookie) return next("No cookie exists yet.");
+						return UtilsModule.runJob("PARSE_COOKIES", { cookieString: req.headers.cookie }, this).then(
+							res => {
+								SID = res[IOModule.SIDname];
+								next(null);
+							}
+						);
 					},
 
 					next => {
@@ -440,9 +453,7 @@ class _IOModule extends CoreClass {
 
 					next => {
 						CacheModule.runJob("HGET", { table: "sessions", key: SID }, this)
-							.then(session => {
-								next(null, session);
-							})
+							.then(session => next(null, session))
 							.catch(next);
 					},
 
@@ -455,15 +466,9 @@ class _IOModule extends CoreClass {
 
 						return CacheModule.runJob(
 							"HSET",
-							{
-								table: "sessions",
-								key: SID,
-								value: session
-							},
+							{ table: "sessions", key: SID, value: session },
 							this
-						).then(session => {
-							next(null, session);
-						});
+						).then(session => next(null, session));
 					},
 
 					(res, next) => {
@@ -496,11 +501,13 @@ class _IOModule extends CoreClass {
 					}
 				],
 				() => {
-					if (!socket.session) socket.session = { socketId: socket.id };
-					else socket.session.socketId = socket.id;
+					if (!socket.session) socket.session = { socketId: req.headers["sec-websocket-key"] };
+					else socket.session.socketId = req.headers["sec-websocket-key"];
 
-					cb();
-					resolve();
+					console.log("session", socket.session);
+
+					// cb();
+					resolve(socket);
 				}
 			);
 		});
@@ -513,6 +520,8 @@ class _IOModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async HANDLE_IO_CONNECTION(payload) {
+		console.log("handle io connection");
+
 		return new Promise(resolve => {
 			const { socket } = payload;
 
@@ -528,7 +537,7 @@ class _IOModule extends CoreClass {
 					`A user tried to connect, but is currently banned. IP: ${socket.ip}.${sessionInfo}`
 				);
 
-				socket.emit("keep.event:banned", socket.banishment.ban);
+				socket.dispatch("keep.event:banned", socket.banishment.ban);
 
 				return socket.disconnect(true);
 			}
@@ -536,35 +545,35 @@ class _IOModule extends CoreClass {
 			IOModule.log("INFO", "IO_CONNECTION", `User connected. IP: ${socket.ip}.${sessionInfo}`);
 
 			// catch when the socket has been disconnected
-			socket.on("disconnect", () => {
+			socket.onclose = () => {
 				if (socket.session.sessionId) sessionInfo = ` UserID: ${socket.session.userId}.`;
 				IOModule.log("INFO", "IO_DISCONNECTION", `User disconnected. IP: ${socket.ip}.${sessionInfo}`);
-			});
+			};
 
-			socket.use((data, next) => {
-				if (data.length === 0) return next(new Error("Not enough arguments specified."));
-				if (typeof data[0] !== "string") return next(new Error("First argument must be a string."));
+			// socket.use((data, next) => {
+			// 	if (data.length === 0) return next(new Error("Not enough arguments specified."));
+			// 	if (typeof data[0] !== "string") return next(new Error("First argument must be a string."));
 
-				const namespaceAction = data[0];
-				if (
-					!namespaceAction ||
-					namespaceAction.indexOf(".") === -1 ||
-					namespaceAction.indexOf(".") !== namespaceAction.lastIndexOf(".")
-				)
-					return next(new Error("Invalid first argument"));
-				const namespace = data[0].split(".")[0];
-				const action = data[0].split(".")[1];
+			// 	const namespaceAction = data[0];
+			// 	if (
+			// 		!namespaceAction ||
+			// 		namespaceAction.indexOf(".") === -1 ||
+			// 		namespaceAction.indexOf(".") !== namespaceAction.lastIndexOf(".")
+			// 	)
+			// 		return next(new Error("Invalid first argument"));
+			// 	const namespace = data[0].split(".")[0];
+			// 	const action = data[0].split(".")[1];
 
-				if (!namespace) return next(new Error("Invalid namespace."));
-				if (!action) return next(new Error("Invalid action."));
-				if (!IOModule.actions[namespace]) return next(new Error("Namespace not found."));
-				if (!IOModule.actions[namespace][action]) return next(new Error("Action not found."));
+			// 	if (!namespace) return next(new Error("Invalid namespace."));
+			// 	if (!action) return next(new Error("Invalid action."));
+			// 	if (!IOModule.actions[namespace]) return next(new Error("Namespace not found."));
+			// 	if (!IOModule.actions[namespace][action]) return next(new Error("Action not found."));
 
-				return next();
-			});
+			// 	return next();
+			// });
 
 			// catch errors on the socket (internal to socket.io)
-			socket.on("error", console.error);
+			socket.onerror = console.error;
 
 			if (socket.session.sessionId) {
 				CacheModule.runJob("HGET", {
@@ -574,7 +583,7 @@ class _IOModule extends CoreClass {
 					.then(session => {
 						if (session && session.userId) {
 							IOModule.userModel.findOne({ _id: session.userId }, (err, user) => {
-								if (err || !user) return socket.emit("ready", false);
+								if (err || !user) return socket.dispatch("ready", false);
 
 								let role = "";
 								let username = "";
@@ -585,14 +594,14 @@ class _IOModule extends CoreClass {
 									userId = session.userId;
 								}
 
-								return socket.emit("ready", true, role, username, userId);
+								return socket.dispatch("ready", true, role, username, userId);
 							});
-						} else socket.emit("ready", false);
+						} else socket.dispatch("ready", false);
 					})
 					.catch(() => {
-						socket.emit("ready", false);
+						socket.dispatch("ready", false);
 					});
-			} else socket.emit("ready", false);
+			} else socket.dispatch("ready", false);
 
 			// have the socket listen for each action
 			Object.keys(IOModule.actions).forEach(namespace => {
@@ -600,9 +609,26 @@ class _IOModule extends CoreClass {
 					// the full name of the action
 					const name = `${namespace}.${action}`;
 
+					socket.onmessage = message => {
+						const data = JSON.parse(message.data);
+
+						if (data[data.length - 1].callbackRef) {
+							const { callbackRef } = data[data.length - 1];
+							data.pop();
+							return socket.actions.emit(data.shift(0), [
+								...data,
+								res => socket.dispatch("callbackRef", callbackRef, res)
+							]);
+						}
+
+						return socket.actions.emit(data.shift(0), data);
+					};
+
 					// listen for this action to be called
-					socket.on(name, async (...args) => {
+					socket.listen(name, async args => {
 						IOModule.runJob("RUN_ACTION", { socket, namespace, action, args });
+
+						console.log(name, args);
 
 						/* let cb = args[args.length - 1];
 

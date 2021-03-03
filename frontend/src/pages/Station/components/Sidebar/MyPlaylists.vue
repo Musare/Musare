@@ -88,7 +88,7 @@ export default {
 			this.socket = socket;
 
 			/** Get playlists for user */
-			this.socket.emit("playlists.indexMyPlaylists", true, res => {
+			this.socket.dispatch("playlists.indexMyPlaylists", true, res => {
 				if (res.status === "success") this.playlists = res.data;
 				this.orderOfPlaylists = this.calculatePlaylistOrder(); // order in regards to the database
 			});
@@ -164,7 +164,7 @@ export default {
 			this.openModal({ sector: "station", modal: "editPlaylist" });
 		},
 		selectPlaylist(id) {
-			this.socket.emit(
+			this.socket.dispatch(
 				"stations.selectPrivatePlaylist",
 				this.station._id,
 				id,
@@ -179,7 +179,7 @@ export default {
 			);
 		},
 		deselectPlaylist() {
-			this.socket.emit(
+			this.socket.dispatch(
 				"stations.deselectPrivatePlaylist",
 				this.station._id,
 				res => {

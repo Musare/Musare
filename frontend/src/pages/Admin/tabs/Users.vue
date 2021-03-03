@@ -98,7 +98,7 @@ export default {
 			this.openModal({ sector: "admin", modal: "editUser" });
 		},
 		init() {
-			this.socket.emit("users.index", res => {
+			this.socket.dispatch("users.index", res => {
 				console.log(res);
 				if (res.status === "success") {
 					this.users = res.data;
@@ -110,7 +110,7 @@ export default {
 					}
 				}
 			});
-			this.socket.emit("apis.joinAdminRoom", "users", () => {});
+			this.socket.dispatch("apis.joinAdminRoom", "users", () => {});
 		},
 		...mapActions("modalVisibility", ["openModal"])
 	}

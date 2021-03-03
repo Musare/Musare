@@ -101,7 +101,7 @@ export default {
 		io.getSocket(socket => {
 			this.socket = socket;
 
-			this.socket.emit(
+			this.socket.dispatch(
 				`punishments.getPunishmentById`,
 				this.punishmentId,
 				res => {

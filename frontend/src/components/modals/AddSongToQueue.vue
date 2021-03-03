@@ -235,7 +235,7 @@ export default {
 	mounted() {
 		io.getSocket(socket => {
 			this.socket = socket;
-			this.socket.emit("playlists.indexMyPlaylists", true, res => {
+			this.socket.dispatch("playlists.indexMyPlaylists", true, res => {
 				if (res.status === "success") this.playlists = res.data;
 			});
 		});
@@ -257,7 +257,7 @@ export default {
 		},
 		addSongToQueue(songId, index) {
 			if (this.station.type === "community") {
-				this.socket.emit(
+				this.socket.dispatch(
 					"stations.addToQueue",
 					this.station._id,
 					songId,
@@ -280,7 +280,7 @@ export default {
 					}
 				);
 			} else {
-				this.socket.emit("queueSongs.add", songId, data => {
+				this.socket.dispatch("queueSongs.add", songId, data => {
 					if (data.status !== "success")
 						new Toast({
 							content: `Error: ${data.message}`,
@@ -318,7 +318,7 @@ export default {
 				}
 			}, 750);
 
-			return this.socket.emit(
+			return this.socket.dispatch(
 				"queueSongs.addSetToQueue",
 				this.search.playlist.query,
 				this.search.playlist.isImportingOnlyMusic,

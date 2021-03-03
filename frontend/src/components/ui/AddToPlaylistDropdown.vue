@@ -60,7 +60,7 @@ export default {
 		io.getSocket(socket => {
 			this.socket = socket;
 
-			this.socket.emit("playlists.indexMyPlaylists", false, res => {
+			this.socket.dispatch("playlists.indexMyPlaylists", false, res => {
 				if (res.status === "success") {
 					this.playlists = res.data;
 					this.checkIfPlaylistsHaveSong();
@@ -95,7 +95,7 @@ export default {
 	methods: {
 		toggleSongInPlaylist(index, playlistId) {
 			if (!this.playlists[index].hasSong) {
-				this.socket.emit(
+				this.socket.dispatch(
 					"playlists.addSongToPlaylist",
 					false,
 					this.song.songId,
@@ -110,7 +110,7 @@ export default {
 					}
 				);
 			} else {
-				this.socket.emit(
+				this.socket.dispatch(
 					"playlists.removeSongFromPlaylist",
 					this.song.songId,
 					playlistId,

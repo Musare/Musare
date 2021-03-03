@@ -77,14 +77,14 @@ export default {
 			this.socket = socket;
 
 			if (this.myUserId !== this.userId) {
-				this.socket.emit(
+				this.socket.dispatch(
 					"apis.joinRoom",
 					`profile-${this.userId}-activities`,
 					() => {}
 				);
 			}
 
-			this.socket.emit("activities.length", this.userId, length => {
+			this.socket.dispatch("activities.length", this.userId, length => {
 				this.maxPosition = Math.ceil(length / 15) + 1;
 				this.getSet();
 			});
@@ -112,7 +112,7 @@ export default {
 	},
 	methods: {
 		hideActivity(activityId) {
-			this.socket.emit("activities.hideActivity", activityId, res => {
+			this.socket.dispatch("activities.hideActivity", activityId, res => {
 				if (res.status !== "success")
 					new Toast({ content: res.message, timeout: 3000 });
 			});
@@ -123,7 +123,7 @@ export default {
 
 			this.isGettingSet = true;
 
-			this.socket.emit(
+			this.socket.dispatch(
 				"activities.getSet",
 				this.userId,
 				this.position,

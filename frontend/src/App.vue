@@ -141,7 +141,7 @@ export default {
 		io.getSocket(true, socket => {
 			this.socket = socket;
 
-			this.socket.emit("users.getPreferences", res => {
+			this.socket.dispatch("users.getPreferences", res => {
 				if (res.status === "success") {
 					this.changeAutoSkipDisliked(res.data.autoSkipDisliked);
 					this.changeNightmode(res.data.nightmode);

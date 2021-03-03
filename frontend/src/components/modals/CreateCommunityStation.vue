@@ -118,7 +118,7 @@ export default {
 					timeout: 8000
 				});
 
-			return this.socket.emit(
+			return this.socket.dispatch(
 				"stations.create",
 				{
 					name,

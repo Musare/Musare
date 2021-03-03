@@ -329,7 +329,7 @@ export default {
 		});
 
 		if (this.$route.query.songId) {
-			this.socket.emit(
+			this.socket.dispatch(
 				"songs.getSongFromMusareId",
 				this.$route.query.songId,
 				res => {
@@ -356,7 +356,7 @@ export default {
 				"Are you sure you want to delete this song?"
 			);
 			if (dialogResult !== true) return;
-			this.socket.emit("songs.remove", id, res => {
+			this.socket.dispatch("songs.remove", id, res => {
 				if (res.status === "success")
 					new Toast({ content: res.message, timeout: 4000 });
 				else new Toast({ content: res.message, timeout: 8000 });
@@ -367,7 +367,7 @@ export default {
 			if (this.position >= this.maxPosition) return;
 			this.isGettingSet = true;
 
-			this.socket.emit("songs.getSet", this.position, data => {
+			this.socket.dispatch("songs.getSet", this.position, data => {
 				data.forEach(song => {
 					this.addSong(song);
 				});
@@ -404,13 +404,13 @@ export default {
 			if (this.songs.length > 0)
 				this.position = Math.ceil(this.songs.length / 15) + 1;
 
-			this.socket.emit("songs.length", length => {
+			this.socket.dispatch("songs.length", length => {
 				this.maxPosition = Math.ceil(length / 15) + 1;
 
 				this.getSet();
 			});
 
-			this.socket.emit("apis.joinAdminRoom", "songs", () => {});
+			this.socket.dispatch("apis.joinAdminRoom", "songs", () => {});
 		},
 		...mapActions("admin/songs", [
 			// "stopVideo",

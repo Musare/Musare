@@ -5,6 +5,7 @@ services:
     build: ./backend
     ports:
       - "${BACKEND_PORT}:8080"
+      - "3030:3030"
     volumes:
       - ./backend:/opt/app
       - ./log:/opt/log

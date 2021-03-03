@@ -19,17 +19,22 @@ const callbacks = {
 	}
 };
 
+const callbackss = {};
+let callbackRef = 0;
+
 export default {
 	ready: false,
-
 	socket: null,
+	dispatcher: null,
 
 	getSocket(...args) {
 		if (args[0] === true) {
-			if (this.ready) args[1](this.socket);
-			else callbacks.general.persist.push(args[1]);
-		} else if (this.ready) args[0](this.socket);
-		else callbacks.general.temp.push(args[0]);
+			if (this.ready) {
+				args[1](this.socket);
+			} else callbacks.general.persist.push(args[1]);
+		} else if (this.ready) {
+			args[0](this.socket);
+		} else callbacks.general.temp.push(args[0]);
 	},
 
 	onConnect(...args) {
@@ -64,40 +69,82 @@ export default {
 	},
 
 	init(url) {
-		/* eslint-disable-next-line no-undef */
-		this.socket = window.socket = io(url);
+		class CustomWebSocket extends WebSocket {
+			constructor() {
+				super(url);
+				this.dispatcher = new EventTarget();
+			}
 
-		this.socket.on("connect", () => {
+			on(target, cb) {
+				this.dispatcher.addEventListener(target, event =>
+					cb(...event.detail)
+				);
+			}
+
+			dispatch(...args) {
+				callbackRef += 1;
+
+				const cb = args[args.length - 1];
+				if (typeof cb === "function") callbackss[callbackRef] = cb;
+
+				this.send(
+					JSON.stringify([...args.slice(0, -1), { callbackRef }])
+				);
+			}
+		}
+
+		this.socket = window.socket = new CustomWebSocket(url);
+
+		this.socket.onopen = () => {
 			callbacks.onConnect.temp.forEach(cb => cb());
 			callbacks.onConnect.persist.forEach(cb => cb());
-		});
 
-		this.socket.on("disconnect", () => {
+			this.ready = true;
+
+			callbacks.general.temp.forEach(callback => callback(this.socket));
+			callbacks.general.persist.forEach(callback =>
+				callback(this.socket)
+			);
+
+			callbacks.general.temp = [];
+			callbacks.general.persist = [];
+		};
+
+		this.socket.onmessage = message => {
+			const data = JSON.parse(message.data);
+			const name = data.shift(0);
+
+			if (name === "callbackRef") {
+				const callbackRef = data.shift(0);
+				callbackss[callbackRef](...data);
+				return delete callbackss[callbackRef];
+			}
+
+			return this.socket.dispatcher.dispatchEvent(
+				new CustomEvent(name, {
+					detail: data
+				})
+			);
+		};
+
+		this.socket.onclose = () => {
 			console.log("IO: SOCKET DISCONNECTED");
 			callbacks.onDisconnect.temp.forEach(cb => cb());
 			callbacks.onDisconnect.persist.forEach(cb => cb());
-		});
+		};
 
-		this.socket.on("connect_error", () => {
-			console.log("IO: SOCKET CONNECT ERROR");
-			callbacks.onConnectError.temp.forEach(cb => cb());
-			callbacks.onConnectError.persist.forEach(cb => cb());
-		});
+		// this.socket.on("connect_error", () => {
+		// 	console.log("IO: SOCKET CONNECT ERROR");
+		// 	callbacks.onConnectError.temp.forEach(cb => cb());
+		// 	callbacks.onConnectError.persist.forEach(cb => cb());
+		// });
 
-		this.socket.on("error", err => {
+		this.socket.onerror = err => {
 			console.log("IO: SOCKET ERROR", err);
 			new Toast({
 				content: err,
 				timeout: 8000
 			});
-		});
-
-		this.ready = true;
-
-		callbacks.general.temp.forEach(callback => callback(this.socket));
-		callbacks.general.persist.forEach(callback => callback(this.socket));
-
-		callbacks.general.temp = [];
-		callbacks.general.persist = [];
+		};
 	}
 };

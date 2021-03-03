@@ -92,7 +92,7 @@ export default {
 		// 	this.openModal({ sector: "admin", modal: "editPlaylist" });
 		// },
 		init() {
-			this.socket.emit("playlists.index", res => {
+			this.socket.dispatch("playlists.index", res => {
 				console.log(res);
 				if (res.status === "success") {
 					this.playlists = res.data;
@@ -104,7 +104,7 @@ export default {
 					// }
 				}
 			});
-			this.socket.emit("apis.joinAdminRoom", "playlists", () => {});
+			this.socket.dispatch("apis.joinAdminRoom", "playlists", () => {});
 		},
 		getDateFormatted(createdAt) {
 			const date = new Date(createdAt);

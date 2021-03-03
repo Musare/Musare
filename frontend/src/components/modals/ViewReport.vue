@@ -117,7 +117,7 @@ export default {
 		io.getSocket(socket => {
 			this.socket = socket;
 
-			this.socket.emit(`reports.findOne`, this.reportId, res => {
+			this.socket.dispatch(`reports.findOne`, this.reportId, res => {
 				if (res.status === "success") {
 					const report = res.data;
 					this.viewReport(report);

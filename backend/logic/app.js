@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
 import express from "express";
 import oauth from "oauth";
+import http from "http";
 import CoreClass from "../core";
 
 const { OAuth2 } = oauth;
@@ -42,7 +43,7 @@ class _AppModule extends CoreClass {
 
 			const app = (this.app = express());
 			const SIDname = config.get("cookie.SIDname");
-			this.server = app.listen(config.get("serverPort"));
+			this.server = http.createServer(app).listen(config.get("serverPort"));
 
 			app.use(cookieParser());
 

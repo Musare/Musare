@@ -41,7 +41,7 @@ export default {
 			)
 				return; // nothing has changed
 
-			this.socket.emit(
+			this.socket.dispatch(
 				"users.updateOrderOfPlaylists",
 				recalculatedOrder,
 				res => {

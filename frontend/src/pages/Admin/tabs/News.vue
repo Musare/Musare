@@ -248,7 +248,7 @@ export default {
 	mounted() {
 		io.getSocket(socket => {
 			this.socket = socket;
-			this.socket.emit("news.index", res => {
+			this.socket.dispatch("news.index", res => {
 				res.data.forEach(news => {
 					this.addNews(news);
 				});
@@ -293,21 +293,25 @@ export default {
 					timeout: 3000
 				});
 
-			return this.socket.emit("news.create", this.creating, result => {
-				new Toast(result.message, 4000);
-				if (result.status === "success")
-					this.creating = {
-						title: "",
-						description: "",
-						bugs: [],
-						features: [],
-						improvements: [],
-						upcoming: []
-					};
-			});
+			return this.socket.dispatch(
+				"news.create",
+				this.creating,
+				result => {
+					new Toast(result.message, 4000);
+					if (result.status === "success")
+						this.creating = {
+							title: "",
+							description: "",
+							bugs: [],
+							features: [],
+							improvements: [],
+							upcoming: []
+						};
+				}
+			);
 		},
 		remove(news) {
-			this.socket.emit(
+			this.socket.dispatch(
 				"news.remove",
 				news,
 				res => new Toast({ content: res.message, timeout: 8000 })
@@ -340,7 +344,7 @@ export default {
 			this.creating[type].splice(index, 1);
 		},
 		init() {
-			this.socket.emit("apis.joinAdminRoom", "news", () => {});
+			this.socket.dispatch("apis.joinAdminRoom", "news", () => {});
 		},
 		...mapActions("modalVisibility", ["openModal", "closeModal"]),
 		...mapActions("admin/news", [

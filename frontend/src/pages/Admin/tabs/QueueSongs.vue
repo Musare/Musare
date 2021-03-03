@@ -261,7 +261,7 @@ export default {
 			this.openModal({ sector: "admin", modal: "editSong" });
 		},
 		add(song) {
-			this.socket.emit("songs.add", song, res => {
+			this.socket.dispatch("songs.add", song, res => {
 				if (res.status === "success")
 					new Toast({ content: res.message, timeout: 2000 });
 				else new Toast({ content: res.message, timeout: 4000 });
@@ -273,7 +273,7 @@ export default {
 				"Are you sure you want to delete this song?"
 			);
 			if (dialogResult !== true) return;
-			this.socket.emit("queueSongs.remove", id, res => {
+			this.socket.dispatch("queueSongs.remove", id, res => {
 				if (res.status === "success")
 					new Toast({ content: res.message, timeout: 2000 });
 				else new Toast({ content: res.message, timeout: 4000 });
@@ -284,7 +284,7 @@ export default {
 			if (this.position >= this.maxPosition) return;
 			this.isGettingSet = true;
 
-			this.socket.emit("queueSongs.getSet", this.position, data => {
+			this.socket.dispatch("queueSongs.getSet", this.position, data => {
 				data.forEach(song => this.songs.push(song));
 
 				this.position += 1;
@@ -309,13 +309,13 @@ export default {
 			if (this.songs.length > 0)
 				this.position = Math.ceil(this.songs.length / 15) + 1;
 
-			this.socket.emit("queueSongs.length", length => {
+			this.socket.dispatch("queueSongs.length", length => {
 				this.maxPosition = Math.ceil(length / 15) + 1;
 
 				this.getSet();
 			});
 
-			this.socket.emit("apis.joinAdminRoom", "queue", () => {});
+			this.socket.dispatch("apis.joinAdminRoom", "queue", () => {});
 		},
 		// ...mapActions("admin/songs", ["editSong"]),
 		...mapActions("modals/editSong", ["stopVideo"]),

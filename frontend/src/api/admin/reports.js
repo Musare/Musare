@@ -5,7 +5,7 @@ export default {
 	resolve(reportId) {
 		return new Promise((resolve, reject) => {
 			io.getSocket(socket => {
-				socket.emit("reports.resolve", reportId, res => {
+				socket.dispatch("reports.resolve", reportId, res => {
 					new Toast({ content: res.message, timeout: 3000 });
 					if (res.status === "success")
 						return resolve({ status: "success" });

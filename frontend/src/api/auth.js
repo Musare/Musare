@@ -9,7 +9,7 @@ export default {
 			const { username, email, password, recaptchaToken } = user;
 
 			io.getSocket(socket => {
-				socket.emit(
+				socket.dispatch(
 					"users.register",
 					username,
 					email,
@@ -53,7 +53,7 @@ export default {
 			const { email, password } = user;
 
 			io.getSocket(socket => {
-				socket.emit("users.login", email, password, res => {
+				socket.dispatch("users.login", email, password, res => {
 					console.log(123, res);
 					if (res.status === "success") {
 						return lofig.get("cookie").then(cookie => {
@@ -81,7 +81,7 @@ export default {
 	logout() {
 		return new Promise((resolve, reject) => {
 			io.getSocket(socket => {
-				socket.emit("users.logout", res => {
+				socket.dispatch("users.logout", res => {
 					if (res.status === "success") {
 						return lofig.get("cookie").then(cookie => {
 							document.cookie = `${cookie.SIDname}=;expires=Thu, 01 Jan 1970 00:00:01 GMT;`;

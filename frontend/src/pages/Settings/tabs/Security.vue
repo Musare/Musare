@@ -220,7 +220,7 @@ export default {
 					timeout: 8000
 				});
 
-			return this.socket.emit(
+			return this.socket.dispatch(
 				"users.updatePassword",
 				this.previousPassword,
 				newPassword,
@@ -240,17 +240,17 @@ export default {
 			);
 		},
 		unlinkPassword() {
-			this.socket.emit("users.unlinkPassword", res => {
+			this.socket.dispatch("users.unlinkPassword", res => {
 				new Toast({ content: res.message, timeout: 8000 });
 			});
 		},
 		unlinkGitHub() {
-			this.socket.emit("users.unlinkGitHub", res => {
+			this.socket.dispatch("users.unlinkGitHub", res => {
 				new Toast({ content: res.message, timeout: 8000 });
 			});
 		},
 		removeSessions() {
-			this.socket.emit(`users.removeSessions`, this.userId, res => {
+			this.socket.dispatch(`users.removeSessions`, this.userId, res => {
 				new Toast({ content: res.message, timeout: 4000 });
 			});
 		}

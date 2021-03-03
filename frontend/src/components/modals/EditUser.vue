@@ -117,7 +117,7 @@ export default {
 		io.getSocket(socket => {
 			this.socket = socket;
 
-			this.socket.emit(`users.getUserFromId`, this.userId, res => {
+			this.socket.dispatch(`users.getUserFromId`, this.userId, res => {
 				if (res.status === "success") {
 					const user = res.data;
 					this.editUser(user);
@@ -151,7 +151,7 @@ export default {
 					timeout: 8000
 				});
 
-			return this.socket.emit(
+			return this.socket.dispatch(
 				`users.updateUsername`,
 				this.user._id,
 				username,
@@ -177,7 +177,7 @@ export default {
 					timeout: 8000
 				});
 
-			return this.socket.emit(
+			return this.socket.dispatch(
 				`users.updateEmail`,
 				this.user._id,
 				email,
@@ -187,7 +187,7 @@ export default {
 			);
 		},
 		updateRole() {
-			this.socket.emit(
+			this.socket.dispatch(
 				`users.updateRole`,
 				this.user._id,
 				this.user.role,
@@ -210,7 +210,7 @@ export default {
 					timeout: 8000
 				});
 
-			return this.socket.emit(
+			return this.socket.dispatch(
 				`users.banUserById`,
 				this.user._id,
 				this.ban.reason,
@@ -221,7 +221,7 @@ export default {
 			);
 		},
 		removeSessions() {
-			this.socket.emit(`users.removeSessions`, this.user._id, res => {
+			this.socket.dispatch(`users.removeSessions`, this.user._id, res => {
 				new Toast({ content: res.message, timeout: 4000 });
 			});
 		},

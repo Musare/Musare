@@ -214,7 +214,7 @@ export default {
 
 			this.$refs.saveButton.saveStatus = "disabled";
 
-			return this.socket.emit(
+			return this.socket.dispatch(
 				"users.updateEmail",
 				this.userId,
 				email,
@@ -256,7 +256,7 @@ export default {
 
 			this.$refs.saveButton.saveStatus = "disabled";
 
-			return this.socket.emit(
+			return this.socket.dispatch(
 				"users.updateUsername",
 				this.userId,
 				username,
@@ -281,9 +281,9 @@ export default {
 			);
 		},
 		removeAccount() {
-			return this.socket.emit("users.remove", res => {
+			return this.socket.dispatch("users.remove", res => {
 				if (res.status === "success") {
-					return this.socket.emit("users.logout", () => {
+					return this.socket.dispatch("users.logout", () => {
 						return lofig.get("cookie").then(cookie => {
 							document.cookie = `${cookie.SIDname}=;expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
 							return window.location.reload();
@@ -295,7 +295,7 @@ export default {
 			});
 		},
 		removeActivities() {
-			this.socket.emit("activities.removeAllForUser", res => {
+			this.socket.dispatch("activities.removeAllForUser", res => {
 				new Toast({ content: res.message, timeout: 4000 });
 			});
 		},

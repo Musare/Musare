@@ -90,7 +90,7 @@ export default {
 		io.getSocket(socket => {
 			this.socket = socket;
 
-			this.socket.emit("users.findBySession", res => {
+			this.socket.dispatch("users.findBySession", res => {
 				if (res.status === "success") {
 					this.setUser(res.data);
 				} else {

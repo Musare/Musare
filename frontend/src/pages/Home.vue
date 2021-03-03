@@ -656,7 +656,7 @@ export default {
 	},
 	methods: {
 		init() {
-			this.socket.emit("stations.index", data => {
+			this.socket.dispatch("stations.index", data => {
 				this.stations = [];
 
 				if (data.status === "success")
@@ -678,7 +678,7 @@ export default {
 					});
 			});
 
-			this.socket.emit("apis.joinRoom", "home", () => {});
+			this.socket.dispatch("apis.joinRoom", "home", () => {});
 		},
 		isOwner(station) {
 			return station.owner === this.userId;
@@ -687,24 +687,32 @@ export default {
 			return typeof station.currentSong.title !== "undefined";
 		},
 		favoriteStation(station) {
-			this.socket.emit("stations.favoriteStation", station._id, res => {
-				if (res.status === "success") {
-					new Toast({
-						content: "Successfully favorited station.",
-						timeout: 4000
-					});
-				} else new Toast({ content: res.message, timeout: 8000 });
-			});
+			this.socket.dispatch(
+				"stations.favoriteStation",
+				station._id,
+				res => {
+					if (res.status === "success") {
+						new Toast({
+							content: "Successfully favorited station.",
+							timeout: 4000
+						});
+					} else new Toast({ content: res.message, timeout: 8000 });
+				}
+			);
 		},
 		unfavoriteStation(station) {
-			this.socket.emit("stations.unfavoriteStation", station._id, res => {
-				if (res.status === "success") {
-					new Toast({
-						content: "Successfully unfavorited station.",
-						timeout: 4000
-					});
-				} else new Toast({ content: res.message, timeout: 8000 });
-			});
+			this.socket.dispatch(
+				"stations.unfavoriteStation",
+				station._id,
+				res => {
+					if (res.status === "success") {
+						new Toast({
+							content: "Successfully unfavorited station.",
+							timeout: 4000
+						});
+					} else new Toast({ content: res.message, timeout: 8000 });
+				}
+			);
 		},
 		...mapActions("modalVisibility", ["openModal"]),
 		...mapActions("station", ["updateIfStationIsFavorited"])

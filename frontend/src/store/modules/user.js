@@ -117,7 +117,7 @@ const modules = {
 						if (state.userIdRequested[`Z${userId}`] !== true) {
 							commit("requestingUserId", userId);
 							io.getSocket(socket => {
-								socket.emit(
+								socket.dispatch(
 									"users.getUsernameFromId",
 									userId,
 									res => {

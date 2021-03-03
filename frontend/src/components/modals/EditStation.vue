@@ -513,33 +513,37 @@ export default {
 		io.getSocket(socket => {
 			this.socket = socket;
 
-			this.socket.emit(`stations.getStationById`, this.stationId, res => {
-				if (res.status === "success") {
-					const { station } = res;
-					// this.song = { ...song };
-					// if (this.song.discogs === undefined)
-					// 	this.song.discogs = null;
-					this.editStation(station);
+			this.socket.dispatch(
+				`stations.getStationById`,
+				this.stationId,
+				res => {
+					if (res.status === "success") {
+						const { station } = res;
+						// this.song = { ...song };
+						// if (this.song.discogs === undefined)
+						// 	this.song.discogs = null;
+						this.editStation(station);
 
-					// this.songDataLoaded = true;
+						// this.songDataLoaded = true;
 
-					this.station.genres = JSON.parse(
-						JSON.stringify(this.station.genres)
-					);
-					this.station.blacklistedGenres = JSON.parse(
-						JSON.stringify(this.station.blacklistedGenres)
-					);
-				} else {
-					new Toast({
-						content: "Station with that ID not found",
-						timeout: 3000
-					});
-					this.closeModal({
-						sector: this.sector,
-						modal: "editStation"
-					});
+						this.station.genres = JSON.parse(
+							JSON.stringify(this.station.genres)
+						);
+						this.station.blacklistedGenres = JSON.parse(
+							JSON.stringify(this.station.blacklistedGenres)
+						);
+					} else {
+						new Toast({
+							content: "Station with that ID not found",
+							timeout: 3000
+						});
+						this.closeModal({
+							sector: this.sector,
+							modal: "editStation"
+						});
+					}
 				}
-			});
+			);
 
 			return socket;
 		});
@@ -614,7 +618,7 @@ export default {
 
 			this.$refs.saveButton.status = "disabled";
 
-			return this.socket.emit(
+			return this.socket.dispatch(
 				"stations.updateName",
 				this.station._id,
 				name,
@@ -649,7 +653,7 @@ export default {
 
 			this.$refs.saveButton.status = "disabled";
 
-			return this.socket.emit(
+			return this.socket.dispatch(
 				"stations.updateDisplayName",
 				this.station._id,
 				displayName,
@@ -686,7 +690,7 @@ export default {
 
 			this.$refs.saveButton.status = "disabled";
 
-			return this.socket.emit(
+			return this.socket.dispatch(
 				"stations.updateDescription",
 				this.station._id,
 				description,
@@ -710,7 +714,7 @@ export default {
 		updatePrivacy() {
 			this.$refs.saveButton.status = "disabled";
 
-			this.socket.emit(
+			this.socket.dispatch(
 				"stations.updatePrivacy",
 				this.station._id,
 				this.station.privacy,
@@ -729,7 +733,7 @@ export default {
 		updateGenres() {
 			this.$refs.saveButton.status = "disabled";
 
-			this.socket.emit(
+			this.socket.dispatch(
 				"stations.updateGenres",
 				this.station._id,
 				this.station.genres,
@@ -754,7 +758,7 @@ export default {
 		updateBlacklistedGenres() {
 			this.$refs.saveButton.status = "disabled";
 
-			this.socket.emit(
+			this.socket.dispatch(
 				"stations.updateBlacklistedGenres",
 				this.station._id,
 				this.station.blacklistedGenres,
@@ -783,7 +787,7 @@ export default {
 		updatePartyMode() {
 			this.$refs.saveButton.status = "disabled";
 
-			this.socket.emit(
+			this.socket.dispatch(
 				"stations.updatePartyMode",
 				this.station._id,
 				this.station.partyMode,
@@ -807,26 +811,30 @@ export default {
 		updateQueueLock() {
 			this.$refs.saveButton.status = "disabled";
 
-			this.socket.emit("stations.toggleLock", this.station._id, res => {
-				if (res.status === "success") {
-					if (this.originalStation)
-						this.originalStation.locked = res.data;
+			this.socket.dispatch(
+				"stations.toggleLock",
+				this.station._id,
+				res => {
+					if (res.status === "success") {
+						if (this.originalStation)
+							this.originalStation.locked = res.data;
+
+						new Toast({
+							content: `Toggled queue lock successfully to ${res.data}`,
+							timeout: 4000
+						});
+
+						return this.$refs.saveButton.handleSuccessfulSave();
+					}
 
 					new Toast({
-						content: `Toggled queue lock successfully to ${res.data}`,
-						timeout: 4000
+						content: "Failed to toggle queue lock.",
+						timeout: 8000
 					});
 
-					return this.$refs.saveButton.handleSuccessfulSave();
+					return this.$refs.saveButton.handleFailedSave();
 				}
-
-				new Toast({
-					content: "Failed to toggle queue lock.",
-					timeout: 8000
-				});
-
-				return this.$refs.saveButton.handleFailedSave();
-			});
+			);
 		},
 		updateThemeLocal(theme) {
 			if (this.station.theme === theme) return;
@@ -836,7 +844,7 @@ export default {
 		updateTheme() {
 			this.$refs.saveButton.status = "disabled";
 
-			this.socket.emit(
+			this.socket.dispatch(
 				"stations.updateTheme",
 				this.station._id,
 				this.station.theme,
@@ -853,7 +861,7 @@ export default {
 			);
 		},
 		deleteStation() {
-			this.socket.emit("stations.remove", this.station._id, res => {
+			this.socket.dispatch("stations.remove", this.station._id, res => {
 				if (res.status === "success")
 					this.closeModal({
 						sector: "station",

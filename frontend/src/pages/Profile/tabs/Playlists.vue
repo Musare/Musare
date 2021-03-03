@@ -136,14 +136,14 @@ export default {
 			this.socket = socket;
 
 			if (this.myUserId !== this.userId) {
-				this.socket.emit(
+				this.socket.dispatch(
 					"apis.joinRoom",
 					`profile-${this.userId}-playlists`,
 					() => {}
 				);
 			}
 
-			this.socket.emit("playlists.indexForUser", this.userId, res => {
+			this.socket.dispatch("playlists.indexForUser", this.userId, res => {
 				if (res.status === "success") this.setPlaylists(res.data);
 				this.orderOfPlaylists = this.calculatePlaylistOrder(); // order in regards to the database
 			});

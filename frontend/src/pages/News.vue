@@ -101,7 +101,7 @@ export default {
 	mounted() {
 		io.getSocket(socket => {
 			this.socket = socket;
-			this.socket.emit("news.index", res => {
+			this.socket.dispatch("news.index", res => {
 				this.news = res.data;
 				if (this.news.length === 0) this.noFound = true;
 			});

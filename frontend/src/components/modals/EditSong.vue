@@ -615,7 +615,7 @@ export default {
 		io.getSocket(socket => {
 			this.socket = socket;
 
-			this.socket.emit(
+			this.socket.dispatch(
 				`${this.songType}.getSongFromMusareId`,
 				this.songId,
 				res => {
@@ -1092,7 +1092,7 @@ export default {
 
 			saveButtonRef.status = "disabled";
 
-			return this.socket.emit(
+			return this.socket.dispatch(
 				`${this.songType}.update`,
 				song._id,
 				song,
@@ -1177,7 +1177,7 @@ export default {
 		searchDiscogsForPage(page) {
 			const query = this.discogsQuery;
 
-			this.socket.emit("apis.searchDiscogs", query, page, res => {
+			this.socket.dispatch("apis.searchDiscogs", query, page, res => {
 				if (res.status === "success") {
 					if (page === 1)
 						new Toast({

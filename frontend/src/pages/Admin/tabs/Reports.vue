@@ -94,7 +94,7 @@ export default {
 			this.socket = socket;
 			if (this.socket.connected) this.init();
 
-			this.socket.emit("reports.index", res => {
+			this.socket.dispatch("reports.index", res => {
 				this.reports = res.data;
 			});
 
@@ -114,20 +114,24 @@ export default {
 		});
 
 		if (this.$route.query.id) {
-			this.socket.emit("reports.findOne", this.$route.query.id, res => {
-				if (res.status === "success") this.view(res.data);
-				else
-					new Toast({
-						content: "Report with that ID not found",
-						timeout: 3000
-					});
-			});
+			this.socket.dispatch(
+				"reports.findOne",
+				this.$route.query.id,
+				res => {
+					if (res.status === "success") this.view(res.data);
+					else
+						new Toast({
+							content: "Report with that ID not found",
+							timeout: 3000
+						});
+				}
+			);
 		}
 	},
 	methods: {
 		formatDistance,
 		init() {
-			this.socket.emit("apis.joinAdminRoom", "reports", () => {});
+			this.socket.dispatch("apis.joinAdminRoom", "reports", () => {});
 		},
 		view(report) {
 			// this.viewReport(report);

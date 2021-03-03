@@ -149,7 +149,7 @@ export default {
 
 			this.$refs.saveButton.status = "disabled";
 
-			return this.socket.emit(
+			return this.socket.dispatch(
 				"users.updateName",
 				this.userId,
 				name,
@@ -184,7 +184,7 @@ export default {
 
 			this.$refs.saveButton.status = "disabled";
 
-			return this.socket.emit(
+			return this.socket.dispatch(
 				"users.updateLocation",
 				this.userId,
 				location,
@@ -219,7 +219,7 @@ export default {
 
 			this.$refs.saveButton.status = "disabled";
 
-			return this.socket.emit(
+			return this.socket.dispatch(
 				"users.updateBio",
 				this.userId,
 				bio,
@@ -248,7 +248,7 @@ export default {
 
 			this.$refs.saveButton.status = "disabled";
 
-			return this.socket.emit(
+			return this.socket.dispatch(
 				"users.updateAvatarType",
 				this.userId,
 				avatar,

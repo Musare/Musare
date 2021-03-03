@@ -65,7 +65,7 @@ export default {
 		io.getSocket(socket => {
 			this.socket = socket;
 
-			this.socket.emit("users.getPreferences", res => {
+			this.socket.dispatch("users.getPreferences", res => {
 				if (res.status === "success") {
 					this.localNightmode = res.data.nightmode;
 					this.localAutoSkipDisliked = res.data.autoSkipDisliked;
@@ -97,7 +97,7 @@ export default {
 
 			this.$refs.saveButton.status = "disabled";
 
-			return this.socket.emit(
+			return this.socket.dispatch(
 				"users.updatePreferences",
 				{
 					nightmode: this.localNightmode,

@@ -136,11 +136,12 @@ export default {
 		io.getSocket(socket => {
 			this.socket = socket;
 
-			this.socket.emit(
+			this.socket.dispatch(
 				"users.findByUsername",
 				this.$route.params.username,
 				res => {
-					if (res.status === "error") this.$router.go("/404");
+					if (res.status === "error" || res.status === "failure")
+						this.$router.push("/404");
 					else {
 						this.user = res.data;
 
