@@ -23,7 +23,7 @@ CacheModule.runJob("SUB", {
 	cb: res => {
 		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
 			sockets.forEach(socket => {
-				socket.emit("keep.event:user.preferences.changed", res.preferences);
+				socket.dispatch("keep.event:user.preferences.changed", res.preferences);
 			});
 		});
 	}
@@ -34,7 +34,7 @@ CacheModule.runJob("SUB", {
 	cb: res => {
 		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
 			sockets.forEach(socket => {
-				socket.emit("event:user.orderOfPlaylists.changed", res.orderOfPlaylists);
+				socket.dispatch("event:user.orderOfPlaylists.changed", res.orderOfPlaylists);
 			});
 		});
 
@@ -50,7 +50,7 @@ CacheModule.runJob("SUB", {
 	cb: user => {
 		IOModule.runJob("SOCKETS_FROM_USER", { userId: user._id }).then(sockets => {
 			sockets.forEach(socket => {
-				socket.emit("event:user.username.changed", user.username);
+				socket.dispatch("event:user.username.changed", user.username);
 			});
 		});
 	}
@@ -61,7 +61,7 @@ CacheModule.runJob("SUB", {
 	cb: userId => {
 		IOModule.runJob("SOCKETS_FROM_USER_WITHOUT_CACHE", { userId }).then(sockets => {
 			sockets.forEach(socket => {
-				socket.emit("keep.event:user.session.removed");
+				socket.dispatch("keep.event:user.session.removed");
 			});
 		});
 	}
@@ -72,7 +72,7 @@ CacheModule.runJob("SUB", {
 	cb: userId => {
 		IOModule.runJob("SOCKETS_FROM_USER", { userId }).then(sockets => {
 			sockets.forEach(socket => {
-				socket.emit("event:user.linkPassword");
+				socket.dispatch("event:user.linkPassword");
 			});
 		});
 	}
@@ -83,7 +83,7 @@ CacheModule.runJob("SUB", {
 	cb: userId => {
 		IOModule.runJob("SOCKETS_FROM_USER", { userId }).then(sockets => {
 			sockets.forEach(socket => {
-				socket.emit("event:user.unlinkPassword");
+				socket.dispatch("event:user.unlinkPassword");
 			});
 		});
 	}
@@ -94,7 +94,7 @@ CacheModule.runJob("SUB", {
 	cb: userId => {
 		IOModule.runJob("SOCKETS_FROM_USER", { userId }).then(sockets => {
 			sockets.forEach(socket => {
-				socket.emit("event:user.linkGithub");
+				socket.dispatch("event:user.linkGithub");
 			});
 		});
 	}
@@ -105,7 +105,7 @@ CacheModule.runJob("SUB", {
 	cb: userId => {
 		IOModule.runJob("SOCKETS_FROM_USER", { userId }).then(sockets => {
 			sockets.forEach(socket => {
-				socket.emit("event:user.unlinkGithub");
+				socket.dispatch("event:user.unlinkGithub");
 			});
 		});
 	}
@@ -116,7 +116,7 @@ CacheModule.runJob("SUB", {
 	cb: data => {
 		IOModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
 			sockets.forEach(socket => {
-				socket.emit("keep.event:banned", data.punishment);
+				socket.dispatch("keep.event:banned", data.punishment);
 				socket.disconnect(true);
 			});
 		});
@@ -128,7 +128,7 @@ CacheModule.runJob("SUB", {
 	cb: data => {
 		IOModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
 			sockets.forEach(socket => {
-				socket.emit("event:user.favoritedStation", data.stationId);
+				socket.dispatch("event:user.favoritedStation", data.stationId);
 			});
 		});
 	}
@@ -139,7 +139,7 @@ CacheModule.runJob("SUB", {
 	cb: data => {
 		IOModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
 			sockets.forEach(socket => {
-				socket.emit("event:user.unfavoritedStation", data.stationId);
+				socket.dispatch("event:user.unfavoritedStation", data.stationId);
 			});
 		});
 	}

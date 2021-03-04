@@ -13,7 +13,7 @@ CacheModule.runJob("SUB", {
 	channel: "activity.removeAllForUser",
 	cb: userId => {
 		IOModule.runJob("SOCKETS_FROM_USER", { userId }, this).then(sockets =>
-			sockets.forEach(socket => socket.emit("event:activity.removeAllForUser"))
+			sockets.forEach(socket => socket.dispatch("event:activity.removeAllForUser"))
 		);
 
 		IOModule.runJob("EMIT_TO_ROOM", {
@@ -27,7 +27,7 @@ CacheModule.runJob("SUB", {
 	channel: "activity.hide",
 	cb: res => {
 		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets =>
-			sockets.forEach(socket => socket.emit("event:activity.hide", res.activityId))
+			sockets.forEach(socket => socket.dispatch("event:activity.hide", res.activityId))
 		);
 
 		IOModule.runJob("EMIT_TO_ROOM", {

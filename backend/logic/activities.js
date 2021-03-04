@@ -74,7 +74,7 @@ class _ActivitiesModule extends CoreClass {
 					(activity, next) => {
 						IOModule.runJob("SOCKETS_FROM_USER", { userId: activity.userId }, this)
 							.then(sockets => {
-								sockets.forEach(socket => socket.emit("event:activity.create", activity));
+								sockets.forEach(socket => socket.dispatch("event:activity.create", activity));
 								next(null, activity);
 							})
 							.catch(next);
@@ -227,7 +227,7 @@ class _ActivitiesModule extends CoreClass {
 
 							IOModule.runJob("SOCKETS_FROM_USER", { userId: payload.userId }, this)
 								.then(sockets =>
-									sockets.forEach(socket => socket.emit("event:activity.hide", activity._id))
+									sockets.forEach(socket => socket.dispatch("event:activity.hide", activity._id))
 								)
 								.catch(next);
 
@@ -332,7 +332,7 @@ class _ActivitiesModule extends CoreClass {
 
 							IOModule.runJob("SOCKETS_FROM_USER", { userId: payload.userId }, this)
 								.then(sockets =>
-									sockets.forEach(socket => socket.emit("event:activity.hide", activity._id))
+									sockets.forEach(socket => socket.dispatch("event:activity.hide", activity._id))
 								)
 								.catch(next);
 

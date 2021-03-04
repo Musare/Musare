@@ -59,9 +59,9 @@ CacheModule.runJob("SUB", {
 								}).then(userModel =>
 									userModel.findOne({ _id: session.userId }, (err, user) => {
 										if (user.role === "admin")
-											socket.emit("event:userCount.updated", stationId, count);
+											socket.dispatch("event:userCount.updated", stationId, count);
 										else if (station.type === "community" && station.owner === session.userId)
-											socket.emit("event:userCount.updated", stationId, count);
+											socket.dispatch("event:userCount.updated", stationId, count);
 									})
 								);
 						});
@@ -137,7 +137,7 @@ CacheModule.runJob("SUB", {
 			}).then(response => {
 				const { socketsThatCan } = response;
 				socketsThatCan.forEach(socket => {
-					socket.emit("event:station.pause", { stationId });
+					socket.dispatch("event:station.pause", { stationId });
 				});
 			});
 		});
@@ -160,7 +160,7 @@ CacheModule.runJob("SUB", {
 				.then(response => {
 					const { socketsThatCan } = response;
 					socketsThatCan.forEach(socket => {
-						socket.emit("event:station.resume", { stationId });
+						socket.dispatch("event:station.resume", { stationId });
 					});
 				})
 				.catch(console.log);
@@ -190,10 +190,10 @@ CacheModule.runJob("SUB", {
 					}).then(response => {
 						const { socketsThatCan, socketsThatCannot } = response;
 						socketsThatCan.forEach(socket => {
-							socket.emit("event:station.updatePrivacy", { stationId, privacy: station.privacy });
+							socket.dispatch("event:station.updatePrivacy", { stationId, privacy: station.privacy });
 						});
 						socketsThatCannot.forEach(socket => {
-							socket.emit("event:station.removed", { stationId });
+							socket.dispatch("event:station.removed", { stationId });
 						});
 					});
 				} else {
@@ -205,7 +205,7 @@ CacheModule.runJob("SUB", {
 					}).then(response => {
 						const { socketsThatCan } = response;
 						socketsThatCan.forEach(socket => {
-							socket.emit("event:station.updatePrivacy", { stationId, privacy: station.privacy });
+							socket.dispatch("event:station.updatePrivacy", { stationId, privacy: station.privacy });
 						});
 					});
 				}
@@ -225,7 +225,7 @@ CacheModule.runJob("SUB", {
 				station
 			}).then(response => {
 				const { socketsThatCan } = response;
-				socketsThatCan.forEach(socket => socket.emit("event:station.updateName", { stationId, name }));
+				socketsThatCan.forEach(socket => socket.dispatch("event:station.updateName", { stationId, name }));
 			})
 		);
 
@@ -248,7 +248,7 @@ CacheModule.runJob("SUB", {
 			}).then(response => {
 				const { socketsThatCan } = response;
 				socketsThatCan.forEach(socket =>
-					socket.emit("event:station.updateDisplayName", { stationId, displayName })
+					socket.dispatch("event:station.updateDisplayName", { stationId, displayName })
 				);
 			})
 		);
@@ -272,7 +272,7 @@ CacheModule.runJob("SUB", {
 			}).then(response => {
 				const { socketsThatCan } = response;
 				socketsThatCan.forEach(socket =>
-					socket.emit("event:station.updateDescription", { stationId, description })
+					socket.dispatch("event:station.updateDescription", { stationId, description })
 				);
 			})
 		);
@@ -299,7 +299,7 @@ CacheModule.runJob("SUB", {
 			}).then(response => {
 				const { socketsThatCan } = response;
 				socketsThatCan.forEach(socket => {
-					socket.emit("event:station.themeUpdated", { stationId, theme: station.theme });
+					socket.dispatch("event:station.themeUpdated", { stationId, theme: station.theme });
 				});
 			});
 		});
@@ -379,9 +379,9 @@ CacheModule.runJob("SUB", {
 						}).then(session => {
 							if (session) {
 								userModel.findOne({ _id: session.userId }, (err, user) => {
-									if (user.role === "admin") socket.emit("event:stations.created", station);
+									if (user.role === "admin") socket.dispatch("event:stations.created", station);
 									else if (station.type === "community" && station.owner === session.userId)
-										socket.emit("event:stations.created", station);
+										socket.dispatch("event:stations.created", station);
 								});
 							}
 						});

@@ -953,7 +953,7 @@ class _StationsModule extends CoreClass {
 														(err, user) => {
 															if (!err && user) {
 																if (user.role === "admin")
-																	socket.emit(
+																	socket.dispatch(
 																		"event:station.nextSong",
 																		station._id,
 																		station.currentSong
@@ -962,7 +962,7 @@ class _StationsModule extends CoreClass {
 																	station.type === "community" &&
 																	station.owner === session.userId
 																)
-																	socket.emit(
+																	socket.dispatch(
 																		"event:station.nextSong",
 																		station._id,
 																		station.currentSong

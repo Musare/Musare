@@ -152,20 +152,15 @@ class _IOModule extends CoreClass {
 			const sockets = [];
 
 			return async.eachLimit(
-				Object.keys(IOModule._io.clients),
+				IOModule._io.clients,
 				1,
-				(id, next) => {
-					const { session } = IOModule._io.clients[id];
+				(socket, next) => {
+					const { sessionId } = socket.session;
 
-					console.log(1, session);
-
-					if (session.sessionId) {
-						return CacheModule.runJob("HGET", { table: "sessions", key: session.sessionId }, this)
+					if (sessionId) {
+						return CacheModule.runJob("HGET", { table: "sessions", key: sessionId }, this)
 							.then(session => {
-								console.log(2, session, payload.userId);
-
-								if (session && session.userId === payload.userId)
-									sockets.push(IOModule._io.clients[id]);
+								if (session && session.userId === payload.userId) sockets.push(socket);
 								next();
 							})
 							.catch(err => next(err));
@@ -174,8 +169,6 @@ class _IOModule extends CoreClass {
 					return next();
 				},
 				err => {
-					console.log("SOCKETS_FROM_USER", sockets, err);
-
 					if (err) return reject(err);
 					return resolve(sockets);
 				}
@@ -293,21 +286,7 @@ class _IOModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async EMIT_TO_ROOM(payload) {
-		console.log("EMIT_TO_ROOM", payload.room);
-
 		return new Promise(resolve => {
-			// IOModule._io.clients.forEach(socket => {
-			// 	console.log(1234);
-			// 	console.log(socket, socket.rooms);
-
-			// 	if (socket.rooms[payload.room]) {
-			// 		console.log(payload.args);
-			// 		socket.dispatch(...payload.args);
-			// 	}
-			// });
-
-			console.log(IOModule.rooms, payload.room);
-
 			if (IOModule.rooms[payload.room])
 				return IOModule.rooms[payload.room].forEach(async socketId => {
 					const socket = await IOModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId }, this);

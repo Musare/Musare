@@ -64,7 +64,7 @@ CacheModule.runJob("SUB", {
 		});
 		IOModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
 			sockets.forEach(socket => {
-				socket.emit("event:song.newRatings", {
+				socket.dispatch("event:song.newRatings", {
 					songId: data.songId,
 					liked: true,
 					disliked: false
@@ -90,7 +90,7 @@ CacheModule.runJob("SUB", {
 		});
 		IOModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
 			sockets.forEach(socket => {
-				socket.emit("event:song.newRatings", {
+				socket.dispatch("event:song.newRatings", {
 					songId: data.songId,
 					liked: false,
 					disliked: true
@@ -116,7 +116,7 @@ CacheModule.runJob("SUB", {
 		});
 		IOModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
 			sockets.forEach(socket => {
-				socket.emit("event:song.newRatings", {
+				socket.dispatch("event:song.newRatings", {
 					songId: data.songId,
 					liked: false,
 					disliked: false
@@ -142,7 +142,7 @@ CacheModule.runJob("SUB", {
 		});
 		IOModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
 			sockets.forEach(socket => {
-				socket.emit("event:song.newRatings", {
+				socket.dispatch("event:song.newRatings", {
 					songId: data.songId,
 					liked: false,
 					disliked: false
