@@ -38,6 +38,8 @@ export default {
 	},
 
 	onConnect(...args) {
+		console.log("on connect io.js", args);
+
 		if (args[0] === true) callbacks.onConnect.persist.push(args[1]);
 		else callbacks.onConnect.temp.push(args[0]);
 	},

@@ -928,11 +928,12 @@ class _StationsModule extends CoreClass {
 								.then()
 								.catch();
 						} else {
-							const sockets = await IOModule.runJob("GET_ROOM_SOCKETS", { room: "home" }, this);
+							const sockets = await IOModule.runJob("GET_SOCKETS_FOR_ROOM", { room: "home" }, this);
 
-							Object.keys(sockets).forEach(socketKey => {
-								const socket = sockets[socketKey];
+							sockets.forEach(async socketId => {
+								const socket = await IOModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId }, this);
 								const { session } = socket;
+
 								if (session.sessionId) {
 									CacheModule.runJob(
 										"HGET",
@@ -981,10 +982,8 @@ class _StationsModule extends CoreClass {
 						if (station.currentSong !== null && station.currentSong.songId !== undefined) {
 							IOModule.runJob("SOCKETS_JOIN_SONG_ROOM", {
 								sockets: await IOModule.runJob(
-									"GET_ROOM_SOCKETS",
-									{
-										room: `station.${station._id}`
-									},
+									"GET_SOCKETS_FOR_ROOM",
+									{ room: `station.${station._id}` },
 									this
 								),
 								room: `song.${station.currentSong.songId}`
@@ -999,10 +998,8 @@ class _StationsModule extends CoreClass {
 						} else {
 							IOModule.runJob("SOCKETS_LEAVE_SONG_ROOMS", {
 								sockets: await IOModule.runJob(
-									"GET_ROOM_SOCKETS",
-									{
-										room: `station.${station._id}`
-									},
+									"GET_SOCKETS_FOR_ROOM",
+									{ room: `station.${station._id}` },
 									this
 								)
 							})
@@ -1125,7 +1122,7 @@ class _StationsModule extends CoreClass {
 	 */
 	GET_SOCKETS_THAT_CAN_KNOW_ABOUT_STATION(payload) {
 		return new Promise((resolve, reject) => {
-			IOModule.runJob("GET_ROOM_SOCKETS", { room: payload.room }, this)
+			IOModule.runJob("GET_SOCKETS_FOR_ROOM", { room: payload.room }, this)
 				.then(socketsObject => {
 					const sockets = Object.keys(socketsObject).map(socketKey => socketsObject[socketKey]);
 					let socketsThatCan = [];

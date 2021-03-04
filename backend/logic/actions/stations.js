@@ -41,7 +41,7 @@ CacheModule.runJob("SUB", {
 					args: ["event:userCount.updated", stationId, count]
 				});
 			else {
-				const sockets = await IOModule.runJob("GET_ROOM_SOCKETS", {
+				const sockets = await IOModule.runJob("GET_SOCKETS_FOR_ROOM", {
 					room: "home"
 				});
 
@@ -366,7 +366,7 @@ CacheModule.runJob("SUB", {
 					args: ["event:stations.created", station]
 				});
 			else {
-				const sockets = await IOModule.runJob("GET_ROOM_SOCKETS", {
+				const sockets = await IOModule.runJob("GET_SOCKETS_FOR_ROOM", {
 					room: "home"
 				});
 				Object.keys(sockets).forEach(socketKey => {
@@ -400,8 +400,6 @@ export default {
 	 * @param {Function} cb - callback
 	 */
 	index(session, cb) {
-		console.log("called");
-
 		async.waterfall(
 			[
 				next => {
@@ -770,13 +768,7 @@ export default {
 
 					data.currentSong.skipVotes = data.currentSong.skipVotes.length;
 
-					return SongsModule.runJob(
-						"GET_SONG_FROM_ID",
-						{
-							songId: data.currentSong.songId
-						},
-						this
-					)
+					return SongsModule.runJob("GET_SONG_FROM_ID", { songId: data.currentSong.songId }, this)
 						.then(response => {
 							const { song } = response;
 							if (song) {
@@ -1034,16 +1026,8 @@ export default {
 
 				(station, next) => {
 					skipVotes = station.currentSong.skipVotes.length;
-					IOModule.runJob(
-						"GET_ROOM_SOCKETS",
-						{
-							room: `station.${stationId}`
-						},
-						this
-					)
-						.then(sockets => {
-							next(null, sockets);
-						})
+					IOModule.runJob("GET_SOCKETS_FOR_ROOM", { room: `station.${stationId}` }, this)
+						.then(sockets => next(null, sockets))
 						.catch(next);
 				},
 

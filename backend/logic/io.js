@@ -63,8 +63,6 @@ class _IOModule extends CoreClass {
 			this._io.on("connection", async (socket, req) => {
 				socket.dispatch = (...args) => socket.send(JSON.stringify(args));
 
-				console.log(socket.actions);
-
 				socket.actions = new EventEmitter();
 				socket.actions.setMaxListeners(0);
 				socket.listen = (target, cb) => socket.actions.addListener(target, args => cb(args));
@@ -257,13 +255,11 @@ class _IOModule extends CoreClass {
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.socketId - the id of the socket which should join the room
-	 * @param {object} payload.room - the object representing the room the socket should join
+	 * @param {string} payload.room - the name of the room
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async SOCKET_JOIN_ROOM(payload) {
 		const { room, socketId } = payload;
-
-		console.log("JOIN_ROOM", payload.room);
 
 		// leave all other rooms
 		await IOModule.runJob("SOCKET_LEAVE_ROOMS", { socketId }, this);
@@ -297,59 +293,64 @@ class _IOModule extends CoreClass {
 		});
 	}
 
-	// UNKNOWN
-	// eslint-disable-next-line require-jsdoc
+	/**
+	 * Allows a socket to join a 'song' room
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.socketId - the id of the socket which should join the room
+	 * @param {string} payload.room - the name of the room
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	async SOCKET_JOIN_SONG_ROOM(payload) {
-		// socketId, room
-		const socket = await IOModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId: payload.socketId }, this);
+		const { room, socketId } = payload;
+
+		// leave any other song rooms the user is in
+		await IOModule.runJob("SOCKETS_LEAVE_SONG_ROOMS", { sockets: [socketId] }, this);
 
 		return new Promise(resolve => {
-			const { rooms } = socket;
-			Object.keys(rooms).forEach(roomKey => {
-				const room = rooms[roomKey];
-				if (room.indexOf("song.") !== -1) socket.leave(room);
-			});
-
-			socket.join(payload.room);
+			// join the room
+			if (IOModule.rooms[room]) IOModule.rooms[room].push(socketId);
+			else IOModule.rooms[room] = [socketId];
 
 			return resolve();
 		});
 	}
 
-	// UNKNOWN
-	// eslint-disable-next-line require-jsdoc
+	/**
+	 * Allows multiple sockets to join a 'song' room
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {Array} payload.sockets - array of socketIds
+	 * @param {object} payload.room - the name of the room
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	SOCKETS_JOIN_SONG_ROOM(payload) {
-		// sockets, room
 		return new Promise(resolve => {
-			Object.keys(payload.sockets).forEach(socketKey => {
-				const socket = payload.sockets[socketKey];
-
-				const { rooms } = socket;
-				Object.keys(rooms).forEach(roomKey => {
-					const room = rooms[roomKey];
-					if (room.indexOf("song.") !== -1) socket.leave(room);
-				});
-
-				socket.join(payload.room);
-			});
-
+			payload.sockets.forEach(socketId => IOModule.runJob("SOCKET_JOIN_SONG_ROOM", { socketId }, this));
 			return resolve();
 		});
 	}
 
-	// UNKNOWN
-	// eslint-disable-next-line require-jsdoc
+	/**
+	 * Allows multiple sockets to leave any 'song' rooms they are in
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {Array} payload.sockets - array of socketIds
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
 	SOCKETS_LEAVE_SONG_ROOMS(payload) {
-		// sockets
 		return new Promise(resolve => {
-			Object.keys(payload.sockets).forEach(socketKey => {
-				const socket = payload.sockets[socketKey];
-				const { rooms } = socket;
-				Object.keys(rooms).forEach(roomKey => {
-					const room = rooms[roomKey];
-					if (room.indexOf("song.") !== -1) socket.leave(room);
+			payload.sockets.forEach(async socketId => {
+				const rooms = await IOModule.runJob("GET_ROOMS_FOR_SOCKET", { socketId }, this);
+
+				rooms.forEach(room => {
+					if (room.indexOf("song.") !== -1)
+						IOModule.rooms[room] = IOModule.rooms[room].filter(
+							participant => participant !== payload.socketId
+						);
 				});
 			});
+
 			resolve();
 		});
 	}
@@ -361,10 +362,29 @@ class _IOModule extends CoreClass {
 	 * @param {string} payload.room - the name of the room
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
-	async GET_ROOM_SOCKETS(payload) {
+	async GET_SOCKETS_FOR_ROOM(payload) {
 		return new Promise(resolve => {
 			if (IOModule.rooms[payload.room]) return resolve(IOModule.rooms[payload.room]);
 			return resolve([]);
+		});
+	}
+
+	/**
+	 * Gets any rooms a socket is connected to
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.socketId - the id of the socket to check the rooms for
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	async GET_ROOMS_FOR_SOCKET(payload) {
+		return new Promise(resolve => {
+			const rooms = [];
+
+			Object.keys(IOModule.rooms).forEach(room => {
+				if (IOModule.rooms[room].includes(payload.socketId)) rooms.push(room);
+			});
+
+			return resolve(rooms);
 		});
 	}
 
@@ -487,7 +507,7 @@ class _IOModule extends CoreClass {
 
 				socket.dispatch("keep.event:banned", socket.banishment.ban);
 
-				return socket.disconnect(true); // need to fix
+				return socket.disconnect(true); // doesn't work - need to fix
 			}
 
 			IOModule.log("INFO", "IO_CONNECTION", `User connected. IP: ${socket.ip}.${sessionInfo}`);

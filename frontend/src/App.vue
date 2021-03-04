@@ -109,6 +109,7 @@ export default {
 		}
 
 		io.onConnect(true, () => {
+			console.log("APP.VUE", "onConnect(true, () => {})");
 			this.socketConnected = true;
 		});
 		io.onConnectError(true, () => {
