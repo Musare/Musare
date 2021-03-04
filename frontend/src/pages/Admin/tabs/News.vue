@@ -248,21 +248,24 @@ export default {
 	mounted() {
 		io.getSocket(socket => {
 			this.socket = socket;
-			this.socket.dispatch("news.index", res => {
-				res.data.forEach(news => {
-					this.addNews(news);
-				});
-			});
-			this.socket.on("event:admin.news.created", news => {
-				this.addNews(news);
-			});
-			this.socket.on("event:admin.news.updated", updatedNews => {
-				this.updateNews(updatedNews);
-			});
-			this.socket.on("event:admin.news.removed", news => {
-				this.removeNews(news._id);
-			});
-			if (this.socket.connected) this.init();
+
+			this.socket.dispatch("news.index", res =>
+				res.data.forEach(news => this.addNews(news))
+			);
+
+			this.socket.on("event:admin.news.created", news =>
+				this.addNews(news)
+			);
+
+			this.socket.on("event:admin.news.updated", updatedNews =>
+				this.updateNews(updatedNews)
+			);
+
+			this.socket.on("event:admin.news.removed", news =>
+				this.removeNews(news._id)
+			);
+
+			if (this.socket.readyState === 1) this.init();
 			io.onConnect(() => this.init());
 		});
 	},

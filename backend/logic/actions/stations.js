@@ -400,16 +400,17 @@ export default {
 	 * @param {Function} cb - callback
 	 */
 	index(session, cb) {
+		console.log("called");
+
 		async.waterfall(
 			[
 				next => {
-					CacheModule.runJob("HGETALL", { table: "stations" }, this).then(stations => {
-						next(null, stations);
-					});
+					CacheModule.runJob("HGETALL", { table: "stations" }, this).then(stations => next(null, stations));
 				},
 
 				(items, next) => {
 					const filteredStations = [];
+
 					async.each(
 						items,
 						(station, nextStation) => {
@@ -418,14 +419,10 @@ export default {
 									callback => {
 										// only relevant if user logged in
 										if (session.userId) {
-											return StationsModule.runJob(
-												"HAS_USER_FAVORITED_STATION",
-												{
-													userId: session.userId,
-													stationId: station._id
-												},
-												this
-											)
+											return StationsModule.runJob("HAS_USER_FAVORITED_STATION", {
+												userId: session.userId,
+												stationId: station._id
+											})
 												.then(isStationFavorited => {
 													station.isFavorited = isStationFavorited;
 													return callback();
@@ -456,7 +453,6 @@ export default {
 									station.userCount = StationsModule.usersPerStationCount[station._id] || 0;
 
 									if (exists) filteredStations.push(station);
-
 									return nextStation();
 								}
 							);
@@ -471,7 +467,9 @@ export default {
 					this.log("ERROR", "STATIONS_INDEX", `Indexing stations failed. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
+
 				this.log("SUCCESS", "STATIONS_INDEX", `Indexing stations successful.`, false);
+
 				return cb({ status: "success", stations });
 			}
 		);

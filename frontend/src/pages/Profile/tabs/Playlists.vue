@@ -34,7 +34,10 @@
 					:name="!drag ? 'draggable-list-transition' : null"
 				>
 					<div
-						class="item item-draggable"
+						:class="{
+							item: true,
+							'item-draggable': myUserId === userId
+						}"
 						v-for="playlist in playlists"
 						:key="playlist._id"
 					>

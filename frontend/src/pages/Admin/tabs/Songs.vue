@@ -310,22 +310,20 @@ export default {
 		io.getSocket(socket => {
 			this.socket = socket;
 
-			this.socket.on("event:admin.song.added", song => {
-				this.addSong(song);
-			});
+			this.socket.on("event:admin.song.added", song =>
+				this.addSong(song)
+			);
 
-			this.socket.on("event:admin.song.removed", songId => {
-				this.removeSong(songId);
-			});
+			this.socket.on("event:admin.song.removed", songId =>
+				this.removeSong(songId)
+			);
 
-			this.socket.on("event:admin.song.updated", updatedSong => {
-				this.updateSong(updatedSong);
-			});
+			this.socket.on("event:admin.song.updated", updatedSong =>
+				this.updateSong(updatedSong)
+			);
 
-			if (this.socket.connected) this.init();
-			io.onConnect(() => {
-				this.init();
-			});
+			if (this.socket.readyState === 1) this.init();
+			io.onConnect(() => this.init());
 		});
 
 		if (this.$route.query.songId) {

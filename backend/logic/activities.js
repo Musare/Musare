@@ -73,8 +73,8 @@ class _ActivitiesModule extends CoreClass {
 
 					(activity, next) => {
 						IOModule.runJob("SOCKETS_FROM_USER", { userId: activity.userId }, this)
-							.then(res => {
-								res.sockets.forEach(socket => socket.emit("event:activity.create", activity));
+							.then(sockets => {
+								sockets.forEach(socket => socket.emit("event:activity.create", activity));
 								next(null, activity);
 							})
 							.catch(next);
@@ -226,8 +226,8 @@ class _ActivitiesModule extends CoreClass {
 							activityModel.updateOne({ _id: activity._id }, { $set: { hidden: true } }).catch(next);
 
 							IOModule.runJob("SOCKETS_FROM_USER", { userId: payload.userId }, this)
-								.then(res =>
-									res.sockets.forEach(socket => socket.emit("event:activity.hide", activity._id))
+								.then(sockets =>
+									sockets.forEach(socket => socket.emit("event:activity.hide", activity._id))
 								)
 								.catch(next);
 
@@ -331,8 +331,8 @@ class _ActivitiesModule extends CoreClass {
 							activityModel.updateOne({ _id: activity._id }, { $set: { hidden: true } }).catch(next);
 
 							IOModule.runJob("SOCKETS_FROM_USER", { userId: payload.userId }, this)
-								.then(res =>
-									res.sockets.forEach(socket => socket.emit("event:activity.hide", activity._id))
+								.then(sockets =>
+									sockets.forEach(socket => socket.emit("event:activity.hide", activity._id))
 								)
 								.catch(next);
 

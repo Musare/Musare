@@ -1092,13 +1092,7 @@ class _StationsModule extends CoreClass {
 			async.waterfall(
 				[
 					next => {
-						DBModule.runJob(
-							"GET_MODEL",
-							{
-								modelName: "user"
-							},
-							this
-						).then(userModel => {
+						DBModule.runJob("GET_MODEL", { modelName: "user" }, this).then(userModel => {
 							userModel.findOne({ _id: payload.userId }, next);
 						});
 					},

@@ -243,10 +243,8 @@ export default {
 				}
 			});
 
-			if (this.socket.connected) this.init();
-			io.onConnect(() => {
-				this.init();
-			});
+			if (this.socket.readyState === 1) this.init();
+			io.onConnect(() => this.init());
 		});
 	},
 	methods: {

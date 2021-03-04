@@ -80,7 +80,9 @@ export default {
 				this.socket.dispatch(
 					"apis.joinRoom",
 					`profile-${this.userId}-activities`,
-					() => {}
+					res => {
+						console.log("res of joining activities room", res);
+					}
 				);
 			}
 

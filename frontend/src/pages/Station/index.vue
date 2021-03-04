@@ -598,7 +598,7 @@ export default {
 		io.getSocket(socket => {
 			this.socket = socket;
 
-			if (this.socket.connected) this.join();
+			if (this.socket.readyState === 1) this.join();
 			io.onConnect(this.join);
 
 			this.socket.dispatch(

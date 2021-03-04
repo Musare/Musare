@@ -19,7 +19,7 @@ export default {
 			return {
 				animation: 200,
 				group: "description",
-				disabled: false,
+				disabled: this.myUserId !== this.userId,
 				ghostClass: "draggable-list-ghost"
 			};
 		}

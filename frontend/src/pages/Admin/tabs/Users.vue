@@ -88,7 +88,8 @@ export default {
 	mounted() {
 		io.getSocket(socket => {
 			this.socket = socket;
-			if (this.socket.connected) this.init();
+
+			if (this.socket.readyState === 1) this.init();
 			io.onConnect(() => this.init());
 		});
 	},

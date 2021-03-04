@@ -16,10 +16,8 @@ const ActivitiesModule = moduleManager.modules.activities;
 CacheModule.runJob("SUB", {
 	channel: "playlist.create",
 	cb: playlist => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: playlist.createdBy }, this).then(response => {
-			response.sockets.forEach(socket => {
-				socket.emit("event:playlist.create", playlist);
-			});
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: playlist.createdBy }, this).then(sockets => {
+			sockets.forEach(socket => socket.emit("event:playlist.create", playlist));
 		});
 
 		if (playlist.privacy === "public")
@@ -33,8 +31,8 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "playlist.delete",
 	cb: res => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(response => {
-			response.sockets.forEach(socket => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
+			sockets.forEach(socket => {
 				socket.emit("event:playlist.delete", res.playlistId);
 			});
 		});
@@ -49,8 +47,8 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "playlist.repositionSongs",
 	cb: res => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(response =>
-			response.sockets.forEach(socket =>
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets =>
+			sockets.forEach(socket =>
 				socket.emit("event:playlist.repositionSongs", {
 					playlistId: res.playlistId,
 					songsBeingChanged: res.songsBeingChanged
@@ -63,8 +61,8 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "playlist.addSong",
 	cb: res => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(response => {
-			response.sockets.forEach(socket => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
+			sockets.forEach(socket => {
 				socket.emit("event:playlist.addSong", {
 					playlistId: res.playlistId,
 					song: res.song
@@ -89,8 +87,8 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "playlist.removeSong",
 	cb: res => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(response => {
-			response.sockets.forEach(socket => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
+			sockets.forEach(socket => {
 				socket.emit("event:playlist.removeSong", {
 					playlistId: res.playlistId,
 					songId: res.songId
@@ -115,8 +113,8 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "playlist.updateDisplayName",
 	cb: res => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(response => {
-			response.sockets.forEach(socket => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
+			sockets.forEach(socket => {
 				socket.emit("event:playlist.updateDisplayName", {
 					playlistId: res.playlistId,
 					displayName: res.displayName
@@ -141,8 +139,8 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "playlist.updatePrivacy",
 	cb: res => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(response => {
-			response.sockets.forEach(socket => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
+			sockets.forEach(socket => {
 				socket.emit("event:playlist.updatePrivacy", {
 					playlist: res.playlist
 				});

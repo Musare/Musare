@@ -51,16 +51,12 @@ class _IOModule extends CoreClass {
 
 		// this._io.origins(config.get("cors.origin"));
 
-		// this._io = socketio(server);
-
 		this._io = new WebSocket.Server({ server, path: "/ws" });
+
+		this.rooms = {};
 
 		return new Promise(resolve => {
 			this.setStage(3);
-
-			// this._io.use(async (socket, cb) => {
-			// 	IOModule.runJob("HANDLE_IO_USE", { socket, cb });
-			// });
 
 			this.setStage(4);
 
@@ -73,7 +69,6 @@ class _IOModule extends CoreClass {
 				socket.actions.setMaxListeners(0);
 				socket.listen = (target, cb) => socket.actions.addListener(target, args => cb(args));
 
-				socket.dispatch("test2", { color: "red" }, 9);
 				IOModule.runJob("HANDLE_IO_USE", { socket, req }).then(socket =>
 					IOModule.runJob("HANDLE_IO_CONNECTION", { socket })
 				);
@@ -97,18 +92,20 @@ class _IOModule extends CoreClass {
 	}
 
 	/**
-	 * Returns whether there is a socket for a session id or not
+	 * Obtains socket object for a specified socket id
 	 *
 	 * @param {object} payload - object containing the payload
-	 * @param {string} payload.sessionId - user session id
+	 * @param {string} payload.socketId - the id of the socket
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
-	async SOCKET_FROM_SESSION(payload) {
-		// socketId
+	async SOCKET_FROM_SOCKET_ID(payload) {
 		return new Promise((resolve, reject) => {
-			const ns = IOModule._io.of("/");
-			if (ns) {
-				return resolve(ns.connected[payload.socketId]);
+			const { clients } = IOModule._io;
+
+			if (clients) {
+				return clients.forEach(socket => {
+					if (socket.session.socketId === payload.socketId) resolve(socket);
+				});
 			}
 
 			return reject();
@@ -124,20 +121,18 @@ class _IOModule extends CoreClass {
 	 */
 	async SOCKETS_FROM_SESSION_ID(payload) {
 		return new Promise(resolve => {
-			const ns = IOModule._io.of("/");
+			const { clients } = IOModule._io;
 			const sockets = [];
 
-			if (ns) {
+			if (clients) {
 				return async.each(
-					Object.keys(ns.connected),
+					Object.keys(clients),
 					(id, next) => {
-						const { session } = ns.connected[id];
+						const { session } = clients[id];
 						if (session.sessionId === payload.sessionId) sockets.push(session.sessionId);
 						next();
 					},
-					() => {
-						resolve({ sockets });
-					}
+					() => resolve(sockets)
 				);
 			}
 
@@ -154,33 +149,37 @@ class _IOModule extends CoreClass {
 	 */
 	async SOCKETS_FROM_USER(payload) {
 		return new Promise((resolve, reject) => {
-			const ns = IOModule._io.of("/");
 			const sockets = [];
 
-			if (ns) {
-				return async.eachLimit(
-					Object.keys(ns.connected),
-					1,
-					(id, next) => {
-						const { session } = ns.connected[id];
+			return async.eachLimit(
+				Object.keys(IOModule._io.clients),
+				1,
+				(id, next) => {
+					const { session } = IOModule._io.clients[id];
 
-						if (session.sessionId) {
-							CacheModule.runJob("HGET", { table: "sessions", key: session.sessionId }, this)
-								.then(session => {
-									if (session && session.userId === payload.userId) sockets.push(ns.connected[id]);
-									next();
-								})
-								.catch(err => next(err));
-						} else next();
-					},
-					err => {
-						if (err) return reject(err);
-						return resolve({ sockets });
+					console.log(1, session);
+
+					if (session.sessionId) {
+						return CacheModule.runJob("HGET", { table: "sessions", key: session.sessionId }, this)
+							.then(session => {
+								console.log(2, session, payload.userId);
+
+								if (session && session.userId === payload.userId)
+									sockets.push(IOModule._io.clients[id]);
+								next();
+							})
+							.catch(err => next(err));
 					}
-				);
-			}
 
-			return resolve();
+					return next();
+				},
+				err => {
+					console.log("SOCKETS_FROM_USER", sockets, err);
+
+					if (err) return reject(err);
+					return resolve(sockets);
+				}
+			);
 		});
 	}
 
@@ -193,35 +192,24 @@ class _IOModule extends CoreClass {
 	 */
 	async SOCKETS_FROM_IP(payload) {
 		return new Promise(resolve => {
-			const ns = IOModule._io.of("/");
+			const { clients } = IOModule._io;
+
 			const sockets = [];
-			if (ns) {
-				return async.each(
-					Object.keys(ns.connected),
-					(id, next) => {
-						const { session } = ns.connected[id];
 
-						CacheModule.runJob(
-							"HGET",
-							{
-								table: "sessions",
-								key: session.sessionId
-							},
-							this
-						)
-							.then(session => {
-								if (session && ns.connected[id].ip === payload.ip) sockets.push(ns.connected[id]);
-								next();
-							})
-							.catch(() => next());
-					},
-					() => {
-						resolve(sockets);
-					}
-				);
-			}
+			return async.each(
+				Object.keys(clients),
+				(id, next) => {
+					const { session } = clients[id];
 
-			return resolve();
+					CacheModule.runJob("HGET", { table: "sessions", key: session.sessionId }, this)
+						.then(session => {
+							if (session && clients[id].ip === payload.ip) sockets.push(clients[id]);
+							next();
+						})
+						.catch(() => next());
+				},
+				() => resolve(sockets)
+			);
 		});
 	}
 
@@ -234,20 +222,18 @@ class _IOModule extends CoreClass {
 	 */
 	async SOCKETS_FROM_USER_WITHOUT_CACHE(payload) {
 		return new Promise(resolve => {
-			const ns = IOModule._io.of("/");
+			const { clients } = IOModule._io;
 			const sockets = [];
 
-			if (ns) {
+			if (clients) {
 				return async.each(
-					Object.keys(ns.connected),
+					Object.keys(clients),
 					(id, next) => {
-						const { session } = ns.connected[id];
-						if (session.userId === payload.userId) sockets.push(ns.connected[id]);
+						const { session } = clients[id];
+						if (session.userId === payload.userId) sockets.push(clients[id]);
 						next();
 					},
-					() => {
-						resolve({ sockets });
-					}
+					() => resolve(sockets)
 				);
 			}
 
@@ -263,20 +249,10 @@ class _IOModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async SOCKET_LEAVE_ROOMS(payload) {
-		const socket = await IOModule.runJob(
-			"SOCKET_FROM_SESSION",
-			{
-				socketId: payload.socketId
-			},
-			this
-		);
-
 		return new Promise(resolve => {
-			const { rooms } = socket;
-
-			Object.keys(rooms).forEach(roomKey => {
-				const room = rooms[roomKey];
-				socket.leave(room);
+			// filter out rooms that the user is in
+			Object.keys(IOModule.rooms).forEach(room => {
+				IOModule.rooms[room] = IOModule.rooms[room].filter(participant => participant !== payload.socketId);
 			});
 
 			return resolve();
@@ -284,7 +260,7 @@ class _IOModule extends CoreClass {
 	}
 
 	/**
-	 * Allows a socket to join a specified room
+	 * Allows a socket to join a specified room (this will remove them from any rooms they are currently in)
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.socketId - the id of the socket which should join the room
@@ -292,22 +268,51 @@ class _IOModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async SOCKET_JOIN_ROOM(payload) {
-		const socket = await IOModule.runJob(
-			"SOCKET_FROM_SESSION",
-			{
-				socketId: payload.socketId
-			},
-			this
-		);
+		const { room, socketId } = payload;
+
+		console.log("JOIN_ROOM", payload.room);
+
+		// leave all other rooms
+		await IOModule.runJob("SOCKET_LEAVE_ROOMS", { socketId }, this);
 
 		return new Promise(resolve => {
-			const { rooms } = socket;
-			Object.keys(rooms).forEach(roomKey => {
-				const room = rooms[roomKey];
-				socket.leave(room);
-			});
+			// create room if it doesn't exist, and add socketId to array
+			if (IOModule.rooms[room]) IOModule.rooms[room].push(socketId);
+			else IOModule.rooms[room] = [socketId];
 
-			socket.join(payload.room);
+			return resolve();
+		});
+	}
+
+	/**
+	 * Emits arguments to any sockets that are in a specified a room
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.room - the name of the room to emit arguments
+	 * @param {object} payload.args - any arguments to be emitted to the sockets in the specific room
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	async EMIT_TO_ROOM(payload) {
+		console.log("EMIT_TO_ROOM", payload.room);
+
+		return new Promise(resolve => {
+			// IOModule._io.clients.forEach(socket => {
+			// 	console.log(1234);
+			// 	console.log(socket, socket.rooms);
+
+			// 	if (socket.rooms[payload.room]) {
+			// 		console.log(payload.args);
+			// 		socket.dispatch(...payload.args);
+			// 	}
+			// });
+
+			console.log(IOModule.rooms, payload.room);
+
+			if (IOModule.rooms[payload.room])
+				return IOModule.rooms[payload.room].forEach(async socketId => {
+					const socket = await IOModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId }, this);
+					socket.dispatch(...payload.args);
+				});
 
 			return resolve();
 		});
@@ -317,13 +322,7 @@ class _IOModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
 	async SOCKET_JOIN_SONG_ROOM(payload) {
 		// socketId, room
-		const socket = await IOModule.runJob(
-			"SOCKET_FROM_SESSION",
-			{
-				socketId: payload.socketId
-			},
-			this
-		);
+		const socket = await IOModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId: payload.socketId }, this);
 
 		return new Promise(resolve => {
 			const { rooms } = socket;
@@ -377,28 +376,6 @@ class _IOModule extends CoreClass {
 	}
 
 	/**
-	 * Emits arguments to any sockets that are in a specified a room
-	 *
-	 * @param {object} payload - object that contains the payload
-	 * @param {string} payload.room - the name of the room to emit arguments
-	 * @param {object} payload.args - any arguments to be emitted to the sockets in the specific room
-	 * @returns {Promise} - returns promise (reject, resolve)
-	 */
-	async EMIT_TO_ROOM(payload) {
-		return new Promise(resolve =>
-			// const { sockets } = IOModule._io.sockets;
-			// Object.keys(sockets).forEach(socketKey => {
-			// 	const socket = sockets[socketKey];
-			// 	if (socket.rooms[payload.room]) {
-			// 		socket.dispatch(...payload.args);
-			// 	}
-			// });
-
-			resolve()
-		);
-	}
-
-	/**
 	 * Gets any sockets connected to a room
 	 *
 	 * @param {object} payload - object that contains the payload
@@ -407,14 +384,8 @@ class _IOModule extends CoreClass {
 	 */
 	async GET_ROOM_SOCKETS(payload) {
 		return new Promise(resolve => {
-			const { sockets } = IOModule._io.sockets;
-			const roomSockets = [];
-			Object.keys(sockets).forEach(socketKey => {
-				const socket = sockets[socketKey];
-				if (socket.rooms[payload.room]) roomSockets.push(socket);
-			});
-
-			return resolve(roomSockets);
+			if (IOModule.rooms[payload.room]) return resolve(IOModule.rooms[payload.room]);
+			return resolve([]);
 		});
 	}
 
@@ -504,8 +475,6 @@ class _IOModule extends CoreClass {
 					if (!socket.session) socket.session = { socketId: req.headers["sec-websocket-key"] };
 					else socket.session.socketId = req.headers["sec-websocket-key"];
 
-					console.log("session", socket.session);
-
 					// cb();
 					resolve(socket);
 				}
@@ -539,16 +508,18 @@ class _IOModule extends CoreClass {
 
 				socket.dispatch("keep.event:banned", socket.banishment.ban);
 
-				return socket.disconnect(true);
+				return socket.disconnect(true); // need to fix
 			}
 
 			IOModule.log("INFO", "IO_CONNECTION", `User connected. IP: ${socket.ip}.${sessionInfo}`);
 
 			// catch when the socket has been disconnected
-			socket.onclose = () => {
+			socket.on("close", async () => {
 				if (socket.session.sessionId) sessionInfo = ` UserID: ${socket.session.userId}.`;
 				IOModule.log("INFO", "IO_DISCONNECTION", `User disconnected. IP: ${socket.ip}.${sessionInfo}`);
-			};
+
+				await IOModule.runJob("SOCKET_LEAVE_ROOMS", { socketId: socket.session.socketId });
+			});
 
 			// socket.use((data, next) => {
 			// 	if (data.length === 0) return next(new Error("Not enough arguments specified."));
@@ -573,7 +544,7 @@ class _IOModule extends CoreClass {
 			// });
 
 			// catch errors on the socket (internal to socket.io)
-			socket.onerror = console.error;
+			socket.onerror = console.error; // need to update
 
 			if (socket.session.sessionId) {
 				CacheModule.runJob("HGET", {
@@ -625,86 +596,9 @@ class _IOModule extends CoreClass {
 					};
 
 					// listen for this action to be called
-					socket.listen(name, async args => {
-						IOModule.runJob("RUN_ACTION", { socket, namespace, action, args });
-
-						console.log(name, args);
-
-						/* let cb = args[args.length - 1];
-
-						if (typeof cb !== "function")
-							cb = () => {
-								IOModule.log("INFO", "IO_MODULE", `There was no callback provided for ${name}.`);
-							};
-						else args.pop();
-
-						if (this.getStatus() !== "READY") {
-							IOModule.log(
-								"INFO",
-								"IO_REJECTED_ACTION",
-								`A user tried to execute an action, but the IO module is currently not ready. Action: ${namespace}.${action}.`
-							);
-							return;
-						}
-						IOModule.log("INFO", "IO_ACTION", `A user executed an action. Action: ${namespace}.${action}.`);
-
-						let failedGettingSession = false;
-						// load the session from the cache
-						if (socket.session.sessionId)
-							await CacheModule.runJob("HGET", {
-								table: "sessions",
-								key: socket.session.sessionId
-							})
-								.then(session => {
-									// make sure the sockets sessionId isn't set if there is no session
-									if (socket.session.sessionId && session === null) delete socket.session.sessionId;
-								})
-								.catch(() => {
-									failedGettingSession = true;
-									if (typeof cb === "function")
-										cb({
-											status: "error",
-											message: "An error occurred while obtaining your session"
-										});
-								});
-						if (!failedGettingSession)
-							try {
-								// call the action, passing it the session, and the arguments socket.io passed us
-								this.runJob("RUN_ACTION", { namespace, action, session: socket.session, args })
-									.then(response => {
-										if (typeof cb === "function") cb(response);
-									})
-									.catch(err => {
-										if (typeof cb === "function") cb(err);
-									});
-								// actions[namespace][action].apply(
-								// 	null,
-								// 	[socket.session].concat(args).concat([
-								// 		result => {
-								// 			IOModule.log(
-								// 				"INFO",
-								// 				"IO_ACTION",
-								// 				`Response to action. Action: ${namespace}.${action}. Response status: ${result.status}`
-								// 			);
-								// 			// respond to the socket with our message
-								// 			if (typeof cb === "function") cb(result);
-								// 		}
-								// 	])
-								// );
-							} catch (err) {
-								if (typeof cb === "function")
-									cb({
-										status: "error",
-										message: "An error occurred while executing the specified action."
-									});
-
-								IOModule.log(
-									"ERROR",
-									"IO_ACTION_ERROR",
-									`Some type of exception occurred in the action ${namespace}.${action}. Error message: ${err.message}`
-								);
-							} */
-					});
+					socket.listen(name, async args =>
+						IOModule.runJob("RUN_ACTION", { socket, namespace, action, args })
+					);
 				});
 			});
 
@@ -726,6 +620,7 @@ class _IOModule extends CoreClass {
 			const name = `${namespace}.${action}`;
 
 			let cb = args[args.length - 1];
+
 			if (typeof cb !== "function")
 				cb = () => {
 					IOModule.log("INFO", "IO_MODULE", `There was no callback provided for ${name}.`);
@@ -770,6 +665,7 @@ class _IOModule extends CoreClass {
 									status: "error",
 									message: "An error occurred while executing the specified action."
 								});
+
 							reject(err);
 
 							IOModule.log(

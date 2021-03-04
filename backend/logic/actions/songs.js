@@ -62,8 +62,8 @@ CacheModule.runJob("SUB", {
 				}
 			]
 		});
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(response => {
-			response.sockets.forEach(socket => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
+			sockets.forEach(socket => {
 				socket.emit("event:song.newRatings", {
 					songId: data.songId,
 					liked: true,
@@ -88,8 +88,8 @@ CacheModule.runJob("SUB", {
 				}
 			]
 		});
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(response => {
-			response.sockets.forEach(socket => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
+			sockets.forEach(socket => {
 				socket.emit("event:song.newRatings", {
 					songId: data.songId,
 					liked: false,
@@ -114,8 +114,8 @@ CacheModule.runJob("SUB", {
 				}
 			]
 		});
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(response => {
-			response.sockets.forEach(socket => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
+			sockets.forEach(socket => {
 				socket.emit("event:song.newRatings", {
 					songId: data.songId,
 					liked: false,
@@ -140,8 +140,8 @@ CacheModule.runJob("SUB", {
 				}
 			]
 		});
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(response => {
-			response.sockets.forEach(socket => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
+			sockets.forEach(socket => {
 				socket.emit("event:song.newRatings", {
 					songId: data.songId,
 					liked: false,

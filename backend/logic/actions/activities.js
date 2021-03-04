@@ -12,8 +12,8 @@ const UtilsModule = moduleManager.modules.utils;
 CacheModule.runJob("SUB", {
 	channel: "activity.removeAllForUser",
 	cb: userId => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId }, this).then(res =>
-			res.sockets.forEach(socket => socket.emit("event:activity.removeAllForUser"))
+		IOModule.runJob("SOCKETS_FROM_USER", { userId }, this).then(sockets =>
+			sockets.forEach(socket => socket.emit("event:activity.removeAllForUser"))
 		);
 
 		IOModule.runJob("EMIT_TO_ROOM", {
@@ -26,8 +26,8 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "activity.hide",
 	cb: res => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(response =>
-			response.sockets.forEach(socket => socket.emit("event:activity.hide", res.activityId))
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets =>
+			sockets.forEach(socket => socket.emit("event:activity.hide", res.activityId))
 		);
 
 		IOModule.runJob("EMIT_TO_ROOM", {

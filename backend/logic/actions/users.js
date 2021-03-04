@@ -21,8 +21,8 @@ const PlaylistsModule = moduleManager.modules.playlists;
 CacheModule.runJob("SUB", {
 	channel: "user.updatePreferences",
 	cb: res => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(response => {
-			response.sockets.forEach(socket => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
+			sockets.forEach(socket => {
 				socket.emit("keep.event:user.preferences.changed", res.preferences);
 			});
 		});
@@ -32,8 +32,8 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "user.updateOrderOfPlaylists",
 	cb: res => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(response => {
-			response.sockets.forEach(socket => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
+			sockets.forEach(socket => {
 				socket.emit("event:user.orderOfPlaylists.changed", res.orderOfPlaylists);
 			});
 		});
@@ -48,8 +48,8 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "user.updateUsername",
 	cb: user => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: user._id }).then(response => {
-			response.sockets.forEach(socket => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: user._id }).then(sockets => {
+			sockets.forEach(socket => {
 				socket.emit("event:user.username.changed", user.username);
 			});
 		});
@@ -59,8 +59,8 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "user.removeSessions",
 	cb: userId => {
-		IOModule.runJob("SOCKETS_FROM_USER_WITHOUT_CACHE", { userId }).then(response => {
-			response.sockets.forEach(socket => {
+		IOModule.runJob("SOCKETS_FROM_USER_WITHOUT_CACHE", { userId }).then(sockets => {
+			sockets.forEach(socket => {
 				socket.emit("keep.event:user.session.removed");
 			});
 		});
@@ -70,8 +70,8 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "user.linkPassword",
 	cb: userId => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId }).then(response => {
-			response.sockets.forEach(socket => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId }).then(sockets => {
+			sockets.forEach(socket => {
 				socket.emit("event:user.linkPassword");
 			});
 		});
@@ -81,8 +81,8 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "user.unlinkPassword",
 	cb: userId => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId }).then(response => {
-			response.sockets.forEach(socket => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId }).then(sockets => {
+			sockets.forEach(socket => {
 				socket.emit("event:user.unlinkPassword");
 			});
 		});
@@ -92,8 +92,8 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "user.linkGithub",
 	cb: userId => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId }).then(response => {
-			response.sockets.forEach(socket => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId }).then(sockets => {
+			sockets.forEach(socket => {
 				socket.emit("event:user.linkGithub");
 			});
 		});
@@ -103,8 +103,8 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "user.unlinkGithub",
 	cb: userId => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId }).then(response => {
-			response.sockets.forEach(socket => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId }).then(sockets => {
+			sockets.forEach(socket => {
 				socket.emit("event:user.unlinkGithub");
 			});
 		});
@@ -114,8 +114,8 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "user.ban",
 	cb: data => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(response => {
-			response.sockets.forEach(socket => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
+			sockets.forEach(socket => {
 				socket.emit("keep.event:banned", data.punishment);
 				socket.disconnect(true);
 			});
@@ -126,8 +126,8 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "user.favoritedStation",
 	cb: data => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(response => {
-			response.sockets.forEach(socket => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
+			sockets.forEach(socket => {
 				socket.emit("event:user.favoritedStation", data.stationId);
 			});
 		});
@@ -137,8 +137,8 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "user.unfavoritedStation",
 	cb: data => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(response => {
-			response.sockets.forEach(socket => {
+		IOModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
+			sockets.forEach(socket => {
 				socket.emit("event:user.unfavoritedStation", data.stationId);
 			});
 		});

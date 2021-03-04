@@ -360,7 +360,7 @@ class _TasksModule extends CoreClass {
 			async.each(
 				Object.keys(StationsModule.userList),
 				(socketId, next) => {
-					IOModule.runJob("SOCKET_FROM_SESSION", { socketId }).then(socket => {
+					IOModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId }).then(socket => {
 						const stationId = StationsModule.userList[socketId];
 
 						if (!socket || Object.keys(socket.rooms).indexOf(`station.${stationId}`) === -1) {

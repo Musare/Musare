@@ -501,7 +501,7 @@ export default {
 		io.getSocket(socket => {
 			this.socket = socket;
 
-			if (this.socket.connected) this.init();
+			if (this.socket.readyState === 1) this.init();
 			io.onConnect(() => this.init());
 
 			this.socket.on("event:stations.created", res => {

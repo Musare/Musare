@@ -92,7 +92,9 @@ export default {
 	mounted() {
 		io.getSocket(socket => {
 			this.socket = socket;
-			if (this.socket.connected) this.init();
+
+			if (this.socket.readyState === 1) this.init();
+			io.onConnect(() => this.init());
 
 			this.socket.dispatch("reports.index", res => {
 				this.reports = res.data;
@@ -104,13 +106,9 @@ export default {
 				});
 			});
 
-			this.socket.on("event:admin.report.created", report => {
-				this.reports.push(report);
-			});
-
-			io.onConnect(() => {
-				this.init();
-			});
+			this.socket.on("event:admin.report.created", report =>
+				this.reports.push(report)
+			);
 		});
 
 		if (this.$route.query.id) {
