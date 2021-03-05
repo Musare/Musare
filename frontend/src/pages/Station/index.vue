@@ -599,7 +599,10 @@ export default {
 			this.socket = socket;
 
 			if (this.socket.readyState === 1) this.join();
-			io.onConnect(this.join);
+			io.onConnect(() => {
+				console.log("station page connect", this.socket.readyState);
+				this.join();
+			});
 
 			this.socket.dispatch(
 				"stations.existsByName",

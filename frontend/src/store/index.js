@@ -1,5 +1,8 @@
+/* eslint-disable import/no-cycle */
 import Vue from "vue";
 import Vuex from "vuex";
+
+import websockets from "./modules/websockets";
 
 import user from "./modules/user";
 import settings from "./modules/settings";
@@ -19,6 +22,7 @@ Vue.use(Vuex);
 
 export default new Vuex.Store({
 	modules: {
+		websockets,
 		user,
 		settings,
 		station,

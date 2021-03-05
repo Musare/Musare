@@ -48,7 +48,6 @@ export default {
 	}),
 	watch: {
 		socketConnected(connected) {
-			console.log(connected);
 			if (!connected)
 				new Toast({
 					content: "Could not connect to the server.",
@@ -109,12 +108,9 @@ export default {
 		}
 
 		io.onConnect(true, () => {
-			console.log("APP.VUE", "onConnect(true, () => {})");
 			this.socketConnected = true;
 		});
-		io.onConnectError(true, () => {
-			this.socketConnected = false;
-		});
+
 		io.onDisconnect(true, () => {
 			this.socketConnected = false;
 		});
@@ -139,6 +135,7 @@ export default {
 				new Toast({ content: msg, timeout: 20000 });
 			}
 		});
+
 		io.getSocket(true, socket => {
 			this.socket = socket;
 

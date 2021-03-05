@@ -149,7 +149,7 @@ lofig.fetchConfig().then(config => {
 	}
 
 	// const { serverDomain } = config;
-	io.init("ws://localhost:8080/ws");
+	io.init({ url: "ws://localhost:8080/ws" });
 
 	io.getSocket(socket => {
 		socket.on("ready", (loggedIn, role, username, userId) => {
