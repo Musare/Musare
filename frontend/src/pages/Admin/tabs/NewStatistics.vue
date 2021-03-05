@@ -193,7 +193,7 @@
 <script>
 import { mapGetters } from "vuex";
 
-import io from "../../../io";
+import ws from "../../../ws";
 
 export default {
 	components: {},
@@ -208,7 +208,7 @@ export default {
 	}),
 	mounted() {
 		if (this.socket.readyState === 1) this.init();
-		io.onConnect(() => this.init());
+		ws.onConnect(() => this.init());
 	},
 	methods: {
 		init() {

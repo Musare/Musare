@@ -6,7 +6,7 @@ import moduleManager from "../../index";
 
 const DBModule = moduleManager.modules.db;
 const UtilsModule = moduleManager.modules.utils;
-const IOModule = moduleManager.modules.io;
+const WSModule = moduleManager.modules.ws;
 const SongsModule = moduleManager.modules.songs;
 const CacheModule = moduleManager.modules.cache;
 const PlaylistsModule = moduleManager.modules.playlists;
@@ -16,12 +16,12 @@ const ActivitiesModule = moduleManager.modules.activities;
 CacheModule.runJob("SUB", {
 	channel: "playlist.create",
 	cb: playlist => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: playlist.createdBy }, this).then(sockets => {
+		WSModule.runJob("SOCKETS_FROM_USER", { userId: playlist.createdBy }, this).then(sockets => {
 			sockets.forEach(socket => socket.dispatch("event:playlist.create", playlist));
 		});
 
 		if (playlist.privacy === "public")
-			IOModule.runJob("EMIT_TO_ROOM", {
+			WSModule.runJob("EMIT_TO_ROOM", {
 				room: `profile-${playlist.createdBy}-playlists`,
 				args: ["event:playlist.create", playlist]
 			});
@@ -31,13 +31,13 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "playlist.delete",
 	cb: res => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
+		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
 			sockets.forEach(socket => {
 				socket.dispatch("event:playlist.delete", res.playlistId);
 			});
 		});
 
-		IOModule.runJob("EMIT_TO_ROOM", {
+		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `profile-${res.userId}-playlists`,
 			args: ["event:playlist.delete", res.playlistId]
 		});
@@ -47,7 +47,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "playlist.repositionSongs",
 	cb: res => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets =>
+		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets =>
 			sockets.forEach(socket =>
 				socket.dispatch("event:playlist.repositionSongs", {
 					playlistId: res.playlistId,
@@ -61,7 +61,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "playlist.addSong",
 	cb: res => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
+		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
 			sockets.forEach(socket => {
 				socket.dispatch("event:playlist.addSong", {
 					playlistId: res.playlistId,
@@ -71,7 +71,7 @@ CacheModule.runJob("SUB", {
 		});
 
 		if (res.privacy === "public")
-			IOModule.runJob("EMIT_TO_ROOM", {
+			WSModule.runJob("EMIT_TO_ROOM", {
 				room: `profile-${res.userId}-playlists`,
 				args: [
 					"event:playlist.addSong",
@@ -87,7 +87,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "playlist.removeSong",
 	cb: res => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
+		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
 			sockets.forEach(socket => {
 				socket.dispatch("event:playlist.removeSong", {
 					playlistId: res.playlistId,
@@ -97,7 +97,7 @@ CacheModule.runJob("SUB", {
 		});
 
 		if (res.privacy === "public")
-			IOModule.runJob("EMIT_TO_ROOM", {
+			WSModule.runJob("EMIT_TO_ROOM", {
 				room: `profile-${res.userId}-playlists`,
 				args: [
 					"event:playlist.removeSong",
@@ -113,7 +113,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "playlist.updateDisplayName",
 	cb: res => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
+		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
 			sockets.forEach(socket => {
 				socket.dispatch("event:playlist.updateDisplayName", {
 					playlistId: res.playlistId,
@@ -123,7 +123,7 @@ CacheModule.runJob("SUB", {
 		});
 
 		if (res.privacy === "public")
-			IOModule.runJob("EMIT_TO_ROOM", {
+			WSModule.runJob("EMIT_TO_ROOM", {
 				room: `profile-${res.userId}-playlists`,
 				args: [
 					"event:playlist.updateDisplayName",
@@ -139,7 +139,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "playlist.updatePrivacy",
 	cb: res => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
+		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
 			sockets.forEach(socket => {
 				socket.dispatch("event:playlist.updatePrivacy", {
 					playlist: res.playlist
@@ -148,12 +148,12 @@ CacheModule.runJob("SUB", {
 		});
 
 		if (res.playlist.privacy === "public")
-			return IOModule.runJob("EMIT_TO_ROOM", {
+			return WSModule.runJob("EMIT_TO_ROOM", {
 				room: `profile-${res.userId}-playlists`,
 				args: ["event:playlist.create", res.playlist]
 			});
 
-		return IOModule.runJob("EMIT_TO_ROOM", {
+		return WSModule.runJob("EMIT_TO_ROOM", {
 			room: `profile-${res.userId}-playlists`,
 			args: ["event:playlist.delete", res.playlist._id]
 		});
@@ -164,7 +164,7 @@ export default {
 	/**
 	 * Gets all playlists
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Function} cb - gets called with the result
 	 */
 	index: isAdminRequired(async function index(session, cb) {
@@ -191,7 +191,7 @@ export default {
 	/**
 	 * Gets the first song from a private playlist
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} playlistId - the id of the playlist we are getting the first song from
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -235,7 +235,7 @@ export default {
 	/**
 	 * Gets a list of all the playlists for a specific user
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} userId - the user id in question
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -308,7 +308,7 @@ export default {
 	/**
 	 * Gets all playlists for the user requesting it
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {boolean} showNonModifiablePlaylists - whether or not to show non modifiable playlists e.g. liked songs
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -371,7 +371,7 @@ export default {
 	/**
 	 * Creates a new private playlist
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {object} data - the data for the new private playlist
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -461,7 +461,7 @@ export default {
 	/**
 	 * Gets a playlist from id
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} playlistId - the id of the playlist we are getting
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -510,7 +510,7 @@ export default {
 	/**
 	 * Obtains basic metadata of a playlist in order to format an activity
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} playlistId - the playlist id
 	 * @param {Function} cb - callback
 	 */
@@ -554,7 +554,7 @@ export default {
 	/**
 	 * Updates a private playlist
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} playlistId - the id of the playlist we are updating
 	 * @param {object} playlist - the new private playlist object
 	 * @param {Function} cb - gets called with the result
@@ -614,7 +614,7 @@ export default {
 	/**
 	 * Shuffles songs in a private playlist
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} playlistId - the id of the playlist we are updating
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -675,7 +675,7 @@ export default {
 	/**
 	 * Changes the order of song(s) in a private playlist
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} playlistId - the id of the playlist we are targeting
 	 * @param {Array} songsBeingChanged - the songs to be repositioned, each element contains "songId" and "position" properties
 	 * @param {Function} cb - gets called with the result
@@ -751,7 +751,7 @@ export default {
 	/**
 	 * Moves a song to the bottom of the list in a private playlist
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} playlistId - the id of the playlist we are moving the song to the bottom from
 	 * @param {string} songId - the id of the song we are moving to the bottom of the list
 	 * @param {Function} cb - gets called with the result
@@ -791,7 +791,7 @@ export default {
 					});
 
 					// update position property on songs that need to be changed
-					return IOModule.runJob(
+					return WSModule.runJob(
 						"RUN_ACTION2",
 						{
 							session,
@@ -836,7 +836,7 @@ export default {
 	/**
 	 * Adds a song to a private playlist
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {boolean} isSet - is the song part of a set of songs to be added
 	 * @param {string} songId - the id of the song we are trying to add
 	 * @param {string} playlistId - the id of the playlist we are adding the song to
@@ -955,7 +955,7 @@ export default {
 	/**
 	 * Adds a set of songs to a private playlist
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} url - the url of the the YouTube playlist
 	 * @param {string} playlistId - the id of the playlist we are adding the set of songs to
 	 * @param {boolean} musicOnly - whether to only add music to the playlist
@@ -994,7 +994,7 @@ export default {
 						songIds,
 						1,
 						(songId, next) => {
-							IOModule.runJob(
+							WSModule.runJob(
 								"RUN_ACTION2",
 								{
 									session,
@@ -1078,7 +1078,7 @@ export default {
 	/**
 	 * Removes a song from a private playlist
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} songId - the id of the song we are removing from the private playlist
 	 * @param {string} playlistId - the id of the playlist we are removing the song from
 	 * @param {Function} cb - gets called with the result
@@ -1124,7 +1124,7 @@ export default {
 					});
 
 					// update position property on songs that need to be changed
-					return IOModule.runJob(
+					return WSModule.runJob(
 						"RUN_ACTION2",
 						{
 							session,
@@ -1223,7 +1223,7 @@ export default {
 	/**
 	 * Updates the displayName of a private playlist
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} playlistId - the id of the playlist we are updating the displayName for
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -1305,7 +1305,7 @@ export default {
 	/**
 	 * Removes a private playlist
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} playlistId - the id of the playlist we are moving the song to the top from
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -1430,7 +1430,7 @@ export default {
 	/**
 	 * Updates the privacy of a private playlist
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} playlistId - the id of the playlist we are updating the privacy for
 	 * @param {string} privacy - what the new privacy of the playlist should be e.g. public
 	 * @param {Function} cb - gets called with the result

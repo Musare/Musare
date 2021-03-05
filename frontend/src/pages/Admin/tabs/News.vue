@@ -218,7 +218,7 @@
 import { mapActions, mapState, mapGetters } from "vuex";
 
 import Toast from "toasters";
-import io from "../../../io";
+import ws from "../../../ws";
 
 import EditNews from "../../../components/modals/EditNews.vue";
 
@@ -264,7 +264,7 @@ export default {
 		);
 
 		if (this.socket.readyState === 1) this.init();
-		io.onConnect(() => this.init());
+		ws.onConnect(() => this.init());
 	},
 	methods: {
 		createNews() {

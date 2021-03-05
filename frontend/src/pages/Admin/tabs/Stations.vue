@@ -187,7 +187,7 @@
 import { mapState, mapActions, mapGetters } from "vuex";
 
 import Toast from "toasters";
-import io from "../../../io";
+import ws from "../../../ws";
 
 import EditStation from "../../../components/modals/EditStation.vue";
 import UserIdToUsername from "../../../components/common/UserIdToUsername.vue";
@@ -216,7 +216,7 @@ export default {
 	},
 	mounted() {
 		if (this.socket.readyState === 1) this.init();
-		io.onConnect(() => this.init());
+		ws.onConnect(() => this.init());
 
 		this.socket.on("event:admin.station.added", station =>
 			this.stationAdded(station)

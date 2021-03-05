@@ -507,7 +507,7 @@ import Z404 from "../404.vue";
 import FloatingBox from "../../components/ui/FloatingBox.vue";
 import AddToPlaylistDropdown from "../../components/ui/AddToPlaylistDropdown.vue";
 
-import io from "../../io";
+import ws from "../../ws";
 import keyboardShortcuts from "../../keyboardShortcuts";
 import utils from "../../../js/utils";
 
@@ -599,10 +599,7 @@ export default {
 		window.stationInterval = 0;
 
 		if (this.socket.readyState === 1) this.join();
-		io.onConnect(() => {
-			console.log("station page connect", this.socket.readyState);
-			this.join();
-		});
+		ws.onConnect(() => this.join());
 
 		this.socket.dispatch(
 			"stations.existsByName",

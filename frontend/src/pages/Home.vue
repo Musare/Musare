@@ -445,7 +445,7 @@ import MainFooter from "../components/layout/MainFooter.vue";
 import CreateCommunityStation from "../components/modals/CreateCommunityStation.vue";
 import UserIdToUsername from "../components/common/UserIdToUsername.vue";
 
-import io from "../io";
+import ws from "../ws";
 
 export default {
 	components: {
@@ -500,7 +500,7 @@ export default {
 		this.siteName = await lofig.get("siteSettings.siteName");
 
 		if (this.socket.readyState === 1) this.init();
-		io.onConnect(() => this.init());
+		ws.onConnect(() => this.init());
 
 		this.socket.on("event:stations.created", res => {
 			const station = res;

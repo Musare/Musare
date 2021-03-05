@@ -4,7 +4,7 @@ import VueRouter from "vue-router";
 import store from "./store";
 
 import App from "./App.vue";
-import io from "./io";
+import ws from "./ws";
 
 const REQUIRED_CONFIG_VERSION = 1;
 
@@ -138,9 +138,9 @@ const router = new VueRouter({
 });
 
 // const { serverDomain } = config;
-io.init({ url: "ws://localhost:8080/ws" });
+ws.init({ url: "ws://localhost:8080/ws" });
 
-io.socket.on("ready", (loggedIn, role, username, userId) =>
+ws.socket.on("ready", (loggedIn, role, username, userId) =>
 	store.dispatch("user/auth/authData", {
 		loggedIn,
 		role,
@@ -149,15 +149,15 @@ io.socket.on("ready", (loggedIn, role, username, userId) =>
 	})
 );
 
-io.socket.on("keep.event:banned", ban =>
+ws.socket.on("keep.event:banned", ban =>
 	store.dispatch("user/auth/banUser", ban)
 );
 
-io.socket.on("event:user.username.changed", username =>
+ws.socket.on("event:user.username.changed", username =>
 	store.dispatch("user/auth/updateUsername", username)
 );
 
-io.socket.on("keep.event:user.preferences.changed", preferences => {
+ws.socket.on("keep.event:user.preferences.changed", preferences => {
 	store.dispatch(
 		"user/preferences/changeAutoSkipDisliked",
 		preferences.autoSkipDisliked
@@ -189,9 +189,9 @@ router.beforeEach((to, from, next) => {
 		window.stationInterval = 0;
 	}
 
-	if (window.socket) io.removeAllListeners();
+	if (window.socket) ws.removeAllListeners();
 
-	io.clear();
+	ws.clear();
 
 	if (to.meta.loginRequired || to.meta.adminRequired) {
 		const gotData = () => {

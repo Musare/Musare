@@ -12,7 +12,7 @@ let TasksModule;
 let CacheModule;
 let StationsModule;
 let UtilsModule;
-let IOModule;
+let WSModule;
 let DBModule;
 
 class _TasksModule extends CoreClass {
@@ -37,7 +37,7 @@ class _TasksModule extends CoreClass {
 			CacheModule = this.moduleManager.modules.cache;
 			StationsModule = this.moduleManager.modules.stations;
 			UtilsModule = this.moduleManager.modules.utils;
-			IOModule = this.moduleManager.modules.io;
+			WSModule = this.moduleManager.modules.ws;
 			DBModule = this.moduleManager.modules.db;
 
 			// this.createTask("testTask", testTask, 5000, true);
@@ -245,7 +245,7 @@ class _TasksModule extends CoreClass {
 									}).finally(() => next2());
 								}
 								if (Date.now() - session.refreshDate > 60 * 60 * 24 * 30 * 1000) {
-									return IOModule.runJob("SOCKETS_FROM_SESSION_ID", {
+									return WSModule.runJob("SOCKETS_FROM_SESSION_ID", {
 										sessionId: session.sessionId
 									}).then(response => {
 										if (response.sockets.length > 0) {
@@ -360,9 +360,9 @@ class _TasksModule extends CoreClass {
 			async.each(
 				Object.keys(StationsModule.userList),
 				(socketId, next) => {
-					IOModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId }).then(async socket => {
+					WSModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId }).then(async socket => {
 						const stationId = StationsModule.userList[socketId];
-						const room = await IOModule.runJob("GET_SOCKETS_FOR_ROOM", { room: `station.${stationId}` });
+						const room = await WSModule.runJob("GET_SOCKETS_FOR_ROOM", { room: `station.${stationId}` });
 
 						if (!socket || room.includes(socketId)) {
 							if (stationsCountUpdated.indexOf(stationId) === -1) stationsCountUpdated.push(stationId);

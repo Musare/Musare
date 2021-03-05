@@ -2,7 +2,7 @@
 
 import reports from "./reports";
 
-// when Vuex needs to interact with socket.io
+// when Vuex needs to interact with websockets
 
 export default {
 	reports

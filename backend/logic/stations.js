@@ -6,7 +6,7 @@ let StationsModule;
 let CacheModule;
 let DBModule;
 let UtilsModule;
-let IOModule;
+let WSModule;
 let SongsModule;
 let NotificationsModule;
 
@@ -27,7 +27,7 @@ class _StationsModule extends CoreClass {
 		CacheModule = this.moduleManager.modules.cache;
 		DBModule = this.moduleManager.modules.db;
 		UtilsModule = this.moduleManager.modules.utils;
-		IOModule = this.moduleManager.modules.io;
+		WSModule = this.moduleManager.modules.ws;
 		SongsModule = this.moduleManager.modules.songs;
 		NotificationsModule = this.moduleManager.modules.notifications;
 
@@ -83,7 +83,7 @@ class _StationsModule extends CoreClass {
 					key: stationId
 				}).then(playlistObj => {
 					if (playlistObj) {
-						IOModule.runJob("EMIT_TO_ROOM", {
+						WSModule.runJob("EMIT_TO_ROOM", {
 							room: `station.${stationId}`,
 							args: ["event:newOfficialPlaylist", playlistObj.songs]
 						});
@@ -905,7 +905,7 @@ class _StationsModule extends CoreClass {
 						}
 						// TODO Pub/Sub this
 
-						IOModule.runJob("EMIT_TO_ROOM", {
+						WSModule.runJob("EMIT_TO_ROOM", {
 							room: `station.${station._id}`,
 							args: [
 								"event:songs.next",
@@ -921,17 +921,17 @@ class _StationsModule extends CoreClass {
 							.catch();
 
 						if (station.privacy === "public") {
-							IOModule.runJob("EMIT_TO_ROOM", {
+							WSModule.runJob("EMIT_TO_ROOM", {
 								room: "home",
 								args: ["event:station.nextSong", station._id, station.currentSong]
 							})
 								.then()
 								.catch();
 						} else {
-							const sockets = await IOModule.runJob("GET_SOCKETS_FOR_ROOM", { room: "home" }, this);
+							const sockets = await WSModule.runJob("GET_SOCKETS_FOR_ROOM", { room: "home" }, this);
 
 							sockets.forEach(async socketId => {
-								const socket = await IOModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId }, this);
+								const socket = await WSModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId }, this);
 								const { session } = socket;
 
 								if (session.sessionId) {
@@ -980,8 +980,8 @@ class _StationsModule extends CoreClass {
 						}
 
 						if (station.currentSong !== null && station.currentSong.songId !== undefined) {
-							IOModule.runJob("SOCKETS_JOIN_SONG_ROOM", {
-								sockets: await IOModule.runJob(
+							WSModule.runJob("SOCKETS_JOIN_SONG_ROOM", {
+								sockets: await WSModule.runJob(
 									"GET_SOCKETS_FOR_ROOM",
 									{ room: `station.${station._id}` },
 									this
@@ -996,8 +996,8 @@ class _StationsModule extends CoreClass {
 								});
 							}
 						} else {
-							IOModule.runJob("SOCKETS_LEAVE_SONG_ROOMS", {
-								sockets: await IOModule.runJob(
+							WSModule.runJob("SOCKETS_LEAVE_SONG_ROOMS", {
+								sockets: await WSModule.runJob(
 									"GET_SOCKETS_FOR_ROOM",
 									{ room: `station.${station._id}` },
 									this
@@ -1117,12 +1117,12 @@ class _StationsModule extends CoreClass {
 	 *
 	 * @param {object} payload - the payload object
 	 * @param {object} payload.station - the station object
-	 * @param {string} payload.room - the socket.io room to get the sockets from
+	 * @param {string} payload.room - the websockets room to get the sockets from
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	GET_SOCKETS_THAT_CAN_KNOW_ABOUT_STATION(payload) {
 		return new Promise((resolve, reject) => {
-			IOModule.runJob("GET_SOCKETS_FOR_ROOM", { room: payload.room }, this)
+			WSModule.runJob("GET_SOCKETS_FOR_ROOM", { room: payload.room }, this)
 				.then(socketsObject => {
 					const sockets = Object.keys(socketsObject).map(socketKey => socketsObject[socketKey]);
 					let socketsThatCan = [];

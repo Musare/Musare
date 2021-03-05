@@ -3,55 +3,47 @@ import Toast from "toasters";
 // eslint-disable-next-line import/no-cycle
 import store from "./store";
 
-const callbacks = {
-	general: {
-		temp: [],
-		persist: []
-	},
-	onConnect: {
-		temp: [],
-		persist: []
-	},
-	onDisconnect: {
-		temp: [],
-		persist: []
-	}
+const onConnect = {
+	temp: [],
+	persist: []
 };
 
-const whenConnected = [];
+const onDisconnect = {
+	temp: [],
+	persist: []
+};
 
-const callbackss = {};
-let callbackRef = 0;
+// references for when a dispatch event is ready to callback from server to client
+const CB_REFS = {};
+let CB_REF = 0;
 
 export default {
 	socket: null,
 	dispatcher: null,
 
 	onConnect(...args) {
-		if (args[0] === true) callbacks.onConnect.persist.push(args[1]);
-		else callbacks.onConnect.temp.push(args[0]);
+		if (args[0] === true) onConnect.persist.push(args[1]);
+		else onConnect.temp.push(args[0]);
 	},
 
 	onDisconnect(...args) {
-		if (args[0] === true) callbacks.onDisconnect.persist.push(args[1]);
-		else callbacks.onDisconnect.temp.push(args[0]);
+		if (args[0] === true) onDisconnect.persist.push(args[1]);
+		else onDisconnect.temp.push(args[0]);
 	},
 
 	clear: () => {
-		Object.keys(callbacks).forEach(type => {
-			callbacks[type].temp = [];
-		});
+		onConnect.temp = [];
+		onDisconnect.temp = [];
 	},
 
-	removeAllListeners() {
-		Object.keys(callbackss).forEach(id => {
+	removeAllListeners: () =>
+		Object.keys(CB_REFS).forEach(id => {
 			if (
 				id.indexOf("$event:") !== -1 &&
 				id.indexOf("$event:keep.") === -1
 			)
-				delete callbackss[id];
-		});
-	},
+				delete CB_REFS[id];
+		}),
 
 	init() {
 		class ListenerHandler extends EventTarget {
@@ -71,17 +63,16 @@ export default {
 
 				const stack = this.listeners[type];
 
-				for (let i = 0, l = stack.length; i < l; i += 1)
-					if (stack[i] === cb) stack.splice(i, 1);
+				stack.forEach((element, index) => {
+					if (element === cb) stack.splice(index, 1);
+				});
 			}
 
 			dispatchEvent(event) {
 				if (!(event.type in this.listeners)) return true; // event type doesn't exist
 
 				const stack = this.listeners[event.type].slice();
-
-				for (let i = 0, l = stack.length; i < l; i += 1)
-					stack[i].call(this, event);
+				stack.forEach(element => element.call(this, event));
 
 				return !event.defaultPrevented;
 			}
@@ -100,18 +91,16 @@ export default {
 			}
 
 			dispatch(...args) {
-				callbackRef += 1;
+				CB_REF += 1;
 
 				if (this.readyState !== 1)
-					return callbacks.onConnect.temp.push(() =>
-						this.dispatch(...args)
-					);
+					return onConnect.temp.push(() => this.dispatch(...args));
 
 				const cb = args[args.length - 1];
-				if (typeof cb === "function") callbackss[callbackRef] = cb;
+				if (typeof cb === "function") CB_REFS[CB_REF] = cb;
 
 				return this.send(
-					JSON.stringify([...args.slice(0, -1), { callbackRef }])
+					JSON.stringify([...args.slice(0, -1), { CB_REF }])
 				);
 			}
 		}
@@ -120,29 +109,23 @@ export default {
 		store.dispatch("websockets/createSocket", this.socket);
 
 		this.socket.onopen = () => {
-			callbacks.onConnect.temp.forEach(cb => cb());
-			callbacks.onConnect.persist.forEach(cb => cb());
-
 			console.log("IO: SOCKET CONNECTED");
 
-			whenConnected.forEach(func => func());
-
-			callbacks.general.temp.forEach(cb => cb(this.socket));
-			callbacks.general.persist.forEach(cb => cb(this.socket));
-
-			callbacks.general.temp = [];
-			callbacks.general.persist = [];
+			onConnect.temp.forEach(cb => cb());
+			onConnect.persist.forEach(cb => cb());
 		};
 
 		this.socket.onmessage = message => {
 			const data = JSON.parse(message.data);
 			const name = data.shift(0);
 
-			if (name === "callbackRef") {
-				const callbackRef = data.shift(0);
-				callbackss[callbackRef](...data);
-				return delete callbackss[callbackRef];
+			if (name === "CB_REF") {
+				const CB_REF = data.shift(0);
+				CB_REFS[CB_REF](...data);
+				return delete CB_REFS[CB_REF];
 			}
+
+			if (name === "ERROR") console.log("WS: SOCKET ERROR:", data[0]);
 
 			return this.socket.dispatcher.dispatchEvent(
 				new CustomEvent(name, {
@@ -152,19 +135,17 @@ export default {
 		};
 
 		this.socket.onclose = () => {
-			console.log("IO: SOCKET DISCONNECTED");
+			console.log("WS: SOCKET DISCONNECTED");
 
-			callbacks.onDisconnect.temp.forEach(cb => cb());
-			callbacks.onDisconnect.persist.forEach(cb => cb());
+			onDisconnect.temp.forEach(cb => cb());
+			onDisconnect.persist.forEach(cb => cb());
 
 			// try to reconnect every 1000ms
-			setTimeout(() => {
-				this.init();
-			}, 1000);
+			setTimeout(() => this.init(), 1000);
 		};
 
 		this.socket.onerror = err => {
-			console.log("IO: SOCKET ERROR", err);
+			console.log("WS: SOCKET ERROR", err);
 
 			new Toast({
 				content: "Cannot perform this action at this time.",

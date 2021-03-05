@@ -188,7 +188,7 @@ import FloatingBox from "../../../components/ui/FloatingBox.vue";
 
 import ScrollAndFetchHandler from "../../../mixins/ScrollAndFetchHandler.vue";
 
-import io from "../../../io";
+import ws from "../../../ws";
 
 export default {
 	components: { EditSong, UserIdToUsername, FloatingBox },
@@ -243,7 +243,7 @@ export default {
 		});
 
 		if (this.socket.readyState === 1) this.init();
-		io.onConnect(() => this.init());
+		ws.onConnect(() => this.init());
 	},
 	methods: {
 		edit(song) {

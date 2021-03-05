@@ -6,7 +6,7 @@ import moduleManager from "../../index";
 
 const DBModule = moduleManager.modules.db;
 const UtilsModule = moduleManager.modules.utils;
-const IOModule = moduleManager.modules.io;
+const WSModule = moduleManager.modules.ws;
 const CacheModule = moduleManager.modules.cache;
 const SongsModule = moduleManager.modules.songs;
 const ActivitiesModule = moduleManager.modules.activities;
@@ -15,7 +15,7 @@ const PlaylistsModule = moduleManager.modules.playlists;
 CacheModule.runJob("SUB", {
 	channel: "song.removed",
 	cb: songId => {
-		IOModule.runJob("EMIT_TO_ROOM", {
+		WSModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.songs",
 			args: ["event:admin.song.removed", songId]
 		});
@@ -27,7 +27,7 @@ CacheModule.runJob("SUB", {
 	cb: async songId => {
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
 		songModel.findOne({ _id: songId }, (err, song) => {
-			IOModule.runJob("EMIT_TO_ROOM", {
+			WSModule.runJob("EMIT_TO_ROOM", {
 				room: "admin.songs",
 				args: ["event:admin.song.added", song]
 			});
@@ -40,7 +40,7 @@ CacheModule.runJob("SUB", {
 	cb: async songId => {
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
 		songModel.findOne({ _id: songId }, (err, song) => {
-			IOModule.runJob("EMIT_TO_ROOM", {
+			WSModule.runJob("EMIT_TO_ROOM", {
 				room: "admin.songs",
 				args: ["event:admin.song.updated", song]
 			});
@@ -51,7 +51,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "song.like",
 	cb: data => {
-		IOModule.runJob("EMIT_TO_ROOM", {
+		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `song.${data.songId}`,
 			args: [
 				"event:song.like",
@@ -62,7 +62,7 @@ CacheModule.runJob("SUB", {
 				}
 			]
 		});
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
+		WSModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
 			sockets.forEach(socket => {
 				socket.dispatch("event:song.newRatings", {
 					songId: data.songId,
@@ -77,7 +77,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "song.dislike",
 	cb: data => {
-		IOModule.runJob("EMIT_TO_ROOM", {
+		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `song.${data.songId}`,
 			args: [
 				"event:song.dislike",
@@ -88,7 +88,7 @@ CacheModule.runJob("SUB", {
 				}
 			]
 		});
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
+		WSModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
 			sockets.forEach(socket => {
 				socket.dispatch("event:song.newRatings", {
 					songId: data.songId,
@@ -103,7 +103,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "song.unlike",
 	cb: data => {
-		IOModule.runJob("EMIT_TO_ROOM", {
+		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `song.${data.songId}`,
 			args: [
 				"event:song.unlike",
@@ -114,7 +114,7 @@ CacheModule.runJob("SUB", {
 				}
 			]
 		});
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
+		WSModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
 			sockets.forEach(socket => {
 				socket.dispatch("event:song.newRatings", {
 					songId: data.songId,
@@ -129,7 +129,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "song.undislike",
 	cb: data => {
-		IOModule.runJob("EMIT_TO_ROOM", {
+		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `song.${data.songId}`,
 			args: [
 				"event:song.undislike",
@@ -140,7 +140,7 @@ CacheModule.runJob("SUB", {
 				}
 			]
 		});
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
+		WSModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
 			sockets.forEach(socket => {
 				socket.dispatch("event:song.newRatings", {
 					songId: data.songId,
@@ -156,7 +156,7 @@ export default {
 	/**
 	 * Returns the length of the songs list
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param cb
 	 */
 	length: isAdminRequired(async function length(session, cb) {
@@ -182,7 +182,7 @@ export default {
 	/**
 	 * Gets a set of songs
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param set - the set number to return
 	 * @param cb
 	 */
@@ -213,7 +213,7 @@ export default {
 	/**
 	 * Gets a song from the YouTube song id
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} songId - the YouTube song id
 	 * @param {Function} cb
 	 */
@@ -245,7 +245,7 @@ export default {
 	/**
 	 * Gets a song from the Musare song id
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} songId - the Musare song id
 	 * @param {Function} cb
 	 */
@@ -277,7 +277,7 @@ export default {
 	/**
 	 * Obtains basic metadata of a song in order to format an activity
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} songId - the song id
 	 * @param {Function} cb - callback
 	 */
@@ -333,7 +333,7 @@ export default {
 	/**
 	 * Updates a song
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} songId - the song id
 	 * @param {object} song - the updated song object
 	 * @param {Function} cb

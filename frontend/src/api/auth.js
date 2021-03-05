@@ -1,16 +1,16 @@
 /* eslint-disable import/no-cycle */
 
 import Toast from "toasters";
-import io from "../io";
+import ws from "../ws";
 
-// when Vuex needs to interact with socket.io
+// when Vuex needs to interact with websockets
 
 export default {
 	register(user) {
 		return new Promise((resolve, reject) => {
 			const { username, email, password, recaptchaToken } = user;
 
-			io.socket.dispatch(
+			ws.socket.dispatch(
 				"users.register",
 				username,
 				email,
@@ -52,7 +52,7 @@ export default {
 		return new Promise((resolve, reject) => {
 			const { email, password } = user;
 
-			io.socket.dispatch("users.login", email, password, res => {
+			ws.socket.dispatch("users.login", email, password, res => {
 				console.log(123, res);
 				if (res.status === "success") {
 					return lofig.get("cookie").then(cookie => {
@@ -77,7 +77,7 @@ export default {
 	},
 	logout() {
 		return new Promise((resolve, reject) => {
-			io.socket.dispatch("users.logout", res => {
+			ws.socket.dispatch("users.logout", res => {
 				if (res.status === "success") {
 					return lofig.get("cookie").then(cookie => {
 						document.cookie = `${cookie.SIDname}=;expires=Thu, 01 Jan 1970 00:00:01 GMT;`;

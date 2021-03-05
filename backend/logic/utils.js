@@ -2,7 +2,7 @@ import crypto from "crypto";
 import CoreClass from "../core";
 
 let UtilsModule;
-let IOModule;
+let WSModule;
 
 class _UtilsModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
@@ -19,7 +19,7 @@ class _UtilsModule extends CoreClass {
 	 */
 	initialize() {
 		return new Promise(resolve => {
-			IOModule = this.moduleManager.modules.io;
+			WSModule = this.moduleManager.modules.ws;
 
 			resolve();
 		});
@@ -151,10 +151,8 @@ class _UtilsModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async GET_SOCKET_FROM_ID(payload) {
-		// socketId
-		const io = await IOModule.runJob("IO", {}, this);
-
-		return new Promise(resolve => resolve(io.sockets.sockets[payload.socketId]));
+		const ws = await WSModule.runJob("WS", {}, this);
+		return new Promise(resolve => resolve(ws.sockets.sockets[payload.socketId]));
 	}
 
 	/**

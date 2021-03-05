@@ -62,7 +62,7 @@ import { mapState, mapActions, mapGetters } from "vuex";
 // import EditPlaylist from "../../../components/modals/EditPlaylist/index.vue";
 import UserIdToUsername from "../../../components/common/UserIdToUsername.vue";
 
-import io from "../../../io";
+import ws from "../../../ws";
 import utils from "../../../../js/utils";
 
 export default {
@@ -84,7 +84,7 @@ export default {
 	},
 	mounted() {
 		if (this.socket.readyState === 1) this.init();
-		io.onConnect(() => this.init());
+		ws.onConnect(() => this.init());
 	},
 	methods: {
 		// edit(playlist) {

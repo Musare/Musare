@@ -106,7 +106,7 @@ import { mapGetters } from "vuex";
 import { Line } from "chart.js";
 import "chartjs-adapter-date-fns";
 
-import io from "../../../io";
+import ws from "../../../ws";
 
 export default {
 	components: {},
@@ -268,7 +268,7 @@ export default {
 		});
 
 		if (this.socket.readyState === 1) this.init();
-		io.onConnect(() => this.init());
+		ws.onConnect(() => this.init());
 	},
 	methods: {
 		init() {

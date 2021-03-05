@@ -6,7 +6,7 @@ import moduleManager from "../../index";
 
 const DBModule = moduleManager.modules.db;
 const UtilsModule = moduleManager.modules.utils;
-const IOModule = moduleManager.modules.io;
+const WSModule = moduleManager.modules.ws;
 const SongsModule = moduleManager.modules.songs;
 const CacheModule = moduleManager.modules.cache;
 const NotificationsModule = moduleManager.modules.notifications;
@@ -17,7 +17,7 @@ const YouTubeModule = moduleManager.modules.youtube;
 CacheModule.runJob("SUB", {
 	channel: "station.updateUsers",
 	cb: ({ stationId, usersPerStation }) => {
-		IOModule.runJob("EMIT_TO_ROOM", {
+		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${stationId}`,
 			args: ["event:users.updated", usersPerStation]
 		});
@@ -29,19 +29,19 @@ CacheModule.runJob("SUB", {
 	cb: ({ stationId, usersPerStationCount }) => {
 		const count = usersPerStationCount || 0;
 
-		IOModule.runJob("EMIT_TO_ROOM", {
+		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${stationId}`,
 			args: ["event:userCount.updated", count]
 		});
 
 		StationsModule.runJob("GET_STATION", { stationId }).then(async station => {
 			if (station.privacy === "public")
-				IOModule.runJob("EMIT_TO_ROOM", {
+				WSModule.runJob("EMIT_TO_ROOM", {
 					room: "home",
 					args: ["event:userCount.updated", stationId, count]
 				});
 			else {
-				const sockets = await IOModule.runJob("GET_SOCKETS_FOR_ROOM", {
+				const sockets = await WSModule.runJob("GET_SOCKETS_FOR_ROOM", {
 					room: "home"
 				});
 
@@ -75,7 +75,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "station.updateTheme",
 	cb: data => {
-		IOModule.runJob("EMIT_TO_ROOM", {
+		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${data.stationId}`,
 			args: ["event:theme.updated", data.theme]
 		});
@@ -85,7 +85,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "station.queueLockToggled",
 	cb: data => {
-		IOModule.runJob("EMIT_TO_ROOM", {
+		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${data.stationId}`,
 			args: ["event:queueLockToggled", data.locked]
 		});
@@ -95,7 +95,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "station.updatePartyMode",
 	cb: data => {
-		IOModule.runJob("EMIT_TO_ROOM", {
+		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${data.stationId}`,
 			args: ["event:partyMode.updated", data.partyMode]
 		});
@@ -105,7 +105,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "privatePlaylist.selected",
 	cb: data => {
-		IOModule.runJob("EMIT_TO_ROOM", {
+		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${data.stationId}`,
 			args: ["event:privatePlaylist.selected", data.playlistId]
 		});
@@ -115,7 +115,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "privatePlaylist.deselected",
 	cb: data => {
-		IOModule.runJob("EMIT_TO_ROOM", {
+		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${data.stationId}`,
 			args: ["event:privatePlaylist.deselected"]
 		});
@@ -126,7 +126,7 @@ CacheModule.runJob("SUB", {
 	channel: "station.pause",
 	cb: stationId => {
 		StationsModule.runJob("GET_STATION", { stationId }).then(station => {
-			IOModule.runJob("EMIT_TO_ROOM", {
+			WSModule.runJob("EMIT_TO_ROOM", {
 				room: `station.${stationId}`,
 				args: ["event:stations.pause", { pausedAt: station.pausedAt }]
 			});
@@ -148,7 +148,7 @@ CacheModule.runJob("SUB", {
 	channel: "station.resume",
 	cb: stationId => {
 		StationsModule.runJob("GET_STATION", { stationId }).then(station => {
-			IOModule.runJob("EMIT_TO_ROOM", {
+			WSModule.runJob("EMIT_TO_ROOM", {
 				room: `station.${stationId}`,
 				args: ["event:stations.resume", { timePaused: station.timePaused }]
 			});
@@ -177,7 +177,7 @@ CacheModule.runJob("SUB", {
 				if (station.privacy === "public") {
 					// Station became public
 
-					IOModule.runJob("EMIT_TO_ROOM", {
+					WSModule.runJob("EMIT_TO_ROOM", {
 						room: "home",
 						args: ["event:stations.created", station]
 					});
@@ -229,7 +229,7 @@ CacheModule.runJob("SUB", {
 			})
 		);
 
-		IOModule.runJob("EMIT_TO_ROOM", {
+		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${stationId}`,
 			args: ["event:station.updateName", { stationId, name }]
 		});
@@ -253,7 +253,7 @@ CacheModule.runJob("SUB", {
 			})
 		);
 
-		IOModule.runJob("EMIT_TO_ROOM", {
+		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${stationId}`,
 			args: ["event:station.updateDisplayName", { stationId, displayName }]
 		});
@@ -277,7 +277,7 @@ CacheModule.runJob("SUB", {
 			})
 		);
 
-		IOModule.runJob("EMIT_TO_ROOM", {
+		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${stationId}`,
 			args: ["event:station.updateDescription", { stationId, description }]
 		});
@@ -289,7 +289,7 @@ CacheModule.runJob("SUB", {
 	cb: response => {
 		const { stationId } = response;
 		StationsModule.runJob("GET_STATION", { stationId }).then(station => {
-			IOModule.runJob("EMIT_TO_ROOM", {
+			WSModule.runJob("EMIT_TO_ROOM", {
 				room: `station.${stationId}`,
 				args: ["event:station.themeUpdated", station.theme]
 			});
@@ -310,7 +310,7 @@ CacheModule.runJob("SUB", {
 	channel: "station.queueUpdate",
 	cb: stationId => {
 		StationsModule.runJob("GET_STATION", { stationId }).then(station => {
-			IOModule.runJob("EMIT_TO_ROOM", {
+			WSModule.runJob("EMIT_TO_ROOM", {
 				room: `station.${stationId}`,
 				args: ["event:queue.update", station.queue]
 			});
@@ -321,7 +321,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "station.voteSkipSong",
 	cb: stationId => {
-		IOModule.runJob("EMIT_TO_ROOM", {
+		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${stationId}`,
 			args: ["event:song.voteSkipSong"]
 		});
@@ -331,16 +331,16 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "station.remove",
 	cb: stationId => {
-		IOModule.runJob("EMIT_TO_ROOM", {
+		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${stationId}`,
 			args: ["event:stations.remove"]
 		});
 		console.log(111, "REMOVED");
-		IOModule.runJob("EMIT_TO_ROOM", {
+		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `home`,
 			args: ["event:station.removed", { stationId }]
 		});
-		IOModule.runJob("EMIT_TO_ROOM", {
+		WSModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.stations",
 			args: ["event:admin.station.removed", stationId]
 		});
@@ -355,18 +355,18 @@ CacheModule.runJob("SUB", {
 		StationsModule.runJob("INITIALIZE_STATION", { stationId }).then(async response => {
 			const { station } = response;
 			station.userCount = StationsModule.usersPerStationCount[stationId] || 0;
-			IOModule.runJob("EMIT_TO_ROOM", {
+			WSModule.runJob("EMIT_TO_ROOM", {
 				room: "admin.stations",
 				args: ["event:admin.station.added", station]
 			});
 			// TODO If community, check if on whitelist
 			if (station.privacy === "public")
-				IOModule.runJob("EMIT_TO_ROOM", {
+				WSModule.runJob("EMIT_TO_ROOM", {
 					room: "home",
 					args: ["event:stations.created", station]
 				});
 			else {
-				const sockets = await IOModule.runJob("GET_SOCKETS_FOR_ROOM", {
+				const sockets = await WSModule.runJob("GET_SOCKETS_FOR_ROOM", {
 					room: "home"
 				});
 				Object.keys(sockets).forEach(socketKey => {
@@ -722,7 +722,7 @@ export default {
 				},
 
 				(station, next) => {
-					IOModule.runJob("SOCKET_JOIN_ROOM", {
+					WSModule.runJob("SOCKET_JOIN_ROOM", {
 						socketId: session.socketId,
 						room: `station.${station._id}`
 					});
@@ -761,7 +761,7 @@ export default {
 
 					if (!data.currentSong || !data.currentSong.title) return next(null, data);
 
-					IOModule.runJob("SOCKET_JOIN_SONG_ROOM", {
+					WSModule.runJob("SOCKET_JOIN_SONG_ROOM", {
 						socketId: session.socketId,
 						room: `song.${data.currentSong.songId}`
 					});
@@ -1026,7 +1026,7 @@ export default {
 
 				(station, next) => {
 					skipVotes = station.currentSong.skipVotes.length;
-					IOModule.runJob("GET_SOCKETS_FOR_ROOM", { room: `station.${stationId}` }, this)
+					WSModule.runJob("GET_SOCKETS_FOR_ROOM", { room: `station.${stationId}` }, this)
 						.then(sockets => next(null, sockets))
 						.catch(next);
 				},
@@ -1129,7 +1129,7 @@ export default {
 
 				this.log("SUCCESS", "STATIONS_LEAVE", `Left station "${stationId}" successfully.`);
 
-				IOModule.runJob("SOCKET_LEAVE_ROOMS", { socketId: session });
+				WSModule.runJob("SOCKET_LEAVE_ROOMS", { socketId: session });
 
 				delete StationsModule.userList[session.socketId];
 

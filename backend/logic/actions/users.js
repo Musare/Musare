@@ -11,7 +11,7 @@ import moduleManager from "../../index";
 
 const DBModule = moduleManager.modules.db;
 const UtilsModule = moduleManager.modules.utils;
-const IOModule = moduleManager.modules.io;
+const WSModule = moduleManager.modules.ws;
 const CacheModule = moduleManager.modules.cache;
 const MailModule = moduleManager.modules.mail;
 const PunishmentsModule = moduleManager.modules.punishments;
@@ -21,7 +21,7 @@ const PlaylistsModule = moduleManager.modules.playlists;
 CacheModule.runJob("SUB", {
 	channel: "user.updatePreferences",
 	cb: res => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
+		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
 			sockets.forEach(socket => {
 				socket.dispatch("keep.event:user.preferences.changed", res.preferences);
 			});
@@ -32,13 +32,13 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "user.updateOrderOfPlaylists",
 	cb: res => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
+		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
 			sockets.forEach(socket => {
 				socket.dispatch("event:user.orderOfPlaylists.changed", res.orderOfPlaylists);
 			});
 		});
 
-		IOModule.runJob("EMIT_TO_ROOM", {
+		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `profile-${res.userId}-playlists`,
 			args: ["event:user.orderOfPlaylists.changed", res.orderOfPlaylists]
 		});
@@ -48,7 +48,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "user.updateUsername",
 	cb: user => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: user._id }).then(sockets => {
+		WSModule.runJob("SOCKETS_FROM_USER", { userId: user._id }).then(sockets => {
 			sockets.forEach(socket => {
 				socket.dispatch("event:user.username.changed", user.username);
 			});
@@ -59,7 +59,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "user.removeSessions",
 	cb: userId => {
-		IOModule.runJob("SOCKETS_FROM_USER_WITHOUT_CACHE", { userId }).then(sockets => {
+		WSModule.runJob("SOCKETS_FROM_USER_WITHOUT_CACHE", { userId }).then(sockets => {
 			sockets.forEach(socket => {
 				socket.dispatch("keep.event:user.session.removed");
 			});
@@ -70,7 +70,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "user.linkPassword",
 	cb: userId => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId }).then(sockets => {
+		WSModule.runJob("SOCKETS_FROM_USER", { userId }).then(sockets => {
 			sockets.forEach(socket => {
 				socket.dispatch("event:user.linkPassword");
 			});
@@ -81,7 +81,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "user.unlinkPassword",
 	cb: userId => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId }).then(sockets => {
+		WSModule.runJob("SOCKETS_FROM_USER", { userId }).then(sockets => {
 			sockets.forEach(socket => {
 				socket.dispatch("event:user.unlinkPassword");
 			});
@@ -92,7 +92,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "user.linkGithub",
 	cb: userId => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId }).then(sockets => {
+		WSModule.runJob("SOCKETS_FROM_USER", { userId }).then(sockets => {
 			sockets.forEach(socket => {
 				socket.dispatch("event:user.linkGithub");
 			});
@@ -103,7 +103,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "user.unlinkGithub",
 	cb: userId => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId }).then(sockets => {
+		WSModule.runJob("SOCKETS_FROM_USER", { userId }).then(sockets => {
 			sockets.forEach(socket => {
 				socket.dispatch("event:user.unlinkGithub");
 			});
@@ -114,7 +114,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "user.ban",
 	cb: data => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
+		WSModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
 			sockets.forEach(socket => {
 				socket.dispatch("keep.event:banned", data.punishment);
 				socket.disconnect(true);
@@ -126,7 +126,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "user.favoritedStation",
 	cb: data => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
+		WSModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
 			sockets.forEach(socket => {
 				socket.dispatch("event:user.favoritedStation", data.stationId);
 			});
@@ -137,7 +137,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "user.unfavoritedStation",
 	cb: data => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
+		WSModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
 			sockets.forEach(socket => {
 				socket.dispatch("event:user.unfavoritedStation", data.stationId);
 			});
@@ -149,7 +149,7 @@ export default {
 	/**
 	 * Lists all Users
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Function} cb - gets called with the result
 	 */
 	index: isAdminRequired(async function index(session, cb) {
@@ -199,7 +199,7 @@ export default {
 	/**
 	 * Removes all data held on a user, including their ability to login
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Function} cb - gets called with the result
 	 */
 	remove: isLoginRequired(async function remove(session, cb) {
@@ -256,7 +256,7 @@ export default {
 	/**
 	 * Logs user in
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} identifier - the email of the user
 	 * @param {string} password - the plaintext of the user
 	 * @param {Function} cb - gets called with the result
@@ -340,7 +340,7 @@ export default {
 	/**
 	 * Registers a new user
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} username - the username for the new user
 	 * @param {string} email - the email for the new user
 	 * @param {string} password - the plaintext password for the new user
@@ -563,7 +563,7 @@ export default {
 	/**
 	 * Logs out a user
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Function} cb - gets called with the result
 	 */
 	logout(session, cb) {
@@ -605,7 +605,7 @@ export default {
 	/**
 	 * Removes all sessions for a user
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} userId - the id of the user we are trying to delete the sessions of
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -689,7 +689,7 @@ export default {
 	/**
 	 * Updates the order of a user's playlists
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Array} orderOfPlaylists - array of playlist ids (with a specific order)
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -745,7 +745,7 @@ export default {
 	/**
 	 * Updates a user's preferences
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {object} preferences - object containing preferences
 	 * @param {boolean} preferences.nightmode - whether or not the user is using the night mode theme
 	 * @param {boolean} preferences.autoSkipDisliked - whether to automatically skip disliked songs
@@ -832,7 +832,7 @@ export default {
 	/**
 	 * Retrieves a user's preferences
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Function} cb - gets called with the result
 	 */
 	getPreferences: isLoginRequired(async function updatePreferences(session, cb) {
@@ -875,7 +875,7 @@ export default {
 	/**
 	 * Gets user object from username (only a few properties)
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} username - the username of the user we are trying to find
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -924,7 +924,7 @@ export default {
 	/**
 	 * Gets a username from an userId
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} userId - the userId of the person we are trying to get the username from
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -969,7 +969,7 @@ export default {
 	/**
 	 * Gets a user from a userId
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} userId - the userId of the person we are trying to get the username from
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -1024,7 +1024,7 @@ export default {
 	/**
 	 * Gets user info from session
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Function} cb - gets called with the result
 	 */
 	async findBySession(session, cb) {
@@ -1092,7 +1092,7 @@ export default {
 	/**
 	 * Updates a user's username
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} updatingUserId - the updating user's id
 	 * @param {string} newUsername - the new username
 	 * @param {Function} cb - gets called with the result
@@ -1176,7 +1176,7 @@ export default {
 	/**
 	 * Updates a user's email
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} updatingUserId - the updating user's id
 	 * @param {string} newEmail - the new email
 	 * @param {Function} cb - gets called with the result
@@ -1280,7 +1280,7 @@ export default {
 	/**
 	 * Updates a user's name
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} updatingUserId - the updating user's id
 	 * @param {string} newBio - the new name
 	 * @param {Function} cb - gets called with the result
@@ -1346,7 +1346,7 @@ export default {
 	/**
 	 * Updates a user's location
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} updatingUserId - the updating user's id
 	 * @param {string} newLocation - the new location
 	 * @param {Function} cb - gets called with the result
@@ -1418,7 +1418,7 @@ export default {
 	/**
 	 * Updates a user's bio
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} updatingUserId - the updating user's id
 	 * @param {string} newBio - the new bio
 	 * @param {Function} cb - gets called with the result
@@ -1478,7 +1478,7 @@ export default {
 	/**
 	 * Updates the type of a user's avatar
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} updatingUserId - the updating user's id
 	 * @param {string} newType - the new type
 	 * @param {Function} cb - gets called with the result
@@ -1542,7 +1542,7 @@ export default {
 	/**
 	 * Updates a user's role
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} updatingUserId - the updating user's id
 	 * @param {string} newRole - the new role
 	 * @param {Function} cb - gets called with the result
@@ -1601,7 +1601,7 @@ export default {
 	/**
 	 * Updates a user's password
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} previousPassword - the previous password
 	 * @param {string} newPassword - the new password
 	 * @param {Function} cb - gets called with the result
@@ -1678,7 +1678,7 @@ export default {
 	/**
 	 * Requests a password for a session
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} email - the email of the user that requests a password reset
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -1756,7 +1756,7 @@ export default {
 	/**
 	 * Verifies a password code
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} code - the password code
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -1800,7 +1800,7 @@ export default {
 	/**
 	 * Adds a password to a user with a code
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} code - the password code
 	 * @param {string} newPassword - the new password code
 	 * @param {Function} cb - gets called with the result
@@ -1880,7 +1880,7 @@ export default {
 	/**
 	 * Unlinks password from user
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Function} cb - gets called with the result
 	 */
 	unlinkPassword: isLoginRequired(async function unlinkPassword(session, cb) {
@@ -1927,7 +1927,7 @@ export default {
 	/**
 	 * Unlinks GitHub from user
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Function} cb - gets called with the result
 	 */
 	unlinkGitHub: isLoginRequired(async function unlinkGitHub(session, cb) {
@@ -1974,7 +1974,7 @@ export default {
 	/**
 	 * Requests a password reset for an email
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} email - the email of the user that requests a password reset
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -2053,7 +2053,7 @@ export default {
 	/**
 	 * Verifies a reset code
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} code - the password reset code
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -2092,7 +2092,7 @@ export default {
 	/**
 	 * Changes a user's password with a reset code
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} code - the password reset code
 	 * @param {string} newPassword - the new password reset code
 	 * @param {Function} cb - gets called with the result
@@ -2165,7 +2165,7 @@ export default {
 	/**
 	 * Bans a user by userId
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} value - the user id that is going to be banned
 	 * @param {string} reason - the reason for the ban
 	 * @param {string} expiresAt - the time the ban expires

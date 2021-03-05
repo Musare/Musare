@@ -2,7 +2,7 @@
 /* eslint-disable import/no-cycle */
 
 import auth from "../../api/auth";
-import io from "../../io";
+import ws from "../../ws";
 import validation from "../../validation";
 
 const state = {};
@@ -117,7 +117,7 @@ const modules = {
 					if (typeof state.userIdMap[`Z${userId}`] !== "string") {
 						if (state.userIdRequested[`Z${userId}`] !== true) {
 							commit("requestingUserId", userId);
-							io.socket.dispatch(
+							ws.socket.dispatch(
 								"users.getUsernameFromId",
 								userId,
 								res => {

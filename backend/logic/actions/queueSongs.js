@@ -8,7 +8,7 @@ import moduleManager from "../../index";
 
 const DBModule = moduleManager.modules.db;
 const UtilsModule = moduleManager.modules.utils;
-const IOModule = moduleManager.modules.io;
+const WSModule = moduleManager.modules.ws;
 const YouTubeModule = moduleManager.modules.youtube;
 const CacheModule = moduleManager.modules.cache;
 
@@ -19,7 +19,7 @@ CacheModule.runJob("SUB", {
 			modelName: "queueSong"
 		});
 		queueSongModel.findOne({ _id: songId }, (err, song) => {
-			IOModule.runJob("EMIT_TO_ROOM", {
+			WSModule.runJob("EMIT_TO_ROOM", {
 				room: "admin.queue",
 				args: ["event:admin.queueSong.added", song]
 			});
@@ -30,7 +30,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "queue.removedSong",
 	cb: songId => {
-		IOModule.runJob("EMIT_TO_ROOM", {
+		WSModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.queue",
 			args: ["event:admin.queueSong.removed", songId]
 		});
@@ -44,7 +44,7 @@ CacheModule.runJob("SUB", {
 			modelName: "queueSong"
 		});
 		queueSongModel.findOne({ _id: songId }, (err, song) => {
-			IOModule.runJob("EMIT_TO_ROOM", {
+			WSModule.runJob("EMIT_TO_ROOM", {
 				room: "admin.queue",
 				args: ["event:admin.queueSong.updated", song]
 			});
@@ -125,7 +125,7 @@ export default {
 	/**
 	 * Gets a song from the Musare song id
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} songId - the Musare song id
 	 * @param {Function} cb
 	 */
@@ -159,7 +159,7 @@ export default {
 	/**
 	 * Updates a queuesong
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} songId - the id of the queuesong that gets updated
 	 * @param {object} updatedSong - the object of the updated queueSong
 	 * @param {Function} cb - gets called with the result
@@ -221,7 +221,7 @@ export default {
 	/**
 	 * Removes a queuesong
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} songId - the id of the queuesong that gets removed
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -269,7 +269,7 @@ export default {
 	/**
 	 * Creates a queuesong
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} songId - the id of the song that gets added
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -361,7 +361,7 @@ export default {
 	/**
 	 * Adds a set of songs to the queue
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} url - the url of the the YouTube playlist
 	 * @param {boolean} musicOnly - whether to only get music from the playlist
 	 * @param {Function} cb - gets called with the result
@@ -395,7 +395,7 @@ export default {
 						songIds,
 						1,
 						(songId, next) => {
-							IOModule.runJob(
+							WSModule.runJob(
 								"RUN_ACTION2",
 								{
 									session,

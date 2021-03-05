@@ -18,7 +18,7 @@ import Banned from "./pages/Banned.vue";
 import WhatIsNew from "./components/modals/WhatIsNew.vue";
 import LoginModal from "./components/modals/Login.vue";
 import RegisterModal from "./components/modals/Register.vue";
-import io from "./io";
+import ws from "./ws";
 import keyboardShortcuts from "./keyboardShortcuts";
 
 export default {
@@ -112,11 +112,11 @@ export default {
 			localStorage.removeItem("github_redirect");
 		}
 
-		io.onConnect(true, () => {
+		ws.onConnect(true, () => {
 			this.socketConnected = true;
 		});
 
-		io.onDisconnect(true, () => {
+		ws.onDisconnect(true, () => {
 			this.socketConnected = false;
 		});
 

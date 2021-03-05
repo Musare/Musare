@@ -70,7 +70,7 @@ import { mapState, mapActions, mapGetters } from "vuex";
 
 import EditUser from "../../../components/modals/EditUser.vue";
 import ProfilePicture from "../../../components/ui/ProfilePicture.vue";
-import io from "../../../io";
+import ws from "../../../ws";
 
 export default {
 	components: { EditUser, ProfilePicture },
@@ -90,7 +90,7 @@ export default {
 	},
 	mounted() {
 		if (this.socket.readyState === 1) this.init();
-		io.onConnect(() => this.init());
+		ws.onConnect(() => this.init());
 	},
 	methods: {
 		edit(user) {

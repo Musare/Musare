@@ -71,7 +71,7 @@ import { mapState, mapActions, mapGetters } from "vuex";
 import { formatDistance } from "date-fns";
 
 import Toast from "toasters";
-import io from "../../../io";
+import ws from "../../../ws";
 
 import ViewReport from "../../../components/modals/ViewReport.vue";
 import UserIdToUsername from "../../../components/common/UserIdToUsername.vue";
@@ -94,7 +94,7 @@ export default {
 	},
 	mounted() {
 		if (this.socket.readyState === 1) this.init();
-		io.onConnect(() => this.init());
+		ws.onConnect(() => this.init());
 
 		this.socket.dispatch("reports.index", res => {
 			this.reports = res.data;
