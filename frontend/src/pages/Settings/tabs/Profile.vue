@@ -64,7 +64,7 @@
 				v-model="modifiedUser.bio"
 			/>
 			<span v-if="modifiedUser.bio" class="character-counter"
-				>{{ modifiedUser.bws.length }}/200</span
+				>{{ modifiedUser.bio.length }}/200</span
 			>
 		</p>
 
