@@ -364,7 +364,9 @@ class _TasksModule extends CoreClass {
 						const stationId = StationsModule.userList[socketId];
 						const room = await WSModule.runJob("GET_SOCKETS_FOR_ROOM", { room: `station.${stationId}` });
 
-						if (!socket || room.includes(socketId)) {
+						if (!socket || !room.includes(socketId)) {
+							console.log("yes");
+
 							if (stationsCountUpdated.indexOf(stationId) === -1) stationsCountUpdated.push(stationId);
 							if (stationsUpdated.indexOf(stationId) === -1) stationsUpdated.push(String(stationId));
 
