@@ -137,6 +137,40 @@ const router = new VueRouter({
 	]
 });
 
+// const { serverDomain } = config;
+io.init({ url: "ws://localhost:8080/ws" });
+
+io.socket.on("ready", (loggedIn, role, username, userId) =>
+	store.dispatch("user/auth/authData", {
+		loggedIn,
+		role,
+		username,
+		userId
+	})
+);
+
+io.socket.on("keep.event:banned", ban =>
+	store.dispatch("user/auth/banUser", ban)
+);
+
+io.socket.on("event:user.username.changed", username =>
+	store.dispatch("user/auth/updateUsername", username)
+);
+
+io.socket.on("keep.event:user.preferences.changed", preferences => {
+	store.dispatch(
+		"user/preferences/changeAutoSkipDisliked",
+		preferences.autoSkipDisliked
+	);
+
+	store.dispatch("user/preferences/changeNightmode", preferences.nightmode);
+
+	store.dispatch(
+		"user/preferences/changeActivityLogPublic",
+		preferences.activityLogPublic
+	);
+});
+
 lofig.folder = "../config/default.json";
 lofig.fetchConfig().then(config => {
 	const { configVersion, skipConfigVersionCheck } = config;
@@ -147,45 +181,6 @@ lofig.fetchConfig().then(config => {
 		);
 		window.stop();
 	}
-
-	// const { serverDomain } = config;
-	io.init({ url: "ws://localhost:8080/ws" });
-
-	io.getSocket(socket => {
-		socket.on("ready", (loggedIn, role, username, userId) => {
-			store.dispatch("user/auth/authData", {
-				loggedIn,
-				role,
-				username,
-				userId
-			});
-		});
-
-		socket.on("keep.event:banned", ban =>
-			store.dispatch("user/auth/banUser", ban)
-		);
-
-		socket.on("event:user.username.changed", username =>
-			store.dispatch("user/auth/updateUsername", username)
-		);
-
-		socket.on("keep.event:user.preferences.changed", preferences => {
-			store.dispatch(
-				"user/preferences/changeAutoSkipDisliked",
-				preferences.autoSkipDisliked
-			);
-
-			store.dispatch(
-				"user/preferences/changeNightmode",
-				preferences.nightmode
-			);
-
-			store.dispatch(
-				"user/preferences/changeActivityLogPublic",
-				preferences.activityLogPublic
-			);
-		});
-	});
 });
 
 router.beforeEach((to, from, next) => {

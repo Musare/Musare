@@ -215,7 +215,7 @@
 </template>
 
 <script>
-import { mapActions, mapState } from "vuex";
+import { mapActions, mapState, mapGetters } from "vuex";
 
 import Toast from "toasters";
 import io from "../../../io";
@@ -243,31 +243,28 @@ export default {
 		}),
 		...mapState("admin/news", {
 			news: state => state.news
+		}),
+		...mapGetters({
+			socket: "websockets/getSocket"
 		})
 	},
 	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
+		this.socket.dispatch("news.index", res =>
+			res.data.forEach(news => this.addNews(news))
+		);
 
-			this.socket.dispatch("news.index", res =>
-				res.data.forEach(news => this.addNews(news))
-			);
+		this.socket.on("event:admin.news.created", news => this.addNews(news));
 
-			this.socket.on("event:admin.news.created", news =>
-				this.addNews(news)
-			);
+		this.socket.on("event:admin.news.updated", updatedNews =>
+			this.updateNews(updatedNews)
+		);
 
-			this.socket.on("event:admin.news.updated", updatedNews =>
-				this.updateNews(updatedNews)
-			);
+		this.socket.on("event:admin.news.removed", news =>
+			this.removeNews(news._id)
+		);
 
-			this.socket.on("event:admin.news.removed", news =>
-				this.removeNews(news._id)
-			);
-
-			if (this.socket.readyState === 1) this.init();
-			io.onConnect(() => this.init());
-		});
+		if (this.socket.readyState === 1) this.init();
+		io.onConnect(() => this.init());
 	},
 	methods: {
 		createNews() {

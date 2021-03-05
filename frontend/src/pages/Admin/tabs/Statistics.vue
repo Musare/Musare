@@ -102,6 +102,7 @@
 </template>
 
 <script>
+import { mapGetters } from "vuex";
 import { Line } from "chart.js";
 import "chartjs-adapter-date-fns";
 
@@ -143,6 +144,9 @@ export default {
 			}
 		};
 	},
+	computed: mapGetters({
+		socket: "websockets/getSocket"
+	}),
 	mounted() {
 		const minuteCtx = document.getElementById("minuteChart");
 		const hourCtx = document.getElementById("hourChart");
@@ -263,12 +267,8 @@ export default {
 			}
 		});
 
-		io.getSocket(socket => {
-			this.socket = socket;
-			if (this.socket.readyState === 1) this.init();
-
-			io.onConnect(() => this.init());
-		});
+		if (this.socket.readyState === 1) this.init();
+		io.onConnect(() => this.init());
 	},
 	methods: {
 		init() {

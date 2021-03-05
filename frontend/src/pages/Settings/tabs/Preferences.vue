@@ -41,10 +41,9 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapState, mapActions, mapGetters } from "vuex";
 import Toast from "toasters";
 
-import io from "../../../io";
 import SaveButton from "../../../components/ui/SaveButton.vue";
 
 export default {
@@ -56,28 +55,29 @@ export default {
 			localActivityLogPublic: false
 		};
 	},
-	computed: mapState({
-		nightmode: state => state.user.preferences.nightmode,
-		autoSkipDisliked: state => state.user.preferences.autoSkipDisliked,
-		activityLogPublic: state => state.user.preferences.activityLogPublic
-	}),
+	computed: {
+		...mapState({
+			nightmode: state => state.user.preferences.nightmode,
+			autoSkipDisliked: state => state.user.preferences.autoSkipDisliked,
+			activityLogPublic: state => state.user.preferences.activityLogPublic
+		}),
+		...mapGetters({
+			socket: "websockets/getSocket"
+		})
+	},
 	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
+		this.socket.dispatch("users.getPreferences", res => {
+			if (res.status === "success") {
+				this.localNightmode = res.data.nightmode;
+				this.localAutoSkipDisliked = res.data.autoSkipDisliked;
+				this.localActivityLogPublic = res.data.activityLogPublic;
+			}
+		});
 
-			this.socket.dispatch("users.getPreferences", res => {
-				if (res.status === "success") {
-					this.localNightmode = res.data.nightmode;
-					this.localAutoSkipDisliked = res.data.autoSkipDisliked;
-					this.localActivityLogPublic = res.data.activityLogPublic;
-				}
-			});
-
-			socket.on("keep.event:user.preferences.changed", preferences => {
-				this.localNightmode = preferences.nightmode;
-				this.localAutoSkipDisliked = preferences.autoSkipDisliked;
-				this.localActivityLogPublic = preferences.activityLogPublic;
-			});
+		this.socket.on("keep.event:user.preferences.changed", preferences => {
+			this.localNightmode = preferences.nightmode;
+			this.localAutoSkipDisliked = preferences.autoSkipDisliked;
+			this.localActivityLogPublic = preferences.activityLogPublic;
 		});
 	},
 	methods: {

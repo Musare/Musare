@@ -46,7 +46,7 @@
 </template>
 
 <script>
-import { mapActions } from "vuex";
+import { mapActions, mapGetters } from "vuex";
 import Toast from "toasters";
 
 import TabQueryHandler from "../../mixins/TabQueryHandler.vue";
@@ -58,8 +58,6 @@ import SecuritySettings from "./tabs/Security.vue";
 import AccountSettings from "./tabs/Account.vue";
 import ProfileSettings from "./tabs/Profile.vue";
 import PreferencesSettings from "./tabs/Preferences.vue";
-
-import io from "../../io";
 
 export default {
 	components: {
@@ -76,6 +74,9 @@ export default {
 			tab: "profile"
 		};
 	},
+	computed: mapGetters({
+		socket: "websockets/getSocket"
+	}),
 	mounted() {
 		if (
 			this.$route.query.tab === "profile" ||
@@ -87,48 +88,44 @@ export default {
 
 		this.localNightmode = this.nightmode;
 
-		io.getSocket(socket => {
-			this.socket = socket;
-
-			this.socket.dispatch("users.findBySession", res => {
-				if (res.status === "success") {
-					this.setUser(res.data);
-				} else {
-					new Toast({
-						content: "You're not currently signed in.",
-						timeout: 3000
-					});
-				}
-			});
-
-			this.socket.on("event:user.linkPassword", () =>
-				this.updateOriginalUser({
-					property: "password",
-					value: true
-				})
-			);
-
-			this.socket.on("event:user.unlinkPassword", () =>
-				this.updateOriginalUser({
-					property: "password",
-					value: false
-				})
-			);
-
-			this.socket.on("event:user.linkGithub", () =>
-				this.updateOriginalUser({
-					property: "github",
-					value: true
-				})
-			);
-
-			this.socket.on("event:user.unlinkGithub", () =>
-				this.updateOriginalUser({
-					property: "github",
-					value: false
-				})
-			);
+		this.socket.dispatch("users.findBySession", res => {
+			if (res.status === "success") {
+				this.setUser(res.data);
+			} else {
+				new Toast({
+					content: "You're not currently signed in.",
+					timeout: 3000
+				});
+			}
 		});
+
+		this.socket.on("event:user.linkPassword", () =>
+			this.updateOriginalUser({
+				property: "password",
+				value: true
+			})
+		);
+
+		this.socket.on("event:user.unlinkPassword", () =>
+			this.updateOriginalUser({
+				property: "password",
+				value: false
+			})
+		);
+
+		this.socket.on("event:user.linkGithub", () =>
+			this.updateOriginalUser({
+				property: "github",
+				value: true
+			})
+		);
+
+		this.socket.on("event:user.unlinkGithub", () =>
+			this.updateOriginalUser({
+				property: "github",
+				value: false
+			})
+		);
 	},
 	methods: mapActions("settings", ["updateOriginalUser", "setUser"])
 };

@@ -73,11 +73,10 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapState, mapGetters, mapActions } from "vuex";
 import { format, formatDistance, parseISO } from "date-fns"; // eslint-disable-line no-unused-vars
 
 import Toast from "toasters";
-import io from "../../io";
 import Modal from "../Modal.vue";
 import UserIdToUsername from "../common/UserIdToUsername.vue";
 
@@ -95,34 +94,31 @@ export default {
 	computed: {
 		...mapState("modals/viewPunishment", {
 			punishment: state => state.punishment
+		}),
+		...mapGetters({
+			socket: "websockets/getSocket"
 		})
 	},
 	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
-
-			this.socket.dispatch(
-				`punishments.getPunishmentById`,
-				this.punishmentId,
-				res => {
-					if (res.status === "success") {
-						const punishment = res.data;
-						this.viewPunishment(punishment);
-					} else {
-						new Toast({
-							content: "Punishment with that ID not found",
-							timeout: 3000
-						});
-						this.closeModal({
-							sector: this.sector,
-							modal: "viewPunishment"
-						});
-					}
+		this.socket.dispatch(
+			`punishments.getPunishmentById`,
+			this.punishmentId,
+			res => {
+				if (res.status === "success") {
+					const punishment = res.data;
+					this.viewPunishment(punishment);
+				} else {
+					new Toast({
+						content: "Punishment with that ID not found",
+						timeout: 3000
+					});
+					this.closeModal({
+						sector: this.sector,
+						modal: "viewPunishment"
+					});
 				}
-			);
-
-			return socket;
-		});
+			}
+		);
 	},
 	methods: {
 		...mapActions("modalVisibility", ["closeModal"]),

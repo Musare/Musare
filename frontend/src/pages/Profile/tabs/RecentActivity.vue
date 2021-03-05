@@ -39,10 +39,8 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
+import { mapState, mapGetters } from "vuex";
 import Toast from "toasters";
-
-import io from "../../../io";
 
 import ActivityItem from "../../../components/ui/ActivityItem.vue";
 
@@ -70,46 +68,45 @@ export default {
 			}),
 			myUserId: state => state.user.auth.userId,
 			username: state => state.user.auth.username
+		}),
+		...mapGetters({
+			socket: "websockets/getSocket"
 		})
 	},
 	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
+		if (this.myUserId !== this.userId) {
+			this.socket.dispatch(
+				"apis.joinRoom",
+				`profile-${this.userId}-activities`,
+				res => {
+					console.log("res of joining activities room", res);
+				}
+			);
+		}
 
-			if (this.myUserId !== this.userId) {
-				this.socket.dispatch(
-					"apis.joinRoom",
-					`profile-${this.userId}-activities`,
-					res => {
-						console.log("res of joining activities room", res);
-					}
-				);
-			}
+		this.socket.dispatch("activities.length", this.userId, length => {
+			this.maxPosition = Math.ceil(length / 15) + 1;
+			this.getSet();
+		});
 
-			this.socket.dispatch("activities.length", this.userId, length => {
-				this.maxPosition = Math.ceil(length / 15) + 1;
-				this.getSet();
-			});
+		this.socket.on("event:activity.create", activity => {
+			this.activities.unshift(activity);
+			this.offsettedFromNextSet += 1;
+		});
 
-			this.socket.on("event:activity.create", activity => {
-				this.activities.unshift(activity);
-				this.offsettedFromNextSet += 1;
-			});
+		this.socket.on("event:activity.hide", activityId => {
+			this.activities = this.activities.filter(
+				activity => activity._id !== activityId
+			);
 
-			this.socket.on("event:activity.hide", activityId => {
-				this.activities = this.activities.filter(
-					activity => activity._id !== activityId
-				);
+			this.offsettedFromNextSet -= 1;
+		});
 
-				this.offsettedFromNextSet -= 1;
-			});
-
-			this.socket.on("event:activity.removeAllForUser", () => {
-				this.activities = [];
-				this.position = 1;
-				this.maxPosition = 1;
-				this.offsettedFromNextSet = 0;
-			});
+		this.socket.on("event:activity.removeAllForUser", () => {
+			this.activities = [];
+			this.position = 1;
+			this.maxPosition = 1;
+			this.offsettedFromNextSet = 0;
 		});
 	},
 	methods: {

@@ -84,7 +84,7 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
+import { mapState, mapGetters } from "vuex";
 import { format, parseISO } from "date-fns";
 
 import TabQueryHandler from "../../mixins/TabQueryHandler.vue";
@@ -95,8 +95,6 @@ import Playlists from "./tabs/Playlists.vue";
 import ProfilePicture from "../../components/ui/ProfilePicture.vue";
 import MainHeader from "../../components/layout/MainHeader.vue";
 import MainFooter from "../../components/layout/MainFooter.vue";
-
-import io from "../../io";
 
 export default {
 	components: {
@@ -124,6 +122,9 @@ export default {
 			...mapState("modalVisibility", {
 				modals: state => state.modals.station
 			})
+		}),
+		...mapGetters({
+			socket: "websockets/getSocket"
 		})
 	},
 	mounted() {
@@ -133,29 +134,25 @@ export default {
 		)
 			this.tab = this.$route.query.tab;
 
-		io.getSocket(socket => {
-			this.socket = socket;
+		this.socket.dispatch(
+			"users.findByUsername",
+			this.$route.params.username,
+			res => {
+				if (res.status === "error" || res.status === "failure")
+					this.$router.push("/404");
+				else {
+					this.user = res.data;
 
-			this.socket.dispatch(
-				"users.findByUsername",
-				this.$route.params.username,
-				res => {
-					if (res.status === "error" || res.status === "failure")
-						this.$router.push("/404");
-					else {
-						this.user = res.data;
+					this.user.createdAt = format(
+						parseISO(this.user.createdAt),
+						"MMMM do yyyy"
+					);
 
-						this.user.createdAt = format(
-							parseISO(this.user.createdAt),
-							"MMMM do yyyy"
-						);
-
-						this.isUser = true;
-						this.userId = this.user._id;
-					}
+					this.isUser = true;
+					this.userId = this.user._id;
 				}
-			);
-		});
+			}
+		);
 	}
 };
 </script>

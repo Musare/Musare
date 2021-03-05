@@ -11,7 +11,7 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapState, mapActions, mapGetters } from "vuex";
 import Toast from "toasters";
 
 import Banned from "./pages/Banned.vue";
@@ -36,16 +36,21 @@ export default {
 			keyIsDown: false
 		};
 	},
-	computed: mapState({
-		loggedIn: state => state.user.auth.loggedIn,
-		role: state => state.user.auth.role,
-		username: state => state.user.auth.username,
-		userId: state => state.user.auth.userId,
-		banned: state => state.user.auth.banned,
-		modals: state => state.modalVisibility.modals,
-		currentlyActive: state => state.modalVisibility.currentlyActive,
-		nightmode: state => state.user.preferences.nightmode
-	}),
+	computed: {
+		...mapState({
+			loggedIn: state => state.user.auth.loggedIn,
+			role: state => state.user.auth.role,
+			username: state => state.user.auth.username,
+			userId: state => state.user.auth.userId,
+			banned: state => state.user.auth.banned,
+			modals: state => state.modalVisibility.modals,
+			currentlyActive: state => state.modalVisibility.currentlyActive,
+			nightmode: state => state.user.preferences.nightmode
+		}),
+		...mapGetters({
+			socket: "websockets/getSocket"
+		})
+	},
 	watch: {
 		socketConnected(connected) {
 			if (!connected)
@@ -136,24 +141,20 @@ export default {
 			}
 		});
 
-		io.getSocket(true, socket => {
-			this.socket = socket;
+		this.socket.dispatch("users.getPreferences", res => {
+			if (res.status === "success") {
+				this.changeAutoSkipDisliked(res.data.autoSkipDisliked);
+				this.changeNightmode(res.data.nightmode);
+				this.changeActivityLogPublic(res.data.activityLogPublic);
 
-			this.socket.dispatch("users.getPreferences", res => {
-				if (res.status === "success") {
-					this.changeAutoSkipDisliked(res.data.autoSkipDisliked);
-					this.changeNightmode(res.data.nightmode);
-					this.changeActivityLogPublic(res.data.activityLogPublic);
-
-					if (this.nightmode) this.enableNightMode();
-					else this.disableNightMode();
-				}
-			});
-
-			this.socket.on("keep.event:user.session.removed", () =>
-				window.location.reload()
-			);
+				if (this.nightmode) this.enableNightMode();
+				else this.disableNightMode();
+			}
 		});
+
+		this.socket.on("keep.event:user.session.removed", () =>
+			window.location.reload()
+		);
 	},
 	methods: {
 		submitOnEnter: (cb, event) => {

@@ -88,10 +88,9 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapState, mapGetters, mapActions } from "vuex";
 
 import Toast from "toasters";
-import io from "../../io";
 import Modal from "../Modal.vue";
 import validation from "../../validation";
 
@@ -111,29 +110,26 @@ export default {
 	computed: {
 		...mapState("modals/editUser", {
 			user: state => state.user
+		}),
+		...mapGetters({
+			socket: "websockets/getSocket"
 		})
 	},
 	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
-
-			this.socket.dispatch(`users.getUserFromId`, this.userId, res => {
-				if (res.status === "success") {
-					const user = res.data;
-					this.editUser(user);
-				} else {
-					new Toast({
-						content: "User with that ID not found",
-						timeout: 3000
-					});
-					this.closeModal({
-						sector: this.sector,
-						modal: "editUser"
-					});
-				}
-			});
-
-			return socket;
+		this.socket.dispatch(`users.getUserFromId`, this.userId, res => {
+			if (res.status === "success") {
+				const user = res.data;
+				this.editUser(user);
+			} else {
+				new Toast({
+					content: "User with that ID not found",
+					timeout: 3000
+				});
+				this.closeModal({
+					sector: this.sector,
+					modal: "editUser"
+				});
+			}
 		});
 	},
 	methods: {

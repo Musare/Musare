@@ -1,4 +1,5 @@
 /* eslint no-param-reassign: 0 */
+/* eslint-disable import/no-cycle */
 
 import admin from "../../../api/admin/index";
 

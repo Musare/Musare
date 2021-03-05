@@ -227,12 +227,12 @@
 
 <script>
 import Toast from "toasters";
+import { mapGetters } from "vuex";
 
 import MainHeader from "../components/layout/MainHeader.vue";
 import MainFooter from "../components/layout/MainFooter.vue";
 import InputHelpBox from "../components/ui/InputHelpBox.vue";
 
-import io from "../io";
 import validation from "../validation";
 
 export default {
@@ -271,6 +271,9 @@ export default {
 			step: 1
 		};
 	},
+	computed: mapGetters({
+		socket: "websockets/getSocket"
+	}),
 	watch: {
 		email(value) {
 			if (
@@ -305,12 +308,6 @@ export default {
 			this.checkPasswordMatch(this.newPassword, value);
 		}
 	},
-	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
-		});
-	},
-
 	methods: {
 		checkPasswordMatch(newPassword, newPasswordAgain) {
 			if (newPasswordAgain !== newPassword) {

@@ -18,22 +18,14 @@ const callbacks = {
 	}
 };
 
+const whenConnected = [];
+
 const callbackss = {};
 let callbackRef = 0;
 
 export default {
 	socket: null,
 	dispatcher: null,
-
-	getSocket(...args) {
-		if (args[0] === true) {
-			if (this.socket && this.socket.readyState === 1) {
-				args[1](this.socket);
-			} else callbacks.general.persist.push(args[1]);
-		} else if (this.socket && this.socket.readyState === 1) {
-			args[0](this.socket);
-		} else callbacks.general.temp.push(args[0]);
-	},
 
 	onConnect(...args) {
 		if (args[0] === true) callbacks.onConnect.persist.push(args[1]);
@@ -111,10 +103,9 @@ export default {
 				callbackRef += 1;
 
 				if (this.readyState !== 1)
-					return new Toast({
-						content: "Cannot perform this action at this time.",
-						timeout: 8000
-					});
+					return callbacks.onConnect.temp.push(() =>
+						this.dispatch(...args)
+					);
 
 				const cb = args[args.length - 1];
 				if (typeof cb === "function") callbackss[callbackRef] = cb;
@@ -133,6 +124,8 @@ export default {
 			callbacks.onConnect.persist.forEach(cb => cb());
 
 			console.log("IO: SOCKET CONNECTED");
+
+			whenConnected.forEach(func => func());
 
 			callbacks.general.temp.forEach(cb => cb(this.socket));
 			callbacks.general.persist.forEach(cb => cb(this.socket));

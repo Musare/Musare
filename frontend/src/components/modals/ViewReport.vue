@@ -89,11 +89,9 @@
 </template>
 
 <script>
-import { mapActions, mapState } from "vuex";
+import { mapActions, mapGetters, mapState } from "vuex";
 import { formatDistance } from "date-fns";
 import Toast from "toasters";
-
-import io from "../../io";
 
 import UserIdToUsername from "../common/UserIdToUsername.vue";
 import Modal from "../Modal.vue";
@@ -107,6 +105,9 @@ export default {
 	computed: {
 		...mapState("modals/viewReport", {
 			report: state => state.report
+		}),
+		...mapGetters({
+			socket: "websockets/getSocket"
 		})
 	},
 	mounted() {
@@ -114,26 +115,20 @@ export default {
 			this.closeModal({ sector: this.sector, modal: "editSong" });
 		}
 
-		io.getSocket(socket => {
-			this.socket = socket;
-
-			this.socket.dispatch(`reports.findOne`, this.reportId, res => {
-				if (res.status === "success") {
-					const report = res.data;
-					this.viewReport(report);
-				} else {
-					new Toast({
-						content: "Report with that ID not found",
-						timeout: 3000
-					});
-					this.closeModal({
-						sector: this.sector,
-						modal: "viewReport"
-					});
-				}
-			});
-
-			return socket;
+		this.socket.dispatch(`reports.findOne`, this.reportId, res => {
+			if (res.status === "success") {
+				const report = res.data;
+				this.viewReport(report);
+			} else {
+				new Toast({
+					content: "Report with that ID not found",
+					timeout: 3000
+				});
+				this.closeModal({
+					sector: this.sector,
+					modal: "viewReport"
+				});
+			}
 		});
 	},
 	methods: {

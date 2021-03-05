@@ -184,7 +184,7 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapState, mapActions, mapGetters } from "vuex";
 
 import Toast from "toasters";
 import io from "../../../io";
@@ -209,23 +209,22 @@ export default {
 		}),
 		...mapState("modalVisibility", {
 			modals: state => state.modals.admin
+		}),
+		...mapGetters({
+			socket: "websockets/getSocket"
 		})
 	},
 	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
+		if (this.socket.readyState === 1) this.init();
+		io.onConnect(() => this.init());
 
-			if (this.socket.readyState === 1) this.init();
-			io.onConnect(() => this.init());
+		this.socket.on("event:admin.station.added", station =>
+			this.stationAdded(station)
+		);
 
-			this.socket.on("event:admin.station.added", station =>
-				this.stationAdded(station)
-			);
-
-			this.socket.on("event:admin.station.removed", stationId =>
-				this.stationRemoved(stationId)
-			);
-		});
+		this.socket.on("event:admin.station.removed", stationId =>
+			this.stationRemoved(stationId)
+		);
 	},
 	methods: {
 		createStation() {

@@ -164,10 +164,9 @@
 </template>
 
 <script>
-import { mapActions, mapState } from "vuex";
+import { mapActions, mapGetters, mapState } from "vuex";
 
 import Toast from "toasters";
-import io from "../../io";
 
 import Modal from "../Modal.vue";
 
@@ -180,27 +179,26 @@ export default {
 	computed: {
 		...mapState("modals/editNews", {
 			news: state => state.news
+		}),
+		...mapGetters({
+			socket: "websockets/getSocket"
 		})
 	},
 	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
-
-			this.socket.dispatch(`news.getNewsFromId`, this.newsId, res => {
-				if (res.status === "success") {
-					const news = res.data;
-					this.editNews(news);
-				} else {
-					new Toast({
-						content: "News with that ID not found",
-						timeout: 3000
-					});
-					this.closeModal({
-						sector: this.sector,
-						modal: "editNews"
-					});
-				}
-			});
+		this.socket.dispatch(`news.getNewsFromId`, this.newsId, res => {
+			if (res.status === "success") {
+				const news = res.data;
+				this.editNews(news);
+			} else {
+				new Toast({
+					content: "News with that ID not found",
+					timeout: 3000
+				});
+				this.closeModal({
+					sector: this.sector,
+					modal: "editNews"
+				});
+			}
 		});
 	},
 	methods: {

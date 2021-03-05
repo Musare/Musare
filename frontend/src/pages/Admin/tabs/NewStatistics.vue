@@ -191,6 +191,8 @@
 </template>
 
 <script>
+import { mapGetters } from "vuex";
+
 import io from "../../../io";
 
 export default {
@@ -201,12 +203,12 @@ export default {
 			module: null
 		};
 	},
+	computed: mapGetters({
+		socket: "websockets/getSocket"
+	}),
 	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
-			if (this.socket.readyState === 1) this.init();
-			io.onConnect(() => this.init());
-		});
+		if (this.socket.readyState === 1) this.init();
+		io.onConnect(() => this.init());
 	},
 	methods: {
 		init() {

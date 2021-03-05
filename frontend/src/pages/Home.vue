@@ -456,9 +456,7 @@ export default {
 	},
 	data() {
 		return {
-			recaptcha: {
-				key: ""
-			},
+			recaptcha: { key: "" },
 			stations: [],
 			searchQuery: "",
 			siteName: "Musare"
@@ -500,9 +498,6 @@ export default {
 	},
 	async mounted() {
 		this.siteName = await lofig.get("siteSettings.siteName");
-
-		// io.getSocket(socket => {
-		// 	this.socket = socket;
 
 		if (this.socket.readyState === 1) this.init();
 		io.onConnect(() => this.init());
@@ -650,7 +645,6 @@ export default {
 				}
 			});
 		});
-		// });
 	},
 	methods: {
 		init() {

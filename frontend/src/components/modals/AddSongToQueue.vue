@@ -206,7 +206,7 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapState, mapGetters, mapActions } from "vuex";
 
 import Toast from "toasters";
 
@@ -216,8 +216,6 @@ import PlaylistItem from "../ui/PlaylistItem.vue";
 import SearchQueryItem from "../ui/SearchQueryItem.vue";
 import Modal from "../Modal.vue";
 
-import io from "../../io";
-
 export default {
 	components: { Modal, PlaylistItem, SearchQueryItem },
 	mixins: [SearchYoutube],
@@ -226,18 +224,20 @@ export default {
 			playlists: []
 		};
 	},
-	computed: mapState({
-		loggedIn: state => state.user.auth.loggedIn,
-		station: state => state.station.station,
-		privatePlaylistQueueSelected: state =>
-			state.station.privatePlaylistQueueSelected
-	}),
+	computed: {
+		...mapState({
+			loggedIn: state => state.user.auth.loggedIn,
+			station: state => state.station.station,
+			privatePlaylistQueueSelected: state =>
+				state.station.privatePlaylistQueueSelected
+		}),
+		...mapGetters({
+			socket: "websockets/getSocket"
+		})
+	},
 	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
-			this.socket.dispatch("playlists.indexMyPlaylists", true, res => {
-				if (res.status === "success") this.playlists = res.data;
-			});
+		this.socket.dispatch("playlists.indexMyPlaylists", true, res => {
+			if (res.status === "success") this.playlists = res.data;
 		});
 	},
 	methods: {

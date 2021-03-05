@@ -73,22 +73,26 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapState, mapActions, mapGetters } from "vuex";
 import Toast from "toasters";
 
 import validation from "../../../validation";
-import io from "../../../io";
 
 import ProfilePicture from "../../../components/ui/ProfilePicture.vue";
 import SaveButton from "../../../components/ui/SaveButton.vue";
 
 export default {
 	components: { ProfilePicture, SaveButton },
-	computed: mapState({
-		userId: state => state.user.auth.userId,
-		originalUser: state => state.settings.originalUser,
-		modifiedUser: state => state.settings.modifiedUser
-	}),
+	computed: {
+		...mapState({
+			userId: state => state.user.auth.userId,
+			originalUser: state => state.settings.originalUser,
+			modifiedUser: state => state.settings.modifiedUser
+		}),
+		...mapGetters({
+			socket: "websockets/getSocket"
+		})
+	},
 	watch: {
 		"modifiedUser.avatar.type": function watchAvatarType(newType, oldType) {
 			if (
@@ -103,11 +107,6 @@ export default {
 				this.modifiedUser.avatar.color = color;
 			}
 		}
-	},
-	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
-		});
 	},
 	methods: {
 		saveChanges() {

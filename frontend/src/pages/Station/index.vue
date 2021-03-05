@@ -495,7 +495,7 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapState, mapActions, mapGetters } from "vuex";
 import Toast from "toasters";
 import { ContentLoader } from "vue-content-loader";
 
@@ -582,6 +582,9 @@ export default {
 			role: state => state.user.auth.role,
 			nightmode: state => state.user.preferences.nightmode,
 			autoSkipDisliked: state => state.user.preferences.autoSkipDisliked
+		}),
+		...mapGetters({
+			socket: "websockets/getSocket"
 		})
 	},
 	mounted() {
@@ -595,251 +598,244 @@ export default {
 
 		window.stationInterval = 0;
 
-		io.getSocket(socket => {
-			this.socket = socket;
+		if (this.socket.readyState === 1) this.join();
+		io.onConnect(() => {
+			console.log("station page connect", this.socket.readyState);
+			this.join();
+		});
 
-			if (this.socket.readyState === 1) this.join();
-			io.onConnect(() => {
-				console.log("station page connect", this.socket.readyState);
-				this.join();
-			});
-
-			this.socket.dispatch(
-				"stations.existsByName",
-				this.stationIdentifier,
-				res => {
-					if (res.status === "failure" || !res.exists) {
-						// station identifier may be using stationid instead
-						this.socket.dispatch(
-							"stations.existsById",
-							this.stationIdentifier,
-							res => {
-								if (res.status === "failure" || !res.exists) {
-									this.loading = false;
-									this.exists = false;
-								}
-							}
-						);
-					}
-				}
-			);
-
-			this.socket.on("event:songs.next", data => {
-				const previousSong = this.currentSong.songId
-					? this.currentSong
-					: null;
-
-				this.updatePreviousSong(previousSong);
-
-				const { currentSong } = data;
-
-				if (currentSong && !currentSong.thumbnail)
-					currentSong.ytThumbnail = `https://img.youtube.com/vi/${currentSong.songId}/mqdefault.jpg`;
-
-				this.updateCurrentSong(currentSong || {});
-
-				this.startedAt = data.startedAt;
-				this.updateStationPaused(data.paused);
-				this.timePaused = data.timePaused;
-
-				if (currentSong) {
-					this.updateNoSong(false);
-
-					if (this.currentSong.artists)
-						this.currentSong.artists = this.currentSong.artists.join(
-							", "
-						);
-
-					if (!this.playerReady) this.youtubeReady();
-					else this.playVideo();
-
+		this.socket.dispatch(
+			"stations.existsByName",
+			this.stationIdentifier,
+			res => {
+				if (res.status === "failure" || !res.exists) {
+					// station identifier may be using stationid instead
 					this.socket.dispatch(
-						"songs.getOwnSongRatings",
-						data.currentSong.songId,
-						song => {
-							if (this.currentSong.songId === song.songId) {
-								this.liked = song.liked;
-								this.disliked = song.disliked;
-
-								if (
-									this.autoSkipDisliked &&
-									song.disliked === true
-								) {
-									this.voteSkipStation();
-									new Toast({
-										content:
-											"Automatically voted to skip disliked song.",
-										timeout: 4000
-									});
-								}
+						"stations.existsById",
+						this.stationIdentifier,
+						res => {
+							if (res.status === "failure" || !res.exists) {
+								this.loading = false;
+								this.exists = false;
 							}
 						}
 					);
-				} else {
-					if (this.playerReady) this.player.pauseVideo();
-					this.updateNoSong(true);
 				}
+			}
+		);
 
-				let isInQueue = false;
+		this.socket.on("event:songs.next", data => {
+			const previousSong = this.currentSong.songId
+				? this.currentSong
+				: null;
 
-				this.songsList.forEach(queueSong => {
-					if (queueSong.requestedBy === this.userId) isInQueue = true;
-				});
+			this.updatePreviousSong(previousSong);
 
-				if (
-					!isInQueue &&
-					this.privatePlaylistQueueSelected &&
-					(this.automaticallyRequestedSongId !==
-						this.currentSong.songId ||
-						!this.currentSong.songId)
-				) {
-					this.addFirstPrivatePlaylistSongToQueue();
-				}
-			});
+			const { currentSong } = data;
 
-			this.socket.on("event:stations.pause", data => {
-				this.pausedAt = data.pausedAt;
-				this.updateStationPaused(true);
-				this.pauseLocalPlayer();
-			});
+			if (currentSong && !currentSong.thumbnail)
+				currentSong.ytThumbnail = `https://img.youtube.com/vi/${currentSong.songId}/mqdefault.jpg`;
 
-			this.socket.on("event:stations.resume", data => {
-				this.timePaused = data.timePaused;
-				this.updateStationPaused(false);
-				if (!this.localPaused) this.resumeLocalPlayer();
-			});
+			this.updateCurrentSong(currentSong || {});
 
-			this.socket.on("event:stations.remove", () => {
-				window.location.href = "/";
-				return true;
-			});
+			this.startedAt = data.startedAt;
+			this.updateStationPaused(data.paused);
+			this.timePaused = data.timePaused;
 
-			this.socket.on("event:song.like", data => {
-				if (!this.noSong) {
-					if (data.songId === this.currentSong.songId) {
-						this.currentSong.dislikes = data.dislikes;
-						this.currentSong.likes = data.likes;
+			if (currentSong) {
+				this.updateNoSong(false);
+
+				if (this.currentSong.artists)
+					this.currentSong.artists = this.currentSong.artists.join(
+						", "
+					);
+
+				if (!this.playerReady) this.youtubeReady();
+				else this.playVideo();
+
+				this.socket.dispatch(
+					"songs.getOwnSongRatings",
+					data.currentSong.songId,
+					song => {
+						if (this.currentSong.songId === song.songId) {
+							this.liked = song.liked;
+							this.disliked = song.disliked;
+
+							if (
+								this.autoSkipDisliked &&
+								song.disliked === true
+							) {
+								this.voteSkipStation();
+								new Toast({
+									content:
+										"Automatically voted to skip disliked song.",
+									timeout: 4000
+								});
+							}
+						}
 					}
-				}
-			});
-
-			this.socket.on("event:song.dislike", data => {
-				if (!this.noSong) {
-					if (data.songId === this.currentSong.songId) {
-						this.currentSong.dislikes = data.dislikes;
-						this.currentSong.likes = data.likes;
-					}
-				}
-			});
-
-			this.socket.on("event:song.unlike", data => {
-				if (!this.noSong) {
-					if (data.songId === this.currentSong.songId) {
-						this.currentSong.dislikes = data.dislikes;
-						this.currentSong.likes = data.likes;
-					}
-				}
-			});
-
-			this.socket.on("event:song.undislike", data => {
-				if (!this.noSong) {
-					if (data.songId === this.currentSong.songId) {
-						this.currentSong.dislikes = data.dislikes;
-						this.currentSong.likes = data.likes;
-					}
-				}
-			});
-
-			this.socket.on("event:song.newRatings", data => {
-				if (!this.noSong) {
-					if (data.songId === this.currentSong.songId) {
-						this.liked = data.liked;
-						this.disliked = data.disliked;
-					}
-				}
-			});
-
-			this.socket.on("event:queue.update", queue => {
-				if (this.station.type === "community")
-					this.updateSongsList(queue);
-			});
-
-			this.socket.on("event:song.voteSkipSong", () => {
-				if (this.currentSong) this.currentSong.skipVotes += 1;
-			});
-
-			this.socket.on("event:privatePlaylist.selected", playlistId => {
-				if (this.station.type === "community") {
-					this.station.privatePlaylist = playlistId;
-				}
-			});
-
-			this.socket.on("event:privatePlaylist.deselected", () => {
-				if (this.station.type === "community") {
-					this.station.privatePlaylist = null;
-				}
-			});
-
-			this.socket.on("event:partyMode.updated", partyMode => {
-				if (this.station.type === "community") {
-					this.station.partyMode = partyMode;
-				}
-			});
-
-			this.socket.on("event:station.themeUpdated", theme => {
-				this.station.theme = theme;
-			});
-
-			this.socket.on("event:station.updateName", res => {
-				this.station.name = res.name;
-				// eslint-disable-next-line no-restricted-globals
-				history.pushState(
-					{},
-					null,
-					`${res.name}?${Object.keys(this.$route.query)
-						.map(key => {
-							return `${encodeURIComponent(
-								key
-							)}=${encodeURIComponent(this.$route.query[key])}`;
-						})
-						.join("&")}`
 				);
+			} else {
+				if (this.playerReady) this.player.pauseVideo();
+				this.updateNoSong(true);
+			}
+
+			let isInQueue = false;
+
+			this.songsList.forEach(queueSong => {
+				if (queueSong.requestedBy === this.userId) isInQueue = true;
 			});
 
-			this.socket.on("event:station.updateDisplayName", res => {
-				this.station.displayName = res.displayName;
-			});
+			if (
+				!isInQueue &&
+				this.privatePlaylistQueueSelected &&
+				(this.automaticallyRequestedSongId !==
+					this.currentSong.songId ||
+					!this.currentSong.songId)
+			) {
+				this.addFirstPrivatePlaylistSongToQueue();
+			}
+		});
 
-			this.socket.on("event:station.updateDescription", res => {
-				this.station.description = res.description;
-			});
+		this.socket.on("event:stations.pause", data => {
+			this.pausedAt = data.pausedAt;
+			this.updateStationPaused(true);
+			this.pauseLocalPlayer();
+		});
 
-			this.socket.on("event:newOfficialPlaylist", playlist => {
-				if (this.station.type === "official")
-					this.updateSongsList(playlist);
-			});
+		this.socket.on("event:stations.resume", data => {
+			this.timePaused = data.timePaused;
+			this.updateStationPaused(false);
+			if (!this.localPaused) this.resumeLocalPlayer();
+		});
 
-			this.socket.on("event:users.updated", users =>
-				this.updateUsers(users)
+		this.socket.on("event:stations.remove", () => {
+			window.location.href = "/";
+			return true;
+		});
+
+		this.socket.on("event:song.like", data => {
+			if (!this.noSong) {
+				if (data.songId === this.currentSong.songId) {
+					this.currentSong.dislikes = data.dislikes;
+					this.currentSong.likes = data.likes;
+				}
+			}
+		});
+
+		this.socket.on("event:song.dislike", data => {
+			if (!this.noSong) {
+				if (data.songId === this.currentSong.songId) {
+					this.currentSong.dislikes = data.dislikes;
+					this.currentSong.likes = data.likes;
+				}
+			}
+		});
+
+		this.socket.on("event:song.unlike", data => {
+			if (!this.noSong) {
+				if (data.songId === this.currentSong.songId) {
+					this.currentSong.dislikes = data.dislikes;
+					this.currentSong.likes = data.likes;
+				}
+			}
+		});
+
+		this.socket.on("event:song.undislike", data => {
+			if (!this.noSong) {
+				if (data.songId === this.currentSong.songId) {
+					this.currentSong.dislikes = data.dislikes;
+					this.currentSong.likes = data.likes;
+				}
+			}
+		});
+
+		this.socket.on("event:song.newRatings", data => {
+			if (!this.noSong) {
+				if (data.songId === this.currentSong.songId) {
+					this.liked = data.liked;
+					this.disliked = data.disliked;
+				}
+			}
+		});
+
+		this.socket.on("event:queue.update", queue => {
+			if (this.station.type === "community") this.updateSongsList(queue);
+		});
+
+		this.socket.on("event:song.voteSkipSong", () => {
+			if (this.currentSong) this.currentSong.skipVotes += 1;
+		});
+
+		this.socket.on("event:privatePlaylist.selected", playlistId => {
+			if (this.station.type === "community") {
+				this.station.privatePlaylist = playlistId;
+			}
+		});
+
+		this.socket.on("event:privatePlaylist.deselected", () => {
+			if (this.station.type === "community") {
+				this.station.privatePlaylist = null;
+			}
+		});
+
+		this.socket.on("event:partyMode.updated", partyMode => {
+			if (this.station.type === "community") {
+				this.station.partyMode = partyMode;
+			}
+		});
+
+		this.socket.on("event:station.themeUpdated", theme => {
+			this.station.theme = theme;
+		});
+
+		this.socket.on("event:station.updateName", res => {
+			this.station.name = res.name;
+			// eslint-disable-next-line no-restricted-globals
+			history.pushState(
+				{},
+				null,
+				`${res.name}?${Object.keys(this.$route.query)
+					.map(key => {
+						return `${encodeURIComponent(key)}=${encodeURIComponent(
+							this.$route.query[key]
+						)}`;
+					})
+					.join("&")}`
 			);
+		});
 
-			this.socket.on("event:userCount.updated", userCount =>
-				this.updateUserCount(userCount)
-			);
+		this.socket.on("event:station.updateDisplayName", res => {
+			this.station.displayName = res.displayName;
+		});
 
-			this.socket.on("event:queueLockToggled", locked => {
-				this.station.locked = locked;
-			});
+		this.socket.on("event:station.updateDescription", res => {
+			this.station.description = res.description;
+		});
 
-			this.socket.on("event:user.favoritedStation", stationId => {
-				if (stationId === this.station._id)
-					this.updateIfStationIsFavorited({ isFavorited: true });
-			});
+		this.socket.on("event:newOfficialPlaylist", playlist => {
+			if (this.station.type === "official")
+				this.updateSongsList(playlist);
+		});
 
-			this.socket.on("event:user.unfavoritedStation", stationId => {
-				if (stationId === this.station._id)
-					this.updateIfStationIsFavorited({ isFavorited: false });
-			});
+		this.socket.on("event:users.updated", users => this.updateUsers(users));
+
+		this.socket.on("event:userCount.updated", userCount =>
+			this.updateUserCount(userCount)
+		);
+
+		this.socket.on("event:queueLockToggled", locked => {
+			this.station.locked = locked;
+		});
+
+		this.socket.on("event:user.favoritedStation", stationId => {
+			if (stationId === this.station._id)
+				this.updateIfStationIsFavorited({ isFavorited: true });
+		});
+
+		this.socket.on("event:user.unfavoritedStation", stationId => {
+			if (stationId === this.station._id)
+				this.updateIfStationIsFavorited({ isFavorited: false });
 		});
 
 		if (JSON.parse(localStorage.getItem("muted"))) {

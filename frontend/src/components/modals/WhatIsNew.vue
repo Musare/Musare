@@ -69,8 +69,7 @@
 
 <script>
 import { format } from "date-fns";
-
-import io from "../../io";
+import { mapGetters } from "vuex";
 
 export default {
 	data() {
@@ -79,35 +78,32 @@ export default {
 			news: null
 		};
 	},
+	computed: mapGetters({
+		socket: "websockets/getSocket"
+	}),
 	mounted() {
-		io.getSocket(true, socket => {
-			this.socket = socket;
-			this.socket.dispatch("news.newest", res => {
-				this.news = res.data;
-				if (this.news && localStorage.getItem("firstVisited")) {
-					if (localStorage.getItem("whatIsNew")) {
-						if (
-							parseInt(localStorage.getItem("whatIsNew")) <
-							res.data.createdAt
-						) {
-							this.toggleModal();
-							localStorage.setItem(
-								"whatIsNew",
-								res.data.createdAt
-							);
-						}
-					} else {
-						if (
-							parseInt(localStorage.getItem("firstVisited")) <
-							res.data.createdAt
-						) {
-							this.toggleModal();
-						}
+		this.socket.dispatch("news.newest", res => {
+			this.news = res.data;
+			if (this.news && localStorage.getItem("firstVisited")) {
+				if (localStorage.getItem("whatIsNew")) {
+					if (
+						parseInt(localStorage.getItem("whatIsNew")) <
+						res.data.createdAt
+					) {
+						this.toggleModal();
 						localStorage.setItem("whatIsNew", res.data.createdAt);
 					}
-				} else if (!localStorage.getItem("firstVisited"))
-					localStorage.setItem("firstVisited", Date.now());
-			});
+				} else {
+					if (
+						parseInt(localStorage.getItem("firstVisited")) <
+						res.data.createdAt
+					) {
+						this.toggleModal();
+					}
+					localStorage.setItem("whatIsNew", res.data.createdAt);
+				}
+			} else if (!localStorage.getItem("firstVisited"))
+				localStorage.setItem("firstVisited", Date.now());
 		});
 	},
 	methods: {

@@ -421,12 +421,11 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapState, mapGetters, mapActions } from "vuex";
 
 import Toast from "toasters";
 
 import Modal from "../Modal.vue";
-import io from "../../io";
 import validation from "../../validation";
 import SaveButton from "../ui/SaveButton.vue";
 
@@ -507,45 +506,38 @@ export default {
 		...mapState("modals/editStation", {
 			station: state => state.station,
 			originalStation: state => state.originalStation
+		}),
+		...mapGetters({
+			socket: "websockets/getSocket"
 		})
 	},
 	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
+		this.socket.dispatch(`stations.getStationById`, this.stationId, res => {
+			if (res.status === "success") {
+				const { station } = res;
+				// this.song = { ...song };
+				// if (this.song.discogs === undefined)
+				// 	this.song.discogs = null;
+				this.editStation(station);
 
-			this.socket.dispatch(
-				`stations.getStationById`,
-				this.stationId,
-				res => {
-					if (res.status === "success") {
-						const { station } = res;
-						// this.song = { ...song };
-						// if (this.song.discogs === undefined)
-						// 	this.song.discogs = null;
-						this.editStation(station);
+				// this.songDataLoaded = true;
 
-						// this.songDataLoaded = true;
-
-						this.station.genres = JSON.parse(
-							JSON.stringify(this.station.genres)
-						);
-						this.station.blacklistedGenres = JSON.parse(
-							JSON.stringify(this.station.blacklistedGenres)
-						);
-					} else {
-						new Toast({
-							content: "Station with that ID not found",
-							timeout: 3000
-						});
-						this.closeModal({
-							sector: this.sector,
-							modal: "editStation"
-						});
-					}
-				}
-			);
-
-			return socket;
+				this.station.genres = JSON.parse(
+					JSON.stringify(this.station.genres)
+				);
+				this.station.blacklistedGenres = JSON.parse(
+					JSON.stringify(this.station.blacklistedGenres)
+				);
+			} else {
+				new Toast({
+					content: "Station with that ID not found",
+					timeout: 3000
+				});
+				this.closeModal({
+					sector: this.sector,
+					modal: "editStation"
+				});
+			}
 		});
 	},
 	methods: {

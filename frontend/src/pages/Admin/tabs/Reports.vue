@@ -67,7 +67,7 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapState, mapActions, mapGetters } from "vuex";
 import { formatDistance } from "date-fns";
 
 import Toast from "toasters";
@@ -87,29 +87,28 @@ export default {
 	computed: {
 		...mapState("modalVisibility", {
 			modals: state => state.modals.admin
+		}),
+		...mapGetters({
+			socket: "websockets/getSocket"
 		})
 	},
 	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
+		if (this.socket.readyState === 1) this.init();
+		io.onConnect(() => this.init());
 
-			if (this.socket.readyState === 1) this.init();
-			io.onConnect(() => this.init());
-
-			this.socket.dispatch("reports.index", res => {
-				this.reports = res.data;
-			});
-
-			this.socket.on("event:admin.report.resolved", reportId => {
-				this.reports = this.reports.filter(report => {
-					return report._id !== reportId;
-				});
-			});
-
-			this.socket.on("event:admin.report.created", report =>
-				this.reports.push(report)
-			);
+		this.socket.dispatch("reports.index", res => {
+			this.reports = res.data;
 		});
+
+		this.socket.on("event:admin.report.resolved", reportId => {
+			this.reports = this.reports.filter(report => {
+				return report._id !== reportId;
+			});
+		});
+
+		this.socket.on("event:admin.report.created", report =>
+			this.reports.push(report)
+		);
 
 		if (this.$route.query.id) {
 			this.socket.dispatch(

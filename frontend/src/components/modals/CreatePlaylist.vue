@@ -33,11 +33,10 @@
 </template>
 
 <script>
-import { mapActions } from "vuex";
+import { mapActions, mapGetters } from "vuex";
 
 import Toast from "toasters";
 import Modal from "../Modal.vue";
-import io from "../../io";
 import validation from "../../validation";
 
 export default {
@@ -51,11 +50,9 @@ export default {
 			}
 		};
 	},
-	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
-		});
-	},
+	computed: mapGetters({
+		socket: "websockets/getSocket"
+	}),
 	methods: {
 		createPlaylist() {
 			const { displayName } = this.playlist;

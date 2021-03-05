@@ -177,8 +177,7 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
-import Vue from "vue";
+import { mapState, mapActions, mapGetters } from "vuex";
 
 import Toast from "toasters";
 
@@ -212,6 +211,9 @@ export default {
 		},
 		...mapState("modalVisibility", {
 			modals: state => state.modals.admin
+		}),
+		...mapGetters({
+			socket: "websockets/getSocket"
 		})
 	},
 	watch: {
@@ -221,31 +223,27 @@ export default {
 		}
 	},
 	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
-
-			this.socket.on("event:admin.queueSong.added", queueSong => {
-				this.songs.push(queueSong);
-			});
-
-			this.socket.on("event:admin.queueSong.removed", songId => {
-				this.songs = this.songs.filter(song => {
-					return song._id !== songId;
-				});
-			});
-
-			this.socket.on("event:admin.queueSong.updated", updatedSong => {
-				for (let i = 0; i < this.songs.length; i += 1) {
-					const song = this.songs[i];
-					if (song._id === updatedSong._id) {
-						Vue.set(this.songs, i, updatedSong);
-					}
-				}
-			});
-
-			if (this.socket.readyState === 1) this.init();
-			io.onConnect(() => this.init());
+		this.socket.on("event:admin.queueSong.added", queueSong => {
+			this.songs.push(queueSong);
 		});
+
+		this.socket.on("event:admin.queueSong.removed", songId => {
+			this.songs = this.songs.filter(song => {
+				return song._id !== songId;
+			});
+		});
+
+		this.socket.on("event:admin.queueSong.updated", updatedSong => {
+			for (let i = 0; i < this.songs.length; i += 1) {
+				const song = this.songs[i];
+				if (song._id === updatedSong._id) {
+					this.$set(this.songs, i, updatedSong);
+				}
+			}
+		});
+
+		if (this.socket.readyState === 1) this.init();
+		io.onConnect(() => this.init());
 	},
 	methods: {
 		edit(song) {

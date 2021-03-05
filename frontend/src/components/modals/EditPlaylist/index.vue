@@ -358,7 +358,7 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapState, mapGetters, mapActions } from "vuex";
 import draggable from "vuedraggable";
 import Toast from "toasters";
 
@@ -368,7 +368,6 @@ import Modal from "../../Modal.vue";
 import SearchQueryItem from "../../ui/SearchQueryItem.vue";
 import PlaylistSongItem from "./components/PlaylistSongItem.vue";
 
-import io from "../../../io";
 import validation from "../../../validation";
 import utils from "../../../../js/utils";
 
@@ -396,7 +395,10 @@ export default {
 				disabled: !this.isEditable(),
 				ghostClass: "draggable-list-ghost"
 			};
-		}
+		},
+		...mapGetters({
+			socket: "websockets/getSocket"
+		})
 	},
 	watch: {
 		"search.songs.results": function checkIfSongInPlaylist(songs) {
@@ -411,70 +413,64 @@ export default {
 		}
 	},
 	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
+		this.socket.dispatch("playlists.getPlaylist", this.editing, res => {
+			if (res.status === "success") {
+				this.playlist = res.data;
+				this.playlist.songs.sort((a, b) => a.position - b.position);
+			}
 
-			this.socket.dispatch("playlists.getPlaylist", this.editing, res => {
-				if (res.status === "success") {
-					this.playlist = res.data;
-					this.playlist.songs.sort((a, b) => a.position - b.position);
-				}
+			this.playlist.oldId = res.data._id;
+		});
 
-				this.playlist.oldId = res.data._id;
-			});
+		this.socket.on("event:playlist.addSong", data => {
+			if (this.playlist._id === data.playlistId)
+				this.playlist.songs.push(data.song);
+		});
 
-			this.socket.on("event:playlist.addSong", data => {
-				if (this.playlist._id === data.playlistId)
-					this.playlist.songs.push(data.song);
-			});
+		this.socket.on("event:playlist.removeSong", data => {
+			if (this.playlist._id === data.playlistId) {
+				// remove song from array of playlists
+				this.playlist.songs.forEach((song, index) => {
+					if (song.songId === data.songId)
+						this.playlist.songs.splice(index, 1);
+				});
 
-			this.socket.on("event:playlist.removeSong", data => {
-				if (this.playlist._id === data.playlistId) {
-					// remove song from array of playlists
+				// if this song is in search results, mark it available to add to the playlist again
+				this.search.songs.results.forEach((searchItem, index) => {
+					if (data.songId === searchItem.id) {
+						this.search.songs.results[index].isAddedToQueue = false;
+					}
+				});
+			}
+		});
+
+		this.socket.on("event:playlist.updateDisplayName", data => {
+			if (this.playlist._id === data.playlistId)
+				this.playlist.displayName = data.displayName;
+		});
+
+		this.socket.on("event:playlist.repositionSongs", data => {
+			if (this.playlist._id === data.playlistId) {
+				// for each song that has a new position
+				data.songsBeingChanged.forEach(changedSong => {
 					this.playlist.songs.forEach((song, index) => {
-						if (song.songId === data.songId)
-							this.playlist.songs.splice(index, 1);
-					});
+						// find song locally
+						if (song.songId === changedSong.songId) {
+							// change song position attribute
+							this.playlist.songs[index].position =
+								changedSong.position;
 
-					// if this song is in search results, mark it available to add to the playlist again
-					this.search.songs.results.forEach((searchItem, index) => {
-						if (data.songId === searchItem.id) {
-							this.search.songs.results[
-								index
-							].isAddedToQueue = false;
+							// reposition in array if needed
+							if (index !== changedSong.position - 1)
+								this.playlist.songs.splice(
+									changedSong.position - 1,
+									0,
+									this.playlist.songs.splice(index, 1)[0]
+								);
 						}
 					});
-				}
-			});
-
-			this.socket.on("event:playlist.updateDisplayName", data => {
-				if (this.playlist._id === data.playlistId)
-					this.playlist.displayName = data.displayName;
-			});
-
-			this.socket.on("event:playlist.repositionSongs", data => {
-				if (this.playlist._id === data.playlistId) {
-					// for each song that has a new position
-					data.songsBeingChanged.forEach(changedSong => {
-						this.playlist.songs.forEach((song, index) => {
-							// find song locally
-							if (song.songId === changedSong.songId) {
-								// change song position attribute
-								this.playlist.songs[index].position =
-									changedSong.position;
-
-								// reposition in array if needed
-								if (index !== changedSong.position - 1)
-									this.playlist.songs.splice(
-										changedSong.position - 1,
-										0,
-										this.playlist.songs.splice(index, 1)[0]
-									);
-							}
-						});
-					});
-				}
-			});
+				});
+			}
 		});
 	},
 	methods: {

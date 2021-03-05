@@ -147,7 +147,6 @@
 import Toast from "toasters";
 import { mapGetters, mapState } from "vuex";
 
-import io from "../../../io";
 import validation from "../../../validation";
 
 import InputHelpBox from "../../../components/ui/InputHelpBox.vue";
@@ -171,7 +170,8 @@ export default {
 	computed: {
 		...mapGetters({
 			isPasswordLinked: "settings/isPasswordLinked",
-			isGithubLinked: "settings/isGithubLinked"
+			isGithubLinked: "settings/isGithubLinked",
+			socket: "websockets/getSocket"
 		}),
 		...mapState({
 			userId: state => state.user.auth.userId
@@ -195,10 +195,6 @@ export default {
 		}
 	},
 	async mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
-		});
-
 		this.serverDomain = await lofig.get("serverDomain");
 	},
 	methods: {

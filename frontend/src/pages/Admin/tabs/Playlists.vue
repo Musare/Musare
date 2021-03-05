@@ -57,7 +57,7 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapState, mapActions, mapGetters } from "vuex";
 
 // import EditPlaylist from "../../../components/modals/EditPlaylist/index.vue";
 import UserIdToUsername from "../../../components/common/UserIdToUsername.vue";
@@ -77,14 +77,14 @@ export default {
 	computed: {
 		...mapState("modalVisibility", {
 			modals: state => state.modals.admin
+		}),
+		...mapGetters({
+			socket: "websockets/getSocket"
 		})
 	},
 	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
-			if (this.socket.readyState === 1) this.init();
-			io.onConnect(() => this.init());
-		});
+		if (this.socket.readyState === 1) this.init();
+		io.onConnect(() => this.init());
 	},
 	methods: {
 		// edit(playlist) {

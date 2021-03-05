@@ -200,7 +200,7 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapState, mapActions, mapGetters } from "vuex";
 
 import Toast from "toasters";
 
@@ -298,6 +298,9 @@ export default {
 		}),
 		...mapState("admin/songs", {
 			songs: state => state.songs
+		}),
+		...mapGetters({
+			socket: "websockets/getSocket"
 		})
 	},
 	watch: {
@@ -307,24 +310,18 @@ export default {
 		}
 	},
 	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
+		this.socket.on("event:admin.song.added", song => this.addSong(song));
 
-			this.socket.on("event:admin.song.added", song =>
-				this.addSong(song)
-			);
+		this.socket.on("event:admin.song.removed", songId =>
+			this.removeSong(songId)
+		);
 
-			this.socket.on("event:admin.song.removed", songId =>
-				this.removeSong(songId)
-			);
+		this.socket.on("event:admin.song.updated", updatedSong =>
+			this.updateSong(updatedSong)
+		);
 
-			this.socket.on("event:admin.song.updated", updatedSong =>
-				this.updateSong(updatedSong)
-			);
-
-			if (this.socket.readyState === 1) this.init();
-			io.onConnect(() => this.init());
-		});
+		if (this.socket.readyState === 1) this.init();
+		io.onConnect(() => this.init());
 
 		if (this.$route.query.songId) {
 			this.socket.dispatch(
