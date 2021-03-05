@@ -68,7 +68,8 @@ We currently only utilize 1 backend, 1 MongoDB server and 1 Redis server running
 
     | Property | Description |
     | - | - |
-    | `serverDomain` | Should be the url where the backend will be accessible from, usually `http://localhost:8080` for non-Docker. |
+    | `apiDomain` | Should be the url where the backend will be accessible from, usually `http://localhost:8080` for non-Docker. |
+    | `websocketsDomain` | Should be the same as the `serverDomain`, except using the `ws://` protocol instead of `http://` and with `/ws` at the end. |
     | `frontendDomain` | Should be the url where the frontend will be accessible from, usually `http://localhost` for docker or `http://localhost:80` for non-Docker. |
     | `frontendPort` | Should be the port where the frontend will be accessible from, should always be port `81` for Docker, and is recommended to be port `80` for non-Docker. |
     | `recaptcha.key` | Can be obtained by setting up a [ReCaptcha Site (v3)](https://www.google.com/recaptcha/admin). |

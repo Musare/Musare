@@ -31,7 +31,7 @@ export default {
 	replace: false,
 	data() {
 		return {
-			serverDomain: "",
+			apiDomain: "",
 			socketConnected: true,
 			keyIsDown: false
 		};
@@ -120,7 +120,7 @@ export default {
 			this.socketConnected = false;
 		});
 
-		this.serverDomain = await lofig.get("serverDomain");
+		this.apiDomain = await lofig.get("apiDomain");
 
 		this.$router.onReady(() => {
 			if (this.$route.query.err) {

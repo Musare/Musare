@@ -378,7 +378,7 @@ export default {
 		return {
 			utils,
 			drag: false,
-			serverDomain: "",
+			apiDomain: "",
 			playlist: { songs: [] }
 		};
 	},
@@ -641,11 +641,11 @@ export default {
 			});
 		},
 		async downloadPlaylist() {
-			if (this.serverDomain === "")
-				this.serverDomain = await lofig.get("serverDomain");
+			if (this.apiDomain === "")
+				this.apiDomain = await lofig.get("apiDomain");
 
 			fetch(
-				`${this.serverDomain}/export/privatePlaylist/${this.playlist._id}`,
+				`${this.apiDomain}/export/privatePlaylist/${this.playlist._id}`,
 				{ credentials: "include" }
 			)
 				.then(res => res.blob())

@@ -94,7 +94,7 @@
 				>
 				<a
 					class="button is-github"
-					:href="serverDomain + '/auth/github/authorize'"
+					:href="apiDomain + '/auth/github/authorize'"
 					@click="githubRedirect()"
 				>
 					<div class="icon">
@@ -142,7 +142,7 @@ export default {
 				token: "",
 				enabled: false
 			},
-			serverDomain: ""
+			apiDomain: ""
 		};
 	},
 	watch: {
@@ -195,7 +195,7 @@ export default {
 		}
 	},
 	async mounted() {
-		this.serverDomain = await lofig.get("serverDomain");
+		this.apiDomain = await lofig.get("apiDomain");
 
 		lofig.get("recaptcha").then(obj => {
 			this.recaptcha.enabled = obj.enabled;

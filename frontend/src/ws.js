@@ -45,7 +45,7 @@ export default {
 				delete CB_REFS[id];
 		}),
 
-	init() {
+	init(url) {
 		class ListenerHandler extends EventTarget {
 			constructor() {
 				super();
@@ -79,7 +79,7 @@ export default {
 		}
 
 		class CustomWebSocket extends WebSocket {
-			constructor(url) {
+			constructor() {
 				super(url);
 				this.dispatcher = new ListenerHandler();
 			}
@@ -105,7 +105,7 @@ export default {
 			}
 		}
 
-		this.socket = new CustomWebSocket("ws://localhost:8080/ws");
+		this.socket = new CustomWebSocket();
 		store.dispatch("websockets/createSocket", this.socket);
 
 		this.socket.onopen = () => {
@@ -141,7 +141,7 @@ export default {
 			onDisconnect.persist.forEach(cb => cb());
 
 			// try to reconnect every 1000ms
-			setTimeout(() => this.init(), 1000);
+			setTimeout(() => this.init(url), 1000);
 		};
 
 		this.socket.onerror = err => {

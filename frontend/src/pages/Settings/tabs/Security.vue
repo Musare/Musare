@@ -78,10 +78,7 @@
 
 			<hr class="section-horizontal-rule" />
 
-			<a
-				class="button is-github"
-				:href="`${serverDomain}/auth/github/link`"
-			>
+			<a class="button is-github" :href="`${apiDomain}/auth/github/link`">
 				<div class="icon">
 					<img class="invert" src="/assets/social/github.svg" />
 				</div>
@@ -155,7 +152,7 @@ export default {
 	components: { InputHelpBox },
 	data() {
 		return {
-			serverDomain: "",
+			apiDomain: "",
 			previousPassword: "",
 			validation: {
 				newPassword: {
@@ -195,7 +192,7 @@ export default {
 		}
 	},
 	async mounted() {
-		this.serverDomain = await lofig.get("serverDomain");
+		this.apiDomain = await lofig.get("apiDomain");
 	},
 	methods: {
 		onInputBlur(inputName) {
