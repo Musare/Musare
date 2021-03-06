@@ -102,7 +102,23 @@ class _PlaylistsModule extends CoreClass {
 							error: err
 						});
 						reject(new Error(formattedErr));
-					} else resolve();
+					} else {
+						resolve();
+
+						PlaylistsModule.runJob("CREATE_MISSING_GENRE_PLAYLISTS", {})
+							.then()
+							.catch()
+							.finally(() => {
+								SongsModule.runJob("GET_ALL_GENRES", {})
+									.then(response => {
+										const { genres } = response;
+										genres.forEach(genre => {
+											PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre }).then().catch();
+										});
+									})
+									.catch();
+							});
+					}
 				}
 			)
 		);
@@ -208,6 +224,82 @@ class _PlaylistsModule extends CoreClass {
 					else resolve({ playlist });
 				}
 			);
+		});
+	}
+
+	/**
+	 * Gets all missing genre playlists
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	GET_MISSING_GENRE_PLAYLISTS() {
+		return new Promise((resolve, reject) => {
+			SongsModule.runJob("GET_ALL_GENRES", {}, this)
+				.then(response => {
+					const { genres } = response;
+					const missingGenres = [];
+					async.eachLimit(
+						genres,
+						1,
+						(genre, next) => {
+							PlaylistsModule.runJob(
+								"GET_GENRE_PLAYLIST",
+								{ genre: genre.toLowerCase(), includeSongs: false },
+								this
+							)
+								.then(() => {
+									next();
+								})
+								.catch(err => {
+									if (err.message === "Playlist not found") {
+										missingGenres.push(genre);
+										next();
+									} else next(err);
+								});
+						},
+						err => {
+							if (err) reject(err);
+							else resolve({ genres: missingGenres });
+						}
+					);
+				})
+				.catch(err => {
+					reject(err);
+				});
+		});
+	}
+
+	/**
+	 * Creates all missing genre playlists
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	CREATE_MISSING_GENRE_PLAYLISTS() {
+		return new Promise((resolve, reject) => {
+			PlaylistsModule.runJob("GET_MISSING_GENRE_PLAYLISTS", {}, this)
+				.then(response => {
+					const { genres } = response;
+					async.eachLimit(
+						genres,
+						1,
+						(genre, next) => {
+							PlaylistsModule.runJob("CREATE_GENRE_PLAYLIST", { genre }, this)
+								.then(() => {
+									next();
+								})
+								.catch(err => {
+									next(err);
+								});
+						},
+						err => {
+							if (err) reject(err);
+							else resolve();
+						}
+					);
+				})
+				.catch(err => {
+					reject(err);
+				});
 		});
 	}
 
