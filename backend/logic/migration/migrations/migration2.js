@@ -56,6 +56,7 @@ export default async function migrate(MigrationModule) {
 													includedPlaylists: [],
 													excludedPlaylists: [],
 													playlist: station.type === "official" ? [] : station.playlist,
+													genres: [],
 													documentVersion: 2
 												}
 											},
