@@ -509,13 +509,15 @@ class _StationsModule extends CoreClass {
 						const currentSongs = station.playlist;
 						const currentSongIds = station.playlist.map(song => song._id);
 						const songsToAdd = [];
-						playlistSongs.forEach(song => {
-							if (
-								songsToAdd.length < songsStillNeeded &&
-								currentSongIds.indexOf(song._id.toString()) === -1
-							)
-								songsToAdd.push(song);
-						});
+						playlistSongs
+							.map(song => song._doc)
+							.forEach(song => {
+								if (
+									songsToAdd.length < songsStillNeeded &&
+									currentSongIds.indexOf(song._id.toString()) === -1
+								)
+									songsToAdd.push(song);
+							});
 
 						next(null, [...currentSongs, ...songsToAdd]);
 					},
@@ -578,6 +580,7 @@ class _StationsModule extends CoreClass {
 					},
 
 					(song, next) => {
+						console.log(44444, song, song._id);
 						SongsModule.runJob("GET_SONG", { id: song._id }, this)
 							.then(response => {
 								const { song } = response;
@@ -600,6 +603,7 @@ class _StationsModule extends CoreClass {
 					}
 				],
 				(err, song) => {
+					if (err) console.log(33333, err, payload);
 					if (err) reject(err);
 					else resolve({ song });
 				}
@@ -867,6 +871,7 @@ class _StationsModule extends CoreClass {
 				],
 				async (err, station) => {
 					if (err) {
+						console.log(123, err);
 						err = await UtilsModule.runJob(
 							"GET_ERROR",
 							{
@@ -875,6 +880,7 @@ class _StationsModule extends CoreClass {
 							this
 						);
 						StationsModule.log("ERROR", `Skipping station "${payload.stationId}" failed. "${err}"`);
+						return;
 						reject(new Error(err));
 					} else {
 						if (station.currentSong !== null && station.currentSong.songId !== undefined) {

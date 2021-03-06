@@ -1,9 +1,11 @@
+import mongoose from "mongoose";
+
 export default {
 	displayName: { type: String, min: 2, max: 32, required: true },
 	isUserModifiable: { type: Boolean, default: true, required: true },
 	songs: [
 		{
-			_id: { required: false },
+			_id: { type: mongoose.Schema.Types.ObjectId, required: false },
 			songId: { type: String },
 			title: { type: String },
 			duration: { type: Number },
