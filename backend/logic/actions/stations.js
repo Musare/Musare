@@ -45,9 +45,10 @@ CacheModule.runJob("SUB", {
 					room: "home"
 				});
 
-				Object.keys(sockets).forEach(socketKey => {
-					const socket = sockets[socketKey];
+				sockets.forEach(async socketId => {
+					const socket = await WSModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId }, this);
 					const { session } = socket;
+
 					if (session.sessionId) {
 						CacheModule.runJob("HGET", {
 							table: "sessions",
@@ -369,9 +370,11 @@ CacheModule.runJob("SUB", {
 				const sockets = await WSModule.runJob("GET_SOCKETS_FOR_ROOM", {
 					room: "home"
 				});
-				Object.keys(sockets).forEach(socketKey => {
-					const socket = sockets[socketKey];
+
+				sockets.forEach(async socketId => {
+					const socket = await WSModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId }, this);
 					const { session } = socket;
+
 					if (session.sessionId) {
 						CacheModule.runJob("HGET", {
 							table: "sessions",
@@ -1043,6 +1046,7 @@ export default {
 					return cb({ status: "failure", message: err });
 				}
 				this.log("SUCCESS", "STATIONS_VOTE_SKIP", `Vote skipping "${stationId}" successful.`);
+
 				CacheModule.runJob("PUB", {
 					channel: "station.voteSkipSong",
 					value: stationId

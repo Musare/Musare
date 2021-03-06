@@ -937,10 +937,7 @@ class _StationsModule extends CoreClass {
 								if (session.sessionId) {
 									CacheModule.runJob(
 										"HGET",
-										{
-											table: "sessions",
-											key: session.sessionId
-										},
+										{ table: "sessions", key: session.sessionId },
 										this
 										// eslint-disable-next-line no-loop-func
 									).then(session => {
@@ -996,15 +993,17 @@ class _StationsModule extends CoreClass {
 								});
 							}
 						} else {
-							WSModule.runJob("SOCKETS_LEAVE_SONG_ROOMS", {
-								sockets: await WSModule.runJob(
-									"GET_SOCKETS_FOR_ROOM",
-									{ room: `station.${station._id}` },
-									this
-								)
-							})
-								.then()
-								.catch();
+							WSModule.runJob(
+								"SOCKETS_LEAVE_SONG_ROOMS",
+								{
+									sockets: await WSModule.runJob(
+										"GET_SOCKETS_FOR_ROOM",
+										{ room: `station.${station._id}` },
+										this
+									)
+								},
+								this
+							).then(() => {});
 						}
 
 						resolve({ station });

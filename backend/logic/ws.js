@@ -97,11 +97,13 @@ class _WSModule extends CoreClass {
 			const { clients } = WSModule._io;
 
 			if (clients)
-				return clients.forEach(socket => {
-					if (socket.session.socketId === payload.socketId) resolve(socket);
+				// eslint-disable-next-line consistent-return
+				clients.forEach(socket => {
+					if (socket.session.socketId === payload.socketId) return resolve(socket);
 				});
 
-			return reject();
+			// socket doesn't exist
+			return resolve();
 		});
 	}
 
@@ -284,6 +286,7 @@ class _WSModule extends CoreClass {
 					// get every socketId (and thus every socket) in the room, and dispatch to each
 					const socket = await WSModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId }, this);
 					socket.dispatch(...payload.args);
+					return resolve();
 				});
 
 			return resolve();
@@ -323,7 +326,10 @@ class _WSModule extends CoreClass {
 	 */
 	SOCKETS_JOIN_SONG_ROOM(payload) {
 		return new Promise(resolve => {
-			payload.sockets.forEach(socketId => WSModule.runJob("SOCKET_JOIN_SONG_ROOM", { socketId }, this));
+			payload.sockets.forEach(async socketId => {
+				await WSModule.runJob("SOCKET_JOIN_SONG_ROOM", { socketId }, this);
+			});
+
 			return resolve();
 		});
 	}
@@ -336,20 +342,20 @@ class _WSModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	SOCKETS_LEAVE_SONG_ROOMS(payload) {
-		return new Promise(resolve => {
-			payload.sockets.forEach(async socketId => {
-				const rooms = await WSModule.runJob("GET_ROOMS_FOR_SOCKET", { socketId }, this);
+		return new Promise(resolve =>
+			Promise.allSettled(
+				payload.sockets.map(async socketId => {
+					const rooms = await WSModule.runJob("GET_ROOMS_FOR_SOCKET", { socketId }, this);
 
-				rooms.forEach(room => {
-					if (room.indexOf("song.") !== -1)
-						WSModule.rooms[room] = WSModule.rooms[room].filter(
-							participant => participant !== payload.socketId
-						);
-				});
-			});
-
-			resolve();
-		});
+					rooms.forEach(room => {
+						if (room.indexOf("song.") !== -1)
+							WSModule.rooms[room] = WSModule.rooms[room].filter(
+								participant => participant !== payload.socketId
+							);
+					});
+				})
+			).then(() => resolve())
+		);
 	}
 
 	/**

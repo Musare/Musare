@@ -144,18 +144,6 @@ class _UtilsModule extends CoreClass {
 	}
 
 	/**
-	 * Returns a socket object from a socket identifier
-	 *
-	 * @param {object} payload - object that contains the payload
-	 * @param {string} payload.socketId - the socket id
-	 * @returns {Promise} - returns promise (reject, resolve)
-	 */
-	async GET_SOCKET_FROM_ID(payload) {
-		const ws = await WSModule.runJob("WS", {}, this);
-		return new Promise(resolve => resolve(ws.sockets.sockets[payload.socketId]));
-	}
-
-	/**
 	 * Creates a random number within a range
 	 *
 	 * @param {object} payload - object that contains the payload
