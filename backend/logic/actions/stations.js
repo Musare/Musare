@@ -2355,10 +2355,16 @@ export default {
 													"GET_GENRE_PLAYLIST",
 													{ genre, includeSongs: false },
 													this
-												).then(response => {
-													playlists.push(response.playlist);
-													next();
-												});
+												)
+													.then(response => {
+														playlists.push(response.playlist);
+														next();
+													})
+													.catch(err => {
+														next(
+															`An error occurred when trying to get genre playlist for genre ${genre}. Error: ${err}.`
+														);
+													});
 											},
 											err => {
 												next(
@@ -2379,10 +2385,16 @@ export default {
 													"GET_GENRE_PLAYLIST",
 													{ genre, includeSongs: false },
 													this
-												).then(response => {
-													playlists.push(response.playlist);
-													next();
-												});
+												)
+													.then(response => {
+														playlists.push(response.playlist);
+														next();
+													})
+													.catch(err => {
+														next(
+															`An error occurred when trying to get genre playlist for genre ${genre}. Error: ${err}.`
+														);
+													});
 											},
 											err => {
 												next(
