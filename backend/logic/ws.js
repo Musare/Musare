@@ -93,7 +93,7 @@ class _WSModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	async SOCKET_FROM_SOCKET_ID(payload) {
-		return new Promise((resolve, reject) => {
+		return new Promise(resolve => {
 			const { clients } = WSModule._io;
 
 			if (clients)

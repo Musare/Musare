@@ -2,7 +2,6 @@ import crypto from "crypto";
 import CoreClass from "../core";
 
 let UtilsModule;
-let WSModule;
 
 class _UtilsModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
@@ -18,11 +17,7 @@ class _UtilsModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	initialize() {
-		return new Promise(resolve => {
-			WSModule = this.moduleManager.modules.ws;
-
-			resolve();
-		});
+		return new Promise(resolve => resolve());
 	}
 
 	/**
