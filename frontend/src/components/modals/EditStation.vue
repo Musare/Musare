@@ -539,6 +539,9 @@ export default {
 										return "Unknown/Error";
 									}
 								);
+								this.originalStation.genres = JSON.parse(
+									JSON.stringify(this.station.genres)
+								);
 							}
 						}
 					);
@@ -557,6 +560,11 @@ export default {
 										}
 										return "Unknown/Error";
 									}
+								);
+								this.originalStation.blacklistedGenres = JSON.parse(
+									JSON.stringify(
+										this.station.blacklistedGenres
+									)
 								);
 							}
 						}
