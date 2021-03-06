@@ -114,7 +114,6 @@ class _SongsModule extends CoreClass {
 			async.waterfall(
 				[
 					next => {
-						console.log(payload);
 						if (!mongoose.Types.ObjectId.isValid(payload.id)) return next("Id is not a valid ObjectId.");
 						return CacheModule.runJob("HGET", { table: "songs", key: payload.id }, this)
 							.then(song => next(null, song))

@@ -1,4 +1,5 @@
 import async from "async";
+import mongoose from "mongoose";
 
 import CoreClass from "../core";
 
@@ -747,7 +748,7 @@ class _StationsModule extends CoreClass {
 											return next(null, currentSong, currentSongIndex, station);
 										};
 
-										if (playlist[currentSongIndex]._id)
+										if (mongoose.Types.ObjectId.isValid(playlist[currentSongIndex]._id))
 											return SongsModule.runJob(
 												"GET_SONG",
 												{

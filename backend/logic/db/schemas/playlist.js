@@ -3,6 +3,7 @@ export default {
 	isUserModifiable: { type: Boolean, default: true, required: true },
 	songs: [
 		{
+			_id: { required: false },
 			songId: { type: String },
 			title: { type: String },
 			duration: { type: Number },
