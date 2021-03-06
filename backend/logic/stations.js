@@ -880,7 +880,6 @@ class _StationsModule extends CoreClass {
 							this
 						);
 						StationsModule.log("ERROR", `Skipping station "${payload.stationId}" failed. "${err}"`);
-						return;
 						reject(new Error(err));
 					} else {
 						if (station.currentSong !== null && station.currentSong.songId !== undefined) {

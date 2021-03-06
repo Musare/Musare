@@ -2614,10 +2614,10 @@ export default {
 	addToQueue: isLoginRequired(async function addToQueue(session, stationId, songId, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
-		const playlistModel = await DBModule.runJob(
+		const stationModel = await DBModule.runJob(
 			"GET_MODEL",
 			{
-				modelName: "playlist"
+				modelName: "station"
 			},
 			this
 		);
@@ -2669,27 +2669,20 @@ export default {
 					if (station.currentSong && station.currentSong.songId === songId)
 						return next("That song is currently playing.");
 
-					return playlistModel.findOne({ _id: station.playlist2 }, (err, playlist) => {
-						console.log(111, station, err, playlist);
-						next(err, station, playlist);
-					});
-				},
-
-				(station, playlist, next) => {
-					async.each(
-						playlist.songs,
-						(song, next) => {
-							if (song.songId === songId) return next("That song is already in the queue.");
+					return async.each(
+						station.queue,
+						(queueSong, next) => {
+							if (queueSong.songId === songId) return next("That song is already in the queue.");
 							return next();
 						},
-						err => next(err, station, playlist)
+						err => next(err, station)
 					);
 				},
 
-				(station, playlist, next) => {
+				(station, next) => {
 					SongsModule.runJob("GET_SONG_FROM_ID", { songId }, this)
 						.then(res => {
-							if (res.song) return next(null, res.song, station, playlist);
+							if (res.song) return next(null, res.song, station);
 
 							return YouTubeModule.runJob("GET_SONG", { songId }, this)
 								.then(response => {
@@ -2701,84 +2694,79 @@ export default {
 									song.thumbnail = "empty";
 									song.explicit = false;
 
-									return next(null, song, station, playlist);
+									return next(null, song, station);
 								})
 								.catch(err => {
-									console.log(11111, err);
 									next(err);
 								});
 						})
 						.catch(err => {
-							console.log(11122, err);
 							next(err);
 						});
 				},
 
-				(song, station, playlist, next) => {
+				(song, station, next) => {
 					song.requestedBy = session.userId;
 					song.requestedAt = Date.now();
 
 					let totalDuration = 0;
-					playlist.songs.forEach(song => {
+					station.queue.forEach(song => {
 						totalDuration += song.duration;
 					});
 					if (totalDuration >= 3600 * 3) return next("The max length of the queue is 3 hours.");
-					return next(null, song, station, playlist);
+					return next(null, song, station);
 				},
 
-				(song, station, playlist, next) => {
-					console.log(333, song, station, playlist);
-
-					if (playlist.songs.length === 0) return next(null, song, station, playlist);
+				(song, station, next) => {
+					if (station.queue.length === 0) return next(null, song, station);
 					let totalDuration = 0;
-					const userId = playlist.songs[playlist.songs.length - 1].requestedBy;
-					playlist.songs.forEach(song => {
+					const userId = station.queue[station.queue.length - 1].requestedBy;
+					station.queue.forEach(song => {
 						if (userId === song.requestedBy) {
 							totalDuration += song.duration;
 						}
 					});
 
 					if (totalDuration >= 900) return next("The max length of songs per user is 15 minutes.");
-					return next(null, song, station, playlist);
+					return next(null, song, station);
 				},
 
-				(song, station, playlist, next) => {
-					console.log(444, song, station, playlist);
-					if (playlist.songs.length === 0) return next(null, song, station);
+				(song, station, next) => {
+					if (station.queue.length === 0) return next(null, song);
 					let totalSongs = 0;
-					const userId = playlist.songs[playlist.songs.length - 1].requestedBy;
-					playlist.songs.forEach(song => {
+					const userId = station.queue[station.queue.length - 1].requestedBy;
+					station.queue.forEach(song => {
 						if (userId === song.requestedBy) {
 							totalSongs += 1;
 						}
 					});
 
-					if (totalSongs <= 2) return next(null, song, station);
+					if (totalSongs <= 2) return next(null, song);
 					if (totalSongs > 3)
 						return next("The max amount of songs per user is 3, and only 2 in a row is allowed.");
 					if (
-						playlist.songs[playlist.songs.length - 2].requestedBy !== userId ||
-						playlist.songs[playlist.songs.length - 3] !== userId
+						station.queue[station.queue.length - 2].requestedBy !== userId ||
+						station.queue[station.queue.length - 3] !== userId
 					)
 						return next("The max amount of songs per user is 3, and only 2 in a row is allowed.");
 
-					return next(null, song, station);
+					return next(null, song);
 				},
 
-				(song, station, next) => {
-					playlistModel.updateOne(
-						{ _id: station.playlist2 },
-						{ $push: { songs: song } },
+				(song, next) => {
+					stationModel.updateOne(
+						{ _id: stationId },
+						{ $push: { queue: song } },
 						{ runValidators: true },
 						next
 					);
-				}
+				},
 
-				// (res, next) => {
-				// 	StationsModule.runJob("UPDATE_STATION", { stationId }, this)
-				// 		.then(station => next(null, station))
-				// 		.catch(next);
-				// }
+				(res, next) => {
+					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
+						.then(station => next(null, station))
+						.catch(next);
+				}
 
 				// (res, next) => {
 				// 	StationsModule.runJob("UPDATE_STATION", { stationId }, this)
