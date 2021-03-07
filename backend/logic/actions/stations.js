@@ -1590,12 +1590,18 @@ export default {
 						newGenres,
 						1,
 						(genre, next) => {
-							PlaylistsModule.runJob("GET_GENRE_PLAYLIST", { genre, includeSongs: false }, this).then(
-								response => {
+							PlaylistsModule.runJob("GET_GENRE_PLAYLIST", { genre, includeSongs: false }, this)
+								.then(response => {
 									playlists.push(response.playlist);
 									next();
-								}
-							);
+								})
+								.catch(err => {
+									if (err.message === "Playlist not found")
+										next(
+											`The genre playlist for "${genre}" was not found. Please ensure that this genre playlist exists.`
+										);
+									else next(err);
+								});
 						},
 						err => {
 							next(
@@ -1765,12 +1771,18 @@ export default {
 						newBlacklistedGenres,
 						1,
 						(genre, next) => {
-							PlaylistsModule.runJob("GET_GENRE_PLAYLIST", { genre, includeSongs: false }, this).then(
-								response => {
+							PlaylistsModule.runJob("GET_GENRE_PLAYLIST", { genre, includeSongs: false }, this)
+								.then(response => {
 									playlists.push(response.playlist);
 									next();
-								}
-							);
+								})
+								.catch(err => {
+									if (err.message === "Playlist not found")
+										next(
+											`The genre playlist for "${genre}" was not found. Please ensure that this genre playlist exists.`
+										);
+									else next(err);
+								});
 						},
 						err => {
 							next(
