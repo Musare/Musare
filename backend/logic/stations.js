@@ -1,4 +1,5 @@
 import async from "async";
+import mongoose from "mongoose";
 
 import CoreClass from "../core";
 
@@ -8,6 +9,7 @@ let DBModule;
 let UtilsModule;
 let IOModule;
 let SongsModule;
+let PlaylistsModule;
 let NotificationsModule;
 
 class _StationsModule extends CoreClass {
@@ -29,6 +31,7 @@ class _StationsModule extends CoreClass {
 		UtilsModule = this.moduleManager.modules.utils;
 		IOModule = this.moduleManager.modules.io;
 		SongsModule = this.moduleManager.modules.songs;
+		PlaylistsModule = this.moduleManager.modules.playlists;
 		NotificationsModule = this.moduleManager.modules.notifications;
 
 		this.defaultSong = {
@@ -312,114 +315,6 @@ class _StationsModule extends CoreClass {
 	}
 
 	/**
-	 * Calculates the next song for the station
-	 *
-	 * @param {object} payload - object that contains the payload
-	 * @param {string} payload.station - station object to calculate song for
-	 * @returns {Promise} - returns a promise (resolve, reject)
-	 */
-	async CALCULATE_SONG_FOR_STATION(payload) {
-		// station, bypassValidate = false
-		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
-
-		return new Promise((resolve, reject) => {
-			const songList = [];
-
-			return async.waterfall(
-				[
-					next => {
-						if (payload.station.genres.length === 0) return next();
-
-						const genresDone = [];
-						const blacklistedGenres = payload.station.blacklistedGenres.map(blacklistedGenre =>
-							blacklistedGenre.toLowerCase()
-						);
-
-						return payload.station.genres.forEach(genre => {
-							songModel.find({ genres: { $regex: genre, $options: "i" } }, (err, songs) => {
-								if (!err) {
-									songs.forEach(song => {
-										if (songList.indexOf(song._id) === -1) {
-											let found = false;
-											song.genres.forEach(songGenre => {
-												if (blacklistedGenres.indexOf(songGenre.toLowerCase()) !== -1)
-													found = true;
-											});
-											if (!found) {
-												songList.push(song._id);
-											}
-										}
-									});
-								}
-								genresDone.push(genre);
-								if (genresDone.length === payload.station.genres.length) next();
-							});
-						});
-					},
-
-					next => {
-						const playlist = [];
-						songList.forEach(songId => {
-							if (payload.station.playlist.indexOf(songId) === -1) playlist.push(songId);
-						});
-
-						// eslint-disable-next-line array-callback-return
-						payload.station.playlist.filter(songId => {
-							if (songList.indexOf(songId) !== -1) playlist.push(songId);
-						});
-
-						UtilsModule.runJob("SHUFFLE", { array: playlist })
-							.then(result => {
-								next(null, result.array);
-							}, this)
-							.catch(next);
-					},
-
-					(playlist, next) => {
-						StationsModule.runJob(
-							"CALCULATE_OFFICIAL_PLAYLIST_LIST",
-							{
-								stationId: payload.station._id,
-								songList: playlist
-							},
-							this
-						)
-							.then(() => {
-								next(null, playlist);
-							})
-							.catch(next);
-					},
-
-					(playlist, next) => {
-						StationsModule.stationModel.updateOne(
-							{ _id: payload.station._id },
-							{ $set: { playlist } },
-							{ runValidators: true },
-							() => {
-								StationsModule.runJob(
-									"UPDATE_STATION",
-									{
-										stationId: payload.station._id
-									},
-									this
-								)
-									.then(() => {
-										next(null, playlist);
-									})
-									.catch(next);
-							}
-						);
-					}
-				],
-				(err, newPlaylist) => {
-					if (err) return reject(new Error(err));
-					return resolve(newPlaylist);
-				}
-			);
-		});
-	}
-
-	/**
 	 * Attempts to get the station from Redis. If it's not in Redis, get it from Mongo and add it to Redis.
 	 *
 	 * @param {object} payload - object that contains the payload
@@ -443,14 +338,6 @@ class _StationsModule extends CoreClass {
 
 					(station, next) => {
 						if (station) {
-							if (station.type === "official") {
-								StationsModule.runJob("CALCULATE_OFFICIAL_PLAYLIST_LIST", {
-									stationId: station._id,
-									songList: station.playlist
-								})
-									.then()
-									.catch();
-							}
 							station = StationsModule.stationSchema(station);
 							CacheModule.runJob("HSET", {
 								table: "stations",
@@ -496,12 +383,6 @@ class _StationsModule extends CoreClass {
 
 					(station, next) => {
 						if (station) {
-							if (station.type === "official") {
-								StationsModule.runJob("CALCULATE_OFFICIAL_PLAYLIST_LIST", {
-									stationId: station._id,
-									songList: station.playlist
-								});
-							}
 							station = StationsModule.stationSchema(station);
 							CacheModule.runJob("HSET", {
 								table: "stations",
@@ -578,60 +459,188 @@ class _StationsModule extends CoreClass {
 	}
 
 	/**
-	 * Creates the official playlist for a station
+	 * Fills up the official station playlist queue using the songs from the official station playlist
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.stationId - the id of the station
-	 * @param {Array} payload.songList - list of songs to put in official playlist
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
-	async CALCULATE_OFFICIAL_PLAYLIST_LIST(payload) {
-		const officialPlaylistSchema = await CacheModule.runJob("GET_SCHEMA", { schemaName: "officialPlaylist" }, this);
+	FILL_UP_OFFICIAL_STATION_PLAYLIST_QUEUE(payload) {
+		return new Promise((resolve, reject) => {
+			const { stationId } = payload;
 
-		console.log(typeof payload.songList, payload.songList);
+			async.waterfall(
+				[
+					next => {
+						PlaylistsModule.runJob("GET_STATION_PLAYLIST", { stationId, includeSongs: true }, this)
+							.then(response => {
+								next(null, response.playlist);
+							})
+							.catch(next);
+					},
 
-		return new Promise(resolve => {
-			const lessInfoPlaylist = [];
+					(playlist, next) => {
+						UtilsModule.runJob("SHUFFLE", { array: playlist.songs }, this)
+							.then(response => {
+								next(null, response.array);
+							})
+							.catch(next);
+					},
 
-			return async.each(
-				payload.songList,
-				(song, next) => {
-					SongsModule.runJob("GET_SONG", { id: song }, this)
-						.then(response => {
-							const { song } = response;
-							if (song) {
-								const newSong = {
-									_id: song._id,
-									songId: song.songId,
-									title: song.title,
-									artists: song.artists,
-									duration: song.duration,
-									thumbnail: song.thumbnail,
-									requestedAt: song.requestedAt
-								};
-								lessInfoPlaylist.push(newSong);
+					(playlistSongs, next) => {
+						StationsModule.runJob("GET_STATION", { stationId }, this)
+							.then(station => {
+								next(null, playlistSongs, station);
+							})
+							.catch(next);
+					},
+
+					(playlistSongs, station, next) => {
+						const songsStillNeeded = 50 - station.playlist.length;
+						const currentSongs = station.playlist;
+						const currentSongIds = station.playlist.map(song => song._id);
+						const songsToAdd = [];
+						playlistSongs
+							.map(song => song._doc)
+							.forEach(song => {
+								if (
+									songsToAdd.length < songsStillNeeded &&
+									currentSongIds.indexOf(song._id.toString()) === -1
+								)
+									songsToAdd.push(song);
+							});
+
+						next(null, [...currentSongs, ...songsToAdd]);
+					},
+
+					(newPlaylist, next) => {
+						StationsModule.stationModel.updateOne(
+							{ _id: stationId },
+							{ $set: { playlist: newPlaylist } },
+							{ runValidators: true },
+							() => {
+								StationsModule.runJob(
+									"UPDATE_STATION",
+									{
+										stationId
+									},
+									this
+								)
+									.then(() => {
+										next(null);
+									})
+									.catch(next);
 							}
-						})
-						.finally(() => {
-							next();
-						});
-				},
-				() => {
-					CacheModule.runJob(
-						"HSET",
-						{
-							table: "officialPlaylists",
-							key: payload.stationId,
-							value: officialPlaylistSchema(payload.stationId, lessInfoPlaylist)
-						},
-						this
-					).finally(() => {
-						CacheModule.runJob("PUB", {
-							channel: "station.newOfficialPlaylist",
-							value: payload.stationId
-						});
-						resolve();
-					});
+						);
+					}
+				],
+				err => {
+					if (err) reject(err);
+					else resolve();
+				}
+			);
+		});
+	}
+
+	/**
+	 * Gets next official station song
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.stationId - the id of the station
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	GET_NEXT_OFFICIAL_STATION_SONG(payload) {
+		return new Promise((resolve, reject) => {
+			const { stationId } = payload;
+
+			async.waterfall(
+				[
+					next => {
+						StationsModule.runJob("GET_STATION", { stationId }, this)
+							.then(station => {
+								next(null, station);
+							})
+							.catch(next);
+					},
+
+					(station, next) => {
+						if (station.playlist.length === 0) next("No songs available.");
+						else {
+							next(null, station.playlist[0]);
+						}
+					},
+
+					(song, next) => {
+						console.log(44444, song, song._id);
+						SongsModule.runJob("GET_SONG", { id: song._id }, this)
+							.then(response => {
+								const { song } = response;
+								if (song) {
+									const newSong = {
+										_id: song._id,
+										songId: song.songId,
+										title: song.title,
+										artists: song.artists,
+										duration: song.duration,
+										thumbnail: song.thumbnail,
+										requestedAt: song.requestedAt
+									};
+									next(null, newSong);
+								} else {
+									next(null, song);
+								}
+							})
+							.catch(next);
+					}
+				],
+				(err, song) => {
+					if (err) console.log(33333, err, payload);
+					if (err) reject(err);
+					else resolve({ song });
+				}
+			);
+		});
+	}
+
+	/**
+	 * Removes first official playlist queue song
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.stationId - the id of the station
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	REMOVE_FIRST_OFFICIAL_PLAYLIST_QUEUE_SONG(payload) {
+		return new Promise((resolve, reject) => {
+			const { stationId } = payload;
+
+			async.waterfall(
+				[
+					next => {
+						StationsModule.stationModel.updateOne(
+							{ _id: stationId },
+							{ $pop: { playlist: -1 } },
+							{ runValidators: true },
+							err => {
+								if (err) next(err);
+								else
+									StationsModule.runJob(
+										"UPDATE_STATION",
+										{
+											stationId
+										},
+										this
+									)
+										.then(() => {
+											next(null);
+										})
+										.catch(next);
+							}
+						);
+					}
+				],
+				err => {
+					if (err) reject(err);
+					else resolve();
 				}
 			);
 		});
@@ -734,7 +743,7 @@ class _StationsModule extends CoreClass {
 											return next(null, currentSong, currentSongIndex, station);
 										};
 
-										if (playlist[currentSongIndex]._id)
+										if (mongoose.Types.ObjectId.isValid(playlist[currentSongIndex]._id))
 											return SongsModule.runJob(
 												"GET_SONG",
 												{
@@ -760,72 +769,35 @@ class _StationsModule extends CoreClass {
 							);
 						}
 
-						if (station.type === "official" && station.playlist.length === 0) {
-							return StationsModule.runJob("CALCULATE_SONG_FOR_STATION", { station }, this)
-								.then(playlist => {
-									if (playlist.length === 0)
-										return next(null, StationsModule.defaultSong, 0, station);
-
-									return SongsModule.runJob(
-										"GET_SONG",
-										{
-											id: playlist[0]
-										},
+						if (station.type === "official") {
+							StationsModule.runJob(
+								"REMOVE_FIRST_OFFICIAL_PLAYLIST_QUEUE_SONG",
+								{ stationId: station._id },
+								this
+							)
+								.then(() => {
+									StationsModule.runJob(
+										"FILL_UP_OFFICIAL_STATION_PLAYLIST_QUEUE",
+										{ stationId: station._id },
 										this
 									)
-										.then(response => {
-											next(null, response.song, 0, station);
+										.then(() => {
+											StationsModule.runJob(
+												"GET_NEXT_OFFICIAL_STATION_SONG",
+												{ stationId: station._id },
+												this
+											)
+												.then(response => {
+													next(null, response.song, 0, station);
+												})
+												.catch(err => {
+													if (err === "No songs available.") next(null, null, 0, station);
+													else next(err);
+												});
 										})
-										.catch(() => next(null, StationsModule.defaultSong, 0, station));
+										.catch(next);
 								})
-								.catch(err => {
-									next(err);
-								});
-						}
-
-						if (station.type === "official" && station.playlist.length > 0) {
-							return async.doUntil(
-								next => {
-									if (station.currentSongIndex < station.playlist.length - 1) {
-										SongsModule.runJob(
-											"GET_SONG",
-											{
-												id: station.playlist[station.currentSongIndex + 1]
-											},
-											this
-										)
-											.then(response => next(null, response.song, station.currentSongIndex + 1))
-											.catch(() => {
-												station.currentSongIndex += 1;
-												next(null, null, null);
-											});
-									} else {
-										StationsModule.runJob(
-											"CALCULATE_SONG_FOR_STATION",
-											{
-												station
-											},
-											this
-										)
-											.then(newPlaylist => {
-												SongsModule.runJob("GET_SONG", { id: newPlaylist[0] }, this)
-													.then(response => {
-														station.playlist = newPlaylist;
-														next(null, response.song, 0);
-													})
-													.catch(() => next(null, StationsModule.defaultSong, 0));
-											})
-											.catch(() => {
-												next(null, StationsModule.defaultSong, 0);
-											});
-									}
-								},
-								(song, currentSongIndex, next) => {
-									if (song) return next(null, true, currentSongIndex);
-									return next(null, false);
-								},
-								(err, song, currentSongIndex) => next(err, song, currentSongIndex, station)
-							);
+								.catch(next);
 						}
 					},
 					(song, currentSongIndex, station, next) => {
@@ -890,6 +862,7 @@ class _StationsModule extends CoreClass {
 				],
 				async (err, station) => {
 					if (err) {
+						console.log(123, err);
 						err = await UtilsModule.runJob(
 							"GET_ERROR",
 							{
@@ -1219,6 +1192,350 @@ class _StationsModule extends CoreClass {
 					}
 				})
 				.catch(reject);
+		});
+	}
+
+	/**
+	 * Adds a playlist to be included in a station
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {object} payload.stationId - the id of the station to include the playlist in
+	 * @param {object} payload.playlistId - the id of the playlist to be included
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	INCLUDE_PLAYLIST(payload) {
+		return new Promise((resolve, reject) => {
+			async.waterfall(
+				[
+					next => {
+						if (!payload.stationId) next("Please specify a station id");
+						else if (!payload.playlistId) next("Please specify a playlist id");
+						else next();
+					},
+
+					next => {
+						StationsModule.runJob("GET_STATION", { stationId: payload.stationId }, this)
+							.then(station => {
+								next(null, station);
+							})
+							.catch(next);
+					},
+
+					(station, next) => {
+						if (station.playlist2 === payload.playlistId) next("You cannot include the station playlist");
+						else if (station.includedPlaylists.indexOf(payload.playlistId) !== -1)
+							next("This playlist is already included");
+						else if (station.excludedPlaylists.indexOf(payload.playlistId) !== -1)
+							next(
+								"This playlist is currently excluded, please remove it from there before including it"
+							);
+						else
+							PlaylistsModule.runJob("GET_PLAYLIST", { playlistId: payload.playlistId }, this)
+								.then(() => {
+									next(null);
+								})
+								.catch(next);
+					},
+
+					next => {
+						DBModule.runJob(
+							"GET_MODEL",
+							{
+								modelName: "station"
+							},
+							this
+						).then(stationModel => {
+							stationModel.updateOne(
+								{ _id: payload.stationId },
+								{ $push: { includedPlaylists: payload.playlistId } },
+								next
+							);
+						});
+					},
+
+					(res, next) => {
+						StationsModule.runJob(
+							"UPDATE_STATION",
+							{
+								stationId: payload.stationId
+							},
+							this
+						)
+							.then(() => {
+								next();
+							})
+							.catch(next);
+					}
+				],
+				async err => {
+					if (err && err !== true) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						return reject(new Error(err));
+					}
+
+					return resolve();
+				}
+			);
+		});
+	}
+
+	/**
+	 * Removes a playlist that is included in a station
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {object} payload.stationId - the id of the station
+	 * @param {object} payload.playlistId - the id of the playlist
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	REMOVE_INCLUDED_PLAYLIST(payload) {
+		return new Promise((resolve, reject) => {
+			async.waterfall(
+				[
+					next => {
+						if (!payload.stationId) next("Please specify a station id");
+						else if (!payload.playlistId) next("Please specify a playlist id");
+						else next();
+					},
+
+					next => {
+						StationsModule.runJob("GET_STATION", { stationId: payload.stationId }, this)
+							.then(station => {
+								next(null, station);
+							})
+							.catch(next);
+					},
+
+					(station, next) => {
+						if (station.includedPlaylists.indexOf(payload.playlistId) === -1)
+							next("This playlist isn't included");
+						else next();
+					},
+
+					next => {
+						DBModule.runJob(
+							"GET_MODEL",
+							{
+								modelName: "station"
+							},
+							this
+						).then(stationModel => {
+							stationModel.updateOne(
+								{ _id: payload.stationId },
+								{ $pull: { includedPlaylists: payload.playlistId } },
+								next
+							);
+						});
+					},
+
+					(res, next) => {
+						StationsModule.runJob(
+							"UPDATE_STATION",
+							{
+								stationId: payload.stationId
+							},
+							this
+						)
+							.then(() => {
+								next();
+							})
+							.catch(next);
+					}
+				],
+				async err => {
+					if (err && err !== true) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						return reject(new Error(err));
+					}
+
+					return resolve();
+				}
+			);
+		});
+	}
+
+	/**
+	 * Adds a playlist to be excluded in a station
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {object} payload.stationId - the id of the station
+	 * @param {object} payload.playlistId - the id of the playlist
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	EXCLUDE_PLAYLIST(payload) {
+		return new Promise((resolve, reject) => {
+			async.waterfall(
+				[
+					next => {
+						if (!payload.stationId) next("Please specify a station id");
+						else if (!payload.playlistId) next("Please specify a playlist id");
+						else next();
+					},
+
+					next => {
+						StationsModule.runJob("GET_STATION", { stationId: payload.stationId }, this)
+							.then(station => {
+								next(null, station);
+							})
+							.catch(next);
+					},
+
+					(station, next) => {
+						if (station.playlist2 === payload.playlistId) next("You cannot exclude the station playlist");
+						else if (station.excludedPlaylists.indexOf(payload.playlistId) !== -1)
+							next("This playlist is already excluded");
+						else if (station.includedPlaylists.indexOf(payload.playlistId) !== -1)
+							next(
+								"This playlist is currently included, please remove it from there before excluding it"
+							);
+						else
+							PlaylistsModule.runJob("GET_PLAYLIST", { playlistId: payload.playlistId }, this)
+								.then(() => {
+									next(null);
+								})
+								.catch(next);
+					},
+
+					next => {
+						DBModule.runJob(
+							"GET_MODEL",
+							{
+								modelName: "station"
+							},
+							this
+						).then(stationModel => {
+							stationModel.updateOne(
+								{ _id: payload.stationId },
+								{ $push: { excludedPlaylists: payload.playlistId } },
+								next
+							);
+						});
+					},
+
+					(res, next) => {
+						StationsModule.runJob(
+							"UPDATE_STATION",
+							{
+								stationId: payload.stationId
+							},
+							this
+						)
+							.then(() => {
+								next();
+							})
+							.catch(next);
+					}
+				],
+				async err => {
+					if (err && err !== true) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						return reject(new Error(err));
+					}
+
+					return resolve();
+				}
+			);
+		});
+	}
+
+	/**
+	 * Removes a playlist that is excluded in a station
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {object} payload.stationId - the id of the station
+	 * @param {object} payload.playlistId - the id of the playlist
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	REMOVE_EXCLUDED_PLAYLIST(payload) {
+		return new Promise((resolve, reject) => {
+			console.log(112, payload);
+			async.waterfall(
+				[
+					next => {
+						if (!payload.stationId) next("Please specify a station id");
+						else if (!payload.playlistId) next("Please specify a playlist id");
+						else next();
+					},
+
+					next => {
+						StationsModule.runJob("GET_STATION", { stationId: payload.stationId }, this)
+							.then(station => {
+								next(null, station);
+							})
+							.catch(next);
+					},
+
+					(station, next) => {
+						if (station.excludedPlaylists.indexOf(payload.playlistId) === -1)
+							next("This playlist isn't excluded");
+						else next();
+					},
+
+					next => {
+						DBModule.runJob(
+							"GET_MODEL",
+							{
+								modelName: "station"
+							},
+							this
+						).then(stationModel => {
+							stationModel.updateOne(
+								{ _id: payload.stationId },
+								{ $pull: { excludedPlaylists: payload.playlistId } },
+								next
+							);
+						});
+					},
+
+					(res, next) => {
+						StationsModule.runJob(
+							"UPDATE_STATION",
+							{
+								stationId: payload.stationId
+							},
+							this
+						)
+							.then(() => {
+								next();
+							})
+							.catch(next);
+					}
+				],
+				async err => {
+					if (err && err !== true) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						return reject(new Error(err));
+					}
+
+					return resolve();
+				}
+			);
+		});
+	}
+
+	/**
+	 * Gets stations that include or exclude a specific playlist
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.playlistId - the playlist id
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	GET_STATIONS_THAT_INCLUDE_OR_EXCLUDE_PLAYLIST(payload) {
+		return new Promise((resolve, reject) => {
+			DBModule.runJob(
+				"GET_MODEL",
+				{
+					modelName: "station"
+				},
+				this
+			).then(stationModel => {
+				stationModel.find(
+					{ $or: [{ includedPlaylists: payload.playlistId }, { excludedPlaylists: payload.playlistId }] },
+					(err, stations) => {
+						if (err) reject(err);
+						else resolve({ stationIds: stations.map(station => station._id) });
+					}
+				);
+			});
 		});
 	}
 }

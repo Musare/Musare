@@ -1,4 +1,5 @@
 import async from "async";
+import mongoose from "mongoose";
 
 import { isLoginRequired, isOwnerRequired } from "./hooks";
 
@@ -8,6 +9,7 @@ const DBModule = moduleManager.modules.db;
 const UtilsModule = moduleManager.modules.utils;
 const IOModule = moduleManager.modules.io;
 const SongsModule = moduleManager.modules.songs;
+const PlaylistsModule = moduleManager.modules.playlists;
 const CacheModule = moduleManager.modules.cache;
 const NotificationsModule = moduleManager.modules.notifications;
 const StationsModule = moduleManager.modules.stations;
@@ -896,6 +898,148 @@ export default {
 		);
 	},
 
+	getStationIncludedPlaylistsById(session, stationId, cb) {
+		async.waterfall(
+			[
+				next => {
+					StationsModule.runJob("GET_STATION", { stationId }, this)
+						.then(station => {
+							next(null, station);
+						})
+						.catch(next);
+				},
+
+				(station, next) => {
+					if (!station) return next("Station not found.");
+					return StationsModule.runJob(
+						"CAN_USER_VIEW_STATION",
+						{
+							station,
+							userId: session.userId
+						},
+						this
+					)
+						.then(canView => {
+							if (!canView) next("Not allowed to get station.");
+							else next(null, station);
+						})
+						.catch(err => next(err));
+				},
+
+				(station, next) => {
+					const playlists = [];
+
+					async.eachLimit(
+						station.includedPlaylists,
+						1,
+						(playlistId, next) => {
+							PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+								.then(playlist => {
+									playlists.push(playlist);
+									next();
+								})
+								.catch(() => {
+									playlists.push(null);
+									next();
+								});
+						},
+						err => {
+							next(err, playlists);
+						}
+					);
+				}
+			],
+			async (err, playlists) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"GET_STATION_INCLUDED_PLAYLISTS_BY_ID",
+						`Getting station "${stationId}"'s included playlists failed. "${err}"`
+					);
+					return cb({ status: "failure", message: err });
+				}
+				this.log(
+					"SUCCESS",
+					"GET_STATION_INCLUDED_PLAYLISTS_BY_ID",
+					`Got station "${stationId}"'s included playlists successfully.`
+				);
+				return cb({ status: "success", playlists });
+			}
+		);
+	},
+
+	getStationExcludedPlaylistsById(session, stationId, cb) {
+		async.waterfall(
+			[
+				next => {
+					StationsModule.runJob("GET_STATION", { stationId }, this)
+						.then(station => {
+							next(null, station);
+						})
+						.catch(next);
+				},
+
+				(station, next) => {
+					if (!station) return next("Station not found.");
+					return StationsModule.runJob(
+						"CAN_USER_VIEW_STATION",
+						{
+							station,
+							userId: session.userId
+						},
+						this
+					)
+						.then(canView => {
+							if (!canView) next("Not allowed to get station.");
+							else next(null, station);
+						})
+						.catch(err => next(err));
+				},
+
+				(station, next) => {
+					const playlists = [];
+
+					async.eachLimit(
+						station.excludedPlaylists,
+						1,
+						(playlistId, next) => {
+							PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+								.then(playlist => {
+									playlists.push(playlist);
+									next();
+								})
+								.catch(() => {
+									playlists.push(null);
+									next();
+								});
+						},
+						err => {
+							next(err, playlists);
+						}
+					);
+				}
+			],
+			async (err, playlists) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"GET_STATION_EXCLUDED_PLAYLISTS_BY_ID",
+						`Getting station "${stationId}"'s excluded playlists failed. "${err}"`
+					);
+					return cb({ status: "failure", message: err });
+				}
+				this.log(
+					"SUCCESS",
+					"GET_STATION_EXCLUDED_PLAYLISTS_BY_ID",
+					`Got station "${stationId}"'s excluded playlists successfully.`
+				);
+				return cb({ status: "success", playlists });
+			}
+		);
+	},
+
 	/**
 	 * Toggles if a station is locked
 	 *
@@ -1239,6 +1383,7 @@ export default {
 	 */
 	updateDisplayName: isOwnerRequired(async function updateDisplayName(session, stationId, newDisplayName, cb) {
 		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
+		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
 
 		async.waterfall(
 			[
@@ -1255,6 +1400,16 @@ export default {
 					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
 						.then(station => next(null, station))
 						.catch(next);
+				},
+
+				(station, next) => {
+					playlistModel.updateOne(
+						{ _id: station.playlist2 },
+						{ $set: { displayName: `Station - ${station.displayName}` } },
+						err => {
+							next(err, station);
+						}
+					);
 				}
 			],
 			async err => {
@@ -1452,25 +1607,122 @@ export default {
 	 * @param cb
 	 */
 	updateGenres: isOwnerRequired(async function updateGenres(session, stationId, newGenres, cb) {
-		const stationModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "station"
-			},
-			this
-		);
 		async.waterfall(
 			[
 				next => {
-					stationModel.updateOne(
-						{ _id: stationId },
-						{ $set: { genres: newGenres } },
-						{ runValidators: true },
-						next
+					StationsModule.runJob("GET_STATION", { stationId }, this)
+						.then(station => {
+							next(null, station);
+						})
+						.catch(next);
+				},
+
+				(station, next) => {
+					const playlists = [];
+					async.eachLimit(
+						newGenres,
+						1,
+						(genre, next) => {
+							PlaylistsModule.runJob("GET_GENRE_PLAYLIST", { genre, includeSongs: false }, this)
+								.then(response => {
+									playlists.push(response.playlist);
+									next();
+								})
+								.catch(err => {
+									if (err.message === "Playlist not found")
+										next(
+											`The genre playlist for "${genre}" was not found. Please ensure that this genre playlist exists.`
+										);
+									else next(err);
+								});
+						},
+						err => {
+							next(
+								err,
+								station,
+								playlists.map(playlist => playlist._id.toString())
+							);
+						}
 					);
 				},
 
-				(res, next) => {
+				(station, playlists, next) => {
+					const playlistsToRemoveFromExcluded = playlists.filter(
+						playlistId => station.excludedPlaylists.indexOf(playlistId) !== -1
+					);
+					console.log(
+						`playlistsToRemoveFromExcluded: ${playlistsToRemoveFromExcluded.length}`,
+						playlistsToRemoveFromExcluded
+					);
+
+					async.eachLimit(
+						playlistsToRemoveFromExcluded,
+						1,
+						(playlistId, next) => {
+							StationsModule.runJob("REMOVE_EXCLUDED_PLAYLIST", { stationId, playlistId }, this)
+								.then(() => {
+									next();
+								})
+								.catch(next);
+						},
+						err => {
+							next(err, station, playlists);
+						}
+					);
+				},
+
+				(station, playlists, next) => {
+					const playlistsToRemoveFromIncluded = station.includedPlaylists.filter(
+						playlistId => playlists.indexOf(playlistId) === -1
+					);
+					console.log(
+						`playlistsToRemoveFromIncluded: ${playlistsToRemoveFromIncluded.length}`,
+						playlistsToRemoveFromIncluded
+					);
+
+					async.eachLimit(
+						playlistsToRemoveFromIncluded,
+						1,
+						(playlistId, next) => {
+							StationsModule.runJob("REMOVE_INCLUDED_PLAYLIST", { stationId, playlistId }, this)
+								.then(() => {
+									next();
+								})
+								.catch(next);
+						},
+						err => {
+							next(err, station, playlists);
+						}
+					);
+				},
+
+				(station, playlists, next) => {
+					const playlistsToAddToIncluded = playlists.filter(
+						playlistId => station.includedPlaylists.indexOf(playlistId) === -1
+					);
+					console.log(
+						`playlistsToAddToIncluded: ${playlistsToAddToIncluded.length}`,
+						playlistsToAddToIncluded
+					);
+
+					async.eachLimit(
+						playlistsToAddToIncluded,
+						1,
+						(playlistId, next) => {
+							StationsModule.runJob("INCLUDE_PLAYLIST", { stationId, playlistId }, this)
+								.then(() => {
+									next();
+								})
+								.catch(next);
+						},
+						err => {
+							next(err);
+						}
+					);
+				},
+
+				next => {
+					PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();
 					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
 						.then(station => next(null, station))
 						.catch(next);
@@ -1536,24 +1788,122 @@ export default {
 		newBlacklistedGenres,
 		cb
 	) {
-		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
-
 		async.waterfall(
 			[
 				next => {
-					stationModel.updateOne(
-						{ _id: stationId },
-						{
-							$set: {
-								blacklistedGenres: newBlacklistedGenres
-							}
+					StationsModule.runJob("GET_STATION", { stationId }, this)
+						.then(station => {
+							next(null, station);
+						})
+						.catch(next);
+				},
+
+				(station, next) => {
+					const playlists = [];
+					async.eachLimit(
+						newBlacklistedGenres,
+						1,
+						(genre, next) => {
+							PlaylistsModule.runJob("GET_GENRE_PLAYLIST", { genre, includeSongs: false }, this)
+								.then(response => {
+									playlists.push(response.playlist);
+									next();
+								})
+								.catch(err => {
+									if (err.message === "Playlist not found")
+										next(
+											`The genre playlist for "${genre}" was not found. Please ensure that this genre playlist exists.`
+										);
+									else next(err);
+								});
 						},
-						{ runValidators: true },
-						next
+						err => {
+							next(
+								err,
+								station,
+								playlists.map(playlist => playlist._id.toString())
+							);
+						}
 					);
 				},
 
-				(res, next) => {
+				(station, playlists, next) => {
+					const playlistsToRemoveFromIncluded = playlists.filter(
+						playlistId => station.includedPlaylists.indexOf(playlistId) !== -1
+					);
+					console.log(
+						`playlistsToRemoveFromIncluded: ${playlistsToRemoveFromIncluded.length}`,
+						playlistsToRemoveFromIncluded
+					);
+
+					async.eachLimit(
+						playlistsToRemoveFromIncluded,
+						1,
+						(playlistId, next) => {
+							StationsModule.runJob("REMOVE_INCLUDED_PLAYLIST", { stationId, playlistId }, this)
+								.then(() => {
+									next();
+								})
+								.catch(next);
+						},
+						err => {
+							next(err, station, playlists);
+						}
+					);
+				},
+
+				(station, playlists, next) => {
+					const playlistsToRemoveFromExcluded = station.excludedPlaylists.filter(
+						playlistId => playlists.indexOf(playlistId) === -1
+					);
+					console.log(
+						`playlistsToRemoveFromExcluded: ${playlistsToRemoveFromExcluded.length}`,
+						playlistsToRemoveFromExcluded
+					);
+
+					async.eachLimit(
+						playlistsToRemoveFromExcluded,
+						1,
+						(playlistId, next) => {
+							StationsModule.runJob("REMOVE_EXCLUDED_PLAYLIST", { stationId, playlistId }, this)
+								.then(() => {
+									next();
+								})
+								.catch(next);
+						},
+						err => {
+							next(err, station, playlists);
+						}
+					);
+				},
+
+				(station, playlists, next) => {
+					const playlistsToAddToExcluded = playlists.filter(
+						playlistId => station.excludedPlaylists.indexOf(playlistId) === -1
+					);
+					console.log(
+						`playlistsToAddToExcluded: ${playlistsToAddToExcluded.length}`,
+						playlistsToAddToExcluded
+					);
+
+					async.eachLimit(
+						playlistsToAddToExcluded,
+						1,
+						(playlistId, next) => {
+							StationsModule.runJob("EXCLUDE_PLAYLIST", { stationId, playlistId }, this)
+								.then(() => {
+									next();
+								})
+								.catch(next);
+						},
+						err => {
+							next(err);
+						}
+					);
+				},
+
+				next => {
+					PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();
 					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
 						.then(station => next(null, station))
 						.catch(next);
@@ -1913,6 +2263,12 @@ export default {
 					CacheModule.runJob("HDEL", { table: "stations", key: stationId }, this)
 						.then(next(null, station))
 						.catch(next);
+				},
+
+				(station, next) => {
+					if (station.playlist2)
+						PlaylistsModule.runJob("DELETE_PLAYLIST", { playlistId: station.playlist2 }).then().catch();
+					next(null, station);
 				}
 			],
 			async (err, station) => {
@@ -1953,6 +2309,7 @@ export default {
 	create: isLoginRequired(async function create(session, data, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
+		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
 
 		data.name = data.name.toLowerCase();
 
@@ -2022,73 +2379,271 @@ export default {
 					this.log(station);
 
 					if (station) return next("A station with that name or display name already exists.");
-					const { name, displayName, description, genres, playlist, type, blacklistedGenres } = data;
+					const { name, displayName, description, playlist, type, genres, blacklistedGenres } = data;
+					const stationId = mongoose.Types.ObjectId();
+
 					if (type === "official") {
 						return userModel.findOne({ _id: session.userId }, (err, user) => {
 							if (err) return next(err);
 							if (!user) return next("User not found.");
 							if (user.role !== "admin") return next("Admin required.");
-							return stationModel.create(
-								{
-									name,
-									displayName,
-									description,
-									type,
-									privacy: "private",
-									playlist,
-									genres,
-									blacklistedGenres,
-									currentSong: StationsModule.defaultSong
-								},
-								next
+
+							return async.waterfall(
+								[
+									next => {
+										const playlists = [];
+										async.eachLimit(
+											genres,
+											1,
+											(genre, next) => {
+												PlaylistsModule.runJob(
+													"GET_GENRE_PLAYLIST",
+													{ genre, includeSongs: false },
+													this
+												)
+													.then(response => {
+														playlists.push(response.playlist);
+														next();
+													})
+													.catch(err => {
+														next(
+															`An error occurred when trying to get genre playlist for genre ${genre}. Error: ${err}.`
+														);
+													});
+											},
+											err => {
+												next(
+													err,
+													playlists.map(playlist => playlist._id.toString())
+												);
+											}
+										);
+									},
+
+									(genrePlaylistIds, next) => {
+										const playlists = [];
+										async.eachLimit(
+											blacklistedGenres,
+											1,
+											(genre, next) => {
+												PlaylistsModule.runJob(
+													"GET_GENRE_PLAYLIST",
+													{ genre, includeSongs: false },
+													this
+												)
+													.then(response => {
+														playlists.push(response.playlist);
+														next();
+													})
+													.catch(err => {
+														next(
+															`An error occurred when trying to get genre playlist for genre ${genre}. Error: ${err}.`
+														);
+													});
+											},
+											err => {
+												next(
+													err,
+													genrePlaylistIds,
+													playlists.map(playlist => playlist._id.toString())
+												);
+											}
+										);
+									},
+
+									(genrePlaylistIds, blacklistedGenrePlaylistIds, next) => {
+										const duplicateGenre =
+											genrePlaylistIds.length !== new Set(genrePlaylistIds).size;
+										const duplicateBlacklistedGenre =
+											genrePlaylistIds.length !== new Set(genrePlaylistIds).size;
+										const duplicateCross =
+											genrePlaylistIds.length + blacklistedGenrePlaylistIds.length !==
+											new Set([...genrePlaylistIds, ...blacklistedGenrePlaylistIds]).size;
+										if (duplicateGenre)
+											return next("You cannot have the same genre included twice.");
+										if (duplicateBlacklistedGenre)
+											return next("You cannot have the same blacklisted genre included twice.");
+										if (duplicateCross)
+											return next(
+												"You cannot have the same genre included and blacklisted at the same time."
+											);
+										return next(null, genrePlaylistIds, blacklistedGenrePlaylistIds);
+									}
+								],
+								(err, genrePlaylistIds, blacklistedGenrePlaylistIds) => {
+									if (err) return next(err);
+									return playlistModel.create(
+										{
+											isUserModifiable: false,
+											displayName: `Station - ${displayName}`,
+											songs: [],
+											createdBy: "Musare",
+											createdFor: `${stationId}`,
+											createdAt: Date.now(),
+											type: "station"
+										},
+
+										(err, playlist2) => {
+											if (err) next(err);
+											else {
+												stationModel.create(
+													{
+														_id: stationId,
+														name,
+														displayName,
+														description,
+														type,
+														privacy: "private",
+														playlist2: playlist2._id,
+														playlist,
+														currentSong: StationsModule.defaultSong
+													},
+													(err, station) => {
+														next(
+															err,
+															station,
+															genrePlaylistIds,
+															blacklistedGenrePlaylistIds
+														);
+													}
+												);
+											}
+										}
+									);
+								}
 							);
 						});
 					}
 					if (type === "community") {
 						if (blacklist.indexOf(name) !== -1)
 							return next("That name is blacklisted. Please use a different name.");
-						return stationModel.create(
+						return playlistModel.create(
 							{
-								name,
-								displayName,
-								description,
-								type,
-								privacy: "private",
-								owner: session.userId,
-								queue: [],
-								currentSong: null
+								isUserModifiable: false,
+								displayName: `Station - ${name}`,
+								songs: [],
+								createdBy: session.userId,
+								createdFor: `${stationId}`,
+								createdAt: Date.now(),
+								type: "station"
 							},
-							next
+
+							(err, playlist2) => {
+								if (err) next(err);
+								else {
+									stationModel.create(
+										{
+											name,
+											displayName,
+											description,
+											playlist2: playlist2._id,
+											type,
+											privacy: "private",
+											owner: session.userId,
+											queue: [],
+											currentSong: null
+										},
+										(err, station) => {
+											next(err, station, null, null);
+										}
+									);
+								}
+							}
 						);
 					}
+				},
+
+				(station, genrePlaylistIds, blacklistedGenrePlaylistIds, next) => {
+					if (station.type !== "official") return next(null, station);
+
+					const stationId = station._id;
+					console.log(111, station, genrePlaylistIds, blacklistedGenrePlaylistIds, next);
+
+					return async.waterfall(
+						[
+							next => {
+								async.eachLimit(
+									genrePlaylistIds,
+									1,
+									(playlistId, next) => {
+										StationsModule.runJob("INCLUDE_PLAYLIST", { stationId, playlistId }, this)
+											.then(() => {
+												next();
+											})
+											.catch(next);
+									},
+									next
+								);
+							},
+
+							next => {
+								async.eachLimit(
+									blacklistedGenrePlaylistIds,
+									1,
+									(playlistId, next) => {
+										StationsModule.runJob("EXCLUDE_PLAYLIST", { stationId, playlistId }, this)
+											.then(() => {
+												next();
+											})
+											.catch(next);
+									},
+									next
+								);
+							},
+
+							next => {
+								PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();
+								next();
+							}
+						],
+						async err => {
+							if (err) {
+								err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+								this.log(
+									"ERROR",
+									"STATIONS_CREATE",
+									`Created station ${stationId} successfully, but an error occurred during playing including/excluding. Error: ${err}`
+								);
+							}
+							next(null, station, err);
+						}
+					);
 				}
 			],
-			async (err, station) => {
+			async (err, station, extraError) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "STATIONS_CREATE", `Creating station failed. "${err}"`);
-					return cb({ status: "failure", message: err });
-				}
-				this.log("SUCCESS", "STATIONS_CREATE", `Created station "${station._id}" successfully.`);
+					cb({ status: "failure", message: err });
+				} else {
+					this.log("SUCCESS", "STATIONS_CREATE", `Created station "${station._id}" successfully.`);
 
-				CacheModule.runJob("PUB", {
-					channel: "station.create",
-					value: station._id
-				});
+					CacheModule.runJob("PUB", {
+						channel: "station.create",
+						value: station._id
+					});
 
-				ActivitiesModule.runJob("ADD_ACTIVITY", {
-					userId: session.userId,
-					type: "station__create",
-					payload: {
-						message: `Created a station named <stationId>${station.displayName}</stationId>`,
-						stationId: station._id
+					ActivitiesModule.runJob("ADD_ACTIVITY", {
+						userId: session.userId,
+						type: "station__create",
+						payload: {
+							message: `Created a station named <stationId>${station.displayName}</stationId>`,
+							stationId: station._id
+						}
+					});
+
+					if (!extraError) {
+						cb({
+							status: "success",
+							message: "Successfully created station."
+						});
+					} else {
+						cb({
+							status: "success",
+							message: `Successfully created station, but with one error at the end: ${extraError}`
+						});
 					}
-				});
-
-				return cb({
-					status: "success",
-					message: "Successfully created station."
-				});
+				}
 			}
 		);
 	}),
@@ -2124,6 +2679,7 @@ export default {
 
 				(station, next) => {
 					if (!station) return next("Station not found.");
+					if (!station.partyMode) return next("Station is not in party mode.");
 
 					if (station.locked) {
 						return userModel.findOne({ _id: session.userId }, (err, user) => {
@@ -2185,19 +2741,21 @@ export default {
 
 									return next(null, song, station);
 								})
-								.catch(err => next(err));
+								.catch(err => {
+									next(err);
+								});
 						})
-						.catch(err => next(err));
+						.catch(err => {
+							next(err);
+						});
 				},
 
 				(song, station, next) => {
-					const { queue } = station;
 					song.requestedBy = session.userId;
 					song.requestedAt = Date.now();
-					queue.push(song);
 
 					let totalDuration = 0;
-					queue.forEach(song => {
+					station.queue.forEach(song => {
 						totalDuration += song.duration;
 					});
 					if (totalDuration >= 3600 * 3) return next("The max length of the queue is 3 hours.");
@@ -2205,10 +2763,9 @@ export default {
 				},
 
 				(song, station, next) => {
-					const { queue } = station;
-					if (queue.length === 0) return next(null, song, station);
+					if (station.queue.length === 0) return next(null, song, station);
 					let totalDuration = 0;
-					const userId = queue[queue.length - 1].requestedBy;
+					const userId = station.queue[station.queue.length - 1].requestedBy;
 					station.queue.forEach(song => {
 						if (userId === song.requestedBy) {
 							totalDuration += song.duration;
@@ -2220,11 +2777,10 @@ export default {
 				},
 
 				(song, station, next) => {
-					const { queue } = station;
-					if (queue.length === 0) return next(null, song);
+					if (station.queue.length === 0) return next(null, song);
 					let totalSongs = 0;
-					const userId = queue[queue.length - 1].requestedBy;
-					queue.forEach(song => {
+					const userId = station.queue[station.queue.length - 1].requestedBy;
+					station.queue.forEach(song => {
 						if (userId === song.requestedBy) {
 							totalSongs += 1;
 						}
@@ -2233,7 +2789,10 @@ export default {
 					if (totalSongs <= 2) return next(null, song);
 					if (totalSongs > 3)
 						return next("The max amount of songs per user is 3, and only 2 in a row is allowed.");
-					if (queue[queue.length - 2].requestedBy !== userId || queue[queue.length - 3] !== userId)
+					if (
+						station.queue[station.queue.length - 2].requestedBy !== userId ||
+						station.queue[station.queue.length - 3] !== userId
+					)
 						return next("The max amount of songs per user is 3, and only 2 in a row is allowed.");
 
 					return next(null, song);
@@ -2242,7 +2801,7 @@ export default {
 				(song, next) => {
 					stationModel.updateOne(
 						{ _id: stationId },
-						{ $pushr: { queue: song } },
+						{ $push: { queue: song } },
 						{ runValidators: true },
 						next
 					);
@@ -2253,6 +2812,14 @@ export default {
 						.then(station => next(null, station))
 						.catch(next);
 				}
+
+				// (res, next) => {
+				// 	StationsModule.runJob("UPDATE_STATION", { stationId }, this)
+				// 		.then(station => {
+				// 			next(null, station);
+				// 		})
+				// 		.catch(next);
+				// }
 			],
 			async err => {
 				if (err) {
@@ -2379,7 +2946,6 @@ export default {
 
 				(station, next) => {
 					if (!station) return next("Station not found.");
-					if (station.type !== "community") return next("Station is not a community station.");
 					return next(null, station);
 				},
 
@@ -2390,9 +2956,14 @@ export default {
 							return next("Insufficient permissions.");
 						})
 						.catch(err => next(err));
+				},
+
+				(station, next) => {
+					if (station.type === "official") next(null, station.playlist);
+					else next(null, station.queue);
 				}
 			],
-			async (err, station) => {
+			async (err, queue) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
@@ -2408,7 +2979,7 @@ export default {
 				return cb({
 					status: "success",
 					message: "Successfully got queue.",
-					queue: station.queue
+					queue
 				});
 			}
 		);

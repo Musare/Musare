@@ -523,12 +523,58 @@ export default {
 
 					// this.songDataLoaded = true;
 
-					this.station.genres = JSON.parse(
-						JSON.stringify(this.station.genres)
+					this.socket.emit(
+						`stations.getStationIncludedPlaylistsById`,
+						this.stationId,
+						res => {
+							if (res.status === "success") {
+								this.station.genres = res.playlists.map(
+									playlist => {
+										if (playlist) {
+											if (playlist.type === "genre")
+												return playlist.createdFor;
+											return `Playlist: ${playlist.name}`;
+										}
+										return "Unknown/Error";
+									}
+								);
+								this.originalStation.genres = JSON.parse(
+									JSON.stringify(this.station.genres)
+								);
+							}
+						}
 					);
-					this.station.blacklistedGenres = JSON.parse(
-						JSON.stringify(this.station.blacklistedGenres)
+
+					this.socket.emit(
+						`stations.getStationExcludedPlaylistsById`,
+						this.stationId,
+						res => {
+							if (res.status === "success") {
+								this.station.blacklistedGenres = res.playlists.map(
+									playlist => {
+										if (playlist) {
+											if (playlist.type === "genre")
+												return playlist.createdFor;
+											return `Playlist: ${playlist.name}`;
+										}
+										return "Unknown/Error";
+									}
+								);
+								this.originalStation.blacklistedGenres = JSON.parse(
+									JSON.stringify(
+										this.station.blacklistedGenres
+									)
+								);
+							}
+						}
 					);
+
+					// this.station.genres = JSON.parse(
+					// 	JSON.stringify(this.station.genres)
+					// );
+					// this.station.blacklistedGenres = JSON.parse(
+					// 	JSON.stringify(this.station.blacklistedGenres)
+					// );
 				} else {
 					new Toast({
 						content: "Station with that ID not found",

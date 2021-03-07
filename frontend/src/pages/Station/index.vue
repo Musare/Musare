@@ -692,6 +692,18 @@ export default {
 				) {
 					this.addFirstPrivatePlaylistSongToQueue();
 				}
+
+				if (this.station.type === "official") {
+					this.socket.emit(
+						"stations.getQueue",
+						this.station._id,
+						res => {
+							if (res.status === "success") {
+								this.updateSongsList(res.queue);
+							}
+						}
+					);
+				}
 			});
 
 			this.socket.on("event:stations.pause", data => {
@@ -1515,6 +1527,17 @@ export default {
 					}
 
 					if (type === "community" && partyMode === true) {
+						this.socket.emit("stations.getQueue", _id, res => {
+							if (res.status === "success") {
+								this.updateSongsList(res.queue);
+							}
+						});
+					}
+
+					if (
+						(type === "community" && partyMode === true) ||
+						type === "official"
+					) {
 						this.socket.emit("stations.getQueue", _id, res => {
 							if (res.status === "success") {
 								this.updateSongsList(res.queue);

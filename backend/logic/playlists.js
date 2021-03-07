@@ -3,6 +3,7 @@ import async from "async";
 import CoreClass from "../core";
 
 let PlaylistsModule;
+let StationsModule;
 let SongsModule;
 let CacheModule;
 let DBModule;
@@ -24,6 +25,7 @@ class _PlaylistsModule extends CoreClass {
 	async initialize() {
 		this.setStage(1);
 
+		StationsModule = this.moduleManager.modules.stations;
 		CacheModule = this.moduleManager.modules.cache;
 		DBModule = this.moduleManager.modules.db;
 		UtilsModule = this.moduleManager.modules.utils;
@@ -100,7 +102,23 @@ class _PlaylistsModule extends CoreClass {
 							error: err
 						});
 						reject(new Error(formattedErr));
-					} else resolve();
+					} else {
+						resolve();
+
+						PlaylistsModule.runJob("CREATE_MISSING_GENRE_PLAYLISTS", {})
+							.then()
+							.catch()
+							.finally(() => {
+								SongsModule.runJob("GET_ALL_GENRES", {})
+									.then(response => {
+										const { genres } = response;
+										genres.forEach(genre => {
+											PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre }).then().catch();
+										});
+									})
+									.catch();
+							});
+					}
 				}
 			)
 		);
@@ -199,6 +217,105 @@ class _PlaylistsModule extends CoreClass {
 			const includeObject = payload.includeSongs ? null : { songs: false };
 			PlaylistsModule.playlistModel.findOne(
 				{ type: "genre", createdFor: payload.genre },
+				includeObject,
+				(err, playlist) => {
+					if (err) reject(new Error(err));
+					else if (!playlist) reject(new Error("Playlist not found"));
+					else resolve({ playlist });
+				}
+			);
+		});
+	}
+
+	/**
+	 * Gets all missing genre playlists
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	GET_MISSING_GENRE_PLAYLISTS() {
+		return new Promise((resolve, reject) => {
+			SongsModule.runJob("GET_ALL_GENRES", {}, this)
+				.then(response => {
+					const { genres } = response;
+					const missingGenres = [];
+					async.eachLimit(
+						genres,
+						1,
+						(genre, next) => {
+							PlaylistsModule.runJob(
+								"GET_GENRE_PLAYLIST",
+								{ genre: genre.toLowerCase(), includeSongs: false },
+								this
+							)
+								.then(() => {
+									next();
+								})
+								.catch(err => {
+									if (err.message === "Playlist not found") {
+										missingGenres.push(genre);
+										next();
+									} else next(err);
+								});
+						},
+						err => {
+							if (err) reject(err);
+							else resolve({ genres: missingGenres });
+						}
+					);
+				})
+				.catch(err => {
+					reject(err);
+				});
+		});
+	}
+
+	/**
+	 * Creates all missing genre playlists
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	CREATE_MISSING_GENRE_PLAYLISTS() {
+		return new Promise((resolve, reject) => {
+			PlaylistsModule.runJob("GET_MISSING_GENRE_PLAYLISTS", {}, this)
+				.then(response => {
+					const { genres } = response;
+					async.eachLimit(
+						genres,
+						1,
+						(genre, next) => {
+							PlaylistsModule.runJob("CREATE_GENRE_PLAYLIST", { genre }, this)
+								.then(() => {
+									next();
+								})
+								.catch(err => {
+									next(err);
+								});
+						},
+						err => {
+							if (err) reject(err);
+							else resolve();
+						}
+					);
+				})
+				.catch(err => {
+					reject(err);
+				});
+		});
+	}
+
+	/**
+	 * Gets a station playlist
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.staationId - the station id
+	 * @param {string} payload.includeSongs - include the songs
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	GET_STATION_PLAYLIST(payload) {
+		return new Promise((resolve, reject) => {
+			const includeObject = payload.includeSongs ? null : { songs: false };
+			PlaylistsModule.playlistModel.findOne(
+				{ type: "station", createdFor: payload.stationId },
 				includeObject,
 				(err, playlist) => {
 					if (err) reject(new Error(err));
@@ -359,11 +476,213 @@ class _PlaylistsModule extends CoreClass {
 
 						Promise.allSettled(promises)
 							.then(() => {
-								next();
+								next(null, data.playlist._id);
 							})
 							.catch(err => {
 								next(err);
 							});
+					},
+
+					(playlistId, next) => {
+						StationsModule.runJob("GET_STATIONS_THAT_INCLUDE_OR_EXCLUDE_PLAYLIST", { playlistId })
+							.then(response => {
+								response.stationIds.forEach(stationId => {
+									PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();
+								});
+							})
+							.catch();
+						next();
+					}
+				],
+				err => {
+					if (err && err !== true) return reject(new Error(err));
+					return resolve({});
+				}
+			);
+		});
+	}
+
+	/**
+	 * Gets a orphaned station playlists
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	GET_ORPHANED_STATION_PLAYLISTS() {
+		return new Promise((resolve, reject) => {
+			PlaylistsModule.playlistModel.find({ type: "station" }, { songs: false }, (err, playlists) => {
+				if (err) reject(new Error(err));
+				else {
+					const orphanedPlaylists = [];
+					async.eachLimit(
+						playlists,
+						1,
+						(playlist, next) => {
+							StationsModule.runJob("GET_STATION", { stationId: playlist.createdFor }, this)
+								.then(station => {
+									if (station.playlist2 !== playlist._id.toString()) {
+										orphanedPlaylists.push(playlist);
+									}
+									next();
+								})
+								.catch(err => {
+									if (err.message === "Station not found") {
+										orphanedPlaylists.push(playlist);
+										next();
+									} else next(err);
+								});
+						},
+						err => {
+							if (err) reject(new Error(err));
+							else resolve({ playlists: orphanedPlaylists });
+						}
+					);
+				}
+			});
+		});
+	}
+
+	/**
+	 * Deletes all orphaned station playlists
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	DELETE_ORPHANED_STATION_PLAYLISTS() {
+		return new Promise((resolve, reject) => {
+			PlaylistsModule.runJob("GET_ORPHANED_STATION_PLAYLISTS", {}, this)
+				.then(response => {
+					async.eachLimit(
+						response.playlists,
+						1,
+						(playlist, next) => {
+							PlaylistsModule.runJob("DELETE_PLAYLIST", { playlistId: playlist._id }, this)
+								.then(() => {
+									this.log("INFO", "Deleting orphaned station playlist");
+									next();
+								})
+								.catch(err => {
+									next(err);
+								});
+						},
+						err => {
+							if (err) reject(new Error(err));
+							else resolve({});
+						}
+					);
+				})
+				.catch(err => {
+					reject(new Error(err));
+				});
+		});
+	}
+
+	/**
+	 * Fills a station playlist with songs
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.stationId - the station id
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	AUTOFILL_STATION_PLAYLIST(payload) {
+		return new Promise((resolve, reject) => {
+			let originalPlaylist = null;
+			async.waterfall(
+				[
+					next => {
+						if (!payload.stationId) next("Please specify a station id");
+						else next();
+					},
+
+					next => {
+						StationsModule.runJob("GET_STATION", { stationId: payload.stationId }, this)
+							.then(station => {
+								next(null, station);
+							})
+							.catch(next);
+					},
+
+					(station, next) => {
+						PlaylistsModule.runJob("GET_PLAYLIST", { playlistId: station.playlist2 }, this)
+							.then(playlist => {
+								originalPlaylist = playlist;
+								next(null, station);
+							})
+							.catch(err => {
+								next(err);
+							});
+					},
+
+					(station, next) => {
+						const includedPlaylists = [];
+						async.eachLimit(
+							station.includedPlaylists,
+							1,
+							(playlistId, next) => {
+								PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+									.then(playlist => {
+										includedPlaylists.push(playlist);
+										next();
+									})
+									.catch(next);
+							},
+							err => {
+								next(err, station, includedPlaylists);
+							}
+						);
+					},
+
+					(station, includedPlaylists, next) => {
+						const excludedPlaylists = [];
+						async.eachLimit(
+							station.excludedPlaylists,
+							1,
+							(playlistId, next) => {
+								PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+									.then(playlist => {
+										excludedPlaylists.push(playlist);
+										next();
+									})
+									.catch(next);
+							},
+							err => {
+								next(err, station, includedPlaylists, excludedPlaylists);
+							}
+						);
+					},
+
+					(station, includedPlaylists, excludedPlaylists, next) => {
+						const excludedSongs = excludedPlaylists
+							.flatMap(excludedPlaylist => excludedPlaylist.songs)
+							.reduce(
+								(items, item) =>
+									items.find(x => x.songId === item.songId) ? [...items] : [...items, item],
+								[]
+							);
+						const includedSongs = includedPlaylists
+							.flatMap(includedPlaylist => includedPlaylist.songs)
+							.reduce(
+								(songs, song) =>
+									songs.find(x => x.songId === song.songId) ? [...songs] : [...songs, song],
+								[]
+							)
+							.filter(song => !excludedSongs.find(x => x.songId === song.songId));
+
+						next(null, station, includedSongs);
+					},
+
+					(station, includedSongs, next) => {
+						PlaylistsModule.playlistModel.updateOne(
+							{ _id: station.playlist2 },
+							{ $set: { songs: includedSongs } },
+							err => {
+								next(err, includedSongs);
+							}
+						);
+					},
+
+					(includedSongs, next) => {
+						if (originalPlaylist.songs.length === 0 && includedSongs.length > 0)
+							StationsModule.runJob("SKIP_STATION", { stationId: payload.stationId });
+						next();
 					}
 				],
 				err => {
