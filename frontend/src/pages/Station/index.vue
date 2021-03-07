@@ -681,7 +681,29 @@ export default {
 
 			this.songsList.forEach(queueSong => {
 				if (queueSong.requestedBy === this.userId) isInQueue = true;
-			});
+    	});
+      
+      if (
+        !isInQueue &&
+        this.privatePlaylistQueueSelected &&
+        (this.automaticallyRequestedSongId !==
+          this.currentSong.songId ||
+          !this.currentSong.songId)
+      ) {
+        this.addFirstPrivatePlaylistSongToQueue();
+      }
+
+      if (this.station.type === "official") {
+        this.socket.dispatch(
+          "stations.getQueue",
+          this.station._id,
+          res => {
+            if (res.status === "success") {
+              this.updateSongsList(res.queue);
+            }
+          }
+        );
+      }
 
 			if (
 				!isInQueue &&
@@ -1541,6 +1563,17 @@ export default {
 								}
 							);
 						}
+            
+            if (
+              (type === "community" && partyMode === true) ||
+              type === "official"
+            ) {
+              this.socket.dispatch("stations.getQueue", _id, res => {
+                if (res.status === "success") {
+                  this.updateSongsList(res.queue);
+                }
+              });
+            }
 
 						if (this.isOwnerOrAdmin()) {
 							keyboardShortcuts.registerShortcut(
