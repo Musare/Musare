@@ -512,79 +512,77 @@ export default {
 		})
 	},
 	mounted() {
-    this.socket.dispatch(`stations.getStationById`, this.stationId, res => {
-      if (res.status === "success") {
-        const { station } = res;
-        // this.song = { ...song };
-        // if (this.song.discogs === undefined)
-        // 	this.song.discogs = null;
-        this.editStation(station);
+		this.socket.dispatch(`stations.getStationById`, this.stationId, res => {
+			if (res.status === "success") {
+				const { station } = res;
+				// this.song = { ...song };
+				// if (this.song.discogs === undefined)
+				// 	this.song.discogs = null;
+				this.editStation(station);
 
-        // this.songDataLoaded = true;
+				// this.songDataLoaded = true;
 
-        this.socket.dispatch(
-          `stations.getStationIncludedPlaylistsById`,
-          this.stationId,
-          res => {
-            if (res.status === "success") {
-              this.station.genres = res.playlists.map(
-                playlist => {
-                  if (playlist) {
-                    if (playlist.type === "genre")
-                      return playlist.createdFor;
-                    return `Playlist: ${playlist.name}`;
-                  }
-                  return "Unknown/Error";
-                }
-              );
-              this.originalStation.genres = JSON.parse(
-                JSON.stringify(this.station.genres)
-              );
-            }
-          }
-        );
+				this.socket.dispatch(
+					`stations.getStationIncludedPlaylistsById`,
+					this.stationId,
+					res => {
+						if (res.status === "success") {
+							this.station.genres = res.playlists.map(
+								playlist => {
+									if (playlist) {
+										if (playlist.type === "genre")
+											return playlist.createdFor;
+										return `Playlist: ${playlist.name}`;
+									}
+									return "Unknown/Error";
+								}
+							);
+							this.originalStation.genres = JSON.parse(
+								JSON.stringify(this.station.genres)
+							);
+						}
+					}
+				);
 
-        this.socket.dispatch(
-          `stations.getStationExcludedPlaylistsById`,
-          this.stationId,
-          res => {
-            if (res.status === "success") {
-              this.station.blacklistedGenres = res.playlists.map(
-                playlist => {
-                  if (playlist) {
-                    if (playlist.type === "genre")
-                      return playlist.createdFor;
-                    return `Playlist: ${playlist.name}`;
-                  }
-                  return "Unknown/Error";
-                }
-              );
-              this.originalStation.blacklistedGenres = JSON.parse(
-                JSON.stringify(
-                  this.station.blacklistedGenres
-                )
-              );
-            }
-          }
-        );
+				this.socket.dispatch(
+					`stations.getStationExcludedPlaylistsById`,
+					this.stationId,
+					res => {
+						if (res.status === "success") {
+							this.station.blacklistedGenres = res.playlists.map(
+								playlist => {
+									if (playlist) {
+										if (playlist.type === "genre")
+											return playlist.createdFor;
+										return `Playlist: ${playlist.name}`;
+									}
+									return "Unknown/Error";
+								}
+							);
+							this.originalStation.blacklistedGenres = JSON.parse(
+								JSON.stringify(this.station.blacklistedGenres)
+							);
+						}
+					}
+				);
 
-        // this.station.genres = JSON.parse(
-        // 	JSON.stringify(this.station.genres)
-        // );
-        // this.station.blacklistedGenres = JSON.parse(
-        // 	JSON.stringify(this.station.blacklistedGenres)
-        // );
-      } else {
-        new Toast({
-          content: "Station with that ID not found",
-          timeout: 3000
-        });
-        this.closeModal({
-          sector: this.sector,
-          modal: "editStation"
-        });
-      }
-    });
+				// this.station.genres = JSON.parse(
+				// 	JSON.stringify(this.station.genres)
+				// );
+				// this.station.blacklistedGenres = JSON.parse(
+				// 	JSON.stringify(this.station.blacklistedGenres)
+				// );
+			} else {
+				new Toast({
+					content: "Station with that ID not found",
+					timeout: 3000
+				});
+				this.closeModal({
+					sector: this.sector,
+					modal: "editStation"
+				});
+			}
+		});
 	},
 	methods: {
 		saveChanges() {
