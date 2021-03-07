@@ -584,6 +584,7 @@ class _PlaylistsModule extends CoreClass {
 	 */
 	AUTOFILL_STATION_PLAYLIST(payload) {
 		return new Promise((resolve, reject) => {
+			let originalPlaylist = null;
 			async.waterfall(
 				[
 					next => {
@@ -601,7 +602,8 @@ class _PlaylistsModule extends CoreClass {
 
 					(station, next) => {
 						PlaylistsModule.runJob("GET_PLAYLIST", { playlistId: station.playlist2 }, this)
-							.then(() => {
+							.then(playlist => {
+								originalPlaylist = playlist;
 								next(null, station);
 							})
 							.catch(err => {
@@ -671,8 +673,16 @@ class _PlaylistsModule extends CoreClass {
 						PlaylistsModule.playlistModel.updateOne(
 							{ _id: station.playlist2 },
 							{ $set: { songs: includedSongs } },
-							next
+							err => {
+								next(err, includedSongs);
+							}
 						);
+					},
+
+					(includedSongs, next) => {
+						if (originalPlaylist.songs.length === 0 && includedSongs.length > 0)
+							StationsModule.runJob("SKIP_STATION", { stationId: payload.stationId });
+						next();
 					}
 				],
 				err => {
