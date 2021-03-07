@@ -358,16 +358,18 @@ CacheModule.runJob("SUB", {
 		StationsModule.runJob("INITIALIZE_STATION", { stationId }).then(async response => {
 			const { station } = response;
 			station.userCount = StationsModule.usersPerStationCount[stationId] || 0;
+
 			WSModule.runJob("EMIT_TO_ROOM", {
 				room: "admin.stations",
 				args: ["event:admin.station.added", station]
-			});
+			}).then(() => {});
+
 			// TODO If community, check if on whitelist
 			if (station.privacy === "public")
 				WSModule.runJob("EMIT_TO_ROOM", {
 					room: "home",
 					args: ["event:stations.created", station]
-				});
+				}).then(() => {});
 			else {
 				const sockets = await WSModule.runJob("GET_SOCKETS_FOR_ROOM", {
 					room: "home"
@@ -2247,13 +2249,15 @@ export default {
 
 				(station, next) => {
 					CacheModule.runJob("HDEL", { table: "stations", key: stationId }, this)
-						.then(next(null, station))
+						.then(() => next(null, station))
 						.catch(next);
 				},
 
 				(station, next) => {
 					if (station.playlist2)
-						PlaylistsModule.runJob("DELETE_PLAYLIST", { playlistId: station.playlist2 }).then().catch();
+						PlaylistsModule.runJob("DELETE_PLAYLIST", { playlistId: station.playlist2 })
+							.then(() => {})
+							.catch(next);
 					next(null, station);
 				}
 			],

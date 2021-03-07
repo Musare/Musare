@@ -26,7 +26,7 @@ CacheModule.runJob("SUB", {
 	channel: "song.added",
 	cb: async songId => {
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
-		songModel.findOne({ _id: songId }, (err, song) => {
+		songModel.findOne({ songId }, (err, song) => {
 			WSModule.runJob("EMIT_TO_ROOM", {
 				room: "admin.songs",
 				args: ["event:admin.song.added", song]
@@ -39,7 +39,7 @@ CacheModule.runJob("SUB", {
 	channel: "song.updated",
 	cb: async songId => {
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
-		songModel.findOne({ _id: songId }, (err, song) => {
+		songModel.findOne({ songId }, (err, song) => {
 			WSModule.runJob("EMIT_TO_ROOM", {
 				room: "admin.songs",
 				args: ["event:admin.song.updated", song]
@@ -62,6 +62,7 @@ CacheModule.runJob("SUB", {
 				}
 			]
 		});
+
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
 			sockets.forEach(socket => {
 				socket.dispatch("event:song.newRatings", {
@@ -254,12 +255,8 @@ export default {
 			[
 				next => {
 					SongsModule.runJob("GET_SONG", { id: songId }, this)
-						.then(response => {
-							next(null, response.song);
-						})
-						.catch(err => {
-							next(err);
-						});
+						.then(response => next(null, response.song))
+						.catch(err => next(err));
 				}
 			],
 			async (err, song) => {
@@ -435,18 +432,18 @@ export default {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 
-					this.log("ERROR", "SONGS_UPDATE", `Failed to remove song "${songId}". "${err}"`);
+					this.log("ERROR", "SONGS_REMOVE", `Failed to remove song "${songId}". "${err}"`);
 
 					return cb({ status: "failure", message: err });
 				}
 
-				this.log("SUCCESS", "SONGS_UPDATE", `Successfully remove song "${songId}".`);
+				this.log("SUCCESS", "SONGS_REMOVE", `Successfully remove song "${songId}".`);
 
 				CacheModule.runJob("PUB", { channel: "song.removed", value: songId });
 
 				return cb({
 					status: "success",
-					message: "Song has been successfully updated"
+					message: "Song has been successfully removed"
 				});
 			}
 		);

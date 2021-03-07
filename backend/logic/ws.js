@@ -289,6 +289,8 @@ class _WSModule extends CoreClass {
 					return resolve();
 				});
 
+			console.log("room doesn't exist");
+
 			return resolve();
 		});
 	}
@@ -326,11 +328,11 @@ class _WSModule extends CoreClass {
 	 */
 	SOCKETS_JOIN_SONG_ROOM(payload) {
 		return new Promise(resolve => {
-			payload.sockets.forEach(async socketId => {
-				await WSModule.runJob("SOCKET_JOIN_SONG_ROOM", { socketId }, this);
-			});
-
-			return resolve();
+			Promise.allSettled(
+				payload.sockets.map(async socketId => {
+					await WSModule.runJob("SOCKET_JOIN_SONG_ROOM", { socketId }, this);
+				})
+			).then(() => resolve());
 		});
 	}
 
@@ -692,6 +694,7 @@ class _WSModule extends CoreClass {
 								"RUN_ACTION2",
 								`Response to action. Action: ${namespace}.${action}. Response status: ${result.status}`
 							);
+
 							resolve(result);
 						}
 					])

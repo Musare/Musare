@@ -43,6 +43,7 @@ CacheModule.runJob("SUB", {
 		const queueSongModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "queueSong"
 		});
+
 		queueSongModel.findOne({ _id: songId }, (err, song) => {
 			WSModule.runJob("EMIT_TO_ROOM", {
 				room: "admin.queue",
@@ -60,13 +61,8 @@ export default {
 	 * @param cb
 	 */
 	length: isAdminRequired(async function length(session, cb) {
-		const queueSongModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "queueSong"
-			},
-			this
-		);
+		const queueSongModel = await DBModule.runJob("GET_MODEL", { modelName: "queueSong" }, this);
+
 		async.waterfall(
 			[
 				next => {
