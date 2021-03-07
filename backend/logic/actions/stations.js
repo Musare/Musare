@@ -2278,7 +2278,7 @@ export default {
 				ActivitiesModule.runJob("ADD_ACTIVITY", {
 					userId: session.userId,
 					type: "station__remove",
-					payload: { message: `Removed a station named <stationId>${station.displayName}</stationId>` }
+					payload: { message: `Removed a station named ${station.displayName}` }
 				});
 
 				return cb({

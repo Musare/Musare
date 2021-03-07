@@ -1414,8 +1414,7 @@ export default {
 					userId: playlist.createdBy,
 					type: "playlist__remove",
 					payload: {
-						message: `Removed playlist <playlistId>${playlist.displayName}</playlistId>`,
-						playlistId
+						message: `Removed playlist ${playlist.displayName}`
 					}
 				});
 
