@@ -2913,7 +2913,6 @@ export default {
 
 				(station, next) => {
 					if (!station) return next("Station not found.");
-					if (station.type !== "community") return next("Station is not a community station.");
 					return next(null, station);
 				},
 
@@ -2924,9 +2923,14 @@ export default {
 							return next("Insufficient permissions.");
 						})
 						.catch(err => next(err));
+				},
+
+				(station, next) => {
+					if (station.type === "official") next(null, station.playlist);
+					else next(null, station.queue);
 				}
 			],
-			async (err, station) => {
+			async (err, queue) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
@@ -2942,7 +2946,7 @@ export default {
 				return cb({
 					status: "success",
 					message: "Successfully got queue.",
-					queue: station.queue
+					queue
 				});
 			}
 		);
