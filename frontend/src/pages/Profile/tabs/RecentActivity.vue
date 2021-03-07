@@ -42,6 +42,8 @@
 import { mapState, mapGetters } from "vuex";
 import Toast from "toasters";
 
+import ws from "../../../ws";
+
 import ActivityItem from "../../../components/ui/ActivityItem.vue";
 
 export default {
@@ -75,12 +77,14 @@ export default {
 	},
 	mounted() {
 		if (this.myUserId !== this.userId) {
-			this.socket.dispatch(
-				"apis.joinRoom",
-				`profile-${this.userId}-activities`,
-				res => {
-					console.log("res of joining activities room", res);
-				}
+			ws.onConnect(() =>
+				this.socket.dispatch(
+					"apis.joinRoom",
+					`profile-${this.userId}-activities`,
+					res => {
+						console.log("res of joining activities room", res);
+					}
+				)
 			);
 		}
 

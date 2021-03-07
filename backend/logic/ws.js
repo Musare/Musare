@@ -289,8 +289,6 @@ class _WSModule extends CoreClass {
 					return resolve();
 				});
 
-			console.log("room doesn't exist");
-
 			return resolve();
 		});
 	}

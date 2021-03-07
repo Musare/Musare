@@ -92,6 +92,8 @@
 import draggable from "vuedraggable";
 import { mapActions, mapState, mapGetters } from "vuex";
 
+import ws from "../../../ws";
+
 import SortablePlaylists from "../../../mixins/SortablePlaylists.vue";
 import PlaylistItem from "../../../components/ui/PlaylistItem.vue";
 
@@ -137,10 +139,12 @@ export default {
 			this.tab = this.$route.query.tab;
 
 		if (this.myUserId !== this.userId) {
-			this.socket.dispatch(
-				"apis.joinRoom",
-				`profile-${this.userId}-playlists`,
-				() => {}
+			ws.onConnect(() =>
+				this.socket.dispatch(
+					"apis.joinRoom",
+					`profile-${this.userId}-playlists`,
+					() => {}
+				)
 			);
 		}
 
