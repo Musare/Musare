@@ -437,7 +437,7 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapState, mapGetters, mapActions } from "vuex";
 import Toast from "toasters";
 
 import MainHeader from "../components/layout/MainHeader.vue";
@@ -445,7 +445,7 @@ import MainFooter from "../components/layout/MainFooter.vue";
 import CreateCommunityStation from "../components/modals/CreateCommunityStation.vue";
 import UserIdToUsername from "../components/common/UserIdToUsername.vue";
 
-import io from "../io";
+import ws from "../ws";
 
 export default {
 	components: {
@@ -456,9 +456,7 @@ export default {
 	},
 	data() {
 		return {
-			recaptcha: {
-				key: ""
-			},
+			recaptcha: { key: "" },
 			stations: [],
 			searchQuery: "",
 			siteName: "Musare"
@@ -469,6 +467,9 @@ export default {
 			loggedIn: state => state.user.auth.loggedIn,
 			userId: state => state.user.auth.userId,
 			modals: state => state.modalVisibility.modals.home
+		}),
+		...mapGetters({
+			socket: "websockets/getSocket"
 		}),
 		filteredStations() {
 			const privacyOrder = ["public", "unlisted", "private"];
@@ -498,165 +499,156 @@ export default {
 	async mounted() {
 		this.siteName = await lofig.get("siteSettings.siteName");
 
-		io.getSocket(socket => {
-			this.socket = socket;
+		if (this.socket.readyState === 1) this.init();
+		ws.onConnect(() => this.init());
 
-			if (this.socket.connected) this.init();
-			io.onConnect(() => this.init());
+		this.socket.on("event:stations.created", res => {
+			const station = res;
+			if (this.stations.find(_station => _station._id === station._id)) {
+				this.stations.forEach(s => {
+					const _station = s;
+					if (_station._id === station._id) {
+						_station.privacy = station.privacy;
+					}
+				});
+			} else {
+				if (!station.currentSong)
+					station.currentSong = {
+						thumbnail: "/assets/notes-transparent.png"
+					};
+				if (station.currentSong && !station.currentSong.thumbnail)
+					station.currentSong.ytThumbnail = `https://img.youtube.com/vi/${station.currentSong.songId}/mqdefault.jpg`;
+				this.stations.push(station);
+			}
+		});
 
-			this.socket.on("event:stations.created", res => {
-				const station = res;
-				if (
-					this.stations.find(_station => _station._id === station._id)
-				) {
-					this.stations.forEach(s => {
-						const _station = s;
-						if (_station._id === station._id) {
-							_station.privacy = station.privacy;
-						}
-					});
-				} else {
-					if (!station.currentSong)
-						station.currentSong = {
+		this.socket.on("event:station.removed", response => {
+			const { stationId } = response;
+			const station = this.stations.find(
+				station => station._id === stationId
+			);
+			if (station) {
+				const stationIndex = this.stations.indexOf(station);
+				this.stations.splice(stationIndex, 1);
+			}
+		});
+
+		this.socket.on("event:userCount.updated", (stationId, userCount) => {
+			this.stations.forEach(s => {
+				const station = s;
+				if (station._id === stationId) {
+					station.userCount = userCount;
+				}
+			});
+		});
+
+		this.socket.on("event:station.updatePrivacy", response => {
+			const { stationId, privacy } = response;
+			this.stations.forEach(s => {
+				const station = s;
+				if (station._id === stationId) {
+					station.privacy = privacy;
+				}
+			});
+		});
+
+		this.socket.on("event:station.updateName", response => {
+			const { stationId, name } = response;
+			this.stations.forEach(s => {
+				const station = s;
+				if (station._id === stationId) {
+					station.name = name;
+				}
+			});
+		});
+
+		this.socket.on("event:station.updateDisplayName", response => {
+			const { stationId, displayName } = response;
+			this.stations.forEach(s => {
+				const station = s;
+				if (station._id === stationId) {
+					station.displayName = displayName;
+				}
+			});
+		});
+
+		this.socket.on("event:station.updateDescription", response => {
+			const { stationId, description } = response;
+			this.stations.forEach(s => {
+				const station = s;
+				if (station._id === stationId) {
+					station.description = description;
+				}
+			});
+		});
+
+		this.socket.on("event:station.updateTheme", response => {
+			const { stationId, theme } = response;
+			this.stations.forEach(s => {
+				const station = s;
+				if (station._id === stationId) {
+					station.theme = theme;
+				}
+			});
+		});
+
+		this.socket.on("event:station.nextSong", (stationId, song) => {
+			let newSong = song;
+			this.stations.forEach(s => {
+				const station = s;
+				if (station._id === stationId) {
+					if (!newSong)
+						newSong = {
 							thumbnail: "/assets/notes-transparent.png"
 						};
-					if (station.currentSong && !station.currentSong.thumbnail)
-						station.currentSong.ytThumbnail = `https://img.youtube.com/vi/${station.currentSong.songId}/mqdefault.jpg`;
-					this.stations.push(station);
+					if (newSong && !newSong.thumbnail)
+						newSong.ytThumbnail = `https://img.youtube.com/vi/${newSong.songId}/mqdefault.jpg`;
+					station.currentSong = newSong;
 				}
 			});
+		});
 
-			this.socket.on("event:station.removed", response => {
-				const { stationId } = response;
-				const station = this.stations.find(
-					station => station._id === stationId
-				);
-				if (station) {
-					const stationIndex = this.stations.indexOf(station);
-					this.stations.splice(stationIndex, 1);
+		this.socket.on("event:station.pause", response => {
+			const { stationId } = response;
+			this.stations.forEach(s => {
+				const station = s;
+				if (station._id === stationId) {
+					station.paused = true;
 				}
 			});
+		});
 
-			this.socket.on(
-				"event:userCount.updated",
-				(stationId, userCount) => {
-					this.stations.forEach(s => {
-						const station = s;
-						if (station._id === stationId) {
-							station.userCount = userCount;
-						}
-					});
+		this.socket.on("event:station.resume", response => {
+			const { stationId } = response;
+			this.stations.forEach(s => {
+				const station = s;
+				if (station._id === stationId) {
+					station.paused = false;
 				}
-			);
-
-			this.socket.on("event:station.updatePrivacy", response => {
-				const { stationId, privacy } = response;
-				this.stations.forEach(s => {
-					const station = s;
-					if (station._id === stationId) {
-						station.privacy = privacy;
-					}
-				});
 			});
+		});
 
-			this.socket.on("event:station.updateName", response => {
-				const { stationId, name } = response;
-				this.stations.forEach(s => {
-					const station = s;
-					if (station._id === stationId) {
-						station.name = name;
-					}
-				});
+		this.socket.on("event:user.favoritedStation", stationId => {
+			this.stations.forEach(s => {
+				const station = s;
+				if (station._id === stationId) {
+					station.isFavorited = true;
+				}
 			});
+		});
 
-			this.socket.on("event:station.updateDisplayName", response => {
-				const { stationId, displayName } = response;
-				this.stations.forEach(s => {
-					const station = s;
-					if (station._id === stationId) {
-						station.displayName = displayName;
-					}
-				});
-			});
-
-			this.socket.on("event:station.updateDescription", response => {
-				const { stationId, description } = response;
-				this.stations.forEach(s => {
-					const station = s;
-					if (station._id === stationId) {
-						station.description = description;
-					}
-				});
-			});
-
-			this.socket.on("event:station.updateTheme", response => {
-				const { stationId, theme } = response;
-				this.stations.forEach(s => {
-					const station = s;
-					if (station._id === stationId) {
-						station.theme = theme;
-					}
-				});
-			});
-
-			this.socket.on("event:station.nextSong", (stationId, song) => {
-				let newSong = song;
-				this.stations.forEach(s => {
-					const station = s;
-					if (station._id === stationId) {
-						if (!newSong)
-							newSong = {
-								thumbnail: "/assets/notes-transparent.png"
-							};
-						if (newSong && !newSong.thumbnail)
-							newSong.ytThumbnail = `https://img.youtube.com/vi/${newSong.songId}/mqdefault.jpg`;
-						station.currentSong = newSong;
-					}
-				});
-			});
-
-			this.socket.on("event:station.pause", response => {
-				const { stationId } = response;
-				this.stations.forEach(s => {
-					const station = s;
-					if (station._id === stationId) {
-						station.paused = true;
-					}
-				});
-			});
-
-			this.socket.on("event:station.resume", response => {
-				const { stationId } = response;
-				this.stations.forEach(s => {
-					const station = s;
-					if (station._id === stationId) {
-						station.paused = false;
-					}
-				});
-			});
-
-			this.socket.on("event:user.favoritedStation", stationId => {
-				this.stations.forEach(s => {
-					const station = s;
-					if (station._id === stationId) {
-						station.isFavorited = true;
-					}
-				});
-			});
-
-			this.socket.on("event:user.unfavoritedStation", stationId => {
-				this.stations.forEach(s => {
-					const station = s;
-					if (station._id === stationId) {
-						station.isFavorited = false;
-					}
-				});
+		this.socket.on("event:user.unfavoritedStation", stationId => {
+			this.stations.forEach(s => {
+				const station = s;
+				if (station._id === stationId) {
+					station.isFavorited = false;
+				}
 			});
 		});
 	},
 	methods: {
 		init() {
-			this.socket.emit("stations.index", data => {
+			this.socket.dispatch("stations.index", data => {
 				this.stations = [];
 
 				if (data.status === "success")
@@ -678,7 +670,7 @@ export default {
 					});
 			});
 
-			this.socket.emit("apis.joinRoom", "home", () => {});
+			this.socket.dispatch("apis.joinRoom", "home", () => {});
 		},
 		isOwner(station) {
 			return station.owner === this.userId;
@@ -687,24 +679,32 @@ export default {
 			return typeof station.currentSong.title !== "undefined";
 		},
 		favoriteStation(station) {
-			this.socket.emit("stations.favoriteStation", station._id, res => {
-				if (res.status === "success") {
-					new Toast({
-						content: "Successfully favorited station.",
-						timeout: 4000
-					});
-				} else new Toast({ content: res.message, timeout: 8000 });
-			});
+			this.socket.dispatch(
+				"stations.favoriteStation",
+				station._id,
+				res => {
+					if (res.status === "success") {
+						new Toast({
+							content: "Successfully favorited station.",
+							timeout: 4000
+						});
+					} else new Toast({ content: res.message, timeout: 8000 });
+				}
+			);
 		},
 		unfavoriteStation(station) {
-			this.socket.emit("stations.unfavoriteStation", station._id, res => {
-				if (res.status === "success") {
-					new Toast({
-						content: "Successfully unfavorited station.",
-						timeout: 4000
-					});
-				} else new Toast({ content: res.message, timeout: 8000 });
-			});
+			this.socket.dispatch(
+				"stations.unfavoriteStation",
+				station._id,
+				res => {
+					if (res.status === "success") {
+						new Toast({
+							content: "Successfully unfavorited station.",
+							timeout: 4000
+						});
+					} else new Toast({ content: res.message, timeout: 8000 });
+				}
+			);
 		},
 		...mapActions("modalVisibility", ["openModal"]),
 		...mapActions("station", ["updateIfStationIsFavorited"])

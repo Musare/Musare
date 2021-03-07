@@ -6,17 +6,17 @@ import moduleManager from "../../index";
 
 const DBModule = moduleManager.modules.db;
 const CacheModule = moduleManager.modules.cache;
-const IOModule = moduleManager.modules.io;
+const WSModule = moduleManager.modules.ws;
 const UtilsModule = moduleManager.modules.utils;
 
 CacheModule.runJob("SUB", {
 	channel: "activity.removeAllForUser",
 	cb: userId => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId }, this).then(res =>
-			res.sockets.forEach(socket => socket.emit("event:activity.removeAllForUser"))
+		WSModule.runJob("SOCKETS_FROM_USER", { userId }, this).then(sockets =>
+			sockets.forEach(socket => socket.dispatch("event:activity.removeAllForUser"))
 		);
 
-		IOModule.runJob("EMIT_TO_ROOM", {
+		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `profile-${userId}-activities`,
 			args: ["event:activity.removeAllForUser"]
 		});
@@ -26,11 +26,11 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "activity.hide",
 	cb: res => {
-		IOModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(response =>
-			response.sockets.forEach(socket => socket.emit("event:activity.hide", res.activityId))
+		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets =>
+			sockets.forEach(socket => socket.dispatch("event:activity.hide", res.activityId))
 		);
 
-		IOModule.runJob("EMIT_TO_ROOM", {
+		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `profile-${res.userId}-activities`,
 			args: ["event:activity.hide", res.activityId]
 		});
@@ -41,7 +41,7 @@ export default {
 	/**
 	 * Returns how many activities there are for a user
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} userId - the id of the user in question
 	 * @param {Function} cb - callback
 	 */

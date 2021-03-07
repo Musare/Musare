@@ -84,11 +84,10 @@
 
 <script>
 import { format } from "date-fns";
-import Vue from "vue";
+import { mapGetters } from "vuex";
 
 import MainHeader from "../components/layout/MainHeader.vue";
 import MainFooter from "../components/layout/MainFooter.vue";
-import io from "../io";
 
 export default {
 	components: { MainHeader, MainFooter },
@@ -98,28 +97,28 @@ export default {
 			noFound: false
 		};
 	},
+	computed: mapGetters({
+		socket: "websockets/getSocket"
+	}),
 	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
-			this.socket.emit("news.index", res => {
-				this.news = res.data;
-				if (this.news.length === 0) this.noFound = true;
-			});
-			this.socket.on("event:admin.news.created", news => {
-				this.news.unshift(news);
-				this.noFound = false;
-			});
-			this.socket.on("event:admin.news.updated", news => {
-				for (let n = 0; n < this.news.length; n += 1) {
-					if (this.news[n]._id === news._id) {
-						Vue.set(this.news, n, news);
-					}
+		this.socket.dispatch("news.index", res => {
+			this.news = res.data;
+			if (this.news.length === 0) this.noFound = true;
+		});
+		this.socket.on("event:admin.news.created", news => {
+			this.news.unshift(news);
+			this.noFound = false;
+		});
+		this.socket.on("event:admin.news.updated", news => {
+			for (let n = 0; n < this.news.length; n += 1) {
+				if (this.news[n]._id === news._id) {
+					this.$set(this.news, n, news);
 				}
-			});
-			this.socket.on("event:admin.news.removed", news => {
-				this.news = this.news.filter(item => item._id !== news._id);
-				if (this.news.length === 0) this.noFound = true;
-			});
+			}
+		});
+		this.socket.on("event:admin.news.removed", news => {
+			this.news = this.news.filter(item => item._id !== news._id);
+			if (this.news.length === 0) this.noFound = true;
 		});
 	},
 	methods: {

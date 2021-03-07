@@ -206,7 +206,7 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapState, mapGetters, mapActions } from "vuex";
 
 import Toast from "toasters";
 
@@ -216,8 +216,6 @@ import PlaylistItem from "../ui/PlaylistItem.vue";
 import SearchQueryItem from "../ui/SearchQueryItem.vue";
 import Modal from "../Modal.vue";
 
-import io from "../../io";
-
 export default {
 	components: { Modal, PlaylistItem, SearchQueryItem },
 	mixins: [SearchYoutube],
@@ -226,18 +224,20 @@ export default {
 			playlists: []
 		};
 	},
-	computed: mapState({
-		loggedIn: state => state.user.auth.loggedIn,
-		station: state => state.station.station,
-		privatePlaylistQueueSelected: state =>
-			state.station.privatePlaylistQueueSelected
-	}),
+	computed: {
+		...mapState({
+			loggedIn: state => state.user.auth.loggedIn,
+			station: state => state.station.station,
+			privatePlaylistQueueSelected: state =>
+				state.station.privatePlaylistQueueSelected
+		}),
+		...mapGetters({
+			socket: "websockets/getSocket"
+		})
+	},
 	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
-			this.socket.emit("playlists.indexMyPlaylists", true, res => {
-				if (res.status === "success") this.playlists = res.data;
-			});
+		this.socket.dispatch("playlists.indexMyPlaylists", true, res => {
+			if (res.status === "success") this.playlists = res.data;
 		});
 	},
 	methods: {
@@ -257,7 +257,7 @@ export default {
 		},
 		addSongToQueue(songId, index) {
 			if (this.station.type === "community") {
-				this.socket.emit(
+				this.socket.dispatch(
 					"stations.addToQueue",
 					this.station._id,
 					songId,
@@ -280,7 +280,7 @@ export default {
 					}
 				);
 			} else {
-				this.socket.emit("queueSongs.add", songId, data => {
+				this.socket.dispatch("queueSongs.add", songId, data => {
 					if (data.status !== "success")
 						new Toast({
 							content: `Error: ${data.message}`,
@@ -318,7 +318,7 @@ export default {
 				}
 			}, 750);
 
-			return this.socket.emit(
+			return this.socket.dispatch(
 				"queueSongs.addSetToQueue",
 				this.search.playlist.query,
 				this.search.playlist.isImportingOnlyMusic,

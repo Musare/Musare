@@ -1,7 +1,8 @@
 /* eslint no-param-reassign: 0 */
+/* eslint-disable import/no-cycle */
 
 import auth from "../../api/auth";
-import io from "../../io";
+import ws from "../../ws";
 import validation from "../../validation";
 
 const state = {};
@@ -116,32 +117,27 @@ const modules = {
 					if (typeof state.userIdMap[`Z${userId}`] !== "string") {
 						if (state.userIdRequested[`Z${userId}`] !== true) {
 							commit("requestingUserId", userId);
-							io.getSocket(socket => {
-								socket.emit(
-									"users.getUsernameFromId",
-									userId,
-									res => {
-										if (res.status === "success") {
-											commit("mapUserId", {
-												userId,
-												username: res.data
-											});
+							ws.socket.dispatch(
+								"users.getUsernameFromId",
+								userId,
+								res => {
+									if (res.status === "success") {
+										commit("mapUserId", {
+											userId,
+											username: res.data
+										});
 
-											state.pendingUserIdCallbacks[
-												`Z${userId}`
-											].forEach(cb => cb(res.data));
+										state.pendingUserIdCallbacks[
+											`Z${userId}`
+										].forEach(cb => cb(res.data));
 
-											commit(
-												"clearPendingCallbacks",
-												userId
-											);
+										commit("clearPendingCallbacks", userId);
 
-											return resolve(res.data);
-										}
-										return resolve();
+										return resolve(res.data);
 									}
-								);
-							});
+									return resolve();
+								}
+							);
 						} else {
 							commit("pendingUsername", {
 								userId,

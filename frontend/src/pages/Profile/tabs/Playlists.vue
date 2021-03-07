@@ -34,7 +34,10 @@
 					:name="!drag ? 'draggable-list-transition' : null"
 				>
 					<div
-						class="item item-draggable"
+						:class="{
+							item: true,
+							'item-draggable': myUserId === userId
+						}"
 						v-for="playlist in playlists"
 						:key="playlist._id"
 					>
@@ -87,9 +90,9 @@
 
 <script>
 import draggable from "vuedraggable";
-import { mapActions, mapState } from "vuex";
+import { mapActions, mapState, mapGetters } from "vuex";
 
-import io from "../../../io";
+import ws from "../../../ws";
 
 import SortablePlaylists from "../../../mixins/SortablePlaylists.vue";
 import PlaylistItem from "../../../components/ui/PlaylistItem.vue";
@@ -123,7 +126,10 @@ export default {
 			set(playlists) {
 				this.$store.commit("user/playlists/setPlaylists", playlists);
 			}
-		}
+		},
+		...mapGetters({
+			socket: "websockets/getSocket"
+		})
 	},
 	mounted() {
 		if (
@@ -132,86 +138,84 @@ export default {
 		)
 			this.tab = this.$route.query.tab;
 
-		io.getSocket(socket => {
-			this.socket = socket;
-
-			if (this.myUserId !== this.userId) {
-				this.socket.emit(
+		if (this.myUserId !== this.userId) {
+			ws.onConnect(() =>
+				this.socket.dispatch(
 					"apis.joinRoom",
 					`profile-${this.userId}-playlists`,
 					() => {}
-				);
-			}
-
-			this.socket.emit("playlists.indexForUser", this.userId, res => {
-				if (res.status === "success") this.setPlaylists(res.data);
-				this.orderOfPlaylists = this.calculatePlaylistOrder(); // order in regards to the database
-			});
-
-			this.socket.on("event:playlist.create", playlist => {
-				this.playlists.push(playlist);
-			});
-
-			this.socket.on("event:playlist.delete", playlistId => {
-				this.playlists.forEach((playlist, index) => {
-					if (playlist._id === playlistId) {
-						this.playlists.splice(index, 1);
-					}
-				});
-			});
-
-			this.socket.on("event:playlist.addSong", data => {
-				this.playlists.forEach((playlist, index) => {
-					if (playlist._id === data.playlistId) {
-						this.playlists[index].songs.push(data.song);
-					}
-				});
-			});
-
-			this.socket.on("event:playlist.removeSong", data => {
-				this.playlists.forEach((playlist, index) => {
-					if (playlist._id === data.playlistId) {
-						this.playlists[index].songs.forEach((song, index2) => {
-							if (song.songId === data.songId) {
-								this.playlists[index].songs.splice(index2, 1);
-							}
-						});
-					}
-				});
-			});
-
-			this.socket.on("event:playlist.updateDisplayName", data => {
-				this.playlists.forEach((playlist, index) => {
-					if (playlist._id === data.playlistId) {
-						this.playlists[index].displayName = data.displayName;
-					}
-				});
-			});
-
-			this.socket.on("event:playlist.updatePrivacy", data => {
-				this.playlists.forEach((playlist, index) => {
-					if (playlist._id === data.playlist._id) {
-						this.playlists[index].privacy = data.playlist.privacy;
-					}
-				});
-			});
-
-			this.socket.on(
-				"event:user.orderOfPlaylists.changed",
-				orderOfPlaylists => {
-					const sortedPlaylists = [];
-
-					this.playlists.forEach(playlist => {
-						sortedPlaylists[
-							orderOfPlaylists.indexOf(playlist._id)
-						] = playlist;
-					});
-
-					this.playlists = sortedPlaylists;
-					this.orderOfPlaylists = this.calculatePlaylistOrder();
-				}
+				)
 			);
+		}
+
+		this.socket.dispatch("playlists.indexForUser", this.userId, res => {
+			if (res.status === "success") this.setPlaylists(res.data);
+			this.orderOfPlaylists = this.calculatePlaylistOrder(); // order in regards to the database
 		});
+
+		this.socket.on("event:playlist.create", playlist => {
+			this.playlists.push(playlist);
+		});
+
+		this.socket.on("event:playlist.delete", playlistId => {
+			this.playlists.forEach((playlist, index) => {
+				if (playlist._id === playlistId) {
+					this.playlists.splice(index, 1);
+				}
+			});
+		});
+
+		this.socket.on("event:playlist.addSong", data => {
+			this.playlists.forEach((playlist, index) => {
+				if (playlist._id === data.playlistId) {
+					this.playlists[index].songs.push(data.song);
+				}
+			});
+		});
+
+		this.socket.on("event:playlist.removeSong", data => {
+			this.playlists.forEach((playlist, index) => {
+				if (playlist._id === data.playlistId) {
+					this.playlists[index].songs.forEach((song, index2) => {
+						if (song.songId === data.songId) {
+							this.playlists[index].songs.splice(index2, 1);
+						}
+					});
+				}
+			});
+		});
+
+		this.socket.on("event:playlist.updateDisplayName", data => {
+			this.playlists.forEach((playlist, index) => {
+				if (playlist._id === data.playlistId) {
+					this.playlists[index].displayName = data.displayName;
+				}
+			});
+		});
+
+		this.socket.on("event:playlist.updatePrivacy", data => {
+			this.playlists.forEach((playlist, index) => {
+				if (playlist._id === data.playlist._id) {
+					this.playlists[index].privacy = data.playlist.privacy;
+				}
+			});
+		});
+
+		this.socket.on(
+			"event:user.orderOfPlaylists.changed",
+			orderOfPlaylists => {
+				const sortedPlaylists = [];
+
+				this.playlists.forEach(playlist => {
+					sortedPlaylists[
+						orderOfPlaylists.indexOf(playlist._id)
+					] = playlist;
+				});
+
+				this.playlists = sortedPlaylists;
+				this.orderOfPlaylists = this.calculatePlaylistOrder();
+			}
+		);
 	},
 	methods: {
 		showPlaylist(playlistId) {

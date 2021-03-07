@@ -67,11 +67,11 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapState, mapActions, mapGetters } from "vuex";
 import { formatDistance } from "date-fns";
 
 import Toast from "toasters";
-import io from "../../../io";
+import ws from "../../../ws";
 
 import ViewReport from "../../../components/modals/ViewReport.vue";
 import UserIdToUsername from "../../../components/common/UserIdToUsername.vue";
@@ -87,47 +87,48 @@ export default {
 	computed: {
 		...mapState("modalVisibility", {
 			modals: state => state.modals.admin
+		}),
+		...mapGetters({
+			socket: "websockets/getSocket"
 		})
 	},
 	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
-			if (this.socket.connected) this.init();
+		if (this.socket.readyState === 1) this.init();
+		ws.onConnect(() => this.init());
 
-			this.socket.emit("reports.index", res => {
-				this.reports = res.data;
-			});
+		this.socket.dispatch("reports.index", res => {
+			this.reports = res.data;
+		});
 
-			this.socket.on("event:admin.report.resolved", reportId => {
-				this.reports = this.reports.filter(report => {
-					return report._id !== reportId;
-				});
-			});
-
-			this.socket.on("event:admin.report.created", report => {
-				this.reports.push(report);
-			});
-
-			io.onConnect(() => {
-				this.init();
+		this.socket.on("event:admin.report.resolved", reportId => {
+			this.reports = this.reports.filter(report => {
+				return report._id !== reportId;
 			});
 		});
 
+		this.socket.on("event:admin.report.created", report =>
+			this.reports.push(report)
+		);
+
 		if (this.$route.query.id) {
-			this.socket.emit("reports.findOne", this.$route.query.id, res => {
-				if (res.status === "success") this.view(res.data);
-				else
-					new Toast({
-						content: "Report with that ID not found",
-						timeout: 3000
-					});
-			});
+			this.socket.dispatch(
+				"reports.findOne",
+				this.$route.query.id,
+				res => {
+					if (res.status === "success") this.view(res.data);
+					else
+						new Toast({
+							content: "Report with that ID not found",
+							timeout: 3000
+						});
+				}
+			);
 		}
 	},
 	methods: {
 		formatDistance,
 		init() {
-			this.socket.emit("apis.joinAdminRoom", "reports", () => {});
+			this.socket.dispatch("apis.joinAdminRoom", "reports", () => {});
 		},
 		view(report) {
 			// this.viewReport(report);

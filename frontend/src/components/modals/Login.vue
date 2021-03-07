@@ -62,7 +62,7 @@
 				>
 				<a
 					class="button is-github"
-					:href="serverDomain + '/auth/github/authorize'"
+					:href="apiDomain + '/auth/github/authorize'"
 					@click="githubRedirect()"
 				>
 					<div class="icon">
@@ -88,11 +88,11 @@ export default {
 		return {
 			email: "",
 			password: "",
-			serverDomain: ""
+			apiDomain: ""
 		};
 	},
 	async mounted() {
-		this.serverDomain = await lofig.get("serverDomain");
+		this.apiDomain = await lofig.get("apiDomain");
 	},
 	methods: {
 		submitModal() {

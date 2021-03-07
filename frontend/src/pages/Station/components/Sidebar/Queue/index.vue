@@ -118,7 +118,7 @@ export default {
 			return this.loggedIn && this.userRole === "admin";
 		},
 		removeFromQueue(songId) {
-			window.socket.emit(
+			window.socket.dispatch(
 				"stations.removeFromQueue",
 				this.station._id,
 				songId,

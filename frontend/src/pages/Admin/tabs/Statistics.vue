@@ -102,10 +102,11 @@
 </template>
 
 <script>
+import { mapGetters } from "vuex";
 import { Line } from "chart.js";
 import "chartjs-adapter-date-fns";
 
-import io from "../../../io";
+import ws from "../../../ws";
 
 export default {
 	components: {},
@@ -143,6 +144,9 @@ export default {
 			}
 		};
 	},
+	computed: mapGetters({
+		socket: "websockets/getSocket"
+	}),
 	mounted() {
 		const minuteCtx = document.getElementById("minuteChart");
 		const hourCtx = document.getElementById("hourChart");
@@ -263,15 +267,12 @@ export default {
 			}
 		});
 
-		io.getSocket(socket => {
-			this.socket = socket;
-			if (this.socket.connected) this.init();
-			io.onConnect(() => this.init());
-		});
+		if (this.socket.readyState === 1) this.init();
+		ws.onConnect(() => this.init());
 	},
 	methods: {
 		init() {
-			this.socket.emit("apis.joinAdminRoom", "statistics", () => {});
+			this.socket.dispatch("apis.joinAdminRoom", "statistics", () => {});
 			this.socket.on(
 				"event:admin.statistics.success.units.minute",
 				units => {

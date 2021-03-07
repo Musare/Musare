@@ -200,7 +200,7 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapState, mapActions, mapGetters } from "vuex";
 
 import Toast from "toasters";
 
@@ -211,7 +211,7 @@ import FloatingBox from "../../../components/ui/FloatingBox.vue";
 
 import ScrollAndFetchHandler from "../../../mixins/ScrollAndFetchHandler.vue";
 
-import io from "../../../io";
+import ws from "../../../ws";
 
 export default {
 	components: { EditSong, UserIdToUsername, FloatingBox },
@@ -298,6 +298,9 @@ export default {
 		}),
 		...mapState("admin/songs", {
 			songs: state => state.songs
+		}),
+		...mapGetters({
+			socket: "websockets/getSocket"
 		})
 	},
 	watch: {
@@ -307,29 +310,21 @@ export default {
 		}
 	},
 	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
+		this.socket.on("event:admin.song.added", song => this.addSong(song));
 
-			this.socket.on("event:admin.song.added", song => {
-				this.addSong(song);
-			});
+		this.socket.on("event:admin.song.removed", songId =>
+			this.removeSong(songId)
+		);
 
-			this.socket.on("event:admin.song.removed", songId => {
-				this.removeSong(songId);
-			});
+		this.socket.on("event:admin.song.updated", updatedSong =>
+			this.updateSong(updatedSong)
+		);
 
-			this.socket.on("event:admin.song.updated", updatedSong => {
-				this.updateSong(updatedSong);
-			});
-
-			if (this.socket.connected) this.init();
-			io.onConnect(() => {
-				this.init();
-			});
-		});
+		if (this.socket.readyState === 1) this.init();
+		ws.onConnect(() => this.init());
 
 		if (this.$route.query.songId) {
-			this.socket.emit(
+			this.socket.dispatch(
 				"songs.getSongFromMusareId",
 				this.$route.query.songId,
 				res => {
@@ -356,7 +351,7 @@ export default {
 				"Are you sure you want to delete this song?"
 			);
 			if (dialogResult !== true) return;
-			this.socket.emit("songs.remove", id, res => {
+			this.socket.dispatch("songs.remove", id, res => {
 				if (res.status === "success")
 					new Toast({ content: res.message, timeout: 4000 });
 				else new Toast({ content: res.message, timeout: 8000 });
@@ -367,7 +362,7 @@ export default {
 			if (this.position >= this.maxPosition) return;
 			this.isGettingSet = true;
 
-			this.socket.emit("songs.getSet", this.position, data => {
+			this.socket.dispatch("songs.getSet", this.position, data => {
 				data.forEach(song => {
 					this.addSong(song);
 				});
@@ -404,13 +399,13 @@ export default {
 			if (this.songs.length > 0)
 				this.position = Math.ceil(this.songs.length / 15) + 1;
 
-			this.socket.emit("songs.length", length => {
+			this.socket.dispatch("songs.length", length => {
 				this.maxPosition = Math.ceil(length / 15) + 1;
 
 				this.getSet();
 			});
 
-			this.socket.emit("apis.joinAdminRoom", "songs", () => {});
+			this.socket.dispatch("apis.joinAdminRoom", "songs", () => {});
 		},
 		...mapActions("admin/songs", [
 			// "stopVideo",

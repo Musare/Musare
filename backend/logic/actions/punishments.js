@@ -6,19 +6,19 @@ import moduleManager from "../../index";
 
 const DBModule = moduleManager.modules.db;
 const UtilsModule = moduleManager.modules.utils;
-const IOModule = moduleManager.modules.io;
+const WSModule = moduleManager.modules.ws;
 const CacheModule = moduleManager.modules.cache;
 const PunishmentsModule = moduleManager.modules.punishments;
 
 CacheModule.runJob("SUB", {
 	channel: "ip.ban",
 	cb: data => {
-		IOModule.runJob("EMIT_TO_ROOM", {
+		WSModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.punishments",
 			args: ["event:admin.punishment.added", data.punishment]
 		});
 
-		IOModule.runJob("SOCKETS_FROM_IP", { ip: data.ip }, this).then(sockets => {
+		WSModule.runJob("SOCKETS_FROM_IP", { ip: data.ip }, this).then(sockets => {
 			sockets.forEach(socket => {
 				socket.disconnect(true);
 			});
@@ -30,7 +30,7 @@ export default {
 	/**
 	 * Gets all punishments
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Function} cb - gets called with the result
 	 */
 	index: isAdminRequired(async function index(session, cb) {
@@ -62,7 +62,7 @@ export default {
 	/**
 	 * Gets a punishment by id
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} punishmentId - the punishment id
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -99,7 +99,7 @@ export default {
 	/**
 	 * Bans an IP address
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} value - the ip address that is going to be banned
 	 * @param {string} reason - the reason for the ban
 	 * @param {string} expiresAt - the time the ban expires

@@ -495,7 +495,7 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapState, mapActions, mapGetters } from "vuex";
 import Toast from "toasters";
 import { ContentLoader } from "vue-content-loader";
 
@@ -507,7 +507,7 @@ import Z404 from "../404.vue";
 import FloatingBox from "../../components/ui/FloatingBox.vue";
 import AddToPlaylistDropdown from "../../components/ui/AddToPlaylistDropdown.vue";
 
-import io from "../../io";
+import ws from "../../ws";
 import keyboardShortcuts from "../../keyboardShortcuts";
 import utils from "../../../js/utils";
 
@@ -582,6 +582,9 @@ export default {
 			role: state => state.user.auth.role,
 			nightmode: state => state.user.preferences.nightmode,
 			autoSkipDisliked: state => state.user.preferences.autoSkipDisliked
+		}),
+		...mapGetters({
+			socket: "websockets/getSocket"
 		})
 	},
 	mounted() {
@@ -595,260 +598,263 @@ export default {
 
 		window.stationInterval = 0;
 
-		io.getSocket(socket => {
-			this.socket = socket;
+		if (this.socket.readyState === 1) this.join();
+		ws.onConnect(() => this.join());
 
-			if (this.socket.connected) this.join();
-			io.onConnect(this.join);
-
-			this.socket.emit(
-				"stations.existsByName",
-				this.stationIdentifier,
-				res => {
-					if (res.status === "failure" || !res.exists) {
-						// station identifier may be using stationid instead
-						this.socket.emit(
-							"stations.existsById",
-							this.stationIdentifier,
-							res => {
-								if (res.status === "failure" || !res.exists) {
-									this.loading = false;
-									this.exists = false;
-								}
-							}
-						);
-					}
-				}
-			);
-
-			this.socket.on("event:songs.next", data => {
-				const previousSong = this.currentSong.songId
-					? this.currentSong
-					: null;
-
-				this.updatePreviousSong(previousSong);
-
-				const { currentSong } = data;
-
-				if (currentSong && !currentSong.thumbnail)
-					currentSong.ytThumbnail = `https://img.youtube.com/vi/${currentSong.songId}/mqdefault.jpg`;
-
-				this.updateCurrentSong(currentSong || {});
-
-				this.startedAt = data.startedAt;
-				this.updateStationPaused(data.paused);
-				this.timePaused = data.timePaused;
-
-				if (currentSong) {
-					this.updateNoSong(false);
-
-					if (this.currentSong.artists)
-						this.currentSong.artists = this.currentSong.artists.join(
-							", "
-						);
-
-					if (!this.playerReady) this.youtubeReady();
-					else this.playVideo();
-
-					this.socket.emit(
-						"songs.getOwnSongRatings",
-						data.currentSong.songId,
-						song => {
-							if (this.currentSong.songId === song.songId) {
-								this.liked = song.liked;
-								this.disliked = song.disliked;
-
-								if (
-									this.autoSkipDisliked &&
-									song.disliked === true
-								) {
-									this.voteSkipStation();
-									new Toast({
-										content:
-											"Automatically voted to skip disliked song.",
-										timeout: 4000
-									});
-								}
-							}
-						}
-					);
-				} else {
-					if (this.playerReady) this.player.pauseVideo();
-					this.updateNoSong(true);
-				}
-
-				let isInQueue = false;
-
-				this.songsList.forEach(queueSong => {
-					if (queueSong.requestedBy === this.userId) isInQueue = true;
-				});
-
-				if (
-					!isInQueue &&
-					this.privatePlaylistQueueSelected &&
-					(this.automaticallyRequestedSongId !==
-						this.currentSong.songId ||
-						!this.currentSong.songId)
-				) {
-					this.addFirstPrivatePlaylistSongToQueue();
-				}
-
-				if (this.station.type === "official") {
-					this.socket.emit(
-						"stations.getQueue",
-						this.station._id,
+		this.socket.dispatch(
+			"stations.existsByName",
+			this.stationIdentifier,
+			res => {
+				if (res.status === "failure" || !res.exists) {
+					// station identifier may be using stationid instead
+					this.socket.dispatch(
+						"stations.existsById",
+						this.stationIdentifier,
 						res => {
-							if (res.status === "success") {
-								this.updateSongsList(res.queue);
+							if (res.status === "failure" || !res.exists) {
+								this.loading = false;
+								this.exists = false;
 							}
 						}
 					);
 				}
-			});
+			}
+		);
 
-			this.socket.on("event:stations.pause", data => {
-				this.pausedAt = data.pausedAt;
-				this.updateStationPaused(true);
-				this.pauseLocalPlayer();
-			});
+		this.socket.on("event:songs.next", data => {
+			const previousSong = this.currentSong.songId
+				? this.currentSong
+				: null;
 
-			this.socket.on("event:stations.resume", data => {
-				this.timePaused = data.timePaused;
-				this.updateStationPaused(false);
-				if (!this.localPaused) this.resumeLocalPlayer();
-			});
+			this.updatePreviousSong(previousSong);
 
-			this.socket.on("event:stations.remove", () => {
-				window.location.href = "/";
-				return true;
-			});
+			const { currentSong } = data;
 
-			this.socket.on("event:song.like", data => {
-				if (!this.noSong) {
-					if (data.songId === this.currentSong.songId) {
-						this.currentSong.dislikes = data.dislikes;
-						this.currentSong.likes = data.likes;
+			if (currentSong && !currentSong.thumbnail)
+				currentSong.ytThumbnail = `https://img.youtube.com/vi/${currentSong.songId}/mqdefault.jpg`;
+
+			this.updateCurrentSong(currentSong || {});
+
+			this.startedAt = data.startedAt;
+			this.updateStationPaused(data.paused);
+			this.timePaused = data.timePaused;
+
+			if (currentSong) {
+				this.updateNoSong(false);
+
+				if (this.currentSong.artists)
+					this.currentSong.artists = this.currentSong.artists.join(
+						", "
+					);
+
+				if (!this.playerReady) this.youtubeReady();
+				else this.playVideo();
+
+				this.socket.dispatch(
+					"songs.getOwnSongRatings",
+					data.currentSong.songId,
+					song => {
+						if (this.currentSong.songId === song.songId) {
+							this.liked = song.liked;
+							this.disliked = song.disliked;
+
+							if (
+								this.autoSkipDisliked &&
+								song.disliked === true
+							) {
+								this.voteSkipStation();
+								new Toast({
+									content:
+										"Automatically voted to skip disliked song.",
+									timeout: 4000
+								});
+							}
+						}
 					}
-				}
-			});
-
-			this.socket.on("event:song.dislike", data => {
-				if (!this.noSong) {
-					if (data.songId === this.currentSong.songId) {
-						this.currentSong.dislikes = data.dislikes;
-						this.currentSong.likes = data.likes;
-					}
-				}
-			});
-
-			this.socket.on("event:song.unlike", data => {
-				if (!this.noSong) {
-					if (data.songId === this.currentSong.songId) {
-						this.currentSong.dislikes = data.dislikes;
-						this.currentSong.likes = data.likes;
-					}
-				}
-			});
-
-			this.socket.on("event:song.undislike", data => {
-				if (!this.noSong) {
-					if (data.songId === this.currentSong.songId) {
-						this.currentSong.dislikes = data.dislikes;
-						this.currentSong.likes = data.likes;
-					}
-				}
-			});
-
-			this.socket.on("event:song.newRatings", data => {
-				if (!this.noSong) {
-					if (data.songId === this.currentSong.songId) {
-						this.liked = data.liked;
-						this.disliked = data.disliked;
-					}
-				}
-			});
-
-			this.socket.on("event:queue.update", queue => {
-				if (this.station.type === "community")
-					this.updateSongsList(queue);
-			});
-
-			this.socket.on("event:song.voteSkipSong", () => {
-				if (this.currentSong) this.currentSong.skipVotes += 1;
-			});
-
-			this.socket.on("event:privatePlaylist.selected", playlistId => {
-				if (this.station.type === "community") {
-					this.station.privatePlaylist = playlistId;
-				}
-			});
-
-			this.socket.on("event:privatePlaylist.deselected", () => {
-				if (this.station.type === "community") {
-					this.station.privatePlaylist = null;
-				}
-			});
-
-			this.socket.on("event:partyMode.updated", partyMode => {
-				if (this.station.type === "community") {
-					this.station.partyMode = partyMode;
-				}
-			});
-
-			this.socket.on("event:station.themeUpdated", theme => {
-				this.station.theme = theme;
-			});
-
-			this.socket.on("event:station.updateName", res => {
-				this.station.name = res.name;
-				// eslint-disable-next-line no-restricted-globals
-				history.pushState(
-					{},
-					null,
-					`${res.name}?${Object.keys(this.$route.query)
-						.map(key => {
-							return `${encodeURIComponent(
-								key
-							)}=${encodeURIComponent(this.$route.query[key])}`;
-						})
-						.join("&")}`
 				);
+			} else {
+				if (this.playerReady) this.player.pauseVideo();
+				this.updateNoSong(true);
+			}
+
+			let isInQueue = false;
+
+			this.songsList.forEach(queueSong => {
+				if (queueSong.requestedBy === this.userId) isInQueue = true;
 			});
 
-			this.socket.on("event:station.updateDisplayName", res => {
-				this.station.displayName = res.displayName;
-			});
+			if (
+				!isInQueue &&
+				this.privatePlaylistQueueSelected &&
+				(this.automaticallyRequestedSongId !==
+					this.currentSong.songId ||
+					!this.currentSong.songId)
+			) {
+				this.addFirstPrivatePlaylistSongToQueue();
+			}
 
-			this.socket.on("event:station.updateDescription", res => {
-				this.station.description = res.description;
-			});
+			if (this.station.type === "official") {
+				this.socket.dispatch(
+					"stations.getQueue",
+					this.station._id,
+					res => {
+						if (res.status === "success") {
+							this.updateSongsList(res.queue);
+						}
+					}
+				);
+			}
 
-			this.socket.on("event:newOfficialPlaylist", playlist => {
-				if (this.station.type === "official")
-					this.updateSongsList(playlist);
-			});
+			if (
+				!isInQueue &&
+				this.privatePlaylistQueueSelected &&
+				(this.automaticallyRequestedSongId !==
+					this.currentSong.songId ||
+					!this.currentSong.songId)
+			) {
+				this.addFirstPrivatePlaylistSongToQueue();
+			}
+		});
 
-			this.socket.on("event:users.updated", users =>
-				this.updateUsers(users)
+		this.socket.on("event:stations.pause", data => {
+			this.pausedAt = data.pausedAt;
+			this.updateStationPaused(true);
+			this.pauseLocalPlayer();
+		});
+
+		this.socket.on("event:stations.resume", data => {
+			this.timePaused = data.timePaused;
+			this.updateStationPaused(false);
+			if (!this.localPaused) this.resumeLocalPlayer();
+		});
+
+		this.socket.on("event:stations.remove", () => {
+			window.location.href = "/";
+			return true;
+		});
+
+		this.socket.on("event:song.like", data => {
+			if (!this.noSong) {
+				if (data.songId === this.currentSong.songId) {
+					this.currentSong.dislikes = data.dislikes;
+					this.currentSong.likes = data.likes;
+				}
+			}
+		});
+
+		this.socket.on("event:song.dislike", data => {
+			if (!this.noSong) {
+				if (data.songId === this.currentSong.songId) {
+					this.currentSong.dislikes = data.dislikes;
+					this.currentSong.likes = data.likes;
+				}
+			}
+		});
+
+		this.socket.on("event:song.unlike", data => {
+			if (!this.noSong) {
+				if (data.songId === this.currentSong.songId) {
+					this.currentSong.dislikes = data.dislikes;
+					this.currentSong.likes = data.likes;
+				}
+			}
+		});
+
+		this.socket.on("event:song.undislike", data => {
+			if (!this.noSong) {
+				if (data.songId === this.currentSong.songId) {
+					this.currentSong.dislikes = data.dislikes;
+					this.currentSong.likes = data.likes;
+				}
+			}
+		});
+
+		this.socket.on("event:song.newRatings", data => {
+			if (!this.noSong) {
+				if (data.songId === this.currentSong.songId) {
+					this.liked = data.liked;
+					this.disliked = data.disliked;
+				}
+			}
+		});
+
+		this.socket.on("event:queue.update", queue => {
+			if (this.station.type === "community") this.updateSongsList(queue);
+		});
+
+		this.socket.on("event:song.voteSkipSong", () => {
+			if (this.currentSong) this.currentSong.skipVotes += 1;
+		});
+
+		this.socket.on("event:privatePlaylist.selected", playlistId => {
+			if (this.station.type === "community") {
+				this.station.privatePlaylist = playlistId;
+			}
+		});
+
+		this.socket.on("event:privatePlaylist.deselected", () => {
+			if (this.station.type === "community") {
+				this.station.privatePlaylist = null;
+			}
+		});
+
+		this.socket.on("event:partyMode.updated", partyMode => {
+			if (this.station.type === "community") {
+				this.station.partyMode = partyMode;
+			}
+		});
+
+		this.socket.on("event:station.themeUpdated", theme => {
+			this.station.theme = theme;
+		});
+
+		this.socket.on("event:station.updateName", res => {
+			this.station.name = res.name;
+			// eslint-disable-next-line no-restricted-globals
+			history.pushState(
+				{},
+				null,
+				`${res.name}?${Object.keys(this.$route.query)
+					.map(key => {
+						return `${encodeURIComponent(key)}=${encodeURIComponent(
+							this.$route.query[key]
+						)}`;
+					})
+					.join("&")}`
 			);
+		});
 
-			this.socket.on("event:userCount.updated", userCount =>
-				this.updateUserCount(userCount)
-			);
+		this.socket.on("event:station.updateDisplayName", res => {
+			this.station.displayName = res.displayName;
+		});
 
-			this.socket.on("event:queueLockToggled", locked => {
-				this.station.locked = locked;
-			});
+		this.socket.on("event:station.updateDescription", res => {
+			this.station.description = res.description;
+		});
 
-			this.socket.on("event:user.favoritedStation", stationId => {
-				if (stationId === this.station._id)
-					this.updateIfStationIsFavorited({ isFavorited: true });
-			});
+		this.socket.on("event:newOfficialPlaylist", playlist => {
+			if (this.station.type === "official")
+				this.updateSongsList(playlist);
+		});
 
-			this.socket.on("event:user.unfavoritedStation", stationId => {
-				if (stationId === this.station._id)
-					this.updateIfStationIsFavorited({ isFavorited: false });
-			});
+		this.socket.on("event:users.updated", users => this.updateUsers(users));
+
+		this.socket.on("event:userCount.updated", userCount =>
+			this.updateUserCount(userCount)
+		);
+
+		this.socket.on("event:queueLockToggled", locked => {
+			this.station.locked = locked;
+		});
+
+		this.socket.on("event:user.favoritedStation", stationId => {
+			if (stationId === this.station._id)
+				this.updateIfStationIsFavorited({ isFavorited: true });
+		});
+
+		this.socket.on("event:user.unfavoritedStation", stationId => {
+			if (stationId === this.station._id)
+				this.updateIfStationIsFavorited({ isFavorited: false });
 		});
 
 		if (JSON.parse(localStorage.getItem("muted"))) {
@@ -894,7 +900,7 @@ export default {
 			return this.isOwnerOnly() || this.isAdminOnly();
 		},
 		removeFromQueue(songId) {
-			window.socket.emit(
+			window.socket.dispatch(
 				"stations.removeFromQueue",
 				this.station._id,
 				songId,
@@ -1188,14 +1194,18 @@ export default {
 				this.timeElapsed = utils.formatTime(duration);
 		},
 		toggleLock() {
-			window.socket.emit("stations.toggleLock", this.station._id, res => {
-				if (res.status === "success") {
-					new Toast({
-						content: "Successfully toggled the queue lock.",
-						timeout: 4000
-					});
-				} else new Toast({ content: res.message, timeout: 8000 });
-			});
+			window.socket.dispatch(
+				"stations.toggleLock",
+				this.station._id,
+				res => {
+					if (res.status === "success") {
+						new Toast({
+							content: "Successfully toggled the queue lock.",
+							timeout: 4000
+						});
+					} else new Toast({ content: res.message, timeout: 8000 });
+				}
+			);
 		},
 		changeVolume() {
 			const volume = this.volumeSliderValue;
@@ -1235,36 +1245,45 @@ export default {
 			}
 		},
 		skipStation() {
-			this.socket.emit("stations.forceSkip", this.station._id, data => {
-				if (data.status !== "success")
-					new Toast({
-						content: `Error: ${data.message}`,
-						timeout: 8000
-					});
-				else
-					new Toast({
-						content:
-							"Successfully skipped the station's current song.",
-						timeout: 4000
-					});
-			});
+			this.socket.dispatch(
+				"stations.forceSkip",
+				this.station._id,
+				data => {
+					if (data.status !== "success")
+						new Toast({
+							content: `Error: ${data.message}`,
+							timeout: 8000
+						});
+					else
+						new Toast({
+							content:
+								"Successfully skipped the station's current song.",
+							timeout: 4000
+						});
+				}
+			);
 		},
 		voteSkipStation() {
-			this.socket.emit("stations.voteSkip", this.station._id, data => {
-				if (data.status !== "success")
-					new Toast({
-						content: `Error: ${data.message}`,
-						timeout: 8000
-					});
-				else
-					new Toast({
-						content: "Successfully voted to skip the current song.",
-						timeout: 4000
-					});
-			});
+			this.socket.dispatch(
+				"stations.voteSkip",
+				this.station._id,
+				data => {
+					if (data.status !== "success")
+						new Toast({
+							content: `Error: ${data.message}`,
+							timeout: 8000
+						});
+					else
+						new Toast({
+							content:
+								"Successfully voted to skip the current song.",
+							timeout: 4000
+						});
+				}
+			);
 		},
 		resumeStation() {
-			this.socket.emit("stations.resume", this.station._id, data => {
+			this.socket.dispatch("stations.resume", this.station._id, data => {
 				if (data.status !== "success")
 					new Toast({
 						content: `Error: ${data.message}`,
@@ -1278,7 +1297,7 @@ export default {
 			});
 		},
 		pauseStation() {
-			this.socket.emit("stations.pause", this.station._id, data => {
+			this.socket.dispatch("stations.pause", this.station._id, data => {
 				if (data.status !== "success")
 					new Toast({
 						content: `Error: ${data.message}`,
@@ -1321,7 +1340,7 @@ export default {
 		},
 		toggleLike() {
 			if (this.liked)
-				this.socket.emit(
+				this.socket.dispatch(
 					"songs.unlike",
 					this.currentSong.songId,
 					data => {
@@ -1333,7 +1352,7 @@ export default {
 					}
 				);
 			else
-				this.socket.emit(
+				this.socket.dispatch(
 					"songs.like",
 					this.currentSong.songId,
 					data => {
@@ -1347,7 +1366,7 @@ export default {
 		},
 		toggleDislike() {
 			if (this.disliked)
-				return this.socket.emit(
+				return this.socket.dispatch(
 					"songs.undislike",
 					this.currentSong.songId,
 					data => {
@@ -1359,7 +1378,7 @@ export default {
 					}
 				);
 
-			return this.socket.emit(
+			return this.socket.dispatch(
 				"songs.dislike",
 				this.currentSong.songId,
 				data => {
@@ -1381,7 +1400,7 @@ export default {
 					if (queueSong.requestedBy === this.userId) isInQueue = true;
 				});
 				if (!isInQueue && this.privatePlaylistQueueSelected) {
-					this.socket.emit(
+					this.socket.dispatch(
 						"playlists.getFirstSong",
 						this.privatePlaylistQueueSelected,
 						data => {
@@ -1390,13 +1409,13 @@ export default {
 									if (data.song.duration < 15 * 60) {
 										this.automaticallyRequestedSongId =
 											data.song.songId;
-										this.socket.emit(
+										this.socket.dispatch(
 											"stations.addToQueue",
 											this.station._id,
 											data.song.songId,
 											data2 => {
 												if (data2.status === "success")
-													this.socket.emit(
+													this.socket.dispatch(
 														"playlists.moveSongToBottom",
 														this
 															.privatePlaylistQueueSelected,
@@ -1410,7 +1429,7 @@ export default {
 											timeout: 3000
 										});
 
-										this.socket.emit(
+										this.socket.dispatch(
 											"playlists.moveSongToBottom",
 											this.privatePlaylistQueueSelected,
 											data.song.songId,
@@ -1442,234 +1461,257 @@ export default {
 			this.$refs.playerDebugBox.resetBox();
 		},
 		join() {
-			this.socket.emit("stations.join", this.stationIdentifier, res => {
-				if (res.status === "success") {
-					setTimeout(() => {
-						this.loading = false;
-					}, 1000); // prevents popping in of youtube embed etc.
+			this.socket.dispatch(
+				"stations.join",
+				this.stationIdentifier,
+				res => {
+					if (res.status === "success") {
+						setTimeout(() => {
+							this.loading = false;
+						}, 1000); // prevents popping in of youtube embed etc.
 
-					const {
-						_id,
-						displayName,
-						name,
-						description,
-						privacy,
-						locked,
-						partyMode,
-						owner,
-						privatePlaylist,
-						type,
-						genres,
-						blacklistedGenres,
-						isFavorited,
-						theme
-					} = res.data;
+						const {
+							_id,
+							displayName,
+							name,
+							description,
+							privacy,
+							locked,
+							partyMode,
+							owner,
+							privatePlaylist,
+							type,
+							genres,
+							blacklistedGenres,
+							isFavorited,
+							theme
+						} = res.data;
 
-					// change url to use station name instead of station id
-					if (name !== this.stationIdentifier) {
-						// eslint-disable-next-line no-restricted-globals
-						history.pushState({}, null, name);
-					}
+						// change url to use station name instead of station id
+						if (name !== this.stationIdentifier) {
+							// eslint-disable-next-line no-restricted-globals
+							history.pushState({}, null, name);
+						}
 
-					this.joinStation({
-						_id,
-						name,
-						displayName,
-						description,
-						privacy,
-						locked,
-						partyMode,
-						owner,
-						privatePlaylist,
-						type,
-						genres,
-						blacklistedGenres,
-						isFavorited,
-						theme
-					});
-
-					const currentSong = res.data.currentSong
-						? res.data.currentSong
-						: {};
-
-					if (currentSong.artists)
-						currentSong.artists = currentSong.artists.join(", ");
-
-					if (currentSong && !currentSong.thumbnail)
-						currentSong.ytThumbnail = `https://img.youtube.com/vi/${currentSong.songId}/mqdefault.jpg`;
-
-					this.updateCurrentSong(currentSong);
-
-					this.startedAt = res.data.startedAt;
-					this.updateStationPaused(res.data.paused);
-					this.timePaused = res.data.timePaused;
-					this.updateUserCount(res.data.userCount);
-					this.updateUsers(res.data.users);
-					this.pausedAt = res.data.pausedAt;
-
-					if (res.data.currentSong) {
-						this.updateNoSong(false);
-						this.youtubeReady();
-						this.playVideo();
-						this.socket.emit(
-							"songs.getOwnSongRatings",
-							res.data.currentSong.songId,
-							data => {
-								if (this.currentSong.songId === data.songId) {
-									this.liked = data.liked;
-									this.disliked = data.disliked;
-								}
-							}
-						);
-					} else {
-						if (this.playerReady) this.player.pauseVideo();
-						this.updateNoSong(true);
-					}
-
-					if (type === "community" && partyMode === true) {
-						this.socket.emit("stations.getQueue", _id, res => {
-							if (res.status === "success") {
-								this.updateSongsList(res.queue);
-							}
+						this.joinStation({
+							_id,
+							name,
+							displayName,
+							description,
+							privacy,
+							locked,
+							partyMode,
+							owner,
+							privatePlaylist,
+							type,
+							genres,
+							blacklistedGenres,
+							isFavorited,
+							theme
 						});
-					}
 
-					if (
-						(type === "community" && partyMode === true) ||
-						type === "official"
-					) {
-						this.socket.emit("stations.getQueue", _id, res => {
-							if (res.status === "success") {
-								this.updateSongsList(res.queue);
-							}
-						});
-					}
+						const currentSong = res.data.currentSong
+							? res.data.currentSong
+							: {};
 
-					if (this.isOwnerOrAdmin()) {
-						keyboardShortcuts.registerShortcut(
-							"station.pauseResume",
-							{
-								keyCode: 32,
-								shift: false,
-								ctrl: true,
-								preventDefault: true,
-								handler: () => {
-									if (this.stationPaused)
-										this.resumeStation();
-									else this.pauseStation();
+						if (currentSong.artists)
+							currentSong.artists = currentSong.artists.join(
+								", "
+							);
+
+						if (currentSong && !currentSong.thumbnail)
+							currentSong.ytThumbnail = `https://img.youtube.com/vi/${currentSong.songId}/mqdefault.jpg`;
+
+						this.updateCurrentSong(currentSong);
+
+						this.startedAt = res.data.startedAt;
+						this.updateStationPaused(res.data.paused);
+						this.timePaused = res.data.timePaused;
+						this.updateUserCount(res.data.userCount);
+						this.updateUsers(res.data.users);
+						this.pausedAt = res.data.pausedAt;
+
+						if (res.data.currentSong) {
+							this.updateNoSong(false);
+							this.youtubeReady();
+							this.playVideo();
+							this.socket.dispatch(
+								"songs.getOwnSongRatings",
+								res.data.currentSong.songId,
+								data => {
+									if (
+										this.currentSong.songId === data.songId
+									) {
+										this.liked = data.liked;
+										this.disliked = data.disliked;
+									}
 								}
-							}
-						);
+							);
+						} else {
+							if (this.playerReady) this.player.pauseVideo();
+							this.updateNoSong(true);
+						}
 
-						keyboardShortcuts.registerShortcut(
-							"station.skipStation",
-							{
-								keyCode: 39,
-								shift: false,
-								ctrl: true,
-								preventDefault: true,
-								handler: () => {
-									this.skipStation();
+						if (type === "community" && partyMode === true) {
+							this.socket.dispatch(
+								"stations.getQueue",
+								_id,
+								res => {
+									if (res.status === "success") {
+										this.updateSongsList(res.queue);
+									}
 								}
-							}
-						);
-					}
-
-					keyboardShortcuts.registerShortcut(
-						"station.lowerVolumeLarge",
-						{
-							keyCode: 40,
-							shift: false,
-							ctrl: true,
-							preventDefault: true,
-							handler: () => {
-								this.volumeSliderValue -= 1000;
-								this.changeVolume();
-							}
-						}
-					);
-
-					keyboardShortcuts.registerShortcut(
-						"station.lowerVolumeSmall",
-						{
-							keyCode: 40,
-							shift: true,
-							ctrl: true,
-							preventDefault: true,
-							handler: () => {
-								this.volumeSliderValue -= 100;
-								this.changeVolume();
-							}
-						}
-					);
-
-					keyboardShortcuts.registerShortcut(
-						"station.increaseVolumeLarge",
-						{
-							keyCode: 38,
-							shift: false,
-							ctrl: true,
-							preventDefault: true,
-							handler: () => {
-								this.volumeSliderValue += 1000;
-								this.changeVolume();
-							}
-						}
-					);
-
-					keyboardShortcuts.registerShortcut(
-						"station.increaseVolumeSmall",
-						{
-							keyCode: 38,
-							shift: true,
-							ctrl: true,
-							preventDefault: true,
-							handler: () => {
-								this.volumeSliderValue += 100;
-								this.changeVolume();
-							}
-						}
-					);
-
-					keyboardShortcuts.registerShortcut("station.toggleDebug", {
-						keyCode: 68,
-						shift: false,
-						ctrl: true,
-						preventDefault: true,
-						handler: () => {
-							this.togglePlayerDebugBox();
-						}
-					});
-
-					// UNIX client time before ping
-					const beforePing = Date.now();
-					this.socket.emit("apis.ping", pong => {
-						// UNIX client time after ping
-						const afterPing = Date.now();
-						// Average time in MS it took between the server responding and the client receiving
-						const connectionLatency = (afterPing - beforePing) / 2;
-						console.log(connectionLatency, beforePing - afterPing);
-						// UNIX server time
-						const serverDate = pong.date;
-						// Difference between the server UNIX time and the client UNIX time after ping, with the connectionLatency added to the server UNIX time
-						const difference =
-							serverDate + connectionLatency - afterPing;
-						console.log("Difference: ", difference);
-						if (difference > 3000 || difference < -3000) {
-							console.log(
-								"System time difference is bigger than 3 seconds."
 							);
 						}
-						this.systemDifference = difference;
-					});
-				} else {
-					this.loading = false;
-					this.exists = false;
+
+						if (
+							(type === "community" && partyMode === true) ||
+							type === "official"
+						) {
+							this.socket.dispatch(
+								"stations.getQueue",
+								_id,
+								res => {
+									if (res.status === "success") {
+										this.updateSongsList(res.queue);
+									}
+								}
+							);
+						}
+
+						if (this.isOwnerOrAdmin()) {
+							keyboardShortcuts.registerShortcut(
+								"station.pauseResume",
+								{
+									keyCode: 32,
+									shift: false,
+									ctrl: true,
+									preventDefault: true,
+									handler: () => {
+										if (this.stationPaused)
+											this.resumeStation();
+										else this.pauseStation();
+									}
+								}
+							);
+
+							keyboardShortcuts.registerShortcut(
+								"station.skipStation",
+								{
+									keyCode: 39,
+									shift: false,
+									ctrl: true,
+									preventDefault: true,
+									handler: () => {
+										this.skipStation();
+									}
+								}
+							);
+						}
+
+						keyboardShortcuts.registerShortcut(
+							"station.lowerVolumeLarge",
+							{
+								keyCode: 40,
+								shift: false,
+								ctrl: true,
+								preventDefault: true,
+								handler: () => {
+									this.volumeSliderValue -= 1000;
+									this.changeVolume();
+								}
+							}
+						);
+
+						keyboardShortcuts.registerShortcut(
+							"station.lowerVolumeSmall",
+							{
+								keyCode: 40,
+								shift: true,
+								ctrl: true,
+								preventDefault: true,
+								handler: () => {
+									this.volumeSliderValue -= 100;
+									this.changeVolume();
+								}
+							}
+						);
+
+						keyboardShortcuts.registerShortcut(
+							"station.increaseVolumeLarge",
+							{
+								keyCode: 38,
+								shift: false,
+								ctrl: true,
+								preventDefault: true,
+								handler: () => {
+									this.volumeSliderValue += 1000;
+									this.changeVolume();
+								}
+							}
+						);
+
+						keyboardShortcuts.registerShortcut(
+							"station.increaseVolumeSmall",
+							{
+								keyCode: 38,
+								shift: true,
+								ctrl: true,
+								preventDefault: true,
+								handler: () => {
+									this.volumeSliderValue += 100;
+									this.changeVolume();
+								}
+							}
+						);
+
+						keyboardShortcuts.registerShortcut(
+							"station.toggleDebug",
+							{
+								keyCode: 68,
+								shift: false,
+								ctrl: true,
+								preventDefault: true,
+								handler: () => {
+									this.togglePlayerDebugBox();
+								}
+							}
+						);
+
+						// UNIX client time before ping
+						const beforePing = Date.now();
+						this.socket.dispatch("apis.ping", pong => {
+							// UNIX client time after ping
+							const afterPing = Date.now();
+							// Average time in MS it took between the server responding and the client receiving
+							const connectionLatency =
+								(afterPing - beforePing) / 2;
+							console.log(
+								connectionLatency,
+								beforePing - afterPing
+							);
+							// UNIX server time
+							const serverDate = pong.date;
+							// Difference between the server UNIX time and the client UNIX time after ping, with the connectionLatency added to the server UNIX time
+							const difference =
+								serverDate + connectionLatency - afterPing;
+							console.log("Difference: ", difference);
+							if (difference > 3000 || difference < -3000) {
+								console.log(
+									"System time difference is bigger than 3 seconds."
+								);
+							}
+							this.systemDifference = difference;
+						});
+					} else {
+						this.loading = false;
+						this.exists = false;
+					}
 				}
-			});
+			);
 		},
 		favoriteStation() {
-			this.socket.emit(
+			this.socket.dispatch(
 				"stations.favoriteStation",
 				this.station._id,
 				res => {
@@ -1683,7 +1725,7 @@ export default {
 			);
 		},
 		unfavoriteStation() {
-			this.socket.emit(
+			this.socket.dispatch(
 				"stations.unfavoriteStation",
 				this.station._id,
 				res => {

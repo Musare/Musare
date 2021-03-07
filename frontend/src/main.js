@@ -4,9 +4,9 @@ import VueRouter from "vue-router";
 import store from "./store";
 
 import App from "./App.vue";
-import io from "./io";
+import ws from "./ws";
 
-const REQUIRED_CONFIG_VERSION = 1;
+const REQUIRED_CONFIG_VERSION = 2;
 
 const handleMetadata = attrs => {
 	document.title = `Musare | ${attrs.title}`;
@@ -138,109 +138,122 @@ const router = new VueRouter({
 });
 
 lofig.folder = "../config/default.json";
-lofig.fetchConfig().then(config => {
-	const { configVersion, skipConfigVersionCheck } = config;
-	if (configVersion !== REQUIRED_CONFIG_VERSION && !skipConfigVersionCheck) {
-		// eslint-disable-next-line no-alert
-		alert(
-			"CONFIG VERSION IS WRONG. PLEASE UPDATE YOUR CONFIG WITH THE HELP OF THE TEMPLATE FILE AND THE README FILE."
-		);
-		window.stop();
-	}
 
-	const { serverDomain } = config;
-	io.init(serverDomain);
-	io.getSocket(socket => {
-		socket.on("ready", (loggedIn, role, username, userId) => {
-			store.dispatch("user/auth/authData", {
-				loggedIn,
-				role,
-				username,
-				userId
-			});
-		});
+(async () => {
+	const websocketsDomain = await lofig.get("websocketsDomain");
+	ws.init(websocketsDomain);
 
-		socket.on("keep.event:banned", ban =>
-			store.dispatch("user/auth/banUser", ban)
-		);
+	ws.socket.on("ready", (loggedIn, role, username, userId) =>
+		store.dispatch("user/auth/authData", {
+			loggedIn,
+			role,
+			username,
+			userId
+		})
+	);
 
-		socket.on("event:user.username.changed", username =>
-			store.dispatch("user/auth/updateUsername", username)
+	ws.socket.on("keep.event:banned", ban =>
+		store.dispatch("user/auth/banUser", ban)
+	);
+
+	ws.socket.on("event:user.username.changed", username =>
+		store.dispatch("user/auth/updateUsername", username)
+	);
+
+	ws.socket.on("keep.event:user.preferences.changed", preferences => {
+		store.dispatch(
+			"user/preferences/changeAutoSkipDisliked",
+			preferences.autoSkipDisliked
 		);
 
-		socket.on("keep.event:user.preferences.changed", preferences => {
-			store.dispatch(
-				"user/preferences/changeAutoSkipDisliked",
-				preferences.autoSkipDisliked
-			);
+		store.dispatch(
+			"user/preferences/changeNightmode",
+			preferences.nightmode
+		);
 
-			store.dispatch(
-				"user/preferences/changeNightmode",
-				preferences.nightmode
-			);
-
-			store.dispatch(
-				"user/preferences/changeActivityLogPublic",
-				preferences.activityLogPublic
-			);
-		});
+		store.dispatch(
+			"user/preferences/changeActivityLogPublic",
+			preferences.activityLogPublic
+		);
 	});
-});
 
-router.beforeEach((to, from, next) => {
-	if (window.stationInterval) {
-		clearInterval(window.stationInterval);
-		window.stationInterval = 0;
-	}
+	lofig.fetchConfig().then(config => {
+		const { configVersion, skipConfigVersionCheck } = config;
+		if (
+			configVersion !== REQUIRED_CONFIG_VERSION &&
+			!skipConfigVersionCheck
+		) {
+			// eslint-disable-next-line no-alert
+			alert(
+				"CONFIG VERSION IS WRONG. PLEASE UPDATE YOUR CONFIG WITH THE HELP OF THE TEMPLATE FILE AND THE README FILE."
+			);
+			window.stop();
+		}
+	});
 
-	if (window.socket) io.removeAllListeners();
+	router.beforeEach((to, from, next) => {
+		if (window.stationInterval) {
+			clearInterval(window.stationInterval);
+			window.stationInterval = 0;
+		}
 
-	io.clear();
+		if (window.socket) ws.removeAllListeners();
 
-	if (to.meta.loginRequired || to.meta.adminRequired) {
-		const gotData = () => {
-			if (to.meta.loginRequired && !store.state.user.auth.loggedIn)
-				next({ path: "/login" });
-			else if (
-				to.meta.adminRequired &&
-				store.state.user.auth.role !== "admin"
-			)
-				next({ path: "/" });
-			else next();
-		};
+		ws.clear();
 
-		if (store.state.user.auth.gotData) gotData();
-		else {
-			const watcher = store.watch(
-				state => state.user.auth.gotData,
-				() => {
-					watcher();
-					gotData();
+		if (to.meta.loginRequired || to.meta.adminRequired) {
+			const gotData = () => {
+				if (to.meta.loginRequired && !store.state.user.auth.loggedIn)
+					next({ path: "/login" });
+				else if (
+					to.meta.adminRequired &&
+					store.state.user.auth.role !== "admin"
+				)
+					next({ path: "/" });
+				else next();
+			};
+
+			if (store.state.user.auth.gotData) gotData();
+			else {
+				const watcher = store.watch(
+					state => state.user.auth.gotData,
+					() => {
+						watcher();
+						gotData();
+					}
+				);
+			}
+		} else next();
+	});
+
+	Vue.directive("click-outside", {
+		bind(element, binding) {
+			window.handleOutsideClick = event => {
+				if (
+					!(
+						element === event.target ||
+						element.contains(event.target)
+					)
+				) {
+					binding.value();
 				}
+			};
+
+			document.body.addEventListener("click", window.handleOutsideClick);
+		},
+		unbind() {
+			document.body.removeEventListener(
+				"click",
+				window.handleOutsideClick
 			);
 		}
-	} else next();
-});
+	});
 
-Vue.directive("click-outside", {
-	bind(element, binding) {
-		window.handleOutsideClick = event => {
-			if (!(element === event.target || element.contains(event.target))) {
-				binding.value();
-			}
-		};
-
-		document.body.addEventListener("click", window.handleOutsideClick);
-	},
-	unbind() {
-		document.body.removeEventListener("click", window.handleOutsideClick);
-	}
-});
-
-// eslint-disable-next-line no-new
-new Vue({
-	router,
-	store,
-	el: "#root",
-	render: wrapper => wrapper(App)
-});
+	// eslint-disable-next-line no-new
+	new Vue({
+		router,
+		store,
+		el: "#root",
+		render: wrapper => wrapper(App)
+	});
+})();

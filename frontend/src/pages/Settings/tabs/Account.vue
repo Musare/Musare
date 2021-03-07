@@ -96,11 +96,10 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapState, mapActions, mapGetters } from "vuex";
 import Toast from "toasters";
 
 import validation from "../../../validation";
-import io from "../../../io";
 
 import InputHelpBox from "../../../components/ui/InputHelpBox.vue";
 import SaveButton from "../../../components/ui/SaveButton.vue";
@@ -123,11 +122,16 @@ export default {
 			}
 		};
 	},
-	computed: mapState({
-		userId: state => state.user.auth.userId,
-		originalUser: state => state.settings.originalUser,
-		modifiedUser: state => state.settings.modifiedUser
-	}),
+	computed: {
+		...mapState({
+			userId: state => state.user.auth.userId,
+			originalUser: state => state.settings.originalUser,
+			modifiedUser: state => state.settings.modifiedUser
+		}),
+		...mapGetters({
+			socket: "websockets/getSocket"
+		})
+	},
 	watch: {
 		// prettier-ignore
 		// eslint-disable-next-line func-names
@@ -166,11 +170,6 @@ export default {
 				this.validation.email.valid = true;
 			}
 		}
-	},
-	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
-		});
 	},
 	methods: {
 		onInputBlur(inputName) {
@@ -214,7 +213,7 @@ export default {
 
 			this.$refs.saveButton.saveStatus = "disabled";
 
-			return this.socket.emit(
+			return this.socket.dispatch(
 				"users.updateEmail",
 				this.userId,
 				email,
@@ -256,7 +255,7 @@ export default {
 
 			this.$refs.saveButton.saveStatus = "disabled";
 
-			return this.socket.emit(
+			return this.socket.dispatch(
 				"users.updateUsername",
 				this.userId,
 				username,
@@ -281,9 +280,9 @@ export default {
 			);
 		},
 		removeAccount() {
-			return this.socket.emit("users.remove", res => {
+			return this.socket.dispatch("users.remove", res => {
 				if (res.status === "success") {
-					return this.socket.emit("users.logout", () => {
+					return this.socket.dispatch("users.logout", () => {
 						return lofig.get("cookie").then(cookie => {
 							document.cookie = `${cookie.SIDname}=;expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
 							return window.location.reload();
@@ -295,7 +294,7 @@ export default {
 			});
 		},
 		removeActivities() {
-			this.socket.emit("activities.removeAllForUser", res => {
+			this.socket.dispatch("activities.removeAllForUser", res => {
 				new Toast({ content: res.message, timeout: 4000 });
 			});
 		},

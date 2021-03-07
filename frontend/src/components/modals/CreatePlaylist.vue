@@ -33,11 +33,10 @@
 </template>
 
 <script>
-import { mapActions } from "vuex";
+import { mapActions, mapGetters } from "vuex";
 
 import Toast from "toasters";
 import Modal from "../Modal.vue";
-import io from "../../io";
 import validation from "../../validation";
 
 export default {
@@ -51,11 +50,9 @@ export default {
 			}
 		};
 	},
-	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
-		});
-	},
+	computed: mapGetters({
+		socket: "websockets/getSocket"
+	}),
 	methods: {
 		createPlaylist() {
 			const { displayName } = this.playlist;
@@ -73,21 +70,25 @@ export default {
 					timeout: 8000
 				});
 
-			return this.socket.emit("playlists.create", this.playlist, res => {
-				new Toast({ content: res.message, timeout: 3000 });
+			return this.socket.dispatch(
+				"playlists.create",
+				this.playlist,
+				res => {
+					new Toast({ content: res.message, timeout: 3000 });
 
-				if (res.status === "success") {
-					this.closeModal({
-						sector: "station",
-						modal: "createPlaylist"
-					});
-					this.editPlaylist(res.data._id);
-					this.openModal({
-						sector: "station",
-						modal: "editPlaylist"
-					});
+					if (res.status === "success") {
+						this.closeModal({
+							sector: "station",
+							modal: "createPlaylist"
+						});
+						this.editPlaylist(res.data._id);
+						this.openModal({
+							sector: "station",
+							modal: "editPlaylist"
+						});
+					}
 				}
-			});
+			);
 		},
 		...mapActions("modalVisibility", ["closeModal", "openModal"]),
 		...mapActions("user/playlists", ["editPlaylist"])

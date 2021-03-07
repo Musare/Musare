@@ -227,12 +227,12 @@
 
 <script>
 import Toast from "toasters";
+import { mapGetters } from "vuex";
 
 import MainHeader from "../components/layout/MainHeader.vue";
 import MainFooter from "../components/layout/MainFooter.vue";
 import InputHelpBox from "../components/ui/InputHelpBox.vue";
 
-import io from "../io";
 import validation from "../validation";
 
 export default {
@@ -271,6 +271,9 @@ export default {
 			step: 1
 		};
 	},
+	computed: mapGetters({
+		socket: "websockets/getSocket"
+	}),
 	watch: {
 		email(value) {
 			if (
@@ -305,12 +308,6 @@ export default {
 			this.checkPasswordMatch(this.newPassword, value);
 		}
 	},
-	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
-		});
-	},
-
 	methods: {
 		checkPasswordMatch(newPassword, newPasswordAgain) {
 			if (newPasswordAgain !== newPassword) {
@@ -345,7 +342,7 @@ export default {
 			this.hasEmailBeenSentAlready = false;
 
 			if (this.mode === "set") {
-				return this.socket.emit("users.requestPassword", res => {
+				return this.socket.dispatch("users.requestPassword", res => {
 					new Toast({ content: res.message, timeout: 8000 });
 					if (res.status === "success") {
 						this.step = 2;
@@ -353,7 +350,7 @@ export default {
 				});
 			}
 
-			return this.socket.emit(
+			return this.socket.dispatch(
 				"users.requestPasswordReset",
 				this.email,
 				res => {
@@ -372,7 +369,7 @@ export default {
 					timeout: 8000
 				});
 
-			return this.socket.emit(
+			return this.socket.dispatch(
 				this.mode === "set"
 					? "users.verifyPasswordCode"
 					: "users.verifyPasswordResetCode",
@@ -401,7 +398,7 @@ export default {
 					timeout: 8000
 				});
 
-			return this.socket.emit(
+			return this.socket.dispatch(
 				this.mode === "set"
 					? "users.changePasswordWithCode"
 					: "users.changePasswordWithResetCode",

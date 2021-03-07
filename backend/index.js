@@ -196,7 +196,7 @@ if (config.debug && config.debug.traceUnhandledPromises === true) {
 // moduleManager.addModule("mail");
 // moduleManager.addModule("api");
 // moduleManager.addModule("app");
-// moduleManager.addModule("io");
+// moduleManager.addModule("ws");
 // moduleManager.addModule("logger");
 // moduleManager.addModule("notifications");
 // moduleManager.addModule("activities");
@@ -381,7 +381,7 @@ if (!config.get("migration")) {
 	moduleManager.addModule("activities");
 	moduleManager.addModule("api");
 	moduleManager.addModule("app");
-	moduleManager.addModule("io");
+	moduleManager.addModule("ws");
 	moduleManager.addModule("notifications");
 	moduleManager.addModule("playlists");
 	moduleManager.addModule("punishments");

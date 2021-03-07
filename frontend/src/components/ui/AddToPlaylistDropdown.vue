@@ -41,8 +41,8 @@
 </template>
 
 <script>
+import { mapGetters } from "vuex";
 import Toast from "toasters";
-import io from "../../io";
 
 export default {
 	props: {
@@ -56,46 +56,45 @@ export default {
 			playlists: []
 		};
 	},
+	computed: mapGetters({
+		socket: "websockets/getSocket"
+	}),
 	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
+		this.socket.dispatch("playlists.indexMyPlaylists", false, res => {
+			if (res.status === "success") {
+				this.playlists = res.data;
+				this.checkIfPlaylistsHaveSong();
+			}
+		});
 
-			this.socket.emit("playlists.indexMyPlaylists", false, res => {
-				if (res.status === "success") {
-					this.playlists = res.data;
-					this.checkIfPlaylistsHaveSong();
+		this.socket.on("event:songs.next", () => {
+			this.checkIfPlaylistsHaveSong();
+		});
+
+		this.socket.on("event:playlist.create", playlist => {
+			this.playlists.push(playlist);
+		});
+
+		this.socket.on("event:playlist.delete", playlistId => {
+			this.playlists.forEach((playlist, index) => {
+				if (playlist._id === playlistId) {
+					this.playlists.splice(index, 1);
 				}
 			});
+		});
 
-			this.socket.on("event:songs.next", () => {
-				this.checkIfPlaylistsHaveSong();
-			});
-
-			this.socket.on("event:playlist.create", playlist => {
-				this.playlists.push(playlist);
-			});
-
-			this.socket.on("event:playlist.delete", playlistId => {
-				this.playlists.forEach((playlist, index) => {
-					if (playlist._id === playlistId) {
-						this.playlists.splice(index, 1);
-					}
-				});
-			});
-
-			this.socket.on("event:playlist.updateDisplayName", data => {
-				this.playlists.forEach((playlist, index) => {
-					if (playlist._id === data.playlistId) {
-						this.playlists[index].displayName = data.displayName;
-					}
-				});
+		this.socket.on("event:playlist.updateDisplayName", data => {
+			this.playlists.forEach((playlist, index) => {
+				if (playlist._id === data.playlistId) {
+					this.playlists[index].displayName = data.displayName;
+				}
 			});
 		});
 	},
 	methods: {
 		toggleSongInPlaylist(index, playlistId) {
 			if (!this.playlists[index].hasSong) {
-				this.socket.emit(
+				this.socket.dispatch(
 					"playlists.addSongToPlaylist",
 					false,
 					this.song.songId,
@@ -110,7 +109,7 @@ export default {
 					}
 				);
 			} else {
-				this.socket.emit(
+				this.socket.dispatch(
 					"playlists.removeSongFromPlaylist",
 					this.song.songId,
 					playlistId,

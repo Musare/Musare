@@ -65,14 +65,14 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapState, mapActions, mapGetters } from "vuex";
 
 import Toast from "toasters";
 
 // import EditPlaylist from "../../../components/modals/EditPlaylist/index.vue";
 import UserIdToUsername from "../../../components/common/UserIdToUsername.vue";
 
-import io from "../../../io";
+import ws from "../../../ws";
 import utils from "../../../../js/utils";
 
 export default {
@@ -87,14 +87,14 @@ export default {
 	computed: {
 		...mapState("modalVisibility", {
 			modals: state => state.modals.admin
+		}),
+		...mapGetters({
+			socket: "websockets/getSocket"
 		})
 	},
 	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
-			if (this.socket.connected) this.init();
-			io.onConnect(() => this.init());
-		});
+		if (this.socket.readyState === 1) this.init();
+		ws.onConnect(() => this.init());
 	},
 	methods: {
 		// edit(playlist) {
@@ -102,7 +102,7 @@ export default {
 		// 	this.openModal({ sector: "admin", modal: "editPlaylist" });
 		// },
 		init() {
-			this.socket.emit("playlists.index", res => {
+			this.socket.dispatch("playlists.index", res => {
 				console.log(res);
 				if (res.status === "success") {
 					this.playlists = res.data;
@@ -114,7 +114,7 @@ export default {
 					// }
 				}
 			});
-			this.socket.emit("apis.joinAdminRoom", "playlists", () => {});
+			this.socket.dispatch("apis.joinAdminRoom", "playlists", () => {});
 		},
 		getDateFormatted(createdAt) {
 			const date = new Date(createdAt);

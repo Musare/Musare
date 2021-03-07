@@ -6,13 +6,13 @@ import moduleManager from "../../index";
 
 const DBModule = moduleManager.modules.db;
 const UtilsModule = moduleManager.modules.utils;
-const IOModule = moduleManager.modules.io;
+const WSModule = moduleManager.modules.ws;
 const CacheModule = moduleManager.modules.cache;
 
 CacheModule.runJob("SUB", {
 	channel: "news.create",
 	cb: news => {
-		IOModule.runJob("EMIT_TO_ROOM", {
+		WSModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.news",
 			args: ["event:admin.news.created", news]
 		});
@@ -22,7 +22,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "news.remove",
 	cb: news => {
-		IOModule.runJob("EMIT_TO_ROOM", {
+		WSModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.news",
 			args: ["event:admin.news.removed", news]
 		});
@@ -32,7 +32,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "news.update",
 	cb: news => {
-		IOModule.runJob("EMIT_TO_ROOM", {
+		WSModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.news",
 			args: ["event:admin.news.updated", news]
 		});
@@ -43,7 +43,7 @@ export default {
 	/**
 	 * Gets all news items
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Function} cb - gets called with the result
 	 */
 	async index(session, cb) {
@@ -69,7 +69,7 @@ export default {
 	/**
 	 * Gets a news item by id
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} newsId - the news id
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -95,7 +95,7 @@ export default {
 	/**
 	 * Creates a news item
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {object} data - the object of the news data
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -128,7 +128,7 @@ export default {
 	/**
 	 * Gets the latest news item
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Function} cb - gets called with the result
 	 */
 	async newest(session, cb) {
@@ -145,6 +145,7 @@ export default {
 					this.log("ERROR", "NEWS_NEWEST", `Getting the latest news failed. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
+
 				this.log("SUCCESS", "NEWS_NEWEST", `Successfully got the latest news.`, false);
 				return cb({ status: "success", data: news });
 			}
@@ -154,7 +155,7 @@ export default {
 	/**
 	 * Removes a news item
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {object} news - the news object
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -184,7 +185,7 @@ export default {
 	/**
 	 * Removes a news item
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} _id - the news id
 	 * @param {object} news - the news object
 	 * @param {Function} cb - gets called with the result

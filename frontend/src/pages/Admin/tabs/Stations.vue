@@ -184,10 +184,10 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapState, mapActions, mapGetters } from "vuex";
 
 import Toast from "toasters";
-import io from "../../../io";
+import ws from "../../../ws";
 
 import EditStation from "../../../components/modals/EditStation.vue";
 import UserIdToUsername from "../../../components/common/UserIdToUsername.vue";
@@ -209,23 +209,22 @@ export default {
 		}),
 		...mapState("modalVisibility", {
 			modals: state => state.modals.admin
+		}),
+		...mapGetters({
+			socket: "websockets/getSocket"
 		})
 	},
 	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
-			if (this.socket.connected) this.init();
+		if (this.socket.readyState === 1) this.init();
+		ws.onConnect(() => this.init());
 
-			this.socket.on("event:admin.station.added", station => {
-				this.stationAdded(station);
-			});
-			this.socket.on("event:admin.station.removed", stationId => {
-				this.stationRemoved(stationId);
-			});
-			io.onConnect(() => {
-				this.init();
-			});
-		});
+		this.socket.on("event:admin.station.added", station =>
+			this.stationAdded(station)
+		);
+
+		this.socket.on("event:admin.station.removed", stationId =>
+			this.stationRemoved(stationId)
+		);
 	},
 	methods: {
 		createStation() {
@@ -255,7 +254,7 @@ export default {
 					timeout: 3000
 				});
 
-			return this.socket.emit(
+			return this.socket.dispatch(
 				"stations.create",
 				{
 					name,
@@ -276,7 +275,7 @@ export default {
 			);
 		},
 		removeStation(index) {
-			this.socket.emit(
+			this.socket.dispatch(
 				"stations.remove",
 				this.stations[index]._id,
 				res => {
@@ -339,10 +338,10 @@ export default {
 			this.newStation.blacklistedGenres.splice(index, 1);
 		},
 		init() {
-			this.socket.emit("stations.index", data => {
+			this.socket.dispatch("stations.index", data => {
 				this.loadStations(data.stations);
 			});
-			this.socket.emit("apis.joinAdminRoom", "stations", () => {});
+			this.socket.dispatch("apis.joinAdminRoom", "stations", () => {});
 		},
 		...mapActions("modalVisibility", ["openModal"]),
 		...mapActions("admin/stations", [

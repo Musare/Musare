@@ -39,10 +39,10 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
+import { mapState, mapGetters, mapActions } from "vuex";
 import Toast from "toasters";
 
-import io from "../../../io";
+import ws from "../../../ws";
 
 import ActivityItem from "../../../components/ui/ActivityItem.vue";
 
@@ -56,6 +56,7 @@ export default {
 	},
 	data() {
 		return {
+			username: "",
 			activities: [],
 			position: 1,
 			maxPosition: 1,
@@ -68,51 +69,57 @@ export default {
 			...mapState("modalVisibility", {
 				modals: state => state.modals.station
 			}),
-			myUserId: state => state.user.auth.userId,
-			username: state => state.user.auth.username
+			myUserId: state => state.user.auth.userId
+		}),
+		...mapGetters({
+			socket: "websockets/getSocket"
 		})
 	},
 	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
-
-			if (this.myUserId !== this.userId) {
-				this.socket.emit(
+		if (this.myUserId !== this.userId) {
+			ws.onConnect(() =>
+				this.socket.dispatch(
 					"apis.joinRoom",
 					`profile-${this.userId}-activities`,
-					() => {}
-				);
-			}
+					res => {
+						console.log("res of joining activities room", res);
+					}
+				)
+			);
 
-			this.socket.emit("activities.length", this.userId, length => {
-				this.maxPosition = Math.ceil(length / 15) + 1;
-				this.getSet();
+			this.getUsernameFromId(this.userId).then(res => {
+				if (res) this.username = res;
 			});
+		}
 
-			this.socket.on("event:activity.create", activity => {
-				this.activities.unshift(activity);
-				this.offsettedFromNextSet += 1;
-			});
+		this.socket.dispatch("activities.length", this.userId, length => {
+			this.maxPosition = Math.ceil(length / 15) + 1;
+			this.getSet();
+		});
 
-			this.socket.on("event:activity.hide", activityId => {
-				this.activities = this.activities.filter(
-					activity => activity._id !== activityId
-				);
+		this.socket.on("event:activity.create", activity => {
+			this.activities.unshift(activity);
+			this.offsettedFromNextSet += 1;
+		});
 
-				this.offsettedFromNextSet -= 1;
-			});
+		this.socket.on("event:activity.hide", activityId => {
+			this.activities = this.activities.filter(
+				activity => activity._id !== activityId
+			);
 
-			this.socket.on("event:activity.removeAllForUser", () => {
-				this.activities = [];
-				this.position = 1;
-				this.maxPosition = 1;
-				this.offsettedFromNextSet = 0;
-			});
+			this.offsettedFromNextSet -= 1;
+		});
+
+		this.socket.on("event:activity.removeAllForUser", () => {
+			this.activities = [];
+			this.position = 1;
+			this.maxPosition = 1;
+			this.offsettedFromNextSet = 0;
 		});
 	},
 	methods: {
 		hideActivity(activityId) {
-			this.socket.emit("activities.hideActivity", activityId, res => {
+			this.socket.dispatch("activities.hideActivity", activityId, res => {
 				if (res.status !== "success")
 					new Toast({ content: res.message, timeout: 3000 });
 			});
@@ -123,7 +130,7 @@ export default {
 
 			this.isGettingSet = true;
 
-			this.socket.emit(
+			this.socket.dispatch(
 				"activities.getSet",
 				this.userId,
 				this.position,
@@ -148,7 +155,8 @@ export default {
 			if (scrollPosition + 100 >= bottomPosition) this.getSet();
 
 			return this.maxPosition === this.position;
-		}
+		},
+		...mapActions("user/auth", ["getUsernameFromId"])
 	}
 };
 </script>

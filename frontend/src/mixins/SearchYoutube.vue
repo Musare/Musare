@@ -33,7 +33,7 @@ export default {
 				query = query.join("");
 			}
 
-			this.socket.emit("apis.searchYoutube", query, res => {
+			this.socket.dispatch("apis.searchYoutube", query, res => {
 				if (res.status === "success") {
 					this.search.songs.nextPageToken = res.data.nextPageToken;
 					this.search.songs.results = [];
@@ -52,7 +52,7 @@ export default {
 			});
 		},
 		loadMoreSongs() {
-			this.socket.emit(
+			this.socket.dispatch(
 				"apis.searchYoutubeForPage",
 				this.search.songs.query,
 				this.search.songs.nextPageToken,

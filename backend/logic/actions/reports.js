@@ -6,7 +6,7 @@ import moduleManager from "../../index";
 
 const DBModule = moduleManager.modules.db;
 const UtilsModule = moduleManager.modules.utils;
-const IOModule = moduleManager.modules.io;
+const WSModule = moduleManager.modules.ws;
 const SongsModule = moduleManager.modules.songs;
 const CacheModule = moduleManager.modules.cache;
 const ActivitiesModule = moduleManager.modules.activities;
@@ -37,7 +37,7 @@ const reportableIssues = [
 CacheModule.runJob("SUB", {
 	channel: "report.resolve",
 	cb: reportId => {
-		IOModule.runJob("EMIT_TO_ROOM", {
+		WSModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.reports",
 			args: ["event:admin.report.resolved", reportId]
 		});
@@ -47,7 +47,7 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "report.create",
 	cb: report => {
-		IOModule.runJob("EMIT_TO_ROOM", {
+		WSModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.reports",
 			args: ["event:admin.report.created", report]
 		});
@@ -58,7 +58,7 @@ export default {
 	/**
 	 * Gets all reports
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Function} cb - gets called with the result
 	 */
 	index: isAdminRequired(async function index(session, cb) {
@@ -90,7 +90,7 @@ export default {
 	/**
 	 * Gets a specific report
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} reportId - the id of the report to return
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -123,7 +123,7 @@ export default {
 	/**
 	 * Gets all reports for a songId (_id)
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} songId - the id of the song to index reports for
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -167,7 +167,7 @@ export default {
 	/**
 	 * Resolves a report
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} reportId - the id of the report that is getting resolved
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -220,7 +220,7 @@ export default {
 	/**
 	 * Creates a new report
 	 *
-	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {object} data - the object of the report data
 	 * @param {Function} cb - gets called with the result
 	 */

@@ -3,7 +3,8 @@
 		"key": "",
 		"enabled": false
 	},
-	"serverDomain": "http://localhost:8080",
+	"apiDomain": "http://localhost:8080",
+	"websocketsDomain": "ws://localhost:8080/ws",
 	"frontendDomain": "http://localhost",
 	"frontendPort": "81",
   	"cookie": {
@@ -18,5 +19,5 @@
 		"github": "https://github.com/Musare/MusareNode"
 	},
 	"skipConfigVersionCheck": false,
-	"configVersion": 1
+	"configVersion": 2
 }

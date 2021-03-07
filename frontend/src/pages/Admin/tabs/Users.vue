@@ -66,11 +66,11 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapState, mapActions, mapGetters } from "vuex";
 
 import EditUser from "../../../components/modals/EditUser.vue";
 import ProfilePicture from "../../../components/ui/ProfilePicture.vue";
-import io from "../../../io";
+import ws from "../../../ws";
 
 export default {
 	components: { EditUser, ProfilePicture },
@@ -83,14 +83,14 @@ export default {
 	computed: {
 		...mapState("modalVisibility", {
 			modals: state => state.modals.admin
+		}),
+		...mapGetters({
+			socket: "websockets/getSocket"
 		})
 	},
 	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
-			if (this.socket.connected) this.init();
-			io.onConnect(() => this.init());
-		});
+		if (this.socket.readyState === 1) this.init();
+		ws.onConnect(() => this.init());
 	},
 	methods: {
 		edit(user) {
@@ -98,7 +98,7 @@ export default {
 			this.openModal({ sector: "admin", modal: "editUser" });
 		},
 		init() {
-			this.socket.emit("users.index", res => {
+			this.socket.dispatch("users.index", res => {
 				console.log(res);
 				if (res.status === "success") {
 					this.users = res.data;
@@ -110,7 +110,7 @@ export default {
 					}
 				}
 			});
-			this.socket.emit("apis.joinAdminRoom", "users", () => {});
+			this.socket.dispatch("apis.joinAdminRoom", "users", () => {});
 		},
 		...mapActions("modalVisibility", ["openModal"])
 	}

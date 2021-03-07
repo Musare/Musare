@@ -11,14 +11,14 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapState, mapActions, mapGetters } from "vuex";
 import Toast from "toasters";
 
 import Banned from "./pages/Banned.vue";
 import WhatIsNew from "./components/modals/WhatIsNew.vue";
 import LoginModal from "./components/modals/Login.vue";
 import RegisterModal from "./components/modals/Register.vue";
-import io from "./io";
+import ws from "./ws";
 import keyboardShortcuts from "./keyboardShortcuts";
 
 export default {
@@ -31,24 +31,28 @@ export default {
 	replace: false,
 	data() {
 		return {
-			serverDomain: "",
+			apiDomain: "",
 			socketConnected: true,
 			keyIsDown: false
 		};
 	},
-	computed: mapState({
-		loggedIn: state => state.user.auth.loggedIn,
-		role: state => state.user.auth.role,
-		username: state => state.user.auth.username,
-		userId: state => state.user.auth.userId,
-		banned: state => state.user.auth.banned,
-		modals: state => state.modalVisibility.modals,
-		currentlyActive: state => state.modalVisibility.currentlyActive,
-		nightmode: state => state.user.preferences.nightmode
-	}),
+	computed: {
+		...mapState({
+			loggedIn: state => state.user.auth.loggedIn,
+			role: state => state.user.auth.role,
+			username: state => state.user.auth.username,
+			userId: state => state.user.auth.userId,
+			banned: state => state.user.auth.banned,
+			modals: state => state.modalVisibility.modals,
+			currentlyActive: state => state.modalVisibility.currentlyActive,
+			nightmode: state => state.user.preferences.nightmode
+		}),
+		...mapGetters({
+			socket: "websockets/getSocket"
+		})
+	},
 	watch: {
 		socketConnected(connected) {
-			console.log(connected);
 			if (!connected)
 				new Toast({
 					content: "Could not connect to the server.",
@@ -108,17 +112,15 @@ export default {
 			localStorage.removeItem("github_redirect");
 		}
 
-		io.onConnect(true, () => {
+		ws.onConnect(true, () => {
 			this.socketConnected = true;
 		});
-		io.onConnectError(true, () => {
-			this.socketConnected = false;
-		});
-		io.onDisconnect(true, () => {
+
+		ws.onDisconnect(true, () => {
 			this.socketConnected = false;
 		});
 
-		this.serverDomain = await lofig.get("serverDomain");
+		this.apiDomain = await lofig.get("apiDomain");
 
 		this.$router.onReady(() => {
 			if (this.$route.query.err) {
@@ -138,24 +140,21 @@ export default {
 				new Toast({ content: msg, timeout: 20000 });
 			}
 		});
-		io.getSocket(true, socket => {
-			this.socket = socket;
 
-			this.socket.emit("users.getPreferences", res => {
-				if (res.status === "success") {
-					this.changeAutoSkipDisliked(res.data.autoSkipDisliked);
-					this.changeNightmode(res.data.nightmode);
-					this.changeActivityLogPublic(res.data.activityLogPublic);
+		this.socket.dispatch("users.getPreferences", res => {
+			if (res.status === "success") {
+				this.changeAutoSkipDisliked(res.data.autoSkipDisliked);
+				this.changeNightmode(res.data.nightmode);
+				this.changeActivityLogPublic(res.data.activityLogPublic);
 
-					if (this.nightmode) this.enableNightMode();
-					else this.disableNightMode();
-				}
-			});
-
-			this.socket.on("keep.event:user.session.removed", () =>
-				window.location.reload()
-			);
+				if (this.nightmode) this.enableNightMode();
+				else this.disableNightMode();
+			}
 		});
+
+		this.socket.on("keep.event:user.session.removed", () =>
+			window.location.reload()
+		);
 	},
 	methods: {
 		submitOnEnter: (cb, event) => {

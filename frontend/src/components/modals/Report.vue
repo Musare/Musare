@@ -182,11 +182,10 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapState, mapGetters, mapActions } from "vuex";
 
 import Toast from "toasters";
 import Modal from "../Modal.vue";
-import io from "../../io";
 
 export default {
 	components: { Modal },
@@ -249,13 +248,12 @@ export default {
 			currentSong: state => state.station.currentSong,
 			previousSong: state => state.station.previousSong,
 			song: state => state.modals.report.song
+		}),
+		...mapGetters({
+			socket: "websockets/getSocket"
 		})
 	},
 	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
-		});
-
 		this.report.songId = this.currentSong.songId;
 
 		if (this.song !== null) {
@@ -267,7 +265,7 @@ export default {
 	methods: {
 		create() {
 			console.log(this.report);
-			this.socket.emit("reports.create", this.report, res => {
+			this.socket.dispatch("reports.create", this.report, res => {
 				new Toast({ content: res.message, timeout: 4000 });
 				if (res.status === "success")
 					this.closeModal({

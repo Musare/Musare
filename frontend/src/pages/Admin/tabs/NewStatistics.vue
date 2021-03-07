@@ -191,7 +191,9 @@
 </template>
 
 <script>
-import io from "../../../io";
+import { mapGetters } from "vuex";
+
+import ws from "../../../ws";
 
 export default {
 	components: {},
@@ -201,16 +203,16 @@ export default {
 			module: null
 		};
 	},
+	computed: mapGetters({
+		socket: "websockets/getSocket"
+	}),
 	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
-			if (this.socket.connected) this.init();
-			io.onConnect(() => this.init());
-		});
+		if (this.socket.readyState === 1) this.init();
+		ws.onConnect(() => this.init());
 	},
 	methods: {
 		init() {
-			this.socket.emit("utils.getModules", data => {
+			this.socket.dispatch("utils.getModules", data => {
 				console.log(data);
 				if (data.status === "success") {
 					this.modules = data.modules;
@@ -218,7 +220,7 @@ export default {
 			});
 
 			if (this.$route.query.moduleName) {
-				this.socket.emit(
+				this.socket.dispatch(
 					"utils.getModule",
 					this.$route.query.moduleName,
 					data => {

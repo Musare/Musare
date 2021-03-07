@@ -78,10 +78,7 @@
 
 			<hr class="section-horizontal-rule" />
 
-			<a
-				class="button is-github"
-				:href="`${serverDomain}/auth/github/link`"
-			>
+			<a class="button is-github" :href="`${apiDomain}/auth/github/link`">
 				<div class="icon">
 					<img class="invert" src="/assets/social/github.svg" />
 				</div>
@@ -147,7 +144,6 @@
 import Toast from "toasters";
 import { mapGetters, mapState } from "vuex";
 
-import io from "../../../io";
 import validation from "../../../validation";
 
 import InputHelpBox from "../../../components/ui/InputHelpBox.vue";
@@ -156,7 +152,7 @@ export default {
 	components: { InputHelpBox },
 	data() {
 		return {
-			serverDomain: "",
+			apiDomain: "",
 			previousPassword: "",
 			validation: {
 				newPassword: {
@@ -171,7 +167,8 @@ export default {
 	computed: {
 		...mapGetters({
 			isPasswordLinked: "settings/isPasswordLinked",
-			isGithubLinked: "settings/isGithubLinked"
+			isGithubLinked: "settings/isGithubLinked",
+			socket: "websockets/getSocket"
 		}),
 		...mapState({
 			userId: state => state.user.auth.userId
@@ -195,11 +192,7 @@ export default {
 		}
 	},
 	async mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
-		});
-
-		this.serverDomain = await lofig.get("serverDomain");
+		this.apiDomain = await lofig.get("apiDomain");
 	},
 	methods: {
 		onInputBlur(inputName) {
@@ -220,7 +213,7 @@ export default {
 					timeout: 8000
 				});
 
-			return this.socket.emit(
+			return this.socket.dispatch(
 				"users.updatePassword",
 				this.previousPassword,
 				newPassword,
@@ -240,17 +233,17 @@ export default {
 			);
 		},
 		unlinkPassword() {
-			this.socket.emit("users.unlinkPassword", res => {
+			this.socket.dispatch("users.unlinkPassword", res => {
 				new Toast({ content: res.message, timeout: 8000 });
 			});
 		},
 		unlinkGitHub() {
-			this.socket.emit("users.unlinkGitHub", res => {
+			this.socket.dispatch("users.unlinkGitHub", res => {
 				new Toast({ content: res.message, timeout: 8000 });
 			});
 		},
 		removeSessions() {
-			this.socket.emit(`users.removeSessions`, this.userId, res => {
+			this.socket.dispatch(`users.removeSessions`, this.userId, res => {
 				new Toast({ content: res.message, timeout: 4000 });
 			});
 		}

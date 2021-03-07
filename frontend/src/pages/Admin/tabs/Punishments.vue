@@ -94,11 +94,11 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapState, mapGetters, mapActions } from "vuex";
 import Toast from "toasters";
 
 import ViewPunishment from "../../../components/modals/ViewPunishment.vue";
-import io from "../../../io";
+import ws from "../../../ws";
 
 export default {
 	components: { ViewPunishment },
@@ -118,17 +118,18 @@ export default {
 		},
 		...mapState("modalVisibility", {
 			modals: state => state.modals.admin
+		}),
+		...mapGetters({
+			socket: "websockets/getSocket"
 		})
 	},
 	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
-			if (this.socket.connected) this.init();
-			io.onConnect(() => this.init());
-			socket.on("event:admin.punishment.added", punishment => {
-				this.punishments.push(punishment);
-			});
-		});
+		if (this.socket.readyState === 1) this.init();
+		ws.onConnect(() => this.init());
+
+		this.socket.on("event:admin.punishment.added", punishment =>
+			this.punishments.push(punishment)
+		);
 	},
 	methods: {
 		view(punishment) {
@@ -137,7 +138,7 @@ export default {
 			this.openModal({ sector: "admin", modal: "viewPunishment" });
 		},
 		banIP() {
-			this.socket.emit(
+			this.socket.dispatch(
 				"punishments.banIP",
 				this.ipBan.ip,
 				this.ipBan.reason,
@@ -148,10 +149,10 @@ export default {
 			);
 		},
 		init() {
-			this.socket.emit("punishments.index", res => {
+			this.socket.dispatch("punishments.index", res => {
 				if (res.status === "success") this.punishments = res.data;
 			});
-			this.socket.emit("apis.joinAdminRoom", "punishments", () => {});
+			this.socket.dispatch("apis.joinAdminRoom", "punishments", () => {});
 		},
 		...mapActions("modalVisibility", ["openModal"]),
 		...mapActions("admin/punishments", ["viewPunishment"])

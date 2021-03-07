@@ -6,7 +6,7 @@ let ActivitiesModule;
 let DBModule;
 let CacheModule;
 let UtilsModule;
-let IOModule;
+let WSModule;
 let PlaylistsModule;
 
 class _ActivitiesModule extends CoreClass {
@@ -27,7 +27,7 @@ class _ActivitiesModule extends CoreClass {
 			DBModule = this.moduleManager.modules.db;
 			CacheModule = this.moduleManager.modules.cache;
 			UtilsModule = this.moduleManager.modules.utils;
-			IOModule = this.moduleManager.modules.io;
+			WSModule = this.moduleManager.modules.ws;
 			PlaylistsModule = this.moduleManager.modules.playlists;
 
 			resolve();
@@ -72,16 +72,16 @@ class _ActivitiesModule extends CoreClass {
 					},
 
 					(activity, next) => {
-						IOModule.runJob("SOCKETS_FROM_USER", { userId: activity.userId }, this)
-							.then(res => {
-								res.sockets.forEach(socket => socket.emit("event:activity.create", activity));
+						WSModule.runJob("SOCKETS_FROM_USER", { userId: activity.userId }, this)
+							.then(sockets => {
+								sockets.forEach(socket => socket.dispatch("event:activity.create", activity));
 								next(null, activity);
 							})
 							.catch(next);
 					},
 
 					(activity, next) => {
-						IOModule.runJob("EMIT_TO_ROOM", {
+						WSModule.runJob("EMIT_TO_ROOM", {
 							room: `profile-${activity.userId}-activities`,
 							args: ["event:activity.create", activity]
 						});
@@ -225,13 +225,13 @@ class _ActivitiesModule extends CoreClass {
 						activities.forEach(activity => {
 							activityModel.updateOne({ _id: activity._id }, { $set: { hidden: true } }).catch(next);
 
-							IOModule.runJob("SOCKETS_FROM_USER", { userId: payload.userId }, this)
-								.then(res =>
-									res.sockets.forEach(socket => socket.emit("event:activity.hide", activity._id))
+							WSModule.runJob("SOCKETS_FROM_USER", { userId: payload.userId }, this)
+								.then(sockets =>
+									sockets.forEach(socket => socket.dispatch("event:activity.hide", activity._id))
 								)
 								.catch(next);
 
-							IOModule.runJob("EMIT_TO_ROOM", {
+							WSModule.runJob("EMIT_TO_ROOM", {
 								room: `profile-${payload.userId}-activities`,
 								args: ["event:activity.hide", activity._id]
 							});
@@ -330,13 +330,13 @@ class _ActivitiesModule extends CoreClass {
 						activities.forEach(activity => {
 							activityModel.updateOne({ _id: activity._id }, { $set: { hidden: true } }).catch(next);
 
-							IOModule.runJob("SOCKETS_FROM_USER", { userId: payload.userId }, this)
-								.then(res =>
-									res.sockets.forEach(socket => socket.emit("event:activity.hide", activity._id))
+							WSModule.runJob("SOCKETS_FROM_USER", { userId: payload.userId }, this)
+								.then(sockets =>
+									sockets.forEach(socket => socket.dispatch("event:activity.hide", activity._id))
 								)
 								.catch(next);
 
-							IOModule.runJob("EMIT_TO_ROOM", {
+							WSModule.runJob("EMIT_TO_ROOM", {
 								room: `profile-${payload.userId}-activities`,
 								args: ["event:activity.hide", activity._id]
 							});

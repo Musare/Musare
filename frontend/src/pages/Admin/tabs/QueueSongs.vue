@@ -177,8 +177,7 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
-import Vue from "vue";
+import { mapState, mapActions, mapGetters } from "vuex";
 
 import Toast from "toasters";
 
@@ -189,7 +188,7 @@ import FloatingBox from "../../../components/ui/FloatingBox.vue";
 
 import ScrollAndFetchHandler from "../../../mixins/ScrollAndFetchHandler.vue";
 
-import io from "../../../io";
+import ws from "../../../ws";
 
 export default {
 	components: { EditSong, UserIdToUsername, FloatingBox },
@@ -212,6 +211,9 @@ export default {
 		},
 		...mapState("modalVisibility", {
 			modals: state => state.modals.admin
+		}),
+		...mapGetters({
+			socket: "websockets/getSocket"
 		})
 	},
 	watch: {
@@ -221,33 +223,27 @@ export default {
 		}
 	},
 	mounted() {
-		io.getSocket(socket => {
-			this.socket = socket;
+		this.socket.on("event:admin.queueSong.added", queueSong => {
+			this.songs.push(queueSong);
+		});
 
-			this.socket.on("event:admin.queueSong.added", queueSong => {
-				this.songs.push(queueSong);
-			});
-
-			this.socket.on("event:admin.queueSong.removed", songId => {
-				this.songs = this.songs.filter(song => {
-					return song._id !== songId;
-				});
-			});
-
-			this.socket.on("event:admin.queueSong.updated", updatedSong => {
-				for (let i = 0; i < this.songs.length; i += 1) {
-					const song = this.songs[i];
-					if (song._id === updatedSong._id) {
-						Vue.set(this.songs, i, updatedSong);
-					}
-				}
-			});
-
-			if (this.socket.connected) this.init();
-			io.onConnect(() => {
-				this.init();
+		this.socket.on("event:admin.queueSong.removed", songId => {
+			this.songs = this.songs.filter(song => {
+				return song._id !== songId;
 			});
 		});
+
+		this.socket.on("event:admin.queueSong.updated", updatedSong => {
+			for (let i = 0; i < this.songs.length; i += 1) {
+				const song = this.songs[i];
+				if (song._id === updatedSong._id) {
+					this.$set(this.songs, i, updatedSong);
+				}
+			}
+		});
+
+		if (this.socket.readyState === 1) this.init();
+		ws.onConnect(() => this.init());
 	},
 	methods: {
 		edit(song) {
@@ -261,7 +257,7 @@ export default {
 			this.openModal({ sector: "admin", modal: "editSong" });
 		},
 		add(song) {
-			this.socket.emit("songs.add", song, res => {
+			this.socket.dispatch("songs.add", song, res => {
 				if (res.status === "success")
 					new Toast({ content: res.message, timeout: 2000 });
 				else new Toast({ content: res.message, timeout: 4000 });
@@ -273,7 +269,7 @@ export default {
 				"Are you sure you want to delete this song?"
 			);
 			if (dialogResult !== true) return;
-			this.socket.emit("queueSongs.remove", id, res => {
+			this.socket.dispatch("queueSongs.remove", id, res => {
 				if (res.status === "success")
 					new Toast({ content: res.message, timeout: 2000 });
 				else new Toast({ content: res.message, timeout: 4000 });
@@ -284,7 +280,7 @@ export default {
 			if (this.position >= this.maxPosition) return;
 			this.isGettingSet = true;
 
-			this.socket.emit("queueSongs.getSet", this.position, data => {
+			this.socket.dispatch("queueSongs.getSet", this.position, data => {
 				data.forEach(song => this.songs.push(song));
 
 				this.position += 1;
@@ -309,13 +305,13 @@ export default {
 			if (this.songs.length > 0)
 				this.position = Math.ceil(this.songs.length / 15) + 1;
 
-			this.socket.emit("queueSongs.length", length => {
+			this.socket.dispatch("queueSongs.length", length => {
 				this.maxPosition = Math.ceil(length / 15) + 1;
 
 				this.getSet();
 			});
 
-			this.socket.emit("apis.joinAdminRoom", "queue", () => {});
+			this.socket.dispatch("apis.joinAdminRoom", "queue", () => {});
 		},
 		// ...mapActions("admin/songs", ["editSong"]),
 		...mapActions("modals/editSong", ["stopVideo"]),

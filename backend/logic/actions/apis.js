@@ -7,7 +7,7 @@ import { isAdminRequired } from "./hooks";
 import moduleManager from "../../index";
 
 const UtilsModule = moduleManager.modules.utils;
-const IOModule = moduleManager.modules.io;
+const WSModule = moduleManager.modules.ws;
 const YouTubeModule = moduleManager.modules.youtube;
 
 export default {
@@ -122,7 +122,7 @@ export default {
 	 */
 	joinRoom(session, page, cb) {
 		if (page === "home" || page.startsWith("profile-")) {
-			IOModule.runJob("SOCKET_JOIN_ROOM", {
+			WSModule.runJob("SOCKET_JOIN_ROOM", {
 				socketId: session.socketId,
 				room: page
 			})
@@ -152,7 +152,7 @@ export default {
 			page === "statistics" ||
 			page === "punishments"
 		) {
-			IOModule.runJob("SOCKET_JOIN_ROOM", {
+			WSModule.runJob("SOCKET_JOIN_ROOM", {
 				socketId: session.socketId,
 				room: `admin.${page}`
 			});
