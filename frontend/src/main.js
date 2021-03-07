@@ -140,6 +140,20 @@ const router = new VueRouter({
 lofig.folder = "../config/default.json";
 
 (async () => {
+	lofig.fetchConfig().then(config => {
+		const { configVersion, skipConfigVersionCheck } = config;
+		if (
+			configVersion !== REQUIRED_CONFIG_VERSION &&
+			!skipConfigVersionCheck
+		) {
+			// eslint-disable-next-line no-alert
+			alert(
+				"CONFIG VERSION IS WRONG. PLEASE UPDATE YOUR CONFIG WITH THE HELP OF THE TEMPLATE FILE AND THE README FILE."
+			);
+			window.stop();
+		}
+	});
+
 	const websocketsDomain = await lofig.get("websocketsDomain");
 	ws.init(websocketsDomain);
 
@@ -175,20 +189,6 @@ lofig.folder = "../config/default.json";
 			"user/preferences/changeActivityLogPublic",
 			preferences.activityLogPublic
 		);
-	});
-
-	lofig.fetchConfig().then(config => {
-		const { configVersion, skipConfigVersionCheck } = config;
-		if (
-			configVersion !== REQUIRED_CONFIG_VERSION &&
-			!skipConfigVersionCheck
-		) {
-			// eslint-disable-next-line no-alert
-			alert(
-				"CONFIG VERSION IS WRONG. PLEASE UPDATE YOUR CONFIG WITH THE HELP OF THE TEMPLATE FILE AND THE README FILE."
-			);
-			window.stop();
-		}
 	});
 
 	router.beforeEach((to, from, next) => {
