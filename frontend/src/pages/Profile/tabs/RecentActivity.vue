@@ -39,7 +39,7 @@
 </template>
 
 <script>
-import { mapState, mapGetters } from "vuex";
+import { mapState, mapGetters, mapActions } from "vuex";
 import Toast from "toasters";
 
 import ws from "../../../ws";
@@ -56,6 +56,7 @@ export default {
 	},
 	data() {
 		return {
+			username: "",
 			activities: [],
 			position: 1,
 			maxPosition: 1,
@@ -68,8 +69,7 @@ export default {
 			...mapState("modalVisibility", {
 				modals: state => state.modals.station
 			}),
-			myUserId: state => state.user.auth.userId,
-			username: state => state.user.auth.username
+			myUserId: state => state.user.auth.userId
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
@@ -86,6 +86,10 @@ export default {
 					}
 				)
 			);
+
+			this.getUsernameFromId(this.userId).then(res => {
+				if (res) this.username = res;
+			});
 		}
 
 		this.socket.dispatch("activities.length", this.userId, length => {
@@ -151,7 +155,8 @@ export default {
 			if (scrollPosition + 100 >= bottomPosition) this.getSet();
 
 			return this.maxPosition === this.position;
-		}
+		},
+		...mapActions("user/auth", ["getUsernameFromId"])
 	}
 };
 </script>
