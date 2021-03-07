@@ -135,7 +135,7 @@ class _AppModule extends CoreClass {
 
 				const { state } = req.query;
 
-				const verificationToken = await UtilsModule.runJob("GENERATE_RANDOM_STRING", { length: 64 });
+				const verificationToken = await UtilsModule.runJob("GENERATE_RANDOM_STRING", { length: 64 }, this);
 
 				return async.waterfall(
 					[

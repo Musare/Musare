@@ -349,13 +349,8 @@ export default {
 	 */
 	async register(session, username, email, password, recaptcha, cb) {
 		email = email.toLowerCase();
-		const verificationToken = await UtilsModule.runJob(
-			"GENERATE_RANDOM_STRING",
-			{
-				length: 64
-			},
-			this
-		);
+		const verificationToken = await UtilsModule.runJob("GENERATE_RANDOM_STRING", { length: 64 }, this);
+
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 		const verifyEmailSchema = await MailModule.runJob(
 			"GET_SCHEMA",
@@ -391,7 +386,7 @@ export default {
 							})
 							.then(res => next(null, res.data))
 							.catch(err => next(err));
-					else next(null, null, null);
+					else next(null, null);
 				},
 
 				// check if the response from Google recaptcha is successful
@@ -447,13 +442,7 @@ export default {
 
 				// generate the url for gravatar avatar
 				(user, next) => {
-					UtilsModule.runJob(
-						"CREATE_GRAVATAR",
-						{
-							email: user.email.address
-						},
-						this
-					).then(url => {
+					UtilsModule.runJob("CREATE_GRAVATAR", { email: user.email.address }, this).then(url => {
 						user.avatar = {
 							type: "gravatar",
 							url

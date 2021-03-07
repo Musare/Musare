@@ -57,9 +57,13 @@ CacheModule.runJob("SUB", {
 							key: session.sessionId
 						}).then(session => {
 							if (session)
-								DBModule.runJob("GET_MODEL", {
-									modelName: "user"
-								}).then(userModel =>
+								DBModule.runJob(
+									"GET_MODEL",
+									{
+										modelName: "user"
+									},
+									this
+								).then(userModel =>
 									userModel.findOne({ _id: session.userId }, (err, user) => {
 										if (user.role === "admin")
 											socket.dispatch("event:userCount.updated", stationId, count);
@@ -820,6 +824,7 @@ export default {
 					this.log("ERROR", "STATIONS_JOIN", `Joining station "${stationIdentifier}" failed. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
+
 				this.log("SUCCESS", "STATIONS_JOIN", `Joined station "${data._id}" successfully.`);
 				return cb({ status: "success", data });
 			}
