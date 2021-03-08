@@ -631,7 +631,7 @@ export default {
 				(playlist, next) => {
 					if (!playlist.isUserModifiable) return next("Playlist cannot be shuffled.");
 
-					return UtilsModule.runJob("SHUFFLE", { array: playlist.songs }, this)
+					return UtilsModule.runJob("SHUFFLE_SONG_POSITIONS", { array: playlist.songs }, this)
 						.then(result => next(null, result.array))
 						.catch(next);
 				},

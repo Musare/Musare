@@ -480,7 +480,7 @@ class _StationsModule extends CoreClass {
 					},
 
 					(playlist, next) => {
-						UtilsModule.runJob("SHUFFLE_SONG_POSITIONS", { array: playlist.songs }, this)
+						UtilsModule.runJob("SHUFFLE", { array: playlist.songs }, this)
 							.then(response => {
 								next(null, response.array);
 							})
@@ -502,12 +502,15 @@ class _StationsModule extends CoreClass {
 						const songsToAdd = [];
 						playlistSongs
 							.map(song => song._doc)
-							.forEach(song => {
+							.every(song => {
 								if (
 									songsToAdd.length < songsStillNeeded &&
 									currentSongIds.indexOf(song._id.toString()) === -1
-								)
+								) {
 									songsToAdd.push(song);
+									return false;
+								}
+								return true;
 							});
 
 						next(null, [...currentSongs, ...songsToAdd]);
