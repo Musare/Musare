@@ -949,35 +949,25 @@ class _StationsModule extends CoreClass {
 							});
 						}
 
-						if (station.currentSong !== null && station.currentSong.songId !== undefined) {
-							WSModule.runJob("SOCKETS_JOIN_SONG_ROOM", {
-								sockets: await WSModule.runJob(
-									"GET_SOCKETS_FOR_ROOM",
-									{ room: `station.${station._id}` },
-									this
-								),
-								room: `song.${station.currentSong.songId}`
-							});
-							if (!station.paused) {
-								NotificationsModule.runJob("SCHEDULE", {
-									name: `stations.nextSong?id=${station._id}`,
-									time: station.currentSong.duration * 1000,
-									station
+						WSModule.runJob("GET_SOCKETS_FOR_ROOM", { room: `station.${station._id}` }).then(sockets => {
+							if (station.currentSong !== null && station.currentSong.songId !== undefined) {
+								WSModule.runJob("SOCKETS_JOIN_SONG_ROOM", {
+									sockets,
+									room: `song.${station.currentSong.songId}`
+								});
+								if (!station.paused) {
+									NotificationsModule.runJob("SCHEDULE", {
+										name: `stations.nextSong?id=${station._id}`,
+										time: station.currentSong.duration * 1000,
+										station
+									});
+								}
+							} else {
+								WSModule.runJob("SOCKETS_LEAVE_SONG_ROOMS", {
+									sockets
 								});
 							}
-						} else {
-							WSModule.runJob(
-								"SOCKETS_LEAVE_SONG_ROOMS",
-								{
-									sockets: await WSModule.runJob(
-										"GET_SOCKETS_FOR_ROOM",
-										{ room: `station.${station._id}` },
-										this
-									)
-								},
-								this
-							).then(() => {});
-						}
+						});
 
 						resolve({ station });
 					}

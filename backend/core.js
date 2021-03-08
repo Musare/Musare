@@ -620,14 +620,17 @@ export default class CoreClass {
 							job.parentJob &&
 							job.parentJob.childJobs.find(childJob => childJob.status !== "FINISHED") === undefined
 						) {
-							this.log(
-								"INFO",
-								`Requeing/resuming job ${
-									job.parentJob.name
-								} (${job.parentJob.toString()}) since all child jobs are complete.`
-							);
-							job.parentJob.setStatus("REQUEUED");
-							job.parentJob.module.jobQueue.resumeRunningJob(job.parentJob);
+							if (job.parentJob.status !== "WAITING_ON_CHILD_JOB") {
+								this.log(
+									"ERROR",
+									`Job ${
+										job.parentJob.name
+									} (${job.parentJob.toString()}) had a child job complete even though it is not waiting on a child job. This should never happen.`
+								);
+							} else {
+								job.parentJob.setStatus("REQUEUED");
+								job.parentJob.module.jobQueue.resumeRunningJob(job.parentJob);
+							}
 						}
 						resolve();
 					});
