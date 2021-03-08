@@ -480,7 +480,7 @@ class _StationsModule extends CoreClass {
 					},
 
 					(playlist, next) => {
-						UtilsModule.runJob("SHUFFLE", { array: playlist.songs }, this)
+						UtilsModule.runJob("SHUFFLE_SONG_POSITIONS", { array: playlist.songs }, this)
 							.then(response => {
 								next(null, response.array);
 							})

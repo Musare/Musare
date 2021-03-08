@@ -228,13 +228,46 @@ class _UtilsModule extends CoreClass {
 	}
 
 	/**
-	 * Shuffles an array of songs by their position property
+	 * Shuffles an array
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {object} payload.array - an array of songs that should be shuffled
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	SHUFFLE(payload) {
+		// array
+		return new Promise(resolve => {
+			const { array } = payload;
+
+			// sort the positions array
+			let currentIndex = array.length;
+			let temporaryValue;
+			let randomIndex;
+
+			// While there remain elements to shuffle...
+			while (currentIndex !== 0) {
+				// Pick a remaining element...
+				randomIndex = Math.floor(Math.random() * currentIndex);
+				currentIndex -= 1;
+
+				// And swap it with the current element.
+				temporaryValue = array[currentIndex];
+				array[currentIndex] = array[randomIndex];
+				array[randomIndex] = temporaryValue;
+			}
+
+			resolve({ array });
+		});
+	}
+
+	/**
+	 * Shuffles an array of songs by their position property
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {object} payload.array - an array of songs that should be shuffled
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	SHUFFLE_SONG_POSITIONS(payload) {
 		// array
 		return new Promise(resolve => {
 			const { array } = payload;
