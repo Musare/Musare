@@ -281,7 +281,7 @@ class _WSModule extends CoreClass {
 	async EMIT_TO_ROOM(payload) {
 		return new Promise(resolve => {
 			// if the room exists
-			if (WSModule.rooms[payload.room])
+			if (WSModule.rooms[payload.room] && WSModule.rooms[payload.room].length > 0)
 				return WSModule.rooms[payload.room].forEach(async socketId => {
 					// get every socketId (and thus every socket) in the room, and dispatch to each
 					const socket = await WSModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId }, this);
