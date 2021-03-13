@@ -105,19 +105,19 @@ class _PlaylistsModule extends CoreClass {
 					} else {
 						resolve();
 
-						PlaylistsModule.runJob("CREATE_MISSING_GENRE_PLAYLISTS", {})
-							.then()
-							.catch()
-							.finally(() => {
-								SongsModule.runJob("GET_ALL_GENRES", {})
-									.then(response => {
-										const { genres } = response;
-										genres.forEach(genre => {
-											PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre }).then().catch();
-										});
-									})
-									.catch();
-							});
+						// PlaylistsModule.runJob("CREATE_MISSING_GENRE_PLAYLISTS", {})
+						// 	.then()
+						// 	.catch()
+						// 	.finally(() => {
+						// 		SongsModule.runJob("GET_ALL_GENRES", {})
+						// 			.then(response => {
+						// 				const { genres } = response;
+						// 				genres.forEach(genre => {
+						// 					PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre }).then().catch();
+						// 				});
+						// 			})
+						// 			.catch();
+						// 	});
 					}
 				}
 			)
