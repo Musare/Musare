@@ -5,6 +5,37 @@ import axios from "axios";
 
 import CoreClass from "../core";
 
+class RateLimitter {
+	/**
+	 * Constructor
+	 *
+	 * @param {number} timeBetween - The time between each allowed YouTube request
+	 */
+	constructor(timeBetween) {
+		this.dateStarted = Date.now();
+		this.timeBetween = timeBetween;
+	}
+
+	/**
+	 * Returns a promise that resolves whenever the ratelimit of a YouTube request is done
+	 *
+	 * @returns {Promise} - promise that gets resolved when the rate limit allows it
+	 */
+	continue() {
+		return new Promise(resolve => {
+			if (Date.now() - this.dateStarted >= this.timeBetween) resolve();
+			else setTimeout(resolve, this.dateStarted + this.timeBetween - Date.now());
+		});
+	}
+
+	/**
+	 * Restart the rate limit timer
+	 */
+	restart() {
+		this.dateStarted = Date.now();
+	}
+}
+
 let YouTubeModule;
 
 class _YouTubeModule extends CoreClass {
@@ -27,6 +58,9 @@ class _YouTubeModule extends CoreClass {
 	 */
 	initialize() {
 		return new Promise(resolve => {
+			this.rateLimiter = new RateLimitter(config.get("apis.youtube.rateLimit"));
+			this.requestTimeout = config.get("apis.youtube.requestTimeout");
+
 			resolve();
 		});
 	}
@@ -50,22 +84,25 @@ class _YouTubeModule extends CoreClass {
 
 		if (payload.pageToken) params.pageToken = payload.pageToken;
 
-		return new Promise((resolve, reject) => {
-			axios
-				.get("https://www.googleapis.com/youtube/v3/search", { params })
-				.then(res => {
-					if (res.data.err) {
-						YouTubeModule.log("ERROR", "SEARCH", `${res.data.error.message}`);
-						return reject(new Error("An error has occured. Please try again later."));
-					}
+		return new Promise((resolve, reject) =>
+			YouTubeModule.rateLimiter.continue().then(() => {
+				YouTubeModule.rateLimiter.restart();
+				axios
+					.get("https://www.googleapis.com/youtube/v3/search", { params })
+					.then(res => {
+						if (res.data.err) {
+							YouTubeModule.log("ERROR", "SEARCH", `${res.data.error.message}`);
+							return reject(new Error("An error has occured. Please try again later."));
+						}
 
-					return resolve(res.data);
-				})
-				.catch(err => {
-					YouTubeModule.log("ERROR", "SEARCH", `${err.message}`);
-					return reject(new Error("An error has occured. Please try again later."));
-				});
-		});
+						return resolve(res.data);
+					})
+					.catch(err => {
+						YouTubeModule.log("ERROR", "SEARCH", `${err.message}`);
+						return reject(new Error("An error has occured. Please try again later."));
+					});
+			})
+		);
 	}
 
 	/**
@@ -85,59 +122,64 @@ class _YouTubeModule extends CoreClass {
 
 			if (payload.pageToken) params.pageToken = payload.pageToken;
 
-			axios
-				.get("https://www.googleapis.com/youtube/v3/videos", {
-					params,
-					timeout: 30000
-				})
-				.then(res => {
-					if (res.data.error) {
-						YouTubeModule.log("ERROR", "GET_SONG", `${res.data.error.message}`);
+			YouTubeModule.rateLimiter.continue().then(() => {
+				YouTubeModule.rateLimiter.restart();
+				axios
+					.get("https://www.googleapis.com/youtube/v3/videos", {
+						params,
+						timeout: YouTubeModule.requestTimeout
+					})
+					.then(res => {
+						if (res.data.error) {
+							YouTubeModule.log("ERROR", "GET_SONG", `${res.data.error.message}`);
+							return reject(new Error("An error has occured. Please try again later."));
+						}
+
+						if (res.data.items[0] === undefined)
+							return reject(
+								new Error("The specified video does not exist or cannot be publicly accessed.")
+							);
+
+						// TODO Clean up duration converter
+						let dur = res.data.items[0].contentDetails.duration;
+
+						dur = dur.replace("PT", "");
+
+						let duration = 0;
+
+						dur = dur.replace(/([\d]*)H/, (v, v2) => {
+							v2 = Number(v2);
+							duration = v2 * 60 * 60;
+							return "";
+						});
+
+						dur = dur.replace(/([\d]*)M/, (v, v2) => {
+							v2 = Number(v2);
+							duration += v2 * 60;
+							return "";
+						});
+
+						// eslint-disable-next-line no-unused-vars
+						dur = dur.replace(/([\d]*)S/, (v, v2) => {
+							v2 = Number(v2);
+							duration += v2;
+							return "";
+						});
+
+						const song = {
+							songId: res.data.items[0].id,
+							title: res.data.items[0].snippet.title,
+							thumbnail: res.data.items[0].snippet.thumbnails.default.url,
+							duration
+						};
+
+						return resolve({ song });
+					})
+					.catch(err => {
+						YouTubeModule.log("ERROR", "GET_SONG", `${err.message}`);
 						return reject(new Error("An error has occured. Please try again later."));
-					}
-
-					if (res.data.items[0] === undefined)
-						return reject(new Error("The specified video does not exist or cannot be publicly accessed."));
-
-					// TODO Clean up duration converter
-					let dur = res.data.items[0].contentDetails.duration;
-
-					dur = dur.replace("PT", "");
-
-					let duration = 0;
-
-					dur = dur.replace(/([\d]*)H/, (v, v2) => {
-						v2 = Number(v2);
-						duration = v2 * 60 * 60;
-						return "";
 					});
-
-					dur = dur.replace(/([\d]*)M/, (v, v2) => {
-						v2 = Number(v2);
-						duration += v2 * 60;
-						return "";
-					});
-
-					// eslint-disable-next-line no-unused-vars
-					dur = dur.replace(/([\d]*)S/, (v, v2) => {
-						v2 = Number(v2);
-						duration += v2;
-						return "";
-					});
-
-					const song = {
-						songId: res.data.items[0].id,
-						title: res.data.items[0].snippet.title,
-						thumbnail: res.data.items[0].snippet.thumbnails.default.url,
-						duration
-					};
-
-					return resolve({ song });
-				})
-				.catch(err => {
-					YouTubeModule.log("ERROR", "GET_SONG", `${err.message}`);
-					return reject(new Error("An error has occured. Please try again later."));
-				});
+			});
 		});
 	}
 
@@ -239,27 +281,30 @@ class _YouTubeModule extends CoreClass {
 
 			if (payload.nextPageToken) params.pageToken = payload.nextPageToken;
 
-			axios
-				.get("https://www.googleapis.com/youtube/v3/playlistItems", {
-					params,
-					timeout: 30000
-				})
-				.then(res => {
-					if (res.data.err) {
-						YouTubeModule.log("ERROR", "GET_PLAYLIST_PAGE", `${res.data.error.message}`);
+			YouTubeModule.rateLimiter.continue().then(() => {
+				YouTubeModule.rateLimiter.restart();
+				axios
+					.get("https://www.googleapis.com/youtube/v3/playlistItems", {
+						params,
+						timeout: YouTubeModule.requestTimeout
+					})
+					.then(res => {
+						if (res.data.err) {
+							YouTubeModule.log("ERROR", "GET_PLAYLIST_PAGE", `${res.data.error.message}`);
+							return reject(new Error("An error has occured. Please try again later."));
+						}
+
+						const songs = res.data.items;
+
+						if (res.data.nextPageToken) return resolve({ nextPageToken: res.data.nextPageToken, songs });
+
+						return resolve({ songs });
+					})
+					.catch(err => {
+						YouTubeModule.log("ERROR", "GET_PLAYLIST_PAGE", `${err.message}`);
 						return reject(new Error("An error has occured. Please try again later."));
-					}
-
-					const songs = res.data.items;
-
-					if (res.data.nextPageToken) return resolve({ nextPageToken: res.data.nextPageToken, songs });
-
-					return resolve({ songs });
-				})
-				.catch(err => {
-					YouTubeModule.log("ERROR", "GET_PLAYLIST_PAGE", `${err.message}`);
-					return reject(new Error("An error has occured. Please try again later."));
-				});
+					});
+			});
 		});
 	}
 
@@ -290,39 +335,42 @@ class _YouTubeModule extends CoreClass {
 				maxResults: videosPerPage
 			};
 
-			return axios
-				.get("https://www.googleapis.com/youtube/v3/videos", {
-					params,
-					timeout: 30000
-				})
-				.then(res => {
-					if (res.data.err) {
-						YouTubeModule.log("ERROR", "FILTER_MUSIC_VIDEOS", `${res.data.error.message}`);
-						return reject(new Error("An error has occured. Please try again later."));
-					}
+			return YouTubeModule.rateLimiter.continue().then(() => {
+				YouTubeModule.rateLimiter.restart();
+				axios
+					.get("https://www.googleapis.com/youtube/v3/videos", {
+						params,
+						timeout: YouTubeModule.requestTimeout
+					})
+					.then(res => {
+						if (res.data.err) {
+							YouTubeModule.log("ERROR", "FILTER_MUSIC_VIDEOS", `${res.data.error.message}`);
+							return reject(new Error("An error has occured. Please try again later."));
+						}
 
-					const songIds = [];
+						const songIds = [];
 
-					res.data.items.forEach(item => {
-						const songId = item.id;
+						res.data.items.forEach(item => {
+							const songId = item.id;
 
-						if (!item.topicDetails) return;
-						if (item.topicDetails.topicCategories.indexOf("https://en.wikipedia.org/wiki/Music") !== -1)
-							songIds.push(songId);
+							if (!item.topicDetails) return;
+							if (item.topicDetails.topicCategories.indexOf("https://en.wikipedia.org/wiki/Music") !== -1)
+								songIds.push(songId);
+						});
+
+						return YouTubeModule.runJob(
+							"FILTER_MUSIC_VIDEOS",
+							{ videoIds: payload.videoIds, page: page + 1 },
+							this
+						)
+							.then(result => resolve({ songIds: songIds.concat(result.songIds) }))
+							.catch(err => reject(err));
+					})
+					.catch(err => {
+						YouTubeModule.log("ERROR", "FILTER_MUSIC_VIDEOS", `${err.message}`);
+						return reject(new Error("Failed to find playlist from YouTube"));
 					});
-
-					return YouTubeModule.runJob(
-						"FILTER_MUSIC_VIDEOS",
-						{ videoIds: payload.videoIds, page: page + 1 },
-						this
-					)
-						.then(result => resolve({ songIds: songIds.concat(result.songIds) }))
-						.catch(err => reject(err));
-				})
-				.catch(err => {
-					YouTubeModule.log("ERROR", "FILTER_MUSIC_VIDEOS", `${err.message}`);
-					return reject(new Error("Failed to find playlist from YouTube"));
-				});
+			});
 		});
 	}
 }
