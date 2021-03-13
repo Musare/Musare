@@ -36,7 +36,7 @@
 									!isNotSelected(playlist._id) &&
 									!station.partyMode
 							"
-							@click="deselectPlaylist()"
+							@click="deselectPlaylist(playlist._id)"
 							class="material-icons stop-icon"
 							>stop</i
 						>
@@ -178,10 +178,11 @@ export default {
 				}
 			);
 		},
-		deselectPlaylist() {
+		deselectPlaylist(id) {
 			this.socket.dispatch(
 				"stations.deselectPrivatePlaylist",
 				this.station._id,
+				id,
 				res => {
 					if (res.status === "failure")
 						return new Toast({
@@ -194,7 +195,10 @@ export default {
 		},
 		isNotSelected(id) {
 			// TODO Also change this once it changes for a station
-			if (this.station && this.station.privatePlaylist === id)
+			if (
+				this.station &&
+				this.station.includedPlaylists.indexOf(id) !== -1
+			)
 				return false;
 			return true;
 		},

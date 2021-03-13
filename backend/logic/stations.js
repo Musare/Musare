@@ -498,21 +498,20 @@ class _StationsModule extends CoreClass {
 					(playlistSongs, station, next) => {
 						const songsStillNeeded = 50 - station.playlist.length;
 						const currentSongs = station.playlist;
-						const currentSongIds = station.playlist.map(song => song._id);
+						const currentSongIds = station.playlist.map(song => song.songId);
 						const songsToAdd = [];
 						playlistSongs
 							.map(song => song._doc)
 							.every(song => {
 								if (
 									songsToAdd.length < songsStillNeeded &&
-									currentSongIds.indexOf(song._id.toString()) === -1
+									currentSongIds.indexOf(song.songId) === -1
 								) {
 									songsToAdd.push(song);
 									return false;
 								}
 								return true;
 							});
-
 						next(null, [...currentSongs, ...songsToAdd]);
 					},
 
@@ -546,13 +545,13 @@ class _StationsModule extends CoreClass {
 	}
 
 	/**
-	 * Gets next official station song
+	 * Gets next station song
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.stationId - the id of the station
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
-	GET_NEXT_OFFICIAL_STATION_SONG(payload) {
+	GET_NEXT_STATION_SONG(payload) {
 		return new Promise((resolve, reject) => {
 			const { stationId } = payload;
 
@@ -574,26 +573,27 @@ class _StationsModule extends CoreClass {
 					},
 
 					(song, next) => {
-						console.log(44444, song, song._id);
-						SongsModule.runJob("GET_SONG", { id: song._id }, this)
-							.then(response => {
-								const { song } = response;
-								if (song) {
-									const newSong = {
-										_id: song._id,
-										songId: song.songId,
-										title: song.title,
-										artists: song.artists,
-										duration: song.duration,
-										thumbnail: song.thumbnail,
-										requestedAt: song.requestedAt
-									};
-									next(null, newSong);
-								} else {
-									next(null, song);
-								}
-							})
-							.catch(next);
+						if (!song._id) next(null, song);
+						else
+							SongsModule.runJob("GET_SONG", { id: song._id }, this)
+								.then(response => {
+									const { song } = response;
+									if (song) {
+										const newSong = {
+											_id: song._id,
+											songId: song.songId,
+											title: song.title,
+											artists: song.artists,
+											duration: song.duration,
+											thumbnail: song.thumbnail,
+											requestedAt: song.requestedAt
+										};
+										next(null, newSong);
+									} else {
+										next(null, song);
+									}
+								})
+								.catch(next);
 					}
 				],
 				(err, song) => {
@@ -664,6 +664,7 @@ class _StationsModule extends CoreClass {
 
 			async.waterfall(
 				[
+					// Clears up any existing timers that would skip the station if the song ends
 					next => {
 						NotificationsModule.runJob("UNSCHEDULE", {
 							name: `stations.nextSong?id=${payload.stationId}`
@@ -674,6 +675,7 @@ class _StationsModule extends CoreClass {
 							.catch(next);
 					},
 
+					// Gets the station object
 					next => {
 						StationsModule.runJob(
 							"GET_STATION",
@@ -687,6 +689,7 @@ class _StationsModule extends CoreClass {
 							})
 							.catch(() => {});
 					},
+
 					// eslint-disable-next-line consistent-return
 					(station, next) => {
 						if (!station) return next("Station not found.");
@@ -715,62 +718,93 @@ class _StationsModule extends CoreClass {
 						}
 
 						if (station.type === "community" && !station.partyMode) {
-							return DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this).then(playlistModel =>
-								playlistModel.findOne({ _id: station.privatePlaylist }, (err, playlist) => {
-									if (err) return next(err);
-
-									if (!playlist) return next(null, null, -13, station);
-
-									playlist = playlist.songs;
-
-									if (playlist.length > 0) {
-										let currentSongIndex;
-
-										if (station.currentSongIndex < playlist.length - 1)
-											currentSongIndex = station.currentSongIndex + 1;
-										else currentSongIndex = 0;
-
-										const callback = (err, song) => {
-											if (err) return next(err);
-											if (song) return next(null, song, currentSongIndex, station);
-
-											const currentSong = {
-												songId: playlist[currentSongIndex].songId,
-												title: playlist[currentSongIndex].title,
-												duration: playlist[currentSongIndex].duration,
-												likes: -1,
-												dislikes: -1,
-												requestedAt: playlist[currentSongIndex].requestedAt
-											};
-
-											return next(null, currentSong, currentSongIndex, station);
-										};
-
-										if (mongoose.Types.ObjectId.isValid(playlist[currentSongIndex]._id))
-											return SongsModule.runJob(
-												"GET_SONG",
-												{
-													id: playlist[currentSongIndex]._id
-												},
+							StationsModule.runJob(
+								"REMOVE_FIRST_OFFICIAL_PLAYLIST_QUEUE_SONG",
+								{ stationId: station._id },
+								this
+							)
+								.then(() => {
+									StationsModule.runJob(
+										"FILL_UP_OFFICIAL_STATION_PLAYLIST_QUEUE",
+										{ stationId: station._id },
+										this
+									)
+										.then(() => {
+											StationsModule.runJob(
+												"GET_NEXT_STATION_SONG",
+												{ stationId: station._id },
 												this
 											)
-												.then(response => callback(null, response.song))
-												.catch(callback);
-										return SongsModule.runJob(
-											"GET_SONG_FROM_ID",
-											{
-												songId: playlist[currentSongIndex].songId
-											},
-											this
-										)
-											.then(response => callback(null, response.song))
-											.catch(callback);
-									}
-
-									return next(null, null, -14, station);
+												.then(response => {
+													next(null, response.song, 0, station);
+												})
+												.catch(err => {
+													if (err === "No songs available.") next(null, null, 0, station);
+													else next(err);
+												});
+										})
+										.catch(next);
 								})
-							);
+								.catch(next);
 						}
+
+						// if (station.type === "community" && !station.partyMode) {
+						// 	return DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this).then(playlistModel =>
+						// 		playlistModel.findOne({ _id: station.privatePlaylist }, (err, playlist) => {
+						// 			if (err) return next(err);
+
+						// 			if (!playlist) return next(null, null, -13, station);
+
+						// 			playlist = playlist.songs;
+
+						// 			if (playlist.length > 0) {
+						// 				let currentSongIndex;
+
+						// 				if (station.currentSongIndex < playlist.length - 1)
+						// 					currentSongIndex = station.currentSongIndex + 1;
+						// 				else currentSongIndex = 0;
+
+						// 				const callback = (err, song) => {
+						// 					if (err) return next(err);
+						// 					if (song) return next(null, song, currentSongIndex, station);
+
+						// 					const currentSong = {
+						// 						songId: playlist[currentSongIndex].songId,
+						// 						title: playlist[currentSongIndex].title,
+						// 						duration: playlist[currentSongIndex].duration,
+						// 						likes: -1,
+						// 						dislikes: -1,
+						// 						requestedAt: playlist[currentSongIndex].requestedAt
+						// 					};
+
+						// 					return next(null, currentSong, currentSongIndex, station);
+						// 				};
+
+						// 				if (mongoose.Types.ObjectId.isValid(playlist[currentSongIndex]._id))
+						// 					return SongsModule.runJob(
+						// 						"GET_SONG",
+						// 						{
+						// 							id: playlist[currentSongIndex]._id
+						// 						},
+						// 						this
+						// 					)
+						// 						.then(response => callback(null, response.song))
+						// 						.catch(callback);
+						// 				return SongsModule.runJob(
+						// 					"GET_SONG_FROM_ID",
+						// 					{
+						// 						songId: playlist[currentSongIndex].songId
+						// 					},
+						// 					this
+						// 				)
+						// 					.then(response => callback(null, response.song))
+						// 					.catch(callback);
+						// 			}
+
+						// 			return next(null, null, -14, station);
+						// 		})
+						// 	);
+						// }
 
 						if (station.type === "official") {
 							StationsModule.runJob(
@@ -786,7 +820,7 @@ class _StationsModule extends CoreClass {
 									)
 										.then(() => {
 											StationsModule.runJob(
-												"GET_NEXT_OFFICIAL_STATION_SONG",
+												"GET_NEXT_STATION_SONG",
 												{ stationId: station._id },
 												this
 											)

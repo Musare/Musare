@@ -754,6 +754,8 @@ export default {
 						partyMode: station.partyMode,
 						owner: station.owner,
 						privatePlaylist: station.privatePlaylist,
+						includedPlaylists: station.includedPlaylists,
+						excludedPlaylists: station.excludedPlaylists,
 						genres: station.genres,
 						blacklistedGenres: station.blacklistedGenres,
 						theme: station.theme
@@ -2512,6 +2514,7 @@ export default {
 					if (type === "community") {
 						if (blacklist.indexOf(name) !== -1)
 							return next("That name is blacklisted. Please use a different name.");
+						console.log(12121212, stationId);
 						return playlistModel.create(
 							{
 								isUserModifiable: false,
@@ -2528,6 +2531,7 @@ export default {
 								else {
 									stationModel.create(
 										{
+											_id: stationId,
 											name,
 											displayName,
 											description,
@@ -2989,9 +2993,6 @@ export default {
 	 * @param cb
 	 */
 	selectPrivatePlaylist: isOwnerRequired(async function selectPrivatePlaylist(session, stationId, playlistId, cb) {
-		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
-		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
-
 		async.waterfall(
 			[
 				next => {
@@ -3003,34 +3004,20 @@ export default {
 				(station, next) => {
 					if (!station) return next("Station not found.");
 					if (station.type !== "community") return next("Station is not a community station.");
-					if (station.privatePlaylist === playlistId)
-						return next("That private playlist is already selected.");
-					return playlistModel.findOne({ _id: playlistId }, next);
+					if (station.includedPlaylists.indexOf(playlistId) !== -1)
+						return next("That playlist is already included.");
+					return next();
 				},
 
-				(playlist, next) => {
-					if (!playlist) return next("Playlist not found.");
-					const currentSongIndex = playlist.songs.length > 0 ? playlist.songs.length - 1 : 0;
-					return stationModel.updateOne(
-						{ _id: stationId },
-						{
-							$set: {
-								privatePlaylist: playlistId,
-								currentSongIndex
-							}
-						},
-						{ runValidators: true },
-						next
-					);
-				},
-
-				(res, next) => {
-					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
-						.then(station => next(null, station))
+				next => {
+					StationsModule.runJob("INCLUDE_PLAYLIST", { stationId, playlistId }, this)
+						.then(() => {
+							next();
+						})
 						.catch(next);
 				}
 			],
-			async (err, station) => {
+			async err => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
@@ -3047,19 +3034,15 @@ export default {
 					`Selected private playlist "${playlistId}" for station "${stationId}" successfully.`
 				);
 
-				NotificationsModule.runJob("UNSCHEDULE", {
-					name: `stations.nextSong?id${stationId}`
-				});
+				PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();
 
-				if (!station.partyMode) StationsModule.runJob("SKIP_STATION", { stationId });
-
-				CacheModule.runJob("PUB", {
-					channel: "privatePlaylist.selected",
-					value: {
-						playlistId,
-						stationId
-					}
-				});
+				// CacheModule.runJob("PUB", {
+				// 	channel: "privatePlaylist.selected",
+				// 	value: {
+				// 		playlistId,
+				// 		stationId
+				// 	}
+				// });
 
 				return cb({
 					status: "success",
@@ -3076,15 +3059,12 @@ export default {
 	 * @param stationId - the station id
 	 * @param cb
 	 */
-	deselectPrivatePlaylist: isOwnerRequired(async function deselectPrivatePlaylist(session, stationId, cb) {
-		const stationModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "station"
-			},
-			this
-		);
-
+	deselectPrivatePlaylist: isOwnerRequired(async function deselectPrivatePlaylist(
+		session,
+		stationId,
+		playlistId,
+		cb
+	) {
 		async.waterfall(
 			[
 				next => {
@@ -3098,30 +3078,20 @@ export default {
 				(station, next) => {
 					if (!station) return next("Station not found.");
 					if (station.type !== "community") return next("Station is not a community station.");
-					if (!station.privatePlaylist) return next("No private playlist is currently selected.");
-
-					return stationModel.updateOne(
-						{ _id: stationId },
-						{
-							$set: {
-								privatePlaylist: null,
-								currentSongIndex: 0
-							}
-						},
-						{ runValidators: true },
-						next
-					);
+					if (station.includedPlaylists.indexOf(playlistId) === -1)
+						return next("That playlist is not included.");
+					return next();
 				},
 
-				(res, next) => {
-					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
-						.then(station => {
-							next(null, station);
+				next => {
+					StationsModule.runJob("REMOVE_INCLUDED_PLAYLIST", { stationId, playlistId }, this)
+						.then(() => {
+							next();
 						})
 						.catch(next);
 				}
 			],
-			async (err, station) => {
+			async err => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
@@ -3138,18 +3108,14 @@ export default {
 					`Deselected private playlist for station "${stationId}" successfully.`
 				);
 
-				NotificationsModule.runJob("UNSCHEDULE", {
-					name: `stations.nextSong?id${stationId}`
-				});
+				PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();
 
-				if (!station.partyMode) StationsModule.runJob("SKIP_STATION", { stationId });
-
-				CacheModule.runJob("PUB", {
-					channel: "privatePlaylist.deselected",
-					value: {
-						stationId
-					}
-				});
+				// CacheModule.runJob("PUB", {
+				// 	channel: "privatePlaylist.deselected",
+				// 	value: {
+				// 		stationId
+				// 	}
+				// });
 
 				return cb({
 					status: "success",

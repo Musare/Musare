@@ -680,6 +680,14 @@ class _PlaylistsModule extends CoreClass {
 					},
 
 					(includedSongs, next) => {
+						PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId: originalPlaylist._id }, this)
+							.then(() => {
+								next(null, includedSongs);
+							})
+							.catch(next);
+					},
+
+					(includedSongs, next) => {
 						if (originalPlaylist.songs.length === 0 && includedSongs.length > 0)
 							StationsModule.runJob("SKIP_STATION", { stationId: payload.stationId });
 						next();
