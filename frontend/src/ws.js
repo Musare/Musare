@@ -97,11 +97,15 @@ export default {
 					return onConnect.temp.push(() => this.dispatch(...args));
 
 				const cb = args[args.length - 1];
-				if (typeof cb === "function") CB_REFS[CB_REF] = cb;
+				if (typeof cb === "function") {
+					CB_REFS[CB_REF] = cb;
 
-				return this.send(
-					JSON.stringify([...args.slice(0, -1), { CB_REF }])
-				);
+					return this.send(
+						JSON.stringify([...args.slice(0, -1), { CB_REF }])
+					);
+				}
+
+				return this.send(JSON.stringify([...args]));
 			}
 		}
 
