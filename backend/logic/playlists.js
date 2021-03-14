@@ -713,40 +713,6 @@ class _PlaylistsModule extends CoreClass {
 			async.waterfall(
 				[
 					next => {
-						CacheModule.runJob("HGETALL", { table: "playlists" }, this)
-							.then(playlists => next(null, playlists))
-							.catch(next);
-					},
-
-					(playlists, next) => {
-						if (!playlists) return next();
-
-						const playlistIds = Object.keys(playlists);
-
-						return async.each(
-							playlistIds,
-							(playlistId, next) => {
-								PlaylistsModule.playlistModel.findOne({ _id: playlistId }, (err, playlist) => {
-									if (err) next(err);
-									else if (!playlist) {
-										CacheModule.runJob(
-											"HDEL",
-											{
-												table: "playlists",
-												key: playlistId
-											},
-											this
-										)
-											.then(() => next())
-											.catch(next);
-									} else next();
-								});
-							},
-							next
-						);
-					},
-
-					next => {
 						CacheModule.runJob(
 							"HGET",
 							{
