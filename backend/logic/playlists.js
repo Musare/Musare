@@ -726,8 +726,24 @@ class _PlaylistsModule extends CoreClass {
 					},
 
 					(playlist, next) => {
-						if (playlist) return next(true, playlist);
-						return PlaylistsModule.playlistModel.findOne({ _id: payload.playlistId }, next);
+						if (playlist)
+							PlaylistsModule.playlistModel.exists({ _id: payload.playlistId }, (err, exists) => {
+								if (err) next(err);
+								else if (exists) next(null, playlist);
+								else {
+									CacheModule.runJob(
+										"HDEL",
+										{
+											table: "playlists",
+											key: payload.playlistId
+										},
+										this
+									)
+										.then(() => next())
+										.catch(next);
+								}
+							});
+						else PlaylistsModule.playlistModel.findOne({ _id: payload.playlistId }, next);
 					},
 
 					(playlist, next) => {
