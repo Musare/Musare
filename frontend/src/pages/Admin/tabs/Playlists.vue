@@ -133,7 +133,7 @@ export default {
 			return this.utils.formatTimeLong(length);
 		},
 		deleteOrphanedStationPlaylists() {
-			this.socket.emit(
+			this.socket.dispatch(
 				"playlists.deleteOrphanedStationPlaylists",
 				res => {
 					if (res.status === "success") {
