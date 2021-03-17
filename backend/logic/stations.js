@@ -578,6 +578,7 @@ class _StationsModule extends CoreClass {
 							SongsModule.runJob("GET_SONG", { id: song._id }, this)
 								.then(response => {
 									const { song } = response;
+
 									if (song) {
 										const newSong = {
 											_id: song._id,
@@ -586,12 +587,15 @@ class _StationsModule extends CoreClass {
 											artists: song.artists,
 											duration: song.duration,
 											thumbnail: song.thumbnail,
-											requestedAt: song.requestedAt
+											requestedAt: song.requestedAt,
+											likes: song.likes,
+											dislikes: song.dislikes
 										};
-										next(null, newSong);
-									} else {
-										next(null, song);
+
+										return next(null, newSong);
 									}
+
+									return next(null, song);
 								})
 								.catch(next);
 					}
@@ -839,6 +843,7 @@ class _StationsModule extends CoreClass {
 					},
 					(song, currentSongIndex, station, next) => {
 						const $set = {};
+
 						if (song === null) $set.currentSong = null;
 						else if (song.likes === -1 && song.dislikes === -1) {
 							$set.currentSong = {
@@ -876,13 +881,7 @@ class _StationsModule extends CoreClass {
 						StationsModule.stationModel.updateOne({ _id: station._id }, { $set }, err => {
 							if (err) return next(err);
 
-							return StationsModule.runJob(
-								"UPDATE_STATION",
-								{
-									stationId: station._id
-								},
-								this
-							)
+							return StationsModule.runJob("UPDATE_STATION", { stationId: station._id }, this)
 								.then(station => {
 									if (station.type === "community" && station.partyMode === true)
 										CacheModule.runJob("PUB", {
@@ -899,7 +898,6 @@ class _StationsModule extends CoreClass {
 				],
 				async (err, station) => {
 					if (err) {
-						console.log(123, err);
 						err = await UtilsModule.runJob(
 							"GET_ERROR",
 							{

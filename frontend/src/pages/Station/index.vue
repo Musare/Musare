@@ -1532,12 +1532,12 @@ export default {
 							this.socket.dispatch(
 								"songs.getOwnSongRatings",
 								res.data.currentSong.songId,
-								data => {
+								song => {
 									if (
-										this.currentSong.songId === data.songId
+										this.currentSong.songId === song.songId
 									) {
-										this.liked = data.liked;
-										this.disliked = data.disliked;
+										this.liked = song.liked;
+										this.disliked = song.disliked;
 									}
 								}
 							);
