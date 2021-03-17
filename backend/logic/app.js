@@ -125,6 +125,7 @@ class _AppModule extends CoreClass {
 						"APP_REJECTED_GITHUB_AUTHORIZE",
 						`A user tried to use github authorize, but the APP module is currently not ready.`
 					);
+
 					return redirectOnErr(res, "Something went wrong on our end. Please try again later.");
 				}
 
@@ -135,7 +136,7 @@ class _AppModule extends CoreClass {
 
 				const { state } = req.query;
 
-				const verificationToken = await UtilsModule.runJob("GENERATE_RANDOM_STRING", { length: 64 }, this);
+				const verificationToken = await UtilsModule.runJob("GENERATE_RANDOM_STRING", { length: 64 });
 
 				return async.waterfall(
 					[
@@ -162,12 +163,12 @@ class _AppModule extends CoreClass {
 
 							return axios
 								.get("https://api.github.com/user", options)
-								.then(res => next(null, res))
+								.then(github => next(null, github))
 								.catch(err => next(err));
 						},
 
-						(res, next) => {
-							if (res.status !== 200) return next(res.data.message);
+						(github, next) => {
+							if (github.status !== 200) return next(github.data.message);
 
 							if (state) {
 								return async.waterfall(
@@ -196,7 +197,7 @@ class _AppModule extends CoreClass {
 												{
 													$set: {
 														"services.github": {
-															id: res.data.id,
+															id: github.data.id,
 															accessToken
 														}
 													}
@@ -204,7 +205,7 @@ class _AppModule extends CoreClass {
 												{ runValidators: true },
 												err => {
 													if (err) return next(err);
-													return next(null, user, res.data);
+													return next(null, user, github.data);
 												}
 											);
 										},
@@ -214,6 +215,7 @@ class _AppModule extends CoreClass {
 												channel: "user.linkGithub",
 												value: user._id
 											});
+
 											res.redirect(`${config.get("domain")}/settings#security`);
 										}
 									],
@@ -221,10 +223,10 @@ class _AppModule extends CoreClass {
 								);
 							}
 
-							if (!res.data.id) return next("Something went wrong, no id.");
+							if (!github.data.id) return next("Something went wrong, no id.");
 
-							return userModel.findOne({ "services.github.id": res.data.id }, (err, user) => {
-								next(err, user, res.data);
+							return userModel.findOne({ "services.github.id": github.data.id }, (err, user) => {
+								next(err, user, github.data);
 							});
 						},
 
@@ -372,6 +374,8 @@ class _AppModule extends CoreClass {
 						}
 					],
 					async (err, userId) => {
+						console.log(err, userId);
+
 						if (err && err !== true) {
 							err = await UtilsModule.runJob("GET_ERROR", {
 								error: err
