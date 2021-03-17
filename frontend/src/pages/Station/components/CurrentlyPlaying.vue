@@ -29,7 +29,7 @@
 					{{ currentSong.title }}
 				</h4>
 				<h5 id="song-artists" v-if="currentSong.artists">
-					{{ currentSong.artists }}
+					{{ currentSong.artists.join(", ") }}
 				</h5>
 				<p
 					id="song-request-time"

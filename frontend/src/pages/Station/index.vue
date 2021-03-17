@@ -642,11 +642,6 @@ export default {
 			if (currentSong) {
 				this.updateNoSong(false);
 
-				if (this.currentSong.artists)
-					this.currentSong.artists = this.currentSong.artists.join(
-						", "
-					);
-
 				if (!this.playerReady) this.youtubeReady();
 				else this.playVideo();
 
@@ -1517,11 +1512,6 @@ export default {
 						const currentSong = res.data.currentSong
 							? res.data.currentSong
 							: {};
-
-						if (currentSong.artists)
-							currentSong.artists = currentSong.artists.join(
-								", "
-							);
 
 						if (currentSong && !currentSong.thumbnail)
 							currentSong.ytThumbnail = `https://img.youtube.com/vi/${currentSong.songId}/mqdefault.jpg`;

@@ -264,7 +264,6 @@ export default {
 	},
 	methods: {
 		create() {
-			console.log(this.report);
 			this.socket.dispatch("reports.create", this.report, res => {
 				new Toast({ content: res.message, timeout: 4000 });
 				if (res.status === "success")
