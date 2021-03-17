@@ -33,6 +33,7 @@
 			<slot name="actions" />
 			<i
 				class="material-icons"
+				v-if="loggedIn"
 				@click="showPlaylistDropdown = !showPlaylistDropdown"
 			>
 				queue
@@ -42,6 +43,8 @@
 </template>
 
 <script>
+import { mapState } from "vuex";
+
 import AddToPlaylistDropdown from "../../../ui/AddToPlaylistDropdown.vue";
 
 export default {
@@ -56,7 +59,10 @@ export default {
 		return {
 			showPlaylistDropdown: false
 		};
-	}
+	},
+	computed: mapState({
+		loggedIn: state => state.user.auth.loggedIn
+	})
 };
 </script>
 

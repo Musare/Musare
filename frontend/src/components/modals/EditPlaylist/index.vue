@@ -277,7 +277,10 @@
 											>
 
 											<i
-												v-if="!song.simpleSong"
+												v-if="
+													!song.simpleSong &&
+														userRole === 'admin'
+												"
 												class="material-icons report-icon"
 												@click="
 													reportSongInPlaylist(song)
@@ -285,8 +288,12 @@
 											>
 												flag
 											</i>
+
 											<i
-												v-if="!song.simpleSong"
+												v-if="
+													!song.simpleSong &&
+														userRole === 'admin'
+												"
 												class="material-icons edit-icon"
 												@click="
 													editSongInPlaylist(song)
@@ -382,12 +389,14 @@ export default {
 			playlist: { songs: [] }
 		};
 	},
-
 	computed: {
 		...mapState("user/playlists", {
 			editing: state => state.editing
 		}),
-		...mapState({ userId: state => state.user.auth.userId }),
+		...mapState({
+			userId: state => state.user.auth.userId,
+			userRole: state => state.user.auth.role
+		}),
 		dragOptions() {
 			return {
 				animation: 200,
