@@ -705,15 +705,15 @@ export default {
 			// 	);
 			// }
 
-			if (
-				!isInQueue &&
-				this.privatePlaylistQueueSelected &&
-				(this.automaticallyRequestedSongId !==
-					this.currentSong.songId ||
-					!this.currentSong.songId)
-			) {
-				this.addFirstPrivatePlaylistSongToQueue();
-			}
+			// if (
+			// 	!isInQueue &&
+			// 	this.privatePlaylistQueueSelected &&
+			// 	(this.automaticallyRequestedSongId !==
+			// 		this.currentSong.songId ||
+			// 		!this.currentSong.songId)
+			// ) {
+			// 	this.addFirstPrivatePlaylistSongToQueue();
+			// }
 		});
 
 		this.socket.on("event:stations.pause", data => {

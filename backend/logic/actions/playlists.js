@@ -206,6 +206,7 @@ export default {
 
 				(playlist, next) => {
 					if (!playlist || playlist.createdBy !== session.userId) return next("Playlist not found.");
+					playlist.songs.sort((a, b) => a.position - b.position);
 					return next(null, playlist.songs[0]);
 				}
 			],
