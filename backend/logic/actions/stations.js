@@ -1978,13 +1978,19 @@ export default {
 						return next(`The party mode was already ${newPartyMode ? "enabled." : "disabled."}`);
 					return stationModel.updateOne(
 						{ _id: stationId },
-						{ $set: { partyMode: newPartyMode } },
+						{ $set: { partyMode: newPartyMode, queue: [] } },
 						{ runValidators: true },
 						next
 					);
 				},
 
 				(res, next) => {
+					CacheModule.runJob("PUB", {
+						channel: "station.queueUpdate",
+						value: stationId
+					})
+						.then()
+						.catch();
 					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
 						.then(station => {
 							next(null, station);
