@@ -174,6 +174,7 @@ export default {
 							content: res.message,
 							timeout: 8000
 						});
+					this.station.includedPlaylists.push(id);
 					return new Toast({ content: res.message, timeout: 4000 });
 				}
 			);
@@ -189,6 +190,10 @@ export default {
 							content: res.message,
 							timeout: 8000
 						});
+					this.station.includedPlaylists.splice(
+						this.station.includedPlaylists.indexOf(id),
+						1
+					);
 					return new Toast({ content: res.message, timeout: 4000 });
 				}
 			);

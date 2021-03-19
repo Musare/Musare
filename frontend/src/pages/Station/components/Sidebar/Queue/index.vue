@@ -79,7 +79,7 @@
 </template>
 
 <script>
-import { mapActions, mapState } from "vuex";
+import { mapActions, mapState, mapGetters } from "vuex";
 import Toast from "toasters";
 
 import QueueItem from "./QueueItem.vue";
@@ -92,14 +92,19 @@ export default {
 			actionableButtonVisible: false
 		};
 	},
-	computed: mapState({
-		loggedIn: state => state.user.auth.loggedIn,
-		userId: state => state.user.auth.userId,
-		userRole: state => state.user.auth.role,
-		station: state => state.station.station,
-		songsList: state => state.station.songsList,
-		noSong: state => state.station.noSong
-	}),
+	computed: {
+		...mapState({
+			loggedIn: state => state.user.auth.loggedIn,
+			userId: state => state.user.auth.userId,
+			userRole: state => state.user.auth.role,
+			station: state => state.station.station,
+			songsList: state => state.station.songsList,
+			noSong: state => state.station.noSong
+		}),
+		...mapGetters({
+			socket: "websockets/getSocket"
+		})
+	},
 	updated() {
 		// check if actionable button is visible, if not: set max-height of queue items to 100%
 		if (
@@ -118,7 +123,7 @@ export default {
 			return this.loggedIn && this.userRole === "admin";
 		},
 		removeFromQueue(songId) {
-			window.socket.dispatch(
+			this.socket.dispatch(
 				"stations.removeFromQueue",
 				this.station._id,
 				songId,

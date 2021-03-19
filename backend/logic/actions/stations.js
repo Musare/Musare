@@ -1978,13 +1978,19 @@ export default {
 						return next(`The party mode was already ${newPartyMode ? "enabled." : "disabled."}`);
 					return stationModel.updateOne(
 						{ _id: stationId },
-						{ $set: { partyMode: newPartyMode } },
+						{ $set: { partyMode: newPartyMode, queue: [] } },
 						{ runValidators: true },
 						next
 					);
 				},
 
 				(res, next) => {
+					CacheModule.runJob("PUB", {
+						channel: "station.queueUpdate",
+						value: stationId
+					})
+						.then()
+						.catch();
 					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
 						.then(station => {
 							next(null, station);
@@ -2514,7 +2520,6 @@ export default {
 					if (type === "community") {
 						if (blacklist.indexOf(name) !== -1)
 							return next("That name is blacklisted. Please use a different name.");
-						console.log(12121212, stationId);
 						return playlistModel.create(
 							{
 								isUserModifiable: false,
@@ -2752,6 +2757,7 @@ export default {
 				(song, station, next) => {
 					song.requestedBy = session.userId;
 					song.requestedAt = Date.now();
+					song._id = null;
 
 					let totalDuration = 0;
 					station.queue.forEach(song => {
@@ -2958,7 +2964,7 @@ export default {
 				},
 
 				(station, next) => {
-					if (station.type === "official") next(null, station.playlist);
+					if (station.type === "official") next(null, station.queue);
 					else next(null, station.queue);
 				}
 			],
