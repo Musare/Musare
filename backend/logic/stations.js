@@ -465,10 +465,9 @@ class _StationsModule extends CoreClass {
 	 * @param {string} payload.stationId - the id of the station
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
-	FILL_UP_OFFICIAL_STATION_PLAYLIST_QUEUE(payload) {
+	FILL_UP_STATION_QUEUE_FROM_STATION_PLAYLIST(payload) {
 		return new Promise((resolve, reject) => {
 			const { stationId } = payload;
-
 			async.waterfall(
 				[
 					next => {
@@ -496,10 +495,11 @@ class _StationsModule extends CoreClass {
 					},
 
 					(playlistSongs, station, next) => {
-						const songsStillNeeded = 50 - station.playlist.length;
-						const currentSongs = station.playlist;
-						const currentSongIds = station.playlist.map(song => song.songId);
+						const songsStillNeeded = 50 - station.queue.length;
+						const currentSongs = station.queue;
+						const currentSongIds = station.queue.map(song => song.songId);
 						const songsToAdd = [];
+
 						playlistSongs
 							.map(song => song._doc)
 							.every(song => {
@@ -508,8 +508,9 @@ class _StationsModule extends CoreClass {
 									currentSongIds.indexOf(song.songId) === -1
 								) {
 									songsToAdd.push(song);
-									return false;
+									return true;
 								}
+								if (songsToAdd.length >= songsStillNeeded) return false;
 								return true;
 							});
 						next(null, [...currentSongs, ...songsToAdd]);
@@ -518,20 +519,22 @@ class _StationsModule extends CoreClass {
 					(newPlaylist, next) => {
 						StationsModule.stationModel.updateOne(
 							{ _id: stationId },
-							{ $set: { playlist: newPlaylist } },
+							{ $set: { queue: newPlaylist } },
 							{ runValidators: true },
-							() => {
-								StationsModule.runJob(
-									"UPDATE_STATION",
-									{
-										stationId
-									},
-									this
-								)
-									.then(() => {
-										next(null);
-									})
-									.catch(next);
+							err => {
+								if (err) next(err);
+								else
+									StationsModule.runJob(
+										"UPDATE_STATION",
+										{
+											stationId
+										},
+										this
+									)
+										.then(() => {
+											next(null);
+										})
+										.catch(next);
 							}
 						);
 					}
@@ -566,9 +569,9 @@ class _StationsModule extends CoreClass {
 					},
 
 					(station, next) => {
-						if (station.playlist.length === 0) next("No songs available.");
+						if (station.queue.length === 0) next("No songs available.");
 						else {
-							next(null, station.playlist[0]);
+							next(null, station.queue[0]);
 						}
 					},
 
@@ -606,13 +609,13 @@ class _StationsModule extends CoreClass {
 	}
 
 	/**
-	 * Removes first official playlist queue song
+	 * Removes first station queue song
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.stationId - the id of the station
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
-	REMOVE_FIRST_OFFICIAL_PLAYLIST_QUEUE_SONG(payload) {
+	REMOVE_FIRST_QUEUE_SONG(payload) {
 		return new Promise((resolve, reject) => {
 			const { stationId } = payload;
 
@@ -621,7 +624,7 @@ class _StationsModule extends CoreClass {
 					next => {
 						StationsModule.stationModel.updateOne(
 							{ _id: stationId },
-							{ $pop: { playlist: -1 } },
+							{ $pop: { queue: -1 } },
 							{ runValidators: true },
 							err => {
 								if (err) next(err);
@@ -701,49 +704,58 @@ class _StationsModule extends CoreClass {
 							// Community station with party mode enabled and songs in the queue
 							if (station.paused) return next(null, null, -19, station);
 
-							return StationsModule.stationModel.updateOne(
-								{ _id: payload.stationId },
-								{
-									$pull: {
-										queue: {
-											_id: station.queue[0]._id
-										}
-									}
-								},
-								err => {
-									if (err) return next(err);
-									return next(null, station.queue[0], -12, station);
-								}
-							);
+							StationsModule.runJob("GET_NEXT_STATION_SONG", { stationId: station._id }, this)
+								.then(response => {
+									StationsModule.runJob(
+										"REMOVE_FIRST_QUEUE_SONG",
+										{ stationId: station._id },
+										this
+									).then(() => {
+										next(null, response.song, 0, station);
+									});
+								})
+								.catch(err => {
+									if (err === "No songs available.") next(null, null, 0, station);
+									else next(err);
+								});
+
+							// return StationsModule.stationModel.updateOne(
+							// 	{ _id: payload.stationId },
+							// 	{
+							// 		$pull: {
+							// 			queue: {
+							// 				_id: station.queue[0]._id
+							// 			}
+							// 		}
+							// 	},
+							// 	err => {
+							// 		if (err) return next(err);
+							// 		return next(null, station.queue[0], -12, station);
+							// 	}
+							// );
 						}
 
 						if (station.type === "community" && !station.partyMode) {
 							StationsModule.runJob(
-								"REMOVE_FIRST_OFFICIAL_PLAYLIST_QUEUE_SONG",
+								"FILL_UP_STATION_QUEUE_FROM_STATION_PLAYLIST",
 								{ stationId: station._id },
 								this
 							)
 								.then(() => {
-									StationsModule.runJob(
-										"FILL_UP_OFFICIAL_STATION_PLAYLIST_QUEUE",
-										{ stationId: station._id },
-										this
-									)
-										.then(() => {
+									StationsModule.runJob("GET_NEXT_STATION_SONG", { stationId: station._id }, this)
+										.then(response => {
 											StationsModule.runJob(
-												"GET_NEXT_STATION_SONG",
+												"REMOVE_FIRST_QUEUE_SONG",
 												{ stationId: station._id },
 												this
-											)
-												.then(response => {
-													next(null, response.song, 0, station);
-												})
-												.catch(err => {
-													if (err === "No songs available.") next(null, null, 0, station);
-													else next(err);
-												});
+											).then(() => {
+												next(null, response.song, 0, station);
+											});
 										})
-										.catch(next);
+										.catch(err => {
+											if (err === "No songs available.") next(null, null, 0, station);
+											else next(err);
+										});
 								})
 								.catch(next);
 						}
@@ -808,31 +820,27 @@ class _StationsModule extends CoreClass {
 
 						if (station.type === "official") {
 							StationsModule.runJob(
-								"REMOVE_FIRST_OFFICIAL_PLAYLIST_QUEUE_SONG",
+								"FILL_UP_STATION_QUEUE_FROM_STATION_PLAYLIST",
 								{ stationId: station._id },
 								this
 							)
 								.then(() => {
-									StationsModule.runJob(
-										"FILL_UP_OFFICIAL_STATION_PLAYLIST_QUEUE",
-										{ stationId: station._id },
-										this
-									)
-										.then(() => {
+									StationsModule.runJob("GET_NEXT_STATION_SONG", { stationId: station._id }, this)
+										.then(response => {
 											StationsModule.runJob(
-												"GET_NEXT_STATION_SONG",
+												"REMOVE_FIRST_QUEUE_SONG",
 												{ stationId: station._id },
 												this
 											)
-												.then(response => {
+												.then(() => {
 													next(null, response.song, 0, station);
 												})
-												.catch(err => {
-													if (err === "No songs available.") next(null, null, 0, station);
-													else next(err);
-												});
+												.catch(next);
 										})
-										.catch(next);
+										.catch(err => {
+											if (err === "No songs available.") next(null, null, 0, station);
+											else next(err);
+										});
 								})
 								.catch(next);
 						}
@@ -884,13 +892,12 @@ class _StationsModule extends CoreClass {
 								this
 							)
 								.then(station => {
-									if (station.type === "community" && station.partyMode === true)
-										CacheModule.runJob("PUB", {
-											channel: "station.queueUpdate",
-											value: payload.stationId
-										})
-											.then()
-											.catch();
+									CacheModule.runJob("PUB", {
+										channel: "station.queueUpdate",
+										value: payload.stationId
+									})
+										.then()
+										.catch();
 									next(null, station);
 								})
 								.catch(next);
@@ -899,7 +906,6 @@ class _StationsModule extends CoreClass {
 				],
 				async (err, station) => {
 					if (err) {
-						console.log(123, err);
 						err = await UtilsModule.runJob(
 							"GET_ERROR",
 							{

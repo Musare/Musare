@@ -693,17 +693,17 @@ export default {
 				this.addFirstPrivatePlaylistSongToQueue();
 			}
 
-			if (this.station.type === "official") {
-				this.socket.dispatch(
-					"stations.getQueue",
-					this.station._id,
-					res => {
-						if (res.status === "success") {
-							this.updateSongsList(res.queue);
-						}
-					}
-				);
-			}
+			// if (this.station.type === "official") {
+			// 	this.socket.dispatch(
+			// 		"stations.getQueue",
+			// 		this.station._id,
+			// 		res => {
+			// 			if (res.status === "success") {
+			// 				this.updateSongsList(res.queue);
+			// 			}
+			// 		}
+			// 	);
+			// }
 
 			if (
 				!isInQueue &&
@@ -779,7 +779,7 @@ export default {
 		});
 
 		this.socket.on("event:queue.update", queue => {
-			if (this.station.type === "community") this.updateSongsList(queue);
+			this.updateSongsList(queue);
 		});
 
 		this.socket.on("event:song.voteSkipSong", () => {
@@ -832,10 +832,10 @@ export default {
 			this.station.description = res.description;
 		});
 
-		this.socket.on("event:newOfficialPlaylist", playlist => {
-			if (this.station.type === "official")
-				this.updateSongsList(playlist);
-		});
+		// this.socket.on("event:newOfficialPlaylist", playlist => {
+		// 	if (this.station.type === "official")
+		// 		this.updateSongsList(playlist);
+		// });
 
 		this.socket.on("event:users.updated", users => this.updateUsers(users));
 
@@ -1556,32 +1556,11 @@ export default {
 							this.updateNoSong(true);
 						}
 
-						if (type === "community" && partyMode === true) {
-							this.socket.dispatch(
-								"stations.getQueue",
-								_id,
-								res => {
-									if (res.status === "success") {
-										this.updateSongsList(res.queue);
-									}
-								}
-							);
-						}
-
-						if (
-							(type === "community" && partyMode === true) ||
-							type === "official"
-						) {
-							this.socket.dispatch(
-								"stations.getQueue",
-								_id,
-								res => {
-									if (res.status === "success") {
-										this.updateSongsList(res.queue);
-									}
-								}
-							);
-						}
+						this.socket.dispatch("stations.getQueue", _id, res => {
+							if (res.status === "success") {
+								this.updateSongsList(res.queue);
+							}
+						});
 
 						if (this.isOwnerOrAdmin()) {
 							keyboardShortcuts.registerShortcut(
