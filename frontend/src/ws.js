@@ -8,6 +8,8 @@ const onConnect = {
 	persist: []
 };
 
+let pendingDispatches = [];
+
 const onDisconnect = {
 	temp: [],
 	persist: []
@@ -46,6 +48,10 @@ export default {
 		}),
 
 	init(url) {
+		// ensures correct context of socket object when dispatching (because socket object is recreated on reconnection)
+		const waitForConnectionToDispatch = (...args) =>
+			this.socket.dispatch(...args);
+
 		class ListenerHandler extends EventTarget {
 			constructor() {
 				super();
@@ -94,9 +100,12 @@ export default {
 				CB_REF += 1;
 
 				if (this.readyState !== 1)
-					return onConnect.temp.push(() => this.dispatch(...args));
+					return pendingDispatches.push(() =>
+						waitForConnectionToDispatch(...args)
+					);
 
 				const cb = args[args.length - 1];
+
 				if (typeof cb === "function") {
 					CB_REFS[CB_REF] = cb;
 
@@ -115,8 +124,15 @@ export default {
 		this.socket.onopen = () => {
 			console.log("IO: SOCKET CONNECTED");
 
-			onConnect.temp.forEach(cb => cb());
-			onConnect.persist.forEach(cb => cb());
+			setTimeout(() => {
+				onConnect.temp.forEach(cb => cb());
+
+				// dispatches that were attempted while the server was offline
+				pendingDispatches.forEach(cb => cb());
+				pendingDispatches = [];
+
+				onConnect.persist.forEach(cb => cb());
+			}, 50); // small delay between readyState being 1 and the server actually receiving dispatches
 		};
 
 		this.socket.onmessage = message => {
