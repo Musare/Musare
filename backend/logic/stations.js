@@ -513,7 +513,11 @@ class _StationsModule extends CoreClass {
 								if (songsToAdd.length >= songsStillNeeded) return false;
 								return true;
 							});
-						next(null, [...currentSongs, ...songsToAdd]);
+						const newPlaylist = [...currentSongs, ...songsToAdd].map(song => {
+							if (!song._id) song._id = null;
+							return song;
+						});
+						next(null, newPlaylist);
 					},
 
 					(newPlaylist, next) => {
