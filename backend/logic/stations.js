@@ -600,7 +600,15 @@ class _StationsModule extends CoreClass {
 										next(null, song);
 									}
 								})
-								.catch(next);
+								.catch(err => {
+									if (err.message === "Song not found.") {
+										this.log(
+											"ERROR",
+											`In GET_NEXT_STATION_SONG, attempted to get song "${song._id}", but got the error "Song not found.". Ignoring it for now, but this is not normal.`
+										);
+										next(null, song);
+									} else next(err);
+								});
 					}
 				],
 				(err, song) => {
