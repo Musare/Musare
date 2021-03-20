@@ -58,7 +58,6 @@
 				<i
 					v-if="
 						$parent.loggedIn &&
-							!song.simpleSong &&
 							song.likes !== -1 &&
 							song.dislikes !== -1
 					"
@@ -75,7 +74,6 @@
 				<i
 					v-if="
 						$parent.isAdminOnly() &&
-							!song.simpleSong &&
 							song.likes !== -1 &&
 							song.dislikes !== -1
 					"
@@ -85,10 +83,7 @@
 					edit
 				</i>
 				<i
-					v-if="
-						station.type === 'community' &&
-							($parent.isOwnerOnly() || $parent.isAdminOnly())
-					"
+					v-if="$parent.isOwnerOnly() || $parent.isAdminOnly()"
 					class="material-icons delete-icon"
 					@click="$parent.removeFromQueue(song.songId)"
 					>delete_forever</i

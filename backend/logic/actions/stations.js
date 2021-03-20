@@ -2878,7 +2878,6 @@ export default {
 
 				(station, next) => {
 					if (!station) return next("Station not found.");
-					if (station.type !== "community") return next("Station is not a community station.");
 
 					return async.each(
 						station.queue,
