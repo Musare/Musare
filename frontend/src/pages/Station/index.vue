@@ -646,10 +646,11 @@ export default {
 
 			this.updateCurrentSong(currentSong || {});
 
-			const nextSong = this.songsList[1].songId
-				? this.songsList[1]
-				: null;
-			this.updateNextSong(nextSong || {});
+			let nextSong = null;
+			if (this.songsList[1]) {
+				nextSong = this.songsList[1].songId ? this.songsList[1] : null;
+			}
+			this.updateNextSong(nextSong);
 
 			this.startedAt = data.startedAt;
 			this.updateStationPaused(data.paused);
@@ -791,6 +792,11 @@ export default {
 
 		this.socket.on("event:queue.update", queue => {
 			this.updateSongsList(queue);
+			let nextSong = null;
+			if (this.songsList[0]) {
+				nextSong = this.songsList[0].songId ? this.songsList[0] : null;
+			}
+			this.updateNextSong(nextSong);
 		});
 
 		this.socket.on("event:song.voteSkipSong", () => {
@@ -1565,9 +1571,12 @@ export default {
 						this.socket.dispatch("stations.getQueue", _id, res => {
 							if (res.status === "success") {
 								this.updateSongsList(res.queue);
-								const nextSong = this.songsList[0].songId
-									? this.songsList[0]
-									: null;
+								let nextSong = null;
+								if (this.songsList[0]) {
+									nextSong = this.songsList[0].songId
+										? this.songsList[0]
+										: null;
+								}
 								this.updateNextSong(nextSong);
 							}
 						});
