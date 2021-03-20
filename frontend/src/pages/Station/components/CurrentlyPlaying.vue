@@ -1,35 +1,36 @@
 <template>
-	<div id="currently-playing">
+	<div class="currently-playing">
 		<figure class="thumbnail">
 			<div
-				v-if="currentSong.ytThumbnail"
+				v-if="song.ytThumbnail"
 				id="yt-thumbnail-bg"
 				:style="{
-					'background-image': 'url(' + currentSong.ytThumbnail + ')'
+					'background-image': 'url(' + song.ytThumbnail + ')'
 				}"
 			></div>
 			<img
-				v-if="currentSong.ytThumbnail"
-				:src="currentSong.ytThumbnail"
+				v-if="song.ytThumbnail"
+				:src="song.ytThumbnail"
 				onerror="this.src='/assets/notes-transparent.png'"
 			/>
 			<img
 				v-else
-				:src="currentSong.thumbnail"
+				:src="song.thumbnail"
 				onerror="this.src='/assets/notes-transparent.png'"
 			/>
 		</figure>
 		<div id="song-info">
 			<div id="song-details">
-				<h6>Currently playing...</h6>
+				<h6 v-if="type === 'current'">Currently Playing...</h6>
+				<h6 v-if="type === 'next'">Next Up...</h6>
 				<h4
 					id="song-title"
-					:style="!currentSong.artists ? { fontSize: '17px' } : null"
+					:style="!song.artists ? { fontSize: '17px' } : null"
 				>
-					{{ currentSong.title }}
+					{{ song.title }}
 				</h4>
-				<h5 id="song-artists" v-if="currentSong.artists">
-					{{ currentSong.artists.join(", ") }}
+				<h5 id="song-artists" v-if="song.artists">
+					{{ song.artists.join(", ") }}
 				</h5>
 				<p
 					id="song-request-time"
@@ -40,13 +41,9 @@
 				>
 					Requested
 					<strong>{{
-						formatDistance(
-							parseISO(currentSong.requestedAt),
-							Date.now(),
-							{
-								addSuffix: true
-							}
-						)
+						formatDistance(parseISO(song.requestedAt), Date.now(), {
+							addSuffix: true
+						})
 					}}</strong>
 				</p>
 			</div>
@@ -54,13 +51,8 @@
 				<button
 					class="button"
 					id="report-icon"
-					v-if="loggedIn && !currentSong.simpleSong"
-					@click="
-						openModal({
-							sector: 'station',
-							modal: 'report'
-						})
-					"
+					v-if="loggedIn && !song.simpleSong"
+					@click="report(song)"
 				>
 					<i class="material-icons icon-with-button">flag</i>
 				</button>
@@ -68,17 +60,15 @@
 					class="button"
 					id="youtube-icon"
 					target="_blank"
-					:href="
-						`https://www.youtube.com/watch?v=${currentSong.songId}`
-					"
+					:href="`https://www.youtube.com/watch?v=${song.songId}`"
 				>
 					<div class="icon"></div>
 				</a>
 				<button
 					class="button is-primary"
 					id="editsong-icon"
-					v-if="$parent.isAdminOnly() && !currentSong.simpleSong"
-					@click="$parent.editSong(currentSong)"
+					v-if="$parent.isAdminOnly() && !song.simpleSong"
+					@click="$parent.editSong(song)"
 				>
 					<i class="material-icons icon-with-button">edit</i>
 				</button>
@@ -92,9 +82,18 @@ import { mapState, mapActions } from "vuex";
 import { formatDistance, parseISO } from "date-fns";
 
 export default {
+	props: {
+		song: {
+			type: Object,
+			default: () => {}
+		},
+		type: {
+			type: String,
+			default: "current"
+		}
+	},
 	computed: {
 		...mapState("station", {
-			currentSong: state => state.currentSong,
 			station: state => state.station
 		}),
 		...mapState({
@@ -102,6 +101,11 @@ export default {
 		})
 	},
 	methods: {
+		report(song) {
+			this.reportSong(song);
+			this.openModal({ sector: "station", modal: "report" });
+		},
+		...mapActions("modals/report", ["reportSong"]),
 		...mapActions("modalVisibility", ["openModal"]),
 		formatDistance,
 		parseISO
@@ -110,7 +114,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-#currently-playing {
+.currently-playing {
 	display: flex;
 	flex-direction: row;
 	align-items: center;

@@ -312,10 +312,16 @@
 								class="quadrant"
 								:class="{ 'no-currently-playing': noSong }"
 							>
-								<currently-playing />
+								<currently-playing :song="currentSong" />
 								<!-- <p v-else class="nothing-here-text">
 								No song is currently playing
 							</p> -->
+							</div>
+							<div id="next-up-container" class="quadrant">
+								<currently-playing
+									type="next"
+									:song="nextSong"
+								/>
 							</div>
 						</div>
 					</div>
@@ -569,6 +575,7 @@ export default {
 		...mapState("station", {
 			station: state => state.station,
 			currentSong: state => state.currentSong,
+			nextSong: state => state.nextSong,
 			songsList: state => state.songsList,
 			stationPaused: state => state.stationPaused,
 			localPaused: state => state.localPaused,
@@ -634,6 +641,11 @@ export default {
 				currentSong.ytThumbnail = `https://img.youtube.com/vi/${currentSong.songId}/mqdefault.jpg`;
 
 			this.updateCurrentSong(currentSong || {});
+
+			const nextSong = this.songsList[1].songId
+				? this.songsList[1]
+				: null;
+			this.updateNextSong(nextSong || {});
 
 			this.startedAt = data.startedAt;
 			this.updateStationPaused(data.paused);
@@ -1549,6 +1561,10 @@ export default {
 						this.socket.dispatch("stations.getQueue", _id, res => {
 							if (res.status === "success") {
 								this.updateSongsList(res.queue);
+								const nextSong = this.songsList[0].songId
+									? this.songsList[0]
+									: null;
+								this.updateNextSong(nextSong);
 							}
 						});
 
@@ -1722,6 +1738,7 @@ export default {
 			"updateUsers",
 			"updateCurrentSong",
 			"updatePreviousSong",
+			"updateNextSong",
 			"updateSongsList",
 			"updateStationPaused",
 			"updateLocalPaused",
