@@ -317,7 +317,11 @@
 								No song is currently playing
 							</p> -->
 							</div>
-							<div id="next-up-container" class="quadrant">
+							<div
+								v-if="nextSong"
+								id="next-up-container"
+								class="quadrant"
+							>
 								<currently-playing
 									type="next"
 									:song="nextSong"
