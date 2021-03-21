@@ -229,7 +229,7 @@
 					</div>
 					<!--  Buttons changing the mode of the station -->
 					<div v-if="station.type === 'community'">
-						<label class="label">Play Mode</label>
+						<label class="label">Station Mode</label>
 						<div
 							@mouseenter="modeDropdownActive = true"
 							@mouseleave="modeDropdownActive = false"
@@ -295,9 +295,9 @@
 								"
 							>
 								<i class="material-icons">{{
-									station.playMode
-										? "playlist_play"
-										: "playlist_play"
+									station.playMode === "random"
+										? "shuffle"
+										: "format_list_numbered"
 								}}</i>
 								{{
 									station.playMode === "random"
@@ -314,7 +314,7 @@
 									"
 									@click="updatePlayModeLocal('random')"
 								>
-									<i class="material-icons">playlist_play</i>
+									<i class="material-icons">shuffle</i>
 									Random
 								</button>
 							</transition>
@@ -327,7 +327,9 @@
 									"
 									@click="updatePlayModeLocal('sequential')"
 								>
-									<i class="material-icons">playlist_play</i>
+									<i class="material-icons"
+										>format_list_numbered</i
+									>
 									Sequential
 								</button>
 							</transition>
