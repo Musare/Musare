@@ -23,8 +23,7 @@
 						<i
 							v-if="
 								station.type === 'community' &&
-									isNotSelected(playlist._id) &&
-									!station.partyMode
+									isNotSelected(playlist._id)
 							"
 							@click="selectPlaylist(playlist._id)"
 							class="material-icons play-icon"
@@ -33,8 +32,7 @@
 						<i
 							v-if="
 								station.type === 'community' &&
-									!isNotSelected(playlist._id) &&
-									!station.partyMode
+									!isNotSelected(playlist._id)
 							"
 							@click="deselectPlaylist(playlist._id)"
 							class="material-icons stop-icon"
@@ -81,7 +79,9 @@ export default {
 	},
 	computed: {
 		...mapState({
-			station: state => state.station.station
+			station: state => state.station.station,
+			privatePlaylistQueueSelected: state =>
+				state.station.privatePlaylistQueueSelected
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
@@ -164,41 +164,77 @@ export default {
 			this.openModal({ sector: "station", modal: "editPlaylist" });
 		},
 		selectPlaylist(id) {
-			this.socket.dispatch(
-				"stations.selectPrivatePlaylist",
-				this.station._id,
-				id,
-				res => {
-					if (res.status === "failure")
-						return new Toast({
-							content: res.message,
-							timeout: 8000
-						});
-					this.station.includedPlaylists.push(id);
-					return new Toast({ content: res.message, timeout: 4000 });
+			if (this.station.type === "community" && this.station.partyMode) {
+				if (this.isNotSelected(id)) {
+					this.updatePrivatePlaylistQueueSelected(id);
+					this.$parent.$parent.addFirstPrivatePlaylistSongToQueue();
+					new Toast({
+						content:
+							"Successfully selected playlist to auto request songs.",
+						timeout: 4000
+					});
+				} else {
+					new Toast({
+						content: "Error: Playlist already selected.",
+						timeout: 4000
+					});
 				}
-			);
+			} else {
+				this.socket.dispatch(
+					"stations.selectPrivatePlaylist",
+					this.station._id,
+					id,
+					res => {
+						if (res.status === "failure") {
+							new Toast({
+								content: res.message,
+								timeout: 8000
+							});
+						} else {
+							this.station.includedPlaylists.push(id);
+							new Toast({
+								content: res.message,
+								timeout: 4000
+							});
+						}
+					}
+				);
+			}
 		},
 		deselectPlaylist(id) {
-			this.socket.dispatch(
-				"stations.deselectPrivatePlaylist",
-				this.station._id,
-				id,
-				res => {
-					if (res.status === "failure")
-						return new Toast({
+			if (this.station.type === "community" && this.station.partyMode) {
+				this.updatePrivatePlaylistQueueSelected(null);
+				new Toast({
+					content: "Successfully deselected playlist.",
+					timeout: 4000
+				});
+			} else {
+				this.socket.dispatch(
+					"stations.deselectPrivatePlaylist",
+					this.station._id,
+					id,
+					res => {
+						if (res.status === "failure")
+							new Toast({
+								content: res.message,
+								timeout: 8000
+							});
+						this.station.includedPlaylists.splice(
+							this.station.includedPlaylists.indexOf(id),
+							1
+						);
+						new Toast({
 							content: res.message,
-							timeout: 8000
+							timeout: 4000
 						});
-					this.station.includedPlaylists.splice(
-						this.station.includedPlaylists.indexOf(id),
-						1
-					);
-					return new Toast({ content: res.message, timeout: 4000 });
-				}
-			);
+					}
+				);
+			}
 		},
 		isNotSelected(id) {
+			if (this.station.type === "community" && this.station.partyMode) {
+				return this.privatePlaylistQueueSelected !== id;
+			}
 			// TODO Also change this once it changes for a station
 			if (
 				this.station &&
@@ -207,6 +243,7 @@ export default {
 				return false;
 			return true;
 		},
+		...mapActions("station", ["updatePrivatePlaylistQueueSelected"]),
 		...mapActions("modalVisibility", ["openModal"]),
 		...mapActions("user/playlists", ["editPlaylist"])
 	}
