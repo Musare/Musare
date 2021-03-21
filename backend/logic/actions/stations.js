@@ -109,25 +109,25 @@ CacheModule.runJob("SUB", {
 	}
 });
 
-CacheModule.runJob("SUB", {
-	channel: "privatePlaylist.selected",
-	cb: data => {
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `station.${data.stationId}`,
-			args: ["event:privatePlaylist.selected", data.playlistId]
-		});
-	}
-});
+// CacheModule.runJob("SUB", {
+// 	channel: "privatePlaylist.selected",
+// 	cb: data => {
+// 		WSModule.runJob("EMIT_TO_ROOM", {
+// 			room: `station.${data.stationId}`,
+// 			args: ["event:privatePlaylist.selected", data.playlistId]
+// 		});
+// 	}
+// });
 
-CacheModule.runJob("SUB", {
-	channel: "privatePlaylist.deselected",
-	cb: data => {
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `station.${data.stationId}`,
-			args: ["event:privatePlaylist.deselected"]
-		});
-	}
-});
+// CacheModule.runJob("SUB", {
+// 	channel: "privatePlaylist.deselected",
+// 	cb: data => {
+// 		WSModule.runJob("EMIT_TO_ROOM", {
+// 			room: `station.${data.stationId}`,
+// 			args: ["event:privatePlaylist.deselected"]
+// 		});
+// 	}
+// });
 
 CacheModule.runJob("SUB", {
 	channel: "station.pause",
@@ -753,11 +753,11 @@ export default {
 						locked: station.locked,
 						partyMode: station.partyMode,
 						owner: station.owner,
-						privatePlaylist: station.privatePlaylist,
+						// privatePlaylist: station.privatePlaylist,
 						includedPlaylists: station.includedPlaylists,
 						excludedPlaylists: station.excludedPlaylists,
-						genres: station.genres,
-						blacklistedGenres: station.blacklistedGenres,
+						// genres: station.genres,
+						// blacklistedGenres: station.blacklistedGenres,
 						theme: station.theme
 					};
 
@@ -879,9 +879,9 @@ export default {
 						locked: station.locked,
 						partyMode: station.partyMode,
 						owner: station.owner,
-						privatePlaylist: station.privatePlaylist,
-						genres: station.genres,
-						blacklistedGenres: station.blacklistedGenres,
+						// privatePlaylist: station.privatePlaylist,
+						// genres: station.genres,
+						// blacklistedGenres: station.blacklistedGenres,
 						theme: station.theme
 					};
 
@@ -1399,7 +1399,7 @@ export default {
 
 				(station, next) => {
 					playlistModel.updateOne(
-						{ _id: station.playlist2 },
+						{ _id: station.playlist },
 						{ $set: { displayName: `Station - ${station.displayName}` } },
 						err => {
 							next(err, station);
@@ -2267,8 +2267,8 @@ export default {
 				},
 
 				(station, next) => {
-					if (station.playlist2)
-						PlaylistsModule.runJob("DELETE_PLAYLIST", { playlistId: station.playlist2 })
+					if (station.playlist)
+						PlaylistsModule.runJob("DELETE_PLAYLIST", { playlistId: station.playlist })
 							.then(() => {})
 							.catch(next);
 					next(null, station);
@@ -2486,7 +2486,7 @@ export default {
 											type: "station"
 										},
 
-										(err, playlist2) => {
+										(err, playlist) => {
 											if (err) next(err);
 											else {
 												stationModel.create(
@@ -2497,8 +2497,7 @@ export default {
 														description,
 														type,
 														privacy: "private",
-														playlist2: playlist2._id,
-														playlist,
+														playlist: playlist._id,
 														currentSong: StationsModule.defaultSong
 													},
 													(err, station) => {
@@ -2531,7 +2530,7 @@ export default {
 								type: "station"
 							},
 
-							(err, playlist2) => {
+							(err, playlist) => {
 								if (err) next(err);
 								else {
 									stationModel.create(
@@ -2540,7 +2539,7 @@ export default {
 											name,
 											displayName,
 											description,
-											playlist2: playlist2._id,
+											playlist: playlist._id,
 											type,
 											privacy: "private",
 											owner: session.userId,

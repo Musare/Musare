@@ -1250,7 +1250,7 @@ class _StationsModule extends CoreClass {
 					},
 
 					(station, next) => {
-						if (station.playlist2 === payload.playlistId) next("You cannot include the station playlist");
+						if (station.playlist === payload.playlistId) next("You cannot include the station playlist");
 						else if (station.includedPlaylists.indexOf(payload.playlistId) !== -1)
 							next("This playlist is already included");
 						else if (station.excludedPlaylists.indexOf(payload.playlistId) !== -1)
@@ -1408,7 +1408,7 @@ class _StationsModule extends CoreClass {
 					},
 
 					(station, next) => {
-						if (station.playlist2 === payload.playlistId) next("You cannot exclude the station playlist");
+						if (station.playlist === payload.playlistId) next("You cannot exclude the station playlist");
 						else if (station.excludedPlaylists.indexOf(payload.playlistId) !== -1)
 							next("This playlist is already excluded");
 						else if (station.includedPlaylists.indexOf(payload.playlistId) !== -1)

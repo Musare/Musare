@@ -519,7 +519,7 @@ class _PlaylistsModule extends CoreClass {
 						(playlist, next) => {
 							StationsModule.runJob("GET_STATION", { stationId: playlist.createdFor }, this)
 								.then(station => {
-									if (station.playlist2 !== playlist._id.toString()) {
+									if (station.playlist !== playlist._id.toString()) {
 										orphanedPlaylists.push(playlist);
 									}
 									next();
@@ -601,7 +601,7 @@ class _PlaylistsModule extends CoreClass {
 					},
 
 					(station, next) => {
-						PlaylistsModule.runJob("GET_PLAYLIST", { playlistId: station.playlist2 }, this)
+						PlaylistsModule.runJob("GET_PLAYLIST", { playlistId: station.playlist }, this)
 							.then(playlist => {
 								originalPlaylist = playlist;
 								next(null, station);
@@ -671,7 +671,7 @@ class _PlaylistsModule extends CoreClass {
 
 					(station, includedSongs, next) => {
 						PlaylistsModule.playlistModel.updateOne(
-							{ _id: station.playlist2 },
+							{ _id: station.playlist },
 							{ $set: { songs: includedSongs } },
 							err => {
 								next(err, includedSongs);

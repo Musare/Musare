@@ -23,10 +23,7 @@ export default {
 	timePaused: { type: Number, default: 0, required: true },
 	pausedAt: { type: Number, default: 0, required: true },
 	startedAt: { type: Number, default: 0, required: true },
-	playlist: { type: Array },
-	playlist2: { type: mongoose.Schema.Types.ObjectId, required: true },
-	genres: [{ type: String }],
-	blacklistedGenres: [{ type: String }],
+	playlist: { type: mongoose.Schema.Types.ObjectId, required: true },
 	privacy: { type: String, enum: ["public", "unlisted", "private"], default: "private" },
 	locked: { type: Boolean, default: false },
 	queue: [
@@ -44,10 +41,10 @@ export default {
 		}
 	],
 	owner: { type: String },
-	privatePlaylist: { type: mongoose.Schema.Types.ObjectId },
 	partyMode: { type: Boolean },
+	playMode: { type: String, enum: ["random", "sequential"] },
 	theme: { type: String, enum: ["blue", "purple", "teal", "orange"], default: "blue" },
 	includedPlaylists: [{ type: String }],
 	excludedPlaylists: [{ type: String }],
-	documentVersion: { type: Number, default: 2, required: true }
+	documentVersion: { type: Number, default: 3, required: true }
 };
