@@ -42,7 +42,7 @@ export default {
 	],
 	owner: { type: String },
 	partyMode: { type: Boolean },
-	playMode: { type: String, enum: ["random", "sequential"] },
+	playMode: { type: String, enum: ["random", "sequential"], default: "random" },
 	theme: { type: String, enum: ["blue", "purple", "teal", "orange"], default: "blue" },
 	includedPlaylists: [{ type: String }],
 	excludedPlaylists: [{ type: String }],
