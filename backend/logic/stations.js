@@ -479,51 +479,73 @@ class _StationsModule extends CoreClass {
 					},
 
 					(playlist, next) => {
-						UtilsModule.runJob("SHUFFLE", { array: playlist.songs }, this)
-							.then(response => {
-								next(null, response.array);
-							})
-							.catch(next);
-					},
-
-					(playlistSongs, next) => {
 						StationsModule.runJob("GET_STATION", { stationId }, this)
 							.then(station => {
-								next(null, playlistSongs, station);
+								next(null, playlist, station);
 							})
 							.catch(next);
 					},
 
-					(playlistSongs, station, next) => {
+					(playlist, station, next) => {
+						if (station.playMode === "random") {
+							UtilsModule.runJob("SHUFFLE", { array: playlist.songs }, this)
+								.then(response => {
+									next(null, response.array, station);
+								})
+								.catch(console.log);
+						} else next(null, playlist.songs, station);
+					},
+
+					(_playlistSongs, station, next) => {
+						let playlistSongs = JSON.parse(JSON.stringify(_playlistSongs));
+						if (station.playMode === "sequential") {
+							if (station.currentSongIndex <= playlistSongs.length) {
+								const songsToAddToEnd = playlistSongs.splice(0, station.currentSongIndex);
+								playlistSongs = [...playlistSongs, ...songsToAddToEnd];
+							}
+						}
+
 						const songsStillNeeded = 50 - station.queue.length;
 						const currentSongs = station.queue;
 						const currentSongIds = station.queue.map(song => song.songId);
 						const songsToAdd = [];
+						let lastSongAdded = null;
 
 						playlistSongs
-							.map(song => song._doc)
+							// .map(song => song._doc)
 							.every(song => {
+								console.log(11, song, playlistSongs);
 								if (
 									songsToAdd.length < songsStillNeeded &&
 									currentSongIds.indexOf(song.songId) === -1
 								) {
+									lastSongAdded = song;
 									songsToAdd.push(song);
 									return true;
 								}
 								if (songsToAdd.length >= songsStillNeeded) return false;
 								return true;
 							});
+
+						let { currentSongIndex } = station;
+						if (station.playMode === "sequential") {
+							const indexOfLastSong = _playlistSongs
+								.map(song => song.songId)
+								.indexOf(lastSongAdded.songId);
+							if (indexOfLastSong !== -1) currentSongIndex = indexOfLastSong;
+						}
+
 						const newPlaylist = [...currentSongs, ...songsToAdd].map(song => {
 							if (!song._id) song._id = null;
 							return song;
 						});
-						next(null, newPlaylist);
+						next(null, newPlaylist, currentSongIndex);
 					},
 
-					(newPlaylist, next) => {
+					(newPlaylist, currentSongIndex, next) => {
 						StationsModule.stationModel.updateOne(
 							{ _id: stationId },
-							{ $set: { queue: newPlaylist } },
+							{ $set: { queue: newPlaylist, currentSongIndex } },
 							{ runValidators: true },
 							err => {
 								if (err) next(err);
@@ -714,11 +736,11 @@ class _StationsModule extends CoreClass {
 						if (!station) return next("Station not found.");
 
 						if (station.type === "community" && station.partyMode && station.queue.length === 0)
-							return next(null, null, -11, station); // Community station with party mode enabled and no songs in the queue
+							return next(null, null, station); // Community station with party mode enabled and no songs in the queue
 
 						if (station.type === "community" && station.partyMode && station.queue.length > 0) {
 							// Community station with party mode enabled and songs in the queue
-							if (station.paused) return next(null, null, -19, station);
+							if (station.paused) return next(null, null, station);
 
 							StationsModule.runJob("GET_NEXT_STATION_SONG", { stationId: station._id }, this)
 								.then(response => {
@@ -731,7 +753,7 @@ class _StationsModule extends CoreClass {
 									});
 								})
 								.catch(err => {
-									if (err === "No songs available.") next(null, null, 0, station);
+									if (err === "No songs available.") next(null, null, station);
 									else next(err);
 								});
 
@@ -765,11 +787,11 @@ class _StationsModule extends CoreClass {
 												{ stationId: station._id },
 												this
 											).then(() => {
-												next(null, response.song, 0, station);
+												next(null, response.song, station);
 											});
 										})
 										.catch(err => {
-											if (err === "No songs available.") next(null, null, 0, station);
+											if (err === "No songs available.") next(null, null, station);
 											else next(err);
 										});
 								})
@@ -849,19 +871,19 @@ class _StationsModule extends CoreClass {
 												this
 											)
 												.then(() => {
-													next(null, response.song, 0, station);
+													next(null, response.song, station);
 												})
 												.catch(next);
 										})
 										.catch(err => {
-											if (err === "No songs available.") next(null, null, 0, station);
+											if (err === "No songs available.") next(null, null, station);
 											else next(err);
 										});
 								})
 								.catch(next);
 						}
 					},
-					(song, currentSongIndex, station, next) => {
+					(song, station, next) => {
 						const $set = {};
 
 						if (song === null) $set.currentSong = null;
@@ -890,7 +912,7 @@ class _StationsModule extends CoreClass {
 							};
 						}
 
-						if (currentSongIndex >= 0) $set.currentSongIndex = currentSongIndex;
+						// if (currentSongIndex >= 0) $set.currentSongIndex = currentSongIndex;
 						$set.startedAt = Date.now();
 						$set.timePaused = 0;
 						if (station.paused) $set.pausedAt = Date.now();

@@ -229,7 +229,7 @@
 					</div>
 					<!--  Buttons changing the mode of the station -->
 					<div v-if="station.type === 'community'">
-						<label class="label">Mode</label>
+						<label class="label">Play Mode</label>
 						<div
 							@mouseenter="modeDropdownActive = true"
 							@mouseleave="modeDropdownActive = false"
@@ -275,6 +275,60 @@
 								>
 									<i class="material-icons">emoji_people</i>
 									Party
+								</button>
+							</transition>
+						</div>
+					</div>
+					<div>
+						<label class="label">Play Mode</label>
+						<div
+							@mouseenter="playModeDropdownActive = true"
+							@mouseleave="playModeDropdownActive = false"
+							class="button-wrapper"
+						>
+							<button
+								class="blue"
+								@click="
+									station.playMode === 'random'
+										? updatePlayModeLocal('sequential')
+										: updatePlayModeLocal('random')
+								"
+							>
+								<i class="material-icons">{{
+									station.playMode
+										? "playlist_play"
+										: "playlist_play"
+								}}</i>
+								{{
+									station.playMode === "random"
+										? "Random"
+										: "Sequential"
+								}}
+							</button>
+							<transition name="slide-down">
+								<button
+									class="blue"
+									v-if="
+										playModeDropdownActive &&
+											station.playMode === 'sequential'
+									"
+									@click="updatePlayModeLocal('random')"
+								>
+									<i class="material-icons">playlist_play</i>
+									Random
+								</button>
+							</transition>
+							<transition name="slide-down">
+								<button
+									class="blue"
+									v-if="
+										playModeDropdownActive &&
+											station.playMode === 'random'
+									"
+									@click="updatePlayModeLocal('sequential')"
+								>
+									<i class="material-icons">playlist_play</i>
+									Sequential
 								</button>
 							</transition>
 						</div>
@@ -449,6 +503,7 @@ export default {
 			blacklistGenreAutosuggestItems: [],
 			privacyDropdownActive: false,
 			modeDropdownActive: false,
+			playModeDropdownActive: false,
 			queueLockDropdownActive: false,
 			themeDropdownActive: false,
 			genres: [
@@ -596,6 +651,9 @@ export default {
 			const partyModeChanged =
 				this.originalStation.type === "community" &&
 				this.originalStation.partyMode !== this.station.partyMode;
+			const playModeChanged =
+				this.originalStation.type === "community" &&
+				this.originalStation.playMode !== this.station.playMode;
 			const queueLockChanged =
 				this.originalStation.type === "community" &&
 				this.station.partyMode &&
@@ -614,6 +672,7 @@ export default {
 			if (descriptionChanged) this.updateDescription();
 			if (privacyChanged) this.updatePrivacy();
 			if (partyModeChanged) this.updatePartyMode();
+			if (playModeChanged) this.updatePlayMode();
 			if (queueLockChanged) this.updateQueueLock();
 			if (genresChanged) this.updateGenres();
 			if (blacklistedGenresChanged) this.updateBlacklistedGenres();
@@ -625,6 +684,7 @@ export default {
 				!descriptionChanged &&
 				!privacyChanged &&
 				!partyModeChanged &&
+				!playModeChanged &&
 				!queueLockChanged &&
 				!genresChanged &&
 				!blacklistedGenresChanged &&
@@ -832,6 +892,30 @@ export default {
 
 					if (res.status === "success") {
 						this.originalStation.partyMode = this.station.partyMode;
+						return this.$refs.saveButton.handleSuccessfulSave();
+					}
+
+					return this.$refs.saveButton.handleFailedSave();
+				}
+			);
+		},
+		updatePlayModeLocal(playMode) {
+			if (this.station.playMode === playMode) return;
+			this.station.playMode = playMode;
+			this.playModeDropdownActive = false;
+		},
+		updatePlayMode() {
+			this.$refs.saveButton.status = "disabled";
+
+			this.socket.dispatch(
+				"stations.updatePlayMode",
+				this.station._id,
+				this.station.playMode,
+				res => {
+					new Toast({ content: res.message, timeout: 8000 });
+
+					if (res.status === "success") {
+						this.originalStation.playMode = this.station.playMode;
 						return this.$refs.saveButton.handleSuccessfulSave();
 					}
 

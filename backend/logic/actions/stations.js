@@ -752,6 +752,7 @@ export default {
 						privacy: station.privacy,
 						locked: station.locked,
 						partyMode: station.partyMode,
+						playMode: station.playMode,
 						owner: station.owner,
 						// privatePlaylist: station.privatePlaylist,
 						includedPlaylists: station.includedPlaylists,
@@ -878,6 +879,7 @@ export default {
 						privacy: station.privacy,
 						locked: station.locked,
 						partyMode: station.partyMode,
+						playMode: station.playMode,
 						owner: station.owner,
 						// privatePlaylist: station.privatePlaylist,
 						// genres: station.genres,
@@ -2024,6 +2026,83 @@ export default {
 				return cb({
 					status: "success",
 					message: "Successfully updated the party mode."
+				});
+			}
+		);
+	}),
+
+	/**
+	 * Updates a station's play mode
+	 *
+	 * @param session
+	 * @param stationId - the station id
+	 * @param newPlayMode - the new station play mode
+	 * @param cb
+	 */
+	updatePlayMode: isOwnerRequired(async function updatePartyMode(session, stationId, newPlayMode, cb) {
+		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
+
+		async.waterfall(
+			[
+				next => {
+					StationsModule.runJob("GET_STATION", { stationId }, this)
+						.then(station => {
+							next(null, station);
+						})
+						.catch(next);
+				},
+
+				(station, next) => {
+					if (!station) return next("Station not found.");
+					if (station.newPlayMode === newPlayMode) return next(`The play mode was already ${newPlayMode}`);
+					return stationModel.updateOne(
+						{ _id: stationId },
+						{ $set: { playMode: newPlayMode, queue: [] } },
+						{ runValidators: true },
+						next
+					);
+				},
+
+				(res, next) => {
+					CacheModule.runJob("PUB", {
+						channel: "station.queueUpdate",
+						value: stationId
+					})
+						.then()
+						.catch();
+					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
+						.then(station => {
+							next(null, station);
+						})
+						.catch(next);
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"STATIONS_UPDATE_PLAY_MODE",
+						`Updating station "${stationId}" play mode to "${newPlayMode}" failed. "${err}"`
+					);
+					return cb({ status: "failure", message: err });
+				}
+				this.log(
+					"SUCCESS",
+					"STATIONS_UPDATE_PLAY_MODE",
+					`Updated station "${stationId}" play mode to "${newPlayMode}" successfully.`
+				);
+				CacheModule.runJob("PUB", {
+					channel: "station.newPlayMode",
+					value: {
+						stationId,
+						playMode: newPlayMode
+					}
+				});
+				StationsModule.runJob("SKIP_STATION", { stationId });
+				return cb({
+					status: "success",
+					message: "Successfully updated the play mode."
 				});
 			}
 		);
