@@ -652,7 +652,6 @@ export default {
 				this.originalStation.type === "community" &&
 				this.originalStation.partyMode !== this.station.partyMode;
 			const playModeChanged =
-				this.originalStation.type === "community" &&
 				this.originalStation.playMode !== this.station.playMode;
 			const queueLockChanged =
 				this.originalStation.type === "community" &&
