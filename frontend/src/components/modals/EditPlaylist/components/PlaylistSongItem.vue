@@ -32,7 +32,7 @@
 		<div class="universal-item-actions">
 			<slot name="actions" />
 			<i
-				class="material-icons"
+				class="material-icons add-to-playlist-icon"
 				v-if="loggedIn"
 				@click="showPlaylistDropdown = !showPlaylistDropdown"
 			>

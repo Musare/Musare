@@ -67,7 +67,7 @@
 					flag
 				</i>
 				<i
-					class="material-icons"
+					class="material-icons add-to-playlist-icon"
 					@click="showPlaylistDropdown = !showPlaylistDropdown"
 					>queue</i
 				>
