@@ -492,7 +492,7 @@ class _StationsModule extends CoreClass {
 								.then(response => {
 									next(null, response.array, station);
 								})
-								.catch(console.log);
+								.catch(next);
 						} else next(null, playlist.songs, station);
 					},
 
@@ -504,7 +504,6 @@ class _StationsModule extends CoreClass {
 								playlistSongs = [...playlistSongs, ...songsToAddToEnd];
 							}
 						}
-
 						const songsStillNeeded = 50 - station.queue.length;
 						const currentSongs = station.queue;
 						const currentSongIds = station.queue.map(song => song.songId);
@@ -514,7 +513,6 @@ class _StationsModule extends CoreClass {
 						playlistSongs
 							// .map(song => song._doc)
 							.every(song => {
-								console.log(11, song, playlistSongs);
 								if (
 									songsToAdd.length < songsStillNeeded &&
 									currentSongIds.indexOf(song.songId) === -1
@@ -528,10 +526,12 @@ class _StationsModule extends CoreClass {
 							});
 
 						let { currentSongIndex } = station;
-						if (station.playMode === "sequential") {
+
+						if (station.playMode === "sequential" && lastSongAdded) {
 							const indexOfLastSong = _playlistSongs
 								.map(song => song.songId)
 								.indexOf(lastSongAdded.songId);
+
 							if (indexOfLastSong !== -1) currentSongIndex = indexOfLastSong;
 						}
 
