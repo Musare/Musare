@@ -1,7 +1,7 @@
 process.env.NODE_CONFIG_DIR = `${__dirname}/dist/config/`;
 const config = require("config");
 
-const merge = require("webpack-merge");
+const { merge } = require("webpack-merge");
 const common = require("./webpack.common.js");
 
 module.exports = merge(common, {
