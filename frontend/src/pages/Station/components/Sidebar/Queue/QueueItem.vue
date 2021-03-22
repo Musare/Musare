@@ -1,6 +1,5 @@
 <template>
 	<div class="universal-item queue-item">
-		<add-to-playlist-dropdown v-if="showPlaylistDropdown" :song="song" />
 		<div id="thumbnail-and-info">
 			<img
 				class="item-thumbnail"
@@ -50,6 +49,8 @@
 				</p>
 			</div>
 		</div>
+		<add-to-playlist-dropdown v-if="showPlaylistDropdown" :song="song" />
+
 		<div id="duration-and-actions">
 			<p id="song-duration">
 				{{ utils.formatTime(song.duration) }}
@@ -144,10 +145,13 @@ export default {
 
 /deep/ #nav-dropdown {
 	margin-top: 36px;
+	width: 0;
+	height: 0;
 
-	/deep/ .nav-dropdown-items {
-		position: absolute;
-		right: 0;
+	.nav-dropdown-items {
+		width: max-content;
+		position: relative;
+		right: 125px;
 	}
 }
 
@@ -167,7 +171,7 @@ export default {
 	}
 
 	#thumbnail-and-info {
-		width: calc(100% - 120px);
+		width: calc(100% - 110px);
 	}
 
 	#song-info {
