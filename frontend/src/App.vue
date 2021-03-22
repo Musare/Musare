@@ -108,7 +108,7 @@ export default {
 		});
 
 		if (localStorage.getItem("github_redirect")) {
-			this.$router.go(localStorage.getItem("github_redirect"));
+			this.$router.push(localStorage.getItem("github_redirect"));
 			localStorage.removeItem("github_redirect");
 		}
 

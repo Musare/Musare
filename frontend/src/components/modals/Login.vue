@@ -101,7 +101,7 @@ export default {
 				password: this.password
 			})
 				.then(res => {
-					if (res.status === "success") window.location.href = "/";
+					if (res.status === "success") window.location.reload();
 				})
 				.catch(
 					err => new Toast({ content: err.message, timeout: 5000 })
@@ -113,6 +113,11 @@ export default {
 		},
 		githubRedirect() {
 			localStorage.setItem("github_redirect", this.$route.path);
+			console.log(
+				"Yes",
+				this.$route.path,
+				localStorage.getItem("github_redirect")
+			);
 		},
 		...mapActions("modalVisibility", ["closeModal"]),
 		...mapActions("user/auth", ["login"])
