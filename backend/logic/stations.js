@@ -749,7 +749,7 @@ class _StationsModule extends CoreClass {
 										{ stationId: station._id },
 										this
 									).then(() => {
-										next(null, response.song, 0, station);
+										next(null, response.song, station);
 									});
 								})
 								.catch(err => {
