@@ -1825,6 +1825,7 @@ export default {
 
 .night-mode {
 	#currently-playing-container,
+	#next-up-container,
 	#about-station-container,
 	#control-bar-container,
 	.player-container {
