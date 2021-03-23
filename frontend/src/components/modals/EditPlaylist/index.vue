@@ -18,7 +18,11 @@
 					<h5>Duration: {{ totalLength() }}</h5>
 				</div>
 
-				<div id="playlist-settings-section" class="section">
+				<div
+					id="playlist-settings-section"
+					v-if="userId === playlist.createdBy || isEditable()"
+					class="section"
+				>
 					<div v-if="isEditable()">
 						<h4 class="section-title">Edit Details</h4>
 
@@ -51,7 +55,7 @@
 						</div>
 					</div>
 
-					<div v-if="userId === playlist.createdBy">
+					<div>
 						<label class="label"> Change privacy </label>
 						<div class="control is-grouped input-with-button">
 							<div class="control is-expanded select">
@@ -426,9 +430,12 @@ export default {
 			if (res.status === "success") {
 				this.playlist = res.data;
 				this.playlist.songs.sort((a, b) => a.position - b.position);
-			}
-
-			this.playlist.oldId = res.data._id;
+				this.playlist.oldId = res.data._id;
+			} else
+				new Toast({
+					content: res.message,
+					timeout: 4000
+				});
 		});
 
 		this.socket.on("event:playlist.addSong", data => {
@@ -485,7 +492,7 @@ export default {
 	methods: {
 		editSongInPlaylist(song) {
 			this.$parent.editingSongId = song._id;
-			this.openModal({ sector: "station", modal: "editSong" });
+			this.openModal({ sector: "admin", modal: "editSong" });
 		},
 		reportSongInPlaylist(song) {
 			this.reportSong(song);

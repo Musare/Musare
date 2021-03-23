@@ -97,11 +97,13 @@
 import { mapState, mapGetters, mapActions } from "vuex";
 import Toast from "toasters";
 
-import ViewPunishment from "../../../components/modals/ViewPunishment.vue";
 import ws from "../../../ws";
 
 export default {
-	components: { ViewPunishment },
+	components: {
+		ViewPunishment: () =>
+			import("../../../components/modals/ViewPunishment.vue")
+	},
 	data() {
 		return {
 			viewingPunishmentId: "",

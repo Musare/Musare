@@ -477,8 +477,17 @@ export default {
 
 				(playlist, next) => {
 					if (!playlist) return next("Playlist not found");
-					if (playlist.privacy !== "public" && playlist.createdBy !== session.userId)
+					if (playlist.privacy !== "public" && playlist.createdBy !== session.userId) {
+						if (session)
+							// check if user requested to get a playlist is an admin
+							return DBModule.runJob("GET_MODEL", { modelName: "user" }, this).then(userModel => {
+								userModel.findOne({ _id: session.userId }, (err, user) => {
+									if (user && user.role === "admin") return next(null, playlist);
+									return next("User unauthorised to view playlist.");
+								});
+							});
 						return next("User unauthorised to view playlist.");
+					}
 
 					return next(null, playlist);
 				}

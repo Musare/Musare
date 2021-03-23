@@ -1,4 +1,4 @@
-module.exports = {
+export default {
 	regex: {
 		azAZ09_: /^[A-Za-z0-9_]+$/,
 		az09_: /^[a-z0-9_]+$/,

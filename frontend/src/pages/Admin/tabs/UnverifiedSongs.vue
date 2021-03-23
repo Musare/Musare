@@ -179,7 +179,6 @@ import { mapState, mapActions, mapGetters } from "vuex";
 
 import Toast from "toasters";
 
-import EditSong from "../../../components/modals/EditSong.vue";
 import UserIdToUsername from "../../../components/common/UserIdToUsername.vue";
 
 import FloatingBox from "../../../components/ui/FloatingBox.vue";
@@ -189,7 +188,11 @@ import ScrollAndFetchHandler from "../../../mixins/ScrollAndFetchHandler.vue";
 import ws from "../../../ws";
 
 export default {
-	components: { EditSong, UserIdToUsername, FloatingBox },
+	components: {
+		EditSong: () => import("../../../components/modals/EditSong.vue"),
+		UserIdToUsername,
+		FloatingBox
+	},
 	mixins: [ScrollAndFetchHandler],
 	data() {
 		return {

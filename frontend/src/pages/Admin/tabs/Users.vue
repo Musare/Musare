@@ -68,12 +68,14 @@
 <script>
 import { mapState, mapActions, mapGetters } from "vuex";
 
-import EditUser from "../../../components/modals/EditUser.vue";
 import ProfilePicture from "../../../components/ui/ProfilePicture.vue";
 import ws from "../../../ws";
 
 export default {
-	components: { EditUser, ProfilePicture },
+	components: {
+		EditUser: () => import("../../../components/modals/EditUser.vue"),
+		ProfilePicture
+	},
 	data() {
 		return {
 			editingUserId: "",

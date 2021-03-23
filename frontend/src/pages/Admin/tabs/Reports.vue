@@ -73,11 +73,13 @@ import { formatDistance } from "date-fns";
 import Toast from "toasters";
 import ws from "../../../ws";
 
-import ViewReport from "../../../components/modals/ViewReport.vue";
 import UserIdToUsername from "../../../components/common/UserIdToUsername.vue";
 
 export default {
-	components: { ViewReport, UserIdToUsername },
+	components: {
+		ViewReport: () => import("../../../components/modals/ViewReport.vue"),
+		UserIdToUsername
+	},
 	data() {
 		return {
 			viewingReportId: "",

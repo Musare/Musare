@@ -189,11 +189,13 @@ import { mapState, mapActions, mapGetters } from "vuex";
 import Toast from "toasters";
 import ws from "../../../ws";
 
-import EditStation from "../../../components/modals/EditStation.vue";
 import UserIdToUsername from "../../../components/common/UserIdToUsername.vue";
 
 export default {
-	components: { EditStation, UserIdToUsername },
+	components: {
+		EditStation: () => import("../../../components/modals/EditStation.vue"),
+		UserIdToUsername
+	},
 	data() {
 		return {
 			editingStationId: "",

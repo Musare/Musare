@@ -140,7 +140,7 @@ export default {
 	},
 	data() {
 		return {
-			currentTab: "unverifiedSongs"
+			currentTab: ""
 		};
 	},
 	watch: {
