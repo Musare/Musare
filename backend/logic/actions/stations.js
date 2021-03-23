@@ -1116,13 +1116,7 @@ export default {
 	 * @param cb
 	 */
 	voteSkip: isLoginRequired(async function voteSkip(session, stationId, cb) {
-		const stationModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "station"
-			},
-			this
-		);
+		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
 
 		let skipVotes = 0;
 		let shouldSkip = false;
@@ -1131,22 +1125,13 @@ export default {
 			[
 				next => {
 					StationsModule.runJob("GET_STATION", { stationId }, this)
-						.then(station => {
-							next(null, station);
-						})
+						.then(station => next(null, station))
 						.catch(next);
 				},
 
 				(station, next) => {
 					if (!station) return next("Station not found.");
-					return StationsModule.runJob(
-						"CAN_USER_VIEW_STATION",
-						{
-							station,
-							userId: session.userId
-						},
-						this
-					)
+					return StationsModule.runJob("CAN_USER_VIEW_STATION", { station, userId: session.userId }, this)
 						.then(canView => {
 							if (canView) return next(null, station);
 							return next("Insufficient permissions.");
@@ -1190,8 +1175,32 @@ export default {
 				},
 
 				(sockets, next) => {
-					if (sockets.length <= skipVotes) shouldSkip = true;
-					next();
+					if (sockets.length <= skipVotes) {
+						shouldSkip = true;
+						return next();
+					}
+
+					const users = [];
+
+					return async.each(
+						sockets,
+						(socketId, next) => {
+							WSModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId }, this)
+								.then(socket => {
+									if (socket.session && socket.session.userId) {
+										if (!users.includes(socket.session.userId)) users.push(socket.session.userId);
+									} else users.push(socketId);
+									return next();
+								})
+								.catch(next);
+						},
+						err => {
+							if (err) return next(err);
+
+							if (users.length <= skipVotes) shouldSkip = true;
+							return next();
+						}
+					);
 				}
 			],
 			async err => {
