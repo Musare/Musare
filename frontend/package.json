@@ -1,6 +1,9 @@
 {
   "name": "musare-frontend",
-  "sideEffects": false,
+  "sideEffects": [
+    "*.css",
+    "*.vue"
+  ],
   "private": true,
   "version": "2.1.0",
   "description": "A modern, open-source, collaborative music app https://musare.com",
