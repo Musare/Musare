@@ -3,7 +3,7 @@
   "sideEffects": false,
   "private": true,
   "version": "2.1.0",
-  "description": "A `mo`dern, open-source, collaborative music app https://musare.com",
+  "description": "A modern, open-source, collaborative music app https://musare.com",
   "main": "main.js",
   "author": "Musare Team",
   "license": "GPL-3.0",
