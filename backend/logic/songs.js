@@ -318,7 +318,7 @@ class _SongsModule extends CoreClass {
 			async.waterfall(
 				[
 					next => {
-						SongsModule.songModel.find({}, { genres: 1, _id: false }, next);
+						SongsModule.songModel.find({ verified: true }, { genres: 1, _id: false }, next);
 					},
 
 					(songs, next) => {
@@ -356,7 +356,7 @@ class _SongsModule extends CoreClass {
 				[
 					next => {
 						SongsModule.songModel.find(
-							{ genres: { $regex: new RegExp(`^${payload.genre.toLowerCase()}$`, "i") } },
+							{ verified: true, genres: { $regex: new RegExp(`^${payload.genre.toLowerCase()}$`, "i") } },
 							next
 						);
 					}

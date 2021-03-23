@@ -11,8 +11,9 @@ export default {
 	explicit: { type: Boolean, default: false, required: true },
 	requestedBy: { type: String, required: true },
 	requestedAt: { type: Date, required: true },
-	acceptedBy: { type: String, required: true },
-	acceptedAt: { type: Date, default: Date.now, required: true },
+	acceptedBy: { type: String, required: true }, // TODO Should be verifiedBy
+	acceptedAt: { type: Date, default: Date.now, required: true }, // TODO Should be verifiedAt
 	discogs: { type: Object },
+	verified: false,
 	documentVersion: { type: Number, default: 1, required: true }
 };

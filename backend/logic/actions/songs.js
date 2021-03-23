@@ -1,4 +1,5 @@
 import async from "async";
+import config from "config";
 
 import { isAdminRequired, isLoginRequired } from "./hooks";
 
@@ -10,39 +11,81 @@ const WSModule = moduleManager.modules.ws;
 const CacheModule = moduleManager.modules.cache;
 const SongsModule = moduleManager.modules.songs;
 const ActivitiesModule = moduleManager.modules.activities;
+const YouTubeModule = moduleManager.modules.youtube;
 const PlaylistsModule = moduleManager.modules.playlists;
 
 CacheModule.runJob("SUB", {
-	channel: "song.removed",
-	cb: songId => {
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: "admin.songs",
-			args: ["event:admin.song.removed", songId]
-		});
-	}
-});
-
-CacheModule.runJob("SUB", {
-	channel: "song.added",
+	channel: "song.newUnverifiedSong",
 	cb: async songId => {
-		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
-		songModel.findOne({ songId }, (err, song) => {
+		const songModel = await DBModule.runJob("GET_MODEL", {
+			modelName: "song"
+		});
+		songModel.findOne({ _id: songId }, (err, song) => {
 			WSModule.runJob("EMIT_TO_ROOM", {
-				room: "admin.songs",
-				args: ["event:admin.song.added", song]
+				room: "admin.unverifiedSongs",
+				args: ["event:admin.unverifiedSong.added", song]
 			});
 		});
 	}
 });
 
 CacheModule.runJob("SUB", {
-	channel: "song.updated",
+	channel: "song.removedUnverifiedSong",
+	cb: songId => {
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: "admin.unverifiedSongs",
+			args: ["event:admin.unverifiedSong.removed", songId]
+		});
+	}
+});
+
+CacheModule.runJob("SUB", {
+	channel: "song.updateUnverifiedSong",
+	cb: async songId => {
+		const songModel = await DBModule.runJob("GET_MODEL", {
+			modelName: "song"
+		});
+
+		songModel.findOne({ _id: songId }, (err, song) => {
+			WSModule.runJob("EMIT_TO_ROOM", {
+				room: "admin.unverifiedSongs",
+				args: ["event:admin.unverifiedSong.updated", song]
+			});
+		});
+	}
+});
+
+CacheModule.runJob("SUB", {
+	channel: "song.newVerifiedSong",
 	cb: async songId => {
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
 		songModel.findOne({ songId }, (err, song) => {
 			WSModule.runJob("EMIT_TO_ROOM", {
 				room: "admin.songs",
-				args: ["event:admin.song.updated", song]
+				args: ["event:admin.verifiedSong.added", song]
+			});
+		});
+	}
+});
+
+CacheModule.runJob("SUB", {
+	channel: "song.removedVerifiedSong",
+	cb: songId => {
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: "admin.songs",
+			args: ["event:admin.verifiedSong.removed", songId]
+		});
+	}
+});
+
+CacheModule.runJob("SUB", {
+	channel: "song.updatedVerifiedSong",
+	cb: async songId => {
+		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
+		songModel.findOne({ songId }, (err, song) => {
+			WSModule.runJob("EMIT_TO_ROOM", {
+				room: "admin.songs",
+				args: ["event:admin.verifiedSong.updated", song]
 			});
 		});
 	}
@@ -160,21 +203,29 @@ export default {
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param cb
 	 */
-	length: isAdminRequired(async function length(session, cb) {
+	length: isAdminRequired(async function length(session, verified, cb) {
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 		async.waterfall(
 			[
 				next => {
-					songModel.countDocuments({}, next);
+					songModel.countDocuments({ verified }, next);
 				}
 			],
 			async (err, count) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log("ERROR", "SONGS_LENGTH", `Failed to get length from songs. "${err}"`);
+					this.log(
+						"ERROR",
+						"SONGS_LENGTH",
+						`Failed to get length from songs that are ${verified ? "verified" : "not verified"}. "${err}"`
+					);
 					return cb({ status: "failure", message: err });
 				}
-				this.log("SUCCESS", "SONGS_LENGTH", `Got length from songs successfully.`);
+				this.log(
+					"SUCCESS",
+					"SONGS_LENGTH",
+					`Got length from songs that are ${verified ? "verified" : "not verified"} successfully.`
+				);
 				return cb(count);
 			}
 		);
@@ -187,13 +238,13 @@ export default {
 	 * @param set - the set number to return
 	 * @param cb
 	 */
-	getSet: isAdminRequired(async function getSet(session, set, cb) {
+	getSet: isAdminRequired(async function getSet(session, set, verified, cb) {
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 		async.waterfall(
 			[
 				next => {
 					songModel
-						.find({})
+						.find({ verified })
 						.skip(15 * (set - 1))
 						.limit(15)
 						.exec(next);
@@ -202,10 +253,18 @@ export default {
 			async (err, songs) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log("ERROR", "SONGS_GET_SET", `Failed to get set from songs. "${err}"`);
+					this.log(
+						"ERROR",
+						"SONGS_GET_SET",
+						`Failed to get set from songs that are ${verified ? "verified" : "not verified"}. "${err}"`
+					);
 					return cb({ status: "failure", message: err });
 				}
-				this.log("SUCCESS", "SONGS_GET_SET", `Got set from songs successfully.`);
+				this.log(
+					"SUCCESS",
+					"SONGS_GET_SET",
+					`Got set from songs that are ${verified ? "verified" : "not verified"} successfully.`
+				);
 				return cb(songs);
 			}
 		);
@@ -377,10 +436,17 @@ export default {
 
 				this.log("SUCCESS", "SONGS_UPDATE", `Successfully updated song "${songId}".`);
 
-				CacheModule.runJob("PUB", {
-					channel: "song.updated",
-					value: song.songId
-				});
+				if (song.verified) {
+					CacheModule.runJob("PUB", {
+						channel: "song.updatedVerifiedSong",
+						value: song.songId
+					});
+				} else {
+					CacheModule.runJob("PUB", {
+						channel: "song.updatedUnverifiedSong",
+						value: song.songId
+					});
+				}
 
 				return cb({
 					status: "success",
@@ -439,7 +505,17 @@ export default {
 
 				this.log("SUCCESS", "SONGS_REMOVE", `Successfully remove song "${songId}".`);
 
-				CacheModule.runJob("PUB", { channel: "song.removed", value: songId });
+				if (song.verified) {
+					CacheModule.runJob("PUB", {
+						channel: "song.removedVerifiedSong",
+						value: songId
+					});
+				} else {
+					CacheModule.runJob("PUB", {
+						channel: "song.removedUnverifiedSong",
+						value: songId
+					});
+				}
 
 				return cb({
 					status: "success",
@@ -450,79 +526,315 @@ export default {
 	}),
 
 	/**
-	 * Adds a song
+	 * Requests a song
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} songId - the id of the song that gets requested
+	 * @param {Function} cb - gets called with the result
+	 */
+	request: isLoginRequired(async function add(session, songId, cb) {
+		const requestedAt = Date.now();
+		const SongModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
+		const UserModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+
+		async.waterfall(
+			[
+				next => {
+					SongModel.findOne({ songId }, next);
+				},
+
+				// Get YouTube data from id
+				(song, next) => {
+					if (song) return next("This song is already in the database.");
+					// TODO Add err object as first param of callback
+					return YouTubeModule.runJob("GET_SONG", { songId }, this)
+						.then(response => {
+							const { song } = response;
+							song.duration = -1;
+							song.artists = [];
+							song.genres = [];
+							song.skipDuration = 0;
+							song.thumbnail = `${config.get("domain")}/assets/notes.png`;
+							song.explicit = false;
+							song.requestedBy = session.userId;
+							song.requestedAt = requestedAt;
+							song.verified = false;
+							next(null, song);
+						})
+						.catch(next);
+				},
+				(newSong, next) => {
+					const song = new SongModel(newSong);
+					song.save({ validateBeforeSave: false }, err => {
+						if (err) return next(err, song);
+						return next(null, song);
+					});
+				},
+				(song, next) => {
+					UserModel.findOne({ _id: session.userId }, (err, user) => {
+						if (err) return next(err);
+
+						user.statistics.songsRequested += 1;
+
+						return user.save(err => {
+							if (err) return next(err);
+							return next(null, song);
+						});
+					});
+				}
+			],
+			async (err, song) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"SONGS_REQUEST",
+						`Requesting song "${songId}" failed for user ${session.userId}. "${err}"`
+					);
+					return cb({ status: "failure", message: err });
+				}
+				CacheModule.runJob("PUB", {
+					channel: "song.newUnverifiedSong",
+					value: song._id
+				});
+				this.log(
+					"SUCCESS",
+					"SONGS_REQUEST",
+					`User "${session.userId}" successfully requested song "${songId}".`
+				);
+				return cb({
+					status: "success",
+					message: "Successfully requested that song"
+				});
+			}
+		);
+	}),
+
+	/**
+	 * Verifies a song
 	 *
 	 * @param session
 	 * @param song - the song object
 	 * @param cb
 	 */
-	add: isAdminRequired(async function add(session, song, cb) {
+	verify: isAdminRequired(async function add(session, songId, cb) {
 		const SongModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 		async.waterfall(
 			[
 				next => {
-					SongModel.findOne({ songId: song.songId }, next);
+					SongModel.findOne({ songId }, next);
 				},
 
-				(existingSong, next) => {
-					if (existingSong) return next("Song is already in rotation.");
-					return next();
+				(song, next) => {
+					if (!song) return next("This song is not in the database.");
+					return next(null, song);
 				},
 
-				next => {
-					const newSong = new SongModel(song);
-					newSong.acceptedBy = session.userId;
-					newSong.acceptedAt = Date.now();
-					newSong.save(next);
+				(song, next) => {
+					song.acceptedBy = session.userId;
+					song.acceptedAt = Date.now();
+					song.verified = true;
+					song.save(err => {
+						next(err, song);
+					});
 				},
 
-				(res, next) => {
-					this.module
-						.runJob(
-							"RUN_ACTION2",
-							{
-								session,
-								namespace: "queueSongs",
-								action: "remove",
-								args: [song._id]
-							},
-							this
-						)
-						.finally(() => {
-							song.genres.forEach(genre => {
-								PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre })
-									.then(() => {})
-									.catch(() => {});
-							});
+				(song, next) => {
+					song.genres.forEach(genre => {
+						PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre })
+							.then(() => {})
+							.catch(() => {});
+					});
 
-							next();
-						});
+					next(null, song);
 				}
 			],
-			async err => {
+			async (err, song) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 
-					this.log("ERROR", "SONGS_ADD", `User "${session.userId}" failed to add song. "${err}"`);
+					this.log("ERROR", "SONGS_VERIFY", `User "${session.userId}" failed to verify song. "${err}"`);
 
 					return cb({ status: "failure", message: err });
 				}
 
-				this.log("SUCCESS", "SONGS_ADD", `User "${session.userId}" successfully added song "${song.songId}".`);
+				this.log("SUCCESS", "SONGS_VERIFY", `User "${session.userId}" successfully verified song "${songId}".`);
 
 				CacheModule.runJob("PUB", {
-					channel: "song.added",
-					value: song.songId
+					channel: "song.newVerifiedSong",
+					value: song._id
 				});
 
 				return cb({
 					status: "success",
-					message: "Song has been moved from the queue successfully."
+					message: "Song has been verified successfully."
 				});
 			}
 		);
 		// TODO Check if video is in queue and Add the song to the appropriate stations
 	}),
+
+	/**
+	 * Requests a set of songs
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} url - the url of the the YouTube playlist
+	 * @param {boolean} musicOnly - whether to only get music from the playlist
+	 * @param {Function} cb - gets called with the result
+	 */
+	requestSet: isLoginRequired(function requestSet(session, url, musicOnly, cb) {
+		async.waterfall(
+			[
+				next => {
+					YouTubeModule.runJob(
+						"GET_PLAYLIST",
+						{
+							url,
+							musicOnly
+						},
+						this
+					)
+						.then(res => {
+							next(null, res.songs);
+						})
+						.catch(next);
+				},
+				(songIds, next) => {
+					let successful = 0;
+					let failed = 0;
+					let alreadyInDatabase = 0;
+
+					if (songIds.length === 0) next();
+
+					async.eachLimit(
+						songIds,
+						1,
+						(songId, next) => {
+							WSModule.runJob(
+								"RUN_ACTION2",
+								{
+									session,
+									namespace: "songs",
+									action: "request",
+									args: [songId]
+								},
+								this
+							)
+								.then(res => {
+									if (res.status === "success") successful += 1;
+									else failed += 1;
+									if (res.message === "This song is already in the database.") alreadyInDatabase += 1;
+								})
+								.catch(() => {
+									failed += 1;
+								})
+								.finally(() => {
+									next();
+								});
+						},
+						() => {
+							next(null, { successful, failed, alreadyInDatabase });
+						}
+					);
+				}
+			],
+			async (err, response) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"REQUEST_SET",
+						`Importing a YouTube playlist to be requested failed for user "${session.userId}". "${err}"`
+					);
+					return cb({ status: "failure", message: err });
+				}
+				this.log(
+					"SUCCESS",
+					"REQUEST_SET",
+					`Successfully imported a YouTube playlist to be requested for user "${session.userId}".`
+				);
+				return cb({
+					status: "success",
+					message: `Playlist is done importing. ${response.successful} were added succesfully, ${response.failed} failed (${response.alreadyInDatabase} were already in database)`
+				});
+			}
+		);
+	}),
+
+	// /**
+	//  * Adds a song
+	//  *
+	//  * @param session
+	//  * @param song - the song object
+	//  * @param cb
+	//  */
+	// add: isAdminRequired(async function add(session, song, cb) {
+	// 	const SongModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
+	// 	async.waterfall(
+	// 		[
+	// 			next => {
+	// 				SongModel.findOne({ songId: song.songId }, next);
+	// 			},
+
+	// 			(existingSong, next) => {
+	// 				if (existingSong) return next("Song is already in rotation.");
+	// 				return next();
+	// 			},
+
+	// 			next => {
+	// 				const newSong = new SongModel(song);
+	// 				newSong.acceptedBy = session.userId;
+	// 				newSong.acceptedAt = Date.now();
+	// 				newSong.save(next);
+	// 			},
+
+	// 			(res, next) => {
+	// 				this.module
+	// 					.runJob(
+	// 						"RUN_ACTION2",
+	// 						{
+	// 							session,
+	// 							namespace: "queueSongs",
+	// 							action: "remove",
+	// 							args: [song._id]
+	// 						},
+	// 						this
+	// 					)
+	// 					.finally(() => {
+	// 						song.genres.forEach(genre => {
+	// 							PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre })
+	// 								.then(() => {})
+	// 								.catch(() => {});
+	// 						});
+
+	// 						next();
+	// 					});
+	// 			}
+	// 		],
+	// 		async err => {
+	// 			if (err) {
+	// 				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+
+	// 				this.log("ERROR", "SONGS_ADD", `User "${session.userId}" failed to add song. "${err}"`);
+
+	// 				return cb({ status: "failure", message: err });
+	// 			}
+
+	// 			this.log("SUCCESS", "SONGS_ADD", `User "${session.userId}" successfully added song "${song.songId}".`);
+
+	// 			CacheModule.runJob("PUB", {
+	// 				channel: "song.added",
+	// 				value: song.songId
+	// 			});
+
+	// 			return cb({
+	// 				status: "success",
+	// 				message: "Song has been moved from the queue successfully."
+	// 			});
+	// 		}
+	// 	);
+	// 	// TODO Check if video is in queue and Add the song to the appropriate stations
+	// }),
 
 	/**
 	 * Likes a song

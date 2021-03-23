@@ -1,7 +1,7 @@
 <template>
-	<div @scroll="handleScroll">
-		<metadata title="Admin | Queue songs" />
-		<div class="container">
+	<div>
+		<metadata title="Admin | Songs" />
+		<div class="container" @scroll="handleScroll">
 			<p>
 				<span>Sets loaded: {{ setsLoaded }} / {{ maxSets }}</span>
 				<br />
@@ -28,6 +28,36 @@
 				Keyboard shortcuts helper
 			</button>
 			<br />
+			<div>
+				<input
+					type="text"
+					placeholder="Filter artist checkboxes"
+					v-model="artistFilterQuery"
+				/>
+				<label v-for="artist in filteredArtists" :key="artist">
+					<input
+						type="checkbox"
+						:checked="artistFilterSelected.indexOf(artist) !== -1"
+						@click="toggleArtistSelected(artist)"
+					/>
+					<span>{{ artist }}</span>
+				</label>
+			</div>
+			<div>
+				<input
+					type="text"
+					placeholder="Filter genre checkboxes"
+					v-model="genreFilterQuery"
+				/>
+				<label v-for="genre in filteredGenres" :key="genre">
+					<input
+						type="checkbox"
+						:checked="genreFilterSelected.indexOf(genre) !== -1"
+						@click="toggleGenreSelected(genre)"
+					/>
+					<span>{{ genre }}</span>
+				</label>
+			</div>
 			<br />
 			<table class="table is-striped">
 				<thead>
@@ -36,24 +66,21 @@
 						<td>Title</td>
 						<td>Artists</td>
 						<td>Genres</td>
-						<td>ID / YouTube ID</td>
+						<td class="likesColumn">
+							<i class="material-icons thumbLike">thumb_up</i>
+						</td>
+						<td class="dislikesColumn">
+							<i class="material-icons thumbDislike"
+								>thumb_down</i
+							>
+						</td>
+						<td>ID / Youtube ID</td>
 						<td>Requested By</td>
 						<td>Options</td>
 					</tr>
 				</thead>
 				<tbody>
-					<tr
-						v-for="(song, index) in filteredSongs"
-						:key="index"
-						tabindex="0"
-						@keydown.up.prevent
-						@keydown.down.prevent
-						@keyup.up="selectPrevious($event)"
-						@keyup.down="selectNext($event)"
-						@keyup.e="edit(song, index)"
-						@keyup.a="add(song)"
-						@keyup.x="remove(song._id, index)"
-					>
+					<tr v-for="(song, index) in filteredSongs" :key="index">
 						<td>
 							<img
 								class="song-thumbnail"
@@ -66,6 +93,8 @@
 						</td>
 						<td>{{ song.artists.join(", ") }}</td>
 						<td>{{ song.genres.join(", ") }}</td>
+						<td>{{ song.likes }}</td>
+						<td>{{ song.dislikes }}</td>
 						<td>
 							{{ song._id }}
 							<br />
@@ -88,15 +117,9 @@
 						<td class="optionsColumn">
 							<button
 								class="button is-primary"
-								@click="edit(song, index)"
+								@click="edit(song)"
 							>
 								<i class="material-icons">edit</i>
-							</button>
-							<button
-								class="button is-success"
-								@click="add(song)"
-							>
-								<i class="material-icons">add</i>
 							</button>
 							<button
 								class="button is-danger"
@@ -112,7 +135,7 @@
 		<edit-song
 			v-if="modals.editSong"
 			:song-id="editingSongId"
-			song-type="queueSongs"
+			song-type="songs"
 		/>
 		<floating-box
 			id="keyboardShortcutsHelper"
@@ -121,7 +144,7 @@
 			<template #body>
 				<div>
 					<div>
-						<span class="biggest"><b>Queue songs page</b></span>
+						<span class="biggest"><b>Songs page</b></span>
 						<span
 							><b>Arrow keys up/down</b> - Moves between
 							songs</span
@@ -197,7 +220,14 @@ export default {
 		return {
 			editingSongId: "",
 			searchQuery: "",
-			songs: []
+			artistFilterQuery: "",
+			artistFilterSelected: [],
+			genreFilterQuery: "",
+			genreFilterSelected: [],
+			editing: {
+				index: 0,
+				song: {}
+			}
 		};
 	},
 	computed: {
@@ -206,11 +236,68 @@ export default {
 				song =>
 					JSON.stringify(Object.values(song)).indexOf(
 						this.searchQuery
-					) !== -1
+					) !== -1 &&
+					(this.artistFilterSelected.length === 0 ||
+						song.artists.some(
+							artist =>
+								this.artistFilterSelected.indexOf(artist) !== -1
+						)) &&
+					(this.genreFilterSelected.length === 0 ||
+						song.genres.some(
+							genre =>
+								this.genreFilterSelected.indexOf(genre) !== -1
+						))
 			);
+		},
+		artists() {
+			const artists = [];
+			this.songs.forEach(song => {
+				song.artists.forEach(artist => {
+					if (artists.indexOf(artist) === -1) artists.push(artist);
+				});
+			});
+			return artists.sort();
+		},
+		filteredArtists() {
+			return this.artists
+				.filter(
+					artist =>
+						this.artistFilterSelected.indexOf(artist) !== -1 ||
+						artist.indexOf(this.artistFilterQuery) !== -1
+				)
+				.sort(
+					(a, b) =>
+						(this.artistFilterSelected.indexOf(a) === -1 ? 1 : 0) -
+						(this.artistFilterSelected.indexOf(b) === -1 ? 1 : 0)
+				);
+		},
+		genres() {
+			const genres = [];
+			this.songs.forEach(song => {
+				song.genres.forEach(genre => {
+					if (genres.indexOf(genre) === -1) genres.push(genre);
+				});
+			});
+			return genres.sort();
+		},
+		filteredGenres() {
+			return this.genres
+				.filter(
+					genre =>
+						this.genreFilterSelected.indexOf(genre) !== -1 ||
+						genre.indexOf(this.genreFilterQuery) !== -1
+				)
+				.sort(
+					(a, b) =>
+						(this.genreFilterSelected.indexOf(a) === -1 ? 1 : 0) -
+						(this.genreFilterSelected.indexOf(b) === -1 ? 1 : 0)
+				);
 		},
 		...mapState("modalVisibility", {
 			modals: state => state.modals.admin
+		}),
+		...mapState("admin/songs", {
+			songs: state => state.songs
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
@@ -218,50 +305,47 @@ export default {
 	},
 	watch: {
 		// eslint-disable-next-line func-names
-		"modals.editSong": function(value) {
-			if (value === false) this.stopVideo();
+		"modals.editSong": function(val) {
+			if (!val) this.stopVideo();
 		}
 	},
 	mounted() {
-		this.socket.on("event:admin.queueSong.added", queueSong => {
-			this.songs.push(queueSong);
-		});
+		this.socket.on("event:admin.verifiedSong.added", song =>
+			this.addSong(song)
+		);
 
-		this.socket.on("event:admin.queueSong.removed", songId => {
-			this.songs = this.songs.filter(song => {
-				return song._id !== songId;
-			});
-		});
+		this.socket.on("event:admin.verifiedSong.removed", songId =>
+			this.removeSong(songId)
+		);
 
-		this.socket.on("event:admin.queueSong.updated", updatedSong => {
-			for (let i = 0; i < this.songs.length; i += 1) {
-				const song = this.songs[i];
-				if (song._id === updatedSong._id) {
-					this.$set(this.songs, i, updatedSong);
-				}
-			}
-		});
+		this.socket.on("event:admin.verifiedSong.updated", updatedSong =>
+			this.updateSong(updatedSong)
+		);
 
 		if (this.socket.readyState === 1) this.init();
 		ws.onConnect(() => this.init());
+
+		if (this.$route.query.songId) {
+			this.socket.dispatch(
+				"songs.getSongFromMusareId",
+				this.$route.query.songId,
+				res => {
+					if (res.status === "success") {
+						this.edit(res.data.song);
+					} else
+						new Toast({
+							content: "Song with that ID not found",
+							timeout: 3000
+						});
+				}
+			);
+		}
 	},
 	methods: {
 		edit(song) {
-			// const newSong = {};
-			// Object.keys(song).forEach(n => {
-			// 	newSong[n] = song[n];
-			// });
-
-			// this.editSong({ index, song: newSong, type: "queueSongs" });
+			// this.editSong({ song, type: "songs" });
 			this.editingSongId = song._id;
 			this.openModal({ sector: "admin", modal: "editSong" });
-		},
-		add(song) {
-			this.socket.dispatch("songs.add", song, res => {
-				if (res.status === "success")
-					new Toast({ content: res.message, timeout: 2000 });
-				else new Toast({ content: res.message, timeout: 4000 });
-			});
 		},
 		remove(id) {
 			// eslint-disable-next-line
@@ -269,10 +353,10 @@ export default {
 				"Are you sure you want to delete this song?"
 			);
 			if (dialogResult !== true) return;
-			this.socket.dispatch("queueSongs.remove", id, res => {
+			this.socket.dispatch("songs.remove", id, res => {
 				if (res.status === "success")
-					new Toast({ content: res.message, timeout: 2000 });
-				else new Toast({ content: res.message, timeout: 4000 });
+					new Toast({ content: res.message, timeout: 4000 });
+				else new Toast({ content: res.message, timeout: 8000 });
 			});
 		},
 		getSet() {
@@ -280,20 +364,32 @@ export default {
 			if (this.position >= this.maxPosition) return;
 			this.isGettingSet = true;
 
-			this.socket.dispatch("queueSongs.getSet", this.position, data => {
-				data.forEach(song => this.songs.push(song));
+			this.socket.dispatch("songs.getSet", this.position, true, data => {
+				data.forEach(song => {
+					this.addSong(song);
+				});
 
 				this.position += 1;
 				this.isGettingSet = false;
 			});
 		},
-		selectPrevious(event) {
-			if (event.srcElement.previousElementSibling)
-				event.srcElement.previousElementSibling.focus();
+		toggleArtistSelected(artist) {
+			if (this.artistFilterSelected.indexOf(artist) === -1)
+				this.artistFilterSelected.push(artist);
+			else
+				this.artistFilterSelected.splice(
+					this.artistFilterSelected.indexOf(artist),
+					1
+				);
 		},
-		selectNext(event) {
-			if (event.srcElement.nextElementSibling)
-				event.srcElement.nextElementSibling.focus();
+		toggleGenreSelected(genre) {
+			if (this.genreFilterSelected.indexOf(genre) === -1)
+				this.genreFilterSelected.push(genre);
+			else
+				this.genreFilterSelected.splice(
+					this.genreFilterSelected.indexOf(genre),
+					1
+				);
 		},
 		toggleKeyboardShortcutsHelper() {
 			this.$refs.keyboardShortcutsHelper.toggleBox();
@@ -305,17 +401,23 @@ export default {
 			if (this.songs.length > 0)
 				this.position = Math.ceil(this.songs.length / 15) + 1;
 
-			this.socket.dispatch("queueSongs.length", length => {
+			this.socket.dispatch("songs.length", true, length => {
 				this.maxPosition = Math.ceil(length / 15) + 1;
 
 				this.getSet();
 			});
 
-			this.socket.dispatch("apis.joinAdminRoom", "queue", () => {});
+			this.socket.dispatch("apis.joinAdminRoom", "songs", () => {});
 		},
-		// ...mapActions("admin/songs", ["editSong"]),
+		...mapActions("admin/songs", [
+			// "stopVideo",
+			// "editSong",
+			"addSong",
+			"removeSong",
+			"updateSong"
+		]),
 		...mapActions("modals/editSong", ["stopVideo"]),
-		...mapActions("modalVisibility", ["openModal"])
+		...mapActions("modalVisibility", ["openModal", "closeModal"])
 	}
 };
 </script>
@@ -347,10 +449,28 @@ export default {
 	}
 }
 
+body {
+	font-family: "Hind", sans-serif;
+}
+
 .optionsColumn {
-	width: 140px;
+	width: 100px;
 	button {
 		width: 35px;
+	}
+}
+
+.likesColumn,
+.dislikesColumn {
+	width: 40px;
+	i {
+		font-size: 20px;
+	}
+	.thumbLike {
+		color: var(--green) !important;
+	}
+	.thumbDislike {
+		color: var(--red) !important;
 	}
 }
 
