@@ -503,6 +503,82 @@ class _PlaylistsModule extends CoreClass {
 	}
 
 	/**
+	 * Gets orphaned genre playlists
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	GET_ORPHANED_GENRE_PLAYLISTS() {
+		return new Promise((resolve, reject) => {
+			PlaylistsModule.playlistModel.find({ type: "genre" }, { songs: false }, (err, playlists) => {
+				if (err) reject(new Error(err));
+				else {
+					const orphanedPlaylists = [];
+					async.eachLimit(
+						playlists,
+						1,
+						(playlist, next) => {
+							SongsModule.runJob("GET_ALL_SONGS_WITH_GENRE", { genre: playlist.createdFor }, this)
+								.then(response => {
+									if (response.songs.length === 0) {
+										StationsModule.runJob(
+											"GET_STATIONS_THAT_INCLUDE_OR_EXCLUDE_PLAYLIST",
+											{ playlistId: playlist._id },
+											this
+										)
+											.then(response => {
+												if (response.stationIds.length === 0) orphanedPlaylists.push(playlist);
+												next();
+											})
+											.catch(next);
+									} else next();
+								})
+								.catch(next);
+						},
+						err => {
+							if (err) reject(new Error(err));
+							else resolve({ playlists: orphanedPlaylists });
+						}
+					);
+				}
+			});
+		});
+	}
+
+	/**
+	 * Deletes all orphaned genre playlists
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	DELETE_ORPHANED_GENRE_PLAYLISTS() {
+		return new Promise((resolve, reject) => {
+			PlaylistsModule.runJob("GET_ORPHANED_GENRE_PLAYLISTS", {}, this)
+				.then(response => {
+					async.eachLimit(
+						response.playlists,
+						1,
+						(playlist, next) => {
+							PlaylistsModule.runJob("DELETE_PLAYLIST", { playlistId: playlist._id }, this)
+								.then(() => {
+									this.log("INFO", "Deleting orphaned genre playlist");
+									next();
+								})
+								.catch(err => {
+									next(err);
+								});
+						},
+						err => {
+							if (err) reject(new Error(err));
+							else resolve({});
+						}
+					);
+				})
+				.catch(err => {
+					reject(new Error(err));
+				});
+		});
+	}
+
+	/**
 	 * Gets a orphaned station playlists
 	 *
 	 * @returns {Promise} - returns promise (reject, resolve)

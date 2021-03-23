@@ -1579,7 +1579,9 @@ class _StationsModule extends CoreClass {
 				this
 			).then(stationModel => {
 				stationModel.find(
-					{ $or: [{ includedPlaylists: payload.playlistId }, { excludedPlaylists: payload.playlistId }] },
+					{
+						$or: [{ includedPlaylists: payload.playlistId }, { excludedPlaylists: payload.playlistId }]
+					},
 					(err, stations) => {
 						if (err) reject(err);
 						else resolve({ stationIds: stations.map(station => station._id) });

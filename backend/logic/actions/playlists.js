@@ -1541,5 +1541,40 @@ export default {
 				return cb({ status: "success", message: "Success" });
 			}
 		);
+	}),
+
+	/**
+	 * Deletes all orphaned genre playlists
+	 *
+	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {Function} cb - gets called with the result
+	 */
+	deleteOrphanedGenrePlaylists: isAdminRequired(async function index(session, cb) {
+		async.waterfall(
+			[
+				next => {
+					PlaylistsModule.runJob("DELETE_ORPHANED_GENRE_PLAYLISTS", {}, this)
+						.then(() => next())
+						.catch(next);
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"PLAYLISTS_DELETE_ORPHANED_GENRE_PLAYLISTS",
+						`Deleting orphaned genre playlists failed. "${err}"`
+					);
+					return cb({ status: "failure", message: err });
+				}
+				this.log(
+					"SUCCESS",
+					"PLAYLISTS_DELETE_ORPHANED_GENRE_PLAYLISTS",
+					"Deleting orphaned genre playlists successfull."
+				);
+				return cb({ status: "success", message: "Success" });
+			}
+		);
 	})
 };
