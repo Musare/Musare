@@ -1,6 +1,12 @@
 <template>
 	<div v-if="isUser">
-		<edit-playlist v-if="modals.editPlaylist" />
+		<edit-playlist v-if="modals.station.editPlaylist" />
+		<report v-if="modals.station.report" />
+		<edit-song
+			v-if="modals.admin.editSong"
+			:song-id="editingSongId"
+			song-type="songs"
+		/>
 
 		<metadata :title="`Profile | ${user.username}`" />
 		<main-header />
@@ -104,7 +110,9 @@ export default {
 		RecentActivity,
 		Playlists,
 		EditPlaylist: () =>
-			import("../../components/modals/EditPlaylist/index.vue")
+			import("../../components/modals/EditPlaylist/index.vue"),
+		Report: () => import("../../components/modals/Report.vue"),
+		EditSong: () => import("../../components/modals/EditSong.vue")
 	},
 	mixins: [TabQueryHandler],
 	data() {
@@ -112,7 +120,8 @@ export default {
 			user: {},
 			userId: "",
 			isUser: false,
-			tab: "recent-activity"
+			tab: "recent-activity",
+			editingSongId: ""
 		};
 	},
 	computed: {
@@ -120,7 +129,7 @@ export default {
 			role: state => state.user.auth.role,
 			myUserId: state => state.user.auth.userId,
 			...mapState("modalVisibility", {
-				modals: state => state.modals.station
+				modals: state => state.modals
 			})
 		}),
 		...mapGetters({

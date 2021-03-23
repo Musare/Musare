@@ -435,22 +435,22 @@
 					</div>
 				</div>
 
-				<song-queue v-if="modals.addSongToQueue" />
-				<edit-playlist v-if="modals.editPlaylist" />
-				<create-playlist v-if="modals.createPlaylist" />
+				<song-queue v-if="modals.station.addSongToQueue" />
+				<edit-playlist v-if="modals.station.editPlaylist" />
+				<create-playlist v-if="modals.station.createPlaylist" />
 				<edit-station
-					v-if="modals.editStation"
+					v-if="modals.station.editStation"
 					:station-id="station._id"
 					sector="station"
 				/>
-				<report v-if="modals.report" />
+				<report v-if="modals.station.report" />
 			</div>
 
 			<main-footer v-if="exists" />
 		</div>
 
 		<edit-song
-			v-if="modals.editSong"
+			v-if="modals.admin.editSong"
 			:song-id="editingSongId"
 			song-type="songs"
 			sector="station"
@@ -574,7 +574,7 @@ export default {
 	},
 	computed: {
 		...mapState("modalVisibility", {
-			modals: state => state.modals.station
+			modals: state => state.modals
 		}),
 		...mapState("station", {
 			station: state => state.station,

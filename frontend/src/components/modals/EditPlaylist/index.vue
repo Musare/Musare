@@ -426,9 +426,12 @@ export default {
 			if (res.status === "success") {
 				this.playlist = res.data;
 				this.playlist.songs.sort((a, b) => a.position - b.position);
-			}
-
-			this.playlist.oldId = res.data._id;
+				this.playlist.oldId = res.data._id;
+			} else
+				new Toast({
+					content: res.message,
+					timeout: 4000
+				});
 		});
 
 		this.socket.on("event:playlist.addSong", data => {
@@ -485,7 +488,7 @@ export default {
 	methods: {
 		editSongInPlaylist(song) {
 			this.$parent.editingSongId = song._id;
-			this.openModal({ sector: "station", modal: "editSong" });
+			this.openModal({ sector: "admin", modal: "editSong" });
 		},
 		reportSongInPlaylist(song) {
 			this.reportSong(song);

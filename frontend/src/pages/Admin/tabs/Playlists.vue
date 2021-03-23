@@ -22,7 +22,7 @@
 						<td>Created at</td>
 						<td>Created for</td>
 						<td>Playlist id</td>
-						<!-- <td>Options</td> -->
+						<td>Options</td>
 					</tr>
 				</thead>
 				<tbody>
@@ -44,23 +44,26 @@
 						</td>
 						<td>{{ playlist.createdFor }}</td>
 						<td>{{ playlist._id }}</td>
-						<!-- <td>
+						<td>
 							<button
 								class="button is-primary"
-								@click="edit(playlist)"
+								@click="edit(playlist._id)"
 							>
-								Edit
+								View
 							</button>
-						</td> -->
+						</td>
 					</tr>
 				</tbody>
 			</table>
 		</div>
-		<!-- <edit-playlist
-			v-if="modals.editPlaylist"
-			:user-id="editingPlaylistId"
-			sector="admin"
-		/> -->
+
+		<edit-playlist v-if="modals.admin.editPlaylist" sector="admin" />
+		<report v-if="modals.station.report" />
+		<edit-song
+			v-if="modals.admin.editSong"
+			:song-id="editingSongId"
+			song-type="songs"
+		/>
 	</div>
 </template>
 
@@ -69,24 +72,29 @@ import { mapState, mapActions, mapGetters } from "vuex";
 
 import Toast from "toasters";
 
-// import EditPlaylist from "../../../components/modals/EditPlaylist/index.vue";
+import EditPlaylist from "../../../components/modals/EditPlaylist/index.vue";
 import UserIdToUsername from "../../../components/common/UserIdToUsername.vue";
 
 import ws from "../../../ws";
 import utils from "../../../../js/utils";
 
 export default {
-	components: { /* EditPlaylist, */ UserIdToUsername },
+	components: {
+		EditPlaylist,
+		UserIdToUsername,
+		Report: () => import("../../../components/modals/Report.vue"),
+		EditSong: () => import("../../../components/modals/EditSong.vue")
+	},
 	data() {
 		return {
 			utils,
-			// editingPlaylistId: "",
-			playlists: []
+			playlists: [],
+			editingSongId: ""
 		};
 	},
 	computed: {
 		...mapState("modalVisibility", {
-			modals: state => state.modals.admin
+			modals: state => state.modals
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
@@ -97,13 +105,12 @@ export default {
 		ws.onConnect(() => this.init());
 	},
 	methods: {
-		// edit(playlist) {
-		// 	this.editingPlaylistId = playlist._id;
-		// 	this.openModal({ sector: "admin", modal: "editPlaylist" });
-		// },
+		edit(playlistId) {
+			this.editPlaylist(playlistId);
+			this.openModal({ sector: "admin", modal: "editPlaylist" });
+		},
 		init() {
 			this.socket.dispatch("playlists.index", res => {
-				console.log(res);
 				if (res.status === "success") {
 					this.playlists = res.data;
 					// if (this.$route.query.userId) {
@@ -150,7 +157,8 @@ export default {
 				}
 			);
 		},
-		...mapActions("modalVisibility", ["openModal"])
+		...mapActions("modalVisibility", ["openModal"]),
+		...mapActions("user/playlists", ["editPlaylist"])
 	}
 };
 </script>
