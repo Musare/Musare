@@ -4,24 +4,24 @@
 		<div class="tabs is-centered">
 			<ul>
 				<li
-					:class="{ 'is-active': currentTab == 'unverifiedSongs' }"
-					@click="showTab('unverifiedSongs')"
+					:class="{ 'is-active': currentTab == 'unverifiedsongs' }"
+					@click="showTab('unverifiedsongs')"
 				>
 					<router-link
-						class="tab unverifiedSongs"
-						to="/admin/unverifiedSongs"
+						class="tab unverifiedsongs"
+						to="/admin/unverifiedsongs"
 					>
 						<i class="material-icons">music_note</i>
 						<span>&nbsp;Unverified Songs</span>
 					</router-link>
 				</li>
 				<li
-					:class="{ 'is-active': currentTab == 'verifiedSongs' }"
-					@click="showTab('verifiedSongs')"
+					:class="{ 'is-active': currentTab == 'verifiedsongs' }"
+					@click="showTab('verifiedsongs')"
 				>
 					<router-link
-						class="tab verifiedSongs"
-						to="/admin/verifiedSongs"
+						class="tab verifiedsongs"
+						to="/admin/verifiedsongs"
 					>
 						<i class="material-icons">music_note</i>
 						<span>&nbsp;Verified Songs</span>
@@ -108,8 +108,8 @@
 			</ul>
 		</div>
 
-		<unverified-songs v-if="currentTab == 'unverifiedSongs'" />
-		<verified-songs v-if="currentTab == 'verifiedSongs'" />
+		<unverified-songs v-if="currentTab == 'unverifiedsongs'" />
+		<verified-songs v-if="currentTab == 'verifiedsongs'" />
 		<stations v-if="currentTab == 'stations'" />
 		<playlists v-if="currentTab == 'playlists'" />
 		<reports v-if="currentTab == 'reports'" />
@@ -155,10 +155,10 @@ export default {
 		changeTab(path) {
 			switch (path) {
 				case "/admin/unverifiedsongs":
-					this.currentTab = "unverifiedSongs";
+					this.currentTab = "unverifiedsongs";
 					break;
 				case "/admin/verifiedsongs":
-					this.currentTab = "verifiedSongs";
+					this.currentTab = "verifiedsongs";
 					break;
 				case "/admin/stations":
 					this.currentTab = "stations";
@@ -215,11 +215,11 @@ export default {
 	padding-top: 10px;
 	margin-top: -10px;
 	background-color: var(--white);
-	.unverifiedSongs {
+	.unverifiedsongs {
 		color: var(--teal);
 		border-color: var(--teal);
 	}
-	.verifiedSongs {
+	.verifiedsongs {
 		color: var(--primary-color);
 		border-color: var(--primary-color);
 	}

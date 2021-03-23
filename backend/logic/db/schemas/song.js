@@ -3,7 +3,7 @@ export default {
 	title: { type: String, required: true },
 	artists: [{ type: String }],
 	genres: [{ type: String }],
-	duration: { type: Number, required: true },
+	duration: { type: Number, min: 1, required: true },
 	skipDuration: { type: Number, required: true },
 	thumbnail: { type: String, required: true },
 	likes: { type: Number, default: 0, required: true },

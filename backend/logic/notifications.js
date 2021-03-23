@@ -169,24 +169,27 @@ class _NotificationsModule extends CoreClass {
 	SCHEDULE(payload) {
 		return new Promise((resolve, reject) => {
 			const time = Math.round(payload.time);
-			NotificationsModule.log(
-				"STATION_ISSUE",
-				`SCHEDULE - Time: ${time}; Name: ${payload.name}; Key: ${crypto
-					.createHash("md5")
-					.update(`_notification:${payload.name}_`)
-					.digest("hex")}; StationId: ${payload.station._id}; StationName: ${payload.station.name}`
-			);
-			NotificationsModule.pub.set(
-				crypto.createHash("md5").update(`_notification:${payload.name}_`).digest("hex"),
-				"",
-				"PX",
-				time,
-				"NX",
-				err => {
-					if (err) reject(err);
-					else resolve();
-				}
-			);
+			if (time <= 0) reject(new Error("Time has to be higher than 0"));
+			else {
+				NotificationsModule.log(
+					"STATION_ISSUE",
+					`SCHEDULE - Time: ${time}; Name: ${payload.name}; Key: ${crypto
+						.createHash("md5")
+						.update(`_notification:${payload.name}_`)
+						.digest("hex")}; StationId: ${payload.station._id}; StationName: ${payload.station.name}`
+				);
+				NotificationsModule.pub.set(
+					crypto.createHash("md5").update(`_notification:${payload.name}_`).digest("hex"),
+					"",
+					"PX",
+					time,
+					"NX",
+					err => {
+						if (err) reject(err);
+						else resolve();
+					}
+				);
+			}
 		});
 	}
 
