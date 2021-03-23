@@ -2461,7 +2461,7 @@ export default {
 					this.log(station);
 
 					if (station) return next("A station with that name or display name already exists.");
-					const { name, displayName, description, playlist, type, genres, blacklistedGenres } = data;
+					const { name, displayName, description, /* playlist, */ type, genres, blacklistedGenres } = data;
 					const stationId = mongoose.Types.ObjectId();
 
 					if (type === "official") {

@@ -1311,7 +1311,7 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	remove: isLoginRequired(async function remove(session, playlistId, cb) {
-		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
+		// const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
 		async.waterfall(
