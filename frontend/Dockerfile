@@ -7,6 +7,8 @@ RUN mkdir -p /opt
 WORKDIR /opt
 ADD package.json /opt/package.json
 
+RUN npm install -g webpack@5.27.2 webpack-cli@4.5.0
+
 RUN npm install
 
 RUN mkdir -p /run/nginx
