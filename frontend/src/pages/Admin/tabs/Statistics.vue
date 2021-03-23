@@ -103,8 +103,7 @@
 
 <script>
 import { mapGetters } from "vuex";
-import { Line } from "chart.js";
-import "chartjs-adapter-date-fns";
+import { LineElement } from "chart.js";
 
 import ws from "../../../ws";
 
@@ -151,7 +150,7 @@ export default {
 		const minuteCtx = document.getElementById("minuteChart");
 		const hourCtx = document.getElementById("hourChart");
 
-		this.minuteChart = new Line(minuteCtx, {
+		this.minuteChart = new LineElement(minuteCtx, {
 			data: {
 				labels: [
 					"-10",
@@ -209,7 +208,7 @@ export default {
 			}
 		});
 
-		this.hourChart = new Line(hourCtx, {
+		this.hourChart = new LineElement(hourCtx, {
 			data: {
 				labels: [
 					"-10",
