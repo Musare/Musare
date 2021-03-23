@@ -18,7 +18,11 @@
 					<h5>Duration: {{ totalLength() }}</h5>
 				</div>
 
-				<div id="playlist-settings-section" class="section">
+				<div
+					id="playlist-settings-section"
+					v-if="userId === playlist.createdBy || isEditable()"
+					class="section"
+				>
 					<div v-if="isEditable()">
 						<h4 class="section-title">Edit Details</h4>
 
@@ -51,7 +55,7 @@
 						</div>
 					</div>
 
-					<div v-if="userId === playlist.createdBy">
+					<div>
 						<label class="label"> Change privacy </label>
 						<div class="control is-grouped input-with-button">
 							<div class="control is-expanded select">
