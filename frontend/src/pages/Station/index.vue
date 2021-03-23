@@ -1742,7 +1742,7 @@ export default {
 		},
 		editSong(song) {
 			this.editingSongId = song._id;
-			this.openModal({ sector: "station", modal: "editSong" });
+			this.openModal({ sector: "admin", modal: "editSong" });
 		},
 		...mapActions("modalVisibility", ["openModal"]),
 		...mapActions("station", [

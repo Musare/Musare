@@ -72,7 +72,6 @@ import { mapState, mapActions, mapGetters } from "vuex";
 
 import Toast from "toasters";
 
-import EditPlaylist from "../../../components/modals/EditPlaylist/index.vue";
 import UserIdToUsername from "../../../components/common/UserIdToUsername.vue";
 
 import ws from "../../../ws";
@@ -80,7 +79,8 @@ import utils from "../../../../js/utils";
 
 export default {
 	components: {
-		EditPlaylist,
+		EditPlaylist: () =>
+			import("../../../components/modals/EditPlaylist/index.vue"),
 		UserIdToUsername,
 		Report: () => import("../../../components/modals/Report.vue"),
 		EditSong: () => import("../../../components/modals/EditSong.vue")

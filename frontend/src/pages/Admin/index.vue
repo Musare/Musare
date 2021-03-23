@@ -134,7 +134,7 @@ export default {
 	},
 	data() {
 		return {
-			currentTab: "queueSongs"
+			currentTab: ""
 		};
 	},
 	watch: {

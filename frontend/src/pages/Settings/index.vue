@@ -54,24 +54,19 @@ import TabQueryHandler from "../../mixins/TabQueryHandler.vue";
 import MainHeader from "../../components/layout/MainHeader.vue";
 import MainFooter from "../../components/layout/MainFooter.vue";
 
-import SecuritySettings from "./tabs/Security.vue";
-import AccountSettings from "./tabs/Account.vue";
-import ProfileSettings from "./tabs/Profile.vue";
-import PreferencesSettings from "./tabs/Preferences.vue";
-
 export default {
 	components: {
 		MainHeader,
 		MainFooter,
-		SecuritySettings,
-		AccountSettings,
-		ProfileSettings,
-		PreferencesSettings
+		SecuritySettings: () => import("./tabs/Security.vue"),
+		AccountSettings: () => import("./tabs/Account.vue"),
+		ProfileSettings: () => import("./tabs/Profile.vue"),
+		PreferencesSettings: () => import("./tabs/Preferences.vue")
 	},
 	mixins: [TabQueryHandler],
 	data() {
 		return {
-			tab: "profile"
+			tab: ""
 		};
 	},
 	computed: mapGetters({
@@ -85,6 +80,7 @@ export default {
 			this.$route.query.tab === "preferences"
 		)
 			this.tab = this.$route.query.tab;
+		else this.tab = "profile";
 
 		this.localNightmode = this.nightmode;
 

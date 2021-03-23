@@ -442,7 +442,6 @@ import Toast from "toasters";
 
 import MainHeader from "../components/layout/MainHeader.vue";
 import MainFooter from "../components/layout/MainFooter.vue";
-import CreateCommunityStation from "../components/modals/CreateCommunityStation.vue";
 import UserIdToUsername from "../components/common/UserIdToUsername.vue";
 
 import ws from "../ws";
@@ -451,7 +450,8 @@ export default {
 	components: {
 		MainHeader,
 		MainFooter,
-		CreateCommunityStation,
+		CreateCommunityStation: () =>
+			import("../components/modals/CreateCommunityStation.vue"),
 		UserIdToUsername
 	},
 	data() {
