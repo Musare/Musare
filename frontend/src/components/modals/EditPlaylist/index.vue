@@ -15,6 +15,7 @@
 			<div id="first-column">
 				<div id="playlist-info-section" class="section">
 					<h3>{{ playlist.displayName }}</h3>
+					<h5>Song Count: {{ playlist.songs.length }}</h5>
 					<h5>Duration: {{ totalLength() }}</h5>
 				</div>
 
@@ -309,7 +310,8 @@
 											<i
 												v-if="
 													userId ===
-														playlist.createdBy
+														playlist.createdBy ||
+														isEditable()
 												"
 												@click="
 													removeSongFromPlaylist(
@@ -349,6 +351,7 @@
 				class="button is-default"
 				v-if="
 					this.userId === this.playlist.createdBy ||
+						isEditable() ||
 						this.playlist.privacy === 'public'
 				"
 				@click="downloadPlaylist()"
@@ -541,7 +544,8 @@ export default {
 		isEditable() {
 			return (
 				this.playlist.isUserModifiable &&
-				this.userId === this.playlist.createdBy
+				(this.userId === this.playlist.createdBy ||
+					this.userRole === "admin")
 			);
 		},
 		updateSongPositioning({ moved }) {
@@ -802,7 +806,7 @@ export default {
 			height: auto !important;
 
 			#first-column {
-				break-after: always;
+				flex-basis: 100%;
 			}
 
 			.section {
