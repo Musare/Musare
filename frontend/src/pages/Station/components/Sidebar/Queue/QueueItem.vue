@@ -149,9 +149,10 @@ export default {
 	height: 0;
 
 	.nav-dropdown-items {
-		width: max-content;
+		width: 250px;
+		max-width: 100vw;
 		position: relative;
-		right: 125px;
+		right: 175px;
 	}
 }
 
