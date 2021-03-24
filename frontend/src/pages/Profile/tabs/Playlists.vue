@@ -109,6 +109,10 @@ export default {
 		userId: {
 			type: String,
 			default: ""
+		},
+		username: {
+			type: String,
+			default: ""
 		}
 	},
 	computed: {
@@ -116,8 +120,7 @@ export default {
 			...mapState("modalVisibility", {
 				modals: state => state.modals.station
 			}),
-			myUserId: state => state.user.auth.userId,
-			username: state => state.user.auth.username
+			myUserId: state => state.user.auth.userId
 		}),
 		playlists: {
 			get() {
