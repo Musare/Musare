@@ -4,7 +4,7 @@ services:
   backend:
     build: ./backend
     ports:
-      - "${BACKEND_PORT}:8080"
+      - "${HOST}:${BACKEND_PORT}:8080"
     volumes:
       - ./backend:/opt/app
       - ./log:/opt/log
@@ -17,7 +17,7 @@ services:
   frontend:
     build: ./frontend
     ports:
-      - "${FRONTEND_PORT}:80"
+      - "${HOST}:${FRONTEND_PORT}:80"
     volumes:
       - ./frontend:/opt/app
       - /opt/app/node_modules/
@@ -26,8 +26,6 @@ services:
 
   mongo:
     image: mongo:4.0
-    ports:
-      - "${MONGO_PORT}:27017"
     environment:
       - MONGO_INITDB_ROOT_USERNAME=admin
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
@@ -38,11 +36,11 @@ services:
       - MONGO_USER_PASSWORD=${MONGO_USER_PASSWORD}
     volumes:
       - ./tools/docker/setup-mongo.sh:/docker-entrypoint-initdb.d/setup-mongo.sh
+      - ./.db:/data/db
 
   redis:
     image: redis
     command: "--notify-keyspace-events Ex --requirepass ${REDIS_PASSWORD} --appendonly yes"
     volumes:
       - .redis:/data
-    ports:
-      - "${REDIS_PORT}:6379"
+
