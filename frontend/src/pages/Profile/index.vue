@@ -78,7 +78,11 @@
 						Playlists
 					</button>
 				</div>
-				<playlists :user-id="userId" v-show="tab === 'playlists'" />
+				<playlists
+					:user-id="userId"
+					:username="user.name"
+					v-show="tab === 'playlists'"
+				/>
 				<recent-activity
 					:user-id="userId"
 					v-show="tab === 'recent-activity'"
