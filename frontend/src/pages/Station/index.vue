@@ -1891,11 +1891,8 @@ export default {
 			border: 1px solid var(--light-grey-3);
 		}
 
-		#station-left-column {
-			padding: 0;
-		}
+		#station-left-column,
 		#station-right-column {
-			max-width: 650px;
 			padding: 0;
 		}
 
@@ -2229,6 +2226,12 @@ export default {
 	justify-content: center;
 }
 
+@media (min-width: 1500px) {
+	#station-right-column {
+		max-width: 650px;
+	}
+}
+
 @media (max-width: 950px) {
 	#mobile-progress-animation {
 		display: block;
@@ -2286,8 +2289,6 @@ export default {
 			}
 
 			#station-right-column {
-				max-width: unset;
-
 				#about-station-container #admin-buttons {
 					flex-wrap: wrap;
 				}
