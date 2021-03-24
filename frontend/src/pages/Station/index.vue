@@ -1945,6 +1945,7 @@ export default {
 		#current-next-row {
 			display: flex;
 			flex-direction: row;
+			max-width: calc(100vw - 40px);
 
 			#currently-playing-container,
 			#next-up-container {
