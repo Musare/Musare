@@ -122,7 +122,7 @@ export default {
 		store.dispatch("websockets/createSocket", this.socket);
 
 		this.socket.onopen = () => {
-			console.log("IO: SOCKET CONNECTED");
+			console.log("WS: SOCKET CONNECTED");
 
 			setTimeout(() => {
 				onConnect.temp.forEach(cb => cb());

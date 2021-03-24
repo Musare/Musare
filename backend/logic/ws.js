@@ -68,7 +68,23 @@ class _WSModule extends CoreClass {
 				WSModule.runJob("HANDLE_WS_USE", { socket, req }).then(socket =>
 					WSModule.runJob("HANDLE_WS_CONNECTION", { socket })
 				);
+
+				socket.isAlive = true;
+				socket.on("pong", function heartbeat() {
+					this.isAlive = true;
+				});
 			});
+
+			const keepAliveInterval = setInterval(() => {
+				this._io.clients.forEach(socket => {
+					if (socket.isAlive === false) return socket.terminate();
+
+					socket.isAlive = false;
+					return socket.ping(() => {});
+				});
+			}, 45000);
+
+			this._io.on("close", () => clearInterval(keepAliveInterval));
 
 			this.setStage(4);
 
