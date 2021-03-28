@@ -228,7 +228,7 @@
 						</div>
 					</div>
 					<!--  Buttons changing the mode of the station -->
-					<div v-if="station.type === 'community'">
+					<div>
 						<label class="label">Station Mode</label>
 						<div
 							@mouseenter="modeDropdownActive = true"
@@ -265,7 +265,10 @@
 									Playlist
 								</button>
 							</transition>
-							<transition name="slide-down">
+							<transition
+								v-if="station.type === 'community'"
+								name="slide-down"
+							>
 								<button
 									class="yellow"
 									v-if="
@@ -318,7 +321,10 @@
 									Random
 								</button>
 							</transition>
-							<transition name="slide-down">
+							<transition
+								v-if="station.type === 'community'"
+								name="slide-down"
+							>
 								<button
 									class="blue"
 									v-if="
@@ -1317,7 +1323,7 @@ export default {
 			}
 
 			&.blue {
-				background-color: var(--primary-color);
+				background-color: var(--blue);
 			}
 
 			&.orange {

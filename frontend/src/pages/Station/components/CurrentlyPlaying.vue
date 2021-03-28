@@ -26,10 +26,15 @@
 				<h4
 					id="song-title"
 					:style="!song.artists ? { fontSize: '17px' } : null"
+					:title="song.title"
 				>
 					{{ song.title }}
 				</h4>
-				<h5 id="song-artists" v-if="song.artists">
+				<h5
+					id="song-artists"
+					v-if="song.artists"
+					:title="song.artists.join(', ')"
+				>
 					{{ song.artists.join(", ") }}
 				</h5>
 				<p
@@ -157,10 +162,10 @@ export default {
 
 	#song-info {
 		display: flex;
-		flex-direction: row;
+		flex-direction: column;
 		flex-wrap: wrap;
 		margin-left: 20px;
-		width: 100%;
+		width: calc(100% - 130px - 20px);
 		height: 100%;
 
 		*:not(i) {
@@ -173,6 +178,8 @@ export default {
 			justify-content: center;
 			flex-direction: column;
 			flex-grow: 1;
+			width: 100%;
+
 			h6 {
 				color: var(--primary-color) !important;
 				font-weight: bold;
@@ -182,11 +189,17 @@ export default {
 			#song-title {
 				margin-top: 7px;
 				font-size: 22px;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
 			}
 
 			#song-artists {
 				font-size: 16px;
 				margin-bottom: 5px;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
 			}
 
 			#song-request-time {

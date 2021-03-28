@@ -206,6 +206,7 @@ export default {
 			display: flex;
 			align-items: center;
 			margin-bottom: 0 !important;
+			width: inherit;
 
 			input {
 				margin-right: 5px;
@@ -220,10 +221,11 @@ export default {
 				display: flex;
 				flex-direction: row;
 				align-items: center;
+				width: inherit;
 
 				span {
 					cursor: pointer;
-					width: 24px;
+					min-width: 24px;
 					height: 24px;
 					background-color: var(--white);
 					display: inline-block;
@@ -236,6 +238,9 @@ export default {
 					margin-left: 10px;
 					cursor: pointer;
 					color: var(--black);
+					overflow: hidden;
+					text-overflow: ellipsis;
+					white-space: nowrap;
 				}
 			}
 

@@ -14,19 +14,15 @@
 import { mapState, mapActions, mapGetters } from "vuex";
 import Toast from "toasters";
 
-import Banned from "./pages/Banned.vue";
-import WhatIsNew from "./components/modals/WhatIsNew.vue";
-import LoginModal from "./components/modals/Login.vue";
-import RegisterModal from "./components/modals/Register.vue";
 import ws from "./ws";
 import keyboardShortcuts from "./keyboardShortcuts";
 
 export default {
 	components: {
-		WhatIsNew,
-		LoginModal,
-		RegisterModal,
-		Banned
+		WhatIsNew: () => import("./components/modals/WhatIsNew.vue"),
+		LoginModal: () => import("./components/modals/Login.vue"),
+		RegisterModal: () => import("./components/modals/Register.vue"),
+		Banned: () => import("./pages/Banned.vue")
 	},
 	replace: false,
 	data() {
