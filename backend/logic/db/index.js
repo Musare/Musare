@@ -12,7 +12,7 @@ const REQUIRED_DOCUMENT_VERSIONS = {
 	punishment: 1,
 	queueSong: 1,
 	report: 1,
-	song: 1,
+	song: 2,
 	station: 3,
 	user: 1
 };
