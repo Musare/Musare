@@ -6,6 +6,9 @@ let SongsModule;
 let CacheModule;
 let DBModule;
 let UtilsModule;
+let YouTubeModule;
+let StationModule;
+let PlaylistModule;
 
 class _SongsModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
@@ -26,9 +29,12 @@ class _SongsModule extends CoreClass {
 		CacheModule = this.moduleManager.modules.cache;
 		DBModule = this.moduleManager.modules.db;
 		UtilsModule = this.moduleManager.modules.utils;
+		YouTubeModule = this.moduleManager.modules.youtube;
+		StationModule = this.moduleManager.modules.stations;
+		PlaylistModule = this.moduleManager.modules.playlists;
 
-		this.songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
-		this.songSchemaCache = await CacheModule.runJob("GET_SCHEMA", { schemaName: "song" });
+		this.SongModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
+		this.SongSchemaCache = await CacheModule.runJob("GET_SCHEMA", { schemaName: "song" });
 
 		this.setStage(2);
 
@@ -54,7 +60,7 @@ class _SongsModule extends CoreClass {
 						return async.each(
 							songIds,
 							(songId, next) => {
-								SongsModule.songModel.findOne({ songId }, (err, song) => {
+								SongsModule.SongModel.findOne({ songId }, (err, song) => {
 									if (err) next(err);
 									else if (!song)
 										CacheModule.runJob("HDEL", {
@@ -72,7 +78,7 @@ class _SongsModule extends CoreClass {
 
 					next => {
 						this.setStage(4);
-						SongsModule.songModel.find({}, next);
+						SongsModule.SongModel.find({}, next);
 					},
 
 					(songs, next) => {
@@ -83,7 +89,7 @@ class _SongsModule extends CoreClass {
 								CacheModule.runJob("HSET", {
 									table: "songs",
 									key: song.songId,
-									value: SongsModule.songSchemaCache(song)
+									value: SongsModule.SongSchemaCache(song)
 								})
 									.then(() => next())
 									.catch(next);
@@ -122,7 +128,7 @@ class _SongsModule extends CoreClass {
 
 					(song, next) => {
 						if (song) return next(true, song);
-						return SongsModule.songModel.findOne({ _id: payload.id }, next);
+						return SongsModule.SongModel.findOne({ _id: payload.id }, next);
 					},
 
 					(song, next) => {
@@ -148,6 +154,46 @@ class _SongsModule extends CoreClass {
 	}
 
 	/**
+	 * Makes sure that if a song is not currently in the songs db, to add it
+	 *
+	 * @param {object} payload - an object containing the payload
+	 * @param {string} payload.songId - the youtube song id of the song we are trying to ensure is in the songs db
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	ENSURE_SONG_EXISTS_BY_SONG_ID(payload) {
+		return new Promise((resolve, reject) =>
+			async.waterfall(
+				[
+					next => {
+						SongsModule.SongModel.findOne({ songId: payload.songId }, next);
+					},
+
+					(song, next) => {
+						if (song) next(true, song);
+						else {
+							YouTubeModule.runJob("GET_SONG", { songId: payload.songId }, this)
+								.then(response => next(null, { ...response.song }))
+								.catch(next);
+						}
+					},
+
+					(_song, next) => {
+						const song = new SongsModule.SongModel({ ..._song });
+						song.save({ validateBeforeSave: true }, err => {
+							if (err) return next(err, song);
+							return next(null, song);
+						});
+					}
+				],
+				(err, song) => {
+					if (err && err !== true) return reject(new Error(err));
+					return resolve({ song });
+				}
+			)
+		);
+	}
+
+	/**
 	 * Gets a song by song id from the cache or Mongo, and if it isn't in the cache yet, adds it the cache
 	 *
 	 * @param {object} payload - an object containing the payload
@@ -159,7 +205,7 @@ class _SongsModule extends CoreClass {
 			async.waterfall(
 				[
 					next => {
-						SongsModule.songModel.findOne({ songId: payload.songId }, next);
+						SongsModule.SongModel.findOne({ songId: payload.songId }, next);
 					}
 				],
 				(err, song) => {
@@ -182,7 +228,7 @@ class _SongsModule extends CoreClass {
 			async.waterfall(
 				[
 					next => {
-						SongsModule.songModel.findOne({ _id: payload.songId }, next);
+						SongsModule.SongModel.findOne({ _id: payload.songId }, next);
 					},
 
 					(song, next) => {
@@ -207,6 +253,62 @@ class _SongsModule extends CoreClass {
 								next(null, song);
 							})
 							.catch(next);
+					},
+
+					(song, next) => {
+						next(null, song);
+						const { _id, songId, title, artists, thumbnail, duration, verified } = song;
+						const trimmedSong = {
+							_id,
+							songId,
+							title,
+							artists,
+							thumbnail,
+							duration,
+							verified
+						};
+						this.log("INFO", `Going to update playlists and stations now for song ${_id}`);
+						DBModule.runJob("GET_MODEL", { modelName: "playlist" }).then(playlistModel => {
+							playlistModel.updateMany(
+								{ "songs._id": song._id },
+								{ $set: { "songs.$": trimmedSong } },
+								err => {
+									if (err) this.log("ERROR", err);
+									else
+										playlistModel.find({ "songs._id": song._id }, (err, playlists) => {
+											playlists.forEach(playlist => {
+												PlaylistModule.runJob("UPDATE_PLAYLIST", {
+													playlistId: playlist._id
+												});
+											});
+										});
+								}
+							);
+						});
+						DBModule.runJob("GET_MODEL", { modelName: "station" }).then(stationModel => {
+							stationModel.updateMany(
+								{ "queue._id": song._id },
+								{
+									$set: {
+										"queue.$.songId": songId,
+										"queue.$.title": title,
+										"queue.$.artists": artists,
+										"queue.$.thumbnail": thumbnail,
+										"queue.$.duration": duration,
+										"queue.$.verified": verified
+									}
+								},
+								err => {
+									if (err) this.log("ERROR", err);
+									else
+										stationModel.find({ "queue._id": song._id }, (err, stations) => {
+											stations.forEach(station => {
+												StationModule.runJob("UPDATE_STATION", { stationId: station._id });
+											});
+										});
+								}
+							);
+						});
 					}
 				],
 				(err, song) => {
@@ -229,7 +331,7 @@ class _SongsModule extends CoreClass {
 			async.waterfall(
 				[
 					next => {
-						SongsModule.songModel.deleteOne({ songId: payload.songId }, next);
+						SongsModule.SongModel.deleteOne({ songId: payload.songId }, next);
 					},
 
 					next => {
@@ -288,7 +390,7 @@ class _SongsModule extends CoreClass {
 					},
 
 					({ likes, dislikes }, next) => {
-						SongsModule.songModel.updateOne(
+						SongsModule.SongModel.updateOne(
 							{ _id: payload.songId },
 							{
 								$set: {
@@ -318,7 +420,7 @@ class _SongsModule extends CoreClass {
 			async.waterfall(
 				[
 					next => {
-						SongsModule.songModel.find({ verified: true }, { genres: 1, _id: false }, next);
+						SongsModule.SongModel.find({ verified: true }, { genres: 1, _id: false }, next);
 					},
 
 					(songs, next) => {
@@ -355,7 +457,7 @@ class _SongsModule extends CoreClass {
 			async.waterfall(
 				[
 					next => {
-						SongsModule.songModel.find(
+						SongsModule.SongModel.find(
 							{ verified: true, genres: { $regex: new RegExp(`^${payload.genre.toLowerCase()}$`, "i") } },
 							next
 						);

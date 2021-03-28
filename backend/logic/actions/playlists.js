@@ -875,25 +875,20 @@ export default {
 						.catch(next);
 				},
 				(position, next) => {
-					SongsModule.runJob("GET_SONG_FROM_ID", { songId }, this)
-						.then(res => {
-							const { song } = res;
-
+					SongsModule.runJob("ENSURE_SONG_EXISTS_BY_SONG_ID", { songId }, this)
+						.then(response => {
+							const { song } = response;
+							const { _id, title, thumbnail, duration, verified } = song;
 							next(null, {
-								_id: song._id,
+								_id,
 								songId,
-								title: song.title,
-								duration: song.duration,
-								thumbnail: song.thumbnail,
-								artists: song.artists,
-								position
+								title,
+								thumbnail,
+								duration,
+								verified
 							});
 						})
-						.catch(() => {
-							YouTubeModule.runJob("GET_SONG", { songId }, this)
-								.then(response => next(null, { ...response.song, position }))
-								.catch(next);
-						});
+						.catch(next);
 				},
 				(newSong, next) => {
 					playlistModel.updateOne(

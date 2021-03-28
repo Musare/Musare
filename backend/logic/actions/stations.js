@@ -2816,36 +2816,29 @@ export default {
 				},
 
 				(station, next) => {
-					SongsModule.runJob("GET_SONG_FROM_ID", { songId }, this)
-						.then(res => {
-							if (res.song) return next(null, res.song, station);
-
-							return YouTubeModule.runJob("GET_SONG", { songId }, this)
-								.then(response => {
-									const { song } = response;
-									song.artists = [];
-									song.skipDuration = 0;
-									song.likes = -1;
-									song.dislikes = -1;
-									song.thumbnail = "empty";
-									song.explicit = false;
-
-									return next(null, song, station);
-								})
-								.catch(err => {
-									next(err);
-								});
+					SongsModule.runJob("ENSURE_SONG_EXISTS_BY_SONG_ID", { songId }, this)
+						.then(response => {
+							const { song } = response;
+							const { _id, title, thumbnail, duration, verified } = song;
+							next(
+								null,
+								{
+									_id,
+									songId,
+									title,
+									thumbnail,
+									duration,
+									verified
+								},
+								station
+							);
 						})
-						.catch(err => {
-							next(err);
-						});
+						.catch(next);
 				},
 
 				(song, station, next) => {
 					song.requestedBy = session.userId;
 					song.requestedAt = Date.now();
-					song._id = null;
-
 					let totalDuration = 0;
 					station.queue.forEach(song => {
 						totalDuration += song.duration;
