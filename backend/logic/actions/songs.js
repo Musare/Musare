@@ -533,70 +533,8 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	request: isLoginRequired(async function add(session, songId, cb) {
-		const requestedAt = Date.now();
-		const SongModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
-		const UserModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-
-		async.waterfall(
-			[
-				next => {
-					SongModel.findOne({ songId }, next);
-				},
-
-				// Get YouTube data from id
-				(song, next) => {
-					if (song) return next("This song is already in the database.");
-					// TODO Add err object as first param of callback
-					return YouTubeModule.runJob("GET_SONG", { songId }, this)
-						.then(response => {
-							const { song } = response;
-							song.duration = -1;
-							song.artists = [];
-							song.genres = [];
-							song.skipDuration = 0;
-							song.thumbnail = `${config.get("domain")}/assets/notes.png`;
-							song.explicit = false;
-							song.requestedBy = session.userId;
-							song.requestedAt = requestedAt;
-							song.verified = false;
-							next(null, song);
-						})
-						.catch(next);
-				},
-				(newSong, next) => {
-					const song = new SongModel(newSong);
-					song.save({ validateBeforeSave: false }, err => {
-						if (err) return next(err, song);
-						return next(null, song);
-					});
-				},
-				(song, next) => {
-					UserModel.findOne({ _id: session.userId }, (err, user) => {
-						if (err) return next(err);
-
-						user.statistics.songsRequested += 1;
-
-						return user.save(err => {
-							if (err) return next(err);
-							return next(null, song);
-						});
-					});
-				}
-			],
-			async (err, song) => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"SONGS_REQUEST",
-						`Requesting song "${songId}" failed for user ${session.userId}. "${err}"`
-					);
-					return cb({ status: "failure", message: err });
-				}
-				CacheModule.runJob("PUB", {
-					channel: "song.newUnverifiedSong",
-					value: song._id
-				});
+		SongsModule.runJob("REQUEST_SONG", { songId, userId: session.userId }, this)
+			.then(() => {
 				this.log(
 					"SUCCESS",
 					"SONGS_REQUEST",
@@ -606,8 +544,16 @@ export default {
 					status: "success",
 					message: "Successfully requested that song"
 				});
-			}
-		);
+			})
+			.catch(async err => {
+				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				this.log(
+					"ERROR",
+					"SONGS_REQUEST",
+					`Requesting song "${songId}" failed for user ${session.userId}. "${err}"`
+				);
+				return cb({ status: "failure", message: err });
+			});
 	}),
 
 	/**

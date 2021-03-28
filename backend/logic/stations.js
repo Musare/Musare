@@ -1590,6 +1590,54 @@ class _StationsModule extends CoreClass {
 			});
 		});
 	}
+
+	/**
+	 * Clears every queue
+	 *
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	CLEAR_EVERY_STATION_QUEUE() {
+		return new Promise((resolve, reject) => {
+			async.waterfall(
+				[
+					next => {
+						StationsModule.stationModel.updateMany({}, { $set: { queue: [] } }, err => {
+							if (err) next(err);
+							else {
+								StationsModule.stationModel.find({}, (err, stations) => {
+									if (err) next(err);
+									else {
+										async.eachLimit(
+											stations,
+											1,
+											(station, next) => {
+												StationsModule.runJob("UPDATE_STATION", {
+													stationId: station._id
+												})
+													.then(() => next())
+													.catch(next);
+												CacheModule.runJob("PUB", {
+													channel: "station.queueUpdate",
+													value: station._id
+												})
+													.then()
+													.catch();
+											},
+											next
+										);
+									}
+								});
+							}
+						});
+					}
+				],
+				err => {
+					if (err) reject(err);
+					else resolve();
+				}
+			);
+		});
+	}
 }
 
 export default new _StationsModule();

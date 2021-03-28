@@ -2,6 +2,11 @@
 	<div>
 		<metadata title="Admin | Stations" />
 		<div class="container">
+			<button class="button is-primary" @click="clearEveryStationQueue()">
+				Clear every station queue
+			</button>
+			<br />
+			<br />
 			<table class="table is-striped">
 				<thead>
 					<tr>
@@ -338,6 +343,21 @@ export default {
 		},
 		removeBlacklistedGenre(index) {
 			this.newStation.blacklistedGenres.splice(index, 1);
+		},
+		clearEveryStationQueue() {
+			this.socket.dispatch("stations.clearEveryStationQueue", res => {
+				if (res.status === "success") {
+					new Toast({
+						content: `${res.message}`,
+						timeout: 4000
+					});
+				} else {
+					new Toast({
+						content: `Error: ${res.message}`,
+						timeout: 8000
+					});
+				}
+			});
 		},
 		init() {
 			this.socket.dispatch("stations.index", data => {

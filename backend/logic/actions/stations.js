@@ -1,7 +1,7 @@
 import async from "async";
 import mongoose from "mongoose";
 
-import { isLoginRequired, isOwnerRequired } from "./hooks";
+import { isLoginRequired, isOwnerRequired, isAdminRequired } from "./hooks";
 
 import moduleManager from "../../index";
 
@@ -14,7 +14,6 @@ const CacheModule = moduleManager.modules.cache;
 const NotificationsModule = moduleManager.modules.notifications;
 const StationsModule = moduleManager.modules.stations;
 const ActivitiesModule = moduleManager.modules.activities;
-const YouTubeModule = moduleManager.modules.youtube;
 
 CacheModule.runJob("SUB", {
 	channel: "station.updateUsers",
@@ -3327,6 +3326,33 @@ export default {
 					status: "success",
 					message: "Succesfully unfavorited station."
 				});
+			}
+		);
+	}),
+
+	/**
+	 * Clears every station queue
+	 *
+	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {Function} cb - gets called with the result
+	 */
+	clearEveryStationQueue: isAdminRequired(async function clearEveryStationQueue(session, cb) {
+		async.waterfall(
+			[
+				next => {
+					StationsModule.runJob("CLEAR_EVERY_STATION_QUEUE", {}, this)
+						.then(() => next())
+						.catch(next);
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "CLEAR_EVERY_STATION_QUEUE", `Clearing every station queue failed. "${err}"`);
+					return cb({ status: "failure", message: err });
+				}
+				this.log("SUCCESS", "CLEAR_EVERY_STATION_QUEUE", "Clearing every station queue was successfull.");
+				return cb({ status: "success", message: "Success" });
 			}
 		);
 	})

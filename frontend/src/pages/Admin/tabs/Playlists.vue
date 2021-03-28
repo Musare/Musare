@@ -14,6 +14,12 @@
 			>
 				Delete orphaned genre playlists
 			</button>
+			<button
+				class="button is-primary"
+				@click="requestOrphanedPlaylistSongs()"
+			>
+				Request orphaned playlist songs
+			</button>
 			<br />
 			<br />
 			<table class="table is-striped">
@@ -166,6 +172,24 @@ export default {
 		deleteOrphanedGenrePlaylists() {
 			this.socket.dispatch(
 				"playlists.deleteOrphanedGenrePlaylists",
+				res => {
+					if (res.status === "success") {
+						new Toast({
+							content: `${res.message}`,
+							timeout: 4000
+						});
+					} else {
+						new Toast({
+							content: `Error: ${res.message}`,
+							timeout: 8000
+						});
+					}
+				}
+			);
+		},
+		requestOrphanedPlaylistSongs() {
+			this.socket.dispatch(
+				"playlists.requestOrphanedPlaylistSongs",
 				res => {
 					if (res.status === "success") {
 						new Toast({
