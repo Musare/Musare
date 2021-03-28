@@ -15,5 +15,5 @@ export default {
 	acceptedAt: { type: Date }, // TODO Should be verifiedAt
 	discogs: { type: Object },
 	verified: { type: Boolean, required: true, default: false },
-	documentVersion: { type: Number, default: 1, required: true }
+	documentVersion: { type: Number, default: 2, required: true }
 };
