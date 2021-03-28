@@ -485,7 +485,7 @@ class _SongsModule extends CoreClass {
 				playlistModel.find({}, (err, playlists) => {
 					if (err) reject(new Error(err));
 					else {
-						SongsModule.SongModel.find({}, { _id: true }, (err, songs) => {
+						SongsModule.SongModel.find({}, { songId: true }, (err, songs) => {
 							if (err) reject(new Error(err));
 							else {
 								const songIds = songs.map(song => song.songId);
