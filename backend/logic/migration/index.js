@@ -92,6 +92,7 @@ class _MigrationModule extends CoreClass {
 						},
 						err => {
 							if (err) console.log("Migration error", err);
+							else console.log("Migration completed");
 						}
 					);
 
