@@ -496,7 +496,7 @@ class _SongsModule extends CoreClass {
 									(playlist, next) => {
 										playlist.songs.forEach(song => {
 											if (
-												songIds.indexOf(song._id.toString()) === -1 &&
+												(song._id && songIds.indexOf(song._id.toString()) === -1) ||
 												orphanedSongIds.indexOf(song.songId) === -1
 											) {
 												orphanedSongIds.push(song.songId);
