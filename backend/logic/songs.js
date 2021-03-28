@@ -488,24 +488,24 @@ class _SongsModule extends CoreClass {
 						SongsModule.SongModel.find({}, { _id: true }, (err, songs) => {
 							if (err) reject(new Error(err));
 							else {
-								const songIds = songs.map(song => song._id.toString());
-								const orphanedSongIds = [];
+								const songIds = songs.map(song => song.songId);
+								const orphanedSongIds = new Set();
 								async.eachLimit(
 									playlists,
 									1,
 									(playlist, next) => {
 										playlist.songs.forEach(song => {
 											if (
-												(song._id && songIds.indexOf(song._id.toString()) === -1) ||
-												orphanedSongIds.indexOf(song.songId) === -1
+												songIds.indexOf(song.songId) === -1 &&
+												!orphanedSongIds.has(song.songId)
 											) {
-												orphanedSongIds.push(song.songId);
+												orphanedSongIds.add(song.songId);
 											}
 										});
 										next();
 									},
 									() => {
-										resolve({ songIds: orphanedSongIds });
+										resolve({ songIds: Array.from(orphanedSongIds) });
 									}
 								);
 							}

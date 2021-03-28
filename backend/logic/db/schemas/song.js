@@ -1,5 +1,5 @@
 export default {
-	songId: { type: String, min: 11, max: 11, required: true, index: true },
+	songId: { type: String, min: 11, max: 11, required: true, index: true, unique: true },
 	title: { type: String, required: true },
 	artists: [{ type: String, default: [] }],
 	genres: [{ type: String, default: [] }],
