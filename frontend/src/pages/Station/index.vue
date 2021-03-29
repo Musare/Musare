@@ -480,12 +480,12 @@
 				>
 				<span><b>Station paused</b>: {{ stationPaused }}</span>
 				<span
-					><b>Station Genres</b>:
-					{{ station.genres.join(", ") }}</span
+					><b>Station Included Playlists</b>:
+					{{ station.includedPlaylists.join(", ") }}</span
 				>
 				<span
-					><b>Station Blacklisted Genres</b>:
-					{{ station.blacklistedGenres.join(", ") }}</span
+					><b>Station Excluded Playlists</b>:
+					{{ station.excludedPlaylists.join(", ") }}</span
 				>
 			</template>
 		</floating-box>
