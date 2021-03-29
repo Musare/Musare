@@ -41,7 +41,8 @@ class _StationsModule extends CoreClass {
 			skipDuration: 0,
 			likes: -1,
 			dislikes: -1,
-			requestedAt: Date.now()
+			requestedAt: Date.now(),
+			verified: false
 		};
 
 		this.userList = {};
@@ -899,7 +900,8 @@ class _StationsModule extends CoreClass {
 								dislikes: song.dislikes,
 								skipDuration: song.skipDuration,
 								thumbnail: song.thumbnail,
-								requestedAt: song.requestedAt
+								requestedAt: song.requestedAt,
+								verified: song.verified
 							};
 						}
 

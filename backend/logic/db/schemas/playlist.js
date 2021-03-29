@@ -11,6 +11,7 @@ export default {
 			duration: { type: Number },
 			thumbnail: { type: String, required: false },
 			artists: { type: Array, required: false },
+			verified: { type: Boolean, default: false },
 			position: { type: Number }
 		}
 	],
