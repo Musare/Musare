@@ -56,7 +56,7 @@
 				<button
 					class="button"
 					id="report-icon"
-					v-if="loggedIn && !song.simpleSong"
+					v-if="loggedIn"
 					@click="report(song)"
 				>
 					<i class="material-icons icon-with-button">flag</i>
@@ -72,7 +72,7 @@
 				<button
 					class="button is-primary"
 					id="editsong-icon"
-					v-if="$parent.isAdminOnly() && !song.simpleSong"
+					v-if="$parent.isAdminOnly()"
 					@click="$parent.editSong(song)"
 				>
 					<i class="material-icons icon-with-button">edit</i>

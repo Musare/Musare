@@ -618,7 +618,8 @@ class _StationsModule extends CoreClass {
 											thumbnail: song.thumbnail,
 											requestedAt: song.requestedAt,
 											likes: song.likes,
-											dislikes: song.dislikes
+											dislikes: song.dislikes,
+											verified: song.verified
 										};
 
 										return next(null, newSong);
@@ -887,17 +888,7 @@ class _StationsModule extends CoreClass {
 						const $set = {};
 
 						if (song === null) $set.currentSong = null;
-						else if (song.likes === -1 && song.dislikes === -1) {
-							$set.currentSong = {
-								songId: song.songId,
-								title: song.title,
-								duration: song.duration,
-								skipDuration: 0,
-								likes: -1,
-								dislikes: -1,
-								requestedAt: song.requestedAt
-							};
-						} else {
+						else {
 							$set.currentSong = {
 								_id: song._id,
 								songId: song.songId,

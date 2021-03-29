@@ -172,10 +172,6 @@
 									<!-- Ratings (Like/Dislike) Buttons -->
 									<div
 										id="ratings"
-										v-if="
-											currentSong.likes !== -1 &&
-												currentSong.dislikes !== -1
-										"
 										:class="{
 											liked: liked,
 											disliked: disliked
@@ -253,13 +249,7 @@
 								</div>
 								<div id="right-buttons" v-else>
 									<!-- Disabled Ratings (Like/Dislike) Buttons -->
-									<div
-										id="ratings"
-										v-if="
-											currentSong.likes !== -1 &&
-												currentSong.dislikes !== -1
-										"
-									>
+									<div id="ratings">
 										<!-- Disabled Like Song Button -->
 										<button
 											class="button is-success tooltip tooltip-top disabled"

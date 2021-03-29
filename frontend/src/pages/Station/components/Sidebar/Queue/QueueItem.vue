@@ -57,11 +57,7 @@
 			</p>
 			<div class="universal-item-actions">
 				<i
-					v-if="
-						$parent.loggedIn &&
-							song.likes !== -1 &&
-							song.dislikes !== -1
-					"
+					v-if="$parent.loggedIn"
 					class="material-icons report-icon"
 					@click="report(song)"
 				>
@@ -73,11 +69,7 @@
 					>queue</i
 				>
 				<i
-					v-if="
-						$parent.isAdminOnly() &&
-							song.likes !== -1 &&
-							song.dislikes !== -1
-					"
+					v-if="$parent.isAdminOnly()"
 					class="material-icons edit-icon"
 					@click="$parent.$parent.$parent.editSong(song)"
 				>
