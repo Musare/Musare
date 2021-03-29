@@ -15,6 +15,13 @@
 			<div id="song-info">
 				<h4 class="item-title" :title="song.title">
 					{{ song.title }}
+					<i
+						v-if="song.verified"
+						class="material-icons verified-song"
+						title="Verified Song"
+					>
+						check_circle
+					</i>
 				</h4>
 				<h5
 					class="item-description"
