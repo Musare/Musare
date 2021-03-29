@@ -170,20 +170,40 @@ class _SongsModule extends CoreClass {
 					},
 
 					(song, next) => {
-						if (song) next(true, song);
+						if (song && song.duration > 0) next(true, song);
 						else {
 							YouTubeModule.runJob("GET_SONG", { songId: payload.songId }, this)
-								.then(response => next(null, { ...response.song }))
+								.then(response => {
+									next(null, song, response.song);
+								})
 								.catch(next);
 						}
+
+						// else if (song && song.duration <= 0) {
+						// 	YouTubeModule.runJob("GET_SONG", { songId: payload.songId }, this)
+						// 		.then(response => next(null, { ...response.song }, false))
+						// 		.catch(next);
+						// } else {
+						// 	YouTubeModule.runJob("GET_SONG", { songId: payload.songId }, this)
+						// 		.then(response => next(null, { ...response.song }, false))
+						// 		.catch(next);
+						// }
 					},
 
-					(_song, next) => {
-						const song = new SongsModule.SongModel({ ..._song });
-						song.save({ validateBeforeSave: true }, err => {
-							if (err) return next(err, song);
-							return next(null, song);
-						});
+					(song, youtubeSong, next) => {
+						if (song && song.duration <= 0) {
+							song.duration = youtubeSong.duration;
+							song.save({ validateBeforeSave: true }, err => {
+								if (err) return next(err, song);
+								return next(null, song);
+							});
+						} else {
+							const song = new SongsModule.SongModel({ ...youtubeSong });
+							song.save({ validateBeforeSave: true }, err => {
+								if (err) return next(err, song);
+								return next(null, song);
+							});
+						}
 					}
 				],
 				(err, song) => {
@@ -485,10 +505,10 @@ class _SongsModule extends CoreClass {
 				playlistModel.find({}, (err, playlists) => {
 					if (err) reject(new Error(err));
 					else {
-						SongsModule.SongModel.find({}, { songId: true }, (err, songs) => {
+						SongsModule.SongModel.find({}, { _id: true, songId: true }, (err, songs) => {
 							if (err) reject(new Error(err));
 							else {
-								const songIds = songs.map(song => song.songId);
+								const musareSongIds = songs.map(song => song._id.toString());
 								const orphanedSongIds = new Set();
 								async.eachLimit(
 									playlists,
@@ -496,7 +516,7 @@ class _SongsModule extends CoreClass {
 									(playlist, next) => {
 										playlist.songs.forEach(song => {
 											if (
-												songIds.indexOf(song.songId) === -1 &&
+												(!song._id || musareSongIds.indexOf(song._id.toString() === -1)) &&
 												!orphanedSongIds.has(song.songId)
 											) {
 												orphanedSongIds.add(song.songId);
@@ -605,12 +625,22 @@ class _SongsModule extends CoreClass {
 				.then(playlistModel => {
 					SongsModule.runJob("GET_ORPHANED_PLAYLIST_SONGS", {}, this).then(response => {
 						const { songIds } = response;
+						const playlistsToUpdate = new Set();
+
 						async.eachLimit(
 							songIds,
 							1,
 							(songId, next) => {
 								async.waterfall(
 									[
+										next => {
+											console.log(
+												songId,
+												`this is song ${songIds.indexOf(songId) + 1}/${songIds.length}`
+											);
+											setTimeout(next, 150);
+										},
+
 										next => {
 											SongsModule.runJob("ENSURE_SONG_EXISTS_BY_SONG_ID", { songId }, this)
 												.then(() => next())
@@ -623,6 +653,8 @@ class _SongsModule extends CoreClass {
 										},
 
 										next => {
+											console.log(444, songId);
+
 											SongsModule.SongModel.findOne({ songId }, next);
 										},
 
@@ -640,7 +672,7 @@ class _SongsModule extends CoreClass {
 											playlistModel.updateMany(
 												{ "songs.songId": song.songId },
 												{ $set: { "songs.$": trimmedSong } },
-												err => {
+												(err, res) => {
 													next(err, song);
 												}
 											);
@@ -652,10 +684,9 @@ class _SongsModule extends CoreClass {
 
 										(playlists, next) => {
 											playlists.forEach(playlist => {
-												PlaylistsModule.runJob("UPDATE_PLAYLIST", {
-													playlistId: playlist._id
-												});
+												playlistsToUpdate.add(playlist._id.toString());
 											});
+
 											next();
 										}
 									],
@@ -664,7 +695,29 @@ class _SongsModule extends CoreClass {
 							},
 							err => {
 								if (err) reject(err);
-								else resolve();
+								else {
+									async.eachLimit(
+										Array.from(playlistsToUpdate),
+										1,
+										(playlistId, next) => {
+											PlaylistsModule.runJob(
+												"UPDATE_PLAYLIST",
+												{
+													playlistId
+												},
+												this
+											)
+												.then(() => {
+													next();
+												})
+												.catch(next);
+										},
+										err => {
+											if (err) reject(err);
+											else resolve();
+										}
+									);
+								}
 							}
 						);
 					});
