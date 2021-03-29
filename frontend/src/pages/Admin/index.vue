@@ -185,7 +185,7 @@ export default {
 					this.currentTab = "punishments";
 					break;
 				default:
-					this.currentTab = "verifiedSongs";
+					this.currentTab = "verifiedsongs";
 			}
 		},
 		showTab(tab) {
