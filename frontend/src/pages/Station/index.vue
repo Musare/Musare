@@ -631,9 +631,6 @@ export default {
 
 			const { currentSong } = data;
 
-			if (currentSong && !currentSong.thumbnail)
-				currentSong.ytThumbnail = `https://img.youtube.com/vi/${currentSong.songId}/mqdefault.jpg`;
-
 			this.updateCurrentSong(currentSong || {});
 
 			let nextSong = null;
@@ -1524,9 +1521,6 @@ export default {
 						const currentSong = res.data.currentSong
 							? res.data.currentSong
 							: {};
-
-						if (currentSong && !currentSong.thumbnail)
-							currentSong.ytThumbnail = `https://img.youtube.com/vi/${currentSong.songId}/mqdefault.jpg`;
 
 						this.updateCurrentSong(currentSong);
 

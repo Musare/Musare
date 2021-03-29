@@ -67,18 +67,44 @@
 					<div class="card-image">
 						<figure class="image is-square">
 							<div
-								v-if="station.currentSong.ytThumbnail"
+								v-if="
+									station.currentSong.songId &&
+										(!station.currentSong.thumbnail ||
+											(station.currentSong.thumbnail &&
+												(station.currentSong.thumbnail.lastIndexOf(
+													'notes-transparent'
+												) !== -1 ||
+													station.currentSong.thumbnail.lastIndexOf(
+														'/assets/notes.png'
+													) !== -1)) ||
+											station.currentSong.thumbnail ==
+												('empty' || null))
+								"
 								class="ytThumbnailBg"
 								:style="{
 									'background-image':
 										'url(' +
-										station.currentSong.ytThumbnail +
+										`https://img.youtube.com/vi/${station.currentSong.songId}/mqdefault.jpg` +
 										')'
 								}"
 							></div>
 							<img
-								v-if="station.currentSong.ytThumbnail"
-								:src="station.currentSong.ytThumbnail"
+								v-if="
+									station.currentSong.songId &&
+										(!station.currentSong.thumbnail ||
+											(station.currentSong.thumbnail &&
+												(station.currentSong.thumbnail.lastIndexOf(
+													'notes-transparent'
+												) !== -1 ||
+													station.currentSong.thumbnail.lastIndexOf(
+														'/assets/notes.png'
+													) !== -1)) ||
+											station.currentSong.thumbnail ==
+												('empty' || null))
+								"
+								:src="
+									`https://img.youtube.com/vi/${station.currentSong.songId}/mqdefault.jpg`
+								"
 								onerror="this.src='/assets/notes-transparent.png'"
 							/>
 							<img
@@ -286,18 +312,44 @@
 					<div class="card-image">
 						<figure class="image is-square">
 							<div
-								v-if="station.currentSong.ytThumbnail"
+								v-if="
+									station.currentSong.songId &&
+										(!station.currentSong.thumbnail ||
+											(station.currentSong.thumbnail &&
+												(station.currentSong.thumbnail.lastIndexOf(
+													'notes-transparent'
+												) !== -1 ||
+													station.currentSong.thumbnail.lastIndexOf(
+														'/assets/notes.png'
+													) !== -1)) ||
+											station.currentSong.thumbnail ==
+												('empty' || null))
+								"
 								class="ytThumbnailBg"
 								:style="{
 									'background-image':
 										'url(' +
-										station.currentSong.ytThumbnail +
+										`https://img.youtube.com/vi/${station.currentSong.songId}/mqdefault.jpg` +
 										')'
 								}"
 							></div>
 							<img
-								v-if="station.currentSong.ytThumbnail"
-								:src="station.currentSong.ytThumbnail"
+								v-if="
+									station.currentSong.songId &&
+										(!station.currentSong.thumbnail ||
+											(station.currentSong.thumbnail &&
+												(station.currentSong.thumbnail.lastIndexOf(
+													'notes-transparent'
+												) !== -1 ||
+													station.currentSong.thumbnail.lastIndexOf(
+														'/assets/notes.png'
+													) !== -1)) ||
+											station.currentSong.thumbnail ==
+												('empty' || null))
+								"
+								:src="
+									`https://img.youtube.com/vi/${station.currentSong.songId}/mqdefault.jpg`
+								"
 								onerror="this.src='/assets/notes-transparent.png'"
 							/>
 							<img
@@ -601,8 +653,6 @@ export default {
 						newSong = {
 							thumbnail: "/assets/notes-transparent.png"
 						};
-					if (newSong && !newSong.thumbnail)
-						newSong.ytThumbnail = `https://img.youtube.com/vi/${newSong.songId}/mqdefault.jpg`;
 					station.currentSong = newSong;
 				}
 			});

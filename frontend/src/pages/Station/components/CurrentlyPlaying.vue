@@ -2,15 +2,40 @@
 	<div class="currently-playing">
 		<figure class="thumbnail">
 			<div
-				v-if="song.ytThumbnail"
+				v-if="
+					song.songId &&
+						(!song.thumbnail ||
+							(song.thumbnail &&
+								(song.thumbnail.lastIndexOf(
+									'notes-transparent'
+								) !== -1 ||
+									song.thumbnail.lastIndexOf(
+										'/assets/notes.png'
+									) !== -1)) ||
+							song.thumbnail == ('empty' || null))
+				"
 				id="yt-thumbnail-bg"
 				:style="{
-					'background-image': 'url(' + song.ytThumbnail + ')'
+					'background-image':
+						'url(' +
+						`https://img.youtube.com/vi/${song.songId}/mqdefault.jpg` +
+						')'
 				}"
 			></div>
 			<img
-				v-if="song.ytThumbnail"
-				:src="song.ytThumbnail"
+				v-if="
+					song.songId &&
+						(!song.thumbnail ||
+							(song.thumbnail &&
+								(song.thumbnail.lastIndexOf(
+									'notes-transparent'
+								) !== -1 ||
+									song.thumbnail.lastIndexOf(
+										'/assets/notes.png'
+									) !== -1)) ||
+							song.thumbnail == ('empty' || null))
+				"
+				:src="`https://img.youtube.com/vi/${song.songId}/mqdefault.jpg`"
 				onerror="this.src='/assets/notes-transparent.png'"
 			/>
 			<img
