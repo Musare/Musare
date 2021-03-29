@@ -2217,6 +2217,9 @@ export default {
 }
 
 @media (min-width: 1500px) {
+	#station-left-column {
+		max-width: calc(100% - 650px);
+	}
 	#station-right-column {
 		max-width: 650px;
 	}
