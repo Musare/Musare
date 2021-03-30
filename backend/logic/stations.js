@@ -602,10 +602,10 @@ class _StationsModule extends CoreClass {
 						}
 					},
 
-					(song, next) => {
-						if (!song._id) next(null, song);
+					(queueSong, next) => {
+						if (!queueSong._id) next(null, queueSong);
 						else
-							SongsModule.runJob("GET_SONG", { id: song._id }, this)
+							SongsModule.runJob("GET_SONG", { id: queueSong._id }, this)
 								.then(response => {
 									const { song } = response;
 
@@ -616,8 +616,9 @@ class _StationsModule extends CoreClass {
 											title: song.title,
 											artists: song.artists,
 											duration: song.duration,
+											skipDuration: song.skipDuration,
 											thumbnail: song.thumbnail,
-											requestedAt: song.requestedAt,
+											requestedAt: queueSong.requestedAt,
 											likes: song.likes,
 											dislikes: song.dislikes,
 											verified: song.verified
