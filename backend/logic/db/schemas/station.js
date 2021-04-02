@@ -17,6 +17,7 @@ export default {
 		likes: { type: Number, default: -1 },
 		dislikes: { type: Number, default: -1 },
 		skipVotes: [{ type: String }],
+		requestedBy: { type: String },
 		requestedAt: { type: Date },
 		status: { type: String }
 	},

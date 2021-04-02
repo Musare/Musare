@@ -619,6 +619,7 @@ class _StationsModule extends CoreClass {
 											skipDuration: song.skipDuration,
 											thumbnail: song.thumbnail,
 											requestedAt: queueSong.requestedAt,
+											requestedBy: queueSong.requestedBy,
 											likes: song.likes,
 											dislikes: song.dislikes,
 											status: song.status
@@ -902,6 +903,7 @@ class _StationsModule extends CoreClass {
 								skipDuration: song.skipDuration,
 								thumbnail: song.thumbnail,
 								requestedAt: song.requestedAt,
+								requestedBy: song.requestedBy,
 								status: song.status
 							};
 						}

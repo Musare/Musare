@@ -419,8 +419,9 @@ export default {
 				(items, next) => {
 					const filteredStations = [];
 
-					async.each(
+					async.eachLimit(
 						items,
+						1,
 						(station, nextStation) => {
 							async.waterfall(
 								[
