@@ -76,6 +76,9 @@
 												) !== -1 ||
 													station.currentSong.thumbnail.lastIndexOf(
 														'/assets/notes.png'
+													) !== -1 ||
+													station.currentSong.thumbnail.lastIndexOf(
+														'i.ytimg.com'
 													) !== -1)) ||
 											station.currentSong.thumbnail ==
 												('empty' || null))
@@ -98,9 +101,14 @@
 												) !== -1 ||
 													station.currentSong.thumbnail.lastIndexOf(
 														'/assets/notes.png'
+													) !== -1 ||
+													station.currentSong.thumbnail.lastIndexOf(
+														'i.ytimg.com'
 													) !== -1)) ||
+											station.currentSong.thumbnail ===
+												'empty' ||
 											station.currentSong.thumbnail ==
-												('empty' || null))
+												null)
 								"
 								:src="
 									`https://img.youtube.com/vi/${station.currentSong.songId}/mqdefault.jpg`
@@ -322,8 +330,10 @@
 													station.currentSong.thumbnail.lastIndexOf(
 														'/assets/notes.png'
 													) !== -1)) ||
+											station.currentSong.thumbnail ===
+												'empty' ||
 											station.currentSong.thumbnail ==
-												('empty' || null))
+												null)
 								"
 								class="ytThumbnailBg"
 								:style="{

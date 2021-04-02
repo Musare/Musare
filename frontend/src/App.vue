@@ -556,9 +556,8 @@ button.delete:focus {
 }
 
 .verified-song {
-	font-size: 22px;
+	font-size: 17px;
 	color: var(--primary-color);
-	vertical-align: top;
 }
 
 .section-title,

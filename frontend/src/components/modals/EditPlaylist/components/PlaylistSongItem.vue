@@ -12,7 +12,8 @@
 								song.thumbnail.lastIndexOf(
 									'/assets/notes.png'
 								) !== -1)) ||
-						song.thumbnail == ('empty' || null))
+						song.thumbnail === 'empty' ||
+						song.thumbnail == null)
 						? `https://img.youtube.com/vi/${song.songId}/mqdefault.jpg`
 						: song.thumbnail
 				"

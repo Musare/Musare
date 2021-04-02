@@ -11,8 +11,12 @@
 								) !== -1 ||
 									song.thumbnail.lastIndexOf(
 										'/assets/notes.png'
+									) !== -1 ||
+									song.thumbnail.lastIndexOf(
+										'i.ytimg.com'
 									) !== -1)) ||
-							song.thumbnail == ('empty' || null))
+							song.thumbnail === 'empty' ||
+							song.thumbnail == null)
 				"
 				id="yt-thumbnail-bg"
 				:style="{
@@ -32,8 +36,12 @@
 								) !== -1 ||
 									song.thumbnail.lastIndexOf(
 										'/assets/notes.png'
+									) !== -1 ||
+									song.thumbnail.lastIndexOf(
+										'i.ytimg.com'
 									) !== -1)) ||
-							song.thumbnail == ('empty' || null))
+							song.thumbnail === 'empty' ||
+							song.thumbnail == null)
 				"
 				:src="`https://img.youtube.com/vi/${song.songId}/mqdefault.jpg`"
 				onerror="this.src='/assets/notes-transparent.png'"
@@ -76,12 +84,23 @@
 							station.partyMode === true
 					"
 				>
-					Requested
-					<strong>{{
-						formatDistance(parseISO(song.requestedAt), Date.now(), {
-							addSuffix: true
-						})
-					}}</strong>
+					Requested by
+					<strong>
+						<user-id-to-username
+							:user-id="song.requestedBy"
+							:link="true"
+						/>
+						{{
+							formatDistance(
+								parseISO(song.requestedAt),
+								new Date(),
+								{
+									includeSeconds: true
+								}
+							)
+						}}
+						ago
+					</strong>
 				</p>
 			</div>
 			<div id="song-actions">
@@ -118,7 +137,10 @@
 import { mapState, mapActions } from "vuex";
 import { formatDistance, parseISO } from "date-fns";
 
+import UserIdToUsername from "../../../components/common/UserIdToUsername.vue";
+
 export default {
+	components: { UserIdToUsername },
 	props: {
 		song: {
 			type: Object,
