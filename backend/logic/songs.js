@@ -278,7 +278,7 @@ class _SongsModule extends CoreClass {
 
 					(song, next) => {
 						next(null, song);
-						const { _id, songId, title, artists, thumbnail, duration, verified } = song;
+						const { _id, songId, title, artists, thumbnail, duration, status } = song;
 						const trimmedSong = {
 							_id,
 							songId,
@@ -286,7 +286,7 @@ class _SongsModule extends CoreClass {
 							artists,
 							thumbnail,
 							duration,
-							verified
+							status
 						};
 						this.log("INFO", `Going to update playlists and stations now for song ${_id}`);
 						DBModule.runJob("GET_MODEL", { modelName: "playlist" }).then(playlistModel => {
@@ -316,7 +316,7 @@ class _SongsModule extends CoreClass {
 										"queue.$.artists": artists,
 										"queue.$.thumbnail": thumbnail,
 										"queue.$.duration": duration,
-										"queue.$.verified": verified
+										"queue.$.status": status
 									}
 								},
 								err => {
@@ -441,7 +441,7 @@ class _SongsModule extends CoreClass {
 			async.waterfall(
 				[
 					next => {
-						SongsModule.SongModel.find({ verified: true }, { genres: 1, _id: false }, next);
+						SongsModule.SongModel.find({ status: "verified" }, { genres: 1, _id: false }, next);
 					},
 
 					(songs, next) => {
@@ -479,7 +479,10 @@ class _SongsModule extends CoreClass {
 				[
 					next => {
 						SongsModule.SongModel.find(
-							{ verified: true, genres: { $regex: new RegExp(`^${payload.genre.toLowerCase()}$`, "i") } },
+							{
+								status: "verified",
+								genres: { $regex: new RegExp(`^${payload.genre.toLowerCase()}$`, "i") }
+							},
 							next
 						);
 					}
@@ -568,7 +571,7 @@ class _SongsModule extends CoreClass {
 								song.explicit = false;
 								song.requestedBy = userId;
 								song.requestedAt = requestedAt;
-								song.verified = false;
+								song.status = "unverified";
 								next(null, song);
 							})
 							.catch(next);
@@ -659,7 +662,7 @@ class _SongsModule extends CoreClass {
 										},
 
 										(song, next) => {
-											const { _id, title, artists, thumbnail, duration, verified } = song;
+											const { _id, title, artists, thumbnail, duration, status } = song;
 											const trimmedSong = {
 												_id,
 												songId,
@@ -667,7 +670,7 @@ class _SongsModule extends CoreClass {
 												artists,
 												thumbnail,
 												duration,
-												verified
+												status
 											};
 											playlistModel.updateMany(
 												{ "songs.songId": song.songId },

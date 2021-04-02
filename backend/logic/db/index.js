@@ -8,12 +8,12 @@ import CoreClass from "../../core";
 const REQUIRED_DOCUMENT_VERSIONS = {
 	activity: 1,
 	news: 1,
-	playlist: 1,
+	playlist: 2,
 	punishment: 1,
 	queueSong: 1,
 	report: 1,
-	song: 2,
-	station: 3,
+	song: 3,
+	station: 4,
 	user: 1
 };
 

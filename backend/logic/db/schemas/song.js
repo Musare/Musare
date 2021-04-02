@@ -14,6 +14,6 @@ export default {
 	acceptedBy: { type: String }, // TODO Should be verifiedBy
 	acceptedAt: { type: Date }, // TODO Should be verifiedAt
 	discogs: { type: Object },
-	verified: { type: Boolean, required: true, default: false },
-	documentVersion: { type: Number, default: 2, required: true }
+	status: { type: String, required: true, default: "hidden", enum: ["hidden", "unverified", "verified"] },
+	documentVersion: { type: Number, default: 3, required: true }
 };

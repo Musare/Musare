@@ -878,14 +878,14 @@ export default {
 					SongsModule.runJob("ENSURE_SONG_EXISTS_BY_SONG_ID", { songId }, this)
 						.then(response => {
 							const { song } = response;
-							const { _id, title, thumbnail, duration, verified } = song;
+							const { _id, title, thumbnail, duration, status } = song;
 							next(null, {
 								_id,
 								songId,
 								title,
 								thumbnail,
 								duration,
-								verified
+								status
 							});
 						})
 						.catch(next);

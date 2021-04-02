@@ -28,6 +28,18 @@
 					</router-link>
 				</li>
 				<li
+					:class="{ 'is-active': currentTab == 'hiddensongs' }"
+					@click="showTab('hiddensongs')"
+				>
+					<router-link
+						class="tab hiddensongs"
+						to="/admin/hiddensongs"
+					>
+						<i class="material-icons">music_note</i>
+						<span>&nbsp;Hidden Songs</span>
+					</router-link>
+				</li>
+				<li
 					:class="{ 'is-active': currentTab == 'stations' }"
 					@click="showTab('stations')"
 				>
@@ -110,6 +122,7 @@
 
 		<unverified-songs v-if="currentTab == 'unverifiedsongs'" />
 		<verified-songs v-if="currentTab == 'verifiedsongs'" />
+		<hidden-songs v-if="currentTab == 'hiddensongs'" />
 		<stations v-if="currentTab == 'stations'" />
 		<playlists v-if="currentTab == 'playlists'" />
 		<reports v-if="currentTab == 'reports'" />
@@ -129,6 +142,7 @@ export default {
 		MainHeader,
 		UnverifiedSongs: () => import("./tabs/UnverifiedSongs.vue"),
 		VerifiedSongs: () => import("./tabs/VerifiedSongs.vue"),
+		HiddenSongs: () => import("./tabs/HiddenSongs.vue"),
 		Stations: () => import("./tabs/Stations.vue"),
 		Playlists: () => import("./tabs/Playlists.vue"),
 		Reports: () => import("./tabs/Reports.vue"),
@@ -159,6 +173,9 @@ export default {
 					break;
 				case "/admin/verifiedsongs":
 					this.currentTab = "verifiedsongs";
+					break;
+				case "/admin/hiddensongs":
+					this.currentTab = "hiddensongs";
 					break;
 				case "/admin/stations":
 					this.currentTab = "stations";
@@ -220,6 +237,10 @@ export default {
 		border-color: var(--teal);
 	}
 	.verifiedsongs {
+		color: var(--teal);
+		border-color: var(--teal);
+	}
+	.hiddensongs {
 		color: var(--primary-color);
 		border-color: var(--primary-color);
 	}

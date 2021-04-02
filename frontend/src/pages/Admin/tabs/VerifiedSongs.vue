@@ -353,10 +353,10 @@ export default {
 		remove(id) {
 			// eslint-disable-next-line
 			const dialogResult = window.confirm(
-				"Are you sure you want to delete this song?"
+				"Are you sure you want to unverify this song?"
 			);
 			if (dialogResult !== true) return;
-			this.socket.dispatch("songs.remove", id, res => {
+			this.socket.dispatch("songs.unverify", id, res => {
 				if (res.status === "success")
 					new Toast({ content: res.message, timeout: 4000 });
 				else new Toast({ content: res.message, timeout: 8000 });
@@ -367,14 +367,19 @@ export default {
 			if (this.position >= this.maxPosition) return;
 			this.isGettingSet = true;
 
-			this.socket.dispatch("songs.getSet", this.position, true, data => {
-				data.forEach(song => {
-					this.addSong(song);
-				});
+			this.socket.dispatch(
+				"songs.getSet",
+				this.position,
+				"verified",
+				data => {
+					data.forEach(song => {
+						this.addSong(song);
+					});
 
-				this.position += 1;
-				this.isGettingSet = false;
-			});
+					this.position += 1;
+					this.isGettingSet = false;
+				}
+			);
 		},
 		toggleArtistSelected(artist) {
 			if (this.artistFilterSelected.indexOf(artist) === -1)
@@ -404,7 +409,7 @@ export default {
 			if (this.songs.length > 0)
 				this.position = Math.ceil(this.songs.length / 15) + 1;
 
-			this.socket.dispatch("songs.length", true, length => {
+			this.socket.dispatch("songs.length", "verified", length => {
 				this.maxPosition = Math.ceil(length / 15) + 1;
 
 				this.getSet();

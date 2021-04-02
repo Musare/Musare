@@ -55,7 +55,7 @@
 				>
 					{{ song.title }}
 					<i
-						v-if="song.verified"
+						v-if="song.status === 'verified'"
 						class="material-icons verified-song"
 						title="Verified Song"
 					>

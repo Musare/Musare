@@ -42,7 +42,7 @@ class _StationsModule extends CoreClass {
 			likes: -1,
 			dislikes: -1,
 			requestedAt: Date.now(),
-			verified: false
+			status: "unverified"
 		};
 
 		this.userList = {};
@@ -621,7 +621,7 @@ class _StationsModule extends CoreClass {
 											requestedAt: queueSong.requestedAt,
 											likes: song.likes,
 											dislikes: song.dislikes,
-											verified: song.verified
+											status: song.status
 										};
 
 										return next(null, newSong);
@@ -902,7 +902,7 @@ class _StationsModule extends CoreClass {
 								skipDuration: song.skipDuration,
 								thumbnail: song.thumbnail,
 								requestedAt: song.requestedAt,
-								verified: song.verified
+								status: song.status
 							};
 						}
 

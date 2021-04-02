@@ -18,7 +18,7 @@ export default {
 		dislikes: { type: Number, default: -1 },
 		skipVotes: [{ type: String }],
 		requestedAt: { type: Date },
-		verified: { type: Boolean, default: false }
+		status: { type: String }
 	},
 	currentSongIndex: { type: Number, default: 0, required: true },
 	timePaused: { type: Number, default: 0, required: true },
@@ -35,11 +35,11 @@ export default {
 			duration: { type: Number },
 			skipDuration: { type: Number },
 			thumbnail: { type: String },
-			likes: { type: Number, default: -1 },
-			dislikes: { type: Number, default: -1 },
+			likes: { type: Number },
+			dislikes: { type: Number },
 			requestedBy: { type: String },
 			requestedAt: { type: Date },
-			verified: { type: Boolean, required: true, default: false }
+			status: { type: String }
 		}
 	],
 	owner: { type: String },
@@ -48,5 +48,5 @@ export default {
 	theme: { type: String, enum: ["blue", "purple", "teal", "orange"], default: "blue" },
 	includedPlaylists: [{ type: String }],
 	excludedPlaylists: [{ type: String }],
-	documentVersion: { type: Number, default: 3, required: true }
+	documentVersion: { type: Number, default: 4, required: true }
 };

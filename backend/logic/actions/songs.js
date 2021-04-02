@@ -203,12 +203,12 @@ export default {
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param cb
 	 */
-	length: isAdminRequired(async function length(session, verified, cb) {
+	length: isAdminRequired(async function length(session, status, cb) {
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 		async.waterfall(
 			[
 				next => {
-					songModel.countDocuments({ verified }, next);
+					songModel.countDocuments({ status }, next);
 				}
 			],
 			async (err, count) => {
@@ -217,14 +217,14 @@ export default {
 					this.log(
 						"ERROR",
 						"SONGS_LENGTH",
-						`Failed to get length from songs that are ${verified ? "verified" : "not verified"}. "${err}"`
+						`Failed to get length from songs that have the status ${status}. "${err}"`
 					);
 					return cb({ status: "failure", message: err });
 				}
 				this.log(
 					"SUCCESS",
 					"SONGS_LENGTH",
-					`Got length from songs that are ${verified ? "verified" : "not verified"} successfully.`
+					`Got length from songs that have the status ${status} successfully.`
 				);
 				return cb(count);
 			}
@@ -238,13 +238,13 @@ export default {
 	 * @param set - the set number to return
 	 * @param cb
 	 */
-	getSet: isAdminRequired(async function getSet(session, set, verified, cb) {
+	getSet: isAdminRequired(async function getSet(session, set, status, cb) {
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 		async.waterfall(
 			[
 				next => {
 					songModel
-						.find({ verified })
+						.find({ status })
 						.skip(15 * (set - 1))
 						.limit(15)
 						.exec(next);
@@ -256,15 +256,11 @@ export default {
 					this.log(
 						"ERROR",
 						"SONGS_GET_SET",
-						`Failed to get set from songs that are ${verified ? "verified" : "not verified"}. "${err}"`
+						`Failed to get set from songs that have the status ${status}. "${err}"`
 					);
 					return cb({ status: "failure", message: err });
 				}
-				this.log(
-					"SUCCESS",
-					"SONGS_GET_SET",
-					`Got set from songs that are ${verified ? "verified" : "not verified"} successfully.`
-				);
+				this.log("SUCCESS", "SONGS_GET_SET", `Got set from songs that have the status ${status} successfully.`);
 				return cb(songs);
 			}
 		);
@@ -436,12 +432,12 @@ export default {
 
 				this.log("SUCCESS", "SONGS_UPDATE", `Successfully updated song "${songId}".`);
 
-				if (song.verified) {
+				if (song.status === "verified") {
 					CacheModule.runJob("PUB", {
 						channel: "song.updatedVerifiedSong",
 						value: song.songId
 					});
-				} else {
+				} else if (song.status === "unverified") {
 					CacheModule.runJob("PUB", {
 						channel: "song.updatedUnverifiedSong",
 						value: song.songId
@@ -457,73 +453,73 @@ export default {
 		);
 	}),
 
-	/**
-	 * Removes a song
-	 *
-	 * @param session
-	 * @param songId - the song id
-	 * @param cb
-	 */
-	remove: isAdminRequired(async function remove(session, songId, cb) {
-		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
-		let song = null;
-		async.waterfall(
-			[
-				next => {
-					songModel.findOne({ _id: songId }, next);
-				},
+	// /**
+	//  * Removes a song
+	//  *
+	//  * @param session
+	//  * @param songId - the song id
+	//  * @param cb
+	//  */
+	// remove: isAdminRequired(async function remove(session, songId, cb) {
+	// 	const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
+	// 	let song = null;
+	// 	async.waterfall(
+	// 		[
+	// 			next => {
+	// 				songModel.findOne({ _id: songId }, next);
+	// 			},
 
-				(_song, next) => {
-					song = _song;
-					songModel.deleteOne({ _id: songId }, next);
-				},
+	// 			(_song, next) => {
+	// 				song = _song;
+	// 				songModel.deleteOne({ _id: songId }, next);
+	// 			},
 
-				(res, next) => {
-					// TODO Check if res gets returned from above
-					CacheModule.runJob("HDEL", { table: "songs", key: songId }, this)
-						.then(() => {
-							next();
-						})
-						.catch(next)
-						.finally(() => {
-							song.genres.forEach(genre => {
-								PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre })
-									.then(() => {})
-									.catch(() => {});
-							});
-						});
-				}
-			],
-			async err => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+	// 			(res, next) => {
+	// 				// TODO Check if res gets returned from above
+	// 				CacheModule.runJob("HDEL", { table: "songs", key: songId }, this)
+	// 					.then(() => {
+	// 						next();
+	// 					})
+	// 					.catch(next)
+	// 					.finally(() => {
+	// 						song.genres.forEach(genre => {
+	// 							PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre })
+	// 								.then(() => {})
+	// 								.catch(() => {});
+	// 						});
+	// 					});
+	// 			}
+	// 		],
+	// 		async err => {
+	// 			if (err) {
+	// 				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 
-					this.log("ERROR", "SONGS_REMOVE", `Failed to remove song "${songId}". "${err}"`);
+	// 				this.log("ERROR", "SONGS_REMOVE", `Failed to remove song "${songId}". "${err}"`);
 
-					return cb({ status: "failure", message: err });
-				}
+	// 				return cb({ status: "failure", message: err });
+	// 			}
 
-				this.log("SUCCESS", "SONGS_REMOVE", `Successfully remove song "${songId}".`);
+	// 			this.log("SUCCESS", "SONGS_REMOVE", `Successfully remove song "${songId}".`);
 
-				if (song.verified) {
-					CacheModule.runJob("PUB", {
-						channel: "song.removedVerifiedSong",
-						value: songId
-					});
-				} else {
-					CacheModule.runJob("PUB", {
-						channel: "song.removedUnverifiedSong",
-						value: songId
-					});
-				}
+	// 			if (song.verified) {
+	// 				CacheModule.runJob("PUB", {
+	// 					channel: "song.removedVerifiedSong",
+	// 					value: songId
+	// 				});
+	// 			} else {
+	// 				CacheModule.runJob("PUB", {
+	// 					channel: "song.removedUnverifiedSong",
+	// 					value: songId
+	// 				});
+	// 			}
 
-				return cb({
-					status: "success",
-					message: "Song has been successfully removed"
-				});
-			}
-		);
-	}),
+	// 			return cb({
+	// 				status: "success",
+	// 				message: "Song has been successfully removed"
+	// 			});
+	// 		}
+	// 	);
+	// }),
 
 	/**
 	 * Requests a song
@@ -579,7 +575,7 @@ export default {
 				(song, next) => {
 					song.acceptedBy = session.userId;
 					song.acceptedAt = Date.now();
-					song.verified = true;
+					song.status = "verified";
 					song.save(err => {
 						next(err, song);
 					});
@@ -614,6 +610,77 @@ export default {
 				return cb({
 					status: "success",
 					message: "Song has been verified successfully."
+				});
+			}
+		);
+		// TODO Check if video is in queue and Add the song to the appropriate stations
+	}),
+
+	/**
+	 * Un-verifies a song
+	 *
+	 * @param session
+	 * @param songId - the song id
+	 * @param cb
+	 */
+	unverify: isAdminRequired(async function add(session, songId, cb) {
+		const SongModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
+		async.waterfall(
+			[
+				next => {
+					SongModel.findOne({ _id: songId }, next);
+				},
+
+				(song, next) => {
+					if (!song) return next("This song is not in the database.");
+					return next(null, song);
+				},
+
+				(song, next) => {
+					song.status = "unverified";
+					song.save(err => {
+						next(err, song);
+					});
+				},
+
+				(song, next) => {
+					song.genres.forEach(genre => {
+						PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre })
+							.then(() => {})
+							.catch(() => {});
+					});
+
+					next(null);
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+
+					this.log("ERROR", "SONGS_UNVERIFY", `User "${session.userId}" failed to verify song. "${err}"`);
+
+					return cb({ status: "failure", message: err });
+				}
+
+				this.log(
+					"SUCCESS",
+					"SONGS_UNVERIFY",
+					`User "${session.userId}" successfully unverified song "${songId}".`
+				);
+
+				CacheModule.runJob("PUB", {
+					channel: "song.newUnverifiedSong",
+					value: songId
+				});
+
+				CacheModule.runJob("PUB", {
+					channel: "song.removedVerifiedSong",
+					value: songId
+				});
+
+				return cb({
+					status: "success",
+					message: "Song has been unverified successfully."
 				});
 			}
 		);
