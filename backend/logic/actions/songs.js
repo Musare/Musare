@@ -40,7 +40,7 @@ CacheModule.runJob("SUB", {
 });
 
 CacheModule.runJob("SUB", {
-	channel: "song.updateUnverifiedSong",
+	channel: "song.updatedUnverifiedSong",
 	cb: async songId => {
 		const songModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "song"
@@ -86,6 +86,47 @@ CacheModule.runJob("SUB", {
 			WSModule.runJob("EMIT_TO_ROOM", {
 				room: "admin.songs",
 				args: ["event:admin.verifiedSong.updated", song]
+			});
+		});
+	}
+});
+
+CacheModule.runJob("SUB", {
+	channel: "song.newHiddenSong",
+	cb: async songId => {
+		const songModel = await DBModule.runJob("GET_MODEL", {
+			modelName: "song"
+		});
+		songModel.findOne({ _id: songId }, (err, song) => {
+			WSModule.runJob("EMIT_TO_ROOM", {
+				room: "admin.hiddenSongs",
+				args: ["event:admin.hiddenSong.added", song]
+			});
+		});
+	}
+});
+
+CacheModule.runJob("SUB", {
+	channel: "song.removedHiddenSong",
+	cb: songId => {
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: "admin.hiddenSongs",
+			args: ["event:admin.hiddenSong.removed", songId]
+		});
+	}
+});
+
+CacheModule.runJob("SUB", {
+	channel: "song.updatedHiddenSong",
+	cb: async songId => {
+		const songModel = await DBModule.runJob("GET_MODEL", {
+			modelName: "song"
+		});
+
+		songModel.findOne({ _id: songId }, (err, song) => {
+			WSModule.runJob("EMIT_TO_ROOM", {
+				room: "admin.hiddenSongs",
+				args: ["event:admin.hiddenSong.updated", song]
 			});
 		});
 	}
@@ -442,6 +483,11 @@ export default {
 						channel: "song.updatedUnverifiedSong",
 						value: song.songId
 					});
+				} else if (song.status === "hidden") {
+					CacheModule.runJob("PUB", {
+						channel: "song.updatedHiddenSong",
+						value: song.songId
+					});
 				}
 
 				return cb({
@@ -547,6 +593,56 @@ export default {
 					"ERROR",
 					"SONGS_REQUEST",
 					`Requesting song "${songId}" failed for user ${session.userId}. "${err}"`
+				);
+				return cb({ status: "failure", message: err });
+			});
+	}),
+
+	/**
+	 * Hides a song
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} songId - the Musare id of the song that gets hidden
+	 * @param {Function} cb - gets called with the result
+	 */
+	hide: isLoginRequired(async function add(session, songId, cb) {
+		SongsModule.runJob("HIDE_SONG", { songId }, this)
+			.then(() => {
+				this.log("SUCCESS", "SONGS_HIDE", `User "${session.userId}" successfully hid song "${songId}".`);
+				return cb({
+					status: "success",
+					message: "Successfully hid that song"
+				});
+			})
+			.catch(async err => {
+				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				this.log("ERROR", "SONGS_HIDE", `Hiding song "${songId}" failed for user ${session.userId}. "${err}"`);
+				return cb({ status: "failure", message: err });
+			});
+	}),
+
+	/**
+	 * Unhides a song
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} songId - the Musare id of the song that gets hidden
+	 * @param {Function} cb - gets called with the result
+	 */
+	unhide: isLoginRequired(async function add(session, songId, cb) {
+		SongsModule.runJob("UNHIDE_SONG", { songId }, this)
+			.then(() => {
+				this.log("SUCCESS", "SONGS_UNHIDE", `User "${session.userId}" successfully unhid song "${songId}".`);
+				return cb({
+					status: "success",
+					message: "Successfully unhid that song"
+				});
+			})
+			.catch(async err => {
+				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				this.log(
+					"ERROR",
+					"SONGS_UNHIDE",
+					`Unhiding song "${songId}" failed for user ${session.userId}. "${err}"`
 				);
 				return cb({ status: "failure", message: err });
 			});

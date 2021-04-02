@@ -100,7 +100,7 @@
 							</button>
 							<button
 								class="button is-danger"
-								@click="remove(song._id, index)"
+								@click="hide(song._id, index)"
 							>
 								<i class="material-icons">cancel</i>
 							</button>
@@ -264,13 +264,13 @@ export default {
 				else new Toast({ content: res.message, timeout: 4000 });
 			});
 		},
-		remove(id) {
+		hide(id) {
 			// eslint-disable-next-line
 			const dialogResult = window.confirm(
-				"Are you sure you want to delete this song?"
+				"Are you sure you want to hide this song?"
 			);
 			if (dialogResult !== true) return;
-			this.socket.dispatch("songs.remove", id, res => {
+			this.socket.dispatch("songs.hide", id, res => {
 				if (res.status === "success")
 					new Toast({ content: res.message, timeout: 2000 });
 				else new Toast({ content: res.message, timeout: 4000 });

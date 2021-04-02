@@ -250,7 +250,7 @@ export default {
 			this.openModal({ sector: "admin", modal: "editSong" });
 		},
 		unhide(song) {
-			this.socket.dispatch("songs.unhide", song.songId, res => {
+			this.socket.dispatch("songs.unhide", song._id, res => {
 				if (res.status === "success")
 					new Toast({ content: res.message, timeout: 2000 });
 				else new Toast({ content: res.message, timeout: 4000 });

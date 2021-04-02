@@ -615,6 +615,103 @@ class _SongsModule extends CoreClass {
 		});
 	}
 
+	/**
+	 * Hides a song
+	 *
+	 * @param {object} payload - The payload
+	 * @param {string} payload.songId - The Musare song id of the song
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	HIDE_SONG(payload) {
+		return new Promise((resolve, reject) => {
+			const { songId } = payload;
+
+			async.waterfall(
+				[
+					next => {
+						SongsModule.SongModel.findOne({ _id: songId }, next);
+					},
+
+					// Get YouTube data from id
+					(song, next) => {
+						if (!song) return next("This song does not exist.");
+						if (song.status === "hidden") return next("This song is already hidden.");
+						if (song.status === "verified") return next("Verified songs cannot be hidden.");
+						// TODO Add err object as first param of callback
+						return next();
+					},
+
+					next => {
+						SongsModule.SongModel.updateOne({ _id: songId }, { status: "hidden" }, next);
+					}
+				],
+				async err => {
+					if (err) reject(err);
+
+					CacheModule.runJob("PUB", {
+						channel: "song.newHiddenSong",
+						value: songId
+					});
+
+					CacheModule.runJob("PUB", {
+						channel: "song.removedUnverifiedSong",
+						value: songId
+					});
+
+					resolve();
+				}
+			);
+		});
+	}
+
+	/**
+	 * Unhides a song
+	 *
+	 * @param {object} payload - The payload
+	 * @param {string} payload.songId - The Musare song id of the song
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	UNHIDE_SONG(payload) {
+		return new Promise((resolve, reject) => {
+			const { songId } = payload;
+
+			async.waterfall(
+				[
+					next => {
+						SongsModule.SongModel.findOne({ _id: songId }, next);
+					},
+
+					// Get YouTube data from id
+					(song, next) => {
+						if (!song) return next("This song does not exist.");
+						if (song.status !== "hidden") return next("This song is not hidden.");
+						// TODO Add err object as first param of callback
+						return next();
+					},
+
+					next => {
+						SongsModule.SongModel.updateOne({ _id: songId }, { status: "unverified" }, next);
+					}
+				],
+				async err => {
+					if (err) reject(err);
+
+					CacheModule.runJob("PUB", {
+						channel: "song.newUnverifiedSong",
+						value: songId
+					});
+
+					CacheModule.runJob("PUB", {
+						channel: "song.removedHiddenSong",
+						value: songId
+					});
+
+					resolve();
+				}
+			);
+		});
+	}
+
 	// runjob songs REQUEST_ORPHANED_PLAYLIST_SONGS {}
 
 	/**
