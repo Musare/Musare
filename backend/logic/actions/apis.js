@@ -143,8 +143,9 @@ export default {
 	 */
 	joinAdminRoom: isAdminRequired((session, page, cb) => {
 		if (
-			page === "queue" ||
+			page === "unverifiedSongs" ||
 			page === "songs" ||
+			page === "hiddenSongs" ||
 			page === "stations" ||
 			page === "reports" ||
 			page === "news" ||

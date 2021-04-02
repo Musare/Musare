@@ -704,6 +704,10 @@ export default {
 					channel: "song.newVerifiedSong",
 					value: song._id
 				});
+				CacheModule.runJob("PUB", {
+					channel: "song.removedUnverifiedSong",
+					value: song._id
+				});
 
 				return cb({
 					status: "success",

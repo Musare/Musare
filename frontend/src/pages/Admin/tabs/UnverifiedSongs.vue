@@ -94,7 +94,7 @@
 							</button>
 							<button
 								class="button is-success"
-								@click="add(song)"
+								@click="verify(song)"
 							>
 								<i class="material-icons">add</i>
 							</button>
@@ -257,7 +257,7 @@ export default {
 			this.editingSongId = song._id;
 			this.openModal({ sector: "admin", modal: "editSong" });
 		},
-		add(song) {
+		verify(song) {
 			this.socket.dispatch("songs.verify", song.songId, res => {
 				if (res.status === "success")
 					new Toast({ content: res.message, timeout: 2000 });
