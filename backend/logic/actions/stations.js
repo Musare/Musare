@@ -1,7 +1,7 @@
 import async from "async";
 import mongoose from "mongoose";
 
-import { isLoginRequired, isOwnerRequired } from "./hooks";
+import { isLoginRequired, isOwnerRequired, isAdminRequired } from "./hooks";
 
 import moduleManager from "../../index";
 
@@ -14,7 +14,6 @@ const CacheModule = moduleManager.modules.cache;
 const NotificationsModule = moduleManager.modules.notifications;
 const StationsModule = moduleManager.modules.stations;
 const ActivitiesModule = moduleManager.modules.activities;
-const YouTubeModule = moduleManager.modules.youtube;
 
 CacheModule.runJob("SUB", {
 	channel: "station.updateUsers",
@@ -420,8 +419,9 @@ export default {
 				(items, next) => {
 					const filteredStations = [];
 
-					async.each(
+					async.eachLimit(
 						items,
+						1,
 						(station, nextStation) => {
 							async.waterfall(
 								[
@@ -2816,36 +2816,29 @@ export default {
 				},
 
 				(station, next) => {
-					SongsModule.runJob("GET_SONG_FROM_ID", { songId }, this)
-						.then(res => {
-							if (res.song) return next(null, res.song, station);
-
-							return YouTubeModule.runJob("GET_SONG", { songId }, this)
-								.then(response => {
-									const { song } = response;
-									song.artists = [];
-									song.skipDuration = 0;
-									song.likes = -1;
-									song.dislikes = -1;
-									song.thumbnail = "empty";
-									song.explicit = false;
-
-									return next(null, song, station);
-								})
-								.catch(err => {
-									next(err);
-								});
+					SongsModule.runJob("ENSURE_SONG_EXISTS_BY_SONG_ID", { songId }, this)
+						.then(response => {
+							const { song } = response;
+							const { _id, title, thumbnail, duration, status } = song;
+							next(
+								null,
+								{
+									_id,
+									songId,
+									title,
+									thumbnail,
+									duration,
+									status
+								},
+								station
+							);
 						})
-						.catch(err => {
-							next(err);
-						});
+						.catch(next);
 				},
 
 				(song, station, next) => {
 					song.requestedBy = session.userId;
 					song.requestedAt = Date.now();
-					song._id = null;
-
 					let totalDuration = 0;
 					station.queue.forEach(song => {
 						totalDuration += song.duration;
@@ -3334,6 +3327,33 @@ export default {
 					status: "success",
 					message: "Succesfully unfavorited station."
 				});
+			}
+		);
+	}),
+
+	/**
+	 * Clears every station queue
+	 *
+	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {Function} cb - gets called with the result
+	 */
+	clearEveryStationQueue: isAdminRequired(async function clearEveryStationQueue(session, cb) {
+		async.waterfall(
+			[
+				next => {
+					StationsModule.runJob("CLEAR_EVERY_STATION_QUEUE", {}, this)
+						.then(() => next())
+						.catch(next);
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "CLEAR_EVERY_STATION_QUEUE", `Clearing every station queue failed. "${err}"`);
+					return cb({ status: "failure", message: err });
+				}
+				this.log("SUCCESS", "CLEAR_EVERY_STATION_QUEUE", "Clearing every station queue was successfull.");
+				return cb({ status: "success", message: "Success" });
 			}
 		);
 	})

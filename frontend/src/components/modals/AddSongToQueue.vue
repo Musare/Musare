@@ -280,7 +280,7 @@ export default {
 					}
 				);
 			} else {
-				this.socket.dispatch("queueSongs.add", songId, data => {
+				this.socket.dispatch("songs.request", songId, data => {
 					if (data.status !== "success")
 						new Toast({
 							content: `Error: ${data.message}`,
@@ -319,7 +319,7 @@ export default {
 			}, 750);
 
 			return this.socket.dispatch(
-				"queueSongs.addSetToQueue",
+				"songs.requestSet",
 				this.search.playlist.query,
 				this.search.playlist.isImportingOnlyMusic,
 				res => {

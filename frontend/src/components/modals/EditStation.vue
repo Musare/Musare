@@ -292,9 +292,11 @@
 							<button
 								class="blue"
 								@click="
-									station.playMode === 'random'
-										? updatePlayModeLocal('sequential')
-										: updatePlayModeLocal('random')
+									(station.type === 'official' &&
+										station.playMode === 'random') ||
+									station.playMode === 'sequential'
+										? updatePlayModeLocal('random')
+										: updatePlayModeLocal('sequential')
 								"
 							>
 								<i class="material-icons">{{

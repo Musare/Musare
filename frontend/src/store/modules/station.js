@@ -76,13 +76,6 @@ const mutations = {
 		state.users = users;
 	},
 	updateCurrentSong(state, currentSong) {
-		if (currentSong.likes === -1 && currentSong.dislikes === -1) {
-			currentSong.skipDuration = 0;
-			currentSong.simpleSong = true;
-		} else {
-			currentSong.simpleSong = false;
-		}
-
 		state.currentSong = currentSong;
 	},
 	updatePreviousSong(state, previousSong) {

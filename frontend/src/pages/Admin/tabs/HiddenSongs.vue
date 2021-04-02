@@ -1,6 +1,6 @@
 <template>
 	<div @scroll="handleScroll">
-		<metadata title="Admin | Queue songs" />
+		<metadata title="Admin | Hidden songs" />
 		<div class="container">
 			<p>
 				<span>Sets loaded: {{ setsLoaded }} / {{ maxSets }}</span>
@@ -94,26 +94,16 @@
 							</button>
 							<button
 								class="button is-success"
-								@click="add(song)"
+								@click="unhide(song)"
 							>
 								<i class="material-icons">add</i>
-							</button>
-							<button
-								class="button is-danger"
-								@click="remove(song._id, index)"
-							>
-								<i class="material-icons">cancel</i>
 							</button>
 						</td>
 					</tr>
 				</tbody>
 			</table>
 		</div>
-		<edit-song
-			v-if="modals.editSong"
-			:song-id="editingSongId"
-			song-type="queueSongs"
-		/>
+		<edit-song v-if="modals.editSong" :song-id="editingSongId" />
 		<floating-box
 			id="keyboardShortcutsHelper"
 			ref="keyboardShortcutsHelper"
@@ -121,7 +111,7 @@
 			<template #body>
 				<div>
 					<div>
-						<span class="biggest"><b>Queue songs page</b></span>
+						<span class="biggest"><b>Hidden songs page</b></span>
 						<span
 							><b>Arrow keys up/down</b> - Moves between
 							songs</span
@@ -226,17 +216,17 @@ export default {
 		}
 	},
 	mounted() {
-		this.socket.on("event:admin.queueSong.added", queueSong => {
-			this.songs.push(queueSong);
+		this.socket.on("event:admin.hiddenSong.added", song => {
+			this.songs.push(song);
 		});
 
-		this.socket.on("event:admin.queueSong.removed", songId => {
+		this.socket.on("event:admin.hiddenSong.removed", songId => {
 			this.songs = this.songs.filter(song => {
 				return song._id !== songId;
 			});
 		});
 
-		this.socket.on("event:admin.queueSong.updated", updatedSong => {
+		this.socket.on("event:admin.hiddenSong.updated", updatedSong => {
 			for (let i = 0; i < this.songs.length; i += 1) {
 				const song = this.songs[i];
 				if (song._id === updatedSong._id) {
@@ -259,20 +249,8 @@ export default {
 			this.editingSongId = song._id;
 			this.openModal({ sector: "admin", modal: "editSong" });
 		},
-		add(song) {
-			this.socket.dispatch("songs.add", song, res => {
-				if (res.status === "success")
-					new Toast({ content: res.message, timeout: 2000 });
-				else new Toast({ content: res.message, timeout: 4000 });
-			});
-		},
-		remove(id) {
-			// eslint-disable-next-line
-			const dialogResult = window.confirm(
-				"Are you sure you want to delete this song?"
-			);
-			if (dialogResult !== true) return;
-			this.socket.dispatch("queueSongs.remove", id, res => {
+		unhide(song) {
+			this.socket.dispatch("songs.unhide", song._id, res => {
 				if (res.status === "success")
 					new Toast({ content: res.message, timeout: 2000 });
 				else new Toast({ content: res.message, timeout: 4000 });
@@ -283,12 +261,17 @@ export default {
 			if (this.position >= this.maxPosition) return;
 			this.isGettingSet = true;
 
-			this.socket.dispatch("queueSongs.getSet", this.position, data => {
-				data.forEach(song => this.songs.push(song));
+			this.socket.dispatch(
+				"songs.getSet",
+				this.position,
+				"hidden",
+				data => {
+					data.forEach(song => this.songs.push(song));
 
-				this.position += 1;
-				this.isGettingSet = false;
-			});
+					this.position += 1;
+					this.isGettingSet = false;
+				}
+			);
 		},
 		selectPrevious(event) {
 			if (event.srcElement.previousElementSibling)
@@ -308,13 +291,13 @@ export default {
 			if (this.songs.length > 0)
 				this.position = Math.ceil(this.songs.length / 15) + 1;
 
-			this.socket.dispatch("queueSongs.length", length => {
+			this.socket.dispatch("songs.length", "hidden", length => {
 				this.maxPosition = Math.ceil(length / 15) + 1;
 
 				this.getSet();
 			});
 
-			this.socket.dispatch("apis.joinAdminRoom", "queue", () => {});
+			this.socket.dispatch("apis.joinAdminRoom", "hiddenSongs", () => {});
 		},
 		// ...mapActions("admin/songs", ["editSong"]),
 		...mapActions("modals/editSong", ["stopVideo"]),

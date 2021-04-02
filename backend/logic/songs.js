@@ -1,4 +1,5 @@
 import async from "async";
+import config from "config";
 import mongoose from "mongoose";
 import CoreClass from "../core";
 
@@ -6,6 +7,9 @@ let SongsModule;
 let CacheModule;
 let DBModule;
 let UtilsModule;
+let YouTubeModule;
+let StationsModule;
+let PlaylistsModule;
 
 class _SongsModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
@@ -26,9 +30,12 @@ class _SongsModule extends CoreClass {
 		CacheModule = this.moduleManager.modules.cache;
 		DBModule = this.moduleManager.modules.db;
 		UtilsModule = this.moduleManager.modules.utils;
+		YouTubeModule = this.moduleManager.modules.youtube;
+		StationsModule = this.moduleManager.modules.stations;
+		PlaylistsModule = this.moduleManager.modules.playlists;
 
-		this.songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
-		this.songSchemaCache = await CacheModule.runJob("GET_SCHEMA", { schemaName: "song" });
+		this.SongModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
+		this.SongSchemaCache = await CacheModule.runJob("GET_SCHEMA", { schemaName: "song" });
 
 		this.setStage(2);
 
@@ -54,7 +61,7 @@ class _SongsModule extends CoreClass {
 						return async.each(
 							songIds,
 							(songId, next) => {
-								SongsModule.songModel.findOne({ songId }, (err, song) => {
+								SongsModule.SongModel.findOne({ songId }, (err, song) => {
 									if (err) next(err);
 									else if (!song)
 										CacheModule.runJob("HDEL", {
@@ -72,7 +79,7 @@ class _SongsModule extends CoreClass {
 
 					next => {
 						this.setStage(4);
-						SongsModule.songModel.find({}, next);
+						SongsModule.SongModel.find({}, next);
 					},
 
 					(songs, next) => {
@@ -83,7 +90,7 @@ class _SongsModule extends CoreClass {
 								CacheModule.runJob("HSET", {
 									table: "songs",
 									key: song.songId,
-									value: SongsModule.songSchemaCache(song)
+									value: SongsModule.SongSchemaCache(song)
 								})
 									.then(() => next())
 									.catch(next);
@@ -122,7 +129,7 @@ class _SongsModule extends CoreClass {
 
 					(song, next) => {
 						if (song) return next(true, song);
-						return SongsModule.songModel.findOne({ _id: payload.id }, next);
+						return SongsModule.SongModel.findOne({ _id: payload.id }, next);
 					},
 
 					(song, next) => {
@@ -148,6 +155,66 @@ class _SongsModule extends CoreClass {
 	}
 
 	/**
+	 * Makes sure that if a song is not currently in the songs db, to add it
+	 *
+	 * @param {object} payload - an object containing the payload
+	 * @param {string} payload.songId - the youtube song id of the song we are trying to ensure is in the songs db
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	ENSURE_SONG_EXISTS_BY_SONG_ID(payload) {
+		return new Promise((resolve, reject) =>
+			async.waterfall(
+				[
+					next => {
+						SongsModule.SongModel.findOne({ songId: payload.songId }, next);
+					},
+
+					(song, next) => {
+						if (song && song.duration > 0) next(true, song);
+						else {
+							YouTubeModule.runJob("GET_SONG", { songId: payload.songId }, this)
+								.then(response => {
+									next(null, song, response.song);
+								})
+								.catch(next);
+						}
+
+						// else if (song && song.duration <= 0) {
+						// 	YouTubeModule.runJob("GET_SONG", { songId: payload.songId }, this)
+						// 		.then(response => next(null, { ...response.song }, false))
+						// 		.catch(next);
+						// } else {
+						// 	YouTubeModule.runJob("GET_SONG", { songId: payload.songId }, this)
+						// 		.then(response => next(null, { ...response.song }, false))
+						// 		.catch(next);
+						// }
+					},
+
+					(song, youtubeSong, next) => {
+						if (song && song.duration <= 0) {
+							song.duration = youtubeSong.duration;
+							song.save({ validateBeforeSave: true }, err => {
+								if (err) return next(err, song);
+								return next(null, song);
+							});
+						} else {
+							const song = new SongsModule.SongModel({ ...youtubeSong });
+							song.save({ validateBeforeSave: true }, err => {
+								if (err) return next(err, song);
+								return next(null, song);
+							});
+						}
+					}
+				],
+				(err, song) => {
+					if (err && err !== true) return reject(new Error(err));
+					return resolve({ song });
+				}
+			)
+		);
+	}
+
+	/**
 	 * Gets a song by song id from the cache or Mongo, and if it isn't in the cache yet, adds it the cache
 	 *
 	 * @param {object} payload - an object containing the payload
@@ -159,7 +226,7 @@ class _SongsModule extends CoreClass {
 			async.waterfall(
 				[
 					next => {
-						SongsModule.songModel.findOne({ songId: payload.songId }, next);
+						SongsModule.SongModel.findOne({ songId: payload.songId }, next);
 					}
 				],
 				(err, song) => {
@@ -182,7 +249,7 @@ class _SongsModule extends CoreClass {
 			async.waterfall(
 				[
 					next => {
-						SongsModule.songModel.findOne({ _id: payload.songId }, next);
+						SongsModule.SongModel.findOne({ _id: payload.songId }, next);
 					},
 
 					(song, next) => {
@@ -207,6 +274,79 @@ class _SongsModule extends CoreClass {
 								next(null, song);
 							})
 							.catch(next);
+					},
+
+					(song, next) => {
+						next(null, song);
+						const { _id, songId, title, artists, thumbnail, duration, status } = song;
+						const trimmedSong = {
+							_id,
+							songId,
+							title,
+							artists,
+							thumbnail,
+							duration,
+							status
+						};
+						this.log("INFO", `Going to update playlists and stations now for song ${_id}`);
+						DBModule.runJob("GET_MODEL", { modelName: "playlist" }).then(playlistModel => {
+							playlistModel.updateMany(
+								{ "songs._id": song._id },
+								{ $set: { "songs.$": trimmedSong } },
+								err => {
+									if (err) this.log("ERROR", err);
+									else
+										playlistModel.find({ "songs._id": song._id }, (err, playlists) => {
+											playlists.forEach(playlist => {
+												PlaylistsModule.runJob("UPDATE_PLAYLIST", {
+													playlistId: playlist._id
+												});
+											});
+										});
+								}
+							);
+						});
+						DBModule.runJob("GET_MODEL", { modelName: "station" }).then(stationModel => {
+							stationModel.updateMany(
+								{ "queue._id": song._id },
+								{
+									$set: {
+										"queue.$.songId": songId,
+										"queue.$.title": title,
+										"queue.$.artists": artists,
+										"queue.$.thumbnail": thumbnail,
+										"queue.$.duration": duration,
+										"queue.$.status": status
+									}
+								},
+								err => {
+									if (err) this.log("ERROR", err);
+									else
+										stationModel.find({ "queue._id": song._id }, (err, stations) => {
+											stations.forEach(station => {
+												StationsModule.runJob("UPDATE_STATION", { stationId: station._id });
+											});
+										});
+								}
+							);
+						});
+					},
+
+					(song, next) => {
+						async.eachLimit(
+							song.genres,
+							1,
+							(genre, next) => {
+								PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre }, this)
+									.then(() => {
+										next();
+									})
+									.catch(err => next(err));
+							},
+							err => {
+								next(err, song);
+							}
+						);
 					}
 				],
 				(err, song) => {
@@ -229,7 +369,7 @@ class _SongsModule extends CoreClass {
 			async.waterfall(
 				[
 					next => {
-						SongsModule.songModel.deleteOne({ songId: payload.songId }, next);
+						SongsModule.SongModel.deleteOne({ songId: payload.songId }, next);
 					},
 
 					next => {
@@ -288,7 +428,7 @@ class _SongsModule extends CoreClass {
 					},
 
 					({ likes, dislikes }, next) => {
-						SongsModule.songModel.updateOne(
+						SongsModule.SongModel.updateOne(
 							{ _id: payload.songId },
 							{
 								$set: {
@@ -318,7 +458,7 @@ class _SongsModule extends CoreClass {
 			async.waterfall(
 				[
 					next => {
-						SongsModule.songModel.find({}, { genres: 1, _id: false }, next);
+						SongsModule.SongModel.find({ status: "verified" }, { genres: 1, _id: false }, next);
 					},
 
 					(songs, next) => {
@@ -355,8 +495,11 @@ class _SongsModule extends CoreClass {
 			async.waterfall(
 				[
 					next => {
-						SongsModule.songModel.find(
-							{ genres: { $regex: new RegExp(`^${payload.genre.toLowerCase()}$`, "i") } },
+						SongsModule.SongModel.find(
+							{
+								status: "verified",
+								genres: { $regex: new RegExp(`^${payload.genre.toLowerCase()}$`, "i") }
+							},
 							next
 						);
 					}
@@ -367,6 +510,349 @@ class _SongsModule extends CoreClass {
 				}
 			)
 		);
+	}
+
+	// runjob songs GET_ORPHANED_PLAYLIST_SONGS {}
+
+	/**
+	 * Gets a orphaned playlist songs
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	GET_ORPHANED_PLAYLIST_SONGS() {
+		return new Promise((resolve, reject) => {
+			DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this).then(playlistModel => {
+				playlistModel.find({}, (err, playlists) => {
+					if (err) reject(new Error(err));
+					else {
+						SongsModule.SongModel.find({}, { _id: true, songId: true }, (err, songs) => {
+							if (err) reject(new Error(err));
+							else {
+								const musareSongIds = songs.map(song => song._id.toString());
+								const orphanedSongIds = new Set();
+								async.eachLimit(
+									playlists,
+									1,
+									(playlist, next) => {
+										playlist.songs.forEach(song => {
+											if (
+												(!song._id || musareSongIds.indexOf(song._id.toString() === -1)) &&
+												!orphanedSongIds.has(song.songId)
+											) {
+												orphanedSongIds.add(song.songId);
+											}
+										});
+										next();
+									},
+									() => {
+										resolve({ songIds: Array.from(orphanedSongIds) });
+									}
+								);
+							}
+						});
+					}
+				});
+			});
+		});
+	}
+
+	/**
+	 * Requests a song, adding it to the DB
+	 *
+	 * @param {object} payload - The payload
+	 * @param {string} payload.songId - The YouTube song id of the song
+	 * @param {string} payload.userId - The user id of the person requesting the song
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	REQUEST_SONG(payload) {
+		return new Promise((resolve, reject) => {
+			const { songId, userId } = payload;
+			const requestedAt = Date.now();
+
+			async.waterfall(
+				[
+					next => {
+						SongsModule.SongModel.findOne({ songId }, next);
+					},
+
+					// Get YouTube data from id
+					(song, next) => {
+						if (song) return next("This song is already in the database.");
+						// TODO Add err object as first param of callback
+						return YouTubeModule.runJob("GET_SONG", { songId }, this)
+							.then(response => {
+								const { song } = response;
+								song.artists = [];
+								song.genres = [];
+								song.skipDuration = 0;
+								song.explicit = false;
+								song.requestedBy = userId;
+								song.requestedAt = requestedAt;
+								song.status = "unverified";
+								next(null, song);
+							})
+							.catch(next);
+					},
+					(newSong, next) => {
+						const song = new SongsModule.SongModel(newSong);
+						song.save({ validateBeforeSave: false }, err => {
+							if (err) return next(err, song);
+							return next(null, song);
+						});
+					},
+					(song, next) => {
+						DBModule.runJob("GET_MODEL", { modelName: "user" }, this)
+							.then(UserModel => {
+								UserModel.findOne({ _id: userId }, (err, user) => {
+									if (err) return next(err);
+									if (!user) return next(null, song);
+
+									user.statistics.songsRequested += 1;
+
+									return user.save(err => {
+										if (err) return next(err);
+										return next(null, song);
+									});
+								});
+							})
+							.catch(next);
+					}
+				],
+				async (err, song) => {
+					if (err) reject(err);
+
+					SongsModule.runJob("UPDATE_SONG", { songId });
+
+					CacheModule.runJob("PUB", {
+						channel: "song.newUnverifiedSong",
+						value: song._id
+					});
+
+					resolve();
+				}
+			);
+		});
+	}
+
+	/**
+	 * Hides a song
+	 *
+	 * @param {object} payload - The payload
+	 * @param {string} payload.songId - The Musare song id of the song
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	HIDE_SONG(payload) {
+		return new Promise((resolve, reject) => {
+			const { songId } = payload;
+
+			async.waterfall(
+				[
+					next => {
+						SongsModule.SongModel.findOne({ _id: songId }, next);
+					},
+
+					// Get YouTube data from id
+					(song, next) => {
+						if (!song) return next("This song does not exist.");
+						if (song.status === "hidden") return next("This song is already hidden.");
+						if (song.status === "verified") return next("Verified songs cannot be hidden.");
+						// TODO Add err object as first param of callback
+						return next();
+					},
+
+					next => {
+						SongsModule.SongModel.updateOne({ _id: songId }, { status: "hidden" }, next);
+					},
+
+					(res, next) => {
+						SongsModule.runJob("UPDATE_SONG", { songId });
+						next();
+					}
+				],
+				async err => {
+					if (err) reject(err);
+
+					CacheModule.runJob("PUB", {
+						channel: "song.newHiddenSong",
+						value: songId
+					});
+
+					CacheModule.runJob("PUB", {
+						channel: "song.removedUnverifiedSong",
+						value: songId
+					});
+
+					resolve();
+				}
+			);
+		});
+	}
+
+	/**
+	 * Unhides a song
+	 *
+	 * @param {object} payload - The payload
+	 * @param {string} payload.songId - The Musare song id of the song
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	UNHIDE_SONG(payload) {
+		return new Promise((resolve, reject) => {
+			const { songId } = payload;
+
+			async.waterfall(
+				[
+					next => {
+						SongsModule.SongModel.findOne({ _id: songId }, next);
+					},
+
+					// Get YouTube data from id
+					(song, next) => {
+						if (!song) return next("This song does not exist.");
+						if (song.status !== "hidden") return next("This song is not hidden.");
+						// TODO Add err object as first param of callback
+						return next();
+					},
+
+					next => {
+						SongsModule.SongModel.updateOne({ _id: songId }, { status: "unverified" }, next);
+					},
+
+					(res, next) => {
+						SongsModule.runJob("UPDATE_SONG", { songId });
+						next();
+					}
+				],
+				async err => {
+					if (err) reject(err);
+
+					CacheModule.runJob("PUB", {
+						channel: "song.newUnverifiedSong",
+						value: songId
+					});
+
+					CacheModule.runJob("PUB", {
+						channel: "song.removedHiddenSong",
+						value: songId
+					});
+
+					resolve();
+				}
+			);
+		});
+	}
+
+	// runjob songs REQUEST_ORPHANED_PLAYLIST_SONGS {}
+
+	/**
+	 * Requests all orphaned playlist songs, adding them to the database
+	 *
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	REQUEST_ORPHANED_PLAYLIST_SONGS() {
+		return new Promise((resolve, reject) => {
+			DBModule.runJob("GET_MODEL", { modelName: "playlist" })
+				.then(playlistModel => {
+					SongsModule.runJob("GET_ORPHANED_PLAYLIST_SONGS", {}, this).then(response => {
+						const { songIds } = response;
+						const playlistsToUpdate = new Set();
+
+						async.eachLimit(
+							songIds,
+							1,
+							(songId, next) => {
+								async.waterfall(
+									[
+										next => {
+											console.log(
+												songId,
+												`this is song ${songIds.indexOf(songId) + 1}/${songIds.length}`
+											);
+											setTimeout(next, 150);
+										},
+
+										next => {
+											SongsModule.runJob("ENSURE_SONG_EXISTS_BY_SONG_ID", { songId }, this)
+												.then(() => next())
+												.catch(next);
+											// SongsModule.runJob("REQUEST_SONG", { songId, userId: null }, this)
+											// 	.then(() => {
+											// 		next();
+											// 	})
+											// 	.catch(next);
+										},
+
+										next => {
+											console.log(444, songId);
+
+											SongsModule.SongModel.findOne({ songId }, next);
+										},
+
+										(song, next) => {
+											const { _id, title, artists, thumbnail, duration, status } = song;
+											const trimmedSong = {
+												_id,
+												songId,
+												title,
+												artists,
+												thumbnail,
+												duration,
+												status
+											};
+											playlistModel.updateMany(
+												{ "songs.songId": song.songId },
+												{ $set: { "songs.$": trimmedSong } },
+												(err, res) => {
+													next(err, song);
+												}
+											);
+										},
+
+										(song, next) => {
+											playlistModel.find({ "songs._id": song._id }, next);
+										},
+
+										(playlists, next) => {
+											playlists.forEach(playlist => {
+												playlistsToUpdate.add(playlist._id.toString());
+											});
+
+											next();
+										}
+									],
+									next
+								);
+							},
+							err => {
+								if (err) reject(err);
+								else {
+									async.eachLimit(
+										Array.from(playlistsToUpdate),
+										1,
+										(playlistId, next) => {
+											PlaylistsModule.runJob(
+												"UPDATE_PLAYLIST",
+												{
+													playlistId
+												},
+												this
+											)
+												.then(() => {
+													next();
+												})
+												.catch(next);
+										},
+										err => {
+											if (err) reject(err);
+											else resolve();
+										}
+									);
+								}
+							}
+						);
+					});
+				})
+				.catch(reject);
+		});
 	}
 }
 

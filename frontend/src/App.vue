@@ -555,6 +555,11 @@ button.delete:focus {
 	font-size: 18px;
 }
 
+.verified-song {
+	font-size: 17px;
+	color: var(--primary-color);
+}
+
 .section-title,
 h4.section-title {
 	font-size: 26px;

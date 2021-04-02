@@ -4,21 +4,39 @@
 		<div class="tabs is-centered">
 			<ul>
 				<li
-					:class="{ 'is-active': currentTab == 'queueSongs' }"
-					@click="showTab('queueSongs')"
+					:class="{ 'is-active': currentTab == 'unverifiedsongs' }"
+					@click="showTab('unverifiedsongs')"
 				>
-					<router-link class="tab queueSongs" to="/admin/queuesongs">
-						<i class="material-icons">queue_music</i>
-						<span>&nbsp;Queue Songs</span>
+					<router-link
+						class="tab unverifiedsongs"
+						to="/admin/unverifiedsongs"
+					>
+						<i class="material-icons">music_note</i>
+						<span>&nbsp;Unverified Songs</span>
 					</router-link>
 				</li>
 				<li
-					:class="{ 'is-active': currentTab == 'songs' }"
-					@click="showTab('songs')"
+					:class="{ 'is-active': currentTab == 'verifiedsongs' }"
+					@click="showTab('verifiedsongs')"
 				>
-					<router-link class="tab songs" to="/admin/songs">
+					<router-link
+						class="tab verifiedsongs"
+						to="/admin/verifiedsongs"
+					>
 						<i class="material-icons">music_note</i>
-						<span>&nbsp;Songs</span>
+						<span>&nbsp;Verified Songs</span>
+					</router-link>
+				</li>
+				<li
+					:class="{ 'is-active': currentTab == 'hiddensongs' }"
+					@click="showTab('hiddensongs')"
+				>
+					<router-link
+						class="tab hiddensongs"
+						to="/admin/hiddensongs"
+					>
+						<i class="material-icons">music_note</i>
+						<span>&nbsp;Hidden Songs</span>
 					</router-link>
 				</li>
 				<li
@@ -102,8 +120,9 @@
 			</ul>
 		</div>
 
-		<queue-songs v-if="currentTab == 'queueSongs'" />
-		<songs v-if="currentTab == 'songs'" />
+		<unverified-songs v-if="currentTab == 'unverifiedsongs'" />
+		<verified-songs v-if="currentTab == 'verifiedsongs'" />
+		<hidden-songs v-if="currentTab == 'hiddensongs'" />
 		<stations v-if="currentTab == 'stations'" />
 		<playlists v-if="currentTab == 'playlists'" />
 		<reports v-if="currentTab == 'reports'" />
@@ -121,8 +140,9 @@ import MainHeader from "../../components/layout/MainHeader.vue";
 export default {
 	components: {
 		MainHeader,
-		QueueSongs: () => import("./tabs/QueueSongs.vue"),
-		Songs: () => import("./tabs/Songs.vue"),
+		UnverifiedSongs: () => import("./tabs/UnverifiedSongs.vue"),
+		VerifiedSongs: () => import("./tabs/VerifiedSongs.vue"),
+		HiddenSongs: () => import("./tabs/HiddenSongs.vue"),
 		Stations: () => import("./tabs/Stations.vue"),
 		Playlists: () => import("./tabs/Playlists.vue"),
 		Reports: () => import("./tabs/Reports.vue"),
@@ -148,11 +168,14 @@ export default {
 	methods: {
 		changeTab(path) {
 			switch (path) {
-				case "/admin/queuesongs":
-					this.currentTab = "queueSongs";
+				case "/admin/unverifiedsongs":
+					this.currentTab = "unverifiedsongs";
 					break;
-				case "/admin/songs":
-					this.currentTab = "songs";
+				case "/admin/verifiedsongs":
+					this.currentTab = "verifiedsongs";
+					break;
+				case "/admin/hiddensongs":
+					this.currentTab = "hiddensongs";
 					break;
 				case "/admin/stations":
 					this.currentTab = "stations";
@@ -179,7 +202,7 @@ export default {
 					this.currentTab = "punishments";
 					break;
 				default:
-					this.currentTab = "queueSongs";
+					this.currentTab = "verifiedsongs";
 			}
 		},
 		showTab(tab) {
@@ -209,11 +232,15 @@ export default {
 	padding-top: 10px;
 	margin-top: -10px;
 	background-color: var(--white);
-	.queueSongs {
+	.unverifiedsongs {
 		color: var(--teal);
 		border-color: var(--teal);
 	}
-	.songs {
+	.verifiedsongs {
+		color: var(--teal);
+		border-color: var(--teal);
+	}
+	.hiddensongs {
 		color: var(--primary-color);
 		border-color: var(--primary-color);
 	}

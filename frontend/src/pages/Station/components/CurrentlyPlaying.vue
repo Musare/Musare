@@ -2,15 +2,48 @@
 	<div class="currently-playing">
 		<figure class="thumbnail">
 			<div
-				v-if="song.ytThumbnail"
+				v-if="
+					song.songId &&
+						(!song.thumbnail ||
+							(song.thumbnail &&
+								(song.thumbnail.lastIndexOf(
+									'notes-transparent'
+								) !== -1 ||
+									song.thumbnail.lastIndexOf(
+										'/assets/notes.png'
+									) !== -1 ||
+									song.thumbnail.lastIndexOf(
+										'i.ytimg.com'
+									) !== -1)) ||
+							song.thumbnail === 'empty' ||
+							song.thumbnail == null)
+				"
 				id="yt-thumbnail-bg"
 				:style="{
-					'background-image': 'url(' + song.ytThumbnail + ')'
+					'background-image':
+						'url(' +
+						`https://img.youtube.com/vi/${song.songId}/mqdefault.jpg` +
+						')'
 				}"
 			></div>
 			<img
-				v-if="song.ytThumbnail"
-				:src="song.ytThumbnail"
+				v-if="
+					song.songId &&
+						(!song.thumbnail ||
+							(song.thumbnail &&
+								(song.thumbnail.lastIndexOf(
+									'notes-transparent'
+								) !== -1 ||
+									song.thumbnail.lastIndexOf(
+										'/assets/notes.png'
+									) !== -1 ||
+									song.thumbnail.lastIndexOf(
+										'i.ytimg.com'
+									) !== -1)) ||
+							song.thumbnail === 'empty' ||
+							song.thumbnail == null)
+				"
+				:src="`https://img.youtube.com/vi/${song.songId}/mqdefault.jpg`"
 				onerror="this.src='/assets/notes-transparent.png'"
 			/>
 			<img
@@ -29,6 +62,13 @@
 					:title="song.title"
 				>
 					{{ song.title }}
+					<i
+						v-if="song.status === 'verified'"
+						class="material-icons verified-song"
+						title="Verified Song"
+					>
+						check_circle
+					</i>
 				</h4>
 				<h5
 					id="song-artists"
@@ -44,19 +84,30 @@
 							station.partyMode === true
 					"
 				>
-					Requested
-					<strong>{{
-						formatDistance(parseISO(song.requestedAt), Date.now(), {
-							addSuffix: true
-						})
-					}}</strong>
+					Requested by
+					<strong>
+						<user-id-to-username
+							:user-id="song.requestedBy"
+							:link="true"
+						/>
+						{{
+							formatDistance(
+								parseISO(song.requestedAt),
+								new Date(),
+								{
+									includeSeconds: true
+								}
+							)
+						}}
+						ago
+					</strong>
 				</p>
 			</div>
 			<div id="song-actions">
 				<button
 					class="button"
 					id="report-icon"
-					v-if="loggedIn && !song.simpleSong"
+					v-if="loggedIn"
 					@click="report(song)"
 				>
 					<i class="material-icons icon-with-button">flag</i>
@@ -72,7 +123,7 @@
 				<button
 					class="button is-primary"
 					id="editsong-icon"
-					v-if="$parent.isAdminOnly() && !song.simpleSong"
+					v-if="$parent.isAdminOnly()"
 					@click="$parent.editSong(song)"
 				>
 					<i class="material-icons icon-with-button">edit</i>
@@ -86,7 +137,10 @@
 import { mapState, mapActions } from "vuex";
 import { formatDistance, parseISO } from "date-fns";
 
+import UserIdToUsername from "../../../components/common/UserIdToUsername.vue";
+
 export default {
+	components: { UserIdToUsername },
 	props: {
 		song: {
 			type: Object,

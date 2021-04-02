@@ -41,7 +41,8 @@ class _StationsModule extends CoreClass {
 			skipDuration: 0,
 			likes: -1,
 			dislikes: -1,
-			requestedAt: Date.now()
+			requestedAt: Date.now(),
+			status: "unverified"
 		};
 
 		this.userList = {};
@@ -601,10 +602,10 @@ class _StationsModule extends CoreClass {
 						}
 					},
 
-					(song, next) => {
-						if (!song._id) next(null, song);
+					(queueSong, next) => {
+						if (!queueSong._id) next(null, queueSong);
 						else
-							SongsModule.runJob("GET_SONG", { id: song._id }, this)
+							SongsModule.runJob("GET_SONG", { id: queueSong._id }, this)
 								.then(response => {
 									const { song } = response;
 
@@ -615,10 +616,13 @@ class _StationsModule extends CoreClass {
 											title: song.title,
 											artists: song.artists,
 											duration: song.duration,
+											skipDuration: song.skipDuration,
 											thumbnail: song.thumbnail,
-											requestedAt: song.requestedAt,
+											requestedAt: queueSong.requestedAt,
+											requestedBy: queueSong.requestedBy,
 											likes: song.likes,
-											dislikes: song.dislikes
+											dislikes: song.dislikes,
+											status: song.status
 										};
 
 										return next(null, newSong);
@@ -887,17 +891,7 @@ class _StationsModule extends CoreClass {
 						const $set = {};
 
 						if (song === null) $set.currentSong = null;
-						else if (song.likes === -1 && song.dislikes === -1) {
-							$set.currentSong = {
-								songId: song.songId,
-								title: song.title,
-								duration: song.duration,
-								skipDuration: 0,
-								likes: -1,
-								dislikes: -1,
-								requestedAt: song.requestedAt
-							};
-						} else {
+						else {
 							$set.currentSong = {
 								_id: song._id,
 								songId: song.songId,
@@ -908,7 +902,9 @@ class _StationsModule extends CoreClass {
 								dislikes: song.dislikes,
 								skipDuration: song.skipDuration,
 								thumbnail: song.thumbnail,
-								requestedAt: song.requestedAt
+								requestedAt: song.requestedAt,
+								requestedBy: song.requestedBy,
+								status: song.status
 							};
 						}
 
@@ -1579,13 +1575,63 @@ class _StationsModule extends CoreClass {
 				this
 			).then(stationModel => {
 				stationModel.find(
-					{ $or: [{ includedPlaylists: payload.playlistId }, { excludedPlaylists: payload.playlistId }] },
+					{
+						$or: [{ includedPlaylists: payload.playlistId }, { excludedPlaylists: payload.playlistId }]
+					},
 					(err, stations) => {
 						if (err) reject(err);
 						else resolve({ stationIds: stations.map(station => station._id) });
 					}
 				);
 			});
+		});
+	}
+
+	/**
+	 * Clears every queue
+	 *
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	CLEAR_EVERY_STATION_QUEUE() {
+		return new Promise((resolve, reject) => {
+			async.waterfall(
+				[
+					next => {
+						StationsModule.stationModel.updateMany({}, { $set: { queue: [] } }, err => {
+							if (err) next(err);
+							else {
+								StationsModule.stationModel.find({}, (err, stations) => {
+									if (err) next(err);
+									else {
+										async.eachLimit(
+											stations,
+											1,
+											(station, next) => {
+												StationsModule.runJob("UPDATE_STATION", {
+													stationId: station._id
+												})
+													.then(() => next())
+													.catch(next);
+												CacheModule.runJob("PUB", {
+													channel: "station.queueUpdate",
+													value: station._id
+												})
+													.then()
+													.catch();
+											},
+											next
+										);
+									}
+								});
+							}
+						});
+					}
+				],
+				err => {
+					if (err) reject(err);
+					else resolve();
+				}
+			);
 		});
 	}
 }

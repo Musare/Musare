@@ -172,10 +172,6 @@
 									<!-- Ratings (Like/Dislike) Buttons -->
 									<div
 										id="ratings"
-										v-if="
-											currentSong.likes !== -1 &&
-												currentSong.dislikes !== -1
-										"
 										:class="{
 											liked: liked,
 											disliked: disliked
@@ -253,13 +249,7 @@
 								</div>
 								<div id="right-buttons" v-else>
 									<!-- Disabled Ratings (Like/Dislike) Buttons -->
-									<div
-										id="ratings"
-										v-if="
-											currentSong.likes !== -1 &&
-												currentSong.dislikes !== -1
-										"
-									>
+									<div id="ratings">
 										<!-- Disabled Like Song Button -->
 										<button
 											class="button is-success tooltip tooltip-top disabled"
@@ -490,12 +480,12 @@
 				>
 				<span><b>Station paused</b>: {{ stationPaused }}</span>
 				<span
-					><b>Station Genres</b>:
-					{{ station.genres.join(", ") }}</span
+					><b>Station Included Playlists</b>:
+					{{ station.includedPlaylists.join(", ") }}</span
 				>
 				<span
-					><b>Station Blacklisted Genres</b>:
-					{{ station.blacklistedGenres.join(", ") }}</span
+					><b>Station Excluded Playlists</b>:
+					{{ station.excludedPlaylists.join(", ") }}</span
 				>
 			</template>
 		</floating-box>
@@ -640,9 +630,6 @@ export default {
 			this.updatePreviousSong(previousSong);
 
 			const { currentSong } = data;
-
-			if (currentSong && !currentSong.thumbnail)
-				currentSong.ytThumbnail = `https://img.youtube.com/vi/${currentSong.songId}/mqdefault.jpg`;
 
 			this.updateCurrentSong(currentSong || {});
 
@@ -1535,9 +1522,6 @@ export default {
 							? res.data.currentSong
 							: {};
 
-						if (currentSong && !currentSong.thumbnail)
-							currentSong.ytThumbnail = `https://img.youtube.com/vi/${currentSong.songId}/mqdefault.jpg`;
-
 						this.updateCurrentSong(currentSong);
 
 						this.startedAt = res.data.startedAt;
@@ -2227,6 +2211,9 @@ export default {
 }
 
 @media (min-width: 1500px) {
+	#station-left-column {
+		max-width: calc(100% - 650px);
+	}
 	#station-right-column {
 		max-width: 650px;
 	}

@@ -3,7 +3,20 @@
 		<div id="thumbnail-and-info">
 			<img
 				class="item-thumbnail"
-				:src="song.ytThumbnail ? song.ytThumbnail : song.thumbnail"
+				:src="
+					song.songId &&
+					(!song.thumbnail ||
+						(song.thumbnail &&
+							(song.thumbnail.lastIndexOf('notes-transparent') !==
+								-1 ||
+								song.thumbnail.lastIndexOf(
+									'/assets/notes.png'
+								) !== -1)) ||
+						song.thumbnail === 'empty' ||
+						song.thumbnail == null)
+						? `https://img.youtube.com/vi/${song.songId}/mqdefault.jpg`
+						: song.thumbnail
+				"
 				onerror="this.src='/assets/notes-transparent.png'"
 			/>
 			<div id="song-info">
@@ -15,6 +28,13 @@
 					:title="song.title"
 				>
 					{{ song.title }}
+					<i
+						v-if="song.status === 'verified'"
+						class="material-icons verified-song"
+						title="Verified Song"
+					>
+						check_circle
+					</i>
 				</h4>
 				<h5
 					class="item-description"
@@ -41,10 +61,11 @@
 								parseISO(song.requestedAt),
 								new Date(),
 								{
-									addSuffix: true
+									includeSeconds: true
 								}
 							)
 						}}
+						ago
 					</strong>
 				</p>
 			</div>
@@ -57,11 +78,7 @@
 			</p>
 			<div class="universal-item-actions">
 				<i
-					v-if="
-						$parent.loggedIn &&
-							song.likes !== -1 &&
-							song.dislikes !== -1
-					"
+					v-if="$parent.loggedIn"
 					class="material-icons report-icon"
 					@click="report(song)"
 				>
@@ -73,11 +90,7 @@
 					>queue</i
 				>
 				<i
-					v-if="
-						$parent.isAdminOnly() &&
-							song.likes !== -1 &&
-							song.dislikes !== -1
-					"
+					v-if="$parent.isAdminOnly()"
 					class="material-icons edit-icon"
 					@click="$parent.$parent.$parent.editSong(song)"
 				>

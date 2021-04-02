@@ -8,12 +8,12 @@ import CoreClass from "../../core";
 const REQUIRED_DOCUMENT_VERSIONS = {
 	activity: 1,
 	news: 1,
-	playlist: 1,
+	playlist: 2,
 	punishment: 1,
 	queueSong: 1,
 	report: 1,
-	song: 1,
-	station: 3,
+	song: 3,
+	station: 4,
 	user: 1
 };
 
@@ -207,30 +207,22 @@ class _DBModule extends CoreClass {
 					// Song
 					const songTitle = title => isLength(title, 1, 100);
 					this.schemas.song.path("title").validate(songTitle, "Invalid title.");
-					this.schemas.queueSong.path("title").validate(songTitle, "Invalid title.");
 
-					this.schemas.song
-						.path("artists")
-						.validate(artists => !(artists.length < 1 || artists.length > 10), "Invalid artists.");
-					this.schemas.queueSong
-						.path("artists")
-						.validate(artists => !(artists.length < 0 || artists.length > 10), "Invalid artists.");
+					this.schemas.song.path("artists").validate(artists => artists.length <= 10, "Invalid artists.");
 
 					const songArtists = artists =>
 						artists.filter(artist => isLength(artist, 1, 64) && artist !== "NONE").length ===
 						artists.length;
 					this.schemas.song.path("artists").validate(songArtists, "Invalid artists.");
-					this.schemas.queueSong.path("artists").validate(songArtists, "Invalid artists.");
 
 					const songGenres = genres => {
-						if (genres.length < 1 || genres.length > 16) return false;
+						if (genres.length > 16) return false;
 						return (
 							genres.filter(genre => isLength(genre, 1, 32) && regex.ascii.test(genre)).length ===
 							genres.length
 						);
 					};
 					this.schemas.song.path("genres").validate(songGenres, "Invalid genres.");
-					this.schemas.queueSong.path("genres").validate(songGenres, "Invalid genres.");
 
 					const songThumbnail = thumbnail => {
 						if (!isLength(thumbnail, 1, 256)) return false;
@@ -238,7 +230,6 @@ class _DBModule extends CoreClass {
 						return thumbnail.startsWith("http://") || thumbnail.startsWith("https://");
 					};
 					this.schemas.song.path("thumbnail").validate(songThumbnail, "Invalid thumbnail.");
-					this.schemas.queueSong.path("thumbnail").validate(songThumbnail, "Invalid thumbnail.");
 
 					// Playlist
 					this.schemas.playlist

@@ -282,10 +282,7 @@
 											>
 
 											<i
-												v-if="
-													!song.simpleSong &&
-														userRole === 'admin'
-												"
+												v-if="userRole === 'admin'"
 												class="material-icons report-icon"
 												@click="
 													reportSongInPlaylist(song)
@@ -295,10 +292,7 @@
 											</i>
 
 											<i
-												v-if="
-													!song.simpleSong &&
-														userRole === 'admin'
-												"
+												v-if="userRole === 'admin'"
 												class="material-icons edit-icon"
 												@click="
 													editSongInPlaylist(song)

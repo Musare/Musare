@@ -11,6 +11,7 @@ export default {
 			duration: { type: Number },
 			thumbnail: { type: String, required: false },
 			artists: { type: Array, required: false },
+			status: { type: String },
 			position: { type: Number }
 		}
 	],
@@ -19,5 +20,5 @@ export default {
 	createdFor: { type: String },
 	privacy: { type: String, enum: ["public", "private"], default: "private" },
 	type: { type: String, enum: ["user", "genre", "station"], required: true },
-	documentVersion: { type: Number, default: 1, required: true }
+	documentVersion: { type: Number, default: 2, required: true }
 };
