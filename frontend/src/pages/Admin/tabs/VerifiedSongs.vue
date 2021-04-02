@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<metadata title="Admin | Songs" />
-		<div class="container" @scroll="handleScroll">
+		<div class="container">
 			<p>
 				<span>Sets loaded: {{ setsLoaded }} / {{ maxSets }}</span>
 				<br />
@@ -344,6 +344,12 @@ export default {
 			);
 		}
 	},
+	created() {
+		window.addEventListener("scroll", this.handleScroll);
+	},
+	destroyed() {
+		window.removeEventListener("scroll", this.handleScroll);
+	},
 	methods: {
 		edit(song) {
 			// this.editSong({ song, type: "songs" });
@@ -380,6 +386,13 @@ export default {
 					this.isGettingSet = false;
 				}
 			);
+		},
+		handleScroll() {
+			const scrollPosition = document.body.clientHeight + window.scrollY;
+			const bottomPosition = document.body.scrollHeight;
+			if (this.loadAllSongs) return false;
+			if (scrollPosition + 400 >= bottomPosition) this.getSet();
+			return this.maxPosition === this.position;
 		},
 		toggleArtistSelected(artist) {
 			if (this.artistFilterSelected.indexOf(artist) === -1)

@@ -1,5 +1,5 @@
 <template>
-	<div @scroll="handleScroll">
+	<div>
 		<metadata title="Admin | Hidden songs" />
 		<div class="container">
 			<p>
@@ -238,6 +238,12 @@ export default {
 		if (this.socket.readyState === 1) this.init();
 		ws.onConnect(() => this.init());
 	},
+	created() {
+		window.addEventListener("scroll", this.handleScroll);
+	},
+	destroyed() {
+		window.removeEventListener("scroll", this.handleScroll);
+	},
 	methods: {
 		edit(song) {
 			// const newSong = {};
@@ -272,6 +278,13 @@ export default {
 					this.isGettingSet = false;
 				}
 			);
+		},
+		handleScroll() {
+			const scrollPosition = document.body.clientHeight + window.scrollY;
+			const bottomPosition = document.body.scrollHeight;
+			if (this.loadAllSongs) return false;
+			if (scrollPosition + 400 >= bottomPosition) this.getSet();
+			return this.maxPosition === this.position;
 		},
 		selectPrevious(event) {
 			if (event.srcElement.previousElementSibling)

@@ -4,6 +4,18 @@
 		<div class="tabs is-centered">
 			<ul>
 				<li
+					:class="{ 'is-active': currentTab == 'hiddensongs' }"
+					@click="showTab('hiddensongs')"
+				>
+					<router-link
+						class="tab hiddensongs"
+						to="/admin/hiddensongs"
+					>
+						<i class="material-icons">music_note</i>
+						<span>&nbsp;Hidden Songs</span>
+					</router-link>
+				</li>
+				<li
 					:class="{ 'is-active': currentTab == 'unverifiedsongs' }"
 					@click="showTab('unverifiedsongs')"
 				>
@@ -23,20 +35,8 @@
 						class="tab verifiedsongs"
 						to="/admin/verifiedsongs"
 					>
-						<i class="material-icons">music_note</i>
+						<i class="material-icons">check_circle</i>
 						<span>&nbsp;Verified Songs</span>
-					</router-link>
-				</li>
-				<li
-					:class="{ 'is-active': currentTab == 'hiddensongs' }"
-					@click="showTab('hiddensongs')"
-				>
-					<router-link
-						class="tab hiddensongs"
-						to="/admin/hiddensongs"
-					>
-						<i class="material-icons">music_note</i>
-						<span>&nbsp;Hidden Songs</span>
 					</router-link>
 				</li>
 				<li
@@ -237,12 +237,12 @@ export default {
 		border-color: var(--teal);
 	}
 	.verifiedsongs {
-		color: var(--teal);
-		border-color: var(--teal);
-	}
-	.hiddensongs {
 		color: var(--primary-color);
 		border-color: var(--primary-color);
+	}
+	.hiddensongs {
+		color: var(--grey);
+		border-color: var(--grey);
 	}
 	.stations {
 		color: var(--purple);
