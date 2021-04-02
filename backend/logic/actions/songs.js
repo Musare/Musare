@@ -684,6 +684,8 @@ export default {
 							.catch(() => {});
 					});
 
+					SongsModule.runJob("UPDATE_SONG", { songId: song._id });
+
 					next(null, song);
 				}
 			],
@@ -745,6 +747,8 @@ export default {
 							.then(() => {})
 							.catch(() => {});
 					});
+
+					SongsModule.runJob("UPDATE_SONG", { songId: song._id });
 
 					next(null);
 				}

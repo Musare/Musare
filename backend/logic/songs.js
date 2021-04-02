@@ -330,6 +330,23 @@ class _SongsModule extends CoreClass {
 								}
 							);
 						});
+					},
+
+					(song, next) => {
+						async.eachLimit(
+							song.genres,
+							1,
+							(genre, next) => {
+								PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre }, this)
+									.then(() => {
+										next();
+									})
+									.catch(err => next(err));
+							},
+							err => {
+								next(err, song);
+							}
+						);
 					}
 				],
 				(err, song) => {
@@ -604,6 +621,8 @@ class _SongsModule extends CoreClass {
 				async (err, song) => {
 					if (err) reject(err);
 
+					SongsModule.runJob("UPDATE_SONG", { songId });
+
 					CacheModule.runJob("PUB", {
 						channel: "song.newUnverifiedSong",
 						value: song._id
@@ -643,6 +662,11 @@ class _SongsModule extends CoreClass {
 
 					next => {
 						SongsModule.SongModel.updateOne({ _id: songId }, { status: "hidden" }, next);
+					},
+
+					(res, next) => {
+						SongsModule.runJob("UPDATE_SONG", { songId });
+						next();
 					}
 				],
 				async err => {
@@ -691,6 +715,11 @@ class _SongsModule extends CoreClass {
 
 					next => {
 						SongsModule.SongModel.updateOne({ _id: songId }, { status: "unverified" }, next);
+					},
+
+					(res, next) => {
+						SongsModule.runJob("UPDATE_SONG", { songId });
+						next();
 					}
 				],
 				async err => {
