@@ -78,6 +78,7 @@
 			</p>
 			<div class="universal-item-actions">
 				<tippy
+					v-if="$parent.loggedIn"
 					interactive="true"
 					placement="left"
 					theme="songActions"
@@ -100,7 +101,6 @@
 						<div class="youtube-icon"></div>
 					</a>
 					<i
-						v-if="$parent.loggedIn"
 						class="material-icons report-icon"
 						@click="report(song)"
 						content="Report Song"
@@ -108,10 +108,7 @@
 					>
 						flag
 					</i>
-					<add-to-playlist-dropdown
-						v-if="$parent.loggedIn"
-						:song="song"
-					>
+					<add-to-playlist-dropdown :song="song">
 						<i
 							slot="button"
 							class="material-icons add-to-playlist-icon"
@@ -139,6 +136,15 @@
 					>
 					<slot name="actions" />
 				</tippy>
+				<a
+					v-else
+					target="_blank"
+					:href="`https://www.youtube.com/watch?v=${song.songId}`"
+					content="View on Youtube"
+					v-tippy
+				>
+					<div class="youtube-icon"></div>
+				</a>
 			</div>
 		</div>
 	</div>

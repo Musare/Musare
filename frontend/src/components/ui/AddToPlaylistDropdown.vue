@@ -5,6 +5,7 @@
 		:placement="placement"
 		theme="addToPlaylist"
 		trigger="click"
+		append-to="parent"
 	>
 		<template #trigger>
 			<slot name="button" />
