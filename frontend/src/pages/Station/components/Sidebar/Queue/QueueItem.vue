@@ -92,7 +92,7 @@
 				<i
 					v-if="$parent.isAdminOnly()"
 					class="material-icons edit-icon"
-					@click="$parent.$parent.$parent.editSong(song)"
+						@click="edit(song)"
 				>
 					edit
 				</i>
@@ -140,6 +140,11 @@ export default {
 			this.reportSong(song);
 			this.openModal({ sector: "station", modal: "report" });
 		},
+		edit(song) {
+			this.editSong(song);
+			this.openModal({ sector: "admin", modal: "editSong" });
+		},
+		...mapActions("modals/editSong", ["editSong"]),
 		...mapActions("modals/report", ["reportSong"]),
 		...mapActions("modalVisibility", ["openModal"]),
 		formatDistance,

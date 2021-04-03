@@ -71,11 +71,7 @@
 
 		<edit-playlist v-if="modals.admin.editPlaylist" sector="admin" />
 		<report v-if="modals.station.report" />
-		<edit-song
-			v-if="modals.admin.editSong"
-			:song-id="editingSongId"
-			song-type="songs"
-		/>
+		<edit-song v-if="modals.admin.editSong" song-type="songs" />
 	</div>
 </template>
 
@@ -100,8 +96,7 @@ export default {
 	data() {
 		return {
 			utils,
-			playlists: [],
-			editingSongId: ""
+			playlists: []
 		};
 	},
 	computed: {

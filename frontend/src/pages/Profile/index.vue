@@ -2,11 +2,7 @@
 	<div v-if="isUser">
 		<edit-playlist v-if="modals.station.editPlaylist" />
 		<report v-if="modals.station.report" />
-		<edit-song
-			v-if="modals.admin.editSong"
-			:song-id="editingSongId"
-			song-type="songs"
-		/>
+		<edit-song v-if="modals.admin.editSong" song-type="songs" />
 
 		<metadata :title="`Profile | ${user.username}`" />
 		<main-header />
@@ -124,8 +120,7 @@ export default {
 			user: {},
 			userId: "",
 			isUser: false,
-			tab: "recent-activity",
-			editingSongId: ""
+			tab: "recent-activity"
 		};
 	},
 	computed: {

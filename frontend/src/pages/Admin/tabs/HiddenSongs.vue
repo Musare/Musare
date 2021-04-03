@@ -103,7 +103,7 @@
 				</tbody>
 			</table>
 		</div>
-		<edit-song v-if="modals.editSong" :song-id="editingSongId" />
+		<edit-song v-if="modals.editSong" />
 		<floating-box
 			id="keyboardShortcutsHelper"
 			ref="keyboardShortcutsHelper"
@@ -188,7 +188,6 @@ export default {
 	mixins: [ScrollAndFetchHandler],
 	data() {
 		return {
-			editingSongId: "",
 			searchQuery: "",
 			songs: []
 		};
@@ -246,13 +245,7 @@ export default {
 	},
 	methods: {
 		edit(song) {
-			// const newSong = {};
-			// Object.keys(song).forEach(n => {
-			// 	newSong[n] = song[n];
-			// });
-
-			// this.editSong({ index, song: newSong, type: "queueSongs" });
-			this.editingSongId = song._id;
+			this.editSong(song);
 			this.openModal({ sector: "admin", modal: "editSong" });
 		},
 		unhide(song) {
@@ -312,8 +305,7 @@ export default {
 
 			this.socket.dispatch("apis.joinAdminRoom", "hiddenSongs", () => {});
 		},
-		// ...mapActions("admin/songs", ["editSong"]),
-		...mapActions("modals/editSong", ["stopVideo"]),
+		...mapActions("modals/editSong", ["editSong", "stopVideo"]),
 		...mapActions("modalVisibility", ["openModal"])
 	}
 };

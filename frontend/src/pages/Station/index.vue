@@ -441,7 +441,6 @@
 
 		<edit-song
 			v-if="modals.admin.editSong"
-			:song-id="editingSongId"
 			song-type="songs"
 			sector="station"
 		/>
@@ -558,7 +557,6 @@ export default {
 			playbackRate: 1,
 			volumeSliderValue: 0,
 			showPlaylistDropdown: false,
-			editingSongId: "",
 			theme: "var(--primary-color)"
 		};
 	},
@@ -1723,10 +1721,6 @@ export default {
 					} else new Toast({ content: res.message, timeout: 8000 });
 				}
 			);
-		},
-		editSong(song) {
-			this.editingSongId = song._id;
-			this.openModal({ sector: "admin", modal: "editSong" });
 		},
 		...mapActions("modalVisibility", ["openModal"]),
 		...mapActions("station", [

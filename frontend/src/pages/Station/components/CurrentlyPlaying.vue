@@ -124,7 +124,7 @@
 					class="button is-primary"
 					id="editsong-icon"
 					v-if="$parent.isAdminOnly()"
-					@click="$parent.editSong(song)"
+					@click="edit(song)"
 				>
 					<i class="material-icons icon-with-button">edit</i>
 				</button>
@@ -160,10 +160,15 @@ export default {
 		})
 	},
 	methods: {
+		edit(song) {
+			this.editSong(song);
+			this.openModal({ sector: "admin", modal: "editSong" });
+		},
 		report(song) {
 			this.reportSong(song);
 			this.openModal({ sector: "station", modal: "report" });
 		},
+		...mapActions("modals/editSong", ["editSong"]),
 		...mapActions("modals/report", ["reportSong"]),
 		...mapActions("modalVisibility", ["openModal"]),
 		formatDistance,
