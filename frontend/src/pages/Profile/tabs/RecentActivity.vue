@@ -23,6 +23,8 @@
 							v-if="userId === myUserId"
 							href="#"
 							@click.prevent="hideActivity(activity._id)"
+							content="Hide Activity"
+							v-tippy
 						>
 							<i class="material-icons hide-icon"
 								>visibility_off</i

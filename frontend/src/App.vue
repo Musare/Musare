@@ -724,6 +724,11 @@ h4.section-title {
 			flex-wrap: wrap;
 		}
 
+		.action-dropdown-icon {
+			display: flex;
+			color: var(--primary-color);
+		}
+
 		.queue-actions {
 			display: flex;
 		}

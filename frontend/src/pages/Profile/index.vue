@@ -50,7 +50,12 @@
 					v-if="user.createdAt || user.location"
 				>
 					<div class="date" v-if="user.createdAt">
-						<i class="material-icons">calendar_today</i>
+						<i
+							class="material-icons"
+							content="Account Creation Date"
+							v-tippy
+							>calendar_today</i
+						>
 						<p>{{ user.createdAt }}</p>
 					</div>
 					<div class="location" v-if="user.location">

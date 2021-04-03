@@ -27,6 +27,12 @@
 							"
 							@click="selectPlaylist(playlist._id)"
 							class="material-icons play-icon"
+							:content="
+								station.partyMode
+									? 'Request songs from this playlist'
+									: 'Play songs from this playlist'
+							"
+							v-tippy
 							>play_arrow</i
 						>
 						<i
@@ -36,6 +42,12 @@
 							"
 							@click="deselectPlaylist(playlist._id)"
 							class="material-icons stop-icon"
+							:content="
+								station.partyMode
+									? 'Stop requesting songs from this playlist'
+									: 'Stop playing songs from this playlist'
+							"
+							v-tippy
 							>stop</i
 						>
 						<i

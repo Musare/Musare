@@ -1,5 +1,5 @@
 <template>
-	<div :style="'--primary-color: var(--' + station.theme + ')'">
+	<div>
 		<metadata v-if="exists && !loading" :title="`${station.displayName}`" />
 		<metadata v-else-if="!exists && !loading" :title="`Not found`" />
 
@@ -842,6 +842,7 @@ export default {
 
 		this.socket.on("event:station.themeUpdated", theme => {
 			this.station.theme = theme;
+			document.body.style.cssText = `--primary-color: var(--${theme})`;
 		});
 
 		this.socket.on("event:station.updateName", res => {
@@ -910,6 +911,8 @@ export default {
 		this.frontendDevMode = lofig.get("mode");
 	},
 	beforeDestroy() {
+		document.body.style.cssText = "";
+
 		/** Reset Songslist */
 		this.updateSongsList([]);
 
@@ -1551,6 +1554,8 @@ export default {
 							isFavorited,
 							theme
 						});
+
+						document.body.style.cssText = `--primary-color: var(--${res.data.theme})`;
 
 						const currentSong = res.data.currentSong
 							? res.data.currentSong

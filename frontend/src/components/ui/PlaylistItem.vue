@@ -6,7 +6,8 @@
 				<i
 					v-if="playlist.privacy === 'private'"
 					class="private-playlist-icon material-icons"
-					title="This playlist is not visible to other users."
+					content="This playlist is not visible to other users."
+					v-tippy
 					>lock</i
 				>
 			</p>

@@ -84,7 +84,12 @@
 					trigger="click"
 				>
 					<template #trigger>
-						<i class="material-icons">more_horiz</i>
+						<i
+							class="material-icons action-dropdown-icon"
+							content="Song Options"
+							v-tippy
+							>more_horiz</i
+						>
 					</template>
 					<a
 						target="_blank"

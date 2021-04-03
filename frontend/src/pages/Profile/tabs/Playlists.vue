@@ -54,12 +54,16 @@
 									v-if="myUserId === userId"
 									@click="showPlaylist(playlist._id)"
 									class="material-icons edit-icon"
+									content="Edit Playlist"
+									v-tippy
 									>edit</i
 								>
 								<i
 									v-else
 									@click="showPlaylist(playlist._id)"
 									class="material-icons view-icon"
+									content="View Playlist"
+									v-tippy
 									>visibility</i
 								>
 							</div>
