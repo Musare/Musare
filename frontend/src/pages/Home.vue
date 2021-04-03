@@ -129,19 +129,24 @@
 									v-if="loggedIn && !station.isFavorited"
 									@click.prevent="favoriteStation(station)"
 									class="favorite material-icons"
+									content="Favorite Station"
+									v-tippy
 									>star_border</i
 								>
 								<i
 									v-if="loggedIn && station.isFavorited"
 									@click.prevent="unfavoriteStation(station)"
 									class="favorite material-icons"
+									content="Unfavorite Station"
+									v-tippy
 									>star</i
 								>
 								<h5>{{ station.displayName }}</h5>
 								<i
 									v-if="station.type === 'official'"
 									class="material-icons verified-station"
-									title="Verified station"
+									content="Verified Station"
+									v-tippy
 								>
 									check_circle
 								</i>
@@ -174,19 +179,22 @@
 											isOwner(station)
 									"
 									class="homeIcon material-icons"
-									title="This is your station."
+									content="This is your station."
+									v-tippy
 									>home</i
 								>
 								<i
 									v-if="station.privacy === 'private'"
 									class="privateIcon material-icons"
-									title="This station is not visible to other users."
+									content="This station is not visible to other users."
+									v-tippy
 									>lock</i
 								>
 								<i
 									v-if="station.privacy === 'unlisted'"
 									class="unlistedIcon material-icons"
-									title="Unlisted Station"
+									content="Unlisted Station"
+									v-tippy
 									>link</i
 								>
 							</div>
@@ -196,7 +204,8 @@
 						<i
 							v-if="station.paused && station.currentSong.title"
 							class="material-icons"
-							title="Station Paused"
+							content="Station Paused"
+							v-tippy
 							>pause</i
 						>
 						<i
@@ -228,11 +237,12 @@
 						<span v-else class="songTitle">No Songs Playing</span>
 						<i
 							class="material-icons stationMode"
-							:title="
+							:content="
 								station.partyMode
 									? 'Station in Party mode'
 									: 'Station in Playlist mode'
 							"
+							v-tippy
 							>{{
 								station.partyMode
 									? "emoji_people"
@@ -376,19 +386,24 @@
 									v-if="loggedIn && !station.isFavorited"
 									@click.prevent="favoriteStation(station)"
 									class="favorite material-icons"
+									content="Favorite Station"
+									v-tippy
 									>star_border</i
 								>
 								<i
 									v-if="loggedIn && station.isFavorited"
 									@click.prevent="unfavoriteStation(station)"
 									class="favorite material-icons"
+									content="Unfavorite Station"
+									v-tippy
 									>star</i
 								>
 								<h5>{{ station.displayName }}</h5>
 								<i
 									v-if="station.type === 'official'"
 									class="material-icons verified-station"
-									title="Verified station"
+									content="Verified Station"
+									v-tippy
 								>
 									check_circle
 								</i>
@@ -421,19 +436,22 @@
 											isOwner(station)
 									"
 									class="homeIcon material-icons"
-									title="This is your station."
+									content="This is your station."
+									v-tippy
 									>home</i
 								>
 								<i
 									v-if="station.privacy === 'private'"
 									class="privateIcon material-icons"
-									title="This station is not visible to other users."
+									content="This station is not visible to other users."
+									v-tippy
 									>lock</i
 								>
 								<i
 									v-if="station.privacy === 'unlisted'"
 									class="unlistedIcon material-icons"
-									title="Unlisted Station"
+									content="Unlisted Station"
+									v-tippy
 									>link</i
 								>
 							</div>
@@ -443,7 +461,8 @@
 						<i
 							v-if="station.paused && station.currentSong.title"
 							class="material-icons"
-							title="Station Paused"
+							content="Station Paused"
+							v-tippy
 							>pause</i
 						>
 						<i
@@ -475,11 +494,12 @@
 						<span v-else class="songTitle">No Songs Playing</span>
 						<i
 							class="material-icons stationMode"
-							:title="
+							:content="
 								station.partyMode
 									? 'Station in Party mode'
 									: 'Station in Playlist mode'
 							"
+							v-tippy
 							>{{
 								station.partyMode
 									? "emoji_people"

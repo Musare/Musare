@@ -249,73 +249,48 @@
 											'item-draggable': isEditable()
 										}"
 									>
-										<div slot="actions">
+										<div
+											v-if="isEditable()"
+											class="queue-actions"
+											slot="actions"
+										>
 											<i
 												class="material-icons"
-												v-if="isEditable() && index > 0"
+												v-if="index > 0"
 												@click="moveSongToTop(index)"
+												content="Move to top of Queue"
+												v-tippy
 												>vertical_align_top</i
 											>
 											<i
-												v-else
-												class="material-icons"
-												style="opacity: 0"
-												>error</i
-											>
-
-											<i
 												v-if="
-													isEditable() &&
-														playlist.songs.length -
-															1 !==
-															index
+													playlist.songs.length -
+														1 !==
+														index
 												"
 												@click="moveSongToBottom(index)"
 												class="material-icons"
+												content="Move to bottom of Queue"
+												v-tippy
 												>vertical_align_bottom</i
 											>
-											<i
-												v-else
-												class="material-icons"
-												style="opacity: 0"
-												>error</i
-											>
-
-											<i
-												v-if="userRole === 'admin'"
-												class="material-icons report-icon"
-												@click="
-													reportSongInPlaylist(song)
-												"
-											>
-												flag
-											</i>
-
-											<i
-												v-if="userRole === 'admin'"
-												class="material-icons edit-icon"
-												@click="
-													editSongInPlaylist(song)
-												"
-											>
-												edit
-											</i>
-
-											<i
-												v-if="
-													userId ===
-														playlist.createdBy ||
-														isEditable()
-												"
-												@click="
-													removeSongFromPlaylist(
-														song.songId
-													)
-												"
-												class="material-icons delete-icon"
-												>delete</i
-											>
 										</div>
+										<i
+											slot="remove"
+											v-if="
+												userId === playlist.createdBy ||
+													isEditable()
+											"
+											@click="
+												removeSongFromPlaylist(
+													song.songId
+												)
+											"
+											class="material-icons delete-icon"
+											content="Remove Song from Playlist"
+											v-tippy
+											>delete</i
+										>
 									</playlist-song-item>
 								</li>
 							</transition-group>
@@ -487,14 +462,6 @@ export default {
 		});
 	},
 	methods: {
-		editSongInPlaylist(song) {
-			this.$parent.editingSongId = song._id;
-			this.openModal({ sector: "admin", modal: "editSong" });
-		},
-		reportSongInPlaylist(song) {
-			this.reportSong(song);
-			this.openModal({ sector: "station", modal: "report" });
-		},
 		importPlaylist() {
 			let isImportingPlaylist = true;
 
@@ -722,7 +689,6 @@ export default {
 				);
 			}
 		},
-		...mapActions("modals/report", ["reportSong"]),
 		...mapActions("modalVisibility", ["openModal", "closeModal"])
 	}
 };

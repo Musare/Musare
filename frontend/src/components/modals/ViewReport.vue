@@ -24,7 +24,7 @@
 					/>
 					<br />
 					<strong>Time of report:</strong>
-					<span :title="report.createdAt">
+					<span :content="report.createdAt" v-tippy>
 						{{
 							formatDistance(
 								new Date(report.createdAt),

@@ -25,8 +25,9 @@
 			</button>
 			<button
 				v-else
-				class="button is-default tooltip tooltip-top tooltip-center"
-				data-tooltip="Login to manage playlists"
+				class="button is-default"
+				content="Login to manage playlists"
+				v-tippy
 			>
 				My Playlists
 			</button>

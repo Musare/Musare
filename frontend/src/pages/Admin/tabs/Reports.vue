@@ -28,7 +28,7 @@
 							/>
 						</td>
 						<td>
-							<span :title="report.createdAt">{{
+							<span :content="report.createdAt" v-tippy>{{
 								formatDistance(
 									new Date(report.createdAt),
 									new Date(),

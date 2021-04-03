@@ -41,6 +41,8 @@
 						<i
 							@click="edit(playlist._id)"
 							class="material-icons edit-icon"
+							content="Edit Playlist"
+							v-tippy
 							>edit</i
 						>
 					</div>

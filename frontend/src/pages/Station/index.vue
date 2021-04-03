@@ -77,9 +77,14 @@
 								<div id="left-buttons">
 									<!-- Debug Box -->
 									<button
+										:v-if="
+											frontendDevMode === 'development'
+										"
 										class="button is-primary"
 										@click="togglePlayerDebugBox()"
 										@dblclick="resetPlayerDebugBox()"
+										content="Debug"
+										v-tippy
 									>
 										<i
 											class="material-icons icon-with-button"
@@ -94,6 +99,8 @@
 										@click="resumeLocalStation()"
 										id="local-resume"
 										v-if="localPaused"
+										content="Unpause Playback"
+										v-tippy
 									>
 										<i class="material-icons">play_arrow</i>
 									</button>
@@ -102,6 +109,8 @@
 										@click="pauseLocalStation()"
 										id="local-pause"
 										v-else
+										content="Pause Playback"
+										v-tippy
 									>
 										<i class="material-icons">pause</i>
 									</button>
@@ -111,6 +120,8 @@
 										v-if="loggedIn"
 										class="button is-primary"
 										@click="voteSkipStation()"
+										content="Vote to Skip Song"
+										v-tippy
 									>
 										<i
 											class="material-icons icon-with-button"
@@ -120,8 +131,9 @@
 									</button>
 									<button
 										v-else
-										class="button is-primary tooltip tooltip-top disabled"
-										data-tooltip="Login to vote to skip songs"
+										class="button is-primary disabled"
+										content="Login to vote to skip songs"
+										v-tippy
 									>
 										<i
 											class="material-icons icon-with-button"
@@ -145,12 +157,16 @@
 										v-if="muted"
 										class="material-icons"
 										@click="toggleMute()"
+										content="Unmute"
+										v-tippy
 										>volume_mute</i
 									>
 									<i
 										v-else
 										class="material-icons"
 										@click="toggleMute()"
+										content="Mute"
+										v-tippy
 										>volume_down</i
 									>
 									<input
@@ -165,6 +181,8 @@
 									<i
 										class="material-icons"
 										@click="increaseVolume()"
+										content="Increase Volume"
+										v-tippy
 										>volume_up</i
 									>
 								</p>
@@ -182,6 +200,8 @@
 											class="button is-success like-song"
 											id="like-song"
 											@click="toggleLike()"
+											content="Like Song"
+											v-tippy
 										>
 											<i
 												class="material-icons icon-with-button"
@@ -195,6 +215,8 @@
 											class="button is-danger dislike-song"
 											id="dislike-song"
 											@click="toggleDislike()"
+											content="Dislike Song"
+											v-tippy
 										>
 											<i
 												class="material-icons icon-with-button"
@@ -207,54 +229,59 @@
 									</div>
 
 									<!-- Add Song To Playlist Button & Dropdown -->
-									<div
-										id="add-song-to-playlist"
-										v-click-outside="
-											() =>
-												(this.showPlaylistDropdown = false)
-										"
+									<add-to-playlist-dropdown
+										:song="currentSong"
+										placement="top-end"
 									>
-										<div class="control has-addons">
-											<button
-												class="button is-primary"
-												@click="
-													showPlaylistDropdown = !showPlaylistDropdown
-												"
-											>
-												<i class="material-icons"
-													>queue</i
+										<div
+											slot="button"
+											id="add-song-to-playlist"
+											v-click-outside="
+												() =>
+													(this.showPlaylistDropdown = false)
+											"
+											content="Add Song to Playlist"
+											v-tippy
+										>
+											<div class="control has-addons">
+												<button
+													class="button is-primary"
+													@click="
+														showPlaylistDropdown = !showPlaylistDropdown
+													"
 												>
-											</button>
-											<button
-												class="button"
-												id="dropdown-toggle"
-												@click="
-													showPlaylistDropdown = !showPlaylistDropdown
-												"
-											>
-												<i class="material-icons">
-													{{
-														showPlaylistDropdown
-															? "expand_more"
-															: "expand_less"
-													}}
-												</i>
-											</button>
+													<i class="material-icons"
+														>queue</i
+													>
+												</button>
+												<button
+													class="button"
+													id="dropdown-toggle"
+													@click="
+														showPlaylistDropdown = !showPlaylistDropdown
+													"
+												>
+													<i class="material-icons">
+														{{
+															showPlaylistDropdown
+																? "expand_more"
+																: "expand_less"
+														}}
+													</i>
+												</button>
+											</div>
 										</div>
-										<add-to-playlist-dropdown
-											v-if="showPlaylistDropdown"
-											:song="currentSong"
-										/>
-									</div>
+									</add-to-playlist-dropdown>
 								</div>
 								<div id="right-buttons" v-else>
 									<!-- Disabled Ratings (Like/Dislike) Buttons -->
 									<div id="ratings">
 										<!-- Disabled Like Song Button -->
 										<button
-											class="button is-success tooltip tooltip-top disabled"
+											class="button is-success disabled"
 											id="like-song"
-											data-tooltip="Login to like songs"
+											content="Login to like songs"
+											v-tippy
 										>
 											<i
 												class="material-icons icon-with-button"
@@ -264,9 +291,10 @@
 
 										<!-- Disabled Dislike Song Button -->
 										<button
-											class="button is-danger tooltip tooltip-top disabled"
+											class="button is-danger disabled"
 											id="dislike-song"
-											data-tooltip="Login to dislike songs"
+											content="Login to dislike songs"
+											v-tippy
 										>
 											<i
 												class="material-icons icon-with-button"
@@ -278,8 +306,9 @@
 									<div id="add-song-to-playlist">
 										<div class="control has-addons">
 											<button
-												class="button is-primary tooltip tooltip-top disabled"
-												data-tooltip="Login to add songs to playlist"
+												class="button is-primary disabled"
+												content="Login to add songs to playlist"
+												v-tippy
 											>
 												<i class="material-icons"
 													>queue</i
@@ -331,6 +360,8 @@
 												loggedIn && station.isFavorited
 											"
 											@click.prevent="unfavoriteStation()"
+											content="Unfavorite Station"
+											v-tippy
 											class="material-icons"
 											>star</i
 										>
@@ -340,16 +371,19 @@
 											"
 											@click.prevent="favoriteStation()"
 											class="material-icons"
+											content="Favorite Station"
+											v-tippy
 											>star_border</i
 										>
 									</a>
 									<i
 										class="material-icons stationMode"
-										:title="
+										:content="
 											station.partyMode
 												? 'Station in Party mode'
 												: 'Station in Playlist mode'
 										"
+										v-tippy
 										>{{
 											station.partyMode
 												? "emoji_people"
@@ -872,6 +906,8 @@ export default {
 			localStorage.setItem("volume", volume);
 			this.volumeSliderValue = volume * 100;
 		}
+
+		this.frontendDevMode = lofig.get("mode");
 	},
 	beforeDestroy() {
 		/** Reset Songslist */

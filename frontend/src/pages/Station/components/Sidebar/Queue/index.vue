@@ -15,7 +15,30 @@
 					type: station.type,
 					partyMode: station.partyMode
 				}"
-			/>
+			>
+				<div
+					v-if="isAdminOnly() || isOwnerOnly()"
+					class="queue-actions"
+					slot="actions"
+				>
+					<i
+						class="material-icons"
+						v-if="index > 0"
+						@click="moveSongToTop(index)"
+						content="Move to top of Queue"
+						v-tippy
+						>vertical_align_top</i
+					>
+					<i
+						v-if="songsList.length - 1 !== index"
+						@click="moveSongToBottom(index)"
+						class="material-icons"
+						content="Move to bottom of Queue"
+						v-tippy
+						>vertical_align_bottom</i
+					>
+				</div>
+			</queue-item>
 			<p class="nothing-here-text" v-if="songsList.length < 1">
 				There are no songs currently queued
 			</p>
@@ -44,7 +67,7 @@
 			<span class="optional-desktop-only-text"> Add Song To Queue </span>
 		</button>
 		<button
-			class="button is-primary tab-actionable-button tooltip tooltip-top tooltip-center disabled"
+			class="button is-primary tab-actionable-button disabled"
 			v-if="
 				!loggedIn &&
 					((station.type === 'community' &&
@@ -52,7 +75,8 @@
 						!station.locked) ||
 						station.type === 'official')
 			"
-			data-tooltip="Login to add songs to queue"
+			content="Login to add songs to queue"
+			v-tippy
 		>
 			<i class="material-icons icon-with-button">queue</i>
 			<span class="optional-desktop-only-text"> Add Song To Queue </span>

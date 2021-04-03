@@ -25,7 +25,8 @@
 					<i
 						v-if="song.status === 'verified'"
 						class="material-icons verified-song"
-						title="Verified Song"
+						content="Verified Song"
+						v-tippy
 					>
 						check_circle
 					</i>
@@ -43,21 +44,59 @@
 			</div>
 		</div>
 		<div class="universal-item-actions">
-			<slot name="actions" />
-			<i
-				class="material-icons add-to-playlist-icon"
-				v-if="loggedIn"
-				@click="showPlaylistDropdown = !showPlaylistDropdown"
+			<tippy
+				interactive="true"
+				placement="left"
+				theme="songActions"
+				trigger="click"
 			>
-				queue
-			</i>
+				<template #trigger>
+					<i class="material-icons">more_horiz</i>
+				</template>
+				<a
+					target="_blank"
+					:href="`https://www.youtube.com/watch?v=${song.songId}`"
+					content="View on Youtube"
+					v-tippy
+				>
+					<div class="youtube-icon"></div>
+				</a>
+				<i
+					v-if="loggedIn"
+					class="material-icons report-icon"
+					@click="reportSongInPlaylist(song)"
+					content="Report Song"
+					v-tippy
+				>
+					flag
+				</i>
+				<add-to-playlist-dropdown v-if="loggedIn" :song="song">
+					<i
+						slot="button"
+						class="material-icons add-to-playlist-icon"
+						content="Add Song to Playlist"
+						v-tippy
+						>queue</i
+					>
+				</add-to-playlist-dropdown>
+				<i
+					v-if="userRole === 'admin'"
+					class="material-icons edit-icon"
+					@click="editSongInPlaylist(song)"
+					content="Edit Song"
+					v-tippy
+				>
+					edit
+				</i>
+				<slot name="remove" />
+				<slot name="actions" />
+			</tippy>
 		</div>
-		<add-to-playlist-dropdown v-if="showPlaylistDropdown" :song="song" />
 	</div>
 </template>
 
 <script>
-import { mapState } from "vuex";
+import { mapState, mapActions } from "vuex";
 
 import AddToPlaylistDropdown from "../../../ui/AddToPlaylistDropdown.vue";
 
@@ -69,14 +108,23 @@ export default {
 			default: () => {}
 		}
 	},
-	data() {
-		return {
-			showPlaylistDropdown: false
-		};
-	},
 	computed: mapState({
-		loggedIn: state => state.user.auth.loggedIn
-	})
+		loggedIn: state => state.user.auth.loggedIn,
+		userRole: state => state.user.auth.role
+	}),
+	methods: {
+		editSongInPlaylist(song) {
+			this.editSong(song);
+			this.openModal({ sector: "admin", modal: "editSong" });
+		},
+		reportSongInPlaylist(song) {
+			this.reportSong(song);
+			this.openModal({ sector: "station", modal: "report" });
+		},
+		...mapActions("modals/editSong", ["editSong"]),
+		...mapActions("modals/report", ["reportSong"]),
+		...mapActions("modalVisibility", ["openModal"])
+	}
 };
 </script>
 
@@ -124,7 +172,7 @@ export default {
 	}
 
 	#thumbnail-and-info {
-		width: calc(100% - 120px);
+		width: calc(100% - 50px);
 	}
 
 	#song-info {
@@ -132,7 +180,7 @@ export default {
 		flex-direction: column;
 		justify-content: center;
 		margin-left: 20px;
-		width: calc(100% - 65px);
+		width: calc(100% - 50px);
 
 		.item-title {
 			font-size: 16px;

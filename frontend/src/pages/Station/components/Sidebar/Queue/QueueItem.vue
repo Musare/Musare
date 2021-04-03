@@ -31,7 +31,8 @@
 					<i
 						v-if="song.status === 'verified'"
 						class="material-icons verified-song"
-						title="Verified Song"
+						content="Verified Song"
+						v-tippy
 					>
 						check_circle
 					</i>
@@ -70,38 +71,69 @@
 				</p>
 			</div>
 		</div>
-		<add-to-playlist-dropdown v-if="showPlaylistDropdown" :song="song" />
 
 		<div id="duration-and-actions">
 			<p id="song-duration">
 				{{ utils.formatTime(song.duration) }}
 			</p>
 			<div class="universal-item-actions">
-				<i
-					v-if="$parent.loggedIn"
-					class="material-icons report-icon"
-					@click="report(song)"
+				<tippy
+					interactive="true"
+					placement="left"
+					theme="songActions"
+					trigger="click"
 				>
-					flag
-				</i>
-				<i
-					class="material-icons add-to-playlist-icon"
-					@click="showPlaylistDropdown = !showPlaylistDropdown"
-					>queue</i
-				>
-				<i
-					v-if="$parent.isAdminOnly()"
-					class="material-icons edit-icon"
+					<template #trigger>
+						<i class="material-icons">more_horiz</i>
+					</template>
+					<a
+						target="_blank"
+						:href="`https://www.youtube.com/watch?v=${song.songId}`"
+						content="View on Youtube"
+						v-tippy
+					>
+						<div class="youtube-icon"></div>
+					</a>
+					<i
+						v-if="$parent.loggedIn"
+						class="material-icons report-icon"
+						@click="report(song)"
+						content="Report Song"
+						v-tippy
+					>
+						flag
+					</i>
+					<add-to-playlist-dropdown
+						v-if="$parent.loggedIn"
+						:song="song"
+					>
+						<i
+							slot="button"
+							class="material-icons add-to-playlist-icon"
+							content="Add Song to Playlist"
+							v-tippy
+							>queue</i
+						>
+					</add-to-playlist-dropdown>
+					<i
+						v-if="$parent.isAdminOnly()"
+						class="material-icons edit-icon"
 						@click="edit(song)"
-				>
-					edit
-				</i>
-				<i
-					v-if="$parent.isOwnerOnly() || $parent.isAdminOnly()"
-					class="material-icons delete-icon"
-					@click="$parent.removeFromQueue(song.songId)"
-					>delete_forever</i
-				>
+						content="Edit Song"
+						v-tippy
+					>
+						edit
+					</i>
+					<i
+						v-if="$parent.isOwnerOnly() || $parent.isAdminOnly()"
+						class="material-icons delete-icon"
+						@click="$parent.removeFromQueue(song.songId)"
+						content="Remove Song from Queue"
+						v-tippy
+						>delete_forever</i
+					>
+					<slot name="actions" />
+				</tippy>
 			</div>
 		</div>
 	</div>
@@ -131,8 +163,7 @@ export default {
 	},
 	data() {
 		return {
-			utils,
-			showPlaylistDropdown: false
+			utils
 		};
 	},
 	methods: {
@@ -190,7 +221,7 @@ export default {
 	}
 
 	#thumbnail-and-info {
-		width: calc(100% - 110px);
+		width: calc(100% - 90px);
 	}
 
 	#song-info {
@@ -198,7 +229,7 @@ export default {
 		flex-direction: column;
 		justify-content: center;
 		margin-left: 20px;
-		width: calc(100% - 65px);
+		width: calc(100% - 80px);
 
 		*:not(i) {
 			margin: 0;

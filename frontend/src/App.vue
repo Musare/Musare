@@ -239,6 +239,10 @@ export default {
 	.content {
 		background-color: var(--dark-grey-3) !important;
 	}
+
+	.tippy-tooltip.songActions-theme {
+		background-color: var(--dark-grey);
+	}
 }
 
 body.night-mode {
@@ -336,95 +340,181 @@ a {
 	z-index: 10000000;
 }
 
-.tooltip {
-	position: relative;
-
-	&:after {
-		position: absolute;
-		min-width: 80px;
-		margin-left: -75%;
-		text-align: center;
-		padding: 7.5px 6px;
-		border-radius: 2px;
-		background-color: var(--dark-grey);
-		font-size: 14px;
-		line-height: 24px;
-		text-transform: none;
-		color: var(--white);
-		content: attr(data-tooltip);
-		opacity: 0;
-		transition: all 0.2s ease-in-out 0.1s;
-		visibility: hidden;
-		z-index: 5;
-	}
-
-	&:hover:after,
-	&:focus:after {
-		opacity: 1;
-		visibility: visible;
-	}
+.tippy-tooltip.dark-theme {
+	font-size: 14px;
+	padding: 5px 10px;
 }
 
-.tooltip-top {
-	&:after {
-		bottom: 150%;
+.tippy-tooltip.songActions-theme {
+	font-size: 14px;
+	padding: 5px 10px;
+	border: 1px solid var(--light-grey-3);
+	box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+	background-color: white;
+
+	.button {
+		width: 146px;
 	}
 
-	&:hover {
-		&:after {
-			bottom: 120%;
+	.queue-actions,
+	.addToPlaylistDropdown {
+		display: inline-block;
+	}
+
+	i,
+	a {
+		display: inline-block;
+		cursor: pointer;
+		color: var(--dark-grey);
+		vertical-align: middle;
+
+		&:hover,
+		&:focus {
+			filter: brightness(90%);
+		}
+
+		&:not(:first-of-type) {
+			margin-left: 5px;
+		}
+	}
+
+	.play-icon {
+		color: var(--green);
+	}
+
+	.edit-icon,
+	.view-icon,
+	.add-to-playlist-icon {
+		color: var(--primary-color);
+	}
+
+	.hide-icon {
+		color: var(--light-grey-3);
+	}
+
+	.stop-icon,
+	.delete-icon {
+		color: var(--red);
+	}
+
+	.report-icon {
+		color: var(--yellow);
+	}
+}
+.tippy-popper[x-placement^="top"] .tippy-tooltip {
+	&.songActions-theme,
+	&.addToPlaylist-theme {
+		.tippy-arrow {
+			border-top-color: var(--light-grey-3);
+		}
+	}
+}
+.tippy-popper[x-placement^="bottom"] .tippy-tooltip {
+	&.songActions-theme,
+	&.addToPlaylist-theme {
+		.tippy-arrow {
+			border-bottom-color: var(--light-grey-3);
+		}
+	}
+}
+.tippy-popper[x-placement^="left"] .tippy-tooltip {
+	&.songActions-theme,
+	&.addToPlaylist-theme {
+		.tippy-arrow {
+			border-left-color: var(--light-grey-3);
+		}
+	}
+}
+.tippy-popper[x-placement^="right"] .tippy-tooltip {
+	&.songActions-theme,
+	&.addToPlaylist-theme {
+		.tippy-arrow {
+			border-right-color: var(--light-grey-3);
 		}
 	}
 }
 
-.tooltip-bottom {
-	&:after {
-		top: 155%;
-	}
+.tippy-tooltip.addToPlaylist-theme {
+	font-size: 14px;
+	padding: 5px;
+	border: 1px solid var(--light-grey-3);
+	box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+	background-color: white;
+	color: var(--dark-grey);
 
-	&:hover {
-		&:after {
-			top: 125%;
-		}
-	}
-}
+	.nav-dropdown-items {
+		.nav-item {
+			width: 100%;
+			justify-content: flex-start;
+			border: 0;
+			padding: 10px;
+			font-size: 15.5px;
+			height: 36px;
+			background: var(--light-grey);
+			border-radius: 5px;
+			cursor: pointer;
 
-.tooltip-left {
-	&:after {
-		bottom: -10px;
-		right: 130%;
-		min-width: 100px;
-	}
+			.checkbox-control {
+				display: flex;
+				align-items: center;
+				margin-bottom: 0 !important;
+				width: inherit;
 
-	&:hover {
-		&:after {
-			right: 110%;
-		}
-	}
-}
+				input {
+					margin-right: 5px;
+				}
 
-.tooltip-right {
-	&:after {
-		bottom: -10px;
-		left: 190%;
-		min-width: 100px;
-	}
+				input[type="checkbox"] {
+					opacity: 0;
+					position: absolute;
+				}
 
-	&:hover {
-		&:after {
-			left: 200%;
-		}
-	}
-}
+				label {
+					display: flex;
+					flex-direction: row;
+					align-items: center;
+					width: inherit;
 
-.tooltip-center {
-	&:after {
-		margin-left: 0;
-	}
+					span {
+						cursor: pointer;
+						min-width: 24px;
+						height: 24px;
+						background-color: var(--white);
+						display: inline-block;
+						border: 1px solid var(--dark-grey-2);
+						position: relative;
+						border-radius: 3px;
+					}
 
-	&:hover {
-		&:after {
-			margin-left: 0;
+					p {
+						margin-left: 10px;
+						cursor: pointer;
+						color: var(--black);
+						overflow: hidden;
+						text-overflow: ellipsis;
+						white-space: nowrap;
+					}
+				}
+
+				input[type="checkbox"]:checked + label span::after {
+					content: "";
+					width: 18px;
+					height: 18px;
+					left: 2px;
+					top: 2px;
+					border-radius: 3px;
+					background-color: var(--primary-color);
+					position: absolute;
+				}
+			}
+
+			&:focus {
+				outline-color: var(--light-grey-3);
+			}
+
+			&:not(:last-of-type) {
+				margin-bottom: 5px;
+			}
 		}
 	}
 }
@@ -634,6 +724,10 @@ h4.section-title {
 			flex-wrap: wrap;
 		}
 
+		.queue-actions {
+			display: flex;
+		}
+
 		.button {
 			width: 146px;
 		}
@@ -693,5 +787,14 @@ h4.section-title {
 .save-button-transition-enter {
 	transform: translateX(20px);
 	opacity: 0;
+}
+
+.youtube-icon {
+	margin-right: 3px;
+	height: 20px;
+	width: 20px;
+	-webkit-mask: url("/assets/social/youtube.svg") no-repeat center;
+	mask: url("/assets/social/youtube.svg") no-repeat center;
+	background-color: var(--youtube);
 }
 </style>

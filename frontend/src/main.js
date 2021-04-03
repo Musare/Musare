@@ -1,5 +1,6 @@
 import Vue from "vue";
 
+import VueTippy, { TippyComponent } from "vue-tippy";
 import VueRouter from "vue-router";
 import store from "./store";
 
@@ -11,6 +12,24 @@ const REQUIRED_CONFIG_VERSION = 2;
 const handleMetadata = attrs => {
 	document.title = `Musare | ${attrs.title}`;
 };
+
+Vue.use(VueTippy, {
+	directive: "tippy", // => v-tippy
+	flipDuration: 0,
+	popperOptions: {
+		modifiers: {
+			preventOverflow: {
+				enabled: true
+			}
+		}
+	},
+	allowHTML: true,
+	animation: "scale",
+	theme: "dark",
+	arrow: true
+});
+
+Vue.component("Tippy", TippyComponent);
 
 Vue.component("Metadata", {
 	watch: {

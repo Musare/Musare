@@ -65,7 +65,8 @@
 					<i
 						v-if="song.status === 'verified'"
 						class="material-icons verified-song"
-						title="Verified Song"
+						content="Verified Song"
+						v-tippy
 					>
 						check_circle
 					</i>
