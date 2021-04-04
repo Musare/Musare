@@ -1,24 +1,7 @@
 <template>
 	<div class="universal-item playlist-song-item">
 		<div id="thumbnail-and-info">
-			<img
-				class="item-thumbnail"
-				:src="
-					song.songId &&
-					(!song.thumbnail ||
-						(song.thumbnail &&
-							(song.thumbnail.lastIndexOf('notes-transparent') !==
-								-1 ||
-								song.thumbnail.lastIndexOf(
-									'/assets/notes.png'
-								) !== -1)) ||
-						song.thumbnail === 'empty' ||
-						song.thumbnail == null)
-						? `https://img.youtube.com/vi/${song.songId}/mqdefault.jpg`
-						: song.thumbnail
-				"
-				onerror="this.src='/assets/notes-transparent.png'"
-			/>
+			<song-thumbnail :song="song" />
 			<div id="song-info">
 				<h4 class="item-title" :title="song.title">
 					{{ song.title }}
@@ -113,9 +96,10 @@
 import { mapState, mapActions } from "vuex";
 
 import AddToPlaylistDropdown from "../../../ui/AddToPlaylistDropdown.vue";
+import SongThumbnail from "../../../ui/SongThumbnail.vue";
 
 export default {
-	components: { AddToPlaylistDropdown },
+	components: { AddToPlaylistDropdown, SongThumbnail },
 	props: {
 		song: {
 			type: Object,
@@ -165,6 +149,7 @@ export default {
 
 .playlist-song-item {
 	width: 100%;
+	min-height: 50px;
 
 	#thumbnail-and-info,
 	.universal-item-actions div {
@@ -180,7 +165,8 @@ export default {
 		}
 	}
 
-	.item-thumbnail {
+	.thumbnail {
+		min-width: 55px;
 		width: 55px;
 		height: 55px;
 	}

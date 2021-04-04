@@ -1,24 +1,7 @@
 <template>
 	<div class="universal-item queue-item">
 		<div id="thumbnail-and-info">
-			<img
-				class="item-thumbnail"
-				:src="
-					song.songId &&
-					(!song.thumbnail ||
-						(song.thumbnail &&
-							(song.thumbnail.lastIndexOf('notes-transparent') !==
-								-1 ||
-								song.thumbnail.lastIndexOf(
-									'/assets/notes.png'
-								) !== -1)) ||
-						song.thumbnail === 'empty' ||
-						song.thumbnail == null)
-						? `https://img.youtube.com/vi/${song.songId}/mqdefault.jpg`
-						: song.thumbnail
-				"
-				onerror="this.src='/assets/notes-transparent.png'"
-			/>
+			<song-thumbnail :song="song" />
 			<div id="song-info">
 				<h4
 					class="item-title"
@@ -156,10 +139,11 @@ import { formatDistance, parseISO } from "date-fns";
 
 import AddToPlaylistDropdown from "../../../../../components/ui/AddToPlaylistDropdown.vue";
 import UserIdToUsername from "../../../../../components/common/UserIdToUsername.vue";
+import SongThumbnail from "../../../../../components/ui/SongThumbnail.vue";
 import utils from "../../../../../../js/utils";
 
 export default {
-	components: { UserIdToUsername, AddToPlaylistDropdown },
+	components: { UserIdToUsername, AddToPlaylistDropdown, SongThumbnail },
 	props: {
 		song: {
 			type: Object,
@@ -233,6 +217,13 @@ export default {
 
 	#thumbnail-and-info {
 		width: calc(100% - 90px);
+	}
+
+	.thumbnail {
+		min-width: 65px;
+		width: 65px;
+		height: 65px;
+		margin: -7.5px;
 	}
 
 	#song-info {

@@ -692,6 +692,7 @@ h4.section-title {
 	padding: 7.5px;
 	border: 1px solid var(--light-grey-3);
 	border-radius: 3px;
+	overflow: hidden;
 
 	.item-thumbnail {
 		width: 65px;
