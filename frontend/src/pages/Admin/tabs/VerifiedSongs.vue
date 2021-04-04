@@ -118,12 +118,16 @@
 							<button
 								class="button is-primary"
 								@click="edit(song)"
+								content="Edit Song"
+								v-tippy
 							>
 								<i class="material-icons">edit</i>
 							</button>
 							<button
 								class="button is-danger"
 								@click="remove(song._id, index)"
+								content="Unverify Song"
+								v-tippy
 							>
 								<i class="material-icons">cancel</i>
 							</button>

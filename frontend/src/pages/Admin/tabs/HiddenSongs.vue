@@ -89,14 +89,18 @@
 							<button
 								class="button is-primary"
 								@click="edit(song, index)"
+								content="Edit Song"
+								v-tippy
 							>
 								<i class="material-icons">edit</i>
 							</button>
 							<button
 								class="button is-success"
 								@click="unhide(song)"
+								content="Unhide Song"
+								v-tippy
 							>
-								<i class="material-icons">add</i>
+								<i class="material-icons">visibility</i>
 							</button>
 						</td>
 					</tr>

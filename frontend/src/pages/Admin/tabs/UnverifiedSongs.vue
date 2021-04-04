@@ -89,20 +89,26 @@
 							<button
 								class="button is-primary"
 								@click="edit(song, index)"
+								content="Edit Song"
+								v-tippy
 							>
 								<i class="material-icons">edit</i>
 							</button>
 							<button
 								class="button is-success"
 								@click="verify(song)"
+								content="Verify Song"
+								v-tippy
 							>
-								<i class="material-icons">add</i>
+								<i class="material-icons">check_circle</i>
 							</button>
 							<button
 								class="button is-danger"
 								@click="hide(song._id, index)"
+								content="Hide Song"
+								v-tippy
 							>
-								<i class="material-icons">cancel</i>
+								<i class="material-icons">visibility_off</i>
 							</button>
 						</td>
 					</tr>

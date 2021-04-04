@@ -38,6 +38,7 @@
 			v-if="
 				currentSong &&
 					(currentSong.songId === 'l9PxOanFjxQ' ||
+						currentSong.songId === 'xKVcVSYmesU' ||
 						currentSong.songId === '60ItHLz5WEA')
 			"
 			class="bg-bubbles"
@@ -157,6 +158,8 @@
 											(currentSong.songId ===
 												'l9PxOanFjxQ' ||
 												currentSong.songId ===
+													'xKVcVSYmesU' ||
+												currentSong.songId ===
 													'60ItHLz5WEA')
 									"
 									src="/assets/old_logo.png"
@@ -175,9 +178,7 @@
 								<div id="left-buttons">
 									<!-- Debug Box -->
 									<button
-										:v-if="
-											frontendDevMode === 'development'
-										"
+										v-if="frontendDevMode === 'development'"
 										class="button is-primary"
 										@click="togglePlayerDebugBox()"
 										@dblclick="resetPlayerDebugBox()"
@@ -334,19 +335,12 @@
 										<div
 											slot="button"
 											id="add-song-to-playlist"
-											v-click-outside="
-												() =>
-													(this.showPlaylistDropdown = false)
-											"
 											content="Add Song to Playlist"
 											v-tippy
 										>
 											<div class="control has-addons">
 												<button
 													class="button is-primary"
-													@click="
-														showPlaylistDropdown = !showPlaylistDropdown
-													"
 												>
 													<i class="material-icons"
 														>queue</i
@@ -355,9 +349,6 @@
 												<button
 													class="button"
 													id="dropdown-toggle"
-													@click="
-														showPlaylistDropdown = !showPlaylistDropdown
-													"
 												>
 													<i class="material-icons">
 														{{
@@ -690,7 +681,8 @@ export default {
 			volumeSliderValue: 0,
 			showPlaylistDropdown: false,
 			theme: "var(--primary-color)",
-			seekerbarPercentage: 0
+			seekerbarPercentage: 0,
+			frontendDevMode: "production"
 		};
 	},
 	computed: {
@@ -719,7 +711,7 @@ export default {
 			socket: "websockets/getSocket"
 		})
 	},
-	mounted() {
+	async mounted() {
 		window.scrollTo(0, 0);
 
 		Date.currently = () => {
@@ -732,6 +724,8 @@ export default {
 
 		if (this.socket.readyState === 1) this.join();
 		ws.onConnect(() => this.join());
+
+		this.frontendDevMode = await lofig.get("mode");
 
 		this.socket.dispatch(
 			"stations.existsByName",
@@ -1006,8 +1000,6 @@ export default {
 			localStorage.setItem("volume", volume);
 			this.volumeSliderValue = volume * 100;
 		}
-
-		this.frontendDevMode = lofig.get("mode");
 	},
 	beforeDestroy() {
 		document.body.style.cssText = "";

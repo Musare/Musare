@@ -6,6 +6,16 @@
 		theme="addToPlaylist"
 		trigger="click"
 		append-to="parent"
+		@show="
+			() => {
+				$parent.showPlaylistDropdown = true;
+			}
+		"
+		@hide="
+			() => {
+				$parent.showPlaylistDropdown = false;
+			}
+		"
 	>
 		<template #trigger>
 			<slot name="button" />
