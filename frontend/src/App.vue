@@ -344,13 +344,106 @@ a {
 	font-size: 14px;
 	padding: 5px 10px;
 }
+.night-mode {
+	.tippy-tooltip {
+		&.dark-theme {
+			border: 1px solid var(--light-grey-3);
+			box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25),
+				0 10px 10px rgba(0, 0, 0, 0.22);
+			background-color: white;
+			.tippy-content {
+				color: var(--black);
+			}
+		}
+		&.songActions-theme {
+			background-color: var(--dark-grey-2);
+			border: 0 !important;
+
+			i,
+			a {
+				color: var(--white);
+			}
+
+			.youtube-icon {
+				background-color: var(--white);
+			}
+		}
+		&.addToPlaylist-theme {
+			background-color: var(--dark-grey-2);
+			border: 0 !important;
+
+			.nav-dropdown-items {
+				.nav-item {
+					background-color: var(--dark-grey);
+
+					&:focus {
+						outline-color: var(--dark-grey);
+					}
+
+					p {
+						color: var(--white);
+					}
+
+					.checkbox-control label span {
+						background-color: var(--dark-grey-2);
+					}
+				}
+			}
+		}
+	}
+
+	.tippy-popper[x-placement^="top"] .tippy-tooltip {
+		&.songActions-theme,
+		&.addToPlaylist-theme {
+			.tippy-arrow {
+				border-top-color: var(--dark-grey-2);
+			}
+		}
+		&.dark-theme .tippy-arrow {
+			border-top-color: var(--white);
+		}
+	}
+	.tippy-popper[x-placement^="bottom"] .tippy-tooltip {
+		&.songActions-theme,
+		&.addToPlaylist-theme {
+			.tippy-arrow {
+				border-bottom-color: var(--dark-grey-2);
+			}
+		}
+		&.dark-theme .tippy-arrow {
+			border-bottom-color: var(--white);
+		}
+	}
+	.tippy-popper[x-placement^="left"] .tippy-tooltip {
+		&.songActions-theme,
+		&.addToPlaylist-theme {
+			.tippy-arrow {
+				border-left-color: var(--dark-grey-2);
+			}
+		}
+		&.dark-theme .tippy-arrow {
+			border-left-color: var(--white);
+		}
+	}
+	.tippy-popper[x-placement^="right"] .tippy-tooltip {
+		&.songActions-theme,
+		&.addToPlaylist-theme {
+			.tippy-arrow {
+				border-right-color: var(--dark-grey-2);
+			}
+		}
+		&.dark-theme .tippy-arrow {
+			border-right-color: var(--white);
+		}
+	}
+}
 
 .tippy-tooltip.songActions-theme {
 	font-size: 14px;
 	padding: 5px 10px;
 	border: 1px solid var(--light-grey-3);
 	box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
-	background-color: white;
+	background-color: var(--white);
 
 	.button {
 		width: 146px;
@@ -401,6 +494,7 @@ a {
 		color: var(--yellow);
 	}
 }
+
 .tippy-popper[x-placement^="top"] .tippy-tooltip {
 	&.songActions-theme,
 	&.addToPlaylist-theme {
@@ -439,7 +533,7 @@ a {
 	padding: 5px;
 	border: 1px solid var(--light-grey-3);
 	box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
-	background-color: white;
+	background-color: var(--white);
 	color: var(--dark-grey);
 
 	.nav-dropdown-items {

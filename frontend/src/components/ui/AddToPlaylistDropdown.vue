@@ -158,28 +158,3 @@ export default {
 	}
 };
 </script>
-
-<style lang="scss" scoped>
-.night-mode {
-	.nav-dropdown-items {
-		background-color: var(--dark-grey-2);
-		border: 0 !important;
-
-		.nav-item {
-			background-color: var(--dark-grey);
-
-			&:focus {
-				outline-color: var(--dark-grey);
-			}
-
-			p {
-				color: var(--white);
-			}
-
-			.checkbox-control label span {
-				background-color: var(--dark-grey-2);
-			}
-		}
-	}
-}
-</style>
