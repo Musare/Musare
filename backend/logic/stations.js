@@ -34,16 +34,16 @@ class _StationsModule extends CoreClass {
 		PlaylistsModule = this.moduleManager.modules.playlists;
 		NotificationsModule = this.moduleManager.modules.notifications;
 
-		this.defaultSong = {
-			songId: "60ItHLz5WEA",
-			title: "Faded - Alan Walker",
-			duration: 212,
-			skipDuration: 0,
-			likes: -1,
-			dislikes: -1,
-			requestedAt: Date.now(),
-			status: "unverified"
-		};
+		// this.defaultSong = {
+		// 	songId: "60ItHLz5WEA",
+		// 	title: "Faded - Alan Walker",
+		// 	duration: 212,
+		// 	skipDuration: 0,
+		// 	likes: -1,
+		// 	dislikes: -1,
+		// 	requestedAt: Date.now(),
+		// 	status: "unverified"
+		// };
 
 		this.userList = {};
 		this.usersPerStation = {};

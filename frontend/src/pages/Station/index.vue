@@ -34,6 +34,26 @@
 		<!-- More simplistic loading animation for mobile users -->
 		<div v-show="loading" id="mobile-progress-animation" />
 
+		<ul
+			v-if="
+				currentSong &&
+					(currentSong.songId === 'l9PxOanFjxQ' ||
+						currentSong.songId === '60ItHLz5WEA')
+			"
+			class="bg-bubbles"
+		>
+			<li></li>
+			<li></li>
+			<li></li>
+			<li></li>
+			<li></li>
+			<li></li>
+			<li></li>
+			<li></li>
+			<li></li>
+			<li></li>
+		</ul>
+
 		<div v-show="!loading">
 			<main-header v-if="exists" />
 
@@ -71,7 +91,85 @@
 								</div>
 							</div>
 							<div id="seeker-bar-container">
-								<div id="seeker-bar" style="width: 0%" />
+								<div
+									id="seeker-bar"
+									:style="{
+										width: `${seekerbarPercentage}%`
+									}"
+									:class="{
+										nyan:
+											currentSong &&
+											currentSong.songId === 'QH2-TGUlwu4'
+									}"
+								/>
+								<img
+									v-if="
+										currentSong &&
+											currentSong.songId === 'QH2-TGUlwu4'
+									"
+									src="https://freepngimg.com/thumb/nyan_cat/1-2-nyan-cat-free-download-png.png"
+									:style="{
+										position: 'absolute',
+										top: `-10px`,
+										left: `${seekerbarPercentage}%`,
+										width: '50px'
+									}"
+								/>
+								<img
+									v-if="
+										currentSong &&
+											(currentSong.songId ===
+												'DtVBCG6ThDk' ||
+												currentSong.songId ===
+													'sI66hcu9fIs' ||
+												currentSong.songId ===
+													'iYYRH4apXDo' ||
+												currentSong.songId ===
+													'tRcPA7Fzebw')
+									"
+									src="/assets/rocket.svg"
+									:style="{
+										position: 'absolute',
+										top: `-21px`,
+										left: `calc(${seekerbarPercentage}% - 35px)`,
+										width: '50px',
+										transform: 'rotate(45deg)'
+									}"
+								/>
+								<img
+									v-if="
+										currentSong &&
+											currentSong.songId === 'jofNR_WkoCE'
+									"
+									src="/assets/fox.svg"
+									:style="{
+										position: 'absolute',
+										top: `-21px`,
+										left: `calc(${seekerbarPercentage}% - 35px)`,
+										width: '50px',
+										transform: 'scaleX(-1)',
+										opacity: 1
+									}"
+								/>
+								<img
+									v-if="
+										currentSong &&
+											(currentSong.songId ===
+												'l9PxOanFjxQ' ||
+												currentSong.songId ===
+													'60ItHLz5WEA')
+									"
+									src="/assets/old_logo.png"
+									:style="{
+										position: 'absolute',
+										top: `-9px`,
+										left: `calc(${seekerbarPercentage}% - 22px)`,
+										'background-color': 'rgb(96, 199, 169)',
+										width: '25px',
+										height: '25px',
+										'border-radius': '25px'
+									}"
+								/>
 							</div>
 							<div id="control-bar-container">
 								<div id="left-buttons">
@@ -591,7 +689,8 @@ export default {
 			playbackRate: 1,
 			volumeSliderValue: 0,
 			showPlaylistDropdown: false,
-			theme: "var(--primary-color)"
+			theme: "var(--primary-color)",
+			seekerbarPercentage: 0
 		};
 	},
 	computed: {
@@ -1123,12 +1222,10 @@ export default {
 		},
 		resizeSeekerbar() {
 			if (!this.stationPaused) {
-				document.getElementById(
-					"seeker-bar"
-				).style.width = `${parseFloat(
+				this.seekerbarPercentage = parseFloat(
 					(this.getTimeElapsed() / 1000 / this.currentSong.duration) *
 						100
-				)}%`;
+				);
 			}
 		},
 		calculateTimeElapsed() {
@@ -2015,7 +2112,7 @@ export default {
 				height: 7px;
 				display: block;
 				width: 100%;
-				overflow: hidden;
+				// overflow: hidden;
 
 				#seeker-bar {
 					background-color: var(--primary-color);
@@ -2237,6 +2334,174 @@ export default {
 
 .footer {
 	margin-top: 30px;
+}
+
+.nyan {
+	background: linear-gradient(
+		90deg,
+		magenta 0%,
+		red 15%,
+		orange 30%,
+		yellow 45%,
+		lime 60%,
+		cyan 75%,
+		blue 90%,
+		magenta 100%
+	);
+
+	background-size: 200%;
+	animation: nyanMoving 4s linear infinite;
+}
+
+@keyframes nyanMoving {
+	0% {
+		background-position: 0% 0%;
+	}
+	100% {
+		background-position: -200% 0%;
+	}
+}
+
+.bg-bubbles {
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	z-index: -1;
+	margin: 0px;
+	pointer-events: none;
+}
+
+.bg-bubbles li {
+	position: absolute;
+	list-style: none;
+	display: block;
+	width: 40px;
+	height: 40px;
+	border-radius: 100px;
+	// background-color: rgba(255, 255, 255, 0.15);
+	background-color: var(--primary-color);
+	opacity: 0.15;
+	bottom: 0px;
+	-webkit-animation: square 25s infinite;
+	animation: square 25s infinite;
+	-webkit-transition-timing-function: linear;
+	transition-timing-function: linear;
+}
+
+.bg-bubbles li:nth-child(1) {
+	left: 10%;
+}
+
+.bg-bubbles li:nth-child(2) {
+	left: 20%;
+	width: 80px;
+	height: 80px;
+	-webkit-animation-delay: 2s;
+	animation-delay: 2s;
+	-webkit-animation-duration: 17s;
+	animation-duration: 17s;
+}
+
+.bg-bubbles li:nth-child(3) {
+	left: 25%;
+	-webkit-animation-delay: 4s;
+	animation-delay: 4s;
+}
+
+.bg-bubbles li:nth-child(4) {
+	left: 40%;
+	width: 60px;
+	height: 60px;
+	-webkit-animation-duration: 22s;
+	animation-duration: 22s;
+	// background-color: rgba(255, 255, 255, 0.25);
+	background-color: var(--primary-color);
+	opacity: 0.25;
+}
+
+.bg-bubbles li:nth-child(5) {
+	left: 70%;
+}
+
+.bg-bubbles li:nth-child(6) {
+	left: 80%;
+	width: 120px;
+	height: 120px;
+	-webkit-animation-delay: 3s;
+	animation-delay: 3s;
+	// background-color: rgba(255, 255, 255, 0.2);
+	background-color: var(--primary-color);
+	opacity: 0.2;
+}
+
+.bg-bubbles li:nth-child(7) {
+	left: 32%;
+	width: 160px;
+	height: 160px;
+	-webkit-animation-delay: 7s;
+	animation-delay: 7s;
+}
+
+.bg-bubbles li:nth-child(8) {
+	left: 55%;
+	width: 20px;
+	height: 20px;
+	-webkit-animation-delay: 15s;
+	animation-delay: 15s;
+	-webkit-animation-duration: 40s;
+	animation-duration: 40s;
+}
+
+.bg-bubbles li:nth-child(9) {
+	left: 25%;
+	width: 10px;
+	height: 10px;
+	-webkit-animation-delay: 2s;
+	animation-delay: 2s;
+	-webkit-animation-duration: 40s;
+	animation-duration: 40s;
+	// background-color: rgba(255, 255, 255, 0.3);
+	background-color: var(--primary-color);
+	opacity: 0.3;
+}
+
+.bg-bubbles li:nth-child(10) {
+	left: 80%;
+	width: 160px;
+	height: 160px;
+	-webkit-animation-delay: 11s;
+	animation-delay: 11s;
+}
+
+/* Tablet view fix */
+@media (max-width: 768px) {
+	.bg-bubbles li:nth-child(10) {
+		display: none;
+	}
+}
+
+@-webkit-keyframes square {
+	0% {
+		-webkit-transform: translateY(0);
+		transform: translateY(0);
+	}
+	100% {
+		-webkit-transform: translateY(-700px) rotate(600deg);
+		transform: translateY(-700px) rotate(600deg);
+	}
+}
+
+@keyframes square {
+	0% {
+		-webkit-transform: translateY(0);
+		transform: translateY(0);
+	}
+	100% {
+		-webkit-transform: translateY(-700px) rotate(600deg);
+		transform: translateY(-700px) rotate(600deg);
+	}
 }
 
 /deep/ .nothing-here-text {

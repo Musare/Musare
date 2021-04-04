@@ -2586,7 +2586,7 @@ export default {
 														type,
 														privacy: "private",
 														playlist: playlist._id,
-														currentSong: StationsModule.defaultSong
+														currentSong: null
 													},
 													(err, station) => {
 														next(
