@@ -1,5 +1,4 @@
 import async from "async";
-import config from "config";
 
 import { isAdminRequired, isLoginRequired } from "./hooks";
 

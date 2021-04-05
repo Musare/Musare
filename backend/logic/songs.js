@@ -1,5 +1,4 @@
 import async from "async";
-import config from "config";
 import mongoose from "mongoose";
 import CoreClass from "../core";
 
@@ -172,7 +171,7 @@ class _SongsModule extends CoreClass {
 					(song, next) => {
 						if (song && song.duration > 0) next(true, song);
 						else {
-							YouTubeModule.runJob("GET_SONG", { songId: payload.songId }, this)
+							YouTubeModule.runJob("GET_SONG", { songId: payload.songId, userId: payload.userId }, this)
 								.then(response => {
 									next(null, song, response.song);
 								})
@@ -801,7 +800,7 @@ class _SongsModule extends CoreClass {
 											playlistModel.updateMany(
 												{ "songs.songId": song.songId },
 												{ $set: { "songs.$": trimmedSong } },
-												(err, res) => {
+												err => {
 													next(err, song);
 												}
 											);

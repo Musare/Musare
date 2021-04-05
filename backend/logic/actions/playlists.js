@@ -875,7 +875,7 @@ export default {
 						.catch(next);
 				},
 				(position, next) => {
-					SongsModule.runJob("ENSURE_SONG_EXISTS_BY_SONG_ID", { songId }, this)
+					SongsModule.runJob("ENSURE_SONG_EXISTS_BY_SONG_ID", { songId, userId: session.userId }, this)
 						.then(response => {
 							const { song } = response;
 							const { _id, title, thumbnail, duration, status } = song;

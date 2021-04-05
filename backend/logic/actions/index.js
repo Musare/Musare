@@ -1,6 +1,5 @@
 import apis from "./apis";
 import songs from "./songs";
-import queueSongs from "./queueSongs";
 import stations from "./stations";
 import playlists from "./playlists";
 import users from "./users";
@@ -13,7 +12,6 @@ import utils from "./utils";
 export default {
 	apis,
 	songs,
-	queueSongs,
 	stations,
 	playlists,
 	users,
