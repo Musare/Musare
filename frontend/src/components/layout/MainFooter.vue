@@ -13,9 +13,8 @@
 						:href="`${this.github}`"
 						target="_blank"
 						title="GitHub Repository"
+						>GitHub</a
 					>
-						GitHub
-					</a>
 					<router-link title="About Musare" to="/about"
 						>About</router-link
 					>
@@ -93,12 +92,13 @@ export default {
 
 	#footer-links {
 		order: 2;
+
 		:not(:last-child) {
 			border-right: solid 1px var(--primary-color);
 		}
 
 		a {
-			padding: 0 7px;
+			padding: 0 7px 0 4px;
 			color: var(--primary-color);
 
 			&:first-of-type {
