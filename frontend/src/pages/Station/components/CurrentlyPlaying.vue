@@ -1,12 +1,12 @@
 <template>
 	<div class="currently-playing">
 		<song-thumbnail :song="song" />
-		<div id="song-info">
-			<div id="song-details">
+		<div class="song-info">
+			<div class="song-details">
 				<h6 v-if="type === 'current'">Currently Playing...</h6>
 				<h6 v-if="type === 'next'">Next Up...</h6>
 				<h4
-					id="song-title"
+					class="song-title"
 					:style="!song.artists ? { fontSize: '17px' } : null"
 					:title="song.title"
 				>
@@ -21,14 +21,14 @@
 					</i>
 				</h4>
 				<h5
-					id="song-artists"
+					class="song-artists"
 					v-if="song.artists"
 					:title="song.artists.join(', ')"
 				>
 					{{ song.artists.join(", ") }}
 				</h5>
 				<p
-					id="song-request-time"
+					class="song-request-time"
 					v-if="
 						station.type === 'community' &&
 							station.partyMode === true
@@ -53,33 +53,58 @@
 					</strong>
 				</p>
 			</div>
-			<div id="song-actions">
-				<button
-					class="button"
-					id="report-icon"
-					v-if="loggedIn"
-					@click="report(song)"
-				>
-					<i class="material-icons icon-with-button">flag</i>
-				</button>
-				<a
-					class="button"
-					id="youtube-icon"
-					target="_blank"
-					:href="`https://www.youtube.com/watch?v=${song.songId}`"
-				>
-					<div class="icon"></div>
-				</a>
-				<button
-					class="button is-primary"
-					id="editsong-icon"
-					v-if="$parent.isAdminOnly()"
-					@click="edit(song)"
-				>
-					<i class="material-icons icon-with-button">edit</i>
-				</button>
-			</div>
 		</div>
+		<tippy
+			class="song-actions"
+			interactive="true"
+			placement="right"
+			theme="songActions"
+			trigger="click"
+		>
+			<template #trigger>
+				<i
+					class="material-icons action-dropdown-icon"
+					content="Song Options"
+					v-tippy
+					>more_horiz</i
+				>
+			</template>
+			<a
+				target="_blank"
+				:href="`https://www.youtube.com/watch?v=${song.songId}`"
+				content="View on Youtube"
+				v-tippy
+			>
+				<div class="youtube-icon"></div>
+			</a>
+			<i
+				v-if="$parent.loggedIn"
+				class="material-icons report-icon"
+				@click="report(song)"
+				content="Report Song"
+				v-tippy
+			>
+				flag
+			</i>
+			<add-to-playlist-dropdown v-if="$parent.loggedIn" :song="song">
+				<i
+					slot="button"
+					class="material-icons add-to-playlist-icon"
+					content="Add Song to Playlist"
+					v-tippy
+					>queue</i
+				>
+			</add-to-playlist-dropdown>
+			<i
+				v-if="$parent.isAdminOnly()"
+				class="material-icons edit-icon"
+				@click="edit(song)"
+				content="Edit Song"
+				v-tippy
+			>
+				edit
+			</i>
+		</tippy>
 	</div>
 </template>
 
@@ -87,11 +112,12 @@
 import { mapState, mapActions } from "vuex";
 import { formatDistance, parseISO } from "date-fns";
 
+import AddToPlaylistDropdown from "../../../components/ui/AddToPlaylistDropdown.vue";
 import UserIdToUsername from "../../../components/common/UserIdToUsername.vue";
 import SongThumbnail from "../../../components/ui/SongThumbnail.vue";
 
 export default {
-	components: { UserIdToUsername, SongThumbnail },
+	components: { AddToPlaylistDropdown, UserIdToUsername, SongThumbnail },
 	props: {
 		song: {
 			type: Object,
@@ -138,12 +164,12 @@ export default {
 	padding: 10px;
 	min-height: 130px;
 
-	#song-info {
+	.song-info {
 		display: flex;
 		flex-direction: column;
 		flex-wrap: wrap;
 		margin-left: 20px;
-		width: calc(100% - 130px - 20px);
+		width: calc(100% - 130px - 34px);
 		height: 100%;
 
 		*:not(i) {
@@ -151,7 +177,7 @@ export default {
 			font-family: Karla, Arial, sans-serif;
 		}
 
-		#song-details {
+		.song-details {
 			display: flex;
 			justify-content: center;
 			flex-direction: column;
@@ -164,7 +190,7 @@ export default {
 				font-size: 17px;
 			}
 
-			#song-title {
+			.song-title {
 				margin-top: 7px;
 				font-size: 22px;
 				overflow: hidden;
@@ -172,7 +198,7 @@ export default {
 				white-space: nowrap;
 			}
 
-			#song-artists {
+			.song-artists {
 				font-size: 16px;
 				margin-bottom: 5px;
 				overflow: hidden;
@@ -180,48 +206,22 @@ export default {
 				white-space: nowrap;
 			}
 
-			#song-request-time {
+			.song-request-time {
 				font-size: 12px;
 				margin-top: 7px;
 				color: var(--dark-grey);
 			}
 		}
+	}
 
-		#song-actions {
-			display: flex;
+	.song-actions {
+		display: flex;
+		cursor: pointer;
+		color: var(--primary-color);
 
-			.button {
-				color: var(--white);
-				padding: 0 15px;
-				border: 0;
-				margin: auto 3px;
-			}
-
-			#report-icon {
-				background-color: var(--yellow);
-			}
-
-			#youtube-icon {
-				background-color: var(--youtube);
-
-				.icon {
-					margin-right: 3px;
-					height: 20px;
-					width: 20px;
-					-webkit-mask: url("/assets/social/youtube.svg") no-repeat
-						center;
-					mask: url("/assets/social/youtube.svg") no-repeat center;
-					background-color: var(--white);
-				}
-			}
-
-			#editsong-icon.button.is-primary {
-				background-color: var(--primary-color) !important;
-				&:hover,
-				&:focus {
-					filter: brightness(90%);
-				}
-			}
+		&:hover,
+		&:focus {
+			filter: brightness(90%);
 		}
 	}
 }
