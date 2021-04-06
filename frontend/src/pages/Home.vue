@@ -64,64 +64,10 @@
 					}"
 					:style="'--primary-color: var(--' + station.theme + ')'"
 				>
-					<div class="card-image">
-						<figure class="image is-square">
-							<div
-								v-if="
-									station.currentSong.songId &&
-										(!station.currentSong.thumbnail ||
-											(station.currentSong.thumbnail &&
-												(station.currentSong.thumbnail.lastIndexOf(
-													'notes-transparent'
-												) !== -1 ||
-													station.currentSong.thumbnail.lastIndexOf(
-														'/assets/notes.png'
-													) !== -1 ||
-													station.currentSong.thumbnail.lastIndexOf(
-														'i.ytimg.com'
-													) !== -1)) ||
-											station.currentSong.thumbnail ==
-												('empty' || null))
-								"
-								class="ytThumbnailBg"
-								:style="{
-									'background-image':
-										'url(' +
-										`https://img.youtube.com/vi/${station.currentSong.songId}/mqdefault.jpg` +
-										')'
-								}"
-							></div>
-							<img
-								v-if="
-									station.currentSong.songId &&
-										(!station.currentSong.thumbnail ||
-											(station.currentSong.thumbnail &&
-												(station.currentSong.thumbnail.lastIndexOf(
-													'notes-transparent'
-												) !== -1 ||
-													station.currentSong.thumbnail.lastIndexOf(
-														'/assets/notes.png'
-													) !== -1 ||
-													station.currentSong.thumbnail.lastIndexOf(
-														'i.ytimg.com'
-													) !== -1)) ||
-											station.currentSong.thumbnail ===
-												'empty' ||
-											station.currentSong.thumbnail ==
-												null)
-								"
-								:src="
-									`https://img.youtube.com/vi/${station.currentSong.songId}/mqdefault.jpg`
-								"
-								onerror="this.src='/assets/notes-transparent.png'"
-							/>
-							<img
-								v-else
-								:src="station.currentSong.thumbnail"
-								onerror="this.src='/assets/notes-transparent.png'"
-							/>
-						</figure>
-					</div>
+					<song-thumbnail
+						class="card-image"
+						:song="station.currentSong"
+					/>
 					<div class="card-content">
 						<div class="media">
 							<div class="media-left displayName">
@@ -327,58 +273,10 @@
 					}"
 					:style="'--primary-color: var(--' + station.theme + ')'"
 				>
-					<div class="card-image">
-						<figure class="image is-square">
-							<div
-								v-if="
-									station.currentSong.songId &&
-										(!station.currentSong.thumbnail ||
-											(station.currentSong.thumbnail &&
-												(station.currentSong.thumbnail.lastIndexOf(
-													'notes-transparent'
-												) !== -1 ||
-													station.currentSong.thumbnail.lastIndexOf(
-														'/assets/notes.png'
-													) !== -1)) ||
-											station.currentSong.thumbnail ===
-												'empty' ||
-											station.currentSong.thumbnail ==
-												null)
-								"
-								class="ytThumbnailBg"
-								:style="{
-									'background-image':
-										'url(' +
-										`https://img.youtube.com/vi/${station.currentSong.songId}/mqdefault.jpg` +
-										')'
-								}"
-							></div>
-							<img
-								v-if="
-									station.currentSong.songId &&
-										(!station.currentSong.thumbnail ||
-											(station.currentSong.thumbnail &&
-												(station.currentSong.thumbnail.lastIndexOf(
-													'notes-transparent'
-												) !== -1 ||
-													station.currentSong.thumbnail.lastIndexOf(
-														'/assets/notes.png'
-													) !== -1)) ||
-											station.currentSong.thumbnail ==
-												('empty' || null))
-								"
-								:src="
-									`https://img.youtube.com/vi/${station.currentSong.songId}/mqdefault.jpg`
-								"
-								onerror="this.src='/assets/notes-transparent.png'"
-							/>
-							<img
-								v-else
-								:src="station.currentSong.thumbnail"
-								onerror="this.src='/assets/notes-transparent.png'"
-							/>
-						</figure>
-					</div>
+					<song-thumbnail
+						class="card-image"
+						:song="station.currentSong"
+					/>
 					<div class="card-content">
 						<div class="media">
 							<div class="media-left displayName">
@@ -524,6 +422,7 @@ import Toast from "toasters";
 
 import MainHeader from "../components/layout/MainHeader.vue";
 import MainFooter from "../components/layout/MainFooter.vue";
+import SongThumbnail from "../components/ui/SongThumbnail.vue";
 import UserIdToUsername from "../components/common/UserIdToUsername.vue";
 
 import ws from "../ws";
@@ -532,6 +431,7 @@ export default {
 	components: {
 		MainHeader,
 		MainFooter,
+		SongThumbnail,
 		CreateCommunityStation: () =>
 			import("../components/modals/CreateCommunityStation.vue"),
 		UserIdToUsername
@@ -830,7 +730,7 @@ html {
 		color: var(--light-grey-2);
 	}
 
-	.card-image .image {
+	.card-image.thumbnail {
 		background-color: var(--dark-grey-2);
 	}
 
@@ -1116,29 +1016,11 @@ html {
 		}
 	}
 
-	.card-image {
+	.card-image.thumbnail {
+		min-width: 120px;
 		width: 120px;
-		.image {
-			box-shadow: 1px 0 3px rgba(100, 100, 100, 0.3);
-			.ytThumbnailBg {
-				background: url("/assets/notes-transparent.png") no-repeat
-					center center;
-				background-size: cover;
-				height: 100%;
-				width: 100%;
-				position: absolute;
-				top: 0;
-				filter: blur(1px);
-			}
-			img {
-				height: auto;
-				width: 120px;
-				top: 0;
-				margin-top: auto;
-				margin-bottom: auto;
-				z-index: 1;
-			}
-		}
+		height: 120px;
+		margin: 0;
 	}
 
 	.bottomBar {
@@ -1175,15 +1057,18 @@ html {
 	}
 
 	&.createStation {
-		.card-image .image.is-square .material-icons {
-			position: absolute;
-			top: 25px;
-			bottom: 25px;
-			left: 0;
-			right: 0;
-			text-align: center;
-			font-size: 70px;
-			color: var(--primary-color);
+		.card-image .image.is-square {
+			width: 120px;
+			.material-icons {
+				position: absolute;
+				top: 25px;
+				bottom: 25px;
+				left: 0;
+				right: 0;
+				text-align: center;
+				font-size: 70px;
+				color: var(--primary-color);
+			}
 		}
 		.card-content {
 			.media {
