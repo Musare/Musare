@@ -6,6 +6,9 @@ YELLOW='\033[0;93m'
 GREEN='\033[0;32m'
 NC='\033[0m'
 
+scriptLocation="$(dirname -- $(readlink -fn -- "$0"; echo x))"
+cd "${scriptLocation%x}"
+
 handleServices()
 {
     validServices=(backend frontend mongo redis)
@@ -258,7 +261,7 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
         echo -e "${YELLOW}eslint - Run eslint on frontend and/or backend${NC}"
         echo -e "${YELLOW}backup - Backup database data to file${NC}"
         echo -e "${YELLOW}restore - Restore database data from backup file${NC}"
-        echo -e "${YELLOW}reset - Reset service Data${NC}"
+        echo -e "${YELLOW}reset - Reset service data${NC}"
         echo -e "${YELLOW}admin [add,remove] - Assign/unassign admin role to/from a user${NC}"
         ;;
 
@@ -276,7 +279,7 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
         echo -e "${YELLOW}eslint - Run eslint on frontend and/or backend${NC}"
         echo -e "${YELLOW}backup - Backup database data to file${NC}"
         echo -e "${YELLOW}restore - Restore database data from backup file${NC}"
-        echo -e "${YELLOW}reset - Reset service Data${NC}"
+        echo -e "${YELLOW}reset - Reset service data${NC}"
         echo -e "${YELLOW}admin [add,remove] - Assign/unassign admin role to/from a user${NC}"
         ;;
 
