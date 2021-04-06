@@ -7,7 +7,6 @@
 	"serverDomain": "http://localhost:8080",
 	"serverPort": 8080,
 	"registrationDisabled": true,
-	"isDocker": true,
 	"fancyConsole": true,
 	"apis": {
 		"youtube": {

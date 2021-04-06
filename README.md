@@ -46,7 +46,6 @@ We currently only utilize 1 backend, 1 MongoDB server and 1 Redis server running
     | `domain` | Should be the url where the site will be accessible from,usually `http://localhost` for non-Docker. |
     | `serverDomain` | Should be the url where the backend will be accessible from, usually `http://localhost:8080` for non-Docker. |
     | `serverPort` | Should be the port where the backend will listen on, should always be `8080` for Docker, and is recommended for non-Docker. |
-    | `isDocker` | Self-explanatory. Are you using Docker? |
     | `serverPort` | Should be the port where the backend will listen on, should always be `8080` for Docker, and is recommended for non-Docker. |
     | `registrationDisabled` | If set to true, users can't register accounts. |
     | `apis.youtube.key`            | Can be obtained by setting up a [YouTube API Key](https://developers.google.com/youtube/v3/getting-started). You need to use the YouTube Data API v3, and create an API key. |

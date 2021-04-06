@@ -17,12 +17,10 @@
 						<div class="card-content">
 							<article class="media">
 								<figure class="media-left">
-									<p class="image is-64x64">
-										<img
-											:src="previousSong.thumbnail"
-											onerror='this.src="/assets/notes-transparent.png"'
-										/>
-									</p>
+									<song-thumbnail
+										class="image is-64x64"
+										:song="previousSong"
+									/>
 								</figure>
 								<div class="media-content">
 									<div class="content">
@@ -61,12 +59,10 @@
 						<div class="card-content">
 							<article class="media">
 								<figure class="media-left">
-									<p class="image is-64x64">
-										<img
-											:src="currentSong.thumbnail"
-											onerror='this.src="/assets/notes-transparent.png"'
-										/>
-									</p>
+									<song-thumbnail
+										class="image is-64x64"
+										:song="currentSong"
+									/>
 								</figure>
 								<div class="media-content">
 									<div class="content">
@@ -98,12 +94,10 @@
 						<div class="card-content">
 							<article class="media">
 								<figure class="media-left">
-									<p class="image is-64x64">
-										<img
-											:src="localSong.thumbnail"
-											onerror='this.src="/assets/notes-transparent.png"'
-										/>
-									</p>
+									<song-thumbnail
+										class="image is-64x64"
+										:song="localSong"
+									/>
 								</figure>
 								<div class="media-content">
 									<div class="content">
@@ -186,9 +180,10 @@ import { mapState, mapGetters, mapActions } from "vuex";
 
 import Toast from "toasters";
 import Modal from "../Modal.vue";
+import SongThumbnail from "../ui/SongThumbnail.vue";
 
 export default {
-	components: { Modal },
+	components: { Modal, SongThumbnail },
 	data() {
 		return {
 			isPreviousSongActive: false,
@@ -312,6 +307,11 @@ h6 {
 }
 .song-type:last-of-type {
 	padding-right: 0;
+}
+
+.thumbnail.image.is-64x64 {
+	min-width: 64px;
+	margin: 0;
 }
 
 .media-content {
