@@ -32,6 +32,7 @@
 				interactive="true"
 				placement="left"
 				theme="songActions"
+				ref="songActions"
 				trigger="click"
 			>
 				<template #trigger>
@@ -111,11 +112,24 @@ export default {
 		userRole: state => state.user.auth.role
 	}),
 	methods: {
+		hideTippyElements() {
+			this.$refs.songActions.tip.hide();
+
+			setTimeout(
+				() =>
+					Array.from(
+						document.querySelectorAll(".tippy-popper")
+					).forEach(popper => popper._tippy.hide()),
+				500
+			);
+		},
 		editSongInPlaylist(song) {
+			this.hideTippyElements();
 			this.editSong(song);
 			this.openModal({ sector: "admin", modal: "editSong" });
 		},
 		reportSongInPlaylist(song) {
+			this.hideTippyElements();
 			this.reportSong(song);
 			this.openModal({ sector: "station", modal: "report" });
 		},
