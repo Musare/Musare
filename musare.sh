@@ -143,6 +143,7 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
         fix=""
         if [[ $2 == "fix" || $3 == "fix" || $2 == "--fix" || $3 == "--fix" ]]; then
             fix="--fix"
+            echo -e "${GREEN}Auto-fix enabled${NC}"
         fi
         case $2 in
             frontend)
@@ -151,7 +152,7 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
             backend)
                 docker-compose exec backend npx eslint app/logic $fix
                 ;;
-            "")
+            ""|fix|--fix)
                 docker-compose exec frontend npx eslint app/src --ext .js,.vue $fix
                 docker-compose exec backend npx eslint app/logic $fix
                 ;;

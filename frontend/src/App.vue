@@ -454,6 +454,10 @@ a {
 		display: inline-block;
 	}
 
+	.addToPlaylistDropdown .tippy-popper {
+		max-width: unset;
+	}
+
 	i,
 	a {
 		display: inline-block;
