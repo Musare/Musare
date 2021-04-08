@@ -1057,20 +1057,35 @@ html {
 	}
 
 	&.createStation {
-		.card-image .image.is-square {
-			width: 120px;
-			.material-icons {
-				position: absolute;
-				top: 25px;
-				bottom: 25px;
-				left: 0;
-				right: 0;
-				text-align: center;
-				font-size: 70px;
-				color: var(--primary-color);
+		height: auto;
+
+		.card-image {
+			.image.is-square {
+				width: 120px;
+
+				@media screen and (max-width: 330px) {
+					width: 50px;
+
+					.material-icons {
+						font-size: 35px !important;
+					}
+				}
+
+				.material-icons {
+					position: absolute;
+					top: 25px;
+					bottom: 25px;
+					left: 0;
+					right: 0;
+					text-align: center;
+					font-size: 70px;
+					color: var(--primary-color);
+				}
 			}
 		}
 		.card-content {
+			width: min-content;
+
 			.media {
 				margin-top: auto;
 				.displayName h5 {
