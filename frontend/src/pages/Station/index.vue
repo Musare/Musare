@@ -2072,11 +2072,6 @@ export default {
 				flex-basis: 50%;
 				.song-item {
 					border: unset;
-					.thumbnail {
-						min-width: 130px !important;
-						width: 130px !important;
-						height: 130px !important;
-					}
 				}
 				.nothing-here-text {
 					height: 100%;

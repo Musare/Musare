@@ -385,13 +385,6 @@ export default {
 				}
 			);
 		},
-		handleScroll() {
-			const scrollPosition = document.body.clientHeight + window.scrollY;
-			const bottomPosition = document.body.scrollHeight;
-			if (this.loadAllSongs) return false;
-			if (scrollPosition + 400 >= bottomPosition) this.getSet();
-			return this.maxPosition === this.position;
-		},
 		toggleArtistSelected(artist) {
 			if (this.artistFilterSelected.indexOf(artist) === -1)
 				this.artistFilterSelected.push(artist);

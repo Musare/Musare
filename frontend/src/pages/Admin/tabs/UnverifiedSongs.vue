@@ -298,13 +298,6 @@ export default {
 				}
 			);
 		},
-		handleScroll() {
-			const scrollPosition = document.body.clientHeight + window.scrollY;
-			const bottomPosition = document.body.scrollHeight;
-			if (this.loadAllSongs) return false;
-			if (scrollPosition + 400 >= bottomPosition) this.getSet();
-			return this.maxPosition === this.position;
-		},
 		selectPrevious(event) {
 			if (event.srcElement.previousElementSibling)
 				event.srcElement.previousElementSibling.focus();
