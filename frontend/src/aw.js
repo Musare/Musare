@@ -5,26 +5,42 @@ let pingTries = 0;
 let uuid = null;
 let enabled = false;
 
-// let sendingVideoDataToast = new Toast({
-// 	content: "Sending video data to ActivityWatch.",
-// 	persistant: true
-// });
+let lastTimeSentVideoDate = 0;
+let lastTimeDenied = 0;
+let lastTimeCompetitor = 0;
 
-// let deniedToast = new Toast({
-// 	content:
-// 		"Another Musare instance is already sending data to ActivityWatch Musare extension. Please only use 1 active tab for stations and editsong.",
-// 	persistant: true
-// });
+const notConnectedToast = new Toast({
+	content: "ActivityWatch is not connected yet.",
+	persistent: true
+});
+notConnectedToast.hide();
 
-// let competitorToast = new Toast({
-// 	content:
-// 		"Another Musare instance is already sending data to ActivityWatch Musare extension. Please only use 1 active tab for stations and editsong.",
-// 	persistant: true
-// });
+const sendingVideoDataToast = new Toast({
+	content: "Sending video data to ActivityWatch.",
+	persistent: true
+});
+sendingVideoDataToast.hide();
+
+const deniedToast = new Toast({
+	content:
+		"Another Musare instance is already sending data to ActivityWatch Musare extension. Please only use 1 active tab for stations and editsong.",
+	persistent: true
+});
+deniedToast.hide();
+
+const competitorToast = new Toast({
+	content:
+		"Another Musare instance is already sending data to ActivityWatch Musare extension. Please only use 1 active tab for stations and editsong.",
+	persistent: true
+});
+competitorToast.hide();
 
 export default {
 	sendVideoData(videoData) {
-		if (enabled) this.sendEvent("videoData", videoData);
+		if (enabled) {
+			lastTimeSentVideoDate = Date.now();
+			this.sendEvent("videoData", videoData);
+		}
 	},
 
 	sendEvent(type, data) {
@@ -58,13 +74,36 @@ export default {
 				this.eventListener
 			);
 
+			notConnectedToast.show();
+
 			this.attemptPing();
 
 			enabled = true;
 			console.log("Enabled AW.");
 
-			// setInterval(() => {
-			// }, 1000);
+			setInterval(() => {
+				if (lastTimeDenied + 1000 > Date.now()) {
+					deniedToast.show();
+				} else {
+					deniedToast.hide();
+				}
+
+				if (lastTimeCompetitor + 1000 > Date.now()) {
+					competitorToast.show();
+				} else {
+					competitorToast.hide();
+				}
+
+				if (
+					!(lastTimeDenied + 1000 > Date.now()) &&
+					!(lastTimeCompetitor + 1000 > Date.now()) &&
+					lastTimeSentVideoDate + 1000 > Date.now()
+				) {
+					sendingVideoDataToast.show();
+				} else {
+					sendingVideoDataToast.hide();
+				}
+			}, 1000);
 		}
 	},
 
@@ -74,6 +113,7 @@ export default {
 			this.eventListener
 		);
 		enabled = false;
+		notConnectedToast.hide();
 		console.log("Disabled AW.");
 	},
 
@@ -82,6 +122,7 @@ export default {
 
 		if (data.type === "pong") {
 			gotPong = true;
+			notConnectedToast.hide();
 			new Toast({
 				content:
 					"Got pong, connected to ActivityWatch Musare extension",
@@ -90,20 +131,13 @@ export default {
 		}
 
 		if (data.type === "denied") {
-			new Toast({
-				content:
-					"Another Musare instance is already sending data to ActivityWatch Musare extension. Please only use 1 active tab for stations and editsong.",
-				timeout: 4000
-			});
+			lastTimeDenied = Date.now();
 		}
 
 		if (data.type === "competitor") {
-			if (data.competitor !== uuid)
-				new Toast({
-					content:
-						"Another Musare instance is trying and failing to send data to the ActivityWatch Musare instance. Please only use 1 active tab for stations and editsong.",
-					timeout: 4000
-				});
+			if (data.competitor !== uuid) {
+				lastTimeCompetitor = Date.now();
+			}
 		}
 	},
 
