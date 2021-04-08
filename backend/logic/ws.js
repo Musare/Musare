@@ -344,7 +344,7 @@ class _WSModule extends CoreClass {
 		return new Promise(resolve => {
 			Promise.allSettled(
 				payload.sockets.map(async socketId => {
-					await WSModule.runJob("SOCKET_JOIN_SONG_ROOM", { socketId }, this);
+					await WSModule.runJob("SOCKET_JOIN_SONG_ROOM", { socketId, room: payload.room }, this);
 				})
 			).then(() => resolve());
 		});
@@ -365,9 +365,7 @@ class _WSModule extends CoreClass {
 
 					rooms.forEach(room => {
 						if (room.indexOf("song.") !== -1)
-							WSModule.rooms[room] = WSModule.rooms[room].filter(
-								participant => participant !== payload.socketId
-							);
+							WSModule.rooms[room] = WSModule.rooms[room].filter(participant => participant !== socketId);
 					});
 				})
 			).then(() => resolve())
