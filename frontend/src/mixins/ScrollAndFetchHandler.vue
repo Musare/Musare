@@ -20,6 +20,12 @@ export default {
 	unmounted() {
 		clearInterval(this.interval);
 	},
+	created() {
+		window.addEventListener("scroll", this.handleScroll);
+	},
+	destroyed() {
+		window.removeEventListener("scroll", this.handleScroll);
+	},
 	methods: {
 		handleScroll() {
 			const scrollPosition = document.body.clientHeight + window.scrollY;
