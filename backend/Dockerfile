@@ -10,6 +10,4 @@ ADD package.json /opt/package.json
 
 RUN npm install
 
-EXPOSE 80
-
 CMD npm run docker:dev

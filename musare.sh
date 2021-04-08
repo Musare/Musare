@@ -185,8 +185,12 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
         echo -e "${CYAN}Musare | Backup${NC}"
         if [[ -f .env ]]; then
             source .env
-            echo -e "${YELLOW}Creating backup at ${PWD}/musare-$(date +"%Y-%m-%d-%s").dump${NC}"
-            docker-compose exec -T mongo sh -c "mongodump --authenticationDatabase musare -u ${MONGO_USER_USERNAME} -p ${MONGO_USER_PASSWORD} -d musare --archive" > musare-$(date +"%Y-%m-%d-%s").dump
+            if [[ ! -d "${scriptLocation%x}/backups" ]]; then
+                echo -e "${YELLOW}Creating backup directory at ${scriptLocation%x}/backups${NC}"
+                mkdir "${scriptLocation%x}/backups"
+            fi
+            echo -e "${YELLOW}Creating backup at ${scriptLocation%x}/backups/musare-$(date +"%Y-%m-%d-%s").dump${NC}"
+            docker-compose exec -T mongo sh -c "mongodump --authenticationDatabase musare -u ${MONGO_USER_USERNAME} -p ${MONGO_USER_PASSWORD} -d musare --archive" > "${scriptLocation%x}/backups/musare-$(date +"%Y-%m-%d-%s").dump"
         else
             echo -e "${RED}Error: .env does not exist${NC}"
         fi

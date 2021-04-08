@@ -3,11 +3,11 @@
 		"key": "",
 		"enabled": false
 	},
-	"apiDomain": "http://localhost:8080",
-	"websocketsDomain": "ws://localhost:8080/ws",
+	"apiDomain": "http://localhost/backend",
+	"websocketsDomain": "ws://localhost/backend/ws",
 	"frontendDomain": "http://localhost",
 	"frontendPort": "81",
-  	"cookie": {
+	"cookie": {
 		"domain": "localhost",
 		"secure": false,
 		"SIDname": "SID"
