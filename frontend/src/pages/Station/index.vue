@@ -343,7 +343,7 @@
 													class="button is-primary"
 												>
 													<i class="material-icons"
-														>queue</i
+														>playlist_add</i
 													>
 												</button>
 												<button
@@ -1033,6 +1033,8 @@ export default {
 		shortcutNames.forEach(shortcutName => {
 			keyboardShortcuts.unregisterShortcut(shortcutName);
 		});
+
+		this.joinStation();
 	},
 	methods: {
 		isOwnerOnly() {

@@ -96,7 +96,7 @@
 							class="material-icons add-to-playlist-icon"
 							content="Add Song to Playlist"
 							v-tippy
-							>queue</i
+							>playlist_add</i
 						>
 					</add-to-playlist-dropdown>
 					<i
