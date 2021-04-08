@@ -1904,7 +1904,10 @@ export default {
 					startedDuration:
 						this.activityWatchVideoLastStartDuration <= 0
 							? 0
-							: this.activityWatchVideoLastStartDuration / 1000,
+							: Math.floor(
+									this.activityWatchVideoLastStartDuration /
+										1000
+							  ),
 					source: `station#${this.station.name}`,
 					hostname: window.location.hostname
 				};

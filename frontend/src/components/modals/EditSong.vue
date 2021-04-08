@@ -1414,24 +1414,17 @@ export default {
 			if (!this.video.paused) {
 				if (this.activityWatchVideoLastStatus !== "playing") {
 					this.activityWatchVideoLastStatus = "playing";
-					console.log(
-						this.song.skipDuration,
-						parseFloat(this.youtubeVideoCurrentTime),
-						typeof this.song.skipDuration,
-						typeof this.youtubeVideoCurrentTime,
-						this.song.skipDuration > 0,
-						parseFloat(this.youtubeVideoCurrentTime) === 0
-					);
 					if (
 						this.song.skipDuration > 0 &&
 						parseFloat(this.youtubeVideoCurrentTime) === 0
 					) {
-						this.activityWatchVideoLastStartDuration =
+						this.activityWatchVideoLastStartDuration = Math.floor(
 							this.song.skipDuration +
-							parseFloat(this.youtubeVideoCurrentTime);
+								parseFloat(this.youtubeVideoCurrentTime)
+						);
 					} else {
-						this.activityWatchVideoLastStartDuration = parseFloat(
-							this.youtubeVideoCurrentTime
+						this.activityWatchVideoLastStartDuration = Math.floor(
+							parseFloat(this.youtubeVideoCurrentTime)
 						);
 					}
 				}
