@@ -44,7 +44,8 @@ export default {
 		orderOfPlaylists: [{ type: mongoose.Schema.Types.ObjectId }],
 		nightmode: { type: Boolean, default: false, required: true },
 		autoSkipDisliked: { type: Boolean, default: true, required: true },
-		activityLogPublic: { type: Boolean, default: false, required: true }
+		activityLogPublic: { type: Boolean, default: false, required: true },
+		activityWatch: { type: Boolean, default: false, required: true }
 	},
-	documentVersion: { type: Number, default: 1, required: true }
+	documentVersion: { type: Number, default: 2, required: true }
 };

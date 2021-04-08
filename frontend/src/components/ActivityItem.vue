@@ -115,6 +115,7 @@ export default {
 				user__edit_location: "place",
 				user__toggle_nightmode: "nightlight_round",
 				user__toggle_autoskip_disliked_songs: "thumb_down_alt",
+				user__toggle_activity_watch: "visibility",
 				/** Songs */
 				song__report: "flag",
 				song__like: "thumb_up_alt",

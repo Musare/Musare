@@ -220,7 +220,8 @@ const modules = {
 		state: {
 			nightmode: false,
 			autoSkipDisliked: true,
-			activityLogPublic: false
+			activityLogPublic: false,
+			activityWatch: false
 		},
 		actions: {
 			changeNightmode: ({ commit }, nightmode) => {
@@ -231,6 +232,9 @@ const modules = {
 			},
 			changeActivityLogPublic: ({ commit }, activityLogPublic) => {
 				commit("changeActivityLogPublic", activityLogPublic);
+			},
+			changeActivityWatch: ({ commit }, activityWatch) => {
+				commit("changeActivityWatch", activityWatch);
 			}
 		},
 		mutations: {
@@ -242,6 +246,9 @@ const modules = {
 			},
 			changeActivityLogPublic(state, activityLogPublic) {
 				state.activityLogPublic = activityLogPublic;
+			},
+			changeActivityWatch(state, activityWatch) {
+				state.activityWatch = activityWatch;
 			}
 		}
 	}

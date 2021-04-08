@@ -35,6 +35,17 @@
 				<p>Allow my activity log to be viewed publicly</p>
 			</label>
 		</p>
+		<p class="control is-expanded checkbox-control">
+			<input
+				type="checkbox"
+				id="activityWatch"
+				v-model="localActivityWatch"
+			/>
+			<label for="activityWatch">
+				<span></span>
+				<p>Use ActivityWatch integration (requires extension)</p>
+			</label>
+		</p>
 
 		<save-button ref="saveButton" @clicked="saveChanges()" />
 	</div>
@@ -52,14 +63,17 @@ export default {
 		return {
 			localNightmode: false,
 			localAutoSkipDisliked: false,
-			localActivityLogPublic: false
+			localActivityLogPublic: false,
+			localActivityWatch: false
 		};
 	},
 	computed: {
 		...mapState({
 			nightmode: state => state.user.preferences.nightmode,
 			autoSkipDisliked: state => state.user.preferences.autoSkipDisliked,
-			activityLogPublic: state => state.user.preferences.activityLogPublic
+			activityLogPublic: state =>
+				state.user.preferences.activityLogPublic,
+			activityWatch: state => state.user.preferences.activityWatch
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
@@ -71,6 +85,7 @@ export default {
 				this.localNightmode = res.data.nightmode;
 				this.localAutoSkipDisliked = res.data.autoSkipDisliked;
 				this.localActivityLogPublic = res.data.activityLogPublic;
+				this.localActivityWatch = res.data.activityWatch;
 			}
 		});
 
@@ -78,6 +93,7 @@ export default {
 			this.localNightmode = preferences.nightmode;
 			this.localAutoSkipDisliked = preferences.autoSkipDisliked;
 			this.localActivityLogPublic = preferences.activityLogPublic;
+			this.localActivityWatch = preferences.activityWatch;
 		});
 	},
 	methods: {
@@ -85,7 +101,8 @@ export default {
 			if (
 				this.localNightmode === this.nightmode &&
 				this.localAutoSkipDisliked === this.autoSkipDisliked &&
-				this.localActivityLogPublic === this.activityLogPublic
+				this.localActivityLogPublic === this.activityLogPublic &&
+				this.localActivityWatch === this.activityWatch
 			) {
 				new Toast({
 					content: "Please make a change before saving.",
@@ -102,7 +119,8 @@ export default {
 				{
 					nightmode: this.localNightmode,
 					autoSkipDisliked: this.localAutoSkipDisliked,
-					activityLogPublic: this.localActivityLogPublic
+					activityLogPublic: this.localActivityLogPublic,
+					activityWatch: this.localActivityWatch
 				},
 				res => {
 					if (res.status !== "success") {
@@ -123,7 +141,8 @@ export default {
 		...mapActions("user/preferences", [
 			"changeNightmode",
 			"changeAutoSkipDisliked",
-			"changeActivityLogPublic"
+			"changeActivityLogPublic",
+			"changeActivityWatch"
 		])
 	}
 };

@@ -739,6 +739,7 @@ export default {
 	 * @param {boolean} preferences.nightmode - whether or not the user is using the night mode theme
 	 * @param {boolean} preferences.autoSkipDisliked - whether to automatically skip disliked songs
 	 * @param {boolean} preferences.activityLogPublic - whether or not a user's activity log can be publicly viewed
+	 * @param {boolean} preferences.activityWatch - whether or not a user is using the ActivityWatch integration
 	 * @param {Function} cb - gets called with the result
 	 */
 	updatePreferences: isLoginRequired(async function updatePreferences(session, preferences, cb) {
@@ -754,7 +755,8 @@ export default {
 								preferences: {
 									nightmode: preferences.nightmode,
 									autoSkipDisliked: preferences.autoSkipDisliked,
-									activityLogPublic: preferences.activityLogPublic
+									activityLogPublic: preferences.activityLogPublic,
+									activityWatch: preferences.activityWatch
 								}
 							}
 						},
@@ -801,6 +803,17 @@ export default {
 							message: preferences.autoSkipDisliked
 								? "Enabled the autoskipping of disliked songs"
 								: "Disabled the autoskipping of disliked songs"
+						}
+					});
+
+				if (preferences.activityWatch !== user.preferences.activityWatch)
+					ActivitiesModule.runJob("ADD_ACTIVITY", {
+						userId: session.userId,
+						type: "user__toggle_activity_watch",
+						payload: {
+							message: preferences.activityWatch
+								? "Enabled ActivityWatch integration"
+								: "Disabled ActivityWatch integration"
 						}
 					});
 

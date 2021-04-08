@@ -3,7 +3,6 @@ import Vue from "vue";
 import VueTippy, { TippyComponent } from "vue-tippy";
 import VueRouter from "vue-router";
 
-import aw from "@/aw";
 import ws from "@/ws";
 import store from "./store";
 
@@ -175,8 +174,6 @@ lofig.folder = "../config/default.json";
 		}
 	});
 
-	aw.init();
-
 	const websocketsDomain = await lofig.get("websocketsDomain");
 	ws.init(websocketsDomain);
 
@@ -211,6 +208,11 @@ lofig.folder = "../config/default.json";
 		store.dispatch(
 			"user/preferences/changeActivityLogPublic",
 			preferences.activityLogPublic
+		);
+
+		store.dispatch(
+			"user/preferences/changeActivityWatch",
+			preferences.activityWatch
 		);
 	});
 

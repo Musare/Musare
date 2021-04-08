@@ -95,6 +95,7 @@ class _ActivitiesModule extends CoreClass {
 						const spammableActivities = [
 							"user__toggle_nightmode",
 							"user__toggle_autoskip_disliked_songs",
+							"user__toggle_activity_watch",
 							"song__like",
 							"song__unlike",
 							"song__dislike",

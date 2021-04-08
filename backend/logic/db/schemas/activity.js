@@ -13,6 +13,7 @@ export default {
 			"user__edit_location",
 			"user__toggle_nightmode",
 			"user__toggle_autoskip_disliked_songs",
+			"user__toggle_activity_watch",
 			/** Songs */
 			"song__report",
 			"song__like",
