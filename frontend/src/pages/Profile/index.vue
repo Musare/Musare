@@ -103,7 +103,7 @@ import TabQueryHandler from "../../mixins/TabQueryHandler.vue";
 import RecentActivity from "./tabs/RecentActivity.vue";
 import Playlists from "./tabs/Playlists.vue";
 
-import ProfilePicture from "../../components/ui/ProfilePicture.vue";
+import ProfilePicture from "../../components/ProfilePicture.vue";
 import MainHeader from "../../components/layout/MainHeader.vue";
 import MainFooter from "../../components/layout/MainFooter.vue";
 

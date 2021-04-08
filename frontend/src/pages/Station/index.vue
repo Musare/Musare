@@ -641,9 +641,9 @@ import MainFooter from "../../components/layout/MainFooter.vue";
 
 import Z404 from "../404.vue";
 
-import FloatingBox from "../../components/ui/FloatingBox.vue";
-import AddToPlaylistDropdown from "../../components/ui/AddToPlaylistDropdown.vue";
-import SongItem from "../../components/ui/SongItem.vue";
+import FloatingBox from "../../components/FloatingBox.vue";
+import AddToPlaylistDropdown from "../../components/AddToPlaylistDropdown.vue";
+import SongItem from "../../components/SongItem.vue";
 
 import ws from "../../ws";
 import keyboardShortcuts from "../../keyboardShortcuts";

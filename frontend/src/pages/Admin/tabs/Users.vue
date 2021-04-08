@@ -68,7 +68,7 @@
 <script>
 import { mapState, mapActions, mapGetters } from "vuex";
 
-import ProfilePicture from "../../../components/ui/ProfilePicture.vue";
+import ProfilePicture from "../../../components/ProfilePicture.vue";
 import ws from "../../../ws";
 
 export default {

@@ -194,7 +194,7 @@ import { mapState, mapActions, mapGetters } from "vuex";
 import Toast from "toasters";
 import ws from "../../../ws";
 
-import UserIdToUsername from "../../../components/common/UserIdToUsername.vue";
+import UserIdToUsername from "../../../components/UserIdToUsername.vue";
 
 export default {
 	components: {

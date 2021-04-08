@@ -111,7 +111,7 @@
 import { mapActions } from "vuex";
 import Toast from "toasters";
 
-import InputHelpBox from "../ui/InputHelpBox.vue";
+import InputHelpBox from "../InputHelpBox.vue";
 
 import validation from "../../validation";
 

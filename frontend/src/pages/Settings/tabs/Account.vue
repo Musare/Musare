@@ -101,8 +101,8 @@ import Toast from "toasters";
 
 import validation from "../../../validation";
 
-import InputHelpBox from "../../../components/ui/InputHelpBox.vue";
-import SaveButton from "../../../components/ui/SaveButton.vue";
+import InputHelpBox from "../../../components/InputHelpBox.vue";
+import SaveButton from "../../../components/SaveButton.vue";
 
 export default {
 	components: { InputHelpBox, SaveButton },

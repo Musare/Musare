@@ -112,7 +112,7 @@
 import { mapActions, mapState, mapGetters } from "vuex";
 import Toast from "toasters";
 
-import SongItem from "../../../components/ui/SongItem.vue";
+import SongItem from "../../../components/SongItem.vue";
 
 export default {
 	components: { SongItem },

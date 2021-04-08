@@ -512,8 +512,8 @@ import Toast from "toasters";
 import keyboardShortcuts from "../../keyboardShortcuts";
 import validation from "../../validation";
 import Modal from "../Modal.vue";
-import FloatingBox from "../ui/FloatingBox.vue";
-import SaveButton from "../ui/SaveButton.vue";
+import FloatingBox from "../FloatingBox.vue";
+import SaveButton from "../SaveButton.vue";
 
 export default {
 	components: { Modal, FloatingBox, SaveButton },

@@ -78,8 +78,8 @@ import Toast from "toasters";
 
 import validation from "../../../validation";
 
-import ProfilePicture from "../../../components/ui/ProfilePicture.vue";
-import SaveButton from "../../../components/ui/SaveButton.vue";
+import ProfilePicture from "../../../components/ProfilePicture.vue";
+import SaveButton from "../../../components/SaveButton.vue";
 
 export default {
 	components: { ProfilePicture, SaveButton },

@@ -93,7 +93,7 @@ import { mapActions, mapGetters, mapState } from "vuex";
 import { formatDistance } from "date-fns";
 import Toast from "toasters";
 
-import UserIdToUsername from "../common/UserIdToUsername.vue";
+import UserIdToUsername from "../UserIdToUsername.vue";
 import Modal from "../Modal.vue";
 
 export default {

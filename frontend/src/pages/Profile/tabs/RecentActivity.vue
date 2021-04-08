@@ -46,7 +46,7 @@ import Toast from "toasters";
 
 import ws from "../../../ws";
 
-import ActivityItem from "../../../components/ui/ActivityItem.vue";
+import ActivityItem from "../../../components/ActivityItem.vue";
 
 export default {
 	components: { ActivityItem },

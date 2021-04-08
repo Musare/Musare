@@ -180,7 +180,7 @@ import { mapState, mapGetters, mapActions } from "vuex";
 
 import Toast from "toasters";
 import Modal from "../Modal.vue";
-import SongThumbnail from "../ui/SongThumbnail.vue";
+import SongThumbnail from "../SongThumbnail.vue";
 
 export default {
 	components: { Modal, SongThumbnail },

@@ -129,9 +129,9 @@ import { mapActions, mapState } from "vuex";
 import { formatDistance, parseISO } from "date-fns";
 
 import AddToPlaylistDropdown from "./AddToPlaylistDropdown.vue";
-import UserIdToUsername from "../common/UserIdToUsername.vue";
+import UserIdToUsername from "./UserIdToUsername.vue";
 import SongThumbnail from "./SongThumbnail.vue";
-import utils from "../../../js/utils";
+import utils from "../../js/utils";
 
 export default {
 	components: { UserIdToUsername, AddToPlaylistDropdown, SongThumbnail },

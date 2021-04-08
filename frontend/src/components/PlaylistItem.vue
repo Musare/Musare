@@ -24,7 +24,7 @@
 </template>
 
 <script>
-import utils from "../../../js/utils";
+import utils from "../../js/utils";
 
 export default {
 	props: {

@@ -491,7 +491,7 @@ import Toast from "toasters";
 
 import Modal from "../Modal.vue";
 import validation from "../../validation";
-import SaveButton from "../ui/SaveButton.vue";
+import SaveButton from "../SaveButton.vue";
 
 export default {
 	components: { Modal, SaveButton },

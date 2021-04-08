@@ -146,7 +146,7 @@ import { mapGetters, mapState } from "vuex";
 
 import validation from "../../../validation";
 
-import InputHelpBox from "../../../components/ui/InputHelpBox.vue";
+import InputHelpBox from "../../../components/InputHelpBox.vue";
 
 export default {
 	components: { InputHelpBox },

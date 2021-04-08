@@ -348,8 +348,8 @@ import Toast from "toasters";
 import SearchYoutube from "../../mixins/SearchYoutube.vue";
 
 import Modal from "../Modal.vue";
-import SearchQueryItem from "../ui/SearchQueryItem.vue";
-import SongItem from "../ui/SongItem.vue";
+import SearchQueryItem from "../SearchQueryItem.vue";
+import SongItem from "../SongItem.vue";
 
 import validation from "../../validation";
 import utils from "../../../js/utils";
