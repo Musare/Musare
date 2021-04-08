@@ -509,6 +509,7 @@
 import { mapState, mapGetters, mapActions } from "vuex";
 import Toast from "toasters";
 
+import aw from "@/aw";
 import validation from "@/validation";
 import keyboardShortcuts from "@/keyboardShortcuts";
 import Modal from "../Modal.vue";
@@ -548,6 +549,9 @@ export default {
 			keydownGenreInputTimeout: 0,
 			artistAutosuggestItems: [],
 			genreAutosuggestItems: [],
+			activityWatchVideoDataInterval: null,
+			activityWatchVideoLastStatus: "",
+			activityWatchVideoLastStartDuration: "",
 			genres: [
 				"Blues",
 				"Country",
@@ -612,6 +616,10 @@ export default {
 		//   this.song.skipDuration
 		// );
 
+		this.activityWatchVideoDataInterval = setInterval(() => {
+			this.sendActivityWatchVideoData();
+		}, 1000);
+
 		this.useHTTPS = await lofig.get("cookie.secure");
 
 		this.socket.dispatch(
@@ -640,7 +648,7 @@ export default {
 								this.song.skipDuration >
 								this.song.duration
 						) {
-							this.video.paused = false;
+							this.video.paused = true;
 							this.video.player.stopVideo();
 							this.drawCanvas();
 						}
@@ -932,6 +940,7 @@ export default {
 	beforeDestroy() {
 		this.playerReady = false;
 		clearInterval(this.interval);
+		clearInterval(this.activityWatchVideoDataInterval);
 
 		const shortcutNames = [
 			"editSong.pauseResume",
@@ -1400,6 +1409,53 @@ export default {
 		},
 		resetGenreHelper() {
 			this.$refs.genreHelper.resetBox();
+		},
+		sendActivityWatchVideoData() {
+			if (!this.video.paused) {
+				if (this.activityWatchVideoLastStatus !== "playing") {
+					this.activityWatchVideoLastStatus = "playing";
+					console.log(
+						this.song.skipDuration,
+						parseFloat(this.youtubeVideoCurrentTime),
+						typeof this.song.skipDuration,
+						typeof this.youtubeVideoCurrentTime,
+						this.song.skipDuration > 0,
+						parseFloat(this.youtubeVideoCurrentTime) === 0
+					);
+					if (
+						this.song.skipDuration > 0 &&
+						parseFloat(this.youtubeVideoCurrentTime) === 0
+					) {
+						this.activityWatchVideoLastStartDuration =
+							this.song.skipDuration +
+							parseFloat(this.youtubeVideoCurrentTime);
+					} else {
+						this.activityWatchVideoLastStartDuration = parseFloat(
+							this.youtubeVideoCurrentTime
+						);
+					}
+				}
+
+				const videoData = {
+					title: this.song.title,
+					artists: this.song.artists
+						? this.song.artists.join(", ")
+						: null,
+					youtubeId: this.song.songId,
+					muted: this.muted,
+					volume: this.volumeSliderValue / 100,
+					startedDuration:
+						this.activityWatchVideoLastStartDuration <= 0
+							? 0
+							: this.activityWatchVideoLastStartDuration,
+					source: `editSong#${this.song.songId}`,
+					hostname: window.location.hostname
+				};
+
+				aw.sendVideoData(videoData);
+			} else {
+				this.activityWatchVideoLastStatus = "not_playing";
+			}
 		},
 		...mapActions("modals/editSong", [
 			"stopVideo",

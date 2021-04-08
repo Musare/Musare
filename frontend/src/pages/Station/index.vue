@@ -636,6 +636,7 @@ import { mapState, mapActions, mapGetters } from "vuex";
 import Toast from "toasters";
 import { ContentLoader } from "vue-content-loader";
 
+import aw from "@/aw";
 import ws from "@/ws";
 import keyboardShortcuts from "@/keyboardShortcuts";
 
@@ -695,7 +696,11 @@ export default {
 			showPlaylistDropdown: false,
 			theme: "var(--primary-color)",
 			seekerbarPercentage: 0,
-			frontendDevMode: "production"
+			frontendDevMode: "production",
+			activityWatchVideoDataInterval: null,
+			activityWatchVideoLastStatus: "",
+			activityWatchVideoLastYouTubeId: "",
+			activityWatchVideoLastStartDuration: ""
 		};
 	},
 	computed: {
@@ -734,6 +739,9 @@ export default {
 		this.stationIdentifier = this.$route.params.id;
 
 		window.stationInterval = 0;
+		this.activityWatchVideoDataInterval = setInterval(() => {
+			this.sendActivityWatchVideoData();
+		}, 1000);
 
 		if (this.socket.readyState === 1) this.join();
 		ws.onConnect(() => this.join());
@@ -1033,6 +1041,8 @@ export default {
 		shortcutNames.forEach(shortcutName => {
 			keyboardShortcuts.unregisterShortcut(shortcutName);
 		});
+
+		clearInterval(this.activityWatchVideoDataInterval);
 	},
 	methods: {
 		isOwnerOnly() {
@@ -1864,6 +1874,45 @@ export default {
 					} else new Toast({ content: res.message, timeout: 8000 });
 				}
 			);
+		},
+		sendActivityWatchVideoData() {
+			if (!this.stationPaused && !this.localPaused && this.currentSong) {
+				if (this.activityWatchVideoLastStatus !== "playing") {
+					this.activityWatchVideoLastStatus = "playing";
+					this.activityWatchVideoLastStartDuration =
+						this.currentSong.skipDuration + this.getTimeElapsed();
+				}
+
+				if (
+					this.activityWatchVideoLastYouTubeId !==
+					this.currentSong.songId
+				) {
+					this.activityWatchVideoLastYouTubeId = this.currentSong.songId;
+					this.activityWatchVideoLastStartDuration =
+						this.currentSong.skipDuration + this.getTimeElapsed();
+				}
+
+				const videoData = {
+					title: this.currentSong ? this.currentSong.title : null,
+					artists:
+						this.currentSong && this.currentSong.artists
+							? this.currentSong.artists.join(", ")
+							: null,
+					youtubeId: this.currentSong.songId,
+					muted: this.muted,
+					volume: this.volumeSliderValue / 100,
+					startedDuration:
+						this.activityWatchVideoLastStartDuration <= 0
+							? 0
+							: this.activityWatchVideoLastStartDuration / 1000,
+					source: `station#${this.station.name}`,
+					hostname: window.location.hostname
+				};
+
+				aw.sendVideoData(videoData);
+			} else {
+				this.activityWatchVideoLastStatus = "not_playing";
+			}
 		},
 		...mapActions("modalVisibility", ["openModal"]),
 		...mapActions("station", [

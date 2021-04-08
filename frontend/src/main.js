@@ -3,6 +3,7 @@ import Vue from "vue";
 import VueTippy, { TippyComponent } from "vue-tippy";
 import VueRouter from "vue-router";
 
+import aw from "@/aw";
 import ws from "@/ws";
 import store from "./store";
 
@@ -173,6 +174,8 @@ lofig.folder = "../config/default.json";
 			window.stop();
 		}
 	});
+
+	aw.init();
 
 	const websocketsDomain = await lofig.get("websocketsDomain");
 	ws.init(websocketsDomain);
