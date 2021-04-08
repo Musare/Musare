@@ -345,13 +345,13 @@ import { mapState, mapGetters, mapActions } from "vuex";
 import draggable from "vuedraggable";
 import Toast from "toasters";
 
-import SearchYoutube from "../../mixins/SearchYoutube.vue";
+import SearchYoutube from "@/mixins/SearchYoutube.vue";
 
+import validation from "@/validation";
 import Modal from "../Modal.vue";
 import SearchQueryItem from "../SearchQueryItem.vue";
 import SongItem from "../SongItem.vue";
 
-import validation from "../../validation";
 import utils from "../../../js/utils";
 
 export default {

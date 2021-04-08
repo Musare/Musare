@@ -49,10 +49,9 @@
 import { mapActions, mapGetters } from "vuex";
 import Toast from "toasters";
 
-import TabQueryHandler from "../../mixins/TabQueryHandler.vue";
-
-import MainHeader from "../../components/layout/MainHeader.vue";
-import MainFooter from "../../components/layout/MainFooter.vue";
+import MainHeader from "@/components/layout/MainHeader.vue";
+import MainFooter from "@/components/layout/MainFooter.vue";
+import TabQueryHandler from "@/mixins/TabQueryHandler.vue";
 
 export default {
 	components: {

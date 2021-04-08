@@ -98,14 +98,14 @@
 import { mapState, mapGetters } from "vuex";
 import { format, parseISO } from "date-fns";
 
-import TabQueryHandler from "../../mixins/TabQueryHandler.vue";
+import ProfilePicture from "@/components/ProfilePicture";
+import MainHeader from "@/components/layout/MainHeader";
+import MainFooter from "@/components/layout/MainFooter.vue";
+
+import TabQueryHandler from "@/mixins/TabQueryHandler.vue";
 
 import RecentActivity from "./tabs/RecentActivity.vue";
 import Playlists from "./tabs/Playlists.vue";
-
-import ProfilePicture from "../../components/ProfilePicture.vue";
-import MainHeader from "../../components/layout/MainHeader.vue";
-import MainFooter from "../../components/layout/MainFooter.vue";
 
 export default {
 	components: {
@@ -114,9 +114,9 @@ export default {
 		ProfilePicture,
 		RecentActivity,
 		Playlists,
-		EditPlaylist: () => import("../../components/modals/EditPlaylist.vue"),
-		Report: () => import("../../components/modals/Report.vue"),
-		EditSong: () => import("../../components/modals/EditSong.vue")
+		EditPlaylist: () => import("@/components/modals/EditPlaylist.vue"),
+		Report: () => import("@/components/modals/Report.vue"),
+		EditSong: () => import("@/components/modals/EditSong.vue")
 	},
 	mixins: [TabQueryHandler],
 	data() {

@@ -1,7 +1,7 @@
 /* eslint no-param-reassign: 0 */
 
 // import Vue from "vue";
-// import admin from "../../../api/admin/index";
+// import admin from "@/api/admin/index";
 
 export default {
 	namespaced: true,

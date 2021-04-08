@@ -2,10 +2,11 @@ import Vue from "vue";
 
 import VueTippy, { TippyComponent } from "vue-tippy";
 import VueRouter from "vue-router";
+
+import ws from "@/ws";
 import store from "./store";
 
 import App from "./App.vue";
-import ws from "./ws";
 
 const REQUIRED_CONFIG_VERSION = 2;
 
@@ -75,75 +76,75 @@ const router = new VueRouter({
 	routes: [
 		{
 			path: "/",
-			component: () => import("./pages/Home.vue")
+			component: () => import("@/pages/Home.vue")
 		},
 		{
 			path: "/404",
 			alias: ["*"],
-			component: () => import("./pages/404.vue")
+			component: () => import("@/pages/404.vue")
 		},
 		{
 			path: "/terms",
-			component: () => import("./pages/Terms.vue")
+			component: () => import("@/pages/Terms.vue")
 		},
 		{
 			path: "/privacy",
-			component: () => import("./pages/Privacy.vue")
+			component: () => import("@/pages/Privacy.vue")
 		},
 		{
 			path: "/team",
-			component: () => import("./pages/Team.vue")
+			component: () => import("@/pages/Team.vue")
 		},
 		{
 			path: "/news",
-			component: () => import("./pages/News.vue")
+			component: () => import("@/pages/News.vue")
 		},
 		{
 			path: "/about",
-			component: () => import("./pages/About.vue")
+			component: () => import("@/pages/About.vue")
 		},
 		{
 			name: "profile",
 			path: "/u/:username",
-			component: () => import("./pages/Profile/index.vue")
+			component: () => import("@/pages/Profile/index.vue")
 		},
 		{
 			path: "/settings",
-			component: () => import("./pages/Settings/index.vue"),
+			component: () => import("@/pages/Settings/index.vue"),
 			meta: {
 				loginRequired: true
 			}
 		},
 		{
 			path: "/reset_password",
-			component: () => import("./pages/ResetPassword.vue")
+			component: () => import("@/pages/ResetPassword.vue")
 		},
 		{
 			path: "/set_password",
 			props: { mode: "set" },
-			component: () => import("./pages/ResetPassword.vue"),
+			component: () => import("@/pages/ResetPassword.vue"),
 			meta: {
 				loginRequired: true
 			}
 		},
 		{
 			path: "/login",
-			component: () => import("./components/modals/Login.vue")
+			component: () => import("@/components/modals/Login.vue")
 		},
 		{
 			path: "/register",
-			component: () => import("./components/modals/Register.vue")
+			component: () => import("@/components/modals/Register.vue")
 		},
 		{
 			path: "/admin",
-			component: () => import("./pages/Admin/index.vue"),
+			component: () => import("@/pages/Admin/index.vue"),
 			meta: {
 				adminRequired: true
 			}
 		},
 		{
 			path: "/admin/:page",
-			component: () => import("./pages/Admin/index.vue"),
+			component: () => import("@/pages//Admin/index.vue"),
 			meta: {
 				adminRequired: true
 			}
@@ -151,7 +152,7 @@ const router = new VueRouter({
 		{
 			name: "station",
 			path: "/:id",
-			component: () => import("./pages/Station/index.vue")
+			component: () => import("@/pages//Station/index.vue")
 		}
 	]
 });

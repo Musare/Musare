@@ -1,9 +1,9 @@
 /* eslint no-param-reassign: 0 */
 /* eslint-disable import/no-cycle */
 
-import auth from "../../api/auth";
-import ws from "../../ws";
-import validation from "../../validation";
+import validation from "@/validation";
+import ws from "@/ws";
+import auth from "@/api/auth";
 
 const state = {};
 const getters = {};

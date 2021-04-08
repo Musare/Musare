@@ -91,8 +91,8 @@
 import { mapState, mapGetters, mapActions } from "vuex";
 
 import Toast from "toasters";
+import validation from "@/validation";
 import Modal from "../Modal.vue";
-import validation from "../../validation";
 
 export default {
 	components: { Modal },

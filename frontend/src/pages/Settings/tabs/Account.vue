@@ -99,10 +99,9 @@
 import { mapState, mapActions, mapGetters } from "vuex";
 import Toast from "toasters";
 
-import validation from "../../../validation";
-
-import InputHelpBox from "../../../components/InputHelpBox.vue";
-import SaveButton from "../../../components/SaveButton.vue";
+import InputHelpBox from "@/components/InputHelpBox.vue";
+import SaveButton from "@/components/SaveButton.vue";
+import validation from "@/validation";
 
 export default {
 	components: { InputHelpBox, SaveButton },

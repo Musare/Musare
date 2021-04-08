@@ -229,11 +229,11 @@
 import Toast from "toasters";
 import { mapGetters } from "vuex";
 
-import MainHeader from "../components/layout/MainHeader.vue";
-import MainFooter from "../components/layout/MainFooter.vue";
-import InputHelpBox from "../components/InputHelpBox.vue";
+import MainHeader from "@/components/layout/MainHeader.vue";
+import MainFooter from "@/components/layout/MainFooter.vue";
+import InputHelpBox from "@/components/InputHelpBox.vue";
 
-import validation from "../validation";
+import validation from "@/validation";
 
 export default {
 	components: { MainHeader, MainFooter, InputHelpBox },

@@ -420,12 +420,12 @@
 import { mapState, mapGetters, mapActions } from "vuex";
 import Toast from "toasters";
 
-import MainHeader from "../components/layout/MainHeader.vue";
-import MainFooter from "../components/layout/MainFooter.vue";
-import SongThumbnail from "../components/SongThumbnail.vue";
-import UserIdToUsername from "../components/UserIdToUsername.vue";
+import MainHeader from "@/components/layout/MainHeader.vue";
+import MainFooter from "@/components/layout/MainFooter.vue";
+import SongThumbnail from "@/components/SongThumbnail.vue";
+import UserIdToUsername from "@/components/UserIdToUsername.vue";
 
-import ws from "../ws";
+import ws from "@/ws";
 
 export default {
 	components: {
@@ -433,7 +433,7 @@ export default {
 		MainFooter,
 		SongThumbnail,
 		CreateCommunityStation: () =>
-			import("../components/modals/CreateCommunityStation.vue"),
+			import("@/components/modals/CreateCommunityStation.vue"),
 		UserIdToUsername
 	},
 	data() {

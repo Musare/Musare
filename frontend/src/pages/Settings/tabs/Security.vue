@@ -144,9 +144,8 @@
 import Toast from "toasters";
 import { mapGetters, mapState } from "vuex";
 
-import validation from "../../../validation";
-
-import InputHelpBox from "../../../components/InputHelpBox.vue";
+import InputHelpBox from "@/components/InputHelpBox.vue";
+import validation from "@/validation";
 
 export default {
 	components: { InputHelpBox },

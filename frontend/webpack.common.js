@@ -1,3 +1,4 @@
+const path = require("path");
 const { VueLoaderPlugin } = require("vue-loader");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 
@@ -6,6 +7,12 @@ module.exports = {
 	output: {
 		path: `${__dirname}/dist/build/`,
 		filename: "[name].[contenthash].js"
+	},
+	resolve: {
+		alias: {
+			"@": path.resolve(__dirname, "./src/")
+		},
+		extensions: [".js", ".vue"]
 	},
 	plugins: [
 		new VueLoaderPlugin(),

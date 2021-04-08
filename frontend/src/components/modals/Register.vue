@@ -111,9 +111,8 @@
 import { mapActions } from "vuex";
 import Toast from "toasters";
 
+import validation from "@/validation";
 import InputHelpBox from "../InputHelpBox.vue";
-
-import validation from "../../validation";
 
 export default {
 	components: { InputHelpBox },

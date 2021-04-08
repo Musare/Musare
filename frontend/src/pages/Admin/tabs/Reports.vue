@@ -71,13 +71,12 @@ import { mapState, mapActions, mapGetters } from "vuex";
 import { formatDistance } from "date-fns";
 
 import Toast from "toasters";
-import ws from "../../../ws";
-
-import UserIdToUsername from "../../../components/UserIdToUsername.vue";
+import UserIdToUsername from "@/components/UserIdToUsername.vue";
+import ws from "@/ws";
 
 export default {
 	components: {
-		ViewReport: () => import("../../../components/modals/ViewReport.vue"),
+		ViewReport: () => import("@/components/modals/ViewReport.vue"),
 		UserIdToUsername
 	},
 	data() {

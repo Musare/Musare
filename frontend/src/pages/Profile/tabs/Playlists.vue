@@ -96,17 +96,15 @@
 import draggable from "vuedraggable";
 import { mapActions, mapState, mapGetters } from "vuex";
 
-import ws from "../../../ws";
-
-import SortablePlaylists from "../../../mixins/SortablePlaylists.vue";
-import PlaylistItem from "../../../components/PlaylistItem.vue";
+import PlaylistItem from "@/components/PlaylistItem.vue";
+import SortablePlaylists from "@/mixins/SortablePlaylists.vue";
+import ws from "@/ws";
 
 export default {
 	components: {
 		PlaylistItem,
 		draggable,
-		CreatePlaylist: () =>
-			import("../../../components/modals/CreatePlaylist.vue")
+		CreatePlaylist: () => import("@/components/modals/CreatePlaylist.vue")
 	},
 	mixins: [SortablePlaylists],
 	props: {

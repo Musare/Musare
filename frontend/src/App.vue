@@ -19,10 +19,10 @@ import keyboardShortcuts from "./keyboardShortcuts";
 
 export default {
 	components: {
-		WhatIsNew: () => import("./components/modals/WhatIsNew.vue"),
-		LoginModal: () => import("./components/modals/Login.vue"),
-		RegisterModal: () => import("./components/modals/Register.vue"),
-		Banned: () => import("./pages/Banned.vue")
+		WhatIsNew: () => import("@/components/modals/WhatIsNew.vue"),
+		LoginModal: () => import("@/components/modals/Login.vue"),
+		RegisterModal: () => import("@/components/modals/Register.vue"),
+		Banned: () => import("@/pages/Banned.vue")
 	},
 	replace: false,
 	data() {

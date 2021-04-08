@@ -80,8 +80,8 @@ import { mapState, mapActions, mapGetters } from "vuex";
 import Toast from "toasters";
 import draggable from "vuedraggable";
 
-import PlaylistItem from "../../../components/PlaylistItem.vue";
-import SortablePlaylists from "../../../mixins/SortablePlaylists.vue";
+import PlaylistItem from "@/components/PlaylistItem.vue";
+import SortablePlaylists from "@/mixins/SortablePlaylists.vue";
 
 export default {
 	components: { PlaylistItem, draggable },

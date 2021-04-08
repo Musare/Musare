@@ -1,7 +1,7 @@
 /* eslint-disable import/no-cycle */
 
 import Toast from "toasters";
-import ws from "../ws";
+import ws from "@/ws";
 
 // when Vuex needs to interact with websockets
 

@@ -509,8 +509,8 @@
 import { mapState, mapGetters, mapActions } from "vuex";
 import Toast from "toasters";
 
-import keyboardShortcuts from "../../keyboardShortcuts";
-import validation from "../../validation";
+import validation from "@/validation";
+import keyboardShortcuts from "@/keyboardShortcuts";
 import Modal from "../Modal.vue";
 import FloatingBox from "../FloatingBox.vue";
 import SaveButton from "../SaveButton.vue";

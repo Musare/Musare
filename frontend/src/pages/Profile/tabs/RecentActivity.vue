@@ -44,9 +44,8 @@
 import { mapState, mapGetters, mapActions } from "vuex";
 import Toast from "toasters";
 
-import ws from "../../../ws";
-
-import ActivityItem from "../../../components/ActivityItem.vue";
+import ActivityItem from "@/components/ActivityItem.vue";
+import ws from "@/ws";
 
 export default {
 	components: { ActivityItem },

@@ -185,17 +185,16 @@ import { mapState, mapActions, mapGetters } from "vuex";
 
 import Toast from "toasters";
 
-import UserIdToUsername from "../../../components/UserIdToUsername.vue";
+import UserIdToUsername from "@/components/UserIdToUsername.vue";
+import FloatingBox from "@/components/FloatingBox.vue";
 
-import FloatingBox from "../../../components/FloatingBox.vue";
+import ScrollAndFetchHandler from "@/mixins/ScrollAndFetchHandler.vue";
 
-import ScrollAndFetchHandler from "../../../mixins/ScrollAndFetchHandler.vue";
-
-import ws from "../../../ws";
+import ws from "@/ws";
 
 export default {
 	components: {
-		EditSong: () => import("../../../components/modals/EditSong.vue"),
+		EditSong: () => import("@/components/modals/EditSong.vue"),
 		UserIdToUsername,
 		FloatingBox
 	},

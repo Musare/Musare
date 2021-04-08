@@ -193,7 +193,7 @@
 <script>
 import { mapGetters } from "vuex";
 
-import ws from "../../../ws";
+import ws from "@/ws";
 
 export default {
 	components: {},

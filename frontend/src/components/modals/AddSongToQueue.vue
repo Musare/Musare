@@ -210,7 +210,7 @@ import { mapState, mapGetters, mapActions } from "vuex";
 
 import Toast from "toasters";
 
-import SearchYoutube from "../../mixins/SearchYoutube.vue";
+import SearchYoutube from "@/mixins/SearchYoutube.vue";
 
 import PlaylistItem from "../PlaylistItem.vue";
 import SearchQueryItem from "../SearchQueryItem.vue";

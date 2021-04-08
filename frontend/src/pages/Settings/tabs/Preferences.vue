@@ -44,7 +44,7 @@
 import { mapState, mapActions, mapGetters } from "vuex";
 import Toast from "toasters";
 
-import SaveButton from "../../../components/SaveButton.vue";
+import SaveButton from "@/components/SaveButton.vue";
 
 export default {
 	components: { SaveButton },

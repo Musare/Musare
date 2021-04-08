@@ -122,7 +122,7 @@
 </template>
 
 <script>
-import MainHeader from "../../components/layout/MainHeader.vue";
+import MainHeader from "@/components/layout/MainHeader.vue";
 
 export default {
 	components: {

@@ -14,7 +14,7 @@
 </template>
 
 <script>
-import MainFooter from "../components/layout/MainFooter.vue";
+import MainFooter from "@/components/layout/MainFooter.vue";
 
 export default {
 	components: { MainFooter }

@@ -636,17 +636,17 @@ import { mapState, mapActions, mapGetters } from "vuex";
 import Toast from "toasters";
 import { ContentLoader } from "vue-content-loader";
 
-import MainHeader from "../../components/layout/MainHeader.vue";
-import MainFooter from "../../components/layout/MainFooter.vue";
+import ws from "@/ws";
+import keyboardShortcuts from "@/keyboardShortcuts";
 
+import MainHeader from "@/components/layout/MainHeader.vue";
+import MainFooter from "@/components/layout/MainFooter.vue";
+
+import FloatingBox from "@/components/FloatingBox.vue";
+import AddToPlaylistDropdown from "@/components/AddToPlaylistDropdown.vue";
+import SongItem from "@/components/SongItem.vue";
 import Z404 from "../404.vue";
 
-import FloatingBox from "../../components/FloatingBox.vue";
-import AddToPlaylistDropdown from "../../components/AddToPlaylistDropdown.vue";
-import SongItem from "../../components/SongItem.vue";
-
-import ws from "../../ws";
-import keyboardShortcuts from "../../keyboardShortcuts";
 import utils from "../../../js/utils";
 
 import StationSidebar from "./Sidebar/index.vue";
@@ -656,17 +656,16 @@ export default {
 		ContentLoader,
 		MainHeader,
 		MainFooter,
-		SongQueue: () => import("../../components/modals/AddSongToQueue.vue"),
-		EditPlaylist: () => import("../../components/modals/EditPlaylist.vue"),
-		CreatePlaylist: () =>
-			import("../../components/modals/CreatePlaylist.vue"),
-		EditStation: () => import("../../components/modals/EditStation.vue"),
-		Report: () => import("../../components/modals/Report.vue"),
+		SongQueue: () => import("@/components/modals/AddSongToQueue.vue"),
+		EditPlaylist: () => import("@/components/modals/EditPlaylist.vue"),
+		CreatePlaylist: () => import("@/components/modals/CreatePlaylist.vue"),
+		EditStation: () => import("@/components/modals/EditStation.vue"),
+		Report: () => import("@/components/modals/Report.vue"),
 		Z404,
 		FloatingBox,
 		StationSidebar,
 		AddToPlaylistDropdown,
-		EditSong: () => import("../../components/modals/EditSong.vue"),
+		EditSong: () => import("@/components/modals/EditSong.vue"),
 		SongItem
 	},
 	data() {

@@ -218,11 +218,11 @@
 import { mapActions, mapState, mapGetters } from "vuex";
 
 import Toast from "toasters";
-import ws from "../../../ws";
+import ws from "@/ws";
 
 export default {
 	components: {
-		EditNews: () => import("../../../components/modals/EditNews.vue")
+		EditNews: () => import("@/components/modals/EditNews.vue")
 	},
 	data() {
 		return {

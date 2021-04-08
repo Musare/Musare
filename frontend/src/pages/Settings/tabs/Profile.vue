@@ -76,10 +76,9 @@
 import { mapState, mapActions, mapGetters } from "vuex";
 import Toast from "toasters";
 
-import validation from "../../../validation";
-
-import ProfilePicture from "../../../components/ProfilePicture.vue";
-import SaveButton from "../../../components/SaveButton.vue";
+import ProfilePicture from "@/components/ProfilePicture.vue";
+import SaveButton from "@/components/SaveButton.vue";
+import validation from "@/validation";
 
 export default {
 	components: { ProfilePicture, SaveButton },
