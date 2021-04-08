@@ -13,60 +13,34 @@
 						<table class="table">
 							<thead>
 								<tr>
-									<th />
-									<th>Success</th>
-									<th>Error</th>
-									<th>Info</th>
+									<th>Name</th>
+									<th>Status</th>
+									<th>Stage</th>
+									<th>Jobs in queue</th>
+									<th>Jobs in progress</th>
+									<th>Jobs paused</th>
+									<th>Concurrency</th>
 								</tr>
 							</thead>
 							<tbody>
-								<tr>
-									<th><strong>Average per second</strong></th>
-									<th :title="logs.second.success">
-										{{ round(logs.second.success) }}
-									</th>
-									<th :title="logs.second.error">
-										{{ round(logs.second.error) }}
-									</th>
-									<th :title="logs.second.info">
-										{{ round(logs.second.info) }}
-									</th>
-								</tr>
-								<tr>
-									<th><strong>Average per minute</strong></th>
-									<th :title="logs.minute.success">
-										{{ round(logs.minute.success) }}
-									</th>
-									<th :title="logs.minute.error">
-										{{ round(logs.minute.error) }}
-									</th>
-									<th :title="logs.minute.info">
-										{{ round(logs.minute.info) }}
-									</th>
-								</tr>
-								<tr>
-									<th><strong>Average per hour</strong></th>
-									<th :title="logs.hour.success">
-										{{ round(logs.hour.success) }}
-									</th>
-									<th :title="logs.hour.error">
-										{{ round(logs.hour.error) }}
-									</th>
-									<th :title="logs.hour.info">
-										{{ round(logs.hour.info) }}
-									</th>
-								</tr>
-								<tr>
-									<th><strong>Average per day</strong></th>
-									<th :title="logs.day.success">
-										{{ round(logs.day.success) }}
-									</th>
-									<th :title="logs.day.error">
-										{{ round(logs.day.error) }}
-									</th>
-									<th :title="logs.day.info">
-										{{ round(logs.day.info) }}
-									</th>
+								<tr
+									v-for="moduleItem in modules"
+									:key="moduleItem.name"
+								>
+									<td>
+										<router-link
+											:to="
+												'?moduleName=' + moduleItem.name
+											"
+											>{{ moduleItem.name }}</router-link
+										>
+									</td>
+									<td>{{ moduleItem.status }}</td>
+									<td>{{ moduleItem.stage }}</td>
+									<td>{{ moduleItem.jobsInQueue }}</td>
+									<td>{{ moduleItem.jobsInProgress }}</td>
+									<td>{{ moduleItem.jobsPaused }}</td>
+									<td>{{ moduleItem.concurrency }}</td>
 								</tr>
 							</tbody>
 						</table>
@@ -75,25 +49,140 @@
 			</div>
 		</div>
 		<br />
-		<div class="columns">
+		<div class="columns" v-if="module">
 			<div
 				class="card column is-10-desktop is-offset-1-desktop is-12-mobile"
 			>
+				<header class="card-header">
+					<p class="card-header-title">Running tasks</p>
+				</header>
 				<div class="card-content">
 					<div class="content">
-						<canvas id="minuteChart" height="400" />
+						<table class="table">
+							<thead>
+								<tr>
+									<th>Name</th>
+									<th>Payload</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr
+									v-for="job in module.runningTasks"
+									:key="JSON.stringify(job)"
+								>
+									<td>{{ job.name }}</td>
+									<td>
+										{{ JSON.stringify(job.payload) }}
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+			<div
+				class="card column is-10-desktop is-offset-1-desktop is-12-mobile"
+			>
+				<header class="card-header">
+					<p class="card-header-title">Paused tasks</p>
+				</header>
+				<div class="card-content">
+					<div class="content">
+						<table class="table">
+							<thead>
+								<tr>
+									<th>Name</th>
+									<th>Payload</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr
+									v-for="job in module.pausedTasks"
+									:key="JSON.stringify(job)"
+								>
+									<td>{{ job.name }}</td>
+									<td>
+										{{ JSON.stringify(job.payload) }}
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+			<div
+				class="card column is-10-desktop is-offset-1-desktop is-12-mobile"
+			>
+				<header class="card-header">
+					<p class="card-header-title">Queued tasks</p>
+				</header>
+				<div class="card-content">
+					<div class="content">
+						<table class="table">
+							<thead>
+								<tr>
+									<th>Name</th>
+									<th>Payload</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr
+									v-for="job in module.queuedTasks"
+									:key="JSON.stringify(job)"
+								>
+									<td>{{ job.name }}</td>
+									<td>
+										{{ JSON.stringify(job.payload) }}
+									</td>
+								</tr>
+							</tbody>
+						</table>
 					</div>
 				</div>
 			</div>
 		</div>
 		<br />
-		<div class="columns">
+		<div class="columns" v-if="module">
 			<div
 				class="card column is-10-desktop is-offset-1-desktop is-12-mobile"
 			>
+				<header class="card-header">
+					<p class="card-header-title">Average Logs</p>
+				</header>
 				<div class="card-content">
 					<div class="content">
-						<canvas id="hourChart" height="400" />
+						<table class="table">
+							<thead>
+								<tr>
+									<th>Job name</th>
+									<th>Successful</th>
+									<th>Failed</th>
+									<th>Total</th>
+									<th>Average timing</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr
+									v-for="(job,
+									jobName) in module.jobStatistics"
+									:key="jobName"
+								>
+									<td>{{ jobName }}</td>
+									<td>
+										{{ job.successful }}
+									</td>
+									<td>
+										{{ job.failed }}
+									</td>
+									<td>
+										{{ job.total }}
+									</td>
+									<td>
+										{{ job.averageTiming }}
+									</td>
+								</tr>
+							</tbody>
+						</table>
 					</div>
 				</div>
 			</div>
@@ -103,7 +192,6 @@
 
 <script>
 import { mapGetters } from "vuex";
-import { LineElement } from "chart.js";
 
 import ws from "../../../ws";
 
@@ -111,212 +199,41 @@ export default {
 	components: {},
 	data() {
 		return {
-			successUnitsPerMinute: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			errorUnitsPerMinute: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			infoUnitsPerMinute: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			successUnitsPerHour: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			errorUnitsPerHour: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			infoUnitsPerHour: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			minuteChart: null,
-			hourChart: null,
-			logs: {
-				second: {
-					success: 0,
-					error: 0,
-					info: 0
-				},
-				minute: {
-					success: 0,
-					error: 0,
-					info: 0
-				},
-				hour: {
-					success: 0,
-					error: 0,
-					info: 0
-				},
-				day: {
-					success: 0,
-					error: 0,
-					info: 0
-				}
-			}
+			modules: [],
+			module: null
 		};
 	},
 	computed: mapGetters({
 		socket: "websockets/getSocket"
 	}),
 	mounted() {
-		const minuteCtx = document.getElementById("minuteChart");
-		const hourCtx = document.getElementById("hourChart");
-
-		this.minuteChart = new LineElement(minuteCtx, {
-			data: {
-				labels: [
-					"-10",
-					"-9",
-					"-8",
-					"-7",
-					"-6",
-					"-5",
-					"-4",
-					"-3",
-					"-2",
-					"-1"
-				],
-				datasets: [
-					{
-						label: "Success",
-						data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-						backgroundColor: ["rgba(75, 192, 192, 0.2)"],
-						borderColor: ["rgba(75, 192, 192, 1)"],
-						borderWidth: 1
-					},
-					{
-						label: "Error",
-						data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-						backgroundColor: ["rgba(255, 99, 132, 0.2)"],
-						borderColor: ["rgba(255,99,132,1)"],
-						borderWidth: 1
-					},
-					{
-						label: "Info",
-						data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-						backgroundColor: ["rgba(54, 162, 235, 0.2)"],
-						borderColor: ["rgba(54, 162, 235, 1)"],
-						borderWidth: 1
-					}
-				]
-			},
-			options: {
-				title: {
-					display: true,
-					text: "Logs per minute"
-				},
-				scales: {
-					yAxes: [
-						{
-							ticks: {
-								beginAtZero: true,
-								stepSize: 1
-							}
-						}
-					]
-				},
-				responsive: true,
-				maintainAspectRatio: false
-			}
-		});
-
-		this.hourChart = new LineElement(hourCtx, {
-			data: {
-				labels: [
-					"-10",
-					"-9",
-					"-8",
-					"-7",
-					"-6",
-					"-5",
-					"-4",
-					"-3",
-					"-2",
-					"-1"
-				],
-				datasets: [
-					{
-						label: "Success",
-						data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-						backgroundColor: ["rgba(75, 192, 192, 0.2)"],
-						borderColor: ["rgba(75, 192, 192, 1)"],
-						borderWidth: 1
-					},
-					{
-						label: "Error",
-						data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-						backgroundColor: ["rgba(255, 99, 132, 0.2)"],
-						borderColor: ["rgba(255,99,132,1)"],
-						borderWidth: 1
-					},
-					{
-						label: "Info",
-						data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-						backgroundColor: ["rgba(54, 162, 235, 0.2)"],
-						borderColor: ["rgba(54, 162, 235, 1)"],
-						borderWidth: 1
-					}
-				]
-			},
-			options: {
-				title: {
-					display: true,
-					text: "Logs per hour"
-				},
-				scales: {
-					yAxes: [
-						{
-							ticks: {
-								beginAtZero: true,
-								stepSize: 1
-							}
-						}
-					]
-				},
-				responsive: true,
-				maintainAspectRatio: false
-			}
-		});
-
 		if (this.socket.readyState === 1) this.init();
 		ws.onConnect(() => this.init());
 	},
 	methods: {
 		init() {
-			this.socket.dispatch("apis.joinAdminRoom", "statistics", () => {});
-			this.socket.on(
-				"event:admin.statistics.success.units.minute",
-				units => {
-					this.successUnitsPerMinute = units;
-					this.minuteChart.data.datasets[0].data = units;
-					this.minuteChart.update();
+			this.socket.dispatch("utils.getModules", data => {
+				console.log(data);
+				if (data.status === "success") {
+					this.modules = data.modules;
 				}
-			);
-			this.socket.on(
-				"event:admin.statistics.error.units.minute",
-				units => {
-					this.errorUnitsPerMinute = units;
-					this.minuteChart.data.datasets[1].data = units;
-					this.minuteChart.update();
-				}
-			);
-			this.socket.on(
-				"event:admin.statistics.info.units.minute",
-				units => {
-					this.infoUnitsPerMinute = units;
-					this.minuteChart.data.datasets[2].data = units;
-					this.minuteChart.update();
-				}
-			);
-			this.socket.on(
-				"event:admin.statistics.success.units.hour",
-				units => {
-					this.successUnitsPerHour = units;
-					this.hourChart.data.datasets[0].data = units;
-					this.hourChart.update();
-				}
-			);
-			this.socket.on("event:admin.statistics.error.units.hour", units => {
-				this.errorUnitsPerHour = units;
-				this.hourChart.data.datasets[1].data = units;
-				this.hourChart.update();
 			});
-			this.socket.on("event:admin.statistics.info.units.hour", units => {
-				this.infoUnitsPerHour = units;
-				this.hourChart.data.datasets[2].data = units;
-				this.hourChart.update();
-			});
-			this.socket.on("event:admin.statistics.logs", logs => {
-				this.logs = logs;
-			});
+
+			if (this.$route.query.moduleName) {
+				this.socket.dispatch(
+					"utils.getModule",
+					this.$route.query.moduleName,
+					data => {
+						console.log(data);
+						if (data.status === "success") {
+							this.module = {
+								runningJobs: data.runningJobs,
+								jobStatistics: data.jobStatistics
+							};
+						}
+					}
+				);
+			}
 		},
 		round(number) {
 			return Math.round(number);
@@ -325,6 +242,7 @@ export default {
 };
 </script>
 
+//
 <style lang="scss" scoped>
 .night-mode {
 	.table {
