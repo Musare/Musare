@@ -18,8 +18,8 @@
 			<button
 				v-if="loggedIn"
 				class="button is-default"
-				:class="{ selected: tab === 'my-playlists' }"
-				@click="showTab('my-playlists')"
+				:class="{ selected: tab === 'playlists' }"
+				@click="showTab('playlists')"
 			>
 				My Playlists
 			</button>
@@ -34,21 +34,21 @@
 		</div>
 		<queue class="tab" v-show="tab === 'queue'" />
 		<users class="tab" v-show="tab === 'users'" />
-		<my-playlists class="tab" v-show="tab === 'my-playlists'" />
+		<playlists class="tab" v-show="tab === 'playlists'" />
 	</div>
 </template>
 
 <script>
 import { mapActions, mapState } from "vuex";
 
-import TabQueryHandler from "../../../../mixins/TabQueryHandler.vue";
+import TabQueryHandler from "../../../mixins/TabQueryHandler.vue";
 
-import Queue from "./Queue/index.vue";
+import Queue from "./Queue.vue";
 import Users from "./Users.vue";
-import MyPlaylists from "./MyPlaylists.vue";
+import Playlists from "./Playlists.vue";
 
 export default {
-	components: { Queue, Users, MyPlaylists },
+	components: { Queue, Users, Playlists },
 	mixins: [TabQueryHandler],
 	data() {
 		return {
@@ -64,7 +64,7 @@ export default {
 		if (
 			this.$route.query.tab === "queue" ||
 			this.$route.query.tab === "users" ||
-			this.$route.query.tab === "my-playlists"
+			this.$route.query.tab === "playlists"
 		)
 			this.tab = this.$route.query.tab;
 	},
@@ -142,7 +142,7 @@ export default {
 	max-height: calc(100% - 20px - 40px);
 	padding: 10px;
 
-	.queue-item:not(:last-of-type) {
+	.song-item:not(:last-of-type) {
 		margin-bottom: 10px;
 	}
 }

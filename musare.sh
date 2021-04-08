@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export PATH=/usr/local/bin:/usr/bin:/bin
+
 CYAN='\033[33;36m';
 RED='\033[0;31m'
 YELLOW='\033[0;93m'

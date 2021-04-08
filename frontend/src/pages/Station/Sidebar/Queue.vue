@@ -1,26 +1,32 @@
 <template>
 	<div id="queue">
 		<div
-			id="queue-items"
 			:class="{
 				'actionable-button-hidden': !actionableButtonVisible,
 				'scrollable-list': true
 			}"
 		>
-			<queue-item
+			<song-item
 				v-for="(song, index) in songsList"
 				:key="index + song.songId"
 				:song="song"
-				:station="{
-					type: station.type,
-					partyMode: station.partyMode
-				}"
+				:requested-by="
+					station.type === 'community' && station.partyMode === true
+				"
 			>
 				<div
 					v-if="isAdminOnly() || isOwnerOnly()"
-					class="queue-actions"
+					class="song-actions"
 					slot="actions"
 				>
+					<i
+						v-if="isOwnerOnly() || isAdminOnly()"
+						class="material-icons delete-icon"
+						@click="removeFromQueue(song.songId)"
+						content="Remove Song from Queue"
+						v-tippy
+						>delete_forever</i
+					>
 					<i
 						class="material-icons"
 						v-if="index > 0"
@@ -38,7 +44,7 @@
 						>vertical_align_bottom</i
 					>
 				</div>
-			</queue-item>
+			</song-item>
 			<p class="nothing-here-text" v-if="songsList.length < 1">
 				There are no songs currently queued
 			</p>
@@ -106,10 +112,10 @@
 import { mapActions, mapState, mapGetters } from "vuex";
 import Toast from "toasters";
 
-import QueueItem from "./QueueItem.vue";
+import SongItem from "../../../components/ui/SongItem.vue";
 
 export default {
-	components: { QueueItem },
+	components: { SongItem },
 	data() {
 		return {
 			dismissedWarning: false,
@@ -183,7 +189,7 @@ export default {
 		max-height: 100%;
 	}
 
-	.queue-item:not(:last-of-type) {
+	.song-item:not(:last-of-type) {
 		margin-bottom: 10px;
 	}
 

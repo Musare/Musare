@@ -449,7 +449,7 @@ a {
 		width: 146px;
 	}
 
-	.queue-actions,
+	.song-actions,
 	.addToPlaylistDropdown {
 		display: inline-block;
 	}
@@ -785,6 +785,7 @@ h4.section-title {
 .universal-item {
 	display: flex;
 	flex-direction: row;
+	flex-grow: 1;
 	align-items: center;
 	justify-content: space-between;
 	padding: 7.5px;
@@ -828,7 +829,7 @@ h4.section-title {
 			color: var(--primary-color);
 		}
 
-		.queue-actions {
+		.song-actions {
 			display: flex;
 		}
 

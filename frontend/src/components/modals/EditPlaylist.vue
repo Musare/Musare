@@ -243,7 +243,7 @@
 									v-for="(song, index) in playlist.songs"
 									:key="'key-' + index"
 								>
-									<playlist-song-item
+									<song-item
 										:song="song"
 										:class="{
 											'item-draggable': isEditable()
@@ -251,14 +251,30 @@
 									>
 										<div
 											v-if="isEditable()"
-											class="queue-actions"
+											class="song-actions"
 											slot="actions"
 										>
+											<i
+												v-if="
+													userId ===
+														playlist.createdBy ||
+														isEditable()
+												"
+												@click="
+													removeSongFromPlaylist(
+														song.songId
+													)
+												"
+												class="material-icons delete-icon"
+												content="Remove Song from Playlist"
+												v-tippy
+												>delete_forever</i
+											>
 											<i
 												class="material-icons"
 												v-if="index > 0"
 												@click="moveSongToTop(index)"
-												content="Move to top of Queue"
+												content="Move to top of Playlist"
 												v-tippy
 												>vertical_align_top</i
 											>
@@ -270,28 +286,12 @@
 												"
 												@click="moveSongToBottom(index)"
 												class="material-icons"
-												content="Move to bottom of Queue"
+												content="Move to bottom of Playlist"
 												v-tippy
 												>vertical_align_bottom</i
 											>
 										</div>
-										<i
-											slot="remove"
-											v-if="
-												userId === playlist.createdBy ||
-													isEditable()
-											"
-											@click="
-												removeSongFromPlaylist(
-													song.songId
-												)
-											"
-											class="material-icons delete-icon"
-											content="Remove Song from Playlist"
-											v-tippy
-											>delete</i
-										>
-									</playlist-song-item>
+									</song-item>
 								</li>
 							</transition-group>
 						</draggable>
@@ -345,17 +345,17 @@ import { mapState, mapGetters, mapActions } from "vuex";
 import draggable from "vuedraggable";
 import Toast from "toasters";
 
-import SearchYoutube from "../../../mixins/SearchYoutube.vue";
+import SearchYoutube from "../../mixins/SearchYoutube.vue";
 
-import Modal from "../../Modal.vue";
-import SearchQueryItem from "../../ui/SearchQueryItem.vue";
-import PlaylistSongItem from "./components/PlaylistSongItem.vue";
+import Modal from "../Modal.vue";
+import SearchQueryItem from "../ui/SearchQueryItem.vue";
+import SongItem from "../ui/SongItem.vue";
 
-import validation from "../../../validation";
-import utils from "../../../../js/utils";
+import validation from "../../validation";
+import utils from "../../../js/utils";
 
 export default {
-	components: { Modal, draggable, SearchQueryItem, PlaylistSongItem },
+	components: { Modal, draggable, SearchQueryItem, SongItem },
 	mixins: [SearchYoutube],
 	data() {
 		return {

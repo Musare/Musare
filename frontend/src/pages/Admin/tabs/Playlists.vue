@@ -88,7 +88,7 @@ import utils from "../../../../js/utils";
 export default {
 	components: {
 		EditPlaylist: () =>
-			import("../../../components/modals/EditPlaylist/index.vue"),
+			import("../../../components/modals/EditPlaylist.vue"),
 		UserIdToUsername,
 		Report: () => import("../../../components/modals/Report.vue"),
 		EditSong: () => import("../../../components/modals/EditSong.vue")

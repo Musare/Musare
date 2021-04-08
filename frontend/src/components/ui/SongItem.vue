@@ -1,8 +1,9 @@
 <template>
-	<div class="universal-item queue-item">
-		<div id="thumbnail-and-info">
-			<song-thumbnail :song="song" />
-			<div id="song-info">
+	<div class="universal-item song-item">
+		<div class="thumbnail-and-info">
+			<song-thumbnail :class="{ large: largeThumbnail }" :song="song" />
+			<div class="song-info">
+				<h6 v-if="header">{{ header }}</h6>
 				<h4
 					class="item-title"
 					:style="
@@ -28,11 +29,8 @@
 					{{ song.artists.join(", ") }}
 				</h5>
 				<p
-					id="song-request-time"
-					v-if="
-						station.type === 'community' &&
-							station.partyMode === true
-					"
+					class="song-request-time"
+					v-if="requestedBy && song.requestedBy"
 				>
 					Requested by
 					<strong>
@@ -55,13 +53,13 @@
 			</div>
 		</div>
 
-		<div id="duration-and-actions">
-			<p id="song-duration">
+		<div class="duration-and-actions">
+			<p v-if="duration" class="song-duration">
 				{{ utils.formatTime(song.duration) }}
 			</p>
 			<div class="universal-item-actions">
 				<tippy
-					v-if="$parent.loggedIn"
+					v-if="loggedIn"
 					interactive="true"
 					placement="left"
 					theme="songActions"
@@ -102,7 +100,7 @@
 						>
 					</add-to-playlist-dropdown>
 					<i
-						v-if="$parent.isAdminOnly()"
+						v-if="loggedIn && userRole === 'admin'"
 						class="material-icons edit-icon"
 						@click="edit(song)"
 						content="Edit Song"
@@ -110,14 +108,6 @@
 					>
 						edit
 					</i>
-					<i
-						v-if="$parent.isOwnerOnly() || $parent.isAdminOnly()"
-						class="material-icons delete-icon"
-						@click="$parent.removeFromQueue(song.songId)"
-						content="Remove Song from Queue"
-						v-tippy
-						>delete_forever</i
-					>
 					<slot name="actions" />
 				</tippy>
 				<a
@@ -135,13 +125,13 @@
 </template>
 
 <script>
-import { mapActions } from "vuex";
+import { mapActions, mapState } from "vuex";
 import { formatDistance, parseISO } from "date-fns";
 
-import AddToPlaylistDropdown from "../../../../../components/ui/AddToPlaylistDropdown.vue";
-import UserIdToUsername from "../../../../../components/common/UserIdToUsername.vue";
-import SongThumbnail from "../../../../../components/ui/SongThumbnail.vue";
-import utils from "../../../../../../js/utils";
+import AddToPlaylistDropdown from "./AddToPlaylistDropdown.vue";
+import UserIdToUsername from "../common/UserIdToUsername.vue";
+import SongThumbnail from "./SongThumbnail.vue";
+import utils from "../../../js/utils";
 
 export default {
 	components: { UserIdToUsername, AddToPlaylistDropdown, SongThumbnail },
@@ -150,17 +140,33 @@ export default {
 			type: Object,
 			default: () => {}
 		},
-		station: {
-			type: Object,
-			default: () => {
-				return { type: "community", partyMode: false };
-			}
+		requestedBy: {
+			type: Boolean,
+			default: false
+		},
+		duration: {
+			type: Boolean,
+			default: true
+		},
+		largeThumbnail: {
+			type: Boolean,
+			default: false
+		},
+		header: {
+			type: String,
+			default: null
 		}
 	},
 	data() {
 		return {
 			utils
 		};
+	},
+	computed: {
+		...mapState({
+			loggedIn: state => state.user.auth.loggedIn,
+			userRole: state => state.user.auth.role
+		})
 	},
 	methods: {
 		hideTippyElements() {
@@ -195,7 +201,7 @@ export default {
 
 <style lang="scss" scoped>
 .night-mode {
-	.queue-item {
+	.song-item {
 		background-color: var(--dark-grey-2) !important;
 		border: 0 !important;
 	}
@@ -214,14 +220,14 @@ export default {
 	}
 }
 
-.queue-item {
-	#thumbnail-and-info,
-	#duration-and-actions {
+.song-item {
+	.thumbnail-and-info,
+	.duration-and-actions {
 		display: flex;
 		align-items: center;
 	}
 
-	#duration-and-actions {
+	.duration-and-actions {
 		margin-left: 5px;
 
 		.universal-item-actions div i {
@@ -229,7 +235,7 @@ export default {
 		}
 	}
 
-	#thumbnail-and-info {
+	.thumbnail-and-info {
 		width: calc(100% - 90px);
 	}
 
@@ -238,9 +244,14 @@ export default {
 		width: 65px;
 		height: 65px;
 		margin: -7.5px;
+		&.large {
+			min-width: 130px;
+			width: 130px;
+			height: 130px;
+		}
 	}
 
-	#song-info {
+	.song-info {
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
@@ -252,13 +263,20 @@ export default {
 			font-family: Karla, Arial, sans-serif;
 		}
 
-		#song-request-time {
+		h6 {
+			color: var(--primary-color) !important;
+			font-weight: bold;
+			font-size: 17px;
+			margin-bottom: 5px;
+		}
+
+		.song-request-time {
 			font-size: 12px;
 			margin-top: 7px;
 		}
 	}
 
-	#song-duration {
+	.song-duration {
 		font-size: 20px;
 	}
 

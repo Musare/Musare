@@ -420,7 +420,16 @@
 								class="quadrant"
 								:class="{ 'no-currently-playing': noSong }"
 							>
-								<currently-playing :song="currentSong" />
+								<song-item
+									:song="currentSong"
+									:duration="false"
+									:large-thumbnail="true"
+									:requested-by="
+										station.type === 'community' &&
+											station.partyMode === true
+									"
+									header="Currently Playing.."
+								/>
 								<!-- <p v-else class="nothing-here-text">
 								No song is currently playing
 							</p> -->
@@ -430,9 +439,15 @@
 								id="next-up-container"
 								class="quadrant"
 							>
-								<currently-playing
-									type="next"
+								<song-item
 									:song="nextSong"
+									:duration="false"
+									:large-thumbnail="true"
+									:requested-by="
+										station.type === 'community' &&
+											station.partyMode === true
+									"
+									header="Next Up.."
 								/>
 							</div>
 						</div>
@@ -628,13 +643,13 @@ import Z404 from "../404.vue";
 
 import FloatingBox from "../../components/ui/FloatingBox.vue";
 import AddToPlaylistDropdown from "../../components/ui/AddToPlaylistDropdown.vue";
+import SongItem from "../../components/ui/SongItem.vue";
 
 import ws from "../../ws";
 import keyboardShortcuts from "../../keyboardShortcuts";
 import utils from "../../../js/utils";
 
-import CurrentlyPlaying from "./components/CurrentlyPlaying.vue";
-import StationSidebar from "./components/Sidebar/index.vue";
+import StationSidebar from "./Sidebar/index.vue";
 
 export default {
 	components: {
@@ -642,18 +657,17 @@ export default {
 		MainHeader,
 		MainFooter,
 		SongQueue: () => import("../../components/modals/AddSongToQueue.vue"),
-		EditPlaylist: () =>
-			import("../../components/modals/EditPlaylist/index.vue"),
+		EditPlaylist: () => import("../../components/modals/EditPlaylist.vue"),
 		CreatePlaylist: () =>
 			import("../../components/modals/CreatePlaylist.vue"),
 		EditStation: () => import("../../components/modals/EditStation.vue"),
 		Report: () => import("../../components/modals/Report.vue"),
 		Z404,
 		FloatingBox,
-		CurrentlyPlaying,
 		StationSidebar,
 		AddToPlaylistDropdown,
-		EditSong: () => import("../../components/modals/EditSong.vue")
+		EditSong: () => import("../../components/modals/EditSong.vue"),
+		SongItem
 	},
 	data() {
 		return {
@@ -2056,6 +2070,14 @@ export default {
 			#next-up-container {
 				overflow: hidden;
 				flex-basis: 50%;
+				.song-item {
+					border: unset;
+					.thumbnail {
+						min-width: 130px !important;
+						width: 130px !important;
+						height: 130px !important;
+					}
+				}
 				.nothing-here-text {
 					height: 100%;
 				}

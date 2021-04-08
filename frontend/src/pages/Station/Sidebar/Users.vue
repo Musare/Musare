@@ -69,7 +69,7 @@
 import { mapState } from "vuex";
 import Toast from "toasters";
 
-import ProfilePicture from "../../../../components/ui/ProfilePicture.vue";
+import ProfilePicture from "../../../components/ui/ProfilePicture.vue";
 
 export default {
 	components: { ProfilePicture },
