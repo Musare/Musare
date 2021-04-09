@@ -58,7 +58,7 @@ CacheModule.runJob("SUB", {
 	channel: "song.newVerifiedSong",
 	cb: async songId => {
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
-		songModel.findOne({ songId }, (err, song) => {
+		songModel.findOne({ _id: songId }, (err, song) => {
 			WSModule.runJob("EMIT_TO_ROOM", {
 				room: "admin.songs",
 				args: ["event:admin.verifiedSong.added", song]
@@ -81,7 +81,7 @@ CacheModule.runJob("SUB", {
 	channel: "song.updatedVerifiedSong",
 	cb: async songId => {
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
-		songModel.findOne({ songId }, (err, song) => {
+		songModel.findOne({ _id: songId }, (err, song) => {
 			WSModule.runJob("EMIT_TO_ROOM", {
 				room: "admin.songs",
 				args: ["event:admin.verifiedSong.updated", song]
@@ -475,17 +475,17 @@ export default {
 				if (song.status === "verified") {
 					CacheModule.runJob("PUB", {
 						channel: "song.updatedVerifiedSong",
-						value: song.songId
+						value: song._id
 					});
 				} else if (song.status === "unverified") {
 					CacheModule.runJob("PUB", {
 						channel: "song.updatedUnverifiedSong",
-						value: song.songId
+						value: song._id
 					});
 				} else if (song.status === "hidden") {
 					CacheModule.runJob("PUB", {
 						channel: "song.updatedHiddenSong",
-						value: song.songId
+						value: song._id
 					});
 				}
 

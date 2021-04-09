@@ -10,7 +10,65 @@ const actions = {};
 const mutations = {};
 
 const modules = {
-	songs: {
+	hiddenSongs: {
+		namespaced: true,
+		state: {
+			songs: []
+		},
+		getters: {},
+		actions: {
+			addSong: ({ commit }, song) => commit("addSong", song),
+			removeSong: ({ commit }, songId) => commit("removeSong", songId),
+			updateSong: ({ commit }, updatedSong) =>
+				commit("updateSong", updatedSong)
+		},
+		mutations: {
+			addSong(state, song) {
+				state.songs.push(song);
+			},
+			removeSong(state, songId) {
+				state.songs = state.songs.filter(song => {
+					return song._id !== songId;
+				});
+			},
+			updateSong(state, updatedSong) {
+				state.songs.forEach((song, index) => {
+					if (song._id === updatedSong._id)
+						Vue.set(state.songs, index, updatedSong);
+				});
+			}
+		}
+	},
+	unverifiedSongs: {
+		namespaced: true,
+		state: {
+			songs: []
+		},
+		getters: {},
+		actions: {
+			addSong: ({ commit }, song) => commit("addSong", song),
+			removeSong: ({ commit }, songId) => commit("removeSong", songId),
+			updateSong: ({ commit }, updatedSong) =>
+				commit("updateSong", updatedSong)
+		},
+		mutations: {
+			addSong(state, song) {
+				state.songs.push(song);
+			},
+			removeSong(state, songId) {
+				state.songs = state.songs.filter(song => {
+					return song._id !== songId;
+				});
+			},
+			updateSong(state, updatedSong) {
+				state.songs.forEach((song, index) => {
+					if (song._id === updatedSong._id)
+						Vue.set(state.songs, index, updatedSong);
+				});
+			}
+		}
+	},
+	verifiedSongs: {
 		namespaced: true,
 		state: {
 			songs: []

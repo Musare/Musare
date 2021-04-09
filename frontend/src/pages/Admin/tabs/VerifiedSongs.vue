@@ -297,7 +297,7 @@ export default {
 		...mapState("modalVisibility", {
 			modals: state => state.modals.admin
 		}),
-		...mapState("admin/songs", {
+		...mapState("admin/verifiedSongs", {
 			songs: state => state.songs
 		}),
 		...mapGetters({
@@ -414,7 +414,7 @@ export default {
 
 			this.socket.dispatch("apis.joinAdminRoom", "songs", () => {});
 		},
-		...mapActions("admin/songs", [
+		...mapActions("admin/verifiedSongs", [
 			// "stopVideo",
 			"addSong",
 			"removeSong",

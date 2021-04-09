@@ -191,8 +191,7 @@ export default {
 	mixins: [ScrollAndFetchHandler],
 	data() {
 		return {
-			searchQuery: "",
-			songs: []
+			searchQuery: ""
 		};
 	},
 	computed: {
@@ -207,6 +206,9 @@ export default {
 		...mapState("modalVisibility", {
 			modals: state => state.modals.admin
 		}),
+		...mapState("admin/hiddenSongs", {
+			songs: state => state.songs
+		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
 		})
@@ -219,22 +221,15 @@ export default {
 	},
 	mounted() {
 		this.socket.on("event:admin.hiddenSong.added", song => {
-			this.songs.push(song);
+			this.addSong(song);
 		});
 
 		this.socket.on("event:admin.hiddenSong.removed", songId => {
-			this.songs = this.songs.filter(song => {
-				return song._id !== songId;
-			});
+			this.removeSong(songId);
 		});
 
 		this.socket.on("event:admin.hiddenSong.updated", updatedSong => {
-			for (let i = 0; i < this.songs.length; i += 1) {
-				const song = this.songs[i];
-				if (song._id === updatedSong._id) {
-					this.$set(this.songs, i, updatedSong);
-				}
-			}
+			this.updateSong(updatedSong);
 		});
 
 		if (this.socket.readyState === 1) this.init();
@@ -262,7 +257,9 @@ export default {
 				this.position,
 				"hidden",
 				data => {
-					data.forEach(song => this.songs.push(song));
+					data.forEach(song => {
+						this.addSong(song);
+					});
 
 					this.position += 1;
 					this.isGettingSet = false;
@@ -295,6 +292,12 @@ export default {
 
 			this.socket.dispatch("apis.joinAdminRoom", "hiddenSongs", () => {});
 		},
+		...mapActions("admin/hiddenSongs", [
+			// "stopVideo",
+			"addSong",
+			"removeSong",
+			"updateSong"
+		]),
 		...mapActions("modals/editSong", ["editSong", "stopVideo"]),
 		...mapActions("modalVisibility", ["openModal"])
 	}
