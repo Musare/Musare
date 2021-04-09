@@ -15,6 +15,7 @@ import { mapState, mapActions, mapGetters } from "vuex";
 import Toast from "toasters";
 
 import ws from "./ws";
+import aw from "./aw";
 import keyboardShortcuts from "./keyboardShortcuts";
 
 export default {
@@ -41,7 +42,8 @@ export default {
 			banned: state => state.user.auth.banned,
 			modals: state => state.modalVisibility.modals,
 			currentlyActive: state => state.modalVisibility.currentlyActive,
-			nightmode: state => state.user.preferences.nightmode
+			nightmode: state => state.user.preferences.nightmode,
+			activityWatch: state => state.user.preferences.activityWatch
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
@@ -71,6 +73,10 @@ export default {
 		nightmode(nightmode) {
 			if (nightmode) this.enableNightMode();
 			else this.disableNightMode();
+		},
+		activityWatch(activityWatch) {
+			if (activityWatch) aw.enable();
+			else aw.disable();
 		}
 	},
 	async mounted() {
@@ -142,6 +148,7 @@ export default {
 				this.changeAutoSkipDisliked(res.data.autoSkipDisliked);
 				this.changeNightmode(res.data.nightmode);
 				this.changeActivityLogPublic(res.data.activityLogPublic);
+				this.changeActivityWatch(res.data.activityWatch);
 
 				if (this.nightmode) this.enableNightMode();
 				else this.disableNightMode();
@@ -170,7 +177,8 @@ export default {
 		...mapActions("user/preferences", [
 			"changeNightmode",
 			"changeAutoSkipDisliked",
-			"changeActivityLogPublic"
+			"changeActivityLogPublic",
+			"changeActivityWatch"
 		])
 	}
 };
@@ -214,12 +222,12 @@ export default {
 	}
 
 	#toasts-container .toast {
-		color: var(--dark-grey-2);
-		background-color: var(--light-grey-3) !important;
+		// color: var(--dark-grey-2);
+		// background-color: var(--light-grey-3) !important;
 
-		&:last-of-type {
-			background-color: var(--light-grey) !important;
-		}
+		// &:last-of-type {
+		// 	background-color: var(--light-grey) !important;
+		// }
 	}
 
 	h1,
@@ -254,11 +262,11 @@ body.night-mode {
 
 	.toast {
 		font-weight: 600;
-		background-color: var(--dark-grey) !important;
+		// background-color: var(--dark-grey) !important;
 
-		&:last-of-type {
-			background-color: var(--dark-grey-2) !important;
-		}
+		// &:last-of-type {
+		// 	background-color: var(--dark-grey-2) !important;
+		// }
 	}
 }
 

@@ -14,7 +14,7 @@ const REQUIRED_DOCUMENT_VERSIONS = {
 	report: 1,
 	song: 3,
 	station: 4,
-	user: 1
+	user: 2
 };
 
 const regex = {

@@ -209,6 +209,11 @@ lofig.folder = "../config/default.json";
 			"user/preferences/changeActivityLogPublic",
 			preferences.activityLogPublic
 		);
+
+		store.dispatch(
+			"user/preferences/changeActivityWatch",
+			preferences.activityWatch
+		);
 	});
 
 	router.beforeEach((to, from, next) => {
