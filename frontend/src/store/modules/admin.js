@@ -1,6 +1,7 @@
 /* eslint no-param-reassign: 0 */
 /* eslint-disable import/no-cycle */
 
+import Vue from "vue";
 import admin from "@/api/admin/index";
 
 const state = {};
@@ -33,7 +34,7 @@ const modules = {
 			updateSong(state, updatedSong) {
 				state.songs.forEach((song, index) => {
 					if (song._id === updatedSong._id)
-						this.$set(state.songs, index, updatedSong);
+						Vue.set(state.songs, index, updatedSong);
 				});
 			}
 		}
@@ -114,7 +115,7 @@ const modules = {
 			updateNews(state, updatedNews) {
 				state.news.forEach((news, index) => {
 					if (news._id === updatedNews._id)
-						this.$set(state.news, index, updatedNews);
+						Vue.set(state.news, index, updatedNews);
 				});
 			}
 		}
