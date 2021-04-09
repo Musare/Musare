@@ -2441,7 +2441,12 @@ export default {
 			"settings",
 			"admin",
 			"auth",
-			"reset_password"
+			"reset_password",
+			"backend",
+			"api",
+			"songs",
+			"playlists",
+			"playlist"
 		];
 
 		async.waterfall(

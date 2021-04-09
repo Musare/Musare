@@ -343,7 +343,7 @@
 													class="button is-primary"
 												>
 													<i class="material-icons"
-														>queue</i
+														>playlist_add</i
 													>
 												</button>
 												<button
@@ -1043,6 +1043,8 @@ export default {
 		});
 
 		clearInterval(this.activityWatchVideoDataInterval);
+		
+		this.joinStation();
 	},
 	methods: {
 		isOwnerOnly() {

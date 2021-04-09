@@ -489,7 +489,8 @@ a {
 
 	.edit-icon,
 	.view-icon,
-	.add-to-playlist-icon {
+	.add-to-playlist-icon,
+	.add-to-queue-icon {
 		color: var(--primary-color);
 	}
 

@@ -1,10 +1,10 @@
 {
 	"mode": "development",
-    "migration": false,
+	"migration": false,
 	"secret": "default",
 	"domain": "http://localhost",
 	"frontendPort": 80,
-	"serverDomain": "http://localhost:8080",
+	"serverDomain": "http://localhost/backend",
 	"serverPort": 8080,
 	"registrationDisabled": true,
 	"fancyConsole": true,
@@ -12,7 +12,7 @@
 		"youtube": {
 			"key": "",
 			"rateLimit": 500,
-            "requestTimeout": 5000
+			"requestTimeout": 5000
 		},
 		"recaptcha": {
 			"secret": "",
@@ -31,15 +31,13 @@
 	},
 	"cors": {
 		"origin": [
-			"http://localhost",
-			"http://192.168.99.100",
-			"http://dev.musare.com"
+			"http://localhost"
 		]
 	},
 	"smtp": {
 		"host": "smtp.mailgun.org",
 		"port": 587,
-		"auth" : {
+		"auth": {
 			"user": "",
 			"pass": ""
 		},
@@ -66,33 +64,29 @@
 		"captureJobs": []
 	},
 	"defaultLogging": {
-        "hideType": [
-            "INFO"
-        ],
-        "blacklistedTerms": [
-        ]
-    },
-    "customLoggingPerModule": {
-        // "cache": {
-        //     "hideType": [
-
-        //     ],
-        //     "blacklistedTerms": []
+		"hideType": [
+			"INFO"
+		],
+		"blacklistedTerms": []
+	},
+	"customLoggingPerModule": {
+		// "cache": {
+		//     "hideType": [
+		//     ],
+		//     "blacklistedTerms": []
 		// },
 		"migration": {
-            "hideType": [
-
-            ],
-            "blacklistedTerms": [
-                "Ran job",
-                "Running job",
-                "Queuing job",
-                "Pausing job",
-                "is queued",
-                "is re-queued",
-                "Requeing"
-            ]
-        }
+			"hideType": [],
+			"blacklistedTerms": [
+				"Ran job",
+				"Running job",
+				"Queuing job",
+				"Pausing job",
+				"is queued",
+				"is re-queued",
+				"Requeing"
+			]
+		}
 	},
 	"configVersion": 2
 }

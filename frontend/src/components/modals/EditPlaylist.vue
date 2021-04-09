@@ -250,10 +250,22 @@
 										}"
 									>
 										<div
-											v-if="isEditable()"
 											class="song-actions"
 											slot="actions"
 										>
+											<i
+												class="material-icons add-to-queue-icon"
+												v-if="
+													station.partyMode &&
+														!station.locked
+												"
+												@click="
+													addSongToQueue(song.songId)
+												"
+												content="Add Song to Queue"
+												v-tippy
+												>queue</i
+											>
 											<i
 												v-if="
 													userId ===
@@ -272,7 +284,7 @@
 											>
 											<i
 												class="material-icons"
-												v-if="index > 0"
+												v-if="isEditable() && index > 0"
 												@click="moveSongToTop(index)"
 												content="Move to top of Playlist"
 												v-tippy
@@ -280,9 +292,10 @@
 											>
 											<i
 												v-if="
-													playlist.songs.length -
-														1 !==
-														index
+													isEditable() &&
+														playlist.songs.length -
+															1 !==
+															index
 												"
 												@click="moveSongToBottom(index)"
 												class="material-icons"
@@ -366,6 +379,9 @@ export default {
 		};
 	},
 	computed: {
+		...mapState("station", {
+			station: state => state.station
+		}),
 		...mapState("user/playlists", {
 			editing: state => state.editing
 		}),
@@ -688,6 +704,26 @@ export default {
 					}
 				);
 			}
+		},
+		addSongToQueue(songId) {
+			this.socket.dispatch(
+				"stations.addToQueue",
+				this.station._id,
+				songId,
+				data => {
+					if (data.status !== "success")
+						new Toast({
+							content: `Error: ${data.message}`,
+							timeout: 8000
+						});
+					else {
+						new Toast({
+							content: `${data.message}`,
+							timeout: 4000
+						});
+					}
+				}
+			);
 		},
 		...mapActions("modalVisibility", ["openModal", "closeModal"])
 	}
