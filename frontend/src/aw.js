@@ -11,27 +11,31 @@ let lastTimeCompetitor = 0;
 
 const notConnectedToast = new Toast({
 	content: "ActivityWatch is not connected yet.",
-	persistent: true
+	persistent: true,
+	interactable: false
 });
 notConnectedToast.hide();
 
 const sendingVideoDataToast = new Toast({
 	content: "Sending video data to ActivityWatch.",
-	persistent: true
+	persistent: true,
+	interactable: false
 });
 sendingVideoDataToast.hide();
 
 const deniedToast = new Toast({
 	content:
 		"Another Musare instance is already sending data to ActivityWatch Musare extension. Please only use 1 active tab for stations and editsong.",
-	persistent: true
+	persistent: true,
+	interactable: false
 });
 deniedToast.hide();
 
 const competitorToast = new Toast({
 	content:
 		"Another Musare instance is already sending data to ActivityWatch Musare extension. Please only use 1 active tab for stations and editsong.",
-	persistent: true
+	persistent: true,
+	interactable: false
 });
 competitorToast.hide();
 

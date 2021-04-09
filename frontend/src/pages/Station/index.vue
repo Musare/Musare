@@ -1043,7 +1043,7 @@ export default {
 		});
 
 		clearInterval(this.activityWatchVideoDataInterval);
-		
+
 		this.joinStation();
 	},
 	methods: {

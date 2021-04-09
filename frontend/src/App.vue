@@ -222,12 +222,12 @@ export default {
 	}
 
 	#toasts-container .toast {
-		color: var(--dark-grey-2);
-		background-color: var(--light-grey-3) !important;
+		// color: var(--dark-grey-2);
+		// background-color: var(--light-grey-3) !important;
 
-		&:last-of-type {
-			background-color: var(--light-grey) !important;
-		}
+		// &:last-of-type {
+		// 	background-color: var(--light-grey) !important;
+		// }
 	}
 
 	h1,
@@ -262,11 +262,11 @@ body.night-mode {
 
 	.toast {
 		font-weight: 600;
-		background-color: var(--dark-grey) !important;
+		// background-color: var(--dark-grey) !important;
 
-		&:last-of-type {
-			background-color: var(--dark-grey-2) !important;
-		}
+		// &:last-of-type {
+		// 	background-color: var(--dark-grey-2) !important;
+		// }
 	}
 }
 
