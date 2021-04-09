@@ -8,6 +8,7 @@ const DBModule = moduleManager.modules.db;
 const UtilsModule = moduleManager.modules.utils;
 const WSModule = moduleManager.modules.ws;
 const SongsModule = moduleManager.modules.songs;
+const StationsModule = moduleManager.modules.stations;
 const CacheModule = moduleManager.modules.cache;
 const PlaylistsModule = moduleManager.modules.playlists;
 const YouTubeModule = moduleManager.modules.youtube;
@@ -938,6 +939,14 @@ export default {
 					});
 				}
 
+				StationsModule.runJob("GET_STATIONS_THAT_INCLUDE_OR_EXCLUDE_PLAYLIST", { playlistId })
+					.then(response => {
+						response.stationIds.forEach(stationId => {
+							PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();
+						});
+					})
+					.catch();
+
 				CacheModule.runJob("PUB", {
 					channel: "playlist.addSong",
 					value: {
@@ -1155,6 +1164,14 @@ export default {
 				},
 
 				(playlist, next) => {
+					StationsModule.runJob("GET_STATIONS_THAT_INCLUDE_OR_EXCLUDE_PLAYLIST", { playlistId })
+						.then(response => {
+							response.stationIds.forEach(stationId => {
+								PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();
+							});
+						})
+						.catch();
+
 					SongsModule.runJob("GET_SONG_FROM_ID", { songId }, this)
 						.then(res =>
 							next(null, playlist, {
