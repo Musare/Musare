@@ -325,6 +325,16 @@ CacheModule.runJob("SUB", {
 });
 
 CacheModule.runJob("SUB", {
+	channel: "station.repositionSongInQueue",
+	cb: res => {
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: `station.${res.stationId}`,
+			args: ["event:queue.repositionSong", res.song]
+		});
+	}
+});
+
+CacheModule.runJob("SUB", {
 	channel: "station.voteSkipSong",
 	cb: stationId => {
 		WSModule.runJob("EMIT_TO_ROOM", {
@@ -3093,6 +3103,87 @@ export default {
 			}
 		);
 	},
+
+	/**
+	 * Reposition a song in station queue
+	 *
+	 * @param {object} session - user session
+	 * @param {object} song - contains details about the song that is to be repositioned
+	 * @param {string} song.songId - the id of the song
+	 * @param {number} song.newIndex - the new position for the song in the queue
+	 * @param {number} song.oldIndex - the old position of the song in the queue
+	 * @param {string} stationId - the station id
+	 * @param {Function} cb - callback
+	 */
+	repositionSongInQueue: isOwnerRequired(async function repositionQueue(session, song, stationId, cb) {
+		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
+
+		async.waterfall(
+			[
+				next => {
+					if (!song || !song.songId) return next("You must provide a song to reposition.");
+					return next();
+				},
+
+				// remove song from queue
+				next => {
+					stationModel.updateOne({ _id: stationId }, { $pull: { queue: { songId: song.songId } } }, next);
+				},
+
+				// add song back to queue (in new position)
+				(res, next) => {
+					stationModel.updateOne(
+						{ _id: stationId },
+						{ $push: { queue: { $each: [song], $position: song.newIndex } } },
+						err => next(err)
+					);
+				},
+
+				// update the cache representation of the station
+				next => {
+					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
+						.then(station => next(null, station))
+						.catch(next);
+				}
+			],
+			async err => {
+				console.log(err);
+
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"STATIONS_REPOSITION_SONG_IN_QUEUE",
+						`Repositioning song ${song.songId} in queue of station "${stationId}" failed. "${err}"`
+					);
+					return cb({ status: "failure", message: err });
+				}
+
+				this.log(
+					"SUCCESS",
+					"STATIONS_REPOSITION_SONG_IN_QUEUE",
+					`Repositioned song ${song.songId} in queue of station "${stationId}" successfully.`
+				);
+
+				CacheModule.runJob("PUB", {
+					channel: "station.repositionSongInQueue",
+					value: {
+						song: {
+							songId: song.songId,
+							oldIndex: song.oldIndex,
+							newIndex: song.newIndex
+						},
+						stationId
+					}
+				});
+
+				return cb({
+					status: "success",
+					message: "Successfully repositioned song in queue."
+				});
+			}
+		);
+	}),
 
 	/**
 	 * Selects a private playlist for a station
