@@ -14,7 +14,7 @@
 						:name="user.name ? user.name : user.username"
 					/>
 					<div>
-						<div class="name-role-row">
+						<div class="name-row" v-if="user.name">
 							<p class="name">{{ user.name }}</p>
 							<span
 								class="role admin"
@@ -22,7 +22,14 @@
 								>admin</span
 							>
 						</div>
-						<h2 class="username">@{{ user.username }}</h2>
+						<div class="username-row">
+							<h2 class="username">@{{ user.username }}</h2>
+							<span
+								class="role admin"
+								v-if="user.role === 'admin' && !user.name"
+								>admin</span
+							>
+						</div>
 					</div>
 				</div>
 				<div
@@ -236,7 +243,8 @@ export default {
 		}
 	}
 
-	.name-role-row {
+	.name-row,
+	.username-row {
 		display: flex;
 		flex-direction: row;
 		align-items: center;
