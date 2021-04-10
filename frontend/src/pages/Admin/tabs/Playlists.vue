@@ -20,6 +20,18 @@
 			>
 				Request orphaned playlist songs
 			</button>
+			<button
+				class="button is-primary"
+				@click="clearAndRefillAllStationPlaylists()"
+			>
+				Clear and refill all station playlists
+			</button>
+			<button
+				class="button is-primary"
+				@click="clearAndRefillAllGenrePlaylists()"
+			>
+				Clear and refill all genre playlists
+			</button>
 			<br />
 			<br />
 			<table class="table is-striped">
@@ -177,6 +189,36 @@ export default {
 						new Toast(res.message);
 					} else {
 						new Toast(`Error: ${res.message}`);
+					}
+				}
+			);
+		},
+		clearAndRefillAllStationPlaylists() {
+			this.socket.dispatch(
+				"playlists.clearAndRefillAllStationPlaylists",
+				res => {
+					if (res.status === "success") {
+						new Toast({ content: res.message, timeout: 4000 });
+					} else {
+						new Toast({
+							content: `Error: ${res.message}`,
+							timeout: 4000
+						});
+					}
+				}
+			);
+		},
+		clearAndRefillAllGenrePlaylists() {
+			this.socket.dispatch(
+				"playlists.clearAndRefillAllGenrePlaylists",
+				res => {
+					if (res.status === "success") {
+						new Toast({ content: res.message, timeout: 4000 });
+					} else {
+						new Toast({
+							content: `Error: ${res.message}`,
+							timeout: 4000
+						});
 					}
 				}
 			);

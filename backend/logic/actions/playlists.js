@@ -1627,5 +1627,239 @@ export default {
 				return cb({ status: "success", message: "Success" });
 			}
 		);
+	}),
+
+	/**
+	 * Clears and refills a station playlist
+	 *
+	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {string} playlistId - the id of the playlist we are clearing and refilling
+	 * @param {Function} cb - gets called with the result
+	 */
+	clearAndRefillStationPlaylist: isAdminRequired(async function index(session, playlistId, cb) {
+		async.waterfall(
+			[
+				next => {
+					if (!playlistId) next("Please specify a playlist id");
+					else {
+						PlaylistsModule.runJob("CLEAR_AND_REFILL_STATION_PLAYLIST", { playlistId }, this)
+							.then(() => {
+								next();
+							})
+							.catch(err => {
+								next(err);
+							});
+					}
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+
+					this.log(
+						"ERROR",
+						"PLAYLIST_CLEAR_AND_REFILL_STATION_PLAYLIST",
+						`Clearing and refilling station playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
+					);
+
+					return cb({ status: "failure", message: err });
+				}
+
+				this.log(
+					"SUCCESS",
+					"PLAYLIST_CLEAR_AND_REFILL_STATION_PLAYLIST",
+					`Successfully cleared and refilled station playlist "${playlistId}" for user "${session.userId}".`
+				);
+
+				return cb({
+					status: "success",
+					message: "Playlist has been successfully cleared and refilled"
+				});
+			}
+		);
+	}),
+
+	/**
+	 * Clears and refills a genre playlist
+	 *
+	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {string} playlistId - the id of the playlist we are clearing and refilling
+	 * @param {Function} cb - gets called with the result
+	 */
+	clearAndRefillGenrePlaylist: isAdminRequired(async function index(session, playlistId, cb) {
+		async.waterfall(
+			[
+				next => {
+					if (!playlistId) next("Please specify a playlist id");
+					else {
+						PlaylistsModule.runJob("CLEAR_AND_REFILL_GENRE_PLAYLIST", { playlistId }, this)
+							.then(() => {
+								next();
+							})
+							.catch(err => {
+								next(err);
+							});
+					}
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+
+					this.log(
+						"ERROR",
+						"PLAYLIST_CLEAR_AND_REFILL_GENRE_PLAYLIST",
+						`Clearing and refilling genre playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
+					);
+
+					return cb({ status: "failure", message: err });
+				}
+
+				this.log(
+					"SUCCESS",
+					"PLAYLIST_CLEAR_AND_REFILL_GENRE_PLAYLIST",
+					`Successfully cleared and refilled genre playlist "${playlistId}" for user "${session.userId}".`
+				);
+
+				return cb({
+					status: "success",
+					message: "Playlist has been successfully cleared and refilled"
+				});
+			}
+		);
+	}),
+
+	/**
+	 * Clears and refills all station playlists
+	 *
+	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {Function} cb - gets called with the result
+	 */
+	clearAndRefillAllStationPlaylists: isAdminRequired(async function index(session, cb) {
+		async.waterfall(
+			[
+				next => {
+					PlaylistsModule.runJob("GET_ALL_STATION_PLAYLISTS", {}, this)
+						.then(response => {
+							next(null, response.playlists);
+						})
+						.catch(err => {
+							next(err);
+						});
+				},
+
+				(playlists, next) => {
+					async.eachLimit(
+						playlists,
+						1,
+						(playlist, next) => {
+							PlaylistsModule.runJob(
+								"CLEAR_AND_REFILL_STATION_PLAYLIST",
+								{ playlistId: playlist._id },
+								this
+							)
+								.then(() => {
+									next();
+								})
+								.catch(err => {
+									next(err);
+								});
+						},
+						next
+					);
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+
+					this.log(
+						"ERROR",
+						"PLAYLIST_CLEAR_AND_REFILL_ALL_STATION_PLAYLISTS",
+						`Clearing and refilling all station playlists failed for user "${session.userId}". "${err}"`
+					);
+
+					return cb({ status: "failure", message: err });
+				}
+
+				this.log(
+					"SUCCESS",
+					"PLAYLIST_CLEAR_AND_REFILL_ALL_STATION_PLAYLISTS",
+					`Successfully cleared and refilled all station playlists for user "${session.userId}".`
+				);
+
+				return cb({
+					status: "success",
+					message: "Playlists have been successfully cleared and refilled"
+				});
+			}
+		);
+	}),
+
+	/**
+	 * Clears and refills all genre playlists
+	 *
+	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {Function} cb - gets called with the result
+	 */
+	clearAndRefillAllGenrePlaylists: isAdminRequired(async function index(session, cb) {
+		async.waterfall(
+			[
+				next => {
+					PlaylistsModule.runJob("GET_ALL_GENRE_PLAYLISTS", {}, this)
+						.then(response => {
+							next(null, response.playlists);
+						})
+						.catch(err => {
+							next(err);
+						});
+				},
+
+				(playlists, next) => {
+					async.eachLimit(
+						playlists,
+						1,
+						(playlist, next) => {
+							PlaylistsModule.runJob(
+								"CLEAR_AND_REFILL_GENRE_PLAYLIST",
+								{ playlistId: playlist._id },
+								this
+							)
+								.then(() => {
+									next();
+								})
+								.catch(err => {
+									next(err);
+								});
+						},
+						next
+					);
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+
+					this.log(
+						"ERROR",
+						"PLAYLIST_CLEAR_AND_REFILL_ALL_GENRE_PLAYLISTS",
+						`Clearing and refilling all genre playlists failed for user "${session.userId}". "${err}"`
+					);
+
+					return cb({ status: "failure", message: err });
+				}
+
+				this.log(
+					"SUCCESS",
+					"PLAYLIST_CLEAR_AND_REFILL_ALL_GENRE_PLAYLISTS",
+					`Successfully cleared and refilled all genre playlists for user "${session.userId}".`
+				);
+
+				return cb({
+					status: "success",
+					message: "Playlists have been successfully cleared and refilled"
+				});
+			}
+		);
 	})
 };
