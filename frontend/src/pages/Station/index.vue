@@ -925,10 +925,21 @@ export default {
 
 		this.socket.on("event:queue.update", queue => {
 			this.updateSongsList(queue);
+
 			let nextSong = null;
-			if (this.songsList[0]) {
+			if (this.songsList[0])
 				nextSong = this.songsList[0].songId ? this.songsList[0] : null;
-			}
+
+			this.updateNextSong(nextSong);
+		});
+
+		this.socket.on("event:queue.repositionSong", song => {
+			this.repositionSongInList(song);
+
+			let nextSong = null;
+			if (this.songsList[0])
+				nextSong = this.songsList[0].songId ? this.songsList[0] : null;
+
 			this.updateNextSong(nextSong);
 		});
 
@@ -1929,6 +1940,7 @@ export default {
 			"updatePreviousSong",
 			"updateNextSong",
 			"updateSongsList",
+			"repositionSongInList",
 			"updateStationPaused",
 			"updateLocalPaused",
 			"updateNoSong",

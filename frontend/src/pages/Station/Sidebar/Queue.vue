@@ -10,6 +10,7 @@
 			v-bind="dragOptions"
 			@start="drag = true"
 			@end="drag = false"
+			@change="repositionSongInQueue"
 		>
 			<transition-group
 				type="transition"
@@ -43,14 +44,14 @@
 						<i
 							class="material-icons"
 							v-if="index > 0"
-							@click="moveSongToTop(index)"
+							@click="moveSongToTop(song, index)"
 							content="Move to top of Queue"
 							v-tippy
 							>vertical_align_top</i
 						>
 						<i
 							v-if="queue.length - 1 !== index"
-							@click="moveSongToBottom(index)"
+							@click="moveSongToBottom(song, index)"
 							class="material-icons"
 							content="Move to bottom of Queue"
 							v-tippy
@@ -139,6 +140,14 @@ export default {
 		};
 	},
 	computed: {
+		queue: {
+			get() {
+				return this.$store.state.station.songsList;
+			},
+			set(queue) {
+				this.$store.commit("station/updateSongsList", queue);
+			}
+		},
 		dragOptions() {
 			return {
 				animation: 200,
@@ -146,14 +155,6 @@ export default {
 				disabled: !(this.isAdminOnly() || this.isOwnerOnly()),
 				ghostClass: "draggable-list-ghost"
 			};
-		},
-		queue: {
-			get() {
-				return this.songsList;
-			},
-			set(queue) {
-				this.updateQueuePositioning(queue);
-			}
 		},
 		...mapState({
 			loggedIn: state => state.user.auth.loggedIn,
@@ -200,27 +201,39 @@ export default {
 				}
 			);
 		},
-		updateQueuePositioning(queue) {
+		repositionSongInQueue({ moved }) {
+			if (!moved) return; // we only need to update when song is moved
+
 			this.socket.dispatch(
-				"stations.repositionQueue",
+				"stations.repositionSongInQueue",
+				{
+					...moved.element,
+					oldIndex: moved.oldIndex,
+					newIndex: moved.newIndex
+				},
 				this.station._id,
-				queue,
 				res => {
 					new Toast({ content: res.message, timeout: 4000 });
 				}
 			);
 		},
-		moveSongToTop(index) {
-			this.queue.splice(0, 0, this.queue.splice(index, 1)[0]);
-			this.updateQueuePositioning(this.queue);
+		moveSongToTop(song, index) {
+			this.repositionSongInQueue({
+				moved: {
+					element: song,
+					oldIndex: index,
+					newIndex: 0
+				}
+			});
 		},
-		moveSongToBottom(index) {
-			this.queue.splice(
-				this.queue.length,
-				0,
-				this.queue.splice(index, 1)[0]
-			);
-			this.updateQueuePositioning(this.queue);
+		moveSongToBottom(song, index) {
+			this.repositionSongInQueue({
+				moved: {
+					element: song,
+					oldIndex: index,
+					newIndex: this.songsList.length
+				}
+			});
 		},
 		...mapActions("modalVisibility", ["openModal"])
 	}

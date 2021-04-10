@@ -45,6 +45,9 @@ const actions = {
 	updateSongsList: ({ commit }, songsList) => {
 		commit("updateSongsList", songsList);
 	},
+	repositionSongInList: ({ commit }, song) => {
+		commit("repositionSongInList", song);
+	},
 	updateStationPaused: ({ commit }, stationPaused) => {
 		commit("updateStationPaused", stationPaused);
 	},
@@ -85,6 +88,23 @@ const mutations = {
 		state.nextSong = nextSong;
 	},
 	updateSongsList(state, songsList) {
+		state.songsList = songsList;
+	},
+	repositionSongInList(state, song) {
+		if (
+			state.songsList[song.newIndex] &&
+			state.songsList[song.newIndex].songId === song.songId
+		)
+			return;
+
+		const { songsList } = state;
+
+		songsList.splice(
+			song.newIndex,
+			0,
+			songsList.splice(song.oldIndex, 1)[0]
+		);
+
 		state.songsList = songsList;
 	},
 	updateStationPaused(state, stationPaused) {
