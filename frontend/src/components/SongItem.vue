@@ -4,16 +4,18 @@
 			<song-thumbnail :class="{ large: largeThumbnail }" :song="song" />
 			<div class="song-info">
 				<h6 v-if="header">{{ header }}</h6>
-				<h4
-					class="item-title"
-					:style="
-						song.artists && song.artists.length < 1
-							? { fontSize: '16px' }
-							: null
-					"
-					:title="song.title"
-				>
-					{{ song.title }}
+				<div class="song-title">
+					<h4
+						class="item-title"
+						:style="
+							song.artists && song.artists.length < 1
+								? { fontSize: '16px' }
+								: null
+						"
+						:title="song.title"
+					>
+						{{ song.title }}
+					</h4>
 					<i
 						v-if="song.status === 'verified'"
 						class="material-icons verified-song"
@@ -22,7 +24,7 @@
 					>
 						check_circle
 					</i>
-				</h4>
+				</div>
 				<h5
 					class="item-description"
 					v-if="song.artists"
@@ -265,11 +267,15 @@ export default {
 			font-family: Karla, Arial, sans-serif;
 		}
 
-		h6 {
-			color: var(--primary-color) !important;
-			font-weight: bold;
-			font-size: 17px;
-			margin-bottom: 5px;
+		.song-title {
+			display: flex;
+			flex-direction: row;
+			h6 {
+				color: var(--primary-color) !important;
+				font-weight: bold;
+				font-size: 17px;
+				margin-bottom: 5px;
+			}
 		}
 
 		.song-request-time {
