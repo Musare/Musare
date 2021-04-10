@@ -201,49 +201,39 @@ export default {
 			const newPassword = this.validation.newPassword.value;
 
 			if (this.previousPassword === "")
-				return new Toast({
-					content: "Please enter a previous password.",
-					timeout: 8000
-				});
+				return new Toast("Please enter a previous password.");
 
 			if (!this.validation.newPassword.valid)
-				return new Toast({
-					content: "Please enter a valid new password.",
-					timeout: 8000
-				});
+				return new Toast("Please enter a valid new password.");
 
 			return this.socket.dispatch(
 				"users.updatePassword",
 				this.previousPassword,
 				newPassword,
 				res => {
-					if (res.status !== "success")
-						new Toast({ content: res.message, timeout: 8000 });
+					if (res.status !== "success") new Toast(res.message);
 					else {
 						this.previousPassword = "";
 						this.validation.newPassword.value = "";
 
-						new Toast({
-							content: "Successfully changed password.",
-							timeout: 4000
-						});
+						new Toast("Successfully changed password.");
 					}
 				}
 			);
 		},
 		unlinkPassword() {
 			this.socket.dispatch("users.unlinkPassword", res => {
-				new Toast({ content: res.message, timeout: 8000 });
+				new Toast(res.message);
 			});
 		},
 		unlinkGitHub() {
 			this.socket.dispatch("users.unlinkGitHub", res => {
-				new Toast({ content: res.message, timeout: 8000 });
+				new Toast(res.message);
 			});
 		},
 		removeSessions() {
 			this.socket.dispatch(`users.removeSessions`, this.userId, res => {
-				new Toast({ content: res.message, timeout: 4000 });
+				new Toast(res.message);
 			});
 		}
 	}

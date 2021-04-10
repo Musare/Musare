@@ -188,27 +188,20 @@ export default {
 			if (!usernameChanged && !emailAddressChanged) {
 				this.$refs.saveButton.handleFailedSave();
 
-				new Toast({
-					content: "Please make a change before saving.",
-					timeout: 8000
-				});
+				new Toast("Please make a change before saving.");
 			}
 		},
 		changeEmail() {
 			const email = this.modifiedUser.email.address;
 			if (!validation.isLength(email, 3, 254))
-				return new Toast({
-					content: "Email must have between 3 and 254 characters.",
-					timeout: 8000
-				});
+				return new Toast(
+					"Email must have between 3 and 254 characters."
+				);
 			if (
 				email.indexOf("@") !== email.lastIndexOf("@") ||
 				!validation.regex.emailSimple.test(email)
 			)
-				return new Toast({
-					content: "Invalid email format.",
-					timeout: 8000
-				});
+				return new Toast("Invalid email format.");
 
 			this.$refs.saveButton.saveStatus = "disabled";
 
@@ -218,13 +211,10 @@ export default {
 				email,
 				res => {
 					if (res.status !== "success") {
-						new Toast({ content: res.message, timeout: 8000 });
+						new Toast(res.message);
 						this.$refs.saveButton.handleFailedSave();
 					} else {
-						new Toast({
-							content: "Successfully changed email address",
-							timeout: 4000
-						});
+						new Toast("Successfully changed email address");
 
 						this.updateOriginalUser({
 							property: "email.address",
@@ -240,17 +230,14 @@ export default {
 			const { username } = this.modifiedUser;
 
 			if (!validation.isLength(username, 2, 32))
-				return new Toast({
-					content: "Username must have between 2 and 32 characters.",
-					timeout: 8000
-				});
+				return new Toast(
+					"Username must have between 2 and 32 characters."
+				);
 
 			if (!validation.regex.azAZ09_.test(username))
-				return new Toast({
-					content:
-						"Invalid username format. Allowed characters: a-z, A-Z, 0-9 and _.",
-					timeout: 8000
-				});
+				return new Toast(
+					"Invalid username format. Allowed characters: a-z, A-Z, 0-9 and _."
+				);
 
 			this.$refs.saveButton.saveStatus = "disabled";
 
@@ -260,13 +247,10 @@ export default {
 				username,
 				res => {
 					if (res.status !== "success") {
-						new Toast({ content: res.message, timeout: 8000 });
+						new Toast(res.message);
 						this.$refs.saveButton.handleFailedSave();
 					} else {
-						new Toast({
-							content: "Successfully changed username",
-							timeout: 4000
-						});
+						new Toast("Successfully changed username");
 
 						this.updateOriginalUser({
 							property: "username",
@@ -289,12 +273,12 @@ export default {
 					});
 				}
 
-				return new Toast({ content: res.message, timeout: 8000 });
+				return new Toast(res.message);
 			});
 		},
 		removeActivities() {
 			this.socket.dispatch("activities.removeAllForUser", res => {
-				new Toast({ content: res.message, timeout: 4000 });
+				new Toast(res.message);
 			});
 		},
 		...mapActions("settings", ["updateOriginalUser"])

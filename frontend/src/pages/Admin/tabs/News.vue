@@ -273,25 +273,16 @@ export default {
 			} = this;
 
 			if (this.creating.title === "")
-				return new Toast({
-					content: "Field (Title) cannot be empty",
-					timeout: 3000
-				});
+				return new Toast("Field (Title) cannot be empty");
 			if (this.creating.description === "")
-				return new Toast({
-					content: "Field (Description) cannot be empty",
-					timeout: 3000
-				});
+				return new Toast("Field (Description) cannot be empty");
 			if (
 				bugs.length <= 0 &&
 				features.length <= 0 &&
 				improvements.length <= 0 &&
 				upcoming.length <= 0
 			)
-				return new Toast({
-					content: "You must have at least one News Item",
-					timeout: 3000
-				});
+				return new Toast("You must have at least one News Item");
 
 			return this.socket.dispatch(
 				"news.create",
@@ -314,7 +305,7 @@ export default {
 			this.socket.dispatch(
 				"news.remove",
 				news,
-				res => new Toast({ content: res.message, timeout: 8000 })
+				res => new Toast(res.message)
 			);
 		},
 		editNewsClick(news) {
@@ -325,20 +316,14 @@ export default {
 			const change = document.getElementById(`new-${type}`).value.trim();
 
 			if (this.creating[type].indexOf(change) !== -1)
-				return new Toast({
-					content: `Tag already exists`,
-					timeout: 3000
-				});
+				return new Toast(`Tag already exists`);
 
 			if (change) {
 				document.getElementById(`new-${type}`).value = "";
 				this.creating[type].push(change);
 				return true;
 			}
-			return new Toast({
-				content: `${type} cannot be empty`,
-				timeout: 3000
-			});
+			return new Toast(`${type} cannot be empty`);
 		},
 		removeChange(type, index) {
 			this.creating[type].splice(index, 1);

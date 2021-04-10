@@ -120,10 +120,7 @@ export default {
 				const report = res.data;
 				this.viewReport(report);
 			} else {
-				new Toast({
-					content: "Report with that ID not found",
-					timeout: 3000
-				});
+				new Toast("Report with that ID not found");
 				this.closeModal({
 					sector: this.sector,
 					modal: "viewReport"
@@ -142,9 +139,7 @@ export default {
 							modal: "viewReport"
 						});
 				})
-				.catch(
-					err => new Toast({ content: err.message, timeout: 5000 })
-				);
+				.catch(err => new Toast(err.message));
 		},
 		...mapActions("modals/viewReport", ["viewReport", "resolveReport"]),
 		...mapActions("modalVisibility", ["closeModal"])

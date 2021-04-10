@@ -2,10 +2,7 @@
 	<modal title="Report">
 		<div slot="body">
 			<div class="columns song-types">
-				<div
-					v-if="previousSong !== null && localSong === null"
-					class="column song-type"
-				>
+				<div v-if="previousSong !== null" class="column song-type">
 					<div
 						class="card is-fullwidth"
 						:class="{ 'is-highlight-active': isPreviousSongActive }"
@@ -44,52 +41,14 @@
 						/>
 					</div>
 				</div>
-				<div
-					v-if="currentSong !== {} && localSong === null"
-					class="column song-type"
-				>
+				<div v-if="localSong !== null" class="column song-type">
 					<div
 						class="card is-fullwidth"
-						:class="{ 'is-highlight-active': isCurrentSongActive }"
-						@click="highlight('currentSong')"
+						:class="{ 'is-highlight-active': isLocalSongActive }"
+						@click="highlight('localSong')"
 					>
 						<header class="card-header">
-							<p class="card-header-title">Current Song</p>
-						</header>
-						<div class="card-content">
-							<article class="media">
-								<figure class="media-left">
-									<song-thumbnail
-										class="image is-64x64"
-										:song="currentSong"
-									/>
-								</figure>
-								<div class="media-content">
-									<div class="content">
-										<p>
-											<strong>{{
-												currentSong.title
-											}}</strong>
-											<br />
-											<small>{{
-												currentSong.artists.join(", ")
-											}}</small>
-										</p>
-									</div>
-								</div>
-							</article>
-						</div>
-						<a
-							href="#"
-							class="absolute-a"
-							@click="highlight('currentSong')"
-						/>
-					</div>
-				</div>
-				<div v-if="localSong !== null" class="column song-type">
-					<div class="card is-fullwidth">
-						<header class="card-header">
-							<p class="card-header-title">Song</p>
+							<p class="card-header-title">Selected Song</p>
 						</header>
 						<div class="card-content">
 							<article class="media">
@@ -114,6 +73,11 @@
 								</div>
 							</article>
 						</div>
+						<a
+							href="#"
+							class="absolute-a"
+							@click="highlight('localSong')"
+						/>
 					</div>
 				</div>
 			</div>
@@ -187,7 +151,7 @@ export default {
 	data() {
 		return {
 			isPreviousSongActive: false,
-			isCurrentSongActive: true,
+			isLocalSongActive: true,
 			localSong: null,
 			report: {
 				resolved: false,
@@ -240,7 +204,6 @@ export default {
 			return 400 - this.report.description.length;
 		},
 		...mapState({
-			currentSong: state => state.station.currentSong,
 			previousSong: state => state.station.previousSong,
 			song: state => state.modals.report.song
 		}),
@@ -249,8 +212,6 @@ export default {
 		})
 	},
 	mounted() {
-		this.report.songId = this.currentSong.songId;
-
 		if (this.song !== null) {
 			this.localSong = this.song;
 			this.report.songId = this.song.songId;
@@ -260,7 +221,7 @@ export default {
 	methods: {
 		create() {
 			this.socket.dispatch("reports.create", this.report, res => {
-				new Toast({ content: res.message, timeout: 4000 });
+				new Toast(res.message);
 				if (res.status === "success")
 					this.closeModal({
 						sector: "station",
@@ -269,13 +230,13 @@ export default {
 			});
 		},
 		highlight(type) {
-			if (type === "currentSong") {
-				this.report.songId = this.currentSong.songId;
+			if (type === "localSong") {
+				this.report.songId = this.localSong.songId;
 				this.isPreviousSongActive = false;
-				this.isCurrentSongActive = true;
+				this.isLocalSongActive = true;
 			} else if (type === "previousSong") {
 				this.report.songId = this.previousSong.songId;
-				this.isCurrentSongActive = false;
+				this.isLocalSongActive = false;
 				this.isPreviousSongActive = true;
 			}
 		},

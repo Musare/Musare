@@ -242,9 +242,7 @@ export default {
 		},
 		unhide(song) {
 			this.socket.dispatch("songs.unhide", song._id, res => {
-				if (res.status === "success")
-					new Toast({ content: res.message, timeout: 2000 });
-				else new Toast({ content: res.message, timeout: 4000 });
+				new Toast(res.message);
 			});
 		},
 		getSet() {

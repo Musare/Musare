@@ -107,7 +107,7 @@ export default {
 					this.song.songId,
 					playlist._id,
 					res => {
-						new Toast({ content: res.message, timeout: 4000 });
+						new Toast(res.message);
 
 						if (res.status === "success") {
 							this.playlists[playlistIndex].songs.push(this.song);
@@ -120,7 +120,7 @@ export default {
 					this.song.songId,
 					playlist._id,
 					res => {
-						new Toast({ content: res.message, timeout: 4000 });
+						new Toast(res.message);
 
 						if (res.status === "success") {
 							this.playlists[playlistIndex].songs.forEach(

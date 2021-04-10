@@ -65,43 +65,29 @@ export default {
 			const { name, displayName, description } = this.newCommunity;
 
 			if (!name || !displayName || !description)
-				return new Toast({
-					content: "Please fill in all fields",
-					timeout: 8000
-				});
+				return new Toast("Please fill in all fields");
 
 			if (!validation.isLength(name, 2, 16))
-				return new Toast({
-					content: "Name must have between 2 and 16 characters.",
-					timeout: 8000
-				});
+				return new Toast("Name must have between 2 and 16 characters.");
 
 			if (!validation.regex.az09_.test(name))
-				return new Toast({
-					content:
-						"Invalid name format. Allowed characters: a-z, 0-9 and _.",
-					timeout: 8000
-				});
+				return new Toast(
+					"Invalid name format. Allowed characters: a-z, 0-9 and _."
+				);
 
 			if (!validation.isLength(displayName, 2, 32))
-				return new Toast({
-					content:
-						"Display name must have between 2 and 32 characters.",
-					timeout: 8000
-				});
+				return new Toast(
+					"Display name must have between 2 and 32 characters."
+				);
 			if (!validation.regex.ascii.test(displayName))
-				return new Toast({
-					content:
-						"Invalid display name format. Only ASCII characters are allowed.",
-					timeout: 8000
-				});
+				return new Toast(
+					"Invalid display name format. Only ASCII characters are allowed."
+				);
 
 			if (!validation.isLength(description, 2, 200))
-				return new Toast({
-					content:
-						"Description must have between 2 and 200 characters.",
-					timeout: 8000
-				});
+				return new Toast(
+					"Description must have between 2 and 200 characters."
+				);
 
 			let characters = description.split("");
 
@@ -110,10 +96,7 @@ export default {
 			});
 
 			if (characters.length !== 0)
-				return new Toast({
-					content: "Invalid description format.",
-					timeout: 8000
-				});
+				return new Toast("Invalid description format.");
 
 			return this.socket.dispatch(
 				"stations.create",
@@ -125,15 +108,12 @@ export default {
 				},
 				res => {
 					if (res.status === "success") {
-						new Toast({
-							content: `You have added the station successfully`,
-							timeout: 4000
-						});
+						new Toast(`You have added the station successfully`);
 						this.closeModal({
 							sector: "home",
 							modal: "createCommunityStation"
 						});
-					} else new Toast({ content: res.message, timeout: 4000 });
+					} else new Toast(res.message);
 				}
 			);
 		},

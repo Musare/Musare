@@ -263,36 +263,24 @@ export default {
 					songId,
 					data => {
 						if (data.status !== "success")
-							new Toast({
-								content: `Error: ${data.message}`,
-								timeout: 8000
-							});
+							new Toast(`Error: ${data.message}`);
 						else {
 							this.search.songs.results[
 								index
 							].isAddedToQueue = true;
 
-							new Toast({
-								content: `${data.message}`,
-								timeout: 4000
-							});
+							new Toast(data.message);
 						}
 					}
 				);
 			} else {
 				this.socket.dispatch("songs.request", songId, data => {
 					if (data.status !== "success")
-						new Toast({
-							content: `Error: ${data.message}`,
-							timeout: 8000
-						});
+						new Toast(`Error: ${data.message}`);
 					else {
 						this.search.songs.results[index].isAddedToQueue = true;
 
-						new Toast({
-							content: `${data.message}`,
-							timeout: 4000
-						});
+						new Toast(data.message);
 					}
 				});
 			}
@@ -302,10 +290,7 @@ export default {
 
 			// import query is blank
 			if (!this.search.playlist.query)
-				return new Toast({
-					content: "Please enter a YouTube playlist URL.",
-					timeout: 4000
-				});
+				return new Toast("Please enter a YouTube playlist URL.");
 
 			const regex = new RegExp(`[\\?&]list=([^&#]*)`);
 			const splitQuery = regex.exec(this.search.playlist.query);
@@ -320,11 +305,9 @@ export default {
 			// don't give starting import message instantly in case of instant error
 			setTimeout(() => {
 				if (isImportingPlaylist) {
-					new Toast({
-						content:
-							"Starting to import your playlist. This can take some time to do.",
-						timeout: 4000
-					});
+					new Toast(
+						"Starting to import your playlist. This can take some time to do."
+					);
 				}
 			}, 750);
 

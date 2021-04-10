@@ -94,10 +94,7 @@ export default {
 					this.frontendDomain + this.$route.fullPath
 				);
 			} catch (err) {
-				new Toast({
-					content: "Failed to copy to clipboard.",
-					timeout: 8000
-				});
+				new Toast("Failed to copy to clipboard.");
 			}
 		}
 	}

@@ -108,10 +108,7 @@ export default {
 					const punishment = res.data;
 					this.viewPunishment(punishment);
 				} else {
-					new Toast({
-						content: "Punishment with that ID not found",
-						timeout: 3000
-					});
+					new Toast("Punishment with that ID not found");
 					this.closeModal({
 						sector: this.sector,
 						modal: "viewPunishment"

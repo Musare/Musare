@@ -227,10 +227,7 @@ export default {
 				!this.email.valid ||
 				!this.password.valid
 			)
-				return new Toast({
-					content: "Please ensure all fields are valid.",
-					timeout: 5000
-				});
+				return new Toast("Please ensure all fields are valid.");
 
 			return this.register({
 				username: this.username.value,
@@ -241,9 +238,7 @@ export default {
 				.then(res => {
 					if (res.status === "success") window.location.href = "/";
 				})
-				.catch(
-					err => new Toast({ content: err.message, timeout: 5000 })
-				);
+				.catch(err => new Toast(err.message));
 		},
 		onInputBlur(inputName) {
 			this[inputName].entered = true;

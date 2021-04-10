@@ -808,11 +808,9 @@ export default {
 								song.disliked === true
 							) {
 								this.voteSkipStation();
-								new Toast({
-									content:
-										"Automatically voted to skip disliked song.",
-									timeout: 4000
-								});
+								new Toast(
+									"Automatically voted to skip disliked song."
+								);
 							}
 						}
 					}
@@ -1063,12 +1061,8 @@ export default {
 				songId,
 				res => {
 					if (res.status === "success") {
-						new Toast({
-							content:
-								"Successfully removed song from the queue.",
-							timeout: 4000
-						});
-					} else new Toast({ content: res.message, timeout: 8000 });
+						new Toast("Successfully removed song from the queue.");
+					} else new Toast(res.message);
 				}
 			);
 		},
@@ -1110,21 +1104,18 @@ export default {
 							console.log("error with youtube video", err);
 
 							if (err.data === 150 && this.loggedIn) {
-								new Toast({
-									content:
-										"Automatically voted to skip as this song isn't available for you.",
-									timeout: 4000
-								});
+								new Toast(
+									"Automatically voted to skip as this song isn't available for you."
+								);
 
 								// automatically vote to skip
 								this.voteSkipStation();
 
 								// persistent message while song is playing
-								const toastMessage =
-									"This song is unavailable for you, but is playing for everyone else.";
-								new Toast({
-									content: toastMessage,
-									persistant: true
+								const persistentToast = new Toast({
+									content:
+										"This song is unavailable for you, but is playing for everyone else.",
+									persistent: true
 								});
 
 								// save current song id
@@ -1137,17 +1128,7 @@ export default {
 											this.currentSong.songId !==
 											erroredSongId
 										) {
-											document
-												.getElementById(
-													"toasts-content"
-												)
-												.childNodes.forEach(toast => {
-													if (
-														toast.innerHTML ===
-														toastMessage
-													)
-														toast.remove();
-												});
+											persistentToast.destroy();
 
 											clearInterval(
 												window.isSongErroredInterval
@@ -1157,11 +1138,9 @@ export default {
 									150
 								);
 							} else {
-								new Toast({
-									content:
-										"There has been an error with the YouTube Embed",
-									timeout: 8000
-								});
+								new Toast(
+									"There has been an error with the YouTube Embed"
+								);
 							}
 						},
 						onStateChange: event => {
@@ -1355,11 +1334,8 @@ export default {
 				this.station._id,
 				res => {
 					if (res.status === "success") {
-						new Toast({
-							content: "Successfully toggled the queue lock.",
-							timeout: 4000
-						});
-					} else new Toast({ content: res.message, timeout: 8000 });
+						new Toast("Successfully toggled the queue lock.");
+					} else new Toast(res.message);
 				}
 			);
 		},
@@ -1406,16 +1382,11 @@ export default {
 				this.station._id,
 				data => {
 					if (data.status !== "success")
-						new Toast({
-							content: `Error: ${data.message}`,
-							timeout: 8000
-						});
+						new Toast(`Error: ${data.message}`);
 					else
-						new Toast({
-							content:
-								"Successfully skipped the station's current song.",
-							timeout: 4000
-						});
+						new Toast(
+							"Successfully skipped the station's current song."
+						);
 				}
 			);
 		},
@@ -1425,45 +1396,26 @@ export default {
 				this.station._id,
 				data => {
 					if (data.status !== "success")
-						new Toast({
-							content: `Error: ${data.message}`,
-							timeout: 8000
-						});
+						new Toast(`Error: ${data.message}`);
 					else
-						new Toast({
-							content:
-								"Successfully voted to skip the current song.",
-							timeout: 4000
-						});
+						new Toast(
+							"Successfully voted to skip the current song."
+						);
 				}
 			);
 		},
 		resumeStation() {
 			this.socket.dispatch("stations.resume", this.station._id, data => {
 				if (data.status !== "success")
-					new Toast({
-						content: `Error: ${data.message}`,
-						timeout: 8000
-					});
-				else
-					new Toast({
-						content: "Successfully resumed the station.",
-						timeout: 4000
-					});
+					new Toast(`Error: ${data.message}`);
+				else new Toast("Successfully resumed the station.");
 			});
 		},
 		pauseStation() {
 			this.socket.dispatch("stations.pause", this.station._id, data => {
 				if (data.status !== "success")
-					new Toast({
-						content: `Error: ${data.message}`,
-						timeout: 8000
-					});
-				else
-					new Toast({
-						content: "Successfully paused the station.",
-						timeout: 4000
-					});
+					new Toast(`Error: ${data.message}`);
+				else new Toast("Successfully paused the station.");
 			});
 		},
 		toggleMute() {
@@ -1501,10 +1453,7 @@ export default {
 					this.currentSong.songId,
 					data => {
 						if (data.status !== "success")
-							new Toast({
-								content: `Error: ${data.message}`,
-								timeout: 8000
-							});
+							new Toast(`Error: ${data.message}`);
 					}
 				);
 			else
@@ -1513,10 +1462,7 @@ export default {
 					this.currentSong.songId,
 					data => {
 						if (data.status !== "success")
-							new Toast({
-								content: `Error: ${data.message}`,
-								timeout: 8000
-							});
+							new Toast(`Error: ${data.message}`);
 					}
 				);
 		},
@@ -1527,10 +1473,7 @@ export default {
 					this.currentSong.songId,
 					data => {
 						if (data.status !== "success")
-							new Toast({
-								content: `Error: ${data.message}`,
-								timeout: 8000
-							});
+							new Toast(`Error: ${data.message}`);
 					}
 				);
 
@@ -1539,10 +1482,7 @@ export default {
 				this.currentSong.songId,
 				data => {
 					if (data.status !== "success")
-						new Toast({
-							content: `Error: ${data.message}`,
-							timeout: 8000
-						});
+						new Toast(`Error: ${data.message}`);
 				}
 			);
 		},
@@ -1580,10 +1520,9 @@ export default {
 											}
 										);
 									} else {
-										new Toast({
-											content: `Top song in playlist was too long to be added.`,
-											timeout: 3000
-										});
+										new Toast(
+											`Top song in playlist was too long to be added.`
+										);
 
 										this.socket.dispatch(
 											"playlists.moveSongToBottom",
@@ -1600,10 +1539,9 @@ export default {
 										);
 									}
 								} else
-									new Toast({
-										content: `Selected playlist has no songs.`,
-										timeout: 4000
-									});
+									new Toast(
+										`Selected playlist has no songs.`
+									);
 							}
 						}
 					);
@@ -1856,11 +1794,8 @@ export default {
 				this.station._id,
 				res => {
 					if (res.status === "success") {
-						new Toast({
-							content: "Successfully favorited station.",
-							timeout: 4000
-						});
-					} else new Toast({ content: res.message, timeout: 8000 });
+						new Toast("Successfully favorited station.");
+					} else new Toast(res.message);
 				}
 			);
 		},
@@ -1870,11 +1805,8 @@ export default {
 				this.station._id,
 				res => {
 					if (res.status === "success") {
-						new Toast({
-							content: "Successfully unfavorited station.",
-							timeout: 4000
-						});
-					} else new Toast({ content: res.message, timeout: 8000 });
+						new Toast("Successfully unfavorited station.");
+					} else new Toast(res.message);
 				}
 			);
 		},

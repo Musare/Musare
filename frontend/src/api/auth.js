@@ -84,7 +84,7 @@ export default {
 						return window.location.reload();
 					});
 				}
-				new Toast({ content: res.message, timeout: 4000 });
+				new Toast(res.message);
 				return reject(new Error(res.message));
 			});
 		});

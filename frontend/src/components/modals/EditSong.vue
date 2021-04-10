@@ -723,20 +723,16 @@ export default {
 									) {
 										this.video.player.stopVideo();
 										this.video.paused = true;
-										return new Toast({
-											content:
-												"Video can't play. Specified duration is bigger than the YouTube song duration.",
-											timeout: 4000
-										});
+										return new Toast(
+											"Video can't play. Specified duration is bigger than the YouTube song duration."
+										);
 									}
 									if (this.song.duration <= 0) {
 										this.video.player.stopVideo();
 										this.video.paused = true;
-										return new Toast({
-											content:
-												"Video can't play. Specified duration has to be more than 0 seconds.",
-											timeout: 4000
-										});
+										return new Toast(
+											"Video can't play. Specified duration has to be more than 0 seconds."
+										);
 									}
 
 									if (
@@ -756,10 +752,7 @@ export default {
 						}
 					});
 				} else {
-					new Toast({
-						content: "Song with that ID not found",
-						timeout: 3000
-					});
+					new Toast("Song with that ID not found");
 					this.closeModal({
 						sector: this.sector,
 						modal: "editSong"
@@ -971,18 +964,12 @@ export default {
 
 			if (!song.title) {
 				saveButtonRef.handleFailedSave();
-				return new Toast({
-					content: "Please fill in all fields",
-					timeout: 8000
-				});
+				return new Toast("Please fill in all fields");
 			}
 
 			if (!song.thumbnail) {
 				saveButtonRef.handleFailedSave();
-				return new Toast({
-					content: "Please fill in all fields",
-					timeout: 8000
-				});
+				return new Toast("Please fill in all fields");
 			}
 
 			// Duration
@@ -991,30 +978,25 @@ export default {
 				this.youtubeVideoDuration
 			) {
 				saveButtonRef.handleFailedSave();
-				return new Toast({
-					content:
-						"Duration can't be higher than the length of the video",
-					timeout: 8000
-				});
+				return new Toast(
+					"Duration can't be higher than the length of the video"
+				);
 			}
 
 			// Title
 			if (!validation.isLength(song.title, 1, 100)) {
 				saveButtonRef.handleFailedSave();
-				return new Toast({
-					content: "Title must have between 1 and 100 characters.",
-					timeout: 8000
-				});
+				return new Toast(
+					"Title must have between 1 and 100 characters."
+				);
 			}
 
 			// Artists
 			if (song.artists.length < 1 || song.artists.length > 10) {
 				saveButtonRef.handleFailedSave();
-				return new Toast({
-					content:
-						"Invalid artists. You must have at least 1 artist and a maximum of 10 artists.",
-					timeout: 8000
-				});
+				return new Toast(
+					"Invalid artists. You must have at least 1 artist and a maximum of 10 artists."
+				);
 			}
 
 			let error;
@@ -1034,7 +1016,7 @@ export default {
 
 			if (error) {
 				saveButtonRef.handleFailedSave();
-				return new Toast({ content: error, timeout: 8000 });
+				return new Toast(error);
 			}
 
 			// Genres
@@ -1058,24 +1040,19 @@ export default {
 
 			if (error) {
 				saveButtonRef.handleFailedSave();
-				return new Toast({ content: error, timeout: 8000 });
+				return new Toast(error);
 			}
 
 			// Thumbnail
 			if (!validation.isLength(song.thumbnail, 1, 256)) {
 				saveButtonRef.handleFailedSave();
-				return new Toast({
-					content:
-						"Thumbnail must have between 8 and 256 characters.",
-					timeout: 8000
-				});
+				return new Toast(
+					"Thumbnail must have between 8 and 256 characters."
+				);
 			}
 			if (this.useHTTPS && song.thumbnail.indexOf("https://") !== 0) {
 				saveButtonRef.handleFailedSave();
-				return new Toast({
-					content: 'Thumbnail must start with "https://".',
-					timeout: 8000
-				});
+				return new Toast('Thumbnail must start with "https://".');
 			}
 
 			if (
@@ -1084,16 +1061,13 @@ export default {
 				song.thumbnail.indexOf("https://") !== 0
 			) {
 				saveButtonRef.handleFailedSave();
-				return new Toast({
-					content: 'Thumbnail must start with "http://".',
-					timeout: 8000
-				});
+				return new Toast('Thumbnail must start with "http://".');
 			}
 
 			saveButtonRef.status = "disabled";
 
 			return this.socket.dispatch(`songs.update`, song._id, song, res => {
-				new Toast({ content: res.message, timeout: 4000 });
+				new Toast(res.message);
 
 				if (res.status === "success")
 					saveButtonRef.handleSuccessfulSave();
@@ -1175,15 +1149,13 @@ export default {
 			this.socket.dispatch("apis.searchDiscogs", query, page, res => {
 				if (res.status === "success") {
 					if (page === 1)
-						new Toast({
-							content: `Successfully searched. Got ${res.results.length} results.`,
-							timeout: 4000
-						});
+						new Toast(
+							`Successfully searched. Got ${res.results.length} results.`
+						);
 					else
-						new Toast({
-							content: `Successfully got ${res.results.length} more results.`,
-							timeout: 4000
-						});
+						new Toast(
+							`Successfully got ${res.results.length} more results.`
+						);
 
 					if (page === 1) {
 						this.discogs.apiResults = [];
@@ -1215,7 +1187,7 @@ export default {
 
 					this.discogs.page = page;
 					this.discogs.disableLoadMore = false;
-				} else new Toast({ content: res.message, timeout: 8000 });
+				} else new Toast(res.message);
 			});
 		},
 		loadNextDiscogsPage() {
@@ -1322,37 +1294,25 @@ export default {
 					.value.toLowerCase()
 					.trim();
 				if (this.song.genres.indexOf(genre) !== -1)
-					return new Toast({
-						content: "Genre already exists",
-						timeout: 3000
-					});
+					return new Toast("Genre already exists");
 				if (genre) {
 					this.song.genres.push(genre);
 					document.getElementById("new-genre").value = "";
 					return false;
 				}
 
-				return new Toast({
-					content: "Genre cannot be empty",
-					timeout: 3000
-				});
+				return new Toast("Genre cannot be empty");
 			}
 			if (type === "artists") {
 				const artist = document.getElementById("new-artist").value;
 				if (this.song.artists.indexOf(artist) !== -1)
-					return new Toast({
-						content: "Artist already exists",
-						timeout: 3000
-					});
+					return new Toast("Artist already exists");
 				if (document.getElementById("new-artist").value !== "") {
 					this.song.artists.push(artist);
 					document.getElementById("new-artist").value = "";
 					return false;
 				}
-				return new Toast({
-					content: "Artist cannot be empty",
-					timeout: 3000
-				});
+				return new Toast("Artist cannot be empty");
 			}
 
 			return false;

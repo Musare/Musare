@@ -14,6 +14,7 @@ const notConnectedToast = new Toast({
 	persistent: true,
 	interactable: false
 });
+
 notConnectedToast.hide();
 
 const sendingVideoDataToast = new Toast({
@@ -21,6 +22,7 @@ const sendingVideoDataToast = new Toast({
 	persistent: true,
 	interactable: false
 });
+
 sendingVideoDataToast.hide();
 
 const deniedToast = new Toast({
@@ -29,6 +31,7 @@ const deniedToast = new Toast({
 	persistent: true,
 	interactable: false
 });
+
 deniedToast.hide();
 
 const competitorToast = new Toast({
@@ -37,6 +40,7 @@ const competitorToast = new Toast({
 	persistent: true,
 	interactable: false
 });
+
 competitorToast.hide();
 
 export default {
@@ -127,11 +131,7 @@ export default {
 		if (data.type === "pong") {
 			gotPong = true;
 			notConnectedToast.hide();
-			new Toast({
-				content:
-					"Got pong, connected to ActivityWatch Musare extension",
-				timeout: 8000
-			});
+			new Toast("Got pong, connected to ActivityWatch Musare extension");
 		}
 
 		if (data.type === "denied") {
@@ -154,11 +154,9 @@ export default {
 					this.attemptPing.apply(this);
 				}, 1000);
 			} else {
-				new Toast({
-					content:
-						"Couldn't connect to ActivityWatch Musare extension.",
-					timeout: 8000
-				});
+				new Toast(
+					"Couldn't connect to ActivityWatch Musare extension."
+				);
 			}
 		}
 	}

@@ -47,8 +47,7 @@ export default {
 							isAddedToQueue: false
 						});
 					});
-				} else if (res.status === "error")
-					new Toast({ content: res.message, timeout: 3000 });
+				} else if (res.status === "error") new Toast(res.message);
 			});
 		},
 		loadMoreSongs() {
@@ -71,8 +70,7 @@ export default {
 								isAddedToQueue: false
 							});
 						});
-					} else if (res.status === "error")
-						new Toast({ content: res.message, timeout: 3000 });
+					} else if (res.status === "error") new Toast(res.message);
 				}
 			);
 		}

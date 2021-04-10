@@ -117,11 +117,7 @@ export default {
 				this.$route.query.id,
 				res => {
 					if (res.status === "success") this.view(res.data);
-					else
-						new Toast({
-							content: "Report with that ID not found",
-							timeout: 3000
-						});
+					else new Toast("Report with that ID not found");
 				}
 			);
 		}
@@ -145,9 +141,7 @@ export default {
 							modal: "viewReport"
 						});
 				})
-				.catch(
-					err => new Toast({ content: err.message, timeout: 5000 })
-				);
+				.catch(err => new Toast(err.message));
 		},
 		...mapActions("modalVisibility", ["openModal", "closeModal"]),
 		...mapActions("admin/reports", ["resolveReport"])
