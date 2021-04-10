@@ -196,9 +196,7 @@ class _YouTubeModule extends CoreClass {
 	 */
 	GET_PLAYLIST(payload) {
 		return new Promise((resolve, reject) => {
-			const name = "list".replace(/[\\[]/, "\\[").replace(/[\]]/, "\\]");
-
-			const regex = new RegExp(`[\\?&]${name}=([^&#]*)`);
+			const regex = new RegExp(`[\\?&]list=([^&#]*)`);
 			const splitQuery = regex.exec(payload.url);
 
 			if (!splitQuery) {
@@ -255,7 +253,7 @@ class _YouTubeModule extends CoreClass {
 				(err, response) => {
 					if (err && err !== true) {
 						YouTubeModule.log("ERROR", "GET_PLAYLIST", "Some error has occurred.", err.message);
-						reject(new Error("Some error has occurred."));
+						reject(new Error(err.message));
 					} else {
 						resolve({ songs: response.filteredSongs ? response.filteredSongs.songIds : response.songs });
 					}
@@ -305,6 +303,9 @@ class _YouTubeModule extends CoreClass {
 					})
 					.catch(err => {
 						YouTubeModule.log("ERROR", "GET_PLAYLIST_PAGE", `${err.message}`);
+						if (err.message === "Request failed with status code 404") {
+							return reject(new Error("Playlist not found. Is the playlist public/unlisted?"));
+						}
 						return reject(new Error("An error has occured. Please try again later."));
 					});
 			});

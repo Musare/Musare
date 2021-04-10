@@ -474,7 +474,7 @@
 			<save-button ref="saveButton" @clicked="saveChanges()" />
 
 			<button
-				v-if="station.type === 'community'"
+				v-if="station && station.type === 'community'"
 				class="button is-danger"
 				@click="deleteStation()"
 			>
@@ -592,15 +592,15 @@ export default {
 					this.stationId,
 					res => {
 						if (res.status === "success") {
-							this.station.genres = res.playlists.map(
-								playlist => {
+							this.setGenres(
+								res.playlists.map(playlist => {
 									if (playlist) {
 										if (playlist.type === "genre")
 											return playlist.createdFor;
 										return `Playlist: ${playlist.name}`;
 									}
 									return "Unknown/Error";
-								}
+								})
 							);
 							this.originalStation.genres = JSON.parse(
 								JSON.stringify(this.station.genres)
@@ -614,15 +614,15 @@ export default {
 					this.stationId,
 					res => {
 						if (res.status === "success") {
-							this.station.blacklistedGenres = res.playlists.map(
-								playlist => {
+							this.setBlacklistedGenres(
+								res.playlists.map(playlist => {
 									if (playlist) {
 										if (playlist.type === "genre")
 											return playlist.createdFor;
 										return `Playlist: ${playlist.name}`;
 									}
 									return "Unknown/Error";
-								}
+								})
 							);
 							this.originalStation.blacklistedGenres = JSON.parse(
 								JSON.stringify(this.station.blacklistedGenres)
@@ -645,6 +645,9 @@ export default {
 				});
 			}
 		});
+	},
+	beforeDestroy() {
+		this.clearStation();
 	},
 	methods: {
 		saveChanges() {
@@ -1068,7 +1071,12 @@ export default {
 			else if (type === "blacklist-genres")
 				this.station.blacklistedGenres.splice(index, 1);
 		},
-		...mapActions("modals/editStation", ["editStation"]),
+		...mapActions("modals/editStation", [
+			"editStation",
+			"setGenres",
+			"setBlacklistedGenres",
+			"clearStation"
+		]),
 		...mapActions("modalVisibility", ["closeModal"])
 	}
 };
