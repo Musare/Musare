@@ -1,5 +1,3 @@
-import Toast from "toasters";
-
 // eslint-disable-next-line import/no-cycle
 import store from "./store";
 

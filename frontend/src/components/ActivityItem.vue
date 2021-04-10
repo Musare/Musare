@@ -185,6 +185,7 @@ export default {
 		min-width: 70.5px;
 		max-width: 70.5px;
 		height: 70.5px;
+		margin-left: 0px;
 
 		&.red {
 			background-color: var(--red);
