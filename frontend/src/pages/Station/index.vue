@@ -1175,6 +1175,7 @@ export default {
 										this.currentSong.skipDuration,
 									true
 								);
+								this.canAutoplay = true;
 								if (this.localPaused || this.stationPaused)
 									this.player.pauseVideo();
 							} else if (
@@ -1251,7 +1252,7 @@ export default {
 				this.currentSong &&
 				this.player.getPlayerState() === -1
 			) {
-				if (this.attemptsToPlayVideo >= 5) {
+				if (!this.canAutoplay) {
 					if (
 						Date.now() - this.lastTimeRequestedIfCanAutoplay >
 						2000
