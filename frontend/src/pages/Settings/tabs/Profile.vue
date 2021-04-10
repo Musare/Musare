@@ -15,7 +15,11 @@
 			<div id="avatar-selection-inner-container">
 				<profile-picture
 					:avatar="modifiedUser.avatar"
-					:name="modifiedUser.name"
+					:name="
+						modifiedUser.name
+							? modifiedUser.name
+							: modifiedUser.username
+					"
 				/>
 				<div class="select">
 					<select v-model="modifiedUser.avatar.type">

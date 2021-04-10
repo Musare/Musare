@@ -44,7 +44,7 @@
 					>
 						<profile-picture
 							:avatar="user.avatar"
-							:name="user.name"
+							:name="user.name ? user.name : user.username"
 						/>
 
 						{{ user.username }}

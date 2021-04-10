@@ -9,7 +9,10 @@
 		<div class="container">
 			<div class="info-section">
 				<div class="picture-name-row">
-					<profile-picture :avatar="user.avatar" :name="user.name" />
+					<profile-picture
+						:avatar="user.avatar"
+						:name="user.name ? user.name : user.username"
+					/>
 					<div>
 						<div class="name-role-row">
 							<p class="name">{{ user.name }}</p>
