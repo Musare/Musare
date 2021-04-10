@@ -31,12 +31,19 @@
 							>
 								Edit
 							</button>
-							<button
-								class="button is-danger"
-								@click="remove(news)"
+							<tippy
+								interactive="true"
+								placement="top"
+								theme="confirm"
+								trigger="click"
 							>
-								Remove
-							</button>
+								<template #trigger>
+									<button class="button is-danger">
+										Remove
+									</button>
+								</template>
+								<a @click="remove(news)"> Confirm</a>
+							</tippy>
 						</td>
 					</tr>
 				</tbody>
@@ -388,6 +395,10 @@ export default {
 
 td {
 	vertical-align: middle;
+
+	& > div {
+		display: inline-flex;
+	}
 }
 
 .is-info:focus {

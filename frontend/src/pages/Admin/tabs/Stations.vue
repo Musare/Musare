@@ -61,12 +61,17 @@
 							<a class="button is-info" @click="edit(station)"
 								>Edit</a
 							>
-							<a
-								class="button is-danger"
-								href="#"
-								@click="removeStation(index)"
-								>Remove</a
+							<tippy
+								interactive="true"
+								placement="top"
+								theme="confirm"
+								trigger="click"
 							>
+								<template #trigger>
+									<a class="button is-danger">Remove</a>
+								</template>
+								<a @click="removeStation(index)"> Confirm</a>
+							</tippy>
 						</td>
 					</tr>
 				</tbody>
@@ -399,6 +404,10 @@ td {
 	word-wrap: break-word;
 	max-width: 10vw;
 	vertical-align: middle;
+
+	& > div {
+		display: inline-flex;
+	}
 }
 
 .is-info:focus {

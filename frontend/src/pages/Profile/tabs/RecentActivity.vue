@@ -19,17 +19,22 @@
 					:activity="activity"
 				>
 					<div slot="actions">
-						<a
+						<tippy
 							v-if="userId === myUserId"
-							href="#"
-							@click.prevent="hideActivity(activity._id)"
-							content="Hide Activity"
-							v-tippy
+							interactive="true"
+							placement="top"
+							theme="confirm"
+							trigger="click"
 						>
-							<i class="material-icons hide-icon"
-								>visibility_off</i
-							>
-						</a>
+							<template #trigger>
+								<a content="Hide Activity" v-tippy>
+									<i class="material-icons hide-icon"
+										>visibility_off</i
+									>
+								</a>
+							</template>
+							<a @click="hideActivity(activity._id)"> Confirm</a>
+						</tippy>
 					</div>
 				</activity-item>
 			</div>

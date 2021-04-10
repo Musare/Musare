@@ -266,22 +266,35 @@
 												v-tippy
 												>queue</i
 											>
-											<i
+											<tippy
 												v-if="
 													userId ===
 														playlist.createdBy ||
 														isEditable()
 												"
-												@click="
-													removeSongFromPlaylist(
-														song.songId
-													)
-												"
-												class="material-icons delete-icon"
-												content="Remove Song from Playlist"
-												v-tippy
-												>delete_forever</i
+												interactive="true"
+												placement="top"
+												theme="confirm"
+												trigger="click"
 											>
+												<template #trigger>
+													<i
+														class="material-icons delete-icon"
+														content="Remove Song from Playlist"
+														v-tippy
+														>delete_forever</i
+													>
+												</template>
+												<a
+													@click="
+														removeSongFromPlaylist(
+															song.songId
+														)
+													"
+												>
+													Confirm</a
+												>
+											</tippy>
 											<i
 												class="material-icons"
 												v-if="isEditable() && index > 0"
@@ -342,30 +355,46 @@
 				Download Playlist
 			</a>
 			<div class="right">
-				<a
-					class="button is-danger"
-					@click="clearAndRefillStationPlaylist()"
-					href="#"
+				<tippy
 					v-if="playlist.type === 'station'"
+					interactive="true"
+					placement="top"
+					theme="confirm"
+					trigger="click"
 				>
-					Clear and refill station playlist
-				</a>
-				<a
-					class="button is-danger"
-					@click="clearAndRefillGenrePlaylist()"
-					href="#"
+					<template #trigger>
+						<a class="button is-danger">
+							Clear and refill station playlist
+						</a>
+					</template>
+					<a @click="clearAndRefillStationPlaylist()"> Confirm </a>
+				</tippy>
+				<tippy
 					v-if="playlist.type === 'genre'"
+					interactive="true"
+					placement="top"
+					theme="confirm"
+					trigger="click"
 				>
-					Clear and refill genre playlist
-				</a>
-				<a
-					class="button is-danger"
-					@click="removePlaylist()"
-					href="#"
+					<template #trigger>
+						<a class="button is-danger">
+							Clear and refill genre playlist
+						</a>
+					</template>
+					<a @click="clearAndRefillGenrePlaylist()"> Confirm </a>
+				</tippy>
+				<tippy
 					v-if="isEditable()"
+					interactive="true"
+					placement="top"
+					theme="confirm"
+					trigger="click"
 				>
-					Remove Playlist
-				</a>
+					<template #trigger>
+						<a class="button is-danger"> Remove Playlist </a>
+					</template>
+					<a @click="removePlaylist()"> Confirm </a>
+				</tippy>
 			</div>
 		</div>
 	</modal>

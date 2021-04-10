@@ -473,19 +473,31 @@
 		<template #footer>
 			<save-button ref="saveButton" @clicked="saveChanges()" />
 			<div class="right">
-				<button
-					class="button is-danger"
-					@click="clearAndRefillStationQueue()"
+				<tippy
+					interactive="true"
+					placement="top"
+					theme="confirm"
+					trigger="click"
 				>
-					Clear and refill station queue
-				</button>
-				<button
+					<template #trigger>
+						<a class="button is-danger">
+							Clear and refill station queue
+						</a>
+					</template>
+					<a @click="clearAndRefillStationQueue()"> Confirm </a>
+				</tippy>
+				<tippy
 					v-if="station && station.type === 'community'"
-					class="button is-danger"
-					@click="deleteStation()"
+					interactive="true"
+					placement="top"
+					theme="confirm"
+					trigger="click"
 				>
-					Delete station
-				</button>
+					<template #trigger>
+						<button class="button is-danger">Delete station</button>
+					</template>
+					<a @click="deleteStation()"> Confirm </a>
+				</tippy>
 			</div>
 		</template>
 	</modal>

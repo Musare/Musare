@@ -2,9 +2,7 @@
 	<div class="content account-tab">
 		<h4 class="section-title">Change account details</h4>
 
-		<p class="section-description">
-			Keep these details up-to-date.
-		</p>
+		<p class="section-description">Keep these details up-to-date.</p>
 
 		<hr class="section-horizontal-rule" />
 
@@ -75,24 +73,36 @@
 
 		<hr class="section-horizontal-rule" />
 
-		<div>
-			<a
-				class="button is-warning"
-				href="#"
-				@click.prevent="removeActivities()"
+		<div class="row">
+			<tippy
+				interactive="true"
+				placement="top"
+				theme="confirm"
+				trigger="click"
 			>
-				<i class="material-icons icon-with-button">clear</i>
-				Clear my activities
-			</a>
+				<template #trigger>
+					<a class="button is-warning">
+						<i class="material-icons icon-with-button">clear</i>
+						Clear my activities
+					</a>
+				</template>
+				<a @click="removeActivities()"> Confirm</a>
+			</tippy>
 
-			<a
-				class="button is-danger"
-				href="#"
-				@click.prevent="removeAccount()"
+			<tippy
+				interactive="true"
+				placement="top"
+				theme="confirm"
+				trigger="click"
 			>
-				<i class="material-icons icon-with-button">delete</i>
-				Remove my account
-			</a>
+				<template #trigger>
+					<a class="button is-danger">
+						<i class="material-icons icon-with-button">delete</i>
+						Remove my account
+					</a>
+				</template>
+				<a @click="removeAccount()"> Confirm</a>
+			</tippy>
 		</div>
 	</div>
 </template>
@@ -291,5 +301,9 @@ export default {
 <style lang="scss" scoped>
 .control {
 	margin-bottom: 2px !important;
+}
+
+.row {
+	display: flex;
 }
 </style>

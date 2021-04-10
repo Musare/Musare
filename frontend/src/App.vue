@@ -442,6 +442,20 @@ a {
 	}
 }
 
+.tippy-tooltip.confirm-theme {
+	background-color: var(--red);
+	padding: 5px 10px;
+	a {
+		color: var(--white);
+		font-size: 14px;
+		font-weight: 600;
+		&:hover,
+		&:focus {
+			filter: brightness(90%);
+		}
+	}
+}
+
 .tippy-tooltip.songActions-theme {
 	font-size: 14px;
 	padding: 5px 10px;
@@ -454,7 +468,8 @@ a {
 	}
 
 	.song-actions,
-	.addToPlaylistDropdown {
+	.addToPlaylistDropdown,
+	.song-actions > div {
 		display: inline-block;
 	}
 
@@ -511,6 +526,9 @@ a {
 			border-top-color: var(--light-grey-3);
 		}
 	}
+	&.confirm-theme .tippy-arrow {
+		border-top-color: var(--red);
+	}
 }
 .tippy-popper[x-placement^="bottom"] .tippy-tooltip {
 	&.songActions-theme,
@@ -518,6 +536,9 @@ a {
 		.tippy-arrow {
 			border-bottom-color: var(--light-grey-3);
 		}
+	}
+	&.confirm-theme .tippy-arrow {
+		border-bottom-color: var(--red);
 	}
 }
 .tippy-popper[x-placement^="left"] .tippy-tooltip {
@@ -527,6 +548,9 @@ a {
 			border-left-color: var(--light-grey-3);
 		}
 	}
+	&.confirm-theme .tippy-arrow {
+		border-left-color: var(--red);
+	}
 }
 .tippy-popper[x-placement^="right"] .tippy-tooltip {
 	&.songActions-theme,
@@ -534,6 +558,9 @@ a {
 		.tippy-arrow {
 			border-right-color: var(--light-grey-3);
 		}
+	}
+	&.confirm-theme .tippy-arrow {
+		border-right-color: var(--red);
 	}
 }
 

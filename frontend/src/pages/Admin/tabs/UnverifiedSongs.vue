@@ -102,14 +102,25 @@
 							>
 								<i class="material-icons">check_circle</i>
 							</button>
-							<button
-								class="button is-danger"
-								@click="hide(song._id, index)"
-								content="Hide Song"
-								v-tippy
+							<tippy
+								interactive="true"
+								placement="top"
+								theme="confirm"
+								trigger="click"
 							>
-								<i class="material-icons">visibility_off</i>
-							</button>
+								<template #trigger>
+									<button
+										class="button is-danger"
+										content="Hide Song"
+										v-tippy
+									>
+										<i class="material-icons"
+											>visibility_off</i
+										>
+									</button>
+								</template>
+								<a @click="hide(song._id, index)"> Confirm</a>
+							</tippy>
 						</td>
 					</tr>
 				</tbody>
@@ -368,6 +379,10 @@ export default {
 
 td {
 	vertical-align: middle;
+
+	& > div {
+		display: inline-flex;
+	}
 }
 
 #keyboardShortcutsHelper {

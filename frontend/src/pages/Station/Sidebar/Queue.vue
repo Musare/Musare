@@ -33,14 +33,26 @@
 						class="song-actions"
 						slot="actions"
 					>
-						<i
+						<tippy
 							v-if="isOwnerOnly() || isAdminOnly()"
-							class="material-icons delete-icon"
-							@click="removeFromQueue(song.songId)"
-							content="Remove Song from Queue"
-							v-tippy
-							>delete_forever</i
+							interactive="true"
+							placement="top"
+							theme="confirm"
+							trigger="click"
 						>
+							<template #trigger>
+								<i
+									class="material-icons delete-icon"
+									content="Remove Song from Queue"
+									v-tippy
+									@click.shift="removeFromQueue(song.songId)"
+									>delete_forever</i
+								>
+							</template>
+							<a @click="removeFromQueue(song.songId)">
+								Confirm
+							</a>
+						</tippy>
 						<i
 							class="material-icons"
 							v-if="index > 0"

@@ -96,25 +96,39 @@
 
 			<hr class="section-horizontal-rule" />
 
-			<div>
-				<a
+			<div class="row">
+				<tippy
 					v-if="isPasswordLinked"
-					class="button is-danger"
-					href="#"
-					@click.prevent="unlinkPassword()"
+					interactive="true"
+					placement="top"
+					theme="confirm"
+					trigger="click"
 				>
-					<i class="material-icons icon-with-button">close</i>
-					Remove password
-				</a>
-
-				<a
-					class="button is-danger"
-					href="#"
-					@click.prevent="unlinkGitHub()"
+					<template #trigger>
+						<a class="button is-danger">
+							<i class="material-icons icon-with-button">close</i>
+							Remove password
+						</a>
+					</template>
+					<a @click="unlinkPassword()"> Confirm</a>
+				</tippy>
+				<tippy
+					v-if="isGithubLinked"
+					interactive="true"
+					placement="top"
+					theme="confirm"
+					trigger="click"
 				>
-					<i class="material-icons icon-with-button">link_off</i>
-					Remove GitHub from account
-				</a>
+					<template #trigger>
+						<a class="button is-danger">
+							<i class="material-icons icon-with-button"
+								>link_off</i
+							>
+							Remove GitHub from account
+						</a>
+					</template>
+					<a @click="unlinkGitHub()"> Confirm</a>
+				</tippy>
 			</div>
 
 			<div class="section-margin-bottom" />
@@ -127,15 +141,24 @@
 			</p>
 
 			<hr class="section-horizontal-rule" />
-
-			<a
-				class="button is-warning"
-				href="#"
-				@click.prevent="removeSessions()"
-			>
-				<i class="material-icons icon-with-button">exit_to_app</i>
-				Log out everywhere
-			</a>
+			<div class="row">
+				<tippy
+					interactive="true"
+					placement="top"
+					theme="confirm"
+					trigger="click"
+				>
+					<template #trigger>
+						<a class="button is-warning">
+							<i class="material-icons icon-with-button"
+								>exit_to_app</i
+							>
+							Logout everywhere
+						</a>
+					</template>
+					<a @click="removeSessions()"> Confirm</a>
+				</tippy>
+			</div>
 		</div>
 	</div>
 </template>
@@ -248,5 +271,9 @@ export default {
 
 .control {
 	margin-bottom: 2px !important;
+}
+
+.row {
+	display: flex;
 }
 </style>

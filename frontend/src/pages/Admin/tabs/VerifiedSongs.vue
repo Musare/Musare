@@ -123,14 +123,23 @@
 							>
 								<i class="material-icons">edit</i>
 							</button>
-							<button
-								class="button is-danger"
-								@click="remove(song._id, index)"
-								content="Unverify Song"
-								v-tippy
+							<tippy
+								interactive="true"
+								placement="top"
+								theme="confirm"
+								trigger="click"
 							>
-								<i class="material-icons">cancel</i>
-							</button>
+								<template #trigger>
+									<button
+										class="button is-danger"
+										content="Unverify Song"
+										v-tippy
+									>
+										<i class="material-icons">cancel</i>
+									</button>
+								</template>
+								<a @click="remove(song._id, index)"> Confirm</a>
+							</tippy>
 						</td>
 					</tr>
 				</tbody>
@@ -481,6 +490,10 @@ body {
 
 td {
 	vertical-align: middle;
+
+	& > div {
+		display: inline-flex;
+	}
 }
 
 #keyboardShortcutsHelper {
