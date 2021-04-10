@@ -1112,11 +1112,9 @@ export default {
 								this.voteSkipStation();
 
 								// persistent message while song is playing
-								const toastMessage =
-									"This song is unavailable for you, but is playing for everyone else.";
-
-								new Toast({
-									content: toastMessage,
+								const persistentToast = new Toast({
+									content:
+										"This song is unavailable for you, but is playing for everyone else.",
 									persistent: true
 								});
 
@@ -1130,17 +1128,7 @@ export default {
 											this.currentSong.songId !==
 											erroredSongId
 										) {
-											document
-												.getElementById(
-													"toasts-content"
-												)
-												.childNodes.forEach(toast => {
-													if (
-														toast.innerHTML ===
-														toastMessage
-													)
-														toast.remove();
-												});
+											persistentToast.destroy();
 
 											clearInterval(
 												window.isSongErroredInterval
