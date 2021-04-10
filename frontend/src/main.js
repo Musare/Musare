@@ -129,11 +129,17 @@ const router = new VueRouter({
 		},
 		{
 			path: "/login",
-			component: () => import("@/components/modals/Login.vue")
+			component: () => import("@/components/modals/Login.vue"),
+			meta: {
+				guestsOnly: true
+			}
 		},
 		{
 			path: "/register",
-			component: () => import("@/components/modals/Register.vue")
+			component: () => import("@/components/modals/Register.vue"),
+			meta: {
+				guestsOnly: true
+			}
 		},
 		{
 			path: "/admin",
@@ -226,7 +232,11 @@ lofig.folder = "../config/default.json";
 
 		ws.clear();
 
-		if (to.meta.loginRequired || to.meta.adminRequired) {
+		if (
+			to.meta.loginRequired ||
+			to.meta.adminRequired ||
+			to.meta.guestsOnly
+		) {
 			const gotData = () => {
 				if (to.meta.loginRequired && !store.state.user.auth.loggedIn)
 					next({ path: "/login" });
@@ -234,6 +244,8 @@ lofig.folder = "../config/default.json";
 					to.meta.adminRequired &&
 					store.state.user.auth.role !== "admin"
 				)
+					next({ path: "/" });
+				else if (to.meta.guestsOnly && store.state.user.auth.loggedIn)
 					next({ path: "/" });
 				else next();
 			};

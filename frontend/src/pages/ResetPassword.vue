@@ -45,7 +45,7 @@
 										autofocus
 										v-model="email"
 										@keyup.enter="submitEmail()"
-										@blur="onInputBlur('email')"
+										@keypress="onInput('email')"
 									/>
 								</p>
 								<p class="control">
@@ -62,10 +62,10 @@
 							</div>
 							<transition name="fadein-helpbox">
 								<input-help-box
-									v-if="validation.email.entered"
+									:entered="validation.email.entered"
 									:valid="validation.email.valid"
 									:message="validation.email.message"
-								></input-help-box>
+								/>
 							</transition>
 						</div>
 					</div>
@@ -134,16 +134,16 @@
 									type="password"
 									placeholder="Enter password here..."
 									v-model="newPassword"
-									@blur="onInputBlur('newPassword')"
+									@keypress="onInput('newPassword')"
 								/>
 							</p>
 
 							<transition name="fadein-helpbox">
 								<input-help-box
-									v-if="validation.newPassword.entered"
+									:entered="validation.newPassword.entered"
 									:valid="validation.newPassword.valid"
 									:message="validation.newPassword.message"
-								></input-help-box>
+								/>
 							</transition>
 
 							<p
@@ -160,18 +160,20 @@
 									placeholder="Enter password here..."
 									v-model="newPasswordAgain"
 									@keyup.enter="changePassword()"
-									@blur="onInputBlur('newPasswordAgain')"
+									@keypress="onInput('newPasswordAgain')"
 								/>
 							</p>
 
 							<transition name="fadein-helpbox">
 								<input-help-box
-									v-if="validation.newPasswordAgain.entered"
+									:entered="
+										validation.newPasswordAgain.entered
+									"
 									:valid="validation.newPasswordAgain.valid"
 									:message="
 										validation.newPasswordAgain.message
 									"
-								></input-help-box>
+								/>
 							</transition>
 
 							<a
@@ -260,7 +262,8 @@ export default {
 				newPassword: {
 					entered: false,
 					valid: false,
-					message: "Please enter a valid password."
+					message:
+						"Include at least one lowercase letter, one uppercase letter, one number and one special character."
 				},
 				newPasswordAgain: {
 					entered: false,
@@ -297,7 +300,7 @@ export default {
 				this.validation.newPassword.valid = false;
 			} else if (!validation.regex.password.test(value)) {
 				this.validation.newPassword.message =
-					"Invalid password format. Must have one lowercase letter, one uppercase letter, one number and one special character.";
+					"Include at least one lowercase letter, one uppercase letter, one number and one special character.";
 				this.validation.newPassword.valid = false;
 			} else {
 				this.validation.newPassword.message = "Everything looks great!";
@@ -320,7 +323,7 @@ export default {
 				this.validation.newPasswordAgain.valid = true;
 			}
 		},
-		onInputBlur(inputName) {
+		onInput(inputName) {
 			this.validation[inputName].entered = true;
 		},
 		submitEmail() {
@@ -569,5 +572,9 @@ p {
 .skip-step {
 	background-color: var(--grey-3);
 	color: var(--white);
+}
+
+.control {
+	margin-bottom: 2px !important;
 }
 </style>

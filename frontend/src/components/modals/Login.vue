@@ -1,79 +1,118 @@
 <template>
-	<div class="modal is-active">
-		<div
-			class="modal-background"
-			@click="
-				closeModal({
-					sector: 'header',
-					modal: 'login'
-				})
-			"
-		/>
-		<div class="modal-card">
-			<header class="modal-card-head">
-				<p class="modal-card-title">Login</p>
-				<button
-					class="delete"
-					@click="
-						closeModal({
-							sector: 'header',
-							modal: 'login'
-						})
-					"
-				/>
-			</header>
-			<section class="modal-card-body">
-				<!-- validation to check if exists http://bulma.io/documentation/elements/form/ -->
-				<form>
-					<p class="control">
-						<label class="label">Email</label>
-						<input
-							v-model="email"
-							class="input"
-							type="email"
-							placeholder="Email..."
-						/>
-					</p>
-					<p class="control">
-						<label class="label">Password</label>
-						<input
-							v-model="password"
-							class="input"
-							type="password"
-							placeholder="Password..."
-							@keypress="
-								$parent.submitOnEnter(submitModal, $event)
-							"
-						/>
-					</p>
-					<br />
-					<p>
-						By logging in/registering you agree to our
-						<router-link to="/terms"> Terms of Service </router-link
-						>&nbsp;and
-						<router-link to="/privacy"> Privacy Policy </router-link
-						>.
-					</p>
-				</form>
-			</section>
-			<footer class="modal-card-foot">
-				<a class="button is-primary" href="#" @click="submitModal()"
-					>Submit</a
-				>
-				<a
-					class="button is-github"
-					:href="apiDomain + '/auth/github/authorize'"
-					@click="githubRedirect()"
-				>
-					<div class="icon">
-						<img class="invert" src="/assets/social/github.svg" />
+	<div>
+		<metadata title="Login" v-if="isPage" />
+		<div class="modal is-active">
+			<div class="modal-background" @click="closeLoginModal()" />
+			<div class="modal-card">
+				<header class="modal-card-head">
+					<p class="modal-card-title">Login</p>
+					<button
+						v-if="!isPage"
+						class="delete"
+						@click="closeLoginModal()"
+					/>
+				</header>
+
+				<section class="modal-card-body">
+					<form>
+						<!-- email address -->
+						<p class="control">
+							<label class="label">Email</label>
+							<input
+								v-model="email"
+								class="input"
+								type="email"
+								placeholder="Email..."
+							/>
+						</p>
+
+						<!-- password -->
+						<p class="control">
+							<label class="label">Password</label>
+						</p>
+
+						<div id="password-container">
+							<input
+								v-model="password.value"
+								class="input"
+								type="password"
+								ref="password"
+								placeholder="Password..."
+								@keypress="
+									$parent.submitOnEnter(submitModal, $event)
+								"
+							/>
+							<a @click="togglePasswordVisibility()">
+								<i class="material-icons">
+									{{
+										!password.visible
+											? "visibility"
+											: "visibility_off"
+									}}
+								</i>
+							</a>
+						</div>
+
+						<router-link
+							id="forgot-password"
+							href="#"
+							to="/reset_password"
+							@click.native="closeLoginModal()"
+						>
+							Forgot password?
+						</router-link>
+
+						<br />
+						<p>
+							By logging in you agree to our
+							<router-link
+								to="/terms"
+								@click.native="closeLoginModal()"
+							>
+								Terms of Service
+							</router-link>
+							&nbsp;and
+							<router-link
+								to="/privacy"
+								@click.native="closeLoginModal()"
+							>
+								Privacy Policy </router-link
+							>.
+						</p>
+					</form>
+				</section>
+
+				<footer class="modal-card-foot">
+					<router-link to="/register" v-if="isPage">
+						Don't have an account?
+					</router-link>
+					<a v-else href="#" @click="changeToRegisterModal()">
+						Don't have an account?
+					</a>
+
+					<div id="actions">
+						<a
+							class="button is-github"
+							:href="apiDomain + '/auth/github/authorize'"
+							@click="githubRedirect()"
+						>
+							<div class="icon">
+								<img
+									class="invert"
+									src="/assets/social/github.svg"
+								/>
+							</div>
+							&nbsp;&nbsp;Login with GitHub
+						</a>
+						<a
+							class="button is-primary"
+							href="#"
+							@click="submitModal()"
+							>Login</a
+						>
 					</div>
-					&nbsp;&nbsp;Login with GitHub
-				</a>
-				<a href="/reset_password" @click="resetPassword()"
-					>Forgot password?</a
-				>
-			</footer>
+				</footer>
+			</div>
 		</div>
 	</div>
 </template>
@@ -87,37 +126,53 @@ export default {
 	data() {
 		return {
 			email: "",
-			password: "",
-			apiDomain: ""
+			password: {
+				value: "",
+				visible: false
+			},
+			apiDomain: "",
+			isPage: false
 		};
 	},
 	async mounted() {
 		this.apiDomain = await lofig.get("apiDomain");
+
+		if (this.$route.path === "/login") this.isPage = true;
 	},
 	methods: {
 		submitModal() {
 			this.login({
 				email: this.email,
-				password: this.password
+				password: this.password.value
 			})
 				.then(res => {
 					if (res.status === "success") window.location.reload();
 				})
 				.catch(err => new Toast(err.message));
 		},
-		resetPassword() {
-			this.closeModal({ sector: "header", modal: "login" });
-			this.$router.go("/reset_password");
+		togglePasswordVisibility() {
+			if (this.$refs.password.type === "password") {
+				this.$refs.password.type = "text";
+				this.password.visible = true;
+			} else {
+				this.$refs.password.type = "password";
+				this.password.visible = false;
+			}
+		},
+		changeToRegisterModal() {
+			if (!this.isPage) {
+				this.closeLoginModal();
+				this.openModal({ sector: "header", modal: "register" });
+			}
+		},
+		closeLoginModal() {
+			if (!this.isPage)
+				this.closeModal({ sector: "header", modal: "login" });
 		},
 		githubRedirect() {
 			localStorage.setItem("github_redirect", this.$route.path);
-			console.log(
-				"Yes",
-				this.$route.path,
-				localStorage.getItem("github_redirect")
-			);
 		},
-		...mapActions("modalVisibility", ["closeModal"]),
+		...mapActions("modalVisibility", ["closeModal", "openModal"]),
 		...mapActions("user/auth", ["login"])
 	}
 };
@@ -136,6 +191,33 @@ export default {
 	p:not(.help) {
 		color: var(--light-grey-2);
 	}
+}
+
+#password-container {
+	display: flex;
+	align-items: center;
+
+	a {
+		width: 0;
+		margin-left: -30px;
+		z-index: 0;
+		top: 2px;
+		position: relative;
+		color: var(--light-grey-1);
+	}
+}
+
+#forgot-password {
+	display: flex;
+	justify-content: flex-end;
+	height: 0;
+	margin-top: 5px;
+}
+
+.modal-card-foot {
+	display: flex;
+	justify-content: space-between;
+	flex-wrap: wrap;
 }
 
 .button.is-github {

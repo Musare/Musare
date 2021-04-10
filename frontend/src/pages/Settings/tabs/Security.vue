@@ -29,16 +29,16 @@
 					placeholder="Enter new password here..."
 					v-model="validation.newPassword.value"
 					@keyup.enter="changePassword()"
-					@blur="onInputBlur('newPassword')"
+					@keypress="onInput('newPassword')"
 				/>
 			</p>
 
 			<transition name="fadein-helpbox">
 				<input-help-box
-					v-if="validation.newPassword.entered"
+					:entered="validation.newPassword.entered"
 					:valid="validation.newPassword.valid"
 					:message="validation.newPassword.message"
-				></input-help-box>
+				/>
 			</transition>
 
 			<p class="control">
@@ -158,7 +158,8 @@ export default {
 					value: "",
 					valid: false,
 					entered: false,
-					message: "Please enter a valid password."
+					message:
+						"Include at least one lowercase letter, one uppercase letter, one number and one special character."
 				}
 			}
 		};
@@ -182,7 +183,7 @@ export default {
 				this.validation.newPassword.valid = false;
 			} else if (!validation.regex.password.test(value)) {
 				this.validation.newPassword.message =
-					"Invalid password format. Must have one lowercase letter, one uppercase letter, one number and one special character.";
+					"Include at least one lowercase letter, one uppercase letter, one number and one special character.";
 				this.validation.newPassword.valid = false;
 			} else {
 				this.validation.newPassword.message = "Everything looks great!";
@@ -194,7 +195,7 @@ export default {
 		this.apiDomain = await lofig.get("apiDomain");
 	},
 	methods: {
-		onInputBlur(inputName) {
+		onInput(inputName) {
 			this.validation[inputName].entered = true;
 		},
 		changePassword() {
@@ -243,5 +244,9 @@ export default {
 <style lang="scss" scoped>
 #change-password-button {
 	margin-top: 10px;
+}
+
+.control {
+	margin-bottom: 2px !important;
 }
 </style>

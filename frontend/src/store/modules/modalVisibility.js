@@ -32,11 +32,11 @@ const state = {
 const getters = {};
 
 const actions = {
-	closeModal: async ({ commit }, data) => {
-		if (data.modal === "register") {
-			const recaptchaEnabled = await lofig.get("recaptcha.enabled");
-			if (recaptchaEnabled) window.location.reload();
-		}
+	closeModal: ({ commit }, data) => {
+		if (data.modal === "register")
+			lofig.get("recaptcha.enabled").then(enabled => {
+				if (enabled) window.location.reload();
+			});
 
 		commit("closeModal", data);
 		commit("closeCurrentModal");
