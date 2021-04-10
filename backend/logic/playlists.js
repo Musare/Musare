@@ -336,16 +336,20 @@ class _PlaylistsModule extends CoreClass {
 	 */
 	ADD_SONG_TO_PLAYLIST(payload) {
 		return new Promise((resolve, reject) => {
-			const song = {
-				_id: payload.song._id,
-				songId: payload.song.songId,
-				title: payload.song.title,
-				duration: payload.song.duration
+			const { _id, songId, title, artists, thumbnail, duration, status } = payload.song;
+			const trimmedSong = {
+				_id,
+				songId,
+				title,
+				artists,
+				thumbnail,
+				duration,
+				status
 			};
 
 			PlaylistsModule.playlistModel.updateOne(
 				{ _id: payload.playlistId },
-				{ $push: { songs: song } },
+				{ $push: { songs: trimmedSong } },
 				{ runValidators: true },
 				err => {
 					if (err) reject(new Error(err));
