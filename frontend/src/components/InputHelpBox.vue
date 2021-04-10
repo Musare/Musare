@@ -1,5 +1,14 @@
 <template>
-	<p class="help" :class="valid ? 'is-success' : 'is-danger'">
+	<p
+		class="help"
+		:class="
+			entered || entered === undefined
+				? valid
+					? 'is-success'
+					: 'is-danger'
+				: 'is-grey'
+		"
+	>
 		{{ message }}
 	</p>
 </template>
@@ -14,19 +23,24 @@ export default {
 		valid: {
 			type: Boolean,
 			required: true
+		},
+		entered: {
+			type: Boolean,
+			default: undefined,
+			required: false
 		}
-	},
-	data() {
-		return {};
-	},
-	methods: {}
+	}
 };
 </script>
 
 <style lang="scss" scoped>
 .help {
 	margin-top: 0 !important;
-	margin-bottom: 5px !important;
+	margin-bottom: 10px !important;
 	font-size: 12px;
+}
+
+.is-grey {
+	color: var(--dark-grey-1);
 }
 </style>

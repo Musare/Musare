@@ -217,6 +217,7 @@ export default {
 .modal-card-foot {
 	display: flex;
 	justify-content: space-between;
+	flex-wrap: wrap;
 }
 
 .button.is-github {

@@ -18,7 +18,7 @@
 				v-model="modifiedUser.username"
 				maxlength="32"
 				autocomplete="off"
-				@blur="onInputBlur('username')"
+				@keypress="onInput('username')"
 			/>
 			<span v-if="modifiedUser.username" class="character-counter"
 				>{{ modifiedUser.username.length }}/32</span
@@ -26,9 +26,10 @@
 		</p>
 		<transition name="fadein-helpbox">
 			<input-help-box
+				:entered="validation.username.entered"
 				:valid="validation.username.valid"
 				:message="validation.username.message"
-			></input-help-box>
+			/>
 		</transition>
 
 		<p class="control is-expanded">
@@ -40,15 +41,16 @@
 				placeholder="Enter email address here..."
 				v-if="modifiedUser.email"
 				v-model="modifiedUser.email.address"
-				@blur="onInputBlur('email')"
+				@keypress="onInput('email')"
 				autocomplete="off"
 			/>
 		</p>
 		<transition name="fadein-helpbox">
 			<input-help-box
+				:entered="validation.email.entered"
 				:valid="validation.email.valid"
 				:message="validation.email.message"
-			></input-help-box>
+			/>
 		</transition>
 
 		<save-button ref="saveButton" @clicked="saveChanges()" />
@@ -144,7 +146,7 @@ export default {
 			value !== this.originalUser.username // Sometimes a username pulled from GitHub won't succeed validation
 		) {
 				this.validation.username.message =
-					"Invalid username format. Allowed characters: a-z, A-Z, 0-9 and _.";
+					"Invalid format. Allowed characters: a-z, A-Z, 0-9 and _.";
 				this.validation.username.valid = false;
 			} else {
 				this.validation.username.message = "Everything looks great!";
@@ -162,7 +164,7 @@ export default {
 				value.indexOf("@") !== value.lastIndexOf("@") ||
 				!validation.regex.emailSimple.test(value)
 			) {
-				this.validation.email.message = "Invalid Email format.";
+				this.validation.email.message = "Invalid format.";
 				this.validation.email.valid = false;
 			} else {
 				this.validation.email.message = "Everything looks great!";
@@ -171,7 +173,7 @@ export default {
 		}
 	},
 	methods: {
-		onInputBlur(inputName) {
+		onInput(inputName) {
 			this.validation[inputName].entered = true;
 		},
 		saveChanges() {
@@ -285,3 +287,9 @@ export default {
 	}
 };
 </script>
+
+<style lang="scss" scoped>
+.control {
+	margin-bottom: 2px !important;
+}
+</style>

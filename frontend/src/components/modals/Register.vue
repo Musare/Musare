@@ -1,135 +1,143 @@
 <template>
-	<div class="modal is-active">
-		<div class="modal-background" @click="closeRegisterModal()" />
-		<div class="modal-card">
-			<header class="modal-card-head">
-				<p class="modal-card-title">Register</p>
-				<button
-					v-if="!isPage"
-					class="delete"
-					@click="closeRegisterModal()"
-				/>
-			</header>
-			<section class="modal-card-body">
-				<!-- email address -->
-				<p class="control">
-					<label class="label">Email</label>
-					<input
-						v-model="email.value"
-						class="input"
-						type="email"
-						placeholder="Email..."
-						@blur="onInputBlur('email')"
-						autofocus
+	<div>
+		<metadata title="Register" v-if="isPage" />
+		<div class="modal is-active">
+			<div class="modal-background" @click="closeRegisterModal()" />
+			<div class="modal-card">
+				<header class="modal-card-head">
+					<p class="modal-card-title">Register</p>
+					<button
+						v-if="!isPage"
+						class="delete"
+						@click="closeRegisterModal()"
 					/>
-				</p>
-				<transition name="fadein-helpbox">
-					<input-help-box
-						v-if="email.entered"
-						:valid="email.valid"
-						:message="email.message"
-					></input-help-box>
-				</transition>
+				</header>
+				<section class="modal-card-body">
+					<!-- email address -->
+					<p class="control">
+						<label class="label">Email</label>
+						<input
+							v-model="email.value"
+							class="input"
+							type="email"
+							placeholder="Email..."
+							@keypress="onInput('email')"
+							autofocus
+						/>
+					</p>
+					<transition name="fadein-helpbox">
+						<input-help-box
+							:entered="email.entered"
+							:valid="email.valid"
+							:message="email.message"
+						></input-help-box>
+					</transition>
 
-				<!-- username -->
-				<p class="control">
-					<label class="label">Username</label>
-					<input
-						v-model="username.value"
-						class="input"
-						type="text"
-						placeholder="Username..."
-						@blur="onInputBlur('username')"
-					/>
-				</p>
-				<transition name="fadein-helpbox">
-					<input-help-box
-						v-if="username.entered"
-						:valid="username.valid"
-						:message="username.message"
-					></input-help-box>
-				</transition>
+					<!-- username -->
+					<p class="control">
+						<label class="label">Username</label>
+						<input
+							v-model="username.value"
+							class="input"
+							type="text"
+							placeholder="Username..."
+							@keypress="onInput('username')"
+						/>
+					</p>
+					<transition name="fadein-helpbox">
+						<input-help-box
+							:entered="username.entered"
+							:valid="username.valid"
+							:message="username.message"
+						></input-help-box>
+					</transition>
 
-				<!-- password -->
-				<p class="control">
-					<label class="label">Password</label>
-				</p>
+					<!-- password -->
+					<p class="control">
+						<label class="label">Password</label>
+					</p>
 
-				<div id="password-container">
-					<input
-						v-model="password.value"
-						class="input"
-						type="password"
-						ref="password"
-						placeholder="Password..."
-						@blur="onInputBlur('password')"
-						@keypress="$parent.submitOnEnter(submitModal, $event)"
-					/>
-					<a @click="togglePasswordVisibility()">
-						<i class="material-icons">
-							{{
-								!password.visible
-									? "visibility"
-									: "visibility_off"
-							}}
-						</i>
-					</a>
-				</div>
+					<div id="password-container">
+						<input
+							v-model="password.value"
+							class="input"
+							type="password"
+							ref="password"
+							placeholder="Password..."
+							@keypress="
+								onInput('password') &&
+									$parent.submitOnEnter(submitModal, $event)
+							"
+						/>
+						<a @click="togglePasswordVisibility()">
+							<i class="material-icons">
+								{{
+									!password.visible
+										? "visibility"
+										: "visibility_off"
+								}}
+							</i>
+						</a>
+					</div>
 
-				<transition name="fadein-helpbox">
-					<input-help-box
-						v-if="password.entered"
-						:valid="password.valid"
-						:message="password.message"
-					></input-help-box>
-				</transition>
+					<transition name="fadein-helpbox">
+						<input-help-box
+							:valid="password.valid"
+							:entered="password.entered"
+							:message="password.message"
+						></input-help-box>
+					</transition>
 
-				<br />
+					<br />
 
-				<p>
-					By registering you agree to our
-					<router-link
-						to="/terms"
-						@click.native="closeRegisterModal()"
-					>
-						Terms of Service
+					<p>
+						By registering you agree to our
+						<router-link
+							to="/terms"
+							@click.native="closeRegisterModal()"
+						>
+							Terms of Service
+						</router-link>
+						&nbsp;and
+						<router-link
+							to="/privacy"
+							@click.native="closeRegisterModal()"
+						>
+							Privacy Policy </router-link
+						>.
+					</p>
+				</section>
+				<footer class="modal-card-foot">
+					<router-link to="/login" v-if="isPage">
+						Already have an account?
 					</router-link>
-					&nbsp;and
-					<router-link
-						to="/privacy"
-						@click.native="closeRegisterModal()"
-					>
-						Privacy Policy </router-link
-					>.
-				</p>
-			</section>
-			<footer class="modal-card-foot">
-				<router-link to="/login" v-if="isPage">
-					Already have an account?
-				</router-link>
-				<a v-else href="#" @click="changeToLoginModal()">
-					Already have an account?
-				</a>
-
-				<div id="actions">
-					<a
-						class="button is-github"
-						:href="apiDomain + '/auth/github/authorize'"
-						@click="githubRedirect()"
-					>
-						<div class="icon">
-							<img
-								class="invert"
-								src="/assets/social/github.svg"
-							/>
-						</div>
-						&nbsp;&nbsp;Register with GitHub
+					<a v-else href="#" @click="changeToLoginModal()">
+						Already have an account?
 					</a>
-					<a class="button is-primary" href="#" @click="submitModal()"
-						>Register</a
-					>
-				</div>
-			</footer>
+
+					<div id="actions">
+						<a
+							class="button is-github"
+							:href="apiDomain + '/auth/github/authorize'"
+							@click="githubRedirect()"
+						>
+							<div class="icon">
+								<img
+									class="invert"
+									src="/assets/social/github.svg"
+								/>
+							</div>
+							&nbsp;&nbsp;Register with GitHub
+						</a>
+						<a
+							class="button is-primary"
+							href="#"
+							@click="submitModal()"
+							>Register</a
+						>
+					</div>
+				</footer>
+			</div>
 		</div>
 	</div>
 </template>
@@ -149,7 +157,7 @@ export default {
 				value: "",
 				valid: false,
 				entered: false,
-				message: "Please enter a valid username."
+				message: "Only letters, numbers and underscores are allowed."
 			},
 			email: {
 				value: "",
@@ -162,7 +170,8 @@ export default {
 				valid: false,
 				entered: false,
 				visible: false,
-				message: "Please enter a valid password."
+				message:
+					"Include at least one lowercase letter, one uppercase letter, one number and one special character."
 			},
 			recaptcha: {
 				key: "",
@@ -182,7 +191,7 @@ export default {
 				this.username.valid = false;
 			} else if (!validation.regex.azAZ09_.test(value)) {
 				this.username.message =
-					"Invalid username format. Allowed characters: a-z, A-Z, 0-9 and _.";
+					"Invalid format. Allowed characters: a-z, A-Z, 0-9 and _.";
 				this.username.valid = false;
 			} else {
 				this.username.message = "Everything looks great!";
@@ -199,7 +208,7 @@ export default {
 				value.indexOf("@") !== value.lastIndexOf("@") ||
 				!validation.regex.emailSimple.test(value)
 			) {
-				this.email.message = "Invalid Email format.";
+				this.email.message = "Invalid format.";
 				this.email.valid = false;
 			} else {
 				this.email.message = "Everything looks great!";
@@ -214,7 +223,7 @@ export default {
 				this.password.valid = false;
 			} else if (!validation.regex.password.test(value)) {
 				this.password.message =
-					"Invalid password format. Must have one lowercase letter, one uppercase letter, one number and one special character.";
+					"Include at least one lowercase letter, one uppercase letter, one number and one special character.";
 				this.password.valid = false;
 			} else {
 				this.password.message = "Everything looks great!";
@@ -290,7 +299,7 @@ export default {
 				})
 				.catch(err => new Toast(err.message));
 		},
-		onInputBlur(inputName) {
+		onInput(inputName) {
 			this[inputName].entered = true;
 		},
 		githubRedirect() {
@@ -331,9 +340,14 @@ export default {
 	}
 }
 
+.control {
+	margin-bottom: 2px !important;
+}
+
 .modal-card-foot {
 	display: flex;
 	justify-content: space-between;
+	flex-wrap: wrap;
 }
 
 .button.is-github {
