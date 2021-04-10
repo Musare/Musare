@@ -26,14 +26,15 @@
 				href="#"
 				v-for="(playlist, index) in playlists"
 				:key="index"
-				@click.prevent="toggleSongInPlaylist(index, playlist._id)"
+				@click.prevent="toggleSongInPlaylist(index)"
 				:title="playlist.displayName"
 			>
 				<p class="control is-expanded checkbox-control">
 					<input
 						type="checkbox"
 						:id="index"
-						v-model="playlist.hasSong"
+						:checked="hasSong(playlist)"
+						@click="toggleSongInPlaylist(index)"
 					/>
 					<label :for="index">
 						<span></span>
@@ -73,12 +74,7 @@ export default {
 		this.socket.dispatch("playlists.indexMyPlaylists", false, res => {
 			if (res.status === "success") {
 				this.playlists = res.data;
-				this.checkIfPlaylistsHaveSong();
 			}
-		});
-
-		this.socket.on("event:songs.next", () => {
-			this.checkIfPlaylistsHaveSong();
 		});
 
 		this.socket.on("event:playlist.create", playlist => {
@@ -102,19 +98,19 @@ export default {
 		});
 	},
 	methods: {
-		toggleSongInPlaylist(index, playlistId) {
-			if (!this.playlists[index].hasSong) {
+		toggleSongInPlaylist(playlistIndex) {
+			const playlist = this.playlists[playlistIndex];
+			if (!this.hasSong(playlist)) {
 				this.socket.dispatch(
 					"playlists.addSongToPlaylist",
 					false,
 					this.song.songId,
-					playlistId,
+					playlist._id,
 					res => {
 						new Toast({ content: res.message, timeout: 4000 });
 
 						if (res.status === "success") {
-							this.playlists[index].songs.push(this.song);
-							this.playlists[index].hasSong = true;
+							this.playlists[playlistIndex].songs.push(this.song);
 						}
 					}
 				);
@@ -122,38 +118,29 @@ export default {
 				this.socket.dispatch(
 					"playlists.removeSongFromPlaylist",
 					this.song.songId,
-					playlistId,
+					playlist._id,
 					res => {
 						new Toast({ content: res.message, timeout: 4000 });
 
 						if (res.status === "success") {
-							this.playlists[index].songs.forEach(
+							this.playlists[playlistIndex].songs.forEach(
 								(song, songIndex) => {
 									if (song.songId === this.song.songId)
-										this.playlists[index].songs.splice(
-											songIndex,
-											1
-										);
+										this.playlists[
+											playlistIndex
+										].songs.splice(songIndex, 1);
 								}
 							);
-
-							this.playlists[index].hasSong = false;
 						}
 					}
 				);
 			}
 		},
-		checkIfPlaylistsHaveSong() {
-			this.playlists.forEach((playlist, index) => {
-				let hasSong = false;
-
-				for (let song = 0; song < playlist.songs.length; song += 1) {
-					if (playlist.songs[song].songId === this.song.songId)
-						hasSong = true;
-				}
-
-				this.$set(this.playlists[index], "hasSong", hasSong);
-			});
+		hasSong(playlist) {
+			return (
+				playlist.songs.map(song => song._id).indexOf(this.song._id) !==
+				-1
+			);
 		}
 	}
 };
