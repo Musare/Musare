@@ -72,18 +72,6 @@
 			>
 				<span>Go to song</span>
 			</a>
-			<a
-				class="button is-danger"
-				@click="
-					closeModal({
-						sector,
-						modal: 'viewReport'
-					})
-				"
-				href="#"
-			>
-				<span>Cancel</span>
-			</a>
 		</div>
 	</modal>
 </template>

@@ -86,4 +86,15 @@ p {
 .modal-card-title {
 	font-size: 27px;
 }
+
+.modal-card-foot {
+	& > div {
+		display: flex;
+		flex-grow: 1;
+	}
+	.right {
+		margin-left: auto;
+		justify-content: right;
+	}
+}
 </style>

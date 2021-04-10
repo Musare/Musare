@@ -83,14 +83,13 @@
 				</section>
 
 				<footer class="modal-card-foot">
-					<router-link to="/register" v-if="isPage">
-						Don't have an account?
-					</router-link>
-					<a v-else href="#" @click="changeToRegisterModal()">
-						Don't have an account?
-					</a>
-
 					<div id="actions">
+						<a
+							class="button is-primary"
+							href="#"
+							@click="submitModal()"
+							>Login</a
+						>
 						<a
 							class="button is-github"
 							:href="apiDomain + '/auth/github/authorize'"
@@ -104,13 +103,13 @@
 							</div>
 							&nbsp;&nbsp;Login with GitHub
 						</a>
-						<a
-							class="button is-primary"
-							href="#"
-							@click="submitModal()"
-							>Login</a
-						>
 					</div>
+					<router-link to="/register" v-if="isPage">
+						Don't have an account?
+					</router-link>
+					<a v-else href="#" @click="changeToRegisterModal()">
+						Don't have an account?
+					</a>
 				</footer>
 			</div>
 		</div>
@@ -209,9 +208,9 @@ export default {
 
 #forgot-password {
 	display: flex;
-	justify-content: flex-end;
+	justify-content: flex-start;
 	height: 0;
-	margin-top: 5px;
+	margin: 5px 0;
 }
 
 .modal-card-foot {

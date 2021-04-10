@@ -148,17 +148,6 @@
 				<i class="material-icons save-changes">done</i>
 				<span>&nbsp;Save and close</span>
 			</button>
-			<button
-				class="button is-danger"
-				@click="
-					closeModal({
-						sector,
-						modal: 'editNews'
-					})
-				"
-			>
-				<span>&nbsp;Close</span>
-			</button>
 		</div>
 	</modal>
 </template>

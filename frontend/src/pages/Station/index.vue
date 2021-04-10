@@ -68,6 +68,115 @@
 					:class="{ 'nothing-here': noSong }"
 				>
 					<div id="station-left-column" class="column">
+						<div id="about-station-container" class="quadrant">
+							<div id="station-info">
+								<div class="row" id="station-name">
+									<h1>{{ station.displayName }}</h1>
+									<a href="#">
+										<!-- Favorite Station Button -->
+										<i
+											v-if="
+												loggedIn && station.isFavorited
+											"
+											@click.prevent="unfavoriteStation()"
+											content="Unfavorite Station"
+											v-tippy
+											class="material-icons"
+											>star</i
+										>
+										<i
+											v-if="
+												loggedIn && !station.isFavorited
+											"
+											@click.prevent="favoriteStation()"
+											class="material-icons"
+											content="Favorite Station"
+											v-tippy
+											>star_border</i
+										>
+									</a>
+									<i
+										class="material-icons stationMode"
+										:content="
+											station.partyMode
+												? 'Station in Party mode'
+												: 'Station in Playlist mode'
+										"
+										v-tippy
+										>{{
+											station.partyMode
+												? "emoji_people"
+												: "playlist_play"
+										}}</i
+									>
+								</div>
+								<p>{{ station.description }}</p>
+							</div>
+
+							<div id="admin-buttons" v-if="isOwnerOrAdmin()">
+								<!-- (Admin) Pause/Resume Button -->
+								<button
+									class="button is-danger"
+									v-if="stationPaused"
+									@click="resumeStation()"
+								>
+									<i class="material-icons icon-with-button"
+										>play_arrow</i
+									>
+									<span class="optional-desktop-only-text">
+										Resume Station
+									</span>
+								</button>
+								<button
+									class="button is-danger"
+									@click="pauseStation()"
+									v-else
+								>
+									<i class="material-icons icon-with-button"
+										>pause</i
+									>
+									<span class="optional-desktop-only-text">
+										Pause Station
+									</span>
+								</button>
+
+								<!-- (Admin) Skip Button -->
+								<button
+									class="button is-danger"
+									@click="skipStation()"
+								>
+									<i class="material-icons icon-with-button"
+										>skip_next</i
+									>
+									<span class="optional-desktop-only-text">
+										Force Skip
+									</span>
+								</button>
+
+								<!-- (Admin) Station Settings Button -->
+								<button
+									class="button is-primary"
+									@click="
+										openModal({
+											sector: 'station',
+											modal: 'editStation'
+										})
+									"
+								>
+									<i class="material-icons icon-with-button"
+										>settings</i
+									>
+									<span class="optional-desktop-only-text">
+										Station settings
+									</span>
+								</button>
+							</div>
+						</div>
+						<div id="sidebar-container" class="quadrant">
+							<station-sidebar />
+						</div>
+					</div>
+					<div id="station-right-column" class="column">
 						<div class="player-container quadrant" v-show="!noSong">
 							<div id="video-container">
 								<div
@@ -450,115 +559,6 @@
 									header="Next Up.."
 								/>
 							</div>
-						</div>
-					</div>
-					<div id="station-right-column" class="column">
-						<div id="about-station-container" class="quadrant">
-							<div id="station-info">
-								<div class="row" id="station-name">
-									<h1>{{ station.displayName }}</h1>
-									<a href="#">
-										<!-- Favorite Station Button -->
-										<i
-											v-if="
-												loggedIn && station.isFavorited
-											"
-											@click.prevent="unfavoriteStation()"
-											content="Unfavorite Station"
-											v-tippy
-											class="material-icons"
-											>star</i
-										>
-										<i
-											v-if="
-												loggedIn && !station.isFavorited
-											"
-											@click.prevent="favoriteStation()"
-											class="material-icons"
-											content="Favorite Station"
-											v-tippy
-											>star_border</i
-										>
-									</a>
-									<i
-										class="material-icons stationMode"
-										:content="
-											station.partyMode
-												? 'Station in Party mode'
-												: 'Station in Playlist mode'
-										"
-										v-tippy
-										>{{
-											station.partyMode
-												? "emoji_people"
-												: "playlist_play"
-										}}</i
-									>
-								</div>
-								<p>{{ station.description }}</p>
-							</div>
-
-							<div id="admin-buttons" v-if="isOwnerOrAdmin()">
-								<!-- (Admin) Pause/Resume Button -->
-								<button
-									class="button is-danger"
-									v-if="stationPaused"
-									@click="resumeStation()"
-								>
-									<i class="material-icons icon-with-button"
-										>play_arrow</i
-									>
-									<span class="optional-desktop-only-text">
-										Resume Station
-									</span>
-								</button>
-								<button
-									class="button is-danger"
-									@click="pauseStation()"
-									v-else
-								>
-									<i class="material-icons icon-with-button"
-										>pause</i
-									>
-									<span class="optional-desktop-only-text">
-										Pause Station
-									</span>
-								</button>
-
-								<!-- (Admin) Skip Button -->
-								<button
-									class="button is-danger"
-									@click="skipStation()"
-								>
-									<i class="material-icons icon-with-button"
-										>skip_next</i
-									>
-									<span class="optional-desktop-only-text">
-										Force Skip
-									</span>
-								</button>
-
-								<!-- (Admin) Station Settings Button -->
-								<button
-									class="button is-primary"
-									@click="
-										openModal({
-											sector: 'station',
-											modal: 'editStation'
-										})
-									"
-								>
-									<i class="material-icons icon-with-button"
-										>settings</i
-									>
-									<span class="optional-desktop-only-text">
-										Station settings
-									</span>
-								</button>
-							</div>
-						</div>
-						<div id="sidebar-container" class="quadrant">
-							<station-sidebar />
 						</div>
 					</div>
 				</div>
@@ -2507,10 +2507,10 @@ export default {
 
 @media (min-width: 1500px) {
 	#station-left-column {
-		max-width: calc(100% - 650px);
+		max-width: 650px;
 	}
 	#station-right-column {
-		max-width: 650px;
+		max-width: calc(100% - 650px);
 	}
 }
 
@@ -2532,6 +2532,16 @@ export default {
 			flex-direction: column;
 
 			#station-left-column {
+				#about-station-container #admin-buttons {
+					flex-wrap: wrap;
+				}
+
+				#sidebar-container {
+					min-height: 350px;
+				}
+			}
+
+			#station-right-column {
 				#current-next-row {
 					flex-direction: column;
 				}
@@ -2567,16 +2577,6 @@ export default {
 						order: 4;
 						flex-wrap: wrap;
 					}
-				}
-			}
-
-			#station-right-column {
-				#about-station-container #admin-buttons {
-					flex-wrap: wrap;
-				}
-
-				#sidebar-container {
-					min-height: 350px;
 				}
 			}
 		}
