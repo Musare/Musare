@@ -512,7 +512,6 @@ class _StationsModule extends CoreClass {
 						const currentSongIds = station.queue.map(song => song.songId);
 						const songsToAdd = [];
 						let lastSongAdded = null;
-						console.log(123123, _playlistSongs, currentSongs, songsStillNeeded);
 
 						playlistSongs
 							// .map(song => song._doc)
