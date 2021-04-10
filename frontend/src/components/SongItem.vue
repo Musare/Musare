@@ -7,7 +7,9 @@
 				<h4
 					class="item-title"
 					:style="
-						song.artists.length < 1 ? { fontSize: '16px' } : null
+						song.artists && song.artists.length < 1
+							? { fontSize: '16px' }
+							: null
 					"
 					:title="song.title"
 				>

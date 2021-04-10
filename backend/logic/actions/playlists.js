@@ -985,15 +985,19 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					YouTubeModule.runJob("GET_PLAYLIST", { url, musicOnly }, this).then(res => {
-						if (res.filteredSongs) {
-							videosInPlaylistTotal = res.songs.length;
-							songsInPlaylistTotal = res.filteredSongs.length;
-						} else {
-							songsInPlaylistTotal = videosInPlaylistTotal = res.songs.length;
-						}
-						next(null, res.songs);
-					});
+					YouTubeModule.runJob("GET_PLAYLIST", { url, musicOnly }, this)
+						.then(res => {
+							if (res.filteredSongs) {
+								videosInPlaylistTotal = res.songs.length;
+								songsInPlaylistTotal = res.filteredSongs.length;
+							} else {
+								songsInPlaylistTotal = videosInPlaylistTotal = res.songs.length;
+							}
+							next(null, res.songs);
+						})
+						.catch(err => {
+							next(err);
+						});
 				},
 				(songIds, next) => {
 					let successful = 0;

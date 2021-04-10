@@ -307,6 +307,16 @@ export default {
 					timeout: 4000
 				});
 
+			const regex = new RegExp(`[\\?&]list=([^&#]*)`);
+			const splitQuery = regex.exec(this.search.playlist.query);
+
+			if (!splitQuery) {
+				return new Toast({
+					content: "Please enter a valid YouTube playlist URL.",
+					timeout: 4000
+				});
+			}
+
 			// don't give starting import message instantly in case of instant error
 			setTimeout(() => {
 				if (isImportingPlaylist) {
