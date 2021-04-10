@@ -205,6 +205,23 @@ class _PlaylistsModule extends CoreClass {
 	}
 
 	/**
+	 * Gets all station playlists
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.includeSongs - include the songs
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	GET_ALL_STATION_PLAYLISTS(payload) {
+		return new Promise((resolve, reject) => {
+			const includeObject = payload.includeSongs ? null : { songs: false };
+			PlaylistsModule.playlistModel.find({ type: "station" }, includeObject, (err, playlists) => {
+				if (err) reject(new Error(err));
+				else resolve({ playlists });
+			});
+		});
+	}
+
+	/**
 	 * Gets a genre playlist
 	 *
 	 * @param {object} payload - object that contains the payload
@@ -410,13 +427,13 @@ class _PlaylistsModule extends CoreClass {
 							this
 						)
 							.then(response => {
-								next(null, { playlist: response.playlist });
+								next(null, response.playlist._id);
 							})
 							.catch(err => {
 								if (err.message === "Playlist not found") {
 									PlaylistsModule.runJob("CREATE_GENRE_PLAYLIST", { genre: payload.genre }, this)
 										.then(playlistId => {
-											next(null, { playlist: { _id: playlistId, songs: [] } });
+											next(null, playlistId);
 										})
 										.catch(err => {
 											next(err);
@@ -425,11 +442,10 @@ class _PlaylistsModule extends CoreClass {
 							});
 					},
 
-					(data, next) => {
+					(playlistId, next) => {
 						SongsModule.runJob("GET_ALL_SONGS_WITH_GENRE", { genre: payload.genre }, this)
 							.then(response => {
-								data.songs = response.songs;
-								next(null, data);
+								next(null, playlistId, response.songs);
 							})
 							.catch(err => {
 								console.log(err);
@@ -437,55 +453,82 @@ class _PlaylistsModule extends CoreClass {
 							});
 					},
 
-					(data, next) => {
-						data.songsToDelete = [];
-						data.songsToAdd = [];
-
-						data.playlist.songs.forEach(playlistSong => {
-							const found = data.songs.find(song => playlistSong.songId === song.songId);
-							if (!found) data.songsToDelete.push(playlistSong);
+					(playlistId, _songs, next) => {
+						const songs = _songs.map(song => {
+							const { _id, songId, title, artists, thumbnail, duration, status } = song;
+							return {
+								_id,
+								songId,
+								title,
+								artists,
+								thumbnail,
+								duration,
+								status
+							};
 						});
 
-						data.songs.forEach(song => {
-							const found = data.playlist.songs.find(playlistSong => song.songId === playlistSong.songId);
-							if (!found) data.songsToAdd.push(song);
+						PlaylistsModule.playlistModel.updateOne({ _id: playlistId }, { $set: { songs } }, err => {
+							next(err, playlistId);
 						});
-
-						next(null, data);
 					},
 
-					(data, next) => {
-						const promises = [];
-						data.songsToAdd.forEach(song => {
-							promises.push(
-								PlaylistsModule.runJob(
-									"ADD_SONG_TO_PLAYLIST",
-									{ playlistId: data.playlist._id, song },
-									this
-								)
-							);
-						});
-						data.songsToDelete.forEach(song => {
-							promises.push(
-								PlaylistsModule.runJob(
-									"DELETE_SONG_FROM_PLAYLIST_BY_SONGID",
-									{
-										playlistId: data.playlist._id,
-										songId: song.songId
-									},
-									this
-								)
-							);
-						});
-
-						Promise.allSettled(promises)
+					(playlistId, next) => {
+						PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId }, this)
 							.then(() => {
-								next(null, data.playlist._id);
+								next(null, playlistId);
 							})
-							.catch(err => {
-								next(err);
-							});
+							.catch(next);
 					},
+
+					// (data, next) => {
+					// 	data.songsToDelete = [];
+					// 	data.songsToAdd = [];
+
+					// 	data.playlist.songs.forEach(playlistSong => {
+					// 		const found = data.songs.find(song => playlistSong.songId === song.songId);
+					// 		if (!found) data.songsToDelete.push(playlistSong);
+					// 	});
+
+					// 	data.songs.forEach(song => {
+					// 		const found = data.playlist.songs.find(playlistSong => song.songId === playlistSong.songId);
+					// 		if (!found) data.songsToAdd.push(song);
+					// 	});
+
+					// 	next(null, data);
+					// },
+
+					// (data, next) => {
+					// 	const promises = [];
+					// 	data.songsToAdd.forEach(song => {
+					// 		promises.push(
+					// 			PlaylistsModule.runJob(
+					// 				"ADD_SONG_TO_PLAYLIST",
+					// 				{ playlistId: data.playlist._id, song },
+					// 				this
+					// 			)
+					// 		);
+					// 	});
+					// 	data.songsToDelete.forEach(song => {
+					// 		promises.push(
+					// 			PlaylistsModule.runJob(
+					// 				"DELETE_SONG_FROM_PLAYLIST_BY_SONGID",
+					// 				{
+					// 					playlistId: data.playlist._id,
+					// 					songId: song.songId
+					// 				},
+					// 				this
+					// 			)
+					// 		);
+					// 	});
+
+					// 	Promise.allSettled(promises)
+					// 		.then(() => {
+					// 			next(null, data.playlist._id);
+					// 		})
+					// 		.catch(err => {
+					// 			next(err);
+					// 		});
+					// },
 
 					(playlistId, next) => {
 						StationsModule.runJob("GET_STATIONS_THAT_INCLUDE_OR_EXCLUDE_PLAYLIST", { playlistId })
@@ -934,6 +977,96 @@ class _PlaylistsModule extends CoreClass {
 				}
 			)
 		);
+	}
+
+	/**
+	 * Clears and refills a station playlist
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.playlistId - the id of the playlist we are trying to clear and refill
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	CLEAR_AND_REFILL_STATION_PLAYLIST(payload) {
+		return new Promise((resolve, reject) => {
+			const { playlistId } = payload;
+			async.waterfall(
+				[
+					next => {
+						PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+							.then(playlist => {
+								next(null, playlist);
+							})
+							.catch(err => {
+								next(err);
+							});
+					},
+
+					(playlist, next) => {
+						if (playlist.type !== "station") next("This playlist is not a station playlist.");
+						else next(null, playlist.createdFor);
+					},
+
+					(stationId, next) => {
+						PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }, this)
+							.then(() => {
+								next();
+							})
+							.catch(err => {
+								next(err);
+							});
+					}
+				],
+				err => {
+					if (err && err !== true) return reject(new Error(err));
+					return resolve();
+				}
+			);
+		});
+	}
+
+	/**
+	 * Clears and refills a genre playlist
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.playlistId - the id of the playlist we are trying to clear and refill
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	CLEAR_AND_REFILL_GENRE_PLAYLIST(payload) {
+		return new Promise((resolve, reject) => {
+			const { playlistId } = payload;
+			async.waterfall(
+				[
+					next => {
+						PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+							.then(playlist => {
+								next(null, playlist);
+							})
+							.catch(err => {
+								next(err);
+							});
+					},
+
+					(playlist, next) => {
+						if (playlist.type !== "genre") next("This playlist is not a genre playlist.");
+						else next(null, playlist.createdFor);
+					},
+
+					(genre, next) => {
+						PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre }, this)
+							.then(() => {
+								next();
+							})
+							.catch(err => {
+								next(err);
+							});
+					}
+				],
+				err => {
+					if (err && err !== true) return reject(new Error(err));
+					return resolve();
+				}
+			);
+		});
 	}
 }
 

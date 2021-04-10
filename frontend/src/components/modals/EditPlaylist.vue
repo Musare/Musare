@@ -349,6 +349,22 @@
 			>
 				Remove Playlist
 			</a>
+			<a
+				class="button is-danger"
+				@click="clearAndRefillStationPlaylist()"
+				href="#"
+				v-if="playlist.type === 'station'"
+			>
+				Clear and refill station playlist
+			</a>
+			<a
+				class="button is-danger"
+				@click="clearAndRefillGenrePlaylist()"
+				href="#"
+				v-if="playlist.type === 'genre'"
+			>
+				Clear and refill genre playlist
+			</a>
 		</div>
 	</modal>
 </template>
@@ -702,8 +718,40 @@ export default {
 				songId,
 				data => {
 					if (data.status !== "success")
-						new Toast(`Error: ${data.message}`);
-					else new Toast(data.message);
+						new Toast({
+							content: `Error: ${data.message}`,
+							timeout: 8000
+						});
+					else new Toast({ content: data.message, timeout: 4000 });
+				}
+			);
+		},
+		clearAndRefillStationPlaylist() {
+			this.socket.dispatch(
+				"playlists.clearAndRefillStationPlaylist",
+				this.playlist._id,
+				data => {
+					console.log(data.message);
+					if (data.status !== "success")
+						new Toast({
+							content: `Error: ${data.message}`,
+							timeout: 8000
+						});
+					else new Toast({ content: data.message, timeout: 4000 });
+				}
+			);
+		},
+		clearAndRefillGenrePlaylist() {
+			this.socket.dispatch(
+				"playlists.clearAndRefillGenrePlaylist",
+				this.playlist._id,
+				data => {
+					if (data.status !== "success")
+						new Toast({
+							content: `Error: ${data.message}`,
+							timeout: 8000
+						});
+					else new Toast({ content: data.message, timeout: 4000 });
 				}
 			);
 		},
