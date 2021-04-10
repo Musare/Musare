@@ -55,19 +55,7 @@
 					</div>
 				</article>
 			</div>
-			<div slot="footer">
-				<button
-					class="button is-danger"
-					@click="
-						closeModal({
-							sector,
-							modal: 'viewPunishment'
-						})
-					"
-				>
-					<span>&nbsp;Close</span>
-				</button>
-			</div>
+			<div slot="footer"></div>
 		</modal>
 	</div>
 </template>

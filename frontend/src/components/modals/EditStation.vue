@@ -472,21 +472,21 @@
 		</template>
 		<template #footer>
 			<save-button ref="saveButton" @clicked="saveChanges()" />
-
-			<button
-				v-if="station && station.type === 'community'"
-				class="button is-danger"
-				@click="deleteStation()"
-			>
-				Delete station
-			</button>
-
-			<button
-				class="button is-danger"
-				@click="clearAndRefillStationQueue()"
-			>
-				Clear and refill station queue
-			</button>
+			<div class="right">
+				<button
+					class="button is-danger"
+					@click="clearAndRefillStationQueue()"
+				>
+					Clear and refill station queue
+				</button>
+				<button
+					v-if="station && station.type === 'community'"
+					class="button is-danger"
+					@click="deleteStation()"
+				>
+					Delete station
+				</button>
+			</div>
 		</template>
 	</modal>
 </template>
@@ -1102,12 +1102,6 @@ export default {
 	}
 };
 </script>
-
-<style lang="scss">
-.edit-station-modal .modal-card-foot {
-	justify-content: flex-end;
-}
-</style>
 
 <style lang="scss" scoped>
 .night-mode {

@@ -341,30 +341,32 @@
 			>
 				Download Playlist
 			</a>
-			<a
-				class="button is-danger"
-				@click="removePlaylist()"
-				href="#"
-				v-if="isEditable()"
-			>
-				Remove Playlist
-			</a>
-			<a
-				class="button is-danger"
-				@click="clearAndRefillStationPlaylist()"
-				href="#"
-				v-if="playlist.type === 'station'"
-			>
-				Clear and refill station playlist
-			</a>
-			<a
-				class="button is-danger"
-				@click="clearAndRefillGenrePlaylist()"
-				href="#"
-				v-if="playlist.type === 'genre'"
-			>
-				Clear and refill genre playlist
-			</a>
+			<div class="right">
+				<a
+					class="button is-danger"
+					@click="clearAndRefillStationPlaylist()"
+					href="#"
+					v-if="playlist.type === 'station'"
+				>
+					Clear and refill station playlist
+				</a>
+				<a
+					class="button is-danger"
+					@click="clearAndRefillGenrePlaylist()"
+					href="#"
+					v-if="playlist.type === 'genre'"
+				>
+					Clear and refill genre playlist
+				</a>
+				<a
+					class="button is-danger"
+					@click="removePlaylist()"
+					href="#"
+					v-if="isEditable()"
+				>
+					Remove Playlist
+				</a>
+			</div>
 		</div>
 	</modal>
 </template>
@@ -768,10 +770,6 @@ export default {
 		.modal-card-body {
 			padding: 16px;
 		}
-	}
-
-	.modal-card-foot {
-		justify-content: flex-end;
 	}
 }
 </style>

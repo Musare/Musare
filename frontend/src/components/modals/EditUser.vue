@@ -71,17 +71,6 @@
 				<button class="button is-warning" @click="removeSessions()">
 					<span>&nbsp;Remove all sessions</span>
 				</button>
-				<button
-					class="button is-danger"
-					@click="
-						closeModal({
-							sector,
-							modal: 'editUser'
-						})
-					"
-				>
-					<span>&nbsp;Close</span>
-				</button>
 			</div>
 		</modal>
 	</div>

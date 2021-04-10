@@ -477,13 +477,6 @@
 					type="save-and-close"
 					@clicked="save(song, true)"
 				/>
-
-				<button
-					class="button is-danger"
-					@click="closeModal({ sector: sector, modal: 'editSong' })"
-				>
-					<span>&nbsp;Close</span>
-				</button>
 			</div>
 		</modal>
 		<floating-box id="genreHelper" ref="genreHelper">
@@ -1440,14 +1433,8 @@ export default {
 		}
 
 		.modal-card-foot {
-			justify-content: flex-end;
-
-			div {
-				display: flex;
-
-				div {
-					margin-right: 5px;
-				}
+			div div {
+				margin-right: 5px;
 			}
 		}
 	}
