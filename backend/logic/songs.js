@@ -201,10 +201,11 @@ class _SongsModule extends CoreClass {
 							});
 						} else {
 							const status =
-								payload.automaticallyRequested === false ||
-								config.get("hideAutomaticallyRequestedSongs") === false
-									? "unverified"
-									: "hidden";
+								(!payload.userId && config.get("hideAnonymousSongs")) ||
+								(payload.automaticallyRequested && config.get("hideAutomaticallyRequestedSongs"))
+									? "hidden"
+									: "unverified";
+
 							const song = new SongsModule.SongModel({
 								...youtubeSong,
 								status,
@@ -599,6 +600,10 @@ class _SongsModule extends CoreClass {
 					(user, song, next) => {
 						if (song) return next("This song is already in the database.");
 						// TODO Add err object as first param of callback
+
+						const requestedBy = user.preferences.anonymousSongRequests ? null : userId;
+						const status = !requestedBy && config.get("hideAnonymousSongs") ? "hidden" : "unverified";
+
 						return YouTubeModule.runJob("GET_SONG", { songId }, this)
 							.then(response => {
 								const { song } = response;
@@ -608,7 +613,7 @@ class _SongsModule extends CoreClass {
 								song.explicit = false;
 								song.requestedBy = user.preferences.anonymousSongRequests ? null : userId;
 								song.requestedAt = requestedAt;
-								song.status = "unverified";
+								song.status = status;
 								next(null, song);
 							})
 							.catch(next);
