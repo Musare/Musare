@@ -58,23 +58,19 @@ export default {
 			const { displayName } = this.playlist;
 
 			if (!validation.isLength(displayName, 2, 32))
-				return new Toast({
-					content:
-						"Display name must have between 2 and 32 characters.",
-					timeout: 8000
-				});
+				return new Toast(
+					"Display name must have between 2 and 32 characters."
+				);
 			if (!validation.regex.ascii.test(displayName))
-				return new Toast({
-					content:
-						"Invalid display name format. Only ASCII characters are allowed.",
-					timeout: 8000
-				});
+				return new Toast(
+					"Invalid display name format. Only ASCII characters are allowed."
+				);
 
 			return this.socket.dispatch(
 				"playlists.create",
 				this.playlist,
 				res => {
-					new Toast({ content: res.message, timeout: 3000 });
+					new Toast(res.message);
 
 					if (res.status === "success") {
 						this.closeModal({

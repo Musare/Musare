@@ -419,11 +419,7 @@ export default {
 				this.playlist = res.data;
 				this.playlist.songs.sort((a, b) => a.position - b.position);
 				this.playlist.oldId = res.data._id;
-			} else
-				new Toast({
-					content: res.message,
-					timeout: 4000
-				});
+			} else new Toast(res.message);
 		});
 
 		this.socket.on("event:playlist.addSong", data => {
@@ -483,19 +479,14 @@ export default {
 
 			// import query is blank
 			if (!this.search.playlist.query)
-				return new Toast({
-					content: "Please enter a YouTube playlist URL.",
-					timeout: 4000
-				});
+				return new Toast("Please enter a YouTube playlist URL.");
 
 			// don't give starting import message instantly in case of instant error
 			setTimeout(() => {
 				if (isImportingPlaylist) {
-					new Toast({
-						content:
-							"Starting to import your playlist. This can take some time to do.",
-						timeout: 4000
-					});
+					new Toast(
+						"Starting to import your playlist. This can take some time to do."
+					);
 				}
 			}, 750);
 
@@ -543,7 +534,7 @@ export default {
 				this.playlist._id,
 				songsBeingChanged,
 				res => {
-					new Toast({ content: res.message, timeout: 4000 });
+					new Toast(res.message);
 				}
 			);
 		},
@@ -559,7 +550,7 @@ export default {
 				"playlists.shuffle",
 				this.playlist._id,
 				res => {
-					new Toast({ content: res.message, timeout: 4000 });
+					new Toast(res.message);
 					if (res.status === "success") {
 						this.playlist.songs = res.data.songs.sort(
 							(a, b) => a.position - b.position
@@ -575,7 +566,7 @@ export default {
 				id,
 				this.playlist._id,
 				res => {
-					new Toast({ content: res.message, timeout: 4000 });
+					new Toast(res.message);
 					if (res.status === "success")
 						this.search.songs.results[index].isAddedToQueue = true;
 				}
@@ -584,12 +575,12 @@ export default {
 		removeSongFromPlaylist(id) {
 			if (this.playlist.displayName === "Liked Songs") {
 				this.socket.dispatch("songs.unlike", id, res => {
-					new Toast({ content: res.message, timeout: 4000 });
+					new Toast(res.message);
 				});
 			}
 			if (this.playlist.displayName === "Disliked Songs") {
 				this.socket.dispatch("songs.undislike", id, res => {
-					new Toast({ content: res.message, timeout: 4000 });
+					new Toast(res.message);
 				});
 			} else {
 				this.socket.dispatch(
@@ -597,7 +588,7 @@ export default {
 					id,
 					this.playlist._id,
 					res => {
-						new Toast({ content: res.message, timeout: 4000 });
+						new Toast(res.message);
 					}
 				);
 			}
@@ -605,30 +596,26 @@ export default {
 		renamePlaylist() {
 			const { displayName } = this.playlist;
 			if (!validation.isLength(displayName, 2, 32))
-				return new Toast({
-					content:
-						"Display name must have between 2 and 32 characters.",
-					timeout: 8000
-				});
+				return new Toast(
+					"Display name must have between 2 and 32 characters."
+				);
 			if (!validation.regex.ascii.test(displayName))
-				return new Toast({
-					content:
-						"Invalid display name format. Only ASCII characters are allowed.",
-					timeout: 8000
-				});
+				return new Toast(
+					"Invalid display name format. Only ASCII characters are allowed."
+				);
 
 			return this.socket.dispatch(
 				"playlists.updateDisplayName",
 				this.playlist._id,
 				this.playlist.displayName,
 				res => {
-					new Toast({ content: res.message, timeout: 4000 });
+					new Toast(res.message);
 				}
 			);
 		},
 		removePlaylist() {
 			this.socket.dispatch("playlists.remove", this.playlist._id, res => {
-				new Toast({ content: res.message, timeout: 3000 });
+				new Toast(res.message);
 				if (res.status === "success") {
 					this.closeModal({
 						sector: "station",
@@ -661,17 +648,10 @@ export default {
 					a.click();
 					window.URL.revokeObjectURL(url);
 
-					new Toast({
-						content: "Successfully downloaded playlist.",
-						timeout: 3000
-					});
+					new Toast("Successfully downloaded playlist.");
 				})
 				.catch(
-					() =>
-						new Toast({
-							content: "Failed to export and download playlist.",
-							timeout: 3000
-						})
+					() => new Toast("Failed to export and download playlist.")
 				);
 		},
 		moveSongToTop(index) {
@@ -700,7 +680,7 @@ export default {
 					this.playlist._id,
 					privacy,
 					res => {
-						new Toast({ content: res.message, timeout: 4000 });
+						new Toast(res.message);
 					}
 				);
 			}
@@ -712,16 +692,8 @@ export default {
 				songId,
 				data => {
 					if (data.status !== "success")
-						new Toast({
-							content: `Error: ${data.message}`,
-							timeout: 8000
-						});
-					else {
-						new Toast({
-							content: `${data.message}`,
-							timeout: 4000
-						});
-					}
+						new Toast(`Error: ${data.message}`);
+					else new Toast(data.message);
 				}
 			);
 		},

@@ -333,11 +333,7 @@ export default {
 				res => {
 					if (res.status === "success") {
 						this.edit(res.data.song);
-					} else
-						new Toast({
-							content: "Song with that ID not found",
-							timeout: 3000
-						});
+					} else new Toast("Song with that ID not found");
 				}
 			);
 		}
@@ -354,9 +350,8 @@ export default {
 			);
 			if (dialogResult !== true) return;
 			this.socket.dispatch("songs.unverify", id, res => {
-				if (res.status === "success")
-					new Toast({ content: res.message, timeout: 4000 });
-				else new Toast({ content: res.message, timeout: 8000 });
+				if (res.status === "success") new Toast(res.message);
+				else new Toast(res.message);
 			});
 		},
 		getSet() {

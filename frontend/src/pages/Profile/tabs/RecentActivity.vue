@@ -118,8 +118,7 @@ export default {
 	methods: {
 		hideActivity(activityId) {
 			this.socket.dispatch("activities.hideActivity", activityId, res => {
-				if (res.status !== "success")
-					new Toast({ content: res.message, timeout: 3000 });
+				if (res.status !== "success") new Toast(res.message);
 			});
 		},
 		getSet() {

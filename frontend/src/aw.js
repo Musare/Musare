@@ -131,11 +131,7 @@ export default {
 		if (data.type === "pong") {
 			gotPong = true;
 			notConnectedToast.hide();
-			new Toast({
-				content:
-					"Got pong, connected to ActivityWatch Musare extension",
-				timeout: 8000
-			});
+			new Toast("Got pong, connected to ActivityWatch Musare extension");
 		}
 
 		if (data.type === "denied") {
@@ -158,11 +154,9 @@ export default {
 					this.attemptPing.apply(this);
 				}, 1000);
 			} else {
-				new Toast({
-					content:
-						"Couldn't connect to ActivityWatch Musare extension.",
-					timeout: 8000
-				});
+				new Toast(
+					"Couldn't connect to ActivityWatch Musare extension."
+				);
 			}
 		}
 	}

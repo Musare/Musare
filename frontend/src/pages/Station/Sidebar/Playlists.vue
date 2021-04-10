@@ -182,16 +182,11 @@ export default {
 				if (this.isNotSelected(id)) {
 					this.updatePrivatePlaylistQueueSelected(id);
 					this.$parent.$parent.addFirstPrivatePlaylistSongToQueue();
-					new Toast({
-						content:
-							"Successfully selected playlist to auto request songs.",
-						timeout: 4000
-					});
+					new Toast(
+						"Successfully selected playlist to auto request songs."
+					);
 				} else {
-					new Toast({
-						content: "Error: Playlist already selected.",
-						timeout: 4000
-					});
+					new Toast("Error: Playlist already selected.");
 				}
 			} else {
 				this.socket.dispatch(
@@ -200,16 +195,10 @@ export default {
 					id,
 					res => {
 						if (res.status === "failure") {
-							new Toast({
-								content: res.message,
-								timeout: 8000
-							});
+							new Toast(res.message);
 						} else {
 							this.station.includedPlaylists.push(id);
-							new Toast({
-								content: res.message,
-								timeout: 4000
-							});
+							new Toast(res.message);
 						}
 					}
 				);
@@ -218,10 +207,7 @@ export default {
 		deselectPlaylist(id) {
 			if (this.station.type === "community" && this.station.partyMode) {
 				this.updatePrivatePlaylistQueueSelected(null);
-				new Toast({
-					content: "Successfully deselected playlist.",
-					timeout: 4000
-				});
+				new Toast("Successfully deselected playlist.");
 			} else {
 				this.socket.dispatch(
 					"stations.deselectPrivatePlaylist",
@@ -229,18 +215,14 @@ export default {
 					id,
 					res => {
 						if (res.status === "failure")
-							new Toast({
-								content: res.message,
-								timeout: 8000
-							});
+							return new Toast(res.message);
+
 						this.station.includedPlaylists.splice(
 							this.station.includedPlaylists.indexOf(id),
 							1
 						);
-						new Toast({
-							content: res.message,
-							timeout: 4000
-						});
+
+						return new Toast(res.message);
 					}
 				);
 			}

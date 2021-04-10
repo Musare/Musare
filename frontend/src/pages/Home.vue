@@ -664,11 +664,8 @@ export default {
 				station._id,
 				res => {
 					if (res.status === "success") {
-						new Toast({
-							content: "Successfully favorited station.",
-							timeout: 4000
-						});
-					} else new Toast({ content: res.message, timeout: 8000 });
+						new Toast("Successfully favorited station.");
+					} else new Toast(res.message);
 				}
 			);
 		},
@@ -678,11 +675,8 @@ export default {
 				station._id,
 				res => {
 					if (res.status === "success") {
-						new Toast({
-							content: "Successfully unfavorited station.",
-							timeout: 4000
-						});
-					} else new Toast({ content: res.message, timeout: 8000 });
+						new Toast("Successfully unfavorited station.");
+					} else new Toast(res.message);
 				}
 			);
 		},

@@ -121,10 +121,7 @@ export default {
 				const user = res.data;
 				this.editUser(user);
 			} else {
-				new Toast({
-					content: "User with that ID not found",
-					timeout: 3000
-				});
+				new Toast("User with that ID not found");
 				this.closeModal({
 					sector: this.sector,
 					modal: "editUser"
@@ -136,49 +133,42 @@ export default {
 		updateUsername() {
 			const { username } = this.user;
 			if (!validation.isLength(username, 2, 32))
-				return new Toast({
-					content: "Username must have between 2 and 32 characters.",
-					timeout: 8000
-				});
+				return new Toast(
+					"Username must have between 2 and 32 characters."
+				);
 			if (!validation.regex.custom("a-zA-Z0-9_-").test(username))
-				return new Toast({
-					content:
-						"Invalid username format. Allowed characters: a-z, A-Z, 0-9, _ and -.",
-					timeout: 8000
-				});
+				return new Toast(
+					"Invalid username format. Allowed characters: a-z, A-Z, 0-9, _ and -."
+				);
 
 			return this.socket.dispatch(
 				`users.updateUsername`,
 				this.user._id,
 				username,
 				res => {
-					new Toast({ content: res.message, timeout: 4000 });
+					new Toast(res.message);
 				}
 			);
 		},
 		updateEmail() {
 			const email = this.user.email.address;
 			if (!validation.isLength(email, 3, 254))
-				return new Toast({
-					content: "Email must have between 3 and 254 characters.",
-					timeout: 8000
-				});
+				return new Toast(
+					"Email must have between 3 and 254 characters."
+				);
 			if (
 				email.indexOf("@") !== email.lastIndexOf("@") ||
 				!validation.regex.emailSimple.test(email) ||
 				!validation.regex.ascii.test(email)
 			)
-				return new Toast({
-					content: "Invalid email format.",
-					timeout: 8000
-				});
+				return new Toast("Invalid email format.");
 
 			return this.socket.dispatch(
 				`users.updateEmail`,
 				this.user._id,
 				email,
 				res => {
-					new Toast({ content: res.message, timeout: 4000 });
+					new Toast(res.message);
 				}
 			);
 		},
@@ -188,23 +178,20 @@ export default {
 				this.user._id,
 				this.user.role,
 				res => {
-					new Toast({ content: res.message, timeout: 4000 });
+					new Toast(res.message);
 				}
 			);
 		},
 		banUser() {
 			const { reason } = this.ban;
 			if (!validation.isLength(reason, 1, 64))
-				return new Toast({
-					content: "Reason must have between 1 and 64 characters.",
-					timeout: 8000
-				});
+				return new Toast(
+					"Reason must have between 1 and 64 characters."
+				);
 			if (!validation.regex.ascii.test(reason))
-				return new Toast({
-					content:
-						"Invalid reason format. Only ascii characters are allowed.",
-					timeout: 8000
-				});
+				return new Toast(
+					"Invalid reason format. Only ascii characters are allowed."
+				);
 
 			return this.socket.dispatch(
 				`users.banUserById`,
@@ -212,13 +199,13 @@ export default {
 				this.ban.reason,
 				this.ban.expiresAt,
 				res => {
-					new Toast({ content: res.message, timeout: 4000 });
+					new Toast(res.message);
 				}
 			);
 		},
 		removeSessions() {
 			this.socket.dispatch(`users.removeSessions`, this.user._id, res => {
-				new Toast({ content: res.message, timeout: 4000 });
+				new Toast(res.message);
 			});
 		},
 		...mapActions("modals/editUser", ["editUser"]),

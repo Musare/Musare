@@ -252,9 +252,7 @@ export default {
 		},
 		verify(song) {
 			this.socket.dispatch("songs.verify", song.songId, res => {
-				if (res.status === "success")
-					new Toast({ content: res.message, timeout: 2000 });
-				else new Toast({ content: res.message, timeout: 4000 });
+				new Toast(res.message);
 			});
 		},
 		hide(id) {
@@ -264,9 +262,7 @@ export default {
 			);
 			if (dialogResult !== true) return;
 			this.socket.dispatch("songs.hide", id, res => {
-				if (res.status === "success")
-					new Toast({ content: res.message, timeout: 2000 });
-				else new Toast({ content: res.message, timeout: 4000 });
+				new Toast(res.message);
 			});
 		},
 		getSet() {

@@ -130,20 +130,14 @@ export default {
 			) {
 				this.$refs.saveButton.handleFailedSave();
 
-				new Toast({
-					content: "Please make a change before saving.",
-					timeout: 8000
-				});
+				new Toast("Please make a change before saving.");
 			}
 		},
 		changeName() {
 			const { name } = this.modifiedUser;
 
 			if (!validation.isLength(name, 1, 64))
-				return new Toast({
-					content: "Name must have between 1 and 64 characters.",
-					timeout: 8000
-				});
+				return new Toast("Name must have between 1 and 64 characters.");
 
 			this.$refs.saveButton.status = "disabled";
 
@@ -153,13 +147,10 @@ export default {
 				name,
 				res => {
 					if (res.status !== "success") {
-						new Toast({ content: res.message, timeout: 8000 });
+						new Toast(res.message);
 						this.$refs.saveButton.handleFailedSave();
 					} else {
-						new Toast({
-							content: "Successfully changed name",
-							timeout: 4000
-						});
+						new Toast("Successfully changed name");
 
 						this.updateOriginalUser({
 							property: "name",
@@ -175,10 +166,9 @@ export default {
 			const { location } = this.modifiedUser;
 
 			if (!validation.isLength(location, 0, 50))
-				return new Toast({
-					content: "Location must have between 0 and 50 characters.",
-					timeout: 8000
-				});
+				return new Toast(
+					"Location must have between 0 and 50 characters."
+				);
 
 			this.$refs.saveButton.status = "disabled";
 
@@ -188,13 +178,10 @@ export default {
 				location,
 				res => {
 					if (res.status !== "success") {
-						new Toast({ content: res.message, timeout: 8000 });
+						new Toast(res.message);
 						this.$refs.saveButton.handleFailedSave();
 					} else {
-						new Toast({
-							content: "Successfully changed location",
-							timeout: 4000
-						});
+						new Toast("Successfully changed location");
 
 						this.updateOriginalUser({
 							property: "location",
@@ -210,10 +197,7 @@ export default {
 			const { bio } = this.modifiedUser;
 
 			if (!validation.isLength(bio, 0, 200))
-				return new Toast({
-					content: "Bio must have between 0 and 200 characters.",
-					timeout: 8000
-				});
+				return new Toast("Bio must have between 0 and 200 characters.");
 
 			this.$refs.saveButton.status = "disabled";
 
@@ -223,13 +207,10 @@ export default {
 				bio,
 				res => {
 					if (res.status !== "success") {
-						new Toast({ content: res.message, timeout: 8000 });
+						new Toast(res.message);
 						this.$refs.saveButton.handleFailedSave();
 					} else {
-						new Toast({
-							content: "Successfully changed bio",
-							timeout: 4000
-						});
+						new Toast("Successfully changed bio");
 
 						this.updateOriginalUser({
 							property: "bio",
@@ -252,13 +233,10 @@ export default {
 				avatar,
 				res => {
 					if (res.status !== "success") {
-						new Toast({ content: res.message, timeout: 8000 });
+						new Toast(res.message);
 						this.$refs.saveButton.handleFailedSave();
 					} else {
-						new Toast({
-							content: "Successfully updated avatar type",
-							timeout: 4000
-						});
+						new Toast("Successfully updated avatar type");
 
 						this.updateOriginalUser({
 							property: "avatar",

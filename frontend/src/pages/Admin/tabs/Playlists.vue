@@ -150,15 +150,9 @@ export default {
 				"playlists.deleteOrphanedStationPlaylists",
 				res => {
 					if (res.status === "success") {
-						new Toast({
-							content: `${res.message}`,
-							timeout: 4000
-						});
+						new Toast(res.message);
 					} else {
-						new Toast({
-							content: `Error: ${res.message}`,
-							timeout: 8000
-						});
+						new Toast(`Error: ${res.message}`);
 					}
 				}
 			);
@@ -168,15 +162,9 @@ export default {
 				"playlists.deleteOrphanedGenrePlaylists",
 				res => {
 					if (res.status === "success") {
-						new Toast({
-							content: `${res.message}`,
-							timeout: 4000
-						});
+						new Toast(res.message);
 					} else {
-						new Toast({
-							content: `Error: ${res.message}`,
-							timeout: 8000
-						});
+						new Toast(`Error: ${res.message}`);
 					}
 				}
 			);
@@ -186,15 +174,9 @@ export default {
 				"playlists.requestOrphanedPlaylistSongs",
 				res => {
 					if (res.status === "success") {
-						new Toast({
-							content: `${res.message}`,
-							timeout: 4000
-						});
+						new Toast(res.message);
 					} else {
-						new Toast({
-							content: `Error: ${res.message}`,
-							timeout: 8000
-						});
+						new Toast(`Error: ${res.message}`);
 					}
 				}
 			);

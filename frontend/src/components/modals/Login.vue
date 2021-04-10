@@ -103,9 +103,7 @@ export default {
 				.then(res => {
 					if (res.status === "success") window.location.reload();
 				})
-				.catch(
-					err => new Toast({ content: err.message, timeout: 5000 })
-				);
+				.catch(err => new Toast(err.message));
 		},
 		resetPassword() {
 			this.closeModal({ sector: "header", modal: "login" });

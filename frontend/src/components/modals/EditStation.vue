@@ -638,10 +638,7 @@ export default {
 				// 	JSON.stringify(this.station.blacklistedGenres)
 				// );
 			} else {
-				new Toast({
-					content: "Station with that ID not found",
-					timeout: 3000
-				});
+				new Toast("Station with that ID not found");
 				this.closeModal({
 					sector: this.sector,
 					modal: "editStation"
@@ -701,25 +698,17 @@ export default {
 			) {
 				this.$refs.saveButton.handleFailedSave();
 
-				new Toast({
-					content: "Please make a change before saving.",
-					timeout: 8000
-				});
+				new Toast("Please make a change before saving.");
 			}
 		},
 		updateName() {
 			const { name } = this.station;
 			if (!validation.isLength(name, 2, 16))
-				return new Toast({
-					content: "Name must have between 2 and 16 characters.",
-					timeout: 8000
-				});
+				return new Toast("Name must have between 2 and 16 characters.");
 			if (!validation.regex.az09_.test(name))
-				return new Toast({
-					content:
-						"Invalid name format. Allowed characters: a-z, 0-9 and _.",
-					timeout: 8000
-				});
+				return new Toast(
+					"Invalid name format. Allowed characters: a-z, 0-9 and _."
+				);
 
 			this.$refs.saveButton.status = "disabled";
 
@@ -728,7 +717,7 @@ export default {
 				this.station._id,
 				name,
 				res => {
-					new Toast({ content: res.message, timeout: 8000 });
+					new Toast(res.message);
 
 					if (res.status === "success") {
 						this.originalStation.name = name;
@@ -743,18 +732,14 @@ export default {
 			const { displayName } = this.station;
 
 			if (!validation.isLength(displayName, 2, 32))
-				return new Toast({
-					content:
-						"Display name must have between 2 and 32 characters.",
-					timeout: 8000
-				});
+				return new Toast(
+					"Display name must have between 2 and 32 characters."
+				);
 
 			if (!validation.regex.ascii.test(displayName))
-				return new Toast({
-					content:
-						"Invalid display name format. Only ASCII characters are allowed.",
-					timeout: 8000
-				});
+				return new Toast(
+					"Invalid display name format. Only ASCII characters are allowed."
+				);
 
 			this.$refs.saveButton.status = "disabled";
 
@@ -763,7 +748,7 @@ export default {
 				this.station._id,
 				displayName,
 				res => {
-					new Toast({ content: res.message, timeout: 8000 });
+					new Toast(res.message);
 
 					if (res.status === "success") {
 						this.originalStation.displayName = displayName;
@@ -777,21 +762,16 @@ export default {
 		updateDescription() {
 			const { description } = this.station;
 			if (!validation.isLength(description, 2, 200))
-				return new Toast({
-					content:
-						"Description must have between 2 and 200 characters.",
-					timeout: 8000
-				});
+				return new Toast(
+					"Description must have between 2 and 200 characters."
+				);
 
 			let characters = description.split("");
 			characters = characters.filter(character => {
 				return character.charCodeAt(0) === 21328;
 			});
 			if (characters.length !== 0)
-				return new Toast({
-					content: "Invalid description format.",
-					timeout: 8000
-				});
+				return new Toast("Invalid description format.");
 
 			this.$refs.saveButton.status = "disabled";
 
@@ -800,7 +780,7 @@ export default {
 				this.station._id,
 				description,
 				res => {
-					new Toast({ content: res.message, timeout: 8000 });
+					new Toast(res.message);
 
 					if (res.status === "success") {
 						this.originalStation.description = description;
@@ -824,7 +804,7 @@ export default {
 				this.station._id,
 				this.station.privacy,
 				res => {
-					new Toast({ content: res.message, timeout: 8000 });
+					new Toast(res.message);
 
 					if (res.status === "success") {
 						this.originalStation.privacy = this.station.privacy;
@@ -843,7 +823,7 @@ export default {
 				this.station._id,
 				this.station.genres,
 				res => {
-					new Toast({ content: res.message, timeout: 8000 });
+					new Toast(res.message);
 
 					if (res.status === "success") {
 						const genres = JSON.parse(
@@ -868,7 +848,7 @@ export default {
 				this.station._id,
 				this.station.blacklistedGenres,
 				res => {
-					new Toast({ content: res.message, timeout: 8000 });
+					new Toast(res.message);
 
 					if (res.status === "success") {
 						const blacklistedGenres = JSON.parse(
@@ -897,7 +877,7 @@ export default {
 				this.station._id,
 				this.station.partyMode,
 				res => {
-					new Toast({ content: res.message, timeout: 8000 });
+					new Toast(res.message);
 
 					if (res.status === "success") {
 						this.originalStation.partyMode = this.station.partyMode;
@@ -921,7 +901,7 @@ export default {
 				this.station._id,
 				this.station.playMode,
 				res => {
-					new Toast({ content: res.message, timeout: 8000 });
+					new Toast(res.message);
 
 					if (res.status === "success") {
 						this.originalStation.playMode = this.station.playMode;
@@ -948,18 +928,14 @@ export default {
 						if (this.originalStation)
 							this.originalStation.locked = res.data;
 
-						new Toast({
-							content: `Toggled queue lock successfully to ${res.data}`,
-							timeout: 4000
-						});
+						new Toast(
+							`Toggled queue lock successfully to ${res.data}`
+						);
 
 						return this.$refs.saveButton.handleSuccessfulSave();
 					}
 
-					new Toast({
-						content: "Failed to toggle queue lock.",
-						timeout: 8000
-					});
+					new Toast("Failed to toggle queue lock.");
 
 					return this.$refs.saveButton.handleFailedSave();
 				}
@@ -978,7 +954,7 @@ export default {
 				this.station._id,
 				this.station.theme,
 				res => {
-					new Toast({ content: res.message, timeout: 8000 });
+					new Toast(res.message);
 
 					if (res.status === "success") {
 						this.originalStation.theme = this.station.theme;
@@ -996,7 +972,7 @@ export default {
 						sector: "station",
 						modal: "editStation"
 					});
-				return new Toast({ content: res.message, timeout: 8000 });
+				return new Toast(res.message);
 			});
 		},
 		blurGenreInput() {
@@ -1061,40 +1037,28 @@ export default {
 			if (type === "genres") {
 				const genre = this.genreInputValue.toLowerCase().trim();
 				if (this.station.genres.indexOf(genre) !== -1)
-					return new Toast({
-						content: "Genre already exists",
-						timeout: 3000
-					});
+					return new Toast("Genre already exists");
 				if (genre) {
 					this.station.genres.push(genre);
 					this.genreInputValue = "";
 					return false;
 				}
 
-				return new Toast({
-					content: "Genre cannot be empty",
-					timeout: 3000
-				});
+				return new Toast("Genre cannot be empty");
 			}
 			if (type === "blacklist-genres") {
 				const genre = this.blacklistGenreInputValue
 					.toLowerCase()
 					.trim();
 				if (this.station.blacklistedGenres.indexOf(genre) !== -1)
-					return new Toast({
-						content: "Blacklist genre already exists",
-						timeout: 3000
-					});
+					return new Toast("Blacklist genre already exists");
 				if (genre) {
 					this.station.blacklistedGenres.push(genre);
 					this.blacklistGenreInputValue = "";
 					return false;
 				}
 
-				return new Toast({
-					content: "Blacklist genre cannot be empty",
-					timeout: 3000
-				});
+				return new Toast("Blacklist genre cannot be empty");
 			}
 
 			return false;

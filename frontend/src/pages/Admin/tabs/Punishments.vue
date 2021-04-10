@@ -145,7 +145,7 @@ export default {
 				this.ipBan.reason,
 				this.ipBan.expiresAt,
 				res => {
-					new Toast({ content: res.message, timeout: 6000 });
+					new Toast(res.message);
 				}
 			);
 		},

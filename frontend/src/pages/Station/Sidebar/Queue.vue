@@ -159,12 +159,8 @@ export default {
 				songId,
 				res => {
 					if (res.status === "success") {
-						new Toast({
-							content:
-								"Successfully removed song from the queue.",
-							timeout: 4000
-						});
-					} else new Toast({ content: res.message, timeout: 8000 });
+						new Toast("Successfully removed song from the queue.");
+					} else new Toast(res.message);
 				}
 			);
 		},

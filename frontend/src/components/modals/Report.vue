@@ -260,7 +260,7 @@ export default {
 	methods: {
 		create() {
 			this.socket.dispatch("reports.create", this.report, res => {
-				new Toast({ content: res.message, timeout: 4000 });
+				new Toast(res.message);
 				if (res.status === "success")
 					this.closeModal({
 						sector: "station",

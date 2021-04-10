@@ -328,22 +328,15 @@ export default {
 				this.email.indexOf("@") !== this.email.lastIndexOf("@") ||
 				!validation.regex.emailSimple.test(this.email)
 			)
-				return new Toast({
-					content: "Invalid email format.",
-					timeout: 8000
-				});
+				return new Toast("Invalid email format.");
 
-			if (!this.email)
-				return new Toast({
-					content: "Email cannot be empty",
-					timeout: 8000
-				});
+			if (!this.email) return new Toast("Email cannot be empty");
 
 			this.hasEmailBeenSentAlready = false;
 
 			if (this.mode === "set") {
 				return this.socket.dispatch("users.requestPassword", res => {
-					new Toast({ content: res.message, timeout: 8000 });
+					new Toast(res.message);
 					if (res.status === "success") {
 						this.step = 2;
 					}
@@ -354,7 +347,7 @@ export default {
 				"users.requestPasswordReset",
 				this.email,
 				res => {
-					new Toast({ content: res.message, timeout: 8000 });
+					new Toast(res.message);
 					if (res.status === "success") {
 						this.code = ""; // in case: already have a code -> request another code
 						this.step = 2;
@@ -363,11 +356,7 @@ export default {
 			);
 		},
 		verifyCode() {
-			if (!this.code)
-				return new Toast({
-					content: "Code cannot be empty",
-					timeout: 8000
-				});
+			if (!this.code) return new Toast("Code cannot be empty");
 
 			return this.socket.dispatch(
 				this.mode === "set"
@@ -375,7 +364,7 @@ export default {
 					: "users.verifyPasswordResetCode",
 				this.code,
 				res => {
-					new Toast({ content: res.message, timeout: 8000 });
+					new Toast(res.message);
 					if (res.status === "success") {
 						this.step = 3;
 					}
@@ -387,16 +376,10 @@ export default {
 				this.validation.newPassword.valid &&
 				!this.validation.newPasswordAgain.valid
 			)
-				return new Toast({
-					content: "Please ensure the passwords match.",
-					timeout: 8000
-				});
+				return new Toast("Please ensure the passwords match.");
 
 			if (!this.validation.newPassword.valid)
-				return new Toast({
-					content: "Please enter a valid password.",
-					timeout: 8000
-				});
+				return new Toast("Please enter a valid password.");
 
 			return this.socket.dispatch(
 				this.mode === "set"
@@ -405,7 +388,7 @@ export default {
 				this.code,
 				this.newPassword,
 				res => {
-					new Toast({ content: res.message, timeout: 8000 });
+					new Toast(res.message);
 					if (res.status === "success") this.step = 4;
 					else this.step = 5;
 				}

@@ -104,10 +104,7 @@ export default {
 				this.localActivityLogPublic === this.activityLogPublic &&
 				this.localActivityWatch === this.activityWatch
 			) {
-				new Toast({
-					content: "Please make a change before saving.",
-					timeout: 5000
-				});
+				new Toast("Please make a change before saving.");
 
 				return this.$refs.saveButton.handleFailedSave();
 			}
@@ -124,15 +121,12 @@ export default {
 				},
 				res => {
 					if (res.status !== "success") {
-						new Toast({ content: res.message, timeout: 8000 });
+						new Toast(res.message);
 
 						return this.$refs.saveButton.handleFailedSave();
 					}
 
-					new Toast({
-						content: "Successfully updated preferences",
-						timeout: 4000
-					});
+					new Toast("Successfully updated preferences");
 
 					return this.$refs.saveButton.handleSuccessfulSave();
 				}

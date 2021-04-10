@@ -87,10 +87,7 @@ export default {
 			if (res.status === "success") {
 				this.setUser(res.data);
 			} else {
-				new Toast({
-					content: "You're not currently signed in.",
-					timeout: 3000
-				});
+				new Toast("You're not currently signed in.");
 			}
 		});
 

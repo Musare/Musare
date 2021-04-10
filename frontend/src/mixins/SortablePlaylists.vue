@@ -45,14 +45,10 @@ export default {
 				"users.updateOrderOfPlaylists",
 				recalculatedOrder,
 				res => {
-					if (res.status === "failure")
-						return new Toast({
-							content: res.message,
-							timeout: 8000
-						});
+					if (res.status === "failure") return new Toast(res.message);
 
 					this.orderOfPlaylists = this.calculatePlaylistOrder(); // new order in regards to the database
-					return new Toast({ content: res.message, timeout: 4000 });
+					return new Toast(res.message);
 				}
 			);
 		}

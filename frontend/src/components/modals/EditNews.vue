@@ -190,10 +190,7 @@ export default {
 				const news = res.data;
 				this.editNews(news);
 			} else {
-				new Toast({
-					content: "News with that ID not found",
-					timeout: 3000
-				});
+				new Toast("News with that ID not found");
 				this.closeModal({
 					sector: this.sector,
 					modal: "editNews"
@@ -206,17 +203,10 @@ export default {
 			const change = document.getElementById(`edit-${type}`).value.trim();
 
 			if (this.news[type].indexOf(change) !== -1)
-				return new Toast({
-					content: `Tag already exists`,
-					timeout: 3000
-				});
+				return new Toast(`Tag already exists`);
 
 			if (change) this.addChange({ type, change });
-			else
-				new Toast({
-					content: `${type} cannot be empty`,
-					timeout: 3000
-				});
+			else new Toast(`${type} cannot be empty`);
 
 			document.getElementById(`edit-${type}`).value = "";
 			return true;
@@ -230,7 +220,7 @@ export default {
 				this.news._id,
 				this.news,
 				res => {
-					new Toast({ content: res.message, timeout: 4000 });
+					new Toast(res.message);
 					if (res.status === "success") {
 						if (close)
 							this.closeModal({
