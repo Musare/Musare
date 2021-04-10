@@ -140,6 +140,9 @@ export default {
 				this.changeAutoSkipDisliked(res.data.autoSkipDisliked);
 				this.changeNightmode(res.data.nightmode);
 				this.changeActivityLogPublic(res.data.activityLogPublic);
+				this.changeAnonymousSongRequests(
+					res.data.anonymousSongRequests
+				);
 				this.changeActivityWatch(res.data.activityWatch);
 
 				if (this.nightmode) this.enableNightMode();
@@ -170,6 +173,7 @@ export default {
 			"changeNightmode",
 			"changeAutoSkipDisliked",
 			"changeActivityLogPublic",
+			"changeAnonymousSongRequests",
 			"changeActivityWatch"
 		])
 	}

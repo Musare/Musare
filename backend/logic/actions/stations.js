@@ -2821,7 +2821,23 @@ export default {
 				},
 
 				(station, next) => {
-					SongsModule.runJob("ENSURE_SONG_EXISTS_BY_SONG_ID", { songId, userId: session.userId }, this)
+					DBModule.runJob("GET_MODEL", { modelName: "user" }, this)
+						.then(UserModel => {
+							UserModel.findOne(
+								{ _id: session.userId },
+								{ "preferences.anonymousSongRequests": 1 },
+								(err, user) => next(err, station, user)
+							);
+						})
+						.catch(next);
+				},
+
+				(station, user, next) => {
+					SongsModule.runJob(
+						"ENSURE_SONG_EXISTS_BY_SONG_ID",
+						{ songId, userId: user.preferences.anonymousSongRequests ? null : session.userId },
+						this
+					)
 						.then(response => {
 							const { song } = response;
 							const { _id, title, thumbnail, duration, status } = song;

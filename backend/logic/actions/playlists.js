@@ -870,13 +870,30 @@ export default {
 									if (song.songId === songId) return next("That song is already in the playlist");
 									return nextSong();
 								},
-								err => next(err, playlist.songs.length + 1)
+								err => next(err)
 							);
 						})
 						.catch(next);
 				},
-				(position, next) => {
-					SongsModule.runJob("ENSURE_SONG_EXISTS_BY_SONG_ID", { songId, userId: session.userId }, this)
+
+				next => {
+					DBModule.runJob("GET_MODEL", { modelName: "user" }, this)
+						.then(UserModel => {
+							UserModel.findOne(
+								{ _id: session.userId },
+								{ "preferences.anonymousSongRequests": 1 },
+								next
+							);
+						})
+						.catch(next);
+				},
+
+				(user, next) => {
+					SongsModule.runJob(
+						"ENSURE_SONG_EXISTS_BY_SONG_ID",
+						{ songId, userId: user.preferences.anonymousSongRequests ? null : session.userId },
+						this
+					)
 						.then(response => {
 							const { song } = response;
 							const { _id, title, thumbnail, duration, status } = song;

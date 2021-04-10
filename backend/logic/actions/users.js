@@ -739,6 +739,7 @@ export default {
 	 * @param {boolean} preferences.nightmode - whether or not the user is using the night mode theme
 	 * @param {boolean} preferences.autoSkipDisliked - whether to automatically skip disliked songs
 	 * @param {boolean} preferences.activityLogPublic - whether or not a user's activity log can be publicly viewed
+	 * @param {boolean} preferences.anonymousSongRequests - whether or not a user's requested songs will be anonymous
 	 * @param {boolean} preferences.activityWatch - whether or not a user is using the ActivityWatch integration
 	 * @param {Function} cb - gets called with the result
 	 */
@@ -756,6 +757,7 @@ export default {
 									nightmode: preferences.nightmode,
 									autoSkipDisliked: preferences.autoSkipDisliked,
 									activityLogPublic: preferences.activityLogPublic,
+									anonymousSongRequests: preferences.anonymousSongRequests,
 									activityWatch: preferences.activityWatch
 								}
 							}

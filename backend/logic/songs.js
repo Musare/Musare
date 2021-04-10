@@ -158,6 +158,7 @@ class _SongsModule extends CoreClass {
 	 *
 	 * @param {object} payload - an object containing the payload
 	 * @param {string} payload.songId - the youtube song id of the song we are trying to ensure is in the songs db
+	 * @param {string} payload.userId - the youtube song id of the song we are trying to ensure is in the songs db
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	ENSURE_SONG_EXISTS_BY_SONG_ID(payload) {
@@ -571,11 +572,19 @@ class _SongsModule extends CoreClass {
 			async.waterfall(
 				[
 					next => {
-						SongsModule.SongModel.findOne({ songId }, next);
+						DBModule.runJob("GET_MODEL", { modelName: "user" }, this)
+							.then(UserModel => {
+								UserModel.findOne({ _id: userId }, { "preferences.anonymousSongRequests": 1 }, next);
+							})
+							.catch(next);
+					},
+
+					(user, next) => {
+						SongsModule.SongModel.findOne({ songId }, (err, song) => next(err, user, song));
 					},
 
 					// Get YouTube data from id
-					(song, next) => {
+					(user, song, next) => {
 						if (song) return next("This song is already in the database.");
 						// TODO Add err object as first param of callback
 						return YouTubeModule.runJob("GET_SONG", { songId }, this)
@@ -585,7 +594,7 @@ class _SongsModule extends CoreClass {
 								song.genres = [];
 								song.skipDuration = 0;
 								song.explicit = false;
-								song.requestedBy = userId;
+								song.requestedBy = user.preferences.anonymousSongRequests ? null : userId;
 								song.requestedAt = requestedAt;
 								song.status = "unverified";
 								next(null, song);
@@ -620,7 +629,7 @@ class _SongsModule extends CoreClass {
 				async (err, song) => {
 					if (err) reject(err);
 
-					SongsModule.runJob("UPDATE_SONG", { songId });
+					SongsModule.runJob("UPDATE_SONG", { songId: song._id });
 
 					CacheModule.runJob("PUB", {
 						channel: "song.newUnverifiedSong",

@@ -221,6 +221,7 @@ const modules = {
 			nightmode: false,
 			autoSkipDisliked: true,
 			activityLogPublic: false,
+			anonymousSongRequests: false,
 			activityWatch: false
 		},
 		actions: {
@@ -232,6 +233,12 @@ const modules = {
 			},
 			changeActivityLogPublic: ({ commit }, activityLogPublic) => {
 				commit("changeActivityLogPublic", activityLogPublic);
+			},
+			changeAnonymousSongRequests: (
+				{ commit },
+				anonymousSongRequests
+			) => {
+				commit("changeAnonymousSongRequests", anonymousSongRequests);
 			},
 			changeActivityWatch: ({ commit }, activityWatch) => {
 				commit("changeActivityWatch", activityWatch);
@@ -246,6 +253,9 @@ const modules = {
 			},
 			changeActivityLogPublic(state, activityLogPublic) {
 				state.activityLogPublic = activityLogPublic;
+			},
+			changeAnonymousSongRequests(state, anonymousSongRequests) {
+				state.anonymousSongRequests = anonymousSongRequests;
 			},
 			changeActivityWatch(state, activityWatch) {
 				state.activityWatch = activityWatch;

@@ -217,6 +217,11 @@ lofig.folder = "../config/default.json";
 		);
 
 		store.dispatch(
+			"user/preferences/changeAnonymousSongRequests",
+			preferences.anonymousSongRequests
+		);
+
+		store.dispatch(
 			"user/preferences/changeActivityWatch",
 			preferences.activityWatch
 		);

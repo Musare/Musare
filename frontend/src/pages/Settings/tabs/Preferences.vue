@@ -38,6 +38,17 @@
 		<p class="control is-expanded checkbox-control">
 			<input
 				type="checkbox"
+				id="anonymousSongRequests"
+				v-model="localAnonymousSongRequests"
+			/>
+			<label for="anonymousSongRequests">
+				<span></span>
+				<p>Request songs anonymously</p>
+			</label>
+		</p>
+		<p class="control is-expanded checkbox-control">
+			<input
+				type="checkbox"
 				id="activityWatch"
 				v-model="localActivityWatch"
 			/>
@@ -64,6 +75,7 @@ export default {
 			localNightmode: false,
 			localAutoSkipDisliked: false,
 			localActivityLogPublic: false,
+			localAnonymousSongRequests: false,
 			localActivityWatch: false
 		};
 	},
@@ -73,6 +85,8 @@ export default {
 			autoSkipDisliked: state => state.user.preferences.autoSkipDisliked,
 			activityLogPublic: state =>
 				state.user.preferences.activityLogPublic,
+			anonymousSongRequests: state =>
+				state.user.preferences.anonymousSongRequests,
 			activityWatch: state => state.user.preferences.activityWatch
 		}),
 		...mapGetters({
@@ -85,6 +99,8 @@ export default {
 				this.localNightmode = res.data.nightmode;
 				this.localAutoSkipDisliked = res.data.autoSkipDisliked;
 				this.localActivityLogPublic = res.data.activityLogPublic;
+				this.localAnonymousSongRequests =
+					res.data.anonymousSongRequests;
 				this.localActivityWatch = res.data.activityWatch;
 			}
 		});
@@ -93,6 +109,7 @@ export default {
 			this.localNightmode = preferences.nightmode;
 			this.localAutoSkipDisliked = preferences.autoSkipDisliked;
 			this.localActivityLogPublic = preferences.activityLogPublic;
+			this.localAnonymousSongRequests = preferences.anonymousSongRequests;
 			this.localActivityWatch = preferences.activityWatch;
 		});
 	},
@@ -102,6 +119,8 @@ export default {
 				this.localNightmode === this.nightmode &&
 				this.localAutoSkipDisliked === this.autoSkipDisliked &&
 				this.localActivityLogPublic === this.activityLogPublic &&
+				this.localAnonymousSongRequests ===
+					this.anonymousSongRequests &&
 				this.localActivityWatch === this.activityWatch
 			) {
 				new Toast("Please make a change before saving.");
@@ -117,6 +136,7 @@ export default {
 					nightmode: this.localNightmode,
 					autoSkipDisliked: this.localAutoSkipDisliked,
 					activityLogPublic: this.localActivityLogPublic,
+					anonymousSongRequests: this.localAnonymousSongRequests,
 					activityWatch: this.localActivityWatch
 				},
 				res => {
@@ -136,6 +156,7 @@ export default {
 			"changeNightmode",
 			"changeAutoSkipDisliked",
 			"changeActivityLogPublic",
+			"changeAnonymousSongRequests",
 			"changeActivityWatch"
 		])
 	}
