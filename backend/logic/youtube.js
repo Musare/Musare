@@ -305,9 +305,8 @@ class _YouTubeModule extends CoreClass {
 						YouTubeModule.log("ERROR", "GET_PLAYLIST_PAGE", `${err.message}`);
 						if (err.message === "Request failed with status code 404") {
 							return reject(new Error("Playlist not found. Is the playlist public/unlisted?"));
-						} else {
-							return reject(new Error("An error has occured. Please try again later."));
 						}
+						return reject(new Error("An error has occured. Please try again later."));
 					});
 			});
 		});
