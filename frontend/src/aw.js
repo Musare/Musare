@@ -14,6 +14,7 @@ const notConnectedToast = new Toast({
 	persistent: true,
 	interactable: false
 });
+
 notConnectedToast.hide();
 
 const sendingVideoDataToast = new Toast({
@@ -21,6 +22,7 @@ const sendingVideoDataToast = new Toast({
 	persistent: true,
 	interactable: false
 });
+
 sendingVideoDataToast.hide();
 
 const deniedToast = new Toast({
@@ -29,6 +31,7 @@ const deniedToast = new Toast({
 	persistent: true,
 	interactable: false
 });
+
 deniedToast.hide();
 
 const competitorToast = new Toast({
@@ -37,6 +40,7 @@ const competitorToast = new Toast({
 	persistent: true,
 	interactable: false
 });
+
 competitorToast.hide();
 
 export default {

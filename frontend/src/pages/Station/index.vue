@@ -1124,7 +1124,7 @@ export default {
 									"This song is unavailable for you, but is playing for everyone else.";
 								new Toast({
 									content: toastMessage,
-									persistant: true
+									persistent: true
 								});
 
 								// save current song id

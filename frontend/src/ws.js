@@ -167,10 +167,10 @@ export default {
 		this.socket.onerror = err => {
 			console.log("WS: SOCKET ERROR", err);
 
-			new Toast({
-				content: "Cannot perform this action at this time.",
-				timeout: 8000
-			});
+			// new Toast({
+			// 	content: "Cannot perform this action at this time.",
+			// 	timeout: 8000
+			// });
 		};
 	}
 };

@@ -51,24 +51,8 @@ export default {
 	},
 	watch: {
 		socketConnected(connected) {
-			if (!connected)
-				new Toast({
-					content: "Could not connect to the server.",
-					persistant: true
-				});
-			else {
-				// better implementation once vue-roaster is updated
-				document
-					.getElementById("toasts-content")
-					.childNodes.forEach(toast => {
-						if (
-							toast.innerHTML ===
-							"Could not connect to the server."
-						) {
-							toast.remove();
-						}
-					});
-			}
+			if (!connected) this.disconnectedMessage.show();
+			else this.disconnectedMessage.hide();
 		},
 		nightmode(nightmode) {
 			if (nightmode) this.enableNightMode();
@@ -113,6 +97,14 @@ export default {
 			this.$router.push(localStorage.getItem("github_redirect"));
 			localStorage.removeItem("github_redirect");
 		}
+
+		this.disconnectedMessage = new Toast({
+			content: "Could not connect to the server.",
+			persistent: true,
+			interactable: false
+		});
+
+		this.disconnectedMessage.hide();
 
 		ws.onConnect(true, () => {
 			this.socketConnected = true;
