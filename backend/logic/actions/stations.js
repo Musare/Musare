@@ -3075,6 +3075,70 @@ export default {
 	},
 
 	/**
+	 * Reposition station queue
+	 *
+	 * @param session
+	 * @param stationId - the station id
+	 * @param queue - queue data
+	 * @param cb
+	 */
+	repositionQueue: isOwnerRequired(async function repositionQueue(session, stationId, queue, cb) {
+		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
+
+		async.waterfall(
+			[
+				next => {
+					if (!queue) return next("Invalid queue data.");
+					return StationsModule.runJob("GET_STATION", { stationId }, this)
+						.then(station => next(null, station))
+						.catch(next);
+				},
+
+				(station, next) => {
+					if (!station) return next("Station not found.");
+					return stationModel
+						.updateOne({ _id: stationId }, { $set: { queue } }, this)
+						.then(station => next(null, station))
+						.catch(next);
+				},
+
+				(res, next) => {
+					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
+						.then(station => next(null, station))
+						.catch(next);
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"STATIONS_REPOSITION_QUEUE",
+						`Repositioning station "${stationId}" queue failed. "${err}"`
+					);
+					return cb({ status: "failure", message: err });
+				}
+
+				this.log(
+					"SUCCESS",
+					"STATIONS_REPOSITION_QUEUE",
+					`Repositioned station "${stationId}" queue successfully.`
+				);
+
+				CacheModule.runJob("PUB", {
+					channel: "station.queueUpdate",
+					value: stationId
+				});
+
+				return cb({
+					status: "success",
+					message: "Successfully repositioned queue."
+				});
+			}
+		);
+	}),
+
+	/**
 	 * Selects a private playlist for a station
 	 *
 	 * @param session

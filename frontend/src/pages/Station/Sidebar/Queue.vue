@@ -1,54 +1,68 @@
 <template>
 	<div id="queue">
-		<div
+		<draggable
 			:class="{
 				'actionable-button-hidden': !actionableButtonVisible,
 				'scrollable-list': true
 			}"
+			v-if="queue.length > 0"
+			v-model="queue"
+			v-bind="dragOptions"
+			@start="drag = true"
+			@end="drag = false"
 		>
-			<song-item
-				v-for="(song, index) in songsList"
-				:key="index + song.songId"
-				:song="song"
-				:requested-by="
-					station.type === 'community' && station.partyMode === true
-				"
+			<transition-group
+				type="transition"
+				:name="!drag ? 'draggable-list-transition' : null"
 			>
-				<div
-					v-if="isAdminOnly() || isOwnerOnly()"
-					class="song-actions"
-					slot="actions"
+				<song-item
+					v-for="(song, index) in queue"
+					:key="index + song.songId"
+					:song="song"
+					:requested-by="
+						station.type === 'community' &&
+							station.partyMode === true
+					"
+					:class="{
+						'item-draggable': isAdminOnly() || isOwnerOnly()
+					}"
 				>
-					<i
-						v-if="isOwnerOnly() || isAdminOnly()"
-						class="material-icons delete-icon"
-						@click="removeFromQueue(song.songId)"
-						content="Remove Song from Queue"
-						v-tippy
-						>delete_forever</i
+					<div
+						v-if="isAdminOnly() || isOwnerOnly()"
+						class="song-actions"
+						slot="actions"
 					>
-					<i
-						class="material-icons"
-						v-if="index > 0"
-						@click="moveSongToTop(index)"
-						content="Move to top of Queue"
-						v-tippy
-						>vertical_align_top</i
-					>
-					<i
-						v-if="songsList.length - 1 !== index"
-						@click="moveSongToBottom(index)"
-						class="material-icons"
-						content="Move to bottom of Queue"
-						v-tippy
-						>vertical_align_bottom</i
-					>
-				</div>
-			</song-item>
-			<p class="nothing-here-text" v-if="songsList.length < 1">
-				There are no songs currently queued
-			</p>
-		</div>
+						<i
+							v-if="isOwnerOnly() || isAdminOnly()"
+							class="material-icons delete-icon"
+							@click="removeFromQueue(song.songId)"
+							content="Remove Song from Queue"
+							v-tippy
+							>delete_forever</i
+						>
+						<i
+							class="material-icons"
+							v-if="index > 0"
+							@click="moveSongToTop(index)"
+							content="Move to top of Queue"
+							v-tippy
+							>vertical_align_top</i
+						>
+						<i
+							v-if="queue.length - 1 !== index"
+							@click="moveSongToBottom(index)"
+							class="material-icons"
+							content="Move to bottom of Queue"
+							v-tippy
+							>vertical_align_bottom</i
+						>
+					</div>
+				</song-item>
+			</transition-group>
+		</draggable>
+		<p class="nothing-here-text" v-else>
+			There are no songs currently queued
+		</p>
 		<button
 			class="button is-primary tab-actionable-button"
 			v-if="
@@ -110,19 +124,37 @@
 
 <script>
 import { mapActions, mapState, mapGetters } from "vuex";
+import draggable from "vuedraggable";
 import Toast from "toasters";
 
 import SongItem from "@/components/SongItem.vue";
 
 export default {
-	components: { SongItem },
+	components: { draggable, SongItem },
 	data() {
 		return {
 			dismissedWarning: false,
-			actionableButtonVisible: false
+			actionableButtonVisible: false,
+			drag: false
 		};
 	},
 	computed: {
+		dragOptions() {
+			return {
+				animation: 200,
+				group: "queue",
+				disabled: !(this.isAdminOnly() || this.isOwnerOnly()),
+				ghostClass: "draggable-list-ghost"
+			};
+		},
+		queue: {
+			get() {
+				return this.songsList;
+			},
+			set(queue) {
+				this.updateQueuePositioning(queue);
+			}
+		},
 		...mapState({
 			loggedIn: state => state.user.auth.loggedIn,
 			userId: state => state.user.auth.userId,
@@ -167,6 +199,28 @@ export default {
 					} else new Toast({ content: res.message, timeout: 8000 });
 				}
 			);
+		},
+		updateQueuePositioning(queue) {
+			this.socket.dispatch(
+				"stations.repositionQueue",
+				this.station._id,
+				queue,
+				res => {
+					new Toast({ content: res.message, timeout: 4000 });
+				}
+			);
+		},
+		moveSongToTop(index) {
+			this.queue.splice(0, 0, this.queue.splice(index, 1)[0]);
+			this.updateQueuePositioning(this.queue);
+		},
+		moveSongToBottom(index) {
+			this.queue.splice(
+				this.queue.length,
+				0,
+				this.queue.splice(index, 1)[0]
+			);
+			this.updateQueuePositioning(this.queue);
 		},
 		...mapActions("modalVisibility", ["openModal"])
 	}
