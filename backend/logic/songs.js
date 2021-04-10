@@ -1,4 +1,5 @@
 import async from "async";
+import config from "config";
 import mongoose from "mongoose";
 import CoreClass from "../core";
 
@@ -159,6 +160,7 @@ class _SongsModule extends CoreClass {
 	 * @param {object} payload - an object containing the payload
 	 * @param {string} payload.songId - the youtube song id of the song we are trying to ensure is in the songs db
 	 * @param {string} payload.userId - the youtube song id of the song we are trying to ensure is in the songs db
+	 * @param {string} payload.automaticallyRequested - whether the song was automatically requested or not
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	ENSURE_SONG_EXISTS_BY_SONG_ID(payload) {
@@ -172,7 +174,7 @@ class _SongsModule extends CoreClass {
 					(song, next) => {
 						if (song && song.duration > 0) next(true, song);
 						else {
-							YouTubeModule.runJob("GET_SONG", { songId: payload.songId, userId: payload.userId }, this)
+							YouTubeModule.runJob("GET_SONG", { songId: payload.songId }, this)
 								.then(response => {
 									next(null, song, response.song);
 								})
@@ -198,7 +200,17 @@ class _SongsModule extends CoreClass {
 								return next(null, song);
 							});
 						} else {
-							const song = new SongsModule.SongModel({ ...youtubeSong });
+							const status =
+								payload.automaticallyRequested === false ||
+								config.get("hideAutomaticallyRequestedSongs") === false
+									? "unverified"
+									: "hidden";
+							const song = new SongsModule.SongModel({
+								...youtubeSong,
+								status,
+								requestedBy: payload.userId,
+								requestedAt: Date.now()
+							});
 							song.save({ validateBeforeSave: true }, err => {
 								if (err) return next(err, song);
 								return next(null, song);
@@ -779,7 +791,11 @@ class _SongsModule extends CoreClass {
 										},
 
 										next => {
-											SongsModule.runJob("ENSURE_SONG_EXISTS_BY_SONG_ID", { songId }, this)
+											SongsModule.runJob(
+												"ENSURE_SONG_EXISTS_BY_SONG_ID",
+												{ songId, automaticallyRequested: true },
+												this
+											)
 												.then(() => next())
 												.catch(next);
 											// SongsModule.runJob("REQUEST_SONG", { songId, userId: null }, this)

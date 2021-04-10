@@ -170,10 +170,7 @@ class _YouTubeModule extends CoreClass {
 							songId: res.data.items[0].id,
 							title: res.data.items[0].snippet.title,
 							thumbnail: res.data.items[0].snippet.thumbnails.default.url,
-							duration,
-							status: "unverified",
-							requestedBy: payload.userId,
-							requestedAt: Date.now()
+							duration
 						};
 
 						return resolve({ song });

@@ -891,7 +891,11 @@ export default {
 				(user, next) => {
 					SongsModule.runJob(
 						"ENSURE_SONG_EXISTS_BY_SONG_ID",
-						{ songId, userId: user.preferences.anonymousSongRequests ? null : session.userId },
+						{
+							songId,
+							userId: user.preferences.anonymousSongRequests ? null : session.userId,
+							automaticallyRequested: true
+						},
 						this
 					)
 						.then(response => {
@@ -1208,8 +1212,10 @@ export default {
 						});
 				},
 
-				(playlist, song, next) => {
-					const songName = song.artists ? `${song.title} by ${song.artists.join(", ")}` : song.title;
+				(playlist, youtubeSong, next) => {
+					const songName = youtubeSong.artists
+						? `${youtubeSong.title} by ${youtubeSong.artists.join(", ")}`
+						: youtubeSong.title;
 
 					if (playlist.displayName !== "Liked Songs" && playlist.displayName !== "Disliked Songs") {
 						ActivitiesModule.runJob("ADD_ACTIVITY", {
@@ -1217,7 +1223,7 @@ export default {
 							type: "playlist__remove_song",
 							payload: {
 								message: `Removed <songId>${songName}</songId> from playlist <playlistId>${playlist.displayName}</playlistId>`,
-								thumbnail: song.thumbnail,
+								thumbnail: youtubeSong.thumbnail,
 								playlistId,
 								songId
 							}

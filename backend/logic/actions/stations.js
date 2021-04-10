@@ -2835,7 +2835,11 @@ export default {
 				(station, user, next) => {
 					SongsModule.runJob(
 						"ENSURE_SONG_EXISTS_BY_SONG_ID",
-						{ songId, userId: user.preferences.anonymousSongRequests ? null : session.userId },
+						{
+							songId,
+							userId: user.preferences.anonymousSongRequests ? null : session.userId,
+							automaticallyRequested: true
+						},
 						this
 					)
 						.then(response => {
