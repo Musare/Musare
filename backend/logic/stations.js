@@ -464,11 +464,12 @@ class _StationsModule extends CoreClass {
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.stationId - the id of the station
+	 * @param {string} payload.ignoreExistingQueue - ignore the existing queue songs, replacing the old queue with a completely fresh one
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	FILL_UP_STATION_QUEUE_FROM_STATION_PLAYLIST(payload) {
 		return new Promise((resolve, reject) => {
-			const { stationId } = payload;
+			const { stationId, ignoreExistingQueue } = payload;
 			async.waterfall(
 				[
 					next => {
@@ -482,6 +483,7 @@ class _StationsModule extends CoreClass {
 					(playlist, next) => {
 						StationsModule.runJob("GET_STATION", { stationId }, this)
 							.then(station => {
+								if (ignoreExistingQueue) station.queue = [];
 								next(null, playlist, station);
 							})
 							.catch(next);
@@ -510,6 +512,7 @@ class _StationsModule extends CoreClass {
 						const currentSongIds = station.queue.map(song => song.songId);
 						const songsToAdd = [];
 						let lastSongAdded = null;
+						console.log(123123, _playlistSongs, currentSongs, songsStillNeeded);
 
 						playlistSongs
 							// .map(song => song._doc)
@@ -1619,6 +1622,45 @@ class _StationsModule extends CoreClass {
 								});
 							}
 						});
+					}
+				],
+				err => {
+					if (err) reject(err);
+					else resolve();
+				}
+			);
+		});
+	}
+
+	/**
+	 * Clears and refills a station queue
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.stationId - the station id
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	CLEAR_AND_REFILL_STATION_QUEUE(payload) {
+		return new Promise((resolve, reject) => {
+			async.waterfall(
+				[
+					next => {
+						StationsModule.runJob(
+							"FILL_UP_STATION_QUEUE_FROM_STATION_PLAYLIST",
+							{ stationId: payload.stationId, ignoreExistingQueue: true },
+							this
+						)
+							.then(() => {
+								CacheModule.runJob("PUB", {
+									channel: "station.queueUpdate",
+									value: payload.stationId
+								})
+									.then()
+									.catch();
+								next();
+							})
+							.catch(err => {
+								next(err);
+							});
 					}
 				],
 				err => {

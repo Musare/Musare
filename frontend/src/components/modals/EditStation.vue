@@ -480,6 +480,13 @@
 			>
 				Delete station
 			</button>
+
+			<button
+				class="button is-danger"
+				@click="clearAndRefillStationQueue()"
+			>
+				Clear and refill station queue
+			</button>
 		</template>
 	</modal>
 </template>
@@ -1070,6 +1077,20 @@ export default {
 			if (type === "genres") this.station.genres.splice(index, 1);
 			else if (type === "blacklist-genres")
 				this.station.blacklistedGenres.splice(index, 1);
+		},
+		clearAndRefillStationQueue() {
+			this.socket.dispatch(
+				"stations.clearAndRefillStationQueue",
+				this.station._id,
+				data => {
+					if (data.status !== "success")
+						new Toast({
+							content: `Error: ${data.message}`,
+							timeout: 8000
+						});
+					else new Toast({ content: data.message, timeout: 4000 });
+				}
+			);
 		},
 		...mapActions("modals/editStation", [
 			"editStation",

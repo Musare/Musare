@@ -3361,5 +3361,41 @@ export default {
 				return cb({ status: "success", message: "Success" });
 			}
 		);
+	}),
+
+	/**
+	 * Clears and refills a station queue
+	 *
+	 * @param {object} session - the session object automatically added by socket.io
+	 * @param {string} stationId - the station id
+	 * @param {Function} cb - gets called with the result
+	 */
+	clearAndRefillStationQueue: isAdminRequired(async function clearAndRefillStationQueue(session, stationId, cb) {
+		async.waterfall(
+			[
+				next => {
+					StationsModule.runJob("CLEAR_AND_REFILL_STATION_QUEUE", { stationId }, this)
+						.then(() => next())
+						.catch(next);
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"CLEAR_AND_REFILL_STATION_QUEUE",
+						`Clearing and refilling station queue failed. "${err}"`
+					);
+					return cb({ status: "failure", message: err });
+				}
+				this.log(
+					"SUCCESS",
+					"CLEAR_AND_REFILL_STATION_QUEUE",
+					"Clearing and refilling station queue was successfull."
+				);
+				return cb({ status: "success", message: "Success" });
+			}
+		);
 	})
 };
