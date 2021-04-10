@@ -1,28 +1,17 @@
 <template>
 	<div class="modal is-active">
-		<div
-			class="modal-background"
-			@click="
-				closeModal({
-					sector: 'header',
-					modal: 'register'
-				})
-			"
-		/>
+		<div class="modal-background" @click="closeRegisterModal()" />
 		<div class="modal-card">
 			<header class="modal-card-head">
 				<p class="modal-card-title">Register</p>
 				<button
+					v-if="!isPage"
 					class="delete"
-					@click="
-						closeModal({
-							sector: 'header',
-							modal: 'register'
-						})
-					"
+					@click="closeRegisterModal()"
 				/>
 			</header>
 			<section class="modal-card-body">
+				<!-- email address -->
 				<p class="control">
 					<label class="label">Email</label>
 					<input
@@ -42,6 +31,7 @@
 					></input-help-box>
 				</transition>
 
+				<!-- username -->
 				<p class="control">
 					<label class="label">Username</label>
 					<input
@@ -60,17 +50,32 @@
 					></input-help-box>
 				</transition>
 
+				<!-- password -->
 				<p class="control">
 					<label class="label">Password</label>
+				</p>
+
+				<div id="password-container">
 					<input
 						v-model="password.value"
 						class="input"
 						type="password"
+						ref="password"
 						placeholder="Password..."
 						@blur="onInputBlur('password')"
 						@keypress="$parent.submitOnEnter(submitModal, $event)"
 					/>
-				</p>
+					<a @click="togglePasswordVisibility()">
+						<i class="material-icons">
+							{{
+								!password.visible
+									? "visibility"
+									: "visibility_off"
+							}}
+						</i>
+					</a>
+				</div>
+
 				<transition name="fadein-helpbox">
 					<input-help-box
 						v-if="password.entered"
@@ -82,26 +87,48 @@
 				<br />
 
 				<p>
-					By logging in/registering you agree to our
-					<router-link to="/terms"> Terms of Service </router-link
-					>&nbsp;and
-					<router-link to="/privacy"> Privacy Policy </router-link>.
+					By registering you agree to our
+					<router-link
+						to="/terms"
+						@click.native="closeRegisterModal()"
+					>
+						Terms of Service
+					</router-link>
+					&nbsp;and
+					<router-link
+						to="/privacy"
+						@click.native="closeRegisterModal()"
+					>
+						Privacy Policy </router-link
+					>.
 				</p>
 			</section>
 			<footer class="modal-card-foot">
-				<a class="button is-primary" href="#" @click="submitModal()"
-					>Submit</a
-				>
-				<a
-					class="button is-github"
-					:href="apiDomain + '/auth/github/authorize'"
-					@click="githubRedirect()"
-				>
-					<div class="icon">
-						<img class="invert" src="/assets/social/github.svg" />
-					</div>
-					&nbsp;&nbsp;Register with GitHub
+				<router-link to="/login" v-if="isPage">
+					Already have an account?
+				</router-link>
+				<a v-else href="#" @click="changeToLoginModal()">
+					Already have an account?
 				</a>
+
+				<div id="actions">
+					<a
+						class="button is-github"
+						:href="apiDomain + '/auth/github/authorize'"
+						@click="githubRedirect()"
+					>
+						<div class="icon">
+							<img
+								class="invert"
+								src="/assets/social/github.svg"
+							/>
+						</div>
+						&nbsp;&nbsp;Register with GitHub
+					</a>
+					<a class="button is-primary" href="#" @click="submitModal()"
+						>Register</a
+					>
+				</div>
 			</footer>
 		</div>
 	</div>
@@ -134,6 +161,7 @@ export default {
 				value: "",
 				valid: false,
 				entered: false,
+				visible: false,
 				message: "Please enter a valid password."
 			},
 			recaptcha: {
@@ -141,7 +169,8 @@ export default {
 				token: "",
 				enabled: false
 			},
-			apiDomain: ""
+			apiDomain: "",
+			isPage: false
 		};
 	},
 	watch: {
@@ -194,6 +223,8 @@ export default {
 		}
 	},
 	async mounted() {
+		if (this.$route.path === "/register") this.isPage = true;
+
 		this.apiDomain = await lofig.get("apiDomain");
 
 		lofig.get("recaptcha").then(obj => {
@@ -221,6 +252,25 @@ export default {
 		});
 	},
 	methods: {
+		togglePasswordVisibility() {
+			if (this.$refs.password.type === "password") {
+				this.$refs.password.type = "text";
+				this.password.visible = true;
+			} else {
+				this.$refs.password.type = "password";
+				this.password.visible = false;
+			}
+		},
+		changeToLoginModal() {
+			if (!this.isPage) {
+				this.closeRegisterModal();
+				this.openModal({ sector: "header", modal: "login" });
+			}
+		},
+		closeRegisterModal() {
+			if (!this.isPage)
+				this.closeModal({ sector: "header", modal: "login" });
+		},
 		submitModal() {
 			if (
 				!this.username.valid ||
@@ -246,7 +296,7 @@ export default {
 		githubRedirect() {
 			localStorage.setItem("github_redirect", this.$route.path);
 		},
-		...mapActions("modalVisibility", ["closeModal"]),
+		...mapActions("modalVisibility", ["closeModal", "openModal"]),
 		...mapActions("user/auth", ["register"])
 	}
 };
@@ -265,6 +315,25 @@ export default {
 	p:not(.help) {
 		color: var(--light-grey-2);
 	}
+}
+
+#password-container {
+	display: flex;
+	align-items: center;
+
+	a {
+		width: 0;
+		margin-left: -30px;
+		z-index: 0;
+		top: 2px;
+		position: relative;
+		color: var(--light-grey-1);
+	}
+}
+
+.modal-card-foot {
+	display: flex;
+	justify-content: space-between;
 }
 
 .button.is-github {
