@@ -27,10 +27,10 @@
 				</div>
 				<h5
 					class="item-description"
-					v-if="song.artists"
-					:title="song.artists.join(', ')"
+					v-if="formatArtists()"
+					:title="formatArtists()"
 				>
-					{{ song.artists.join(", ") }}
+					{{ formatArtists() }}
 				</h5>
 				<p
 					class="song-request-time"
@@ -173,6 +173,20 @@ export default {
 		})
 	},
 	methods: {
+		formatArtists() {
+			if (this.song.artists.length === 1) {
+				return this.song.artists[0];
+			}
+			if (this.song.artists.length === 2) {
+				return this.song.artists.join(" & ");
+			}
+			if (this.song.artists.length > 2) {
+				return `${this.song.artists
+					.slice(0, -1)
+					.join(", ")} & ${this.song.artists.slice(-1)}`;
+			}
+			return null;
+		},
 		hideTippyElements() {
 			this.$refs.songActions.tip.hide();
 
