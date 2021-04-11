@@ -281,11 +281,6 @@
 												<i
 													class="material-icons delete-icon"
 													content="Remove Song from Playlist"
-													@click.shift="
-														removeSongFromPlaylist(
-															song.songId
-														)
-													"
 													v-tippy
 													>delete_forever</i
 												>

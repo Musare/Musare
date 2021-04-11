@@ -7,7 +7,9 @@
 		trigger="click"
 	>
 		<template #trigger>
-			<slot />
+			<div @click.shift="$emit('confirm')">
+				<slot />
+			</div>
 		</template>
 		<a @click.prevent="$emit('confirm')"> Confirm </a>
 	</tippy>
