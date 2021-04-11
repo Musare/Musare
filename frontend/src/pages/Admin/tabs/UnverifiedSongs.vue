@@ -72,11 +72,11 @@
 							<a
 								:href="
 									'https://www.youtube.com/watch?v=' +
-										`${song.songId}`
+										`${song.youtubeId}`
 								"
 								target="_blank"
 							>
-								{{ song.songId }}</a
+								{{ song.youtubeId }}</a
 							>
 						</td>
 						<td>
@@ -237,8 +237,8 @@ export default {
 			this.addSong(song);
 		});
 
-		this.socket.on("event:admin.unverifiedSong.removed", songId => {
-			this.removeSong(songId);
+		this.socket.on("event:admin.unverifiedSong.removed", youtubeId => {
+			this.removeSong(youtubeId);
 		});
 
 		this.socket.on("event:admin.unverifiedSong.updated", updatedSong => {
@@ -254,7 +254,7 @@ export default {
 			this.openModal({ sector: "admin", modal: "editSong" });
 		},
 		verify(song) {
-			this.socket.dispatch("songs.verify", song.songId, res => {
+			this.socket.dispatch("songs.verify", song.youtubeId, res => {
 				new Toast(res.message);
 			});
 		},

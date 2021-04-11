@@ -2,7 +2,7 @@
 	<div class="thumbnail">
 		<div
 			v-if="
-				song.songId &&
+				song.youtubeId &&
 					(!song.thumbnail ||
 						(song.thumbnail &&
 							(song.thumbnail.lastIndexOf('notes-transparent') !==
@@ -19,13 +19,13 @@
 			:style="{
 				'background-image':
 					'url(' +
-					`https://img.youtube.com/vi/${song.songId}/mqdefault.jpg` +
+					`https://img.youtube.com/vi/${song.youtubeId}/mqdefault.jpg` +
 					')'
 			}"
 		></div>
 		<img
 			v-if="
-				song.songId &&
+				song.youtubeId &&
 					(!song.thumbnail ||
 						(song.thumbnail &&
 							(song.thumbnail.lastIndexOf('notes-transparent') !==
@@ -38,7 +38,7 @@
 						song.thumbnail === 'empty' ||
 						song.thumbnail == null)
 			"
-			:src="`https://img.youtube.com/vi/${song.songId}/mqdefault.jpg`"
+			:src="`https://img.youtube.com/vi/${song.youtubeId}/mqdefault.jpg`"
 			onerror="this.src='/assets/notes-transparent.png'"
 		/>
 		<img

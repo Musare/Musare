@@ -293,7 +293,7 @@
 									<input
 										class="input"
 										type="text"
-										v-model="song.songId"
+										v-model="song.youtubeId"
 									/>
 								</p>
 							</div>
@@ -512,7 +512,7 @@ import SaveButton from "../SaveButton.vue";
 export default {
 	components: { Modal, FloatingBox, SaveButton },
 	props: {
-		songId: { type: String, default: null },
+		youtubeId: { type: String, default: null },
 		// songType: { type: String, default: null },
 		sector: { type: String, default: "admin" }
 	},
@@ -605,7 +605,7 @@ export default {
 		// if (this.modals.editSong = false) this.video.player.stopVideo();
 
 		// this.loadVideoById(
-		//   this.song.songId,
+		//   this.song.youtubeId,
 		//   this.song.skipDuration
 		// );
 
@@ -615,144 +615,132 @@ export default {
 
 		this.useHTTPS = await lofig.get("cookie.secure");
 
-		this.socket.dispatch(
-			`songs.getSongFromMusareId`,
-			this.song._id,
-			res => {
-				if (res.status === "success") {
-					const { song } = res.data;
-					// this.song = { ...song };
-					// if (this.song.discogs === undefined)
-					// 	this.song.discogs = null;
-					this.editSong(song);
+		this.socket.dispatch(`songs.getSongFromSongId`, this.song._id, res => {
+			if (res.status === "success") {
+				const { song } = res.data;
+				// this.song = { ...song };
+				// if (this.song.discogs === undefined)
+				// 	this.song.discogs = null;
+				this.editSong(song);
 
-					this.songDataLoaded = true;
+				this.songDataLoaded = true;
 
-					// this.edit(res.data.song);
+				// this.edit(res.data.song);
 
-					this.discogsQuery = this.song.title;
+				this.discogsQuery = this.song.title;
 
-					this.interval = setInterval(() => {
-						if (
-							this.song.duration !== -1 &&
-							this.video.paused === false &&
-							this.playerReady &&
-							this.video.player.getCurrentTime() -
-								this.song.skipDuration >
-								this.song.duration
-						) {
-							this.video.paused = true;
-							this.video.player.stopVideo();
-							this.drawCanvas();
-						}
-						if (this.playerReady) {
-							this.youtubeVideoCurrentTime = this.video.player
-								.getCurrentTime()
+				this.interval = setInterval(() => {
+					if (
+						this.song.duration !== -1 &&
+						this.video.paused === false &&
+						this.playerReady &&
+						this.video.player.getCurrentTime() -
+							this.song.skipDuration >
+							this.song.duration
+					) {
+						this.video.paused = true;
+						this.video.player.stopVideo();
+						this.drawCanvas();
+					}
+					if (this.playerReady) {
+						this.youtubeVideoCurrentTime = this.video.player
+							.getCurrentTime()
+							.toFixed(3);
+					}
+
+					if (this.video.paused === false) this.drawCanvas();
+				}, 200);
+
+				this.video.player = new window.YT.Player("editSongPlayer", {
+					height: 298,
+					width: 530,
+					videoId: this.song.youtubeId,
+					host: "https://www.youtube-nocookie.com",
+					playerVars: {
+						controls: 0,
+						iv_load_policy: 3,
+						rel: 0,
+						showinfo: 0,
+						autoplay: 1
+					},
+					startSeconds: this.song.skipDuration,
+					events: {
+						onReady: () => {
+							let volume = parseInt(
+								localStorage.getItem("volume")
+							);
+							volume = typeof volume === "number" ? volume : 20;
+							console.log(`Seekto: ${this.song.skipDuration}`);
+							this.video.player.seekTo(this.song.skipDuration);
+							this.video.player.setVolume(volume);
+							if (volume > 0) this.video.player.unMute();
+							this.youtubeVideoDuration = this.video.player
+								.getDuration()
 								.toFixed(3);
-						}
+							this.youtubeVideoNote = "(~)";
+							this.playerReady = true;
 
-						if (this.video.paused === false) this.drawCanvas();
-					}, 200);
-
-					this.video.player = new window.YT.Player("editSongPlayer", {
-						height: 298,
-						width: 530,
-						videoId: this.song.songId,
-						host: "https://www.youtube-nocookie.com",
-						playerVars: {
-							controls: 0,
-							iv_load_policy: 3,
-							rel: 0,
-							showinfo: 0,
-							autoplay: 1
+							this.drawCanvas();
 						},
-						startSeconds: this.song.skipDuration,
-						events: {
-							onReady: () => {
-								let volume = parseInt(
-									localStorage.getItem("volume")
-								);
-								volume =
-									typeof volume === "number" ? volume : 20;
-								console.log(
-									`Seekto: ${this.song.skipDuration}`
-								);
-								this.video.player.seekTo(
-									this.song.skipDuration
-								);
-								this.video.player.setVolume(volume);
-								if (volume > 0) this.video.player.unMute();
-								this.youtubeVideoDuration = this.video.player
-									.getDuration()
-									.toFixed(3);
-								this.youtubeVideoNote = "(~)";
-								this.playerReady = true;
+						onStateChange: event => {
+							this.drawCanvas();
 
-								this.drawCanvas();
-							},
-							onStateChange: event => {
-								this.drawCanvas();
-
-								if (event.data === 1) {
-									if (!this.video.autoPlayed) {
-										this.video.autoPlayed = true;
-										return this.video.player.stopVideo();
-									}
-
-									this.video.paused = false;
-									let youtubeDuration = this.video.player.getDuration();
-									this.youtubeVideoDuration = youtubeDuration.toFixed(
-										3
-									);
-									this.youtubeVideoNote = "";
-
-									if (this.song.duration === -1)
-										this.song.duration = youtubeDuration;
-
-									youtubeDuration -= this.song.skipDuration;
-									if (
-										this.song.duration >
-										youtubeDuration + 1
-									) {
-										this.video.player.stopVideo();
-										this.video.paused = true;
-										return new Toast(
-											"Video can't play. Specified duration is bigger than the YouTube song duration."
-										);
-									}
-									if (this.song.duration <= 0) {
-										this.video.player.stopVideo();
-										this.video.paused = true;
-										return new Toast(
-											"Video can't play. Specified duration has to be more than 0 seconds."
-										);
-									}
-
-									if (
-										this.video.player.getCurrentTime() <
-										this.song.skipDuration
-									) {
-										return this.video.player.seekTo(
-											this.song.skipDuration
-										);
-									}
-								} else if (event.data === 2) {
-									this.video.paused = true;
+							if (event.data === 1) {
+								if (!this.video.autoPlayed) {
+									this.video.autoPlayed = true;
+									return this.video.player.stopVideo();
 								}
 
-								return false;
+								this.video.paused = false;
+								let youtubeDuration = this.video.player.getDuration();
+								this.youtubeVideoDuration = youtubeDuration.toFixed(
+									3
+								);
+								this.youtubeVideoNote = "";
+
+								if (this.song.duration === -1)
+									this.song.duration = youtubeDuration;
+
+								youtubeDuration -= this.song.skipDuration;
+								if (this.song.duration > youtubeDuration + 1) {
+									this.video.player.stopVideo();
+									this.video.paused = true;
+									return new Toast(
+										"Video can't play. Specified duration is bigger than the YouTube song duration."
+									);
+								}
+								if (this.song.duration <= 0) {
+									this.video.player.stopVideo();
+									this.video.paused = true;
+									return new Toast(
+										"Video can't play. Specified duration has to be more than 0 seconds."
+									);
+								}
+
+								if (
+									this.video.player.getCurrentTime() <
+									this.song.skipDuration
+								) {
+									return this.video.player.seekTo(
+										this.song.skipDuration
+									);
+								}
+							} else if (event.data === 2) {
+								this.video.paused = true;
 							}
+
+							return false;
 						}
-					});
-				} else {
-					new Toast("Song with that ID not found");
-					this.closeModal({
-						sector: this.sector,
-						modal: "editSong"
-					});
-				}
+					}
+				});
+			} else {
+				new Toast("Song with that ID not found");
+				this.closeModal({
+					sector: this.sector,
+					modal: "editSong"
+				});
 			}
-		);
+		});
 
 		let volume = parseFloat(localStorage.getItem("volume"));
 		volume =
@@ -1387,14 +1375,14 @@ export default {
 					artists: this.song.artists
 						? this.song.artists.join(", ")
 						: null,
-					youtubeId: this.song.songId,
+					youtubeId: this.song.youtubeId,
 					muted: this.muted,
 					volume: this.volumeSliderValue / 100,
 					startedDuration:
 						this.activityWatchVideoLastStartDuration <= 0
 							? 0
 							: this.activityWatchVideoLastStartDuration,
-					source: `editSong#${this.song.songId}`,
+					source: `editSong#${this.song.youtubeId}`,
 					hostname: window.location.hostname
 				};
 

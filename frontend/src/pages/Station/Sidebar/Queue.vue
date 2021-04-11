@@ -18,7 +18,7 @@
 			>
 				<song-item
 					v-for="(song, index) in queue"
-					:key="index + song.songId"
+					:key="index + song.youtubeId"
 					:song="song"
 					:requested-by="
 						station.type === 'community' &&
@@ -35,7 +35,7 @@
 					>
 						<confirm
 							v-if="isOwnerOnly() || isAdminOnly()"
-							@confirm="removeFromQueue(song.songId)"
+							@confirm="removeFromQueue(song.youtubeId)"
 						>
 							<i
 								class="material-icons delete-icon"
@@ -199,11 +199,11 @@ export default {
 		isAdminOnly() {
 			return this.loggedIn && this.userRole === "admin";
 		},
-		removeFromQueue(songId) {
+		removeFromQueue(youtubeId) {
 			this.socket.dispatch(
 				"stations.removeFromQueue",
 				this.station._id,
-				songId,
+				youtubeId,
 				res => {
 					if (res.status === "success") {
 						new Toast("Successfully removed song from the queue.");

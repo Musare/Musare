@@ -72,11 +72,11 @@
 							<a
 								:href="
 									'https://www.youtube.com/watch?v=' +
-										`${song.songId}`
+										`${song.youtubeId}`
 								"
 								target="_blank"
 							>
-								{{ song.songId }}</a
+								{{ song.youtubeId }}</a
 							>
 						</td>
 						<td>
@@ -224,8 +224,8 @@ export default {
 			this.addSong(song);
 		});
 
-		this.socket.on("event:admin.hiddenSong.removed", songId => {
-			this.removeSong(songId);
+		this.socket.on("event:admin.hiddenSong.removed", youtubeId => {
+			this.removeSong(youtubeId);
 		});
 
 		this.socket.on("event:admin.hiddenSong.updated", updatedSong => {

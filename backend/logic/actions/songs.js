@@ -310,14 +310,14 @@ export default {
 	 * Gets a song from the YouTube song id
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {string} songId - the YouTube song id
+	 * @param {string} youtubeId - the YouTube song id
 	 * @param {Function} cb
 	 */
-	getSong: isAdminRequired(function getSong(session, songId, cb) {
+	getSong: isAdminRequired(function getSong(session, youtubeId, cb) {
 		async.waterfall(
 			[
 				next => {
-					SongsModule.runJob("GET_SONG_FROM_ID", { songId }, this)
+					SongsModule.runJob("GET_SONG_FROM_YOUTUBE_ID", { youtubeId }, this)
 						.then(song => {
 							next(null, song);
 						})
@@ -329,10 +329,10 @@ export default {
 			async (err, song) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log("ERROR", "SONGS_GET_SONG", `Failed to get song ${songId}. "${err}"`);
+					this.log("ERROR", "SONGS_GET_SONG", `Failed to get song ${youtubeId}. "${err}"`);
 					return cb({ status: "failure", message: err });
 				}
-				this.log("SUCCESS", "SONGS_GET_SONG", `Got song ${songId} successfully.`);
+				this.log("SUCCESS", "SONGS_GET_SONG", `Got song ${youtubeId} successfully.`);
 				return cb({ status: "success", data: song });
 			}
 		);
@@ -342,14 +342,14 @@ export default {
 	 * Gets a song from the Musare song id
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {string} songId - the Musare song id
+	 * @param {string} songId - the song id
 	 * @param {Function} cb
 	 */
-	getSongFromMusareId: isAdminRequired(function getSong(session, songId, cb) {
+	getSongFromSongId: isAdminRequired(function getSong(session, songId, cb) {
 		async.waterfall(
 			[
 				next => {
-					SongsModule.runJob("GET_SONG", { id: songId }, this)
+					SongsModule.runJob("GET_SONG", { songId }, this)
 						.then(response => next(null, response.song))
 						.catch(err => next(err));
 				}
@@ -370,14 +370,14 @@ export default {
 	 * Obtains basic metadata of a song in order to format an activity
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {string} songId - the song id
+	 * @param {string} youtubeId - the youtube song id
 	 * @param {Function} cb - callback
 	 */
-	getSongForActivity(session, songId, cb) {
+	getSongForActivity(session, youtubeId, cb) {
 		async.waterfall(
 			[
 				next => {
-					SongsModule.runJob("GET_SONG_FROM_ID", { songId }, this)
+					SongsModule.runJob("GET_SONG_FROM_YOUTUBE_ID", { youtubeId }, this)
 						.then(response => next(null, response.song))
 						.catch(next);
 				}
@@ -389,7 +389,7 @@ export default {
 					this.log(
 						"ERROR",
 						"SONGS_GET_SONG_FOR_ACTIVITY",
-						`Failed to obtain metadata of song ${songId} for activity formatting. "${err}"`
+						`Failed to obtain metadata of song ${youtubeId} for activity formatting. "${err}"`
 					);
 
 					return cb({ status: "failure", message: err });
@@ -399,7 +399,7 @@ export default {
 					this.log(
 						"SUCCESS",
 						"SONGS_GET_SONG_FOR_ACTIVITY",
-						`Obtained metadata of song ${songId} for activity formatting successfully.`
+						`Obtained metadata of song ${youtubeId} for activity formatting successfully.`
 					);
 
 					return cb({
@@ -414,7 +414,7 @@ export default {
 				this.log(
 					"ERROR",
 					"SONGS_GET_SONG_FOR_ACTIVITY",
-					`Song ${songId} does not exist so failed to obtain for activity formatting.`
+					`Song ${youtubeId} does not exist so failed to obtain for activity formatting.`
 				);
 
 				return cb({ status: "failure" });
@@ -570,16 +570,16 @@ export default {
 	 * Requests a song
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {string} songId - the id of the song that gets requested
+	 * @param {string} youtubeId - the youtube id of the song that gets requested
 	 * @param {Function} cb - gets called with the result
 	 */
-	request: isLoginRequired(async function add(session, songId, cb) {
-		SongsModule.runJob("REQUEST_SONG", { songId, userId: session.userId }, this)
+	request: isLoginRequired(async function add(session, youtubeId, cb) {
+		SongsModule.runJob("REQUEST_SONG", { youtubeId, userId: session.userId }, this)
 			.then(() => {
 				this.log(
 					"SUCCESS",
 					"SONGS_REQUEST",
-					`User "${session.userId}" successfully requested song "${songId}".`
+					`User "${session.userId}" successfully requested song "${youtubeId}".`
 				);
 				return cb({
 					status: "success",
@@ -591,7 +591,7 @@ export default {
 				this.log(
 					"ERROR",
 					"SONGS_REQUEST",
-					`Requesting song "${songId}" failed for user ${session.userId}. "${err}"`
+					`Requesting song "${youtubeId}" failed for user ${session.userId}. "${err}"`
 				);
 				return cb({ status: "failure", message: err });
 			});
@@ -601,7 +601,7 @@ export default {
 	 * Hides a song
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {string} songId - the Musare id of the song that gets hidden
+	 * @param {string} songId - the song id of the song that gets hidden
 	 * @param {Function} cb - gets called with the result
 	 */
 	hide: isLoginRequired(async function add(session, songId, cb) {
@@ -624,7 +624,7 @@ export default {
 	 * Unhides a song
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {string} songId - the Musare id of the song that gets hidden
+	 * @param {string} songId - the song id of the song that gets hidden
 	 * @param {Function} cb - gets called with the result
 	 */
 	unhide: isLoginRequired(async function add(session, songId, cb) {
@@ -651,15 +651,15 @@ export default {
 	 * Verifies a song
 	 *
 	 * @param session
-	 * @param song - the song object
+	 * @param youtubeId - the youtube id
 	 * @param cb
 	 */
-	verify: isAdminRequired(async function add(session, songId, cb) {
+	verify: isAdminRequired(async function add(session, youtubeId, cb) {
 		const SongModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 		async.waterfall(
 			[
 				next => {
-					SongModel.findOne({ songId }, next);
+					SongModel.findOne({ youtubeId }, next);
 				},
 
 				(song, next) => {
@@ -697,7 +697,11 @@ export default {
 					return cb({ status: "failure", message: err });
 				}
 
-				this.log("SUCCESS", "SONGS_VERIFY", `User "${session.userId}" successfully verified song "${songId}".`);
+				this.log(
+					"SUCCESS",
+					"SONGS_VERIFY",
+					`User "${session.userId}" successfully verified song "${youtubeId}".`
+				);
 
 				CacheModule.runJob("PUB", {
 					channel: "song.newVerifiedSong",
@@ -751,7 +755,7 @@ export default {
 							.catch(() => {});
 					});
 
-					SongsModule.runJob("UPDATE_SONG", { songId: song._id });
+					SongsModule.runJob("UPDATE_SONG", { songId });
 
 					next(null);
 				}
@@ -815,24 +819,24 @@ export default {
 						})
 						.catch(next);
 				},
-				(songIds, next) => {
+				(youtubeIds, next) => {
 					let successful = 0;
 					let failed = 0;
 					let alreadyInDatabase = 0;
 
-					if (songIds.length === 0) next();
+					if (youtubeIds.length === 0) next();
 
 					async.eachLimit(
-						songIds,
+						youtubeIds,
 						1,
-						(songId, next) => {
+						(youtubeId, next) => {
 							WSModule.runJob(
 								"RUN_ACTION2",
 								{
 									session,
 									namespace: "songs",
 									action: "request",
-									args: [songId]
+									args: [youtubeId]
 								},
 								this
 							)
@@ -889,7 +893,7 @@ export default {
 	// 	async.waterfall(
 	// 		[
 	// 			next => {
-	// 				SongModel.findOne({ songId: song.songId }, next);
+	// 				SongModel.findOne({ youtubeId: song.youtubeId }, next);
 	// 			},
 
 	// 			(existingSong, next) => {
@@ -936,11 +940,11 @@ export default {
 	// 				return cb({ status: "failure", message: err });
 	// 			}
 
-	// 			this.log("SUCCESS", "SONGS_ADD", `User "${session.userId}" successfully added song "${song.songId}".`);
+	// 			this.log("SUCCESS", "SONGS_ADD", `User "${session.userId}" successfully added song "${song.youtubeId}".`);
 
 	// 			CacheModule.runJob("PUB", {
 	// 				channel: "song.added",
-	// 				value: song.songId
+	// 				value: song.youtubeId
 	// 			});
 
 	// 			return cb({
@@ -956,16 +960,16 @@ export default {
 	 * Likes a song
 	 *
 	 * @param session
-	 * @param musareSongId - the song id
+	 * @param youtubeId - the youtube id
 	 * @param cb
 	 */
-	like: isLoginRequired(async function like(session, musareSongId, cb) {
+	like: isLoginRequired(async function like(session, youtubeId, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 
 		async.waterfall(
 			[
-				next => songModel.findOne({ songId: musareSongId }, next),
+				next => songModel.findOne({ youtubeId }, next),
 
 				(song, next) => {
 					if (!song) return next("No song found with that id.");
@@ -984,7 +988,7 @@ export default {
 								session,
 								namespace: "playlists",
 								action: "addSongToPlaylist",
-								args: [false, musareSongId, user.likedSongsPlaylist]
+								args: [false, youtubeId, user.likedSongsPlaylist]
 							},
 							this
 						)
@@ -1004,7 +1008,7 @@ export default {
 								session,
 								namespace: "playlists",
 								action: "removeSongFromPlaylist",
-								args: [musareSongId, dislikedSongsPlaylist]
+								args: [youtubeId, dislikedSongsPlaylist]
 							},
 							this
 						)
@@ -1017,7 +1021,7 @@ export default {
 				},
 
 				(song, next) => {
-					SongsModule.runJob("RECALCULATE_SONG_RATINGS", { songId: song._id, musareSongId })
+					SongsModule.runJob("RECALCULATE_SONG_RATINGS", { songId: song._id, youtubeId })
 						.then(ratings => next(null, song, ratings))
 						.catch(err => next(err));
 				}
@@ -1028,7 +1032,7 @@ export default {
 					this.log(
 						"ERROR",
 						"SONGS_LIKE",
-						`User "${session.userId}" failed to like song ${musareSongId}. "${err}"`
+						`User "${session.userId}" failed to like song ${youtubeId}. "${err}"`
 					);
 					return cb({ status: "failure", message: err });
 				}
@@ -1038,7 +1042,7 @@ export default {
 				CacheModule.runJob("PUB", {
 					channel: "song.like",
 					value: JSON.stringify({
-						songId: musareSongId,
+						youtubeId,
 						userId: session.userId,
 						likes,
 						dislikes
@@ -1049,7 +1053,7 @@ export default {
 					userId: session.userId,
 					type: "song__like",
 					payload: {
-						message: `Liked song <songId>${song.title} by ${song.artists.join(", ")}</songId>`,
+						message: `Liked song <youtubeId>${song.title} by ${song.artists.join(", ")}</youtubeId>`,
 						songId: song._id,
 						thumbnail: song.thumbnail
 					}
@@ -1069,17 +1073,17 @@ export default {
 	 * Dislikes a song
 	 *
 	 * @param session
-	 * @param musareSongId - the song id
+	 * @param youtubeId - the youtube id
 	 * @param cb
 	 */
-	dislike: isLoginRequired(async function dislike(session, musareSongId, cb) {
+	dislike: isLoginRequired(async function dislike(session, youtubeId, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 
 		async.waterfall(
 			[
 				next => {
-					songModel.findOne({ songId: musareSongId }, next);
+					songModel.findOne({ youtubeId }, next);
 				},
 
 				(song, next) => {
@@ -1099,7 +1103,7 @@ export default {
 								session,
 								namespace: "playlists",
 								action: "addSongToPlaylist",
-								args: [false, musareSongId, user.dislikedSongsPlaylist]
+								args: [false, youtubeId, user.dislikedSongsPlaylist]
 							},
 							this
 						)
@@ -1119,7 +1123,7 @@ export default {
 								session,
 								namespace: "playlists",
 								action: "removeSongFromPlaylist",
-								args: [musareSongId, likedSongsPlaylist]
+								args: [youtubeId, likedSongsPlaylist]
 							},
 							this
 						)
@@ -1132,7 +1136,7 @@ export default {
 				},
 
 				(song, next) => {
-					SongsModule.runJob("RECALCULATE_SONG_RATINGS", { songId: song._id, musareSongId })
+					SongsModule.runJob("RECALCULATE_SONG_RATINGS", { songId: song._id, youtubeId })
 						.then(ratings => next(null, song, ratings))
 						.catch(err => next(err));
 				}
@@ -1143,7 +1147,7 @@ export default {
 					this.log(
 						"ERROR",
 						"SONGS_DISLIKE",
-						`User "${session.userId}" failed to dislike song ${musareSongId}. "${err}"`
+						`User "${session.userId}" failed to dislike song ${youtubeId}. "${err}"`
 					);
 					return cb({ status: "failure", message: err });
 				}
@@ -1153,7 +1157,7 @@ export default {
 				CacheModule.runJob("PUB", {
 					channel: "song.dislike",
 					value: JSON.stringify({
-						songId: musareSongId,
+						youtubeId,
 						userId: session.userId,
 						likes,
 						dislikes
@@ -1164,7 +1168,7 @@ export default {
 					userId: session.userId,
 					type: "song__dislike",
 					payload: {
-						message: `Disliked song <songId>${song.title} by ${song.artists.join(", ")}</songId>`,
+						message: `Disliked song <youtubeId>${song.title} by ${song.artists.join(", ")}</youtubeId>`,
 						songId: song._id,
 						thumbnail: song.thumbnail
 					}
@@ -1182,17 +1186,17 @@ export default {
 	 * Undislikes a song
 	 *
 	 * @param session
-	 * @param musareSongId - the song id
+	 * @param youtubeId - the youtube id
 	 * @param cb
 	 */
-	undislike: isLoginRequired(async function undislike(session, musareSongId, cb) {
+	undislike: isLoginRequired(async function undislike(session, youtubeId, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 
 		async.waterfall(
 			[
 				next => {
-					songModel.findOne({ songId: musareSongId }, next);
+					songModel.findOne({ youtubeId }, next);
 				},
 
 				(song, next) => {
@@ -1212,7 +1216,7 @@ export default {
 								session,
 								namespace: "playlists",
 								action: "removeSongFromPlaylist",
-								args: [musareSongId, user.dislikedSongsPlaylist]
+								args: [youtubeId, user.dislikedSongsPlaylist]
 							},
 							this
 						)
@@ -1232,7 +1236,7 @@ export default {
 								session,
 								namespace: "playlists",
 								action: "removeSongFromPlaylist",
-								args: [musareSongId, likedSongsPlaylist]
+								args: [youtubeId, likedSongsPlaylist]
 							},
 							this
 						)
@@ -1245,7 +1249,7 @@ export default {
 				},
 
 				(song, next) => {
-					SongsModule.runJob("RECALCULATE_SONG_RATINGS", { songId: song._id, musareSongId })
+					SongsModule.runJob("RECALCULATE_SONG_RATINGS", { songId: song._id, youtubeId })
 						.then(ratings => next(null, song, ratings))
 						.catch(err => next(err));
 				}
@@ -1256,7 +1260,7 @@ export default {
 					this.log(
 						"ERROR",
 						"SONGS_UNDISLIKE",
-						`User "${session.userId}" failed to undislike song ${musareSongId}. "${err}"`
+						`User "${session.userId}" failed to undislike song ${youtubeId}. "${err}"`
 					);
 					return cb({ status: "failure", message: err });
 				}
@@ -1266,7 +1270,7 @@ export default {
 				CacheModule.runJob("PUB", {
 					channel: "song.undislike",
 					value: JSON.stringify({
-						songId: musareSongId,
+						youtubeId,
 						userId: session.userId,
 						likes,
 						dislikes
@@ -1277,9 +1281,9 @@ export default {
 					userId: session.userId,
 					type: "song__undislike",
 					payload: {
-						message: `Removed <songId>${song.title} by ${song.artists.join(
+						message: `Removed <youtubeId>${song.title} by ${song.artists.join(
 							", "
-						)}</songId> from your Disliked Songs`,
+						)}</youtubeId> from your Disliked Songs`,
 						songId: song._id,
 						thumbnail: song.thumbnail
 					}
@@ -1297,17 +1301,17 @@ export default {
 	 * Unlikes a song
 	 *
 	 * @param session
-	 * @param musareSongId - the song id
+	 * @param youtubeId - the youtube id
 	 * @param cb
 	 */
-	unlike: isLoginRequired(async function unlike(session, musareSongId, cb) {
+	unlike: isLoginRequired(async function unlike(session, youtubeId, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 
 		async.waterfall(
 			[
 				next => {
-					songModel.findOne({ songId: musareSongId }, next);
+					songModel.findOne({ youtubeId }, next);
 				},
 
 				(song, next) => {
@@ -1327,7 +1331,7 @@ export default {
 								session,
 								namespace: "playlists",
 								action: "removeSongFromPlaylist",
-								args: [musareSongId, user.dislikedSongsPlaylist]
+								args: [youtubeId, user.dislikedSongsPlaylist]
 							},
 							this
 						)
@@ -1347,7 +1351,7 @@ export default {
 								session,
 								namespace: "playlists",
 								action: "removeSongFromPlaylist",
-								args: [musareSongId, likedSongsPlaylist]
+								args: [youtubeId, likedSongsPlaylist]
 							},
 							this
 						)
@@ -1360,7 +1364,7 @@ export default {
 				},
 
 				(song, next) => {
-					SongsModule.runJob("RECALCULATE_SONG_RATINGS", { songId: song._id, musareSongId })
+					SongsModule.runJob("RECALCULATE_SONG_RATINGS", { songId: song._id, youtubeId })
 						.then(ratings => next(null, song, ratings))
 						.catch(err => next(err));
 				}
@@ -1371,7 +1375,7 @@ export default {
 					this.log(
 						"ERROR",
 						"SONGS_UNLIKE",
-						`User "${session.userId}" failed to unlike song ${musareSongId}. "${err}"`
+						`User "${session.userId}" failed to unlike song ${youtubeId}. "${err}"`
 					);
 					return cb({ status: "failure", message: err });
 				}
@@ -1381,7 +1385,7 @@ export default {
 				CacheModule.runJob("PUB", {
 					channel: "song.unlike",
 					value: JSON.stringify({
-						songId: musareSongId,
+						youtubeId,
 						userId: session.userId,
 						likes,
 						dislikes
@@ -1392,9 +1396,9 @@ export default {
 					userId: session.userId,
 					type: "song__unlike",
 					payload: {
-						message: `Removed <songId>${song.title} by ${song.artists.join(
+						message: `Removed <youtubeId>${song.title} by ${song.artists.join(
 							", "
-						)}</songId> from your Liked Songs`,
+						)}</youtubeId> from your Liked Songs`,
 						songId: song._id,
 						thumbnail: song.thumbnail
 					}
@@ -1412,18 +1416,18 @@ export default {
 	 * Gets user's own song ratings
 	 *
 	 * @param session
-	 * @param musareSongId - the song id
+	 * @param youtubeId - the youtube id
 	 * @param cb
 	 */
 
-	getOwnSongRatings: isLoginRequired(async function getOwnSongRatings(session, musareSongId, cb) {
+	getOwnSongRatings: isLoginRequired(async function getOwnSongRatings(session, youtubeId, cb) {
 		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 
 		async.waterfall(
 			[
 				next => {
-					songModel.findOne({ songId: musareSongId }, next);
+					songModel.findOne({ youtubeId }, next);
 				},
 
 				(song, next) => {
@@ -1442,7 +1446,7 @@ export default {
 
 							Object.values(playlist.songs).forEach(song => {
 								// song is found in 'liked songs' playlist
-								if (song.songId === musareSongId) isLiked = true;
+								if (song.youtubeId === youtubeId) isLiked = true;
 							});
 
 							return next(null, isLiked);
@@ -1460,7 +1464,7 @@ export default {
 
 							Object.values(playlist.songs).forEach(song => {
 								// song is found in 'disliked songs' playlist
-								if (song.songId === musareSongId) ratings.isDisliked = true;
+								if (song.youtubeId === youtubeId) ratings.isDisliked = true;
 							});
 
 							return next(null, ratings);
@@ -1473,7 +1477,7 @@ export default {
 					this.log(
 						"ERROR",
 						"SONGS_GET_OWN_RATINGS",
-						`User "${session.userId}" failed to get ratings for ${musareSongId}. "${err}"`
+						`User "${session.userId}" failed to get ratings for ${youtubeId}. "${err}"`
 					);
 					return cb({ status: "failure", message: err });
 				}
@@ -1482,7 +1486,7 @@ export default {
 
 				return cb({
 					status: "success",
-					songId: musareSongId,
+					youtubeId,
 					liked: isLiked,
 					disliked: isDisliked
 				});

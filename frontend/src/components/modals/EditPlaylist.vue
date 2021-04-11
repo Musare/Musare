@@ -260,7 +260,9 @@
 														!station.locked
 												"
 												@click="
-													addSongToQueue(song.songId)
+													addSongToQueue(
+														song.youtubeId
+													)
 												"
 												content="Add Song to Queue"
 												v-tippy
@@ -274,7 +276,7 @@
 												"
 												@confirm="
 													removeSongFromPlaylist(
-														song.songId
+														song.youtubeId
 													)
 												"
 											>
@@ -422,10 +424,10 @@ export default {
 		"search.songs.results": function checkIfSongInPlaylist(songs) {
 			songs.forEach((searchItem, index) =>
 				this.playlist.songs.find(song => {
-					if (song.songId === searchItem.id)
+					if (song.youtubeId === searchItem.id)
 						this.search.songs.results[index].isAddedToQueue = true;
 
-					return song.songId === searchItem.id;
+					return song.youtubeId === searchItem.id;
 				})
 			);
 		}
@@ -448,13 +450,13 @@ export default {
 			if (this.playlist._id === data.playlistId) {
 				// remove song from array of playlists
 				this.playlist.songs.forEach((song, index) => {
-					if (song.songId === data.songId)
+					if (song.youtubeId === data.youtubeId)
 						this.playlist.songs.splice(index, 1);
 				});
 
 				// if this song is in search results, mark it available to add to the playlist again
 				this.search.songs.results.forEach((searchItem, index) => {
-					if (data.songId === searchItem.id) {
+					if (data.youtubeId === searchItem.id) {
 						this.search.songs.results[index].isAddedToQueue = false;
 					}
 				});
@@ -472,7 +474,7 @@ export default {
 				data.songsBeingChanged.forEach(changedSong => {
 					this.playlist.songs.forEach((song, index) => {
 						// find song locally
-						if (song.songId === changedSong.songId) {
+						if (song.youtubeId === changedSong.youtubeId) {
 							// change song position attribute
 							this.playlist.songs[index].position =
 								changedSong.position;
@@ -551,7 +553,7 @@ export default {
 			this.playlist.songs.forEach((song, index) => {
 				if (song.position !== index + 1)
 					songsBeingChanged.push({
-						songId: song.songId,
+						youtubeId: song.youtubeId,
 						position: index + 1
 					});
 			});
@@ -712,11 +714,11 @@ export default {
 				);
 			}
 		},
-		addSongToQueue(songId) {
+		addSongToQueue(youtubeId) {
 			this.socket.dispatch(
 				"stations.addToQueue",
 				this.station._id,
-				songId,
+				youtubeId,
 				data => {
 					if (data.status !== "success")
 						new Toast({

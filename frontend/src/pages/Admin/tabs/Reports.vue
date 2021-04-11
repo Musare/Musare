@@ -16,7 +16,7 @@
 					<tr v-for="(report, index) in reports" :key="index">
 						<td>
 							<span>
-								{{ report.song.songId }}
+								{{ report.song.youtubeId }}
 								<br />
 								{{ report.song._id }}
 							</span>

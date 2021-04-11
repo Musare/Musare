@@ -155,7 +155,7 @@ export default {
 			localSong: null,
 			report: {
 				resolved: false,
-				songId: "",
+				youtubeId: "",
 				description: "",
 				issues: [
 					{ name: "Video", reasons: [] },
@@ -214,7 +214,7 @@ export default {
 	mounted() {
 		if (this.song !== null) {
 			this.localSong = this.song;
-			this.report.songId = this.song.songId;
+			this.report.youtubeId = this.song.youtubeId;
 			this.reportSong(null);
 		}
 	},
@@ -231,11 +231,11 @@ export default {
 		},
 		highlight(type) {
 			if (type === "localSong") {
-				this.report.songId = this.localSong.songId;
+				this.report.youtubeId = this.localSong.youtubeId;
 				this.isPreviousSongActive = false;
 				this.isLocalSongActive = true;
 			} else if (type === "previousSong") {
-				this.report.songId = this.previousSong.songId;
+				this.report.youtubeId = this.previousSong.youtubeId;
 				this.isLocalSongActive = false;
 				this.isPreviousSongActive = true;
 			}

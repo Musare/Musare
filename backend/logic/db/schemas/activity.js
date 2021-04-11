@@ -48,9 +48,9 @@ export default {
 	payload: {
 		message: { type: String, default: "", required: true },
 		thumbnail: { type: String, required: false },
-		songId: { type: String, required: false },
+		youtubeId: { type: String, required: false },
 		stationId: { type: String, required: false },
 		playlistId: { type: String, required: false }
 	},
-	documentVersion: { type: Number, default: 1, required: true }
+	documentVersion: { type: Number, default: 2, required: true }
 };

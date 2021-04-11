@@ -92,7 +92,7 @@ CacheModule.runJob("SUB", {
 			sockets.forEach(socket => {
 				socket.dispatch("event:playlist.removeSong", {
 					playlistId: res.playlistId,
-					songId: res.songId
+					youtubeId: res.youtubeId
 				});
 			});
 		});
@@ -104,7 +104,7 @@ CacheModule.runJob("SUB", {
 					"event:playlist.removeSong",
 					{
 						playlistId: res.playlistId,
-						songId: res.songId
+						youtubeId: res.youtubeId
 					}
 				]
 			});
@@ -688,7 +688,7 @@ export default {
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} playlistId - the id of the playlist we are targeting
-	 * @param {Array} songsBeingChanged - the songs to be repositioned, each element contains "songId" and "position" properties
+	 * @param {Array} songsBeingChanged - the songs to be repositioned, each element contains "youtubeId" and "position" properties
 	 * @param {Function} cb - gets called with the result
 	 */
 	repositionSongs: isLoginRequired(async function repositionSongs(session, playlistId, songsBeingChanged, cb) {
@@ -702,7 +702,7 @@ export default {
 						songsBeingChanged,
 						(song, nextSong) =>
 							playlistModel.updateOne(
-								{ _id: playlistId, "songs.songId": song.songId },
+								{ _id: playlistId, "songs.youtubeId": song.youtubeId },
 								{
 									$set: {
 										"songs.$.position": song.position
@@ -764,10 +764,10 @@ export default {
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} playlistId - the id of the playlist we are moving the song to the bottom from
-	 * @param {string} songId - the id of the song we are moving to the bottom of the list
+	 * @param {string} youtubeId - the youtube id of the song we are moving to the bottom of the list
 	 * @param {Function} cb - gets called with the result
 	 */
-	moveSongToBottom: isLoginRequired(async function moveSongToBottom(session, playlistId, songId, cb) {
+	moveSongToBottom: isLoginRequired(async function moveSongToBottom(session, playlistId, youtubeId, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -783,10 +783,10 @@ export default {
 					// sort array by position
 					playlist.songs.sort((a, b) => a.position - b.position);
 
-					// find index of songId
+					// find index of youtubeId
 					playlist.songs.forEach((song, index) => {
 						// reorder array (simulates what would be done with a drag and drop interface)
-						if (song.songId === songId)
+						if (song.youtubeId === youtubeId)
 							playlist.songs.splice(playlist.songs.length, 0, playlist.songs.splice(index, 1)[0]);
 					});
 
@@ -796,7 +796,7 @@ export default {
 						// check if position needs updated based on index
 						if (song.position !== index + 1)
 							songsBeingChanged.push({
-								songId: song.songId,
+								youtubeId: song.youtubeId,
 								position: index + 1
 							});
 					});
@@ -825,7 +825,7 @@ export default {
 					this.log(
 						"ERROR",
 						"PLAYLIST_MOVE_SONG_TO_BOTTOM",
-						`Moving song "${songId}" to the bottom for private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
+						`Moving song "${youtubeId}" to the bottom for private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
 					);
 					return cb({ status: "failure", message: err });
 				}
@@ -833,7 +833,7 @@ export default {
 				this.log(
 					"SUCCESS",
 					"PLAYLIST_MOVE_SONG_TO_BOTTOM",
-					`Successfully moved song "${songId}" to the bottom for private playlist "${playlistId}" for user "${session.userId}".`
+					`Successfully moved song "${youtubeId}" to the bottom for private playlist "${playlistId}" for user "${session.userId}".`
 				);
 
 				return cb({
@@ -849,11 +849,11 @@ export default {
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {boolean} isSet - is the song part of a set of songs to be added
-	 * @param {string} songId - the id of the song we are trying to add
+	 * @param {string} youtubeId - the youtube id of the song we are trying to add
 	 * @param {string} playlistId - the id of the playlist we are adding the song to
 	 * @param {Function} cb - gets called with the result
 	 */
-	addSongToPlaylist: isLoginRequired(async function addSongToPlaylist(session, isSet, songId, playlistId, cb) {
+	addSongToPlaylist: isLoginRequired(async function addSongToPlaylist(session, isSet, youtubeId, playlistId, cb) {
 		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
 
 		async.waterfall(
@@ -867,7 +867,8 @@ export default {
 							return async.each(
 								playlist.songs,
 								(song, nextSong) => {
-									if (song.songId === songId) return next("That song is already in the playlist");
+									if (song.youtubeId === youtubeId)
+										return next("That song is already in the playlist");
 									return nextSong();
 								},
 								err => next(err)
@@ -890,9 +891,9 @@ export default {
 
 				(user, next) => {
 					SongsModule.runJob(
-						"ENSURE_SONG_EXISTS_BY_SONG_ID",
+						"ENSURE_SONG_EXISTS_BY_YOUTUBE_ID",
 						{
-							songId,
+							youtubeId,
 							userId: user.preferences.anonymousSongRequests ? null : session.userId,
 							automaticallyRequested: true
 						},
@@ -903,7 +904,7 @@ export default {
 							const { _id, title, thumbnail, duration, status } = song;
 							next(null, {
 								_id,
-								songId,
+								youtubeId,
 								title,
 								thumbnail,
 								duration,
@@ -932,7 +933,7 @@ export default {
 					this.log(
 						"ERROR",
 						"PLAYLIST_ADD_SONG",
-						`Adding song "${songId}" to private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
+						`Adding song "${youtubeId}" to private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
 					);
 					return cb({ status: "failure", message: err });
 				}
@@ -940,7 +941,7 @@ export default {
 				this.log(
 					"SUCCESS",
 					"PLAYLIST_ADD_SONG",
-					`Successfully added song "${songId}" to private playlist "${playlistId}" for user "${session.userId}".`
+					`Successfully added song "${youtubeId}" to private playlist "${playlistId}" for user "${session.userId}".`
 				);
 
 				if (!isSet && playlist.displayName !== "Liked Songs" && playlist.displayName !== "Disliked Songs") {
@@ -952,10 +953,10 @@ export default {
 						userId: session.userId,
 						type: "playlist__add_song",
 						payload: {
-							message: `Added <songId>${songName}</songId> to playlist <playlistId>${playlist.displayName}</playlistId>`,
+							message: `Added <youtubeId>${songName}</youtubeId> to playlist <playlistId>${playlist.displayName}</playlistId>`,
 							thumbnail: newSong.thumbnail,
 							playlistId,
-							songId
+							youtubeId
 						}
 					});
 				}
@@ -1020,33 +1021,33 @@ export default {
 							next(err);
 						});
 				},
-				(songIds, next) => {
+				(youtubeIds, next) => {
 					let successful = 0;
 					let failed = 0;
 					let alreadyInPlaylist = 0;
 
-					if (songIds.length === 0) next();
+					if (youtubeIds.length === 0) next();
 
-					console.log(songIds);
+					console.log(youtubeIds);
 
 					async.eachLimit(
-						songIds,
+						youtubeIds,
 						1,
-						(songId, next) => {
+						(youtubeId, next) => {
 							WSModule.runJob(
 								"RUN_ACTION2",
 								{
 									session,
 									namespace: "playlists",
 									action: "addSongToPlaylist",
-									args: [true, songId, playlistId]
+									args: [true, youtubeId, playlistId]
 								},
 								this
 							)
 								.then(res => {
 									if (res.status === "success") {
 										successful += 1;
-										addedSongs.push(songId);
+										addedSongs.push(youtubeId);
 									} else failed += 1;
 									if (res.message === "That song is already in the playlist") alreadyInPlaylist += 1;
 								})
@@ -1118,17 +1119,17 @@ export default {
 	 * Removes a song from a private playlist
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {string} songId - the id of the song we are removing from the private playlist
+	 * @param {string} youtubeId - the youtube id of the song we are removing from the private playlist
 	 * @param {string} playlistId - the id of the playlist we are removing the song from
 	 * @param {Function} cb - gets called with the result
 	 */
-	removeSongFromPlaylist: isLoginRequired(async function removeSongFromPlaylist(session, songId, playlistId, cb) {
+	removeSongFromPlaylist: isLoginRequired(async function removeSongFromPlaylist(session, youtubeId, playlistId, cb) {
 		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
 
 		async.waterfall(
 			[
 				next => {
-					if (!songId || typeof songId !== "string") return next("Invalid song id.");
+					if (!youtubeId || typeof youtubeId !== "string") return next("Invalid song id.");
 					if (!playlistId) return next("Invalid playlist id.");
 					return next();
 				},
@@ -1145,10 +1146,10 @@ export default {
 					// sort array by position
 					playlist.songs.sort((a, b) => a.position - b.position);
 
-					// find index of songId
+					// find index of youtubeId
 					playlist.songs.forEach((song, ind) => {
 						// remove song from array
-						if (song.songId === songId) playlist.songs.splice(ind, 1);
+						if (song.youtubeId === youtubeId) playlist.songs.splice(ind, 1);
 					});
 
 					const songsBeingChanged = [];
@@ -1157,7 +1158,7 @@ export default {
 						// check if position needs updated based on index
 						if (song.position !== index + 1)
 							songsBeingChanged.push({
-								songId: song.songId,
+								youtubeId: song.youtubeId,
 								position: index + 1
 							});
 					});
@@ -1180,7 +1181,7 @@ export default {
 						.catch(next);
 				},
 
-				next => playlistModel.updateOne({ _id: playlistId }, { $pull: { songs: { songId } } }, next),
+				next => playlistModel.updateOne({ _id: playlistId }, { $pull: { songs: { youtubeId } } }, next),
 
 				(res, next) => {
 					PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId }, this)
@@ -1197,7 +1198,7 @@ export default {
 						})
 						.catch();
 
-					SongsModule.runJob("GET_SONG_FROM_ID", { songId }, this)
+					SongsModule.runJob("GET_SONG_FROM_YOUTUBE_ID", { youtubeId }, this)
 						.then(res =>
 							next(null, playlist, {
 								title: res.song.title,
@@ -1206,7 +1207,7 @@ export default {
 							})
 						)
 						.catch(() => {
-							YouTubeModule.runJob("GET_SONG", { songId }, this)
+							YouTubeModule.runJob("GET_SONG", { youtubeId }, this)
 								.then(response => next(null, playlist, response.song))
 								.catch(next);
 						});
@@ -1222,10 +1223,10 @@ export default {
 							userId: session.userId,
 							type: "playlist__remove_song",
 							payload: {
-								message: `Removed <songId>${songName}</songId> from playlist <playlistId>${playlist.displayName}</playlistId>`,
+								message: `Removed <youtubeId>${songName}</youtubeId> from playlist <playlistId>${playlist.displayName}</playlistId>`,
 								thumbnail: youtubeSong.thumbnail,
 								playlistId,
-								songId
+								youtubeId
 							}
 						});
 					}
@@ -1239,7 +1240,7 @@ export default {
 					this.log(
 						"ERROR",
 						"PLAYLIST_REMOVE_SONG",
-						`Removing song "${songId}" from private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
+						`Removing song "${youtubeId}" from private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
 					);
 					return cb({ status: "failure", message: err });
 				}
@@ -1247,14 +1248,14 @@ export default {
 				this.log(
 					"SUCCESS",
 					"PLAYLIST_REMOVE_SONG",
-					`Successfully removed song "${songId}" from private playlist "${playlistId}" for user "${session.userId}".`
+					`Successfully removed song "${youtubeId}" from private playlist "${playlistId}" for user "${session.userId}".`
 				);
 
 				CacheModule.runJob("PUB", {
 					channel: "playlist.removeSong",
 					value: {
 						playlistId: playlist._id,
-						songId,
+						youtubeId,
 						userId: session.userId,
 						privacy: playlist.privacy
 					}

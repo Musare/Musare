@@ -104,7 +104,7 @@ export default {
 				this.socket.dispatch(
 					"playlists.addSongToPlaylist",
 					false,
-					this.song.songId,
+					this.song.youtubeId,
 					playlist._id,
 					res => {
 						new Toast(res.message);
@@ -117,7 +117,7 @@ export default {
 			} else {
 				this.socket.dispatch(
 					"playlists.removeSongFromPlaylist",
-					this.song.songId,
+					this.song.youtubeId,
 					playlist._id,
 					res => {
 						new Toast(res.message);
@@ -125,7 +125,7 @@ export default {
 						if (res.status === "success") {
 							this.playlists[playlistIndex].songs.forEach(
 								(song, songIndex) => {
-									if (song.songId === this.song.songId)
+									if (song.youtubeId === this.song.youtubeId)
 										this.playlists[
 											playlistIndex
 										].songs.splice(songIndex, 1);

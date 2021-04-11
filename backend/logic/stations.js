@@ -35,7 +35,7 @@ class _StationsModule extends CoreClass {
 		NotificationsModule = this.moduleManager.modules.notifications;
 
 		// this.defaultSong = {
-		// 	songId: "60ItHLz5WEA",
+		// 	youtubeId: "60ItHLz5WEA",
 		// 	title: "Faded - Alan Walker",
 		// 	duration: 212,
 		// 	skipDuration: 0,
@@ -509,7 +509,7 @@ class _StationsModule extends CoreClass {
 						}
 						const songsStillNeeded = 50 - station.queue.length;
 						const currentSongs = station.queue;
-						const currentSongIds = station.queue.map(song => song.songId);
+						const currentYoutubeIds = station.queue.map(song => song.youtubeId);
 						const songsToAdd = [];
 						let lastSongAdded = null;
 
@@ -518,7 +518,7 @@ class _StationsModule extends CoreClass {
 							.every(song => {
 								if (
 									songsToAdd.length < songsStillNeeded &&
-									currentSongIds.indexOf(song.songId) === -1
+									currentYoutubeIds.indexOf(song.youtubeId) === -1
 								) {
 									lastSongAdded = song;
 									songsToAdd.push(song);
@@ -532,8 +532,8 @@ class _StationsModule extends CoreClass {
 
 						if (station.playMode === "sequential" && lastSongAdded) {
 							const indexOfLastSong = _playlistSongs
-								.map(song => song.songId)
-								.indexOf(lastSongAdded.songId);
+								.map(song => song.youtubeId)
+								.indexOf(lastSongAdded.youtubeId);
 
 							if (indexOfLastSong !== -1) currentSongIndex = indexOfLastSong;
 						}
@@ -607,14 +607,14 @@ class _StationsModule extends CoreClass {
 					(queueSong, next) => {
 						if (!queueSong._id) next(null, queueSong);
 						else
-							SongsModule.runJob("GET_SONG", { id: queueSong._id }, this)
+							SongsModule.runJob("GET_SONG", { songId: queueSong._id }, this)
 								.then(response => {
 									const { song } = response;
 
 									if (song) {
 										const newSong = {
 											_id: song._id,
-											songId: song.songId,
+											youtubeId: song.youtubeId,
 											title: song.title,
 											artists: song.artists,
 											duration: song.duration,
@@ -819,7 +819,7 @@ class _StationsModule extends CoreClass {
 						// 					if (song) return next(null, song, currentSongIndex, station);
 
 						// 					const currentSong = {
-						// 						songId: playlist[currentSongIndex].songId,
+						// 						youtubeId: playlist[currentSongIndex].youtubeId,
 						// 						title: playlist[currentSongIndex].title,
 						// 						duration: playlist[currentSongIndex].duration,
 						// 						likes: -1,
@@ -841,9 +841,9 @@ class _StationsModule extends CoreClass {
 						// 						.then(response => callback(null, response.song))
 						// 						.catch(callback);
 						// 				return SongsModule.runJob(
-						// 					"GET_SONG_FROM_ID",
+						// 					"GET_SONG_FROM_YOUTUBE_ID",
 						// 					{
-						// 						songId: playlist[currentSongIndex].songId
+						// 						youtubeId: playlist[currentSongIndex].youtubeId
 						// 					},
 						// 					this
 						// 				)
@@ -890,7 +890,7 @@ class _StationsModule extends CoreClass {
 						else {
 							$set.currentSong = {
 								_id: song._id,
-								songId: song.songId,
+								youtubeId: song.youtubeId,
 								title: song.title,
 								artists: song.artists,
 								duration: song.duration,
@@ -941,7 +941,7 @@ class _StationsModule extends CoreClass {
 						StationsModule.log("ERROR", `Skipping station "${payload.stationId}" failed. "${err}"`);
 						reject(new Error(err));
 					} else {
-						if (station.currentSong !== null && station.currentSong.songId !== undefined) {
+						if (station.currentSong !== null && station.currentSong.youtubeId !== undefined) {
 							station.currentSong.skipVotes = 0;
 						}
 						// TODO Pub/Sub this
@@ -1018,10 +1018,10 @@ class _StationsModule extends CoreClass {
 						}
 
 						WSModule.runJob("GET_SOCKETS_FOR_ROOM", { room: `station.${station._id}` }).then(sockets => {
-							if (station.currentSong !== null && station.currentSong.songId !== undefined) {
+							if (station.currentSong !== null && station.currentSong.youtubeId !== undefined) {
 								WSModule.runJob("SOCKETS_JOIN_SONG_ROOM", {
 									sockets,
-									room: `song.${station.currentSong.songId}`
+									room: `song.${station.currentSong.youtubeId}`
 								});
 								if (!station.paused) {
 									NotificationsModule.runJob("SCHEDULE", {

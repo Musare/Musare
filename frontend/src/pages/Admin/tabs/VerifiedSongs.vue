@@ -101,11 +101,11 @@
 							<a
 								:href="
 									'https://www.youtube.com/watch?v=' +
-										`${song.songId}`
+										`${song.youtubeId}`
 								"
 								target="_blank"
 							>
-								{{ song.songId }}</a
+								{{ song.youtubeId }}</a
 							>
 						</td>
 						<td>
@@ -318,8 +318,8 @@ export default {
 			this.addSong(song)
 		);
 
-		this.socket.on("event:admin.verifiedSong.removed", songId =>
-			this.removeSong(songId)
+		this.socket.on("event:admin.verifiedSong.removed", youtubeId =>
+			this.removeSong(youtubeId)
 		);
 
 		this.socket.on("event:admin.verifiedSong.updated", updatedSong =>
@@ -331,7 +331,7 @@ export default {
 
 		if (this.$route.query.songId) {
 			this.socket.dispatch(
-				"songs.getSongFromMusareId",
+				"songs.getSongFromSongId",
 				this.$route.query.songId,
 				res => {
 					if (res.status === "success") {

@@ -6,7 +6,7 @@
 				class="button is-dark back-to-song"
 				:to="{
 					path: '/admin/songs',
-					query: { id: report.songId }
+					query: { id: report.youtubeId }
 				}"
 			>
 				<i class="material-icons">keyboard_return</i> &nbsp; Edit Song
@@ -15,7 +15,7 @@
 			<article class="message">
 				<div class="message-body">
 					<strong>Song ID:</strong>
-					{{ report.song.songId }} / {{ report.song._id }}
+					{{ report.song.youtubeId }} / {{ report.song._id }}
 					<br />
 					<strong>Author:</strong>
 					<user-id-to-username

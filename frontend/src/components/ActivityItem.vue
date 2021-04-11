@@ -46,11 +46,14 @@ export default {
 	},
 	computed: {
 		formattedMessage() {
-			const { songId, playlistId, stationId } = this.activity.payload;
+			const { youtubeId, playlistId, stationId } = this.activity.payload;
 			let { message } = this.activity.payload;
 
-			if (songId) {
-				message = message.replace(/<songId>(.*)<\/songId>/g, "$1");
+			if (youtubeId) {
+				message = message.replace(
+					/<youtubeId>(.*)<\/youtubeId>/g,
+					"$1"
+				);
 			}
 
 			if (playlistId) {
@@ -73,11 +76,14 @@ export default {
 			};
 		},
 		textOnlyMessage() {
-			const { songId, playlistId, stationId } = this.activity.payload;
+			const { youtubeId, playlistId, stationId } = this.activity.payload;
 			let { message } = this.activity.payload;
 
-			if (songId) {
-				message = message.replace(/<songId>(.*)<\/songId>/g, "$1");
+			if (youtubeId) {
+				message = message.replace(
+					/<youtubeId>(.*)<\/youtubeId>/g,
+					"$1"
+				);
 			}
 
 			if (playlistId) {

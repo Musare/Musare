@@ -44,7 +44,7 @@ class _ActivitiesModule extends CoreClass {
 	 * @param {object} payload.payload - the details of the activity e.g. an array of songs that were added
 	 * @param {string} payload.payload.message - the main message describing the activity e.g. 50 songs added to playlist 'playlist name'
 	 * @param {string} payload.payload.thumbnail - url to a thumbnail e.g. song album art to be used when display an activity
-	 * @param {string} payload.payload.songId - (optional) if relevant, the id of the song related to the activity
+	 * @param {string} payload.payload.youtubeId - (optional) if relevant, the youtube id of the song related to the activity
 	 * @param {string} payload.payload.playlistId - (optional) if relevant, the id of the playlist related to the activity
 	 * @param {string} payload.payload.stationId - (optional) if relevant, the id of the station related to the activity
 	 * @returns {Promise} - returns promise (reject, resolve)

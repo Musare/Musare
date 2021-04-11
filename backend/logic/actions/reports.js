@@ -121,7 +121,7 @@ export default {
 	}),
 
 	/**
-	 * Gets all reports for a songId (_id)
+	 * Gets all reports for a songId
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} songId - the id of the song to index reports for
@@ -231,13 +231,13 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					songModel.findOne({ songId: data.songId }).exec(next);
+					songModel.findOne({ youtubeId: data.youtubeId }).exec(next);
 				},
 
 				(song, next) => {
 					if (!song) return next("Song not found.");
 
-					return SongsModule.runJob("GET_SONG", { id: song._id }, this)
+					return SongsModule.runJob("GET_SONG", { songId: song._id }, this)
 						.then(res => next(null, res.song))
 						.catch(next);
 				},
@@ -245,10 +245,10 @@ export default {
 				(song, next) => {
 					if (!song) return next("Song not found.");
 
-					delete data.songId;
+					delete data.youtubeId;
 					data.song = {
 						_id: song._id,
-						songId: song.songId
+						youtubeId: song.youtubeId
 					};
 
 					for (let z = 0; z < data.issues.length; z += 1) {
@@ -314,13 +314,17 @@ export default {
 					userId: report.createdBy,
 					type: "song__report",
 					payload: {
-						message: `Reported song <songId>${song.title} by ${song.artists.join(", ")}</songId>`,
+						message: `Reported song <youtubeId>${song.title} by ${song.artists.join(", ")}</youtubeId>`,
 						songId: data.song._id,
 						thumbnail: song.thumbnail
 					}
 				});
 
-				this.log("SUCCESS", "REPORTS_CREATE", `User "${session.userId}" created report for "${data.songId}".`);
+				this.log(
+					"SUCCESS",
+					"REPORTS_CREATE",
+					`User "${session.userId}" created report for "${data.youtubeId}".`
+				);
 
 				return cb({
 					status: "success",

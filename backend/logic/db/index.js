@@ -6,14 +6,14 @@ import async from "async";
 import CoreClass from "../../core";
 
 const REQUIRED_DOCUMENT_VERSIONS = {
-	activity: 1,
+	activity: 2,
 	news: 1,
-	playlist: 2,
+	playlist: 3,
 	punishment: 1,
 	queueSong: 1,
-	report: 1,
-	song: 3,
-	station: 4,
+	report: 2,
+	song: 4,
+	station: 5,
 	user: 3
 };
 

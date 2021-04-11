@@ -255,12 +255,12 @@ export default {
 				}
 			}
 		},
-		addSongToQueue(songId, index) {
+		addSongToQueue(youtubeId, index) {
 			if (this.station.type === "community") {
 				this.socket.dispatch(
 					"stations.addToQueue",
 					this.station._id,
-					songId,
+					youtubeId,
 					data => {
 						if (data.status !== "success")
 							new Toast(`Error: ${data.message}`);
@@ -274,7 +274,7 @@ export default {
 					}
 				);
 			} else {
-				this.socket.dispatch("songs.request", songId, data => {
+				this.socket.dispatch("songs.request", youtubeId, data => {
 					if (data.status !== "success")
 						new Toast(`Error: ${data.message}`);
 					else {
