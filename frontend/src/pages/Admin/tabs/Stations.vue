@@ -61,17 +61,9 @@
 							<a class="button is-info" @click="edit(station)"
 								>Edit</a
 							>
-							<tippy
-								interactive="true"
-								placement="top"
-								theme="confirm"
-								trigger="click"
-							>
-								<template #trigger>
-									<a class="button is-danger">Remove</a>
-								</template>
-								<a @click="removeStation(index)"> Confirm</a>
-							</tippy>
+							<confirm @confirm="removeStation(index)">
+								<a class="button is-danger">Remove</a>
+							</confirm>
 						</td>
 					</tr>
 				</tbody>
@@ -198,12 +190,14 @@ import { mapState, mapActions, mapGetters } from "vuex";
 
 import Toast from "toasters";
 import UserIdToUsername from "@/components/UserIdToUsername.vue";
+import Confirm from "@/components/Confirm.vue";
 import ws from "@/ws";
 
 export default {
 	components: {
 		EditStation: () => import("@/components/modals/EditStation.vue"),
-		UserIdToUsername
+		UserIdToUsername,
+		Confirm
 	},
 	data() {
 		return {

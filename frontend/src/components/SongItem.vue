@@ -276,6 +276,9 @@ export default {
 				font-size: 17px;
 				margin-bottom: 5px;
 			}
+			.verified-song {
+				margin-left: 5px;
+			}
 		}
 
 		.song-request-time {

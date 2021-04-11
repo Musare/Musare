@@ -19,22 +19,16 @@
 					:activity="activity"
 				>
 					<div slot="actions">
-						<tippy
+						<confirm
 							v-if="userId === myUserId"
-							interactive="true"
-							placement="top"
-							theme="confirm"
-							trigger="click"
+							@confirm="hideActivity(activity._id)"
 						>
-							<template #trigger>
-								<a content="Hide Activity" v-tippy>
-									<i class="material-icons hide-icon"
-										>visibility_off</i
-									>
-								</a>
-							</template>
-							<a @click="hideActivity(activity._id)"> Confirm</a>
-						</tippy>
+							<a content="Hide Activity" v-tippy>
+								<i class="material-icons hide-icon"
+									>visibility_off</i
+								>
+							</a>
+						</confirm>
 					</div>
 				</activity-item>
 			</div>
@@ -51,9 +45,10 @@ import Toast from "toasters";
 
 import ActivityItem from "@/components/ActivityItem.vue";
 import ws from "@/ws";
+import Confirm from "@/components/Confirm.vue";
 
 export default {
-	components: { ActivityItem },
+	components: { ActivityItem, Confirm },
 	props: {
 		userId: {
 			type: String,

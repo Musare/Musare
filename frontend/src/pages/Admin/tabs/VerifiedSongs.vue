@@ -123,23 +123,15 @@
 							>
 								<i class="material-icons">edit</i>
 							</button>
-							<tippy
-								interactive="true"
-								placement="top"
-								theme="confirm"
-								trigger="click"
-							>
-								<template #trigger>
-									<button
-										class="button is-danger"
-										content="Unverify Song"
-										v-tippy
-									>
-										<i class="material-icons">cancel</i>
-									</button>
-								</template>
-								<a @click="remove(song._id, index)"> Confirm</a>
-							</tippy>
+							<confirm @confirm="remove(song._id, index)">
+								<button
+									class="button is-danger"
+									content="Unverify Song"
+									v-tippy
+								>
+									<i class="material-icons">cancel</i>
+								</button>
+							</confirm>
 						</td>
 					</tr>
 				</tbody>
@@ -215,6 +207,7 @@ import Toast from "toasters";
 
 import UserIdToUsername from "@/components/UserIdToUsername.vue";
 import FloatingBox from "@/components/FloatingBox.vue";
+import Confirm from "@/components/Confirm.vue";
 
 import ScrollAndFetchHandler from "@/mixins/ScrollAndFetchHandler.vue";
 
@@ -224,7 +217,8 @@ export default {
 	components: {
 		EditSong: () => import("@/components/modals/EditSong.vue"),
 		UserIdToUsername,
-		FloatingBox
+		FloatingBox,
+		Confirm
 	},
 	mixins: [ScrollAndFetchHandler],
 	data() {

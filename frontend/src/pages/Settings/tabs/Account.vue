@@ -74,35 +74,19 @@
 		<hr class="section-horizontal-rule" />
 
 		<div class="row">
-			<tippy
-				interactive="true"
-				placement="top"
-				theme="confirm"
-				trigger="click"
-			>
-				<template #trigger>
-					<a class="button is-warning">
-						<i class="material-icons icon-with-button">clear</i>
-						Clear my activities
-					</a>
-				</template>
-				<a @click="removeActivities()"> Confirm</a>
-			</tippy>
+			<confirm @confirm="removeActivities()">
+				<a class="button is-warning">
+					<i class="material-icons icon-with-button">clear</i>
+					Clear my activities
+				</a>
+			</confirm>
 
-			<tippy
-				interactive="true"
-				placement="top"
-				theme="confirm"
-				trigger="click"
-			>
-				<template #trigger>
-					<a class="button is-danger">
-						<i class="material-icons icon-with-button">delete</i>
-						Remove my account
-					</a>
-				</template>
-				<a @click="removeAccount()"> Confirm</a>
-			</tippy>
+			<confirm @confirm="removeAccount()">
+				<a class="button is-danger">
+					<i class="material-icons icon-with-button">delete</i>
+					Remove my account
+				</a>
+			</confirm>
 		</div>
 	</div>
 </template>
@@ -114,9 +98,10 @@ import Toast from "toasters";
 import InputHelpBox from "@/components/InputHelpBox.vue";
 import SaveButton from "@/components/SaveButton.vue";
 import validation from "@/validation";
+import Confirm from "@/components/Confirm.vue";
 
 export default {
-	components: { InputHelpBox, SaveButton },
+	components: { InputHelpBox, SaveButton, Confirm },
 	data() {
 		return {
 			validation: {

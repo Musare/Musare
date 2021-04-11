@@ -473,31 +473,17 @@
 		<template #footer>
 			<save-button ref="saveButton" @clicked="saveChanges()" />
 			<div class="right">
-				<tippy
-					interactive="true"
-					placement="top"
-					theme="confirm"
-					trigger="click"
-				>
-					<template #trigger>
-						<a class="button is-danger">
-							Clear and refill station queue
-						</a>
-					</template>
-					<a @click="clearAndRefillStationQueue()"> Confirm </a>
-				</tippy>
-				<tippy
+				<confirm @confirm="clearAndRefillStationQueue()">
+					<a class="button is-danger">
+						Clear and refill station queue
+					</a>
+				</confirm>
+				<confirm
 					v-if="station && station.type === 'community'"
-					interactive="true"
-					placement="top"
-					theme="confirm"
-					trigger="click"
+					@confirm="deleteStation()"
 				>
-					<template #trigger>
-						<button class="button is-danger">Delete station</button>
-					</template>
-					<a @click="deleteStation()"> Confirm </a>
-				</tippy>
+					<button class="button is-danger">Delete station</button>
+				</confirm>
 			</div>
 		</template>
 	</modal>
@@ -509,11 +495,12 @@ import { mapState, mapGetters, mapActions } from "vuex";
 import Toast from "toasters";
 
 import validation from "@/validation";
+import Confirm from "@/components/Confirm.vue";
 import Modal from "../Modal.vue";
 import SaveButton from "../SaveButton.vue";
 
 export default {
-	components: { Modal, SaveButton },
+	components: { Modal, Confirm, SaveButton },
 	props: {
 		stationId: { type: String, default: "" },
 		sector: { type: String, default: "admin" }

@@ -266,35 +266,25 @@
 												v-tippy
 												>queue</i
 											>
-											<tippy
+											<confirm
 												v-if="
 													userId ===
 														playlist.createdBy ||
 														isEditable()
 												"
-												interactive="true"
-												placement="top"
-												theme="confirm"
-												trigger="click"
+												@confirm="
+													removeSongFromPlaylist(
+														song.songId
+													)
+												"
 											>
-												<template #trigger>
-													<i
-														class="material-icons delete-icon"
-														content="Remove Song from Playlist"
-														v-tippy
-														>delete_forever</i
-													>
-												</template>
-												<a
-													@click="
-														removeSongFromPlaylist(
-															song.songId
-														)
-													"
+												<i
+													class="material-icons delete-icon"
+													content="Remove Song from Playlist"
+													v-tippy
+													>delete_forever</i
 												>
-													Confirm</a
-												>
-											</tippy>
+											</confirm>
 											<i
 												class="material-icons"
 												v-if="isEditable() && index > 0"
@@ -355,46 +345,25 @@
 				Download Playlist
 			</a>
 			<div class="right">
-				<tippy
+				<confirm
 					v-if="playlist.type === 'station'"
-					interactive="true"
-					placement="top"
-					theme="confirm"
-					trigger="click"
+					@confirm="clearAndRefillStationPlaylist()"
 				>
-					<template #trigger>
-						<a class="button is-danger">
-							Clear and refill station playlist
-						</a>
-					</template>
-					<a @click="clearAndRefillStationPlaylist()"> Confirm </a>
-				</tippy>
-				<tippy
+					<a class="button is-danger">
+						Clear and refill station playlist
+					</a>
+				</confirm>
+				<confirm
 					v-if="playlist.type === 'genre'"
-					interactive="true"
-					placement="top"
-					theme="confirm"
-					trigger="click"
+					@confirm="clearAndRefillGenrePlaylist()"
 				>
-					<template #trigger>
-						<a class="button is-danger">
-							Clear and refill genre playlist
-						</a>
-					</template>
-					<a @click="clearAndRefillGenrePlaylist()"> Confirm </a>
-				</tippy>
-				<tippy
-					v-if="isEditable()"
-					interactive="true"
-					placement="top"
-					theme="confirm"
-					trigger="click"
-				>
-					<template #trigger>
-						<a class="button is-danger"> Remove Playlist </a>
-					</template>
-					<a @click="removePlaylist()"> Confirm </a>
-				</tippy>
+					<a class="button is-danger">
+						Clear and refill genre playlist
+					</a>
+				</confirm>
+				<confirm v-if="isEditable()" @confirm="removePlaylist()">
+					<a class="button is-danger"> Remove Playlist </a>
+				</confirm>
 			</div>
 		</div>
 	</modal>
@@ -408,6 +377,7 @@ import Toast from "toasters";
 import SearchYoutube from "@/mixins/SearchYoutube.vue";
 
 import validation from "@/validation";
+import Confirm from "@/components/Confirm.vue";
 import Modal from "../Modal.vue";
 import SearchQueryItem from "../SearchQueryItem.vue";
 import SongItem from "../SongItem.vue";
@@ -415,7 +385,7 @@ import SongItem from "../SongItem.vue";
 import utils from "../../../js/utils";
 
 export default {
-	components: { Modal, draggable, SearchQueryItem, SongItem },
+	components: { Modal, draggable, Confirm, SearchQueryItem, SongItem },
 	mixins: [SearchYoutube],
 	data() {
 		return {

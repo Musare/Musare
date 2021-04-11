@@ -97,38 +97,18 @@
 			<hr class="section-horizontal-rule" />
 
 			<div class="row">
-				<tippy
-					v-if="isPasswordLinked"
-					interactive="true"
-					placement="top"
-					theme="confirm"
-					trigger="click"
-				>
-					<template #trigger>
-						<a class="button is-danger">
-							<i class="material-icons icon-with-button">close</i>
-							Remove password
-						</a>
-					</template>
-					<a @click="unlinkPassword()"> Confirm</a>
-				</tippy>
-				<tippy
-					v-if="isGithubLinked"
-					interactive="true"
-					placement="top"
-					theme="confirm"
-					trigger="click"
-				>
-					<template #trigger>
-						<a class="button is-danger">
-							<i class="material-icons icon-with-button"
-								>link_off</i
-							>
-							Remove GitHub from account
-						</a>
-					</template>
-					<a @click="unlinkGitHub()"> Confirm</a>
-				</tippy>
+				<confirm v-if="isPasswordLinked" @confirm="unlinkPassword()">
+					<a class="button is-danger">
+						<i class="material-icons icon-with-button">close</i>
+						Remove password
+					</a>
+				</confirm>
+				<confirm v-if="isGithubLinked" @confirm="unlinkGitHub()">
+					<a class="button is-danger">
+						<i class="material-icons icon-with-button">link_off</i>
+						Remove GitHub from account
+					</a>
+				</confirm>
 			</div>
 
 			<div class="section-margin-bottom" />
@@ -142,22 +122,14 @@
 
 			<hr class="section-horizontal-rule" />
 			<div class="row">
-				<tippy
-					interactive="true"
-					placement="top"
-					theme="confirm"
-					trigger="click"
-				>
-					<template #trigger>
-						<a class="button is-warning">
-							<i class="material-icons icon-with-button"
-								>exit_to_app</i
-							>
-							Logout everywhere
-						</a>
-					</template>
-					<a @click="removeSessions()"> Confirm</a>
-				</tippy>
+				<confirm @confirm="removeSessions()">
+					<a class="button is-warning">
+						<i class="material-icons icon-with-button"
+							>exit_to_app</i
+						>
+						Logout everywhere
+					</a>
+				</confirm>
 			</div>
 		</div>
 	</div>
@@ -169,9 +141,10 @@ import { mapGetters, mapState } from "vuex";
 
 import InputHelpBox from "@/components/InputHelpBox.vue";
 import validation from "@/validation";
+import Confirm from "@/components/Confirm.vue";
 
 export default {
-	components: { InputHelpBox },
+	components: { InputHelpBox, Confirm },
 	data() {
 		return {
 			apiDomain: "",

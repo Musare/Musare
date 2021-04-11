@@ -102,25 +102,15 @@
 							>
 								<i class="material-icons">check_circle</i>
 							</button>
-							<tippy
-								interactive="true"
-								placement="top"
-								theme="confirm"
-								trigger="click"
-							>
-								<template #trigger>
-									<button
-										class="button is-danger"
-										content="Hide Song"
-										v-tippy
-									>
-										<i class="material-icons"
-											>visibility_off</i
-										>
-									</button>
-								</template>
-								<a @click="hide(song._id, index)"> Confirm</a>
-							</tippy>
+							<confirm @confirm="hide(song._id, index)">
+								<button
+									class="button is-danger"
+									content="Hide Song"
+									v-tippy
+								>
+									<i class="material-icons">visibility_off</i>
+								</button>
+							</confirm>
 						</td>
 					</tr>
 				</tbody>
@@ -198,6 +188,7 @@ import Toast from "toasters";
 
 import UserIdToUsername from "@/components/UserIdToUsername.vue";
 import FloatingBox from "@/components/FloatingBox.vue";
+import Confirm from "@/components/Confirm.vue";
 
 import ScrollAndFetchHandler from "@/mixins/ScrollAndFetchHandler.vue";
 
@@ -207,7 +198,8 @@ export default {
 	components: {
 		EditSong: () => import("@/components/modals/EditSong.vue"),
 		UserIdToUsername,
-		FloatingBox
+		FloatingBox,
+		Confirm
 	},
 	mixins: [ScrollAndFetchHandler],
 	data() {

@@ -33,26 +33,17 @@
 						class="song-actions"
 						slot="actions"
 					>
-						<tippy
+						<confirm
 							v-if="isOwnerOnly() || isAdminOnly()"
-							interactive="true"
-							placement="top"
-							theme="confirm"
-							trigger="click"
+							@confirm="removeFromQueue(song.songId)"
 						>
-							<template #trigger>
-								<i
-									class="material-icons delete-icon"
-									content="Remove Song from Queue"
-									v-tippy
-									@click.shift="removeFromQueue(song.songId)"
-									>delete_forever</i
-								>
-							</template>
-							<a @click="removeFromQueue(song.songId)">
-								Confirm
-							</a>
-						</tippy>
+							<i
+								class="material-icons delete-icon"
+								content="Remove Song from Queue"
+								v-tippy
+								>delete_forever</i
+							>
+						</confirm>
 						<i
 							class="material-icons"
 							v-if="index > 0"
@@ -141,9 +132,10 @@ import draggable from "vuedraggable";
 import Toast from "toasters";
 
 import SongItem from "@/components/SongItem.vue";
+import Confirm from "@/components/Confirm.vue";
 
 export default {
-	components: { draggable, SongItem },
+	components: { draggable, SongItem, Confirm },
 	data() {
 		return {
 			dismissedWarning: false,

@@ -31,19 +31,9 @@
 							>
 								Edit
 							</button>
-							<tippy
-								interactive="true"
-								placement="top"
-								theme="confirm"
-								trigger="click"
-							>
-								<template #trigger>
-									<button class="button is-danger">
-										Remove
-									</button>
-								</template>
-								<a @click="remove(news)"> Confirm</a>
-							</tippy>
+							<confirm @confirm="remove(news)">
+								<button class="button is-danger">Remove</button>
+							</confirm>
 						</td>
 					</tr>
 				</tbody>
@@ -227,8 +217,11 @@ import { mapActions, mapState, mapGetters } from "vuex";
 import Toast from "toasters";
 import ws from "@/ws";
 
+import Confirm from "@/components/Confirm.vue";
+
 export default {
 	components: {
+		Confirm,
 		EditNews: () => import("@/components/modals/EditNews.vue")
 	},
 	data() {
