@@ -419,18 +419,29 @@ export default {
 	 * @param {object} session - user session
 	 * @param {Function} cb - callback
 	 */
-	index(session, cb) {
+	async index(session, cb) {
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
+
 		async.waterfall(
 			[
+				// get array of the ids of the user's favorite stations
 				next => {
-					CacheModule.runJob("HGETALL", { table: "stations" }, this).then(stations => next(null, stations));
+					if (session.userId)
+						return userModel.findById(session.userId).select({ favoriteStations: -1 }).exec(next);
+					return next(null, { favoriteStations: [] });
 				},
 
-				(items, next) => {
+				({ favoriteStations }, next) => {
+					CacheModule.runJob("HGETALL", { table: "stations" }, this).then(stations =>
+						next(null, stations, favoriteStations)
+					);
+				},
+
+				(stations, favorited, next) => {
 					const filteredStations = [];
 
 					async.eachLimit(
-						items,
+						stations,
 						1,
 						(station, nextStation) => {
 							async.waterfall(
@@ -438,15 +449,8 @@ export default {
 									callback => {
 										// only relevant if user logged in
 										if (session.userId) {
-											return StationsModule.runJob("HAS_USER_FAVORITED_STATION", {
-												userId: session.userId,
-												stationId: station._id
-											})
-												.then(isStationFavorited => {
-													station.isFavorited = isStationFavorited;
-													return callback();
-												})
-												.catch(err => callback(err));
+											if (favorited.indexOf(station._id) !== -1) station.isFavorited = true;
+											return callback();
 										}
 
 										return callback();
@@ -476,11 +480,11 @@ export default {
 								}
 							);
 						},
-						() => next(null, filteredStations)
+						() => next(null, filteredStations, favorited)
 					);
 				}
 			],
-			async (err, stations) => {
+			async (err, stations, favorited) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "STATIONS_INDEX", `Indexing stations failed. "${err}"`);
@@ -489,7 +493,7 @@ export default {
 
 				this.log("SUCCESS", "STATIONS_INDEX", `Indexing stations successful.`, false);
 
-				return cb({ status: "success", stations });
+				return cb({ status: "success", data: { stations, favorited } });
 			}
 		);
 	},
@@ -2344,6 +2348,7 @@ export default {
 	 */
 	remove: isOwnerRequired(async function remove(session, stationId, cb) {
 		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
 		async.waterfall(
 			[
@@ -2370,6 +2375,15 @@ export default {
 							.then(() => {})
 							.catch(next);
 					next(null, station);
+				},
+
+				// remove reference to the station id in any array of a user's favorite stations
+				(station, next) => {
+					userModel.updateMany(
+						{ favoriteStations: stationId },
+						{ $pull: { favoriteStations: stationId } },
+						err => next(err, station)
+					);
 				}
 			],
 			async (err, station) => {

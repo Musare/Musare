@@ -409,7 +409,7 @@ export default {
 		dragOptions() {
 			return {
 				animation: 200,
-				group: "description",
+				group: "songs",
 				disabled: !this.isEditable(),
 				ghostClass: "draggable-list-ghost"
 			};

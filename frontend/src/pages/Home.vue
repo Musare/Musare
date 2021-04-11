@@ -50,153 +50,193 @@
 						<h2>My Favorites</h2>
 					</div>
 				</div>
-				<router-link
-					v-for="(station, index) in favoriteStations"
-					:key="index"
-					:to="{
-						name: 'station',
-						params: { id: station.name }
-					}"
-					class="card station-card"
-					:class="{
-						isPrivate: station.privacy === 'private',
-						isMine: isOwner(station)
-					}"
-					:style="'--primary-color: var(--' + station.theme + ')'"
-				>
-					<song-thumbnail
-						class="card-image"
-						:song="station.currentSong"
-					/>
-					<div class="card-content">
-						<div class="media">
-							<div class="media-left displayName">
-								<i
-									v-if="loggedIn && !station.isFavorited"
-									@click.prevent="favoriteStation(station)"
-									class="favorite material-icons"
-									content="Favorite Station"
-									v-tippy
-									>star_border</i
-								>
-								<i
-									v-if="loggedIn && station.isFavorited"
-									@click.prevent="unfavoriteStation(station)"
-									class="favorite material-icons"
-									content="Unfavorite Station"
-									v-tippy
-									>star</i
-								>
-								<h5>{{ station.displayName }}</h5>
-								<i
-									v-if="station.type === 'official'"
-									class="material-icons verified-station"
-									content="Verified Station"
-									v-tippy
-								>
-									check_circle
-								</i>
-							</div>
-						</div>
 
-						<div class="content">
-							{{ station.description }}
-						</div>
-						<div class="under-content">
-							<p class="hostedBy">
-								Hosted by
-								<span class="host">
-									<span
-										v-if="station.type === 'official'"
-										title="Musare"
-										>Musare</span
-									>
-									<user-id-to-username
-										v-else
-										:user-id="station.owner"
-										:link="true"
-									/>
-								</span>
-							</p>
-							<div class="icons">
+				<draggable
+					class="scrollable-list"
+					v-model="favoriteStations"
+					v-bind="dragOptions"
+					@start="drag = true"
+					@end="drag = false"
+					@change="changeFavoriteOrder"
+				>
+					<transition-group
+						type="transition"
+						:name="!drag ? 'draggable-list-transition' : null"
+					>
+						<router-link
+							v-for="(station, index) in favoriteStations"
+							:key="`key-${index}`"
+							:to="{
+								name: 'station',
+								params: { id: station.name }
+							}"
+							:class="{
+								card: true,
+								'station-card': true,
+								'item-draggable': true,
+								isPrivate: station.privacy === 'private',
+								isMine: isOwner(station)
+							}"
+							:style="
+								'--primary-color: var(--' + station.theme + ')'
+							"
+						>
+							<song-thumbnail
+								class="card-image"
+								:song="station.currentSong"
+							/>
+							<div class="card-content">
+								<div class="media">
+									<div class="media-left displayName">
+										<i
+											v-if="
+												loggedIn && !station.isFavorited
+											"
+											@click.prevent="
+												favoriteStation(station)
+											"
+											class="favorite material-icons"
+											content="Favorite Station"
+											v-tippy
+											>star_border</i
+										>
+										<i
+											v-if="
+												loggedIn && station.isFavorited
+											"
+											@click.prevent="
+												unfavoriteStation(station)
+											"
+											class="favorite material-icons"
+											content="Unfavorite Station"
+											v-tippy
+											>star</i
+										>
+										<h5>{{ station.displayName }}</h5>
+										<i
+											v-if="station.type === 'official'"
+											class="material-icons verified-station"
+											content="Verified Station"
+											v-tippy
+										>
+											check_circle
+										</i>
+									</div>
+								</div>
+
+								<div class="content">
+									{{ station.description }}
+								</div>
+								<div class="under-content">
+									<p class="hostedBy">
+										Hosted by
+										<span class="host">
+											<span
+												v-if="
+													station.type === 'official'
+												"
+												title="Musare"
+												>Musare</span
+											>
+											<user-id-to-username
+												v-else
+												:user-id="station.owner"
+												:link="true"
+											/>
+										</span>
+									</p>
+									<div class="icons">
+										<i
+											v-if="
+												station.type === 'community' &&
+													isOwner(station)
+											"
+											class="homeIcon material-icons"
+											content="This is your station."
+											v-tippy
+											>home</i
+										>
+										<i
+											v-if="station.privacy === 'private'"
+											class="privateIcon material-icons"
+											content="This station is not visible to other users."
+											v-tippy
+											>lock</i
+										>
+										<i
+											v-if="
+												station.privacy === 'unlisted'
+											"
+											class="unlistedIcon material-icons"
+											content="Unlisted Station"
+											v-tippy
+											>link</i
+										>
+									</div>
+								</div>
+							</div>
+							<div class="bottomBar">
 								<i
 									v-if="
-										station.type === 'community' &&
-											isOwner(station)
+										station.paused &&
+											station.currentSong.title
 									"
-									class="homeIcon material-icons"
-									content="This is your station."
+									class="material-icons"
+									content="Station Paused"
 									v-tippy
-									>home</i
+									>pause</i
 								>
 								<i
-									v-if="station.privacy === 'private'"
-									class="privateIcon material-icons"
-									content="This station is not visible to other users."
-									v-tippy
-									>lock</i
+									v-else-if="station.currentSong.title"
+									class="material-icons"
+									>music_note</i
+								>
+								<i v-else class="material-icons">music_off</i>
+								<span
+									v-if="station.currentSong.title"
+									class="songTitle"
+									:title="
+										station.currentSong.artists.length > 0
+											? 'Now Playing: ' +
+											  station.currentSong.title +
+											  ' by ' +
+											  station.currentSong.artists.join(
+													','
+											  )
+											: 'Now Playing: ' +
+											  station.currentSong.title
+									"
+									>{{ station.currentSong.title }}
+									{{
+										station.currentSong.artists.length > 0
+											? " by " +
+											  station.currentSong.artists.join(
+													","
+											  )
+											: ""
+									}}</span
+								>
+								<span v-else class="songTitle"
+									>No Songs Playing</span
 								>
 								<i
-									v-if="station.privacy === 'unlisted'"
-									class="unlistedIcon material-icons"
-									content="Unlisted Station"
+									class="material-icons stationMode"
+									:content="
+										station.partyMode
+											? 'Station in Party mode'
+											: 'Station in Playlist mode'
+									"
 									v-tippy
-									>link</i
+									>{{
+										station.partyMode
+											? "emoji_people"
+											: "playlist_play"
+									}}</i
 								>
 							</div>
-						</div>
-					</div>
-					<div class="bottomBar">
-						<i
-							v-if="station.paused && station.currentSong.title"
-							class="material-icons"
-							content="Station Paused"
-							v-tippy
-							>pause</i
-						>
-						<i
-							v-else-if="station.currentSong.title"
-							class="material-icons"
-							>music_note</i
-						>
-						<i v-else class="material-icons">music_off</i>
-						<span
-							v-if="station.currentSong.title"
-							class="songTitle"
-							:title="
-								station.currentSong.artists.length > 0
-									? 'Now Playing: ' +
-									  station.currentSong.title +
-									  ' by ' +
-									  station.currentSong.artists.join(',')
-									: 'Now Playing: ' +
-									  station.currentSong.title
-							"
-							>{{ station.currentSong.title }}
-							{{
-								station.currentSong.artists.length > 0
-									? " by " +
-									  station.currentSong.artists.join(",")
-									: ""
-							}}</span
-						>
-						<span v-else class="songTitle">No Songs Playing</span>
-						<i
-							class="material-icons stationMode"
-							:content="
-								station.partyMode
-									? 'Station in Party mode'
-									: 'Station in Playlist mode'
-							"
-							v-tippy
-							>{{
-								station.partyMode
-									? "emoji_people"
-									: "playlist_play"
-							}}</i
-						>
-					</div>
-				</router-link>
+						</router-link>
+					</transition-group>
+				</draggable>
 			</div>
 			<div class="group bottom">
 				<div class="group-title">
@@ -418,6 +458,7 @@
 
 <script>
 import { mapState, mapGetters, mapActions } from "vuex";
+import draggable from "vuedraggable";
 import Toast from "toasters";
 
 import MainHeader from "@/components/layout/MainHeader.vue";
@@ -434,14 +475,18 @@ export default {
 		SongThumbnail,
 		CreateCommunityStation: () =>
 			import("@/components/modals/CreateCommunityStation.vue"),
-		UserIdToUsername
+		UserIdToUsername,
+		draggable
 	},
 	data() {
 		return {
 			recaptcha: { key: "" },
 			stations: [],
+			favoriteStations: [],
 			searchQuery: "",
-			siteName: "Musare"
+			siteName: "Musare",
+			orderOfFavoriteStations: [],
+			drag: false
 		};
 	},
 	computed: {
@@ -472,10 +517,18 @@ export default {
 						b.userCount - a.userCount
 				);
 		},
-		favoriteStations() {
-			return this.filteredStations.filter(
-				station => station.isFavorited === true
-			);
+		dragOptions() {
+			return {
+				animation: 200,
+				group: "favoriteStations",
+				disabled: false,
+				ghostClass: "draggable-list-ghost"
+			};
+		}
+	},
+	watch: {
+		orderOfFavoriteStations() {
+			this.calculateFavoriteStations();
 		}
 	},
 	async mounted() {
@@ -504,135 +557,139 @@ export default {
 			}
 		});
 
-		this.socket.on("event:station.removed", response => {
-			const { stationId } = response;
+		this.socket.on("event:station.removed", res => {
+			const { stationId } = res;
 			const station = this.stations.find(
 				station => station._id === stationId
 			);
+
 			if (station) {
 				const stationIndex = this.stations.indexOf(station);
 				this.stations.splice(stationIndex, 1);
+
+				if (station.isFavorited)
+					this.orderOfFavoriteStations.filter(
+						favoritedId => favoritedId !== stationId
+					);
 			}
 		});
 
 		this.socket.on("event:userCount.updated", (stationId, userCount) => {
-			this.stations.forEach(s => {
-				const station = s;
-				if (station._id === stationId) {
-					station.userCount = userCount;
-				}
-			});
+			const station = this.stations.find(
+				station => station._id === stationId
+			);
+
+			if (station) station.userCount = userCount;
 		});
 
-		this.socket.on("event:station.updatePrivacy", response => {
-			const { stationId, privacy } = response;
-			this.stations.forEach(s => {
-				const station = s;
-				if (station._id === stationId) {
-					station.privacy = privacy;
-				}
-			});
+		this.socket.on("event:station.updatePrivacy", res => {
+			const station = this.stations.find(
+				station => station._id === res.stationId
+			);
+
+			if (station) station.privacy = res.privacy;
 		});
 
-		this.socket.on("event:station.updateName", response => {
-			const { stationId, name } = response;
-			this.stations.forEach(s => {
-				const station = s;
-				if (station._id === stationId) {
-					station.name = name;
-				}
-			});
+		this.socket.on("event:station.updateName", res => {
+			const station = this.stations.find(
+				station => station._id === res.stationId
+			);
+
+			if (station) station.name = res.name;
 		});
 
-		this.socket.on("event:station.updateDisplayName", response => {
-			const { stationId, displayName } = response;
-			this.stations.forEach(s => {
-				const station = s;
-				if (station._id === stationId) {
-					station.displayName = displayName;
-				}
-			});
+		this.socket.on("event:station.updateDisplayName", res => {
+			const station = this.stations.find(
+				station => station._id === res.stationId
+			);
+
+			if (station) station.displayName = res.displayName;
 		});
 
-		this.socket.on("event:station.updateDescription", response => {
-			const { stationId, description } = response;
-			this.stations.forEach(s => {
-				const station = s;
-				if (station._id === stationId) {
-					station.description = description;
-				}
-			});
+		this.socket.on("event:station.updateDescription", res => {
+			const station = this.stations.find(
+				station => station._id === res.stationId
+			);
+
+			if (station) station.description = res.description;
 		});
 
-		this.socket.on("event:station.updateTheme", response => {
-			const { stationId, theme } = response;
-			this.stations.forEach(s => {
-				const station = s;
-				if (station._id === stationId) {
-					station.theme = theme;
-				}
-			});
+		this.socket.on("event:station.updateTheme", res => {
+			const station = this.stations.find(
+				station => station._id === res.stationId
+			);
+
+			if (station) station.theme = res.theme;
 		});
 
 		this.socket.on("event:station.nextSong", (stationId, song) => {
-			let newSong = song;
-			this.stations.forEach(s => {
-				const station = s;
-				if (station._id === stationId) {
-					if (!newSong)
-						newSong = {
-							thumbnail: "/assets/notes-transparent.png"
-						};
-					station.currentSong = newSong;
-				}
-			});
+			const station = this.stations.find(
+				station => station._id === stationId
+			);
+
+			if (station) {
+				let newSong = song;
+
+				if (!newSong)
+					newSong = {
+						thumbnail: "/assets/notes-transparent.png"
+					};
+
+				station.currentSong = newSong;
+			}
 		});
 
-		this.socket.on("event:station.pause", response => {
-			const { stationId } = response;
-			this.stations.forEach(s => {
-				const station = s;
-				if (station._id === stationId) {
-					station.paused = true;
-				}
-			});
+		this.socket.on("event:station.pause", res => {
+			const station = this.stations.find(
+				station => station._id === res.stationId
+			);
+
+			if (station) station.paused = true;
 		});
 
-		this.socket.on("event:station.resume", response => {
-			const { stationId } = response;
-			this.stations.forEach(s => {
-				const station = s;
-				if (station._id === stationId) {
-					station.paused = false;
-				}
-			});
+		this.socket.on("event:station.resume", res => {
+			const station = this.stations.find(
+				station => station._id === res.stationId
+			);
+
+			if (station) station.paused = false;
 		});
 
 		this.socket.on("event:user.favoritedStation", stationId => {
-			this.stations.forEach(s => {
-				const station = s;
-				if (station._id === stationId) {
-					station.isFavorited = true;
-				}
-			});
+			const station = this.stations.find(
+				station => station._id === stationId
+			);
+
+			if (station) {
+				station.isFavorited = true;
+				this.orderOfFavoriteStations.push(stationId);
+			}
 		});
 
 		this.socket.on("event:user.unfavoritedStation", stationId => {
-			this.stations.forEach(s => {
-				const station = s;
-				if (station._id === stationId) {
-					station.isFavorited = false;
-				}
-			});
+			const station = this.stations.find(
+				station => station._id === stationId
+			);
+
+			if (station) {
+				station.isFavorited = false;
+				this.orderOfFavoriteStations = this.orderOfFavoriteStations.filter(
+					favoritedId => favoritedId !== stationId
+				);
+			}
+		});
+
+		this.socket.on("event:user.orderOfFavoriteStations.changed", order => {
+			this.orderOfFavoriteStations = order;
 		});
 	},
 	methods: {
 		init() {
-			this.socket.dispatch("stations.index", data => {
+			this.socket.dispatch("stations.index", res => {
 				this.stations = [];
 
-				if (data.status === "success")
-					data.stations.forEach(station => {
+				if (res.status === "success") {
+					res.data.stations.forEach(station => {
 						const modifiableStation = station;
 
 						if (!modifiableStation.currentSong)
@@ -648,6 +705,9 @@ export default {
 
 						this.stations.push(modifiableStation);
 					});
+
+					this.orderOfFavoriteStations = res.data.favorited;
+				}
 			});
 
 			this.socket.dispatch("apis.joinRoom", "home", () => {});
@@ -677,6 +737,29 @@ export default {
 					if (res.status === "success") {
 						new Toast("Successfully unfavorited station.");
 					} else new Toast(res.message);
+				}
+			);
+		},
+		calculateFavoriteStations() {
+			this.favoriteStations = this.filteredStations
+				.filter(station => station.isFavorited === true)
+				.sort(
+					(a, b) =>
+						this.orderOfFavoriteStations.indexOf(a._id) -
+						this.orderOfFavoriteStations.indexOf(b._id)
+				);
+		},
+		changeFavoriteOrder() {
+			const recalculatedOrder = [];
+			this.favoriteStations.forEach(station =>
+				recalculatedOrder.push(station._id)
+			);
+
+			this.socket.dispatch(
+				"users.updateOrderOfFavoriteStations",
+				recalculatedOrder,
+				res => {
+					return new Toast(res.message);
 				}
 			);
 		},

@@ -18,7 +18,7 @@ export default {
 		dragOptions() {
 			return {
 				animation: 200,
-				group: "description",
+				group: "playlists",
 				disabled: this.myUserId !== this.userId,
 				ghostClass: "draggable-list-ghost"
 			};

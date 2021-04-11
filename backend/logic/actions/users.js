@@ -30,6 +30,17 @@ CacheModule.runJob("SUB", {
 });
 
 CacheModule.runJob("SUB", {
+	channel: "user.updateOrderOfFavoriteStations",
+	cb: res => {
+		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
+			sockets.forEach(socket => {
+				socket.dispatch("event:user.orderOfFavoriteStations.changed", res.favoriteStations);
+			});
+		});
+	}
+});
+
+CacheModule.runJob("SUB", {
 	channel: "user.updateOrderOfPlaylists",
 	cb: res => {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
@@ -670,6 +681,66 @@ export default {
 				return cb({
 					status: "success",
 					message: "Successfully removed all sessions."
+				});
+			}
+		);
+	}),
+
+	/**
+	 * Updates the order of a user's favorite stations
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {Array} favoriteStations - array of station ids (with a specific order)
+	 * @param {Function} cb - gets called with the result
+	 */
+	updateOrderOfFavoriteStations: isLoginRequired(async function updateOrderOfFavoriteStations(
+		session,
+		favoriteStations,
+		cb
+	) {
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+
+		async.waterfall(
+			[
+				next => {
+					userModel.updateOne(
+						{ _id: session.userId },
+						{ $set: { favoriteStations } },
+						{ runValidators: true },
+						next
+					);
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+
+					this.log(
+						"ERROR",
+						"UPDATE_ORDER_OF_USER_FAVORITE_STATIONS",
+						`Couldn't update order of favorite stations for user "${session.userId}" to "${favoriteStations}". "${err}"`
+					);
+
+					return cb({ status: "failure", message: err });
+				}
+
+				CacheModule.runJob("PUB", {
+					channel: "user.updateOrderOfFavoriteStations",
+					value: {
+						favoriteStations,
+						userId: session.userId
+					}
+				});
+
+				this.log(
+					"SUCCESS",
+					"UPDATE_ORDER_OF_USER_FAVORITE_STATIONS",
+					`Updated order of favorite stations for user "${session.userId}" to "${favoriteStations}".`
+				);
+
+				return cb({
+					status: "success",
+					message: "Order of favorite stations successfully updated"
 				});
 			}
 		);
