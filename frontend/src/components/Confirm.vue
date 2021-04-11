@@ -1,14 +1,14 @@
 <template>
 	<tippy
 		interactive="true"
-		placement="top"
+		:placement="placement"
 		theme="confirm"
 		ref="confirm"
 		trigger="click"
 		@hide="confirm(false)"
 	>
 		<template #trigger>
-			<div @click.shift="confirm(true)" @click.exact="confirm()">
+			<div @click.shift.stop="confirm(true)" @click.exact="confirm()">
 				<slot />
 			</div>
 		</template>
@@ -18,6 +18,12 @@
 
 <script>
 export default {
+	props: {
+		placement: {
+			type: String,
+			default: "top"
+		}
+	},
 	data() {
 		return {
 			clickedOnce: false

@@ -274,6 +274,7 @@
 														playlist.createdBy ||
 														isEditable()
 												"
+												placement="left"
 												@confirm="
 													removeSongFromPlaylist(
 														song.youtubeId

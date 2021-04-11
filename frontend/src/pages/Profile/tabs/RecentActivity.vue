@@ -21,6 +21,7 @@
 					<div slot="actions">
 						<confirm
 							v-if="userId === myUserId"
+							placement="left"
 							@confirm="hideActivity(activity._id)"
 						>
 							<a content="Hide Activity" v-tippy>

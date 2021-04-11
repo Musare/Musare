@@ -123,7 +123,10 @@
 							>
 								<i class="material-icons">edit</i>
 							</button>
-							<confirm @confirm="remove(song._id, index)">
+							<confirm
+								placement="left"
+								@confirm="remove(song._id, index)"
+							>
 								<button
 									class="button is-danger"
 									content="Unverify Song"

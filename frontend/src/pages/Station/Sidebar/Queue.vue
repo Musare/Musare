@@ -35,6 +35,7 @@
 					>
 						<confirm
 							v-if="isOwnerOnly() || isAdminOnly()"
+							placement="left"
 							@confirm="removeFromQueue(song.youtubeId)"
 						>
 							<i

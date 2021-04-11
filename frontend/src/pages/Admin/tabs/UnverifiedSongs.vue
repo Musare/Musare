@@ -102,7 +102,10 @@
 							>
 								<i class="material-icons">check_circle</i>
 							</button>
-							<confirm @confirm="hide(song._id, index)">
+							<confirm
+								placement="left"
+								@confirm="hide(song._id, index)"
+							>
 								<button
 									class="button is-danger"
 									content="Hide Song"
