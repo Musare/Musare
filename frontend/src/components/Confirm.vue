@@ -9,16 +9,6 @@
 		<template #trigger>
 			<slot />
 		</template>
-		<a @click.prevent="confirm()"> Confirm </a>
+		<a @click.prevent="$emit('confirm')"> Confirm </a>
 	</tippy>
 </template>
-
-<script>
-export default {
-	methods: {
-		confirm() {
-			this.$emit("confirm");
-		}
-	}
-};
-</script>
