@@ -80,7 +80,9 @@
 					</template>
 					<a
 						target="_blank"
-						:href="`https://www.youtube.com/watch?v=${song.songId}`"
+						:href="
+							`https://www.youtube.com/watch?v=${song.youtubeId}`
+						"
 						content="View on Youtube"
 						v-tippy
 					>
@@ -117,7 +119,7 @@
 				<a
 					v-else
 					target="_blank"
-					:href="`https://www.youtube.com/watch?v=${song.songId}`"
+					:href="`https://www.youtube.com/watch?v=${song.youtubeId}`"
 					content="View on Youtube"
 					v-tippy
 				>

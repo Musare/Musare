@@ -8,7 +8,7 @@ export default {
 	paused: { type: Boolean, default: false, required: true },
 	currentSong: {
 		_id: { type: String },
-		songId: { type: String },
+		youtubeId: { type: String },
 		title: { type: String },
 		artists: [{ type: String }],
 		duration: { type: Number },
@@ -30,7 +30,7 @@ export default {
 	locked: { type: Boolean, default: false },
 	queue: [
 		{
-			songId: { type: String, required: true },
+			youtubeId: { type: String, required: true },
 			title: { type: String },
 			artists: [{ type: String }],
 			duration: { type: Number },
@@ -49,5 +49,5 @@ export default {
 	theme: { type: String, enum: ["blue", "purple", "teal", "orange"], default: "blue" },
 	includedPlaylists: [{ type: String }],
 	excludedPlaylists: [{ type: String }],
-	documentVersion: { type: Number, default: 4, required: true }
+	documentVersion: { type: Number, default: 5, required: true }
 };

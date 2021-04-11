@@ -6,7 +6,7 @@ export default {
 	songs: [
 		{
 			_id: { type: mongoose.Schema.Types.ObjectId, required: false },
-			songId: { type: String },
+			youtubeId: { type: String },
 			title: { type: String },
 			duration: { type: Number },
 			thumbnail: { type: String, required: false },
@@ -20,5 +20,5 @@ export default {
 	createdFor: { type: String },
 	privacy: { type: String, enum: ["public", "private"], default: "private" },
 	type: { type: String, enum: ["user", "genre", "station"], required: true },
-	documentVersion: { type: Number, default: 2, required: true }
+	documentVersion: { type: Number, default: 3, required: true }
 };

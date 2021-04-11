@@ -552,7 +552,7 @@ export default {
 						thumbnail: "/assets/notes-transparent.png"
 					};
 				if (station.currentSong && !station.currentSong.thumbnail)
-					station.currentSong.ytThumbnail = `https://img.youtube.com/vi/${station.currentSong.songId}/mqdefault.jpg`;
+					station.currentSong.ytThumbnail = `https://img.youtube.com/vi/${station.currentSong.youtubeId}/mqdefault.jpg`;
 				this.stations.push(station);
 			}
 		});
@@ -701,7 +701,7 @@ export default {
 							modifiableStation.currentSong &&
 							!modifiableStation.currentSong.thumbnail
 						)
-							modifiableStation.currentSong.ytThumbnail = `https://img.youtube.com/vi/${station.currentSong.songId}/mqdefault.jpg`;
+							modifiableStation.currentSong.ytThumbnail = `https://img.youtube.com/vi/${station.currentSong.youtubeId}/mqdefault.jpg`;
 
 						this.stations.push(modifiableStation);
 					});

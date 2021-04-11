@@ -791,12 +791,16 @@ export default {
 
 					WSModule.runJob("SOCKET_JOIN_SONG_ROOM", {
 						socketId: session.socketId,
-						room: `song.${data.currentSong.songId}`
+						room: `song.${data.currentSong.youtubeId}`
 					});
 
 					data.currentSong.skipVotes = data.currentSong.skipVotes.length;
 
-					return SongsModule.runJob("GET_SONG_FROM_ID", { songId: data.currentSong.songId }, this)
+					return SongsModule.runJob(
+						"GET_SONG_FROM_YOUTUBE_ID",
+						{ youtubeId: data.currentSong.youtubeId },
+						this
+					)
 						.then(response => {
 							const { song } = response;
 							if (song) {
@@ -2773,10 +2777,10 @@ export default {
 	 *
 	 * @param session
 	 * @param stationId - the station id
-	 * @param songId - the song id
+	 * @param youtubeId - the song id
 	 * @param cb
 	 */
-	addToQueue: isLoginRequired(async function addToQueue(session, stationId, songId, cb) {
+	addToQueue: isLoginRequired(async function addToQueue(session, stationId, youtubeId, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
 		const stationModel = await DBModule.runJob(
@@ -2831,13 +2835,13 @@ export default {
 				},
 
 				(station, next) => {
-					if (station.currentSong && station.currentSong.songId === songId)
+					if (station.currentSong && station.currentSong.youtubeId === youtubeId)
 						return next("That song is currently playing.");
 
 					return async.each(
 						station.queue,
 						(queueSong, next) => {
-							if (queueSong.songId === songId) return next("That song is already in the queue.");
+							if (queueSong.youtubeId === youtubeId) return next("That song is already in the queue.");
 							return next();
 						},
 						err => next(err, station)
@@ -2858,9 +2862,9 @@ export default {
 
 				(station, user, next) => {
 					SongsModule.runJob(
-						"ENSURE_SONG_EXISTS_BY_SONG_ID",
+						"ENSURE_SONG_EXISTS_BY_YOUTUBE_ID",
 						{
-							songId,
+							youtubeId,
 							userId: user.preferences.anonymousSongRequests ? null : session.userId,
 							automaticallyRequested: true
 						},
@@ -2873,7 +2877,7 @@ export default {
 								null,
 								{
 									_id,
-									songId,
+									youtubeId,
 									title,
 									thumbnail,
 									duration,
@@ -2961,7 +2965,7 @@ export default {
 					this.log(
 						"ERROR",
 						"STATIONS_ADD_SONG_TO_QUEUE",
-						`Adding song "${songId}" to station "${stationId}" queue failed. "${err}"`
+						`Adding song "${youtubeId}" to station "${stationId}" queue failed. "${err}"`
 					);
 					return cb({ status: "failure", message: err });
 				}
@@ -2969,7 +2973,7 @@ export default {
 				this.log(
 					"SUCCESS",
 					"STATIONS_ADD_SONG_TO_QUEUE",
-					`Added song "${songId}" to station "${stationId}" successfully.`
+					`Added song "${youtubeId}" to station "${stationId}" successfully.`
 				);
 
 				CacheModule.runJob("PUB", {
@@ -2990,16 +2994,16 @@ export default {
 	 *
 	 * @param session
 	 * @param stationId - the station id
-	 * @param songId - the song id
+	 * @param youtubeId - the youtube id
 	 * @param cb
 	 */
-	removeFromQueue: isOwnerRequired(async function removeFromQueue(session, stationId, songId, cb) {
+	removeFromQueue: isOwnerRequired(async function removeFromQueue(session, stationId, youtubeId, cb) {
 		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
 
 		async.waterfall(
 			[
 				next => {
-					if (!songId) return next("Invalid song id.");
+					if (!youtubeId) return next("Invalid youtube id.");
 					return StationsModule.runJob("GET_STATION", { stationId }, this)
 						.then(station => next(null, station))
 						.catch(next);
@@ -3011,7 +3015,7 @@ export default {
 					return async.each(
 						station.queue,
 						(queueSong, next) => {
-							if (queueSong.songId === songId) return next(true);
+							if (queueSong.youtubeId === youtubeId) return next(true);
 							return next();
 						},
 						err => {
@@ -3022,7 +3026,7 @@ export default {
 				},
 
 				next => {
-					stationModel.updateOne({ _id: stationId }, { $pull: { queue: { songId } } }, next);
+					stationModel.updateOne({ _id: stationId }, { $pull: { queue: { youtubeId } } }, next);
 				},
 
 				(res, next) => {
@@ -3037,7 +3041,7 @@ export default {
 					this.log(
 						"ERROR",
 						"STATIONS_REMOVE_SONG_TO_QUEUE",
-						`Removing song "${songId}" from station "${stationId}" queue failed. "${err}"`
+						`Removing song "${youtubeId}" from station "${stationId}" queue failed. "${err}"`
 					);
 					return cb({ status: "failure", message: err });
 				}
@@ -3045,7 +3049,7 @@ export default {
 				this.log(
 					"SUCCESS",
 					"STATIONS_REMOVE_SONG_TO_QUEUE",
-					`Removed song "${songId}" from station "${stationId}" successfully.`
+					`Removed song "${youtubeId}" from station "${stationId}" successfully.`
 				);
 
 				CacheModule.runJob("PUB", {
@@ -3123,7 +3127,7 @@ export default {
 	 *
 	 * @param {object} session - user session
 	 * @param {object} song - contains details about the song that is to be repositioned
-	 * @param {string} song.songId - the id of the song
+	 * @param {string} song.youtubeId - the youtube id of the song
 	 * @param {number} song.newIndex - the new position for the song in the queue
 	 * @param {number} song.oldIndex - the old position of the song in the queue
 	 * @param {string} stationId - the station id
@@ -3135,13 +3139,17 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					if (!song || !song.songId) return next("You must provide a song to reposition.");
+					if (!song || !song.youtubeId) return next("You must provide a song to reposition.");
 					return next();
 				},
 
 				// remove song from queue
 				next => {
-					stationModel.updateOne({ _id: stationId }, { $pull: { queue: { songId: song.songId } } }, next);
+					stationModel.updateOne(
+						{ _id: stationId },
+						{ $pull: { queue: { youtubeId: song.youtubeId } } },
+						next
+					);
 				},
 
 				// add song back to queue (in new position)
@@ -3168,7 +3176,7 @@ export default {
 					this.log(
 						"ERROR",
 						"STATIONS_REPOSITION_SONG_IN_QUEUE",
-						`Repositioning song ${song.songId} in queue of station "${stationId}" failed. "${err}"`
+						`Repositioning song ${song.youtubeId} in queue of station "${stationId}" failed. "${err}"`
 					);
 					return cb({ status: "failure", message: err });
 				}
@@ -3176,14 +3184,14 @@ export default {
 				this.log(
 					"SUCCESS",
 					"STATIONS_REPOSITION_SONG_IN_QUEUE",
-					`Repositioned song ${song.songId} in queue of station "${stationId}" successfully.`
+					`Repositioned song ${song.youtubeId} in queue of station "${stationId}" successfully.`
 				);
 
 				CacheModule.runJob("PUB", {
 					channel: "station.repositionSongInQueue",
 					value: {
 						song: {
-							songId: song.songId,
+							youtubeId: song.youtubeId,
 							oldIndex: song.oldIndex,
 							newIndex: song.newIndex
 						},

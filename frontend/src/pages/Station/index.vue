@@ -37,9 +37,9 @@
 		<ul
 			v-if="
 				currentSong &&
-					(currentSong.songId === 'l9PxOanFjxQ' ||
-						currentSong.songId === 'xKVcVSYmesU' ||
-						currentSong.songId === '60ItHLz5WEA')
+					(currentSong.youtubeId === 'l9PxOanFjxQ' ||
+						currentSong.youtubeId === 'xKVcVSYmesU' ||
+						currentSong.youtubeId === '60ItHLz5WEA')
 			"
 			class="bg-bubbles"
 		>
@@ -209,13 +209,15 @@
 									:class="{
 										nyan:
 											currentSong &&
-											currentSong.songId === 'QH2-TGUlwu4'
+											currentSong.youtubeId ===
+												'QH2-TGUlwu4'
 									}"
 								/>
 								<img
 									v-if="
 										currentSong &&
-											currentSong.songId === 'QH2-TGUlwu4'
+											currentSong.youtubeId ===
+												'QH2-TGUlwu4'
 									"
 									src="https://freepngimg.com/thumb/nyan_cat/1-2-nyan-cat-free-download-png.png"
 									:style="{
@@ -228,13 +230,13 @@
 								<img
 									v-if="
 										currentSong &&
-											(currentSong.songId ===
+											(currentSong.youtubeId ===
 												'DtVBCG6ThDk' ||
-												currentSong.songId ===
+												currentSong.youtubeId ===
 													'sI66hcu9fIs' ||
-												currentSong.songId ===
+												currentSong.youtubeId ===
 													'iYYRH4apXDo' ||
-												currentSong.songId ===
+												currentSong.youtubeId ===
 													'tRcPA7Fzebw')
 									"
 									src="/assets/rocket.svg"
@@ -249,7 +251,8 @@
 								<img
 									v-if="
 										currentSong &&
-											currentSong.songId === 'jofNR_WkoCE'
+											currentSong.youtubeId ===
+												'jofNR_WkoCE'
 									"
 									src="/assets/fox.svg"
 									:style="{
@@ -264,11 +267,11 @@
 								<img
 									v-if="
 										currentSong &&
-											(currentSong.songId ===
+											(currentSong.youtubeId ===
 												'l9PxOanFjxQ' ||
-												currentSong.songId ===
+												currentSong.youtubeId ===
 													'xKVcVSYmesU' ||
-												currentSong.songId ===
+												currentSong.youtubeId ===
 													'60ItHLz5WEA')
 									"
 									src="/assets/old_logo.png"
@@ -586,7 +589,7 @@
 
 		<floating-box id="player-debug-box" ref="playerDebugBox">
 			<template #body>
-				<span><b>YouTube id</b>: {{ currentSong.songId }}</span>
+				<span><b>YouTube id</b>: {{ currentSong.youtubeId }}</span>
 				<span><b>Duration</b>: {{ currentSong.duration }}</span>
 				<span
 					><b>Skip duration</b>: {{ currentSong.skipDuration }}</span
@@ -687,7 +690,7 @@ export default {
 			disliked: false,
 			timeBeforePause: 0,
 			skipVotes: 0,
-			automaticallyRequestedSongId: null,
+			automaticallyRequestedYoutubeId: null,
 			systemDifference: 0,
 			attemptsToPlayVideo: 0,
 			canAutoplay: true,
@@ -771,7 +774,7 @@ export default {
 		);
 
 		this.socket.on("event:songs.next", data => {
-			const previousSong = this.currentSong.songId
+			const previousSong = this.currentSong.youtubeId
 				? this.currentSong
 				: null;
 
@@ -783,7 +786,9 @@ export default {
 
 			let nextSong = null;
 			if (this.songsList[1]) {
-				nextSong = this.songsList[1].songId ? this.songsList[1] : null;
+				nextSong = this.songsList[1].youtubeId
+					? this.songsList[1]
+					: null;
 			}
 			this.updateNextSong(nextSong);
 
@@ -799,9 +804,9 @@ export default {
 
 				this.socket.dispatch(
 					"songs.getOwnSongRatings",
-					data.currentSong.songId,
+					data.currentSong.youtubeId,
 					song => {
-						if (this.currentSong.songId === song.songId) {
+						if (this.currentSong.youtubeId === song.youtubeId) {
 							this.liked = song.liked;
 							this.disliked = song.disliked;
 
@@ -831,9 +836,9 @@ export default {
 			if (
 				!isInQueue &&
 				this.privatePlaylistQueueSelected &&
-				(this.automaticallyRequestedSongId !==
-					this.currentSong.songId ||
-					!this.currentSong.songId)
+				(this.automaticallyRequestedYoutubeId !==
+					this.currentSong.youtubeId ||
+					!this.currentSong.youtubeId)
 			) {
 				this.addFirstPrivatePlaylistSongToQueue();
 			}
@@ -853,9 +858,9 @@ export default {
 			// if (
 			// 	!isInQueue &&
 			// 	this.privatePlaylistQueueSelected &&
-			// 	(this.automaticallyRequestedSongId !==
-			// 		this.currentSong.songId ||
-			// 		!this.currentSong.songId)
+			// 	(this.automaticallyRequestedYoutubeId !==
+			// 		this.currentSong.youtubeId ||
+			// 		!this.currentSong.youtubeId)
 			// ) {
 			// 	this.addFirstPrivatePlaylistSongToQueue();
 			// }
@@ -880,7 +885,7 @@ export default {
 
 		this.socket.on("event:song.like", data => {
 			if (!this.noSong) {
-				if (data.songId === this.currentSong.songId) {
+				if (data.youtubeId === this.currentSong.youtubeId) {
 					this.currentSong.dislikes = data.dislikes;
 					this.currentSong.likes = data.likes;
 				}
@@ -889,7 +894,7 @@ export default {
 
 		this.socket.on("event:song.dislike", data => {
 			if (!this.noSong) {
-				if (data.songId === this.currentSong.songId) {
+				if (data.youtubeId === this.currentSong.youtubeId) {
 					this.currentSong.dislikes = data.dislikes;
 					this.currentSong.likes = data.likes;
 				}
@@ -898,7 +903,7 @@ export default {
 
 		this.socket.on("event:song.unlike", data => {
 			if (!this.noSong) {
-				if (data.songId === this.currentSong.songId) {
+				if (data.youtubeId === this.currentSong.youtubeId) {
 					this.currentSong.dislikes = data.dislikes;
 					this.currentSong.likes = data.likes;
 				}
@@ -907,7 +912,7 @@ export default {
 
 		this.socket.on("event:song.undislike", data => {
 			if (!this.noSong) {
-				if (data.songId === this.currentSong.songId) {
+				if (data.youtubeId === this.currentSong.youtubeId) {
 					this.currentSong.dislikes = data.dislikes;
 					this.currentSong.likes = data.likes;
 				}
@@ -916,7 +921,7 @@ export default {
 
 		this.socket.on("event:song.newRatings", data => {
 			if (!this.noSong) {
-				if (data.songId === this.currentSong.songId) {
+				if (data.youtubeId === this.currentSong.youtubeId) {
 					this.liked = data.liked;
 					this.disliked = data.disliked;
 				}
@@ -928,7 +933,9 @@ export default {
 
 			let nextSong = null;
 			if (this.songsList[0])
-				nextSong = this.songsList[0].songId ? this.songsList[0] : null;
+				nextSong = this.songsList[0].youtubeId
+					? this.songsList[0]
+					: null;
 
 			this.updateNextSong(nextSong);
 		});
@@ -938,7 +945,9 @@ export default {
 
 			let nextSong = null;
 			if (this.songsList[0])
-				nextSong = this.songsList[0].songId ? this.songsList[0] : null;
+				nextSong = this.songsList[0].youtubeId
+					? this.songsList[0]
+					: null;
 
 			this.updateNextSong(nextSong);
 		});
@@ -1067,11 +1076,11 @@ export default {
 		isOwnerOrAdmin() {
 			return this.isOwnerOnly() || this.isAdminOnly();
 		},
-		removeFromQueue(songId) {
+		removeFromQueue(youtubeId) {
 			window.socket.dispatch(
 				"stations.removeFromQueue",
 				this.station._id,
-				songId,
+				youtubeId,
 				res => {
 					if (res.status === "success") {
 						new Toast("Successfully removed song from the queue.");
@@ -1084,7 +1093,7 @@ export default {
 				this.player = new window.YT.Player("stationPlayer", {
 					height: 270,
 					width: 480,
-					videoId: this.currentSong.songId,
+					videoId: this.currentSong.youtubeId,
 					host: "https://www.youtube-nocookie.com",
 					startSeconds:
 						this.getTimeElapsed() / 1000 +
@@ -1132,14 +1141,15 @@ export default {
 								});
 
 								// save current song id
-								const erroredSongId = this.currentSong.songId;
+								const erroredYoutubeId = this.currentSong
+									.youtubeId;
 
 								// remove persistent toast if video has finished
 								window.isSongErroredInterval = setInterval(
 									() => {
 										if (
-											this.currentSong.songId !==
-											erroredSongId
+											this.currentSong.youtubeId !==
+											erroredYoutubeId
 										) {
 											persistentToast.destroy();
 
@@ -1218,7 +1228,7 @@ export default {
 			if (this.playerReady) {
 				this.videoLoading = true;
 				this.player.loadVideoById(
-					this.currentSong.songId,
+					this.currentSong.youtubeId,
 					this.getTimeElapsed() / 1000 + this.currentSong.skipDuration
 				);
 
@@ -1463,7 +1473,7 @@ export default {
 			if (this.liked)
 				this.socket.dispatch(
 					"songs.unlike",
-					this.currentSong.songId,
+					this.currentSong.youtubeId,
 					data => {
 						if (data.status !== "success")
 							new Toast(`Error: ${data.message}`);
@@ -1472,7 +1482,7 @@ export default {
 			else
 				this.socket.dispatch(
 					"songs.like",
-					this.currentSong.songId,
+					this.currentSong.youtubeId,
 					data => {
 						if (data.status !== "success")
 							new Toast(`Error: ${data.message}`);
@@ -1483,7 +1493,7 @@ export default {
 			if (this.disliked)
 				return this.socket.dispatch(
 					"songs.undislike",
-					this.currentSong.songId,
+					this.currentSong.youtubeId,
 					data => {
 						if (data.status !== "success")
 							new Toast(`Error: ${data.message}`);
@@ -1492,7 +1502,7 @@ export default {
 
 			return this.socket.dispatch(
 				"songs.dislike",
-				this.currentSong.songId,
+				this.currentSong.youtubeId,
 				data => {
 					if (data.status !== "success")
 						new Toast(`Error: ${data.message}`);
@@ -1516,19 +1526,19 @@ export default {
 							if (data.status === "success") {
 								if (data.song) {
 									if (data.song.duration < 15 * 60) {
-										this.automaticallyRequestedSongId =
-											data.song.songId;
+										this.automaticallyRequestedYoutubeId =
+											data.song.youtubeId;
 										this.socket.dispatch(
 											"stations.addToQueue",
 											this.station._id,
-											data.song.songId,
+											data.song.youtubeId,
 											data2 => {
 												if (data2.status === "success")
 													this.socket.dispatch(
 														"playlists.moveSongToBottom",
 														this
 															.privatePlaylistQueueSelected,
-														data.song.songId
+														data.song.youtubeId
 													);
 											}
 										);
@@ -1540,7 +1550,7 @@ export default {
 										this.socket.dispatch(
 											"playlists.moveSongToBottom",
 											this.privatePlaylistQueueSelected,
-											data.song.songId,
+											data.song.youtubeId,
 											data3 => {
 												if (data3.status === "success")
 													setTimeout(
@@ -1642,10 +1652,11 @@ export default {
 							this.playVideo();
 							this.socket.dispatch(
 								"songs.getOwnSongRatings",
-								res.data.currentSong.songId,
+								res.data.currentSong.youtubeId,
 								song => {
 									if (
-										this.currentSong.songId === song.songId
+										this.currentSong.youtubeId ===
+										song.youtubeId
 									) {
 										this.liked = song.liked;
 										this.disliked = song.disliked;
@@ -1662,7 +1673,7 @@ export default {
 								this.updateSongsList(res.queue);
 								let nextSong = null;
 								if (this.songsList[0]) {
-									nextSong = this.songsList[0].songId
+									nextSong = this.songsList[0].youtubeId
 										? this.songsList[0]
 										: null;
 								}
@@ -1833,9 +1844,9 @@ export default {
 
 				if (
 					this.activityWatchVideoLastYouTubeId !==
-					this.currentSong.songId
+					this.currentSong.youtubeId
 				) {
-					this.activityWatchVideoLastYouTubeId = this.currentSong.songId;
+					this.activityWatchVideoLastYouTubeId = this.currentSong.youtubeId;
 					this.activityWatchVideoLastStartDuration =
 						this.currentSong.skipDuration + this.getTimeElapsed();
 				}
@@ -1846,7 +1857,7 @@ export default {
 						this.currentSong && this.currentSong.artists
 							? this.currentSong.artists.join(", ")
 							: null,
-					youtubeId: this.currentSong.songId,
+					youtubeId: this.currentSong.youtubeId,
 					muted: this.muted,
 					volume: this.volumeSliderValue / 100,
 					startedDuration:

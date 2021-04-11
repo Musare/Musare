@@ -93,7 +93,7 @@ const mutations = {
 	repositionSongInList(state, song) {
 		if (
 			state.songsList[song.newIndex] &&
-			state.songsList[song.newIndex].songId === song.songId
+			state.songsList[song.newIndex].youtubeId === song.youtubeId
 		)
 			return;
 

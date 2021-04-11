@@ -1,5 +1,5 @@
 export default {
-	songId: { type: String, min: 11, max: 11, required: true, index: true, unique: true },
+	youtubeId: { type: String, min: 11, max: 11, required: true, index: true, unique: true },
 	title: { type: String, required: true },
 	artists: [{ type: String, default: [] }],
 	genres: [{ type: String, default: [] }],
@@ -15,5 +15,5 @@ export default {
 	acceptedAt: { type: Date }, // TODO Should be verifiedAt
 	discogs: { type: Object },
 	status: { type: String, required: true, default: "hidden", enum: ["hidden", "unverified", "verified"] },
-	documentVersion: { type: Number, default: 3, required: true }
+	documentVersion: { type: Number, default: 4, required: true }
 };

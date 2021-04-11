@@ -132,7 +132,7 @@ export default {
 			this.playlists.forEach((playlist, index) => {
 				if (playlist._id === data.playlistId) {
 					this.playlists[index].songs.forEach((song, index2) => {
-						if (song.songId === data.songId) {
+						if (song.youtubeId === data.youtubeId) {
 							this.playlists[index].songs.splice(index2, 1);
 						}
 					});

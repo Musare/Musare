@@ -109,14 +109,14 @@ class _YouTubeModule extends CoreClass {
 	 * Gets the details of a song using the YouTube API
 	 *
 	 * @param {object} payload - object that contains the payload
-	 * @param {string} payload.songId - the YouTube API id of the song
+	 * @param {string} payload.youtubeId - the YouTube API id of the song
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	GET_SONG(payload) {
 		return new Promise((resolve, reject) => {
 			const params = {
 				part: "snippet,contentDetails,statistics,status",
-				id: payload.songId,
+				id: payload.youtubeId,
 				key: config.get("apis.youtube.key")
 			};
 
@@ -167,7 +167,7 @@ class _YouTubeModule extends CoreClass {
 						});
 
 						const song = {
-							songId: res.data.items[0].id,
+							youtubeId: res.data.items[0].id,
 							title: res.data.items[0].snippet.title,
 							thumbnail: res.data.items[0].snippet.thumbnails.default.url,
 							duration
@@ -252,7 +252,7 @@ class _YouTubeModule extends CoreClass {
 						YouTubeModule.log("ERROR", "GET_PLAYLIST", "Some error has occurred.", err.message);
 						reject(new Error(err.message));
 					} else {
-						resolve({ songs: response.filteredSongs ? response.filteredSongs.songIds : response.songs });
+						resolve({ songs: response.filteredSongs ? response.filteredSongs.youtubeIds : response.songs });
 					}
 				}
 			);
@@ -349,14 +349,14 @@ class _YouTubeModule extends CoreClass {
 							return reject(new Error("An error has occured. Please try again later."));
 						}
 
-						const songIds = [];
+						const youtubeIds = [];
 
 						res.data.items.forEach(item => {
-							const songId = item.id;
+							const youtubeId = item.id;
 
 							if (!item.topicDetails) return;
 							if (item.topicDetails.topicCategories.indexOf("https://en.wikipedia.org/wiki/Music") !== -1)
-								songIds.push(songId);
+								youtubeIds.push(youtubeId);
 						});
 
 						return YouTubeModule.runJob(
@@ -364,7 +364,7 @@ class _YouTubeModule extends CoreClass {
 							{ videoIds: payload.videoIds, page: page + 1 },
 							this
 						)
-							.then(result => resolve({ songIds: songIds.concat(result.songIds) }))
+							.then(result => resolve({ youtubeIds: youtubeIds.concat(result.youtubeIds) }))
 							.catch(err => reject(err));
 					})
 					.catch(err => {

@@ -353,10 +353,10 @@ class _PlaylistsModule extends CoreClass {
 	 */
 	ADD_SONG_TO_PLAYLIST(payload) {
 		return new Promise((resolve, reject) => {
-			const { _id, songId, title, artists, thumbnail, duration, status } = payload.song;
+			const { _id, youtubeId, title, artists, thumbnail, duration, status } = payload.song;
 			const trimmedSong = {
 				_id,
-				songId,
+				youtubeId,
 				title,
 				artists,
 				thumbnail,
@@ -383,18 +383,18 @@ class _PlaylistsModule extends CoreClass {
 	}
 
 	/**
-	 * Deletes a song from a playlist based on the songId
+	 * Deletes a song from a playlist based on the youtube id
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.playlistId - the playlist id
-	 * @param {string} payload.songId - the songId
+	 * @param {string} payload.youtubeId - the youtube id
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
-	DELETE_SONG_FROM_PLAYLIST_BY_SONGID(payload) {
+	DELETE_SONG_FROM_PLAYLIST_BY_YOUTUBE_ID(payload) {
 		return new Promise((resolve, reject) => {
 			PlaylistsModule.playlistModel.updateOne(
 				{ _id: payload.playlistId },
-				{ $pull: { songs: { songId: payload.songId } } },
+				{ $pull: { songs: { youtubeId: payload.youtubeId } } },
 				err => {
 					if (err) reject(new Error(err));
 					else {
@@ -455,10 +455,10 @@ class _PlaylistsModule extends CoreClass {
 
 					(playlistId, _songs, next) => {
 						const songs = _songs.map(song => {
-							const { _id, songId, title, artists, thumbnail, duration, status } = song;
+							const { _id, youtubeId, title, artists, thumbnail, duration, status } = song;
 							return {
 								_id,
-								songId,
+								youtubeId,
 								title,
 								artists,
 								thumbnail,
@@ -485,12 +485,12 @@ class _PlaylistsModule extends CoreClass {
 					// 	data.songsToAdd = [];
 
 					// 	data.playlist.songs.forEach(playlistSong => {
-					// 		const found = data.songs.find(song => playlistSong.songId === song.songId);
+					// 		const found = data.songs.find(song => playlistSong.youtubeId === song.youtubeId);
 					// 		if (!found) data.songsToDelete.push(playlistSong);
 					// 	});
 
 					// 	data.songs.forEach(song => {
-					// 		const found = data.playlist.songs.find(playlistSong => song.songId === playlistSong.songId);
+					// 		const found = data.playlist.songs.find(playlistSong => song.youtubeId === playlistSong.youtubeId);
 					// 		if (!found) data.songsToAdd.push(song);
 					// 	});
 
@@ -511,10 +511,10 @@ class _PlaylistsModule extends CoreClass {
 					// 	data.songsToDelete.forEach(song => {
 					// 		promises.push(
 					// 			PlaylistsModule.runJob(
-					// 				"DELETE_SONG_FROM_PLAYLIST_BY_SONGID",
+					// 				"DELETE_SONG_FROM_PLAYLIST_BY_YOUTUBE_ID",
 					// 				{
 					// 					playlistId: data.playlist._id,
-					// 					songId: song.songId
+					// 					youtubeId: song.youtubeId
 					// 				},
 					// 				this
 					// 			)
@@ -777,17 +777,17 @@ class _PlaylistsModule extends CoreClass {
 							.flatMap(excludedPlaylist => excludedPlaylist.songs)
 							.reduce(
 								(items, item) =>
-									items.find(x => x.songId === item.songId) ? [...items] : [...items, item],
+									items.find(x => x.youtubeId === item.youtubeId) ? [...items] : [...items, item],
 								[]
 							);
 						const includedSongs = includedPlaylists
 							.flatMap(includedPlaylist => includedPlaylist.songs)
 							.reduce(
 								(songs, song) =>
-									songs.find(x => x.songId === song.songId) ? [...songs] : [...songs, song],
+									songs.find(x => x.youtubeId === song.youtubeId) ? [...songs] : [...songs, song],
 								[]
 							)
-							.filter(song => !excludedSongs.find(x => x.songId === song.songId));
+							.filter(song => !excludedSongs.find(x => x.youtubeId === song.youtubeId));
 
 						next(null, station, includedSongs);
 					},
