@@ -241,7 +241,7 @@
 							>
 								<li
 									v-for="(song, index) in playlist.songs"
-									:key="'key-' + index"
+									:key="'key-' + song._id"
 								>
 									<song-item
 										:song="song"
@@ -281,6 +281,11 @@
 												<i
 													class="material-icons delete-icon"
 													content="Remove Song from Playlist"
+													@click.shift="
+														removeSongFromPlaylist(
+															song.songId
+														)
+													"
 													v-tippy
 													>delete_forever</i
 												>
