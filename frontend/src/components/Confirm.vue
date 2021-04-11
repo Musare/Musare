@@ -5,21 +5,10 @@
 		theme="confirm"
 		ref="confirm"
 		trigger="click"
-		@click.shift="confirm()"
 	>
-		<template #trigger @click.shift="confirm()">
+		<template #trigger>
 			<slot />
 		</template>
-		<a @click.prevent="confirm()"> Confirm </a>
+		<a @click.prevent="$emit('confirm')"> Confirm </a>
 	</tippy>
 </template>
-
-<script>
-export default {
-	methods: {
-		confirm() {
-			this.$emit("confirm");
-		}
-	}
-};
-</script>

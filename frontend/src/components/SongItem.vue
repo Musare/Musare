@@ -267,15 +267,16 @@ export default {
 			font-family: Karla, Arial, sans-serif;
 		}
 
+		h6 {
+			color: var(--primary-color) !important;
+			font-weight: bold;
+			font-size: 17px;
+			margin-bottom: 5px;
+		}
+
 		.song-title {
 			display: flex;
 			flex-direction: row;
-			h6 {
-				color: var(--primary-color) !important;
-				font-weight: bold;
-				font-size: 17px;
-				margin-bottom: 5px;
-			}
 			.verified-song {
 				margin-left: 5px;
 			}
