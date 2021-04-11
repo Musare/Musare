@@ -25,7 +25,7 @@
 					<label class="label">Bugs</label>
 					<p class="control has-addons">
 						<input
-							id="edit-bugs"
+							ref="edit-bugs"
 							class="input"
 							type="text"
 							placeholder="Bug"
@@ -51,7 +51,7 @@
 					<label class="label">Features</label>
 					<p class="control has-addons">
 						<input
-							id="edit-features"
+							ref="edit-features"
 							class="input"
 							type="text"
 							placeholder="Feature"
@@ -83,7 +83,7 @@
 					<label class="label">Improvements</label>
 					<p class="control has-addons">
 						<input
-							id="edit-improvements"
+							ref="edit-improvements"
 							class="input"
 							type="text"
 							placeholder="Improvement"
@@ -112,7 +112,7 @@
 					<label class="label">Upcoming</label>
 					<p class="control has-addons">
 						<input
-							id="edit-upcoming"
+							ref="edit-upcoming"
 							class="input"
 							type="text"
 							placeholder="Upcoming"
@@ -189,7 +189,7 @@ export default {
 	},
 	methods: {
 		add(type) {
-			const change = document.getElementById(`edit-${type}`).value.trim();
+			const change = this.$refs[`edit-${type}`].value.trim();
 
 			if (this.news[type].indexOf(change) !== -1)
 				return new Toast(`Tag already exists`);
@@ -197,7 +197,7 @@ export default {
 			if (change) this.addChange({ type, change });
 			else new Toast(`${type} cannot be empty`);
 
-			document.getElementById(`edit-${type}`).value = "";
+			this.$refs[`edit-${type}`].value = "";
 			return true;
 		},
 		remove(type, index) {

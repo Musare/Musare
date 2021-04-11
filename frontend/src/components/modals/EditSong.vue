@@ -7,7 +7,7 @@
 						<div class="player-section">
 							<div id="editSongPlayer"></div>
 							<canvas
-								id="durationCanvas"
+								ref="durationCanvas"
 								height="20"
 								width="530"
 							></canvas>
@@ -87,7 +87,7 @@
 									<input
 										class="input"
 										type="text"
-										id="title-input"
+										ref="title-input"
 										v-model="song.title"
 										@keyup.ctrl.alt.d="
 											getAlbumData('title')
@@ -156,7 +156,7 @@
 									<input
 										class="input"
 										type="text"
-										id="new-artist"
+										ref="new-artist"
 										v-model="artistInputValue"
 										@blur="blurArtistInput()"
 										@focus="focusArtistInput()"
@@ -229,7 +229,7 @@
 									<input
 										class="input"
 										type="text"
-										id="new-genre"
+										ref="new-genre"
 										v-model="genreInputValue"
 										@blur="blurGenreInput()"
 										@focus="focusGenreInput()"
@@ -356,7 +356,7 @@
 							<input
 								class="input"
 								type="text"
-								id="discogs-input"
+								ref="discogs-input"
 								v-model="discogsQuery"
 								@keyup.enter="searchDiscogsForPage(1)"
 								@change="onDiscogsQueryChange"
@@ -864,7 +864,7 @@ export default {
 			keyCode: 36,
 			preventDefault: true,
 			handler: () => {
-				document.getElementById("title-input").focus();
+				this.$refs["title-input"].focus();
 			}
 		});
 
@@ -872,7 +872,7 @@ export default {
 			keyCode: 35,
 			preventDefault: true,
 			handler: () => {
-				document.getElementById("discogs-input").focus();
+				this.$refs["discogs-input"].focus();
 			}
 		});
 
@@ -1282,27 +1282,27 @@ export default {
 		},
 		addTag(type) {
 			if (type === "genres") {
-				const genre = document
-					.getElementById("new-genre")
-					.value.toLowerCase()
+				const genre = this.$refs["new-genre"].value
+					.toLowerCase()
 					.trim();
+
 				if (this.song.genres.indexOf(genre) !== -1)
 					return new Toast("Genre already exists");
 				if (genre) {
 					this.song.genres.push(genre);
-					document.getElementById("new-genre").value = "";
+					this.$refs["new-genre"].value = "";
 					return false;
 				}
 
 				return new Toast("Genre cannot be empty");
 			}
 			if (type === "artists") {
-				const artist = document.getElementById("new-artist").value;
+				const artist = this.$refs["new-artist"].value;
 				if (this.song.artists.indexOf(artist) !== -1)
 					return new Toast("Artist already exists");
-				if (document.getElementById("new-artist").value !== "") {
+				if (this.$refs["new-artist"].value !== "") {
 					this.song.artists.push(artist);
-					document.getElementById("new-artist").value = "";
+					this.$refs["new-artist"].value = "";
 					return false;
 				}
 				return new Toast("Artist cannot be empty");
@@ -1315,7 +1315,7 @@ export default {
 			else if (type === "artists") this.song.artists.splice(index, 1);
 		},
 		drawCanvas() {
-			const canvasElement = document.getElementById("durationCanvas");
+			const canvasElement = this.$refs.durationCanvas;
 			const ctx = canvasElement.getContext("2d");
 
 			const videoDuration = Number(this.youtubeVideoDuration);

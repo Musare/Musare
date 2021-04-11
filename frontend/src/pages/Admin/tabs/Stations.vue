@@ -109,7 +109,7 @@
 							<div class="sector">
 								<p class="control has-addons">
 									<input
-										id="new-genre"
+										ref="new-genre"
 										class="input"
 										type="text"
 										placeholder="Genre"
@@ -137,7 +137,7 @@
 							<div class="sector">
 								<p class="control has-addons">
 									<input
-										id="new-blacklisted-genre"
+										ref="new-blacklisted-genre"
 										class="input"
 										type="text"
 										placeholder="Blacklisted Genre"
@@ -287,15 +287,12 @@ export default {
 			});
 		},
 		addGenre() {
-			const genre = document
-				.getElementById(`new-genre`)
-				.value.toLowerCase()
-				.trim();
+			const genre = this.$refs["new-genre"].value.toLowerCase().trim();
 			if (this.newStation.genres.indexOf(genre) !== -1)
 				return new Toast("Genre already exists");
 			if (genre) {
 				this.newStation.genres.push(genre);
-				document.getElementById(`new-genre`).value = "";
+				this.$refs["new-genre"].value = "";
 				return true;
 			}
 			return new Toast("Genre cannot be empty");
@@ -304,16 +301,15 @@ export default {
 			this.newStation.genres.splice(index, 1);
 		},
 		addBlacklistedGenre() {
-			const genre = document
-				.getElementById(`new-blacklisted-genre`)
-				.value.toLowerCase()
+			const genre = this.$refs["new-blacklisted-genre"].value
+				.toLowerCase()
 				.trim();
 			if (this.newStation.blacklistedGenres.indexOf(genre) !== -1)
 				return new Toast("Genre already exists");
 
 			if (genre) {
 				this.newStation.blacklistedGenres.push(genre);
-				document.getElementById(`new-blacklisted-genre`).value = "";
+				this.$refs["new-blacklisted-genre"].value = "";
 				return true;
 			}
 			return new Toast("Genre cannot be empty");
@@ -331,8 +327,9 @@ export default {
 			});
 		},
 		init() {
-			this.socket.dispatch("stations.index", data => {
-				this.loadStations(data.stations);
+			this.socket.dispatch("stations.index", res => {
+				if (res.status === "success")
+					this.loadStations(res.data.stations);
 			});
 			this.socket.dispatch("apis.joinAdminRoom", "stations", () => {});
 		},

@@ -72,7 +72,7 @@
 								<label class="label">Bugs</label>
 								<p class="control has-addons">
 									<input
-										id="new-bugs"
+										ref="new-bugs"
 										class="input"
 										type="text"
 										placeholder="Bug"
@@ -101,7 +101,7 @@
 								<label class="label">Features</label>
 								<p class="control has-addons">
 									<input
-										id="new-features"
+										ref="new-features"
 										class="input"
 										type="text"
 										placeholder="Feature"
@@ -134,7 +134,7 @@
 								<label class="label">Improvements</label>
 								<p class="control has-addons">
 									<input
-										id="new-improvements"
+										ref="new-improvements"
 										class="input"
 										type="text"
 										placeholder="Improvement"
@@ -166,7 +166,7 @@
 								<label class="label">Upcoming</label>
 								<p class="control has-addons">
 									<input
-										id="new-upcoming"
+										ref="new-upcoming"
 										class="input"
 										type="text"
 										placeholder="Upcoming"
@@ -313,13 +313,13 @@ export default {
 			this.openModal({ sector: "admin", modal: "editNews" });
 		},
 		addChange(type) {
-			const change = document.getElementById(`new-${type}`).value.trim();
+			const change = this.$refs[`new-${type}`].value.trim();
 
 			if (this.creating[type].indexOf(change) !== -1)
 				return new Toast(`Tag already exists`);
 
 			if (change) {
-				document.getElementById(`new-${type}`).value = "";
+				this.$refs[`new-${type}`].value = "";
 				this.creating[type].push(change);
 				return true;
 			}
