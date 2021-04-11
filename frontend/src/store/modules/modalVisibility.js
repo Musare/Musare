@@ -11,6 +11,7 @@ const state = {
 		},
 		station: {
 			addSongToQueue: false,
+			requestSong: false,
 			editPlaylist: false,
 			createPlaylist: false,
 			editStation: false,

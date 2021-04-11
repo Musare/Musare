@@ -71,14 +71,11 @@
 			class="button is-primary tab-actionable-button"
 			v-if="
 				loggedIn &&
-					((station.type === 'community' &&
-						station.partyMode &&
-						((station.locked && isOwnerOnly()) ||
-							!station.locked ||
-							(station.locked &&
-								isAdminOnly() &&
-								dismissedWarning))) ||
-						station.type === 'official')
+					station.type === 'community' &&
+					station.partyMode &&
+					((station.locked && isOwnerOnly()) ||
+						!station.locked ||
+						(station.locked && isAdminOnly() && dismissedWarning))
 			"
 			@click="
 				openModal({
@@ -89,6 +86,19 @@
 		>
 			<i class="material-icons icon-with-button">queue</i>
 			<span class="optional-desktop-only-text"> Add Song To Queue </span>
+		</button>
+		<button
+			class="button is-primary tab-actionable-button"
+			v-if="loggedIn && station.type === 'official'"
+			@click="
+				openModal({
+					sector: 'station',
+					modal: 'requestSong'
+				})
+			"
+		>
+			<i class="material-icons icon-with-button">queue</i>
+			<span class="optional-desktop-only-text"> Request Song </span>
 		</button>
 		<button
 			class="button is-primary tab-actionable-button disabled"

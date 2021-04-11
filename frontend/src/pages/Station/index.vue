@@ -564,6 +564,7 @@
 				</div>
 
 				<song-queue v-if="modals.station.addSongToQueue" />
+				<request-song v-if="modals.station.requestSong" />
 				<edit-playlist v-if="modals.station.editPlaylist" />
 				<create-playlist v-if="modals.station.createPlaylist" />
 				<edit-station
@@ -658,6 +659,7 @@ export default {
 		MainHeader,
 		MainFooter,
 		SongQueue: () => import("@/components/modals/AddSongToQueue.vue"),
+		RequestSong: () => import("@/components/modals/RequestSong.vue"),
 		EditPlaylist: () => import("@/components/modals/EditPlaylist.vue"),
 		CreatePlaylist: () => import("@/components/modals/CreatePlaylist.vue"),
 		EditStation: () => import("@/components/modals/EditStation.vue"),
