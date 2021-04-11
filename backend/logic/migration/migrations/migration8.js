@@ -33,9 +33,10 @@ export default async function migrate(MigrationModule) {
 										payload.youtubeId = payload.songId;
 										delete payload.songId;
 									}
-									payload.message = payload.message
-										.replaceAll("<songId", "<youtubeId")
-										.replaceAll("</songId", "</youtubeId");
+									if (payload.message)
+										payload.message = payload.message
+											.replaceAll("<songId", "<youtubeId")
+											.replaceAll("</songId", "</youtubeId");
 
 									activityModel.updateOne(
 										{ _id: activity._id },
