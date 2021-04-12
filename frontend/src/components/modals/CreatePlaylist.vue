@@ -77,7 +77,7 @@ export default {
 							sector: "station",
 							modal: "createPlaylist"
 						});
-						this.editPlaylist(res.data._id);
+						this.editPlaylist(res.data.playlistId);
 						this.openModal({
 							sector: "station",
 							modal: "editPlaylist"

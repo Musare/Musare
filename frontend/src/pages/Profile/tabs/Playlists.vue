@@ -154,7 +154,7 @@ export default {
 		}
 
 		this.socket.dispatch("playlists.indexForUser", this.userId, res => {
-			if (res.status === "success") this.setPlaylists(res.data);
+			if (res.status === "success") this.setPlaylists(res.data.playlists);
 			this.orderOfPlaylists = this.calculatePlaylistOrder(); // order in regards to the database
 		});
 

@@ -98,7 +98,7 @@ export default {
 		ws.onConnect(() => this.init());
 
 		this.socket.dispatch("reports.index", res => {
-			this.reports = res.data;
+			if (res.status === "success") this.reports = res.data.reports;
 		});
 
 		this.socket.on("event:admin.report.resolved", reportId => {
@@ -116,7 +116,7 @@ export default {
 				"reports.findOne",
 				this.$route.query.id,
 				res => {
-					if (res.status === "success") this.view(res.data);
+					if (res.status === "success") this.view(res.data.report);
 					else new Toast("Report with that ID not found");
 				}
 			);

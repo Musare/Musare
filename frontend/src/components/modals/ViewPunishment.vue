@@ -93,7 +93,7 @@ export default {
 			this.punishmentId,
 			res => {
 				if (res.status === "success") {
-					const punishment = res.data;
+					const { punishment } = res.data;
 					this.viewPunishment(punishment);
 				} else {
 					new Toast("Punishment with that ID not found");

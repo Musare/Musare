@@ -259,14 +259,14 @@ export default {
 						"SONGS_LENGTH",
 						`Failed to get length from songs that have the status ${status}. "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 				this.log(
 					"SUCCESS",
 					"SONGS_LENGTH",
 					`Got length from songs that have the status ${status} successfully.`
 				);
-				return cb(count);
+				return cb({ status: "success", message: "Successfully got length of songs.", data: { length: count } });
 			}
 		);
 	}),
@@ -298,10 +298,10 @@ export default {
 						"SONGS_GET_SET",
 						`Failed to get set from songs that have the status ${status}. "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 				this.log("SUCCESS", "SONGS_GET_SET", `Got set from songs that have the status ${status} successfully.`);
-				return cb(songs);
+				return cb({ status: "success", message: "Successfully got set of songs.", data: { songs } });
 			}
 		);
 	}),
@@ -330,10 +330,10 @@ export default {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "SONGS_GET_SONG", `Failed to get song ${youtubeId}. "${err}"`);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 				this.log("SUCCESS", "SONGS_GET_SONG", `Got song ${youtubeId} successfully.`);
-				return cb({ status: "success", data: song });
+				return cb({ status: "success", data: { song } });
 			}
 		);
 	}),
@@ -358,7 +358,7 @@ export default {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "SONGS_GET_SONG_FROM_MUSARE_ID", `Failed to get song ${songId}. "${err}"`);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 				this.log("SUCCESS", "SONGS_GET_SONG_FROM_MUSARE_ID", `Got song ${songId} successfully.`);
 				return cb({ status: "success", data: { song } });
@@ -392,7 +392,7 @@ export default {
 						`Failed to obtain metadata of song ${youtubeId} for activity formatting. "${err}"`
 					);
 
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				if (song) {
@@ -417,7 +417,7 @@ export default {
 					`Song ${youtubeId} does not exist so failed to obtain for activity formatting.`
 				);
 
-				return cb({ status: "failure" });
+				return cb({ status: "error" });
 			}
 		);
 	},
@@ -467,7 +467,7 @@ export default {
 
 					this.log("ERROR", "SONGS_UPDATE", `Failed to update song "${songId}". "${err}"`);
 
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log("SUCCESS", "SONGS_UPDATE", `Successfully updated song "${songId}".`);
@@ -492,7 +492,7 @@ export default {
 				return cb({
 					status: "success",
 					message: "Song has been successfully updated",
-					data: song
+					data: { song }
 				});
 			}
 		);
@@ -541,7 +541,7 @@ export default {
 
 	// 				this.log("ERROR", "SONGS_REMOVE", `Failed to remove song "${songId}". "${err}"`);
 
-	// 				return cb({ status: "failure", message: err });
+	// 				return cb({ status: "error", message: err });
 	// 			}
 
 	// 			this.log("SUCCESS", "SONGS_REMOVE", `Successfully remove song "${songId}".`);
@@ -593,7 +593,7 @@ export default {
 					"SONGS_REQUEST",
 					`Requesting song "${youtubeId}" failed for user ${session.userId}. "${err}"`
 				);
-				return cb({ status: "failure", message: err });
+				return cb({ status: "error", message: err });
 			});
 	}),
 
@@ -616,7 +616,7 @@ export default {
 			.catch(async err => {
 				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 				this.log("ERROR", "SONGS_HIDE", `Hiding song "${songId}" failed for user ${session.userId}. "${err}"`);
-				return cb({ status: "failure", message: err });
+				return cb({ status: "error", message: err });
 			});
 	}),
 
@@ -643,7 +643,7 @@ export default {
 					"SONGS_UNHIDE",
 					`Unhiding song "${songId}" failed for user ${session.userId}. "${err}"`
 				);
-				return cb({ status: "failure", message: err });
+				return cb({ status: "error", message: err });
 			});
 	}),
 
@@ -694,7 +694,7 @@ export default {
 
 					this.log("ERROR", "SONGS_VERIFY", `User "${session.userId}" failed to verify song. "${err}"`);
 
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log(
@@ -766,7 +766,7 @@ export default {
 
 					this.log("ERROR", "SONGS_UNVERIFY", `User "${session.userId}" failed to verify song. "${err}"`);
 
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log(
@@ -866,7 +866,7 @@ export default {
 						"REQUEST_SET",
 						`Importing a YouTube playlist to be requested failed for user "${session.userId}". "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 				this.log(
 					"SUCCESS",
@@ -937,7 +937,7 @@ export default {
 
 	// 				this.log("ERROR", "SONGS_ADD", `User "${session.userId}" failed to add song. "${err}"`);
 
-	// 				return cb({ status: "failure", message: err });
+	// 				return cb({ status: "error", message: err });
 	// 			}
 
 	// 			this.log("SUCCESS", "SONGS_ADD", `User "${session.userId}" successfully added song "${song.youtubeId}".`);
@@ -993,7 +993,7 @@ export default {
 							this
 						)
 						.then(res => {
-							if (res.status === "failure")
+							if (res.status === "error")
 								return next("Unable to add song to the 'Liked Songs' playlist.");
 							return next(null, song, user.dislikedSongsPlaylist);
 						})
@@ -1013,7 +1013,7 @@ export default {
 							this
 						)
 						.then(res => {
-							if (res.status === "failure")
+							if (res.status === "error")
 								return next("Unable to remove song from the 'Disliked Songs' playlist.");
 							return next(null, song);
 						})
@@ -1034,7 +1034,7 @@ export default {
 						"SONGS_LIKE",
 						`User "${session.userId}" failed to like song ${youtubeId}. "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				SongsModule.runJob("UPDATE_SONG", { songId: song._id });
@@ -1108,7 +1108,7 @@ export default {
 							this
 						)
 						.then(res => {
-							if (res.status === "failure")
+							if (res.status === "error")
 								return next("Unable to add song to the 'Disliked Songs' playlist.");
 							return next(null, song, user.likedSongsPlaylist);
 						})
@@ -1128,7 +1128,7 @@ export default {
 							this
 						)
 						.then(res => {
-							if (res.status === "failure")
+							if (res.status === "error")
 								return next("Unable to remove song from the 'Liked Songs' playlist.");
 							return next(null, song);
 						})
@@ -1149,7 +1149,7 @@ export default {
 						"SONGS_DISLIKE",
 						`User "${session.userId}" failed to dislike song ${youtubeId}. "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				SongsModule.runJob("UPDATE_SONG", { songId: song._id });
@@ -1221,7 +1221,7 @@ export default {
 							this
 						)
 						.then(res => {
-							if (res.status === "failure")
+							if (res.status === "error")
 								return next("Unable to remove song from the 'Disliked Songs' playlist.");
 							return next(null, song, user.likedSongsPlaylist);
 						})
@@ -1241,7 +1241,7 @@ export default {
 							this
 						)
 						.then(res => {
-							if (res.status === "failure")
+							if (res.status === "error")
 								return next("Unable to remove song from the 'Liked Songs' playlist.");
 							return next(null, song);
 						})
@@ -1262,7 +1262,7 @@ export default {
 						"SONGS_UNDISLIKE",
 						`User "${session.userId}" failed to undislike song ${youtubeId}. "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				SongsModule.runJob("UPDATE_SONG", { songId: song._id });
@@ -1336,7 +1336,7 @@ export default {
 							this
 						)
 						.then(res => {
-							if (res.status === "failure")
+							if (res.status === "error")
 								return next("Unable to remove song from the 'Disliked Songs' playlist.");
 							return next(null, song, user.likedSongsPlaylist);
 						})
@@ -1356,7 +1356,7 @@ export default {
 							this
 						)
 						.then(res => {
-							if (res.status === "failure")
+							if (res.status === "error")
 								return next("Unable to remove song from the 'Liked Songs' playlist.");
 							return next(null, song);
 						})
@@ -1377,7 +1377,7 @@ export default {
 						"SONGS_UNLIKE",
 						`User "${session.userId}" failed to unlike song ${youtubeId}. "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				SongsModule.runJob("UPDATE_SONG", { songId: song._id });
@@ -1479,16 +1479,18 @@ export default {
 						"SONGS_GET_OWN_RATINGS",
 						`User "${session.userId}" failed to get ratings for ${youtubeId}. "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				const { isLiked, isDisliked } = ratings;
 
 				return cb({
 					status: "success",
-					youtubeId,
-					liked: isLiked,
-					disliked: isDisliked
+					data: {
+						youtubeId,
+						liked: isLiked,
+						disliked: isDisliked
+					}
 				});
 			}
 		);

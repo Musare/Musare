@@ -105,7 +105,7 @@ export default {
 
 		this.socket.dispatch(`reports.findOne`, this.reportId, res => {
 			if (res.status === "success") {
-				const report = res.data;
+				const { report } = res.data;
 				this.viewReport(report);
 			} else {
 				new Toast("Report with that ID not found");

@@ -32,7 +32,7 @@ export default destination =>
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("LOGIN_REQUIRED", `User failed to pass login required check.`);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 				this.log("LOGIN_REQUIRED", `User "${session.userId}" passed login required check.`);
 				return destination.apply(this, [session].concat(args));

@@ -45,7 +45,7 @@ export default {
 				"users.updateOrderOfPlaylists",
 				recalculatedOrder,
 				res => {
-					if (res.status === "failure") return new Toast(res.message);
+					if (res.status === "error") return new Toast(res.message);
 
 					this.orderOfPlaylists = this.calculatePlaylistOrder(); // new order in regards to the database
 					return new Toast(res.message);

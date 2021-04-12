@@ -79,10 +79,10 @@ export default {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "REPORTS_INDEX", `Indexing reports failed. "${err}"`);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 				this.log("SUCCESS", "REPORTS_INDEX", "Indexing reports successful.");
-				return cb({ status: "success", data: reports });
+				return cb({ status: "success", data: { reports } });
 			}
 		);
 	}),
@@ -112,10 +112,10 @@ export default {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "REPORTS_FIND_ONE", `Finding report "${reportId}" failed. "${err}"`);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 				this.log("SUCCESS", "REPORTS_FIND_ONE", `Finding report "${reportId}" successful.`);
-				return cb({ status: "success", data: report });
+				return cb({ status: "success", data: { report } });
 			}
 		);
 	}),
@@ -156,7 +156,7 @@ export default {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "GET_REPORTS_FOR_SONG", `Indexing reports for song "${songId}" failed. "${err}"`);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 				this.log("SUCCESS", "GET_REPORTS_FOR_SONG", `Indexing reports for song "${songId}" successful.`);
 				return cb({ status: "success", data });
@@ -202,7 +202,7 @@ export default {
 						"REPORTS_RESOLVE",
 						`Resolving report "${reportId}" failed by user "${session.userId}". "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 				CacheModule.runJob("PUB", {
 					channel: "report.resolve",
@@ -260,14 +260,14 @@ export default {
 									)
 								) {
 									return cb({
-										status: "failure",
+										status: "error",
 										message: "Invalid data"
 									});
 								}
 							}
 						} else
 							return cb({
-								status: "failure",
+								status: "error",
 								message: "Invalid data"
 							});
 					}
@@ -302,7 +302,7 @@ export default {
 						"REPORTS_CREATE",
 						`Creating report for "${data.song._id}" failed by user "${session.userId}". "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				CacheModule.runJob("PUB", {

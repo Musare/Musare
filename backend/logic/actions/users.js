@@ -176,7 +176,7 @@ export default {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "USER_INDEX", `Indexing users failed. "${err}"`);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 				this.log("SUCCESS", "USER_INDEX", `Indexing users successful.`);
 				const filteredUsers = [];
@@ -202,7 +202,7 @@ export default {
 						services: { github: user.services.github }
 					});
 				});
-				return cb({ status: "success", data: filteredUsers });
+				return cb({ status: "success", data: { users: filteredUsers } });
 			}
 		);
 	}),
@@ -247,7 +247,7 @@ export default {
 						"USER_REMOVE",
 						`Removing data and account for user "${session.userId}" failed. "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log(
@@ -333,7 +333,7 @@ export default {
 						"USER_PASSWORD_LOGIN",
 						`Login failed with password for user "${identifier}". "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log("SUCCESS", "USER_PASSWORD_LOGIN", `Login successful with password for user "${identifier}"`);
@@ -341,8 +341,7 @@ export default {
 				return cb({
 					status: "success",
 					message: "Login successful",
-					user: {},
-					SID: sessionId
+					data: { SID: sessionId }
 				});
 			}
 		);
@@ -521,7 +520,7 @@ export default {
 						"USER_PASSWORD_REGISTER",
 						`Register failed with password for user "${username}"."${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				ActivitiesModule.runJob("ADD_ACTIVITY", {
@@ -536,7 +535,7 @@ export default {
 					`Register successful with password for user "${username}".`
 				);
 
-				const result = await this.module.runJob(
+				const res = await this.module.runJob(
 					"RUN_ACTION2",
 					{
 						session,
@@ -551,8 +550,9 @@ export default {
 					status: "success",
 					message: "Successfully registered."
 				};
-				if (result.status === "success") {
-					obj.SID = result.SID;
+
+				if (res.status === "success") {
+					obj.SID = res.data.SID;
 				}
 
 				return cb(obj);
@@ -590,7 +590,7 @@ export default {
 				if (err && err !== true) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "USER_LOGOUT", `Logout failed. "${err}" `);
-					cb({ status: "failure", message: err });
+					cb({ status: "error", message: err });
 				} else {
 					this.log("SUCCESS", "USER_LOGOUT", `Logout successful.`);
 					cb({
@@ -675,7 +675,7 @@ export default {
 						"REMOVE_SESSIONS_FOR_USER",
 						`Couldn't remove all sessions for user "${userId}". "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 				this.log("SUCCESS", "REMOVE_SESSIONS_FOR_USER", `Removed all sessions for user "${userId}".`);
 				return cb({
@@ -721,7 +721,7 @@ export default {
 						`Couldn't update order of favorite stations for user "${session.userId}" to "${favoriteStations}". "${err}"`
 					);
 
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				CacheModule.runJob("PUB", {
@@ -777,7 +777,7 @@ export default {
 						`Couldn't update order of playlists for user "${session.userId}" to "${orderOfPlaylists}". "${err}"`
 					);
 
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				CacheModule.runJob("PUB", {
@@ -850,7 +850,7 @@ export default {
 						)}". "${err}"`
 					);
 
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				CacheModule.runJob("PUB", {
@@ -929,7 +929,7 @@ export default {
 						`Couldn't retrieve preferences for user "${session.userId}". "${err}"`
 					);
 
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log(
@@ -941,7 +941,7 @@ export default {
 				return cb({
 					status: "success",
 					message: "Preferences successfully retrieved",
-					data: preferences
+					data: { preferences }
 				});
 			}
 		);
@@ -974,7 +974,7 @@ export default {
 
 					this.log("ERROR", "FIND_BY_USERNAME", `User not found for username "${username}". "${err}"`);
 
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log("SUCCESS", "FIND_BY_USERNAME", `User found for username "${username}".`);
@@ -1013,7 +1013,7 @@ export default {
 
 					return cb({
 						status: "success",
-						data: user.username
+						data: { username: user.username }
 					});
 				}
 
@@ -1024,7 +1024,7 @@ export default {
 				);
 
 				return cb({
-					status: "failure",
+					status: "error",
 					message: "Couldn't find the user."
 				});
 			})
@@ -1036,7 +1036,7 @@ export default {
 						"GET_USERNAME_FROM_ID",
 						`Getting the username from userId "${userId}" failed. "${err}"`
 					);
-					cb({ status: "failure", message: err });
+					cb({ status: "error", message: err });
 				}
 			});
 	},
@@ -1082,7 +1082,7 @@ export default {
 				);
 
 				return cb({
-					status: "failure",
+					status: "error",
 					message: "Couldn't find the user."
 				});
 			})
@@ -1090,7 +1090,7 @@ export default {
 				if (err && err !== true) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "GET_USER_FROM_ID", `Getting the user from userId "${userId}" failed. "${err}"`);
-					cb({ status: "failure", message: err });
+					cb({ status: "error", message: err });
 				}
 			});
 	}),
@@ -1138,10 +1138,10 @@ export default {
 				if (err && err !== true) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "FIND_BY_SESSION", `User not found. "${err}"`);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
-				const data = {
+				const sanitisedUser = {
 					email: {
 						address: user.email.address
 					},
@@ -1152,13 +1152,13 @@ export default {
 					bio: user.bio
 				};
 
-				if (user.services.password && user.services.password.password) data.password = true;
-				if (user.services.github && user.services.github.id) data.github = true;
+				if (user.services.password && user.services.password.password) sanitisedUser.password = true;
+				if (user.services.github && user.services.github.id) sanitisedUser.github = true;
 
 				this.log("SUCCESS", "FIND_BY_SESSION", `User found. "${user.username}".`);
 				return cb({
 					status: "success",
-					data
+					data: { user: sanitisedUser }
 				});
 			}
 		);
@@ -1223,7 +1223,7 @@ export default {
 						`Couldn't update username for user "${updatingUserId}" to username "${newUsername}". "${err}"`
 					);
 
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				CacheModule.runJob("PUB", {
@@ -1335,7 +1335,7 @@ export default {
 						`Couldn't update email for user "${updatingUserId}" to email "${newEmail}". '${err}'`
 					);
 
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log(
@@ -1399,7 +1399,7 @@ export default {
 						"UPDATE_NAME",
 						`Couldn't update name for user "${updatingUserId}" to name "${newName}". "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				ActivitiesModule.runJob("ADD_ACTIVITY", {
@@ -1467,7 +1467,7 @@ export default {
 						`Couldn't update location for user "${updatingUserId}" to location "${newLocation}". "${err}"`
 					);
 
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				ActivitiesModule.runJob("ADD_ACTIVITY", {
@@ -1531,7 +1531,7 @@ export default {
 						"UPDATE_BIO",
 						`Couldn't update bio for user "${updatingUserId}" to bio "${newBio}". "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				ActivitiesModule.runJob("ADD_ACTIVITY", {
@@ -1591,7 +1591,7 @@ export default {
 						"UPDATE_AVATAR_TYPE",
 						`Couldn't update avatar type for user "${updatingUserId}" to type "${newAvatar.type}". "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				ActivitiesModule.runJob("ADD_ACTIVITY", {
@@ -1656,7 +1656,7 @@ export default {
 						`User "${session.userId}" couldn't update role for user "${updatingUserId}" to role "${newRole}". "${err}"`
 					);
 
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log(
@@ -1737,7 +1737,7 @@ export default {
 						"UPDATE_PASSWORD",
 						`Failed updating user password of user '${session.userId}'. '${err}'.`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log("SUCCESS", "UPDATE_PASSWORD", `User '${session.userId}' updated their password.`);
@@ -1811,7 +1811,7 @@ export default {
 						`UserId '${session.userId}' failed to request password. '${err}'`
 					);
 
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log(
@@ -1860,7 +1860,7 @@ export default {
 				if (err && err !== true) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "VERIFY_PASSWORD_CODE", `Code '${code}' failed to verify. '${err}'`);
-					cb({ status: "failure", message: err });
+					cb({ status: "error", message: err });
 				} else {
 					this.log("SUCCESS", "VERIFY_PASSWORD_CODE", `Code '${code}' successfully verified.`);
 					cb({
@@ -1934,7 +1934,7 @@ export default {
 				if (err && err !== true) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "ADD_PASSWORD_WITH_CODE", `Code '${code}' failed to add password. '${err}'`);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log("SUCCESS", "ADD_PASSWORD_WITH_CODE", `Code '${code}' successfully added password.`);
@@ -1981,7 +1981,7 @@ export default {
 						"UNLINK_PASSWORD",
 						`Unlinking password failed for userId '${session.userId}'. '${err}'`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log("SUCCESS", "UNLINK_PASSWORD", `Unlinking password successful for userId '${session.userId}'.`);
@@ -2028,7 +2028,7 @@ export default {
 						"UNLINK_GITHUB",
 						`Unlinking GitHub failed for userId '${session.userId}'. '${err}'`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log("SUCCESS", "UNLINK_GITHUB", `Unlinking GitHub successful for userId '${session.userId}'.`);
@@ -2108,7 +2108,7 @@ export default {
 						"REQUEST_PASSWORD_RESET",
 						`Email '${email}' failed to request password reset. '${err}'`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log(
@@ -2151,7 +2151,7 @@ export default {
 				if (err && err !== true) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "VERIFY_PASSWORD_RESET_CODE", `Code '${code}' failed to verify. '${err}'`);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log("SUCCESS", "VERIFY_PASSWORD_RESET_CODE", `Code '${code}' successfully verified.`);
@@ -2224,7 +2224,7 @@ export default {
 						"CHANGE_PASSWORD_WITH_RESET_CODE",
 						`Code '${code}' failed to change password. '${err}'`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log("SUCCESS", "CHANGE_PASSWORD_WITH_RESET_CODE", `Code '${code}' successfully changed password.`);
@@ -2325,7 +2325,7 @@ export default {
 						"BAN_USER_BY_ID",
 						`User ${session.userId} failed to ban user ${userId} with the reason ${reason}. '${err}'`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log(

@@ -101,9 +101,8 @@ export default {
 		},
 		init() {
 			this.socket.dispatch("users.index", res => {
-				console.log(res);
 				if (res.status === "success") {
-					this.users = res.data;
+					this.users = res.data.users;
 					if (this.$route.query.userId) {
 						const user = this.users.find(
 							user => user._id === this.$route.query.userId

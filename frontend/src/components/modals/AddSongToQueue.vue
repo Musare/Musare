@@ -237,7 +237,7 @@ export default {
 	},
 	mounted() {
 		this.socket.dispatch("playlists.indexMyPlaylists", true, res => {
-			if (res.status === "success") this.playlists = res.data;
+			if (res.status === "success") this.playlists = res.data.playlists;
 		});
 	},
 	methods: {
@@ -261,26 +261,26 @@ export default {
 					"stations.addToQueue",
 					this.station._id,
 					youtubeId,
-					data => {
-						if (data.status !== "success")
-							new Toast(`Error: ${data.message}`);
+					res => {
+						if (res.status !== "success")
+							new Toast(`Error: ${res.message}`);
 						else {
 							this.search.songs.results[
 								index
 							].isAddedToQueue = true;
 
-							new Toast(data.message);
+							new Toast(res.message);
 						}
 					}
 				);
 			} else {
-				this.socket.dispatch("songs.request", youtubeId, data => {
-					if (data.status !== "success")
-						new Toast(`Error: ${data.message}`);
+				this.socket.dispatch("songs.request", youtubeId, res => {
+					if (res.status !== "success")
+						new Toast(`Error: ${res.message}`);
 					else {
 						this.search.songs.results[index].isAddedToQueue = true;
 
-						new Toast(data.message);
+						new Toast(res.message);
 					}
 				});
 			}

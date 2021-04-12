@@ -585,7 +585,7 @@ export default {
 	mounted() {
 		this.socket.dispatch(`stations.getStationById`, this.stationId, res => {
 			if (res.status === "success") {
-				const { station } = res;
+				const { station } = res.data;
 				// this.song = { ...song };
 				// if (this.song.discogs === undefined)
 				// 	this.song.discogs = null;
@@ -599,7 +599,7 @@ export default {
 					res => {
 						if (res.status === "success") {
 							this.setGenres(
-								res.playlists.map(playlist => {
+								res.data.playlists.map(playlist => {
 									if (playlist) {
 										if (playlist.type === "genre")
 											return playlist.createdFor;
@@ -621,7 +621,7 @@ export default {
 					res => {
 						if (res.status === "success") {
 							this.setBlacklistedGenres(
-								res.playlists.map(playlist => {
+								res.data.playlists.map(playlist => {
 									if (playlist) {
 										if (playlist.type === "genre")
 											return playlist.createdFor;
@@ -935,10 +935,10 @@ export default {
 				res => {
 					if (res.status === "success") {
 						if (this.originalStation)
-							this.originalStation.locked = res.data;
+							this.originalStation.locked = res.data.locked;
 
 						new Toast(
-							`Toggled queue lock successfully to ${res.data}`
+							`Toggled queue lock successfully to ${res.data.locked}`
 						);
 
 						return this.$refs.saveButton.handleSuccessfulSave();
@@ -1081,13 +1081,13 @@ export default {
 			this.socket.dispatch(
 				"stations.clearAndRefillStationQueue",
 				this.station._id,
-				data => {
-					if (data.status !== "success")
+				res => {
+					if (res.status !== "success")
 						new Toast({
-							content: `Error: ${data.message}`,
+							content: `Error: ${res.message}`,
 							timeout: 8000
 						});
-					else new Toast({ content: data.message, timeout: 4000 });
+					else new Toast({ content: res.message, timeout: 4000 });
 				}
 			);
 		},

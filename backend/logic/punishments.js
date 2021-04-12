@@ -59,9 +59,7 @@ class _PunishmentsModule extends CoreClass {
 											table: "punishments",
 											key: punishmentId
 										})
-											.then(() => {
-												cb();
-											})
+											.then(() => cb())
 											.catch(next);
 									else cb();
 								});

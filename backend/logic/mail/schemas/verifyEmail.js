@@ -28,10 +28,6 @@ export default (to, username, code, cb) => {
 	};
 
 	mail.runJob("SEND_MAIL", { data })
-		.then(() => {
-			cb();
-		})
-		.catch(err => {
-			cb(err);
-		});
+		.then(() => cb())
+		.catch(err => cb(err));
 };

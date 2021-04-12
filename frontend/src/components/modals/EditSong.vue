@@ -1131,21 +1131,21 @@ export default {
 				if (res.status === "success") {
 					if (page === 1)
 						new Toast(
-							`Successfully searched. Got ${res.results.length} results.`
+							`Successfully searched. Got ${res.data.results.length} results.`
 						);
 					else
 						new Toast(
-							`Successfully got ${res.results.length} more results.`
+							`Successfully got ${res.data.results.length} more results.`
 						);
 
 					if (page === 1) {
 						this.discogs.apiResults = [];
 					}
 
-					this.discogs.pages = res.pages;
+					this.discogs.pages = res.data.pages;
 
 					this.discogs.apiResults = this.discogs.apiResults.concat(
-						res.results.map(result => {
+						res.data.results.map(result => {
 							const type =
 								result.type.charAt(0).toUpperCase() +
 								result.type.slice(1);

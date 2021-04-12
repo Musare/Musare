@@ -95,13 +95,15 @@ export default {
 	},
 	mounted() {
 		this.socket.dispatch("users.getPreferences", res => {
+			const { preferences } = res.data;
+
 			if (res.status === "success") {
-				this.localNightmode = res.data.nightmode;
-				this.localAutoSkipDisliked = res.data.autoSkipDisliked;
-				this.localActivityLogPublic = res.data.activityLogPublic;
+				this.localNightmode = preferences.nightmode;
+				this.localAutoSkipDisliked = preferences.autoSkipDisliked;
+				this.localActivityLogPublic = preferences.activityLogPublic;
 				this.localAnonymousSongRequests =
-					res.data.anonymousSongRequests;
-				this.localActivityWatch = res.data.activityWatch;
+					preferences.anonymousSongRequests;
+				this.localActivityWatch = preferences.activityWatch;
 			}
 		});
 

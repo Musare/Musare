@@ -369,13 +369,15 @@ export default {
 				"songs.getSet",
 				this.position,
 				"verified",
-				data => {
-					data.forEach(song => {
-						this.addSong(song);
-					});
+				res => {
+					if (res.status === "success") {
+						res.data.songs.forEach(song => {
+							this.addSong(song);
+						});
 
-					this.position += 1;
-					this.isGettingSet = false;
+						this.position += 1;
+						this.isGettingSet = false;
+					}
 				}
 			);
 		},
@@ -407,10 +409,11 @@ export default {
 			if (this.songs.length > 0)
 				this.position = Math.ceil(this.songs.length / 15) + 1;
 
-			this.socket.dispatch("songs.length", "verified", length => {
-				this.maxPosition = Math.ceil(length / 15) + 1;
-
-				this.getSet();
+			this.socket.dispatch("songs.length", "verified", res => {
+				if (res.status === "success") {
+					this.maxPosition = Math.ceil(res.data.length / 15) + 1;
+					this.getSet();
+				}
 			});
 
 			this.socket.dispatch("apis.joinAdminRoom", "songs", () => {});

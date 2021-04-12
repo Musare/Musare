@@ -472,7 +472,7 @@ class _AppModule extends CoreClass {
 							this.log("ERROR", "VERIFY_EMAIL", `Verifying email failed. "${error}"`);
 
 							return res.json({
-								status: "failure",
+								status: "error",
 								message: error
 							});
 						}

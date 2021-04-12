@@ -84,11 +84,8 @@ export default {
 		this.localNightmode = this.nightmode;
 
 		this.socket.dispatch("users.findBySession", res => {
-			if (res.status === "success") {
-				this.setUser(res.data);
-			} else {
-				new Toast("You're not currently signed in.");
-			}
+			if (res.status === "success") this.setUser(res.data.user);
+			else new Toast("You're not currently signed in.");
 		});
 
 		this.socket.on("event:user.linkPassword", () =>

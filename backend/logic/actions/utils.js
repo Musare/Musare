@@ -37,13 +37,13 @@ export default {
 				if (err && err !== true) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "GET_MODULES", `User ${session.userId} failed to get modules. '${err}'`);
-					cb({ status: "failure", message: err });
+					cb({ status: "error", message: err });
 				} else {
 					this.log("SUCCESS", "GET_MODULES", `User ${session.userId} has successfully got the modules info.`);
 					cb({
 						status: "success",
 						message: "Successfully got modules.",
-						modules
+						data: { modules }
 					});
 				}
 			}
@@ -62,16 +62,18 @@ export default {
 				if (err && err !== true) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "GET_MODULE", `User ${session.userId} failed to get module. '${err}'`);
-					cb({ status: "failure", message: err });
+					cb({ status: "error", message: err });
 				} else {
 					this.log("SUCCESS", "GET_MODULE", `User ${session.userId} has successfully got the module info.`);
 					cb({
 						status: "success",
 						message: "Successfully got module info.",
-						// runningTasks: module.jobQueue.runningTasks,
-						// pausedTasks: module.jobQueue.pausedTasks,
-						// queuedTasks: module.jobQueue.queue,
-						jobStatistics: module.jobStatistics
+						data: {
+							// runningTasks: module.jobQueue.runningTasks,
+							// pausedTasks: module.jobQueue.pausedTasks,
+							// queuedTasks: module.jobQueue.queue,
+							jobStatistics: module.jobStatistics
+						}
 					});
 				}
 			}
