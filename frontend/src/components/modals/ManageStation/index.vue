@@ -72,7 +72,6 @@ import { mapState, mapGetters, mapActions } from "vuex";
 import Toast from "toasters";
 import TabQueryHandler from "@/mixins/TabQueryHandler.vue";
 
-import validation from "@/validation";
 import Confirm from "@/components/Confirm.vue";
 import Modal from "../../Modal.vue";
 
@@ -158,13 +157,12 @@ export default {
 		flex-direction: column;
 		flex-grow: 1;
 		width: auto;
-		max-width: 600px;
 		padding: 15px !important;
 		margin: 0 10px;
 	}
 
 	.left-section {
-		max-width: 50%;
+		flex-basis: 50%;
 		height: 100%;
 		overflow-y: auto;
 		flex-grow: 1;
@@ -201,10 +199,20 @@ export default {
 		}
 	}
 	.right-section {
-		max-width: 50%;
+		flex-basis: 50%;
 		height: 100%;
 		overflow-y: auto;
 		flex-grow: 1;
+	}
+}
+
+@media screen and (max-width: 1100px) {
+	.manage-station-modal.modal .modal-card-body .custom-modal-body {
+		.left-section,
+		.right-section {
+			flex-basis: unset;
+			height: auto;
+		}
 	}
 }
 </style>
