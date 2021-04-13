@@ -476,12 +476,12 @@ export default {
 					res => {
 						if (res.status === "success") {
 							if (this.originalStation) {
-								this.station.locked = res.data;
-								this.originalStation.locked = res.data;
+								this.station.locked = res.data.locked;
+								this.originalStation.locked = res.data.locked;
 							}
 
 							new Toast(
-								`Toggled queue lock successfully to ${res.data}`
+								`Toggled queue lock successfully to ${res.data.locked}`
 							);
 						} else {
 							new Toast("Failed to toggle queue lock.");

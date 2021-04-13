@@ -4,8 +4,6 @@
 			<div class="custom-modal-body" v-if="station && station._id">
 				<div class="left-section">
 					<div class="section tabs-container">
-						<h4 class="section-title">Manage Station</h4>
-						<hr class="section-horizontal-rule" />
 						<div class="tab-selection">
 							<button
 								class="button is-default"
@@ -111,7 +109,7 @@ export default {
 	mounted() {
 		this.socket.dispatch(`stations.getStationById`, this.stationId, res => {
 			if (res.status === "success") {
-				const { station } = res;
+				const { station } = res.data;
 				this.editStation(station);
 			} else {
 				new Toast(`Station with that ID not found${this.stationId}`);
@@ -126,6 +124,20 @@ export default {
 		this.clearStation();
 	},
 	methods: {
+		clearAndRefillStationQueue() {
+			this.socket.dispatch(
+				"stations.clearAndRefillStationQueue",
+				this.station._id,
+				res => {
+					if (res.status !== "success")
+						new Toast({
+							content: `Error: ${res.message}`,
+							timeout: 8000
+						});
+					else new Toast({ content: res.message, timeout: 4000 });
+				}
+			);
+		},
 		...mapActions("modals/editStation", ["editStation", "clearStation"]),
 		...mapActions("modalVisibility", ["closeModal"])
 	}

@@ -187,7 +187,7 @@ export default {
 	},
 	mounted() {
 		this.socket.dispatch("playlists.indexMyPlaylists", true, res => {
-			if (res.status === "success") this.playlists = res.data;
+			if (res.status === "success") this.playlists = res.data.playlists;
 			this.orderOfPlaylists = this.calculatePlaylistOrder(); // order in regards to the database
 		});
 
@@ -260,8 +260,8 @@ export default {
 			this.station._id,
 			res => {
 				if (res.status === "success") {
-					this.station.includedPlaylists = res.playlists;
-					this.originalStation.includedPlaylists = res.playlists;
+					this.station.includedPlaylists = res.data.playlists;
+					this.originalStation.includedPlaylists = res.data.playlists;
 				}
 			}
 		);
@@ -271,8 +271,8 @@ export default {
 			this.station._id,
 			res => {
 				if (res.status === "success") {
-					this.station.excludedPlaylists = res.playlists;
-					this.originalStation.excludedPlaylists = res.playlists;
+					this.station.excludedPlaylists = res.data.playlists;
+					this.originalStation.excludedPlaylists = res.data.playlists;
 				}
 			}
 		);
