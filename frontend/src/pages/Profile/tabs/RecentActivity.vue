@@ -86,14 +86,16 @@ export default {
 				)
 			);
 
-			this.getUsernameFromId(this.userId).then(res => {
-				if (res) this.username = res;
+			this.getUsernameFromId(this.userId).then(username => {
+				if (username) this.username = username;
 			});
 		}
 
-		this.socket.dispatch("activities.length", this.userId, length => {
-			this.maxPosition = Math.ceil(length / 15) + 1;
-			this.getSet();
+		this.socket.dispatch("activities.length", this.userId, res => {
+			if (res.status === "success") {
+				this.maxPosition = Math.ceil(res.data.length / 15) + 1;
+				this.getSet();
+			}
 		});
 
 		this.socket.on("event:activity.create", activity => {
@@ -135,7 +137,7 @@ export default {
 				this.offsettedFromNextSet,
 				res => {
 					if (res.status === "success") {
-						this.activities.push(...res.data);
+						this.activities.push(...res.data.activities);
 						this.position += 1;
 					}
 

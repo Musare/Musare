@@ -151,7 +151,8 @@ export default {
 		},
 		init() {
 			this.socket.dispatch("punishments.index", res => {
-				if (res.status === "success") this.punishments = res.data;
+				if (res.status === "success")
+					this.punishments = res.data.punishments;
 			});
 			this.socket.dispatch("apis.joinAdminRoom", "punishments", () => {});
 		},

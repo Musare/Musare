@@ -160,8 +160,7 @@ export default {
 			"users.findByUsername",
 			this.$route.params.username,
 			res => {
-				if (res.status === "error" || res.status === "failure")
-					this.$router.push("/404");
+				if (res.status === "error") this.$router.push("/404");
 				else {
 					this.user = res.data;
 

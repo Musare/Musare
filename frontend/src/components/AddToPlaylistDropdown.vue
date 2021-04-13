@@ -73,7 +73,7 @@ export default {
 	mounted() {
 		this.socket.dispatch("playlists.indexMyPlaylists", false, res => {
 			if (res.status === "success") {
-				this.playlists = res.data;
+				this.playlists = res.data.playlists;
 			}
 		});
 

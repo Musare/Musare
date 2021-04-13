@@ -176,7 +176,7 @@ export default {
 	mounted() {
 		this.socket.dispatch(`news.getNewsFromId`, this.newsId, res => {
 			if (res.status === "success") {
-				const news = res.data;
+				const { news } = res.data;
 				this.editNews(news);
 			} else {
 				new Toast("News with that ID not found");

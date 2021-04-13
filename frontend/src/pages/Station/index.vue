@@ -780,13 +780,13 @@ export default {
 			"stations.existsByName",
 			this.stationIdentifier,
 			res => {
-				if (res.status === "failure" || !res.exists) {
+				if (res.status === "error" || !res.data.exists) {
 					// station identifier may be using stationid instead
 					this.socket.dispatch(
 						"stations.existsById",
 						this.stationIdentifier,
 						res => {
-							if (res.status === "failure" || !res.exists) {
+							if (res.status === "error" || !res.data.exists) {
 								this.loading = false;
 								this.exists = false;
 							}
@@ -828,14 +828,17 @@ export default {
 				this.socket.dispatch(
 					"songs.getOwnSongRatings",
 					data.currentSong.youtubeId,
-					song => {
-						if (this.currentSong.youtubeId === song.youtubeId) {
-							this.liked = song.liked;
-							this.disliked = song.disliked;
+					res => {
+						if (
+							res.status === "success" &&
+							this.currentSong.youtubeId === res.data.youtubeId
+						) {
+							this.liked = res.data.liked;
+							this.disliked = res.data.disliked;
 
 							if (
 								this.autoSkipDisliked &&
-								song.disliked === true
+								res.data.disliked === true
 							) {
 								this.voteSkipStation();
 								new Toast(
@@ -872,7 +875,7 @@ export default {
 			// 		this.station._id,
 			// 		res => {
 			// 			if (res.status === "success") {
-			// 				this.updateSongsList(res.queue);
+			// 				this.updateSongsList(res.data.queue);
 			// 			}
 			// 		}
 			// 	);
@@ -1497,18 +1500,18 @@ export default {
 				this.socket.dispatch(
 					"songs.unlike",
 					this.currentSong.youtubeId,
-					data => {
-						if (data.status !== "success")
-							new Toast(`Error: ${data.message}`);
+					res => {
+						if (res.status !== "success")
+							new Toast(`Error: ${res.message}`);
 					}
 				);
 			else
 				this.socket.dispatch(
 					"songs.like",
 					this.currentSong.youtubeId,
-					data => {
-						if (data.status !== "success")
-							new Toast(`Error: ${data.message}`);
+					res => {
+						if (res.status !== "success")
+							new Toast(`Error: ${res.message}`);
 					}
 				);
 		},
@@ -1517,18 +1520,18 @@ export default {
 				return this.socket.dispatch(
 					"songs.undislike",
 					this.currentSong.youtubeId,
-					data => {
-						if (data.status !== "success")
-							new Toast(`Error: ${data.message}`);
+					res => {
+						if (res.status !== "success")
+							new Toast(`Error: ${res.message}`);
 					}
 				);
 
 			return this.socket.dispatch(
 				"songs.dislike",
 				this.currentSong.youtubeId,
-				data => {
-					if (data.status !== "success")
-						new Toast(`Error: ${data.message}`);
+				res => {
+					if (res.status !== "success")
+						new Toast(`Error: ${res.message}`);
 				}
 			);
 		},
@@ -1545,23 +1548,24 @@ export default {
 					this.socket.dispatch(
 						"playlists.getFirstSong",
 						this.privatePlaylistQueueSelected,
-						data => {
-							if (data.status === "success") {
-								if (data.song) {
-									if (data.song.duration < 15 * 60) {
+						res => {
+							if (res.status === "success") {
+								const { song } = res.data;
+								if (song) {
+									if (song.duration < 15 * 60) {
 										this.automaticallyRequestedYoutubeId =
-											data.song.youtubeId;
+											song.youtubeId;
 										this.socket.dispatch(
 											"stations.addToQueue",
 											this.station._id,
-											data.song.youtubeId,
+											song.youtubeId,
 											data2 => {
 												if (data2.status === "success")
 													this.socket.dispatch(
 														"playlists.moveSongToBottom",
 														this
 															.privatePlaylistQueueSelected,
-														data.song.youtubeId
+														song.youtubeId
 													);
 											}
 										);
@@ -1573,7 +1577,7 @@ export default {
 										this.socket.dispatch(
 											"playlists.moveSongToBottom",
 											this.privatePlaylistQueueSelected,
-											data.song.youtubeId,
+											song.youtubeId,
 											data3 => {
 												if (data3.status === "success")
 													setTimeout(
@@ -1676,13 +1680,14 @@ export default {
 							this.socket.dispatch(
 								"songs.getOwnSongRatings",
 								res.data.currentSong.youtubeId,
-								song => {
+								res => {
 									if (
+										res.status === "success" &&
 										this.currentSong.youtubeId ===
-										song.youtubeId
+											res.data.youtubeId
 									) {
-										this.liked = song.liked;
-										this.disliked = song.disliked;
+										this.liked = res.data.liked;
+										this.disliked = res.data.disliked;
 									}
 								}
 							);
@@ -1693,7 +1698,7 @@ export default {
 
 						this.socket.dispatch("stations.getQueue", _id, res => {
 							if (res.status === "success") {
-								this.updateSongsList(res.queue);
+								this.updateSongsList(res.data.queue);
 								let nextSong = null;
 								if (this.songsList[0]) {
 									nextSong = this.songsList[0].youtubeId
@@ -1805,28 +1810,30 @@ export default {
 
 						// UNIX client time before ping
 						const beforePing = Date.now();
-						this.socket.dispatch("apis.ping", pong => {
-							// UNIX client time after ping
-							const afterPing = Date.now();
-							// Average time in MS it took between the server responding and the client receiving
-							const connectionLatency =
-								(afterPing - beforePing) / 2;
-							console.log(
-								connectionLatency,
-								beforePing - afterPing
-							);
-							// UNIX server time
-							const serverDate = pong.date;
-							// Difference between the server UNIX time and the client UNIX time after ping, with the connectionLatency added to the server UNIX time
-							const difference =
-								serverDate + connectionLatency - afterPing;
-							console.log("Difference: ", difference);
-							if (difference > 3000 || difference < -3000) {
+						this.socket.dispatch("apis.ping", res => {
+							if (res.status === "success") {
+								// UNIX client time after ping
+								const afterPing = Date.now();
+								// Average time in MS it took between the server responding and the client receiving
+								const connectionLatency =
+									(afterPing - beforePing) / 2;
 								console.log(
-									"System time difference is bigger than 3 seconds."
+									connectionLatency,
+									beforePing - afterPing
 								);
+								// UNIX server time
+								const serverDate = res.data.date;
+								// Difference between the server UNIX time and the client UNIX time after ping, with the connectionLatency added to the server UNIX time
+								const difference =
+									serverDate + connectionLatency - afterPing;
+								console.log("Difference: ", difference);
+								if (difference > 3000 || difference < -3000) {
+									console.log(
+										"System time difference is bigger than 3 seconds."
+									);
+								}
+								this.systemDifference = difference;
 							}
-							this.systemDifference = difference;
 						});
 					} else {
 						this.loading = false;

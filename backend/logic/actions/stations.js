@@ -488,7 +488,7 @@ export default {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "STATIONS_INDEX", `Indexing stations failed. "${err}"`);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log("SUCCESS", "STATIONS_INDEX", `Indexing stations successful.`, false);
@@ -524,7 +524,7 @@ export default {
 						"STATIONS_GET_STATION_FOR_ACTIVITY",
 						`Failed to obtain metadata of station ${stationId} for activity formatting. "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 				this.log(
 					"SUCCESS",
@@ -573,7 +573,7 @@ export default {
 						"STATION_EXISTS_BY_NAME",
 						`Checking if station "${stationName}" exists failed. "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log(
@@ -582,7 +582,7 @@ export default {
 					`Station "${stationName}" exists successfully.` /* , false */
 				);
 
-				return cb({ status: "success", exists });
+				return cb({ status: "success", data: { exists } });
 			}
 		);
 	},
@@ -618,7 +618,7 @@ export default {
 						"STATION_EXISTS_BY_ID",
 						`Checking if station "${stationId}" exists failed. "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log(
@@ -627,7 +627,7 @@ export default {
 					`Station "${stationId}" exists successfully.` /* , false */
 				);
 
-				return cb({ status: "success", exists });
+				return cb({ status: "success", data: { exists } });
 			}
 		);
 	},
@@ -700,7 +700,7 @@ export default {
 						"STATIONS_GET_PLAYLIST",
 						`Getting playlist for station "${stationId}" failed. "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log(
@@ -710,7 +710,7 @@ export default {
 					false
 				);
 
-				return cb({ status: "success", data: playlist.songs });
+				return cb({ status: "success", data: { songs: playlist.songs } });
 			}
 		);
 	},
@@ -843,7 +843,7 @@ export default {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "STATIONS_JOIN", `Joining station "${stationIdentifier}" failed. "${err}"`);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log("SUCCESS", "STATIONS_JOIN", `Joined station "${data._id}" successfully.`);
@@ -912,10 +912,10 @@ export default {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "GET_STATION_BY_ID", `Getting station "${stationId}" failed. "${err}"`);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 				this.log("SUCCESS", "GET_STATION_BY_ID", `Got station "${stationId}" successfully.`);
-				return cb({ status: "success", station: data });
+				return cb({ status: "success", data: { station: data } });
 			}
 		);
 	},
@@ -979,14 +979,14 @@ export default {
 						"GET_STATION_INCLUDED_PLAYLISTS_BY_ID",
 						`Getting station "${stationId}"'s included playlists failed. "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 				this.log(
 					"SUCCESS",
 					"GET_STATION_INCLUDED_PLAYLISTS_BY_ID",
 					`Got station "${stationId}"'s included playlists successfully.`
 				);
-				return cb({ status: "success", playlists });
+				return cb({ status: "success", data: { playlists } });
 			}
 		);
 	},
@@ -1050,14 +1050,14 @@ export default {
 						"GET_STATION_EXCLUDED_PLAYLISTS_BY_ID",
 						`Getting station "${stationId}"'s excluded playlists failed. "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 				this.log(
 					"SUCCESS",
 					"GET_STATION_EXCLUDED_PLAYLISTS_BY_ID",
 					`Got station "${stationId}"'s excluded playlists successfully.`
 				);
-				return cb({ status: "success", playlists });
+				return cb({ status: "success", data: { playlists } });
 			}
 		);
 	},
@@ -1070,13 +1070,8 @@ export default {
 	 * @param cb
 	 */
 	toggleLock: isOwnerRequired(async function toggleLock(session, stationId, cb) {
-		const stationModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "station"
-			},
-			this
-		);
+		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
+
 		async.waterfall(
 			[
 				next => {
@@ -1107,7 +1102,7 @@ export default {
 						"STATIONS_UPDATE_LOCKED_STATUS",
 						`Toggling the queue lock for station "${stationId}" failed. "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 				this.log(
 					"SUCCESS",
@@ -1121,7 +1116,7 @@ export default {
 						locked: station.locked
 					}
 				});
-				return cb({ status: "success", data: station.locked });
+				return cb({ status: "success", data: { locked: station.locked } });
 			}
 		);
 	}),
@@ -1225,7 +1220,7 @@ export default {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "STATIONS_VOTE_SKIP", `Vote skipping station "${stationId}" failed. "${err}"`);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 				this.log("SUCCESS", "STATIONS_VOTE_SKIP", `Vote skipping "${stationId}" successful.`);
 
@@ -1271,7 +1266,7 @@ export default {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "STATIONS_FORCE_SKIP", `Force skipping station "${stationId}" failed. "${err}"`);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 				StationsModule.runJob("SKIP_STATION", { stationId });
 				this.log("SUCCESS", "STATIONS_FORCE_SKIP", `Force skipped station "${stationId}" successfully.`);
@@ -1310,7 +1305,7 @@ export default {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "STATIONS_LEAVE", `Leaving station "${stationId}" failed. "${err}"`);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log("SUCCESS", "STATIONS_LEAVE", `Left station "${stationId}" successfully.`);
@@ -1322,7 +1317,7 @@ export default {
 				return cb({
 					status: "success",
 					message: "Successfully left station.",
-					userCount
+					data: { userCount }
 				});
 			}
 		);
@@ -1366,7 +1361,7 @@ export default {
 						`Updating station "${stationId}" name to "${newName}" failed. "${err}"`
 					);
 
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log(
@@ -1444,7 +1439,7 @@ export default {
 						"STATIONS_UPDATE_DISPLAY_NAME",
 						`Updating station "${stationId}" displayName to "${newDisplayName}" failed. "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log(
@@ -1511,7 +1506,7 @@ export default {
 						"STATIONS_UPDATE_DESCRIPTION",
 						`Updating station "${stationId}" description to "${newDescription}" failed. "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log(
@@ -1592,7 +1587,7 @@ export default {
 						"STATIONS_UPDATE_PRIVACY",
 						`Updating station "${stationId}" privacy to "${newPrivacy}" failed. "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 				this.log(
 					"SUCCESS",
@@ -1760,7 +1755,7 @@ export default {
 						"STATIONS_UPDATE_GENRES",
 						`Updating station "${stationId}" genres to "${newGenres}" failed. "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log(
@@ -1941,7 +1936,7 @@ export default {
 						"STATIONS_UPDATE_BLACKLISTED_GENRES",
 						`Updating station "${stationId}" blacklisted genres to "${newBlacklistedGenres}" failed. "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log(
@@ -2035,7 +2030,7 @@ export default {
 						"STATIONS_UPDATE_PARTY_MODE",
 						`Updating station "${stationId}" party mode to "${newPartyMode}" failed. "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 				this.log(
 					"SUCCESS",
@@ -2112,7 +2107,7 @@ export default {
 						"STATIONS_UPDATE_PLAY_MODE",
 						`Updating station "${stationId}" play mode to "${newPlayMode}" failed. "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 				this.log(
 					"SUCCESS",
@@ -2181,7 +2176,7 @@ export default {
 						"STATIONS_UPDATE_THEME",
 						`Updating station "${stationId}" theme to "${newTheme}" failed. "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log(
@@ -2259,7 +2254,7 @@ export default {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "STATIONS_PAUSE", `Pausing station "${stationId}" failed. "${err}"`);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 				this.log("SUCCESS", "STATIONS_PAUSE", `Paused station "${stationId}" successfully.`);
 				CacheModule.runJob("PUB", {
@@ -2328,7 +2323,7 @@ export default {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "STATIONS_RESUME", `Resuming station "${stationId}" failed. "${err}"`);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 				this.log("SUCCESS", "STATIONS_RESUME", `Resuming station "${stationId}" successfully.`);
 				CacheModule.runJob("PUB", {
@@ -2394,7 +2389,7 @@ export default {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "STATIONS_REMOVE", `Removing station "${stationId}" failed. "${err}"`);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log("SUCCESS", "STATIONS_REMOVE", `Removing station "${stationId}" successfully.`);
@@ -2738,7 +2733,7 @@ export default {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "STATIONS_CREATE", `Creating station failed. "${err}"`);
-					cb({ status: "failure", message: err });
+					cb({ status: "error", message: err });
 				} else {
 					this.log("SUCCESS", "STATIONS_CREATE", `Created station "${station._id}" successfully.`);
 
@@ -2967,7 +2962,7 @@ export default {
 						"STATIONS_ADD_SONG_TO_QUEUE",
 						`Adding song "${youtubeId}" to station "${stationId}" queue failed. "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log(
@@ -3043,7 +3038,7 @@ export default {
 						"STATIONS_REMOVE_SONG_TO_QUEUE",
 						`Removing song "${youtubeId}" from station "${stationId}" queue failed. "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log(
@@ -3108,7 +3103,7 @@ export default {
 						"STATIONS_GET_QUEUE",
 						`Getting queue for station "${stationId}" failed. "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log("SUCCESS", "STATIONS_GET_QUEUE", `Got queue for station "${stationId}" successfully.`);
@@ -3116,7 +3111,7 @@ export default {
 				return cb({
 					status: "success",
 					message: "Successfully got queue.",
-					queue
+					data: { queue }
 				});
 			}
 		);
@@ -3178,7 +3173,7 @@ export default {
 						"STATIONS_REPOSITION_SONG_IN_QUEUE",
 						`Repositioning song ${song.youtubeId} in queue of station "${stationId}" failed. "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log(
@@ -3248,7 +3243,7 @@ export default {
 						"STATIONS_SELECT_PRIVATE_PLAYLIST",
 						`Selecting private playlist "${playlistId}" for station "${stationId}" failed. "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log(
@@ -3322,7 +3317,7 @@ export default {
 						"STATIONS_DESELECT_PRIVATE_PLAYLIST",
 						`Deselecting private playlist for station "${stationId}" failed. "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log(
@@ -3385,7 +3380,7 @@ export default {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "FAVORITE_STATION", `Favoriting station "${stationId}" failed. "${err}"`);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log("SUCCESS", "FAVORITE_STATION", `Favorited station "${stationId}" successfully.`);
@@ -3439,7 +3434,7 @@ export default {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "UNFAVORITE_STATION", `Unfavoriting station "${stationId}" failed. "${err}"`);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log("SUCCESS", "UNFAVORITE_STATION", `Unfavorited station "${stationId}" successfully.`);
@@ -3488,10 +3483,10 @@ export default {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "CLEAR_EVERY_STATION_QUEUE", `Clearing every station queue failed. "${err}"`);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
-				this.log("SUCCESS", "CLEAR_EVERY_STATION_QUEUE", "Clearing every station queue was successfull.");
-				return cb({ status: "success", message: "Success" });
+				this.log("SUCCESS", "CLEAR_EVERY_STATION_QUEUE", "Clearing every station queue was successful.");
+				return cb({ status: "success", message: "Successfully cleared every station queue." });
 			}
 		);
 	}),
@@ -3520,14 +3515,14 @@ export default {
 						"CLEAR_AND_REFILL_STATION_QUEUE",
 						`Clearing and refilling station queue failed. "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 				this.log(
 					"SUCCESS",
 					"CLEAR_AND_REFILL_STATION_QUEUE",
-					"Clearing and refilling station queue was successfull."
+					"Clearing and refilling station queue was successful."
 				);
-				return cb({ status: "success", message: "Success" });
+				return cb({ status: "success", message: "Successfully cleared and refilled station queue." });
 			}
 		);
 	})

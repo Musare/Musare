@@ -53,7 +53,6 @@ export default {
 			const { email, password } = user;
 
 			ws.socket.dispatch("users.login", email, password, res => {
-				console.log(123, res);
 				if (res.status === "success") {
 					return lofig.get("cookie").then(cookie => {
 						const date = new Date();
@@ -65,7 +64,7 @@ export default {
 						if (cookie.domain !== "localhost")
 							domain = ` domain=${cookie.domain};`;
 						document.cookie = `${cookie.SIDname}=${
-							res.SID
+							res.data.SID
 						}; expires=${date.toGMTString()}; ${domain}${secure}path=/`;
 						return resolve({ status: "success" });
 					});

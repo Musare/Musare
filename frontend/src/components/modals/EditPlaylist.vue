@@ -436,9 +436,9 @@ export default {
 	mounted() {
 		this.socket.dispatch("playlists.getPlaylist", this.editing, res => {
 			if (res.status === "success") {
-				this.playlist = res.data;
+				this.playlist = res.data.playlist;
 				this.playlist.songs.sort((a, b) => a.position - b.position);
-				this.playlist.oldId = res.data._id;
+				this.playlist.oldId = res.data.playlist._id;
 			} else new Toast(res.message);
 		});
 
@@ -531,7 +531,7 @@ export default {
 						isImportingPlaylist = false;
 						if (this.search.playlist.isImportingOnlyMusic) {
 							new Toast({
-								content: `${res.stats.songsInPlaylistTotal} of the ${res.stats.videosInPlaylistTotal} videos in the playlist were songs.`,
+								content: `${res.data.stats.songsInPlaylistTotal} of the ${res.data.stats.videosInPlaylistTotal} videos in the playlist were songs.`,
 								timeout: 20000
 							});
 						}
@@ -582,7 +582,7 @@ export default {
 				res => {
 					new Toast(res.message);
 					if (res.status === "success") {
-						this.playlist.songs = res.data.songs.sort(
+						this.playlist.songs = res.data.playlist.songs.sort(
 							(a, b) => a.position - b.position
 						);
 					}

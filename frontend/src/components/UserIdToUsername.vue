@@ -25,8 +25,8 @@ export default {
 		};
 	},
 	mounted() {
-		this.getUsernameFromId(this.$props.userId).then(res => {
-			if (res) this.username = res;
+		this.getUsernameFromId(this.$props.userId).then(username => {
+			if (username) this.username = username;
 		});
 	},
 	methods: {

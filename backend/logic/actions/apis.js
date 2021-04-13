@@ -28,7 +28,7 @@ export default {
 			.catch(async err => {
 				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 				this.log("ERROR", "APIS_SEARCH_YOUTUBE", `Searching youtube failed with query "${query}". "${err}"`);
-				return cb({ status: "failure", message: err });
+				return cb({ status: "error", message: err });
 			});
 	},
 
@@ -58,7 +58,7 @@ export default {
 					"APIS_SEARCH_YOUTUBE_FOR_PAGE",
 					`Searching youtube failed with query "${query}". "${err}"`
 				);
-				return cb({ status: "failure", message: err });
+				return cb({ status: "error", message: err });
 			});
 	},
 
@@ -97,7 +97,7 @@ export default {
 						"APIS_SEARCH_DISCOGS",
 						`Searching discogs failed with query "${query}". "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 				this.log(
 					"SUCCESS",
@@ -106,8 +106,10 @@ export default {
 				);
 				return cb({
 					status: "success",
-					results: body.results,
-					pages: body.pagination.pages
+					data: {
+						results: body.results,
+						pages: body.pagination.pages
+					}
 				});
 			}
 		);
@@ -131,7 +133,8 @@ export default {
 					this.log("ERROR", `Joining room failed: ${err.message}`);
 				});
 		}
-		cb({});
+
+		cb({ status: "success", message: "Successfully joined room." });
 	},
 
 	/**
@@ -152,13 +155,13 @@ export default {
 			page === "users" ||
 			page === "statistics" ||
 			page === "punishments"
-		) {
+		)
 			WSModule.runJob("SOCKET_JOIN_ROOM", {
 				socketId: session.socketId,
 				room: `admin.${page}`
 			});
-		}
-		cb({});
+
+		cb({ status: "success", message: "Successfully joined admin room." });
 	}),
 
 	/**
@@ -168,6 +171,6 @@ export default {
 	 * @param {Function} cb - callback
 	 */
 	ping(session, cb) {
-		cb({ date: Date.now() });
+		cb({ status: "success", message: "Successfully pinged.", data: { date: Date.now() } });
 	}
 };

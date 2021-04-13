@@ -181,10 +181,10 @@ export default {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "PLAYLISTS_INDEX", `Indexing playlists failed. "${err}"`);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 				this.log("SUCCESS", "PLAYLISTS_INDEX", "Indexing playlists successful.");
-				return cb({ status: "success", data: playlists });
+				return cb({ status: "success", data: { playlists } });
 			}
 		);
 	}),
@@ -219,7 +219,7 @@ export default {
 						"PLAYLIST_GET_FIRST_SONG",
 						`Getting the first song of playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 				this.log(
 					"SUCCESS",
@@ -228,7 +228,7 @@ export default {
 				);
 				return cb({
 					status: "success",
-					song
+					data: { song }
 				});
 			}
 		);
@@ -294,14 +294,14 @@ export default {
 						"PLAYLIST_INDEX_FOR_USER",
 						`Indexing playlists for user "${userId}" failed. "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log("SUCCESS", "PLAYLIST_INDEX_FOR_USER", `Successfully indexed playlists for user "${userId}".`);
 
 				return cb({
 					status: "success",
-					data: playlists
+					data: { playlists }
 				});
 			}
 		);
@@ -355,7 +355,7 @@ export default {
 						"PLAYLIST_INDEX_FOR_ME",
 						`Indexing playlists for user "${session.userId}" failed. "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 				this.log(
 					"SUCCESS",
@@ -364,7 +364,7 @@ export default {
 				);
 				return cb({
 					status: "success",
-					data: playlists
+					data: { playlists }
 				});
 			}
 		);
@@ -385,7 +385,7 @@ export default {
 
 		async.waterfall(
 			[
-				next => (data ? next() : cb({ status: "failure", message: "Invalid data" })),
+				next => (data ? next() : cb({ status: "error", message: "Invalid data" })),
 
 				next => {
 					const { displayName, songs, privacy } = data;
@@ -426,7 +426,7 @@ export default {
 						"PLAYLIST_CREATE",
 						`Creating private playlist failed for user "${session.userId}". "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				CacheModule.runJob("PUB", {
@@ -453,7 +453,7 @@ export default {
 					status: "success",
 					message: "Successfully created playlist",
 					data: {
-						_id: playlist._id
+						playlistId: playlist._id
 					}
 				});
 			}
@@ -501,7 +501,7 @@ export default {
 						"PLAYLIST_GET",
 						`Getting private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log(
@@ -512,7 +512,7 @@ export default {
 
 				return cb({
 					status: "success",
-					data: playlist
+					data: { playlist }
 				});
 			}
 		);
@@ -544,7 +544,7 @@ export default {
 						"PLAYLISTS_GET_PLAYLIST_FOR_ACTIVITY",
 						`Failed to obtain metadata of playlist ${playlistId} for activity formatting. "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 				this.log(
 					"SUCCESS",
@@ -605,7 +605,7 @@ export default {
 						"PLAYLIST_UPDATE",
 						`Updating private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log(
@@ -616,7 +616,7 @@ export default {
 
 				return cb({
 					status: "success",
-					data: playlist
+					data: { playlist }
 				});
 			}
 		);
@@ -665,7 +665,7 @@ export default {
 						"PLAYLIST_SHUFFLE",
 						`Updating private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log(
@@ -677,7 +677,7 @@ export default {
 				return cb({
 					status: "success",
 					message: "Successfully shuffled playlist.",
-					data: playlist
+					data: { playlist }
 				});
 			}
 		);
@@ -733,7 +733,7 @@ export default {
 						`Repositioning songs for private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
 					);
 
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log(
@@ -827,7 +827,7 @@ export default {
 						"PLAYLIST_MOVE_SONG_TO_BOTTOM",
 						`Moving song "${youtubeId}" to the bottom for private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log(
@@ -935,7 +935,7 @@ export default {
 						"PLAYLIST_ADD_SONG",
 						`Adding song "${youtubeId}" to private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log(
@@ -982,7 +982,7 @@ export default {
 				return cb({
 					status: "success",
 					message: "Song has been successfully added to the playlist",
-					data: playlist.songs
+					data: { songs: playlist.songs }
 				});
 			}
 		);
@@ -1084,7 +1084,7 @@ export default {
 						"PLAYLIST_IMPORT",
 						`Importing a YouTube playlist to private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				ActivitiesModule.runJob("ADD_ACTIVITY", {
@@ -1105,10 +1105,12 @@ export default {
 				return cb({
 					status: "success",
 					message: `Playlist has been imported. ${addSongsStats.successful} were added successfully, ${addSongsStats.failed} failed (${addSongsStats.alreadyInPlaylist} were already in the playlist)`,
-					data: playlist.songs,
-					stats: {
-						videosInPlaylistTotal,
-						songsInPlaylistTotal
+					data: {
+						songs: playlist.songs,
+						stats: {
+							videosInPlaylistTotal,
+							songsInPlaylistTotal
+						}
 					}
 				});
 			}
@@ -1242,7 +1244,7 @@ export default {
 						"PLAYLIST_REMOVE_SONG",
 						`Removing song "${youtubeId}" from private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log(
@@ -1264,7 +1266,7 @@ export default {
 				return cb({
 					status: "success",
 					message: "Song has been successfully removed from playlist",
-					data: playlist.songs
+					data: { songs: playlist.songs }
 				});
 			}
 		);
@@ -1316,7 +1318,7 @@ export default {
 						"PLAYLIST_UPDATE_DISPLAY_NAME",
 						`Updating display name to "${displayName}" for private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log(
@@ -1443,7 +1445,7 @@ export default {
 						"PLAYLIST_REMOVE",
 						`Removing private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log(
@@ -1514,7 +1516,7 @@ export default {
 						`Updating privacy to "${privacy}" for private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
 					);
 
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log(
@@ -1571,14 +1573,14 @@ export default {
 						"PLAYLISTS_DELETE_ORPHANED_STATION_PLAYLISTS",
 						`Deleting orphaned station playlists failed. "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 				this.log(
 					"SUCCESS",
 					"PLAYLISTS_DELETE_ORPHANED_STATION_PLAYLISTS",
-					"Deleting orphaned station playlists successfull."
+					"Deleting orphaned station playlists successful."
 				);
-				return cb({ status: "success", message: "Success" });
+				return cb({ status: "success", message: "Successfully deleted orphaned station playlists." });
 			}
 		);
 	}),
@@ -1606,14 +1608,14 @@ export default {
 						"PLAYLISTS_DELETE_ORPHANED_GENRE_PLAYLISTS",
 						`Deleting orphaned genre playlists failed. "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 				this.log(
 					"SUCCESS",
 					"PLAYLISTS_DELETE_ORPHANED_GENRE_PLAYLISTS",
-					"Deleting orphaned genre playlists successfull."
+					"Deleting orphaned genre playlists successful."
 				);
-				return cb({ status: "success", message: "Success" });
+				return cb({ status: "success", message: "Successfully deleted orphaned genre playlists." });
 			}
 		);
 	}),
@@ -1641,14 +1643,14 @@ export default {
 						"REQUEST_ORPHANED_PLAYLIST_SONGS",
 						`Requesting orphaned playlist songs failed. "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 				this.log(
 					"SUCCESS",
 					"REQUEST_ORPHANED_PLAYLIST_SONGS",
-					"Requesting orphaned playlist songs was successfull."
+					"Requesting orphaned playlist songs was successful."
 				);
-				return cb({ status: "success", message: "Success" });
+				return cb({ status: "success", message: "Successfully requested orphaned playlist songs." });
 			}
 		);
 	}),
@@ -1686,7 +1688,7 @@ export default {
 						`Clearing and refilling station playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
 					);
 
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log(
@@ -1736,7 +1738,7 @@ export default {
 						`Clearing and refilling genre playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
 					);
 
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log(
@@ -1803,7 +1805,7 @@ export default {
 						`Clearing and refilling all station playlists failed for user "${session.userId}". "${err}"`
 					);
 
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log(
@@ -1870,7 +1872,7 @@ export default {
 						`Clearing and refilling all genre playlists failed for user "${session.userId}". "${err}"`
 					);
 
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log(

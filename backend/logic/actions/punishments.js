@@ -51,10 +51,10 @@ export default {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "PUNISHMENTS_INDEX", `Indexing punishments failed. "${err}"`);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 				this.log("SUCCESS", "PUNISHMENTS_INDEX", "Indexing punishments successful.");
-				return cb({ status: "success", data: punishments });
+				return cb({ status: "success", data: { punishments } });
 			}
 		);
 	}),
@@ -88,10 +88,10 @@ export default {
 						"GET_PUNISHMENT_BY_ID",
 						`Getting punishment with id ${punishmentId} failed. "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 				this.log("SUCCESS", "GET_PUNISHMENT_BY_ID", `Got punishment with id ${punishmentId} successful.`);
-				return cb({ status: "success", data: punishment });
+				return cb({ status: "success", data: { punishment } });
 			}
 		);
 	}),
@@ -178,7 +178,7 @@ export default {
 						"BAN_IP",
 						`User ${session.userId} failed to ban IP address ${value} with the reason ${reason}. '${err}'`
 					);
-					cb({ status: "failure", message: err });
+					cb({ status: "error", message: err });
 				}
 				this.log(
 					"SUCCESS",

@@ -121,19 +121,21 @@ const modules = {
 								"users.getUsernameFromId",
 								userId,
 								res => {
+									const { username } = res.data;
+
 									if (res.status === "success") {
 										commit("mapUserId", {
 											userId,
-											username: res.data
+											username
 										});
 
 										state.pendingUserIdCallbacks[
 											`Z${userId}`
-										].forEach(cb => cb(res.data));
+										].forEach(cb => cb(username));
 
 										commit("clearPendingCallbacks", userId);
 
-										return resolve(res.data);
+										return resolve(username);
 									}
 									return resolve();
 								}

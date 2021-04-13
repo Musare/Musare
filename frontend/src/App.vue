@@ -136,14 +136,16 @@ export default {
 		});
 
 		this.socket.dispatch("users.getPreferences", res => {
+			const { preferences } = res.data;
+
 			if (res.status === "success") {
-				this.changeAutoSkipDisliked(res.data.autoSkipDisliked);
-				this.changeNightmode(res.data.nightmode);
-				this.changeActivityLogPublic(res.data.activityLogPublic);
+				this.changeAutoSkipDisliked(preferences.autoSkipDisliked);
+				this.changeNightmode(preferences.nightmode);
+				this.changeActivityLogPublic(preferences.activityLogPublic);
 				this.changeAnonymousSongRequests(
-					res.data.anonymousSongRequests
+					preferences.anonymousSongRequests
 				);
-				this.changeActivityWatch(res.data.activityWatch);
+				this.changeActivityWatch(preferences.activityWatch);
 
 				if (this.nightmode) this.enableNightMode();
 				else this.disableNightMode();

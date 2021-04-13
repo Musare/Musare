@@ -212,25 +212,20 @@ export default {
 	},
 	methods: {
 		init() {
-			this.socket.dispatch("utils.getModules", data => {
-				console.log(data);
-				if (data.status === "success") {
-					this.modules = data.modules;
-				}
+			this.socket.dispatch("utils.getModules", res => {
+				if (res.status === "success") this.modules = res.data.modules;
 			});
 
 			if (this.$route.query.moduleName) {
 				this.socket.dispatch(
 					"utils.getModule",
 					this.$route.query.moduleName,
-					data => {
-						console.log(data);
-						if (data.status === "success") {
+					res => {
+						if (res.status === "success")
 							this.module = {
-								runningJobs: data.runningJobs,
-								jobStatistics: data.jobStatistics
+								runningJobs: res.data.runningJobs,
+								jobStatistics: res.data.jobStatistics
 							};
-						}
 					}
 				);
 			}

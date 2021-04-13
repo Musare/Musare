@@ -58,10 +58,10 @@ export default {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "NEWS_INDEX", `Indexing news failed. "${err}"`);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 				this.log("SUCCESS", "NEWS_INDEX", `Indexing news successful.`, false);
-				return cb({ status: "success", data: news });
+				return cb({ status: "success", data: { news } });
 			}
 		);
 	},
@@ -85,10 +85,10 @@ export default {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "GET_NEWS_FROM_ID", `Getting news failed. "${err}"`);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 				this.log("SUCCESS", "GET_NEWS_FROM_ID", `Got news successful.`, false);
-				return cb({ status: "success", data: news });
+				return cb({ status: "success", data: { news } });
 			}
 		);
 	},
@@ -113,7 +113,7 @@ export default {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "NEWS_CREATE", `Creating news failed. "${err}"`);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 				CacheModule.runJob("PUB", { channel: "news.create", value: news });
 				this.log("SUCCESS", "NEWS_CREATE", `Creating news successful.`);
@@ -143,11 +143,11 @@ export default {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "NEWS_NEWEST", `Getting the latest news failed. "${err}"`);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log("SUCCESS", "NEWS_NEWEST", `Successfully got the latest news.`, false);
-				return cb({ status: "success", data: news });
+				return cb({ status: "success", data: { news } });
 			}
 		);
 	},
@@ -171,7 +171,7 @@ export default {
 					"NEWS_REMOVE",
 					`Removing news "${news._id}" failed for user "${session.userId}". "${err}"`
 				);
-				return cb({ status: "failure", message: err });
+				return cb({ status: "error", message: err });
 			}
 			CacheModule.runJob("PUB", { channel: "news.remove", value: news });
 			this.log("SUCCESS", "NEWS_REMOVE", `Removing news "${news._id}" successful by user "${session.userId}".`);
@@ -201,7 +201,7 @@ export default {
 					"NEWS_UPDATE",
 					`Updating news "${_id}" failed for user "${session.userId}". "${err}"`
 				);
-				return cb({ status: "failure", message: err });
+				return cb({ status: "error", message: err });
 			}
 			CacheModule.runJob("PUB", { channel: "news.update", value: news });
 			this.log("SUCCESS", "NEWS_UPDATE", `Updating news "${_id}" successful for user "${session.userId}".`);

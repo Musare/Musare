@@ -102,8 +102,10 @@ export default {
 	}),
 	mounted() {
 		this.socket.dispatch("news.index", res => {
-			this.news = res.data;
-			if (this.news.length === 0) this.noFound = true;
+			if (res.status === "success") {
+				this.news = res.data.news;
+				if (this.news.length === 0) this.noFound = true;
+			}
 		});
 		this.socket.on("event:admin.news.created", news => {
 			this.news.unshift(news);

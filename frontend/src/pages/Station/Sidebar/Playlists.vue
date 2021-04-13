@@ -104,7 +104,7 @@ export default {
 	mounted() {
 		/** Get playlists for user */
 		this.socket.dispatch("playlists.indexMyPlaylists", true, res => {
-			if (res.status === "success") this.playlists = res.data;
+			if (res.status === "success") this.playlists = res.data.playlists;
 			this.orderOfPlaylists = this.calculatePlaylistOrder(); // order in regards to the database
 		});
 
@@ -194,7 +194,7 @@ export default {
 					this.station._id,
 					id,
 					res => {
-						if (res.status === "failure") {
+						if (res.status === "error") {
 							new Toast(res.message);
 						} else {
 							this.station.includedPlaylists.push(id);
@@ -214,7 +214,7 @@ export default {
 					this.station._id,
 					id,
 					res => {
-						if (res.status === "failure")
+						if (res.status === "error")
 							return new Toast(res.message);
 
 						this.station.includedPlaylists.splice(

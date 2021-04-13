@@ -42,7 +42,7 @@ export default destination =>
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("INFO", "ADMIN_REQUIRED", `User failed to pass admin required check. "${err}"`);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 				this.log("INFO", "ADMIN_REQUIRED", `User "${session.userId}" passed admin required check.`, false);
 				return destination.apply(this, [session].concat(args));

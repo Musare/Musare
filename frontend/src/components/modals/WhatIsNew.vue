@@ -83,24 +83,28 @@ export default {
 	}),
 	mounted() {
 		this.socket.dispatch("news.newest", res => {
-			this.news = res.data;
+			if (res.status !== "success") return;
+
+			const { news } = res.data;
+
+			this.news = news;
 			if (this.news && localStorage.getItem("firstVisited")) {
 				if (localStorage.getItem("whatIsNew")) {
 					if (
 						parseInt(localStorage.getItem("whatIsNew")) <
-						res.data.createdAt
+						news.createdAt
 					) {
 						this.toggleModal();
-						localStorage.setItem("whatIsNew", res.data.createdAt);
+						localStorage.setItem("whatIsNew", news.createdAt);
 					}
 				} else {
 					if (
 						parseInt(localStorage.getItem("firstVisited")) <
-						res.data.createdAt
+						news.createdAt
 					) {
 						this.toggleModal();
 					}
-					localStorage.setItem("whatIsNew", res.data.createdAt);
+					localStorage.setItem("whatIsNew", news.createdAt);
 				}
 			} else if (!localStorage.getItem("firstVisited"))
 				localStorage.setItem("firstVisited", Date.now());

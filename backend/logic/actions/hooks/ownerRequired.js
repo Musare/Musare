@@ -56,7 +56,7 @@ export default destination =>
 						"OWNER_REQUIRED",
 						`User failed to pass owner required check for station "${stationId}". "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 				this.log(
 					"INFO",

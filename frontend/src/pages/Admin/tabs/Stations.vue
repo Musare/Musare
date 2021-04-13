@@ -319,11 +319,8 @@ export default {
 		},
 		clearEveryStationQueue() {
 			this.socket.dispatch("stations.clearEveryStationQueue", res => {
-				if (res.status === "success") {
-					new Toast(res.message);
-				} else {
-					new Toast(`Error: ${res.message}`);
-				}
+				if (res.status === "success") new Toast(res.message);
+				else new Toast(`Error: ${res.message}`);
 			});
 		},
 		init() {

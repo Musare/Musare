@@ -249,9 +249,10 @@ export default {
 		})
 	},
 	mounted() {
-		this.socket.dispatch("news.index", res =>
-			res.data.forEach(news => this.addNews(news))
-		);
+		this.socket.dispatch("news.index", res => {
+			if (res.status === "success")
+				res.data.news.forEach(news => this.addNews(news));
+		});
 
 		this.socket.on("event:admin.news.created", news => this.addNews(news));
 
@@ -284,22 +285,18 @@ export default {
 			)
 				return new Toast("You must have at least one News Item");
 
-			return this.socket.dispatch(
-				"news.create",
-				this.creating,
-				result => {
-					new Toast(result.message, 4000);
-					if (result.status === "success")
-						this.creating = {
-							title: "",
-							description: "",
-							bugs: [],
-							features: [],
-							improvements: [],
-							upcoming: []
-						};
-				}
-			);
+			return this.socket.dispatch("news.create", this.creating, res => {
+				new Toast(res.message, 4000);
+				if (res.status === "success")
+					this.creating = {
+						title: "",
+						description: "",
+						bugs: [],
+						features: [],
+						improvements: [],
+						upcoming: []
+					};
+			});
 		},
 		remove(news) {
 			this.socket.dispatch(

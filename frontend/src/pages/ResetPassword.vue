@@ -340,9 +340,7 @@ export default {
 			if (this.mode === "set") {
 				return this.socket.dispatch("users.requestPassword", res => {
 					new Toast(res.message);
-					if (res.status === "success") {
-						this.step = 2;
-					}
+					if (res.status === "success") this.step = 2;
 				});
 			}
 
@@ -368,9 +366,7 @@ export default {
 				this.code,
 				res => {
 					new Toast(res.message);
-					if (res.status === "success") {
-						this.step = 3;
-					}
+					if (res.status === "success") this.step = 3;
 				}
 			);
 		},

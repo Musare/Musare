@@ -62,12 +62,16 @@ export default {
 						"SONGS_LENGTH",
 						`Failed to get length of activities for user ${userId}. "${err}"`
 					);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log("SUCCESS", "ACTIVITIES_LENGTH", `Got length of activities for user ${userId} successfully.`);
 
-				return cb(count);
+				return cb({
+					status: "error",
+					message: "Successfully obtained length of activities.",
+					data: { length: count }
+				});
 			}
 		);
 	},
@@ -119,11 +123,11 @@ export default {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "ACTIVITIES_GET_SET", `Failed to get set ${set} from activities. "${err}"`);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				this.log("SUCCESS", "ACTIVITIES_GET_SET", `Set ${set} from activities obtained successfully.`);
-				return cb({ status: "success", data: activities });
+				return cb({ status: "success", data: { activities } });
 			}
 		);
 	},
@@ -148,7 +152,7 @@ export default {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "ACTIVITIES_HIDE_ACTIVITY", `Failed to hide activity ${activityId}. "${err}"`);
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				CacheModule.runJob("PUB", {
@@ -197,7 +201,7 @@ export default {
 						`Failed to delete activities for user ${session.userId}. "${err}"`
 					);
 
-					return cb({ status: "failure", message: err });
+					return cb({ status: "error", message: err });
 				}
 
 				CacheModule.runJob("PUB", {

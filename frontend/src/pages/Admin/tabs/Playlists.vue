@@ -130,7 +130,7 @@ export default {
 		init() {
 			this.socket.dispatch("playlists.index", res => {
 				if (res.status === "success") {
-					this.playlists = res.data;
+					this.playlists = res.data.playlists;
 					// if (this.$route.query.userId) {
 					// 	const user = this.users.find(
 					// 		user => user._id === this.$route.query.userId
@@ -161,11 +161,8 @@ export default {
 			this.socket.dispatch(
 				"playlists.deleteOrphanedStationPlaylists",
 				res => {
-					if (res.status === "success") {
-						new Toast(res.message);
-					} else {
-						new Toast(`Error: ${res.message}`);
-					}
+					if (res.status === "success") new Toast(res.message);
+					else new Toast(`Error: ${res.message}`);
 				}
 			);
 		},
@@ -173,11 +170,8 @@ export default {
 			this.socket.dispatch(
 				"playlists.deleteOrphanedGenrePlaylists",
 				res => {
-					if (res.status === "success") {
-						new Toast(res.message);
-					} else {
-						new Toast(`Error: ${res.message}`);
-					}
+					if (res.status === "success") new Toast(res.message);
+					else new Toast(`Error: ${res.message}`);
 				}
 			);
 		},
@@ -185,11 +179,8 @@ export default {
 			this.socket.dispatch(
 				"playlists.requestOrphanedPlaylistSongs",
 				res => {
-					if (res.status === "success") {
-						new Toast(res.message);
-					} else {
-						new Toast(`Error: ${res.message}`);
-					}
+					if (res.status === "success") new Toast(res.message);
+					else new Toast(`Error: ${res.message}`);
 				}
 			);
 		},
@@ -197,14 +188,13 @@ export default {
 			this.socket.dispatch(
 				"playlists.clearAndRefillAllStationPlaylists",
 				res => {
-					if (res.status === "success") {
+					if (res.status === "success")
 						new Toast({ content: res.message, timeout: 4000 });
-					} else {
+					else
 						new Toast({
 							content: `Error: ${res.message}`,
 							timeout: 4000
 						});
-					}
 				}
 			);
 		},
@@ -212,14 +202,13 @@ export default {
 			this.socket.dispatch(
 				"playlists.clearAndRefillAllGenrePlaylists",
 				res => {
-					if (res.status === "success") {
+					if (res.status === "success")
 						new Toast({ content: res.message, timeout: 4000 });
-					} else {
+					else
 						new Toast({
 							content: `Error: ${res.message}`,
 							timeout: 4000
 						});
-					}
 				}
 			);
 		},
