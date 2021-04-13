@@ -647,6 +647,16 @@ a {
 			}
 		}
 	}
+	.tippy-content > div {
+		display: flex;
+		flex-direction: column;
+		button {
+			width: 150px;
+			&:not(:last-of-type) {
+				margin-bottom: 10px;
+			}
+		}
+	}
 }
 
 .select {

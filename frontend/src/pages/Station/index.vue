@@ -170,6 +170,22 @@
 										Station settings
 									</span>
 								</button>
+								<button
+									class="button is-primary"
+									@click="
+										openModal({
+											sector: 'station',
+											modal: 'manageStation'
+										})
+									"
+								>
+									<i class="material-icons icon-with-button"
+										>settings</i
+									>
+									<span class="optional-desktop-only-text">
+										Manage Station
+									</span>
+								</button>
 							</div>
 						</div>
 						<div id="sidebar-container" class="quadrant">
@@ -575,6 +591,11 @@
 					:station-id="station._id"
 					sector="station"
 				/>
+				<manage-station
+					v-if="modals.station.manageStation"
+					:station-id="station._id"
+					sector="station"
+				/>
 				<report v-if="modals.station.report" />
 			</div>
 
@@ -666,6 +687,8 @@ export default {
 		EditPlaylist: () => import("@/components/modals/EditPlaylist.vue"),
 		CreatePlaylist: () => import("@/components/modals/CreatePlaylist.vue"),
 		EditStation: () => import("@/components/modals/EditStation.vue"),
+		ManageStation: () =>
+			import("@/components/modals/ManageStation/index.vue"),
 		Report: () => import("@/components/modals/Report.vue"),
 		Z404,
 		FloatingBox,

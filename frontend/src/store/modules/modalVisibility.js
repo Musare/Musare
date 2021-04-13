@@ -15,6 +15,7 @@ const state = {
 			editPlaylist: false,
 			createPlaylist: false,
 			editStation: false,
+			manageStation: false,
 			report: false
 		},
 		admin: {
