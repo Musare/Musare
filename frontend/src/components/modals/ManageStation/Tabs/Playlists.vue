@@ -187,7 +187,7 @@ export default {
 	},
 	mounted() {
 		this.socket.dispatch("playlists.indexMyPlaylists", true, res => {
-			if (res.status === "success") this.playlists = res.data.playlists;
+			if (res.status === "success") this.playlists = res.data;
 			this.orderOfPlaylists = this.calculatePlaylistOrder(); // order in regards to the database
 		});
 

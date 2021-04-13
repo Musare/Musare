@@ -112,7 +112,7 @@ export default {
 	mounted() {
 		this.socket.dispatch(`stations.getStationById`, this.stationId, res => {
 			if (res.status === "success") {
-				const { station } = res.data;
+				const { station } = res;
 				this.editStation(station);
 			} else {
 				new Toast(`Station with that ID not found${this.stationId}`);
