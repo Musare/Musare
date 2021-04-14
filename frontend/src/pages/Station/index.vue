@@ -810,6 +810,8 @@ export default {
 							res.status === "success" &&
 							this.currentSong.youtubeId === res.data.youtubeId
 						) {
+							console.log(res);
+
 							this.liked = res.data.liked;
 							this.disliked = res.data.disliked;
 

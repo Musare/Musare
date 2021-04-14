@@ -135,11 +135,11 @@ CacheModule.runJob("SUB", {
 	channel: "song.like",
 	cb: data => {
 		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `song.${data.songId}`,
+			room: `song.${data.youtubeId}`,
 			args: [
 				"event:song.like",
 				{
-					songId: data.songId,
+					youtubeId: data.youtubeId,
 					likes: data.likes,
 					dislikes: data.dislikes
 				}
@@ -149,7 +149,7 @@ CacheModule.runJob("SUB", {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
 			sockets.forEach(socket => {
 				socket.dispatch("event:song.newRatings", {
-					songId: data.songId,
+					youtubeId: data.youtubeId,
 					liked: true,
 					disliked: false
 				});
@@ -162,11 +162,11 @@ CacheModule.runJob("SUB", {
 	channel: "song.dislike",
 	cb: data => {
 		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `song.${data.songId}`,
+			room: `song.${data.youtubeId}`,
 			args: [
 				"event:song.dislike",
 				{
-					songId: data.songId,
+					youtubeId: data.youtubeId,
 					likes: data.likes,
 					dislikes: data.dislikes
 				}
@@ -175,7 +175,7 @@ CacheModule.runJob("SUB", {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
 			sockets.forEach(socket => {
 				socket.dispatch("event:song.newRatings", {
-					songId: data.songId,
+					youtubeId: data.youtubeId,
 					liked: false,
 					disliked: true
 				});
@@ -188,11 +188,11 @@ CacheModule.runJob("SUB", {
 	channel: "song.unlike",
 	cb: data => {
 		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `song.${data.songId}`,
+			room: `song.${data.youtubeId}`,
 			args: [
 				"event:song.unlike",
 				{
-					songId: data.songId,
+					youtubeId: data.youtubeId,
 					likes: data.likes,
 					dislikes: data.dislikes
 				}
@@ -201,7 +201,7 @@ CacheModule.runJob("SUB", {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
 			sockets.forEach(socket => {
 				socket.dispatch("event:song.newRatings", {
-					songId: data.songId,
+					youtubeId: data.youtubeId,
 					liked: false,
 					disliked: false
 				});
@@ -214,11 +214,11 @@ CacheModule.runJob("SUB", {
 	channel: "song.undislike",
 	cb: data => {
 		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `song.${data.songId}`,
+			room: `song.${data.youtubeId}`,
 			args: [
 				"event:song.undislike",
 				{
-					songId: data.songId,
+					youtubeId: data.youtubeId,
 					likes: data.likes,
 					dislikes: data.dislikes
 				}
@@ -227,7 +227,7 @@ CacheModule.runJob("SUB", {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
 			sockets.forEach(socket => {
 				socket.dispatch("event:song.newRatings", {
-					songId: data.songId,
+					youtubeId: data.youtubeId,
 					liked: false,
 					disliked: false
 				});
