@@ -302,7 +302,7 @@ export default {
 		};
 	},
 	computed: {
-		...mapState("modals/editStation", {
+		...mapState("modals/manageStation", {
 			station: state => state.station,
 			originalStation: state => state.originalStation
 		}),

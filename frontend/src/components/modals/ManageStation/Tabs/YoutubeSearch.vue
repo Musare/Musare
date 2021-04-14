@@ -79,7 +79,7 @@ export default {
 	},
 	mixins: [SearchYoutube],
 	computed: {
-		...mapState("modals/editStation", {
+		...mapState("modals/manageStation", {
 			station: state => state.station,
 			originalStation: state => state.originalStation
 		}),

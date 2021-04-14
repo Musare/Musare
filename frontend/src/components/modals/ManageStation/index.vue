@@ -98,7 +98,7 @@ export default {
 		};
 	},
 	computed: {
-		...mapState("modals/editStation", {
+		...mapState("modals/manageStation", {
 			station: state => state.station,
 			originalStation: state => state.originalStation
 		}),
@@ -111,6 +111,26 @@ export default {
 			if (res.status === "success") {
 				const { station } = res.data;
 				this.editStation(station);
+
+				this.socket.dispatch(
+					"stations.getStationIncludedPlaylistsById",
+					this.stationId,
+					res => {
+						if (res.status === "success") {
+							this.setIncludedPlaylists(res.data.playlists);
+						}
+					}
+				);
+
+				this.socket.dispatch(
+					"stations.getStationExcludedPlaylistsById",
+					this.stationId,
+					res => {
+						if (res.status === "success") {
+							this.setExcludedPlaylists(res.data.playlists);
+						}
+					}
+				);
 			} else {
 				new Toast(`Station with that ID not found${this.stationId}`);
 				this.closeModal({
@@ -138,7 +158,12 @@ export default {
 				}
 			);
 		},
-		...mapActions("modals/editStation", ["editStation", "clearStation"]),
+		...mapActions("modals/manageStation", [
+			"editStation",
+			"setIncludedPlaylists",
+			"setExcludedPlaylists",
+			"clearStation"
+		]),
 		...mapActions("modalVisibility", ["closeModal"])
 	}
 };

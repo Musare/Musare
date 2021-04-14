@@ -144,7 +144,7 @@
 <script>
 import { mapActions, mapState, mapGetters } from "vuex";
 
-import Toast from "toasters";
+// import Toast from "toasters";
 import draggable from "vuedraggable";
 import PlaylistItem from "@/components/PlaylistItem.vue";
 
@@ -154,8 +154,8 @@ import SortablePlaylists from "@/mixins/SortablePlaylists.vue";
 export default {
 	components: {
 		draggable,
-		PlaylistItem,
-		CreatePlaylist: () => import("@/components/modals/CreatePlaylist.vue")
+		PlaylistItem
+		// CreatePlaylist: () => import("@/components/modals/CreatePlaylist.vue")
 	},
 	mixins: [TabQueryHandler, SortablePlaylists],
 	data() {
@@ -177,7 +177,7 @@ export default {
 			myUserId: state => state.user.auth.userId,
 			userId: state => state.user.auth.userId
 		}),
-		...mapState("modals/editStation", {
+		...mapState("modals/manageStation", {
 			station: state => state.station,
 			originalStation: state => state.originalStation
 		}),
