@@ -72,11 +72,9 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "user.removeSessions",
 	cb: userId => {
-		WSModule.runJob("SOCKETS_FROM_USER_WITHOUT_CACHE", { userId }).then(sockets => {
-			sockets.forEach(socket => {
-				socket.dispatch("keep.event:user.session.removed");
-			});
-		});
+		WSModule.runJob("SOCKETS_FROM_USER", { userId }).then(sockets =>
+			sockets.forEach(socket => socket.dispatch("keep.event:user.session.removed"))
+		);
 	}
 });
 
@@ -583,23 +581,32 @@ export default {
 				},
 
 				(session, next) => {
-					CacheModule.runJob("HDEL", { table: "sessions", key: session.sessionId }, this)
-						.then(() => next())
-						.catch(next);
+					CacheModule.runJob("PUB", {
+						channel: "user.removeSessions",
+						value: session.userId
+					});
+
+					// temp fix, need to wait properly for the SUB/PUB refactor (on wekan)
+					setTimeout(() => {
+						CacheModule.runJob("HDEL", { table: "sessions", key: session.sessionId }, this)
+							.then(() => next())
+							.catch(next);
+					}, 50);
 				}
 			],
 			async err => {
 				if (err && err !== true) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "USER_LOGOUT", `Logout failed. "${err}" `);
-					cb({ status: "error", message: err });
-				} else {
-					this.log("SUCCESS", "USER_LOGOUT", `Logout successful.`);
-					cb({
-						status: "success",
-						message: "Successfully logged out."
-					});
+					return cb({ status: "error", message: err });
 				}
+
+				this.log("SUCCESS", "USER_LOGOUT", `Logout successful.`);
+
+				return cb({
+					status: "success",
+					message: "Successfully logged out."
+				});
 			}
 		);
 	},
@@ -647,25 +654,29 @@ export default {
 						value: userId
 					});
 
-					async.each(
-						keys,
-						(sessionId, callback) => {
-							const session = sessions[sessionId];
-							if (session.userId === userId) {
-								// TODO Also maybe add this to this runJob
-								CacheModule.runJob("HDEL", {
-									channel: "sessions",
-									key: sessionId
-								})
-									.then(() => {
-										callback(null);
-									})
-									.catch(next);
-							}
-						},
-						err => {
-							next(err);
-						}
+					// temp fix, need to wait properly for the SUB/PUB refactor (on wekan)
+					setTimeout(
+						() =>
+							async.each(
+								keys,
+								(sessionId, callback) => {
+									const session = sessions[sessionId];
+
+									if (session.userId === userId) {
+										// TODO Also maybe add this to this runJob
+										CacheModule.runJob("HDEL", {
+											table: "sessions",
+											key: sessionId
+										})
+											.then(() => callback(null))
+											.catch(callback);
+									}
+								},
+								err => {
+									next(err);
+								}
+							),
+						50
 					);
 				}
 			],
@@ -679,7 +690,9 @@ export default {
 					);
 					return cb({ status: "error", message: err });
 				}
+
 				this.log("SUCCESS", "REMOVE_SESSIONS_FOR_USER", `Removed all sessions for user "${userId}".`);
+
 				return cb({
 					status: "success",
 					message: "Successfully removed all sessions."
