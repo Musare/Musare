@@ -2,116 +2,115 @@
 	<div class="app">
 		<metadata title="Team" />
 		<main-header />
-		<div class="container">
-			<div class="content-wrapper">
-				<h2 class="has-text-centered page-title">Our Team</h2>
-				<div class="columns">
-					<div
-						class="card column is-6-desktop is-offset-3-desktop is-12-mobile"
+		<h2 class="has-text-centered">Current Team</h2>
+		<div class="group">
+			<div
+				v-for="(member, index) in currentTeam"
+				:key="index"
+				class="card"
+			>
+				<header class="card-header">
+					<profile-picture
+						:avatar="member.avatar"
+						:name="member.name"
+					/>
+					<div>
+						<strong>{{ member.name }}</strong>
+						<span v-if="member.active"
+							>Active: {{ member.active }}</span
+						>
+					</div>
+					<a
+						v-if="member.link"
+						:href="member.link"
+						target="_blank"
+						class="material-icons"
 					>
-						<header class="card-header">
-							<p class="card-header-title">Kris</p>
-						</header>
-						<div class="card-content">
-							<div class="content">
-								<span class="role"
-									><span class="custom-tag purple"
-										>Senior Project Manager</span
-									>
-									and
-									<span class="custom-tag blue"
-										>Co-Founder</span
-									></span
-								>
-								<ul>
-									<li>
-										<b>Joined: </b>
-										September 23, 2015
-									</li>
-									<li>
-										<b>Email: </b>
-										<a href="mailto:kris@musare.com"
-											>&#107;&#114;&#105;&#115;&#064;&#109;&#117;&#115;&#097;&#114;&#101;&#046;&#099;&#111;&#109;</a
-										>
-									</li>
-								</ul>
-							</div>
-						</div>
+						link
+					</a>
+				</header>
+				<div class="card-content">
+					<div v-if="member.bio" class="bio">
+						{{ member.bio }}
+					</div>
+					<div v-if="member.projects" class="projects">
+						<a
+							v-for="(project, index) in member.projects"
+							:key="index"
+							:href="
+								'https://github.com/Musare/' +
+									project +
+									'/commits?author=' +
+									member.github
+							"
+							target="_blank"
+						>
+							{{ project }}
+						</a>
 					</div>
 				</div>
-				<br />
-				<div class="columns">
-					<div
-						class="card column is-6-desktop is-offset-3-desktop is-12-mobile"
+			</div>
+		</div>
+		<h3 class="has-text-centered">Previous Team</h3>
+		<div class="group">
+			<div
+				v-for="(member, index) in previousTeam"
+				:key="index"
+				class="card"
+			>
+				<header class="card-header">
+					<profile-picture
+						:avatar="{ type: 'text', color: 'grey' }"
+						:name="member.name"
+					/>
+					<div>
+						<strong>{{ member.name }}</strong>
+						<span v-if="member.active"
+							>Active: {{ member.active }}</span
+						>
+					</div>
+					<a
+						v-if="member.link"
+						:href="member.link"
+						target="_blank"
+						class="material-icons"
 					>
-						<header class="card-header">
-							<p class="card-header-title">Jonathan</p>
-						</header>
-						<div class="card-content">
-							<div class="content">
-								<span class="role"
-									><span class="custom-tag light-blue"
-										>Lead Developer</span
-									></span
-								>
-								<ul>
-									<li>
-										<b>Joined: </b>
-										August 28, 2016
-									</li>
-									<li>
-										<b>Email: </b>
-										<a href="mailto:jonathan@musare.com"
-											>&#106;&#111;&#110;&#097;&#116;&#104;&#097;&#110;&#064;&#109;&#117;&#115;&#097;&#114;&#101;&#046;&#099;&#111;&#109;</a
-										>
-									</li>
-								</ul>
-							</div>
-						</div>
+						link
+					</a>
+				</header>
+				<div class="card-content">
+					<div v-if="member.bio" class="bio">
+						{{ member.bio }}
+					</div>
+					<div v-if="member.projects" class="projects">
+						<a
+							v-for="(project, index) in member.projects"
+							:key="index"
+							:href="
+								'https://github.com/Musare/' +
+									project +
+									'/commits?author=' +
+									member.github
+							"
+							target="_blank"
+						>
+							{{ project }}
+						</a>
 					</div>
 				</div>
-				<br />
-				<div class="columns">
-					<div
-						class="card column is-6-desktop is-offset-3-desktop is-12-mobile"
-					>
-						<header class="card-header">
-							<p class="card-header-title">Antonio</p>
-						</header>
-						<div class="card-content">
-							<div class="content">
-								<span class="role"
-									><span class="custom-tag light-green"
-										>Moderator</span
-									></span
-								>
-								<ul>
-									<li>
-										<b>Joined: </b>
-										November 11, 2015
-									</li>
-									<li>
-										<b>Email: </b>
-										<a href="mailto:antonio@musare.com"
-											>&#97;&#110;&#116;&#111;&#110;&#105;&#111;&#64;&#109;&#117;&#115;&#97;&#114;&#101;&#46;&#99;&#111;&#109;</a
-										>
-									</li>
-								</ul>
-							</div>
-						</div>
-					</div>
-				</div>
-				<div id="special-thanks">
-					<h4 class="has-text-centered">Special Thanks</h4>
-					<br />
-					<p class="has-text-centered thanks">
-						Special thanks to Owen Diffey, Zachery, Adryd, Cameron
-						Kline, Wesley McCann,
-						<strong>Akira Laine (Co-Founder)</strong>, Johannes
-						Andersen and Aaron Gildea for their contributions to
-						Musare.
-					</p>
-				</div>
+			</div>
+		</div>
+		<div class="other-contributors">
+			<h4>Other Contributors</h4>
+			<div>
+				<a
+					v-for="(member, index) in otherContributors"
+					:key="index"
+					:href="member.link"
+					target="_blank"
+				>
+					{{ member.name }}
+				</a>
 			</div>
 		</div>
 		<main-footer />
@@ -121,77 +120,249 @@
 <script>
 import MainHeader from "@/components/layout/MainHeader.vue";
 import MainFooter from "@/components/layout/MainFooter.vue";
+import ProfilePicture from "@/components/ProfilePicture.vue";
 
 export default {
-	components: { MainHeader, MainFooter }
+	components: { MainHeader, MainFooter, ProfilePicture },
+	data() {
+		return {
+			currentTeam: [
+				{
+					name: "Kristian Vos",
+					bio:
+						"Co-Founder, Owner, Lead Developer, System Admin and QA Tester.",
+					projects: [
+						"MusareMeteor",
+						"MusareReact",
+						"MusareNode",
+						"MusareStatus",
+						"MusareTranslation",
+						"aw-watcher-musare",
+						"lofig"
+					],
+					active: "Sept 2015 - present",
+					github: "KrisVos130",
+					link: "https://kvos.dev",
+					avatar: {
+						type: "text",
+						color: "orange"
+					}
+				},
+				{
+					name: "Owen Diffey",
+					bio:
+						"Developer, Designer, System Admin and QA Tester. Previously Owner and Project Manager.",
+					projects: ["MusareMeteor", "MusareReact", "MusareNode"],
+					active: "Feb 2016 - present",
+					github: "odiffey",
+					link: "https://diffey.dev",
+					avatar: {
+						type: "text",
+						color: "purple"
+					}
+				},
+				{
+					name: "Jonathan Graham",
+					bio: "Lead Developer, Designer and QA Tester.",
+					projects: [
+						"MusareMeteor",
+						"MusareReact",
+						"MusareNode",
+						"vue-roaster",
+						"lofig"
+					],
+					active: "Aug 2016 - present",
+					github: "jonathan-grah",
+					link: "https://jgraham.dev",
+					avatar: {
+						type: "text",
+						color: "blue"
+					}
+				}
+			],
+			previousTeam: [
+				{
+					name: "Akira Laine",
+					bio:
+						"Co-Founder, Leader Developer, Designer and QA Tester.",
+					projects: ["MusareMeteor"],
+					active: "Sept 2015 - Feb 2016",
+					github: "darthmeme",
+					link: "https://github.com/AkiraLaine"
+				},
+				{
+					name: "Cameron Kline",
+					bio: "Developer, Designer and QA Tester.",
+					projects: ["MusareMeteor", "MusareReact", "MusareNode"],
+					active: "Aug - Nov 2016",
+					github: "luveti",
+					link: "https://github.com/luveti"
+				},
+				{
+					name: "Antonio",
+					bio: "Official instance Moderator.",
+					active: "Unknown"
+				},
+				{
+					name: "Aaron Gildea",
+					bio: "Official instance Moderator.",
+					active: "Unknown"
+				},
+				{
+					name: "Adryd",
+					bio: "Created Logo.",
+					active: "May 2016",
+					link: "https://github.com/Adryd"
+				}
+			],
+			otherContributors: [
+				{
+					name: "arvind-iyer",
+					link: "https://github.com/arvind-iyer"
+				},
+				{
+					name: "CullenIO",
+					link: "https://github.com/CullenIO"
+				},
+				{
+					name: "Wesley McCann",
+					link: "https://github.com/Septimus"
+				},
+				{
+					name: "Johannes Andersen",
+					link: "https://github.com/Johannes-Andersen"
+				}
+			]
+		};
+	}
 };
 </script>
 
 <style lang="scss" scoped>
 .night-mode {
-	.card {
+	.group .card {
 		background-color: var(--dark-grey-3);
 		p {
 			color: var(--light-grey-2);
 		}
 	}
+	.group .card .card-content .projects a,
+	.other-contributors div a {
+		background-color: var(--dark-grey);
+	}
 }
 
-li a {
-	color: dodgerblue;
-	border-bottom: 0 !important;
+a {
+	color: var(--primary-color);
+	&:hover,
+	&:focus {
+		filter: brightness(95%);
+	}
 }
 
-ul {
-	margin-left: 0;
-	margin-right: 0;
-	list-style: none;
+h2,
+h3,
+h4 {
+	margin: 20px 0;
+}
+h2 {
+	margin-top: 50px;
+}
+.other-contributors {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	text-align: center;
+	margin-bottom: 50px;
+
+	div {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		a {
+			background: var(--white);
+			padding: 10px;
+			border-radius: 5px;
+			white-space: nowrap;
+			margin-top: 5px;
+			font-size: 16px;
+			text-align: center;
+			box-shadow: 0 1px 2px rgba(10, 10, 10, 0.1),
+				0 0 0 1px rgba(10, 10, 10, 0.1);
+			&:not(:last-of-type) {
+				margin-right: 5px;
+			}
+		}
+	}
 }
 
-.columns {
-	margin: 0;
-}
+.group {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	margin: 0 auto;
+	max-width: 1260px;
 
-.card-content .content {
-	font-size: 15px;
-}
+	.card {
+		display: inline-flex;
+		flex-direction: column;
+		width: calc(100% - 30px);
+		max-width: 400px;
+		margin: 10px;
+		text-align: left;
+		border-radius: 5px;
+		box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1),
+			0 0 0 1px rgba(10, 10, 10, 0.1);
+		.card-header {
+			line-height: 22.5px;
+			padding: 10px;
+			.profile-picture {
+				margin-right: 10px;
+				width: 45px;
+				height: 45px;
+				font-size: 20px;
+			}
+			div {
+				display: flex;
+				flex-direction: column;
+				line-height: 20px;
+				margin: auto 0;
+				strong {
+					font-size: 18px;
+				}
+			}
+			a {
+				margin-top: auto;
+				margin-bottom: auto;
+				margin-left: auto;
+			}
+		}
+		.card-content {
+			display: flex;
+			flex-direction: column;
+			flex-grow: 1;
+			.bio {
+				font-size: 16px;
+				margin-bottom: 10px;
+			}
+			.projects {
+				display: flex;
+				flex-wrap: wrap;
+				margin-top: auto;
 
-.card-header-title {
-	font-size: 17px;
-	font-weight: 700;
-}
-
-.role {
-	font-size: 16px;
-	font-weight: 500;
-}
-
-.custom-tag.blue {
-	border-bottom: 2px var(--dark-blue) solid;
-}
-
-.custom-tag.pink {
-	border-bottom: 2px var(--light-pink) solid;
-}
-
-.custom-tag.light-blue {
-	border-bottom: 2px var(--blue) solid;
-	background-color: transparent !important;
-}
-
-.custom-tag.light-green {
-	border-bottom: 2px var(--teal) solid;
-}
-
-.custom-tag.purple {
-	border-bottom: 2px var(--purple) solid;
-}
-
-#special-thanks {
-	margin-top: 60px;
-
-	.thanks {
-		font-size: 15px;
+				a {
+					background: var(--light-grey-2);
+					height: 30px;
+					padding: 5px;
+					border-radius: 5px;
+					white-space: nowrap;
+					margin-top: 5px;
+					&:not(:last-of-type) {
+						margin-right: 5px;
+					}
+				}
+			}
+		}
 	}
 }
 </style>
