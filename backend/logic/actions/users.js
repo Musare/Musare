@@ -23,7 +23,7 @@ CacheModule.runJob("SUB", {
 	cb: res => {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
 			sockets.forEach(socket => {
-				socket.dispatch("keep.event:user.preferences.changed", res.preferences);
+				socket.dispatch("keep.event:user.preferences.changed", { data: { preferences: res.preferences } });
 			});
 		});
 	}
@@ -34,7 +34,9 @@ CacheModule.runJob("SUB", {
 	cb: res => {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
 			sockets.forEach(socket => {
-				socket.dispatch("event:user.orderOfFavoriteStations.changed", res.favoriteStations);
+				socket.dispatch("event:user.orderOfFavoriteStations.changed", {
+					data: { order: res.favoriteStations }
+				});
 			});
 		});
 	}
@@ -45,13 +47,13 @@ CacheModule.runJob("SUB", {
 	cb: res => {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
 			sockets.forEach(socket => {
-				socket.dispatch("event:user.orderOfPlaylists.changed", res.orderOfPlaylists);
+				socket.dispatch("event:user.orderOfPlaylists.changed", { data: { order: res.orderOfPlaylists } });
 			});
 		});
 
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `profile-${res.userId}-playlists`,
-			args: ["event:user.orderOfPlaylists.changed", res.orderOfPlaylists]
+			args: ["event:user.orderOfPlaylists.changed", { data: { order: res.orderOfPlaylists } }]
 		});
 	}
 });
@@ -61,7 +63,7 @@ CacheModule.runJob("SUB", {
 	cb: user => {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: user._id }).then(sockets => {
 			sockets.forEach(socket => {
-				socket.dispatch("event:user.username.changed", user.username);
+				socket.dispatch("event:user.username.changed", { data: { username: user.username } });
 			});
 		});
 	}
@@ -70,11 +72,9 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "user.removeSessions",
 	cb: userId => {
-		WSModule.runJob("SOCKETS_FROM_USER_WITHOUT_CACHE", { userId }).then(sockets => {
-			sockets.forEach(socket => {
-				socket.dispatch("keep.event:user.session.removed");
-			});
-		});
+		WSModule.runJob("SOCKETS_FROM_USER", { userId }).then(sockets =>
+			sockets.forEach(socket => socket.dispatch("keep.event:user.session.removed"))
+		);
 	}
 });
 
@@ -127,7 +127,7 @@ CacheModule.runJob("SUB", {
 	cb: data => {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
 			sockets.forEach(socket => {
-				socket.dispatch("keep.event:banned", data.punishment);
+				socket.dispatch("keep.event:banned", { data: { ban: data.punishment } });
 				socket.disconnect(true);
 			});
 		});
@@ -139,7 +139,7 @@ CacheModule.runJob("SUB", {
 	cb: data => {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
 			sockets.forEach(socket => {
-				socket.dispatch("event:user.favoritedStation", data.stationId);
+				socket.dispatch("event:user.favoritedStation", { data: { stationId: data.stationId } });
 			});
 		});
 	}
@@ -150,7 +150,7 @@ CacheModule.runJob("SUB", {
 	cb: data => {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
 			sockets.forEach(socket => {
-				socket.dispatch("event:user.unfavoritedStation", data.stationId);
+				socket.dispatch("event:user.unfavoritedStation", { data: { stationId: data.stationId } });
 			});
 		});
 	}
@@ -581,23 +581,32 @@ export default {
 				},
 
 				(session, next) => {
-					CacheModule.runJob("HDEL", { table: "sessions", key: session.sessionId }, this)
-						.then(() => next())
-						.catch(next);
+					CacheModule.runJob("PUB", {
+						channel: "user.removeSessions",
+						value: session.userId
+					});
+
+					// temp fix, need to wait properly for the SUB/PUB refactor (on wekan)
+					setTimeout(() => {
+						CacheModule.runJob("HDEL", { table: "sessions", key: session.sessionId }, this)
+							.then(() => next())
+							.catch(next);
+					}, 50);
 				}
 			],
 			async err => {
 				if (err && err !== true) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "USER_LOGOUT", `Logout failed. "${err}" `);
-					cb({ status: "error", message: err });
-				} else {
-					this.log("SUCCESS", "USER_LOGOUT", `Logout successful.`);
-					cb({
-						status: "success",
-						message: "Successfully logged out."
-					});
+					return cb({ status: "error", message: err });
 				}
+
+				this.log("SUCCESS", "USER_LOGOUT", `Logout successful.`);
+
+				return cb({
+					status: "success",
+					message: "Successfully logged out."
+				});
 			}
 		);
 	},
@@ -645,25 +654,29 @@ export default {
 						value: userId
 					});
 
-					async.each(
-						keys,
-						(sessionId, callback) => {
-							const session = sessions[sessionId];
-							if (session.userId === userId) {
-								// TODO Also maybe add this to this runJob
-								CacheModule.runJob("HDEL", {
-									channel: "sessions",
-									key: sessionId
-								})
-									.then(() => {
-										callback(null);
-									})
-									.catch(next);
-							}
-						},
-						err => {
-							next(err);
-						}
+					// temp fix, need to wait properly for the SUB/PUB refactor (on wekan)
+					setTimeout(
+						() =>
+							async.each(
+								keys,
+								(sessionId, callback) => {
+									const session = sessions[sessionId];
+
+									if (session.userId === userId) {
+										// TODO Also maybe add this to this runJob
+										CacheModule.runJob("HDEL", {
+											table: "sessions",
+											key: sessionId
+										})
+											.then(() => callback(null))
+											.catch(callback);
+									}
+								},
+								err => {
+									next(err);
+								}
+							),
+						50
 					);
 				}
 			],
@@ -677,7 +690,9 @@ export default {
 					);
 					return cb({ status: "error", message: err });
 				}
+
 				this.log("SUCCESS", "REMOVE_SESSIONS_FOR_USER", `Removed all sessions for user "${userId}".`);
+
 				return cb({
 					status: "success",
 					message: "Successfully removed all sessions."

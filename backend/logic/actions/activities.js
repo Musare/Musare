@@ -26,13 +26,15 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "activity.hide",
 	cb: res => {
-		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets =>
-			sockets.forEach(socket => socket.dispatch("event:activity.hide", res.activityId))
+		const { activityId, userId } = res;
+
+		WSModule.runJob("SOCKETS_FROM_USER", { userId }, this).then(sockets =>
+			sockets.forEach(socket => socket.dispatch("event:activity.hide", { data: { activityId } }))
 		);
 
 		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `profile-${res.userId}-activities`,
-			args: ["event:activity.hide", res.activityId]
+			room: `profile-${userId}-activities`,
+			args: ["event:activity.hide", { data: { activityId } }]
 		});
 	}
 });

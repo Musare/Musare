@@ -98,14 +98,14 @@ export default {
 			}
 		});
 
-		this.socket.on("event:activity.create", activity => {
-			this.activities.unshift(activity);
+		this.socket.on("event:activity.create", res => {
+			this.activities.unshift(res.data.activity);
 			this.offsettedFromNextSet += 1;
 		});
 
-		this.socket.on("event:activity.hide", activityId => {
+		this.socket.on("event:activity.hide", res => {
 			this.activities = this.activities.filter(
-				activity => activity._id !== activityId
+				activity => activity._id !== res.data.activityId
 			);
 
 			this.offsettedFromNextSet -= 1;

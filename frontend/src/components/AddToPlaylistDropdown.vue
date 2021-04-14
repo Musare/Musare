@@ -77,22 +77,22 @@ export default {
 			}
 		});
 
-		this.socket.on("event:playlist.create", playlist => {
-			this.playlists.push(playlist);
+		this.socket.on("event:playlist.create", res => {
+			this.playlists.push(res.data.playlist);
 		});
 
-		this.socket.on("event:playlist.delete", playlistId => {
+		this.socket.on("event:playlist.delete", res => {
 			this.playlists.forEach((playlist, index) => {
-				if (playlist._id === playlistId) {
+				if (playlist._id === res.data.playlistId) {
 					this.playlists.splice(index, 1);
 				}
 			});
 		});
 
-		this.socket.on("event:playlist.updateDisplayName", data => {
+		this.socket.on("event:playlist.updateDisplayName", res => {
 			this.playlists.forEach((playlist, index) => {
-				if (playlist._id === data.playlistId) {
-					this.playlists[index].displayName = data.displayName;
+				if (playlist._id === res.data.playlistId) {
+					this.playlists[index].displayName = res.data.displayName;
 				}
 			});
 		});

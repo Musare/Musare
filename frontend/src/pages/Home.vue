@@ -538,7 +538,8 @@ export default {
 		ws.onConnect(() => this.init());
 
 		this.socket.on("event:stations.created", res => {
-			const station = res;
+			const station = res.data;
+
 			if (this.stations.find(_station => _station._id === station._id)) {
 				this.stations.forEach(s => {
 					const _station = s;
@@ -558,7 +559,8 @@ export default {
 		});
 
 		this.socket.on("event:station.removed", res => {
-			const { stationId } = res;
+			const { stationId } = res.data;
+
 			const station = this.stations.find(
 				station => station._id === stationId
 			);
@@ -574,44 +576,44 @@ export default {
 			}
 		});
 
-		this.socket.on("event:userCount.updated", (stationId, userCount) => {
+		this.socket.on("event:userCount.updated", res => {
 			const station = this.stations.find(
-				station => station._id === stationId
+				station => station._id === res.data.stationId
 			);
 
-			if (station) station.userCount = userCount;
+			if (station) station.userCount = res.data.userCount;
 		});
 
 		this.socket.on("event:station.updatePrivacy", res => {
 			const station = this.stations.find(
-				station => station._id === res.stationId
+				station => station._id === res.data.stationId
 			);
 
-			if (station) station.privacy = res.privacy;
+			if (station) station.privacy = res.data.privacy;
 		});
 
 		this.socket.on("event:station.updateName", res => {
 			const station = this.stations.find(
-				station => station._id === res.stationId
+				station => station._id === res.data.stationId
 			);
 
-			if (station) station.name = res.name;
+			if (station) station.name = res.data.name;
 		});
 
 		this.socket.on("event:station.updateDisplayName", res => {
 			const station = this.stations.find(
-				station => station._id === res.stationId
+				station => station._id === res.data.stationId
 			);
 
-			if (station) station.displayName = res.displayName;
+			if (station) station.displayName = res.data.displayName;
 		});
 
 		this.socket.on("event:station.updateDescription", res => {
 			const station = this.stations.find(
-				station => station._id === res.stationId
+				station => station._id === res.data.stationId
 			);
 
-			if (station) station.description = res.description;
+			if (station) station.description = res.data.description;
 		});
 
 		this.socket.on("event:station.updateTheme", res => {
@@ -622,13 +624,13 @@ export default {
 			if (station) station.theme = res.theme;
 		});
 
-		this.socket.on("event:station.nextSong", (stationId, song) => {
+		this.socket.on("event:station.nextSong", res => {
 			const station = this.stations.find(
-				station => station._id === stationId
+				station => station._id === res.data.stationId
 			);
 
 			if (station) {
-				let newSong = song;
+				let newSong = res.data.song;
 
 				if (!newSong)
 					newSong = {
@@ -641,7 +643,7 @@ export default {
 
 		this.socket.on("event:station.pause", res => {
 			const station = this.stations.find(
-				station => station._id === res.stationId
+				station => station._id === res.data.stationId
 			);
 
 			if (station) station.paused = true;
@@ -649,13 +651,15 @@ export default {
 
 		this.socket.on("event:station.resume", res => {
 			const station = this.stations.find(
-				station => station._id === res.stationId
+				station => station._id === res.data.stationId
 			);
 
 			if (station) station.paused = false;
 		});
 
-		this.socket.on("event:user.favoritedStation", stationId => {
+		this.socket.on("event:user.favoritedStation", res => {
+			const { stationId } = res.data;
+
 			const station = this.stations.find(
 				station => station._id === stationId
 			);
@@ -666,7 +670,9 @@ export default {
 			}
 		});
 
-		this.socket.on("event:user.unfavoritedStation", stationId => {
+		this.socket.on("event:user.unfavoritedStation", res => {
+			const { stationId } = res.data;
+
 			const station = this.stations.find(
 				station => station._id === stationId
 			);
@@ -679,8 +685,8 @@ export default {
 			}
 		});
 
-		this.socket.on("event:user.orderOfFavoriteStations.changed", order => {
-			this.orderOfFavoriteStations = order;
+		this.socket.on("event:user.orderOfFavoriteStations.changed", res => {
+			this.orderOfFavoriteStations = res.data.order;
 		});
 	},
 	methods: {

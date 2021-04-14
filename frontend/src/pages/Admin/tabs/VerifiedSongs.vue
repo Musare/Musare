@@ -317,16 +317,16 @@ export default {
 		}
 	},
 	mounted() {
-		this.socket.on("event:admin.verifiedSong.added", song =>
-			this.addSong(song)
+		this.socket.on("event:admin.verifiedSong.added", res =>
+			this.addSong(res.data.song)
 		);
 
-		this.socket.on("event:admin.verifiedSong.removed", youtubeId =>
-			this.removeSong(youtubeId)
+		this.socket.on("event:admin.verifiedSong.removed", res =>
+			this.removeSong(res.data.youtubeId)
 		);
 
-		this.socket.on("event:admin.verifiedSong.updated", updatedSong =>
-			this.updateSong(updatedSong)
+		this.socket.on("event:admin.verifiedSong.updated", res =>
+			this.updateSong(res.data.song)
 		);
 
 		if (this.socket.readyState === 1) this.init();

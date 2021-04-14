@@ -233,12 +233,12 @@ export default {
 		if (this.socket.readyState === 1) this.init();
 		ws.onConnect(() => this.init());
 
-		this.socket.on("event:admin.station.added", station =>
-			this.stationAdded(station)
+		this.socket.on("event:admin.station.added", res =>
+			this.stationAdded(res.data.station)
 		);
 
-		this.socket.on("event:admin.station.removed", stationId =>
-			this.stationRemoved(stationId)
+		this.socket.on("event:admin.station.removed", res =>
+			this.stationRemoved(res.data.stationId)
 		);
 	},
 	methods: {

@@ -19,10 +19,11 @@ CacheModule.runJob("SUB", {
 		const songModel = await DBModule.runJob("GET_MODEL", {
 			modelName: "song"
 		});
+
 		songModel.findOne({ _id: songId }, (err, song) => {
 			WSModule.runJob("EMIT_TO_ROOM", {
 				room: "admin.unverifiedSongs",
-				args: ["event:admin.unverifiedSong.added", song]
+				args: ["event:admin.unverifiedSong.added", { data: { song } }]
 			});
 		});
 	}
@@ -33,7 +34,7 @@ CacheModule.runJob("SUB", {
 	cb: songId => {
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.unverifiedSongs",
-			args: ["event:admin.unverifiedSong.removed", songId]
+			args: ["event:admin.unverifiedSong.removed", { data: { songId } }]
 		});
 	}
 });
@@ -48,7 +49,7 @@ CacheModule.runJob("SUB", {
 		songModel.findOne({ _id: songId }, (err, song) => {
 			WSModule.runJob("EMIT_TO_ROOM", {
 				room: "admin.unverifiedSongs",
-				args: ["event:admin.unverifiedSong.updated", song]
+				args: ["event:admin.unverifiedSong.updated", { data: { song } }]
 			});
 		});
 	}
@@ -61,7 +62,7 @@ CacheModule.runJob("SUB", {
 		songModel.findOne({ _id: songId }, (err, song) => {
 			WSModule.runJob("EMIT_TO_ROOM", {
 				room: "admin.songs",
-				args: ["event:admin.verifiedSong.added", song]
+				args: ["event:admin.verifiedSong.added", { data: { song } }]
 			});
 		});
 	}
@@ -72,7 +73,7 @@ CacheModule.runJob("SUB", {
 	cb: songId => {
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.songs",
-			args: ["event:admin.verifiedSong.removed", songId]
+			args: ["event:admin.verifiedSong.removed", { data: { songId } }]
 		});
 	}
 });
@@ -84,7 +85,7 @@ CacheModule.runJob("SUB", {
 		songModel.findOne({ _id: songId }, (err, song) => {
 			WSModule.runJob("EMIT_TO_ROOM", {
 				room: "admin.songs",
-				args: ["event:admin.verifiedSong.updated", song]
+				args: ["event:admin.verifiedSong.updated", { data: { song } }]
 			});
 		});
 	}
@@ -99,7 +100,7 @@ CacheModule.runJob("SUB", {
 		songModel.findOne({ _id: songId }, (err, song) => {
 			WSModule.runJob("EMIT_TO_ROOM", {
 				room: "admin.hiddenSongs",
-				args: ["event:admin.hiddenSong.added", song]
+				args: ["event:admin.hiddenSong.added", { data: { song } }]
 			});
 		});
 	}
@@ -110,7 +111,7 @@ CacheModule.runJob("SUB", {
 	cb: songId => {
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.hiddenSongs",
-			args: ["event:admin.hiddenSong.removed", songId]
+			args: ["event:admin.hiddenSong.removed", { data: { songId } }]
 		});
 	}
 });
@@ -125,7 +126,7 @@ CacheModule.runJob("SUB", {
 		songModel.findOne({ _id: songId }, (err, song) => {
 			WSModule.runJob("EMIT_TO_ROOM", {
 				room: "admin.hiddenSongs",
-				args: ["event:admin.hiddenSong.updated", song]
+				args: ["event:admin.hiddenSong.updated", { data: { song } }]
 			});
 		});
 	}
@@ -135,13 +136,11 @@ CacheModule.runJob("SUB", {
 	channel: "song.like",
 	cb: data => {
 		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `song.${data.songId}`,
+			room: `song.${data.youtubeId}`,
 			args: [
 				"event:song.like",
 				{
-					songId: data.songId,
-					likes: data.likes,
-					dislikes: data.dislikes
+					data: { youtubeId: data.youtubeId, likes: data.likes, dislikes: data.dislikes }
 				}
 			]
 		});
@@ -149,9 +148,11 @@ CacheModule.runJob("SUB", {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
 			sockets.forEach(socket => {
 				socket.dispatch("event:song.newRatings", {
-					songId: data.songId,
-					liked: true,
-					disliked: false
+					data: {
+						youtubeId: data.youtubeId,
+						liked: true,
+						disliked: false
+					}
 				});
 			});
 		});
@@ -162,22 +163,22 @@ CacheModule.runJob("SUB", {
 	channel: "song.dislike",
 	cb: data => {
 		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `song.${data.songId}`,
+			room: `song.${data.youtubeId}`,
 			args: [
 				"event:song.dislike",
 				{
-					songId: data.songId,
-					likes: data.likes,
-					dislikes: data.dislikes
+					data: { youtubeId: data.youtubeId, likes: data.likes, dislikes: data.dislikes }
 				}
 			]
 		});
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
 			sockets.forEach(socket => {
 				socket.dispatch("event:song.newRatings", {
-					songId: data.songId,
-					liked: false,
-					disliked: true
+					data: {
+						youtubeId: data.youtubeId,
+						liked: false,
+						disliked: true
+					}
 				});
 			});
 		});
@@ -188,22 +189,22 @@ CacheModule.runJob("SUB", {
 	channel: "song.unlike",
 	cb: data => {
 		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `song.${data.songId}`,
+			room: `song.${data.youtubeId}`,
 			args: [
 				"event:song.unlike",
 				{
-					songId: data.songId,
-					likes: data.likes,
-					dislikes: data.dislikes
+					data: { youtubeId: data.youtubeId, likes: data.likes, dislikes: data.dislikes }
 				}
 			]
 		});
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
 			sockets.forEach(socket => {
 				socket.dispatch("event:song.newRatings", {
-					songId: data.songId,
-					liked: false,
-					disliked: false
+					data: {
+						youtubeId: data.youtubeId,
+						liked: false,
+						disliked: false
+					}
 				});
 			});
 		});
@@ -214,22 +215,22 @@ CacheModule.runJob("SUB", {
 	channel: "song.undislike",
 	cb: data => {
 		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `song.${data.songId}`,
+			room: `song.${data.youtubeId}`,
 			args: [
 				"event:song.undislike",
 				{
-					songId: data.songId,
-					likes: data.likes,
-					dislikes: data.dislikes
+					data: { youtubeId: data.youtubeId, likes: data.likes, dislikes: data.dislikes }
 				}
 			]
 		});
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
 			sockets.forEach(socket => {
 				socket.dispatch("event:song.newRatings", {
-					songId: data.songId,
-					liked: false,
-					disliked: false
+					data: {
+						youtubeId: data.youtubeId,
+						liked: false,
+						disliked: false
+					}
 				});
 			});
 		});

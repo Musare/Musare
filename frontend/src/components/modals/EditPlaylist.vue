@@ -442,37 +442,37 @@ export default {
 			} else new Toast(res.message);
 		});
 
-		this.socket.on("event:playlist.addSong", data => {
-			if (this.playlist._id === data.playlistId)
-				this.playlist.songs.push(data.song);
+		this.socket.on("event:playlist.addSong", res => {
+			if (this.playlist._id === res.data.playlistId)
+				this.playlist.songs.push(res.data.song);
 		});
 
-		this.socket.on("event:playlist.removeSong", data => {
-			if (this.playlist._id === data.playlistId) {
+		this.socket.on("event:playlist.removeSong", res => {
+			if (this.playlist._id === res.data.playlistId) {
 				// remove song from array of playlists
 				this.playlist.songs.forEach((song, index) => {
-					if (song.youtubeId === data.youtubeId)
+					if (song.youtubeId === res.data.youtubeId)
 						this.playlist.songs.splice(index, 1);
 				});
 
 				// if this song is in search results, mark it available to add to the playlist again
 				this.search.songs.results.forEach((searchItem, index) => {
-					if (data.youtubeId === searchItem.id) {
+					if (res.data.youtubeId === searchItem.id) {
 						this.search.songs.results[index].isAddedToQueue = false;
 					}
 				});
 			}
 		});
 
-		this.socket.on("event:playlist.updateDisplayName", data => {
-			if (this.playlist._id === data.playlistId)
-				this.playlist.displayName = data.displayName;
+		this.socket.on("event:playlist.updateDisplayName", res => {
+			if (this.playlist._id === res.data.playlistId)
+				this.playlist.displayName = res.data.displayName;
 		});
 
-		this.socket.on("event:playlist.repositionSongs", data => {
-			if (this.playlist._id === data.playlistId) {
+		this.socket.on("event:playlist.repositionSongs", res => {
+			if (this.playlist._id === res.data.playlistId) {
 				// for each song that has a new position
-				data.songsBeingChanged.forEach(changedSong => {
+				res.data.songsBeingChanged.forEach(changedSong => {
 					this.playlist.songs.forEach((song, index) => {
 						// find song locally
 						if (song.youtubeId === changedSong.youtubeId) {

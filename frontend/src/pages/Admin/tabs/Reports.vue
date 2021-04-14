@@ -101,14 +101,14 @@ export default {
 			if (res.status === "success") this.reports = res.data.reports;
 		});
 
-		this.socket.on("event:admin.report.resolved", reportId => {
+		this.socket.on("event:admin.report.resolved", res => {
 			this.reports = this.reports.filter(report => {
-				return report._id !== reportId;
+				return report._id !== res.data.reportId;
 			});
 		});
 
-		this.socket.on("event:admin.report.created", report =>
-			this.reports.push(report)
+		this.socket.on("event:admin.report.created", res =>
+			this.reports.push(res.data.report)
 		);
 
 		if (this.$route.query.id) {

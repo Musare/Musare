@@ -18,13 +18,13 @@ CacheModule.runJob("SUB", {
 	channel: "playlist.create",
 	cb: playlist => {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: playlist.createdBy }, this).then(sockets => {
-			sockets.forEach(socket => socket.dispatch("event:playlist.create", playlist));
+			sockets.forEach(socket => socket.dispatch("event:playlist.create", { data: { playlist } }));
 		});
 
 		if (playlist.privacy === "public")
 			WSModule.runJob("EMIT_TO_ROOM", {
 				room: `profile-${playlist.createdBy}-playlists`,
-				args: ["event:playlist.create", playlist]
+				args: ["event:playlist.create", { data: { playlist } }]
 			});
 	}
 });
@@ -34,13 +34,13 @@ CacheModule.runJob("SUB", {
 	cb: res => {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
 			sockets.forEach(socket => {
-				socket.dispatch("event:playlist.delete", res.playlistId);
+				socket.dispatch("event:playlist.delete", { data: { playlistId: res.playlistId } });
 			});
 		});
 
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `profile-${res.userId}-playlists`,
-			args: ["event:playlist.delete", res.playlistId]
+			args: ["event:playlist.delete", { data: { playlistId: res.playlistId } }]
 		});
 	}
 });
@@ -51,8 +51,10 @@ CacheModule.runJob("SUB", {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets =>
 			sockets.forEach(socket =>
 				socket.dispatch("event:playlist.repositionSongs", {
-					playlistId: res.playlistId,
-					songsBeingChanged: res.songsBeingChanged
+					data: {
+						playlistId: res.playlistId,
+						songsBeingChanged: res.songsBeingChanged
+					}
 				})
 			)
 		);
@@ -65,8 +67,10 @@ CacheModule.runJob("SUB", {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
 			sockets.forEach(socket => {
 				socket.dispatch("event:playlist.addSong", {
-					playlistId: res.playlistId,
-					song: res.song
+					data: {
+						playlistId: res.playlistId,
+						song: res.song
+					}
 				});
 			});
 		});
@@ -77,8 +81,10 @@ CacheModule.runJob("SUB", {
 				args: [
 					"event:playlist.addSong",
 					{
-						playlistId: res.playlistId,
-						song: res.song
+						data: {
+							playlistId: res.playlistId,
+							song: res.song
+						}
 					}
 				]
 			});
@@ -91,8 +97,10 @@ CacheModule.runJob("SUB", {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
 			sockets.forEach(socket => {
 				socket.dispatch("event:playlist.removeSong", {
-					playlistId: res.playlistId,
-					youtubeId: res.youtubeId
+					data: {
+						playlistId: res.playlistId,
+						youtubeId: res.youtubeId
+					}
 				});
 			});
 		});
@@ -103,8 +111,10 @@ CacheModule.runJob("SUB", {
 				args: [
 					"event:playlist.removeSong",
 					{
-						playlistId: res.playlistId,
-						youtubeId: res.youtubeId
+						data: {
+							playlistId: res.playlistId,
+							youtubeId: res.youtubeId
+						}
 					}
 				]
 			});
@@ -117,8 +127,10 @@ CacheModule.runJob("SUB", {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
 			sockets.forEach(socket => {
 				socket.dispatch("event:playlist.updateDisplayName", {
-					playlistId: res.playlistId,
-					displayName: res.displayName
+					data: {
+						playlistId: res.playlistId,
+						displayName: res.displayName
+					}
 				});
 			});
 		});
@@ -129,8 +141,10 @@ CacheModule.runJob("SUB", {
 				args: [
 					"event:playlist.updateDisplayName",
 					{
-						playlistId: res.playlistId,
-						displayName: res.displayName
+						data: {
+							playlistId: res.playlistId,
+							displayName: res.displayName
+						}
 					}
 				]
 			});
@@ -143,7 +157,9 @@ CacheModule.runJob("SUB", {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
 			sockets.forEach(socket => {
 				socket.dispatch("event:playlist.updatePrivacy", {
-					playlist: res.playlist
+					data: {
+						playlist: res.playlist
+					}
 				});
 			});
 		});
@@ -151,12 +167,26 @@ CacheModule.runJob("SUB", {
 		if (res.playlist.privacy === "public")
 			return WSModule.runJob("EMIT_TO_ROOM", {
 				room: `profile-${res.userId}-playlists`,
-				args: ["event:playlist.create", res.playlist]
+				args: [
+					"event:playlist.create",
+					{
+						data: {
+							playlist: res.playlist
+						}
+					}
+				]
 			});
 
 		return WSModule.runJob("EMIT_TO_ROOM", {
 			room: `profile-${res.userId}-playlists`,
-			args: ["event:playlist.delete", res.playlist._id]
+			args: [
+				"event:playlist.delete",
+				{
+					data: {
+						playlistId: res.playlist._id
+					}
+				}
+			]
 		});
 	}
 });
