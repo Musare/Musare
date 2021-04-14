@@ -23,6 +23,7 @@ const state = {
 			editUser: false,
 			editSong: false,
 			editStation: false,
+			manageStation: false,
 			editPlaylist: false,
 			viewReport: false,
 			viewPunishment: false

@@ -20,7 +20,10 @@
 								Playlists
 							</button>
 							<button
-								v-if="station.type === 'community'"
+								v-if="
+									station.type === 'community' &&
+										station.partyMode
+								"
 								class="button is-default"
 								:class="{ selected: tab === 'youtube' }"
 								@click="showTab('youtube')"
@@ -30,7 +33,10 @@
 						</div>
 						<settings class="tab" v-show="tab === 'settings'" />
 						<youtube-search
-							v-if="station.type === 'community'"
+							v-if="
+								station.type === 'community' &&
+									station.partyMode
+							"
 							class="tab"
 							v-show="tab === 'youtube'"
 						/>
@@ -47,6 +53,19 @@
 			</div>
 		</template>
 		<template #footer>
+			<button
+				class="button is-primary tab-actionable-button"
+				v-if="loggedIn && station.type === 'official'"
+				@click="
+					openModal({
+						sector: 'station',
+						modal: 'requestSong'
+					})
+				"
+			>
+				<i class="material-icons icon-with-button">queue</i>
+				<span class="optional-desktop-only-text"> Request Song </span>
+			</button>
 			<div class="right">
 				<confirm @confirm="clearAndRefillStationQueue()">
 					<a class="button is-danger">
@@ -98,6 +117,9 @@ export default {
 		};
 	},
 	computed: {
+		...mapState({
+			loggedIn: state => state.user.auth.loggedIn
+		}),
 		...mapState("modals/manageStation", {
 			station: state => state.station,
 			originalStation: state => state.originalStation
@@ -164,7 +186,7 @@ export default {
 			"setExcludedPlaylists",
 			"clearStation"
 		]),
-		...mapActions("modalVisibility", ["closeModal"])
+		...mapActions("modalVisibility", ["openModal", "closeModal"])
 	}
 };
 </script>

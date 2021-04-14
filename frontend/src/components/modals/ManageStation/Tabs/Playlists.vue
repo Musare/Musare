@@ -26,14 +26,15 @@
 				</button>
 			</div>
 			<div class="tab" v-show="tab === 'current'">
-				<!-- <div v-if="station.includedPlaylists.length > 0">
+				<div v-if="includedPlaylists.length > 0">
 					<playlist-item
 						:playlist="playlist"
-						v-for="(playlist, index) in station.includedPlaylists"
+						v-for="(playlist, index) in includedPlaylists"
 						:key="'key-' + index"
 					>
 						<div class="icons-group" slot="actions">
 							<i
+								@click="deselectPlaylist(playlist._id)"
 								class="material-icons stop-icon"
 								content="Stop playing songs from this playlist
 							"
@@ -58,8 +59,8 @@
 							>
 						</div>
 					</playlist-item>
-				</div> -->
-				<p class="nothing-here-text scrollable-list">
+				</div>
+				<p v-else class="nothing-here-text scrollable-list">
 					No playlists currently selected.
 				</p>
 			</div>
@@ -104,6 +105,11 @@
 						>
 							<div slot="actions">
 								<i
+									v-if="
+										station.type === 'community' &&
+											isNotSelected(playlist._id)
+									"
+									@click="selectPlaylist(playlist._id)"
 									class="material-icons play-icon"
 									:content="
 										station.partyMode
@@ -114,6 +120,11 @@
 									>play_arrow</i
 								>
 								<i
+									v-if="
+										station.type === 'community' &&
+											!isNotSelected(playlist._id)
+									"
+									@click="deselectPlaylist(playlist._id)"
 									class="material-icons stop-icon"
 									:content="
 										station.partyMode
@@ -144,7 +155,7 @@
 <script>
 import { mapActions, mapState, mapGetters } from "vuex";
 
-// import Toast from "toasters";
+import Toast from "toasters";
 import draggable from "vuedraggable";
 import PlaylistItem from "@/components/PlaylistItem.vue";
 
@@ -179,7 +190,9 @@ export default {
 		}),
 		...mapState("modals/manageStation", {
 			station: state => state.station,
-			originalStation: state => state.originalStation
+			originalStation: state => state.originalStation,
+			includedPlaylists: state => state.includedPlaylists,
+			excludedPlaylists: state => state.excludedPlaylists
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
@@ -281,6 +294,64 @@ export default {
 		showPlaylist(playlistId) {
 			this.editPlaylist(playlistId);
 			this.openModal({ sector: "station", modal: "editPlaylist" });
+		},
+		selectPlaylist(id) {
+			if (this.station.type === "community" && this.station.partyMode) {
+				new Toast(
+					"Error: Party mode playlist selection not added yet."
+				);
+			} else {
+				this.socket.dispatch(
+					"stations.selectPrivatePlaylist",
+					this.station._id,
+					id,
+					res => {
+						if (res.status === "error") {
+							new Toast(res.message);
+						} else {
+							this.station.includedPlaylists.push(id);
+							new Toast(res.message);
+						}
+					}
+				);
+			}
+		},
+		deselectPlaylist(id) {
+			if (this.station.type === "community" && this.station.partyMode) {
+				new Toast(
+					"Error: Party mode playlist selection not added yet."
+				);
+			} else {
+				this.socket.dispatch(
+					"stations.deselectPrivatePlaylist",
+					this.station._id,
+					id,
+					res => {
+						if (res.status === "error")
+							return new Toast(res.message);
+
+						this.station.includedPlaylists.splice(
+							this.station.includedPlaylists.indexOf(id),
+							1
+						);
+
+						return new Toast(res.message);
+					}
+				);
+			}
+		},
+		isNotSelected(id) {
+			if (this.station.type === "community" && this.station.partyMode) {
+				// Party mode playlist selection not added yet
+				return true;
+			}
+			// TODO Also change this once it changes for a station
+			if (
+				this.station &&
+				this.station.includedPlaylists.indexOf(id) !== -1
+			)
+				return false;
+			return true;
 		},
 		...mapActions("station", ["updatePrivatePlaylistQueueSelected"]),
 		...mapActions("modalVisibility", ["openModal"]),

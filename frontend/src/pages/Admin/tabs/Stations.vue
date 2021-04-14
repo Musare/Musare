@@ -61,6 +61,9 @@
 							<a class="button is-info" @click="edit(station)"
 								>Edit</a
 							>
+							<a class="button is-info" @click="manage(station)"
+								>Manage</a
+							>
 							<confirm @confirm="removeStation(index)">
 								<a class="button is-danger">Remove</a>
 							</confirm>
@@ -182,6 +185,11 @@
 			:station-id="editingStationId"
 			sector="admin"
 		/>
+		<manage-station
+			v-if="modals.manageStation"
+			:station-id="editingStationId"
+			sector="admin"
+		/>
 	</div>
 </template>
 
@@ -196,6 +204,8 @@ import ws from "@/ws";
 export default {
 	components: {
 		EditStation: () => import("@/components/modals/EditStation.vue"),
+		ManageStation: () =>
+			import("@/components/modals/ManageStation/index.vue"),
 		UserIdToUsername,
 		Confirm
 	},
@@ -286,6 +296,13 @@ export default {
 				modal: "editStation"
 			});
 		},
+		manage(station) {
+			this.editingStationId = station._id;
+			this.openModal({
+				sector: "admin",
+				modal: "manageStation"
+			});
+		},
 		addGenre() {
 			const genre = this.$refs["new-genre"].value.toLowerCase().trim();
 			if (this.newStation.genres.indexOf(genre) !== -1)
@@ -333,6 +350,7 @@ export default {
 		...mapActions("modalVisibility", ["openModal"]),
 		...mapActions("admin/stations", [
 			"editStation",
+			"manageStation",
 			"loadStations",
 			"stationRemoved",
 			"stationAdded"

@@ -143,6 +143,7 @@
 			<div class="small-section">
 				<label class="label">Station Mode</label>
 				<tippy
+					v-if="station.type === 'community'"
 					class="button-wrapper"
 					theme="addToPlaylist"
 					interactive="true"
@@ -182,10 +183,21 @@
 						Party
 					</button>
 				</tippy>
+				<div v-else class="button-wrapper">
+					<button
+						class="blue"
+						content="Can not be changed on official stations."
+						v-tippy
+					>
+						<i class="material-icons">playlist_play</i>
+						Playlist
+					</button>
+				</div>
 			</div>
 			<div v-if="!station.partyMode" class="small-section">
 				<label class="label">Play Mode</label>
 				<tippy
+					v-if="station.type === 'community'"
 					class="button-wrapper"
 					theme="addToPlaylist"
 					interactive="true"
@@ -224,6 +236,16 @@
 						Sequential
 					</button>
 				</tippy>
+				<div v-else class="button-wrapper">
+					<button
+						class="blue"
+						content="Can not be changed on official stations."
+						v-tippy
+					>
+						<i class="material-icons">shuffle</i>
+						Random
+					</button>
+				</div>
 			</div>
 			<div
 				v-if="
