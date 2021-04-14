@@ -82,6 +82,10 @@ export default {
 			background-color: var(--teal);
 			color: var(--white);
 		}
+		&.grey {
+			background-color: var(--grey);
+			color: var(--white);
+		}
 	}
 }
 </style>
