@@ -107,7 +107,9 @@ export default {
 			}
 		});
 
-		this.socket.on("keep.event:user.preferences.changed", preferences => {
+		this.socket.on("keep.event:user.preferences.changed", res => {
+			const { preferences } = res.data;
+
 			this.localNightmode = preferences.nightmode;
 			this.localAutoSkipDisliked = preferences.autoSkipDisliked;
 			this.localActivityLogPublic = preferences.activityLogPublic;

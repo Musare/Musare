@@ -136,9 +136,9 @@ export default {
 		});
 
 		this.socket.dispatch("users.getPreferences", res => {
-			const { preferences } = res.data;
-
 			if (res.status === "success") {
+				const { preferences } = res.data;
+
 				this.changeAutoSkipDisliked(preferences.autoSkipDisliked);
 				this.changeNightmode(preferences.nightmode);
 				this.changeActivityLogPublic(preferences.activityLogPublic);

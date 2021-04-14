@@ -14,7 +14,7 @@ CacheModule.runJob("SUB", {
 	cb: news => {
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.news",
-			args: ["event:admin.news.created", news]
+			args: ["event:admin.news.created", { data: { news } }]
 		});
 	}
 });
@@ -24,7 +24,7 @@ CacheModule.runJob("SUB", {
 	cb: news => {
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.news",
-			args: ["event:admin.news.removed", news]
+			args: ["event:admin.news.removed", { data: { news } }]
 		});
 	}
 });
@@ -34,7 +34,7 @@ CacheModule.runJob("SUB", {
 	cb: news => {
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.news",
-			args: ["event:admin.news.updated", news]
+			args: ["event:admin.news.updated", { data: { news } }]
 		});
 	}
 });

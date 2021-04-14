@@ -15,7 +15,7 @@ CacheModule.runJob("SUB", {
 	cb: data => {
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.punishments",
-			args: ["event:admin.punishment.added", data.punishment]
+			args: ["event:admin.punishment.added", { data: { punishment: data.punishment } }]
 		});
 
 		WSModule.runJob("SOCKETS_FROM_IP", { ip: data.ip }, this).then(sockets => {

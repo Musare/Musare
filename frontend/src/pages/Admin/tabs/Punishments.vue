@@ -128,8 +128,8 @@ export default {
 		if (this.socket.readyState === 1) this.init();
 		ws.onConnect(() => this.init());
 
-		this.socket.on("event:admin.punishment.added", punishment =>
-			this.punishments.push(punishment)
+		this.socket.on("event:admin.punishment.added", res =>
+			this.punishments.push(res.data.punishment)
 		);
 	},
 	methods: {

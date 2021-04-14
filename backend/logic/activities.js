@@ -74,7 +74,9 @@ class _ActivitiesModule extends CoreClass {
 					(activity, next) => {
 						WSModule.runJob("SOCKETS_FROM_USER", { userId: activity.userId }, this)
 							.then(sockets => {
-								sockets.forEach(socket => socket.dispatch("event:activity.create", activity));
+								sockets.forEach(socket =>
+									socket.dispatch("event:activity.create", { data: { activity } })
+								);
 								next(null, activity);
 							})
 							.catch(next);
@@ -83,7 +85,7 @@ class _ActivitiesModule extends CoreClass {
 					(activity, next) => {
 						WSModule.runJob("EMIT_TO_ROOM", {
 							room: `profile-${activity.userId}-activities`,
-							args: ["event:activity.create", activity]
+							args: ["event:activity.create", { data: { activity } }]
 						});
 
 						return next(null, activity);
@@ -228,13 +230,15 @@ class _ActivitiesModule extends CoreClass {
 
 							WSModule.runJob("SOCKETS_FROM_USER", { userId: payload.userId }, this)
 								.then(sockets =>
-									sockets.forEach(socket => socket.dispatch("event:activity.hide", activity._id))
+									sockets.forEach(socket =>
+										socket.dispatch("event:activity.hide", { data: { activityId: activity._id } })
+									)
 								)
 								.catch(next);
 
 							WSModule.runJob("EMIT_TO_ROOM", {
 								room: `profile-${payload.userId}-activities`,
-								args: ["event:activity.hide", activity._id]
+								args: ["event:activity.hide", { data: { activityId: activity._id } }]
 							});
 
 							if (activity.type === payload.type) howManySongs += 1;
@@ -333,13 +337,15 @@ class _ActivitiesModule extends CoreClass {
 
 							WSModule.runJob("SOCKETS_FROM_USER", { userId: payload.userId }, this)
 								.then(sockets =>
-									sockets.forEach(socket => socket.dispatch("event:activity.hide", activity._id))
+									sockets.forEach(socket =>
+										socket.dispatch("event:activity.hide", { data: { activityId: activity._id } })
+									)
 								)
 								.catch(next);
 
 							WSModule.runJob("EMIT_TO_ROOM", {
 								room: `profile-${payload.userId}-activities`,
-								args: ["event:activity.hide", activity._id]
+								args: ["event:activity.hide", { data: { activityId: activity._id } }]
 							});
 						});
 

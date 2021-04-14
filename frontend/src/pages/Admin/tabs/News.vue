@@ -254,14 +254,16 @@ export default {
 				res.data.news.forEach(news => this.addNews(news));
 		});
 
-		this.socket.on("event:admin.news.created", news => this.addNews(news));
-
-		this.socket.on("event:admin.news.updated", updatedNews =>
-			this.updateNews(updatedNews)
+		this.socket.on("event:admin.news.created", res =>
+			this.addNews(res.data.news)
 		);
 
-		this.socket.on("event:admin.news.removed", news =>
-			this.removeNews(news._id)
+		this.socket.on("event:admin.news.updated", res =>
+			this.updateNews(res.data.news)
+		);
+
+		this.socket.on("event:admin.news.removed", res =>
+			this.removeNews(res.data.news._id)
 		);
 
 		if (this.socket.readyState === 1) this.init();

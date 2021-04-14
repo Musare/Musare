@@ -107,19 +107,21 @@ export default {
 				if (this.news.length === 0) this.noFound = true;
 			}
 		});
-		this.socket.on("event:admin.news.created", news => {
-			this.news.unshift(news);
+		this.socket.on("event:admin.news.created", res => {
+			this.news.unshift(res.data.news);
 			this.noFound = false;
 		});
-		this.socket.on("event:admin.news.updated", news => {
+		this.socket.on("event:admin.news.updated", res => {
 			for (let n = 0; n < this.news.length; n += 1) {
-				if (this.news[n]._id === news._id) {
-					this.$set(this.news, n, news);
+				if (this.news[n]._id === res.data.news._id) {
+					this.$set(this.news, n, res.data.news);
 				}
 			}
 		});
-		this.socket.on("event:admin.news.removed", news => {
-			this.news = this.news.filter(item => item._id !== news._id);
+		this.socket.on("event:admin.news.removed", res => {
+			this.news = this.news.filter(
+				item => item._id !== res.data.news._id
+			);
 			if (this.news.length === 0) this.noFound = true;
 		});
 	},

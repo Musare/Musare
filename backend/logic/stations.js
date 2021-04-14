@@ -89,7 +89,7 @@ class _StationsModule extends CoreClass {
 					if (playlistObj) {
 						WSModule.runJob("EMIT_TO_ROOM", {
 							room: `station.${stationId}`,
-							args: ["event:newOfficialPlaylist", playlistObj.songs]
+							args: ["event:newOfficialPlaylist", { data: { playlist: playlistObj.songs } }]
 						});
 					}
 				});
@@ -951,10 +951,12 @@ class _StationsModule extends CoreClass {
 							args: [
 								"event:songs.next",
 								{
-									currentSong: station.currentSong,
-									startedAt: station.startedAt,
-									paused: station.paused,
-									timePaused: 0
+									data: {
+										currentSong: station.currentSong,
+										startedAt: station.startedAt,
+										paused: station.paused,
+										timePaused: 0
+									}
 								}
 							]
 						})
@@ -964,7 +966,10 @@ class _StationsModule extends CoreClass {
 						if (station.privacy === "public") {
 							WSModule.runJob("EMIT_TO_ROOM", {
 								room: "home",
-								args: ["event:station.nextSong", station._id, station.currentSong]
+								args: [
+									"event:station.nextSong",
+									{ data: { stationId: station._id, song: station.currentSong } }
+								]
 							})
 								.then()
 								.catch();
@@ -992,20 +997,22 @@ class _StationsModule extends CoreClass {
 														(err, user) => {
 															if (!err && user) {
 																if (user.role === "admin")
-																	socket.dispatch(
-																		"event:station.nextSong",
-																		station._id,
-																		station.currentSong
-																	);
+																	socket.dispatch("event:station.nextSong", {
+																		data: {
+																			stationId: station._id,
+																			song: station.currentSong
+																		}
+																	});
 																else if (
 																	station.type === "community" &&
 																	station.owner === session.userId
 																)
-																	socket.dispatch(
-																		"event:station.nextSong",
-																		station._id,
-																		station.currentSong
-																	);
+																	socket.dispatch("event:station.nextSong", {
+																		data: {
+																			stationId: station._id,
+																			song: station.currentSong
+																		}
+																	});
 															}
 														}
 													);

@@ -39,7 +39,7 @@ CacheModule.runJob("SUB", {
 	cb: reportId => {
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.reports",
-			args: ["event:admin.report.resolved", reportId]
+			args: ["event:admin.report.resolved", { data: { reportId } }]
 		});
 	}
 });
@@ -49,7 +49,7 @@ CacheModule.runJob("SUB", {
 	cb: report => {
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.reports",
-			args: ["event:admin.report.created", report]
+			args: ["event:admin.report.created", { data: { report } }]
 		});
 	}
 });

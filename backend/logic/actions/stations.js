@@ -20,7 +20,7 @@ CacheModule.runJob("SUB", {
 	cb: ({ stationId, usersPerStation }) => {
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${stationId}`,
-			args: ["event:users.updated", usersPerStation]
+			args: ["event:users.updated", { data: { users: usersPerStation } }]
 		});
 	}
 });
@@ -32,14 +32,14 @@ CacheModule.runJob("SUB", {
 
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${stationId}`,
-			args: ["event:userCount.updated", count]
+			args: ["event:userCount.updated", { data: { userCount: count } }]
 		});
 
 		StationsModule.runJob("GET_STATION", { stationId }).then(async station => {
 			if (station.privacy === "public")
 				WSModule.runJob("EMIT_TO_ROOM", {
 					room: "home",
-					args: ["event:userCount.updated", stationId, count]
+					args: ["event:userCount.updated", { data: { stationId, userCount: count } }]
 				});
 			else {
 				const sockets = await WSModule.runJob("GET_SOCKETS_FOR_ROOM", {
@@ -65,9 +65,9 @@ CacheModule.runJob("SUB", {
 								).then(userModel =>
 									userModel.findOne({ _id: session.userId }, (err, user) => {
 										if (user.role === "admin")
-											socket.dispatch("event:userCount.updated", stationId, count);
+											socket.dispatch("event:userCount.updated", { data: { stationId, count } });
 										else if (station.type === "community" && station.owner === session.userId)
-											socket.dispatch("event:userCount.updated", stationId, count);
+											socket.dispatch("event:userCount.updated", { data: { stationId, count } });
 									})
 								);
 						});
@@ -83,7 +83,7 @@ CacheModule.runJob("SUB", {
 	cb: data => {
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${data.stationId}`,
-			args: ["event:theme.updated", data.theme]
+			args: ["event:theme.updated", { data: { theme: data.theme } }]
 		});
 	}
 });
@@ -93,7 +93,7 @@ CacheModule.runJob("SUB", {
 	cb: data => {
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${data.stationId}`,
-			args: ["event:queueLockToggled", data.locked]
+			args: ["event:queueLockToggled", { data: { locked: data.locked } }]
 		});
 	}
 });
@@ -103,7 +103,7 @@ CacheModule.runJob("SUB", {
 	cb: data => {
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${data.stationId}`,
-			args: ["event:partyMode.updated", data.partyMode]
+			args: ["event:partyMode.updated", { data: { partyMode: data.partyMode } }]
 		});
 	}
 });
@@ -113,7 +113,7 @@ CacheModule.runJob("SUB", {
 // 	cb: data => {
 // 		WSModule.runJob("EMIT_TO_ROOM", {
 // 			room: `station.${data.stationId}`,
-// 			args: ["event:privatePlaylist.selected", data.playlistId]
+// 			args: ["event:privatePlaylist.selected", {data: {playlistId: data.playlistId}}]
 // 		});
 // 	}
 // });
@@ -134,7 +134,7 @@ CacheModule.runJob("SUB", {
 		StationsModule.runJob("GET_STATION", { stationId }).then(station => {
 			WSModule.runJob("EMIT_TO_ROOM", {
 				room: `station.${stationId}`,
-				args: ["event:stations.pause", { pausedAt: station.pausedAt }]
+				args: ["event:stations.pause", { data: { pausedAt: station.pausedAt } }]
 			});
 
 			StationsModule.runJob("GET_SOCKETS_THAT_CAN_KNOW_ABOUT_STATION", {
@@ -143,7 +143,7 @@ CacheModule.runJob("SUB", {
 			}).then(response => {
 				const { socketsThatCan } = response;
 				socketsThatCan.forEach(socket => {
-					socket.dispatch("event:station.pause", { stationId });
+					socket.dispatch("event:station.pause", { data: { stationId } });
 				});
 			});
 		});
@@ -156,7 +156,7 @@ CacheModule.runJob("SUB", {
 		StationsModule.runJob("GET_STATION", { stationId }).then(station => {
 			WSModule.runJob("EMIT_TO_ROOM", {
 				room: `station.${stationId}`,
-				args: ["event:stations.resume", { timePaused: station.timePaused }]
+				args: ["event:stations.resume", { data: { timePaused: station.timePaused } }]
 			});
 
 			StationsModule.runJob("GET_SOCKETS_THAT_CAN_KNOW_ABOUT_STATION", {
@@ -166,7 +166,7 @@ CacheModule.runJob("SUB", {
 				.then(response => {
 					const { socketsThatCan } = response;
 					socketsThatCan.forEach(socket => {
-						socket.dispatch("event:station.resume", { stationId });
+						socket.dispatch("event:station.resume", { data: { stationId } });
 					});
 				})
 				.catch(console.log);
@@ -185,7 +185,7 @@ CacheModule.runJob("SUB", {
 
 					WSModule.runJob("EMIT_TO_ROOM", {
 						room: "home",
-						args: ["event:stations.created", station]
+						args: ["event:stations.created", { data: { station } }]
 					});
 				} else if (previousPrivacy === "public") {
 					// Station became hidden
@@ -196,10 +196,12 @@ CacheModule.runJob("SUB", {
 					}).then(response => {
 						const { socketsThatCan, socketsThatCannot } = response;
 						socketsThatCan.forEach(socket => {
-							socket.dispatch("event:station.updatePrivacy", { stationId, privacy: station.privacy });
+							socket.dispatch("event:station.updatePrivacy", {
+								data: { stationId, privacy: station.privacy }
+							});
 						});
 						socketsThatCannot.forEach(socket => {
-							socket.dispatch("event:station.removed", { stationId });
+							socket.dispatch("event:station.removed", { data: { stationId } });
 						});
 					});
 				} else {
@@ -211,7 +213,9 @@ CacheModule.runJob("SUB", {
 					}).then(response => {
 						const { socketsThatCan } = response;
 						socketsThatCan.forEach(socket => {
-							socket.dispatch("event:station.updatePrivacy", { stationId, privacy: station.privacy });
+							socket.dispatch("event:station.updatePrivacy", {
+								data: { stationId, privacy: station.privacy }
+							});
 						});
 					});
 				}
@@ -231,13 +235,15 @@ CacheModule.runJob("SUB", {
 				station
 			}).then(response => {
 				const { socketsThatCan } = response;
-				socketsThatCan.forEach(socket => socket.dispatch("event:station.updateName", { stationId, name }));
+				socketsThatCan.forEach(socket =>
+					socket.dispatch("event:station.updateName", { data: { stationId, name } })
+				);
 			})
 		);
 
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${stationId}`,
-			args: ["event:station.updateName", { stationId, name }]
+			args: ["event:station.updateName", { data: { stationId, name } }]
 		});
 	}
 });
@@ -254,14 +260,14 @@ CacheModule.runJob("SUB", {
 			}).then(response => {
 				const { socketsThatCan } = response;
 				socketsThatCan.forEach(socket =>
-					socket.dispatch("event:station.updateDisplayName", { stationId, displayName })
+					socket.dispatch("event:station.updateDisplayName", { data: { stationId, displayName } })
 				);
 			})
 		);
 
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${stationId}`,
-			args: ["event:station.updateDisplayName", { stationId, displayName }]
+			args: ["event:station.updateDisplayName", { data: { stationId, displayName } }]
 		});
 	}
 });
@@ -278,34 +284,36 @@ CacheModule.runJob("SUB", {
 			}).then(response => {
 				const { socketsThatCan } = response;
 				socketsThatCan.forEach(socket =>
-					socket.dispatch("event:station.updateDescription", { stationId, description })
+					socket.dispatch("event:station.updateDescription", { data: { stationId, description } })
 				);
 			})
 		);
 
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${stationId}`,
-			args: ["event:station.updateDescription", { stationId, description }]
+			args: ["event:station.updateDescription", { data: { stationId, description } }]
 		});
 	}
 });
 
 CacheModule.runJob("SUB", {
 	channel: "station.themeUpdate",
-	cb: response => {
-		const { stationId } = response;
+	cb: res => {
+		const { stationId } = res;
+
 		StationsModule.runJob("GET_STATION", { stationId }).then(station => {
 			WSModule.runJob("EMIT_TO_ROOM", {
 				room: `station.${stationId}`,
-				args: ["event:station.themeUpdated", station.theme]
+				args: ["event:station.themeUpdated", { data: { theme: station.theme } }]
 			});
+
 			StationsModule.runJob("GET_SOCKETS_THAT_CAN_KNOW_ABOUT_STATION", {
 				room: `home`,
 				station
-			}).then(response => {
-				const { socketsThatCan } = response;
+			}).then(res => {
+				const { socketsThatCan } = res;
 				socketsThatCan.forEach(socket => {
-					socket.dispatch("event:station.themeUpdated", { stationId, theme: station.theme });
+					socket.dispatch("event:station.themeUpdated", { data: { theme: station.theme } });
 				});
 			});
 		});
@@ -318,7 +326,7 @@ CacheModule.runJob("SUB", {
 		StationsModule.runJob("GET_STATION", { stationId }).then(station => {
 			WSModule.runJob("EMIT_TO_ROOM", {
 				room: `station.${stationId}`,
-				args: ["event:queue.update", station.queue]
+				args: ["event:queue.update", { data: { queue: station.queue } }]
 			});
 		});
 	}
@@ -329,7 +337,7 @@ CacheModule.runJob("SUB", {
 	cb: res => {
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${res.stationId}`,
-			args: ["event:queue.repositionSong", res.song]
+			args: ["event:queue.repositionSong", { data: { song: res.song } }]
 		});
 	}
 });
@@ -351,14 +359,15 @@ CacheModule.runJob("SUB", {
 			room: `station.${stationId}`,
 			args: ["event:stations.remove"]
 		});
-		console.log(111, "REMOVED");
+
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `home`,
-			args: ["event:station.removed", { stationId }]
+			args: ["event:station.removed", { data: { stationId } }]
 		});
+
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.stations",
-			args: ["event:admin.station.removed", stationId]
+			args: ["event:admin.station.removed", { data: { stationId } }]
 		});
 	}
 });
@@ -374,14 +383,14 @@ CacheModule.runJob("SUB", {
 
 			WSModule.runJob("EMIT_TO_ROOM", {
 				room: "admin.stations",
-				args: ["event:admin.station.added", station]
+				args: ["event:admin.station.added", { data: { station } }]
 			}).then(() => {});
 
 			// TODO If community, check if on whitelist
 			if (station.privacy === "public")
 				WSModule.runJob("EMIT_TO_ROOM", {
 					room: "home",
-					args: ["event:stations.created", station]
+					args: ["event:stations.created", { data: { station } }]
 				}).then(() => {});
 			else {
 				const sockets = await WSModule.runJob("GET_SOCKETS_FOR_ROOM", {
@@ -399,9 +408,10 @@ CacheModule.runJob("SUB", {
 						}).then(session => {
 							if (session) {
 								userModel.findOne({ _id: session.userId }, (err, user) => {
-									if (user.role === "admin") socket.dispatch("event:stations.created", station);
+									if (user.role === "admin")
+										socket.dispatch("event:stations.created", { data: { station } });
 									else if (station.type === "community" && station.owner === session.userId)
-										socket.dispatch("event:stations.created", station);
+										socket.dispatch("event:stations.created", { data: { station } });
 								});
 							}
 						});

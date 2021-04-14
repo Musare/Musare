@@ -515,7 +515,7 @@ class _WSModule extends CoreClass {
 					`A user tried to connect, but is currently banned. IP: ${socket.ip}.${sessionInfo}`
 				);
 
-				socket.dispatch("keep.event:banned", socket.banishment.ban);
+				socket.dispatch("keep.event:banned", { data: { ban: socket.banishment.ban } });
 
 				return socket.close(); // close socket connection
 			}
@@ -544,7 +544,7 @@ class _WSModule extends CoreClass {
 					.then(session => {
 						if (session && session.userId) {
 							WSModule.userModel.findOne({ _id: session.userId }, (err, user) => {
-								if (err || !user) return socket.dispatch("ready", false);
+								if (err || !user) return socket.dispatch("ready", { data: { loggedIn: false } });
 
 								let role = "";
 								let username = "";
@@ -556,12 +556,12 @@ class _WSModule extends CoreClass {
 									userId = session.userId;
 								}
 
-								return socket.dispatch("ready", true, role, username, userId);
+								return socket.dispatch("ready", { data: { loggedIn: true, role, username, userId } });
 							});
-						} else socket.dispatch("ready", false);
+						} else socket.dispatch("ready", { data: { loggedIn: false } });
 					})
-					.catch(() => socket.dispatch("ready", false));
-			} else socket.dispatch("ready", false);
+					.catch(() => socket.dispatch("ready", { data: { loggedIn: false } }));
+			} else socket.dispatch("ready", { data: { loggedIn: false } });
 
 			socket.onmessage = message => {
 				const data = JSON.parse(message.data);

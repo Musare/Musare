@@ -183,24 +183,28 @@ lofig.folder = "../config/default.json";
 	const websocketsDomain = await lofig.get("websocketsDomain");
 	ws.init(websocketsDomain);
 
-	ws.socket.on("ready", (loggedIn, role, username, userId) =>
+	ws.socket.on("ready", res => {
+		const { loggedIn, role, username, userId } = res.data;
+
 		store.dispatch("user/auth/authData", {
 			loggedIn,
 			role,
 			username,
 			userId
-		})
+		});
+	});
+
+	ws.socket.on("keep.event:banned", res =>
+		store.dispatch("user/auth/banUser", res.data.ban)
 	);
 
-	ws.socket.on("keep.event:banned", ban =>
-		store.dispatch("user/auth/banUser", ban)
+	ws.socket.on("event:user.username.changed", res =>
+		store.dispatch("user/auth/updateUsername", res.data.username)
 	);
 
-	ws.socket.on("event:user.username.changed", username =>
-		store.dispatch("user/auth/updateUsername", username)
-	);
+	ws.socket.on("keep.event:user.preferences.changed", res => {
+		const { preferences } = res.data;
 
-	ws.socket.on("keep.event:user.preferences.changed", preferences => {
 		store.dispatch(
 			"user/preferences/changeAutoSkipDisliked",
 			preferences.autoSkipDisliked
