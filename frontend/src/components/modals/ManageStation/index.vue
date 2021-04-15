@@ -123,7 +123,7 @@
 							</confirm>
 						</div>
 						<hr class="section-horizontal-rule" />
-						<queue />
+						<queue sector="manageStation" />
 					</div>
 				</div>
 			</div>
@@ -166,9 +166,9 @@ import Toast from "toasters";
 import TabQueryHandler from "@/mixins/TabQueryHandler.vue";
 
 import Confirm from "@/components/Confirm.vue";
+import Queue from "@/components/Queue.vue";
 import Modal from "../../Modal.vue";
 
-import Queue from "../../../pages/Station/Sidebar/Queue.vue";
 import Settings from "./Tabs/Settings.vue";
 import Playlists from "./Tabs/Playlists.vue";
 import Search from "./Tabs/Search.vue";
@@ -200,12 +200,11 @@ export default {
 			userId: state => state.user.auth.userId,
 			role: state => state.user.auth.role
 		}),
-		...mapState("station", {
-			stationPaused: state => state.stationPaused
-		}),
 		...mapState("modals/manageStation", {
 			station: state => state.station,
-			originalStation: state => state.originalStation
+			originalStation: state => state.originalStation,
+			songsList: state => state.songsList,
+			stationPaused: state => state.stationPaused
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
@@ -216,6 +215,8 @@ export default {
 			if (res.status === "success") {
 				const { station } = res.data;
 				this.editStation(station);
+
+				this.updateStationPaused(res.data.station.paused);
 
 				this.socket.dispatch(
 					"stations.getStationIncludedPlaylistsById",
@@ -236,6 +237,16 @@ export default {
 						}
 					}
 				);
+
+				this.socket.dispatch(
+					"stations.getQueue",
+					this.stationId,
+					res => {
+						if (res.status === "success") {
+							this.updateSongsList(res.data.queue);
+						}
+					}
+				);
 			} else {
 				new Toast(`Station with that ID not found`);
 				this.closeModal({
@@ -244,8 +255,27 @@ export default {
 				});
 			}
 		});
+
+		this.socket.on("event:queue.update", res => {
+			this.updateSongsList(res.data.queue);
+		});
+
+		this.socket.on("event:queue.repositionSong", res => {
+			this.repositionSongInList(res.data.song);
+		});
+
+		this.socket.on("event:stations.pause", res => {
+			this.pausedAt = res.data.pausedAt;
+			this.updateStationPaused(true);
+		});
+
+		this.socket.on("event:stations.resume", res => {
+			this.timePaused = res.data.timePaused;
+			this.updateStationPaused(false);
+		});
 	},
 	beforeDestroy() {
+		this.repositionSongInList([]);
 		this.clearStation();
 	},
 	methods: {
@@ -304,7 +334,10 @@ export default {
 			"editStation",
 			"setIncludedPlaylists",
 			"setExcludedPlaylists",
-			"clearStation"
+			"clearStation",
+			"updateSongsList",
+			"repositionSongInList",
+			"updateStationPaused"
 		]),
 		...mapActions("modalVisibility", ["openModal", "closeModal"])
 	}
@@ -316,6 +349,7 @@ export default {
 	z-index: 1800;
 	.modal-card {
 		width: 1300px;
+		height: 100%;
 		overflow: auto;
 		.tab > button {
 			width: 100%;

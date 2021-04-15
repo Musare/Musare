@@ -912,7 +912,8 @@ export default {
 						// privatePlaylist: station.privatePlaylist,
 						// genres: station.genres,
 						// blacklistedGenres: station.blacklistedGenres,
-						theme: station.theme
+						theme: station.theme,
+						paused: station.paused
 					};
 
 					next(null, data);

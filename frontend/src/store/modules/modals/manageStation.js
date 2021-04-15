@@ -6,16 +6,33 @@ export default {
 		originalStation: {},
 		station: {},
 		includedPlaylists: [],
-		excludedPlaylists: []
+		excludedPlaylists: [],
+		songsList: [],
+		stationPaused: true
 	},
 	getters: {},
 	actions: {
-		editStation: ({ commit }, station) => commit("editStation", station),
-		setIncludedPlaylists: ({ commit }, includedPlaylists) =>
-			commit("setIncludedPlaylists", includedPlaylists),
-		setExcludedPlaylists: ({ commit }, excludedPlaylists) =>
-			commit("setExcludedPlaylists", excludedPlaylists),
-		clearStation: ({ commit }) => commit("clearStation")
+		editStation: ({ commit }, station) => {
+			commit("editStation", station);
+		},
+		setIncludedPlaylists: ({ commit }, includedPlaylists) => {
+			commit("setIncludedPlaylists", includedPlaylists);
+		},
+		setExcludedPlaylists: ({ commit }, excludedPlaylists) => {
+			commit("setExcludedPlaylists", excludedPlaylists);
+		},
+		clearStation: ({ commit }) => {
+			commit("clearStation");
+		},
+		updateSongsList: ({ commit }, songsList) => {
+			commit("updateSongsList", songsList);
+		},
+		repositionSongInList: ({ commit }, song) => {
+			commit("repositionSongInList", song);
+		},
+		updateStationPaused: ({ commit }, stationPaused) => {
+			commit("updateStationPaused", stationPaused);
+		}
 	},
 	mutations: {
 		editStation(state, station) {
@@ -35,6 +52,29 @@ export default {
 		clearStation(state) {
 			state.originalStation = null;
 			state.station = null;
+		},
+		updateSongsList(state, songsList) {
+			state.songsList = songsList;
+		},
+		repositionSongInList(state, song) {
+			if (
+				state.songsList[song.newIndex] &&
+				state.songsList[song.newIndex].youtubeId === song.youtubeId
+			)
+				return;
+
+			const { songsList } = state;
+
+			songsList.splice(
+				song.newIndex,
+				0,
+				songsList.splice(song.oldIndex, 1)[0]
+			);
+
+			state.songsList = songsList;
+		},
+		updateStationPaused(state, stationPaused) {
+			state.stationPaused = stationPaused;
 		}
 	}
 };
