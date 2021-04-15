@@ -15,7 +15,9 @@ const state = {
 	songsList: [],
 	stationPaused: true,
 	localPaused: false,
-	noSong: true
+	noSong: true,
+	includedPlaylists: [],
+	excludedPlaylists: []
 };
 
 const getters = {};
@@ -62,6 +64,12 @@ const actions = {
 	},
 	updateIfStationIsFavorited: ({ commit }, { isFavorited }) => {
 		commit("updateIfStationIsFavorited", isFavorited);
+	},
+	setIncludedPlaylists: ({ commit }, includedPlaylists) => {
+		commit("setIncludedPlaylists", includedPlaylists);
+	},
+	setExcludedPlaylists: ({ commit }, excludedPlaylists) => {
+		commit("setExcludedPlaylists", excludedPlaylists);
 	}
 };
 
@@ -121,6 +129,12 @@ const mutations = {
 	},
 	updateIfStationIsFavorited(state, isFavorited) {
 		state.station.isFavorited = isFavorited;
+	},
+	setIncludedPlaylists(state, includedPlaylists) {
+		state.includedPlaylists = JSON.parse(JSON.stringify(includedPlaylists));
+	},
+	setExcludedPlaylists(state, excludedPlaylists) {
+		state.excludedPlaylists = JSON.parse(JSON.stringify(excludedPlaylists));
 	}
 };
 

@@ -744,7 +744,9 @@ export default {
 			localPaused: state => state.localPaused,
 			noSong: state => state.noSong,
 			privatePlaylistQueueSelected: state =>
-				state.privatePlaylistQueueSelected
+				state.privatePlaylistQueueSelected,
+			includedPlaylists: state => state.includedPlaylists,
+			excludedPlaylists: state => state.excludedPlaylists
 		}),
 		...mapState({
 			loggedIn: state => state.user.auth.loggedIn,
@@ -1701,6 +1703,30 @@ export default {
 							this.updateNoSong(true);
 						}
 
+						this.socket.dispatch(
+							"stations.getStationIncludedPlaylistsById",
+							this.station._id,
+							res => {
+								if (res.status === "success") {
+									this.setIncludedPlaylists(
+										res.data.playlists
+									);
+								}
+							}
+						);
+
+						this.socket.dispatch(
+							"stations.getStationExcludedPlaylistsById",
+							this.station._id,
+							res => {
+								if (res.status === "success") {
+									this.setExcludedPlaylists(
+										res.data.playlists
+									);
+								}
+							}
+						);
+
 						this.socket.dispatch("stations.getQueue", _id, res => {
 							if (res.status === "success") {
 								this.updateSongsList(res.data.queue);
@@ -1924,7 +1950,9 @@ export default {
 			"updateStationPaused",
 			"updateLocalPaused",
 			"updateNoSong",
-			"updateIfStationIsFavorited"
+			"updateIfStationIsFavorited",
+			"setIncludedPlaylists",
+			"setExcludedPlaylists"
 		]),
 		...mapActions("modals/editSong", ["stopVideo"])
 	}

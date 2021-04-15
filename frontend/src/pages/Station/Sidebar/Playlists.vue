@@ -23,7 +23,7 @@
 						<i
 							v-if="
 								station.type === 'community' &&
-									isNotSelected(playlist._id)
+									!isSelected(playlist._id)
 							"
 							@click="selectPlaylist(playlist._id)"
 							class="material-icons play-icon"
@@ -38,7 +38,7 @@
 						<i
 							v-if="
 								station.type === 'community' &&
-									!isNotSelected(playlist._id)
+									isSelected(playlist._id)
 							"
 							@click="deselectPlaylist(playlist._id)"
 							class="material-icons stop-icon"
@@ -92,10 +92,12 @@ export default {
 		};
 	},
 	computed: {
-		...mapState({
-			station: state => state.station.station,
+		...mapState("station", {
+			station: state => state.station,
 			privatePlaylistQueueSelected: state =>
-				state.station.privatePlaylistQueueSelected
+				state.privatePlaylistQueueSelected,
+			includedPlaylists: state => state.includedPlaylists,
+			excludedPlaylists: state => state.excludedPlaylists
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
@@ -179,65 +181,47 @@ export default {
 		},
 		selectPlaylist(id) {
 			if (this.station.type === "community" && this.station.partyMode) {
-				if (this.isNotSelected(id)) {
-					this.updatePrivatePlaylistQueueSelected(id);
-					this.$parent.$parent.addFirstPrivatePlaylistSongToQueue();
-					new Toast(
-						"Successfully selected playlist to auto request songs."
-					);
-				} else {
-					new Toast("Error: Playlist already selected.");
-				}
+				new Toast(
+					"Error: Party mode playlist selection not added yet."
+				);
 			} else {
 				this.socket.dispatch(
-					"stations.selectPrivatePlaylist",
+					"stations.includePlaylist",
 					this.station._id,
 					id,
 					res => {
-						if (res.status === "error") {
-							new Toast(res.message);
-						} else {
-							this.station.includedPlaylists.push(id);
-							new Toast(res.message);
-						}
+						new Toast(res.message);
 					}
 				);
 			}
 		},
 		deselectPlaylist(id) {
 			if (this.station.type === "community" && this.station.partyMode) {
-				this.updatePrivatePlaylistQueueSelected(null);
-				new Toast("Successfully deselected playlist.");
+				new Toast(
+					"Error: Party mode playlist selection not added yet."
+				);
 			} else {
 				this.socket.dispatch(
-					"stations.deselectPrivatePlaylist",
+					"stations.removeIncludedPlaylist",
 					this.station._id,
 					id,
 					res => {
-						if (res.status === "error")
-							return new Toast(res.message);
-
-						this.station.includedPlaylists.splice(
-							this.station.includedPlaylists.indexOf(id),
-							1
-						);
-
-						return new Toast(res.message);
+						new Toast(res.message);
 					}
 				);
 			}
 		},
-		isNotSelected(id) {
+		isSelected(id) {
 			if (this.station.type === "community" && this.station.partyMode) {
-				return this.privatePlaylistQueueSelected !== id;
+				// Party mode playlist selection not added yet.
+				return false;
 			}
 			// TODO Also change this once it changes for a station
-			if (
-				this.station &&
-				this.station.includedPlaylists.indexOf(id) !== -1
-			)
-				return false;
-			return true;
+			let selected = false;
+			this.includedPlaylists.forEach(playlist => {
+				if (playlist._id === id) selected = true;
+			});
+			return selected;
 		},
 		...mapActions("station", ["updatePrivatePlaylistQueueSelected"]),
 		...mapActions("modalVisibility", ["openModal"]),

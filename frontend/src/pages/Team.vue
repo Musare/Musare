@@ -6,7 +6,7 @@
 		<div class="group">
 			<div
 				v-for="(member, index) in currentTeam"
-				:key="index"
+				:key="'current-' + index"
 				class="card"
 			>
 				<header class="card-header">
@@ -35,8 +35,8 @@
 					</div>
 					<div v-if="member.projects" class="projects">
 						<a
-							v-for="(project, index) in member.projects"
-							:key="index"
+							v-for="(project, pindex) in member.projects"
+							:key="'currentp-' + pindex"
 							:href="
 								'https://github.com/Musare/' +
 									project +
@@ -55,7 +55,7 @@
 		<div class="group">
 			<div
 				v-for="(member, index) in previousTeam"
-				:key="index"
+				:key="'previous-' + index"
 				class="card"
 			>
 				<header class="card-header">
@@ -84,8 +84,8 @@
 					</div>
 					<div v-if="member.projects" class="projects">
 						<a
-							v-for="(project, index) in member.projects"
-							:key="index"
+							v-for="(project, pindex) in member.projects"
+							:key="'previousp-' + pindex"
 							:href="
 								'https://github.com/Musare/' +
 									project +
@@ -152,7 +152,12 @@ export default {
 					name: "Owen Diffey",
 					bio:
 						"Developer, Designer, System Admin and QA Tester. Previously Owner and Project Manager.",
-					projects: ["MusareMeteor", "MusareReact", "MusareNode"],
+					projects: [
+						"MusareMeteor",
+						"MusareReact",
+						"MusareNode",
+						"vue-roaster"
+					],
 					active: "Feb 2016 - present",
 					github: "odiffey",
 					link: "https://diffey.dev",
