@@ -8,7 +8,8 @@ export default {
 		includedPlaylists: [],
 		excludedPlaylists: [],
 		songsList: [],
-		stationPaused: true
+		stationPaused: true,
+		currentSong: {}
 	},
 	getters: {},
 	actions: {
@@ -32,6 +33,9 @@ export default {
 		},
 		updateStationPaused: ({ commit }, stationPaused) => {
 			commit("updateStationPaused", stationPaused);
+		},
+		updateCurrentSong: ({ commit }, currentSong) => {
+			commit("updateCurrentSong", currentSong);
 		}
 	},
 	mutations: {
@@ -75,6 +79,9 @@ export default {
 		},
 		updateStationPaused(state, stationPaused) {
 			state.stationPaused = stationPaused;
+		},
+		updateCurrentSong(state, currentSong) {
+			state.currentSong = currentSong;
 		}
 	}
 };

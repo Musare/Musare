@@ -913,7 +913,8 @@ export default {
 						// genres: station.genres,
 						// blacklistedGenres: station.blacklistedGenres,
 						theme: station.theme,
-						paused: station.paused
+						paused: station.paused,
+						currentSong: station.currentSong
 					};
 
 					next(null, data);

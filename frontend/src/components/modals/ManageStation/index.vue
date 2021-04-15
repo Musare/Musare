@@ -123,6 +123,17 @@
 							</confirm>
 						</div>
 						<hr class="section-horizontal-rule" />
+						<song-item
+							v-if="currentSong._id"
+							:song="currentSong"
+							:large-thumbnail="true"
+							:requested-by="
+								station.type === 'community' &&
+									station.partyMode === true
+							"
+							header="Currently Playing.."
+							class="currently-playing"
+						/>
 						<queue sector="manageStation" />
 					</div>
 				</div>
@@ -167,6 +178,7 @@ import TabQueryHandler from "@/mixins/TabQueryHandler.vue";
 
 import Confirm from "@/components/Confirm.vue";
 import Queue from "@/components/Queue.vue";
+import SongItem from "@/components/SongItem.vue";
 import Modal from "../../Modal.vue";
 
 import Settings from "./Tabs/Settings.vue";
@@ -179,6 +191,7 @@ export default {
 		Modal,
 		Confirm,
 		Queue,
+		SongItem,
 		Settings,
 		Playlists,
 		Search,
@@ -204,7 +217,8 @@ export default {
 			station: state => state.station,
 			originalStation: state => state.originalStation,
 			songsList: state => state.songsList,
-			stationPaused: state => state.stationPaused
+			stationPaused: state => state.stationPaused,
+			currentSong: state => state.currentSong
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
@@ -215,6 +229,12 @@ export default {
 			if (res.status === "success") {
 				const { station } = res.data;
 				this.editStation(station);
+
+				const currentSong = res.data.station.currentSong
+					? res.data.station.currentSong
+					: {};
+
+				this.updateCurrentSong(currentSong);
 
 				this.updateStationPaused(res.data.station.paused);
 
@@ -272,6 +292,12 @@ export default {
 		this.socket.on("event:stations.resume", res => {
 			this.timePaused = res.data.timePaused;
 			this.updateStationPaused(false);
+		});
+
+		this.socket.on("event:songs.next", res => {
+			const { currentSong } = res.data;
+
+			this.updateCurrentSong(currentSong || {});
 		});
 	},
 	beforeDestroy() {
@@ -337,7 +363,8 @@ export default {
 			"clearStation",
 			"updateSongsList",
 			"repositionSongInList",
-			"updateStationPaused"
+			"updateStationPaused",
+			"updateCurrentSong"
 		]),
 		...mapActions("modalVisibility", ["openModal", "closeModal"])
 	}
@@ -416,24 +443,29 @@ export default {
 		height: 100%;
 		overflow-y: auto;
 		flex-grow: 1;
-		.section .queue-title {
-			display: flex;
-			line-height: 30px;
-			.material-icons {
-				margin-left: 5px;
-				margin-bottom: 5px;
-				font-size: 28px;
-				cursor: pointer;
-				&:first-of-type {
-					margin-left: auto;
+		.section {
+			.queue-title {
+				display: flex;
+				line-height: 30px;
+				.material-icons {
+					margin-left: 5px;
+					margin-bottom: 5px;
+					font-size: 28px;
+					cursor: pointer;
+					&:first-of-type {
+						margin-left: auto;
+					}
+					&.skip-station {
+						color: var(--red);
+					}
+					&.resume-station,
+					&.pause-station {
+						color: var(--primary-color);
+					}
 				}
-				&.skip-station {
-					color: var(--red);
-				}
-				&.resume-station,
-				&.pause-station {
-					color: var(--primary-color);
-				}
+			}
+			.currently-playing {
+				margin-bottom: 10px;
 			}
 		}
 	}
