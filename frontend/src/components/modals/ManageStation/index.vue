@@ -89,7 +89,39 @@
 				</div>
 				<div class="right-section">
 					<div class="section">
-						<h4 class="section-title">Queue</h4>
+						<div class="queue-title">
+							<h4 class="section-title">Queue</h4>
+							<i
+								v-if="isOwnerOrAdmin() && stationPaused"
+								@click="resumeStation()"
+								class="material-icons resume-station"
+								content="Resume Station"
+								v-tippy
+							>
+								play_arrow
+							</i>
+							<i
+								v-if="isOwnerOrAdmin() && !stationPaused"
+								@click="pauseStation()"
+								class="material-icons pause-station"
+								content="Pause Station"
+								v-tippy
+							>
+								pause
+							</i>
+							<confirm
+								v-if="isOwnerOrAdmin()"
+								@confirm="skipStation()"
+							>
+								<i
+									class="material-icons skip-station"
+									content="Force Skip Station"
+									v-tippy
+								>
+									skip_next
+								</i>
+							</confirm>
+						</div>
 						<hr class="section-horizontal-rule" />
 						<queue />
 					</div>
@@ -168,6 +200,8 @@ export default {
 			userId: state => state.user.auth.userId,
 			role: state => state.user.auth.role
 		}),
+		...mapState("station", {
+			stationPaused: state => state.stationPaused
 		}),
 		...mapState("modals/manageStation", {
 			station: state => state.station,
@@ -203,7 +237,7 @@ export default {
 					}
 				);
 			} else {
-				new Toast(`Station with that ID not found${this.stationId}`);
+				new Toast(`Station with that ID not found`);
 				this.closeModal({
 					sector: this.sector,
 					modal: "manageStation"
@@ -223,6 +257,34 @@ export default {
 		},
 		isOwnerOrAdmin() {
 			return this.isOwner() || this.isAdmin();
+		},
+		resumeStation() {
+			this.socket.dispatch("stations.resume", this.station._id, res => {
+				if (res.status !== "success")
+					new Toast(`Error: ${res.message}`);
+				else new Toast("Successfully resumed the station.");
+			});
+		},
+		pauseStation() {
+			this.socket.dispatch("stations.pause", this.station._id, res => {
+				if (res.status !== "success")
+					new Toast(`Error: ${res.message}`);
+				else new Toast("Successfully paused the station.");
+			});
+		},
+		skipStation() {
+			this.socket.dispatch(
+				"stations.forceSkip",
+				this.station._id,
+				res => {
+					if (res.status !== "success")
+						new Toast(`Error: ${res.message}`);
+					else
+						new Toast(
+							"Successfully skipped the station's current song."
+						);
+				}
+			);
 		},
 		clearAndRefillStationQueue() {
 			this.socket.dispatch(
@@ -320,6 +382,26 @@ export default {
 		height: 100%;
 		overflow-y: auto;
 		flex-grow: 1;
+		.section .queue-title {
+			display: flex;
+			line-height: 30px;
+			.material-icons {
+				margin-left: 5px;
+				margin-bottom: 5px;
+				font-size: 28px;
+				cursor: pointer;
+				&:first-of-type {
+					margin-left: auto;
+				}
+				&.skip-station {
+					color: var(--red);
+				}
+				&.resume-station,
+				&.pause-station {
+					color: var(--primary-color);
+				}
+			}
+		}
 	}
 }
 

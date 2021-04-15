@@ -33,15 +33,18 @@
 						:key="'key-' + index"
 					>
 						<div class="icons-group" slot="actions">
-							<i
+							<confirm
 								v-if="isOwnerOrAdmin()"
-								@click="deselectPlaylist(playlist._id)"
-								class="material-icons stop-icon"
-								content="Stop playing songs from this playlist
-							"
-								v-tippy
-								>stop</i
+								@confirm="deselectPlaylist(playlist._id)"
 							>
+								<i
+									class="material-icons stop-icon"
+									content="Stop playing songs from this playlist"
+									v-tippy
+								>
+									stop
+								</i>
+							</confirm>
 							<i
 								v-if="playlist.createdBy === myUserId"
 								@click="showPlaylist(playlist._id)"
@@ -143,23 +146,26 @@
 									v-tippy
 									>play_arrow</i
 								>
-								<i
+								<confirm
 									v-if="
 										station.type === 'community' &&
 											(isOwnerOrAdmin() ||
 												station.partyMode) &&
 											isSelected(playlist._id)
 									"
-									@click="deselectPlaylist(playlist._id)"
-									class="material-icons stop-icon"
-									:content="
-										station.partyMode
-											? 'Stop requesting songs from this playlist'
-											: 'Stop playing songs from this playlist'
-									"
-									v-tippy
-									>stop</i
+									@confirm="deselectPlaylist(playlist._id)"
 								>
+									<i
+										class="material-icons stop-icon"
+										:content="
+											station.partyMode
+												? 'Stop requesting songs from this playlist'
+												: 'Stop playing songs from this playlist'
+										"
+										v-tippy
+										>stop</i
+									>
+								</confirm>
 								<i
 									@click="showPlaylist(playlist._id)"
 									class="material-icons edit-icon"
@@ -184,6 +190,7 @@ import { mapActions, mapState, mapGetters } from "vuex";
 import Toast from "toasters";
 import draggable from "vuedraggable";
 import PlaylistItem from "@/components/PlaylistItem.vue";
+import Confirm from "@/components/Confirm.vue";
 
 import TabQueryHandler from "@/mixins/TabQueryHandler.vue";
 import SortablePlaylists from "@/mixins/SortablePlaylists.vue";
@@ -191,7 +198,8 @@ import SortablePlaylists from "@/mixins/SortablePlaylists.vue";
 export default {
 	components: {
 		draggable,
-		PlaylistItem
+		PlaylistItem,
+		Confirm
 		// CreatePlaylist: () => import("@/components/modals/CreatePlaylist.vue")
 	},
 	mixins: [TabQueryHandler, SortablePlaylists],

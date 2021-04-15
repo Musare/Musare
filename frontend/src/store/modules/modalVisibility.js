@@ -10,11 +10,9 @@ const state = {
 			createCommunityStation: false
 		},
 		station: {
-			addSongToQueue: false,
 			requestSong: false,
 			editPlaylist: false,
 			createPlaylist: false,
-			editStation: false,
 			manageStation: false,
 			report: false
 		},
@@ -22,7 +20,6 @@ const state = {
 			editNews: false,
 			editUser: false,
 			editSong: false,
-			editStation: false,
 			manageStation: false,
 			editPlaylist: false,
 			viewReport: false,

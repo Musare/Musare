@@ -58,9 +58,6 @@
 							/>
 						</td>
 						<td>
-							<a class="button is-info" @click="edit(station)"
-								>Edit</a
-							>
 							<a class="button is-info" @click="manage(station)"
 								>Manage</a
 							>
@@ -180,11 +177,6 @@
 			</div>
 		</div>
 
-		<edit-station
-			v-if="modals.editStation"
-			:station-id="editingStationId"
-			sector="admin"
-		/>
 		<manage-station
 			v-if="modals.manageStation"
 			:station-id="editingStationId"
@@ -203,7 +195,6 @@ import ws from "@/ws";
 
 export default {
 	components: {
-		EditStation: () => import("@/components/modals/EditStation.vue"),
 		ManageStation: () =>
 			import("@/components/modals/ManageStation/index.vue"),
 		UserIdToUsername,
@@ -289,13 +280,6 @@ export default {
 				}
 			);
 		},
-		edit(station) {
-			this.editingStationId = station._id;
-			this.openModal({
-				sector: "admin",
-				modal: "editStation"
-			});
-		},
 		manage(station) {
 			this.editingStationId = station._id;
 			this.openModal({
@@ -349,7 +333,6 @@ export default {
 		},
 		...mapActions("modalVisibility", ["openModal"]),
 		...mapActions("admin/stations", [
-			"editStation",
 			"manageStation",
 			"loadStations",
 			"stationRemoved",
