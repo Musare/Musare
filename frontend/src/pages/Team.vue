@@ -2,119 +2,123 @@
 	<div class="app">
 		<metadata title="Team" />
 		<main-header />
-		<h2 class="has-text-centered">Current Team</h2>
-		<div class="group">
-			<div
-				v-for="(member, index) in currentTeam"
-				:key="index"
-				class="card"
-			>
-				<header class="card-header">
-					<profile-picture
-						:avatar="member.avatar"
-						:name="member.name"
-					/>
-					<div>
-						<strong>{{ member.name }}</strong>
-						<span v-if="member.active"
-							>Active: {{ member.active }}</span
-						>
-					</div>
-					<a
-						v-if="member.link"
-						:href="member.link"
-						target="_blank"
-						class="material-icons"
-					>
-						link
-					</a>
-				</header>
-				<div class="card-content">
-					<div
-						v-if="member.bio"
-						class="bio"
-						v-html="member.bio"
-					></div>
-					<div v-if="member.projects" class="projects">
-						<a
-							v-for="(project, projectIndex) in member.projects"
-							:key="projectIndex"
-							:href="
-								'https://github.com/Musare/' +
-									project +
-									'/commits?author=' +
-									member.github
-							"
-							target="_blank"
-						>
-							{{ project }}
-						</a>
-					</div>
-				</div>
-			</div>
-		</div>
-		<h3 class="has-text-centered">Previous Team</h3>
-		<div class="group">
-			<div
-				v-for="(member, index) in previousTeam"
-				:key="index"
-				class="card"
-			>
-				<header class="card-header">
-					<profile-picture
-						:avatar="{ type: 'text', color: 'grey' }"
-						:name="member.name"
-					/>
-					<div>
-						<strong>{{ member.name }}</strong>
-						<span v-if="member.active"
-							>Active: {{ member.active }}</span
-						>
-					</div>
-					<a
-						v-if="member.link"
-						:href="member.link"
-						target="_blank"
-						class="material-icons"
-					>
-						link
-					</a>
-				</header>
-				<div class="card-content">
-					<div
-						v-if="member.bio"
-						class="bio"
-						v-html="member.bio"
-					></div>
-					<div v-if="member.projects" class="projects">
-						<a
-							v-for="(project, projectIndex) in member.projects"
-							:key="projectIndex"
-							:href="
-								'https://github.com/Musare/' +
-									project +
-									'/commits?author=' +
-									member.github
-							"
-							target="_blank"
-						>
-							{{ project }}
-						</a>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class="other-contributors">
-			<h4>Other Contributors</h4>
-			<div>
-				<a
-					v-for="(member, index) in otherContributors"
+		<div class="container">
+			<h2 class="has-text-centered">Current Team</h2>
+			<div class="group">
+				<div
+					v-for="(member, index) in currentTeam"
 					:key="index"
-					:href="member.link"
-					target="_blank"
+					class="card"
 				>
-					{{ member.name }}
-				</a>
+					<header class="card-header">
+						<profile-picture
+							:avatar="member.avatar"
+							:name="member.name"
+						/>
+						<div>
+							<strong>{{ member.name }}</strong>
+							<span v-if="member.active"
+								>Active: {{ member.active }}</span
+							>
+						</div>
+						<a
+							v-if="member.link"
+							:href="member.link"
+							target="_blank"
+							class="material-icons"
+						>
+							link
+						</a>
+					</header>
+					<div class="card-content">
+						<div
+							v-if="member.bio"
+							class="bio"
+							v-html="member.bio"
+						></div>
+						<div v-if="member.projects" class="projects">
+							<a
+								v-for="(project,
+								projectIndex) in member.projects"
+								:key="projectIndex"
+								:href="
+									'https://github.com/Musare/' +
+										project +
+										'/commits?author=' +
+										member.github
+								"
+								target="_blank"
+							>
+								{{ project }}
+							</a>
+						</div>
+					</div>
+				</div>
+			</div>
+			<h3 class="has-text-centered">Previous Team</h3>
+			<div class="group">
+				<div
+					v-for="(member, index) in previousTeam"
+					:key="index"
+					class="card"
+				>
+					<header class="card-header">
+						<profile-picture
+							:avatar="{ type: 'text', color: 'grey' }"
+							:name="member.name"
+						/>
+						<div>
+							<strong>{{ member.name }}</strong>
+							<span v-if="member.active"
+								>Active: {{ member.active }}</span
+							>
+						</div>
+						<a
+							v-if="member.link"
+							:href="member.link"
+							target="_blank"
+							class="material-icons"
+						>
+							link
+						</a>
+					</header>
+					<div class="card-content">
+						<div
+							v-if="member.bio"
+							class="bio"
+							v-html="member.bio"
+						></div>
+						<div v-if="member.projects" class="projects">
+							<a
+								v-for="(project,
+								projectIndex) in member.projects"
+								:key="projectIndex"
+								:href="
+									'https://github.com/Musare/' +
+										project +
+										'/commits?author=' +
+										member.github
+								"
+								target="_blank"
+							>
+								{{ project }}
+							</a>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="other-contributors">
+				<h4>Other Contributors</h4>
+				<div>
+					<a
+						v-for="(member, index) in otherContributors"
+						:key="index"
+						:href="member.link"
+						target="_blank"
+					>
+						{{ member.name }}
+					</a>
+				</div>
 			</div>
 		</div>
 		<main-footer />
@@ -258,6 +262,10 @@ export default {
 	.other-contributors div a {
 		background-color: var(--dark-grey);
 	}
+}
+
+.container {
+	max-width: 100% !important;
 }
 
 a {
