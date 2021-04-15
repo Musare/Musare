@@ -93,7 +93,10 @@ export default {
 			}
 		});
 
-		if (localStorage.getItem("github_redirect")) {
+		if (
+			localStorage.getItem("github_redirect") &&
+			localStorage.getItem("github_redirect") !== "/login"
+		) {
 			this.$router.push(localStorage.getItem("github_redirect"));
 			localStorage.removeItem("github_redirect");
 		}
