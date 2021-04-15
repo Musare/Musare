@@ -23,6 +23,9 @@
 						<i
 							v-if="
 								station.type === 'community' &&
+									(userId === station.owner ||
+										role === 'admin' ||
+										station.partyMode) &&
 									!isSelected(playlist._id)
 							"
 							@click="selectPlaylist(playlist._id)"
@@ -38,6 +41,9 @@
 						<i
 							v-if="
 								station.type === 'community' &&
+									(userId === station.owner ||
+										role === 'admin' ||
+										station.partyMode) &&
 									isSelected(playlist._id)
 							"
 							@click="deselectPlaylist(playlist._id)"
@@ -92,6 +98,10 @@ export default {
 		};
 	},
 	computed: {
+		...mapState({
+			role: state => state.user.auth.role,
+			userId: state => state.user.auth.userId
+		}),
 		...mapState("station", {
 			station: state => state.station,
 			privatePlaylistQueueSelected: state =>

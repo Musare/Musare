@@ -188,8 +188,7 @@ export default {
 			previousTeam: [
 				{
 					name: "Akira Laine",
-					bio:
-						"Co-Founder, Leader Developer, Designer and QA Tester.",
+					bio: "Co-Founder, Lead Developer, Designer and QA Tester.",
 					projects: ["MusareMeteor"],
 					active: "Sept 2015 - Feb 2016",
 					github: "darthmeme",

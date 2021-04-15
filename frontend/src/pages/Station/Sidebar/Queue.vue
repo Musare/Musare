@@ -81,7 +81,7 @@
 			@click="
 				openModal({
 					sector: 'station',
-					modal: 'addSongToQueue'
+					modal: 'manageStation'
 				})
 			"
 		>

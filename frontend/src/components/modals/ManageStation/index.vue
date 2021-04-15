@@ -6,6 +6,7 @@
 					<div class="section tabs-container">
 						<div class="tab-selection">
 							<button
+								v-if="isOwnerOrAdmin()"
 								class="button is-default"
 								:class="{ selected: tab === 'settings' }"
 								@click="showTab('settings')"
@@ -13,6 +14,15 @@
 								Settings
 							</button>
 							<button
+								v-if="
+									isOwnerOrAdmin() ||
+										(loggedIn &&
+											station.type === 'community' &&
+											station.partyMode &&
+											((station.locked &&
+												isOwnerOrAdmin()) ||
+												!station.locked))
+								"
 								class="button is-default"
 								:class="{ selected: tab === 'playlists' }"
 								@click="showTab('playlists')"
@@ -21,26 +31,60 @@
 							</button>
 							<button
 								v-if="
-									station.type === 'community' &&
-										station.partyMode
+									loggedIn &&
+										station.type === 'community' &&
+										station.partyMode &&
+										((station.locked && isOwnerOrAdmin()) ||
+											!station.locked)
 								"
 								class="button is-default"
-								:class="{ selected: tab === 'youtube' }"
-								@click="showTab('youtube')"
+								:class="{ selected: tab === 'search' }"
+								@click="showTab('search')"
 							>
-								YouTube
+								Search
+							</button>
+							<button
+								v-if="isOwnerOrAdmin()"
+								class="button is-default"
+								:class="{ selected: tab === 'blacklist' }"
+								@click="showTab('blacklist')"
+							>
+								Blacklist
 							</button>
 						</div>
-						<settings class="tab" v-show="tab === 'settings'" />
-						<youtube-search
+						<settings
+							v-if="isOwnerOrAdmin()"
+							class="tab"
+							v-show="tab === 'settings'"
+						/>
+						<playlists
 							v-if="
-								station.type === 'community' &&
-									station.partyMode
+								isOwnerOrAdmin() ||
+									(loggedIn &&
+										station.type === 'community' &&
+										station.partyMode &&
+										((station.locked && isOwnerOrAdmin()) ||
+											!station.locked))
 							"
 							class="tab"
-							v-show="tab === 'youtube'"
+							v-show="tab === 'playlists'"
 						/>
-						<playlists class="tab" v-show="tab === 'playlists'" />
+						<search
+							v-if="
+								loggedIn &&
+									station.type === 'community' &&
+									station.partyMode &&
+									((station.locked && isOwnerOrAdmin()) ||
+										!station.locked)
+							"
+							class="tab"
+							v-show="tab === 'search'"
+						/>
+						<blacklist
+							v-if="isOwnerOrAdmin()"
+							class="tab"
+							v-show="tab === 'blacklist'"
+						/>
 					</div>
 				</div>
 				<div class="right-section">
@@ -66,7 +110,7 @@
 				<i class="material-icons icon-with-button">queue</i>
 				<span class="optional-desktop-only-text"> Request Song </span>
 			</button>
-			<div class="right">
+			<div v-if="isOwnerOrAdmin()" class="right">
 				<confirm @confirm="clearAndRefillStationQueue()">
 					<a class="button is-danger">
 						Clear and refill station queue
@@ -95,7 +139,8 @@ import Modal from "../../Modal.vue";
 import Queue from "../../../pages/Station/Sidebar/Queue.vue";
 import Settings from "./Tabs/Settings.vue";
 import Playlists from "./Tabs/Playlists.vue";
-import YoutubeSearch from "./Tabs/YoutubeSearch.vue";
+import Search from "./Tabs/Search.vue";
+import Blacklist from "./Tabs/Blacklist.vue";
 
 export default {
 	components: {
@@ -104,7 +149,8 @@ export default {
 		Queue,
 		Settings,
 		Playlists,
-		YoutubeSearch
+		Search,
+		Blacklist
 	},
 	mixins: [TabQueryHandler],
 	props: {
@@ -113,12 +159,15 @@ export default {
 	},
 	data() {
 		return {
-			tab: "settings"
+			tab: "playlists"
 		};
 	},
 	computed: {
 		...mapState({
-			loggedIn: state => state.user.auth.loggedIn
+			loggedIn: state => state.user.auth.loggedIn,
+			userId: state => state.user.auth.userId,
+			role: state => state.user.auth.role
+		}),
 		}),
 		...mapState("modals/manageStation", {
 			station: state => state.station,
@@ -166,6 +215,15 @@ export default {
 		this.clearStation();
 	},
 	methods: {
+		isOwner() {
+			return this.loggedIn && this.userId === this.station.owner;
+		},
+		isAdmin() {
+			return this.loggedIn && this.role === "admin";
+		},
+		isOwnerOrAdmin() {
+			return this.isOwner() || this.isAdmin();
+		},
 		clearAndRefillStationQueue() {
 			this.socket.dispatch(
 				"stations.clearAndRefillStationQueue",

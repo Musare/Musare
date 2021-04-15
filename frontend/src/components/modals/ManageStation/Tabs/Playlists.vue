@@ -34,6 +34,7 @@
 					>
 						<div class="icons-group" slot="actions">
 							<i
+								v-if="isOwnerOrAdmin()"
 								@click="deselectPlaylist(playlist._id)"
 								class="material-icons stop-icon"
 								content="Stop playing songs from this playlist
@@ -50,7 +51,11 @@
 								>edit</i
 							>
 							<i
-								v-else
+								v-if="
+									playlist.createdBy !== myUserId &&
+										(playlist.privacy === 'public' ||
+											isAdmin())
+								"
 								@click="showPlaylist(playlist._id)"
 								class="material-icons edit-icon"
 								content="View Playlist"
@@ -65,6 +70,23 @@
 				</p>
 			</div>
 			<div class="tab" v-show="tab === 'search'">
+				<label class="label"> Search for a public playlist </label>
+				<div class="control is-grouped input-with-button">
+					<p class="control is-expanded">
+						<input
+							class="input"
+							type="text"
+							placeholder="Enter your playlist query here..."
+						/>
+					</p>
+					<p class="control">
+						<a class="button is-info" href="#"
+							><i class="material-icons icon-with-button"
+								>search</i
+							>Search</a
+						>
+					</p>
+				</div>
 				Searching genre and public user playlists has yet to be added.
 			</div>
 			<div
@@ -107,6 +129,8 @@
 								<i
 									v-if="
 										station.type === 'community' &&
+											(isOwnerOrAdmin() ||
+												station.partyMode) &&
 											!isSelected(playlist._id)
 									"
 									@click="selectPlaylist(playlist._id)"
@@ -122,6 +146,8 @@
 								<i
 									v-if="
 										station.type === 'community' &&
+											(isOwnerOrAdmin() ||
+												station.partyMode) &&
 											isSelected(playlist._id)
 									"
 									@click="deselectPlaylist(playlist._id)"
@@ -184,6 +210,7 @@ export default {
 			}
 		},
 		...mapState({
+			loggedIn: state => state.user.auth.loggedIn,
 			role: state => state.user.auth.role,
 			myUserId: state => state.user.auth.userId,
 			userId: state => state.user.auth.userId
@@ -291,6 +318,15 @@ export default {
 		);
 	},
 	methods: {
+		isOwner() {
+			return this.loggedIn && this.userId === this.station.owner;
+		},
+		isAdmin() {
+			return this.loggedIn && this.role === "admin";
+		},
+		isOwnerOrAdmin() {
+			return this.isOwner() || this.isAdmin();
+		},
 		showPlaylist(playlistId) {
 			this.editPlaylist(playlistId);
 			this.openModal({ sector: "station", modal: "editPlaylist" });
