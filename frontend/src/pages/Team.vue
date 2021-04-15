@@ -30,13 +30,15 @@
 					</a>
 				</header>
 				<div class="card-content">
-					<div v-if="member.bio" class="bio">
-						{{ member.bio }}
-					</div>
+					<div
+						v-if="member.bio"
+						class="bio"
+						v-html="member.bio"
+					></div>
 					<div v-if="member.projects" class="projects">
 						<a
-							v-for="(project, index) in member.projects"
-							:key="index"
+							v-for="(project, projectIndex) in member.projects"
+							:key="projectIndex"
 							:href="
 								'https://github.com/Musare/' +
 									project +
@@ -79,13 +81,15 @@
 					</a>
 				</header>
 				<div class="card-content">
-					<div v-if="member.bio" class="bio">
-						{{ member.bio }}
-					</div>
+					<div
+						v-if="member.bio"
+						class="bio"
+						v-html="member.bio"
+					></div>
 					<div v-if="member.projects" class="projects">
 						<a
-							v-for="(project, index) in member.projects"
-							:key="index"
+							v-for="(project, projectIndex) in member.projects"
+							:key="projectIndex"
 							:href="
 								'https://github.com/Musare/' +
 									project +
@@ -163,7 +167,11 @@ export default {
 				},
 				{
 					name: "Jonathan Graham",
-					bio: "Lead Developer, Designer and QA Tester.",
+					bio: `
+						<em>Gap-year student based in the UK hoping to study Computer Science at university in September.</em>
+						<br /><br />
+						Lead Developer, Designer and QA Tester.
+						`,
 					projects: [
 						"MusareMeteor",
 						"MusareReact",
@@ -351,7 +359,7 @@ h2 {
 				margin-top: auto;
 
 				a {
-					background: var(--light-grey-2);
+					background: var(--light-grey);
 					height: 30px;
 					padding: 5px;
 					border-radius: 5px;
