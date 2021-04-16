@@ -72,13 +72,10 @@ import { mapActions, mapState, mapGetters } from "vuex";
 import Toast from "toasters";
 import PlaylistItem from "@/components/PlaylistItem.vue";
 
-import TabQueryHandler from "@/mixins/TabQueryHandler.vue";
-
 export default {
 	components: {
 		PlaylistItem
 	},
-	mixins: [TabQueryHandler],
 	data() {
 		return {
 			tab: "playlists"
@@ -98,6 +95,9 @@ export default {
 		})
 	},
 	methods: {
+		showTab(tab) {
+			this.tab = tab;
+		},
 		showPlaylist(playlistId) {
 			this.editPlaylist(playlistId);
 			this.openModal({ sector: "station", modal: "editPlaylist" });

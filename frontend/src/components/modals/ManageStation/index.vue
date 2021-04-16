@@ -1,5 +1,12 @@
 <template>
-	<modal title="Manage Station" class="manage-station-modal">
+	<modal
+		:title="
+			!isOwnerOrAdmin() && station.partyMode
+				? 'Add Song to Queue'
+				: 'Manage Station'
+		"
+		class="manage-station-modal"
+	>
 		<template #body>
 			<div class="custom-modal-body" v-if="station && station._id">
 				<div class="left-section">
@@ -174,7 +181,6 @@
 import { mapState, mapGetters, mapActions } from "vuex";
 
 import Toast from "toasters";
-import TabQueryHandler from "@/mixins/TabQueryHandler.vue";
 
 import Confirm from "@/components/Confirm.vue";
 import Queue from "@/components/Queue.vue";
@@ -197,14 +203,13 @@ export default {
 		Search,
 		Blacklist
 	},
-	mixins: [TabQueryHandler],
 	props: {
 		stationId: { type: String, default: "" },
 		sector: { type: String, default: "admin" }
 	},
 	data() {
 		return {
-			tab: "playlists"
+			tab: "settings"
 		};
 	},
 	computed: {
@@ -229,6 +234,9 @@ export default {
 			if (res.status === "success") {
 				const { station } = res.data;
 				this.editStation(station);
+
+				if (!this.isOwnerOrAdmin() && this.station.partyMode)
+					this.tab = "search";
 
 				const currentSong = res.data.station.currentSong
 					? res.data.station.currentSong
@@ -305,6 +313,9 @@ export default {
 		this.clearStation();
 	},
 	methods: {
+		showTab(tab) {
+			this.tab = tab;
+		},
 		isOwner() {
 			return this.loggedIn && this.userId === this.station.owner;
 		},

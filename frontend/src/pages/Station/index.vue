@@ -159,22 +159,6 @@
 									@click="
 										openModal({
 											sector: 'station',
-											modal: 'editStation'
-										})
-									"
-								>
-									<i class="material-icons icon-with-button"
-										>settings</i
-									>
-									<span class="optional-desktop-only-text">
-										Station settings
-									</span>
-								</button>
-								<button
-									class="button is-primary"
-									@click="
-										openModal({
-											sector: 'station',
 											modal: 'manageStation'
 										})
 									"

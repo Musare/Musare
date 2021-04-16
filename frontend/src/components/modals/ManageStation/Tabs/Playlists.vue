@@ -192,7 +192,6 @@ import draggable from "vuedraggable";
 import PlaylistItem from "@/components/PlaylistItem.vue";
 import Confirm from "@/components/Confirm.vue";
 
-import TabQueryHandler from "@/mixins/TabQueryHandler.vue";
 import SortablePlaylists from "@/mixins/SortablePlaylists.vue";
 
 export default {
@@ -202,7 +201,7 @@ export default {
 		Confirm
 		// CreatePlaylist: () => import("@/components/modals/CreatePlaylist.vue")
 	},
-	mixins: [TabQueryHandler, SortablePlaylists],
+	mixins: [SortablePlaylists],
 	data() {
 		return {
 			tab: "current"
@@ -326,6 +325,9 @@ export default {
 		);
 	},
 	methods: {
+		showTab(tab) {
+			this.tab = tab;
+		},
 		isOwner() {
 			return this.loggedIn && this.userId === this.station.owner;
 		},

@@ -87,6 +87,7 @@ export default {
 		div {
 			display: flex;
 			align-items: center;
+			line-height: 1;
 
 			button,
 			.button {
