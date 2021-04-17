@@ -97,7 +97,7 @@ class _YouTubeModule extends CoreClass {
 			YouTubeModule.rateLimiter.continue().then(() => {
 				YouTubeModule.rateLimiter.restart();
 				YouTubeModule.axios
-					.get("https://www.kvos.dev/youtube/v3/searh", {
+					.get("https://www.googleapis.com/youtube/v3/search", {
 						params,
 						raxConfig: {
 							onRetryAttempt: err => {
