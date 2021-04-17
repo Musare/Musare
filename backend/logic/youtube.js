@@ -1,6 +1,7 @@
 import async from "async";
 import config from "config";
 
+import * as rax from "retry-axios";
 import axios from "axios";
 
 import CoreClass from "../core";
@@ -61,6 +62,14 @@ class _YouTubeModule extends CoreClass {
 			this.rateLimiter = new RateLimitter(config.get("apis.youtube.rateLimit"));
 			this.requestTimeout = config.get("apis.youtube.requestTimeout");
 
+			this.axios = axios.create();
+			this.axios.defaults.raxConfig = {
+				instance: this.axios,
+				retry: config.get("apis.youtube.retryAmount"),
+				noResponseRetries: config.get("apis.youtube.retryAmount")
+			};
+			rax.attach(this.axios);
+
 			resolve();
 		});
 	}
@@ -87,8 +96,20 @@ class _YouTubeModule extends CoreClass {
 		return new Promise((resolve, reject) =>
 			YouTubeModule.rateLimiter.continue().then(() => {
 				YouTubeModule.rateLimiter.restart();
-				axios
-					.get("https://www.googleapis.com/youtube/v3/search", { params })
+				YouTubeModule.axios
+					.get("https://www.googleapis.com/youtube/v3/search", {
+						params,
+						raxConfig: {
+							onRetryAttempt: err => {
+								const cfg = rax.getConfig(err);
+								YouTubeModule.log(
+									"ERROR",
+									"SEARCH",
+									`Attempt #${cfg.currentRetryAttempt}. Error: ${err.message}`
+								);
+							}
+						}
+					})
 					.then(res => {
 						if (res.data.err) {
 							YouTubeModule.log("ERROR", "SEARCH", `${res.data.error.message}`);
@@ -124,10 +145,20 @@ class _YouTubeModule extends CoreClass {
 
 			YouTubeModule.rateLimiter.continue().then(() => {
 				YouTubeModule.rateLimiter.restart();
-				axios
+				YouTubeModule.axios
 					.get("https://www.googleapis.com/youtube/v3/videos", {
 						params,
-						timeout: YouTubeModule.requestTimeout
+						timeout: YouTubeModule.requestTimeout,
+						raxConfig: {
+							onRetryAttempt: err => {
+								const cfg = rax.getConfig(err);
+								YouTubeModule.log(
+									"ERROR",
+									"GET_SONG",
+									`Attempt #${cfg.currentRetryAttempt}. Error: ${err.message}`
+								);
+							}
+						}
 					})
 					.then(res => {
 						if (res.data.error) {
@@ -176,6 +207,7 @@ class _YouTubeModule extends CoreClass {
 						return resolve({ song });
 					})
 					.catch(err => {
+						// console.log(111, err, payload);
 						YouTubeModule.log("ERROR", "GET_SONG", `${err.message}`);
 						return reject(new Error("An error has occured. Please try again later."));
 					});
@@ -248,6 +280,7 @@ class _YouTubeModule extends CoreClass {
 					}
 				],
 				(err, response) => {
+					// console.log(222, err, payload);
 					if (err && err !== true) {
 						YouTubeModule.log("ERROR", "GET_PLAYLIST", "Some error has occurred.", err.message);
 						reject(new Error(err.message));
@@ -281,10 +314,20 @@ class _YouTubeModule extends CoreClass {
 
 			YouTubeModule.rateLimiter.continue().then(() => {
 				YouTubeModule.rateLimiter.restart();
-				axios
+				YouTubeModule.axios
 					.get("https://www.googleapis.com/youtube/v3/playlistItems", {
 						params,
-						timeout: YouTubeModule.requestTimeout
+						timeout: YouTubeModule.requestTimeout,
+						raxConfig: {
+							onRetryAttempt: err => {
+								const cfg = rax.getConfig(err);
+								YouTubeModule.log(
+									"ERROR",
+									"GET_PLAYLIST_PAGE",
+									`Attempt #${cfg.currentRetryAttempt}. Error: ${err.message}`
+								);
+							}
+						}
 					})
 					.then(res => {
 						if (res.data.err) {
@@ -299,6 +342,7 @@ class _YouTubeModule extends CoreClass {
 						return resolve({ songs });
 					})
 					.catch(err => {
+						// console.log(333, err, payload);
 						YouTubeModule.log("ERROR", "GET_PLAYLIST_PAGE", `${err.message}`);
 						if (err.message === "Request failed with status code 404") {
 							return reject(new Error("Playlist not found. Is the playlist public/unlisted?"));
@@ -338,10 +382,20 @@ class _YouTubeModule extends CoreClass {
 
 			return YouTubeModule.rateLimiter.continue().then(() => {
 				YouTubeModule.rateLimiter.restart();
-				axios
+				YouTubeModule.axios
 					.get("https://www.googleapis.com/youtube/v3/videos", {
 						params,
-						timeout: YouTubeModule.requestTimeout
+						timeout: YouTubeModule.requestTimeout,
+						raxConfig: {
+							onRetryAttempt: err => {
+								const cfg = rax.getConfig(err);
+								YouTubeModule.log(
+									"ERROR",
+									"FILTER_MUSIC_VIDEOS",
+									`Attempt #${cfg.currentRetryAttempt}. Error: ${err.message}`
+								);
+							}
+						}
 					})
 					.then(res => {
 						if (res.data.err) {
@@ -368,6 +422,7 @@ class _YouTubeModule extends CoreClass {
 							.catch(err => reject(err));
 					})
 					.catch(err => {
+						// console.log(444, err, payload);
 						YouTubeModule.log("ERROR", "FILTER_MUSIC_VIDEOS", `${err.message}`);
 						return reject(new Error("Failed to find playlist from YouTube"));
 					});

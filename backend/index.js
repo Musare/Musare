@@ -3,7 +3,7 @@ import "./loadEnvVariables.js";
 import util from "util";
 import config from "config";
 
-const REQUIRED_CONFIG_VERSION = 4;
+const REQUIRED_CONFIG_VERSION = 5;
 
 // eslint-disable-next-line
 Array.prototype.remove = function (item) {
