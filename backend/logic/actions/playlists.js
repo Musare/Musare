@@ -220,6 +220,88 @@ export default {
 	}),
 
 	/**
+	 * Searches through all playlists that can be included in a community station
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} query - the query
+	 * @param {Function} cb - gets called with the result
+	 */
+	searchCommunity: isLoginRequired(async function searchCommunity(session, query, cb) {
+		async.waterfall(
+			[
+				next => {
+					if (!query || typeof query !== "string") next("Invalid query.");
+					else if (query.length < 3) next("Invalid query.");
+					else next();
+				},
+
+				next => {
+					PlaylistsModule.runJob("SEARCH", {
+						query,
+						includeUser: true,
+						includeGenre: true,
+						includeOwn: true,
+						userId: session.userId
+					})
+						.then(response => {
+							next(null, response.playlists);
+						})
+						.catch(err => {
+							next(err);
+						});
+				}
+			],
+			async (err, playlists) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "PLAYLISTS_SEARCH_COMMUNITY", `Searching playlists failed. "${err}"`);
+					return cb({ status: "error", message: err });
+				}
+				this.log("SUCCESS", "PLAYLISTS_SEARCH_COMMUNITY", "Searching playlists successful.");
+				return cb({ status: "success", data: { playlists } });
+			}
+		);
+	}),
+
+	/**
+	 * Searches through all playlists that can be included in an official station
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} query - the query
+	 * @param {Function} cb - gets called with the result
+	 */
+	searchOfficial: isAdminRequired(async function searchOfficial(session, query, cb) {
+		async.waterfall(
+			[
+				next => {
+					if (!query || typeof query !== "string") next("Invalid query.");
+					else if (query.length < 3) next("Invalid query.");
+					else next();
+				},
+
+				next => {
+					PlaylistsModule.runJob("SEARCH", { query, includeGenre: true, includePrivate: true })
+						.then(response => {
+							next(null, response.playlists);
+						})
+						.catch(err => {
+							next(err);
+						});
+				}
+			],
+			async (err, playlists) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "PLAYLISTS_SEARCH_OFFICIAL", `Searching playlists failed. "${err}"`);
+					return cb({ status: "error", message: err });
+				}
+				this.log("SUCCESS", "PLAYLISTS_SEARCH_OFFICIAL", "Searching playlists successful.");
+				return cb({ status: "success", data: { playlists } });
+			}
+		);
+	}),
+
+	/**
 	 * Gets the first song from a private playlist
 	 *
 	 * @param {object} session - the session object automatically added by the websocket

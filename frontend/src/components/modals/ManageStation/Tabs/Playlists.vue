@@ -80,6 +80,8 @@
 							class="input"
 							type="text"
 							placeholder="Enter your playlist query here..."
+							v-model="playlistQuery"
+							@keyup.enter="searchForPlaylists()"
 						/>
 					</p>
 					<p class="control">
@@ -204,7 +206,8 @@ export default {
 	mixins: [SortablePlaylists],
 	data() {
 		return {
-			tab: "current"
+			tab: "current",
+			playlistQuery: ""
 		};
 	},
 	computed: {
@@ -384,6 +387,20 @@ export default {
 				if (playlist._id === id) selected = true;
 			});
 			return selected;
+		},
+		searchForPlaylists() {
+			const query = this.playlistQuery;
+
+			const action =
+				this.station.type === "official"
+					? "playlists.searchOfficial"
+					: "playlists.searchCommunity";
+
+			this.socket.dispatch(action, query, res => {
+				if (res.status === "success") {
+					console.log(res);
+				} else if (res.status === "error") new Toast(res.message);
+			});
 		},
 		...mapActions("station", ["updatePrivatePlaylistQueueSelected"]),
 		...mapActions("modalVisibility", ["openModal"]),
