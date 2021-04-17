@@ -12,6 +12,16 @@
 				>
 			</p>
 			<p class="item-description">
+				<span v-if="showOwner"
+					><a v-if="playlist.createdBy === 'Musare'" title="Musare"
+						>Musare</a
+					><user-id-to-username
+						v-else
+						:user-id="playlist.createdBy"
+						:link="true"
+					/>
+					•</span
+				>
 				{{ totalLength(playlist) }} •
 				{{ playlist.songs.length }}
 				{{ playlist.songs.length === 1 ? "song" : "songs" }}
@@ -24,11 +34,14 @@
 </template>
 
 <script>
+import UserIdToUsername from "@/components/UserIdToUsername.vue";
 import utils from "../../js/utils";
 
 export default {
+	components: { UserIdToUsername },
 	props: {
-		playlist: { type: Object, default: () => {} }
+		playlist: { type: Object, default: () => {} },
+		showOwner: { type: Boolean, default: false }
 	},
 	data() {
 		return {

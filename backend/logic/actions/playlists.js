@@ -230,8 +230,7 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					if (!query || typeof query !== "string") next("Invalid query.");
-					else if (query.length < 3) next("Invalid query.");
+					if ((!query && query !== "") || typeof query !== "string") next("Invalid query.");
 					else next();
 				},
 
@@ -241,6 +240,7 @@ export default {
 						includeUser: true,
 						includeGenre: true,
 						includeOwn: true,
+						includeSongs: true,
 						userId: session.userId
 					})
 						.then(response => {
@@ -274,13 +274,17 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					if (!query || typeof query !== "string") next("Invalid query.");
-					else if (query.length < 3) next("Invalid query.");
+					if ((!query && query !== "") || typeof query !== "string") next("Invalid query.");
 					else next();
 				},
 
 				next => {
-					PlaylistsModule.runJob("SEARCH", { query, includeGenre: true, includePrivate: true })
+					PlaylistsModule.runJob("SEARCH", {
+						query,
+						includeGenre: true,
+						includePrivate: true,
+						includeSongs: true
+					})
 						.then(response => {
 							next(null, response.playlists);
 						})

@@ -28,9 +28,10 @@
 			<div class="tab" v-show="tab === 'current'">
 				<div v-if="includedPlaylists.length > 0">
 					<playlist-item
-						:playlist="playlist"
 						v-for="(playlist, index) in includedPlaylists"
 						:key="'key-' + index"
+						:playlist="playlist"
+						:show-owner="true"
 					>
 						<div class="icons-group" slot="actions">
 							<confirm
@@ -80,19 +81,83 @@
 							class="input"
 							type="text"
 							placeholder="Enter your playlist query here..."
-							v-model="playlistQuery"
+							v-model="search.query"
 							@keyup.enter="searchForPlaylists()"
 						/>
 					</p>
 					<p class="control">
-						<a class="button is-info" href="#"
+						<a class="button is-info" @click="searchForPlaylists()"
 							><i class="material-icons icon-with-button"
 								>search</i
 							>Search</a
 						>
 					</p>
 				</div>
-				Searching genre and public user playlists has yet to be added.
+				<div v-if="search.results.length > 0">
+					<playlist-item
+						v-for="(playlist, index) in search.results"
+						:key="'searchKey-' + index"
+						:playlist="playlist"
+						:show-owner="true"
+					>
+						<div class="icons-group" slot="actions">
+							<confirm
+								v-if="
+									(isOwnerOrAdmin() ||
+										(station.type === 'community' &&
+											station.partyMode)) &&
+										isSelected(playlist._id)
+								"
+								@confirm="deselectPlaylist(playlist._id)"
+							>
+								<i
+									class="material-icons stop-icon"
+									content="Stop playing songs from this playlist"
+									v-tippy
+								>
+									stop
+								</i>
+							</confirm>
+							<i
+								v-if="
+									(isOwnerOrAdmin() ||
+										(station.type === 'community' &&
+											station.partyMode)) &&
+										!isSelected(playlist._id)
+								"
+								@click="selectPlaylist(playlist._id)"
+								class="material-icons play-icon"
+								:content="
+									station.partyMode
+										? 'Request songs from this playlist'
+										: 'Play songs from this playlist'
+								"
+								v-tippy
+								>play_arrow</i
+							>
+							<i
+								v-if="playlist.createdBy === myUserId"
+								@click="showPlaylist(playlist._id)"
+								class="material-icons edit-icon"
+								content="Edit Playlist"
+								v-tippy
+								>edit</i
+							>
+							<i
+								v-if="
+									playlist.createdBy !== myUserId &&
+										(playlist.privacy === 'public' ||
+											isAdmin())
+								"
+								@click="showPlaylist(playlist._id)"
+								class="material-icons edit-icon"
+								content="View Playlist"
+								v-tippy
+								>visibility</i
+							>
+						</div>
+					</playlist-item>
+				</div>
 			</div>
 			<div
 				v-if="station.type === 'community'"
@@ -207,7 +272,10 @@ export default {
 	data() {
 		return {
 			tab: "current",
-			playlistQuery: ""
+			search: {
+				query: "",
+				results: []
+			}
 		};
 	},
 	computed: {
@@ -389,8 +457,8 @@ export default {
 			return selected;
 		},
 		searchForPlaylists() {
-			const query = this.playlistQuery;
-
+			const { query } = this.search;
+			console.log(111, query);
 			const action =
 				this.station.type === "official"
 					? "playlists.searchOfficial"
@@ -398,8 +466,11 @@ export default {
 
 			this.socket.dispatch(action, query, res => {
 				if (res.status === "success") {
-					console.log(res);
-				} else if (res.status === "error") new Toast(res.message);
+					this.search.results = res.data.playlists;
+				} else if (res.status === "error") {
+					this.search.results = [];
+					new Toast(res.message);
+				}
 			});
 		},
 		...mapActions("station", ["updatePrivatePlaylistQueueSelected"]),
