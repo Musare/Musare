@@ -43,7 +43,7 @@
 		</div>
 		<main-footer />
 
-		<remove-account v-if="modals.settings.removeAccount" />
+		<remove-account v-if="modals.removeAccount" />
 	</div>
 </template>
 

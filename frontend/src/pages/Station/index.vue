@@ -156,12 +156,7 @@
 								<!-- (Admin) Station Settings Button -->
 								<button
 									class="button is-primary"
-									@click="
-										openModal({
-											sector: 'station',
-											modal: 'editStation'
-										})
-									"
+									@click="openModal('editStation')"
 								>
 									<i class="material-icons icon-with-button"
 										>settings</i
@@ -566,26 +561,22 @@
 					</div>
 				</div>
 
-				<song-queue v-if="modals.station.addSongToQueue" />
-				<request-song v-if="modals.station.requestSong" />
-				<edit-playlist v-if="modals.station.editPlaylist" />
-				<create-playlist v-if="modals.station.createPlaylist" />
+				<song-queue v-if="modals.addSongToQueue" />
+				<request-song v-if="modals.requestSong" />
+				<edit-playlist v-if="modals.editPlaylist" />
+				<create-playlist v-if="modals.createPlaylist" />
 				<edit-station
-					v-if="modals.station.editStation"
+					v-if="modals.editStation"
 					:station-id="station._id"
 					sector="station"
 				/>
-				<report v-if="modals.station.report" />
+				<report v-if="modals.report" />
 			</div>
 
 			<main-footer v-if="exists" />
 		</div>
 
-		<edit-song
-			v-if="modals.admin.editSong"
-			song-type="songs"
-			sector="station"
-		/>
+		<edit-song v-if="modals.editSong" song-type="songs" sector="station" />
 
 		<floating-box id="player-debug-box" ref="playerDebugBox">
 			<template #body>

@@ -83,15 +83,7 @@
 				</a>
 			</confirm>
 
-			<a
-				class="button is-danger"
-				@click="
-					openModal({
-						sector: 'settings',
-						modal: 'removeAccount'
-					})
-				"
-			>
+			<a class="button is-danger" @click="openModal('removeAccount')">
 				<i class="material-icons icon-with-button">delete</i>
 				Remove my account
 			</a>

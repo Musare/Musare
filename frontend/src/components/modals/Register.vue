@@ -281,12 +281,11 @@ export default {
 		changeToLoginModal() {
 			if (!this.isPage) {
 				this.closeRegisterModal();
-				this.openModal({ sector: "header", modal: "login" });
+				this.openModal("login");
 			}
 		},
 		closeRegisterModal() {
-			if (!this.isPage)
-				this.closeModal({ sector: "header", modal: "login" });
+			if (!this.isPage) this.closeModal("login");
 		},
 		submitModal() {
 			if (

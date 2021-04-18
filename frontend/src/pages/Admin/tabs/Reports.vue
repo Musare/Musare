@@ -87,7 +87,7 @@ export default {
 	},
 	computed: {
 		...mapState("modalVisibility", {
-			modals: state => state.modals.admin
+			modals: state => state.modals
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
@@ -130,16 +130,13 @@ export default {
 		view(report) {
 			// this.viewReport(report);
 			this.viewingReportId = report._id;
-			this.openModal({ sector: "admin", modal: "viewReport" });
+			this.openModal("viewReport");
 		},
 		resolve(reportId) {
 			return this.resolveReport(reportId)
 				.then(res => {
 					if (res.status === "success" && this.modals.viewReport)
-						this.closeModal({
-							sector: "admin",
-							modal: "viewReport"
-						});
+						this.closeModal("viewReport");
 				})
 				.catch(err => new Toast(err.message));
 		},

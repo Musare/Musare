@@ -166,12 +166,11 @@ export default {
 		changeToRegisterModal() {
 			if (!this.isPage) {
 				this.closeLoginModal();
-				this.openModal({ sector: "header", modal: "register" });
+				this.openModal("register");
 			}
 		},
 		closeLoginModal() {
-			if (!this.isPage)
-				this.closeModal({ sector: "header", modal: "login" });
+			if (!this.isPage) this.closeModal("login");
 		},
 		githubRedirect() {
 			if (!this.isPage)

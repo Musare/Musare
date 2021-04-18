@@ -645,10 +645,7 @@ export default {
 				// );
 			} else {
 				new Toast("Station with that ID not found");
-				this.closeModal({
-					sector: this.sector,
-					modal: "editStation"
-				});
+				this.closeModal("editStation");
 			}
 		});
 	},
@@ -976,11 +973,7 @@ export default {
 		},
 		deleteStation() {
 			this.socket.dispatch("stations.remove", this.station._id, res => {
-				if (res.status === "success")
-					this.closeModal({
-						sector: "station",
-						modal: "editStation"
-					});
+				if (res.status === "success") this.closeModal("editStation");
 				return new Toast(res.message);
 			});
 		},

@@ -109,10 +109,7 @@ export default {
 				res => {
 					if (res.status === "success") {
 						new Toast(`You have added the station successfully`);
-						this.closeModal({
-							sector: "home",
-							modal: "createCommunityStation"
-						});
+						this.closeModal("createCommunityStation");
 					} else new Toast(res.message);
 				}
 			);

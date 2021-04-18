@@ -585,7 +585,7 @@ export default {
 			song: state => state.song
 		}),
 		...mapState("modalVisibility", {
-			modals: state => state.modals.admin
+			modals: state => state.modals
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
@@ -735,10 +735,7 @@ export default {
 				});
 			} else {
 				new Toast("Song with that ID not found");
-				this.closeModal({
-					sector: this.sector,
-					modal: "editSong"
-				});
+				this.closeModal("editSong");
 			}
 		});
 
@@ -838,10 +835,7 @@ export default {
 			ctrl: true,
 			preventDefault: true,
 			handler: () => {
-				this.closeModal({
-					sector: this.sector,
-					modal: "editSong"
-				});
+				this.closeModal("editSong");
 				setTimeout(() => {
 					window.focusedElementBefore.focus();
 				}, 500);
@@ -1054,11 +1048,7 @@ export default {
 					saveButtonRef.handleSuccessfulSave();
 				else saveButtonRef.handleFailedSave();
 
-				if (close)
-					this.closeModal({
-						sector: this.sector,
-						modal: "editSong"
-					});
+				if (close) this.closeModal("editSong");
 			});
 		},
 		toggleAPIResult(index) {

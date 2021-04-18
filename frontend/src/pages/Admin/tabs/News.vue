@@ -239,7 +239,7 @@ export default {
 	},
 	computed: {
 		...mapState("modalVisibility", {
-			modals: state => state.modals.admin
+			modals: state => state.modals
 		}),
 		...mapState("admin/news", {
 			news: state => state.news
@@ -309,7 +309,7 @@ export default {
 		},
 		editNewsClick(news) {
 			this.editingNewsId = news._id;
-			this.openModal({ sector: "admin", modal: "editNews" });
+			this.openModal("editNews");
 		},
 		addChange(type) {
 			const change = this.$refs[`new-${type}`].value.trim();

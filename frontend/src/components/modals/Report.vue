@@ -123,16 +123,7 @@
 				<i class="material-icons save-changes">done</i>
 				<span>&nbsp;Create</span>
 			</a>
-			<a
-				class="button is-danger"
-				href="#"
-				@click="
-					closeModal({
-						sector: 'station',
-						modal: 'report'
-					})
-				"
-			>
+			<a class="button is-danger" href="#" @click="closeModal('report')">
 				<span>&nbsp;Cancel</span>
 			</a>
 		</div>
@@ -222,11 +213,7 @@ export default {
 		create() {
 			this.socket.dispatch("reports.create", this.report, res => {
 				new Toast(res.message);
-				if (res.status === "success")
-					this.closeModal({
-						sector: "station",
-						modal: "report"
-					});
+				if (res.status === "success") this.closeModal("report");
 			});
 		},
 		highlight(type) {

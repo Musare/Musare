@@ -118,7 +118,7 @@ export default {
 			return this.punishments;
 		},
 		...mapState("modalVisibility", {
-			modals: state => state.modals.admin
+			modals: state => state.modals
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
@@ -136,7 +136,7 @@ export default {
 		view(punishment) {
 			// this.viewPunishment(punishment);
 			this.viewingPunishmentId = punishment._id;
-			this.openModal({ sector: "admin", modal: "viewPunishment" });
+			this.openModal("viewPunishment");
 		},
 		banIP() {
 			this.socket.dispatch(

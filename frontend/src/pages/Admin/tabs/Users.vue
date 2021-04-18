@@ -84,7 +84,7 @@ export default {
 	},
 	computed: {
 		...mapState("modalVisibility", {
-			modals: state => state.modals.admin
+			modals: state => state.modals
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
@@ -97,7 +97,7 @@ export default {
 	methods: {
 		edit(user) {
 			this.editingUserId = user._id;
-			this.openModal({ sector: "admin", modal: "editUser" });
+			this.openModal("editUser");
 		},
 		init() {
 			this.socket.dispatch("users.index", res => {

@@ -20,23 +20,13 @@
 						<div v-if="!loggedIn" class="buttons">
 							<button
 								class="button login"
-								@click="
-									openModal({
-										sector: 'header',
-										modal: 'login'
-									})
-								"
+								@click="openModal('login')"
 							>
 								Login
 							</button>
 							<button
 								class="button register"
-								@click="
-									openModal({
-										sector: 'header',
-										modal: 'register'
-									})
-								"
+								@click="openModal('register')"
 							>
 								Register
 							</button>
@@ -246,12 +236,7 @@
 				</div>
 				<a
 					v-if="loggedIn"
-					@click="
-						openModal({
-							sector: 'home',
-							modal: 'createCommunityStation'
-						})
-					"
+					@click="openModal('createCommunityStation')"
 					class="card station-card createStation"
 				>
 					<div class="card-image">
@@ -274,12 +259,7 @@
 				</a>
 				<a
 					v-else
-					@click="
-						openModal({
-							sector: 'header',
-							modal: 'login'
-						})
-					"
+					@click="openModal('login')"
 					class="card station-card createStation"
 				>
 					<div class="card-image">
@@ -493,7 +473,7 @@ export default {
 		...mapState({
 			loggedIn: state => state.user.auth.loggedIn,
 			userId: state => state.user.auth.userId,
-			modals: state => state.modalVisibility.modals.home
+			modals: state => state.modalVisibility.modals
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"

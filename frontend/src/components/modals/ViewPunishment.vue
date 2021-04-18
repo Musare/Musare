@@ -97,10 +97,7 @@ export default {
 					this.viewPunishment(punishment);
 				} else {
 					new Toast("Punishment with that ID not found");
-					this.closeModal({
-						sector: this.sector,
-						modal: "viewPunishment"
-					});
+					this.closeModal("viewPunishment");
 				}
 			}
 		);

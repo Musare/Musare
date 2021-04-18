@@ -4,8 +4,8 @@
 		<div v-else class="upper-container">
 			<router-view :key="$route.fullPath" class="main-container" />
 			<what-is-new />
-			<login-modal v-if="modals.header.login" />
-			<register-modal v-if="modals.header.register" />
+			<login-modal v-if="modals.login" />
+			<register-modal v-if="modals.register" />
 		</div>
 	</div>
 </template>

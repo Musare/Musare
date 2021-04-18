@@ -213,7 +213,7 @@ export default {
 			stations: state => state.stations
 		}),
 		...mapState("modalVisibility", {
-			modals: state => state.modals.admin
+			modals: state => state.modals
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
@@ -281,10 +281,7 @@ export default {
 		},
 		edit(station) {
 			this.editingStationId = station._id;
-			this.openModal({
-				sector: "admin",
-				modal: "editStation"
-			});
+			this.openModal("editStation");
 		},
 		addGenre() {
 			const genre = this.$refs["new-genre"].value.toLowerCase().trim();

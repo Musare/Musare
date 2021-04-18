@@ -45,26 +45,10 @@
 				<a class="nav-item is-tab" href="#" @click="logout()">Logout</a>
 			</span>
 			<span v-if="!loggedIn && !hideLoggedOut" class="grouped">
-				<a
-					class="nav-item"
-					href="#"
-					@click="
-						openModal({
-							sector: 'header',
-							modal: 'login'
-						})
-					"
+				<a class="nav-item" href="#" @click="openModal('login')"
 					>Login</a
 				>
-				<a
-					class="nav-item"
-					href="#"
-					@click="
-						openModal({
-							sector: 'header',
-							modal: 'register'
-						})
-					"
+				<a class="nav-item" href="#" @click="openModal('register')"
 					>Register</a
 				>
 			</span>

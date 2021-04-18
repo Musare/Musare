@@ -81,9 +81,9 @@
 			</table>
 		</div>
 
-		<edit-playlist v-if="modals.admin.editPlaylist" sector="admin" />
-		<report v-if="modals.station.report" />
-		<edit-song v-if="modals.admin.editSong" song-type="songs" />
+		<edit-playlist v-if="modals.editPlaylist" sector="admin" />
+		<report v-if="modals.report" />
+		<edit-song v-if="modals.editSong" song-type="songs" />
 	</div>
 </template>
 
@@ -125,7 +125,7 @@ export default {
 	methods: {
 		edit(playlistId) {
 			this.editPlaylist(playlistId);
-			this.openModal({ sector: "admin", modal: "editPlaylist" });
+			this.openModal("editPlaylist");
 		},
 		init() {
 			this.socket.dispatch("playlists.index", res => {
