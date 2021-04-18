@@ -78,7 +78,7 @@
 		<div class="row">
 			<confirm @confirm="removeActivities()">
 				<a class="button is-warning">
-					<i class="material-icons icon-with-button">clear</i>
+					<i class="material-icons icon-with-button">cancel</i>
 					Clear my activities
 				</a>
 			</confirm>

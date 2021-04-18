@@ -20,6 +20,7 @@ const modules = {
 			loggedIn: false,
 			role: "",
 			username: "",
+			email: "",
 			userId: "",
 			banned: false,
 			ban: {},
@@ -185,6 +186,7 @@ const modules = {
 				state.loggedIn = data.loggedIn;
 				state.role = data.role;
 				state.username = data.username;
+				state.email = data.email;
 				state.userId = data.userId;
 				state.gotData = true;
 			},

@@ -549,14 +549,18 @@ class _WSModule extends CoreClass {
 								let role = "";
 								let username = "";
 								let userId = "";
+								let email = "";
 
 								if (user) {
 									role = user.role;
 									username = user.username;
+									email = user.email.address;
 									userId = session.userId;
 								}
 
-								return socket.dispatch("ready", { data: { loggedIn: true, role, username, userId } });
+								return socket.dispatch("ready", {
+									data: { loggedIn: true, role, username, userId, email }
+								});
 							});
 						} else socket.dispatch("ready", { data: { loggedIn: false } });
 					})

@@ -140,7 +140,7 @@
 								src="/assets/social/github.svg"
 							/>
 						</div>
-						&nbsp; Relink GitHub to account
+						&nbsp; Re-link GitHub to account
 					</a>
 				</div>
 			</div>
@@ -154,7 +154,7 @@
 				id="remove-account-container"
 				v-if="step === 'remove-account'"
 			>
-				<h2 class="content-box-title">Remove Account</h2>
+				<h2 class="content-box-title">Remove your account</h2>
 				<p class="content-box-description">
 					There is no going back after confirming account removal.
 				</p>
@@ -162,7 +162,7 @@
 				<div class="content-box-inputs">
 					<confirm placement="right" @confirm="remove()">
 						<button class="button">
-							<i class="material-icons">cancel</i>
+							<i class="material-icons">delete</i>
 							&nbsp;Remove Account
 						</button>
 					</confirm>
