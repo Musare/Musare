@@ -615,8 +615,7 @@
 				<span><b>Local paused</b>: {{ localPaused }}</span>
 				<span><b>No song</b>: {{ noSong }}</span>
 				<span
-					><b>Private playlist queue selected</b>:
-					{{ privatePlaylistQueueSelected }}</span
+					><b>Party playlists selected</b>: {{ partyPlaylists }}</span
 				>
 				<span><b>Station paused</b>: {{ stationPaused }}</span>
 				<span
@@ -689,7 +688,6 @@ export default {
 			disliked: false,
 			timeBeforePause: 0,
 			skipVotes: 0,
-			automaticallyRequestedYoutubeId: null,
 			systemDifference: 0,
 			attemptsToPlayVideo: 0,
 			canAutoplay: true,
@@ -719,8 +717,7 @@ export default {
 			stationPaused: state => state.stationPaused,
 			localPaused: state => state.localPaused,
 			noSong: state => state.noSong,
-			privatePlaylistQueueSelected: state =>
-				state.privatePlaylistQueueSelected,
+			partyPlaylists: state => state.partyPlaylists,
 			includedPlaylists: state => state.includedPlaylists,
 			excludedPlaylists: state => state.excludedPlaylists
 		}),
@@ -839,37 +836,9 @@ export default {
 				if (queueSong.requestedBy === this.userId) isInQueue = true;
 			});
 
-			if (
-				!isInQueue &&
-				this.privatePlaylistQueueSelected &&
-				(this.automaticallyRequestedYoutubeId !==
-					this.currentSong.youtubeId ||
-					!this.currentSong.youtubeId)
-			) {
-				this.addFirstPrivatePlaylistSongToQueue();
+			if (!isInQueue && this.partyPlaylists) {
+				this.addPartyPlaylistSongToQueue();
 			}
-
-			// if (this.station.type === "official") {
-			// 	this.socket.dispatch(
-			// 		"stations.getQueue",
-			// 		this.station._id,
-			// 		res => {
-			// 			if (res.status === "success") {
-			// 				this.updateSongsList(res.data.queue);
-			// 			}
-			// 		}
-			// 	);
-			// }
-
-			// if (
-			// 	!isInQueue &&
-			// 	this.privatePlaylistQueueSelected &&
-			// 	(this.automaticallyRequestedYoutubeId !==
-			// 		this.currentSong.youtubeId ||
-			// 		!this.currentSong.youtubeId)
-			// ) {
-			// 	this.addFirstPrivatePlaylistSongToQueue();
-			// }
 		});
 
 		this.socket.on("event:stations.pause", res => {
@@ -1073,7 +1042,7 @@ export default {
 
 		clearInterval(this.activityWatchVideoDataInterval);
 
-		this.joinStation();
+		this.leaveStation();
 	},
 	methods: {
 		isOwnerOnly() {
@@ -1518,7 +1487,7 @@ export default {
 				}
 			);
 		},
-		addFirstPrivatePlaylistSongToQueue() {
+		addPartyPlaylistSongToQueue() {
 			let isInQueue = false;
 			if (
 				this.station.type === "community" &&
@@ -1527,57 +1496,33 @@ export default {
 				this.songsList.forEach(queueSong => {
 					if (queueSong.requestedBy === this.userId) isInQueue = true;
 				});
-				if (!isInQueue && this.privatePlaylistQueueSelected) {
-					this.socket.dispatch(
-						"playlists.getFirstSong",
-						this.privatePlaylistQueueSelected,
-						res => {
-							if (res.status === "success") {
-								const { song } = res.data;
-								if (song) {
-									if (song.duration < 15 * 60) {
-										this.automaticallyRequestedYoutubeId =
-											song.youtubeId;
-										this.socket.dispatch(
-											"stations.addToQueue",
-											this.station._id,
-											song.youtubeId,
-											data2 => {
-												if (data2.status === "success")
-													this.socket.dispatch(
-														"playlists.moveSongToBottom",
-														this
-															.privatePlaylistQueueSelected,
-														song.youtubeId
-													);
-											}
-										);
-									} else {
-										new Toast(
-											`Top song in playlist was too long to be added.`
-										);
-
-										this.socket.dispatch(
-											"playlists.moveSongToBottom",
-											this.privatePlaylistQueueSelected,
-											song.youtubeId,
-											data3 => {
-												if (data3.status === "success")
-													setTimeout(
-														() =>
-															this.addFirstPrivatePlaylistSongToQueue(),
-														3000
-													);
-											}
-										);
-									}
-								} else
-									new Toast(
-										`Selected playlist has no songs.`
-									);
-							}
+				if (!isInQueue && this.partyPlaylists.length > 0) {
+					const selectedPlaylist = this.partyPlaylists[
+						Math.floor(Math.random() * this.partyPlaylists.length)
+					];
+					if (
+						selectedPlaylist._id &&
+						selectedPlaylist.songs.length > 0
+					) {
+						const selectedSong =
+							selectedPlaylist.songs[
+								Math.floor(
+									Math.random() *
+										selectedPlaylist.songs.length
+								)
+							];
+						if (selectedSong.youtubeId) {
+							this.socket.dispatch(
+								"stations.addToQueue",
+								this.station._id,
+								selectedSong.youtubeId,
+								data => {
+									if (data.status !== "success")
+										new Toast("Error auto queueing song");
+								}
+							);
 						}
-					);
+					}
 				}
 			}
 		},
@@ -1916,6 +1861,7 @@ export default {
 		...mapActions("modalVisibility", ["openModal"]),
 		...mapActions("station", [
 			"joinStation",
+			"leaveStation",
 			"updateUserCount",
 			"updateUsers",
 			"updateCurrentSong",

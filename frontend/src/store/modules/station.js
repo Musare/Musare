@@ -2,7 +2,7 @@
 
 const state = {
 	station: {},
-	privatePlaylistQueueSelected: null,
+	partyPlaylists: [],
 	editing: {},
 	userCount: 0,
 	users: {
@@ -25,6 +25,9 @@ const getters = {};
 const actions = {
 	joinStation: ({ commit }, station) => {
 		commit("joinStation", station);
+	},
+	leaveStation: ({ commit }, station) => {
+		commit("leaveStation", station);
 	},
 	editStation: ({ commit }, station) => {
 		commit("editStation", station);
@@ -59,8 +62,8 @@ const actions = {
 	updateNoSong: ({ commit }, noSong) => {
 		commit("updateNoSong", noSong);
 	},
-	updatePrivatePlaylistQueueSelected: ({ commit }, status) => {
-		commit("updatePrivatePlaylistQueueSelected", status);
+	updatePartyPlaylists: ({ commit }, playlists) => {
+		commit("updatePartyPlaylists", playlists);
 	},
 	updateIfStationIsFavorited: ({ commit }, { isFavorited }) => {
 		commit("updateIfStationIsFavorited", isFavorited);
@@ -76,6 +79,10 @@ const actions = {
 const mutations = {
 	joinStation(state, station) {
 		state.station = { ...station };
+	},
+	leaveStation(state) {
+		state.station = {};
+		state.partyPlaylists = [];
 	},
 	editStation(state, station) {
 		state.editing = { ...station };
@@ -124,8 +131,8 @@ const mutations = {
 	updateNoSong(state, noSong) {
 		state.noSong = noSong;
 	},
-	updatePrivatePlaylistQueueSelected(state, status) {
-		state.privatePlaylistQueueSelected = status;
+	updatePartyPlaylists(state, playlists) {
+		state.partyPlaylists = playlists;
 	},
 	updateIfStationIsFavorited(state, isFavorited) {
 		state.station.isFavorited = isFavorited;
