@@ -612,6 +612,140 @@ export default {
 	},
 
 	/**
+	 * Checks if user's password is correct (e.g. before a sensitive action)
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} password - the password the user entered that we need to validate
+	 * @param {Function} cb - gets called with the result
+	 */
+	confirmPasswordMatch: isLoginRequired(async function confirmPasswordMatch(session, password, cb) {
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+
+		return async.waterfall(
+			[
+				next => {
+					if (!password || password === "") return next("Please provide a valid password.");
+					return next();
+				},
+
+				next => {
+					userModel.findOne({ _id: session.userId }, (err, user) =>
+						next(err, user.services.password.password)
+					);
+				},
+
+				(passwordHash, next) => {
+					if (!passwordHash) return next("Your account doesn't have a password linked.");
+
+					return bcrypt.compare(sha256(password), passwordHash, (err, match) => {
+						if (err) return next(err);
+						if (!match) return next(null, false);
+						return next(null, true);
+					});
+				}
+			],
+			async (err, match) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"USER_CONFIRM_PASSWORD",
+						`Couldn't confirm password for user "${session.userId}". "${err}"`
+					);
+					return cb({ status: "error", message: err });
+				}
+
+				if (match) {
+					this.log(
+						"SUCCESS",
+						"USER_CONFIRM_PASSWORD",
+						`Successfully checked for password match (it matched) for user "${session.userId}".`
+					);
+
+					return cb({
+						status: "success",
+						message: "Your password matches."
+					});
+				}
+
+				this.log(
+					"SUCCESS",
+					"USER_CONFIRM_PASSWORD",
+					`Successfully checked for password match (it didn't match) for user "${session.userId}".`
+				);
+
+				return cb({
+					status: "error",
+					message: "Unfortunately your password doesn't match."
+				});
+			}
+		);
+	}),
+
+	/**
+	 * Checks if user's github access token has expired or not (ie. if their github account is still linked)
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {Function} cb - gets called with the result
+	 */
+	confirmGithubLink: isLoginRequired(async function confirmGithubLink(session, cb) {
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+
+		return async.waterfall(
+			[
+				next => {
+					userModel.findOne({ _id: session.userId }, (err, user) => next(err, user));
+				},
+
+				(user, next) => {
+					if (!user.services.github) return next("You don't have GitHub linked to your account.");
+
+					return axios
+						.get(`https://api.github.com/user/emails`, {
+							headers: {
+								"User-Agent": "request",
+								Authorization: `token ${user.services.github.access_token}`
+							}
+						})
+						.then(res => next(null, res))
+						.catch(err => next(err));
+				},
+
+				(res, next) => next(null, res.status === 200)
+			],
+			async (err, linked) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"USER_CONFIRM_GITHUB_LINK",
+						`Couldn't confirm github link for user "${session.userId}". "${err}"`
+					);
+					return cb({ status: "error", message: err });
+				}
+
+				this.log(
+					"SUCCESS",
+					"USER_CONFIRM_GITHUB_LINK",
+					`GitHub is ${linked ? "linked" : "not linked"} for user "${session.userId}".`
+				);
+
+				if (linked) {
+					return cb({
+						status: "success",
+						message: "Your GitHub account is linked."
+					});
+				}
+
+				return cb({
+					status: "error",
+					message: "Unfortunately your GitHub account isn't linked anymore."
+				});
+			}
+		);
+	}),
+
+	/**
 	 * Removes all sessions for a user
 	 *
 	 * @param {object} session - the session object automatically added by the websocket

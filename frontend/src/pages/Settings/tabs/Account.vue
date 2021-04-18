@@ -81,12 +81,18 @@
 				</a>
 			</confirm>
 
-			<confirm @confirm="removeAccount()">
-				<a class="button is-danger">
-					<i class="material-icons icon-with-button">delete</i>
-					Remove my account
-				</a>
-			</confirm>
+			<a
+				class="button is-danger"
+				@click="
+					openModal({
+						sector: 'settings',
+						modal: 'confirmAccountRemoval'
+					})
+				"
+			>
+				<i class="material-icons icon-with-button">delete</i>
+				Remove my account
+			</a>
 		</div>
 	</div>
 </template>
@@ -101,7 +107,11 @@ import validation from "@/validation";
 import Confirm from "@/components/Confirm.vue";
 
 export default {
-	components: { InputHelpBox, SaveButton, Confirm },
+	components: {
+		InputHelpBox,
+		SaveButton,
+		Confirm
+	},
 	data() {
 		return {
 			validation: {
@@ -259,26 +269,14 @@ export default {
 				}
 			);
 		},
-		removeAccount() {
-			return this.socket.dispatch("users.remove", res => {
-				if (res.status === "success") {
-					return this.socket.dispatch("users.logout", () => {
-						return lofig.get("cookie").then(cookie => {
-							document.cookie = `${cookie.SIDname}=;expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
-							return window.location.reload();
-						});
-					});
-				}
 
-				return new Toast(res.message);
-			});
-		},
 		removeActivities() {
 			this.socket.dispatch("activities.removeAllForUser", res => {
 				new Toast(res.message);
 			});
 		},
-		...mapActions("settings", ["updateOriginalUser"])
+		...mapActions("settings", ["updateOriginalUser"]),
+		...mapActions("modalVisibility", ["openModal"])
 	}
 };
 </script>

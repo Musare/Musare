@@ -169,7 +169,8 @@ export default {
 				this.closeModal({ sector: "header", modal: "login" });
 		},
 		githubRedirect() {
-			localStorage.setItem("github_redirect", this.$route.path);
+			if (!this.isPage)
+				localStorage.setItem("github_redirect", this.$route.path);
 		},
 		...mapActions("modalVisibility", ["closeModal", "openModal"]),
 		...mapActions("user/auth", ["login"])
@@ -204,13 +205,6 @@ export default {
 		position: relative;
 		color: var(--light-grey-1);
 	}
-}
-
-#forgot-password {
-	display: flex;
-	justify-content: flex-start;
-	height: 0;
-	margin: 5px 0;
 }
 
 .modal-card-foot {

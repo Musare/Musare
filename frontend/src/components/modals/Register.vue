@@ -302,7 +302,8 @@ export default {
 			this[inputName].entered = true;
 		},
 		githubRedirect() {
-			localStorage.setItem("github_redirect", this.$route.path);
+			if (!this.isPage)
+				localStorage.setItem("github_redirect", this.$route.path);
 		},
 		...mapActions("modalVisibility", ["closeModal", "openModal"]),
 		...mapActions("user/auth", ["register"])

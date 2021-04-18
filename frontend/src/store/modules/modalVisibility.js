@@ -17,6 +17,9 @@ const state = {
 			editStation: false,
 			report: false
 		},
+		settings: {
+			confirmAccountRemoval: false
+		},
 		admin: {
 			editNews: false,
 			editUser: false,
