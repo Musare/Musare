@@ -491,7 +491,6 @@ export default {
 		},
 		searchForPlaylists() {
 			const { query } = this.search;
-			console.log(111, query);
 			const action =
 				this.station.type === "official"
 					? "playlists.searchOfficial"

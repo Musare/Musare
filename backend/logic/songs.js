@@ -408,6 +408,75 @@ class _SongsModule extends CoreClass {
 	}
 
 	/**
+	 * Searches through songs
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.query - the query
+	 * @param {string} payload.includeHidden - include hidden songs
+	 * @param {string} payload.includeUnverified - include unverified songs
+	 * @param {string} payload.includeVerified - include verified songs
+	 * @param {string} payload.trimmed - include trimmed songs
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	SEARCH(payload) {
+		return new Promise((resolve, reject) =>
+			async.waterfall(
+				[
+					next => {
+						const statuses = [];
+						if (payload.includeHidden) statuses.push("hidden");
+						if (payload.includeUnverified) statuses.push("unverified");
+						if (payload.includeVerified) statuses.push("verified");
+						if (statuses.length === 0) return next("No statuses have been included.");
+
+						const filterArray = [
+							{
+								title: new RegExp(`${payload.query}`, "i"),
+								status: { $in: statuses }
+							},
+							{
+								artists: new RegExp(`${payload.query}`, "i"),
+								status: { $in: statuses }
+							}
+						];
+
+						return next(null, filterArray);
+					},
+
+					(filterArray, next) => {
+						SongsModule.SongModel.find({ $or: filterArray }, next);
+					},
+
+					(songs, next) => {
+						if (songs.length === 0) next("No songs found");
+						else if (payload.trimmed) {
+							next(
+								null,
+								songs.map(song => {
+									const { _id, youtubeId, title, artists, thumbnail, duration, status } = song;
+									return {
+										_id,
+										youtubeId,
+										title,
+										artists,
+										thumbnail,
+										duration,
+										status
+									};
+								})
+							);
+						} else next(null, songs);
+					}
+				],
+				(err, songs) => {
+					if (err && err !== true) return reject(new Error(err));
+					return resolve({ songs });
+				}
+			)
+		);
+	}
+
+	/**
 	 * Recalculates dislikes and likes for a song
 	 *
 	 * @param {object} payload - returns an object containing the payload

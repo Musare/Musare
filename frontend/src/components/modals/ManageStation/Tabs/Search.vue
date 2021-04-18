@@ -8,6 +8,8 @@
 						class="input"
 						type="text"
 						placeholder="Enter your song query here..."
+						v-model="musareSongsQuery"
+						@keyup.enter="searchForMusareSongs()"
 					/>
 				</p>
 				<p class="control">
@@ -104,6 +106,11 @@ export default {
 		SearchQueryItem
 	},
 	mixins: [SearchYoutube],
+	data() {
+		return {
+			musareSongsQuery: ""
+		};
+	},
 	computed: {
 		...mapState("modals/manageStation", {
 			station: state => state.station,
@@ -143,6 +150,19 @@ export default {
 					}
 				});
 			}
+		},
+		searchForMusareSongs() {
+			const query = this.musareSongsQuery;
+
+			this.socket.dispatch("songs.searchOfficial", query, res => {
+				console.log(111, res);
+				if (res.status === "success") {
+					// this.search.results = res.data.playlists;
+				} else if (res.status === "error") {
+					// this.search.results = [];
+					new Toast(res.message);
+				}
+			});
 		}
 	}
 };
