@@ -147,6 +147,13 @@
 			</div>
 		</template>
 		<template #footer>
+			<a
+				class="button is-default"
+				v-if="isOwnerOrAdmin() && !station.partyMode"
+				@click="stationPlaylist()"
+			>
+				View Station Playlist
+			</a>
 			<button
 				class="button is-primary tab-actionable-button"
 				v-if="loggedIn && station.type === 'official'"
@@ -367,6 +374,24 @@ export default {
 				}
 			);
 		},
+		stationPlaylist() {
+			this.socket.dispatch(
+				"playlists.getPlaylistForStation",
+				this.station._id,
+				false,
+				res => {
+					if (res.status === "success") {
+						this.editPlaylist(res.data.playlist._id);
+						this.openModal({
+							sector: "station",
+							modal: "editPlaylist"
+						});
+					} else {
+						new Toast(res.message);
+					}
+				}
+			);
+		},
 		...mapActions("modals/manageStation", [
 			"editStation",
 			"setIncludedPlaylists",
@@ -377,7 +402,8 @@ export default {
 			"updateStationPaused",
 			"updateCurrentSong"
 		]),
-		...mapActions("modalVisibility", ["openModal", "closeModal"])
+		...mapActions("modalVisibility", ["openModal", "closeModal"]),
+		...mapActions("user/playlists", ["editPlaylist"])
 	}
 };
 </script>
