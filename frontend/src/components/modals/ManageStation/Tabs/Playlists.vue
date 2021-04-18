@@ -46,6 +46,17 @@
 									stop
 								</i>
 							</confirm>
+							<confirm
+								v-if="isOwnerOrAdmin()"
+								@confirm="blacklistPlaylist(playlist._id)"
+							>
+								<i
+									class="material-icons stop-icon"
+									content="Blacklist Playlist"
+									v-tippy
+									>block</i
+								>
+							</confirm>
 							<i
 								v-if="playlist.createdBy === myUserId"
 								@click="showPlaylist(playlist._id)"
@@ -135,6 +146,17 @@
 								v-tippy
 								>play_arrow</i
 							>
+							<confirm
+								v-if="isOwnerOrAdmin()"
+								@confirm="blacklistPlaylist(playlist._id)"
+							>
+								<i
+									class="material-icons stop-icon"
+									content="Blacklist Playlist"
+									v-tippy
+									>block</i
+								>
+							</confirm>
 							<i
 								v-if="playlist.createdBy === myUserId"
 								@click="showPlaylist(playlist._id)"
@@ -231,6 +253,17 @@
 										"
 										v-tippy
 										>stop</i
+									>
+								</confirm>
+								<confirm
+									v-if="isOwnerOrAdmin()"
+									@confirm="blacklistPlaylist(playlist._id)"
+								>
+									<i
+										class="material-icons stop-icon"
+										content="Blacklist Playlist"
+										v-tippy
+										>block</i
 									>
 								</confirm>
 								<i
@@ -472,6 +505,19 @@ export default {
 					new Toast(res.message);
 				}
 			});
+		},
+		blacklistPlaylist(id) {
+			if (this.isSelected(id)) {
+				this.deselectPlaylist(id);
+			}
+			this.socket.dispatch(
+				"stations.excludePlaylist",
+				this.station._id,
+				id,
+				res => {
+					new Toast(res.message);
+				}
+			);
 		},
 		...mapActions("station", ["updatePrivatePlaylistQueueSelected"]),
 		...mapActions("modalVisibility", ["openModal"]),
