@@ -88,7 +88,7 @@
 				@click="
 					openModal({
 						sector: 'settings',
-						modal: 'confirmAccountRemoval'
+						modal: 'removeAccount'
 					})
 				"
 			>

@@ -6,6 +6,7 @@
 		ref="confirm"
 		trigger="click"
 		class="button-with-tooltip"
+		@hide="clickedOnce = false"
 	>
 		<template #trigger>
 			<div @click.shift.stop="confirm(true)" @click.exact="confirm()">

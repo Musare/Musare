@@ -43,7 +43,7 @@
 		</div>
 		<main-footer />
 
-		<confirm-account-removal v-if="modals.settings.confirmAccountRemoval" />
+		<remove-account v-if="modals.settings.removeAccount" />
 	</div>
 </template>
 
@@ -63,8 +63,7 @@ export default {
 		AccountSettings: () => import("./tabs/Account.vue"),
 		ProfileSettings: () => import("./tabs/Profile.vue"),
 		PreferencesSettings: () => import("./tabs/Preferences.vue"),
-		ConfirmAccountRemoval: () =>
-			import("@/components/modals/ConfirmAccountRemoval.vue")
+		RemoveAccount: () => import("@/components/modals/RemoveAccount.vue")
 	},
 	mixins: [TabQueryHandler],
 	data() {

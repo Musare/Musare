@@ -18,7 +18,7 @@ const state = {
 			report: false
 		},
 		settings: {
-			confirmAccountRemoval: false
+			removeAccount: false
 		},
 		admin: {
 			editNews: false,
