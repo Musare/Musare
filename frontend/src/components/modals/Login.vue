@@ -53,14 +53,16 @@
 							</a>
 						</div>
 
-						<router-link
-							id="forgot-password"
-							href="#"
-							to="/reset_password"
-							@click.native="closeLoginModal()"
-						>
-							Forgot password?
-						</router-link>
+						<p class="content-box-optional-helper">
+							<router-link
+								id="forgot-password"
+								href="#"
+								to="/reset_password"
+								@click.native="closeLoginModal()"
+							>
+								Forgot password?
+							</router-link>
+						</p>
 
 						<br />
 						<p>
@@ -104,12 +106,15 @@
 							&nbsp;&nbsp;Login with GitHub
 						</a>
 					</div>
-					<router-link to="/register" v-if="isPage">
-						Don't have an account?
-					</router-link>
-					<a v-else href="#" @click="changeToRegisterModal()">
-						Don't have an account?
-					</a>
+
+					<p class="content-box-optional-helper">
+						<router-link to="/register" v-if="isPage">
+							Don't have an account?
+						</router-link>
+						<a v-else href="#" @click="changeToRegisterModal()">
+							Don't have an account?
+						</a>
+					</p>
 				</footer>
 			</div>
 		</div>
@@ -211,6 +216,10 @@ export default {
 	display: flex;
 	justify-content: space-between;
 	flex-wrap: wrap;
+
+	.content-box-optional-helper {
+		margin-top: 0;
+	}
 }
 
 .button.is-github {
@@ -227,9 +236,5 @@ export default {
 
 .invert {
 	filter: brightness(5);
-}
-
-a {
-	color: var(--primary-color);
 }
 </style>

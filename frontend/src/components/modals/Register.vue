@@ -129,12 +129,15 @@
 							&nbsp;&nbsp;Register with GitHub
 						</a>
 					</div>
-					<router-link to="/login" v-if="isPage">
-						Already have an account?
-					</router-link>
-					<a v-else href="#" @click="changeToLoginModal()">
-						Already have an account?
-					</a>
+
+					<p class="content-box-optional-helper">
+						<router-link to="/login" v-if="isPage">
+							Already have an account?
+						</router-link>
+						<a v-else href="#" @click="changeToLoginModal()">
+							Already have an account?
+						</a>
+					</p>
 				</footer>
 			</div>
 		</div>
@@ -348,6 +351,10 @@ export default {
 	display: flex;
 	justify-content: space-between;
 	flex-wrap: wrap;
+
+	.content-box-optional-helper {
+		margin-top: 0;
+	}
 }
 
 .button.is-github {

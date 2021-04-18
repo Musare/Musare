@@ -56,6 +56,16 @@
 					identity.
 				</p>
 
+				<p class="content-box-optional-helper">
+					<router-link
+						id="forgot-password"
+						href="#"
+						to="/reset_password"
+					>
+						Forgot password?
+					</router-link>
+				</p>
+
 				<div class="content-box-inputs">
 					<div class="control is-grouped input-with-button">
 						<div id="password-container">
@@ -87,10 +97,6 @@
 						</p>
 					</div>
 				</div>
-
-				<router-link id="forgot-password" href="#" to="/reset_password">
-					Forgot password?
-				</router-link>
 			</div>
 
 			<div

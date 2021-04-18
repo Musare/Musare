@@ -1018,45 +1018,49 @@ h4.section-title {
 		margin-top: 30px;
 		padding: 30px 20px;
 	}
+}
 
-	.content-box-title {
-		font-size: 25px;
-		color: var(--black);
-	}
+.content-box-optional-helper {
+	margin-top: 15px;
+	color: var(--primary-color);
+	text-decoration: underline;
+	font-size: 16px;
 
-	.content-box-description {
-		font-size: 14px;
-		color: var(--dark-grey);
-	}
-
-	.content-box-optional-helper {
-		margin-top: 15px;
+	a {
 		color: var(--primary-color);
-		text-decoration: underline;
-		font-size: 16px;
+	}
+}
+
+.content-box-title {
+	font-size: 25px;
+	color: var(--black);
+}
+
+.content-box-description {
+	font-size: 14px;
+	color: var(--dark-grey);
+}
+
+.content-box-inputs {
+	margin-top: 35px;
+
+	.input-with-button {
+		.button {
+			width: 105px;
+		}
+
+		@media screen and (max-width: 450px) {
+			flex-direction: column;
+		}
 	}
 
-	.content-box-inputs {
-		margin-top: 35px;
+	label {
+		font-size: 11px;
+	}
 
-		.input-with-button {
-			.button {
-				width: 105px;
-			}
-
-			@media screen and (max-width: 450px) {
-				flex-direction: column;
-			}
-		}
-
-		label {
-			font-size: 11px;
-		}
-
-		#change-password-button {
-			margin-top: 36px;
-			width: 175px;
-		}
+	#change-password-button {
+		margin-top: 36px;
+		width: 175px;
 	}
 }
 </style>
