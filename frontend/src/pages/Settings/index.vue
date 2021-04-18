@@ -140,6 +140,12 @@ export default {
 	margin-top: 32px;
 	padding: 24px;
 
+	/deep/ .row {
+		*:not(:last-child) {
+			margin-right: 5px;
+		}
+	}
+
 	.content {
 		background-color: var(--white);
 		padding: 30px 50px;

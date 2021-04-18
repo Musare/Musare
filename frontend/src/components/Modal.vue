@@ -94,7 +94,11 @@ p {
 	}
 	.right {
 		margin-left: auto;
-		justify-content: right;
+		justify-content: flex-end;
+
+		*:not(:last-child) {
+			margin-right: 5px;
+		}
 	}
 }
 </style>
