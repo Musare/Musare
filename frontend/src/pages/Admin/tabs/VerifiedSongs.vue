@@ -301,7 +301,7 @@ export default {
 				);
 		},
 		...mapState("modalVisibility", {
-			modals: state => state.modals.admin
+			modals: state => state.modals
 		}),
 		...mapState("admin/verifiedSongs", {
 			songs: state => state.songs
@@ -347,7 +347,7 @@ export default {
 	methods: {
 		edit(song) {
 			this.editSong(song);
-			this.openModal({ sector: "admin", modal: "editSong" });
+			this.openModal("editSong");
 		},
 		remove(id) {
 			// eslint-disable-next-line

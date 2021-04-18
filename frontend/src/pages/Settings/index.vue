@@ -42,11 +42,13 @@
 			</div>
 		</div>
 		<main-footer />
+
+		<remove-account v-if="modals.removeAccount" />
 	</div>
 </template>
 
 <script>
-import { mapActions, mapGetters } from "vuex";
+import { mapActions, mapGetters, mapState } from "vuex";
 import Toast from "toasters";
 
 import MainHeader from "@/components/layout/MainHeader.vue";
@@ -60,7 +62,8 @@ export default {
 		SecuritySettings: () => import("./tabs/Security.vue"),
 		AccountSettings: () => import("./tabs/Account.vue"),
 		ProfileSettings: () => import("./tabs/Profile.vue"),
-		PreferencesSettings: () => import("./tabs/Preferences.vue")
+		PreferencesSettings: () => import("./tabs/Preferences.vue"),
+		RemoveAccount: () => import("@/components/modals/RemoveAccount.vue")
 	},
 	mixins: [TabQueryHandler],
 	data() {
@@ -68,9 +71,14 @@ export default {
 			tab: ""
 		};
 	},
-	computed: mapGetters({
-		socket: "websockets/getSocket"
-	}),
+	computed: {
+		...mapGetters({
+			socket: "websockets/getSocket"
+		}),
+		...mapState("modalVisibility", {
+			modals: state => state.modals
+		})
+	},
 	mounted() {
 		if (
 			this.$route.query.tab === "profile" ||
@@ -130,6 +138,12 @@ export default {
 .container {
 	margin-top: 32px;
 	padding: 24px;
+
+	/deep/ .row {
+		*:not(:last-child) {
+			margin-right: 5px;
+		}
+	}
 
 	.content {
 		background-color: var(--white);

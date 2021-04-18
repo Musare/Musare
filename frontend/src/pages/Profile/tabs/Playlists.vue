@@ -76,12 +76,7 @@
 				v-if="myUserId === userId"
 				class="button is-primary"
 				id="create-new-playlist-button"
-				@click="
-					openModal({
-						sector: 'station',
-						modal: 'createPlaylist'
-					})
-				"
+				@click="openModal('createPlaylist')"
 			>
 				Create new playlist
 			</button>
@@ -120,7 +115,7 @@ export default {
 	computed: {
 		...mapState({
 			...mapState("modalVisibility", {
-				modals: state => state.modals.station
+				modals: state => state.modals
 			}),
 			myUserId: state => state.user.auth.userId
 		}),
@@ -222,7 +217,7 @@ export default {
 	methods: {
 		showPlaylist(playlistId) {
 			this.editPlaylist(playlistId);
-			this.openModal({ sector: "station", modal: "editPlaylist" });
+			this.openModal("editPlaylist");
 		},
 		...mapActions("modalVisibility", ["openModal"]),
 		...mapActions("user/playlists", ["editPlaylist", "setPlaylists"])

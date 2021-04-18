@@ -206,12 +206,12 @@ export default {
 		report(song) {
 			this.hideTippyElements();
 			this.reportSong(song);
-			this.openModal({ sector: "station", modal: "report" });
+			this.openModal("report");
 		},
 		edit(song) {
 			this.hideTippyElements();
 			this.editSong(song);
-			this.openModal({ sector: "admin", modal: "editSong" });
+			this.openModal("editSong");
 		},
 		...mapActions("modals/editSong", ["editSong"]),
 		...mapActions("modals/report", ["reportSong"]),

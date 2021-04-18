@@ -73,7 +73,7 @@
 		<a
 			class="button create-playlist tab-actionable-button"
 			href="#"
-			@click="openModal({ sector: 'station', modal: 'createPlaylist' })"
+			@click="openModal('createPlaylist')"
 		>
 			<i class="material-icons icon-with-button">create</i>
 			<span class="optional-desktop-only-text"> Create Playlist </span>
@@ -193,7 +193,7 @@ export default {
 	methods: {
 		edit(id) {
 			this.editPlaylist(id);
-			this.openModal({ sector: "station", modal: "editPlaylist" });
+			this.openModal("editPlaylist");
 		},
 		selectPlaylist(playlist) {
 			if (this.station.type === "community" && this.station.partyMode) {

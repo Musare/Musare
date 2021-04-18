@@ -157,12 +157,7 @@
 			<button
 				class="button is-primary tab-actionable-button"
 				v-if="loggedIn && station.type === 'official'"
-				@click="
-					openModal({
-						sector: 'station',
-						modal: 'requestSong'
-					})
-				"
+				@click="openModal('requestSong')"
 			>
 				<i class="material-icons icon-with-button">queue</i>
 				<span class="optional-desktop-only-text"> Request Song </span>
@@ -284,10 +279,7 @@ export default {
 				);
 			} else {
 				new Toast(`Station with that ID not found`);
-				this.closeModal({
-					sector: this.sector,
-					modal: "manageStation"
-				});
+				this.closeModal("manageStation");
 			}
 		});
 
@@ -382,10 +374,7 @@ export default {
 				res => {
 					if (res.status === "success") {
 						this.editPlaylist(res.data.playlist._id);
-						this.openModal({
-							sector: "station",
-							modal: "editPlaylist"
-						});
+						this.openModal("editPlaylist");
 					} else {
 						new Toast(res.message);
 					}

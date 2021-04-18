@@ -646,12 +646,7 @@ export default {
 		removePlaylist() {
 			this.socket.dispatch("playlists.remove", this.playlist._id, res => {
 				new Toast(res.message);
-				if (res.status === "success") {
-					this.closeModal({
-						sector: "station",
-						modal: "editPlaylist"
-					});
-				}
+				if (res.status === "success") this.closeModal("editPlaylist");
 			});
 		},
 		async downloadPlaylist() {

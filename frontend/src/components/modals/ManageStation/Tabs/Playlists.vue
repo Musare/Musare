@@ -189,12 +189,7 @@
 				<button
 					class="button is-primary"
 					id="create-new-playlist-button"
-					@click="
-						openModal({
-							sector: 'station',
-							modal: 'createPlaylist'
-						})
-					"
+					@click="openModal('createPlaylist')"
 				>
 					Create new playlist
 				</button>
@@ -451,7 +446,7 @@ export default {
 		},
 		showPlaylist(playlistId) {
 			this.editPlaylist(playlistId);
-			this.openModal({ sector: "station", modal: "editPlaylist" });
+			this.openModal("editPlaylist");
 		},
 		selectPlaylist(playlist) {
 			if (this.station.type === "community" && this.station.partyMode) {

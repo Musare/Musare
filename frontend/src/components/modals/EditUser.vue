@@ -111,10 +111,7 @@ export default {
 				this.editUser(user);
 			} else {
 				new Toast("User with that ID not found");
-				this.closeModal({
-					sector: this.sector,
-					modal: "editUser"
-				});
+				this.closeModal("editUser");
 			}
 		});
 	},

@@ -100,7 +100,7 @@ export default {
 		},
 		showPlaylist(playlistId) {
 			this.editPlaylist(playlistId);
-			this.openModal({ sector: "station", modal: "editPlaylist" });
+			this.openModal("editPlaylist");
 		},
 		deselectPlaylist(id) {
 			this.socket.dispatch(

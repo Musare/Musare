@@ -184,12 +184,13 @@ lofig.folder = "../config/default.json";
 	ws.init(websocketsDomain);
 
 	ws.socket.on("ready", res => {
-		const { loggedIn, role, username, userId } = res.data;
+		const { loggedIn, role, username, userId, email } = res.data;
 
 		store.dispatch("user/auth/authData", {
 			loggedIn,
 			role,
 			username,
+			email,
 			userId
 		});
 	});

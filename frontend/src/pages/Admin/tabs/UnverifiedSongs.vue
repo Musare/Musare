@@ -220,7 +220,7 @@ export default {
 			);
 		},
 		...mapState("modalVisibility", {
-			modals: state => state.modals.admin
+			modals: state => state.modals
 		}),
 		...mapState("admin/unverifiedSongs", {
 			songs: state => state.songs
@@ -254,7 +254,7 @@ export default {
 	methods: {
 		edit(song) {
 			this.editSong(song);
-			this.openModal({ sector: "admin", modal: "editSong" });
+			this.openModal("editSong");
 		},
 		verify(song) {
 			this.socket.dispatch("songs.verify", song.youtubeId, res => {

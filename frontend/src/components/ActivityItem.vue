@@ -156,7 +156,7 @@ export default {
 		},
 		showPlaylist(playlistId) {
 			this.editPlaylist(playlistId);
-			this.openModal({ sector: "station", modal: "editPlaylist" });
+			this.openModal("editPlaylist");
 		},
 		...mapActions("user/playlists", ["editPlaylist"]),
 		formatDistance,

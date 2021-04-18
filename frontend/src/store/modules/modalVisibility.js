@@ -2,29 +2,20 @@
 
 const state = {
 	modals: {
-		header: {
-			login: false,
-			register: false
-		},
-		home: {
-			createCommunityStation: false
-		},
-		station: {
-			requestSong: false,
-			editPlaylist: false,
-			createPlaylist: false,
-			manageStation: false,
-			report: false
-		},
-		admin: {
-			editNews: false,
-			editUser: false,
-			editSong: false,
-			manageStation: false,
-			editPlaylist: false,
-			viewReport: false,
-			viewPunishment: false
-		}
+		manageStation: false,
+		login: false,
+		register: false,
+		createCommunityStation: false,
+		requestSong: false,
+		editPlaylist: false,
+		createPlaylist: false,
+		report: false,
+		removeAccount: false,
+		editNews: false,
+		editUser: false,
+		editSong: false,
+		viewReport: false,
+		viewPunishment: false
 	},
 	currentlyActive: []
 };
@@ -32,17 +23,17 @@ const state = {
 const getters = {};
 
 const actions = {
-	closeModal: ({ commit }, data) => {
-		if (data.modal === "register")
+	closeModal: ({ commit }, modal) => {
+		if (modal === "register")
 			lofig.get("recaptcha.enabled").then(enabled => {
 				if (enabled) window.location.reload();
 			});
 
-		commit("closeModal", data);
+		commit("closeModal", modal);
 		commit("closeCurrentModal");
 	},
-	openModal: ({ commit }, data) => {
-		commit("openModal", data);
+	openModal: ({ commit }, modal) => {
+		commit("openModal", modal);
 	},
 	closeCurrentModal: ({ commit }) => {
 		commit("closeCurrentModal");
@@ -50,17 +41,15 @@ const actions = {
 };
 
 const mutations = {
-	closeModal(state, data) {
-		state.modals[data.sector][data.modal] = false;
+	closeModal(state, modal) {
+		state.modals[modal] = false;
 	},
-	openModal(state, data) {
-		state.modals[data.sector][data.modal] = true;
-		state.currentlyActive.unshift(data);
+	openModal(state, modal) {
+		state.modals[modal] = true;
+		state.currentlyActive.unshift(modal);
 	},
 	closeCurrentModal(state) {
-		const { sector, modal } = state.currentlyActive[0];
-		state.modals[sector][modal] = false;
-
+		state.modals[state.currentlyActive[0]] = false;
 		state.currentlyActive.shift();
 	}
 };

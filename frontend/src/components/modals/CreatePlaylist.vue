@@ -73,15 +73,9 @@ export default {
 					new Toast(res.message);
 
 					if (res.status === "success") {
-						this.closeModal({
-							sector: "station",
-							modal: "createPlaylist"
-						});
+						this.closeModal("createPlaylist");
 						this.editPlaylist(res.data.playlistId);
-						this.openModal({
-							sector: "station",
-							modal: "editPlaylist"
-						});
+						this.openModal("editPlaylist");
 					}
 				}
 			);

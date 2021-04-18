@@ -4,8 +4,8 @@
 		<div v-else class="upper-container">
 			<router-view :key="$route.fullPath" class="main-container" />
 			<what-is-new />
-			<login-modal v-if="modals.header.login" />
-			<register-modal v-if="modals.header.register" />
+			<login-modal v-if="modals.login" />
+			<register-modal v-if="modals.register" />
 		</div>
 	</div>
 </template>
@@ -244,6 +244,15 @@ export default {
 
 	.content {
 		background-color: var(--dark-grey-3) !important;
+	}
+
+	.content-box,
+	.step:not(.selected) {
+		background-color: var(--dark-grey-3) !important;
+	}
+
+	.label {
+		color: var(--light-grey-2);
 	}
 
 	.tippy-tooltip.songActions-theme {
@@ -945,5 +954,123 @@ h4.section-title {
 	-webkit-mask: url("/assets/social/youtube.svg") no-repeat center;
 	mask: url("/assets/social/youtube.svg") no-repeat center;
 	background-color: var(--youtube);
+}
+
+#forgot-password {
+	display: flex;
+	justify-content: flex-start;
+	margin: 5px 0;
+}
+
+.steps-fade-enter-active,
+.steps-fade-leave-active {
+	transition: all 0.3s ease;
+}
+
+.steps-fade-enter,
+.steps-fade-leave-to {
+	opacity: 0;
+}
+
+.skip-step {
+	background-color: var(--grey-3);
+	color: var(--white);
+}
+
+#steps {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 50px;
+	margin-top: 36px;
+
+	@media screen and (max-width: 300px) {
+		display: none;
+	}
+
+	.step {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 100%;
+		border: 1px solid var(--dark-grey);
+		min-width: 50px;
+		min-height: 50px;
+		background-color: var(--white);
+		font-size: 30px;
+		cursor: pointer;
+
+		&.selected {
+			background-color: var(--primary-color);
+			color: var(--white) !important;
+			border: 0;
+		}
+	}
+
+	.divider {
+		display: flex;
+		justify-content: center;
+		width: 180px;
+		height: 1px;
+		background-color: var(--dark-grey);
+	}
+}
+
+.content-box {
+	margin-top: 90px;
+	border-radius: 3px;
+	background-color: var(--white);
+	border: 1px solid var(--dark-grey);
+	max-width: 580px;
+	padding: 40px;
+
+	@media screen and (max-width: 300px) {
+		margin-top: 30px;
+		padding: 30px 20px;
+	}
+}
+
+.content-box-optional-helper {
+	margin-top: 15px;
+	color: var(--primary-color);
+	text-decoration: underline;
+	font-size: 16px;
+
+	a {
+		color: var(--primary-color);
+	}
+}
+
+.content-box-title {
+	font-size: 25px;
+	color: var(--black);
+}
+
+.content-box-description {
+	font-size: 14px;
+	color: var(--dark-grey);
+}
+
+.content-box-inputs {
+	margin-top: 35px;
+
+	.input-with-button {
+		.button {
+			width: 105px;
+		}
+
+		@media screen and (max-width: 450px) {
+			flex-direction: column;
+		}
+	}
+
+	label {
+		font-size: 11px;
+	}
+
+	#change-password-button {
+		margin-top: 36px;
+		width: 175px;
+	}
 }
 </style>

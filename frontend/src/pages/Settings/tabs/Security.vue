@@ -30,6 +30,7 @@
 					v-model="validation.newPassword.value"
 					@keyup.enter="changePassword()"
 					@keypress="onInput('newPassword')"
+					@paste="onInput('newPassword')"
 				/>
 			</p>
 
@@ -71,7 +72,7 @@
 		</div>
 
 		<div v-if="!isGithubLinked">
-			<h4 class="section-title">Link GitHub</h4>
+			<h4 class="section-title">Link your GitHub account</h4>
 			<p class="section-description">
 				Link your Musare account with GitHub.
 			</p>

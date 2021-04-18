@@ -22,6 +22,7 @@
 							type="email"
 							placeholder="Email..."
 							@keypress="onInput('email')"
+							@paste="onInput('email')"
 							autofocus
 						/>
 					</p>
@@ -30,7 +31,7 @@
 							:entered="email.entered"
 							:valid="email.valid"
 							:message="email.message"
-						></input-help-box>
+						/>
 					</transition>
 
 					<!-- username -->
@@ -42,6 +43,7 @@
 							type="text"
 							placeholder="Username..."
 							@keypress="onInput('username')"
+							@paste="onInput('username')"
 						/>
 					</p>
 					<transition name="fadein-helpbox">
@@ -49,7 +51,7 @@
 							:entered="username.entered"
 							:valid="username.valid"
 							:message="username.message"
-						></input-help-box>
+						/>
 					</transition>
 
 					<!-- password -->
@@ -65,6 +67,10 @@
 							ref="password"
 							placeholder="Password..."
 							@keypress="
+								onInput('password') &&
+									$parent.submitOnEnter(submitModal, $event)
+							"
+							@paste="
 								onInput('password') &&
 									$parent.submitOnEnter(submitModal, $event)
 							"
@@ -85,7 +91,7 @@
 							:valid="password.valid"
 							:entered="password.entered"
 							:message="password.message"
-						></input-help-box>
+						/>
 					</transition>
 
 					<br />
@@ -129,12 +135,15 @@
 							&nbsp;&nbsp;Register with GitHub
 						</a>
 					</div>
-					<router-link to="/login" v-if="isPage">
-						Already have an account?
-					</router-link>
-					<a v-else href="#" @click="changeToLoginModal()">
-						Already have an account?
-					</a>
+
+					<p class="content-box-optional-helper">
+						<router-link to="/login" v-if="isPage">
+							Already have an account?
+						</router-link>
+						<a v-else href="#" @click="changeToLoginModal()">
+							Already have an account?
+						</a>
+					</p>
 				</footer>
 			</div>
 		</div>
@@ -272,12 +281,11 @@ export default {
 		changeToLoginModal() {
 			if (!this.isPage) {
 				this.closeRegisterModal();
-				this.openModal({ sector: "header", modal: "login" });
+				this.openModal("login");
 			}
 		},
 		closeRegisterModal() {
-			if (!this.isPage)
-				this.closeModal({ sector: "header", modal: "login" });
+			if (!this.isPage) this.closeModal("login");
 		},
 		submitModal() {
 			if (
@@ -302,7 +310,8 @@ export default {
 			this[inputName].entered = true;
 		},
 		githubRedirect() {
-			localStorage.setItem("github_redirect", this.$route.path);
+			if (!this.isPage)
+				localStorage.setItem("github_redirect", this.$route.path);
 		},
 		...mapActions("modalVisibility", ["closeModal", "openModal"]),
 		...mapActions("user/auth", ["register"])
@@ -347,6 +356,10 @@ export default {
 	display: flex;
 	justify-content: space-between;
 	flex-wrap: wrap;
+
+	.content-box-optional-helper {
+		margin-top: 0;
+	}
 }
 
 .button.is-github {

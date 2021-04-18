@@ -100,7 +100,7 @@ export default {
 	},
 	mounted() {
 		if (this.$route.query.returnToSong) {
-			this.closeModal({ sector: this.sector, modal: "editSong" });
+			this.closeModal("editSong");
 		}
 
 		this.socket.dispatch(`reports.findOne`, this.reportId, res => {
@@ -109,10 +109,7 @@ export default {
 				this.viewReport(report);
 			} else {
 				new Toast("Report with that ID not found");
-				this.closeModal({
-					sector: this.sector,
-					modal: "viewReport"
-				});
+				this.closeModal("viewReport");
 			}
 		});
 	},
@@ -121,11 +118,7 @@ export default {
 		resolve(reportId) {
 			return this.resolveReport(reportId)
 				.then(res => {
-					if (res.status === "success")
-						this.closeModal({
-							sector: this.sector,
-							modal: "viewReport"
-						});
+					if (res.status === "success") this.closeModal("viewReport");
 				})
 				.catch(err => new Toast(err.message));
 		},

@@ -79,12 +79,7 @@
 						!station.locked ||
 						(station.locked && isAdminOnly() && dismissedWarning))
 			"
-			@click="
-				openModal({
-					sector: 'station',
-					modal: 'manageStation'
-				})
-			"
+			@click="openModal('manageStation')"
 		>
 			<i class="material-icons icon-with-button">queue</i>
 			<span class="optional-desktop-only-text"> Add Song To Queue </span>
@@ -94,12 +89,7 @@
 			v-if="
 				sector === 'station' && loggedIn && station.type === 'official'
 			"
-			@click="
-				openModal({
-					sector: 'station',
-					modal: 'requestSong'
-				})
-			"
+			@click="openModal('requestSong')"
 		>
 			<i class="material-icons icon-with-button">queue</i>
 			<span class="optional-desktop-only-text"> Request Song </span>

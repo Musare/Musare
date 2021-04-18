@@ -180,10 +180,7 @@ export default {
 				this.editNews(news);
 			} else {
 				new Toast("News with that ID not found");
-				this.closeModal({
-					sector: this.sector,
-					modal: "editNews"
-				});
+				this.closeModal("editNews");
 			}
 		});
 	},
@@ -211,11 +208,7 @@ export default {
 				res => {
 					new Toast(res.message);
 					if (res.status === "success") {
-						if (close)
-							this.closeModal({
-								sector: this.sector,
-								modal: "editNews"
-							});
+						if (close) this.closeModal("editNews");
 					}
 				}
 			);
