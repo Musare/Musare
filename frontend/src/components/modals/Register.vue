@@ -22,6 +22,7 @@
 							type="email"
 							placeholder="Email..."
 							@keypress="onInput('email')"
+							@paste="onInput('email')"
 							autofocus
 						/>
 					</p>
@@ -30,7 +31,7 @@
 							:entered="email.entered"
 							:valid="email.valid"
 							:message="email.message"
-						></input-help-box>
+						/>
 					</transition>
 
 					<!-- username -->
@@ -42,6 +43,7 @@
 							type="text"
 							placeholder="Username..."
 							@keypress="onInput('username')"
+							@paste="onInput('username')"
 						/>
 					</p>
 					<transition name="fadein-helpbox">
@@ -49,7 +51,7 @@
 							:entered="username.entered"
 							:valid="username.valid"
 							:message="username.message"
-						></input-help-box>
+						/>
 					</transition>
 
 					<!-- password -->
@@ -65,6 +67,10 @@
 							ref="password"
 							placeholder="Password..."
 							@keypress="
+								onInput('password') &&
+									$parent.submitOnEnter(submitModal, $event)
+							"
+							@paste="
 								onInput('password') &&
 									$parent.submitOnEnter(submitModal, $event)
 							"
@@ -85,7 +91,7 @@
 							:valid="password.valid"
 							:entered="password.entered"
 							:message="password.message"
-						></input-help-box>
+						/>
 					</transition>
 
 					<br />

@@ -46,6 +46,7 @@
 										v-model="email"
 										@keyup.enter="submitEmail()"
 										@keypress="onInput('email')"
+										@paste="onInput('email')"
 									/>
 								</p>
 								<p class="control">
@@ -135,6 +136,7 @@
 									placeholder="Enter password here..."
 									v-model="newPassword"
 									@keypress="onInput('newPassword')"
+									@paste="onInput('newPassword')"
 								/>
 							</p>
 
@@ -161,6 +163,7 @@
 									v-model="newPasswordAgain"
 									@keyup.enter="changePassword()"
 									@keypress="onInput('newPasswordAgain')"
+									@paste="onInput('newPasswordAgain')"
 								/>
 							</p>
 

@@ -17,6 +17,7 @@
 				maxlength="32"
 				autocomplete="off"
 				@keypress="onInput('username')"
+				@paste="onInput('username')"
 			/>
 			<span v-if="modifiedUser.username" class="character-counter"
 				>{{ modifiedUser.username.length }}/32</span
@@ -40,6 +41,7 @@
 				v-if="modifiedUser.email"
 				v-model="modifiedUser.email.address"
 				@keypress="onInput('email')"
+				@paste="onInput('email')"
 				autocomplete="off"
 			/>
 		</p>

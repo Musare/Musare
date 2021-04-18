@@ -30,6 +30,7 @@
 					v-model="validation.newPassword.value"
 					@keyup.enter="changePassword()"
 					@keypress="onInput('newPassword')"
+					@paste="onInput('newPassword')"
 				/>
 			</p>
 
