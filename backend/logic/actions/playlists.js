@@ -677,6 +677,65 @@ export default {
 		);
 	},
 
+	/**
+	 * Gets a playlist from station id
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} stationId - the id of the station we are getting
+	 * @param {string} includeSongs - include songs
+	 * @param {Function} cb - gets called with the result
+	 */
+	getPlaylistForStation: function getPlaylist(session, stationId, includeSongs, cb) {
+		async.waterfall(
+			[
+				next => {
+					PlaylistsModule.runJob("GET_STATION_PLAYLIST", { stationId, includeSongs }, this)
+						.then(response => next(null, response.playlist))
+						.catch(next);
+				},
+
+				(playlist, next) => {
+					if (!playlist) return next("Playlist not found");
+					if (playlist.privacy !== "public" && playlist.createdBy !== session.userId) {
+						if (session)
+							// check if user requested to get a playlist is an admin
+							return DBModule.runJob("GET_MODEL", { modelName: "user" }, this).then(userModel => {
+								userModel.findOne({ _id: session.userId }, (err, user) => {
+									if (user && user.role === "admin") return next(null, playlist);
+									return next("User unauthorised to view playlist.");
+								});
+							});
+						return next("User unauthorised to view playlist.");
+					}
+
+					return next(null, playlist);
+				}
+			],
+			async (err, playlist) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"PLAYLIST_GET",
+						`Getting playlist for station "${stationId}" failed for user "${session.userId}". "${err}"`
+					);
+					return cb({ status: "error", message: err });
+				}
+
+				this.log(
+					"SUCCESS",
+					"PLAYLIST_GET",
+					`Successfully got playlist for station "${stationId}" for user "${session.userId}".`
+				);
+
+				return cb({
+					status: "success",
+					data: { playlist }
+				});
+			}
+		);
+	},
+
 	// TODO Remove this
 	/**
 	 * Updates a private playlist
