@@ -730,16 +730,10 @@ export default {
 					`GitHub is ${linked ? "linked" : "not linked"} for user "${session.userId}".`
 				);
 
-				if (linked) {
-					return cb({
-						status: "success",
-						message: "Your GitHub account is linked."
-					});
-				}
-
 				return cb({
-					status: "error",
-					message: "Unfortunately your GitHub account isn't linked anymore."
+					status: "success",
+					data: { linked },
+					message: "Successfully checked if GitHub accounty was linked."
 				});
 			}
 		);

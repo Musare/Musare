@@ -5,17 +5,48 @@
 	>
 		<template #body>
 			<div id="steps">
-				<p class="step" :class="{ selected: step === 1 }">1</p>
+				<p
+					class="step"
+					:class="{ selected: step === 'confirm-identity' }"
+				>
+					1
+				</p>
 				<span class="divider"></span>
-				<p class="step" :class="{ selected: step === 2 }">2</p>
+				<p
+					class="step"
+					:class="{
+						selected:
+							(isPasswordLinked && step === 'export-data') ||
+							step === 'relink-github'
+					}"
+				>
+					2
+				</p>
 				<span class="divider"></span>
-				<p class="step" :class="{ selected: step === 3 }">3</p>
+				<p
+					class="step"
+					:class="{
+						selected:
+							(isPasswordLinked && step === 'remove-account') ||
+							step === 'export-data'
+					}"
+				>
+					3
+				</p>
+				<span class="divider" v-if="!isPasswordLinked"></span>
+				<p
+					class="step"
+					:class="{ selected: step === 'remove-account' }"
+					v-if="!isPasswordLinked"
+				>
+					4
+				</p>
 			</div>
 
 			<div
 				class="content-box"
 				id="password-linked"
-				v-if="isPasswordLinked && step === 1"
+				v-if="step === 'confirm-identity' && isPasswordLinked"
 			>
 				<h2 class="content-box-title">
 					Enter your password
@@ -62,10 +93,11 @@
 				</router-link>
 			</div>
 
-			<!-- check github api and see if access token still works: if it doesn't then the user will need to re-connect it -->
-
-			<div class="content-box" v-if="isGithubLinked && step === 1">
-				<h2 class="content-box-title">Verify GitHub</h2>
+			<div
+				class="content-box"
+				v-else-if="isGithubLinked && step === 'confirm-identity'"
+			>
+				<h2 class="content-box-title">Verify your GitHub</h2>
 				<p class="content-box-description">
 					Check your GitHub account is still linked in order to remove
 					your account.
@@ -79,16 +111,43 @@
 								src="/assets/social/github.svg"
 							/>
 						</div>
-						&nbsp; Check GitHub Link
+						&nbsp; Check GitHub is linked
 					</a>
 				</div>
 			</div>
 
-			<div v-if="step === 2">
+			<div class="content-box" v-if="step === 'relink-github'">
+				<h2 class="content-box-title">Re-link GitHub</h2>
+				<p class="content-box-description">
+					Re-link your GitHub account in order to verify your
+					identity.
+				</p>
+
+				<div class="content-box-inputs">
+					<a
+						class="button is-github"
+						:href="`${apiDomain}/auth/github/link`"
+					>
+						<div class="icon">
+							<img
+								class="invert"
+								src="/assets/social/github.svg"
+							/>
+						</div>
+						&nbsp; Relink GitHub to account
+					</a>
+				</div>
+			</div>
+
+			<div v-if="step === 'export-data'">
 				DOWNLOAD A BACKUP OF YOUR DATa BEFORE ITS PERMENATNELY DELETED
 			</div>
 
-			<div class="content-box" id="step-3" v-if="step === 3">
+			<div
+				class="content-box"
+				id="remove-account-container"
+				v-if="step === 'remove-account'"
+			>
 				<h2 class="content-box-title">Remove Account</h2>
 				<p class="content-box-description">
 					There is no going back after confirming account removal.
@@ -119,7 +178,8 @@ export default {
 	components: { Modal, Confirm },
 	data() {
 		return {
-			step: 1,
+			step: "confirm-identity",
+			apiDomain: "",
 			password: {
 				value: "",
 				visible: false
@@ -131,6 +191,9 @@ export default {
 		isGithubLinked: "settings/isGithubLinked",
 		socket: "websockets/getSocket"
 	}),
+	async mounted() {
+		this.apiDomain = await lofig.get("apiDomain");
+	},
 	methods: {
 		togglePasswordVisibility() {
 			if (this.$refs.password.type === "password") {
@@ -146,16 +209,26 @@ export default {
 				"users.confirmPasswordMatch",
 				this.password.value,
 				res => {
-					if (res.status === "success") this.step = 3;
+					if (res.status === "success") this.step = "remove-account";
 					else new Toast(res.message);
 				}
 			);
 		},
 		confirmGithubLink() {
 			return this.socket.dispatch("users.confirmGithubLink", res => {
-				console.log(res);
-				if (res.status === "success") this.step = 3;
-				else new Toast(res.message);
+				if (res.status === "success") {
+					if (res.data.linked) this.step = "remove-account";
+					else {
+						new Toast(
+							`Your GitHub account isn't linked. Please re-link your account and try again.`
+						);
+						this.step = "relink-github";
+						localStorage.setItem(
+							"github_redirect",
+							window.location.pathname + window.location.search
+						);
+					}
+				} else new Toast(res.message);
 			});
 		},
 		remove() {
@@ -199,6 +272,10 @@ h2 {
 	max-width: unset;
 }
 
+#steps {
+	margin-top: 0;
+}
+
 #password-linked {
 	#password-container {
 		display: flex;
@@ -224,7 +301,7 @@ h2 {
 	margin-bottom: 0 !important;
 }
 
-#step-3 .content-box-inputs {
+#remove-account-container .content-box-inputs {
 	width: fit-content;
 }
 </style>

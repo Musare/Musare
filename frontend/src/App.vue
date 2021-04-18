@@ -968,10 +968,6 @@ h4.section-title {
 }
 
 #steps {
-	margin-top: 0;
-}
-
-#steps {
 	display: flex;
 	align-items: center;
 	justify-content: center;
