@@ -216,7 +216,7 @@ class _AppModule extends CoreClass {
 												value: user._id
 											});
 
-											res.redirect(`${config.get("domain")}/settings#security`);
+											res.redirect(`${config.get("domain")}/settings?tab=security`);
 										}
 									],
 									next
