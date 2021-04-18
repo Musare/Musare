@@ -8,16 +8,34 @@
 						class="input"
 						type="text"
 						placeholder="Enter your song query here..."
-						v-model="musareSongsQuery"
+						v-model="musareSearch.query"
 						@keyup.enter="searchForMusareSongs()"
 					/>
 				</p>
 				<p class="control">
-					<a class="button is-info" href="#"
+					<a class="button is-info" @click="searchForMusareSongs()"
 						><i class="material-icons icon-with-button">search</i
 						>Search</a
 					>
 				</p>
+			</div>
+			<div v-if="musareSearch.results.length > 0">
+				<song-item
+					v-for="(song, index) in musareSearch.results"
+					:key="index + song._id"
+					:song="song"
+				>
+					<div class="song-actions" slot="actions">
+						<i
+							class="material-icons add-to-queue-icon"
+							v-if="station.partyMode && !station.locked"
+							@click="addSongToQueue(song.youtubeId)"
+							content="Add Song to Queue"
+							v-tippy
+							>queue</i
+						>
+					</div>
+				</song-item>
 			</div>
 		</div>
 		<div class="youtube-search">
@@ -99,16 +117,21 @@ import { mapState, mapGetters } from "vuex";
 import Toast from "toasters";
 import SearchYoutube from "@/mixins/SearchYoutube.vue";
 
+import SongItem from "@/components/SongItem.vue";
 import SearchQueryItem from "../../../SearchQueryItem.vue";
 
 export default {
 	components: {
+		SongItem,
 		SearchQueryItem
 	},
 	mixins: [SearchYoutube],
 	data() {
 		return {
-			musareSongsQuery: ""
+			musareSearch: {
+				query: "",
+				results: []
+			}
 		};
 	},
 	computed: {
@@ -131,9 +154,10 @@ export default {
 						if (res.status !== "success")
 							new Toast(`Error: ${res.message}`);
 						else {
-							this.search.songs.results[
-								index
-							].isAddedToQueue = true;
+							if (index)
+								this.search.songs.results[
+									index
+								].isAddedToQueue = true;
 
 							new Toast(res.message);
 						}
@@ -152,14 +176,13 @@ export default {
 			}
 		},
 		searchForMusareSongs() {
-			const query = this.musareSongsQuery;
+			const { query } = this.musareSearch;
 
 			this.socket.dispatch("songs.searchOfficial", query, res => {
-				console.log(111, res);
 				if (res.status === "success") {
-					// this.search.results = res.data.playlists;
+					this.musareSearch.results = res.data.songs;
 				} else if (res.status === "error") {
-					// this.search.results = [];
+					this.musareSearch.results = [];
 					new Toast(res.message);
 				}
 			});
@@ -167,3 +190,16 @@ export default {
 	}
 };
 </script>
+
+<style lang="scss">
+.search {
+	.musare-search,
+	.universal-item:not(:last-of-type) {
+		margin-bottom: 10px;
+	}
+	.load-more-button {
+		width: 100%;
+		margin-top: 10px;
+	}
+}
+</style>
