@@ -23,6 +23,8 @@ services:
       - /opt/app/node_modules/
     environment:
       - FRONTEND_MODE=${FRONTEND_MODE}
+    links:
+      - backend
 
   mongo:
     image: mongo:4.0

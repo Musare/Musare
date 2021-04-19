@@ -1,5 +1,8 @@
 <template>
-	<div class="universal-item song-item">
+	<div
+		class="universal-item song-item"
+		:class="{ 'with-duration': duration }"
+	>
 		<div class="thumbnail-and-info">
 			<song-thumbnail :class="{ large: largeThumbnail }" :song="song" />
 			<div class="song-info">
@@ -310,6 +313,10 @@ export default {
 
 	.edit-icon {
 		color: var(--primary-color);
+	}
+
+	&.with-duration .song-info {
+		width: calc(100% - 150px);
 	}
 }
 </style>

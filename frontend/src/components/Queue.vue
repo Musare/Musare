@@ -71,21 +71,24 @@
 		<button
 			class="button is-primary tab-actionable-button"
 			v-if="
-				loggedIn &&
+				sector === 'station' &&
+					loggedIn &&
 					station.type === 'community' &&
 					station.partyMode &&
 					((station.locked && isOwnerOnly()) ||
 						!station.locked ||
 						(station.locked && isAdminOnly() && dismissedWarning))
 			"
-			@click="openModal('addSongToQueue')"
+			@click="openModal('manageStation')"
 		>
 			<i class="material-icons icon-with-button">queue</i>
 			<span class="optional-desktop-only-text"> Add Song To Queue </span>
 		</button>
 		<button
 			class="button is-primary tab-actionable-button"
-			v-if="loggedIn && station.type === 'official'"
+			v-if="
+				sector === 'station' && loggedIn && station.type === 'official'
+			"
 			@click="openModal('requestSong')"
 		>
 			<i class="material-icons icon-with-button">queue</i>
@@ -94,7 +97,8 @@
 		<button
 			class="button is-primary tab-actionable-button disabled"
 			v-if="
-				!loggedIn &&
+				sector === 'station' &&
+					!loggedIn &&
 					((station.type === 'community' &&
 						station.partyMode &&
 						!station.locked) ||
@@ -137,6 +141,12 @@ import Confirm from "@/components/Confirm.vue";
 
 export default {
 	components: { draggable, SongItem, Confirm },
+	props: {
+		sector: {
+			type: String,
+			default: "station"
+		}
+	},
 	data() {
 		return {
 			dismissedWarning: false,
@@ -147,10 +157,20 @@ export default {
 	computed: {
 		queue: {
 			get() {
+				if (this.sector === "manageStation") {
+					return this.$store.state.modals.manageStation.songsList;
+				}
 				return this.$store.state.station.songsList;
 			},
 			set(queue) {
-				this.$store.commit("station/updateSongsList", queue);
+				if (this.sector === "manageStation") {
+					this.$store.commit(
+						"modals/manageStation/updateSongsList",
+						queue
+					);
+				} else {
+					this.$store.commit("station/updateSongsList", queue);
+				}
 			}
 		},
 		dragOptions() {
@@ -167,6 +187,7 @@ export default {
 			userRole: state => state.user.auth.role,
 			station: state => state.station.station,
 			songsList: state => state.station.songsList,
+			otherSongsList: state => state.modals.manageStation.songsList,
 			noSong: state => state.station.noSong
 		}),
 		...mapGetters({

@@ -160,7 +160,12 @@ export default {
 					name: "Owen Diffey",
 					bio:
 						"Developer, Designer, System Admin and QA Tester. Previously Owner and Project Manager.",
-					projects: ["MusareMeteor", "MusareReact", "MusareNode"],
+					projects: [
+						"MusareMeteor",
+						"MusareReact",
+						"MusareNode",
+						"vue-roaster"
+					],
 					active: "Feb 2016 - present",
 					github: "odiffey",
 					link: "https://diffey.dev",
@@ -195,8 +200,7 @@ export default {
 			previousTeam: [
 				{
 					name: "Akira Laine",
-					bio:
-						"Co-Founder, Leader Developer, Designer and QA Tester.",
+					bio: "Co-Founder, Lead Developer, Designer and QA Tester.",
 					projects: ["MusareMeteor"],
 					active: "Sept 2015 - Feb 2016",
 					github: "darthmeme",

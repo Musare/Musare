@@ -568,6 +568,49 @@ export default {
 	// }),
 
 	/**
+	 * Searches through official songs
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} query - the query
+	 * @param {string} page - the page
+	 * @param {Function} cb - gets called with the result
+	 */
+	searchOfficial: isLoginRequired(async function searchOfficial(session, query, page, cb) {
+		async.waterfall(
+			[
+				next => {
+					if ((!query && query !== "") || typeof query !== "string") next("Invalid query.");
+					else next();
+				},
+
+				next => {
+					SongsModule.runJob("SEARCH", {
+						query,
+						includeVerified: true,
+						trimmed: true,
+						page
+					})
+						.then(response => {
+							next(null, response);
+						})
+						.catch(err => {
+							next(err);
+						});
+				}
+			],
+			async (err, data) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "SONGS_SEARCH_OFFICIAL", `Searching songs failed. "${err}"`);
+					return cb({ status: "error", message: err });
+				}
+				this.log("SUCCESS", "SONGS_SEARCH_OFFICIAL", "Searching songs successful.");
+				return cb({ status: "success", data });
+			}
+		);
+	}),
+
+	/**
 	 * Requests a song
 	 *
 	 * @param {object} session - the session object automatically added by the websocket

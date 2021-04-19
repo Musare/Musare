@@ -980,6 +980,95 @@ class _PlaylistsModule extends CoreClass {
 	}
 
 	/**
+	 * Searches through playlists
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.query - the query
+	 * @param {string} payload.includePrivate - include private playlists
+	 * @param {string} payload.includeStation - include station playlists
+	 * @param {string} payload.includeUser - include user playlists
+	 * @param {string} payload.includeGenre - include genre playlists
+	 * @param {string} payload.includeOwn - include own user playlists
+	 * @param {string} payload.userId - the user id of the person requesting
+	 * @param {string} payload.includeSongs - include songs
+	 * @param {string} payload.page - page (default 1)
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	SEARCH(payload) {
+		return new Promise((resolve, reject) =>
+			async.waterfall(
+				[
+					next => {
+						const types = [];
+						if (payload.includeStation) types.push("station");
+						if (payload.includeUser) types.push("user");
+						if (payload.includeGenre) types.push("genre");
+						if (types.length === 0 && !payload.includeOwn) return next("No types have been included.");
+
+						const privacies = ["public"];
+						if (payload.includePrivate) privacies.push("private");
+
+						const includeObject = payload.includeSongs ? null : { songs: false };
+						const filterArray = [
+							{
+								displayName: new RegExp(`${payload.query}`, "i"),
+								privacy: { $in: privacies },
+								type: { $in: types }
+							}
+						];
+
+						if (payload.includeOwn && payload.userId)
+							filterArray.push({
+								displayName: new RegExp(`${payload.query}`, "i"),
+								type: "user",
+								createdBy: payload.userId
+							});
+
+						return next(null, filterArray, includeObject);
+					},
+
+					(filterArray, includeObject, next) => {
+						const page = payload.page ? payload.page : 1;
+						const pageSize = 15;
+						const skipAmount = pageSize * (page - 1);
+
+						PlaylistsModule.playlistModel.find({ $or: filterArray }).count((err, count) => {
+							if (err) next(err);
+							else {
+								PlaylistsModule.playlistModel
+									.find({ $or: filterArray }, includeObject)
+									.skip(skipAmount)
+									.limit(pageSize)
+									.exec((err, playlists) => {
+										if (err) next(err);
+										else {
+											next(null, {
+												playlists,
+												page,
+												pageSize,
+												skipAmount,
+												count
+											});
+										}
+									});
+							}
+						});
+					},
+
+					(data, next) => {
+						if (data.playlists.length > 0) next(null, data);
+						else next("No playlists found");
+					}
+				],
+				(err, data) => {
+					if (err && err !== true) return reject(new Error(err));
+					return resolve(data);
+				}
+			)
+		);
+	}
+
+	/**
 	 * Clears and refills a station playlist
 	 *
 	 * @param {object} payload - object that contains the payload

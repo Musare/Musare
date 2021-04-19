@@ -58,8 +58,8 @@
 							/>
 						</td>
 						<td>
-							<a class="button is-info" @click="edit(station)"
-								>Edit</a
+							<a class="button is-info" @click="manage(station)"
+								>Manage</a
 							>
 							<confirm @confirm="removeStation(index)">
 								<a class="button is-danger">Remove</a>
@@ -177,11 +177,16 @@
 			</div>
 		</div>
 
-		<edit-station
-			v-if="modals.editStation"
+		<request-song v-if="modals.requestSong" />
+		<edit-playlist v-if="modals.editPlaylist" />
+		<create-playlist v-if="modals.createPlaylist" />
+		<manage-station
+			v-if="modals.manageStation"
 			:station-id="editingStationId"
 			sector="admin"
 		/>
+		<report v-if="modals.report" />
+		<edit-song v-if="modals.editSong" song-type="songs" sector="admin" />
 	</div>
 </template>
 
@@ -195,7 +200,13 @@ import ws from "@/ws";
 
 export default {
 	components: {
-		EditStation: () => import("@/components/modals/EditStation.vue"),
+		RequestSong: () => import("@/components/modals/RequestSong.vue"),
+		EditPlaylist: () => import("@/components/modals/EditPlaylist.vue"),
+		CreatePlaylist: () => import("@/components/modals/CreatePlaylist.vue"),
+		ManageStation: () =>
+			import("@/components/modals/ManageStation/index.vue"),
+		Report: () => import("@/components/modals/Report.vue"),
+		EditSong: () => import("@/components/modals/EditSong.vue"),
 		UserIdToUsername,
 		Confirm
 	},
@@ -279,9 +290,9 @@ export default {
 				}
 			);
 		},
-		edit(station) {
+		manage(station) {
 			this.editingStationId = station._id;
-			this.openModal("editStation");
+			this.openModal("manageStation");
 		},
 		addGenre() {
 			const genre = this.$refs["new-genre"].value.toLowerCase().trim();
@@ -329,7 +340,7 @@ export default {
 		},
 		...mapActions("modalVisibility", ["openModal"]),
 		...mapActions("admin/stations", [
-			"editStation",
+			"manageStation",
 			"loadStations",
 			"stationRemoved",
 			"stationAdded"

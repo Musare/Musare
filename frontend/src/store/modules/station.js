@@ -2,7 +2,7 @@
 
 const state = {
 	station: {},
-	privatePlaylistQueueSelected: null,
+	partyPlaylists: [],
 	editing: {},
 	userCount: 0,
 	users: {
@@ -15,7 +15,9 @@ const state = {
 	songsList: [],
 	stationPaused: true,
 	localPaused: false,
-	noSong: true
+	noSong: true,
+	includedPlaylists: [],
+	excludedPlaylists: []
 };
 
 const getters = {};
@@ -23,6 +25,9 @@ const getters = {};
 const actions = {
 	joinStation: ({ commit }, station) => {
 		commit("joinStation", station);
+	},
+	leaveStation: ({ commit }, station) => {
+		commit("leaveStation", station);
 	},
 	editStation: ({ commit }, station) => {
 		commit("editStation", station);
@@ -57,17 +62,27 @@ const actions = {
 	updateNoSong: ({ commit }, noSong) => {
 		commit("updateNoSong", noSong);
 	},
-	updatePrivatePlaylistQueueSelected: ({ commit }, status) => {
-		commit("updatePrivatePlaylistQueueSelected", status);
+	updatePartyPlaylists: ({ commit }, playlists) => {
+		commit("updatePartyPlaylists", playlists);
 	},
 	updateIfStationIsFavorited: ({ commit }, { isFavorited }) => {
 		commit("updateIfStationIsFavorited", isFavorited);
+	},
+	setIncludedPlaylists: ({ commit }, includedPlaylists) => {
+		commit("setIncludedPlaylists", includedPlaylists);
+	},
+	setExcludedPlaylists: ({ commit }, excludedPlaylists) => {
+		commit("setExcludedPlaylists", excludedPlaylists);
 	}
 };
 
 const mutations = {
 	joinStation(state, station) {
 		state.station = { ...station };
+	},
+	leaveStation(state) {
+		state.station = {};
+		state.partyPlaylists = [];
 	},
 	editStation(state, station) {
 		state.editing = { ...station };
@@ -116,11 +131,17 @@ const mutations = {
 	updateNoSong(state, noSong) {
 		state.noSong = noSong;
 	},
-	updatePrivatePlaylistQueueSelected(state, status) {
-		state.privatePlaylistQueueSelected = status;
+	updatePartyPlaylists(state, playlists) {
+		state.partyPlaylists = playlists;
 	},
 	updateIfStationIsFavorited(state, isFavorited) {
 		state.station.isFavorited = isFavorited;
+	},
+	setIncludedPlaylists(state, includedPlaylists) {
+		state.includedPlaylists = JSON.parse(JSON.stringify(includedPlaylists));
+	},
+	setExcludedPlaylists(state, excludedPlaylists) {
+		state.excludedPlaylists = JSON.parse(JSON.stringify(excludedPlaylists));
 	}
 };
 

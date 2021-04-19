@@ -912,7 +912,9 @@ export default {
 						// privatePlaylist: station.privatePlaylist,
 						// genres: station.genres,
 						// blacklistedGenres: station.blacklistedGenres,
-						theme: station.theme
+						theme: station.theme,
+						paused: station.paused,
+						currentSong: station.currentSong
 					};
 
 					next(null, data);
@@ -2895,6 +2897,39 @@ export default {
 				},
 
 				(song, station, next) => {
+					const excludedPlaylists = [];
+					async.eachLimit(
+						station.excludedPlaylists,
+						1,
+						(playlistId, next) => {
+							PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+								.then(playlist => {
+									excludedPlaylists.push(playlist);
+									next();
+								})
+								.catch(next);
+						},
+						err => {
+							next(err, song, station, excludedPlaylists);
+						}
+					);
+				},
+
+				(song, station, excludedPlaylists, next) => {
+					const excludedSongs = excludedPlaylists
+						.flatMap(excludedPlaylist => excludedPlaylist.songs)
+						.reduce(
+							(items, item) =>
+								items.find(x => x.youtubeId === item.youtubeId) ? [...items] : [...items, item],
+							[]
+						);
+
+					if (excludedSongs.find(excludedSong => excludedSong._id.toString() === song._id.toString()))
+						next("That song is in an excluded playlist and cannot be played.");
+					else next(null, song, station);
+				},
+
+				(song, station, next) => {
 					song.requestedBy = session.userId;
 					song.requestedAt = Date.now();
 					let totalDuration = 0;
@@ -3207,6 +3242,274 @@ export default {
 				return cb({
 					status: "success",
 					message: "Successfully repositioned song in queue."
+				});
+			}
+		);
+	}),
+
+	/**
+	 * Includes a playlist in a station
+	 *
+	 * @param session
+	 * @param stationId - the station id
+	 * @param playlistId - the playlist id
+	 * @param cb
+	 */
+	includePlaylist: isOwnerRequired(async function includePlaylist(session, stationId, playlistId, cb) {
+		async.waterfall(
+			[
+				next => {
+					StationsModule.runJob("GET_STATION", { stationId }, this)
+						.then(station => next(null, station))
+						.catch(next);
+				},
+
+				(station, next) => {
+					if (!station) return next("Station not found.");
+					if (station.includedPlaylists.indexOf(playlistId) !== -1)
+						return next("That playlist is already included.");
+					return next();
+				},
+
+				next => {
+					StationsModule.runJob("INCLUDE_PLAYLIST", { stationId, playlistId }, this)
+						.then(() => {
+							next();
+						})
+						.catch(next);
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"STATIONS_INCLUDE_PLAYLIST",
+						`Including playlist "${playlistId}" for station "${stationId}" failed. "${err}"`
+					);
+					return cb({ status: "error", message: err });
+				}
+
+				this.log(
+					"SUCCESS",
+					"STATIONS_INCLUDE_PLAYLIST",
+					`Including playlist "${playlistId}" for station "${stationId}" successfully.`
+				);
+
+				PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();
+
+				// CacheModule.runJob("PUB", {
+				// 	channel: "privatePlaylist.selected",
+				// 	value: {
+				// 		playlistId,
+				// 		stationId
+				// 	}
+				// });
+
+				return cb({
+					status: "success",
+					message: "Successfully included playlist."
+				});
+			}
+		);
+	}),
+
+	/**
+	 * Remove included a playlist from a station
+	 *
+	 * @param session
+	 * @param stationId - the station id
+	 * @param playlistId - the playlist id
+	 * @param cb
+	 */
+	removeIncludedPlaylist: isOwnerRequired(async function removeIncludedPlaylist(session, stationId, playlistId, cb) {
+		async.waterfall(
+			[
+				next => {
+					StationsModule.runJob("GET_STATION", { stationId }, this)
+						.then(station => next(null, station))
+						.catch(next);
+				},
+
+				(station, next) => {
+					if (!station) return next("Station not found.");
+					if (station.includedPlaylists.indexOf(playlistId) === -1)
+						return next("That playlist is not included.");
+					return next();
+				},
+
+				next => {
+					StationsModule.runJob("REMOVE_INCLUDED_PLAYLIST", { stationId, playlistId }, this)
+						.then(() => {
+							next();
+						})
+						.catch(next);
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"STATIONS_REMOVE_INCLUDED_PLAYLIST",
+						`Removing included playlist "${playlistId}" for station "${stationId}" failed. "${err}"`
+					);
+					return cb({ status: "error", message: err });
+				}
+
+				this.log(
+					"SUCCESS",
+					"STATIONS_REMOVE_INCLUDED_PLAYLIST",
+					`Removing included playlist "${playlistId}" for station "${stationId}" successfully.`
+				);
+
+				PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();
+
+				// CacheModule.runJob("PUB", {
+				// 	channel: "privatePlaylist.selected",
+				// 	value: {
+				// 		playlistId,
+				// 		stationId
+				// 	}
+				// });
+
+				return cb({
+					status: "success",
+					message: "Successfully removed included playlist."
+				});
+			}
+		);
+	}),
+
+	/**
+	 * Excludes a playlist in a station
+	 *
+	 * @param session
+	 * @param stationId - the station id
+	 * @param playlistId - the playlist id
+	 * @param cb
+	 */
+	excludePlaylist: isOwnerRequired(async function excludePlaylist(session, stationId, playlistId, cb) {
+		async.waterfall(
+			[
+				next => {
+					StationsModule.runJob("GET_STATION", { stationId }, this)
+						.then(station => next(null, station))
+						.catch(next);
+				},
+
+				(station, next) => {
+					if (!station) return next("Station not found.");
+					if (station.excludedPlaylists.indexOf(playlistId) !== -1)
+						return next("That playlist is already excluded.");
+					return next();
+				},
+
+				next => {
+					StationsModule.runJob("EXCLUDE_PLAYLIST", { stationId, playlistId }, this)
+						.then(() => {
+							next();
+						})
+						.catch(next);
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"STATIONS_EXCLUDE_PLAYLIST",
+						`Excluding playlist "${playlistId}" for station "${stationId}" failed. "${err}"`
+					);
+					return cb({ status: "error", message: err });
+				}
+
+				this.log(
+					"SUCCESS",
+					"STATIONS_EXCLUDE_PLAYLIST",
+					`Excluding playlist "${playlistId}" for station "${stationId}" successfully.`
+				);
+
+				PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();
+
+				// CacheModule.runJob("PUB", {
+				// 	channel: "privatePlaylist.selected",
+				// 	value: {
+				// 		playlistId,
+				// 		stationId
+				// 	}
+				// });
+
+				return cb({
+					status: "success",
+					message: "Successfully excluded playlist."
+				});
+			}
+		);
+	}),
+
+	/**
+	 * Remove excluded a playlist from a station
+	 *
+	 * @param session
+	 * @param stationId - the station id
+	 * @param playlistId - the playlist id
+	 * @param cb
+	 */
+	removeExcludedPlaylist: isOwnerRequired(async function removeExcludedPlaylist(session, stationId, playlistId, cb) {
+		async.waterfall(
+			[
+				next => {
+					StationsModule.runJob("GET_STATION", { stationId }, this)
+						.then(station => next(null, station))
+						.catch(next);
+				},
+
+				(station, next) => {
+					if (!station) return next("Station not found.");
+					if (station.excludedPlaylists.indexOf(playlistId) === -1)
+						return next("That playlist is not excluded.");
+					return next();
+				},
+
+				next => {
+					StationsModule.runJob("REMOVE_EXCLUDED_PLAYLIST", { stationId, playlistId }, this)
+						.then(() => {
+							next();
+						})
+						.catch(next);
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"STATIONS_REMOVE_EXCLUDED_PLAYLIST",
+						`Removing excluded playlist "${playlistId}" for station "${stationId}" failed. "${err}"`
+					);
+					return cb({ status: "error", message: err });
+				}
+
+				this.log(
+					"SUCCESS",
+					"STATIONS_REMOVE_EXCLUDED_PLAYLIST",
+					`Removing excluded playlist "${playlistId}" for station "${stationId}" successfully.`
+				);
+
+				PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();
+
+				// CacheModule.runJob("PUB", {
+				// 	channel: "privatePlaylist.selected",
+				// 	value: {
+				// 		playlistId,
+				// 		stationId
+				// 	}
+				// });
+
+				return cb({
+					status: "success",
+					message: "Successfully removed excluded playlist."
 				});
 			}
 		);
