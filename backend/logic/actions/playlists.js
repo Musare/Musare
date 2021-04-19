@@ -246,21 +246,21 @@ export default {
 						page
 					})
 						.then(response => {
-							next(null, response.playlists);
+							next(null, response);
 						})
 						.catch(err => {
 							next(err);
 						});
 				}
 			],
-			async (err, playlists) => {
+			async (err, data) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "PLAYLISTS_SEARCH_COMMUNITY", `Searching playlists failed. "${err}"`);
 					return cb({ status: "error", message: err });
 				}
 				this.log("SUCCESS", "PLAYLISTS_SEARCH_COMMUNITY", "Searching playlists successful.");
-				return cb({ status: "success", data: { playlists } });
+				return cb({ status: "success", data });
 			}
 		);
 	}),
@@ -290,21 +290,21 @@ export default {
 						page
 					})
 						.then(response => {
-							next(null, response.playlists);
+							next(null, response);
 						})
 						.catch(err => {
 							next(err);
 						});
 				}
 			],
-			async (err, playlists) => {
+			async (err, data) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "PLAYLISTS_SEARCH_OFFICIAL", `Searching playlists failed. "${err}"`);
 					return cb({ status: "error", message: err });
 				}
 				this.log("SUCCESS", "PLAYLISTS_SEARCH_OFFICIAL", "Searching playlists successful.");
-				return cb({ status: "success", data: { playlists } });
+				return cb({ status: "success", data });
 			}
 		);
 	}),

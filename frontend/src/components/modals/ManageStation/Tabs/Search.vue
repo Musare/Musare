@@ -36,6 +36,13 @@
 						>
 					</div>
 				</song-item>
+				<button
+					v-if="resultsLeftCount > 0"
+					class="button is-primary"
+					@click="searchForMusareSongs(musareSearch.page + 1)"
+				>
+					Load {{ nextPageResultsCount }} more results
+				</button>
 			</div>
 		</div>
 		<div class="youtube-search">
@@ -130,11 +137,21 @@ export default {
 		return {
 			musareSearch: {
 				query: "",
+				searchedQuery: "",
+				page: 0,
+				count: 0,
+				resultsLeft: 0,
 				results: []
 			}
 		};
 	},
 	computed: {
+		resultsLeftCount() {
+			return this.musareSearch.count - this.musareSearch.results.length;
+		},
+		nextPageResultsCount() {
+			return Math.min(this.musareSearch.pageSize, this.resultsLeftCount);
+		},
 		...mapState("modals/manageStation", {
 			station: state => state.station,
 			originalStation: state => state.originalStation
@@ -176,16 +193,45 @@ export default {
 			}
 		},
 		searchForMusareSongs(page) {
-			const { query } = this.musareSearch;
+			if (
+				this.musareSearch.page >= page ||
+				this.musareSearch.searchedQuery !== this.musareSearch.query
+			) {
+				this.musareSearch.results = [];
+				this.musareSearch.page = 0;
+				this.musareSearch.count = 0;
+				this.musareSearch.resultsLeft = 0;
+				this.musareSearch.pageSize = 0;
+			}
 
-			this.socket.dispatch("songs.searchOfficial", query, page, res => {
-				if (res.status === "success") {
-					this.musareSearch.results = res.data.songs;
-				} else if (res.status === "error") {
-					this.musareSearch.results = [];
-					new Toast(res.message);
+			this.musareSearch.searchedQuery = this.musareSearch.query;
+			this.socket.dispatch(
+				"songs.searchOfficial",
+				this.musareSearch.query,
+				page,
+				res => {
+					const { data } = res;
+					const { count, pageSize, songs } = data;
+					if (res.status === "success") {
+						this.musareSearch.results = [
+							...this.musareSearch.results,
+							...songs
+						];
+						this.musareSearch.page = page;
+						this.musareSearch.count = count;
+						this.musareSearch.resultsLeft =
+							count - this.musareSearch.results.length;
+						this.musareSearch.pageSize = pageSize;
+					} else if (res.status === "error") {
+						this.musareSearch.results = [];
+						this.musareSearch.page = 0;
+						this.musareSearch.count = 0;
+						this.musareSearch.resultsLeft = 0;
+						this.musareSearch.pageSize = 0;
+						new Toast(res.message);
+					}
 				}
-			});
+			);
 		}
 	}
 };

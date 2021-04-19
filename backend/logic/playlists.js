@@ -1029,21 +1029,40 @@ class _PlaylistsModule extends CoreClass {
 
 					(filterArray, includeObject, next) => {
 						const page = payload.page ? payload.page : 1;
-						PlaylistsModule.playlistModel
-							.find({ $or: filterArray }, includeObject)
-							.skip(15 * (page - 1))
-							.limit(15)
-							.exec(next);
+						const pageSize = 15;
+						const skipAmount = pageSize * (page - 1);
+
+						PlaylistsModule.playlistModel.find({ $or: filterArray }).count((err, count) => {
+							if (err) next(err);
+							else {
+								PlaylistsModule.playlistModel
+									.find({ $or: filterArray }, includeObject)
+									.skip(skipAmount)
+									.limit(pageSize)
+									.exec((err, playlists) => {
+										if (err) next(err);
+										else {
+											next(null, {
+												playlists,
+												page,
+												pageSize,
+												skipAmount,
+												count
+											});
+										}
+									});
+							}
+						});
 					},
 
-					(playlists, next) => {
-						if (playlists.length > 0) next(null, playlists);
+					(data, next) => {
+						if (data.playlists.length > 0) next(null, data);
 						else next("No playlists found");
 					}
 				],
-				(err, playlists) => {
+				(err, data) => {
 					if (err && err !== true) return reject(new Error(err));
-					return resolve({ playlists });
+					return resolve(data);
 				}
 			)
 		);

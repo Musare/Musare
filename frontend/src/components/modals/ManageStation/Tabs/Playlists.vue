@@ -179,6 +179,13 @@
 							>
 						</div>
 					</playlist-item>
+					<button
+						v-if="resultsLeftCount > 0"
+						class="button is-primary"
+						@click="searchForPlaylists(search.page + 1)"
+					>
+						Load {{ nextPageResultsCount }} more results
+					</button>
 				</div>
 			</div>
 			<div
@@ -302,6 +309,10 @@ export default {
 			tab: "current",
 			search: {
 				query: "",
+				searchedQuery: "",
+				page: 0,
+				count: 0,
+				resultsLeft: 0,
 				results: []
 			}
 		};
@@ -320,6 +331,12 @@ export default {
 				return this.partyPlaylists;
 			}
 			return this.includedPlaylists;
+		},
+		resultsLeftCount() {
+			return this.search.count - this.search.results.length;
+		},
+		nextPageResultsCount() {
+			return Math.min(this.search.pageSize, this.resultsLeftCount);
 		},
 		...mapState({
 			loggedIn: state => state.user.auth.loggedIn,
@@ -504,17 +521,43 @@ export default {
 			return selected;
 		},
 		searchForPlaylists(page) {
+			if (
+				this.search.page >= page ||
+				this.search.searchedQuery !== this.search.query
+			) {
+				this.search.results = [];
+				this.search.page = 0;
+				this.search.count = 0;
+				this.search.resultsLeft = 0;
+				this.search.pageSize = 0;
+			}
+
 			const { query } = this.search;
 			const action =
 				this.station.type === "official"
 					? "playlists.searchOfficial"
 					: "playlists.searchCommunity";
 
+			this.search.searchedQuery = this.search.query;
 			this.socket.dispatch(action, query, page, res => {
+				const { data } = res;
+				const { count, pageSize, playlists } = data;
 				if (res.status === "success") {
-					this.search.results = res.data.playlists;
+					this.search.results = [
+						...this.search.results,
+						...playlists
+					];
+					this.search.page = page;
+					this.search.count = count;
+					this.search.resultsLeft =
+						count - this.search.results.length;
+					this.search.pageSize = pageSize;
 				} else if (res.status === "error") {
 					this.search.results = [];
+					this.search.page = 0;
+					this.search.count = 0;
+					this.search.resultsLeft = 0;
+					this.search.pageSize = 0;
 					new Toast(res.message);
 				}
 			});

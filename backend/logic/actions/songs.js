@@ -591,21 +591,21 @@ export default {
 						page
 					})
 						.then(response => {
-							next(null, response.songs);
+							next(null, response);
 						})
 						.catch(err => {
 							next(err);
 						});
 				}
 			],
-			async (err, songs) => {
+			async (err, data) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "SONGS_SEARCH_OFFICIAL", `Searching songs failed. "${err}"`);
 					return cb({ status: "error", message: err });
 				}
 				this.log("SUCCESS", "SONGS_SEARCH_OFFICIAL", "Searching songs successful.");
-				return cb({ status: "success", data: { songs } });
+				return cb({ status: "success", data });
 			}
 		);
 	}),

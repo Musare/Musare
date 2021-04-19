@@ -446,18 +446,36 @@ class _SongsModule extends CoreClass {
 
 					(filterArray, next) => {
 						const page = payload.page ? payload.page : 1;
-						SongsModule.SongModel.find({ $or: filterArray })
-							.skip(15 * (page - 1))
-							.limit(15)
-							.exec(next);
+						const pageSize = 15;
+						const skipAmount = pageSize * (page - 1);
+
+						SongsModule.SongModel.find({ $or: filterArray }).count((err, count) => {
+							if (err) next(err);
+							else {
+								SongsModule.SongModel.find({ $or: filterArray })
+									.skip(skipAmount)
+									.limit(pageSize)
+									.exec((err, songs) => {
+										if (err) next(err);
+										else {
+											next(null, {
+												songs,
+												page,
+												pageSize,
+												skipAmount,
+												count
+											});
+										}
+									});
+							}
+						});
 					},
 
-					(songs, next) => {
-						if (songs.length === 0) next("No songs found");
+					(data, next) => {
+						if (data.songs.length === 0) next("No songs found");
 						else if (payload.trimmed) {
-							next(
-								null,
-								songs.map(song => {
+							next(null, {
+								songs: data.songs.map(song => {
 									const { _id, youtubeId, title, artists, thumbnail, duration, status } = song;
 									return {
 										_id,
@@ -468,14 +486,15 @@ class _SongsModule extends CoreClass {
 										duration,
 										status
 									};
-								})
-							);
-						} else next(null, songs);
+								}),
+								...data
+							});
+						} else next(null, data);
 					}
 				],
-				(err, songs) => {
+				(err, data) => {
 					if (err && err !== true) return reject(new Error(err));
-					return resolve({ songs });
+					return resolve(data);
 				}
 			)
 		);
