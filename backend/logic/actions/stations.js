@@ -2897,6 +2897,39 @@ export default {
 				},
 
 				(song, station, next) => {
+					const excludedPlaylists = [];
+					async.eachLimit(
+						station.excludedPlaylists,
+						1,
+						(playlistId, next) => {
+							PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+								.then(playlist => {
+									excludedPlaylists.push(playlist);
+									next();
+								})
+								.catch(next);
+						},
+						err => {
+							next(err, song, station, excludedPlaylists);
+						}
+					);
+				},
+
+				(song, station, excludedPlaylists, next) => {
+					const excludedSongs = excludedPlaylists
+						.flatMap(excludedPlaylist => excludedPlaylist.songs)
+						.reduce(
+							(items, item) =>
+								items.find(x => x.youtubeId === item.youtubeId) ? [...items] : [...items, item],
+							[]
+						);
+
+					if (excludedSongs.find(excludedSong => excludedSong._id.toString() === song._id.toString()))
+						next("That song is in an excluded playlist and cannot be played.");
+					else next(null, song, station);
+				},
+
+				(song, station, next) => {
 					song.requestedBy = session.userId;
 					song.requestedAt = Date.now();
 					let totalDuration = 0;
