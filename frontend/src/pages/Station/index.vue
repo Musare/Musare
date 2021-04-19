@@ -820,16 +820,6 @@ export default {
 				if (this.playerReady) this.player.pauseVideo();
 				this.updateNoSong(true);
 			}
-
-			let isInQueue = false;
-
-			this.songsList.forEach(queueSong => {
-				if (queueSong.requestedBy === this.userId) isInQueue = true;
-			});
-
-			if (!isInQueue && this.partyPlaylists) {
-				this.addPartyPlaylistSongToQueue();
-			}
 		});
 
 		this.socket.on("event:stations.pause", res => {
@@ -904,6 +894,8 @@ export default {
 					: null;
 
 			this.updateNextSong(nextSong);
+
+			this.addPartyPlaylistSongToQueue();
 		});
 
 		this.socket.on("event:queue.repositionSong", res => {

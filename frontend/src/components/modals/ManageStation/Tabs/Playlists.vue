@@ -80,7 +80,7 @@
 						</div>
 					</playlist-item>
 				</div>
-				<p v-else class="nothing-here-text scrollable-list">
+				<p v-else class="has-text-centered scrollable-list">
 					No playlists currently selected.
 				</p>
 			</div>
@@ -279,7 +279,7 @@
 						</playlist-item>
 					</transition-group>
 				</draggable>
-				<p v-else class="nothing-here-text scrollable-list">
+				<p v-else class="has-text-centered scrollable-list">
 					You don't have any playlists!
 				</p>
 			</div>

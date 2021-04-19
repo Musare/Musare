@@ -1,11 +1,11 @@
 <template>
 	<div class="station-blacklist">
-		<p class="text-centered">
+		<p class="has-text-centered">
 			Blacklist a playlist to prevent all of its songs playing in this
-			station, or blacklist a song to prevent it playing.
+			station.
 		</p>
 		<div class="tabs-container">
-			<div class="tab-selection">
+			<!-- <div class="tab-selection">
 				<button
 					class="button is-default"
 					:class="{ selected: tab === 'playlists' }"
@@ -20,7 +20,7 @@
 				>
 					Songs
 				</button>
-			</div>
+			</div> -->
 			<div class="tab" v-show="tab === 'playlists'">
 				<div v-if="excludedPlaylists.length > 0">
 					<playlist-item
@@ -56,13 +56,13 @@
 						</div>
 					</playlist-item>
 				</div>
-				<p v-else class="nothing-here-text scrollable-list">
+				<p v-else class="has-text-centered scrollable-list">
 					No playlists currently blacklisted.
 				</p>
 			</div>
-			<div class="tab" v-show="tab === 'songs'">
+			<!-- <div class="tab" v-show="tab === 'songs'">
 				Blacklisting songs has yet to be added.
-			</div>
+			</div> -->
 		</div>
 	</div>
 </template>

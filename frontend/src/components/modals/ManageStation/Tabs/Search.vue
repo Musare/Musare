@@ -38,7 +38,7 @@
 				</song-item>
 				<button
 					v-if="resultsLeftCount > 0"
-					class="button is-primary"
+					class="button is-primary load-more-button"
 					@click="searchForMusareSongs(musareSearch.page + 1)"
 				>
 					Load {{ nextPageResultsCount }} more results

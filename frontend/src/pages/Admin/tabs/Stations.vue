@@ -177,11 +177,16 @@
 			</div>
 		</div>
 
+		<request-song v-if="modals.requestSong" />
+		<edit-playlist v-if="modals.editPlaylist" />
+		<create-playlist v-if="modals.createPlaylist" />
 		<manage-station
 			v-if="modals.manageStation"
 			:station-id="editingStationId"
 			sector="admin"
 		/>
+		<report v-if="modals.report" />
+		<edit-song v-if="modals.editSong" song-type="songs" sector="admin" />
 	</div>
 </template>
 
@@ -195,8 +200,13 @@ import ws from "@/ws";
 
 export default {
 	components: {
+		RequestSong: () => import("@/components/modals/RequestSong.vue"),
+		EditPlaylist: () => import("@/components/modals/EditPlaylist.vue"),
+		CreatePlaylist: () => import("@/components/modals/CreatePlaylist.vue"),
 		ManageStation: () =>
 			import("@/components/modals/ManageStation/index.vue"),
+		Report: () => import("@/components/modals/Report.vue"),
+		EditSong: () => import("@/components/modals/EditSong.vue"),
 		UserIdToUsername,
 		Confirm
 	},
