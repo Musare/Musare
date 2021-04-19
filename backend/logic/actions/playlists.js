@@ -224,9 +224,10 @@ export default {
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} query - the query
+	 * @param {string} query - the page
 	 * @param {Function} cb - gets called with the result
 	 */
-	searchCommunity: isLoginRequired(async function searchCommunity(session, query, cb) {
+	searchCommunity: isLoginRequired(async function searchCommunity(session, query, page, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -241,7 +242,8 @@ export default {
 						includeGenre: true,
 						includeOwn: true,
 						includeSongs: true,
-						userId: session.userId
+						userId: session.userId,
+						page
 					})
 						.then(response => {
 							next(null, response.playlists);
@@ -268,9 +270,10 @@ export default {
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} query - the query
+	 * @param {string} query - the page
 	 * @param {Function} cb - gets called with the result
 	 */
-	searchOfficial: isAdminRequired(async function searchOfficial(session, query, cb) {
+	searchOfficial: isAdminRequired(async function searchOfficial(session, query, page, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -283,7 +286,8 @@ export default {
 						query,
 						includeGenre: true,
 						includePrivate: true,
-						includeSongs: true
+						includeSongs: true,
+						page
 					})
 						.then(response => {
 							next(null, response.playlists);

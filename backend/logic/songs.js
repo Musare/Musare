@@ -416,6 +416,7 @@ class _SongsModule extends CoreClass {
 	 * @param {string} payload.includeUnverified - include unverified songs
 	 * @param {string} payload.includeVerified - include verified songs
 	 * @param {string} payload.trimmed - include trimmed songs
+	 * @param {string} payload.page - page (default 1)
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	SEARCH(payload) {
@@ -444,7 +445,11 @@ class _SongsModule extends CoreClass {
 					},
 
 					(filterArray, next) => {
-						SongsModule.SongModel.find({ $or: filterArray }, next);
+						const page = payload.page ? payload.page : 1;
+						SongsModule.SongModel.find({ $or: filterArray })
+							.skip(15 * (page - 1))
+							.limit(15)
+							.exec(next);
 					},
 
 					(songs, next) => {

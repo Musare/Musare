@@ -9,11 +9,11 @@
 						type="text"
 						placeholder="Enter your song query here..."
 						v-model="musareSearch.query"
-						@keyup.enter="searchForMusareSongs()"
+						@keyup.enter="searchForMusareSongs(1)"
 					/>
 				</p>
 				<p class="control">
-					<a class="button is-info" @click="searchForMusareSongs()"
+					<a class="button is-info" @click="searchForMusareSongs(1)"
 						><i class="material-icons icon-with-button">search</i
 						>Search</a
 					>
@@ -175,10 +175,10 @@ export default {
 				});
 			}
 		},
-		searchForMusareSongs() {
+		searchForMusareSongs(page) {
 			const { query } = this.musareSearch;
 
-			this.socket.dispatch("songs.searchOfficial", query, res => {
+			this.socket.dispatch("songs.searchOfficial", query, page, res => {
 				if (res.status === "success") {
 					this.musareSearch.results = res.data.songs;
 				} else if (res.status === "error") {

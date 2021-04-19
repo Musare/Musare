@@ -93,11 +93,11 @@
 							type="text"
 							placeholder="Enter your playlist query here..."
 							v-model="search.query"
-							@keyup.enter="searchForPlaylists()"
+							@keyup.enter="searchForPlaylists(1)"
 						/>
 					</p>
 					<p class="control">
-						<a class="button is-info" @click="searchForPlaylists()"
+						<a class="button is-info" @click="searchForPlaylists(1)"
 							><i class="material-icons icon-with-button"
 								>search</i
 							>Search</a
@@ -503,14 +503,14 @@ export default {
 			});
 			return selected;
 		},
-		searchForPlaylists() {
+		searchForPlaylists(page) {
 			const { query } = this.search;
 			const action =
 				this.station.type === "official"
 					? "playlists.searchOfficial"
 					: "playlists.searchCommunity";
 
-			this.socket.dispatch(action, query, res => {
+			this.socket.dispatch(action, query, page, res => {
 				if (res.status === "success") {
 					this.search.results = res.data.playlists;
 				} else if (res.status === "error") {

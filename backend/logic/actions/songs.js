@@ -572,9 +572,10 @@ export default {
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} query - the query
+	 * @param {string} page - the page
 	 * @param {Function} cb - gets called with the result
 	 */
-	searchOfficial: isLoginRequired(async function searchOfficial(session, query, cb) {
+	searchOfficial: isLoginRequired(async function searchOfficial(session, query, page, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -586,7 +587,8 @@ export default {
 					SongsModule.runJob("SEARCH", {
 						query,
 						includeVerified: true,
-						trimmed: true
+						trimmed: true,
+						page
 					})
 						.then(response => {
 							next(null, response.songs);

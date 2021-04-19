@@ -991,6 +991,7 @@ class _PlaylistsModule extends CoreClass {
 	 * @param {string} payload.includeOwn - include own user playlists
 	 * @param {string} payload.userId - the user id of the person requesting
 	 * @param {string} payload.includeSongs - include songs
+	 * @param {string} payload.page - page (default 1)
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	SEARCH(payload) {
@@ -1027,7 +1028,12 @@ class _PlaylistsModule extends CoreClass {
 					},
 
 					(filterArray, includeObject, next) => {
-						PlaylistsModule.playlistModel.find({ $or: filterArray }, includeObject, next);
+						const page = payload.page ? payload.page : 1;
+						PlaylistsModule.playlistModel
+							.find({ $or: filterArray }, includeObject)
+							.skip(15 * (page - 1))
+							.limit(15)
+							.exec(next);
 					},
 
 					(playlists, next) => {
