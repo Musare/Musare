@@ -21,7 +21,10 @@
 							class="input"
 							type="email"
 							placeholder="Email..."
-							@keypress="onInput('email')"
+							@keypress="
+								onInput('email') &
+									$parent.submitOnEnter(submitModal, $event)
+							"
 							@paste="onInput('email')"
 							autofocus
 						/>
@@ -42,7 +45,10 @@
 							class="input"
 							type="text"
 							placeholder="Username..."
-							@keypress="onInput('username')"
+							@keypress="
+								onInput('username') &
+									$parent.submitOnEnter(submitModal, $event)
+							"
 							@paste="onInput('username')"
 						/>
 					</p>
@@ -67,13 +73,10 @@
 							ref="password"
 							placeholder="Password..."
 							@keypress="
-								onInput('password') &&
+								onInput('password') &
 									$parent.submitOnEnter(submitModal, $event)
 							"
-							@paste="
-								onInput('password') &&
-									$parent.submitOnEnter(submitModal, $event)
-							"
+							@paste="onInput('password')"
 						/>
 						<a @click="togglePasswordVisibility()">
 							<i class="material-icons">

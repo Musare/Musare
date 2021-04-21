@@ -23,6 +23,9 @@
 								class="input"
 								type="email"
 								placeholder="Email..."
+								@keypress="
+									$parent.submitOnEnter(submitModal, $event)
+								"
 							/>
 						</p>
 
