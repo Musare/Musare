@@ -375,7 +375,8 @@ export default {
 					const { orderOfPlaylists } = preferences;
 
 					const match = {
-						createdBy: userId
+						createdBy: userId,
+						type: "user"
 					};
 
 					// if a playlist order exists
@@ -448,7 +449,8 @@ export default {
 					const { orderOfPlaylists } = preferences;
 
 					const match = {
-						createdBy: session.userId
+						createdBy: session.userId,
+						type: "user"
 					};
 
 					// if non modifiable playlists should be shown as well
