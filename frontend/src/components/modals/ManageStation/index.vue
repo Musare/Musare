@@ -1,5 +1,6 @@
 <template>
 	<modal
+		v-if="station"
 		:title="
 			!isOwnerOrAdmin() && station.partyMode
 				? 'Add Song to Queue'

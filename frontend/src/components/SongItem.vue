@@ -2,6 +2,7 @@
 	<div
 		class="universal-item song-item"
 		:class="{ 'with-duration': duration }"
+		v-if="song"
 	>
 		<div class="thumbnail-and-info">
 			<song-thumbnail :class="{ large: largeThumbnail }" :song="song" />
