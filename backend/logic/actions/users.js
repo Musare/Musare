@@ -438,6 +438,7 @@ export default {
 					next(null, {
 						_id,
 						username,
+						name: username,
 						email: {
 							address: email,
 							verificationToken
@@ -454,7 +455,8 @@ export default {
 				(user, next) => {
 					UtilsModule.runJob("CREATE_GRAVATAR", { email: user.email.address }, this).then(url => {
 						user.avatar = {
-							type: "gravatar",
+							type: "initials",
+							color: "blue",
 							url
 						};
 						next(null, user);
