@@ -332,7 +332,10 @@ class _ActivitiesModule extends CoreClass {
 						const query = {};
 						query[`payload.${payload.type}`] = payload[payload.type];
 
-						activityModel.find(query, ["_id", "payload.message"]).sort({ createdAt: -1 }).exec(next);
+						activityModel
+							.find(query, ["_id", "userId", "payload.message"])
+							.sort({ createdAt: -1 })
+							.exec(next);
 					},
 
 					(activities, next) => {
@@ -368,7 +371,35 @@ class _ActivitiesModule extends CoreClass {
 										{ _id: activity._id },
 										{ $set: { "payload.message": activity.payload.message } }
 									)
-									.then(() => next())
+									.then(() => {
+										WSModule.runJob("SOCKETS_FROM_USER", { userId: activity.userId })
+											.then(sockets =>
+												sockets.forEach(socket =>
+													socket.dispatch("event:activity.update", {
+														data: {
+															activityId: activity._id,
+															message: activity.payload.message
+														}
+													})
+												)
+											)
+											.catch(next);
+
+										WSModule.runJob("EMIT_TO_ROOM", {
+											room: `profile-${activity.userId}-activities`,
+											args: [
+												"event:activity.update",
+												{
+													data: {
+														activityId: activity._id,
+														message: activity.payload.message
+													}
+												}
+											]
+										});
+
+										return next();
+									})
 									.catch(next);
 							},
 							err => next(err)

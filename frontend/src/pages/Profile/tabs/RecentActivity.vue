@@ -97,6 +97,12 @@ export default {
 			}
 		});
 
+		this.socket.on("event:activity.update", res => {
+			this.activities.find(
+				activity => activity._id === res.data.activityId
+			).payload.message = res.data.message;
+		});
+
 		this.socket.on("event:activity.create", res => {
 			this.activities.unshift(res.data.activity);
 			this.offsettedFromNextSet += 1;
