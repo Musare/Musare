@@ -337,9 +337,8 @@ export default {
 				"songs.getSongFromSongId",
 				this.$route.query.songId,
 				res => {
-					if (res.status === "success") {
-						this.edit(res.data.song);
-					} else new Toast("Song with that ID not found");
+					if (res.status === "success") this.edit(res.data.song);
+					else new Toast("Song with that ID not found");
 				}
 			);
 		}

@@ -70,7 +70,7 @@ export default {
 				this.log("SUCCESS", "ACTIVITIES_LENGTH", `Got length of activities for user ${userId} successfully.`);
 
 				return cb({
-					status: "error",
+					status: "success",
 					message: "Successfully obtained length of activities.",
 					data: { length: count }
 				});
