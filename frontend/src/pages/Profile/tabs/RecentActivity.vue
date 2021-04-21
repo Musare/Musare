@@ -21,7 +21,6 @@
 					<div slot="actions">
 						<confirm
 							v-if="userId === myUserId"
-							placement="left"
 							@confirm="hideActivity(activity._id)"
 						>
 							<a content="Hide Activity" v-tippy>
@@ -166,5 +165,9 @@ export default {
 	overflow: auto;
 	min-height: auto;
 	max-height: 570px;
+}
+
+.content a {
+	border-bottom: 0;
 }
 </style>
