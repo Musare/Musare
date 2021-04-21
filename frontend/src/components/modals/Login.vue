@@ -34,7 +34,7 @@
 							<label class="label">Password</label>
 						</p>
 
-						<div id="password-container">
+						<div id="password-visibility-container">
 							<input
 								v-model="password.value"
 								class="input"
@@ -197,20 +197,6 @@ export default {
 	.label,
 	p:not(.help) {
 		color: var(--light-grey-2);
-	}
-}
-
-#password-container {
-	display: flex;
-	align-items: center;
-
-	a {
-		width: 0;
-		margin-left: -30px;
-		z-index: 0;
-		top: 2px;
-		position: relative;
-		color: var(--light-grey-1);
 	}
 }
 

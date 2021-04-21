@@ -52,8 +52,7 @@
 					Enter your password
 				</h2>
 				<p class="content-box-description">
-					We will send a code to your email address to verify your
-					identity.
+					Confirming your password will let us verify your identity.
 				</p>
 
 				<p class="content-box-optional-helper">
@@ -68,7 +67,7 @@
 
 				<div class="content-box-inputs">
 					<div class="control is-grouped input-with-button">
-						<div id="password-container">
+						<div id="password-visibility-container">
 							<input
 								class="input"
 								type="password"
@@ -280,19 +279,8 @@ h2 {
 }
 
 #password-linked {
-	#password-container {
-		display: flex;
-		align-items: center;
-		width: 100%; // new
-
-		a {
-			width: 0;
-			margin-left: -30px;
-			z-index: 0;
-			top: 2px;
-			position: relative;
-			color: var(--light-grey-1);
-		}
+	#password-visibility-container {
+		width: 100%;
 	}
 
 	> a {

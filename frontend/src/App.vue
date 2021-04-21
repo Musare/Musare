@@ -1063,4 +1063,18 @@ h4.section-title {
 		width: 175px;
 	}
 }
+
+#password-visibility-container {
+	display: flex;
+	align-items: center;
+
+	a {
+		width: 0;
+		margin-left: -30px;
+		z-index: 0;
+		top: 2px;
+		position: relative;
+		color: var(--light-grey-1);
+	}
+}
 </style>

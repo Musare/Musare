@@ -131,16 +131,33 @@
 						<div class="content-box-inputs">
 							<p class="control is-expanded">
 								<label for="new-password">New password</label>
+							</p>
+
+							<div id="password-visibility-container">
 								<input
 									class="input"
 									id="new-password"
 									type="password"
+									ref="password"
 									placeholder="Enter password here..."
 									v-model="password.value"
 									@keypress="onInput('password')"
 									@paste="onInput('password')"
 								/>
-							</p>
+								<a
+									@click="
+										togglePasswordVisibility('password')
+									"
+								>
+									<i class="material-icons">
+										{{
+											!password.visible
+												? "visibility"
+												: "visibility_off"
+										}}
+									</i>
+								</a>
+							</div>
 
 							<transition name="fadein-helpbox">
 								<input-help-box
@@ -157,17 +174,36 @@
 								<label for="new-password-again"
 									>New password again</label
 								>
+							</p>
+
+							<div id="password-visibility-container">
 								<input
 									class="input"
 									id="new-password-again"
 									type="password"
+									ref="passwordAgain"
 									placeholder="Enter password here..."
 									v-model="passwordAgain.value"
 									@keyup.enter="changePassword()"
 									@keypress="onInput('passwordAgain')"
 									@paste="onInput('passwordAgain')"
 								/>
-							</p>
+								<a
+									@click="
+										togglePasswordVisibility(
+											'passwordAgain'
+										)
+									"
+								>
+									<i class="material-icons">
+										{{
+											!passwordAgain.visible
+												? "visibility"
+												: "visibility_off"
+										}}
+									</i>
+								</a>
+							</div>
 
 							<transition name="fadein-helpbox">
 								<input-help-box
@@ -259,6 +295,7 @@ export default {
 			},
 			password: {
 				value: "",
+				visible: false,
 				entered: false,
 				valid: false,
 				message:
@@ -266,6 +303,7 @@ export default {
 			},
 			passwordAgain: {
 				value: "",
+				visible: false,
 				entered: false,
 				valid: false,
 				message: "This password must match."
@@ -318,6 +356,15 @@ export default {
 		this.email.value = this.accountEmail;
 	},
 	methods: {
+		togglePasswordVisibility(ref) {
+			if (this.$refs[ref].type === "password") {
+				this.$refs[ref].type = "text";
+				this[ref].visible = true;
+			} else {
+				this.$refs[ref].type = "password";
+				this[ref].visible = false;
+			}
+		},
 		checkPasswordMatch(password, passwordAgain) {
 			if (passwordAgain !== password) {
 				this.passwordAgain.message = "This password must match.";

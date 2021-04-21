@@ -10,29 +10,56 @@
 			<hr class="section-horizontal-rule" />
 
 			<p class="control is-expanded margin-top-zero">
-				<label for="previous-password">Previous password</label>
-				<input
-					class="input"
-					id="previous-password"
-					type="password"
-					placeholder="Enter your old password here..."
-					v-model="previousPassword"
-				/>
+				<label for="old-password">Previous password</label>
 			</p>
 
-			<p id="new-password-again-input" class="control is-expanded">
+			<div id="password-visibility-container">
+				<input
+					class="input"
+					id="old-password"
+					ref="oldPassword"
+					type="password"
+					placeholder="Enter your old password here..."
+					v-model="validation.oldPassword.value"
+				/>
+				<a @click="togglePasswordVisibility('oldPassword')">
+					<i class="material-icons">
+						{{
+							!validation.oldPassword.visible
+								? "visibility"
+								: "visibility_off"
+						}}
+					</i>
+				</a>
+			</div>
+
+			<p class="control is-expanded">
 				<label for="new-password">New password</label>
+			</p>
+
+			<div id="password-visibility-container">
 				<input
 					class="input"
 					id="new-password"
 					type="password"
+					ref="newPassword"
 					placeholder="Enter new password here..."
 					v-model="validation.newPassword.value"
 					@keyup.enter="changePassword()"
 					@keypress="onInput('newPassword')"
 					@paste="onInput('newPassword')"
 				/>
-			</p>
+
+				<a @click="togglePasswordVisibility('newPassword')">
+					<i class="material-icons">
+						{{
+							!validation.newPassword.visible
+								? "visibility"
+								: "visibility_off"
+						}}
+					</i>
+				</a>
+			</div>
 
 			<transition name="fadein-helpbox">
 				<input-help-box
@@ -149,10 +176,14 @@ export default {
 	data() {
 		return {
 			apiDomain: "",
-			previousPassword: "",
 			validation: {
+				oldPassword: {
+					value: "",
+					visible: false
+				},
 				newPassword: {
 					value: "",
+					visible: false,
 					valid: false,
 					entered: false,
 					message:
@@ -192,26 +223,35 @@ export default {
 		this.apiDomain = await lofig.get("apiDomain");
 	},
 	methods: {
+		togglePasswordVisibility(ref) {
+			if (this.$refs[ref].type === "password") {
+				this.$refs[ref].type = "text";
+				this.validation[ref].visible = true;
+			} else {
+				this.$refs[ref].type = "password";
+				this.validation[ref].visible = false;
+			}
+		},
 		onInput(inputName) {
 			this.validation[inputName].entered = true;
 		},
 		changePassword() {
 			const newPassword = this.validation.newPassword.value;
 
-			if (this.previousPassword === "")
-				return new Toast("Please enter a previous password.");
+			if (this.validation.oldPassword.value === "")
+				return new Toast("Please enter your previous password.");
 
 			if (!this.validation.newPassword.valid)
 				return new Toast("Please enter a valid new password.");
 
 			return this.socket.dispatch(
 				"users.updatePassword",
-				this.previousPassword,
+				this.validation.oldPassword.value,
 				newPassword,
 				res => {
 					if (res.status !== "success") new Toast(res.message);
 					else {
-						this.previousPassword = "";
+						this.validation.prevPassword.value = "";
 						this.validation.newPassword.value = "";
 
 						new Toast("Successfully changed password.");
