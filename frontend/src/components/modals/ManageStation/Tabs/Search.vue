@@ -59,10 +59,7 @@
 					/>
 				</p>
 				<p class="control">
-					<a
-						class="button is-info"
-						@click.prevent="searchForSongs()"
-						href="#"
+					<a class="button is-info" @click.prevent="searchForSongs()"
 						><i class="material-icons icon-with-button">search</i
 						>Search</a
 					>
@@ -80,7 +77,6 @@
 							<a
 								class="button is-success"
 								v-if="result.isAddedToQueue"
-								href="#"
 								key="added-to-queue"
 							>
 								<i class="material-icons icon-with-button"
@@ -94,7 +90,6 @@
 								@click.prevent="
 									addSongToQueue(result.id, index)
 								"
-								href="#"
 								key="add-to-queue"
 							>
 								<i class="material-icons icon-with-button"
@@ -107,9 +102,8 @@
 				</search-query-item>
 
 				<a
-					class="button is-default load-more-button"
+					class="button is-primary load-more-button"
 					@click.prevent="loadMoreSongs()"
-					href="#"
 				>
 					Load more...
 				</a>

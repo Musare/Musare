@@ -200,7 +200,7 @@
 						</search-query-item>
 
 						<a
-							class="button is-default load-more-button"
+							class="button is-primary load-more-button"
 							@click.prevent="loadMoreSongs()"
 							href="#"
 						>

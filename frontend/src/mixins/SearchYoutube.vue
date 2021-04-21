@@ -44,6 +44,8 @@ export default {
 							url: `https://www.youtube.com/watch?v=${this.id}`,
 							title: result.snippet.title,
 							thumbnail: result.snippet.thumbnails.default.url,
+							channelId: result.snippet.channelId,
+							channelTitle: result.snippet.channelTitle,
 							isAddedToQueue: false
 						});
 					});
@@ -67,6 +69,8 @@ export default {
 								title: result.snippet.title,
 								thumbnail:
 									result.snippet.thumbnails.default.url,
+								channelId: result.snippet.channelId,
+								channelTitle: result.snippet.channelTitle,
 								isAddedToQueue: false
 							});
 						});
