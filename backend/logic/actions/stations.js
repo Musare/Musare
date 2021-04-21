@@ -2417,6 +2417,8 @@ export default {
 					payload: { message: `Removed a station named ${station.displayName}` }
 				});
 
+				ActivitiesModule.runJob("REMOVE_ACTIVITY_REFERENCES", { type: "stationId", stationId });
+
 				return cb({
 					status: "success",
 					message: "Successfully removed."

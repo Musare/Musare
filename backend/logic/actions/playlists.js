@@ -1649,6 +1649,8 @@ export default {
 					}
 				});
 
+				ActivitiesModule.runJob("REMOVE_ACTIVITY_REFERENCES", { type: "playlistId", playlistId });
+
 				return cb({
 					status: "success",
 					message: "Playlist successfully removed"

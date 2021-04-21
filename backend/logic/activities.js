@@ -298,6 +298,96 @@ class _ActivitiesModule extends CoreClass {
 	}
 
 	/**
+	 * Removes any references to a station, playlist or song in activities
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.type - type of reference. enum: ["youtubeId", "stationId", "playlistId"]
+	 * @param {string} payload.stationId - (optional) the id of a station
+	 * @param {string} payload.playlistId - (optional) the id of a playlist
+	 * @param {string} payload.youtubeId - (optional) the id of a song
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	async REMOVE_ACTIVITY_REFERENCES(payload) {
+		const activityModel = await DBModule.runJob("GET_MODEL", { modelName: "activity" }, this);
+
+		return new Promise((resolve, reject) => {
+			async.waterfall(
+				[
+					next => {
+						if (
+							(payload.type !== "youtubeId" &&
+								payload.type !== "stationId" &&
+								payload.type !== "playlistId") ||
+							!payload.type
+						)
+							return next("Please use a valid reference type.");
+
+						if (!payload[payload.type]) return next(`Please provide a ${payload.type} in the job payload.`);
+
+						return next();
+					},
+
+					// find all activities that include the reference
+					next => {
+						const query = {};
+						query[`payload.${payload.type}`] = payload[payload.type];
+
+						activityModel.find(query, ["_id", "payload.message"]).sort({ createdAt: -1 }).exec(next);
+					},
+
+					(activities, next) => {
+						async.eachLimit(
+							activities,
+							1,
+							(activity, next) => {
+								// remove the reference tags
+
+								if (payload.youtubeId) {
+									activity.payload.message = activity.payload.message.replace(
+										/<youtubeId>(.*)<\/youtubeId>/g,
+										"$1"
+									);
+								}
+
+								if (payload.playlistId) {
+									activity.payload.message = activity.payload.message.replace(
+										/<playlistId>(.*)<\/playlistId>/g,
+										`$1`
+									);
+								}
+
+								if (payload.stationId) {
+									activity.payload.message = activity.payload.message.replace(
+										/<stationId>(.*)<\/stationId>/g,
+										`$1`
+									);
+								}
+
+								activityModel
+									.updateOne(
+										{ _id: activity._id },
+										{ $set: { "payload.message": activity.payload.message } }
+									)
+									.then(() => next())
+									.catch(next);
+							},
+							err => next(err)
+						);
+					}
+				],
+				async err => {
+					if (err) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						return reject(new Error(err));
+					}
+
+					return resolve();
+				}
+			);
+		});
+	}
+
+	/**
 	 * Hides any activities of the same type within a 15-minute period to prevent spam
 	 *
 	 * @param {object} payload - object that contains the payload
