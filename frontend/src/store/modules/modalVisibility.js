@@ -2,14 +2,13 @@
 
 const state = {
 	modals: {
+		manageStation: false,
 		login: false,
 		register: false,
 		createCommunityStation: false,
-		addSongToQueue: false,
 		requestSong: false,
 		editPlaylist: false,
 		createPlaylist: false,
-		editStation: false,
 		report: false,
 		removeAccount: false,
 		editNews: false,

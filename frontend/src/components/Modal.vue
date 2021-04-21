@@ -91,6 +91,9 @@ p {
 	& > div {
 		display: flex;
 		flex-grow: 1;
+		div:not(:first-of-type) {
+			margin-left: 10px;
+		}
 	}
 	.right {
 		margin-left: auto;

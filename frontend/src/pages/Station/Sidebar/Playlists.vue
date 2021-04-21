@@ -23,9 +23,12 @@
 						<i
 							v-if="
 								station.type === 'community' &&
-									isNotSelected(playlist._id)
+									(userId === station.owner ||
+										role === 'admin' ||
+										station.partyMode) &&
+									!isSelected(playlist._id)
 							"
-							@click="selectPlaylist(playlist._id)"
+							@click="selectPlaylist(playlist)"
 							class="material-icons play-icon"
 							:content="
 								station.partyMode
@@ -38,7 +41,10 @@
 						<i
 							v-if="
 								station.type === 'community' &&
-									!isNotSelected(playlist._id)
+									(userId === station.owner ||
+										role === 'admin' ||
+										station.partyMode) &&
+									isSelected(playlist._id)
 							"
 							@click="deselectPlaylist(playlist._id)"
 							class="material-icons stop-icon"
@@ -92,10 +98,22 @@ export default {
 		};
 	},
 	computed: {
+		currentPlaylists() {
+			if (this.station.type === "community" && this.station.partyMode) {
+				return this.partyPlaylists;
+			}
+			return this.includedPlaylists;
+		},
 		...mapState({
-			station: state => state.station.station,
-			privatePlaylistQueueSelected: state =>
-				state.station.privatePlaylistQueueSelected
+			role: state => state.user.auth.role,
+			userId: state => state.user.auth.userId
+		}),
+		...mapState("station", {
+			station: state => state.station,
+			partyPlaylists: state => state.partyPlaylists,
+			includedPlaylists: state => state.includedPlaylists,
+			excludedPlaylists: state => state.excludedPlaylists,
+			songsList: state => state.songsList
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
@@ -177,11 +195,11 @@ export default {
 			this.editPlaylist(id);
 			this.openModal("editPlaylist");
 		},
-		selectPlaylist(id) {
+		selectPlaylist(playlist) {
 			if (this.station.type === "community" && this.station.partyMode) {
-				if (this.isNotSelected(id)) {
-					this.updatePrivatePlaylistQueueSelected(id);
-					this.$parent.$parent.addFirstPrivatePlaylistSongToQueue();
+				if (!this.isSelected(playlist.id)) {
+					this.partyPlaylists.push(playlist);
+					this.addPartyPlaylistSongToQueue();
 					new Toast(
 						"Successfully selected playlist to auto request songs."
 					);
@@ -190,56 +208,88 @@ export default {
 				}
 			} else {
 				this.socket.dispatch(
-					"stations.selectPrivatePlaylist",
+					"stations.includePlaylist",
 					this.station._id,
-					id,
+					playlist._id,
 					res => {
-						if (res.status === "error") {
-							new Toast(res.message);
-						} else {
-							this.station.includedPlaylists.push(id);
-							new Toast(res.message);
-						}
+						new Toast(res.message);
 					}
 				);
 			}
 		},
 		deselectPlaylist(id) {
 			if (this.station.type === "community" && this.station.partyMode) {
-				this.updatePrivatePlaylistQueueSelected(null);
-				new Toast("Successfully deselected playlist.");
+				let selected = false;
+				this.currentPlaylists.forEach((playlist, index) => {
+					if (playlist._id === id) {
+						selected = true;
+						this.partyPlaylists.splice(index, 1);
+					}
+				});
+				if (selected) {
+					new Toast("Successfully deselected playlist.");
+				} else {
+					new Toast("Playlist not selected.");
+				}
 			} else {
 				this.socket.dispatch(
-					"stations.deselectPrivatePlaylist",
+					"stations.removeIncludedPlaylist",
 					this.station._id,
 					id,
 					res => {
-						if (res.status === "error")
-							return new Toast(res.message);
-
-						this.station.includedPlaylists.splice(
-							this.station.includedPlaylists.indexOf(id),
-							1
-						);
-
-						return new Toast(res.message);
+						new Toast(res.message);
 					}
 				);
 			}
 		},
-		isNotSelected(id) {
-			if (this.station.type === "community" && this.station.partyMode) {
-				return this.privatePlaylistQueueSelected !== id;
-			}
+		isSelected(id) {
 			// TODO Also change this once it changes for a station
-			if (
-				this.station &&
-				this.station.includedPlaylists.indexOf(id) !== -1
-			)
-				return false;
-			return true;
+			let selected = false;
+			this.currentPlaylists.forEach(playlist => {
+				if (playlist._id === id) selected = true;
+			});
+			return selected;
 		},
-		...mapActions("station", ["updatePrivatePlaylistQueueSelected"]),
+		addPartyPlaylistSongToQueue() {
+			let isInQueue = false;
+			if (
+				this.station.type === "community" &&
+				this.station.partyMode === true
+			) {
+				this.songsList.forEach(queueSong => {
+					if (queueSong.requestedBy === this.userId) isInQueue = true;
+				});
+				if (!isInQueue && this.partyPlaylists) {
+					const selectedPlaylist = this.partyPlaylists[
+						Math.floor(Math.random() * this.partyPlaylists.length)
+					];
+					if (
+						selectedPlaylist._id &&
+						selectedPlaylist.songs.length > 0
+					) {
+						const selectedSong =
+							selectedPlaylist.songs[
+								Math.floor(
+									Math.random() *
+										selectedPlaylist.songs.length
+								)
+							];
+						if (selectedSong.youtubeId) {
+							this.socket.dispatch(
+								"stations.addToQueue",
+								this.station._id,
+								selectedSong.youtubeId,
+								data => {
+									if (data.status !== "success")
+										new Toast("Error auto queueing song");
+								}
+							);
+						}
+					}
+				}
+			}
+		},
+		...mapActions("station", ["updatePartyPlaylists"]),
 		...mapActions("modalVisibility", ["openModal"]),
 		...mapActions("user/playlists", ["editPlaylist"])
 	}

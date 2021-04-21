@@ -408,6 +408,99 @@ class _SongsModule extends CoreClass {
 	}
 
 	/**
+	 * Searches through songs
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.query - the query
+	 * @param {string} payload.includeHidden - include hidden songs
+	 * @param {string} payload.includeUnverified - include unverified songs
+	 * @param {string} payload.includeVerified - include verified songs
+	 * @param {string} payload.trimmed - include trimmed songs
+	 * @param {string} payload.page - page (default 1)
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	SEARCH(payload) {
+		return new Promise((resolve, reject) =>
+			async.waterfall(
+				[
+					next => {
+						const statuses = [];
+						if (payload.includeHidden) statuses.push("hidden");
+						if (payload.includeUnverified) statuses.push("unverified");
+						if (payload.includeVerified) statuses.push("verified");
+						if (statuses.length === 0) return next("No statuses have been included.");
+
+						const filterArray = [
+							{
+								title: new RegExp(`${payload.query}`, "i"),
+								status: { $in: statuses }
+							},
+							{
+								artists: new RegExp(`${payload.query}`, "i"),
+								status: { $in: statuses }
+							}
+						];
+
+						return next(null, filterArray);
+					},
+
+					(filterArray, next) => {
+						const page = payload.page ? payload.page : 1;
+						const pageSize = 15;
+						const skipAmount = pageSize * (page - 1);
+
+						SongsModule.SongModel.find({ $or: filterArray }).count((err, count) => {
+							if (err) next(err);
+							else {
+								SongsModule.SongModel.find({ $or: filterArray })
+									.skip(skipAmount)
+									.limit(pageSize)
+									.exec((err, songs) => {
+										if (err) next(err);
+										else {
+											next(null, {
+												songs,
+												page,
+												pageSize,
+												skipAmount,
+												count
+											});
+										}
+									});
+							}
+						});
+					},
+
+					(data, next) => {
+						if (data.songs.length === 0) next("No songs found");
+						else if (payload.trimmed) {
+							next(null, {
+								songs: data.songs.map(song => {
+									const { _id, youtubeId, title, artists, thumbnail, duration, status } = song;
+									return {
+										_id,
+										youtubeId,
+										title,
+										artists,
+										thumbnail,
+										duration,
+										status
+									};
+								}),
+								...data
+							});
+						} else next(null, data);
+					}
+				],
+				(err, data) => {
+					if (err && err !== true) return reject(new Error(err));
+					return resolve(data);
+				}
+			)
+		);
+	}
+
+	/**
 	 * Recalculates dislikes and likes for a song
 	 *
 	 * @param {object} payload - returns an object containing the payload

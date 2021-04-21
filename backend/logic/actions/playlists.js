@@ -220,6 +220,96 @@ export default {
 	}),
 
 	/**
+	 * Searches through all playlists that can be included in a community station
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} query - the query
+	 * @param {string} query - the page
+	 * @param {Function} cb - gets called with the result
+	 */
+	searchCommunity: isLoginRequired(async function searchCommunity(session, query, page, cb) {
+		async.waterfall(
+			[
+				next => {
+					if ((!query && query !== "") || typeof query !== "string") next("Invalid query.");
+					else next();
+				},
+
+				next => {
+					PlaylistsModule.runJob("SEARCH", {
+						query,
+						includeUser: true,
+						includeGenre: true,
+						includeOwn: true,
+						includeSongs: true,
+						userId: session.userId,
+						page
+					})
+						.then(response => {
+							next(null, response);
+						})
+						.catch(err => {
+							next(err);
+						});
+				}
+			],
+			async (err, data) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "PLAYLISTS_SEARCH_COMMUNITY", `Searching playlists failed. "${err}"`);
+					return cb({ status: "error", message: err });
+				}
+				this.log("SUCCESS", "PLAYLISTS_SEARCH_COMMUNITY", "Searching playlists successful.");
+				return cb({ status: "success", data });
+			}
+		);
+	}),
+
+	/**
+	 * Searches through all playlists that can be included in an official station
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} query - the query
+	 * @param {string} query - the page
+	 * @param {Function} cb - gets called with the result
+	 */
+	searchOfficial: isAdminRequired(async function searchOfficial(session, query, page, cb) {
+		async.waterfall(
+			[
+				next => {
+					if ((!query && query !== "") || typeof query !== "string") next("Invalid query.");
+					else next();
+				},
+
+				next => {
+					PlaylistsModule.runJob("SEARCH", {
+						query,
+						includeGenre: true,
+						includePrivate: true,
+						includeSongs: true,
+						page
+					})
+						.then(response => {
+							next(null, response);
+						})
+						.catch(err => {
+							next(err);
+						});
+				}
+			],
+			async (err, data) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "PLAYLISTS_SEARCH_OFFICIAL", `Searching playlists failed. "${err}"`);
+					return cb({ status: "error", message: err });
+				}
+				this.log("SUCCESS", "PLAYLISTS_SEARCH_OFFICIAL", "Searching playlists successful.");
+				return cb({ status: "success", data });
+			}
+		);
+	}),
+
+	/**
 	 * Gets the first song from a private playlist
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
@@ -586,6 +676,65 @@ export default {
 					data: {
 						title: playlist.displayName
 					}
+				});
+			}
+		);
+	},
+
+	/**
+	 * Gets a playlist from station id
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} stationId - the id of the station we are getting
+	 * @param {string} includeSongs - include songs
+	 * @param {Function} cb - gets called with the result
+	 */
+	getPlaylistForStation: function getPlaylist(session, stationId, includeSongs, cb) {
+		async.waterfall(
+			[
+				next => {
+					PlaylistsModule.runJob("GET_STATION_PLAYLIST", { stationId, includeSongs }, this)
+						.then(response => next(null, response.playlist))
+						.catch(next);
+				},
+
+				(playlist, next) => {
+					if (!playlist) return next("Playlist not found");
+					if (playlist.privacy !== "public" && playlist.createdBy !== session.userId) {
+						if (session)
+							// check if user requested to get a playlist is an admin
+							return DBModule.runJob("GET_MODEL", { modelName: "user" }, this).then(userModel => {
+								userModel.findOne({ _id: session.userId }, (err, user) => {
+									if (user && user.role === "admin") return next(null, playlist);
+									return next("User unauthorised to view playlist.");
+								});
+							});
+						return next("User unauthorised to view playlist.");
+					}
+
+					return next(null, playlist);
+				}
+			],
+			async (err, playlist) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"PLAYLIST_GET",
+						`Getting playlist for station "${stationId}" failed for user "${session.userId}". "${err}"`
+					);
+					return cb({ status: "error", message: err });
+				}
+
+				this.log(
+					"SUCCESS",
+					"PLAYLIST_GET",
+					`Successfully got playlist for station "${stationId}" for user "${session.userId}".`
+				);
+
+				return cb({
+					status: "success",
+					data: { playlist }
 				});
 			}
 		);
