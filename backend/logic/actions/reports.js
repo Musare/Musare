@@ -315,7 +315,7 @@ export default {
 					type: "song__report",
 					payload: {
 						message: `Reported song <youtubeId>${song.title} by ${song.artists.join(", ")}</youtubeId>`,
-						songId: data.song._id,
+						youtubeId: data.song.youtubeId,
 						thumbnail: song.thumbnail
 					}
 				});

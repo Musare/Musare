@@ -1098,7 +1098,7 @@ export default {
 					type: "song__like",
 					payload: {
 						message: `Liked song <youtubeId>${song.title} by ${song.artists.join(", ")}</youtubeId>`,
-						songId: song._id,
+						youtubeId,
 						thumbnail: song.thumbnail
 					}
 				});
@@ -1213,7 +1213,7 @@ export default {
 					type: "song__dislike",
 					payload: {
 						message: `Disliked song <youtubeId>${song.title} by ${song.artists.join(", ")}</youtubeId>`,
-						songId: song._id,
+						youtubeId,
 						thumbnail: song.thumbnail
 					}
 				});
@@ -1328,7 +1328,7 @@ export default {
 						message: `Removed <youtubeId>${song.title} by ${song.artists.join(
 							", "
 						)}</youtubeId> from your Disliked Songs`,
-						songId: song._id,
+						youtubeId,
 						thumbnail: song.thumbnail
 					}
 				});
@@ -1443,7 +1443,7 @@ export default {
 						message: `Removed <youtubeId>${song.title} by ${song.artists.join(
 							", "
 						)}</youtubeId> from your Liked Songs`,
-						songId: song._id,
+						youtubeId,
 						thumbnail: song.thumbnail
 					}
 				});
@@ -1471,6 +1471,7 @@ export default {
 		async.waterfall(
 			[
 				next => {
+					console.log(youtubeId);
 					songModel.findOne({ youtubeId }, next);
 				},
 
