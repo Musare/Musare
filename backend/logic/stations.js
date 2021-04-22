@@ -725,10 +725,8 @@ class _StationsModule extends CoreClass {
 							},
 							this
 						)
-							.then(station => {
-								next(null, station);
-							})
-							.catch(() => {});
+							.then(station => next(null, station))
+							.catch(next);
 					},
 
 					// eslint-disable-next-line consistent-return

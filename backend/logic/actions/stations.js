@@ -2002,9 +2002,7 @@ export default {
 			[
 				next => {
 					StationsModule.runJob("GET_STATION", { stationId }, this)
-						.then(station => {
-							next(null, station);
-						})
+						.then(station => next(null, station))
 						.catch(next);
 				},
 
@@ -2025,12 +2023,11 @@ export default {
 						channel: "station.queueUpdate",
 						value: stationId
 					})
-						.then()
-						.catch();
+						.then(() => {})
+						.catch(next);
+
 					StationsModule.runJob("UPDATE_STATION", { stationId }, this)
-						.then(station => {
-							next(null, station);
-						})
+						.then(station => next(null, station))
 						.catch(next);
 				}
 			],
@@ -2044,11 +2041,13 @@ export default {
 					);
 					return cb({ status: "error", message: err });
 				}
+
 				this.log(
 					"SUCCESS",
 					"STATIONS_UPDATE_PARTY_MODE",
 					`Updated station "${stationId}" party mode to "${newPartyMode}" successfully.`
 				);
+
 				CacheModule.runJob("PUB", {
 					channel: "station.updatePartyMode",
 					value: {
@@ -2056,7 +2055,9 @@ export default {
 						partyMode: newPartyMode
 					}
 				});
+
 				StationsModule.runJob("SKIP_STATION", { stationId });
+
 				return cb({
 					status: "success",
 					message: "Successfully updated the party mode."
@@ -2882,13 +2883,14 @@ export default {
 					)
 						.then(response => {
 							const { song } = response;
-							const { _id, title, thumbnail, duration, status } = song;
+							const { _id, title, artists, thumbnail, duration, status } = song;
 							next(
 								null,
 								{
 									_id,
 									youtubeId,
 									title,
+									artists,
 									thumbnail,
 									duration,
 									status
