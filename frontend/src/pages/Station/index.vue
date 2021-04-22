@@ -1545,7 +1545,7 @@ export default {
 						// change url to use station name instead of station id
 						if (name !== this.stationIdentifier) {
 							// eslint-disable-next-line no-restricted-globals
-							history.pushState({}, null, name);
+							this.$router.replace(name);
 						}
 
 						this.joinStation({
