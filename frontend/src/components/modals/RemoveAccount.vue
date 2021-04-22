@@ -104,8 +104,7 @@
 			>
 				<h2 class="content-box-title">Verify your GitHub</h2>
 				<p class="content-box-description">
-					Check your GitHub account is still linked in order to remove
-					your account.
+					Check your account is still linked to remove your account.
 				</p>
 
 				<div class="content-box-inputs">

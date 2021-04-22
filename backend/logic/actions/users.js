@@ -221,18 +221,50 @@ export default {
 
 		async.waterfall(
 			[
+				// activities related to the user
 				next => {
 					activityModel.deleteMany({ userId: session.userId }, next);
 				},
 
+				// user's stations
 				(res, next) => {
-					stationModel.deleteMany({ owner: session.userId }, next);
+					stationModel.find({ owner: session.userId }, (err, stations) => {
+						if (err) return next(err);
+
+						return async.each(
+							stations,
+							(station, callback) => {
+								// delete the station
+								stationModel.deleteOne({ _id: station._id }, err => {
+									if (err) return callback(err);
+
+									// if applicable, delete the corresponding playlist for the station
+									if (station.playlist)
+										return PlaylistsModule.runJob("DELETE_PLAYLIST", {
+											playlistId: station.playlist
+										})
+											.then(() => callback())
+											.catch(callback);
+
+									return callback();
+								});
+							},
+							err => next(err)
+						);
+					});
 				},
 
+				// playlists for a user's stations
+				next => {
+					playlistModel.deleteMany({ owner: session.userId }, next);
+				},
+
+				// user's playlists
 				(res, next) => {
 					playlistModel.deleteMany({ createdBy: session.userId }, next);
 				},
 
+				// user object
 				(res, next) => {
 					userModel.deleteMany({ _id: session.userId }, next);
 				}

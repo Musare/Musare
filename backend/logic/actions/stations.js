@@ -2380,6 +2380,7 @@ export default {
 						.catch(next);
 				},
 
+				// remove the playlist for the station
 				(station, next) => {
 					if (station.playlist)
 						PlaylistsModule.runJob("DELETE_PLAYLIST", { playlistId: station.playlist })
