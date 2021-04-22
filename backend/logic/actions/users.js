@@ -238,8 +238,6 @@ export default {
 				}
 			],
 			async err => {
-				console.log(err);
-
 				if (err && err !== true) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(

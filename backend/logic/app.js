@@ -198,7 +198,7 @@ class _AppModule extends CoreClass {
 													$set: {
 														"services.github": {
 															id: github.data.id,
-															accessToken
+															access_token: accessToken
 														}
 													}
 												},
@@ -283,7 +283,7 @@ class _AppModule extends CoreClass {
 							}
 
 							return next(null, {
-								_id, // TODO Check if exists
+								_id,
 								username: body.login,
 								name: body.name,
 								location: body.location,
@@ -293,7 +293,7 @@ class _AppModule extends CoreClass {
 									verificationToken
 								},
 								services: {
-									github: { id: body.id, accessToken }
+									github: { id: body.id, access_token: accessToken }
 								}
 							});
 						},
