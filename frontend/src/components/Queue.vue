@@ -228,12 +228,12 @@ export default {
 
 			this.socket.dispatch(
 				"stations.repositionSongInQueue",
+				this.station._id,
 				{
 					...moved.element,
 					oldIndex: moved.oldIndex,
 					newIndex: moved.newIndex
 				},
-				this.station._id,
 				res => {
 					new Toast({ content: res.message, timeout: 4000 });
 				}

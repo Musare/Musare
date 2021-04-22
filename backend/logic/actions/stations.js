@@ -3178,7 +3178,7 @@ export default {
 	 * @param {string} stationId - the station id
 	 * @param {Function} cb - callback
 	 */
-	repositionSongInQueue: isOwnerRequired(async function repositionQueue(session, song, stationId, cb) {
+	repositionSongInQueue: isOwnerRequired(async function repositionQueue(session, stationId, song, cb) {
 		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
 
 		async.waterfall(
@@ -3214,8 +3214,6 @@ export default {
 				}
 			],
 			async err => {
-				console.log(err);
-
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
