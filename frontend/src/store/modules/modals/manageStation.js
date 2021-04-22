@@ -3,6 +3,7 @@
 export default {
 	namespaced: true,
 	state: {
+		tab: "settings",
 		originalStation: {},
 		station: {},
 		includedPlaylists: [],
@@ -13,6 +14,9 @@ export default {
 	},
 	getters: {},
 	actions: {
+		showTab: ({ commit }, tab) => {
+			commit("showTab", tab);
+		},
 		editStation: ({ commit }, station) => {
 			commit("editStation", station);
 		},
@@ -39,6 +43,9 @@ export default {
 		}
 	},
 	mutations: {
+		showTab(state, tab) {
+			state.tab = tab;
+		},
 		editStation(state, station) {
 			state.originalStation = JSON.parse(JSON.stringify(station));
 			state.station = JSON.parse(JSON.stringify(station));

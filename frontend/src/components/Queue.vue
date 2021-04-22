@@ -79,7 +79,7 @@
 						!station.locked ||
 						(station.locked && isAdminOnly() && dismissedWarning))
 			"
-			@click="openModal('manageStation')"
+			@click="openModal('manageStation') & showManageStationTab('search')"
 		>
 			<i class="material-icons icon-with-button">queue</i>
 			<span class="optional-desktop-only-text"> Add Song To Queue </span>
@@ -257,7 +257,10 @@ export default {
 				}
 			});
 		},
-		...mapActions("modalVisibility", ["openModal"])
+		...mapActions("modalVisibility", ["openModal"]),
+		...mapActions({
+			showManageStationTab: "modals/manageStation/showTab"
+		})
 	}
 };
 </script>

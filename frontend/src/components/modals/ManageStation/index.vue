@@ -210,11 +210,6 @@ export default {
 		stationId: { type: String, default: "" },
 		sector: { type: String, default: "admin" }
 	},
-	data() {
-		return {
-			tab: "settings"
-		};
-	},
 	computed: {
 		...mapState({
 			loggedIn: state => state.user.auth.loggedIn,
@@ -222,6 +217,7 @@ export default {
 			role: state => state.user.auth.role
 		}),
 		...mapState("modals/manageStation", {
+			tab: state => state.tab,
 			station: state => state.station,
 			originalStation: state => state.originalStation,
 			songsList: state => state.songsList,
@@ -239,7 +235,7 @@ export default {
 				this.editStation(station);
 
 				if (!this.isOwnerOrAdmin() && this.station.partyMode)
-					this.tab = "search";
+					this.showTab("search");
 
 				const currentSong = res.data.station.currentSong
 					? res.data.station.currentSong
@@ -313,9 +309,6 @@ export default {
 		this.clearStation();
 	},
 	methods: {
-		showTab(tab) {
-			this.tab = tab;
-		},
 		isOwner() {
 			return this.loggedIn && this.userId === this.station.owner;
 		},
@@ -383,6 +376,7 @@ export default {
 			);
 		},
 		...mapActions("modals/manageStation", [
+			"showTab",
 			"editStation",
 			"setIncludedPlaylists",
 			"setExcludedPlaylists",
