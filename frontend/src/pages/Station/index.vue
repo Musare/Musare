@@ -2513,7 +2513,6 @@ export default {
 
 	#station-outer-container {
 		padding: 10px;
-		height: unset;
 		max-width: 700px;
 
 		#station-inner-container {
