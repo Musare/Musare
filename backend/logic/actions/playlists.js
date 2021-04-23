@@ -17,9 +17,9 @@ const ActivitiesModule = moduleManager.modules.activities;
 CacheModule.runJob("SUB", {
 	channel: "playlist.create",
 	cb: playlist => {
-		WSModule.runJob("SOCKETS_FROM_USER", { userId: playlist.createdBy }, this).then(sockets => {
-			sockets.forEach(socket => socket.dispatch("event:playlist.create", { data: { playlist } }));
-		});
+		WSModule.runJob("SOCKETS_FROM_USER", { userId: playlist.createdBy }, this).then(sockets =>
+			sockets.forEach(socket => socket.dispatch("event:playlist.create", { data: { playlist } }))
+		);
 
 		if (playlist.privacy === "public")
 			WSModule.runJob("EMIT_TO_ROOM", {

@@ -290,7 +290,6 @@
 import { mapActions, mapState, mapGetters } from "vuex";
 
 import Toast from "toasters";
-import draggable from "vuedraggable";
 import PlaylistItem from "@/components/PlaylistItem.vue";
 import Confirm from "@/components/Confirm.vue";
 
@@ -298,10 +297,8 @@ import SortablePlaylists from "@/mixins/SortablePlaylists.vue";
 
 export default {
 	components: {
-		draggable,
 		PlaylistItem,
 		Confirm
-		// CreatePlaylist: () => import("@/components/modals/CreatePlaylist.vue")
 	},
 	mixins: [SortablePlaylists],
 	data() {
@@ -318,14 +315,6 @@ export default {
 		};
 	},
 	computed: {
-		playlists: {
-			get() {
-				return this.$store.state.user.playlists.playlists;
-			},
-			set(playlists) {
-				this.$store.commit("user/playlists/setPlaylists", playlists);
-			}
-		},
 		currentPlaylists() {
 			if (this.station.type === "community" && this.station.partyMode) {
 				return this.partyPlaylists;
@@ -341,12 +330,10 @@ export default {
 		...mapState({
 			loggedIn: state => state.user.auth.loggedIn,
 			role: state => state.user.auth.role,
-			myUserId: state => state.user.auth.userId,
 			userId: state => state.user.auth.userId,
 			partyPlaylists: state => state.station.partyPlaylists
 		}),
 		...mapState("modals/manageStation", {
-			station: state => state.station,
 			originalStation: state => state.originalStation,
 			includedPlaylists: state => state.includedPlaylists,
 			excludedPlaylists: state => state.excludedPlaylists,
@@ -358,73 +345,9 @@ export default {
 	},
 	mounted() {
 		this.socket.dispatch("playlists.indexMyPlaylists", true, res => {
-			if (res.status === "success") this.playlists = res.data.playlists;
+			if (res.status === "success") this.setPlaylists(res.data.playlists);
 			this.orderOfPlaylists = this.calculatePlaylistOrder(); // order in regards to the database
 		});
-
-		this.socket.on("event:playlist.create", res => {
-			this.playlists.push(res.data.playlist);
-		});
-
-		this.socket.on("event:playlist.delete", res => {
-			this.playlists.forEach((playlist, index) => {
-				if (playlist._id === res.data.playlistId) {
-					this.playlists.splice(index, 1);
-				}
-			});
-		});
-
-		this.socket.on("event:playlist.addSong", res => {
-			this.playlists.forEach((playlist, index) => {
-				if (playlist._id === res.data.playlistId) {
-					this.playlists[index].songs.push(res.data.song);
-				}
-			});
-		});
-
-		this.socket.on("event:playlist.removeSong", res => {
-			this.playlists.forEach((playlist, index) => {
-				if (playlist._id === res.data.playlistId) {
-					this.playlists[index].songs.forEach((song, index2) => {
-						if (song.youtubeId === res.data.youtubeId) {
-							this.playlists[index].songs.splice(index2, 1);
-						}
-					});
-				}
-			});
-		});
-
-		this.socket.on("event:playlist.updateDisplayName", res => {
-			this.playlists.forEach((playlist, index) => {
-				if (playlist._id === res.data.playlistId) {
-					this.playlists[index].displayName = res.data.displayName;
-				}
-			});
-		});
-
-		this.socket.on("event:playlist.updatePrivacy", res => {
-			this.playlists.forEach((playlist, index) => {
-				if (playlist._id === res.data.playlist._id) {
-					this.playlists[index].privacy = res.data.playlist.privacy;
-				}
-			});
-		});
-
-		this.socket.on(
-			"event:user.orderOfPlaylists.changed",
-			orderOfPlaylists => {
-				const sortedPlaylists = [];
-
-				this.playlists.forEach(playlist => {
-					sortedPlaylists[
-						orderOfPlaylists.indexOf(playlist._id)
-					] = playlist;
-				});
-
-				this.playlists = sortedPlaylists;
-				this.orderOfPlaylists = this.calculatePlaylistOrder();
-			}
-		);
 
 		this.socket.dispatch(
 			`stations.getStationIncludedPlaylistsById`,

@@ -84,19 +84,13 @@
 <script>
 import { mapState, mapActions, mapGetters } from "vuex";
 import Toast from "toasters";
-import draggable from "vuedraggable";
 
 import PlaylistItem from "@/components/PlaylistItem.vue";
 import SortablePlaylists from "@/mixins/SortablePlaylists.vue";
 
 export default {
-	components: { PlaylistItem, draggable },
+	components: { PlaylistItem },
 	mixins: [SortablePlaylists],
-	data() {
-		return {
-			playlists: []
-		};
-	},
 	computed: {
 		currentPlaylists() {
 			if (this.station.type === "community" && this.station.partyMode) {
@@ -109,7 +103,6 @@ export default {
 			userId: state => state.user.auth.userId
 		}),
 		...mapState("station", {
-			station: state => state.station,
 			partyPlaylists: state => state.partyPlaylists,
 			includedPlaylists: state => state.includedPlaylists,
 			excludedPlaylists: state => state.excludedPlaylists,
@@ -122,73 +115,9 @@ export default {
 	mounted() {
 		/** Get playlists for user */
 		this.socket.dispatch("playlists.indexMyPlaylists", true, res => {
-			if (res.status === "success") this.playlists = res.data.playlists;
+			if (res.status === "success") this.setPlaylists(res.data.playlists);
 			this.orderOfPlaylists = this.calculatePlaylistOrder(); // order in regards to the database
 		});
-
-		this.socket.on("event:playlist.create", res => {
-			this.playlists.push(res.data.playlist);
-		});
-
-		this.socket.on("event:playlist.delete", res => {
-			this.playlists.forEach((playlist, index) => {
-				if (playlist._id === res.data.playlistId) {
-					this.playlists.splice(index, 1);
-				}
-			});
-		});
-
-		this.socket.on("event:playlist.addSong", res => {
-			this.playlists.forEach((playlist, index) => {
-				if (playlist._id === res.data.playlistId) {
-					this.playlists[index].songs.push(res.data.song);
-				}
-			});
-		});
-
-		this.socket.on("event:playlist.removeSong", res => {
-			this.playlists.forEach((playlist, index) => {
-				if (playlist._id === res.data.playlistId) {
-					this.playlists[index].songs.forEach((song, index2) => {
-						if (song.youtubeId === res.data.youtubeId) {
-							this.playlists[index].songs.splice(index2, 1);
-						}
-					});
-				}
-			});
-		});
-
-		this.socket.on("event:playlist.updateDisplayName", res => {
-			this.playlists.forEach((playlist, index) => {
-				if (playlist._id === res.data.playlistId) {
-					this.playlists[index].displayName = res.data.displayName;
-				}
-			});
-		});
-
-		this.socket.on("event:playlist.updatePrivacy", res => {
-			this.playlists.forEach((playlist, index) => {
-				if (playlist._id === res.data.playlist._id) {
-					this.playlists[index].privacy = res.data.playlist.privacy;
-				}
-			});
-		});
-
-		this.socket.on(
-			"event:user.orderOfPlaylists.changed",
-			orderOfPlaylists => {
-				const sortedPlaylists = [];
-
-				this.playlists.forEach(playlist => {
-					sortedPlaylists[
-						orderOfPlaylists.indexOf(playlist._id)
-					] = playlist;
-				});
-
-				this.playlists = sortedPlaylists;
-				this.orderOfPlaylists = this.calculatePlaylistOrder();
-			}
-		);
 	},
 	methods: {
 		edit(id) {
@@ -291,7 +220,7 @@ export default {
 		},
 		...mapActions("station", ["updatePartyPlaylists"]),
 		...mapActions("modalVisibility", ["openModal"]),
-		...mapActions("user/playlists", ["editPlaylist"])
+		...mapActions("user/playlists", ["editPlaylist", "setPlaylists"])
 	}
 };
 </script>
