@@ -119,9 +119,7 @@ export default {
 			}
 		});
 		this.socket.on("event:admin.news.removed", res => {
-			this.news = this.news.filter(
-				item => item._id !== res.data.news._id
-			);
+			this.news = this.news.filter(item => item._id !== res.data.newsId);
 			if (this.news.length === 0) this.noFound = true;
 		});
 	},

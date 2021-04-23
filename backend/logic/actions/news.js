@@ -21,10 +21,10 @@ CacheModule.runJob("SUB", {
 
 CacheModule.runJob("SUB", {
 	channel: "news.remove",
-	cb: news => {
+	cb: newsId => {
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.news",
-			args: ["event:admin.news.removed", { data: { news } }]
+			args: ["event:admin.news.removed", { data: { newsId } }]
 		});
 	}
 });
@@ -60,7 +60,9 @@ export default {
 					this.log("ERROR", "NEWS_INDEX", `Indexing news failed. "${err}"`);
 					return cb({ status: "error", message: err });
 				}
+
 				this.log("SUCCESS", "NEWS_INDEX", `Indexing news successful.`, false);
+
 				return cb({ status: "success", data: { news } });
 			}
 		);
@@ -75,10 +77,11 @@ export default {
 	 */
 	async getNewsFromId(session, newsId, cb) {
 		const newsModel = await DBModule.runJob("GET_MODEL", { modelName: "news" }, this);
+
 		async.waterfall(
 			[
 				next => {
-					newsModel.findOne({ _id: newsId }, next);
+					newsModel.findById(newsId, next);
 				}
 			],
 			async (err, news) => {
@@ -87,7 +90,9 @@ export default {
 					this.log("ERROR", "GET_NEWS_FROM_ID", `Getting news failed. "${err}"`);
 					return cb({ status: "error", message: err });
 				}
+
 				this.log("SUCCESS", "GET_NEWS_FROM_ID", `Got news successful.`, false);
+
 				return cb({ status: "success", data: { news } });
 			}
 		);
@@ -156,25 +161,27 @@ export default {
 	 * Removes a news item
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {object} news - the news object
+	 * @param {object} newsId - the id of the news object we want to remove
 	 * @param {Function} cb - gets called with the result
 	 */
-	// TODO Pass in an id, not an object
-	// TODO Fix this
-	remove: isAdminRequired(async function remove(session, news, cb) {
+	remove: isAdminRequired(async function remove(session, newsId, cb) {
 		const newsModel = await DBModule.runJob("GET_MODEL", { modelName: "news" }, this);
-		newsModel.deleteOne({ _id: news._id }, async err => {
+
+		newsModel.deleteOne({ _id: newsId }, async err => {
 			if (err) {
 				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 				this.log(
 					"ERROR",
 					"NEWS_REMOVE",
-					`Removing news "${news._id}" failed for user "${session.userId}". "${err}"`
+					`Removing news "${newsId}" failed for user "${session.userId}". "${err}"`
 				);
 				return cb({ status: "error", message: err });
 			}
-			CacheModule.runJob("PUB", { channel: "news.remove", value: news });
-			this.log("SUCCESS", "NEWS_REMOVE", `Removing news "${news._id}" successful by user "${session.userId}".`);
+
+			CacheModule.runJob("PUB", { channel: "news.remove", value: newsId });
+
+			this.log("SUCCESS", "NEWS_REMOVE", `Removing news "${newsId}" successful by user "${session.userId}".`);
+
 			return cb({
 				status: "success",
 				message: "Successfully removed News"

@@ -31,7 +31,7 @@
 							>
 								Edit
 							</button>
-							<confirm @confirm="remove(news)">
+							<confirm @confirm="remove(news._id)">
 								<button class="button is-danger">Remove</button>
 							</confirm>
 						</td>
@@ -263,7 +263,7 @@ export default {
 		);
 
 		this.socket.on("event:admin.news.removed", res =>
-			this.removeNews(res.data.news._id)
+			this.removeNews(res.data.newsId)
 		);
 
 		if (this.socket.readyState === 1) this.init();
@@ -300,10 +300,10 @@ export default {
 					};
 			});
 		},
-		remove(news) {
+		remove(id) {
 			this.socket.dispatch(
 				"news.remove",
-				news,
+				id,
 				res => new Toast(res.message)
 			);
 		},

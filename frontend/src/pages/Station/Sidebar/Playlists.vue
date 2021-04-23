@@ -93,9 +93,9 @@ export default {
 	mixins: [SortablePlaylists],
 	computed: {
 		currentPlaylists() {
-			if (this.station.type === "community" && this.station.partyMode) {
+			if (this.station.type === "community" && this.station.partyMode)
 				return this.partyPlaylists;
-			}
+
 			return this.includedPlaylists;
 		},
 		...mapState({

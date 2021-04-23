@@ -913,21 +913,18 @@ export default {
 		});
 
 		this.socket.on("event:privatePlaylist.selected", res => {
-			if (this.station.type === "community") {
+			if (this.station.type === "community")
 				this.station.privatePlaylist = res.data.playlistId;
-			}
 		});
 
 		this.socket.on("event:privatePlaylist.deselected", () => {
-			if (this.station.type === "community") {
+			if (this.station.type === "community")
 				this.station.privatePlaylist = null;
-			}
 		});
 
 		this.socket.on("event:partyMode.updated", res => {
-			if (this.station.type === "community") {
+			if (this.station.type === "community")
 				this.station.partyMode = res.data.partyMode;
-			}
 		});
 
 		this.socket.on("event:station.themeUpdated", res => {
