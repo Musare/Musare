@@ -307,6 +307,7 @@ export default {
 	beforeDestroy() {
 		this.repositionSongInList([]);
 		this.clearStation();
+		this.showTab("settings");
 	},
 	methods: {
 		isOwner() {

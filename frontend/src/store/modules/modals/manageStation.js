@@ -14,33 +14,21 @@ export default {
 	},
 	getters: {},
 	actions: {
-		showTab: ({ commit }, tab) => {
-			commit("showTab", tab);
-		},
-		editStation: ({ commit }, station) => {
-			commit("editStation", station);
-		},
-		setIncludedPlaylists: ({ commit }, includedPlaylists) => {
-			commit("setIncludedPlaylists", includedPlaylists);
-		},
-		setExcludedPlaylists: ({ commit }, excludedPlaylists) => {
-			commit("setExcludedPlaylists", excludedPlaylists);
-		},
-		clearStation: ({ commit }) => {
-			commit("clearStation");
-		},
-		updateSongsList: ({ commit }, songsList) => {
-			commit("updateSongsList", songsList);
-		},
-		repositionSongInList: ({ commit }, song) => {
-			commit("repositionSongInList", song);
-		},
-		updateStationPaused: ({ commit }, stationPaused) => {
-			commit("updateStationPaused", stationPaused);
-		},
-		updateCurrentSong: ({ commit }, currentSong) => {
-			commit("updateCurrentSong", currentSong);
-		}
+		showTab: ({ commit }, tab) => commit("showTab", tab),
+		editStation: ({ commit }, station) => commit("editStation", station),
+		setIncludedPlaylists: ({ commit }, includedPlaylists) =>
+			commit("setIncludedPlaylists", includedPlaylists),
+		setExcludedPlaylists: ({ commit }, excludedPlaylists) =>
+			commit("setExcludedPlaylists", excludedPlaylists),
+		clearStation: ({ commit }) => commit("clearStation"),
+		updateSongsList: ({ commit }, songsList) =>
+			commit("updateSongsList", songsList),
+		repositionSongInList: ({ commit }, song) =>
+			commit("repositionSongInList", song),
+		updateStationPaused: ({ commit }, stationPaused) =>
+			commit("updateStationPaused", stationPaused),
+		updateCurrentSong: ({ commit }, currentSong) =>
+			commit("updateCurrentSong", currentSong)
 	},
 	mutations: {
 		showTab(state, tab) {

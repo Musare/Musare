@@ -157,20 +157,17 @@ export default {
 	computed: {
 		queue: {
 			get() {
-				if (this.sector === "manageStation") {
+				if (this.sector === "manageStation")
 					return this.$store.state.modals.manageStation.songsList;
-				}
 				return this.$store.state.station.songsList;
 			},
 			set(queue) {
-				if (this.sector === "manageStation") {
+				if (this.sector === "manageStation")
 					this.$store.commit(
 						"modals/manageStation/updateSongsList",
 						queue
 					);
-				} else {
-					this.$store.commit("station/updateSongsList", queue);
-				}
+				else this.$store.commit("station/updateSongsList", queue);
 			}
 		},
 		dragOptions() {
