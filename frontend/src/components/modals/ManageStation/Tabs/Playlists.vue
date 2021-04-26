@@ -147,7 +147,11 @@
 								>play_arrow</i
 							>
 							<confirm
-								v-if="isOwnerOrAdmin()"
+								v-if="
+									isOwnerOrAdmin() &&
+										!isSelected(playlist._id) &&
+										!isExcluded(playlist._id)
+								"
 								@confirm="blacklistPlaylist(playlist._id)"
 							>
 								<i
@@ -225,7 +229,8 @@
 										station.type === 'community' &&
 											(isOwnerOrAdmin() ||
 												station.partyMode) &&
-											!isSelected(playlist._id)
+											!isSelected(playlist._id) &&
+											!isExcluded(playlist._id)
 									"
 									@click="selectPlaylist(playlist)"
 									class="material-icons play-icon"
@@ -258,7 +263,10 @@
 									>
 								</confirm>
 								<confirm
-									v-if="isOwnerOrAdmin()"
+									v-if="
+										isOwnerOrAdmin() &&
+											!isExcluded(playlist._id)
+									"
 									@confirm="blacklistPlaylist(playlist._id)"
 								>
 									<i
@@ -443,6 +451,13 @@ export default {
 			});
 			return selected;
 		},
+		isExcluded(id) {
+			let selected = false;
+			this.excludedPlaylists.forEach(playlist => {
+				if (playlist._id === id) selected = true;
+			});
+			return selected;
+		},
 		searchForPlaylists(page) {
 			if (
 				this.search.page >= page ||
@@ -491,6 +506,16 @@ export default {
 			}
 			this.socket.dispatch(
 				"stations.excludePlaylist",
+				this.station._id,
+				id,
+				res => {
+					new Toast(res.message);
+				}
+			);
+		},
+		removeExcludedPlaylist(id) {
+			this.socket.dispatch(
+				"stations.removeExcludedPlaylist",
 				this.station._id,
 				id,
 				res => {

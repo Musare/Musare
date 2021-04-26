@@ -221,6 +221,8 @@ export default {
 			station: state => state.station,
 			originalStation: state => state.originalStation,
 			songsList: state => state.songsList,
+			includedPlaylists: state => state.includedPlaylists,
+			excludedPlaylists: state => state.excludedPlaylists,
 			stationPaused: state => state.stationPaused,
 			currentSong: state => state.currentSong
 		}),
@@ -274,6 +276,75 @@ export default {
 						}
 					}
 				);
+
+				if (this.sector === "admin")
+					this.socket.dispatch(
+						"apis.joinManageStationRoom",
+						`manage-station.${this.stationId}`,
+						() => {}
+					);
+
+				this.socket.on("event:station.updateName", res => {
+					this.station.name = res.data.name;
+				});
+
+				this.socket.on("event:station.updateDisplayName", res => {
+					this.station.displayName = res.data.displayName;
+				});
+
+				this.socket.on("event:station.updateDescription", res => {
+					this.station.description = res.data.description;
+				});
+
+				this.socket.on("event:partyMode.updated", res => {
+					if (this.station.type === "community")
+						this.station.partyMode = res.data.partyMode;
+				});
+
+				this.socket.on("event:playMode.updated", res => {
+					this.station.playMode = res.data.playMode;
+				});
+
+				this.socket.on("event:station.themeUpdated", res => {
+					const { theme } = res.data;
+					this.station.theme = theme;
+				});
+
+				this.socket.on("event:station.updatePrivacy", res => {
+					this.station.privacy = res.data.privacy;
+				});
+
+				this.socket.on("event:queueLockToggled", res => {
+					this.station.locked = res.data.locked;
+				});
+
+				this.socket.on("event:station.includedPlaylist", res => {
+					const { playlist } = res.data;
+					this.includedPlaylists.push(playlist);
+				});
+
+				this.socket.on("event:station.excludedPlaylist", res => {
+					const { playlist } = res.data;
+					this.excludedPlaylists.push(playlist);
+				});
+
+				this.socket.on("event:station.removedIncludedPlaylist", res => {
+					const { playlistId } = res.data;
+					const playlistIndex = this.includedPlaylists
+						.map(playlist => playlist._id)
+						.indexOf(playlistId);
+					if (playlistIndex >= 0)
+						this.includedPlaylists.splice(playlistIndex, 1);
+				});
+
+				this.socket.on("event:station.removedExcludedPlaylist", res => {
+					const { playlistId } = res.data;
+					const playlistIndex = this.excludedPlaylists
+						.map(playlist => playlist._id)
+						.indexOf(playlistId);
+					if (playlistIndex >= 0)
+						this.excludedPlaylists.splice(playlistIndex, 1);
+				});
 			} else {
 				new Toast(`Station with that ID not found`);
 				this.closeModal("manageStation");
@@ -288,13 +359,11 @@ export default {
 			this.repositionSongInList(res.data.song);
 		});
 
-		this.socket.on("event:stations.pause", res => {
-			this.pausedAt = res.data.pausedAt;
+		this.socket.on("event:stations.pause", () => {
 			this.updateStationPaused(true);
 		});
 
-		this.socket.on("event:stations.resume", res => {
-			this.timePaused = res.data.timePaused;
+		this.socket.on("event:stations.resume", () => {
 			this.updateStationPaused(false);
 		});
 
@@ -319,17 +388,13 @@ export default {
 		isOwnerOrAdmin() {
 			return this.isOwner() || this.isAdmin();
 		},
-		removeStation(index) {
-			this.socket.dispatch(
-				"stations.remove",
-				this.station._id,
-				res => {
-					new Toast(res.message);
-					if (res.status === "success") {
-						this.closeModal("manageStation");
-					}
+		removeStation() {
+			this.socket.dispatch("stations.remove", this.station._id, res => {
+				new Toast(res.message);
+				if (res.status === "success") {
+					this.closeModal("manageStation");
 				}
-			);
+			});
 		},
 		resumeStation() {
 			this.socket.dispatch("stations.resume", this.station._id, res => {

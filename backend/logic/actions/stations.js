@@ -81,9 +81,15 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "station.queueLockToggled",
 	cb: data => {
+		const { stationId, locked } = data;
 		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `station.${data.stationId}`,
-			args: ["event:queueLockToggled", { data: { locked: data.locked } }]
+			room: `station.${stationId}`,
+			args: ["event:queueLockToggled", { data: { locked } }]
+		});
+
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: `manage-station.${stationId}`,
+			args: ["event:queueLockToggled", { data: { stationId, locked } }]
 		});
 	}
 });
@@ -98,6 +104,11 @@ CacheModule.runJob("SUB", {
 				args: ["event:partyMode.updated", { data: { partyMode } }]
 			});
 
+			WSModule.runJob("EMIT_TO_ROOM", {
+				room: `manage-station.${stationId}`,
+				args: ["event:partyMode.updated", { data: { stationId, partyMode } }]
+			});
+
 			StationsModule.runJob("GET_SOCKETS_THAT_CAN_KNOW_ABOUT_STATION", {
 				room: `home`,
 				station
@@ -107,6 +118,23 @@ CacheModule.runJob("SUB", {
 					socket.dispatch("event:station.updatePartyMode", { data: { stationId, partyMode } });
 				});
 			});
+		});
+	}
+});
+
+CacheModule.runJob("SUB", {
+	channel: "station.newPlayMode",
+	cb: data => {
+		const { stationId, playMode } = data;
+		
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: `station.${stationId}`,
+			args: ["event:playMode.updated", { data: { playMode } }]
+		});
+
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: `manage-station.${stationId}`,
+			args: ["event:playMode.updated", { data: { stationId, playMode } }]
 		});
 	}
 });
@@ -132,12 +160,87 @@ CacheModule.runJob("SUB", {
 // });
 
 CacheModule.runJob("SUB", {
+	channel: "station.includedPlaylist",
+	cb: data => {
+		const { stationId, playlistId } = data;
+
+		PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }).then(playlist => {
+			WSModule.runJob("EMIT_TO_ROOM", {
+				room: `station.${stationId}`,
+				args: ["event:station.includedPlaylist", { data: { stationId, playlist } }]
+			});
+
+			WSModule.runJob("EMIT_TO_ROOM", {
+				room: `manage-station.${stationId}`,
+				args: ["event:station.includedPlaylist", { data: { stationId, playlist } }]
+			});
+		});
+	}
+});
+
+CacheModule.runJob("SUB", {
+	channel: "station.excludedPlaylist",
+	cb: data => {
+		const { stationId, playlistId } = data;
+
+		PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }).then(playlist => {
+			WSModule.runJob("EMIT_TO_ROOM", {
+				room: `station.${stationId}`,
+				args: ["event:station.excludedPlaylist", { data: { stationId, playlist } }]
+			});
+
+			WSModule.runJob("EMIT_TO_ROOM", {
+				room: `manage-station.${stationId}`,
+				args: ["event:station.excludedPlaylist", { data: { stationId, playlist } }]
+			});
+		});
+	}
+});
+
+CacheModule.runJob("SUB", {
+	channel: "station.removedIncludedPlaylist",
+	cb: data => {
+		const { stationId, playlistId } = data;
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: `station.${stationId}`,
+			args: ["event:station.removedIncludedPlaylist", { data: { stationId, playlistId } }]
+		});
+
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: `manage-station.${stationId}`,
+			args: ["event:station.removedIncludedPlaylist", { data: { stationId, playlistId } }]
+		});
+	}
+});
+
+CacheModule.runJob("SUB", {
+	channel: "station.removedExcludedPlaylist",
+	cb: data => {
+		const { stationId, playlistId } = data;
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: `station.${stationId}`,
+			args: ["event:station.removedExcludedPlaylist", { data: { stationId, playlistId } }]
+		});
+
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: `manage-station.${stationId}`,
+			args: ["event:station.removedExcludedPlaylist", { data: { stationId, playlistId } }]
+		});
+	}
+});
+
+CacheModule.runJob("SUB", {
 	channel: "station.pause",
 	cb: stationId => {
 		StationsModule.runJob("GET_STATION", { stationId }).then(station => {
 			WSModule.runJob("EMIT_TO_ROOM", {
 				room: `station.${stationId}`,
 				args: ["event:stations.pause", { data: { pausedAt: station.pausedAt } }]
+			});
+
+			WSModule.runJob("EMIT_TO_ROOM", {
+				room: `manage-station.${stationId}`,
+				args: ["event:stations.pause", { data: { stationId, pausedAt: station.pausedAt } }]
 			});
 
 			StationsModule.runJob("GET_SOCKETS_THAT_CAN_KNOW_ABOUT_STATION", {
@@ -160,6 +263,11 @@ CacheModule.runJob("SUB", {
 			WSModule.runJob("EMIT_TO_ROOM", {
 				room: `station.${stationId}`,
 				args: ["event:stations.resume", { data: { timePaused: station.timePaused } }]
+			});
+
+			WSModule.runJob("EMIT_TO_ROOM", {
+				room: `manage-station.${stationId}`,
+				args: ["event:stations.resume", { data: { stationId, timePaused: station.timePaused } }]
 			});
 
 			StationsModule.runJob("GET_SOCKETS_THAT_CAN_KNOW_ABOUT_STATION", {
@@ -223,6 +331,16 @@ CacheModule.runJob("SUB", {
 					});
 				}
 			}
+
+			WSModule.runJob("EMIT_TO_ROOM", {
+				room: `station.${stationId}`,
+				args: ["event:station.updatePrivacy", { data: { privacy: station.privacy } }]
+			});
+
+			WSModule.runJob("EMIT_TO_ROOM", {
+				room: `manage-station.${stationId}`,
+				args: ["event:station.updatePrivacy", { data: { stationId, privacy: station.privacy } }]
+			});
 		});
 	}
 });
@@ -232,7 +350,7 @@ CacheModule.runJob("SUB", {
 	cb: res => {
 		const { stationId, name } = res;
 
-		StationsModule.runJob("GET_STATION", { stationId }).then(station =>
+		StationsModule.runJob("GET_STATION", { stationId }).then(station => {
 			StationsModule.runJob("GET_SOCKETS_THAT_CAN_KNOW_ABOUT_STATION", {
 				room: `home`,
 				station
@@ -241,11 +359,16 @@ CacheModule.runJob("SUB", {
 				socketsThatCan.forEach(socket =>
 					socket.dispatch("event:station.updateName", { data: { stationId, name } })
 				);
-			})
-		);
+			});
+		});
 
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${stationId}`,
+			args: ["event:station.updateName", { data: { stationId, name } }]
+		});
+
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: `manage-station.${stationId}`,
 			args: ["event:station.updateName", { data: { stationId, name } }]
 		});
 	}
@@ -272,6 +395,11 @@ CacheModule.runJob("SUB", {
 			room: `station.${stationId}`,
 			args: ["event:station.updateDisplayName", { data: { stationId, displayName } }]
 		});
+
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: `manage-station.${stationId}`,
+			args: ["event:station.updateDisplayName", { data: { stationId, displayName } }]
+		});
 	}
 });
 
@@ -296,6 +424,11 @@ CacheModule.runJob("SUB", {
 			room: `station.${stationId}`,
 			args: ["event:station.updateDescription", { data: { stationId, description } }]
 		});
+
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: `manage-station.${stationId}`,
+			args: ["event:station.updateDescription", { data: { stationId, description } }]
+		});
 	}
 });
 
@@ -310,6 +443,11 @@ CacheModule.runJob("SUB", {
 				args: ["event:station.themeUpdated", { data: { theme: station.theme } }]
 			});
 
+			WSModule.runJob("EMIT_TO_ROOM", {
+				room: `manage-station.${stationId}`,
+				args: ["event:station.themeUpdated", { data: { stationId, theme: station.theme } }]
+			});
+
 			StationsModule.runJob("GET_SOCKETS_THAT_CAN_KNOW_ABOUT_STATION", {
 				room: `home`,
 				station
@@ -319,7 +457,7 @@ CacheModule.runJob("SUB", {
 					socket.dispatch("event:station.updateTheme", { data: { stationId, theme: station.theme } });
 				});
 			});
-		});
+		});		
 	}
 });
 
@@ -330,6 +468,11 @@ CacheModule.runJob("SUB", {
 			WSModule.runJob("EMIT_TO_ROOM", {
 				room: `station.${stationId}`,
 				args: ["event:queue.update", { data: { queue: station.queue } }]
+			});
+
+			WSModule.runJob("EMIT_TO_ROOM", {
+				room: `manage-station.${stationId}`,
+				args: ["event:queue.update", { data: { stationId, queue: station.queue } }]
 			});
 		});
 	}
@@ -3304,13 +3447,13 @@ export default {
 
 				PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();
 
-				// CacheModule.runJob("PUB", {
-				// 	channel: "privatePlaylist.selected",
-				// 	value: {
-				// 		playlistId,
-				// 		stationId
-				// 	}
-				// });
+				CacheModule.runJob("PUB", {
+					channel: "station.includedPlaylist",
+					value: {
+						playlistId,
+						stationId
+					}
+				});
 
 				return cb({
 					status: "success",
@@ -3371,13 +3514,13 @@ export default {
 
 				PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();
 
-				// CacheModule.runJob("PUB", {
-				// 	channel: "privatePlaylist.selected",
-				// 	value: {
-				// 		playlistId,
-				// 		stationId
-				// 	}
-				// });
+				CacheModule.runJob("PUB", {
+					channel: "station.removedIncludedPlaylist",
+					value: {
+						playlistId,
+						stationId
+					}
+				});
 
 				return cb({
 					status: "success",
@@ -3438,13 +3581,13 @@ export default {
 
 				PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();
 
-				// CacheModule.runJob("PUB", {
-				// 	channel: "privatePlaylist.selected",
-				// 	value: {
-				// 		playlistId,
-				// 		stationId
-				// 	}
-				// });
+				CacheModule.runJob("PUB", {
+					channel: "station.excludedPlaylist",
+					value: {
+						playlistId,
+						stationId
+					}
+				});
 
 				return cb({
 					status: "success",
@@ -3505,13 +3648,13 @@ export default {
 
 				PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();
 
-				// CacheModule.runJob("PUB", {
-				// 	channel: "privatePlaylist.selected",
-				// 	value: {
-				// 		playlistId,
-				// 		stationId
-				// 	}
-				// });
+				CacheModule.runJob("PUB", {
+					channel: "station.removedExcludedPlaylist",
+					value: {
+						playlistId,
+						stationId
+					}
+				});
 
 				return cb({
 					status: "success",

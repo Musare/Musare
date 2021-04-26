@@ -138,6 +138,28 @@ export default {
 	},
 
 	/**
+	 * Joins a room
+	 *
+	 * @param {object} session - user session
+	 * @param {string} page - the room to join
+	 * @param {Function} cb - callback
+	 */
+	 joinManageStationRoom: isAdminRequired((session, page, cb) => {
+		if (page.startsWith("manage-station.")) {
+			WSModule.runJob("SOCKET_JOIN_ROOM", {
+				socketId: session.socketId,
+				room: page
+			})
+				.then(() => {})
+				.catch(err => {
+					this.log("ERROR", `Joining room failed: ${err.message}`);
+				});
+		}
+
+		cb({ status: "success", message: "Successfully joined room." });
+	}),
+
+	/**
 	 * Joins an admin room
 	 *
 	 * @param {object} session - user session
