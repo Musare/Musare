@@ -171,7 +171,7 @@
 				</confirm>
 				<confirm
 					v-if="station && station.type === 'community'"
-					@confirm="deleteStation()"
+					@confirm="removeStation()"
 				>
 					<button class="button is-danger">Delete station</button>
 				</confirm>
@@ -318,6 +318,18 @@ export default {
 		},
 		isOwnerOrAdmin() {
 			return this.isOwner() || this.isAdmin();
+		},
+		removeStation(index) {
+			this.socket.dispatch(
+				"stations.remove",
+				this.station._id,
+				res => {
+					new Toast(res.message);
+					if (res.status === "success") {
+						this.closeModal("manageStation");
+					}
+				}
+			);
 		},
 		resumeStation() {
 			this.socket.dispatch("stations.resume", this.station._id, res => {
