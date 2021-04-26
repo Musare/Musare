@@ -597,11 +597,21 @@ export default {
 		});
 
 		this.socket.on("event:station.updateTheme", res => {
+			const { stationId, theme } = res.data;
 			const station = this.stations.find(
-				station => station._id === res.stationId
+				station => station._id === stationId
 			);
 
-			if (station) station.theme = res.theme;
+			if (station) station.theme = theme;
+		});
+
+		this.socket.on("event:station.updatePartyMode", res => {
+			const { stationId, partyMode } = res.data;
+			const station = this.stations.find(
+				station => station._id === stationId
+			);
+
+			if (station) station.partyMode = partyMode;
 		});
 
 		this.socket.on("event:station.nextSong", res => {

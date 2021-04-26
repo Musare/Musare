@@ -1152,94 +1152,108 @@ class _StationsModule extends CoreClass {
 	GET_SOCKETS_THAT_CAN_KNOW_ABOUT_STATION(payload) {
 		return new Promise((resolve, reject) => {
 			WSModule.runJob("GET_SOCKETS_FOR_ROOM", { room: payload.room }, this)
-				.then(sockets => {
-					let socketsThatCan = [];
-					const socketsThatCannot = [];
+				.then(socketIds => {
+					const sockets = [];
+					async.eachLimit(
+						socketIds,
+						1,
+						(socketId, next) => {
+							WSModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId }, this).then(socket => {
+								sockets.push(socket);
+								next();
+							}).catch(err => {
+								reject(err);
+							});
+						},
+						err => {
+							if (err) reject(err);
+							else {
+								let socketsThatCan = [];
+								const socketsThatCannot = [];
 
-					if (payload.station.privacy === "public") {
-						socketsThatCan = sockets;
-						resolve({ socketsThatCan, socketsThatCannot });
-					} else {
-						async.eachLimit(
-							sockets,
-							1,
-							(socketId, next) => {
-								WSModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId }, this).then(socket => {
-									const { session } = socket;
+								if (payload.station.privacy === "public") {
+									socketsThatCan = sockets;
+									resolve({ socketsThatCan, socketsThatCannot });
+								} else {
+									async.eachLimit(
+										sockets,
+										1,
+										(socket, next) => {
+											const { session } = socket;
 
-									async.waterfall(
-										[
-											next => {
-												if (!session.sessionId) next("No session id");
-												else next();
-											},
-
-											next => {
-												CacheModule.runJob(
-													"HGET",
-													{
-														table: "sessions",
-														key: session.sessionId
+											async.waterfall(
+												[
+													next => {
+														if (!session.sessionId) next("No session id");
+														else next();
 													},
-													this
-												)
-													.then(response => {
-														next(null, response);
-													})
-													.catch(next);
-											},
 
-											(session, next) => {
-												if (!session) next("No session");
-												else {
-													DBModule.runJob("GET_MODEL", { modelName: "user" }, this)
-														.then(userModel => {
-															next(null, userModel);
-														})
-														.catch(next);
-												}
-											},
+													next => {
+														CacheModule.runJob(
+															"HGET",
+															{
+																table: "sessions",
+																key: session.sessionId
+															},
+															this
+														)
+															.then(response => {
+																next(null, response);
+															})
+															.catch(next);
+													},
 
-											(userModel, next) => {
-												if (!userModel) next("No user model");
-												else
-													userModel.findOne(
-														{
-															_id: session.userId
-														},
-														next
-													);
-											},
+													(session, next) => {
+														if (!session) next("No session");
+														else {
+															DBModule.runJob("GET_MODEL", { modelName: "user" }, this)
+																.then(userModel => {
+																	next(null, userModel);
+																})
+																.catch(next);
+														}
+													},
 
-											(user, next) => {
-												if (!user) next("No user found");
-												else if (user.role === "admin") {
-													socketsThatCan.push(socket);
+													(userModel, next) => {
+														if (!userModel) next("No user model");
+														else
+															userModel.findOne(
+																{
+																	_id: session.userId
+																},
+																next
+															);
+													},
+
+													(user, next) => {
+														if (!user) next("No user found");
+														else if (user.role === "admin") {
+															socketsThatCan.push(socket);
+															next();
+														} else if (
+															payload.station.type === "community" &&
+															payload.station.owner === session.userId
+														) {
+															socketsThatCan.push(socket);
+															next();
+														}
+													}
+												],
+												err => {
+													if (err) socketsThatCannot.push(socket);
 													next();
-												} else if (
-													payload.station.type === "community" &&
-													payload.station.owner === session.userId
-												) {
-													socketsThatCan.push(socket);
-													next();
 												}
-											}
-										],
+											);
+										},
 										err => {
-											if (err) socketsThatCannot.push(socket);
-											next();
+											if (err) reject(err);
+											else resolve({ socketsThatCan, socketsThatCannot });
 										}
 									);
-								}).catch(err => {
-									next(err);
-								});
-							},
-							err => {
-								if (err) reject(err);
-								else resolve({ socketsThatCan, socketsThatCannot });
+								}
 							}
-						);
-					}
+						}
+					);
 				})
 				.catch(reject);
 		});

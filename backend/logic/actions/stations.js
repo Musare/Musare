@@ -79,16 +79,6 @@ CacheModule.runJob("SUB", {
 });
 
 CacheModule.runJob("SUB", {
-	channel: "station.updateTheme",
-	cb: data => {
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `station.${data.stationId}`,
-			args: ["event:theme.updated", { data: { theme: data.theme } }]
-		});
-	}
-});
-
-CacheModule.runJob("SUB", {
 	channel: "station.queueLockToggled",
 	cb: data => {
 		WSModule.runJob("EMIT_TO_ROOM", {
@@ -101,9 +91,22 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "station.updatePartyMode",
 	cb: data => {
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `station.${data.stationId}`,
-			args: ["event:partyMode.updated", { data: { partyMode: data.partyMode } }]
+		const { stationId, partyMode } = data;
+		StationsModule.runJob("GET_STATION", { stationId }).then(station => {
+			WSModule.runJob("EMIT_TO_ROOM", {
+				room: `station.${stationId}`,
+				args: ["event:partyMode.updated", { data: { partyMode } }]
+			});
+
+			StationsModule.runJob("GET_SOCKETS_THAT_CAN_KNOW_ABOUT_STATION", {
+				room: `home`,
+				station
+			}).then(response => {
+				const { socketsThatCan } = response;
+				socketsThatCan.forEach(socket => {
+					socket.dispatch("event:station.updatePartyMode", { data: { stationId, partyMode } });
+				});
+			});
 		});
 	}
 });
@@ -313,7 +316,7 @@ CacheModule.runJob("SUB", {
 			}).then(res => {
 				const { socketsThatCan } = res;
 				socketsThatCan.forEach(socket => {
-					socket.dispatch("event:station.themeUpdated", { data: { theme: station.theme } });
+					socket.dispatch("event:station.updateTheme", { data: { stationId, theme: station.theme } });
 				});
 			});
 		});
