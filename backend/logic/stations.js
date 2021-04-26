@@ -1152,8 +1152,7 @@ class _StationsModule extends CoreClass {
 	GET_SOCKETS_THAT_CAN_KNOW_ABOUT_STATION(payload) {
 		return new Promise((resolve, reject) => {
 			WSModule.runJob("GET_SOCKETS_FOR_ROOM", { room: payload.room }, this)
-				.then(socketsObject => {
-					const sockets = Object.keys(socketsObject).map(socketKey => socketsObject[socketKey]);
+				.then(sockets => {
 					let socketsThatCan = [];
 					const socketsThatCannot = [];
 
@@ -1164,72 +1163,76 @@ class _StationsModule extends CoreClass {
 						async.eachLimit(
 							sockets,
 							1,
-							(socket, next) => {
-								const { session } = socket;
+							(socketId, next) => {
+								WSModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId }, this).then(socket => {
+									const { session } = socket;
 
-								async.waterfall(
-									[
-										next => {
-											if (!session.sessionId) next("No session id");
-											else next();
-										},
+									async.waterfall(
+										[
+											next => {
+												if (!session.sessionId) next("No session id");
+												else next();
+											},
 
-										next => {
-											CacheModule.runJob(
-												"HGET",
-												{
-													table: "sessions",
-													key: session.sessionId
-												},
-												this
-											)
-												.then(response => {
-													next(null, response);
-												})
-												.catch(next);
-										},
-
-										(session, next) => {
-											if (!session) next("No session");
-											else {
-												DBModule.runJob("GET_MODEL", { modelName: "user" }, this)
-													.then(userModel => {
-														next(null, userModel);
+											next => {
+												CacheModule.runJob(
+													"HGET",
+													{
+														table: "sessions",
+														key: session.sessionId
+													},
+													this
+												)
+													.then(response => {
+														next(null, response);
 													})
 													.catch(next);
-											}
-										},
+											},
 
-										(userModel, next) => {
-											if (!userModel) next("No user model");
-											else
-												userModel.findOne(
-													{
-														_id: session.userId
-													},
-													next
-												);
-										},
+											(session, next) => {
+												if (!session) next("No session");
+												else {
+													DBModule.runJob("GET_MODEL", { modelName: "user" }, this)
+														.then(userModel => {
+															next(null, userModel);
+														})
+														.catch(next);
+												}
+											},
 
-										(user, next) => {
-											if (!user) next("No user found");
-											else if (user.role === "admin") {
-												socketsThatCan.push(socket);
-												next();
-											} else if (
-												payload.station.type === "community" &&
-												payload.station.owner === session.userId
-											) {
-												socketsThatCan.push(socket);
-												next();
+											(userModel, next) => {
+												if (!userModel) next("No user model");
+												else
+													userModel.findOne(
+														{
+															_id: session.userId
+														},
+														next
+													);
+											},
+
+											(user, next) => {
+												if (!user) next("No user found");
+												else if (user.role === "admin") {
+													socketsThatCan.push(socket);
+													next();
+												} else if (
+													payload.station.type === "community" &&
+													payload.station.owner === session.userId
+												) {
+													socketsThatCan.push(socket);
+													next();
+												}
 											}
+										],
+										err => {
+											if (err) socketsThatCannot.push(socket);
+											next();
 										}
-									],
-									err => {
-										if (err) socketsThatCannot.push(socket);
-										next();
-									}
-								);
+									);
+								}).catch(err => {
+									next(err);
+								});
 							},
 							err => {
 								if (err) reject(err);

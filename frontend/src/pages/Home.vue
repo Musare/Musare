@@ -518,7 +518,7 @@ export default {
 		ws.onConnect(() => this.init());
 
 		this.socket.on("event:stations.created", res => {
-			const station = res.data;
+			const { station } = res.data;
 
 			if (this.stations.find(_station => _station._id === station._id)) {
 				this.stations.forEach(s => {
