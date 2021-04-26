@@ -23,7 +23,7 @@
 						class="tab unverifiedsongs"
 						to="/admin/unverifiedsongs"
 					>
-						<i class="material-icons">music_note</i>
+						<i class="material-icons">unpublished</i>
 						<span>&nbsp;Unverified Songs</span>
 					</router-link>
 				</li>

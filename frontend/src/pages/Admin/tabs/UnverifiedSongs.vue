@@ -262,11 +262,6 @@ export default {
 			});
 		},
 		hide(id) {
-			// eslint-disable-next-line
-			const dialogResult = window.confirm(
-				"Are you sure you want to hide this song?"
-			);
-			if (dialogResult !== true) return;
 			this.socket.dispatch("songs.hide", id, res => {
 				new Toast(res.message);
 			});

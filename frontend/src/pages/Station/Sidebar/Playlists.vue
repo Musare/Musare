@@ -21,12 +21,18 @@
 				>
 					<div class="icons-group" slot="actions">
 						<i
+							v-if="isExcluded(playlist._id)"
+							class="material-icons stop-icon"
+							content="This playlist is blacklisted in this station"
+							v-tippy
+							>play_disabled</i
+						>
+						<i
 							v-if="
 								station.type === 'community' &&
-									(userId === station.owner ||
-										role === 'admin' ||
-										station.partyMode) &&
-									!isSelected(playlist._id)
+									(isOwnerOrAdmin() || station.partyMode) &&
+									!isSelected(playlist._id) &&
+									!isExcluded(playlist._id)
 							"
 							@click="selectPlaylist(playlist)"
 							class="material-icons play-icon"
@@ -38,24 +44,36 @@
 							v-tippy
 							>play_arrow</i
 						>
-						<i
+						<confirm
 							v-if="
 								station.type === 'community' &&
-									(userId === station.owner ||
-										role === 'admin' ||
-										station.partyMode) &&
+									(isOwnerOrAdmin() || station.partyMode) &&
 									isSelected(playlist._id)
 							"
-							@click="deselectPlaylist(playlist._id)"
-							class="material-icons stop-icon"
-							:content="
-								station.partyMode
-									? 'Stop requesting songs from this playlist'
-									: 'Stop playing songs from this playlist'
-							"
-							v-tippy
-							>stop</i
+							@confirm="deselectPlaylist(playlist._id)"
 						>
+							<i
+								class="material-icons stop-icon"
+								:content="
+									station.partyMode
+										? 'Stop requesting songs from this playlist'
+										: 'Stop playing songs from this playlist'
+								"
+								v-tippy
+								>stop</i
+							>
+						</confirm>
+						<confirm
+							v-if="isOwnerOrAdmin() && !isExcluded(playlist._id)"
+							@confirm="blacklistPlaylist(playlist._id)"
+						>
+							<i
+								class="material-icons stop-icon"
+								content="Blacklist Playlist"
+								v-tippy
+								>block</i
+							>
+						</confirm>
 						<i
 							@click="edit(playlist._id)"
 							class="material-icons edit-icon"
@@ -87,9 +105,10 @@ import Toast from "toasters";
 
 import PlaylistItem from "@/components/PlaylistItem.vue";
 import SortablePlaylists from "@/mixins/SortablePlaylists.vue";
+import Confirm from "@/components/Confirm.vue";
 
 export default {
-	components: { PlaylistItem },
+	components: { PlaylistItem, Confirm },
 	mixins: [SortablePlaylists],
 	computed: {
 		currentPlaylists() {
@@ -100,7 +119,8 @@ export default {
 		},
 		...mapState({
 			role: state => state.user.auth.role,
-			userId: state => state.user.auth.userId
+			userId: state => state.user.auth.userId,
+			loggedIn: state => state.user.auth.loggedIn
 		}),
 		...mapState("station", {
 			partyPlaylists: state => state.partyPlaylists,
@@ -118,8 +138,45 @@ export default {
 			if (res.status === "success") this.setPlaylists(res.data.playlists);
 			this.orderOfPlaylists = this.calculatePlaylistOrder(); // order in regards to the database
 		});
+
+		this.socket.on("event:station.includedPlaylist", res => {
+			const { playlist } = res.data;
+			this.includedPlaylists.push(playlist);
+		});
+
+		this.socket.on("event:station.excludedPlaylist", res => {
+			const { playlist } = res.data;
+			this.excludedPlaylists.push(playlist);
+		});
+
+		this.socket.on("event:station.removedIncludedPlaylist", res => {
+			const { playlistId } = res.data;
+			const playlistIndex = this.includedPlaylists
+				.map(playlist => playlist._id)
+				.indexOf(playlistId);
+			if (playlistIndex >= 0)
+				this.includedPlaylists.splice(playlistIndex, 1);
+		});
+
+		this.socket.on("event:station.removedExcludedPlaylist", res => {
+			const { playlistId } = res.data;
+			const playlistIndex = this.excludedPlaylists
+				.map(playlist => playlist._id)
+				.indexOf(playlistId);
+			if (playlistIndex >= 0)
+				this.excludedPlaylists.splice(playlistIndex, 1);
+		});
 	},
 	methods: {
+		isOwner() {
+			return this.loggedIn && this.userId === this.station.owner;
+		},
+		isAdmin() {
+			return this.loggedIn && this.role === "admin";
+		},
+		isOwnerOrAdmin() {
+			return this.isOwner() || this.isAdmin();
+		},
 		edit(id) {
 			this.editPlaylist(id);
 			this.openModal("editPlaylist");
@@ -172,12 +229,31 @@ export default {
 			}
 		},
 		isSelected(id) {
-			// TODO Also change this once it changes for a station
 			let selected = false;
 			this.currentPlaylists.forEach(playlist => {
 				if (playlist._id === id) selected = true;
 			});
 			return selected;
+		},
+		isExcluded(id) {
+			let selected = false;
+			this.excludedPlaylists.forEach(playlist => {
+				if (playlist._id === id) selected = true;
+			});
+			return selected;
+		},
+		blacklistPlaylist(id) {
+			if (this.isSelected(id)) {
+				this.deselectPlaylist(id);
+			}
+			this.socket.dispatch(
+				"stations.excludePlaylist",
+				this.station._id,
+				id,
+				res => {
+					new Toast(res.message);
+				}
+			);
 		},
 		addPartyPlaylistSongToQueue() {
 			let isInQueue = false;

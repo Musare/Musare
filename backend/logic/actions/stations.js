@@ -126,7 +126,7 @@ CacheModule.runJob("SUB", {
 	channel: "station.newPlayMode",
 	cb: data => {
 		const { stationId, playMode } = data;
-		
+
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${stationId}`,
 			args: ["event:playMode.updated", { data: { playMode } }]
@@ -457,7 +457,7 @@ CacheModule.runJob("SUB", {
 					socket.dispatch("event:station.updateTheme", { data: { stationId, theme: station.theme } });
 				});
 			});
-		});		
+		});
 	}
 });
 
@@ -2776,7 +2776,9 @@ export default {
 														type,
 														privacy: "private",
 														playlist: playlist._id,
-														currentSong: null
+														currentSong: null,
+														partyMode: false,
+														playMode: "random"
 													},
 													(err, station) => {
 														next(
@@ -2822,7 +2824,9 @@ export default {
 											privacy: "private",
 											owner: session.userId,
 											queue: [],
-											currentSong: null
+											currentSong: null,
+											partyMode: true,
+											playMode: "random"
 										},
 										(err, station) => {
 											next(err, station, null, null);

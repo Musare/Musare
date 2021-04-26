@@ -349,11 +349,6 @@ export default {
 			this.openModal("editSong");
 		},
 		remove(id) {
-			// eslint-disable-next-line
-			const dialogResult = window.confirm(
-				"Are you sure you want to unverify this song?"
-			);
-			if (dialogResult !== true) return;
 			this.socket.dispatch("songs.unverify", id, res => {
 				if (res.status === "success") new Toast(res.message);
 				else new Toast(res.message);

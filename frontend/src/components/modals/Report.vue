@@ -283,8 +283,13 @@ h6 {
 	}
 }
 
-.edit-report-wrapper {
-	padding: 20px;
+.card {
+	border-radius: 5px;
+}
+
+.columns {
+	margin-left: unset;
+	margin-right: unset;
 }
 
 .is-highlight-active {

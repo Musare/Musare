@@ -144,7 +144,7 @@ export default {
 	 * @param {string} page - the room to join
 	 * @param {Function} cb - callback
 	 */
-	 joinManageStationRoom: isAdminRequired((session, page, cb) => {
+	joinManageStationRoom: isAdminRequired((session, page, cb) => {
 		if (page.startsWith("manage-station.")) {
 			WSModule.runJob("SOCKET_JOIN_ROOM", {
 				socketId: session.socketId,

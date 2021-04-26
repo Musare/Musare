@@ -1158,12 +1158,14 @@ class _StationsModule extends CoreClass {
 						socketIds,
 						1,
 						(socketId, next) => {
-							WSModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId }, this).then(socket => {
-								sockets.push(socket);
-								next();
-							}).catch(err => {
-								reject(err);
-							});
+							WSModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId }, this)
+								.then(socket => {
+									sockets.push(socket);
+									next();
+								})
+								.catch(err => {
+									reject(err);
+								});
 						},
 						err => {
 							if (err) reject(err);

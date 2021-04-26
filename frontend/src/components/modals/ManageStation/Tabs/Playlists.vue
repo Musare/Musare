@@ -112,6 +112,13 @@
 						:show-owner="true"
 					>
 						<div class="icons-group" slot="actions">
+							<i
+								v-if="isExcluded(playlist._id)"
+								class="material-icons stop-icon"
+								content="This playlist is blacklisted in this station"
+								v-tippy
+								>play_disabled</i
+							>
 							<confirm
 								v-if="
 									(isOwnerOrAdmin() ||
@@ -134,7 +141,8 @@
 									(isOwnerOrAdmin() ||
 										(station.type === 'community' &&
 											station.partyMode)) &&
-										!isSelected(playlist._id)
+										!isSelected(playlist._id) &&
+										!isExcluded(playlist._id)
 								"
 								@click="selectPlaylist(playlist)"
 								class="material-icons play-icon"
@@ -149,7 +157,6 @@
 							<confirm
 								v-if="
 									isOwnerOrAdmin() &&
-										!isSelected(playlist._id) &&
 										!isExcluded(playlist._id)
 								"
 								@confirm="blacklistPlaylist(playlist._id)"
@@ -224,6 +231,13 @@
 							:playlist="playlist"
 						>
 							<div slot="actions">
+								<i
+									v-if="isExcluded(playlist._id)"
+									class="material-icons stop-icon"
+									content="This playlist is blacklisted in this station"
+									v-tippy
+									>play_disabled</i
+								>
 								<i
 									v-if="
 										station.type === 'community' &&
@@ -444,7 +458,6 @@ export default {
 			}
 		},
 		isSelected(id) {
-			// TODO Also change this once it changes for a station
 			let selected = false;
 			this.currentPlaylists.forEach(playlist => {
 				if (playlist._id === id) selected = true;
@@ -506,16 +519,6 @@ export default {
 			}
 			this.socket.dispatch(
 				"stations.excludePlaylist",
-				this.station._id,
-				id,
-				res => {
-					new Toast(res.message);
-				}
-			);
-		},
-		removeExcludedPlaylist(id) {
-			this.socket.dispatch(
-				"stations.removeExcludedPlaylist",
 				this.station._id,
 				id,
 				res => {
