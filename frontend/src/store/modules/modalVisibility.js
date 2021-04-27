@@ -1,4 +1,5 @@
 /* eslint no-param-reassign: 0 */
+import ws from "@/ws";
 
 const state = {
 	modals: {
@@ -49,6 +50,9 @@ const mutations = {
 		state.currentlyActive.unshift(modal);
 	},
 	closeCurrentModal(state) {
+		// remove any websocket listeners for the modal
+		ws.removeModalListeners(state.currentlyActive[0]);
+
 		state.modals[state.currentlyActive[0]] = false;
 		state.currentlyActive.shift();
 	}

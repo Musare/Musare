@@ -45,6 +45,17 @@ export default {
 				delete CB_REFS[id];
 		}),
 
+	removeModalListeners(modal) {
+		Object.keys(this.socket.dispatcher.listeners).forEach(type =>
+			this.socket.dispatcher.listeners[type].forEach(
+				(listener, index) => {
+					if (listener.options && listener.options.modal === modal)
+						this.socket.dispatcher.listeners[type].splice(index, 1);
+				}
+			)
+		);
+	},
+
 	init(url) {
 		// ensures correct context of socket object when dispatching (because socket object is recreated on reconnection)
 		const waitForConnectionToDispatch = (...args) =>
@@ -63,20 +74,21 @@ export default {
 				const stack = this.listeners[type];
 
 				// push the callback
-				stack.push({ cb, ...options });
+				stack.push({ cb, options });
 
 				const replaceableIndexes = [];
 
 				// check for any replaceable callbacks
 				stack.forEach((element, index) => {
-					if (element.replaceable) replaceableIndexes.push(index);
+					if (element.options && element.options.replaceable)
+						replaceableIndexes.push(index);
 				});
 
 				// should always be 1 replaceable callback remaining
 				replaceableIndexes.pop();
 
 				// delete the other replaceable callbacks
-				replaceableIndexes.forEach(index => delete stack[index]);
+				replaceableIndexes.forEach(index => stack.splice(index, 1));
 			}
 
 			// eslint-disable-next-line consistent-return

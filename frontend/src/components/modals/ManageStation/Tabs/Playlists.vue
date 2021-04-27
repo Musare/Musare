@@ -357,6 +357,7 @@ export default {
 		}),
 		...mapState("modals/manageStation", {
 			originalStation: state => state.originalStation,
+			station: state => state.station,
 			includedPlaylists: state => state.includedPlaylists,
 			excludedPlaylists: state => state.excludedPlaylists,
 			songsList: state => state.songsList

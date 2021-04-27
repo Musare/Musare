@@ -24,9 +24,7 @@ export default destination =>
 						},
 						this
 					)
-						.then(session => {
-							next(null, session);
-						})
+						.then(session => next(null, session))
 						.catch(next);
 				},
 				(session, next) => {
@@ -36,10 +34,11 @@ export default destination =>
 				(user, next) => {
 					if (!user) return next("Login required.");
 					if (user.role === "admin") return next(true);
+
+					if (!stationId) return next("Please provide a stationId.");
+
 					return StationsModule.runJob("GET_STATION", { stationId }, this)
-						.then(station => {
-							next(null, station);
-						})
+						.then(station => next(null, station))
 						.catch(next);
 				},
 				(station, next) => {

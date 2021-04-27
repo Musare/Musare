@@ -442,56 +442,82 @@ export default {
 			} else new Toast(res.message);
 		});
 
-		this.socket.on("event:playlist.addSong", res => {
-			if (this.playlist._id === res.data.playlistId)
-				this.playlist.songs.push(res.data.song);
-		});
-
-		this.socket.on("event:playlist.removeSong", res => {
-			if (this.playlist._id === res.data.playlistId) {
-				// remove song from array of playlists
-				this.playlist.songs.forEach((song, index) => {
-					if (song.youtubeId === res.data.youtubeId)
-						this.playlist.songs.splice(index, 1);
-				});
-
-				// if this song is in search results, mark it available to add to the playlist again
-				this.search.songs.results.forEach((searchItem, index) => {
-					if (res.data.youtubeId === searchItem.id) {
-						this.search.songs.results[index].isAddedToQueue = false;
-					}
-				});
+		this.socket.on(
+			"event:playlist.addSong",
+			res => {
+				if (this.playlist._id === res.data.playlistId)
+					this.playlist.songs.push(res.data.song);
+			},
+			{
+				modal: "editPlaylist"
 			}
-		});
+		);
 
-		this.socket.on("event:playlist.updateDisplayName", res => {
-			if (this.playlist._id === res.data.playlistId)
-				this.playlist.displayName = res.data.displayName;
-		});
-
-		this.socket.on("event:playlist.repositionSongs", res => {
-			if (this.playlist._id === res.data.playlistId) {
-				// for each song that has a new position
-				res.data.songsBeingChanged.forEach(changedSong => {
+		this.socket.on(
+			"event:playlist.removeSong",
+			res => {
+				if (this.playlist._id === res.data.playlistId) {
+					// remove song from array of playlists
 					this.playlist.songs.forEach((song, index) => {
-						// find song locally
-						if (song.youtubeId === changedSong.youtubeId) {
-							// change song position attribute
-							this.playlist.songs[index].position =
-								changedSong.position;
+						if (song.youtubeId === res.data.youtubeId)
+							this.playlist.songs.splice(index, 1);
+					});
 
-							// reposition in array if needed
-							if (index !== changedSong.position - 1)
-								this.playlist.songs.splice(
-									changedSong.position - 1,
-									0,
-									this.playlist.songs.splice(index, 1)[0]
-								);
+					// if this song is in search results, mark it available to add to the playlist again
+					this.search.songs.results.forEach((searchItem, index) => {
+						if (res.data.youtubeId === searchItem.id) {
+							this.search.songs.results[
+								index
+							].isAddedToQueue = false;
 						}
 					});
-				});
+				}
+			},
+			{
+				modal: "editPlaylist"
 			}
-		});
+		);
+
+		this.socket.on(
+			"event:playlist.updateDisplayName",
+			res => {
+				if (this.playlist._id === res.data.playlistId)
+					this.playlist.displayName = res.data.displayName;
+			},
+			{
+				modal: "editPlaylist"
+			}
+		);
+
+		this.socket.on(
+			"event:playlist.repositionSongs",
+			res => {
+				if (this.playlist._id === res.data.playlistId) {
+					// for each song that has a new position
+					res.data.songsBeingChanged.forEach(changedSong => {
+						this.playlist.songs.forEach((song, index) => {
+							// find song locally
+							if (song.youtubeId === changedSong.youtubeId) {
+								// change song position attribute
+								this.playlist.songs[index].position =
+									changedSong.position;
+
+								// reposition in array if needed
+								if (index !== changedSong.position - 1)
+									this.playlist.songs.splice(
+										changedSong.position - 1,
+										0,
+										this.playlist.songs.splice(index, 1)[0]
+									);
+							}
+						});
+					});
+				}
+			},
+			{
+				modal: "editPlaylist"
+			}
+		);
 	},
 	methods: {
 		importPlaylist() {
