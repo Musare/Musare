@@ -514,9 +514,8 @@ export default {
 			});
 		},
 		blacklistPlaylist(id) {
-			if (this.isSelected(id)) {
-				this.deselectPlaylist(id);
-			}
+			if (this.isSelected(id)) this.deselectPlaylist(id);
+
 			this.socket.dispatch(
 				"stations.excludePlaylist",
 				this.station._id,

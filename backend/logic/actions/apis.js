@@ -123,7 +123,7 @@ export default {
 	 * @param {Function} cb - callback
 	 */
 	joinRoom(session, page, cb) {
-		if (page === "home" || page.startsWith("profile-")) {
+		if (page === "home" || page.startsWith("profile.") || page.startsWith("manage-station.")) {
 			WSModule.runJob("SOCKET_JOIN_ROOM", {
 				socketId: session.socketId,
 				room: page
@@ -136,28 +136,6 @@ export default {
 
 		cb({ status: "success", message: "Successfully joined room." });
 	},
-
-	/**
-	 * Joins a room
-	 *
-	 * @param {object} session - user session
-	 * @param {string} page - the room to join
-	 * @param {Function} cb - callback
-	 */
-	joinManageStationRoom: isAdminRequired((session, page, cb) => {
-		if (page.startsWith("manage-station.")) {
-			WSModule.runJob("SOCKET_JOIN_ROOM", {
-				socketId: session.socketId,
-				room: page
-			})
-				.then(() => {})
-				.catch(err => {
-					this.log("ERROR", `Joining room failed: ${err.message}`);
-				});
-		}
-
-		cb({ status: "success", message: "Successfully joined room." });
-	}),
 
 	/**
 	 * Joins an admin room

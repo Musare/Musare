@@ -238,9 +238,10 @@ lofig.folder = "../config/default.json";
 			window.stationInterval = 0;
 		}
 
-		if (window.socket) ws.removeAllListeners();
-
-		ws.clear();
+		if (ws.socket) {
+			ws.clear();
+			ws.removeAllListeners();
+		}
 
 		if (
 			to.meta.loginRequired ||

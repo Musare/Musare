@@ -56,9 +56,27 @@ export default {
 				this.listeners = {};
 			}
 
-			addEventListener(type, cb) {
-				if (!(type in this.listeners)) this.listeners[type] = []; // add the listener type to listeners object
-				this.listeners[type].push(cb); // push the callback
+			addEventListener(type, cb, options) {
+				// add the listener type to listeners object
+				if (!(type in this.listeners)) this.listeners[type] = [];
+
+				const stack = this.listeners[type];
+
+				// push the callback
+				stack.push({ cb, ...options });
+
+				const replaceableIndexes = [];
+
+				// check for any replaceable callbacks
+				stack.forEach((element, index) => {
+					if (element.replaceable) replaceableIndexes.push(index);
+				});
+
+				// should always be 1 replaceable callback remaining
+				replaceableIndexes.pop();
+
+				// delete the other replaceable callbacks
+				replaceableIndexes.forEach(index => delete stack[index]);
 			}
 
 			// eslint-disable-next-line consistent-return
@@ -68,7 +86,7 @@ export default {
 				const stack = this.listeners[type];
 
 				stack.forEach((element, index) => {
-					if (element === cb) stack.splice(index, 1);
+					if (element.cb === cb) stack.splice(index, 1);
 				});
 			}
 
@@ -76,7 +94,7 @@ export default {
 				if (!(event.type in this.listeners)) return true; // event type doesn't exist
 
 				const stack = this.listeners[event.type].slice();
-				stack.forEach(element => element.call(this, event));
+				stack.forEach(element => element.cb.call(this, event));
 
 				return !event.defaultPrevented;
 			}
@@ -88,9 +106,11 @@ export default {
 				this.dispatcher = new ListenerHandler();
 			}
 
-			on(target, cb) {
-				this.dispatcher.addEventListener(target, event =>
-					cb(...event.detail)
+			on(target, cb, options) {
+				this.dispatcher.addEventListener(
+					target,
+					event => cb(...event.detail),
+					options
 				);
 			}
 

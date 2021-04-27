@@ -131,7 +131,7 @@ export default {
 			ws.onConnect(() =>
 				this.socket.dispatch(
 					"apis.joinRoom",
-					`profile-${this.userId}-playlists`,
+					`profile.${this.userId}.playlists`,
 					() => {}
 				)
 			);

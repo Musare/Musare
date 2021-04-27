@@ -277,12 +277,10 @@ export default {
 					}
 				);
 
-				if (this.sector === "admin")
-					this.socket.dispatch(
-						"apis.joinManageStationRoom",
-						`manage-station.${this.stationId}`,
-						() => {}
-					);
+				this.socket.dispatch(
+					"apis.joinRoom",
+					`manage-station.${this.stationId}`
+				);
 
 				this.socket.on("event:station.updateName", res => {
 					this.station.name = res.data.name;

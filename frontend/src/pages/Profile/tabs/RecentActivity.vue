@@ -81,7 +81,7 @@ export default {
 			ws.onConnect(() =>
 				this.socket.dispatch(
 					"apis.joinRoom",
-					`profile-${this.userId}-activities`
+					`profile.${this.userId}.activities`
 				)
 			);
 
