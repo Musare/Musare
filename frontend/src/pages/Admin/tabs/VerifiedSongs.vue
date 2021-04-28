@@ -322,7 +322,7 @@ export default {
 		);
 
 		this.socket.on("event:admin.verifiedSong.removed", res =>
-			this.removeSong(res.data.youtubeId)
+			this.removeSong(res.data.songId)
 		);
 
 		this.socket.on("event:admin.verifiedSong.updated", res =>

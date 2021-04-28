@@ -241,7 +241,7 @@ export default {
 		});
 
 		this.socket.on("event:admin.unverifiedSong.removed", res => {
-			this.removeSong(res.data.youtubeId);
+			this.removeSong(res.data.songId);
 		});
 
 		this.socket.on("event:admin.unverifiedSong.updated", res => {
