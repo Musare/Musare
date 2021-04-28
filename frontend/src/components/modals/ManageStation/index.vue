@@ -284,9 +284,7 @@ export default {
 					res => {
 						this.station.name = res.data.name;
 					},
-					{
-						modal: "manageStation"
-					}
+					{ modal: "manageStation" }
 				);
 
 				this.socket.on(
@@ -294,9 +292,7 @@ export default {
 					res => {
 						this.station.displayName = res.data.displayName;
 					},
-					{
-						modal: "manageStation"
-					}
+					{ modal: "manageStation" }
 				);
 
 				this.socket.on(
@@ -304,9 +300,7 @@ export default {
 					res => {
 						this.station.description = res.data.description;
 					},
-					{
-						modal: "manageStation"
-					}
+					{ modal: "manageStation" }
 				);
 
 				this.socket.on(
@@ -315,9 +309,7 @@ export default {
 						if (this.station.type === "community")
 							this.station.partyMode = res.data.partyMode;
 					},
-					{
-						modal: "manageStation"
-					}
+					{ modal: "manageStation" }
 				);
 
 				this.socket.on(
@@ -325,9 +317,7 @@ export default {
 					res => {
 						this.station.playMode = res.data.playMode;
 					},
-					{
-						modal: "manageStation"
-					}
+					{ modal: "manageStation" }
 				);
 
 				this.socket.on(
@@ -336,9 +326,7 @@ export default {
 						const { theme } = res.data;
 						this.station.theme = theme;
 					},
-					{
-						modal: "manageStation"
-					}
+					{ modal: "manageStation" }
 				);
 
 				this.socket.on(
@@ -346,9 +334,7 @@ export default {
 					res => {
 						this.station.privacy = res.data.privacy;
 					},
-					{
-						modal: "manageStation"
-					}
+					{ modal: "manageStation" }
 				);
 
 				this.socket.on(
@@ -356,9 +342,7 @@ export default {
 					res => {
 						this.station.locked = res.data.locked;
 					},
-					{
-						modal: "manageStation"
-					}
+					{ modal: "manageStation" }
 				);
 
 				this.socket.on(
@@ -367,9 +351,7 @@ export default {
 						const { playlist } = res.data;
 						this.includedPlaylists.push(playlist);
 					},
-					{
-						modal: "manageStation"
-					}
+					{ modal: "manageStation" }
 				);
 
 				this.socket.on(
@@ -378,9 +360,7 @@ export default {
 						const { playlist } = res.data;
 						this.excludedPlaylists.push(playlist);
 					},
-					{
-						modal: "manageStation"
-					}
+					{ modal: "manageStation" }
 				);
 
 				this.socket.on(
@@ -393,9 +373,7 @@ export default {
 						if (playlistIndex >= 0)
 							this.includedPlaylists.splice(playlistIndex, 1);
 					},
-					{
-						modal: "manageStation"
-					}
+					{ modal: "manageStation" }
 				);
 
 				this.socket.on(
@@ -408,9 +386,7 @@ export default {
 						if (playlistIndex >= 0)
 							this.excludedPlaylists.splice(playlistIndex, 1);
 					},
-					{
-						modal: "manageStation"
-					}
+					{ modal: "manageStation" }
 				);
 			} else {
 				new Toast(`Station with that ID not found`);
@@ -420,42 +396,26 @@ export default {
 
 		this.socket.on(
 			"event:queue.update",
-			res => {
-				this.updateSongsList(res.data.queue);
-			},
-			{
-				modal: "manageStation"
-			}
+			res => this.updateSongsList(res.data.queue),
+			{ modal: "manageStation" }
 		);
 
 		this.socket.on(
 			"event:queue.repositionSong",
-			res => {
-				this.repositionSongInList(res.data.song);
-			},
-			{
-				modal: "manageStation"
-			}
+			res => this.repositionSongInList(res.data.song),
+			{ modal: "manageStation" }
 		);
 
 		this.socket.on(
 			"event:stations.pause",
-			() => {
-				this.updateStationPaused(true);
-			},
-			{
-				modal: "manageStation"
-			}
+			() => this.updateStationPaused(true),
+			{ modal: "manageStation" }
 		);
 
 		this.socket.on(
 			"event:stations.resume",
-			() => {
-				this.updateStationPaused(false);
-			},
-			{
-				modal: "manageStation"
-			}
+			() => this.updateStationPaused(false),
+			{ modal: "manageStation" }
 		);
 
 		this.socket.on(
@@ -465,9 +425,7 @@ export default {
 
 				this.updateCurrentSong(currentSong || {});
 			},
-			{
-				modal: "manageStation"
-			}
+			{ modal: "manageStation" }
 		);
 	},
 	beforeDestroy() {

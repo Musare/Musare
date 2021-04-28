@@ -485,6 +485,11 @@ CacheModule.runJob("SUB", {
 			room: `station.${res.stationId}`,
 			args: ["event:queue.repositionSong", { data: { song: res.song } }]
 		});
+
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: `manage-station.${res.stationId}`,
+			args: ["event:queue.repositionSong", { data: { song: res.song } }]
+		});
 	}
 });
 
