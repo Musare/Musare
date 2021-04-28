@@ -1020,6 +1020,8 @@ export default {
 
 		clearInterval(this.activityWatchVideoDataInterval);
 
+		this.socket.dispatch("stations.leave", this.station._id, () => {});
+
 		this.leaveStation();
 	},
 	methods: {

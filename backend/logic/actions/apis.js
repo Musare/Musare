@@ -138,6 +138,28 @@ export default {
 	},
 
 	/**
+	 * Leaves a room
+	 *
+	 * @param {object} session - user session
+	 * @param {string} room - the room to leave
+	 * @param {Function} cb - callback
+	 */
+	 leaveRoom(session, room, cb) {
+		if (room === "home" || room.startsWith("profile.") || room.startsWith("manage-station.")) {
+			WSModule.runJob("SOCKET_LEAVE_ROOM", {
+				socketId: session.socketId,
+				room
+			})
+				.then(() => {})
+				.catch(err => {
+					this.log("ERROR", `Leaving room failed: ${err.message}`);
+				});
+		}
+
+		cb({ status: "success", message: "Successfully left room." });
+	},
+
+	/**
 	 * Joins an admin room
 	 *
 	 * @param {object} session - user session
@@ -155,14 +177,29 @@ export default {
 			page === "users" ||
 			page === "statistics" ||
 			page === "punishments"
-		)
-			WSModule.runJob("SOCKET_JOIN_ROOM", {
-				socketId: session.socketId,
-				room: `admin.${page}`
+		) {
+			WSModule.runJob("SOCKET_LEAVE_ROOMS", { socketId: session.socketId }).then(() => {
+				WSModule.runJob("SOCKET_JOIN_ROOM", {
+					socketId: session.socketId,
+					room: `admin.${page}`
+				});
 			});
+		}
 
 		cb({ status: "success", message: "Successfully joined admin room." });
 	}),
+
+	/**
+	 * Leaves all rooms
+	 *
+	 * @param {object} session - user session
+	 * @param {Function} cb - callback
+	 */
+	 leaveRooms(session, cb) {
+		WSModule.runJob("SOCKET_LEAVE_ROOMS", { socketId: session.socketId });
+
+		cb({ status: "success", message: "Successfully left all rooms." });
+	},
 
 	/**
 	 * Returns current date

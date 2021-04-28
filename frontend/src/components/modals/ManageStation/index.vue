@@ -429,6 +429,12 @@ export default {
 		);
 	},
 	beforeDestroy() {
+		this.socket.dispatch(
+			"apis.leaveRoom",
+			`manage-station.${this.stationId}`,
+			() => {}
+		);
+
 		this.repositionSongInList([]);
 		this.clearStation();
 		this.showTab("settings");

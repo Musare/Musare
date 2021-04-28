@@ -264,6 +264,23 @@ class _WSModule extends CoreClass {
 	}
 
 	/**
+	 * Allows a socket to leave a specific room they are connected to
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.socketId - the id of the socket which should leave a room
+	 * @param {string} payload.room - the room
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	 async SOCKET_LEAVE_ROOM(payload) {
+		return new Promise(resolve => {
+			// filter out rooms that the user is in
+			if (WSModule.rooms[payload.room]) WSModule.rooms[payload.room] = WSModule.rooms[payload.room].filter(participant => participant !== payload.socketId);
+
+			return resolve();
+		});
+	}
+
+	/**
 	 * Allows a socket to join a specified room (this will remove them from any rooms they are currently in)
 	 *
 	 * @param {object} payload - object that contains the payload
@@ -273,10 +290,6 @@ class _WSModule extends CoreClass {
 	 */
 	async SOCKET_JOIN_ROOM(payload) {
 		const { room, socketId } = payload;
-
-		// leave all other rooms
-		await WSModule.runJob("SOCKET_LEAVE_ROOMS", { socketId }, this);
-
 		return new Promise(resolve => {
 			// create room if it doesn't exist, and add socketId to array
 			if (WSModule.rooms[room]) WSModule.rooms[room].push(socketId);

@@ -5,6 +5,7 @@ import { isAdminRequired } from "./hooks";
 import moduleManager from "../../index";
 
 const UtilsModule = moduleManager.modules.utils;
+const WSModule = moduleManager.modules.ws;
 
 export default {
 	getModules: isAdminRequired(function getModules(session, cb) {
@@ -78,5 +79,22 @@ export default {
 				}
 			}
 		);
-	})
+	}),
+
+	getRooms(session, cb) {
+		WSModule.runJob("GET_ROOMS_FOR_SOCKET", { socketId: session.socketId }).then(response => {
+			this.log("SUCCESS", "GET_ROOMS", `User ${session.userId} has successfully got the module info.`);
+			cb({
+				status: "success",
+				message: "Successfully got rooms.",
+				data: {
+					rooms: response
+				}
+			});
+		}).catch(async err => {
+			err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+			this.log("ERROR", "GET_ROOMS", `Failed to get rooms. '${err}'`);
+			cb({ status: "error", message: err });
+		});
+	}
 };

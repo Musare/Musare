@@ -1473,7 +1473,7 @@ export default {
 
 				this.log("SUCCESS", "STATIONS_LEAVE", `Left station "${stationId}" successfully.`);
 
-				WSModule.runJob("SOCKET_LEAVE_ROOMS", { socketId: session });
+				WSModule.runJob("SOCKET_LEAVE_ROOM", { socketId: session.socketId, room: `station.${stationId}` });
 
 				delete StationsModule.userList[session.socketId];
 

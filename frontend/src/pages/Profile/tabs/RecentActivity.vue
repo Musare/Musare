@@ -123,6 +123,13 @@ export default {
 			this.offsettedFromNextSet = 0;
 		});
 	},
+	beforeDestroy() {
+		this.socket.dispatch(
+			"apis.leaveRoom",
+			`profile.${this.userId}.activities`,
+			() => {}
+		);
+	},
 	methods: {
 		hideActivity(activityId) {
 			this.socket.dispatch("activities.hideActivity", activityId, res => {

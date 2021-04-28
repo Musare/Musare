@@ -151,6 +151,9 @@ export default {
 	mounted() {
 		this.changeTab(this.$route.path);
 	},
+	beforeDestroy() {
+		this.socket.dispatch("apis.leaveRooms", () => {});
+	},
 	methods: {
 		changeTab(path) {
 			switch (path) {

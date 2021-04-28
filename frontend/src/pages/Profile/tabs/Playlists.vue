@@ -142,6 +142,13 @@ export default {
 			this.orderOfPlaylists = this.calculatePlaylistOrder(); // order in regards to the database
 		});
 	},
+	beforeDestroy() {
+		this.socket.dispatch(
+			"apis.leaveRoom",
+			`profile.${this.userId}.playlists`,
+			() => {}
+		);
+	},
 	methods: {
 		showPlaylist(playlistId) {
 			this.editPlaylist(playlistId);

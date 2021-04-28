@@ -680,6 +680,9 @@ export default {
 			this.orderOfFavoriteStations = res.data.order;
 		});
 	},
+	beforeDestroy() {
+		this.socket.dispatch("apis.leaveRoom", "home", () => {});
+	},
 	methods: {
 		init() {
 			this.socket.dispatch("stations.index", res => {
