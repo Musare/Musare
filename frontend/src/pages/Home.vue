@@ -615,6 +615,7 @@ export default {
 		});
 
 		this.socket.on("event:station.nextSong", res => {
+			console.log("NEXT SONG!");
 			const station = this.stations.find(
 				station => station._id === res.data.stationId
 			);
@@ -706,7 +707,7 @@ export default {
 				}
 			});
 
-			this.socket.dispatch("apis.joinRoom", "home", () => {});
+			this.socket.dispatch("apis.joinRoom", "home");
 		},
 		isOwner(station) {
 			return station.owner === this.userId;

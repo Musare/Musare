@@ -957,37 +957,28 @@ class _StationsModule extends CoreClass {
 									}
 								}
 							]
-						})
-							.then()
-							.catch();
+						});
 
-						if (station.privacy === "public") {
+						if (station.privacy === "public")
 							WSModule.runJob("EMIT_TO_ROOM", {
 								room: "home",
 								args: [
 									"event:station.nextSong",
 									{ data: { stationId: station._id, song: station.currentSong } }
 								]
-							})
-								.then()
-								.catch();
-						} else {
+							});
+						else {
 							const sockets = await WSModule.runJob("GET_SOCKETS_FOR_ROOM", { room: "home" }, this);
 
 							sockets.forEach(async socketId => {
-								const socket = await WSModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId }, this);
+								const socket = await WSModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId });
 								const { session } = socket;
 
 								if (session.sessionId) {
-									CacheModule.runJob(
-										"HGET",
-										{ table: "sessions", key: session.sessionId },
-										this
-										// eslint-disable-next-line no-loop-func
-									).then(session => {
-										if (session) {
-											DBModule.runJob("GET_MODEL", { modelName: "user" }, this).then(
-												userModel => {
+									CacheModule.runJob("HGET", { table: "sessions", key: session.sessionId }).then(
+										session => {
+											if (session) {
+												DBModule.runJob("GET_MODEL", { modelName: "user" }).then(userModel => {
 													userModel.findOne(
 														{
 															_id: session.userId
@@ -1014,10 +1005,10 @@ class _StationsModule extends CoreClass {
 															}
 														}
 													);
-												}
-											);
+												});
+											}
 										}
-									});
+									);
 								}
 							});
 						}

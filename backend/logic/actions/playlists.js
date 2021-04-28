@@ -1209,8 +1209,6 @@ export default {
 
 					if (youtubeIds.length === 0) next();
 
-					console.log(youtubeIds);
-
 					async.eachLimit(
 						youtubeIds,
 						1,

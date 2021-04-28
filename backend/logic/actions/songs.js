@@ -1470,11 +1470,7 @@ export default {
 
 		async.waterfall(
 			[
-				next => {
-					console.log(youtubeId);
-					songModel.findOne({ youtubeId }, next);
-				},
-
+				next => songModel.findOne({ youtubeId }, next),
 				(song, next) => {
 					if (!song) return next("No song found with that id.");
 					return next(null);
