@@ -122,9 +122,9 @@ const modules = {
 								"users.getUsernameFromId",
 								userId,
 								res => {
-									const { username } = res.data;
-
 									if (res.status === "success") {
+										const { username } = res.data;
+
 										commit("mapUserId", {
 											userId,
 											username

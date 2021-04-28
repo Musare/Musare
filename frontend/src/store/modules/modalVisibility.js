@@ -51,7 +51,7 @@ const mutations = {
 	},
 	closeCurrentModal(state) {
 		// remove any websocket listeners for the modal
-		ws.removeModalListeners(state.currentlyActive[0]);
+		ws.destroyModalListeners(state.currentlyActive[0]);
 
 		state.modals[state.currentlyActive[0]] = false;
 		state.currentlyActive.shift();

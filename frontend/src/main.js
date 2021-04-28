@@ -239,8 +239,8 @@ lofig.folder = "../config/default.json";
 		}
 
 		if (ws.socket) {
-			ws.clear();
-			ws.removeAllListeners();
+			ws.clearCallbacks();
+			ws.destroyListeners();
 		}
 
 		if (

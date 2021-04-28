@@ -31,12 +31,12 @@ export default {
 		else onDisconnect.temp.push(args[0]);
 	},
 
-	clear: () => {
+	clearCallbacks: () => {
 		onConnect.temp = [];
 		onDisconnect.temp = [];
 	},
 
-	removeAllListeners: () =>
+	destroyListeners: () =>
 		Object.keys(CB_REFS).forEach(id => {
 			if (
 				id.indexOf("$event:") !== -1 &&
@@ -45,14 +45,12 @@ export default {
 				delete CB_REFS[id];
 		}),
 
-	removeModalListeners(modal) {
+	destroyModalListeners(modal) {
 		Object.keys(this.socket.dispatcher.listeners).forEach(type =>
-			this.socket.dispatcher.listeners[type].forEach(
-				(listener, index) => {
-					if (listener.options && listener.options.modal === modal)
-						this.socket.dispatcher.listeners[type].splice(index, 1);
-				}
-			)
+			this.socket.dispatcher.listeners[type].forEach((element, index) => {
+				if (element.options && element.options.modal === modal)
+					this.socket.dispatcher.listeners[type].splice(index, 1);
+			})
 		);
 	},
 

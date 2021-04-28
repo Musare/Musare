@@ -24,10 +24,13 @@ const mutations = {
 			// for each listener type
 			Object.keys(listeners).forEach(listenerType =>
 				// for each callback previously present for the listener type
-				listeners[listenerType].forEach(cb =>
+				listeners[listenerType].forEach(element => {
 					// add the listener back after the websocket object is reset
-					state.socket.dispatcher.addEventListener(listenerType, cb)
-				)
+					state.socket.dispatcher.addEventListener(
+						listenerType,
+						element.cb
+					);
+				})
 			);
 		}
 	}
