@@ -144,7 +144,7 @@ export default {
 	 * @param {string} room - the room to leave
 	 * @param {Function} cb - callback
 	 */
-	 leaveRoom(session, room, cb) {
+	leaveRoom(session, room, cb) {
 		if (room === "home" || room.startsWith("profile.") || room.startsWith("manage-station.")) {
 			WSModule.runJob("SOCKET_LEAVE_ROOM", {
 				socketId: session.socketId,
@@ -195,7 +195,7 @@ export default {
 	 * @param {object} session - user session
 	 * @param {Function} cb - callback
 	 */
-	 leaveRooms(session, cb) {
+	leaveRooms(session, cb) {
 		WSModule.runJob("SOCKET_LEAVE_ROOMS", { socketId: session.socketId });
 
 		cb({ status: "success", message: "Successfully left all rooms." });

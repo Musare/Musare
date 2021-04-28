@@ -271,10 +271,13 @@ class _WSModule extends CoreClass {
 	 * @param {string} payload.room - the room
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
-	 async SOCKET_LEAVE_ROOM(payload) {
+	async SOCKET_LEAVE_ROOM(payload) {
 		return new Promise(resolve => {
 			// filter out rooms that the user is in
-			if (WSModule.rooms[payload.room]) WSModule.rooms[payload.room] = WSModule.rooms[payload.room].filter(participant => participant !== payload.socketId);
+			if (WSModule.rooms[payload.room])
+				WSModule.rooms[payload.room] = WSModule.rooms[payload.room].filter(
+					participant => participant !== payload.socketId
+				);
 
 			return resolve();
 		});

@@ -192,7 +192,7 @@
 					</playlist-item>
 					<button
 						v-if="resultsLeftCount > 0"
-						class="button is-primary"
+						class="button is-primary load-more-button"
 						@click="searchForPlaylists(search.page + 1)"
 					>
 						Load {{ nextPageResultsCount }} more results
@@ -611,6 +611,10 @@ export default {
 			.playlist-item:not(:last-of-type),
 			.item.item-draggable:not(:last-of-type) {
 				margin-bottom: 10px;
+			}
+			.load-more-button {
+				width: 100%;
+				margin-top: 10px;
 			}
 		}
 	}

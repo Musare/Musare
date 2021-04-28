@@ -29,14 +29,15 @@
 						:key="'key-' + index"
 					>
 						<div class="icons-group" slot="actions">
-							<i
-								@click="deselectPlaylist(playlist._id)"
-								class="material-icons stop-icon"
-								content="Stop blacklisting songs from this playlist
+							<confirm @confirm="deselectPlaylist(playlist._id)">
+								<i
+									class="material-icons stop-icon"
+									content="Stop blacklisting songs from this playlist
 							"
-								v-tippy
-								>stop</i
-							>
+									v-tippy
+									>stop</i
+								>
+							</confirm>
 							<i
 								v-if="playlist.createdBy === userId"
 								@click="showPlaylist(playlist._id)"
@@ -71,10 +72,12 @@ import { mapActions, mapState, mapGetters } from "vuex";
 
 import Toast from "toasters";
 import PlaylistItem from "@/components/PlaylistItem.vue";
+import Confirm from "@/components/Confirm.vue";
 
 export default {
 	components: {
-		PlaylistItem
+		PlaylistItem,
+		Confirm
 	},
 	data() {
 		return {
