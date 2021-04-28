@@ -204,29 +204,37 @@ export default {
 			}
 		},
 		deselectPlaylist(id) {
-			if (this.station.type === "community" && this.station.partyMode) {
-				let selected = false;
-				this.currentPlaylists.forEach((playlist, index) => {
-					if (playlist._id === id) {
-						selected = true;
-						this.partyPlaylists.splice(index, 1);
+			return new Promise(resolve => {
+				if (
+					this.station.type === "community" &&
+					this.station.partyMode
+				) {
+					let selected = false;
+					this.currentPlaylists.forEach((playlist, index) => {
+						if (playlist._id === id) {
+							selected = true;
+							this.partyPlaylists.splice(index, 1);
+						}
+					});
+					if (selected) {
+						new Toast("Successfully deselected playlist.");
+						resolve();
+					} else {
+						new Toast("Playlist not selected.");
+						resolve();
 					}
-				});
-				if (selected) {
-					new Toast("Successfully deselected playlist.");
 				} else {
-					new Toast("Playlist not selected.");
+					this.socket.dispatch(
+						"stations.removeIncludedPlaylist",
+						this.station._id,
+						id,
+						res => {
+							new Toast(res.message);
+							resolve();
+						}
+					);
 				}
-			} else {
-				this.socket.dispatch(
-					"stations.removeIncludedPlaylist",
-					this.station._id,
-					id,
-					res => {
-						new Toast(res.message);
-					}
-				);
-			}
+			});
 		},
 		isSelected(id) {
 			let selected = false;
@@ -242,10 +250,9 @@ export default {
 			});
 			return selected;
 		},
-		blacklistPlaylist(id) {
-			if (this.isSelected(id)) {
-				this.deselectPlaylist(id);
-			}
+		async blacklistPlaylist(id) {
+			if (this.isSelected(id)) await this.deselectPlaylist(id);
+
 			this.socket.dispatch(
 				"stations.excludePlaylist",
 				this.station._id,
