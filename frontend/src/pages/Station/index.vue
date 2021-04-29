@@ -1049,8 +1049,8 @@ export default {
 		youtubeReady() {
 			if (!this.player) {
 				this.player = new window.YT.Player("stationPlayer", {
-					height: 270,
-					width: 480,
+					height: "100%",
+					width: "100%",
 					videoId: this.currentSong.youtubeId,
 					host: "https://www.youtube-nocookie.com",
 					startSeconds:
@@ -1862,6 +1862,10 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.main-container > div {
+	height: 100%;
+}
+
 #page-loader-container {
 	height: inherit;
 
@@ -1954,15 +1958,16 @@ export default {
 #station-outer-container {
 	margin: 0 auto;
 	padding: 20px 40px;
-	height: 100%;
+	min-height: calc(
+		100vh - 196px
+	); // Height of nav (64px) + height of footer (130px)
 	width: 100%;
 	max-width: 1800px;
 	display: flex;
 
 	#station-inner-container {
-		height: 100%;
 		width: 100%;
-		min-height: calc(100vh - 428px);
+		height: fit-content;
 		display: flex;
 		flex-direction: row;
 		flex-wrap: wrap;
@@ -1981,7 +1986,6 @@ export default {
 		.quadrant {
 			border-radius: 5px;
 			margin: 10px;
-			flex-grow: 1;
 		}
 
 		.quadrant:not(#sidebar-container) {
@@ -2063,15 +2067,18 @@ export default {
 			border: 1px solid var(--light-grey-3);
 			border-radius: 5px;
 			overflow: hidden;
-			flex-grow: 1;
 
 			&.nothing-here-text {
 				margin: 10px;
+				flex: 1;
+				min-height: 487px;
 			}
 
 			#video-container {
-				width: 100%;
-				height: 100%;
+				position: relative;
+				padding-bottom: 56.25%; /* proportion value to aspect ratio 16:9 (9 / 16 = 0.5625 or 56.25%) */
+				height: 0;
+				overflow: hidden;
 
 				.player-cannot-autoplay {
 					position: relative;
@@ -2313,6 +2320,8 @@ export default {
 			border-top: 0;
 			position: relative;
 			height: inherit;
+			flex-grow: 1;
+			min-height: 350px;
 		}
 	}
 }
@@ -2504,7 +2513,7 @@ export default {
 	}
 }
 
-@media (max-width: 950px) {
+@media (max-width: 1350px) {
 	#mobile-progress-animation {
 		display: block;
 	}
@@ -2518,7 +2527,7 @@ export default {
 		max-width: 700px;
 
 		#station-inner-container {
-			flex-direction: column;
+			flex-direction: column-reverse;
 
 			#station-left-column {
 				#about-station-container #admin-buttons {
@@ -2569,6 +2578,14 @@ export default {
 				}
 			}
 		}
+	}
+}
+
+@media (max-width: 990px) {
+	#station-outer-container {
+		min-height: calc(
+			100vh - 256px
+		); // Height of nav (64px) + height of footer (190px)
 	}
 }
 </style>
