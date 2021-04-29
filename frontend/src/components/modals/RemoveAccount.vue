@@ -130,6 +130,7 @@
 				<div class="content-box-inputs">
 					<a
 						class="button is-github"
+						@click="relinkGithub()"
 						:href="`${apiDomain}/auth/github/link`"
 					>
 						<div class="icon">
@@ -182,6 +183,7 @@ export default {
 	components: { Modal, Confirm },
 	data() {
 		return {
+			name: "RemoveAccount",
 			step: "confirm-identity",
 			apiDomain: "",
 			password: {
@@ -227,13 +229,19 @@ export default {
 							`Your GitHub account isn't linked. Please re-link your account and try again.`
 						);
 						this.step = "relink-github";
-						localStorage.setItem(
-							"github_redirect",
-							window.location.pathname + window.location.search
-						);
 					}
 				} else new Toast(res.message);
 			});
+		},
+		relinkGithub() {
+			localStorage.setItem(
+				"github_redirect",
+				`${window.location.pathname + window.location.search}${
+					!this.$route.query.removeAccount
+						? "&removeAccount=relinked-github"
+						: ""
+				}`
+			);
 		},
 		remove() {
 			return this.socket.dispatch("users.remove", res => {

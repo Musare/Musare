@@ -171,6 +171,22 @@ export default {
 			}
 		}
 	},
+	mounted() {
+		if (
+			this.$route.query.removeAccount === "relinked-github" &&
+			!localStorage.getItem("github_redirect")
+		) {
+			this.openModal("removeAccount");
+
+			setTimeout(() => {
+				const modal = this.$parent.$children.find(
+					child => child.name === "RemoveAccount"
+				);
+
+				modal.confirmGithubLink();
+			}, 50);
+		}
+	},
 	methods: {
 		onInput(inputName) {
 			this.validation[inputName].entered = true;
