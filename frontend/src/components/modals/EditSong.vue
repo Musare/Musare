@@ -76,6 +76,7 @@
 							class="thumbnail-preview"
 							:src="song.thumbnail"
 							onerror="this.src='/assets/notes-transparent.png'"
+							ref="thumbnailElement"
 							v-if="songDataLoaded"
 						/>
 					</div>
@@ -945,6 +946,29 @@ export default {
 			if (!song.thumbnail) {
 				saveButtonRef.handleFailedSave();
 				return new Toast("Please fill in all fields");
+			}
+
+			const thumbnailHeight = this.$refs.thumbnailElement.naturalHeight;
+			const thumbnailWidth = this.$refs.thumbnailElement.naturalWidth;
+			const thumbnailSizeDifference = thumbnailWidth - thumbnailHeight;
+
+			if (thumbnailHeight < 100 || thumbnailWidth < 100) {
+				saveButtonRef.handleFailedSave();
+				return new Toast(
+					"Thumbnail width and height must be at least 100px."
+				);
+			}
+
+			if (thumbnailHeight > 2000 || thumbnailWidth > 2000) {
+				saveButtonRef.handleFailedSave();
+				return new Toast(
+					"Thumbnail width and height must be less than 2000px."
+				);
+			}
+
+			if (thumbnailSizeDifference > 5 || thumbnailSizeDifference < -5) {
+				saveButtonRef.handleFailedSave();
+				return new Toast("Thumbnail is not square.");
 			}
 
 			// Duration
