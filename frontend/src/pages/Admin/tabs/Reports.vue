@@ -13,7 +13,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					<tr v-for="(report, index) in reports" :key="index">
+					<tr v-for="report in reports" :key="report._id">
 						<td>
 							<span>
 								{{ report.song.youtubeId }}

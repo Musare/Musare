@@ -54,8 +54,8 @@
 						:name="!drag ? 'draggable-list-transition' : null"
 					>
 						<router-link
-							v-for="(station, index) in favoriteStations"
-							:key="`key-${index}`"
+							v-for="station in favoriteStations"
+							:key="`key-${station._id}`"
 							:to="{
 								name: 'station',
 								params: { id: station.name }
@@ -280,8 +280,8 @@
 				</a>
 
 				<router-link
-					v-for="(station, index) in filteredStations"
-					:key="index"
+					v-for="station in filteredStations"
+					:key="station._id"
 					:to="{
 						name: 'station',
 						params: { id: station.name }

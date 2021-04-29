@@ -160,7 +160,7 @@
 					>
 						<search-query-item
 							v-for="(result, index) in search.songs.results"
-							:key="index"
+							:key="result.id"
 							:result="result"
 						>
 							<div slot="actions">
@@ -241,7 +241,7 @@
 							>
 								<li
 									v-for="(song, index) in playlist.songs"
-									:key="'key-' + song._id"
+									:key="`key-${song._id}`"
 								>
 									<song-item
 										:song="song"

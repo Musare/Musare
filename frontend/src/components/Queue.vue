@@ -18,7 +18,7 @@
 			>
 				<song-item
 					v-for="(song, index) in queue"
-					:key="`queue-${index}`"
+					:key="`queue-${song._id}`"
 					:song="song"
 					:requested-by="
 						station.type === 'community' &&

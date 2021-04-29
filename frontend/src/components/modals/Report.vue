@@ -84,15 +84,15 @@
 			<div class="edit-report-wrapper">
 				<div class="columns is-multiline">
 					<div
-						v-for="(issue, issueIndex) in issues"
+						v-for="issue in issues"
 						class="column is-half"
-						:key="issueIndex"
+						:key="issue.name"
 					>
 						<label class="label">{{ issue.name }}</label>
 						<p
-							v-for="(reason, reasonIndex) in issue.reasons"
+							v-for="reason in issue.reasons"
 							class="control"
-							:key="reasonIndex"
+							:key="reason"
 						>
 							<label class="checkbox">
 								<input

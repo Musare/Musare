@@ -21,8 +21,8 @@
 			</div>
 			<div v-if="musareSearch.results.length > 0">
 				<song-item
-					v-for="(song, index) in musareSearch.results"
-					:key="index + song._id"
+					v-for="song in musareSearch.results"
+					:key="song._id"
 					:song="song"
 				>
 					<div class="song-actions" slot="actions">
@@ -69,7 +69,7 @@
 			<div v-if="search.songs.results.length > 0" id="song-query-results">
 				<search-query-item
 					v-for="(result, index) in search.songs.results"
-					:key="index"
+					:key="result.id"
 					:result="result"
 				>
 					<div slot="actions">

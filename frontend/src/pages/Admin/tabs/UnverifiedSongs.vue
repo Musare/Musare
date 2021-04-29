@@ -43,8 +43,8 @@
 				</thead>
 				<tbody>
 					<tr
-						v-for="(song, index) in filteredSongs"
-						:key="index"
+						v-for="song in filteredSongs"
+						:key="song._id"
 						tabindex="0"
 						@keydown.up.prevent
 						@keydown.down.prevent

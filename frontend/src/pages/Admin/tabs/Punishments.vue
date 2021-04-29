@@ -14,8 +14,8 @@
 				</thead>
 				<tbody>
 					<tr
-						v-for="(punishment, index) in sortedPunishments"
-						:key="index"
+						v-for="punishment in sortedPunishments"
+						:key="punishment._id"
 					>
 						<td v-if="punishment.type === 'banUserId'">User ID</td>
 						<td v-else>IP Address</td>

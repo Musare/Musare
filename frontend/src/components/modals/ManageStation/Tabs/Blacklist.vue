@@ -25,8 +25,8 @@
 				<div v-if="excludedPlaylists.length > 0">
 					<playlist-item
 						:playlist="playlist"
-						v-for="(playlist, index) in excludedPlaylists"
-						:key="'key-' + index"
+						v-for="playlist in excludedPlaylists"
+						:key="`key-${playlist._id}`"
 					>
 						<div class="icons-group" slot="actions">
 							<confirm @confirm="deselectPlaylist(playlist._id)">

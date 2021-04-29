@@ -20,7 +20,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					<tr v-for="(user, index) in users" :key="index">
+					<tr v-for="user in users" :key="user._id">
 						<td>
 							<profile-picture
 								:avatar="user.avatar"

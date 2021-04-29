@@ -15,8 +15,8 @@
 			>
 				<playlist-item
 					:playlist="playlist"
-					v-for="(playlist, index) in playlists"
-					:key="'key-' + index"
+					v-for="playlist in playlists"
+					:key="`key-${playlist._id}`"
 					class="item-draggable"
 				>
 					<div class="icons-group" slot="actions">

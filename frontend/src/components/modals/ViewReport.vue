@@ -50,7 +50,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					<tr v-for="(issue, index) in report.issues" :key="index">
+					<tr v-for="issue in report.issues" :key="issue.name">
 						<td>
 							<span>{{ issue.name }}</span>
 						</td>
