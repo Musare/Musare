@@ -155,8 +155,7 @@
 			>
 				<h2 class="content-box-title">Remove your account</h2>
 				<p class="content-box-description">
-					Your account will be deactivated instantly and your data
-					will shortly be deleted by an admin.
+					{{ accountRemovalMessage }}
 				</p>
 
 				<div class="content-box-inputs">
@@ -187,6 +186,7 @@ export default {
 			name: "RemoveAccount",
 			step: "confirm-identity",
 			apiDomain: "",
+			accountRemovalMessage: "",
 			password: {
 				value: "",
 				visible: false
@@ -200,6 +200,7 @@ export default {
 	}),
 	async mounted() {
 		this.apiDomain = await lofig.get("apiDomain");
+		this.accountRemovalMessage = await lofig.get("messages.accountRemoval");
 	},
 	methods: {
 		togglePasswordVisibility() {
