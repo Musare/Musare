@@ -143,6 +143,11 @@ export default {
 			if (!validation.isLength(name, 1, 64))
 				return new Toast("Name must have between 1 and 64 characters.");
 
+			if (!validation.regex.name.test(name))
+				return new Toast(
+					"Invalid name format. Only letters, spaces, apostrophes and hyphens are allowed."
+				);
+
 			this.$refs.saveButton.status = "disabled";
 
 			return this.socket.dispatch(
