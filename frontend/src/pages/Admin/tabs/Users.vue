@@ -18,7 +18,7 @@
 						<td>
 							{{
 								request.type === "remove"
-									? "Remove Account"
+									? "Remove all associated data"
 									: request.type
 							}}
 						</td>
