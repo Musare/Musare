@@ -3,6 +3,7 @@ import songs from "./songs";
 import stations from "./stations";
 import playlists from "./playlists";
 import users from "./users";
+import dataRequests from "./dataRequests";
 import activities from "./activities";
 import reports from "./reports";
 import news from "./news";
@@ -15,6 +16,7 @@ export default {
 	stations,
 	playlists,
 	users,
+	dataRequests,
 	activities,
 	reports,
 	news,

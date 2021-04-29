@@ -2,6 +2,40 @@
 	<div>
 		<metadata title="Admin | Users" />
 		<div class="container">
+			<h2 v-if="dataRequests.length > 0">Data Requests</h2>
+
+			<table class="table is-striped" v-if="dataRequests.length > 0">
+				<thead>
+					<tr>
+						<td>User ID</td>
+						<td>Request Type</td>
+						<td>Options</td>
+					</tr>
+				</thead>
+				<tbody>
+					<tr v-for="(request, index) in dataRequests" :key="index">
+						<td>{{ request.userId }}</td>
+						<td>
+							{{
+								request.type === "remove"
+									? "Remove Account"
+									: request.type
+							}}
+						</td>
+						<td>
+							<button
+								class="button is-primary"
+								@click="resolveDataRequest(request._id)"
+							>
+								Resolve
+							</button>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+
+			<h2>Users</h2>
+
 			<table class="table is-striped">
 				<thead>
 					<tr>
@@ -67,6 +101,7 @@
 
 <script>
 import { mapState, mapActions, mapGetters } from "vuex";
+import Toast from "toasters";
 
 import ProfilePicture from "@/components/ProfilePicture.vue";
 import ws from "@/ws";
@@ -79,6 +114,7 @@ export default {
 	data() {
 		return {
 			editingUserId: "",
+			dataRequests: [],
 			users: []
 		};
 	},
@@ -111,7 +147,28 @@ export default {
 					}
 				}
 			});
+
+			this.socket.dispatch("dataRequests.index", res => {
+				if (res.status === "success")
+					this.dataRequests = res.data.requests;
+			});
+
 			this.socket.dispatch("apis.joinAdminRoom", "users", () => {});
+
+			this.socket.on("event:admin.dataRequests.created", res =>
+				this.dataRequests.push(res.data.request)
+			);
+
+			this.socket.on("event:admin.dataRequests.resolved", res => {
+				this.dataRequests = this.dataRequests.filter(
+					request => request._id !== res.data.dataRequestId
+				);
+			});
+		},
+		resolveDataRequest(id) {
+			this.socket.dispatch("dataRequests.resolve", id, res => {
+				if (res.status === "success") new Toast(res.message);
+			});
 		},
 		...mapActions("modalVisibility", ["openModal"])
 	}

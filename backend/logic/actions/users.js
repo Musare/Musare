@@ -277,7 +277,16 @@ export default {
 					dataRequestModel.create({ userId: session.userId, type: "remove" }, next);
 				},
 
-				(request, next) => userModel.find({ role: "admin" }, next),
+				(request, next) => {
+					WSModule.runJob("EMIT_TO_ROOM", {
+						room: "admin.users",
+						args: ["event:admin.dataRequests.created", { data: { request } }]
+					});
+
+					return next();
+				},
+
+				next => userModel.find({ role: "admin" }, next),
 
 				// send email to all admins of a data removal request
 				(users, next) => {
