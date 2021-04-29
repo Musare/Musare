@@ -9,6 +9,7 @@
 	"registrationDisabled": true,
 	"hideAutomaticallyRequestedSongs": false,
     "hideAnonymousSongs": false,
+	"sendDataRequestEmails": true,
 	"fancyConsole": true,
 	"apis": {
 		"youtube": {
@@ -91,5 +92,5 @@
 			]
 		}
 	},
-	"configVersion": 5
+	"configVersion": 6
 }

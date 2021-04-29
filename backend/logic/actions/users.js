@@ -281,6 +281,7 @@ export default {
 
 				// send email to all admins of a data removal request
 				(users, next) => {
+					if (!config.get("sendDataRequestEmails")) return next();
 					if (users.length === 0) return next();
 
 					const to = [];
