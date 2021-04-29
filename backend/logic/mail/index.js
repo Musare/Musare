@@ -28,7 +28,8 @@ class _MailModule extends CoreClass {
 		this.schemas = {
 			verifyEmail: await importSchema("verifyEmail"),
 			resetPasswordRequest: await importSchema("resetPasswordRequest"),
-			passwordRequest: await importSchema("passwordRequest")
+			passwordRequest: await importSchema("passwordRequest"),
+			dataRequest: await importSchema("dataRequest")
 		};
 
 		this.enabled = config.get("smtp.enabled");
@@ -55,6 +56,7 @@ class _MailModule extends CoreClass {
 	 * @returns {Promise} - returns promise (reject, resolve)
 	 */
 	SEND_MAIL(payload) {
+		// console.log(payload);
 		return new Promise((resolve, reject) => {
 			if (MailModule.enabled)
 				return MailModule.transporter

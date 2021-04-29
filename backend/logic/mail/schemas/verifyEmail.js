@@ -1,7 +1,4 @@
 import config from "config";
-
-// const moduleManager = require('../../../index');
-
 import mail from "../index";
 
 /**

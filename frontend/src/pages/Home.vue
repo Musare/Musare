@@ -15,7 +15,7 @@
 						<img
 							class="logo"
 							src="/assets/white_wordmark.png"
-							:alt="`${this.siteName}` || `Musare`"
+							:alt="`${this.sitename}` || `Musare`"
 						/>
 						<div v-if="!loggedIn" class="buttons">
 							<button
@@ -464,7 +464,7 @@ export default {
 			stations: [],
 			favoriteStations: [],
 			searchQuery: "",
-			siteName: "Musare",
+			sitename: "Musare",
 			orderOfFavoriteStations: [],
 			drag: false
 		};
@@ -512,7 +512,7 @@ export default {
 		}
 	},
 	async mounted() {
-		this.siteName = await lofig.get("siteSettings.siteName");
+		this.sitename = await lofig.get("siteSettings.sitename");
 
 		if (this.socket.readyState === 1) this.init();
 		ws.onConnect(() => this.init());

@@ -4,7 +4,7 @@
 			<router-link v-if="!hideLogo" class="nav-item is-brand" to="/">
 				<img
 					:src="`${this.siteSettings.logo_white}`"
-					:alt="`${this.siteSettings.siteName}` || `Musare`"
+					:alt="`${this.siteSettings.sitename}` || `Musare`"
 				/>
 			</router-link>
 		</div>
@@ -71,7 +71,7 @@ export default {
 			frontendDomain: "",
 			siteSettings: {
 				logo: "",
-				siteName: ""
+				sitename: ""
 			}
 		};
 	},

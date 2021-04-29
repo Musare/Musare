@@ -8,7 +8,7 @@ import store from "./store";
 
 import App from "./App.vue";
 
-const REQUIRED_CONFIG_VERSION = 2;
+const REQUIRED_CONFIG_VERSION = 3;
 
 const handleMetadata = attrs => {
 	document.title = `Musare | ${attrs.title}`;
