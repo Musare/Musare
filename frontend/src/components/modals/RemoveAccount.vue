@@ -155,7 +155,8 @@
 			>
 				<h2 class="content-box-title">Remove your account</h2>
 				<p class="content-box-description">
-					There is no going back after confirming account removal.
+					Your account will be deactivated instantly and your data
+					will shortly be deleted by an admin.
 				</p>
 
 				<div class="content-box-inputs">

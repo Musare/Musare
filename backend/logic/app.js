@@ -374,8 +374,6 @@ class _AppModule extends CoreClass {
 						}
 					],
 					async (err, userId) => {
-						console.log(err, userId);
-
 						if (err && err !== true) {
 							err = await UtilsModule.runJob("GET_ERROR", {
 								error: err

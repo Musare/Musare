@@ -215,9 +215,12 @@ export default {
 	 */
 	remove: isLoginRequired(async function remove(session, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
+		const dataRequestModel = await DBModule.runJob("GET_MODEL", { modelName: "dataRequest" }, this);
 		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
 		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
 		const activityModel = await DBModule.runJob("GET_MODEL", { modelName: "activity" }, this);
+
+		const dataRequestEmail = await MailModule.runJob("GET_SCHEMA", { schemaName: "dataRequest" }, this);
 
 		async.waterfall(
 			[
@@ -267,6 +270,23 @@ export default {
 				// user object
 				(res, next) => {
 					userModel.deleteMany({ _id: session.userId }, next);
+				},
+
+				// request data removal for user
+				(res, next) => {
+					dataRequestModel.create({ userId: session.userId, type: "remove" }, next);
+				},
+
+				(request, next) => userModel.find({ role: "admin" }, next),
+
+				// send email to all admins of a data removal request
+				(users, next) => {
+					if (users.length === 0) return next();
+
+					const to = [];
+					users.forEach(user => to.push(user.email.address));
+
+					return dataRequestEmail(to, session.userId, "remove", err => next(err));
 				}
 			],
 			async err => {
@@ -349,9 +369,7 @@ export default {
 						},
 						this
 					)
-						.then(() => {
-							next(null, sessionId);
-						})
+						.then(() => next(null, sessionId))
 						.catch(next);
 				}
 			],
@@ -392,13 +410,7 @@ export default {
 		const verificationToken = await UtilsModule.runJob("GENERATE_RANDOM_STRING", { length: 64 }, this);
 
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-		const verifyEmailSchema = await MailModule.runJob(
-			"GET_SCHEMA",
-			{
-				schemaName: "verifyEmail"
-			},
-			this
-		);
+		const verifyEmailSchema = await MailModule.runJob("GET_SCHEMA", { schemaName: "verifyEmail" }, this);
 
 		async.waterfall(
 			[
