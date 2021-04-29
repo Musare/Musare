@@ -950,25 +950,24 @@ export default {
 
 			const thumbnailHeight = this.$refs.thumbnailElement.naturalHeight;
 			const thumbnailWidth = this.$refs.thumbnailElement.naturalWidth;
-			const thumbnailSizeDifference = thumbnailWidth - thumbnailHeight;
 
-			if (thumbnailHeight < 100 || thumbnailWidth < 100) {
+			if (thumbnailHeight < 80 || thumbnailWidth < 80) {
 				saveButtonRef.handleFailedSave();
 				return new Toast(
-					"Thumbnail width and height must be at least 100px."
+					"Thumbnail width and height must be at least 80px."
 				);
 			}
 
-			if (thumbnailHeight > 2000 || thumbnailWidth > 2000) {
+			if (thumbnailHeight > 4000 || thumbnailWidth > 4000) {
 				saveButtonRef.handleFailedSave();
 				return new Toast(
-					"Thumbnail width and height must be less than 2000px."
+					"Thumbnail width and height must be less than 4000px."
 				);
 			}
 
-			if (thumbnailSizeDifference > 5 || thumbnailSizeDifference < -5) {
+			if (thumbnailHeight - thumbnailWidth > 5) {
 				saveButtonRef.handleFailedSave();
-				return new Toast("Thumbnail is not square.");
+				return new Toast("Thumbnail cannot be taller than it is wide.");
 			}
 
 			// Duration
