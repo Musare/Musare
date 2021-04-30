@@ -4,11 +4,16 @@
 	font-style: normal;
 	font-weight: 400;
 	src: url("/fonts/inter-v3-latin-regular.eot"); /* IE9 Compat Modes */
-	src: local(""), url("/fonts/inter-v3-latin-regular.eot?#iefix") format("embedded-opentype"),
+	src: local(""),
+		url("/fonts/inter-v3-latin-regular.eot?#iefix")
+			format("embedded-opentype"),
 		/* IE6-IE8 */ url("/fonts/inter-v3-latin-regular.woff2") format("woff2"),
-		/* Super Modern Browsers */ url("/fonts/inter-v3-latin-regular.woff") format("woff"),
-		/* Modern Browsers */ url("/fonts/inter-v3-latin-regular.ttf") format("truetype"),
-		/* Safari, Android, iOS */ url("/fonts/inter-v3-latin-regular.svg#Inter") format("svg"); /* Legacy iOS */
+		/* Super Modern Browsers */ url("/fonts/inter-v3-latin-regular.woff")
+			format("woff"),
+		/* Modern Browsers */ url("/fonts/inter-v3-latin-regular.ttf")
+			format("truetype"),
+		/* Safari, Android, iOS */
+			url("/fonts/inter-v3-latin-regular.svg#Inter") format("svg"); /* Legacy iOS */
 }
 
 /* inter-200 - latin */
@@ -17,11 +22,15 @@
 	font-style: normal;
 	font-weight: 200;
 	src: url("/fonts/inter-v3-latin-200.eot"); /* IE9 Compat Modes */
-	src: local(""), url("/fonts/inter-v3-latin-200.eot?#iefix") format("embedded-opentype"),
+	src: local(""),
+		url("/fonts/inter-v3-latin-200.eot?#iefix") format("embedded-opentype"),
 		/* IE6-IE8 */ url("/fonts/inter-v3-latin-200.woff2") format("woff2"),
-		/* Super Modern Browsers */ url("/fonts/inter-v3-latin-200.woff") format("woff"),
-		/* Modern Browsers */ url("/fonts/inter-v3-latin-200.ttf") format("truetype"),
-		/* Safari, Android, iOS */ url("/fonts/inter-v3-latin-200.svg#Inter") format("svg"); /* Legacy iOS */
+		/* Super Modern Browsers */ url("/fonts/inter-v3-latin-200.woff")
+			format("woff"),
+		/* Modern Browsers */ url("/fonts/inter-v3-latin-200.ttf")
+			format("truetype"),
+		/* Safari, Android, iOS */ url("/fonts/inter-v3-latin-200.svg#Inter")
+			format("svg"); /* Legacy iOS */
 }
 
 /* inter-800 - latin */
@@ -30,11 +39,15 @@
 	font-style: normal;
 	font-weight: 800;
 	src: url("/fonts/inter-v3-latin-800.eot"); /* IE9 Compat Modes */
-	src: local(""), url("/fonts/inter-v3-latin-800.eot?#iefix") format("embedded-opentype"),
+	src: local(""),
+		url("/fonts/inter-v3-latin-800.eot?#iefix") format("embedded-opentype"),
 		/* IE6-IE8 */ url("/fonts/inter-v3-latin-800.woff2") format("woff2"),
-		/* Super Modern Browsers */ url("/fonts/inter-v3-latin-800.woff") format("woff"),
-		/* Modern Browsers */ url("/fonts/inter-v3-latin-800.ttf") format("truetype"),
-		/* Safari, Android, iOS */ url("/fonts/inter-v3-latin-800.svg#Inter") format("svg"); /* Legacy iOS */
+		/* Super Modern Browsers */ url("/fonts/inter-v3-latin-800.woff")
+			format("woff"),
+		/* Modern Browsers */ url("/fonts/inter-v3-latin-800.ttf")
+			format("truetype"),
+		/* Safari, Android, iOS */ url("/fonts/inter-v3-latin-800.svg#Inter")
+			format("svg"); /* Legacy iOS */
 }
 
 /* inter-600 - latin */
@@ -43,11 +56,15 @@
 	font-style: normal;
 	font-weight: 600;
 	src: url("/fonts/inter-v3-latin-600.eot"); /* IE9 Compat Modes */
-	src: local(""), url("/fonts/inter-v3-latin-600.eot?#iefix") format("embedded-opentype"),
+	src: local(""),
+		url("/fonts/inter-v3-latin-600.eot?#iefix") format("embedded-opentype"),
 		/* IE6-IE8 */ url("/fonts/inter-v3-latin-600.woff2") format("woff2"),
-		/* Super Modern Browsers */ url("/fonts/inter-v3-latin-600.woff") format("woff"),
-		/* Modern Browsers */ url("/fonts/inter-v3-latin-600.ttf") format("truetype"),
-		/* Safari, Android, iOS */ url("/fonts/inter-v3-latin-600.svg#Inter") format("svg"); /* Legacy iOS */
+		/* Super Modern Browsers */ url("/fonts/inter-v3-latin-600.woff")
+			format("woff"),
+		/* Modern Browsers */ url("/fonts/inter-v3-latin-600.ttf")
+			format("truetype"),
+		/* Safari, Android, iOS */ url("/fonts/inter-v3-latin-600.svg#Inter")
+			format("svg"); /* Legacy iOS */
 }
 
 /* pacifico-regular - latin */
@@ -56,11 +73,17 @@
 	font-style: normal;
 	font-weight: 400;
 	src: url("/fonts/pacifico-v17-latin-regular.eot"); /* IE9 Compat Modes */
-	src: local(""), url("/fonts/pacifico-v17-latin-regular.eot?#iefix") format("embedded-opentype"),
-		/* IE6-IE8 */ url("/fonts/pacifico-v17-latin-regular.woff2") format("woff2"),
-		/* Super Modern Browsers */ url("/fonts/pacifico-v17-latin-regular.woff") format("woff"),
-		/* Modern Browsers */ url("/fonts/pacifico-v17-latin-regular.ttf") format("truetype"),
-		/* Safari, Android, iOS */ url("/fonts/pacifico-v17-latin-regular.svg#Pacifico") format("svg"); /* Legacy iOS */
+	src: local(""),
+		url("/fonts/pacifico-v17-latin-regular.eot?#iefix")
+			format("embedded-opentype"),
+		/* IE6-IE8 */ url("/fonts/pacifico-v17-latin-regular.woff2")
+			format("woff2"),
+		/* Super Modern Browsers */
+			url("/fonts/pacifico-v17-latin-regular.woff") format("woff"),
+		/* Modern Browsers */ url("/fonts/pacifico-v17-latin-regular.ttf")
+			format("truetype"),
+		/* Safari, Android, iOS */
+			url("/fonts/pacifico-v17-latin-regular.svg#Pacifico") format("svg"); /* Legacy iOS */
 }
 
 @font-face {
@@ -198,7 +221,7 @@ h6 {
 }
 
 .white {
-	background-color: #FFFFFF !important;
+	background-color: #ffffff !important;
 }
 
 .btn-search {

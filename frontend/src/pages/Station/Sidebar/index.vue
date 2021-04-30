@@ -113,6 +113,16 @@ export default {
 	}
 }
 
+/deep/ .nothing-here-text {
+	height: 100%;
+}
+
+/deep/ .tab {
+	.nothing-here-text:not(:only-child) {
+		height: calc(100% - 40px);
+	}
+}
+
 /deep/ .tab-actionable-button {
 	width: calc(100% - 20px);
 	height: 40px;
@@ -138,8 +148,8 @@ export default {
 
 /deep/ .scrollable-list {
 	width: 100%;
+	max-height: calc(100% - 40px - 20px);
 	overflow: auto;
-	max-height: calc(100% - 20px - 40px);
 	padding: 10px;
 
 	.song-item:not(:last-of-type) {
