@@ -90,10 +90,6 @@ export default {
 	border-top: 0;
 }
 
-#queue {
-	padding-bottom: 40px;
-}
-
 #tab-selection {
 	display: flex;
 
@@ -121,6 +117,12 @@ export default {
 	height: 100%;
 }
 
+/deep/ .tab {
+	.nothing-here-text:not(:only-child) {
+		height: calc(100% - 40px);
+	}
+}
+
 /deep/ .tab-actionable-button {
 	width: calc(100% - 20px);
 	height: 40px;
@@ -146,6 +148,7 @@ export default {
 
 /deep/ .scrollable-list {
 	width: 100%;
+	max-height: calc(100% - 40px - 20px);
 	overflow: auto;
 	padding: 10px;
 
