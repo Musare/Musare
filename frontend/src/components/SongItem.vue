@@ -298,7 +298,7 @@ export default {
 		flex-direction: column;
 		justify-content: center;
 		margin-left: 20px;
-		width: calc(100% - 80px);
+		width: calc(100% - 10px);
 
 		*:not(i) {
 			margin: 0;
@@ -335,7 +335,7 @@ export default {
 	}
 
 	&.with-duration .song-info {
-		width: calc(100% - 150px);
+		width: calc(100% - 80px);
 	}
 }
 </style>
