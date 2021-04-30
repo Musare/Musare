@@ -585,6 +585,7 @@ export default {
 	.tabs-container {
 		.tab-selection {
 			display: flex;
+			overflow-x: auto;
 			.button {
 				border-radius: 0;
 				border: 0;

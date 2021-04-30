@@ -92,6 +92,7 @@ export default {
 
 #tab-selection {
 	display: flex;
+	overflow-x: auto;
 
 	.button {
 		border-radius: 5px 5px 0 0;
