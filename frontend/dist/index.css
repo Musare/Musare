@@ -241,3 +241,13 @@ a.nav-item.is-tab {
 strong {
 	color: inherit;
 }
+
+@media (max-width: 1200px) {
+	#stationPlayer {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+	}
+}
