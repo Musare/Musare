@@ -1049,8 +1049,8 @@ export default {
 		youtubeReady() {
 			if (!this.player) {
 				this.player = new window.YT.Player("stationPlayer", {
-					height: "100%",
-					width: "100%",
+					height: 270,
+					width: 480,
 					videoId: this.currentSong.youtubeId,
 					host: "https://www.youtube-nocookie.com",
 					startSeconds:
@@ -1862,9 +1862,9 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.main-container > div {
-	height: 100%;
-}
+// .main-container > div {
+// 	height: 100%;
+// }
 
 #page-loader-container {
 	height: inherit;
@@ -1958,16 +1958,18 @@ export default {
 #station-outer-container {
 	margin: 0 auto;
 	padding: 20px 40px;
-	min-height: calc(
-		100vh - 196px
-	); // Height of nav (64px) + height of footer (130px)
+	height: 100%;
+	// min-height: calc(
+	// 	100vh - 196px
+	// ); // Height of nav (64px) + height of footer (130px)
 	width: 100%;
 	max-width: 1800px;
 	display: flex;
 
 	#station-inner-container {
 		width: 100%;
-		height: fit-content;
+		// height: fit-content;
+		min-height: calc(100vh - 428px);
 		display: flex;
 		flex-direction: row;
 		flex-wrap: wrap;
@@ -1986,6 +1988,7 @@ export default {
 		.quadrant {
 			border-radius: 5px;
 			margin: 10px;
+			flex-grow: 1;
 		}
 
 		.quadrant:not(#sidebar-container) {
@@ -2044,7 +2047,7 @@ export default {
 		#current-next-row {
 			display: flex;
 			flex-direction: row;
-			max-width: calc(100vw - 40px);
+			// max-width: calc(100vw - 40px);
 
 			#currently-playing-container,
 			#next-up-container {
@@ -2080,10 +2083,12 @@ export default {
 			}
 
 			#video-container {
-				position: relative;
-				padding-bottom: 56.25%; /* proportion value to aspect ratio 16:9 (9 / 16 = 0.5625 or 56.25%) */
-				height: 0;
-				overflow: hidden;
+				// position: relative;
+				// padding-bottom: 56.25%; /* proportion value to aspect ratio 16:9 (9 / 16 = 0.5625 or 56.25%) */
+				// height: 0;
+				// overflow: hidden;
+				width: 100%;
+				height: 100%;
 
 				.player-cannot-autoplay {
 					position: relative;
@@ -2608,6 +2613,7 @@ export default {
 @media (max-width: 1200px) {
 	#station-outer-container {
 		max-width: 1200px;
+		padding: 0;
 
 		#station-inner-container {
 			flex-direction: column-reverse;
