@@ -65,7 +65,10 @@
 			<p v-if="duration" class="song-duration">
 				{{ utils.formatTime(song.duration) }}
 			</p>
-			<div class="universal-item-actions">
+			<div
+				class="universal-item-actions"
+				v-if="disabledActions.indexOf('all') === -1"
+			>
 				<tippy
 					v-if="loggedIn"
 					interactive="true"
@@ -83,6 +86,7 @@
 						>
 					</template>
 					<a
+						v-if="disabledActions.indexOf('youtube') === -1"
 						target="_blank"
 						:href="
 							`https://www.youtube.com/watch?v=${song.youtubeId}`
@@ -93,6 +97,7 @@
 						<div class="youtube-icon"></div>
 					</a>
 					<i
+						v-if="disabledActions.indexOf('report') === -1"
 						class="material-icons report-icon"
 						@click="report(song)"
 						content="Report Song"
@@ -100,7 +105,10 @@
 					>
 						flag
 					</i>
-					<add-to-playlist-dropdown :song="song">
+					<add-to-playlist-dropdown
+						v-if="disabledActions.indexOf('addToPlaylist') === -1"
+						:song="song"
+					>
 						<i
 							slot="button"
 							class="material-icons add-to-playlist-icon"
@@ -110,7 +118,11 @@
 						>
 					</add-to-playlist-dropdown>
 					<i
-						v-if="loggedIn && userRole === 'admin'"
+						v-if="
+							loggedIn &&
+								userRole === 'admin' &&
+								disabledActions.indexOf('edit') === -1
+						"
 						class="material-icons edit-icon"
 						@click="edit(song)"
 						content="Edit Song"
@@ -121,7 +133,9 @@
 					<slot name="actions" />
 				</tippy>
 				<a
-					v-else
+					v-if="
+						!loggedIn && disabledActions.indexOf('youtube') === -1
+					"
 					target="_blank"
 					:href="`https://www.youtube.com/watch?v=${song.youtubeId}`"
 					content="View on Youtube"
@@ -161,6 +175,10 @@ export default {
 		largeThumbnail: {
 			type: Boolean,
 			default: false
+		},
+		disabledActions: {
+			type: Array,
+			default: () => []
 		},
 		header: {
 			type: String,

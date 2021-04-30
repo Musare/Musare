@@ -763,12 +763,6 @@ export default {
 		);
 
 		this.socket.on("event:songs.next", res => {
-			const previousSong = this.currentSong.youtubeId
-				? this.currentSong
-				: null;
-
-			this.updatePreviousSong(previousSong);
-
 			const { currentSong } = res.data;
 
 			this.updateCurrentSong(currentSong || {});
@@ -1845,7 +1839,6 @@ export default {
 			"updateUserCount",
 			"updateUsers",
 			"updateCurrentSong",
-			"updatePreviousSong",
 			"updateNextSong",
 			"updateSongsList",
 			"repositionSongInList",

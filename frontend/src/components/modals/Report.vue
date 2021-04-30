@@ -1,86 +1,12 @@
 <template>
 	<modal title="Report">
 		<div slot="body">
-			<div class="columns song-types">
-				<div v-if="previousSong !== null" class="column song-type">
-					<div
-						class="card is-fullwidth"
-						:class="{ 'is-highlight-active': isPreviousSongActive }"
-						@click="highlight('previousSong')"
-					>
-						<header class="card-header">
-							<p class="card-header-title">Previous Song</p>
-						</header>
-						<div class="card-content">
-							<article class="media">
-								<figure class="media-left">
-									<song-thumbnail
-										class="image is-64x64"
-										:song="previousSong"
-									/>
-								</figure>
-								<div class="media-content">
-									<div class="content">
-										<p>
-											<strong>{{
-												previousSong.title
-											}}</strong>
-											<br />
-											<small>{{
-												previousSong.artists.join(", ")
-											}}</small>
-										</p>
-									</div>
-								</div>
-							</article>
-						</div>
-						<a
-							href="#"
-							class="absolute-a"
-							@click="highlight('previousSong')"
-						/>
-					</div>
-				</div>
-				<div v-if="localSong !== null" class="column song-type">
-					<div
-						class="card is-fullwidth"
-						:class="{ 'is-highlight-active': isLocalSongActive }"
-						@click="highlight('localSong')"
-					>
-						<header class="card-header">
-							<p class="card-header-title">Selected Song</p>
-						</header>
-						<div class="card-content">
-							<article class="media">
-								<figure class="media-left">
-									<song-thumbnail
-										class="image is-64x64"
-										:song="localSong"
-									/>
-								</figure>
-								<div class="media-content">
-									<div class="content">
-										<p>
-											<strong>{{
-												localSong.title
-											}}</strong>
-											<br />
-											<small>{{
-												localSong.artists.join(", ")
-											}}</small>
-										</p>
-									</div>
-								</div>
-							</article>
-						</div>
-						<a
-							href="#"
-							class="absolute-a"
-							@click="highlight('localSong')"
-						/>
-					</div>
-				</div>
-			</div>
+			<song-item
+				:song="localSong"
+				:large-thumbnail="true"
+				:disabled-actions="['report']"
+				header="Selected Song.."
+			/>
 			<div class="edit-report-wrapper">
 				<div class="columns is-multiline">
 					<div
@@ -134,15 +60,13 @@
 import { mapState, mapGetters, mapActions } from "vuex";
 
 import Toast from "toasters";
+import SongItem from "@/components/SongItem.vue";
 import Modal from "../Modal.vue";
-import SongThumbnail from "../SongThumbnail.vue";
 
 export default {
-	components: { Modal, SongThumbnail },
+	components: { Modal, SongItem },
 	data() {
 		return {
-			isPreviousSongActive: false,
-			isLocalSongActive: true,
 			localSong: null,
 			report: {
 				resolved: false,
@@ -195,7 +119,6 @@ export default {
 			return 400 - this.report.description.length;
 		},
 		...mapState({
-			previousSong: state => state.station.previousSong,
 			song: state => state.modals.report.song
 		}),
 		...mapGetters({
@@ -216,17 +139,6 @@ export default {
 				if (res.status === "success") this.closeModal("report");
 			});
 		},
-		highlight(type) {
-			if (type === "localSong") {
-				this.report.youtubeId = this.localSong.youtubeId;
-				this.isPreviousSongActive = false;
-				this.isLocalSongActive = true;
-			} else if (type === "previousSong") {
-				this.report.youtubeId = this.previousSong.youtubeId;
-				this.isLocalSongActive = false;
-				this.isPreviousSongActive = true;
-			}
-		},
 		toggleIssue(name, reason) {
 			for (let z = 0; z < this.report.issues.length; z += 1) {
 				if (this.report.issues[z].name === name) {
@@ -246,26 +158,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-h6 {
-	margin-bottom: 15px;
-}
-
-.song-type:first-of-type {
-	padding-left: 0;
-}
-.song-type:last-of-type {
-	padding-right: 0;
-}
-
-.thumbnail.image.is-64x64 {
-	min-width: 64px;
-	margin: 0;
-}
-
-.media-content {
-	display: flex;
-	align-items: center;
-	height: 64px;
+.edit-report-wrapper {
+	margin-top: 20px;
 }
 
 .radio-controls .control {
@@ -283,16 +177,8 @@ h6 {
 	}
 }
 
-.card {
-	border-radius: 5px;
-}
-
 .columns {
 	margin-left: unset;
 	margin-right: unset;
-}
-
-.is-highlight-active {
-	border: 3px var(--primary-color) solid;
 }
 </style>

@@ -10,7 +10,6 @@ const state = {
 		loggedOut: []
 	},
 	currentSong: {},
-	previousSong: null,
 	nextSong: null,
 	songsList: [],
 	stationPaused: true,
@@ -40,9 +39,6 @@ const actions = {
 	},
 	updateCurrentSong: ({ commit }, currentSong) => {
 		commit("updateCurrentSong", currentSong);
-	},
-	updatePreviousSong: ({ commit }, previousSong) => {
-		commit("updatePreviousSong", previousSong);
 	},
 	updateNextSong: ({ commit }, nextSong) => {
 		commit("updateNextSong", nextSong);
@@ -95,9 +91,6 @@ const mutations = {
 	},
 	updateCurrentSong(state, currentSong) {
 		state.currentSong = currentSong;
-	},
-	updatePreviousSong(state, previousSong) {
-		state.previousSong = previousSong;
 	},
 	updateNextSong(state, nextSong) {
 		state.nextSong = nextSong;
