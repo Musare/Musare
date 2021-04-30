@@ -1861,6 +1861,16 @@ export default {
 };
 </script>
 
+<style lang="scss">
+#stationPlayer {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+}
+</style>
+
 <style lang="scss" scoped>
 // .main-container > div {
 // 	height: 100%;
@@ -1986,7 +1996,6 @@ export default {
 		.quadrant {
 			border-radius: 5px;
 			margin: 10px;
-			flex-grow: 1;
 		}
 
 		.quadrant:not(#sidebar-container) {
@@ -2081,12 +2090,10 @@ export default {
 			}
 
 			#video-container {
-				// position: relative;
-				// padding-bottom: 56.25%; /* proportion value to aspect ratio 16:9 (9 / 16 = 0.5625 or 56.25%) */
-				// height: 0;
-				// overflow: hidden;
-				width: 100%;
-				height: 100%;
+				position: relative;
+				padding-bottom: 56.25%; /* proportion value to aspect ratio 16:9 (9 / 16 = 0.5625 or 56.25%) */
+				height: 0;
+				overflow: hidden;
 
 				.player-cannot-autoplay {
 					position: relative;
@@ -2616,16 +2623,6 @@ export default {
 		#station-inner-container {
 			flex-direction: column-reverse;
 			flex-wrap: nowrap;
-
-			.player-container {
-				#video-container {
-					position: relative;
-					padding-bottom: 56.25%; /* proportion value to aspect ratio 16:9 (9 / 16 = 0.5625 or 56.25%) */
-					height: 0;
-					overflow: hidden;
-					width: unset;
-				}
-			}
 		}
 	}
 }
