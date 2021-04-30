@@ -2057,6 +2057,11 @@ export default {
 					height: 100%;
 				}
 			}
+
+			> div:only-child {
+				flex: 1 !important;
+				flex-basis: 100% !important;
+			}
 		}
 
 		.player-container {
@@ -2513,7 +2518,26 @@ export default {
 	}
 }
 
-@media (max-width: 1350px) {
+// 	// #current-next-row {
+// 	// 	flex-direction: column;
+
+// 	// 	> div {
+// 	// 		flex: 1 !important;
+// 	// 	}
+// 	// }
+// }
+
+@media (max-width: 1700px) {
+	#current-next-row {
+		flex-direction: column !important;
+
+		> div {
+			flex: 1 !important;
+		}
+	}
+}
+
+@media (max-width: 1500px) {
 	#mobile-progress-animation {
 		display: block;
 	}
@@ -2523,11 +2547,11 @@ export default {
 	}
 
 	#station-outer-container {
-		padding: 10px;
-		max-width: 700px;
+		// padding: 10px;
+		max-width: 1500px;
 
 		#station-inner-container {
-			flex-direction: column-reverse;
+			flex-direction: row;
 
 			#station-left-column {
 				#about-station-container #admin-buttons {
@@ -2577,6 +2601,17 @@ export default {
 					}
 				}
 			}
+		}
+	}
+}
+
+@media (max-width: 1200px) {
+	#station-outer-container {
+		max-width: 1200px;
+
+		#station-inner-container {
+			flex-direction: column-reverse;
+			flex-wrap: nowrap;
 		}
 	}
 }

@@ -274,6 +274,10 @@ export default {
 	background-color: var(--white);
 	border-radius: 0 0 5px 5px;
 
+	.scrollable-list {
+		max-height: calc(100% - 20px);
+	}
+
 	.actionable-button-hidden {
 		max-height: 100%;
 	}

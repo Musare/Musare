@@ -314,6 +314,10 @@ export default {
 	margin-bottom: 20px;
 	border-radius: 0 0 5px 5px;
 	max-height: 100%;
+
+	.scrollable-list {
+		max-height: calc(100% - 60px);
+	}
 }
 
 .night-mode {

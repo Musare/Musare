@@ -90,6 +90,10 @@ export default {
 	border-top: 0;
 }
 
+#queue {
+	padding-bottom: 40px;
+}
+
 #tab-selection {
 	display: flex;
 
@@ -111,6 +115,10 @@ export default {
 		background-color: var(--dark-grey-3) !important;
 		color: var(--white) !important;
 	}
+}
+
+/deep/ .nothing-here-text {
+	height: 100%;
 }
 
 /deep/ .tab-actionable-button {
@@ -139,7 +147,6 @@ export default {
 /deep/ .scrollable-list {
 	width: 100%;
 	overflow: auto;
-	max-height: calc(100% - 20px - 40px);
 	padding: 10px;
 
 	.song-item:not(:last-of-type) {
