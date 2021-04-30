@@ -36,9 +36,9 @@
 						>
 					</p>
 					<span
-						v-for="(bug, index) in news.bugs"
+						v-for="bug in news.bugs"
 						class="tag is-info"
-						:key="index"
+						:key="bug"
 					>
 						{{ bug }}
 						<button
@@ -65,9 +65,9 @@
 						>
 					</p>
 					<span
-						v-for="(feature, index) in news.features"
+						v-for="feature in news.features"
 						class="tag is-info"
-						:key="index"
+						:key="feature"
 					>
 						{{ feature }}
 						<button
@@ -97,9 +97,9 @@
 						>
 					</p>
 					<span
-						v-for="(improvement, index) in news.improvements"
+						v-for="improvement in news.improvements"
 						class="tag is-info"
-						:key="index"
+						:key="improvement"
 					>
 						{{ improvement }}
 						<button
@@ -126,9 +126,9 @@
 						>
 					</p>
 					<span
-						v-for="(upcoming, index) in news.upcoming"
+						v-for="upcoming in news.upcoming"
 						class="tag is-info"
-						:key="index"
+						:key="upcoming"
 					>
 						{{ upcoming }}
 						<button

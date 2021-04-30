@@ -34,6 +34,7 @@ export default {
 			return this.name
 				.split(" ")
 				.map(word => word.charAt(0))
+				.splice(0, 2)
 				.join("")
 				.toUpperCase();
 		}

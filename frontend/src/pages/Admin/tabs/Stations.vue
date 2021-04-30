@@ -20,7 +20,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					<tr v-for="(station, index) in stations" :key="index">
+					<tr v-for="station in stations" :key="station._id">
 						<td>
 							<span>{{ station._id }}</span>
 						</td>
@@ -124,7 +124,7 @@
 								</p>
 								<span
 									v-for="(genre, index) in newStation.genres"
-									:key="index"
+									:key="genre"
 									class="tag is-info"
 								>
 									{{ genre }}
@@ -153,7 +153,7 @@
 								<span
 									v-for="(genre,
 									index) in newStation.blacklistedGenres"
-									:key="index"
+									:key="genre"
 									class="tag is-info"
 								>
 									{{ genre }}

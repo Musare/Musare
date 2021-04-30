@@ -22,6 +22,7 @@ const regex = {
 	az09_: /^[a-z0-9_]+$/,
 	emailSimple: /^[\x00-\x7F]+@[a-z0-9]+\.[a-z0-9]+(\.[a-z0-9]+)?$/,
 	ascii: /^[\x00-\x7F]+$/,
+	name: /^[\p{L} .'-]+$/u,
 	custom: regex => new RegExp(`^[${regex}]+$`)
 };
 
@@ -65,6 +66,7 @@ class _DBModule extends CoreClass {
 						queueSong: {},
 						station: {},
 						user: {},
+						dataRequest: {},
 						activity: {},
 						playlist: {},
 						news: {},
@@ -84,6 +86,7 @@ class _DBModule extends CoreClass {
 					await importSchema("queueSong");
 					await importSchema("station");
 					await importSchema("user");
+					await importSchema("dataRequest");
 					await importSchema("activity");
 					await importSchema("playlist");
 					await importSchema("news");
@@ -95,6 +98,7 @@ class _DBModule extends CoreClass {
 						queueSong: mongoose.model("queueSong", this.schemas.queueSong),
 						station: mongoose.model("station", this.schemas.station),
 						user: mongoose.model("user", this.schemas.user),
+						dataRequest: mongoose.model("dataRequest", this.schemas.dataRequest),
 						activity: mongoose.model("activity", this.schemas.activity),
 						playlist: mongoose.model("playlist", this.schemas.playlist),
 						news: mongoose.model("news", this.schemas.news),
@@ -136,6 +140,10 @@ class _DBModule extends CoreClass {
 						if (email.indexOf("@") !== email.lastIndexOf("@")) return false;
 						return regex.emailSimple.test(email) && regex.ascii.test(email);
 					}, "Invalid email.");
+
+					this.schemas.user
+						.path("name")
+						.validate(name => isLength(name, 1, 64) && regex.name.test(name), "Invalid name.");
 
 					// Station
 					this.schemas.station

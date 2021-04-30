@@ -25,7 +25,7 @@
 				class="nav-item"
 				href="#"
 				v-for="(playlist, index) in playlists"
-				:key="index"
+				:key="playlist._id"
 				@click.prevent="toggleSongInPlaylist(index)"
 				:title="playlist.displayName"
 			>

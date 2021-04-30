@@ -44,7 +44,7 @@
 				<tbody>
 					<tr
 						v-for="(song, index) in filteredSongs"
-						:key="index"
+						:key="song._id"
 						tabindex="0"
 						@keydown.up.prevent
 						@keydown.down.prevent

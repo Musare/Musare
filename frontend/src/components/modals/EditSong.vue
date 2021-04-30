@@ -76,6 +76,7 @@
 							class="thumbnail-preview"
 							:src="song.thumbnail"
 							onerror="this.src='/assets/notes-transparent.png'"
+							ref="thumbnailElement"
 							v-if="songDataLoaded"
 						/>
 					</div>
@@ -193,17 +194,16 @@
 										class="autosuggest-item"
 										tabindex="0"
 										@click="selectArtistAutosuggest(item)"
-										v-for="(item,
-										index) in artistAutosuggestItems"
-										:key="index"
+										v-for="item in artistAutosuggestItems"
+										:key="item"
 										>{{ item }}</span
 									>
 								</div>
 								<div class="list-container">
 									<div
 										class="list-item"
-										v-for="(artist, index) in song.artists"
-										:key="index"
+										v-for="artist in song.artists"
+										:key="artist"
 									>
 										<div
 											class="list-item-circle"
@@ -265,17 +265,16 @@
 									<span
 										class="autosuggest-item"
 										@click="selectGenreAutosuggest(item)"
-										v-for="(item,
-										index) in genreAutosuggestItems"
-										:key="index"
+										v-for="item in genreAutosuggestItems"
+										:key="item"
 										>{{ item }}</span
 									>
 								</div>
 								<div class="list-container">
 									<div
 										class="list-item"
-										v-for="(genre, index) in song.genres"
-										:key="index"
+										v-for="genre in song.genres"
+										:key="genre"
 									>
 										<div
 											class="list-item-circle"
@@ -381,7 +380,7 @@
 							<div
 								class="api-result"
 								v-for="(result, index) in discogs.apiResults"
-								:key="index"
+								:key="result.album.id"
 								tabindex="0"
 								@keydown.space.prevent
 								@keyup.enter="toggleAPIResult(index)"
@@ -441,7 +440,9 @@
 											tabindex="0"
 											v-for="(track,
 											trackIndex) in result.tracks"
-											:key="trackIndex"
+											:key="
+												`${track.position}-${track.title}`
+											"
 											@click="
 												selectTrack(index, trackIndex)
 											"
@@ -593,10 +594,10 @@ export default {
 	},
 	watch: {
 		/* eslint-disable */
-		"song.duration": function () {
+		"song.duration": function() {
 			this.drawCanvas();
 		},
-		"song.skipDuration": function () {
+		"song.skipDuration": function() {
 			this.drawCanvas();
 		}
 		/* eslint-enable */
@@ -945,6 +946,28 @@ export default {
 			if (!song.thumbnail) {
 				saveButtonRef.handleFailedSave();
 				return new Toast("Please fill in all fields");
+			}
+
+			const thumbnailHeight = this.$refs.thumbnailElement.naturalHeight;
+			const thumbnailWidth = this.$refs.thumbnailElement.naturalWidth;
+
+			if (thumbnailHeight < 80 || thumbnailWidth < 80) {
+				saveButtonRef.handleFailedSave();
+				return new Toast(
+					"Thumbnail width and height must be at least 80px."
+				);
+			}
+
+			if (thumbnailHeight > 4000 || thumbnailWidth > 4000) {
+				saveButtonRef.handleFailedSave();
+				return new Toast(
+					"Thumbnail width and height must be less than 4000px."
+				);
+			}
+
+			if (thumbnailHeight - thumbnailWidth > 5) {
+				saveButtonRef.handleFailedSave();
+				return new Toast("Thumbnail cannot be taller than it is wide.");
 			}
 
 			// Duration

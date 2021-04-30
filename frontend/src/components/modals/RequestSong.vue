@@ -42,7 +42,7 @@
 				>
 					<search-query-item
 						v-for="(result, index) in search.songs.results"
-						:key="index"
+						:key="result.id"
 						:result="result"
 					>
 						<div slot="actions">

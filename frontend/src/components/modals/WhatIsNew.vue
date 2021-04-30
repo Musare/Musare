@@ -22,10 +22,7 @@
 						The features are so great
 					</div>
 					<ul class="sect-body">
-						<li
-							v-for="(feature, index) in news.features"
-							:key="index"
-						>
+						<li v-for="feature in news.features" :key="feature">
 							{{ feature }}
 						</li>
 					</ul>
@@ -34,8 +31,8 @@
 					<div class="sect-head-improvements">Improvements</div>
 					<ul class="sect-body">
 						<li
-							v-for="(improvement, index) in news.improvements"
-							:key="index"
+							v-for="improvement in news.improvements"
+							:key="improvement"
 						>
 							{{ improvement }}
 						</li>
@@ -44,7 +41,7 @@
 				<div v-show="news.bugs.length > 0" class="sect">
 					<div class="sect-head-bugs">Bugs Smashed</div>
 					<ul class="sect-body">
-						<li v-for="(bug, index) in news.bugs" :key="index">
+						<li v-for="bug in news.bugs" :key="bug">
 							{{ bug }}
 						</li>
 					</ul>
@@ -54,10 +51,7 @@
 						Coming Soon to a Musare near you
 					</div>
 					<ul class="sect-body">
-						<li
-							v-for="(upcoming, index) in news.upcoming"
-							:key="index"
-						>
+						<li v-for="upcoming in news.upcoming" :key="upcoming">
 							{{ upcoming }}
 						</li>
 					</ul>

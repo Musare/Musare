@@ -34,7 +34,7 @@
 
 		<aside class="menu">
 			<ul class="menu-list scrollable-list">
-				<li v-for="(user, index) in users.loggedIn" :key="index">
+				<li v-for="user in users.loggedIn" :key="user.username">
 					<router-link
 						:to="{
 							name: 'profile',

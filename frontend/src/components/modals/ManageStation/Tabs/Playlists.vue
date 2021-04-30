@@ -28,8 +28,8 @@
 			<div class="tab" v-show="tab === 'current'">
 				<div v-if="currentPlaylists.length > 0">
 					<playlist-item
-						v-for="(playlist, index) in currentPlaylists"
-						:key="'key-' + index"
+						v-for="playlist in currentPlaylists"
+						:key="`key-${playlist._id}`"
 						:playlist="playlist"
 						:show-owner="true"
 					>
@@ -106,8 +106,8 @@
 				</div>
 				<div v-if="search.results.length > 0">
 					<playlist-item
-						v-for="(playlist, index) in search.results"
-						:key="'searchKey-' + index"
+						v-for="playlist in search.results"
+						:key="`searchKey-${playlist._id}`"
 						:playlist="playlist"
 						:show-owner="true"
 					>

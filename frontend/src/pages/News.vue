@@ -5,8 +5,8 @@
 		<div class="container">
 			<div class="content-wrapper">
 				<div
-					v-for="(item, index) in news"
-					:key="index"
+					v-for="item in news"
+					:key="item._id"
 					class="card is-fullwidth"
 				>
 					<header class="card-header">
@@ -24,9 +24,8 @@
 							</div>
 							<ul class="sect-body">
 								<li
-									v-for="(feature,
-									itemIndex) in item.features"
-									:key="itemIndex"
+									v-for="feature in item.features"
+									:key="feature"
 								>
 									{{ feature }}
 								</li>
@@ -38,9 +37,8 @@
 							</div>
 							<ul class="sect-body">
 								<li
-									v-for="(improvement,
-									itemIndex) in item.improvements"
-									:key="itemIndex"
+									v-for="improvement in item.improvements"
+									:key="improvement"
 								>
 									{{ improvement }}
 								</li>
@@ -49,10 +47,7 @@
 						<div v-show="item.bugs.length > 0" class="sect">
 							<div class="sect-head-bugs">Bugs Smashed</div>
 							<ul class="sect-body">
-								<li
-									v-for="(bug, itemIndex) in item.bugs"
-									:key="itemIndex"
-								>
+								<li v-for="bug in item.bugs" :key="bug">
 									{{ bug }}
 								</li>
 							</ul>
@@ -63,9 +58,8 @@
 							</div>
 							<ul class="sect-body">
 								<li
-									v-for="(upcoming,
-									itemIndex) in item.upcoming"
-									:key="itemIndex"
+									v-for="upcoming in item.upcoming"
+									:key="upcoming"
 								>
 									{{ upcoming }}
 								</li>

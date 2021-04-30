@@ -15,9 +15,12 @@
 	"siteSettings": {
 		"logo_white": "/assets/white_wordmark.png",
 		"logo_blue": "/assets/blue_wordmark.png",
-		"siteName": "Musare",
+		"sitename": "Musare",
 		"github": "https://github.com/Musare/MusareNode"
 	},
+	"messages": {
+		"accountRemoval": "Your account will be deactivated instantly and your data will shortly be deleted by an admin."
+	},
 	"skipConfigVersionCheck": false,
-	"configVersion": 2
+	"configVersion": 3
 }

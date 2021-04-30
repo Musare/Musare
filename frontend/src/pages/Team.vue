@@ -6,8 +6,8 @@
 			<h2 class="has-text-centered">Current Team</h2>
 			<div class="group">
 				<div
-					v-for="(member, index) in currentTeam"
-					:key="index"
+					v-for="member in currentTeam"
+					:key="member.name"
 					class="card"
 				>
 					<header class="card-header">
@@ -38,9 +38,8 @@
 						></div>
 						<div v-if="member.projects" class="projects">
 							<a
-								v-for="(project,
-								projectIndex) in member.projects"
-								:key="projectIndex"
+								v-for="project in member.projects"
+								:key="project"
 								:href="
 									'https://github.com/Musare/' +
 										project +
@@ -58,8 +57,8 @@
 			<h3 class="has-text-centered">Previous Team</h3>
 			<div class="group">
 				<div
-					v-for="(member, index) in previousTeam"
-					:key="index"
+					v-for="member in previousTeam"
+					:key="member.name"
 					class="card"
 				>
 					<header class="card-header">
@@ -90,9 +89,8 @@
 						></div>
 						<div v-if="member.projects" class="projects">
 							<a
-								v-for="(project,
-								projectIndex) in member.projects"
-								:key="projectIndex"
+								v-for="project in member.projects"
+								:key="project"
 								:href="
 									'https://github.com/Musare/' +
 										project +
@@ -111,8 +109,8 @@
 				<h4>Other Contributors</h4>
 				<div>
 					<a
-						v-for="(member, index) in otherContributors"
-						:key="index"
+						v-for="member in otherContributors"
+						:key="member.name"
 						:href="member.link"
 						target="_blank"
 					>

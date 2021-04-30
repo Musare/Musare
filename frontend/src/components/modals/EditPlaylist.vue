@@ -21,10 +21,14 @@
 
 				<div
 					id="playlist-settings-section"
-					v-if="userId === playlist.createdBy || isEditable()"
+					v-if="
+						userId === playlist.createdBy ||
+							isEditable() ||
+							(playlist.type === 'genre' && isAdmin())
+					"
 					class="section"
 				>
-					<div v-if="isEditable()">
+					<div v-if="userId === playlist.createdBy || isEditable()">
 						<h4 class="section-title">Edit Details</h4>
 
 						<p class="section-description">
@@ -56,7 +60,12 @@
 						</div>
 					</div>
 
-					<div>
+					<div
+						v-if="
+							isEditable() ||
+								(playlist.type === 'genre' && isAdmin())
+						"
+					>
 						<label class="label"> Change privacy </label>
 						<div class="control is-grouped input-with-button">
 							<div class="control is-expanded select">
@@ -160,7 +169,7 @@
 					>
 						<search-query-item
 							v-for="(result, index) in search.songs.results"
-							:key="index"
+							:key="result.id"
 							:result="result"
 						>
 							<div slot="actions">
@@ -241,7 +250,7 @@
 							>
 								<li
 									v-for="(song, index) in playlist.songs"
-									:key="'key-' + song._id"
+									:key="`key-${song._id}`"
 								>
 									<song-item
 										:song="song"
@@ -571,6 +580,9 @@ export default {
 				(this.userId === this.playlist.createdBy ||
 					this.userRole === "admin")
 			);
+		},
+		isAdmin() {
+			return this.userRole === "admin";
 		},
 		updateSongPositioning({ moved }) {
 			if (!moved) return; // we only need to update when song is moved

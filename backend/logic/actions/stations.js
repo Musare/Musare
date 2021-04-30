@@ -3426,6 +3426,8 @@ export default {
 					if (!station) return next("Station not found.");
 					if (station.includedPlaylists.indexOf(playlistId) !== -1)
 						return next("That playlist is already included.");
+					if (station.playMode === "sequential" && station.includedPlaylists.length > 0)
+						return next("Error: Only 1 playlist can be included in sequential play mode.");
 					return next();
 				},
 

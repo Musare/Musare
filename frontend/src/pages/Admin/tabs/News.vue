@@ -15,7 +15,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					<tr v-for="(news, index) in news" :key="index">
+					<tr v-for="news in news" :key="news._id">
 						<td>
 							<strong>{{ news.title }}</strong>
 						</td>
@@ -87,7 +87,7 @@
 								</p>
 								<span
 									v-for="(bug, index) in creating.bugs"
-									:key="index"
+									:key="bug"
 									class="tag is-info"
 								>
 									{{ bug }}
@@ -117,7 +117,7 @@
 								<span
 									v-for="(feature,
 									index) in creating.features"
-									:key="index"
+									:key="feature"
 									class="tag is-info"
 								>
 									{{ feature }}
@@ -150,7 +150,7 @@
 								<span
 									v-for="(improvement,
 									index) in creating.improvements"
-									:key="index"
+									:key="improvement"
 									class="tag is-info"
 								>
 									{{ improvement }}
@@ -182,7 +182,7 @@
 								<span
 									v-for="(upcoming,
 									index) in creating.upcoming"
-									:key="index"
+									:key="upcoming"
 									class="tag is-info"
 								>
 									{{ upcoming }}

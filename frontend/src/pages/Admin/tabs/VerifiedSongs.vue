@@ -80,7 +80,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					<tr v-for="(song, index) in filteredSongs" :key="index">
+					<tr v-for="(song, index) in filteredSongs" :key="song._id">
 						<td>
 							<img
 								class="song-thumbnail"

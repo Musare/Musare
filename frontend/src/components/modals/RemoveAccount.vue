@@ -130,6 +130,7 @@
 				<div class="content-box-inputs">
 					<a
 						class="button is-github"
+						@click="relinkGithub()"
 						:href="`${apiDomain}/auth/github/link`"
 					>
 						<div class="icon">
@@ -154,7 +155,7 @@
 			>
 				<h2 class="content-box-title">Remove your account</h2>
 				<p class="content-box-description">
-					There is no going back after confirming account removal.
+					{{ accountRemovalMessage }}
 				</p>
 
 				<div class="content-box-inputs">
@@ -182,8 +183,10 @@ export default {
 	components: { Modal, Confirm },
 	data() {
 		return {
+			name: "RemoveAccount",
 			step: "confirm-identity",
 			apiDomain: "",
+			accountRemovalMessage: "",
 			password: {
 				value: "",
 				visible: false
@@ -197,6 +200,7 @@ export default {
 	}),
 	async mounted() {
 		this.apiDomain = await lofig.get("apiDomain");
+		this.accountRemovalMessage = await lofig.get("messages.accountRemoval");
 	},
 	methods: {
 		togglePasswordVisibility() {
@@ -227,13 +231,19 @@ export default {
 							`Your GitHub account isn't linked. Please re-link your account and try again.`
 						);
 						this.step = "relink-github";
-						localStorage.setItem(
-							"github_redirect",
-							window.location.pathname + window.location.search
-						);
 					}
 				} else new Toast(res.message);
 			});
+		},
+		relinkGithub() {
+			localStorage.setItem(
+				"github_redirect",
+				`${window.location.pathname + window.location.search}${
+					!this.$route.query.removeAccount
+						? "&removeAccount=relinked-github"
+						: ""
+				}`
+			);
 		},
 		remove() {
 			return this.socket.dispatch("users.remove", res => {
