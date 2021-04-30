@@ -349,7 +349,11 @@ export default {
 					"event:station.includedPlaylist",
 					res => {
 						const { playlist } = res.data;
-						this.includedPlaylists.push(playlist);
+						const playlistIndex = this.includedPlaylists
+							.map(includedPlaylist => includedPlaylist._id)
+							.indexOf(playlist._id);
+						if (playlistIndex === -1)
+							this.includedPlaylists.push(playlist);
 					},
 					{ modal: "manageStation" }
 				);
@@ -358,7 +362,11 @@ export default {
 					"event:station.excludedPlaylist",
 					res => {
 						const { playlist } = res.data;
-						this.excludedPlaylists.push(playlist);
+						const playlistIndex = this.excludedPlaylists
+							.map(excludedPlaylist => excludedPlaylist._id)
+							.indexOf(playlist._id);
+						if (playlistIndex === -1)
+							this.excludedPlaylists.push(playlist);
 					},
 					{ modal: "manageStation" }
 				);
