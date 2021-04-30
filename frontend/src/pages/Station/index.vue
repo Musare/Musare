@@ -1959,9 +1959,7 @@ export default {
 	margin: 0 auto;
 	padding: 20px 40px;
 	height: 100%;
-	// min-height: calc(
-	// 	100vh - 196px
-	// ); // Height of nav (64px) + height of footer (130px)
+	min-height: calc(100vh - 264px);
 	width: 100%;
 	max-width: 1800px;
 	display: flex;
