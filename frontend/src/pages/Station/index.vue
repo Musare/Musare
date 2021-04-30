@@ -1872,10 +1872,6 @@ export default {
 </style>
 
 <style lang="scss" scoped>
-// .main-container > div {
-// 	height: 100%;
-// }
-
 #page-loader-container {
 	height: inherit;
 
@@ -1968,8 +1964,7 @@ export default {
 #station-outer-container {
 	margin: 0 auto;
 	padding: 20px 40px;
-	height: 100%;
-	min-height: calc(100vh - 264px);
+	min-height: calc(100vh - 64px);
 	width: 100%;
 	max-width: 1800px;
 	display: flex;
@@ -2119,7 +2114,6 @@ export default {
 				height: 7px;
 				display: block;
 				width: 100%;
-				// overflow: hidden;
 
 				#seeker-bar {
 					background-color: var(--primary-color);
@@ -2528,15 +2522,6 @@ export default {
 	}
 }
 
-// 	// #current-next-row {
-// 	// 	flex-direction: column;
-
-// 	// 	> div {
-// 	// 		flex: 1 !important;
-// 	// 	}
-// 	// }
-// }
-
 @media (max-width: 1700px) {
 	#current-next-row {
 		flex-direction: column !important;
@@ -2557,7 +2542,6 @@ export default {
 	}
 
 	#station-outer-container {
-		// padding: 10px;
 		max-width: 1500px;
 
 		#station-inner-container {
