@@ -143,10 +143,7 @@ class _DBModule extends CoreClass {
 
 					this.schemas.user
 						.path("name")
-						.validate(
-							name => isLength(name, 1, 64) && regex.name.test(name),
-							"Invalid name."
-						);
+						.validate(name => isLength(name, 1, 64) && regex.name.test(name), "Invalid name.");
 
 					// Station
 					this.schemas.station
