@@ -691,7 +691,8 @@ export default {
 			activityWatchVideoDataInterval: null,
 			activityWatchVideoLastStatus: "",
 			activityWatchVideoLastYouTubeId: "",
-			activityWatchVideoLastStartDuration: ""
+			activityWatchVideoLastStartDuration: "",
+			nextCurrentSong: null
 		};
 	},
 	computed: {
@@ -760,16 +761,15 @@ export default {
 			}
 		);
 
-		this.socket.on("event:songs.skip", res => {
-			const { skippedSong } = res.data;
-			if (this.currentSong._id === skippedSong._id) {
-				this.skipSong();
-			}
-		});
-
 		this.socket.on("event:songs.next", res => {
-			const { currentSong, startedAt, paused, timePaused } = res.data;
-			if (this.noSong) {
+			const {
+				currentSong,
+				startedAt,
+				paused,
+				timePaused,
+				naturel
+			} = res.data;
+			if (this.noSong || !naturel) {
 				this.setCurrentSong({
 					currentSong,
 					startedAt,
@@ -777,12 +777,13 @@ export default {
 					timePaused,
 					pausedAt: 0
 				});
-			} else if (
-				this.nextSong &&
-				currentSong &&
-				this.nextSong._id === currentSong._id
-			) {
-				this.setNextSong(currentSong);
+			} else {
+				this.setNextCurrentSong({
+					currentSong,
+					startedAt,
+					paused,
+					timePaused
+				});
 			}
 		});
 
@@ -865,7 +866,7 @@ export default {
 					? this.songsList[0]
 					: null;
 
-			this.setNextSong(nextSong);
+			this.updateNextSong(nextSong);
 
 			this.addPartyPlaylistSongToQueue();
 		});
@@ -879,7 +880,7 @@ export default {
 					? this.songsList[0]
 					: null;
 
-			this.setNextSong(nextSong);
+			this.updateNextSong(nextSong);
 		});
 
 		this.socket.on("event:song.voteSkipSong", () => {
@@ -1021,54 +1022,16 @@ export default {
 				}
 			);
 		},
-		setNextSong(nextSong) {
-			if (
-				nextSong &&
-				(!this.nextSong || this.nextSong._id !== nextSong._id) &&
-				(!this.noSong && nextSong._id !== this.currentSong._id)
-			) {
-				this.updateNextSong(nextSong);
-
-				this.socket.dispatch(
-					"stations.getNextSongInfo",
-					this.station._id,
-					nextSong._id,
-					data => {
-						if (data.status === "success") {
-							if (
-								this.nextSong &&
-								this.nextSong._id === nextSong._id
-							) {
-								this.updateNextSong(data.data.nextSong);
-							}
-						}
-					}
-				);
-			}
-			if (!nextSong) {
-				this.updateNextSong(null);
+		setNextCurrentSong(nextCurrentSong) {
+			this.nextCurrentSong = nextCurrentSong;
+			if (this.getTimeRemaining() <= 0) {
+				this.skipSong();
 			}
 		},
 		skipSong() {
-			if (this.nextSong) {
-				this.setCurrentSong({
-					currentSong: {
-						...this.nextSong,
-						skipVotes: 0
-					},
-					startedAt: Date.now(),
-					paused: this.stationPaused,
-					timePaused: 0,
-					pausedAt: 0
-				});
-			} else {
-				this.setCurrentSong({
-					currentSong: null,
-					startedAt: 0,
-					paused: this.stationPaused,
-					timePaused: 0,
-					pausedAt: 0
-				});
+			console.log("SKIP_SONG_FN", this.nextCurrentSong);
+			if (this.nextCurrentSong && this.nextCurrentSong.currentSong) {
+				this.setCurrentSong(this.nextCurrentSong);
 			}
 		},
 		setCurrentSong(data) {
@@ -1082,13 +1045,19 @@ export default {
 
 			this.updateCurrentSong(currentSong || {});
 
-			if (
-				currentSong &&
-				this.nextSong &&
-				currentSong._id === this.nextSong._id
-			) {
-				this.setNextSong(null);
-			}
+			let nextSong = null;
+			if (this.songsList[0])
+				nextSong = this.songsList[0].youtubeId
+					? this.songsList[0]
+					: null;
+			this.updateNextSong(nextSong);
+			this.nextCurrentSong = {
+				currentSong: null,
+				startedAt: 0,
+				paused,
+				timePaused: 0,
+				pausedAt: 0
+			};
 
 			clearTimeout(window.stationNextSongTimeout);
 
@@ -1700,7 +1669,7 @@ export default {
 										? this.songsList[0]
 										: null;
 								}
-								this.setNextSong(nextSong);
+								this.updateNextSong(nextSong);
 							}
 						});
 

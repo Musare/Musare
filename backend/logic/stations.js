@@ -242,7 +242,8 @@ class _StationsModule extends CoreClass {
 									name: `stations.nextSong?id=${station._id}`,
 									cb: () =>
 										StationsModule.runJob("SKIP_STATION", {
-											stationId: station._id
+											stationId: station._id,
+											natural: true
 										}),
 									unique: true,
 									station
@@ -260,7 +261,8 @@ class _StationsModule extends CoreClass {
 							return StationsModule.runJob(
 								"SKIP_STATION",
 								{
-									stationId: station._id
+									stationId: station._id,
+									natural: false
 								},
 								this
 							)
@@ -280,7 +282,8 @@ class _StationsModule extends CoreClass {
 							return StationsModule.runJob(
 								"SKIP_STATION",
 								{
-									stationId: station._id
+									stationId: station._id,
+									natural: false
 								},
 								this
 							)
@@ -695,6 +698,7 @@ class _StationsModule extends CoreClass {
 	 *
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.stationId - the id of the station to skip
+	 * @param {string} payload.natural - whether to skip naturally or forcefully
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	SKIP_STATION(payload) {
@@ -953,7 +957,8 @@ class _StationsModule extends CoreClass {
 										currentSong: station.currentSong,
 										startedAt: station.startedAt,
 										paused: station.paused,
-										timePaused: 0
+										timePaused: 0,
+										natural: payload.natural
 									}
 								}
 							]
