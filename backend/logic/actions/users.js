@@ -15,6 +15,7 @@ const WSModule = moduleManager.modules.ws;
 const CacheModule = moduleManager.modules.cache;
 const MailModule = moduleManager.modules.mail;
 const PunishmentsModule = moduleManager.modules.punishments;
+const SongsModule = moduleManager.modules.songs;
 const ActivitiesModule = moduleManager.modules.activities;
 const PlaylistsModule = moduleManager.modules.playlists;
 
@@ -222,6 +223,8 @@ export default {
 
 		const dataRequestEmail = await MailModule.runJob("GET_SCHEMA", { schemaName: "dataRequest" }, this);
 
+		const songsToAdjustRatings = [];
+
 		async.waterfall(
 			[
 				// activities related to the user
@@ -262,13 +265,57 @@ export default {
 					playlistModel.deleteMany({ owner: session.userId }, next);
 				},
 
-				// user's playlists
 				(res, next) => {
+					playlistModel.findOne({ createdBy: session.userId, displayName: "Liked Songs" }, next);
+				},
+
+				// get all liked songs (as the global rating values for these songs will need adjusted)
+				(playlist, next) => {
+					if (!playlist) return next();
+
+					playlist.songs.forEach(song =>
+						songsToAdjustRatings.push({ songId: song._id, youtubeId: song.youtubeId })
+					);
+
+					return next();
+				},
+
+				next => {
+					playlistModel.findOne({ createdBy: session.userId, displayName: "Disliked Songs" }, next);
+				},
+
+				// get all disliked songs (as the global rating values for these songs will need adjusted)
+				(playlist, next) => {
+					if (!playlist) return next();
+
+					playlist.songs.forEach(song =>
+						songsToAdjustRatings.push({ songId: song._id, youtubeId: song.youtubeId })
+					);
+
+					return next();
+				},
+
+				// user's playlists
+				next => {
 					playlistModel.deleteMany({ createdBy: session.userId }, next);
 				},
 
-				// user object
 				(res, next) => {
+					async.each(
+						songsToAdjustRatings,
+						(song, next) => {
+							const { songId, youtubeId } = song;
+
+							SongsModule.runJob("RECALCULATE_SONG_RATINGS", { songId, youtubeId })
+								.then(() => next())
+								.catch(next);
+						},
+						err => next(err)
+					);
+				},
+
+				// user object
+				next => {
 					userModel.deleteMany({ _id: session.userId }, next);
 				},
 
