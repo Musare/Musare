@@ -134,7 +134,6 @@
 						<song-item
 							v-if="currentSong._id"
 							:song="currentSong"
-							:large-thumbnail="true"
 							:requested-by="
 								station.type === 'community' &&
 									station.partyMode === true
@@ -549,6 +548,16 @@ export default {
 		.tab > button {
 			width: 100%;
 			margin-bottom: 10px;
+		}
+		.currently-playing.song-item {
+			.song-info {
+				width: calc(100% - 150px);
+			}
+			.thumbnail {
+				min-width: 130px;
+				width: 130px;
+				height: 130px;
+			}
 		}
 	}
 }
