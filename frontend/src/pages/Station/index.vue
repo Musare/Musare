@@ -530,7 +530,6 @@
 								<song-item
 									:song="currentSong"
 									:duration="false"
-									:large-thumbnail="true"
 									:requested-by="
 										station.type === 'community' &&
 											station.partyMode === true
@@ -549,7 +548,6 @@
 								<song-item
 									:song="nextSong"
 									:duration="false"
-									:large-thumbnail="true"
 									:requested-by="
 										station.type === 'community' &&
 											station.partyMode === true
@@ -1861,6 +1859,20 @@ export default {
 	left: 0;
 	width: 100%;
 	height: 100%;
+}
+
+#currently-playing-container,
+#next-up-container {
+	.song-item {
+		.song-info {
+			width: calc(100% - 80px);
+		}
+		.thumbnail {
+			min-width: 130px;
+			width: 130px;
+			height: 130px;
+		}
+	}
 }
 </style>
 

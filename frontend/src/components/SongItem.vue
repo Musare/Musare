@@ -5,7 +5,7 @@
 		v-if="song"
 	>
 		<div class="thumbnail-and-info">
-			<song-thumbnail :class="{ large: largeThumbnail }" :song="song" />
+			<song-thumbnail :song="song" />
 			<div class="song-info">
 				<h6 v-if="header">{{ header }}</h6>
 				<div class="song-title">
@@ -172,10 +172,6 @@ export default {
 			type: Boolean,
 			default: true
 		},
-		largeThumbnail: {
-			type: Boolean,
-			default: false
-		},
 		disabledActions: {
 			type: Array,
 			default: () => []
@@ -286,11 +282,6 @@ export default {
 		width: 65px;
 		height: 65px;
 		margin: -7.5px;
-		&.large {
-			min-width: 130px;
-			width: 130px;
-			height: 130px;
-		}
 	}
 
 	.song-info {
