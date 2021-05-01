@@ -674,6 +674,11 @@ export default {
 
 				this.songDataLoaded = true;
 
+				this.socket.dispatch(
+					"apis.joinRoom",
+					`edit-song.${this.song._id}`
+				);
+
 				// this.edit(res.data.song);
 
 				this.discogsQuery = this.song.title;
@@ -970,6 +975,12 @@ export default {
 		this.playerReady = false;
 		clearInterval(this.interval);
 		clearInterval(this.activityWatchVideoDataInterval);
+
+		this.socket.dispatch(
+			"apis.leaveRoom",
+			`edit-song.${this.song._id}`,
+			() => {}
+		);
 
 		const shortcutNames = [
 			"editSong.pauseResume",
