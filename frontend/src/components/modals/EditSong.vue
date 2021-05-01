@@ -482,7 +482,7 @@
 					<button
 						v-if="song.status === 'unverified'"
 						class="button is-success"
-						@click="verify(song)"
+						@click="verify(song._id)"
 						content="Verify Song"
 						v-tippy
 					>
@@ -491,7 +491,7 @@
 					<confirm
 						v-if="song.status === 'verified'"
 						placement="left"
-						@confirm="unverify(song._id, index)"
+						@confirm="unverify(song._id)"
 					>
 						<button
 							class="button is-danger"
@@ -504,7 +504,7 @@
 					<confirm
 						v-if="song.status === 'unverified'"
 						placement="left"
-						@confirm="hide(song._id, index)"
+						@confirm="hide(song._id)"
 					>
 						<button
 							class="button is-danger"
@@ -1475,15 +1475,14 @@ export default {
 				this.activityWatchVideoLastStatus = "not_playing";
 			}
 		},
-		verify(song) {
-			this.socket.dispatch("songs.verify", song.youtubeId, res => {
+		verify(id) {
+			this.socket.dispatch("songs.verify", id, res => {
 				new Toast(res.message);
 			});
 		},
 		unverify(id) {
 			this.socket.dispatch("songs.unverify", id, res => {
-				if (res.status === "success") new Toast(res.message);
-				else new Toast(res.message);
+				new Toast(res.message);
 			});
 		},
 		hide(id) {
