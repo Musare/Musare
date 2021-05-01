@@ -1013,7 +1013,6 @@ export default {
 		);
 	},
 
-
 	/**
 	 * Gets a station by id
 	 *

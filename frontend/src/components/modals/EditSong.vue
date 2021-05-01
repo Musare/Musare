@@ -523,6 +523,15 @@
 					>
 						<i class="material-icons">visibility</i>
 					</button>
+					<confirm placement="left" @confirm="remove(song._id)">
+						<button
+							class="button is-danger"
+							content="Remove Song"
+							v-tippy
+						>
+							<i class="material-icons">delete</i>
+						</button>
+					</confirm>
 				</div>
 			</div>
 		</modal>
@@ -809,6 +818,21 @@ export default {
 
 		this.socket.on("event:admin.verifiedSong.added", res => {
 			this.song.status = res.data.song.status;
+		});
+
+		this.socket.on("event:admin.hiddenSong.removed", () => {
+			new Toast("The song you were editing was removed");
+			this.closeModal("editSong");
+		});
+
+		this.socket.on("event:admin.unverifiedSong.removed", () => {
+			new Toast("The song you were editing was removed");
+			this.closeModal("editSong");
+		});
+
+		this.socket.on("event:admin.verifiedSong.removed", () => {
+			new Toast("The song you were editing was removed");
+			this.closeModal("editSong");
 		});
 
 		keyboardShortcuts.registerShortcut("editSong.pauseResumeVideo", {
@@ -1492,6 +1516,11 @@ export default {
 		},
 		unhide(id) {
 			this.socket.dispatch("songs.unhide", id, res => {
+				new Toast(res.message);
+			});
+		},
+		remove(id) {
+			this.socket.dispatch("songs.remove", id, res => {
 				new Toast(res.message);
 			});
 		},
