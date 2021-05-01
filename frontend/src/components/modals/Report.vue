@@ -1,13 +1,12 @@
 <template>
 	<modal title="Report">
 		<div slot="body">
-			<song-item
-				:song="localSong"
-				:large-thumbnail="true"
-				:disabled-actions="['report']"
-				header="Selected Song.."
-			/>
 			<div class="edit-report-wrapper">
+				<song-item
+					:song="localSong"
+					:disabled-actions="['report']"
+					header="Selected Song.."
+				/>
 				<div class="columns is-multiline">
 					<div
 						v-for="issue in issues"
@@ -157,11 +156,20 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
-.edit-report-wrapper {
-	margin-top: 20px;
+<style lang="scss">
+.edit-report-wrapper .song-item {
+	.song-info {
+		width: calc(100% - 150px);
+	}
+	.thumbnail {
+		min-width: 130px;
+		width: 130px;
+		height: 130px;
+	}
 }
+</style>
 
+<style lang="scss" scoped>
 .radio-controls .control {
 	display: flex;
 	align-items: center;
@@ -180,5 +188,6 @@ export default {
 .columns {
 	margin-left: unset;
 	margin-right: unset;
+	margin-top: 20px;
 }
 </style>
