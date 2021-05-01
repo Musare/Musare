@@ -1013,6 +1013,86 @@ export default {
 		);
 	},
 
+	getNextSongInfo(session, stationId, songId, cb) {
+		async.waterfall(
+			[
+				next => {
+					StationsModule.runJob("GET_STATION", { stationId }, this)
+						.then(station => next(null, station))
+						.catch(err => {
+							next(err);
+						});
+				},
+
+				(station, next) => {
+					if (!station) return next("Station not found.");
+					return StationsModule.runJob("CAN_USER_VIEW_STATION", { station, userId: session.userId }, this)
+						.then(canView => {
+							if (!canView) next("Not allowed to get info about station.");
+							else next(null, station);
+						})
+						.catch(err => {
+							console.log(stationId, station, songId);
+							next(err);
+						});
+				},
+
+				(station, next) => {
+					if (
+						station.currentSong._id === songId ||
+						(station.queue.length > 0 && station.queue[0]._id === songId) ||
+						(station.queue.length > 1 && station.queue[1]._id === songId)
+					) {
+						next(null);
+					} else next("That song is not next.");
+				},
+
+				next => {
+					SongsModule.runJob("GET_SONG", { songId }, this)
+						.then(response => {
+							const { song } = response;
+							const nextSong = {
+								_id: song._id,
+								youtubeId: song.youtubeId,
+								title: song.title,
+								artists: song.artists,
+								duration: song.duration,
+								likes: song.likes,
+								dislikes: song.dislikes,
+								skipDuration: song.skipDuration,
+								thumbnail: song.thumbnail,
+								requestedAt: song.requestedAt,
+								requestedBy: song.requestedBy,
+								status: song.status
+							};
+							next(null, { nextSong });
+						})
+						.catch(err => {
+							next(err);
+						});
+				}
+			],
+			async (err, data) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"STATIONS_GET_NEXT_SONG_INFO",
+						`Getting next song info for station "${stationId}" failed. "${err}"`
+					);
+					return cb({ status: "error", message: err });
+				}
+
+				this.log(
+					"SUCCESS",
+					"STATIONS_GET_NEXT_SONG_INFO",
+					`Got next song info for station "${stationId}" successfully.`
+				);
+				return cb({ status: "success", data });
+			}
+		);
+	},
+
 	/**
 	 * Gets a station by id
 	 *
@@ -1346,14 +1426,14 @@ export default {
 				(station, next) => {
 					skipVotes = station.currentSong.skipVotes.length;
 					WSModule.runJob("GET_SOCKETS_FOR_ROOM", { room: `station.${stationId}` }, this)
-						.then(sockets => next(null, sockets))
+						.then(sockets => next(null, station, sockets))
 						.catch(next);
 				},
 
-				(sockets, next) => {
+				(station, sockets, next) => {
 					if (sockets.length <= skipVotes) {
 						shouldSkip = true;
-						return next();
+						return next(null, station);
 					}
 
 					const users = [];
@@ -1374,12 +1454,12 @@ export default {
 							if (err) return next(err);
 
 							if (users.length <= skipVotes) shouldSkip = true;
-							return next();
+							return next(null, station);
 						}
 					);
 				}
 			],
-			async err => {
+			async (err, station) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "STATIONS_VOTE_SKIP", `Vote skipping station "${stationId}" failed. "${err}"`);
@@ -1392,7 +1472,21 @@ export default {
 					value: stationId
 				});
 
-				if (shouldSkip) StationsModule.runJob("SKIP_STATION", { stationId });
+				if (shouldSkip) {
+					console.log(111, station);
+					WSModule.runJob("EMIT_TO_ROOM", {
+						room: `station.${station._id}`,
+						args: [
+							"event:songs.skip",
+							{
+								data: {
+									skippedSong: station.currentSong
+								}
+							}
+						]
+					});
+					StationsModule.runJob("SKIP_STATION", { stationId });
+				}
 
 				return cb({
 					status: "success",
@@ -1422,15 +1516,26 @@ export default {
 
 				(station, next) => {
 					if (!station) return next("Station not found.");
-					return next();
+					return next(null, station);
 				}
 			],
-			async err => {
+			async (err, station) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "STATIONS_FORCE_SKIP", `Force skipping station "${stationId}" failed. "${err}"`);
 					return cb({ status: "error", message: err });
 				}
+				WSModule.runJob("EMIT_TO_ROOM", {
+					room: `station.${station._id}`,
+					args: [
+						"event:songs.skip",
+						{
+							data: {
+								skippedSong: station.currentSong
+							}
+						}
+					]
+				});
 				StationsModule.runJob("SKIP_STATION", { stationId });
 				this.log("SUCCESS", "STATIONS_FORCE_SKIP", `Force skipped station "${stationId}" successfully.`);
 				return cb({

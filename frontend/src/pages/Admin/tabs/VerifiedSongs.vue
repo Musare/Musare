@@ -27,6 +27,15 @@
 			>
 				Keyboard shortcuts helper
 			</button>
+			<!-- <confirm placement="bottom" @confirm="updateAllSongs()">
+				<button
+					class="button is-danger"
+					content="Update all songs"
+					v-tippy
+				>
+					Update all songs
+				</button>
+			</confirm> -->
 			<br />
 			<div>
 				<input
@@ -350,6 +359,12 @@ export default {
 		},
 		remove(id) {
 			this.socket.dispatch("songs.unverify", id, res => {
+				if (res.status === "success") new Toast(res.message);
+				else new Toast(res.message);
+			});
+		},
+		updateAllSongs() {
+			this.socket.dispatch("songs.updateAll", res => {
 				if (res.status === "success") new Toast(res.message);
 				else new Toast(res.message);
 			});
