@@ -478,6 +478,52 @@
 					type="save-and-close"
 					@clicked="save(song, true)"
 				/>
+				<div class="right">
+					<button
+						v-if="song.status === 'unverified'"
+						class="button is-success"
+						@click="verify(song)"
+						content="Verify Song"
+						v-tippy
+					>
+						<i class="material-icons">check_circle</i>
+					</button>
+					<confirm
+						v-if="song.status === 'verified'"
+						placement="left"
+						@confirm="unverify(song._id, index)"
+					>
+						<button
+							class="button is-danger"
+							content="Unverify Song"
+							v-tippy
+						>
+							<i class="material-icons">cancel</i>
+						</button>
+					</confirm>
+					<confirm
+						v-if="song.status === 'unverified'"
+						placement="left"
+						@confirm="hide(song._id, index)"
+					>
+						<button
+							class="button is-danger"
+							content="Hide Song"
+							v-tippy
+						>
+							<i class="material-icons">visibility_off</i>
+						</button>
+					</confirm>
+					<button
+						v-if="song.status === 'hidden'"
+						class="button is-success"
+						@click="unhide(song._id)"
+						content="Unhide Song"
+						v-tippy
+					>
+						<i class="material-icons">visibility</i>
+					</button>
+				</div>
 			</div>
 		</modal>
 		<floating-box id="genreHelper" ref="genreHelper">
@@ -506,12 +552,13 @@ import Toast from "toasters";
 import aw from "@/aw";
 import validation from "@/validation";
 import keyboardShortcuts from "@/keyboardShortcuts";
+import Confirm from "@/components/Confirm.vue";
 import Modal from "../Modal.vue";
 import FloatingBox from "../FloatingBox.vue";
 import SaveButton from "../SaveButton.vue";
 
 export default {
-	components: { Modal, FloatingBox, SaveButton },
+	components: { Modal, FloatingBox, SaveButton, Confirm },
 	props: {
 		youtubeId: { type: String, default: null },
 		// songType: { type: String, default: null },
@@ -594,10 +641,10 @@ export default {
 	},
 	watch: {
 		/* eslint-disable */
-		"song.duration": function() {
+		"song.duration": function () {
 			this.drawCanvas();
 		},
-		"song.skipDuration": function() {
+		"song.skipDuration": function () {
 			this.drawCanvas();
 		}
 		/* eslint-enable */
@@ -623,6 +670,7 @@ export default {
 				// if (this.song.discogs === undefined)
 				// 	this.song.discogs = null;
 				this.editSong(song);
+				console.log(song);
 
 				this.songDataLoaded = true;
 
@@ -745,6 +793,18 @@ export default {
 			typeof volume === "number" && !Number.isNaN(volume) ? volume : 20;
 		localStorage.setItem("volume", volume);
 		this.volumeSliderValue = volume * 100;
+
+		this.socket.on("event:admin.hiddenSong.added", res => {
+			this.song.status = res.data.song.status;
+		});
+
+		this.socket.on("event:admin.unverifiedSong.added", res => {
+			this.song.status = res.data.song.status;
+		});
+
+		this.socket.on("event:admin.verifiedSong.added", res => {
+			this.song.status = res.data.song.status;
+		});
 
 		keyboardShortcuts.registerShortcut("editSong.pauseResumeVideo", {
 			keyCode: 101,
@@ -1404,6 +1464,27 @@ export default {
 				this.activityWatchVideoLastStatus = "not_playing";
 			}
 		},
+		verify(song) {
+			this.socket.dispatch("songs.verify", song.youtubeId, res => {
+				new Toast(res.message);
+			});
+		},
+		unverify(id) {
+			this.socket.dispatch("songs.unverify", id, res => {
+				if (res.status === "success") new Toast(res.message);
+				else new Toast(res.message);
+			});
+		},
+		hide(id) {
+			this.socket.dispatch("songs.hide", id, res => {
+				new Toast(res.message);
+			});
+		},
+		unhide(id) {
+			this.socket.dispatch("songs.unhide", id, res => {
+				new Toast(res.message);
+			});
+		},
 		...mapActions("modals/editSong", [
 			"stopVideo",
 			"loadVideoById",
@@ -1436,6 +1517,11 @@ export default {
 		.modal-card-foot {
 			div div {
 				margin-right: 5px;
+			}
+			.right {
+				display: flex;
+				margin-left: auto;
+				margin-right: 0;
 			}
 		}
 	}
