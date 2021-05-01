@@ -145,7 +145,7 @@ export default {
 	 * @param {Function} cb - callback
 	 */
 	leaveRoom(session, room, cb) {
-		if (room === "home" || room.startsWith("profile.") || room.startsWith("manage-station.") || page.startsWith("edit-song.")) {
+		if (room === "home" || room.startsWith("profile.") || room.startsWith("manage-station.") || room.startsWith("edit-song.")) {
 			WSModule.runJob("SOCKET_LEAVE_ROOM", {
 				socketId: session.socketId,
 				room
