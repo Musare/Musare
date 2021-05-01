@@ -25,6 +25,11 @@ CacheModule.runJob("SUB", {
 				room: "admin.unverifiedSongs",
 				args: ["event:admin.unverifiedSong.added", { data: { song } }]
 			});
+
+			WSModule.runJob("EMIT_TO_ROOM", {
+				room: `edit-song.${songId}`,
+				args: ["event:admin.unverifiedSong.added", { data: { song } }]
+			});
 		});
 	}
 });
@@ -64,6 +69,11 @@ CacheModule.runJob("SUB", {
 				room: "admin.songs",
 				args: ["event:admin.verifiedSong.added", { data: { song } }]
 			});
+
+			WSModule.runJob("EMIT_TO_ROOM", {
+				room: `edit-song.${songId}`,
+				args: ["event:admin.verifiedSong.added", { data: { song } }]
+			});
 		});
 	}
 });
@@ -100,6 +110,11 @@ CacheModule.runJob("SUB", {
 		songModel.findOne({ _id: songId }, (err, song) => {
 			WSModule.runJob("EMIT_TO_ROOM", {
 				room: "admin.hiddenSongs",
+				args: ["event:admin.hiddenSong.added", { data: { song } }]
+			});
+
+			WSModule.runJob("EMIT_TO_ROOM", {
+				room: `edit-song.${songId}`,
 				args: ["event:admin.hiddenSong.added", { data: { song } }]
 			});
 		});
