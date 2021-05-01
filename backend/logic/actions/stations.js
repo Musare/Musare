@@ -1013,6 +1013,7 @@ export default {
 		);
 	},
 
+
 	/**
 	 * Gets a station by id
 	 *
@@ -1392,7 +1393,9 @@ export default {
 					value: stationId
 				});
 
-				if (shouldSkip) StationsModule.runJob("SKIP_STATION", { stationId });
+				if (shouldSkip) {
+					StationsModule.runJob("SKIP_STATION", { stationId, natural: false });
+				}
 
 				return cb({
 					status: "success",
@@ -1431,7 +1434,7 @@ export default {
 					this.log("ERROR", "STATIONS_FORCE_SKIP", `Force skipping station "${stationId}" failed. "${err}"`);
 					return cb({ status: "error", message: err });
 				}
-				StationsModule.runJob("SKIP_STATION", { stationId });
+				StationsModule.runJob("SKIP_STATION", { stationId, natural: false });
 				this.log("SUCCESS", "STATIONS_FORCE_SKIP", `Force skipped station "${stationId}" successfully.`);
 				return cb({
 					status: "success",
@@ -2207,7 +2210,7 @@ export default {
 					}
 				});
 
-				StationsModule.runJob("SKIP_STATION", { stationId });
+				StationsModule.runJob("SKIP_STATION", { stationId, natural: false });
 
 				return cb({
 					status: "success",
@@ -2285,7 +2288,7 @@ export default {
 						playMode: newPlayMode
 					}
 				});
-				StationsModule.runJob("SKIP_STATION", { stationId });
+				StationsModule.runJob("SKIP_STATION", { stationId, natural: false });
 				return cb({
 					status: "success",
 					message: "Successfully updated the play mode."

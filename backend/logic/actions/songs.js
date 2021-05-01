@@ -323,6 +323,37 @@ export default {
 	}),
 
 	/**
+	 * Updates all songs
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param cb
+	 */
+	updateAll: isAdminRequired(async function length(session, cb) {
+		async.waterfall(
+			[
+				next => {
+					SongsModule.runJob("UPDATE_ALL_SONGS", {})
+						.then(() => {
+							next();
+						})
+						.catch(err => {
+							next(err);
+						});
+				}
+			],
+			async err => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "SONGS_UPDATE_ALL", `Failed to update all songs. "${err}"`);
+					return cb({ status: "error", message: err });
+				}
+				this.log("SUCCESS", "SONGS_UPDATE_ALL", `Updated all songs successfully.`);
+				return cb({ status: "success", message: "Successfully updated all songs." });
+			}
+		);
+	}),
+
+	/**
 	 * Gets a song from the YouTube song id
 	 *
 	 * @param {object} session - the session object automatically added by the websocket

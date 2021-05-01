@@ -372,6 +372,51 @@ class _SongsModule extends CoreClass {
 	}
 
 	/**
+	 * Updates all songs
+	 *
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	UPDATE_ALL_SONGS() {
+		return new Promise((resolve, reject) =>
+			async.waterfall(
+				[
+					next => {
+						return next("Currently disabled since it's broken due to the backend memory leak issue.");
+						SongsModule.SongModel.find({}, next);
+					},
+
+					(songs, next) => {
+						let index = 0;
+						const { length } = songs;
+						async.eachLimit(
+							songs,
+							10,
+							(song, next) => {
+								index += 1;
+								console.log(`Updating song #${index} out of ${length}: ${song._id}`);
+								SongsModule.runJob("UPDATE_SONG", { songId: song._id }, this, 9)
+									.then(() => {
+										next();
+									})
+									.catch(err => {
+										next(err);
+									});
+							},
+							err => {
+								next(err);
+							}
+						);
+					}
+				],
+				err => {
+					if (err && err !== true) return reject(new Error(err));
+					return resolve();
+				}
+			)
+		);
+	}
+
+	/**
 	 * Deletes song from id from Mongo and cache
 	 *
 	 * @param {object} payload - returns an object containing the payload

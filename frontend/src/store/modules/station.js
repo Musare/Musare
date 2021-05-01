@@ -79,6 +79,20 @@ const mutations = {
 	leaveStation(state) {
 		state.station = {};
 		state.partyPlaylists = [];
+		state.editing = {};
+		state.userCount = 0;
+		state.users = {
+			loggedIn: [],
+			loggedOut: []
+		};
+		state.currentSong = {};
+		state.nextSong = null;
+		state.songsList = [];
+		state.stationPaused = true;
+		state.localPaused = false;
+		state.noSong = true;
+		state.includedPlaylists = [];
+		state.excludedPlaylists = [];
 	},
 	editStation(state, station) {
 		state.editing = { ...station };

@@ -691,7 +691,8 @@ export default {
 			activityWatchVideoDataInterval: null,
 			activityWatchVideoLastStatus: "",
 			activityWatchVideoLastYouTubeId: "",
-			activityWatchVideoLastStartDuration: ""
+			activityWatchVideoLastStartDuration: "",
+			nextCurrentSong: null
 		};
 	},
 	computed: {
@@ -761,54 +762,28 @@ export default {
 		);
 
 		this.socket.on("event:songs.next", res => {
-			const { currentSong } = res.data;
-
-			this.updateCurrentSong(currentSong || {});
-
-			let nextSong = null;
-			if (this.songsList[1]) {
-				nextSong = this.songsList[1].youtubeId
-					? this.songsList[1]
-					: null;
-			}
-			this.updateNextSong(nextSong);
-
-			this.startedAt = res.data.startedAt;
-			this.updateStationPaused(res.data.paused);
-			this.timePaused = res.data.timePaused;
-
-			if (currentSong) {
-				this.updateNoSong(false);
-
-				if (!this.playerReady) this.youtubeReady();
-				else this.playVideo();
-
-				this.socket.dispatch(
-					"songs.getOwnSongRatings",
-					currentSong.youtubeId,
-					res => {
-						if (
-							res.status === "success" &&
-							this.currentSong.youtubeId === res.data.youtubeId
-						) {
-							this.liked = res.data.liked;
-							this.disliked = res.data.disliked;
-
-							if (
-								this.autoSkipDisliked &&
-								res.data.disliked === true
-							) {
-								this.voteSkipStation();
-								new Toast(
-									"Automatically voted to skip disliked song."
-								);
-							}
-						}
-					}
-				);
+			const {
+				currentSong,
+				startedAt,
+				paused,
+				timePaused,
+				naturel
+			} = res.data;
+			if (this.noSong || !naturel) {
+				this.setCurrentSong({
+					currentSong,
+					startedAt,
+					paused,
+					timePaused,
+					pausedAt: 0
+				});
 			} else {
-				if (this.playerReady) this.player.pauseVideo();
-				this.updateNoSong(true);
+				this.setNextCurrentSong({
+					currentSong,
+					startedAt,
+					paused,
+					timePaused
+				});
 			}
 		});
 
@@ -816,12 +791,20 @@ export default {
 			this.pausedAt = res.data.pausedAt;
 			this.updateStationPaused(true);
 			this.pauseLocalPlayer();
+
+			clearTimeout(window.stationNextSongTimeout);
 		});
 
 		this.socket.on("event:stations.resume", res => {
 			this.timePaused = res.data.timePaused;
 			this.updateStationPaused(false);
 			if (!this.localPaused) this.resumeLocalPlayer();
+
+			if (this.currentSong)
+				window.stationNextSongTimeout = setTimeout(
+					this.skipSong,
+					this.getTimeRemaining()
+				);
 		});
 
 		this.socket.on("event:stations.remove", () => {
@@ -1011,6 +994,7 @@ export default {
 		});
 
 		clearInterval(this.activityWatchVideoDataInterval);
+		clearTimeout(window.stationNextSongTimeout);
 
 		this.socket.dispatch("stations.leave", this.station._id, () => {});
 
@@ -1037,6 +1021,94 @@ export default {
 					} else new Toast(res.message);
 				}
 			);
+		},
+		setNextCurrentSong(nextCurrentSong) {
+			this.nextCurrentSong = nextCurrentSong;
+			if (this.getTimeRemaining() <= 0) {
+				this.skipSong();
+			}
+		},
+		skipSong() {
+			console.log("SKIP_SONG_FN", this.nextCurrentSong);
+			if (this.nextCurrentSong && this.nextCurrentSong.currentSong) {
+				this.setCurrentSong(this.nextCurrentSong);
+			}
+		},
+		setCurrentSong(data) {
+			const {
+				currentSong,
+				startedAt,
+				paused,
+				timePaused,
+				pausedAt
+			} = data;
+
+			this.updateCurrentSong(currentSong || {});
+
+			let nextSong = null;
+			if (this.songsList[0])
+				nextSong = this.songsList[0].youtubeId
+					? this.songsList[0]
+					: null;
+			this.updateNextSong(nextSong);
+			this.nextCurrentSong = {
+				currentSong: null,
+				startedAt: 0,
+				paused,
+				timePaused: 0,
+				pausedAt: 0
+			};
+
+			clearTimeout(window.stationNextSongTimeout);
+
+			this.startedAt = startedAt;
+			this.updateStationPaused(paused);
+			this.timePaused = timePaused;
+			this.pausedAt = pausedAt;
+
+			if (currentSong) {
+				this.updateNoSong(false);
+
+				if (!this.playerReady) this.youtubeReady();
+				else this.playVideo();
+
+				if (!this.stationPaused) {
+					window.stationNextSongTimeout = setTimeout(
+						this.skipSong,
+						this.getTimeRemaining()
+					);
+				}
+
+				this.socket.dispatch(
+					"songs.getOwnSongRatings",
+					currentSong.youtubeId,
+					res => {
+						if (
+							res.status === "success" &&
+							this.currentSong.youtubeId === res.data.youtubeId
+						) {
+							this.liked = res.data.liked;
+							this.disliked = res.data.disliked;
+
+							if (
+								this.autoSkipDisliked &&
+								res.data.disliked === true
+							) {
+								this.voteSkipStation();
+								new Toast(
+									"Automatically voted to skip disliked song."
+								);
+							}
+						}
+					}
+				);
+			} else {
+				if (this.playerReady) this.player.pauseVideo();
+				this.updateNoSong(true);
+			}
+
+			this.calculateTimeElapsed();
+			this.resizeSeekerbar();
 		},
 		youtubeReady() {
 			if (!this.player) {
@@ -1174,6 +1246,12 @@ export default {
 			}
 			return 0;
 		},
+		getTimeRemaining() {
+			if (this.currentSong) {
+				return this.currentSong.duration * 1000 - this.getTimeElapsed();
+			}
+			return 0;
+		},
 		playVideo() {
 			if (this.playerReady) {
 				this.videoLoading = true;
@@ -1185,18 +1263,17 @@ export default {
 				if (window.stationInterval !== 0)
 					clearInterval(window.stationInterval);
 				window.stationInterval = setInterval(() => {
-					this.resizeSeekerbar();
-					this.calculateTimeElapsed();
+					if (!this.stationPaused) {
+						this.resizeSeekerbar();
+						this.calculateTimeElapsed();
+					}
 				}, 150);
 			}
 		},
 		resizeSeekerbar() {
-			if (!this.stationPaused) {
-				this.seekerbarPercentage = parseFloat(
-					(this.getTimeElapsed() / 1000 / this.currentSong.duration) *
-						100
-				);
-			}
+			this.seekerbarPercentage = parseFloat(
+				(this.getTimeElapsed() / 1000 / this.currentSong.duration) * 100
+			);
 		},
 		calculateTimeElapsed() {
 			if (
@@ -1225,7 +1302,7 @@ export default {
 				}
 			}
 
-			if (!this.stationPaused && !this.localPaused) {
+			if (!this.stationPaused && !this.localPaused && this.playerReady) {
 				const timeElapsed = this.getTimeElapsed();
 				const currentPlayerTime =
 					Math.max(
@@ -1298,7 +1375,7 @@ export default {
 
 			const songDuration = this.currentSong.duration;
 			if (songDuration <= duration) this.player.pauseVideo();
-			if (!this.stationPaused && duration <= songDuration)
+			if (duration <= songDuration)
 				this.timeElapsed = utils.formatTime(duration);
 		},
 		toggleLock() {
@@ -1560,53 +1637,16 @@ export default {
 
 						document.body.style.cssText = `--primary-color: var(--${res.data.theme})`;
 
-						const currentSong = res.data.currentSong
-							? res.data.currentSong
-							: {};
+						this.setCurrentSong({
+							currentSong: res.data.currentSong,
+							startedAt: res.data.startedAt,
+							paused: res.data.paused,
+							timePaused: res.data.timePaused,
+							pausedAt: res.data.pausedAt
+						});
 
-						this.updateCurrentSong(currentSong);
-
-						this.startedAt = res.data.startedAt;
-						this.updateStationPaused(res.data.paused);
-						this.timePaused = res.data.timePaused;
 						this.updateUserCount(res.data.userCount);
 						this.updateUsers(res.data.users);
-						this.pausedAt = res.data.pausedAt;
-
-						if (res.data.currentSong) {
-							this.updateNoSong(false);
-							this.youtubeReady();
-							this.playVideo();
-							this.socket.dispatch(
-								"songs.getOwnSongRatings",
-								res.data.currentSong.youtubeId,
-								res => {
-									if (
-										res.status === "success" &&
-										this.currentSong.youtubeId ===
-											res.data.youtubeId
-									) {
-										this.liked = res.data.liked;
-										this.disliked = res.data.disliked;
-									}
-								}
-							);
-						} else {
-							if (this.playerReady) this.player.pauseVideo();
-							this.updateNoSong(true);
-						}
-
-						this.socket.dispatch(
-							"stations.getStationIncludedPlaylistsById",
-							this.station._id,
-							res => {
-								if (res.status === "success") {
-									this.setIncludedPlaylists(
-										res.data.playlists
-									);
-								}
-							}
-						);
 
 						this.socket.dispatch(
 							"stations.getStationExcludedPlaylistsById",
