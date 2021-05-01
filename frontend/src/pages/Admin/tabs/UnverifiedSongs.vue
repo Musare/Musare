@@ -96,16 +96,13 @@
 							</button>
 							<button
 								class="button is-success"
-								@click="verify(song)"
+								@click="verify(song._id)"
 								content="Verify Song"
 								v-tippy
 							>
 								<i class="material-icons">check_circle</i>
 							</button>
-							<confirm
-								placement="left"
-								@confirm="hide(song._id, index)"
-							>
+							<confirm placement="left" @confirm="hide(song._id)">
 								<button
 									class="button is-danger"
 									content="Hide Song"
@@ -256,8 +253,8 @@ export default {
 			this.editSong(song);
 			this.openModal("editSong");
 		},
-		verify(song) {
-			this.socket.dispatch("songs.verify", song.youtubeId, res => {
+		verify(id) {
+			this.socket.dispatch("songs.verify", id, res => {
 				new Toast(res.message);
 			});
 		},

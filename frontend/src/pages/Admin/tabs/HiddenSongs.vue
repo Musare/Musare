@@ -96,7 +96,7 @@
 							</button>
 							<button
 								class="button is-success"
-								@click="unhide(song)"
+								@click="unhide(song._id)"
 								content="Unhide Song"
 								v-tippy
 							>
@@ -240,8 +240,8 @@ export default {
 			this.editSong(song);
 			this.openModal("editSong");
 		},
-		unhide(song) {
-			this.socket.dispatch("songs.unhide", song._id, res => {
+		unhide(id) {
+			this.socket.dispatch("songs.unhide", id, res => {
 				new Toast(res.message);
 			});
 		},

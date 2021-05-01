@@ -43,6 +43,7 @@
 					Requested by
 					<strong>
 						<user-id-to-username
+							:key="song._id"
 							:user-id="song.requestedBy"
 							:link="true"
 						/>

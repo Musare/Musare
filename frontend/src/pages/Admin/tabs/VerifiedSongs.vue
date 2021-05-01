@@ -89,7 +89,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					<tr v-for="(song, index) in filteredSongs" :key="song._id">
+					<tr v-for="song in filteredSongs" :key="song._id">
 						<td>
 							<img
 								class="song-thumbnail"
@@ -134,7 +134,7 @@
 							</button>
 							<confirm
 								placement="left"
-								@confirm="remove(song._id, index)"
+								@confirm="unverify(song._id)"
 							>
 								<button
 									class="button is-danger"
@@ -357,10 +357,9 @@ export default {
 			this.editSong(song);
 			this.openModal("editSong");
 		},
-		remove(id) {
+		unverify(id) {
 			this.socket.dispatch("songs.unverify", id, res => {
-				if (res.status === "success") new Toast(res.message);
-				else new Toast(res.message);
+				new Toast(res.message);
 			});
 		},
 		updateAllSongs() {

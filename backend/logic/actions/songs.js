@@ -741,15 +741,15 @@ export default {
 	 * Verifies a song
 	 *
 	 * @param session
-	 * @param youtubeId - the youtube id
+	 * @param songId - the song id
 	 * @param cb
 	 */
-	verify: isAdminRequired(async function add(session, youtubeId, cb) {
+	verify: isAdminRequired(async function add(session, songId, cb) {
 		const SongModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
 		async.waterfall(
 			[
 				next => {
-					SongModel.findOne({ youtubeId }, next);
+					SongModel.findOne({ _id: songId }, next);
 				},
 
 				(song, next) => {
@@ -787,11 +787,7 @@ export default {
 					return cb({ status: "error", message: err });
 				}
 
-				this.log(
-					"SUCCESS",
-					"SONGS_VERIFY",
-					`User "${session.userId}" successfully verified song "${youtubeId}".`
-				);
+				this.log("SUCCESS", "SONGS_VERIFY", `User "${session.userId}" successfully verified song "${songId}".`);
 
 				CacheModule.runJob("PUB", {
 					channel: "song.newVerifiedSong",
