@@ -12,10 +12,10 @@
 				preserve-aspect-ratio="none"
 				id="page-loader-content"
 			>
-				<rect x="100" y="108" rx="5" ry="5" width="1048" height="672" />
-				<rect x="100" y="810" rx="5" ry="5" width="1048" height="110" />
-				<rect x="1190" y="110" rx="5" ry="5" width="630" height="149" />
-				<rect x="1190" y="288" rx="5" ry="5" width="630" height="630" />
+				<rect x="55" y="105" rx="5" ry="5" width="670" height="149" />
+				<rect x="55" y="283" rx="5" ry="5" width="670" height="640" />
+				<rect x="745" y="108" rx="5" ry="5" width="1120" height="672" />
+				<rect x="745" y="810" rx="5" ry="5" width="1120" height="110" />
 			</content-loader>
 
 			<content-loader
