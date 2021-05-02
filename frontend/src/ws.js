@@ -36,16 +36,24 @@ export default {
 		onDisconnect.temp = [];
 	},
 
-	destroyListeners: () =>
+	destroyListeners() {
 		Object.keys(CB_REFS).forEach(id => {
 			if (
 				id.indexOf("$event:") !== -1 &&
 				id.indexOf("$event:keep.") === -1
 			)
 				delete CB_REFS[id];
-		}),
+		});
+
+		// destroy all listeners that aren't site-wide
+		Object.keys(this.socket.dispatcher.listeners).forEach(type => {
+			if (type.indexOf("keep.") === -1 && type !== "ready")
+				delete this.socket.dispatcher.listeners[type];
+		});
+	},
 
 	destroyModalListeners(modal) {
+		// destroy all listeners for a specific modal
 		Object.keys(this.socket.dispatcher.listeners).forEach(type =>
 			this.socket.dispatcher.listeners[type].forEach((element, index) => {
 				if (element.options && element.options.modal === modal)

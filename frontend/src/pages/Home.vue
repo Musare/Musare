@@ -615,7 +615,6 @@ export default {
 		});
 
 		this.socket.on("event:station.nextSong", res => {
-			console.log("NEXT SONG!");
 			const station = this.stations.find(
 				station => station._id === res.data.stationId
 			);
