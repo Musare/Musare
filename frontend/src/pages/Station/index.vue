@@ -692,7 +692,9 @@ export default {
 			activityWatchVideoLastStatus: "",
 			activityWatchVideoLastYouTubeId: "",
 			activityWatchVideoLastStartDuration: "",
-			nextCurrentSong: null
+			nextCurrentSong: null,
+			editSongModalWatcher: null,
+			beforeEditSongModalLocalPaused: null
 		};
 	},
 	computed: {
@@ -723,6 +725,18 @@ export default {
 		})
 	},
 	async mounted() {
+		this.editSongModalWatcher = this.$store.watch(
+			state => state.modalVisibility.modals.editSong,
+			newValue => {
+				if (newValue === true) {
+					this.beforeEditSongModalLocalPaused = this.localPaused;
+					this.pauseLocalStation();
+				} else if (!this.beforeEditSongModalLocalPaused) {
+					this.resumeLocalStation();
+				}
+			}
+		);
+
 		window.scrollTo(0, 0);
 
 		Date.currently = () => {
@@ -992,6 +1006,8 @@ export default {
 		shortcutNames.forEach(shortcutName => {
 			keyboardShortcuts.unregisterShortcut(shortcutName);
 		});
+
+		this.editSongModalWatcher(); // removes the watcher
 
 		clearInterval(this.activityWatchVideoDataInterval);
 		clearTimeout(window.stationNextSongTimeout);
