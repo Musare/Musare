@@ -1845,7 +1845,7 @@ export default {
 			);
 		},
 		sendActivityWatchVideoData() {
-			if (!this.stationPaused && !this.localPaused && this.currentSong) {
+			if (!this.stationPaused && !this.localPaused && !this.noSong) {
 				if (this.activityWatchVideoLastStatus !== "playing") {
 					this.activityWatchVideoLastStatus = "playing";
 					this.activityWatchVideoLastStartDuration =
