@@ -523,7 +523,7 @@
 					>
 						<i class="material-icons">visibility</i>
 					</button>
-					<confirm placement="left" @confirm="remove(song._id)">
+					<!-- <confirm placement="left" @confirm="remove(song._id)">
 						<button
 							class="button is-danger"
 							content="Remove Song"
@@ -531,7 +531,7 @@
 						>
 							<i class="material-icons">delete</i>
 						</button>
-					</confirm>
+					</confirm> -->
 				</div>
 			</div>
 		</modal>
@@ -1533,11 +1533,11 @@ export default {
 				new Toast(res.message);
 			});
 		},
-		remove(id) {
-			this.socket.dispatch("songs.remove", id, res => {
-				new Toast(res.message);
-			});
-		},
+		// remove(id) {
+		// 	this.socket.dispatch("songs.remove", id, res => {
+		// 		new Toast(res.message);
+		// 	});
+		// },
 		...mapActions("modals/editSong", [
 			"stopVideo",
 			"loadVideoById",

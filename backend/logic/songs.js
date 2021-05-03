@@ -416,41 +416,85 @@ class _SongsModule extends CoreClass {
 		);
 	}
 
-	/**
-	 * Deletes song from id from Mongo and cache
-	 *
-	 * @param {object} payload - returns an object containing the payload
-	 * @param {string} payload.youtubeId - the youtube id of the song we are trying to delete
-	 * @returns {Promise} - returns a promise (resolve, reject)
-	 */
-	DELETE_SONG(payload) {
-		return new Promise((resolve, reject) =>
-			async.waterfall(
-				[
-					next => {
-						SongsModule.SongModel.deleteOne({ youtubeId: payload.youtubeId }, next);
-					},
+	// /**
+	//  * Deletes song from id from Mongo and cache
+	//  *
+	//  * @param {object} payload - returns an object containing the payload
+	//  * @param {string} payload.songId - the song id of the song we are trying to delete
+	//  * @returns {Promise} - returns a promise (resolve, reject)
+	//  */
+	// DELETE_SONG(payload) {
+	// 	return new Promise((resolve, reject) =>
+	// 		async.waterfall(
+	// 			[
+	// 				next => {
+	// 					SongsModule.SongModel.deleteOne({ _id: payload.songId }, next);
+	// 				},
 
-					next => {
-						CacheModule.runJob(
-							"HDEL",
-							{
-								table: "songs",
-								key: payload.youtubeId
-							},
-							this
-						)
-							.then(() => next())
-							.catch(next);
-					}
-				],
-				err => {
-					if (err && err !== true) return reject(new Error(err));
-					return resolve();
-				}
-			)
-		);
-	}
+	// 				next => {
+	// 					CacheModule.runJob(
+	// 						"HDEL",
+	// 						{
+	// 							table: "songs",
+	// 							key: payload.songId
+	// 						},
+	// 						this
+	// 					)
+	// 						.then(() => next())
+	// 						.catch(next);
+	// 				},
+
+	// 				next => {
+	// 					this.log("INFO", `Going to update playlists and stations now for deleted song ${payload.songId}`);
+	// 					DBModule.runJob("GET_MODEL", { modelName: "playlist" }).then(playlistModel => {
+	// 						playlistModel.find({ "songs._id": song._id }, (err, playlists) => {
+	// 							if (err) this.log("ERROR", err);
+	// 							else {
+	// 								playlistModel.updateMany(
+	// 									{ "songs._id": payload.songId },
+	// 									{ $pull: { "songs.$._id": payload.songId} },
+	// 									err => {
+	// 										if (err) this.log("ERROR", err);
+	// 										else {
+	// 											playlists.forEach(playlist => {
+	// 												PlaylistsModule.runJob("UPDATE_PLAYLIST", {
+	// 													playlistId: playlist._id
+	// 												});
+	// 											});
+	// 										}
+	// 									}
+	// 								);
+									
+	// 							}
+	// 						});
+	// 					});
+	// 					DBModule.runJob("GET_MODEL", { modelName: "station" }).then(stationModel => {
+	// 						stationModel.find({ "queue._id": payload.songId }, (err, stations) => {
+	// 							stationModel.updateMany(
+	// 								{ "queue._id": payload.songId },
+	// 								{
+	// 									$pull: { "queue._id":  }
+	// 								},
+	// 								err => {
+	// 									if (err) this.log("ERROR", err);
+	// 									else {
+	// 										stations.forEach(station => {
+	// 											StationsModule.runJob("UPDATE_STATION", { stationId: station._id });
+	// 										});	
+	// 									}
+	// 								}
+	// 							);
+	// 						});
+	// 					});
+	// 				}
+	// 			],
+	// 			err => {
+	// 				if (err && err !== true) return reject(new Error(err));
+	// 				return resolve();
+	// 			}
+	// 		)
+	// 	);
+	// }
 
 	/**
 	 * Searches through songs
