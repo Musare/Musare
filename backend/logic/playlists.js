@@ -554,14 +554,22 @@ class _PlaylistsModule extends CoreClass {
 					// },
 
 					(playlistId, next) => {
-						StationsModule.runJob("GET_STATIONS_THAT_INCLUDE_OR_EXCLUDE_PLAYLIST", { playlistId })
+						StationsModule.runJob("GET_STATIONS_THAT_INCLUDE_OR_EXCLUDE_PLAYLIST", { playlistId }, this)
 							.then(response => {
-								response.stationIds.forEach(stationId => {
-									PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();
+								async.eachLimit(response.stationIds, 1, (stationId, next) => {
+									PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }, this).then(() => {
+										next();
+									}).catch(err => {
+										next(err);
+									});
+								}, err => {
+									if (err) next(err);
+									else next();
 								});
 							})
-							.catch();
-						next();
+							.catch(err => {
+								next(err);
+							});
 					}
 				],
 				err => {

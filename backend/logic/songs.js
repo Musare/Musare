@@ -203,7 +203,7 @@ class _SongsModule extends CoreClass {
 						} else {
 							const status =
 								(!payload.userId && config.get("hideAnonymousSongs")) ||
-								(payload.automaticallyRequested && config.get("hideAutomaticallyRequestedSongs"))
+									(payload.automaticallyRequested && config.get("hideAutomaticallyRequestedSongs"))
 									? "hidden"
 									: "unverified";
 
@@ -291,7 +291,6 @@ class _SongsModule extends CoreClass {
 					},
 
 					(song, next) => {
-						next(null, song);
 						const { _id, youtubeId, title, artists, thumbnail, duration, status } = song;
 						const trimmedSong = {
 							_id,
@@ -302,25 +301,75 @@ class _SongsModule extends CoreClass {
 							duration,
 							status
 						};
-						this.log("INFO", `Going to update playlists and stations now for song ${_id}`);
-						DBModule.runJob("GET_MODEL", { modelName: "playlist" }).then(playlistModel => {
+						this.log("INFO", `Going to update playlists now for song ${_id}`);
+						DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this).then(playlistModel => {
 							playlistModel.updateMany(
 								{ "songs._id": song._id },
 								{ $set: { "songs.$": trimmedSong } },
 								err => {
-									if (err) this.log("ERROR", err);
+									if (err) next(err);
 									else
 										playlistModel.find({ "songs._id": song._id }, (err, playlists) => {
-											playlists.forEach(playlist => {
-												PlaylistsModule.runJob("UPDATE_PLAYLIST", {
-													playlistId: playlist._id
+											if (err) next(err);
+											else {
+												async.eachLimit(playlists, 1, (playlist, next) => {
+													PlaylistsModule.runJob("UPDATE_PLAYLIST", {
+														playlistId: playlist._id
+													}, this).then(() => {
+														next();
+													}).catch(err => {
+														next(err);
+													});
+												}, err => {
+													if (err) next(err);
+													else next(null, song)
 												});
-											});
+											}
+											// playlists.forEach(playlist => {
+											// 	PlaylistsModule.runJob("UPDATE_PLAYLIST", {
+											// 		playlistId: playlist._id
+											// 	});
+											// });
 										});
 								}
 							);
+						}).catch(err => {
+							next(err);
 						});
-						DBModule.runJob("GET_MODEL", { modelName: "station" }).then(stationModel => {
+					},
+
+					(song, next) => {
+						// next(null, song);
+						const { _id, youtubeId, title, artists, thumbnail, duration, status } = song;
+						// const trimmedSong = {
+						// 	_id,
+						// 	youtubeId,
+						// 	title,
+						// 	artists,
+						// 	thumbnail,
+						// 	duration,
+						// 	status
+						// };
+						// this.log("INFO", `Going to update playlists and stations now for song ${_id}`);
+						// DBModule.runJob("GET_MODEL", { modelName: "playlist" }).then(playlistModel => {
+						// 	playlistModel.updateMany(
+						// 		{ "songs._id": song._id },
+						// 		{ $set: { "songs.$": trimmedSong } },
+						// 		err => {
+						// 			if (err) this.log("ERROR", err);
+						// 			else
+						// 				playlistModel.find({ "songs._id": song._id }, (err, playlists) => {
+						// 					playlists.forEach(playlist => {
+						// 						PlaylistsModule.runJob("UPDATE_PLAYLIST", {
+						// 							playlistId: playlist._id
+						// 						});
+						// 					});
+						// 				});
+						// 		}
+						// 	);
+						// });
+						this.log("INFO", `Going to update stations now for song ${_id}`);
+						DBModule.runJob("GET_MODEL", { modelName: "station" }, this).then(stationModel => {
 							stationModel.updateMany(
 								{ "queue._id": song._id },
 								{
@@ -337,12 +386,24 @@ class _SongsModule extends CoreClass {
 									if (err) this.log("ERROR", err);
 									else
 										stationModel.find({ "queue._id": song._id }, (err, stations) => {
-											stations.forEach(station => {
-												StationsModule.runJob("UPDATE_STATION", { stationId: station._id });
-											});
+											if (err) next(err);
+											else {
+												async.eachLimit(stations, 1, (station, next) => {
+													StationsModule.runJob("UPDATE_STATION", { stationId: station._id }, this).then(() => {
+														next();
+													}).catch(err => {
+														next(err);
+													});
+												}, err => {
+													if (err) next(err);
+													else next(null, song);
+												});
+											}
 										});
 								}
 							);
+						}).catch(err => {
+							next(err);
 						});
 					},
 
@@ -381,7 +442,6 @@ class _SongsModule extends CoreClass {
 			async.waterfall(
 				[
 					next => {
-						return next("Currently disabled since it's broken due to the backend memory leak issue.");
 						SongsModule.SongModel.find({}, next);
 					},
 
@@ -390,11 +450,11 @@ class _SongsModule extends CoreClass {
 						const { length } = songs;
 						async.eachLimit(
 							songs,
-							10,
+							2,
 							(song, next) => {
 								index += 1;
 								console.log(`Updating song #${index} out of ${length}: ${song._id}`);
-								SongsModule.runJob("UPDATE_SONG", { songId: song._id }, this, 9)
+								SongsModule.runJob("UPDATE_SONG", { songId: song._id }, this)
 									.then(() => {
 										next();
 									})
@@ -464,7 +524,7 @@ class _SongsModule extends CoreClass {
 	// 										}
 	// 									}
 	// 								);
-									
+
 	// 							}
 	// 						});
 	// 					});
@@ -480,7 +540,7 @@ class _SongsModule extends CoreClass {
 	// 									else {
 	// 										stations.forEach(station => {
 	// 											StationsModule.runJob("UPDATE_STATION", { stationId: station._id });
-	// 										});	
+	// 										});
 	// 									}
 	// 								}
 	// 							);

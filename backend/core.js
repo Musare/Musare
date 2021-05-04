@@ -245,6 +245,13 @@ class Job {
 	}
 
 	/**
+	 * Removes child jobs to prevent memory leak
+	 */
+	cleanup() {
+		this.childJobs = this.childJobs.map(() => null);
+	}
+
+	/**
 	 * Logs to the module of the job
 	 *
 	 * @param  {any} args - Anything to be added to the log e.g. log type, log message
@@ -306,7 +313,6 @@ export default class CoreClass {
 		this.concurrency = options && options.concurrency ? options.concurrency : 10;
 		this.jobQueue = new Queue((job, options) => this._runJob(job, options), this.concurrency);
 		this.jobQueue.pause();
-		this.runningJobs = [];
 		this.priorities = options && options.priorities ? options.priorities : {};
 		this.stage = 0;
 		this.jobStatistics = {};
@@ -554,7 +560,7 @@ export default class CoreClass {
 
 			const previousStatus = job.status;
 			job.setStatus("RUNNING");
-			this.runningJobs.push(job);
+			this.moduleManager.jobManager.addJob(job);
 
 			if (previousStatus === "QUEUED") {
 				if (!options.isQuiet) this.log("INFO", `Job ${job.name} (${job.toString()}) is queued, so calling it`);
@@ -606,7 +612,8 @@ export default class CoreClass {
 						const executionTime = endTime - startTime;
 						this.jobStatistics[job.name].total += 1;
 						this.jobStatistics[job.name].averageTiming.update(executionTime);
-						this.runningJobs.splice(this.runningJobs.indexOf(job), 1);
+						this.moduleManager.jobManager.removeJob(job);
+						job.cleanup();
 
 						if (!job.parentJob) {
 							if (job.responseType === "RESOLVE") {

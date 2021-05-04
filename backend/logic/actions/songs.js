@@ -332,7 +332,7 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					SongsModule.runJob("UPDATE_ALL_SONGS", {})
+					SongsModule.runJob("UPDATE_ALL_SONGS", {}, this)
 						.then(() => {
 							next();
 						})
@@ -499,8 +499,8 @@ export default {
 								.filter((value, index, self) => self.indexOf(value) === index)
 								.forEach(genre => {
 									PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre })
-										.then(() => {})
-										.catch(() => {});
+										.then(() => { })
+										.catch(() => { });
 								});
 
 							next(null, song);
@@ -776,8 +776,8 @@ export default {
 				(song, next) => {
 					song.genres.forEach(genre => {
 						PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre })
-							.then(() => {})
-							.catch(() => {});
+							.then(() => { })
+							.catch(() => { });
 					});
 
 					SongsModule.runJob("UPDATE_SONG", { songId: song._id });
@@ -844,8 +844,8 @@ export default {
 				(song, next) => {
 					song.genres.forEach(genre => {
 						PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre })
-							.then(() => {})
-							.catch(() => {});
+							.then(() => { })
+							.catch(() => { });
 					});
 
 					SongsModule.runJob("UPDATE_SONG", { songId });

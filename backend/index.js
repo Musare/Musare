@@ -224,11 +224,36 @@ if (config.debug && config.debug.traceUnhandledPromises === true) {
 // 	}
 // }
 
+class JobManager {
+	constructor() {
+		this.runningJobs = {};
+	}
+
+	addJob(job) {
+		if (!this.runningJobs[job.module.name]) this.runningJobs[job.module.name] = {};
+		this.runningJobs[job.module.name][job.toString()] = job;
+	}
+
+	removeJob(job) {
+		if (!this.runningJobs[job.module.name]) this.runningJobs[job.module.name] = {};
+		delete this.runningJobs[job.module.name][job.toString()];
+	}
+
+	getJob(uuid) {
+		let job = null;
+		Object.keys(this.runningJobs).forEach(moduleName => {
+			if (this.runningJobs[moduleName][uuid]) job = this.runningJobs[moduleName][uuid];
+		});
+		return job;
+	}
+}
+
 class ModuleManager {
 	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		this.modules = {};
 		this.modulesNotInitialized = [];
+		this.jobManager = new JobManager();
 		this.i = 0;
 		this.lockdown = false;
 		this.fancyConsole = fancyConsole;
@@ -318,8 +343,7 @@ class ModuleManager {
 
 			this.log(
 				"INFO",
-				`Initialized: ${Object.keys(this.modules).length - this.modulesNotInitialized.length}/${
-					Object.keys(this.modules).length
+				`Initialized: ${Object.keys(this.modules).length - this.modulesNotInitialized.length}/${Object.keys(this.modules).length
 				}.`
 			);
 
@@ -404,10 +428,12 @@ moduleManager.initialize();
  */
 function printJob(job, layer) {
 	const tabs = Array(layer).join("\t");
-	console.log(`${tabs}${job.name} (${job.toString()}) ${job.status}`);
-	job.childJobs.forEach(childJob => {
-		printJob(childJob, layer + 1);
-	});
+	if (job) {
+		console.log(`${tabs}${job.name} (${job.toString()}) ${job.status}`);
+		job.childJobs.forEach(childJob => {
+			printJob(childJob, layer + 1);
+		});
+	} else console.log(`${tabs}JOB WAS REMOVED`);
 }
 
 /**
@@ -439,8 +465,7 @@ process.stdin.on("data", data => {
 			console.log(
 				`${moduleName.toUpperCase()}${Array(tabsNeeded).join(
 					"\t"
-				)}${module.getStatus()}. Jobs in queue: ${module.jobQueue.lengthQueue()}. Jobs in progress: ${module.jobQueue.lengthRunning()}. Jobs paused: ${module.jobQueue.lengthPaused()} Concurrency: ${
-					module.jobQueue.concurrency
+				)}${module.getStatus()}. Jobs in queue: ${module.jobQueue.lengthQueue()}. Jobs in progress: ${module.jobQueue.lengthRunning()}. Jobs paused: ${module.jobQueue.lengthPaused()} Concurrency: ${module.jobQueue.concurrency
 				}. Stage: ${module.getStage()}`
 			);
 		});
@@ -476,17 +501,8 @@ process.stdin.on("data", data => {
 		const parts = command.split(" ");
 
 		const uuid = parts[1];
-		let jobFound = null;
+		let jobFound = moduleManager.jobManager.getJob(uuid);
 
-		Object.keys(moduleManager.modules).forEach(moduleName => {
-			const module = moduleManager.modules[moduleName];
-			const task1 = module.jobQueue.runningTasks.find(task => task.job.uniqueId === uuid);
-			const task2 = module.jobQueue.queue.find(task => task.job.uniqueId === uuid);
-			const task3 = module.jobQueue.pausedTasks.find(task => task.job.uniqueId === uuid);
-			if (task1) jobFound = task1.job;
-			if (task2) jobFound = task2.job;
-			if (task3) jobFound = task3.job;
-		});
 
 		if (jobFound) {
 			let topParent = jobFound;
@@ -500,7 +516,7 @@ process.stdin.on("data", data => {
 			);
 			console.log(jobFound);
 			printJob(topParent, 1);
-		} else console.log("Could not find job in any running, queued or paused lists in any module.");
+		} else console.log("Could not find job in job manager.");
 	}
 	if (command.startsWith("runjob")) {
 		const parts = command.split(" ");
