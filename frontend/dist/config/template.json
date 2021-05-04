@@ -7,6 +7,7 @@
 	"websocketsDomain": "ws://localhost/backend/ws",
 	"frontendDomain": "http://localhost",
 	"frontendPort": "81",
+	"mode": "development",
 	"cookie": {
 		"domain": "localhost",
 		"secure": false,
@@ -22,5 +23,5 @@
 		"accountRemoval": "Your account will be deactivated instantly and your data will shortly be deleted by an admin."
 	},
 	"skipConfigVersionCheck": false,
-	"configVersion": 3
+	"configVersion": 4
 }

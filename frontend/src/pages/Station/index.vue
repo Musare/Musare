@@ -577,12 +577,16 @@
 
 		<floating-box id="player-debug-box" ref="playerDebugBox">
 			<template #body>
+				<span><b>No song</b>: {{ noSong }}</span>
+				<span><b>Song id</b>: {{ currentSong._id }}</span>
 				<span><b>YouTube id</b>: {{ currentSong.youtubeId }}</span>
 				<span><b>Duration</b>: {{ currentSong.duration }}</span>
 				<span
 					><b>Skip duration</b>: {{ currentSong.skipDuration }}</span
 				>
+				<span><b>Loading</b>: {{ loading }}</span>
 				<span><b>Can autoplay</b>: {{ canAutoplay }}</span>
+				<span><b>Player ready</b>: {{ playerReady }}</span>
 				<span
 					><b>Attempts to play video</b>:
 					{{ attemptsToPlayVideo }}</span
@@ -591,29 +595,17 @@
 					><b>Last time requested if can autoplay</b>:
 					{{ lastTimeRequestedIfCanAutoplay }}</span
 				>
-				<span><b>Loading</b>: {{ loading }}</span>
-				<span><b>Playback rate</b>: {{ playbackRate }}</span>
-				<span><b>Player ready</b>: {{ playerReady }}</span>
-				<span><b>Ready</b>: {{ ready }}</span>
 				<span><b>Seeking</b>: {{ seeking }}</span>
+				<span><b>Playback rate</b>: {{ playbackRate }}</span>
 				<span><b>System difference</b>: {{ systemDifference }}</span>
 				<span><b>Time before paused</b>: {{ timeBeforePause }}</span>
-				<span><b>Time elapsed</b>: {{ timeElapsed }}</span>
 				<span><b>Time paused</b>: {{ timePaused }}</span>
+				<span><b>Time elapsed</b>: {{ timeElapsed }}</span>
 				<span><b>Volume slider value</b>: {{ volumeSliderValue }}</span>
 				<span><b>Local paused</b>: {{ localPaused }}</span>
-				<span><b>No song</b>: {{ noSong }}</span>
-				<span
-					><b>Party playlists selected</b>: {{ partyPlaylists }}</span
-				>
 				<span><b>Station paused</b>: {{ stationPaused }}</span>
 				<span
-					><b>Station Included Playlists</b>:
-					{{ station.includedPlaylists.join(", ") }}</span
-				>
-				<span
-					><b>Station Excluded Playlists</b>:
-					{{ station.excludedPlaylists.join(", ") }}</span
+					><b>Party playlists selected</b>: {{ partyPlaylists }}</span
 				>
 			</template>
 		</floating-box>
@@ -666,7 +658,6 @@ export default {
 			utils,
 			title: "Station",
 			loading: true,
-			ready: false,
 			exists: true,
 			playerReady: false,
 			player: undefined,
@@ -1930,6 +1921,22 @@ export default {
 		}
 	}
 }
+
+#player-debug-box {
+	.box-body {
+		// flex-direction: column;
+		flex-flow: column;
+
+		span {
+			flex: 1;
+			display: block;
+		}
+
+		b {
+			color: var(--black);
+		}
+	}
+}
 </style>
 
 <style lang="scss" scoped>
@@ -1980,16 +1987,6 @@ export default {
 .button.is-primary:hover,
 .button.is-primary:focus {
 	filter: brightness(90%);
-}
-
-#player-debug-box {
-	.box-body {
-		flex-direction: column;
-
-		b {
-			color: var(--black);
-		}
-	}
 }
 
 .night-mode {
