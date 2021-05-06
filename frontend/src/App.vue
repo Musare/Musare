@@ -3,7 +3,7 @@
 		<banned v-if="banned" />
 		<div v-else class="upper-container">
 			<router-view :key="$route.fullPath" class="main-container" />
-			<what-is-new />
+			<what-is-new v-show="modals.whatIsNew" />
 			<login-modal v-if="modals.login" />
 			<register-modal v-if="modals.register" />
 		</div>
@@ -1085,6 +1085,61 @@ h4.section-title {
 		top: 2px;
 		position: relative;
 		color: var(--light-grey-1);
+	}
+}
+
+.news-item {
+	font-family: "Karla";
+
+	* {
+		font-family: Karla, Arial, sans-serif;
+		font-size: 16px;
+	}
+
+	h1 {
+		font-size: 55px;
+
+		&:first-of-type {
+			margin-top: 0;
+		}
+	}
+
+	h2 {
+		font-size: 45px;
+	}
+
+	h3 {
+		font-size: 40px;
+	}
+
+	h4 {
+		font-size: 35px;
+	}
+
+	h5 {
+		font-size: 30px;
+	}
+
+	h6 {
+		font-size: 25px;
+	}
+
+	ul {
+		list-style: unset;
+	}
+
+	li {
+		margin-left: 30px;
+	}
+
+	blockquote {
+		padding: 0px 15px;
+		color: #6a737d;
+		border-left: 0.25em solid #dfe2e5;
+	}
+
+	code {
+		font-style: italic;
 	}
 }
 </style>

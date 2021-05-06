@@ -1,5 +1,8 @@
 <template>
-	<modal :title="newsId ? 'Edit News' : 'Create News'">
+	<modal
+		class="edit-news-modal"
+		:title="newsId ? 'Edit News' : 'Create News'"
+	>
 		<div slot="body">
 			<div id="markdown-editor-and-preview">
 				<div class="column">
@@ -8,7 +11,11 @@
 				</div>
 				<div class="column">
 					<p><strong>Preview</strong></p>
-					<div id="preview" v-html="marked(markdown)"></div>
+					<div
+						class="news-item"
+						id="preview"
+						v-html="marked(markdown)"
+					></div>
 				</div>
 			</div>
 		</div>
@@ -150,6 +157,14 @@ export default {
 };
 </script>
 
+<style lang="scss">
+.edit-news-modal {
+	.modal-card {
+		width: 1300px;
+	}
+}
+</style>
+
 <style lang="scss" scoped>
 #markdown-editor-and-preview {
 	display: flex;
@@ -181,7 +196,7 @@ export default {
 		padding: 5px;
 		border: 1px solid var(--light-grey-3);
 		border-radius: 3px;
-		height: 500px;
+		height: 700px;
 	}
 }
 </style>

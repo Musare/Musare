@@ -14,7 +14,7 @@
 				</thead>
 				<tbody>
 					<tr v-for="news in news" :key="news._id">
-						<td class="news-status">{{ news.status }}</td>
+						<td class="news-item-status">{{ news.status }}</td>
 						<td>
 							<strong>{{ news.title }}</strong>
 						</td>
@@ -25,7 +25,7 @@
 								:link="true"
 							/>
 						</td>
-						<td>{{ news.markdown }}</td>
+						<td class="news-item-markdown">{{ news.markdown }}</td>
 						<td>
 							<button
 								class="button is-primary"
@@ -193,7 +193,14 @@ td {
 	color: var(--primary-color);
 }
 
-.news-status {
+.news-item-status {
 	text-transform: capitalize;
+}
+
+.news-item-markdown {
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	overflow: hidden;
+	max-width: 400px;
 }
 </style>

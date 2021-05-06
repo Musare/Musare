@@ -3,6 +3,7 @@ import ws from "@/ws";
 
 const state = {
 	modals: {
+		whatIsNew: false,
 		manageStation: false,
 		login: false,
 		register: false,

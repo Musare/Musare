@@ -3,30 +3,15 @@
 		<metadata title="News" />
 		<main-header />
 		<div class="container">
-			<div class="content-wrapper">
-				<div
-					v-for="item in news"
-					:key="item._id"
-					class="card is-fullwidth"
-				>
-					<header class="card-header">
-						<p class="card-header-title">
-							{{ item.title }} - {{ formatDate(item.createdAt) }}
-						</p>
-					</header>
-					<div class="card-content">
-						<div class="content">
-							<p>{{ item.markdown }}</p>
-						</div>
-					</div>
-				</div>
-				<h3
-					v-if="news.length === 0"
-					class="has-text-centered page-title"
-				>
-					No news items were found.
-				</h3>
-			</div>
+			<div
+				v-for="item in news"
+				:key="item._id"
+				class="section news-item"
+				v-html="marked(item.markdown)"
+			></div>
+			<h3 v-if="news.length === 0" class="has-text-centered page-title">
+				No news items were found.
+			</h3>
 		</div>
 		<main-footer />
 	</div>
@@ -35,6 +20,7 @@
 <script>
 import { format } from "date-fns";
 import { mapGetters } from "vuex";
+import marked from "marked";
 
 import MainHeader from "@/components/layout/MainHeader.vue";
 import MainFooter from "@/components/layout/MainFooter.vue";
@@ -50,6 +36,17 @@ export default {
 		socket: "websockets/getSocket"
 	}),
 	mounted() {
+		marked.use({
+			renderer: {
+				table(header, body) {
+					return `<table class="table is-striped">
+					<thead>${header}</thead>
+					<tbody>${body}</tbody>
+					</table>`;
+				}
+			}
+		});
+
 		this.socket.dispatch("news.index", res => {
 			if (res.status === "success") this.news = res.data.news;
 		});
@@ -68,6 +65,7 @@ export default {
 		});
 	},
 	methods: {
+		marked,
 		formatDate: unix => {
 			return format(unix, "dd-MM-yyyy");
 		}
@@ -82,38 +80,14 @@ export default {
 	}
 }
 
-.card {
+.section {
+	border: 1px solid var(--light-grey-3);
+	width: 1000px;
+	max-width: 100%;
 	margin-top: 50px;
-}
 
-.sect {
-	div[class^="sect-head"],
-	div[class*=" sect-head"] {
-		padding: 12px;
-		text-transform: uppercase;
-		font-weight: bold;
-		color: var(--white);
-	}
-
-	.sect-head-features {
-		background-color: dodgerblue;
-	}
-	.sect-head-improvements {
-		background-color: seagreen;
-	}
-	.sect-head-bugs {
-		background-color: brown;
-	}
-	.sect-head-upcoming {
-		background-color: mediumpurple;
-	}
-
-	.sect-body {
-		padding: 15px 25px;
-
-		li {
-			list-style-type: disc;
-		}
+	&:last-of-type {
+		margin-bottom: 50px;
 	}
 }
 </style>

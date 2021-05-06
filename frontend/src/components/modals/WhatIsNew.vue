@@ -1,41 +1,41 @@
 <template>
-	<div
-		v-if="news !== null"
-		class="modal"
-		:class="{ 'is-active': isModalActive }"
-	>
-		<div class="modal-background" />
-		<div class="modal-card">
-			<header class="modal-card-head">
-				<p class="modal-card-title">
-					<strong>{{ news.title }}</strong>
-					({{ formatDate(news.createdAt) }})
-				</p>
-				<button class="delete" @click="toggleModal()" />
-			</header>
-			<section class="modal-card-body">
-				<div class="content">
-					<p>{{ news.markdown }}</p>
-				</div>
-			</section>
-		</div>
+	<div v-if="news !== null">
+		<modal :title="`News posted ${timeCreated}`">
+			<div slot="body">
+				<div
+					class="section news-item"
+					v-html="marked(news.markdown)"
+				></div>
+			</div>
+		</modal>
 	</div>
 </template>
 
 <script>
-import { format } from "date-fns";
-import { mapGetters } from "vuex";
+import { formatDistance } from "date-fns";
+import marked from "marked";
+import { mapGetters, mapActions } from "vuex";
+
+import Modal from "../Modal.vue";
 
 export default {
+	components: { Modal },
 	data() {
 		return {
 			isModalActive: false,
 			news: null
 		};
 	},
-	computed: mapGetters({
-		socket: "websockets/getSocket"
-	}),
+	computed: {
+		...mapGetters({
+			socket: "websockets/getSocket"
+		}),
+		timeCreated() {
+			return formatDistance(this.news.createdAt, new Date(), {
+				addSuffix: true
+			});
+		}
+	},
 	mounted() {
 		this.socket.dispatch("news.newest", res => {
 			if (res.status !== "success") return;
@@ -49,7 +49,7 @@ export default {
 						parseInt(localStorage.getItem("whatIsNew")) <
 						news.createdAt
 					) {
-						this.toggleModal();
+						this.openModal("whatIsNew");
 						localStorage.setItem("whatIsNew", news.createdAt);
 					}
 				} else {
@@ -57,7 +57,7 @@ export default {
 						parseInt(localStorage.getItem("firstVisited")) <
 						news.createdAt
 					)
-						this.toggleModal();
+						this.openModal("whatIsNew");
 					localStorage.setItem("whatIsNew", news.createdAt);
 				}
 			} else if (!localStorage.getItem("firstVisited"))
@@ -65,17 +65,8 @@ export default {
 		});
 	},
 	methods: {
-		toggleModal() {
-			this.isModalActive = !this.isModalActive;
-		},
-		formatDate: unix => {
-			return format(unix, "dd-MM-yyyy");
-		}
-	},
-	events: {
-		closeModal() {
-			this.isModalActive = false;
-		}
+		marked,
+		...mapActions("modalVisibility", ["openModal"])
 	}
 };
 </script>
