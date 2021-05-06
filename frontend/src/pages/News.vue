@@ -16,58 +16,14 @@
 					</header>
 					<div class="card-content">
 						<div class="content">
-							<p>{{ item.description }}</p>
-						</div>
-						<div v-show="item.features.length > 0" class="sect">
-							<div class="sect-head-features">
-								The features are so great
-							</div>
-							<ul class="sect-body">
-								<li
-									v-for="feature in item.features"
-									:key="feature"
-								>
-									{{ feature }}
-								</li>
-							</ul>
-						</div>
-						<div v-show="item.improvements.length > 0" class="sect">
-							<div class="sect-head-improvements">
-								Improvements
-							</div>
-							<ul class="sect-body">
-								<li
-									v-for="improvement in item.improvements"
-									:key="improvement"
-								>
-									{{ improvement }}
-								</li>
-							</ul>
-						</div>
-						<div v-show="item.bugs.length > 0" class="sect">
-							<div class="sect-head-bugs">Bugs Smashed</div>
-							<ul class="sect-body">
-								<li v-for="bug in item.bugs" :key="bug">
-									{{ bug }}
-								</li>
-							</ul>
-						</div>
-						<div v-show="item.upcoming.length > 0" class="sect">
-							<div class="sect-head-upcoming">
-								Coming Soon to a Musare near you
-							</div>
-							<ul class="sect-body">
-								<li
-									v-for="upcoming in item.upcoming"
-									:key="upcoming"
-								>
-									{{ upcoming }}
-								</li>
-							</ul>
+							<p>{{ item.markdown }}</p>
 						</div>
 					</div>
 				</div>
-				<h3 v-if="noFound" class="has-text-centered page-title">
+				<h3
+					v-if="news.length === 0"
+					class="has-text-centered page-title"
+				>
 					No news items were found.
 				</h3>
 			</div>
@@ -87,8 +43,7 @@ export default {
 	components: { MainHeader, MainFooter },
 	data() {
 		return {
-			news: [],
-			noFound: false
+			news: []
 		};
 	},
 	computed: mapGetters({
@@ -96,15 +51,11 @@ export default {
 	}),
 	mounted() {
 		this.socket.dispatch("news.index", res => {
-			if (res.status === "success") {
-				this.news = res.data.news;
-				if (this.news.length === 0) this.noFound = true;
-			}
+			if (res.status === "success") this.news = res.data.news;
 		});
-		this.socket.on("event:admin.news.created", res => {
-			this.news.unshift(res.data.news);
-			this.noFound = false;
-		});
+		this.socket.on("event:admin.news.created", res =>
+			this.news.unshift(res.data.news)
+		);
 		this.socket.on("event:admin.news.updated", res => {
 			for (let n = 0; n < this.news.length; n += 1) {
 				if (this.news[n]._id === res.data.news._id) {
@@ -114,7 +65,6 @@ export default {
 		});
 		this.socket.on("event:admin.news.removed", res => {
 			this.news = this.news.filter(item => item._id !== res.data.newsId);
-			if (this.news.length === 0) this.noFound = true;
 		});
 	},
 	methods: {

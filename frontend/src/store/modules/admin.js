@@ -156,12 +156,16 @@ const modules = {
 		},
 		getters: {},
 		actions: {
+			setNews: ({ commit }, news) => commit("setNews", news),
 			addNews: ({ commit }, news) => commit("addNews", news),
 			removeNews: ({ commit }, newsId) => commit("removeNews", newsId),
 			updateNews: ({ commit }, updatedNews) =>
 				commit("updateNews", updatedNews)
 		},
 		mutations: {
+			setNews(state, news) {
+				state.news = news;
+			},
 			addNews(state, news) {
 				state.news.push(news);
 			},

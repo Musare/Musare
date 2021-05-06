@@ -88,6 +88,10 @@ p {
 }
 
 .modal-card-foot {
+	*:not(:last-child) {
+		margin-right: 10px;
+	}
+
 	& > div {
 		display: flex;
 		flex-grow: 1;
@@ -95,6 +99,7 @@ p {
 			margin-left: 10px;
 		}
 	}
+
 	.right {
 		margin-left: auto;
 		justify-content: flex-end;

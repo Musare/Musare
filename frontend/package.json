@@ -47,6 +47,7 @@
     "date-fns": "^2.19.0",
     "eslint-config-airbnb-base": "^13.2.0",
     "html-webpack-plugin": "^5.3.1",
+    "marked": "^2.0.3",
     "toasters": "^2.3.0",
     "vue": "^2.6.12",
     "vue-content-loader": "^0.2.3",

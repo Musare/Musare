@@ -13,7 +13,6 @@ import admin from "./modules/admin";
 import editSongModal from "./modules/modals/editSong";
 import manageStationModal from "./modules/modals/manageStation";
 import editUserModal from "./modules/modals/editUser";
-import editNewsModal from "./modules/modals/editNews";
 import viewPunishmentModal from "./modules/modals/viewPunishment";
 import viewReportModal from "./modules/modals/viewReport";
 import reportModal from "./modules/modals/report";
@@ -34,7 +33,6 @@ export default new Vuex.Store({
 				editSong: editSongModal,
 				manageStation: manageStationModal,
 				editUser: editUserModal,
-				editNews: editNewsModal,
 				viewPunishment: viewPunishmentModal,
 				viewReport: viewReportModal,
 				report: reportModal

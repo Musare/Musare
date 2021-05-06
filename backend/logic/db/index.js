@@ -7,7 +7,7 @@ import CoreClass from "../../core";
 
 const REQUIRED_DOCUMENT_VERSIONS = {
 	activity: 2,
-	news: 1,
+	news: 2,
 	playlist: 3,
 	punishment: 1,
 	queueSong: 1,

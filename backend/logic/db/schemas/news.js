@@ -1,11 +1,8 @@
 export default {
 	title: { type: String, required: true },
-	description: { type: String, required: true },
-	bugs: [{ type: String }],
-	features: [{ type: String }],
-	improvements: [{ type: String }],
-	upcoming: [{ type: String }],
+	markdown: { type: String, required: true },
+	status: { type: String, enum: ["draft", "published", "archived"], required: true, default: "published" },
 	createdBy: { type: String, required: true },
 	createdAt: { type: Number, default: Date.now, required: true },
-	documentVersion: { type: Number, default: 1, required: true }
+	documentVersion: { type: Number, default: 2, required: true }
 };

@@ -5,29 +5,31 @@
 			<table class="table is-striped">
 				<thead>
 					<tr>
+						<td>Status</td>
 						<td>Title</td>
-						<td>Description</td>
-						<td>Bugs</td>
-						<td>Features</td>
-						<td>Improvements</td>
-						<td>Upcoming</td>
+						<td>Author</td>
+						<td>Markdown</td>
 						<td>Options</td>
 					</tr>
 				</thead>
 				<tbody>
 					<tr v-for="news in news" :key="news._id">
+						<td class="news-status">{{ news.status }}</td>
 						<td>
 							<strong>{{ news.title }}</strong>
 						</td>
-						<td>{{ news.description }}</td>
-						<td>{{ news.bugs.join(", ") }}</td>
-						<td>{{ news.features.join(", ") }}</td>
-						<td>{{ news.improvements.join(", ") }}</td>
-						<td>{{ news.upcoming.join(", ") }}</td>
+						<td>
+							<user-id-to-username
+								:user-id="news.createdBy"
+								:alt="news.createdBy"
+								:link="true"
+							/>
+						</td>
+						<td>{{ news.markdown }}</td>
 						<td>
 							<button
 								class="button is-primary"
-								@click="editNewsClick(news)"
+								@click="edit(news._id)"
 							>
 								Edit
 							</button>
@@ -39,168 +41,9 @@
 				</tbody>
 			</table>
 
-			<div class="card is-fullwidth">
-				<header class="card-header">
-					<p class="card-header-title">Create News</p>
-				</header>
-				<div class="card-content">
-					<div class="content">
-						<label class="label">Title & Description</label>
-						<div class="control is-horizontal">
-							<div class="control is-grouped">
-								<p class="control is-expanded">
-									<input
-										v-model="creating.title"
-										class="input"
-										type="text"
-										placeholder="Title"
-									/>
-								</p>
-								<p class="control is-expanded">
-									<input
-										v-model="creating.description"
-										class="input"
-										type="text"
-										placeholder="Short description"
-									/>
-								</p>
-							</div>
-						</div>
-
-						<div class="columns">
-							<div class="column">
-								<label class="label">Bugs</label>
-								<p class="control has-addons">
-									<input
-										ref="new-bugs"
-										class="input"
-										type="text"
-										placeholder="Bug"
-										@keyup.enter="addChange('bugs')"
-									/>
-									<a
-										class="button is-info"
-										href="#"
-										@click="addChange('bugs')"
-										>Add</a
-									>
-								</p>
-								<span
-									v-for="(bug, index) in creating.bugs"
-									:key="bug"
-									class="tag is-info"
-								>
-									{{ bug }}
-									<button
-										class="delete is-info"
-										@click="removeChange('bugs', index)"
-									/>
-								</span>
-							</div>
-							<div class="column">
-								<label class="label">Features</label>
-								<p class="control has-addons">
-									<input
-										ref="new-features"
-										class="input"
-										type="text"
-										placeholder="Feature"
-										@keyup.enter="addChange('features')"
-									/>
-									<a
-										class="button is-info"
-										href="#"
-										@click="addChange('features')"
-										>Add</a
-									>
-								</p>
-								<span
-									v-for="(feature,
-									index) in creating.features"
-									:key="feature"
-									class="tag is-info"
-								>
-									{{ feature }}
-									<button
-										class="delete is-info"
-										@click="removeChange('features', index)"
-									/>
-								</span>
-							</div>
-						</div>
-
-						<div class="columns">
-							<div class="column">
-								<label class="label">Improvements</label>
-								<p class="control has-addons">
-									<input
-										ref="new-improvements"
-										class="input"
-										type="text"
-										placeholder="Improvement"
-										@keyup.enter="addChange('improvements')"
-									/>
-									<a
-										class="button is-info"
-										href="#"
-										@click="addChange('improvements')"
-										>Add</a
-									>
-								</p>
-								<span
-									v-for="(improvement,
-									index) in creating.improvements"
-									:key="improvement"
-									class="tag is-info"
-								>
-									{{ improvement }}
-									<button
-										class="delete is-info"
-										@click="
-											removeChange('improvements', index)
-										"
-									/>
-								</span>
-							</div>
-							<div class="column">
-								<label class="label">Upcoming</label>
-								<p class="control has-addons">
-									<input
-										ref="new-upcoming"
-										class="input"
-										type="text"
-										placeholder="Upcoming"
-										@keyup.enter="addChange('upcoming')"
-									/>
-									<a
-										class="button is-info"
-										href="#"
-										@click="addChange('upcoming')"
-										>Add</a
-									>
-								</p>
-								<span
-									v-for="(upcoming,
-									index) in creating.upcoming"
-									:key="upcoming"
-									class="tag is-info"
-								>
-									{{ upcoming }}
-									<button
-										class="delete is-info"
-										@click="removeChange('upcoming', index)"
-									/>
-								</span>
-							</div>
-						</div>
-					</div>
-				</div>
-				<footer class="card-footer">
-					<a class="card-footer-item" @click="createNews()" href="#"
-						>Create</a
-					>
-				</footer>
-			</div>
+			<button class="is-primary button" @click="edit()">
+				Create News Item
+			</button>
 		</div>
 
 		<edit-news
@@ -213,28 +56,22 @@
 
 <script>
 import { mapActions, mapState, mapGetters } from "vuex";
-
 import Toast from "toasters";
+
 import ws from "@/ws";
 
 import Confirm from "@/components/Confirm.vue";
+import UserIdToUsername from "@/components/UserIdToUsername.vue";
 
 export default {
 	components: {
 		Confirm,
+		UserIdToUsername,
 		EditNews: () => import("@/components/modals/EditNews.vue")
 	},
 	data() {
 		return {
-			editingNewsId: "",
-			creating: {
-				title: "",
-				description: "",
-				bugs: [],
-				features: [],
-				improvements: [],
-				upcoming: []
-			}
+			editingNewsId: ""
 		};
 	},
 	computed: {
@@ -250,8 +87,7 @@ export default {
 	},
 	mounted() {
 		this.socket.dispatch("news.index", res => {
-			if (res.status === "success")
-				res.data.news.forEach(news => this.addNews(news));
+			if (res.status === "success") this.setNews(res.data.news);
 		});
 
 		this.socket.on("event:admin.news.created", res =>
@@ -270,35 +106,10 @@ export default {
 		ws.onConnect(() => this.init());
 	},
 	methods: {
-		createNews() {
-			const {
-				creating: { bugs, features, improvements, upcoming }
-			} = this;
-
-			if (this.creating.title === "")
-				return new Toast("Field (Title) cannot be empty");
-			if (this.creating.description === "")
-				return new Toast("Field (Description) cannot be empty");
-			if (
-				bugs.length <= 0 &&
-				features.length <= 0 &&
-				improvements.length <= 0 &&
-				upcoming.length <= 0
-			)
-				return new Toast("You must have at least one News Item");
-
-			return this.socket.dispatch("news.create", this.creating, res => {
-				new Toast(res.message, 4000);
-				if (res.status === "success")
-					this.creating = {
-						title: "",
-						description: "",
-						bugs: [],
-						features: [],
-						improvements: [],
-						upcoming: []
-					};
-			});
+		edit(id) {
+			if (id) this.editingNewsId = id;
+			else this.editingNewsId = "";
+			this.openModal("editNews");
 		},
 		remove(id) {
 			this.socket.dispatch(
@@ -307,26 +118,6 @@ export default {
 				res => new Toast(res.message)
 			);
 		},
-		editNewsClick(news) {
-			this.editingNewsId = news._id;
-			this.openModal("editNews");
-		},
-		addChange(type) {
-			const change = this.$refs[`new-${type}`].value.trim();
-
-			if (this.creating[type].indexOf(change) !== -1)
-				return new Toast(`Tag already exists`);
-
-			if (change) {
-				this.$refs[`new-${type}`].value = "";
-				this.creating[type].push(change);
-				return true;
-			}
-			return new Toast(`${type} cannot be empty`);
-		},
-		removeChange(type, index) {
-			this.creating[type].splice(index, 1);
-		},
 		init() {
 			this.socket.dispatch("apis.joinAdminRoom", "news", () => {});
 		},
@@ -334,6 +125,7 @@ export default {
 		...mapActions("admin/news", [
 			"editNews",
 			"addNews",
+			"setNews",
 			"removeNews",
 			"updateNews"
 		])
@@ -399,5 +191,9 @@ td {
 
 .card-footer-item {
 	color: var(--primary-color);
+}
+
+.news-status {
+	text-transform: capitalize;
 }
 </style>

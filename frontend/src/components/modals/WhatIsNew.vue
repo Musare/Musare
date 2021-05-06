@@ -15,46 +15,7 @@
 			</header>
 			<section class="modal-card-body">
 				<div class="content">
-					<p>{{ news.description }}</p>
-				</div>
-				<div v-show="news.features.length > 0" class="sect">
-					<div class="sect-head-features">
-						The features are so great
-					</div>
-					<ul class="sect-body">
-						<li v-for="feature in news.features" :key="feature">
-							{{ feature }}
-						</li>
-					</ul>
-				</div>
-				<div v-show="news.improvements.length > 0" class="sect">
-					<div class="sect-head-improvements">Improvements</div>
-					<ul class="sect-body">
-						<li
-							v-for="improvement in news.improvements"
-							:key="improvement"
-						>
-							{{ improvement }}
-						</li>
-					</ul>
-				</div>
-				<div v-show="news.bugs.length > 0" class="sect">
-					<div class="sect-head-bugs">Bugs Smashed</div>
-					<ul class="sect-body">
-						<li v-for="bug in news.bugs" :key="bug">
-							{{ bug }}
-						</li>
-					</ul>
-				</div>
-				<div v-show="news.upcoming.length > 0" class="sect">
-					<div class="sect-head-upcoming">
-						Coming Soon to a Musare near you
-					</div>
-					<ul class="sect-body">
-						<li v-for="upcoming in news.upcoming" :key="upcoming">
-							{{ upcoming }}
-						</li>
-					</ul>
+					<p>{{ news.markdown }}</p>
 				</div>
 			</section>
 		</div>
@@ -95,9 +56,8 @@ export default {
 					if (
 						parseInt(localStorage.getItem("firstVisited")) <
 						news.createdAt
-					) {
+					)
 						this.toggleModal();
-					}
 					localStorage.setItem("whatIsNew", news.createdAt);
 				}
 			} else if (!localStorage.getItem("firstVisited"))
