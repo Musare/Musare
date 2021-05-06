@@ -60,7 +60,8 @@ export default {
 
 	p,
 	label,
-	td {
+	td,
+	th {
 		color: var(--light-grey-2) !important;
 	}
 

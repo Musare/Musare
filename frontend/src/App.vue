@@ -238,10 +238,12 @@ export default {
 	}
 
 	p:not(.help),
-	label {
+	label,
+	.label {
 		color: var(--light-grey-2) !important;
 	}
 
+	.section,
 	.content {
 		background-color: var(--dark-grey-3) !important;
 	}
@@ -249,10 +251,6 @@ export default {
 	.content-box,
 	.step:not(.selected) {
 		background-color: var(--dark-grey-3) !important;
-	}
-
-	.label {
-		color: var(--light-grey-2);
 	}
 
 	.tippy-tooltip.songActions-theme {

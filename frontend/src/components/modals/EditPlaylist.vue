@@ -811,10 +811,6 @@ export default {
 
 <style lang="scss" scoped>
 .night-mode {
-	.section {
-		background-color: var(--dark-grey-3) !important;
-	}
-
 	.label,
 	p,
 	strong {
