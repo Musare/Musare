@@ -1088,6 +1088,8 @@ h4.section-title {
 
 .news-item {
 	font-family: "Karla";
+	border-radius: 5px;
+	padding: 20px;
 
 	* {
 		font-family: Karla, Arial, sans-serif;
@@ -1095,7 +1097,7 @@ h4.section-title {
 	}
 
 	h1 {
-		font-size: 55px;
+		font-size: 40px;
 
 		&:first-of-type {
 			margin-top: 0;
@@ -1103,23 +1105,26 @@ h4.section-title {
 	}
 
 	h2 {
-		font-size: 45px;
-	}
-
-	h3 {
-		font-size: 40px;
-	}
-
-	h4 {
-		font-size: 35px;
-	}
-
-	h5 {
 		font-size: 30px;
 	}
 
-	h6 {
+	h3 {
 		font-size: 25px;
+	}
+
+	h4,
+	h5,
+	h6 {
+		font-size: 20px;
+	}
+
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6 {
+		margin: 10px 0;
 	}
 
 	ul {
