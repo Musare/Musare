@@ -67,6 +67,17 @@ export default {
 		...mapGetters({ socket: "websockets/getSocket" })
 	},
 	mounted() {
+		marked.use({
+			renderer: {
+				table(header, body) {
+					return `<table class="table is-striped">
+					<thead>${header}</thead>
+					<tbody>${body}</tbody>
+					</table>`;
+				}
+			}
+		});
+
 		if (this.newsId) {
 			this.socket.dispatch(`news.getNewsFromId`, this.newsId, res => {
 				if (res.status === "success") {

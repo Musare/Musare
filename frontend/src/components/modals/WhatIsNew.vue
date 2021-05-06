@@ -37,6 +37,17 @@ export default {
 		}
 	},
 	mounted() {
+		marked.use({
+			renderer: {
+				table(header, body) {
+					return `<table class="table is-striped">
+					<thead>${header}</thead>
+					<tbody>${body}</tbody>
+					</table>`;
+				}
+			}
+		});
+
 		this.socket.dispatch("news.newest", res => {
 			if (res.status !== "success") return;
 
