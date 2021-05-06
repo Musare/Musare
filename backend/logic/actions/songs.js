@@ -332,7 +332,7 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					SongsModule.runJob("UPDATE_ALL_SONGS", {})
+					SongsModule.runJob("UPDATE_ALL_SONGS", {}, this)
 						.then(() => {
 							next();
 						})
@@ -499,8 +499,8 @@ export default {
 								.filter((value, index, self) => self.indexOf(value) === index)
 								.forEach(genre => {
 									PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre })
-										.then(() => {})
-										.catch(() => {});
+										.then(() => { })
+										.catch(() => { });
 								});
 
 							next(null, song);
@@ -545,80 +545,80 @@ export default {
 		);
 	}),
 
-	/**
-	 * Removes a song
-	 *
-	 * @param session
-	 * @param songId - the song id
-	 * @param cb
-	 */
-	remove: isAdminRequired(async function remove(session, songId, cb) {
-		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
-		let song = null;
-		async.waterfall(
-			[
-				next => {
-					songModel.findOne({ _id: songId }, next);
-				},
+	// /**
+	//  * Removes a song
+	//  *
+	//  * @param session
+	//  * @param songId - the song id
+	//  * @param cb
+	//  */
+	// remove: isAdminRequired(async function remove(session, songId, cb) {
+	// 	const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" }, this);
+	// 	let song = null;
+	// 	async.waterfall(
+	// 		[
+	// 			next => {
+	// 				songModel.findOne({ _id: songId }, next);
+	// 			},
 
-				(_song, next) => {
-					song = _song;
-					songModel.deleteOne({ _id: songId }, next);
-				},
+	// 			(_song, next) => {
+	// 				song = _song;
+	// 				songModel.deleteOne({ _id: songId }, next);
+	// 			},
 
-				(res, next) => {
-					// TODO Check if res gets returned from above
-					CacheModule.runJob("HDEL", { table: "songs", key: songId }, this)
-						.then(() => {
-							next();
-						})
-						.catch(next)
-						.finally(() => {
-							song.genres.forEach(genre => {
-								PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre })
-									.then(() => {})
-									.catch(() => {});
-							});
-						});
-				}
-			],
-			async err => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+	// 			(res, next) => {
+	// 				// TODO Check if res gets returned from above
+	// 				CacheModule.runJob("HDEL", { table: "songs", key: songId }, this)
+	// 					.then(() => {
+	// 						next();
+	// 					})
+	// 					.catch(next)
+	// 					.finally(() => {
+	// 						song.genres.forEach(genre => {
+	// 							PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre })
+	// 								.then(() => {})
+	// 								.catch(() => {});
+	// 						});
+	// 					});
+	// 			}
+	// 		],
+	// 		async err => {
+	// 			if (err) {
+	// 				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 
-					this.log("ERROR", "SONGS_REMOVE", `Failed to remove song "${songId}". "${err}"`);
+	// 				this.log("ERROR", "SONGS_REMOVE", `Failed to remove song "${songId}". "${err}"`);
 
-					return cb({ status: "error", message: err });
-				}
+	// 				return cb({ status: "error", message: err });
+	// 			}
 
-				this.log("SUCCESS", "SONGS_REMOVE", `Successfully removed song "${songId}".`);
+	// 			this.log("SUCCESS", "SONGS_REMOVE", `Successfully removed song "${songId}".`);
 
-				if (song.status === "verified") {
-					CacheModule.runJob("PUB", {
-						channel: "song.removedVerifiedSong",
-						value: songId
-					});
-				}
-				if (song.status === "unverified") {
-					CacheModule.runJob("PUB", {
-						channel: "song.removedUnverifiedSong",
-						value: songId
-					});
-				}
-				if (song.status === "hidden") {
-					CacheModule.runJob("PUB", {
-						channel: "song.removedHiddenSong",
-						value: songId
-					});
-				}
+	// 			if (song.status === "verified") {
+	// 				CacheModule.runJob("PUB", {
+	// 					channel: "song.removedVerifiedSong",
+	// 					value: songId
+	// 				});
+	// 			}
+	// 			if (song.status === "unverified") {
+	// 				CacheModule.runJob("PUB", {
+	// 					channel: "song.removedUnverifiedSong",
+	// 					value: songId
+	// 				});
+	// 			}
+	// 			if (song.status === "hidden") {
+	// 				CacheModule.runJob("PUB", {
+	// 					channel: "song.removedHiddenSong",
+	// 					value: songId
+	// 				});
+	// 			}
 
-				return cb({
-					status: "success",
-					message: "Song has been successfully removed"
-				});
-			}
-		);
-	}),
+	// 			return cb({
+	// 				status: "success",
+	// 				message: "Song has been successfully removed"
+	// 			});
+	// 		}
+	// 	);
+	// }),
 
 	/**
 	 * Searches through official songs
@@ -776,8 +776,8 @@ export default {
 				(song, next) => {
 					song.genres.forEach(genre => {
 						PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre })
-							.then(() => {})
-							.catch(() => {});
+							.then(() => { })
+							.catch(() => { });
 					});
 
 					SongsModule.runJob("UPDATE_SONG", { songId: song._id });
@@ -844,8 +844,8 @@ export default {
 				(song, next) => {
 					song.genres.forEach(genre => {
 						PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre })
-							.then(() => {})
-							.catch(() => {});
+							.then(() => { })
+							.catch(() => { });
 					});
 
 					SongsModule.runJob("UPDATE_SONG", { songId });

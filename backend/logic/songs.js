@@ -203,7 +203,7 @@ class _SongsModule extends CoreClass {
 						} else {
 							const status =
 								(!payload.userId && config.get("hideAnonymousSongs")) ||
-								(payload.automaticallyRequested && config.get("hideAutomaticallyRequestedSongs"))
+									(payload.automaticallyRequested && config.get("hideAutomaticallyRequestedSongs"))
 									? "hidden"
 									: "unverified";
 
@@ -291,7 +291,6 @@ class _SongsModule extends CoreClass {
 					},
 
 					(song, next) => {
-						next(null, song);
 						const { _id, youtubeId, title, artists, thumbnail, duration, status } = song;
 						const trimmedSong = {
 							_id,
@@ -302,25 +301,75 @@ class _SongsModule extends CoreClass {
 							duration,
 							status
 						};
-						this.log("INFO", `Going to update playlists and stations now for song ${_id}`);
-						DBModule.runJob("GET_MODEL", { modelName: "playlist" }).then(playlistModel => {
+						this.log("INFO", `Going to update playlists now for song ${_id}`);
+						DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this).then(playlistModel => {
 							playlistModel.updateMany(
 								{ "songs._id": song._id },
 								{ $set: { "songs.$": trimmedSong } },
 								err => {
-									if (err) this.log("ERROR", err);
+									if (err) next(err);
 									else
 										playlistModel.find({ "songs._id": song._id }, (err, playlists) => {
-											playlists.forEach(playlist => {
-												PlaylistsModule.runJob("UPDATE_PLAYLIST", {
-													playlistId: playlist._id
+											if (err) next(err);
+											else {
+												async.eachLimit(playlists, 1, (playlist, next) => {
+													PlaylistsModule.runJob("UPDATE_PLAYLIST", {
+														playlistId: playlist._id
+													}, this).then(() => {
+														next();
+													}).catch(err => {
+														next(err);
+													});
+												}, err => {
+													if (err) next(err);
+													else next(null, song)
 												});
-											});
+											}
+											// playlists.forEach(playlist => {
+											// 	PlaylistsModule.runJob("UPDATE_PLAYLIST", {
+											// 		playlistId: playlist._id
+											// 	});
+											// });
 										});
 								}
 							);
+						}).catch(err => {
+							next(err);
 						});
-						DBModule.runJob("GET_MODEL", { modelName: "station" }).then(stationModel => {
+					},
+
+					(song, next) => {
+						// next(null, song);
+						const { _id, youtubeId, title, artists, thumbnail, duration, status } = song;
+						// const trimmedSong = {
+						// 	_id,
+						// 	youtubeId,
+						// 	title,
+						// 	artists,
+						// 	thumbnail,
+						// 	duration,
+						// 	status
+						// };
+						// this.log("INFO", `Going to update playlists and stations now for song ${_id}`);
+						// DBModule.runJob("GET_MODEL", { modelName: "playlist" }).then(playlistModel => {
+						// 	playlistModel.updateMany(
+						// 		{ "songs._id": song._id },
+						// 		{ $set: { "songs.$": trimmedSong } },
+						// 		err => {
+						// 			if (err) this.log("ERROR", err);
+						// 			else
+						// 				playlistModel.find({ "songs._id": song._id }, (err, playlists) => {
+						// 					playlists.forEach(playlist => {
+						// 						PlaylistsModule.runJob("UPDATE_PLAYLIST", {
+						// 							playlistId: playlist._id
+						// 						});
+						// 					});
+						// 				});
+						// 		}
+						// 	);
+						// });
+						this.log("INFO", `Going to update stations now for song ${_id}`);
+						DBModule.runJob("GET_MODEL", { modelName: "station" }, this).then(stationModel => {
 							stationModel.updateMany(
 								{ "queue._id": song._id },
 								{
@@ -337,12 +386,24 @@ class _SongsModule extends CoreClass {
 									if (err) this.log("ERROR", err);
 									else
 										stationModel.find({ "queue._id": song._id }, (err, stations) => {
-											stations.forEach(station => {
-												StationsModule.runJob("UPDATE_STATION", { stationId: station._id });
-											});
+											if (err) next(err);
+											else {
+												async.eachLimit(stations, 1, (station, next) => {
+													StationsModule.runJob("UPDATE_STATION", { stationId: station._id }, this).then(() => {
+														next();
+													}).catch(err => {
+														next(err);
+													});
+												}, err => {
+													if (err) next(err);
+													else next(null, song);
+												});
+											}
 										});
 								}
 							);
+						}).catch(err => {
+							next(err);
 						});
 					},
 
@@ -381,7 +442,6 @@ class _SongsModule extends CoreClass {
 			async.waterfall(
 				[
 					next => {
-						return next("Currently disabled since it's broken due to the backend memory leak issue.");
 						SongsModule.SongModel.find({}, next);
 					},
 
@@ -390,11 +450,11 @@ class _SongsModule extends CoreClass {
 						const { length } = songs;
 						async.eachLimit(
 							songs,
-							10,
+							2,
 							(song, next) => {
 								index += 1;
 								console.log(`Updating song #${index} out of ${length}: ${song._id}`);
-								SongsModule.runJob("UPDATE_SONG", { songId: song._id }, this, 9)
+								SongsModule.runJob("UPDATE_SONG", { songId: song._id }, this)
 									.then(() => {
 										next();
 									})
@@ -416,41 +476,85 @@ class _SongsModule extends CoreClass {
 		);
 	}
 
-	/**
-	 * Deletes song from id from Mongo and cache
-	 *
-	 * @param {object} payload - returns an object containing the payload
-	 * @param {string} payload.youtubeId - the youtube id of the song we are trying to delete
-	 * @returns {Promise} - returns a promise (resolve, reject)
-	 */
-	DELETE_SONG(payload) {
-		return new Promise((resolve, reject) =>
-			async.waterfall(
-				[
-					next => {
-						SongsModule.SongModel.deleteOne({ youtubeId: payload.youtubeId }, next);
-					},
+	// /**
+	//  * Deletes song from id from Mongo and cache
+	//  *
+	//  * @param {object} payload - returns an object containing the payload
+	//  * @param {string} payload.songId - the song id of the song we are trying to delete
+	//  * @returns {Promise} - returns a promise (resolve, reject)
+	//  */
+	// DELETE_SONG(payload) {
+	// 	return new Promise((resolve, reject) =>
+	// 		async.waterfall(
+	// 			[
+	// 				next => {
+	// 					SongsModule.SongModel.deleteOne({ _id: payload.songId }, next);
+	// 				},
 
-					next => {
-						CacheModule.runJob(
-							"HDEL",
-							{
-								table: "songs",
-								key: payload.youtubeId
-							},
-							this
-						)
-							.then(() => next())
-							.catch(next);
-					}
-				],
-				err => {
-					if (err && err !== true) return reject(new Error(err));
-					return resolve();
-				}
-			)
-		);
-	}
+	// 				next => {
+	// 					CacheModule.runJob(
+	// 						"HDEL",
+	// 						{
+	// 							table: "songs",
+	// 							key: payload.songId
+	// 						},
+	// 						this
+	// 					)
+	// 						.then(() => next())
+	// 						.catch(next);
+	// 				},
+
+	// 				next => {
+	// 					this.log("INFO", `Going to update playlists and stations now for deleted song ${payload.songId}`);
+	// 					DBModule.runJob("GET_MODEL", { modelName: "playlist" }).then(playlistModel => {
+	// 						playlistModel.find({ "songs._id": song._id }, (err, playlists) => {
+	// 							if (err) this.log("ERROR", err);
+	// 							else {
+	// 								playlistModel.updateMany(
+	// 									{ "songs._id": payload.songId },
+	// 									{ $pull: { "songs.$._id": payload.songId} },
+	// 									err => {
+	// 										if (err) this.log("ERROR", err);
+	// 										else {
+	// 											playlists.forEach(playlist => {
+	// 												PlaylistsModule.runJob("UPDATE_PLAYLIST", {
+	// 													playlistId: playlist._id
+	// 												});
+	// 											});
+	// 										}
+	// 									}
+	// 								);
+
+	// 							}
+	// 						});
+	// 					});
+	// 					DBModule.runJob("GET_MODEL", { modelName: "station" }).then(stationModel => {
+	// 						stationModel.find({ "queue._id": payload.songId }, (err, stations) => {
+	// 							stationModel.updateMany(
+	// 								{ "queue._id": payload.songId },
+	// 								{
+	// 									$pull: { "queue._id":  }
+	// 								},
+	// 								err => {
+	// 									if (err) this.log("ERROR", err);
+	// 									else {
+	// 										stations.forEach(station => {
+	// 											StationsModule.runJob("UPDATE_STATION", { stationId: station._id });
+	// 										});
+	// 									}
+	// 								}
+	// 							);
+	// 						});
+	// 					});
+	// 				}
+	// 			],
+	// 			err => {
+	// 				if (err && err !== true) return reject(new Error(err));
+	// 				return resolve();
+	// 			}
+	// 		)
+	// 	);
+	// }
 
 	/**
 	 * Searches through songs

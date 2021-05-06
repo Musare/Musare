@@ -15,8 +15,8 @@
 								<div class="player-footer-left">
 									<i
 										class="material-icons player-play-pause"
-										@click="settings('play')"
-										@keyup.enter="settings('play')"
+										@click="play()"
+										@keyup.enter="play()"
 										tabindex="0"
 										v-if="video.paused"
 										>play_arrow</i
@@ -523,7 +523,7 @@
 					>
 						<i class="material-icons">visibility</i>
 					</button>
-					<confirm placement="left" @confirm="remove(song._id)">
+					<!-- <confirm placement="left" @confirm="remove(song._id)">
 						<button
 							class="button is-danger"
 							content="Remove Song"
@@ -531,7 +531,7 @@
 						>
 							<i class="material-icons">delete</i>
 						</button>
-					</confirm>
+					</confirm> -->
 				</div>
 			</div>
 		</modal>
@@ -650,10 +650,10 @@ export default {
 	},
 	watch: {
 		/* eslint-disable */
-		"song.duration": function () {
+		"song.duration": function() {
 			this.drawCanvas();
 		},
-		"song.skipDuration": function () {
+		"song.skipDuration": function() {
 			this.drawCanvas();
 		}
 		/* eslint-enable */
@@ -839,7 +839,7 @@ export default {
 			keyCode: 101,
 			preventDefault: true,
 			handler: () => {
-				if (this.video.paused) this.settings("play");
+				if (this.video.paused) this.play();
 				else this.settings("pause");
 			}
 		});
@@ -1032,6 +1032,11 @@ export default {
 
 			let saveButtonRef = this.$refs.saveButton;
 			if (close) saveButtonRef = this.$refs.saveAndCloseButton;
+
+			if (this.youtubeVideoDuration === "0.000") {
+				saveButtonRef.handleFailedSave();
+				return new Toast("The video appears to not be working.");
+			}
 
 			if (!song.title) {
 				saveButtonRef.handleFailedSave();
@@ -1370,6 +1375,15 @@ export default {
 					break;
 			}
 		},
+		play() {
+			if (
+				this.video.player.getVideoData().video_id !==
+				this.song.youtubeId
+			) {
+				this.loadVideoById(this.song.youtubeId, this.song.skipDuration);
+			}
+			this.settings("play");
+		},
 		changeVolume() {
 			const volume = this.volumeSliderValue;
 			localStorage.setItem("volume", volume / 100);
@@ -1519,11 +1533,11 @@ export default {
 				new Toast(res.message);
 			});
 		},
-		remove(id) {
-			this.socket.dispatch("songs.remove", id, res => {
-				new Toast(res.message);
-			});
-		},
+		// remove(id) {
+		// 	this.socket.dispatch("songs.remove", id, res => {
+		// 		new Toast(res.message);
+		// 	});
+		// },
 		...mapActions("modals/editSong", [
 			"stopVideo",
 			"loadVideoById",

@@ -27,7 +27,7 @@
 			>
 				Keyboard shortcuts helper
 			</button>
-			<!-- <confirm placement="bottom" @confirm="updateAllSongs()">
+			<confirm placement="bottom" @confirm="updateAllSongs()">
 				<button
 					class="button is-danger"
 					content="Update all songs"
@@ -35,7 +35,7 @@
 				>
 					Update all songs
 				</button>
-			</confirm> -->
+			</confirm>
 			<br />
 			<div>
 				<input
@@ -363,6 +363,7 @@ export default {
 			});
 		},
 		updateAllSongs() {
+			new Toast("Updating all songs, this could take a very long time.");
 			this.socket.dispatch("songs.updateAll", res => {
 				if (res.status === "success") new Toast(res.message);
 				else new Toast(res.message);

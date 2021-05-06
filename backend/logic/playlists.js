@@ -152,6 +152,29 @@ class _PlaylistsModule extends CoreClass {
 		});
 	}
 
+	// /**
+	//  * Returns a list of playlists that include a specific song
+	//  *
+	//  * @param {object} payload - object that contains the payload
+	//  * @param {string} payload.songId - the song id
+	//  * @param {string} payload.includeSongs - include the songs
+	//  * @returns {Promise} - returns promise (reject, resolve)
+	//  */
+	// GET_PLAYLISTS_WITH_SONG(payload) {
+	// 	return new Promise((resolve, reject) => {
+	// 		async.waterfall([
+	// 			next => {
+	// 				const includeObject = payload.includeSongs ? null : { songs: false };
+	// 				PlaylistsModule.playlistModel.find({ "songs._id": payload.songId }, includeObject, next);
+	// 			},
+
+	// 			(playlists, next) => {
+	// 				console.log(playlists);
+	// 			}
+	// 		]);
+	// 	});
+	// }
+
 	/**
 	 * Creates a playlist that contains all songs of a specific genre
 	 *
@@ -531,14 +554,22 @@ class _PlaylistsModule extends CoreClass {
 					// },
 
 					(playlistId, next) => {
-						StationsModule.runJob("GET_STATIONS_THAT_INCLUDE_OR_EXCLUDE_PLAYLIST", { playlistId })
+						StationsModule.runJob("GET_STATIONS_THAT_INCLUDE_OR_EXCLUDE_PLAYLIST", { playlistId }, this)
 							.then(response => {
-								response.stationIds.forEach(stationId => {
-									PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }).then().catch();
+								async.eachLimit(response.stationIds, 1, (stationId, next) => {
+									PlaylistsModule.runJob("AUTOFILL_STATION_PLAYLIST", { stationId }, this).then(() => {
+										next();
+									}).catch(err => {
+										next(err);
+									});
+								}, err => {
+									if (err) next(err);
+									else next();
 								});
 							})
-							.catch();
-						next();
+							.catch(err => {
+								next(err);
+							});
 					}
 				],
 				err => {
