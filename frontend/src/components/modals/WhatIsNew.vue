@@ -1,6 +1,6 @@
 <template>
 	<div v-if="news !== null">
-		<modal title="News">
+		<modal title="News" class="what-is-news-modal">
 			<div slot="body">
 				<div
 					class="section news-item"
@@ -13,18 +13,21 @@
 					<user-id-to-username
 						:user-id="news.createdBy"
 						:alt="news.createdBy"
-						:link="true"
-					/>
-					@
+						:link="true"/></span
+				><span :title="new Date(news.createdAt)">
+					{{
+						formatDistance(news.createdAt, new Date(), {
+							addSuffix: true
+						})
+					}}
 				</span>
-				{{ formatDate(news.createdAt) }}
 			</div>
 		</modal>
 	</div>
 </template>
 
 <script>
-import { format } from "date-fns";
+import { formatDistance } from "date-fns";
 import marked from "marked";
 import { mapGetters, mapActions } from "vuex";
 
@@ -85,13 +88,23 @@ export default {
 	},
 	methods: {
 		marked,
-		formatDate: unix => {
-			return format(unix, "HH:ii:ss dd-MM-yyyy");
-		},
+		formatDistance,
 		...mapActions("modalVisibility", ["openModal"])
 	}
 };
 </script>
+
+<style lang="scss">
+.what-is-news-modal {
+	.modal-card {
+		.modal-card-foot {
+			span:not(:last-child) {
+				margin-right: 5px !important;
+			}
+		}
+	}
+}
+</style>
 
 <style lang="scss" scoped>
 .night-mode {

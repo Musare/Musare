@@ -38,17 +38,20 @@
 				type="save-and-close"
 				@clicked="newsId ? update(true) : create(true)"
 			/>
-			<div class="right">
-				<span v-if="createdBy">
+			<div class="right" v-if="createdAt > 0">
+				<span>
 					By
 					<user-id-to-username
 						:user-id="createdBy"
 						:alt="createdBy"
-						:link="true"
-					/>
-					@
+						:link="true"/></span
+				><span :title="new Date(createdAt)">
+					{{
+						formatDistance(createdAt, new Date(), {
+							addSuffix: true
+						})
+					}}
 				</span>
-				{{ formatDate(createdAt) }}
 			</div>
 		</div>
 	</modal>
@@ -58,7 +61,7 @@
 import { mapActions, mapGetters, mapState } from "vuex";
 import marked from "marked";
 import Toast from "toasters";
-import { format } from "date-fns";
+import { formatDistance } from "date-fns";
 
 import UserIdToUsername from "@/components/UserIdToUsername.vue";
 import SaveButton from "../SaveButton.vue";
@@ -182,9 +185,7 @@ export default {
 				}
 			);
 		},
-		formatDate: unix => {
-			return format(unix, "HH:ii:ss dd-MM-yyyy");
-		},
+		formatDistance,
 		...mapActions("modalVisibility", ["closeModal"]),
 		...mapActions("modals/editNews", [
 			"editNews",
@@ -201,6 +202,10 @@ export default {
 		width: 1300px;
 		.modal-card-foot .right {
 			margin: auto 0 auto auto !important;
+
+			span:not(:last-child) {
+				margin-right: 0 !important;
+			}
 		}
 	}
 }
