@@ -591,6 +591,7 @@ export default {
 				disableLoadMore: false
 			},
 			volumeSliderValue: 0,
+			skipToLast10SecsPressed: false,
 			artistInputValue: "",
 			genreInputValue: "",
 			artistInputFocussed: false,
@@ -742,6 +743,7 @@ export default {
 
 							const duration = this.video.player.getDuration();
 
+							console.log(1111, duration.toFixed(3));
 							this.youtubeVideoDuration = duration.toFixed(3);
 							this.youtubeVideoNote = "(~)";
 							this.playerReady = true;
@@ -751,7 +753,13 @@ export default {
 						onStateChange: event => {
 							this.drawCanvas();
 
-							if (event.data === 1) {
+							let skipToLast10SecsPressed = false;
+							if (this.skipToLast10SecsPressed) {
+								this.skipToLast10SecsPressed = false;
+								skipToLast10SecsPressed = true;
+							}
+
+							if (event.data === 1 && !skipToLast10SecsPressed) {
 								if (!this.video.autoPlayed) {
 									this.video.autoPlayed = true;
 									return this.video.player.stopVideo();
@@ -791,6 +799,12 @@ export default {
 											this.youtubeVideoDuration)
 								)
 									this.song.duration = newYoutubeVideoDuration;
+
+								console.log(
+									2222,
+									newYoutubeVideoDuration,
+									this.video.player.getDuration()
+								);
 
 								this.youtubeVideoDuration = newYoutubeVideoDuration;
 								this.youtubeVideoNote = "";
@@ -1402,6 +1416,7 @@ export default {
 					this.pauseVideo(false);
 					break;
 				case "skipToLast10Secs":
+					this.skipToLast10SecsPressed = true;
 					if (this.video.paused) this.pauseVideo(false);
 					this.video.player.seekTo(
 						this.song.duration - 10 + this.song.skipDuration
