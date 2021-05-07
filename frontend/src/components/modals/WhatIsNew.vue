@@ -1,25 +1,38 @@
 <template>
 	<div v-if="news !== null">
-		<modal :title="`News posted ${timeCreated}`">
+		<modal title="News">
 			<div slot="body">
 				<div
 					class="section news-item"
 					v-html="marked(news.markdown)"
 				></div>
 			</div>
+			<div slot="footer">
+				<span v-if="news.createdBy">
+					By
+					<user-id-to-username
+						:user-id="news.createdBy"
+						:alt="news.createdBy"
+						:link="true"
+					/>
+					@
+				</span>
+				{{ formatDate(news.createdAt) }}
+			</div>
 		</modal>
 	</div>
 </template>
 
 <script>
-import { formatDistance } from "date-fns";
+import { format } from "date-fns";
 import marked from "marked";
 import { mapGetters, mapActions } from "vuex";
 
+import UserIdToUsername from "@/components/UserIdToUsername.vue";
 import Modal from "../Modal.vue";
 
 export default {
-	components: { Modal },
+	components: { Modal, UserIdToUsername },
 	data() {
 		return {
 			isModalActive: false,
@@ -29,12 +42,7 @@ export default {
 	computed: {
 		...mapGetters({
 			socket: "websockets/getSocket"
-		}),
-		timeCreated() {
-			return formatDistance(this.news.createdAt, new Date(), {
-				addSuffix: true
-			});
-		}
+		})
 	},
 	mounted() {
 		marked.use({
@@ -77,6 +85,9 @@ export default {
 	},
 	methods: {
 		marked,
+		formatDate: unix => {
+			return format(unix, "HH:ii:ss dd-MM-yyyy");
+		},
 		...mapActions("modalVisibility", ["openModal"])
 	}
 };
@@ -104,6 +115,10 @@ export default {
 
 .modal-card-title {
 	font-size: 14px;
+}
+
+.news-item {
+	box-shadow: unset !important;
 }
 
 .delete {

@@ -147,6 +147,16 @@
 			</div>
 		</template>
 		<template #footer>
+			<router-link
+				v-if="sector !== 'station'"
+				:to="{
+					name: 'station',
+					params: { id: station.name }
+				}"
+				class="button is-primary"
+			>
+				Go To Station
+			</router-link>
 			<a
 				class="button is-default"
 				v-if="isOwnerOrAdmin() && !station.partyMode"

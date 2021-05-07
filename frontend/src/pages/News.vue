@@ -3,12 +3,20 @@
 		<metadata title="News" />
 		<main-header />
 		<div class="container">
-			<div
-				v-for="item in news"
-				:key="item._id"
-				class="section news-item"
-				v-html="marked(item.markdown)"
-			></div>
+			<h1 class="has-text-centered">News</h1>
+			<div v-for="item in news" :key="item._id" class="section news-item">
+				<div v-html="marked(item.markdown)"></div>
+				<div class="info">
+					<hr />
+					By
+					<user-id-to-username
+						:user-id="item.createdBy"
+						:alt="item.createdBy"
+						:link="true"
+					/>
+					@ {{ formatDate(item.createdAt) }}
+				</div>
+			</div>
 			<h3 v-if="news.length === 0" class="has-text-centered page-title">
 				No news items were found.
 			</h3>
@@ -24,9 +32,10 @@ import marked from "marked";
 
 import MainHeader from "@/components/layout/MainHeader.vue";
 import MainFooter from "@/components/layout/MainFooter.vue";
+import UserIdToUsername from "@/components/UserIdToUsername.vue";
 
 export default {
-	components: { MainHeader, MainFooter },
+	components: { MainHeader, MainFooter, UserIdToUsername },
 	data() {
 		return {
 			news: []
@@ -67,7 +76,7 @@ export default {
 	methods: {
 		marked,
 		formatDate: unix => {
-			return format(unix, "dd-MM-yyyy");
+			return format(unix, "HH:ii:ss dd-MM-yyyy");
 		}
 	}
 };
