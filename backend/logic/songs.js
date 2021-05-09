@@ -949,7 +949,6 @@ class _SongsModule extends CoreClass {
 					(song, next) => {
 						if (!song) return next("This song does not exist.");
 						if (song.status === "hidden") return next("This song is already hidden.");
-						if (song.status === "verified") return next("Verified songs cannot be hidden.");
 						// TODO Add err object as first param of callback
 						return next();
 					},

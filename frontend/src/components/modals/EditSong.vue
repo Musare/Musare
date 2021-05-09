@@ -482,7 +482,7 @@
 				/>
 				<div class="right">
 					<button
-						v-if="song.status === 'unverified'"
+						v-if="song.status !== 'verified'"
 						class="button is-success"
 						@click="verify(song._id)"
 						content="Verify Song"
@@ -504,7 +504,7 @@
 						</button>
 					</confirm>
 					<confirm
-						v-if="song.status === 'unverified'"
+						v-if="song.status !== 'hidden'"
 						placement="left"
 						@confirm="hide(song._id)"
 					>
