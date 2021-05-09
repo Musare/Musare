@@ -109,8 +109,9 @@ export default {
 	}
 
 	.selected {
-		background-color: var(--dark-grey-3) !important;
+		background-color: var(--primary-color) !important;
 		color: var(--white) !important;
+		font-weight: 600;
 	}
 }
 
