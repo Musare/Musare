@@ -1,11 +1,26 @@
 <template>
 	<div v-if="news !== null">
-		<modal :title="`News posted ${timeCreated}`">
+		<modal title="News" class="what-is-news-modal">
 			<div slot="body">
 				<div
 					class="section news-item"
 					v-html="marked(news.markdown)"
 				></div>
+			</div>
+			<div slot="footer">
+				<span v-if="news.createdBy">
+					By
+					<user-id-to-username
+						:user-id="news.createdBy"
+						:alt="news.createdBy"
+						:link="true"/></span
+				><span :title="new Date(news.createdAt)">
+					{{
+						formatDistance(news.createdAt, new Date(), {
+							addSuffix: true
+						})
+					}}
+				</span>
 			</div>
 		</modal>
 	</div>
@@ -16,10 +31,11 @@ import { formatDistance } from "date-fns";
 import marked from "marked";
 import { mapGetters, mapActions } from "vuex";
 
+import UserIdToUsername from "@/components/UserIdToUsername.vue";
 import Modal from "../Modal.vue";
 
 export default {
-	components: { Modal },
+	components: { Modal, UserIdToUsername },
 	data() {
 		return {
 			isModalActive: false,
@@ -29,12 +45,7 @@ export default {
 	computed: {
 		...mapGetters({
 			socket: "websockets/getSocket"
-		}),
-		timeCreated() {
-			return formatDistance(this.news.createdAt, new Date(), {
-				addSuffix: true
-			});
-		}
+		})
 	},
 	mounted() {
 		marked.use({
@@ -77,10 +88,23 @@ export default {
 	},
 	methods: {
 		marked,
+		formatDistance,
 		...mapActions("modalVisibility", ["openModal"])
 	}
 };
 </script>
+
+<style lang="scss">
+.what-is-news-modal {
+	.modal-card {
+		.modal-card-foot {
+			span:not(:last-child) {
+				margin-right: 5px !important;
+			}
+		}
+	}
+}
+</style>
 
 <style lang="scss" scoped>
 .night-mode {
@@ -104,6 +128,10 @@ export default {
 
 .modal-card-title {
 	font-size: 14px;
+}
+
+.news-item {
+	box-shadow: unset !important;
 }
 
 .delete {

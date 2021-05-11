@@ -223,8 +223,14 @@ export default {
 					active: "Unknown"
 				},
 				{
+					name: "Johannes Andersen",
+					bio: "Official instance Moderator and QA Tester.",
+					active: "Unknown",
+					link: "https://github.com/Johannes-Andersen"
+				},
+				{
 					name: "Adryd",
-					bio: "Created Logo.",
+					bio: "Created Logo and Notes image.",
 					active: "May 2016",
 					link: "https://github.com/Adryd"
 				}
@@ -241,10 +247,6 @@ export default {
 				{
 					name: "Wesley McCann",
 					link: "https://github.com/Septimus"
-				},
-				{
-					name: "Johannes Andersen",
-					link: "https://github.com/Johannes-Andersen"
 				}
 			]
 		};

@@ -203,7 +203,7 @@ class _SongsModule extends CoreClass {
 						} else {
 							const status =
 								(!payload.userId && config.get("hideAnonymousSongs")) ||
-									(payload.automaticallyRequested && config.get("hideAutomaticallyRequestedSongs"))
+								(payload.automaticallyRequested && config.get("hideAutomaticallyRequestedSongs"))
 									? "hidden"
 									: "unverified";
 
@@ -302,40 +302,53 @@ class _SongsModule extends CoreClass {
 							status
 						};
 						this.log("INFO", `Going to update playlists now for song ${_id}`);
-						DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this).then(playlistModel => {
-							playlistModel.updateMany(
-								{ "songs._id": song._id },
-								{ $set: { "songs.$": trimmedSong } },
-								err => {
-									if (err) next(err);
-									else
-										playlistModel.find({ "songs._id": song._id }, (err, playlists) => {
-											if (err) next(err);
-											else {
-												async.eachLimit(playlists, 1, (playlist, next) => {
-													PlaylistsModule.runJob("UPDATE_PLAYLIST", {
-														playlistId: playlist._id
-													}, this).then(() => {
-														next();
-													}).catch(err => {
-														next(err);
-													});
-												}, err => {
-													if (err) next(err);
-													else next(null, song)
-												});
-											}
-											// playlists.forEach(playlist => {
-											// 	PlaylistsModule.runJob("UPDATE_PLAYLIST", {
-											// 		playlistId: playlist._id
-											// 	});
-											// });
-										});
-								}
-							);
-						}).catch(err => {
-							next(err);
-						});
+						DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this)
+							.then(playlistModel => {
+								playlistModel.updateMany(
+									{ "songs._id": song._id },
+									{ $set: { "songs.$": trimmedSong } },
+									err => {
+										if (err) next(err);
+										else
+											playlistModel.find({ "songs._id": song._id }, (err, playlists) => {
+												if (err) next(err);
+												else {
+													async.eachLimit(
+														playlists,
+														1,
+														(playlist, next) => {
+															PlaylistsModule.runJob(
+																"UPDATE_PLAYLIST",
+																{
+																	playlistId: playlist._id
+																},
+																this
+															)
+																.then(() => {
+																	next();
+																})
+																.catch(err => {
+																	next(err);
+																});
+														},
+														err => {
+															if (err) next(err);
+															else next(null, song);
+														}
+													);
+												}
+												// playlists.forEach(playlist => {
+												// 	PlaylistsModule.runJob("UPDATE_PLAYLIST", {
+												// 		playlistId: playlist._id
+												// 	});
+												// });
+											});
+									}
+								);
+							})
+							.catch(err => {
+								next(err);
+							});
 					},
 
 					(song, next) => {
@@ -369,42 +382,55 @@ class _SongsModule extends CoreClass {
 						// 	);
 						// });
 						this.log("INFO", `Going to update stations now for song ${_id}`);
-						DBModule.runJob("GET_MODEL", { modelName: "station" }, this).then(stationModel => {
-							stationModel.updateMany(
-								{ "queue._id": song._id },
-								{
-									$set: {
-										"queue.$.youtubeId": youtubeId,
-										"queue.$.title": title,
-										"queue.$.artists": artists,
-										"queue.$.thumbnail": thumbnail,
-										"queue.$.duration": duration,
-										"queue.$.status": status
+						DBModule.runJob("GET_MODEL", { modelName: "station" }, this)
+							.then(stationModel => {
+								stationModel.updateMany(
+									{ "queue._id": song._id },
+									{
+										$set: {
+											"queue.$.youtubeId": youtubeId,
+											"queue.$.title": title,
+											"queue.$.artists": artists,
+											"queue.$.thumbnail": thumbnail,
+											"queue.$.duration": duration,
+											"queue.$.status": status
+										}
+									},
+									err => {
+										if (err) this.log("ERROR", err);
+										else
+											stationModel.find({ "queue._id": song._id }, (err, stations) => {
+												if (err) next(err);
+												else {
+													async.eachLimit(
+														stations,
+														1,
+														(station, next) => {
+															StationsModule.runJob(
+																"UPDATE_STATION",
+																{ stationId: station._id },
+																this
+															)
+																.then(() => {
+																	next();
+																})
+																.catch(err => {
+																	next(err);
+																});
+														},
+														err => {
+															if (err) next(err);
+															else next(null, song);
+														}
+													);
+												}
+											});
 									}
-								},
-								err => {
-									if (err) this.log("ERROR", err);
-									else
-										stationModel.find({ "queue._id": song._id }, (err, stations) => {
-											if (err) next(err);
-											else {
-												async.eachLimit(stations, 1, (station, next) => {
-													StationsModule.runJob("UPDATE_STATION", { stationId: station._id }, this).then(() => {
-														next();
-													}).catch(err => {
-														next(err);
-													});
-												}, err => {
-													if (err) next(err);
-													else next(null, song);
-												});
-											}
-										});
-								}
-							);
-						}).catch(err => {
-							next(err);
-						});
+								);
+							})
+							.catch(err => {
+								next(err);
+							});
 					},
 
 					(song, next) => {
@@ -923,7 +949,6 @@ class _SongsModule extends CoreClass {
 					(song, next) => {
 						if (!song) return next("This song does not exist.");
 						if (song.status === "hidden") return next("This song is already hidden.");
-						if (song.status === "verified") return next("Verified songs cannot be hidden.");
 						// TODO Add err object as first param of callback
 						return next();
 					},

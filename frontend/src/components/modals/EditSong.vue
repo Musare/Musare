@@ -207,7 +207,9 @@
 									>
 										<div
 											class="list-item-circle"
-											@click="removeTag('artists', index)"
+											@click="
+												removeTag('artists', artist)
+											"
 										>
 											<i class="material-icons">close</i>
 										</div>
@@ -278,7 +280,7 @@
 									>
 										<div
 											class="list-item-circle"
-											@click="removeTag('genres', index)"
+											@click="removeTag('genres', genre)"
 										>
 											<i class="material-icons">close</i>
 										</div>
@@ -480,7 +482,7 @@
 				/>
 				<div class="right">
 					<button
-						v-if="song.status === 'unverified'"
+						v-if="song.status !== 'verified'"
 						class="button is-success"
 						@click="verify(song._id)"
 						content="Verify Song"
@@ -502,7 +504,7 @@
 						</button>
 					</confirm>
 					<confirm
-						v-if="song.status === 'unverified'"
+						v-if="song.status !== 'hidden'"
 						placement="left"
 						@confirm="hide(song._id)"
 					>
@@ -578,8 +580,8 @@ export default {
 			songDataLoaded: false,
 			focusedElementBefore: null,
 			discogsQuery: "",
-			youtubeVideoDuration: 0.0,
-			youtubeVideoCurrentTime: 0.0,
+			youtubeVideoDuration: "0.000",
+			youtubeVideoCurrentTime: 0,
 			youtubeVideoNote: "",
 			useHTTPS: false,
 			discogs: {
@@ -589,6 +591,7 @@ export default {
 				disableLoadMore: false
 			},
 			volumeSliderValue: 0,
+			skipToLast10SecsPressed: false,
 			artistInputValue: "",
 			genreInputValue: "",
 			artistInputFocussed: false,
@@ -737,9 +740,11 @@ export default {
 							this.video.player.seekTo(this.song.skipDuration);
 							this.video.player.setVolume(volume);
 							if (volume > 0) this.video.player.unMute();
-							this.youtubeVideoDuration = this.video.player
-								.getDuration()
-								.toFixed(3);
+
+							const duration = this.video.player.getDuration();
+
+							console.log(1111, duration.toFixed(3));
+							this.youtubeVideoDuration = duration.toFixed(3);
 							this.youtubeVideoNote = "(~)";
 							this.playerReady = true;
 
@@ -748,7 +753,13 @@ export default {
 						onStateChange: event => {
 							this.drawCanvas();
 
-							if (event.data === 1) {
+							let skipToLast10SecsPressed = false;
+							if (this.skipToLast10SecsPressed) {
+								this.skipToLast10SecsPressed = false;
+								skipToLast10SecsPressed = true;
+							}
+
+							if (event.data === 1 && !skipToLast10SecsPressed) {
 								if (!this.video.autoPlayed) {
 									this.video.autoPlayed = true;
 									return this.video.player.stopVideo();
@@ -756,9 +767,46 @@ export default {
 
 								this.video.paused = false;
 								let youtubeDuration = this.video.player.getDuration();
-								this.youtubeVideoDuration = youtubeDuration.toFixed(
+								const newYoutubeVideoDuration = youtubeDuration.toFixed(
 									3
 								);
+
+								const songDurationNumber = Number(
+									this.song.duration
+								);
+								const songDurationNumber2 =
+									Number(this.song.duration) + 1;
+								const songDurationNumber3 =
+									Number(this.song.duration) - 1;
+								const fixedSongDuration = songDurationNumber.toFixed(
+									3
+								);
+								const fixedSongDuration2 = songDurationNumber2.toFixed(
+									3
+								);
+								const fixedSongDuration3 = songDurationNumber3.toFixed(
+									3
+								);
+
+								if (
+									this.youtubeVideoDuration !==
+										newYoutubeVideoDuration &&
+									(fixedSongDuration ===
+										this.youtubeVideoDuration ||
+										fixedSongDuration2 ===
+											this.youtubeVideoDuration ||
+										fixedSongDuration3 ===
+											this.youtubeVideoDuration)
+								)
+									this.song.duration = newYoutubeVideoDuration;
+
+								console.log(
+									2222,
+									newYoutubeVideoDuration,
+									this.video.player.getDuration()
+								);
+
+								this.youtubeVideoDuration = newYoutubeVideoDuration;
 								this.youtubeVideoNote = "";
 
 								if (this.song.duration === -1)
@@ -1368,6 +1416,7 @@ export default {
 					this.pauseVideo(false);
 					break;
 				case "skipToLast10Secs":
+					this.skipToLast10SecsPressed = true;
 					if (this.video.paused) this.pauseVideo(false);
 					this.video.player.seekTo(
 						this.song.duration - 10 + this.song.skipDuration
@@ -1380,6 +1429,7 @@ export default {
 				this.video.player.getVideoData().video_id !==
 				this.song.youtubeId
 			) {
+				this.song.duration = -1;
 				this.loadVideoById(this.song.youtubeId, this.song.skipDuration);
 			}
 			this.settings("play");
@@ -1392,27 +1442,29 @@ export default {
 		},
 		addTag(type) {
 			if (type === "genres") {
-				const genre = this.$refs["new-genre"].value
-					.toLowerCase()
-					.trim();
+				const genre = this.genreInputValue.trim();
 
-				if (this.song.genres.indexOf(genre) !== -1)
+				if (
+					this.song.genres
+						.map(genre => genre.toLowerCase())
+						.indexOf(genre.toLowerCase()) !== -1
+				)
 					return new Toast("Genre already exists");
 				if (genre) {
 					this.song.genres.push(genre);
-					this.$refs["new-genre"].value = "";
+					this.genreInputValue = "";
 					return false;
 				}
 
 				return new Toast("Genre cannot be empty");
 			}
 			if (type === "artists") {
-				const artist = this.$refs["new-artist"].value;
+				const artist = this.artistInputValue;
 				if (this.song.artists.indexOf(artist) !== -1)
 					return new Toast("Artist already exists");
-				if (this.$refs["new-artist"].value !== "") {
+				if (artist !== "") {
 					this.song.artists.push(artist);
-					this.$refs["new-artist"].value = "";
+					this.artistInputValue = "";
 					return false;
 				}
 				return new Toast("Artist cannot be empty");
@@ -1420,9 +1472,11 @@ export default {
 
 			return false;
 		},
-		removeTag(type, index) {
-			if (type === "genres") this.song.genres.splice(index, 1);
-			else if (type === "artists") this.song.artists.splice(index, 1);
+		removeTag(type, value) {
+			if (type === "genres")
+				this.song.genres.splice(this.song.genres.indexOf(value), 1);
+			else if (type === "artists")
+				this.song.artists.splice(this.song.artists.indexOf(value), 1);
 		},
 		drawCanvas() {
 			const canvasElement = this.$refs.durationCanvas;

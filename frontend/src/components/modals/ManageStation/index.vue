@@ -147,6 +147,16 @@
 			</div>
 		</template>
 		<template #footer>
+			<router-link
+				v-if="sector !== 'station'"
+				:to="{
+					name: 'station',
+					params: { id: station.name }
+				}"
+				class="button is-primary"
+			>
+				Go To Station
+			</router-link>
 			<a
 				class="button is-default"
 				v-if="isOwnerOrAdmin() && !station.partyMode"
@@ -605,8 +615,9 @@ export default {
 				}
 
 				.selected {
-					background-color: var(--dark-grey-3) !important;
+					background-color: var(--primary-color) !important;
 					color: var(--white) !important;
+					font-weight: 600;
 				}
 			}
 			.tab {

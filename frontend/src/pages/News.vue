@@ -4,18 +4,27 @@
 		<main-header />
 		<div class="container">
 			<div class="content-wrapper">
-				<h3 class=" has-text-centered page-title">
-					{{
-						news.length === 0 ? "No news items were found." : "News"
-					}}
-				</h3>
-
+				<h1 class="has-text-centered page-title">News</h1>
 				<div
 					v-for="item in news"
 					:key="item._id"
 					class="section news-item"
-					v-html="marked(item.markdown)"
-				></div>
+				>
+					<div v-html="marked(item.markdown)"></div>
+					<div class="info">
+						<hr />
+						By
+						<user-id-to-username
+							:user-id="item.createdBy"
+							:alt="item.createdBy"
+							:link="true"
+						/>
+						@ {{ formatDate(item.createdAt) }}
+					</div>
+				</div>
+				<h3 v-if="news.length === 0" class="has-text-centered">
+					No news items were found.
+				</h3>
 			</div>
 		</div>
 		<main-footer />
@@ -29,9 +38,10 @@ import marked from "marked";
 
 import MainHeader from "@/components/layout/MainHeader.vue";
 import MainFooter from "@/components/layout/MainFooter.vue";
+import UserIdToUsername from "@/components/UserIdToUsername.vue";
 
 export default {
-	components: { MainHeader, MainFooter },
+	components: { MainHeader, MainFooter, UserIdToUsername },
 	data() {
 		return {
 			news: []
@@ -72,7 +82,7 @@ export default {
 	methods: {
 		marked,
 		formatDate: unix => {
-			return format(unix, "dd-MM-yyyy");
+			return format(unix, "HH:ii:ss dd-MM-yyyy");
 		}
 	}
 };

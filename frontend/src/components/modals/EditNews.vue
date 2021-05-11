@@ -38,6 +38,21 @@
 				type="save-and-close"
 				@clicked="newsId ? update(true) : create(true)"
 			/>
+			<div class="right" v-if="createdAt > 0">
+				<span>
+					By
+					<user-id-to-username
+						:user-id="createdBy"
+						:alt="createdBy"
+						:link="true"/></span
+				><span :title="new Date(createdAt)">
+					{{
+						formatDistance(createdAt, new Date(), {
+							addSuffix: true
+						})
+					}}
+				</span>
+			</div>
 		</div>
 	</modal>
 </template>
@@ -46,20 +61,25 @@
 import { mapActions, mapGetters, mapState } from "vuex";
 import marked from "marked";
 import Toast from "toasters";
+import { formatDistance } from "date-fns";
 
+import UserIdToUsername from "@/components/UserIdToUsername.vue";
 import SaveButton from "../SaveButton.vue";
 import Modal from "../Modal.vue";
 
 export default {
-	components: { Modal, SaveButton },
+	components: { Modal, SaveButton, UserIdToUsername },
 	props: {
 		newsId: { type: String, default: "" },
 		sector: { type: String, default: "admin" }
 	},
 	data() {
 		return {
-			markdown: "# Example\n## Subheading goes here",
-			status: "published"
+			markdown:
+				"# Header\n ## Sub-Header\n- **So**\n- _Many_\n- ~Points~\n\nOther things you want to say and [link](https://example.com).\n\n### Sub-Sub-Header\n> Oh look, a quote!\n\n`lil code`\n\n```\nbig code\n```\n",
+			status: "published",
+			createdBy: null,
+			createdAt: 0
 		};
 	},
 	computed: {
@@ -81,9 +101,16 @@ export default {
 		if (this.newsId) {
 			this.socket.dispatch(`news.getNewsFromId`, this.newsId, res => {
 				if (res.status === "success") {
-					const { markdown, status } = res.data.news;
+					const {
+						markdown,
+						status,
+						createdBy,
+						createdAt
+					} = res.data.news;
 					this.markdown = markdown;
 					this.status = status;
+					this.createdBy = createdBy;
+					this.createdAt = createdAt;
 				} else {
 					new Toast("News with that ID not found.");
 					this.closeModal("editNews");
@@ -158,6 +185,7 @@ export default {
 				}
 			);
 		},
+		formatDistance,
 		...mapActions("modalVisibility", ["closeModal"]),
 		...mapActions("modals/editNews", [
 			"editNews",
@@ -172,6 +200,13 @@ export default {
 .edit-news-modal {
 	.modal-card {
 		width: 1300px;
+		.modal-card-foot .right {
+			margin: auto 0 auto auto !important;
+
+			span:not(:last-child) {
+				margin-right: 0 !important;
+			}
+		}
 	}
 }
 </style>
