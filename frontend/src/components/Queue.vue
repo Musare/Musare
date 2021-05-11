@@ -182,9 +182,16 @@ export default {
 			loggedIn: state => state.user.auth.loggedIn,
 			userId: state => state.user.auth.userId,
 			userRole: state => state.user.auth.role,
-			station: state => state.station.station,
-			songsList: state => state.station.songsList,
-			otherSongsList: state => state.modals.manageStation.songsList,
+			station(state) {
+				return this.sector === "station"
+					? state.station.station
+					: state.modals.manageStation.station;
+			},
+			songsList(state) {
+				return this.sector === "station"
+					? state.station.songsList
+					: state.modals.manageStation.songsList;
+			},
 			noSong: state => state.station.noSong
 		}),
 		...mapGetters({

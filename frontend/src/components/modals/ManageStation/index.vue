@@ -148,7 +148,7 @@
 		</template>
 		<template #footer>
 			<router-link
-				v-if="sector !== 'station'"
+				v-if="sector !== 'station' && station.name"
 				:to="{
 					name: 'station',
 					params: { id: station.name }
