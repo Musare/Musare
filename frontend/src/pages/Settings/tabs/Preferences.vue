@@ -107,7 +107,7 @@ export default {
 			}
 		});
 
-		this.socket.on("keep.event:user.preferences.changed", res => {
+		this.socket.on("keep.event:user.preferences.updated", res => {
 			const { preferences } = res.data;
 
 			this.localNightmode = preferences.nightmode;

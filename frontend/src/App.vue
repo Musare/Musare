@@ -152,7 +152,7 @@ export default {
 			}
 		});
 
-		this.socket.on("keep.event:user.session.removed", () =>
+		this.socket.on("keep.event:user.session.deleted", () =>
 			window.location.reload()
 		);
 	},

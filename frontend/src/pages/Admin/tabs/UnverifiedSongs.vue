@@ -233,11 +233,11 @@ export default {
 		}
 	},
 	mounted() {
-		this.socket.on("event:admin.unverifiedSong.added", res => {
+		this.socket.on("event:admin.unverifiedSong.created", res => {
 			this.addSong(res.data.song);
 		});
 
-		this.socket.on("event:admin.unverifiedSong.removed", res => {
+		this.socket.on("event:admin.unverifiedSong.deleted", res => {
 			this.removeSong(res.data.songId);
 		});
 

@@ -18,13 +18,13 @@ CacheModule.runJob("SUB", {
 	channel: "playlist.create",
 	cb: playlist => {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: playlist.createdBy }, this).then(sockets =>
-			sockets.forEach(socket => socket.dispatch("event:playlist.create", { data: { playlist } }))
+			sockets.forEach(socket => socket.dispatch("d", { data: { playlist } }))
 		);
 
 		if (playlist.privacy === "public")
 			WSModule.runJob("EMIT_TO_ROOM", {
 				room: `profile-${playlist.createdBy}-playlists`,
-				args: ["event:playlist.create", { data: { playlist } }]
+				args: ["event:playlist.created", { data: { playlist } }]
 			});
 	}
 });
@@ -34,13 +34,13 @@ CacheModule.runJob("SUB", {
 	cb: res => {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
 			sockets.forEach(socket => {
-				socket.dispatch("event:playlist.delete", { data: { playlistId: res.playlistId } });
+				socket.dispatch("event:playlist.deleted", { data: { playlistId: res.playlistId } });
 			});
 		});
 
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `profile-${res.userId}-playlists`,
-			args: ["event:playlist.delete", { data: { playlistId: res.playlistId } }]
+			args: ["event:playlist.deleted", { data: { playlistId: res.playlistId } }]
 		});
 	}
 });
@@ -50,7 +50,7 @@ CacheModule.runJob("SUB", {
 	cb: res => {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets =>
 			sockets.forEach(socket =>
-				socket.dispatch("event:playlist.repositionSongs", {
+				socket.dispatch("event:playlist.songs.repositioned", {
 					data: {
 						playlistId: res.playlistId,
 						songsBeingChanged: res.songsBeingChanged
@@ -66,7 +66,7 @@ CacheModule.runJob("SUB", {
 	cb: res => {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
 			sockets.forEach(socket => {
-				socket.dispatch("event:playlist.addSong", {
+				socket.dispatch("event:playlist.song.added", {
 					data: {
 						playlistId: res.playlistId,
 						song: res.song
@@ -79,7 +79,7 @@ CacheModule.runJob("SUB", {
 			WSModule.runJob("EMIT_TO_ROOM", {
 				room: `profile-${res.userId}-playlists`,
 				args: [
-					"event:playlist.addSong",
+					"event:playlist.song.added",
 					{
 						data: {
 							playlistId: res.playlistId,
@@ -96,7 +96,7 @@ CacheModule.runJob("SUB", {
 	cb: res => {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
 			sockets.forEach(socket => {
-				socket.dispatch("event:playlist.removeSong", {
+				socket.dispatch("event:playlist.song.removed", {
 					data: {
 						playlistId: res.playlistId,
 						youtubeId: res.youtubeId
@@ -109,7 +109,7 @@ CacheModule.runJob("SUB", {
 			WSModule.runJob("EMIT_TO_ROOM", {
 				room: `profile-${res.userId}-playlists`,
 				args: [
-					"event:playlist.removeSong",
+					"event:playlist.song.removed",
 					{
 						data: {
 							playlistId: res.playlistId,
@@ -126,7 +126,7 @@ CacheModule.runJob("SUB", {
 	cb: res => {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
 			sockets.forEach(socket => {
-				socket.dispatch("event:playlist.updateDisplayName", {
+				socket.dispatch("event:playlist.displayName.updated", {
 					data: {
 						playlistId: res.playlistId,
 						displayName: res.displayName
@@ -139,7 +139,7 @@ CacheModule.runJob("SUB", {
 			WSModule.runJob("EMIT_TO_ROOM", {
 				room: `profile-${res.userId}-playlists`,
 				args: [
-					"event:playlist.updateDisplayName",
+					"event:playlist.displayName.updated",
 					{
 						data: {
 							playlistId: res.playlistId,
@@ -156,7 +156,7 @@ CacheModule.runJob("SUB", {
 	cb: res => {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
 			sockets.forEach(socket => {
-				socket.dispatch("event:playlist.updatePrivacy", {
+				socket.dispatch("event:playlist.privacy.updated", {
 					data: {
 						playlist: res.playlist
 					}
@@ -168,7 +168,7 @@ CacheModule.runJob("SUB", {
 			return WSModule.runJob("EMIT_TO_ROOM", {
 				room: `profile-${res.userId}-playlists`,
 				args: [
-					"event:playlist.create",
+					"event:playlist.created",
 					{
 						data: {
 							playlist: res.playlist
@@ -180,7 +180,7 @@ CacheModule.runJob("SUB", {
 		return WSModule.runJob("EMIT_TO_ROOM", {
 			room: `profile-${res.userId}-playlists`,
 			args: [
-				"event:playlist.delete",
+				"event:playlist.deleted",
 				{
 					data: {
 						playlistId: res.playlist._id

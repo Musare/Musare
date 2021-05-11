@@ -951,7 +951,7 @@ class _StationsModule extends CoreClass {
 						WSModule.runJob("EMIT_TO_ROOM", {
 							room: `station.${station._id}`,
 							args: [
-								"event:songs.next",
+								"event:station.nextSong",
 								{
 									data: {
 										currentSong: station.currentSong,

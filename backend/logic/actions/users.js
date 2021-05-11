@@ -24,7 +24,7 @@ CacheModule.runJob("SUB", {
 	cb: res => {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
 			sockets.forEach(socket => {
-				socket.dispatch("keep.event:user.preferences.changed", { data: { preferences: res.preferences } });
+				socket.dispatch("keep.event:user.preferences.updated", { data: { preferences: res.preferences } });
 			});
 		});
 	}
@@ -35,7 +35,7 @@ CacheModule.runJob("SUB", {
 	cb: res => {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
 			sockets.forEach(socket => {
-				socket.dispatch("event:user.orderOfFavoriteStations.changed", {
+				socket.dispatch("event:user.orderOfFavoriteStations.updated", {
 					data: { order: res.favoriteStations }
 				});
 			});
@@ -48,13 +48,13 @@ CacheModule.runJob("SUB", {
 	cb: res => {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
 			sockets.forEach(socket => {
-				socket.dispatch("event:user.orderOfPlaylists.changed", { data: { order: res.orderOfPlaylists } });
+				socket.dispatch("event:user.orderOfPlaylists.updated", { data: { order: res.orderOfPlaylists } });
 			});
 		});
 
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `profile-${res.userId}-playlists`,
-			args: ["event:user.orderOfPlaylists.changed", { data: { order: res.orderOfPlaylists } }]
+			args: ["event:user.orderOfPlaylists.updated", { data: { order: res.orderOfPlaylists } }]
 		});
 	}
 });
@@ -64,7 +64,7 @@ CacheModule.runJob("SUB", {
 	cb: user => {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: user._id }).then(sockets => {
 			sockets.forEach(socket => {
-				socket.dispatch("event:user.username.changed", { data: { username: user.username } });
+				socket.dispatch("event:user.username.updated", { data: { username: user.username } });
 			});
 		});
 	}
@@ -74,7 +74,7 @@ CacheModule.runJob("SUB", {
 	channel: "user.removeSessions",
 	cb: userId => {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId }).then(sockets =>
-			sockets.forEach(socket => socket.dispatch("keep.event:user.session.removed"))
+			sockets.forEach(socket => socket.dispatch("keep.event:user.session.deleted"))
 		);
 	}
 });
@@ -84,7 +84,7 @@ CacheModule.runJob("SUB", {
 	cb: userId => {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId }).then(sockets => {
 			sockets.forEach(socket => {
-				socket.dispatch("event:user.linkPassword");
+				socket.dispatch("event:user.password.linked");
 			});
 		});
 	}
@@ -95,7 +95,7 @@ CacheModule.runJob("SUB", {
 	cb: userId => {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId }).then(sockets => {
 			sockets.forEach(socket => {
-				socket.dispatch("event:user.unlinkPassword");
+				socket.dispatch("event:user.password.unlinked");
 			});
 		});
 	}
@@ -106,7 +106,7 @@ CacheModule.runJob("SUB", {
 	cb: userId => {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId }).then(sockets => {
 			sockets.forEach(socket => {
-				socket.dispatch("event:user.linkGithub");
+				socket.dispatch("event:user.github.linked");
 			});
 		});
 	}
@@ -117,7 +117,7 @@ CacheModule.runJob("SUB", {
 	cb: userId => {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId }).then(sockets => {
 			sockets.forEach(socket => {
-				socket.dispatch("event:user.unlinkGithub");
+				socket.dispatch("event:user.github.unlinked");
 			});
 		});
 	}
@@ -128,7 +128,7 @@ CacheModule.runJob("SUB", {
 	cb: data => {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
 			sockets.forEach(socket => {
-				socket.dispatch("keep.event:banned", { data: { ban: data.punishment } });
+				socket.dispatch("keep.event:user.banned", { data: { ban: data.punishment } });
 				socket.disconnect(true);
 			});
 		});
@@ -140,7 +140,7 @@ CacheModule.runJob("SUB", {
 	cb: data => {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
 			sockets.forEach(socket => {
-				socket.dispatch("event:user.favoritedStation", { data: { stationId: data.stationId } });
+				socket.dispatch("event:user.station.favorited", { data: { stationId: data.stationId } });
 			});
 		});
 	}
@@ -151,7 +151,7 @@ CacheModule.runJob("SUB", {
 	cb: data => {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
 			sockets.forEach(socket => {
-				socket.dispatch("event:user.unfavoritedStation", { data: { stationId: data.stationId } });
+				socket.dispatch("event:user.station.unfavorited", { data: { stationId: data.stationId } });
 			});
 		});
 	}

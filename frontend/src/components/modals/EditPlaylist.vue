@@ -452,7 +452,7 @@ export default {
 		});
 
 		this.socket.on(
-			"event:playlist.addSong",
+			"event:playlist.song.added",
 			res => {
 				if (this.playlist._id === res.data.playlistId)
 					this.playlist.songs.push(res.data.song);
@@ -463,7 +463,7 @@ export default {
 		);
 
 		this.socket.on(
-			"event:playlist.removeSong",
+			"event:playlist.song.removed",
 			res => {
 				if (this.playlist._id === res.data.playlistId) {
 					// remove song from array of playlists
@@ -488,7 +488,7 @@ export default {
 		);
 
 		this.socket.on(
-			"event:playlist.updateDisplayName",
+			"event:playlist.displayName.updated",
 			res => {
 				if (this.playlist._id === res.data.playlistId)
 					this.playlist.displayName = res.data.displayName;
@@ -499,7 +499,7 @@ export default {
 		);
 
 		this.socket.on(
-			"event:playlist.repositionSongs",
+			"event:playlist.songs.repositioned",
 			res => {
 				if (this.playlist._id === res.data.playlistId) {
 					// for each song that has a new position

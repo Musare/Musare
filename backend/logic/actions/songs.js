@@ -23,12 +23,12 @@ CacheModule.runJob("SUB", {
 		songModel.findOne({ _id: songId }, (err, song) => {
 			WSModule.runJob("EMIT_TO_ROOM", {
 				room: "admin.unverifiedSongs",
-				args: ["event:admin.unverifiedSong.added", { data: { song } }]
+				args: ["event:admin.unverifiedSong.created", { data: { song } }]
 			});
 
 			WSModule.runJob("EMIT_TO_ROOM", {
 				room: `edit-song.${songId}`,
-				args: ["event:admin.unverifiedSong.added", { data: { song } }]
+				args: ["event:admin.unverifiedSong.created", { data: { song } }]
 			});
 		});
 	}
@@ -39,7 +39,7 @@ CacheModule.runJob("SUB", {
 	cb: songId => {
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.unverifiedSongs",
-			args: ["event:admin.unverifiedSong.removed", { data: { songId } }]
+			args: ["event:admin.unverifiedSong.deleted", { data: { songId } }]
 		});
 	}
 });
@@ -67,12 +67,12 @@ CacheModule.runJob("SUB", {
 		songModel.findOne({ _id: songId }, (err, song) => {
 			WSModule.runJob("EMIT_TO_ROOM", {
 				room: "admin.songs",
-				args: ["event:admin.verifiedSong.added", { data: { song } }]
+				args: ["event:admin.verifiedSong.created", { data: { song } }]
 			});
 
 			WSModule.runJob("EMIT_TO_ROOM", {
 				room: `edit-song.${songId}`,
-				args: ["event:admin.verifiedSong.added", { data: { song } }]
+				args: ["event:admin.verifiedSong.created", { data: { song } }]
 			});
 		});
 	}
@@ -83,7 +83,7 @@ CacheModule.runJob("SUB", {
 	cb: songId => {
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.songs",
-			args: ["event:admin.verifiedSong.removed", { data: { songId } }]
+			args: ["event:admin.verifiedSong.deleted", { data: { songId } }]
 		});
 	}
 });
@@ -110,12 +110,12 @@ CacheModule.runJob("SUB", {
 		songModel.findOne({ _id: songId }, (err, song) => {
 			WSModule.runJob("EMIT_TO_ROOM", {
 				room: "admin.hiddenSongs",
-				args: ["event:admin.hiddenSong.added", { data: { song } }]
+				args: ["event:admin.hiddenSong.created", { data: { song } }]
 			});
 
 			WSModule.runJob("EMIT_TO_ROOM", {
 				room: `edit-song.${songId}`,
-				args: ["event:admin.hiddenSong.added", { data: { song } }]
+				args: ["event:admin.hiddenSong.created", { data: { song } }]
 			});
 		});
 	}
@@ -126,7 +126,7 @@ CacheModule.runJob("SUB", {
 	cb: songId => {
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.hiddenSongs",
-			args: ["event:admin.hiddenSong.removed", { data: { songId } }]
+			args: ["event:admin.hiddenSong.deleted", { data: { songId } }]
 		});
 	}
 });
@@ -153,7 +153,7 @@ CacheModule.runJob("SUB", {
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `song.${data.youtubeId}`,
 			args: [
-				"event:song.like",
+				"event:song.liked",
 				{
 					data: { youtubeId: data.youtubeId, likes: data.likes, dislikes: data.dislikes }
 				}
@@ -162,7 +162,7 @@ CacheModule.runJob("SUB", {
 
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
 			sockets.forEach(socket => {
-				socket.dispatch("event:song.newRatings", {
+				socket.dispatch("event:song.ratings.updated", {
 					data: {
 						youtubeId: data.youtubeId,
 						liked: true,
@@ -180,15 +180,16 @@ CacheModule.runJob("SUB", {
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `song.${data.youtubeId}`,
 			args: [
-				"event:song.dislike",
+				"event:song.disliked",
 				{
 					data: { youtubeId: data.youtubeId, likes: data.likes, dislikes: data.dislikes }
 				}
 			]
 		});
+
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
 			sockets.forEach(socket => {
-				socket.dispatch("event:song.newRatings", {
+				socket.dispatch("event:song.ratings.updated", {
 					data: {
 						youtubeId: data.youtubeId,
 						liked: false,
@@ -206,15 +207,16 @@ CacheModule.runJob("SUB", {
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `song.${data.youtubeId}`,
 			args: [
-				"event:song.unlike",
+				"event:song.unliked",
 				{
 					data: { youtubeId: data.youtubeId, likes: data.likes, dislikes: data.dislikes }
 				}
 			]
 		});
+
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
 			sockets.forEach(socket => {
-				socket.dispatch("event:song.newRatings", {
+				socket.dispatch("event:song.ratings.updated", {
 					data: {
 						youtubeId: data.youtubeId,
 						liked: false,
@@ -232,15 +234,16 @@ CacheModule.runJob("SUB", {
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `song.${data.youtubeId}`,
 			args: [
-				"event:song.undislike",
+				"event:song.undisliked",
 				{
 					data: { youtubeId: data.youtubeId, likes: data.likes, dislikes: data.dislikes }
 				}
 			]
 		});
+
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
 			sockets.forEach(socket => {
-				socket.dispatch("event:song.newRatings", {
+				socket.dispatch("event:song.ratings.updated", {
 					data: {
 						youtubeId: data.youtubeId,
 						liked: false,

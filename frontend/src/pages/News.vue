@@ -97,7 +97,7 @@ export default {
 			}
 		});
 
-		this.socket.on("event:news.removed", res => {
+		this.socket.on("event:news.deleted", res => {
 			this.news = this.news.filter(item => item._id !== res.data.newsId);
 		});
 

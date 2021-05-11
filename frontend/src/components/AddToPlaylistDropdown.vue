@@ -77,11 +77,11 @@ export default {
 			}
 		});
 
-		this.socket.on("event:playlist.create", res => {
+		this.socket.on("event:playlist.created", res => {
 			this.playlists.push(res.data.playlist);
 		});
 
-		this.socket.on("event:playlist.delete", res => {
+		this.socket.on("event:playlist.deleted", res => {
 			this.playlists.forEach((playlist, index) => {
 				if (playlist._id === res.data.playlistId) {
 					this.playlists.splice(index, 1);
@@ -89,7 +89,7 @@ export default {
 			});
 		});
 
-		this.socket.on("event:playlist.updateDisplayName", res => {
+		this.socket.on("event:playlist.displayName.updated", res => {
 			this.playlists.forEach((playlist, index) => {
 				if (playlist._id === res.data.playlistId) {
 					this.playlists[index].displayName = res.data.displayName;

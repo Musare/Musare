@@ -326,11 +326,11 @@ export default {
 		}
 	},
 	mounted() {
-		this.socket.on("event:admin.verifiedSong.added", res =>
+		this.socket.on("event:admin.verifiedSong.created", res =>
 			this.addSong(res.data.song)
 		);
 
-		this.socket.on("event:admin.verifiedSong.removed", res =>
+		this.socket.on("event:admin.verifiedSong.deleted", res =>
 			this.removeSong(res.data.songId)
 		);
 

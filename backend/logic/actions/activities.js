@@ -29,12 +29,12 @@ CacheModule.runJob("SUB", {
 		const { activityId, userId } = res;
 
 		WSModule.runJob("SOCKETS_FROM_USER", { userId }, this).then(sockets =>
-			sockets.forEach(socket => socket.dispatch("event:activity.hide", { data: { activityId } }))
+			sockets.forEach(socket => socket.dispatch("event:activity.hidden", { data: { activityId } }))
 		);
 
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `profile-${userId}-activities`,
-			args: ["event:activity.hide", { data: { activityId } }]
+			args: ["event:activity.hidden", { data: { activityId } }]
 		});
 	}
 });

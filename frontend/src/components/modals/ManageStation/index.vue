@@ -289,7 +289,7 @@ export default {
 				);
 
 				this.socket.on(
-					"event:station.updateName",
+					"event:station.name.updated",
 					res => {
 						this.station.name = res.data.name;
 					},
@@ -297,7 +297,7 @@ export default {
 				);
 
 				this.socket.on(
-					"event:station.updateDisplayName",
+					"event:station.displayName.updated",
 					res => {
 						this.station.displayName = res.data.displayName;
 					},
@@ -305,7 +305,7 @@ export default {
 				);
 
 				this.socket.on(
-					"event:station.updateDescription",
+					"event:station.description.updated",
 					res => {
 						this.station.description = res.data.description;
 					},
@@ -313,7 +313,7 @@ export default {
 				);
 
 				this.socket.on(
-					"event:partyMode.updated",
+					"event:station.partyMode.updated",
 					res => {
 						if (this.station.type === "community")
 							this.station.partyMode = res.data.partyMode;
@@ -322,7 +322,7 @@ export default {
 				);
 
 				this.socket.on(
-					"event:playMode.updated",
+					"event:station.playMode.updated",
 					res => {
 						this.station.playMode = res.data.playMode;
 					},
@@ -330,7 +330,7 @@ export default {
 				);
 
 				this.socket.on(
-					"event:station.themeUpdated",
+					"event:station.theme.updated",
 					res => {
 						const { theme } = res.data;
 						this.station.theme = theme;
@@ -339,7 +339,7 @@ export default {
 				);
 
 				this.socket.on(
-					"event:station.updatePrivacy",
+					"event:station.privacy.updated",
 					res => {
 						this.station.privacy = res.data.privacy;
 					},
@@ -347,7 +347,7 @@ export default {
 				);
 
 				this.socket.on(
-					"event:queueLockToggled",
+					"event:station.queue.lock.toggled",
 					res => {
 						this.station.locked = res.data.locked;
 					},
@@ -412,31 +412,31 @@ export default {
 		});
 
 		this.socket.on(
-			"event:queue.update",
+			"event:station.queue.updated",
 			res => this.updateSongsList(res.data.queue),
 			{ modal: "manageStation" }
 		);
 
 		this.socket.on(
-			"event:queue.repositionSong",
+			"event:station.queue.song.repositioned",
 			res => this.repositionSongInList(res.data.song),
 			{ modal: "manageStation" }
 		);
 
 		this.socket.on(
-			"event:stations.pause",
+			"event:station.pause",
 			() => this.updateStationPaused(true),
 			{ modal: "manageStation" }
 		);
 
 		this.socket.on(
-			"event:stations.resume",
+			"event:station.resume",
 			() => this.updateStationPaused(false),
 			{ modal: "manageStation" }
 		);
 
 		this.socket.on(
-			"event:songs.next",
+			"event:station.nextSong",
 			res => {
 				const { currentSong } = res.data;
 

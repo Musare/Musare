@@ -195,15 +195,15 @@ lofig.folder = "../config/default.json";
 		});
 	});
 
-	ws.socket.on("keep.event:banned", res =>
+	ws.socket.on("keep.event:user.banned", res =>
 		store.dispatch("user/auth/banUser", res.data.ban)
 	);
 
-	ws.socket.on("event:user.username.changed", res =>
+	ws.socket.on("event:user.username.updated", res =>
 		store.dispatch("user/auth/updateUsername", res.data.username)
 	);
 
-	ws.socket.on("keep.event:user.preferences.changed", res => {
+	ws.socket.on("keep.event:user.preferences.updated", res => {
 		const { preferences } = res.data;
 
 		store.dispatch(

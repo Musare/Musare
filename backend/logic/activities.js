@@ -75,7 +75,7 @@ class _ActivitiesModule extends CoreClass {
 						WSModule.runJob("SOCKETS_FROM_USER", { userId: activity.userId }, this)
 							.then(sockets => {
 								sockets.forEach(socket =>
-									socket.dispatch("event:activity.create", { data: { activity } })
+									socket.dispatch("event:activity.created", { data: { activity } })
 								);
 								next(null, activity);
 							})
@@ -85,7 +85,7 @@ class _ActivitiesModule extends CoreClass {
 					(activity, next) => {
 						WSModule.runJob("EMIT_TO_ROOM", {
 							room: `profile-${activity.userId}-activities`,
-							args: ["event:activity.create", { data: { activity } }]
+							args: ["event:activity.created", { data: { activity } }]
 						});
 
 						return next(null, activity);
@@ -231,14 +231,14 @@ class _ActivitiesModule extends CoreClass {
 							WSModule.runJob("SOCKETS_FROM_USER", { userId: payload.userId }, this)
 								.then(sockets =>
 									sockets.forEach(socket =>
-										socket.dispatch("event:activity.hide", { data: { activityId: activity._id } })
+										socket.dispatch("event:activity.hidden", { data: { activityId: activity._id } })
 									)
 								)
 								.catch(next);
 
 							WSModule.runJob("EMIT_TO_ROOM", {
 								room: `profile-${payload.userId}-activities`,
-								args: ["event:activity.hide", { data: { activityId: activity._id } }]
+								args: ["event:activity.hidden", { data: { activityId: activity._id } }]
 							});
 
 							if (activity.type === payload.type) howManySongs += 1;
@@ -375,7 +375,7 @@ class _ActivitiesModule extends CoreClass {
 										WSModule.runJob("SOCKETS_FROM_USER", { userId: activity.userId })
 											.then(sockets =>
 												sockets.forEach(socket =>
-													socket.dispatch("event:activity.update", {
+													socket.dispatch("event:activity.updated", {
 														data: {
 															activityId: activity._id,
 															message: activity.payload.message
@@ -388,7 +388,7 @@ class _ActivitiesModule extends CoreClass {
 										WSModule.runJob("EMIT_TO_ROOM", {
 											room: `profile-${activity.userId}-activities`,
 											args: [
-												"event:activity.update",
+												"event:activity.updated",
 												{
 													data: {
 														activityId: activity._id,
@@ -459,14 +459,14 @@ class _ActivitiesModule extends CoreClass {
 							WSModule.runJob("SOCKETS_FROM_USER", { userId: payload.userId }, this)
 								.then(sockets =>
 									sockets.forEach(socket =>
-										socket.dispatch("event:activity.hide", { data: { activityId: activity._id } })
+										socket.dispatch("event:activity.hidden", { data: { activityId: activity._id } })
 									)
 								)
 								.catch(next);
 
 							WSModule.runJob("EMIT_TO_ROOM", {
 								room: `profile-${payload.userId}-activities`,
-								args: ["event:activity.hide", { data: { activityId: activity._id } }]
+								args: ["event:activity.hidden", { data: { activityId: activity._id } }]
 							});
 						});
 

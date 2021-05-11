@@ -220,11 +220,11 @@ export default {
 		}
 	},
 	mounted() {
-		this.socket.on("event:admin.hiddenSong.added", res => {
+		this.socket.on("event:admin.hiddenSong.created", res => {
 			this.addSong(res.data.song);
 		});
 
-		this.socket.on("event:admin.hiddenSong.removed", res => {
+		this.socket.on("event:admin.hiddenSong.deleted", res => {
 			this.removeSong(res.data.songId);
 		});
 

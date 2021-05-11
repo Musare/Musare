@@ -30,12 +30,12 @@ CacheModule.runJob("SUB", {
 	cb: newsId => {
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.news",
-			args: ["event:admin.news.removed", { data: { newsId } }]
+			args: ["event:admin.news.deleted", { data: { newsId } }]
 		});
 
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: "news",
-			args: ["event:news.removed", { data: { newsId } }]
+			args: ["event:news.deleted", { data: { newsId } }]
 		});
 	}
 });

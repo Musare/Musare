@@ -35,13 +35,13 @@ export default {
 	},
 	mounted() {
 		this.socket.on(
-			"event:playlist.create",
+			"event:playlist.created",
 			res => this.playlists.push(res.data.playlist),
 			{ replaceable: true }
 		);
 
 		this.socket.on(
-			"event:playlist.delete",
+			"event:playlist.deleted",
 			res => {
 				this.playlists.forEach((playlist, index) => {
 					if (playlist._id === res.data.playlistId) {
@@ -53,7 +53,7 @@ export default {
 		);
 
 		this.socket.on(
-			"event:playlist.addSong",
+			"event:playlist.song.added",
 			res => {
 				this.playlists.forEach((playlist, index) => {
 					if (playlist._id === res.data.playlistId) {
@@ -65,7 +65,7 @@ export default {
 		);
 
 		this.socket.on(
-			"event:playlist.removeSong",
+			"event:playlist.song.removed",
 			res => {
 				this.playlists.forEach((playlist, index) => {
 					if (playlist._id === res.data.playlistId) {
@@ -81,7 +81,7 @@ export default {
 		);
 
 		this.socket.on(
-			"event:playlist.updateDisplayName",
+			"event:playlist.displayName.updated",
 			res => {
 				this.playlists.forEach((playlist, index) => {
 					if (playlist._id === res.data.playlistId) {
@@ -94,7 +94,7 @@ export default {
 		);
 
 		this.socket.on(
-			"event:playlist.updatePrivacy",
+			"event:playlist.privacy.updated",
 			res => {
 				this.playlists.forEach((playlist, index) => {
 					if (playlist._id === res.data.playlist._id) {
@@ -107,7 +107,7 @@ export default {
 		);
 
 		this.socket.on(
-			"event:user.orderOfPlaylists.changed",
+			"event:user.orderOfPlaylists.updated",
 			res => {
 				const sortedPlaylists = [];
 

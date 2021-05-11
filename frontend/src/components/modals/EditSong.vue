@@ -856,29 +856,29 @@ export default {
 		localStorage.setItem("volume", volume);
 		this.volumeSliderValue = volume * 100;
 
-		this.socket.on("event:admin.hiddenSong.added", res => {
+		this.socket.on("event:admin.hiddenSong.created", res => {
 			this.song.status = res.data.song.status;
 		});
 
-		this.socket.on("event:admin.unverifiedSong.added", res => {
+		this.socket.on("event:admin.unverifiedSong.created", res => {
 			this.song.status = res.data.song.status;
 		});
 
-		this.socket.on("event:admin.verifiedSong.added", res => {
+		this.socket.on("event:admin.verifiedSong.created", res => {
 			this.song.status = res.data.song.status;
 		});
 
-		this.socket.on("event:admin.hiddenSong.removed", () => {
+		this.socket.on("event:admin.hiddenSong.deleted", () => {
 			new Toast("The song you were editing was removed");
 			this.closeModal("editSong");
 		});
 
-		this.socket.on("event:admin.unverifiedSong.removed", () => {
+		this.socket.on("event:admin.unverifiedSong.deleted", () => {
 			new Toast("The song you were editing was removed");
 			this.closeModal("editSong");
 		});
 
-		this.socket.on("event:admin.verifiedSong.removed", () => {
+		this.socket.on("event:admin.verifiedSong.deleted", () => {
 			new Toast("The song you were editing was removed");
 			this.closeModal("editSong");
 		});

@@ -766,7 +766,7 @@ export default {
 			}
 		);
 
-		this.socket.on("event:songs.next", res => {
+		this.socket.on("event:station.nextSong", res => {
 			const {
 				currentSong,
 				startedAt,
@@ -792,7 +792,7 @@ export default {
 			}
 		});
 
-		this.socket.on("event:stations.pause", res => {
+		this.socket.on("event:station.pause", res => {
 			this.pausedAt = res.data.pausedAt;
 			this.updateStationPaused(true);
 			this.pauseLocalPlayer();
@@ -800,7 +800,7 @@ export default {
 			clearTimeout(window.stationNextSongTimeout);
 		});
 
-		this.socket.on("event:stations.resume", res => {
+		this.socket.on("event:station.resume", res => {
 			this.timePaused = res.data.timePaused;
 			this.updateStationPaused(false);
 			if (!this.localPaused) this.resumeLocalPlayer();
@@ -812,12 +812,12 @@ export default {
 				);
 		});
 
-		this.socket.on("event:stations.remove", () => {
+		this.socket.on("event:station.deleted", () => {
 			window.location.href = "/";
 			return true;
 		});
 
-		this.socket.on("event:song.like", res => {
+		this.socket.on("event:song.liked", res => {
 			if (!this.noSong) {
 				if (res.data.youtubeId === this.currentSong.youtubeId) {
 					this.currentSong.dislikes = res.data.dislikes;
@@ -826,7 +826,7 @@ export default {
 			}
 		});
 
-		this.socket.on("event:song.dislike", res => {
+		this.socket.on("event:song.disliked", res => {
 			if (!this.noSong) {
 				if (res.data.youtubeId === this.currentSong.youtubeId) {
 					this.currentSong.dislikes = res.data.dislikes;
@@ -835,7 +835,7 @@ export default {
 			}
 		});
 
-		this.socket.on("event:song.unlike", res => {
+		this.socket.on("event:song.unliked", res => {
 			if (!this.noSong) {
 				if (res.data.youtubeId === this.currentSong.youtubeId) {
 					this.currentSong.dislikes = res.data.dislikes;
@@ -844,7 +844,7 @@ export default {
 			}
 		});
 
-		this.socket.on("event:song.undislike", res => {
+		this.socket.on("event:song.undisliked", res => {
 			if (!this.noSong) {
 				if (res.data.youtubeId === this.currentSong.youtubeId) {
 					this.currentSong.dislikes = res.data.dislikes;
@@ -853,7 +853,7 @@ export default {
 			}
 		});
 
-		this.socket.on("event:song.newRatings", res => {
+		this.socket.on("event:song.ratings.updated", res => {
 			if (!this.noSong) {
 				if (res.data.youtubeId === this.currentSong.youtubeId) {
 					this.liked = res.data.liked;
@@ -862,7 +862,7 @@ export default {
 			}
 		});
 
-		this.socket.on("event:queue.update", res => {
+		this.socket.on("event:station.queue.updated", res => {
 			this.updateSongsList(res.data.queue);
 
 			let nextSong = null;
@@ -876,7 +876,7 @@ export default {
 			this.addPartyPlaylistSongToQueue();
 		});
 
-		this.socket.on("event:queue.repositionSong", res => {
+		this.socket.on("event:station.queue.song.repositioned", res => {
 			this.repositionSongInList(res.data.song);
 
 			let nextSong = null;
@@ -888,7 +888,7 @@ export default {
 			this.updateNextSong(nextSong);
 		});
 
-		this.socket.on("event:song.voteSkipSong", () => {
+		this.socket.on("event:station.voteSkipSong", () => {
 			if (this.currentSong) this.currentSong.skipVotes += 1;
 		});
 
@@ -902,18 +902,18 @@ export default {
 				this.station.privatePlaylist = null;
 		});
 
-		this.socket.on("event:partyMode.updated", res => {
+		this.socket.on("event:station.partyMode.updated", res => {
 			if (this.station.type === "community")
 				this.station.partyMode = res.data.partyMode;
 		});
 
-		this.socket.on("event:station.themeUpdated", res => {
+		this.socket.on("event:station.theme.updated", res => {
 			const { theme } = res.data;
 			this.station.theme = theme;
 			document.body.style.cssText = `--primary-color: var(--${theme})`;
 		});
 
-		this.socket.on("event:station.updateName", res => {
+		this.socket.on("event:station.name.updated", res => {
 			this.station.name = res.data.name;
 			// eslint-disable-next-line no-restricted-globals
 			history.pushState(
@@ -929,11 +929,11 @@ export default {
 			);
 		});
 
-		this.socket.on("event:station.updateDisplayName", res => {
+		this.socket.on("event:station.displayName.updated", res => {
 			this.station.displayName = res.data.displayName;
 		});
 
-		this.socket.on("event:station.updateDescription", res => {
+		this.socket.on("event:station.description.updated", res => {
 			this.station.description = res.data.description;
 		});
 
@@ -942,24 +942,24 @@ export default {
 		// 		this.updateSongsList(res.data.playlist);
 		// });
 
-		this.socket.on("event:users.updated", res =>
+		this.socket.on("event:station.users.updated", res =>
 			this.updateUsers(res.data.users)
 		);
 
-		this.socket.on("event:userCount.updated", res =>
+		this.socket.on("event:station.userCount.updated", res =>
 			this.updateUserCount(res.data.userCount)
 		);
 
-		this.socket.on("event:queueLockToggled", res => {
+		this.socket.on("event:station.queue.lock.toggled", res => {
 			this.station.locked = res.data.locked;
 		});
 
-		this.socket.on("event:user.favoritedStation", res => {
+		this.socket.on("event:user.station.favorited", res => {
 			if (res.data.stationId === this.station._id)
 				this.updateIfStationIsFavorited({ isFavorited: true });
 		});
 
-		this.socket.on("event:user.unfavoritedStation", res => {
+		this.socket.on("event:user.station.unfavorited", res => {
 			if (res.data.stationId === this.station._id)
 				this.updateIfStationIsFavorited({ isFavorited: false });
 		});

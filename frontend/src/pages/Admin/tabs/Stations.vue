@@ -234,11 +234,11 @@ export default {
 		if (this.socket.readyState === 1) this.init();
 		ws.onConnect(() => this.init());
 
-		this.socket.on("event:admin.station.added", res =>
+		this.socket.on("event:admin.station.created", res =>
 			this.stationAdded(res.data.station)
 		);
 
-		this.socket.on("event:admin.station.removed", res =>
+		this.socket.on("event:admin.station.deleted", res =>
 			this.stationRemoved(res.data.stationId)
 		);
 	},

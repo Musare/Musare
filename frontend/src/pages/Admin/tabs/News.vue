@@ -98,7 +98,7 @@ export default {
 			this.updateNews(res.data.news)
 		);
 
-		this.socket.on("event:admin.news.removed", res =>
+		this.socket.on("event:admin.news.deleted", res =>
 			this.removeNews(res.data.newsId)
 		);
 
