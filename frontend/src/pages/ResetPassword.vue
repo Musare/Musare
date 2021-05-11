@@ -6,7 +6,7 @@
 		<main-header />
 		<div class="container">
 			<div class="content-wrapper">
-				<h1 id="title">
+				<h1 id="title" class="has-text-centered page-title">
 					{{ mode === "reset" ? "Reset" : "Set" }} your password
 				</h1>
 
@@ -469,7 +469,6 @@ p {
 	#title {
 		color: var(--black);
 		font-size: 42px;
-		text-align: center;
 	}
 
 	.reset-status-box {

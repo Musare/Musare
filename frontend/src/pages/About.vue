@@ -4,7 +4,7 @@
 		<main-header />
 		<div class="container">
 			<div class="content-wrapper">
-				<h2 class="has-text-centered page-title">About</h2>
+				<h1 class="has-text-centered page-title">About</h1>
 				<div class="card is-fullwidth">
 					<header class="card-header">
 						<p class="card-header-title">The project</p>
