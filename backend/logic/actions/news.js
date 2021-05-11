@@ -16,6 +16,12 @@ CacheModule.runJob("SUB", {
 			room: "admin.news",
 			args: ["event:admin.news.created", { data: { news } }]
 		});
+
+		if (news.status === "published")
+			WSModule.runJob("EMIT_TO_ROOM", {
+				room: "news",
+				args: ["event:news.created", { data: { news } }]
+			});
 	}
 });
 
@@ -26,6 +32,11 @@ CacheModule.runJob("SUB", {
 			room: "admin.news",
 			args: ["event:admin.news.removed", { data: { newsId } }]
 		});
+
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: "news",
+			args: ["event:news.removed", { data: { newsId } }]
+		});
 	}
 });
 
@@ -35,6 +46,11 @@ CacheModule.runJob("SUB", {
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.news",
 			args: ["event:admin.news.updated", { data: { news } }]
+		});
+
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: "news",
+			args: ["event:news.updated", { data: { news } }]
 		});
 	}
 });

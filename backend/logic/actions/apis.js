@@ -125,6 +125,7 @@ export default {
 	joinRoom(session, page, cb) {
 		if (
 			page === "home" ||
+			page === "news" ||
 			page.startsWith("profile.") ||
 			page.startsWith("manage-station.") ||
 			page.startsWith("edit-song.")

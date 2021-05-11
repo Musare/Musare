@@ -119,7 +119,7 @@ export default {
 			);
 		},
 		init() {
-			this.socket.dispatch("apis.joinAdminRoom", "news", () => {});
+			this.socket.dispatch("apis.joinAdminRoom", "news");
 		},
 		...mapActions("modalVisibility", ["openModal", "closeModal"]),
 		...mapActions("admin/news", [

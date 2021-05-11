@@ -44,6 +44,8 @@ import { mapGetters } from "vuex";
 import marked from "marked";
 import { sanitize } from "dompurify";
 
+import ws from "@/ws";
+
 import MainHeader from "@/components/layout/MainHeader.vue";
 import MainFooter from "@/components/layout/MainFooter.vue";
 import UserIdToUsername from "@/components/UserIdToUsername.vue";
@@ -73,24 +75,42 @@ export default {
 		this.socket.dispatch("news.index", res => {
 			if (res.status === "success") this.news = res.data.news;
 		});
-		this.socket.on("event:admin.news.created", res =>
+
+		this.socket.on("event:news.created", res =>
 			this.news.unshift(res.data.news)
 		);
-		this.socket.on("event:admin.news.updated", res => {
+
+		this.socket.on("event:news.updated", res => {
+			if (res.data.news.status === "draft") {
+				this.news = this.news.filter(
+					item => item._id !== res.data.news._id
+				);
+				return;
+			}
+
 			for (let n = 0; n < this.news.length; n += 1) {
-				if (this.news[n]._id === res.data.news._id) {
-					this.$set(this.news, n, res.data.news);
-				}
+				if (this.news[n]._id === res.data.news._id)
+					this.$set(this.news, n, {
+						...this.news[n],
+						...res.data.news
+					});
 			}
 		});
-		this.socket.on("event:admin.news.removed", res => {
+
+		this.socket.on("event:news.removed", res => {
 			this.news = this.news.filter(item => item._id !== res.data.newsId);
 		});
+
+		if (this.socket.readyState === 1) this.init();
+		ws.onConnect(() => this.init());
 	},
 	methods: {
 		marked,
 		sanitize,
-		formatDistance
+		formatDistance,
+		init() {
+			this.socket.dispatch("apis.joinRoom", "news");
+		}
 	}
 };
 </script>
