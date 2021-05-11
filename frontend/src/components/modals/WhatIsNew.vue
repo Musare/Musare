@@ -4,7 +4,7 @@
 			<div slot="body">
 				<div
 					class="section news-item"
-					v-html="marked(news.markdown)"
+					v-html="sanitize(marked(news.markdown))"
 				></div>
 			</div>
 			<div slot="footer">
@@ -29,6 +29,7 @@
 <script>
 import { formatDistance } from "date-fns";
 import marked from "marked";
+import { sanitize } from "dompurify";
 import { mapGetters, mapActions } from "vuex";
 
 import UserIdToUsername from "@/components/UserIdToUsername.vue";
@@ -88,6 +89,7 @@ export default {
 	},
 	methods: {
 		marked,
+		sanitize,
 		formatDistance,
 		...mapActions("modalVisibility", ["openModal"])
 	}

@@ -14,7 +14,7 @@
 					<div
 						class="news-item"
 						id="preview"
-						v-html="marked(markdown)"
+						v-html="sanitize(marked(markdown))"
 					></div>
 				</div>
 			</div>
@@ -60,6 +60,7 @@
 <script>
 import { mapActions, mapGetters, mapState } from "vuex";
 import marked from "marked";
+import { sanitize } from "dompurify";
 import Toast from "toasters";
 import { formatDistance } from "date-fns";
 
@@ -120,11 +121,15 @@ export default {
 	},
 	methods: {
 		marked,
+		sanitize,
 		getTitle() {
 			let title = "";
 			const preview = document.getElementById("preview");
 
 			// validate existence of h1 for the page title
+
+			if (preview.childNodes.length === 0) return "";
+
 			if (preview.childNodes[0].tagName !== "H1") {
 				for (
 					let node = 0;
@@ -143,6 +148,9 @@ export default {
 			return title;
 		},
 		create(close) {
+			if (this.markdown === "")
+				return new Toast("News item cannot be empty.");
+
 			const title = this.getTitle();
 			if (!title)
 				return new Toast(
@@ -164,6 +172,9 @@ export default {
 			);
 		},
 		update(close) {
+			if (this.markdown === "")
+				return new Toast("News item cannot be empty.");
+
 			const title = this.getTitle();
 			if (!title)
 				return new Toast(
@@ -212,6 +223,13 @@ export default {
 </style>
 
 <style lang="scss" scoped>
+.night-mode {
+	#markdown-editor-and-preview textarea,
+	#markdown-editor-and-preview #preview {
+		border-color: #fff;
+	}
+}
+
 #markdown-editor-and-preview {
 	display: flex;
 	flex-wrap: wrap;
@@ -235,12 +253,13 @@ export default {
 	#preview {
 		word-break: break-all;
 		overflow: auto;
+		box-shadow: none;
 	}
 
 	textarea,
 	#preview {
 		padding: 5px;
-		border: 1px solid var(--light-grey-3);
+		border: 1px solid var(--light-grey-3) !important;
 		border-radius: 3px;
 		height: 700px;
 	}

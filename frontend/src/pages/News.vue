@@ -10,7 +10,7 @@
 					:key="item._id"
 					class="section news-item"
 				>
-					<div v-html="marked(item.markdown)"></div>
+					<div v-html="sanitize(marked(item.markdown))"></div>
 					<div class="info">
 						<hr />
 						By
@@ -19,7 +19,14 @@
 							:alt="item.createdBy"
 							:link="true"
 						/>
-						@ {{ formatDate(item.createdAt) }}
+
+						<span :title="new Date(item.createdAt)">
+							{{
+								formatDistance(item.createdAt, new Date(), {
+									addSuffix: true
+								})
+							}}
+						</span>
 					</div>
 				</div>
 				<h3 v-if="news.length === 0" class="has-text-centered">
@@ -32,9 +39,10 @@
 </template>
 
 <script>
-import { format } from "date-fns";
+import { formatDistance } from "date-fns";
 import { mapGetters } from "vuex";
 import marked from "marked";
+import { sanitize } from "dompurify";
 
 import MainHeader from "@/components/layout/MainHeader.vue";
 import MainFooter from "@/components/layout/MainFooter.vue";
@@ -81,9 +89,8 @@ export default {
 	},
 	methods: {
 		marked,
-		formatDate: unix => {
-			return format(unix, "HH:ii:ss dd-MM-yyyy");
-		}
+		sanitize,
+		formatDistance
 	}
 };
 </script>
