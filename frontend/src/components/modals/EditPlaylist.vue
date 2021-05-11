@@ -28,7 +28,7 @@
 					"
 					class="section"
 				>
-					<div v-if="userId === playlist.createdBy || isEditable()">
+					<div v-if="isEditable()">
 						<h4 class="section-title">Edit Details</h4>
 
 						<p class="section-description">
@@ -62,7 +62,7 @@
 
 					<div
 						v-if="
-							isEditable() ||
+							userId === playlist.createdBy ||
 								(playlist.type === 'genre' && isAdmin())
 						"
 					>
