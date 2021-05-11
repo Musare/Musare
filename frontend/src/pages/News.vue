@@ -3,15 +3,20 @@
 		<metadata title="News" />
 		<main-header />
 		<div class="container">
-			<div
-				v-for="item in news"
-				:key="item._id"
-				class="section news-item"
-				v-html="marked(item.markdown)"
-			></div>
-			<h3 v-if="news.length === 0" class="has-text-centered page-title">
-				No news items were found.
-			</h3>
+			<div class="content-wrapper">
+				<h3 class=" has-text-centered page-title">
+					{{
+						news.length === 0 ? "No news items were found." : "News"
+					}}
+				</h3>
+
+				<div
+					v-for="item in news"
+					:key="item._id"
+					class="section news-item"
+					v-html="marked(item.markdown)"
+				></div>
+			</div>
 		</div>
 		<main-footer />
 	</div>

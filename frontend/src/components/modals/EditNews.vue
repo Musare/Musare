@@ -23,7 +23,7 @@
 			<p class="control select">
 				<select v-model="status">
 					<option value="draft">Draft</option>
-					<option value="published" selected>Published</option>
+					<option value="published" selected>Publish</option>
 				</select>
 			</p>
 
