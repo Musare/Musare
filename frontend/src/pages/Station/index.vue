@@ -772,9 +772,9 @@ export default {
 				startedAt,
 				paused,
 				timePaused,
-				naturel
+				natural
 			} = res.data;
-			if (this.noSong || !naturel) {
+			if (this.noSong || !natural) {
 				this.setCurrentSong({
 					currentSong,
 					startedAt,

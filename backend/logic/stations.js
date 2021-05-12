@@ -933,113 +933,102 @@ class _StationsModule extends CoreClass {
 				],
 				async (err, station) => {
 					if (err) {
-						err = await UtilsModule.runJob(
-							"GET_ERROR",
-							{
-								error: err
-							},
-							this
-						);
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 						StationsModule.log("ERROR", `Skipping station "${payload.stationId}" failed. "${err}"`);
-						reject(new Error(err));
-					} else {
-						if (station.currentSong !== null && station.currentSong.youtubeId !== undefined) {
-							station.currentSong.skipVotes = 0;
-						}
-						// TODO Pub/Sub this
+						return reject(new Error(err));
+					}
 
+					if (station.currentSong !== null && station.currentSong.youtubeId !== undefined)
+						station.currentSong.skipVotes = 0;
+
+					// TODO Pub/Sub this
+
+					const { currentSong } = station;
+
+					WSModule.runJob("EMIT_TO_ROOM", {
+						room: `station.${station._id}`,
+						args: [
+							"event:station.nextSong",
+							{
+								data: {
+									currentSong,
+									startedAt: station.startedAt,
+									paused: station.paused,
+									timePaused: 0,
+									natural: payload.natural
+								}
+							}
+						]
+					});
+
+					WSModule.runJob("EMIT_TO_ROOM", {
+						room: `manage-station.${station._id}`,
+						args: ["event:station.nextSong", { data: { stationId: station._id, currentSong } }]
+					});
+
+					if (station.privacy === "public")
 						WSModule.runJob("EMIT_TO_ROOM", {
-							room: `station.${station._id}`,
-							args: [
-								"event:station.nextSong",
-								{
-									data: {
-										currentSong: station.currentSong,
-										startedAt: station.startedAt,
-										paused: station.paused,
-										timePaused: 0,
-										natural: payload.natural
-									}
-								}
-							]
+							room: "home",
+							args: ["event:station.nextSong", { data: { stationId: station._id, currentSong } }]
 						});
+					else {
+						const sockets = await WSModule.runJob("GET_SOCKETS_FOR_ROOM", { room: "home" }, this);
 
-						if (station.privacy === "public")
-							WSModule.runJob("EMIT_TO_ROOM", {
-								room: "home",
-								args: [
-									"event:station.nextSong",
-									{ data: { stationId: station._id, song: station.currentSong } }
-								]
-							});
-						else {
-							const sockets = await WSModule.runJob("GET_SOCKETS_FOR_ROOM", { room: "home" }, this);
+						sockets.forEach(async socketId => {
+							const socket = await WSModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId });
+							const { session } = socket;
 
-							sockets.forEach(async socketId => {
-								const socket = await WSModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId });
-								const { session } = socket;
-
-								if (session.sessionId) {
-									CacheModule.runJob("HGET", { table: "sessions", key: session.sessionId }).then(
-										session => {
-											if (session) {
-												DBModule.runJob("GET_MODEL", { modelName: "user" }).then(userModel => {
-													userModel.findOne(
-														{
-															_id: session.userId
-														},
-														(err, user) => {
-															if (!err && user) {
-																if (user.role === "admin")
-																	socket.dispatch("event:station.nextSong", {
-																		data: {
-																			stationId: station._id,
-																			song: station.currentSong
-																		}
-																	});
-																else if (
-																	station.type === "community" &&
-																	station.owner === session.userId
-																)
-																	socket.dispatch("event:station.nextSong", {
-																		data: {
-																			stationId: station._id,
-																			song: station.currentSong
-																		}
-																	});
-															}
-														}
-													);
+							if (session.sessionId) {
+								CacheModule.runJob("HGET", { table: "sessions", key: session.sessionId }).then(
+									session => {
+										if (session) {
+											DBModule.runJob("GET_MODEL", { modelName: "user" }).then(userModel => {
+												userModel.findOne({ _id: session.userId }, (err, user) => {
+													if (!err && user) {
+														if (user.role === "admin")
+															socket.dispatch("event:station.nextSong", {
+																data: {
+																	stationId: station._id,
+																	currentSong
+																}
+															});
+														else if (
+															station.type === "community" &&
+															station.owner === session.userId
+														)
+															socket.dispatch("event:station.nextSong", {
+																data: {
+																	stationId: station._id,
+																	currentSong
+																}
+															});
+													}
 												});
-											}
+											});
 										}
-									);
-								}
-							});
-						}
-
-						WSModule.runJob("GET_SOCKETS_FOR_ROOM", { room: `station.${station._id}` }).then(sockets => {
-							if (station.currentSong !== null && station.currentSong.youtubeId !== undefined) {
-								WSModule.runJob("SOCKETS_JOIN_SONG_ROOM", {
-									sockets,
-									room: `song.${station.currentSong.youtubeId}`
-								});
-								if (!station.paused) {
-									NotificationsModule.runJob("SCHEDULE", {
-										name: `stations.nextSong?id=${station._id}`,
-										time: station.currentSong.duration * 1000,
-										station
-									});
-								}
-							} else {
-								WSModule.runJob("SOCKETS_LEAVE_SONG_ROOMS", {
-									sockets
-								});
+									}
+								);
 							}
 						});
-
-						resolve({ station });
 					}
+
+					WSModule.runJob("GET_SOCKETS_FOR_ROOM", { room: `station.${station._id}` }).then(sockets => {
+						if (station.currentSong !== null && station.currentSong.youtubeId !== undefined) {
+							WSModule.runJob("SOCKETS_JOIN_SONG_ROOM", {
+								sockets,
+								room: `song.${station.currentSong.youtubeId}`
+							});
+							if (!station.paused) {
+								NotificationsModule.runJob("SCHEDULE", {
+									name: `stations.nextSong?id=${station._id}`,
+									time: station.currentSong.duration * 1000,
+									station
+								});
+							}
+						} else WSModule.runJob("SOCKETS_LEAVE_SONG_ROOMS", { sockets });
+					});
+
+					return resolve({ station });
 				}
 			);
 		});

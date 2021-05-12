@@ -108,7 +108,7 @@ export default {
 			this.offsettedFromNextSet += 1;
 		});
 
-		this.socket.on("event:activity.hide", res => {
+		this.socket.on("event:activity.hidden", res => {
 			this.activities = this.activities.filter(
 				activity => activity._id !== res.data.activityId
 			);

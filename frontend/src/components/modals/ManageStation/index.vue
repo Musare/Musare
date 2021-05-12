@@ -440,7 +440,6 @@ export default {
 			"event:station.nextSong",
 			res => {
 				const { currentSong } = res.data;
-
 				this.updateCurrentSong(currentSong || {});
 			},
 			{ modal: "manageStation" }

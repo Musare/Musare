@@ -114,8 +114,8 @@ import MainFooter from "@/components/layout/MainFooter.vue";
 
 import TabQueryHandler from "@/mixins/TabQueryHandler.vue";
 
-import RecentActivity from "./tabs/RecentActivity.vue";
-import Playlists from "./tabs/Playlists.vue";
+import RecentActivity from "./Tabs/RecentActivity.vue";
+import Playlists from "./Tabs/Playlists.vue";
 
 export default {
 	components: {

@@ -59,10 +59,10 @@ export default {
 	components: {
 		MainHeader,
 		MainFooter,
-		SecuritySettings: () => import("./tabs/Security.vue"),
-		AccountSettings: () => import("./tabs/Account.vue"),
-		ProfileSettings: () => import("./tabs/Profile.vue"),
-		PreferencesSettings: () => import("./tabs/Preferences.vue"),
+		SecuritySettings: () => import("./Tabs/Security.vue"),
+		AccountSettings: () => import("./Tabs/Account.vue"),
+		ProfileSettings: () => import("./Tabs/Profile.vue"),
+		PreferencesSettings: () => import("./Tabs/Preferences.vue"),
 		RemoveAccount: () => import("@/components/modals/RemoveAccount.vue")
 	},
 	mixins: [TabQueryHandler],
@@ -96,28 +96,28 @@ export default {
 			else new Toast("You're not currently signed in.");
 		});
 
-		this.socket.on("event:user.linkPassword", () =>
+		this.socket.on("event:user.password.linked", () =>
 			this.updateOriginalUser({
 				property: "password",
 				value: true
 			})
 		);
 
-		this.socket.on("event:user.unlinkPassword", () =>
+		this.socket.on("event:user.password.unlinked", () =>
 			this.updateOriginalUser({
 				property: "password",
 				value: false
 			})
 		);
 
-		this.socket.on("event:user.linkGithub", () =>
+		this.socket.on("event:user.github.linked", () =>
 			this.updateOriginalUser({
 				property: "github",
 				value: true
 			})
 		);
 
-		this.socket.on("event:user.unlinkGithub", () =>
+		this.socket.on("event:user.github.unlinked", () =>
 			this.updateOriginalUser({
 				property: "github",
 				value: false

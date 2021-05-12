@@ -620,7 +620,7 @@ export default {
 			);
 
 			if (station) {
-				let newSong = res.data.song;
+				let newSong = res.data.currentSong;
 
 				if (!newSong)
 					newSong = {
