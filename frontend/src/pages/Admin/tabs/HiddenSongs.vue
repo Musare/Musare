@@ -281,6 +281,8 @@ export default {
 			this.$refs.keyboardShortcutsHelper.resetBox();
 		},
 		init() {
+			this.position = 1;
+			this.maxPosition = 1;
 			this.resetSongs();
 
 			if (this.songs.length > 0)
