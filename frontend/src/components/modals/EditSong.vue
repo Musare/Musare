@@ -856,32 +856,56 @@ export default {
 		localStorage.setItem("volume", volume);
 		this.volumeSliderValue = volume * 100;
 
-		this.socket.on("event:admin.hiddenSong.created", res => {
-			this.song.status = res.data.song.status;
-		});
+		this.socket.on(
+			"event:admin.hiddenSong.created",
+			res => {
+				this.song.status = res.data.song.status;
+			},
+			{ modal: "editSong" }
+		);
 
-		this.socket.on("event:admin.unverifiedSong.created", res => {
-			this.song.status = res.data.song.status;
-		});
+		this.socket.on(
+			"event:admin.unverifiedSong.created",
+			res => {
+				this.song.status = res.data.song.status;
+			},
+			{ modal: "editSong" }
+		);
 
-		this.socket.on("event:admin.verifiedSong.created", res => {
-			this.song.status = res.data.song.status;
-		});
+		this.socket.on(
+			"event:admin.verifiedSong.created",
+			res => {
+				this.song.status = res.data.song.status;
+			},
+			{ modal: "editSong" }
+		);
 
-		this.socket.on("event:admin.hiddenSong.deleted", () => {
-			new Toast("The song you were editing was removed");
-			this.closeModal("editSong");
-		});
+		this.socket.on(
+			"event:admin.hiddenSong.deleted",
+			() => {
+				new Toast("The song you were editing was removed");
+				this.closeModal("editSong");
+			},
+			{ modal: "editSong" }
+		);
 
-		this.socket.on("event:admin.unverifiedSong.deleted", () => {
-			new Toast("The song you were editing was removed");
-			this.closeModal("editSong");
-		});
+		this.socket.on(
+			"event:admin.unverifiedSong.deleted",
+			() => {
+				new Toast("The song you were editing was removed");
+				this.closeModal("editSong");
+			},
+			{ modal: "editSong" }
+		);
 
-		this.socket.on("event:admin.verifiedSong.deleted", () => {
-			new Toast("The song you were editing was removed");
-			this.closeModal("editSong");
-		});
+		this.socket.on(
+			"event:admin.verifiedSong.deleted",
+			() => {
+				new Toast("The song you were editing was removed");
+				this.closeModal("editSong");
+			},
+			{ modal: "editSong" }
+		);
 
 		keyboardShortcuts.registerShortcut("editSong.pauseResumeVideo", {
 			keyCode: 101,
