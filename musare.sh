@@ -172,6 +172,7 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
         else
             git pull
             docker-compose build
+            docker-compose stop
             docker-compose up -d
         fi
         ;;

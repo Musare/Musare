@@ -6,6 +6,7 @@
 				? 'Add Song to Queue'
 				: 'Manage Station'
 		"
+		:style="`--primary-color: var(--${station.theme})`"
 		class="manage-station-modal"
 	>
 		<template #body>
