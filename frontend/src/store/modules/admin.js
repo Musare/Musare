@@ -17,12 +17,16 @@ const modules = {
 		},
 		getters: {},
 		actions: {
+			resetSongs: ({ commit }) => commit("resetSongs"),
 			addSong: ({ commit }, song) => commit("addSong", song),
 			removeSong: ({ commit }, songId) => commit("removeSong", songId),
 			updateSong: ({ commit }, updatedSong) =>
 				commit("updateSong", updatedSong)
 		},
 		mutations: {
+			resetSongs(state) {
+				state.songs = [];
+			},
 			addSong(state, song) {
 				state.songs.push(song);
 			},
@@ -46,12 +50,16 @@ const modules = {
 		},
 		getters: {},
 		actions: {
+			resetSongs: ({ commit }) => commit("resetSongs"),
 			addSong: ({ commit }, song) => commit("addSong", song),
 			removeSong: ({ commit }, songId) => commit("removeSong", songId),
 			updateSong: ({ commit }, updatedSong) =>
 				commit("updateSong", updatedSong)
 		},
 		mutations: {
+			resetSongs(state) {
+				state.songs = [];
+			},
 			addSong(state, song) {
 				state.songs.push(song);
 			},
@@ -75,12 +83,16 @@ const modules = {
 		},
 		getters: {},
 		actions: {
+			resetSongs: ({ commit }) => commit("resetSongs"),
 			addSong: ({ commit }, song) => commit("addSong", song),
 			removeSong: ({ commit }, songId) => commit("removeSong", songId),
 			updateSong: ({ commit }, updatedSong) =>
 				commit("updateSong", updatedSong)
 		},
 		mutations: {
+			resetSongs(state) {
+				state.songs = [];
+			},
 			addSong(state, song) {
 				state.songs.push(song);
 			},

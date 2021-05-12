@@ -299,6 +299,8 @@ export default {
 			this.$refs.keyboardShortcutsHelper.resetBox();
 		},
 		init() {
+			this.resetSongs();
+
 			if (this.songs.length > 0)
 				this.position = Math.ceil(this.songs.length / 15) + 1;
 
@@ -317,6 +319,7 @@ export default {
 		},
 		...mapActions("admin/unverifiedSongs", [
 			// "stopVideo",
+			"resetSongs",
 			"addSong",
 			"removeSong",
 			"updateSong"

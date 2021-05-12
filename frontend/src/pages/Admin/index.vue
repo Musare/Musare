@@ -122,6 +122,8 @@
 </template>
 
 <script>
+import { mapGetters } from "vuex";
+
 import MainHeader from "@/components/layout/MainHeader.vue";
 
 export default {
@@ -143,6 +145,9 @@ export default {
 			currentTab: ""
 		};
 	},
+	computed: mapGetters({
+		socket: "websockets/getSocket"
+	}),
 	watch: {
 		$route(route) {
 			this.changeTab(route.path);

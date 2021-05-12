@@ -326,9 +326,10 @@ export default {
 		}
 	},
 	mounted() {
-		this.socket.on("event:admin.verifiedSong.created", res =>
-			this.addSong(res.data.song)
-		);
+		this.socket.on("event:admin.verifiedSong.created", res => {
+			this.addSong(res.data.song);
+			console.log("created");
+		});
 
 		this.socket.on("event:admin.verifiedSong.deleted", res =>
 			this.removeSong(res.data.songId)
@@ -415,6 +416,8 @@ export default {
 			this.$refs.keyboardShortcutsHelper.resetBox();
 		},
 		init() {
+			this.resetSongs();
+
 			if (this.songs.length > 0)
 				this.position = Math.ceil(this.songs.length / 15) + 1;
 
@@ -429,6 +432,7 @@ export default {
 		},
 		...mapActions("admin/verifiedSongs", [
 			// "stopVideo",
+			"resetSongs",
 			"addSong",
 			"removeSong",
 			"updateSong"

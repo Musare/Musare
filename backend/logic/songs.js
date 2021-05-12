@@ -975,6 +975,11 @@ class _SongsModule extends CoreClass {
 						value: songId
 					});
 
+					CacheModule.runJob("PUB", {
+						channel: "song.removedVerifiedSong",
+						value: songId
+					});
+
 					resolve();
 				}
 			);
