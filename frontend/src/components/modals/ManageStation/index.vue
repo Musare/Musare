@@ -40,25 +40,17 @@
 							</button>
 							<button
 								v-if="
-									loggedIn &&
+									(loggedIn &&
 										station.type === 'community' &&
 										station.partyMode &&
-										((station.locked && isOwnerOrAdmin()) ||
-											!station.locked)
+										!station.locked) ||
+										isOwnerOrAdmin()
 								"
 								class="button is-default"
-								:class="{ selected: tab === 'search' }"
-								@click="showTab('search')"
+								:class="{ selected: tab === 'songs' }"
+								@click="showTab('songs')"
 							>
-								Search
-							</button>
-							<button
-								v-if="isOwnerOrAdmin()"
-								class="button is-default"
-								:class="{ selected: tab === 'blacklist' }"
-								@click="showTab('blacklist')"
-							>
-								Blacklist
+								Songs
 							</button>
 						</div>
 						<settings
@@ -78,58 +70,86 @@
 							class="tab"
 							v-show="tab === 'playlists'"
 						/>
-						<search
+						<songs
 							v-if="
-								loggedIn &&
+								(loggedIn &&
 									station.type === 'community' &&
 									station.partyMode &&
-									((station.locked && isOwnerOrAdmin()) ||
-										!station.locked)
+									!station.locked) ||
+									isOwnerOrAdmin()
 							"
 							class="tab"
-							v-show="tab === 'search'"
-						/>
-						<blacklist
-							v-if="isOwnerOrAdmin()"
-							class="tab"
-							v-show="tab === 'blacklist'"
+							v-show="tab === 'songs'"
 						/>
 					</div>
 				</div>
 				<div class="right-section">
 					<div class="section">
+						<div id="about-station-container">
+							<div id="station-info">
+								<div id="station-name">
+									<h1>{{ station.displayName }}</h1>
+									<i
+										class="material-icons stationMode"
+										:content="
+											station.partyMode
+												? 'Station in Party mode'
+												: 'Station in Playlist mode'
+										"
+										v-tippy
+										>{{
+											station.partyMode
+												? "emoji_people"
+												: "playlist_play"
+										}}</i
+									>
+								</div>
+								<p>{{ station.description }}</p>
+							</div>
+
+							<div id="admin-buttons" v-if="isOwnerOrAdmin()">
+								<!-- (Admin) Pause/Resume Button -->
+								<button
+									class="button is-danger"
+									v-if="stationPaused"
+									@click="resumeStation()"
+								>
+									<i class="material-icons icon-with-button"
+										>play_arrow</i
+									>
+									<span class="optional-desktop-only-text">
+										Resume Station
+									</span>
+								</button>
+								<button
+									class="button is-danger"
+									@click="pauseStation()"
+									v-else
+								>
+									<i class="material-icons icon-with-button"
+										>pause</i
+									>
+									<span class="optional-desktop-only-text">
+										Pause Station
+									</span>
+								</button>
+
+								<!-- (Admin) Skip Button -->
+								<button
+									class="button is-danger"
+									@click="skipStation()"
+								>
+									<i class="material-icons icon-with-button"
+										>skip_next</i
+									>
+									<span class="optional-desktop-only-text">
+										Force Skip
+									</span>
+								</button>
+							</div>
+						</div>
 						<div class="queue-title">
 							<h4 class="section-title">Queue</h4>
-							<i
-								v-if="isOwnerOrAdmin() && stationPaused"
-								@click="resumeStation()"
-								class="material-icons resume-station"
-								content="Resume Station"
-								v-tippy
-							>
-								play_arrow
-							</i>
-							<i
-								v-if="isOwnerOrAdmin() && !stationPaused"
-								@click="pauseStation()"
-								class="material-icons pause-station"
-								content="Pause Station"
-								v-tippy
-							>
-								pause
-							</i>
-							<confirm
-								v-if="isOwnerOrAdmin()"
-								@confirm="skipStation()"
-							>
-								<i
-									class="material-icons skip-station"
-									content="Force Skip Station"
-									v-tippy
-								>
-									skip_next
-								</i>
-							</confirm>
 						</div>
 						<hr class="section-horizontal-rule" />
 						<song-item
@@ -202,8 +222,7 @@ import Modal from "../../Modal.vue";
 
 import Settings from "./Tabs/Settings.vue";
 import Playlists from "./Tabs/Playlists.vue";
-import Search from "./Tabs/Search.vue";
-import Blacklist from "./Tabs/Blacklist.vue";
+import Songs from "./Tabs/Songs.vue";
 
 export default {
 	components: {
@@ -213,8 +232,7 @@ export default {
 		SongItem,
 		Settings,
 		Playlists,
-		Search,
-		Blacklist
+		Songs
 	},
 	props: {
 		stationId: { type: String, default: "" },
@@ -247,7 +265,7 @@ export default {
 				this.editStation(station);
 
 				if (!this.isOwnerOrAdmin() && this.station.partyMode)
-					this.showTab("search");
+					this.showTab("songs");
 
 				const currentSong = res.data.station.currentSong
 					? res.data.station.currentSong
@@ -577,7 +595,6 @@ export default {
 .manage-station-modal.modal .modal-card-body .custom-modal-body {
 	display: flex;
 	flex-wrap: wrap;
-	height: 100%;
 
 	.section {
 		display: flex;
@@ -633,6 +650,56 @@ export default {
 		overflow-y: auto;
 		flex-grow: 1;
 		.section {
+			#about-station-container {
+				padding: 20px;
+				display: flex;
+				flex-direction: column;
+				flex-grow: unset;
+				border-radius: 5px;
+				margin: 0 0 20px 0;
+				background-color: var(--white);
+				border: 1px solid var(--light-grey-3);
+
+				#station-info {
+					#station-name {
+						flex-direction: row !important;
+						display: flex;
+						flex-direction: row;
+						max-width: 100%;
+
+						h1 {
+							margin: 0;
+							font-size: 36px;
+							line-height: 0.8;
+						}
+
+						i {
+							margin-left: 10px;
+							font-size: 30px;
+							color: var(--yellow);
+							&.stationMode {
+								padding-left: 10px;
+								margin-left: auto;
+								color: var(--primary-color);
+							}
+						}
+					}
+
+					p {
+						max-width: 700px;
+						margin-bottom: 10px;
+					}
+				}
+
+				#admin-buttons {
+					display: flex;
+
+					.button {
+						margin: 3px;
+					}
+				}
+			}
+
 			.queue-title {
 				display: flex;
 				line-height: 30px;

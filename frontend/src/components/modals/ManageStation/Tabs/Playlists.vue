@@ -4,13 +4,6 @@
 			<div class="tab-selection">
 				<button
 					class="button is-default"
-					:class="{ selected: tab === 'current' }"
-					@click="showTab('current')"
-				>
-					Current
-				</button>
-				<button
-					class="button is-default"
 					:class="{ selected: tab === 'search' }"
 					@click="showTab('search')"
 				>
@@ -24,65 +17,29 @@
 				>
 					My Playlists
 				</button>
-			</div>
-			<div class="tab" v-show="tab === 'current'">
-				<div v-if="currentPlaylists.length > 0">
-					<playlist-item
-						v-for="playlist in currentPlaylists"
-						:key="`key-${playlist._id}`"
-						:playlist="playlist"
-						:show-owner="true"
-					>
-						<div class="icons-group" slot="actions">
-							<confirm
-								v-if="isOwnerOrAdmin()"
-								@confirm="deselectPlaylist(playlist._id)"
-							>
-								<i
-									class="material-icons stop-icon"
-									content="Stop playing songs from this playlist"
-									v-tippy
-								>
-									stop
-								</i>
-							</confirm>
-							<confirm
-								v-if="isOwnerOrAdmin()"
-								@confirm="blacklistPlaylist(playlist._id)"
-							>
-								<i
-									class="material-icons stop-icon"
-									content="Blacklist Playlist"
-									v-tippy
-									>block</i
-								>
-							</confirm>
-							<i
-								v-if="playlist.createdBy === myUserId"
-								@click="showPlaylist(playlist._id)"
-								class="material-icons edit-icon"
-								content="Edit Playlist"
-								v-tippy
-								>edit</i
-							>
-							<i
-								v-if="
-									playlist.createdBy !== myUserId &&
-										(playlist.privacy === 'public' ||
-											isAdmin())
-								"
-								@click="showPlaylist(playlist._id)"
-								class="material-icons edit-icon"
-								content="View Playlist"
-								v-tippy
-								>visibility</i
-							>
-						</div>
-					</playlist-item>
-				</div>
-				<p v-else class="has-text-centered scrollable-list">
-					No playlists currently selected.
-				</p>
+				<button
+					class="button is-default"
+					:class="{ selected: tab === 'party' }"
+					v-if="station.type === 'community' && station.partyMode"
+					@click="showTab('party')"
+				>
+					Party
+				</button>
+				<button
+					class="button is-default"
+					:class="{ selected: tab === 'included' }"
+					v-if="!(station.type === 'community' && station.partyMode)"
+					@click="showTab('included')"
+				>
+					Included
+				</button>
+				<button
+					class="button is-default"
+					:class="{ selected: tab === 'excluded' }"
+					@click="showTab('excluded')"
+				>
+					Excluded
+				</button>
 			</div>
 			<div class="tab" v-show="tab === 'search'">
 				<label class="label"> Search for a public playlist </label>
@@ -121,12 +78,30 @@
 							>
 							<confirm
 								v-if="
-									(isOwnerOrAdmin() ||
-										(station.type === 'community' &&
-											station.partyMode)) &&
+									station.type === 'community' &&
+										station.partyMode &&
 										isSelected(playlist._id)
 								"
-								@confirm="deselectPlaylist(playlist._id)"
+								@confirm="deselectPartyPlaylist(playlist._id)"
+							>
+								<i
+									class="material-icons stop-icon"
+									content="Stop playing songs from this playlist"
+									v-tippy
+								>
+									stop
+								</i>
+							</confirm>
+							<confirm
+								v-if="
+									isOwnerOrAdmin() &&
+										!(
+											station.type === 'community' &&
+											station.partyMode
+										) &&
+										isIncluded(playlist._id)
+								"
+								@confirm="removeIncludedPlaylist(playlist._id)"
 							>
 								<i
 									class="material-icons stop-icon"
@@ -138,19 +113,30 @@
 							</confirm>
 							<i
 								v-if="
-									(isOwnerOrAdmin() ||
-										(station.type === 'community' &&
-											station.partyMode)) &&
+									station.type === 'community' &&
+										station.partyMode &&
 										!isSelected(playlist._id) &&
 										!isExcluded(playlist._id)
 								"
-								@click="selectPlaylist(playlist)"
+								@click="selectPartyPlaylist(playlist)"
 								class="material-icons play-icon"
-								:content="
-									station.partyMode
-										? 'Request songs from this playlist'
-										: 'Play songs from this playlist'
+								content="Request songs from this playlist"
+								v-tippy
+								>play_arrow</i
+							>
+							<i
+								v-if="
+									isOwnerOrAdmin() &&
+										!(
+											station.type === 'community' &&
+											station.partyMode
+										) &&
+										!isIncluded(playlist._id) &&
+										!isExcluded(playlist._id)
 								"
+								@click="includePlaylist(playlist)"
+								class="material-icons play-icon"
+								:content="'Play songs from this playlist'"
 								v-tippy
 								>play_arrow</i
 							>
@@ -241,37 +227,61 @@
 								<i
 									v-if="
 										station.type === 'community' &&
-											(isOwnerOrAdmin() ||
-												station.partyMode) &&
+											station.partyMode &&
 											!isSelected(playlist._id) &&
 											!isExcluded(playlist._id)
 									"
-									@click="selectPlaylist(playlist)"
+									@click="selectPartyPlaylist(playlist)"
 									class="material-icons play-icon"
-									:content="
-										station.partyMode
-											? 'Request songs from this playlist'
-											: 'Play songs from this playlist'
+									content="Request songs from this playlist"
+									v-tippy
+									>play_arrow</i
+								>
+								<i
+									v-if="
+										station.type === 'community' &&
+											isOwnerOrAdmin() &&
+											!station.partyMode &&
+											!isSelected(playlist._id) &&
+											!isExcluded(playlist._id)
 									"
+									@click="includePlaylist(playlist)"
+									class="material-icons play-icon"
+									content="Play songs from this playlist"
 									v-tippy
 									>play_arrow</i
 								>
 								<confirm
 									v-if="
 										station.type === 'community' &&
-											(isOwnerOrAdmin() ||
-												station.partyMode) &&
+											station.partyMode &&
 											isSelected(playlist._id)
 									"
-									@confirm="deselectPlaylist(playlist._id)"
+									@confirm="
+										deselectPartyPlaylist(playlist._id)
+									"
 								>
 									<i
 										class="material-icons stop-icon"
-										:content="
-											station.partyMode
-												? 'Stop requesting songs from this playlist'
-												: 'Stop playing songs from this playlist'
-										"
+										content="Stop requesting songs from this playlist"
+										v-tippy
+										>stop</i
+									>
+								</confirm>
+								<confirm
+									v-if="
+										station.type === 'community' &&
+											isOwnerOrAdmin() &&
+											!station.partyMode &&
+											isIncluded(playlist._id)
+									"
+									@confirm="
+										removeIncludedPlaylist(playlist._id)
+									"
+								>
+									<i
+										class="material-icons stop-icon"
+										content="Stop playing songs from this playlist"
 										v-tippy
 										>stop</i
 									>
@@ -305,6 +315,174 @@
 					You don't have any playlists!
 				</p>
 			</div>
+			<div
+				class="tab"
+				v-show="tab === 'party'"
+				v-if="station.type === 'community' && station.partyMode"
+			>
+				<div v-if="partyPlaylists.length > 0">
+					<playlist-item
+						v-for="playlist in partyPlaylists"
+						:key="`key-${playlist._id}`"
+						:playlist="playlist"
+						:show-owner="true"
+					>
+						<div class="icons-group" slot="actions">
+							<confirm
+								v-if="isOwnerOrAdmin()"
+								@confirm="deselectPartyPlaylist(playlist._id)"
+							>
+								<i
+									class="material-icons stop-icon"
+									content="Stop playing songs from this playlist"
+									v-tippy
+								>
+									stop
+								</i>
+							</confirm>
+							<confirm
+								v-if="isOwnerOrAdmin()"
+								@confirm="blacklistPlaylist(playlist._id)"
+							>
+								<i
+									class="material-icons stop-icon"
+									content="Blacklist Playlist"
+									v-tippy
+									>block</i
+								>
+							</confirm>
+							<i
+								v-if="playlist.createdBy === myUserId"
+								@click="showPlaylist(playlist._id)"
+								class="material-icons edit-icon"
+								content="Edit Playlist"
+								v-tippy
+								>edit</i
+							>
+							<i
+								v-if="
+									playlist.createdBy !== myUserId &&
+										(playlist.privacy === 'public' ||
+											isAdmin())
+								"
+								@click="showPlaylist(playlist._id)"
+								class="material-icons edit-icon"
+								content="View Playlist"
+								v-tippy
+								>visibility</i
+							>
+						</div>
+					</playlist-item>
+				</div>
+				<p v-else class="has-text-centered scrollable-list">
+					No playlists currently being played.
+				</p>
+			</div>
+			<div
+				class="tab"
+				v-show="tab === 'included'"
+				v-if="!(station.type === 'community' && station.partyMode)"
+			>
+				<div v-if="includedPlaylists.length > 0">
+					<playlist-item
+						v-for="playlist in includedPlaylists"
+						:key="`key-${playlist._id}`"
+						:playlist="playlist"
+						:show-owner="true"
+					>
+						<div class="icons-group" slot="actions">
+							<confirm
+								v-if="isOwnerOrAdmin()"
+								@confirm="removeIncludedPlaylist(playlist._id)"
+							>
+								<i
+									class="material-icons stop-icon"
+									content="Stop playing songs from this playlist"
+									v-tippy
+								>
+									stop
+								</i>
+							</confirm>
+							<confirm
+								v-if="isOwnerOrAdmin()"
+								@confirm="blacklistPlaylist(playlist._id)"
+							>
+								<i
+									class="material-icons stop-icon"
+									content="Blacklist Playlist"
+									v-tippy
+									>block</i
+								>
+							</confirm>
+							<i
+								v-if="playlist.createdBy === myUserId"
+								@click="showPlaylist(playlist._id)"
+								class="material-icons edit-icon"
+								content="Edit Playlist"
+								v-tippy
+								>edit</i
+							>
+							<i
+								v-if="
+									playlist.createdBy !== myUserId &&
+										(playlist.privacy === 'public' ||
+											isAdmin())
+								"
+								@click="showPlaylist(playlist._id)"
+								class="material-icons edit-icon"
+								content="View Playlist"
+								v-tippy
+								>visibility</i
+							>
+						</div>
+					</playlist-item>
+				</div>
+				<p v-else class="has-text-centered scrollable-list">
+					No playlists currently included.
+				</p>
+			</div>
+			<div class="tab" v-show="tab === 'excluded'">
+				<div v-if="excludedPlaylists.length > 0">
+					<playlist-item
+						:playlist="playlist"
+						v-for="playlist in excludedPlaylists"
+						:key="`key-${playlist._id}`"
+					>
+						<div class="icons-group" slot="actions">
+							<confirm
+								@confirm="removeExcludedPlaylist(playlist._id)"
+							>
+								<i
+									class="material-icons stop-icon"
+									content="Stop blacklisting songs from this playlist
+							"
+									v-tippy
+									>stop</i
+								>
+							</confirm>
+							<i
+								v-if="playlist.createdBy === userId"
+								@click="showPlaylist(playlist._id)"
+								class="material-icons edit-icon"
+								content="Edit Playlist"
+								v-tippy
+								>edit</i
+							>
+							<i
+								v-else
+								@click="showPlaylist(playlist._id)"
+								class="material-icons edit-icon"
+								content="View Playlist"
+								v-tippy
+								>visibility</i
+							>
+						</div>
+					</playlist-item>
+				</div>
+				<p v-else class="has-text-centered scrollable-list">
+					No playlists currently excluded.
+				</p>
+			</div>
 		</div>
 	</div>
 </template>
@@ -325,7 +503,7 @@ export default {
 	mixins: [SortablePlaylists],
 	data() {
 		return {
-			tab: "current",
+			tab: "included",
 			search: {
 				query: "",
 				searchedQuery: "",
@@ -337,12 +515,6 @@ export default {
 		};
 	},
 	computed: {
-		currentPlaylists() {
-			if (this.station.type === "community" && this.station.partyMode) {
-				return this.partyPlaylists;
-			}
-			return this.includedPlaylists;
-		},
 		resultsLeftCount() {
 			return this.search.count - this.search.results.length;
 		},
@@ -367,6 +539,9 @@ export default {
 		})
 	},
 	mounted() {
+		if (this.station.type === "community" && this.station.partyMode)
+			this.showTab("search");
+
 		this.socket.dispatch("playlists.indexMyPlaylists", true, res => {
 			if (res.status === "success") this.setPlaylists(res.data.playlists);
 			this.orderOfPlaylists = this.calculatePlaylistOrder(); // order in regards to the database
@@ -411,67 +586,84 @@ export default {
 			this.editPlaylist(playlistId);
 			this.openModal("editPlaylist");
 		},
-		selectPlaylist(playlist) {
-			if (this.station.type === "community" && this.station.partyMode) {
-				if (!this.isSelected(playlist.id)) {
-					this.partyPlaylists.push(playlist);
-					this.addPartyPlaylistSongToQueue();
-					new Toast(
-						"Successfully selected playlist to auto request songs."
-					);
-				} else {
-					new Toast("Error: Playlist already selected.");
-				}
-			} else {
-				this.socket.dispatch(
-					"stations.includePlaylist",
-					this.station._id,
-					playlist._id,
-					res => {
-						new Toast(res.message);
-					}
+		selectPartyPlaylist(playlist) {
+			if (!this.isSelected(playlist.id)) {
+				this.partyPlaylists.push(playlist);
+				this.addPartyPlaylistSongToQueue();
+				new Toast(
+					"Successfully selected playlist to auto request songs."
 				);
+			} else {
+				new Toast("Error: Playlist already selected.");
 			}
 		},
-		deselectPlaylist(id) {
+		includePlaylist(playlist) {
+			this.socket.dispatch(
+				"stations.includePlaylist",
+				this.station._id,
+				playlist._id,
+				res => {
+					new Toast(res.message);
+				}
+			);
+		},
+		deselectPartyPlaylist(id) {
 			return new Promise(resolve => {
-				if (
-					this.station.type === "community" &&
-					this.station.partyMode
-				) {
-					let selected = false;
-					this.currentPlaylists.forEach((playlist, index) => {
-						if (playlist._id === id) {
-							selected = true;
-							this.partyPlaylists.splice(index, 1);
-						}
-					});
-					if (selected) {
-						new Toast("Successfully deselected playlist.");
-						resolve();
-					} else {
-						new Toast("Playlist not selected.");
+				let selected = false;
+				this.partyPlaylists.forEach((playlist, index) => {
+					if (playlist._id === id) {
+						selected = true;
+						this.partyPlaylists.splice(index, 1);
+					}
+				});
+				if (selected) {
+					new Toast("Successfully deselected playlist.");
+					resolve();
+				} else {
+					new Toast("Playlist not selected.");
+					resolve();
+				}
+			});
+		},
+		removeIncludedPlaylist(id) {
+			return new Promise(resolve => {
+				this.socket.dispatch(
+					"stations.removeIncludedPlaylist",
+					this.station._id,
+					id,
+					res => {
+						new Toast(res.message);
 						resolve();
 					}
-				} else {
-					this.socket.dispatch(
-						"stations.removeIncludedPlaylist",
-						this.station._id,
-						id,
-						res => {
-							new Toast(res.message);
-							resolve();
-						}
-					);
-				}
+				);
+			});
+		},
+		removeExcludedPlaylist(id) {
+			return new Promise(resolve => {
+				this.socket.dispatch(
+					"stations.removeExcludedPlaylist",
+					this.station._id,
+					id,
+					res => {
+						new Toast(res.message);
+						resolve();
+					}
+				);
 			});
 		},
 		isSelected(id) {
 			let selected = false;
-			this.currentPlaylists.forEach(playlist => {
+			this.partyPlaylists.forEach(playlist => {
 				if (playlist._id === id) selected = true;
 			});
 			return selected;
+		},
+		isIncluded(id) {
+			let included = false;
+			this.includedPlaylists.forEach(playlist => {
+				if (playlist._id === id) included = true;
+			});
+			return included;
 		},
 		isExcluded(id) {
 			let selected = false;
@@ -523,7 +715,7 @@ export default {
 			});
 		},
 		async blacklistPlaylist(id) {
-			if (this.isSelected(id)) await this.deselectPlaylist(id);
+			if (this.isIncluded(id)) await this.removeIncludedPlaylist(id);
 
 			this.socket.dispatch(
 				"stations.excludePlaylist",
