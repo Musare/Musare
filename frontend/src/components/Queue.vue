@@ -27,6 +27,7 @@
 					:class="{
 						'item-draggable': isAdminOnly() || isOwnerOnly()
 					}"
+					:disabled-actions="[]"
 				>
 					<div
 						v-if="isAdminOnly() || isOwnerOnly()"

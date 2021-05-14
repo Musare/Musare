@@ -498,7 +498,7 @@ a {
 			filter: brightness(90%);
 		}
 
-		&:not(:first-of-type) {
+		&:not(:first) {
 			margin-left: 5px;
 		}
 	}

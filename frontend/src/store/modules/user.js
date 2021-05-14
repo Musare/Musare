@@ -203,7 +203,8 @@ const modules = {
 		namespaced: true,
 		state: {
 			editing: "",
-			playlists: []
+			playlists: [],
+			fetchedPlaylists: false
 		},
 		actions: {
 			editPlaylist: ({ commit }, id) => commit("editPlaylist", id),
@@ -215,6 +216,7 @@ const modules = {
 				state.editing = id;
 			},
 			setPlaylists(state, playlists) {
+				state.fetchedPlaylists = true;
 				state.playlists = playlists;
 			}
 		}
