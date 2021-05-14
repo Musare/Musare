@@ -1132,7 +1132,8 @@ export default {
 						iv_load_policy: 3,
 						rel: 0,
 						showinfo: 0,
-						disablekb: 1
+						disablekb: 1,
+						playsinline: 1
 					},
 					events: {
 						onReady: () => {
