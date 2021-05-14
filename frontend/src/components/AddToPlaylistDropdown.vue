@@ -71,7 +71,9 @@ export default {
 		}),
 		playlists: {
 			get() {
-				return this.$store.state.user.playlists.playlists;
+				return this.$store.state.user.playlists.playlists.filter(
+					playlist => playlist.isUserModifiable
+				);
 			},
 			set(playlists) {
 				this.$store.commit("user/playlists/setPlaylists", playlists);
@@ -125,33 +127,14 @@ export default {
 					false,
 					this.song.youtubeId,
 					playlist._id,
-					res => {
-						new Toast(res.message);
-
-						if (res.status === "success") {
-							this.playlists[playlistIndex].songs.push(this.song);
-						}
-					}
+					res => new Toast(res.message)
 				);
 			} else {
 				this.socket.dispatch(
 					"playlists.removeSongFromPlaylist",
 					this.song.youtubeId,
 					playlist._id,
-					res => {
-						new Toast(res.message);
-
-						if (res.status === "success") {
-							this.playlists[playlistIndex].songs.forEach(
-								(song, songIndex) => {
-									if (song.youtubeId === this.song.youtubeId)
-										this.playlists[
-											playlistIndex
-										].songs.splice(songIndex, 1);
-								}
-							);
-						}
-					}
+					res => new Toast(res.message)
 				);
 			}
 		},
