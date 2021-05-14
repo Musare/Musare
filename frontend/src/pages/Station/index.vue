@@ -723,9 +723,8 @@ export default {
 				if (newValue === true) {
 					this.beforeEditSongModalLocalPaused = this.localPaused;
 					this.pauseLocalStation();
-				} else if (!this.beforeEditSongModalLocalPaused) {
+				} else if (!this.beforeEditSongModalLocalPaused)
 					this.resumeLocalStation();
-				}
 			}
 		);
 
@@ -1198,6 +1197,14 @@ export default {
 							}
 						},
 						onStateChange: event => {
+							// on ios, playback will be paused locally by default
+							if (
+								event.data === window.YT.PlayerState.PAUSED &&
+								!this.localPaused &&
+								this.isIOS
+							)
+								this.localPaused = true;
+
 							if (
 								event.data === window.YT.PlayerState.PLAYING &&
 								this.videoLoading === true
@@ -1223,9 +1230,9 @@ export default {
 							} else if (
 								event.data === window.YT.PlayerState.PLAYING &&
 								this.seeking === true
-							) {
+							)
 								this.seeking = false;
-							}
+
 							if (
 								event.data === window.YT.PlayerState.PAUSED &&
 								!this.localPaused &&
