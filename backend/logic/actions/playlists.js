@@ -46,15 +46,14 @@ CacheModule.runJob("SUB", {
 });
 
 CacheModule.runJob("SUB", {
-	channel: "playlist.repositionSongs",
+	channel: "playlist.repositionSong",
 	cb: res => {
-		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets =>
+		const { userId, playlistId, song } = res;
+
+		WSModule.runJob("SOCKETS_FROM_USER", { userId }, this).then(sockets =>
 			sockets.forEach(socket =>
-				socket.dispatch("event:playlist.songs.repositioned", {
-					data: {
-						playlistId: res.playlistId,
-						songsBeingChanged: res.songsBeingChanged
-					}
+				socket.dispatch("event:playlist.song.repositioned", {
+					data: { playlistId, song }
 				})
 			)
 		);
@@ -641,49 +640,6 @@ export default {
 	},
 
 	/**
-	 * Obtains basic metadata of a playlist in order to format an activity
-	 *
-	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {string} playlistId - the playlist id
-	 * @param {Function} cb - callback
-	 */
-	getPlaylistForActivity(session, playlistId, cb) {
-		async.waterfall(
-			[
-				next => {
-					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
-						.then(playlist => {
-							next(null, playlist);
-						})
-						.catch(next);
-				}
-			],
-			async (err, playlist) => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"PLAYLISTS_GET_PLAYLIST_FOR_ACTIVITY",
-						`Failed to obtain metadata of playlist ${playlistId} for activity formatting. "${err}"`
-					);
-					return cb({ status: "error", message: err });
-				}
-				this.log(
-					"SUCCESS",
-					"PLAYLISTS_GET_PLAYLIST_FOR_ACTIVITY",
-					`Obtained metadata of playlist ${playlistId} for activity formatting successfully.`
-				);
-				return cb({
-					status: "success",
-					data: {
-						title: playlist.displayName
-					}
-				});
-			}
-		);
-	},
-
-	/**
 	 * Gets a playlist from station id
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
@@ -741,67 +697,6 @@ export default {
 			}
 		);
 	},
-
-	// TODO Remove this
-	/**
-	 * Updates a private playlist
-	 *
-	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {string} playlistId - the id of the playlist we are updating
-	 * @param {object} playlist - the new private playlist object
-	 * @param {Function} cb - gets called with the result
-	 */
-	update: isLoginRequired(async function update(session, playlistId, playlist, cb) {
-		const playlistModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "playlist"
-			},
-			this
-		);
-		async.waterfall(
-			[
-				next => {
-					playlistModel.updateOne(
-						{ _id: playlistId, createdBy: session.userId },
-						playlist,
-						{ runValidators: true },
-						next
-					);
-				},
-
-				(res, next) => {
-					PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId }, this)
-						.then(playlist => {
-							next(null, playlist);
-						})
-						.catch(next);
-				}
-			],
-			async (err, playlist) => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"PLAYLIST_UPDATE",
-						`Updating private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
-					);
-					return cb({ status: "error", message: err });
-				}
-
-				this.log(
-					"SUCCESS",
-					"PLAYLIST_UPDATE",
-					`Successfully updated private playlist "${playlistId}" for user "${session.userId}".`
-				);
-
-				return cb({
-					status: "success",
-					data: { playlist }
-				});
-			}
-		);
-	}),
 
 	/**
 	 * Shuffles songs in a private playlist
@@ -865,37 +760,44 @@ export default {
 	}),
 
 	/**
-	 * Changes the order of song(s) in a private playlist
+	 * Changes the order (position) of a song in a playlist
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} playlistId - the id of the playlist we are targeting
-	 * @param {Array} songsBeingChanged - the songs to be repositioned, each element contains "youtubeId" and "position" properties
+	 * @param {object} song - the song to be repositioned
+	 * @param {string} song.youtubeId - the youtube id of the song being repositioned
+	 * @param {string} song.newIndex - the new position of the song in the playlist
+	 * @param {...any} song.args - any other elements that would be included with a song item in a playlist
 	 * @param {Function} cb - gets called with the result
 	 */
-	repositionSongs: isLoginRequired(async function repositionSongs(session, playlistId, songsBeingChanged, cb) {
+	repositionSong: isLoginRequired(async function repositionSong(session, playlistId, song, cb) {
 		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
 
 		async.waterfall(
 			[
-				// update playlist object with each song's new position
-				next =>
-					async.each(
-						songsBeingChanged,
-						(song, nextSong) =>
-							playlistModel.updateOne(
-								{ _id: playlistId, "songs.youtubeId": song.youtubeId },
-								{
-									$set: {
-										"songs.$.position": song.position
-									}
-								},
-								err => {
-									if (err) return next(err);
-									return nextSong();
-								}
-							),
+				next => {
+					if (!playlistId) return next("Please provide a playlist.");
+					if (!song || !song.youtubeId) return next("You must provide a song to reposition.");
+					return next();
+				},
+
+				// remove song from playlist
+				next => {
+					playlistModel.updateOne(
+						{ _id: playlistId },
+						{ $pull: { songs: { youtubeId: song.youtubeId } } },
 						next
-					),
+					);
+				},
+
+				// add song back to playlist (in new position)
+				(res, next) => {
+					playlistModel.updateOne(
+						{ _id: playlistId },
+						{ $push: { songs: { $each: [song], $position: song.newIndex } } },
+						err => next(err)
+					);
+				},
 
 				// update the cache with the new songs positioning
 				next => {
@@ -910,8 +812,8 @@ export default {
 
 					this.log(
 						"ERROR",
-						"PLAYLIST_REPOSITION_SONGS",
-						`Repositioning songs for private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
+						"PLAYLIST_REPOSITION_SONG",
+						`Repositioning song ${song.youtubeId}  for private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
 					);
 
 					return cb({ status: "error", message: err });
@@ -919,107 +821,22 @@ export default {
 
 				this.log(
 					"SUCCESS",
-					"PLAYLIST_REPOSITION_SONGS",
-					`Successfully repositioned songs for private playlist "${playlistId}" for user "${session.userId}".`
+					"PLAYLIST_REPOSITION_SONG",
+					`Successfully repositioned song ${song.youtubeId} for private playlist "${playlistId}" for user "${session.userId}".`
 				);
 
 				CacheModule.runJob("PUB", {
-					channel: "playlist.repositionSongs",
+					channel: "playlist.repositionSong",
 					value: {
 						userId: session.userId,
 						playlistId,
-						songsBeingChanged
+						song
 					}
 				});
 
 				return cb({
 					status: "success",
-					message: "Order of songs successfully updated"
-				});
-			}
-		);
-	}),
-
-	/**
-	 * Moves a song to the bottom of the list in a private playlist
-	 *
-	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {string} playlistId - the id of the playlist we are moving the song to the bottom from
-	 * @param {string} youtubeId - the youtube id of the song we are moving to the bottom of the list
-	 * @param {Function} cb - gets called with the result
-	 */
-	moveSongToBottom: isLoginRequired(async function moveSongToBottom(session, playlistId, youtubeId, cb) {
-		async.waterfall(
-			[
-				next => {
-					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
-						.then(playlist => next(null, playlist))
-						.catch(next);
-				},
-
-				(playlist, next) => {
-					if (!playlist || playlist.createdBy !== session.userId) return next("Playlist not found");
-					if (!playlist.isUserModifiable) return next("Playlist cannot be modified.");
-
-					// sort array by position
-					playlist.songs.sort((a, b) => a.position - b.position);
-
-					// find index of youtubeId
-					playlist.songs.forEach((song, index) => {
-						// reorder array (simulates what would be done with a drag and drop interface)
-						if (song.youtubeId === youtubeId)
-							playlist.songs.splice(playlist.songs.length, 0, playlist.songs.splice(index, 1)[0]);
-					});
-
-					const songsBeingChanged = [];
-
-					playlist.songs.forEach((song, index) => {
-						// check if position needs updated based on index
-						if (song.position !== index + 1)
-							songsBeingChanged.push({
-								youtubeId: song.youtubeId,
-								position: index + 1
-							});
-					});
-
-					// update position property on songs that need to be changed
-					return WSModule.runJob(
-						"RUN_ACTION2",
-						{
-							session,
-							namespace: "playlists",
-							action: "repositionSongs",
-							args: [playlistId, songsBeingChanged]
-						},
-						this
-					)
-						.then(res => {
-							if (res.status === "success") return next();
-							return next("Unable to reposition song in playlist.");
-						})
-						.catch(next);
-				}
-			],
-			async err => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"PLAYLIST_MOVE_SONG_TO_BOTTOM",
-						`Moving song "${youtubeId}" to the bottom for private playlist "${playlistId}" failed for user "${session.userId}". "${err}"`
-					);
-					return cb({ status: "error", message: err });
-				}
-
-				this.log(
-					"SUCCESS",
-					"PLAYLIST_MOVE_SONG_TO_BOTTOM",
-					`Successfully moved song "${youtubeId}" to the bottom for private playlist "${playlistId}" for user "${session.userId}".`
-				);
-
-				return cb({
-					status: "success",
-					message: "Order of songs successfully updated"
+					message: "Successfully repositioned song"
 				});
 			}
 		);
@@ -1311,59 +1128,14 @@ export default {
 			[
 				next => {
 					if (!youtubeId || typeof youtubeId !== "string") return next("Invalid song id.");
-					if (!playlistId) return next("Invalid playlist id.");
+					if (!playlistId || typeof youtubeId !== "string") return next("Invalid playlist id.");
 					return next();
 				},
 
-				next => {
-					PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
-						.then(playlist => next(null, playlist))
-						.catch(next);
-				},
-
-				(playlist, next) => {
-					if (!playlist || playlist.createdBy !== session.userId) return next("Playlist not found");
-
-					// sort array by position
-					playlist.songs.sort((a, b) => a.position - b.position);
-
-					// find index of youtubeId
-					playlist.songs.forEach((song, ind) => {
-						// remove song from array
-						if (song.youtubeId === youtubeId) playlist.songs.splice(ind, 1);
-					});
-
-					const songsBeingChanged = [];
-
-					playlist.songs.forEach((song, index) => {
-						// check if position needs updated based on index
-						if (song.position !== index + 1)
-							songsBeingChanged.push({
-								youtubeId: song.youtubeId,
-								position: index + 1
-							});
-					});
-
-					// update position property on songs that need to be changed
-					return WSModule.runJob(
-						"RUN_ACTION2",
-						{
-							session,
-							namespace: "playlists",
-							action: "repositionSongs",
-							args: [playlistId, songsBeingChanged]
-						},
-						this
-					)
-						.then(res => {
-							if (res.status === "success") return next();
-							return next("Unable to reposition song in playlist.");
-						})
-						.catch(next);
-				},
-
+				// remove song from playlist
 				next => playlistModel.updateOne({ _id: playlistId }, { $pull: { songs: { youtubeId } } }, next),
 
+				// update cache representation of the playlist
 				(res, next) => {
 					PlaylistsModule.runJob("UPDATE_PLAYLIST", { playlistId }, this)
 						.then(playlist => next(null, playlist))

@@ -55,6 +55,7 @@ export default {
 		this.socket.on(
 			"event:playlist.song.added",
 			res => {
+				console.log("added");
 				this.playlists.forEach((playlist, index) => {
 					if (playlist._id === res.data.playlistId) {
 						this.playlists[index].songs.push(res.data.song);
