@@ -358,7 +358,7 @@
 										}}
 									</p>
 								</div>
-								<p id="volume-control">
+								<p id="volume-control" v-if="!isIOS">
 									<i
 										v-if="muted"
 										class="material-icons"
@@ -656,6 +656,7 @@ export default {
 	data() {
 		return {
 			utils,
+			isIOS: navigator.platform.match(/iPhone|iPod|iPad/),
 			title: "Station",
 			loading: true,
 			exists: true,
@@ -1314,7 +1315,7 @@ export default {
 				!this.stationPaused &&
 				!this.localPaused &&
 				this.playerReady &&
-				!navigator.platform.match(/iPhone|iPod|iPad/)
+				!this.isIOS
 			) {
 				const timeElapsed = this.getTimeElapsed();
 				const currentPlayerTime =
