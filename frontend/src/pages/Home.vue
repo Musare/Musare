@@ -107,7 +107,9 @@
 											v-if="station.type === 'official'"
 											class="material-icons verified-station"
 											content="Verified Station"
-											v-tippy
+											v-tippy="{
+												theme: 'info'
+											}"
 										>
 											check_circle
 										</i>
@@ -143,14 +145,14 @@
 											"
 											class="homeIcon material-icons"
 											content="This is your station."
-											v-tippy
+											v-tippy="{ theme: 'info' }"
 											>home</i
 										>
 										<i
 											v-if="station.privacy === 'private'"
 											class="privateIcon material-icons"
 											content="This station is not visible to other users."
-											v-tippy
+											v-tippy="{ theme: 'info' }"
 											>lock</i
 										>
 										<i
@@ -159,7 +161,7 @@
 											"
 											class="unlistedIcon material-icons"
 											content="Unlisted Station"
-											v-tippy
+											v-tippy="{ theme: 'info' }"
 											>link</i
 										>
 									</div>
@@ -173,7 +175,7 @@
 									"
 									class="material-icons"
 									content="Station Paused"
-									v-tippy
+									v-tippy="{ theme: 'info' }"
 									>pause</i
 								>
 								<i
@@ -216,7 +218,7 @@
 											? 'Station in Party mode'
 											: 'Station in Playlist mode'
 									"
-									v-tippy
+									v-tippy="{ theme: 'info' }"
 									>{{
 										station.partyMode
 											? "emoji_people"
@@ -321,7 +323,7 @@
 									v-if="station.type === 'official'"
 									class="material-icons verified-station"
 									content="Verified Station"
-									v-tippy
+									v-tippy="{ theme: 'info' }"
 								>
 									check_circle
 								</i>
@@ -355,21 +357,21 @@
 									"
 									class="homeIcon material-icons"
 									content="This is your station."
-									v-tippy
+									v-tippy="{ theme: 'info' }"
 									>home</i
 								>
 								<i
 									v-if="station.privacy === 'private'"
 									class="privateIcon material-icons"
 									content="This station is not visible to other users."
-									v-tippy
+									v-tippy="{ theme: 'info' }"
 									>lock</i
 								>
 								<i
 									v-if="station.privacy === 'unlisted'"
 									class="unlistedIcon material-icons"
 									content="Unlisted Station"
-									v-tippy
+									v-tippy="{ theme: 'info' }"
 									>link</i
 								>
 							</div>
@@ -380,7 +382,7 @@
 							v-if="station.paused && station.currentSong.title"
 							class="material-icons"
 							content="Station Paused"
-							v-tippy
+							v-tippy="{ theme: 'info' }"
 							>pause</i
 						>
 						<i
@@ -417,7 +419,7 @@
 									? 'Station in Party mode'
 									: 'Station in Playlist mode'
 							"
-							v-tippy
+							v-tippy="{ theme: 'info' }"
 							>{{
 								station.partyMode
 									? "emoji_people"

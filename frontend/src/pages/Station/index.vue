@@ -102,7 +102,7 @@
 												? 'Station in Party mode'
 												: 'Station in Playlist mode'
 										"
-										v-tippy
+										v-tippy="{ theme: 'info' }"
 										>{{
 											station.partyMode
 												? "emoji_people"
@@ -339,7 +339,7 @@
 										v-else
 										class="button is-primary disabled"
 										content="Login to vote to skip songs"
-										v-tippy
+										v-tippy="{ theme: 'info' }"
 									>
 										<i
 											class="material-icons icon-with-button"
@@ -358,7 +358,7 @@
 										}}
 									</p>
 								</div>
-								<p id="volume-control">
+								<p id="volume-control" v-if="!isIOS">
 									<i
 										v-if="muted"
 										class="material-icons"
@@ -477,7 +477,7 @@
 											class="button is-success disabled"
 											id="like-song"
 											content="Login to like songs"
-											v-tippy
+											v-tippy="{ theme: 'info' }"
 										>
 											<i
 												class="material-icons icon-with-button"
@@ -490,7 +490,7 @@
 											class="button is-danger disabled"
 											id="dislike-song"
 											content="Login to dislike songs"
-											v-tippy
+											v-tippy="{ theme: 'info' }"
 										>
 											<i
 												class="material-icons icon-with-button"
@@ -504,7 +504,7 @@
 											<button
 												class="button is-primary disabled"
 												content="Login to add songs to playlist"
-												v-tippy
+												v-tippy="{ theme: 'info' }"
 											>
 												<i class="material-icons"
 													>queue</i
@@ -656,6 +656,7 @@ export default {
 	data() {
 		return {
 			utils,
+			isIOS: navigator.platform.match(/iPhone|iPod|iPad/),
 			title: "Station",
 			loading: true,
 			exists: true,
@@ -722,9 +723,8 @@ export default {
 				if (newValue === true) {
 					this.beforeEditSongModalLocalPaused = this.localPaused;
 					this.pauseLocalStation();
-				} else if (!this.beforeEditSongModalLocalPaused) {
+				} else if (!this.beforeEditSongModalLocalPaused)
 					this.resumeLocalStation();
-				}
 			}
 		);
 
@@ -1132,7 +1132,8 @@ export default {
 						iv_load_policy: 3,
 						rel: 0,
 						showinfo: 0,
-						disablekb: 1
+						disablekb: 1,
+						playsinline: 1
 					},
 					events: {
 						onReady: () => {
@@ -1150,6 +1151,14 @@ export default {
 							if (this.muted) this.player.mute();
 
 							this.playVideo();
+
+							// on ios, playback will be forcibly paused locally
+							if (this.isIOS) {
+								this.updateLocalPaused(true);
+								new Toast(
+									"Please click play manually to use Musare on iOS."
+								);
+							}
 						},
 						onError: err => {
 							console.log("error with youtube video", err);
@@ -1221,9 +1230,9 @@ export default {
 							} else if (
 								event.data === window.YT.PlayerState.PLAYING &&
 								this.seeking === true
-							) {
+							)
 								this.seeking = false;
-							}
+
 							if (
 								event.data === window.YT.PlayerState.PAUSED &&
 								!this.localPaused &&
@@ -1309,7 +1318,12 @@ export default {
 				}
 			}
 
-			if (!this.stationPaused && !this.localPaused && this.playerReady) {
+			if (
+				!this.stationPaused &&
+				!this.localPaused &&
+				this.playerReady &&
+				!this.isIOS
+			) {
 				const timeElapsed = this.getTimeElapsed();
 				const currentPlayerTime =
 					Math.max(
@@ -1319,7 +1333,6 @@ export default {
 					) * 1000;
 
 				const difference = timeElapsed - currentPlayerTime;
-				// console.log(difference);
 
 				let playbackRate = 1;
 

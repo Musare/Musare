@@ -112,6 +112,7 @@
 								v-if="isOwnerOrAdmin()"
 								class="button is-default"
 								:class="{ selected: tab === 'settings' }"
+								ref="settings-tab"
 								@click="showTab('settings')"
 							>
 								Settings
@@ -120,6 +121,7 @@
 								v-if="isAllowedToParty() || isOwnerOrAdmin()"
 								class="button is-default"
 								:class="{ selected: tab === 'playlists' }"
+								ref="playlists-tab"
 								@click="showTab('playlists')"
 							>
 								Playlists
@@ -635,7 +637,6 @@ export default {
 			);
 		},
 		...mapActions("modals/manageStation", [
-			"showTab",
 			"editStation",
 			"setIncludedPlaylists",
 			"setExcludedPlaylists",
@@ -646,6 +647,12 @@ export default {
 			"updateStationPaused",
 			"updateCurrentSong"
 		]),
+		...mapActions({
+			showTab(dispatch, payload) {
+				this.$refs[`${payload}-tab`].scrollIntoView();
+				return dispatch("modals/manageStation/showTab", payload);
+			}
+		}),
 		...mapActions("modalVisibility", ["openModal", "closeModal"]),
 		...mapActions("user/playlists", ["editPlaylist"])
 	}

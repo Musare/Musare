@@ -121,7 +121,7 @@
 								v-if="isExcluded(playlist._id)"
 								class="material-icons stop-icon"
 								content="This playlist is blacklisted in this station"
-								v-tippy
+								v-tippy="{ theme: 'info' }"
 								>play_disabled</i
 							>
 							<confirm
@@ -321,7 +321,7 @@
 									v-if="isExcluded(playlist._id)"
 									class="material-icons stop-icon"
 									content="This playlist is blacklisted in this station"
-									v-tippy
+									v-tippy="{ theme: 'info' }"
 									>play_disabled</i
 								> -->
 								<i

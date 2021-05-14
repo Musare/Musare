@@ -28,13 +28,17 @@
 							/>
 						</td>
 						<td>
-							<span :content="report.createdAt" v-tippy>{{
-								formatDistance(
-									new Date(report.createdAt),
-									new Date(),
-									{ addSuffix: true }
-								)
-							}}</span>
+							<span
+								:content="report.createdAt"
+								v-tippy="{ theme: 'info' }"
+								>{{
+									formatDistance(
+										new Date(report.createdAt),
+										new Date(),
+										{ addSuffix: true }
+									)
+								}}</span
+							>
 						</td>
 						<td>
 							<span>{{ report.description }}</span>

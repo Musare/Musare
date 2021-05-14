@@ -48,7 +48,7 @@
 </template>
 
 <script>
-import { mapGetters } from "vuex";
+import { mapGetters, mapState, mapActions } from "vuex";
 import Toast from "toasters";
 
 export default {
@@ -62,40 +62,59 @@ export default {
 			default: "left"
 		}
 	},
-	data() {
-		return {
-			playlists: []
-		};
-	},
-	computed: mapGetters({
-		socket: "websockets/getSocket"
-	}),
-	mounted() {
-		this.socket.dispatch("playlists.indexMyPlaylists", false, res => {
-			if (res.status === "success") {
-				this.playlists = res.data.playlists;
+	computed: {
+		...mapGetters({
+			socket: "websockets/getSocket"
+		}),
+		...mapState({
+			fetchedPlaylists: state => state.user.playlists.fetchedPlaylists
+		}),
+		playlists: {
+			get() {
+				return this.$store.state.user.playlists.playlists;
+			},
+			set(playlists) {
+				this.$store.commit("user/playlists/setPlaylists", playlists);
 			}
-		});
-
-		this.socket.on("event:playlist.created", res => {
-			this.playlists.push(res.data.playlist);
-		});
-
-		this.socket.on("event:playlist.deleted", res => {
-			this.playlists.forEach((playlist, index) => {
-				if (playlist._id === res.data.playlistId) {
-					this.playlists.splice(index, 1);
-				}
+		}
+	},
+	mounted() {
+		if (!this.fetchedPlaylists)
+			this.socket.dispatch("playlists.indexMyPlaylists", false, res => {
+				if (res.status === "success")
+					this.setPlaylists(res.data.playlists);
 			});
-		});
 
-		this.socket.on("event:playlist.displayName.updated", res => {
-			this.playlists.forEach((playlist, index) => {
-				if (playlist._id === res.data.playlistId) {
-					this.playlists[index].displayName = res.data.displayName;
-				}
-			});
-		});
+		this.socket.on(
+			"event:playlist.created",
+			res => this.playlists.push(res.data.playlist),
+			{ replaceable: true }
+		);
+
+		this.socket.on(
+			"event:playlist.deleted",
+			res => {
+				this.playlists.forEach((playlist, index) => {
+					if (playlist._id === res.data.playlistId) {
+						this.playlists.splice(index, 1);
+					}
+				});
+			},
+			{ replaceable: true }
+		);
+
+		this.socket.on(
+			"event:playlist.displayName.updated",
+			res => {
+				this.playlists.forEach((playlist, index) => {
+					if (playlist._id === res.data.playlistId) {
+						this.playlists[index].displayName =
+							res.data.displayName;
+					}
+				});
+			},
+			{ replaceable: true }
+		);
 	},
 	methods: {
 		toggleSongInPlaylist(playlistIndex) {
@@ -141,7 +160,8 @@ export default {
 				playlist.songs.map(song => song._id).indexOf(this.song._id) !==
 				-1
 			);
-		}
+		},
+		...mapActions("user/playlists", ["setPlaylists"])
 	}
 };
 </script>

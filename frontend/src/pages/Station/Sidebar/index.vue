@@ -27,7 +27,7 @@
 				v-else
 				class="button is-default"
 				content="Login to manage playlists"
-				v-tippy
+				v-tippy="{ theme: 'info' }"
 			>
 				My Playlists
 			</button>

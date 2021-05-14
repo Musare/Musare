@@ -18,7 +18,7 @@ CacheModule.runJob("SUB", {
 	channel: "playlist.create",
 	cb: playlist => {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: playlist.createdBy }, this).then(sockets =>
-			sockets.forEach(socket => socket.dispatch("d", { data: { playlist } }))
+			sockets.forEach(socket => socket.dispatch("event:playlist.created", { data: { playlist } }))
 		);
 
 		if (playlist.privacy === "public")
