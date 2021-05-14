@@ -130,6 +130,7 @@
 								v-if="isAllowedToParty() || isOwnerOrAdmin()"
 								class="button is-default"
 								:class="{ selected: tab === 'songs' }"
+								ref="songs-tab"
 								@click="showTab('songs')"
 							>
 								Songs
