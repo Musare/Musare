@@ -1310,7 +1310,12 @@ export default {
 				}
 			}
 
-			if (!this.stationPaused && !this.localPaused && this.playerReady) {
+			if (
+				!this.stationPaused &&
+				!this.localPaused &&
+				this.playerReady &&
+				!navigator.platform.match(/iPhone|iPod|iPad/)
+			) {
 				const timeElapsed = this.getTimeElapsed();
 				const currentPlayerTime =
 					Math.max(
@@ -1320,7 +1325,6 @@ export default {
 					) * 1000;
 
 				const difference = timeElapsed - currentPlayerTime;
-				// console.log(difference);
 
 				let playbackRate = 1;
 
