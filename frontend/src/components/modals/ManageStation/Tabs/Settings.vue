@@ -187,7 +187,7 @@
 					<button
 						class="blue"
 						content="Can not be changed on official stations."
-						v-tippy
+						v-tippy="{ theme: 'info' }"
 					>
 						<i class="material-icons">playlist_play</i>
 						Playlist
@@ -240,7 +240,7 @@
 					<button
 						class="blue"
 						content="Can not be changed on official stations."
-						v-tippy
+						v-tippy="{ theme: 'info' }"
 					>
 						<i class="material-icons">shuffle</i>
 						Random

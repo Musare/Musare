@@ -451,12 +451,17 @@ a {
 	}
 }
 
+.tippy-tooltip.info-theme {
+	font-size: 12px;
+	letter-spacing: 1px;
+}
+
 .tippy-tooltip.confirm-theme {
 	background-color: var(--red);
 	padding: 5px 10px;
 	a {
 		color: var(--white);
-		font-size: 14px;
+		font-size: 15px;
 		font-weight: 600;
 		&:hover,
 		&:focus {
@@ -466,7 +471,7 @@ a {
 }
 
 .tippy-tooltip.songActions-theme {
-	font-size: 14px;
+	font-size: 15px;
 	padding: 5px 10px;
 	border: 1px solid var(--light-grey-3);
 	box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
@@ -574,7 +579,7 @@ a {
 }
 
 .tippy-tooltip.addToPlaylist-theme {
-	font-size: 14px;
+	font-size: 15px;
 	padding: 5px;
 	border: 1px solid var(--light-grey-3);
 	box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);

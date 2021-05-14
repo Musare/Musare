@@ -63,7 +63,7 @@
 						<i
 							class="material-icons"
 							content="Account Creation Date"
-							v-tippy
+							v-tippy="{ theme: 'info' }"
 							>calendar_today</i
 						>
 						<p>{{ user.createdAt }}</p>

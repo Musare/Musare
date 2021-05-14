@@ -24,7 +24,7 @@
 						v-if="song.status === 'verified'"
 						class="material-icons verified-song"
 						content="Verified Song"
-						v-tippy
+						v-tippy="{ theme: 'info' }"
 					>
 						check_circle
 					</i>
@@ -307,6 +307,7 @@ export default {
 		.song-title {
 			display: flex;
 			flex-direction: row;
+
 			.verified-song {
 				margin-left: 5px;
 			}

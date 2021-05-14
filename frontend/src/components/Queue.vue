@@ -106,7 +106,7 @@
 						station.type === 'official')
 			"
 			content="Login to add songs to queue"
-			v-tippy
+			v-tippy="{ theme: 'info' }"
 		>
 			<i class="material-icons icon-with-button">queue</i>
 			<span class="optional-desktop-only-text"> Add Song To Queue </span>

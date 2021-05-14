@@ -102,7 +102,7 @@
 												? 'Station in Party mode'
 												: 'Station in Playlist mode'
 										"
-										v-tippy
+										v-tippy="{ theme: 'info' }"
 										>{{
 											station.partyMode
 												? "emoji_people"
@@ -339,7 +339,7 @@
 										v-else
 										class="button is-primary disabled"
 										content="Login to vote to skip songs"
-										v-tippy
+										v-tippy="{ theme: 'info' }"
 									>
 										<i
 											class="material-icons icon-with-button"
@@ -477,7 +477,7 @@
 											class="button is-success disabled"
 											id="like-song"
 											content="Login to like songs"
-											v-tippy
+											v-tippy="{ theme: 'info' }"
 										>
 											<i
 												class="material-icons icon-with-button"
@@ -490,7 +490,7 @@
 											class="button is-danger disabled"
 											id="dislike-song"
 											content="Login to dislike songs"
-											v-tippy
+											v-tippy="{ theme: 'info' }"
 										>
 											<i
 												class="material-icons icon-with-button"
@@ -504,7 +504,7 @@
 											<button
 												class="button is-primary disabled"
 												content="Login to add songs to playlist"
-												v-tippy
+												v-tippy="{ theme: 'info' }"
 											>
 												<i class="material-icons"
 													>queue</i
