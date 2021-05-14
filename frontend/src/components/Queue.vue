@@ -240,21 +240,12 @@ export default {
 				},
 				res => {
 					new Toast({ content: res.message, timeout: 4000 });
-					if (res.status !== "success") {
-						if (this.sector === "station") {
-							this.repositionSongInListStation({
-								...moved.element,
-								newIndex: moved.oldIndex,
-								oldIndex: moved.newIndex
-							});
-						} else if (this.sector === "manageStation") {
-							this.repositionSongInListManageStation({
-								...moved.element,
-								newIndex: moved.oldIndex,
-								oldIndex: moved.newIndex
-							});
-						}
-					}
+					if (res.status !== "success")
+						this.repositionSongInList({
+							...moved.element,
+							newIndex: moved.oldIndex,
+							oldIndex: moved.newIndex
+						});
 				}
 			);
 		},
@@ -276,11 +267,16 @@ export default {
 				}
 			});
 		},
-		...mapActions("modals/manageStation", {
-			repositionSongInListManageStation: "repositionSongInList"
-		}),
-		...mapActions("station", {
-			repositionSongInListStation: "repositionSongInList"
+		...mapActions({
+			repositionSongInList(dispatch, payload) {
+				if (this.sector === "manageStation")
+					return dispatch(
+						"modals/manageStation/repositionSongInList",
+						payload
+					);
+
+				return dispatch("station/repositionSongInList", payload);
+			}
 		}),
 		...mapActions("modalVisibility", ["openModal"]),
 		...mapActions({
