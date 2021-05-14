@@ -1151,6 +1151,9 @@ export default {
 							if (this.muted) this.player.mute();
 
 							this.playVideo();
+
+							// on ios, playback will be forcibly paused locally
+							if (this.isIOS) this.localPaused = true;
 						},
 						onError: err => {
 							console.log("error with youtube video", err);
@@ -1197,14 +1200,6 @@ export default {
 							}
 						},
 						onStateChange: event => {
-							// on ios, playback will be paused locally by default
-							if (
-								event.data === window.YT.PlayerState.PAUSED &&
-								!this.localPaused &&
-								this.isIOS
-							)
-								this.localPaused = true;
-
 							if (
 								event.data === window.YT.PlayerState.PLAYING &&
 								this.videoLoading === true
