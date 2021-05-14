@@ -1153,7 +1153,12 @@ export default {
 							this.playVideo();
 
 							// on ios, playback will be forcibly paused locally
-							if (this.isIOS) this.updateLocalPaused(true);
+							if (this.isIOS) {
+								this.updateLocalPaused(true);
+								new Toast(
+									"Please click play manually to use Musare on iOS."
+								);
+							}
 						},
 						onError: err => {
 							console.log("error with youtube video", err);
