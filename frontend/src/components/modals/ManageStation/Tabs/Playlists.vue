@@ -20,7 +20,7 @@
 				<button
 					class="button is-default"
 					:class="{ selected: tab === 'party' }"
-					v-if="station.type === 'community' && station.partyMode"
+					v-if="isPartyMode()"
 					@click="showTab('party')"
 				>
 					Party
@@ -28,7 +28,7 @@
 				<button
 					class="button is-default"
 					:class="{ selected: tab === 'included' }"
-					v-if="!(station.type === 'community' && station.partyMode)"
+					v-if="isPlaylistMode()"
 					@click="showTab('included')"
 				>
 					Included
@@ -68,6 +68,54 @@
 						:playlist="playlist"
 						:show-owner="true"
 					>
+						<i
+							class="material-icons"
+							slot="left-icon"
+							v-if="
+								isAllowedToParty() && isSelected(playlist._id)
+							"
+							content="This playlist is currently selected"
+							v-tippy
+						>
+							radio
+						</i>
+						<i
+							class="material-icons"
+							slot="left-icon"
+							v-else-if="
+								isOwnerOrAdmin() &&
+									isPlaylistMode() &&
+									isIncluded(playlist._id)
+							"
+							content="This playlist is currently included"
+							v-tippy
+						>
+							play_arrow
+						</i>
+						<i
+							class="material-icons excluded-icon"
+							slot="left-icon"
+							v-else-if="
+								isOwnerOrAdmin() && isExcluded(playlist._id)
+							"
+							content="This playlist is currently excluded"
+							v-tippy
+						>
+							block
+						</i>
+						<i
+							class="material-icons"
+							slot="left-icon"
+							v-else
+							:content="
+								isPartyMode()
+									? 'This playlist is currently not selected or excluded'
+									: 'This playlist is currently not included or excluded'
+							"
+							v-tippy
+						>
+							play_disabled
+						</i>
 						<div class="icons-group" slot="actions">
 							<i
 								v-if="isExcluded(playlist._id)"
@@ -77,11 +125,7 @@
 								>play_disabled</i
 							>
 							<confirm
-								v-if="
-									station.type === 'community' &&
-										station.partyMode &&
-										isSelected(playlist._id)
-								"
+								v-if="isPartyMode() && isSelected(playlist._id)"
 								@confirm="deselectPartyPlaylist(playlist._id)"
 							>
 								<i
@@ -95,10 +139,7 @@
 							<confirm
 								v-if="
 									isOwnerOrAdmin() &&
-										!(
-											station.type === 'community' &&
-											station.partyMode
-										) &&
+										isPlaylistMode() &&
 										isIncluded(playlist._id)
 								"
 								@confirm="removeIncludedPlaylist(playlist._id)"
@@ -113,8 +154,7 @@
 							</confirm>
 							<i
 								v-if="
-									station.type === 'community' &&
-										station.partyMode &&
+									isPartyMode() &&
 										!isSelected(playlist._id) &&
 										!isExcluded(playlist._id)
 								"
@@ -127,10 +167,7 @@
 							<i
 								v-if="
 									isOwnerOrAdmin() &&
-										!(
-											station.type === 'community' &&
-											station.partyMode
-										) &&
+										isPlaylistMode() &&
 										!isIncluded(playlist._id) &&
 										!isExcluded(playlist._id)
 								"
@@ -153,6 +190,20 @@
 									v-tippy
 									>block</i
 								>
+							</confirm>
+							<confirm
+								v-if="
+									isOwnerOrAdmin() && isExcluded(playlist._id)
+								"
+								@confirm="removeExcludedPlaylist(playlist._id)"
+							>
+								<i
+									class="material-icons stop-icon"
+									content="Stop blacklisting songs from this playlist"
+									v-tippy
+								>
+									stop
+								</i>
 							</confirm>
 							<i
 								v-if="playlist.createdBy === myUserId"
@@ -216,20 +267,67 @@
 							:key="playlist._id"
 							:playlist="playlist"
 						>
+							<i
+								class="material-icons"
+								slot="left-icon"
+								v-if="
+									isAllowedToParty() &&
+										isSelected(playlist._id)
+								"
+								content="This playlist is currently selected"
+								v-tippy
+							>
+								radio
+							</i>
+							<i
+								class="material-icons"
+								slot="left-icon"
+								v-else-if="
+									isOwnerOrAdmin() &&
+										isPlaylistMode() &&
+										isIncluded(playlist._id)
+								"
+								content="This playlist is currently included"
+								v-tippy
+							>
+								play_arrow
+							</i>
+							<i
+								class="material-icons excluded-icon"
+								slot="left-icon"
+								v-else-if="
+									isOwnerOrAdmin() && isExcluded(playlist._id)
+								"
+								content="This playlist is currently excluded"
+								v-tippy
+							>
+								block
+							</i>
+							<i
+								class="material-icons"
+								slot="left-icon"
+								v-else
+								:content="
+									isPartyMode()
+										? 'This playlist is currently not selected or excluded'
+										: 'This playlist is currently not included or excluded'
+								"
+								v-tippy
+							>
+								play_disabled
+							</i>
 							<div slot="actions">
-								<i
+								<!-- <i
 									v-if="isExcluded(playlist._id)"
 									class="material-icons stop-icon"
 									content="This playlist is blacklisted in this station"
 									v-tippy
 									>play_disabled</i
-								>
+								> -->
 								<i
 									v-if="
-										station.type === 'community' &&
-											station.partyMode &&
-											!isSelected(playlist._id) &&
-											!isExcluded(playlist._id)
+										isPartyMode() &&
+											!isSelected(playlist._id)
 									"
 									@click="selectPartyPlaylist(playlist)"
 									class="material-icons play-icon"
@@ -239,11 +337,9 @@
 								>
 								<i
 									v-if="
-										station.type === 'community' &&
+										isPlaylistMode() &&
 											isOwnerOrAdmin() &&
-											!station.partyMode &&
-											!isSelected(playlist._id) &&
-											!isExcluded(playlist._id)
+											!isSelected(playlist._id)
 									"
 									@click="includePlaylist(playlist)"
 									class="material-icons play-icon"
@@ -253,8 +349,7 @@
 								>
 								<confirm
 									v-if="
-										station.type === 'community' &&
-											station.partyMode &&
+										isPartyMode() &&
 											isSelected(playlist._id)
 									"
 									@confirm="
@@ -270,9 +365,8 @@
 								</confirm>
 								<confirm
 									v-if="
-										station.type === 'community' &&
+										isPlaylistMode() &&
 											isOwnerOrAdmin() &&
-											!station.partyMode &&
 											isIncluded(playlist._id)
 									"
 									@confirm="
@@ -300,6 +394,23 @@
 										>block</i
 									>
 								</confirm>
+								<confirm
+									v-if="
+										isOwnerOrAdmin() &&
+											isExcluded(playlist._id)
+									"
+									@confirm="
+										removeExcludedPlaylist(playlist._id)
+									"
+								>
+									<i
+										class="material-icons stop-icon"
+										content="Stop blacklisting songs from this playlist"
+										v-tippy
+									>
+										stop
+									</i>
+								</confirm>
 								<i
 									@click="showPlaylist(playlist._id)"
 									class="material-icons edit-icon"
@@ -315,11 +426,7 @@
 					You don't have any playlists!
 				</p>
 			</div>
-			<div
-				class="tab"
-				v-show="tab === 'party'"
-				v-if="station.type === 'community' && station.partyMode"
-			>
+			<div class="tab" v-show="tab === 'party'" v-if="isPartyMode()">
 				<div v-if="partyPlaylists.length > 0">
 					<playlist-item
 						v-for="playlist in partyPlaylists"
@@ -327,6 +434,14 @@
 						:playlist="playlist"
 						:show-owner="true"
 					>
+						<i
+							class="material-icons"
+							slot="left-icon"
+							content="This playlist is currently selected"
+							v-tippy
+						>
+							radio
+						</i>
 						<div class="icons-group" slot="actions">
 							<confirm
 								v-if="isOwnerOrAdmin()"
@@ -381,7 +496,7 @@
 			<div
 				class="tab"
 				v-show="tab === 'included'"
-				v-if="!(station.type === 'community' && station.partyMode)"
+				v-if="isPlaylistMode()"
 			>
 				<div v-if="includedPlaylists.length > 0">
 					<playlist-item
@@ -390,6 +505,14 @@
 						:playlist="playlist"
 						:show-owner="true"
 					>
+						<i
+							class="material-icons"
+							slot="left-icon"
+							content="This playlist is currently included"
+							v-tippy
+						>
+							play_arrow
+						</i>
 						<div class="icons-group" slot="actions">
 							<confirm
 								v-if="isOwnerOrAdmin()"
@@ -441,13 +564,25 @@
 					No playlists currently included.
 				</p>
 			</div>
-			<div class="tab" v-show="tab === 'excluded'">
+			<div
+				class="tab"
+				v-show="tab === 'excluded'"
+				v-if="isOwnerOrAdmin()"
+			>
 				<div v-if="excludedPlaylists.length > 0">
 					<playlist-item
 						:playlist="playlist"
 						v-for="playlist in excludedPlaylists"
 						:key="`key-${playlist._id}`"
 					>
+						<i
+							class="material-icons excluded-icon"
+							slot="left-icon"
+							content="This playlist is currently excluded"
+							v-tippy
+						>
+							block
+						</i>
 						<div class="icons-group" slot="actions">
 							<confirm
 								@confirm="removeExcludedPlaylist(playlist._id)"
@@ -574,13 +709,35 @@ export default {
 			this.tab = tab;
 		},
 		isOwner() {
-			return this.loggedIn && this.userId === this.station.owner;
+			return (
+				this.loggedIn &&
+				this.station &&
+				this.userId === this.station.owner
+			);
 		},
 		isAdmin() {
 			return this.loggedIn && this.role === "admin";
 		},
 		isOwnerOrAdmin() {
 			return this.isOwner() || this.isAdmin();
+		},
+		isPartyMode() {
+			return (
+				this.station &&
+				this.station.type === "community" &&
+				this.station.partyMode
+			);
+		},
+		isAllowedToParty() {
+			return (
+				this.station &&
+				this.isPartyMode() &&
+				(!this.station.locked || this.isOwnerOrAdmin()) &&
+				this.loggedIn
+			);
+		},
+		isPlaylistMode() {
+			return this.station && !this.isPartyMode();
 		},
 		showPlaylist(playlistId) {
 			this.editPlaylist(playlistId);
@@ -773,6 +930,18 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.excluded-icon {
+	color: var(--red);
+}
+
+.included-icon {
+	color: var(--green);
+}
+
+.selected-icon {
+	color: var(--purple);
+}
+
 .station-playlists {
 	.tabs-container {
 		.tab-selection {

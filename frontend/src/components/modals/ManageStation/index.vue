@@ -12,83 +12,19 @@
 		<template #body>
 			<div class="custom-modal-body" v-if="station && station._id">
 				<div class="left-section">
-					<div class="section tabs-container">
-						<div class="tab-selection">
-							<button
-								v-if="isOwnerOrAdmin()"
-								class="button is-default"
-								:class="{ selected: tab === 'settings' }"
-								@click="showTab('settings')"
-							>
-								Settings
-							</button>
-							<button
-								v-if="
-									isOwnerOrAdmin() ||
-										(loggedIn &&
-											station.type === 'community' &&
-											station.partyMode &&
-											((station.locked &&
-												isOwnerOrAdmin()) ||
-												!station.locked))
-								"
-								class="button is-default"
-								:class="{ selected: tab === 'playlists' }"
-								@click="showTab('playlists')"
-							>
-								Playlists
-							</button>
-							<button
-								v-if="
-									(loggedIn &&
-										station.type === 'community' &&
-										station.partyMode &&
-										!station.locked) ||
-										isOwnerOrAdmin()
-								"
-								class="button is-default"
-								:class="{ selected: tab === 'songs' }"
-								@click="showTab('songs')"
-							>
-								Songs
-							</button>
-						</div>
-						<settings
-							v-if="isOwnerOrAdmin()"
-							class="tab"
-							v-show="tab === 'settings'"
-						/>
-						<playlists
-							v-if="
-								isOwnerOrAdmin() ||
-									(loggedIn &&
-										station.type === 'community' &&
-										station.partyMode &&
-										((station.locked && isOwnerOrAdmin()) ||
-											!station.locked))
-							"
-							class="tab"
-							v-show="tab === 'playlists'"
-						/>
-						<songs
-							v-if="
-								(loggedIn &&
-									station.type === 'community' &&
-									station.partyMode &&
-									!station.locked) ||
-									isOwnerOrAdmin()
-							"
-							class="tab"
-							v-show="tab === 'songs'"
-						/>
-					</div>
-				</div>
-				<div class="right-section">
 					<div class="section">
 						<div id="about-station-container">
 							<div id="station-info">
 								<div id="station-name">
 									<h1>{{ station.displayName }}</h1>
+									<i
+										v-if="station.type === 'official'"
+										class="material-icons verified-station"
+										content="Verified Station"
+										v-tippy
+									>
+										check_circle
+									</i>
 									<i
 										class="material-icons stationMode"
 										:content="
@@ -146,8 +82,76 @@
 										Force Skip
 									</span>
 								</button>
+
+								<!-- Station Settings Button -->
+								<!-- <button
+									class="button is-primary"
+									@click="openModal('manageStation')"
+								>
+									<i class="material-icons icon-with-button"
+										>settings</i
+									>
+									<span class="optional-desktop-only-text">
+										Manage Station
+									</span>
+								</button> -->
+								<router-link
+									v-if="sector !== 'station' && station.name"
+									:to="{
+										name: 'station',
+										params: { id: station.name }
+									}"
+									class="button is-primary"
+								>
+									Go To Station
+								</router-link>
 							</div>
 						</div>
+						<div class="tab-selection">
+							<button
+								v-if="isOwnerOrAdmin()"
+								class="button is-default"
+								:class="{ selected: tab === 'settings' }"
+								@click="showTab('settings')"
+							>
+								Settings
+							</button>
+							<button
+								v-if="isAllowedToParty() || isOwnerOrAdmin()"
+								class="button is-default"
+								:class="{ selected: tab === 'playlists' }"
+								@click="showTab('playlists')"
+							>
+								Playlists
+							</button>
+							<button
+								v-if="isAllowedToParty() || isOwnerOrAdmin()"
+								class="button is-default"
+								:class="{ selected: tab === 'songs' }"
+								@click="showTab('songs')"
+							>
+								Songs
+							</button>
+						</div>
+						<settings
+							v-if="isOwnerOrAdmin()"
+							class="tab"
+							v-show="tab === 'settings'"
+						/>
+						<playlists
+							v-if="isAllowedToParty() || isOwnerOrAdmin()"
+							class="tab"
+							v-show="tab === 'playlists'"
+						/>
+						<songs
+							v-if="isAllowedToParty() || isOwnerOrAdmin()"
+							class="tab"
+							v-show="tab === 'songs'"
+						/>
+					</div>
+				</div>
+				<div class="right-section">
+					<div class="section">
 						<div class="queue-title">
 							<h4 class="section-title">Queue</h4>
 						</div>
@@ -168,7 +172,7 @@
 			</div>
 		</template>
 		<template #footer>
-			<router-link
+			<!-- <router-link
 				v-if="sector !== 'station' && station.name"
 				:to="{
 					name: 'station',
@@ -177,14 +181,7 @@
 				class="button is-primary"
 			>
 				Go To Station
-			</router-link>
-			<a
-				class="button is-default"
-				v-if="isOwnerOrAdmin() && !station.partyMode"
-				@click="stationPlaylist()"
-			>
-				View Station Playlist
-			</a>
+			</router-link> -->
 			<button
 				class="button is-primary tab-actionable-button"
 				v-if="loggedIn && station.type === 'official'"
@@ -249,6 +246,7 @@ export default {
 			station: state => state.station,
 			originalStation: state => state.originalStation,
 			songsList: state => state.songsList,
+			stationPlaylist: state => state.stationPlaylist,
 			includedPlaylists: state => state.includedPlaylists,
 			excludedPlaylists: state => state.excludedPlaylists,
 			stationPaused: state => state.stationPaused,
@@ -292,6 +290,19 @@ export default {
 							this.setExcludedPlaylists(res.data.playlists);
 					}
 				);
+
+				if (this.isOwnerOrAdmin()) {
+					this.socket.dispatch(
+						"playlists.getPlaylistForStation",
+						this.station._id,
+						true,
+						res => {
+							if (res.status === "success") {
+								this.updateStationPlaylist(res.data.playlist);
+							}
+						}
+					);
+				}
 
 				this.socket.dispatch(
 					"stations.getQueue",
@@ -462,6 +473,73 @@ export default {
 			},
 			{ modal: "manageStation" }
 		);
+
+		if (this.isOwnerOrAdmin()) {
+			this.socket.on(
+				"event:playlist.song.added",
+				res => {
+					if (this.stationPlaylist._id === res.data.playlistId)
+						this.stationPlaylist.songs.push(res.data.song);
+				},
+				{
+					modal: "manageStation"
+				}
+			);
+
+			this.socket.on(
+				"event:playlist.song.removed",
+				res => {
+					if (this.stationPlaylist._id === res.data.playlistId) {
+						// remove song from array of playlists
+						this.stationPlaylist.songs.forEach((song, index) => {
+							if (song.youtubeId === res.data.youtubeId)
+								this.stationPlaylist.songs.splice(index, 1);
+						});
+					}
+				},
+				{
+					modal: "manageStation"
+				}
+			);
+
+			this.socket.on(
+				"event:playlist.songs.repositioned",
+				res => {
+					if (this.stationPlaylist._id === res.data.playlistId) {
+						// for each song that has a new position
+						res.data.songsBeingChanged.forEach(changedSong => {
+							this.stationPlaylist.songs.forEach(
+								(song, index) => {
+									// find song locally
+									if (
+										song.youtubeId === changedSong.youtubeId
+									) {
+										// change song position attribute
+										this.stationPlaylist.songs[
+											index
+										].position = changedSong.position;
+
+										// reposition in array if needed
+										if (index !== changedSong.position - 1)
+											this.stationPlaylist.songs.splice(
+												changedSong.position - 1,
+												0,
+												this.stationPlaylist.songs.splice(
+													index,
+													1
+												)[0]
+											);
+									}
+								}
+							);
+						});
+					}
+				},
+				{
+					modal: "manageStation"
+				}
+			);
+		}
 	},
 	beforeDestroy() {
 		this.socket.dispatch(
@@ -476,13 +554,35 @@ export default {
 	},
 	methods: {
 		isOwner() {
-			return this.loggedIn && this.userId === this.station.owner;
+			return (
+				this.loggedIn &&
+				this.station &&
+				this.userId === this.station.owner
+			);
 		},
 		isAdmin() {
 			return this.loggedIn && this.role === "admin";
 		},
 		isOwnerOrAdmin() {
 			return this.isOwner() || this.isAdmin();
+		},
+		isPartyMode() {
+			return (
+				this.station &&
+				this.station.type === "community" &&
+				this.station.partyMode
+			);
+		},
+		isAllowedToParty() {
+			return (
+				this.station &&
+				this.isPartyMode() &&
+				(!this.station.locked || this.isOwnerOrAdmin()) &&
+				this.loggedIn
+			);
+		},
+		isPlaylistMode() {
+			return this.station && !this.isPartyMode();
 		},
 		removeStation() {
 			this.socket.dispatch("stations.remove", this.station._id, res => {
@@ -534,21 +634,6 @@ export default {
 				}
 			);
 		},
-		stationPlaylist() {
-			this.socket.dispatch(
-				"playlists.getPlaylistForStation",
-				this.station._id,
-				false,
-				res => {
-					if (res.status === "success") {
-						this.editPlaylist(res.data.playlist._id);
-						this.openModal("editPlaylist");
-					} else {
-						new Toast(res.message);
-					}
-				}
-			);
-		},
 		...mapActions("modals/manageStation", [
 			"showTab",
 			"editStation",
@@ -556,6 +641,7 @@ export default {
 			"setExcludedPlaylists",
 			"clearStation",
 			"updateSongsList",
+			"updateStationPlaylist",
 			"repositionSongInList",
 			"updateStationPaused",
 			"updateCurrentSong"
@@ -611,37 +697,89 @@ export default {
 		overflow-y: auto;
 		flex-grow: 1;
 
-		.tabs-container {
-			.tab-selection {
-				display: flex;
-				overflow-x: auto;
+		#about-station-container {
+			padding: 20px;
+			display: flex;
+			flex-direction: column;
+			flex-grow: unset;
+			border-radius: 5px;
+			margin: 0 0 20px 0;
+			background-color: var(--white);
+			border: 1px solid var(--light-grey-3);
 
-				.button {
-					border-radius: 5px 5px 0 0;
-					border: 0;
-					text-transform: uppercase;
-					font-size: 14px;
-					color: var(--dark-grey-3);
-					background-color: var(--light-grey-2);
-					flex-grow: 1;
-					height: 32px;
+			#station-info {
+				#station-name {
+					flex-direction: row !important;
+					display: flex;
+					flex-direction: row;
+					max-width: 100%;
 
-					&:not(:first-of-type) {
-						margin-left: 5px;
+					h1 {
+						margin: 0;
+						font-size: 36px;
+						line-height: 0.8;
+					}
+
+					i {
+						margin-left: 10px;
+						font-size: 30px;
+						color: var(--yellow);
+						&.stationMode {
+							padding-left: 10px;
+							margin-left: auto;
+							color: var(--primary-color);
+						}
+					}
+
+					.verified-station {
+						color: var(--primary-color);
 					}
 				}
 
-				.selected {
-					background-color: var(--primary-color) !important;
-					color: var(--white) !important;
-					font-weight: 600;
+				p {
+					max-width: 700px;
+					margin-bottom: 10px;
 				}
 			}
-			.tab {
-				border: 1px solid var(--light-grey-3);
-				padding: 15px;
-				border-radius: 0 0 5px 5px;
+
+			#admin-buttons {
+				display: flex;
+
+				.button {
+					margin: 3px;
+				}
 			}
+		}
+
+		.tab-selection {
+			display: flex;
+			overflow-x: auto;
+
+			.button {
+				border-radius: 5px 5px 0 0;
+				border: 0;
+				text-transform: uppercase;
+				font-size: 14px;
+				color: var(--dark-grey-3);
+				background-color: var(--light-grey-2);
+				flex-grow: 1;
+				height: 32px;
+
+				&:not(:first-of-type) {
+					margin-left: 5px;
+				}
+			}
+
+			.selected {
+				background-color: var(--primary-color) !important;
+				color: var(--white) !important;
+				font-weight: 600;
+			}
+		}
+		.tab {
+			border: 1px solid var(--light-grey-3);
+			padding: 15px;
+			border-radius: 0 0 5px 5px;
 		}
 	}
 	.right-section {
@@ -650,56 +788,6 @@ export default {
 		overflow-y: auto;
 		flex-grow: 1;
 		.section {
-			#about-station-container {
-				padding: 20px;
-				display: flex;
-				flex-direction: column;
-				flex-grow: unset;
-				border-radius: 5px;
-				margin: 0 0 20px 0;
-				background-color: var(--white);
-				border: 1px solid var(--light-grey-3);
-
-				#station-info {
-					#station-name {
-						flex-direction: row !important;
-						display: flex;
-						flex-direction: row;
-						max-width: 100%;
-
-						h1 {
-							margin: 0;
-							font-size: 36px;
-							line-height: 0.8;
-						}
-
-						i {
-							margin-left: 10px;
-							font-size: 30px;
-							color: var(--yellow);
-							&.stationMode {
-								padding-left: 10px;
-								margin-left: auto;
-								color: var(--primary-color);
-							}
-						}
-					}
-
-					p {
-						max-width: 700px;
-						margin-bottom: 10px;
-					}
-				}
-
-				#admin-buttons {
-					display: flex;
-
-					.button {
-						margin: 3px;
-					}
-				}
-			}
-
 			.queue-title {
 				display: flex;
 				line-height: 30px;

@@ -16,14 +16,14 @@
 				</button>
 				<button
 					class="button is-default"
-					:class="{ selected: tab === 'included' }"
+					:class="{ selected: tab === 'stationPlaylist' }"
 					v-if="
 						isOwnerOrAdmin() &&
 							!(station.type === 'community' && station.partyMode)
 					"
-					@click="showTab('included')"
+					@click="showTab('stationPlaylist')"
 				>
-					Included
+					Station playlist
 				</button>
 				<button
 					class="button is-default"
@@ -169,15 +169,19 @@
 			</div>
 			<div
 				class="tab"
-				v-show="tab === 'included'"
+				v-show="tab === 'stationPlaylist'"
 				v-if="
 					isOwnerOrAdmin() &&
 						!(station.type === 'community' && station.partyMode)
 				"
 			>
-				<div v-if="includedSongs.length > 0">
+				<div v-if="stationPlaylist.songs.length > 0">
+					<div id="playlist-info-section" class="section">
+						<h5>Song Count: {{ stationPlaylist.songs.length }}</h5>
+						<h5>Duration: {{ totalLength(stationPlaylist) }}</h5>
+					</div>
 					<song-item
-						v-for="song in includedSongs"
+						v-for="song in stationPlaylist.songs"
 						:key="song._id"
 						:song="song"
 					>
@@ -194,6 +198,9 @@
 				v-if="isOwnerOrAdmin()"
 			>
 				<div v-if="excludedSongs.length > 0">
+					<div id="playlist-info-section" class="section">
+						<h5>Song Count: {{ excludedSongs.length }}</h5>
+					</div>
 					<song-item
 						v-for="song in excludedSongs"
 						:key="song._id"
@@ -219,6 +226,8 @@ import SearchYoutube from "@/mixins/SearchYoutube.vue";
 import SongItem from "@/components/SongItem.vue";
 import SearchQueryItem from "../../../SearchQueryItem.vue";
 
+import utils from "../../../../../js/utils";
+
 export default {
 	components: {
 		SongItem,
@@ -227,6 +236,7 @@ export default {
 	mixins: [SearchYoutube],
 	data() {
 		return {
+			utils,
 			tab: "search",
 			musareSearch: {
 				query: "",
@@ -244,13 +254,6 @@ export default {
 		},
 		nextPageResultsCount() {
 			return Math.min(this.musareSearch.pageSize, this.resultsLeftCount);
-		},
-		includedSongs() {
-			return this.includedPlaylists
-				.map(playlist => playlist.songs)
-				.flat()
-				.filter((song, index, self) => self.indexOf(song) === index)
-				.filter(song => this.excludedSongIds.indexOf(song._id) === -1);
 		},
 		excludedSongs() {
 			return this.excludedPlaylists
@@ -270,7 +273,7 @@ export default {
 			station: state => state.station,
 			originalStation: state => state.originalStation,
 			excludedPlaylists: state => state.excludedPlaylists,
-			includedPlaylists: state => state.includedPlaylists
+			stationPlaylist: state => state.stationPlaylist
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
@@ -281,7 +284,7 @@ export default {
 			this.isOwnerOrAdmin() &&
 			!(this.station.type === "community" && this.station.partyMode)
 		)
-			this.showTab("included");
+			this.showTab("stationPlaylist");
 	},
 	methods: {
 		showTab(tab) {
@@ -295,6 +298,13 @@ export default {
 		},
 		isOwnerOrAdmin() {
 			return this.isOwner() || this.isAdmin();
+		},
+		totalLength(playlist) {
+			let length = 0;
+			playlist.songs.forEach(song => {
+				length += song.duration;
+			});
+			return this.utils.formatTimeLong(length);
 		},
 		addSongToQueue(youtubeId, index) {
 			if (this.station.type === "community") {
@@ -420,6 +430,27 @@ export default {
 	.load-more-button {
 		width: 100%;
 		margin-top: 10px;
+	}
+
+	#playlist-info-section {
+		border: 1px solid var(--light-grey-3);
+		border-radius: 3px;
+		padding: 15px !important;
+		margin-bottom: 16px;
+
+		h3 {
+			font-weight: 600;
+			font-size: 30px;
+		}
+
+		h5 {
+			font-size: 18px;
+		}
+
+		h3,
+		h5 {
+			margin: 0;
+		}
 	}
 }
 </style>
