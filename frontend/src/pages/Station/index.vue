@@ -1153,7 +1153,7 @@ export default {
 							this.playVideo();
 
 							// on ios, playback will be forcibly paused locally
-							if (this.isIOS) this.localPaused = true;
+							if (this.isIOS) this.updateLocalPaused(true);
 						},
 						onError: err => {
 							console.log("error with youtube video", err);
