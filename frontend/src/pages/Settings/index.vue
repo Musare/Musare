@@ -154,6 +154,7 @@ export default {
 	#page-title {
 		margin-top: 0;
 		font-size: 35px;
+		text-align: center;
 	}
 
 	#sidebar-with-content {
@@ -173,6 +174,11 @@ export default {
 			margin-top: 30px;
 			flex-direction: row;
 
+			.nav-links {
+				margin-left: 0;
+				margin-right: 64px;
+			}
+
 			.content {
 				width: 600px;
 				margin-top: 0px !important;
@@ -182,7 +188,8 @@ export default {
 
 	.nav-links {
 		width: 250px;
-		margin-right: 64px;
+		margin-left: auto;
+		margin-right: auto;
 
 		a {
 			outline: none;
