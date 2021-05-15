@@ -5,6 +5,7 @@
 			<ul>
 				<li
 					:class="{ 'is-active': currentTab == 'hiddensongs' }"
+					ref="hiddensongs-tab"
 					@click="showTab('hiddensongs')"
 				>
 					<router-link
@@ -17,6 +18,7 @@
 				</li>
 				<li
 					:class="{ 'is-active': currentTab == 'unverifiedsongs' }"
+					ref="unverifiedsongs-tab"
 					@click="showTab('unverifiedsongs')"
 				>
 					<router-link
@@ -29,6 +31,7 @@
 				</li>
 				<li
 					:class="{ 'is-active': currentTab == 'verifiedsongs' }"
+					ref="verifiedsongs-tab"
 					@click="showTab('verifiedsongs')"
 				>
 					<router-link
@@ -41,6 +44,7 @@
 				</li>
 				<li
 					:class="{ 'is-active': currentTab == 'stations' }"
+					ref="stations-tab"
 					@click="showTab('stations')"
 				>
 					<router-link class="tab stations" to="/admin/stations">
@@ -50,6 +54,7 @@
 				</li>
 				<li
 					:class="{ 'is-active': currentTab == 'playlists' }"
+					ref="playlists-tab"
 					@click="showTab('playlists')"
 				>
 					<router-link class="tab playlists" to="/admin/playlists">
@@ -59,6 +64,7 @@
 				</li>
 				<li
 					:class="{ 'is-active': currentTab == 'reports' }"
+					ref="reports-tab"
 					@click="showTab('reports')"
 				>
 					<router-link class="tab reports" to="/admin/reports">
@@ -68,6 +74,7 @@
 				</li>
 				<li
 					:class="{ 'is-active': currentTab == 'news' }"
+					ref="news-tab"
 					@click="showTab('news')"
 				>
 					<router-link class="tab news" to="/admin/news">
@@ -77,6 +84,7 @@
 				</li>
 				<li
 					:class="{ 'is-active': currentTab == 'users' }"
+					ref="users-tab"
 					@click="showTab('users')"
 				>
 					<router-link class="tab users" to="/admin/users">
@@ -86,6 +94,7 @@
 				</li>
 				<li
 					:class="{ 'is-active': currentTab == 'statistics' }"
+					ref="statistics-tab"
 					@click="showTab('statistics')"
 				>
 					<router-link class="tab statistics" to="/admin/statistics">
@@ -95,6 +104,7 @@
 				</li>
 				<li
 					:class="{ 'is-active': currentTab == 'punishments' }"
+					ref="punishments-tab"
 					@click="showTab('punishments')"
 				>
 					<router-link
@@ -163,40 +173,44 @@ export default {
 		changeTab(path) {
 			switch (path) {
 				case "/admin/unverifiedsongs":
-					this.currentTab = "unverifiedsongs";
+					this.showTab("unverifiedsongs");
 					break;
 				case "/admin/verifiedsongs":
-					this.currentTab = "verifiedsongs";
+					this.showTab("verifiedsongs");
 					break;
 				case "/admin/hiddensongs":
-					this.currentTab = "hiddensongs";
+					this.showTab("hiddensongs");
 					break;
 				case "/admin/stations":
-					this.currentTab = "stations";
+					this.showTab("stations");
 					break;
 				case "/admin/playlists":
-					this.currentTab = "playlists";
+					this.showTab("playlists");
 					break;
 				case "/admin/reports":
-					this.currentTab = "reports";
+					this.showTab("reports");
 					break;
 				case "/admin/news":
-					this.currentTab = "news";
+					this.showTab("news");
 					break;
 				case "/admin/users":
-					this.currentTab = "users";
+					this.showTab("users");
 					break;
 				case "/admin/statistics":
-					this.currentTab = "statistics";
+					this.showTab("statistics");
 					break;
 				case "/admin/punishments":
-					this.currentTab = "punishments";
+					this.showTab("punishments");
 					break;
 				default:
-					this.currentTab = "verifiedsongs";
+					this.showTab("verifiedsongs");
 			}
 		},
 		showTab(tab) {
+			if (this.$refs[`${tab}-tab`])
+				this.$refs[`${tab}-tab`].scrollIntoView({
+					inline: "center"
+				});
 			this.currentTab = tab;
 		}
 	}
