@@ -222,9 +222,9 @@ export default {
 				this.station._id,
 				youtubeId,
 				res => {
-					if (res.status === "success") {
+					if (res.status === "success")
 						new Toast("Successfully removed song from the queue.");
-					} else new Toast(res.message);
+					else new Toast(res.message);
 				}
 			);
 		},

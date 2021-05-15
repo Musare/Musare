@@ -240,7 +240,7 @@
 							v-bind="dragOptions"
 							@start="drag = true"
 							@end="drag = false"
-							@change="updateSongPositioning"
+							@change="repositionSong"
 						>
 							<transition-group
 								type="transition"
@@ -457,9 +457,7 @@ export default {
 				if (this.playlist._id === res.data.playlistId)
 					this.playlist.songs.push(res.data.song);
 			},
-			{
-				modal: "editPlaylist"
-			}
+			{ modal: "editPlaylist" }
 		);
 
 		this.socket.on(
@@ -482,9 +480,7 @@ export default {
 					});
 				}
 			},
-			{
-				modal: "editPlaylist"
-			}
+			{ modal: "editPlaylist" }
 		);
 
 		this.socket.on(
@@ -493,39 +489,32 @@ export default {
 				if (this.playlist._id === res.data.playlistId)
 					this.playlist.displayName = res.data.displayName;
 			},
-			{
-				modal: "editPlaylist"
-			}
+			{ modal: "editPlaylist" }
 		);
 
 		this.socket.on(
-			"event:playlist.songs.repositioned",
+			"event:playlist.song.repositioned",
 			res => {
 				if (this.playlist._id === res.data.playlistId) {
-					// for each song that has a new position
-					res.data.songsBeingChanged.forEach(changedSong => {
-						this.playlist.songs.forEach((song, index) => {
-							// find song locally
-							if (song.youtubeId === changedSong.youtubeId) {
-								// change song position attribute
-								this.playlist.songs[index].position =
-									changedSong.position;
+					const { song, playlistId } = res.data;
 
-								// reposition in array if needed
-								if (index !== changedSong.position - 1)
-									this.playlist.songs.splice(
-										changedSong.position - 1,
-										0,
-										this.playlist.songs.splice(index, 1)[0]
-									);
-							}
-						});
-					});
+					if (this.playlist._id === playlistId) {
+						if (
+							this.playlist.songs[song.newIndex] &&
+							this.playlist.songs[song.newIndex].youtubeId ===
+								song.youtubeId
+						)
+							return;
+
+						this.playlist.songs.splice(
+							song.newIndex,
+							0,
+							this.playlist.songs.splice(song.oldIndex, 1)[0]
+						);
+					}
 				}
 			},
-			{
-				modal: "editPlaylist"
-			}
+			{ modal: "editPlaylist" }
 		);
 	},
 	methods: {
@@ -584,27 +573,44 @@ export default {
 		isAdmin() {
 			return this.userRole === "admin";
 		},
-		updateSongPositioning({ moved }) {
+		repositionSong({ moved }) {
 			if (!moved) return; // we only need to update when song is moved
 
-			const songsBeingChanged = [];
-
-			this.playlist.songs.forEach((song, index) => {
-				if (song.position !== index + 1)
-					songsBeingChanged.push({
-						youtubeId: song.youtubeId,
-						position: index + 1
-					});
-			});
-
 			this.socket.dispatch(
-				"playlists.repositionSongs",
+				"playlists.repositionSong",
 				this.playlist._id,
-				songsBeingChanged,
+				{
+					...moved.element,
+					oldIndex: moved.oldIndex,
+					newIndex: moved.newIndex
+				},
 				res => {
-					new Toast(res.message);
+					if (res.status !== "success")
+						this.repositionSongInList({
+							...moved.element,
+							newIndex: moved.oldIndex,
+							oldIndex: moved.newIndex
+						});
 				}
 			);
+		},
+		moveSongToTop(song, index) {
+			this.repositionSongInPlaylist({
+				moved: {
+					element: song,
+					oldIndex: index,
+					newIndex: 0
+				}
+			});
+		},
+		moveSongToBottom(song, index) {
+			this.repositionSongInPlaylist({
+				moved: {
+					element: song,
+					oldIndex: index,
+					newIndex: this.songsList.length
+				}
+			});
 		},
 		totalLength() {
 			let length = 0;
@@ -641,25 +647,24 @@ export default {
 			);
 		},
 		removeSongFromPlaylist(id) {
-			if (this.playlist.displayName === "Liked Songs") {
-				this.socket.dispatch("songs.unlike", id, res => {
+			if (this.playlist.displayName === "Liked Songs")
+				return this.socket.dispatch("songs.unlike", id, res => {
 					new Toast(res.message);
 				});
-			}
-			if (this.playlist.displayName === "Disliked Songs") {
-				this.socket.dispatch("songs.undislike", id, res => {
+
+			if (this.playlist.displayName === "Disliked Songs")
+				return this.socket.dispatch("songs.undislike", id, res => {
 					new Toast(res.message);
 				});
-			} else {
-				this.socket.dispatch(
-					"playlists.removeSongFromPlaylist",
-					id,
-					this.playlist._id,
-					res => {
-						new Toast(res.message);
-					}
-				);
-			}
+
+			return this.socket.dispatch(
+				"playlists.removeSongFromPlaylist",
+				id,
+				this.playlist._id,
+				res => {
+					new Toast(res.message);
+				}
+			);
 		},
 		renamePlaylist() {
 			const { displayName } = this.playlist;
@@ -716,24 +721,6 @@ export default {
 				.catch(
 					() => new Toast("Failed to export and download playlist.")
 				);
-		},
-		moveSongToTop(index) {
-			this.playlist.songs.splice(
-				0,
-				0,
-				this.playlist.songs.splice(index, 1)[0]
-			);
-
-			this.updateSongPositioning({ moved: {} });
-		},
-		moveSongToBottom(index) {
-			this.playlist.songs.splice(
-				this.playlist.songs.length,
-				0,
-				this.playlist.songs.splice(index, 1)[0]
-			);
-
-			this.updateSongPositioning({ moved: {} });
 		},
 		updatePrivacy() {
 			const { privacy } = this.playlist;
