@@ -736,14 +736,12 @@ export default {
 								localStorage.getItem("volume")
 							);
 							volume = typeof volume === "number" ? volume : 20;
-							console.log(`Seekto: ${this.song.skipDuration}`);
 							this.video.player.seekTo(this.song.skipDuration);
 							this.video.player.setVolume(volume);
 							if (volume > 0) this.video.player.unMute();
 
 							const duration = this.video.player.getDuration();
 
-							console.log(1111, duration.toFixed(3));
 							this.youtubeVideoDuration = duration.toFixed(3);
 							this.youtubeVideoNote = "(~)";
 							this.playerReady = true;
@@ -754,7 +752,10 @@ export default {
 							this.drawCanvas();
 
 							let skipToLast10SecsPressed = false;
-							if (this.skipToLast10SecsPressed) {
+							if (
+								event.data === 1 &&
+								this.skipToLast10SecsPressed
+							) {
 								this.skipToLast10SecsPressed = false;
 								skipToLast10SecsPressed = true;
 							}
@@ -799,12 +800,6 @@ export default {
 											this.youtubeVideoDuration)
 								)
 									this.song.duration = newYoutubeVideoDuration;
-
-								console.log(
-									2222,
-									newYoutubeVideoDuration,
-									this.video.player.getDuration()
-								);
 
 								this.youtubeVideoDuration = newYoutubeVideoDuration;
 								this.youtubeVideoNote = "";
