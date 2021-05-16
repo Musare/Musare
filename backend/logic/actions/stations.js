@@ -541,7 +541,6 @@ CacheModule.runJob("SUB", {
 				args: ["event:admin.station.created", { data: { station } }]
 			}).then(() => {});
 
-			// TODO If community, check if on whitelist
 			if (station.privacy === "public")
 				WSModule.runJob("EMIT_TO_ROOM", {
 					room: "home",
