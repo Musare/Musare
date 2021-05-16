@@ -4,6 +4,7 @@
 			<div class="tab-selection">
 				<button
 					class="button is-default"
+					ref="current-tab"
 					:class="{ selected: tab === 'current' }"
 					@click="showTab('current')"
 				>
@@ -11,6 +12,7 @@
 				</button>
 				<button
 					class="button is-default"
+					ref="search-tab"
 					:class="{ selected: tab === 'search' }"
 					@click="showTab('search')"
 				>
@@ -19,6 +21,7 @@
 				<button
 					v-if="station.type === 'community'"
 					class="button is-default"
+					ref="my-playlists-tab"
 					:class="{ selected: tab === 'my-playlists' }"
 					@click="showTab('my-playlists')"
 				>
@@ -396,6 +399,7 @@ export default {
 	},
 	methods: {
 		showTab(tab) {
+			this.$refs[`${tab}-tab`].scrollIntoView();
 			this.tab = tab;
 		},
 		isOwner() {
