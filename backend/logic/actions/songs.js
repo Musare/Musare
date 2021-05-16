@@ -769,8 +769,8 @@ export default {
 				},
 
 				(song, next) => {
-					song.acceptedBy = session.userId;
-					song.acceptedAt = Date.now();
+					song.verifiedBy = session.userId;
+					song.verifiedAt = Date.now();
 					song.status = "verified";
 					song.save(err => {
 						next(err, song);
@@ -1001,8 +1001,8 @@ export default {
 
 	// 			next => {
 	// 				const newSong = new SongModel(song);
-	// 				newSong.acceptedBy = session.userId;
-	// 				newSong.acceptedAt = Date.now();
+	// 				newSong.verifiedBy = session.userId;
+	// 				newSong.verifiedAt = Date.now();
 	// 				newSong.save(next);
 	// 			},
 
