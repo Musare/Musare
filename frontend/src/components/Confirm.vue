@@ -1,6 +1,7 @@
 <template>
 	<tippy
 		interactive="true"
+		touch="true"
 		:placement="placement"
 		theme="confirm"
 		ref="confirm"

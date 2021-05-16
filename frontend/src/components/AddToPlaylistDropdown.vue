@@ -1,6 +1,7 @@
 <template>
 	<tippy
 		class="addToPlaylistDropdown"
+		touch="true"
 		interactive="true"
 		:placement="placement"
 		theme="addToPlaylist"

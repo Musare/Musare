@@ -72,6 +72,7 @@
 			>
 				<tippy
 					v-if="loggedIn"
+					touch="true"
 					interactive="true"
 					placement="left"
 					theme="songActions"
