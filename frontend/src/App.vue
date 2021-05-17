@@ -396,10 +396,6 @@ a {
 					p {
 						color: var(--white);
 					}
-
-					.checkbox-control label span {
-						background-color: var(--dark-grey-2);
-					}
 				}
 			}
 		}
@@ -537,7 +533,7 @@ a {
 	&.songActions-theme,
 	&.addToPlaylist-theme {
 		.tippy-arrow {
-			border-top-color: var(--light-grey-3);
+			border-top-color: var(--white);
 		}
 	}
 	&.confirm-theme .tippy-arrow {
@@ -548,7 +544,7 @@ a {
 	&.songActions-theme,
 	&.addToPlaylist-theme {
 		.tippy-arrow {
-			border-bottom-color: var(--light-grey-3);
+			border-bottom-color: var(--white);
 		}
 	}
 	&.confirm-theme .tippy-arrow {
@@ -559,7 +555,7 @@ a {
 	&.songActions-theme,
 	&.addToPlaylist-theme {
 		.tippy-arrow {
-			border-left-color: var(--light-grey-3);
+			border-left-color: var(--white);
 		}
 	}
 	&.confirm-theme .tippy-arrow {
@@ -570,7 +566,7 @@ a {
 	&.songActions-theme,
 	&.addToPlaylist-theme {
 		.tippy-arrow {
-			border-right-color: var(--light-grey-3);
+			border-right-color: var(--white);
 		}
 	}
 	&.confirm-theme .tippy-arrow {
@@ -600,55 +596,61 @@ a {
 
 			.checkbox-control {
 				display: flex;
+				flex-direction: row;
 				align-items: center;
-				margin-bottom: 0 !important;
-				width: inherit;
 
-				input {
-					margin-right: 5px;
+				p {
+					margin-left: 10px;
 				}
 
-				input[type="checkbox"] {
+				.switch {
+					position: relative;
+					display: inline-block;
+					flex-shrink: 0;
+					width: 40px;
+					height: 24px;
+				}
+
+				.switch input {
 					opacity: 0;
+					width: 0;
+					height: 0;
+				}
+
+				.slider {
 					position: absolute;
+					cursor: pointer;
+					top: 0;
+					left: 0;
+					right: 0;
+					bottom: 0;
+					background-color: #ccc;
+					transition: 0.2s;
+					border-radius: 34px;
 				}
 
-				label {
-					display: flex;
-					flex-direction: row;
-					align-items: center;
-					width: inherit;
-
-					span {
-						cursor: pointer;
-						min-width: 24px;
-						height: 24px;
-						background-color: var(--white);
-						display: inline-block;
-						border: 1px solid var(--dark-grey-2);
-						position: relative;
-						border-radius: 3px;
-					}
-
-					p {
-						margin-left: 10px;
-						cursor: pointer;
-						color: var(--black);
-						overflow: hidden;
-						text-overflow: ellipsis;
-						white-space: nowrap;
-					}
-				}
-
-				input[type="checkbox"]:checked + label span::after {
+				.slider:before {
+					position: absolute;
 					content: "";
-					width: 18px;
-					height: 18px;
-					left: 2px;
-					top: 2px;
-					border-radius: 3px;
+					height: 16px;
+					width: 16px;
+					left: 4px;
+					bottom: 4px;
+					background-color: white;
+					transition: 0.2s;
+					border-radius: 50%;
+				}
+
+				input:checked + .slider {
 					background-color: var(--primary-color);
-					position: absolute;
+				}
+
+				input:focus + .slider {
+					box-shadow: 0 0 1px var(--primary-color);
+				}
+
+				input:checked + .slider:before {
+					transform: translateX(16px);
 				}
 			}
 

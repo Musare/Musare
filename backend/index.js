@@ -225,20 +225,37 @@ if (config.debug && config.debug.traceUnhandledPromises === true) {
 // }
 
 class JobManager {
+	// eslint-disable-next-line require-jsdoc
 	constructor() {
 		this.runningJobs = {};
 	}
 
+	/**
+	 * Adds a job to the list of running jobs
+	 *
+	 * @param {object} job - the job object
+	 */
 	addJob(job) {
 		if (!this.runningJobs[job.module.name]) this.runningJobs[job.module.name] = {};
 		this.runningJobs[job.module.name][job.toString()] = job;
 	}
 
+	/**
+	 * Removes a job from the list of running jobs (after it's completed)
+	 *
+	 * @param {object} job - the job object
+	 */
 	removeJob(job) {
 		if (!this.runningJobs[job.module.name]) this.runningJobs[job.module.name] = {};
 		delete this.runningJobs[job.module.name][job.toString()];
 	}
 
+	/**
+	 * Returns detail about a job via a identifier
+	 *
+	 * @param {string} uuid - the job identifier
+	 * @returns {object} - the job object
+	 */
 	getJob(uuid) {
 		let job = null;
 		Object.keys(this.runningJobs).forEach(moduleName => {
@@ -343,7 +360,8 @@ class ModuleManager {
 
 			this.log(
 				"INFO",
-				`Initialized: ${Object.keys(this.modules).length - this.modulesNotInitialized.length}/${Object.keys(this.modules).length
+				`Initialized: ${Object.keys(this.modules).length - this.modulesNotInitialized.length}/${
+					Object.keys(this.modules).length
 				}.`
 			);
 
@@ -465,7 +483,8 @@ process.stdin.on("data", data => {
 			console.log(
 				`${moduleName.toUpperCase()}${Array(tabsNeeded).join(
 					"\t"
-				)}${module.getStatus()}. Jobs in queue: ${module.jobQueue.lengthQueue()}. Jobs in progress: ${module.jobQueue.lengthRunning()}. Jobs paused: ${module.jobQueue.lengthPaused()} Concurrency: ${module.jobQueue.concurrency
+				)}${module.getStatus()}. Jobs in queue: ${module.jobQueue.lengthQueue()}. Jobs in progress: ${module.jobQueue.lengthRunning()}. Jobs paused: ${module.jobQueue.lengthPaused()} Concurrency: ${
+					module.jobQueue.concurrency
 				}. Stage: ${module.getStage()}`
 			);
 		});
@@ -501,8 +520,7 @@ process.stdin.on("data", data => {
 		const parts = command.split(" ");
 
 		const uuid = parts[1];
-		let jobFound = moduleManager.jobManager.getJob(uuid);
-
+		const jobFound = moduleManager.jobManager.getJob(uuid);
 
 		if (jobFound) {
 			let topParent = jobFound;

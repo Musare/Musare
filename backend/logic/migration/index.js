@@ -42,9 +42,7 @@ class _MigrationModule extends CoreClass {
 					useCreateIndex: true
 				})
 				.then(async () => {
-					mongoose.connection.on("error", err => {
-						this.log("ERROR", err);
-					});
+					mongoose.connection.on("error", err => this.log("ERROR", err));
 
 					mongoose.connection.on("disconnected", () => {
 						this.log("ERROR", "Disconnected, going to try to reconnect...");
@@ -83,12 +81,8 @@ class _MigrationModule extends CoreClass {
 						1,
 						(index, next) => {
 							MigrationModule.runJob("RUN_MIGRATION", { index: index + 1 }, null, -1)
-								.then(() => {
-									next();
-								})
-								.catch(err => {
-									next(err);
-								});
+								.then(() => next())
+								.catch(err => next(err));
 						},
 						err => {
 							if (err) console.log("Migration error", err);

@@ -162,7 +162,7 @@ export default {
 		flex-direction: column;
 	}
 
-	@media only screen and (min-width: 900px) {
+	@media only screen and (min-width: 700px) {
 		#page-title {
 			margin: 0;
 			font-size: 40px;
@@ -170,6 +170,7 @@ export default {
 
 		#sidebar-with-content {
 			width: 962px;
+			max-width: 100%;
 			margin: 0 auto;
 			margin-top: 30px;
 			flex-direction: row;
