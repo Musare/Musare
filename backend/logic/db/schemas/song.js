@@ -15,5 +15,5 @@ export default {
 	acceptedAt: { type: Date }, // TODO Should be verifiedAt
 	discogs: { type: Object },
 	status: { type: String, required: true, default: "hidden", enum: ["hidden", "unverified", "verified"] },
-	documentVersion: { type: Number, default: 4, required: true }
+	documentVersion: { type: Number, default: 5, required: true }
 };
