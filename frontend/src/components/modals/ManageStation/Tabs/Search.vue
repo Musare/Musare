@@ -175,7 +175,7 @@ export default {
 					}
 				);
 			} else {
-				this.socket.dispatch("songs.request", youtubeId, res => {
+				this.socket.dispatch("songs.request", youtubeId, false, res => {
 					if (res.status !== "success")
 						new Toast(`Error: ${res.message}`);
 					else {

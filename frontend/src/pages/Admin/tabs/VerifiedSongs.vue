@@ -27,6 +27,9 @@
 			>
 				Keyboard shortcuts helper
 			</button>
+			<button class="button is-primary" @click="openModal('importAlbum')">
+				Import album
+			</button>
 			<confirm placement="bottom" @confirm="updateAllSongs()">
 				<button
 					class="button is-danger"
@@ -149,6 +152,7 @@
 				</tbody>
 			</table>
 		</div>
+		<import-album v-if="modals.importAlbum" />
 		<edit-song v-if="modals.editSong" song-type="songs" />
 		<floating-box
 			id="keyboardShortcutsHelper"
@@ -228,6 +232,7 @@ import ws from "@/ws";
 export default {
 	components: {
 		EditSong: () => import("@/components/modals/EditSong.vue"),
+		ImportAlbum: () => import("@/components/modals/ImportAlbum.vue"),
 		UserIdToUsername,
 		FloatingBox,
 		Confirm

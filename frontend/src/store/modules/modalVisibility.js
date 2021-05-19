@@ -16,6 +16,7 @@ const state = {
 		editNews: false,
 		editUser: false,
 		editSong: false,
+		importAlbum: false,
 		viewReport: false,
 		viewPunishment: false
 	},

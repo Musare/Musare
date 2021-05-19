@@ -572,6 +572,8 @@ export default {
 	components: { Modal, FloatingBox, SaveButton, Confirm },
 	props: {
 		youtubeId: { type: String, default: null },
+		songId: { type: String, default: null },
+		discogsAlbum: { type: Object, default: null },
 		// songType: { type: String, default: null },
 		sector: { type: String, default: "admin" }
 	},
@@ -681,7 +683,10 @@ export default {
 				// this.song = { ...song };
 				// if (this.song.discogs === undefined)
 				// 	this.song.discogs = null;
-				this.editSong(song);
+				if (this.song.discogs)
+					this.editSong({ ...song, discogs: this.song.discogs });
+				else this.editSong(song);
+
 				console.log(song);
 
 				this.songDataLoaded = true;

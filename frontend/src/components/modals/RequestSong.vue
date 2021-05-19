@@ -181,7 +181,7 @@ export default {
 					}
 				);
 			} else {
-				this.socket.dispatch("songs.request", youtubeId, res => {
+				this.socket.dispatch("songs.request", youtubeId, false, res => {
 					if (res.status !== "success")
 						new Toast(`Error: ${res.message}`);
 					else {
@@ -222,6 +222,7 @@ export default {
 				"songs.requestSet",
 				this.search.playlist.query,
 				this.search.playlist.isImportingOnlyMusic,
+				false,
 				res => {
 					isImportingPlaylist = false;
 					return new Toast({ content: res.message, timeout: 20000 });
