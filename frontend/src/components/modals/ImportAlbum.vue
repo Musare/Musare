@@ -3,9 +3,6 @@
 		<modal title="Import Album" class="import-album-modal">
 			<div slot="body" class="import-album-modal-body">
 				<div class="search-discogs-album">
-					<button class="button is-primary" @click="cheatSelect()">
-						Cheat import
-					</button>
 					<div
 						class="selected-discogs-info"
 						v-if="!discogsAlbum || !discogsAlbum.album"
@@ -500,38 +497,6 @@ export default {
 			});
 
 			this.updatePlaylistSongs(playlistSongs);
-		},
-		cheatSelect() {
-			this.selectAlbum({
-				expanded: true,
-				gotMoreInfo: true,
-				album: {
-					id: 1198933,
-					title: "Imagine Dragons - Evolve",
-					type: "Master",
-					year: "2017",
-					genres: ["Rock", "Pop"],
-					albumArt:
-						"https://img.discogs.com/NGObjk0gIIbrE6Ot3LbEET7H390=/fit-in/600x600/filters:strip_icc():format(jpeg):mode_rgb():quality(90)/discogs-images/R-10469087-1501265566-7000.jpeg.jpg",
-					resourceUrl: "https://api.discogs.com/masters/1198933",
-					artists: ["Imagine Dragons"],
-					artistIds: [2727700]
-				},
-				dataQuality: "Correct",
-				tracks: [
-					{ position: "1", title: "I Don't Know Why" },
-					{ position: "2", title: "Whatever It Takes" },
-					{ position: "3", title: "Believer" },
-					{ position: "4", title: "Walking The Wire" },
-					{ position: "5", title: "Rise Up" },
-					{ position: "6", title: "I'll Make It Up To You" },
-					{ position: "7", title: "Yesterday" },
-					{ position: "8", title: "Mouth Of The River" },
-					{ position: "9", title: "Thunder" },
-					{ position: "10", title: "Start Over" },
-					{ position: "11", title: "Dancing In The Dark" }
-				]
-			});
 		},
 		selectAlbum(result) {
 			this.selectDiscogsAlbum(result);

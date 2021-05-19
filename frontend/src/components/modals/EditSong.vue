@@ -474,12 +474,21 @@
 				</div>
 			</div>
 			<div slot="footer">
-				<save-button ref="saveButton" @clicked="save(song, false)" />
+				<save-button
+					ref="saveButton"
+					@clicked="save(song, false, false)"
+				/>
 				<save-button
 					ref="saveAndCloseButton"
 					type="save-and-close"
-					@clicked="save(song, true)"
+					@clicked="save(song, false, true)"
 				/>
+				<button
+					class="button is-primary"
+					@click="save(song, true, true)"
+				>
+					Save, verify and close
+				</button>
 				<div class="right">
 					<button
 						v-if="song.status !== 'verified'"
@@ -988,7 +997,7 @@ export default {
 			ctrl: true,
 			preventDefault: true,
 			handler: () => {
-				this.save(this.song, false);
+				this.save(this.song, false, false);
 			}
 		});
 
@@ -1099,7 +1108,7 @@ export default {
 		});
 	},
 	methods: {
-		save(songToCopy, close) {
+		save(songToCopy, verify, close) {
 			const song = JSON.parse(JSON.stringify(songToCopy));
 
 			let saveButtonRef = this.$refs.saveButton;
@@ -1243,6 +1252,7 @@ export default {
 					saveButtonRef.handleSuccessfulSave();
 				else saveButtonRef.handleFailedSave();
 
+				if (verify) this.verify(this.song._id);
 				if (close) this.closeModal("editSong");
 			});
 		},
