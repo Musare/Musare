@@ -874,7 +874,9 @@ export default {
 		this.socket.on(
 			"event:admin.hiddenSong.created",
 			res => {
-				this.song.status = res.data.song.status;
+				if (res.data.songId === this.song._id) {
+					this.song.status = res.data.song.status;
+				}
 			},
 			{ modal: "editSong" }
 		);
@@ -882,7 +884,9 @@ export default {
 		this.socket.on(
 			"event:admin.unverifiedSong.created",
 			res => {
-				this.song.status = res.data.song.status;
+				if (res.data.songId === this.song._id) {
+					this.song.status = res.data.song.status;
+				}
 			},
 			{ modal: "editSong" }
 		);
@@ -890,38 +894,12 @@ export default {
 		this.socket.on(
 			"event:admin.verifiedSong.created",
 			res => {
-				this.song.status = res.data.song.status;
+				if (res.data.songId === this.song._id) {
+					this.song.status = res.data.song.status;
+				}
 			},
 			{ modal: "editSong" }
 		);
-
-		this.socket.on(
-			"event:admin.hiddenSong.deleted",
-			() => {
-				new Toast("The song you were editing was removed");
-				this.closeModal("editSong");
-			},
-			{ modal: "editSong" }
-		);
-
-		this.socket.on(
-			"event:admin.unverifiedSong.deleted",
-			() => {
-				new Toast("The song you were editing was removed");
-				this.closeModal("editSong");
-			},
-			{ modal: "editSong" }
-		);
-
-		this.socket.on(
-			"event:admin.verifiedSong.deleted",
-			() => {
-				new Toast("The song you were editing was removed");
-				this.closeModal("editSong");
-			},
-			{ modal: "editSong" }
-		);
-
 		keyboardShortcuts.registerShortcut("editSong.pauseResumeVideo", {
 			keyCode: 101,
 			preventDefault: true,
@@ -1083,6 +1061,7 @@ export default {
 		*/
 	},
 	beforeDestroy() {
+		this.video.player.stopVideo();
 		this.playerReady = false;
 		clearInterval(this.interval);
 		clearInterval(this.activityWatchVideoDataInterval);

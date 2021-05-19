@@ -265,7 +265,7 @@
 						<!-- <transition-group> -->
 						<song-item
 							v-for="song in playlistSongs"
-							:key="song._id"
+							:key="`playlist-song-${song._id}`"
 							:song="song"
 						>
 						</song-item>
@@ -296,7 +296,7 @@
 							<!-- <transition-group> -->
 							<song-item
 								v-for="song in trackSongs[index]"
-								:key="song._id"
+								:key="`track-song-${song._id}`"
 								:song="song"
 							>
 							</song-item>
@@ -462,7 +462,7 @@ export default {
 					const songsAlreadyVerified =
 						res.songs.length - songs.length;
 					this.setPlaylistSongs(songs);
-					this.trackSongs = songs.map(() => []);
+					this.trackSongs = this.discogsAlbum.tracks.map(() => []);
 					this.tryToAutoMove();
 					if (songsAlreadyVerified > 0)
 						new Toast(

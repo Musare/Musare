@@ -324,12 +324,6 @@ export default {
 			socket: "websockets/getSocket"
 		})
 	},
-	watch: {
-		// eslint-disable-next-line func-names
-		"modals.editSong": function(val) {
-			if (!val) this.stopVideo();
-		}
-	},
 	mounted() {
 		this.socket.on("event:admin.verifiedSong.created", res => {
 			this.addSong(res.data.song);
@@ -444,7 +438,7 @@ export default {
 			"removeSong",
 			"updateSong"
 		]),
-		...mapActions("modals/editSong", ["editSong", "stopVideo"]),
+		...mapActions("modals/editSong", ["editSong"]),
 		...mapActions("modalVisibility", ["openModal", "closeModal"])
 	}
 };

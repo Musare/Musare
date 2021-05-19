@@ -934,15 +934,16 @@ class _SongsModule extends CoreClass {
 						status
 					};
 
+					if (err && err === "This song is already in the database.") return reject(new ErrorWithData(err, { song: trimmedSong }));
+					
 					SongsModule.runJob("UPDATE_SONG", { songId: song._id });
 
 					CacheModule.runJob("PUB", {
 						channel: "song.newUnverifiedSong",
 						value: song._id
 					});
-
-					if (err && err === "This song is already in the database.") return reject(new ErrorWithData(err, { song: trimmedSong }));
-					else return resolve({ song: trimmedSong });
+					
+					return resolve({ song: trimmedSong });
 				}
 			);
 		});
