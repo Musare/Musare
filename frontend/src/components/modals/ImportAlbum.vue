@@ -343,8 +343,7 @@ export default {
 			currentEditSongIndex: 0,
 			search: {
 				playlist: {
-					query:
-						"https://www.youtube.com/playlist?list=PLhQ__WZiNh3XPkYQuZ2d08LK0vP-pVz2F"
+					query: ""
 				}
 			},
 			discogsQuery: "",

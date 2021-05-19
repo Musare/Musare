@@ -116,6 +116,7 @@
 				</tbody>
 			</table>
 		</div>
+		<import-album v-if="modals.importAlbum" />
 		<edit-song v-if="modals.editSong" />
 		<floating-box
 			id="keyboardShortcutsHelper"
@@ -197,6 +198,7 @@ import ws from "@/ws";
 export default {
 	components: {
 		EditSong: () => import("@/components/modals/EditSong.vue"),
+		ImportAlbum: () => import("@/components/modals/ImportAlbum.vue"),
 		UserIdToUsername,
 		FloatingBox,
 		Confirm

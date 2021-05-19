@@ -33,7 +33,6 @@ const actions = {
 			});
 
 		commit("closeModal", modal);
-		commit("closeCurrentModal");
 	},
 	openModal: ({ commit }, modal) => {
 		commit("openModal", modal);

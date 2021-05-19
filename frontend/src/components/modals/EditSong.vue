@@ -436,6 +436,12 @@
 										Data quality:
 										<span>{{ result.dataQuality }}</span>
 									</p>
+									<button
+										class="button is-primary"
+										@click="importAlbum(result)"
+									>
+										Import album
+									</button>
 									<div class="tracks">
 										<div
 											class="track"
@@ -1108,6 +1114,11 @@ export default {
 		});
 	},
 	methods: {
+		importAlbum(result) {
+			this.selectDiscogsAlbum(result);
+			this.openModal("importAlbum");
+			this.closeModal("editSong");
+		},
 		save(songToCopy, verify, close) {
 			const song = JSON.parse(JSON.stringify(songToCopy));
 
@@ -1626,6 +1637,7 @@ export default {
 		// 		new Toast(res.message);
 		// 	});
 		// },
+		...mapActions("modals/importAlbum", ["selectDiscogsAlbum"]),
 		...mapActions("modals/editSong", [
 			"stopVideo",
 			"loadVideoById",
@@ -1635,7 +1647,7 @@ export default {
 			"updateSongField",
 			"selectDiscogsInfo"
 		]),
-		...mapActions("modalVisibility", ["closeModal"])
+		...mapActions("modalVisibility", ["closeModal", "openModal"])
 	}
 };
 </script>
