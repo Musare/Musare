@@ -191,10 +191,18 @@ export default {
 
 		.picture-name-row {
 			flex-direction: column !important;
+
+			.profile-picture {
+				margin-right: 0 !important;
+			}
 		}
 
-		.name-role-row {
+		.name-row {
 			margin-top: 24px;
+		}
+
+		.username-row {
+			justify-content: center;
 		}
 
 		.buttons .button:not(:last-of-type) {
@@ -205,6 +213,12 @@ export default {
 		.date-location-row {
 			flex-direction: column;
 			width: auto !important;
+			row-gap: 24px;
+
+			.date,
+			.location {
+				justify-content: center;
+			}
 		}
 
 		.date-location-row > div:nth-child(2),
@@ -215,6 +229,12 @@ export default {
 
 	.bottom-section {
 		flex-direction: column;
+
+		.buttons,
+		.content {
+			margin-left: auto;
+			margin-right: auto !important;
+		}
 	}
 
 	.content {

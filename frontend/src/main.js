@@ -17,6 +17,7 @@ const handleMetadata = attrs => {
 Vue.use(VueTippy, {
 	directive: "tippy", // => v-tippy
 	flipDuration: 0,
+	touch: false,
 	popperOptions: {
 		modifiers: {
 			preventOverflow: {

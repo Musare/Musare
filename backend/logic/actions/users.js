@@ -1339,14 +1339,13 @@ export default {
 			});
 	}),
 
-	// TODO Fix security issues
 	/**
 	 * Gets user info from session
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Function} cb - gets called with the result
 	 */
-	async findBySession(session, cb) {
+	findBySession: isLoginRequired(async function findBySession(session, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
 		async.waterfall(
@@ -1406,7 +1405,7 @@ export default {
 				});
 			}
 		);
-	},
+	}),
 
 	/**
 	 * Updates a user's username

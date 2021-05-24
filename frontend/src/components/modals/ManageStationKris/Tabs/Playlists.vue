@@ -12,6 +12,7 @@
 				<button
 					v-if="station.type === 'community'"
 					class="button is-default"
+					ref="my-playlists-tab"
 					:class="{ selected: tab === 'my-playlists' }"
 					@click="showTab('my-playlists')"
 				>
@@ -706,6 +707,7 @@ export default {
 	},
 	methods: {
 		showTab(tab) {
+			this.$refs[`${tab}-tab`].scrollIntoView();
 			this.tab = tab;
 		},
 		isOwner() {

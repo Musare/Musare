@@ -1,6 +1,7 @@
 <template>
 	<tippy
 		class="addToPlaylistDropdown"
+		touch="true"
 		interactive="true"
 		:placement="placement"
 		theme="addToPlaylist"
@@ -20,6 +21,7 @@
 		<template #trigger>
 			<slot name="button" />
 		</template>
+
 		<div class="nav-dropdown-items" v-if="playlists.length > 0">
 			<button
 				class="nav-item"
@@ -30,12 +32,15 @@
 				:title="playlist.displayName"
 			>
 				<p class="control is-expanded checkbox-control">
-					<input
-						type="checkbox"
-						:id="index"
-						:checked="hasSong(playlist)"
-						@click="toggleSongInPlaylist(index)"
-					/>
+					<label class="switch">
+						<input
+							type="checkbox"
+							:id="index"
+							:checked="hasSong(playlist)"
+							@click="toggleSongInPlaylist(index)"
+						/>
+						<span class="slider round"></span>
+					</label>
 					<label :for="index">
 						<span></span>
 						<p>{{ playlist.displayName }}</p>
@@ -71,7 +76,9 @@ export default {
 		}),
 		playlists: {
 			get() {
-				return this.$store.state.user.playlists.playlists;
+				return this.$store.state.user.playlists.playlists.filter(
+					playlist => playlist.isUserModifiable
+				);
 			},
 			set(playlists) {
 				this.$store.commit("user/playlists/setPlaylists", playlists);
@@ -125,33 +132,14 @@ export default {
 					false,
 					this.song.youtubeId,
 					playlist._id,
-					res => {
-						new Toast(res.message);
-
-						if (res.status === "success") {
-							this.playlists[playlistIndex].songs.push(this.song);
-						}
-					}
+					res => new Toast(res.message)
 				);
 			} else {
 				this.socket.dispatch(
 					"playlists.removeSongFromPlaylist",
 					this.song.youtubeId,
 					playlist._id,
-					res => {
-						new Toast(res.message);
-
-						if (res.status === "success") {
-							this.playlists[playlistIndex].songs.forEach(
-								(song, songIndex) => {
-									if (song.youtubeId === this.song.youtubeId)
-										this.playlists[
-											playlistIndex
-										].songs.splice(songIndex, 1);
-								}
-							);
-						}
-					}
+					res => new Toast(res.message)
 				);
 			}
 		},
@@ -165,3 +153,9 @@ export default {
 	}
 };
 </script>
+
+<style lang="scss" scoped>
+.nav-dropdown-items button .control {
+	margin-bottom: 0 !important;
+}
+</style>

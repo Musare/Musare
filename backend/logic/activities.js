@@ -34,7 +34,6 @@ class _ActivitiesModule extends CoreClass {
 		});
 	}
 
-	// TODO: Migrate
 	/**
 	 * Adds a new activity to the database
 	 *

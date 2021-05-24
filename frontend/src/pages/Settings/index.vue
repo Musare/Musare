@@ -154,6 +154,7 @@ export default {
 	#page-title {
 		margin-top: 0;
 		font-size: 35px;
+		text-align: center;
 	}
 
 	#sidebar-with-content {
@@ -161,7 +162,7 @@ export default {
 		flex-direction: column;
 	}
 
-	@media only screen and (min-width: 900px) {
+	@media only screen and (min-width: 700px) {
 		#page-title {
 			margin: 0;
 			font-size: 40px;
@@ -169,9 +170,15 @@ export default {
 
 		#sidebar-with-content {
 			width: 962px;
+			max-width: 100%;
 			margin: 0 auto;
 			margin-top: 30px;
 			flex-direction: row;
+
+			.nav-links {
+				margin-left: 0;
+				margin-right: 64px;
+			}
 
 			.content {
 				width: 600px;
@@ -182,7 +189,8 @@ export default {
 
 	.nav-links {
 		width: 250px;
-		margin-right: 64px;
+		margin-left: auto;
+		margin-right: auto;
 
 		a {
 			outline: none;

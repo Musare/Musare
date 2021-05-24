@@ -55,15 +55,11 @@
 			<li></li>
 		</ul>
 
-		<div v-show="!loading">
-			<main-header v-if="exists" />
+		<div v-show="!loading && exists">
+			<main-header />
 
-			<div
-				id="station-outer-container"
-				:style="[!exists ? { margin: 0, padding: 0 } : {}]"
-			>
+			<div id="station-outer-container">
 				<div
-					v-show="exists"
 					id="station-inner-container"
 					:class="{ 'nothing-here': noSong }"
 				>
@@ -570,7 +566,7 @@
 				<report v-if="modals.report" />
 			</div>
 
-			<main-footer v-if="exists" />
+			<main-footer />
 		</div>
 
 		<edit-song v-if="modals.editSong" song-type="songs" sector="station" />

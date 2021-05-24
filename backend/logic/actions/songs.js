@@ -571,7 +571,6 @@ export default {
 	// 			},
 
 	// 			(res, next) => {
-	// 				// TODO Check if res gets returned from above
 	// 				CacheModule.runJob("HDEL", { table: "songs", key: songId }, this)
 	// 					.then(() => {
 	// 						next();
@@ -769,8 +768,8 @@ export default {
 				},
 
 				(song, next) => {
-					song.acceptedBy = session.userId;
-					song.acceptedAt = Date.now();
+					song.verifiedBy = session.userId;
+					song.verifiedAt = Date.now();
 					song.status = "verified";
 					song.save(err => {
 						next(err, song);
@@ -1001,8 +1000,8 @@ export default {
 
 	// 			next => {
 	// 				const newSong = new SongModel(song);
-	// 				newSong.acceptedBy = session.userId;
-	// 				newSong.acceptedAt = Date.now();
+	// 				newSong.verifiedBy = session.userId;
+	// 				newSong.verifiedAt = Date.now();
 	// 				newSong.save(next);
 	// 			},
 
@@ -1091,8 +1090,12 @@ export default {
 							this
 						)
 						.then(res => {
-							if (res.status === "error")
+							if (res.status === "error") {
+								if (res.message === "That song is already in the playlist")
+									return next("You have already liked this song.");
 								return next("Unable to add song to the 'Liked Songs' playlist.");
+							}
+
 							return next(null, song, user.dislikedSongsPlaylist);
 						})
 						.catch(err => next(err));
@@ -1165,8 +1168,6 @@ export default {
 		);
 	}),
 
-	// TODO: ALready liked/disliked etc.
-
 	/**
 	 * Dislikes a song
 	 *
@@ -1206,8 +1207,12 @@ export default {
 							this
 						)
 						.then(res => {
-							if (res.status === "error")
+							if (res.status === "error") {
+								if (res.message === "That song is already in the playlist")
+									return next("You have already disliked this song.");
 								return next("Unable to add song to the 'Disliked Songs' playlist.");
+							}
+
 							return next(null, song, user.likedSongsPlaylist);
 						})
 						.catch(err => next(err));
