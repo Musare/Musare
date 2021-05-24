@@ -1,5 +1,6 @@
 <template>
 	<div class="playlist-item universal-item">
+		<slot name="left-icon" />
 		<div class="left-part">
 			<p class="item-title">
 				{{ playlist.displayName }}

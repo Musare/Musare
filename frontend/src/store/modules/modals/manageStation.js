@@ -6,6 +6,7 @@ export default {
 		tab: "settings",
 		originalStation: {},
 		station: {},
+		stationPlaylist: { songs: [] },
 		includedPlaylists: [],
 		excludedPlaylists: [],
 		songsList: [],
@@ -23,6 +24,8 @@ export default {
 		clearStation: ({ commit }) => commit("clearStation"),
 		updateSongsList: ({ commit }, songsList) =>
 			commit("updateSongsList", songsList),
+		updateStationPlaylist: ({ commit }, stationPlaylist) =>
+			commit("updateStationPlaylist", stationPlaylist),
 		repositionSongInList: ({ commit }, song) =>
 			commit("repositionSongInList", song),
 		updateStationPaused: ({ commit }, stationPaused) =>
@@ -54,6 +57,9 @@ export default {
 		},
 		updateSongsList(state, songsList) {
 			state.songsList = songsList;
+		},
+		updateStationPlaylist(state, stationPlaylist) {
+			state.stationPlaylist = stationPlaylist;
 		},
 		repositionSongInList(state, song) {
 			if (
