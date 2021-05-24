@@ -558,8 +558,17 @@
 				<request-song v-if="modals.requestSong" />
 				<edit-playlist v-if="modals.editPlaylist" />
 				<create-playlist v-if="modals.createPlaylist" />
-				<manage-station
-					v-if="modals.manageStation"
+				<manage-station-owen
+					v-if="
+						modals.manageStation && manageStationVersion === 'owen'
+					"
+					:station-id="station._id"
+					sector="station"
+				/>
+				<manage-station-kris
+					v-if="
+						modals.manageStation && manageStationVersion === 'kris'
+					"
 					:station-id="station._id"
 					sector="station"
 				/>
@@ -639,8 +648,10 @@ export default {
 		RequestSong: () => import("@/components/modals/RequestSong.vue"),
 		EditPlaylist: () => import("@/components/modals/EditPlaylist.vue"),
 		CreatePlaylist: () => import("@/components/modals/CreatePlaylist.vue"),
-		ManageStation: () =>
-			import("@/components/modals/ManageStation/index.vue"),
+		ManageStationOwen: () =>
+			import("@/components/modals/ManageStationOwen/index.vue"),
+		ManageStationKris: () =>
+			import("@/components/modals/ManageStationKris/index.vue"),
 		Report: () => import("@/components/modals/Report.vue"),
 		Z404,
 		FloatingBox,
@@ -653,6 +664,7 @@ export default {
 		return {
 			utils,
 			isIOS: navigator.platform.match(/iPhone|iPod|iPad/),
+			manageStationVersion: "",
 			title: "Station",
 			loading: true,
 			exists: true,
@@ -713,6 +725,10 @@ export default {
 		})
 	},
 	async mounted() {
+		lofig.get("manageStationVersion", manageStationVersion => {
+			this.manageStationVersion = manageStationVersion;
+		});
+
 		this.editSongModalWatcher = this.$store.watch(
 			state => state.modalVisibility.modals.editSong,
 			newValue => {
