@@ -11,6 +11,7 @@ import station from "./modules/station";
 import admin from "./modules/admin";
 
 import editSongModal from "./modules/modals/editSong";
+import editPlaylistModal from "./modules/modals/editPlaylist";
 import manageStationModal from "./modules/modals/manageStation";
 import editUserModal from "./modules/modals/editUser";
 import viewPunishmentModal from "./modules/modals/viewPunishment";
@@ -31,6 +32,7 @@ export default new Vuex.Store({
 			namespaced: true,
 			modules: {
 				editSong: editSongModal,
+				editPlaylist: editPlaylistModal,
 				manageStation: manageStationModal,
 				editUser: editUserModal,
 				viewPunishment: viewPunishmentModal,

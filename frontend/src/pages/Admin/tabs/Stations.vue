@@ -206,7 +206,7 @@ import ws from "@/ws";
 export default {
 	components: {
 		RequestSong: () => import("@/components/modals/RequestSong.vue"),
-		EditPlaylist: () => import("@/components/modals/EditPlaylist.vue"),
+		EditPlaylist: () => import("@/components/modals/EditPlaylist"),
 		CreatePlaylist: () => import("@/components/modals/CreatePlaylist.vue"),
 		ManageStationOwen: () =>
 			import("@/components/modals/ManageStationOwen/index.vue"),

@@ -646,7 +646,7 @@ export default {
 		MainHeader,
 		MainFooter,
 		RequestSong: () => import("@/components/modals/RequestSong.vue"),
-		EditPlaylist: () => import("@/components/modals/EditPlaylist.vue"),
+		EditPlaylist: () => import("@/components/modals/EditPlaylist"),
 		CreatePlaylist: () => import("@/components/modals/CreatePlaylist.vue"),
 		ManageStationOwen: () =>
 			import("@/components/modals/ManageStationOwen/index.vue"),

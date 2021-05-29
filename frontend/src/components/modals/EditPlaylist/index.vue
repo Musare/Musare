@@ -19,204 +19,52 @@
 					<h5>Duration: {{ totalLength() }}</h5>
 				</div>
 
-				<div
-					id="playlist-settings-section"
-					v-if="
-						userId === playlist.createdBy ||
-							isEditable() ||
-							(playlist.type === 'genre' && isAdmin())
-					"
-					class="section"
-				>
-					<div v-if="isEditable()">
-						<h4 class="section-title">Edit Details</h4>
-
-						<p class="section-description">
-							Change the display name and privacy of the playlist.
-						</p>
-
-						<hr class="section-horizontal-rule" />
-
-						<label class="label"> Change display name </label>
-
-						<div class="control is-grouped input-with-button">
-							<p class="control is-expanded">
-								<input
-									v-model="playlist.displayName"
-									class="input"
-									type="text"
-									placeholder="Playlist Display Name"
-									@keyup.enter="renamePlaylist()"
-								/>
-							</p>
-							<p class="control">
-								<a
-									class="button is-info"
-									@click.prevent="renamePlaylist()"
-									href="#"
-									>Rename</a
-								>
-							</p>
-						</div>
+				<div id="tabs-container">
+					<div id="tab-selection">
+						<button
+							class="button is-default"
+							:class="{ selected: tab === 'settings' }"
+							ref="settings-tab"
+							@click="showTab('settings')"
+							v-if="
+								userId === playlist.createdBy ||
+									isEditable() ||
+									(playlist.type === 'genre' && isAdmin())
+							"
+						>
+							Settings
+						</button>
+						<button
+							class="button is-default"
+							:class="{ selected: tab === 'youtube' }"
+							ref="youtube-tab"
+							@click="showTab('youtube')"
+							v-if="isEditable()"
+						>
+							YouTube
+						</button>
 					</div>
-
-					<div
+					<settings
+						class="tab"
+						v-show="tab === 'settings'"
 						v-if="
 							userId === playlist.createdBy ||
+								isEditable() ||
 								(playlist.type === 'genre' && isAdmin())
 						"
-					>
-						<label class="label"> Change privacy </label>
-						<div class="control is-grouped input-with-button">
-							<div class="control is-expanded select">
-								<select v-model="playlist.privacy">
-									<option value="private">Private</option>
-									<option value="public">Public</option>
-								</select>
-							</div>
-							<p class="control">
-								<a
-									class="button is-info"
-									@click.prevent="updatePrivacy()"
-									href="#"
-									>Update Privacy</a
-								>
-							</p>
-						</div>
-					</div>
+					/>
+					<youtube
+						class="tab"
+						v-show="tab === 'youtube'"
+						v-if="isEditable()"
+					/>
 				</div>
+
+				<!--
 
 				<div
 					id="import-from-youtube-section"
-					class="section"
-					v-if="isEditable()"
-				>
-					<h4 class="section-title">Import from YouTube</h4>
-
-					<p class="section-description">
-						Import a playlist or song by searching or using a link
-						from YouTube.
-					</p>
-
-					<hr class="section-horizontal-rule" />
-
-					<label class="label">
-						Search for a playlist from YouTube
-					</label>
-					<div class="control is-grouped input-with-button">
-						<p class="control is-expanded">
-							<input
-								class="input"
-								type="text"
-								placeholder="Enter YouTube Playlist URL here..."
-								v-model="search.playlist.query"
-								@keyup.enter="importPlaylist()"
-							/>
-						</p>
-						<p class="control has-addons">
-							<span class="select" id="playlist-import-type">
-								<select
-									v-model="
-										search.playlist.isImportingOnlyMusic
-									"
-								>
-									<option :value="false">Import all</option>
-									<option :value="true">
-										Import only music
-									</option>
-								</select>
-							</span>
-							<a
-								class="button is-info"
-								@click.prevent="importPlaylist()"
-								href="#"
-								><i class="material-icons icon-with-button"
-									>publish</i
-								>Import</a
-							>
-						</p>
-					</div>
-
-					<label class="label">
-						Search for a song from YouTube
-					</label>
-					<div class="control is-grouped input-with-button">
-						<p class="control is-expanded">
-							<input
-								class="input"
-								type="text"
-								placeholder="Enter your YouTube query here..."
-								v-model="search.songs.query"
-								autofocus
-								@keyup.enter="searchForSongs()"
-							/>
-						</p>
-						<p class="control">
-							<a
-								class="button is-info"
-								@click.prevent="searchForSongs()"
-								href="#"
-								><i class="material-icons icon-with-button"
-									>search</i
-								>Search</a
-							>
-						</p>
-					</div>
-
-					<div
-						v-if="search.songs.results.length > 0"
-						id="song-query-results"
-					>
-						<search-query-item
-							v-for="(result, index) in search.songs.results"
-							:key="result.id"
-							:result="result"
-						>
-							<div slot="actions">
-								<transition
-									name="search-query-actions"
-									mode="out-in"
-								>
-									<a
-										class="button is-success"
-										v-if="result.isAddedToQueue"
-										href="#"
-										key="added-to-playlist"
-									>
-										<i
-											class="material-icons icon-with-button"
-											>done</i
-										>
-										Added to playlist
-									</a>
-									<a
-										class="button is-dark"
-										v-else
-										@click.prevent="
-											addSongToPlaylist(result.id, index)
-										"
-										href="#"
-										key="add-to-playlist"
-									>
-										<i
-											class="material-icons icon-with-button"
-											>add</i
-										>
-										Add to playlist
-									</a>
-								</transition>
-							</div>
-						</search-query-item>
-
-						<a
-							class="button is-primary load-more-button"
-							@click.prevent="loadMoreSongs()"
-							href="#"
-						>
-							Load more...
-						</a>
-					</div>
-				</div>
+					 -->
 			</div>
 
 			<div id="second-column">
@@ -235,8 +83,8 @@
 						<draggable
 							class="menu-list scrollable-list"
 							tag="ul"
-							v-if="playlist.songs.length > 0"
-							v-model="playlist.songs"
+							v-if="playlistSongs.length > 0"
+							v-model="playlistSongs"
 							v-bind="dragOptions"
 							@start="drag = true"
 							@end="drag = false"
@@ -249,7 +97,7 @@
 								"
 							>
 								<li
-									v-for="(song, index) in playlist.songs"
+									v-for="(song, index) in playlistSongs"
 									:key="`key-${song._id}`"
 								>
 									<song-item
@@ -300,7 +148,9 @@
 											<i
 												class="material-icons"
 												v-if="isEditable() && index > 0"
-												@click="moveSongToTop(index)"
+												@click="
+													moveSongToTop(song, index)
+												"
 												content="Move to top of Playlist"
 												v-tippy
 												>vertical_align_top</i
@@ -308,11 +158,16 @@
 											<i
 												v-if="
 													isEditable() &&
-														playlist.songs.length -
+														playlistSongs.length -
 															1 !==
 															index
 												"
-												@click="moveSongToBottom(index)"
+												@click="
+													moveSongToBottom(
+														song,
+														index
+													)
+												"
 												class="material-icons"
 												content="Move to bottom of Playlist"
 												v-tippy
@@ -386,25 +241,22 @@ import { mapState, mapGetters, mapActions } from "vuex";
 import draggable from "vuedraggable";
 import Toast from "toasters";
 
-import SearchYoutube from "@/mixins/SearchYoutube.vue";
-
-import validation from "@/validation";
 import Confirm from "@/components/Confirm.vue";
-import Modal from "../Modal.vue";
-import SearchQueryItem from "../SearchQueryItem.vue";
-import SongItem from "../SongItem.vue";
+import Modal from "../../Modal.vue";
+import SongItem from "../../SongItem.vue";
 
-import utils from "../../../js/utils";
+import Settings from "./Tabs/Settings.vue";
+import Youtube from "./Tabs/Youtube.vue";
+
+import utils from "../../../../js/utils";
 
 export default {
-	components: { Modal, draggable, Confirm, SearchQueryItem, SongItem },
-	mixins: [SearchYoutube],
+	components: { Modal, draggable, Confirm, SongItem, Settings, Youtube },
 	data() {
 		return {
 			utils,
 			drag: false,
-			apiDomain: "",
-			playlist: { songs: [] }
+			apiDomain: ""
 		};
 	},
 	computed: {
@@ -414,6 +266,21 @@ export default {
 		...mapState("user/playlists", {
 			editing: state => state.editing
 		}),
+		...mapState("modals/editPlaylist", {
+			tab: state => state.tab,
+			playlist: state => state.playlist
+		}),
+		playlistSongs: {
+			get() {
+				return this.$store.state.modals.editPlaylist.playlist.songs;
+			},
+			set(value) {
+				this.$store.commit(
+					"modals/editPlaylist/updatePlaylistSongs",
+					value
+				);
+			}
+		},
 		...mapState({
 			userId: state => state.user.auth.userId,
 			userRole: state => state.user.auth.role
@@ -430,24 +297,12 @@ export default {
 			socket: "websockets/getSocket"
 		})
 	},
-	watch: {
-		"search.songs.results": function checkIfSongInPlaylist(songs) {
-			songs.forEach((searchItem, index) =>
-				this.playlist.songs.find(song => {
-					if (song.youtubeId === searchItem.id)
-						this.search.songs.results[index].isAddedToQueue = true;
-
-					return song.youtubeId === searchItem.id;
-				})
-			);
-		}
-	},
 	mounted() {
 		this.socket.dispatch("playlists.getPlaylist", this.editing, res => {
 			if (res.status === "success") {
-				this.playlist = res.data.playlist;
-				this.playlist.songs.sort((a, b) => a.position - b.position);
-				this.playlist.oldId = res.data.playlist._id;
+				// this.playlist = res.data.playlist;
+				// this.playlist.songs.sort((a, b) => a.position - b.position);
+				this.setPlaylist(res.data.playlist);
 			} else new Toast(res.message);
 		});
 
@@ -455,7 +310,7 @@ export default {
 			"event:playlist.song.added",
 			res => {
 				if (this.playlist._id === res.data.playlistId)
-					this.playlist.songs.push(res.data.song);
+					this.addSong(res.data.song);
 			},
 			{ modal: "editPlaylist" }
 		);
@@ -465,19 +320,16 @@ export default {
 			res => {
 				if (this.playlist._id === res.data.playlistId) {
 					// remove song from array of playlists
-					this.playlist.songs.forEach((song, index) => {
-						if (song.youtubeId === res.data.youtubeId)
-							this.playlist.songs.splice(index, 1);
-					});
+					this.removeSong(res.data.youtubeId);
 
-					// if this song is in search results, mark it available to add to the playlist again
-					this.search.songs.results.forEach((searchItem, index) => {
-						if (res.data.youtubeId === searchItem.id) {
-							this.search.songs.results[
-								index
-							].isAddedToQueue = false;
-						}
-					});
+					// // if this song is in search results, mark it available to add to the playlist again
+					// this.search.songs.results.forEach((searchItem, index) => {
+					// 	if (res.data.youtubeId === searchItem.id) {
+					// 		this.search.songs.results[
+					// 			index
+					// 		].isAddedToQueue = false;
+					// 	}
+					// });
 				}
 			},
 			{ modal: "editPlaylist" }
@@ -486,8 +338,13 @@ export default {
 		this.socket.on(
 			"event:playlist.displayName.updated",
 			res => {
-				if (this.playlist._id === res.data.playlistId)
-					this.playlist.displayName = res.data.displayName;
+				if (this.playlist._id === res.data.playlistId) {
+					const playlist = {
+						displayName: res.data.displayName,
+						...this.playlist
+					};
+					this.setPlaylist(playlist);
+				}
 			},
 			{ modal: "editPlaylist" }
 		);
@@ -499,18 +356,7 @@ export default {
 					const { song, playlistId } = res.data;
 
 					if (this.playlist._id === playlistId) {
-						if (
-							this.playlist.songs[song.newIndex] &&
-							this.playlist.songs[song.newIndex].youtubeId ===
-								song.youtubeId
-						)
-							return;
-
-						this.playlist.songs.splice(
-							song.newIndex,
-							0,
-							this.playlist.songs.splice(song.oldIndex, 1)[0]
-						);
+						this.repositionedSong(song);
 					}
 				}
 			},
@@ -518,51 +364,6 @@ export default {
 		);
 	},
 	methods: {
-		importPlaylist() {
-			let isImportingPlaylist = true;
-
-			// import query is blank
-			if (!this.search.playlist.query)
-				return new Toast("Please enter a YouTube playlist URL.");
-
-			const regex = new RegExp(`[\\?&]list=([^&#]*)`);
-			const splitQuery = regex.exec(this.search.playlist.query);
-
-			if (!splitQuery) {
-				return new Toast({
-					content: "Please enter a valid YouTube playlist URL.",
-					timeout: 4000
-				});
-			}
-
-			// don't give starting import message instantly in case of instant error
-			setTimeout(() => {
-				if (isImportingPlaylist) {
-					new Toast(
-						"Starting to import your playlist. This can take some time to do."
-					);
-				}
-			}, 750);
-
-			return this.socket.dispatch(
-				"playlists.addSetToPlaylist",
-				this.search.playlist.query,
-				this.playlist._id,
-				this.search.playlist.isImportingOnlyMusic,
-				res => {
-					new Toast({ content: res.message, timeout: 20000 });
-					if (res.status === "success") {
-						isImportingPlaylist = false;
-						if (this.search.playlist.isImportingOnlyMusic) {
-							new Toast({
-								content: `${res.data.stats.songsInPlaylistTotal} of the ${res.data.stats.videosInPlaylistTotal} videos in the playlist were songs.`,
-								timeout: 20000
-							});
-						}
-					}
-				}
-			);
-		},
 		isEditable() {
 			return (
 				this.playlist.isUserModifiable &&
@@ -586,7 +387,7 @@ export default {
 				},
 				res => {
 					if (res.status !== "success")
-						this.repositionSongInList({
+						this.repositionedSong({
 							...moved.element,
 							newIndex: moved.oldIndex,
 							oldIndex: moved.newIndex
@@ -595,7 +396,7 @@ export default {
 			);
 		},
 		moveSongToTop(song, index) {
-			this.repositionSongInPlaylist({
+			this.repositionSong({
 				moved: {
 					element: song,
 					oldIndex: index,
@@ -604,11 +405,11 @@ export default {
 			});
 		},
 		moveSongToBottom(song, index) {
-			this.repositionSongInPlaylist({
+			this.repositionSong({
 				moved: {
 					element: song,
 					oldIndex: index,
-					newIndex: this.songsList.length
+					newIndex: this.playlistSongs.length
 				}
 			});
 		},
@@ -626,23 +427,12 @@ export default {
 				res => {
 					new Toast(res.message);
 					if (res.status === "success") {
-						this.playlist.songs = res.data.playlist.songs.sort(
-							(a, b) => a.position - b.position
+						this.updatePlaylistSongs(
+							res.data.playlist.songs.sort(
+								(a, b) => a.position - b.position
+							)
 						);
 					}
-				}
-			);
-		},
-		addSongToPlaylist(id, index) {
-			this.socket.dispatch(
-				"playlists.addSongToPlaylist",
-				false,
-				id,
-				this.playlist._id,
-				res => {
-					new Toast(res.message);
-					if (res.status === "success")
-						this.search.songs.results[index].isAddedToQueue = true;
 				}
 			);
 		},
@@ -661,26 +451,6 @@ export default {
 				"playlists.removeSongFromPlaylist",
 				id,
 				this.playlist._id,
-				res => {
-					new Toast(res.message);
-				}
-			);
-		},
-		renamePlaylist() {
-			const { displayName } = this.playlist;
-			if (!validation.isLength(displayName, 2, 32))
-				return new Toast(
-					"Display name must have between 2 and 32 characters."
-				);
-			if (!validation.regex.ascii.test(displayName))
-				return new Toast(
-					"Invalid display name format. Only ASCII characters are allowed."
-				);
-
-			return this.socket.dispatch(
-				"playlists.updateDisplayName",
-				this.playlist._id,
-				this.playlist.displayName,
 				res => {
 					new Toast(res.message);
 				}
@@ -721,19 +491,6 @@ export default {
 				.catch(
 					() => new Toast("Failed to export and download playlist.")
 				);
-		},
-		updatePrivacy() {
-			const { privacy } = this.playlist;
-			if (privacy === "public" || privacy === "private") {
-				this.socket.dispatch(
-					"playlists.updatePrivacy",
-					this.playlist._id,
-					privacy,
-					res => {
-						new Toast(res.message);
-					}
-				);
-			}
 		},
 		addSongToQueue(youtubeId) {
 			this.socket.dispatch(
@@ -779,6 +536,18 @@ export default {
 				}
 			);
 		},
+		...mapActions({
+			showTab(dispatch, payload) {
+				this.$refs[`${payload}-tab`].scrollIntoView();
+				return dispatch("modals/editPlaylist/showTab", payload);
+			}
+		}),
+		...mapActions("modals/editPlaylist", [
+			"setPlaylist",
+			"addSong",
+			"removeSong",
+			"repositionedSong"
+		]),
 		...mapActions("modalVisibility", ["openModal", "closeModal"])
 	}
 };
@@ -831,10 +600,45 @@ export default {
 	.edit-playlist-modal .edit-playlist-modal-inner-container {
 		height: auto !important;
 
-		#import-from-youtube-section #song-query-results,
-		.section {
+		/deep/ .section {
 			max-width: 100% !important;
 		}
+	}
+}
+
+#tabs-container {
+	// padding: 16px;
+
+	#tab-selection {
+		display: flex;
+		overflow-x: auto;
+		margin: 24px 10px 0 10px;
+
+		.button {
+			border-radius: 5px 5px 0 0;
+			border: 0;
+			text-transform: uppercase;
+			font-size: 14px;
+			color: var(--dark-grey-3);
+			background-color: var(--light-grey-2);
+			flex-grow: 1;
+			height: 32px;
+
+			&:not(:first-of-type) {
+				margin-left: 5px;
+			}
+		}
+
+		.selected {
+			background-color: var(--primary-color) !important;
+			color: var(--white) !important;
+			font-weight: 600;
+		}
+	}
+	.tab {
+		border: 1px solid var(--light-grey-3);
+		// padding: 15px;
+		border-radius: 0 0 5px 5px;
 	}
 }
 
@@ -851,7 +655,7 @@ export default {
 				flex-basis: 100%;
 			}
 
-			.section {
+			/deep/ .section {
 				max-width: 100% !important;
 			}
 		}
@@ -863,7 +667,7 @@ export default {
 		justify-content: center;
 	}
 
-	.section {
+	/deep/ .section {
 		padding: 15px !important;
 		margin: 0 10px;
 		max-width: 600px;
@@ -887,7 +691,7 @@ export default {
 		overflow-y: auto;
 		flex-grow: 1;
 
-		.section {
+		/deep/ .section {
 			width: auto;
 		}
 
@@ -908,29 +712,6 @@ export default {
 			h3,
 			h5 {
 				margin: 0;
-			}
-		}
-
-		#import-from-youtube-section {
-			#playlist-import-type select {
-				border-radius: 0;
-			}
-
-			#song-query-results {
-				padding: 10px;
-				margin-top: 10px;
-				border: 1px solid var(--light-grey-3);
-				border-radius: 3px;
-				max-width: 565px;
-
-				.search-query-item:not(:last-of-type) {
-					margin-bottom: 10px;
-				}
-			}
-
-			.load-more-button {
-				width: 100%;
-				margin-top: 10px;
 			}
 		}
 	}

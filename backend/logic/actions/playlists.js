@@ -899,11 +899,12 @@ export default {
 					)
 						.then(response => {
 							const { song } = response;
-							const { _id, title, thumbnail, duration, status } = song;
+							const { _id, title, artists, thumbnail, duration, status } = song;
 							next(null, {
 								_id,
 								youtubeId,
 								title,
+								artists,
 								thumbnail,
 								duration,
 								status
