@@ -13,7 +13,8 @@ export default {
 			autoPlayed: false,
 			currentTime: 0
 		},
-		song: {}
+		song: {},
+		originalSong: {}
 	},
 	getters: {},
 	actions: {
@@ -35,6 +36,7 @@ export default {
 	mutations: {
 		editSong(state, song) {
 			if (song.discogs === undefined) song.discogs = null;
+			state.originalSong = JSON.parse(JSON.stringify(song));
 			state.song = { ...song };
 		},
 		stopVideo(state) {

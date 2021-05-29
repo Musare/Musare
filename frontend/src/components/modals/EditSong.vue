@@ -6,8 +6,12 @@
 					<div class="top-section">
 						<div class="player-section">
 							<div id="editSongPlayer"></div>
+							<div v-show="youtubeError" class="player-error">
+								<h2>{{ youtubeErrorMessage }}</h2>
+							</div>
 							<canvas
 								ref="durationCanvas"
+								v-show="!youtubeError"
 								height="20"
 								width="530"
 							></canvas>
@@ -579,6 +583,8 @@ export default {
 	data() {
 		return {
 			songDataLoaded: false,
+			youtubeError: false,
+			youtubeErrorMessage: "",
 			focusedElementBefore: null,
 			discogsQuery: "",
 			youtubeVideoDuration: "0.000",
@@ -643,7 +649,8 @@ export default {
 	computed: {
 		...mapState("modals/editSong", {
 			video: state => state.video,
-			song: state => state.song
+			song: state => state.song,
+			originalSong: state => state.originalSong
 		}),
 		...mapState("modalVisibility", {
 			modals: state => state.modals
@@ -720,122 +727,134 @@ export default {
 					if (this.video.paused === false) this.drawCanvas();
 				}, 200);
 
-				this.video.player = new window.YT.Player("editSongPlayer", {
-					height: 298,
-					width: 530,
-					videoId: this.song.youtubeId,
-					host: "https://www.youtube-nocookie.com",
-					playerVars: {
-						controls: 0,
-						iv_load_policy: 3,
-						rel: 0,
-						showinfo: 0,
-						autoplay: 0
-					},
-					startSeconds: this.song.skipDuration,
-					events: {
-						onReady: () => {
-							let volume = parseInt(
-								localStorage.getItem("volume")
-							);
-							volume = typeof volume === "number" ? volume : 20;
-							this.video.player.setVolume(volume);
-							if (volume > 0) this.video.player.unMute();
-
-							const duration = this.video.player.getDuration();
-
-							this.youtubeVideoDuration = duration.toFixed(3);
-							this.youtubeVideoNote = "(~)";
-							this.playerReady = true;
-
-							this.drawCanvas();
+				if (window.YT && window.YT.Player) {
+					this.video.player = new window.YT.Player("editSongPlayer", {
+						height: 298,
+						width: 530,
+						videoId: this.song.youtubeId,
+						host: "https://www.youtube-nocookie.com",
+						playerVars: {
+							controls: 0,
+							iv_load_policy: 3,
+							rel: 0,
+							showinfo: 0,
+							autoplay: 0
 						},
-						onStateChange: event => {
-							this.drawCanvas();
+						startSeconds: this.song.skipDuration,
+						events: {
+							onReady: () => {
+								let volume = parseInt(
+									localStorage.getItem("volume")
+								);
+								volume =
+									typeof volume === "number" ? volume : 20;
+								this.video.player.setVolume(volume);
+								if (volume > 0) this.video.player.unMute();
 
-							let skipToLast10SecsPressed = false;
-							if (
-								event.data === 1 &&
-								this.skipToLast10SecsPressed
-							) {
-								this.skipToLast10SecsPressed = false;
-								skipToLast10SecsPressed = true;
-							}
+								const duration = this.video.player.getDuration();
 
-							if (event.data === 1 && !skipToLast10SecsPressed) {
-								this.video.paused = false;
-								let youtubeDuration = this.video.player.getDuration();
-								const newYoutubeVideoDuration = youtubeDuration.toFixed(
-									3
-								);
+								this.youtubeVideoDuration = duration.toFixed(3);
+								this.youtubeVideoNote = "(~)";
+								this.playerReady = true;
 
-								const songDurationNumber = Number(
-									this.song.duration
-								);
-								const songDurationNumber2 =
-									Number(this.song.duration) + 1;
-								const songDurationNumber3 =
-									Number(this.song.duration) - 1;
-								const fixedSongDuration = songDurationNumber.toFixed(
-									3
-								);
-								const fixedSongDuration2 = songDurationNumber2.toFixed(
-									3
-								);
-								const fixedSongDuration3 = songDurationNumber3.toFixed(
-									3
-								);
+								this.drawCanvas();
+							},
+							onStateChange: event => {
+								this.drawCanvas();
 
+								let skipToLast10SecsPressed = false;
 								if (
-									this.youtubeVideoDuration !==
-										newYoutubeVideoDuration &&
-									(fixedSongDuration ===
-										this.youtubeVideoDuration ||
-										fixedSongDuration2 ===
-											this.youtubeVideoDuration ||
-										fixedSongDuration3 ===
-											this.youtubeVideoDuration)
-								)
-									this.song.duration = newYoutubeVideoDuration;
-
-								this.youtubeVideoDuration = newYoutubeVideoDuration;
-								this.youtubeVideoNote = "";
-
-								if (this.song.duration === -1)
-									this.song.duration = youtubeDuration;
-
-								youtubeDuration -= this.song.skipDuration;
-								if (this.song.duration > youtubeDuration + 1) {
-									this.video.player.stopVideo();
-									this.video.paused = true;
-									return new Toast(
-										"Video can't play. Specified duration is bigger than the YouTube song duration."
-									);
-								}
-								if (this.song.duration <= 0) {
-									this.video.player.stopVideo();
-									this.video.paused = true;
-									return new Toast(
-										"Video can't play. Specified duration has to be more than 0 seconds."
-									);
-								}
-
-								if (
-									this.video.player.getCurrentTime() <
-									this.song.skipDuration
+									event.data === 1 &&
+									this.skipToLast10SecsPressed
 								) {
-									return this.video.player.seekTo(
-										this.song.skipDuration
-									);
+									this.skipToLast10SecsPressed = false;
+									skipToLast10SecsPressed = true;
 								}
-							} else if (event.data === 2) {
-								this.video.paused = true;
-							}
 
-							return false;
+								if (
+									event.data === 1 &&
+									!skipToLast10SecsPressed
+								) {
+									this.video.paused = false;
+									let youtubeDuration = this.video.player.getDuration();
+									const newYoutubeVideoDuration = youtubeDuration.toFixed(
+										3
+									);
+
+									const songDurationNumber = Number(
+										this.song.duration
+									);
+									const songDurationNumber2 =
+										Number(this.song.duration) + 1;
+									const songDurationNumber3 =
+										Number(this.song.duration) - 1;
+									const fixedSongDuration = songDurationNumber.toFixed(
+										3
+									);
+									const fixedSongDuration2 = songDurationNumber2.toFixed(
+										3
+									);
+									const fixedSongDuration3 = songDurationNumber3.toFixed(
+										3
+									);
+
+									if (
+										this.youtubeVideoDuration !==
+											newYoutubeVideoDuration &&
+										(fixedSongDuration ===
+											this.youtubeVideoDuration ||
+											fixedSongDuration2 ===
+												this.youtubeVideoDuration ||
+											fixedSongDuration3 ===
+												this.youtubeVideoDuration)
+									)
+										this.song.duration = newYoutubeVideoDuration;
+
+									this.youtubeVideoDuration = newYoutubeVideoDuration;
+									this.youtubeVideoNote = "";
+
+									if (this.song.duration === -1)
+										this.song.duration = youtubeDuration;
+
+									youtubeDuration -= this.song.skipDuration;
+									if (
+										this.song.duration >
+										youtubeDuration + 1
+									) {
+										this.video.player.stopVideo();
+										this.video.paused = true;
+										return new Toast(
+											"Video can't play. Specified duration is bigger than the YouTube song duration."
+										);
+									}
+									if (this.song.duration <= 0) {
+										this.video.player.stopVideo();
+										this.video.paused = true;
+										return new Toast(
+											"Video can't play. Specified duration has to be more than 0 seconds."
+										);
+									}
+
+									if (
+										this.video.player.getCurrentTime() <
+										this.song.skipDuration
+									) {
+										return this.video.player.seekTo(
+											this.song.skipDuration
+										);
+									}
+								} else if (event.data === 2) {
+									this.video.paused = true;
+								}
+
+								return false;
+							}
 						}
-					}
-				});
+					});
+				} else {
+					this.youtubeError = true;
+					this.youtubeErrorMessage = "Player could not be loaded.";
+				}
 			} else {
 				new Toast("Song with that ID not found");
 				this.closeModal("editSong");
@@ -1108,7 +1127,7 @@ export default {
 			let saveButtonRef = this.$refs.saveButton;
 			if (close) saveButtonRef = this.$refs.saveAndCloseButton;
 
-			if (this.youtubeVideoDuration === "0.000") {
+			if (!this.youtubeError && this.youtubeVideoDuration === "0.000") {
 				saveButtonRef.handleFailedSave();
 				return new Toast("The video appears to not be working.");
 			}
@@ -1123,32 +1142,45 @@ export default {
 				return new Toast("Please fill in all fields");
 			}
 
-			const thumbnailHeight = this.$refs.thumbnailElement.naturalHeight;
-			const thumbnailWidth = this.$refs.thumbnailElement.naturalWidth;
+			// const thumbnailHeight = this.$refs.thumbnailElement.naturalHeight;
+			// const thumbnailWidth = this.$refs.thumbnailElement.naturalWidth;
 
-			if (thumbnailHeight < 80 || thumbnailWidth < 80) {
+			// if (thumbnailHeight < 80 || thumbnailWidth < 80) {
+			// 	saveButtonRef.handleFailedSave();
+			// 	return new Toast(
+			// 		"Thumbnail width and height must be at least 80px."
+			// 	);
+			// }
+
+			// if (thumbnailHeight > 4000 || thumbnailWidth > 4000) {
+			// 	saveButtonRef.handleFailedSave();
+			// 	return new Toast(
+			// 		"Thumbnail width and height must be less than 4000px."
+			// 	);
+			// }
+
+			// if (thumbnailHeight - thumbnailWidth > 5) {
+			// 	saveButtonRef.handleFailedSave();
+			// 	return new Toast("Thumbnail cannot be taller than it is wide.");
+			// }
+
+			// Youtube Id
+			if (
+				this.youtubeError &&
+				this.originalSong.youtubeId !== song.youtubeId
+			) {
 				saveButtonRef.handleFailedSave();
 				return new Toast(
-					"Thumbnail width and height must be at least 80px."
+					"You're not allowed to change the YouTube id while the player is not working"
 				);
-			}
-
-			if (thumbnailHeight > 4000 || thumbnailWidth > 4000) {
-				saveButtonRef.handleFailedSave();
-				return new Toast(
-					"Thumbnail width and height must be less than 4000px."
-				);
-			}
-
-			if (thumbnailHeight - thumbnailWidth > 5) {
-				saveButtonRef.handleFailedSave();
-				return new Toast("Thumbnail cannot be taller than it is wide.");
 			}
 
 			// Duration
 			if (
 				Number(song.skipDuration) + Number(song.duration) >
-				this.youtubeVideoDuration
+					this.youtubeVideoDuration &&
+				(!this.youtubeError ||
+					this.originalSong.duration !== song.duration)
 			) {
 				saveButtonRef.handleFailedSave();
 				return new Toast(
@@ -1697,6 +1729,23 @@ export default {
 			width: 530px;
 			display: flex;
 			flex-direction: column;
+
+			.player-error {
+				height: 318px;
+				width: 530px;
+				display: block;
+				border: 1px rgba(163, 224, 255, 0.75) solid;
+				border-radius: 5px 5px 0px 0px;
+				display: flex;
+				align-items: center;
+
+				* {
+					margin: 0;
+					flex: 1;
+					font-size: 30px;
+					text-align: center;
+				}
+			}
 
 			.player-footer {
 				background-color: var(--light-grey);
