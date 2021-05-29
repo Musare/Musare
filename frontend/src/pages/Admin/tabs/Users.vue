@@ -209,7 +209,10 @@ body {
 .profile-picture {
 	max-width: 50px !important;
 	max-height: 50px !important;
-	font-size: 25px !important;
+}
+
+/deep/ .profile-picture.using-initials span {
+	font-size: 20px; // 2/5th of .profile-picture height/width
 }
 
 td {

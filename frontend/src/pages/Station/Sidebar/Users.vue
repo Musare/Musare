@@ -167,7 +167,12 @@ export default {
 					margin-right: 10px;
 					width: 35px;
 					height: 35px;
-					font-size: 15px;
+				}
+
+				/deep/ .profile-picture.using-initials span {
+					font-size: calc(
+						35px / 5 * 2
+					); // 2/5th of .profile-picture height/width
 				}
 			}
 		}
