@@ -1641,9 +1641,6 @@ export default {
 		}
 
 		.modal-card-foot {
-			div div {
-				margin-right: 5px;
-			}
 			.right {
 				display: flex;
 				margin-left: auto;
