@@ -700,9 +700,12 @@ export default {
 						this.song.duration !== -1 &&
 						this.video.paused === false &&
 						this.playerReady &&
-						this.video.player.getCurrentTime() -
+						(this.video.player.getCurrentTime() -
 							this.song.skipDuration >
-							this.song.duration
+							this.song.duration ||
+							(this.video.player.getCurrentTime() > 0 &&
+								this.video.player.getCurrentTime() >=
+									this.video.player.getDuration()))
 					) {
 						this.video.paused = true;
 						this.video.player.stopVideo();
@@ -1580,6 +1583,8 @@ export default {
 					source: `editSong#${this.song.youtubeId}`,
 					hostname: window.location.hostname
 				};
+
+				console.log("SENDING VIDEO DATA");
 
 				aw.sendVideoData(videoData);
 			} else {
