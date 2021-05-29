@@ -90,7 +90,7 @@
 										type="text"
 										ref="title-input"
 										v-model="song.title"
-										@keyup.ctrl.alt.d="
+										@keyup.shift.enter="
 											getAlbumData('title')
 										"
 									/>
@@ -109,6 +109,7 @@
 										class="input"
 										type="text"
 										v-model.number="song.duration"
+										@keyup.shift.enter="fillDuration()"
 									/>
 									<button
 										class="button duration-fill-button"
@@ -137,7 +138,7 @@
 										class="input"
 										type="text"
 										v-model="song.thumbnail"
-										@keyup.ctrl.alt.d="
+										@keyup.shift.enter="
 											getAlbumData('albumArt')
 										"
 									/>
@@ -162,8 +163,8 @@
 										@blur="blurArtistInput()"
 										@focus="focusArtistInput()"
 										@keydown="keydownArtistInput()"
-										@keyup.enter="addTag('artists')"
-										@keyup.ctrl.alt.d="
+										@keyup.exact.enter="addTag('artists')"
+										@keyup.shift.enter="
 											getAlbumData('artists')
 										"
 									/>
@@ -236,8 +237,8 @@
 										@blur="blurGenreInput()"
 										@focus="focusGenreInput()"
 										@keydown="keydownGenreInput()"
-										@keyup.enter="addTag('genres')"
-										@keyup.ctrl.alt.d="
+										@keyup.exact.enter="addTag('genres')"
+										@keyup.shift.enter="
 											getAlbumData('genres')
 										"
 									/>
@@ -990,9 +991,28 @@ export default {
 			}
 		});
 
-		keyboardShortcuts.registerShortcut("editSong.close", {
-			keyCode: 88,
+		keyboardShortcuts.registerShortcut("editSong.saveClose", {
+			keyCode: 83,
 			ctrl: true,
+			alt: true,
+			preventDefault: true,
+			handler: () => {
+				this.save(this.song, true);
+			}
+		});
+
+		keyboardShortcuts.registerShortcut("editSong.saveVerifyClose", {
+			keyCode: 86,
+			ctrl: true,
+			alt: true,
+			preventDefault: true,
+			handler: () => {
+				// alert("not implemented yet");
+			}
+		});
+
+		keyboardShortcuts.registerShortcut("editSong.close", {
+			keyCode: 115,
 			preventDefault: true,
 			handler: () => {
 				this.closeModal("editSong");
@@ -1031,35 +1051,26 @@ export default {
 			}
 		});
 
-		keyboardShortcuts.registerShortcut("editSong.resetDuration", {
-			keyCode: 82,
-			alt: true,
-			ctrl: true,
-			preventDefault: true,
-			handler: () => {
-				this.fillDuration();
-			}
-		});
-
 		/*
 		
 		editSong.pauseResume - Num 5 - Pause/resume song
 		editSong.stopVideo - Ctrl - Num 5 - Stop
 		editSong.skipToLast10Secs - Num 6 - Skip to last 10 seconds
 
-		editSong.volumeDown5 - Num 2 - Volume down by 10
-		editSong.volumeDown1 - Ctrl - Num 2 - Volume down by 1
-		editSong.volumeUp5 - Num 8 - Volume up by 10
-		editSong.volumeUp1 - Ctrl - Num 8 - Volume up by 1
+		editSong.lowerVolumeLarge - Num 2 - Volume down by 10
+		editSong.lowerVolumeSmall - Ctrl - Num 2 - Volume down by 1
+		editSong.increaseVolumeLarge - Num 8 - Volume up by 10
+		editSong.increaseVolumeSmall - Ctrl - Num 8 - Volume up by 1
 
 		editSong.focusTitle - Home - Focus the title input
 		editSong.focusDicogs - End - Focus the discogs input
 
 		editSong.save - Ctrl - S - Saves song
-		editSong.close - Ctrl - X - Closes modal
+		editSong.save - Ctrl - Alt - S - Saves song and closes the modal
+		editSong.save - Ctrl - Alt - V - Saves song, verifies songs and then closes the modal
+		editSong.close - F4 - Closes modal without saving
 
 		editSong.useAllDiscogs - Ctrl - Alt - D - Sets all fields to the Discogs data
-		editSong.resetDuration - Ctrl - Alt - R - Resets the duration
 
 		Inside Discogs inputs: Ctrl - D - Sets this field to the Discogs data
 
@@ -1080,16 +1091,17 @@ export default {
 			"editSong.pauseResume",
 			"editSong.stopVideo",
 			"editSong.skipToLast10Secs",
-			"editSong.volumeDown5",
-			"editSong.volumeDown1",
-			"editSong.volumeUp5",
-			"editSong.volumeUp1",
+			"editSong.lowerVolumeLarge",
+			"editSong.lowerVolumeSmall",
+			"editSong.increaseVolumeLarge",
+			"editSong.increaseVolumeSmall",
 			"editSong.focusTitle",
 			"editSong.focusDicogs",
 			"editSong.save",
+			"editSong.saveClose",
+			"editSong.saveVerifyClose",
 			"editSong.close",
-			"editSong.useAllDiscogs",
-			"editSong.resetDuration"
+			"editSong.useAllDiscogs"
 		];
 
 		shortcutNames.forEach(shortcutName => {

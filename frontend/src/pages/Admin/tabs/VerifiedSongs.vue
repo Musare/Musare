@@ -157,6 +157,20 @@
 			<template #body>
 				<div>
 					<div>
+						<span class="biggest"
+							><b>Keyboard shortcuts helper</b></span
+						>
+						<span
+							><b>Ctrl + /</b> - Toggles this keyboard shortcuts
+							helper</span
+						>
+						<span
+							><b>Ctrl + Shift + /</b> - Resets the position of
+							this keyboard shortcuts helper</span
+						>
+						<hr />
+					</div>
+					<!-- <div>
 						<span class="biggest"><b>Songs page</b></span>
 						<span
 							><b>Arrow keys up/down</b> - Moves between
@@ -165,15 +179,20 @@
 						<span><b>E</b> - Edit selected song</span>
 						<span><b>A</b> - Add selected song</span>
 						<span><b>X</b> - Delete selected song</span>
-					</div>
-					<hr />
+						<hr />
+					</div> -->
 					<div>
 						<span class="biggest"><b>Edit song modal</b></span>
 						<span class="bigger"><b>Navigation</b></span>
 						<span><b>Home</b> - Edit</span>
 						<span><b>End</b> - Edit</span>
 						<hr />
+					</div>
+					<div>
 						<span class="bigger"><b>Player controls</b></span>
+						<span class="bigger"
+							><i>Don't forget to turn off numlock!</i></span
+						>
 						<span><b>Numpad up/down</b> - Volume up/down 10%</span>
 						<span
 							><b>Ctrl + Numpad up/down</b> - Volume up/down
@@ -185,26 +204,33 @@
 							><b>Numpad Right</b> - Skip to last 10 seconds</span
 						>
 						<hr />
+					</div>
+					<div>
 						<span class="bigger"><b>Form control</b></span>
 						<span
-							><b>Ctrl + D</b> - Executes purple button in that
+							><b>Enter</b> - Executes blue button in that
 							input</span
+						>
+						<span
+							><b>Shift + Enter</b> - Executes purple/red button
+							in that input</span
 						>
 						<span
 							><b>Ctrl + Alt + D</b> - Fill in all Discogs
 							fields</span
 						>
-						<span
-							><b>Ctrl + R</b> - Executes red button in that
-							input</span
-						>
-						<span
-							><b>Ctrl + Alt + R</b> - Reset duration field</span
-						>
 						<hr />
+					</div>
+					<div>
 						<span class="bigger"><b>Modal control</b></span>
 						<span><b>Ctrl + S</b> - Save</span>
-						<span><b>Ctrl + X</b> - Exit</span>
+						<span><b>Ctrl + Shift + S</b> - Save and close</span>
+						<span
+							><b>Ctrl + Shift + V</b> - Save, verify and
+							close</span
+						>
+						<span><b>F4</b> - Close without saving</span>
+						<hr />
 					</div>
 				</div>
 			</template>
@@ -216,6 +242,8 @@
 import { mapState, mapActions, mapGetters } from "vuex";
 
 import Toast from "toasters";
+
+import keyboardShortcuts from "@/keyboardShortcuts";
 
 import UserIdToUsername from "@/components/UserIdToUsername.vue";
 import FloatingBox from "@/components/FloatingBox.vue";
@@ -352,6 +380,41 @@ export default {
 				}
 			);
 		}
+
+		keyboardShortcuts.registerShortcut(
+			"verifiedSongs.toggleKeyboardShortcutsHelper",
+			{
+				keyCode: 191, // '/' key
+				ctrl: true,
+				preventDefault: true,
+				handler: () => {
+					this.toggleKeyboardShortcutsHelper();
+				}
+			}
+		);
+
+		keyboardShortcuts.registerShortcut(
+			"verifiedSongs.resetKeyboardShortcutsHelper",
+			{
+				keyCode: 191, // '/' key
+				ctrl: true,
+				shift: true,
+				preventDefault: true,
+				handler: () => {
+					this.resetKeyboardShortcutsHelper();
+				}
+			}
+		);
+	},
+	beforeDestroy() {
+		const shortcutNames = [
+			"verifiedSongs.toggleKeyboardShortcutsHelper",
+			"verifiedSongs.resetKeyboardShortcutsHelper"
+		];
+
+		shortcutNames.forEach(shortcutName => {
+			keyboardShortcuts.unregisterShortcut(shortcutName);
+		});
 	},
 	methods: {
 		edit(song) {
