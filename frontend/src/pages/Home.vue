@@ -808,6 +808,11 @@ html {
 		color: var(--light-grey-2);
 	}
 
+	.card-image i {
+		user-select: none;
+		-webkit-user-select: none;
+	}
+
 	.card-image.thumbnail {
 		background-color: var(--dark-grey-2);
 	}

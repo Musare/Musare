@@ -317,8 +317,17 @@
 							>
 								Discogs
 							</button>
+							<button
+								class="button is-default"
+								:class="{ selected: tab === 'reports' }"
+								ref="reports-tab"
+								@click="showTab('reports')"
+							>
+								Reports ({{ reports.length }})
+							</button>
 						</div>
 						<discogs class="tab" v-show="tab === 'discogs'" />
+						<reports class="tab" v-show="tab === 'reports'" />
 					</div>
 				</div>
 			</div>
@@ -419,9 +428,10 @@ import FloatingBox from "../../FloatingBox.vue";
 import SaveButton from "../../SaveButton.vue";
 
 import Discogs from "./Tabs/Discogs.vue";
+import Reports from "./Tabs/Reports.vue";
 
 export default {
-	components: { Modal, FloatingBox, SaveButton, Confirm, Discogs },
+	components: { Modal, FloatingBox, SaveButton, Confirm, Discogs, Reports },
 	props: {
 		youtubeId: { type: String, default: null },
 		// songType: { type: String, default: null },
@@ -491,7 +501,8 @@ export default {
 			tab: state => state.tab,
 			video: state => state.video,
 			song: state => state.song,
-			originalSong: state => state.originalSong
+			originalSong: state => state.originalSong,
+			reports: state => state.reports
 		}),
 		...mapState("modalVisibility", {
 			modals: state => state.modals
@@ -704,7 +715,7 @@ export default {
 			"reports.getReportsForSong",
 			this.song._id,
 			res => {
-				this.reports = res.data.reports;
+				this.updateReports(res.data.reports);
 			}
 		);
 
@@ -1402,7 +1413,8 @@ export default {
 			"pauseVideo",
 			"getCurrentTime",
 			"editSong",
-			"updateSongField"
+			"updateSongField",
+			"updateReports"
 		]),
 		...mapActions("modalVisibility", ["closeModal"])
 	}

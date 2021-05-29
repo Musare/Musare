@@ -15,6 +15,7 @@ export default {
 		},
 		song: {},
 		originalSong: {},
+		reports: [],
 		tab: "discogs"
 	},
 	getters: {},
@@ -33,7 +34,8 @@ export default {
 		},
 		updateSongField: ({ commit }, data) => commit("updateSongField", data),
 		selectDiscogsInfo: ({ commit }, discogsInfo) =>
-			commit("selectDiscogsInfo", discogsInfo)
+			commit("selectDiscogsInfo", discogsInfo),
+		updateReports: ({ commit }, reports) => commit("updateReports", reports)
 	},
 	mutations: {
 		showTab(state, tab) {
@@ -76,6 +78,9 @@ export default {
 		},
 		selectDiscogsInfo(state, discogsInfo) {
 			state.song.discogs = discogsInfo;
+		},
+		updateReports(state, reports) {
+			state.reports = reports;
 		}
 	}
 };
