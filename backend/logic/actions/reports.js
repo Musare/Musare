@@ -144,22 +144,22 @@ export default {
 						.exec(next);
 				},
 
-				(reports, next) => {
-					const data = [];
-					for (let i = 0; i < reports.length; i += 1) {
-						data.push(reports[i]._id);
+				(_reports, next) => {
+					const reports = [];
+					for (let i = 0; i < _reports.length; i += 1) {
+						data.push(_reports[i]._id);
 					}
-					next(null, data);
+					next(null, reports);
 				}
 			],
-			async (err, data) => {
+			async (err, reports) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log("ERROR", "GET_REPORTS_FOR_SONG", `Indexing reports for song "${songId}" failed. "${err}"`);
 					return cb({ status: "error", message: err });
 				}
 				this.log("SUCCESS", "GET_REPORTS_FOR_SONG", `Indexing reports for song "${songId}" successful.`);
-				return cb({ status: "success", data });
+				return cb({ status: "success", data: { reports } });
 			}
 		);
 	}),

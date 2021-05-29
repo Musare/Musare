@@ -126,7 +126,7 @@ export default {
 		Playlists,
 		EditPlaylist: () => import("@/components/modals/EditPlaylist.vue"),
 		Report: () => import("@/components/modals/Report.vue"),
-		EditSong: () => import("@/components/modals/EditSong.vue")
+		EditSong: () => import("@/components/modals/EditSong")
 	},
 	mixins: [TabQueryHandler],
 	data() {

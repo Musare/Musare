@@ -657,7 +657,7 @@ export default {
 		FloatingBox,
 		StationSidebar,
 		AddToPlaylistDropdown,
-		EditSong: () => import("@/components/modals/EditSong.vue"),
+		EditSong: () => import("@/components/modals/EditSong"),
 		SongItem
 	},
 	data() {

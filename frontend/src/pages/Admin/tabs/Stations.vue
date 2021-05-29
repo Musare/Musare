@@ -213,7 +213,7 @@ export default {
 		ManageStationKris: () =>
 			import("@/components/modals/ManageStationKris/index.vue"),
 		Report: () => import("@/components/modals/Report.vue"),
-		EditSong: () => import("@/components/modals/EditSong.vue"),
+		EditSong: () => import("@/components/modals/EditSong"),
 		UserIdToUsername,
 		Confirm
 	},

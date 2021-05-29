@@ -307,174 +307,18 @@
 					</div>
 				</div>
 				<div class="right-section" v-if="songDataLoaded">
-					<div class="api-section">
-						<div class="selected-discogs-info" v-if="!song.discogs">
-							<p class="selected-discogs-info-none">None</p>
-						</div>
-						<div class="selected-discogs-info" v-if="song.discogs">
-							<div class="top-container">
-								<img :src="song.discogs.album.albumArt" />
-								<div class="right-container">
-									<p class="album-title">
-										{{ song.discogs.album.title }}
-									</p>
-									<div class="bottom-row">
-										<p class="type-year">
-											<span>{{
-												song.discogs.album.type
-											}}</span>
-											•
-											<span>{{
-												song.discogs.album.year
-											}}</span>
-										</p>
-									</div>
-								</div>
-							</div>
-							<div class="bottom-container">
-								<p class="bottom-container-field">
-									Artists:
-									<span>{{
-										song.discogs.album.artists.join(", ")
-									}}</span>
-								</p>
-								<p class="bottom-container-field">
-									Genres:
-									<span>{{
-										song.discogs.album.genres.join(", ")
-									}}</span>
-								</p>
-								<p class="bottom-container-field">
-									Data quality:
-									<span>{{ song.discogs.dataQuality }}</span>
-								</p>
-								<p class="bottom-container-field">
-									Track:
-									<span
-										>{{ song.discogs.track.position }}.
-										{{ song.discogs.track.title }}</span
-									>
-								</p>
-							</div>
-						</div>
-						<p class="control is-expanded">
-							<label class="label">Search query</label>
-							<input
-								class="input"
-								type="text"
-								ref="discogs-input"
-								v-model="discogsQuery"
-								@keyup.enter="searchDiscogsForPage(1)"
-								@change="onDiscogsQueryChange"
-								v-focus
-							/>
-						</p>
-						<button
-							class="button is-info is-fullwidth"
-							@click="searchDiscogsForPage(1)"
-						>
-							Search
-						</button>
-						<label
-							class="label"
-							v-if="discogs.apiResults.length > 0"
-							>API results</label
-						>
-						<div
-							class="api-results-container"
-							v-if="discogs.apiResults.length > 0"
-						>
-							<div
-								class="api-result"
-								v-for="(result, index) in discogs.apiResults"
-								:key="result.album.id"
-								tabindex="0"
-								@keydown.space.prevent
-								@keyup.enter="toggleAPIResult(index)"
+					<div id="tabs-container">
+						<div id="tab-selection">
+							<button
+								class="button is-default"
+								:class="{ selected: tab === 'discogs' }"
+								ref="discogs-tab"
+								@click="showTab('discogs')"
 							>
-								<div class="top-container">
-									<img :src="result.album.albumArt" />
-									<div class="right-container">
-										<p class="album-title">
-											{{ result.album.title }}
-										</p>
-										<div class="bottom-row">
-											<img
-												src="/assets/arrow_up.svg"
-												v-if="result.expanded"
-												@click="toggleAPIResult(index)"
-											/>
-											<img
-												src="/assets/arrow_down.svg"
-												v-if="!result.expanded"
-												@click="toggleAPIResult(index)"
-											/>
-											<p class="type-year">
-												<span>{{
-													result.album.type
-												}}</span>
-												•
-												<span>{{
-													result.album.year
-												}}</span>
-											</p>
-										</div>
-									</div>
-								</div>
-								<div
-									class="bottom-container"
-									v-if="result.expanded"
-								>
-									<p class="bottom-container-field">
-										Artists:
-										<span>{{
-											result.album.artists.join(", ")
-										}}</span>
-									</p>
-									<p class="bottom-container-field">
-										Genres:
-										<span>{{
-											result.album.genres.join(", ")
-										}}</span>
-									</p>
-									<p class="bottom-container-field">
-										Data quality:
-										<span>{{ result.dataQuality }}</span>
-									</p>
-									<div class="tracks">
-										<div
-											class="track"
-											tabindex="0"
-											v-for="(track,
-											trackIndex) in result.tracks"
-											:key="
-												`${track.position}-${track.title}`
-											"
-											@click="
-												selectTrack(index, trackIndex)
-											"
-											@keyup.enter="
-												selectTrack(index, trackIndex)
-											"
-										>
-											<span>{{ track.position }}.</span>
-											<p>{{ track.title }}</p>
-										</div>
-									</div>
-								</div>
-							</div>
+								Discogs
+							</button>
 						</div>
-						<button
-							v-if="
-								discogs.apiResults.length > 0 &&
-									!discogs.disableLoadMore &&
-									discogs.page < discogs.pages
-							"
-							class="button is-fullwidth is-info discogs-load-more"
-							@click="loadNextDiscogsPage()"
-						>
-							Load more...
-						</button>
+						<discogs class="tab" v-show="tab === 'discogs'" />
 					</div>
 				</div>
 			</div>
@@ -568,13 +412,16 @@ import Toast from "toasters";
 import aw from "@/aw";
 import validation from "@/validation";
 import keyboardShortcuts from "@/keyboardShortcuts";
+
 import Confirm from "@/components/Confirm.vue";
-import Modal from "../Modal.vue";
-import FloatingBox from "../FloatingBox.vue";
-import SaveButton from "../SaveButton.vue";
+import Modal from "../../Modal.vue";
+import FloatingBox from "../../FloatingBox.vue";
+import SaveButton from "../../SaveButton.vue";
+
+import Discogs from "./Tabs/Discogs.vue";
 
 export default {
-	components: { Modal, FloatingBox, SaveButton, Confirm },
+	components: { Modal, FloatingBox, SaveButton, Confirm, Discogs },
 	props: {
 		youtubeId: { type: String, default: null },
 		// songType: { type: String, default: null },
@@ -586,17 +433,10 @@ export default {
 			youtubeError: false,
 			youtubeErrorMessage: "",
 			focusedElementBefore: null,
-			discogsQuery: "",
 			youtubeVideoDuration: "0.000",
 			youtubeVideoCurrentTime: 0,
 			youtubeVideoNote: "",
 			useHTTPS: false,
-			discogs: {
-				apiResults: [],
-				page: 1,
-				pages: 1,
-				disableLoadMore: false
-			},
 			volumeSliderValue: 0,
 			skipToLast10SecsPressed: false,
 			artistInputValue: "",
@@ -648,6 +488,7 @@ export default {
 	},
 	computed: {
 		...mapState("modals/editSong", {
+			tab: state => state.tab,
 			video: state => state.video,
 			song: state => state.song,
 			originalSong: state => state.originalSong
@@ -699,8 +540,6 @@ export default {
 				);
 
 				// this.edit(res.data.song);
-
-				this.discogsQuery = this.song.title;
 
 				this.interval = setInterval(() => {
 					if (
@@ -860,6 +699,14 @@ export default {
 				this.closeModal("editSong");
 			}
 		});
+
+		this.socket.dispatch(
+			"reports.getReportsForSong",
+			this.song._id,
+			res => {
+				this.reports = res.data.reports;
+			}
+		);
 
 		let volume = parseFloat(localStorage.getItem("volume"));
 		volume =
@@ -1039,14 +886,6 @@ export default {
 			preventDefault: true,
 			handler: () => {
 				this.$refs["title-input"].focus();
-			}
-		});
-
-		keyboardShortcuts.registerShortcut("editSong.focusDiscogs", {
-			keyCode: 35,
-			preventDefault: true,
-			handler: () => {
-				this.$refs["discogs-input"].focus();
 			}
 		});
 
@@ -1281,42 +1120,6 @@ export default {
 				if (close) this.closeModal("editSong");
 			});
 		},
-		toggleAPIResult(index) {
-			const apiResult = this.discogs.apiResults[index];
-			if (apiResult.expanded === true) apiResult.expanded = false;
-			else if (apiResult.gotMoreInfo === true) apiResult.expanded = true;
-			else {
-				fetch(apiResult.album.resourceUrl)
-					.then(response => {
-						return response.json();
-					})
-					.then(data => {
-						apiResult.album.artists = [];
-						apiResult.album.artistIds = [];
-						const artistRegex = new RegExp(" \\([0-9]+\\)$");
-
-						apiResult.dataQuality = data.data_quality;
-						data.artists.forEach(artist => {
-							apiResult.album.artists.push(
-								artist.name.replace(artistRegex, "")
-							);
-							apiResult.album.artistIds.push(artist.id);
-						});
-						apiResult.tracks = data.tracklist.map(track => {
-							return {
-								position: track.position,
-								title: track.title
-							};
-						});
-						apiResult.expanded = true;
-						apiResult.gotMoreInfo = true;
-					});
-			}
-		},
-		fillDuration() {
-			this.song.duration =
-				this.youtubeVideoDuration - this.song.skipDuration;
-		},
 		getAlbumData(type) {
 			if (!this.song.discogs) return;
 			if (type === "title")
@@ -1344,73 +1147,9 @@ export default {
 					)
 				});
 		},
-		searchDiscogsForPage(page) {
-			const query = this.discogsQuery;
-
-			this.socket.dispatch("apis.searchDiscogs", query, page, res => {
-				if (res.status === "success") {
-					if (page === 1)
-						new Toast(
-							`Successfully searched. Got ${res.data.results.length} results.`
-						);
-					else
-						new Toast(
-							`Successfully got ${res.data.results.length} more results.`
-						);
-
-					if (page === 1) {
-						this.discogs.apiResults = [];
-					}
-
-					this.discogs.pages = res.data.pages;
-
-					this.discogs.apiResults = this.discogs.apiResults.concat(
-						res.data.results.map(result => {
-							const type =
-								result.type.charAt(0).toUpperCase() +
-								result.type.slice(1);
-
-							return {
-								expanded: false,
-								gotMoreInfo: false,
-								album: {
-									id: result.id,
-									title: result.title,
-									type,
-									year: result.year,
-									genres: result.genre,
-									albumArt: result.cover_image,
-									resourceUrl: result.resource_url
-								}
-							};
-						})
-					);
-
-					this.discogs.page = page;
-					this.discogs.disableLoadMore = false;
-				} else new Toast(res.message);
-			});
-		},
-		loadNextDiscogsPage() {
-			this.discogs.disableLoadMore = true;
-			this.searchDiscogsForPage(this.discogs.page + 1);
-		},
-		onDiscogsQueryChange() {
-			this.discogs.page = 1;
-			this.discogs.pages = 1;
-			this.discogs.apiResults = [];
-			this.discogs.disableLoadMore = false;
-		},
-		selectTrack(apiResultIndex, trackIndex) {
-			const apiResult = JSON.parse(
-				JSON.stringify(this.discogs.apiResults[apiResultIndex])
-			);
-			apiResult.track = apiResult.tracks[trackIndex];
-			delete apiResult.tracks;
-			delete apiResult.expanded;
-			delete apiResult.gotMoreInfo;
-
-			this.selectDiscogsInfo(apiResult);
+		fillDuration() {
+			this.song.duration =
+				this.youtubeVideoDuration - this.song.skipDuration;
 		},
 		blurArtistInput() {
 			this.artistInputFocussed = false;
@@ -1651,14 +1390,19 @@ export default {
 		// 		new Toast(res.message);
 		// 	});
 		// },
+		...mapActions({
+			showTab(dispatch, payload) {
+				this.$refs[`${payload}-tab`].scrollIntoView();
+				return dispatch("modals/editSong/showTab", payload);
+			}
+		}),
 		...mapActions("modals/editSong", [
 			"stopVideo",
 			"loadVideoById",
 			"pauseVideo",
 			"getCurrentTime",
 			"editSong",
-			"updateSongField",
-			"selectDiscogsInfo"
+			"updateSongField"
 		]),
 		...mapActions("modalVisibility", ["closeModal"])
 	}
@@ -2004,160 +1748,201 @@ export default {
 	display: flex;
 	flex-wrap: wrap;
 
-	.api-section {
+	#tabs-container {
 		width: 376px;
 		background-color: var(--light-grey);
 		border: 1px rgba(163, 224, 255, 0.75) solid;
 		border-radius: 5px;
-		padding: 16px;
+		// padding: 16px;
 		overflow: auto;
 		height: 100%;
 
-		> label {
-			margin-top: 12px;
-		}
-
-		.top-container {
+		#tab-selection {
 			display: flex;
+			overflow-x: auto;
 
-			img {
-				height: 85px;
-				width: 85px;
-			}
+			.button {
+				border-radius: 5px 5px 0 0;
+				border: 0;
+				text-transform: uppercase;
+				font-size: 14px;
+				color: var(--dark-grey-3);
+				background-color: var(--light-grey-2);
+				flex-grow: 1;
+				height: 32px;
 
-			.right-container {
-				padding: 8px;
-				display: flex;
-				flex-direction: column;
-				flex: 1;
-
-				.album-title {
-					flex: 1;
-					font-weight: 600;
-				}
-
-				.bottom-row {
-					display: flex;
-					flex-flow: row;
-					line-height: 15px;
-
-					img {
-						height: 15px;
-						align-self: end;
-						flex: 1;
-						user-select: none;
-						-moz-user-select: none;
-						-ms-user-select: none;
-						-webkit-user-select: none;
-						cursor: pointer;
-					}
-
-					p {
-						text-align: right;
-					}
-
-					.type-year {
-						font-size: 13px;
-						align-self: end;
-					}
+				&:not(:first-of-type) {
+					margin-left: 5px;
 				}
 			}
-		}
 
-		.bottom-container {
-			padding: 12px;
-
-			.bottom-container-field {
-				line-height: 16px;
-				margin-bottom: 8px;
+			.selected {
+				background-color: var(--primary-color) !important;
+				color: var(--white) !important;
 				font-weight: 600;
-
-				span {
-					font-weight: 400;
-				}
-			}
-
-			.bottom-container-field:last-of-type {
-				margin-bottom: 0;
 			}
 		}
-
-		.selected-discogs-info {
-			background-color: var(--white);
-			border: 1px solid var(--purple);
-			border-radius: 5px;
-			margin-bottom: 16px;
-
-			.selected-discogs-info-none {
-				font-size: 18px;
-				text-align: center;
-			}
-
-			.bottom-row > p {
-				flex: 1;
-			}
-		}
-
-		.api-result {
-			background-color: var(--white);
-			border: 0.5px solid var(--primary-color);
-			border-radius: 5px;
-			margin-bottom: 16px;
-		}
-
-		button {
-			background-color: var(--primary-color) !important;
-
-			&:focus,
-			&:hover {
-				filter: contrast(0.75);
-			}
-		}
-
-		.tracks {
-			margin-top: 12px;
-
-			.track:first-child {
-				margin-top: 0;
-				border-radius: 3px 3px 0 0;
-			}
-
-			.track:last-child {
-				border-radius: 0 0 3px 3px;
-			}
-
-			.track {
-				border: 0.5px solid var(--black);
-				margin-top: -1px;
-				line-height: 16px;
-				display: flex;
-				cursor: pointer;
-
-				span {
-					font-weight: 600;
-					display: inline-block;
-					margin-top: 7px;
-					margin-bottom: 7px;
-					margin-left: 7px;
-				}
-
-				p {
-					display: inline-block;
-					margin: 7px;
-					flex: 1;
-				}
-			}
-
-			.track:hover,
-			.track:focus {
-				background-color: var(--light-grey);
-			}
-		}
-
-		.discogs-load-more {
-			margin-bottom: 8px;
+		.tab {
+			// border: 1px solid var(--light-grey-3);
+			padding: 15px;
+			// border-radius: 0 0 5px 5px;
 		}
 	}
+
+	// .api-section {
+	// 	width: 376px;
+	// 	background-color: var(--light-grey);
+	// 	border: 1px rgba(163, 224, 255, 0.75) solid;
+	// 	border-radius: 5px;
+	// 	padding: 16px;
+	// 	overflow: auto;
+	// 	height: 100%;
+
+	// 	> label {
+	// 		margin-top: 12px;
+	// 	}
+
+	// 	.top-container {
+	// 		display: flex;
+
+	// 		img {
+	// 			height: 85px;
+	// 			width: 85px;
+	// 		}
+
+	// 		.right-container {
+	// 			padding: 8px;
+	// 			display: flex;
+	// 			flex-direction: column;
+	// 			flex: 1;
+
+	// 			.album-title {
+	// 				flex: 1;
+	// 				font-weight: 600;
+	// 			}
+
+	// 			.bottom-row {
+	// 				display: flex;
+	// 				flex-flow: row;
+	// 				line-height: 15px;
+
+	// 				img {
+	// 					height: 15px;
+	// 					align-self: end;
+	// 					flex: 1;
+	// 					user-select: none;
+	// 					-moz-user-select: none;
+	// 					-ms-user-select: none;
+	// 					-webkit-user-select: none;
+	// 					cursor: pointer;
+	// 				}
+
+	// 				p {
+	// 					text-align: right;
+	// 				}
+
+	// 				.type-year {
+	// 					font-size: 13px;
+	// 					align-self: end;
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+
+	// 	.bottom-container {
+	// 		padding: 12px;
+
+	// 		.bottom-container-field {
+	// 			line-height: 16px;
+	// 			margin-bottom: 8px;
+	// 			font-weight: 600;
+
+	// 			span {
+	// 				font-weight: 400;
+	// 			}
+	// 		}
+
+	// 		.bottom-container-field:last-of-type {
+	// 			margin-bottom: 0;
+	// 		}
+	// 	}
+
+	// 	.selected-discogs-info {
+	// 		background-color: var(--white);
+	// 		border: 1px solid var(--purple);
+	// 		border-radius: 5px;
+	// 		margin-bottom: 16px;
+
+	// 		.selected-discogs-info-none {
+	// 			font-size: 18px;
+	// 			text-align: center;
+	// 		}
+
+	// 		.bottom-row > p {
+	// 			flex: 1;
+	// 		}
+	// 	}
+
+	// 	.api-result {
+	// 		background-color: var(--white);
+	// 		border: 0.5px solid var(--primary-color);
+	// 		border-radius: 5px;
+	// 		margin-bottom: 16px;
+	// 	}
+
+	// 	button {
+	// 		background-color: var(--primary-color) !important;
+
+	// 		&:focus,
+	// 		&:hover {
+	// 			filter: contrast(0.75);
+	// 		}
+	// 	}
+
+	// 	.tracks {
+	// 		margin-top: 12px;
+
+	// 		.track:first-child {
+	// 			margin-top: 0;
+	// 			border-radius: 3px 3px 0 0;
+	// 		}
+
+	// 		.track:last-child {
+	// 			border-radius: 0 0 3px 3px;
+	// 		}
+
+	// 		.track {
+	// 			border: 0.5px solid var(--black);
+	// 			margin-top: -1px;
+	// 			line-height: 16px;
+	// 			display: flex;
+	// 			cursor: pointer;
+
+	// 			span {
+	// 				font-weight: 600;
+	// 				display: inline-block;
+	// 				margin-top: 7px;
+	// 				margin-bottom: 7px;
+	// 				margin-left: 7px;
+	// 			}
+
+	// 			p {
+	// 				display: inline-block;
+	// 				margin: 7px;
+	// 				flex: 1;
+	// 			}
+	// 		}
+
+	// 		.track:hover,
+	// 		.track:focus {
+	// 			background-color: var(--light-grey);
+	// 		}
+	// 	}
+
+	// 	.discogs-load-more {
+	// 		margin-bottom: 8px;
+	// 	}
+	// }
 }
 
 .modal-card-foot .is-primary {

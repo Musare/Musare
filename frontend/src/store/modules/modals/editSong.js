@@ -14,10 +14,12 @@ export default {
 			currentTime: 0
 		},
 		song: {},
-		originalSong: {}
+		originalSong: {},
+		tab: "discogs"
 	},
 	getters: {},
 	actions: {
+		showTab: ({ commit }, tab) => commit("showTab", tab),
 		editSong: ({ commit }, song) => commit("editSong", song),
 		stopVideo: ({ commit }) => commit("stopVideo"),
 		loadVideoById: ({ commit }, id, skipDuration) =>
@@ -34,6 +36,9 @@ export default {
 			commit("selectDiscogsInfo", discogsInfo)
 	},
 	mutations: {
+		showTab(state, tab) {
+			state.tab = tab;
+		},
 		editSong(state, song) {
 			if (song.discogs === undefined) song.discogs = null;
 			state.originalSong = JSON.parse(JSON.stringify(song));

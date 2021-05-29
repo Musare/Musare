@@ -104,7 +104,7 @@ export default {
 		EditPlaylist: () => import("@/components/modals/EditPlaylist.vue"),
 		UserIdToUsername,
 		Report: () => import("@/components/modals/Report.vue"),
-		EditSong: () => import("@/components/modals/EditSong.vue")
+		EditSong: () => import("@/components/modals/EditSong")
 	},
 	data() {
 		return {
