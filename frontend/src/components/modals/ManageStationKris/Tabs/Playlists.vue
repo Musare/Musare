@@ -4,6 +4,7 @@
 			<div class="tab-selection">
 				<button
 					class="button is-default"
+					ref="search-tab"
 					:class="{ selected: tab === 'search' }"
 					@click="showTab('search')"
 				>
@@ -20,6 +21,7 @@
 				</button>
 				<button
 					class="button is-default"
+					ref="party-tab"
 					:class="{ selected: tab === 'party' }"
 					v-if="isPartyMode()"
 					@click="showTab('party')"
@@ -28,6 +30,7 @@
 				</button>
 				<button
 					class="button is-default"
+					ref="included-tab"
 					:class="{ selected: tab === 'included' }"
 					v-if="isPlaylistMode()"
 					@click="showTab('included')"
@@ -36,6 +39,7 @@
 				</button>
 				<button
 					class="button is-default"
+					ref="excluded-tab"
 					:class="{ selected: tab === 'excluded' }"
 					@click="showTab('excluded')"
 				>
@@ -71,7 +75,7 @@
 					>
 						<i
 							class="material-icons"
-							slot="left-icon"
+							slot="item-icon"
 							v-if="
 								isAllowedToParty() && isSelected(playlist._id)
 							"
@@ -82,7 +86,7 @@
 						</i>
 						<i
 							class="material-icons"
-							slot="left-icon"
+							slot="item-icon"
 							v-else-if="
 								isOwnerOrAdmin() &&
 									isPlaylistMode() &&
@@ -95,7 +99,7 @@
 						</i>
 						<i
 							class="material-icons excluded-icon"
-							slot="left-icon"
+							slot="item-icon"
 							v-else-if="
 								isOwnerOrAdmin() && isExcluded(playlist._id)
 							"
@@ -106,7 +110,7 @@
 						</i>
 						<i
 							class="material-icons"
-							slot="left-icon"
+							slot="item-icon"
 							v-else
 							:content="
 								isPartyMode()
@@ -270,7 +274,7 @@
 						>
 							<i
 								class="material-icons"
-								slot="left-icon"
+								slot="item-icon"
 								v-if="
 									isAllowedToParty() &&
 										isSelected(playlist._id)
@@ -282,7 +286,7 @@
 							</i>
 							<i
 								class="material-icons"
-								slot="left-icon"
+								slot="item-icon"
 								v-else-if="
 									isOwnerOrAdmin() &&
 										isPlaylistMode() &&
@@ -295,7 +299,7 @@
 							</i>
 							<i
 								class="material-icons excluded-icon"
-								slot="left-icon"
+								slot="item-icon"
 								v-else-if="
 									isOwnerOrAdmin() && isExcluded(playlist._id)
 								"
@@ -306,7 +310,7 @@
 							</i>
 							<i
 								class="material-icons"
-								slot="left-icon"
+								slot="item-icon"
 								v-else
 								:content="
 									isPartyMode()
@@ -437,7 +441,7 @@
 					>
 						<i
 							class="material-icons"
-							slot="left-icon"
+							slot="item-icon"
 							content="This playlist is currently selected"
 							v-tippy
 						>
@@ -508,7 +512,7 @@
 					>
 						<i
 							class="material-icons"
-							slot="left-icon"
+							slot="item-icon"
 							content="This playlist is currently included"
 							v-tippy
 						>
@@ -578,7 +582,7 @@
 					>
 						<i
 							class="material-icons excluded-icon"
-							slot="left-icon"
+							slot="item-icon"
 							content="This playlist is currently excluded"
 							v-tippy
 						>
@@ -664,6 +668,7 @@ export default {
 			partyPlaylists: state => state.station.partyPlaylists
 		}),
 		...mapState("modals/manageStation", {
+			parentTab: state => state.tab,
 			originalStation: state => state.originalStation,
 			station: state => state.station,
 			includedPlaylists: state => state.includedPlaylists,
@@ -673,6 +678,18 @@ export default {
 		...mapGetters({
 			socket: "websockets/getSocket"
 		})
+	},
+	watch: {
+		// eslint-disable-next-line func-names
+		parentTab(value) {
+			if (value === "playlists") {
+				if (this.tab === "included" && this.isPartyMode()) {
+					this.showTab("party");
+				} else if (this.tab === "party" && this.isPlaylistMode()) {
+					this.showTab("included");
+				}
+			}
+		}
 	},
 	mounted() {
 		if (this.station.type === "community" && this.station.partyMode)

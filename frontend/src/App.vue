@@ -2,7 +2,11 @@
 	<div class="upper-container">
 		<banned v-if="banned" />
 		<div v-else class="upper-container">
-			<router-view :key="$route.fullPath" class="main-container" />
+			<router-view
+				:key="$route.fullPath"
+				class="main-container"
+				:class="{ 'main-container-modal-active': aModalIsOpen }"
+			/>
 			<what-is-new v-show="modals.whatIsNew" />
 			<login-modal v-if="modals.login" />
 			<register-modal v-if="modals.register" />
@@ -47,7 +51,10 @@ export default {
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
-		})
+		}),
+		aModalIsOpen() {
+			return Object.keys(this.currentlyActive).length > 0;
+		}
 	},
 	watch: {
 		socketConnected(connected) {
@@ -322,6 +329,11 @@ textarea {
 	> .container {
 		flex: 1 0 auto;
 	}
+}
+
+.main-container.main-container-modal-active {
+	height: 100% !important;
+	overflow: hidden;
 }
 
 a {

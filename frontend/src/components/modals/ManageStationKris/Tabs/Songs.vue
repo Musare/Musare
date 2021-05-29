@@ -5,25 +5,18 @@
 				<button
 					class="button is-default"
 					:class="{ selected: tab === 'search' }"
-					v-if="
-						station.type === 'community' &&
-							station.partyMode &&
-							(isOwnerOrAdmin() || !station.locked)
-					"
+					v-if="isAllowedToParty()"
 					@click="showTab('search')"
 				>
 					Search
 				</button>
 				<button
 					class="button is-default"
-					:class="{ selected: tab === 'stationPlaylist' }"
-					v-if="
-						isOwnerOrAdmin() &&
-							!(station.type === 'community' && station.partyMode)
-					"
-					@click="showTab('stationPlaylist')"
+					:class="{ selected: tab === 'included' }"
+					v-if="isOwnerOrAdmin() && isPlaylistMode()"
+					@click="showTab('included')"
 				>
-					Station playlist
+					Included
 				</button>
 				<button
 					class="button is-default"
@@ -169,14 +162,14 @@
 			</div>
 			<div
 				class="tab"
-				v-show="tab === 'stationPlaylist'"
+				v-show="tab === 'included'"
 				v-if="
 					isOwnerOrAdmin() &&
 						!(station.type === 'community' && station.partyMode)
 				"
 			>
 				<div v-if="stationPlaylist.songs.length > 0">
-					<div id="playlist-info-section" class="section">
+					<div id="playlist-info-section">
 						<h5>Song Count: {{ stationPlaylist.songs.length }}</h5>
 						<h5>Duration: {{ totalLength(stationPlaylist) }}</h5>
 					</div>
@@ -270,6 +263,7 @@ export default {
 			role: state => state.user.auth.role
 		}),
 		...mapState("modals/manageStation", {
+			parentTab: state => state.tab,
 			station: state => state.station,
 			originalStation: state => state.originalStation,
 			excludedPlaylists: state => state.excludedPlaylists,
@@ -279,25 +273,52 @@ export default {
 			socket: "websockets/getSocket"
 		})
 	},
-	mounted() {
-		if (
-			this.isOwnerOrAdmin() &&
-			!(this.station.type === "community" && this.station.partyMode)
-		)
-			this.showTab("stationPlaylist");
+	watch: {
+		// eslint-disable-next-line func-names
+		parentTab(value) {
+			if (value === "songs") {
+				if (this.tab === "search" && this.isPlaylistMode()) {
+					this.showTab("included");
+				} else if (this.tab === "included" && this.isPartyMode()) {
+					this.showTab("search");
+				}
+			}
+		}
 	},
 	methods: {
 		showTab(tab) {
 			this.tab = tab;
 		},
 		isOwner() {
-			return this.loggedIn && this.userId === this.station.owner;
+			return (
+				this.loggedIn &&
+				this.station &&
+				this.userId === this.station.owner
+			);
 		},
 		isAdmin() {
 			return this.loggedIn && this.role === "admin";
 		},
 		isOwnerOrAdmin() {
 			return this.isOwner() || this.isAdmin();
+		},
+		isPartyMode() {
+			return (
+				this.station &&
+				this.station.type === "community" &&
+				this.station.partyMode
+			);
+		},
+		isAllowedToParty() {
+			return (
+				this.station &&
+				this.isPartyMode() &&
+				(!this.station.locked || this.isOwnerOrAdmin()) &&
+				this.loggedIn
+			);
+		},
+		isPlaylistMode() {
+			return this.station && !this.isPartyMode();
 		},
 		totalLength(playlist) {
 			let length = 0;

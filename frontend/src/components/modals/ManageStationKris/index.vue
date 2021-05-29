@@ -689,6 +689,7 @@ export default {
 .manage-station-modal.modal .modal-card-body .custom-modal-body {
 	display: flex;
 	flex-wrap: wrap;
+	height: 100%;
 
 	.section {
 		display: flex;

@@ -1,7 +1,7 @@
 <template>
 	<div class="playlist-item universal-item">
-		<slot name="left-icon" />
-		<div class="left-part">
+		<slot name="item-icon" />
+		<div class="item-title-description">
 			<p class="item-title">
 				{{ playlist.displayName }}
 				<i
@@ -23,9 +23,9 @@
 					/>
 					•</span
 				>
-				{{ totalLength(playlist) }} •
-				{{ playlist.songs.length }}
-				{{ playlist.songs.length === 1 ? "song" : "songs" }}
+				<span :title="playlistLength">
+					{{ playlistLength }}
+				</span>
 			</p>
 		</div>
 		<div class="universal-item-actions">
@@ -48,6 +48,13 @@ export default {
 		return {
 			utils
 		};
+	},
+	computed: {
+		playlistLength() {
+			return `${this.totalLength(this.playlist)} • ${
+				this.playlist.songs.length
+			} ${this.playlist.songs.length === 1 ? "song" : "songs"}`;
+		}
 	},
 	methods: {
 		totalLength(playlist) {
@@ -76,28 +83,31 @@ export default {
 .playlist-item {
 	width: 100%;
 	height: 72px;
+	column-gap: 7.5px;
 
-	.item-title {
-		color: var(--dark-grey-2);
-		font-size: 20px;
-		line-height: 23px;
-		margin-bottom: 0;
-		display: flex;
-		align-items: center;
+	.item-title-description {
+		flex: 1;
+		overflow: hidden;
 
-		.private-playlist-icon {
-			color: var(--dark-pink);
-			font-size: 18px;
-			margin-left: 5px;
+		.item-title {
+			color: var(--dark-grey-2);
+			font-size: 20px;
+			line-height: 23px;
+			margin-bottom: 0;
+			display: flex;
+			align-items: center;
+
+			.private-playlist-icon {
+				color: var(--dark-pink);
+				font-size: 18px;
+				margin-left: 5px;
+			}
 		}
 	}
 
-	.left-part {
-		flex: 1;
-		padding: 12px;
-	}
-
 	.universal-item-actions {
+		margin-left: none;
+
 		div {
 			display: flex;
 			align-items: center;
@@ -108,10 +118,6 @@ export default {
 				width: 100%;
 				font-size: 17px;
 				height: 36px;
-
-				&:not(:last-of-type) {
-					margin-right: 5px;
-				}
 			}
 		}
 	}
