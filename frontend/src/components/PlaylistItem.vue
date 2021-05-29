@@ -1,6 +1,8 @@
 <template>
 	<div class="playlist-item universal-item">
-		<slot name="item-icon" />
+		<slot name="item-icon">
+			<span></span>
+		</slot>
 		<div class="item-title-description">
 			<p class="item-title">
 				{{ playlist.displayName }}
