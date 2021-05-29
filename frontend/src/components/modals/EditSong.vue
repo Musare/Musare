@@ -1584,8 +1584,6 @@ export default {
 					hostname: window.location.hostname
 				};
 
-				console.log("SENDING VIDEO DATA");
-
 				aw.sendVideoData(videoData);
 			} else {
 				this.activityWatchVideoLastStatus = "not_playing";

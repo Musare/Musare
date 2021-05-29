@@ -412,6 +412,18 @@ class ModuleManager {
 			console.error.apply(null, _arguments);
 		}
 	}
+
+	/**
+	 * Locks down all modules
+	 */
+	_lockdown() {
+		this.lockdown = true;
+		Object.keys(this.modules).every(moduleKey => {
+			const module = this.modules[moduleKey];
+			module.setStatus("LOCKDOWN");
+			return true;
+		});
+	}
 }
 
 const moduleManager = new ModuleManager();
