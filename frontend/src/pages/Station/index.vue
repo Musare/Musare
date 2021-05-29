@@ -701,6 +701,9 @@ export default {
 		...mapState("modalVisibility", {
 			modals: state => state.modals
 		}),
+		...mapState("modals/editSong", {
+			video: state => state.video
+		}),
 		...mapState("station", {
 			station: state => state.station,
 			currentSong: state => state.currentSong,
@@ -730,13 +733,14 @@ export default {
 		});
 
 		this.editSongModalWatcher = this.$store.watch(
-			state => state.modalVisibility.modals.editSong,
-			newValue => {
-				if (newValue === true) {
+			state => state.modals.editSong.video.paused,
+			paused => {
+				if (paused && !this.beforeEditSongModalLocalPaused) {
+					this.resumeLocalStation();
+				} else if (!paused) {
 					this.beforeEditSongModalLocalPaused = this.localPaused;
 					this.pauseLocalStation();
-				} else if (!this.beforeEditSongModalLocalPaused)
-					this.resumeLocalStation();
+				}
 			}
 		);
 

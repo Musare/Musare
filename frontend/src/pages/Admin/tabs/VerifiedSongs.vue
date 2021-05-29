@@ -224,9 +224,9 @@
 					<div>
 						<span class="bigger"><b>Modal control</b></span>
 						<span><b>Ctrl + S</b> - Save</span>
-						<span><b>Ctrl + Shift + S</b> - Save and close</span>
+						<span><b>Ctrl + Alt + S</b> - Save and close</span>
 						<span
-							><b>Ctrl + Shift + V</b> - Save, verify and
+							><b>Ctrl + Alt + V</b> - Save, verify and
 							close</span
 						>
 						<span><b>F4</b> - Close without saving</span>

@@ -683,7 +683,6 @@ export default {
 				// if (this.song.discogs === undefined)
 				// 	this.song.discogs = null;
 				this.editSong(song);
-				console.log(song);
 
 				this.songDataLoaded = true;
 
@@ -731,7 +730,7 @@ export default {
 						iv_load_policy: 3,
 						rel: 0,
 						showinfo: 0,
-						autoplay: 1
+						autoplay: 0
 					},
 					startSeconds: this.song.skipDuration,
 					events: {
@@ -740,7 +739,6 @@ export default {
 								localStorage.getItem("volume")
 							);
 							volume = typeof volume === "number" ? volume : 20;
-							this.video.player.seekTo(this.song.skipDuration);
 							this.video.player.setVolume(volume);
 							if (volume > 0) this.video.player.unMute();
 
@@ -765,11 +763,6 @@ export default {
 							}
 
 							if (event.data === 1 && !skipToLast10SecsPressed) {
-								if (!this.video.autoPlayed) {
-									this.video.autoPlayed = true;
-									return this.video.player.stopVideo();
-								}
-
 								this.video.paused = false;
 								let youtubeDuration = this.video.player.getDuration();
 								const newYoutubeVideoDuration = youtubeDuration.toFixed(
