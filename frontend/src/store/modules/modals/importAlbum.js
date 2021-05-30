@@ -15,7 +15,8 @@ export default {
 			// tracks: []
 		},
 		originalPlaylistSongs: [],
-		playlistSongs: []
+		playlistSongs: [],
+		editingSongs: false
 	},
 	getters: {},
 	actions: {
@@ -27,7 +28,10 @@ export default {
 		setPlaylistSongs: ({ commit }, playlistSongs) =>
 			commit("setPlaylistSongs", playlistSongs),
 		updatePlaylistSongs: ({ commit }, playlistSongs) =>
-			commit("updatePlaylistSongs", playlistSongs)
+			commit("updatePlaylistSongs", playlistSongs),
+		updateEditingSongs: ({ commit }, editingSongs) =>
+			commit("updateEditingSongs", editingSongs),
+		resetPlaylistSongs: ({ commit }) => commit("resetPlaylistSongs")
 	},
 	mutations: {
 		selectDiscogsAlbum(state, discogsAlbum) {
@@ -49,6 +53,14 @@ export default {
 		},
 		updatePlaylistSongs(state, playlistSongs) {
 			state.playlistSongs = JSON.parse(JSON.stringify(playlistSongs));
+		},
+		updateEditingSongs(state, editingSongs) {
+			state.editingSongs = editingSongs;
+		},
+		resetPlaylistSongs(state) {
+			state.playlistSongs = JSON.parse(
+				JSON.stringify(state.originalPlaylistSongs)
+			);
 		}
 	}
 };

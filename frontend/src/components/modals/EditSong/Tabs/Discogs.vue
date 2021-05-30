@@ -364,7 +364,7 @@ export default {
 		}
 
 		.bottom-container-field:last-of-type {
-			margin-bottom: 0;
+			margin-bottom: 8px;
 		}
 	}
 

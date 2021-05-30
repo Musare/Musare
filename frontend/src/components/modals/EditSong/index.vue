@@ -347,6 +347,13 @@
 				>
 					Save, verify and close
 				</button>
+				<button
+					class="button is-danger"
+					@click="stopEditingSongs()"
+					v-if="modals.importAlbum && editingSongs"
+				>
+					Stop editing songs
+				</button>
 				<div class="right">
 					<button
 						v-if="song.status !== 'verified'"
@@ -514,6 +521,9 @@ export default {
 			song: state => state.song,
 			originalSong: state => state.originalSong,
 			reports: state => state.reports
+		}),
+		...mapState("modals/importAlbum", {
+			editingSongs: state => state.editingSongs
 		}),
 		...mapState("modalVisibility", {
 			modals: state => state.modals
@@ -963,6 +973,10 @@ export default {
 		});
 	},
 	methods: {
+		stopEditingSongs() {
+			this.updateEditingSongs(false);
+			this.closeModal("editSong");
+		},
 		importAlbum(result) {
 			this.selectDiscogsAlbum(result);
 			this.openModal("importAlbum");
@@ -1399,7 +1413,10 @@ export default {
 		// 		new Toast(res.message);
 		// 	});
 		// },
-		...mapActions("modals/importAlbum", ["selectDiscogsAlbum"]),
+		...mapActions("modals/importAlbum", [
+			"selectDiscogsAlbum",
+			"updateEditingSongs"
+		]),
 		...mapActions({
 			showTab(dispatch, payload) {
 				this.$refs[`${payload}-tab`].scrollIntoView();

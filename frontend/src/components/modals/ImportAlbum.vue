@@ -3,54 +3,6 @@
 		<modal title="Import Album" class="import-album-modal">
 			<div slot="body" class="import-album-modal-body">
 				<div class="search-discogs-album">
-					<div
-						class="selected-discogs-info"
-						v-if="!discogsAlbum || !discogsAlbum.album"
-					>
-						<p class="selected-discogs-info-none">None</p>
-					</div>
-					<div
-						class="selected-discogs-info"
-						v-if="discogsAlbum && discogsAlbum.album"
-					>
-						<div class="top-container">
-							<img :src="discogsAlbum.album.albumArt" />
-							<div class="right-container">
-								<p class="album-title">
-									{{ discogsAlbum.album.title }}
-								</p>
-								<div class="bottom-row">
-									<p class="type-year">
-										<span>{{
-											discogsAlbum.album.type
-										}}</span>
-										•
-										<span>{{
-											discogsAlbum.album.year
-										}}</span>
-									</p>
-								</div>
-							</div>
-						</div>
-						<div class="bottom-container">
-							<p class="bottom-container-field">
-								Artists:
-								<span>{{
-									discogsAlbum.album.artists.join(", ")
-								}}</span>
-							</p>
-							<p class="bottom-container-field">
-								Genres:
-								<span>{{
-									discogsAlbum.album.genres.join(", ")
-								}}</span>
-							</p>
-							<p class="bottom-container-field">
-								Data quality:
-								<span>{{ discogsAlbum.dataQuality }}</span>
-							</p>
-						</div>
-					</div>
 					<p class="control is-expanded">
 						<label class="label">Search query</label>
 						<input
@@ -339,7 +291,6 @@ export default {
 			isImportingPlaylist: false,
 			trackSongs: [],
 			songsToEdit: [],
-			editingSongs: false,
 			currentEditSongIndex: 0,
 			search: {
 				playlist: {
@@ -368,7 +319,8 @@ export default {
 			}
 		},
 		...mapState("modals/importAlbum", {
-			discogsAlbum: state => state.discogsAlbum
+			discogsAlbum: state => state.discogsAlbum,
+			editingSongs: state => state.editingSongs
 		}),
 		...mapState("modalVisibility", {
 			modals: state => state.modals
@@ -379,8 +331,8 @@ export default {
 	},
 	watch: {
 		/* eslint-disable */
-		"modals.editSong": function(test) {
-			if (!test) this.editNextSong();
+		"modals.editSong": function(value) {
+			if (!value) this.editNextSong();
 		}
 		/* eslint-enable */
 	},
@@ -390,6 +342,7 @@ export default {
 	},
 	methods: {
 		editSongs() {
+			this.updateEditingSongs(true);
 			this.songsToEdit = [];
 			this.trackSongs.forEach((songs, index) => {
 				songs.forEach(song => {
@@ -410,12 +363,14 @@ export default {
 			this.editNextSong();
 		},
 		editNextSong() {
-			this.editSong({
-				_id: this.songsToEdit[this.currentEditSongIndex].songId,
-				discogs: this.songsToEdit[this.currentEditSongIndex].discogs
-			});
-			this.currentEditSongIndex += 1;
-			this.openModal("editSong");
+			if (this.editingSongs) {
+				this.editSong({
+					_id: this.songsToEdit[this.currentEditSongIndex].songId,
+					discogs: this.songsToEdit[this.currentEditSongIndex].discogs
+				});
+				this.currentEditSongIndex += 1;
+				this.openModal("editSong");
+			}
 		},
 		log(evt) {
 			window.console.log(evt);
@@ -484,7 +439,8 @@ export default {
 					if (
 						playlistSong.title
 							.toLowerCase()
-							.indexOf(track.title.toLowerCase()) !== -1
+							.trim()
+							.indexOf(track.title.toLowerCase().trim()) !== -1
 					) {
 						playlistSongs.splice(
 							playlistSongs.indexOf(playlistSong),
@@ -496,6 +452,10 @@ export default {
 			});
 
 			this.updatePlaylistSongs(playlistSongs);
+		},
+		resetTrackSongs() {
+			this.resetPlaylistSongs();
+			this.trackSongs = this.discogsAlbum.tracks.map(() => []);
 		},
 		selectAlbum(result) {
 			this.selectDiscogsAlbum(result);
@@ -600,7 +560,9 @@ export default {
 			"toggleDiscogsAlbum",
 			"setPlaylistSongs",
 			"updatePlaylistSongs",
-			"selectDiscogsAlbum"
+			"selectDiscogsAlbum",
+			"updateEditingSongs",
+			"resetPlaylistSongs"
 		]),
 		...mapActions("modals/editSong", ["editSong"]),
 		...mapActions("modalVisibility", ["closeModal", "openModal"])
@@ -624,6 +586,10 @@ export default {
 		}
 
 		.modal-card-foot {
+			.button {
+				margin: 0;
+			}
+
 			div div {
 				margin-right: 5px;
 			}
@@ -726,23 +692,7 @@ export default {
 			}
 
 			.bottom-container-field:last-of-type {
-				margin-bottom: 0;
-			}
-		}
-
-		.selected-discogs-info {
-			background-color: var(--white);
-			border: 1px solid var(--purple);
-			border-radius: 5px;
-			margin-bottom: 16px;
-
-			.selected-discogs-info-none {
-				font-size: 18px;
-				text-align: center;
-			}
-
-			.bottom-row > p {
-				flex: 1;
+				margin-bottom: 8px;
 			}
 		}
 
@@ -777,7 +727,6 @@ export default {
 				margin-top: -1px;
 				line-height: 16px;
 				display: flex;
-				cursor: pointer;
 
 				span {
 					font-weight: 600;
@@ -792,11 +741,6 @@ export default {
 					margin: 7px;
 					flex: 1;
 				}
-			}
-
-			.track:hover,
-			.track:focus {
-				background-color: var(--light-grey);
 			}
 		}
 
