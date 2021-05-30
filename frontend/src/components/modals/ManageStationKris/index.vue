@@ -686,6 +686,12 @@ export default {
 </style>
 
 <style lang="scss" scoped>
+.night-mode {
+	#about-station-container {
+		background-color: var(--dark-grey-3) !important;
+	}
+}
+
 .manage-station-modal.modal .modal-card-body .custom-modal-body {
 	display: flex;
 	flex-wrap: wrap;
