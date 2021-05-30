@@ -124,9 +124,9 @@ export default {
 		ProfilePicture,
 		RecentActivity,
 		Playlists,
-		EditPlaylist: () => import("@/components/modals/EditPlaylist.vue"),
+		EditPlaylist: () => import("@/components/modals/EditPlaylist"),
 		Report: () => import("@/components/modals/Report.vue"),
-		EditSong: () => import("@/components/modals/EditSong.vue")
+		EditSong: () => import("@/components/modals/EditSong")
 	},
 	mixins: [TabQueryHandler],
 	data() {

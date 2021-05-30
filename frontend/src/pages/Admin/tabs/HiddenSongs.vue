@@ -185,7 +185,7 @@ import ws from "@/ws";
 
 export default {
 	components: {
-		EditSong: () => import("@/components/modals/EditSong.vue"),
+		EditSong: () => import("@/components/modals/EditSong"),
 		ImportAlbum: () => import("@/components/modals/ImportAlbum.vue"),
 		UserIdToUsername,
 		FloatingBox

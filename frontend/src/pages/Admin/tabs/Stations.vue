@@ -180,8 +180,13 @@
 		<request-song v-if="modals.requestSong" />
 		<edit-playlist v-if="modals.editPlaylist" />
 		<create-playlist v-if="modals.createPlaylist" />
-		<manage-station
-			v-if="modals.manageStation"
+		<manage-station-owen
+			v-if="modals.manageStation && manageStationVersion === 'owen'"
+			:station-id="editingStationId"
+			sector="admin"
+		/>
+		<manage-station-kris
+			v-if="modals.manageStation && manageStationVersion === 'kris'"
 			:station-id="editingStationId"
 			sector="admin"
 		/>
@@ -201,18 +206,21 @@ import ws from "@/ws";
 export default {
 	components: {
 		RequestSong: () => import("@/components/modals/RequestSong.vue"),
-		EditPlaylist: () => import("@/components/modals/EditPlaylist.vue"),
+		EditPlaylist: () => import("@/components/modals/EditPlaylist"),
 		CreatePlaylist: () => import("@/components/modals/CreatePlaylist.vue"),
-		ManageStation: () =>
-			import("@/components/modals/ManageStation/index.vue"),
+		ManageStationOwen: () =>
+			import("@/components/modals/ManageStationOwen/index.vue"),
+		ManageStationKris: () =>
+			import("@/components/modals/ManageStationKris/index.vue"),
 		Report: () => import("@/components/modals/Report.vue"),
-		EditSong: () => import("@/components/modals/EditSong.vue"),
+		EditSong: () => import("@/components/modals/EditSong"),
 		UserIdToUsername,
 		Confirm
 	},
 	data() {
 		return {
 			editingStationId: "",
+			manageStationVersion: "",
 			newStation: {
 				genres: [],
 				blacklistedGenres: []
@@ -231,6 +239,10 @@ export default {
 		})
 	},
 	mounted() {
+		lofig.get("manageStationVersion", manageStationVersion => {
+			this.manageStationVersion = manageStationVersion;
+		});
+
 		if (this.socket.readyState === 1) this.init();
 		ws.onConnect(() => this.init());
 

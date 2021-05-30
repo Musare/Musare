@@ -6,8 +6,12 @@
 					<div class="top-section">
 						<div class="player-section">
 							<div id="editSongPlayer"></div>
+							<div v-show="youtubeError" class="player-error">
+								<h2>{{ youtubeErrorMessage }}</h2>
+							</div>
 							<canvas
 								ref="durationCanvas"
+								v-show="!youtubeError"
 								height="20"
 								width="530"
 							></canvas>
@@ -90,7 +94,7 @@
 										type="text"
 										ref="title-input"
 										v-model="song.title"
-										@keyup.ctrl.alt.d="
+										@keyup.shift.enter="
 											getAlbumData('title')
 										"
 									/>
@@ -109,6 +113,7 @@
 										class="input"
 										type="text"
 										v-model.number="song.duration"
+										@keyup.shift.enter="fillDuration()"
 									/>
 									<button
 										class="button duration-fill-button"
@@ -137,7 +142,7 @@
 										class="input"
 										type="text"
 										v-model="song.thumbnail"
-										@keyup.ctrl.alt.d="
+										@keyup.shift.enter="
 											getAlbumData('albumArt')
 										"
 									/>
@@ -162,8 +167,8 @@
 										@blur="blurArtistInput()"
 										@focus="focusArtistInput()"
 										@keydown="keydownArtistInput()"
-										@keyup.enter="addTag('artists')"
-										@keyup.ctrl.alt.d="
+										@keyup.exact.enter="addTag('artists')"
+										@keyup.shift.enter="
 											getAlbumData('artists')
 										"
 									/>
@@ -236,8 +241,8 @@
 										@blur="blurGenreInput()"
 										@focus="focusGenreInput()"
 										@keydown="keydownGenreInput()"
-										@keyup.enter="addTag('genres')"
-										@keyup.ctrl.alt.d="
+										@keyup.exact.enter="addTag('genres')"
+										@keyup.shift.enter="
 											getAlbumData('genres')
 										"
 									/>
@@ -302,180 +307,27 @@
 					</div>
 				</div>
 				<div class="right-section" v-if="songDataLoaded">
-					<div class="api-section">
-						<div class="selected-discogs-info" v-if="!song.discogs">
-							<p class="selected-discogs-info-none">None</p>
-						</div>
-						<div class="selected-discogs-info" v-if="song.discogs">
-							<div class="top-container">
-								<img :src="song.discogs.album.albumArt" />
-								<div class="right-container">
-									<p class="album-title">
-										{{ song.discogs.album.title }}
-									</p>
-									<div class="bottom-row">
-										<p class="type-year">
-											<span>{{
-												song.discogs.album.type
-											}}</span>
-											•
-											<span>{{
-												song.discogs.album.year
-											}}</span>
-										</p>
-									</div>
-								</div>
-							</div>
-							<div class="bottom-container">
-								<p class="bottom-container-field">
-									Artists:
-									<span>{{
-										song.discogs.album.artists.join(", ")
-									}}</span>
-								</p>
-								<p class="bottom-container-field">
-									Genres:
-									<span>{{
-										song.discogs.album.genres.join(", ")
-									}}</span>
-								</p>
-								<p class="bottom-container-field">
-									Data quality:
-									<span>{{ song.discogs.dataQuality }}</span>
-								</p>
-								<p class="bottom-container-field">
-									Track:
-									<span
-										>{{ song.discogs.track.position }}.
-										{{ song.discogs.track.title }}</span
-									>
-								</p>
-							</div>
-						</div>
-						<p class="control is-expanded">
-							<label class="label">Search query</label>
-							<input
-								class="input"
-								type="text"
-								ref="discogs-input"
-								v-model="discogsQuery"
-								@keyup.enter="searchDiscogsForPage(1)"
-								@change="onDiscogsQueryChange"
-								v-focus
-							/>
-						</p>
-						<button
-							class="button is-info is-fullwidth"
-							@click="searchDiscogsForPage(1)"
-						>
-							Search
-						</button>
-						<label
-							class="label"
-							v-if="discogs.apiResults.length > 0"
-							>API results</label
-						>
-						<div
-							class="api-results-container"
-							v-if="discogs.apiResults.length > 0"
-						>
-							<div
-								class="api-result"
-								v-for="(result, index) in discogs.apiResults"
-								:key="result.album.id"
-								tabindex="0"
-								@keydown.space.prevent
-								@keyup.enter="toggleAPIResult(index)"
+					<div id="tabs-container">
+						<div id="tab-selection">
+							<button
+								class="button is-default"
+								:class="{ selected: tab === 'discogs' }"
+								ref="discogs-tab"
+								@click="showTab('discogs')"
 							>
-								<div class="top-container">
-									<img :src="result.album.albumArt" />
-									<div class="right-container">
-										<p class="album-title">
-											{{ result.album.title }}
-										</p>
-										<div class="bottom-row">
-											<img
-												src="/assets/arrow_up.svg"
-												v-if="result.expanded"
-												@click="toggleAPIResult(index)"
-											/>
-											<img
-												src="/assets/arrow_down.svg"
-												v-if="!result.expanded"
-												@click="toggleAPIResult(index)"
-											/>
-											<p class="type-year">
-												<span>{{
-													result.album.type
-												}}</span>
-												•
-												<span>{{
-													result.album.year
-												}}</span>
-											</p>
-										</div>
-									</div>
-								</div>
-								<div
-									class="bottom-container"
-									v-if="result.expanded"
-								>
-									<p class="bottom-container-field">
-										Artists:
-										<span>{{
-											result.album.artists.join(", ")
-										}}</span>
-									</p>
-									<p class="bottom-container-field">
-										Genres:
-										<span>{{
-											result.album.genres.join(", ")
-										}}</span>
-									</p>
-									<p class="bottom-container-field">
-										Data quality:
-										<span>{{ result.dataQuality }}</span>
-									</p>
-									<button
-										class="button is-primary"
-										@click="importAlbum(result)"
-									>
-										Import album
-									</button>
-									<div class="tracks">
-										<div
-											class="track"
-											tabindex="0"
-											v-for="(track,
-											trackIndex) in result.tracks"
-											:key="
-												`${track.position}-${track.title}`
-											"
-											@click="
-												selectTrack(index, trackIndex)
-											"
-											@keyup.enter="
-												selectTrack(index, trackIndex)
-											"
-										>
-											<span>{{ track.position }}.</span>
-											<p>{{ track.title }}</p>
-										</div>
-									</div>
-								</div>
-							</div>
+								Discogs
+							</button>
+							<button
+								class="button is-default"
+								:class="{ selected: tab === 'reports' }"
+								ref="reports-tab"
+								@click="showTab('reports')"
+							>
+								Reports ({{ reports.length }})
+							</button>
 						</div>
-						<button
-							v-if="
-								discogs.apiResults.length > 0 &&
-									!discogs.disableLoadMore &&
-									discogs.page < discogs.pages
-							"
-							class="button is-fullwidth is-info discogs-load-more"
-							@click="loadNextDiscogsPage()"
-						>
-							Load more...
-						</button>
+						<discogs class="tab" v-show="tab === 'discogs'" />
+						<reports class="tab" v-show="tab === 'reports'" />
 					</div>
 				</div>
 			</div>
@@ -578,13 +430,17 @@ import Toast from "toasters";
 import aw from "@/aw";
 import validation from "@/validation";
 import keyboardShortcuts from "@/keyboardShortcuts";
+
 import Confirm from "@/components/Confirm.vue";
-import Modal from "../Modal.vue";
-import FloatingBox from "../FloatingBox.vue";
-import SaveButton from "../SaveButton.vue";
+import Modal from "../../Modal.vue";
+import FloatingBox from "../../FloatingBox.vue";
+import SaveButton from "../../SaveButton.vue";
+
+import Discogs from "./Tabs/Discogs.vue";
+import Reports from "./Tabs/Reports.vue";
 
 export default {
-	components: { Modal, FloatingBox, SaveButton, Confirm },
+	components: { Modal, FloatingBox, SaveButton, Confirm, Discogs, Reports },
 	props: {
 		youtubeId: { type: String, default: null },
 		songId: { type: String, default: null },
@@ -595,18 +451,13 @@ export default {
 	data() {
 		return {
 			songDataLoaded: false,
+			youtubeError: false,
+			youtubeErrorMessage: "",
 			focusedElementBefore: null,
-			discogsQuery: "",
 			youtubeVideoDuration: "0.000",
 			youtubeVideoCurrentTime: 0,
 			youtubeVideoNote: "",
 			useHTTPS: false,
-			discogs: {
-				apiResults: [],
-				page: 1,
-				pages: 1,
-				disableLoadMore: false
-			},
 			volumeSliderValue: 0,
 			skipToLast10SecsPressed: false,
 			artistInputValue: "",
@@ -658,8 +509,11 @@ export default {
 	},
 	computed: {
 		...mapState("modals/editSong", {
+			tab: state => state.tab,
 			video: state => state.video,
-			song: state => state.song
+			song: state => state.song,
+			originalSong: state => state.originalSong,
+			reports: state => state.reports
 		}),
 		...mapState("modalVisibility", {
 			modals: state => state.modals
@@ -702,8 +556,6 @@ export default {
 					this.editSong({ ...song, discogs: this.song.discogs });
 				else this.editSong(song);
 
-				console.log(song);
-
 				this.songDataLoaded = true;
 
 				this.socket.dispatch(
@@ -713,16 +565,17 @@ export default {
 
 				// this.edit(res.data.song);
 
-				this.discogsQuery = this.song.title;
-
 				this.interval = setInterval(() => {
 					if (
 						this.song.duration !== -1 &&
 						this.video.paused === false &&
 						this.playerReady &&
-						this.video.player.getCurrentTime() -
+						(this.video.player.getCurrentTime() -
 							this.song.skipDuration >
-							this.song.duration
+							this.song.duration ||
+							(this.video.player.getCurrentTime() > 0 &&
+								this.video.player.getCurrentTime() >=
+									this.video.player.getDuration()))
 					) {
 						this.video.paused = true;
 						this.video.player.stopVideo();
@@ -737,133 +590,147 @@ export default {
 					if (this.video.paused === false) this.drawCanvas();
 				}, 200);
 
-				this.video.player = new window.YT.Player("editSongPlayer", {
-					height: 298,
-					width: 530,
-					videoId: this.song.youtubeId,
-					host: "https://www.youtube-nocookie.com",
-					playerVars: {
-						controls: 0,
-						iv_load_policy: 3,
-						rel: 0,
-						showinfo: 0,
-						autoplay: 1
-					},
-					startSeconds: this.song.skipDuration,
-					events: {
-						onReady: () => {
-							let volume = parseInt(
-								localStorage.getItem("volume")
-							);
-							volume = typeof volume === "number" ? volume : 20;
-							this.video.player.seekTo(this.song.skipDuration);
-							this.video.player.setVolume(volume);
-							if (volume > 0) this.video.player.unMute();
-
-							const duration = this.video.player.getDuration();
-
-							this.youtubeVideoDuration = duration.toFixed(3);
-							this.youtubeVideoNote = "(~)";
-							this.playerReady = true;
-
-							this.drawCanvas();
+				if (window.YT && window.YT.Player) {
+					this.video.player = new window.YT.Player("editSongPlayer", {
+						height: 298,
+						width: 530,
+						videoId: this.song.youtubeId,
+						host: "https://www.youtube-nocookie.com",
+						playerVars: {
+							controls: 0,
+							iv_load_policy: 3,
+							rel: 0,
+							showinfo: 0,
+							autoplay: 0
 						},
-						onStateChange: event => {
-							this.drawCanvas();
-
-							let skipToLast10SecsPressed = false;
-							if (
-								event.data === 1 &&
-								this.skipToLast10SecsPressed
-							) {
-								this.skipToLast10SecsPressed = false;
-								skipToLast10SecsPressed = true;
-							}
-
-							if (event.data === 1 && !skipToLast10SecsPressed) {
-								if (!this.video.autoPlayed) {
-									this.video.autoPlayed = true;
-									return this.video.player.stopVideo();
-								}
-
-								this.video.paused = false;
-								let youtubeDuration = this.video.player.getDuration();
-								const newYoutubeVideoDuration = youtubeDuration.toFixed(
-									3
+						startSeconds: this.song.skipDuration,
+						events: {
+							onReady: () => {
+								let volume = parseInt(
+									localStorage.getItem("volume")
 								);
+								volume =
+									typeof volume === "number" ? volume : 20;
+								this.video.player.setVolume(volume);
+								if (volume > 0) this.video.player.unMute();
 
-								const songDurationNumber = Number(
-									this.song.duration
-								);
-								const songDurationNumber2 =
-									Number(this.song.duration) + 1;
-								const songDurationNumber3 =
-									Number(this.song.duration) - 1;
-								const fixedSongDuration = songDurationNumber.toFixed(
-									3
-								);
-								const fixedSongDuration2 = songDurationNumber2.toFixed(
-									3
-								);
-								const fixedSongDuration3 = songDurationNumber3.toFixed(
-									3
-								);
+								const duration = this.video.player.getDuration();
 
+								this.youtubeVideoDuration = duration.toFixed(3);
+								this.youtubeVideoNote = "(~)";
+								this.playerReady = true;
+
+								this.drawCanvas();
+							},
+							onStateChange: event => {
+								this.drawCanvas();
+
+								let skipToLast10SecsPressed = false;
 								if (
-									this.youtubeVideoDuration !==
-										newYoutubeVideoDuration &&
-									(fixedSongDuration ===
-										this.youtubeVideoDuration ||
-										fixedSongDuration2 ===
-											this.youtubeVideoDuration ||
-										fixedSongDuration3 ===
-											this.youtubeVideoDuration)
-								)
-									this.song.duration = newYoutubeVideoDuration;
-
-								this.youtubeVideoDuration = newYoutubeVideoDuration;
-								this.youtubeVideoNote = "";
-
-								if (this.song.duration === -1)
-									this.song.duration = youtubeDuration;
-
-								youtubeDuration -= this.song.skipDuration;
-								if (this.song.duration > youtubeDuration + 1) {
-									this.video.player.stopVideo();
-									this.video.paused = true;
-									return new Toast(
-										"Video can't play. Specified duration is bigger than the YouTube song duration."
-									);
-								}
-								if (this.song.duration <= 0) {
-									this.video.player.stopVideo();
-									this.video.paused = true;
-									return new Toast(
-										"Video can't play. Specified duration has to be more than 0 seconds."
-									);
-								}
-
-								if (
-									this.video.player.getCurrentTime() <
-									this.song.skipDuration
+									event.data === 1 &&
+									this.skipToLast10SecsPressed
 								) {
-									return this.video.player.seekTo(
-										this.song.skipDuration
-									);
+									this.skipToLast10SecsPressed = false;
+									skipToLast10SecsPressed = true;
 								}
-							} else if (event.data === 2) {
-								this.video.paused = true;
-							}
 
-							return false;
+								if (
+									event.data === 1 &&
+									!skipToLast10SecsPressed
+								) {
+									this.video.paused = false;
+									let youtubeDuration = this.video.player.getDuration();
+									const newYoutubeVideoDuration = youtubeDuration.toFixed(
+										3
+									);
+
+									const songDurationNumber = Number(
+										this.song.duration
+									);
+									const songDurationNumber2 =
+										Number(this.song.duration) + 1;
+									const songDurationNumber3 =
+										Number(this.song.duration) - 1;
+									const fixedSongDuration = songDurationNumber.toFixed(
+										3
+									);
+									const fixedSongDuration2 = songDurationNumber2.toFixed(
+										3
+									);
+									const fixedSongDuration3 = songDurationNumber3.toFixed(
+										3
+									);
+
+									if (
+										this.youtubeVideoDuration !==
+											newYoutubeVideoDuration &&
+										(fixedSongDuration ===
+											this.youtubeVideoDuration ||
+											fixedSongDuration2 ===
+												this.youtubeVideoDuration ||
+											fixedSongDuration3 ===
+												this.youtubeVideoDuration)
+									)
+										this.song.duration = newYoutubeVideoDuration;
+
+									this.youtubeVideoDuration = newYoutubeVideoDuration;
+									this.youtubeVideoNote = "";
+
+									if (this.song.duration === -1)
+										this.song.duration = youtubeDuration;
+
+									youtubeDuration -= this.song.skipDuration;
+									if (
+										this.song.duration >
+										youtubeDuration + 1
+									) {
+										this.video.player.stopVideo();
+										this.video.paused = true;
+										return new Toast(
+											"Video can't play. Specified duration is bigger than the YouTube song duration."
+										);
+									}
+									if (this.song.duration <= 0) {
+										this.video.player.stopVideo();
+										this.video.paused = true;
+										return new Toast(
+											"Video can't play. Specified duration has to be more than 0 seconds."
+										);
+									}
+
+									if (
+										this.video.player.getCurrentTime() <
+										this.song.skipDuration
+									) {
+										return this.video.player.seekTo(
+											this.song.skipDuration
+										);
+									}
+								} else if (event.data === 2) {
+									this.video.paused = true;
+								}
+
+								return false;
+							}
 						}
-					}
-				});
+					});
+				} else {
+					this.youtubeError = true;
+					this.youtubeErrorMessage = "Player could not be loaded.";
+				}
 			} else {
 				new Toast("Song with that ID not found");
 				this.closeModal("editSong");
 			}
 		});
+
+		this.socket.dispatch(
+			"reports.getReportsForSong",
+			this.song._id,
+			res => {
+				this.updateReports(res.data.reports);
+			}
+		);
 
 		let volume = parseFloat(localStorage.getItem("volume"));
 		volume =
@@ -985,9 +852,28 @@ export default {
 			}
 		});
 
-		keyboardShortcuts.registerShortcut("editSong.close", {
-			keyCode: 88,
+		keyboardShortcuts.registerShortcut("editSong.saveClose", {
+			keyCode: 83,
 			ctrl: true,
+			alt: true,
+			preventDefault: true,
+			handler: () => {
+				this.save(this.song, true);
+			}
+		});
+
+		keyboardShortcuts.registerShortcut("editSong.saveVerifyClose", {
+			keyCode: 86,
+			ctrl: true,
+			alt: true,
+			preventDefault: true,
+			handler: () => {
+				// alert("not implemented yet");
+			}
+		});
+
+		keyboardShortcuts.registerShortcut("editSong.close", {
+			keyCode: 115,
 			preventDefault: true,
 			handler: () => {
 				this.closeModal("editSong");
@@ -1005,14 +891,6 @@ export default {
 			}
 		});
 
-		keyboardShortcuts.registerShortcut("editSong.focusDiscogs", {
-			keyCode: 35,
-			preventDefault: true,
-			handler: () => {
-				this.$refs["discogs-input"].focus();
-			}
-		});
-
 		keyboardShortcuts.registerShortcut("editSong.useAllDiscogs", {
 			keyCode: 68,
 			alt: true,
@@ -1026,35 +904,26 @@ export default {
 			}
 		});
 
-		keyboardShortcuts.registerShortcut("editSong.resetDuration", {
-			keyCode: 82,
-			alt: true,
-			ctrl: true,
-			preventDefault: true,
-			handler: () => {
-				this.fillDuration();
-			}
-		});
-
 		/*
 		
 		editSong.pauseResume - Num 5 - Pause/resume song
 		editSong.stopVideo - Ctrl - Num 5 - Stop
 		editSong.skipToLast10Secs - Num 6 - Skip to last 10 seconds
 
-		editSong.volumeDown5 - Num 2 - Volume down by 10
-		editSong.volumeDown1 - Ctrl - Num 2 - Volume down by 1
-		editSong.volumeUp5 - Num 8 - Volume up by 10
-		editSong.volumeUp1 - Ctrl - Num 8 - Volume up by 1
+		editSong.lowerVolumeLarge - Num 2 - Volume down by 10
+		editSong.lowerVolumeSmall - Ctrl - Num 2 - Volume down by 1
+		editSong.increaseVolumeLarge - Num 8 - Volume up by 10
+		editSong.increaseVolumeSmall - Ctrl - Num 8 - Volume up by 1
 
 		editSong.focusTitle - Home - Focus the title input
 		editSong.focusDicogs - End - Focus the discogs input
 
 		editSong.save - Ctrl - S - Saves song
-		editSong.close - Ctrl - X - Closes modal
+		editSong.save - Ctrl - Alt - S - Saves song and closes the modal
+		editSong.save - Ctrl - Alt - V - Saves song, verifies songs and then closes the modal
+		editSong.close - F4 - Closes modal without saving
 
 		editSong.useAllDiscogs - Ctrl - Alt - D - Sets all fields to the Discogs data
-		editSong.resetDuration - Ctrl - Alt - R - Resets the duration
 
 		Inside Discogs inputs: Ctrl - D - Sets this field to the Discogs data
 
@@ -1076,16 +945,17 @@ export default {
 			"editSong.pauseResume",
 			"editSong.stopVideo",
 			"editSong.skipToLast10Secs",
-			"editSong.volumeDown5",
-			"editSong.volumeDown1",
-			"editSong.volumeUp5",
-			"editSong.volumeUp1",
+			"editSong.lowerVolumeLarge",
+			"editSong.lowerVolumeSmall",
+			"editSong.increaseVolumeLarge",
+			"editSong.increaseVolumeSmall",
 			"editSong.focusTitle",
 			"editSong.focusDicogs",
 			"editSong.save",
+			"editSong.saveClose",
+			"editSong.saveVerifyClose",
 			"editSong.close",
-			"editSong.useAllDiscogs",
-			"editSong.resetDuration"
+			"editSong.useAllDiscogs"
 		];
 
 		shortcutNames.forEach(shortcutName => {
@@ -1104,7 +974,7 @@ export default {
 			let saveButtonRef = this.$refs.saveButton;
 			if (close) saveButtonRef = this.$refs.saveAndCloseButton;
 
-			if (this.youtubeVideoDuration === "0.000") {
+			if (!this.youtubeError && this.youtubeVideoDuration === "0.000") {
 				saveButtonRef.handleFailedSave();
 				return new Toast("The video appears to not be working.");
 			}
@@ -1119,32 +989,45 @@ export default {
 				return new Toast("Please fill in all fields");
 			}
 
-			const thumbnailHeight = this.$refs.thumbnailElement.naturalHeight;
-			const thumbnailWidth = this.$refs.thumbnailElement.naturalWidth;
+			// const thumbnailHeight = this.$refs.thumbnailElement.naturalHeight;
+			// const thumbnailWidth = this.$refs.thumbnailElement.naturalWidth;
 
-			if (thumbnailHeight < 80 || thumbnailWidth < 80) {
+			// if (thumbnailHeight < 80 || thumbnailWidth < 80) {
+			// 	saveButtonRef.handleFailedSave();
+			// 	return new Toast(
+			// 		"Thumbnail width and height must be at least 80px."
+			// 	);
+			// }
+
+			// if (thumbnailHeight > 4000 || thumbnailWidth > 4000) {
+			// 	saveButtonRef.handleFailedSave();
+			// 	return new Toast(
+			// 		"Thumbnail width and height must be less than 4000px."
+			// 	);
+			// }
+
+			// if (thumbnailHeight - thumbnailWidth > 5) {
+			// 	saveButtonRef.handleFailedSave();
+			// 	return new Toast("Thumbnail cannot be taller than it is wide.");
+			// }
+
+			// Youtube Id
+			if (
+				this.youtubeError &&
+				this.originalSong.youtubeId !== song.youtubeId
+			) {
 				saveButtonRef.handleFailedSave();
 				return new Toast(
-					"Thumbnail width and height must be at least 80px."
+					"You're not allowed to change the YouTube id while the player is not working"
 				);
-			}
-
-			if (thumbnailHeight > 4000 || thumbnailWidth > 4000) {
-				saveButtonRef.handleFailedSave();
-				return new Toast(
-					"Thumbnail width and height must be less than 4000px."
-				);
-			}
-
-			if (thumbnailHeight - thumbnailWidth > 5) {
-				saveButtonRef.handleFailedSave();
-				return new Toast("Thumbnail cannot be taller than it is wide.");
 			}
 
 			// Duration
 			if (
 				Number(song.skipDuration) + Number(song.duration) >
-				this.youtubeVideoDuration
+					this.youtubeVideoDuration &&
+				(!this.youtubeError ||
+					this.originalSong.duration !== song.duration)
 			) {
 				saveButtonRef.handleFailedSave();
 				return new Toast(
@@ -1246,42 +1129,6 @@ export default {
 				if (close) this.closeModal("editSong");
 			});
 		},
-		toggleAPIResult(index) {
-			const apiResult = this.discogs.apiResults[index];
-			if (apiResult.expanded === true) apiResult.expanded = false;
-			else if (apiResult.gotMoreInfo === true) apiResult.expanded = true;
-			else {
-				fetch(apiResult.album.resourceUrl)
-					.then(response => {
-						return response.json();
-					})
-					.then(data => {
-						apiResult.album.artists = [];
-						apiResult.album.artistIds = [];
-						const artistRegex = new RegExp(" \\([0-9]+\\)$");
-
-						apiResult.dataQuality = data.data_quality;
-						data.artists.forEach(artist => {
-							apiResult.album.artists.push(
-								artist.name.replace(artistRegex, "")
-							);
-							apiResult.album.artistIds.push(artist.id);
-						});
-						apiResult.tracks = data.tracklist.map(track => {
-							return {
-								position: track.position,
-								title: track.title
-							};
-						});
-						apiResult.expanded = true;
-						apiResult.gotMoreInfo = true;
-					});
-			}
-		},
-		fillDuration() {
-			this.song.duration =
-				this.youtubeVideoDuration - this.song.skipDuration;
-		},
 		getAlbumData(type) {
 			if (!this.song.discogs) return;
 			if (type === "title")
@@ -1309,73 +1156,9 @@ export default {
 					)
 				});
 		},
-		searchDiscogsForPage(page) {
-			const query = this.discogsQuery;
-
-			this.socket.dispatch("apis.searchDiscogs", query, page, res => {
-				if (res.status === "success") {
-					if (page === 1)
-						new Toast(
-							`Successfully searched. Got ${res.data.results.length} results.`
-						);
-					else
-						new Toast(
-							`Successfully got ${res.data.results.length} more results.`
-						);
-
-					if (page === 1) {
-						this.discogs.apiResults = [];
-					}
-
-					this.discogs.pages = res.data.pages;
-
-					this.discogs.apiResults = this.discogs.apiResults.concat(
-						res.data.results.map(result => {
-							const type =
-								result.type.charAt(0).toUpperCase() +
-								result.type.slice(1);
-
-							return {
-								expanded: false,
-								gotMoreInfo: false,
-								album: {
-									id: result.id,
-									title: result.title,
-									type,
-									year: result.year,
-									genres: result.genre,
-									albumArt: result.cover_image,
-									resourceUrl: result.resource_url
-								}
-							};
-						})
-					);
-
-					this.discogs.page = page;
-					this.discogs.disableLoadMore = false;
-				} else new Toast(res.message);
-			});
-		},
-		loadNextDiscogsPage() {
-			this.discogs.disableLoadMore = true;
-			this.searchDiscogsForPage(this.discogs.page + 1);
-		},
-		onDiscogsQueryChange() {
-			this.discogs.page = 1;
-			this.discogs.pages = 1;
-			this.discogs.apiResults = [];
-			this.discogs.disableLoadMore = false;
-		},
-		selectTrack(apiResultIndex, trackIndex) {
-			const apiResult = JSON.parse(
-				JSON.stringify(this.discogs.apiResults[apiResultIndex])
-			);
-			apiResult.track = apiResult.tracks[trackIndex];
-			delete apiResult.tracks;
-			delete apiResult.expanded;
-			delete apiResult.gotMoreInfo;
-
-			this.selectDiscogsInfo(apiResult);
+		fillDuration() {
+			this.song.duration =
+				this.youtubeVideoDuration - this.song.skipDuration;
 		},
 		blurArtistInput() {
 			this.artistInputFocussed = false;
@@ -1617,6 +1400,12 @@ export default {
 		// 	});
 		// },
 		...mapActions("modals/importAlbum", ["selectDiscogsAlbum"]),
+		...mapActions({
+			showTab(dispatch, payload) {
+				this.$refs[`${payload}-tab`].scrollIntoView();
+				return dispatch("modals/editSong/showTab", payload);
+			}
+		}),
 		...mapActions("modals/editSong", [
 			"stopVideo",
 			"loadVideoById",
@@ -1624,7 +1413,7 @@ export default {
 			"getCurrentTime",
 			"editSong",
 			"updateSongField",
-			"selectDiscogsInfo"
+			"updateReports"
 		]),
 		...mapActions("modalVisibility", ["closeModal", "openModal"])
 	}
@@ -1647,9 +1436,6 @@ export default {
 		}
 
 		.modal-card-foot {
-			div div {
-				margin-right: 5px;
-			}
 			.right {
 				display: flex;
 				margin-left: auto;
@@ -1698,6 +1484,23 @@ export default {
 			width: 530px;
 			display: flex;
 			flex-direction: column;
+
+			.player-error {
+				height: 318px;
+				width: 530px;
+				display: block;
+				border: 1px rgba(163, 224, 255, 0.75) solid;
+				border-radius: 5px 5px 0px 0px;
+				display: flex;
+				align-items: center;
+
+				* {
+					margin: 0;
+					flex: 1;
+					font-size: 30px;
+					text-align: center;
+				}
+			}
 
 			.player-footer {
 				background-color: var(--light-grey);
@@ -1956,160 +1759,201 @@ export default {
 	display: flex;
 	flex-wrap: wrap;
 
-	.api-section {
+	#tabs-container {
 		width: 376px;
 		background-color: var(--light-grey);
 		border: 1px rgba(163, 224, 255, 0.75) solid;
 		border-radius: 5px;
-		padding: 16px;
+		// padding: 16px;
 		overflow: auto;
 		height: 100%;
 
-		> label {
-			margin-top: 12px;
-		}
-
-		.top-container {
+		#tab-selection {
 			display: flex;
+			overflow-x: auto;
 
-			img {
-				height: 85px;
-				width: 85px;
-			}
+			.button {
+				border-radius: 5px 5px 0 0;
+				border: 0;
+				text-transform: uppercase;
+				font-size: 14px;
+				color: var(--dark-grey-3);
+				background-color: var(--light-grey-2);
+				flex-grow: 1;
+				height: 32px;
 
-			.right-container {
-				padding: 8px;
-				display: flex;
-				flex-direction: column;
-				flex: 1;
-
-				.album-title {
-					flex: 1;
-					font-weight: 600;
-				}
-
-				.bottom-row {
-					display: flex;
-					flex-flow: row;
-					line-height: 15px;
-
-					img {
-						height: 15px;
-						align-self: end;
-						flex: 1;
-						user-select: none;
-						-moz-user-select: none;
-						-ms-user-select: none;
-						-webkit-user-select: none;
-						cursor: pointer;
-					}
-
-					p {
-						text-align: right;
-					}
-
-					.type-year {
-						font-size: 13px;
-						align-self: end;
-					}
+				&:not(:first-of-type) {
+					margin-left: 5px;
 				}
 			}
-		}
 
-		.bottom-container {
-			padding: 12px;
-
-			.bottom-container-field {
-				line-height: 16px;
-				margin-bottom: 8px;
+			.selected {
+				background-color: var(--primary-color) !important;
+				color: var(--white) !important;
 				font-weight: 600;
-
-				span {
-					font-weight: 400;
-				}
-			}
-
-			.bottom-container-field:last-of-type {
-				margin-bottom: 0;
 			}
 		}
-
-		.selected-discogs-info {
-			background-color: var(--white);
-			border: 1px solid var(--purple);
-			border-radius: 5px;
-			margin-bottom: 16px;
-
-			.selected-discogs-info-none {
-				font-size: 18px;
-				text-align: center;
-			}
-
-			.bottom-row > p {
-				flex: 1;
-			}
-		}
-
-		.api-result {
-			background-color: var(--white);
-			border: 0.5px solid var(--primary-color);
-			border-radius: 5px;
-			margin-bottom: 16px;
-		}
-
-		button {
-			background-color: var(--primary-color) !important;
-
-			&:focus,
-			&:hover {
-				filter: contrast(0.75);
-			}
-		}
-
-		.tracks {
-			margin-top: 12px;
-
-			.track:first-child {
-				margin-top: 0;
-				border-radius: 3px 3px 0 0;
-			}
-
-			.track:last-child {
-				border-radius: 0 0 3px 3px;
-			}
-
-			.track {
-				border: 0.5px solid var(--black);
-				margin-top: -1px;
-				line-height: 16px;
-				display: flex;
-				cursor: pointer;
-
-				span {
-					font-weight: 600;
-					display: inline-block;
-					margin-top: 7px;
-					margin-bottom: 7px;
-					margin-left: 7px;
-				}
-
-				p {
-					display: inline-block;
-					margin: 7px;
-					flex: 1;
-				}
-			}
-
-			.track:hover,
-			.track:focus {
-				background-color: var(--light-grey);
-			}
-		}
-
-		.discogs-load-more {
-			margin-bottom: 8px;
+		.tab {
+			// border: 1px solid var(--light-grey-3);
+			padding: 15px;
+			// border-radius: 0 0 5px 5px;
 		}
 	}
+
+	// .api-section {
+	// 	width: 376px;
+	// 	background-color: var(--light-grey);
+	// 	border: 1px rgba(163, 224, 255, 0.75) solid;
+	// 	border-radius: 5px;
+	// 	padding: 16px;
+	// 	overflow: auto;
+	// 	height: 100%;
+
+	// 	> label {
+	// 		margin-top: 12px;
+	// 	}
+
+	// 	.top-container {
+	// 		display: flex;
+
+	// 		img {
+	// 			height: 85px;
+	// 			width: 85px;
+	// 		}
+
+	// 		.right-container {
+	// 			padding: 8px;
+	// 			display: flex;
+	// 			flex-direction: column;
+	// 			flex: 1;
+
+	// 			.album-title {
+	// 				flex: 1;
+	// 				font-weight: 600;
+	// 			}
+
+	// 			.bottom-row {
+	// 				display: flex;
+	// 				flex-flow: row;
+	// 				line-height: 15px;
+
+	// 				img {
+	// 					height: 15px;
+	// 					align-self: end;
+	// 					flex: 1;
+	// 					user-select: none;
+	// 					-moz-user-select: none;
+	// 					-ms-user-select: none;
+	// 					-webkit-user-select: none;
+	// 					cursor: pointer;
+	// 				}
+
+	// 				p {
+	// 					text-align: right;
+	// 				}
+
+	// 				.type-year {
+	// 					font-size: 13px;
+	// 					align-self: end;
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+
+	// 	.bottom-container {
+	// 		padding: 12px;
+
+	// 		.bottom-container-field {
+	// 			line-height: 16px;
+	// 			margin-bottom: 8px;
+	// 			font-weight: 600;
+
+	// 			span {
+	// 				font-weight: 400;
+	// 			}
+	// 		}
+
+	// 		.bottom-container-field:last-of-type {
+	// 			margin-bottom: 0;
+	// 		}
+	// 	}
+
+	// 	.selected-discogs-info {
+	// 		background-color: var(--white);
+	// 		border: 1px solid var(--purple);
+	// 		border-radius: 5px;
+	// 		margin-bottom: 16px;
+
+	// 		.selected-discogs-info-none {
+	// 			font-size: 18px;
+	// 			text-align: center;
+	// 		}
+
+	// 		.bottom-row > p {
+	// 			flex: 1;
+	// 		}
+	// 	}
+
+	// 	.api-result {
+	// 		background-color: var(--white);
+	// 		border: 0.5px solid var(--primary-color);
+	// 		border-radius: 5px;
+	// 		margin-bottom: 16px;
+	// 	}
+
+	// 	button {
+	// 		background-color: var(--primary-color) !important;
+
+	// 		&:focus,
+	// 		&:hover {
+	// 			filter: contrast(0.75);
+	// 		}
+	// 	}
+
+	// 	.tracks {
+	// 		margin-top: 12px;
+
+	// 		.track:first-child {
+	// 			margin-top: 0;
+	// 			border-radius: 3px 3px 0 0;
+	// 		}
+
+	// 		.track:last-child {
+	// 			border-radius: 0 0 3px 3px;
+	// 		}
+
+	// 		.track {
+	// 			border: 0.5px solid var(--black);
+	// 			margin-top: -1px;
+	// 			line-height: 16px;
+	// 			display: flex;
+	// 			cursor: pointer;
+
+	// 			span {
+	// 				font-weight: 600;
+	// 				display: inline-block;
+	// 				margin-top: 7px;
+	// 				margin-bottom: 7px;
+	// 				margin-left: 7px;
+	// 			}
+
+	// 			p {
+	// 				display: inline-block;
+	// 				margin: 7px;
+	// 				flex: 1;
+	// 			}
+	// 		}
+
+	// 		.track:hover,
+	// 		.track:focus {
+	// 			background-color: var(--light-grey);
+	// 		}
+	// 	}
+
+	// 	.discogs-load-more {
+	// 		margin-bottom: 8px;
+	// 	}
+	// }
 }
 
 .modal-card-foot .is-primary {

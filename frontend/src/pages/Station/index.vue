@@ -558,8 +558,17 @@
 				<request-song v-if="modals.requestSong" />
 				<edit-playlist v-if="modals.editPlaylist" />
 				<create-playlist v-if="modals.createPlaylist" />
-				<manage-station
-					v-if="modals.manageStation"
+				<manage-station-owen
+					v-if="
+						modals.manageStation && manageStationVersion === 'owen'
+					"
+					:station-id="station._id"
+					sector="station"
+				/>
+				<manage-station-kris
+					v-if="
+						modals.manageStation && manageStationVersion === 'kris'
+					"
 					:station-id="station._id"
 					sector="station"
 				/>
@@ -637,22 +646,25 @@ export default {
 		MainHeader,
 		MainFooter,
 		RequestSong: () => import("@/components/modals/RequestSong.vue"),
-		EditPlaylist: () => import("@/components/modals/EditPlaylist.vue"),
+		EditPlaylist: () => import("@/components/modals/EditPlaylist"),
 		CreatePlaylist: () => import("@/components/modals/CreatePlaylist.vue"),
-		ManageStation: () =>
-			import("@/components/modals/ManageStation/index.vue"),
+		ManageStationOwen: () =>
+			import("@/components/modals/ManageStationOwen/index.vue"),
+		ManageStationKris: () =>
+			import("@/components/modals/ManageStationKris/index.vue"),
 		Report: () => import("@/components/modals/Report.vue"),
 		Z404,
 		FloatingBox,
 		StationSidebar,
 		AddToPlaylistDropdown,
-		EditSong: () => import("@/components/modals/EditSong.vue"),
+		EditSong: () => import("@/components/modals/EditSong"),
 		SongItem
 	},
 	data() {
 		return {
 			utils,
 			isIOS: navigator.platform.match(/iPhone|iPod|iPad/),
+			manageStationVersion: "",
 			title: "Station",
 			loading: true,
 			exists: true,
@@ -689,6 +701,9 @@ export default {
 		...mapState("modalVisibility", {
 			modals: state => state.modals
 		}),
+		...mapState("modals/editSong", {
+			video: state => state.video
+		}),
 		...mapState("station", {
 			station: state => state.station,
 			currentSong: state => state.currentSong,
@@ -713,14 +728,19 @@ export default {
 		})
 	},
 	async mounted() {
+		lofig.get("manageStationVersion", manageStationVersion => {
+			this.manageStationVersion = manageStationVersion;
+		});
+
 		this.editSongModalWatcher = this.$store.watch(
-			state => state.modalVisibility.modals.editSong,
-			newValue => {
-				if (newValue === true) {
+			state => state.modals.editSong.video.paused,
+			paused => {
+				if (paused && !this.beforeEditSongModalLocalPaused) {
+					this.resumeLocalStation();
+				} else if (!paused) {
 					this.beforeEditSongModalLocalPaused = this.localPaused;
 					this.pauseLocalStation();
-				} else if (!this.beforeEditSongModalLocalPaused)
-					this.resumeLocalStation();
+				}
 			}
 		);
 
@@ -801,11 +821,26 @@ export default {
 			this.updateStationPaused(false);
 			if (!this.localPaused) this.resumeLocalPlayer();
 
-			if (this.currentSong)
-				window.stationNextSongTimeout = setTimeout(
-					this.skipSong,
-					this.getTimeRemaining()
-				);
+			if (this.currentSong) {
+				if (this.nextSong)
+					this.setNextCurrentSong({
+						currentSong: this.nextSong,
+						startedAt: Date.now() + this.getTimeRemaining(),
+						paused: false,
+						timePaused: 0
+					});
+				else
+					this.setNextCurrentSong({
+						currentSong: null,
+						startedAt: 0,
+						paused: false,
+						timePaused: 0,
+						pausedAt: 0
+					});
+				window.stationNextSongTimeout = setTimeout(() => {
+					this.skipSong("window.stationNextSongTimeout 2");
+				}, this.getTimeRemaining());
+			}
 		});
 
 		this.socket.on("event:station.deleted", () => {
@@ -869,6 +904,22 @@ export default {
 
 			this.updateNextSong(nextSong);
 
+			if (nextSong)
+				this.setNextCurrentSong({
+					currentSong: nextSong,
+					startedAt: Date.now() + this.getTimeRemaining(),
+					paused: false,
+					timePaused: 0
+				});
+			else
+				this.setNextCurrentSong({
+					currentSong: null,
+					startedAt: 0,
+					paused: false,
+					timePaused: 0,
+					pausedAt: 0
+				});
+
 			this.addPartyPlaylistSongToQueue();
 		});
 
@@ -882,6 +933,13 @@ export default {
 					: null;
 
 			this.updateNextSong(nextSong);
+
+			this.setNextCurrentSong({
+				currentSong: nextSong,
+				startedAt: Date.now() + this.getTimeRemaining(),
+				paused: false,
+				timePaused: 0
+			});
 		});
 
 		this.socket.on("event:station.voteSkipSong", () => {
@@ -1025,16 +1083,32 @@ export default {
 				}
 			);
 		},
-		setNextCurrentSong(nextCurrentSong) {
+		setNextCurrentSong(nextCurrentSong, skipSkipCheck = false) {
 			this.nextCurrentSong = nextCurrentSong;
-			if (this.getTimeRemaining() <= 0) {
+			if (this.getTimeRemaining() <= 0 && !skipSkipCheck) {
 				this.skipSong();
 			}
 		},
 		skipSong() {
-			console.log("SKIP_SONG_FN", this.nextCurrentSong);
 			if (this.nextCurrentSong && this.nextCurrentSong.currentSong) {
+				const songsList = this.songsList.concat([]);
+				if (
+					songsList.length > 0 &&
+					songsList[0].youtubeId ===
+						this.nextCurrentSong.currentSong.youtubeId
+				) {
+					songsList.splice(0, 1);
+					this.updateSongsList(songsList);
+				}
 				this.setCurrentSong(this.nextCurrentSong);
+			} else {
+				this.setCurrentSong({
+					currentSong: null,
+					startedAt: 0,
+					paused: this.stationPaused,
+					timePaused: 0,
+					pausedAt: 0
+				});
 			}
 		},
 		setCurrentSong(data) {
@@ -1054,13 +1128,16 @@ export default {
 					? this.songsList[0]
 					: null;
 			this.updateNextSong(nextSong);
-			this.nextCurrentSong = {
-				currentSong: null,
-				startedAt: 0,
-				paused,
-				timePaused: 0,
-				pausedAt: 0
-			};
+			this.setNextCurrentSong(
+				{
+					currentSong: null,
+					startedAt: 0,
+					paused,
+					timePaused: 0,
+					pausedAt: 0
+				},
+				true
+			);
 
 			clearTimeout(window.stationNextSongTimeout);
 
@@ -1076,10 +1153,30 @@ export default {
 				else this.playVideo();
 
 				if (!this.stationPaused) {
-					window.stationNextSongTimeout = setTimeout(
-						this.skipSong,
-						this.getTimeRemaining()
-					);
+					if (this.nextSong)
+						this.setNextCurrentSong(
+							{
+								currentSong: this.nextSong,
+								startedAt: Date.now() + this.getTimeRemaining(),
+								paused: false,
+								timePaused: 0
+							},
+							true
+						);
+					else
+						this.setNextCurrentSong(
+							{
+								currentSong: null,
+								startedAt: 0,
+								paused: false,
+								timePaused: 0,
+								pausedAt: 0
+							},
+							true
+						);
+					window.stationNextSongTimeout = setTimeout(() => {
+						this.skipSong("window.stationNextSongTimeout 1");
+					}, this.getTimeRemaining());
 				}
 
 				this.socket.dispatch(
@@ -1109,6 +1206,8 @@ export default {
 				if (this.playerReady) this.player.pauseVideo();
 				this.updateNoSong(true);
 			}
+
+			console.log(666);
 
 			this.calculateTimeElapsed();
 			this.resizeSeekerbar();
@@ -1686,6 +1785,13 @@ export default {
 										: null;
 								}
 								this.updateNextSong(nextSong);
+								this.setNextCurrentSong({
+									currentSong: nextSong,
+									startedAt:
+										Date.now() + this.getTimeRemaining(),
+									paused: false,
+									timePaused: 0
+								});
 							}
 						});
 

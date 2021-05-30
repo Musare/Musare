@@ -89,25 +89,18 @@ p {
 }
 
 .modal-card-foot {
-	*:not(:last-child) {
-		margin-right: 10px;
-	}
+	overflow: auto;
 
 	& > div {
 		display: flex;
 		flex-grow: 1;
-		div:not(:first-of-type) {
-			margin-left: 10px;
-		}
+		column-gap: 16px;
 	}
 
 	.right {
 		margin-left: auto;
 		justify-content: flex-end;
-
-		*:not(:last-child) {
-			margin-right: 5px;
-		}
+		column-gap: 16px;
 	}
 }
 </style>

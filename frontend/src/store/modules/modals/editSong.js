@@ -13,10 +13,14 @@ export default {
 			autoPlayed: false,
 			currentTime: 0
 		},
-		song: {}
+		song: {},
+		originalSong: {},
+		reports: [],
+		tab: "discogs"
 	},
 	getters: {},
 	actions: {
+		showTab: ({ commit }, tab) => commit("showTab", tab),
 		editSong: ({ commit }, song) => commit("editSong", song),
 		stopVideo: ({ commit }) => commit("stopVideo"),
 		loadVideoById: ({ commit }, id, skipDuration) =>
@@ -30,11 +34,16 @@ export default {
 		},
 		updateSongField: ({ commit }, data) => commit("updateSongField", data),
 		selectDiscogsInfo: ({ commit }, discogsInfo) =>
-			commit("selectDiscogsInfo", discogsInfo)
+			commit("selectDiscogsInfo", discogsInfo),
+		updateReports: ({ commit }, reports) => commit("updateReports", reports)
 	},
 	mutations: {
+		showTab(state, tab) {
+			state.tab = tab;
+		},
 		editSong(state, song) {
 			if (song.discogs === undefined) song.discogs = null;
+			state.originalSong = JSON.parse(JSON.stringify(song));
 			state.song = { ...song };
 		},
 		stopVideo(state) {
@@ -69,6 +78,9 @@ export default {
 		},
 		selectDiscogsInfo(state, discogsInfo) {
 			state.song.discogs = discogsInfo;
+		},
+		updateReports(state, reports) {
+			state.reports = reports;
 		}
 	}
 };

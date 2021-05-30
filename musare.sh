@@ -68,9 +68,11 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
         echo -e "${CYAN}Musare | Restart Services${NC}"
         services=$(handleServices "${@:2}")
         if [[ ${services:0:1} == 1 && ${services:2:4} == "all" ]]; then
-            docker-compose restart
+            docker-compose stop
+            docker-compose up -d
         elif [[ ${services:0:1} == 1 ]]; then
-            docker-compose restart ${services:2}
+            docker-compose stop ${services:2}
+            docker-compose up -d ${services:2}
         else
             echo -e "${RED}${services:2}\n${YELLOW}Usage: $(basename $0) restart [backend, frontend, mongo, redis]${NC}"
         fi
@@ -170,10 +172,28 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
         if [[ $(git rev-parse HEAD) == $(git rev-parse @{u}) ]]; then
             echo -e "${GREEN}Already up to date${NC}"
         else
-            git pull
-            docker-compose build
-            docker-compose stop
-            docker-compose up -d
+            dbChange=$(git log --name-only --oneline HEAD..origin/$(git rev-parse --abbrev-ref HEAD) | grep "backend/logic/db/schemas")
+            fcChange=$(git log --name-only --oneline HEAD..origin/$(git rev-parse --abbrev-ref HEAD) | grep "frontend/dist/config/template.json")
+            bcChange=$(git log --name-only --oneline HEAD..origin/$(git rev-parse --abbrev-ref HEAD) | grep "backend/config/template.json")
+            if [[ ( $2 == "auto" && -z $dbChange && -z $fcChange && -z $bcChange ) || -z $2 ]]; then
+                echo -e "${CYAN}Updating...${NC}"
+                git pull
+                docker-compose build
+                docker-compose stop
+                docker-compose up -d
+                echo -e "${GREEN}Updated!${NC}"
+                if [[ -n $dbChange ]]; then
+                    echo -e "${RED}Database schema has changed, please run migration!${NC}"
+                fi
+                if [[ -n $fcChange ]]; then
+                    echo -e "${RED}Frontend config has changed, please update!${NC}"
+                fi
+                if [[ -n $bcChange ]]; then
+                    echo -e "${RED}Backend config has changed, please update!${NC}"
+                fi
+            elif [[ $2 == "auto" ]]; then
+                echo -e "${RED}Auto Update Failed! Database and/or config has changed!${NC}"
+            fi
         fi
         ;;
 

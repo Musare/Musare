@@ -467,7 +467,11 @@ class _WSModule extends CoreClass {
 
 						return CacheModule.runJob(
 							"HSET",
-							{ table: "sessions", key: SID, value: session },
+							{
+								table: "sessions",
+								key: SID,
+								value: session
+							},
 							this
 						).then(session => next(null, session));
 					},

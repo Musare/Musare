@@ -344,8 +344,14 @@ h2 {
 				margin-right: 10px;
 				width: 45px;
 				height: 45px;
-				font-size: 20px;
 			}
+
+			/deep/ .profile-picture.using-initials span {
+				font-size: calc(
+					45px / 5 * 2
+				); // 2/5th of .profile-picture height/width
+			}
+
 			div {
 				display: flex;
 				flex-direction: column;

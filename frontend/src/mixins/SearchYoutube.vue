@@ -77,6 +77,19 @@ export default {
 					} else if (res.status === "error") new Toast(res.message);
 				}
 			);
+		},
+		addSongToPlaylist(id, index) {
+			this.socket.dispatch(
+				"playlists.addSongToPlaylist",
+				false,
+				id,
+				this.playlist._id,
+				res => {
+					new Toast(res.message);
+					if (res.status === "success")
+						this.search.songs.results[index].isAddedToQueue = true;
+				}
+			);
 		}
 	}
 };

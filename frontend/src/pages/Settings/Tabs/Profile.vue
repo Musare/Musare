@@ -138,6 +138,9 @@ export default {
 			}
 		},
 		changeName() {
+			this.modifiedUser.name = this.modifiedUser.name
+				.replaceAll(/ +/g, " ")
+				.trim();
 			const { name } = this.modifiedUser;
 
 			if (!validation.isLength(name, 1, 64))
@@ -146,6 +149,10 @@ export default {
 			if (!validation.regex.name.test(name))
 				return new Toast(
 					"Invalid name format. Only letters, spaces, apostrophes and hyphens are allowed."
+				);
+			if (name.replaceAll(/[ .'-]/g, "").length === 0)
+				return new Toast(
+					"Invalid name format. Only letters, spaces, apostrophes and hyphens are allowed, and there has to be at least one letter."
 				);
 
 			this.$refs.saveButton.status = "disabled";
@@ -289,7 +296,10 @@ export default {
 			margin-right: 10px;
 			width: 50px;
 			height: 50px;
-			font-size: 25px;
+		}
+
+		/deep/ .profile-picture.using-initials span {
+			font-size: 20px; // 2/5th of .profile-picture height/width
 		}
 	}
 }
