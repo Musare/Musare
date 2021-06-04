@@ -22,7 +22,7 @@
 	"messages": {
 		"accountRemoval": "Your account will be deactivated instantly and your data will shortly be deleted by an admin."
 	},
-	"manageStationVersion": "kris or owen",
+	"manageStationVersion": "kris",
 	"skipConfigVersionCheck": false,
 	"configVersion": 5
 }
