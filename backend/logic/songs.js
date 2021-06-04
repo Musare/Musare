@@ -156,6 +156,46 @@ class _SongsModule extends CoreClass {
 	}
 
 	/**
+	 * Gets songs by id from Mongo
+	 *
+	 * @param {object} payload - object containing the payload
+	 * @param {string} payload.songIds - the ids of the songs we are trying to get
+	 * @param {string} payload.properties - the properties to return
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	GET_SONGS(payload) {
+		return new Promise((resolve, reject) =>
+			async.waterfall(
+				[
+					next => {
+						if (!payload.songIds.every(songId => mongoose.Types.ObjectId.isValid(songId)))
+							return next("One or more songIds are not a valid ObjectId.");
+						next();
+					},
+
+					next => {
+						const includeProperties = {};
+						payload.properties.forEach(property => {
+							includeProperties[property] = true;
+						});
+						return SongsModule.SongModel.find(
+							{
+								_id: { $in: payload.songIds }
+							},
+							includeProperties,
+							next
+						);
+					}
+				],
+				(err, songs) => {
+					if (err && err !== true) return reject(new Error(err));
+					return resolve({ songs });
+				}
+			)
+		);
+	}
+
+	/**
 	 * Makes sure that if a song is not currently in the songs db, to add it
 	 *
 	 * @param {object} payload - an object containing the payload

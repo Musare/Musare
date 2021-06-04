@@ -1120,6 +1120,11 @@ export default {
 				pausedAt
 			} = data;
 
+			if (!currentSong.skipDuration || currentSong.skipDuration < 0)
+				currentSong.skipDuration = 0;
+			if (!currentSong.duration || currentSong.duration < 0)
+				currentSong.duration = 0;
+
 			this.updateCurrentSong(currentSong || {});
 
 			let nextSong = null;

@@ -541,6 +541,34 @@ class _StationsModule extends CoreClass {
 							if (indexOfLastSong !== -1) currentSongIndex = indexOfLastSong;
 						}
 
+						next(null, currentSongs, songsToAdd, currentSongIndex);
+					},
+
+					(currentSongs, songsToAdd, currentSongIndex, next) => {
+						SongsModule.runJob("GET_SONGS", {
+							songIds: songsToAdd.map(song => song._id),
+							properties: [
+								"youtubeId",
+								"title",
+								"duration",
+								"skipDuration",
+								"artists",
+								"thumbnail",
+								"status"
+							]
+						})
+							.then(response => {
+								const newSongsToAdd = songsToAdd.map(song => {
+									return response.songs.find(
+										newSong => newSong._id.toString() === song._id.toString()
+									);
+								});
+								next(null, currentSongs, newSongsToAdd, currentSongIndex);
+							})
+							.catch(err => next(err));
+					},
+
+					(currentSongs, songsToAdd, currentSongIndex, next) => {
 						const newPlaylist = [...currentSongs, ...songsToAdd].map(song => {
 							if (!song._id) song._id = null;
 							return song;
