@@ -89,7 +89,7 @@ p {
 }
 
 .modal-card-foot {
-	overflow: auto;
+	overflow: initial;
 
 	& > div {
 		display: flex;

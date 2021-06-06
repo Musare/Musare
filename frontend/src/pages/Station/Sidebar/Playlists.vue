@@ -1,20 +1,19 @@
 <template>
 	<div id="my-playlists">
-		<draggable
-			tag="transition-group"
-			:component-data="{
-				name: !drag ? 'draggable-list-transition' : null
-			}"
-			v-if="playlists.length > 0"
-			v-model="playlists"
-			item-key="_id"
-			v-bind="dragOptions"
-			@start="drag = true"
-			@end="drag = false"
-			@change="savePlaylistOrder"
-		>
-			<template #item="{element}">
-				<div class="menu-list scrollable-list">
+		<div class="menu-list scrollable-list" v-if="playlists.length > 0">
+			<draggable
+				tag="transition-group"
+				:component-data="{
+					name: !drag ? 'draggable-list-transition' : null
+				}"
+				v-model="playlists"
+				item-key="_id"
+				v-bind="dragOptions"
+				@start="drag = true"
+				@end="drag = false"
+				@change="savePlaylistOrder"
+			>
+				<template #item="{element}">
 					<playlist-item :playlist="element" class="item-draggable">
 						<template #actions>
 							<div class="icons-group">
@@ -87,9 +86,10 @@
 							</div>
 						</template>
 					</playlist-item>
-				</div>
-			</template>
-		</draggable>
+				</template>
+			</draggable>
+		</div>
+
 		<p v-else class="nothing-here-text scrollable-list">
 			No Playlists found
 		</p>

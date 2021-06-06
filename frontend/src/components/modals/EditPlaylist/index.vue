@@ -104,77 +104,75 @@
 											}"
 										>
 											<template #actions>
-												<div class="song-actions">
+												<i
+													class="material-icons add-to-queue-icon"
+													v-if="
+														station.partyMode &&
+															!station.locked
+													"
+													@click="
+														addSongToQueue(
+															element.youtubeId
+														)
+													"
+													content="Add Song to Queue"
+													v-tippy
+													>queue</i
+												>
+												<confirm
+													v-if="
+														userId ===
+															playlist.createdBy ||
+															isEditable()
+													"
+													placement="left"
+													@confirm="
+														removeSongFromPlaylist(
+															element.youtubeId
+														)
+													"
+												>
 													<i
-														class="material-icons add-to-queue-icon"
-														v-if="
-															station.partyMode &&
-																!station.locked
-														"
-														@click="
-															addSongToQueue(
-																element.youtubeId
-															)
-														"
-														content="Add Song to Queue"
+														class="material-icons delete-icon"
+														content="Remove Song from Playlist"
 														v-tippy
-														>queue</i
+														>delete_forever</i
 													>
-													<confirm
-														v-if="
-															userId ===
-																playlist.createdBy ||
-																isEditable()
-														"
-														placement="left"
-														@confirm="
-															removeSongFromPlaylist(
-																element.youtubeId
-															)
-														"
-													>
-														<i
-															class="material-icons delete-icon"
-															content="Remove Song from Playlist"
-															v-tippy
-															>delete_forever</i
-														>
-													</confirm>
-													<i
-														class="material-icons"
-														v-if="
-															isEditable() &&
-																index > 0
-														"
-														@click="
-															moveSongToTop(
-																element,
+												</confirm>
+												<i
+													class="material-icons"
+													v-if="
+														isEditable() &&
+															index > 0
+													"
+													@click="
+														moveSongToTop(
+															element,
+															index
+														)
+													"
+													content="Move to top of Playlist"
+													v-tippy
+													>vertical_align_top</i
+												>
+												<i
+													v-if="
+														isEditable() &&
+															playlistSongs.length -
+																1 !==
 																index
-															)
-														"
-														content="Move to top of Playlist"
-														v-tippy
-														>vertical_align_top</i
-													>
-													<i
-														v-if="
-															isEditable() &&
-																playlistSongs.length -
-																	1 !==
-																	index
-														"
-														@click="
-															moveSongToBottom(
-																element,
-																index
-															)
-														"
-														class="material-icons"
-														content="Move to bottom of Playlist"
-														v-tippy
-														>vertical_align_bottom</i
-													>
-												</div>
+													"
+													@click="
+														moveSongToBottom(
+															element,
+															index
+														)
+													"
+													class="material-icons"
+													content="Move to bottom of Playlist"
+													v-tippy
+													>vertical_align_bottom</i
+												>
 											</template>
 										</song-item>
 									</div>

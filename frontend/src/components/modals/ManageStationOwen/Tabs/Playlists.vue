@@ -218,21 +218,23 @@
 				>
 					Create new playlist
 				</button>
-				<draggable
-					tag="transition-group"
-					:component-data="{
-						name: !drag ? 'draggable-list-transition' : null
-					}"
-					item-key="_id"
+				<div
+					class="menu-list scrollable-list"
 					v-if="playlists.length > 0"
-					v-model="playlists"
-					v-bind="dragOptions"
-					@start="drag = true"
-					@end="drag = false"
-					@change="savePlaylistOrder"
 				>
-					<template #item="{element}">
-						<div class="menu-list scrollable-list">
+					<draggable
+						tag="transition-group"
+						:component-data="{
+							name: !drag ? 'draggable-list-transition' : null
+						}"
+						item-key="_id"
+						v-model="playlists"
+						v-bind="dragOptions"
+						@start="drag = true"
+						@end="drag = false"
+						@change="savePlaylistOrder"
+					>
+						<template #item="{element}">
 							<playlist-item
 								class="item-draggable"
 								:playlist="element"
@@ -308,9 +310,10 @@
 									>
 								</template>
 							</playlist-item>
-						</div>
-					</template>
-				</draggable>
+						</template>
+					</draggable>
+				</div>
+
 				<p v-else class="has-text-centered scrollable-list">
 					You don't have any playlists!
 				</p>

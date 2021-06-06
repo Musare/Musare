@@ -9,7 +9,7 @@
 		@hide="clickedOnce = false"
 	>
 		<div @click.shift.stop="confirm(true)" @click.exact="confirm()">
-			<slot name="trigger" ref="trigger" />
+			<slot ref="trigger" />
 		</div>
 		<template #content>
 			<a @click="confirm(null, $event)">

@@ -22,7 +22,6 @@
 						<confirm
 							v-if="userId === myUserId"
 							@confirm="hideActivity(activity._id)"
-							placement="left"
 						>
 							<a content="Hide Activity" v-tippy>
 								<i class="material-icons hide-icon"

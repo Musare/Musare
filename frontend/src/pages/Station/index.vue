@@ -2158,7 +2158,7 @@ export default {
 #station-outer-container {
 	margin: 0 auto;
 	padding: 20px 40px;
-	min-height: calc(100vh - 64px);
+	min-height: calc(100vh - 64px - 130px);
 	width: 100%;
 	max-width: 1800px;
 	display: flex;

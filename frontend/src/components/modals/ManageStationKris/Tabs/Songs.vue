@@ -65,7 +65,7 @@
 							:song="song"
 						>
 							<template #actions>
-								<div class="song-actions">
+								<div class="icons-group">
 									<i
 										class="material-icons add-to-queue-icon"
 										v-if="

@@ -1,69 +1,77 @@
 <template>
 	<div id="queue">
-		<draggable
-			tag="transition-group"
-			:component-data="{
-				name: !drag ? 'draggable-list-transition' : null
-			}"
+		<div
+			v-if="queue.length > 0"
 			:class="{
 				'actionable-button-hidden': !actionableButtonVisible,
 				'scrollable-list': true
 			}"
-			v-if="queue.length > 0"
-			v-model="queue"
-			item-key="_id"
-			v-bind="dragOptions"
-			@start="drag = true"
-			@end="drag = false"
-			@change="repositionSongInQueue"
 		>
-			<template #item="{element, index}">
-				<song-item
-					:song="element"
-					:requested-by="
-						station.type === 'community' &&
-							station.partyMode === true
-					"
-					:class="{
-						'item-draggable': isAdminOnly() || isOwnerOnly()
-					}"
-					:disabled-actions="[]"
-				>
-					<template v-if="isAdminOnly() || isOwnerOnly()" #actions>
-						<div class="song-actions">
-							<confirm
-								v-if="isOwnerOnly() || isAdminOnly()"
-								placement="left"
-								@confirm="removeFromQueue(element.youtubeId)"
-							>
-								<i
-									class="material-icons delete-icon"
-									content="Remove Song from Queue"
-									v-tippy
-									>delete_forever</i
+			<draggable
+				tag="transition-group"
+				:component-data="{
+					name: !drag ? 'draggable-list-transition' : null
+				}"
+				v-model="queue"
+				item-key="_id"
+				v-bind="dragOptions"
+				@start="drag = true"
+				@end="drag = false"
+				@change="repositionSongInQueue"
+			>
+				<template #item="{element, index}">
+					<song-item
+						:song="element"
+						:requested-by="
+							station.type === 'community' &&
+								station.partyMode === true
+						"
+						:class="{
+							'item-draggable': isAdminOnly() || isOwnerOnly()
+						}"
+						:disabled-actions="[]"
+					>
+						<template
+							v-if="isAdminOnly() || isOwnerOnly()"
+							#actions
+						>
+							<div class="icons-group">
+								<confirm
+									v-if="isOwnerOnly() || isAdminOnly()"
+									placement="left"
+									@confirm="
+										removeFromQueue(element.youtubeId)
+									"
 								>
-							</confirm>
-							<i
-								class="material-icons"
-								v-if="index > 0"
-								@click="moveSongToTop(element, index)"
-								content="Move to top of Queue"
-								v-tippy
-								>vertical_align_top</i
-							>
-							<i
-								v-if="queue.length - 1 !== index"
-								@click="moveSongToBottom(element, index)"
-								class="material-icons"
-								content="Move to bottom of Queue"
-								v-tippy
-								>vertical_align_bottom</i
-							>
-						</div>
-					</template>
-				</song-item>
-			</template>
-		</draggable>
+									<i
+										class="material-icons delete-icon"
+										content="Remove Song from Queue"
+										v-tippy
+										>delete_forever</i
+									>
+								</confirm>
+								<i
+									class="material-icons"
+									v-if="index > 0"
+									@click="moveSongToTop(element, index)"
+									content="Move to top of Queue"
+									v-tippy
+									>vertical_align_top</i
+								>
+								<i
+									v-if="queue.length - 1 !== index"
+									@click="moveSongToBottom(element, index)"
+									class="material-icons"
+									content="Move to bottom of Queue"
+									v-tippy
+									>vertical_align_bottom</i
+								>
+							</div>
+						</template>
+					</song-item>
+				</template>
+			</draggable>
+		</div>
 		<p class="nothing-here-text" v-else>
 			There are no songs currently queued
 		</p>

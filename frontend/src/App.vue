@@ -494,9 +494,9 @@ a {
 		width: 146px;
 	}
 
-	.song-actions,
+	.icons-group,
 	.addToPlaylistDropdown,
-	.song-actions > div {
+	.icons-group > div {
 		display: inline-block;
 	}
 
@@ -907,8 +907,13 @@ h4.section-title {
 			color: var(--primary-color);
 		}
 
-		.song-actions {
+		.icons-group {
 			display: flex;
+			align-items: center;
+
+			a {
+				padding: 0;
+			}
 		}
 
 		.button {
