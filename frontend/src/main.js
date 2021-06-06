@@ -278,27 +278,5 @@ lofig.folder = "../config/default.json";
 		} else next();
 	});
 
-	app.directive("click-outside", {
-		beforeMount(element, binding) {
-			window.handleOutsideClick = event => {
-				if (
-					!(
-						element === event.target ||
-						element.contains(event.target)
-					)
-				)
-					binding.value();
-			};
-
-			document.body.addEventListener("click", window.handleOutsideClick);
-		},
-		unmounted() {
-			document.body.removeEventListener(
-				"click",
-				window.handleOutsideClick
-			);
-		}
-	});
-
 	app.mount("#root");
 })();
