@@ -1,22 +1,21 @@
 <template>
 	<tippy
-		interactive="true"
-		touch="true"
+		:interactive="true"
+		:touch="true"
 		:placement="placement"
 		theme="confirm"
 		ref="confirm"
 		trigger="click"
-		class="button-with-tooltip"
 		@hide="clickedOnce = false"
 	>
-		<template #trigger>
-			<div @click.shift.stop="confirm(true)" @click.exact="confirm()">
-				<slot />
-			</div>
+		<div @click.shift.stop="confirm(true)" @click.exact="confirm()">
+			<slot name="trigger" ref="trigger" />
+		</div>
+		<template #content>
+			<a @click="confirm(null, $event)">
+				Click to Confirm
+			</a>
 		</template>
-		<a @click="confirm(null, $event)">
-			Click to Confirm
-		</a>
 	</tippy>
 </template>
 
@@ -28,6 +27,7 @@ export default {
 			default: "top"
 		}
 	},
+	emits: ["confirm"],
 	data() {
 		return {
 			clickedOnce: false

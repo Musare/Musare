@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<modal title="View Punishment">
-			<div slot="body" v-if="punishment && punishment._id">
+			<template #body v-if="punishment && punishment._id">
 				<article class="message">
 					<div class="message-body">
 						<strong>Type:</strong>
@@ -54,8 +54,7 @@
 						<br />
 					</div>
 				</article>
-			</div>
-			<div slot="footer"></div>
+			</template>
 		</modal>
 	</div>
 </template>

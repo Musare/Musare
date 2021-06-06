@@ -56,6 +56,7 @@
 
 <script>
 import { mapActions, mapState, mapGetters } from "vuex";
+import { defineAsyncComponent } from "vue";
 import Toast from "toasters";
 
 import ws from "@/ws";
@@ -67,7 +68,9 @@ export default {
 	components: {
 		Confirm,
 		UserIdToUsername,
-		EditNews: () => import("@/components/modals/EditNews.vue")
+		EditNews: defineAsyncComponent(() =>
+			import("@/components/modals/EditNews.vue")
+		)
 	},
 	data() {
 		return {

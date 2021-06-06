@@ -96,12 +96,15 @@
 <script>
 import { mapState, mapGetters, mapActions } from "vuex";
 import Toast from "toasters";
+import { defineAsyncComponent } from "vue";
 
 import ws from "@/ws";
 
 export default {
 	components: {
-		ViewPunishment: () => import("@/components/modals/ViewPunishment.vue")
+		ViewPunishment: defineAsyncComponent(() =>
+			import("@/components/modals/ViewPunishment.vue")
+		)
 	},
 	data() {
 		return {

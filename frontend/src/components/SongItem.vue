@@ -72,67 +72,71 @@
 			>
 				<tippy
 					v-if="loggedIn"
-					touch="true"
-					interactive="true"
+					:touch="true"
+					:interactive="true"
 					placement="left"
 					theme="songActions"
 					ref="songActions"
 					trigger="click"
 				>
-					<template #trigger>
-						<i
-							class="material-icons action-dropdown-icon"
-							content="Song Options"
+					<i
+						class="material-icons action-dropdown-icon"
+						content="Song Options"
+						v-tippy
+						>more_horiz</i
+					>
+
+					<template #content>
+						<a
+							v-if="disabledActions.indexOf('youtube') === -1"
+							target="_blank"
+							:href="
+								`https://www.youtube.com/watch?v=${song.youtubeId}`
+							"
+							content="View on Youtube"
 							v-tippy
-							>more_horiz</i
 						>
+							<div class="youtube-icon"></div>
+						</a>
+						<i
+							v-if="disabledActions.indexOf('report') === -1"
+							class="material-icons report-icon"
+							@click="report(song)"
+							content="Report Song"
+							v-tippy
+						>
+							flag
+						</i>
+						<add-to-playlist-dropdown
+							v-if="
+								disabledActions.indexOf('addToPlaylist') === -1
+							"
+							:song="song"
+						>
+							<template #button>
+								<i
+									class="material-icons add-to-playlist-icon"
+									content="Add Song to Playlist"
+									v-tippy
+									>playlist_add</i
+								>
+							</template>
+						</add-to-playlist-dropdown>
+						<i
+							v-if="
+								loggedIn &&
+									userRole === 'admin' &&
+									disabledActions.indexOf('edit') === -1
+							"
+							class="material-icons edit-icon"
+							@click="edit(song)"
+							content="Edit Song"
+							v-tippy
+						>
+							edit
+						</i>
+						<slot name="actions" />
 					</template>
-					<a
-						v-if="disabledActions.indexOf('youtube') === -1"
-						target="_blank"
-						:href="
-							`https://www.youtube.com/watch?v=${song.youtubeId}`
-						"
-						content="View on Youtube"
-						v-tippy
-					>
-						<div class="youtube-icon"></div>
-					</a>
-					<i
-						v-if="disabledActions.indexOf('report') === -1"
-						class="material-icons report-icon"
-						@click="report(song)"
-						content="Report Song"
-						v-tippy
-					>
-						flag
-					</i>
-					<add-to-playlist-dropdown
-						v-if="disabledActions.indexOf('addToPlaylist') === -1"
-						:song="song"
-					>
-						<i
-							slot="button"
-							class="material-icons add-to-playlist-icon"
-							content="Add Song to Playlist"
-							v-tippy
-							>playlist_add</i
-						>
-					</add-to-playlist-dropdown>
-					<i
-						v-if="
-							loggedIn &&
-								userRole === 'admin' &&
-								disabledActions.indexOf('edit') === -1
-						"
-						class="material-icons edit-icon"
-						@click="edit(song)"
-						content="Edit Song"
-						v-tippy
-					>
-						edit
-					</i>
-					<slot name="actions" />
 				</tippy>
 				<a
 					v-if="

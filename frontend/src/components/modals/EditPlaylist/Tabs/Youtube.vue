@@ -71,7 +71,7 @@
 				:key="result.id"
 				:result="result"
 			>
-				<div slot="actions">
+				<template #actions>
 					<transition name="search-query-actions" mode="out-in">
 						<a
 							class="button is-success"
@@ -93,7 +93,7 @@
 							Add to playlist
 						</a>
 					</transition>
-				</div>
+				</template>
 			</search-query-item>
 
 			<a

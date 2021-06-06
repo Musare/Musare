@@ -1,6 +1,6 @@
 <template>
 	<modal title="View Report">
-		<div slot="body" v-if="report && report._id">
+		<template #body v-if="report && report._id">
 			<router-link
 				v-if="$route.query.returnToSong"
 				class="button is-dark back-to-song"
@@ -63,8 +63,8 @@
 					</tr>
 				</tbody>
 			</table>
-		</div>
-		<div slot="footer" v-if="report && report._id">
+		</template>
+		<template #footer v-if="report && report._id">
 			<a class="button is-primary" href="#" @click="resolve(report._id)">
 				<span>Resolve</span>
 			</a>
@@ -75,7 +75,7 @@
 			>
 				<span>Go to song</span>
 			</a>
-		</div>
+		</template>
 	</modal>
 </template>
 

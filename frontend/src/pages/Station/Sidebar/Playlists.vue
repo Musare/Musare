@@ -1,89 +1,94 @@
 <template>
 	<div id="my-playlists">
 		<draggable
-			class="menu-list scrollable-list"
+			tag="transition-group"
+			:component-data="{
+				name: !drag ? 'draggable-list-transition' : null
+			}"
 			v-if="playlists.length > 0"
 			v-model="playlists"
+			item-key="_id"
 			v-bind="dragOptions"
 			@start="drag = true"
 			@end="drag = false"
 			@change="savePlaylistOrder"
 		>
-			<transition-group
-				type="transition"
-				:name="!drag ? 'draggable-list-transition' : null"
-			>
-				<playlist-item
-					:playlist="playlist"
-					v-for="playlist in playlists"
-					:key="`key-${playlist._id}`"
-					class="item-draggable"
-				>
-					<div class="icons-group" slot="actions">
-						<i
-							v-if="isExcluded(playlist._id)"
-							class="material-icons stop-icon"
-							content="This playlist is blacklisted in this station"
-							v-tippy="{ theme: 'info' }"
-							>play_disabled</i
-						>
-						<i
-							v-if="
-								station.type === 'community' &&
-									(isOwnerOrAdmin() || station.partyMode) &&
-									!isSelected(playlist._id) &&
-									!isExcluded(playlist._id)
-							"
-							@click="selectPlaylist(playlist)"
-							class="material-icons play-icon"
-							:content="
-								station.partyMode
-									? 'Request songs from this playlist'
-									: 'Play songs from this playlist'
-							"
-							v-tippy
-							>play_arrow</i
-						>
-						<confirm
-							v-if="
-								station.type === 'community' &&
-									(isOwnerOrAdmin() || station.partyMode) &&
-									isSelected(playlist._id)
-							"
-							@confirm="deselectPlaylist(playlist._id)"
-						>
-							<i
-								class="material-icons stop-icon"
-								:content="
-									station.partyMode
-										? 'Stop requesting songs from this playlist'
-										: 'Stop playing songs from this playlist'
-								"
-								v-tippy
-								>stop</i
-							>
-						</confirm>
-						<confirm
-							v-if="isOwnerOrAdmin() && !isExcluded(playlist._id)"
-							@confirm="blacklistPlaylist(playlist._id)"
-						>
-							<i
-								class="material-icons stop-icon"
-								content="Blacklist Playlist"
-								v-tippy
-								>block</i
-							>
-						</confirm>
-						<i
-							@click="edit(playlist._id)"
-							class="material-icons edit-icon"
-							content="Edit Playlist"
-							v-tippy
-							>edit</i
-						>
-					</div>
-				</playlist-item>
-			</transition-group>
+			<template #item="{element}">
+				<div class="menu-list scrollable-list">
+					<playlist-item :playlist="element" class="item-draggable">
+						<template #actions>
+							<div class="icons-group">
+								<i
+									v-if="isExcluded(element._id)"
+									class="material-icons stop-icon"
+									content="This playlist is blacklisted in this station"
+									v-tippy="{ theme: 'info' }"
+									>play_disabled</i
+								>
+								<i
+									v-if="
+										station.type === 'community' &&
+											(isOwnerOrAdmin() ||
+												station.partyMode) &&
+											!isSelected(element._id) &&
+											!isExcluded(element._id)
+									"
+									@click="selectPlaylist(element)"
+									class="material-icons play-icon"
+									:content="
+										station.partyMode
+											? 'Request songs from this playlist'
+											: 'Play songs from this playlist'
+									"
+									v-tippy
+									>play_arrow</i
+								>
+								<confirm
+									v-if="
+										station.type === 'community' &&
+											(isOwnerOrAdmin() ||
+												station.partyMode) &&
+											isSelected(element._id)
+									"
+									@confirm="deselectPlaylist(element._id)"
+								>
+									<i
+										class="material-icons stop-icon"
+										:content="
+											station.partyMode
+												? 'Stop requesting songs from this playlist'
+												: 'Stop playing songs from this playlist'
+										"
+										v-tippy
+										>stop</i
+									>
+								</confirm>
+								<confirm
+									v-if="
+										isOwnerOrAdmin() &&
+											!isExcluded(element._id)
+									"
+									@confirm="blacklistPlaylist(element._id)"
+								>
+									<i
+										class="material-icons stop-icon"
+										content="Blacklist Playlist"
+										v-tippy
+										>block</i
+									>
+								</confirm>
+								<i
+									@click="edit(element._id)"
+									class="material-icons edit-icon"
+									content="Edit Playlist"
+									v-tippy
+									>edit</i
+								>
+							</div>
+						</template>
+					</playlist-item>
+				</div>
+			</template>
 		</draggable>
 		<p v-else class="nothing-here-text scrollable-list">
 			No Playlists found

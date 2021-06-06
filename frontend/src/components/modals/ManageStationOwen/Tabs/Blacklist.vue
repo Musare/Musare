@@ -28,33 +28,37 @@
 						v-for="playlist in excludedPlaylists"
 						:key="`key-${playlist._id}`"
 					>
-						<div class="icons-group" slot="actions">
-							<confirm @confirm="deselectPlaylist(playlist._id)">
-								<i
-									class="material-icons stop-icon"
-									content="Stop blacklisting songs from this playlist
-							"
-									v-tippy
-									>stop</i
+						<template #actions>
+							<div class="icons-group">
+								<confirm
+									@confirm="deselectPlaylist(playlist._id)"
 								>
-							</confirm>
-							<i
-								v-if="playlist.createdBy === userId"
-								@click="showPlaylist(playlist._id)"
-								class="material-icons edit-icon"
-								content="Edit Playlist"
-								v-tippy
-								>edit</i
-							>
-							<i
-								v-else
-								@click="showPlaylist(playlist._id)"
-								class="material-icons edit-icon"
-								content="View Playlist"
-								v-tippy
-								>visibility</i
-							>
-						</div>
+									<i
+										class="material-icons stop-icon"
+										content="Stop blacklisting songs from this playlist
+							"
+										v-tippy
+										>stop</i
+									>
+								</confirm>
+								<i
+									v-if="playlist.createdBy === userId"
+									@click="showPlaylist(playlist._id)"
+									class="material-icons edit-icon"
+									content="Edit Playlist"
+									v-tippy
+									>edit</i
+								>
+								<i
+									v-else
+									@click="showPlaylist(playlist._id)"
+									class="material-icons edit-icon"
+									content="View Playlist"
+									v-tippy
+									>visibility</i
+								>
+							</div>
+						</template>
 					</playlist-item>
 				</div>
 				<p v-else class="has-text-centered scrollable-list">

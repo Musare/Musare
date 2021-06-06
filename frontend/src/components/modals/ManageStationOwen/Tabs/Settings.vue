@@ -42,119 +42,121 @@
 		<div class="settings-buttons">
 			<div class="small-section">
 				<label class="label">Theme</label>
-				<tippy
-					class="button-wrapper"
-					theme="addToPlaylist"
-					interactive="true"
-					touch="true"
-					placement="bottom"
-					trigger="click"
-					append-to="parent"
-				>
-					<template #trigger>
+				<div class="button-wrapper">
+					<tippy
+						theme="addToPlaylist"
+						:interactive="true"
+						:touch="true"
+						placement="bottom"
+						trigger="click"
+						append-to="parent"
+					>
 						<button :class="station.theme">
 							<i class="material-icons">palette</i>
 							{{ station.theme }}
 						</button>
-					</template>
-					<button
-						class="blue"
-						v-if="station.theme !== 'blue'"
-						@click="updateTheme('blue')"
-					>
-						<i class="material-icons">palette</i>
-						Blue
-					</button>
-					<button
-						class="purple"
-						v-if="station.theme !== 'purple'"
-						@click="updateTheme('purple')"
-					>
-						<i class="material-icons">palette</i>
-						Purple
-					</button>
-					<button
-						class="teal"
-						v-if="station.theme !== 'teal'"
-						@click="updateTheme('teal')"
-					>
-						<i class="material-icons">palette</i>
-						Teal
-					</button>
-					<button
-						class="orange"
-						v-if="station.theme !== 'orange'"
-						@click="updateTheme('orange')"
-					>
-						<i class="material-icons">palette</i>
-						Orange
-					</button>
-				</tippy>
+
+						<template #content>
+							<button
+								class="blue"
+								v-if="station.theme !== 'blue'"
+								@click="updateTheme('blue')"
+							>
+								<i class="material-icons">palette</i>
+								Blue
+							</button>
+							<button
+								class="purple"
+								v-if="station.theme !== 'purple'"
+								@click="updateTheme('purple')"
+							>
+								<i class="material-icons">palette</i>
+								Purple
+							</button>
+							<button
+								class="teal"
+								v-if="station.theme !== 'teal'"
+								@click="updateTheme('teal')"
+							>
+								<i class="material-icons">palette</i>
+								Teal
+							</button>
+							<button
+								class="orange"
+								v-if="station.theme !== 'orange'"
+								@click="updateTheme('orange')"
+							>
+								<i class="material-icons">palette</i>
+								Orange
+							</button>
+						</template>
+					</tippy>
+				</div>
 			</div>
 			<div class="small-section">
 				<label class="label">Privacy</label>
-				<tippy
-					class="button-wrapper"
-					theme="addToPlaylist"
-					interactive="true"
-					touch="true"
-					placement="bottom"
-					trigger="click"
-					append-to="parent"
-				>
-					<template #trigger>
+				<div class="button-wrapper">
+					<tippy
+						theme="addToPlaylist"
+						:interactive="true"
+						:touch="true"
+						placement="bottom"
+						trigger="click"
+						append-to="parent"
+					>
 						<button :class="privacyButtons[station.privacy].style">
 							<i class="material-icons">{{
 								privacyButtons[station.privacy].iconName
 							}}</i>
 							{{ station.privacy }}
 						</button>
-					</template>
-					<button
-						class="green"
-						v-if="station.privacy !== 'public'"
-						@click="updatePrivacy('public')"
-					>
-						<i class="material-icons">{{
-							privacyButtons["public"].iconName
-						}}</i>
-						Public
-					</button>
-					<button
-						class="orange"
-						v-if="station.privacy !== 'unlisted'"
-						@click="updatePrivacy('unlisted')"
-					>
-						<i class="material-icons">{{
-							privacyButtons["unlisted"].iconName
-						}}</i>
-						Unlisted
-					</button>
-					<button
-						class="red"
-						v-if="station.privacy !== 'private'"
-						@click="updatePrivacy('private')"
-					>
-						<i class="material-icons">{{
-							privacyButtons["private"].iconName
-						}}</i>
-						Private
-					</button>
-				</tippy>
+
+						<template #content>
+							<button
+								class="green"
+								v-if="station.privacy !== 'public'"
+								@click="updatePrivacy('public')"
+							>
+								<i class="material-icons">{{
+									privacyButtons["public"].iconName
+								}}</i>
+								Public
+							</button>
+							<button
+								class="orange"
+								v-if="station.privacy !== 'unlisted'"
+								@click="updatePrivacy('unlisted')"
+							>
+								<i class="material-icons">{{
+									privacyButtons["unlisted"].iconName
+								}}</i>
+								Unlisted
+							</button>
+							<button
+								class="red"
+								v-if="station.privacy !== 'private'"
+								@click="updatePrivacy('private')"
+							>
+								<i class="material-icons">{{
+									privacyButtons["private"].iconName
+								}}</i>
+								Private
+							</button>
+						</template>
+					</tippy>
+				</div>
 			</div>
 			<div class="small-section">
 				<label class="label">Station Mode</label>
-				<tippy
-					v-if="station.type === 'community'"
-					class="button-wrapper"
-					theme="addToPlaylist"
-					touch="true"
-					interactive="true"
-					placement="bottom"
-					trigger="click"
-					append-to="parent"
-				>
-					<template #trigger>
+				<div class="button-wrapper" v-if="station.type === 'community'">
+					<tippy
+						theme="addToPlaylist"
+						:interactive="true"
+						:touch="true"
+						placement="bottom"
+						trigger="click"
+						append-to="parent"
+					>
 						<button
 							:class="{
 								blue: !station.partyMode,
@@ -168,24 +170,27 @@
 							}}</i>
 							{{ station.partyMode ? "Party" : "Playlist" }}
 						</button>
-					</template>
-					<button
-						class="blue"
-						v-if="station.partyMode"
-						@click="updatePartyMode(false)"
-					>
-						<i class="material-icons">playlist_play</i>
-						Playlist
-					</button>
-					<button
-						class="yellow"
-						v-if="!station.partyMode"
-						@click="updatePartyMode(true)"
-					>
-						<i class="material-icons">emoji_people</i>
-						Party
-					</button>
-				</tippy>
+
+						<template #content>
+							<button
+								class="blue"
+								v-if="station.partyMode"
+								@click="updatePartyMode(false)"
+							>
+								<i class="material-icons">playlist_play</i>
+								Playlist
+							</button>
+							<button
+								class="yellow"
+								v-if="!station.partyMode"
+								@click="updatePartyMode(true)"
+							>
+								<i class="material-icons">emoji_people</i>
+								Party
+							</button>
+						</template>
+					</tippy>
+				</div>
 				<div v-else class="button-wrapper">
 					<button
 						class="blue"
@@ -199,17 +204,15 @@
 			</div>
 			<div v-if="!station.partyMode" class="small-section">
 				<label class="label">Play Mode</label>
-				<tippy
-					v-if="station.type === 'community'"
-					class="button-wrapper"
-					theme="addToPlaylist"
-					touch="true"
-					interactive="true"
-					placement="bottom"
-					trigger="click"
-					append-to="parent"
-				>
-					<template #trigger>
+				<div class="button-wrapper" v-if="station.type === 'community'">
+					<tippy
+						theme="addToPlaylist"
+						:interactive="true"
+						:touch="true"
+						placement="bottom"
+						trigger="click"
+						append-to="parent"
+					>
 						<button class="blue">
 							<i class="material-icons">{{
 								station.playMode === "random"
@@ -222,24 +225,32 @@
 									: "Sequential"
 							}}
 						</button>
-					</template>
-					<button
-						class="blue"
-						v-if="station.playMode === 'sequential'"
-						@click="updatePlayMode('random')"
-					>
-						<i class="material-icons">shuffle</i>
-						Random
-					</button>
-					<button
-						class="blue"
-						v-if="station.playMode === 'random'"
-						@click="updatePlayMode('sequential')"
-					>
-						<i class="material-icons">format_list_numbered</i>
-						Sequential
-					</button>
-				</tippy>
+
+						<template #content>
+							<div class="button-wrapper">
+								<button
+									class="blue"
+									v-if="station.playMode === 'sequential'"
+									@click="updatePlayMode('random')"
+								>
+									<i class="material-icons">shuffle</i>
+									Random
+								</button>
+								<button
+									class="blue"
+									v-if="station.playMode === 'random'"
+									@click="updatePlayMode('sequential')"
+								>
+									<i class="material-icons"
+										>format_list_numbered</i
+									>
+									Sequential
+								</button>
+							</div>
+						</template>
+					</tippy>
+				</div>
+
 				<div v-else class="button-wrapper">
 					<button
 						class="blue"
@@ -258,16 +269,15 @@
 				class="small-section"
 			>
 				<label class="label">Queue lock</label>
-				<tippy
-					class="button-wrapper"
-					theme="addToPlaylist"
-					interactive="true"
-					touch="true"
-					placement="bottom"
-					trigger="click"
-					append-to="parent"
-				>
-					<template #trigger>
+				<div class="button-wrapper">
+					<tippy
+						theme="addToPlaylist"
+						:interactive="true"
+						:touch="true"
+						placement="bottom"
+						trigger="click"
+						append-to="parent"
+					>
 						<button
 							:class="{
 								green: station.locked,
@@ -279,24 +289,27 @@
 							}}</i>
 							{{ station.locked ? "Locked" : "Unlocked" }}
 						</button>
-					</template>
-					<button
-						class="green"
-						v-if="!station.locked"
-						@click="updateQueueLock(true)"
-					>
-						<i class="material-icons">lock</i>
-						Locked
-					</button>
-					<button
-						class="red"
-						v-if="station.locked"
-						@click="updateQueueLock(false)"
-					>
-						<i class="material-icons">lock_open</i>
-						Unlocked
-					</button>
-				</tippy>
+
+						<template #content>
+							<button
+								class="green"
+								v-if="!station.locked"
+								@click="updateQueueLock(true)"
+							>
+								<i class="material-icons">lock</i>
+								Locked
+							</button>
+							<button
+								class="red"
+								v-if="station.locked"
+								@click="updateQueueLock(false)"
+							>
+								<i class="material-icons">lock_open</i>
+								Unlocked
+							</button>
+						</template>
+					</tippy>
+				</div>
 			</div>
 		</div>
 	</div>

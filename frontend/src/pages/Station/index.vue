@@ -435,34 +435,38 @@
 										:song="currentSong"
 										placement="top-end"
 									>
-										<div
-											slot="button"
-											id="add-song-to-playlist"
-											content="Add Song to Playlist"
-											v-tippy
-										>
-											<div class="control has-addons">
-												<button
-													class="button is-primary"
-												>
-													<i class="material-icons"
-														>playlist_add</i
+										<template #button>
+											<div
+												id="add-song-to-playlist"
+												content="Add Song to Playlist"
+												v-tippy
+											>
+												<div class="control has-addons">
+													<button
+														class="button is-primary"
 													>
-												</button>
-												<button
-													class="button"
-													id="dropdown-toggle"
-												>
-													<i class="material-icons">
-														{{
-															showPlaylistDropdown
-																? "expand_more"
-																: "expand_less"
-														}}
-													</i>
-												</button>
+														<i
+															class="material-icons"
+															>playlist_add</i
+														>
+													</button>
+													<button
+														class="button"
+														id="dropdown-toggle"
+													>
+														<i
+															class="material-icons"
+														>
+															{{
+																showPlaylistDropdown
+																	? "expand_more"
+																	: "expand_less"
+															}}
+														</i>
+													</button>
+												</div>
 											</div>
-										</div>
+										</template>
 									</add-to-playlist-dropdown>
 								</div>
 								<div id="right-buttons" v-else>
@@ -621,6 +625,7 @@
 
 <script>
 import { mapState, mapActions, mapGetters } from "vuex";
+import { defineAsyncComponent } from "vue";
 import Toast from "toasters";
 import { ContentLoader } from "vue-content-loader";
 
@@ -645,19 +650,31 @@ export default {
 		ContentLoader,
 		MainHeader,
 		MainFooter,
-		RequestSong: () => import("@/components/modals/RequestSong.vue"),
-		EditPlaylist: () => import("@/components/modals/EditPlaylist"),
-		CreatePlaylist: () => import("@/components/modals/CreatePlaylist.vue"),
-		ManageStationOwen: () =>
-			import("@/components/modals/ManageStationOwen/index.vue"),
-		ManageStationKris: () =>
-			import("@/components/modals/ManageStationKris/index.vue"),
-		Report: () => import("@/components/modals/Report.vue"),
+		RequestSong: defineAsyncComponent(() =>
+			import("@/components/modals/RequestSong.vue")
+		),
+		EditPlaylist: defineAsyncComponent(() =>
+			import("@/components/modals/EditPlaylist")
+		),
+		CreatePlaylist: defineAsyncComponent(() =>
+			import("@/components/modals/CreatePlaylist.vue")
+		),
+		ManageStationOwen: defineAsyncComponent(() =>
+			import("@/components/modals/ManageStationOwen/index.vue")
+		),
+		ManageStationKris: defineAsyncComponent(() =>
+			import("@/components/modals/ManageStationKris/index.vue")
+		),
+		Report: defineAsyncComponent(() =>
+			import("@/components/modals/Report.vue")
+		),
 		Z404,
 		FloatingBox,
 		StationSidebar,
 		AddToPlaylistDropdown,
-		EditSong: () => import("@/components/modals/EditSong"),
+		EditSong: defineAsyncComponent(() =>
+			import("@/components/modals/EditSong")
+		),
 		SongItem
 	},
 	data() {
@@ -967,12 +984,10 @@ export default {
 			document.body.style.cssText = `--primary-color: var(--${theme})`;
 		});
 
-		this.socket.on("event:station.name.updated", res => {
+		this.socket.on("event:station.name.updated", async res => {
 			this.station.name = res.data.name;
-			// eslint-disable-next-line no-restricted-globals
-			history.pushState(
-				{},
-				null,
+
+			await this.$router.push(
 				`${res.data.name}?${Object.keys(this.$route.query)
 					.map(key => {
 						return `${encodeURIComponent(key)}=${encodeURIComponent(
@@ -981,6 +996,9 @@ export default {
 					})
 					.join("&")}`
 			);
+
+			// eslint-disable-next-line no-restricted-globals
+			history.replaceState({ ...history.state, ...{} }, null);
 		});
 
 		this.socket.on("event:station.displayName.updated", res => {
@@ -1032,7 +1050,7 @@ export default {
 			this.volumeSliderValue = volume * 100;
 		}
 	},
-	beforeDestroy() {
+	onBeforeUnmount() {
 		document.body.style.cssText = "";
 
 		/** Reset Songslist */
@@ -1211,8 +1229,6 @@ export default {
 				if (this.playerReady) this.player.pauseVideo();
 				this.updateNoSong(true);
 			}
-
-			console.log(666);
 
 			this.calculateTimeElapsed();
 			this.resizeSeekerbar();

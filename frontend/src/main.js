@@ -1,12 +1,13 @@
-import Vue from "vue";
+/* eslint-disable vue/one-component-per-file */
+import { createApp } from "vue";
 
-import VueTippy, { TippyComponent } from "vue-tippy";
-import VueRouter from "vue-router";
+import VueTippy, { Tippy } from "vue-tippy";
+import { createRouter, createWebHistory } from "vue-router";
 
 import ws from "@/ws";
 import store from "./store";
 
-import App from "./App.vue";
+import AppComponent from "./App.vue";
 
 const REQUIRED_CONFIG_VERSION = 5;
 
@@ -14,7 +15,11 @@ const handleMetadata = attrs => {
 	document.title = `Musare | ${attrs.title}`;
 };
 
-Vue.use(VueTippy, {
+const app = createApp(AppComponent);
+
+app.use(store);
+
+app.use(VueTippy, {
 	directive: "tippy", // => v-tippy
 	flipDuration: 0,
 	touch: false,
@@ -26,14 +31,12 @@ Vue.use(VueTippy, {
 		}
 	},
 	allowHTML: true,
-	animation: "scale",
-	theme: "dark",
-	arrow: true
+	defaultProps: { animation: "scale" }
 });
 
-Vue.component("Tippy", TippyComponent);
+app.component("Tippy", Tippy);
 
-Vue.component("Metadata", {
+app.component("Metadata", {
 	watch: {
 		$attrs: {
 			// eslint-disable-next-line vue/no-arrow-functions-in-watch
@@ -49,10 +52,8 @@ Vue.component("Metadata", {
 	}
 });
 
-Vue.use(VueRouter);
-
-Vue.directive("scroll", {
-	inserted(el, binding) {
+app.directive("scroll", {
+	mounted(el, binding) {
 		const f = evt => {
 			clearTimeout(window.scrollDebounceId);
 			window.scrollDebounceId = setTimeout(() => {
@@ -65,15 +66,15 @@ Vue.directive("scroll", {
 	}
 });
 
-Vue.directive("focus", {
-	inserted(el) {
+app.directive("focus", {
+	mounted(el) {
 		window.focusedElementBefore = document.activeElement;
 		el.focus();
 	}
 });
 
-const router = new VueRouter({
-	mode: "history",
+const router = createRouter({
+	history: createWebHistory(),
 	routes: [
 		{
 			path: "/",
@@ -81,7 +82,7 @@ const router = new VueRouter({
 		},
 		{
 			path: "/404",
-			alias: ["*"],
+			alias: ["/:pathMatch(.*)*"],
 			component: () => import("@/pages/404.vue")
 		},
 		{
@@ -163,6 +164,8 @@ const router = new VueRouter({
 		}
 	]
 });
+
+app.use(router);
 
 lofig.folder = "../config/default.json";
 
@@ -275,22 +278,21 @@ lofig.folder = "../config/default.json";
 		} else next();
 	});
 
-	Vue.directive("click-outside", {
-		bind(element, binding) {
+	app.directive("click-outside", {
+		beforeMount(element, binding) {
 			window.handleOutsideClick = event => {
 				if (
 					!(
 						element === event.target ||
 						element.contains(event.target)
 					)
-				) {
+				)
 					binding.value();
-				}
 			};
 
 			document.body.addEventListener("click", window.handleOutsideClick);
 		},
-		unbind() {
+		unmounted() {
 			document.body.removeEventListener(
 				"click",
 				window.handleOutsideClick
@@ -298,11 +300,5 @@ lofig.folder = "../config/default.json";
 		}
 	});
 
-	// eslint-disable-next-line no-new
-	new Vue({
-		router,
-		store,
-		el: "#root",
-		render: wrapper => wrapper(App)
-	});
+	app.mount("#root");
 })();

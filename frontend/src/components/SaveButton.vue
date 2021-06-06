@@ -17,6 +17,7 @@ export default {
 	props: {
 		type: { type: String, default: "save" } // enum: ["save", "save-and-close"]
 	},
+	emits: ["clicked"],
 	data() {
 		return {
 			status: "default" // enum: ["default", "disabled", "save-failure", "save-success"],

@@ -34,7 +34,7 @@
 					</div>
 				</div>
 			</div>
-			<div v-if="favoriteStations.length > 0" class="group">
+			<div class="group" v-show="favoriteStations.length > 0">
 				<div class="group-title">
 					<div>
 						<h2>My Favorites</h2>
@@ -42,48 +42,47 @@
 				</div>
 
 				<draggable
-					class="scrollable-list"
+					tag="transition-group"
+					:component-data="{
+						name: !drag ? 'draggable-list-transition' : null
+					}"
+					item-key="_id"
 					v-model="favoriteStations"
 					v-bind="dragOptions"
 					@start="drag = true"
 					@end="drag = false"
 					@change="changeFavoriteOrder"
 				>
-					<transition-group
-						type="transition"
-						:name="!drag ? 'draggable-list-transition' : null"
-					>
+					<template #item="{element}">
 						<router-link
-							v-for="station in favoriteStations"
-							:key="`key-${station._id}`"
 							:to="{
 								name: 'station',
-								params: { id: station.name }
+								params: { id: element.name }
 							}"
 							:class="{
 								card: true,
 								'station-card': true,
 								'item-draggable': true,
-								isPrivate: station.privacy === 'private',
-								isMine: isOwner(station)
+								isPrivate: element.privacy === 'private',
+								isMine: isOwner(element)
 							}"
 							:style="
-								'--primary-color: var(--' + station.theme + ')'
+								'--primary-color: var(--' + element.theme + ')'
 							"
 						>
 							<song-thumbnail
 								class="card-image"
-								:song="station.currentSong"
+								:song="element.currentSong"
 							/>
 							<div class="card-content">
 								<div class="media">
 									<div class="media-left displayName">
 										<i
 											v-if="
-												loggedIn && !station.isFavorited
+												loggedIn && !element.isFavorited
 											"
 											@click.prevent="
-												favoriteStation(station)
+												favoriteStation(element._id)
 											"
 											class="favorite material-icons"
 											content="Favorite Station"
@@ -92,19 +91,19 @@
 										>
 										<i
 											v-if="
-												loggedIn && station.isFavorited
+												loggedIn && element.isFavorited
 											"
 											@click.prevent="
-												unfavoriteStation(station)
+												unfavoriteStation(element._id)
 											"
 											class="favorite material-icons"
 											content="Unfavorite Station"
 											v-tippy
 											>star</i
 										>
-										<h5>{{ station.displayName }}</h5>
+										<h5>{{ element.displayName }}</h5>
 										<i
-											v-if="station.type === 'official'"
+											v-if="element.type === 'official'"
 											class="material-icons verified-station"
 											content="Verified Station"
 											v-tippy="{
@@ -117,7 +116,7 @@
 								</div>
 
 								<div class="content">
-									{{ station.description }}
+									{{ element.description }}
 								</div>
 								<div class="under-content">
 									<p class="hostedBy">
@@ -125,14 +124,14 @@
 										<span class="host">
 											<span
 												v-if="
-													station.type === 'official'
+													element.type === 'official'
 												"
 												title="Musare"
 												>Musare</span
 											>
 											<user-id-to-username
 												v-else
-												:user-id="station.owner"
+												:user-id="element.owner"
 												:link="true"
 											/>
 										</span>
@@ -140,8 +139,8 @@
 									<div class="icons">
 										<i
 											v-if="
-												station.type === 'community' &&
-													isOwner(station)
+												element.type === 'community' &&
+													isOwner(element)
 											"
 											class="homeIcon material-icons"
 											content="This is your station."
@@ -149,7 +148,7 @@
 											>home</i
 										>
 										<i
-											v-if="station.privacy === 'private'"
+											v-if="element.privacy === 'private'"
 											class="privateIcon material-icons"
 											content="This station is not visible to other users."
 											v-tippy="{ theme: 'info' }"
@@ -157,7 +156,7 @@
 										>
 										<i
 											v-if="
-												station.privacy === 'unlisted'
+												element.privacy === 'unlisted'
 											"
 											class="unlistedIcon material-icons"
 											content="Unlisted Station"
@@ -170,8 +169,8 @@
 							<div class="bottomBar">
 								<i
 									v-if="
-										station.paused &&
-											station.currentSong.title
+										element.paused &&
+											element.currentSong.title
 									"
 									class="material-icons"
 									content="Station Paused"
@@ -179,30 +178,30 @@
 									>pause</i
 								>
 								<i
-									v-else-if="station.currentSong.title"
+									v-else-if="element.currentSong.title"
 									class="material-icons"
 									>music_note</i
 								>
 								<i v-else class="material-icons">music_off</i>
 								<span
-									v-if="station.currentSong.title"
+									v-if="element.currentSong.title"
 									class="songTitle"
 									:title="
-										station.currentSong.artists.length > 0
+										element.currentSong.artists.length > 0
 											? 'Now Playing: ' +
-											  station.currentSong.title +
+											  element.currentSong.title +
 											  ' by ' +
-											  station.currentSong.artists.join(
+											  element.currentSong.artists.join(
 													','
 											  )
 											: 'Now Playing: ' +
-											  station.currentSong.title
+											  element.currentSong.title
 									"
-									>{{ station.currentSong.title }}
+									>{{ element.currentSong.title }}
 									{{
-										station.currentSong.artists.length > 0
+										element.currentSong.artists.length > 0
 											? " by " +
-											  station.currentSong.artists.join(
+											  element.currentSong.artists.join(
 													","
 											  )
 											: ""
@@ -214,20 +213,20 @@
 								<i
 									class="material-icons stationMode"
 									:content="
-										station.partyMode
+										element.partyMode
 											? 'Station in Party mode'
 											: 'Station in Playlist mode'
 									"
 									v-tippy="{ theme: 'info' }"
 									>{{
-										station.partyMode
+										element.partyMode
 											? "emoji_people"
 											: "playlist_play"
 									}}</i
 								>
 							</div>
 						</router-link>
-					</transition-group>
+					</template>
 				</draggable>
 			</div>
 			<div class="group bottom">
@@ -304,7 +303,9 @@
 							<div class="media-left displayName">
 								<i
 									v-if="loggedIn && !station.isFavorited"
-									@click.prevent="favoriteStation(station)"
+									@click.prevent="
+										favoriteStation(station._id)
+									"
 									class="favorite material-icons"
 									content="Favorite Station"
 									v-tippy
@@ -312,7 +313,9 @@
 								>
 								<i
 									v-if="loggedIn && station.isFavorited"
-									@click.prevent="unfavoriteStation(station)"
+									@click.prevent="
+										unfavoriteStation(station._id)
+									"
 									class="favorite material-icons"
 									content="Unfavorite Station"
 									v-tippy
@@ -440,6 +443,7 @@
 
 <script>
 import { mapState, mapGetters, mapActions } from "vuex";
+import { defineAsyncComponent } from "vue";
 import draggable from "vuedraggable";
 import Toast from "toasters";
 
@@ -455,8 +459,9 @@ export default {
 		MainHeader,
 		MainFooter,
 		SongThumbnail,
-		CreateCommunityStation: () =>
-			import("@/components/modals/CreateCommunityStation.vue"),
+		CreateCommunityStation: defineAsyncComponent(() =>
+			import("@/components/modals/CreateCommunityStation.vue")
+		),
 		UserIdToUsername,
 		draggable
 	},
@@ -509,8 +514,11 @@ export default {
 		}
 	},
 	watch: {
-		orderOfFavoriteStations() {
-			this.calculateFavoriteStations();
+		orderOfFavoriteStations: {
+			deep: true,
+			handler() {
+				this.calculateFavoriteStations();
+			}
 		}
 	},
 	async mounted() {
@@ -681,7 +689,7 @@ export default {
 			this.orderOfFavoriteStations = res.data.order;
 		});
 	},
-	beforeDestroy() {
+	onBeforeUnmount() {
 		this.socket.dispatch("apis.leaveRoom", "home", () => {});
 	},
 	methods: {
@@ -719,21 +727,17 @@ export default {
 		isPlaying(station) {
 			return typeof station.currentSong.title !== "undefined";
 		},
-		favoriteStation(station) {
-			this.socket.dispatch(
-				"stations.favoriteStation",
-				station._id,
-				res => {
-					if (res.status === "success") {
-						new Toast("Successfully favorited station.");
-					} else new Toast(res.message);
-				}
-			);
+		favoriteStation(stationId) {
+			this.socket.dispatch("stations.favoriteStation", stationId, res => {
+				if (res.status === "success") {
+					new Toast("Successfully favorited station.");
+				} else new Toast(res.message);
+			});
 		},
-		unfavoriteStation(station) {
+		unfavoriteStation(stationId) {
 			this.socket.dispatch(
 				"stations.unfavoriteStation",
-				station._id,
+				stationId,
 				res => {
 					if (res.status === "success") {
 						new Toast("Successfully unfavorited station.");

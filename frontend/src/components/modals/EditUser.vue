@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<modal title="Edit User">
-			<div slot="body" v-if="user && user._id">
+			<template #body v-if="user && user._id">
 				<p class="control has-addons">
 					<input
 						v-model="user.username"
@@ -60,8 +60,8 @@
 					/>
 					<a class="button is-error" @click="banUser()">Ban user</a>
 				</p>
-			</div>
-			<div slot="footer">
+			</template>
+			<template #footer>
 				<!--button class='button is-warning'>
 					<span>&nbsp;Send Verification Email</span>
 				</button>
@@ -71,7 +71,7 @@
 				<button class="button is-warning" @click="removeSessions()">
 					<span>&nbsp;Remove all sessions</span>
 				</button>
-			</div>
+			</template>
 		</modal>
 	</div>
 </template>

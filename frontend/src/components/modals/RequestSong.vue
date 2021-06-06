@@ -1,6 +1,6 @@
 <template>
 	<modal title="Request Song">
-		<div slot="body">
+		<template #body>
 			<div class="vertical-padding">
 				<!-- Choosing a song from youtube -->
 
@@ -45,7 +45,7 @@
 						:key="result.id"
 						:result="result"
 					>
-						<div slot="actions">
+						<template #actions>
 							<transition
 								name="search-query-actions"
 								mode="out-in"
@@ -76,7 +76,7 @@
 									Add to queue
 								</a>
 							</transition>
-						</div>
+						</template>
 					</search-query-item>
 
 					<a
@@ -135,7 +135,7 @@
 					</div>
 				</div>
 			</div>
-		</div>
+		</template>
 	</modal>
 </template>
 

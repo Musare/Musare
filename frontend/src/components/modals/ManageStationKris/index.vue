@@ -544,7 +544,7 @@ export default {
 			);
 		}
 	},
-	beforeDestroy() {
+	onBeforeUnmount() {
 		this.socket.dispatch(
 			"apis.leaveRoom",
 			`manage-station.${this.stationId}`,

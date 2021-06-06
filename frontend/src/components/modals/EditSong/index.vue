@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<modal title="Edit Song" class="song-modal">
-			<div slot="body">
+			<template #body>
 				<div class="left-section">
 					<div class="top-section">
 						<div class="player-section">
@@ -330,8 +330,8 @@
 						<reports class="tab" v-show="tab === 'reports'" />
 					</div>
 				</div>
-			</div>
-			<div slot="footer">
+			</template>
+			<template #footer>
 				<save-button ref="saveButton" @clicked="save(song, false)" />
 				<save-button
 					ref="saveAndCloseButton"
@@ -393,7 +393,7 @@
 						</button>
 					</confirm> -->
 				</div>
-			</div>
+			</template>
 		</modal>
 		<floating-box id="genreHelper" ref="genreHelper">
 			<template #body>
@@ -938,7 +938,7 @@ export default {
 
 		*/
 	},
-	beforeDestroy() {
+	onBeforeUnmount() {
 		this.playerReady = false;
 		clearInterval(this.interval);
 		clearInterval(this.activityWatchVideoDataInterval);

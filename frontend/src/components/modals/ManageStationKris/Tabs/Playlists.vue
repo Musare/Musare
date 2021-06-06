@@ -73,208 +73,9 @@
 						:playlist="playlist"
 						:show-owner="true"
 					>
-						<i
-							class="material-icons"
-							slot="item-icon"
-							v-if="
-								isAllowedToParty() && isSelected(playlist._id)
-							"
-							content="This playlist is currently selected"
-							v-tippy
-						>
-							radio
-						</i>
-						<i
-							class="material-icons"
-							slot="item-icon"
-							v-else-if="
-								isOwnerOrAdmin() &&
-									isPlaylistMode() &&
-									isIncluded(playlist._id)
-							"
-							content="This playlist is currently included"
-							v-tippy
-						>
-							play_arrow
-						</i>
-						<i
-							class="material-icons excluded-icon"
-							slot="item-icon"
-							v-else-if="
-								isOwnerOrAdmin() && isExcluded(playlist._id)
-							"
-							content="This playlist is currently excluded"
-							v-tippy
-						>
-							block
-						</i>
-						<i
-							class="material-icons"
-							slot="item-icon"
-							v-else
-							:content="
-								isPartyMode()
-									? 'This playlist is currently not selected or excluded'
-									: 'This playlist is currently not included or excluded'
-							"
-							v-tippy
-						>
-							play_disabled
-						</i>
-						<div class="icons-group" slot="actions">
-							<i
-								v-if="isExcluded(playlist._id)"
-								class="material-icons stop-icon"
-								content="This playlist is blacklisted in this station"
-								v-tippy="{ theme: 'info' }"
-								>play_disabled</i
-							>
-							<confirm
-								v-if="isPartyMode() && isSelected(playlist._id)"
-								@confirm="deselectPartyPlaylist(playlist._id)"
-							>
-								<i
-									class="material-icons stop-icon"
-									content="Stop playing songs from this playlist"
-									v-tippy
-								>
-									stop
-								</i>
-							</confirm>
-							<confirm
-								v-if="
-									isOwnerOrAdmin() &&
-										isPlaylistMode() &&
-										isIncluded(playlist._id)
-								"
-								@confirm="removeIncludedPlaylist(playlist._id)"
-							>
-								<i
-									class="material-icons stop-icon"
-									content="Stop playing songs from this playlist"
-									v-tippy
-								>
-									stop
-								</i>
-							</confirm>
-							<i
-								v-if="
-									isPartyMode() &&
-										!isSelected(playlist._id) &&
-										!isExcluded(playlist._id)
-								"
-								@click="selectPartyPlaylist(playlist)"
-								class="material-icons play-icon"
-								content="Request songs from this playlist"
-								v-tippy
-								>play_arrow</i
-							>
-							<i
-								v-if="
-									isOwnerOrAdmin() &&
-										isPlaylistMode() &&
-										!isIncluded(playlist._id) &&
-										!isExcluded(playlist._id)
-								"
-								@click="includePlaylist(playlist)"
-								class="material-icons play-icon"
-								:content="'Play songs from this playlist'"
-								v-tippy
-								>play_arrow</i
-							>
-							<confirm
-								v-if="
-									isOwnerOrAdmin() &&
-										!isExcluded(playlist._id)
-								"
-								@confirm="blacklistPlaylist(playlist._id)"
-							>
-								<i
-									class="material-icons stop-icon"
-									content="Blacklist Playlist"
-									v-tippy
-									>block</i
-								>
-							</confirm>
-							<confirm
-								v-if="
-									isOwnerOrAdmin() && isExcluded(playlist._id)
-								"
-								@confirm="removeExcludedPlaylist(playlist._id)"
-							>
-								<i
-									class="material-icons stop-icon"
-									content="Stop blacklisting songs from this playlist"
-									v-tippy
-								>
-									stop
-								</i>
-							</confirm>
-							<i
-								v-if="playlist.createdBy === myUserId"
-								@click="showPlaylist(playlist._id)"
-								class="material-icons edit-icon"
-								content="Edit Playlist"
-								v-tippy
-								>edit</i
-							>
-							<i
-								v-if="
-									playlist.createdBy !== myUserId &&
-										(playlist.privacy === 'public' ||
-											isAdmin())
-								"
-								@click="showPlaylist(playlist._id)"
-								class="material-icons edit-icon"
-								content="View Playlist"
-								v-tippy
-								>visibility</i
-							>
-						</div>
-					</playlist-item>
-					<button
-						v-if="resultsLeftCount > 0"
-						class="button is-primary load-more-button"
-						@click="searchForPlaylists(search.page + 1)"
-					>
-						Load {{ nextPageResultsCount }} more results
-					</button>
-				</div>
-			</div>
-			<div
-				v-if="station.type === 'community'"
-				class="tab"
-				v-show="tab === 'my-playlists'"
-			>
-				<button
-					class="button is-primary"
-					id="create-new-playlist-button"
-					@click="openModal('createPlaylist')"
-				>
-					Create new playlist
-				</button>
-				<draggable
-					class="menu-list scrollable-list"
-					v-if="playlists.length > 0"
-					v-model="playlists"
-					v-bind="dragOptions"
-					@start="drag = true"
-					@end="drag = false"
-					@change="savePlaylistOrder"
-				>
-					<transition-group
-						type="transition"
-						:name="!drag ? 'draggable-list-transition' : null"
-					>
-						<playlist-item
-							class="item-draggable"
-							v-for="playlist in playlists"
-							:key="playlist._id"
-							:playlist="playlist"
-						>
+						<template #item-icon>
 							<i
 								class="material-icons"
-								slot="item-icon"
 								v-if="
 									isAllowedToParty() &&
 										isSelected(playlist._id)
@@ -286,7 +87,6 @@
 							</i>
 							<i
 								class="material-icons"
-								slot="item-icon"
 								v-else-if="
 									isOwnerOrAdmin() &&
 										isPlaylistMode() &&
@@ -299,7 +99,6 @@
 							</i>
 							<i
 								class="material-icons excluded-icon"
-								slot="item-icon"
 								v-else-if="
 									isOwnerOrAdmin() && isExcluded(playlist._id)
 								"
@@ -310,7 +109,6 @@
 							</i>
 							<i
 								class="material-icons"
-								slot="item-icon"
 								v-else
 								:content="
 									isPartyMode()
@@ -321,36 +119,16 @@
 							>
 								play_disabled
 							</i>
-							<div slot="actions">
-								<!-- <i
+						</template>
+
+						<template #actions>
+							<div class="icons-group">
+								<i
 									v-if="isExcluded(playlist._id)"
 									class="material-icons stop-icon"
 									content="This playlist is blacklisted in this station"
 									v-tippy="{ theme: 'info' }"
 									>play_disabled</i
-								> -->
-								<i
-									v-if="
-										isPartyMode() &&
-											!isSelected(playlist._id)
-									"
-									@click="selectPartyPlaylist(playlist)"
-									class="material-icons play-icon"
-									content="Request songs from this playlist"
-									v-tippy
-									>play_arrow</i
-								>
-								<i
-									v-if="
-										isPlaylistMode() &&
-											isOwnerOrAdmin() &&
-											!isSelected(playlist._id)
-									"
-									@click="includePlaylist(playlist)"
-									class="material-icons play-icon"
-									content="Play songs from this playlist"
-									v-tippy
-									>play_arrow</i
 								>
 								<confirm
 									v-if="
@@ -363,15 +141,16 @@
 								>
 									<i
 										class="material-icons stop-icon"
-										content="Stop requesting songs from this playlist"
+										content="Stop playing songs from this playlist"
 										v-tippy
-										>stop</i
 									>
+										stop
+									</i>
 								</confirm>
 								<confirm
 									v-if="
-										isPlaylistMode() &&
-											isOwnerOrAdmin() &&
+										isOwnerOrAdmin() &&
+											isPlaylistMode() &&
 											isIncluded(playlist._id)
 									"
 									@confirm="
@@ -382,9 +161,35 @@
 										class="material-icons stop-icon"
 										content="Stop playing songs from this playlist"
 										v-tippy
-										>stop</i
 									>
+										stop
+									</i>
 								</confirm>
+								<i
+									v-if="
+										isPartyMode() &&
+											!isSelected(playlist._id) &&
+											!isExcluded(playlist._id)
+									"
+									@click="selectPartyPlaylist(playlist)"
+									class="material-icons play-icon"
+									content="Request songs from this playlist"
+									v-tippy
+									>play_arrow</i
+								>
+								<i
+									v-if="
+										isOwnerOrAdmin() &&
+											isPlaylistMode() &&
+											!isIncluded(playlist._id) &&
+											!isExcluded(playlist._id)
+									"
+									@click="includePlaylist(playlist)"
+									class="material-icons play-icon"
+									:content="'Play songs from this playlist'"
+									v-tippy
+									>play_arrow</i
+								>
 								<confirm
 									v-if="
 										isOwnerOrAdmin() &&
@@ -417,15 +222,225 @@
 									</i>
 								</confirm>
 								<i
+									v-if="playlist.createdBy === myUserId"
 									@click="showPlaylist(playlist._id)"
 									class="material-icons edit-icon"
 									content="Edit Playlist"
 									v-tippy
 									>edit</i
 								>
+								<i
+									v-if="
+										playlist.createdBy !== myUserId &&
+											(playlist.privacy === 'public' ||
+												isAdmin())
+									"
+									@click="showPlaylist(playlist._id)"
+									class="material-icons edit-icon"
+									content="View Playlist"
+									v-tippy
+									>visibility</i
+								>
 							</div>
-						</playlist-item>
-					</transition-group>
+						</template>
+					</playlist-item>
+					<button
+						v-if="resultsLeftCount > 0"
+						class="button is-primary load-more-button"
+						@click="searchForPlaylists(search.page + 1)"
+					>
+						Load {{ nextPageResultsCount }} more results
+					</button>
+				</div>
+			</div>
+			<div
+				v-if="station.type === 'community'"
+				class="tab"
+				v-show="tab === 'my-playlists'"
+			>
+				<button
+					class="button is-primary"
+					id="create-new-playlist-button"
+					@click="openModal('createPlaylist')"
+				>
+					Create new playlist
+				</button>
+				<draggable
+					tag="transition-group"
+					:component-data="{
+						name: !drag ? 'draggable-list-transition' : null
+					}"
+					v-if="playlists.length > 0"
+					item-key="_id"
+					v-model="playlists"
+					v-bind="dragOptions"
+					@start="drag = true"
+					@end="drag = false"
+					@change="savePlaylistOrder"
+				>
+					<template #item="{element}">
+						<div class="menu-list scrollable-list">
+							<playlist-item
+								class="item-draggable"
+								:playlist="element"
+							>
+								<template #item-icon>
+									<i
+										class="material-icons"
+										v-if="
+											isAllowedToParty() &&
+												isSelected(element._id)
+										"
+										content="This playlist is currently selected"
+										v-tippy
+									>
+										radio
+									</i>
+									<i
+										class="material-icons"
+										v-else-if="
+											isOwnerOrAdmin() &&
+												isPlaylistMode() &&
+												isIncluded(element._id)
+										"
+										content="This playlist is currently included"
+										v-tippy
+									>
+										play_arrow
+									</i>
+									<i
+										class="material-icons excluded-icon"
+										v-else-if="
+											isOwnerOrAdmin() &&
+												isExcluded(element._id)
+										"
+										content="This playlist is currently excluded"
+										v-tippy
+									>
+										block
+									</i>
+									<i
+										class="material-icons"
+										v-else
+										:content="
+											isPartyMode()
+												? 'This playlist is currently not selected or excluded'
+												: 'This playlist is currently not included or excluded'
+										"
+										v-tippy
+									>
+										play_disabled
+									</i>
+								</template>
+
+								<template #actions>
+									<!-- <i
+									v-if="isExcluded(playlist._id)"
+									class="material-icons stop-icon"
+									content="This playlist is blacklisted in this station"
+									v-tippy="{ theme: 'info' }"
+									>play_disabled</i
+								> -->
+									<i
+										v-if="
+											isPartyMode() &&
+												!isSelected(element._id)
+										"
+										@click="selectPartyPlaylist(element)"
+										class="material-icons play-icon"
+										content="Request songs from this playlist"
+										v-tippy
+										>play_arrow</i
+									>
+									<i
+										v-if="
+											isPlaylistMode() &&
+												isOwnerOrAdmin() &&
+												!isSelected(element._id)
+										"
+										@click="includePlaylist(element)"
+										class="material-icons play-icon"
+										content="Play songs from this playlist"
+										v-tippy
+										>play_arrow</i
+									>
+									<confirm
+										v-if="
+											isPartyMode() &&
+												isSelected(element._id)
+										"
+										@confirm="
+											deselectPartyPlaylist(element._id)
+										"
+									>
+										<i
+											class="material-icons stop-icon"
+											content="Stop requesting songs from this playlist"
+											v-tippy
+											>stop</i
+										>
+									</confirm>
+									<confirm
+										v-if="
+											isPlaylistMode() &&
+												isOwnerOrAdmin() &&
+												isIncluded(element._id)
+										"
+										@confirm="
+											removeIncludedPlaylist(element._id)
+										"
+									>
+										<i
+											class="material-icons stop-icon"
+											content="Stop playing songs from this playlist"
+											v-tippy
+											>stop</i
+										>
+									</confirm>
+									<confirm
+										v-if="
+											isOwnerOrAdmin() &&
+												!isExcluded(element._id)
+										"
+										@confirm="
+											blacklistPlaylist(element._id)
+										"
+									>
+										<i
+											class="material-icons stop-icon"
+											content="Blacklist Playlist"
+											v-tippy
+											>block</i
+										>
+									</confirm>
+									<confirm
+										v-if="
+											isOwnerOrAdmin() &&
+												isExcluded(element._id)
+										"
+										@confirm="
+											removeExcludedPlaylist(element._id)
+										"
+									>
+										<i
+											class="material-icons stop-icon"
+											content="Stop blacklisting songs from this playlist"
+											v-tippy
+										>
+											stop
+										</i>
+									</confirm>
+									<i
+										@click="showPlaylist(element._id)"
+										class="material-icons edit-icon"
+										content="Edit Playlist"
+										v-tippy
+										>edit</i
+									>
+								</template>
+							</playlist-item>
+						</div>
+					</template>
 				</draggable>
 				<p v-else class="has-text-centered scrollable-list">
 					You don't have any playlists!
@@ -439,59 +454,65 @@
 						:playlist="playlist"
 						:show-owner="true"
 					>
-						<i
-							class="material-icons"
-							slot="item-icon"
-							content="This playlist is currently selected"
-							v-tippy
-						>
-							radio
-						</i>
-						<div class="icons-group" slot="actions">
-							<confirm
-								v-if="isOwnerOrAdmin()"
-								@confirm="deselectPartyPlaylist(playlist._id)"
-							>
-								<i
-									class="material-icons stop-icon"
-									content="Stop playing songs from this playlist"
-									v-tippy
-								>
-									stop
-								</i>
-							</confirm>
-							<confirm
-								v-if="isOwnerOrAdmin()"
-								@confirm="blacklistPlaylist(playlist._id)"
-							>
-								<i
-									class="material-icons stop-icon"
-									content="Blacklist Playlist"
-									v-tippy
-									>block</i
-								>
-							</confirm>
+						<template #item-icon>
 							<i
-								v-if="playlist.createdBy === myUserId"
-								@click="showPlaylist(playlist._id)"
-								class="material-icons edit-icon"
-								content="Edit Playlist"
+								class="material-icons"
+								content="This playlist is currently selected"
 								v-tippy
-								>edit</i
 							>
-							<i
-								v-if="
-									playlist.createdBy !== myUserId &&
-										(playlist.privacy === 'public' ||
-											isAdmin())
-								"
-								@click="showPlaylist(playlist._id)"
-								class="material-icons edit-icon"
-								content="View Playlist"
-								v-tippy
-								>visibility</i
-							>
-						</div>
+								radio
+							</i>
+						</template>
+
+						<template #actions>
+							<div class="icons-group">
+								<confirm
+									v-if="isOwnerOrAdmin()"
+									@confirm="
+										deselectPartyPlaylist(playlist._id)
+									"
+								>
+									<i
+										class="material-icons stop-icon"
+										content="Stop playing songs from this playlist"
+										v-tippy
+									>
+										stop
+									</i>
+								</confirm>
+								<confirm
+									v-if="isOwnerOrAdmin()"
+									@confirm="blacklistPlaylist(playlist._id)"
+								>
+									<i
+										class="material-icons stop-icon"
+										content="Blacklist Playlist"
+										v-tippy
+										>block</i
+									>
+								</confirm>
+								<i
+									v-if="playlist.createdBy === myUserId"
+									@click="showPlaylist(playlist._id)"
+									class="material-icons edit-icon"
+									content="Edit Playlist"
+									v-tippy
+									>edit</i
+								>
+								<i
+									v-if="
+										playlist.createdBy !== myUserId &&
+											(playlist.privacy === 'public' ||
+												isAdmin())
+									"
+									@click="showPlaylist(playlist._id)"
+									class="material-icons edit-icon"
+									content="View Playlist"
+									v-tippy
+									>visibility</i
+								>
+							</div>
+						</template>
 					</playlist-item>
 				</div>
 				<p v-else class="has-text-centered scrollable-list">
@@ -510,59 +531,65 @@
 						:playlist="playlist"
 						:show-owner="true"
 					>
-						<i
-							class="material-icons"
-							slot="item-icon"
-							content="This playlist is currently included"
-							v-tippy
-						>
-							play_arrow
-						</i>
-						<div class="icons-group" slot="actions">
-							<confirm
-								v-if="isOwnerOrAdmin()"
-								@confirm="removeIncludedPlaylist(playlist._id)"
-							>
-								<i
-									class="material-icons stop-icon"
-									content="Stop playing songs from this playlist"
-									v-tippy
-								>
-									stop
-								</i>
-							</confirm>
-							<confirm
-								v-if="isOwnerOrAdmin()"
-								@confirm="blacklistPlaylist(playlist._id)"
-							>
-								<i
-									class="material-icons stop-icon"
-									content="Blacklist Playlist"
-									v-tippy
-									>block</i
-								>
-							</confirm>
+						<template #item-icon>
 							<i
-								v-if="playlist.createdBy === myUserId"
-								@click="showPlaylist(playlist._id)"
-								class="material-icons edit-icon"
-								content="Edit Playlist"
+								class="material-icons"
+								content="This playlist is currently included"
 								v-tippy
-								>edit</i
 							>
-							<i
-								v-if="
-									playlist.createdBy !== myUserId &&
-										(playlist.privacy === 'public' ||
-											isAdmin())
-								"
-								@click="showPlaylist(playlist._id)"
-								class="material-icons edit-icon"
-								content="View Playlist"
-								v-tippy
-								>visibility</i
-							>
-						</div>
+								play_arrow
+							</i>
+						</template>
+
+						<template #actions>
+							<div class="icons-group">
+								<confirm
+									v-if="isOwnerOrAdmin()"
+									@confirm="
+										removeIncludedPlaylist(playlist._id)
+									"
+								>
+									<i
+										class="material-icons stop-icon"
+										content="Stop playing songs from this playlist"
+										v-tippy
+									>
+										stop
+									</i>
+								</confirm>
+								<confirm
+									v-if="isOwnerOrAdmin()"
+									@confirm="blacklistPlaylist(playlist._id)"
+								>
+									<i
+										class="material-icons stop-icon"
+										content="Blacklist Playlist"
+										v-tippy
+										>block</i
+									>
+								</confirm>
+								<i
+									v-if="playlist.createdBy === myUserId"
+									@click="showPlaylist(playlist._id)"
+									class="material-icons edit-icon"
+									content="Edit Playlist"
+									v-tippy
+									>edit</i
+								>
+								<i
+									v-if="
+										playlist.createdBy !== myUserId &&
+											(playlist.privacy === 'public' ||
+												isAdmin())
+									"
+									@click="showPlaylist(playlist._id)"
+									class="material-icons edit-icon"
+									content="View Playlist"
+									v-tippy
+									>visibility</i
+								>
+							</div>
+						</template>
 					</playlist-item>
 				</div>
 				<p v-else class="has-text-centered scrollable-list">
@@ -580,43 +607,49 @@
 						v-for="playlist in excludedPlaylists"
 						:key="`key-${playlist._id}`"
 					>
-						<i
-							class="material-icons excluded-icon"
-							slot="item-icon"
-							content="This playlist is currently excluded"
-							v-tippy
-						>
-							block
-						</i>
-						<div class="icons-group" slot="actions">
-							<confirm
-								@confirm="removeExcludedPlaylist(playlist._id)"
+						<template #item-icon>
+							<i
+								class="material-icons excluded-icon"
+								content="This playlist is currently excluded"
+								v-tippy
 							>
-								<i
-									class="material-icons stop-icon"
-									content="Stop blacklisting songs from this playlist
-							"
-									v-tippy
-									>stop</i
+								block
+							</i>
+						</template>
+
+						<template #actions>
+							<div class="icons-group">
+								<confirm
+									@confirm="
+										removeExcludedPlaylist(playlist._id)
+									"
 								>
-							</confirm>
-							<i
-								v-if="playlist.createdBy === userId"
-								@click="showPlaylist(playlist._id)"
-								class="material-icons edit-icon"
-								content="Edit Playlist"
-								v-tippy
-								>edit</i
-							>
-							<i
-								v-else
-								@click="showPlaylist(playlist._id)"
-								class="material-icons edit-icon"
-								content="View Playlist"
-								v-tippy
-								>visibility</i
-							>
-						</div>
+									<i
+										class="material-icons stop-icon"
+										content="Stop blacklisting songs from this playlist
+							"
+										v-tippy
+										>stop</i
+									>
+								</confirm>
+								<i
+									v-if="playlist.createdBy === userId"
+									@click="showPlaylist(playlist._id)"
+									class="material-icons edit-icon"
+									content="Edit Playlist"
+									v-tippy
+									>edit</i
+								>
+								<i
+									v-else
+									@click="showPlaylist(playlist._id)"
+									class="material-icons edit-icon"
+									content="View Playlist"
+									v-tippy
+									>visibility</i
+								>
+							</div>
+						</template>
 					</playlist-item>
 				</div>
 				<p v-else class="has-text-centered scrollable-list">

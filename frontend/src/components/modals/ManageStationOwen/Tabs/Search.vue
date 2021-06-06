@@ -25,16 +25,18 @@
 					:key="song._id"
 					:song="song"
 				>
-					<div class="song-actions" slot="actions">
-						<i
-							class="material-icons add-to-queue-icon"
-							v-if="station.partyMode && !station.locked"
-							@click="addSongToQueue(song.youtubeId)"
-							content="Add Song to Queue"
-							v-tippy
-							>queue</i
-						>
-					</div>
+					<template #actions>
+						<div class="song-actions">
+							<i
+								class="material-icons add-to-queue-icon"
+								v-if="station.partyMode && !station.locked"
+								@click="addSongToQueue(song.youtubeId)"
+								content="Add Song to Queue"
+								v-tippy
+								>queue</i
+							>
+						</div>
+					</template>
 				</song-item>
 				<button
 					v-if="resultsLeftCount > 0"
@@ -72,7 +74,7 @@
 					:key="result.id"
 					:result="result"
 				>
-					<div slot="actions">
+					<template #actions>
 						<transition name="search-query-actions" mode="out-in">
 							<a
 								class="button is-success"
@@ -98,7 +100,7 @@
 								Add to queue
 							</a>
 						</transition>
-					</div>
+					</template>
 				</search-query-item>
 
 				<a

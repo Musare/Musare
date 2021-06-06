@@ -41,9 +41,8 @@
 <script>
 import { mapActions, mapState } from "vuex";
 
-import TabQueryHandler from "@/mixins/TabQueryHandler.vue";
-
 import Queue from "@/components/Queue.vue";
+import TabQueryHandler from "@/mixins/TabQueryHandler.vue";
 import Users from "./Users.vue";
 import Playlists from "./Playlists.vue";
 

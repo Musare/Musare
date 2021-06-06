@@ -18,10 +18,11 @@
 					:key="activity._id"
 					:activity="activity"
 				>
-					<div slot="actions">
+					<template #actions>
 						<confirm
 							v-if="userId === myUserId"
 							@confirm="hideActivity(activity._id)"
+							placement="left"
 						>
 							<a content="Hide Activity" v-tippy>
 								<i class="material-icons hide-icon"
@@ -29,7 +30,7 @@
 								>
 							</a>
 						</confirm>
-					</div>
+					</template>
 				</activity-item>
 			</div>
 		</div>
@@ -123,7 +124,7 @@ export default {
 			this.offsettedFromNextSet = 0;
 		});
 	},
-	beforeDestroy() {
+	onBeforeUnmount() {
 		this.socket.dispatch(
 			"apis.leaveRoom",
 			`profile.${this.userId}.activities`,

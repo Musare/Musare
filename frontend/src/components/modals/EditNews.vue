@@ -3,7 +3,7 @@
 		class="edit-news-modal"
 		:title="newsId ? 'Edit News' : 'Create News'"
 	>
-		<div slot="body">
+		<template #body>
 			<div id="markdown-editor-and-preview">
 				<div class="column">
 					<p><strong>Markdown</strong></p>
@@ -18,8 +18,8 @@
 					></div>
 				</div>
 			</div>
-		</div>
-		<div slot="footer">
+		</template>
+		<template #footer>
 			<p class="control select">
 				<select v-model="status">
 					<option value="draft">Draft</option>
@@ -53,7 +53,7 @@
 					}}
 				</span>
 			</div>
-		</div>
+		</template>
 	</modal>
 </template>
 

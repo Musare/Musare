@@ -449,7 +449,7 @@ export default {
 			{ modal: "manageStation" }
 		);
 	},
-	beforeDestroy() {
+	onBeforeUnmount() {
 		this.socket.dispatch(
 			"apis.leaveRoom",
 			`manage-station.${this.stationId}`,

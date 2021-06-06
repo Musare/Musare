@@ -73,6 +73,7 @@
 <script>
 import { mapState, mapActions, mapGetters } from "vuex";
 import { formatDistance } from "date-fns";
+import { defineAsyncComponent } from "vue";
 
 import Toast from "toasters";
 import UserIdToUsername from "@/components/UserIdToUsername.vue";
@@ -80,7 +81,9 @@ import ws from "@/ws";
 
 export default {
 	components: {
-		ViewReport: () => import("@/components/modals/ViewReport.vue"),
+		ViewReport: defineAsyncComponent(() =>
+			import("@/components/modals/ViewReport.vue")
+		),
 		UserIdToUsername
 	},
 	data() {

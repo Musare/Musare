@@ -21,55 +21,51 @@
 			<hr class="section-horizontal-rule" />
 
 			<draggable
-				class="menu-list scrollable-list"
+				tag="transition-group"
+				:component-data="{
+					name: !drag ? 'draggable-list-transition' : null
+				}"
 				v-if="playlists.length > 0"
 				v-model="playlists"
+				item-key="_id"
 				v-bind="dragOptions"
 				@start="drag = true"
 				@end="drag = false"
 				@change="savePlaylistOrder"
 			>
-				<transition-group
-					type="transition"
-					:name="!drag ? 'draggable-list-transition' : null"
-				>
-					<div
+				<template #item="{element}">
+					<playlist-item
+						v-if="
+							element.privacy === 'public' ||
+								(element.privacy === 'private' &&
+									element.createdBy === userId)
+						"
+						:playlist="element"
 						:class="{
 							item: true,
 							'item-draggable': myUserId === userId
 						}"
-						v-for="playlist in playlists"
-						:key="playlist._id"
 					>
-						<playlist-item
-							v-if="
-								playlist.privacy === 'public' ||
-									(playlist.privacy === 'private' &&
-										playlist.createdBy === userId)
-							"
-							:playlist="playlist"
-						>
-							<div slot="actions">
-								<i
-									v-if="myUserId === userId"
-									@click="showPlaylist(playlist._id)"
-									class="material-icons edit-icon"
-									content="Edit Playlist"
-									v-tippy
-									>edit</i
-								>
-								<i
-									v-else
-									@click="showPlaylist(playlist._id)"
-									class="material-icons view-icon"
-									content="View Playlist"
-									v-tippy
-									>visibility</i
-								>
-							</div>
-						</playlist-item>
-					</div>
-				</transition-group>
+						<template #actions>
+							<i
+								v-if="myUserId === userId"
+								@click="showPlaylist(element._id)"
+								class="material-icons edit-icon"
+								content="Edit Playlist"
+								v-tippy
+								>edit</i
+							>
+							<i
+								v-else
+								@click="showPlaylist(element._id)"
+								class="material-icons view-icon"
+								content="View Playlist"
+								v-tippy
+								>visibility</i
+							>
+						</template>
+					</playlist-item>
+				</template>
 			</draggable>
 
 			<button
@@ -89,6 +85,7 @@
 
 <script>
 import { mapActions, mapState, mapGetters } from "vuex";
+import { defineAsyncComponent } from "vue";
 
 import PlaylistItem from "@/components/PlaylistItem.vue";
 import SortablePlaylists from "@/mixins/SortablePlaylists.vue";
@@ -97,7 +94,9 @@ import ws from "@/ws";
 export default {
 	components: {
 		PlaylistItem,
-		CreatePlaylist: () => import("@/components/modals/CreatePlaylist.vue")
+		CreatePlaylist: defineAsyncComponent(() =>
+			import("@/components/modals/CreatePlaylist.vue")
+		)
 	},
 	mixins: [SortablePlaylists],
 	props: {
@@ -142,7 +141,7 @@ export default {
 			this.orderOfPlaylists = this.calculatePlaylistOrder(); // order in regards to the database
 		});
 	},
-	beforeDestroy() {
+	onBeforeUnmount() {
 		this.socket.dispatch(
 			"apis.leaveRoom",
 			`profile.${this.userId}.playlists`,

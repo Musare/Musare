@@ -1,6 +1,5 @@
 /* eslint-disable import/no-cycle */
-import Vue from "vue";
-import Vuex from "vuex";
+import { createStore } from "vuex";
 
 import websockets from "./modules/websockets";
 
@@ -18,9 +17,7 @@ import viewPunishmentModal from "./modules/modals/viewPunishment";
 import viewReportModal from "./modules/modals/viewReport";
 import reportModal from "./modules/modals/report";
 
-Vue.use(Vuex);
-
-export default new Vuex.Store({
+export default createStore({
 	modules: {
 		websockets,
 		user,

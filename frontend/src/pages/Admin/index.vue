@@ -133,22 +133,31 @@
 
 <script>
 import { mapGetters } from "vuex";
+import { defineAsyncComponent } from "vue";
 
 import MainHeader from "@/components/layout/MainHeader.vue";
 
 export default {
 	components: {
 		MainHeader,
-		UnverifiedSongs: () => import("./tabs/UnverifiedSongs.vue"),
-		VerifiedSongs: () => import("./tabs/VerifiedSongs.vue"),
-		HiddenSongs: () => import("./tabs/HiddenSongs.vue"),
-		Stations: () => import("./tabs/Stations.vue"),
-		Playlists: () => import("./tabs/Playlists.vue"),
-		Reports: () => import("./tabs/Reports.vue"),
-		News: () => import("./tabs/News.vue"),
-		Users: () => import("./tabs/Users.vue"),
-		Statistics: () => import("./tabs/Statistics.vue"),
-		Punishments: () => import("./tabs/Punishments.vue")
+		UnverifiedSongs: defineAsyncComponent(() =>
+			import("./tabs/UnverifiedSongs.vue")
+		),
+		VerifiedSongs: defineAsyncComponent(() =>
+			import("./tabs/VerifiedSongs.vue")
+		),
+		HiddenSongs: defineAsyncComponent(() =>
+			import("./tabs/HiddenSongs.vue")
+		),
+		Stations: defineAsyncComponent(() => import("./tabs/Stations.vue")),
+		Playlists: defineAsyncComponent(() => import("./tabs/Playlists.vue")),
+		Reports: defineAsyncComponent(() => import("./tabs/Reports.vue")),
+		News: defineAsyncComponent(() => import("./tabs/News.vue")),
+		Users: defineAsyncComponent(() => import("./tabs/Users.vue")),
+		Statistics: defineAsyncComponent(() => import("./tabs/Statistics.vue")),
+		Punishments: defineAsyncComponent(() =>
+			import("./tabs/Punishments.vue")
+		)
 	},
 	data() {
 		return {
@@ -166,7 +175,7 @@ export default {
 	mounted() {
 		this.changeTab(this.$route.path);
 	},
-	beforeDestroy() {
+	onBeforeUnmount() {
 		this.socket.dispatch("apis.leaveRooms", () => {});
 	},
 	methods: {

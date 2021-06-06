@@ -1,6 +1,6 @@
 <template>
 	<modal title="Report">
-		<div slot="body">
+		<template #body>
 			<div class="edit-report-wrapper">
 				<song-item
 					:song="localSong"
@@ -42,8 +42,8 @@
 					</div>
 				</div>
 			</div>
-		</div>
-		<div slot="footer">
+		</template>
+		<template #footer>
 			<a class="button is-success" @click="create()" href="#">
 				<i class="material-icons save-changes">done</i>
 				<span>&nbsp;Create</span>
@@ -51,7 +51,7 @@
 			<a class="button is-danger" href="#" @click="closeModal('report')">
 				<span>&nbsp;Cancel</span>
 			</a>
-		</div>
+		</template>
 	</modal>
 </template>
 

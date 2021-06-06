@@ -91,6 +91,7 @@
 
 <script>
 import { mapState, mapActions, mapGetters } from "vuex";
+import { defineAsyncComponent } from "vue";
 
 import Toast from "toasters";
 
@@ -101,10 +102,16 @@ import utils from "../../../../js/utils";
 
 export default {
 	components: {
-		EditPlaylist: () => import("@/components/modals/EditPlaylist"),
+		EditPlaylist: defineAsyncComponent(() =>
+			import("@/components/modals/EditPlaylist")
+		),
 		UserIdToUsername,
-		Report: () => import("@/components/modals/Report.vue"),
-		EditSong: () => import("@/components/modals/EditSong")
+		Report: defineAsyncComponent(() =>
+			import("@/components/modals/Report.vue")
+		),
+		EditSong: defineAsyncComponent(() =>
+			import("@/components/modals/EditSong")
+		)
 	},
 	data() {
 		return {

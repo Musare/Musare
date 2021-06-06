@@ -5,7 +5,7 @@
 			<p>
 				<span>Sets loaded: {{ setsLoaded }} / {{ maxSets }}</span>
 				<br />
-				<span>Loaded songs: {{ this.songs.length }}</span>
+				<span>Loaded songs: {{ songs.length }}</span>
 			</p>
 			<input
 				v-model="searchQuery"
@@ -183,6 +183,7 @@
 
 <script>
 import { mapState, mapActions, mapGetters } from "vuex";
+import { defineAsyncComponent } from "vue";
 
 import Toast from "toasters";
 
@@ -196,7 +197,9 @@ import ws from "@/ws";
 
 export default {
 	components: {
-		EditSong: () => import("@/components/modals/EditSong"),
+		EditSong: defineAsyncComponent(() =>
+			import("@/components/modals/EditSong")
+		),
 		UserIdToUsername,
 		FloatingBox,
 		Confirm

@@ -17,6 +17,7 @@
 <script>
 import { mapState, mapActions, mapGetters } from "vuex";
 import Toast from "toasters";
+import { defineAsyncComponent } from "vue";
 
 import ws from "./ws";
 import aw from "./aw";
@@ -24,10 +25,16 @@ import keyboardShortcuts from "./keyboardShortcuts";
 
 export default {
 	components: {
-		WhatIsNew: () => import("@/components/modals/WhatIsNew.vue"),
-		LoginModal: () => import("@/components/modals/Login.vue"),
-		RegisterModal: () => import("@/components/modals/Register.vue"),
-		Banned: () => import("@/pages/Banned.vue")
+		WhatIsNew: defineAsyncComponent(() =>
+			import("@/components/modals/WhatIsNew.vue")
+		),
+		LoginModal: defineAsyncComponent(() =>
+			import("@/components/modals/Login.vue")
+		),
+		RegisterModal: defineAsyncComponent(() =>
+			import("@/components/modals/Register.vue")
+		),
+		Banned: defineAsyncComponent(() => import("@/pages/Banned.vue"))
 	},
 	replace: false,
 	data() {
@@ -123,7 +130,7 @@ export default {
 
 		this.apiDomain = await lofig.get("apiDomain");
 
-		this.$router.onReady(() => {
+		this.$router.isReady(() => {
 			if (this.$route.query.err) {
 				let { err } = this.$route.query;
 				err = err
@@ -190,6 +197,9 @@ export default {
 </script>
 
 <style lang="scss">
+@import "tippy.js/dist/tippy.css";
+@import "tippy.js/animations/scale.css";
+
 :root {
 	--primary-color: var(--blue);
 	--blue: rgb(2, 166, 242);
@@ -260,7 +270,7 @@ export default {
 		background-color: var(--dark-grey-3) !important;
 	}
 
-	.tippy-tooltip.songActions-theme {
+	.tippy-box[data-theme~="songActions"] {
 		background-color: var(--dark-grey);
 	}
 }
@@ -323,6 +333,7 @@ textarea {
 
 .main-container {
 	height: 100%;
+	min-height: 100vh;
 	display: flex;
 	flex-direction: column;
 
@@ -365,22 +376,22 @@ a {
 	z-index: 10000000;
 }
 
-.tippy-tooltip.dark-theme {
-	font-size: 14px;
-	padding: 5px 10px;
-}
 .night-mode {
-	.tippy-tooltip {
-		&.dark-theme {
-			border: 1px solid var(--light-grey-3);
-			box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25),
-				0 10px 10px rgba(0, 0, 0, 0.22);
-			background-color: white;
-			.tippy-content {
-				color: var(--black);
-			}
+	.tippy-box {
+		border: 1px solid var(--light-grey-3);
+		box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25),
+			0 10px 10px rgba(0, 0, 0, 0.22);
+		background-color: var(--white);
+
+		> .tippy-arrow::before {
+			border-top-color: var(--white);
 		}
-		&.songActions-theme {
+
+		.tippy-content {
+			color: var(--black);
+		}
+
+		&[data-theme~="songActions"] {
 			background-color: var(--dark-grey-2);
 			border: 0 !important;
 
@@ -393,7 +404,7 @@ a {
 				background-color: var(--white);
 			}
 		}
-		&.addToPlaylist-theme {
+		&[data-theme~="addToPlaylist"] {
 			background-color: var(--dark-grey-2);
 			border: 0 !important;
 
@@ -413,64 +424,58 @@ a {
 		}
 	}
 
-	.tippy-popper[x-placement^="top"] .tippy-tooltip {
-		&.songActions-theme,
-		&.addToPlaylist-theme {
-			.tippy-arrow {
+	.tippy-box[data-placement^="top"] {
+		&[data-theme~="songActions"],
+		&[data-theme~="addToPlaylist"] {
+			> .tippy-arrow::before {
 				border-top-color: var(--dark-grey-2);
 			}
 		}
-		&.dark-theme .tippy-arrow {
-			border-top-color: var(--white);
-		}
 	}
-	.tippy-popper[x-placement^="bottom"] .tippy-tooltip {
-		&.songActions-theme,
-		&.addToPlaylist-theme {
-			.tippy-arrow {
+
+	.tippy-popper[data-placement^="bottom"] {
+		&[data-theme~="songActions"],
+		&[data-theme~="addToPlaylist"] {
+			> .tippy-arrow::before {
 				border-bottom-color: var(--dark-grey-2);
 			}
 		}
-		&.dark-theme .tippy-arrow {
-			border-bottom-color: var(--white);
-		}
 	}
-	.tippy-popper[x-placement^="left"] .tippy-tooltip {
-		&.songActions-theme,
-		&.addToPlaylist-theme {
-			.tippy-arrow {
+
+	.tippy-popper[data-placement^="left"] {
+		&[data-theme~="songActions"],
+		&[data-theme~="addToPlaylist"] {
+			> .tippy-arrow::before {
 				border-left-color: var(--dark-grey-2);
 			}
 		}
-		&.dark-theme .tippy-arrow {
-			border-left-color: var(--white);
-		}
 	}
-	.tippy-popper[x-placement^="right"] .tippy-tooltip {
-		&.songActions-theme,
-		&.addToPlaylist-theme {
-			.tippy-arrow {
+
+	.tippy-box[data-placement^="right"] {
+		&[data-theme~="songActions"],
+		&[data-theme~="addToPlaylist"] {
+			> .tippy-arrow::before {
 				border-right-color: var(--dark-grey-2);
 			}
-		}
-		&.dark-theme .tippy-arrow {
-			border-right-color: var(--white);
 		}
 	}
 }
 
-.tippy-tooltip.info-theme {
+.tippy-box[data-theme~="info"] {
 	font-size: 12px;
 	letter-spacing: 1px;
 }
 
-.tippy-tooltip.confirm-theme {
+.tippy-box[data-theme~="confirm"] {
 	background-color: var(--red);
 	padding: 5px 10px;
+
 	a {
 		color: var(--white);
+		border-bottom: 0;
 		font-size: 15px;
 		font-weight: 600;
+
 		&:hover,
 		&:focus {
 			filter: brightness(90%);
@@ -478,7 +483,7 @@ a {
 	}
 }
 
-.tippy-tooltip.songActions-theme {
+.tippy-box[data-theme~="songActions"] {
 	font-size: 15px;
 	padding: 5px 10px;
 	border: 1px solid var(--light-grey-3);
@@ -541,52 +546,55 @@ a {
 	}
 }
 
-.tippy-popper[x-placement^="top"] .tippy-tooltip {
-	&.songActions-theme,
-	&.addToPlaylist-theme {
-		.tippy-arrow {
+.tippy-box[data-placement^="top"] {
+	&[data-theme~="songActions"],
+	&[data-theme~="addToPlaylist"] {
+		> .tippy-arrow::before {
 			border-top-color: var(--white);
 		}
 	}
-	&.confirm-theme .tippy-arrow {
+	&[data-theme~="confirm"] > .tippy-arrow::before {
 		border-top-color: var(--red);
 	}
 }
-.tippy-popper[x-placement^="bottom"] .tippy-tooltip {
-	&.songActions-theme,
-	&.addToPlaylist-theme {
-		.tippy-arrow {
+
+.tippy-box[data-placement^="bottom"] {
+	&[data-theme~="songActions"],
+	&[data-theme~="addToPlaylist"] {
+		> .tippy-arrow::before {
 			border-bottom-color: var(--white);
 		}
 	}
-	&.confirm-theme .tippy-arrow {
+	&[data-theme~="confirm"] > .tippy-arrow::before {
 		border-bottom-color: var(--red);
 	}
 }
-.tippy-popper[x-placement^="left"] .tippy-tooltip {
-	&.songActions-theme,
-	&.addToPlaylist-theme {
-		.tippy-arrow {
+
+.tippy-box[data-placement^="left"] {
+	&[data-theme~="songActions"],
+	&[data-theme~="addToPlaylist"] {
+		> .tippy-arrow::before {
 			border-left-color: var(--white);
 		}
 	}
-	&.confirm-theme .tippy-arrow {
+	&[data-theme~="confirm"] > .tippy-arrow::before {
 		border-left-color: var(--red);
 	}
 }
-.tippy-popper[x-placement^="right"] .tippy-tooltip {
-	&.songActions-theme,
-	&.addToPlaylist-theme {
-		.tippy-arrow {
+
+.tippy-box[data-placement^="right"] {
+	&[data-theme~="songActions"],
+	&[data-theme~="addToPlaylist"] {
+		> .tippy-arrow::before {
 			border-right-color: var(--white);
 		}
 	}
-	&.confirm-theme .tippy-arrow {
+	&[data-theme~="confirm"] > .tippy-arrow::before {
 		border-right-color: var(--red);
 	}
 }
 
-.tippy-tooltip.addToPlaylist-theme {
+.tippy-box[data-theme~="addToPlaylist"] {
 	font-size: 15px;
 	padding: 5px;
 	border: 1px solid var(--light-grey-3);

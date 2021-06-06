@@ -18,7 +18,7 @@
 					<p class="step" :class="{ selected: step === 3 }">3</p>
 				</div>
 
-				<transition name="steps-fade" mode="out-in">
+				<transition-group name="steps-fade" mode="out-in">
 					<!-- Step 1 -- Enter email address -->
 					<div class="content-box" v-if="step === 1" :key="step">
 						<h2 class="content-box-title">
@@ -257,7 +257,7 @@
 							>Return to Settings</router-link
 						>
 					</div>
-				</transition>
+				</transition-group>
 			</div>
 		</div>
 		<main-footer />

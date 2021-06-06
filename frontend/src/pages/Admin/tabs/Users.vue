@@ -101,6 +101,7 @@
 
 <script>
 import { mapState, mapActions, mapGetters } from "vuex";
+import { defineAsyncComponent } from "vue";
 import Toast from "toasters";
 
 import ProfilePicture from "@/components/ProfilePicture.vue";
@@ -108,7 +109,9 @@ import ws from "@/ws";
 
 export default {
 	components: {
-		EditUser: () => import("@/components/modals/EditUser.vue"),
+		EditUser: defineAsyncComponent(() =>
+			import("@/components/modals/EditUser.vue")
+		),
 		ProfilePicture
 	},
 	data() {

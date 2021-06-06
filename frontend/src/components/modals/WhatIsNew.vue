@@ -1,13 +1,13 @@
 <template>
 	<div v-if="news !== null">
 		<modal title="News" class="what-is-news-modal">
-			<div slot="body">
+			<template #body>
 				<div
 					class="section news-item"
 					v-html="sanitize(marked(news.markdown))"
 				></div>
-			</div>
-			<div slot="footer">
+			</template>
+			<template #footer>
 				<span v-if="news.createdBy">
 					By
 					<user-id-to-username
@@ -21,9 +21,10 @@
 						})
 					}}
 				</span>
-			</div>
+			</template>
 		</modal>
 	</div>
+	<div v-else></div>
 </template>
 
 <script>

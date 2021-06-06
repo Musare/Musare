@@ -1,8 +1,10 @@
 /* eslint no-param-reassign: 0 */
 /* eslint-disable import/no-cycle */
 
-import Vue from "vue";
+// import Vue from "vue";
 import admin from "@/api/admin/index";
+
+const Vue = {};
 
 const state = {};
 const getters = {};

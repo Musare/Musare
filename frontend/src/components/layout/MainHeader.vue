@@ -3,8 +3,8 @@
 		<div class="nav-left">
 			<router-link v-if="!hideLogo" class="nav-item is-brand" to="/">
 				<img
-					:src="`${this.siteSettings.logo_white}`"
-					:alt="`${this.siteSettings.sitename}` || `Musare`"
+					:src="siteSettings.logo_white"
+					:alt="siteSettings.sitename || `Musare`"
 				/>
 			</router-link>
 		</div>

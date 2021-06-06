@@ -1,8 +1,8 @@
 <template>
 	<tippy
 		class="addToPlaylistDropdown"
-		touch="true"
-		interactive="true"
+		:touch="true"
+		:interactive="true"
 		:placement="placement"
 		theme="addToPlaylist"
 		trigger="click"
@@ -18,37 +18,37 @@
 			}
 		"
 	>
-		<template #trigger>
-			<slot name="button" />
-		</template>
+		<slot name="button" ref="trigger" />
 
-		<div class="nav-dropdown-items" v-if="playlists.length > 0">
-			<button
-				class="nav-item"
-				href="#"
-				v-for="(playlist, index) in playlists"
-				:key="playlist._id"
-				@click.prevent="toggleSongInPlaylist(index)"
-				:title="playlist.displayName"
-			>
-				<p class="control is-expanded checkbox-control">
-					<label class="switch">
-						<input
-							type="checkbox"
-							:id="index"
-							:checked="hasSong(playlist)"
-							@click="toggleSongInPlaylist(index)"
-						/>
-						<span class="slider round"></span>
-					</label>
-					<label :for="index">
-						<span></span>
-						<p>{{ playlist.displayName }}</p>
-					</label>
-				</p>
-			</button>
-		</div>
-		<p v-else>You haven't created any playlists.</p>
+		<template #content>
+			<div class="nav-dropdown-items" v-if="playlists.length > 0">
+				<button
+					class="nav-item"
+					href="#"
+					v-for="(playlist, index) in playlists"
+					:key="playlist._id"
+					@click.prevent="toggleSongInPlaylist(index)"
+					:title="playlist.displayName"
+				>
+					<p class="control is-expanded checkbox-control">
+						<label class="switch">
+							<input
+								type="checkbox"
+								:id="index"
+								:checked="hasSong(playlist)"
+								@click="toggleSongInPlaylist(index)"
+							/>
+							<span class="slider round"></span>
+						</label>
+						<label :for="index">
+							<span></span>
+							<p>{{ playlist.displayName }}</p>
+						</label>
+					</p>
+				</button>
+			</div>
+			<p v-else>You haven't created any playlists.</p>
+		</template>
 	</tippy>
 </template>
 

@@ -197,6 +197,7 @@
 
 <script>
 import { mapState, mapActions, mapGetters } from "vuex";
+import { defineAsyncComponent } from "vue";
 
 import Toast from "toasters";
 import UserIdToUsername from "@/components/UserIdToUsername.vue";
@@ -205,15 +206,27 @@ import ws from "@/ws";
 
 export default {
 	components: {
-		RequestSong: () => import("@/components/modals/RequestSong.vue"),
-		EditPlaylist: () => import("@/components/modals/EditPlaylist"),
-		CreatePlaylist: () => import("@/components/modals/CreatePlaylist.vue"),
-		ManageStationOwen: () =>
-			import("@/components/modals/ManageStationOwen/index.vue"),
-		ManageStationKris: () =>
-			import("@/components/modals/ManageStationKris/index.vue"),
-		Report: () => import("@/components/modals/Report.vue"),
-		EditSong: () => import("@/components/modals/EditSong"),
+		RequestSong: defineAsyncComponent(() =>
+			import("@/components/modals/RequestSong.vue")
+		),
+		EditPlaylist: defineAsyncComponent(() =>
+			import("@/components/modals/EditPlaylist")
+		),
+		CreatePlaylist: defineAsyncComponent(() =>
+			import("@/components/modals/CreatePlaylist.vue")
+		),
+		ManageStationOwen: defineAsyncComponent(() =>
+			import("@/components/modals/ManageStationOwen/index.vue")
+		),
+		ManageStationKris: defineAsyncComponent(() =>
+			import("@/components/modals/ManageStationKris/index.vue")
+		),
+		Report: defineAsyncComponent(() =>
+			import("@/components/modals/Report.vue")
+		),
+		EditSong: defineAsyncComponent(() =>
+			import("@/components/modals/EditSong")
+		),
 		UserIdToUsername,
 		Confirm
 	},

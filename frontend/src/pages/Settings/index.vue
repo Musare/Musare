@@ -49,21 +49,34 @@
 
 <script>
 import { mapActions, mapGetters, mapState } from "vuex";
+import { defineAsyncComponent } from "vue";
+
 import Toast from "toasters";
+
+import TabQueryHandler from "@/mixins/TabQueryHandler.vue";
 
 import MainHeader from "@/components/layout/MainHeader.vue";
 import MainFooter from "@/components/layout/MainFooter.vue";
-import TabQueryHandler from "@/mixins/TabQueryHandler.vue";
 
 export default {
 	components: {
 		MainHeader,
 		MainFooter,
-		SecuritySettings: () => import("./Tabs/Security.vue"),
-		AccountSettings: () => import("./Tabs/Account.vue"),
-		ProfileSettings: () => import("./Tabs/Profile.vue"),
-		PreferencesSettings: () => import("./Tabs/Preferences.vue"),
-		RemoveAccount: () => import("@/components/modals/RemoveAccount.vue")
+		SecuritySettings: defineAsyncComponent(() =>
+			import("./Tabs/Security.vue")
+		),
+		AccountSettings: defineAsyncComponent(() =>
+			import("./Tabs/Account.vue")
+		),
+		ProfileSettings: defineAsyncComponent(() =>
+			import("./Tabs/Profile.vue")
+		),
+		PreferencesSettings: defineAsyncComponent(() =>
+			import("./Tabs/Preferences.vue")
+		),
+		RemoveAccount: defineAsyncComponent(() =>
+			import("@/components/modals/RemoveAccount.vue")
+		)
 	},
 	mixins: [TabQueryHandler],
 	data() {
