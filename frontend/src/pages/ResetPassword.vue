@@ -321,6 +321,8 @@ export default {
 	},
 	watch: {
 		"email.value": function watchEmail(value) {
+			if (!value) return;
+
 			if (
 				value.indexOf("@") !== value.lastIndexOf("@") ||
 				!validation.regex.emailSimple.test(value)
@@ -333,6 +335,8 @@ export default {
 			}
 		},
 		"password.value": function watchPassword(value) {
+			if (!value) return;
+
 			this.checkPasswordMatch(value, this.passwordAgain.value);
 
 			if (!validation.isLength(value, 6, 200)) {
@@ -349,6 +353,8 @@ export default {
 			}
 		},
 		"passwordAgain.value": function watchPasswordAgain(value) {
+			if (!value) return;
+
 			this.checkPasswordMatch(this.password.value, value);
 		}
 	},

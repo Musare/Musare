@@ -23,7 +23,7 @@
 							placeholder="Email..."
 							@keypress="
 								onInput('email') &
-									$parent.submitOnEnter(submitModal, $event)
+									submitOnEnter(submitModal, $event)
 							"
 							@paste="onInput('email')"
 							autofocus
@@ -47,7 +47,7 @@
 							placeholder="Username..."
 							@keypress="
 								onInput('username') &
-									$parent.submitOnEnter(submitModal, $event)
+									submitOnEnter(submitModal, $event)
 							"
 							@paste="onInput('username')"
 						/>
@@ -74,7 +74,7 @@
 							placeholder="Password..."
 							@keypress="
 								onInput('password') &
-									$parent.submitOnEnter(submitModal, $event)
+									submitOnEnter(submitModal, $event)
 							"
 							@paste="onInput('password')"
 						/>
@@ -272,6 +272,9 @@ export default {
 		});
 	},
 	methods: {
+		submitOnEnter: (cb, event) => {
+			if (event.which === 13) cb();
+		},
 		togglePasswordVisibility() {
 			if (this.$refs.password.type === "password") {
 				this.$refs.password.type = "text";

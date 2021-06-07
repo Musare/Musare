@@ -171,9 +171,6 @@ export default {
 		);
 	},
 	methods: {
-		submitOnEnter: (cb, event) => {
-			if (event.which === 13) cb();
-		},
 		enableNightMode: () => {
 			document
 				.getElementsByTagName("body")[0]
