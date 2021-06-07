@@ -532,20 +532,20 @@ CacheModule.runJob("SUB", {
 	cb: async stationId => {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
 
-		StationsModule.runJob("INITIALIZE_STATION", { stationId }).then(async response => {
-			const { station } = response;
+		StationsModule.runJob("INITIALIZE_STATION", { stationId }).then(async res => {
+			const { station } = res;
 			station.userCount = StationsModule.usersPerStationCount[stationId] || 0;
 
 			WSModule.runJob("EMIT_TO_ROOM", {
 				room: "admin.stations",
 				args: ["event:admin.station.created", { data: { station } }]
-			}).then(() => {});
+			});
 
 			if (station.privacy === "public")
 				WSModule.runJob("EMIT_TO_ROOM", {
 					room: "home",
 					args: ["event:station.created", { data: { station } }]
-				}).then(() => {});
+				});
 			else {
 				const sockets = await WSModule.runJob("GET_SOCKETS_FOR_ROOM", {
 					room: "home"
@@ -2653,12 +2653,7 @@ export default {
 				next => {
 					stationModel.findOne(
 						{
-							$or: [
-								{ name: data.name },
-								{
-									displayName: new RegExp(`^${data.displayName}$`, "i")
-								}
-							]
+							$or: [{ name: data.name }, { displayName: new RegExp(`^${data.displayName}$`, "i") }]
 						},
 						next
 					);
@@ -2851,7 +2846,6 @@ export default {
 					if (station.type !== "official") return next(null, station);
 
 					const stationId = station._id;
-					console.log(111, station, genrePlaylistIds, blacklistedGenrePlaylistIds, next);
 
 					return async.waterfall(
 						[
@@ -2861,9 +2855,7 @@ export default {
 									1,
 									(playlistId, next) => {
 										StationsModule.runJob("INCLUDE_PLAYLIST", { stationId, playlistId }, this)
-											.then(() => {
-												next();
-											})
+											.then(() => next())
 											.catch(next);
 									},
 									next
@@ -2876,9 +2868,7 @@ export default {
 									1,
 									(playlistId, next) => {
 										StationsModule.runJob("EXCLUDE_PLAYLIST", { stationId, playlistId }, this)
-											.then(() => {
-												next();
-											})
+											.then(() => next())
 											.catch(next);
 									},
 									next

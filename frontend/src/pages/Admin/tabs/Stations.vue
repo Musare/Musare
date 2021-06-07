@@ -20,7 +20,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					<tr v-for="station in stations" :key="station._id">
+					<tr v-for="(station, index) in stations" :key="station._id">
 						<td>
 							<span>{{ station._id }}</span>
 						</td>
@@ -310,9 +310,7 @@ export default {
 			this.socket.dispatch(
 				"stations.remove",
 				this.stations[index]._id,
-				res => {
-					new Toast(res.message);
-				}
+				res => new Toast(res.message)
 			);
 		},
 		manage(station) {
@@ -361,6 +359,7 @@ export default {
 				if (res.status === "success")
 					this.loadStations(res.data.stations);
 			});
+
 			this.socket.dispatch("apis.joinAdminRoom", "stations", () => {});
 		},
 		...mapActions("modalVisibility", ["openModal"]),

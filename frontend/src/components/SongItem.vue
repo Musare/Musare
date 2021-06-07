@@ -217,7 +217,7 @@ export default {
 			return null;
 		},
 		hideTippyElements() {
-			this.$refs.songActions.tip.hide();
+			this.$refs.songActions.tippy.hide();
 
 			setTimeout(
 				() =>
