@@ -175,7 +175,7 @@ export default {
 
 <style lang="scss" scoped>
 #activity-items {
-	overflow: hidden;
+	overflow: auto;
 	min-height: auto;
 	max-height: 570px;
 }
