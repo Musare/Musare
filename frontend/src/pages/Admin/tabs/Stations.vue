@@ -180,13 +180,8 @@
 		<request-song v-if="modals.requestSong" />
 		<edit-playlist v-if="modals.editPlaylist" />
 		<create-playlist v-if="modals.createPlaylist" />
-		<manage-station-owen
-			v-if="modals.manageStation && manageStationVersion === 'owen'"
-			:station-id="editingStationId"
-			sector="admin"
-		/>
-		<manage-station-kris
-			v-if="modals.manageStation && manageStationVersion === 'kris'"
+		<manage-station
+			v-if="modals.manageStation"
 			:station-id="editingStationId"
 			sector="admin"
 		/>
@@ -215,11 +210,8 @@ export default {
 		CreatePlaylist: defineAsyncComponent(() =>
 			import("@/components/modals/CreatePlaylist.vue")
 		),
-		ManageStationOwen: defineAsyncComponent(() =>
-			import("@/components/modals/ManageStationOwen/index.vue")
-		),
-		ManageStationKris: defineAsyncComponent(() =>
-			import("@/components/modals/ManageStationKris/index.vue")
+		ManageStation: defineAsyncComponent(() =>
+			import("@/components/modals/ManageStation/index.vue")
 		),
 		Report: defineAsyncComponent(() =>
 			import("@/components/modals/Report.vue")
