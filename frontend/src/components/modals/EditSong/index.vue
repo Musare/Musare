@@ -938,7 +938,7 @@ export default {
 
 		*/
 	},
-	onBeforeUnmount() {
+	beforeUnmount() {
 		this.playerReady = false;
 		clearInterval(this.interval);
 		clearInterval(this.activityWatchVideoDataInterval);

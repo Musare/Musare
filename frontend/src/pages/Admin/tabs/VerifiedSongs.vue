@@ -409,7 +409,7 @@ export default {
 			}
 		);
 	},
-	onBeforeUnmount() {
+	beforeUnmount() {
 		const shortcutNames = [
 			"verifiedSongs.toggleKeyboardShortcutsHelper",
 			"verifiedSongs.resetKeyboardShortcutsHelper"

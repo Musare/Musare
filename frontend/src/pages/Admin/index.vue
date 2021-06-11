@@ -175,7 +175,7 @@ export default {
 	mounted() {
 		this.changeTab(this.$route.path);
 	},
-	onBeforeUnmount() {
+	beforeUnmount() {
 		this.socket.dispatch("apis.leaveRooms", () => {});
 	},
 	methods: {

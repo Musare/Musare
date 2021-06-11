@@ -1050,7 +1050,7 @@ export default {
 			this.volumeSliderValue = volume * 100;
 		}
 	},
-	onBeforeUnmount() {
+	beforeUnmount() {
 		document.body.style.cssText = "";
 
 		/** Reset Songslist */
