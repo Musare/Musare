@@ -225,7 +225,6 @@ export default {
 	data() {
 		return {
 			editingStationId: "",
-			manageStationVersion: "",
 			newStation: {
 				genres: [],
 				blacklistedGenres: []
@@ -244,10 +243,6 @@ export default {
 		})
 	},
 	mounted() {
-		lofig.get("manageStationVersion", manageStationVersion => {
-			this.manageStationVersion = manageStationVersion;
-		});
-
 		if (this.socket.readyState === 1) this.init();
 		ws.onConnect(() => this.init());
 

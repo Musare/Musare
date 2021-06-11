@@ -669,7 +669,6 @@ export default {
 		return {
 			utils,
 			isIOS: navigator.platform.match(/iPhone|iPod|iPad/),
-			manageStationVersion: "",
 			title: "Station",
 			loading: true,
 			exists: true,
@@ -733,10 +732,6 @@ export default {
 		})
 	},
 	async mounted() {
-		lofig.get("manageStationVersion", manageStationVersion => {
-			this.manageStationVersion = manageStationVersion;
-		});
-
 		this.editSongModalWatcher = this.$store.watch(
 			state => state.modals.editSong.video.paused,
 			paused => {
