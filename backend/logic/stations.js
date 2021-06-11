@@ -554,15 +554,15 @@ class _StationsModule extends CoreClass {
 								"skipDuration",
 								"artists",
 								"thumbnail",
-								"status"
+								"status",
+								"likes",
+								"dislikes"
 							]
 						})
 							.then(response => {
-								const newSongsToAdd = songsToAdd.map(song => {
-									return response.songs.find(
-										newSong => newSong._id.toString() === song._id.toString()
-									);
-								});
+								const newSongsToAdd = songsToAdd.map(song =>
+									response.songs.find(newSong => newSong._id.toString() === song._id.toString())
+								);
 								next(null, currentSongs, newSongsToAdd, currentSongIndex);
 							})
 							.catch(err => next(err));

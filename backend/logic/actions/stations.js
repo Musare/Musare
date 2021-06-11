@@ -3290,10 +3290,7 @@ export default {
 						.catch(err => next(err));
 				},
 
-				(station, next) => {
-					if (station.type === "official") next(null, station.queue);
-					else next(null, station.queue);
-				}
+				(station, next) => next(null, station.queue)
 			],
 			async (err, queue) => {
 				if (err) {

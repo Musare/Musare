@@ -795,6 +795,7 @@ export default {
 				timePaused,
 				natural
 			} = res.data;
+
 			if (this.noSong || !natural) {
 				this.setCurrentSong({
 					currentSong,
@@ -1138,6 +1139,7 @@ export default {
 				nextSong = this.songsList[0].youtubeId
 					? this.songsList[0]
 					: null;
+
 			this.updateNextSong(nextSong);
 			this.setNextCurrentSong(
 				{
