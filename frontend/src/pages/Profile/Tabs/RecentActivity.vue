@@ -123,7 +123,7 @@ export default {
 			this.offsettedFromNextSet = 0;
 		});
 	},
-	onBeforeUnmount() {
+	beforeUnmount() {
 		this.socket.dispatch(
 			"apis.leaveRoom",
 			`profile.${this.userId}.activities`,

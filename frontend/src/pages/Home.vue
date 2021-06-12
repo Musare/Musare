@@ -689,7 +689,7 @@ export default {
 			this.orderOfFavoriteStations = res.data.order;
 		});
 	},
-	onBeforeUnmount() {
+	beforeUnmount() {
 		this.socket.dispatch("apis.leaveRoom", "home", () => {});
 	},
 	methods: {
