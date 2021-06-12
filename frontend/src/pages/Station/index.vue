@@ -1038,7 +1038,7 @@ export default {
 			this.volumeSliderValue = volume * 100;
 		}
 	},
-	onBeforeUnmount() {
+	beforeUnmount() {
 		document.body.style.cssText = "";
 
 		/** Reset Songslist */
@@ -1091,6 +1091,7 @@ export default {
 		},
 		setNextCurrentSong(nextCurrentSong, skipSkipCheck = false) {
 			this.nextCurrentSong = nextCurrentSong;
+			// If skipSkipCheck is true, it won't try to skip the song
 			if (this.getTimeRemaining() <= 0 && !skipSkipCheck) {
 				this.skipSong();
 			}

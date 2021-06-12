@@ -141,7 +141,7 @@ export default {
 			this.orderOfPlaylists = this.calculatePlaylistOrder(); // order in regards to the database
 		});
 	},
-	onBeforeUnmount() {
+	beforeUnmount() {
 		this.socket.dispatch(
 			"apis.leaveRoom",
 			`profile.${this.userId}.playlists`,
