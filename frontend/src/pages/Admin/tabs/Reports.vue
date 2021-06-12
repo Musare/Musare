@@ -8,7 +8,8 @@
 						<td>Song ID</td>
 						<td>Author</td>
 						<td>Time of report</td>
-						<td>Description</td>
+						<td>Category</td>
+						<td>Info</td>
 						<td>Options</td>
 					</tr>
 				</thead>
@@ -41,7 +42,10 @@
 							>
 						</td>
 						<td>
-							<span>{{ report.description }}</span>
+							<span>{{ report.category }}</span>
+						</td>
+						<td>
+							<span>{{ report.info }}</span>
 						</td>
 						<td>
 							<a

@@ -3,33 +3,134 @@
 		<template #body>
 			<div class="edit-report-wrapper">
 				<song-item
-					:song="localSong"
+					:song="song"
 					:disabled-actions="['report']"
 					header="Selected Song.."
 				/>
+
 				<div class="columns is-multiline">
 					<div
-						v-for="issue in issues"
+						v-for="issue in predefinedIssues"
 						class="column is-half"
-						:key="issue.name"
+						:key="issue.category"
 					>
-						<label class="label">{{ issue.name }}</label>
+						<label class="label">{{ issue.category }}</label>
+
 						<p
 							v-for="reason in issue.reasons"
-							class="control"
-							:key="reason"
+							class="control checkbox-control"
+							:key="reason.reason"
 						>
-							<label class="checkbox">
-								<input
-									type="checkbox"
-									@click="toggleIssue(issue.name, reason)"
-								/>
-								{{ reason }}
-							</label>
+							<span class="align-horizontally">
+								<span>
+									<label class="switch">
+										<input
+											type="checkbox"
+											:id="reason.reason"
+											v-model="reason.enabled"
+										/>
+										<span class="slider round"></span>
+									</label>
+
+									<label :for="reason.reason">
+										<span></span>
+										<p>{{ reason.reason }}</p>
+									</label>
+								</span>
+
+								<i
+									class="material-icons"
+									content="Provide More Info"
+									v-tippy
+									@click="reason.showInfo = !reason.showInfo"
+								>
+									info
+								</i>
+							</span>
+
+							<input
+								type="text"
+								class="input"
+								v-model="reason.info"
+								v-if="reason.showInfo"
+								placeholder="Provide more information..."
+								@keyup="reason.enabled = true"
+							/>
 						</p>
 					</div>
-					<div class="column">
-						<label class="label">Other</label>
+					<!-- allow for multiple custom issues with plus/add button and then a input textbox -->
+					<!-- do away with textbox -->
+
+					<div class="column is-half">
+						<div id="custom-issues">
+							<div id="custom-issues-title">
+								<label class="label">Issues not listed</label>
+
+								<button
+									class="button tab-actionable-button "
+									content="Add an issue that isn't listed"
+									v-tippy="{ theme: 'info' }"
+									@click="customIssues.push('')"
+								>
+									<i class="material-icons icon-with-button"
+										>add</i
+									>
+									<span>
+										Add Custom Issue
+									</span>
+								</button>
+							</div>
+
+							<div
+								class="custom-issue control is-grouped input-with-button"
+								v-for="(issue, index) in customIssues"
+								:key="index"
+							>
+								<p class="control is-expanded">
+									<input
+										type="text"
+										class="input"
+										v-model="customIssues[index]"
+										placeholder="Provide information..."
+									/>
+								</p>
+								<p class="control">
+									<button
+										class="button is-danger"
+										content="Remove custom issue"
+										v-tippy="{ theme: 'info' }"
+										@click="customIssues.splice(index, 1)"
+									>
+										<i class="material-icons">
+											delete
+										</i>
+									</button>
+								</p>
+							</div>
+
+							<p
+								id="no-issues-listed"
+								v-if="customIssues.length <= 0"
+							>
+								<em>
+									Add any issues that aren't listed above.
+								</em>
+							</p>
+						</div>
+					</div>
+
+					<!--
+						<div class="column">
+						<p class="content-box-optional-helper">
+							<a href="#" @click="changeToLoginModal()">
+								Issue isn't listed?
+							</a>
+						</p>
+
+						<br />
+
+		
+
 						<textarea
 							v-model="report.description"
 							class="textarea"
@@ -40,6 +141,7 @@
 							{{ charactersRemaining }}
 						</div>
 					</div>
+					-->
 				</div>
 			</div>
 		</template>
@@ -66,49 +168,122 @@ export default {
 	components: { Modal, SongItem },
 	data() {
 		return {
-			localSong: null,
-			report: {
-				resolved: false,
-				youtubeId: "",
-				description: "",
-				issues: [
-					{ name: "Video", reasons: [] },
-					{ name: "Title", reasons: [] },
-					{ name: "Duration", reasons: [] },
-					{ name: "Artists", reasons: [] },
-					{ name: "Thumbnail", reasons: [] }
-				]
-			},
-			issues: [
+			customIssues: [],
+			predefinedIssues: [
 				{
-					name: "Video",
+					category: "video",
 					reasons: [
-						"Doesn't exist",
-						"It's private",
-						"It's not available in my country",
-						"Unofficial"
+						{
+							enabled: false,
+							reason: "Doesn't exist",
+							info: "",
+							showInfo: false
+						},
+						{
+							enabled: false,
+							reason: "It's private",
+							info: "",
+							showInfo: false
+						},
+						{
+							enabled: false,
+							reason: "It's not available in my country",
+							info: "United States",
+							showInfo: false
+						},
+						{
+							enabled: false,
+							reason: "Unofficial",
+							info: "",
+							showInfo: false
+						}
 					]
 				},
 				{
-					name: "Title",
-					reasons: ["Incorrect", "Inappropriate"]
-				},
-				{
-					name: "Duration",
+					category: "title",
 					reasons: [
-						"Skips too soon",
-						"Skips too late",
-						"Starts too soon",
-						"Starts too late"
+						{
+							enabled: false,
+							reason: "Incorrect",
+							info: "",
+							showInfo: false
+						},
+						{
+							enabled: false,
+							reason: "Inappropriate",
+							info: "",
+							showInfo: false
+						}
 					]
 				},
 				{
-					name: "Artists",
-					reasons: ["Incorrect", "Inappropriate"]
+					category: "duration",
+					reasons: [
+						{
+							enabled: false,
+							reason: "Skips too soon",
+							info: "",
+							showInfo: false
+						},
+						{
+							enabled: false,
+							reason: "Skips too late",
+							info: "",
+							showInfo: false
+						},
+						{
+							enabled: false,
+							reason: "Starts too soon",
+							info: "",
+							showInfo: false
+						},
+						{
+							enabled: false,
+							reason: "Starts too late",
+							info: "",
+							showInfo: false
+						}
+					]
 				},
 				{
-					name: "Thumbnail",
-					reasons: ["Incorrect", "Inappropriate", "Doesn't exist"]
+					category: "artists",
+					reasons: [
+						{
+							enabled: false,
+							reason: "Incorrect",
+							info: "",
+							showInfo: false
+						},
+						{
+							enabled: false,
+							reason: "Inappropriate",
+							info: "",
+							showInfo: false
+						}
+					]
+				},
+				{
+					category: "thumbnail",
+					reasons: [
+						{
+							enabled: false,
+							reason: "Incorrect",
+							info: "",
+							showInfo: false
+						},
+						{
+							enabled: false,
+							reason: "Inappropriate",
+							info: "",
+							showInfo: false
+						},
+						{
+							enabled: false,
+							reason: "Doesn't exist",
+							info: "",
+							showInfo: false
+						}
+					]
 				}
 			]
 		};
@@ -124,31 +299,40 @@ export default {
 			socket: "websockets/getSocket"
 		})
 	},
-	mounted() {
-		if (this.song !== null) {
-			this.localSong = this.song;
-			this.report.youtubeId = this.song.youtubeId;
-			this.reportSong(null);
-		}
-	},
 	methods: {
 		create() {
-			this.socket.dispatch("reports.create", this.report, res => {
-				new Toast(res.message);
-				if (res.status === "success") this.closeModal("report");
-			});
-		},
-		toggleIssue(name, reason) {
-			for (let z = 0; z < this.report.issues.length; z += 1) {
-				if (this.report.issues[z].name === name) {
-					if (this.report.issues[z].reasons.indexOf(reason) > -1) {
-						this.report.issues[z].reasons.splice(
-							this.report.issues[z].reasons.indexOf(reason),
-							1
-						);
-					} else this.report.issues[z].reasons.push(reason);
+			const issues = [];
+
+			// any predefined issues that are enabled
+			this.predefinedIssues.forEach(category =>
+				category.reasons.forEach(reason => {
+					if (reason.enabled) {
+						const info =
+							reason.info === ""
+								? reason.reason
+								: `${reason.reason} - ${reason.info}`;
+
+						issues.push({ category: category.category, info });
+					}
+				})
+			);
+
+			// any custom issues
+			this.customIssues.forEach(issue =>
+				issues.push({ category: "custom", info: issue })
+			);
+
+			this.socket.dispatch(
+				"reports.create",
+				{
+					issues,
+					youtubeId: this.song.youtubeId
+				},
+				res => {
+					new Toast(res.message);
+					if (res.status === "success") this.closeModal("report");
 				}
-			}
+			);
 		},
 		...mapActions("modals/report", ["reportSong"]),
 		...mapActions("modalVisibility", ["closeModal"])
@@ -185,9 +369,74 @@ export default {
 	}
 }
 
+.label {
+	text-transform: capitalize;
+}
+
 .columns {
 	margin-left: unset;
 	margin-right: unset;
 	margin-top: 20px;
+
+	.control {
+		display: flex;
+		flex-direction: column;
+
+		span.align-horizontally {
+			width: 100%;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+
+			span {
+				display: flex;
+			}
+		}
+
+		i {
+			cursor: pointer;
+		}
+
+		input[type="text"] {
+			height: initial;
+			margin: 10px 0;
+		}
+	}
+}
+
+#custom-issues {
+	height: 100%;
+
+	#custom-issues-title {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 15px;
+
+		button {
+			padding: 3px 5px;
+			height: initial;
+		}
+
+		label {
+			margin: 0;
+		}
+	}
+
+	#no-issues-listed {
+		display: flex;
+		height: calc(100% - 32px - 15px);
+		align-items: center;
+		justify-content: center;
+	}
+
+	.custom-issue {
+		flex-direction: row;
+
+		input {
+			height: 36px;
+			margin: 0;
+		}
+	}
 }
 </style>

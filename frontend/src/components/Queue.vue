@@ -89,7 +89,7 @@
 			@click="openModal('manageStation') & showManageStationTab('search')"
 		>
 			<i class="material-icons icon-with-button">queue</i>
-			<span class="optional-desktop-only-text"> Add Song To Queue </span>
+			<span> Add Song To Queue </span>
 		</button>
 		<button
 			class="button is-primary tab-actionable-button"
@@ -99,7 +99,7 @@
 			@click="openModal('requestSong')"
 		>
 			<i class="material-icons icon-with-button">queue</i>
-			<span class="optional-desktop-only-text"> Request Song </span>
+			<span> Request Song </span>
 		</button>
 		<button
 			class="button is-primary tab-actionable-button disabled"
@@ -115,7 +115,7 @@
 			v-tippy="{ theme: 'info' }"
 		>
 			<i class="material-icons icon-with-button">queue</i>
-			<span class="optional-desktop-only-text"> Add Song To Queue </span>
+			<span> Add Song To Queue </span>
 		</button>
 		<div
 			id="queue-locked"

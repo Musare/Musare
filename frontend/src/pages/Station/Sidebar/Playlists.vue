@@ -99,7 +99,7 @@
 			@click="openModal('createPlaylist')"
 		>
 			<i class="material-icons icon-with-button">create</i>
-			<span class="optional-desktop-only-text"> Create Playlist </span>
+			<span> Create Playlist </span>
 		</a>
 	</div>
 </template>

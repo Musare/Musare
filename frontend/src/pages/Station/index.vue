@@ -119,7 +119,7 @@
 									<i class="material-icons icon-with-button"
 										>play_arrow</i
 									>
-									<span class="optional-desktop-only-text">
+									<span>
 										Resume Station
 									</span>
 								</button>
@@ -131,7 +131,7 @@
 									<i class="material-icons icon-with-button"
 										>pause</i
 									>
-									<span class="optional-desktop-only-text">
+									<span>
 										Pause Station
 									</span>
 								</button>
@@ -144,7 +144,7 @@
 									<i class="material-icons icon-with-button"
 										>skip_next</i
 									>
-									<span class="optional-desktop-only-text">
+									<span>
 										Force Skip
 									</span>
 								</button>
@@ -157,7 +157,7 @@
 									<i class="material-icons icon-with-button"
 										>settings</i
 									>
-									<span class="optional-desktop-only-text">
+									<span>
 										Manage Station
 									</span>
 								</button>
