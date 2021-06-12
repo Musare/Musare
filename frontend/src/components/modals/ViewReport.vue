@@ -39,30 +39,17 @@
 						}}
 					</span>
 					<br />
-					<span v-if="report.description">
-						<strong>Description:</strong>
-						{{ report.description }}
+					<span>
+						<strong>Category:</strong>
+						{{ report.category }}
+					</span>
+					<br />
+					<span>
+						<strong>Info:</strong>
+						{{ report.info }}
 					</span>
 				</div>
 			</article>
-			<table v-if="report.issues.length > 0" class="table is-narrow">
-				<thead>
-					<tr>
-						<td>Issue</td>
-						<td>Reasons</td>
-					</tr>
-				</thead>
-				<tbody>
-					<tr v-for="issue in report.issues" :key="issue.name">
-						<td>
-							<span>{{ issue.name }}</span>
-						</td>
-						<td>
-							<span>{{ issue.reasons }}</span>
-						</td>
-					</tr>
-				</tbody>
-			</table>
 		</template>
 		<template #footer v-if="report && report._id">
 			<a class="button is-primary" href="#" @click="resolve(report._id)">

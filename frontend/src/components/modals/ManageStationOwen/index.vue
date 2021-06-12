@@ -175,7 +175,7 @@
 				@click="openModal('requestSong')"
 			>
 				<i class="material-icons icon-with-button">queue</i>
-				<span class="optional-desktop-only-text"> Request Song </span>
+				<span> Request Song </span>
 			</button>
 			<div v-if="isOwnerOrAdmin()" class="right">
 				<confirm @confirm="clearAndRefillStationQueue()">

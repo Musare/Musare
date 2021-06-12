@@ -11,7 +11,7 @@ const REQUIRED_DOCUMENT_VERSIONS = {
 	playlist: 4,
 	punishment: 1,
 	queueSong: 1,
-	report: 2,
+	report: 3,
 	song: 5,
 	station: 5,
 	user: 3
@@ -261,15 +261,6 @@ class _DBModule extends CoreClass {
 					}, "Max 3 hours per song.");
 
 					this.schemas.playlist.index({ createdFor: 1, type: 1 }, { unique: true });
-
-					// Report
-					this.schemas.report
-						.path("description")
-						.validate(
-							description =>
-								!description || (isLength(description, 0, 400) && regex.ascii.test(description)),
-							"Invalid description."
-						);
 
 					if (config.get("skipDbDocumentsVersionCheck")) resolve();
 					else {

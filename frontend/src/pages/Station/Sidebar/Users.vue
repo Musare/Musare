@@ -58,7 +58,7 @@
 			@click="copyToClipboard()"
 		>
 			<i class="material-icons icon-with-button">share</i>
-			<span class="optional-desktop-only-text">
+			<span>
 				Share (copy to clipboard)
 			</span>
 		</button>
