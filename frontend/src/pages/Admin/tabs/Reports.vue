@@ -8,8 +8,7 @@
 						<td>Song ID</td>
 						<td>Author</td>
 						<td>Time of report</td>
-						<td>Category</td>
-						<td>Info</td>
+						<td>Issues</td>
 						<td>Options</td>
 					</tr>
 				</thead>
@@ -42,10 +41,15 @@
 							>
 						</td>
 						<td>
-							<span>{{ report.category }}</span>
-						</td>
-						<td>
-							<span>{{ report.info }}</span>
+							<ul>
+								<li
+									v-for="(issue, index) in report.issues"
+									:key="index"
+								>
+									<strong> {{ issue.category }}:</strong>
+									{{ issue.info }}
+								</li>
+							</ul>
 						</td>
 						<td>
 							<a
@@ -113,6 +117,7 @@ export default {
 		});
 
 		this.socket.on("event:admin.report.resolved", res => {
+			console.log("report resolved event", res);
 			this.reports = this.reports.filter(report => {
 				return report._id !== res.data.reportId;
 			});
@@ -139,7 +144,6 @@ export default {
 			this.socket.dispatch("apis.joinAdminRoom", "reports", () => {});
 		},
 		view(report) {
-			// this.viewReport(report);
 			this.viewingReportId = report._id;
 			this.openModal("viewReport");
 		},
@@ -192,5 +196,9 @@ td {
 	word-wrap: break-word;
 	max-width: 10vw;
 	vertical-align: middle;
+}
+
+li {
+	list-style: inside;
 }
 </style>

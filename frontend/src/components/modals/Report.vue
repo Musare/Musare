@@ -69,7 +69,7 @@
 								<button
 									class="button tab-actionable-button "
 									content="Add an issue that isn't listed"
-									v-tippy="{ theme: 'info' }"
+									v-tippy
 									@click="customIssues.push('')"
 								>
 									<i class="material-icons icon-with-button"
@@ -98,7 +98,7 @@
 									<button
 										class="button is-danger"
 										content="Remove custom issue"
-										v-tippy="{ theme: 'info' }"
+										v-tippy
 										@click="customIssues.splice(index, 1)"
 									>
 										<i class="material-icons">

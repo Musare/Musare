@@ -40,13 +40,16 @@
 					</span>
 					<br />
 					<span>
-						<strong>Category:</strong>
-						{{ report.category }}
-					</span>
-					<br />
-					<span>
-						<strong>Info:</strong>
-						{{ report.info }}
+						<strong>Issues:</strong>
+						<ul id="issues">
+							<li
+								v-for="(issue, index) in report.issues"
+								:key="index"
+							>
+								<strong> {{ issue.category }}:</strong>
+								{{ issue.info }}
+							</li>
+						</ul>
 					</span>
 				</div>
 			</article>
@@ -134,5 +137,9 @@ export default {
 .back-to-song {
 	display: flex;
 	margin-bottom: 20px;
+}
+
+#issues {
+	list-style: inside;
 }
 </style>

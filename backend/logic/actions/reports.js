@@ -184,9 +184,6 @@ export default {
 
 		const { youtubeId } = report;
 
-		// properties for every report issue that is saved to db
-		const template = {};
-
 		async.waterfall(
 			[
 				next => songModel.findOne({ youtubeId }).exec(next),
@@ -202,7 +199,8 @@ export default {
 				(song, next) => {
 					if (!song) return next("Song not found.");
 
-					template.song = {
+					delete report.youtubeId;
+					report.song = {
 						_id: song._id,
 						youtubeId: song.youtubeId
 					};
@@ -210,45 +208,40 @@ export default {
 					return next(null, { title: song.title, artists: song.artists, thumbnail: song.thumbnail });
 				},
 
-				(song, next) => {
-					template.createdBy = session.userId;
-					template.createdAt = Date.now();
-
-					return async.each(
-						report.issues,
-						(issue, next) => {
-							reportModel.create({ ...issue, ...template }, (err, value) => {
-								CacheModule.runJob("PUB", {
-									channel: "report.create",
-									value
-								});
-
-								return next(err);
-							});
+				(song, next) =>
+					reportModel.create(
+						{
+							createdBy: session.userId,
+							createdAt: Date.now(),
+							...report
 						},
-						err => next(err, report, song)
-					);
-				}
+						err => next(err, song)
+					)
 			],
-			async (err, report, song) => {
+			async (err, song) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
 						"ERROR",
 						"REPORTS_CREATE",
-						`Creating report for "${template.song._id}" failed by user "${session.userId}". "${err}"`
+						`Creating report for "${report.song._id}" failed by user "${session.userId}". "${err}"`
 					);
 					return cb({ status: "error", message: err });
 				}
 
 				ActivitiesModule.runJob("ADD_ACTIVITY", {
-					userId: template.createdBy,
+					userId: report.createdBy,
 					type: "song__report",
 					payload: {
 						message: `Reported song <youtubeId>${song.title} by ${song.artists.join(", ")}</youtubeId>`,
-						youtubeId: template.song.youtubeId,
+						youtubeId: report.song.youtubeId,
 						thumbnail: song.thumbnail
 					}
+				});
+
+				CacheModule.runJob("PUB", {
+					channel: "report.create",
+					report
 				});
 
 				this.log("SUCCESS", "REPORTS_CREATE", `User "${session.userId}" created report for "${youtubeId}".`);
