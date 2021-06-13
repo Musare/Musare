@@ -1434,6 +1434,7 @@ export default {
 
 		.modal-card-body {
 			padding: 16px;
+			display: flex;
 		}
 
 		.modal-card-foot {
