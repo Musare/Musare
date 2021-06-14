@@ -242,7 +242,7 @@ lofig.folder = "../config/default.json";
 			window.stationInterval = 0;
 		}
 
-		if (ws.socket) {
+		if (ws.socket && to.fullPath !== from.fullPath) {
 			ws.clearCallbacks();
 			ws.destroyListeners();
 		}
