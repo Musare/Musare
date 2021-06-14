@@ -12,10 +12,30 @@ const CacheModule = moduleManager.modules.cache;
 const ActivitiesModule = moduleManager.modules.activities;
 
 CacheModule.runJob("SUB", {
-	channel: "report.resolve",
-	cb: reportId => {
+	channel: "report.issue.toggle",
+	cb: data => {
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: "admin.reports",
+			args: ["event:admin.report.issue.toggled", { data: { issueId: data.issueId, reportId: data.reportId } }]
+		});
+
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: `edit-song.${data.songId}`,
+			args: ["event:admin.report.issue.toggled", { data: { issueId: data.issueId, reportId: data.reportId } }]
+		});
+	}
+});
+
+CacheModule.runJob("SUB", {
+	channel: "report.resolve",
+	cb: ({ reportId, songId }) => {
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: "admin.reports",
+			args: ["event:admin.report.resolved", { data: { reportId } }]
+		});
+
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: `edit-song.${songId}`,
 			args: ["event:admin.report.resolved", { data: { reportId } }]
 		});
 	}
@@ -24,9 +44,30 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "report.create",
 	cb: report => {
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: "admin.reports",
-			args: ["event:admin.report.created", { data: { report } }]
+		console.log(report);
+
+		DBModule.runJob("GET_MODEL", { modelName: "user" }, this).then(userModel => {
+			userModel
+				.findById(report.createdBy)
+				.select({ avatar: -1, name: -1, username: -1 })
+				.exec((err, { avatar, name, username }) => {
+					report.createdBy = {
+						avatar,
+						name,
+						username,
+						_id: report.createdBy
+					};
+
+					WSModule.runJob("EMIT_TO_ROOM", {
+						room: "admin.reports",
+						args: ["event:admin.report.created", { data: { report } }]
+					});
+
+					WSModule.runJob("EMIT_TO_ROOM", {
+						room: `edit-song.${report.song._id}`,
+						args: ["event:admin.report.created", { data: { report } }]
+					});
+				});
 		});
 	}
 });
@@ -87,22 +128,38 @@ export default {
 	 */
 	getReportsForSong: isAdminRequired(async function getReportsForSong(session, songId, cb) {
 		const reportModel = await DBModule.runJob("GET_MODEL", { modelName: "report" }, this);
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
 		async.waterfall(
 			[
-				next => {
-					reportModel
-						.find({ song: { _id: songId }, resolved: false })
-						.sort({ released: "desc" })
-						.exec(next);
-				},
+				next =>
+					reportModel.find({ "song._id": songId, resolved: false }).sort({ createdAt: "desc" }).exec(next),
 
 				(_reports, next) => {
 					const reports = [];
-					for (let i = 0; i < _reports.length; i += 1) {
-						reports.push(_reports[i]._id);
-					}
-					next(null, reports);
+
+					async.each(
+						_reports,
+						(report, cb) => {
+							userModel
+								.findById(report.createdBy)
+								.select({ avatar: -1, name: -1, username: -1 })
+								.exec((err, { avatar, name, username }) => {
+									reports.push({
+										...report._doc,
+										createdBy: {
+											avatar,
+											name,
+											username,
+											_id: report.createdBy
+										}
+									});
+
+									return cb(err);
+								});
+						},
+						err => next(err, reports)
+					);
 				}
 			],
 			async (err, reports) => {
@@ -119,7 +176,7 @@ export default {
 	}),
 
 	/**
-	 * Resolves a reported issue
+	 * Resolves a report as a whole
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} reportId - the id of the report that is getting resolved
@@ -131,19 +188,21 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					reportModel.findOne({ _id: reportId }).exec(next);
+					reportModel.findById(reportId).exec(next);
 				},
 
 				(report, next) => {
 					if (!report) return next("Report not found.");
+
 					report.resolved = true;
+
 					return report.save(err => {
 						if (err) return next(err.message);
-						return next();
+						return next(null, report.song._id);
 					});
 				}
 			],
-			async err => {
+			async (err, songId) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
@@ -156,7 +215,7 @@ export default {
 
 				CacheModule.runJob("PUB", {
 					channel: "report.resolve",
-					value: reportId
+					value: { reportId, songId }
 				});
 
 				this.log("SUCCESS", "REPORTS_RESOLVE", `User "${session.userId}" resolved report "${reportId}".`);
@@ -164,6 +223,65 @@ export default {
 				return cb({
 					status: "success",
 					message: "Successfully resolved Report"
+				});
+			}
+		);
+	}),
+
+	/**
+	 * Resolves/Unresolves an issue within a report
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} reportId - the id of the report that is getting resolved
+	 * @param {string} issueId - the id of the issue within the report
+	 * @param {Function} cb - gets called with the result
+	 */
+	toggleIssue: isAdminRequired(async function toggleIssue(session, reportId, issueId, cb) {
+		const reportModel = await DBModule.runJob("GET_MODEL", { modelName: "report" }, this);
+
+		async.waterfall(
+			[
+				next => {
+					reportModel.findById(reportId).exec(next);
+				},
+
+				(report, next) => {
+					if (!report) return next("Report not found.");
+
+					const issue = report.issues.find(issue => issue._id.toString() === issueId);
+					issue.resolved = !issue.resolved;
+
+					return report.save(err => {
+						if (err) return next(err.message);
+						return next(null, report.song._id);
+					});
+				}
+			],
+			async (err, songId) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"REPORTS_TOGGLE_ISSUE",
+						`Resolving an issue within report "${reportId}" failed by user "${session.userId}". "${err}"`
+					);
+					return cb({ status: "error", message: err });
+				}
+
+				CacheModule.runJob("PUB", {
+					channel: "report.issue.toggle",
+					value: { reportId, issueId, songId }
+				});
+
+				this.log(
+					"SUCCESS",
+					"REPORTS_TOGGLE_ISSUE",
+					`User "${session.userId}" resolved an issue in report "${reportId}".`
+				);
+
+				return cb({
+					status: "success",
+					message: "Successfully resolved issue within report"
 				});
 			}
 		);
@@ -215,10 +333,10 @@ export default {
 							createdAt: Date.now(),
 							...report
 						},
-						err => next(err, song)
+						(err, report) => next(err, report, song)
 					)
 			],
-			async (err, song) => {
+			async (err, report, song) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
@@ -230,7 +348,7 @@ export default {
 				}
 
 				ActivitiesModule.runJob("ADD_ACTIVITY", {
-					userId: report.createdBy,
+					userId: session.userId,
 					type: "song__report",
 					payload: {
 						message: `Reported song <youtubeId>${song.title} by ${song.artists.join(", ")}</youtubeId>`,
@@ -241,7 +359,7 @@ export default {
 
 				CacheModule.runJob("PUB", {
 					channel: "report.create",
-					report
+					value: report
 				});
 
 				this.log("SUCCESS", "REPORTS_CREATE", `User "${session.userId}" created report for "${youtubeId}".`);

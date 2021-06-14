@@ -32,7 +32,10 @@ export default {
 		updateSongField: ({ commit }, data) => commit("updateSongField", data),
 		selectDiscogsInfo: ({ commit }, discogsInfo) =>
 			commit("selectDiscogsInfo", discogsInfo),
-		updateReports: ({ commit }, reports) => commit("updateReports", reports)
+		updateReports: ({ commit }, reports) =>
+			commit("updateReports", reports),
+		resolveReport: ({ commit }, reportId) =>
+			commit("resolveReport", reportId)
 	},
 	mutations: {
 		showTab(state, tab) {
@@ -78,6 +81,11 @@ export default {
 		},
 		updateReports(state, reports) {
 			state.reports = reports;
+		},
+		resolveReport(state, reportId) {
+			state.reports = state.reports.filter(
+				report => report._id !== reportId
+			);
 		}
 	}
 };

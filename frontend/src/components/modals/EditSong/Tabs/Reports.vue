@@ -1,346 +1,267 @@
 <template>
-	<div class="reports-tab">
-		<div class="report-summary">
-			<div class="report-summary-header">
-				<p class="report-summary-title">Summary</p>
-				<div class="report-summary-actions universal-item-actions">
-					<i
-						class="material-icons resolve-all-icon"
-						content="Resolve all"
-						v-tippy
-						>done_all</i
-					>
-				</div>
-			</div>
-			<div class="report-summary-items">
-				<div class="report-summary-item report-summary-item-resolved">
-					<i
-						class="material-icons duration-icon report-summary-item-left-icon"
-						content="Duration"
-						v-tippy
-						>timer</i
-					>
-					<p class="report-summary-item-description">
-						<span class="report-summary-item-description-1"
-							>Video starts too soon</span
-						>
-						<span class="report-summary-item-description-2"
-							>The video ends 3 seconds too late</span
-						>
-						<span class="report-summary-item-description-2"
-							>The video ends 3 seconds too late</span
-						>
-						<span class="report-summary-item-description-2"
-							>The video ends 3 seconds too late</span
-						>
-					</p>
-					<div
-						class="report-summary-item-actions universal-item-actions"
-					>
-						<i
-							class="material-icons resolve-icon"
-							content="Resolve"
-							v-tippy
-							>done</i
-						>
-					</div>
-				</div>
-				<div class="report-summary-item report-summary-item-resolved">
-					<i
-						class="material-icons thumbnail-icon report-summary-item-left-icon"
-						content="Thumbnail"
-						v-tippy
-						>image</i
-					>
-					<p class="report-summary-item-description">
-						<span class="report-summary-item-description-1"
-							>Video starts too soon</span
-						>
-					</p>
-					<div
-						class="report-summary-item-actions universal-item-actions"
-					>
-						<i
-							class="material-icons resolve-icon"
-							content="Resolve"
-							v-tippy
-							>done</i
-						>
-					</div>
-				</div>
-			</div>
+	<div class="reports-tab tabs-container">
+		<div class="tab-selection">
+			<button
+				class="button is-default"
+				ref="sort-by-report-tab"
+				:class="{ selected: tab === 'sort-by-report' }"
+				@click="showTab('sort-by-report')"
+			>
+				Sort by Report
+			</button>
+			<button
+				class="button is-default"
+				ref="sort-by-category-tab"
+				:class="{ selected: tab === 'sort-by-category' }"
+				@click="showTab('sort-by-category')"
+			>
+				Sort by Category
+			</button>
 		</div>
-		<hr />
-		<div class="report-items">
-			<div class="report-item">
-				<div class="report-item-header">
-					<p class="report-item-summary">Duration issues</p>
-					<div class="report-item-actions universal-item-actions">
-						<i
-							class="material-icons resolve-all-icon"
-							content="Resolve all"
-							v-tippy
-							>done_all</i
-						>
-					</div>
-				</div>
-				<div class="report-sub-items">
-					<div class="report-sub-item report-sub-item-resolved">
-						<i
-							class="material-icons duration-icon report-sub-item-left-icon"
-							content="Duration"
-							v-tippy
-							>timer</i
-						>
-						<p class="report-sub-item-description">
-							<span class="report-sub-item-description-1"
-								>Video starts too soon</span
-							>
-						</p>
-						<div
-							class="report-sub-item-actions universal-item-actions"
-						>
-							<i
-								class="material-icons unresolve-icon"
-								content="Unresolve"
-								v-tippy
-								>remove</i
-							>
+
+		<div class="tab" v-if="tab === 'sort-by-category'">
+			<div class="report-items" v-if="reports.length > 0">
+				<div
+					class="report-item"
+					v-for="(issues, category) in sortedByCategory"
+					:key="category"
+				>
+					<div class="report-item-header">
+						<div class="report-item-info">
+							<div class="report-item-icon">
+								<i
+									class="material-icons"
+									:content="category"
+									v-tippy="{ theme: 'info' }"
+								>
+									{{ icons[category] }}
+								</i>
+							</div>
+
+							<div class="report-item-summary">
+								<p class="report-item-summary-title">
+									{{ category }} Issues
+								</p>
+							</div>
 						</div>
-					</div>
-					<div class="report-sub-item report-sub-item-unresolved">
-						<i
-							class="material-icons duration-icon report-sub-item-left-icon"
-							content="Duration"
-							v-tippy
-							>timer</i
-						>
-						<p class="report-sub-item-description">
-							<span class="report-sub-item-description-1"
-								>Video ends too late</span
-							>
-							<span class="report-sub-item-description-2"
-								>The video ends 3 seconds too late</span
-							>
-						</p>
-						<div
-							class="report-sub-item-actions universal-item-actions"
-						>
+
+						<!-- <div class="report-item-actions universal-item-actions">
 							<i
 								class="material-icons resolve-icon"
-								content="Resolve"
+								content="Resolve all"
 								v-tippy
-								>done</i
+								@click="resolve(99)"
 							>
-						</div>
+								done_all
+							</i>
+						</div> -->
 					</div>
-				</div>
-			</div>
-			<div class="report-item">
-				<div class="report-item-header">
-					<p class="report-item-summary">
-						Duration and thumbnail issues
-					</p>
-					<div class="report-item-actions universal-item-actions">
-						<i
-							class="material-icons resolve-all-icon"
-							content="Resolve all"
-							v-tippy
-							>done_all</i
-						>
-					</div>
-				</div>
-				<div class="report-sub-items">
-					<div class="report-sub-item report-sub-item-resolved">
-						<i
-							class="material-icons duration-icon report-sub-item-left-icon"
-							content="Duration"
-							v-tippy
-							>timer</i
-						>
-						<p class="report-sub-item-description">
-							<span class="report-sub-item-description-1"
-								>Video starts too soon</span
-							>
-						</p>
+					<div class="report-sub-items">
 						<div
-							class="report-sub-item-actions universal-item-actions"
+							class="report-sub-item report-sub-item-unresolved"
+							:class="[
+								'report',
+								issue.resolved
+									? 'report-sub-item-resolved'
+									: 'report-sub-item-unresolved'
+							]"
+							v-for="(issue, issueIndex) in issues"
+							:key="issueIndex"
 						>
 							<i
-								class="material-icons unresolve-icon"
-								content="Unresolve"
+								class="material-icons duration-icon report-sub-item-left-icon"
+								:content="issue.category"
 								v-tippy
-								>remove</i
 							>
-						</div>
-					</div>
-					<div class="report-sub-item report-sub-item-unresolved">
-						<i
-							class="material-icons thumbnail-icon report-sub-item-left-icon"
-							content="Thumbnail"
-							v-tippy
-							>image</i
-						>
-						<p class="report-sub-item-description">
-							<span class="report-sub-item-description-1"
-								>Thumbnail is incorrect</span
+								{{ icons[category] }}
+							</i>
+
+							<p class="report-sub-item-info">
+								<span class="report-sub-item-title">
+									{{ issue.title }}
+								</span>
+								<span
+									class="report-sub-item-description"
+									v-if="issue.description"
+								>
+									{{ issue.description }}
+								</span>
+							</p>
+
+							<div
+								class="report-sub-item-actions universal-item-actions"
 							>
-						</p>
-						<div
-							class="report-sub-item-actions universal-item-actions"
-						>
-							<i
-								class="material-icons resolve-icon"
-								content="Resolve"
-								v-tippy
-								>done</i
-							>
+								<i
+									class="material-icons resolve-icon"
+									content="Resolve"
+									v-tippy
+									v-if="!issue.resolved"
+									@click="
+										toggleIssue(issue.reportId, issue._id)
+									"
+								>
+									done
+								</i>
+								<i
+									class="material-icons unresolve-icon"
+									content="Unresolve"
+									v-tippy
+									v-else
+									@click="
+										toggleIssue(issue.reportId, issue._id)
+									"
+								>
+									remove
+								</i>
+							</div>
 						</div>
 					</div>
 				</div>
 			</div>
-			<div class="report-item">
-				<div class="report-item-header">
-					<p class="report-item-summary">Various issues</p>
-					<div class="report-item-actions universal-item-actions">
-						<i
-							class="material-icons resolve-all-icon"
-							content="Resolve all"
-							v-tippy
-							>done_all</i
-						>
-					</div>
-				</div>
-				<div class="report-sub-items">
-					<div class="report-sub-item report-sub-item-unresolved">
-						<i
-							class="material-icons duration-icon report-sub-item-left-icon"
-							content="Duration"
-							v-tippy
-							>timer</i
-						>
-						<p class="report-sub-item-description">
-							<span class="report-sub-item-description-1"
-								>Video starts too soon</span
-							>
-						</p>
-						<div
-							class="report-sub-item-actions universal-item-actions"
-						>
+			<p class="no-reports" v-else>There are no reports for this song.</p>
+		</div>
+
+		<div class="tab" v-if="tab === 'sort-by-report'">
+			<div class="report-items" v-if="reports.length > 0">
+				<div
+					class="report-item"
+					v-for="report in reports"
+					:key="report._id"
+				>
+					<div class="report-item-header">
+						<div class="report-item-info">
+							<div class="report-item-icon">
+								<profile-picture
+									:avatar="report.createdBy.avatar"
+									:name="
+										report.createdBy.name
+											? report.createdBy.name
+											: report.createdBy.username
+									"
+								/>
+							</div>
+
+							<div class="report-item-summary">
+								<p class="report-item-summary-title">
+									Reported by
+									<router-link
+										:to="{
+											path: `/u/${report.createdBy.username}`
+										}"
+										:title="report.createdBy._id"
+										@click="closeModal('editSong')"
+									>
+										{{ report.createdBy.username }}
+									</router-link>
+								</p>
+								<p class="report-item-summary-description">
+									{{
+										formatDistance(
+											parseISO(report.createdAt),
+											new Date(),
+											{
+												addSuffix: true
+											}
+										)
+									}}
+								</p>
+							</div>
+						</div>
+
+						<div class="report-item-actions universal-item-actions">
 							<i
 								class="material-icons resolve-icon"
-								content="Resolve"
+								content="Resolve all"
 								v-tippy
-								>done</i
+								@click="resolve(report._id)"
 							>
+								done_all
+							</i>
 						</div>
 					</div>
-					<div class="report-sub-item report-sub-item-unresolved">
-						<i
-							class="material-icons video-icon report-sub-item-left-icon"
-							content="Video"
-							v-tippy
-							>tv</i
-						>
-						<p class="report-sub-item-description">
-							<span class="report-sub-item-description-1"
-								>Video doesn't exist</span
-							>
-						</p>
+					<div class="report-sub-items">
 						<div
-							class="report-sub-item-actions universal-item-actions"
+							class="report-sub-item report-sub-item-unresolved"
+							:class="[
+								'report',
+								issue.resolved
+									? 'report-sub-item-resolved'
+									: 'report-sub-item-unresolved'
+							]"
+							v-for="(issue, issueIndex) in report.issues"
+							:key="issueIndex"
 						>
 							<i
-								class="material-icons resolve-icon"
-								content="Resolve"
+								class="material-icons duration-icon report-sub-item-left-icon"
+								:content="issue.category"
 								v-tippy
-								>done</i
 							>
-						</div>
-					</div>
-					<div class="report-sub-item report-sub-item-unresolved">
-						<i
-							class="material-icons thumbnail-icon report-sub-item-left-icon"
-							content="Thumbnail"
-							v-tippy
-							>image</i
-						>
-						<p class="report-sub-item-description">
-							<span class="report-sub-item-description-1"
-								>Thumbnail is incorrect</span
+								{{ icons[issue.category] }}
+							</i>
+							<p class="report-sub-item-info">
+								<span class="report-sub-item-title">
+									{{ issue.title }}
+								</span>
+								<span
+									class="report-sub-item-description"
+									v-if="issue.description"
+								>
+									{{ issue.description }}
+								</span>
+							</p>
+
+							<div
+								class="report-sub-item-actions universal-item-actions"
 							>
-						</p>
-						<div
-							class="report-sub-item-actions universal-item-actions"
-						>
-							<i
-								class="material-icons resolve-icon"
-								content="Resolve"
-								v-tippy
-								>done</i
-							>
-						</div>
-					</div>
-					<div class="report-sub-item report-sub-item-unresolved">
-						<i
-							class="material-icons artists-icon report-sub-item-left-icon"
-							content="Artists"
-							v-tippy
-							>record_voice_over</i
-						>
-						<p class="report-sub-item-description">
-							<span class="report-sub-item-description-1"
-								>Artists is missing</span
-							>
-						</p>
-						<div
-							class="report-sub-item-actions universal-item-actions"
-						>
-							<i
-								class="material-icons resolve-icon"
-								content="Resolve"
-								v-tippy
-								>done</i
-							>
-						</div>
-					</div>
-					<div class="report-sub-item report-sub-item-unresolved">
-						<i
-							class="material-icons title-icon report-sub-item-left-icon"
-							content="Title"
-							v-tippy
-							>title</i
-						>
-						<p class="report-sub-item-description">
-							<span class="report-sub-item-description-1"
-								>Title is misspelled</span
-							>
-						</p>
-						<div
-							class="report-sub-item-actions universal-item-actions"
-						>
-							<i
-								class="material-icons resolve-icon"
-								content="Resolve"
-								v-tippy
-								>done</i
-							>
+								<i
+									class="material-icons resolve-icon"
+									content="Resolve"
+									v-tippy
+									v-if="!issue.resolved"
+									@click="toggleIssue(report._id, issue._id)"
+								>
+									done
+								</i>
+								<i
+									class="material-icons unresolve-icon"
+									content="Unresolve"
+									v-tippy
+									v-else
+									@click="toggleIssue(report._id, issue._id)"
+								>
+									remove
+								</i>
+							</div>
 						</div>
 					</div>
 				</div>
 			</div>
+			<p class="no-reports" v-else>There are no reports for this song.</p>
 		</div>
 	</div>
 </template>
 
 <script>
-import { mapState, mapGetters /* , mapActions */ } from "vuex";
+import ProfilePicture from "@/components/ProfilePicture.vue";
 
-// import Toast from "toasters";
+import { mapState, mapGetters, mapActions } from "vuex";
+import { formatDistance, parseISO } from "date-fns";
+import Toast from "toasters";
 
 export default {
+	components: { ProfilePicture },
 	data() {
-		return {};
+		return {
+			tab: "sort-by-report",
+			icons: {
+				duration: "timer",
+				video: "tv",
+				thumbnail: "image",
+				artists: "record_voice_over",
+				title: "title",
+				custom: "lightbulb"
+			}
+		};
 	},
 	computed: {
 		...mapState("modals/editSong", {
@@ -348,104 +269,112 @@ export default {
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
-		})
+		}),
+		sortedByCategory() {
+			const categories = {};
+
+			this.reports.forEach(report =>
+				report.issues.forEach(issue => {
+					if (categories[issue.category])
+						categories[issue.category].push({
+							...issue,
+							reportId: report._id
+						});
+					else
+						categories[issue.category] = [
+							{ ...issue, reportId: report._id }
+						];
+				})
+			);
+
+			return categories;
+		}
 	},
-	mounted() {}
-	// methods: {
-	// 	...mapActions("modals/editSong", ["selectDiscogsInfo"])
-	// }
+	mounted() {
+		this.socket.on("event:admin.report.created", res =>
+			this.reports.unshift(res.data.report)
+		);
+
+		this.socket.on("event:admin.report.resolved", res =>
+			this.resolveReport(res.data.reportId)
+		);
+
+		this.socket.on("event:admin.report.issue.toggled", res =>
+			this.reports.forEach((report, index) => {
+				if (report._id === res.data.reportId) {
+					const issue = this.reports[index].issues.find(
+						issue => issue._id.toString() === res.data.issueId
+					);
+
+					issue.resolved = !issue.resolved;
+				}
+			})
+		);
+	},
+	methods: {
+		showTab(tab) {
+			this.$refs[`${tab}-tab`].scrollIntoView();
+			this.tab = tab;
+		},
+		resolve(reportId) {
+			this.socket.dispatch(
+				"reports.resolve",
+				reportId,
+				res => new Toast(res.message)
+			);
+		},
+		toggleIssue(reportId, issueId) {
+			this.socket.dispatch(
+				"reports.toggleIssue",
+				reportId,
+				issueId,
+				res => {
+					if (res.status !== "success") new Toast(res.message);
+				}
+			);
+		},
+		formatDistance,
+		parseISO,
+		...mapActions("modals/editSong", ["resolveReport"]),
+		...mapActions("modalVisibility", ["closeModal"])
+	}
 };
 </script>
 
 <style lang="scss" scoped>
-.report-summary {
-	background-color: var(--white);
-	border: 0.5px solid var(--primary-color);
-	border-radius: 5px;
-	margin-bottom: 16px;
-	padding: 8px;
-
-	.report-summary-header {
+.tabs-container {
+	.tab-selection {
 		display: flex;
-		margin-bottom: 8px;
+		overflow-x: auto;
+		.button {
+			border-radius: 0;
+			border: 0;
+			text-transform: uppercase;
+			font-size: 14px;
+			color: var(--dark-grey-3);
+			background-color: var(--light-grey-2);
+			flex-grow: 1;
+			height: 32px;
 
-		.report-summary-title {
-			font-weight: 700;
-			flex: 1;
-		}
-
-		.report-summary-actions {
-			height: 24px;
-			margin-right: 4px;
-
-			.resolve-all-icon {
-				color: var(--green);
+			&:not(:first-of-type) {
+				margin-left: 5px;
 			}
 		}
-	}
 
-	.report-summary-items {
-		.report-summary-item {
-			border: 0.5px solid var(--black);
-			margin-top: -1px;
-			line-height: 24px;
-			display: flex;
-			padding: 4px;
-			display: flex;
-
-			&:first-child {
-				border-radius: 3px 3px 0 0;
-			}
-
-			&:last-child {
-				border-radius: 0 0 3px 3px;
-			}
-
-			.report-summary-item-left-icon {
-				margin-right: 8px;
-				margin-top: auto;
-				margin-bottom: auto;
-			}
-
-			.report-summary-item-description {
-				flex: 1;
-				display: flex;
-				flex-direction: column;
-
-				.report-summary-item-description-1 {
-					font-size: 14px;
-				}
-
-				.report-summary-item-description-2::before {
-					content: "- ";
-					position: absolute;
-					left: 0px;
-				}
-
-				.report-summary-item-description-2 {
-					font-size: 12px;
-					line-height: 20px;
-					padding-left: 12px;
-					position: relative;
-				}
-			}
-
-			.report-summary-item-actions {
-				height: 24px;
-				margin-left: 8px;
-				margin-top: auto;
-				margin-bottom: auto;
-
-				i {
-					cursor: pointer;
-				}
-
-				.resolve-icon {
-					color: var(--green);
-				}
-			}
+		.selected {
+			background-color: var(--primary-color) !important;
+			color: var(--white) !important;
+			font-weight: 600;
 		}
 	}
+	.tab {
+		padding: 15px 0;
+		border-radius: 0;
+	}
+}
+
+.no-reports {
+	text-align: center;
 }
 
 .report-items {
@@ -458,20 +387,52 @@ export default {
 
 		.report-item-header {
 			display: flex;
+			align-items: center;
+			justify-content: space-between;
 			margin-bottom: 8px;
+			background-color: var(--light-grey);
+			padding: 5px;
+			border-radius: 5px;
 
-			.report-item-summary {
-				font-weight: 700;
-				flex: 1;
+			.report-item-info {
+				display: flex;
+				align-items: center;
+
+				.report-item-icon {
+					display: flex;
+					align-items: center;
+
+					.profile-picture,
+					i {
+						margin-right: 10px;
+						width: 45px;
+						height: 45px;
+					}
+
+					i {
+						font-size: 30px;
+						display: flex;
+						align-items: center;
+						justify-content: center;
+					}
+				}
+
+				.report-item-summary {
+					.report-item-summary-title {
+						font-size: 14px;
+						text-transform: capitalize;
+					}
+
+					.report-item-summary-description {
+						text-transform: capitalize;
+						font-size: 12px;
+					}
+				}
 			}
 
 			.report-item-actions {
 				height: 24px;
 				margin-right: 4px;
-
-				.resolve-all-icon {
-					color: var(--green);
-				}
 			}
 		}
 
@@ -493,14 +454,11 @@ export default {
 				}
 
 				&.report-sub-item-resolved {
-					.report-sub-item-description {
+					.report-sub-item-description,
+					.report-sub-item-title {
 						text-decoration: line-through;
 					}
 				}
-
-				// &.report-sub-item-unresolved {
-
-				// }
 
 				.report-sub-item-left-icon {
 					margin-right: 8px;
@@ -508,17 +466,18 @@ export default {
 					margin-bottom: auto;
 				}
 
-				.report-sub-item-description {
+				.report-sub-item-info {
 					flex: 1;
 					display: flex;
 					flex-direction: column;
 
-					.report-sub-item-description-1 {
+					.report-sub-item-title {
 						font-size: 14px;
 					}
 
-					.report-sub-item-description-2 {
+					.report-sub-item-description {
 						font-size: 12px;
+						line-height: 16px;
 					}
 				}
 
@@ -527,20 +486,18 @@ export default {
 					margin-left: 8px;
 					margin-top: auto;
 					margin-bottom: auto;
-
-					i {
-						cursor: pointer;
-					}
-
-					.resolve-icon {
-						color: var(--green);
-					}
-
-					.unresolve-icon {
-						color: var(--red);
-					}
 				}
 			}
+		}
+
+		.resolve-icon {
+			color: var(--green);
+			cursor: pointer;
+		}
+
+		.unresolve-icon {
+			color: var(--red);
+			cursor: pointer;
 		}
 	}
 }

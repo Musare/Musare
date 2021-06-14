@@ -10,39 +10,41 @@
 
 				<div class="columns is-multiline">
 					<div
-						v-for="issue in predefinedIssues"
+						v-for="category in predefinedCategories"
 						class="column is-half"
-						:key="issue.category"
+						:key="category.category"
 					>
-						<label class="label">{{ issue.category }}</label>
+						<label class="label">{{ category.category }}</label>
 
 						<p
-							v-for="reason in issue.reasons"
+							v-for="issue in category.issues"
 							class="control checkbox-control"
-							:key="reason.reason"
+							:key="issue.title"
 						>
 							<span class="align-horizontally">
 								<span>
 									<label class="switch">
 										<input
 											type="checkbox"
-											:id="reason.reason"
-											v-model="reason.enabled"
+											:id="issue.title"
+											v-model="issue.enabled"
 										/>
 										<span class="slider round"></span>
 									</label>
 
-									<label :for="reason.reason">
+									<label :for="issue.title">
 										<span></span>
-										<p>{{ reason.reason }}</p>
+										<p>{{ issue.title }}</p>
 									</label>
 								</span>
 
 								<i
 									class="material-icons"
-									content="Provide More Info"
+									content="Provide More info"
 									v-tippy
-									@click="reason.showInfo = !reason.showInfo"
+									@click="
+										issue.showDescription = !issue.showDescription
+									"
 								>
 									info
 								</i>
@@ -51,10 +53,10 @@
 							<input
 								type="text"
 								class="input"
-								v-model="reason.info"
-								v-if="reason.showInfo"
+								v-model="issue.description"
+								v-if="issue.showDescription"
 								placeholder="Provide more information..."
-								@keyup="reason.enabled = true"
+								@keyup="issue.enabled = true"
 							/>
 						</p>
 					</div>
@@ -169,119 +171,119 @@ export default {
 	data() {
 		return {
 			customIssues: [],
-			predefinedIssues: [
+			predefinedCategories: [
 				{
 					category: "video",
-					reasons: [
+					issues: [
 						{
 							enabled: false,
-							reason: "Doesn't exist",
-							info: "",
-							showInfo: false
+							title: "Doesn't exist",
+							description: "",
+							showDescription: false
 						},
 						{
 							enabled: false,
-							reason: "It's private",
-							info: "",
-							showInfo: false
+							title: "It's private",
+							description: "",
+							showDescription: false
 						},
 						{
 							enabled: false,
-							reason: "It's not available in my country",
-							info: "United States",
-							showInfo: false
+							title: "It's not available in my country",
+							description: "",
+							showDescription: false
 						},
 						{
 							enabled: false,
-							reason: "Unofficial",
-							info: "",
-							showInfo: false
+							title: "Unofficial",
+							description: "",
+							showDescription: false
 						}
 					]
 				},
 				{
 					category: "title",
-					reasons: [
+					issues: [
 						{
 							enabled: false,
-							reason: "Incorrect",
-							info: "",
-							showInfo: false
+							title: "Incorrect",
+							description: "",
+							showDescription: false
 						},
 						{
 							enabled: false,
-							reason: "Inappropriate",
-							info: "",
-							showInfo: false
+							title: "Inappropriate",
+							description: "",
+							showDescription: false
 						}
 					]
 				},
 				{
 					category: "duration",
-					reasons: [
+					issues: [
 						{
 							enabled: false,
-							reason: "Skips too soon",
-							info: "",
-							showInfo: false
+							title: "Skips too soon",
+							description: "",
+							showDescription: false
 						},
 						{
 							enabled: false,
-							reason: "Skips too late",
-							info: "",
-							showInfo: false
+							title: "Skips too late",
+							description: "",
+							showDescription: false
 						},
 						{
 							enabled: false,
-							reason: "Starts too soon",
-							info: "",
-							showInfo: false
+							title: "Starts too soon",
+							description: "",
+							showDescription: false
 						},
 						{
 							enabled: false,
-							reason: "Starts too late",
-							info: "",
-							showInfo: false
+							title: "Starts too late",
+							description: "",
+							showDescription: false
 						}
 					]
 				},
 				{
 					category: "artists",
-					reasons: [
+					issues: [
 						{
 							enabled: false,
-							reason: "Incorrect",
-							info: "",
-							showInfo: false
+							title: "Incorrect",
+							description: "",
+							showDescription: false
 						},
 						{
 							enabled: false,
-							reason: "Inappropriate",
-							info: "",
-							showInfo: false
+							title: "Inappropriate",
+							description: "",
+							showDescription: false
 						}
 					]
 				},
 				{
 					category: "thumbnail",
-					reasons: [
+					issues: [
 						{
 							enabled: false,
-							reason: "Incorrect",
-							info: "",
-							showInfo: false
+							title: "Incorrect",
+							description: "",
+							showDescription: false
 						},
 						{
 							enabled: false,
-							reason: "Inappropriate",
-							info: "",
-							showInfo: false
+							title: "Inappropriate",
+							description: "",
+							showDescription: false
 						},
 						{
 							enabled: false,
-							reason: "Doesn't exist",
-							info: "",
-							showInfo: false
+							title: "Doesn't exist",
+							description: "",
+							showDescription: false
 						}
 					]
 				}
@@ -304,22 +306,20 @@ export default {
 			const issues = [];
 
 			// any predefined issues that are enabled
-			this.predefinedIssues.forEach(category =>
-				category.reasons.forEach(reason => {
-					if (reason.enabled) {
-						const info =
-							reason.info === ""
-								? reason.reason
-								: `${reason.reason} - ${reason.info}`;
-
-						issues.push({ category: category.category, info });
-					}
+			this.predefinedCategories.forEach(category =>
+				category.issues.forEach(issue => {
+					if (issue.enabled)
+						issues.push({
+							category: category.category,
+							title: issue.title,
+							description: issue.description
+						});
 				})
 			);
 
 			// any custom issues
 			this.customIssues.forEach(issue =>
-				issues.push({ category: "custom", info: issue })
+				issues.push({ category: "custom", title: issue })
 			);
 
 			this.socket.dispatch(
@@ -342,7 +342,7 @@ export default {
 
 <style lang="scss">
 .edit-report-wrapper .song-item {
-	.song-info {
+	.song- {
 		width: calc(100% - 150px);
 	}
 	.thumbnail {

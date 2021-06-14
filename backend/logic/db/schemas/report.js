@@ -11,10 +11,12 @@ export default {
 				enum: ["custom", "video", "title", "duration", "artists", "thumbnail"],
 				required: true
 			},
-			info: { type: String, required: true }
+			title: { type: String, required: true },
+			description: { type: String, required: false },
+			resolved: { type: Boolean, default: false, required: true }
 		}
 	],
 	createdBy: { type: String, required: true },
 	createdAt: { type: Date, default: Date.now, required: true },
-	documentVersion: { type: Number, default: 4, required: true }
+	documentVersion: { type: Number, default: 5, required: true }
 };
