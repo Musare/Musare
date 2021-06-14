@@ -15,12 +15,12 @@ CacheModule.runJob("SUB", {
 	channel: "report.issue.toggle",
 	cb: data => {
 		WSModule.runJob("EMIT_TO_ROOM", {
-			room: "admin.reports",
+			room: `edit-song.${data.songId}`,
 			args: ["event:admin.report.issue.toggled", { data: { issueId: data.issueId, reportId: data.reportId } }]
 		});
 
 		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `edit-song.${data.songId}`,
+			room: `view-report.${data.reportId}`,
 			args: ["event:admin.report.issue.toggled", { data: { issueId: data.issueId, reportId: data.reportId } }]
 		});
 	}
@@ -36,6 +36,13 @@ CacheModule.runJob("SUB", {
 
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `edit-song.${songId}`,
+			args: ["event:admin.report.resolved", { data: { reportId } }]
+		});
+
+		console.log(`view-report.${reportId}`);
+
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: `view-report.${reportId}`,
 			args: ["event:admin.report.resolved", { data: { reportId } }]
 		});
 	}
@@ -74,16 +81,45 @@ CacheModule.runJob("SUB", {
 
 export default {
 	/**
-	 * Gets all reports
+	 * Gets all reports that haven't been yet resolved
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Function} cb - gets called with the result
 	 */
 	index: isAdminRequired(async function index(session, cb) {
 		const reportModel = await DBModule.runJob("GET_MODEL", { modelName: "report" }, this);
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
 		async.waterfall(
-			[next => reportModel.find({ resolved: false }).sort({ released: "desc" }).exec(next)],
+			[
+				next => reportModel.find({ resolved: false }).sort({ createdAt: "desc" }).exec(next),
+				(_reports, next) => {
+					const reports = [];
+
+					async.each(
+						_reports,
+						(report, cb) => {
+							userModel
+								.findById(report.createdBy)
+								.select({ avatar: -1, name: -1, username: -1 })
+								.exec((err, { avatar, name, username }) => {
+									reports.push({
+										...report._doc,
+										createdBy: {
+											avatar,
+											name,
+											username,
+											_id: report.createdBy
+										}
+									});
+
+									return cb(err);
+								});
+						},
+						err => next(err, reports)
+					);
+				}
+			],
 			async (err, reports) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
@@ -106,17 +142,38 @@ export default {
 	 */
 	findOne: isAdminRequired(async function findOne(session, reportId, cb) {
 		const reportModel = await DBModule.runJob("GET_MODEL", { modelName: "report" }, this);
+		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
-		async.waterfall([next => reportModel.findOne({ _id: reportId }).exec(next)], async (err, report) => {
-			if (err) {
-				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-				this.log("ERROR", "REPORTS_FIND_ONE", `Finding report "${reportId}" failed. "${err}"`);
-				return cb({ status: "error", message: err });
+		async.waterfall(
+			[
+				next => reportModel.findOne({ _id: reportId }).exec(next),
+				(report, next) =>
+					userModel
+						.findById(report.createdBy)
+						.select({ avatar: -1, name: -1, username: -1 })
+						.exec((err, { avatar, name, username }) =>
+							next(err, {
+								...report._doc,
+								createdBy: {
+									avatar,
+									name,
+									username,
+									_id: report.createdBy
+								}
+							})
+						)
+			],
+			async (err, report) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log("ERROR", "REPORTS_FIND_ONE", `Finding report "${reportId}" failed. "${err}"`);
+					return cb({ status: "error", message: err });
+				}
+
+				this.log("SUCCESS", "REPORTS_FIND_ONE", `Finding report "${reportId}" successful.`);
+				return cb({ status: "success", data: { report } });
 			}
-
-			this.log("SUCCESS", "REPORTS_FIND_ONE", `Finding report "${reportId}" successful.`);
-			return cb({ status: "success", data: { report } });
-		});
+		);
 	}),
 
 	/**

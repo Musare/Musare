@@ -44,17 +44,6 @@
 								</p>
 							</div>
 						</div>
-
-						<!-- <div class="report-item-actions universal-item-actions">
-							<i
-								class="material-icons resolve-icon"
-								content="Resolve all"
-								v-tippy
-								@click="resolve(99)"
-							>
-								done_all
-							</i>
-						</div> -->
 					</div>
 					<div class="report-sub-items">
 						<div
@@ -299,7 +288,7 @@ export default {
 			this.resolveReport(res.data.reportId)
 		);
 
-		this.socket.on("event:admin.report.issue.toggled", res =>
+		this.socket.on("event:admin.report.issue.toggled", res => {
 			this.reports.forEach((report, index) => {
 				if (report._id === res.data.reportId) {
 					const issue = this.reports[index].issues.find(
@@ -308,8 +297,8 @@ export default {
 
 					issue.resolved = !issue.resolved;
 				}
-			})
-		);
+			});
+		});
 	},
 	methods: {
 		showTab(tab) {
@@ -382,8 +371,11 @@ export default {
 		background-color: var(--white);
 		border: 0.5px solid var(--primary-color);
 		border-radius: 5px;
-		margin-bottom: 16px;
 		padding: 8px;
+
+		&:not(:first-of-type) {
+			margin-bottom: 16px;
+		}
 
 		.report-item-header {
 			display: flex;

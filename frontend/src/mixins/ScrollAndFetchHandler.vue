@@ -22,8 +22,6 @@ export default {
 	},
 	unmounted() {
 		clearInterval(this.interval);
-	},
-	onUnmounted() {
 		window.removeEventListener("scroll", this.handleScroll);
 	},
 	methods: {

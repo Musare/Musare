@@ -112,6 +112,7 @@ export default {
 				if (!(event.type in this.listeners)) return true; // event type doesn't exist
 
 				const stack = this.listeners[event.type].slice();
+
 				stack.forEach(element => element.cb.call(this, event));
 
 				return !event.defaultPrevented;

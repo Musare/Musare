@@ -141,7 +141,9 @@ const modules = {
 	},
 	reports: {
 		namespaced: true,
-		state: {},
+		state: {
+			reports: []
+		},
 		getters: {},
 		actions: {
 			/* eslint-disable-next-line no-unused-vars */
@@ -152,6 +154,9 @@ const modules = {
 						.then(res => resolve(res))
 						.catch(err => reject(new Error(err.message)));
 				});
+			},
+			indexReports({ commit }, reports) {
+				commit("indexReports", reports);
 			}
 		},
 		mutations: {}

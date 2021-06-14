@@ -943,11 +943,7 @@ export default {
 		clearInterval(this.interval);
 		clearInterval(this.activityWatchVideoDataInterval);
 
-		this.socket.dispatch(
-			"apis.leaveRoom",
-			`edit-song.${this.song._id}`,
-			() => {}
-		);
+		this.socket.dispatch("apis.leaveRoom", `edit-song.${this.song._id}`);
 
 		const shortcutNames = [
 			"editSong.pauseResume",

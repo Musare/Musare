@@ -6,9 +6,8 @@
 				<thead>
 					<tr>
 						<td>Song ID</td>
-						<td>Author</td>
-						<td>Time of report</td>
-						<td>Issues</td>
+						<td>Summary</td>
+						<td>Categories Included</td>
 						<td>Options</td>
 					</tr>
 				</thead>
@@ -16,54 +15,99 @@
 					<tr v-for="report in reports" :key="report._id">
 						<td>
 							<span>
-								{{ report.song.youtubeId }}
+								<a
+									:href="
+										'https://www.youtube.com/watch?v=' +
+											`${report.song.youtubeId}`
+									"
+									target="_blank"
+								>
+									{{ report.song.youtubeId }}</a
+								>
 								<br />
 								{{ report.song._id }}
 							</span>
 						</td>
 						<td>
-							<user-id-to-username
-								:user-id="report.createdBy"
-								:link="true"
-							/>
+							<div class="report-item-header">
+								<div class="report-item-info">
+									<div class="report-item-icon">
+										<profile-picture
+											:avatar="report.createdBy.avatar"
+											:name="
+												report.createdBy.name
+													? report.createdBy.name
+													: report.createdBy.username
+											"
+										/>
+									</div>
+
+									<div class="report-item-summary">
+										<p class="report-item-summary-title">
+											Reported by
+											<router-link
+												:to="{
+													path: `/u/${report.createdBy.username}`
+												}"
+												:title="report.createdBy._id"
+											>
+												{{ report.createdBy.username }}
+											</router-link>
+										</p>
+										<p
+											class="report-item-summary-description"
+										>
+											{{
+												formatDistance(
+													new Date(report.createdAt),
+													new Date(),
+													{
+														addSuffix: true
+													}
+												)
+											}}
+										</p>
+									</div>
+								</div>
+							</div>
 						</td>
-						<td>
-							<span
-								:content="report.createdAt"
-								v-tippy="{ theme: 'info' }"
-								>{{
-									formatDistance(
-										new Date(report.createdAt),
-										new Date(),
-										{ addSuffix: true }
-									)
-								}}</span
-							>
-						</td>
-						<td>
+						<td id="categories-column">
 							<ul>
 								<li
-									v-for="(issue, index) in report.issues"
-									:key="index"
+									v-for="category in getCategories(
+										report.issues
+									)"
+									:key="category"
 								>
-									<strong> {{ issue.category }}:</strong>
-									{{ issue.info }}
+									{{ category }}
 								</li>
 							</ul>
 						</td>
-						<td>
-							<a
-								class="button is-warning"
-								href="#"
-								@click="view(report)"
-								>View</a
-							>
+						<td id="options-column">
 							<a
 								class="button is-primary"
 								href="#"
-								@click="resolve(report._id)"
-								>Resolve</a
+								@click="view(report)"
+								content="Expand"
+								v-tippy
 							>
+								<i class="material-icons icon-with-button">
+									open_in_full
+								</i>
+								Expand
+							</a>
+							<a
+								class="button is-success "
+								href="#"
+								@click="resolve(report._id)"
+								content="Resolve"
+								v-tippy
+							>
+								<i class="material-icons icon-with-button">
+									done_all
+								</i>
+								Resolve
+							</a>
 						</td>
 					</tr>
 				</tbody>
@@ -84,7 +128,7 @@ import { formatDistance } from "date-fns";
 import { defineAsyncComponent } from "vue";
 
 import Toast from "toasters";
-import UserIdToUsername from "@/components/UserIdToUsername.vue";
+import ProfilePicture from "@/components/ProfilePicture.vue";
 import ws from "@/ws";
 
 export default {
@@ -92,7 +136,7 @@ export default {
 		ViewReport: defineAsyncComponent(() =>
 			import("@/components/modals/ViewReport.vue")
 		),
-		UserIdToUsername
+		ProfilePicture
 	},
 	data() {
 		return {
@@ -117,31 +161,40 @@ export default {
 		});
 
 		this.socket.on("event:admin.report.resolved", res => {
-			console.log("report resolved event", res);
 			this.reports = this.reports.filter(report => {
 				return report._id !== res.data.reportId;
 			});
 		});
 
 		this.socket.on("event:admin.report.created", res =>
-			this.reports.push(res.data.report)
+			this.reports.unshift(res.data.report)
 		);
 
-		if (this.$route.query.id) {
-			this.socket.dispatch(
-				"reports.findOne",
-				this.$route.query.id,
-				res => {
-					if (res.status === "success") this.view(res.data.report);
-					else new Toast("Report with that ID not found");
-				}
-			);
-		}
+		// if (this.$route.query.id) {
+		// 	this.socket.dispatch(
+		// 		"reports.findOne",
+		// 		this.$route.query.id,
+		// 		res => {
+		// 			if (res.status === "success") this.view(res.data.report);
+		// 			else new Toast("Report with that ID not found");
+		// 		}
+		// 	);
+		// }
 	},
 	methods: {
 		formatDistance,
 		init() {
 			this.socket.dispatch("apis.joinAdminRoom", "reports", () => {});
+		},
+		getCategories(issues) {
+			const categories = [];
+
+			issues.forEach(issue => {
+				if (categories.indexOf(issue.category) === -1)
+					categories.push(issue.category);
+			});
+
+			return categories;
 		},
 		view(report) {
 			this.viewingReportId = report._id;
@@ -188,8 +241,14 @@ export default {
 	}
 }
 
-.tag:not(:last-child) {
-	margin-right: 5px;
+#options-column {
+	a:not(:last-of-type) {
+		margin-right: 5px;
+	}
+}
+
+#categories-column {
+	text-transform: capitalize;
 }
 
 td {
@@ -200,5 +259,51 @@ td {
 
 li {
 	list-style: inside;
+}
+
+.report-item-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 8px;
+	background-color: var(--light-grey);
+	padding: 5px;
+	border-radius: 5px;
+
+	.report-item-info {
+		display: flex;
+		align-items: center;
+
+		.report-item-icon {
+			display: flex;
+			align-items: center;
+
+			.profile-picture,
+			i {
+				margin-right: 10px;
+				width: 45px;
+				height: 45px;
+			}
+
+			i {
+				font-size: 30px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+			}
+		}
+
+		.report-item-summary {
+			.report-item-summary-title {
+				font-size: 14px;
+				text-transform: capitalize;
+			}
+
+			.report-item-summary-description {
+				text-transform: capitalize;
+				font-size: 12px;
+			}
+		}
+	}
 }
 </style>

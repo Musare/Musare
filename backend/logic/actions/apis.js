@@ -119,20 +119,21 @@ export default {
 	 * Joins a room
 	 *
 	 * @param {object} session - user session
-	 * @param {string} page - the room to join
+	 * @param {string} room - the room to join
 	 * @param {Function} cb - callback
 	 */
-	joinRoom(session, page, cb) {
+	joinRoom(session, room, cb) {
 		if (
-			page === "home" ||
-			page === "news" ||
-			page.startsWith("profile.") ||
-			page.startsWith("manage-station.") ||
-			page.startsWith("edit-song.")
+			room === "home" ||
+			room === "news" ||
+			room.startsWith("profile.") ||
+			room.startsWith("manage-station.") ||
+			room.startsWith("edit-song.") ||
+			room.startsWith("view-report.")
 		) {
 			WSModule.runJob("SOCKET_JOIN_ROOM", {
 				socketId: session.socketId,
-				room: page
+				room
 			})
 				.then(() => {})
 				.catch(err => {
@@ -155,7 +156,8 @@ export default {
 			room === "home" ||
 			room.startsWith("profile.") ||
 			room.startsWith("manage-station.") ||
-			room.startsWith("edit-song.")
+			room.startsWith("edit-song.") ||
+			room.startsWith("view-report.")
 		) {
 			WSModule.runJob("SOCKET_LEAVE_ROOM", {
 				socketId: session.socketId,
