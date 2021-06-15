@@ -39,8 +39,6 @@ CacheModule.runJob("SUB", {
 			args: ["event:admin.report.resolved", { data: { reportId } }]
 		});
 
-		console.log(`view-report.${reportId}`);
-
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `view-report.${reportId}`,
 			args: ["event:admin.report.resolved", { data: { reportId } }]

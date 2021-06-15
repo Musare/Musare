@@ -110,19 +110,15 @@
 			</div>
 		</template>
 		<template #footer v-if="report && report._id">
-			<a
-				class="button is-primary"
-				:href="`/admin/songs?songId=${report.song._id}`"
-				target="_blank"
-			>
+			<a class="button is-primary" @click="openSong()">
 				<i
 					class="material-icons icon-with-button"
-					content="Open Song in New Tab"
+					content="Edit Song"
 					v-tippy
 				>
-					open_in_new
+					edit
 				</i>
-				Open Song
+				Edit Song
 			</a>
 			<a class="button is-success" href="#" @click="resolve(report._id)">
 				<i
@@ -229,8 +225,13 @@ export default {
 				}
 			);
 		},
+		openSong() {
+			this.editSong({ _id: this.report.song._id });
+			this.openModal("editSong");
+		},
 		...mapActions("admin/reports", ["indexReports", "resolveReport"]),
-		...mapActions("modalVisibility", ["closeModal"])
+		...mapActions("modals/editSong", ["editSong"]),
+		...mapActions("modalVisibility", ["closeModal", "openModal"])
 	}
 };
 </script>

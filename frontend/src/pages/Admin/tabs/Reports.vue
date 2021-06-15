@@ -5,29 +5,14 @@
 			<table class="table is-striped">
 				<thead>
 					<tr>
-						<td>Song ID</td>
 						<td>Summary</td>
+						<td>YouTube / Song ID</td>
 						<td>Categories Included</td>
 						<td>Options</td>
 					</tr>
 				</thead>
 				<tbody>
 					<tr v-for="report in reports" :key="report._id">
-						<td>
-							<span>
-								<a
-									:href="
-										'https://www.youtube.com/watch?v=' +
-											`${report.song.youtubeId}`
-									"
-									target="_blank"
-								>
-									{{ report.song.youtubeId }}</a
-								>
-								<br />
-								{{ report.song._id }}
-							</span>
-						</td>
 						<td>
 							<div class="report-item-header">
 								<div class="report-item-info">
@@ -71,6 +56,22 @@
 								</div>
 							</div>
 						</td>
+						<td>
+							<span>
+								<a
+									:href="
+										'https://www.youtube.com/watch?v=' +
+											`${report.song.youtubeId}`
+									"
+									target="_blank"
+								>
+									{{ report.song.youtubeId }}</a
+								>
+								<br />
+								{{ report.song._id }}
+							</span>
+						</td>
+
 						<td id="categories-column">
 							<ul>
 								<li
@@ -119,6 +120,8 @@
 			:report-id="viewingReportId"
 			sector="admin"
 		/>
+
+		<edit-song v-if="modals.editSong" song-type="songs" />
 	</div>
 </template>
 
@@ -135,6 +138,9 @@ export default {
 	components: {
 		ViewReport: defineAsyncComponent(() =>
 			import("@/components/modals/ViewReport.vue")
+		),
+		EditSong: defineAsyncComponent(() =>
+			import("@/components/modals/EditSong/index.vue")
 		),
 		ProfilePicture
 	},

@@ -280,25 +280,34 @@ export default {
 		}
 	},
 	mounted() {
-		this.socket.on("event:admin.report.created", res =>
-			this.reports.unshift(res.data.report)
+		this.socket.on(
+			"event:admin.report.created",
+			res => this.reports.unshift(res.data.report),
+			{ modal: "editSong" }
 		);
 
-		this.socket.on("event:admin.report.resolved", res =>
-			this.resolveReport(res.data.reportId)
+		this.socket.on(
+			"event:admin.report.resolved",
+			res => this.resolveReport(res.data.reportId),
+			{ modal: "editSong" }
 		);
 
-		this.socket.on("event:admin.report.issue.toggled", res => {
-			this.reports.forEach((report, index) => {
-				if (report._id === res.data.reportId) {
-					const issue = this.reports[index].issues.find(
-						issue => issue._id.toString() === res.data.issueId
-					);
+		this.socket.on(
+			"event:admin.report.issue.toggled",
+			res => {
+				console.log("being toggled twice?");
+				this.reports.forEach((report, index) => {
+					if (report._id === res.data.reportId) {
+						const issue = this.reports[index].issues.find(
+							issue => issue._id.toString() === res.data.issueId
+						);
 
-					issue.resolved = !issue.resolved;
-				}
-			});
-		});
+						issue.resolved = !issue.resolved;
+					}
+				});
+			},
+			{ modal: "editSong" }
+		);
 	},
 	methods: {
 		showTab(tab) {
