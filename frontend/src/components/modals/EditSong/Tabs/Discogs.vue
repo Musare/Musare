@@ -109,6 +109,12 @@
 						Data quality:
 						<span>{{ result.dataQuality }}</span>
 					</p>
+					<button
+						class="button is-primary"
+						@click="importAlbum(result)"
+					>
+						Import album
+					</button>
 					<div class="tracks">
 						<div
 							class="track"
@@ -358,7 +364,7 @@ export default {
 		}
 
 		.bottom-container-field:last-of-type {
-			margin-bottom: 0;
+			margin-bottom: 8px;
 		}
 	}
 

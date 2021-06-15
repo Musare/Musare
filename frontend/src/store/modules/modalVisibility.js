@@ -16,6 +16,7 @@ const state = {
 		editNews: false,
 		editUser: false,
 		editSong: false,
+		importAlbum: false,
 		viewReport: false,
 		viewPunishment: false
 	},
@@ -32,7 +33,6 @@ const actions = {
 			});
 
 		commit("closeModal", modal);
-		commit("closeCurrentModal");
 	},
 	openModal: ({ commit }, modal) => {
 		commit("openModal", modal);
