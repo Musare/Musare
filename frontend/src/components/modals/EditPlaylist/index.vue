@@ -36,12 +36,23 @@
 							</button>
 							<button
 								class="button is-default"
-								:class="{ selected: tab === 'youtube' }"
-								ref="youtube-tab"
-								@click="showTab('youtube')"
+								:class="{ selected: tab === 'add-songs' }"
+								ref="add-songs-tab"
+								@click="showTab('add-songs')"
 								v-if="isEditable()"
 							>
-								YouTube
+								Add Songs
+							</button>
+							<button
+								class="button is-default"
+								:class="{
+									selected: tab === 'import-playlists'
+								}"
+								ref="import-playlists-tab"
+								@click="showTab('import-playlists')"
+								v-if="isEditable()"
+							>
+								Import Playlists
 							</button>
 						</div>
 						<settings
@@ -53,18 +64,17 @@
 									(playlist.type === 'genre' && isAdmin())
 							"
 						/>
-						<youtube
+						<add-songs
 							class="tab"
-							v-show="tab === 'youtube'"
+							v-show="tab === 'add-songs'"
+							v-if="isEditable()"
+						/>
+						<import-playlists
+							class="tab"
+							v-show="tab === 'import-playlists'"
 							v-if="isEditable()"
 						/>
 					</div>
-
-					<!--
-
-				<div
-					id="import-from-youtube-section"
-					 -->
 				</div>
 
 				<div id="second-column">
@@ -247,12 +257,21 @@ import Modal from "../../Modal.vue";
 import SongItem from "../../SongItem.vue";
 
 import Settings from "./Tabs/Settings.vue";
-import Youtube from "./Tabs/Youtube.vue";
+import AddSongs from "./Tabs/AddSongs.vue";
+import ImportPlaylists from "./Tabs/ImportPlaylists.vue";
 
 import utils from "../../../../js/utils";
 
 export default {
-	components: { Modal, draggable, Confirm, SongItem, Settings, Youtube },
+	components: {
+		Modal,
+		draggable,
+		Confirm,
+		SongItem,
+		Settings,
+		AddSongs,
+		ImportPlaylists
+	},
 	data() {
 		return {
 			utils,
@@ -601,7 +620,8 @@ export default {
 	.edit-playlist-modal .edit-playlist-modal-inner-container {
 		height: auto !important;
 
-		/deep/ .section {
+		/deep/ .section,
+		#tab-selection {
 			max-width: 100% !important;
 		}
 	}
@@ -612,8 +632,9 @@ export default {
 
 	#tab-selection {
 		display: flex;
-		overflow-x: auto;
+		// overflow-x: auto;
 		margin: 24px 10px 0 10px;
+		max-width: 600px;
 
 		.button {
 			border-radius: 5px 5px 0 0;
@@ -722,6 +743,12 @@ export default {
 		height: 100%;
 		overflow-y: auto;
 		flex-grow: 1;
+
+		#rearrange-songs-section {
+			.scrollable-list:not(:last-of-type) {
+				margin-bottom: 10px;
+			}
+		}
 	}
 }
 </style>
