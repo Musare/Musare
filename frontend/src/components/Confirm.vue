@@ -6,6 +6,7 @@
 		theme="confirm"
 		ref="confirm"
 		trigger="click"
+		:append-to="body"
 		@onHide="clickedOnce = false"
 		@hide="delayedHide()"
 	>
@@ -31,9 +32,11 @@ export default {
 	emits: ["confirm"],
 	data() {
 		return {
-			clickedOnce: false
+			clickedOnce: false,
+			body: document.body
 		};
 	},
+
 	methods: {
 		// eslint-disable-next-line no-unused-vars
 		confirm(event) {
@@ -49,6 +52,7 @@ export default {
 
 			this.clickedOnce = false;
 			this.$emit("confirm");
+			this.$refs.confirm.tippy.hide();
 		},
 		delayedHide() {
 			setTimeout(() => {
