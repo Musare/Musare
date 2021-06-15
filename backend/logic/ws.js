@@ -326,6 +326,35 @@ class _WSModule extends CoreClass {
 	}
 
 	/**
+	 * Emits arguments to any sockets that are in specified rooms
+	 *
+	 * @param {object} payload - object that contains the payload
+	 * @param {Array} payload.rooms - array of strings with the name of each room e.g. ["station-page", "song.1234"]
+	 * @param {object} payload.args - any arguments to be emitted to the sockets in the specific room
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	async EMIT_TO_ROOMS(payload) {
+		return new Promise(resolve =>
+			async.each(
+				payload.rooms,
+				(room, next) => {
+					// if the room exists
+					if (WSModule.rooms[room] && WSModule.rooms[room].length > 0)
+						return WSModule.rooms[room].forEach(async socketId => {
+							// get every socketId (and thus every socket) in the room, and dispatch to each
+							const socket = await WSModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId }, this);
+							socket.dispatch(...payload.args);
+							return next();
+						});
+
+					return next();
+				},
+				() => resolve()
+			)
+		);
+	}
+
+	/**
 	 * Allows a socket to join a 'song' room
 	 *
 	 * @param {object} payload - object that contains the payload

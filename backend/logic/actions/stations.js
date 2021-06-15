@@ -168,17 +168,12 @@ CacheModule.runJob("SUB", {
 	cb: data => {
 		const { stationId, playlistId } = data;
 
-		PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }).then(playlist => {
-			WSModule.runJob("EMIT_TO_ROOM", {
-				room: `station.${stationId}`,
+		PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }).then(playlist =>
+			WSModule.runJob("EMIT_TO_ROOMS", {
+				rooms: [`station.${stationId}`, `manage-station.${stationId}`],
 				args: ["event:station.includedPlaylist", { data: { stationId, playlist } }]
-			});
-
-			WSModule.runJob("EMIT_TO_ROOM", {
-				room: `manage-station.${stationId}`,
-				args: ["event:station.includedPlaylist", { data: { stationId, playlist } }]
-			});
-		});
+			})
+		);
 	}
 });
 
@@ -187,17 +182,12 @@ CacheModule.runJob("SUB", {
 	cb: data => {
 		const { stationId, playlistId } = data;
 
-		PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }).then(playlist => {
-			WSModule.runJob("EMIT_TO_ROOM", {
-				room: `station.${stationId}`,
+		PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }).then(playlist =>
+			WSModule.runJob("EMIT_TO_ROOMS", {
+				rooms: [`station.${stationId}`, `manage-station.${stationId}`],
 				args: ["event:station.excludedPlaylist", { data: { stationId, playlist } }]
-			});
-
-			WSModule.runJob("EMIT_TO_ROOM", {
-				room: `manage-station.${stationId}`,
-				args: ["event:station.excludedPlaylist", { data: { stationId, playlist } }]
-			});
-		});
+			})
+		);
 	}
 });
 
@@ -205,13 +195,8 @@ CacheModule.runJob("SUB", {
 	channel: "station.removedIncludedPlaylist",
 	cb: data => {
 		const { stationId, playlistId } = data;
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `station.${stationId}`,
-			args: ["event:station.removedIncludedPlaylist", { data: { stationId, playlistId } }]
-		});
-
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `manage-station.${stationId}`,
+		WSModule.runJob("EMIT_TO_ROOMS", {
+			rooms: [`station.${stationId}`, `manage-station.${stationId}`],
 			args: ["event:station.removedIncludedPlaylist", { data: { stationId, playlistId } }]
 		});
 	}
@@ -221,13 +206,8 @@ CacheModule.runJob("SUB", {
 	channel: "station.removedExcludedPlaylist",
 	cb: data => {
 		const { stationId, playlistId } = data;
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `station.${stationId}`,
-			args: ["event:station.removedExcludedPlaylist", { data: { stationId, playlistId } }]
-		});
-
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `manage-station.${stationId}`,
+		WSModule.runJob("EMIT_TO_ROOMS", {
+			rooms: [`station.${stationId}`, `manage-station.${stationId}`],
 			args: ["event:station.removedExcludedPlaylist", { data: { stationId, playlistId } }]
 		});
 	}
@@ -366,13 +346,8 @@ CacheModule.runJob("SUB", {
 			});
 		});
 
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `station.${stationId}`,
-			args: ["event:station.name.updated", { data: { stationId, name } }]
-		});
-
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `manage-station.${stationId}`,
+		WSModule.runJob("EMIT_TO_ROOMS", {
+			rooms: [`station.${stationId}`, `manage-station.${stationId}`],
 			args: ["event:station.name.updated", { data: { stationId, name } }]
 		});
 	}
@@ -395,13 +370,8 @@ CacheModule.runJob("SUB", {
 			})
 		);
 
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `station.${stationId}`,
-			args: ["event:station.displayName.updated", { data: { stationId, displayName } }]
-		});
-
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `manage-station.${stationId}`,
+		WSModule.runJob("EMIT_TO_ROOMS", {
+			rooms: [`station.${stationId}`, `manage-station.${stationId}`],
 			args: ["event:station.displayName.updated", { data: { stationId, displayName } }]
 		});
 	}
@@ -424,13 +394,8 @@ CacheModule.runJob("SUB", {
 			})
 		);
 
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `station.${stationId}`,
-			args: ["event:station.description.updated", { data: { stationId, description } }]
-		});
-
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `manage-station.${stationId}`,
+		WSModule.runJob("EMIT_TO_ROOMS", {
+			rooms: [`station.${stationId}`, `manage-station.${stationId}`],
 			args: ["event:station.description.updated", { data: { stationId, description } }]
 		});
 	}
@@ -485,13 +450,8 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "station.repositionSongInQueue",
 	cb: res => {
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `station.${res.stationId}`,
-			args: ["event:station.queue.song.repositioned", { data: { song: res.song } }]
-		});
-
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `manage-station.${res.stationId}`,
+		WSModule.runJob("EMIT_TO_ROOMS", {
+			rooms: [`station.${res.stationId}`, `manage-station.${res.stationId}`],
 			args: ["event:station.queue.song.repositioned", { data: { song: res.song } }]
 		});
 	}

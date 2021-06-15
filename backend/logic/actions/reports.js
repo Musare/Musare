@@ -13,37 +13,20 @@ const ActivitiesModule = moduleManager.modules.activities;
 
 CacheModule.runJob("SUB", {
 	channel: "report.issue.toggle",
-	cb: data => {
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `edit-song.${data.songId}`,
+	cb: data =>
+		WSModule.runJob("EMIT_TO_ROOMS", {
+			rooms: [`edit-song.${data.songId}`, `view-report.${data.reportId}`],
 			args: ["event:admin.report.issue.toggled", { data: { issueId: data.issueId, reportId: data.reportId } }]
-		});
-
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `view-report.${data.reportId}`,
-			args: ["event:admin.report.issue.toggled", { data: { issueId: data.issueId, reportId: data.reportId } }]
-		});
-	}
+		})
 });
 
 CacheModule.runJob("SUB", {
 	channel: "report.resolve",
-	cb: ({ reportId, songId }) => {
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: "admin.reports",
+	cb: ({ reportId, songId }) =>
+		WSModule.runJob("EMIT_TO_ROOMS", {
+			rooms: ["admin.reports", `edit-song.${songId}`, `view-report.${reportId}`],
 			args: ["event:admin.report.resolved", { data: { reportId } }]
-		});
-
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `edit-song.${songId}`,
-			args: ["event:admin.report.resolved", { data: { reportId } }]
-		});
-
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `view-report.${reportId}`,
-			args: ["event:admin.report.resolved", { data: { reportId } }]
-		});
-	}
+		})
 });
 
 CacheModule.runJob("SUB", {
@@ -63,13 +46,8 @@ CacheModule.runJob("SUB", {
 						_id: report.createdBy
 					};
 
-					WSModule.runJob("EMIT_TO_ROOM", {
-						room: "admin.reports",
-						args: ["event:admin.report.created", { data: { report } }]
-					});
-
-					WSModule.runJob("EMIT_TO_ROOM", {
-						room: `edit-song.${report.song._id}`,
+					WSModule.runJob("EMIT_TO_ROOMS", {
+						rooms: ["admin.reports", `edit-song.${report.song._id}`],
 						args: ["event:admin.report.created", { data: { report } }]
 					});
 				});

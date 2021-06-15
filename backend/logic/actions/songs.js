@@ -20,17 +20,12 @@ CacheModule.runJob("SUB", {
 			modelName: "song"
 		});
 
-		songModel.findOne({ _id: songId }, (err, song) => {
-			WSModule.runJob("EMIT_TO_ROOM", {
-				room: "admin.unverifiedSongs",
+		songModel.findOne({ _id: songId }, (err, song) =>
+			WSModule.runJob("EMIT_TO_ROOMS", {
+				rooms: ["admin.unverifiedSongs", `edit-song.${songId}`],
 				args: ["event:admin.unverifiedSong.created", { data: { song } }]
-			});
-
-			WSModule.runJob("EMIT_TO_ROOM", {
-				room: `edit-song.${songId}`,
-				args: ["event:admin.unverifiedSong.created", { data: { song } }]
-			});
-		});
+			})
+		);
 	}
 });
 
@@ -64,17 +59,12 @@ CacheModule.runJob("SUB", {
 	channel: "song.newVerifiedSong",
 	cb: async songId => {
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
-		songModel.findOne({ _id: songId }, (err, song) => {
-			WSModule.runJob("EMIT_TO_ROOM", {
-				room: "admin.songs",
+		songModel.findOne({ _id: songId }, (err, song) =>
+			WSModule.runJob("EMIT_TO_ROOMS", {
+				rooms: ["admin.songs", `edit-song.${songId}`],
 				args: ["event:admin.verifiedSong.created", { data: { song } }]
-			});
-
-			WSModule.runJob("EMIT_TO_ROOM", {
-				room: `edit-song.${songId}`,
-				args: ["event:admin.verifiedSong.created", { data: { song } }]
-			});
-		});
+			})
+		);
 	}
 });
 
@@ -108,17 +98,12 @@ CacheModule.runJob("SUB", {
 			modelName: "song"
 		});
 
-		songModel.findOne({ _id: songId }, (err, song) => {
-			WSModule.runJob("EMIT_TO_ROOM", {
-				room: "admin.hiddenSongs",
+		songModel.findOne({ _id: songId }, (err, song) =>
+			WSModule.runJob("EMIT_TO_ROOMS", {
+				rooms: ["admin.hiddenSongs", `edit-song.${songId}`],
 				args: ["event:admin.hiddenSong.created", { data: { song } }]
-			});
-
-			WSModule.runJob("EMIT_TO_ROOM", {
-				room: `edit-song.${songId}`,
-				args: ["event:admin.hiddenSong.created", { data: { song } }]
-			});
-		});
+			})
+		);
 	}
 });
 
