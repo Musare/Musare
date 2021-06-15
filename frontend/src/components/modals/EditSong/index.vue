@@ -332,7 +332,10 @@
 				</div>
 			</template>
 			<template #footer>
-				<save-button ref="saveButton" @clicked="save(song, false, false)" />
+				<save-button
+					ref="saveButton"
+					@clicked="save(song, false, false)"
+				/>
 				<save-button
 					ref="saveAndCloseButton"
 					type="save-and-close"

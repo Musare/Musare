@@ -695,7 +695,7 @@ export default {
 					"SONGS_REQUEST",
 					`Requesting song "${youtubeId}" failed for user ${session.userId}. "${err}"`
 				);
-				return cb({ status: "error", message: err, song: (returnSong && _err.data) ? _err.data.song : null });
+				return cb({ status: "error", message: err, song: returnSong && _err.data ? _err.data.song : null });
 			});
 	}),
 
@@ -956,8 +956,10 @@ export default {
 						},
 						() => {
 							if (returnSongs)
-								songs = Object.keys(songs).sort().map(key => songs[key]);
-							
+								songs = Object.keys(songs)
+									.sort()
+									.map(key => songs[key]);
+
 							next(null, { successful, failed, alreadyInDatabase, songs });
 						}
 					);

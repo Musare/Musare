@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<modal title="Import Album" class="import-album-modal">
-			<div slot="body" class="import-album-modal-body">
+			<template #body>
 				<div class="search-discogs-album">
 					<p class="control is-expanded">
 						<label class="label">Search query</label>
@@ -210,18 +210,18 @@
 						v-if="playlistSongs.length > 0"
 						group="songs"
 						v-model="playlistSongs"
+						item-key="_id"
 						@start="drag = true"
 						@end="drag = false"
 						@change="log"
 					>
-						<!-- <transition-group> -->
-						<song-item
-							v-for="song in playlistSongs"
-							:key="`playlist-song-${song._id}`"
-							:song="song"
-						>
-						</song-item>
-						<!-- </transition-group> -->
+						<template #item="{element}">
+							<song-item
+								:key="`playlist-song-${element._id}`"
+								:song="element"
+							>
+							</song-item>
+						</template>
 					</draggable>
 				</div>
 				<div
@@ -241,30 +241,30 @@
 							class="track-box-songs-drag-area"
 							group="songs"
 							v-model="trackSongs[index]"
+							item-key="_id"
 							@start="drag = true"
 							@end="drag = false"
 							@change="log"
 						>
-							<!-- <transition-group> -->
-							<song-item
-								v-for="song in trackSongs[index]"
-								:key="`track-song-${song._id}`"
-								:song="song"
-							>
-							</song-item>
-							<!-- </transition-group> -->
+							<template #item="{element}">
+								<song-item
+									:key="`track-song-${element._id}`"
+									:song="element"
+								>
+								</song-item>
+							</template>
 						</draggable>
 					</div>
 				</div>
-			</div>
-			<div slot="footer">
+			</template>
+			<template #footer>
 				<button class="button is-primary" @click="tryToAutoMove()">
 					Try to auto move
 				</button>
 				<button class="button is-primary" @click="editSongs()">
 					Edit songs
 				</button>
-			</div>
+			</template>
 		</modal>
 	</div>
 </template>
@@ -336,7 +336,7 @@ export default {
 		}
 		/* eslint-enable */
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		this.selectDiscogsAlbum({});
 		this.setPlaylistSongs([]);
 	},
@@ -364,12 +364,15 @@ export default {
 		},
 		editNextSong() {
 			if (this.editingSongs) {
-				this.editSong({
-					_id: this.songsToEdit[this.currentEditSongIndex].songId,
-					discogs: this.songsToEdit[this.currentEditSongIndex].discogs
-				});
-				this.currentEditSongIndex += 1;
-				this.openModal("editSong");
+				setTimeout(() => {
+					this.editSong({
+						_id: this.songsToEdit[this.currentEditSongIndex].songId,
+						discogs: this.songsToEdit[this.currentEditSongIndex]
+							.discogs
+					});
+					this.currentEditSongIndex += 1;
+					this.openModal("editSong");
+				}, 500);
 			}
 		},
 		log(evt) {
@@ -410,7 +413,6 @@ export default {
 				true,
 				res => {
 					this.isImportingPlaylist = false;
-					console.log(111, res);
 					const songs = res.songs.filter(
 						song => song.status !== "verified"
 					);
@@ -577,12 +579,23 @@ export default {
 		margin-left: 24px;
 	}
 
+	// .import-album-modal-body {
+	// 	display: flex;
+	// 	flex-direction: row;
+	// 	flex-wrap: wrap;
+	// 	justify-content: space-evenly;
+	// }
+
 	.modal-card {
 		width: 100%;
 		height: 100%;
 
 		.modal-card-body {
 			padding: 16px;
+			display: flex;
+			flex-direction: row;
+			flex-wrap: wrap;
+			justify-content: space-evenly;
 		}
 
 		.modal-card-foot {
@@ -604,110 +617,216 @@ export default {
 </style>
 
 <style lang="scss" scoped>
-.import-album-modal-body {
-	display: flex;
-	flex-direction: row;
-	flex-wrap: wrap;
-	justify-content: space-evenly;
+.break {
+	flex-basis: 100%;
+	height: 0;
+	border: 1px solid var(--dark-grey);
+	margin-top: 16px;
+	margin-bottom: 16px;
+}
 
-	.break {
-		flex-basis: 100%;
-		height: 0;
-		border: 1px solid var(--dark-grey);
-		margin-top: 16px;
+.search-discogs-album {
+	width: 376px;
+	background-color: var(--light-grey);
+	border: 1px rgba(163, 224, 255, 0.75) solid;
+	border-radius: 5px;
+	padding: 16px;
+	overflow: auto;
+	height: 100%;
+
+	> label {
+		margin-top: 12px;
+	}
+
+	.top-container {
+		display: flex;
+
+		img {
+			height: 85px;
+			width: 85px;
+		}
+
+		.right-container {
+			padding: 8px;
+			display: flex;
+			flex-direction: column;
+			flex: 1;
+
+			.album-title {
+				flex: 1;
+				font-weight: 600;
+			}
+
+			.bottom-row {
+				display: flex;
+				flex-flow: row;
+				line-height: 15px;
+
+				img {
+					height: 15px;
+					align-self: end;
+					flex: 1;
+					user-select: none;
+					-moz-user-select: none;
+					-ms-user-select: none;
+					-webkit-user-select: none;
+					cursor: pointer;
+				}
+
+				p {
+					text-align: right;
+				}
+
+				.type-year {
+					font-size: 13px;
+					align-self: end;
+				}
+			}
+		}
+	}
+
+	.bottom-container {
+		padding: 12px;
+
+		.bottom-container-field {
+			line-height: 16px;
+			margin-bottom: 8px;
+			font-weight: 600;
+
+			span {
+				font-weight: 400;
+			}
+		}
+
+		.bottom-container-field:last-of-type {
+			margin-bottom: 8px;
+		}
+	}
+
+	.api-result {
+		background-color: var(--white);
+		border: 0.5px solid var(--primary-color);
+		border-radius: 5px;
 		margin-bottom: 16px;
 	}
 
-	.search-discogs-album {
-		width: 376px;
-		background-color: var(--light-grey);
-		border: 1px rgba(163, 224, 255, 0.75) solid;
-		border-radius: 5px;
-		padding: 16px;
-		overflow: auto;
-		height: 100%;
+	button {
+		&:focus,
+		&:hover {
+			filter: contrast(0.75);
+		}
+	}
 
-		> label {
-			margin-top: 12px;
+	.tracks {
+		margin-top: 12px;
+
+		.track:first-child {
+			margin-top: 0;
+			border-radius: 3px 3px 0 0;
 		}
 
-		.top-container {
+		.track:last-child {
+			border-radius: 0 0 3px 3px;
+		}
+
+		.track {
+			border: 0.5px solid var(--black);
+			margin-top: -1px;
+			line-height: 16px;
 			display: flex;
 
-			img {
-				height: 85px;
-				width: 85px;
-			}
-
-			.right-container {
-				padding: 8px;
-				display: flex;
-				flex-direction: column;
-				flex: 1;
-
-				.album-title {
-					flex: 1;
-					font-weight: 600;
-				}
-
-				.bottom-row {
-					display: flex;
-					flex-flow: row;
-					line-height: 15px;
-
-					img {
-						height: 15px;
-						align-self: end;
-						flex: 1;
-						user-select: none;
-						-moz-user-select: none;
-						-ms-user-select: none;
-						-webkit-user-select: none;
-						cursor: pointer;
-					}
-
-					p {
-						text-align: right;
-					}
-
-					.type-year {
-						font-size: 13px;
-						align-self: end;
-					}
-				}
-			}
-		}
-
-		.bottom-container {
-			padding: 12px;
-
-			.bottom-container-field {
-				line-height: 16px;
-				margin-bottom: 8px;
+			span {
 				font-weight: 600;
+				display: inline-block;
+				margin-top: 7px;
+				margin-bottom: 7px;
+				margin-left: 7px;
+			}
 
-				span {
-					font-weight: 400;
+			p {
+				display: inline-block;
+				margin: 7px;
+				flex: 1;
+			}
+		}
+	}
+
+	.discogs-load-more {
+		margin-bottom: 8px;
+	}
+}
+
+.discogs-album {
+	width: 376px;
+	background-color: var(--light-grey);
+	border: 1px rgba(163, 224, 255, 0.75) solid;
+	border-radius: 5px;
+	padding: 16px;
+	overflow: auto;
+	height: 100%;
+
+	.top-container {
+		display: flex;
+
+		img {
+			height: 85px;
+			width: 85px;
+		}
+
+		.right-container {
+			padding: 8px;
+			display: flex;
+			flex-direction: column;
+			flex: 1;
+
+			.album-title {
+				flex: 1;
+				font-weight: 600;
+			}
+
+			.bottom-row {
+				display: flex;
+				flex-flow: row;
+				line-height: 15px;
+
+				img {
+					height: 15px;
+					align-self: end;
+					flex: 1;
+					user-select: none;
+					-moz-user-select: none;
+					-ms-user-select: none;
+					-webkit-user-select: none;
+					cursor: pointer;
+				}
+
+				p {
+					text-align: right;
+				}
+
+				.type-year {
+					font-size: 13px;
+					align-self: end;
 				}
 			}
+		}
+	}
 
-			.bottom-container-field:last-of-type {
-				margin-bottom: 8px;
+	.bottom-container {
+		padding: 12px;
+
+		.bottom-container-field {
+			line-height: 16px;
+			margin-bottom: 8px;
+			font-weight: 600;
+
+			span {
+				font-weight: 400;
 			}
 		}
 
-		.api-result {
-			background-color: var(--white);
-			border: 0.5px solid var(--primary-color);
-			border-radius: 5px;
-			margin-bottom: 16px;
-		}
-
-		button {
-			&:focus,
-			&:hover {
-				filter: contrast(0.75);
-			}
+		.bottom-container-field:last-of-type {
+			margin-bottom: 0;
 		}
 
 		.tracks {
@@ -742,184 +861,71 @@ export default {
 					flex: 1;
 				}
 			}
-		}
 
-		.discogs-load-more {
-			margin-bottom: 8px;
+			.track:hover,
+			.track:focus {
+				background-color: var(--light-grey);
+			}
 		}
 	}
+}
 
-	.discogs-album {
-		width: 376px;
-		background-color: var(--light-grey);
-		border: 1px rgba(163, 224, 255, 0.75) solid;
-		border-radius: 5px;
-		padding: 16px;
-		overflow: auto;
-		height: 100%;
+.import-youtube-playlist {
+	width: 376px;
+	background-color: var(--light-grey);
+	border: 1px rgba(163, 224, 255, 0.75) solid;
+	border-radius: 5px;
+	padding: 16px;
+	overflow: auto;
+	height: 100%;
+}
 
-		.top-container {
+.track-boxes {
+	width: 376px;
+	background-color: var(--light-grey);
+	border: 1px rgba(163, 224, 255, 0.75) solid;
+	border-radius: 5px;
+	padding: 16px;
+	overflow: auto;
+	height: 100%;
+
+	.track-box:first-child {
+		margin-top: 0;
+		border-radius: 3px 3px 0 0;
+	}
+
+	.track-box:last-child {
+		border-radius: 0 0 3px 3px;
+	}
+
+	.track-box {
+		border: 0.5px solid var(--black);
+		margin-top: -1px;
+		line-height: 16px;
+		display: flex;
+		flex-flow: column;
+
+		.track-position-title {
 			display: flex;
 
-			img {
-				height: 85px;
-				width: 85px;
-			}
-
-			.right-container {
-				padding: 8px;
-				display: flex;
-				flex-direction: column;
-				flex: 1;
-
-				.album-title {
-					flex: 1;
-					font-weight: 600;
-				}
-
-				.bottom-row {
-					display: flex;
-					flex-flow: row;
-					line-height: 15px;
-
-					img {
-						height: 15px;
-						align-self: end;
-						flex: 1;
-						user-select: none;
-						-moz-user-select: none;
-						-ms-user-select: none;
-						-webkit-user-select: none;
-						cursor: pointer;
-					}
-
-					p {
-						text-align: right;
-					}
-
-					.type-year {
-						font-size: 13px;
-						align-self: end;
-					}
-				}
-			}
-		}
-
-		.bottom-container {
-			padding: 12px;
-
-			.bottom-container-field {
-				line-height: 16px;
-				margin-bottom: 8px;
+			span {
 				font-weight: 600;
-
-				span {
-					font-weight: 400;
-				}
+				display: inline-block;
+				margin-top: 7px;
+				margin-bottom: 7px;
+				margin-left: 7px;
 			}
 
-			.bottom-container-field:last-of-type {
-				margin-bottom: 0;
-			}
-
-			.tracks {
-				margin-top: 12px;
-
-				.track:first-child {
-					margin-top: 0;
-					border-radius: 3px 3px 0 0;
-				}
-
-				.track:last-child {
-					border-radius: 0 0 3px 3px;
-				}
-
-				.track {
-					border: 0.5px solid var(--black);
-					margin-top: -1px;
-					line-height: 16px;
-					display: flex;
-
-					span {
-						font-weight: 600;
-						display: inline-block;
-						margin-top: 7px;
-						margin-bottom: 7px;
-						margin-left: 7px;
-					}
-
-					p {
-						display: inline-block;
-						margin: 7px;
-						flex: 1;
-					}
-				}
-
-				.track:hover,
-				.track:focus {
-					background-color: var(--light-grey);
-				}
-			}
-		}
-	}
-
-	.import-youtube-playlist {
-		width: 376px;
-		background-color: var(--light-grey);
-		border: 1px rgba(163, 224, 255, 0.75) solid;
-		border-radius: 5px;
-		padding: 16px;
-		overflow: auto;
-		height: 100%;
-	}
-
-	.track-boxes {
-		width: 376px;
-		background-color: var(--light-grey);
-		border: 1px rgba(163, 224, 255, 0.75) solid;
-		border-radius: 5px;
-		padding: 16px;
-		overflow: auto;
-		height: 100%;
-
-		.track-box:first-child {
-			margin-top: 0;
-			border-radius: 3px 3px 0 0;
-		}
-
-		.track-box:last-child {
-			border-radius: 0 0 3px 3px;
-		}
-
-		.track-box {
-			border: 0.5px solid var(--black);
-			margin-top: -1px;
-			line-height: 16px;
-			display: flex;
-			flex-flow: column;
-
-			.track-position-title {
-				display: flex;
-
-				span {
-					font-weight: 600;
-					display: inline-block;
-					margin-top: 7px;
-					margin-bottom: 7px;
-					margin-left: 7px;
-				}
-
-				p {
-					display: inline-block;
-					margin: 7px;
-					flex: 1;
-				}
-			}
-
-			.track-box-songs-drag-area {
+			p {
+				display: inline-block;
+				margin: 7px;
 				flex: 1;
-				min-height: 100px;
 			}
+		}
+
+		.track-box-songs-drag-area {
+			flex: 1;
+			min-height: 100px;
 		}
 	}
 }

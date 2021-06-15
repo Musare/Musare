@@ -13,11 +13,10 @@ let PlaylistsModule;
 
 class ErrorWithData extends Error {
 	constructor(message, data) {
-	  super(message);
-	  this.data = data;
+		super(message);
+		this.data = data;
 	}
-  }
-
+}
 
 class _SongsModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
@@ -974,15 +973,16 @@ class _SongsModule extends CoreClass {
 						status
 					};
 
-					if (err && err === "This song is already in the database.") return reject(new ErrorWithData(err, { song: trimmedSong }));
-					
+					if (err && err === "This song is already in the database.")
+						return reject(new ErrorWithData(err, { song: trimmedSong }));
+
 					SongsModule.runJob("UPDATE_SONG", { songId: song._id });
 
 					CacheModule.runJob("PUB", {
 						channel: "song.newUnverifiedSong",
 						value: song._id
 					});
-					
+
 					return resolve({ song: trimmedSong });
 				}
 			);
