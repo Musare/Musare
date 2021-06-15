@@ -656,11 +656,12 @@ export default {
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} youtubeId - the youtube id of the song that gets requested
+	 * @param {string} returnSong - returns the simple song
 	 * @param {Function} cb - gets called with the result
 	 */
-	request: isLoginRequired(async function add(session, youtubeId, cb) {
+	request: isLoginRequired(async function add(session, youtubeId, returnSong, cb) {
 		SongsModule.runJob("REQUEST_SONG", { youtubeId, userId: session.userId }, this)
-			.then(() => {
+			.then(response => {
 				this.log(
 					"SUCCESS",
 					"SONGS_REQUEST",
@@ -668,17 +669,18 @@ export default {
 				);
 				return cb({
 					status: "success",
-					message: "Successfully requested that song"
+					message: "Successfully requested that song",
+					song: returnSong ? response.song : null
 				});
 			})
-			.catch(async err => {
-				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+			.catch(async _err => {
+				const err = await UtilsModule.runJob("GET_ERROR", { error: _err }, this);
 				this.log(
 					"ERROR",
 					"SONGS_REQUEST",
 					`Requesting song "${youtubeId}" failed for user ${session.userId}. "${err}"`
 				);
-				return cb({ status: "error", message: err });
+				return cb({ status: "error", message: err, song: returnSong && _err.data ? _err.data.song : null });
 			});
 	}),
 
@@ -884,7 +886,7 @@ export default {
 	 * @param {boolean} musicOnly - whether to only get music from the playlist
 	 * @param {Function} cb - gets called with the result
 	 */
-	requestSet: isLoginRequired(function requestSet(session, url, musicOnly, cb) {
+	requestSet: isLoginRequired(function requestSet(session, url, musicOnly, returnSongs, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -903,22 +905,23 @@ export default {
 				},
 				(youtubeIds, next) => {
 					let successful = 0;
+					let songs = {};
 					let failed = 0;
 					let alreadyInDatabase = 0;
 
 					if (youtubeIds.length === 0) next();
 
-					async.eachLimit(
+					async.eachOfLimit(
 						youtubeIds,
 						1,
-						(youtubeId, next) => {
+						(youtubeId, index, next) => {
 							WSModule.runJob(
 								"RUN_ACTION2",
 								{
 									session,
 									namespace: "songs",
 									action: "request",
-									args: [youtubeId]
+									args: [youtubeId, returnSongs]
 								},
 								this
 							)
@@ -926,6 +929,8 @@ export default {
 									if (res.status === "success") successful += 1;
 									else failed += 1;
 									if (res.message === "This song is already in the database.") alreadyInDatabase += 1;
+									if (res.song) songs[index] = res.song;
+									else songs[index] = null;
 								})
 								.catch(() => {
 									failed += 1;
@@ -935,7 +940,12 @@ export default {
 								});
 						},
 						() => {
-							next(null, { successful, failed, alreadyInDatabase });
+							if (returnSongs)
+								songs = Object.keys(songs)
+									.sort()
+									.map(key => songs[key]);
+
+							next(null, { successful, failed, alreadyInDatabase, songs });
 						}
 					);
 				}
@@ -957,7 +967,8 @@ export default {
 				);
 				return cb({
 					status: "success",
-					message: `Playlist is done importing. ${response.successful} were added succesfully, ${response.failed} failed (${response.alreadyInDatabase} were already in database)`
+					message: `Playlist is done importing. ${response.successful} were added succesfully, ${response.failed} failed (${response.alreadyInDatabase} were already in database)`,
+					songs: returnSongs ? response.songs : null
 				});
 			}
 		);

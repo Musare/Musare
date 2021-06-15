@@ -27,6 +27,9 @@
 			>
 				Keyboard shortcuts helper
 			</button>
+			<button class="button is-primary" @click="openModal('importAlbum')">
+				Import album
+			</button>
 			<confirm placement="bottom" @confirm="updateAllSongs()">
 				<button
 					class="button is-danger"
@@ -149,6 +152,7 @@
 				</tbody>
 			</table>
 		</div>
+		<import-album v-if="modals.importAlbum" />
 		<edit-song v-if="modals.editSong" song-type="songs" />
 		<floating-box
 			id="keyboardShortcutsHelper"
@@ -259,6 +263,9 @@ export default {
 		EditSong: defineAsyncComponent(() =>
 			import("@/components/modals/EditSong")
 		),
+		ImportAlbum: defineAsyncComponent(() =>
+			import("@/components/modals/ImportAlbum.vue")
+		),
 		UserIdToUsername,
 		FloatingBox,
 		Confirm
@@ -349,12 +356,6 @@ export default {
 		...mapGetters({
 			socket: "websockets/getSocket"
 		})
-	},
-	watch: {
-		// eslint-disable-next-line func-names
-		"modals.editSong": function(val) {
-			if (!val) this.stopVideo();
-		}
 	},
 	mounted() {
 		this.socket.on("event:admin.verifiedSong.created", res => {
@@ -505,7 +506,7 @@ export default {
 			"removeSong",
 			"updateSong"
 		]),
-		...mapActions("modals/editSong", ["editSong", "stopVideo"]),
+		...mapActions("modals/editSong", ["editSong"]),
 		...mapActions("modalVisibility", ["openModal", "closeModal"])
 	}
 };

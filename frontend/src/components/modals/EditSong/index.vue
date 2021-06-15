@@ -332,12 +332,28 @@
 				</div>
 			</template>
 			<template #footer>
-				<save-button ref="saveButton" @clicked="save(song, false)" />
+				<save-button
+					ref="saveButton"
+					@clicked="save(song, false, false)"
+				/>
 				<save-button
 					ref="saveAndCloseButton"
 					type="save-and-close"
-					@clicked="save(song, true)"
+					@clicked="save(song, false, true)"
 				/>
+				<button
+					class="button is-primary"
+					@click="save(song, true, true)"
+				>
+					Save, verify and close
+				</button>
+				<button
+					class="button is-danger"
+					@click="stopEditingSongs()"
+					v-if="modals.importAlbum && editingSongs"
+				>
+					Stop editing songs
+				</button>
 				<div class="right">
 					<button
 						v-if="song.status !== 'verified'"
@@ -434,6 +450,8 @@ export default {
 	components: { Modal, FloatingBox, SaveButton, Confirm, Discogs, Reports },
 	props: {
 		youtubeId: { type: String, default: null },
+		songId: { type: String, default: null },
+		discogsAlbum: { type: Object, default: null },
 		// songType: { type: String, default: null },
 		sector: { type: String, default: "admin" }
 	},
@@ -504,6 +522,9 @@ export default {
 			originalSong: state => state.originalSong,
 			reports: state => state.reports
 		}),
+		...mapState("modals/importAlbum", {
+			editingSongs: state => state.editingSongs
+		}),
 		...mapState("modalVisibility", {
 			modals: state => state.modals
 		}),
@@ -541,7 +562,9 @@ export default {
 				// this.song = { ...song };
 				// if (this.song.discogs === undefined)
 				// 	this.song.discogs = null;
-				this.editSong(song);
+				if (this.song.discogs)
+					this.editSong({ ...song, discogs: this.song.discogs });
+				else this.editSong(song);
 
 				this.songDataLoaded = true;
 
@@ -728,7 +751,9 @@ export default {
 		this.socket.on(
 			"event:admin.hiddenSong.created",
 			res => {
-				this.song.status = res.data.song.status;
+				if (res.data.songId === this.song._id) {
+					this.song.status = res.data.song.status;
+				}
 			},
 			{ modal: "editSong" }
 		);
@@ -736,7 +761,9 @@ export default {
 		this.socket.on(
 			"event:admin.unverifiedSong.created",
 			res => {
-				this.song.status = res.data.song.status;
+				if (res.data.songId === this.song._id) {
+					this.song.status = res.data.song.status;
+				}
 			},
 			{ modal: "editSong" }
 		);
@@ -744,38 +771,12 @@ export default {
 		this.socket.on(
 			"event:admin.verifiedSong.created",
 			res => {
-				this.song.status = res.data.song.status;
+				if (res.data.songId === this.song._id) {
+					this.song.status = res.data.song.status;
+				}
 			},
 			{ modal: "editSong" }
 		);
-
-		this.socket.on(
-			"event:admin.hiddenSong.deleted",
-			() => {
-				new Toast("The song you were editing was removed");
-				this.closeModal("editSong");
-			},
-			{ modal: "editSong" }
-		);
-
-		this.socket.on(
-			"event:admin.unverifiedSong.deleted",
-			() => {
-				new Toast("The song you were editing was removed");
-				this.closeModal("editSong");
-			},
-			{ modal: "editSong" }
-		);
-
-		this.socket.on(
-			"event:admin.verifiedSong.deleted",
-			() => {
-				new Toast("The song you were editing was removed");
-				this.closeModal("editSong");
-			},
-			{ modal: "editSong" }
-		);
-
 		keyboardShortcuts.registerShortcut("editSong.pauseResumeVideo", {
 			keyCode: 101,
 			preventDefault: true,
@@ -857,7 +858,7 @@ export default {
 			ctrl: true,
 			preventDefault: true,
 			handler: () => {
-				this.save(this.song, false);
+				this.save(this.song, false, false);
 			}
 		});
 
@@ -939,6 +940,7 @@ export default {
 		*/
 	},
 	beforeUnmount() {
+		this.video.player.stopVideo();
 		this.playerReady = false;
 		clearInterval(this.interval);
 		clearInterval(this.activityWatchVideoDataInterval);
@@ -967,7 +969,16 @@ export default {
 		});
 	},
 	methods: {
-		save(songToCopy, close) {
+		stopEditingSongs() {
+			this.updateEditingSongs(false);
+			this.closeModal("editSong");
+		},
+		importAlbum(result) {
+			this.selectDiscogsAlbum(result);
+			this.openModal("importAlbum");
+			this.closeModal("editSong");
+		},
+		save(songToCopy, verify, close) {
 			const song = JSON.parse(JSON.stringify(songToCopy));
 
 			let saveButtonRef = this.$refs.saveButton;
@@ -1124,6 +1135,7 @@ export default {
 					saveButtonRef.handleSuccessfulSave();
 				else saveButtonRef.handleFailedSave();
 
+				if (verify) this.verify(this.song._id);
 				if (close) this.closeModal("editSong");
 			});
 		},
@@ -1397,6 +1409,10 @@ export default {
 		// 		new Toast(res.message);
 		// 	});
 		// },
+		...mapActions("modals/importAlbum", [
+			"selectDiscogsAlbum",
+			"updateEditingSongs"
+		]),
 		...mapActions({
 			showTab(dispatch, payload) {
 				this.$refs[`${payload}-tab`].scrollIntoView();
@@ -1412,7 +1428,7 @@ export default {
 			"updateSongField",
 			"updateReports"
 		]),
-		...mapActions("modalVisibility", ["closeModal"])
+		...mapActions("modalVisibility", ["closeModal", "openModal"])
 	}
 };
 </script>

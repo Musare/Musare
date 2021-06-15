@@ -11,6 +11,13 @@ let YouTubeModule;
 let StationsModule;
 let PlaylistsModule;
 
+class ErrorWithData extends Error {
+	constructor(message, data) {
+		super(message);
+		this.data = data;
+	}
+}
+
 class _SongsModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
 	constructor() {
@@ -907,7 +914,7 @@ class _SongsModule extends CoreClass {
 
 					// Get YouTube data from id
 					(user, song, next) => {
-						if (song) return next("This song is already in the database.");
+						if (song) return next("This song is already in the database.", song);
 						// TODO Add err object as first param of callback
 
 						const requestedBy = user.preferences.anonymousSongRequests ? null : userId;
@@ -953,7 +960,21 @@ class _SongsModule extends CoreClass {
 					}
 				],
 				async (err, song) => {
-					if (err) reject(err);
+					if (err && err !== "This song is already in the database.") return reject(err);
+
+					const { _id, youtubeId, title, artists, thumbnail, duration, status } = song;
+					const trimmedSong = {
+						_id,
+						youtubeId,
+						title,
+						artists,
+						thumbnail,
+						duration,
+						status
+					};
+
+					if (err && err === "This song is already in the database.")
+						return reject(new ErrorWithData(err, { song: trimmedSong }));
 
 					SongsModule.runJob("UPDATE_SONG", { songId: song._id });
 
@@ -962,7 +983,7 @@ class _SongsModule extends CoreClass {
 						value: song._id
 					});
 
-					resolve();
+					return resolve({ song: trimmedSong });
 				}
 			);
 		});
