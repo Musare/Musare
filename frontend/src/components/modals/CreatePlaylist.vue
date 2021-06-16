@@ -53,6 +53,15 @@ export default {
 	computed: mapGetters({
 		socket: "websockets/getSocket"
 	}),
+	unmounted() {
+		if (window.addToPlaylistDropdown)
+			window.addToPlaylistDropdown.tippy.setProps({
+				zIndex: 9999,
+				hideOnClick: true
+			});
+
+		window.addToPlaylistDropdown = null;
+	},
 	methods: {
 		createPlaylist() {
 			const { displayName } = this.playlist;
@@ -73,9 +82,12 @@ export default {
 					new Toast(res.message);
 
 					if (res.status === "success") {
+						if (!window.addToPlaylistDropdown) {
+							this.editPlaylist(res.data.playlistId);
+							this.openModal("editPlaylist");
+						}
+
 						this.closeModal("createPlaylist");
-						this.editPlaylist(res.data.playlistId);
-						this.openModal("editPlaylist");
 					}
 				}
 			);

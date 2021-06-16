@@ -10,6 +10,7 @@
 			<what-is-new v-show="modals.whatIsNew" />
 			<login-modal v-if="modals.login" />
 			<register-modal v-if="modals.register" />
+			<create-playlist-modal v-if="modals.createPlaylist" />
 		</div>
 	</div>
 </template>
@@ -33,6 +34,9 @@ export default {
 		),
 		RegisterModal: defineAsyncComponent(() =>
 			import("@/components/modals/Register.vue")
+		),
+		CreatePlaylistModal: defineAsyncComponent(() =>
+			import("@/components/modals/CreatePlaylist.vue")
 		),
 		Banned: defineAsyncComponent(() => import("@/pages/Banned.vue"))
 	},

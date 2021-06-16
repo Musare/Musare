@@ -447,8 +447,9 @@
 													>
 														<i
 															class="material-icons"
-															>playlist_add</i
 														>
+															playlist_add
+														</i>
 													</button>
 													<button
 														class="button"

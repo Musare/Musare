@@ -1,5 +1,5 @@
 <script>
-import { mapState } from "vuex";
+import { mapState, mapActions } from "vuex";
 import Toast from "toasters";
 import draggable from "vuedraggable";
 
@@ -14,16 +14,9 @@ export default {
 	computed: {
 		...mapState({
 			station: state => state.station.station,
-			myUserId: state => state.user.auth.userId
+			myUserId: state => state.user.auth.userId,
+			playlists: state => state.user.playlists.playlists
 		}),
-		playlists: {
-			get() {
-				return this.$store.state.user.playlists.playlists;
-			},
-			set(playlists) {
-				this.$store.commit("user/playlists/setPlaylists", playlists);
-			}
-		},
 		dragOptions() {
 			return {
 				animation: 200,
@@ -36,19 +29,13 @@ export default {
 	mounted() {
 		this.socket.on(
 			"event:playlist.created",
-			res => this.playlists.push(res.data.playlist),
+			res => this.addPlaylist(res.data.playlist),
 			{ replaceable: true }
 		);
 
 		this.socket.on(
 			"event:playlist.deleted",
-			res => {
-				this.playlists.forEach((playlist, index) => {
-					if (playlist._id === res.data.playlistId) {
-						this.playlists.splice(index, 1);
-					}
-				});
-			},
+			res => this.removePlaylist(res.data.playlistId),
 			{ replaceable: true }
 		);
 
@@ -67,13 +54,18 @@ export default {
 		this.socket.on(
 			"event:playlist.song.removed",
 			res => {
-				this.playlists.forEach((playlist, index) => {
+				this.playlists.forEach((playlist, playlistIndex) => {
 					if (playlist._id === res.data.playlistId) {
-						this.playlists[index].songs.forEach((song, index2) => {
-							if (song.youtubeId === res.data.youtubeId) {
-								this.playlists[index].songs.splice(index2, 1);
+						this.playlists[playlistIndex].songs.forEach(
+							(song, songIndex) => {
+								if (song.youtubeId === res.data.youtubeId) {
+									this.playlists[playlistIndex].songs.splice(
+										songIndex,
+										1
+									);
+								}
 							}
-						});
+						);
 					}
 				});
 			},
@@ -150,7 +142,8 @@ export default {
 					return new Toast(res.message);
 				}
 			);
-		}
+		},
+		...mapActions("user/playlists", ["addPlaylist", "removePlaylist"])
 	}
 };
 </script>

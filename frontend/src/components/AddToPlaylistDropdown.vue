@@ -5,6 +5,7 @@
 		:interactive="true"
 		:placement="placement"
 		theme="addToPlaylist"
+		ref="dropdown"
 		trigger="click"
 		append-to="parent"
 		@show="
@@ -48,6 +49,17 @@
 				</button>
 			</div>
 			<p v-else>You haven't created any playlists.</p>
+
+			<button
+				id="create-playlist"
+				class="button is-primary"
+				@click="createPlaylist()"
+			>
+				<i class="material-icons icon-with-button">
+					edit
+				</i>
+				Create Playlist
+			</button>
 		</template>
 	</tippy>
 </template>
@@ -74,15 +86,10 @@ export default {
 		...mapState({
 			fetchedPlaylists: state => state.user.playlists.fetchedPlaylists
 		}),
-		playlists: {
-			get() {
-				return this.$store.state.user.playlists.playlists.filter(
-					playlist => playlist.isUserModifiable
-				);
-			},
-			set(playlists) {
-				this.$store.commit("user/playlists/setPlaylists", playlists);
-			}
+		playlists() {
+			return this.$store.state.user.playlists.playlists.filter(
+				playlist => playlist.isUserModifiable
+			);
 		}
 	},
 	mounted() {
@@ -94,19 +101,13 @@ export default {
 
 		this.socket.on(
 			"event:playlist.created",
-			res => this.playlists.push(res.data.playlist),
+			res => this.addPlaylist(res.data.playlist),
 			{ replaceable: true }
 		);
 
 		this.socket.on(
 			"event:playlist.deleted",
-			res => {
-				this.playlists.forEach((playlist, index) => {
-					if (playlist._id === res.data.playlistId) {
-						this.playlists.splice(index, 1);
-					}
-				});
-			},
+			res => this.removePlaylist(res.data.playlistId),
 			{ replaceable: true }
 		);
 
@@ -149,7 +150,22 @@ export default {
 				-1
 			);
 		},
-		...mapActions("user/playlists", ["setPlaylists"])
+		createPlaylist() {
+			this.$refs.dropdown.tippy.setProps({
+				zIndex: 0,
+				hideOnClick: false
+			});
+
+			window.addToPlaylistDropdown = this.$refs.dropdown;
+
+			this.openModal("createPlaylist");
+		},
+		...mapActions("user/playlists", [
+			"setPlaylists",
+			"addPlaylist",
+			"removePlaylist"
+		]),
+		...mapActions("modalVisibility", ["openModal"])
 	}
 };
 </script>
@@ -157,5 +173,9 @@ export default {
 <style lang="scss" scoped>
 .nav-dropdown-items button .control {
 	margin-bottom: 0 !important;
+}
+
+#create-playlist {
+	margin-top: 10px;
 }
 </style>
