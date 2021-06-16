@@ -290,6 +290,25 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.night-mode {
+	.api-section,
+	.api-result {
+		background-color: var(--dark-grey-3) !important;
+	}
+
+	.api-result .tracks .track:hover,
+	.api-result .tracks .track:focus,
+	.selected-discogs-info {
+		background-color: var(--dark-grey-2) !important;
+	}
+
+	.label,
+	p,
+	strong {
+		color: var(--light-grey-2);
+	}
+}
+
 .discogs-tab {
 	// width: 376px;
 	// background-color: var(--light-grey);
