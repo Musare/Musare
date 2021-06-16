@@ -27,7 +27,9 @@
 			>
 				Keyboard shortcuts helper
 			</button>
-			<button class="button is-primary" @click="openModal('requestSong')">Request song</button>
+			<button class="button is-primary" @click="openModal('requestSong')">
+				Request song
+			</button>
 			<button class="button is-primary" @click="openModal('importAlbum')">
 				Import album
 			</button>

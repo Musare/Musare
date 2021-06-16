@@ -574,7 +574,10 @@ export default {
 
 <style lang="scss">
 .night-mode {
-	.search-discogs-album, .discogs-album, .import-youtube-playlist, .track-boxes {
+	.search-discogs-album,
+	.discogs-album,
+	.import-youtube-playlist,
+	.track-boxes {
 		background-color: var(--dark-grey-3) !important;
 	}
 
@@ -585,7 +588,7 @@ export default {
 	.api-result .tracks .track:hover,
 	.api-result .tracks .track:focus,
 	.discogs-album .tracks .track:hover,
-	.discogs-album .tracks .track:focus  {
+	.discogs-album .tracks .track:focus {
 		background-color: var(--dark-grey-2) !important;
 	}
 

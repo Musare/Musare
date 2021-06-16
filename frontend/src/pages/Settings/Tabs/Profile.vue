@@ -27,7 +27,10 @@
 						<option value="initials">Based on initials</option>
 					</select>
 				</div>
-				<div class="select" v-if="modifiedUser.avatar.type === 'initials'">
+				<div
+					class="select"
+					v-if="modifiedUser.avatar.type === 'initials'"
+				>
 					<select v-model="modifiedUser.avatar.color">
 						<option value="blue">Blue</option>
 						<option value="orange">Orange</option>
@@ -113,7 +116,10 @@ export default {
 				this.modifiedUser.location !== this.originalUser.location;
 			const bioChanged = this.modifiedUser.bio !== this.originalUser.bio;
 			const avatarChanged =
-				this.modifiedUser.avatar.type !== this.originalUser.avatar.type || this.modifiedUser.avatar.color !== this.originalUser.avatar.color;
+				this.modifiedUser.avatar.type !==
+					this.originalUser.avatar.type ||
+				this.modifiedUser.avatar.color !==
+					this.originalUser.avatar.color;
 
 			if (nameChanged) this.changeName();
 			if (locationChanged) this.changeLocation();

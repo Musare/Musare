@@ -22,7 +22,6 @@ app.use(store);
 app.use(VueTippy, {
 	directive: "tippy", // => v-tippy
 	flipDuration: 0,
-	touch: false,
 	popperOptions: {
 		modifiers: {
 			preventOverflow: {
@@ -31,7 +30,7 @@ app.use(VueTippy, {
 		}
 	},
 	allowHTML: true,
-	defaultProps: { animation: "scale" }
+	defaultProps: { animation: "scale", touch: "hold" }
 });
 
 app.component("Tippy", Tippy);
