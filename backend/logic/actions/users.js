@@ -1064,22 +1064,17 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					userModel.findByIdAndUpdate(
-						session.userId,
-						{
-							$set: {
-								preferences: {
-									nightmode: preferences.nightmode,
-									autoSkipDisliked: preferences.autoSkipDisliked,
-									activityLogPublic: preferences.activityLogPublic,
-									anonymousSongRequests: preferences.anonymousSongRequests,
-									activityWatch: preferences.activityWatch
-								}
-							}
-						},
-						{ new: false },
-						next
-					);
+					const $set = {};
+
+					Object.keys(preferences).forEach(preference => {
+						$set[`preferences.${preference}`] = preferences[preference];
+					});
+
+					return next(null, $set);
+				},
+
+				($set, next) => {
+					userModel.findByIdAndUpdate(session.userId, { $set }, { new: false, upsert: true }, next);
 				}
 			],
 			async (err, user) => {

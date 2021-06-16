@@ -34,7 +34,7 @@
 				</tbody>
 			</table>
 
-			<h2>Users</h2>
+			<h1 id="page-title">Users</h1>
 
 			<table class="table is-striped">
 				<thead>

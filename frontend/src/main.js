@@ -209,31 +209,37 @@ lofig.folder = "../config/default.json";
 	ws.socket.on("keep.event:user.preferences.updated", res => {
 		const { preferences } = res.data;
 
-		store.dispatch(
-			"user/preferences/changeAutoSkipDisliked",
-			preferences.autoSkipDisliked
-		);
+		if (preferences.autoSkipDisliked !== undefined)
+			store.dispatch(
+				"user/preferences/changeAutoSkipDisliked",
+				preferences.autoSkipDisliked
+			);
 
-		localStorage.setItem("nightmode", preferences.nightmode);
-		store.dispatch(
-			"user/preferences/changeNightmode",
-			preferences.nightmode
-		);
+		if (preferences.nightmode !== undefined) {
+			localStorage.setItem("nightmode", preferences.nightmode);
+			store.dispatch(
+				"user/preferences/changeNightmode",
+				preferences.nightmode
+			);
+		}
 
-		store.dispatch(
-			"user/preferences/changeActivityLogPublic",
-			preferences.activityLogPublic
-		);
+		if (preferences.activityLogPublic !== undefined)
+			store.dispatch(
+				"user/preferences/changeActivityLogPublic",
+				preferences.activityLogPublic
+			);
 
-		store.dispatch(
-			"user/preferences/changeAnonymousSongRequests",
-			preferences.anonymousSongRequests
-		);
+		if (preferences.anonymousSongRequests !== undefined)
+			store.dispatch(
+				"user/preferences/changeAnonymousSongRequests",
+				preferences.anonymousSongRequests
+			);
 
-		store.dispatch(
-			"user/preferences/changeActivityWatch",
-			preferences.activityWatch
-		);
+		if (preferences.activityWatch !== undefined)
+			store.dispatch(
+				"user/preferences/changeActivityWatch",
+				preferences.activityWatch
+			);
 	});
 
 	router.beforeEach((to, from, next) => {

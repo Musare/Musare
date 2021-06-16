@@ -89,22 +89,24 @@
 							/>
 						</td>
 						<td class="optionsColumn">
-							<button
-								class="button is-primary"
-								@click="edit(song, index)"
-								content="Edit Song"
-								v-tippy
-							>
-								<i class="material-icons">edit</i>
-							</button>
-							<button
-								class="button is-success"
-								@click="unhide(song._id)"
-								content="Unhide Song"
-								v-tippy
-							>
-								<i class="material-icons">visibility</i>
-							</button>
+							<div>
+								<button
+									class="button is-primary"
+									@click="edit(song, index)"
+									content="Edit Song"
+									v-tippy
+								>
+									<i class="material-icons">edit</i>
+								</button>
+								<button
+									class="button is-success"
+									@click="unhide(song._id)"
+									content="Unhide Song"
+									v-tippy
+								>
+									<i class="material-icons">visibility</i>
+								</button>
+							</div>
 						</td>
 					</tr>
 				</tbody>
@@ -348,8 +350,15 @@ export default {
 
 .optionsColumn {
 	width: 140px;
-	button {
-		width: 35px;
+
+	div {
+		button {
+			width: 35px;
+
+			&:not(:last-child) {
+				margin-right: 5px;
+			}
+		}
 	}
 }
 

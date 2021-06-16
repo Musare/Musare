@@ -164,28 +164,16 @@ export default {
 		border-radius: 3px;
 	}
 
-	#page-title {
-		margin-top: 0;
-		font-size: 35px;
-		text-align: center;
-	}
-
 	#sidebar-with-content {
 		display: flex;
 		flex-direction: column;
 	}
 
 	@media only screen and (min-width: 700px) {
-		#page-title {
-			margin: 0;
-			font-size: 40px;
-		}
-
 		#sidebar-with-content {
 			width: 962px;
 			max-width: 100%;
 			margin: 0 auto;
-			margin-top: 30px;
 			flex-direction: row;
 
 			.nav-links {

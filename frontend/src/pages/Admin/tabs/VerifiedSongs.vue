@@ -130,26 +130,28 @@
 							/>
 						</td>
 						<td class="optionsColumn">
-							<button
-								class="button is-primary"
-								@click="edit(song)"
-								content="Edit Song"
-								v-tippy
-							>
-								<i class="material-icons">edit</i>
-							</button>
-							<confirm
-								placement="left"
-								@confirm="unverify(song._id)"
-							>
+							<div>
 								<button
-									class="button is-danger"
-									content="Unverify Song"
+									class="button is-primary"
+									@click="edit(song)"
+									content="Edit Song"
 									v-tippy
 								>
-									<i class="material-icons">cancel</i>
+									<i class="material-icons">edit</i>
 								</button>
-							</confirm>
+								<confirm
+									placement="left"
+									@confirm="unverify(song._id)"
+								>
+									<button
+										class="button is-danger"
+										content="Unverify Song"
+										v-tippy
+									>
+										<i class="material-icons">cancel</i>
+									</button>
+								</confirm>
+							</div>
 						</td>
 					</tr>
 				</tbody>
@@ -551,8 +553,15 @@ body {
 
 .optionsColumn {
 	width: 100px;
-	button {
-		width: 35px;
+
+	div {
+		button {
+			width: 35px;
+
+			&:not(:last-child) {
+				margin-right: 5px;
+			}
+		}
 	}
 }
 

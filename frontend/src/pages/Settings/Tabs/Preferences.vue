@@ -135,11 +135,21 @@ export default {
 		this.socket.on("keep.event:user.preferences.updated", res => {
 			const { preferences } = res.data;
 
-			this.localNightmode = preferences.nightmode;
-			this.localAutoSkipDisliked = preferences.autoSkipDisliked;
-			this.localActivityLogPublic = preferences.activityLogPublic;
-			this.localAnonymousSongRequests = preferences.anonymousSongRequests;
-			this.localActivityWatch = preferences.activityWatch;
+			if (preferences.nightmode !== undefined)
+				this.localNightmode = preferences.nightmode;
+
+			if (preferences.autoSkipDisliked !== undefined)
+				this.localAutoSkipDisliked = preferences.autoSkipDisliked;
+
+			if (preferences.activityLogPublic !== undefined)
+				this.localActivityLogPublic = preferences.activityLogPublic;
+
+			if (preferences.anonymousSongRequests !== undefined)
+				this.localAnonymousSongRequests =
+					preferences.anonymousSongRequests;
+
+			if (preferences.activityWatch !== undefined)
+				this.localActivityWatch = preferences.activityWatch;
 		});
 	},
 	methods: {

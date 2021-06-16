@@ -98,13 +98,7 @@ export default {
 			modals: state => state.modalVisibility.modals.header,
 			role: state => state.user.auth.role,
 			loggedIn: state => state.user.auth.loggedIn,
-			username: state => state.user.auth.username,
-			autoSkipDisliked: state => state.user.preferences.autoSkipDisliked,
-			activityLogPublic: state =>
-				state.user.preferences.activityLogPublic,
-			anonymousSongRequests: state =>
-				state.user.preferences.anonymousSongRequests,
-			activityWatch: state => state.user.preferences.activityWatch
+			username: state => state.user.auth.username
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
@@ -119,13 +113,7 @@ export default {
 			if (this.loggedIn) {
 				this.socket.dispatch(
 					"users.updatePreferences",
-					{
-						nightmode: this.localNightmode,
-						autoSkipDisliked: this.autoSkipDisliked,
-						activityLogPublic: this.activityLogPublic,
-						anonymousSongRequests: this.anonymousSongRequests,
-						activityWatch: this.activityWatch
-					},
+					{ nightmode: this.localNightmode },
 					res => {
 						if (res.status !== "success") new Toast(res.message);
 					}
@@ -144,7 +132,8 @@ export default {
 		});
 
 		this.socket.on("keep.event:user.preferences.updated", res => {
-			this.localNightmode = res.data.preferences.nightmode;
+			if (res.data.preferences.nightmode !== undefined)
+				this.localNightmode = res.data.preferences.nightmode;
 		});
 
 		this.frontendDomain = await lofig.get("frontendDomain");

@@ -89,31 +89,38 @@
 							/>
 						</td>
 						<td class="optionsColumn">
-							<button
-								class="button is-primary"
-								@click="edit(song, index)"
-								content="Edit Song"
-								v-tippy
-							>
-								<i class="material-icons">edit</i>
-							</button>
-							<button
-								class="button is-success"
-								@click="verify(song._id)"
-								content="Verify Song"
-								v-tippy
-							>
-								<i class="material-icons">check_circle</i>
-							</button>
-							<confirm placement="left" @confirm="hide(song._id)">
+							<div>
 								<button
-									class="button is-danger"
-									content="Hide Song"
+									class="button is-primary"
+									@click="edit(song, index)"
+									content="Edit Song"
 									v-tippy
 								>
-									<i class="material-icons">visibility_off</i>
+									<i class="material-icons">edit</i>
 								</button>
-							</confirm>
+								<button
+									class="button is-success"
+									@click="verify(song._id)"
+									content="Verify Song"
+									v-tippy
+								>
+									<i class="material-icons">check_circle</i>
+								</button>
+								<confirm
+									placement="left"
+									@confirm="hide(song._id)"
+								>
+									<button
+										class="button is-danger"
+										content="Hide Song"
+										v-tippy
+									>
+										<i class="material-icons"
+											>visibility_off</i
+										>
+									</button>
+								</confirm>
+							</div>
 						</td>
 					</tr>
 				</tbody>
@@ -369,8 +376,15 @@ export default {
 
 .optionsColumn {
 	width: 140px;
-	button {
-		width: 35px;
+
+	div {
+		button {
+			width: 35px;
+
+			&:not(:last-child) {
+				margin-right: 5px;
+			}
+		}
 	}
 }
 

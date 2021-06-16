@@ -112,13 +112,7 @@ export default {
 				if (this.loggedIn) {
 					this.socket.dispatch(
 						"users.updatePreferences",
-						{
-							nightmode: !this.nightmode,
-							autoSkipDisliked: false,
-							activityLogPublic: false,
-							anonymousSongRequests: false,
-							activityWatch: false
-						},
+						{ nightmode: !this.nightmode },
 						res => {
 							if (res.status !== "success")
 								new Toast(res.message);
@@ -360,6 +354,20 @@ input,
 select,
 textarea {
 	font-family: "Inter", Helvetica, Arial, sans-serif;
+}
+
+#page-title {
+	margin-top: 0;
+	font-size: 35px;
+	text-align: center;
+}
+
+@media only screen and (min-width: 700px) {
+	#page-title {
+		margin: 0;
+		margin-bottom: 30px;
+		font-size: 40px;
+	}
 }
 
 .upper-container {
