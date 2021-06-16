@@ -237,6 +237,16 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.night-mode {
+	.report-item {
+		background-color: var(--dark-grey-2) !important;
+	}
+
+	.report-item-header {
+		background-color: var(--dark-grey-3) !important;
+	}
+}
+
 .report-item {
 	background-color: var(--white);
 	border: 0.5px solid var(--primary-color);
