@@ -120,30 +120,6 @@
 							</p>
 						</div>
 					</div>
-
-					<!--
-						<div class="column">
-						<p class="content-box-optional-helper">
-							<a href="#" @click="changeToLoginModal()">
-								Issue isn't listed?
-							</a>
-						</p>
-
-						<br />
-
-		
-
-						<textarea
-							v-model="report.description"
-							class="textarea"
-							maxlength="400"
-							placeholder="Any other details..."
-						/>
-						<div class="textarea-counter">
-							{{ charactersRemaining }}
-						</div>
-					</div>
-					-->
 				</div>
 			</div>
 		</template>
@@ -322,7 +298,10 @@ export default {
 				issues.push({ category: "custom", title: issue })
 			);
 
-			this.socket.dispatch(
+			if (issues.length === 0)
+				return new Toast("Reports must have at least one issue");
+
+			return this.socket.dispatch(
 				"reports.create",
 				{
 					issues,
