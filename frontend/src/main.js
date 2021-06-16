@@ -215,6 +215,7 @@ lofig.folder = "../config/default.json";
 			preferences.autoSkipDisliked
 		);
 
+		localStorage.setItem("nightmode", preferences.nightmode);
 		store.dispatch(
 			"user/preferences/changeNightmode",
 			preferences.nightmode

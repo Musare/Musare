@@ -24,14 +24,14 @@
 		<div class="nav-right nav-menu" :class="{ 'is-active': isMobile }">
 			<router-link
 				v-if="role === 'admin'"
-				class="nav-item is-tab admin"
+				class="nav-item admin"
 				to="/admin"
 			>
 				<strong>Admin</strong>
 			</router-link>
 			<span v-if="loggedIn" class="grouped">
 				<router-link
-					class="nav-item is-tab"
+					class="nav-item "
 					:to="{
 						name: 'profile',
 						params: { username }
@@ -39,10 +39,10 @@
 				>
 					Profile
 				</router-link>
-				<router-link class="nav-item is-tab" to="/settings"
+				<router-link class="nav-item" to="/settings"
 					>Settings</router-link
 				>
-				<a class="nav-item is-tab" href="#" @click="logout()">Logout</a>
+				<a class="nav-item" href="#" @click="logout()">Logout</a>
 			</span>
 			<span v-if="!loggedIn && !hideLoggedOut" class="grouped">
 				<a class="nav-item" href="#" @click="openModal('login')"
@@ -52,12 +52,29 @@
 					>Register</a
 				>
 			</span>
+			<div class="nav-item" id="nightmode-toggle">
+				<p class="is-expanded checkbox-control">
+					<label class="switch">
+						<input
+							type="checkbox"
+							id="instant-nightmode"
+							v-model="localNightmode"
+						/>
+						<span class="slider round"></span>
+					</label>
+
+					<label for="instant-nightmode">
+						<p>Nightmode</p>
+					</label>
+				</p>
+			</div>
 		</div>
 	</nav>
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import Toast from "toasters";
+import { mapState, mapGetters, mapActions } from "vuex";
 
 export default {
 	props: {
@@ -67,6 +84,7 @@ export default {
 	},
 	data() {
 		return {
+			localNightmode: null,
 			isMobile: false,
 			frontendDomain: "",
 			siteSettings: {
@@ -75,20 +93,68 @@ export default {
 			}
 		};
 	},
-	computed: mapState({
-		modals: state => state.modalVisibility.modals.header,
-		role: state => state.user.auth.role,
-		loggedIn: state => state.user.auth.loggedIn,
-		username: state => state.user.auth.username
-	}),
+	computed: {
+		...mapState({
+			modals: state => state.modalVisibility.modals.header,
+			role: state => state.user.auth.role,
+			loggedIn: state => state.user.auth.loggedIn,
+			username: state => state.user.auth.username,
+			autoSkipDisliked: state => state.user.preferences.autoSkipDisliked,
+			activityLogPublic: state =>
+				state.user.preferences.activityLogPublic,
+			anonymousSongRequests: state =>
+				state.user.preferences.anonymousSongRequests,
+			activityWatch: state => state.user.preferences.activityWatch
+		}),
+		...mapGetters({
+			socket: "websockets/getSocket"
+		})
+	},
+	watch: {
+		localNightmode(newValue, oldValue) {
+			if (oldValue === null) return;
+
+			localStorage.setItem("nightmode", this.localNightmode);
+
+			if (this.loggedIn) {
+				this.socket.dispatch(
+					"users.updatePreferences",
+					{
+						nightmode: this.localNightmode,
+						autoSkipDisliked: this.autoSkipDisliked,
+						activityLogPublic: this.activityLogPublic,
+						anonymousSongRequests: this.anonymousSongRequests,
+						activityWatch: this.activityWatch
+					},
+					res => {
+						if (res.status !== "success") new Toast(res.message);
+					}
+				);
+			}
+
+			this.changeNightmode(this.localNightmode);
+		}
+	},
 	async mounted() {
+		this.localNightmode = JSON.parse(localStorage.getItem("nightmode"));
+
+		this.socket.dispatch("users.getPreferences", res => {
+			if (res.status === "success")
+				this.localNightmode = res.data.preferences.nightmode;
+		});
+
+		this.socket.on("keep.event:user.preferences.updated", res => {
+			this.localNightmode = res.data.preferences.nightmode;
+		});
+
 		this.frontendDomain = await lofig.get("frontendDomain");
 		this.siteSettings = await lofig.get("siteSettings");
 	},
 
 	methods: {
 		...mapActions("modalVisibility", ["openModal"]),
-		...mapActions("user/auth", ["logout"])
+		...mapActions("user/auth", ["logout"]),
+		...mapActions("user/preferences", ["changeNightmode"])
 	}
 };
 </script>

@@ -171,12 +171,10 @@ export default {
 				res => {
 					if (res.status !== "success") {
 						new Toast(res.message);
-
 						return this.$refs.saveButton.handleFailedSave();
 					}
 
 					new Toast("Successfully updated preferences");
-
 					return this.$refs.saveButton.handleSuccessfulSave();
 				}
 			);

@@ -97,6 +97,35 @@ export default {
 			this.keyIsDown = "";
 		};
 
+		// ctrl + alt + n
+		keyboardShortcuts.registerShortcut("nightmode", {
+			keyCode: 78,
+			ctrl: true,
+			alt: true,
+			handler: () => {
+				localStorage.setItem("nightmode", !this.nightmode);
+
+				if (this.loggedIn) {
+					this.socket.dispatch(
+						"users.updatePreferences",
+						{
+							nightmode: !this.nightmode,
+							autoSkipDisliked: false,
+							activityLogPublic: false,
+							anonymousSongRequests: false,
+							activityWatch: false
+						},
+						res => {
+							if (res.status !== "success")
+								new Toast(res.message);
+						}
+					);
+				}
+
+				this.changeNightmode(!this.nightmode);
+			}
+		});
+
 		keyboardShortcuts.registerShortcut("closeModal", {
 			keyCode: 27,
 			shift: false,
@@ -148,6 +177,11 @@ export default {
 				new Toast({ content: msg, timeout: 20000 });
 			}
 		});
+
+		if (localStorage.getItem("nightmode") === "true") {
+			this.changeNightmode(true);
+			this.enableNightMode();
+		}
 
 		this.socket.dispatch("users.getPreferences", res => {
 			if (res.status === "success") {

@@ -625,7 +625,9 @@ export default class CoreClass {
 							}
 						} else if (
 							job.parentJob &&
-							job.parentJob.childJobs.find(childJob => childJob.status !== "FINISHED") === undefined
+							job.parentJob.childJobs.find(childJob =>
+								childJob ? childJob.status !== "FINISHED" : true
+							) === undefined
 						) {
 							if (job.parentJob.status !== "WAITING_ON_CHILD_JOB") {
 								this.log(
