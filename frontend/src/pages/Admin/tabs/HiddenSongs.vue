@@ -27,6 +27,7 @@
 			>
 				Keyboard shortcuts helper
 			</button>
+			<button class="button is-primary" @click="openModal('requestSong')">Request song</button>
 			<br />
 			<br />
 			<table class="table is-striped">
@@ -109,6 +110,7 @@
 		</div>
 		<import-album v-if="modals.importAlbum" />
 		<edit-song v-if="modals.editSong" />
+		<request-song v-if="modals.requestSong" />
 		<floating-box
 			id="keyboardShortcutsHelper"
 			ref="keyboardShortcutsHelper"
@@ -191,6 +193,9 @@ export default {
 		),
 		ImportAlbum: defineAsyncComponent(() =>
 			import("@/components/modals/ImportAlbum.vue")
+		),
+		RequestSong: defineAsyncComponent(() =>
+			import("@/components/modals/RequestSong.vue")
 		),
 		UserIdToUsername,
 		FloatingBox

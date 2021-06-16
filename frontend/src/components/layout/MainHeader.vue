@@ -222,6 +222,7 @@ export default {
 		img {
 			max-height: 38px;
 			color: var(--primary-color);
+			user-select: none;
 		}
 	}
 

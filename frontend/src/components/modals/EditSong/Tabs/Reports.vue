@@ -340,6 +340,22 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.night-mode {
+	.report-items .report-item {
+		background-color: var(--dark-grey-3) !important;
+	}
+
+	.report-items .report-item .report-item-header {
+		background-color: var(--dark-grey-2) !important;
+	}
+
+	.label,
+	p,
+	strong {
+		color: var(--light-grey-2);
+	}
+}
+
 .tabs-container {
 	.tab-selection {
 		display: flex;

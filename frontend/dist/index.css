@@ -134,6 +134,10 @@ body {
 	position: relative;
 }
 
+#root {
+	height: 100%;
+}
+
 .content-wrapper {
 	/* padding: 60px 0 calc(230px + 60px) 0; */
 	padding-top: 60px;

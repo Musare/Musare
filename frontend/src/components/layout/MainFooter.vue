@@ -85,6 +85,7 @@ export default {
 		margin-right: auto;
 		width: 160px;
 		order: 1;
+		user-select: none;
 	}
 
 	#footer-links {

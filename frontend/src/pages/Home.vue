@@ -858,6 +858,7 @@ html {
 		filter: blur(1px);
 		border-radius: 0% 0% 33% 33% / 0% 0% 7% 7%;
 		overflow: hidden;
+		user-select: none;
 	}
 	.overlay {
 		background: linear-gradient(
@@ -894,6 +895,7 @@ html {
 				font-size: 40px;
 				color: var(--white);
 				font-family: Pacifico, cursive;
+				user-select: none;
 			}
 			.buttons {
 				display: flex;

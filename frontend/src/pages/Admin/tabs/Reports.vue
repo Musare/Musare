@@ -245,6 +245,10 @@ export default {
 			color: var(--light-grey-2);
 		}
 	}
+
+	.report-item-header {
+		background-color: var(--dark-grey-4) !important;
+	}
 }
 
 #options-column {

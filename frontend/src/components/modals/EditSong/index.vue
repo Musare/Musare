@@ -1463,21 +1463,9 @@ export default {
 <style lang="scss" scoped>
 .night-mode {
 	.edit-section,
-	.api-section,
-	.api-result,
-	.player-footer {
+	.player-footer,
+	#tabs-container {
 		background-color: var(--dark-grey-3) !important;
-	}
-
-	.api-result .tracks .track:hover,
-	.selected-discogs-info {
-		background-color: var(--dark-grey-2) !important;
-	}
-
-	.label,
-	p,
-	strong {
-		color: var(--light-grey-2);
 	}
 }
 
