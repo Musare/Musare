@@ -573,6 +573,29 @@ export default {
 </script>
 
 <style lang="scss">
+.night-mode {
+	.search-discogs-album, .discogs-album, .import-youtube-playlist, .track-boxes {
+		background-color: var(--dark-grey-3) !important;
+	}
+
+	.api-result {
+		background-color: var(--dark-grey-3) !important;
+	}
+
+	.api-result .tracks .track:hover,
+	.api-result .tracks .track:focus,
+	.discogs-album .tracks .track:hover,
+	.discogs-album .tracks .track:focus  {
+		background-color: var(--dark-grey-2) !important;
+	}
+
+	.label,
+	p,
+	strong {
+		color: var(--light-grey-2);
+	}
+}
+
 .import-album-modal {
 	.modal-card-title {
 		text-align: center;
