@@ -27,6 +27,15 @@
 						<option value="initials">Based on initials</option>
 					</select>
 				</div>
+				<div class="select" v-if="modifiedUser.avatar.type === 'initials'">
+					<select v-model="modifiedUser.avatar.color">
+						<option value="blue">Blue</option>
+						<option value="orange">Orange</option>
+						<option value="green">Green</option>
+						<option value="purple">Purple</option>
+						<option value="teal">Teal</option>
+					</select>
+				</div>
 			</div>
 		</div>
 		<p class="control is-expanded margin-top-zero">
@@ -96,21 +105,6 @@ export default {
 			socket: "websockets/getSocket"
 		})
 	},
-	watch: {
-		"modifiedUser.avatar.type": function watchAvatarType(newType, oldType) {
-			if (
-				oldType &&
-				this.modifiedUser.avatar.type !==
-					this.originalUser.avatar.type &&
-				newType === "initials"
-			) {
-				const colors = ["blue", "orange", "green", "purple", "teal"];
-				const color = colors[Math.floor(Math.random() * colors.length)];
-
-				this.modifiedUser.avatar.color = color;
-			}
-		}
-	},
 	methods: {
 		saveChanges() {
 			const nameChanged =
@@ -119,12 +113,12 @@ export default {
 				this.modifiedUser.location !== this.originalUser.location;
 			const bioChanged = this.modifiedUser.bio !== this.originalUser.bio;
 			const avatarChanged =
-				this.modifiedUser.avatar.type !== this.originalUser.avatar.type;
+				this.modifiedUser.avatar.type !== this.originalUser.avatar.type || this.modifiedUser.avatar.color !== this.originalUser.avatar.color;
 
 			if (nameChanged) this.changeName();
 			if (locationChanged) this.changeLocation();
 			if (bioChanged) this.changeBio();
-			if (avatarChanged) this.changeAvatarType();
+			if (avatarChanged) this.changeAvatar();
 
 			if (
 				!avatarChanged &&
@@ -238,13 +232,13 @@ export default {
 				}
 			);
 		},
-		changeAvatarType() {
+		changeAvatar() {
 			const { avatar } = this.modifiedUser;
 
 			this.$refs.saveButton.status = "disabled";
 
 			return this.socket.dispatch(
-				"users.updateAvatarType",
+				"users.updateAvatar",
 				this.userId,
 				avatar,
 				res => {
@@ -252,7 +246,7 @@ export default {
 						new Toast(res.message);
 						this.$refs.saveButton.handleFailedSave();
 					} else {
-						new Toast("Successfully updated avatar type");
+						new Toast("Successfully updated avatar");
 
 						this.updateOriginalUser({
 							property: "avatar",
@@ -291,6 +285,14 @@ export default {
 		display: flex;
 		align-items: center;
 		margin-top: 5px;
+
+		.select {
+			margin-right: 8px;
+
+			&:last-child {
+				margin-right: 0;
+			}
+		}
 
 		.profile-picture {
 			margin-right: 10px;
