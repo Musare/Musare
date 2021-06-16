@@ -59,6 +59,7 @@ CacheModule.runJob("SUB", {
 	channel: "song.newVerifiedSong",
 	cb: async songId => {
 		const songModel = await DBModule.runJob("GET_MODEL", { modelName: "song" });
+
 		songModel.findOne({ _id: songId }, (err, song) =>
 			WSModule.runJob("EMIT_TO_ROOMS", {
 				rooms: ["admin.songs", `edit-song.${songId}`],

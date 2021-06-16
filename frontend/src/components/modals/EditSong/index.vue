@@ -751,9 +751,8 @@ export default {
 		this.socket.on(
 			"event:admin.hiddenSong.created",
 			res => {
-				if (res.data.songId === this.song._id) {
+				if (res.data.song._id === this.song._id)
 					this.song.status = res.data.song.status;
-				}
 			},
 			{ modal: "editSong" }
 		);
@@ -761,9 +760,8 @@ export default {
 		this.socket.on(
 			"event:admin.unverifiedSong.created",
 			res => {
-				if (res.data.songId === this.song._id) {
+				if (res.data.song._id === this.song._id)
 					this.song.status = res.data.song.status;
-				}
 			},
 			{ modal: "editSong" }
 		);
@@ -771,9 +769,8 @@ export default {
 		this.socket.on(
 			"event:admin.verifiedSong.created",
 			res => {
-				if (res.data.songId === this.song._id) {
+				if (res.data.song._id === this.song._id)
 					this.song.status = res.data.song.status;
-				}
 			},
 			{ modal: "editSong" }
 		);

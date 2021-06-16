@@ -338,15 +338,7 @@ class _WSModule extends CoreClass {
 			async.each(
 				payload.rooms,
 				(room, next) => {
-					// if the room exists
-					if (WSModule.rooms[room] && WSModule.rooms[room].length > 0)
-						return WSModule.rooms[room].forEach(async socketId => {
-							// get every socketId (and thus every socket) in the room, and dispatch to each
-							const socket = await WSModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId }, this);
-							socket.dispatch(...payload.args);
-							return next();
-						});
-
+					WSModule.runJob("EMIT_TO_ROOM", { room, args: payload.args });
 					return next();
 				},
 				() => resolve()
