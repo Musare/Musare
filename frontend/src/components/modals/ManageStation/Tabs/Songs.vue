@@ -65,18 +65,14 @@
 							:song="song"
 						>
 							<template #actions>
-								<div class="icons-group">
-									<i
-										class="material-icons add-to-queue-icon"
-										v-if="
-											station.partyMode && !station.locked
-										"
-										@click="addSongToQueue(song.youtubeId)"
-										content="Add Song to Queue"
-										v-tippy
-										>queue</i
-									>
-								</div>
+								<i
+									class="material-icons add-to-queue-icon"
+									v-if="station.partyMode && !station.locked"
+									@click="addSongToQueue(song.youtubeId)"
+									content="Add Song to Queue"
+									v-tippy
+									>queue</i
+								>
 							</template>
 						</song-item>
 						<button

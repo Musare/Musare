@@ -16,74 +16,71 @@
 				<template #item="{element}">
 					<playlist-item :playlist="element" class="item-draggable">
 						<template #actions>
-							<div class="icons-group">
+							<i
+								v-if="isExcluded(element._id)"
+								class="material-icons stop-icon"
+								content="This playlist is blacklisted in this station"
+								v-tippy="{ theme: 'info' }"
+								>play_disabled</i
+							>
+							<i
+								v-if="
+									station.type === 'community' &&
+										(isOwnerOrAdmin() ||
+											station.partyMode) &&
+										!isSelected(element._id) &&
+										!isExcluded(element._id)
+								"
+								@click="selectPlaylist(element)"
+								class="material-icons play-icon"
+								:content="
+									station.partyMode
+										? 'Request songs from this playlist'
+										: 'Play songs from this playlist'
+								"
+								v-tippy
+								>play_arrow</i
+							>
+							<confirm
+								v-if="
+									station.type === 'community' &&
+										(isOwnerOrAdmin() ||
+											station.partyMode) &&
+										isSelected(element._id)
+								"
+								@confirm="deselectPlaylist(element._id)"
+							>
 								<i
-									v-if="isExcluded(element._id)"
 									class="material-icons stop-icon"
-									content="This playlist is blacklisted in this station"
-									v-tippy="{ theme: 'info' }"
-									>play_disabled</i
-								>
-								<i
-									v-if="
-										station.type === 'community' &&
-											(isOwnerOrAdmin() ||
-												station.partyMode) &&
-											!isSelected(element._id) &&
-											!isExcluded(element._id)
-									"
-									@click="selectPlaylist(element)"
-									class="material-icons play-icon"
 									:content="
 										station.partyMode
-											? 'Request songs from this playlist'
-											: 'Play songs from this playlist'
+											? 'Stop requesting songs from this playlist'
+											: 'Stop playing songs from this playlist'
 									"
 									v-tippy
-									>play_arrow</i
+									>stop</i
 								>
-								<confirm
-									v-if="
-										station.type === 'community' &&
-											(isOwnerOrAdmin() ||
-												station.partyMode) &&
-											isSelected(element._id)
-									"
-									@confirm="deselectPlaylist(element._id)"
-								>
-									<i
-										class="material-icons stop-icon"
-										:content="
-											station.partyMode
-												? 'Stop requesting songs from this playlist'
-												: 'Stop playing songs from this playlist'
-										"
-										v-tippy
-										>stop</i
-									>
-								</confirm>
-								<confirm
-									v-if="
-										isOwnerOrAdmin() &&
-											!isExcluded(element._id)
-									"
-									@confirm="blacklistPlaylist(element._id)"
-								>
-									<i
-										class="material-icons stop-icon"
-										content="Blacklist Playlist"
-										v-tippy
-										>block</i
-									>
-								</confirm>
+							</confirm>
+							<confirm
+								v-if="
+									isOwnerOrAdmin() && !isExcluded(element._id)
+								"
+								@confirm="blacklistPlaylist(element._id)"
+							>
 								<i
-									@click="edit(element._id)"
-									class="material-icons edit-icon"
-									content="Edit Playlist"
+									class="material-icons stop-icon"
+									content="Blacklist Playlist"
 									v-tippy
-									>edit</i
+									>block</i
 								>
-							</div>
+							</confirm>
+							<i
+								@click="edit(element._id)"
+								class="material-icons edit-icon"
+								content="Edit Playlist"
+								v-tippy
+								>edit</i
+							>
 						</template>
 					</playlist-item>
 				</template>
@@ -343,9 +340,6 @@ export default {
 }
 
 .icons-group {
-	display: flex;
-	align-items: center;
-
 	.edit-icon {
 		color: var(--primary-color);
 	}

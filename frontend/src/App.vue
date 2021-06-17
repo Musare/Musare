@@ -542,12 +542,6 @@ a {
 		width: 146px;
 	}
 
-	.icons-group,
-	.addToPlaylistDropdown,
-	.icons-group > div {
-		display: inline-block;
-	}
-
 	.addToPlaylistDropdown .tippy-popper {
 		max-width: unset;
 	}
@@ -968,7 +962,8 @@ h4.section-title {
 			width: 146px;
 		}
 
-		i {
+		i,
+		span {
 			cursor: pointer;
 			color: var(--dark-grey);
 
@@ -977,7 +972,7 @@ h4.section-title {
 				filter: brightness(90%);
 			}
 
-			&:not(:first-of-type) {
+			&:not(:first-child) {
 				margin-left: 5px;
 			}
 		}

@@ -31,7 +31,9 @@
 			</p>
 		</div>
 		<div class="universal-item-actions">
-			<slot name="actions" />
+			<div class="icons-group">
+				<slot name="actions" />
+			</div>
 		</div>
 	</div>
 </template>

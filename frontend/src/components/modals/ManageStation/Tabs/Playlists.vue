@@ -122,126 +122,114 @@
 						</template>
 
 						<template #actions>
-							<div class="icons-group">
+							<i
+								v-if="isExcluded(playlist._id)"
+								class="material-icons stop-icon"
+								content="This playlist is blacklisted in this station"
+								v-tippy="{ theme: 'info' }"
+								>play_disabled</i
+							>
+							<confirm
+								v-if="isPartyMode() && isSelected(playlist._id)"
+								@confirm="deselectPartyPlaylist(playlist._id)"
+							>
 								<i
-									v-if="isExcluded(playlist._id)"
 									class="material-icons stop-icon"
-									content="This playlist is blacklisted in this station"
-									v-tippy="{ theme: 'info' }"
-									>play_disabled</i
-								>
-								<confirm
-									v-if="
-										isPartyMode() &&
-											isSelected(playlist._id)
-									"
-									@confirm="
-										deselectPartyPlaylist(playlist._id)
-									"
-								>
-									<i
-										class="material-icons stop-icon"
-										content="Stop playing songs from this playlist"
-										v-tippy
-									>
-										stop
-									</i>
-								</confirm>
-								<confirm
-									v-if="
-										isOwnerOrAdmin() &&
-											isPlaylistMode() &&
-											isIncluded(playlist._id)
-									"
-									@confirm="
-										removeIncludedPlaylist(playlist._id)
-									"
-								>
-									<i
-										class="material-icons stop-icon"
-										content="Stop playing songs from this playlist"
-										v-tippy
-									>
-										stop
-									</i>
-								</confirm>
-								<i
-									v-if="
-										isPartyMode() &&
-											!isSelected(playlist._id) &&
-											!isExcluded(playlist._id)
-									"
-									@click="selectPartyPlaylist(playlist)"
-									class="material-icons play-icon"
-									content="Request songs from this playlist"
+									content="Stop playing songs from this playlist"
 									v-tippy
-									>play_arrow</i
 								>
+									stop
+								</i>
+							</confirm>
+							<confirm
+								v-if="
+									isOwnerOrAdmin() &&
+										isPlaylistMode() &&
+										isIncluded(playlist._id)
+								"
+								@confirm="removeIncludedPlaylist(playlist._id)"
+							>
 								<i
-									v-if="
-										isOwnerOrAdmin() &&
-											isPlaylistMode() &&
-											!isIncluded(playlist._id) &&
-											!isExcluded(playlist._id)
-									"
-									@click="includePlaylist(playlist)"
-									class="material-icons play-icon"
-									:content="'Play songs from this playlist'"
+									class="material-icons stop-icon"
+									content="Stop playing songs from this playlist"
 									v-tippy
-									>play_arrow</i
 								>
-								<confirm
-									v-if="
-										isOwnerOrAdmin() &&
-											!isExcluded(playlist._id)
-									"
-									@confirm="blacklistPlaylist(playlist._id)"
-								>
-									<i
-										class="material-icons stop-icon"
-										content="Blacklist Playlist"
-										v-tippy
-										>block</i
-									>
-								</confirm>
-								<confirm
-									v-if="
-										isOwnerOrAdmin() &&
-											isExcluded(playlist._id)
-									"
-									@confirm="
-										removeExcludedPlaylist(playlist._id)
-									"
-								>
-									<i
-										class="material-icons stop-icon"
-										content="Stop blacklisting songs from this playlist"
-										v-tippy
-									>
-										stop
-									</i>
-								</confirm>
+									stop
+								</i>
+							</confirm>
+							<i
+								v-if="
+									isPartyMode() &&
+										!isSelected(playlist._id) &&
+										!isExcluded(playlist._id)
+								"
+								@click="selectPartyPlaylist(playlist)"
+								class="material-icons play-icon"
+								content="Request songs from this playlist"
+								v-tippy
+								>play_arrow</i
+							>
+							<i
+								v-if="
+									isOwnerOrAdmin() &&
+										isPlaylistMode() &&
+										!isIncluded(playlist._id) &&
+										!isExcluded(playlist._id)
+								"
+								@click="includePlaylist(playlist)"
+								class="material-icons play-icon"
+								:content="'Play songs from this playlist'"
+								v-tippy
+								>play_arrow</i
+							>
+							<confirm
+								v-if="
+									isOwnerOrAdmin() &&
+										!isExcluded(playlist._id)
+								"
+								@confirm="blacklistPlaylist(playlist._id)"
+							>
 								<i
-									v-if="playlist.createdBy === myUserId"
-									@click="showPlaylist(playlist._id)"
-									class="material-icons edit-icon"
-									content="Edit Playlist"
+									class="material-icons stop-icon"
+									content="Blacklist Playlist"
 									v-tippy
-									>edit</i
+									>block</i
 								>
+							</confirm>
+							<confirm
+								v-if="
+									isOwnerOrAdmin() && isExcluded(playlist._id)
+								"
+								@confirm="removeExcludedPlaylist(playlist._id)"
+							>
 								<i
-									v-if="
-										playlist.createdBy !== myUserId &&
-											(playlist.privacy === 'public' ||
-												isAdmin())
-									"
-									@click="showPlaylist(playlist._id)"
-									class="material-icons edit-icon"
-									content="View Playlist"
+									class="material-icons stop-icon"
+									content="Stop blacklisting songs from this playlist"
 									v-tippy
-									>visibility</i
 								>
-							</div>
+									stop
+								</i>
+							</confirm>
+							<i
+								v-if="playlist.createdBy === myUserId"
+								@click="showPlaylist(playlist._id)"
+								class="material-icons edit-icon"
+								content="Edit Playlist"
+								v-tippy
+								>edit</i
+							>
+							<i
+								v-if="
+									playlist.createdBy !== myUserId &&
+										(playlist.privacy === 'public' ||
+											isAdmin())
+								"
+								@click="showPlaylist(playlist._id)"
+								class="material-icons edit-icon"
+								content="View Playlist"
+								v-tippy
+								>visibility</i
+							>
 						</template>
 					</playlist-item>
 					<button
@@ -468,53 +456,49 @@
 						</template>
 
 						<template #actions>
-							<div class="icons-group">
-								<confirm
-									v-if="isOwnerOrAdmin()"
-									@confirm="
-										deselectPartyPlaylist(playlist._id)
-									"
-								>
-									<i
-										class="material-icons stop-icon"
-										content="Stop playing songs from this playlist"
-										v-tippy
-									>
-										stop
-									</i>
-								</confirm>
-								<confirm
-									v-if="isOwnerOrAdmin()"
-									@confirm="blacklistPlaylist(playlist._id)"
-								>
-									<i
-										class="material-icons stop-icon"
-										content="Blacklist Playlist"
-										v-tippy
-										>block</i
-									>
-								</confirm>
+							<confirm
+								v-if="isOwnerOrAdmin()"
+								@confirm="deselectPartyPlaylist(playlist._id)"
+							>
 								<i
-									v-if="playlist.createdBy === myUserId"
-									@click="showPlaylist(playlist._id)"
-									class="material-icons edit-icon"
-									content="Edit Playlist"
+									class="material-icons stop-icon"
+									content="Stop playing songs from this playlist"
 									v-tippy
-									>edit</i
 								>
+									stop
+								</i>
+							</confirm>
+							<confirm
+								v-if="isOwnerOrAdmin()"
+								@confirm="blacklistPlaylist(playlist._id)"
+							>
 								<i
-									v-if="
-										playlist.createdBy !== myUserId &&
-											(playlist.privacy === 'public' ||
-												isAdmin())
-									"
-									@click="showPlaylist(playlist._id)"
-									class="material-icons edit-icon"
-									content="View Playlist"
+									class="material-icons stop-icon"
+									content="Blacklist Playlist"
 									v-tippy
-									>visibility</i
+									>block</i
 								>
-							</div>
+							</confirm>
+							<i
+								v-if="playlist.createdBy === myUserId"
+								@click="showPlaylist(playlist._id)"
+								class="material-icons edit-icon"
+								content="Edit Playlist"
+								v-tippy
+								>edit</i
+							>
+							<i
+								v-if="
+									playlist.createdBy !== myUserId &&
+										(playlist.privacy === 'public' ||
+											isAdmin())
+								"
+								@click="showPlaylist(playlist._id)"
+								class="material-icons edit-icon"
+								content="View Playlist"
+								v-tippy
+								>visibility</i
+							>
 						</template>
 					</playlist-item>
 				</div>
@@ -545,53 +529,49 @@
 						</template>
 
 						<template #actions>
-							<div class="icons-group">
-								<confirm
-									v-if="isOwnerOrAdmin()"
-									@confirm="
-										removeIncludedPlaylist(playlist._id)
-									"
-								>
-									<i
-										class="material-icons stop-icon"
-										content="Stop playing songs from this playlist"
-										v-tippy
-									>
-										stop
-									</i>
-								</confirm>
-								<confirm
-									v-if="isOwnerOrAdmin()"
-									@confirm="blacklistPlaylist(playlist._id)"
-								>
-									<i
-										class="material-icons stop-icon"
-										content="Blacklist Playlist"
-										v-tippy
-										>block</i
-									>
-								</confirm>
+							<confirm
+								v-if="isOwnerOrAdmin()"
+								@confirm="removeIncludedPlaylist(playlist._id)"
+							>
 								<i
-									v-if="playlist.createdBy === myUserId"
-									@click="showPlaylist(playlist._id)"
-									class="material-icons edit-icon"
-									content="Edit Playlist"
+									class="material-icons stop-icon"
+									content="Stop playing songs from this playlist"
 									v-tippy
-									>edit</i
 								>
+									stop
+								</i>
+							</confirm>
+							<confirm
+								v-if="isOwnerOrAdmin()"
+								@confirm="blacklistPlaylist(playlist._id)"
+							>
 								<i
-									v-if="
-										playlist.createdBy !== myUserId &&
-											(playlist.privacy === 'public' ||
-												isAdmin())
-									"
-									@click="showPlaylist(playlist._id)"
-									class="material-icons edit-icon"
-									content="View Playlist"
+									class="material-icons stop-icon"
+									content="Blacklist Playlist"
 									v-tippy
-									>visibility</i
+									>block</i
 								>
-							</div>
+							</confirm>
+							<i
+								v-if="playlist.createdBy === myUserId"
+								@click="showPlaylist(playlist._id)"
+								class="material-icons edit-icon"
+								content="Edit Playlist"
+								v-tippy
+								>edit</i
+							>
+							<i
+								v-if="
+									playlist.createdBy !== myUserId &&
+										(playlist.privacy === 'public' ||
+											isAdmin())
+								"
+								@click="showPlaylist(playlist._id)"
+								class="material-icons edit-icon"
+								content="View Playlist"
+								v-tippy
+								>visibility</i
+							>
 						</template>
 					</playlist-item>
 				</div>
@@ -621,37 +601,33 @@
 						</template>
 
 						<template #actions>
-							<div class="icons-group">
-								<confirm
-									@confirm="
-										removeExcludedPlaylist(playlist._id)
-									"
-								>
-									<i
-										class="material-icons stop-icon"
-										content="Stop blacklisting songs from this playlist
+							<confirm
+								@confirm="removeExcludedPlaylist(playlist._id)"
+							>
+								<i
+									class="material-icons stop-icon"
+									content="Stop blacklisting songs from this playlist
 							"
-										v-tippy
-										>stop</i
-									>
-								</confirm>
-								<i
-									v-if="playlist.createdBy === userId"
-									@click="showPlaylist(playlist._id)"
-									class="material-icons edit-icon"
-									content="Edit Playlist"
 									v-tippy
-									>edit</i
+									>stop</i
 								>
-								<i
-									v-else
-									@click="showPlaylist(playlist._id)"
-									class="material-icons edit-icon"
-									content="View Playlist"
-									v-tippy
-									>visibility</i
-								>
-							</div>
+							</confirm>
+							<i
+								v-if="playlist.createdBy === userId"
+								@click="showPlaylist(playlist._id)"
+								class="material-icons edit-icon"
+								content="Edit Playlist"
+								v-tippy
+								>edit</i
+							>
+							<i
+								v-else
+								@click="showPlaylist(playlist._id)"
+								class="material-icons edit-icon"
+								content="View Playlist"
+								v-tippy
+								>visibility</i
+							>
 						</template>
 					</playlist-item>
 				</div>

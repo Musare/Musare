@@ -35,38 +35,34 @@
 							v-if="isAdminOnly() || isOwnerOnly()"
 							#actions
 						>
-							<div class="icons-group">
-								<confirm
-									v-if="isOwnerOnly() || isAdminOnly()"
-									placement="left"
-									@confirm="
-										removeFromQueue(element.youtubeId)
-									"
-								>
-									<i
-										class="material-icons delete-icon"
-										content="Remove Song from Queue"
-										v-tippy
-										>delete_forever</i
-									>
-								</confirm>
+							<confirm
+								v-if="isOwnerOnly() || isAdminOnly()"
+								placement="left"
+								@confirm="removeFromQueue(element.youtubeId)"
+							>
 								<i
-									class="material-icons"
-									v-if="index > 0"
-									@click="moveSongToTop(element, index)"
-									content="Move to top of Queue"
+									class="material-icons delete-icon"
+									content="Remove Song from Queue"
 									v-tippy
-									>vertical_align_top</i
+									>delete_forever</i
 								>
-								<i
-									v-if="queue.length - 1 !== index"
-									@click="moveSongToBottom(element, index)"
-									class="material-icons"
-									content="Move to bottom of Queue"
-									v-tippy
-									>vertical_align_bottom</i
-								>
-							</div>
+							</confirm>
+							<i
+								class="material-icons"
+								v-if="index > 0"
+								@click="moveSongToTop(element, index)"
+								content="Move to top of Queue"
+								v-tippy
+								>vertical_align_top</i
+							>
+							<i
+								v-if="queue.length - 1 !== index"
+								@click="moveSongToBottom(element, index)"
+								class="material-icons"
+								content="Move to bottom of Queue"
+								v-tippy
+								>vertical_align_bottom</i
+							>
 						</template>
 					</song-item>
 				</template>
