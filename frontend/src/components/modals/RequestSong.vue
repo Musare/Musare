@@ -52,14 +52,14 @@
 							>
 								<a
 									class="button is-success"
-									v-if="result.isAddedToQueue"
+									v-if="result.isRequested"
 									href="#"
 									key="added-to-playlist"
 								>
 									<i class="material-icons icon-with-button"
 										>done</i
 									>
-									Added to queue
+									Requested song
 								</a>
 								<a
 									class="button is-dark"
@@ -73,7 +73,7 @@
 									<i class="material-icons icon-with-button"
 										>add</i
 									>
-									Add to queue
+									Request song
 								</a>
 							</transition>
 						</template>
@@ -172,9 +172,7 @@ export default {
 						if (res.status !== "success")
 							new Toast(`Error: ${res.message}`);
 						else {
-							this.search.songs.results[
-								index
-							].isAddedToQueue = true;
+							this.search.songs.results[index].isRequested = true;
 
 							new Toast(res.message);
 						}
@@ -185,7 +183,7 @@ export default {
 					if (res.status !== "success")
 						new Toast(`Error: ${res.message}`);
 					else {
-						this.search.songs.results[index].isAddedToQueue = true;
+						this.search.songs.results[index].isRequested = true;
 
 						new Toast(res.message);
 					}

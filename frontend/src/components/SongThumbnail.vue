@@ -38,11 +38,13 @@
 						song.thumbnail === 'empty' ||
 						song.thumbnail == null)
 			"
+			loading="lazy"
 			:src="`https://img.youtube.com/vi/${song.youtubeId}/mqdefault.jpg`"
 			onerror="this.src='/assets/notes-transparent.png'"
 		/>
 		<img
 			v-else
+			loading="lazy"
 			:src="song.thumbnail"
 			onerror="this.src='/assets/notes-transparent.png'"
 		/>
