@@ -426,7 +426,7 @@ a {
 			0 10px 10px rgba(0, 0, 0, 0.22);
 		background-color: var(--white);
 
-		> .tippy-arrow::before {
+		&:not([data-theme~="songActions"]) > .tippy-arrow::before {
 			border-top-color: var(--white);
 		}
 
@@ -476,7 +476,7 @@ a {
 		}
 	}
 
-	.tippy-popper[data-placement^="bottom"] {
+	.tippy-box[data-placement^="bottom"] {
 		&[data-theme~="songActions"],
 		&[data-theme~="addToPlaylist"] {
 			> .tippy-arrow::before {
@@ -485,7 +485,7 @@ a {
 		}
 	}
 
-	.tippy-popper[data-placement^="left"] {
+	.tippy-box[data-placement^="left"] {
 		&[data-theme~="songActions"],
 		&[data-theme~="addToPlaylist"] {
 			> .tippy-arrow::before {

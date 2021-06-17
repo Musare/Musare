@@ -114,6 +114,7 @@
 										-1
 								"
 								:song="song"
+								placement="top-end"
 							>
 								<template #button>
 									<i
