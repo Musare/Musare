@@ -2,10 +2,19 @@
 	<modal class="view-report-modal" title="View Report">
 		<template #body v-if="report && report._id">
 			<div class="report-item">
-				<report-info-item
-					:created-at="report.createdAt"
-					:created-by="report.createdBy"
-				/>
+				<div id="song-and-report-item">
+					<report-info-item
+						:created-at="report.createdAt"
+						:created-by="report.createdBy"
+					/>
+
+					<song-item
+						:song="song"
+						:duration="false"
+						:disabled-actions="['report']"
+					/>
+				</div>
+
 				<div class="report-sub-items">
 					<div
 						class="report-sub-item report-sub-item-unresolved"
@@ -93,10 +102,11 @@ import { mapActions, mapGetters } from "vuex";
 import Toast from "toasters";
 
 import Modal from "@/components/Modal.vue";
+import SongItem from "@/components/SongItem.vue";
 import ReportInfoItem from "@/components/ReportInfoItem.vue";
 
 export default {
-	components: { Modal, ReportInfoItem },
+	components: { Modal, SongItem, ReportInfoItem },
 	props: {
 		reportId: { type: String, default: "" },
 		sector: { type: String, default: "admin" }
@@ -111,7 +121,8 @@ export default {
 				title: "title",
 				custom: "lightbulb"
 			},
-			report: {}
+			report: {},
+			song: null
 		};
 	},
 	computed: {
@@ -130,6 +141,23 @@ export default {
 				);
 
 				this.report = report;
+
+				this.socket.dispatch(
+					"songs.getSongFromSongId",
+					this.report.song._id,
+					res => {
+						console.log("res", res);
+						if (res.status === "success") this.song = res.data.song;
+						else {
+							new Toast(
+								"Cannot find the report's associated song"
+							);
+							this.closeModal("viewReport");
+						}
+
+						console.log(this.song);
+					}
+				);
 			} else {
 				new Toast("Report with that ID not found");
 				this.closeModal("viewReport");
@@ -188,36 +216,49 @@ export default {
 };
 </script>
 
-<style lang="scss">
-.view-report-modal .modal-card {
-	width: auto;
-
-	.modal-card-body {
-		display: flex;
-		justify-content: center;
-	}
-}
-</style>
-
 <style lang="scss" scoped>
 .night-mode {
-	.report-item {
+	.report-sub-items {
 		background-color: var(--dark-grey-2) !important;
-	}
 
-	.report-item-header {
-		background-color: var(--dark-grey-3) !important;
+		.report-sub-item {
+			border: 0.5px solid #fff !important;
+		}
 	}
 }
 
 .report-item {
-	background-color: var(--white);
-	border: 0.5px solid var(--primary-color);
-	border-radius: 5px;
-	padding: 8px;
+	#song-and-report-item {
+		display: flex;
+		margin-bottom: 20px;
 
-	&:not(:first-of-type) {
-		margin-bottom: 16px;
+		.universal-item {
+			width: 50%;
+		}
+
+		.song-item {
+			margin-left: 5px;
+		}
+
+		.report-info-item {
+			margin-right: 5px;
+		}
+	}
+
+	/deep/ .report-info-item {
+		justify-content: flex-start;
+
+		.item-title-description {
+			.item-title {
+				font-size: 20px;
+				font-family: Karla, Arial, sans-serif;
+			}
+
+			.item-description {
+				font-size: 14px;
+				font-family: Karla, Arial, sans-serif;
+			}
+		}
 	}
 
 	.report-sub-items {

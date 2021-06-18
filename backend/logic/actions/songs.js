@@ -344,38 +344,6 @@ export default {
 	}),
 
 	/**
-	 * Gets a song from the YouTube song id
-	 *
-	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {string} youtubeId - the YouTube song id
-	 * @param {Function} cb
-	 */
-	getSong: isAdminRequired(function getSong(session, youtubeId, cb) {
-		async.waterfall(
-			[
-				next => {
-					SongsModule.runJob("GET_SONG_FROM_YOUTUBE_ID", { youtubeId }, this)
-						.then(song => {
-							next(null, song);
-						})
-						.catch(err => {
-							next(err);
-						});
-				}
-			],
-			async (err, song) => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log("ERROR", "SONGS_GET_SONG", `Failed to get song ${youtubeId}. "${err}"`);
-					return cb({ status: "error", message: err });
-				}
-				this.log("SUCCESS", "SONGS_GET_SONG", `Got song ${youtubeId} successfully.`);
-				return cb({ status: "success", data: { song } });
-			}
-		);
-	}),
-
-	/**
 	 * Gets a song from the Musare song id
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
@@ -402,62 +370,6 @@ export default {
 			}
 		);
 	}),
-
-	/**
-	 * Obtains basic metadata of a song in order to format an activity
-	 *
-	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {string} youtubeId - the youtube song id
-	 * @param {Function} cb - callback
-	 */
-	getSongForActivity(session, youtubeId, cb) {
-		async.waterfall(
-			[
-				next => {
-					SongsModule.runJob("GET_SONG_FROM_YOUTUBE_ID", { youtubeId }, this)
-						.then(response => next(null, response.song))
-						.catch(next);
-				}
-			],
-			async (err, song) => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-
-					this.log(
-						"ERROR",
-						"SONGS_GET_SONG_FOR_ACTIVITY",
-						`Failed to obtain metadata of song ${youtubeId} for activity formatting. "${err}"`
-					);
-
-					return cb({ status: "error", message: err });
-				}
-
-				if (song) {
-					this.log(
-						"SUCCESS",
-						"SONGS_GET_SONG_FOR_ACTIVITY",
-						`Obtained metadata of song ${youtubeId} for activity formatting successfully.`
-					);
-
-					return cb({
-						status: "success",
-						data: {
-							title: song.title,
-							thumbnail: song.thumbnail
-						}
-					});
-				}
-
-				this.log(
-					"ERROR",
-					"SONGS_GET_SONG_FOR_ACTIVITY",
-					`Song ${youtubeId} does not exist so failed to obtain for activity formatting.`
-				);
-
-				return cb({ status: "error" });
-			}
-		);
-	},
 
 	/**
 	 * Updates a song

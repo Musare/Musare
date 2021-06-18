@@ -542,10 +542,6 @@ a {
 		width: 146px;
 	}
 
-	.addToPlaylistDropdown .tippy-popper {
-		max-width: unset;
-	}
-
 	i,
 	a {
 		display: inline-block;

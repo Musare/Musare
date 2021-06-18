@@ -10,7 +10,7 @@
 		</div>
 
 		<div class="item-title-description">
-			<p class="item-title">
+			<h2 class="item-title">
 				Reported by
 				<router-link
 					v-if="createdBy.username"
@@ -22,14 +22,14 @@
 					{{ createdBy.username }}
 				</router-link>
 				<span v-else :title="createdBy._id">Deleted User</span>
-			</p>
-			<p class="item-description">
+			</h2>
+			<h5 class="item-description">
 				{{
 					formatDistance(new Date(createdAt), new Date(), {
 						addSuffix: true
 					})
 				}}
-			</p>
+			</h5>
 		</div>
 
 		<div class="universal-item-actions">
@@ -55,6 +55,13 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.night-mode {
+	.report-info-item {
+		background-color: var(--dark-grey-2) !important;
+		border: 0 !important;
+	}
+}
+
 .report-info-item {
 	.item-icon {
 		min-width: 45px;
@@ -78,10 +85,13 @@ export default {
 
 	.item-title {
 		font-size: 14px;
+		margin: 0;
 	}
 
 	.item-description {
 		font-size: 12px;
+		text-transform: capitalize;
+		margin: 0;
 	}
 }
 </style>

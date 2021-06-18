@@ -177,5 +177,9 @@ export default {
 
 #create-playlist {
 	margin-top: 10px;
+
+	i {
+		color: #fff;
+	}
 }
 </style>
