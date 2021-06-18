@@ -135,17 +135,23 @@ export default {
 					userModel
 						.findById(report.createdBy)
 						.select({ avatar: -1, name: -1, username: -1 })
-						.exec((err, { avatar, name, username }) =>
-							next(err, {
-								...report._doc,
-								createdBy: {
-									avatar,
-									name,
-									username,
-									_id: report.createdBy
-								}
-							})
-						)
+						.exec((err, user) => {
+							if (!user)
+								next(err, {
+									...report._doc,
+									createdBy: { _id: report.createdBy }
+								});
+							else
+								next(err, {
+									...report._doc,
+									createdBy: {
+										avatar: user.avatar,
+										name: user.name,
+										username: user.username,
+										_id: report.createdBy
+									}
+								});
+						})
 			],
 			async (err, report) => {
 				if (err) {
@@ -185,16 +191,22 @@ export default {
 							userModel
 								.findById(report.createdBy)
 								.select({ avatar: -1, name: -1, username: -1 })
-								.exec((err, { avatar, name, username }) => {
-									reports.push({
-										...report._doc,
-										createdBy: {
-											avatar,
-											name,
-											username,
-											_id: report.createdBy
-										}
-									});
+								.exec((err, user) => {
+									if (!user)
+										next(err, {
+											...report._doc,
+											createdBy: { _id: report.createdBy }
+										});
+									else
+										next(err, {
+											...report._doc,
+											createdBy: {
+												avatar: user.avatar,
+												name: user.name,
+												username: user.username,
+												_id: report.createdBy
+											}
+										});
 
 									return cb(err);
 								});

@@ -14,52 +14,10 @@
 				<tbody>
 					<tr v-for="report in reports" :key="report._id">
 						<td>
-							<div class="report-item-header">
-								<div class="report-item-info">
-									<div class="report-item-icon">
-										<profile-picture
-											v-if="report.createdBy.avatar"
-											:avatar="report.createdBy.avatar"
-											:name="
-												report.createdBy.name
-													? report.createdBy.name
-													: report.createdBy.username
-											"
-										/>
-									</div>
-
-									<div class="report-item-summary">
-										<p class="report-item-summary-title">
-											Reported by
-											<router-link
-												v-if="report.createdBy.username"
-												:to="{
-													path: `/u/${report.createdBy.username}`
-												}"
-												:title="report.createdBy._id"
-											>
-												{{ report.createdBy.username }}
-											</router-link>
-											<span v-else>{{
-												report.createdBy._id
-											}}</span>
-										</p>
-										<p
-											class="report-item-summary-description"
-										>
-											{{
-												formatDistance(
-													new Date(report.createdAt),
-													new Date(),
-													{
-														addSuffix: true
-													}
-												)
-											}}
-										</p>
-									</div>
-								</div>
-							</div>
+							<report-info-item
+								:created-at="report.createdAt"
+								:created-by="report.createdBy"
+							/>
 						</td>
 						<td>
 							<span>
@@ -131,12 +89,11 @@
 </template>
 
 <script>
+import ReportInfoItem from "@/components/ReportInfoItem.vue";
 import { mapState, mapActions, mapGetters } from "vuex";
-import { formatDistance } from "date-fns";
 import { defineAsyncComponent } from "vue";
 
 import Toast from "toasters";
-import ProfilePicture from "@/components/ProfilePicture.vue";
 import ws from "@/ws";
 
 export default {
@@ -147,7 +104,7 @@ export default {
 		EditSong: defineAsyncComponent(() =>
 			import("@/components/modals/EditSong/index.vue")
 		),
-		ProfilePicture
+		ReportInfoItem
 	},
 	data() {
 		return {
@@ -193,7 +150,6 @@ export default {
 		// }
 	},
 	methods: {
-		formatDistance,
 		init() {
 			this.socket.dispatch("apis.joinAdminRoom", "reports", () => {});
 		},
@@ -274,51 +230,5 @@ td {
 
 li {
 	list-style: inside;
-}
-
-.report-item-header {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	margin-bottom: 8px;
-	background-color: var(--light-grey);
-	padding: 5px;
-	border-radius: 5px;
-
-	.report-item-info {
-		display: flex;
-		align-items: center;
-
-		.report-item-icon {
-			display: flex;
-			align-items: center;
-
-			.profile-picture,
-			i {
-				margin-right: 10px;
-				width: 45px;
-				height: 45px;
-			}
-
-			i {
-				font-size: 30px;
-				display: flex;
-				align-items: center;
-				justify-content: center;
-			}
-		}
-
-		.report-item-summary {
-			.report-item-summary-title {
-				font-size: 14px;
-				text-transform: capitalize;
-			}
-
-			.report-item-summary-description {
-				text-transform: capitalize;
-				font-size: 12px;
-			}
-		}
-	}
 }
 </style>

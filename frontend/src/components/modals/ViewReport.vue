@@ -1,60 +1,11 @@
 <template>
-	<modal title="View Report">
+	<modal class="view-report-modal" title="View Report">
 		<template #body v-if="report && report._id">
 			<div class="report-item">
-				<div class="report-item-header">
-					<div class="report-item-info">
-						<div class="report-item-icon">
-							<profile-picture
-								v-if="report.createdBy.avatar"
-								:avatar="report.createdBy.avatar"
-								:name="
-									report.createdBy.name
-										? report.createdBy.name
-										: report.createdBy.username
-								"
-							/>
-						</div>
-
-						<div class="report-item-summary">
-							<p class="report-item-summary-title">
-								Reported by
-								<router-link
-									v-if="report.createdBy.username"
-									:to="{
-										path: `/u/${report.createdBy.username}`
-									}"
-									:title="report.createdBy._id"
-								>
-									{{ report.createdBy.username }}
-								</router-link>
-								<span v-else>{{ report.createdBy._id }}</span>
-							</p>
-							<p class="report-item-summary-description">
-								{{
-									formatDistance(
-										new Date(report.createdAt),
-										new Date(),
-										{
-											addSuffix: true
-										}
-									)
-								}}
-								/ YouTube:
-								<a
-									:href="
-										'https://www.youtube.com/watch?v=' +
-											`${report.song.youtubeId}`
-									"
-									target="_blank"
-								>
-									{{ report.song.youtubeId }}</a
-								>
-								/ Song ID: {{ report.song._id }}
-							</p>
-						</div>
-					</div>
-				</div>
+				<report-info-item
+					:created-at="report.createdAt"
+					:created-by="report.createdBy"
+				/>
 				<div class="report-sub-items">
 					<div
 						class="report-sub-item report-sub-item-unresolved"
@@ -139,14 +90,13 @@
 
 <script>
 import { mapActions, mapGetters } from "vuex";
-import { formatDistance } from "date-fns";
 import Toast from "toasters";
 
-import ProfilePicture from "@/components/ProfilePicture.vue";
-import Modal from "../Modal.vue";
+import Modal from "@/components/Modal.vue";
+import ReportInfoItem from "@/components/ReportInfoItem.vue";
 
 export default {
-	components: { Modal, ProfilePicture },
+	components: { Modal, ReportInfoItem },
 	props: {
 		reportId: { type: String, default: "" },
 		sector: { type: String, default: "admin" }
@@ -210,7 +160,6 @@ export default {
 		this.socket.dispatch("apis.leaveRoom", `view-report.${this.reportId}`);
 	},
 	methods: {
-		formatDistance,
 		resolve(reportId) {
 			return this.resolveReport(reportId)
 				.then(res => {
@@ -239,6 +188,17 @@ export default {
 };
 </script>
 
+<style lang="scss">
+.view-report-modal .modal-card {
+	width: auto;
+
+	.modal-card-body {
+		display: flex;
+		justify-content: center;
+	}
+}
+</style>
+
 <style lang="scss" scoped>
 .night-mode {
 	.report-item {
@@ -258,60 +218,6 @@ export default {
 
 	&:not(:first-of-type) {
 		margin-bottom: 16px;
-	}
-
-	.report-item-header {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		margin-bottom: 8px;
-		background-color: var(--light-grey);
-		// padding: 5px;
-		padding: 10px;
-		border-radius: 5px;
-
-		.report-item-info {
-			display: flex;
-			align-items: center;
-
-			.report-item-icon {
-				display: flex;
-				align-items: center;
-
-				.profile-picture,
-				i {
-					margin-right: 10px;
-					width: 45px;
-					height: 45px;
-				}
-
-				i {
-					font-size: 30px;
-					display: flex;
-					align-items: center;
-					justify-content: center;
-				}
-			}
-
-			.report-item-summary {
-				.report-item-summary-title {
-					// font-size: 14px;
-					font-size: 16px;
-					text-transform: capitalize;
-				}
-
-				.report-item-summary-description {
-					text-transform: capitalize;
-					// font-size: 12px;
-					font-size: 14px;
-				}
-			}
-		}
-
-		.report-item-actions {
-			height: 24px;
-			margin-right: 4px;
-		}
 	}
 
 	.report-sub-items {

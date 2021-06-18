@@ -26,24 +26,16 @@
 					v-for="(issues, category) in sortedByCategory"
 					:key="category"
 				>
-					<div class="report-item-header">
-						<div class="report-item-info">
-							<div class="report-item-icon">
-								<i
-									class="material-icons"
-									:content="category"
-									v-tippy="{ theme: 'info' }"
-								>
-									{{ icons[category] }}
-								</i>
-							</div>
+					<div class="report-item-header universal-item">
+						<i
+							class="material-icons"
+							:content="category"
+							v-tippy="{ theme: 'info' }"
+						>
+							{{ icons[category] }}
+						</i>
 
-							<div class="report-item-summary">
-								<p class="report-item-summary-title">
-									{{ category }} Issues
-								</p>
-							</div>
-						</div>
+						<p>{{ category }} Issues</p>
 					</div>
 					<div class="report-sub-items">
 						<div
@@ -117,52 +109,11 @@
 					v-for="report in reports"
 					:key="report._id"
 				>
-					<div class="report-item-header">
-						<div class="report-item-info">
-							<div class="report-item-icon">
-								<profile-picture
-									v-if="report.createdBy.avatar"
-									:avatar="report.createdBy.avatar"
-									:name="
-										report.createdBy.name
-											? report.createdBy.name
-											: report.createdBy.username
-									"
-								/>
-							</div>
-
-							<div class="report-item-summary">
-								<p class="report-item-summary-title">
-									Reported by
-									<router-link
-										v-if="report.createdBy.username"
-										:to="{
-											path: `/u/${report.createdBy.username}`
-										}"
-										:title="report.createdBy._id"
-										@click="closeModal('editSong')"
-									>
-										{{ report.createdBy.username }}
-									</router-link>
-									<span v-else>{{
-										report.createdBy._id
-									}}</span>
-								</p>
-								<p class="report-item-summary-description">
-									{{
-										formatDistance(
-											parseISO(report.createdAt),
-											new Date(),
-											{
-												addSuffix: true
-											}
-										)
-									}}
-								</p>
-							</div>
-						</div>
-
-						<div class="report-item-actions universal-item-actions">
+					<report-info-item
+						:created-at="report.createdAt"
+						:created-by="report.createdBy"
+					>
+						<template #actions>
 							<i
 								class="material-icons resolve-icon"
 								content="Resolve all"
@@ -171,8 +122,9 @@
 							>
 								done_all
 							</i>
-						</div>
-					</div>
+						</template>
+					</report-info-item>
+
 					<div class="report-sub-items">
 						<div
 							class="report-sub-item report-sub-item-unresolved"
@@ -236,14 +188,12 @@
 </template>
 
 <script>
-import ProfilePicture from "@/components/ProfilePicture.vue";
-
+import ReportInfoItem from "@/components/ReportInfoItem.vue";
 import { mapState, mapGetters, mapActions } from "vuex";
-import { formatDistance, parseISO } from "date-fns";
 import Toast from "toasters";
 
 export default {
-	components: { ProfilePicture },
+	components: { ReportInfoItem },
 	data() {
 		return {
 			tab: "sort-by-report",
@@ -336,8 +286,6 @@ export default {
 				}
 			);
 		},
-		formatDistance,
-		parseISO,
 		...mapActions("modals/editSong", ["resolveReport"]),
 		...mapActions("modalVisibility", ["closeModal"])
 	}
@@ -408,53 +356,11 @@ export default {
 		}
 
 		.report-item-header {
-			display: flex;
-			align-items: center;
-			justify-content: space-between;
-			margin-bottom: 8px;
-			background-color: var(--light-grey);
-			padding: 5px;
-			border-radius: 5px;
+			justify-content: center;
+			text-transform: capitalize;
 
-			.report-item-info {
-				display: flex;
-				align-items: center;
-
-				.report-item-icon {
-					display: flex;
-					align-items: center;
-
-					.profile-picture,
-					i {
-						margin-right: 10px;
-						width: 45px;
-						height: 45px;
-					}
-
-					i {
-						font-size: 30px;
-						display: flex;
-						align-items: center;
-						justify-content: center;
-					}
-				}
-
-				.report-item-summary {
-					.report-item-summary-title {
-						font-size: 14px;
-						text-transform: capitalize;
-					}
-
-					.report-item-summary-description {
-						text-transform: capitalize;
-						font-size: 12px;
-					}
-				}
-			}
-
-			.report-item-actions {
-				height: 24px;
-				margin-right: 4px;
+			i {
+				margin-right: 5px;
 			}
 		}
 
