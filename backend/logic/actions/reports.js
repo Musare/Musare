@@ -16,7 +16,10 @@ CacheModule.runJob("SUB", {
 	cb: data =>
 		WSModule.runJob("EMIT_TO_ROOMS", {
 			rooms: [`edit-song.${data.songId}`, `view-report.${data.reportId}`],
-			args: ["event:admin.report.issue.toggled", { data: { issueId: data.issueId, reportId: data.reportId } }]
+			args: [
+				"event:admin.report.issue.toggled",
+				{ data: { issueId: data.issueId, reportId: data.reportId, resolved: data.resolved } }
+			]
 		})
 });
 
@@ -193,12 +196,12 @@ export default {
 								.select({ avatar: -1, name: -1, username: -1 })
 								.exec((err, user) => {
 									if (!user)
-										next(err, {
+										reports.push({
 											...report._doc,
 											createdBy: { _id: report.createdBy }
 										});
 									else
-										next(err, {
+										reports.push({
 											...report._doc,
 											createdBy: {
 												avatar: user.avatar,
@@ -306,11 +309,11 @@ export default {
 
 					return report.save(err => {
 						if (err) return next(err.message);
-						return next(null, report.song._id);
+						return next(null, issue.resolved, report.song._id);
 					});
 				}
 			],
-			async (err, songId) => {
+			async (err, resolved, songId) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
 					this.log(
@@ -323,7 +326,7 @@ export default {
 
 				CacheModule.runJob("PUB", {
 					channel: "report.issue.toggle",
-					value: { reportId, issueId, songId }
+					value: { reportId, issueId, songId, resolved }
 				});
 
 				this.log(

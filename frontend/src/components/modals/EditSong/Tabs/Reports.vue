@@ -250,14 +250,13 @@ export default {
 		this.socket.on(
 			"event:admin.report.issue.toggled",
 			res => {
-				console.log("being toggled twice?");
 				this.reports.forEach((report, index) => {
 					if (report._id === res.data.reportId) {
 						const issue = this.reports[index].issues.find(
 							issue => issue._id.toString() === res.data.issueId
 						);
 
-						issue.resolved = !issue.resolved;
+						issue.resolved = res.data.resolved;
 					}
 				});
 			},

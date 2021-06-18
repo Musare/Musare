@@ -150,7 +150,7 @@ export default {
 						issue => issue._id.toString() === res.data.issueId
 					);
 
-					issue.resolved = !issue.resolved;
+					issue.resolved = res.data.resolved;
 				}
 			},
 			{ modal: "viewReport" }
