@@ -6,6 +6,7 @@
 					<div class="report-item-info">
 						<div class="report-item-icon">
 							<profile-picture
+								v-if="report.createdBy.avatar"
 								:avatar="report.createdBy.avatar"
 								:name="
 									report.createdBy.name
@@ -19,6 +20,7 @@
 							<p class="report-item-summary-title">
 								Reported by
 								<router-link
+									v-if="report.createdBy.username"
 									:to="{
 										path: `/u/${report.createdBy.username}`
 									}"
@@ -26,6 +28,7 @@
 								>
 									{{ report.createdBy.username }}
 								</router-link>
+								<span v-else>{{ report.createdBy._id }}</span>
 							</p>
 							<p class="report-item-summary-description">
 								{{

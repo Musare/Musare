@@ -75,19 +75,27 @@ export default {
 					async.each(
 						_reports,
 						(report, cb) => {
+							console.log(typeof report.createdBy);
+
 							userModel
 								.findById(report.createdBy)
 								.select({ avatar: -1, name: -1, username: -1 })
-								.exec((err, { avatar, name, username }) => {
-									reports.push({
-										...report._doc,
-										createdBy: {
-											avatar,
-											name,
-											username,
-											_id: report.createdBy
-										}
-									});
+								.exec((err, user) => {
+									if (!user)
+										reports.push({
+											...report._doc,
+											createdBy: { _id: report.createdBy }
+										});
+									else
+										reports.push({
+											...report._doc,
+											createdBy: {
+												avatar: user.avatar,
+												name: user.name,
+												username: user.username,
+												_id: report.createdBy
+											}
+										});
 
 									return cb(err);
 								});
