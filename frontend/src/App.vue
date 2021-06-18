@@ -550,7 +550,7 @@ a {
 	a {
 		display: inline-block;
 		cursor: pointer;
-		color: var(--dark-grey);
+		// color: var(--dark-grey);
 		vertical-align: middle;
 
 		&:hover,
@@ -965,7 +965,7 @@ h4.section-title {
 		i,
 		span {
 			cursor: pointer;
-			color: var(--dark-grey);
+			// color: var(--dark-grey);
 
 			&:hover,
 			&:focus {

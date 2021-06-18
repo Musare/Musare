@@ -756,15 +756,16 @@ export default {
 				},
 
 				(song, next) => {
+					const oldStatus = song.status;
+
 					song.verifiedBy = session.userId;
 					song.verifiedAt = Date.now();
 					song.status = "verified";
-					song.save(err => {
-						next(err, song);
-					});
+
+					song.save(err => next(err, song, oldStatus));
 				},
 
-				(song, next) => {
+				(song, oldStatus, next) => {
 					song.genres.forEach(genre => {
 						PlaylistsModule.runJob("AUTOFILL_GENRE_PLAYLIST", { genre })
 							.then(() => {})
@@ -772,20 +773,23 @@ export default {
 					});
 
 					SongsModule.runJob("UPDATE_SONG", { songId: song._id });
-
-					next(null, song);
+					next(null, song, oldStatus);
 				}
 			],
-			async (err, song) => {
+			async (err, song, oldStatus) => {
 				if (err) {
 					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-
 					this.log("ERROR", "SONGS_VERIFY", `User "${session.userId}" failed to verify song. "${err}"`);
-
 					return cb({ status: "error", message: err });
 				}
 
 				this.log("SUCCESS", "SONGS_VERIFY", `User "${session.userId}" successfully verified song "${songId}".`);
+
+				if (oldStatus === "hidden")
+					CacheModule.runJob("PUB", {
+						channel: "song.removedHiddenSong",
+						value: song._id
+					});
 
 				CacheModule.runJob("PUB", {
 					channel: "song.newVerifiedSong",

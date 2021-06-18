@@ -1451,6 +1451,14 @@ export default {
 				display: flex;
 				margin-left: auto;
 				margin-right: 0;
+
+				button,
+				a,
+				span {
+					&:not(:last-child) {
+						margin-right: 5px;
+					}
+				}
 			}
 		}
 	}
