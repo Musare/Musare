@@ -350,7 +350,7 @@ export default {
 	 * @param {string} songId - the song id
 	 * @param {Function} cb
 	 */
-	getSongFromSongId: isAdminRequired(function getSong(session, songId, cb) {
+	getSongFromSongId: isAdminRequired(function getSongFromSongId(session, songId, cb) {
 		async.waterfall(
 			[
 				next => {

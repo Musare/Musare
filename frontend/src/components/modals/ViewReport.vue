@@ -2,7 +2,7 @@
 	<modal class="view-report-modal" title="View Report">
 		<template #body v-if="report && report._id">
 			<div class="report-item">
-				<div id="song-and-report-item">
+				<div id="song-and-report-items">
 					<report-info-item
 						:created-at="report.createdAt"
 						:created-by="report.createdBy"
@@ -146,7 +146,6 @@ export default {
 					"songs.getSongFromSongId",
 					this.report.song._id,
 					res => {
-						console.log("res", res);
 						if (res.status === "success") this.song = res.data.song;
 						else {
 							new Toast(
@@ -154,8 +153,6 @@ export default {
 							);
 							this.closeModal("viewReport");
 						}
-
-						console.log(this.song);
 					}
 				);
 			} else {
@@ -227,21 +224,21 @@ export default {
 	}
 }
 
+@media screen and (min-width: 650px) {
+	.report-info-item {
+		margin-right: 10px !important;
+	}
+}
+
 .report-item {
-	#song-and-report-item {
+	#song-and-report-items {
 		display: flex;
+		flex-wrap: wrap;
 		margin-bottom: 20px;
 
 		.universal-item {
-			width: 50%;
-		}
-
-		.song-item {
-			margin-left: 5px;
-		}
-
-		.report-info-item {
-			margin-right: 5px;
+			width: fit-content;
+			margin: 5px 0;
 		}
 	}
 

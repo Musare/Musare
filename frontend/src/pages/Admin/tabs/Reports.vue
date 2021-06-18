@@ -51,7 +51,7 @@
 							<a
 								class="button is-primary"
 								href="#"
-								@click="view(report)"
+								@click="view(report._id)"
 								content="Expand"
 								v-tippy
 							>
@@ -163,8 +163,8 @@ export default {
 
 			return categories;
 		},
-		view(report) {
-			this.viewingReportId = report._id;
+		view(reportId) {
+			this.viewingReportId = reportId;
 			this.openModal("viewReport");
 		},
 		resolve(reportId) {
