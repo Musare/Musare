@@ -353,9 +353,26 @@ export default {
 	},
 	mounted() {
 		this.socket.dispatch("reports.myReportsForSong", this.song._id, res => {
-			if (res.status === "success")
+			if (res.status === "success") {
 				this.existingReports = res.data.reports;
+				this.existingReports.forEach(report =>
+					this.socket.dispatch(
+						"apis.joinRoom",
+						`view-report.${report._id}`
+					)
+				);
+			}
 		});
+
+		this.socket.on(
+			"event:admin.report.resolved",
+			res => {
+				this.existingReports = this.existingReports.filter(
+					report => report._id !== res.data.reportId
+				);
+			},
+			{ modal: "report" }
+		);
 	},
 	methods: {
 		view(reportId) {
