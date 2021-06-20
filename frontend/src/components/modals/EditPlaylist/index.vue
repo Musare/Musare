@@ -616,17 +616,6 @@ export default {
 	}
 }
 
-@media screen and (max-width: 1300px) {
-	.edit-playlist-modal .edit-playlist-modal-inner-container {
-		height: auto !important;
-
-		/deep/ .section,
-		#tab-selection {
-			max-width: 100% !important;
-		}
-	}
-}
-
 #tabs-container {
 	// padding: 16px;
 
@@ -634,7 +623,7 @@ export default {
 		display: flex;
 		// overflow-x: auto;
 		margin: 24px 10px 0 10px;
-		max-width: 600px;
+		max-width: 100%;
 
 		.button {
 			border-radius: 5px 5px 0 0;
@@ -669,6 +658,7 @@ export default {
 		display: flex;
 		flex-wrap: wrap;
 		height: 100%;
+		row-gap: 24px;
 
 		&.view-only {
 			height: auto !important;
@@ -692,7 +682,7 @@ export default {
 	/deep/ .section {
 		padding: 15px !important;
 		margin: 0 10px;
-		max-width: 600px;
+		max-width: 100%;
 		display: flex;
 		flex-direction: column;
 		flex-grow: 1;
@@ -708,7 +698,7 @@ export default {
 	}
 
 	#first-column {
-		max-width: 100%;
+		flex-basis: 550px;
 		height: 100%;
 		overflow-y: auto;
 		flex-grow: 1;
@@ -739,7 +729,7 @@ export default {
 	}
 
 	#second-column {
-		max-width: 100%;
+		flex-basis: 650px;
 		height: 100%;
 		overflow-y: auto;
 		flex-grow: 1;
