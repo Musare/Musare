@@ -54,6 +54,7 @@ export default {
 		clearStation(state) {
 			state.originalStation = null;
 			state.station = null;
+			state.songsList = null;
 		},
 		updateSongsList(state, songsList) {
 			state.songsList = songsList;

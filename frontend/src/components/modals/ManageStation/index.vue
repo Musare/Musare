@@ -551,7 +551,6 @@ export default {
 			() => {}
 		);
 
-		this.repositionSongInList([]);
 		this.clearStation();
 		this.showTab("settings");
 	},
