@@ -103,4 +103,25 @@ p {
 		column-gap: 16px;
 	}
 }
+
+@media screen and (max-width: 600px) {
+	.modal-card {
+		max-height: none;
+
+		.modal-card-body {
+			// padding: 0;
+		}
+
+		.modal-card-head,
+		.modal-card-foot {
+			border-radius: 0;
+		}
+	}
+}
+
+@media screen and (max-height: 650px) {
+	.modal-card {
+		height: 100%;
+	}
+}
 </style>
