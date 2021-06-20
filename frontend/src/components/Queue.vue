@@ -201,7 +201,7 @@ export default {
 			socket: "websockets/getSocket"
 		})
 	},
-	onUpdated() {
+	updated() {
 		// check if actionable button is visible, if not: set max-height of queue items to 100%
 		if (
 			document
