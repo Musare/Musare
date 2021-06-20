@@ -78,7 +78,7 @@
 						</h2>
 						<p
 							class="content-box-description"
-							v-if="!this.email.hasBeenSentAlready"
+							v-if="!email.hasBeenSentAlready"
 						>
 							A code has been sent to
 							<strong>{{ email.value }}.</strong>
