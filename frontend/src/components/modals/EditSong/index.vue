@@ -325,9 +325,18 @@
 							>
 								Reports ({{ reports.length }})
 							</button>
+							<button
+								class="button is-default"
+								:class="{ selected: tab === 'youtube' }"
+								ref="youtube-tab"
+								@click="showTab('youtube')"
+							>
+								YouTube
+							</button>
 						</div>
 						<discogs class="tab" v-show="tab === 'discogs'" />
 						<reports class="tab" v-show="tab === 'reports'" />
+						<youtube class="tab" v-show="tab === 'youtube'" />
 					</div>
 				</div>
 			</template>
@@ -445,9 +454,18 @@ import SaveButton from "../../SaveButton.vue";
 
 import Discogs from "./Tabs/Discogs.vue";
 import Reports from "./Tabs/Reports.vue";
+import Youtube from "./Tabs/Youtube.vue";
 
 export default {
-	components: { Modal, FloatingBox, SaveButton, Confirm, Discogs, Reports },
+	components: {
+		Modal,
+		FloatingBox,
+		SaveButton,
+		Confirm,
+		Discogs,
+		Reports,
+		Youtube
+	},
 	props: {
 		youtubeId: { type: String, default: null },
 		songId: { type: String, default: null },

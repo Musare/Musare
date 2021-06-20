@@ -35,7 +35,10 @@ export default {
 		updateReports: ({ commit }, reports) =>
 			commit("updateReports", reports),
 		resolveReport: ({ commit }, reportId) =>
-			commit("resolveReport", reportId)
+			commit("resolveReport", reportId),
+		updateYoutubeId: ({ commit }, youtubeId) => {
+			commit("updateYoutubeId", youtubeId);
+		}
 	},
 	mutations: {
 		showTab(state, tab) {
@@ -86,6 +89,9 @@ export default {
 			state.reports = state.reports.filter(
 				report => report._id !== reportId
 			);
+		},
+		updateYoutubeId(state, youtubeId) {
+			state.song.youtubeId = youtubeId;
 		}
 	}
 };
