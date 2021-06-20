@@ -1774,6 +1774,18 @@ export default {
 						this.updateUsers(res.data.users);
 
 						this.socket.dispatch(
+							"stations.getStationIncludedPlaylistsById",
+							this.station._id,
+							res => {
+								if (res.status === "success") {
+									this.setIncludedPlaylists(
+										res.data.playlists
+									);
+								}
+							}
+						);
+
+						this.socket.dispatch(
 							"stations.getStationExcludedPlaylistsById",
 							this.station._id,
 							res => {
