@@ -1124,10 +1124,12 @@ export default {
 				pausedAt
 			} = data;
 
-			if (!currentSong.skipDuration || currentSong.skipDuration < 0)
-				currentSong.skipDuration = 0;
-			if (!currentSong.duration || currentSong.duration < 0)
-				currentSong.duration = 0;
+			if (currentSong) {
+				if (!currentSong.skipDuration || currentSong.skipDuration < 0)
+					currentSong.skipDuration = 0;
+				if (!currentSong.duration || currentSong.duration < 0)
+					currentSong.duration = 0;
+			}
 
 			this.updateCurrentSong(currentSong || {});
 
@@ -1785,13 +1787,10 @@ export default {
 
 						this.socket.dispatch("stations.getQueue", _id, res => {
 							if (res.status === "success") {
-								this.updateSongsList(res.data.queue);
-								let nextSong = null;
-								if (this.songsList[0]) {
-									nextSong = this.songsList[0].youtubeId
-										? this.songsList[0]
-										: null;
-								}
+								const { queue } = res.data;
+								this.updateSongsList(queue);
+								const [nextSong] = queue;
+
 								this.updateNextSong(nextSong);
 								this.setNextCurrentSong({
 									currentSong: nextSong,
