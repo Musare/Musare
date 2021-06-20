@@ -420,18 +420,40 @@ export default {
 </style>
 
 <style lang="scss" scoped>
+.night-mode {
+	@media screen and (max-width: 900px) {
+		#right-part {
+			background-color: var(--dark-grey-3) !important;
+		}
+	}
+}
+
 .report-modal-inner-container {
 	display: flex;
+
+	@media screen and (max-width: 900px) {
+		flex-wrap: wrap-reverse;
+
+		#left-part {
+			width: 100%;
+		}
+
+		#right-part {
+			border-left: 0 !important;
+			margin-left: 0 !important;
+			width: 100%;
+			min-width: 0 !important;
+			margin-bottom: 20px;
+			padding: 20px;
+			background-color: var(--light-grey);
+		}
+	}
 
 	#right-part {
 		border-left: 1px solid var(--light-grey-3);
 		padding-left: 20px;
 		margin-left: 20px;
 		min-width: 325px;
-
-		@media screen and (max-width: 900px) {
-			display: none;
-		}
 
 		.report-items {
 			max-height: 485px;
