@@ -15,6 +15,7 @@ import editPlaylistModal from "./modules/modals/editPlaylist";
 import manageStationModal from "./modules/modals/manageStation";
 import editUserModal from "./modules/modals/editUser";
 import viewPunishmentModal from "./modules/modals/viewPunishment";
+import viewReportModal from "./modules/modals/viewReport";
 import reportModal from "./modules/modals/report";
 
 export default createStore({
@@ -34,7 +35,8 @@ export default createStore({
 				manageStation: manageStationModal,
 				editUser: editUserModal,
 				viewPunishment: viewPunishmentModal,
-				report: reportModal
+				report: reportModal,
+				viewReport: viewReportModal
 			}
 		}
 	},

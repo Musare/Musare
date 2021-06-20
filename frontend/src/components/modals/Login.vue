@@ -39,6 +39,7 @@
 								type="password"
 								ref="password"
 								placeholder="Password..."
+								@input="checkForAutofill($event)"
 								@keypress="submitOnEnter(submitModal, $event)"
 							/>
 							<a @click="togglePasswordVisibility()">
@@ -143,7 +144,17 @@ export default {
 		if (this.$route.path === "/login") this.isPage = true;
 	},
 	methods: {
-		submitOnEnter: (cb, event) => {
+		checkForAutofill(event) {
+			if (
+				event.target.value !== "" &&
+				event.inputType === undefined &&
+				event.data === undefined &&
+				event.dataTransfer === undefined &&
+				event.isComposing === undefined
+			)
+				this.submitModal();
+		},
+		submitOnEnter(cb, event) {
 			if (event.which === 13) cb();
 		},
 		submitModal() {

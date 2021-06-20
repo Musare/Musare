@@ -481,8 +481,9 @@ export default {
 					userId: session.userId,
 					type: "song__report",
 					payload: {
-						message: `Reported song <youtubeId>${song.title} by ${song.artists.join(", ")}</youtubeId>`,
+						message: `Created a <reportId>${report._id}</reportId> for song <youtubeId>${song.title}</youtubeId>`,
 						youtubeId: report.song.youtubeId,
+						reportId: report._id,
 						thumbnail: song.thumbnail
 					}
 				});

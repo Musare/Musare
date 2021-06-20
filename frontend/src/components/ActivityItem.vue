@@ -46,13 +46,25 @@ export default {
 	},
 	computed: {
 		formattedMessage() {
-			const { youtubeId, playlistId, stationId } = this.activity.payload;
+			const {
+				youtubeId,
+				playlistId,
+				stationId,
+				reportId
+			} = this.activity.payload;
 			let { message } = this.activity.payload;
 
 			if (youtubeId) {
 				message = message.replace(
 					/<youtubeId>(.*)<\/youtubeId>/g,
 					"$1"
+				);
+			}
+
+			if (reportId) {
+				message = message.replace(
+					/<reportId>(.*)<\/reportId>/g,
+					`<a href='#' class='activity-item-link' @click='showReport("${reportId}")'>report</a>`
 				);
 			}
 
@@ -72,12 +84,27 @@ export default {
 
 			return {
 				template: `<p>${message}</p>`,
-				methods: { showPlaylist: this.showPlaylist }
+				methods: {
+					showPlaylist: this.showPlaylist,
+					showReport: this.showReport
+				}
 			};
 		},
 		textOnlyMessage() {
-			const { youtubeId, playlistId, stationId } = this.activity.payload;
+			const {
+				youtubeId,
+				playlistId,
+				stationId,
+				reportId
+			} = this.activity.payload;
 			let { message } = this.activity.payload;
+
+			if (reportId) {
+				message = message.replace(
+					/<reportId>(.*)<\/reportId>/g,
+					"report"
+				);
+			}
 
 			if (youtubeId) {
 				message = message.replace(
@@ -154,6 +181,10 @@ export default {
 
 			return icons[this.activity.type];
 		},
+		showReport(reportId) {
+			this.viewReport(reportId);
+			this.openModal("viewReport");
+		},
 		showPlaylist(playlistId) {
 			this.editPlaylist(playlistId);
 			this.openModal("editPlaylist");
@@ -161,7 +192,8 @@ export default {
 		...mapActions("user/playlists", ["editPlaylist"]),
 		formatDistance,
 		parseISO,
-		...mapActions("modalVisibility", ["openModal"])
+		...mapActions("modalVisibility", ["openModal"]),
+		...mapActions("modals/viewReport", ["viewReport"])
 	}
 };
 </script>

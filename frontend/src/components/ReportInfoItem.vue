@@ -18,6 +18,7 @@
 						path: `/u/${createdBy.username}`
 					}"
 					:title="createdBy._id"
+					@click="closeModal('viewReport')"
 				>
 					{{ createdBy.username }}
 				</router-link>
@@ -39,7 +40,9 @@
 </template>
 
 <script>
+import { mapActions } from "vuex";
 import { formatDistance } from "date-fns";
+
 import ProfilePicture from "@/components/ProfilePicture.vue";
 
 export default {
@@ -49,7 +52,8 @@ export default {
 		createdAt: { type: String, default: "" }
 	},
 	methods: {
-		formatDistance
+		formatDistance,
+		...mapActions("modalVisibility", ["closeModal"])
 	}
 };
 </script>

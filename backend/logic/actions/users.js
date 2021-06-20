@@ -1100,14 +1100,17 @@ export default {
 					}
 				});
 
-				if (preferences.nightmode !== user.preferences.nightmode)
+				if (preferences.nightmode !== undefined && preferences.nightmode !== user.preferences.nightmode)
 					ActivitiesModule.runJob("ADD_ACTIVITY", {
 						userId: session.userId,
 						type: "user__toggle_nightmode",
 						payload: { message: preferences.nightmode ? "Enabled nightmode" : "Disabled nightmode" }
 					});
 
-				if (preferences.autoSkipDisliked !== user.preferences.autoSkipDisliked)
+				if (
+					preferences.autoSkipDisliked !== undefined &&
+					preferences.autoSkipDisliked !== user.preferences.autoSkipDisliked
+				)
 					ActivitiesModule.runJob("ADD_ACTIVITY", {
 						userId: session.userId,
 						type: "user__toggle_autoskip_disliked_songs",
@@ -1118,7 +1121,10 @@ export default {
 						}
 					});
 
-				if (preferences.activityWatch !== user.preferences.activityWatch)
+				if (
+					preferences.activityWatch !== undefined &&
+					preferences.activityWatch !== user.preferences.activityWatch
+				)
 					ActivitiesModule.runJob("ADD_ACTIVITY", {
 						userId: session.userId,
 						type: "user__toggle_activity_watch",

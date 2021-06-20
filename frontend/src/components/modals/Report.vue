@@ -193,7 +193,7 @@
 				</a>
 			</template>
 		</modal>
-		<view-report v-if="modals.viewReport" :report-id="viewingReportId" />
+		<view-report v-if="modals.viewReport" />
 	</div>
 </template>
 
@@ -210,7 +210,6 @@ export default {
 	components: { Modal, ViewReport, SongItem, ReportInfoItem },
 	data() {
 		return {
-			viewingReportId: "",
 			icons: {
 				duration: "timer",
 				video: "tv",
@@ -353,13 +352,30 @@ export default {
 	},
 	mounted() {
 		this.socket.dispatch("reports.myReportsForSong", this.song._id, res => {
-			if (res.status === "success")
+			if (res.status === "success") {
 				this.existingReports = res.data.reports;
+				this.existingReports.forEach(report =>
+					this.socket.dispatch(
+						"apis.joinRoom",
+						`view-report.${report._id}`
+					)
+				);
+			}
 		});
+
+		this.socket.on(
+			"event:admin.report.resolved",
+			res => {
+				this.existingReports = this.existingReports.filter(
+					report => report._id !== res.data.reportId
+				);
+			},
+			{ modal: "report" }
+		);
 	},
 	methods: {
 		view(reportId) {
-			this.viewingReportId = reportId;
+			this.viewReport(reportId);
 			this.openModal("viewReport");
 		},
 		create() {
@@ -397,8 +413,8 @@ export default {
 				}
 			);
 		},
-		...mapActions("modals/report", ["reportSong"]),
-		...mapActions("modalVisibility", ["openModal", "closeModal"])
+		...mapActions("modalVisibility", ["openModal", "closeModal"]),
+		...mapActions("modals/viewReport", ["viewReport"])
 	}
 };
 </script>
@@ -420,18 +436,40 @@ export default {
 </style>
 
 <style lang="scss" scoped>
+.night-mode {
+	@media screen and (max-width: 900px) {
+		#right-part {
+			background-color: var(--dark-grey-3) !important;
+		}
+	}
+}
+
 .report-modal-inner-container {
 	display: flex;
+
+	@media screen and (max-width: 900px) {
+		flex-wrap: wrap-reverse;
+
+		#left-part {
+			width: 100%;
+		}
+
+		#right-part {
+			border-left: 0 !important;
+			margin-left: 0 !important;
+			width: 100%;
+			min-width: 0 !important;
+			margin-bottom: 20px;
+			padding: 20px;
+			background-color: var(--light-grey);
+		}
+	}
 
 	#right-part {
 		border-left: 1px solid var(--light-grey-3);
 		padding-left: 20px;
 		margin-left: 20px;
 		min-width: 325px;
-
-		@media screen and (max-width: 900px) {
-			display: none;
-		}
 
 		.report-items {
 			max-height: 485px;

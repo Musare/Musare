@@ -50,7 +50,8 @@ export default {
 		thumbnail: { type: String, required: false },
 		youtubeId: { type: String, required: false },
 		stationId: { type: String, required: false },
-		playlistId: { type: String, required: false }
+		playlistId: { type: String, required: false },
+		reportId: { type: String, required: false }
 	},
 	documentVersion: { type: Number, default: 2, required: true }
 };
