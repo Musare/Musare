@@ -2,6 +2,7 @@
 	<div v-if="isUser">
 		<edit-playlist v-if="modals.editPlaylist" />
 		<report v-if="modals.report" />
+		<view-report v-if="modals.viewReport" />
 		<edit-song v-if="modals.editSong" song-type="songs" />
 
 		<metadata :title="`Profile | ${user.username}`" />
@@ -130,6 +131,9 @@ export default {
 		),
 		Report: defineAsyncComponent(() =>
 			import("@/components/modals/Report.vue")
+		),
+		ViewReport: defineAsyncComponent(() =>
+			import("@/components/modals/ViewReport.vue")
 		),
 		EditSong: defineAsyncComponent(() =>
 			import("@/components/modals/EditSong")

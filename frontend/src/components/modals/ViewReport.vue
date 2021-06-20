@@ -54,7 +54,7 @@
 								content="Resolve"
 								v-tippy
 								v-if="!issue.resolved"
-								@click="toggleIssue(report._id, issue._id)"
+								@click="toggleIssue(issue._id)"
 							>
 								done
 							</i>
@@ -63,7 +63,7 @@
 								content="Unresolve"
 								v-tippy
 								v-else
-								@click="toggleIssue(report._id, issue._id)"
+								@click="toggleIssue(issue._id)"
 							>
 								remove
 							</i>
@@ -83,7 +83,7 @@
 				</i>
 				Edit Song
 			</a>
-			<a class="button is-success" href="#" @click="resolve(report._id)">
+			<a class="button is-success" href="#" @click="resolve()">
 				<i
 					class="material-icons icon-with-button"
 					content="Resolve"
@@ -98,7 +98,7 @@
 </template>
 
 <script>
-import { mapActions, mapGetters } from "vuex";
+import { mapActions, mapGetters, mapState } from "vuex";
 import Toast from "toasters";
 
 import Modal from "@/components/Modal.vue";
@@ -108,7 +108,6 @@ import ReportInfoItem from "@/components/ReportInfoItem.vue";
 export default {
 	components: { Modal, SongItem, ReportInfoItem },
 	props: {
-		reportId: { type: String, default: "" },
 		sector: { type: String, default: "admin" }
 	},
 	data() {
@@ -126,6 +125,9 @@ export default {
 		};
 	},
 	computed: {
+		...mapState("modals/viewReport", {
+			reportId: state => state.viewingReportId
+		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
 		})
@@ -185,17 +187,17 @@ export default {
 		this.socket.dispatch("apis.leaveRoom", `view-report.${this.reportId}`);
 	},
 	methods: {
-		resolve(reportId) {
-			return this.resolveReport(reportId)
+		resolve() {
+			return this.resolveReport(this.reportId)
 				.then(res => {
 					if (res.status === "success") this.closeModal("viewReport");
 				})
 				.catch(err => new Toast(err.message));
 		},
-		toggleIssue(reportId, issueId) {
+		toggleIssue(issueId) {
 			this.socket.dispatch(
 				"reports.toggleIssue",
-				reportId,
+				this.reportId,
 				issueId,
 				res => {
 					if (res.status !== "success") new Toast(res.message);

@@ -78,11 +78,7 @@
 			</table>
 		</div>
 
-		<view-report
-			v-if="modals.viewReport"
-			:report-id="viewingReportId"
-			sector="admin"
-		/>
+		<view-report v-if="modals.viewReport" sector="admin" />
 
 		<edit-song v-if="modals.editSong" song-type="songs" />
 	</div>
@@ -108,7 +104,6 @@ export default {
 	},
 	data() {
 		return {
-			viewingReportId: "",
 			reports: []
 		};
 	},
@@ -164,7 +159,7 @@ export default {
 			return categories;
 		},
 		view(reportId) {
-			this.viewingReportId = reportId;
+			this.viewReport(reportId);
 			this.openModal("viewReport");
 		},
 		resolve(reportId) {
@@ -176,7 +171,8 @@ export default {
 				.catch(err => new Toast(err.message));
 		},
 		...mapActions("modalVisibility", ["openModal", "closeModal"]),
-		...mapActions("admin/reports", ["resolveReport"])
+		...mapActions("admin/reports", ["resolveReport"]),
+		...mapActions("modals/viewReport", ["viewReport"])
 	}
 };
 </script>

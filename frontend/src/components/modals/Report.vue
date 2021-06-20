@@ -193,7 +193,7 @@
 				</a>
 			</template>
 		</modal>
-		<view-report v-if="modals.viewReport" :report-id="viewingReportId" />
+		<view-report v-if="modals.viewReport" />
 	</div>
 </template>
 
@@ -210,7 +210,6 @@ export default {
 	components: { Modal, ViewReport, SongItem, ReportInfoItem },
 	data() {
 		return {
-			viewingReportId: "",
 			icons: {
 				duration: "timer",
 				video: "tv",
@@ -376,7 +375,7 @@ export default {
 	},
 	methods: {
 		view(reportId) {
-			this.viewingReportId = reportId;
+			this.viewReport(reportId);
 			this.openModal("viewReport");
 		},
 		create() {
@@ -414,8 +413,8 @@ export default {
 				}
 			);
 		},
-		...mapActions("modals/report", ["reportSong"]),
-		...mapActions("modalVisibility", ["openModal", "closeModal"])
+		...mapActions("modalVisibility", ["openModal", "closeModal"]),
+		...mapActions("modals/viewReport", ["viewReport"])
 	}
 };
 </script>
