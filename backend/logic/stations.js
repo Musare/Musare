@@ -554,9 +554,7 @@ class _StationsModule extends CoreClass {
 								"skipDuration",
 								"artists",
 								"thumbnail",
-								"status",
-								"likes",
-								"dislikes"
+								"status"
 							]
 						})
 							.then(response => {
@@ -924,8 +922,6 @@ class _StationsModule extends CoreClass {
 								title: song.title,
 								artists: song.artists,
 								duration: song.duration,
-								likes: song.likes,
-								dislikes: song.dislikes,
 								skipDuration: song.skipDuration,
 								thumbnail: song.thumbnail,
 								requestedAt: song.requestedAt,
@@ -938,10 +934,10 @@ class _StationsModule extends CoreClass {
 						$set.startedAt = Date.now();
 						$set.timePaused = 0;
 						if (station.paused) $set.pausedAt = Date.now();
-						next(null, $set, station);
+						next(null, $set, song, station);
 					},
 
-					($set, station, next) => {
+					($set, song, station, next) => {
 						StationsModule.stationModel.updateOne({ _id: station._id }, { $set }, err => {
 							if (err) return next(err);
 
@@ -953,10 +949,19 @@ class _StationsModule extends CoreClass {
 									})
 										.then()
 										.catch();
-									next(null, station);
+									next(null, station, song);
 								})
 								.catch(next);
 						});
+					},
+
+					(station, song, next) => {
+						if (station.currentSong !== null && station.currentSong.youtubeId !== undefined) {
+							station.currentSong.likes = song.likes;
+							station.currentSong.dislikes = song.dislikes;
+							station.currentSong.skipVotes = 0;
+						}
+						next(null, station);
 					}
 				],
 				async (err, station) => {
@@ -965,9 +970,6 @@ class _StationsModule extends CoreClass {
 						StationsModule.log("ERROR", `Skipping station "${payload.stationId}" failed. "${err}"`);
 						return reject(new Error(err));
 					}
-
-					if (station.currentSong !== null && station.currentSong.youtubeId !== undefined)
-						station.currentSong.skipVotes = 0;
 
 					// TODO Pub/Sub this
 

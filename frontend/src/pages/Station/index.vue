@@ -319,7 +319,18 @@
 
 									<!-- Vote to Skip Button -->
 									<button
-										v-if="loggedIn"
+										v-if="!skipVotesLoaded"
+										class="button is-primary disabled"
+										content="Skip votes have not been loaded yet"
+										v-tippy
+									>
+										<i
+											class="material-icons icon-with-button"
+											>skip_next</i
+										>
+									</button>
+									<button
+										v-else-if="loggedIn"
 										class="button is-primary"
 										@click="voteSkipStation()"
 										content="Vote to Skip Song"
@@ -392,6 +403,7 @@
 									<!-- Ratings (Like/Dislike) Buttons -->
 									<div
 										id="ratings"
+										v-if="ratingsLoaded"
 										:class="{
 											liked: liked,
 											disliked: disliked
@@ -427,6 +439,33 @@
 												}"
 												>thumb_down_alt</i
 											>{{ currentSong.dislikes }}
+										</button>
+									</div>
+									<div id="ratings" class="disabled" v-else>
+										<!-- Like Song Button -->
+										<button
+											class="button is-success like-song disabled"
+											id="like-song"
+											content="Ratings have not been loaded yet"
+											v-tippy
+										>
+											<i
+												class="material-icons icon-with-button"
+												>thumb_up_alt</i
+											>
+										</button>
+
+										<!-- Dislike Song Button -->
+										<button
+											class="button is-danger dislike-song disabled"
+											id="dislike-song"
+											content="Ratings have not been loaded yet"
+											v-tippy
+										>
+											<i
+												class="material-icons icon-with-button"
+												>thumb_down_alt</i
+											>
 										</button>
 									</div>
 
@@ -472,7 +511,7 @@
 								</div>
 								<div id="right-buttons" v-else>
 									<!-- Disabled Ratings (Like/Dislike) Buttons -->
-									<div id="ratings">
+									<div id="ratings" v-if="ratingsLoaded">
 										<!-- Disabled Like Song Button -->
 										<button
 											class="button is-success disabled"
@@ -497,6 +536,33 @@
 												class="material-icons icon-with-button"
 												>thumb_down_alt</i
 											>{{ currentSong.dislikes }}
+										</button>
+									</div>
+									<div id="ratings" v-else>
+										<!-- Disabled Like Song Button -->
+										<button
+											class="button is-success disabled"
+											id="like-song"
+											content="Ratings have not been loaded yet"
+											v-tippy="{ theme: 'info' }"
+										>
+											<i
+												class="material-icons icon-with-button"
+												>thumb_up_alt</i
+											>
+										</button>
+
+										<!-- Disabled Dislike Song Button -->
+										<button
+											class="button is-danger disabled"
+											id="dislike-song"
+											content="Ratings have not been loaded yet"
+											v-tippy="{ theme: 'info' }"
+										>
+											<i
+												class="material-icons icon-with-button"
+												>thumb_down_alt</i
+											>
 										</button>
 									</div>
 									<!-- Disabled Add Song To Playlist Button & Dropdown -->
@@ -681,7 +747,6 @@ export default {
 			liked: false,
 			disliked: false,
 			timeBeforePause: 0,
-			skipVotes: 0,
 			systemDifference: 0,
 			attemptsToPlayVideo: 0,
 			canAutoplay: true,
@@ -703,6 +768,22 @@ export default {
 		};
 	},
 	computed: {
+		skipVotesLoaded() {
+			return (
+				!this.noSong &&
+				Number.isInteger(this.currentSong.skipVotes) &&
+				this.currentSong.skipVotes >= 0
+			);
+		},
+		ratingsLoaded() {
+			return (
+				!this.noSong &&
+				Number.isInteger(this.currentSong.likes) &&
+				Number.isInteger(this.currentSong.dislikes) &&
+				this.currentSong.likes >= 0 &&
+				this.currentSong.dislikes >= 0
+			);
+		},
 		...mapState("modalVisibility", {
 			modals: state => state.modals
 		}),
@@ -853,8 +934,7 @@ export default {
 		this.socket.on("event:song.liked", res => {
 			if (!this.noSong) {
 				if (res.data.youtubeId === this.currentSong.youtubeId) {
-					this.currentSong.dislikes = res.data.dislikes;
-					this.currentSong.likes = res.data.likes;
+					this.updateCurrentSongRatings(res.data);
 				}
 			}
 		});
@@ -862,8 +942,7 @@ export default {
 		this.socket.on("event:song.disliked", res => {
 			if (!this.noSong) {
 				if (res.data.youtubeId === this.currentSong.youtubeId) {
-					this.currentSong.dislikes = res.data.dislikes;
-					this.currentSong.likes = res.data.likes;
+					this.updateCurrentSongRatings(res.data);
 				}
 			}
 		});
@@ -871,8 +950,7 @@ export default {
 		this.socket.on("event:song.unliked", res => {
 			if (!this.noSong) {
 				if (res.data.youtubeId === this.currentSong.youtubeId) {
-					this.currentSong.dislikes = res.data.dislikes;
-					this.currentSong.likes = res.data.likes;
+					this.updateCurrentSongRatings(res.data);
 				}
 			}
 		});
@@ -880,8 +958,7 @@ export default {
 		this.socket.on("event:song.undisliked", res => {
 			if (!this.noSong) {
 				if (res.data.youtubeId === this.currentSong.youtubeId) {
-					this.currentSong.dislikes = res.data.dislikes;
-					this.currentSong.likes = res.data.likes;
+					this.updateCurrentSongRatings(res.data);
 				}
 			}
 		});
@@ -945,7 +1022,7 @@ export default {
 		});
 
 		this.socket.on("event:station.voteSkipSong", () => {
-			if (this.currentSong) this.currentSong.skipVotes += 1;
+			if (this.currentSong) this.updateCurrentSongSkipVotes(this.currentSong.skipVotes + 1);
 		});
 
 		this.socket.on("event:privatePlaylist.selected", res => {
@@ -1190,6 +1267,17 @@ export default {
 						this.skipSong("window.stationNextSongTimeout 1");
 					}, this.getTimeRemaining());
 				}
+
+				this.socket.dispatch(
+					"songs.getSongRatings",
+					currentSong._id,
+					res => {
+						if (currentSong._id === this.currentSong._id) {
+							const { likes, dislikes } = res.data;
+							this.updateCurrentSongRatings({ likes, dislikes });
+						}
+					}
+				);
 
 				this.socket.dispatch(
 					"songs.getOwnSongRatings",
@@ -2026,7 +2114,9 @@ export default {
 			"updateNoSong",
 			"updateIfStationIsFavorited",
 			"setIncludedPlaylists",
-			"setExcludedPlaylists"
+			"setExcludedPlaylists",
+			"updateCurrentSongRatings",
+			"updateCurrentSongSkipVotes"
 		]),
 		...mapActions("modals/editSong", ["stopVideo"])
 	}

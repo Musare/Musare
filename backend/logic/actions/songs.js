@@ -1429,6 +1429,54 @@ export default {
 	}),
 
 	/**
+	 * Gets song ratings
+	 *
+	 * @param session
+	 * @param songId - the Musare song id
+	 * @param cb
+	 */
+
+	getSongRatings: isLoginRequired(async function getSongRatings(session, songId, cb) {
+		async.waterfall(
+			[
+				next => {
+					SongsModule.runJob("GET_SONG", { songId }, this)
+						.then(res => next(null, res.song))
+						.catch(next);
+				},
+
+				(song, next) => {
+					next(null, {
+						likes: song.likes,
+						dislikes: song.dislikes
+					});
+				}
+			],
+			async (err, ratings) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"SONGS_GET_RATINGS",
+						`User "${session.userId}" failed to get ratings for ${songId}. "${err}"`
+					);
+					return cb({ status: "error", message: err });
+				}
+
+				const { likes, dislikes } = ratings;
+
+				return cb({
+					status: "success",
+					data: {
+						likes,
+						dislikes
+					}
+				});
+			}
+		);
+	}),
+
+	/**
 	 * Gets user's own song ratings
 	 *
 	 * @param session

@@ -69,6 +69,12 @@ const actions = {
 	},
 	setExcludedPlaylists: ({ commit }, excludedPlaylists) => {
 		commit("setExcludedPlaylists", excludedPlaylists);
+	},
+	updateCurrentSongRatings: ({ commit }, songRatings) => {
+		commit("updateCurrentSongRatings", songRatings);
+	},
+	updateCurrentSongSkipVotes: ({ commit }, skipVotes) => {
+		commit("updateCurrentSongSkipVotes", skipVotes);
 	}
 };
 
@@ -149,6 +155,13 @@ const mutations = {
 	},
 	setExcludedPlaylists(state, excludedPlaylists) {
 		state.excludedPlaylists = JSON.parse(JSON.stringify(excludedPlaylists));
+	},
+	updateCurrentSongRatings(state, songRatings) {
+		state.currentSong.likes = songRatings.likes;
+		state.currentSong.dislikes = songRatings.dislikes;
+	},
+	updateCurrentSongSkipVotes(state, skipVotes) {
+		state.currentSong.skipVotes = skipVotes;
 	}
 };
 
