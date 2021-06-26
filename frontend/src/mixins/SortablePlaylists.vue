@@ -12,10 +12,17 @@ export default {
 		};
 	},
 	computed: {
+		playlists: {
+			get() {
+				return this.$store.state.user.playlists.playlists;
+			},
+			set(playlists) {
+				this.$store.commit("user/playlists/updatePlaylists", playlists);
+			}
+		},
 		...mapState({
 			station: state => state.station.station,
-			myUserId: state => state.user.auth.userId,
-			playlists: state => state.user.playlists.playlists
+			myUserId: state => state.user.auth.userId
 		}),
 		dragOptions() {
 			return {

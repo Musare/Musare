@@ -210,6 +210,8 @@ const modules = {
 			editPlaylist: ({ commit }, id) => commit("editPlaylist", id),
 			setPlaylists: ({ commit }, playlists) =>
 				commit("setPlaylists", playlists),
+			updatePlaylists: ({ commit }, playlists) =>
+				commit("updatePlaylists", playlists),
 			addPlaylist: ({ commit }, playlist) =>
 				commit("addPlaylist", playlist),
 			removePlaylist: ({ commit }, playlistId) =>
@@ -221,6 +223,9 @@ const modules = {
 			},
 			setPlaylists(state, playlists) {
 				state.fetchedPlaylists = true;
+				state.playlists = playlists;
+			},
+			updatePlaylists(state, playlists) {
 				state.playlists = playlists;
 			},
 			addPlaylist(state, playlist) {
