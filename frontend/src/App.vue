@@ -721,7 +721,7 @@ a {
 			}
 		}
 	}
-	.tippy-content > div {
+	.tippy-content > span {
 		display: flex;
 		flex-direction: column;
 		button {
