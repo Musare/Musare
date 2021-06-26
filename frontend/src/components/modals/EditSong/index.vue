@@ -341,74 +341,77 @@
 				</div>
 			</template>
 			<template #footer>
-				<save-button
-					ref="saveButton"
-					@clicked="save(song, false, false)"
-				/>
-				<save-button
-					ref="saveAndCloseButton"
-					type="save-and-close"
-					@clicked="save(song, false, true)"
-				/>
-				<button
-					class="button is-primary"
-					@click="save(song, true, true)"
-				>
-					Save, verify and close
-				</button>
-				<button
-					class="button is-danger"
-					@click="stopEditingSongs()"
-					v-if="modals.importAlbum && editingSongs"
-				>
-					Stop editing songs
-				</button>
-				<div class="right">
+				<div>
+					<save-button
+						ref="saveButton"
+						@clicked="save(song, false, false)"
+					/>
+					<save-button
+						ref="saveAndCloseButton"
+						type="save-and-close"
+						@clicked="save(song, false, true)"
+					/>
 					<button
-						v-if="song.status !== 'verified'"
-						class="button is-success"
-						@click="verify(song._id)"
-						content="Verify Song"
-						v-tippy
+						class="button is-primary"
+						@click="save(song, true, true)"
 					>
-						<i class="material-icons">check_circle</i>
+						Save, verify and close
 					</button>
-					<confirm
-						v-if="song.status === 'verified'"
-						placement="left"
-						@confirm="unverify(song._id)"
+
+					<button
+						class="button is-danger"
+						@click="stopEditingSongs()"
+						v-if="modals.importAlbum && editingSongs"
 					>
+						Stop editing songs
+					</button>
+
+					<div class="right">
 						<button
-							class="button is-danger"
-							content="Unverify Song"
+							v-if="song.status !== 'verified'"
+							class="button is-success"
+							@click="verify(song._id)"
+							content="Verify Song"
 							v-tippy
 						>
-							<i class="material-icons">cancel</i>
+							<i class="material-icons">check_circle</i>
 						</button>
-					</confirm>
-					<confirm
-						v-if="song.status !== 'hidden'"
-						placement="left"
-						@confirm="hide(song._id)"
-					>
+						<confirm
+							v-if="song.status === 'verified'"
+							placement="left"
+							@confirm="unverify(song._id)"
+						>
+							<button
+								class="button is-danger"
+								content="Unverify Song"
+								v-tippy
+							>
+								<i class="material-icons">cancel</i>
+							</button>
+						</confirm>
+						<confirm
+							v-if="song.status !== 'hidden'"
+							placement="left"
+							@confirm="hide(song._id)"
+						>
+							<button
+								class="button is-danger"
+								content="Hide Song"
+								v-tippy
+							>
+								<i class="material-icons">visibility_off</i>
+							</button>
+						</confirm>
 						<button
-							class="button is-danger"
-							content="Hide Song"
+							v-if="song.status === 'hidden'"
+							class="button is-success"
+							@click="unhide(song._id)"
+							content="Unhide Song"
 							v-tippy
 						>
-							<i class="material-icons">visibility_off</i>
+							<i class="material-icons">visibility</i>
 						</button>
-					</confirm>
-					<button
-						v-if="song.status === 'hidden'"
-						class="button is-success"
-						@click="unhide(song._id)"
-						content="Unhide Song"
-						v-tippy
-					>
-						<i class="material-icons">visibility</i>
-					</button>
-					<!-- <confirm placement="left" @confirm="remove(song._id)">
+						<!-- <confirm placement="left" @confirm="remove(song._id)">
 						<button
 							class="button is-danger"
 							content="Remove Song"
@@ -417,6 +420,7 @@
 							<i class="material-icons">delete</i>
 						</button>
 					</confirm> -->
+					</div>
 				</div>
 			</template>
 		</modal>
@@ -1449,38 +1453,38 @@ export default {
 </script>
 
 <style lang="scss">
-.song-modal {
-	.modal-card-title {
-		text-align: center;
-		margin-left: 24px;
-	}
+// .song-modal {
+// 	.modal-card-title {
+// 		text-align: center;
+// 		margin-left: 24px;
+// 	}
 
-	.modal-card {
-		width: 1160px;
-		height: 100%;
+// 	.modal-card {
+// 		width: 1160px;
+// 		height: 100%;
 
-		.modal-card-body {
-			padding: 16px;
-			display: flex;
-		}
+// 		.modal-card-body {
+// 			padding: 16px;
+// 			display: flex;
+// 		}
 
-		.modal-card-foot {
-			.right {
-				display: flex;
-				margin-left: auto;
-				margin-right: 0;
+// 		.modal-card-foot {
+// 			.right {
+// 				display: flex;
+// 				margin-left: auto;
+// 				margin-right: 0;
 
-				button,
-				a,
-				span {
-					&:not(:last-child) {
-						margin-right: 5px;
-					}
-				}
-			}
-		}
-	}
-}
+// 				// button,
+// 				// a,
+// 				// span {
+// 				// 	&:not(:last-child) {
+// 				// 		margin-right: 5px;
+// 				// 	}
+// 				// }
+// 			}
+// 		}
+// 	}
+// }
 </style>
 
 <style lang="scss" scoped>
@@ -1492,9 +1496,36 @@ export default {
 	}
 }
 
-.modal-card-body > div {
-	display: flex;
-	height: 100%;
+.song-modal {
+	&::v-deep {
+		.modal-card-title {
+			text-align: center;
+			margin-left: 24px;
+		}
+
+		.modal-card {
+			width: 1160px;
+			height: 100%;
+
+			.modal-card-body {
+				padding: 16px;
+				display: flex;
+
+				> div {
+					display: flex;
+					height: 100%;
+				}
+			}
+
+			.modal-card-foot {
+				.right {
+					display: flex;
+					margin-left: auto;
+					margin-right: 0;
+				}
+			}
+		}
+	}
 }
 
 .left-section {

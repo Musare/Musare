@@ -91,16 +91,18 @@ p {
 .modal-card-foot {
 	overflow: initial;
 
-	& > div {
-		display: flex;
-		flex-grow: 1;
-		column-gap: 16px;
-	}
+	&::v-deep {
+		& > div {
+			display: flex;
+			flex-grow: 1;
+			column-gap: 16px;
+		}
 
-	.right {
-		margin-left: auto;
-		justify-content: flex-end;
-		column-gap: 16px;
+		.right {
+			margin-left: auto;
+			justify-content: flex-end;
+			column-gap: 16px;
+		}
 	}
 }
 

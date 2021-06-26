@@ -20,38 +20,40 @@
 			</div>
 		</template>
 		<template #footer>
-			<p class="control select">
-				<select v-model="status">
-					<option value="draft">Draft</option>
-					<option value="published" selected>Publish</option>
-				</select>
-			</p>
+			<div>
+				<p class="control select">
+					<select v-model="status">
+						<option value="draft">Draft</option>
+						<option value="published" selected>Publish</option>
+					</select>
+				</p>
 
-			<save-button
-				ref="saveButton"
-				v-if="newsId"
-				@clicked="newsId ? update(false) : create(false)"
-			/>
+				<save-button
+					ref="saveButton"
+					v-if="newsId"
+					@clicked="newsId ? update(false) : create(false)"
+				/>
 
-			<save-button
-				ref="saveAndCloseButton"
-				type="save-and-close"
-				@clicked="newsId ? update(true) : create(true)"
-			/>
-			<div class="right" v-if="createdAt > 0">
-				<span>
-					By
-					<user-id-to-username
-						:user-id="createdBy"
-						:alt="createdBy"
-						:link="true"/></span
-				><span :title="new Date(createdAt)">
-					{{
-						formatDistance(createdAt, new Date(), {
-							addSuffix: true
-						})
-					}}
-				</span>
+				<save-button
+					ref="saveAndCloseButton"
+					type="save-and-close"
+					@clicked="newsId ? update(true) : create(true)"
+				/>
+				<div class="right" v-if="createdAt > 0">
+					<span>
+						By
+						<user-id-to-username
+							:user-id="createdBy"
+							:alt="createdBy"
+							:link="true"/></span
+					><span :title="new Date(createdAt)">
+						{{
+							formatDistance(createdAt, new Date(), {
+								addSuffix: true
+							})
+						}}
+					</span>
+				</div>
 			</div>
 		</template>
 	</modal>
