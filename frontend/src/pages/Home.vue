@@ -192,7 +192,7 @@
 											  element.currentSong.title +
 											  ' by ' +
 											  element.currentSong.artists.join(
-													','
+													', '
 											  )
 											: 'Now Playing: ' +
 											  element.currentSong.title
@@ -202,7 +202,7 @@
 										element.currentSong.artists.length > 0
 											? " by " +
 											  element.currentSong.artists.join(
-													","
+													", "
 											  )
 											: ""
 									}}</span
@@ -402,7 +402,7 @@
 									? 'Now Playing: ' +
 									  station.currentSong.title +
 									  ' by ' +
-									  station.currentSong.artists.join(',')
+									  station.currentSong.artists.join(', ')
 									: 'Now Playing: ' +
 									  station.currentSong.title
 							"
@@ -410,7 +410,7 @@
 							{{
 								station.currentSong.artists.length > 0
 									? " by " +
-									  station.currentSong.artists.join(",")
+									  station.currentSong.artists.join(", ")
 									: ""
 							}}</span
 						>
