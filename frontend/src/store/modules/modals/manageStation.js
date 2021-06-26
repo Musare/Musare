@@ -52,9 +52,14 @@ export default {
 			);
 		},
 		clearStation(state) {
-			state.originalStation = null;
-			state.station = null;
-			state.songsList = null;
+			state.originalStation = {};
+			state.station = {};
+			state.stationPlaylist = { songs: [] };
+			state.includedPlaylists = [];
+			state.excludedPlaylists = [];
+			state.songsList = [];
+			state.stationPaused = true;
+			state.currentSong = {};
 		},
 		updateSongsList(state, songsList) {
 			state.songsList = songsList;
