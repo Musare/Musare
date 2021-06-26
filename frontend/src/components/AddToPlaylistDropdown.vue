@@ -94,9 +94,10 @@ export default {
 	},
 	mounted() {
 		if (!this.fetchedPlaylists)
-			this.socket.dispatch("playlists.indexMyPlaylists", false, res => {
+			this.socket.dispatch("playlists.indexMyPlaylists", true, res => {
 				if (res.status === "success")
-					this.setPlaylists(res.data.playlists);
+					if (!this.fetchedPlaylists)
+						this.setPlaylists(res.data.playlists);
 			});
 
 		this.socket.on(
