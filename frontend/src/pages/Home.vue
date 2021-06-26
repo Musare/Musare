@@ -42,15 +42,9 @@
 				</div>
 
 				<draggable
-					tag="transition-group"
-					:component-data="{
-						name: !drag ? 'draggable-list-transition' : null
-					}"
 					item-key="_id"
 					v-model="favoriteStations"
 					v-bind="dragOptions"
-					@start="drag = true"
-					@end="drag = false"
 					@change="changeFavoriteOrder"
 				>
 					<template #item="{element}">
@@ -472,8 +466,7 @@ export default {
 			favoriteStations: [],
 			searchQuery: "",
 			sitename: "Musare",
-			orderOfFavoriteStations: [],
-			drag: false
+			orderOfFavoriteStations: []
 		};
 	},
 	computed: {
