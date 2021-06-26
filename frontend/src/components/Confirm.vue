@@ -7,10 +7,12 @@
 		ref="confirm"
 		trigger="click"
 		:append-to="body"
-		@onHide="clickedOnce = false"
 		@hide="delayedHide()"
 	>
-		<div @click.shift.stop="confirm()" @click.exact="clickedOnce = true">
+		<div
+			@click.shift.stop="shiftClick($event)"
+			@click.exact="click($event)"
+		>
 			<slot ref="trigger" />
 		</div>
 		<template #content>
@@ -45,14 +47,20 @@ export default {
 				event.type !== "click" ||
 				event.altKey ||
 				event.ctrlKey ||
-				event.metaKey ||
-				event.shiftKey
+				event.metaKey
 			)
 				return;
 
 			this.clickedOnce = false;
 			this.$emit("confirm");
 			this.$refs.confirm.tippy.hide();
+		},
+		click(event) {
+			if (!this.clickedOnce) this.clickedOnce = true;
+			else this.confirm(event);
+		},
+		shiftClick(event) {
+			this.confirm(event);
 		},
 		delayedHide() {
 			setTimeout(() => {
