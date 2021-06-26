@@ -1,7 +1,7 @@
 #!/bin/bash
 
 mongo musare \
-        --port ${MONGO_PORT} \
+        --port 27017 \
         -u "admin" \
         --authenticationDatabase "admin" \
         -p ${MONGO_ROOT_PASSWORD} \
