@@ -53,7 +53,9 @@ export default {
 
 			this.clickedOnce = false;
 			this.$emit("confirm");
-			this.$refs.confirm.tippy.hide();
+			setTimeout(() => {
+				this.$refs.confirm.tippy.hide();
+			}, 25);
 		},
 		click(event) {
 			if (!this.clickedOnce) this.clickedOnce = true;
