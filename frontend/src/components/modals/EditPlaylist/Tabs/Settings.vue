@@ -90,6 +90,9 @@ export default {
 					this.userRole === "admin")
 			);
 		},
+		isAdmin() {
+			return this.userRole === "admin";
+		},
 		renamePlaylist() {
 			const { displayName } = this.playlist;
 			if (!validation.isLength(displayName, 2, 32))

@@ -1022,7 +1022,8 @@ export default {
 		});
 
 		this.socket.on("event:station.voteSkipSong", () => {
-			if (this.currentSong) this.updateCurrentSongSkipVotes(this.currentSong.skipVotes + 1);
+			if (this.currentSong)
+				this.updateCurrentSongSkipVotes(this.currentSong.skipVotes + 1);
 		});
 
 		this.socket.on("event:privatePlaylist.selected", res => {
