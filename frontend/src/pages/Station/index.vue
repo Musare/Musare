@@ -345,7 +345,7 @@
 									<button
 										v-else
 										class="button is-primary disabled"
-										content="Login to vote to skip songs"
+										content="Log in to vote to skip songs"
 										v-tippy="{ theme: 'info' }"
 									>
 										<i
@@ -403,10 +403,10 @@
 									<!-- Ratings (Like/Dislike) Buttons -->
 									<div
 										id="ratings"
-										v-if="ratingsLoaded"
+										v-if="ratingsLoaded && ownRatingsLoaded"
 										:class="{
-											liked: liked,
-											disliked: disliked
+											liked: currentSong.liked,
+											disliked: currentSong.disliked
 										}"
 									>
 										<!-- Like Song Button -->
@@ -419,7 +419,9 @@
 										>
 											<i
 												class="material-icons icon-with-button"
-												:class="{ liked: liked }"
+												:class="{
+													liked: currentSong.liked
+												}"
 												>thumb_up_alt</i
 											>{{ currentSong.likes }}
 										</button>
@@ -435,7 +437,8 @@
 											<i
 												class="material-icons icon-with-button"
 												:class="{
-													disliked: disliked
+													disliked:
+														currentSong.disliked
 												}"
 												>thumb_down_alt</i
 											>{{ currentSong.dislikes }}
@@ -516,7 +519,7 @@
 										<button
 											class="button is-success disabled"
 											id="like-song"
-											content="Login to like songs"
+											content="Log in to like songs"
 											v-tippy="{ theme: 'info' }"
 										>
 											<i
@@ -529,7 +532,7 @@
 										<button
 											class="button is-danger disabled"
 											id="dislike-song"
-											content="Login to dislike songs"
+											content="Log in to dislike songs"
 											v-tippy="{ theme: 'info' }"
 										>
 											<i
@@ -570,7 +573,7 @@
 										<div class="control has-addons">
 											<button
 												class="button is-primary disabled"
-												content="Login to add songs to playlist"
+												content="Log in to add songs to playlist"
 												v-tippy="{ theme: 'info' }"
 											>
 												<i class="material-icons"
@@ -674,6 +677,29 @@
 				<span
 					><b>Party playlists selected</b>: {{ partyPlaylists }}</span
 				>
+				<span><b>Skip votes loaded</b>: {{ skipVotesLoaded }}</span>
+				<span
+					><b>Skip votes</b>:
+					{{ skipVotesLoaded ? currentSong.skipVotes : "N/A" }}</span
+				>
+				<span><b>Ratings loaded</b>: {{ ratingsLoaded }}</span>
+				<span
+					><b>Ratings</b>:
+					{{
+						ratingsLoaded
+							? `${currentSong.likes} / ${currentSong.dislikes}`
+							: "N/A"
+					}}</span
+				>
+				<span><b>Own ratings loaded</b>: {{ ownRatingsLoaded }}</span>
+				<span
+					><b>Own ratings</b>:
+					{{
+						ownRatingsLoaded
+							? `${currentSong.liked} / ${currentSong.disliked}`
+							: "N/A"
+					}}</span
+				>
 			</template>
 		</floating-box>
 
@@ -744,8 +770,6 @@ export default {
 			timePaused: 0,
 			muted: false,
 			timeElapsed: "0:00",
-			liked: false,
-			disliked: false,
 			timeBeforePause: 0,
 			systemDifference: 0,
 			attemptsToPlayVideo: 0,
@@ -782,6 +806,13 @@ export default {
 				Number.isInteger(this.currentSong.dislikes) &&
 				this.currentSong.likes >= 0 &&
 				this.currentSong.dislikes >= 0
+			);
+		},
+		ownRatingsLoaded() {
+			return (
+				!this.noSong &&
+				typeof this.currentSong.liked === "boolean" &&
+				typeof this.currentSong.disliked === "boolean"
 			);
 		},
 		...mapState("modalVisibility", {
@@ -966,8 +997,7 @@ export default {
 		this.socket.on("event:song.ratings.updated", res => {
 			if (!this.noSong) {
 				if (res.data.youtubeId === this.currentSong.youtubeId) {
-					this.liked = res.data.liked;
-					this.disliked = res.data.disliked;
+					this.updateOwnCurrentSongRatings(res.data);
 				}
 			}
 		});
@@ -1270,6 +1300,18 @@ export default {
 				}
 
 				this.socket.dispatch(
+					"stations.getSkipVotes",
+					this.station._id,
+					res => {
+						if (res.status === "success") {
+							const { skipVotes, songId } = res.data;
+							if (!this.noSong && this.currentSong._id === songId)
+								this.updateCurrentSongSkipVotes(skipVotes);
+						}
+					}
+				);
+
+				this.socket.dispatch(
 					"songs.getSongRatings",
 					currentSong._id,
 					res => {
@@ -1280,29 +1322,32 @@ export default {
 					}
 				);
 
-				this.socket.dispatch(
-					"songs.getOwnSongRatings",
-					currentSong.youtubeId,
-					res => {
-						if (
-							res.status === "success" &&
-							this.currentSong.youtubeId === res.data.youtubeId
-						) {
-							this.liked = res.data.liked;
-							this.disliked = res.data.disliked;
-
+				if (this.loggedIn) {
+					this.socket.dispatch(
+						"songs.getOwnSongRatings",
+						currentSong.youtubeId,
+						res => {
+							console.log("getOwnSongRatings", res);
 							if (
-								this.autoSkipDisliked &&
-								res.data.disliked === true
+								res.status === "success" &&
+								this.currentSong.youtubeId ===
+									res.data.youtubeId
 							) {
-								this.voteSkipStation();
-								new Toast(
-									"Automatically voted to skip disliked song."
-								);
+								this.updateOwnCurrentSongRatings(res.data);
+
+								if (
+									this.autoSkipDisliked &&
+									res.data.disliked === true
+								) {
+									this.voteSkipStation();
+									new Toast(
+										"Automatically voted to skip disliked song."
+									);
+								}
 							}
 						}
-					}
-				);
+					);
+				}
 			} else {
 				if (this.playerReady) this.player.pauseVideo();
 				this.updateNoSong(true);
@@ -1711,7 +1756,7 @@ export default {
 			}
 		},
 		toggleLike() {
-			if (this.liked)
+			if (this.currentSong.liked)
 				this.socket.dispatch(
 					"songs.unlike",
 					this.currentSong.youtubeId,
@@ -1731,7 +1776,7 @@ export default {
 				);
 		},
 		toggleDislike() {
-			if (this.disliked)
+			if (this.currentSong.disliked)
 				return this.socket.dispatch(
 					"songs.undislike",
 					this.currentSong.youtubeId,
@@ -2117,6 +2162,7 @@ export default {
 			"setIncludedPlaylists",
 			"setExcludedPlaylists",
 			"updateCurrentSongRatings",
+			"updateOwnCurrentSongRatings",
 			"updateCurrentSongSkipVotes"
 		]),
 		...mapActions("modals/editSong", ["stopVideo"])

@@ -3950,5 +3950,55 @@ export default {
 				return cb({ status: "success", message: "Successfully cleared and refilled station queue." });
 			}
 		);
+	}),
+
+	/**
+	 * Gets skip votes for a station
+	 *
+	 * @param session
+	 * @param stationId - the station id
+	 * @param cb
+	 */
+
+	getSkipVotes: isLoginRequired(async function getSkipVotes(session, stationId, cb) {
+		async.waterfall(
+			[
+				next => {
+					StationsModule.runJob("GET_STATION", { stationId }, this)
+						.then(res => next(null, res.currentSong))
+						.catch(console.log);
+				},
+
+				(currentSong, next) => {
+					if (currentSong)
+						next(null, {
+							skipVotes: currentSong.skipVotes.length,
+							songId: currentSong._id
+						});
+					else next("There is no song currently playing.");
+				}
+			],
+			async (err, data) => {
+				if (err) {
+					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+					this.log(
+						"ERROR",
+						"STATIONS_GET_SKIP_VOTES",
+						`User "${session.userId}" failed to get skip votes for ${stationId}. "${err}"`
+					);
+					return cb({ status: "error", message: err });
+				}
+
+				const { skipVotes, songId } = data;
+
+				return cb({
+					status: "success",
+					data: {
+						skipVotes,
+						songId
+					}
+				});
+			}
+		);
 	})
 };

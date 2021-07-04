@@ -73,6 +73,9 @@ const actions = {
 	updateCurrentSongRatings: ({ commit }, songRatings) => {
 		commit("updateCurrentSongRatings", songRatings);
 	},
+	updateOwnCurrentSongRatings: ({ commit }, ownSongRatings) => {
+		commit("updateOwnCurrentSongRatings", ownSongRatings);
+	},
 	updateCurrentSongSkipVotes: ({ commit }, skipVotes) => {
 		commit("updateCurrentSongSkipVotes", skipVotes);
 	}
@@ -159,6 +162,10 @@ const mutations = {
 	updateCurrentSongRatings(state, songRatings) {
 		state.currentSong.likes = songRatings.likes;
 		state.currentSong.dislikes = songRatings.dislikes;
+	},
+	updateOwnCurrentSongRatings(state, ownSongRatings) {
+		state.currentSong.liked = ownSongRatings.liked;
+		state.currentSong.disliked = ownSongRatings.disliked;
 	},
 	updateCurrentSongSkipVotes(state, skipVotes) {
 		state.currentSong.skipVotes = skipVotes;
