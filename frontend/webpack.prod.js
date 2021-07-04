@@ -11,8 +11,8 @@ module.exports = merge(common, {
 	},
 	resolve: {
 		alias: {
-			vue: "vue/dist/vue.esm.js",
-			styles: "src/styles"
+			styles: "src/styles",
+			vue: "vue/dist/vue.esm-bundler.js"
 		}
 	},
 	plugins: [
