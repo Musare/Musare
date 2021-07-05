@@ -1,16 +1,7 @@
 <template>
 	<div class="settings-tab section">
 		<div v-if="isEditable()">
-			<h4 class="section-title">Edit Details</h4>
-
-			<p class="section-description">
-				Change the display name and privacy of the playlist.
-			</p>
-
-			<hr class="section-horizontal-rule" />
-
 			<label class="label"> Change display name </label>
-
 			<div class="control is-grouped input-with-button">
 				<p class="control is-expanded">
 					<input

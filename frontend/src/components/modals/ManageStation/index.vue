@@ -833,7 +833,7 @@ export default {
 	.manage-station-modal.modal .modal-card-body .custom-modal-body {
 		.left-section,
 		.right-section {
-			flex-basis: unset;
+			flex-basis: 100%;
 			height: auto;
 		}
 	}
