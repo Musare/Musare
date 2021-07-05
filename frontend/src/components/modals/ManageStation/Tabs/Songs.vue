@@ -404,6 +404,13 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.night-mode {
+	.tabs-container .tab-selection .button {
+		background: var(--dark-grey) !important;
+		color: var(--white) !important;
+	}
+}
+
 .songs {
 	.tabs-container {
 		.tab-selection {

@@ -248,6 +248,7 @@ export default {
 	height: auto;
 	.admin-container {
 		flex: 1 0 auto;
+		margin-bottom: 10px;
 	}
 }
 

@@ -1493,6 +1493,7 @@ export default {
 	.player-footer,
 	#tabs-container {
 		background-color: var(--dark-grey-3) !important;
+		border: 0 !important;
 	}
 
 	#tabs-container #tab-selection .button {
