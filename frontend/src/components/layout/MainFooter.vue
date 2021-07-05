@@ -3,13 +3,21 @@
 		<div class="container">
 			<div class="footer-content has-text-centered">
 				<div id="footer-copyright">
-					<p>© Copyright Musare 2015 - 2021</p>
+					<p>© Copyright {{ siteSettings.sitename }} 2015 - 2021</p>
 				</div>
-				<a id="footer-logo" href="/"
-					><img src="/assets/blue_wordmark.png" alt="Musare"
-				/></a>
+				<a id="footer-logo" href="/">
+					<img
+						v-if="siteSettings.sitename === 'Musare'"
+						:src="siteSettings.logo_blue"
+						:alt="siteSettings.sitename || `Musare`"
+					/>
+					<span v-else>{{ siteSettings.sitename }}</span>
+				</a>
 				<div id="footer-links">
-					<a :href="github" target="_blank" title="GitHub Repository"
+					<a
+						:href="siteSettings.github"
+						target="_blank"
+						title="GitHub Repository"
 						>GitHub</a
 					>
 					<router-link title="About Musare" to="/about"
@@ -48,7 +56,11 @@ import { mapState, mapGetters, mapActions } from "vuex";
 export default {
 	data() {
 		return {
-			github: "#",
+			siteSettings: {
+				logo: "",
+				sitename: "Musare",
+				github: "#"
+			},
 			localNightmode: null
 		};
 	},
@@ -78,8 +90,6 @@ export default {
 		}
 	},
 	async mounted() {
-		this.github = await lofig.get("siteSettings.github");
-
 		this.localNightmode = JSON.parse(localStorage.getItem("nightmode"));
 
 		this.socket.dispatch("users.getPreferences", res => {
@@ -148,6 +158,17 @@ export default {
 		width: 160px;
 		order: 1;
 		user-select: none;
+		font-size: 2.5rem !important;
+		line-height: 50px !important;
+		font-family: Pacifico, cursive;
+		color: var(--primary-color);
+		white-space: nowrap;
+
+		img {
+			max-height: 38px;
+			color: var(--primary-color);
+			user-select: none;
+		}
 	}
 
 	#footer-links {
@@ -158,15 +179,15 @@ export default {
 		}
 
 		a {
-			padding: 0 7px 0 4px;
+			padding: 0 5px;
 			color: var(--primary-color);
 
 			&:first-of-type {
-				padding: 0 7px 0 0;
+				padding: 0 5px 0 0;
 			}
 
 			&:last-of-type {
-				padding: 0 0 0 7px;
+				padding: 0 0 0 5px;
 			}
 
 			&:hover {

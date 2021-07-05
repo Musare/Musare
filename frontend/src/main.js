@@ -11,10 +11,6 @@ import AppComponent from "./App.vue";
 
 const REQUIRED_CONFIG_VERSION = 6;
 
-const handleMetadata = attrs => {
-	document.title = `Musare | ${attrs.title}`;
-};
-
 const app = createApp(AppComponent);
 
 app.use(store);
@@ -39,9 +35,6 @@ app.component("Metadata", {
 	watch: {
 		$attrs: {
 			// eslint-disable-next-line vue/no-arrow-functions-in-watch
-			handler: attrs => {
-				handleMetadata(attrs);
-			},
 			deep: true,
 			immediate: true
 		}

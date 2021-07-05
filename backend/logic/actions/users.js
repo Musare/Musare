@@ -1100,12 +1100,12 @@ export default {
 					}
 				});
 
-				// if (preferences.nightmode !== undefined && preferences.nightmode !== user.preferences.nightmode)
-				// 	ActivitiesModule.runJob("ADD_ACTIVITY", {
-				// 		userId: session.userId,
-				// 		type: "user__toggle_nightmode",
-				// 		payload: { message: preferences.nightmode ? "Enabled nightmode" : "Disabled nightmode" }
-				// 	});
+				if (preferences.nightmode !== undefined && preferences.nightmode !== user.preferences.nightmode)
+					ActivitiesModule.runJob("ADD_ACTIVITY", {
+						userId: session.userId,
+						type: "user__toggle_nightmode",
+						payload: { message: preferences.nightmode ? "Enabled nightmode" : "Disabled nightmode" }
+					});
 
 				if (
 					preferences.autoSkipDisliked !== undefined &&
