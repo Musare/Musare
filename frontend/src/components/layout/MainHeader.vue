@@ -52,28 +52,11 @@
 					>Register</a
 				>
 			</span>
-			<div class="nav-item" id="nightmode-toggle">
-				<p class="is-expanded checkbox-control">
-					<label class="switch">
-						<input
-							type="checkbox"
-							id="instant-nightmode"
-							v-model="localNightmode"
-						/>
-						<span class="slider round"></span>
-					</label>
-
-					<label for="instant-nightmode">
-						<p>Nightmode</p>
-					</label>
-				</p>
-			</div>
 		</div>
 	</nav>
 </template>
 
 <script>
-import Toast from "toasters";
 import { mapState, mapGetters, mapActions } from "vuex";
 
 export default {
@@ -84,7 +67,6 @@ export default {
 	},
 	data() {
 		return {
-			localNightmode: null,
 			isMobile: false,
 			frontendDomain: "",
 			siteSettings: {
@@ -104,46 +86,14 @@ export default {
 			socket: "websockets/getSocket"
 		})
 	},
-	watch: {
-		localNightmode(newValue, oldValue) {
-			if (oldValue === null) return;
-
-			localStorage.setItem("nightmode", this.localNightmode);
-
-			if (this.loggedIn) {
-				this.socket.dispatch(
-					"users.updatePreferences",
-					{ nightmode: this.localNightmode },
-					res => {
-						if (res.status !== "success") new Toast(res.message);
-					}
-				);
-			}
-
-			this.changeNightmode(this.localNightmode);
-		}
-	},
 	async mounted() {
-		this.localNightmode = JSON.parse(localStorage.getItem("nightmode"));
-
-		this.socket.dispatch("users.getPreferences", res => {
-			if (res.status === "success")
-				this.localNightmode = res.data.preferences.nightmode;
-		});
-
-		this.socket.on("keep.event:user.preferences.updated", res => {
-			if (res.data.preferences.nightmode !== undefined)
-				this.localNightmode = res.data.preferences.nightmode;
-		});
-
 		this.frontendDomain = await lofig.get("frontendDomain");
 		this.siteSettings = await lofig.get("siteSettings");
 	},
 
 	methods: {
 		...mapActions("modalVisibility", ["openModal"]),
-		...mapActions("user/auth", ["logout"]),
-		...mapActions("user/preferences", ["changeNightmode"])
+		...mapActions("user/auth", ["logout"])
 	}
 };
 </script>
