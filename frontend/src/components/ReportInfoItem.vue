@@ -58,6 +58,12 @@ export default {
 };
 </script>
 
+<style lang="scss">
+.report-info-item .item-icon .profile-picture span {
+	font-size: 25px;
+}
+</style>
+
 <style lang="scss" scoped>
 .night-mode {
 	.report-info-item {

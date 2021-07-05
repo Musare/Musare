@@ -274,6 +274,14 @@ export default {
 		// }
 	}
 
+	.input,
+	.textarea,
+	.select select {
+		background-color: var(--dark-grey);
+		border-color: var(--grey-3);
+		color: var(--white);
+	}
+
 	h1,
 	h2,
 	h3,

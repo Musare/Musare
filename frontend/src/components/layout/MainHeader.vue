@@ -10,6 +10,7 @@
 		</div>
 
 		<span
+			v-if="loggedIn || !hideLoggedOut"
 			class="nav-toggle"
 			:class="{ 'is-active': isMobile }"
 			tabindex="0"

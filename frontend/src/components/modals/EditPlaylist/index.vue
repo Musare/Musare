@@ -592,6 +592,11 @@ export default {
 	strong {
 		color: var(--light-grey-2);
 	}
+
+	.tabs-container .tab-selection .button {
+		background: var(--dark-grey) !important;
+		color: var(--white) !important;
+	}
 }
 
 .menu-list li {

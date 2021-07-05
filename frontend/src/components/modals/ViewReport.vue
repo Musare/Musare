@@ -262,7 +262,7 @@ export default {
 
 	.report-sub-items {
 		.report-sub-item {
-			border: 0.5px solid var(--black);
+			border: 1px solid var(--light-grey-3);
 			margin-top: -1px;
 			line-height: 24px;
 			display: flex;
@@ -276,6 +276,10 @@ export default {
 
 			&:last-child {
 				border-radius: 0 0 3px 3px;
+			}
+
+			&:only-child {
+				border-radius: 3px;
 			}
 
 			&.report-sub-item-resolved {
