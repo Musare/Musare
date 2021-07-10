@@ -679,6 +679,15 @@
 				>
 				<span><b>Skip votes loaded</b>: {{ skipVotesLoaded }}</span>
 				<span
+					><b>Skip votes current</b>:
+					{{
+						currentSong.skipVotesCurrent === true ||
+						currentSong.skipVotesCurrent === false
+							? currentSong.skipVotesCurrent
+							: "N/A"
+					}}</span
+				>
+				<span
 					><b>Skip votes</b>:
 					{{ skipVotesLoaded ? currentSong.skipVotes : "N/A" }}</span
 				>
@@ -912,6 +921,13 @@ export default {
 					timePaused,
 					pausedAt: 0
 				});
+			} else if (this.currentSong._id === currentSong._id) {
+				if (this.currentSong.skipVotesLoaded !== true) {
+					this.updateCurrentSongSkipVotes({
+						skipVotes: currentSong.skipVotes,
+						skipVotesCurrent: true
+					});
+				}
 			} else {
 				this.setNextCurrentSong({
 					currentSong,
@@ -1053,7 +1069,10 @@ export default {
 
 		this.socket.on("event:station.voteSkipSong", () => {
 			if (this.currentSong)
-				this.updateCurrentSongSkipVotes(this.currentSong.skipVotes + 1);
+				this.updateCurrentSongSkipVotes({
+					skipVotes: this.currentSong.skipVotes + 1,
+					skipVotesCurrent: null
+				});
 		});
 
 		this.socket.on("event:privatePlaylist.selected", res => {
@@ -1299,14 +1318,24 @@ export default {
 					}, this.getTimeRemaining());
 				}
 
+				const currentSongId = this.currentSong._id;
+
 				this.socket.dispatch(
 					"stations.getSkipVotes",
 					this.station._id,
+					currentSongId,
 					res => {
 						if (res.status === "success") {
-							const { skipVotes, songId } = res.data;
-							if (!this.noSong && this.currentSong._id === songId)
-								this.updateCurrentSongSkipVotes(skipVotes);
+							const { skipVotes, skipVotesCurrent } = res.data;
+							if (
+								!this.noSong &&
+								this.currentSong._id === currentSongId
+							) {
+								this.updateCurrentSongSkipVotes({
+									skipVotes,
+									skipVotesCurrent
+								});
+							}
 						}
 					}
 				);

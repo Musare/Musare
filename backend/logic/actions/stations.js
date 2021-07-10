@@ -3957,10 +3957,11 @@ export default {
 	 *
 	 * @param session
 	 * @param stationId - the station id
+	 * @param stationId - the song id to get skipvotes for
 	 * @param cb
 	 */
 
-	getSkipVotes: isLoginRequired(async function getSkipVotes(session, stationId, cb) {
+	getSkipVotes: isLoginRequired(async function getSkipVotes(session, stationId, songId, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -3970,12 +3971,16 @@ export default {
 				},
 
 				(currentSong, next) => {
-					if (currentSong)
+					if (currentSong && currentSong._id === songId)
 						next(null, {
 							skipVotes: currentSong.skipVotes.length,
-							songId: currentSong._id
+							skipVotesCurrent: true
 						});
-					else next("There is no song currently playing.");
+					else
+						next(null, {
+							skipVotes: 0,
+							skipVotesCurrent: false
+						});
 				}
 			],
 			async (err, data) => {
@@ -3989,13 +3994,13 @@ export default {
 					return cb({ status: "error", message: err });
 				}
 
-				const { skipVotes, songId } = data;
+				const { skipVotes, skipVotesCurrent } = data;
 
 				return cb({
 					status: "success",
 					data: {
 						skipVotes,
-						songId
+						skipVotesCurrent
 					}
 				});
 			}
