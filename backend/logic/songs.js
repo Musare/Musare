@@ -12,6 +12,10 @@ let StationsModule;
 let PlaylistsModule;
 
 class ErrorWithData extends Error {
+	/**
+	 * @param {string} message - the error message
+	 * @param {object} data - the error data
+	 */
 	constructor(message, data) {
 		super(message);
 		this.data = data;
@@ -176,8 +180,8 @@ class _SongsModule extends CoreClass {
 				[
 					next => {
 						if (!payload.songIds.every(songId => mongoose.Types.ObjectId.isValid(songId)))
-							return next("One or more songIds are not a valid ObjectId.");
-						next();
+							next("One or more songIds are not a valid ObjectId.");
+						else next();
 					},
 
 					next => {
