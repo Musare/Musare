@@ -8,29 +8,35 @@ YELLOW='\033[0;93m'
 GREEN='\033[0;32m'
 NC='\033[0m'
 
-scriptLocation="$(dirname -- $(readlink -fn -- "$0"; echo x))"
-cd "${scriptLocation%x}"
+scriptLocation=$(dirname -- "$(readlink -fn -- "$0"; echo x)")
+cd "${scriptLocation%x}" || exit
 
 handleServices()
 {
     validServices=(backend frontend mongo redis)
-    services=()
+    servicesArray=()
     invalidServices=false
-    for x in $@; do
-        if [[ ${validServices[@]} =~ (^|[[:space:]])"$x"($|[[:space:]]) ]]; then
-            if ! [[ ${services[@]} =~ (^|[[:space:]])"$x"($|[[:space:]]) ]]; then
-                services+=("${x}")
-            fi
-        else
-            if [[ $invalidServices == false ]]; then
-                invalidServices="${x}"
+    for x in "$@"; do
+        for validService in "${validServices[@]}"
+        do
+            if [[ ${validService} =~ (^|[[:space:]])"$x"($|[[:space:]]) ]]; then
+                for service in "${servicesArray[@]}"
+                do
+                    if ! [[ "$service" =~ (^|[[:space:]])"$x"($|[[:space:]]) ]]; then
+                        servicesArray+=("$x")
+                    fi
+                done
             else
-                invalidServices="${invalidServices} ${x}"
+                if [[ $invalidServices == false ]]; then
+                    invalidServices="${x}"
+                else
+                    invalidServices="${invalidServices} ${x}"
+                fi
             fi
-        fi
+        done
     done
-    if [[ $invalidServices == false && ${#services[@]} > 0 ]]; then
-        echo "1|${services[@]}"
+    if [[ $invalidServices == false && ${#servicesArray[@]} -gt 0 ]]; then
+        echo "1|" "${servicesArray[@]}"
     elif [[ $invalidServices == false ]]; then
         echo "1|all"
     else
@@ -42,60 +48,60 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
     case $1 in
     start)
         echo -e "${CYAN}Musare | Start Services${NC}"
-        services=$(handleServices "${@:2}")
-        if [[ ${services:0:1} == 1 && ${services:2:4} == "all" ]]; then
+        servicesString=$(handleServices "${@:2}")
+        if [[ ${servicesString:0:1} == 1 && ${servicesString:2:4} == "all" ]]; then
             docker-compose up -d
-        elif [[ ${services:0:1} == 1 ]]; then
-            docker-compose up -d ${services:2}
+        elif [[ ${servicesString:0:1} == 1 ]]; then
+            docker-compose up -d "${servicesString:2}"
         else
-            echo -e "${RED}${services:2}\n${YELLOW}Usage: $(basename $0) start [backend, frontend, mongo, redis]${NC}"
+            echo -e "${RED}${servicesString:2}\n${YELLOW}Usage: $(basename "$0") start [backend, frontend, mongo, redis]${NC}"
         fi
         ;;
 
     stop)
         echo -e "${CYAN}Musare | Stop Services${NC}"
-        services=$(handleServices "${@:2}")
-        if [[ ${services:0:1} == 1 && ${services:2:4} == "all" ]]; then
+        servicesString=$(handleServices "${@:2}")
+        if [[ ${servicesString:0:1} == 1 && ${servicesString:2:4} == "all" ]]; then
             docker-compose stop
-        elif [[ ${services:0:1} == 1 ]]; then
-            docker-compose stop ${services:2}
+        elif [[ ${servicesString:0:1} == 1 ]]; then
+            docker-compose stop "${servicesString:2}"
         else
-            echo -e "${RED}${services:2}\n${YELLOW}Usage: $(basename $0) stop [backend, frontend, mongo, redis]${NC}"
+            echo -e "${RED}${servicesString:2}\n${YELLOW}Usage: $(basename "$0") stop [backend, frontend, mongo, redis]${NC}"
         fi
         ;;
 
     restart)
         echo -e "${CYAN}Musare | Restart Services${NC}"
-        services=$(handleServices "${@:2}")
-        if [[ ${services:0:1} == 1 && ${services:2:4} == "all" ]]; then
+        servicesString=$(handleServices "${@:2}")
+        if [[ ${servicesString:0:1} == 1 && ${servicesString:2:4} == "all" ]]; then
             docker-compose stop
             docker-compose up -d
-        elif [[ ${services:0:1} == 1 ]]; then
-            docker-compose stop ${services:2}
-            docker-compose up -d ${services:2}
+        elif [[ ${servicesString:0:1} == 1 ]]; then
+            docker-compose stop "${servicesString:2}"
+            docker-compose up -d "${servicesString:2}"
         else
-            echo -e "${RED}${services:2}\n${YELLOW}Usage: $(basename $0) restart [backend, frontend, mongo, redis]${NC}"
+            echo -e "${RED}${servicesString:2}\n${YELLOW}Usage: $(basename "$0") restart [backend, frontend, mongo, redis]${NC}"
         fi
         ;;
 
     build)
         echo -e "${CYAN}Musare | Build Services${NC}"
-        services=$(handleServices "${@:2}")
-        if [[ ${services:0:1} == 1 && ${services:2:4} == "all" ]]; then
+        servicesString=$(handleServices "${@:2}")
+        if [[ ${servicesString:0:1} == 1 && ${servicesString:2:4} == "all" ]]; then
             docker-compose build
-        elif [[ ${services:0:1} == 1 ]]; then
-            docker-compose build ${services:2}
+        elif [[ ${servicesString:0:1} == 1 ]]; then
+            docker-compose build "${servicesString:2}"
         else
-            echo -e "${RED}${services:2}\n${YELLOW}Usage: $(basename $0) build [backend, frontend, mongo, redis]${NC}"
+            echo -e "${RED}${servicesString:2}\n${YELLOW}Usage: $(basename "$0") build [backend, frontend, mongo, redis]${NC}"
         fi
         ;;
 
     reset)
         echo -e "${CYAN}Musare | Reset Services${NC}"
-        services=$(handleServices "${@:2}")
-        if [[ ${services:0:1} == 1 && ${services:2:4} == "all" ]]; then
+        servicesString=$(handleServices "${@:2}")
+        if [[ ${servicesString:0:1} == 1 && ${servicesString:2:4} == "all" ]]; then
             echo -e "${GREEN}Are you sure you want to reset all data? ${YELLOW}[y,n]: ${NC}"
-            read confirm
+            read -r confirm
             if [[ "${confirm}" == y* ]]; then
                 docker-compose stop
                 docker-compose rm -v --force
@@ -108,23 +114,23 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
             else
                 echo -e "${RED}Cancelled reset${NC}"
             fi
-        elif [[ ${services:0:1} == 1 ]]; then
-            echo -e "${GREEN}Are you sure you want to reset all data for $(echo ${services:2} | tr ' ' ',')? ${YELLOW}[y,n]: ${NC}"
-            read confirm
+        elif [[ ${servicesString:0:1} == 1 ]]; then
+            echo -e "${GREEN}Are you sure you want to reset all data for $(echo "${servicesString:2}" | tr ' ' ',')? ${YELLOW}[y,n]: ${NC}"
+            read -r confirm
             if [[ "${confirm}" == y* ]]; then
-                docker-compose stop ${services:2}
-                docker-compose rm -v --force ${services:2}
-                if [[ "${services:2}" == *redis* && -d ".redis" ]]; then
+                docker-compose stop "${servicesString:2}"
+                docker-compose rm -v --force "${servicesString:2}"
+                if [[ "${servicesString:2}" == *redis* && -d ".redis" ]]; then
                     rm -rf .redis
                 fi
-                if [[ "${services:2}" == *mongo* && -d ".db" ]]; then
+                if [[ "${servicesString:2}" == *mongo* && -d ".db" ]]; then
                     rm -rf .db
                 fi
             else
                 echo -e "${RED}Cancelled reset${NC}"
             fi
         else
-            echo -e "${RED}${services:2}\n${YELLOW}Usage: $(basename $0) build [backend, frontend, mongo, redis]${NC}"
+            echo -e "${RED}${servicesString:2}\n${YELLOW}Usage: $(basename "$0") build [backend, frontend, mongo, redis]${NC}"
         fi
         ;;
 
@@ -135,10 +141,10 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
             if [[ -z $containerId ]]; then
                 echo -e "${RED}Error: Backend offline, please start to attach.${NC}"
             else
-                docker attach $containerId
+                docker attach "$containerId"
             fi
         else
-            echo -e "${RED}Invalid service $2\n${YELLOW}Usage: $(basename $0) attach backend${NC}"
+            echo -e "${RED}Invalid service $2\n${YELLOW}Usage: $(basename "$0") attach backend${NC}"
         fi
         ;;
 
@@ -161,7 +167,7 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
                 docker-compose exec backend npx eslint app/logic $fix
                 ;;
             *)
-                echo -e "${RED}Invalid service $2\n${YELLOW}Usage: $(basename $0) eslint [backend, frontend] [fix]${NC}"
+                echo -e "${RED}Invalid service $2\n${YELLOW}Usage: $(basename "$0") eslint [backend, frontend] [fix]${NC}"
                 ;;
         esac
         ;;
@@ -169,12 +175,12 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
     update)
         echo -e "${CYAN}Musare | Update${NC}"
         git fetch
-        if [[ $(git rev-parse HEAD) == $(git rev-parse @{u}) ]]; then
+        if [[ $(git rev-parse HEAD) == $(git rev-parse @\{u\}) ]]; then
             echo -e "${GREEN}Already up to date${NC}"
         else
-            dbChange=$(git log --name-only --oneline HEAD..origin/$(git rev-parse --abbrev-ref HEAD) | grep "backend/logic/db/schemas")
-            fcChange=$(git log --name-only --oneline HEAD..origin/$(git rev-parse --abbrev-ref HEAD) | grep "frontend/dist/config/template.json")
-            bcChange=$(git log --name-only --oneline HEAD..origin/$(git rev-parse --abbrev-ref HEAD) | grep "backend/config/template.json")
+            dbChange=$(git log --name-only --oneline HEAD..origin/"$(git rev-parse --abbrev-ref HEAD)" | grep "backend/logic/db/schemas")
+            fcChange=$(git log --name-only --oneline HEAD..origin/"$(git rev-parse --abbrev-ref HEAD)" | grep "frontend/dist/config/template.json")
+            bcChange=$(git log --name-only --oneline HEAD..origin/"$(git rev-parse --abbrev-ref HEAD)" | grep "backend/config/template.json")
             if [[ ( $2 == "auto" && -z $dbChange && -z $fcChange && -z $bcChange ) || -z $2 ]]; then
                 echo -e "${CYAN}Updating...${NC}"
                 git pull
@@ -199,12 +205,13 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
 
     logs)
         echo -e "${CYAN}Musare | Logs${NC}"
-        docker-compose logs ${@:2}
+        docker-compose logs "${@:2}"
         ;;
 
     backup)
         echo -e "${CYAN}Musare | Backup${NC}"
         if [[ -f .env ]]; then
+            # shellcheck disable=SC1091
             source .env
             if [[ ! -d "${scriptLocation%x}/backups" ]]; then
                 echo -e "${YELLOW}Creating backup directory at ${scriptLocation%x}/backups${NC}"
@@ -220,10 +227,11 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
     restore)
         echo -e "${CYAN}Musare | Restore${NC}"
         if [[ -f .env ]]; then
+            # shellcheck disable=SC1091
             source .env
             if [[ -z $2 ]]; then
                 echo -e "${GREEN}Please enter the full path of the dump you wish to restore: ${NC}"
-                read restoreFile
+                read -r restoreFile
             else
                 restoreFile=$2
             fi
@@ -234,7 +242,7 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
             elif [[ ! -f ${restoreFile} ]]; then
                 echo -e "${RED}Error: no file at restore path given, cancelled restoration.${NC}"
             else
-                docker-compose exec -T mongo sh -c "mongorestore --authenticationDatabase musare -u ${MONGO_USER_USERNAME} -p ${MONGO_USER_PASSWORD} --archive" < ${restoreFile}
+                docker-compose exec -T mongo sh -c "mongorestore --authenticationDatabase musare -u ${MONGO_USER_USERNAME} -p ${MONGO_USER_PASSWORD} --archive" < "${restoreFile}"
             fi
         else
             echo -e "${RED}Error: .env does not exist${NC}"
@@ -244,33 +252,34 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
     admin)
         echo -e "${CYAN}Musare | Add Admin${NC}"
         if [[ -f .env ]]; then
+            # shellcheck disable=SC1091
             source .env
             if [[ $2 == "add" ]]; then
                 if [[ -z $3 ]]; then
                     echo -e "${GREEN}Please enter the username of the user you wish to make an admin: ${NC}"
-                    read adminUser
+                    read -r adminUser
                 else
                     adminUser=$3
                 fi
                 if [[ -z $adminUser ]]; then
                     echo -e "${RED}Error: Username for new admin not provided.${NC}"
                 else
-                    docker-compose exec mongo mongo musare -u ${MONGO_USER_USERNAME} -p ${MONGO_USER_PASSWORD} --eval "db.users.update({username: '${adminUser}'}, {\$set: {role: 'admin'}})"
+                    docker-compose exec mongo mongo musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}" --eval "db.users.update({username: '${adminUser}'}, {\$set: {role: 'admin'}})"
                 fi
             elif [[ $2 == "remove" ]]; then
                 if [[ -z $3 ]]; then
                     echo -e "${GREEN}Please enter the username of the user you wish to remove as admin: ${NC}"
-                    read adminUser
+                    read -r adminUser
                 else
                     adminUser=$3
                 fi
                 if [[ -z $adminUser ]]; then
                     echo -e "${RED}Error: Username for new admin not provided.${NC}"
                 else
-                    docker-compose exec mongo mongo musare -u ${MONGO_USER_USERNAME} -p ${MONGO_USER_PASSWORD} --eval "db.users.update({username: '${adminUser}'}, {\$set: {role: 'default'}})"
+                    docker-compose exec mongo mongo musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}" --eval "db.users.update({username: '${adminUser}'}, {\$set: {role: 'default'}})"
                 fi
             else
-                echo -e "${RED}Invalid command $2\n${YELLOW}Usage: $(basename $0) admin [add,remove] username${NC}"
+                echo -e "${RED}Invalid command $2\n${YELLOW}Usage: $(basename "$0") admin [add,remove] username${NC}"
             fi
         else
             echo -e "${RED}Error: .env does not exist${NC}"
