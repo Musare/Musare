@@ -9,7 +9,8 @@
 	"parserOptions": {
 		"ecmaVersion": 2018,
 		"sourceType": "module",
-		"parser": "@babel/eslint-parser"
+		"parser": "@babel/eslint-parser",
+		"requireConfigFile": false
 	},
 	"extends": [
 		"airbnb-base",
