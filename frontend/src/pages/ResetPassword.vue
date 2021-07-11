@@ -55,7 +55,10 @@
 										href="#"
 										@click="submitEmail()"
 										><i
-											class="material-icons icon-with-button"
+											class="
+												material-icons
+												icon-with-button
+											"
 											>mail</i
 										>Request</a
 									>
@@ -112,7 +115,10 @@
 										href="#"
 										@click="verifyCode()"
 										><i
-											class="material-icons icon-with-button"
+											class="
+												material-icons
+												icon-with-button
+											"
 											>vpn_key</i
 										>Verify</a
 									>

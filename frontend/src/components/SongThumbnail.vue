@@ -3,17 +3,16 @@
 		<div
 			v-if="
 				song.youtubeId &&
-					(!song.thumbnail ||
-						(song.thumbnail &&
-							(song.thumbnail.lastIndexOf('notes-transparent') !==
+				(!song.thumbnail ||
+					(song.thumbnail &&
+						(song.thumbnail.lastIndexOf('notes-transparent') !==
+							-1 ||
+							song.thumbnail.lastIndexOf('/assets/notes.png') !==
 								-1 ||
-								song.thumbnail.lastIndexOf(
-									'/assets/notes.png'
-								) !== -1 ||
-								song.thumbnail.lastIndexOf('i.ytimg.com') !==
-									-1)) ||
-						song.thumbnail === 'empty' ||
-						song.thumbnail == null)
+							song.thumbnail.lastIndexOf('i.ytimg.com') !==
+								-1)) ||
+					song.thumbnail === 'empty' ||
+					song.thumbnail == null)
 			"
 			class="yt-thumbnail-bg"
 			:style="{
@@ -26,17 +25,16 @@
 		<img
 			v-if="
 				song.youtubeId &&
-					(!song.thumbnail ||
-						(song.thumbnail &&
-							(song.thumbnail.lastIndexOf('notes-transparent') !==
+				(!song.thumbnail ||
+					(song.thumbnail &&
+						(song.thumbnail.lastIndexOf('notes-transparent') !==
+							-1 ||
+							song.thumbnail.lastIndexOf('/assets/notes.png') !==
 								-1 ||
-								song.thumbnail.lastIndexOf(
-									'/assets/notes.png'
-								) !== -1 ||
-								song.thumbnail.lastIndexOf('i.ytimg.com') !==
-									-1)) ||
-						song.thumbnail === 'empty' ||
-						song.thumbnail == null)
+							song.thumbnail.lastIndexOf('i.ytimg.com') !==
+								-1)) ||
+					song.thumbnail === 'empty' ||
+					song.thumbnail == null)
 			"
 			loading="lazy"
 			:src="`https://img.youtube.com/vi/${song.youtubeId}/mqdefault.jpg`"

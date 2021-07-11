@@ -24,7 +24,7 @@
 								<a
 									:href="
 										'https://www.youtube.com/watch?v=' +
-											`${report.song.youtubeId}`
+										`${report.song.youtubeId}`
 									"
 									target="_blank"
 								>
@@ -61,7 +61,7 @@
 								Expand
 							</a>
 							<a
-								class="button is-success "
+								class="button is-success"
 								href="#"
 								@click="resolve(report._id)"
 								content="Resolve"
@@ -124,9 +124,9 @@ export default {
 		});
 
 		this.socket.on("event:admin.report.resolved", res => {
-			this.reports = this.reports.filter(report => {
-				return report._id !== res.data.reportId;
-			});
+			this.reports = this.reports.filter(
+				report => report._id !== res.data.reportId
+			);
 		});
 
 		this.socket.on("event:admin.report.created", res =>

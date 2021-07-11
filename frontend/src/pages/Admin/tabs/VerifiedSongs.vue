@@ -116,7 +116,7 @@
 							<a
 								:href="
 									'https://www.youtube.com/watch?v=' +
-										`${song.youtubeId}`
+									`${song.youtubeId}`
 								"
 								target="_blank"
 							>

@@ -7,11 +7,11 @@
 				class="has-text-centered"
 				v-if="
 					users.loggedIn &&
-						users.loggedOut &&
-						((users.loggedIn.length === 1 &&
-							users.loggedOut.length === 0) ||
-							(users.loggedIn.length === 0 &&
-								users.loggedOut.length === 1))
+					users.loggedOut &&
+					((users.loggedIn.length === 1 &&
+						users.loggedOut.length === 0) ||
+						(users.loggedIn.length === 0 &&
+							users.loggedOut.length === 1))
 				"
 				key="only-me"
 			>
@@ -21,8 +21,8 @@
 				class="has-text-centered"
 				v-else-if="
 					users.loggedIn &&
-						users.loggedOut &&
-						users.loggedOut.length > 0
+					users.loggedOut &&
+					users.loggedOut.length > 0
 				"
 				key="logged-out-users"
 			>
@@ -58,9 +58,7 @@
 			@click="copyToClipboard()"
 		>
 			<i class="material-icons icon-with-button">share</i>
-			<span>
-				Share (copy to clipboard)
-			</span>
+			<span> Share (copy to clipboard) </span>
 		</button>
 	</div>
 </template>

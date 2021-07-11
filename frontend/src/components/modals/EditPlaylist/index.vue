@@ -28,8 +28,8 @@
 								@click="showTab('settings')"
 								v-if="
 									userId === playlist.createdBy ||
-										isEditable() ||
-										(playlist.type === 'genre' && isAdmin())
+									isEditable() ||
+									(playlist.type === 'genre' && isAdmin())
 								"
 							>
 								Settings
@@ -60,8 +60,8 @@
 							v-show="tab === 'settings'"
 							v-if="
 								userId === playlist.createdBy ||
-									isEditable() ||
-									(playlist.type === 'genre' && isAdmin())
+								isEditable() ||
+								(playlist.type === 'genre' && isAdmin())
 							"
 						/>
 						<add-songs
@@ -105,7 +105,7 @@
 								@end="drag = false"
 								@change="repositionSong"
 							>
-								<template #item="{element, index}">
+								<template #item="{ element, index }">
 									<div class="menu-list scrollable-list">
 										<song-item
 											:song="element"
@@ -115,10 +115,13 @@
 										>
 											<template #actions>
 												<i
-													class="material-icons add-to-queue-icon"
+													class="
+														material-icons
+														add-to-queue-icon
+													"
 													v-if="
 														station.partyMode &&
-															!station.locked
+														!station.locked
 													"
 													@click="
 														addSongToQueue(
@@ -133,7 +136,7 @@
 													v-if="
 														userId ===
 															playlist.createdBy ||
-															isEditable()
+														isEditable()
 													"
 													placement="left"
 													@confirm="
@@ -143,7 +146,10 @@
 													"
 												>
 													<i
-														class="material-icons delete-icon"
+														class="
+															material-icons
+															delete-icon
+														"
 														content="Remove Song from Playlist"
 														v-tippy
 														>delete_forever</i
@@ -153,7 +159,7 @@
 													class="material-icons"
 													v-if="
 														isEditable() &&
-															index > 0
+														index > 0
 													"
 													@click="
 														moveSongToTop(
@@ -168,9 +174,9 @@
 												<i
 													v-if="
 														isEditable() &&
-															playlistSongs.length -
-																1 !==
-																index
+														playlistSongs.length -
+															1 !==
+															index
 													"
 													@click="
 														moveSongToBottom(
@@ -214,8 +220,8 @@
 				class="button is-default"
 				v-if="
 					userId === playlist.createdBy ||
-						isEditable() ||
-						playlist.privacy === 'public'
+					isEditable() ||
+					playlist.privacy === 'public'
 				"
 				@click="downloadPlaylist()"
 				href="#"

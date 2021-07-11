@@ -28,8 +28,8 @@ const modules = {
 		},
 		actions: {
 			/* eslint-disable-next-line no-unused-vars */
-			register: ({ commit }, user) => {
-				return new Promise((resolve, reject) => {
+			register: ({ commit }, user) =>
+				new Promise((resolve, reject) => {
 					const { username, email, password } = user;
 
 					if (!email || !username || !password)
@@ -78,43 +78,30 @@ const modules = {
 
 					return auth
 						.register(user)
-						.then(res => {
-							return resolve(res);
-						})
-						.catch(err => {
-							return reject(new Error(err.message));
-						});
-				});
-			},
+						.then(res => resolve(res))
+						.catch(err => reject(new Error(err.message)));
+				}),
 			/* eslint-disable-next-line no-unused-vars */
-			login: ({ commit }, user) => {
-				return new Promise((resolve, reject) => {
+			login: ({ commit }, user) =>
+				new Promise((resolve, reject) => {
 					auth.login(user)
-						.then(() => {
-							return resolve({
+						.then(() =>
+							resolve({
 								status: "success",
 								message: "Logged in!"
-							});
-						})
-						.catch(err => {
-							return reject(new Error(err.message));
-						});
-				});
-			},
-			logout: () => {
-				return new Promise((resolve, reject) => {
-					return auth
+							})
+						)
+						.catch(err => reject(new Error(err.message)));
+				}),
+			logout: () =>
+				new Promise((resolve, reject) =>
+					auth
 						.logout()
-						.then(() => {
-							return resolve();
-						})
-						.catch(() => {
-							return reject();
-						});
-				});
-			},
-			getUsernameFromId: ({ commit, state }, userId) => {
-				return new Promise(resolve => {
+						.then(() => resolve())
+						.catch(() => reject())
+				),
+			getUsernameFromId: ({ commit, state }, userId) =>
+				new Promise(resolve => {
 					if (typeof state.userIdMap[`Z${userId}`] !== "string") {
 						if (state.userIdRequested[`Z${userId}`] !== true) {
 							commit("requestingUserId", userId);
@@ -144,16 +131,13 @@ const modules = {
 						} else {
 							commit("pendingUsername", {
 								userId,
-								callback: username => {
-									return resolve(username);
-								}
+								callback: username => resolve(username)
 							});
 						}
 					} else {
 						resolve(state.userIdMap[`Z${userId}`]);
 					}
-				});
-			},
+				}),
 			authData: ({ commit }, data) => {
 				commit("authData", data);
 			},

@@ -97,9 +97,7 @@
 									<div
 										class="track"
 										v-for="track in result.tracks"
-										:key="
-											`${track.position}-${track.title}`
-										"
+										:key="`${track.position}-${track.title}`"
 									>
 										<span>{{ track.position }}.</span>
 										<p>{{ track.title }}</p>
@@ -111,8 +109,8 @@
 					<button
 						v-if="
 							discogs.apiResults.length > 0 &&
-								!discogs.disableLoadMore &&
-								discogs.page < discogs.pages
+							!discogs.disableLoadMore &&
+							discogs.page < discogs.pages
 						"
 						class="button is-fullwidth is-info discogs-load-more"
 						@click="loadNextDiscogsPage()"
@@ -215,7 +213,7 @@
 						@end="drag = false"
 						@change="log"
 					>
-						<template #item="{element}">
+						<template #item="{ element }">
 							<song-item
 								:key="`playlist-song-${element._id}`"
 								:song="element"
@@ -246,7 +244,7 @@
 							@end="drag = false"
 							@change="log"
 						>
-							<template #item="{element}">
+							<template #item="{ element }">
 								<song-item
 									:key="`track-song-${element._id}`"
 									:song="element"
@@ -367,8 +365,8 @@ export default {
 				setTimeout(() => {
 					this.editSong({
 						_id: this.songsToEdit[this.currentEditSongIndex].songId,
-						discogs: this.songsToEdit[this.currentEditSongIndex]
-							.discogs
+						discogs:
+							this.songsToEdit[this.currentEditSongIndex].discogs
 					});
 					this.currentEditSongIndex += 1;
 					this.openModal("editSong");
@@ -469,9 +467,7 @@ export default {
 			else if (apiResult.gotMoreInfo === true) apiResult.expanded = true;
 			else {
 				fetch(apiResult.album.resourceUrl)
-					.then(response => {
-						return response.json();
-					})
+					.then(response => response.json())
 					.then(data => {
 						apiResult.album.artists = [];
 						apiResult.album.artistIds = [];
@@ -484,12 +480,10 @@ export default {
 							);
 							apiResult.album.artistIds.push(artist.id);
 						});
-						apiResult.tracks = data.tracklist.map(track => {
-							return {
-								position: track.position,
-								title: track.title
-							};
-						});
+						apiResult.tracks = data.tracklist.map(track => ({
+							position: track.position,
+							title: track.title
+						}));
 						apiResult.expanded = true;
 						apiResult.gotMoreInfo = true;
 					});

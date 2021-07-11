@@ -134,8 +134,8 @@
 		<button
 			v-if="
 				discogs.apiResults.length > 0 &&
-					!discogs.disableLoadMore &&
-					discogs.page < discogs.pages
+				!discogs.disableLoadMore &&
+				discogs.page < discogs.pages
 			"
 			class="button is-fullwidth is-info discogs-load-more"
 			@click="loadNextDiscogsPage()"
@@ -190,9 +190,7 @@ export default {
 			else if (apiResult.gotMoreInfo === true) apiResult.expanded = true;
 			else {
 				fetch(apiResult.album.resourceUrl)
-					.then(response => {
-						return response.json();
-					})
+					.then(response => response.json())
 					.then(data => {
 						apiResult.album.artists = [];
 						apiResult.album.artistIds = [];
@@ -205,12 +203,10 @@ export default {
 							);
 							apiResult.album.artistIds.push(artist.id);
 						});
-						apiResult.tracks = data.tracklist.map(track => {
-							return {
-								position: track.position,
-								title: track.title
-							};
-						});
+						apiResult.tracks = data.tracklist.map(track => ({
+							position: track.position,
+							title: track.title
+						}));
 						apiResult.expanded = true;
 						apiResult.gotMoreInfo = true;
 					});

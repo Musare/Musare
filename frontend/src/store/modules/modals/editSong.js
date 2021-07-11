@@ -23,12 +23,11 @@ export default {
 		loadVideoById: ({ commit }, id, skipDuration) =>
 			commit("loadVideoById", id, skipDuration),
 		pauseVideo: ({ commit }, status) => commit("pauseVideo", status),
-		getCurrentTime: ({ commit, state }, fixedVal) => {
-			return new Promise(resolve => {
+		getCurrentTime: ({ commit, state }, fixedVal) =>
+			new Promise(resolve => {
 				commit("getCurrentTime", fixedVal);
 				resolve(state.video.currentTime);
-			});
-		},
+			}),
 		updateSongField: ({ commit }, data) => commit("updateSongField", data),
 		selectDiscogsInfo: ({ commit }, discogsInfo) =>
 			commit("selectDiscogsInfo", discogsInfo),

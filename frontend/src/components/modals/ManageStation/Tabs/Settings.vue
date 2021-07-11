@@ -409,9 +409,9 @@ export default {
 		updateDescription() {
 			if (this.originalStation.description !== this.station.description) {
 				const { description } = this.station;
-				const characters = description.split("").filter(character => {
-					return character.charCodeAt(0) === 21328;
-				});
+				const characters = description
+					.split("")
+					.filter(character => character.charCodeAt(0) === 21328);
 				if (!validation.isLength(description, 2, 200)) {
 					new Toast(
 						"Description must have between 2 and 200 characters."

@@ -151,8 +151,9 @@
 									>
 								</p>
 								<span
-									v-for="(genre,
-									index) in newStation.blacklistedGenres"
+									v-for="(
+										genre, index
+									) in newStation.blacklistedGenres"
 									:key="genre"
 									class="tag is-info"
 								>

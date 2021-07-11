@@ -53,9 +53,7 @@
 									<i class="material-icons icon-with-button"
 										>play_arrow</i
 									>
-									<span>
-										Resume Station
-									</span>
+									<span> Resume Station </span>
 								</button>
 								<button
 									class="button is-danger"
@@ -65,9 +63,7 @@
 									<i class="material-icons icon-with-button"
 										>pause</i
 									>
-									<span>
-										Pause Station
-									</span>
+									<span> Pause Station </span>
 								</button>
 
 								<!-- (Admin) Skip Button -->
@@ -78,9 +74,7 @@
 									<i class="material-icons icon-with-button"
 										>skip_next</i
 									>
-									<span>
-										Force Skip
-									</span>
+									<span> Force Skip </span>
 								</button>
 
 								<!-- Station Settings Button -->
@@ -164,7 +158,7 @@
 							:song="currentSong"
 							:requested-by="
 								station.type === 'community' &&
-									station.partyMode === true
+								station.partyMode === true
 							"
 							header="Currently Playing.."
 							class="currently-playing"

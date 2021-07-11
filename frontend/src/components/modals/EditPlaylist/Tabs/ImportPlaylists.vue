@@ -1,8 +1,6 @@
 <template>
 	<div class="youtube-tab section">
-		<label class="label">
-			Search for a playlist from YouTube
-		</label>
+		<label class="label"> Search for a playlist from YouTube </label>
 		<div class="control is-grouped input-with-button">
 			<p class="control is-expanded">
 				<input
@@ -17,9 +15,7 @@
 				<span class="select" id="playlist-import-type">
 					<select v-model="search.playlist.isImportingOnlyMusic">
 						<option :value="false">Import all</option>
-						<option :value="true">
-							Import only music
-						</option>
+						<option :value="true">Import only music</option>
 					</select>
 				</span>
 				<a

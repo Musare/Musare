@@ -48,9 +48,7 @@
 				id="password-linked"
 				v-if="step === 'confirm-identity' && isPasswordLinked"
 			>
-				<h2 class="content-box-title">
-					Enter your password
-				</h2>
+				<h2 class="content-box-title">Enter your password</h2>
 				<p class="content-box-description">
 					Confirming your password will let us verify your identity.
 				</p>
@@ -248,13 +246,13 @@ export default {
 		remove() {
 			return this.socket.dispatch("users.remove", res => {
 				if (res.status === "success") {
-					return this.socket.dispatch("users.logout", () => {
-						return lofig.get("cookie").then(cookie => {
+					return this.socket.dispatch("users.logout", () =>
+						lofig.get("cookie").then(cookie => {
 							document.cookie = `${cookie.SIDname}=;expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
 							this.closeModal("removeAccount");
 							return window.location.reload();
-						});
-					});
+						})
+					);
 				}
 
 				return new Toast(res.message);

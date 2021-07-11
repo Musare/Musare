@@ -32,8 +32,8 @@
 				v-show="tab === 'search'"
 				v-if="
 					station.type === 'community' &&
-						station.partyMode &&
-						(isOwnerOrAdmin() || !station.locked)
+					station.partyMode &&
+					(isOwnerOrAdmin() || !station.locked)
 				"
 			>
 				<div class="musare-songs">
@@ -128,7 +128,10 @@
 										key="added-to-queue"
 									>
 										<i
-											class="material-icons icon-with-button"
+											class="
+												material-icons
+												icon-with-button
+											"
 											>done</i
 										>
 										Added to queue
@@ -142,7 +145,10 @@
 										key="add-to-queue"
 									>
 										<i
-											class="material-icons icon-with-button"
+											class="
+												material-icons
+												icon-with-button
+											"
 											>add</i
 										>
 										Add to queue
@@ -165,7 +171,7 @@
 				v-show="tab === 'included'"
 				v-if="
 					isOwnerOrAdmin() &&
-						!(station.type === 'community' && station.partyMode)
+					!(station.type === 'community' && station.partyMode)
 				"
 			>
 				<div v-if="stationPlaylist.songs.length > 0">

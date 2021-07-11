@@ -29,14 +29,13 @@ export default {
 		this.type = this.toCamelCase(this.title);
 	},
 	methods: {
-		toCamelCase: str => {
-			return str
+		toCamelCase: str =>
+			str
 				.toLowerCase()
 				.replace(/[-_]+/g, " ")
 				.replace(/[^\w\s]/g, "")
 				.replace(/ (.)/g, $1 => $1.toUpperCase())
-				.replace(/ /g, "");
-		},
+				.replace(/ /g, ""),
 		...mapActions("modalVisibility", ["closeCurrentModal"])
 	}
 };

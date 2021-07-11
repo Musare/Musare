@@ -45,9 +45,9 @@
 									:key="project"
 									:href="
 										'https://github.com/Musare/' +
-											project +
-											'/commits?author=' +
-											member.github
+										project +
+										'/commits?author=' +
+										member.github
 									"
 									target="_blank"
 								>
@@ -96,9 +96,9 @@
 									:key="project"
 									:href="
 										'https://github.com/Musare/' +
-											project +
-											'/commits?author=' +
-											member.github
+										project +
+										'/commits?author=' +
+										member.github
 									"
 									target="_blank"
 								>
@@ -139,8 +139,7 @@ export default {
 			currentTeam: [
 				{
 					name: "Kristian Vos",
-					bio:
-						"Co-Founder, Owner, Lead Developer, System Admin and QA Tester.",
+					bio: "Co-Founder, Owner, Lead Developer, System Admin and QA Tester.",
 					projects: [
 						"MusareMeteor",
 						"MusareReact",
@@ -160,8 +159,7 @@ export default {
 				},
 				{
 					name: "Owen Diffey",
-					bio:
-						"Developer, Designer, System Admin and QA Tester. Previously Owner and Project Manager.",
+					bio: "Developer, Designer, System Admin and QA Tester. Previously Owner and Project Manager.",
 					projects: [
 						"MusareMeteor",
 						"MusareReact",

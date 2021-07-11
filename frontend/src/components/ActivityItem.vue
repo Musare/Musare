@@ -46,12 +46,8 @@ export default {
 	},
 	computed: {
 		formattedMessage() {
-			const {
-				youtubeId,
-				playlistId,
-				stationId,
-				reportId
-			} = this.activity.payload;
+			const { youtubeId, playlistId, stationId, reportId } =
+				this.activity.payload;
 			let { message } = this.activity.payload;
 
 			if (youtubeId) {
@@ -91,12 +87,8 @@ export default {
 			};
 		},
 		textOnlyMessage() {
-			const {
-				youtubeId,
-				playlistId,
-				stationId,
-				reportId
-			} = this.activity.payload;
+			const { youtubeId, playlistId, stationId, reportId } =
+				this.activity.payload;
 			let { message } = this.activity.payload;
 
 			if (reportId) {

@@ -33,9 +33,7 @@ const modules = {
 				state.songs.push(song);
 			},
 			removeSong(state, songId) {
-				state.songs = state.songs.filter(song => {
-					return song._id !== songId;
-				});
+				state.songs = state.songs.filter(song => song._id !== songId);
 			},
 			updateSong(state, updatedSong) {
 				state.songs.forEach((song, index) => {
@@ -66,9 +64,7 @@ const modules = {
 				state.songs.push(song);
 			},
 			removeSong(state, songId) {
-				state.songs = state.songs.filter(song => {
-					return song._id !== songId;
-				});
+				state.songs = state.songs.filter(song => song._id !== songId);
 			},
 			updateSong(state, updatedSong) {
 				state.songs.forEach((song, index) => {
@@ -99,9 +95,7 @@ const modules = {
 				state.songs.push(song);
 			},
 			removeSong(state, songId) {
-				state.songs = state.songs.filter(song => {
-					return song._id !== songId;
-				});
+				state.songs = state.songs.filter(song => song._id !== songId);
 			},
 			updateSong(state, updatedSong) {
 				state.songs.forEach((song, index) => {
@@ -133,9 +127,9 @@ const modules = {
 				state.stations.push(station);
 			},
 			stationRemoved(state, stationId) {
-				state.stations = state.stations.filter(station => {
-					return station._id !== stationId;
-				});
+				state.stations = state.stations.filter(
+					station => station._id !== stationId
+				);
 			}
 		}
 	},
@@ -147,14 +141,13 @@ const modules = {
 		getters: {},
 		actions: {
 			/* eslint-disable-next-line no-unused-vars */
-			resolveReport: ({ commit }, reportId) => {
-				return new Promise((resolve, reject) => {
-					return admin.reports
+			resolveReport: ({ commit }, reportId) =>
+				new Promise((resolve, reject) =>
+					admin.reports
 						.resolve(reportId)
 						.then(res => resolve(res))
-						.catch(err => reject(new Error(err.message)));
-				});
-			},
+						.catch(err => reject(new Error(err.message)))
+				),
 			indexReports({ commit }, reports) {
 				commit("indexReports", reports);
 			}
@@ -189,9 +182,7 @@ const modules = {
 				state.news.push(news);
 			},
 			removeNews(state, newsId) {
-				state.news = state.news.filter(news => {
-					return news._id !== newsId;
-				});
+				state.news = state.news.filter(news => news._id !== newsId);
 			},
 			updateNews(state, updatedNews) {
 				state.news.forEach((news, index) => {

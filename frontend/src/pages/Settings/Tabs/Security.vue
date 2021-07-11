@@ -204,7 +204,7 @@ export default {
 	},
 	watch: {
 		// eslint-disable-next-line func-names
-		"validation.newPassword.value": function(value) {
+		"validation.newPassword.value": function (value) {
 			if (!validation.isLength(value, 6, 200)) {
 				this.validation.newPassword.message =
 					"Password must have between 6 and 200 characters.";

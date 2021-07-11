@@ -37,9 +37,9 @@
 		<ul
 			v-if="
 				currentSong &&
-					(currentSong.youtubeId === 'l9PxOanFjxQ' ||
-						currentSong.youtubeId === 'xKVcVSYmesU' ||
-						currentSong.youtubeId === '60ItHLz5WEA')
+				(currentSong.youtubeId === 'l9PxOanFjxQ' ||
+					currentSong.youtubeId === 'xKVcVSYmesU' ||
+					currentSong.youtubeId === '60ItHLz5WEA')
 			"
 			class="bg-bubbles"
 		>
@@ -119,9 +119,7 @@
 									<i class="material-icons icon-with-button"
 										>play_arrow</i
 									>
-									<span>
-										Resume Station
-									</span>
+									<span> Resume Station </span>
 								</button>
 								<button
 									class="button is-danger"
@@ -131,9 +129,7 @@
 									<i class="material-icons icon-with-button"
 										>pause</i
 									>
-									<span>
-										Pause Station
-									</span>
+									<span> Pause Station </span>
 								</button>
 
 								<!-- (Admin) Skip Button -->
@@ -144,9 +140,7 @@
 									<i class="material-icons icon-with-button"
 										>skip_next</i
 									>
-									<span>
-										Force Skip
-									</span>
+									<span> Force Skip </span>
 								</button>
 
 								<!-- (Admin) Station Settings Button -->
@@ -157,9 +151,7 @@
 									<i class="material-icons icon-with-button"
 										>settings</i
 									>
-									<span>
-										Manage Station
-									</span>
+									<span> Manage Station </span>
 								</button>
 							</div>
 						</div>
@@ -207,8 +199,7 @@
 								<img
 									v-if="
 										currentSong &&
-											currentSong.youtubeId ===
-												'QH2-TGUlwu4'
+										currentSong.youtubeId === 'QH2-TGUlwu4'
 									"
 									src="https://freepngimg.com/thumb/nyan_cat/1-2-nyan-cat-free-download-png.png"
 									:style="{
@@ -221,14 +212,14 @@
 								<img
 									v-if="
 										currentSong &&
-											(currentSong.youtubeId ===
-												'DtVBCG6ThDk' ||
-												currentSong.youtubeId ===
-													'sI66hcu9fIs' ||
-												currentSong.youtubeId ===
-													'iYYRH4apXDo' ||
-												currentSong.youtubeId ===
-													'tRcPA7Fzebw')
+										(currentSong.youtubeId ===
+											'DtVBCG6ThDk' ||
+											currentSong.youtubeId ===
+												'sI66hcu9fIs' ||
+											currentSong.youtubeId ===
+												'iYYRH4apXDo' ||
+											currentSong.youtubeId ===
+												'tRcPA7Fzebw')
 									"
 									src="/assets/rocket.svg"
 									:style="{
@@ -242,8 +233,7 @@
 								<img
 									v-if="
 										currentSong &&
-											currentSong.youtubeId ===
-												'jofNR_WkoCE'
+										currentSong.youtubeId === 'jofNR_WkoCE'
 									"
 									src="/assets/fox.svg"
 									:style="{
@@ -258,12 +248,12 @@
 								<img
 									v-if="
 										currentSong &&
-											(currentSong.youtubeId ===
-												'l9PxOanFjxQ' ||
-												currentSong.youtubeId ===
-													'xKVcVSYmesU' ||
-												currentSong.youtubeId ===
-													'60ItHLz5WEA')
+										(currentSong.youtubeId ===
+											'l9PxOanFjxQ' ||
+											currentSong.youtubeId ===
+												'xKVcVSYmesU' ||
+											currentSong.youtubeId ===
+												'60ItHLz5WEA')
 									"
 									src="/assets/old_logo.png"
 									:style="{
@@ -289,7 +279,10 @@
 										v-tippy
 									>
 										<i
-											class="material-icons icon-with-button"
+											class="
+												material-icons
+												icon-with-button
+											"
 										>
 											bug_report
 										</i>
@@ -325,7 +318,10 @@
 										v-tippy
 									>
 										<i
-											class="material-icons icon-with-button"
+											class="
+												material-icons
+												icon-with-button
+											"
 											>skip_next</i
 										>
 									</button>
@@ -337,7 +333,10 @@
 										v-tippy
 									>
 										<i
-											class="material-icons icon-with-button"
+											class="
+												material-icons
+												icon-with-button
+											"
 											>skip_next</i
 										>
 										{{ currentSong.skipVotes }}
@@ -349,7 +348,10 @@
 										v-tippy="{ theme: 'info' }"
 									>
 										<i
-											class="material-icons icon-with-button"
+											class="
+												material-icons
+												icon-with-button
+											"
 											>skip_next</i
 										>
 										{{ currentSong.skipVotes }}
@@ -418,7 +420,10 @@
 											v-tippy
 										>
 											<i
-												class="material-icons icon-with-button"
+												class="
+													material-icons
+													icon-with-button
+												"
 												:class="{
 													liked: currentSong.liked
 												}"
@@ -428,14 +433,21 @@
 
 										<!-- Dislike Song Button -->
 										<button
-											class="button is-danger dislike-song"
+											class="
+												button
+												is-danger
+												dislike-song
+											"
 											id="dislike-song"
 											@click="toggleDislike()"
 											content="Dislike Song"
 											v-tippy
 										>
 											<i
-												class="material-icons icon-with-button"
+												class="
+													material-icons
+													icon-with-button
+												"
 												:class="{
 													disliked:
 														currentSong.disliked
@@ -447,26 +459,42 @@
 									<div id="ratings" class="disabled" v-else>
 										<!-- Like Song Button -->
 										<button
-											class="button is-success like-song disabled"
+											class="
+												button
+												is-success
+												like-song
+												disabled
+											"
 											id="like-song"
 											content="Ratings have not been loaded yet"
 											v-tippy
 										>
 											<i
-												class="material-icons icon-with-button"
+												class="
+													material-icons
+													icon-with-button
+												"
 												>thumb_up_alt</i
 											>
 										</button>
 
 										<!-- Dislike Song Button -->
 										<button
-											class="button is-danger dislike-song disabled"
+											class="
+												button
+												is-danger
+												dislike-song
+												disabled
+											"
 											id="dislike-song"
 											content="Ratings have not been loaded yet"
 											v-tippy
 										>
 											<i
-												class="material-icons icon-with-button"
+												class="
+													material-icons
+													icon-with-button
+												"
 												>thumb_down_alt</i
 											>
 										</button>
@@ -485,10 +513,15 @@
 											>
 												<div class="control has-addons">
 													<button
-														class="button is-primary"
+														class="
+															button
+															is-primary
+														"
 													>
 														<i
-															class="material-icons"
+															class="
+																material-icons
+															"
 														>
 															playlist_add
 														</i>
@@ -498,7 +531,9 @@
 														id="dropdown-toggle"
 													>
 														<i
-															class="material-icons"
+															class="
+																material-icons
+															"
 														>
 															{{
 																showPlaylistDropdown
@@ -523,7 +558,10 @@
 											v-tippy="{ theme: 'info' }"
 										>
 											<i
-												class="material-icons icon-with-button"
+												class="
+													material-icons
+													icon-with-button
+												"
 												>thumb_up_alt</i
 											>{{ currentSong.likes }}
 										</button>
@@ -536,7 +574,10 @@
 											v-tippy="{ theme: 'info' }"
 										>
 											<i
-												class="material-icons icon-with-button"
+												class="
+													material-icons
+													icon-with-button
+												"
 												>thumb_down_alt</i
 											>{{ currentSong.dislikes }}
 										</button>
@@ -550,7 +591,10 @@
 											v-tippy="{ theme: 'info' }"
 										>
 											<i
-												class="material-icons icon-with-button"
+												class="
+													material-icons
+													icon-with-button
+												"
 												>thumb_up_alt</i
 											>
 										</button>
@@ -563,7 +607,10 @@
 											v-tippy="{ theme: 'info' }"
 										>
 											<i
-												class="material-icons icon-with-button"
+												class="
+													material-icons
+													icon-with-button
+												"
 												>thumb_down_alt</i
 											>
 										</button>
@@ -572,7 +619,11 @@
 									<div id="add-song-to-playlist">
 										<div class="control has-addons">
 											<button
-												class="button is-primary disabled"
+												class="
+													button
+													is-primary
+													disabled
+												"
 												content="Log in to add songs to playlist"
 												v-tippy="{ theme: 'info' }"
 											>
@@ -602,7 +653,7 @@
 									:duration="false"
 									:requested-by="
 										station.type === 'community' &&
-											station.partyMode === true
+										station.partyMode === true
 									"
 									header="Currently Playing.."
 								/>
@@ -620,7 +671,7 @@
 									:duration="false"
 									:requested-by="
 										station.type === 'community' &&
-											station.partyMode === true
+										station.partyMode === true
 									"
 									header="Next Up.."
 								/>
@@ -868,9 +919,7 @@ export default {
 
 		window.scrollTo(0, 0);
 
-		Date.currently = () => {
-			return new Date().getTime() + this.systemDifference;
-		};
+		Date.currently = () => new Date().getTime() + this.systemDifference;
 
 		this.stationIdentifier = this.$route.params.id;
 
@@ -905,13 +954,8 @@ export default {
 		);
 
 		this.socket.on("event:station.nextSong", res => {
-			const {
-				currentSong,
-				startedAt,
-				paused,
-				timePaused,
-				natural
-			} = res.data;
+			const { currentSong, startedAt, paused, timePaused, natural } =
+				res.data;
 
 			if (this.noSong || !natural) {
 				this.setCurrentSong({
@@ -1101,11 +1145,12 @@ export default {
 
 			await this.$router.push(
 				`${res.data.name}?${Object.keys(this.$route.query)
-					.map(key => {
-						return `${encodeURIComponent(key)}=${encodeURIComponent(
-							this.$route.query[key]
-						)}`;
-					})
+					.map(
+						key =>
+							`${encodeURIComponent(key)}=${encodeURIComponent(
+								this.$route.query[key]
+							)}`
+					)
 					.join("&")}`
 			);
 
@@ -1243,13 +1288,8 @@ export default {
 			}
 		},
 		setCurrentSong(data) {
-			const {
-				currentSong,
-				startedAt,
-				paused,
-				timePaused,
-				pausedAt
-			} = data;
+			const { currentSong, startedAt, paused, timePaused, pausedAt } =
+				data;
 
 			if (currentSong) {
 				if (!currentSong.skipDuration || currentSong.skipDuration < 0)
@@ -1447,8 +1487,8 @@ export default {
 								});
 
 								// save current song id
-								const erroredYoutubeId = this.currentSong
-									.youtubeId;
+								const erroredYoutubeId =
+									this.currentSong.youtubeId;
 
 								// remove persistent toast if video has finished
 								window.isSongErroredInterval = setInterval(
@@ -1834,9 +1874,12 @@ export default {
 					if (queueSong.requestedBy === this.userId) isInQueue = true;
 				});
 				if (!isInQueue && this.partyPlaylists.length > 0) {
-					const selectedPlaylist = this.partyPlaylists[
-						Math.floor(Math.random() * this.partyPlaylists.length)
-					];
+					const selectedPlaylist =
+						this.partyPlaylists[
+							Math.floor(
+								Math.random() * this.partyPlaylists.length
+							)
+						];
 					if (
 						selectedPlaylist._id &&
 						selectedPlaylist.songs.length > 0
@@ -2144,7 +2187,8 @@ export default {
 					this.activityWatchVideoLastYouTubeId !==
 					this.currentSong.youtubeId
 				) {
-					this.activityWatchVideoLastYouTubeId = this.currentSong.youtubeId;
+					this.activityWatchVideoLastYouTubeId =
+						this.currentSong.youtubeId;
 					this.activityWatchVideoLastStartDuration =
 						this.currentSong.skipDuration + this.getTimeElapsed();
 				}

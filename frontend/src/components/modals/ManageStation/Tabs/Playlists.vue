@@ -78,7 +78,7 @@
 								class="material-icons"
 								v-if="
 									isAllowedToParty() &&
-										isSelected(playlist._id)
+									isSelected(playlist._id)
 								"
 								content="This playlist is currently selected"
 								v-tippy
@@ -89,8 +89,8 @@
 								class="material-icons"
 								v-else-if="
 									isOwnerOrAdmin() &&
-										isPlaylistMode() &&
-										isIncluded(playlist._id)
+									isPlaylistMode() &&
+									isIncluded(playlist._id)
 								"
 								content="This playlist is currently included"
 								v-tippy
@@ -144,8 +144,8 @@
 							<confirm
 								v-if="
 									isOwnerOrAdmin() &&
-										isPlaylistMode() &&
-										isIncluded(playlist._id)
+									isPlaylistMode() &&
+									isIncluded(playlist._id)
 								"
 								@confirm="removeIncludedPlaylist(playlist._id)"
 							>
@@ -160,8 +160,8 @@
 							<i
 								v-if="
 									isPartyMode() &&
-										!isSelected(playlist._id) &&
-										!isExcluded(playlist._id)
+									!isSelected(playlist._id) &&
+									!isExcluded(playlist._id)
 								"
 								@click="selectPartyPlaylist(playlist)"
 								class="material-icons play-icon"
@@ -172,9 +172,9 @@
 							<i
 								v-if="
 									isOwnerOrAdmin() &&
-										isPlaylistMode() &&
-										!isIncluded(playlist._id) &&
-										!isExcluded(playlist._id)
+									isPlaylistMode() &&
+									!isIncluded(playlist._id) &&
+									!isExcluded(playlist._id)
 								"
 								@click="includePlaylist(playlist)"
 								class="material-icons play-icon"
@@ -185,7 +185,7 @@
 							<confirm
 								v-if="
 									isOwnerOrAdmin() &&
-										!isExcluded(playlist._id)
+									!isExcluded(playlist._id)
 								"
 								@confirm="blacklistPlaylist(playlist._id)"
 							>
@@ -221,8 +221,7 @@
 							<i
 								v-if="
 									playlist.createdBy !== myUserId &&
-										(playlist.privacy === 'public' ||
-											isAdmin())
+									(playlist.privacy === 'public' || isAdmin())
 								"
 								@click="showPlaylist(playlist._id)"
 								class="material-icons edit-icon"
@@ -269,7 +268,7 @@
 						@end="drag = false"
 						@change="savePlaylistOrder"
 					>
-						<template #item="{element}">
+						<template #item="{ element }">
 							<playlist-item
 								class="item-draggable"
 								:playlist="element"
@@ -279,7 +278,7 @@
 										class="material-icons"
 										v-if="
 											isAllowedToParty() &&
-												isSelected(element._id)
+											isSelected(element._id)
 										"
 										content="This playlist is currently selected"
 										v-tippy
@@ -290,8 +289,8 @@
 										class="material-icons"
 										v-else-if="
 											isOwnerOrAdmin() &&
-												isPlaylistMode() &&
-												isIncluded(element._id)
+											isPlaylistMode() &&
+											isIncluded(element._id)
 										"
 										content="This playlist is currently included"
 										v-tippy
@@ -302,7 +301,7 @@
 										class="material-icons excluded-icon"
 										v-else-if="
 											isOwnerOrAdmin() &&
-												isExcluded(element._id)
+											isExcluded(element._id)
 										"
 										content="This playlist is currently excluded"
 										v-tippy
@@ -334,7 +333,7 @@
 									<i
 										v-if="
 											isPartyMode() &&
-												!isSelected(element._id)
+											!isSelected(element._id)
 										"
 										@click="selectPartyPlaylist(element)"
 										class="material-icons play-icon"
@@ -345,8 +344,8 @@
 									<i
 										v-if="
 											isPlaylistMode() &&
-												isOwnerOrAdmin() &&
-												!isSelected(element._id)
+											isOwnerOrAdmin() &&
+											!isSelected(element._id)
 										"
 										@click="includePlaylist(element)"
 										class="material-icons play-icon"
@@ -357,7 +356,7 @@
 									<confirm
 										v-if="
 											isPartyMode() &&
-												isSelected(element._id)
+											isSelected(element._id)
 										"
 										@confirm="
 											deselectPartyPlaylist(element._id)
@@ -373,8 +372,8 @@
 									<confirm
 										v-if="
 											isPlaylistMode() &&
-												isOwnerOrAdmin() &&
-												isIncluded(element._id)
+											isOwnerOrAdmin() &&
+											isIncluded(element._id)
 										"
 										@confirm="
 											removeIncludedPlaylist(element._id)
@@ -390,7 +389,7 @@
 									<confirm
 										v-if="
 											isOwnerOrAdmin() &&
-												!isExcluded(element._id)
+											!isExcluded(element._id)
 										"
 										@confirm="
 											blacklistPlaylist(element._id)
@@ -406,7 +405,7 @@
 									<confirm
 										v-if="
 											isOwnerOrAdmin() &&
-												isExcluded(element._id)
+											isExcluded(element._id)
 										"
 										@confirm="
 											removeExcludedPlaylist(element._id)
@@ -490,8 +489,7 @@
 							<i
 								v-if="
 									playlist.createdBy !== myUserId &&
-										(playlist.privacy === 'public' ||
-											isAdmin())
+									(playlist.privacy === 'public' || isAdmin())
 								"
 								@click="showPlaylist(playlist._id)"
 								class="material-icons edit-icon"
@@ -563,8 +561,7 @@
 							<i
 								v-if="
 									playlist.createdBy !== myUserId &&
-										(playlist.privacy === 'public' ||
-											isAdmin())
+									(playlist.privacy === 'public' || isAdmin())
 								"
 								@click="showPlaylist(playlist._id)"
 								class="material-icons edit-icon"
@@ -924,9 +921,12 @@ export default {
 					if (queueSong.requestedBy === this.userId) isInQueue = true;
 				});
 				if (!isInQueue && this.partyPlaylists) {
-					const selectedPlaylist = this.partyPlaylists[
-						Math.floor(Math.random() * this.partyPlaylists.length)
-					];
+					const selectedPlaylist =
+						this.partyPlaylists[
+							Math.floor(
+								Math.random() * this.partyPlaylists.length
+							)
+						];
 					if (
 						selectedPlaylist._id &&
 						selectedPlaylist.songs.length > 0

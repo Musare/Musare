@@ -37,9 +37,10 @@ export default {
 		selectDiscogsAlbum(state, discogsAlbum) {
 			state.discogsAlbum = JSON.parse(JSON.stringify(discogsAlbum));
 			if (state.discogsAlbum && state.discogsAlbum.tracks) {
-				state.tracks = state.discogsAlbum.tracks.map(track => {
-					return { ...track, songs: [] };
-				});
+				state.tracks = state.discogsAlbum.tracks.map(track => ({
+					...track,
+					songs: []
+				}));
 			}
 		},
 		toggleDiscogsAlbum(state) {

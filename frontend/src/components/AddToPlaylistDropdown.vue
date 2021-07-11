@@ -55,9 +55,7 @@
 				class="button is-primary"
 				@click="createPlaylist()"
 			>
-				<i class="material-icons icon-with-button">
-					edit
-				</i>
+				<i class="material-icons icon-with-button"> edit </i>
 				Create Playlist
 			</button>
 		</template>

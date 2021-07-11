@@ -3,7 +3,11 @@
 		<metadata title="Admin | Statistics" />
 		<div class="columns">
 			<div
-				class="card column is-10-desktop is-offset-1-desktop is-12-mobile"
+				class="
+					card
+					column
+					is-10-desktop is-offset-1-desktop is-12-mobile
+				"
 			>
 				<header class="card-header">
 					<p class="card-header-title">Average Logs</p>
@@ -51,7 +55,11 @@
 		<br />
 		<div class="columns" v-if="module">
 			<div
-				class="card column is-10-desktop is-offset-1-desktop is-12-mobile"
+				class="
+					card
+					column
+					is-10-desktop is-offset-1-desktop is-12-mobile
+				"
 			>
 				<header class="card-header">
 					<p class="card-header-title">Running tasks</p>
@@ -81,7 +89,11 @@
 				</div>
 			</div>
 			<div
-				class="card column is-10-desktop is-offset-1-desktop is-12-mobile"
+				class="
+					card
+					column
+					is-10-desktop is-offset-1-desktop is-12-mobile
+				"
 			>
 				<header class="card-header">
 					<p class="card-header-title">Paused tasks</p>
@@ -111,7 +123,11 @@
 				</div>
 			</div>
 			<div
-				class="card column is-10-desktop is-offset-1-desktop is-12-mobile"
+				class="
+					card
+					column
+					is-10-desktop is-offset-1-desktop is-12-mobile
+				"
 			>
 				<header class="card-header">
 					<p class="card-header-title">Queued tasks</p>
@@ -144,7 +160,11 @@
 		<br />
 		<div class="columns" v-if="module">
 			<div
-				class="card column is-10-desktop is-offset-1-desktop is-12-mobile"
+				class="
+					card
+					column
+					is-10-desktop is-offset-1-desktop is-12-mobile
+				"
 			>
 				<header class="card-header">
 					<p class="card-header-title">Average Logs</p>
@@ -163,8 +183,9 @@
 							</thead>
 							<tbody>
 								<tr
-									v-for="(job,
-									jobName) in module.jobStatistics"
+									v-for="(
+										job, jobName
+									) in module.jobStatistics"
 									:key="jobName"
 								>
 									<td>{{ jobName }}</td>

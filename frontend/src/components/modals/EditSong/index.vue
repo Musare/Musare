@@ -41,7 +41,10 @@
 										>stop</i
 									>
 									<i
-										class="material-icons player-fast-forward"
+										class="
+											material-icons
+											player-fast-forward
+										"
 										@click="settings('skipToLast10Secs')"
 										@keyup.enter="
 											settings('skipToLast10Secs')
@@ -190,7 +193,7 @@
 									v-if="
 										(artistInputFocussed ||
 											artistAutosuggestContainerFocussed) &&
-											artistAutosuggestItems.length > 0
+										artistAutosuggestItems.length > 0
 									"
 									@mouseover="focusArtistContainer()"
 									@mouseleave="blurArtistContainer()"
@@ -264,7 +267,7 @@
 									v-if="
 										(genreInputFocussed ||
 											genreAutosuggestContainerFocussed) &&
-											genreAutosuggestItems.length > 0
+										genreAutosuggestItems.length > 0
 									"
 									@mouseover="focusGenreContainer()"
 									@mouseleave="blurGenreContainer()"
@@ -646,7 +649,8 @@ export default {
 								this.video.player.setVolume(volume);
 								if (volume > 0) this.video.player.unMute();
 
-								const duration = this.video.player.getDuration();
+								const duration =
+									this.video.player.getDuration();
 
 								this.youtubeVideoDuration = duration.toFixed(3);
 								this.youtubeVideoNote = "(~)";
@@ -671,10 +675,10 @@ export default {
 									!skipToLast10SecsPressed
 								) {
 									this.video.paused = false;
-									let youtubeDuration = this.video.player.getDuration();
-									const newYoutubeVideoDuration = youtubeDuration.toFixed(
-										3
-									);
+									let youtubeDuration =
+										this.video.player.getDuration();
+									const newYoutubeVideoDuration =
+										youtubeDuration.toFixed(3);
 
 									const songDurationNumber = Number(
 										this.song.duration
@@ -683,15 +687,12 @@ export default {
 										Number(this.song.duration) + 1;
 									const songDurationNumber3 =
 										Number(this.song.duration) - 1;
-									const fixedSongDuration = songDurationNumber.toFixed(
-										3
-									);
-									const fixedSongDuration2 = songDurationNumber2.toFixed(
-										3
-									);
-									const fixedSongDuration3 = songDurationNumber3.toFixed(
-										3
-									);
+									const fixedSongDuration =
+										songDurationNumber.toFixed(3);
+									const fixedSongDuration2 =
+										songDurationNumber2.toFixed(3);
+									const fixedSongDuration3 =
+										songDurationNumber3.toFixed(3);
 
 									if (
 										this.youtubeVideoDuration !==
@@ -703,9 +704,11 @@ export default {
 											fixedSongDuration3 ===
 												this.youtubeVideoDuration)
 									)
-										this.song.duration = newYoutubeVideoDuration;
+										this.song.duration =
+											newYoutubeVideoDuration;
 
-									this.youtubeVideoDuration = newYoutubeVideoDuration;
+									this.youtubeVideoDuration =
+										newYoutubeVideoDuration;
 									this.youtubeVideoNote = "";
 
 									if (this.song.duration === -1)
@@ -1226,11 +1229,11 @@ export default {
 			clearTimeout(this.keydownGenreInputTimeout);
 			this.keydownGenreInputTimeout = setTimeout(() => {
 				if (this.genreInputValue.length > 1) {
-					this.genreAutosuggestItems = this.genres.filter(genre => {
-						return genre
+					this.genreAutosuggestItems = this.genres.filter(genre =>
+						genre
 							.toLowerCase()
-							.startsWith(this.genreInputValue.toLowerCase());
-					});
+							.startsWith(this.genreInputValue.toLowerCase())
+					);
 				} else this.genreAutosuggestItems = [];
 			}, 1000);
 		},

@@ -19,12 +19,12 @@
 				@end="drag = false"
 				@change="repositionSongInQueue"
 			>
-				<template #item="{element, index}">
+				<template #item="{ element, index }">
 					<song-item
 						:song="element"
 						:requested-by="
 							station.type === 'community' &&
-								station.partyMode === true
+							station.partyMode === true
 						"
 						:class="{
 							'item-draggable': isAdminOnly() || isOwnerOnly()
@@ -75,12 +75,12 @@
 			class="button is-primary tab-actionable-button"
 			v-if="
 				sector === 'station' &&
-					loggedIn &&
-					station.type === 'community' &&
-					station.partyMode &&
-					((station.locked && isOwnerOnly()) ||
-						!station.locked ||
-						(station.locked && isAdminOnly() && dismissedWarning))
+				loggedIn &&
+				station.type === 'community' &&
+				station.partyMode &&
+				((station.locked && isOwnerOnly()) ||
+					!station.locked ||
+					(station.locked && isAdminOnly() && dismissedWarning))
 			"
 			@click="openModal('manageStation') & showManageStationTab('songs')"
 		>
@@ -101,11 +101,11 @@
 			class="button is-primary tab-actionable-button disabled"
 			v-if="
 				sector === 'station' &&
-					!loggedIn &&
-					((station.type === 'community' &&
-						station.partyMode &&
-						!station.locked) ||
-						station.type === 'official')
+				!loggedIn &&
+				((station.type === 'community' &&
+					station.partyMode &&
+					!station.locked) ||
+					station.type === 'official')
 			"
 			content="Login to add songs to queue"
 			v-tippy="{ theme: 'info' }"

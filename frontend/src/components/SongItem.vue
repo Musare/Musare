@@ -91,9 +91,7 @@
 							<a
 								v-if="disabledActions.indexOf('youtube') === -1"
 								target="_blank"
-								:href="
-									`https://www.youtube.com/watch?v=${song.youtubeId}`
-								"
+								:href="`https://www.youtube.com/watch?v=${song.youtubeId}`"
 								content="View on Youtube"
 								v-tippy
 							>
@@ -111,14 +109,17 @@
 							<add-to-playlist-dropdown
 								v-if="
 									disabledActions.indexOf('addToPlaylist') ===
-										-1
+									-1
 								"
 								:song="song"
 								placement="top-end"
 							>
 								<template #button>
 									<i
-										class="material-icons add-to-playlist-icon"
+										class="
+											material-icons
+											add-to-playlist-icon
+										"
 										content="Add Song to Playlist"
 										v-tippy
 										>playlist_add</i
@@ -128,8 +129,8 @@
 							<i
 								v-if="
 									loggedIn &&
-										userRole === 'admin' &&
-										disabledActions.indexOf('edit') === -1
+									userRole === 'admin' &&
+									disabledActions.indexOf('edit') === -1
 								"
 								class="material-icons edit-icon"
 								@click="edit(song)"

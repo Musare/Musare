@@ -111,9 +111,8 @@ export default {
 				const sortedPlaylists = [];
 
 				this.playlists.forEach(playlist => {
-					sortedPlaylists[
-						res.data.order.indexOf(playlist._id)
-					] = playlist;
+					sortedPlaylists[res.data.order.indexOf(playlist._id)] =
+						playlist;
 				});
 
 				this.playlists = sortedPlaylists;

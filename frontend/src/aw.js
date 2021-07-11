@@ -68,7 +68,7 @@ export default {
 		if (!enabled) {
 			uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
 				/[xy]/g,
-				function abc(c) {
+				c => {
 					// eslint-disable-next-line
 					const r = (Math.random() * 16) | 0;
 					// eslint-disable-next-line

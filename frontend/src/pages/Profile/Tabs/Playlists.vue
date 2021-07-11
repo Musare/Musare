@@ -33,12 +33,12 @@
 				@end="drag = false"
 				@change="savePlaylistOrder"
 			>
-				<template #item="{element}">
+				<template #item="{ element }">
 					<playlist-item
 						v-if="
 							element.privacy === 'public' ||
-								(element.privacy === 'private' &&
-									element.createdBy === userId)
+							(element.privacy === 'private' &&
+								element.createdBy === userId)
 						"
 						:playlist="element"
 						:class="{

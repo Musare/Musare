@@ -16,9 +16,7 @@
 			<slot ref="trigger" />
 		</div>
 		<template #content>
-			<a @click="confirm($event)">
-				Click to Confirm
-			</a>
+			<a @click="confirm($event)"> Click to Confirm </a>
 		</template>
 	</tippy>
 </template>

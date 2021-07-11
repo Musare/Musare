@@ -91,9 +91,9 @@ export default {
 
 			let characters = description.split("");
 
-			characters = characters.filter(character => {
-				return character.charCodeAt(0) === 21328;
-			});
+			characters = characters.filter(
+				character => character.charCodeAt(0) === 21328
+			);
 
 			if (characters.length !== 0)
 				return new Toast("Invalid description format.");

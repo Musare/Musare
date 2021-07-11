@@ -15,11 +15,12 @@ export default {
 				{},
 				null,
 				`${this.$route.path}?${Object.keys(queries)
-					.map(key => {
-						return `${encodeURIComponent(key)}=${encodeURIComponent(
-							queries[key]
-						)}`;
-					})
+					.map(
+						key =>
+							`${encodeURIComponent(key)}=${encodeURIComponent(
+								queries[key]
+							)}`
+					)
 					.join("&")}`
 			);
 		}

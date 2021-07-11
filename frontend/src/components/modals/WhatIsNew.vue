@@ -13,7 +13,7 @@
 					<user-id-to-username
 						:user-id="news.createdBy"
 						:alt="news.createdBy"
-						:link="true"/></span
+						:link="true" /></span
 				><span :title="new Date(news.createdAt)">
 					{{
 						formatDistance(news.createdAt, new Date(), {

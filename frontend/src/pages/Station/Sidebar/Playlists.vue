@@ -13,7 +13,7 @@
 				@end="drag = false"
 				@change="savePlaylistOrder"
 			>
-				<template #item="{element}">
+				<template #item="{ element }">
 					<playlist-item :playlist="element" class="item-draggable">
 						<template #actions>
 							<i
@@ -26,10 +26,9 @@
 							<i
 								v-if="
 									station.type === 'community' &&
-										(isOwnerOrAdmin() ||
-											station.partyMode) &&
-										!isSelected(element._id) &&
-										!isExcluded(element._id)
+									(isOwnerOrAdmin() || station.partyMode) &&
+									!isSelected(element._id) &&
+									!isExcluded(element._id)
 								"
 								@click="selectPlaylist(element)"
 								class="material-icons play-icon"
@@ -44,9 +43,8 @@
 							<confirm
 								v-if="
 									station.type === 'community' &&
-										(isOwnerOrAdmin() ||
-											station.partyMode) &&
-										isSelected(element._id)
+									(isOwnerOrAdmin() || station.partyMode) &&
+									isSelected(element._id)
 								"
 								@confirm="deselectPlaylist(element._id)"
 							>
@@ -280,9 +278,12 @@ export default {
 					if (queueSong.requestedBy === this.userId) isInQueue = true;
 				});
 				if (!isInQueue && this.partyPlaylists) {
-					const selectedPlaylist = this.partyPlaylists[
-						Math.floor(Math.random() * this.partyPlaylists.length)
-					];
+					const selectedPlaylist =
+						this.partyPlaylists[
+							Math.floor(
+								Math.random() * this.partyPlaylists.length
+							)
+						];
 					if (
 						selectedPlaylist._id &&
 						selectedPlaylist.songs.length > 0

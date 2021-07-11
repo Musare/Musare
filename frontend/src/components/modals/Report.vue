@@ -50,7 +50,8 @@
 											content="Provide More info"
 											v-tippy
 											@click="
-												issue.showDescription = !issue.showDescription
+												issue.showDescription =
+													!issue.showDescription
 											"
 										>
 											info
@@ -78,23 +79,29 @@
 										>
 
 										<button
-											class="button tab-actionable-button "
+											class="button tab-actionable-button"
 											content="Add an issue that isn't listed"
 											v-tippy
 											@click="customIssues.push('')"
 										>
 											<i
-												class="material-icons icon-with-button"
+												class="
+													material-icons
+													icon-with-button
+												"
 												>add</i
 											>
-											<span>
-												Add Custom Issue
-											</span>
+											<span> Add Custom Issue </span>
 										</button>
 									</div>
 
 									<div
-										class="custom-issue control is-grouped input-with-button"
+										class="
+											custom-issue
+											control
+											is-grouped
+											input-with-button
+										"
 										v-for="(issue, index) in customIssues"
 										:key="index"
 									>

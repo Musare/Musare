@@ -1,8 +1,6 @@
 <template>
 	<div class="youtube-tab">
-		<label class="label">
-			Search for a song from YouTube
-		</label>
+		<label class="label"> Search for a song from YouTube </label>
 		<div class="control is-grouped input-with-button">
 			<p class="control is-expanded">
 				<input
