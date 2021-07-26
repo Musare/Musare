@@ -639,6 +639,7 @@ a {
 	box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
 	background-color: var(--white);
 	color: var(--dark-grey);
+	width: max-content;
 
 	.nav-dropdown-items {
 		.nav-item {
@@ -726,7 +727,7 @@ a {
 		display: flex;
 		flex-direction: column;
 		button {
-			width: 150px;
+			width: 100%;
 			&:not(:last-of-type) {
 				margin-bottom: 10px;
 			}
