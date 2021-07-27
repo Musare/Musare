@@ -996,6 +996,7 @@ export default {
 			if (!this.localPaused) this.resumeLocalPlayer();
 
 			if (this.currentSong) {
+				const currentSongId = this.currentSong._id;
 				if (this.nextSong)
 					this.setNextCurrentSong({
 						currentSong: this.nextSong,
@@ -1012,7 +1013,8 @@ export default {
 						pausedAt: 0
 					});
 				window.stationNextSongTimeout = setTimeout(() => {
-					this.skipSong("window.stationNextSongTimeout 2");
+					if (!this.noSong && this.currentSong._id === currentSongId)
+						this.skipSong("window.stationNextSongTimeout 2");
 				}, this.getTimeRemaining());
 			}
 		});
@@ -1354,7 +1356,11 @@ export default {
 							true
 						);
 					window.stationNextSongTimeout = setTimeout(() => {
-						this.skipSong("window.stationNextSongTimeout 1");
+						if (
+							!this.noSong &&
+							this.currentSong._id === currentSong._id
+						)
+							this.skipSong("window.stationNextSongTimeout 1");
 					}, this.getTimeRemaining());
 				}
 
