@@ -505,7 +505,9 @@ export default {
 				animation: 200,
 				group: "favoriteStations",
 				disabled: false,
-				ghostClass: "draggable-list-ghost"
+				ghostClass: "draggable-list-ghost",
+				filter: ".ignore-elements",
+				fallbackTolerance: 50
 			};
 		}
 	},
