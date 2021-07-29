@@ -62,7 +62,7 @@ We currently only utilize 1 backend, 1 MongoDB server and 1 Redis server running
     | `skipDbDocumentsVersionCheck` | Skips checking if there are any DB documents outdated or not. Should almost always be set to false. |
     | `configVersion` | Version of the config. Every time the template changes, you should change your config accordingly and update the configVersion. |
 
-4. `cp frontend/build/config/template.json frontend/build/config/default.json`
+4. `cp frontend/dist/config/template.json frontend/dist/config/default.json`
 
     | Property | Description |
     | - | - |
@@ -210,19 +210,15 @@ ___
 
 ___
 
-1. Start the MongoDB database in the background.
+1. Start the MongoDB database & Redis in the background.
 
-    `docker-compose up -d mongo`
+    `docker-compose up -d mongo redis`
 
-2. Start redis and the mongo client in the background, as we usually don't need to monitor these for errors.
-
-    `docker-compose up -d mongoclient redis`
-
-3. Start the backend and frontend in the foreground, so we can watch for errors during development.
+2. Start the backend and frontend in the foreground, so we can watch for errors during development.
 
     `docker-compose up backend frontend`
 
-4. You should now be able to begin development!
+3. You should now be able to begin development!
 
     The backend is auto reloaded when you make changes and the frontend is auto compiled and live reloaded by webpack when you make changes.
     
