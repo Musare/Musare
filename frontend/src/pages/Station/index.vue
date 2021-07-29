@@ -367,7 +367,7 @@
 										}}
 									</p>
 								</div>
-								<p id="volume-control" v-if="!isIOS">
+								<p id="volume-control" v-if="!isApple">
 									<i
 										v-if="muted"
 										class="material-icons"
@@ -821,7 +821,9 @@ export default {
 	data() {
 		return {
 			utils,
-			isIOS: navigator.platform.match(/iPhone|iPod|iPad/),
+			isApple:
+				navigator.platform.match(/iPhone|iPod|iPad/) ||
+				navigator.vendor === "Apple Computer, Inc.",
 			title: "Station",
 			loading: true,
 			exists: true,
@@ -1467,7 +1469,7 @@ export default {
 							this.playVideo();
 
 							// on ios, playback will be forcibly paused locally
-							if (this.isIOS) {
+							if (this.isApple) {
 								this.updateLocalPaused(true);
 								new Toast(
 									"Please click play manually to use Musare on iOS."
@@ -1636,7 +1638,7 @@ export default {
 				!this.stationPaused &&
 				!this.localPaused &&
 				this.playerReady &&
-				!this.isIOS
+				!this.isApple
 			) {
 				const timeElapsed = this.getTimeElapsed();
 				const currentPlayerTime =
