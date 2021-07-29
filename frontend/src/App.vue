@@ -135,7 +135,8 @@ export default {
 		});
 
 		if (localStorage.getItem("github_redirect")) {
-			this.$router.push(localStorage.getItem("github_redirect"));
+			setTimeout(() => 
+				this.$router.push(localStorage.getItem("github_redirect")), 50);
 			localStorage.removeItem("github_redirect");
 		}
 
@@ -157,7 +158,9 @@ export default {
 
 		this.apiDomain = await lofig.get("apiDomain");
 
-		this.$router.isReady(() => {
+		console.log(this.$route);
+
+		this.$router.isReady().then(() => {
 			if (this.$route.query.err) {
 				let { err } = this.$route.query;
 				err = err
@@ -166,6 +169,7 @@ export default {
 				this.$router.push({ query: {} });
 				new Toast({ content: err, timeout: 20000 });
 			}
+
 			if (this.$route.query.msg) {
 				let { msg } = this.$route.query;
 				msg = msg
@@ -265,14 +269,14 @@ export default {
 		color: var(--light-grey-2);
 	}
 
-	#toasts-container .toast {
+	// #toasts-container .toast {
 		// color: var(--dark-grey-2);
 		// background-color: var(--light-grey-3) !important;
 
 		// &:last-of-type {
 		// 	background-color: var(--light-grey) !important;
 		// }
-	}
+	// }
 
 	h1,
 	h2,

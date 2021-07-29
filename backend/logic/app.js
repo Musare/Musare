@@ -78,7 +78,7 @@ class _AppModule extends CoreClass {
 			 * @param {string} err - custom error message
 			 */
 			function redirectOnErr(res, err) {
-				res.redirect(`${config.get("domain")}/?err=${encodeURIComponent(err)}`);
+				res.redirect(`${config.get("domain")}?err=${encodeURIComponent(err)}`);
 			}
 
 			app.get("/auth/github/authorize", async (req, res) => {
