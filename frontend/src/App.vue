@@ -684,6 +684,7 @@ a {
 				}
 
 				.slider {
+					width: 100%;
 					position: absolute;
 					cursor: pointer;
 					top: 0;
@@ -970,11 +971,6 @@ h4.section-title {
 		span {
 			cursor: pointer;
 			// color: var(--dark-grey);
-
-			&:hover,
-			&:focus {
-				filter: brightness(90%);
-			}
 
 			&:not(:first-child) {
 				margin-left: 5px;

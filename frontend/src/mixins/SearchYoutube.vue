@@ -4,7 +4,7 @@ import Toast from "toasters";
 export default {
 	data() {
 		return {
-			search: {
+			youtubeSearch: {
 				songs: {
 					results: [],
 					query: "",
@@ -19,7 +19,7 @@ export default {
 	},
 	methods: {
 		searchForSongs() {
-			let { query } = this.search.songs;
+			let { query } = this.youtubeSearch.songs;
 
 			if (query.indexOf("&index=") !== -1) {
 				query = query.split("&index=");
@@ -35,11 +35,12 @@ export default {
 
 			this.socket.dispatch("apis.searchYoutube", query, res => {
 				if (res.status === "success") {
-					this.search.songs.nextPageToken = res.data.nextPageToken;
-					this.search.songs.results = [];
+					this.youtubeSearch.songs.nextPageToken =
+						res.data.nextPageToken;
+					this.youtubeSearch.songs.results = [];
 
 					res.data.items.forEach(result => {
-						this.search.songs.results.push({
+						this.youtubeSearch.songs.results.push({
 							id: result.id.videoId,
 							url: `https://www.youtube.com/watch?v=${this.id}`,
 							title: result.snippet.title,
@@ -55,15 +56,15 @@ export default {
 		loadMoreSongs() {
 			this.socket.dispatch(
 				"apis.searchYoutubeForPage",
-				this.search.songs.query,
-				this.search.songs.nextPageToken,
+				this.youtubeSearch.songs.query,
+				this.youtubeSearch.songs.nextPageToken,
 				res => {
 					if (res.status === "success") {
-						this.search.songs.nextPageToken =
+						this.youtubeSearch.songs.nextPageToken =
 							res.data.nextPageToken;
 
 						res.data.items.forEach(result => {
-							this.search.songs.results.push({
+							this.youtubeSearch.songs.results.push({
 								id: result.id.videoId,
 								url: `https://www.youtube.com/watch?v=${this.id}`,
 								title: result.snippet.title,
@@ -87,7 +88,9 @@ export default {
 				res => {
 					new Toast(res.message);
 					if (res.status === "success")
-						this.search.songs.results[index].isAddedToQueue = true;
+						this.youtubeSearch.songs.results[
+							index
+						].isAddedToQueue = true;
 				}
 			);
 		}

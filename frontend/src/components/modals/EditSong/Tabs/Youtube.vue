@@ -7,7 +7,7 @@
 					class="input"
 					type="text"
 					placeholder="Enter your YouTube query here..."
-					v-model="search.songs.query"
+					v-model="youtubeSearch.songs.query"
 					autofocus
 					@keyup.enter="searchForSongs()"
 				/>
@@ -23,9 +23,12 @@
 			</p>
 		</div>
 
-		<div v-if="search.songs.results.length > 0" id="song-query-results">
+		<div
+			v-if="youtubeSearch.songs.results.length > 0"
+			id="song-query-results"
+		>
 			<search-query-item
-				v-for="result in search.songs.results"
+				v-for="result in youtubeSearch.songs.results"
 				:key="result.id"
 				:result="result"
 			>
@@ -86,9 +89,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.night-mode {
-}
-
 .youtube-tab {
 	height: calc(100% - 32px);
 

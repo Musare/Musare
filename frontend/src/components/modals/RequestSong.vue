@@ -17,7 +17,7 @@
 							class="input"
 							type="text"
 							placeholder="Enter your YouTube query here..."
-							v-model="search.songs.query"
+							v-model="youtubeSearch.songs.query"
 							autofocus
 							@keyup.enter="searchForSongs()"
 						/>
@@ -38,10 +38,10 @@
 
 				<div
 					id="song-query-results"
-					v-if="search.songs.results.length > 0"
+					v-if="youtubeSearch.songs.results.length > 0"
 				>
 					<search-query-item
-						v-for="(result, index) in search.songs.results"
+						v-for="(result, index) in youtubeSearch.songs.results"
 						:key="result.id"
 						:result="result"
 					>
@@ -106,7 +106,7 @@
 								class="input"
 								type="text"
 								placeholder="YouTube Playlist URL"
-								v-model="search.playlist.query"
+								v-model="youtubeSearch.playlist.query"
 								@keyup.enter="importPlaylist()"
 							/>
 						</p>
@@ -114,7 +114,8 @@
 							<span class="select" id="playlist-import-type">
 								<select
 									v-model="
-										search.playlist.isImportingOnlyMusic
+										youtubeSearch.playlist
+											.isImportingOnlyMusic
 									"
 								>
 									<option :value="false">Import all</option>
@@ -172,7 +173,9 @@ export default {
 						if (res.status !== "success")
 							new Toast(`Error: ${res.message}`);
 						else {
-							this.search.songs.results[index].isRequested = true;
+							this.youtubeSearch.songs.results[
+								index
+							].isRequested = true;
 
 							new Toast(res.message);
 						}
@@ -183,7 +186,9 @@ export default {
 					if (res.status !== "success")
 						new Toast(`Error: ${res.message}`);
 					else {
-						this.search.songs.results[index].isRequested = true;
+						this.youtubeSearch.songs.results[
+							index
+						].isRequested = true;
 
 						new Toast(res.message);
 					}
@@ -194,11 +199,11 @@ export default {
 			let isImportingPlaylist = true;
 
 			// import query is blank
-			if (!this.search.playlist.query)
+			if (!this.youtubeSearch.playlist.query)
 				return new Toast("Please enter a YouTube playlist URL.");
 
 			const regex = new RegExp(`[\\?&]list=([^&#]*)`);
-			const splitQuery = regex.exec(this.search.playlist.query);
+			const splitQuery = regex.exec(this.youtubeSearch.playlist.query);
 
 			if (!splitQuery) {
 				return new Toast({
@@ -218,8 +223,8 @@ export default {
 
 			return this.socket.dispatch(
 				"songs.requestSet",
-				this.search.playlist.query,
-				this.search.playlist.isImportingOnlyMusic,
+				this.youtubeSearch.playlist.query,
+				this.youtubeSearch.playlist.isImportingOnlyMusic,
 				false,
 				res => {
 					isImportingPlaylist = false;

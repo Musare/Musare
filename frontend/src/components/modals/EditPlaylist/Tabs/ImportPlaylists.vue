@@ -7,13 +7,15 @@
 					class="input"
 					type="text"
 					placeholder="Enter YouTube Playlist URL here..."
-					v-model="search.playlist.query"
+					v-model="youtubeSearch.playlist.query"
 					@keyup.enter="importPlaylist()"
 				/>
 			</p>
 			<p class="control has-addons">
 				<span class="select" id="playlist-import-type">
-					<select v-model="search.playlist.isImportingOnlyMusic">
+					<select
+						v-model="youtubeSearch.playlist.isImportingOnlyMusic"
+					>
 						<option :value="false">Import all</option>
 						<option :value="true">Import only music</option>
 					</select>
@@ -54,11 +56,11 @@ export default {
 			let isImportingPlaylist = true;
 
 			// import query is blank
-			if (!this.search.playlist.query)
+			if (!this.youtubeSearch.playlist.query)
 				return new Toast("Please enter a YouTube playlist URL.");
 
 			const regex = new RegExp(`[\\?&]list=([^&#]*)`);
-			const splitQuery = regex.exec(this.search.playlist.query);
+			const splitQuery = regex.exec(this.youtubeSearch.playlist.query);
 
 			if (!splitQuery) {
 				return new Toast({
@@ -78,14 +80,14 @@ export default {
 
 			return this.socket.dispatch(
 				"playlists.addSetToPlaylist",
-				this.search.playlist.query,
+				this.youtubeSearch.playlist.query,
 				this.playlist._id,
-				this.search.playlist.isImportingOnlyMusic,
+				this.youtubeSearch.playlist.isImportingOnlyMusic,
 				res => {
 					new Toast({ content: res.message, timeout: 20000 });
 					if (res.status === "success") {
 						isImportingPlaylist = false;
-						if (this.search.playlist.isImportingOnlyMusic) {
+						if (this.youtubeSearch.playlist.isImportingOnlyMusic) {
 							new Toast({
 								content: `${res.data.stats.songsInPlaylistTotal} of the ${res.data.stats.videosInPlaylistTotal} videos in the playlist were songs.`,
 								timeout: 20000
