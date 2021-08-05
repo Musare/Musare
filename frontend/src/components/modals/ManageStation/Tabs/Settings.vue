@@ -44,7 +44,7 @@
 				<label class="label">Theme</label>
 				<div class="button-wrapper">
 					<tippy
-						theme="addToPlaylist"
+						theme="stationSettings"
 						:interactive="true"
 						:touch="true"
 						placement="bottom"
@@ -97,7 +97,7 @@
 				<label class="label">Privacy</label>
 				<div class="button-wrapper">
 					<tippy
-						theme="addToPlaylist"
+						theme="stationSettings"
 						:interactive="true"
 						:touch="true"
 						placement="bottom"
@@ -150,7 +150,7 @@
 				<label class="label">Station Mode</label>
 				<div class="button-wrapper" v-if="station.type === 'community'">
 					<tippy
-						theme="addToPlaylist"
+						theme="stationSettings"
 						:interactive="true"
 						:touch="true"
 						placement="bottom"
@@ -206,7 +206,7 @@
 				<label class="label">Play Mode</label>
 				<div class="button-wrapper" v-if="station.type === 'community'">
 					<tippy
-						theme="addToPlaylist"
+						theme="stationSettings"
 						:interactive="true"
 						:touch="true"
 						placement="bottom"
@@ -268,7 +268,7 @@
 				<label class="label">Queue lock</label>
 				<div class="button-wrapper">
 					<tippy
-						theme="addToPlaylist"
+						theme="stationSettings"
 						:interactive="true"
 						:touch="true"
 						placement="bottom"
@@ -546,6 +546,10 @@ export default {
 	.button-wrapper {
 		display: flex;
 		flex-direction: column;
+
+		* >>> .tippy-box[data-theme~="addToPlaylist"] .tippy-content > span {
+			max-width: 150px !important;
+		}
 
 		button {
 			width: 100%;
