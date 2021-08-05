@@ -112,6 +112,7 @@
 											:class="{
 												'item-draggable': isEditable()
 											}"
+											:ref="`song-item-${index}`"
 										>
 											<template #actions>
 												<i
@@ -422,6 +423,8 @@ export default {
 			);
 		},
 		moveSongToTop(song, index) {
+			this.$refs[`song-item-${index}`].$refs.songActions.tippy.hide();
+
 			this.repositionSong({
 				moved: {
 					element: song,
@@ -431,6 +434,8 @@ export default {
 			});
 		},
 		moveSongToBottom(song, index) {
+			this.$refs[`song-item-${index}`].$refs.songActions.tippy.hide();
+
 			this.repositionSong({
 				moved: {
 					element: song,

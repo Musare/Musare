@@ -30,6 +30,7 @@
 							'item-draggable': isAdminOnly() || isOwnerOnly()
 						}"
 						:disabled-actions="[]"
+						:ref="`song-item-${index}`"
 					>
 						<template
 							v-if="isAdminOnly() || isOwnerOnly()"
@@ -253,6 +254,8 @@ export default {
 			);
 		},
 		moveSongToTop(song, index) {
+			this.$refs[`song-item-${index}`].$refs.songActions.tippy.hide();
+
 			this.repositionSongInQueue({
 				moved: {
 					element: song,
@@ -262,6 +265,8 @@ export default {
 			});
 		},
 		moveSongToBottom(song, index) {
+			this.$refs[`song-item-${index}`].$refs.songActions.tippy.hide();
+
 			this.repositionSongInQueue({
 				moved: {
 					element: song,

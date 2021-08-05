@@ -49,8 +49,6 @@ export default {
 							...this.musareSearch.results,
 							...songs
 						];
-						console.log(this.musareSearch.results);
-
 						this.musareSearch.page = page;
 						this.musareSearch.count = count;
 						this.musareSearch.resultsLeft =
