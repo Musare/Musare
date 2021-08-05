@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<metadata
+		<page-metadata
 			:title="mode === 'reset' ? 'Reset password' : 'Set password'"
 		/>
 		<main-header />

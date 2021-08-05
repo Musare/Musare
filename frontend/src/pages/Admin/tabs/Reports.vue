@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<metadata title="Admin | Reports" />
+		<page-metadata title="Admin | Reports" />
 		<div class="container">
 			<table class="table is-striped">
 				<thead>

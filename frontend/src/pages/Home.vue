@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<metadata title="Home" />
+		<page-metadata title="Home" />
 		<div class="app">
 			<main-header
 				:hide-logo="true"

@@ -5,7 +5,7 @@
 		<view-report v-if="modals.viewReport" />
 		<edit-song v-if="modals.editSong" song-type="songs" />
 
-		<metadata :title="`Profile | ${user.username}`" />
+		<page-metadata :title="`Profile | ${user.username}`" />
 		<main-header />
 		<div class="container">
 			<div class="info-section">

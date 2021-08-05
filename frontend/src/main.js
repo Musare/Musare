@@ -35,7 +35,7 @@ app.use(VueTippy, {
 
 app.component("Tippy", Tippy);
 
-app.component("Metadata", {
+app.component("PageMetadata", {
 	watch: {
 		$attrs: {
 			// eslint-disable-next-line vue/no-arrow-functions-in-watch

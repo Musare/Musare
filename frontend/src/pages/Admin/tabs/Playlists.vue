@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<metadata title="Admin | Playlists" />
+		<page-metadata title="Admin | Playlists" />
 		<div class="container">
 			<button
 				class="button is-primary"

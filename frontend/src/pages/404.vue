@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<div class="wrapper">
-			<metadata title="404" />
+			<page-metadata title="404" />
 
 			<h3><strong>404</strong>&nbsp;Not Found</h3>
 			<router-link class="button is-dark" to="/">

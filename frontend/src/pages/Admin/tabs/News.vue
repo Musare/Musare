@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<metadata title="Admin | News" />
+		<page-metadata title="Admin | News" />
 		<div class="container">
 			<table class="table is-striped">
 				<thead>

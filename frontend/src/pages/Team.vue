@@ -1,6 +1,6 @@
 <template>
 	<div class="app">
-		<metadata title="Team" />
+		<page-metadata title="Team" />
 		<main-header />
 		<div class="container">
 			<div class="content-wrapper">

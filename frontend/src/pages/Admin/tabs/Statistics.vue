@@ -1,6 +1,6 @@
 <template>
 	<div class="container">
-		<metadata title="Admin | Statistics" />
+		<page-metadata title="Admin | Statistics" />
 		<div class="columns">
 			<div
 				class="

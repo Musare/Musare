@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<metadata title="Login" v-if="isPage" />
+		<page-metadata title="Login" v-if="isPage" />
 		<div class="modal is-active">
 			<div class="modal-background" @click="closeLoginModal()" />
 			<div class="modal-card">

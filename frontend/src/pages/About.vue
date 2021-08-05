@@ -1,6 +1,6 @@
 <template>
 	<div class="app">
-		<metadata title="About" />
+		<page-metadata title="About" />
 		<main-header />
 		<div class="container">
 			<div class="content-wrapper">

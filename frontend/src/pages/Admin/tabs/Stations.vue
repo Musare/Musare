@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<metadata title="Admin | Stations" />
+		<page-metadata title="Admin | Stations" />
 		<div class="container">
 			<button class="button is-primary" @click="clearEveryStationQueue()">
 				Clear every station queue

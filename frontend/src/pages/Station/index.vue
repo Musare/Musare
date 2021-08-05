@@ -1,7 +1,10 @@
 <template>
 	<div>
-		<metadata v-if="exists && !loading" :title="`${station.displayName}`" />
-		<metadata v-else-if="!exists && !loading" :title="`Not found`" />
+		<page-metadata
+			v-if="exists && !loading"
+			:title="`${station.displayName}`"
+		/>
+		<page-metadata v-else-if="!exists && !loading" :title="`Not found`" />
 
 		<div id="page-loader-container" v-if="loading">
 			<content-loader

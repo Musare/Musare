@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<metadata title="Admin | Users" />
+		<page-metadata title="Admin | Users" />
 		<div class="container">
 			<h2 v-if="dataRequests.length > 0">Data Requests</h2>
 

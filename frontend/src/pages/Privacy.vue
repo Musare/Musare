@@ -1,6 +1,6 @@
 <template>
 	<div class="app">
-		<metadata title="Privacy policy" />
+		<page-metadata title="Privacy policy" />
 		<main-header />
 		<div class="container">
 			<h1>MUSARE PRIVACY POLICY</h1>

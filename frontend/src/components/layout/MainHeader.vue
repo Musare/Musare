@@ -106,7 +106,6 @@ export default {
 	},
 	watch: {
 		localNightmode(newValue, oldValue) {
-			console.log(newValue, oldValue, this.localNightmode);
 			if (oldValue === null) return;
 
 			localStorage.setItem("nightmode", this.localNightmode);

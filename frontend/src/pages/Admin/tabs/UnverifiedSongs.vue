@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<metadata title="Admin | Unverified songs" />
+		<page-metadata title="Admin | Unverified songs" />
 		<div class="container">
 			<p>
 				<span>Sets loaded: {{ setsLoaded }} / {{ maxSets }}</span>

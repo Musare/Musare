@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<metadata title="Register" v-if="isPage" />
+		<page-metadata title="Register" v-if="isPage" />
 		<div class="modal is-active">
 			<div class="modal-background" @click="closeRegisterModal()" />
 			<div class="modal-card">

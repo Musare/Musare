@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<metadata title="Settings" />
+		<page-metadata title="Settings" />
 		<main-header />
 		<div class="container">
 			<h1 id="page-title">Settings</h1>
