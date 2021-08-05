@@ -1,6 +1,6 @@
 <template>
 	<div class="youtube-tab section">
-		<div class="musare-songs">
+		<div>
 			<label class="label"> Search for a song on Musare </label>
 			<div class="control is-grouped input-with-button">
 				<p class="control is-expanded">
@@ -19,12 +19,16 @@
 					>
 				</p>
 			</div>
-			<div v-if="musareSearch.results.length > 0">
+			<div
+				v-if="musareSearch.results.length > 0"
+				class="song-query-results"
+			>
 				<song-item
 					v-for="song in musareSearch.results"
 					:key="song._id"
 					:song="song"
 				/>
+
 				<button
 					v-if="resultsLeftCount > 0"
 					class="button is-primary load-more-button"
@@ -34,6 +38,8 @@
 				</button>
 			</div>
 		</div>
+
+		<br v-if="musareSearch.results.length > 0" />
 
 		<div>
 			<label class="label"> Search for a song from YouTube </label>
@@ -61,15 +67,28 @@
 
 			<div
 				v-if="youtubeSearch.songs.results.length > 0"
-				id="song-query-results"
+				class="song-query-results"
 			>
 				<search-query-item
-					v-for="(result, index) in youtubeSearch.songs.results"
+					v-for="result in youtubeSearch.songs.results"
 					:key="result.id"
 					:result="result"
 				>
 					<template #actions>
-						<transition name="search-query-actions" mode="out-in">
+						<add-to-playlist-dropdown
+							:song="{ youtubeId: result.id }"
+							placement="top-end"
+						>
+							<template #button>
+								<i
+									class="material-icons add-to-playlist-icon"
+									content="Add Song to Playlist"
+									v-tippy
+									>playlist_add</i
+								>
+							</template>
+						</add-to-playlist-dropdown>
+						<!-- <transition name="search-query-actions" mode="out-in">
 							<a
 								class="button is-success"
 								v-if="result.isAddedToQueue"
@@ -95,7 +114,7 @@
 								>
 								Add to playlist
 							</a>
-						</transition>
+						</transition> -->
 					</template>
 				</search-query-item>
 
@@ -118,10 +137,11 @@ import SearchYoutube from "@/mixins/SearchYoutube.vue";
 import SearchMusare from "@/mixins/SearchMusare.vue";
 
 import SongItem from "@/components/SongItem.vue";
-import SearchQueryItem from "../../../SearchQueryItem.vue";
+import AddToPlaylistDropdown from "@/components/AddToPlaylistDropdown.vue";
+import SearchQueryItem from "@/components/SearchQueryItem.vue";
 
 export default {
-	components: { SearchQueryItem, SongItem },
+	components: { SearchQueryItem, SongItem, AddToPlaylistDropdown },
 	mixins: [SearchYoutube, SearchMusare],
 	computed: {
 		...mapState("modals/editPlaylist", {
@@ -165,7 +185,7 @@ export default {
 
 <style lang="scss" scoped>
 .youtube-tab {
-	#song-query-results {
+	.song-query-results {
 		padding: 10px;
 		margin-top: 10px;
 		border: 1px solid var(--light-grey-3);
@@ -186,7 +206,7 @@ export default {
 }
 
 @media screen and (max-width: 1300px) {
-	.youtube-tab #song-query-results,
+	.youtube-tab .song-query-results,
 	.section {
 		max-width: 100% !important;
 	}

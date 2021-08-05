@@ -270,6 +270,10 @@ export default {
 }
 
 .song-item {
+	&:not(:last-of-type) {
+		margin-bottom: 10px;
+	}
+
 	.thumbnail-and-info,
 	.duration-and-actions {
 		display: flex;

@@ -145,8 +145,9 @@ export default {
 		},
 		hasSong(playlist) {
 			return (
-				playlist.songs.map(song => song._id).indexOf(this.song._id) !==
-				-1
+				playlist.songs
+					.map(song => song.youtubeId)
+					.indexOf(this.song.youtubeId) !== -1
 			);
 		},
 		createPlaylist() {

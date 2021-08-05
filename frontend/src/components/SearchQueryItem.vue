@@ -17,8 +17,37 @@
 				</a>
 			</div>
 		</div>
+
 		<div class="universal-item-actions">
-			<slot name="actions" />
+			<tippy
+				:touch="true"
+				:interactive="true"
+				placement="left"
+				theme="songActions"
+				ref="songActions"
+				trigger="click"
+			>
+				<i
+					class="material-icons action-dropdown-icon"
+					content="Song Options"
+					v-tippy
+					>more_horiz</i
+				>
+
+				<template #content>
+					<div class="icons-group">
+						<a
+							target="_blank"
+							:href="`https://www.youtube.com/watch?v=${result.id}`"
+							content="View on Youtube"
+							v-tippy
+						>
+							<div class="youtube-icon"></div>
+						</a>
+						<slot name="actions" />
+					</div>
+				</template>
+			</tippy>
 		</div>
 	</div>
 </template>
@@ -35,10 +64,6 @@ export default {
 </script>
 
 <style lang="scss">
-.search-query-item .universal-item-actions i {
-	color: var(--white) !important;
-}
-
 .search-query-actions-enter-active {
 	transition: all 0.2s ease;
 }
@@ -61,7 +86,7 @@ export default {
 <style lang="scss" scoped>
 .night-mode {
 	.search-query-item {
-		background-color: var(--dark-grey-3) !important;
+		background-color: var(--dark-grey-2) !important;
 		border: 0 !important;
 	}
 }
@@ -94,12 +119,12 @@ export default {
 		width: calc(100% - 65px);
 
 		.item-title {
-			font-size: 16px;
+			font-size: 20px;
 		}
 
 		.item-description {
 			margin: 0;
-			font-size: 12px;
+			font-size: 14px;
 		}
 
 		*:not(i) {
