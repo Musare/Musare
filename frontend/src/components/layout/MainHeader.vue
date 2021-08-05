@@ -106,6 +106,7 @@ export default {
 	},
 	watch: {
 		localNightmode(newValue, oldValue) {
+			console.log(newValue, oldValue, this.localNightmode);
 			if (oldValue === null) return;
 
 			localStorage.setItem("nightmode", this.localNightmode);
@@ -125,6 +126,7 @@ export default {
 	},
 	async mounted() {
 		this.localNightmode = JSON.parse(localStorage.getItem("nightmode"));
+		if (this.localNightmode === null) this.localNightmode = false;
 
 		this.socket.dispatch("users.getPreferences", res => {
 			if (res.status === "success")
