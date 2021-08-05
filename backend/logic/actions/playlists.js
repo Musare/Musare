@@ -948,16 +948,17 @@ export default {
 						? `${newSong.title} by ${newSong.artists.join(", ")}`
 						: newSong.title;
 
-					ActivitiesModule.runJob("ADD_ACTIVITY", {
-						userId: session.userId,
-						type: "playlist__add_song",
-						payload: {
-							message: `Added <youtubeId>${songName}</youtubeId> to playlist <playlistId>${playlist.displayName}</playlistId>`,
-							thumbnail: newSong.thumbnail,
-							playlistId,
-							youtubeId
-						}
-					});
+					if (playlist.privacy === "public")
+						ActivitiesModule.runJob("ADD_ACTIVITY", {
+							userId: session.userId,
+							type: "playlist__add_song",
+							payload: {
+								message: `Added <youtubeId>${songName}</youtubeId> to playlist <playlistId>${playlist.displayName}</playlistId>`,
+								thumbnail: newSong.thumbnail,
+								playlistId,
+								youtubeId
+							}
+						});
 				}
 
 				StationsModule.runJob("GET_STATIONS_THAT_INCLUDE_OR_EXCLUDE_PLAYLIST", { playlistId })
@@ -1084,14 +1085,15 @@ export default {
 					return cb({ status: "error", message: err });
 				}
 
-				ActivitiesModule.runJob("ADD_ACTIVITY", {
-					userId: session.userId,
-					type: "playlist__import_playlist",
-					payload: {
-						message: `Imported ${addSongsStats.successful} songs to playlist <playlistId>${playlist.displayName}</playlistId>`,
-						playlistId
-					}
-				});
+				if (playlist.privacy === "public")
+					ActivitiesModule.runJob("ADD_ACTIVITY", {
+						userId: session.userId,
+						type: "playlist__import_playlist",
+						payload: {
+							message: `Imported ${addSongsStats.successful} songs to playlist <playlistId>${playlist.displayName}</playlistId>`,
+							playlistId
+						}
+					});
 
 				this.log(
 					"SUCCESS",
@@ -1172,7 +1174,11 @@ export default {
 						? `${youtubeSong.title} by ${youtubeSong.artists.join(", ")}`
 						: youtubeSong.title;
 
-					if (playlist.displayName !== "Liked Songs" && playlist.displayName !== "Disliked Songs") {
+					if (
+						playlist.displayName !== "Liked Songs" &&
+						playlist.displayName !== "Disliked Songs" &&
+						playlist.privacy === "public"
+					) {
 						ActivitiesModule.runJob("ADD_ACTIVITY", {
 							userId: session.userId,
 							type: "playlist__remove_song",
