@@ -73,8 +73,8 @@ export default {
 			else this.disconnectedMessage.hide();
 		},
 		nightmode(nightmode) {
-			if (nightmode) this.enableNightMode();
-			else this.disableNightMode();
+			if (nightmode) this.enableNightmode();
+			else this.disableNightmode();
 		},
 		activityWatch(activityWatch) {
 			if (activityWatch) aw.enable();
@@ -82,6 +82,19 @@ export default {
 		}
 	},
 	async mounted() {
+		// if (
+		// 	window.matchMedia &&
+		// 	window.matchMedia("(prefers-color-scheme: dark)").matches
+		// ) {
+		// 	if (!this.nightmode) this.toggleNightMode();
+		// } else if (this.nightmode) this.toggleNightMode();
+
+		window
+			.matchMedia("(prefers-color-scheme: dark)")
+			.addEventListener("change", e => {
+				if (e.matches === !this.nightmode) this.toggleNightMode();
+			});
+
 		document.onkeydown = ev => {
 			const event = ev || window.event;
 			const { keyCode } = event;
@@ -106,22 +119,7 @@ export default {
 			keyCode: 78,
 			ctrl: true,
 			alt: true,
-			handler: () => {
-				localStorage.setItem("nightmode", !this.nightmode);
-
-				if (this.loggedIn) {
-					this.socket.dispatch(
-						"users.updatePreferences",
-						{ nightmode: !this.nightmode },
-						res => {
-							if (res.status !== "success")
-								new Toast(res.message);
-						}
-					);
-				}
-
-				this.changeNightmode(!this.nightmode);
-			}
+			handler: () => this.toggleNightMode()
 		});
 
 		keyboardShortcuts.registerShortcut("closeModal", {
@@ -199,8 +197,8 @@ export default {
 				);
 				this.changeActivityWatch(preferences.activityWatch);
 
-				if (this.nightmode) this.enableNightMode();
-				else this.disableNightMode();
+				if (this.nightmode) this.enablenightMode();
+				else this.disableNightmode();
 			}
 		});
 
@@ -209,12 +207,27 @@ export default {
 		);
 	},
 	methods: {
-		enableNightMode: () => {
+		toggleNightMode() {
+			localStorage.setItem("nightmode", !this.nightmode);
+
+			if (this.loggedIn) {
+				this.socket.dispatch(
+					"users.updatePreferences",
+					{ nightmode: !this.nightmode },
+					res => {
+						if (res.status !== "success") new Toast(res.message);
+					}
+				);
+			}
+
+			this.changeNightmode(!this.nightmode);
+		},
+		enableNightmode: () => {
 			document
 				.getElementsByTagName("body")[0]
 				.classList.add("night-mode");
 		},
-		disableNightMode: () => {
+		disableNightmode: () => {
 			document
 				.getElementsByTagName("body")[0]
 				.classList.remove("night-mode");
