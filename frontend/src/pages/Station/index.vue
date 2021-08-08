@@ -42,7 +42,8 @@
 				currentSong &&
 				(currentSong.youtubeId === 'l9PxOanFjxQ' ||
 					currentSong.youtubeId === 'xKVcVSYmesU' ||
-					currentSong.youtubeId === '60ItHLz5WEA')
+					currentSong.youtubeId === '60ItHLz5WEA' ||
+					currentSong.youtubeId === 'e6vkFbtSGm0')
 			"
 			class="bg-bubbles"
 		>
@@ -256,7 +257,9 @@
 											currentSong.youtubeId ===
 												'xKVcVSYmesU' ||
 											currentSong.youtubeId ===
-												'60ItHLz5WEA')
+												'60ItHLz5WEA' ||
+											currentSong.youtubeId ===
+												'e6vkFbtSGm0')
 									"
 									src="/assets/old_logo.png"
 									:style="{
@@ -853,7 +856,10 @@ export default {
 			activityWatchVideoLastStartDuration: "",
 			nextCurrentSong: null,
 			editSongModalWatcher: null,
-			beforeEditSongModalLocalPaused: null
+			beforeEditSongModalLocalPaused: null,
+			socketConnected: null,
+			persistentToastCheckerInterval: null,
+			persistentToasts: []
 		};
 	},
 	computed: {
@@ -932,9 +938,48 @@ export default {
 		this.activityWatchVideoDataInterval = setInterval(() => {
 			this.sendActivityWatchVideoData();
 		}, 1000);
+		this.persistentToastCheckerInterval = setInterval(() => {
+			this.persistentToasts.filter(
+				persistentToast => !persistentToast.checkIfCanRemove()
+			);
+		}, 1000);
 
 		if (this.socket.readyState === 1) this.join();
-		ws.onConnect(() => this.join());
+		ws.onConnect(() => {
+			this.socketConnected = true;
+			clearTimeout(window.stationNextSongTimeout);
+			this.join();
+		});
+
+		ws.onDisconnect(true, () => {
+			this.socketConnected = false;
+			const { currentSong } = this.currentSong;
+			if (this.nextSong)
+				this.setNextCurrentSong(
+					{
+						currentSong: this.nextSong,
+						startedAt: Date.now() + this.getTimeRemaining(),
+						paused: false,
+						timePaused: 0
+					},
+					true
+				);
+			else
+				this.setNextCurrentSong(
+					{
+						currentSong: null,
+						startedAt: 0,
+						paused: false,
+						timePaused: 0,
+						pausedAt: 0
+					},
+					true
+				);
+			window.stationNextSongTimeout = setTimeout(() => {
+				if (!this.noSong && this.currentSong._id === currentSong._id)
+					this.skipSong("window.stationNextSongTimeout 2");
+			}, this.getTimeRemaining());
+		});
 
 		this.frontendDevMode = await lofig.get("mode");
 
@@ -959,32 +1004,15 @@ export default {
 		);
 
 		this.socket.on("event:station.nextSong", res => {
-			const { currentSong, startedAt, paused, timePaused, natural } =
-				res.data;
+			const { currentSong, startedAt, paused, timePaused } = res.data;
 
-			if (this.noSong || !natural) {
-				this.setCurrentSong({
-					currentSong,
-					startedAt,
-					paused,
-					timePaused,
-					pausedAt: 0
-				});
-			} else if (this.currentSong._id === currentSong._id) {
-				if (this.currentSong.skipVotesLoaded !== true) {
-					this.updateCurrentSongSkipVotes({
-						skipVotes: currentSong.skipVotes,
-						skipVotesCurrent: true
-					});
-				}
-			} else {
-				this.setNextCurrentSong({
-					currentSong,
-					startedAt,
-					paused,
-					timePaused
-				});
-			}
+			this.setCurrentSong({
+				currentSong,
+				startedAt,
+				paused,
+				timePaused,
+				pausedAt: 0
+			});
 		});
 
 		this.socket.on("event:station.pause", res => {
@@ -999,29 +1027,6 @@ export default {
 			this.timePaused = res.data.timePaused;
 			this.updateStationPaused(false);
 			if (!this.localPaused) this.resumeLocalPlayer();
-
-			if (this.currentSong) {
-				const currentSongId = this.currentSong._id;
-				if (this.nextSong)
-					this.setNextCurrentSong({
-						currentSong: this.nextSong,
-						startedAt: Date.now() + this.getTimeRemaining(),
-						paused: false,
-						timePaused: 0
-					});
-				else
-					this.setNextCurrentSong({
-						currentSong: null,
-						startedAt: 0,
-						paused: false,
-						timePaused: 0,
-						pausedAt: 0
-					});
-				window.stationNextSongTimeout = setTimeout(() => {
-					if (!this.noSong && this.currentSong._id === currentSongId)
-						this.skipSong("window.stationNextSongTimeout 2");
-				}, this.getTimeRemaining());
-			}
 		});
 
 		this.socket.on("event:station.deleted", () => {
@@ -1080,22 +1085,6 @@ export default {
 
 			this.updateNextSong(nextSong);
 
-			if (nextSong)
-				this.setNextCurrentSong({
-					currentSong: nextSong,
-					startedAt: Date.now() + this.getTimeRemaining(),
-					paused: false,
-					timePaused: 0
-				});
-			else
-				this.setNextCurrentSong({
-					currentSong: null,
-					startedAt: 0,
-					paused: false,
-					timePaused: 0,
-					pausedAt: 0
-				});
-
 			this.addPartyPlaylistSongToQueue();
 		});
 
@@ -1109,13 +1098,6 @@ export default {
 					: null;
 
 			this.updateNextSong(nextSong);
-
-			this.setNextCurrentSong({
-				currentSong: nextSong,
-				startedAt: Date.now() + this.getTimeRemaining(),
-				paused: false,
-				timePaused: 0
-			});
 		});
 
 		this.socket.on("event:station.voteSkipSong", () => {
@@ -1238,6 +1220,10 @@ export default {
 
 		clearInterval(this.activityWatchVideoDataInterval);
 		clearTimeout(window.stationNextSongTimeout);
+		clearTimeout(this.persistentToastCheckerInterval);
+		this.persistentToasts.forEach(persistentToast => {
+			persistentToast.toast.destroy();
+		});
 
 		this.socket.dispatch("stations.leave", this.station._id, () => {});
 
@@ -1338,7 +1324,8 @@ export default {
 				if (!this.playerReady) this.youtubeReady();
 				else this.playVideo();
 
-				if (!this.stationPaused) {
+				// If the station is playing and the backend is not connected, set the next song to skip to after this song and set a timer to skip
+				if (!this.stationPaused && !this.socketConnected) {
 					if (this.nextSong)
 						this.setNextCurrentSong(
 							{
@@ -1501,22 +1488,19 @@ export default {
 								const erroredYoutubeId =
 									this.currentSong.youtubeId;
 
-								// remove persistent toast if video has finished
-								window.isSongErroredInterval = setInterval(
-									() => {
+								this.persistentToasts.push({
+									toast: persistentToast,
+									checkIfCanRemove: () => {
 										if (
 											this.currentSong.youtubeId !==
 											erroredYoutubeId
 										) {
 											persistentToast.destroy();
-
-											clearInterval(
-												window.isSongErroredInterval
-											);
+											return true;
 										}
-									},
-									150
-								);
+										return false;
+									}
+								});
 							} else {
 								new Toast(
 									"There has been an error with the YouTube Embed"
@@ -2021,13 +2005,6 @@ export default {
 								const [nextSong] = queue;
 
 								this.updateNextSong(nextSong);
-								this.setNextCurrentSong({
-									currentSong: nextSong,
-									startedAt:
-										Date.now() + this.getTimeRemaining(),
-									paused: false,
-									timePaused: 0
-								});
 							}
 						});
 

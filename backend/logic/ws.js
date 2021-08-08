@@ -317,7 +317,7 @@ class _WSModule extends CoreClass {
 				return WSModule.rooms[payload.room].forEach(async socketId => {
 					// get every socketId (and thus every socket) in the room, and dispatch to each
 					const socket = await WSModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId }, this);
-					socket.dispatch(...payload.args);
+					if (socket) socket.dispatch(...payload.args);
 					return resolve();
 				});
 

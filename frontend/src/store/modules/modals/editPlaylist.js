@@ -10,6 +10,7 @@ export default {
 	actions: {
 		showTab: ({ commit }, tab) => commit("showTab", tab),
 		setPlaylist: ({ commit }, playlist) => commit("setPlaylist", playlist),
+		clearPlaylist: ({ commit }) => commit("clearPlaylist"),
 		addSong: ({ commit }, song) => commit("addSong", song),
 		removeSong: ({ commit }, youtubeId) => commit("removeSong", youtubeId),
 		updatePlaylistSongs: ({ commit }, playlistSongs) =>
@@ -23,6 +24,9 @@ export default {
 		setPlaylist(state, playlist) {
 			state.playlist = { ...playlist };
 			state.playlist.songs.sort((a, b) => a.position - b.position);
+		},
+		clearPlaylist(state) {
+			state.playlist = { songs: [] };
 		},
 		addSong(state, song) {
 			state.playlist.songs.push(song);

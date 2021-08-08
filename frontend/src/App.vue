@@ -82,13 +82,6 @@ export default {
 		}
 	},
 	async mounted() {
-		// if (
-		// 	window.matchMedia &&
-		// 	window.matchMedia("(prefers-color-scheme: dark)").matches
-		// ) {
-		// 	if (!this.nightmode) this.toggleNightMode();
-		// } else if (this.nightmode) this.toggleNightMode();
-
 		window
 			.matchMedia("(prefers-color-scheme: dark)")
 			.addEventListener("change", e => {

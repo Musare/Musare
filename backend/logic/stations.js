@@ -1006,6 +1006,7 @@ class _StationsModule extends CoreClass {
 
 						sockets.forEach(async socketId => {
 							const socket = await WSModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId });
+							if (!socket) return;
 							const { session } = socket;
 
 							if (session.sessionId) {
@@ -1175,7 +1176,7 @@ class _StationsModule extends CoreClass {
 						(socketId, next) => {
 							WSModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId }, this)
 								.then(socket => {
-									sockets.push(socket);
+									if (socket) sockets.push(socket);
 									next();
 								})
 								.catch(err => {

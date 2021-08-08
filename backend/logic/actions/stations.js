@@ -48,6 +48,7 @@ CacheModule.runJob("SUB", {
 
 				sockets.forEach(async socketId => {
 					const socket = await WSModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId }, this);
+					if (!socket) return;
 					const { session } = socket;
 
 					if (session.sessionId) {
@@ -513,6 +514,7 @@ CacheModule.runJob("SUB", {
 
 				sockets.forEach(async socketId => {
 					const socket = await WSModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId }, this);
+					if (!socket) return;
 					const { session } = socket;
 
 					if (session.sessionId) {
@@ -1326,7 +1328,7 @@ export default {
 						(socketId, next) => {
 							WSModule.runJob("SOCKET_FROM_SOCKET_ID", { socketId }, this)
 								.then(socket => {
-									if (socket.session && socket.session.userId) {
+									if (socket && socket.session && socket.session.userId) {
 										if (!users.includes(socket.session.userId)) users.push(socket.session.userId);
 									} else users.push(socketId);
 									return next();
