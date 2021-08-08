@@ -17,8 +17,8 @@ handleServices()
     servicesArray=()
     invalidServices=false
     for x in "$@"; do
-        if [[ ${validServices[@]} =~ (^|[[:space:]])"$x"($|[[:space:]]) ]]; then
-            if ! [[ ${services[@]} =~ (^|[[:space:]])"$x"($|[[:space:]]) ]]; then
+        if [[ ${validServices[*]} =~ (^|[[:space:]])"$x"($|[[:space:]]) ]]; then
+            if ! [[ ${servicesArray[*]} =~ (^|[[:space:]])"$x"($|[[:space:]]) ]]; then
                 servicesArray+=("${x}")
             fi
         else
@@ -30,7 +30,7 @@ handleServices()
         fi
     done
     if [[ $invalidServices == false && ${#servicesArray[@]} -gt 0 ]]; then
-        echo "1|${servicesArray[@]}"
+        echo "1|${servicesArray[*]}"
     elif [[ $invalidServices == false ]]; then
         echo "1|all"
     else
