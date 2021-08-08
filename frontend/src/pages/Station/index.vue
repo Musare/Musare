@@ -853,7 +853,8 @@ export default {
 			activityWatchVideoLastStartDuration: "",
 			nextCurrentSong: null,
 			editSongModalWatcher: null,
-			beforeEditSongModalLocalPaused: null
+			beforeEditSongModalLocalPaused: null,
+			socketConnected: null
 		};
 	},
 	computed: {
@@ -934,7 +935,41 @@ export default {
 		}, 1000);
 
 		if (this.socket.readyState === 1) this.join();
-		ws.onConnect(() => this.join());
+		ws.onConnect(() => {
+			this.socketConnected = true;
+			clearTimeout(window.stationNextSongTimeout);
+			this.join();
+		});
+
+		ws.onDisconnect(true, () => {
+			this.socketConnected = false;
+			const { currentSong } = this.currentSong;
+			if (this.nextSong)
+				this.setNextCurrentSong(
+					{
+						currentSong: this.nextSong,
+						startedAt: Date.now() + this.getTimeRemaining(),
+						paused: false,
+						timePaused: 0
+					},
+					true
+				);
+			else
+				this.setNextCurrentSong(
+					{
+						currentSong: null,
+						startedAt: 0,
+						paused: false,
+						timePaused: 0,
+						pausedAt: 0
+					},
+					true
+				);
+			window.stationNextSongTimeout = setTimeout(() => {
+				if (!this.noSong && this.currentSong._id === currentSong._id)
+					this.skipSong("window.stationNextSongTimeout 2");
+			}, this.getTimeRemaining());
+		});
 
 		this.frontendDevMode = await lofig.get("mode");
 
@@ -959,32 +994,15 @@ export default {
 		);
 
 		this.socket.on("event:station.nextSong", res => {
-			const { currentSong, startedAt, paused, timePaused, natural } =
-				res.data;
+			const { currentSong, startedAt, paused, timePaused } = res.data;
 
-			if (this.noSong || !natural) {
-				this.setCurrentSong({
-					currentSong,
-					startedAt,
-					paused,
-					timePaused,
-					pausedAt: 0
-				});
-			} else if (this.currentSong._id === currentSong._id) {
-				if (this.currentSong.skipVotesLoaded !== true) {
-					this.updateCurrentSongSkipVotes({
-						skipVotes: currentSong.skipVotes,
-						skipVotesCurrent: true
-					});
-				}
-			} else {
-				this.setNextCurrentSong({
-					currentSong,
-					startedAt,
-					paused,
-					timePaused
-				});
-			}
+			this.setCurrentSong({
+				currentSong,
+				startedAt,
+				paused,
+				timePaused,
+				pausedAt: 0
+			});
 		});
 
 		this.socket.on("event:station.pause", res => {
@@ -999,29 +1017,6 @@ export default {
 			this.timePaused = res.data.timePaused;
 			this.updateStationPaused(false);
 			if (!this.localPaused) this.resumeLocalPlayer();
-
-			if (this.currentSong) {
-				const currentSongId = this.currentSong._id;
-				if (this.nextSong)
-					this.setNextCurrentSong({
-						currentSong: this.nextSong,
-						startedAt: Date.now() + this.getTimeRemaining(),
-						paused: false,
-						timePaused: 0
-					});
-				else
-					this.setNextCurrentSong({
-						currentSong: null,
-						startedAt: 0,
-						paused: false,
-						timePaused: 0,
-						pausedAt: 0
-					});
-				window.stationNextSongTimeout = setTimeout(() => {
-					if (!this.noSong && this.currentSong._id === currentSongId)
-						this.skipSong("window.stationNextSongTimeout 2");
-				}, this.getTimeRemaining());
-			}
 		});
 
 		this.socket.on("event:station.deleted", () => {
@@ -1080,22 +1075,6 @@ export default {
 
 			this.updateNextSong(nextSong);
 
-			if (nextSong)
-				this.setNextCurrentSong({
-					currentSong: nextSong,
-					startedAt: Date.now() + this.getTimeRemaining(),
-					paused: false,
-					timePaused: 0
-				});
-			else
-				this.setNextCurrentSong({
-					currentSong: null,
-					startedAt: 0,
-					paused: false,
-					timePaused: 0,
-					pausedAt: 0
-				});
-
 			this.addPartyPlaylistSongToQueue();
 		});
 
@@ -1109,13 +1088,6 @@ export default {
 					: null;
 
 			this.updateNextSong(nextSong);
-
-			this.setNextCurrentSong({
-				currentSong: nextSong,
-				startedAt: Date.now() + this.getTimeRemaining(),
-				paused: false,
-				timePaused: 0
-			});
 		});
 
 		this.socket.on("event:station.voteSkipSong", () => {
@@ -1338,7 +1310,8 @@ export default {
 				if (!this.playerReady) this.youtubeReady();
 				else this.playVideo();
 
-				if (!this.stationPaused) {
+				// If the station is playing and the backend is not connected, set the next song to skip to after this song and set a timer to skip
+				if (!this.stationPaused && !this.socketConnected) {
 					if (this.nextSong)
 						this.setNextCurrentSong(
 							{
@@ -2021,13 +1994,6 @@ export default {
 								const [nextSong] = queue;
 
 								this.updateNextSong(nextSong);
-								this.setNextCurrentSong({
-									currentSong: nextSong,
-									startedAt:
-										Date.now() + this.getTimeRemaining(),
-									paused: false,
-									timePaused: 0
-								});
 							}
 						});
 
