@@ -351,15 +351,14 @@
 					/>
 					<save-button
 						ref="saveAndCloseButton"
-						type="save-and-close"
+						default-message="Save and close"
 						@clicked="save(song, false, true)"
 					/>
-					<button
-						class="button is-primary"
+					<save-button
+						ref="saveVerifyAndCloseButton"
+						default-message="Save, verify and close"
 						@click="save(song, true, true)"
-					>
-						Save, verify and close
-					</button>
+					/>
 
 					<button
 						class="button is-danger"
@@ -1004,7 +1003,9 @@ export default {
 			const song = JSON.parse(JSON.stringify(songToCopy));
 
 			let saveButtonRef = this.$refs.saveButton;
-			if (close) saveButtonRef = this.$refs.saveAndCloseButton;
+			if (close && !verify) saveButtonRef = this.$refs.saveAndCloseButton;
+			else if (close && verify)
+				saveButtonRef = this.$refs.saveVerifyAndCloseButton;
 
 			if (!this.youtubeError && this.youtubeVideoDuration === "0.000") {
 				saveButtonRef.handleFailedSave();

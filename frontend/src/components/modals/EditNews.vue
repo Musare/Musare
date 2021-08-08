@@ -36,7 +36,7 @@
 
 				<save-button
 					ref="saveAndCloseButton"
-					type="save-and-close"
+					default-message="Save and close"
 					@clicked="newsId ? update(true) : create(true)"
 				/>
 				<div class="right" v-if="createdAt > 0">

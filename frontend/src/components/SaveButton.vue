@@ -15,7 +15,7 @@
 <script>
 export default {
 	props: {
-		type: { type: String, default: "save" } // enum: ["save", "save-and-close"]
+		defaultMessage: { type: String, default: "Save Changes" }
 	},
 	emits: ["clicked"],
 	data() {
@@ -33,9 +33,9 @@ export default {
 				case "disabled":
 					return "Saving...";
 				default:
-					return this.type === "save-and-close"
-						? "Save and Close"
-						: "Save changes";
+					return this.defaultMessage
+						? this.defaultMessage
+						: "Save Changes";
 			}
 		},
 		style() {
@@ -44,6 +44,8 @@ export default {
 					return "is-success";
 				case "save-failure":
 					return `is-danger`;
+				case "disabled":
+					return "is-default";
 				default:
 					return "is-primary";
 			}

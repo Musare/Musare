@@ -1,10 +1,7 @@
 /* eslint no-param-reassign: 0 */
 /* eslint-disable import/no-cycle */
 
-// import Vue from "vue";
 import admin from "@/api/admin/index";
-
-const Vue = {};
 
 const state = {};
 const getters = {};
@@ -38,7 +35,7 @@ const modules = {
 			updateSong(state, updatedSong) {
 				state.songs.forEach((song, index) => {
 					if (song._id === updatedSong._id)
-						Vue.set(state.songs, index, updatedSong);
+						this.set(state.songs, index, updatedSong);
 				});
 			}
 		}
@@ -69,7 +66,7 @@ const modules = {
 			updateSong(state, updatedSong) {
 				state.songs.forEach((song, index) => {
 					if (song._id === updatedSong._id)
-						Vue.set(state.songs, index, updatedSong);
+						this.set(state.songs, index, updatedSong);
 				});
 			}
 		}
@@ -100,7 +97,7 @@ const modules = {
 			updateSong(state, updatedSong) {
 				state.songs.forEach((song, index) => {
 					if (song._id === updatedSong._id)
-						Vue.set(state.songs, index, updatedSong);
+						this.set(state.songs, index, updatedSong);
 				});
 			}
 		}
@@ -187,7 +184,7 @@ const modules = {
 			updateNews(state, updatedNews) {
 				state.news.forEach((news, index) => {
 					if (news._id === updatedNews._id)
-						Vue.set(state.news, index, updatedNews);
+						this.set(state.news, index, updatedNews);
 				});
 			}
 		}
