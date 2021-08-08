@@ -854,7 +854,9 @@ export default {
 			nextCurrentSong: null,
 			editSongModalWatcher: null,
 			beforeEditSongModalLocalPaused: null,
-			socketConnected: null
+			socketConnected: null,
+			persistentToastCheckerInterval: null,
+			persistentToasts: []
 		};
 	},
 	computed: {
@@ -932,6 +934,11 @@ export default {
 		window.stationInterval = 0;
 		this.activityWatchVideoDataInterval = setInterval(() => {
 			this.sendActivityWatchVideoData();
+		}, 1000);
+		this.persistentToastCheckerInterval = setInterval(() => {
+			this.persistentToasts.filter(
+				persistentToast => !persistentToast.checkIfCanRemove()
+			);
 		}, 1000);
 
 		if (this.socket.readyState === 1) this.join();
@@ -1210,6 +1217,10 @@ export default {
 
 		clearInterval(this.activityWatchVideoDataInterval);
 		clearTimeout(window.stationNextSongTimeout);
+		clearTimeout(this.persistentToastCheckerInterval);
+		this.persistentToasts.forEach(persistentToast => {
+			persistentToast.toast.destroy();
+		});
 
 		this.socket.dispatch("stations.leave", this.station._id, () => {});
 
@@ -1474,22 +1485,19 @@ export default {
 								const erroredYoutubeId =
 									this.currentSong.youtubeId;
 
-								// remove persistent toast if video has finished
-								window.isSongErroredInterval = setInterval(
-									() => {
+								this.persistentToasts.push({
+									toast: persistentToast,
+									checkIfCanRemove: () => {
 										if (
 											this.currentSong.youtubeId !==
 											erroredYoutubeId
 										) {
 											persistentToast.destroy();
-
-											clearInterval(
-												window.isSongErroredInterval
-											);
+											return true;
 										}
-									},
-									150
-								);
+										return false;
+									}
+								});
 							} else {
 								new Toast(
 									"There has been an error with the YouTube Embed"
