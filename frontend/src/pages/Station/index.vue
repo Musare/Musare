@@ -42,7 +42,8 @@
 				currentSong &&
 				(currentSong.youtubeId === 'l9PxOanFjxQ' ||
 					currentSong.youtubeId === 'xKVcVSYmesU' ||
-					currentSong.youtubeId === '60ItHLz5WEA')
+					currentSong.youtubeId === '60ItHLz5WEA' ||
+					currentSong.youtubeId === 'e6vkFbtSGm0')
 			"
 			class="bg-bubbles"
 		>
@@ -256,7 +257,9 @@
 											currentSong.youtubeId ===
 												'xKVcVSYmesU' ||
 											currentSong.youtubeId ===
-												'60ItHLz5WEA')
+												'60ItHLz5WEA' ||
+											currentSong.youtubeId ===
+												'e6vkFbtSGm0')
 									"
 									src="/assets/old_logo.png"
 									:style="{
