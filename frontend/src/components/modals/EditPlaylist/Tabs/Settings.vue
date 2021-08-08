@@ -117,7 +117,9 @@ export default {
 			const { privacy } = this.playlist;
 			if (privacy === "public" || privacy === "private") {
 				this.socket.dispatch(
-					"playlists.updatePrivacy",
+					this.playlist.type === "genre"
+						? "playlists.updatePrivacyAdmin"
+						: "playlists.updatePrivacy",
 					this.playlist._id,
 					privacy,
 					res => {
