@@ -41,24 +41,32 @@
 				</p>
 			</div>
 		</div>
-		<p class="control is-expanded">
-			<label class="label">Search query</label>
-			<input
-				class="input"
-				type="text"
-				ref="discogs-input"
-				v-model="discogsQuery"
-				@keyup.enter="searchDiscogsForPage(1)"
-				@change="onDiscogsQueryChange"
-				v-focus
-			/>
-		</p>
-		<button
-			class="button is-info is-fullwidth"
-			@click="searchDiscogsForPage(1)"
-		>
-			Search
-		</button>
+
+		<label class="label"> Search for a song from Discogs </label>
+		<div class="control is-grouped input-with-button">
+			<p class="control is-expanded">
+				<input
+					class="input"
+					type="text"
+					placeholder="Enter your Discogs query here..."
+					ref="discogs-input"
+					v-model="discogsQuery"
+					@keyup.enter="searchDiscogsForPage(1)"
+					@change="onDiscogsQueryChange"
+					v-focus
+				/>
+			</p>
+			<p class="control">
+				<a
+					class="button is-info"
+					@click="searchDiscogsForPage(1)"
+					href="#"
+					><i class="material-icons icon-with-button">search</i
+					>Search</a
+				>
+			</p>
+		</div>
+
 		<label class="label" v-if="discogs.apiResults.length > 0"
 			>API results</label
 		>
@@ -130,18 +138,18 @@
 					</div>
 				</div>
 			</div>
+			<button
+				v-if="
+					discogs.apiResults.length > 0 &&
+					!discogs.disableLoadMore &&
+					discogs.page < discogs.pages
+				"
+				class="button is-fullwidth is-info discogs-load-more"
+				@click="loadNextDiscogsPage()"
+			>
+				Load more...
+			</button>
 		</div>
-		<button
-			v-if="
-				discogs.apiResults.length > 0 &&
-				!discogs.disableLoadMore &&
-				discogs.page < discogs.pages
-			"
-			class="button is-fullwidth is-info discogs-load-more"
-			@click="loadNextDiscogsPage()"
-		>
-			Load more...
-		</button>
 	</div>
 </template>
 
@@ -306,14 +314,6 @@ export default {
 }
 
 .discogs-tab {
-	// width: 376px;
-	// background-color: var(--light-grey);
-	// border: 1px rgba(163, 224, 255, 0.75) solid;
-	// border-radius: 5px;
-	// padding: 16px;
-	// overflow: auto;
-	// height: 100%;
-
 	> label {
 		margin-top: 12px;
 	}
@@ -385,8 +385,8 @@ export default {
 
 	.selected-discogs-info {
 		background-color: var(--white);
-		border: 1px solid var(--purple);
-		border-radius: 5px;
+		border: 1px solid var(--light-grey-3);
+		border-radius: 3px;
 		margin-bottom: 16px;
 
 		.selected-discogs-info-none {
@@ -399,11 +399,16 @@ export default {
 		}
 	}
 
-	.api-result {
-		background-color: var(--white);
-		border: 0.5px solid var(--primary-color);
-		border-radius: 5px;
-		margin-bottom: 16px;
+	.api-results-container {
+		max-height: 445px;
+		overflow: auto;
+
+		.api-result {
+			background-color: var(--white);
+			border: 0.5px solid var(--light-grey-3);
+			border-radius: 3px;
+			margin-bottom: 16px;
+		}
 	}
 
 	button {

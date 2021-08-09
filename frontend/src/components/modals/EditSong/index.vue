@@ -5,53 +5,74 @@
 				<div class="left-section">
 					<div class="top-section">
 						<div class="player-section">
-							<div id="editSongPlayer"></div>
+							<div id="video-container">
+								<div
+									id="editSongPlayer"
+									style="
+										width: 100%;
+										height: 100%;
+										min-height: 200px;
+									"
+								/>
+							</div>
+
 							<div v-show="youtubeError" class="player-error">
 								<h2>{{ youtubeErrorMessage }}</h2>
 							</div>
+
 							<canvas
 								ref="durationCanvas"
+								id="durationCanvas"
 								v-show="!youtubeError"
 								height="20"
 								width="530"
-							></canvas>
+							/>
 							<div class="player-footer">
 								<div class="player-footer-left">
-									<i
-										class="material-icons player-play-pause"
+									<button
+										class="button is-primary"
 										@click="play()"
 										@keyup.enter="play()"
-										tabindex="0"
 										v-if="video.paused"
-										>play_arrow</i
+										content="Unpause Playback"
+										v-tippy
 									>
-									<i
-										class="material-icons player-play-pause"
+										<i class="material-icons">play_arrow</i>
+									</button>
+									<button
+										class="button is-primary"
 										@click="settings('pause')"
 										@keyup.enter="settings('pause')"
-										tabindex="0"
-										v-if="!video.paused"
-										>pause</i
+										v-else
+										content="Pause Playback"
+										v-tippy
 									>
-									<i
-										class="material-icons player-stop"
+										<i class="material-icons">pause</i>
+									</button>
+
+									<button
+										class="button is-danger"
 										@click="settings('stop')"
 										@keyup.enter="settings('stop')"
-										tabindex="0"
-										>stop</i
+										content="Stop Playback"
+										v-tippy
 									>
-									<i
-										class="
-											material-icons
-											player-fast-forward
-										"
+										<i class="material-icons">stop</i>
+									</button>
+
+									<button
+										class="button is-success"
 										@click="settings('skipToLast10Secs')"
 										@keyup.enter="
 											settings('skipToLast10Secs')
 										"
-										tabindex="0"
-										>fast_forward</i
+										content="Skip to last 10 secs"
+										v-tippy
 									>
+										<i class="material-icons"
+											>fast_forward</i
+										>
+									</button>
 								</div>
 								<div class="player-footer-center">
 									<img src="/assets/social/youtube.svg" />
@@ -67,26 +88,45 @@
 									</span>
 								</div>
 								<div class="player-footer-right">
-									<input
-										type="range"
-										v-model="volumeSliderValue"
-										min="0"
-										max="10000"
-										class="active"
-										@change="changeVolume()"
-										@input="changeVolume()"
-									/>
+									<p id="volume-control" v-if="!isApple">
+										<i
+											v-if="muted"
+											class="material-icons"
+											@click="toggleMute()"
+											content="Unmute"
+											v-tippy
+											>volume_mute</i
+										>
+										<i
+											v-else
+											class="material-icons"
+											@click="toggleMute()"
+											content="Mute"
+											v-tippy
+											>volume_down</i
+										>
+										<input
+											v-model="volumeSliderValue"
+											type="range"
+											min="0"
+											max="10000"
+											class="volume-slider active"
+											@change="changeVolume()"
+											@input="changeVolume()"
+										/>
+										<i
+											class="material-icons"
+											@click="increaseVolume()"
+											content="Increase Volume"
+											v-tippy
+											>volume_up</i
+										>
+									</p>
 								</div>
 							</div>
 						</div>
-						<img
-							class="thumbnail-preview"
-							:src="song.thumbnail"
-							onerror="this.src='/assets/notes-transparent.png'"
-							ref="thumbnailElement"
-							v-if="songDataLoaded"
-						/>
 					</div>
+
 					<div class="edit-section" v-if="songDataLoaded">
 						<div class="control is-grouped">
 							<div class="title-container">
@@ -97,6 +137,7 @@
 										type="text"
 										ref="title-input"
 										v-model="song.title"
+										placeholder="Enter song title..."
 										@keyup.shift.enter="
 											getAlbumData('title')
 										"
@@ -105,16 +146,23 @@
 										class="button album-get-button"
 										@click="getAlbumData('title')"
 									>
-										<i class="material-icons">album</i>
+										<i
+											class="material-icons"
+											v-tippy
+											content="Fill from Discogs"
+											>album</i
+										>
 									</button>
 								</p>
 							</div>
+
 							<div class="duration-container">
 								<label class="label">Duration</label>
 								<p class="control has-addons">
 									<input
 										class="input"
 										type="text"
+										placeholder="Enter song duration..."
 										v-model.number="song.duration"
 										@keyup.shift.enter="fillDuration()"
 									/>
@@ -122,29 +170,46 @@
 										class="button duration-fill-button"
 										@click="fillDuration()"
 									>
-										<i class="material-icons">sync</i>
+										<i
+											class="material-icons"
+											v-tippy
+											content="Sync duration with YouTube"
+											>sync</i
+										>
 									</button>
 								</p>
 							</div>
+
 							<div class="skip-duration-container">
 								<label class="label">Skip duration</label>
 								<p class="control">
 									<input
 										class="input"
 										type="text"
+										placeholder="Enter skip duration..."
 										v-model.number="song.skipDuration"
 									/>
 								</p>
 							</div>
 						</div>
-						<div class="control is-grouped">
-							<div class="album-art-container">
-								<label class="label">Album art</label>
+
+						<div class="control is-grouped album-art-container">
+							<label class="label">Album art</label>
+
+							<div>
+								<img
+									class="thumbnail-preview"
+									:src="song.thumbnail"
+									onerror="this.src='/assets/notes-transparent.png'"
+									ref="thumbnailElement"
+									v-if="songDataLoaded"
+								/>
 								<p class="control has-addons">
 									<input
 										class="input"
 										type="text"
 										v-model="song.thumbnail"
+										placeholder="Enter link to album art..."
 										@keyup.shift.enter="
 											getAlbumData('albumArt')
 										"
@@ -153,11 +218,17 @@
 										class="button album-get-button"
 										@click="getAlbumData('albumArt')"
 									>
-										<i class="material-icons">album</i>
+										<i
+											class="material-icons"
+											v-tippy
+											content="Fill from Discogs"
+											>album</i
+										>
 									</button>
 								</p>
 							</div>
 						</div>
+
 						<div class="control is-grouped">
 							<div class="artists-container">
 								<label class="label">Artists</label>
@@ -167,6 +238,7 @@
 										type="text"
 										ref="new-artist"
 										v-model="artistInputValue"
+										placeholder="Add artist..."
 										@blur="blurArtistInput()"
 										@focus="focusArtistInput()"
 										@keydown="keydownArtistInput()"
@@ -179,7 +251,12 @@
 										class="button album-get-button"
 										@click="getAlbumData('artists')"
 									>
-										<i class="material-icons">album</i>
+										<i
+											class="material-icons"
+											v-tippy
+											content="Fill from Discogs"
+											>album</i
+										>
 									</button>
 									<button
 										class="button is-info add-button"
@@ -232,6 +309,8 @@
 										class="material-icons"
 										@click="toggleGenreHelper"
 										@dblclick="resetGenreHelper"
+										v-tippy
+										content="View list of genres"
 										>info</i
 									>
 								</label>
@@ -241,6 +320,7 @@
 										type="text"
 										ref="new-genre"
 										v-model="genreInputValue"
+										placeholder="Add genre..."
 										@blur="blurGenreInput()"
 										@focus="focusGenreInput()"
 										@keydown="keydownGenreInput()"
@@ -253,7 +333,12 @@
 										class="button album-get-button"
 										@click="getAlbumData('genres')"
 									>
-										<i class="material-icons">album</i>
+										<i
+											class="material-icons"
+											v-tippy
+											content="Fill from Discogs"
+											>album</i
+										>
 									</button>
 									<button
 										class="button is-info add-button"
@@ -302,6 +387,7 @@
 									<input
 										class="input"
 										type="text"
+										placeholder="Enter YouTube ID..."
 										v-model="song.youtubeId"
 									/>
 								</p>
@@ -489,6 +575,7 @@ export default {
 			youtubeVideoCurrentTime: 0,
 			youtubeVideoNote: "",
 			useHTTPS: false,
+			muted: false,
 			volumeSliderValue: 0,
 			skipToLast10SecsPressed: false,
 			artistInputValue: "",
@@ -626,8 +713,8 @@ export default {
 
 				if (window.YT && window.YT.Player) {
 					this.video.player = new window.YT.Player("editSongPlayer", {
-						height: 298,
-						width: 530,
+						height: 270,
+						width: 480,
 						videoId: this.song.youtubeId,
 						host: "https://www.youtube-nocookie.com",
 						playerVars: {
@@ -1278,7 +1365,28 @@ export default {
 			const volume = this.volumeSliderValue;
 			localStorage.setItem("volume", volume / 100);
 			this.video.player.setVolume(volume / 100);
-			if (volume > 0) this.video.player.unMute();
+			if (volume > 0) {
+				this.video.player.unMute();
+				this.muted = false;
+			}
+		},
+		toggleMute() {
+			const previousVolume = parseFloat(localStorage.getItem("volume"));
+			const volume =
+				this.video.player.getVolume() * 100 <= 0 ? previousVolume : 0;
+			this.muted = !this.muted;
+			this.volumeSliderValue = volume * 100;
+			this.video.player.setVolume(volume);
+			if (!this.muted) localStorage.setItem("volume", volume);
+		},
+		increaseVolume() {
+			const previousVolume = parseInt(localStorage.getItem("volume"));
+			let volume = previousVolume + 5;
+			this.muted = false;
+			if (volume > 100) volume = 100;
+			this.volumeSliderValue = volume * 100;
+			this.video.player.setVolume(volume);
+			localStorage.setItem("volume", volume);
 		},
 		addTag(type) {
 			if (type === "genres") {
@@ -1457,38 +1565,13 @@ export default {
 </script>
 
 <style lang="scss">
-// .song-modal {
-// 	.modal-card-title {
-// 		text-align: center;
-// 		margin-left: 24px;
-// 	}
-
-// 	.modal-card {
-// 		width: 1160px;
-// 		height: 100%;
-
-// 		.modal-card-body {
-// 			padding: 16px;
-// 			display: flex;
-// 		}
-
-// 		.modal-card-foot {
-// 			.right {
-// 				display: flex;
-// 				margin-left: auto;
-// 				margin-right: 0;
-
-// 				// button,
-// 				// a,
-// 				// span {
-// 				// 	&:not(:last-child) {
-// 				// 		margin-right: 5px;
-// 				// 	}
-// 				// }
-// 			}
-// 		}
-// 	}
-// }
+#editSongPlayer {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+}
 </style>
 
 <style lang="scss" scoped>
@@ -1502,21 +1585,18 @@ export default {
 
 .song-modal {
 	&::v-deep {
-		.modal-card-title {
-			text-align: center;
-			margin-left: 24px;
-		}
-
 		.modal-card {
-			width: 1160px;
-			height: 100%;
+			width: 1300px;
 
 			.modal-card-body {
-				padding: 16px;
 				display: flex;
+				flex-wrap: wrap;
+				column-gap: 16px;
+				row-gap: 16px;
 
 				> div {
 					display: flex;
+					flex-grow: 1;
 					height: 100%;
 				}
 			}
@@ -1532,22 +1612,51 @@ export default {
 	}
 }
 
+#video-container {
+	position: relative;
+	padding-bottom: 56.25%; /* proportion value to aspect ratio 16:9 (9 / 16 = 0.5625 or 56.25%) */
+	height: 0;
+	overflow: hidden;
+
+	.player-cannot-autoplay {
+		position: relative;
+		width: 100%;
+		height: 100%;
+		bottom: calc(100% + 5px);
+		background-color: var(--primary-color);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+
+		p {
+			color: var(--white);
+			font-size: 26px;
+			text-align: center;
+		}
+	}
+}
+
 .left-section {
 	display: flex;
 	flex-direction: column;
-	margin-right: 16px;
+	flex-grow: 0 !important;
+	height: inherit !important;
+
+	@media screen and (max-width: 1245px) {
+		flex-grow: 1 !important;
+	}
 
 	.top-section {
 		display: flex;
+		flex-direction: column;
 
 		.player-section {
-			width: 530px;
 			display: flex;
 			flex-direction: column;
 
 			.player-error {
 				height: 318px;
-				width: 530px;
+				// width: 530px;
 				display: block;
 				border: 1px rgba(163, 224, 255, 0.75) solid;
 				border-radius: 5px 5px 0px 0px;
@@ -1562,16 +1671,22 @@ export default {
 				}
 			}
 
+			#durationCanvas {
+				max-width: 100%;
+			}
+
 			.player-footer {
-				background-color: var(--light-grey);
-				border: 1px rgba(163, 224, 255, 0.75) solid;
-				border-radius: 0px 0px 5px 5px;
+				border: 1px solid var(--light-grey-3);
+				border-radius: 0px 0px 3px 3px;
 				display: flex;
 				justify-content: space-between;
-				height: 54px;
+				padding: 10px;
+				width: 100%;
+				background-color: var(--white);
+				flex-direction: column;
+				flex-flow: wrap;
 
 				> * {
-					width: 33.3%;
 					display: flex;
 					align-items: center;
 				}
@@ -1579,21 +1694,12 @@ export default {
 				.player-footer-left {
 					flex: 1;
 
-					.material-icons {
-						font-size: 38px;
-						cursor: pointer;
-					}
+					.button {
+						width: 75px;
 
-					.player-play-pause {
-						color: var(--primary-color);
-					}
-
-					.player-stop {
-						color: var(--red);
-					}
-
-					.player-fast-forward {
-						color: var(--green);
+						&:not(:first-of-type) {
+							margin-left: 5px;
+						}
 					}
 				}
 
@@ -1603,6 +1709,7 @@ export default {
 					flex: 2;
 					font-size: 21px;
 					font-weight: 400;
+					width: 200px;
 
 					img {
 						height: 21px;
@@ -1616,30 +1723,117 @@ export default {
 					justify-content: right;
 					flex: 1;
 
-					#volumeSlider {
-						width: 126px;
-						margin-right: 10px;
-						background-color: var(--light-grey);
+					#volume-control {
+						margin: 3px;
+						margin-top: 0;
+						display: flex;
+						align-items: center;
+						cursor: pointer;
+
+						.volume-slider {
+							width: 100%;
+							padding: 0 15px;
+							background: transparent;
+							min-width: 100px;
+						}
+
+						input[type="range"] {
+							-webkit-appearance: none;
+							margin: 7.3px 0;
+						}
+
+						input[type="range"]:focus {
+							outline: none;
+						}
+
+						input[type="range"]::-webkit-slider-runnable-track {
+							width: 100%;
+							height: 5.2px;
+							cursor: pointer;
+							box-shadow: 0;
+							background: var(--light-grey-3);
+							border-radius: 0;
+							border: 0;
+						}
+
+						input[type="range"]::-webkit-slider-thumb {
+							box-shadow: 0;
+							border: 0;
+							height: 19px;
+							width: 19px;
+							border-radius: 15px;
+							background: var(--primary-color);
+							cursor: pointer;
+							-webkit-appearance: none;
+							margin-top: -6.5px;
+						}
+
+						input[type="range"]::-moz-range-track {
+							width: 100%;
+							height: 5.2px;
+							cursor: pointer;
+							box-shadow: 0;
+							background: var(--light-grey-3);
+							border-radius: 0;
+							border: 0;
+						}
+
+						input[type="range"]::-moz-range-thumb {
+							box-shadow: 0;
+							border: 0;
+							height: 19px;
+							width: 19px;
+							border-radius: 15px;
+							background: var(--primary-color);
+							cursor: pointer;
+							-webkit-appearance: none;
+							margin-top: -6.5px;
+						}
+						input[type="range"]::-ms-track {
+							width: 100%;
+							height: 5.2px;
+							cursor: pointer;
+							box-shadow: 0;
+							background: var(--light-grey-3);
+							border-radius: 1.3px;
+						}
+
+						input[type="range"]::-ms-fill-lower {
+							background: var(--light-grey-3);
+							border: 0;
+							border-radius: 0;
+							box-shadow: 0;
+						}
+
+						input[type="range"]::-ms-fill-upper {
+							background: var(--light-grey-3);
+							border: 0;
+							border-radius: 0;
+							box-shadow: 0;
+						}
+
+						input[type="range"]::-ms-thumb {
+							box-shadow: 0;
+							border: 0;
+							height: 15px;
+							width: 15px;
+							border-radius: 15px;
+							background: var(--primary-color);
+							cursor: pointer;
+							-webkit-appearance: none;
+							margin-top: 1.5px;
+						}
 					}
 				}
 			}
 		}
-
-		.thumbnail-preview {
-			width: 189px;
-			height: 189px;
-			margin-left: 16px;
-		}
 	}
 
 	.edit-section {
-		width: 735px;
-		background-color: var(--light-grey);
-		border: 1px rgba(163, 224, 255, 0.75) solid;
+		border: 1px solid var(--light-grey-3);
 		margin-top: 16px;
-		flex: 1;
 		overflow: auto;
-		border-radius: 5px;
+		border-radius: 3px;
 
 		.album-get-button {
 			background-color: var(--purple);
@@ -1677,7 +1871,7 @@ export default {
 		}
 
 		> div {
-			margin: 16px;
+			margin: 16px !important;
 		}
 
 		input {
@@ -1699,7 +1893,26 @@ export default {
 		}
 
 		.album-art-container {
-			width: 100%;
+			display: flex;
+			flex-direction: column;
+
+			div {
+				display: flex;
+				flex-direction: row;
+				align-items: center;
+
+				.thumbnail-preview {
+					border: 1px solid var(--light-grey-3);
+
+					width: 75px;
+					height: 75px;
+				}
+
+				.control {
+					margin-left: 20px;
+					width: 100%;
+				}
+			}
 		}
 
 		.artists-container {
@@ -1753,6 +1966,8 @@ export default {
 				color: var(--primary-color);
 				font-size: 14px;
 				margin-left: 1px;
+				position: relative;
+				top: -1px;
 			}
 		}
 
@@ -1818,15 +2033,19 @@ export default {
 .right-section {
 	display: flex;
 	flex-wrap: wrap;
+	flex-basis: 450px;
+	overflow-y: auto;
+
+	@media screen and (max-width: 1245px) {
+		height: inherit !important;
+	}
 
 	#tabs-container {
-		width: 376px;
-		background-color: var(--light-grey);
-		border: 1px rgba(163, 224, 255, 0.75) solid;
-		border-radius: 5px;
-		// padding: 16px;
 		overflow: auto;
 		height: 100%;
+		display: flex;
+		flex-direction: column;
+		flex-grow: 1;
 
 		#tab-selection {
 			display: flex;
@@ -1854,9 +2073,9 @@ export default {
 			}
 		}
 		.tab {
-			// border: 1px solid var(--light-grey-3);
+			border: 1px solid var(--light-grey-3);
+			border-radius: 3px;
 			padding: 15px;
-			// border-radius: 0 0 5px 5px;
 		}
 	}
 
@@ -2018,91 +2237,5 @@ export default {
 
 .modal-card-foot .is-primary {
 	width: 200px;
-}
-
-input[type="range"] {
-	-webkit-appearance: none;
-	width: 100%;
-	margin: 8.5px 0;
-}
-input[type="range"]:focus {
-	outline-style: outset;
-}
-input[type="range"]::-webkit-slider-runnable-track {
-	width: 100%;
-	height: 3px;
-	cursor: pointer;
-	box-shadow: none;
-	background: var(--grey-3);
-	border-radius: none;
-	border: none;
-}
-input[type="range"]::-webkit-slider-thumb {
-	box-shadow: none;
-	border: none;
-	height: 20px;
-	width: 20px;
-	border-radius: 100px;
-	background: var(--primary-color);
-	cursor: pointer;
-	-webkit-appearance: none;
-	margin-top: -8.5px;
-}
-input[type="range"]:focus::-webkit-slider-runnable-track {
-	background: var(--grey-3);
-}
-input[type="range"]::-moz-range-track {
-	width: 100%;
-	height: 3px;
-	cursor: pointer;
-	box-shadow: none;
-	background: var(--grey-3);
-	border-radius: none;
-	border: none;
-}
-input[type="range"]::-moz-range-thumb {
-	box-shadow: none;
-	border: none;
-	height: 20px;
-	width: 20px;
-	border-radius: 100px;
-	background: var(--primary-color);
-	cursor: pointer;
-}
-input[type="range"]::-ms-track {
-	width: 100%;
-	height: 3px;
-	cursor: pointer;
-	background: transparent;
-	border-color: transparent;
-	color: transparent;
-}
-input[type="range"]::-ms-fill-lower {
-	background: var(--grey-2);
-	border: none;
-	border-radius: none;
-	box-shadow: none;
-}
-input[type="range"]::-ms-fill-upper {
-	background: var(--grey-3);
-	border: none;
-	border-radius: none;
-	box-shadow: none;
-}
-input[type="range"]::-ms-thumb {
-	box-shadow: none;
-	border: none;
-	height: 20px;
-	width: 20px;
-	border-radius: 100px;
-	background: var(--primary-color);
-	cursor: pointer;
-	height: 3px;
-}
-input[type="range"]:focus::-ms-fill-lower {
-	background: var(--grey-3);
-}
-input[type="range"]:focus::-ms-fill-upper {
-	background: var(--grey-3);
 }
 </style>
