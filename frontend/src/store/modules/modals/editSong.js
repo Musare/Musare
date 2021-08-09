@@ -37,6 +37,7 @@ export default {
 			commit("resolveReport", reportId),
 		updateYoutubeId: ({ commit }, youtubeId) => {
 			commit("updateYoutubeId", youtubeId);
+			commit("loadVideoById", youtubeId, 0);
 		}
 	},
 	mutations: {
@@ -52,6 +53,7 @@ export default {
 			state.video.player.stopVideo();
 		},
 		loadVideoById(state, id, skipDuration) {
+			state.song.duration = -1;
 			state.video.player.loadVideoById(id, skipDuration);
 		},
 		pauseVideo(state, status) {
