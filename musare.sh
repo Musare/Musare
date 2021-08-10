@@ -17,26 +17,20 @@ handleServices()
     servicesArray=()
     invalidServices=false
     for x in "$@"; do
-        for validService in "${validServices[@]}"
-        do
-            if [[ ${validService} =~ (^|[[:space:]])"$x"($|[[:space:]]) ]]; then
-                for service in "${servicesArray[@]}"
-                do
-                    if ! [[ "$service" =~ (^|[[:space:]])"$x"($|[[:space:]]) ]]; then
-                        servicesArray+=("$x")
-                    fi
-                done
-            else
-                if [[ $invalidServices == false ]]; then
-                    invalidServices="${x}"
-                else
-                    invalidServices="${invalidServices} ${x}"
-                fi
+        if [[ ${validServices[*]} =~ (^|[[:space:]])"$x"($|[[:space:]]) ]]; then
+            if ! [[ ${servicesArray[*]} =~ (^|[[:space:]])"$x"($|[[:space:]]) ]]; then
+                servicesArray+=("${x}")
             fi
-        done
+        else
+            if [[ $invalidServices == false ]]; then
+                invalidServices="${x}"
+            else
+                invalidServices="${invalidServices} ${x}"
+            fi
+        fi
     done
     if [[ $invalidServices == false && ${#servicesArray[@]} -gt 0 ]]; then
-        echo "1|" "${servicesArray[@]}"
+        echo "1|${servicesArray[*]}"
     elif [[ $invalidServices == false ]]; then
         echo "1|all"
     else
@@ -52,7 +46,7 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
         if [[ ${servicesString:0:1} == 1 && ${servicesString:2:4} == "all" ]]; then
             docker-compose up -d
         elif [[ ${servicesString:0:1} == 1 ]]; then
-            docker-compose up -d "${servicesString:2}"
+            docker-compose up -d ${servicesString:2}
         else
             echo -e "${RED}${servicesString:2}\n${YELLOW}Usage: $(basename "$0") start [backend, frontend, mongo, redis]${NC}"
         fi
@@ -64,7 +58,7 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
         if [[ ${servicesString:0:1} == 1 && ${servicesString:2:4} == "all" ]]; then
             docker-compose stop
         elif [[ ${servicesString:0:1} == 1 ]]; then
-            docker-compose stop "${servicesString:2}"
+            docker-compose stop ${servicesString:2}
         else
             echo -e "${RED}${servicesString:2}\n${YELLOW}Usage: $(basename "$0") stop [backend, frontend, mongo, redis]${NC}"
         fi
@@ -77,8 +71,8 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
             docker-compose stop
             docker-compose up -d
         elif [[ ${servicesString:0:1} == 1 ]]; then
-            docker-compose stop "${servicesString:2}"
-            docker-compose up -d "${servicesString:2}"
+            docker-compose stop ${servicesString:2}
+            docker-compose up -d ${servicesString:2}
         else
             echo -e "${RED}${servicesString:2}\n${YELLOW}Usage: $(basename "$0") restart [backend, frontend, mongo, redis]${NC}"
         fi
@@ -90,7 +84,7 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
         if [[ ${servicesString:0:1} == 1 && ${servicesString:2:4} == "all" ]]; then
             docker-compose build
         elif [[ ${servicesString:0:1} == 1 ]]; then
-            docker-compose build "${servicesString:2}"
+            docker-compose build ${servicesString:2}
         else
             echo -e "${RED}${servicesString:2}\n${YELLOW}Usage: $(basename "$0") build [backend, frontend, mongo, redis]${NC}"
         fi
@@ -115,11 +109,11 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
                 echo -e "${RED}Cancelled reset${NC}"
             fi
         elif [[ ${servicesString:0:1} == 1 ]]; then
-            echo -e "${GREEN}Are you sure you want to reset all data for $(echo "${servicesString:2}" | tr ' ' ',')? ${YELLOW}[y,n]: ${NC}"
+            echo -e "${GREEN}Are you sure you want to reset all data for $(echo ${servicesString:2} | tr ' ' ',')? ${YELLOW}[y,n]: ${NC}"
             read -r confirm
             if [[ "${confirm}" == y* ]]; then
-                docker-compose stop "${servicesString:2}"
-                docker-compose rm -v --force "${servicesString:2}"
+                docker-compose stop ${servicesString:2}
+                docker-compose rm -v --force ${servicesString:2}
                 if [[ "${servicesString:2}" == *redis* && -d ".redis" ]]; then
                     rm -rf .redis
                 fi
@@ -141,6 +135,7 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
             if [[ -z $containerId ]]; then
                 echo -e "${RED}Error: Backend offline, please start to attach.${NC}"
             else
+                echo -e "${YELLOW}Detach with CTRL+P+Q${NC}"
                 docker attach "$containerId"
             fi
         else
