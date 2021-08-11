@@ -175,7 +175,7 @@ export default {
 
 		if (localStorage.getItem("nightmode") === "true") {
 			this.changeNightmode(true);
-			this.enableNightMode();
+			this.enableNightmode();
 		}
 
 		this.socket.dispatch("users.getPreferences", res => {
@@ -190,7 +190,7 @@ export default {
 				);
 				this.changeActivityWatch(preferences.activityWatch);
 
-				if (this.nightmode) this.enablenightMode();
+				if (this.nightmode) this.enableNightmode();
 				else this.disableNightmode();
 			}
 		});
