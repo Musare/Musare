@@ -11,6 +11,18 @@ import AppComponent from "./App.vue";
 
 const REQUIRED_CONFIG_VERSION = 6;
 
+lofig.folder = "../config/default.json";
+
+const handleMetadata = attrs => {
+	lofig.get("siteSettings.sitename").then(siteName => {
+		if (siteName) {
+			document.title = `${siteName} | ${attrs.title}`;
+		} else {
+			document.title = `Musare | ${attrs.title}`;
+		}
+	});
+};
+
 const app = createApp(AppComponent);
 
 app.use(store);
@@ -35,6 +47,9 @@ app.component("PageMetadata", {
 	watch: {
 		$attrs: {
 			// eslint-disable-next-line vue/no-arrow-functions-in-watch
+			handler: attrs => {
+				handleMetadata(attrs);
+			},
 			deep: true,
 			immediate: true
 		}
@@ -158,8 +173,6 @@ const router = createRouter({
 });
 
 app.use(router);
-
-lofig.folder = "../config/default.json";
 
 (async () => {
 	lofig.fetchConfig().then(config => {
