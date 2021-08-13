@@ -13,10 +13,14 @@
 				<div class="content-container">
 					<div class="content">
 						<img
+							v-if="siteSettings.sitename === 'Musare'"
+							:src="siteSettings.logo_white"
+							:alt="siteSettings.sitename || `Musare`"
 							class="logo"
-							src="/assets/white_wordmark.png"
-							:alt="`${this.sitename}` || `Musare`"
 						/>
+						<span v-else class="logo">{{
+							siteSettings.sitename
+						}}</span>
 						<div v-if="!loggedIn" class="buttons">
 							<button
 								class="button login"
@@ -468,7 +472,10 @@ export default {
 			stations: [],
 			favoriteStations: [],
 			searchQuery: "",
-			sitename: "Musare",
+			siteSettings: {
+				logo_white: "",
+				sitename: ""
+			},
 			orderOfFavoriteStations: []
 		};
 	},
@@ -520,7 +527,7 @@ export default {
 		}
 	},
 	async mounted() {
-		this.sitename = await lofig.get("siteSettings.sitename");
+		this.siteSettings = await lofig.get("siteSettings");
 
 		if (this.socket.readyState === 1) this.init();
 		ws.onConnect(() => this.init());
@@ -887,12 +894,13 @@ html {
 			right: 0;
 			transform: translateY(-50%);
 			background-color: transparent !important;
-			img.logo {
+			.logo {
 				max-height: 90px;
-				font-size: 40px;
+				font-size: 50px;
 				color: var(--white);
 				font-family: Pacifico, cursive;
 				user-select: none;
+				white-space: nowrap;
 			}
 			.buttons {
 				display: flex;

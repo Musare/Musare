@@ -1,3 +1,6 @@
+process.env.NODE_CONFIG_DIR = `${__dirname}/dist/config/`;
+const config = require("config");
+
 const path = require("path");
 const { VueLoaderPlugin } = require("vue-loader");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
@@ -18,6 +21,7 @@ module.exports = {
 	plugins: [
 		new VueLoaderPlugin(),
 		new HtmlWebpackPlugin({
+			title: config.get("siteSettings.sitename"),
 			hash: true,
 			template: "dist/index.tpl.html",
 			inject: "body",
