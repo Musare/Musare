@@ -281,6 +281,14 @@ export default {
 	// color: var(--dark-grey-2);
 	// background-color: var(--light-grey-3) !important;
 
+	.input,
+	.textarea,
+	.select select {
+		background-color: var(--dark-grey);
+		border-color: var(--grey-3);
+		color: var(--white);
+	}
+
 	// &:last-of-type {
 	// 	background-color: var(--light-grey) !important;
 	// }

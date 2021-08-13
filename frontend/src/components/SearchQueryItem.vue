@@ -29,7 +29,8 @@
 					<div class="youtube-icon"></div>
 				</a>
 				<slot name="actions" />
-			</div>		</div>
+			</div>
+		</div>
 	</div>
 </template>
 

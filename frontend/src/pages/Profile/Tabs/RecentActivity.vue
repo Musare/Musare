@@ -174,6 +174,11 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.night-mode #activity-items .activity-item {
+	background-color: var(--dark-grey-2) !important;
+	border: 0 !important;
+}
+
 #activity-items {
 	overflow: auto;
 	min-height: auto;
