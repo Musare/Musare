@@ -1,7 +1,10 @@
 <template>
 	<div
 		ref="box"
-		class="box"
+		:class="{
+			'floating-box': true,
+			column
+		}"
 		:id="id"
 		v-if="shown"
 		:style="{
@@ -24,7 +27,8 @@
 <script>
 export default {
 	props: {
-		id: { type: String, default: null }
+		id: { type: String, default: null },
+		column: { type: Boolean, default: true }
 	},
 	data() {
 		return {
@@ -129,9 +133,18 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
-.box {
+<style lang="scss">
+.night-mode .floating-box {
+	background-color: var(--dark-grey-2) !important;
+	border: 0 !important;
+	.box-body b {
+		color: var(--light-grey-2) !important;
+	}
+}
+
+.floating-box {
 	background-color: var(--white);
+	color: var(--black);
 	position: fixed;
 	z-index: 10000000;
 	resize: both;
@@ -156,6 +169,14 @@ export default {
 
 		span {
 			padding: 3px 6px;
+		}
+	}
+
+	&.column .box-body {
+		flex-flow: column;
+		span {
+			flex: 1;
+			display: block;
 		}
 	}
 }

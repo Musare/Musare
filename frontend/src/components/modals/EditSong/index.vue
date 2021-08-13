@@ -512,7 +512,7 @@
 				</div>
 			</template>
 		</modal>
-		<floating-box id="genreHelper" ref="genreHelper">
+		<floating-box id="genreHelper" ref="genreHelper" :column="false">
 			<template #body>
 				<span>Blues</span><span>Country</span><span>Disco</span
 				><span>Funk</span><span>Hip-Hop</span><span>Jazz</span
