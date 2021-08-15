@@ -107,12 +107,6 @@ p {
 
 @media screen and (max-width: 600px) {
 	.modal-card {
-		max-height: none;
-
-		.modal-card-body {
-			// padding: 0;
-		}
-
 		.modal-card-head,
 		.modal-card-foot {
 			border-radius: 0;
