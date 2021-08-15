@@ -105,18 +105,14 @@ p {
 	}
 }
 
-@media screen and (max-width: 600px) {
+@media screen and (max-width: 650px) {
 	.modal-card {
+		max-height: 100vh;
+		height: 100%;
 		.modal-card-head,
 		.modal-card-foot {
 			border-radius: 0;
 		}
-	}
-}
-
-@media screen and (max-height: 650px) {
-	.modal-card {
-		height: 100%;
 	}
 }
 </style>
