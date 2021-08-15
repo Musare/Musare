@@ -297,18 +297,26 @@ export default {
 		filteredSongs() {
 			return this.songs.filter(
 				song =>
-					JSON.stringify(Object.values(song)).indexOf(
-						this.searchQuery
-					) !== -1 &&
+					JSON.stringify(Object.values(song))
+						.toLowerCase()
+						.indexOf(this.searchQuery.toLowerCase()) !== -1 &&
 					(this.artistFilterSelected.length === 0 ||
 						song.artists.some(
 							artist =>
-								this.artistFilterSelected.indexOf(artist) !== -1
+								this.artistFilterSelected
+									.map(artistFilterSelected =>
+										artistFilterSelected.toLowerCase()
+									)
+									.indexOf(artist.toLowerCase()) !== -1
 						)) &&
 					(this.genreFilterSelected.length === 0 ||
 						song.genres.some(
 							genre =>
-								this.genreFilterSelected.indexOf(genre) !== -1
+								this.genreFilterSelected
+									.map(genreFilterSelected =>
+										genreFilterSelected.toLowerCase()
+									)
+									.indexOf(genre.toLowerCase()) !== -1
 						))
 			);
 		},
@@ -326,7 +334,10 @@ export default {
 				.filter(
 					artist =>
 						this.artistFilterSelected.indexOf(artist) !== -1 ||
-						artist.indexOf(this.artistFilterQuery) !== -1
+						artist
+							.toLowerCase()
+							.indexOf(this.artistFilterQuery.toLowerCase()) !==
+							-1
 				)
 				.sort(
 					(a, b) =>
@@ -348,7 +359,9 @@ export default {
 				.filter(
 					genre =>
 						this.genreFilterSelected.indexOf(genre) !== -1 ||
-						genre.indexOf(this.genreFilterQuery) !== -1
+						genre
+							.toLowerCase()
+							.indexOf(this.genreFilterQuery.toLowerCase()) !== -1
 				)
 				.sort(
 					(a, b) =>
@@ -595,10 +608,6 @@ td {
 
 #keyboardShortcutsHelper {
 	.box-body {
-		b {
-			color: var(--black);
-		}
-
 		.biggest {
 			font-size: 18px;
 		}

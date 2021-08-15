@@ -449,6 +449,10 @@ export default {
 			background-color: var(--dark-grey-3) !important;
 		}
 	}
+	.columns {
+		background-color: var(--dark-grey-3) !important;
+		border-radius: 5px;
+	}
 }
 
 .report-modal-inner-container {

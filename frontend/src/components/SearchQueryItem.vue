@@ -19,35 +19,17 @@
 		</div>
 
 		<div class="universal-item-actions">
-			<tippy
-				:touch="true"
-				:interactive="true"
-				placement="left"
-				theme="songActions"
-				ref="songActions"
-				trigger="click"
-			>
-				<i
-					class="material-icons action-dropdown-icon"
-					content="Song Options"
+			<div class="icons-group">
+				<a
+					target="_blank"
+					:href="`https://www.youtube.com/watch?v=${result.id}`"
+					content="View on Youtube"
 					v-tippy
-					>more_horiz</i
 				>
-
-				<template #content>
-					<div class="icons-group">
-						<a
-							target="_blank"
-							:href="`https://www.youtube.com/watch?v=${result.id}`"
-							content="View on Youtube"
-							v-tippy
-						>
-							<div class="youtube-icon"></div>
-						</a>
-						<slot name="actions" />
-					</div>
-				</template>
-			</tippy>
+					<div class="youtube-icon"></div>
+				</a>
+				<slot name="actions" />
+			</div>
 		</div>
 	</div>
 </template>

@@ -50,31 +50,25 @@
 								name="search-query-actions"
 								mode="out-in"
 							>
-								<a
-									class="button is-success"
+								<i
 									v-if="result.isRequested"
-									href="#"
 									key="added-to-playlist"
+									class="material-icons icon-requested"
+									content="Requested song"
+									v-tippy
+									>done</i
 								>
-									<i class="material-icons icon-with-button"
-										>done</i
-									>
-									Requested song
-								</a>
-								<a
-									class="button is-dark"
+								<i
 									v-else
 									@click.prevent="
 										addSongToQueue(result.id, index)
 									"
-									href="#"
 									key="add-to-queue"
+									class="material-icons icon-request"
+									content="Request song"
+									v-tippy
+									>add</i
 								>
-									<i class="material-icons icon-with-button"
-										>add</i
-									>
-									Request song
-								</a>
 							</transition>
 						</template>
 					</search-query-item>
@@ -241,6 +235,10 @@ export default {
 	div {
 		color: var(--dark-grey);
 	}
+
+	.icon-request {
+		color: var(--white);
+	}
 }
 
 .song-actions {
@@ -264,6 +262,14 @@ export default {
 
 .vertical-padding {
 	padding: 20px;
+}
+
+.icon-requested {
+	color: var(--green);
+}
+
+.icon-request {
+	color: var(--dark-gray-3);
 }
 
 #song-query-results {

@@ -175,7 +175,7 @@ export default {
 
 		if (localStorage.getItem("nightmode") === "true") {
 			this.changeNightmode(true);
-			this.enableNightMode();
+			this.enableNightmode();
 		}
 
 		this.socket.dispatch("users.getPreferences", res => {
@@ -190,7 +190,7 @@ export default {
 				);
 				this.changeActivityWatch(preferences.activityWatch);
 
-				if (this.nightmode) this.enablenightMode();
+				if (this.nightmode) this.enableNightmode();
 				else this.disableNightmode();
 			}
 		});
@@ -280,6 +280,18 @@ export default {
 	// #toasts-container .toast {
 	// color: var(--dark-grey-2);
 	// background-color: var(--light-grey-3) !important;
+
+	.input,
+	.textarea,
+	.select select {
+		background-color: var(--dark-grey);
+		border-color: var(--grey-3);
+		color: var(--white);
+
+		&::placeholder {
+			color: var(--light-grey-3);
+		}
+	}
 
 	// &:last-of-type {
 	// 	background-color: var(--light-grey) !important;
@@ -532,6 +544,7 @@ a {
 
 .tippy-box[data-theme~="confirm"] {
 	background-color: var(--red);
+	border: 0;
 
 	.tippy-content {
 		padding: 0;
@@ -539,7 +552,7 @@ a {
 
 	a {
 		padding: 15px;
-		line-height: 25px;
+		line-height: 30px;
 		color: var(--white);
 		border-bottom: 0;
 		font-size: 15px;

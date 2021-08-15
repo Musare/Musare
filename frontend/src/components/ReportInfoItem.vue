@@ -73,6 +73,12 @@ export default {
 		height: 45px;
 		margin-right: 10px;
 
+		/deep/ .profile-picture.using-initials span {
+			font-size: calc(
+				45px / 5 * 2
+			); // 2/5th of .profile-picture height/width
+		}
+
 		.profile-picture,
 		i {
 			width: 45px;
