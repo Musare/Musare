@@ -2253,22 +2253,6 @@ export default {
 		}
 	}
 }
-
-#player-debug-box {
-	.box-body {
-		// flex-direction: column;
-		flex-flow: column;
-
-		span {
-			flex: 1;
-			display: block;
-		}
-
-		b {
-			color: var(--black);
-		}
-	}
-}
 </style>
 
 <style lang="scss" scoped>

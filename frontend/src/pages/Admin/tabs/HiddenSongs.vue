@@ -374,10 +374,6 @@ td {
 
 #keyboardShortcutsHelper {
 	.box-body {
-		b {
-			color: var(--black);
-		}
-
 		.biggest {
 			font-size: 18px;
 		}

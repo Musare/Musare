@@ -9,18 +9,18 @@
 			<div
 				:class="{
 					'view-only': !isEditable(),
-					'edit-playlist-modal-inner-container': true
+					'custom-modal-body': true
 				}"
 			>
-				<div id="first-column">
+				<div class="left-section">
 					<div id="playlist-info-section" class="section">
 						<h3>{{ playlist.displayName }}</h3>
 						<h5>Song Count: {{ playlist.songs.length }}</h5>
 						<h5>Duration: {{ totalLength() }}</h5>
 					</div>
 
-					<div id="tabs-container">
-						<div id="tab-selection">
+					<div class="tabs-container">
+						<div class="tab-selection">
 							<button
 								class="button is-default"
 								:class="{ selected: tab === 'settings' }"
@@ -77,7 +77,7 @@
 					</div>
 				</div>
 
-				<div id="second-column">
+				<div class="right-section">
 					<div id="rearrange-songs-section" class="section">
 						<div v-if="isEditable()">
 							<h4 class="section-title">Rearrange Songs</h4>
@@ -616,6 +616,29 @@ export default {
 	strong {
 		color: var(--light-grey-2);
 	}
+
+	.edit-playlist-modal.modal .modal-card-body .custom-modal-body {
+		.left-section {
+			#playlist-info-section {
+				background-color: var(--dark-grey-3) !important;
+				border: 0;
+			}
+			.tabs-container {
+				background-color: transparent !important;
+				.tab-selection .button {
+					background: var(--dark-grey);
+					color: var(--white);
+				}
+				.tab {
+					background-color: var(--dark-grey-3) !important;
+					border: 0 !important;
+				}
+			}
+		}
+		.right-section .section {
+			border-radius: 5px;
+		}
+	}
 }
 
 .menu-list li {
@@ -640,10 +663,10 @@ export default {
 	}
 }
 
-#tabs-container {
+.tabs-container {
 	// padding: 16px;
 
-	#tab-selection {
+	.tab-selection {
 		display: flex;
 		// overflow-x: auto;
 		margin: 24px 10px 0 10px;
@@ -678,7 +701,7 @@ export default {
 }
 
 .edit-playlist-modal {
-	.edit-playlist-modal-inner-container {
+	.custom-modal-body {
 		display: flex;
 		flex-wrap: wrap;
 		height: 100%;
@@ -687,7 +710,7 @@ export default {
 		&.view-only {
 			height: auto !important;
 
-			#first-column {
+			.left-section {
 				flex-basis: 100%;
 			}
 
@@ -721,7 +744,7 @@ export default {
 		width: 150px;
 	}
 
-	#first-column {
+	.left-section {
 		flex-basis: 550px;
 		height: 100%;
 		overflow-y: auto;
@@ -752,7 +775,7 @@ export default {
 		}
 	}
 
-	#second-column {
+	.right-section {
 		flex-basis: 650px;
 		height: 100%;
 		overflow-y: auto;
