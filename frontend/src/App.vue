@@ -540,6 +540,7 @@ a {
 
 .tippy-box[data-theme~="confirm"] {
 	background-color: var(--red);
+	border: 0;
 
 	.tippy-content {
 		padding: 0;
@@ -547,7 +548,7 @@ a {
 
 	a {
 		padding: 15px;
-		line-height: 25px;
+		line-height: 30px;
 		color: var(--white);
 		border-bottom: 0;
 		font-size: 15px;
