@@ -240,7 +240,6 @@ export default {
 
 .main-container {
 	height: auto;
-	margin-bottom: 10px;
 }
 
 .tabs {

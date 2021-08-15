@@ -58,12 +58,6 @@ export default {
 };
 </script>
 
-<style lang="scss">
-.report-info-item .item-icon .profile-picture span {
-	font-size: 25px;
-}
-</style>
-
 <style lang="scss" scoped>
 .night-mode {
 	.report-info-item {
@@ -78,6 +72,12 @@ export default {
 		max-width: 45px;
 		height: 45px;
 		margin-right: 10px;
+
+		/deep/ .profile-picture.using-initials span {
+			font-size: calc(
+				45px / 5 * 2
+			); // 2/5th of .profile-picture height/width
+		}
 
 		.profile-picture,
 		i {

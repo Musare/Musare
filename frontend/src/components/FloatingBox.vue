@@ -150,6 +150,8 @@ export default {
 	resize: both;
 	overflow: auto;
 	border: 1px solid var(--light-grey-2);
+	border-radius: 5px;
+	padding: 10px;
 	min-height: 50px !important;
 	min-width: 50px !important;
 

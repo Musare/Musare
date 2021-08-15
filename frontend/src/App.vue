@@ -287,6 +287,10 @@ export default {
 		background-color: var(--dark-grey);
 		border-color: var(--grey-3);
 		color: var(--white);
+
+		&::placeholder {
+			color: var(--light-grey-3);
+		}
 	}
 
 	// &:last-of-type {

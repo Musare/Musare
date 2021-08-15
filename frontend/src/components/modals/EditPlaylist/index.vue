@@ -12,7 +12,7 @@
 					'custom-modal-body': true
 				}"
 			>
-				<div class="left-section">
+				<div class="first-section">
 					<div id="playlist-info-section" class="section">
 						<h3>{{ playlist.displayName }}</h3>
 						<h5>Song Count: {{ playlist.songs.length }}</h5>
@@ -77,7 +77,7 @@
 					</div>
 				</div>
 
-				<div class="right-section">
+				<div class="second-section">
 					<div id="rearrange-songs-section" class="section">
 						<div v-if="isEditable()">
 							<h4 class="section-title">Rearrange Songs</h4>
@@ -618,7 +618,7 @@ export default {
 	}
 
 	.edit-playlist-modal.modal .modal-card-body .custom-modal-body {
-		.left-section {
+		.first-section {
 			#playlist-info-section {
 				background-color: var(--dark-grey-3) !important;
 				border: 0;
@@ -635,7 +635,7 @@ export default {
 				}
 			}
 		}
-		.right-section .section {
+		.second-section .section {
 			border-radius: 5px;
 		}
 	}
@@ -710,7 +710,7 @@ export default {
 		&.view-only {
 			height: auto !important;
 
-			.left-section {
+			.first-section {
 				flex-basis: 100%;
 			}
 
@@ -744,7 +744,7 @@ export default {
 		width: 150px;
 	}
 
-	.left-section {
+	.first-section {
 		flex-basis: 550px;
 		height: 100%;
 		overflow-y: auto;
@@ -775,7 +775,7 @@ export default {
 		}
 	}
 
-	.right-section {
+	.second-section {
 		flex-basis: 650px;
 		height: 100%;
 		overflow-y: auto;
