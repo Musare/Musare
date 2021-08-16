@@ -88,7 +88,7 @@
 									</span>
 								</div>
 								<div class="player-footer-right">
-									<p id="volume-control" v-if="!isApple">
+									<p id="volume-control">
 										<i
 											v-if="muted"
 											class="material-icons"
