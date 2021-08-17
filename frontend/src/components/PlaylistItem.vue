@@ -23,8 +23,8 @@
 						:user-id="playlist.createdBy"
 						:link="true"
 					/>
-					•</span
-				>
+					•
+				</span>
 				<span :title="playlistLength">
 					{{ playlistLength }}
 				</span>
