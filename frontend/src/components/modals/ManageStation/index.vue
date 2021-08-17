@@ -545,8 +545,8 @@ export default {
 			() => {}
 		);
 
+		if (this.isOwnerOrAdmin()) this.showTab("settings");
 		this.clearStation();
-		this.showTab("settings");
 	},
 	methods: {
 		isOwner() {
@@ -643,7 +643,8 @@ export default {
 		]),
 		...mapActions({
 			showTab(dispatch, payload) {
-				this.$refs[`${payload}-tab`].scrollIntoView();
+				if (this.$refs[`${payload}-tab`])
+					this.$refs[`${payload}-tab`].scrollIntoView(); // Only works if the ref exists, which it doesn't always
 				return dispatch("modals/manageStation/showTab", payload);
 			}
 		}),
