@@ -645,10 +645,10 @@ export default {
 	},
 	watch: {
 		/* eslint-disable */
-		"song.duration": function() {
+		"song.duration": function () {
 			this.drawCanvas();
 		},
-		"song.skipDuration": function() {
+		"song.skipDuration": function () {
 			this.drawCanvas();
 		}
 		/* eslint-enable */

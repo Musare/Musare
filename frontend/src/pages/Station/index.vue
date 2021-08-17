@@ -1597,6 +1597,7 @@ export default {
 		calculateTimeElapsed() {
 			if (
 				this.playerReady &&
+				!this.noSong &&
 				this.currentSong &&
 				this.player.getPlayerState() === -1
 			) {
