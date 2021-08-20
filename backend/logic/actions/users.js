@@ -53,7 +53,7 @@ CacheModule.runJob("SUB", {
 		});
 
 		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `profile-${res.userId}-playlists`,
+			room: `profile.${res.userId}.playlists`,
 			args: ["event:user.orderOfPlaylists.updated", { data: { order: res.orderOfPlaylists } }]
 		});
 	}

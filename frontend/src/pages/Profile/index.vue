@@ -109,6 +109,7 @@
 import { mapState, mapGetters } from "vuex";
 import { format, parseISO } from "date-fns";
 import { defineAsyncComponent } from "vue";
+import ws from "@/ws";
 
 import TabQueryHandler from "@/mixins/TabQueryHandler.vue";
 
@@ -167,24 +168,29 @@ export default {
 		)
 			this.tab = this.$route.query.tab;
 
-		this.socket.dispatch(
-			"users.findByUsername",
-			this.$route.params.username,
-			res => {
-				if (res.status === "error") this.$router.push("/404");
-				else {
-					this.user = res.data;
+		ws.onConnect(this.init);
+	},
+	methods: {
+		init() {
+			this.socket.dispatch(
+				"users.findByUsername",
+				this.$route.params.username,
+				res => {
+					if (res.status === "error") this.$router.push("/404");
+					else {
+						this.user = res.data;
 
-					this.user.createdAt = format(
-						parseISO(this.user.createdAt),
-						"MMMM do yyyy"
-					);
+						this.user.createdAt = format(
+							parseISO(this.user.createdAt),
+							"MMMM do yyyy"
+						);
 
-					this.isUser = true;
-					this.userId = this.user._id;
+						this.isUser = true;
+						this.userId = this.user._id;
+					}
 				}
-			}
-		);
+			);
+		}
 	}
 };
 </script>

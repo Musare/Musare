@@ -65,6 +65,7 @@
 <script>
 import { mapGetters, mapState, mapActions } from "vuex";
 import Toast from "toasters";
+import ws from "@/ws";
 
 export default {
 	props: {
@@ -91,12 +92,7 @@ export default {
 		}
 	},
 	mounted() {
-		if (!this.fetchedPlaylists)
-			this.socket.dispatch("playlists.indexMyPlaylists", true, res => {
-				if (res.status === "success")
-					if (!this.fetchedPlaylists)
-						this.setPlaylists(res.data.playlists);
-			});
+		ws.onConnect(this.init);
 
 		this.socket.on(
 			"event:playlist.created",
@@ -124,6 +120,18 @@ export default {
 		);
 	},
 	methods: {
+		init() {
+			if (!this.fetchedPlaylists)
+				this.socket.dispatch(
+					"playlists.indexMyPlaylists",
+					true,
+					res => {
+						if (res.status === "success")
+							if (!this.fetchedPlaylists)
+								this.setPlaylists(res.data.playlists);
+					}
+				);
+		},
 		toggleSongInPlaylist(playlistIndex) {
 			const playlist = this.playlists[playlistIndex];
 			if (!this.hasSong(playlist)) {

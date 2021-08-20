@@ -637,8 +637,9 @@
 </template>
 <script>
 import { mapActions, mapState, mapGetters } from "vuex";
-
 import Toast from "toasters";
+import ws from "@/ws";
+
 import PlaylistItem from "@/components/PlaylistItem.vue";
 import Confirm from "@/components/Confirm.vue";
 
@@ -704,34 +705,40 @@ export default {
 		if (this.station.type === "community" && this.station.partyMode)
 			this.showTab("search");
 
-		this.socket.dispatch("playlists.indexMyPlaylists", true, res => {
-			if (res.status === "success") this.setPlaylists(res.data.playlists);
-			this.orderOfPlaylists = this.calculatePlaylistOrder(); // order in regards to the database
-		});
-
-		this.socket.dispatch(
-			`stations.getStationIncludedPlaylistsById`,
-			this.station._id,
-			res => {
-				if (res.status === "success") {
-					this.station.includedPlaylists = res.data.playlists;
-					this.originalStation.includedPlaylists = res.data.playlists;
-				}
-			}
-		);
-
-		this.socket.dispatch(
-			`stations.getStationExcludedPlaylistsById`,
-			this.station._id,
-			res => {
-				if (res.status === "success") {
-					this.station.excludedPlaylists = res.data.playlists;
-					this.originalStation.excludedPlaylists = res.data.playlists;
-				}
-			}
-		);
+		ws.onConnect(this.init);
 	},
 	methods: {
+		init() {
+			this.socket.dispatch("playlists.indexMyPlaylists", true, res => {
+				if (res.status === "success")
+					this.setPlaylists(res.data.playlists);
+				this.orderOfPlaylists = this.calculatePlaylistOrder(); // order in regards to the database
+			});
+
+			this.socket.dispatch(
+				`stations.getStationIncludedPlaylistsById`,
+				this.station._id,
+				res => {
+					if (res.status === "success") {
+						this.station.includedPlaylists = res.data.playlists;
+						this.originalStation.includedPlaylists =
+							res.data.playlists;
+					}
+				}
+			);
+
+			this.socket.dispatch(
+				`stations.getStationExcludedPlaylistsById`,
+				this.station._id,
+				res => {
+					if (res.status === "success") {
+						this.station.excludedPlaylists = res.data.playlists;
+						this.originalStation.excludedPlaylists =
+							res.data.playlists;
+					}
+				}
+			);
+		},
 		showTab(tab) {
 			this.$refs[`${tab}-tab`].scrollIntoView();
 			this.tab = tab;

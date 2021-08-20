@@ -83,15 +83,6 @@ class _ActivitiesModule extends CoreClass {
 					},
 
 					(activity, next) => {
-						WSModule.runJob("EMIT_TO_ROOM", {
-							room: `profile-${activity.userId}-activities`,
-							args: ["event:activity.created", { data: { activity } }]
-						});
-
-						return next(null, activity);
-					},
-
-					(activity, next) => {
 						const mergeableActivities = ["playlist__remove_song", "playlist__add_song"];
 
 						const spammableActivities = [
@@ -235,11 +226,6 @@ class _ActivitiesModule extends CoreClass {
 									)
 								)
 								.catch(next);
-
-							WSModule.runJob("EMIT_TO_ROOM", {
-								room: `profile-${payload.userId}-activities`,
-								args: ["event:activity.hidden", { data: { activityId: activity._id } }]
-							});
 
 							if (activity.type === payload.type) howManySongs += 1;
 							else if (activity.type === `${payload.type}s`)
@@ -394,19 +380,6 @@ class _ActivitiesModule extends CoreClass {
 											)
 											.catch(next);
 
-										WSModule.runJob("EMIT_TO_ROOM", {
-											room: `profile-${activity.userId}-activities`,
-											args: [
-												"event:activity.updated",
-												{
-													data: {
-														activityId: activity._id,
-														message: activity.payload.message
-													}
-												}
-											]
-										});
-
 										return next();
 									})
 									.catch(next);
@@ -465,18 +438,15 @@ class _ActivitiesModule extends CoreClass {
 						activities.forEach(activity => {
 							activityModel.updateOne({ _id: activity._id }, { $set: { hidden: true } }).catch(next);
 
-							WSModule.runJob("SOCKETS_FROM_USER", { userId: payload.userId }, this)
-								.then(sockets =>
+							WSModule.runJob("SOCKETS_FROM_USER", { userId: payload.userId })
+								.then(sockets => {
 									sockets.forEach(socket =>
-										socket.dispatch("event:activity.hidden", { data: { activityId: activity._id } })
-									)
-								)
+										socket.dispatch("event:activity.hidden", {
+											data: { activityId: activity._id }
+										})
+									);
+								})
 								.catch(next);
-
-							WSModule.runJob("EMIT_TO_ROOM", {
-								room: `profile-${payload.userId}-activities`,
-								args: ["event:activity.hidden", { data: { activityId: activity._id } }]
-							});
 						});
 
 						return next();

@@ -107,6 +107,7 @@
 <script>
 import { mapActions, mapGetters, mapState } from "vuex";
 import Toast from "toasters";
+import ws from "@/ws";
 
 import Modal from "@/components/Modal.vue";
 import SongItem from "@/components/SongItem.vue";
@@ -140,35 +141,7 @@ export default {
 		})
 	},
 	mounted() {
-		this.socket.dispatch("reports.findOne", this.reportId, res => {
-			if (res.status === "success") {
-				const { report } = res.data;
-
-				this.socket.dispatch(
-					"apis.joinRoom",
-					`view-report.${report._id}`
-				);
-
-				this.report = report;
-
-				this.socket.dispatch(
-					"songs.getSongFromSongId",
-					this.report.song._id,
-					res => {
-						if (res.status === "success") this.song = res.data.song;
-						else {
-							new Toast(
-								"Cannot find the report's associated song"
-							);
-							this.closeModal("viewReport");
-						}
-					}
-				);
-			} else {
-				new Toast("Report with that ID not found");
-				this.closeModal("viewReport");
-			}
-		});
+		ws.onConnect(this.init);
 
 		this.socket.on(
 			"event:admin.report.resolved",
@@ -194,6 +167,38 @@ export default {
 		this.socket.dispatch("apis.leaveRoom", `view-report.${this.reportId}`);
 	},
 	methods: {
+		init() {
+			this.socket.dispatch("reports.findOne", this.reportId, res => {
+				if (res.status === "success") {
+					const { report } = res.data;
+
+					this.socket.dispatch(
+						"apis.joinRoom",
+						`view-report.${report._id}`
+					);
+
+					this.report = report;
+
+					this.socket.dispatch(
+						"songs.getSongFromSongId",
+						this.report.song._id,
+						res => {
+							if (res.status === "success")
+								this.song = res.data.song;
+							else {
+								new Toast(
+									"Cannot find the report's associated song"
+								);
+								this.closeModal("viewReport");
+							}
+						}
+					);
+				} else {
+					new Toast("Report with that ID not found");
+					this.closeModal("viewReport");
+				}
+			});
+		},
 		resolve() {
 			return this.resolveReport(this.reportId)
 				.then(res => {

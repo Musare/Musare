@@ -23,7 +23,7 @@ CacheModule.runJob("SUB", {
 
 		if (playlist.privacy === "public")
 			WSModule.runJob("EMIT_TO_ROOM", {
-				room: `profile-${playlist.createdBy}-playlists`,
+				room: `profile.${playlist.createdBy}.playlists`,
 				args: ["event:playlist.created", { data: { playlist } }]
 			});
 	}
@@ -39,7 +39,7 @@ CacheModule.runJob("SUB", {
 		});
 
 		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `profile-${res.userId}-playlists`,
+			room: `profile.${res.userId}.playlists`,
 			args: ["event:playlist.deleted", { data: { playlistId: res.playlistId } }]
 		});
 	}
@@ -76,7 +76,7 @@ CacheModule.runJob("SUB", {
 
 		if (res.privacy === "public")
 			WSModule.runJob("EMIT_TO_ROOM", {
-				room: `profile-${res.userId}-playlists`,
+				room: `profile.${res.userId}.playlists`,
 				args: [
 					"event:playlist.song.added",
 					{
@@ -106,7 +106,7 @@ CacheModule.runJob("SUB", {
 
 		if (res.privacy === "public")
 			WSModule.runJob("EMIT_TO_ROOM", {
-				room: `profile-${res.userId}-playlists`,
+				room: `profile.${res.userId}.playlists`,
 				args: [
 					"event:playlist.song.removed",
 					{
@@ -136,7 +136,7 @@ CacheModule.runJob("SUB", {
 
 		if (res.privacy === "public")
 			WSModule.runJob("EMIT_TO_ROOM", {
-				room: `profile-${res.userId}-playlists`,
+				room: `profile.${res.userId}.playlists`,
 				args: [
 					"event:playlist.displayName.updated",
 					{
@@ -165,7 +165,7 @@ CacheModule.runJob("SUB", {
 
 		if (res.playlist.privacy === "public")
 			return WSModule.runJob("EMIT_TO_ROOM", {
-				room: `profile-${res.userId}-playlists`,
+				room: `profile.${res.userId}.playlists`,
 				args: [
 					"event:playlist.created",
 					{
@@ -177,7 +177,7 @@ CacheModule.runJob("SUB", {
 			});
 
 		return WSModule.runJob("EMIT_TO_ROOM", {
-			room: `profile-${res.userId}-playlists`,
+			room: `profile.${res.userId}.playlists`,
 			args: [
 				"event:playlist.deleted",
 				{

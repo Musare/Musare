@@ -81,7 +81,6 @@ export default {
 			socket: "websockets/getSocket"
 		})
 	},
-	mounted() {},
 	methods: {
 		...mapActions("modals/editSong", ["updateYoutubeId"])
 	}

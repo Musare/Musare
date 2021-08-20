@@ -392,8 +392,7 @@ export default {
 			this.updateSong(res.data.song)
 		);
 
-		if (this.socket.readyState === 1) this.init();
-		ws.onConnect(() => this.init());
+		ws.onConnect(this.init);
 
 		if (this.$route.query.songId) {
 			this.socket.dispatch(

@@ -143,8 +143,29 @@ export default {
 
 		this.disconnectedMessage.hide();
 
-		ws.onConnect(true, () => {
+		ws.onConnect(() => {
 			this.socketConnected = true;
+
+			this.socket.dispatch("users.getPreferences", res => {
+				if (res.status === "success") {
+					const { preferences } = res.data;
+
+					this.changeAutoSkipDisliked(preferences.autoSkipDisliked);
+					this.changeNightmode(preferences.nightmode);
+					this.changeActivityLogPublic(preferences.activityLogPublic);
+					this.changeAnonymousSongRequests(
+						preferences.anonymousSongRequests
+					);
+					this.changeActivityWatch(preferences.activityWatch);
+
+					if (this.nightmode) this.enableNightmode();
+					else this.disableNightmode();
+				}
+			});
+
+			this.socket.on("keep.event:user.session.deleted", () =>
+				window.location.reload()
+			);
 		});
 
 		ws.onDisconnect(true, () => {
@@ -177,27 +198,6 @@ export default {
 			this.changeNightmode(true);
 			this.enableNightmode();
 		}
-
-		this.socket.dispatch("users.getPreferences", res => {
-			if (res.status === "success") {
-				const { preferences } = res.data;
-
-				this.changeAutoSkipDisliked(preferences.autoSkipDisliked);
-				this.changeNightmode(preferences.nightmode);
-				this.changeActivityLogPublic(preferences.activityLogPublic);
-				this.changeAnonymousSongRequests(
-					preferences.anonymousSongRequests
-				);
-				this.changeActivityWatch(preferences.activityWatch);
-
-				if (this.nightmode) this.enableNightmode();
-				else this.disableNightmode();
-			}
-		});
-
-		this.socket.on("keep.event:user.session.deleted", () =>
-			window.location.reload()
-		);
 	},
 	methods: {
 		toggleNightMode() {

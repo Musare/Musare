@@ -244,8 +244,7 @@ export default {
 		})
 	},
 	mounted() {
-		if (this.socket.readyState === 1) this.init();
-		ws.onConnect(() => this.init());
+		ws.onConnect(this.init);
 
 		this.socket.on("event:admin.station.created", res =>
 			this.stationAdded(res.data.station)

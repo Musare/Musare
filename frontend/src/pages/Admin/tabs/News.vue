@@ -89,10 +89,6 @@ export default {
 		})
 	},
 	mounted() {
-		this.socket.dispatch("news.index", res => {
-			if (res.status === "success") this.setNews(res.data.news);
-		});
-
 		this.socket.on("event:admin.news.created", res =>
 			this.addNews(res.data.news)
 		);
@@ -105,8 +101,7 @@ export default {
 			this.removeNews(res.data.newsId)
 		);
 
-		if (this.socket.readyState === 1) this.init();
-		ws.onConnect(() => this.init());
+		ws.onConnect(this.init);
 	},
 	methods: {
 		edit(id) {
@@ -122,6 +117,10 @@ export default {
 			);
 		},
 		init() {
+			this.socket.dispatch("news.index", res => {
+				if (res.status === "success") this.setNews(res.data.news);
+			});
+
 			this.socket.dispatch("apis.joinAdminRoom", "news");
 		},
 		...mapActions("modalVisibility", ["openModal", "closeModal"]),

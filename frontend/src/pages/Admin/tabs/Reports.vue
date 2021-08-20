@@ -116,12 +116,7 @@ export default {
 		})
 	},
 	mounted() {
-		if (this.socket.readyState === 1) this.init();
-		ws.onConnect(() => this.init());
-
-		this.socket.dispatch("reports.index", res => {
-			if (res.status === "success") this.reports = res.data.reports;
-		});
+		ws.onConnect(this.init);
 
 		this.socket.on("event:admin.report.resolved", res => {
 			this.reports = this.reports.filter(
@@ -146,6 +141,10 @@ export default {
 	},
 	methods: {
 		init() {
+			this.socket.dispatch("reports.index", res => {
+				if (res.status === "success") this.reports = res.data.reports;
+			});
+
 			this.socket.dispatch("apis.joinAdminRoom", "reports", () => {});
 		},
 		getCategories(issues) {

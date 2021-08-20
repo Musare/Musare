@@ -72,10 +72,6 @@ export default {
 			}
 		});
 
-		this.socket.dispatch("news.index", res => {
-			if (res.status === "success") this.news = res.data.news;
-		});
-
 		this.socket.on("event:news.created", res =>
 			this.news.unshift(res.data.news)
 		);
@@ -101,14 +97,17 @@ export default {
 			this.news = this.news.filter(item => item._id !== res.data.newsId);
 		});
 
-		if (this.socket.readyState === 1) this.init();
-		ws.onConnect(() => this.init());
+		ws.onConnect(this.init);
 	},
 	methods: {
 		marked,
 		sanitize,
 		formatDistance,
 		init() {
+			this.socket.dispatch("news.index", res => {
+				if (res.status === "success") this.news = res.data.news;
+			});
+
 			this.socket.dispatch("apis.joinRoom", "news");
 		}
 	}

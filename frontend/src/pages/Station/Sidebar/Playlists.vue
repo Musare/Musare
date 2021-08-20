@@ -102,6 +102,7 @@
 <script>
 import { mapState, mapActions, mapGetters } from "vuex";
 import Toast from "toasters";
+import ws from "@/ws";
 
 import PlaylistItem from "@/components/PlaylistItem.vue";
 import SortablePlaylists from "@/mixins/SortablePlaylists.vue";
@@ -133,11 +134,7 @@ export default {
 		})
 	},
 	mounted() {
-		/** Get playlists for user */
-		this.socket.dispatch("playlists.indexMyPlaylists", true, res => {
-			if (res.status === "success") this.setPlaylists(res.data.playlists);
-			this.orderOfPlaylists = this.calculatePlaylistOrder(); // order in regards to the database
-		});
+		ws.onConnect(this.init);
 
 		this.socket.on("event:station.includedPlaylist", res => {
 			const { playlist } = res.data;
@@ -174,6 +171,14 @@ export default {
 		});
 	},
 	methods: {
+		init() {
+			/** Get playlists for user */
+			this.socket.dispatch("playlists.indexMyPlaylists", true, res => {
+				if (res.status === "success")
+					this.setPlaylists(res.data.playlists);
+				this.orderOfPlaylists = this.calculatePlaylistOrder(); // order in regards to the database
+			});
+		},
 		isOwner() {
 			return this.loggedIn && this.userId === this.station.owner;
 		},

@@ -77,25 +77,7 @@ export default {
 		})
 	},
 	mounted() {
-		if (this.myUserId !== this.userId) {
-			ws.onConnect(() =>
-				this.socket.dispatch(
-					"apis.joinRoom",
-					`profile.${this.userId}.activities`
-				)
-			);
-
-			this.getUsernameFromId(this.userId).then(username => {
-				if (username) this.username = username;
-			});
-		}
-
-		this.socket.dispatch("activities.length", this.userId, res => {
-			if (res.status === "success") {
-				this.maxPosition = Math.ceil(res.data.length / 15) + 1;
-				this.getSet();
-			}
-		});
+		ws.onConnect(this.init);
 
 		this.socket.on("event:activity.updated", res => {
 			this.activities.find(
@@ -123,14 +105,20 @@ export default {
 			this.offsettedFromNextSet = 0;
 		});
 	},
-	beforeUnmount() {
-		this.socket.dispatch(
-			"apis.leaveRoom",
-			`profile.${this.userId}.activities`,
-			() => {}
-		);
-	},
 	methods: {
+		init() {
+			if (this.myUserId !== this.userId)
+				this.getUsernameFromId(this.userId).then(username => {
+					if (username) this.username = username;
+				});
+
+			this.socket.dispatch("activities.length", this.userId, res => {
+				if (res.status === "success") {
+					this.maxPosition = Math.ceil(res.data.length / 15) + 1;
+					this.getSet();
+				}
+			});
+		},
 		hideActivity(activityId) {
 			this.socket.dispatch("activities.hideActivity", activityId, res => {
 				if (res.status !== "success") new Toast(res.message);

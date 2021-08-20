@@ -90,6 +90,7 @@
 <script>
 import { mapState, mapActions, mapGetters } from "vuex";
 import Toast from "toasters";
+import ws from "@/ws";
 
 import SaveButton from "@/components/SaveButton.vue";
 
@@ -119,18 +120,20 @@ export default {
 		})
 	},
 	mounted() {
-		this.socket.dispatch("users.getPreferences", res => {
-			const { preferences } = res.data;
+		ws.onConnect(() =>
+			this.socket.dispatch("users.getPreferences", res => {
+				const { preferences } = res.data;
 
-			if (res.status === "success") {
-				this.localNightmode = preferences.nightmode;
-				this.localAutoSkipDisliked = preferences.autoSkipDisliked;
-				this.localActivityLogPublic = preferences.activityLogPublic;
-				this.localAnonymousSongRequests =
-					preferences.anonymousSongRequests;
-				this.localActivityWatch = preferences.activityWatch;
-			}
-		});
+				if (res.status === "success") {
+					this.localNightmode = preferences.nightmode;
+					this.localAutoSkipDisliked = preferences.autoSkipDisliked;
+					this.localActivityLogPublic = preferences.activityLogPublic;
+					this.localAnonymousSongRequests =
+						preferences.anonymousSongRequests;
+					this.localActivityWatch = preferences.activityWatch;
+				}
+			})
+		);
 
 		this.socket.on("keep.event:user.preferences.updated", res => {
 			const { preferences } = res.data;

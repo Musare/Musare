@@ -265,6 +265,7 @@ import { mapState, mapGetters, mapActions } from "vuex";
 import draggable from "vuedraggable";
 import Toast from "toasters";
 
+import ws from "@/ws";
 import Confirm from "@/components/Confirm.vue";
 import Modal from "../../Modal.vue";
 import SongItem from "../../SongItem.vue";
@@ -332,15 +333,7 @@ export default {
 		})
 	},
 	mounted() {
-		this.gettingSongs = true;
-		this.socket.dispatch("playlists.getPlaylist", this.editing, res => {
-			if (res.status === "success") {
-				// this.playlist = res.data.playlist;
-				// this.playlist.songs.sort((a, b) => a.position - b.position);
-				this.setPlaylist(res.data.playlist);
-			} else new Toast(res.message);
-			this.gettingSongs = false;
-		});
+		ws.onConnect(this.init);
 
 		this.socket.on(
 			"event:playlist.song.added",
@@ -403,6 +396,17 @@ export default {
 		this.clearPlaylist();
 	},
 	methods: {
+		init() {
+			this.gettingSongs = true;
+			this.socket.dispatch("playlists.getPlaylist", this.editing, res => {
+				if (res.status === "success") {
+					// this.playlist = res.data.playlist;
+					// this.playlist.songs.sort((a, b) => a.position - b.position);
+					this.setPlaylist(res.data.playlist);
+				} else new Toast(res.message);
+				this.gettingSongs = false;
+			});
+		},
 		isEditable() {
 			return (
 				this.playlist.isUserModifiable &&

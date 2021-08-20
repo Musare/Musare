@@ -228,8 +228,7 @@ export default {
 		socket: "websockets/getSocket"
 	}),
 	mounted() {
-		if (this.socket.readyState === 1) this.init();
-		ws.onConnect(() => this.init());
+		ws.onConnect(this.init);
 	},
 	methods: {
 		init() {

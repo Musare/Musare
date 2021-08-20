@@ -128,8 +128,7 @@ export default {
 		})
 	},
 	mounted() {
-		if (this.socket.readyState === 1) this.init();
-		ws.onConnect(() => this.init());
+		ws.onConnect(this.init);
 
 		this.socket.on("event:admin.punishment.created", res =>
 			this.punishments.push(res.data.punishment)
@@ -157,6 +156,7 @@ export default {
 				if (res.status === "success")
 					this.punishments = res.data.punishments;
 			});
+
 			this.socket.dispatch("apis.joinAdminRoom", "punishments", () => {});
 		},
 		...mapActions("modalVisibility", ["openModal"]),

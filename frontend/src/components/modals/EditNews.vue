@@ -67,6 +67,7 @@ import Toast from "toasters";
 import { formatDistance } from "date-fns";
 
 import UserIdToUsername from "@/components/UserIdToUsername.vue";
+import ws from "@/ws";
 import SaveButton from "../SaveButton.vue";
 import Modal from "../Modal.vue";
 
@@ -101,23 +102,26 @@ export default {
 			}
 		});
 
-		if (this.newsId) {
-			this.socket.dispatch(`news.getNewsFromId`, this.newsId, res => {
-				if (res.status === "success") {
-					const { markdown, status, createdBy, createdAt } =
-						res.data.news;
-					this.markdown = markdown;
-					this.status = status;
-					this.createdBy = createdBy;
-					this.createdAt = createdAt;
-				} else {
-					new Toast("News with that ID not found.");
-					this.closeModal("editNews");
-				}
-			});
-		}
+		ws.onConnect(this.init);
 	},
 	methods: {
+		init() {
+			if (this.newsId) {
+				this.socket.dispatch(`news.getNewsFromId`, this.newsId, res => {
+					if (res.status === "success") {
+						const { markdown, status, createdBy, createdAt } =
+							res.data.news;
+						this.markdown = markdown;
+						this.status = status;
+						this.createdBy = createdBy;
+						this.createdAt = createdAt;
+					} else {
+						new Toast("News with that ID not found.");
+						this.closeModal("editNews");
+					}
+				});
+			}
+		},
 		marked,
 		sanitize,
 		getTitle() {

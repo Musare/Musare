@@ -32,6 +32,7 @@ import { formatDistance } from "date-fns";
 import marked from "marked";
 import { sanitize } from "dompurify";
 import { mapGetters, mapActions } from "vuex";
+import ws from "@/ws";
 
 import UserIdToUsername from "@/components/UserIdToUsername.vue";
 import Modal from "../Modal.vue";
@@ -61,34 +62,37 @@ export default {
 			}
 		});
 
-		this.socket.dispatch("news.newest", res => {
-			if (res.status !== "success") return;
-
-			const { news } = res.data;
-
-			this.news = news;
-			if (this.news && localStorage.getItem("firstVisited")) {
-				if (localStorage.getItem("whatIsNew")) {
-					if (
-						parseInt(localStorage.getItem("whatIsNew")) <
-						news.createdAt
-					) {
-						this.openModal("whatIsNew");
-						localStorage.setItem("whatIsNew", news.createdAt);
-					}
-				} else {
-					if (
-						parseInt(localStorage.getItem("firstVisited")) <
-						news.createdAt
-					)
-						this.openModal("whatIsNew");
-					localStorage.setItem("whatIsNew", news.createdAt);
-				}
-			} else if (!localStorage.getItem("firstVisited"))
-				localStorage.setItem("firstVisited", Date.now());
-		});
+		ws.onConnect(this.init);
 	},
 	methods: {
+		init() {
+			this.socket.dispatch("news.newest", res => {
+				if (res.status !== "success") return;
+
+				const { news } = res.data;
+
+				this.news = news;
+				if (this.news && localStorage.getItem("firstVisited")) {
+					if (localStorage.getItem("whatIsNew")) {
+						if (
+							parseInt(localStorage.getItem("whatIsNew")) <
+							news.createdAt
+						) {
+							this.openModal("whatIsNew");
+							localStorage.setItem("whatIsNew", news.createdAt);
+						}
+					} else {
+						if (
+							parseInt(localStorage.getItem("firstVisited")) <
+							news.createdAt
+						)
+							this.openModal("whatIsNew");
+						localStorage.setItem("whatIsNew", news.createdAt);
+					}
+				} else if (!localStorage.getItem("firstVisited"))
+					localStorage.setItem("firstVisited", Date.now());
+			});
+		},
 		marked,
 		sanitize,
 		formatDistance,

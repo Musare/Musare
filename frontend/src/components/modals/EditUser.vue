@@ -81,6 +81,7 @@ import { mapState, mapGetters, mapActions } from "vuex";
 
 import Toast from "toasters";
 import validation from "@/validation";
+import ws from "@/ws";
 import Modal from "../Modal.vue";
 
 export default {
@@ -105,17 +106,20 @@ export default {
 		})
 	},
 	mounted() {
-		this.socket.dispatch(`users.getUserFromId`, this.userId, res => {
-			if (res.status === "success") {
-				const user = res.data;
-				this.editUser(user);
-			} else {
-				new Toast("User with that ID not found");
-				this.closeModal("editUser");
-			}
-		});
+		ws.onConnect(this.init);
 	},
 	methods: {
+		init() {
+			this.socket.dispatch(`users.getUserFromId`, this.userId, res => {
+				if (res.status === "success") {
+					const user = res.data;
+					this.editUser(user);
+				} else {
+					new Toast("User with that ID not found");
+					this.closeModal("editUser");
+				}
+			});
+		},
 		updateUsername() {
 			const { username } = this.user;
 			if (!validation.isLength(username, 2, 32))

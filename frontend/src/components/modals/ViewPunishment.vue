@@ -62,6 +62,7 @@
 <script>
 import { mapState, mapGetters, mapActions } from "vuex";
 import { format, formatDistance, parseISO } from "date-fns"; // eslint-disable-line no-unused-vars
+import ws from "@/ws";
 
 import Toast from "toasters";
 import Modal from "../Modal.vue";
@@ -87,21 +88,24 @@ export default {
 		})
 	},
 	mounted() {
-		this.socket.dispatch(
-			`punishments.getPunishmentById`,
-			this.punishmentId,
-			res => {
-				if (res.status === "success") {
-					const { punishment } = res.data;
-					this.viewPunishment(punishment);
-				} else {
-					new Toast("Punishment with that ID not found");
-					this.closeModal("viewPunishment");
-				}
-			}
-		);
+		ws.onConnect(this.init);
 	},
 	methods: {
+		init() {
+			this.socket.dispatch(
+				`punishments.getPunishmentById`,
+				this.punishmentId,
+				res => {
+					if (res.status === "success") {
+						const { punishment } = res.data;
+						this.viewPunishment(punishment);
+					} else {
+						new Toast("Punishment with that ID not found");
+						this.closeModal("viewPunishment");
+					}
+				}
+			);
+		},
 		...mapActions("modalVisibility", ["closeModal"]),
 		...mapActions("modals/viewPunishment", ["viewPunishment"]),
 		format,

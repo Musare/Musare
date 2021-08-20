@@ -207,6 +207,7 @@
 <script>
 import { mapState, mapGetters, mapActions } from "vuex";
 import Toast from "toasters";
+import ws from "@/ws";
 
 import ViewReport from "@/components/modals/ViewReport.vue";
 import SongItem from "@/components/SongItem.vue";
@@ -358,17 +359,7 @@ export default {
 		})
 	},
 	mounted() {
-		this.socket.dispatch("reports.myReportsForSong", this.song._id, res => {
-			if (res.status === "success") {
-				this.existingReports = res.data.reports;
-				this.existingReports.forEach(report =>
-					this.socket.dispatch(
-						"apis.joinRoom",
-						`view-report.${report._id}`
-					)
-				);
-			}
-		});
+		ws.onConnect(this.init);
 
 		this.socket.on(
 			"event:admin.report.resolved",
@@ -381,6 +372,23 @@ export default {
 		);
 	},
 	methods: {
+		init() {
+			this.socket.dispatch(
+				"reports.myReportsForSong",
+				this.song._id,
+				res => {
+					if (res.status === "success") {
+						this.existingReports = res.data.reports;
+						this.existingReports.forEach(report =>
+							this.socket.dispatch(
+								"apis.joinRoom",
+								`view-report.${report._id}`
+							)
+						);
+					}
+				}
+			);
+		},
 		view(reportId) {
 			this.viewReport(reportId);
 			this.openModal("viewReport");

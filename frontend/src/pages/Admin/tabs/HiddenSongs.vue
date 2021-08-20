@@ -230,7 +230,10 @@ export default {
 		})
 	},
 	mounted() {
+		ws.onConnect(this.init);
+
 		this.socket.on("event:admin.hiddenSong.created", res => {
+			console.log("CREATED");
 			this.addSong(res.data.song);
 		});
 
@@ -241,9 +244,6 @@ export default {
 		this.socket.on("event:admin.hiddenSong.updated", res => {
 			this.updateSong(res.data.song);
 		});
-
-		if (this.socket.readyState === 1) this.init();
-		ws.onConnect(() => this.init());
 	},
 	methods: {
 		edit(song) {
@@ -306,7 +306,7 @@ export default {
 				return new Toast(`Error: ${res.mesage}`);
 			});
 
-			this.socket.dispatch("apis.joinAdminRoom", "hiddenSongs", () => {});
+			this.socket.dispatch("apis.joinAdminRoom", "hiddenSongs");
 		},
 		...mapActions("admin/hiddenSongs", [
 			// "stopVideo",

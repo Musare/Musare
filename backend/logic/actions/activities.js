@@ -15,11 +15,6 @@ CacheModule.runJob("SUB", {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId }, this).then(sockets =>
 			sockets.forEach(socket => socket.dispatch("event:activity.removeAllForUser"))
 		);
-
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `profile-${userId}-activities`,
-			args: ["event:activity.removeAllForUser"]
-		});
 	}
 });
 
@@ -31,11 +26,6 @@ CacheModule.runJob("SUB", {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId }, this).then(sockets =>
 			sockets.forEach(socket => socket.dispatch("event:activity.hidden", { data: { activityId } }))
 		);
-
-		WSModule.runJob("EMIT_TO_ROOM", {
-			room: `profile-${userId}-activities`,
-			args: ["event:activity.hidden", { data: { activityId } }]
-		});
 	}
 });
 

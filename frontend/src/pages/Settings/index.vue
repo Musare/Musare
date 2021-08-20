@@ -50,8 +50,8 @@
 <script>
 import { mapActions, mapGetters, mapState } from "vuex";
 import { defineAsyncComponent } from "vue";
-
 import Toast from "toasters";
+import ws from "@/ws";
 
 import TabQueryHandler from "@/mixins/TabQueryHandler.vue";
 
@@ -104,10 +104,7 @@ export default {
 
 		this.localNightmode = this.nightmode;
 
-		this.socket.dispatch("users.findBySession", res => {
-			if (res.status === "success") this.setUser(res.data.user);
-			else new Toast("You're not currently signed in.");
-		});
+		ws.onConnect(this.init);
 
 		this.socket.on("event:user.password.linked", () =>
 			this.updateOriginalUser({
@@ -137,7 +134,15 @@ export default {
 			})
 		);
 	},
-	methods: mapActions("settings", ["updateOriginalUser", "setUser"])
+	methods: {
+		init() {
+			this.socket.dispatch("users.findBySession", res => {
+				if (res.status === "success") this.setUser(res.data.user);
+				else new Toast("You're not currently signed in.");
+			});
+		},
+		...mapActions("settings", ["updateOriginalUser", "setUser"])
+	}
 };
 </script>
 

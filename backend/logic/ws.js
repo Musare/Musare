@@ -295,8 +295,9 @@ class _WSModule extends CoreClass {
 		const { room, socketId } = payload;
 		return new Promise(resolve => {
 			// create room if it doesn't exist, and add socketId to array
-			if (WSModule.rooms[room]) WSModule.rooms[room].push(socketId);
-			else WSModule.rooms[room] = [socketId];
+			if (WSModule.rooms[room]) {
+				if (!(socketId in WSModule.rooms[room])) WSModule.rooms[room].push(socketId);
+			} else WSModule.rooms[room] = [socketId];
 
 			return resolve();
 		});

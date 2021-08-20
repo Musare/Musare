@@ -130,8 +130,17 @@ export default {
 		})
 	},
 	mounted() {
-		if (this.socket.readyState === 1) this.init();
-		ws.onConnect(() => this.init());
+		ws.onConnect(this.init);
+
+		this.socket.on("event:admin.dataRequests.created", res =>
+			this.dataRequests.push(res.data.request)
+		);
+
+		this.socket.on("event:admin.dataRequests.resolved", res => {
+			this.dataRequests = this.dataRequests.filter(
+				request => request._id !== res.data.dataRequestId
+			);
+		});
 	},
 	methods: {
 		edit(user) {
@@ -157,16 +166,6 @@ export default {
 			});
 
 			this.socket.dispatch("apis.joinAdminRoom", "users", () => {});
-
-			this.socket.on("event:admin.dataRequests.created", res =>
-				this.dataRequests.push(res.data.request)
-			);
-
-			this.socket.on("event:admin.dataRequests.resolved", res => {
-				this.dataRequests = this.dataRequests.filter(
-					request => request._id !== res.data.dataRequestId
-				);
-			});
 		},
 		resolveDataRequest(id) {
 			this.socket.dispatch("dataRequests.resolve", id, res => {

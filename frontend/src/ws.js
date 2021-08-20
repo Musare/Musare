@@ -2,10 +2,7 @@
 import store from "./store";
 import ListenerHandler from "./classes/ListenerHandler.class";
 
-const onConnect = {
-	temp: [],
-	persist: []
-};
+const onConnect = [];
 
 let pendingDispatches = [];
 
@@ -22,9 +19,10 @@ export default {
 	socket: null,
 	dispatcher: null,
 
-	onConnect(...args) {
-		if (args[0] === true) onConnect.persist.push(args[1]);
-		else onConnect.temp.push(args[0]);
+	onConnect(cb) {
+		if (this.socket.readyState === 1) cb();
+
+		return onConnect.push(cb);
 	},
 
 	onDisconnect(...args) {
@@ -33,7 +31,6 @@ export default {
 	},
 
 	clearCallbacks: () => {
-		onConnect.temp = [];
 		onDisconnect.temp = [];
 	},
 
@@ -111,14 +108,12 @@ export default {
 			console.log("WS: SOCKET CONNECTED");
 
 			setTimeout(() => {
-				onConnect.temp.forEach(cb => cb());
+				onConnect.forEach(cb => cb());
 
 				// dispatches that were attempted while the server was offline
 				pendingDispatches.forEach(cb => cb());
 				pendingDispatches = [];
-
-				onConnect.persist.forEach(cb => cb());
-			}, 50); // small delay between readyState being 1 and the server actually receiving dispatches
+			}, 150); // small delay between readyState being 1 and the server actually receiving dispatches
 		};
 
 		this.socket.onmessage = message => {

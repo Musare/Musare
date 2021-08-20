@@ -128,8 +128,7 @@ export default {
 		})
 	},
 	mounted() {
-		if (this.socket.readyState === 1) this.init();
-		ws.onConnect(() => this.init());
+		ws.onConnect(this.init);
 	},
 	methods: {
 		edit(playlistId) {
