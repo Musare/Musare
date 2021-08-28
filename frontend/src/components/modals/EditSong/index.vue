@@ -1582,6 +1582,21 @@ export default {
 		}
 	}
 
+	.autosuggest-container {
+		background-color: unset !important;
+	}
+
+	.autosuggest-item {
+		background-color: var(--dark-grey) !important;
+		color: white !important;
+		border-color: var(--dark-grey) !important;
+	}
+
+	.autosuggest-item:hover,
+	.autosuggest-item:focus {
+		background-color: var(--dark-grey-2) !important;
+	}
+
 	#tabs-container #tab-selection .button {
 		background: var(--dark-grey) !important;
 		color: var(--white) !important;
