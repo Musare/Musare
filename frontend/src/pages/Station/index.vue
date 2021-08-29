@@ -926,8 +926,12 @@ export default {
 				typeof this.currentSong.disliked === "boolean"
 			);
 		},
+		aModalIsOpen() {
+			return Object.keys(this.currentlyActive).length > 0;
+		},
 		...mapState("modalVisibility", {
-			modals: state => state.modals
+			modals: state => state.modals,
+			currentlyActive: state => state.currentlyActive
 		}),
 		...mapState("modals/editSong", {
 			video: state => state.video
@@ -2064,6 +2068,7 @@ export default {
 									ctrl: true,
 									preventDefault: true,
 									handler: () => {
+										if (this.aModalIsOpen) return;
 										if (this.stationPaused)
 											this.resumeStation();
 										else this.pauseStation();
@@ -2079,6 +2084,7 @@ export default {
 									ctrl: true,
 									preventDefault: true,
 									handler: () => {
+										if (this.aModalIsOpen) return;
 										this.skipStation();
 									}
 								}
@@ -2093,6 +2099,7 @@ export default {
 								ctrl: true,
 								preventDefault: true,
 								handler: () => {
+									if (this.aModalIsOpen) return;
 									this.volumeSliderValue -= 1000;
 									this.changeVolume();
 								}
@@ -2107,6 +2114,7 @@ export default {
 								ctrl: true,
 								preventDefault: true,
 								handler: () => {
+									if (this.aModalIsOpen) return;
 									this.volumeSliderValue -= 100;
 									this.changeVolume();
 								}
@@ -2121,6 +2129,7 @@ export default {
 								ctrl: true,
 								preventDefault: true,
 								handler: () => {
+									if (this.aModalIsOpen) return;
 									this.volumeSliderValue += 1000;
 									this.changeVolume();
 								}
@@ -2135,6 +2144,7 @@ export default {
 								ctrl: true,
 								preventDefault: true,
 								handler: () => {
+									if (this.aModalIsOpen) return;
 									this.volumeSliderValue += 100;
 									this.changeVolume();
 								}
@@ -2149,6 +2159,7 @@ export default {
 								ctrl: true,
 								preventDefault: true,
 								handler: () => {
+									if (this.aModalIsOpen) return;
 									this.togglePlayerDebugBox();
 								}
 							}
@@ -2161,6 +2172,7 @@ export default {
 								ctrl: true,
 								preventDefault: true,
 								handler: () => {
+									if (this.aModalIsOpen) return;
 									this.toggleKeyboardShortcutsHelper();
 								}
 							}
@@ -2174,6 +2186,7 @@ export default {
 								shift: true,
 								preventDefault: true,
 								handler: () => {
+									if (this.aModalIsOpen) return;
 									this.resetKeyboardShortcutsHelper();
 								}
 							}
