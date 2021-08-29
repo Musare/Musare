@@ -537,7 +537,6 @@ export default {
 					next(null, {
 						_id,
 						username,
-						name: username,
 						email: {
 							address: email,
 							verificationToken
