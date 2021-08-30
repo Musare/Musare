@@ -1048,6 +1048,12 @@ export default {
 		);
 
 		this.socket.on("event:station.nextSong", res => {
+			const previousSong = this.currentSong.youtubeId
+				? this.currentSong
+				: null;
+
+			this.updatePreviousSong(previousSong);
+
 			const { currentSong, startedAt, paused, timePaused } = res.data;
 
 			this.setCurrentSong({
@@ -2298,6 +2304,7 @@ export default {
 			"updateUserCount",
 			"updateUsers",
 			"updateCurrentSong",
+			"updatePreviousSong",
 			"updateNextSong",
 			"updateSongsList",
 			"repositionSongInList",

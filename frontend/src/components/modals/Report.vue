@@ -198,6 +198,15 @@
 				>
 					<span>&nbsp;Cancel</span>
 				</a>
+				<div class="right">
+					<a
+						v-if="previousSong !== null && song !== previousSong"
+						class="button is-primary"
+						@click="reportSong(previousSong)"
+					>
+						<span>&nbsp;Report Previous Song</span>
+					</a>
+				</div>
 			</template>
 		</modal>
 		<view-report v-if="modals.viewReport" />
@@ -348,7 +357,8 @@ export default {
 	},
 	computed: {
 		...mapState({
-			song: state => state.modals.report.song
+			song: state => state.modals.report.song,
+			previousSong: state => state.station.previousSong
 		}),
 		...mapState("modalVisibility", {
 			modals: state => state.modals
@@ -421,7 +431,8 @@ export default {
 			);
 		},
 		...mapActions("modalVisibility", ["openModal", "closeModal"]),
-		...mapActions("modals/viewReport", ["viewReport"])
+		...mapActions("modals/viewReport", ["viewReport"]),
+		...mapActions("modals/report", ["reportSong"])
 	}
 };
 </script>
