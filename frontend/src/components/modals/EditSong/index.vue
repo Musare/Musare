@@ -1768,6 +1768,7 @@ export default {
 					font-size: 21px;
 					font-weight: 400;
 					width: 200px;
+					margin: 0 5px;
 
 					img {
 						height: 21px;

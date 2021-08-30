@@ -39,6 +39,7 @@
 				>
 			</p>
 		</div>
+
 		<div class="settings-buttons">
 			<div class="small-section">
 				<label class="label">Theme</label>
@@ -93,6 +94,7 @@
 					</tippy>
 				</div>
 			</div>
+
 			<div class="small-section">
 				<label class="label">Privacy</label>
 				<div class="button-wrapper">
@@ -146,6 +148,7 @@
 					</tippy>
 				</div>
 			</div>
+
 			<div class="small-section">
 				<label class="label">Station Mode</label>
 				<div class="button-wrapper" v-if="station.type === 'community'">
@@ -202,6 +205,7 @@
 					</button>
 				</div>
 			</div>
+
 			<div v-if="!station.partyMode" class="small-section">
 				<label class="label">Play Mode</label>
 				<div class="button-wrapper" v-if="station.type === 'community'">
@@ -259,6 +263,7 @@
 					</button>
 				</div>
 			</div>
+
 			<div
 				v-if="
 					station.type === 'community' && station.partyMode === true
@@ -551,6 +556,10 @@ export default {
 			max-width: 150px !important;
 		}
 
+		.tippy-content span button {
+			width: 150px;
+		}
+
 		button {
 			width: 100%;
 			height: 36px;
@@ -562,7 +571,6 @@ export default {
 			display: block;
 			text-align: center;
 			justify-content: center;
-			display: inline-flex;
 			-ms-flex-align: center;
 			align-items: center;
 			-moz-user-select: none;
