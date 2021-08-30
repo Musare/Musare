@@ -101,16 +101,13 @@
 
 					<p>
 						By registering you agree to our
-						<router-link
-							to="/terms"
-							@click.native="closeRegisterModal()"
-						>
+						<router-link to="/terms" @click="closeRegisterModal()">
 							Terms of Service
 						</router-link>
 						&nbsp;and
 						<router-link
 							to="/privacy"
-							@click.native="closeRegisterModal()"
+							@click="closeRegisterModal()"
 						>
 							Privacy Policy </router-link
 						>.
@@ -291,7 +288,7 @@ export default {
 			}
 		},
 		closeRegisterModal() {
-			if (!this.isPage) this.closeModal("login");
+			if (!this.isPage) this.closeModal("register");
 		},
 		submitModal() {
 			if (

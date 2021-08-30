@@ -58,7 +58,7 @@
 								id="forgot-password"
 								href="#"
 								to="/reset_password"
-								@click.native="closeLoginModal()"
+								@click="closeLoginModal()"
 							>
 								Forgot password?
 							</router-link>
@@ -67,16 +67,13 @@
 						<br />
 						<p>
 							By logging in you agree to our
-							<router-link
-								to="/terms"
-								@click.native="closeLoginModal()"
-							>
+							<router-link to="/terms" @click="closeLoginModal()">
 								Terms of Service
 							</router-link>
 							&nbsp;and
 							<router-link
 								to="/privacy"
-								@click.native="closeLoginModal()"
+								@click="closeLoginModal()"
 							>
 								Privacy Policy </router-link
 							>.
