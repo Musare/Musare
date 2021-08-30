@@ -401,9 +401,6 @@ export default {
 	}
 
 	.api-results-container {
-		max-height: 445px;
-		overflow: auto;
-
 		.api-result {
 			background-color: var(--white);
 			border: 0.5px solid var(--light-grey-3);

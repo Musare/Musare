@@ -1607,17 +1607,22 @@ export default {
 	&::v-deep {
 		.modal-card {
 			width: 1300px;
+			height: 100%;
 
 			.modal-card-body {
 				display: flex;
-				flex-wrap: wrap;
 				column-gap: 16px;
 				row-gap: 16px;
+
+				@media screen and (max-width: 1000px) {
+					flex-wrap: wrap;
+				}
 
 				> div {
 					display: flex;
 					flex-grow: 1;
 					height: 100%;
+					overflow: auto;
 				}
 			}
 
@@ -1852,7 +1857,6 @@ export default {
 	.edit-section {
 		border: 1px solid var(--light-grey-3);
 		margin-top: 16px;
-		overflow: auto;
 		border-radius: 3px;
 
 		.album-get-button {
@@ -2062,7 +2066,6 @@ export default {
 
 	#tabs-container {
 		overflow: auto;
-		height: 100%;
 		display: flex;
 		flex-direction: column;
 		flex-grow: 1;
