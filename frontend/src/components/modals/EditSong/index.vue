@@ -278,7 +278,7 @@
 									<span
 										class="autosuggest-item"
 										tabindex="0"
-										@click="selectArtistAutosuggest(item)"
+										@click="addTag('artists', item)"
 										v-for="item in artistAutosuggestItems"
 										:key="item"
 										>{{ item }}</span
@@ -359,7 +359,7 @@
 								>
 									<span
 										class="autosuggest-item"
-										@click="selectGenreAutosuggest(item)"
+										@click="addTag('genres', item)"
 										v-for="item in genreAutosuggestItems"
 										:key="item"
 										>{{ item }}</span
@@ -646,10 +646,10 @@ export default {
 	},
 	watch: {
 		/* eslint-disable */
-		"song.duration": function() {
+		"song.duration": function () {
 			this.drawCanvas();
 		},
-		"song.skipDuration": function() {
+		"song.skipDuration": function () {
 			this.drawCanvas();
 		}
 		/* eslint-enable */
@@ -1331,9 +1331,6 @@ export default {
 				// Do things here to query the artist
 			}, 1000);
 		},
-		selectArtistAutosuggest(value) {
-			this.artistInputValue = value;
-		},
 		blurGenreInput() {
 			this.genreInputFocussed = false;
 		},
@@ -1357,9 +1354,6 @@ export default {
 					);
 				} else this.genreAutosuggestItems = [];
 			}, 1000);
-		},
-		selectGenreAutosuggest(value) {
-			this.genreInputValue = value;
 		},
 		settings(type) {
 			switch (type) {
@@ -1421,9 +1415,9 @@ export default {
 			this.video.player.setVolume(volume);
 			localStorage.setItem("volume", volume);
 		},
-		addTag(type) {
+		addTag(type, value) {
 			if (type === "genres") {
-				const genre = this.genreInputValue.trim();
+				const genre = value || this.genreInputValue.trim();
 
 				if (
 					this.song.genres
@@ -1434,18 +1428,20 @@ export default {
 				if (genre) {
 					this.song.genres.push(genre);
 					this.genreInputValue = "";
+					this.genreAutosuggestItems = [];
 					return false;
 				}
 
 				return new Toast("Genre cannot be empty");
 			}
 			if (type === "artists") {
-				const artist = this.artistInputValue;
+				const artist = value || this.artistInputValue;
 				if (this.song.artists.indexOf(artist) !== -1)
 					return new Toast("Artist already exists");
 				if (artist !== "") {
 					this.song.artists.push(artist);
 					this.artistInputValue = "";
+					this.artistAutosuggestItems = [];
 					return false;
 				}
 				return new Toast("Artist cannot be empty");
@@ -1619,6 +1615,21 @@ export default {
 		}
 	}
 
+	.autosuggest-container {
+		background-color: unset !important;
+	}
+
+	.autosuggest-item {
+		background-color: var(--dark-grey) !important;
+		color: white !important;
+		border-color: var(--dark-grey) !important;
+	}
+
+	.autosuggest-item:hover,
+	.autosuggest-item:focus {
+		background-color: var(--dark-grey-2) !important;
+	}
+
 	#tabs-container #tab-selection .button {
 		background: var(--dark-grey) !important;
 		color: var(--white) !important;
@@ -1629,17 +1640,22 @@ export default {
 	&::v-deep {
 		.modal-card {
 			width: 1300px;
+			height: 100%;
 
 			.modal-card-body {
 				display: flex;
-				flex-wrap: wrap;
 				column-gap: 16px;
 				row-gap: 16px;
+
+				@media screen and (max-width: 1000px) {
+					flex-wrap: wrap;
+				}
 
 				> div {
 					display: flex;
 					flex-grow: 1;
 					height: 100%;
+					overflow: auto;
 				}
 			}
 
@@ -1874,7 +1890,6 @@ export default {
 	.edit-section {
 		border: 1px solid var(--light-grey-3);
 		margin-top: 16px;
-		overflow: auto;
 		border-radius: 3px;
 
 		.album-get-button {
@@ -2084,7 +2099,6 @@ export default {
 
 	#tabs-container {
 		overflow: auto;
-		height: 100%;
 		display: flex;
 		flex-direction: column;
 		flex-grow: 1;

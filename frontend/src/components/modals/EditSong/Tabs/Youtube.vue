@@ -89,15 +89,15 @@ export default {
 
 <style lang="scss" scoped>
 .youtube-tab {
+	height: calc(100% - 32px);
+
 	#song-query-results {
 		height: calc(100% - 74px);
-		max-height: 740px;
 		overflow: auto;
 
 		.search-query-item {
 			/deep/ .thumbnail-and-info {
 				width: calc(100% - 29px);
-				max-width: 500px;
 			}
 
 			.icon-selected {

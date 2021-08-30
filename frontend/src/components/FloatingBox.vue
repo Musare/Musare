@@ -13,10 +13,10 @@
 			top: top + 'px',
 			left: left + 'px'
 		}"
-		@mousedown="onResizeBox"
+		@mousedown.left="onResizeBox"
 	>
-		<div class="box-header item-draggable" @mousedown="onDragBox">
-			<slot name="header"></slot>
+		<div class="box-header item-draggable" @mousedown.left="onDragBox">
+			<button class="delete" @click.prevent="toggleBox()" />
 		</div>
 		<div class="box-body">
 			<slot name="body"></slot>
@@ -151,23 +151,31 @@ export default {
 	overflow: auto;
 	border: 1px solid var(--light-grey-2);
 	border-radius: 5px;
-	padding: 10px;
 	min-height: 50px !important;
 	min-width: 50px !important;
+	padding: 0;
 
 	.box-header {
 		z-index: 100000001;
 		background-color: var(--primary-color);
-		padding: 10px;
 		display: block;
-		height: 10px;
+		height: 24px;
 		width: 100%;
+
+		.delete {
+			position: absolute;
+			height: 20px;
+			width: 20px;
+			top: 2px;
+			right: 2px;
+		}
 	}
 
 	.box-body {
 		display: flex;
 		flex-wrap: wrap;
 		justify-content: space-evenly;
+		padding: 10px;
 
 		span {
 			padding: 3px 6px;

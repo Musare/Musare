@@ -5,7 +5,7 @@
 			<router-view
 				:key="$route.fullPath"
 				class="main-container"
-				:class="{ 'main-container-modal-active': aModalIsOpen }"
+				:class="{ 'main-container-modal-active': aModalIsOpen2 }"
 			/>
 			<what-is-new v-show="modals.whatIsNew" />
 			<login-modal v-if="modals.login" />
@@ -45,7 +45,9 @@ export default {
 		return {
 			apiDomain: "",
 			socketConnected: true,
-			keyIsDown: false
+			keyIsDown: false,
+			scrollPosition: { y: 0, x: 0 },
+			aModalIsOpen2: false
 		};
 	},
 	computed: {
@@ -79,6 +81,23 @@ export default {
 		activityWatch(activityWatch) {
 			if (activityWatch) aw.enable();
 			else aw.disable();
+		},
+		aModalIsOpen(aModalIsOpen) {
+			if (aModalIsOpen) {
+				this.scrollPosition = {
+					x: window.scrollX,
+					y: window.scrollY
+				};
+				this.aModalIsOpen2 = true;
+			} else {
+				this.aModalIsOpen2 = false;
+				setTimeout(() => {
+					window.scrollTo(
+						this.scrollPosition.x,
+						this.scrollPosition.y
+					);
+				}, 10);
+			}
 		}
 	},
 	async mounted() {
@@ -411,7 +430,7 @@ textarea {
 
 .main-container.main-container-modal-active {
 	height: 100% !important;
-	overflow: hidden;
+	overflow: hidden !important;
 }
 
 a {
