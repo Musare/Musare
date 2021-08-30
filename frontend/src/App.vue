@@ -144,16 +144,6 @@ export default {
 			}
 		});
 
-		if (localStorage.getItem("github_redirect")) {
-			setTimeout(
-				() =>
-					this.$router.push(localStorage.getItem("github_redirect")),
-				50
-			);
-
-			localStorage.removeItem("github_redirect");
-		}
-
 		this.disconnectedMessage = new Toast({
 			content: "Could not connect to the server.",
 			persistent: true,
@@ -210,6 +200,11 @@ export default {
 					.replace(new RegExp(">", "g"), "&gt;");
 				this.$router.push({ query: {} });
 				new Toast({ content: msg, timeout: 20000 });
+			}
+
+			if (localStorage.getItem("github_redirect")) {
+				this.$router.push(localStorage.getItem("github_redirect"));
+				localStorage.removeItem("github_redirect");
 			}
 		});
 
