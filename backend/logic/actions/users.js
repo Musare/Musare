@@ -536,6 +536,7 @@ export default {
 				(hash, _id, next) => {
 					next(null, {
 						_id,
+						name: "",
 						username,
 						email: {
 							address: email,

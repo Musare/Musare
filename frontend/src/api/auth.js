@@ -25,14 +25,18 @@ export default {
 									new Date().getTime() +
 										2 * 365 * 24 * 60 * 60 * 1000
 								);
+
 								const secure = cookie.secure
 									? "secure=true; "
 									: "";
+
+								let domain = "";
+								if (cookie.domain !== "localhost")
+									domain = ` domain=${cookie.domain};`;
+
 								document.cookie = `SID=${
 									res.SID
-								}; expires=${date.toGMTString()}; domain=${
-									cookie.domain
-								}; ${secure}path=/`;
+								}; expires=${date.toGMTString()}; ${domain}${secure}path=/`;
 
 								return resolve({
 									status: "success",
@@ -40,6 +44,7 @@ export default {
 								});
 							});
 						}
+
 						return reject(new Error("You must login"));
 					}
 
@@ -59,13 +64,17 @@ export default {
 						date.setTime(
 							new Date().getTime() + 2 * 365 * 24 * 60 * 60 * 1000
 						);
+
 						const secure = cookie.secure ? "secure=true; " : "";
+
 						let domain = "";
 						if (cookie.domain !== "localhost")
 							domain = ` domain=${cookie.domain};`;
+
 						document.cookie = `${cookie.SIDname}=${
 							res.data.SID
 						}; expires=${date.toGMTString()}; ${domain}${secure}path=/`;
+
 						return resolve({ status: "success" });
 					});
 				}
