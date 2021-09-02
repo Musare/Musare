@@ -26,7 +26,7 @@
 							/>
 						</td>
 						<td class="news-item-markdown">{{ news.markdown }}</td>
-						<td>
+						<td id="options-column">
 							<button
 								class="button is-primary"
 								@click="edit(news._id)"
@@ -204,5 +204,13 @@ td {
 	white-space: nowrap;
 	overflow: hidden;
 	max-width: 400px;
+}
+
+#options-column {
+	display: flex;
+
+	button {
+		margin-right: 5px;
+	}
 }
 </style>

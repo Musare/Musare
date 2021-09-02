@@ -5,10 +5,10 @@
 			<table class="table is-striped">
 				<thead>
 					<tr>
+						<td>Status</td>
 						<td>Type</td>
 						<td>Value</td>
 						<td>Reason</td>
-						<td>Status</td>
 						<td>Options</td>
 					</tr>
 				</thead>
@@ -17,10 +17,6 @@
 						v-for="punishment in sortedPunishments"
 						:key="punishment._id"
 					>
-						<td v-if="punishment.type === 'banUserId'">User ID</td>
-						<td v-else>IP Address</td>
-						<td>{{ punishment.value }}</td>
-						<td>{{ punishment.reason }}</td>
 						<td>
 							{{
 								punishment.active &&
@@ -30,13 +26,33 @@
 									: "Inactive"
 							}}
 						</td>
+						<td v-if="punishment.type === 'banUserId'">User ID</td>
+						<td v-else>IP Address</td>
+						<td v-if="punishment.type === 'banUserId'">
+							<user-id-to-username
+								:user-id="punishment.value"
+								:alt="punishment.value"
+								:link="true"
+							/>
+							({{ punishment.value }})
+						</td>
+						<td v-else>
+							{{ punishment.value }}
+						</td>
+						<td>{{ punishment.reason }}</td>
+
 						<td>
-							<button
+							<a
 								class="button is-primary"
 								@click="view(punishment)"
+								content="Expand"
+								v-tippy
 							>
-								View
-							</button>
+								<i class="material-icons icon-with-button">
+									open_in_full
+								</i>
+								Expand
+							</a>
 						</td>
 					</tr>
 				</tbody>
@@ -100,11 +116,14 @@ import { defineAsyncComponent } from "vue";
 
 import ws from "@/ws";
 
+import UserIdToUsername from "@/components/UserIdToUsername.vue";
+
 export default {
 	components: {
 		ViewPunishment: defineAsyncComponent(() =>
 			import("@/components/modals/ViewPunishment.vue")
-		)
+		),
+		UserIdToUsername
 	},
 	data() {
 		return {

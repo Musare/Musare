@@ -69,9 +69,9 @@
 							placeholder="Ban reason"
 							autofocus
 						/>
-						<a class="button is-danger" @click="banUser()"
-							>Ban user</a
-						>
+						<a class="button is-danger" @click="banUser()">
+							Ban user
+						</a>
 					</p>
 				</div>
 			</template>

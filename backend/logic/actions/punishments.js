@@ -60,40 +60,56 @@ export default {
 	}),
 
 	/**
-	 * Gets a punishment by id
+	 * Gets all punishments for a user
+	 *
+	 * @param {object} session - the session object automatically added by the websocket
+	 * @param {string} userId - the id of the user
+	 * @param {Function} cb - gets called with the result
+	 */
+	getPunishmentsForUser: isAdminRequired(async function getPunishmentsForUser(session, userId, cb) {
+		const punishmentModel = await DBModule.runJob("GET_MODEL", { modelName: "punishment" }, this);
+
+		punishmentModel.find({ type: "banUserId", value: userId }, async (err, punishments) => {
+			if (err) {
+				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+
+				this.log(
+					"ERROR",
+					"GET_PUNISHMENTS_FOR_USER",
+					`Getting punishments for user ${userId} failed. "${err}"`
+				);
+
+				return cb({ status: "error", message: err });
+			}
+
+			this.log("SUCCESS", "GET_PUNISHMENTS_FOR_USER", `Got punishments for user ${userId} successful.`);
+			return cb({ status: "success", data: { punishments } });
+		});
+	}),
+
+	/**
+	 * Returns a punishment by id
 	 *
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} punishmentId - the punishment id
 	 * @param {Function} cb - gets called with the result
 	 */
-	getPunishmentById: isAdminRequired(async function index(session, punishmentId, cb) {
-		const punishmentModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "punishment"
-			},
-			this
-		);
-		async.waterfall(
-			[
-				next => {
-					punishmentModel.findOne({ _id: punishmentId }, next);
-				}
-			],
-			async (err, punishment) => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"GET_PUNISHMENT_BY_ID",
-						`Getting punishment with id ${punishmentId} failed. "${err}"`
-					);
-					return cb({ status: "error", message: err });
-				}
-				this.log("SUCCESS", "GET_PUNISHMENT_BY_ID", `Got punishment with id ${punishmentId} successful.`);
-				return cb({ status: "success", data: { punishment } });
+	findOne: isAdminRequired(async function findOne(session, punishmentId, cb) {
+		const punishmentModel = await DBModule.runJob("GET_MODEL", { modelName: "punishment" }, this);
+
+		async.waterfall([next => punishmentModel.findOne({ _id: punishmentId }, next)], async (err, punishment) => {
+			if (err) {
+				err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+				this.log(
+					"ERROR",
+					"GET_PUNISHMENT_BY_ID",
+					`Getting punishment with id ${punishmentId} failed. "${err}"`
+				);
+				return cb({ status: "error", message: err });
 			}
-		);
+			this.log("SUCCESS", "GET_PUNISHMENT_BY_ID", `Got punishment with id ${punishmentId} successful.`);
+			return cb({ status: "success", data: { punishment } });
+		});
 	}),
 
 	/**

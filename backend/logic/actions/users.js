@@ -2545,7 +2545,7 @@ export default {
 							value: userId,
 							reason,
 							expiresAt,
-							punishedBy: "" // needs changed
+							punishedBy: session.userId
 						},
 						this
 					)
