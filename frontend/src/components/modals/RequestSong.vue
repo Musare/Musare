@@ -6,7 +6,7 @@
 
 				<h4 class="section-title">Choose a song</h4>
 				<p class="section-description">
-					Choose a song by searching or using a link from YouTube.
+					Choose a song by searching or using a link from YouTube
 				</p>
 
 				<br />
@@ -89,7 +89,7 @@
 
 					<h4 class="section-title">Import a playlist</h4>
 					<p class="section-description">
-						Import a playlist by using a link from YouTube.
+						Import a playlist by using a link from YouTube
 					</p>
 
 					<br />

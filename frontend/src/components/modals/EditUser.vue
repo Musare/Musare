@@ -2,64 +2,78 @@
 	<div>
 		<modal title="Edit User">
 			<template #body v-if="user && user._id">
-				<p class="control has-addons">
-					<input
-						v-model="user.username"
-						class="input is-expanded"
-						type="text"
-						placeholder="Username"
-						autofocus
-					/>
-					<a class="button is-info" @click="updateUsername()"
-						>Update Username</a
-					>
-				</p>
-				<p class="control has-addons">
-					<input
-						v-model="user.email.address"
-						class="input is-expanded"
-						type="text"
-						placeholder="Email Address"
-						autofocus
-					/>
-					<a class="button is-info" @click="updateEmail()"
-						>Update Email Address</a
-					>
-				</p>
-				<p class="control has-addons">
-					<span class="select">
-						<select v-model="user.role">
-							<option>default</option>
-							<option>admin</option>
-						</select>
-					</span>
-					<a class="button is-info" @click="updateRole()"
-						>Update Role</a
-					>
-				</p>
-				<hr />
-				<p class="control has-addons">
-					<span class="select">
-						<select v-model="ban.expiresAt">
-							<option value="1h">1 Hour</option>
-							<option value="12h">12 Hours</option>
-							<option value="1d">1 Day</option>
-							<option value="1w">1 Week</option>
-							<option value="1m">1 Month</option>
-							<option value="3m">3 Months</option>
-							<option value="6m">6 Months</option>
-							<option value="1y">1 Year</option>
-						</select>
-					</span>
-					<input
-						v-model="ban.reason"
-						class="input is-expanded"
-						type="text"
-						placeholder="Ban reason"
-						autofocus
-					/>
-					<a class="button is-error" @click="banUser()">Ban user</a>
-				</p>
+				<div class="section">
+					<label class="label"> Change username </label>
+					<p class="control has-addons">
+						<input
+							v-model="user.username"
+							class="input is-expanded"
+							type="text"
+							placeholder="Username"
+							autofocus
+						/>
+						<a class="button is-info" @click="updateUsername()"
+							>Update Username</a
+						>
+					</p>
+
+					<label class="label"> Change email address </label>
+					<p class="control has-addons">
+						<input
+							v-model="user.email.address"
+							class="input is-expanded"
+							type="text"
+							placeholder="Email Address"
+							autofocus
+						/>
+						<a class="button is-info" @click="updateEmail()"
+							>Update Email Address</a
+						>
+					</p>
+
+					<label class="label"> Change user role </label>
+					<div class="control is-grouped input-with-button">
+						<div class="control is-expanded select">
+							<select v-model="user.role">
+								<option>default</option>
+								<option>admin</option>
+							</select>
+						</div>
+						<p class="control">
+							<a class="button is-info" @click="updateRole()"
+								>Update Role</a
+							>
+						</p>
+					</div>
+				</div>
+
+				<div class="section">
+					<label class="label"> Punish/Ban User </label>
+					<p class="control has-addons">
+						<span class="select">
+							<select v-model="ban.expiresAt">
+								<option value="1h">1 Hour</option>
+								<option value="12h">12 Hours</option>
+								<option value="1d">1 Day</option>
+								<option value="1w">1 Week</option>
+								<option value="1m">1 Month</option>
+								<option value="3m">3 Months</option>
+								<option value="6m">6 Months</option>
+								<option value="1y">1 Year</option>
+							</select>
+						</span>
+						<input
+							v-model="ban.reason"
+							class="input is-expanded"
+							type="text"
+							placeholder="Ban reason"
+							autofocus
+						/>
+						<a class="button is-danger" @click="banUser()"
+							>Ban user</a
+						>
+					</p>
+				</div>
 			</template>
 			<template #footer>
 				<!--button class='button is-warning'>
@@ -122,10 +136,12 @@ export default {
 		},
 		updateUsername() {
 			const { username } = this.user;
+
 			if (!validation.isLength(username, 2, 32))
 				return new Toast(
 					"Username must have between 2 and 32 characters."
 				);
+
 			if (!validation.regex.custom("a-zA-Z0-9_-").test(username))
 				return new Toast(
 					"Invalid username format. Allowed characters: a-z, A-Z, 0-9, _ and -."
@@ -142,10 +158,12 @@ export default {
 		},
 		updateEmail() {
 			const email = this.user.email.address;
+
 			if (!validation.isLength(email, 3, 254))
 				return new Toast(
 					"Email must have between 3 and 254 characters."
 				);
+
 			if (
 				email.indexOf("@") !== email.lastIndexOf("@") ||
 				!validation.regex.emailSimple.test(email) ||
@@ -174,10 +192,12 @@ export default {
 		},
 		banUser() {
 			const { reason } = this.ban;
+
 			if (!validation.isLength(reason, 1, 64))
 				return new Toast(
 					"Reason must have between 1 and 64 characters."
 				);
+
 			if (!validation.regex.ascii.test(reason))
 				return new Toast(
 					"Invalid reason format. Only ascii characters are allowed."
@@ -205,6 +225,10 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.section {
+	padding: 15px 0 !important;
+}
+
 .save-changes {
 	color: var(--white);
 }

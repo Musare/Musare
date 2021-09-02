@@ -2,7 +2,7 @@
 	<div class="content profile-tab">
 		<h4 class="section-title">Change Profile</h4>
 		<p class="section-description">
-			Edit your public profile so users can find out more about you.
+			Edit your public profile so users can find out more about you
 		</p>
 
 		<hr class="section-horizontal-rule" />

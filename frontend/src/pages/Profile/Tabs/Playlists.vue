@@ -15,7 +15,7 @@
 						? "and manage your personal"
 						: `${username}'s`
 				}}
-				playlists.
+				playlists
 			</p>
 
 			<hr class="section-horizontal-rule" />

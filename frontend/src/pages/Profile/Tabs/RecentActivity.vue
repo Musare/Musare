@@ -6,7 +6,7 @@
 			<p class="section-description">
 				This is a log of all actions
 				{{ userId === myUserId ? "you have" : `${username} has` }}
-				taken recently.
+				taken recently
 			</p>
 
 			<hr class="section-horizontal-rule" />

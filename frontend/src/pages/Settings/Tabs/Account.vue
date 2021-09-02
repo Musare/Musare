@@ -2,7 +2,7 @@
 	<div class="content account-tab">
 		<h4 class="section-title">Change account details</h4>
 
-		<p class="section-description">Keep these details up-to-date.</p>
+		<p class="section-description">Keep these details up-to-date</p>
 
 		<hr class="section-horizontal-rule" />
 
@@ -70,7 +70,7 @@
 		<h4 class="section-title">Remove any data we hold on you</h4>
 
 		<p class="section-description">
-			Permanently remove your account and/or data we store on you.
+			Permanently remove your account and/or data we store on you
 		</p>
 
 		<hr class="section-horizontal-rule" />

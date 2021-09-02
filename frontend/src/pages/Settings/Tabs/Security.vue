@@ -4,7 +4,7 @@
 			<h4 class="section-title">Change password</h4>
 
 			<p class="section-description">
-				You will need to know your previous password.
+				You will need to know your previous password
 			</p>
 
 			<hr class="section-horizontal-rule" />
@@ -85,7 +85,7 @@
 		<div v-if="!isPasswordLinked">
 			<h4 class="section-title">Add a password</h4>
 			<p class="section-description">
-				Add a password, as an alternative to signing in with GitHub.
+				Add a password, as an alternative to signing in with GitHub
 			</p>
 
 			<hr class="section-horizontal-rule" />
@@ -101,7 +101,7 @@
 		<div v-if="!isGithubLinked">
 			<h4 class="section-title">Link your GitHub account</h4>
 			<p class="section-description">
-				Link your Musare account with GitHub.
+				Link your Musare account with GitHub
 			</p>
 
 			<hr class="section-horizontal-rule" />
@@ -119,7 +119,7 @@
 		<div v-if="isPasswordLinked && isGithubLinked">
 			<h4 class="section-title">Remove login methods</h4>
 			<p class="section-description">
-				Remove your password as a login method or unlink GitHub.
+				Remove your password as a login method or unlink GitHub
 			</p>
 
 			<hr class="section-horizontal-rule" />
@@ -145,7 +145,7 @@
 		<div>
 			<h4 class="section-title">Log out everywhere</h4>
 			<p class="section-description">
-				Remove all currently logged-in sessions for your account.
+				Remove all currently logged-in sessions for your account
 			</p>
 
 			<hr class="section-horizontal-rule" />

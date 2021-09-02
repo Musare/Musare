@@ -2,7 +2,7 @@
 	<div class="content preferences-tab">
 		<h4 class="section-title">Change preferences</h4>
 
-		<p class="section-description">Tailor these settings to your liking.</p>
+		<p class="section-description">Tailor these settings to your liking</p>
 
 		<hr class="section-horizontal-rule" />
 

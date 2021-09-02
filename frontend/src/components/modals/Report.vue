@@ -155,7 +155,7 @@
 									? "multiple reports"
 									: "a report"
 							}}
-							about this song already.
+							about this song already
 						</p>
 
 						<hr class="section-horizontal-rule" />

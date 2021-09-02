@@ -4,7 +4,7 @@
 			<h4 class="section-title">Edit Details</h4>
 
 			<p class="section-description">
-				Change the display name and privacy of the playlist.
+				Change the display name and privacy of the playlist
 			</p>
 
 			<hr class="section-horizontal-rule" />
