@@ -1,7 +1,7 @@
 # Utility Script
 The utility script is a tool that allows for the simple management of a Musare Docker instance.
 
-Please follow the [Installation Guide](./Installation.md) before using this script.
+Please follow the [Docker Installation Guide](./Installation.md#Docker) before using this script.
 
 ## Usage
 Linux (Bash):
