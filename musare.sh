@@ -138,8 +138,21 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
                 echo -e "${YELLOW}Detach with CTRL+P+Q${NC}"
                 docker attach "$containerId"
             fi
+        elif [[ $2 == "mongo" ]]; then
+            if [[ -f .env ]]; then
+                # shellcheck disable=SC1091
+                source .env
+                if [[ -z $(docker-compose ps -q mongo) ]]; then
+                    echo -e "${RED}Error: Mongo offline, please start to attach.${NC}"
+                else
+                    echo -e "${YELLOW}Detach with CTRL+C${NC}"
+                    docker-compose exec mongo mongo musare -u ${MONGO_USER_USERNAME} -p ${MONGO_USER_PASSWORD}
+                fi
+            else
+                echo -e "${RED}Error: .env does not exist${NC}"
+            fi
         else
-            echo -e "${RED}Invalid service $2\n${YELLOW}Usage: $(basename "$0") attach backend${NC}"
+            echo -e "${RED}Invalid service $2\n${YELLOW}Usage: $(basename "$0") attach [backend,mongo]${NC}"
         fi
         ;;
 
@@ -288,7 +301,7 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
         echo -e "${YELLOW}restart - Restart services${NC}"
         echo -e "${YELLOW}logs - View logs for services${NC}"
         echo -e "${YELLOW}update - Update Musare${NC}"
-        echo -e "${YELLOW}attach backend - Attach to backend service${NC}"
+        echo -e "${YELLOW}attach [backend,mongo] - Attach to backend service or mongo shell${NC}"
         echo -e "${YELLOW}build - Build services${NC}"
         echo -e "${YELLOW}eslint - Run eslint on frontend and/or backend${NC}"
         echo -e "${YELLOW}backup - Backup database data to file${NC}"
@@ -306,7 +319,7 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
         echo -e "${YELLOW}restart - Restart services${NC}"
         echo -e "${YELLOW}logs - View logs for services${NC}"
         echo -e "${YELLOW}update - Update Musare${NC}"
-        echo -e "${YELLOW}attach backend - Attach to backend service${NC}"
+        echo -e "${YELLOW}attach [backend,mongo] - Attach to backend service or mongo shell${NC}"
         echo -e "${YELLOW}build - Build services${NC}"
         echo -e "${YELLOW}eslint - Run eslint on frontend and/or backend${NC}"
         echo -e "${YELLOW}backup - Backup database data to file${NC}"
