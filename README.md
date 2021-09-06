@@ -12,7 +12,7 @@ You can also find the staging branch at [musare.dev](https://musare.dev)
 ## Getting Started
 - [Installation](./.wiki/Installation.md)
 - [Configuration](./.wiki/Configuration.md)
-- [Utility Script](./.wiki/Utility%20Script.md)
+- [Utility Script](./.wiki/Utility_Script.md)
 
 <br />
 

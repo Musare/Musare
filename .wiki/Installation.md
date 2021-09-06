@@ -1,4 +1,5 @@
 # Installation
+Musare can be installed with Docker (recommended) or without, guides for both installations can be found below.
 
 ## Docker
 
@@ -39,7 +40,7 @@
 6. `cp frontend/dist/config/template.json frontend/dist/config/default.json` and configure as per [Configuration](./Configuration.md#Frontend)
 7. Start services
     - **Linux**
-        1. Execute `systemctl enable --now redis mongod`
+        1. Execute `systemctl start redis mongod`
         2. Execute `cd frontend && npm run dev` and `cd backend && npm run dev` separately.
     - **Windows**
         - **Automatic** Run `windows-start.cmd` or just double click the `windows-start.cmd` file and all servers will automatically start up.
@@ -52,13 +53,13 @@
     1. In the root directory, create a folder called `.database`
     2. Create a file called `startMongo.cmd` in the root directory with the contents:
 
-        `"C:\Program Files\MongoDB\Server\3.2\bin\mongod.exe" --dbpath "D:\Programming\HTML\MusareNode\.database"`
+        `"C:\Program Files\MongoDB\Server\4.0\bin\mongod.exe" --dbpath "C:\Path\To\MusareNode\.database"`
 
         Make sure to adjust your paths accordingly.
     3. Start the database by executing the script `startMongo.cmd` you just made
 - Set up the MongoDB database itself
     1. Start MongoDB
-        - **Linux** Execute `systemctl enable --now mongod`
+        - **Linux** Execute `systemctl start mongod`
         - **Windows** Execute the `startMongo.cmd` script you just made
     2. Connect to Mongo from a command prompt
 
@@ -92,7 +93,7 @@
             It should look like `notify-keyspace-events Ex` when done.
     2. Create a file called `startRedis.cmd` in the main folder with the contents:
 
-        `"D:\Redis\redis-server.exe" "D:\Redis\redis.windows.conf" "--requirepass" "PASSWORD"`
+        `"C:\Path\To\Redis\redis-server.exe" "C:\Path\To\Redis\redis.windows.conf" "--requirepass" "PASSWORD"`
 
         And again, make sure that the paths lead to the proper config and executable. Replace `PASSWORD` with your Redis password.
 - **Linux**
