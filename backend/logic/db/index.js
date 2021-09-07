@@ -168,11 +168,11 @@ class _DBModule extends CoreClass {
 							new Promise((resolve, reject) => {
 								this.models.station.countDocuments({ owner }, (err, c) => {
 									if (err) reject(new Error("A mongo error happened."));
-									else if (c >= 3) reject(new Error("User already has 3 stations."));
+									else if (c >= 25) reject(new Error("User already has 25 stations."));
 									else resolve();
 								});
 							}),
-						message: "User already has 3 stations."
+						message: "User already has 25 stations."
 					});
 
 					/*
@@ -248,17 +248,12 @@ class _DBModule extends CoreClass {
 						);
 
 					this.schemas.playlist.path("createdBy").validate(createdBy => {
-						this.models.playlist.countDocuments({ createdBy }, (err, c) => !(err || c >= 10));
-					}, "Max 10 playlists per user.");
+						this.models.playlist.countDocuments({ createdBy }, (err, c) => !(err || c >= 100));
+					}, "Max 100 playlists per user.");
 
 					this.schemas.playlist
 						.path("songs")
-						.validate(songs => songs.length <= 5000, "Max 5000 songs per playlist.");
-
-					this.schemas.playlist.path("songs").validate(songs => {
-						if (songs.length === 0) return true;
-						return songs[0].duration <= 10800;
-					}, "Max 3 hours per song.");
+						.validate(songs => songs.length <= 10000, "Max 10000 songs per playlist.");
 
 					this.schemas.playlist.index({ createdFor: 1, type: 1 }, { unique: true });
 
