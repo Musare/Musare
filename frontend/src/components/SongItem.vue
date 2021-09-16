@@ -139,7 +139,7 @@
 							>
 								edit
 							</i>
-							<slot name="actions" />
+							<slot name="tippyActions" />
 						</div>
 					</template>
 				</tippy>
@@ -154,6 +154,9 @@
 				>
 					<div class="youtube-icon"></div>
 				</a>
+			</div>
+			<div class="universal-item-actions" v-if="$slots.actions">
+				<slot name="actions" />
 			</div>
 		</div>
 	</div>

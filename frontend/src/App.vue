@@ -1036,7 +1036,8 @@ h4.section-title {
 
 		.edit-icon,
 		.view-icon,
-		.add-to-playlist-icon {
+		.add-to-playlist-icon,
+		.add-to-queue-icon {
 			color: var(--primary-color);
 		}
 

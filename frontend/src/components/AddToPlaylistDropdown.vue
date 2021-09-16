@@ -190,4 +190,8 @@ export default {
 		color: #fff;
 	}
 }
+
+.addToPlaylistDropdown {
+	display: flex;
+}
 </style>

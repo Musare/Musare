@@ -34,7 +34,7 @@
 					>
 						<template
 							v-if="isAdminOnly() || isOwnerOnly()"
-							#actions
+							#tippyActions
 						>
 							<confirm
 								v-if="isOwnerOnly() || isAdminOnly()"

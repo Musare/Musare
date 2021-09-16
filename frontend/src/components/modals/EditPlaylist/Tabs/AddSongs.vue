@@ -27,7 +27,24 @@
 					v-for="song in musareSearch.results"
 					:key="song._id"
 					:song="song"
-				/>
+					disabled-actions="addToPlaylist"
+				>
+					<template #actions>
+						<add-to-playlist-dropdown
+							:song="{ youtubeId: song.songId }"
+							placement="top-end"
+						>
+							<template #button>
+								<i
+									class="material-icons add-to-playlist-icon"
+									content="Add Song to Playlist"
+									v-tippy
+									>playlist_add</i
+								>
+							</template>
+						</add-to-playlist-dropdown>
+					</template>
+				</song-item>
 
 				<button
 					v-if="resultsLeftCount > 0"
