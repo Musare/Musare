@@ -1,8 +1,5 @@
 <script>
 export default {
-	setup() {
-		window.addEventListener("scroll", this.handleScroll);
-	},
 	data() {
 		return {
 			position: 1,
@@ -19,6 +16,9 @@ export default {
 		maxSets() {
 			return this.maxPosition - 1;
 		}
+	},
+	mounted() {
+		window.addEventListener("scroll", this.handleScroll);
 	},
 	unmounted() {
 		clearInterval(this.interval);
