@@ -38,56 +38,59 @@ handleServices()
     fi
 }
 
+dockerCommand()
+{
+    validCommands=(start stop restart build ps)
+    if [[ ${validCommands[*]} =~ (^|[[:space:]])"$2"($|[[:space:]]) ]]; then
+        servicesString=$(handleServices "${@:3}")
+        if [[ ${servicesString:0:1} == 1 ]]; then
+            if [[ ${servicesString:2:4} == "all" ]]; then
+                servicesString=""
+            else
+                servicesString=${servicesString:2}
+            fi
+            if [[ $2 == "stop" || $2 == "restart" ]]; then
+                docker-compose stop $servicesString
+            fi
+            if [[ $2 == "start" || $2 == "restart" ]]; then
+                docker-compose up -d $servicesString
+            fi
+            if [[ $2 == "build" || $2 == "ps" ]]; then
+                docker-compose $2 $servicesString
+            fi
+        else
+            echo -e "${RED}${servicesString:2}\n${YELLOW}Usage: ${1} restart [backend, frontend, mongo, redis]${NC}"
+        fi
+    else
+        echo -e "${RED}Error: Invalid dockerCommand input${NC}"
+    fi
+}
+
 if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
     case $1 in
     start)
         echo -e "${CYAN}Musare | Start Services${NC}"
-        servicesString=$(handleServices "${@:2}")
-        if [[ ${servicesString:0:1} == 1 && ${servicesString:2:4} == "all" ]]; then
-            docker-compose up -d
-        elif [[ ${servicesString:0:1} == 1 ]]; then
-            docker-compose up -d ${servicesString:2}
-        else
-            echo -e "${RED}${servicesString:2}\n${YELLOW}Usage: $(basename "$0") start [backend, frontend, mongo, redis]${NC}"
-        fi
+        dockerCommand $(basename "$0") start ${@:2}
         ;;
 
     stop)
         echo -e "${CYAN}Musare | Stop Services${NC}"
-        servicesString=$(handleServices "${@:2}")
-        if [[ ${servicesString:0:1} == 1 && ${servicesString:2:4} == "all" ]]; then
-            docker-compose stop
-        elif [[ ${servicesString:0:1} == 1 ]]; then
-            docker-compose stop ${servicesString:2}
-        else
-            echo -e "${RED}${servicesString:2}\n${YELLOW}Usage: $(basename "$0") stop [backend, frontend, mongo, redis]${NC}"
-        fi
+        dockerCommand $(basename "$0") stop ${@:2}
         ;;
 
     restart)
         echo -e "${CYAN}Musare | Restart Services${NC}"
-        servicesString=$(handleServices "${@:2}")
-        if [[ ${servicesString:0:1} == 1 && ${servicesString:2:4} == "all" ]]; then
-            docker-compose stop
-            docker-compose up -d
-        elif [[ ${servicesString:0:1} == 1 ]]; then
-            docker-compose stop ${servicesString:2}
-            docker-compose up -d ${servicesString:2}
-        else
-            echo -e "${RED}${servicesString:2}\n${YELLOW}Usage: $(basename "$0") restart [backend, frontend, mongo, redis]${NC}"
-        fi
+        dockerCommand $(basename "$0") restart ${@:2}
         ;;
 
     build)
         echo -e "${CYAN}Musare | Build Services${NC}"
-        servicesString=$(handleServices "${@:2}")
-        if [[ ${servicesString:0:1} == 1 && ${servicesString:2:4} == "all" ]]; then
-            docker-compose build
-        elif [[ ${servicesString:0:1} == 1 ]]; then
-            docker-compose build ${servicesString:2}
-        else
-            echo -e "${RED}${servicesString:2}\n${YELLOW}Usage: $(basename "$0") build [backend, frontend, mongo, redis]${NC}"
-        fi
+        dockerCommand $(basename "$0") build ${@:2}
+        ;;
+
+    status)
+        echo -e "${CYAN}Musare | Service Status${NC}"
+        dockerCommand $(basename "$0") ps ${@:2}
         ;;
 
     reset)
@@ -221,12 +224,22 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
         if [[ -f .env ]]; then
             # shellcheck disable=SC1091
             source .env
-            if [[ ! -d "${scriptLocation%x}/backups" ]]; then
-                echo -e "${YELLOW}Creating backup directory at ${scriptLocation%x}/backups${NC}"
-                mkdir "${scriptLocation%x}/backups"
+            if [[ -z "${BACKUP_LOCATION}" ]]; then
+                backupLocation="${scriptLocation%x}/backups"
+            else
+                backupLocation="${BACKUP_LOCATION%/}"
             fi
-            echo -e "${YELLOW}Creating backup at ${scriptLocation%x}/backups/musare-$(date +"%Y-%m-%d-%s").dump${NC}"
-            docker-compose exec -T mongo sh -c "mongodump --authenticationDatabase musare -u ${MONGO_USER_USERNAME} -p ${MONGO_USER_PASSWORD} -d musare --archive" > "${scriptLocation%x}/backups/musare-$(date +"%Y-%m-%d-%s").dump"
+            if [[ ! -d "${backupLocation}" ]]; then
+                echo -e "${YELLOW}Creating backup directory at ${backupLocation}${NC}"
+                mkdir "${backupLocation}"
+            fi
+            if [[ -z "${BACKUP_NAME}" ]]; then
+                backupLocation="${backupLocation}/musare-$(date +"%Y-%m-%d-%s").dump"
+            else
+                backupLocation="${backupLocation}/${BACKUP_NAME}"
+            fi
+            echo -e "${YELLOW}Creating backup at ${backupLocation}${NC}"
+            docker-compose exec -T mongo sh -c "mongodump --authenticationDatabase musare -u ${MONGO_USER_USERNAME} -p ${MONGO_USER_PASSWORD} -d musare --archive" > "${backupLocation}"
         else
             echo -e "${RED}Error: .env does not exist${NC}"
         fi

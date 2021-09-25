@@ -50,8 +50,19 @@ Location: `.env`
 
 | Property | Description |
 | --- | --- |
-| Ports | Will be how you access the services on your machine, or what ports you will need to specify in your nginx files when using proxy_pass. |
 | `COMPOSE_PROJECT_NAME` | Should be a unique name for this installation, especially if you have multiple instances of Musare on the same machine. |
-| `FRONTEND_MODE` | Should be either `dev` or `prod` (self-explanatory). |
-| `MONGO_ROOT_PASSWORD` | Password of the root/admin user of MongoDB |
-| `MONGO_USER_USERNAME` | Password for the "musare" user (what the backend uses) of MongoDB |
+| `BACKEND_HOST` | Host that the backend container should listen on. |
+| `BACKEND_PORT` | Port that the backend container should listen on. |
+| `FRONTEND_HOST` | Host that the frontend container should listen on. |
+| `FRONTEND_PORT` | Port that the frontend container should listen on. |
+| `FRONTEND_MODE` | Should be either `dev` or `prod`. |
+| `MONGO_HOST` | Host that the mongo container should listen on. |
+| `MONGO_PORT` | Port that the mongo container should listen on. |
+| `MONGO_ROOT_PASSWORD` | Password of the root/admin user for MongoDB. |
+| `MONGO_USER_USERNAME` | Application username for MongoDB. |
+| `MONGO_USER_PASSWORD` | Application password for MongoDB. |
+| `REDIS_HOST` | Host that the redis container should listen on. |
+| `REDIS_PORT` | Port that the redis container should listen on. |
+| `REDIS_PASSWORD` | Redis password. |
+| `BACKUP_LOCATION` | Directory to store musare.sh backups. Defaults to `/backups` in script location. |
+| `BACKUP_NAME` | Name of backup files. Defaults to `musare-$(date +"%Y-%m-%d-%s").dump`. |
