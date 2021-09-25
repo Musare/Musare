@@ -49,14 +49,17 @@ dockerCommand()
             else
                 servicesString=${servicesString:2}
             fi
-            if [[ $2 == "stop" || $2 == "restart" ]]; then
-                docker-compose stop $servicesString
+            if [[ ${2} == "stop" || ${2} == "restart" ]]; then
+                # shellcheck disable=SC2086
+                docker-compose stop ${servicesString}
             fi
-            if [[ $2 == "start" || $2 == "restart" ]]; then
-                docker-compose up -d $servicesString
+            if [[ ${2} == "start" || ${2} == "restart" ]]; then
+                # shellcheck disable=SC2086
+                docker-compose up -d ${servicesString}
             fi
-            if [[ $2 == "build" || $2 == "ps" ]]; then
-                docker-compose $2 $servicesString
+            if [[ ${2} == "build" || ${2} == "ps" ]]; then
+                # shellcheck disable=SC2086
+                docker-compose "${2}" ${servicesString}
             fi
         else
             echo -e "${RED}${servicesString:2}\n${YELLOW}Usage: ${1} restart [backend, frontend, mongo, redis]${NC}"
@@ -70,27 +73,32 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
     case $1 in
     start)
         echo -e "${CYAN}Musare | Start Services${NC}"
-        dockerCommand $(basename "$0") start ${@:2}
+        # shellcheck disable=SC2068
+        dockerCommand "$(basename "$0")" start ${@:2}
         ;;
 
     stop)
         echo -e "${CYAN}Musare | Stop Services${NC}"
-        dockerCommand $(basename "$0") stop ${@:2}
+        # shellcheck disable=SC2068
+        dockerCommand "$(basename "$0")" stop ${@:2}
         ;;
 
     restart)
         echo -e "${CYAN}Musare | Restart Services${NC}"
-        dockerCommand $(basename "$0") restart ${@:2}
+        # shellcheck disable=SC2068
+        dockerCommand "$(basename "$0")" restart ${@:2}
         ;;
 
     build)
         echo -e "${CYAN}Musare | Build Services${NC}"
-        dockerCommand $(basename "$0") build ${@:2}
+        # shellcheck disable=SC2068
+        dockerCommand "$(basename "$0")" build ${@:2}
         ;;
 
     status)
         echo -e "${CYAN}Musare | Service Status${NC}"
-        dockerCommand $(basename "$0") ps ${@:2}
+        # shellcheck disable=SC2068
+        dockerCommand "$(basename "$0")" ps ${@:2}
         ;;
 
     reset)
@@ -112,10 +120,12 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
                 echo -e "${RED}Cancelled reset${NC}"
             fi
         elif [[ ${servicesString:0:1} == 1 ]]; then
-            echo -e "${GREEN}Are you sure you want to reset all data for $(echo ${servicesString:2} | tr ' ' ',')? ${YELLOW}[y,n]: ${NC}"
+            echo -e "${GREEN}Are you sure you want to reset all data for $(echo "${servicesString:2}" | tr ' ' ',')? ${YELLOW}[y,n]: ${NC}"
             read -r confirm
             if [[ "${confirm}" == y* ]]; then
+                # shellcheck disable=SC2086
                 docker-compose stop ${servicesString:2}
+                # shellcheck disable=SC2086
                 docker-compose rm -v --force ${servicesString:2}
                 if [[ "${servicesString:2}" == *redis* && -d ".redis" ]]; then
                     rm -rf .redis
@@ -149,7 +159,7 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
                     echo -e "${RED}Error: Mongo offline, please start to attach.${NC}"
                 else
                     echo -e "${YELLOW}Detach with CTRL+C${NC}"
-                    docker-compose exec mongo mongo musare -u ${MONGO_USER_USERNAME} -p ${MONGO_USER_PASSWORD}
+                    docker-compose exec mongo mongo musare -u "${MONGO_USER_USERNAME}" -p "${MONGO_USER_PASSWORD}"
                 fi
             else
                 echo -e "${RED}Error: .env does not exist${NC}"
@@ -312,6 +322,7 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
         echo -e "${YELLOW}start - Start services${NC}"
         echo -e "${YELLOW}stop - Stop services${NC}"
         echo -e "${YELLOW}restart - Restart services${NC}"
+        echo -e "${YELLOW}status - Service status${NC}"
         echo -e "${YELLOW}logs - View logs for services${NC}"
         echo -e "${YELLOW}update - Update Musare${NC}"
         echo -e "${YELLOW}attach [backend,mongo] - Attach to backend service or mongo shell${NC}"
@@ -330,6 +341,7 @@ if [[ -x "$(command -v docker)" && -x "$(command -v docker-compose)" ]]; then
         echo -e "${YELLOW}start - Start services${NC}"
         echo -e "${YELLOW}stop - Stop services${NC}"
         echo -e "${YELLOW}restart - Restart services${NC}"
+        echo -e "${YELLOW}status - Service status${NC}"
         echo -e "${YELLOW}logs - View logs for services${NC}"
         echo -e "${YELLOW}update - Update Musare${NC}"
         echo -e "${YELLOW}attach [backend,mongo] - Attach to backend service or mongo shell${NC}"

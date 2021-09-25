@@ -48,21 +48,25 @@ Location: `frontend/dist/config/default.json`
 ## Docker Environment
 Location: `.env`
 
+In the table below the container host refers to the IP address that the docker container listens on, setting this to `127.0.0.1` for example will only expose the configured port to localhost, whereas setting to `0.0.0.0` will expose the port on all interfaces.
+
+The container port refers to the external docker container port, used to access services within the container. Changing this does not require any changes to configuration within container. For example setting the `MONGO_PORT` to `21018` will allow you to access the mongo service through that port, even though the application within the container is listening on `21017`.
+
 | Property | Description |
 | --- | --- |
 | `COMPOSE_PROJECT_NAME` | Should be a unique name for this installation, especially if you have multiple instances of Musare on the same machine. |
-| `BACKEND_HOST` | Host that the backend container should listen on. |
-| `BACKEND_PORT` | Port that the backend container should listen on. |
-| `FRONTEND_HOST` | Host that the frontend container should listen on. |
-| `FRONTEND_PORT` | Port that the frontend container should listen on. |
+| `BACKEND_HOST` | Backend container host. |
+| `BACKEND_PORT` | Backend container port. |
+| `FRONTEND_HOST` | Frontend container host. |
+| `FRONTEND_PORT` | Frontend container port. |
 | `FRONTEND_MODE` | Should be either `dev` or `prod`. |
-| `MONGO_HOST` | Host that the mongo container should listen on. |
-| `MONGO_PORT` | Port that the mongo container should listen on. |
+| `MONGO_HOST` | Mongo container host. |
+| `MONGO_PORT` | Mongo container port. |
 | `MONGO_ROOT_PASSWORD` | Password of the root/admin user for MongoDB. |
 | `MONGO_USER_USERNAME` | Application username for MongoDB. |
 | `MONGO_USER_PASSWORD` | Application password for MongoDB. |
-| `REDIS_HOST` | Host that the redis container should listen on. |
-| `REDIS_PORT` | Port that the redis container should listen on. |
+| `REDIS_HOST` | Redis container host. |
+| `REDIS_PORT` | Redis container port. |
 | `REDIS_PASSWORD` | Redis password. |
 | `BACKUP_LOCATION` | Directory to store musare.sh backups. Defaults to `/backups` in script location. |
-| `BACKUP_NAME` | Name of backup files. Defaults to `musare-$(date +"%Y-%m-%d-%s").dump`. |
+| `BACKUP_NAME` | Name of musare.sh backup files. Defaults to `musare-$(date +"%Y-%m-%d-%s").dump`. |
