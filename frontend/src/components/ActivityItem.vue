@@ -4,6 +4,7 @@
 			<img
 				v-if="activity.payload.thumbnail"
 				:src="activity.payload.thumbnail"
+				onerror="this.src='/assets/notes.png'"
 				:alt="textOnlyMessage"
 			/>
 			<i class="material-icons activity-type-icon">{{ getIcon() }}</i>
