@@ -464,10 +464,6 @@ a {
 			0 10px 10px rgba(0, 0, 0, 0.22);
 		background-color: var(--white);
 
-		&:not([data-theme~="songActions"]) > .tippy-arrow::before {
-			border-top-color: var(--white);
-		}
-
 		.tippy-content {
 			color: var(--black);
 		}
