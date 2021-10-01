@@ -607,7 +607,8 @@ a {
 		}
 	}
 
-	.play-icon {
+	.play-icon,
+	.added-to-playlist-icon {
 		color: var(--green);
 	}
 
@@ -1030,7 +1031,8 @@ h4.section-title {
 			}
 		}
 
-		.play-icon {
+		.play-icon,
+		.added-to-playlist-icon {
 			color: var(--green);
 		}
 

@@ -32,10 +32,9 @@ export default {
 			state.playlist.songs.push(song);
 		},
 		removeSong(state, youtubeId) {
-			state.playlist.songs.forEach((song, index) => {
-				if (song.youtubeId === youtubeId)
-					state.playlist.songs.splice(index, 1);
-			});
+			state.playlist.songs = state.playlist.songs.filter(
+				song => song.youtubeId !== youtubeId
+			);
 		},
 		updatePlaylistSongs(state, playlistSongs) {
 			state.playlist.songs = playlistSongs;

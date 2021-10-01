@@ -44,10 +44,15 @@ export default {
 					const { data } = res;
 					const { count, pageSize, songs } = data;
 
+					const newSongs = songs.map(song => ({
+						isAddedToQueue: false,
+						...song
+					}));
+
 					if (res.status === "success") {
 						this.musareSearch.results = [
 							...this.musareSearch.results,
-							...songs
+							...newSongs
 						];
 						this.musareSearch.page = page;
 						this.musareSearch.count = count;
@@ -62,6 +67,19 @@ export default {
 						this.musareSearch.pageSize = 0;
 						new Toast(res.message);
 					}
+				}
+			);
+		},
+		addMusareSongToPlaylist(id, index) {
+			this.socket.dispatch(
+				"playlists.addSongToPlaylist",
+				false,
+				id,
+				this.playlist._id,
+				res => {
+					new Toast(res.message);
+					if (res.status === "success")
+						this.musareSearch.results[index].isAddedToQueue = true;
 				}
 			);
 		}
