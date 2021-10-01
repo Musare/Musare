@@ -26,6 +26,11 @@ CacheModule.runJob("SUB", {
 				room: `profile.${playlist.createdBy}.playlists`,
 				args: ["event:playlist.created", { data: { playlist } }]
 			});
+
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: "admin.playlists",
+			args: ["event:admin.playlist.created", { data: { playlist } }]
+		});
 	}
 });
 
@@ -41,6 +46,11 @@ CacheModule.runJob("SUB", {
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `profile.${res.userId}.playlists`,
 			args: ["event:playlist.deleted", { data: { playlistId: res.playlistId } }]
+		});
+
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: "admin.playlists",
+			args: ["event:admin.playlist.deleted", { data: { playlistId: res.playlistId } }]
 		});
 	}
 });
@@ -87,6 +97,11 @@ CacheModule.runJob("SUB", {
 					}
 				]
 			});
+
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: "admin.playlists",
+			args: ["event:admin.playlist.song.added", { data: { playlistId: res.playlistId, song: res.song } }]
+		});
 	}
 });
 
@@ -117,6 +132,14 @@ CacheModule.runJob("SUB", {
 					}
 				]
 			});
+
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: "admin.playlists",
+			args: [
+				"event:admin.playlist.song.removed",
+				{ data: { playlistId: res.playlistId, youtubeId: res.youtubeId } }
+			]
+		});
 	}
 });
 
@@ -147,6 +170,14 @@ CacheModule.runJob("SUB", {
 					}
 				]
 			});
+
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: "admin.playlists",
+			args: [
+				"event:admin.playlist.displayName.updated",
+				{ data: { playlistId: res.playlistId, displayName: res.displayName } }
+			]
+		});
 	}
 });
 
@@ -161,6 +192,14 @@ CacheModule.runJob("SUB", {
 					}
 				});
 			});
+		});
+
+		WSModule.runJob("EMIT_TO_ROOM", {
+			room: "admin.playlists",
+			args: [
+				"event:admin.playlist.privacy.updated",
+				{ data: { playlistId: res.playlist._id, privacy: res.playlist.privacy } }
+			]
 		});
 
 		if (res.playlist.privacy === "public")

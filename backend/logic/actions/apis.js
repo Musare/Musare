@@ -187,6 +187,7 @@ export default {
 			page === "stations" ||
 			page === "reports" ||
 			page === "news" ||
+			page === "playlists" ||
 			page === "users" ||
 			page === "statistics" ||
 			page === "punishments"
