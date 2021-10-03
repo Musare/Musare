@@ -104,12 +104,12 @@
 						<router-link to="/terms" @click="closeRegisterModal()">
 							Terms of Service
 						</router-link>
-						&nbsp;and
+						and
 						<router-link
 							to="/privacy"
 							@click="closeRegisterModal()"
 						>
-							Privacy Policy </router-link
+							Privacy Policy</router-link
 						>.
 					</p>
 				</section>
