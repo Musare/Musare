@@ -475,6 +475,12 @@ p {
 	margin: 0;
 }
 
+.content-wrapper {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
 .container {
 	padding: 25px;
 
