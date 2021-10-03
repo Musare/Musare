@@ -1123,7 +1123,7 @@ h4.section-title {
 		min-height: 50px;
 		background-color: var(--white);
 		font-size: 30px;
-		cursor: pointer;
+		user-select: none;
 
 		&.selected {
 			background-color: var(--primary-color);
