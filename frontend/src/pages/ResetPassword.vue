@@ -18,252 +18,267 @@
 					<p class="step" :class="{ selected: step === 3 }">3</p>
 				</div>
 
-				<transition-group name="steps-fade" mode="out-in">
-					<!-- Step 1 -- Enter email address -->
-					<div class="content-box" v-if="step === 1" :key="step">
-						<h2 class="content-box-title">
-							Enter your email address
-						</h2>
-						<p class="content-box-description">
-							We will send a code to your email address to verify
-							your identity.
-						</p>
-
-						<p class="content-box-optional-helper">
-							<a href="#" @click="step = 2"
-								>Already have a code?</a
-							>
-						</p>
-
-						<div class="content-box-inputs">
-							<div class="control is-grouped input-with-button">
-								<p class="control is-expanded">
-									<input
-										class="input"
-										type="email"
-										placeholder="Enter email address here..."
-										autofocus
-										v-model="email.value"
-										@keyup.enter="submitEmail()"
-										@keypress="onInput('email')"
-										@paste="onInput('email')"
-									/>
-								</p>
-								<p class="control">
-									<a
-										class="button is-info"
-										href="#"
-										@click="submitEmail()"
-										><i
-											class="
-												material-icons
-												icon-with-button
-											"
-											>mail</i
-										>Request</a
-									>
-								</p>
-							</div>
-							<transition name="fadein-helpbox">
-								<input-help-box
-									:entered="email.entered"
-									:valid="email.valid"
-									:message="email.message"
-								/>
-							</transition>
-						</div>
-					</div>
-
-					<!-- Step 2 -- Enter code -->
-					<div class="content-box" v-if="step === 2" :key="step">
-						<h2 class="content-box-title">
-							Enter the code sent to your email
-						</h2>
-						<p
-							class="content-box-description"
-							v-if="!email.hasBeenSentAlready"
-						>
-							A code has been sent to
-							<strong>{{ email.value }}.</strong>
-						</p>
-
-						<p class="content-box-optional-helper">
-							<a
-								href="#"
-								@click="
-									email.value ? submitEmail() : (step = 1)
-								"
-								>Request another code</a
-							>
-						</p>
-
-						<div class="content-box-inputs">
-							<div class="control is-grouped input-with-button">
-								<p class="control is-expanded">
-									<input
-										class="input"
-										type="text"
-										placeholder="Enter code here..."
-										autofocus
-										v-model="code"
-										@keyup.enter="verifyCode()"
-									/>
-								</p>
-								<p class="control">
-									<a
-										class="button is-info"
-										href="#"
-										@click="verifyCode()"
-										><i
-											class="
-												material-icons
-												icon-with-button
-											"
-											>vpn_key</i
-										>Verify</a
-									>
-								</p>
-							</div>
-						</div>
-					</div>
-
-					<!-- Step 3 -- Set new password -->
-					<div class="content-box" v-if="step === 3" :key="step">
-						<h2 class="content-box-title">Set a new password</h2>
-						<p class="content-box-description">
-							Create a new password for your account.
-						</p>
-
-						<div class="content-box-inputs">
-							<p class="control is-expanded">
-								<label for="new-password">New password</label>
+				<div class="content-box-wrapper">
+					<transition-group name="steps-fade" mode="out-in">
+						<!-- Step 1 -- Enter email address -->
+						<div class="content-box" v-if="step === 1" key="1">
+							<h2 class="content-box-title">
+								Enter your email address
+							</h2>
+							<p class="content-box-description">
+								We will send a code to your email address to
+								verify your identity.
 							</p>
 
-							<div id="password-visibility-container">
-								<input
-									class="input"
-									id="new-password"
-									type="password"
-									ref="password"
-									placeholder="Enter password here..."
-									v-model="password.value"
-									@keypress="onInput('password')"
-									@paste="onInput('password')"
-								/>
-								<a
-									@click="
-										togglePasswordVisibility('password')
-									"
+							<p class="content-box-optional-helper">
+								<a href="#" @click="step = 2"
+									>Already have a code?</a
 								>
-									<i class="material-icons">
-										{{
-											!password.visible
-												? "visibility"
-												: "visibility_off"
-										}}
-									</i>
-								</a>
+							</p>
+
+							<div class="content-box-inputs">
+								<div
+									class="control is-grouped input-with-button"
+								>
+									<p class="control is-expanded">
+										<input
+											class="input"
+											type="email"
+											placeholder="Enter email address here..."
+											autofocus
+											v-model="email.value"
+											@keyup.enter="submitEmail()"
+											@keypress="onInput('email')"
+											@paste="onInput('email')"
+										/>
+									</p>
+									<p class="control">
+										<a
+											class="button is-info"
+											href="#"
+											@click="submitEmail()"
+											><i
+												class="
+													material-icons
+													icon-with-button
+												"
+												>mail</i
+											>Request</a
+										>
+									</p>
+								</div>
+								<transition name="fadein-helpbox">
+									<input-help-box
+										:entered="email.entered"
+										:valid="email.valid"
+										:message="email.message"
+									/>
+								</transition>
 							</div>
+						</div>
 
-							<transition name="fadein-helpbox">
-								<input-help-box
-									:entered="password.entered"
-									:valid="password.valid"
-									:message="password.message"
-								/>
-							</transition>
-
+						<!-- Step 2 -- Enter code -->
+						<div class="content-box" v-if="step === 2" key="2">
+							<h2 class="content-box-title">
+								Enter the code sent to your email
+							</h2>
 							<p
-								id="new-password-again-input"
-								class="control is-expanded"
+								class="content-box-description"
+								v-if="!email.hasBeenSentAlready"
 							>
-								<label for="new-password-again"
-									>New password again</label
+								A code has been sent to
+								<strong>{{ email.value }}.</strong>
+							</p>
+
+							<p class="content-box-optional-helper">
+								<a
+									href="#"
+									@click="
+										email.value ? submitEmail() : (step = 1)
+									"
+									>Request another code</a
 								>
 							</p>
 
-							<div id="password-visibility-container">
-								<input
-									class="input"
-									id="new-password-again"
-									type="password"
-									ref="passwordAgain"
-									placeholder="Enter password here..."
-									v-model="passwordAgain.value"
-									@keyup.enter="changePassword()"
-									@keypress="onInput('passwordAgain')"
-									@paste="onInput('passwordAgain')"
-								/>
-								<a
-									@click="
-										togglePasswordVisibility(
-											'passwordAgain'
-										)
-									"
+							<div class="content-box-inputs">
+								<div
+									class="control is-grouped input-with-button"
 								>
-									<i class="material-icons">
-										{{
-											!passwordAgain.visible
-												? "visibility"
-												: "visibility_off"
-										}}
-									</i>
-								</a>
+									<p class="control is-expanded">
+										<input
+											class="input"
+											type="text"
+											placeholder="Enter code here..."
+											autofocus
+											v-model="code"
+											@keyup.enter="verifyCode()"
+										/>
+									</p>
+									<p class="control">
+										<a
+											class="button is-info"
+											href="#"
+											@click="verifyCode()"
+											><i
+												class="
+													material-icons
+													icon-with-button
+												"
+												>vpn_key</i
+											>Verify</a
+										>
+									</p>
+								</div>
 							</div>
+						</div>
 
-							<transition name="fadein-helpbox">
-								<input-help-box
-									:entered="passwordAgain.entered"
-									:valid="passwordAgain.valid"
-									:message="passwordAgain.message"
-								/>
-							</transition>
+						<!-- Step 3 -- Set new password -->
+						<div class="content-box" v-if="step === 3" key="3">
+							<h2 class="content-box-title">
+								Set a new password
+							</h2>
+							<p class="content-box-description">
+								Create a new password for your account.
+							</p>
 
-							<a
-								id="change-password-button"
-								class="button is-success"
-								href="#"
-								@click="changePassword()"
+							<div class="content-box-inputs">
+								<p class="control is-expanded">
+									<label for="new-password"
+										>New password</label
+									>
+								</p>
+
+								<div id="password-visibility-container">
+									<input
+										class="input"
+										id="new-password"
+										type="password"
+										ref="password"
+										placeholder="Enter password here..."
+										v-model="password.value"
+										@keypress="onInput('password')"
+										@paste="onInput('password')"
+									/>
+									<a
+										@click="
+											togglePasswordVisibility('password')
+										"
+									>
+										<i class="material-icons">
+											{{
+												!password.visible
+													? "visibility"
+													: "visibility_off"
+											}}
+										</i>
+									</a>
+								</div>
+
+								<transition name="fadein-helpbox">
+									<input-help-box
+										:entered="password.entered"
+										:valid="password.valid"
+										:message="password.message"
+									/>
+								</transition>
+
+								<p
+									id="new-password-again-input"
+									class="control is-expanded"
+								>
+									<label for="new-password-again"
+										>New password again</label
+									>
+								</p>
+
+								<div id="password-visibility-container">
+									<input
+										class="input"
+										id="new-password-again"
+										type="password"
+										ref="passwordAgain"
+										placeholder="Enter password here..."
+										v-model="passwordAgain.value"
+										@keyup.enter="changePassword()"
+										@keypress="onInput('passwordAgain')"
+										@paste="onInput('passwordAgain')"
+									/>
+									<a
+										@click="
+											togglePasswordVisibility(
+												'passwordAgain'
+											)
+										"
+									>
+										<i class="material-icons">
+											{{
+												!passwordAgain.visible
+													? "visibility"
+													: "visibility_off"
+											}}
+										</i>
+									</a>
+								</div>
+
+								<transition name="fadein-helpbox">
+									<input-help-box
+										:entered="passwordAgain.entered"
+										:valid="passwordAgain.valid"
+										:message="passwordAgain.message"
+									/>
+								</transition>
+
+								<a
+									id="change-password-button"
+									class="button is-success"
+									href="#"
+									@click="changePassword()"
+								>
+									Change password</a
+								>
+							</div>
+						</div>
+
+						<div
+							class="content-box reset-status-box"
+							v-if="step === 4"
+							key="4"
+						>
+							<i class="material-icons success-icon"
+								>check_circle</i
 							>
-								Change password</a
+							<h2>Password successfully {{ mode }}</h2>
+							<router-link
+								class="button is-dark"
+								href="#"
+								to="/settings"
+								><i class="material-icons icon-with-button"
+									>undo</i
+								>Return to Settings</router-link
 							>
 						</div>
-					</div>
 
-					<div
-						class="content-box reset-status-box"
-						v-if="step === 4"
-						:key="step"
-					>
-						<i class="material-icons success-icon">check_circle</i>
-						<h2>Password successfully {{ mode }}</h2>
-						<router-link
-							class="button is-dark"
-							href="#"
-							to="/settings"
-							><i class="material-icons icon-with-button">undo</i
-							>Return to Settings</router-link
+						<div
+							class="content-box reset-status-box"
+							v-if="step === 5"
+							key="5"
 						>
-					</div>
-
-					<div
-						class="content-box reset-status-box"
-						v-if="step === 5"
-						:key="step"
-					>
-						<i class="material-icons error-icon">error</i>
-						<h2>
-							Password {{ mode }} failed, please try again later
-						</h2>
-						<router-link
-							class="button is-dark"
-							href="#"
-							to="/settings"
-							><i class="material-icons icon-with-button">undo</i
-							>Return to Settings</router-link
-						>
-					</div>
-				</transition-group>
+							<i class="material-icons error-icon">error</i>
+							<h2>
+								Password {{ mode }} failed, please try again
+								later
+							</h2>
+							<router-link
+								class="button is-dark"
+								href="#"
+								to="/settings"
+								><i class="material-icons icon-with-button"
+									>undo</i
+								>Return to Settings</router-link
+							>
+						</div>
+					</transition-group>
+				</div>
 			</div>
 		</div>
 		<main-footer />
@@ -473,6 +488,12 @@ h1,
 h2,
 p {
 	margin: 0;
+}
+
+.content-wrapper {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
 }
 
 .container {

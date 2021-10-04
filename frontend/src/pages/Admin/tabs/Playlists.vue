@@ -115,19 +115,57 @@ export default {
 	},
 	data() {
 		return {
-			utils,
-			playlists: []
+			utils
 		};
 	},
 	computed: {
 		...mapState("modalVisibility", {
 			modals: state => state.modals
 		}),
+		...mapState("admin/playlists", {
+			playlists: state => state.playlists
+		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
 		})
 	},
 	mounted() {
+		this.socket.on("event:admin.playlist.created", res =>
+			this.addPlaylist(res.data.playlist)
+		);
+
+		this.socket.on("event:admin.playlist.deleted", res =>
+			this.removePlaylist(res.data.playlistId)
+		);
+
+		this.socket.on("event:admin.playlist.song.added", res =>
+			this.addPlaylistSong({
+				playlistId: res.data.playlistId,
+				song: res.data.song
+			})
+		);
+
+		this.socket.on("event:admin.playlist.song.removed", res =>
+			this.removePlaylistSong({
+				playlistId: res.data.playlistId,
+				youtubeId: res.data.youtubeId
+			})
+		);
+
+		this.socket.on("event:admin.playlist.displayName.updated", res =>
+			this.updatePlaylistDisplayName({
+				playlistId: res.data.playlistId,
+				displayName: res.data.displayName
+			})
+		);
+
+		this.socket.on("event:admin.playlist.privacy.updated", res =>
+			this.updatePlaylistPrivacy({
+				playlistId: res.data.playlistId,
+				privacy: res.data.privacy
+			})
+		);
+
 		ws.onConnect(this.init);
 	},
 	methods: {
@@ -138,7 +176,7 @@ export default {
 		init() {
 			this.socket.dispatch("playlists.index", res => {
 				if (res.status === "success") {
-					this.playlists = res.data.playlists;
+					this.setPlaylists(res.data.playlists);
 					// if (this.$route.query.userId) {
 					// 	const user = this.users.find(
 					// 		user => user._id === this.$route.query.userId
@@ -221,7 +259,16 @@ export default {
 			);
 		},
 		...mapActions("modalVisibility", ["openModal"]),
-		...mapActions("user/playlists", ["editPlaylist"])
+		...mapActions("user/playlists", ["editPlaylist"]),
+		...mapActions("admin/playlists", [
+			"addPlaylist",
+			"setPlaylists",
+			"removePlaylist",
+			"addPlaylistSong",
+			"removePlaylistSong",
+			"updatePlaylistDisplayName",
+			"updatePlaylistPrivacy"
+		])
 	}
 };
 </script>

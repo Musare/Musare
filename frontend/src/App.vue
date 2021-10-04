@@ -464,10 +464,6 @@ a {
 			0 10px 10px rgba(0, 0, 0, 0.22);
 		background-color: var(--white);
 
-		&:not([data-theme~="songActions"]) > .tippy-arrow::before {
-			border-top-color: var(--white);
-		}
-
 		.tippy-content {
 			color: var(--black);
 		}
@@ -607,7 +603,8 @@ a {
 		}
 	}
 
-	.play-icon {
+	.play-icon,
+	.added-to-playlist-icon {
 		color: var(--green);
 	}
 
@@ -1030,7 +1027,8 @@ h4.section-title {
 			}
 		}
 
-		.play-icon {
+		.play-icon,
+		.added-to-playlist-icon {
 			color: var(--green);
 		}
 
@@ -1094,7 +1092,7 @@ h4.section-title {
 	transition: all 0.3s ease;
 }
 
-.steps-fade-enter,
+.steps-fade-enter-from,
 .steps-fade-leave-to {
 	opacity: 0;
 }
@@ -1125,7 +1123,7 @@ h4.section-title {
 		min-height: 50px;
 		background-color: var(--white);
 		font-size: 30px;
-		cursor: pointer;
+		user-select: none;
 
 		&.selected {
 			background-color: var(--primary-color);
@@ -1140,6 +1138,20 @@ h4.section-title {
 		width: 180px;
 		height: 1px;
 		background-color: var(--dark-grey);
+	}
+}
+
+/* This class is used for content-box in ResetPassword, but not in RemoveAccount. This is because ResetPassword uses transitions and RemoveAccount does not */
+.content-box-wrapper {
+	position: relative;
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	min-height: 200px;
+
+	.content-box {
+		position: absolute;
 	}
 }
 

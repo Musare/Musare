@@ -79,7 +79,7 @@ export default {
 				}
 			);
 		},
-		addSongToPlaylist(id, index) {
+		addYouTubeSongToPlaylist(id, index) {
 			this.socket.dispatch(
 				"playlists.addSongToPlaylist",
 				false,

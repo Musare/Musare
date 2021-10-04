@@ -82,12 +82,12 @@ export default {
 					new Toast(res.message);
 
 					if (res.status === "success") {
+						this.closeModal("createPlaylist");
+
 						if (!window.addToPlaylistDropdown) {
 							this.editPlaylist(res.data.playlistId);
 							this.openModal("editPlaylist");
 						}
-
-						this.closeModal("createPlaylist");
 					}
 				}
 			);

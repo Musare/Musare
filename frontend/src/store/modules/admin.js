@@ -188,6 +188,80 @@ const modules = {
 				});
 			}
 		}
+	},
+	playlists: {
+		namespaced: true,
+		state: {
+			playlists: []
+		},
+		getters: {},
+		actions: {
+			setPlaylists: ({ commit }, playlists) =>
+				commit("setPlaylists", playlists),
+			addPlaylist: ({ commit }, playlist) =>
+				commit("addPlaylist", playlist),
+			removePlaylist: ({ commit }, playlistId) =>
+				commit("removePlaylist", playlistId),
+			addPlaylistSong: ({ commit }, { playlistId, song }) =>
+				commit("addPlaylistSong", { playlistId, song }),
+			removePlaylistSong: ({ commit }, { playlistId, youtubeId }) =>
+				commit("removePlaylistSong", { playlistId, youtubeId }),
+			updatePlaylistDisplayName: (
+				{ commit },
+				{ playlistId, displayName }
+			) =>
+				commit("updatePlaylistDisplayName", {
+					playlistId,
+					displayName
+				}),
+			updatePlaylistPrivacy: ({ commit }, { playlistId, privacy }) =>
+				commit("updatePlaylistPrivacy", { playlistId, privacy })
+		},
+		mutations: {
+			setPlaylists(state, playlists) {
+				state.playlists = playlists;
+			},
+			addPlaylist(state, playlist) {
+				state.playlists.unshift(playlist);
+			},
+			removePlaylist(state, playlistId) {
+				state.playlists = state.playlists.filter(
+					playlist => playlist._id !== playlistId
+				);
+			},
+			addPlaylistSong(state, { playlistId, song }) {
+				state.playlists[
+					state.playlists.findIndex(
+						playlist => playlist._id === playlistId
+					)
+				].songs.push(song);
+			},
+			removePlaylistSong(state, { playlistId, youtubeId }) {
+				const playlistIndex = state.playlists.findIndex(
+					playlist => playlist._id === playlistId
+				);
+				state.playlists[playlistIndex].songs.splice(
+					state.playlists[playlistIndex].songs.findIndex(
+						song => song.youtubeId === youtubeId
+					),
+					1
+				);
+			},
+			updatePlaylistDisplayName(state, { playlistId, displayName }) {
+				state.playlists[
+					state.playlists.findIndex(
+						playlist => playlist._id === playlistId
+					)
+				].displayName = displayName;
+			},
+			updatePlaylistPrivacy(state, { playlistId, privacy }) {
+				state.playlists[
+					state.playlists.findIndex(
+						playlist => playlist._id === playlistId
+					)
+				].privacy = privacy;
+			}
+		}
 	}
 };
 

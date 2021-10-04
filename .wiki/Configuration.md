@@ -48,10 +48,25 @@ Location: `frontend/dist/config/default.json`
 ## Docker Environment
 Location: `.env`
 
+In the table below the container host refers to the IP address that the docker container listens on, setting this to `127.0.0.1` for example will only expose the configured port to localhost, whereas setting to `0.0.0.0` will expose the port on all interfaces.
+
+The container port refers to the external docker container port, used to access services within the container. Changing this does not require any changes to configuration within container. For example setting the `MONGO_PORT` to `21018` will allow you to access the mongo service through that port, even though the application within the container is listening on `21017`.
+
 | Property | Description |
 | --- | --- |
-| Ports | Will be how you access the services on your machine, or what ports you will need to specify in your nginx files when using proxy_pass. |
 | `COMPOSE_PROJECT_NAME` | Should be a unique name for this installation, especially if you have multiple instances of Musare on the same machine. |
-| `FRONTEND_MODE` | Should be either `dev` or `prod` (self-explanatory). |
-| `MONGO_ROOT_PASSWORD` | Password of the root/admin user of MongoDB |
-| `MONGO_USER_USERNAME` | Password for the "musare" user (what the backend uses) of MongoDB |
+| `BACKEND_HOST` | Backend container host. |
+| `BACKEND_PORT` | Backend container port. |
+| `FRONTEND_HOST` | Frontend container host. |
+| `FRONTEND_PORT` | Frontend container port. |
+| `FRONTEND_MODE` | Should be either `dev` or `prod`. |
+| `MONGO_HOST` | Mongo container host. |
+| `MONGO_PORT` | Mongo container port. |
+| `MONGO_ROOT_PASSWORD` | Password of the root/admin user for MongoDB. |
+| `MONGO_USER_USERNAME` | Application username for MongoDB. |
+| `MONGO_USER_PASSWORD` | Application password for MongoDB. |
+| `REDIS_HOST` | Redis container host. |
+| `REDIS_PORT` | Redis container port. |
+| `REDIS_PASSWORD` | Redis password. |
+| `BACKUP_LOCATION` | Directory to store musare.sh backups. Defaults to `/backups` in script location. |
+| `BACKUP_NAME` | Name of musare.sh backup files. Defaults to `musare-$(date +"%Y-%m-%d-%s").dump`. |

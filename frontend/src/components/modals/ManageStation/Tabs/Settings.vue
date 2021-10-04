@@ -568,7 +568,7 @@ export default {
 			font-size: 18px;
 			color: var(--white);
 			box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.25);
-			display: block;
+			display: flex;
 			text-align: center;
 			justify-content: center;
 			-ms-flex-align: center;

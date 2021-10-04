@@ -24,25 +24,36 @@
 				class="song-query-results"
 			>
 				<song-item
-					v-for="song in musareSearch.results"
+					v-for="(song, index) in musareSearch.results"
 					:key="song._id"
 					:song="song"
-					disabled-actions="addToPlaylist"
 				>
 					<template #actions>
-						<add-to-playlist-dropdown
-							:song="{ youtubeId: song.songId }"
-							placement="top-end"
+						<transition
+							name="musare-search-query-actions"
+							mode="out-in"
 						>
-							<template #button>
-								<i
-									class="material-icons add-to-playlist-icon"
-									content="Add Song to Playlist"
-									v-tippy
-									>playlist_add</i
-								>
-							</template>
-						</add-to-playlist-dropdown>
+							<i
+								v-if="song.isAddedToQueue"
+								class="material-icons added-to-playlist-icon"
+								content="Song is already in playlist"
+								v-tippy
+								>done</i
+							>
+							<i
+								v-else
+								class="material-icons add-to-playlist-icon"
+								content="Add Song to Playlist"
+								v-tippy
+								@click="
+									addMusareSongToPlaylist(
+										song.youtubeId,
+										index
+									)
+								"
+								>playlist_add</i
+							>
+						</transition>
 					</template>
 				</song-item>
 
@@ -87,51 +98,33 @@
 				class="song-query-results"
 			>
 				<search-query-item
-					v-for="result in youtubeSearch.songs.results"
+					v-for="(result, index) in youtubeSearch.songs.results"
 					:key="result.id"
 					:result="result"
 				>
 					<template #actions>
-						<add-to-playlist-dropdown
-							:song="{ youtubeId: result.id }"
-							placement="top-end"
+						<transition
+							name="youtube-search-query-actions"
+							mode="out-in"
 						>
-							<template #button>
-								<i
-									class="material-icons add-to-playlist-icon"
-									content="Add Song to Playlist"
-									v-tippy
-									>playlist_add</i
-								>
-							</template>
-						</add-to-playlist-dropdown>
-						<!-- <transition name="search-query-actions" mode="out-in">
-							<a
-								class="button is-success"
+							<i
 								v-if="result.isAddedToQueue"
-								href="#"
-								key="added-to-playlist"
+								class="material-icons added-to-playlist-icon"
+								content="Song is already in playlist"
+								v-tippy
+								>done</i
 							>
-								<i class="material-icons icon-with-button"
-									>done</i
-								>
-								Added to playlist
-							</a>
-							<a
-								class="button is-dark"
+							<i
 								v-else
-								@click.prevent="
-									addSongToPlaylist(result.id, index)
+								class="material-icons add-to-playlist-icon"
+								content="Add Song to Playlist"
+								v-tippy
+								@click="
+									addYouTubeSongToPlaylist(result.id, index)
 								"
-								href="#"
-								key="add-to-playlist"
+								>playlist_add</i
 							>
-								<i class="material-icons icon-with-button"
-									>add</i
-								>
-								Add to playlist
-							</a>
-						</transition> -->
+						</transition>
 					</template>
 				</search-query-item>
 
@@ -154,11 +147,10 @@ import SearchYoutube from "@/mixins/SearchYoutube.vue";
 import SearchMusare from "@/mixins/SearchMusare.vue";
 
 import SongItem from "@/components/SongItem.vue";
-import AddToPlaylistDropdown from "@/components/AddToPlaylistDropdown.vue";
 import SearchQueryItem from "@/components/SearchQueryItem.vue";
 
 export default {
-	components: { SearchQueryItem, SongItem, AddToPlaylistDropdown },
+	components: { SearchQueryItem, SongItem },
 	mixins: [SearchYoutube, SearchMusare],
 	computed: {
 		...mapState("modals/editPlaylist", {
@@ -181,6 +173,16 @@ export default {
 				})
 			);
 		},
+		"musareSearch.results": function checkIfSongInPlaylist(songs) {
+			songs.forEach((searchItem, index) =>
+				this.playlist.songs.find(song => {
+					if (song._id === searchItem._id)
+						this.musareSearch.results[index].isAddedToQueue = true;
+
+					return song._id === searchItem._id;
+				})
+			);
+		},
 		"playlist.songs": function checkIfSongInPlaylist() {
 			this.youtubeSearch.songs.results.forEach((searchItem, index) =>
 				this.playlist.songs.find(song => {
@@ -193,6 +195,16 @@ export default {
 						].isAddedToQueue = true;
 
 					return song.youtubeId === searchItem.id;
+				})
+			);
+			console.log(222);
+			this.musareSearch.results.forEach((searchItem, index) =>
+				this.playlist.songs.find(song => {
+					this.musareSearch.results[index].isAddedToQueue = false;
+					if (song.youtubeId === searchItem.youtubeId)
+						this.musareSearch.results[index].isAddedToQueue = true;
+
+					return song.youtubeId === searchItem.youtubeId;
 				})
 			);
 		}
