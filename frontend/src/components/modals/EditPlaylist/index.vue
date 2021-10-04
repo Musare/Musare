@@ -585,7 +585,9 @@ export default {
 		},
 		...mapActions({
 			showTab(dispatch, payload) {
-				this.$refs[`${payload}-tab`].scrollIntoView();
+				this.$refs[`${payload}-tab`].scrollIntoView({
+					block: "nearest"
+				});
 				return dispatch("modals/editPlaylist/showTab", payload);
 			}
 		}),
@@ -605,6 +607,8 @@ export default {
 .edit-playlist-modal {
 	.modal-card {
 		width: 1300px;
+		height: 100%;
+		overflow: auto;
 
 		.modal-card-body {
 			padding: 16px;

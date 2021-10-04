@@ -46,20 +46,28 @@ export default {
 </script>
 
 <style lang="scss">
-.search-query-actions-enter-active {
+.search-query-actions-enter-active,
+.musare-search-query-actions-enter-active,
+.youtube-search-query-actions-enter-active {
 	transition: all 0.2s ease;
 }
 
-.search-query-actions-leave-active {
+.search-query-actions-leave-active,
+.musare-search-query-actions-leave-active,
+.youtube-search-query-actions-leave-active {
 	transition: all 0.2s cubic-bezier(1, 0.5, 0.8, 1);
 }
 
-.search-query-actions-enter {
+.search-query-actions-enter,
+.musare-search-query-actions-enter,
+.youtube-search-query-actions-enter {
 	transform: translateX(-20px);
 	opacity: 0;
 }
 
-.search-query-actions-leave-to {
+.search-query-actions-leave-to,
+.musare-search-query-actions-leave-to,
+.youtube-search-query-actions-leave-to {
 	transform: translateX(20px);
 	opacity: 0;
 }

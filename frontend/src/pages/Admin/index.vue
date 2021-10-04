@@ -218,7 +218,8 @@ export default {
 		showTab(tab) {
 			if (this.$refs[`${tab}-tab`])
 				this.$refs[`${tab}-tab`].scrollIntoView({
-					inline: "center"
+					inline: "center",
+					block: "nearest"
 				});
 			this.currentTab = tab;
 		}

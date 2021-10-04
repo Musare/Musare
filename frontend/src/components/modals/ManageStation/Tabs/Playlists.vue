@@ -740,7 +740,7 @@ export default {
 			);
 		},
 		showTab(tab) {
-			this.$refs[`${tab}-tab`].scrollIntoView();
+			this.$refs[`${tab}-tab`].scrollIntoView({ block: "nearest" });
 			this.tab = tab;
 		},
 		isOwner() {
@@ -885,8 +885,8 @@ export default {
 			this.search.searchedQuery = this.search.query;
 			this.socket.dispatch(action, query, page, res => {
 				const { data } = res;
-				const { count, pageSize, playlists } = data;
 				if (res.status === "success") {
+					const { count, pageSize, playlists } = data;
 					this.search.results = [
 						...this.search.results,
 						...playlists

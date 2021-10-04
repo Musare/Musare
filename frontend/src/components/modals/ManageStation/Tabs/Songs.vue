@@ -65,14 +65,33 @@
 							:song="song"
 						>
 							<template #actions>
-								<i
-									class="material-icons add-to-queue-icon"
-									v-if="station.partyMode && !station.locked"
-									@click="addSongToQueue(song.youtubeId)"
-									content="Add Song to Queue"
-									v-tippy
-									>queue</i
+								<transition
+									name="musare-search-query-actions"
+									mode="out-in"
 								>
+									<i
+										v-if="
+											songsInQueue.indexOf(
+												song.youtubeId
+											) !== -1
+										"
+										class="
+											material-icons
+											added-to-playlist-icon
+										"
+										content="Song is already in queue"
+										v-tippy
+										>done</i
+									>
+									<i
+										v-else
+										class="material-icons add-to-queue-icon"
+										@click="addSongToQueue(song.youtubeId)"
+										content="Add Song to Queue"
+										v-tippy
+										>queue</i
+									>
+								</transition>
 							</template>
 						</song-item>
 						<button
@@ -121,40 +140,32 @@
 						>
 							<template #actions>
 								<transition
-									name="search-query-actions"
+									name="youtube-search-query-actions"
 									mode="out-in"
 								>
-									<a
-										class="button is-success"
-										v-if="result.isAddedToQueue"
-										key="added-to-queue"
+									<i
+										v-if="
+											songsInQueue.indexOf(result.id) !==
+											-1
+										"
+										class="
+											material-icons
+											added-to-playlist-icon
+										"
+										content="Song is already in queue"
+										v-tippy
+										>done</i
 									>
-										<i
-											class="
-												material-icons
-												icon-with-button
-											"
-											>done</i
-										>
-										Added to queue
-									</a>
-									<a
-										class="button is-dark"
+									<i
 										v-else
-										@click.prevent="
+										class="material-icons add-to-queue-icon"
+										@click="
 											addSongToQueue(result.id, index)
 										"
-										key="add-to-queue"
+										content="Add Song to Queue"
+										v-tippy
+										>queue</i
 									>
-										<i
-											class="
-												material-icons
-												icon-with-button
-											"
-											>add</i
-										>
-										Add to queue
-									</a>
 								</transition>
 							</template>
 						</search-query-item>
@@ -252,6 +263,13 @@ export default {
 		excludedSongIds() {
 			return this.excludedSongs.map(excludedSong => excludedSong._id);
 		},
+		songsInQueue() {
+			if (this.station.currentSong)
+				return this.songsList
+					.map(song => song.youtubeId)
+					.concat(this.station.currentSong.youtubeId);
+			return this.songsList.map(song => song.youtubeId);
+		},
 		...mapState({
 			loggedIn: state => state.user.auth.loggedIn,
 			userId: state => state.user.auth.userId,
@@ -261,6 +279,7 @@ export default {
 			parentTab: state => state.tab,
 			station: state => state.station,
 			originalStation: state => state.originalStation,
+			songsList: state => state.songsList,
 			excludedPlaylists: state => state.excludedPlaylists,
 			stationPlaylist: state => state.stationPlaylist
 		}),

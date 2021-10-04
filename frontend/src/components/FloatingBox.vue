@@ -174,8 +174,9 @@ export default {
 	.box-body {
 		display: flex;
 		flex-wrap: wrap;
-		justify-content: space-evenly;
 		padding: 10px;
+		height: calc(100% - 24px); /* 24px is the height of the box-header */
+		overflow: auto;
 
 		span {
 			padding: 3px 6px;
