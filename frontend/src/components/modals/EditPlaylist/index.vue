@@ -605,6 +605,8 @@ export default {
 .edit-playlist-modal {
 	.modal-card {
 		width: 1300px;
+		height: 100%;
+		overflow: auto;
 
 		.modal-card-body {
 			padding: 16px;
