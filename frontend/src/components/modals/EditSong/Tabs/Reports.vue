@@ -279,7 +279,7 @@ export default {
 	},
 	methods: {
 		showTab(tab) {
-			this.$refs[`${tab}-tab`].scrollIntoView();
+			this.$refs[`${tab}-tab`].scrollIntoView({ block: "nearest" });
 			this.tab = tab;
 		},
 		resolve(reportId) {

@@ -1566,7 +1566,9 @@ export default {
 		]),
 		...mapActions({
 			showTab(dispatch, payload) {
-				this.$refs[`${payload}-tab`].scrollIntoView();
+				this.$refs[`${payload}-tab`].scrollIntoView({
+					block: "nearest"
+				});
 				return dispatch("modals/editSong/showTab", payload);
 			}
 		}),
