@@ -929,6 +929,11 @@ export default {
 		aModalIsOpen() {
 			return Object.keys(this.currentlyActive).length > 0;
 		},
+		currentUserQueueSongs() {
+			return this.songsList.filter(
+				queueSong => queueSong.requestedBy === this.userId
+			).length;
+		},
 		...mapState("modalVisibility", {
 			modals: state => state.modals,
 			currentlyActive: state => state.currentlyActive
@@ -958,6 +963,16 @@ export default {
 		...mapGetters({
 			socket: "websockets/getSocket"
 		})
+	},
+	watch: {
+		currentUserQueueSongs(total) {
+			if (
+				this.station.type === "community" &&
+				this.station.partyMode === true &&
+				total < 3
+			)
+				this.addPartyPlaylistSongToQueue();
+		}
 	},
 	async mounted() {
 		this.editSongModalWatcher = this.$store.watch(
@@ -1128,8 +1143,6 @@ export default {
 					: null;
 
 			this.updateNextSong(nextSong);
-
-			this.addPartyPlaylistSongToQueue();
 		});
 
 		this.socket.on("event:station.queue.song.repositioned", res => {
@@ -1905,43 +1918,33 @@ export default {
 			);
 		},
 		addPartyPlaylistSongToQueue() {
-			let isInQueue = false;
 			if (
 				this.station.type === "community" &&
-				this.station.partyMode === true
+				this.station.partyMode === true &&
+				this.currentUserQueueSongs < 3 &&
+				this.partyPlaylists.length > 0
 			) {
-				this.songsList.forEach(queueSong => {
-					if (queueSong.requestedBy === this.userId) isInQueue = true;
-				});
-				if (!isInQueue && this.partyPlaylists.length > 0) {
-					const selectedPlaylist =
-						this.partyPlaylists[
+				const selectedPlaylist =
+					this.partyPlaylists[
+						Math.floor(Math.random() * this.partyPlaylists.length)
+					];
+				if (selectedPlaylist._id && selectedPlaylist.songs.length > 0) {
+					const selectedSong =
+						selectedPlaylist.songs[
 							Math.floor(
-								Math.random() * this.partyPlaylists.length
+								Math.random() * selectedPlaylist.songs.length
 							)
 						];
-					if (
-						selectedPlaylist._id &&
-						selectedPlaylist.songs.length > 0
-					) {
-						const selectedSong =
-							selectedPlaylist.songs[
-								Math.floor(
-									Math.random() *
-										selectedPlaylist.songs.length
-								)
-							];
-						if (selectedSong.youtubeId) {
-							this.socket.dispatch(
-								"stations.addToQueue",
-								this.station._id,
-								selectedSong.youtubeId,
-								data => {
-									if (data.status !== "success")
-										new Toast("Error auto queueing song");
-								}
-							);
-						}
+					if (selectedSong.youtubeId) {
+						this.socket.dispatch(
+							"stations.addToQueue",
+							this.station._id,
+							selectedSong.youtubeId,
+							data => {
+								if (data.status !== "success")
+									this.addPartyPlaylistSongToQueue();
+							}
+						);
 					}
 				}
 			}
