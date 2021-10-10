@@ -204,7 +204,7 @@ export default {
 			this.formatRequestedAt();
 			setInterval(() => {
 				this.formatRequestedAt();
-			}, 5000);
+			}, 30000);
 		}
 	},
 	methods: {
@@ -216,10 +216,7 @@ export default {
 			)
 				this.formatedRequestedAt = this.formatDistance(
 					parseISO(this.song.requestedAt),
-					new Date(),
-					{
-						includeSeconds: true
-					}
+					new Date()
 				);
 		},
 		formatArtists() {
