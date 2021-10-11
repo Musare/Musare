@@ -47,15 +47,7 @@
 							:user-id="song.requestedBy"
 							:link="true"
 						/>
-						{{
-							formatDistance(
-								parseISO(song.requestedAt),
-								new Date(),
-								{
-									includeSeconds: true
-								}
-							)
-						}}
+						{{ formatedRequestedAt }}
 						ago
 					</strong>
 				</p>
@@ -197,7 +189,9 @@ export default {
 	},
 	data() {
 		return {
-			utils
+			utils,
+			formatedRequestedAt: null,
+			formatRequestedAtInterval: null
 		};
 	},
 	computed: {
@@ -206,7 +200,29 @@ export default {
 			userRole: state => state.user.auth.role
 		})
 	},
+	mounted() {
+		if (this.requestedBy) {
+			this.formatRequestedAt();
+			this.formatRequestedAtInterval = setInterval(() => {
+				this.formatRequestedAt();
+			}, 30000);
+		}
+	},
+	unmounted() {
+		clearInterval(this.formatRequestedAtInterval);
+	},
 	methods: {
+		formatRequestedAt() {
+			if (
+				this.requestedBy &&
+				this.song.requestedBy &&
+				this.song.requestedAt
+			)
+				this.formatedRequestedAt = this.formatDistance(
+					parseISO(this.song.requestedAt),
+					new Date()
+				);
+		},
 		formatArtists() {
 			if (this.song.artists.length === 1) {
 				return this.song.artists[0];
