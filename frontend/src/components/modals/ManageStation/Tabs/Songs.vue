@@ -455,5 +455,21 @@ export default {
 			margin: 0;
 		}
 	}
+
+	.musare-songs {
+		.song-item {
+			/deep/ .thumbnail-and-info {
+				width: calc(100% - 116px);
+			}
+		}
+	}
+
+	.youtube-songs {
+		.song-item {
+			/deep/ .thumbnail-and-info {
+				width: calc(100% - 57px);
+			}
+		}
+	}
 }
 </style>

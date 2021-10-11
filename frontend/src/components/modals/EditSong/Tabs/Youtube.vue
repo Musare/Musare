@@ -97,7 +97,7 @@ export default {
 
 		.search-query-item {
 			/deep/ .thumbnail-and-info {
-				width: calc(100% - 29px);
+				width: calc(100% - 59px);
 			}
 
 			.icon-selected {
