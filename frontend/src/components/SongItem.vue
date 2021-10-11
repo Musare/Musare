@@ -190,7 +190,8 @@ export default {
 	data() {
 		return {
 			utils,
-			formatedRequestedAt: null
+			formatedRequestedAt: null,
+			formatRequestedAtInterval: null
 		};
 	},
 	computed: {
@@ -202,10 +203,13 @@ export default {
 	mounted() {
 		if (this.requestedBy) {
 			this.formatRequestedAt();
-			setInterval(() => {
+			this.formatRequestedAtInterval = setInterval(() => {
 				this.formatRequestedAt();
 			}, 30000);
 		}
+	},
+	unmounted() {
+		clearInterval(this.formatRequestedAtInterval);
 	},
 	methods: {
 		formatRequestedAt() {
