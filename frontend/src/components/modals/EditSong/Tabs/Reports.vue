@@ -202,9 +202,11 @@
 </template>
 
 <script>
-import ReportInfoItem from "@/components/ReportInfoItem.vue";
 import { mapState, mapGetters, mapActions } from "vuex";
+
 import Toast from "toasters";
+
+import ReportInfoItem from "@/components/ReportInfoItem.vue";
 
 export default {
 	components: { ReportInfoItem },

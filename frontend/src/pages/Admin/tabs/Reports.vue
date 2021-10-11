@@ -85,12 +85,13 @@
 </template>
 
 <script>
-import ReportInfoItem from "@/components/ReportInfoItem.vue";
 import { mapState, mapActions, mapGetters } from "vuex";
 import { defineAsyncComponent } from "vue";
 
 import Toast from "toasters";
 import ws from "@/ws";
+
+import ReportInfoItem from "@/components/ReportInfoItem.vue";
 
 export default {
 	components: {
