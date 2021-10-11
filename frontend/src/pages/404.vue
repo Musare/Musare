@@ -1,5 +1,6 @@
 <template>
 	<div>
+		<main-header />
 		<div class="wrapper">
 			<page-metadata title="404" />
 
@@ -14,10 +15,11 @@
 </template>
 
 <script>
+import MainHeader from "@/components/layout/MainHeader.vue";
 import MainFooter from "@/components/layout/MainFooter.vue";
 
 export default {
-	components: { MainFooter }
+	components: { MainHeader, MainFooter }
 };
 </script>
 
