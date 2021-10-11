@@ -118,7 +118,10 @@ const router = createRouter({
 		},
 		{
 			path: "/reset_password",
-			component: () => import("@/pages/ResetPassword.vue")
+			component: () => import("@/pages/ResetPassword.vue"),
+			meta: {
+				guestsOnly: true
+			}
 		},
 		{
 			path: "/set_password",
@@ -162,6 +165,44 @@ const router = createRouter({
 			component: () => import("@/pages//Station/index.vue")
 		}
 	]
+});
+
+router.beforeEach((to, from, next) => {
+	if (window.stationInterval) {
+		clearInterval(window.stationInterval);
+		window.stationInterval = 0;
+	}
+
+	if (ws.socket && to.fullPath !== from.fullPath) {
+		ws.clearCallbacks();
+		ws.destroyListeners();
+	}
+
+	if (to.meta.loginRequired || to.meta.adminRequired || to.meta.guestsOnly) {
+		const gotData = () => {
+			if (to.meta.loginRequired && !store.state.user.auth.loggedIn)
+				next({ path: "/login" });
+			else if (
+				to.meta.adminRequired &&
+				store.state.user.auth.role !== "admin"
+			)
+				next({ path: "/" });
+			else if (to.meta.guestsOnly && store.state.user.auth.loggedIn)
+				next({ path: "/" });
+			else next();
+		};
+
+		if (store.state.user.auth.gotData) gotData();
+		else {
+			const watcher = store.watch(
+				state => state.user.auth.gotData,
+				() => {
+					watcher();
+					gotData();
+				}
+			);
+		}
+	} else next();
 });
 
 app.use(router);
@@ -240,48 +281,6 @@ lofig.folder = "../config/default.json";
 				"user/preferences/changeActivityWatch",
 				preferences.activityWatch
 			);
-	});
-
-	router.beforeEach((to, from, next) => {
-		if (window.stationInterval) {
-			clearInterval(window.stationInterval);
-			window.stationInterval = 0;
-		}
-
-		if (ws.socket && to.fullPath !== from.fullPath) {
-			ws.clearCallbacks();
-			ws.destroyListeners();
-		}
-
-		if (
-			to.meta.loginRequired ||
-			to.meta.adminRequired ||
-			to.meta.guestsOnly
-		) {
-			const gotData = () => {
-				if (to.meta.loginRequired && !store.state.user.auth.loggedIn)
-					next({ path: "/login" });
-				else if (
-					to.meta.adminRequired &&
-					store.state.user.auth.role !== "admin"
-				)
-					next({ path: "/" });
-				else if (to.meta.guestsOnly && store.state.user.auth.loggedIn)
-					next({ path: "/" });
-				else next();
-			};
-
-			if (store.state.user.auth.gotData) gotData();
-			else {
-				const watcher = store.watch(
-					state => state.user.auth.gotData,
-					() => {
-						watcher();
-						gotData();
-					}
-				);
-			}
-		} else next();
 	});
 
 	app.mount("#root");
