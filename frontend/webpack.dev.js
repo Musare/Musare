@@ -17,16 +17,32 @@ module.exports = merge(common, {
 		}
 	},
 	devServer: {
-		contentBase: "./dist/",
-		historyApiFallback: true,
-		hot: true,
-		port: config.get("frontendPort"),
-		public: config.get("frontendDomain"),
-		host: "0.0.0.0",
-		watchOptions: {
-			aggregateTimeout: 300,
-			poll: 1000
+		static: {
+			directory: "./dist/",
+			// watchOptions: {
+			// 	aggregateTimeout: 300,
+			// 	poll: 1000
+			// }
+			watch: true
 		},
-		disableHostCheck: true
+		hot: true,
+		historyApiFallback: true,
+		port: config.get("frontendPort"),
+		host: "0.0.0.0",
+		allowedHosts: "all"
 	}
+
+	// devServer: {
+	// 	// contentBase: "./dist/",
+	// 	// historyApiFallback: true,
+	// 	// hot: true,
+	// 	// port: config.get("frontendPort"),
+	// 	// // public: config.get("frontendDomain"),
+	// 	// host: "0.0.0.0",
+	// 	// watchOptions: {
+	// 	// 	aggregateTimeout: 300,
+	// 	// 	poll: 1000
+	// 	// },
+	// 	// disableHostCheck: true
+	// }
 });
