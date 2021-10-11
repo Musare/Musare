@@ -52,13 +52,10 @@ class _DBModule extends CoreClass {
 
 			const mongoUrl = config.get("mongo").url;
 
-			mongoose.set("useFindAndModify", false);
-
 			mongoose
 				.connect(mongoUrl, {
 					useNewUrlParser: true,
-					useUnifiedTopology: true,
-					useCreateIndex: true
+					useUnifiedTopology: true
 				})
 				.then(async () => {
 					this.schemas = {

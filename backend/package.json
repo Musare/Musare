@@ -15,8 +15,8 @@
     "lint": "npx eslint logic"
   },
   "dependencies": {
-    "async": "^3.2.0",
-    "axios": "^0.21.2",
+    "async": "^3.2.1",
+    "axios": "^0.22.0",
     "bcrypt": "^5.0.1",
     "bluebird": "^3.7.2",
     "body-parser": "^1.19.0",
@@ -25,23 +25,23 @@
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "moment": "^2.29.1",
-    "mongoose": "^5.13.2",
-    "nodemailer": "^6.6.1",
+    "mongoose": "^6.0.10",
+    "nodemailer": "^6.7.0",
     "oauth": "^0.9.15",
     "redis": "^3.1.2",
-    "retry-axios": "^2.4.0",
+    "retry-axios": "^2.6.0",
     "sha256": "^0.2.0",
     "underscore": "^1.13.1",
-    "ws": "^7.5.3"
+    "ws": "^8.2.3"
   },
   "devDependencies": {
-    "eslint": "^7.30.0",
+    "eslint": "^7.32.0",
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-config-prettier": "^8.3.0",
-    "eslint-plugin-import": "^2.23.0",
-    "eslint-plugin-jsdoc": "^35.4.3",
-    "eslint-plugin-prettier": "^3.4.0",
-    "prettier": "2.3.2",
+    "eslint-plugin-import": "^2.24.2",
+    "eslint-plugin-jsdoc": "^36.1.1",
+    "eslint-plugin-prettier": "^4.0.0",
+    "prettier": "2.4.1",
     "trace-unhandled": "^2.0.1"
   }
 }

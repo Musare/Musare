@@ -4,7 +4,7 @@
 
 import config from "config";
 import async from "async";
-import WebSocket from "ws";
+import { WebSocket, WebSocketServer } from "ws";
 import { EventEmitter } from "events";
 
 import CoreClass from "../core";
@@ -51,7 +51,7 @@ class _WSModule extends CoreClass {
 
 		// this._io.origins(config.get("cors.origin"));
 
-		this._io = new WebSocket.Server({ server, path: "/ws" });
+		this._io = new WebSocketServer({ server, path: "/ws" });
 
 		this.rooms = {};
 
