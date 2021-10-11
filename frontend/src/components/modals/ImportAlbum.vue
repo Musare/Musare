@@ -329,7 +329,7 @@ export default {
 	},
 	watch: {
 		/* eslint-disable */
-		"modals.editSong": function(value) {
+		"modals.editSong": function (value) {
 			if (!value) this.editNextSong();
 		}
 		/* eslint-enable */
@@ -362,15 +362,12 @@ export default {
 		},
 		editNextSong() {
 			if (this.editingSongs) {
-				setTimeout(() => {
-					this.editSong({
-						_id: this.songsToEdit[this.currentEditSongIndex].songId,
-						discogs:
-							this.songsToEdit[this.currentEditSongIndex].discogs
-					});
-					this.currentEditSongIndex += 1;
-					this.openModal("editSong");
-				}, 500);
+				this.editSong({
+					_id: this.songsToEdit[this.currentEditSongIndex].songId,
+					discogs: this.songsToEdit[this.currentEditSongIndex].discogs
+				});
+				this.currentEditSongIndex += 1;
+				this.openModal("editSong");
 			}
 		},
 		log(evt) {

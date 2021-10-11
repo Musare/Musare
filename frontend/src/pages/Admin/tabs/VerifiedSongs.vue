@@ -158,7 +158,7 @@
 			</table>
 		</div>
 		<import-album v-if="modals.importAlbum" />
-		<edit-song v-if="modals.editSong" song-type="songs" />
+		<edit-song v-if="modals.editSong" song-type="songs" :key="song._id" />
 		<request-song v-if="modals.requestSong" />
 		<floating-box
 			id="keyboardShortcutsHelper"
@@ -374,6 +374,9 @@ export default {
 		}),
 		...mapState("admin/verifiedSongs", {
 			songs: state => state.songs
+		}),
+		...mapState("modals/editSong", {
+			song: state => state.song
 		}),
 		...mapGetters({
 			socket: "websockets/getSocket"
