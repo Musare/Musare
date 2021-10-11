@@ -3,6 +3,7 @@ import store from "./store";
 import ListenerHandler from "./classes/ListenerHandler.class";
 
 const onConnect = [];
+let ready = false;
 
 let pendingDispatches = [];
 
@@ -20,7 +21,7 @@ export default {
 	dispatcher: null,
 
 	onConnect(cb) {
-		if (this.socket.readyState === 1) cb();
+		if (this.socket.readyState === 1 && ready) cb();
 
 		return onConnect.push(cb);
 	},
@@ -105,15 +106,7 @@ export default {
 		store.dispatch("websockets/createSocket", this.socket);
 
 		this.socket.onopen = () => {
-			console.log("WS: SOCKET CONNECTED");
-
-			setTimeout(() => {
-				onConnect.forEach(cb => cb());
-
-				// dispatches that were attempted while the server was offline
-				pendingDispatches.forEach(cb => cb());
-				pendingDispatches = [];
-			}, 150); // small delay between readyState being 1 and the server actually receiving dispatches
+			console.log("WS: SOCKET OPENED");
 		};
 
 		this.socket.onmessage = message => {
@@ -136,7 +129,9 @@ export default {
 		};
 
 		this.socket.onclose = () => {
-			console.log("WS: SOCKET DISCONNECTED");
+			console.log("WS: SOCKET CLOSED");
+
+			ready = false;
 
 			onDisconnect.temp.forEach(cb => cb());
 			onDisconnect.persist.forEach(cb => cb());
@@ -150,5 +145,18 @@ export default {
 
 			// new Toast("Cannot perform this action at this time.");
 		};
+
+		this.socket.on("ready", () => {
+			console.log("WS: SOCKET READY");
+			ready = true;
+
+			setTimeout(() => {
+				onConnect.forEach(cb => cb());
+
+				// dispatches that were attempted while the server was offline
+				pendingDispatches.forEach(cb => cb());
+				pendingDispatches = [];
+			}, 150); // small delay between readyState being 1 and the server actually receiving dispatches
+		});
 	}
 };
