@@ -9,7 +9,7 @@ import store from "./store";
 
 import AppComponent from "./App.vue";
 
-const REQUIRED_CONFIG_VERSION = 7;
+const REQUIRED_CONFIG_VERSION = 8;
 
 const handleMetadata = attrs => {
 	document.title = `Musare | ${attrs.title}`;
@@ -183,7 +183,7 @@ lofig.folder = "../config/default.json";
 		}
 	});
 
-	const websocketsDomain = await lofig.get("websocketsDomain");
+	const websocketsDomain = await lofig.get("backend.websocketsDomain");
 	ws.init(websocketsDomain);
 
 	ws.socket.on("ready", res => {

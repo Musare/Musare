@@ -31,10 +31,11 @@ Location: `frontend/dist/config/default.json`
 
 | Property | Description |
 | --- | --- |
-| `apiDomain` | Should be the url where the backend will be accessible from, usually `http://localhost/backend` for docker or `http://localhost:8080` for non-Docker. |
-| `websocketsDomain` | Should be the same as the `apiDomain`, except using the `ws://` protocol instead of `http://` and with `/ws` at the end. |
+| `backend.apiDomain` | Should be the url where the backend will be accessible from, usually `http://localhost/backend` for docker or `http://localhost:8080` for non-Docker. |
+| `backend.websocketsDomain` | Should be the same as the `apiDomain`, except using the `ws://` protocol instead of `http://` and with `/ws` at the end. |
+| `devServer.webSocketURL` | Should be the webpack-dev-server websocket URL, usually `ws://localhost/ws`. |
+| `devServer.port` | Should be the port where webpack-dev-server will be accessible from, should always be port `81` for Docker since nginx listens on port 80, and is recommended to be port `80` for non-Docker. |
 | `frontendDomain` | Should be the url where the frontend will be accessible from, usually `http://localhost` for docker or `http://localhost:80` for non-Docker. |
-| `frontendPort` | Should be the port where the frontend will be accessible from, should always be port `81` for Docker, and is recommended to be port `80` for non-Docker. |
 | `recaptcha.key` | Can be obtained by setting up a [ReCaptcha Site (v3)](https://www.google.com/recaptcha/admin). |
 | `recaptcha.enabled` | Keep at false to keep disabled. |
 | `cookie.domain` | Should be the ip or address you use to access the site, without protocols (http/https), so for example `localhost`. |

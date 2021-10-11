@@ -220,7 +220,7 @@ export default {
 		}
 	},
 	async mounted() {
-		this.apiDomain = await lofig.get("apiDomain");
+		this.apiDomain = await lofig.get("backend.apiDomain");
 	},
 	methods: {
 		togglePasswordVisibility(ref) {

@@ -136,7 +136,7 @@ export default {
 		};
 	},
 	async mounted() {
-		this.apiDomain = await lofig.get("apiDomain");
+		this.apiDomain = await lofig.get("backend.apiDomain");
 
 		if (this.$route.path === "/login") this.isPage = true;
 	},

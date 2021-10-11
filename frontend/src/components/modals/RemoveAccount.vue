@@ -197,7 +197,7 @@ export default {
 		socket: "websockets/getSocket"
 	}),
 	async mounted() {
-		this.apiDomain = await lofig.get("apiDomain");
+		this.apiDomain = await lofig.get("backend.apiDomain");
 		this.accountRemovalMessage = await lofig.get("messages.accountRemoval");
 	},
 	methods: {

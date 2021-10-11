@@ -242,7 +242,7 @@ export default {
 	async mounted() {
 		if (this.$route.path === "/register") this.isPage = true;
 
-		this.apiDomain = await lofig.get("apiDomain");
+		this.apiDomain = await lofig.get("backend.apiDomain");
 
 		lofig.get("recaptcha").then(obj => {
 			this.recaptcha.enabled = obj.enabled;

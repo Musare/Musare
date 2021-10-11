@@ -181,7 +181,7 @@ export default {
 			this.socketConnected = false;
 		});
 
-		this.apiDomain = await lofig.get("apiDomain");
+		this.apiDomain = await lofig.get("backend.apiDomain");
 
 		this.$router.isReady().then(() => {
 			if (this.$route.query.err) {
