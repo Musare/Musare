@@ -919,43 +919,36 @@ export default {
 			);
 		},
 		addPartyPlaylistSongToQueue() {
-			let isInQueue = false;
 			if (
 				this.station.type === "community" &&
-				this.station.partyMode === true
+				this.station.partyMode === true &&
+				this.songsList.length < 50 &&
+				this.songsList.filter(
+					queueSong => queueSong.requestedBy === this.userId
+				).length < 3 &&
+				this.partyPlaylists
 			) {
-				this.songsList.forEach(queueSong => {
-					if (queueSong.requestedBy === this.userId) isInQueue = true;
-				});
-				if (!isInQueue && this.partyPlaylists) {
-					const selectedPlaylist =
-						this.partyPlaylists[
+				const selectedPlaylist =
+					this.partyPlaylists[
+						Math.floor(Math.random() * this.partyPlaylists.length)
+					];
+				if (selectedPlaylist._id && selectedPlaylist.songs.length > 0) {
+					const selectedSong =
+						selectedPlaylist.songs[
 							Math.floor(
-								Math.random() * this.partyPlaylists.length
+								Math.random() * selectedPlaylist.songs.length
 							)
 						];
-					if (
-						selectedPlaylist._id &&
-						selectedPlaylist.songs.length > 0
-					) {
-						const selectedSong =
-							selectedPlaylist.songs[
-								Math.floor(
-									Math.random() *
-										selectedPlaylist.songs.length
-								)
-							];
-						if (selectedSong.youtubeId) {
-							this.socket.dispatch(
-								"stations.addToQueue",
-								this.station._id,
-								selectedSong.youtubeId,
-								data => {
-									if (data.status !== "success")
-										new Toast("Error auto queueing song");
-								}
-							);
-						}
+					if (selectedSong.youtubeId) {
+						this.socket.dispatch(
+							"stations.addToQueue",
+							this.station._id,
+							selectedSong.youtubeId,
+							data => {
+								if (data.status !== "success")
+									this.addPartyPlaylistSongToQueue();
+							}
+						);
 					}
 				}
 			}
