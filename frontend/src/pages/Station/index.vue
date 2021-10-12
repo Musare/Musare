@@ -1135,7 +1135,7 @@ export default {
 
 			this.updateNextSong(nextSong);
 
-			if (res.data.queue.length < 50) this.addPartyPlaylistSongToQueue();
+			this.addPartyPlaylistSongToQueue();
 		});
 
 		this.socket.on("event:station.queue.song.repositioned", res => {
