@@ -922,6 +922,7 @@ export default {
 			if (
 				this.station.type === "community" &&
 				this.station.partyMode === true &&
+				this.songsList.length < 50 &&
 				this.songsList.filter(
 					queueSong => queueSong.requestedBy === this.userId
 				).length < 3 &&

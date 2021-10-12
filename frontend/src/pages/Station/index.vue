@@ -899,7 +899,8 @@ export default {
 			beforeEditSongModalLocalPaused: null,
 			socketConnected: null,
 			persistentToastCheckerInterval: null,
-			persistentToasts: []
+			persistentToasts: [],
+			partyPlaylistLock: false
 		};
 	},
 	computed: {
@@ -963,16 +964,6 @@ export default {
 		...mapGetters({
 			socket: "websockets/getSocket"
 		})
-	},
-	watch: {
-		currentUserQueueSongs(total) {
-			if (
-				this.station.type === "community" &&
-				this.station.partyMode === true &&
-				total < 3
-			)
-				this.addPartyPlaylistSongToQueue();
-		}
 	},
 	async mounted() {
 		this.editSongModalWatcher = this.$store.watch(
@@ -1143,6 +1134,8 @@ export default {
 					: null;
 
 			this.updateNextSong(nextSong);
+
+			if (res.data.queue.length < 50) this.addPartyPlaylistSongToQueue();
 		});
 
 		this.socket.on("event:station.queue.song.repositioned", res => {
@@ -1919,8 +1912,10 @@ export default {
 		},
 		addPartyPlaylistSongToQueue() {
 			if (
+				!this.partyPlaylistLock &&
 				this.station.type === "community" &&
 				this.station.partyMode === true &&
+				this.songsList.length < 50 &&
 				this.currentUserQueueSongs < 3 &&
 				this.partyPlaylists.length > 0
 			) {
@@ -1936,11 +1931,13 @@ export default {
 							)
 						];
 					if (selectedSong.youtubeId) {
+						this.partyPlaylistLock = true;
 						this.socket.dispatch(
 							"stations.addToQueue",
 							this.station._id,
 							selectedSong.youtubeId,
 							data => {
+								this.partyPlaylistLock = false;
 								if (data.status !== "success")
 									this.addPartyPlaylistSongToQueue();
 							}
