@@ -3049,49 +3049,55 @@ export default {
 				(song, station, next) => {
 					song.requestedBy = session.userId;
 					song.requestedAt = Date.now();
-					let totalDuration = 0;
-					station.queue.forEach(song => {
-						totalDuration += song.duration;
-					});
-					if (totalDuration >= 3600 * 3) return next("The max length of the queue is 3 hours.");
-					return next(null, song, station);
-				},
-
-				(song, station, next) => {
-					if (station.queue.length === 0) return next(null, song, station);
-					let totalDuration = 0;
-					const userId = station.queue[station.queue.length - 1].requestedBy;
-					station.queue.forEach(song => {
-						if (userId === song.requestedBy) {
-							totalDuration += song.duration;
-						}
-					});
-
-					if (totalDuration >= 900) return next("The max length of songs per user is 15 minutes.");
-					return next(null, song, station);
-				},
-
-				(song, station, next) => {
-					if (station.queue.length === 0) return next(null, song);
-					let totalSongs = 0;
-					const userId = station.queue[station.queue.length - 1].requestedBy;
-					station.queue.forEach(song => {
-						if (userId === song.requestedBy) {
-							totalSongs += 1;
-						}
-					});
-
-					if (totalSongs <= 2) return next(null, song);
-					if (totalSongs > 3)
-						return next("The max amount of songs per user is 3, and only 2 in a row is allowed.");
-					if (
-						station.queue[station.queue.length - 2].requestedBy !== userId ||
-						station.queue[station.queue.length - 3] !== userId
-					)
-						return next("The max amount of songs per user is 3, and only 2 in a row is allowed.");
-
 					return next(null, song);
 				},
+
+				// (song, station, next) => {
+				// 	song.requestedBy = session.userId;
+				// 	song.requestedAt = Date.now();
+				// 	let totalDuration = 0;
+				// 	station.queue.forEach(song => {
+				// 		totalDuration += song.duration;
+				// 	});
+				// 	if (totalDuration >= 3600 * 3) return next("The max length of the queue is 3 hours.");
+				// 	return next(null, song, station);
+				// },
+
+				// (song, station, next) => {
+				// 	if (station.queue.length === 0) return next(null, song, station);
+				// 	let totalDuration = 0;
+				// 	const userId = station.queue[station.queue.length - 1].requestedBy;
+				// 	station.queue.forEach(song => {
+				// 		if (userId === song.requestedBy) {
+				// 			totalDuration += song.duration;
+				// 		}
+				// 	});
+
+				// 	if (totalDuration >= 900) return next("The max length of songs per user is 15 minutes.");
+				// 	return next(null, song, station);
+				// },
+
+				// (song, station, next) => {
+				// 	if (station.queue.length === 0) return next(null, song);
+				// 	let totalSongs = 0;
+				// 	const userId = station.queue[station.queue.length - 1].requestedBy;
+				// 	station.queue.forEach(song => {
+				// 		if (userId === song.requestedBy) {
+				// 			totalSongs += 1;
+				// 		}
+				// 	});
+
+				// 	if (totalSongs <= 2) return next(null, song);
+				// 	if (totalSongs > 3)
+				// 		return next("The max amount of songs per user is 3, and only 2 in a row is allowed.");
+				// 	if (
+				// 		station.queue[station.queue.length - 2].requestedBy !== userId ||
+				// 		station.queue[station.queue.length - 3] !== userId
+				// 	)
+				// 		return next("The max amount of songs per user is 3, and only 2 in a row is allowed.");
+
+				// 	return next(null, song);
+				// },
 
 				(song, next) => {
 					stationModel.updateOne(
