@@ -255,6 +255,11 @@ class _DBModule extends CoreClass {
 						.path("songs")
 						.validate(songs => songs.length <= 10000, "Max 10000 songs per playlist.");
 
+					// this.schemas.playlist.path("songs").validate(songs => {
+					// 	if (songs.length === 0) return true;
+					// 	return songs[0].duration <= 10800;
+					// }, "Max 3 hours per song.");
+
 					this.schemas.playlist.index({ createdFor: 1, type: 1 }, { unique: true });
 
 					if (config.get("skipDbDocumentsVersionCheck")) resolve();
