@@ -78,9 +78,7 @@ export default {
 			.reverse()[0];
 	},
 	init() {
-		this.audio = new Audio(
-			"http://localhost/assets/15-seconds-of-silence.mp3"
-		);
+		this.audio = new Audio("/assets/15-seconds-of-silence.mp3");
 
 		this.audio.loop = true;
 		this.audio.volume = 0.1;
